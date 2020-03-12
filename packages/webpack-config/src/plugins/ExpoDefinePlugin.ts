@@ -118,7 +118,7 @@ export default class DefinePlugin extends OriginalDefinePlugin {
     const mode = getMode(env);
     const { publicUrl } = getPublicPaths(env);
     const config = env.config || getConfig(env);
-    const locations = env.locations || getPaths(env.projectRoot, mode);
+    const locations = env.locations || getPaths(env.projectRoot);
     const productionManifestPath = locations.production.manifest;
     return new DefinePlugin({
       mode,

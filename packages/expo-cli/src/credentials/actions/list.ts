@@ -79,13 +79,10 @@ export function displayIosAppCredentials(appCredentials: IosAppCredentials) {
       appCredentials.bundleIdentifier
     }`
   );
-  if (
-    appCredentials.credentials.provisioningProfile &&
-    appCredentials.credentials.provisioningProfileId
-  ) {
+  if (appCredentials.credentials.provisioningProfile) {
     log(
       `    Provisioning profile (ID: ${chalk.green(
-        appCredentials.credentials.provisioningProfileId
+        appCredentials.credentials.provisioningProfileId || '---------'
       )})`
     );
   } else {

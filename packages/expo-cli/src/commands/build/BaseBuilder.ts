@@ -87,8 +87,9 @@ export default class BaseBuilder {
   async checkForBuildInProgress() {
     log('Checking if there is a build in progress...\n');
     let buildStatus;
-    if (process.env.EXPO_NEXT_API) {
-      buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
+    if (process.env.EXPO_LEGACY_API === 'true') {
+      buildStatus = await Project.buildAsync(this.projectDir, {
+        mode: 'status',
         platform: this.platform(),
         current: true,
         releaseChannel: this.options.releaseChannel,
@@ -96,8 +97,7 @@ export default class BaseBuilder {
         sdkVersion: this.manifest.sdkVersion,
       } as any);
     } else {
-      buildStatus = await Project.buildAsync(this.projectDir, {
-        mode: 'status',
+      buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
         platform: this.platform(),
         current: true,
         releaseChannel: this.options.releaseChannel,
@@ -114,15 +114,15 @@ export default class BaseBuilder {
     log('Fetching build history...\n');
 
     let buildStatus: Project.BuildStatusResult | Project.BuildCreatedResult;
-    if (process.env.EXPO_NEXT_API) {
-      buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
+    if (process.env.EXPO_LEGACY_API === 'true') {
+      buildStatus = await Project.buildAsync(this.projectDir, {
+        mode: 'status',
         platform,
         current: false,
         releaseChannel: this.options.releaseChannel,
       });
     } else {
-      buildStatus = await Project.buildAsync(this.projectDir, {
-        mode: 'status',
+      buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
         platform,
         current: false,
         releaseChannel: this.options.releaseChannel,
@@ -296,27 +296,23 @@ ${job.id}
 
   async wait(
     buildId: string,
-    {
-      timeout = 3600,
-      interval = 30,
-      publicUrl,
-    }: { timeout?: number; interval?: number; publicUrl?: string } = {}
+    { interval = 30, publicUrl }: { interval?: number; publicUrl?: string } = {}
   ): Promise<any> {
-    log(`Waiting for build to complete. You can press Ctrl+C to exit.`);
+    log(
+      `Waiting for build to complete.\nYou can press Ctrl+C to exit. It won't cancel the build, you'll able to monitor it at the printed URL.`
+    );
     let spinner = ora().start();
-    let time = new Date().getTime();
-    const endTime = time + secondsToMilliseconds(timeout);
-    while (time <= endTime) {
+    while (true) {
       let res;
-      if (process.env.EXPO_NEXT_API) {
-        res = await Project.getBuildStatusAsync(this.projectDir, {
-          current: false,
-          ...(publicUrl ? { publicUrl } : {}),
-        });
-      } else {
+      if (process.env.EXPO_LEGACY_API === 'true') {
         res = await Project.buildAsync(this.projectDir, {
           current: false,
           mode: 'status',
+          ...(publicUrl ? { publicUrl } : {}),
+        });
+      } else {
+        res = await Project.getBuildStatusAsync(this.projectDir, {
+          current: false,
           ...(publicUrl ? { publicUrl } : {}),
         });
       }
@@ -345,13 +341,8 @@ ${job.id}
           spinner.warn('Unknown status.');
           throw new BuildError(`Unknown status: ${job.status} - aborting!`);
       }
-      time = new Date().getTime();
       await delayAsync(secondsToMilliseconds(interval));
     }
-    spinner.warn('Timed out.');
-    throw new BuildError(
-      'Timeout reached! Project is taking longer than expected to finish building, aborting wait...'
-    );
   }
 
   async build(expIds?: Array<string>) {
@@ -360,30 +351,7 @@ ${job.id}
     const bundleIdentifier = get(this.manifest, 'ios.bundleIdentifier');
 
     let result: any;
-    if (process.env.EXPO_NEXT_API) {
-      let opts: Record<string, any> = {
-        expIds,
-        platform,
-        releaseChannel: this.options.releaseChannel,
-        ...(publicUrl ? { publicUrl } : {}),
-      };
-
-      if (platform === PLATFORMS.IOS) {
-        opts = {
-          ...opts,
-          type: this.options.type,
-          bundleIdentifier,
-        };
-      } else if (platform === PLATFORMS.ANDROID) {
-        opts = {
-          ...opts,
-          type: this.options.type,
-        };
-      }
-
-      // call out to build api here with url
-      result = await Project.startBuildAsync(this.projectDir, opts);
-    } else {
+    if (process.env.EXPO_LEGACY_API === 'true') {
       let opts: Record<string, any> = {
         mode: 'create',
         expIds,
@@ -407,6 +375,29 @@ ${job.id}
 
       // call out to build api here with url
       result = await Project.buildAsync(this.projectDir, opts);
+    } else {
+      let opts: Record<string, any> = {
+        expIds,
+        platform,
+        releaseChannel: this.options.releaseChannel,
+        ...(publicUrl ? { publicUrl } : {}),
+      };
+
+      if (platform === PLATFORMS.IOS) {
+        opts = {
+          ...opts,
+          type: this.options.type,
+          bundleIdentifier,
+        };
+      } else if (platform === PLATFORMS.ANDROID) {
+        opts = {
+          ...opts,
+          type: this.options.type,
+        };
+      }
+
+      // call out to build api here with url
+      result = await Project.startBuildAsync(this.projectDir, opts);
     }
     const { id: buildId, priority, canPurchasePriorityBuilds } = result;
 

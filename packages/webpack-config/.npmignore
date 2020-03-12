@@ -1,4 +1,5 @@
 # Testing
+/e2e
 /tests
 /jest
 /jest-puppeteer.config.js

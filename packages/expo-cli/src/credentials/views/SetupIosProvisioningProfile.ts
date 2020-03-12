@@ -38,8 +38,10 @@ export class SetupIosProvisioningProfile implements IView {
       this._bundleIdentifier
     );
 
-    // We dont have a profile on expo servers
-    if (!configuredProfile) {
+    // We dont have a profile on expo servers or
+    // The configured profile is associated with some other dist cert
+    const configuredWithSameDistCert = appCredentials.distCredentialsId === this._distCert.id;
+    if (!configuredProfile || !configuredWithSameDistCert) {
       return new iosProfileView.CreateOrReuseProvisioningProfile({
         experienceName: this._experienceName,
         bundleIdentifier: this._bundleIdentifier,
@@ -48,19 +50,36 @@ export class SetupIosProvisioningProfile implements IView {
     }
 
     if (!ctx.hasAppleCtx()) {
-      const isValid = await iosProfileView.validateProfileWithoutApple(configuredProfile);
+      const isValid = await iosProfileView.validateProfileWithoutApple(
+        configuredProfile,
+        this._distCert,
+        this._bundleIdentifier
+      );
       if (!isValid) {
         throw new Error(`The provisioning profile we have on file is no longer valid.`);
       }
       return null;
     }
 
+    // User uploaded profiles dont have ids - do best effort validation here
     if (!configuredProfile.provisioningProfileId) {
       log(
         chalk.yellow(
           "The provisioning profile we have on file cannot be validated on Apple's servers."
         )
       );
+      const isValid = await iosProfileView.validateProfileWithoutApple(
+        configuredProfile,
+        this._distCert,
+        this._bundleIdentifier
+      );
+      if (!isValid) {
+        return new iosProfileView.CreateOrReuseProvisioningProfile({
+          experienceName: this._experienceName,
+          bundleIdentifier: this._bundleIdentifier,
+          distCert: this._distCert,
+        });
+      }
       return null;
     }
 

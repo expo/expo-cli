@@ -110,7 +110,7 @@ export default async function(
     // isProd
   );
 
-  const locations = env.locations || (await getPathsAsync(env.projectRoot, mode));
+  const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
   const { publicPath, publicUrl } = getPublicPaths(env);
 

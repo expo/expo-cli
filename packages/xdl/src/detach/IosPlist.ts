@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import plist from 'plist';
+import plist from '@expo/plist';
 
 import { spawnAsyncThrowError } from './ExponentTools';
 import logger from './Logger';

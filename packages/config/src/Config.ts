@@ -63,7 +63,6 @@ function getConfigContext(
   return {
     pkg,
     context: {
-      mode: options.mode,
       projectRoot,
       configPath,
       config: configFromPkg,
@@ -76,11 +75,10 @@ function getConfigContext(
  * If a function is exported from the `app.config.js` then a partial config will be passed as an argument.
  * The partial config is composed from any existing app.json, and certain fields from the `package.json` like name and description.
  *
- * You should use the supplied `mode` option in an `app.config.js` instead of `process.env.NODE_ENV`
  *
  * **Example**
  * ```js
- * module.exports = function({ config, mode }) {
+ * module.exports = function({ config }) {
  *   // mutate the config before returning it.
  *   config.slug = 'new slug'
  *   return config;
@@ -94,14 +92,7 @@ function getConfigContext(
  * @param projectRoot the root folder containing all of your application code
  * @param options enforce criteria for a project config
  */
-export function getConfig(projectRoot: string, options: GetConfigOptions): ProjectConfig {
-  if (!['development', 'production'].includes(options.mode)) {
-    throw new ConfigError(
-      `Invalid mode "${options.mode}" was used to evaluate the project config.`,
-      'INVALID_MODE'
-    );
-  }
-
+export function getConfig(projectRoot: string, options: GetConfigOptions = {}): ProjectConfig {
   const { context, pkg } = getConfigContext(projectRoot, options);
 
   const config = findAndEvalConfig(context) ?? context.config;

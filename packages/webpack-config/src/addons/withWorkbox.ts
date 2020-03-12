@@ -1,3 +1,5 @@
+import { ensureSlash } from '@expo/config/paths';
+import CopyPlugin from 'copy-webpack-plugin';
 import { ensureDirSync, readFileSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
 import {
@@ -7,10 +9,9 @@ import {
   InjectManifestOptions,
 } from 'workbox-webpack-plugin';
 
-import { ensureSlash } from '@expo/config/paths';
+import { getPaths } from '../env';
 import { AnyConfiguration } from '../types';
 import { resolveEntryAsync } from '../utils';
-import { getPaths } from '../env';
 
 /**
  * @internal
@@ -34,6 +35,7 @@ const defaultInjectManifestOptions = {
     /\.LICENSE$/,
     /\.map$/,
     /asset-manifest\.json$/,
+    /\.js\.gz$/,
     // Exclude all apple touch and chrome images because they're cached locally after the PWA is added.
     /(apple-touch-startup-image|chrome-icon|apple-touch-icon).*\.png$/,
   ],
@@ -88,7 +90,22 @@ export default function withWorkbox(
     injectManifestOptions = {},
   } = options;
 
-  const locations = getPaths(projectRoot!, webpackConfig.mode);
+  const locations = getPaths(projectRoot!);
+
+  webpackConfig.plugins.push(
+    new CopyPlugin([
+      {
+        from: locations.template.registerServiceWorker,
+        to: locations.production.registerServiceWorker,
+        transform(content) {
+          return content
+            .toString()
+            .replace('SW_PUBLIC_URL', publicUrl)
+            .replace('SW_PUBLIC_SCOPE', ensureSlash(scope || publicUrl, true));
+        },
+      },
+    ])
+  );
 
   // Always register general service worker
   const expoEntry = webpackConfig.entry;
@@ -104,11 +121,10 @@ export default function withWorkbox(
         ensureDirSync(locations.production.folder);
       } else {
         content = `
-        console.warn("failed to load service-worker in @expo/webpack-config -> withWorkbox. This can be due to the environment the project was built in. Please try again with a globally installed instance of expo-cli. If you continue to run into problems open an issue in https://github.com/expo/expo-cli")
+        console.warn("failed to load service-worker in @expo/webpack-config -> withWorkbox(). This can be due to the environment the project was built in. Please try again with a globally installed instance of expo-cli. If you continue to run into problems open an issue in https://github.com/expo/expo-cli")
         `;
       }
       writeFileSync(swPath, content, 'utf8');
-
       if (!Array.isArray(entries.app)) {
         entries.app = [entries.app];
       }

@@ -81,6 +81,10 @@ workflows:
           e: node-10
           requires:
             - build10
+      - test-plist:
+          e: node-10
+          requires:
+            - build10
 jobs:
   build:
     parameters:
@@ -185,7 +189,7 @@ jobs:
           at: '~'
       - run:
           name: Install test project dependencies
-          command: cd tests/basic && yarn; cd ../..
+          command: cd e2e/basic && yarn; cd ../..
       - run: yarn test:e2e
   test-webpack-config-e2e-next-js:
     parameters:
@@ -198,7 +202,7 @@ jobs:
           at: '~'
       - run:
           name: Install test project dependencies
-          command: cd tests/nextjs && yarn; cd ../..
+          command: cd e2e/nextjs && yarn; cd ../..
       - run: yarn test:e2e:nextjs
   test-expo-schemer:
     parameters:
@@ -226,6 +230,16 @@ jobs:
         type: executor
     executor: << parameters.e >>
     working_directory: ~/expo-cli/packages/electron-adapter
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test
+  test-plist:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/plist
     steps:
       - attach_workspace:
           at: '~'

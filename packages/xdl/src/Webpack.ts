@@ -128,7 +128,7 @@ export async function startAsync(
   const protocol = env.https ? 'https' : 'http';
   const urls = prepareUrls(protocol, '::', webpackServerPort);
   const useYarn = ConfigUtils.isUsingYarn(projectRoot);
-  const appName = await getProjectNameAsync(projectRoot, env.mode !== 'production');
+  const appName = await getProjectNameAsync(projectRoot);
   const nonInteractive = validateBoolOption(
     'nonInteractive',
     options.nonInteractive,
@@ -303,10 +303,9 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
   await bundleWebAppAsync(projectRoot, config);
 }
 
-export async function getProjectNameAsync(projectRoot: string, isDev: boolean): Promise<string> {
+export async function getProjectNameAsync(projectRoot: string): Promise<string> {
   const { exp } = ConfigUtils.getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
-    mode: isDev ? 'development' : 'production',
   });
   const { webName } = ConfigUtils.getNameFromConfig(exp);
   return webName;

@@ -80,7 +80,7 @@ export default function createAllLoaders(
   // @ts-ignore
   env.config = env.config || getConfig(env);
   // @ts-ignore
-  env.locations = env.locations || getPaths(env.projectRoot, env.mode);
+  env.locations = env.locations || getPaths(env.projectRoot);
 
   const { root, includeModule, template } = env.locations;
 
@@ -110,7 +110,7 @@ export function getBabelLoaderRule(
   // @ts-ignore
   env.config = env.config || getConfig(env);
 
-  env.locations = env.locations || getPaths(env.projectRoot, env.mode);
+  env.locations = env.locations || getPaths(env.projectRoot);
 
   const { web: { build: { babel = {} } = {} } = {} } = env.config;
 
