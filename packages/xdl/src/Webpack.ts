@@ -128,7 +128,7 @@ export async function startAsync(
   const protocol = env.https ? 'https' : 'http';
   const urls = prepareUrls(protocol, '::', webpackServerPort);
   const useYarn = ConfigUtils.isUsingYarn(projectRoot);
-  const appName = await getProjectNameAsync(projectRoot, env.mode !== 'production');
+  const appName = await getProjectNameAsync(projectRoot);
   const nonInteractive = validateBoolOption(
     'nonInteractive',
     options.nonInteractive,
