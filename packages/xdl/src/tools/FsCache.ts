@@ -43,6 +43,11 @@ class Cacher<T> {
   }
 
   async getAsync(): Promise<T> {
+    // Let user opt out of cache for debugging purposes
+    if (process.env.SKIP_CACHE) {
+      return await this.refresher();
+    }
+
     let mtime: Date;
     try {
       const stats = await fs.stat(this.filename);
