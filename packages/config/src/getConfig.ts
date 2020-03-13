@@ -2,6 +2,7 @@ import JsonFile from '@expo/json-file';
 import { formatExecError } from 'jest-message-util';
 import path from 'path';
 
+import { spawnSync } from 'child_process';
 import { ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
 import { fileExists } from './Modules';
@@ -70,19 +71,60 @@ export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
   return null;
 }
 
+function constructError({ name, ...json }: any): Error {
+  let error: any;
+  if (name === 'TypeError') {
+    error = new TypeError(json.message);
+  } else {
+    error = new Error(json.message);
+  }
+  for (const key of Object.keys(json)) {
+    if (key in json) {
+      error[key] = json[key];
+    }
+  }
+  return error;
+}
+
 // We cannot use async config resolution right now because Next.js doesn't support async configs.
 // If they don't add support for async Webpack configs then we may need to pull support for Next.js.
 function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoConfig> {
-  let result: any;
   if (configFile.endsWith('.json')) {
-    result = JsonFile.read(configFile, { json5: true });
+    return JsonFile.read(configFile, { json5: true });
   } else {
     try {
-      require('@babel/register')({
-        only: [configFile],
-      });
+      // require('@babel/register')({
+      //   only: [configFile],
+      // });
+      // result = require(configFile);
 
-      result = require(configFile);
+      const res = spawnSync(
+        'node',
+        [
+          require.resolve('@expo/config/readConfig.js'),
+          '--colors',
+          configFile,
+          JSON.stringify({ ...request, config: serializeAndEvaluate(request.config) }),
+        ],
+        {}
+      );
+
+      if (res.status === 0) {
+        const spawnResultString = res.stdout.toString('utf8').trim();
+        const logs = spawnResultString.split('\n');
+        // Get the last console log to prevent parsing anything logged in the config.
+        const lastLog = logs.pop()!;
+        for (const log of logs) {
+          // Log out the logs from the config
+          console.log(log);
+        }
+        // Parse the final log of the script, it's the serialized config
+        return JSON.parse(lastLog);
+      } else {
+        // Parse the error data and throw it as expected
+        const errorData = JSON.parse(res.stderr.toString('utf8'));
+        throw constructError(errorData);
+      }
     } catch (error) {
       if (isMissingFileCode(error.code) || !(error instanceof SyntaxError)) {
         throw error;
@@ -96,19 +138,7 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
       );
       throw new ConfigError(`\n${message}`, 'INVALID_CONFIG');
     }
-    if (result.default != null) {
-      result = result.default;
-    }
-    if (typeof result === 'function') {
-      result = result(request);
-    }
   }
-
-  if (result instanceof Promise) {
-    throw new ConfigError(`Config file ${configFile} cannot return a Promise.`, 'INVALID_CONFIG');
-  }
-
-  return result;
 }
 
 export function serializeAndEvaluate(val: any): any {
