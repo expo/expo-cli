@@ -1,4 +1,4 @@
-import { readConfigJsonAsync, writeConfigJsonAsync } from '@expo/config';
+import { getConfig, writeConfigJsonAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import {
   Android,
@@ -442,7 +442,7 @@ const resolvers = {
     },
     async config(project) {
       try {
-        const { exp } = await readConfigJsonAsync(project.projectDir);
+        const { exp } = getConfig(project.projectDir);
         return exp;
       } catch (error) {
         ProjectUtils.logError(project.projectDir, 'expo', error.message);
