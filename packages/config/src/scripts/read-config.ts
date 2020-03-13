@@ -18,7 +18,7 @@ const { 3: configFileArg, 4: requestArg } = process.argv;
 
 let request: ConfigContext | null = null;
 
-if (typeof process.argv[4] === 'string') {
+if (typeof requestArg === 'string') {
   try {
     request = JSON.parse(requestArg) as ConfigContext;
   } catch (_) {}
