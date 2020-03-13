@@ -6,7 +6,7 @@
 <!-- Header -->
 
 <p align="center">
-    <b>Compress the assets in your project</b>
+    <b>Generate PWA files for your project</b>
     <br/>
     <br/>
     <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/master">
@@ -17,6 +17,28 @@
 ---
 
 <!-- Body -->
+
+## 🚀 Usage
+
+You can use this package with npx or globally install:
+
+```sh
+# npx
+npx expo-pwa [options]
+
+# global
+npm i -g expo-pwa
+```
+
+Optionally, you can install the sharp CLI globally before using this CLI for native image editing:
+
+```sh
+npm install -g sharp-cli
+```
+
+## 🤔 Why?
+
+This package was created as a universal solution for creating PWA assets locally, with _optional_ native acceleration via Sharp CLI, falling back on Jimp for wider device compatibility.
 
 ## License
 

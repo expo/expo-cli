@@ -9,37 +9,21 @@ import { HTMLOutput, generateAsync } from '.';
 import { htmlTagObjectToString } from './HTML';
 import shouldUpdate from './update';
 
-async function commandDidThrowAsync(reason: any) {
-  console.log();
-  console.log('Aborting run');
-  if (reason.command) {
-    console.log(`  ${chalk.magenta(reason.command)} has failed.`);
-  } else {
-    console.log(chalk.red`An unexpected error was encountered. Please report it as a bug:`);
-    console.log(reason);
-  }
-  console.log();
-
-  await shouldUpdate();
-
-  process.exit(1);
-}
-
 const packageJson = () => require('../package.json');
 
 const program = new Command(packageJson().name).version(packageJson().version);
 
 program
   .command('icon <src>')
-  .description('Generate the homescreen icons for a PWA')
+  .description('Generate the home screen icons for a PWA')
   .option('-o, --output <folder>', 'Output directory', 'web')
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
-  .option('--platform <platform>', 'Platform to generate for: safari, chrome')
   .option('--resize <mode>', 'Resize mode to use', 'contain')
   .option('--color <color>', 'Background color for images (must be opaque)')
+  .option('--platform <platform>', 'Platform to generate for: safari, chrome')
   .action((src: string, options) => {
     if (!src) throw new Error('pass image path with --src <path.png>');
-    genImage(options.platform + '-icon', {
+    generateAssets(options.platform + '-icon', {
       src,
       output: options.output,
       publicPath: options.public || options.output,
@@ -59,7 +43,7 @@ program
   .option('--color <color>', 'Background color of the image', 'transparent')
   .action((src: string, options) => {
     if (!src) throw new Error('pass image path with --src <path.png>');
-    genImage('favicon', {
+    generateAssets('favicon', {
       src,
       output: options.output,
       publicPath: options.public || options.output,
@@ -72,14 +56,14 @@ program
 
 program
   .command('splash <src>')
-  .description('Generate the iOS splash screens for a PWA')
+  .description('Generate the Safari splash screens for a PWA')
   .option('-o, --output <folder>', 'Output directory', 'web')
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
   .option('--resize <mode>', 'Resize mode to use', 'contain')
   .option('--color <color>', 'Background color of the image', 'white')
   .action((src: string, options) => {
     if (!src) throw new Error('pass image path with --src <path.png>');
-    genImage('splash', {
+    generateAssets('splash', {
       src,
       output: options.output,
       publicPath: options.public || options.output,
@@ -96,8 +80,8 @@ program
   .option('-o, --output <folder>', 'Output directory', 'web')
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
   .action((config: string, options) => {
-    if (!config) throw new Error('pass an expo config path with --config <path>');
-    genImage('manifest', {
+    if (!config) throw new Error('pass an Expo config with the first argument');
+    generateAssets('manifest', {
       src: '',
       output: options.output,
       publicPath: options.public || options.output,
@@ -110,21 +94,17 @@ program
 
 program.parse(process.argv);
 
-async function genImage(
+type AssetOptions = {
+  src: string;
+  output: string;
+  publicPath: string;
+  color: string;
+  resizeMode: string;
+};
+
+async function generateAssets(
   type: string,
-  {
-    src,
-    output,
-    publicPath,
-    color: backgroundColor,
-    resizeMode,
-  }: {
-    src: string;
-    output: string;
-    publicPath: string;
-    color: string;
-    resizeMode: string;
-  }
+  { src, output, publicPath, color: backgroundColor, resizeMode }: AssetOptions
 ) {
   if (!isResizeMode(resizeMode)) {
     throw new Error(`Invalid resizeMode: ${resizeMode}`);
@@ -165,7 +145,6 @@ async function resolveOutputAsync(publicPath: string, outputPath: string, items:
     // Write image
     const assetPath = resolve(outputPath, item.asset.path);
     fs.ensureDirSync(dirname(assetPath));
-    console.log(`writing file: ${assetPath}`);
     await fs.writeFile(assetPath, item.asset.source);
   }
 
@@ -206,4 +185,20 @@ function logMeta(meta: string[]) {
 
 function isResizeMode(input: any): input is ResizeMode {
   return input && ['contain', 'cover', 'fill', 'inside', 'outside'].includes(input);
+}
+
+async function commandDidThrowAsync(reason: any) {
+  console.log();
+  console.log('Aborting run');
+  if (reason.command) {
+    console.log(`  ${chalk.magenta(reason.command)} has failed.`);
+  } else {
+    console.log(chalk.red`An unexpected error was encountered. Please report it as a bug:`);
+    console.log(reason);
+  }
+  console.log();
+
+  await shouldUpdate();
+
+  process.exit(1);
 }

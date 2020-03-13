@@ -45,6 +45,7 @@ import ChromeIconsWebpackPlugin from './plugins/ChromeIconsWebpackPlugin';
 import ApplePwaWebpackPlugin from './plugins/ApplePwaWebpackPlugin';
 import FaviconWebpackPlugin from './plugins/FaviconWebpackPlugin';
 import ExpoPwaManifestWebpackPlugin from './plugins/ExpoPwaManifestWebpackPlugin';
+import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
@@ -200,7 +201,7 @@ export default async function(
 
   // @ts-ignore
   const templateLinks = templateIndex.querySelectorAll('link');
-  const links: any[] = templateLinks.map((value: any) => ({
+  const links: HTMLLinkNode[] = templateLinks.map((value: any) => ({
     rel: value.getAttribute('rel'),
     media: value.getAttribute('media'),
     href: value.getAttribute('href'),
@@ -209,7 +210,7 @@ export default async function(
   }));
 
   const [manifestLink] = links.filter(
-    (v: any) => typeof v.rel === 'string' && v.rel.split(' ').includes('manifest')
+    link => typeof link.rel === 'string' && link.rel.split(' ').includes('manifest')
   );
   let templateManifest = locations.template.manifest;
   if (manifestLink && manifestLink.href) {

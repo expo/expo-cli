@@ -119,7 +119,7 @@ export async function generateImageAsync(
       );
       console.log(
         chalk.yellow(
-          `- Optionally you can stop the process and try again after successfully running \`npm install -g sharp-cli\`.\n- If you are using \`expo-cli\` to build your project then you could use the \`--no-pwa\` flag to skip the PWA asset generation step entirely.`
+          `\u203A Optionally you can stop the process and try again after successfully running \`npm install -g sharp-cli\`.\n\u203A If you are using \`expo-cli\` to build your project then you could use the \`--no-pwa\` flag to skip the PWA asset generation step entirely.`
         )
       );
     }

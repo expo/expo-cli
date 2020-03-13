@@ -12,6 +12,14 @@ export type HTMLPluginData = {
   plugin: any;
 };
 
+export type HTMLLinkNode = {
+  rel?: string;
+  media?: string;
+  href?: string;
+  sizes?: string;
+  node: any;
+};
+
 export default class ModifyHtmlWebpackPlugin {
   constructor(private modifyOptions: { inject?: boolean | Function } = {}) {}
 

@@ -2,11 +2,11 @@ import { Compiler, compilation } from 'webpack';
 
 import { IconOptions, ProjectOptions, generateFaviconAsync } from '@expo/pwa';
 import chalk from 'chalk';
-import ModifyHtmlWebpackPlugin, { HTMLPluginData } from './ModifyHtmlWebpackPlugin';
+import ModifyHtmlWebpackPlugin, { HTMLLinkNode, HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 
 export default class FaviconWebpackPlugin extends ModifyHtmlWebpackPlugin {
   constructor(
-    private pwaOptions: ProjectOptions & { links: any[] },
+    private pwaOptions: ProjectOptions & { links: HTMLLinkNode[] },
     private favicon: IconOptions | null
   ) {
     super();
@@ -24,17 +24,16 @@ export default class FaviconWebpackPlugin extends ModifyHtmlWebpackPlugin {
 
     const assets = await generateFaviconAsync(this.pwaOptions, this.favicon);
 
-    const links: any[] = this.pwaOptions.links.filter(
-      (v: any) => v.rel && v.rel.split(' ').includes('icon')
+    const links: HTMLLinkNode[] = this.pwaOptions.links.filter(v =>
+      v.rel?.split(' ').includes('icon')
     );
 
     for (const asset of assets) {
       const { attributes = {} } = asset.tag!;
-      if (
-        links.some((v: any) =>
-          v.sizes ? v.sizes === attributes.sizes : v.rel.includes('shortcut')
-        )
-      ) {
+      const faviconExists = links.some(v =>
+        v.sizes ? v.sizes === attributes.sizes : v.rel?.includes('shortcut')
+      );
+      if (faviconExists) {
         console.log(
           chalk.magenta(
             `\u203A Favicon: Using custom <link rel="${attributes.rel}" ${
