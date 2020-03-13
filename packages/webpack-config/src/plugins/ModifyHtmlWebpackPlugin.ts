@@ -6,14 +6,20 @@ function maybeFetchPlugin(compiler: Compiler, name: string): Plugin | undefined 
     .find(constructor => constructor && constructor.name === name);
 }
 
+export type HTMLPluginData = {
+  assetTags: any;
+  outputName: string;
+  plugin: any;
+};
+
 export default class ModifyHtmlWebpackPlugin {
   constructor(private modifyOptions: { inject?: boolean | Function } = {}) {}
 
   async modifyAsync(
     compiler: Compiler,
     compilation: compilation.Compilation,
-    data: any
-  ): Promise<any> {
+    data: HTMLPluginData
+  ): Promise<HTMLPluginData> {
     return data;
   }
 
@@ -35,7 +41,10 @@ export default class ModifyHtmlWebpackPlugin {
 
           HtmlWebpackPlugin.getHooks(compilation).alterAssetTags.tapAsync(
             this.constructor.name,
-            async (data: any, htmlCallback: (error: Error | null, data: any) => void) => {
+            async (
+              data: HTMLPluginData,
+              htmlCallback: (error: Error | null, data: HTMLPluginData) => void
+            ) => {
               // Skip if a custom injectFunction returns false or if
               // the htmlWebpackPlugin optuons includes a `favicons: false` flag
               const isInjectionAllowed =

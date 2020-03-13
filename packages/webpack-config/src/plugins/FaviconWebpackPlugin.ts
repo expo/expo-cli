@@ -1,19 +1,27 @@
 import { Compiler, compilation } from 'webpack';
 
-import { generateFaviconAsync } from '@expo/pwa';
+import { IconOptions, ProjectOptions, generateFaviconAsync } from '@expo/pwa';
 import chalk from 'chalk';
-import ModifyHtmlWebpackPlugin from './ModifyHtmlWebpackPlugin';
+import ModifyHtmlWebpackPlugin, { HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 
 export default class FaviconWebpackPlugin extends ModifyHtmlWebpackPlugin {
-  constructor(private pwaOptions: any, private favicon: any) {
+  constructor(
+    private pwaOptions: ProjectOptions & { links: any[] },
+    private favicon: IconOptions | null
+  ) {
     super();
   }
 
   async modifyAsync(
     compiler: Compiler,
     compilation: compilation.Compilation,
-    data: any
-  ): Promise<any> {
+    data: HTMLPluginData
+  ): Promise<HTMLPluginData> {
+    if (!this.favicon) {
+      console.log(chalk.magenta(`\u203A Skipping favicon generation`));
+      return data;
+    }
+
     const assets = await generateFaviconAsync(this.pwaOptions, this.favicon);
 
     const links: any[] = this.pwaOptions.links.filter(

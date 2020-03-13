@@ -13,7 +13,13 @@ import { boolish } from 'getenv';
 import path from 'path';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import { readFileSync } from 'fs-extra';
-
+import {
+  IconOptions,
+  getChromeIconConfig,
+  getFaviconIconConfig,
+  getSafariIconConfig,
+  getSafariStartupImageConfig,
+} from '@expo/pwa';
 import { projectHasModule } from '@expo/config';
 import { parse } from 'node-html-parser';
 import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
@@ -210,8 +216,13 @@ export default async function(
     templateManifest = locations.template.get(manifestLink.href);
   }
 
-  const appleTouchIcon = env.config.icon ?? env.config.ios.icon;
-  const chromeIcon = env.config.icon ?? env.config.android.icon;
+  const ensureSourceAbsolute = (input: IconOptions | null): IconOptions | null => {
+    if (!input) return input;
+    return {
+      ...input,
+      src: locations.absolute(input.src),
+    };
+  };
 
   let webpackConfig: DevConfiguration = {
     mode,
@@ -256,9 +267,7 @@ export default async function(
           publicPath,
           links,
         },
-        {
-          src: typeof config.web?.favicon === 'string' ? config.web?.favicon : config.icon,
-        }
+        ensureSourceAbsolute(getFaviconIconConfig(config))
       ),
       generatePWAImageAssets &&
         new ApplePwaWebpackPlugin(
@@ -273,8 +282,8 @@ export default async function(
             isWebAppCapable: env.config.web.meta.apple.mobileWebAppCapable,
             barStyle: env.config.web.meta.apple.barStyle,
           },
-          appleTouchIcon ? locations.absolute(appleTouchIcon) : undefined,
-          env.config.web.startupImages
+          ensureSourceAbsolute(getSafariIconConfig(env.config)),
+          ensureSourceAbsolute(getSafariStartupImageConfig(env.config))
         ),
       generatePWAImageAssets &&
         new ChromeIconsWebpackPlugin(
@@ -282,7 +291,7 @@ export default async function(
             projectRoot: env.projectRoot,
             publicPath,
           },
-          { src: chromeIcon ? locations.absolute(chromeIcon) : undefined }
+          ensureSourceAbsolute(getChromeIconConfig(config))
         ),
 
       // This gives some necessary context to module not found errors, such as

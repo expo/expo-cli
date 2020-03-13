@@ -3,13 +3,17 @@ import { ExpoConfig } from '@expo/config';
 import { generateManifestJson } from '@expo/pwa';
 
 import fs from 'fs-extra';
-import PwaManifestWebpackPlugin from './PwaManifestWebpackPlugin';
+import PwaManifestWebpackPlugin, { PwaManifestOptions } from './PwaManifestWebpackPlugin';
+
+export type ExpoPwaManifestOptions = PwaManifestOptions & {
+  /**
+   * The path to a template manifest.json.
+   */
+  template: string;
+};
 
 export default class ExpoPwaManifestWebpackPlugin extends PwaManifestWebpackPlugin {
-  constructor(
-    pwaOptions: { template: string; path: string; inject?: boolean | Function; publicPath: string },
-    config: ExpoConfig
-  ) {
+  constructor(pwaOptions: ExpoPwaManifestOptions, config: ExpoConfig) {
     let inputJson: any;
     try {
       if (fs.existsSync(pwaOptions.template)) {

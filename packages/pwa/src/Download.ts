@@ -6,7 +6,7 @@ import temporary from 'tempy';
 import util from 'util';
 
 // cache downloaded images into memory
-const cacheDownloadedKeys: { [key: string]: string } = {};
+const cacheDownloadedKeys: Record<string, string> = {};
 
 function stripQueryParams(url: string): string {
   return url.split('?')[0].split('#')[0];

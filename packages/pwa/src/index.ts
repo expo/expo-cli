@@ -1,38 +1,13 @@
+import { ExpoConfig } from '@expo/config';
 import * as path from 'path';
 // @ts-ignore
 import generateICO from 'to-ico';
-import { ExpoConfig, getConfig } from '@expo/config';
-import * as Image from './Image';
+
 import * as Cache from './Cache';
+import * as Image from './Image';
 import { assembleOrientationMedia, getDevices } from './Splash';
-
 import { createPWAManifestFromConfig, getConfigForPWA } from './Web';
-import { Manifest } from './Web.types';
-
-type WebpackAsset = {
-  source: Buffer;
-  path: string;
-};
-
-type HtmlTag = {
-  tagName: 'link';
-  attributes: { rel?: string; href?: string; media?: string; sizes?: string; type?: string };
-};
-
-type SplashIcon = Image.Icon & {
-  media: string;
-};
-
-type ProjectOptions = {
-  projectRoot: string;
-  publicPath: string;
-  // unimp
-  destination?: string;
-};
-
-export type HTMLOutput = { asset: WebpackAsset; tag?: HtmlTag; manifest?: ManifestIcon };
-
-export type IconOptions = Omit<Image.Icon, 'name' | 'width' | 'height'>; //| any[];
+import { HTMLOutput, IconOptions, Manifest, ProjectOptions, SplashIcon } from './Web.types';
 
 export async function generateAsync(
   type: string,
@@ -90,12 +65,9 @@ export async function generateSplashAsync(
     }
   }
 
-  const data: HTMLOutput[] = await Promise.all<{
-    asset: WebpackAsset;
-    tag: HtmlTag;
-  }>(
+  const data = await Promise.all<HTMLOutput>(
     icons.map(
-      async (icon: SplashIcon): Promise<any> => {
+      async (icon: SplashIcon): Promise<HTMLOutput> => {
         const { source, name } = await Image.generateImageAsync({ projectRoot, cacheType }, icon);
 
         const href = `pwa/apple-touch-startup-image/${name}`;
@@ -129,12 +101,9 @@ export async function generateAppleIconAsync(
 ): Promise<HTMLOutput[]> {
   const cacheType = 'apple-touch-icon';
 
-  const data: HTMLOutput[] = await Promise.all<{
-    asset: WebpackAsset;
-    tag: HtmlTag;
-  }>(
+  const data = await Promise.all<HTMLOutput>(
     [180].map(
-      async (size: number): Promise<any> => {
+      async (size: number): Promise<HTMLOutput> => {
         const rel = 'apple-touch-icon';
         const { source, name } = await Image.generateImageAsync(
           { projectRoot, cacheType },
@@ -166,20 +135,15 @@ export async function generateAppleIconAsync(
   return data;
 }
 
-type ManifestIcon = { src: string; sizes: string; type: 'image/png'; purpose?: string };
-
 export async function generateChromeIconAsync(
   { projectRoot, publicPath }: ProjectOptions,
   icon: IconOptions
 ): Promise<HTMLOutput[]> {
   const cacheType = 'chrome-icon';
 
-  const data = await Promise.all<{
-    asset: WebpackAsset;
-    manifest: { src: string; sizes: string; type: 'image/png' };
-  }>(
+  const data = await Promise.all<HTMLOutput>(
     [144, 192, 512].map(
-      async (size: number): Promise<any> => {
+      async (size: number): Promise<HTMLOutput> => {
         const rel = 'chrome-icon';
         const { source, name } = await Image.generateImageAsync(
           { projectRoot, cacheType },
@@ -213,17 +177,9 @@ export async function generateFaviconAsync(
   icon: IconOptions
 ): Promise<HTMLOutput[]> {
   const cacheType = 'favicon';
-
-  //   favicon: ({ href }: any) => `<link rel="shortcut icon" href="${href}">`,
-  //   faviconPng: ({ href, size }: any) =>
-  //     `<link rel="icon" type="image/png" sizes="${size}x${size}" href="${href}">`,
-
-  const data: HTMLOutput[] = await Promise.all<{
-    asset: WebpackAsset;
-    tag: HtmlTag;
-  }>(
+  const data: HTMLOutput[] = await Promise.all<HTMLOutput>(
     [16, 32, 48].map(
-      async (size: number): Promise<any> => {
+      async (size: number): Promise<HTMLOutput> => {
         const rel = 'icon';
         const { source, name } = await Image.generateImageAsync(
           { projectRoot, cacheType },
@@ -302,9 +258,17 @@ export function generateManifestJson(
 ): Manifest {
   if (!config) {
     if (!projectRoot) throw new Error('You must either define projectRoot or config');
-    config = getConfigForPWA(projectRoot, props => path.join(projectRoot, ...props));
+    config = getConfigForPWA(projectRoot);
   }
   return createPWAManifestFromConfig(config);
 }
 
 export { getConfigForPWA };
+export {
+  getSafariStartupImageConfig,
+  getSafariIconConfig,
+  getFaviconIconConfig,
+  getChromeIconConfig,
+} from './Web';
+
+export { IconOptions, Icon, ProjectOptions, HTMLOutput } from './Web.types';

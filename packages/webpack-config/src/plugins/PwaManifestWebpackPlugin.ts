@@ -1,12 +1,7 @@
 import { Compiler, Plugin, compilation } from 'webpack';
 import * as path from 'path';
 import JsonWebpackPlugin from './JsonWebpackPlugin';
-
-export type Options = {
-  path: string;
-  json: any;
-  pretty?: boolean;
-};
+import { HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 
 export type Icon = {
   src: string;
@@ -20,11 +15,14 @@ function maybeFetchPlugin(compiler: Compiler, name: string): Plugin | undefined 
     .find(constructor => constructor && constructor.name === name);
 }
 
+export type PwaManifestOptions = {
+  path: string;
+  inject?: boolean | Function;
+  publicPath: string;
+};
+
 export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
-  constructor(
-    private pwaOptions: { path: string; inject?: boolean | Function; publicPath: string },
-    manifest: any
-  ) {
+  constructor(private pwaOptions: PwaManifestOptions, manifest: any) {
     super({
       path: pwaOptions.path,
       json: manifest,
@@ -51,7 +49,10 @@ export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
 
           HtmlWebpackPlugin.getHooks(compilation).alterAssetTags.tapAsync(
             this.constructor.name,
-            (data: any, htmlCallback: (error: Error | null, data: any) => void) => {
+            (
+              data: HTMLPluginData,
+              htmlCallback: (error: Error | null, data: HTMLPluginData) => void
+            ) => {
               // Skip if a custom injectFunction returns false or if
               // the htmlWebpackPlugin optuons includes a `favicons: false` flag
               const isInjectionAllowed =

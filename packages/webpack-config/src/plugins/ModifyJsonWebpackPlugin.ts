@@ -18,8 +18,8 @@ export default class ModifyJsonWebpackPlugin {
   async modifyAsync(
     compiler: Compiler,
     compilation: compilation.Compilation,
-    data: any
-  ): Promise<any> {
+    data: BeforeEmitOptions
+  ): Promise<BeforeEmitOptions> {
     return data;
   }
 

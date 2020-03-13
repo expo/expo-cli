@@ -1,7 +1,12 @@
 import chalk from 'chalk';
 import { Compiler, compilation } from 'webpack';
 
-import { generateAppleIconAsync, generateSplashAsync } from '@expo/pwa';
+import {
+  IconOptions,
+  ProjectOptions,
+  generateAppleIconAsync,
+  generateSplashAsync,
+} from '@expo/pwa';
 
 import ModifyHtmlWebpackPlugin from './ModifyHtmlWebpackPlugin';
 
@@ -16,17 +21,19 @@ function metaTag(name: string, content: string): any {
   };
 }
 
+export type ApplePwaMeta = {
+  name?: string;
+  barStyle?: string;
+  isWebAppCapable?: boolean;
+  isFullScreen?: boolean;
+};
+
 export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
   constructor(
-    private pwaOptions: any,
-    private meta: {
-      name?: string;
-      barStyle?: string;
-      isWebAppCapable?: boolean;
-      isFullScreen?: boolean;
-    },
-    private icon: string | undefined,
-    private startupImages: any[]
+    private pwaOptions: ProjectOptions & { links: any[] },
+    private meta: ApplePwaMeta,
+    private icon: IconOptions | null,
+    private startupImage: IconOptions | null
   ) {
     super();
   }
@@ -57,11 +64,7 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
 
     // App Icon
     if (this.icon) {
-      const iconAssets = await generateAppleIconAsync(this.pwaOptions, {
-        src: this.icon,
-        backgroundColor: 'transparent',
-        resizeMode: 'contain',
-      });
+      const iconAssets = await generateAppleIconAsync(this.pwaOptions, this.icon);
 
       const links = this.pwaOptions.links
         .filter((v: any) => v.rel === 'apple-touch-icon')
@@ -88,33 +91,31 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
 
     // Splash screens
 
-    const [image] = this.startupImages;
+    if (this.startupImage) {
+      const assets = await generateSplashAsync(this.pwaOptions, this.startupImage);
 
-    const assets = await generateSplashAsync(this.pwaOptions, {
-      src: image.src,
-      backgroundColor: image.color,
-      resizeMode: image.resizeMode,
-    });
+      const links = this.pwaOptions.links
+        .filter((v: any) => v.rel === 'apple-touch-startup-image')
+        .map((v: any) => v.media);
 
-    const links = this.pwaOptions.links
-      .filter((v: any) => v.rel === 'apple-touch-startup-image')
-      .map((v: any) => v.media);
-
-    for (const asset of assets) {
-      const media = asset.tag?.attributes.media;
-      if (links.includes(media)) {
-        console.log(
-          chalk.magenta(
-            `\u203A Using custom Safari icon: <link rel="apple-touch-startup-image" media="${media}" .../>`
-          )
-        );
-      } else {
-        compilation.assets[asset.asset.path] = {
-          source: () => asset.asset.source,
-          size: () => asset.asset.source.length,
-        };
-        data.assetTags.meta.push(asset.tag);
+      for (const asset of assets) {
+        const media = asset.tag?.attributes.media;
+        if (links.includes(media)) {
+          console.log(
+            chalk.magenta(
+              `\u203A Using custom Safari icon: <link rel="apple-touch-startup-image" media="${media}" .../>`
+            )
+          );
+        } else {
+          compilation.assets[asset.asset.path] = {
+            source: () => asset.asset.source,
+            size: () => asset.asset.source.length,
+          };
+          data.assetTags.meta.push(asset.tag);
+        }
       }
+    } else {
+      console.log(chalk.magenta(`\u203A Skipping Safari PWA splash screen generation`));
     }
     return data;
   }

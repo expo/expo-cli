@@ -6,7 +6,15 @@
  * @param xhtml {boolean}
  *   Wether the generated html should add closing slashes to be xhtml compliant
  */
-export function htmlTagObjectToString(tagDefinition: any, xhtml: boolean = false): string {
+export function htmlTagObjectToString(
+  tagDefinition: {
+    tagName: string;
+    voidTag?: boolean;
+    innerHTML?: string;
+    attributes: Record<string, string | undefined | boolean>;
+  },
+  xhtml: boolean = false
+): string {
   const attributes = Object.keys(tagDefinition.attributes || {})
     .filter(function(attributeName) {
       return tagDefinition.attributes[attributeName] !== false;

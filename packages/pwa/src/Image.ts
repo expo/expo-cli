@@ -9,15 +9,7 @@ import * as Cache from './Cache';
 import * as Download from './Download';
 import { resize as jimpResize } from './Jimp';
 
-export type Icon = {
-  src: string;
-  name?: string;
-  resizeMode: ResizeMode;
-  backgroundColor: string;
-  width: number;
-  height: number;
-  padding?: number;
-};
+import { Icon } from './Web.types';
 
 const supportedMimeTypes = ['image/png', 'image/jpeg', 'image/webp'];
 

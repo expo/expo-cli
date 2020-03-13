@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import fs from 'fs-extra';
 import { dirname, relative, resolve } from 'path';
 
+import { ResizeMode } from '@expo/image-utils';
 import { HTMLOutput, generateAsync } from '.';
 import { htmlTagObjectToString } from './HTML';
 import shouldUpdate from './update';
@@ -125,10 +126,13 @@ async function genImage(
     resizeMode: string;
   }
 ) {
+  if (!isResizeMode(resizeMode)) {
+    throw new Error(`Invalid resizeMode: ${resizeMode}`);
+  }
   const items = await generateAsync(
     type,
     { projectRoot: resolve(process.cwd()), publicPath: resolve(publicPath) },
-    { src: resolve(src), backgroundColor, resizeMode: resizeMode as any }
+    { src: resolve(src), backgroundColor, resizeMode }
   );
 
   const outputPath = resolve(output);
@@ -198,4 +202,8 @@ function logMeta(meta: string[]) {
     console.log(metaLine);
   }
   console.log();
+}
+
+function isResizeMode(input: any): input is ResizeMode {
+  return input && ['contain', 'cover', 'fill', 'inside', 'outside'].includes(input);
 }

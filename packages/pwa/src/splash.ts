@@ -1,31 +1,4 @@
-import { ResizeMode } from '@expo/image-utils';
-import * as path from 'path';
-
 import { Orientation, isLandscape, isPortrait, isValid } from './Orientation';
-
-export interface Icon {
-  src: string;
-  resizeMode: ResizeMode;
-  padding?: number;
-  size?: string | number;
-  sizes?: number[];
-  type?: string;
-  destination?: string;
-  media?: string; // TODO: Bacon
-  color?: string;
-}
-export type StartupImage = {
-  ios: 'startup';
-  name: string;
-  src: string;
-  padding?: number;
-  size: { width: number; height: number };
-  scale: number;
-  media: string;
-  destination: string | undefined;
-  resizeMode: ResizeMode;
-  color: string | undefined;
-};
 
 interface Device {
   names: string[];
@@ -106,46 +79,4 @@ export function getDevices({
   }
 
   return devices.map(device => ({ ...device, orientations }));
-}
-
-export function fromStartupImage({
-  src,
-  padding,
-  resizeMode,
-  destination,
-  color,
-}: Icon): StartupImage[] {
-  // You cannot lock iOS PWA orientation, we should produce every splash screen.
-  // orientation
-  const devices = getDevices({ orientation: 'any', supportsTablet: false });
-
-  const startupImages: StartupImage[] = [];
-  for (const device of devices) {
-    for (const orientation of device.orientations) {
-      let width = 0;
-      let height = 0;
-      if (orientation !== 'portrait') {
-        width = device.height;
-        height = device.width;
-      } else {
-        height = device.height;
-        width = device.width;
-      }
-
-      const name = `startup-${width}x${height}.png`;
-      startupImages.push({
-        ios: 'startup',
-        src,
-        name,
-        size: { width, height },
-        scale: device.scale,
-        media: assembleOrientationMedia(device.width, device.height, device.scale, orientation),
-        destination: path.join(destination || '', name),
-        padding,
-        resizeMode,
-        color,
-      });
-    }
-  }
-  return startupImages;
 }

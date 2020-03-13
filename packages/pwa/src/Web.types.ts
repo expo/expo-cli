@@ -1,3 +1,5 @@
+import { ResizeMode } from '@expo/image-utils';
+
 export type Direction = 'ltr' | 'rtl' | 'auto';
 
 export type Display = 'fullscreen' | 'standalone' | 'minimal-ui' | 'browser';
@@ -37,3 +39,39 @@ export type Manifest = Partial<{
   theme_color: string;
   crossorigin: CrossOrigin;
 }>;
+
+export type Icon = {
+  src: string;
+  name?: string;
+  resizeMode: ResizeMode;
+  backgroundColor: string;
+  width: number;
+  height: number;
+  padding?: number;
+};
+
+export type WebpackAsset = {
+  source: Buffer;
+  path: string;
+};
+
+export type HtmlTag = {
+  tagName: 'link';
+  attributes: { rel?: string; href?: string; media?: string; sizes?: string; type?: string };
+};
+
+export type SplashIcon = Icon & {
+  media: string;
+};
+
+export type ProjectOptions = {
+  projectRoot: string;
+  publicPath: string;
+  // unimp
+  destination?: string;
+};
+
+export type HTMLOutput = { asset: WebpackAsset; tag?: HtmlTag; manifest?: ManifestIcon };
+
+export type IconOptions = Omit<Icon, 'name' | 'width' | 'height'>;
+export type ManifestIcon = { src: string; sizes: string; type: 'image/png'; purpose?: string };

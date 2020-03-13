@@ -5,7 +5,8 @@ import {
   getNameFromConfig,
   getWebOutputPath,
 } from '@expo/config';
-import { Manifest } from './Web.types';
+
+import { IconOptions, Manifest } from './Web.types';
 
 // To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
 const DEFAULT_VIEWPORT =
@@ -20,7 +21,6 @@ const DEFAULT_DISPLAY = 'standalone';
 const DEFAULT_STATUS_BAR = 'black-translucent';
 const DEFAULT_LANG_DIR = 'auto';
 const DEFAULT_ORIENTATION = 'any';
-const ICON_SIZES = [192, 512];
 const DEFAULT_PREFER_RELATED_APPLICATIONS = true;
 
 // Convert expo value to PWA value
@@ -45,12 +45,9 @@ function sanitizePublicPath(publicPath: unknown): string {
   return publicPath + '/';
 }
 
-export function getConfigForPWA(
-  projectRoot: string,
-  getAbsolutePath: (...pathComponents: string[]) => string
-) {
+export function getConfigForPWA(projectRoot: string) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  return ensurePWAConfig(exp, getAbsolutePath);
+  return ensurePWAConfig(exp);
 }
 
 function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
@@ -206,81 +203,90 @@ function inferWebRelatedApplicationsFromConfig({ web = {}, ios = {}, android = {
   return relatedApplications;
 }
 
-function inferWebHomescreenIcons(
-  config: any = {},
-  getAbsolutePath: (...pathComponents: string[]) => string
-) {
-  const { web = {}, ios = {} } = config;
-  if (Array.isArray(web.icons)) {
-    return web.icons;
+export function getSafariStartupImageConfig(config: ExpoConfig): IconOptions | null {
+  // enforce no defaults
+  const splashScreenObject = (input: any): IconOptions | null => {
+    if (!input.image) return null;
+    return {
+      resizeMode: input.resizeMode,
+      src: input.image,
+      backgroundColor: input.backgroundColor,
+    };
+  };
+
+  // Allow empty objects
+  if (isObject(config.web?.splash)) {
+    return splashScreenObject(config.web?.splash);
   }
-  let icons: any[] = [];
-  let icon;
-  if (web.icon || config.icon) {
-    icon = getAbsolutePath(web.icon || config.icon);
-  } else {
-    return icons;
+  if (isObject(config.ios?.splash)) {
+    return splashScreenObject(config.ios?.splash);
   }
-  const destination = `apple/icons`;
-  icons.push({ src: icon, size: ICON_SIZES, destination });
-  const iOSIcon = config.icon || ios.icon;
-  if (iOSIcon) {
-    const iOSIconPath = getAbsolutePath(iOSIcon);
-    icons.push({
-      ios: true,
-      sizes: 180,
-      src: iOSIconPath,
-      destination,
-    });
+  if (isObject(config.splash)) {
+    return splashScreenObject(config.splash);
   }
-  return icons;
+  return null;
 }
 
-function inferWebStartupImages(
-  config: ExpoConfig,
-  getAbsolutePath: (...pathComponents: string[]) => string
-) {
-  const { icon, splash = {}, primaryColor } = config;
-  const { web } = config;
-  // @ts-ignore
-  if (Array.isArray(web?.startupImages)) {
-    // @ts-ignore
-    return web?.startupImages;
-  }
+export function getSafariIconConfig(config: ExpoConfig): IconOptions | null {
+  // enforce no defaults
+  const validate = (input: string): IconOptions => ({
+    resizeMode: 'contain',
+    src: input,
+    backgroundColor: 'transparent',
+  });
 
-  let startupImages = [];
-
-  let splashImageSource;
-  const possibleIconSrc = web?.splash?.image || splash.image || icon;
-  if (possibleIconSrc) {
-    const resizeMode = web?.splash?.resizeMode || splash.resizeMode || 'contain';
-    const backgroundColor =
-      web?.splash?.backgroundColor || splash.backgroundColor || primaryColor || '#ffffff';
-    splashImageSource = getAbsolutePath(possibleIconSrc);
-    startupImages.push({
-      resizeMode,
-      color: backgroundColor,
-      src: splashImageSource,
-      destination: `apple/splash`,
-    });
+  // Allow empty objects
+  if (typeof config.ios?.icon === 'string') {
+    return validate(config.ios.icon);
   }
-  return startupImages;
+  if (typeof config.icon === 'string') {
+    return validate(config.icon);
+  }
+  return null;
 }
 
-function ensurePWAConfig(
-  appJSON: AppJSONConfig | ExpoConfig,
-  getAbsolutePath: ((...pathComponents: string[]) => string) | undefined
-): ExpoConfig {
+export function getFaviconIconConfig(config: ExpoConfig): IconOptions | null {
+  // enforce no defaults
+  const validate = (input: string): IconOptions => ({
+    resizeMode: 'contain',
+    src: input,
+    backgroundColor: 'transparent',
+  });
+
+  // Allow empty objects
+  if (typeof config.web?.favicon === 'string') {
+    return validate(config.web.favicon);
+  }
+  if (typeof config.icon === 'string') {
+    return validate(config.icon);
+  }
+  return null;
+}
+
+export function getChromeIconConfig(config: ExpoConfig): IconOptions | null {
+  // enforce no defaults
+  const validate = (input: string): IconOptions => ({
+    resizeMode: 'contain',
+    src: input,
+    backgroundColor: 'transparent',
+  });
+
+  // Allow empty objects
+  if (typeof config.android?.icon === 'string') {
+    return validate(config.android.icon);
+  }
+  if (typeof config.icon === 'string') {
+    return validate(config.icon);
+  }
+  return null;
+}
+
+function ensurePWAConfig(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   const config = applyWebDefaults(appJSON);
-  if (getAbsolutePath) {
-    if (!config.web) config.web = {};
-    config.web.icons = inferWebHomescreenIcons(config, getAbsolutePath);
-    config.web.startupImages = inferWebStartupImages(config, getAbsolutePath);
-  }
   return config;
 }
 
-function isObject(item: any): boolean {
+function isObject(item: any): item is Record<any, any> {
   return typeof item === 'object' && !Array.isArray(item) && item !== null;
 }
 

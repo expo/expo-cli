@@ -1,6 +1,14 @@
 import { AsyncSeriesWaterfallHook } from 'tapable';
 import { Compiler, compilation } from 'webpack';
 
+export type Options = {
+  path: string;
+  json: any;
+  pretty?: boolean;
+};
+
+export type BeforeEmitOptions = Options & { plugin: JsonWebpackPlugin };
+
 const hooksMap = new WeakMap<compilation.Compilation, Record<string, AsyncSeriesWaterfallHook>>();
 
 function createWebpackPluginHooks(): Record<string, AsyncSeriesWaterfallHook> {
@@ -9,14 +17,6 @@ function createWebpackPluginHooks(): Record<string, AsyncSeriesWaterfallHook> {
     afterEmit: new AsyncSeriesWaterfallHook(['pluginArgs']),
   };
 }
-
-export type Options = {
-  path: string;
-  json: any;
-  pretty?: boolean;
-};
-
-export type BeforeEmitOptions = Options & { plugin: JsonWebpackPlugin };
 
 export default class JsonWebpackPlugin {
   static getHooks(compilation: compilation.Compilation): Record<string, AsyncSeriesWaterfallHook> {
@@ -31,7 +31,7 @@ export default class JsonWebpackPlugin {
 
   constructor(public options: Options) {
     if (!this.options.path || !this.options.json) {
-      throw new Error('Failed to write json in Webpack.');
+      throw new Error('Failed to write json because either `path` or `json` were not defined.');
     }
   }
 
@@ -39,7 +39,10 @@ export default class JsonWebpackPlugin {
     compiler.hooks.emit.tapAsync(this.constructor.name, this.writeObject);
   }
 
-  private writeObject = async (compilation: compilation.Compilation, callback: any) => {
+  private writeObject = async (
+    compilation: compilation.Compilation,
+    callback: () => void
+  ): Promise<void> => {
     let result: BeforeEmitOptions = {
       json: this.options.json,
       path: this.options.path,

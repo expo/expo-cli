@@ -1,7 +1,8 @@
 import chalk from 'chalk';
 import { Compiler, compilation } from 'webpack';
-import { generateChromeIconAsync } from '@expo/pwa';
+import { IconOptions, ProjectOptions, generateChromeIconAsync } from '@expo/pwa';
 import ModifyJsonWebpackPlugin from './ModifyJsonWebpackPlugin';
+import { BeforeEmitOptions } from './JsonWebpackPlugin';
 
 export type Options = {
   source: string;
@@ -12,7 +13,7 @@ export type Options = {
 
 export default class ChromeIconsWebpackPlugin extends ModifyJsonWebpackPlugin {
   // Maybe we should support the ability to create all icons individually
-  constructor(private options: any, private icon: any) {
+  constructor(private options: ProjectOptions, private icon: IconOptions | null) {
     // TODO(Bacon): Validation
     super();
   }
@@ -20,32 +21,27 @@ export default class ChromeIconsWebpackPlugin extends ModifyJsonWebpackPlugin {
   async modifyAsync(
     compiler: Compiler,
     compilation: compilation.Compilation,
-    data: any
-  ): Promise<any> {
-    if (this.icon?.src) {
-      // If the icons array is already defined, then skip icon generation.
-      if (Array.isArray(data.json.icons)) {
-        return data;
-      }
-
-      data.json.icons = [];
-      const iconAssets = await generateChromeIconAsync(this.options, {
-        src: this.icon.src,
-        backgroundColor: 'transparent',
-        resizeMode: 'contain',
-      });
-
-      for (const asset of iconAssets) {
-        compilation.assets[asset.asset.path] = {
-          source: () => asset.asset.source,
-          size: () => asset.asset.source.length,
-        };
-
-        data.json.icons.push(asset.manifest);
-      }
-    } else {
+    data: BeforeEmitOptions
+  ): Promise<BeforeEmitOptions> {
+    // If the icons array is already defined, then skip icon generation.
+    if (Array.isArray(data.json.icons) || !this.icon) {
       console.log(chalk.magenta(`\u203A Skipping Chrome PWA icon generation`));
+      return data;
     }
+
+    data.json.icons = [];
+
+    const iconAssets = await generateChromeIconAsync(this.options, this.icon);
+
+    for (const asset of iconAssets) {
+      compilation.assets[asset.asset.path] = {
+        source: () => asset.asset.source,
+        size: () => asset.asset.source.length,
+      };
+
+      data.json.icons.push(asset.manifest);
+    }
+
     return data;
   }
 }
