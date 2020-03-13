@@ -47,8 +47,6 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
     if (this.meta.isWebAppCapable) {
       data.assetTags.meta.push(metaTag('apple-mobile-web-app-capable', 'yes'));
       data.assetTags.meta.push(metaTag('mobile-web-app-capable', 'yes'));
-
-      console.log(chalk.magenta(`\u203A Enabling PWA support`));
     }
     if (this.meta.isFullScreen) {
       data.assetTags.meta.push(metaTag('apple-touch-fullscreen', 'yes'));
@@ -74,7 +72,7 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
         if (links.includes(size)) {
           console.log(
             chalk.magenta(
-              `\u203A Using custom Safari icon: <link rel="apple-touch-icon" sizes="${size}" .../>`
+              `\u203A Safari PWA icons: Using custom <link rel="apple-touch-icon" sizes="${size}" ... />`
             )
           );
         } else {
@@ -86,7 +84,7 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
         }
       }
     } else {
-      console.log(chalk.magenta(`\u203A Skipping Safari PWA icon generation`));
+      console.log(chalk.yellow(`\u203A Safari PWA icons: No icon found, skipping auto generation`));
     }
 
     // Splash screens
@@ -103,7 +101,7 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
         if (links.includes(media)) {
           console.log(
             chalk.magenta(
-              `\u203A Using custom Safari icon: <link rel="apple-touch-startup-image" media="${media}" .../>`
+              `\u203A Safari PWA splash screen: Using custom <link rel="apple-touch-startup-image" media="${media}" ... />`
             )
           );
         } else {
@@ -115,7 +113,9 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
         }
       }
     } else {
-      console.log(chalk.magenta(`\u203A Skipping Safari PWA splash screen generation`));
+      console.log(
+        chalk.yellow(`\u203A Safari PWA splash screen: No image found, skipping auto generation`)
+      );
     }
     return data;
   }

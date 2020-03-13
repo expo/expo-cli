@@ -24,8 +24,14 @@ export default class ChromeIconsWebpackPlugin extends ModifyJsonWebpackPlugin {
     data: BeforeEmitOptions
   ): Promise<BeforeEmitOptions> {
     // If the icons array is already defined, then skip icon generation.
-    if (Array.isArray(data.json.icons) || !this.icon) {
-      console.log(chalk.magenta(`\u203A Skipping Chrome PWA icon generation`));
+    if (Array.isArray(data.json.icons)) {
+      console.log(
+        chalk.magenta(`\u203A Chrome PWA icons: Using custom \`icons\` from PWA manifest`)
+      );
+      return data;
+    }
+    if (!this.icon) {
+      console.log(chalk.yellow(`\u203A Chrome PWA icons: No icon found, skipping auto generation`));
       return data;
     }
 

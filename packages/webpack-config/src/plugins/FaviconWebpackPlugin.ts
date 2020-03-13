@@ -18,7 +18,7 @@ export default class FaviconWebpackPlugin extends ModifyHtmlWebpackPlugin {
     data: HTMLPluginData
   ): Promise<HTMLPluginData> {
     if (!this.favicon) {
-      console.log(chalk.magenta(`\u203A Skipping favicon generation`));
+      console.log(chalk.yellow(`\u203A Favicon: No icon found, skipping auto generation`));
       return data;
     }
 
@@ -37,7 +37,7 @@ export default class FaviconWebpackPlugin extends ModifyHtmlWebpackPlugin {
       ) {
         console.log(
           chalk.magenta(
-            `\u203A Using custom favicon icon: <link rel="${attributes.rel}" ${
+            `\u203A Favicon: Using custom <link rel="${attributes.rel}" ${
               attributes.sizes ? `sizes="${attributes.sizes}"` : ''
             } .../>`
           )

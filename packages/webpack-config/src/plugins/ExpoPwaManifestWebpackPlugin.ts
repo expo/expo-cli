@@ -1,8 +1,8 @@
 import { ExpoConfig } from '@expo/config';
-
 import { generateManifestJson } from '@expo/pwa';
-
+import chalk from 'chalk';
 import fs from 'fs-extra';
+
 import PwaManifestWebpackPlugin, { PwaManifestOptions } from './PwaManifestWebpackPlugin';
 
 export type ExpoPwaManifestOptions = PwaManifestOptions & {
@@ -19,8 +19,8 @@ export default class ExpoPwaManifestWebpackPlugin extends PwaManifestWebpackPlug
       if (fs.existsSync(pwaOptions.template)) {
         inputJson = JSON.parse(fs.readFileSync(pwaOptions.template, { encoding: 'utf8' }));
       }
-    } catch (error) {
-      console.log('failed to use template PWA manifest: ' + error);
+    } catch ({ message }) {
+      console.log(chalk.yellow(`\u203A PWA manifest: failed to use template file: ${message}`));
     }
 
     if (!inputJson) inputJson = generateManifestJson({}, config);
