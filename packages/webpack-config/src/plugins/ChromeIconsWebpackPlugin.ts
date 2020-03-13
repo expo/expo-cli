@@ -37,7 +37,7 @@ export default class ChromeIconsWebpackPlugin extends ModifyJsonWebpackPlugin {
 
     data.json.icons = [];
 
-    const iconAssets = await generateChromeIconAsync(this.options, this.icon);
+    const iconAssets = await generateChromeIconAsync(this.options, this.icon, {});
 
     for (const asset of iconAssets) {
       compilation.assets[asset.asset.path] = {
