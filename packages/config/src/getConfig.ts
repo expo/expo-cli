@@ -79,12 +79,7 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
     return JsonFile.read(configFile, { json5: true });
   } else {
     try {
-      // require('@babel/register')({
-      //   only: [configFile],
-      // });
-      // result = require(configFile);
-
-      const res = spawnSync(
+      const spawnResults = spawnSync(
         'node',
         [
           require.resolve('@expo/config/build/scripts/read-config.js'),
@@ -95,8 +90,8 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
         {}
       );
 
-      if (res.status === 0) {
-        const spawnResultString = res.stdout.toString('utf8').trim();
+      if (spawnResults.status === 0) {
+        const spawnResultString = spawnResults.stdout.toString('utf8').trim();
         const logs = spawnResultString.split('\n');
         // Get the last console log to prevent parsing anything logged in the config.
         const lastLog = logs.pop()!;
@@ -108,7 +103,7 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
         return JSON.parse(lastLog);
       } else {
         // Parse the error data and throw it as expected
-        const errorData = JSON.parse(res.stderr.toString('utf8'));
+        const errorData = JSON.parse(spawnResults.stderr.toString('utf8'));
         throw errorFromJSON(errorData);
       }
     } catch (error) {

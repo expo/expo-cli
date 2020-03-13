@@ -29,6 +29,7 @@ try {
 
   require('@babel/register')({
     only: [configFile],
+    presets: [require.resolve('@babel/preset-env')],
   });
 
   let result = require(configFile);
