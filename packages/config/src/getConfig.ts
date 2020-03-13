@@ -1,4 +1,6 @@
 import JsonFile from '@expo/json-file';
+import chalk from 'chalk';
+import { watchFile } from 'fs';
 import { formatExecError } from 'jest-message-util';
 import path from 'path';
 
@@ -52,6 +54,9 @@ export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
   if (request.configPath) {
     const config = testFileName(request.configPath);
     if (config) {
+      if (isNodeConfig(request.configPath)) {
+        watchConfig(request.projectRoot, request.configPath);
+      }
       return reduceExpoObject(serializeAndEvaluate(config));
     } else {
       throw new ConfigError(
@@ -64,10 +69,42 @@ export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
   for (const configFileName of allowedConfigFileNames) {
     const configFilePath = path.resolve(request.projectRoot, configFileName);
     const config = testFileName(configFilePath);
-    if (config) return reduceExpoObject(serializeAndEvaluate(config));
+    if (config) {
+      if (isNodeConfig(configFilePath)) {
+        watchConfig(request.projectRoot, configFilePath);
+      }
+      return reduceExpoObject(serializeAndEvaluate(config));
+    }
   }
 
   return null;
+}
+
+let watchingFiles: string[] = [];
+
+/**
+ * Returns `true` if the file is a node file that would be cached and require a CLI restart to update. i.e: ts, js
+ *
+ * @param path config file path
+ */
+function isNodeConfig(path: string): boolean {
+  return !path.endsWith('json');
+}
+
+function watchConfig(projectRoot: string, configPath: string): void {
+  if (watchingFiles.includes(configPath)) return;
+
+  watchingFiles.push(configPath);
+  const configName = path.relative(projectRoot, configPath);
+  watchFile(configPath, (cur: any, prev: any) => {
+    if (prev.size || cur.size) {
+      console.log(
+        chalk.magenta(
+          `\n\u203A Config changed in \`${configName}\` restart the CLI to see the changes.`
+        )
+      );
+    }
+  });
 }
 
 // We cannot use async config resolution right now because Next.js doesn't support async configs.
