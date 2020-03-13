@@ -63,12 +63,24 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
         resizeMode: 'contain',
       });
 
+      const links = this.pwaOptions.links
+        .filter((v: any) => v.rel === 'apple-touch-icon')
+        .map((v: any) => v.sizes);
       for (const asset of iconAssets) {
-        compilation.assets[asset.asset.path] = {
-          source: () => asset.asset.source,
-          size: () => asset.asset.source.length,
-        };
-        data.assetTags.meta.push(asset.tag);
+        const size = asset.tag?.attributes.sizes;
+        if (links.includes(size)) {
+          console.log(
+            chalk.magenta(
+              `\u203A Using custom Safari icon: <link rel="apple-touch-icon" sizes="${size}" .../>`
+            )
+          );
+        } else {
+          compilation.assets[asset.asset.path] = {
+            source: () => asset.asset.source,
+            size: () => asset.asset.source.length,
+          };
+          data.assetTags.meta.push(asset.tag);
+        }
       }
     } else {
       console.log(chalk.magenta(`\u203A Skipping Safari PWA icon generation`));
@@ -84,12 +96,25 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
       resizeMode: image.resizeMode,
     });
 
+    const links = this.pwaOptions.links
+      .filter((v: any) => v.rel === 'apple-touch-startup-image')
+      .map((v: any) => v.media);
+
     for (const asset of assets) {
-      compilation.assets[asset.asset.path] = {
-        source: () => asset.asset.source,
-        size: () => asset.asset.source.length,
-      };
-      data.assetTags.meta.push(asset.tag);
+      const media = asset.tag?.attributes.media;
+      if (links.includes(media)) {
+        console.log(
+          chalk.magenta(
+            `\u203A Using custom Safari icon: <link rel="apple-touch-startup-image" media="${media}" .../>`
+          )
+        );
+      } else {
+        compilation.assets[asset.asset.path] = {
+          source: () => asset.asset.source,
+          size: () => asset.asset.source.length,
+        };
+        data.assetTags.meta.push(asset.tag);
+      }
     }
     return data;
   }

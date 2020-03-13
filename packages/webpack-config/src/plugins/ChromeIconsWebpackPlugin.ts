@@ -31,12 +31,27 @@ export default class ChromeIconsWebpackPlugin extends ModifyJsonWebpackPlugin {
       });
 
       for (const asset of iconAssets) {
-        compilation.assets[asset.asset.path] = {
-          source: () => asset.asset.source,
-          size: () => asset.asset.source.length,
-        };
+        const [iconAlreadyExists] = data.json.icons.filter((icon: any) => {
+          return (
+            icon.sizes === asset.manifest?.sizes &&
+            icon.type === asset.manifest?.type &&
+            icon.purpose === asset.manifest?.purpose
+          );
+        });
+        if (iconAlreadyExists) {
+          console.log(
+            chalk.magenta(
+              `\u203A Using custom Chrome icon from manifest: "${iconAlreadyExists.src}"`
+            )
+          );
+        } else {
+          compilation.assets[asset.asset.path] = {
+            source: () => asset.asset.source,
+            size: () => asset.asset.source.length,
+          };
 
-        data.json.icons.push(asset.manifest);
+          data.json.icons.push(asset.manifest);
+        }
       }
     } else {
       console.log(chalk.magenta(`\u203A Skipping Chrome PWA icon generation`));

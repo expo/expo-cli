@@ -144,7 +144,7 @@ async function resolveOutputAsync(publicPath: string, outputPath: string, items:
   for (const item of items) {
     if (item.tag) {
       if (item.tag?.attributes?.href) {
-        item.tag.attributes.href = relative(publicPath, item.tag?.attributes?.href);
+        item.tag.attributes.href = '/' + relative(publicPath, item.tag?.attributes?.href);
       }
       // Write HTML
       meta.push(htmlTagObjectToString(item.tag));
@@ -152,6 +152,9 @@ async function resolveOutputAsync(publicPath: string, outputPath: string, items:
     if (item.manifest) {
       // Write Manifest
       if (!Array.isArray(manifest.icons)) manifest.icons = [];
+      if (item.manifest?.src) {
+        item.manifest.src = '/' + relative(publicPath, item.manifest.src);
+      }
       manifest.icons.push(item.manifest);
     }
 

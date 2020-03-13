@@ -12,8 +12,10 @@ import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
 import path from 'path';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
+import { readFileSync } from 'fs-extra';
 
 import { projectHasModule } from '@expo/config';
+import { parse } from 'node-html-parser';
 import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
 import { createAllLoaders } from './loaders';
 import {
@@ -188,6 +190,26 @@ export default async function(
     });
   }
 
+  const templateIndex = parse(readFileSync(locations.template.indexHtml, { encoding: 'utf8' }));
+
+  // @ts-ignore
+  const templateLinks = templateIndex.querySelectorAll('link');
+  const links: any[] = templateLinks.map((value: any) => ({
+    rel: value.getAttribute('rel'),
+    media: value.getAttribute('media'),
+    href: value.getAttribute('href'),
+    sizes: value.getAttribute('sizes'),
+    node: value,
+  }));
+
+  const [manifestLink] = links.filter(
+    (v: any) => typeof v.rel === 'string' && v.rel.split(' ').includes('manifest')
+  );
+  let templateManifest = locations.template.manifest;
+  if (manifestLink && manifestLink.href) {
+    templateManifest = locations.template.get(manifestLink.href);
+  }
+
   const appleTouchIcon = env.config.icon ?? env.config.ios.icon;
   const chromeIcon = env.config.icon ?? env.config.android.icon;
 
@@ -222,6 +244,7 @@ export default async function(
       env.pwa &&
         new ExpoPwaManifestWebpackPlugin(
           {
+            template: templateManifest,
             path: 'manifest.json',
             publicPath,
           },
@@ -231,6 +254,7 @@ export default async function(
         {
           projectRoot: env.projectRoot,
           publicPath,
+          links,
         },
         {
           src: typeof config.web?.favicon === 'string' ? config.web?.favicon : config.icon,
@@ -241,6 +265,7 @@ export default async function(
           {
             projectRoot: env.projectRoot,
             publicPath,
+            links,
           },
           {
             name: env.config.web.shortName,

@@ -6,7 +6,7 @@ import * as Image from './Image';
 import * as Cache from './Cache';
 import { assembleOrientationMedia, getDevices } from './Splash';
 
-import { createPWAManifestFromConfig } from './Web';
+import { createPWAManifestFromConfig, getConfigForPWA } from './Web';
 import { Manifest } from './Web.types';
 
 type WebpackAsset = {
@@ -166,7 +166,7 @@ export async function generateAppleIconAsync(
   return data;
 }
 
-type ManifestIcon = { src: string; sizes: string; type: 'image/png' };
+type ManifestIcon = { src: string; sizes: string; type: 'image/png'; purpose?: string };
 
 export async function generateChromeIconAsync(
   { projectRoot, publicPath }: ProjectOptions,
@@ -185,7 +185,6 @@ export async function generateChromeIconAsync(
           { projectRoot, cacheType },
           { ...icon, width: size, height: size, name: `${rel}-${size}x${size}.png` }
         );
-        console.log('gen img', name);
 
         const href = `pwa/${rel}/${name}`;
 
@@ -288,10 +287,10 @@ export async function generateManifestAsync(
   return [
     {
       // TODO: Bacon: Make the types more flexible
-      asset: { source: manifest as Buffer, path: 'manifest.json' },
+      asset: { source: JSON.stringify(manifest) as any, path: 'manifest.json' },
       tag: {
         tagName: 'link',
-        attributes: { rel: 'manifest', href: 'manifest.json' },
+        attributes: { rel: 'manifest', href: path.join(options.publicPath, 'manifest.json') },
       },
     },
   ];
@@ -303,9 +302,9 @@ export function generateManifestJson(
 ): Manifest {
   if (!config) {
     if (!projectRoot) throw new Error('You must either define projectRoot or config');
-    config = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+    config = getConfigForPWA(projectRoot, props => path.join(projectRoot, ...props));
   }
   return createPWAManifestFromConfig(config);
 }
 
-export { getConfigForPWA } from './Web';
+export { getConfigForPWA };

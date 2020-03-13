@@ -2,13 +2,25 @@ import { ExpoConfig } from '@expo/config';
 
 import { generateManifestJson } from '@expo/pwa';
 
+import fs from 'fs-extra';
 import PwaManifestWebpackPlugin from './PwaManifestWebpackPlugin';
 
 export default class ExpoPwaManifestWebpackPlugin extends PwaManifestWebpackPlugin {
   constructor(
-    pwaOptions: { path: string; inject?: boolean | Function; publicPath: string },
+    pwaOptions: { template: string; path: string; inject?: boolean | Function; publicPath: string },
     config: ExpoConfig
   ) {
-    super(pwaOptions, generateManifestJson({}, config));
+    let inputJson: any;
+    try {
+      if (fs.existsSync(pwaOptions.template)) {
+        inputJson = JSON.parse(fs.readFileSync(pwaOptions.template, { encoding: 'utf8' }));
+      }
+    } catch (error) {
+      console.log('failed to use template PWA manifest: ' + error);
+    }
+
+    if (!inputJson) inputJson = generateManifestJson({}, config);
+
+    super(pwaOptions, inputJson);
   }
 }
