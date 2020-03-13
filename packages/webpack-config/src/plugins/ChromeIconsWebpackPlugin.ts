@@ -23,7 +23,12 @@ export default class ChromeIconsWebpackPlugin extends ModifyJsonWebpackPlugin {
     data: any
   ): Promise<any> {
     if (this.icon?.src) {
-      if (!Array.isArray(data.json.icons)) data.json.icons = [];
+      // If the icons array is already defined, then skip icon generation.
+      if (Array.isArray(data.json.icons)) {
+        return data;
+      }
+
+      data.json.icons = [];
       const iconAssets = await generateChromeIconAsync(this.options, {
         src: this.icon.src,
         backgroundColor: 'transparent',
@@ -31,27 +36,12 @@ export default class ChromeIconsWebpackPlugin extends ModifyJsonWebpackPlugin {
       });
 
       for (const asset of iconAssets) {
-        const [iconAlreadyExists] = data.json.icons.filter((icon: any) => {
-          return (
-            icon.sizes === asset.manifest?.sizes &&
-            icon.type === asset.manifest?.type &&
-            icon.purpose === asset.manifest?.purpose
-          );
-        });
-        if (iconAlreadyExists) {
-          console.log(
-            chalk.magenta(
-              `\u203A Using custom Chrome icon from manifest: "${iconAlreadyExists.src}"`
-            )
-          );
-        } else {
-          compilation.assets[asset.asset.path] = {
-            source: () => asset.asset.source,
-            size: () => asset.asset.source.length,
-          };
+        compilation.assets[asset.asset.path] = {
+          source: () => asset.asset.source,
+          size: () => asset.asset.source.length,
+        };
 
-          data.json.icons.push(asset.manifest);
-        }
+        data.json.icons.push(asset.manifest);
       }
     } else {
       console.log(chalk.magenta(`\u203A Skipping Chrome PWA icon generation`));
