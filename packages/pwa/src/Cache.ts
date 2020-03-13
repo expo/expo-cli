@@ -10,7 +10,6 @@ const cacheKeys: { [key: string]: string } = {};
 // Calculate SHA256 Checksum value of a file based on its contents
 function calculateHash(filePath: string): string {
   const contents = filePath.startsWith('http') ? filePath : readFileSync(filePath);
-
   return crypto
     .createHash('sha256')
     .update(contents)
@@ -65,7 +64,7 @@ export async function cacheImageAsync(
   try {
     await writeFile(resolve(cacheKeys[cacheKey], fileName), buffer);
   } catch ({ message }) {
-    console.warn(`error caching image: "${fileName}". ${message}`);
+    console.warn(`Error caching image: "${fileName}". ${message}`);
   }
 }
 

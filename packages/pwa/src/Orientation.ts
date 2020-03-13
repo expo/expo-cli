@@ -1,3 +1,14 @@
+export type Orientation =
+  | 'any'
+  | 'natural'
+  | 'landscape'
+  | 'landscape-primary'
+  | 'landscape-secondary'
+  | 'portrait'
+  | 'portrait-primary'
+  | 'portrait-secondary'
+  | 'omit';
+
 // https://developer.mozilla.org/en-US/docs/Web/Manifest#orientation
 const VALID_ORIENTATIONS = [
   'any',
@@ -10,17 +21,6 @@ const VALID_ORIENTATIONS = [
   'portrait-secondary',
   'omit',
 ];
-
-export type Orientation =
-  | 'any'
-  | 'natural'
-  | 'landscape'
-  | 'landscape-primary'
-  | 'landscape-secondary'
-  | 'portrait'
-  | 'portrait-primary'
-  | 'portrait-secondary'
-  | 'omit';
 
 const PORTRAIT_ORIENTATIONS = [
   'any',
@@ -40,7 +40,7 @@ const LANDSCAPE_ORIENTATIONS = [
   'omit',
 ];
 
-export function isValid(orientation: string): boolean {
+export function isValid(orientation: string): orientation is Orientation {
   return VALID_ORIENTATIONS.includes(orientation);
 }
 

@@ -56,9 +56,9 @@ export function getDevices({
   orientation = 'natural',
   supportsTablet = true,
 }: {
-  orientation: Orientation;
-  supportsTablet: boolean;
-}): (Device & { orientations: Orientation[] })[] {
+  orientation?: Orientation;
+  supportsTablet?: boolean;
+} = {}): (Device & { orientations: Orientation[] })[] {
   if (!isValid(orientation)) {
     throw new Error(`${orientation} is not a valid orientation`);
   }

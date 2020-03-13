@@ -10,17 +10,6 @@ import {
 
 import ModifyHtmlWebpackPlugin, { HTMLLinkNode, HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 
-function metaTag(name: string, content: string): any {
-  return {
-    tagName: 'meta',
-    voidTag: true,
-    attributes: {
-      name,
-      content,
-    },
-  };
-}
-
 export type ApplePwaMeta = {
   name?: string;
   barStyle?: string;
@@ -62,11 +51,30 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
 
     // App Icon
     if (this.icon) {
-      const iconAssets = await generateAppleIconAsync(this.pwaOptions, this.icon);
-
       const links: string[] = this.pwaOptions.links
         .filter(v => v.rel === 'apple-touch-icon')
         .map(v => v.sizes!);
+
+      const targetSizes = [180];
+      let requiredSizes: number[] = [];
+
+      for (const size of targetSizes) {
+        const sizes = `${size}x${size}`;
+        if (links.includes(sizes)) {
+          console.log(
+            chalk.magenta(
+              `\u203A Safari PWA icons: Using custom <link rel="apple-touch-icon" sizes="${sizes}" .../>`
+            )
+          );
+        } else {
+          requiredSizes.push(size);
+        }
+      }
+
+      const iconAssets = await generateAppleIconAsync(this.pwaOptions, this.icon, {
+        sizes: requiredSizes,
+      });
+
       for (const asset of iconAssets) {
         const size = asset.tag?.attributes.sizes;
         if (size && links.includes(size)) {
@@ -119,4 +127,15 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
     }
     return data;
   }
+}
+
+function metaTag(name: string, content: string): any {
+  return {
+    tagName: 'meta',
+    voidTag: true,
+    attributes: {
+      name,
+      content,
+    },
+  };
 }

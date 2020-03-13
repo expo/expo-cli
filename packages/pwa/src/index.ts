@@ -18,9 +18,9 @@ export async function generateAsync(
     case 'splash':
       return generateSplashAsync(options, icon);
     case 'safari-icon':
-      return generateAppleIconAsync(options, icon);
+      return generateAppleIconAsync(options, icon, {});
     case 'chrome-icon':
-      return generateChromeIconAsync(options, icon);
+      return generateChromeIconAsync(options, icon, {});
     case 'favicon':
       return generateFaviconAsync(options, icon);
     case 'manifest':
@@ -37,7 +37,7 @@ export async function generateSplashAsync(
 
   // You cannot lock iOS PWA orientation, we should produce every splash screen.
   // orientation
-  const devices = getDevices({ orientation: 'any', supportsTablet: false });
+  const devices = getDevices();
 
   const icons: SplashIcon[] = Array.isArray(icon) ? icon : [];
   if (!Array.isArray(icon)) {
@@ -82,6 +82,8 @@ export async function generateSplashAsync(
             attributes: {
               rel: 'apple-touch-startup-image',
               media: icon.media,
+              // TODO(Bacon): Use sizes to query splash screens better
+              // sizes: `${icon.width}x${icon.height}`,
               href: path.join(publicPath, href),
             },
           },
@@ -97,12 +99,13 @@ export async function generateSplashAsync(
 
 export async function generateAppleIconAsync(
   { projectRoot, publicPath }: ProjectOptions,
-  icon: IconOptions
+  icon: IconOptions,
+  { sizes = [180] }: { sizes?: number[] }
 ): Promise<HTMLOutput[]> {
   const cacheType = 'apple-touch-icon';
 
   const data = await Promise.all<HTMLOutput>(
-    [180].map(
+    sizes.map(
       async (size: number): Promise<HTMLOutput> => {
         const rel = 'apple-touch-icon';
         const { source, name } = await Image.generateImageAsync(
@@ -130,19 +133,23 @@ export async function generateAppleIconAsync(
     )
   );
 
-  await Cache.clearUnusedCachesAsync(projectRoot, cacheType);
+  // Don't clear the caches if no generation was performed.
+  if (!sizes.length) {
+    await Cache.clearUnusedCachesAsync(projectRoot, cacheType);
+  }
 
   return data;
 }
 
 export async function generateChromeIconAsync(
   { projectRoot, publicPath }: ProjectOptions,
-  icon: IconOptions
+  icon: IconOptions,
+  { sizes = [144, 192, 512] }: { sizes?: number[] }
 ): Promise<HTMLOutput[]> {
   const cacheType = 'chrome-icon';
 
   const data = await Promise.all<HTMLOutput>(
-    [144, 192, 512].map(
+    sizes.map(
       async (size: number): Promise<HTMLOutput> => {
         const rel = 'chrome-icon';
         const { source, name } = await Image.generateImageAsync(
@@ -167,7 +174,10 @@ export async function generateChromeIconAsync(
     )
   );
 
-  await Cache.clearUnusedCachesAsync(projectRoot, cacheType);
+  // Don't clear the caches if no generation was performed.
+  if (!sizes.length) {
+    await Cache.clearUnusedCachesAsync(projectRoot, cacheType);
+  }
 
   return data;
 }
