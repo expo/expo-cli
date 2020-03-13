@@ -4,8 +4,9 @@ import path from 'path';
 
 import { spawnSync } from 'child_process';
 import { ConfigContext, ExpoConfig } from './Config.types';
-import { ConfigError } from './Errors';
+import { ConfigError, errorFromJSON } from './Errors';
 import { fileExists } from './Modules';
+import { serializeAndEvaluate } from './Serialize';
 
 // support all common config types
 export const allowedConfigFileNames: string[] = (() => {
@@ -71,21 +72,6 @@ export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
   return null;
 }
 
-function constructError({ name, ...json }: any): Error {
-  let error: any;
-  if (name === 'TypeError') {
-    error = new TypeError(json.message);
-  } else {
-    error = new Error(json.message);
-  }
-  for (const key of Object.keys(json)) {
-    if (key in json) {
-      error[key] = json[key];
-    }
-  }
-  return error;
-}
-
 // We cannot use async config resolution right now because Next.js doesn't support async configs.
 // If they don't add support for async Webpack configs then we may need to pull support for Next.js.
 function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoConfig> {
@@ -101,7 +87,7 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
       const res = spawnSync(
         'node',
         [
-          require.resolve('@expo/config/readConfig.js'),
+          require.resolve('@expo/config/build/scripts/read-config.js'),
           '--colors',
           configFile,
           JSON.stringify({ ...request, config: serializeAndEvaluate(request.config) }),
@@ -123,7 +109,7 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
       } else {
         // Parse the error data and throw it as expected
         const errorData = JSON.parse(res.stderr.toString('utf8'));
-        throw constructError(errorData);
+        throw errorFromJSON(errorData);
       }
     } catch (error) {
       if (isMissingFileCode(error.code) || !(error instanceof SyntaxError)) {
@@ -139,25 +125,4 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
       throw new ConfigError(`\n${message}`, 'INVALID_CONFIG');
     }
   }
-}
-
-export function serializeAndEvaluate(val: any): any {
-  if (['undefined', 'string', 'boolean', 'number', 'bigint'].includes(typeof val)) {
-    return val;
-  } else if (typeof val === 'function') {
-    // TODO: Bacon: Should we support async methods?
-    return val();
-  } else if (Array.isArray(val)) {
-    return val.map(serializeAndEvaluate);
-  } else if (typeof val === 'object') {
-    const output: { [key: string]: any } = {};
-    for (const property in val) {
-      if (val.hasOwnProperty(property)) {
-        output[property] = serializeAndEvaluate(val[property]);
-      }
-    }
-    return output;
-  }
-  // symbol
-  throw new ConfigError(`Expo config doesn't support \`Symbols\`: ${val}`, 'INVALID_CONFIG');
 }
