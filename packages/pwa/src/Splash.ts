@@ -53,7 +53,7 @@ export function assembleOrientationMedia(
 }
 
 export function getDevices({
-  orientation = 'natural',
+  orientation = 'portrait',
   supportsTablet = true,
 }: {
   orientation?: Orientation;
