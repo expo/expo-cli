@@ -187,8 +187,9 @@ export async function generateFaviconAsync(
   icon: IconOptions
 ): Promise<HTMLOutput[]> {
   const cacheType = 'favicon';
+  const dimensions = [16, 32, 48];
   const data: HTMLOutput[] = await Promise.all<HTMLOutput>(
-    [16, 32, 48].map(
+    dimensions.map(
       async (size: number): Promise<HTMLOutput> => {
         const rel = 'icon';
         const { source, name } = await Image.generateImageAsync(
@@ -226,9 +227,9 @@ export async function generateFaviconAsync(
 
   const faviconUrl = path.join(publicPath, 'favicon.ico');
 
-  const imageBuffer = await generateICO(data.map(({ asset }) => asset.source)[data.length - 1], {
-    resize: true,
-  });
+  const largestImageBuffer = data[data.length - 1].asset.source;
+
+  const faviconBuffer = await Image.generateFaviconAsync(icon.src, dimensions, largestImageBuffer);
 
   await Cache.clearUnusedCachesAsync(projectRoot, cacheType);
 
@@ -236,7 +237,7 @@ export async function generateFaviconAsync(
     data[0],
     data[1],
     {
-      asset: { source: imageBuffer, path: 'favicon.ico' },
+      asset: { source: faviconBuffer, path: 'favicon.ico' },
       tag: {
         tagName: 'link',
         attributes: { rel: 'shortcut icon', href: faviconUrl },

@@ -25,7 +25,7 @@ async function compositeImagesAsync(image: Jimp, ...images: Jimp[]): Promise<Jim
 }
 
 export async function resize(
-  inputPath: string,
+  inputPath: string | Buffer,
   mimeType: string,
   width: number,
   height: number,
@@ -33,6 +33,7 @@ export async function resize(
   background?: string
 ): Promise<Buffer> {
   try {
+    // @ts-ignore: Jimp types are broken
     const initialImage = await Jimp.read(inputPath);
     const center = Jimp.VERTICAL_ALIGN_MIDDLE | Jimp.HORIZONTAL_ALIGN_CENTER;
     if (fit === ASPECT_FILL) {

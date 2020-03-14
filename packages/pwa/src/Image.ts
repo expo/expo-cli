@@ -1,3 +1,5 @@
+// @ts-ignore
+import generateICO from 'to-ico';
 import { ResizeMode, findSharpInstanceAsync, isAvailableAsync } from '@expo/image-utils';
 import chalk from 'chalk';
 import mime from 'mime';
@@ -23,20 +25,23 @@ async function getBufferWithMimeAsync(
 }
 
 async function resize(
-  inputPath: string,
+  inputPath: string | Buffer,
   mimeType: string,
   width: number,
   height: number,
   fit: ResizeMode = 'contain',
   background?: string
 ): Promise<Buffer> {
-  let sharp: any;
-  if (await isAvailableAsync()) sharp = await findSharpInstanceAsync();
+  let sharp: any = await getSharpAsync();
   if (!sharp) {
     return await jimpResize(inputPath, mimeType, width, height, fit, background);
   }
   try {
-    let sharpBuffer = sharp(inputPath).resize(width, height, { fit, background: 'transparent' });
+    let sharpBuffer = sharp(inputPath)
+      .ensureAlpha()
+      .png()
+      .resize(width, height, { fit, background: 'transparent' });
+
     // Skip an extra step if the background is explicitly transparent.
     if (background && background !== 'transparent') {
       // Add the background color to the image
@@ -76,6 +81,7 @@ export async function generateImageAsync(
   icon.src = await Download.downloadOrUseCachedImage(icon.src);
 
   const mimeType = mime.getType(icon.src);
+
   if (!mimeType) {
     throw new Error(`Invalid mimeType for image with source: ${icon.src}`);
   }
@@ -106,4 +112,46 @@ export async function generateImageAsync(
   }
 
   return { source: imageBuffer, name: fileName };
+}
+
+async function getSharpAsync(): Promise<any> {
+  let sharp: any;
+  if (await isAvailableAsync()) sharp = await findSharpInstanceAsync();
+  return sharp;
+}
+
+export async function generateFaviconAsync(
+  sourcePath: string,
+  dimensions: number[],
+  pngImageBuffer?: Buffer
+): Promise<Buffer> {
+  const sharp: any = await getSharpAsync();
+  if (!sharp) {
+    // No sharp found, use JS to resize the buffers dynamically
+    // TODO(Bacon): Reuse the already resized images if possible.
+    return await generateICO(pngImageBuffer, {
+      sizes: dimensions,
+      resize: true,
+    });
+  }
+
+  // Ensure file is a valid png with alpha channel.
+  const pngBuffer = await sharp(sourcePath)
+    .ensureAlpha()
+    .png()
+    .toBuffer();
+  const metadata = await sharp(pngBuffer).metadata();
+  // Create buffer for each size
+  const resizedBuffers = await Promise.all(
+    dimensions.map(dimension => {
+      const density = (dimension / Math.max(metadata.width, metadata.height)) * metadata.density;
+      return sharp(pngBuffer, {
+        density: isNaN(density) ? undefined : density,
+      })
+        .resize(dimension, dimension, { fit: 'contain', background: 'transparent' })
+        .toBuffer();
+    })
+  );
+
+  return await generateICO(resizedBuffers);
 }
