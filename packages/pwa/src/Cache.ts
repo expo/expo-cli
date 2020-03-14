@@ -27,7 +27,7 @@ export async function createCacheKeyWithDirectoryAsync(
   type: string,
   icon: Icon
 ): Promise<string> {
-  const cacheKey = createCacheKey(icon);
+  const cacheKey = `${type}-${createCacheKey(icon)}`;
   if (!(cacheKey in cacheKeys)) {
     cacheKeys[cacheKey] = await ensureCacheDirectory(projectRoot, type, cacheKey);
   }
