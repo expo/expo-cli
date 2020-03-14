@@ -1,47 +1,25 @@
-import { ImageFormat, ResizeMode, isAvailableAsync, sharpAsync } from '@expo/image-utils';
+import { ResizeMode, findSharpInstanceAsync, isAvailableAsync } from '@expo/image-utils';
 import chalk from 'chalk';
-import fs from 'fs-extra';
 import mime from 'mime';
-import path from 'path';
-import temporary from 'tempy';
 
 import * as Cache from './Cache';
 import * as Download from './Download';
 import { resize as jimpResize } from './Jimp';
-
 import { Icon } from './Web.types';
 
 const supportedMimeTypes = ['image/png', 'image/jpeg', 'image/webp'];
+
+let hasWarned: boolean = false;
 
 async function getBufferWithMimeAsync(
   { src, resizeMode, backgroundColor, width, height }: Icon,
   mimeType: string
 ): Promise<Buffer> {
-  let imagePath;
   if (!supportedMimeTypes.includes(mimeType)) {
-    imagePath = src;
-  } else {
-    const imageData = await resize(src, mimeType, width, height, resizeMode, backgroundColor!);
-    if (imageData instanceof Buffer) {
-      return imageData;
-    } else {
-      imagePath = imageData;
-    }
+    throw new Error(`Supplied image is not a supported image type: ${src}`);
   }
-  try {
-    return await fs.readFile(imagePath);
-  } catch (err) {
-    throw new Error(`It was not possible to read '${src}'.`);
-  }
-}
 
-let hasWarned: boolean = false;
-
-function ensureValidMimeType(mimeType: string): ImageFormat {
-  if (['input', 'jpeg', 'jpg', 'png', 'raw', 'tiff', 'webp'].includes(mimeType)) {
-    return mimeType as ImageFormat;
-  }
-  return 'png';
+  return await resize(src, mimeType, width, height, resizeMode, backgroundColor);
 }
 
 async function resize(
@@ -50,38 +28,37 @@ async function resize(
   width: number,
   height: number,
   fit: ResizeMode = 'contain',
-  background: string
-): Promise<string | Buffer> {
-  if (!(await isAvailableAsync())) {
+  background?: string
+): Promise<Buffer> {
+  let sharp: any;
+  if (await isAvailableAsync()) sharp = await findSharpInstanceAsync();
+  if (!sharp) {
     return await jimpResize(inputPath, mimeType, width, height, fit, background);
   }
-
-  const format = ensureValidMimeType(mimeType.split('/')[1]);
-  const outputPath = temporary.directory();
-
   try {
-    await sharpAsync(
-      {
-        input: inputPath,
-        output: outputPath,
-        format,
-      },
-      [
+    let sharpBuffer = sharp(inputPath).resize(width, height, { fit, background: 'transparent' });
+    // Skip an extra step if the background is explicitly transparent.
+    if (background && background !== 'transparent') {
+      // Add the background color to the image
+      sharpBuffer = sharpBuffer.composite([
         {
-          operation: 'flatten',
-          background,
+          // create a background color
+          input: {
+            create: {
+              width,
+              height,
+              // allow alpha colors
+              channels: 4,
+              background,
+            },
+          },
+          // dest-over makes the first image (input) appear on top of the created image (background color)
+          blend: 'dest-over',
         },
-        {
-          operation: 'resize',
-          width,
-          height,
-          fit,
-          background,
-        },
-      ]
-    );
-
-    return path.join(outputPath, path.basename(inputPath));
+      ]);
+    }
+    // Return an image buffer for flexibility
+    return await sharpBuffer.toBuffer();
   } catch ({ message }) {
     throw new Error(`It was not possible to generate splash screen '${inputPath}'. ${message}`);
   }

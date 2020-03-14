@@ -30,7 +30,7 @@ export async function resize(
   width: number,
   height: number,
   fit: string = 'contain',
-  background: string
+  background?: string
 ): Promise<Buffer> {
   try {
     const initialImage = await Jimp.read(inputPath);

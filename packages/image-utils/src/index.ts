@@ -1,5 +1,6 @@
 export {
   isAvailableAsync,
+  findSharpInstanceAsync,
   sharpAsync,
   SharpGlobalOptions,
   SharpCommandOptions,
