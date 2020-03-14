@@ -107,6 +107,7 @@ export default function(program: Command) {
 
   program
     .command('build:web [project-dir]')
+    .option('-c, --clear', 'Clear all cached build files and assets.')
     .option(
       '--no-pwa',
       'Prevent webpack from generating the manifest.json and injecting meta into the index.html head.'
@@ -114,7 +115,7 @@ export default function(program: Command) {
     .option('-d, --dev', 'Turns dev flag on before bundling')
     .description('Build a production bundle for your project, compressed and ready for deployment.')
     .asyncActionProjectDir(
-      (projectDir: string, options: { pwa: boolean; dev: boolean }) => {
+      (projectDir: string, options: { pwa: boolean; clear: boolean; dev: boolean }) => {
         return Webpack.bundleAsync(projectDir, {
           ...options,
           dev: typeof options.dev === 'undefined' ? false : options.dev,

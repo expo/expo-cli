@@ -6,6 +6,8 @@ import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import { Urls, choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
+import fs from 'fs-extra';
+import path from 'path';
 
 import createWebpackCompiler, { printInstructions } from './createWebpackCompiler';
 import ip from './ip';
@@ -34,6 +36,7 @@ interface WebpackSettings {
 type CLIWebOptions = {
   dev?: boolean;
   pwa?: boolean;
+  clear?: boolean;
   nonInteractive?: boolean;
   port?: number;
   unimodulesOnly?: boolean;
@@ -43,6 +46,7 @@ type CLIWebOptions = {
 type BundlingOptions = {
   dev?: boolean;
   pwa?: boolean;
+  clear?: boolean;
   isImageEditingEnabled?: boolean;
   webpackEnv?: Object;
   mode?: 'development' | 'production' | 'test' | 'none';
@@ -83,6 +87,14 @@ export function printConnectionInstructions(projectRoot: string, options = {}) {
   });
 }
 
+async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<void> {
+  const cacheFolder = path.join(projectRoot, '.expo', 'web', 'cache', mode);
+  try {
+    console.log(`Clearing ${mode} cache directory...`);
+    await fs.remove(cacheFolder);
+  } catch (_) {}
+}
+
 export async function startAsync(
   projectRoot: string,
   options: CLIWebOptions = {},
@@ -109,6 +121,10 @@ export async function startAsync(
   const fullOptions = transformCLIOptions(options);
 
   const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, fullOptions);
+
+  if (fullOptions.clear) {
+    await clearWebCacheAsync(projectRoot, env.mode);
+  }
 
   const config = await createWebpackConfigAsync(env, fullOptions);
 
@@ -297,6 +313,10 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
     // Force production
     mode: 'production',
   });
+
+  if (fullOptions.clear) {
+    await clearWebCacheAsync(projectRoot, env.mode);
+  }
 
   const config = await createWebpackConfigAsync(env, fullOptions);
 
