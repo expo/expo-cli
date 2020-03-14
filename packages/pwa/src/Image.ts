@@ -9,7 +9,7 @@ import * as Download from './Download';
 import { resize as jimpResize } from './Jimp';
 import { Icon } from './Web.types';
 
-const supportedMimeTypes = ['image/png', 'image/jpeg', 'image/webp'];
+const supportedMimeTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 
 let hasWarned: boolean = false;
 
