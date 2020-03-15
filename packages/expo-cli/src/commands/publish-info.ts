@@ -1,4 +1,4 @@
-import { readConfigJsonAsync } from '@expo/config';
+import { getConfig } from '@expo/config';
 import { Api, ApiV2, FormData, Project, UserManager } from '@expo/xdl';
 import dateFormat from 'dateformat';
 
@@ -54,7 +54,9 @@ export default (program: any) => {
 
       // TODO(ville): handle the API result for not authenticated user instead of checking upfront
       const user = await UserManager.ensureLoggedInAsync();
-      const { exp } = await readConfigJsonAsync(projectDir);
+      const { exp } = getConfig(projectDir, {
+        skipSDKVersionRequirement: true,
+      });
 
       let result: any;
       if (process.env.EXPO_LEGACY_API === 'true') {
@@ -151,7 +153,9 @@ export default (program: any) => {
 
       // TODO(ville): handle the API result for not authenticated user instead of checking upfront
       const user = await UserManager.ensureLoggedInAsync();
-      const { exp } = await readConfigJsonAsync(projectDir);
+      const { exp } = getConfig(projectDir, {
+        skipSDKVersionRequirement: true,
+      });
       const slug = await Project.getSlugAsync(projectDir);
 
       let result: any;

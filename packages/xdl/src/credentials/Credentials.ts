@@ -1,4 +1,4 @@
-import { Platform, readConfigJsonAsync } from '@expo/config';
+import { Platform, getConfig } from '@expo/config';
 import { ApiV2 } from '../xdl';
 
 import Api from '../Api';
@@ -21,7 +21,7 @@ export async function getCredentialMetadataAsync(
   projectRoot: string,
   platform: Platform
 ): Promise<CredentialMetadata> {
-  const { exp } = await readConfigJsonAsync(projectRoot);
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   const user = await UserManager.ensureLoggedInAsync();
   let { username } = user;

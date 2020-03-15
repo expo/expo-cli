@@ -1,4 +1,4 @@
-import { ExpoConfig, readConfigJsonAsync } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import { Project, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
@@ -57,7 +57,7 @@ export default class BaseBuilder {
 
   async prepareProjectInfo(): Promise<void> {
     // always use local json to unify behavior between regular apps and self hosted ones
-    const { exp } = await readConfigJsonAsync(this.projectDir);
+    const { exp } = getConfig(this.projectDir);
     this.manifest = exp;
     this.user = await UserManager.ensureLoggedInAsync();
 

@@ -24,7 +24,7 @@ export default function withOptimizations(webpackConfig: AnyConfiguration): AnyC
   if (webpackConfig.mode !== 'production') {
     return webpackConfig;
   }
-  const shouldUseSourceMap = webpackConfig.devtool !== null;
+  const shouldUseSourceMap = typeof webpackConfig.devtool === 'string';
 
   const _isDebugMode = isDebugMode();
 

@@ -1,4 +1,4 @@
-import { ExpoConfig, PackageJSONConfig, readConfigJsonAsync, resolveModule } from '@expo/config';
+import { ExpoConfig, PackageJSONConfig, getConfig, resolveModule } from '@expo/config';
 // @ts-ignore: not typed
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
@@ -246,7 +246,9 @@ async function configureProjectAsync(
 
   log(chalk.gray(`Starting project at ${projectDir}`));
 
-  const { exp, pkg } = await readConfigJsonAsync(projectDir, options.webOnly);
+  const { exp, pkg } = getConfig(projectDir, {
+    skipSDKVersionRequirement: options.webOnly,
+  });
 
   const rootPath = path.resolve(projectDir);
 
