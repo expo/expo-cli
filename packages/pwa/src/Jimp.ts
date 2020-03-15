@@ -24,6 +24,20 @@ async function compositeImagesAsync(image: Jimp, ...images: Jimp[]): Promise<Jim
   return image;
 }
 
+// TODO(Bacon): Maybe optimize images with jimp too
+export async function optimizeAsync(inputPath: string | Buffer, mimeType: string): Promise<Buffer> {
+  // @ts-ignore: Jimp types are broken
+  const initialImage = await Jimp.read(inputPath);
+
+  return initialImage.getBufferAsync(mimeType);
+}
+
+export function cssColorHasTransparency(color: string): boolean {
+  const hex = Jimp.cssColorToHex(color);
+  const rgba = Jimp.intToRGBA(hex);
+  return !rgba.a;
+}
+
 export async function resize(
   inputPath: string | Buffer,
   mimeType: string,

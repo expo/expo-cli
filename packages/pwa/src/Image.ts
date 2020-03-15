@@ -6,7 +6,7 @@ import mime from 'mime';
 
 import * as Cache from './Cache';
 import * as Download from './Download';
-import { resize as jimpResize } from './Jimp';
+import * as Jimp from './Jimp';
 import { Icon } from './Web.types';
 
 const supportedMimeTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
@@ -20,8 +20,30 @@ async function getBufferWithMimeAsync(
   if (!supportedMimeTypes.includes(mimeType)) {
     throw new Error(`Supplied image is not a supported image type: ${src}`);
   }
+  const optimizedBuffer = await convertOrUseCachedPNGImage(src);
+  return await resize(optimizedBuffer, 'image/png', width, height, resizeMode, backgroundColor);
+}
 
-  return await resize(src, mimeType, width, height, resizeMode, backgroundColor);
+const cacheOptimizedKeys: Record<string, Buffer> = {};
+
+// cache png buffers in memory
+export async function convertOrUseCachedPNGImage(url: string): Promise<Buffer> {
+  if (url in cacheOptimizedKeys) {
+    return cacheOptimizedKeys[url];
+  }
+
+  let sharp: any = await getSharpAsync();
+  if (!sharp) {
+    cacheOptimizedKeys[url] = await Jimp.optimizeAsync(url, 'image/png');
+  } else {
+    // Return an image buffer for flexibility, adaptiveFiltering helps reduce the size but it also makes compile time a little longer.
+    // Only using adaptiveFiltering for larger images
+    cacheOptimizedKeys[url] = await sharp(url)
+      .ensureAlpha()
+      .png()
+      .toBuffer();
+  }
+  return cacheOptimizedKeys[url];
 }
 
 async function resize(
@@ -30,17 +52,15 @@ async function resize(
   width: number,
   height: number,
   fit: ResizeMode = 'contain',
-  background?: string
+  background?: string,
+  optimize?: boolean
 ): Promise<Buffer> {
   let sharp: any = await getSharpAsync();
   if (!sharp) {
-    return await jimpResize(inputPath, mimeType, width, height, fit, background);
+    return await Jimp.resize(inputPath, mimeType, width, height, fit, background);
   }
   try {
-    let sharpBuffer = sharp(inputPath)
-      .ensureAlpha()
-      .png()
-      .resize(width, height, { fit, background: 'transparent' });
+    let sharpBuffer = sharp(inputPath).resize(width, height, { fit, background: 'transparent' });
 
     // Skip an extra step if the background is explicitly transparent.
     if (background && background !== 'transparent') {
@@ -62,8 +82,8 @@ async function resize(
         },
       ]);
     }
-    // Return an image buffer for flexibility
-    return await sharpBuffer.toBuffer();
+
+    return await sharpBuffer.png({ palette: true, adaptiveFiltering: true }).toBuffer();
   } catch ({ message }) {
     throw new Error(`It was not possible to generate splash screen '${inputPath}'. ${message}`);
   }
@@ -125,6 +145,8 @@ export async function generateFaviconAsync(
   dimensions: number[],
   pngImageBuffer?: Buffer
 ): Promise<Buffer> {
+  const localPath = await Download.downloadOrUseCachedImage(sourcePath);
+
   const sharp: any = await getSharpAsync();
   if (!sharp) {
     // No sharp found, use JS to resize the buffers dynamically
@@ -136,22 +158,25 @@ export async function generateFaviconAsync(
   }
 
   // Ensure file is a valid png with alpha channel.
-  const pngBuffer = await sharp(sourcePath)
-    .ensureAlpha()
-    .png()
-    .toBuffer();
+  const pngBuffer = await convertOrUseCachedPNGImage(localPath);
   const metadata = await sharp(pngBuffer).metadata();
-  // Create buffer for each size
-  const resizedBuffers = await Promise.all(
-    dimensions.map(dimension => {
-      const density = (dimension / Math.max(metadata.width, metadata.height)) * metadata.density;
-      return sharp(pngBuffer, {
-        density: isNaN(density) ? undefined : density,
+  try {
+    // Create buffer for each size
+    const resizedBuffers = await Promise.all(
+      dimensions.map(dimension => {
+        const density = (dimension / Math.max(metadata.width, metadata.height)) * metadata.density;
+        return sharp(pngBuffer, {
+          density: isNaN(density) ? undefined : Math.ceil(density),
+        })
+          .resize(dimension, dimension, { fit: 'contain', background: 'transparent' })
+          .toBuffer();
       })
-        .resize(dimension, dimension, { fit: 'contain', background: 'transparent' })
-        .toBuffer();
-    })
-  );
+    );
 
-  return await generateICO(resizedBuffers);
+    return await generateICO(resizedBuffers);
+  } catch (error) {
+    // Give a little more context
+    error.message = `Failed to generate Favicon: ${error.message}`;
+    throw error;
+  }
 }
