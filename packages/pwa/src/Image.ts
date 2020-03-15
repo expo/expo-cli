@@ -83,7 +83,7 @@ async function resize(
       ]);
     }
 
-    return await sharpBuffer.png({ palette: true, adaptiveFiltering: true }).toBuffer();
+    return await sharpBuffer.png().toBuffer();
   } catch ({ message }) {
     throw new Error(`It was not possible to generate splash screen '${inputPath}'. ${message}`);
   }
