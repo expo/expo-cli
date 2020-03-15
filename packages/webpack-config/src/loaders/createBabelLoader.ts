@@ -1,13 +1,17 @@
-import { TransformOptions, loadPartialConfig } from '@babel/core';
+import { loadPartialConfig } from '@babel/core';
+import { projectHasModule } from '@expo/config';
 import { getPossibleProjectRoot } from '@expo/config/paths';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 import { Rule } from 'webpack';
+import { boolish } from 'getenv';
 
-import { projectHasModule } from '@expo/config';
-import { Environment, Mode } from '../types';
 import { getConfig, getMode, getPaths } from '../env';
+import { Environment, Mode } from '../types';
+
+// Source maps are resource heavy and can cause out of memory issue for large source files.
+const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
 
 const getModule = (name: string) => path.join('node_modules', name);
 
@@ -165,6 +169,11 @@ export default function createBabelLoader({
     sourceType: 'unambiguous',
     root: ensuredProjectRoot,
     compact: isProduction,
+    // Babel sourcemaps are needed for debugging into node_modules
+    // code.  Without the options below, debuggers like VSCode
+    // show incorrect code and set breakpoints on the wrong lines.
+    sourceMaps: shouldUseSourceMap,
+    inputSourceMap: shouldUseSourceMap,
   };
 
   let cacheIdentifier: string | undefined = customUseOptions.cacheIdentifier;
