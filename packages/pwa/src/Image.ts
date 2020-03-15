@@ -52,8 +52,7 @@ async function resize(
   width: number,
   height: number,
   fit: ResizeMode = 'contain',
-  background?: string,
-  optimize?: boolean
+  background?: string
 ): Promise<Buffer> {
   let sharp: any = await getSharpAsync();
   if (!sharp) {
@@ -141,12 +140,9 @@ async function getSharpAsync(): Promise<any> {
 }
 
 export async function generateFaviconAsync(
-  sourcePath: string,
-  dimensions: number[],
-  pngImageBuffer?: Buffer
+  pngImageBuffer: Buffer,
+  dimensions: number[]
 ): Promise<Buffer> {
-  const localPath = await Download.downloadOrUseCachedImage(sourcePath);
-
   const sharp: any = await getSharpAsync();
   if (!sharp) {
     // No sharp found, use JS to resize the buffers dynamically
@@ -157,15 +153,13 @@ export async function generateFaviconAsync(
     });
   }
 
-  // Ensure file is a valid png with alpha channel.
-  const pngBuffer = await convertOrUseCachedPNGImage(localPath);
-  const metadata = await sharp(pngBuffer).metadata();
+  const metadata = await sharp(pngImageBuffer).metadata();
   try {
     // Create buffer for each size
     const resizedBuffers = await Promise.all(
       dimensions.map(dimension => {
         const density = (dimension / Math.max(metadata.width, metadata.height)) * metadata.density;
-        return sharp(pngBuffer, {
+        return sharp(pngImageBuffer, {
           density: isNaN(density) ? undefined : Math.ceil(density),
         })
           .resize(dimension, dimension, { fit: 'contain', background: 'transparent' })
