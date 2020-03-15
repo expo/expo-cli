@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { ensureDir, readFile, readFileSync, readdirSync, remove, writeFile } from 'fs-extra';
 import { join, resolve } from 'path';
+
 import { Icon } from './Web.types';
 
 const CACHE_LOCATION = '.expo/web/cache/production/images';

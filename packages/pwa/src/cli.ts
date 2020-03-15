@@ -1,10 +1,10 @@
 #!/usr/bin/env node
+import { ResizeMode } from '@expo/image-utils';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs-extra';
 import { dirname, relative, resolve } from 'path';
 
-import { ResizeMode } from '@expo/image-utils';
 import { HTMLOutput, generateAsync } from '.';
 import { htmlTagObjectToString } from './HTML';
 import shouldUpdate from './update';

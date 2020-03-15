@@ -1,7 +1,5 @@
 import { ExpoConfig } from '@expo/config';
 import * as path from 'path';
-// @ts-ignore
-import generateICO from 'to-ico';
 
 import * as Cache from './Cache';
 import * as Image from './Image';

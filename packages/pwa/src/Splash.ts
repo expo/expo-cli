@@ -53,6 +53,7 @@ export function assembleOrientationMedia(
 }
 
 export function getDevices({
+  // disable landscape PWAs by default
   orientation = 'portrait',
   supportsTablet = true,
 }: {
