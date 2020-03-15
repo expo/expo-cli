@@ -108,7 +108,7 @@ export async function generateAppleIconAsync(
         const rel = 'apple-touch-icon';
         const { source, name } = await Image.generateImageAsync(
           { projectRoot, cacheType },
-          { ...icon, width: size, height: size, name: `${rel}-${size}x${size}.png` }
+          { ...icon, width: size, height: size, name: `${rel}-${size}.png` }
         );
 
         const href = `pwa/${rel}/${name}`;
@@ -152,7 +152,7 @@ export async function generateChromeIconAsync(
         const rel = 'chrome-icon';
         const { source, name } = await Image.generateImageAsync(
           { projectRoot, cacheType },
-          { ...icon, width: size, height: size, name: `${rel}-${size}x${size}.png` }
+          { ...icon, width: size, height: size, name: `${rel}-${size}.png` }
         );
 
         const href = `pwa/${rel}/${name}`;
@@ -193,12 +193,11 @@ export async function generateFaviconAsync(
         const { source, name } = await Image.generateImageAsync(
           { projectRoot, cacheType },
           {
-            ...icon,
             backgroundColor: 'transparent',
-            resizeMode: 'contain',
+            ...icon,
             width: size,
             height: size,
-            name: `favicon-${size}x${size}.png`,
+            name: `favicon-${size}.png`,
           }
         );
 
@@ -227,7 +226,7 @@ export async function generateFaviconAsync(
 
   const largestImageBuffer = data[data.length - 1].asset.source;
 
-  const faviconBuffer = await Image.generateFaviconAsync(icon.src, dimensions, largestImageBuffer);
+  const faviconBuffer = await Image.generateFaviconAsync(largestImageBuffer, dimensions);
 
   await Cache.clearUnusedCachesAsync(projectRoot, cacheType);
 
