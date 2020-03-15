@@ -11,6 +11,13 @@ export type Options = {
   resizeMode?: 'contain' | 'cover';
 };
 
+function logNotice(type: string, message: string) {
+  console.log(chalk.magenta(`\u203A ${type}: ${chalk.gray(message)}`));
+}
+function logWarning(type: string, message: string) {
+  console.log(chalk.yellow(`\u203A ${type}: ${chalk.gray(message)}`));
+}
+
 export default class ChromeIconsWebpackPlugin extends ModifyJsonWebpackPlugin {
   // Maybe we should support the ability to create all icons individually
   constructor(private options: ProjectOptions, private icon: IconOptions | null) {
@@ -25,13 +32,11 @@ export default class ChromeIconsWebpackPlugin extends ModifyJsonWebpackPlugin {
   ): Promise<BeforeEmitOptions> {
     // If the icons array is already defined, then skip icon generation.
     if (Array.isArray(data.json.icons)) {
-      console.log(
-        chalk.magenta(`\u203A Chrome PWA icons: Using custom \`icons\` from PWA manifest`)
-      );
+      logNotice('Chrome Icons', `Using custom \`icons\` from PWA manifest`);
       return data;
     }
     if (!this.icon) {
-      console.log(chalk.yellow(`\u203A Chrome PWA icons: No icon found, skipping auto generation`));
+      logWarning('Chrome Icons', `No template image found, skipping auto generation...`);
       return data;
     }
 

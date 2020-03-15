@@ -17,6 +17,12 @@ export type ApplePwaMeta = {
   isFullScreen?: boolean;
 };
 
+function logNotice(type: string, message: string) {
+  console.log(chalk.magenta(`\u203A ${type}: ${chalk.gray(message)}`));
+}
+function logWarning(type: string, message: string) {
+  console.log(chalk.yellow(`\u203A ${type}: ${chalk.gray(message)}`));
+}
 export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
   constructor(
     private pwaOptions: ProjectOptions & { links: HTMLLinkNode[] },
@@ -61,10 +67,9 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
       for (const size of targetSizes) {
         const sizes = `${size}x${size}`;
         if (links.includes(sizes)) {
-          console.log(
-            chalk.magenta(
-              `\u203A Safari PWA icons: Using custom <link rel="apple-touch-icon" sizes="${sizes}" .../>`
-            )
+          logNotice(
+            'Safari Icons',
+            `Using custom <link rel="apple-touch-icon" sizes="${sizes}" .../>`
           );
         } else {
           requiredSizes.push(size);
@@ -78,10 +83,9 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
       for (const asset of iconAssets) {
         const size = asset.tag?.attributes.sizes;
         if (size && links.includes(size)) {
-          console.log(
-            chalk.magenta(
-              `\u203A Safari PWA icons: Using custom <link rel="apple-touch-icon" sizes="${size}" .../>`
-            )
+          logNotice(
+            'Safari Icons',
+            `Using custom <link rel="apple-touch-icon" sizes="${size}" .../>`
           );
         } else {
           compilation.assets[asset.asset.path] = {
@@ -92,7 +96,7 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
         }
       }
     } else {
-      console.log(chalk.yellow(`\u203A Safari PWA icons: No icon found, skipping auto generation`));
+      logWarning('Safari Icons', `No template image found, skipping auto generation...`);
     }
 
     // Splash screens
@@ -107,10 +111,9 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
       for (const asset of assets) {
         const media = asset.tag?.attributes.media;
         if (media && links.includes(media)) {
-          console.log(
-            chalk.magenta(
-              `\u203A Safari PWA splash screen: Using custom <link rel="apple-touch-startup-image" media="${media}" ... />`
-            )
+          logNotice(
+            'Safari Splash Screens',
+            `Using custom <link rel="apple-touch-startup-image" media="${media}" ... />`
           );
         } else {
           compilation.assets[asset.asset.path] = {
@@ -121,9 +124,7 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
         }
       }
     } else {
-      console.log(
-        chalk.yellow(`\u203A Safari PWA splash screen: No image found, skipping auto generation`)
-      );
+      logWarning('Safari Splash Screens', `No template image found, skipping auto generation...`);
     }
     return data;
   }

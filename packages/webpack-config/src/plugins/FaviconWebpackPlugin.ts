@@ -4,6 +4,12 @@ import { IconOptions, ProjectOptions, generateFaviconAsync } from '@expo/pwa';
 import chalk from 'chalk';
 import ModifyHtmlWebpackPlugin, { HTMLLinkNode, HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 
+function logNotice(type: string, message: string) {
+  console.log(chalk.magenta(`\u203A ${type}: ${chalk.gray(message)}`));
+}
+function logWarning(type: string, message: string) {
+  console.log(chalk.yellow(`\u203A ${type}: ${chalk.gray(message)}`));
+}
 export default class FaviconWebpackPlugin extends ModifyHtmlWebpackPlugin {
   constructor(
     private pwaOptions: ProjectOptions & { links: HTMLLinkNode[] },
@@ -18,7 +24,7 @@ export default class FaviconWebpackPlugin extends ModifyHtmlWebpackPlugin {
     data: HTMLPluginData
   ): Promise<HTMLPluginData> {
     if (!this.favicon) {
-      console.log(chalk.yellow(`\u203A Favicon: No icon found, skipping auto generation`));
+      logWarning('Favicon', 'No template image found, skipping auto generation...');
       return data;
     }
 
@@ -34,12 +40,11 @@ export default class FaviconWebpackPlugin extends ModifyHtmlWebpackPlugin {
         v.sizes ? v.sizes === attributes.sizes : v.rel?.includes('shortcut')
       );
       if (faviconExists) {
-        console.log(
-          chalk.magenta(
-            `\u203A Favicon: Using custom <link rel="${attributes.rel}" ${
-              attributes.sizes ? `sizes="${attributes.sizes}"` : ''
-            } .../>`
-          )
+        logNotice(
+          'Favicon',
+          `Using custom <link rel="${attributes.rel}"${
+            attributes.sizes ? ` sizes="${attributes.sizes}"` : ''
+          } .../>`
         );
       } else {
         compilation.assets[asset.asset.path] = {
