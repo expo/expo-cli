@@ -58,12 +58,14 @@ function getDevtool(
 
 function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output {
   const commonOutput: Output = {
-    sourceMapFilename: '[chunkhash].map',
     // We inferred the "public path" (such as / or /my-project) from homepage.
     // We use "/" in development.
     publicPath,
     // Build folder (default `web-build`)
     path: locations.production.folder,
+    // this defaults to 'window', but by setting it to 'this' then
+    // module chunks which are built will work in web workers as well.
+    globalObject: 'this',
   };
 
   if (mode === 'production') {
@@ -73,7 +75,7 @@ function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output
     // Point sourcemap entries to original disk location (format as URL on Windows)
     commonOutput.devtoolModuleFilenameTemplate = (
       info: webpack.DevtoolModuleFilenameTemplateInfo
-    ): string => locations.absolute(info.absoluteResourcePath).replace(/\\/g, '/');
+    ): string => path.relative(locations.root, info.absoluteResourcePath).replace(/\\/g, '/');
   } else {
     // Add comments that describe the file import/exports.
     // This will make it easier to debug.
@@ -276,7 +278,7 @@ export default async function(
             }
             return manifest;
           }, seed);
-          const entrypointFiles = entrypoints.main.filter(fileName => !fileName.endsWith('.map'));
+          const entrypointFiles = entrypoints.app.filter(fileName => !fileName.endsWith('.map'));
 
           return {
             files: manifestFiles,
