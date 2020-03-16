@@ -50,25 +50,23 @@ export async function resize(
     // @ts-ignore: Jimp types are broken
     const initialImage = await Jimp.read(inputPath);
     const center = Jimp.VERTICAL_ALIGN_MIDDLE | Jimp.HORIZONTAL_ALIGN_CENTER;
+    let resizedImage: typeof initialImage;
     if (fit === ASPECT_FILL) {
-      return await initialImage
-        .cover(width, height, center)
-        .quality(100)
-        .getBufferAsync(mimeType);
+      resizedImage = await initialImage.cover(width, height, center).quality(100);
     } else if (fit === ASPECT_FIT) {
-      const resizedImage = await initialImage.contain(width, height, center).quality(100);
-      if (!background) {
-        return resizedImage.getBufferAsync(mimeType);
-      }
-
-      const splashScreen = await createBaseImageAsync(width, height, background);
-      const combinedImage = await compositeImagesAsync(splashScreen, resizedImage);
-      return combinedImage.getBufferAsync(mimeType);
+      resizedImage = await initialImage.contain(width, height, center).quality(100);
     } else {
       throw new Error(
         `Unsupported resize mode: ${fit}. Please choose either 'cover', or 'contain'`
       );
     }
+    if (!background) {
+      return resizedImage.getBufferAsync(mimeType);
+    }
+
+    const splashScreen = await createBaseImageAsync(width, height, background);
+    const combinedImage = await compositeImagesAsync(splashScreen, resizedImage);
+    return combinedImage.getBufferAsync(mimeType);
   } catch ({ message }) {
     throw new Error(`It was not possible to generate splash screen '${inputPath}'. ${message}`);
   }
