@@ -58,6 +58,7 @@ class Transformer extends Minipass {
     return true;
   }
   end() {
+    // TODO: we don't use "HelloWorld" for all of the templates anymore
     let replaced = this.data
       .replace(/Hello App Display Name/g, this.config.displayName || this.config.name)
       .replace(/HelloWorld/g, this.config.name)
