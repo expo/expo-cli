@@ -259,10 +259,12 @@ export async function constructUrlAsync(
   } else {
     let ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.expoServerNgrokUrl;
     if (!ngrokUrl || typeof ngrokUrl !== 'string') {
+      // TODO: if you start with --tunnel flag then this warning will always
+      // show up right before the tunnel starts...
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
-        'Tunnel URL not found, falled back to LAN URL.',
+        'Tunnel URL not found (it might not be ready yet), falling back to LAN URL.',
         'tunnel-url-not-found'
       );
       return constructUrlAsync(
