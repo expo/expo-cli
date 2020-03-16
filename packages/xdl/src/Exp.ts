@@ -9,7 +9,7 @@ import JsonFile from '@expo/json-file';
 import Minipass from 'minipass';
 import pacote, { PackageSpec } from 'pacote';
 import { Readable } from 'stream';
-import tar from 'tar';
+import tar, { ReadEntry } from 'tar';
 import yaml from 'js-yaml';
 
 import { NpmPackageManager, YarnPackageManager } from '@expo/package-manager';
@@ -22,9 +22,6 @@ import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as ProjectSettings from './ProjectSettings';
-
-// TODO(ville): update when this has landed: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
-type ReadEntry = any;
 
 const supportedPlatforms = ['ios', 'android', 'web'];
 
