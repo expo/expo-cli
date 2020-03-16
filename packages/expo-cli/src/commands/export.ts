@@ -7,6 +7,7 @@ import targz from 'targz';
 import { Project, UrlUtils } from '@expo/xdl';
 import { Command } from 'commander';
 
+import prompt, { Question } from '../prompt';
 import log from '../log';
 import { installExitHooks } from '../exit';
 import CommandError from '../CommandError';
@@ -28,10 +29,37 @@ type Options = {
 export async function action(projectDir: string, options: Options) {
   const outputPath = path.resolve(projectDir, options.outputDir);
   if (fs.existsSync(outputPath)) {
-    throw new CommandError(
-      'OUTPUT_DIR_EXISTS',
-      `Output directory ${outputPath} already exists. Aborting export.`
-    );
+    const question: Question = {
+      type: 'confirm',
+      name: 'action',
+      message: `Output directory ${outputPath} already exists. Do you want to override this directories/files : \n${options.outputDir}/bundles, \n${options.outputDir}/assets, \n${options.outputDir}/ios-index.json, and \n${options.outputDir}/android-index.json ?`,
+    };
+
+    const { action } = await prompt(question);
+    if (action) {
+      // If user chooses to override, remove old directories/files, except options.outputDir
+      const outputBundlesDir = path.resolve(outputPath, 'bundles');
+      const outputAssetsDir = path.resolve(outputPath, 'assets');
+      const outputAndroidJson = path.resolve(outputPath, 'android-index.json');
+      const outputiOSJson = path.resolve(outputPath, 'ios-index.json');
+      if (fs.existsSync(outputBundlesDir)) {
+        fs.removeSync(outputBundlesDir);
+      }
+      if (fs.existsSync(outputAssetsDir)) {
+        fs.removeSync(outputAssetsDir);
+      }
+      if (fs.existsSync(outputAndroidJson)) {
+        fs.removeSync(outputAndroidJson);
+      }
+      if (fs.existsSync(outputiOSJson)) {
+        fs.removeSync(outputiOSJson);
+      }
+    } else {
+      throw new CommandError(
+        'OUTPUT_DIR_EXISTS',
+        `Output directory ${outputPath} already exists. Aborting export.`
+      );
+    }
   }
   if (!options.publicUrl) {
     throw new CommandError('MISSING_PUBLIC_URL', 'Missing required option: --public-url');
@@ -94,21 +122,21 @@ export async function action(projectDir: string, options: Options) {
     await fs.ensureDir(tmpFolder);
 
     // Download the urls into a tmp dir
-    const downloadDecompressPromises = options.mergeSrcUrl.map(async (url: string): Promise<
-      void
-    > => {
-      // Add the absolute paths to srcDir
-      const uniqFilename = `${path.basename(url, '.tar.gz')}_${crypto
-        .randomBytes(16)
-        .toString('hex')}`;
-      const tmpFileCompressed = path.resolve(tmpFolder, uniqFilename + '_compressed');
-      const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
-      await download(url, tmpFileCompressed);
-      await decompress(tmpFileCompressed, tmpFolderUncompressed);
+    const downloadDecompressPromises = options.mergeSrcUrl.map(
+      async (url: string): Promise<void> => {
+        // Add the absolute paths to srcDir
+        const uniqFilename = `${path.basename(url, '.tar.gz')}_${crypto
+          .randomBytes(16)
+          .toString('hex')}`;
+        const tmpFileCompressed = path.resolve(tmpFolder, uniqFilename + '_compressed');
+        const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
+        await download(url, tmpFileCompressed);
+        await decompress(tmpFileCompressed, tmpFolderUncompressed);
 
-      // add the decompressed folder to be merged
-      mergeSrcDirs.push(tmpFolderUncompressed);
-    });
+        // add the decompressed folder to be merged
+        mergeSrcDirs.push(tmpFolderUncompressed);
+      }
+    );
 
     await Promise.all(downloadDecompressPromises);
   }
