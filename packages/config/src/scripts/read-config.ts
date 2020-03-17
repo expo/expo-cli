@@ -29,7 +29,8 @@ try {
 
   require('@babel/register')({
     only: [configFile],
-    presets: [require.resolve('@babel/preset-env')],
+    extensions: ['.ts', '.js'],
+    presets: [require.resolve('@expo/babel-preset-cli')],
   });
 
   let result = require(configFile);
