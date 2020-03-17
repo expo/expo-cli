@@ -50,7 +50,7 @@ async function modifyAsync(plistPath: string, plistName: string, transform: (con
   config = transform(config);
 
   // back up old plist and swap in modified one
-  await spawnAsyncThrowError('/bin/cp', [configPlistName, `${configPlistName}.bak`]);
+  await fs.copy(configPlistName, `${configPlistName}.bak`);
   await fs.writeFile(configFilename, JSON.stringify(config));
   if (process.platform === 'darwin') {
     await spawnAsyncThrowError('plutil', [
@@ -89,7 +89,7 @@ async function createBlankAsync(plistPath: string, plistName: string) {
   }
 
   // remove tmp json file
-  await spawnAsyncThrowError('/bin/rm', [tmpConfigFile]);
+  await fs.remove(tmpConfigFile);
 }
 
 async function cleanBackupAsync(plistPath: string, plistName: string, restoreOriginal = true) {
