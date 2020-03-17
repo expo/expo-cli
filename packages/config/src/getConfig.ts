@@ -13,7 +13,6 @@ export const allowedConfigFileNames: string[] = (() => {
   const prefix = 'app';
   return [
     // order is important
-    // TODO: Bacon: Slowly rollout support for other config languages: ts, yml, toml
     `${prefix}.config.ts`,
     `${prefix}.config.js`,
     `${prefix}.config.json`,

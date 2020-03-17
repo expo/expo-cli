@@ -30,7 +30,7 @@ try {
   require('@babel/register')({
     only: [configFile],
     extensions: ['.ts', '.js'],
-    presets: ['@expo/babel-preset-cli'],
+    presets: [require.resolve('@expo/babel-preset-cli')],
   });
 
   let result = require(configFile);
