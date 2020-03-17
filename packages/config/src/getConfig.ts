@@ -14,6 +14,7 @@ export const allowedConfigFileNames: string[] = (() => {
   return [
     // order is important
     // TODO: Bacon: Slowly rollout support for other config languages: ts, yml, toml
+    `${prefix}.config.ts`,
     `${prefix}.config.js`,
     `${prefix}.config.json`,
   ];
