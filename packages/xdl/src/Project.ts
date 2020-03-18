@@ -22,7 +22,7 @@ import express from 'express';
 import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
 import HashIds from 'hashids';
-import joi from 'joi';
+import joi, { exist, meta } from 'joi';
 import chunk from 'lodash/chunk';
 import escapeRegExp from 'lodash/escapeRegExp';
 import get from 'lodash/get';
@@ -41,6 +41,7 @@ import treekill from 'tree-kill';
 import urljoin from 'url-join';
 import { promisify } from 'util';
 import uuid from 'uuid';
+import { Builder, Parser } from 'xml2js';
 
 import * as Analytics from './Analytics';
 import * as Android from './Android';
@@ -292,9 +293,9 @@ async function _resolveManifestAssets(
 ) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (
-      await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)
-    ).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
+    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
+      manifest.sdkVersion
+    )).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
 
     // Get the URLs
     const urls = await Promise.all(
@@ -929,7 +930,7 @@ export async function publishAsync(
       } else {
         // This is an app with expo-updates installed, so set the applicable meta-data properties in
         // AndroidManifest.xml
-        let androidManifestXmlPath = path.join(
+        const androidManifestXmlPath = path.join(
           projectRoot,
           'android',
           'app',
@@ -937,51 +938,25 @@ export async function publishAsync(
           'main',
           'AndroidManifest.xml'
         );
-        let androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
-        let expoUpdateUrlRegex = /<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="[^"]*" \/>/;
-        let expoSdkVersionRegex = /<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="[^"]*" \/>/;
-        let expoReleaseChannelRegex = /<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="[^"]*" \/>/;
-
-        let expoUpdateUrlTag = `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${fullManifestUrl}" />`;
-        let expoSdkVersionTag = `<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="${exp.sdkVersion}" />`;
-        let expoReleaseChannelTag = `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${options.releaseChannel}" />`;
-
-        let tagsToInsert = [];
-        if (androidManifestXmlFile.search(expoUpdateUrlRegex) < 0) {
-          tagsToInsert.push(expoUpdateUrlTag);
-        }
-        if (androidManifestXmlFile.search(expoSdkVersionRegex) < 0) {
-          tagsToInsert.push(expoSdkVersionTag);
-        }
-        if (androidManifestXmlFile.search(expoReleaseChannelRegex) < 0) {
-          tagsToInsert.push(expoReleaseChannelTag);
-        }
-        if (tagsToInsert.length) {
-          // try to insert the meta-data tags that aren't found
-          await ExponentTools.regexFileAsync(
-            /<activity\s+android:name=".MainActivity"/,
-            `${tagsToInsert.join('\n      ')}
-
-      <activity
-        android:name=".MainActivity"`,
-            androidManifestXmlPath
+        const androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
+        const parser = new Parser();
+        try {
+          const manifest = await parser.parseStringPromise(androidManifestXmlFile);
+          _ensureMetaDataExists(manifest, 'expo.modules.updates.EXPO_UPDATE_URL', fullManifestUrl);
+          _ensureMetaDataExists(manifest, 'expo.modules.updates.EXPO_SDK_VERSION', exp.sdkVersion);
+          if (options.releaseChannel) {
+            _ensureMetaDataExists(
+              manifest,
+              'expo.modules.updates.EXPO_RELEASE_CHANNEL',
+              options.releaseChannel
+            );
+          }
+          fs.writeFileSync(androidManifestXmlPath, new Builder().buildObject(manifest));
+        } catch (e) {
+          console.warn(
+            'Failed to modify meta-data tags in AndroidManifest.xml. Make sure your meta-data tags are set correctly as per the expo-updates documentation.'
           );
         }
-        await ExponentTools.regexFileAsync(
-          expoUpdateUrlRegex,
-          expoUpdateUrlTag,
-          androidManifestXmlPath
-        );
-        await ExponentTools.regexFileAsync(
-          expoSdkVersionRegex,
-          expoSdkVersionTag,
-          androidManifestXmlPath
-        );
-        await ExponentTools.regexFileAsync(
-          expoReleaseChannelRegex,
-          expoReleaseChannelTag,
-          androidManifestXmlPath
-        );
       }
     }
   }
@@ -1003,6 +978,46 @@ export async function publishAsync(
         ? `${response.url}?release-channel=${options.releaseChannel}`
         : response.url,
   };
+}
+
+function _ensureMetaDataExists(manifest: any, name: string, value: string): void {
+  const mainApplicationIndex = _findMainApplicationIndex(manifest);
+  const mainApplication = manifest.manifest.application[mainApplicationIndex];
+
+  const metaData = mainApplication['meta-data'] || [];
+  const existingMetaDataIndex = metaData.findIndex(
+    (metaData: any) =>
+      metaData['$'] && (metaData['$']['android:name'] === name || metaData['$']['name'] === name)
+  );
+  if (existingMetaDataIndex < 0) {
+    metaData.push({
+      $: {
+        'android:name': name,
+        'android:value': value,
+      },
+    });
+  } else {
+    metaData[existingMetaDataIndex]['$']['android:value'] = value;
+  }
+
+  mainApplication['meta-data'] = metaData;
+  manifest.manifest.application[mainApplicationIndex] = mainApplication;
+}
+
+function _findMainApplicationIndex(manifest: any): number {
+  if (
+    !manifest.manifest ||
+    !manifest.manifest.application ||
+    !Array.isArray(manifest.manifest.application)
+  ) {
+    throw new Error('Unexpected AndroidManifest format');
+  }
+  const { application } = manifest.manifest;
+  return application.findIndex(
+    (application: any) =>
+      application['$']['android:name'] === '.MainApplication' ||
+      application['$']['name'] === '.MainApplication'
+  );
 }
 
 async function _uploadArtifactsAsync({
@@ -1957,7 +1972,7 @@ export async function startReactNativeServerAsync(
       ...process.env,
       REACT_NATIVE_APP_ROOT: projectRoot,
       ELECTRON_RUN_AS_NODE: '1',
-      ...(nodePath ? { NODE_PATH: nodePath } : {}),
+      ...nodePath ? { NODE_PATH: nodePath } : {},
     },
     silent: true,
   });
