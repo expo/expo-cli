@@ -122,7 +122,7 @@ export async function openProjectAsync(
   projectRoot: string
 ): Promise<{ success: true; url: string } | { success: false; error: Error }> {
   try {
-    let url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
+    let url = await UrlUtils.constructWebAppUrlAsync(projectRoot, { hostType: 'localhost' });
     if (!url) {
       throw new Error('Webpack Dev Server is not running');
     }

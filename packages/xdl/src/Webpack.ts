@@ -115,7 +115,7 @@ export async function startAsync(
 
   if (env.https) {
     if (!process.env.SSL_CRT_FILE || !process.env.SSL_KEY_FILE) {
-      const ssl = await getSSLCert({
+      const ssl = await getSSLCertAsync({
         name: 'localhost',
         directory: projectRoot,
       });
@@ -191,7 +191,7 @@ export async function startAsync(
   });
 
   const host = ip.address();
-  const url = `${protocol}://${host}:${webpackServerPort}`;
+  const url = `${protocol}://${host}:${port}`;
   return {
     url,
     server,
@@ -458,7 +458,13 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   };
 }
 
-async function getSSLCert({ name, directory }: any) {
+async function getSSLCertAsync({
+  name,
+  directory,
+}: {
+  name: string;
+  directory: string;
+}): Promise<{ keyPath: string; certPath: string } | false> {
   console.log(
     chalk.magenta`Ensuring auto SSL certificate is created (you might need to re-run with sudo)`
   );
@@ -466,11 +472,13 @@ async function getSSLCert({ name, directory }: any) {
     const result = await devcert.certificateFor(name);
     if (result) {
       const { key, cert } = result;
-      await fs.ensureDir(path.join(directory, '.expo', 'ssl'));
-      const keyPath = path.join(directory, '.expo', 'ssl', 'key.pem');
+      const folder = path.join(directory, '.expo', 'web', 'development', 'ssl');
+      await fs.ensureDir(folder);
+
+      const keyPath = path.join(folder, `key-${name}.pem`);
       await fs.writeFile(keyPath, key);
 
-      const certPath = path.join(directory, '.expo', 'ssl', 'cert.pem');
+      const certPath = path.join(folder, `cert-${name}.pem`);
       await fs.writeFile(certPath, cert);
 
       return {
@@ -479,8 +487,8 @@ async function getSSLCert({ name, directory }: any) {
       };
     }
     return result;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(`Error creating SSL certificates: ${error}`);
   }
 
   return false;
