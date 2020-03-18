@@ -13,16 +13,29 @@ const packageJson = () => require('../package.json');
 
 const program = new Command(packageJson().name).version(packageJson().version);
 
+const validateSourceArgument = (src: string, command: string) => {
+  if (!src)
+    throw new Error(
+      `You must supply a valid image path or remote URL.\nExample:\n$ expo-pwa ${command} ./assets/icon.png`
+    );
+};
+const validateConfigArgument = (src: string, command: string) => {
+  if (!src)
+    throw new Error(
+      `You must supply a valid Expo config (app.config, or app.json) path.\nExample:\n$ expo-pwa ${command} ./app.config.js`
+    );
+};
+
 program
   .command('icon <src>')
   .description('Generate the home screen icons for a PWA')
   .option('-o, --output <folder>', 'Output directory', 'web')
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
-  .option('--resize <mode>', 'Resize mode to use', 'contain')
-  .option('--color <color>', 'Background color for images (must be opaque)')
+  .option('-r, --resize <mode>', 'Resize mode to use', 'contain')
+  .option('-c, --color <color>', 'Background color for images (must be opaque)')
   .option('--platform <platform>', 'Platform to generate for: safari, chrome')
   .action((src: string, options) => {
-    if (!src) throw new Error('pass image path with --src <path.png>');
+    validateSourceArgument(src, 'icon');
     generateAssets(options.platform + '-icon', {
       src,
       output: options.output,
@@ -39,10 +52,10 @@ program
   .description('Generate the favicons for a website')
   .option('-o, --output <folder>', 'Output directory', 'web')
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
-  .option('--resize <mode>', 'Resize mode to use', 'contain')
-  .option('--color <color>', 'Background color of the image', 'transparent')
+  .option('-r, --resize <mode>', 'Resize mode to use', 'contain')
+  .option('-c, --color <color>', 'Background color of the image', 'transparent')
   .action((src: string, options) => {
-    if (!src) throw new Error('pass image path with --src <path.png>');
+    validateSourceArgument(src, 'favicon');
     generateAssets('favicon', {
       src,
       output: options.output,
@@ -59,10 +72,10 @@ program
   .description('Generate the Safari splash screens for a PWA')
   .option('-o, --output <folder>', 'Output directory', 'web')
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
-  .option('--resize <mode>', 'Resize mode to use', 'contain')
-  .option('--color <color>', 'Background color of the image', 'white')
+  .option('-r, --resize <mode>', 'Resize mode to use', 'contain')
+  .option('-c, --color <color>', 'Background color of the image', 'white')
   .action((src: string, options) => {
-    if (!src) throw new Error('pass image path with --src <path.png>');
+    validateSourceArgument(src, 'splash');
     generateAssets('splash', {
       src,
       output: options.output,
@@ -80,7 +93,7 @@ program
   .option('-o, --output <folder>', 'Output directory', 'web')
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
   .action((config: string, options) => {
-    if (!config) throw new Error('pass an Expo config with the first argument');
+    validateConfigArgument(config, 'manifest');
     generateAssets('manifest', {
       src: '',
       output: options.output,
