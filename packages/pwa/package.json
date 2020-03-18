@@ -25,6 +25,7 @@
   ],
   "scripts": {
     "prepare": "yarn run clean && yarn run build",
+    "test": "jest",
     "lint": "eslint .",
     "watch": "tsc --watch",
     "build": "tsc",
