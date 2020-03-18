@@ -1,5 +1,5 @@
 {
-  "name": "@expo/pwa",
+  "name": "expo-pwa",
   "version": "0.0.0",
   "main": "build",
   "preferGlobal": true,

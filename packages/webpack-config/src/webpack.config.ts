@@ -19,7 +19,7 @@ import {
   getFaviconIconConfig,
   getSafariIconConfig,
   getSafariStartupImageConfig,
-} from '@expo/pwa';
+} from 'expo-pwa';
 import { projectHasModule } from '@expo/config';
 import { parse } from 'node-html-parser';
 import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';

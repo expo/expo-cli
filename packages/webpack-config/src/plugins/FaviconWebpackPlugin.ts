@@ -1,6 +1,6 @@
 import { Compiler, compilation } from 'webpack';
 
-import { IconOptions, ProjectOptions, generateFaviconAsync } from '@expo/pwa';
+import { IconOptions, ProjectOptions, generateFaviconAsync } from 'expo-pwa';
 import chalk from 'chalk';
 import ModifyHtmlWebpackPlugin, { HTMLLinkNode, HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 

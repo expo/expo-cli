@@ -82,7 +82,7 @@ Control how the default Babel loader is configured.
 
 ### PWAs
 
-- See the docs for [`@expo/pwa`](../pwa) to learn more about creating the assets manually.
+- See the docs for [`expo-pwa`](../pwa) to learn more about creating the assets manually.
 - Disable automatic PWA generation with `expo build:web --no-pwa`.
 - `expo build:web` will automatically skip any PWA asset that's already linked in the project's local `web/index.html`.
 - Having sharp CLI installed globally will speed up asset generation, if it's not installed, Jimp will be used instead.

@@ -1,6 +1,6 @@
 <!-- Title -->
 <h1 align="center">
-👋 Welcome to <br><code>@expo/pwa</code>
+👋 Welcome to <br><code>expo-pwa</code>
 </h1>
 
 <!-- Header -->
@@ -38,7 +38,9 @@ npm install -g sharp-cli
 
 ## 🤔 Why?
 
-This package was created as a universal solution for creating PWA assets locally, with _optional_ native acceleration via Sharp CLI, falling back on Jimp for wider device compatibility.
+This package was created as a universal solution for creating PWA assets locally, with _optional_ native acceleration via Sharp CLI, falling back on Jimp for wider device compatibility. Internally the `@expo/webpack-config` uses this package to generate PWA compliant website for Expo projects.
+
+> Image generation is not limited to Expo projects.
 
 ## License
 

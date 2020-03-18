@@ -1,5 +1,5 @@
 import { ExpoConfig } from '@expo/config';
-import { generateManifestJson } from '@expo/pwa';
+import { generateManifestJson } from 'expo-pwa';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 
