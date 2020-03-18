@@ -13,12 +13,12 @@ describe('getConfig', () => {
   // - ensure `app.config` has higher priority to `app`
   // - generated `.expo` object is created and the language hint is added
   describe('language support', () => {
-    xit('parses a ts config', () => {
+    it('parses a ts config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/ts');
       const { exp } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
-      expect(exp.foo).toBe('bar');
+      expect(exp.foo).toBe('bar+value');
       expect(exp.name).toBe('rewrote+ts-config-test');
     });
     it('parses a js config', () => {

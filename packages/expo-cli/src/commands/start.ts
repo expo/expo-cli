@@ -26,6 +26,10 @@ type NormalizedOptions = {
   clear?: boolean;
   maxWorkers?: number;
   sendTo?: string;
+  host?: string;
+  lan?: boolean;
+  localhost?: boolean;
+  tunnel?: boolean;
 };
 
 type Options = NormalizedOptions & {
@@ -73,6 +77,18 @@ async function normalizeOptionsAsync(
   }
   if (hasBooleanArg(rawArgs, 'https')) {
     opts.https = getBooleanArg(rawArgs, 'https');
+  }
+  if (hasBooleanArg(rawArgs, 'localhost')) {
+    opts.localhost = getBooleanArg(rawArgs, 'localhost');
+  }
+  if (hasBooleanArg(rawArgs, 'lan')) {
+    opts.lan = getBooleanArg(rawArgs, 'lan');
+  }
+  if (hasBooleanArg(rawArgs, 'tunnel')) {
+    opts.tunnel = getBooleanArg(rawArgs, 'tunnel');
+  }
+  if (options.host) {
+    opts.host = options.host;
   }
 
   await cacheOptionsAsync(projectDir, opts);

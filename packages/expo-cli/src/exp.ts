@@ -340,7 +340,7 @@ function runAsync(programName: string) {
         serverUrl = `http://${serverUrl}`;
       }
       let parsedUrl = url.parse(serverUrl);
-      const port = parseInt(parsedUrl.port || '');
+      const port = parseInt(parsedUrl.port || '', 10);
       if (parsedUrl.hostname && port) {
         Config.api.host = parsedUrl.hostname;
         Config.api.port = port;

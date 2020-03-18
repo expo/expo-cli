@@ -36,6 +36,7 @@ async function optsAsync(projectDir: string, options: any) {
   opts.hostType = 'lan';
 
   if (options.offline) {
+    // TODO: maybe let people know that we will force localhost with offline?
     ConnectionStatus.setIsOffline(true);
     opts.hostType = 'localhost';
   }
