@@ -1,5 +1,34 @@
 import * as Web from '../Web';
 
+describe('createPWAManifestFromWebConfig', () => {
+  // Important for ensuring that we keep the manifest minimal
+  it(`omits related_applications when none are defined`, () => {
+    const config = {
+      relatedApplications: [],
+      // Even if this is true, we will correct the error by not including it.
+      preferRelatedApplications: true,
+    };
+    const manifest = Web.createPWAManifestFromWebConfig(config);
+    expect(manifest.prefer_related_applications).not.toBeDefined();
+    expect(manifest.related_applications).not.toBeDefined();
+  });
+  it(`includes related_applications when at least one is defined`, () => {
+    const config = {
+      relatedApplications: [{}],
+      preferRelatedApplications: true,
+    };
+    const manifest = Web.createPWAManifestFromWebConfig(config);
+    expect(manifest.prefer_related_applications).toBe(true);
+    expect(manifest.related_applications).toBeDefined();
+  });
+  it(`validates that the object is defined`, () => {
+    expect(() => Web.createPWAManifestFromWebConfig(null)).toThrow(`must be a valid object`);
+  });
+});
+
+/**
+ * Icons
+ */
 describe('getChromeIconConfig', () => {
   it(`defaults to android.icon`, () => {
     const config = {

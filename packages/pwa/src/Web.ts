@@ -1,6 +1,7 @@
 import {
   AppJSONConfig,
   ExpoConfig,
+  WebPlatformConfig,
   getConfig,
   getNameFromConfig,
   getWebOutputPath,
@@ -228,7 +229,6 @@ export function getSafariStartupImageConfig(config: ExpoConfig): IconOptions | n
 }
 
 export function getSafariIconConfig(config: ExpoConfig): IconOptions | null {
-  // enforce no defaults
   const validate = (input: string): IconOptions => ({
     resizeMode: 'contain',
     src: input,
@@ -246,7 +246,6 @@ export function getSafariIconConfig(config: ExpoConfig): IconOptions | null {
 }
 
 export function getFaviconIconConfig(config: ExpoConfig): IconOptions | null {
-  // enforce no defaults
   const validate = (input: string): IconOptions => ({
     resizeMode: 'contain',
     src: input,
@@ -264,7 +263,6 @@ export function getFaviconIconConfig(config: ExpoConfig): IconOptions | null {
 }
 
 export function getChromeIconConfig(config: ExpoConfig): IconOptions | null {
-  // enforce no defaults
   const validate = (input: string): IconOptions => ({
     resizeMode: 'contain',
     src: input,
@@ -290,12 +288,10 @@ function isObject(item: any): item is Record<any, any> {
   return typeof item === 'object' && !Array.isArray(item) && item !== null;
 }
 
-export function createPWAManifestFromConfig(appJson: ExpoConfig): Manifest {
-  if (!isObject(appJson)) {
-    throw new Error('app.json must be an object');
+export function createPWAManifestFromWebConfig(config?: WebPlatformConfig): Manifest {
+  if (!isObject(config)) {
+    throw new Error('Web config must be a valid object');
   }
-
-  const { web: config = {} } = appJson;
 
   const manifest: Manifest = {
     background_color: config.backgroundColor,

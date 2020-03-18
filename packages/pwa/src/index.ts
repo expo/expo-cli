@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as Cache from './Cache';
 import * as Image from './Image';
 import { assembleOrientationMedia, getDevices } from './Splash';
-import { createPWAManifestFromConfig, getConfigForPWA } from './Web';
+import { createPWAManifestFromWebConfig, getConfigForPWA } from './Web';
 import { HTMLOutput, IconOptions, Manifest, ProjectOptions, SplashIcon } from './Web.types';
 
 export async function generateAsync(
@@ -270,7 +270,7 @@ export function generateManifestJson(
     if (!projectRoot) throw new Error('You must either define projectRoot or config');
     config = getConfigForPWA(projectRoot);
   }
-  return createPWAManifestFromConfig(config);
+  return createPWAManifestFromWebConfig(config.web);
 }
 
 export { getConfigForPWA };
