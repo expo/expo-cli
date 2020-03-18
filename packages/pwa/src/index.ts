@@ -1,4 +1,4 @@
-import { ExpoConfig } from '@expo/config';
+import { ExpoConfig, setCustomConfigPath } from '@expo/config';
 import * as path from 'path';
 
 import * as Cache from './Cache';
@@ -21,10 +21,8 @@ export async function generateAsync(
       return generateChromeIconAsync(options, icon, {});
     case 'favicon':
       return generateFaviconAsync(options, icon);
-    case 'manifest':
-      return generateManifestAsync(options);
   }
-  throw new Error('invalid type: ' + type);
+  throw new Error(`Invalid command type: ${type}`);
 }
 
 export async function generateSplashAsync(
@@ -245,13 +243,17 @@ export async function generateFaviconAsync(
 
 export async function generateManifestAsync(
   options: ProjectOptions,
+  configPath?: string,
   config?: ExpoConfig
 ): Promise<HTMLOutput[]> {
+  if (configPath) {
+    setCustomConfigPath(options.projectRoot, configPath);
+  }
   const manifest = generateManifestJson(options, config);
   return [
     {
       // TODO: Bacon: Make the types more flexible
-      asset: { source: JSON.stringify(manifest) as any, path: 'manifest.json' },
+      asset: { source: JSON.stringify(manifest, null, 2) as any, path: 'manifest.json' },
       tag: {
         tagName: 'link',
         attributes: { rel: 'manifest', href: path.join(options.publicPath, 'manifest.json') },

@@ -3,9 +3,9 @@ import { ResizeMode } from '@expo/image-utils';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs-extra';
-import { dirname, relative, resolve } from 'path';
+import { dirname, join, relative, resolve } from 'path';
 
-import { HTMLOutput, generateAsync } from '.';
+import { HTMLOutput, generateAsync, generateManifestAsync } from '.';
 import { htmlTagObjectToString } from './HTML';
 import shouldUpdate from './update';
 
@@ -14,93 +14,130 @@ const packageJson = () => require('../package.json');
 const program = new Command(packageJson().name).version(packageJson().version);
 
 const validateSourceArgument = (src: string, command: string) => {
-  if (!src)
-    throw new Error(
-      `You must supply a valid image path or remote URL.\nExample:\n$ expo-pwa ${command} ./assets/icon.png`
-    );
-};
-const validateConfigArgument = (src: string, command: string) => {
-  if (!src)
-    throw new Error(
-      `You must supply a valid Expo config (app.config, or app.json) path.\nExample:\n$ expo-pwa ${command} ./app.config.js`
-    );
+  if (!src) {
+    console.error(chalk.black.bgRed(`You must supply a valid image path or remote URL. Example:`));
+    console.error(`\n   $ expo-pwa ${command} -i ./assets/icon.png`);
+    console.error();
+    process.exit(-1);
+  }
 };
 
-program
-  .command('icon <src>')
+type ManifestCommandOptions = {
+  output: string;
+  input?: string;
+  public?: string;
+};
+
+type AssetCommandOptions = {
+  output: string;
+  input: string;
+  public?: string;
+  resize?: string;
+  color?: string;
+};
+
+type IconAssetCommandOptions = AssetCommandOptions & {
+  platform: 'safari' | 'chrome';
+};
+
+function outputCommand(name: string, examples: string[] = []): Command {
+  return program
+    .command(`${name} [project-root]`)
+    .option('-i, --input <file>', 'Input file to process')
+    .option('-o, --output <path>', 'Output directory. Default: <project-root/>web')
+    .option('-p, --public <path>', 'Public folder. Default: <output>')
+    .on('--help', () => {
+      if (!examples.length) return;
+
+      console.log();
+      console.log('Examples:');
+      console.log();
+      for (const example of examples) {
+        console.log(`  $ expo-pwa ${name} ${example}`);
+      }
+      console.log();
+    });
+}
+
+function assetCommand(name: string, examples: string[] = []): Command {
+  return outputCommand(name, examples)
+    .option('-r, --resize', 'Resize mode to use [contain, cover]', 'contain')
+    .option('-c, --color', 'CSS background color for to use for the images (should be opaque).');
+}
+
+assetCommand('icon', ['--platform safari -i ./icon.png', '--platform chrome -i ./icon.png'])
   .description('Generate the home screen icons for a PWA')
-  .option('-o, --output <folder>', 'Output directory', 'web')
-  .option('-p, --public <folder>', 'Public folder. Default: <output>')
-  .option('-r, --resize <mode>', 'Resize mode to use', 'contain')
-  .option('-c, --color <color>', 'Background color for images (must be opaque)')
-  .option('--platform <platform>', 'Platform to generate for: safari, chrome')
-  .action((src: string, options) => {
-    validateSourceArgument(src, 'icon');
-    generateAssets(options.platform + '-icon', {
-      src,
-      output: options.output,
-      publicPath: options.public || options.output,
+  .option('--platform', 'Platform to generate for: safari, chrome')
+  .action((inputProjectRoot: string, options: IconAssetCommandOptions) => {
+    validateSourceArgument(options.input, 'favicon');
+    const projectRoot = inputProjectRoot ?? process.cwd();
+    const output = options.output ?? join(projectRoot, 'web');
+
+    generateAssets(projectRoot, options.platform + '-icon', {
+      src: options.input,
+      output,
+      publicPath: options.public || output,
       resizeMode: options.resize,
-      color: options.color,
+      color: options.color || 'transparent',
     })
       .then(shouldUpdate)
       .catch(commandDidThrowAsync);
   });
 
-program
-  .command('favicon <src>')
+assetCommand('favicon', ['-i ./icon.png'])
   .description('Generate the favicons for a website')
-  .option('-o, --output <folder>', 'Output directory', 'web')
-  .option('-p, --public <folder>', 'Public folder. Default: <output>')
-  .option('-r, --resize <mode>', 'Resize mode to use', 'contain')
-  .option('-c, --color <color>', 'Background color of the image', 'transparent')
-  .action((src: string, options) => {
-    validateSourceArgument(src, 'favicon');
-    generateAssets('favicon', {
-      src,
-      output: options.output,
-      publicPath: options.public || options.output,
+  .action((inputProjectRoot: string, options: AssetCommandOptions) => {
+    validateSourceArgument(options.input, 'favicon');
+    const projectRoot = inputProjectRoot ?? process.cwd();
+    const output = options.output ?? join(projectRoot, 'web');
+
+    generateAssets(projectRoot, 'favicon', {
+      src: options.input,
+      output,
+      publicPath: options.public || output,
       resizeMode: options.resize,
-      color: options.color,
+      color: options.color || 'transparent',
     })
       .then(shouldUpdate)
       .catch(commandDidThrowAsync);
   });
 
-program
-  .command('splash <src>')
+assetCommand('splash', ['--color blue --resize cover -i ./splash.png'])
   .description('Generate the Safari splash screens for a PWA')
-  .option('-o, --output <folder>', 'Output directory', 'web')
-  .option('-p, --public <folder>', 'Public folder. Default: <output>')
-  .option('-r, --resize <mode>', 'Resize mode to use', 'contain')
-  .option('-c, --color <color>', 'Background color of the image', 'white')
-  .action((src: string, options) => {
-    validateSourceArgument(src, 'splash');
-    generateAssets('splash', {
-      src,
-      output: options.output,
-      publicPath: options.public || options.output,
+  .action((inputProjectRoot: string, options: AssetCommandOptions) => {
+    validateSourceArgument(options.input, 'favicon');
+    const projectRoot = inputProjectRoot ?? process.cwd();
+    const output = options.output ?? join(projectRoot, 'web');
+
+    generateAssets(projectRoot, 'splash', {
+      src: options.input,
+      output,
+      publicPath: options.public || output,
       resizeMode: options.resize,
-      color: options.color,
+      color: options.color || 'white',
     })
       .then(shouldUpdate)
       .catch(commandDidThrowAsync);
   });
 
-program
-  .command('manifest <config>')
+outputCommand('manifest', ['-i ./random.config.js'])
   .description('Generate the PWA manifest from an Expo project config')
-  .option('-o, --output <folder>', 'Output directory', 'web')
-  .option('-p, --public <folder>', 'Public folder. Default: <output>')
-  .action((config: string, options) => {
-    validateConfigArgument(config, 'manifest');
-    generateAssets('manifest', {
-      src: '',
-      output: options.output,
-      publicPath: options.public || options.output,
-      resizeMode: options.resize,
-      color: options.color,
-    })
+  .action((inputProjectRoot: string, options: ManifestCommandOptions) => {
+    const projectRoot = resolve(inputProjectRoot ?? process.cwd());
+    const output = options.output ?? join(projectRoot, 'web');
+    const publicPath = resolve(options.public ?? output);
+    const outputPath = resolve(output);
+
+    (async () => {
+      const items = await generateManifestAsync(
+        {
+          projectRoot: resolve(projectRoot),
+          publicPath,
+        },
+        options.input ? resolve(options.input) : undefined
+      );
+      await resolveOutputAsync(publicPath, outputPath, items);
+    })()
       .then(shouldUpdate)
       .catch(commandDidThrowAsync);
   });
@@ -112,19 +149,25 @@ type AssetOptions = {
   output: string;
   publicPath: string;
   color: string;
-  resizeMode: string;
+  resizeMode?: string;
 };
 
 async function generateAssets(
+  projectRoot: string | undefined,
   type: string,
-  { src, output, publicPath, color: backgroundColor, resizeMode }: AssetOptions
+  { src, output, publicPath, color: backgroundColor, resizeMode = 'contain' }: AssetOptions
 ) {
   if (!isResizeMode(resizeMode)) {
-    throw new Error(`Invalid resizeMode: ${resizeMode}`);
+    console.error(
+      chalk.black.bgRed(
+        `The provided resizeMode "${resizeMode}" is invalid. Please use one of [cover, contain]`
+      )
+    );
+    process.exit(-1);
   }
   const items = await generateAsync(
     type,
-    { projectRoot: resolve(process.cwd()), publicPath: resolve(publicPath) },
+    { projectRoot: resolve(projectRoot || process.cwd()), publicPath: resolve(publicPath) },
     { src: resolve(src), backgroundColor, resizeMode }
   );
 
@@ -206,7 +249,7 @@ async function commandDidThrowAsync(reason: any) {
   if (reason.command) {
     console.log(`  ${chalk.magenta(reason.command)} has failed.`);
   } else {
-    console.log(chalk.red`An unexpected error was encountered. Please report it as a bug:`);
+    console.log(chalk.black.bgRed`An unexpected error was encountered. Please report it as a bug:`);
     console.log(reason);
   }
   console.log();
