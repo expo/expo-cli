@@ -1,4 +1,4 @@
-import { AppJSONConfig, BareAppConfig, configFilename, readConfigJsonAsync } from '@expo/config';
+import { AppJSONConfig, BareAppConfig, getConfig } from '@expo/config';
 
 import { getEntryPoint } from '@expo/config/paths';
 import fs from 'fs-extra';
@@ -8,8 +8,12 @@ import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
 import Minipass from 'minipass';
 import pacote, { PackageSpec } from 'pacote';
+import { Readable } from 'stream';
 import tar from 'tar';
+import yaml from 'js-yaml';
 
+import { NpmPackageManager, YarnPackageManager } from '@expo/package-manager';
+import semver from 'semver';
 import Api from './Api';
 import ApiV2 from './ApiV2';
 import Logger from './Logger';
@@ -122,9 +126,25 @@ export async function extractTemplateAppAsync(
   targetPath: string,
   config: AppJSONConfig | BareAppConfig
 ) {
-  let tarStream = await pacote.tarball.stream(templateSpec, {
-    cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
-  });
+  await pacote.tarball.stream(
+    templateSpec,
+    tarStream => {
+      return extractTemplateAppAsyncImpl(templateSpec, targetPath, config, tarStream);
+    },
+    {
+      cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
+    }
+  );
+
+  return targetPath;
+}
+
+async function extractTemplateAppAsyncImpl(
+  templateSpec: PackageSpec,
+  targetPath: string,
+  config: AppJSONConfig | BareAppConfig,
+  tarStream: Readable
+) {
   await fs.mkdirp(targetPath);
   await new Promise((resolve, reject) => {
     const extractStream = tar.x({
@@ -152,8 +172,6 @@ export async function extractTemplateAppAsync(
     extractStream.on('close', resolve);
     tarStream.pipe(extractStream);
   });
-
-  return targetPath;
 }
 
 async function initGitRepoAsync(root: string) {
@@ -184,16 +202,32 @@ async function initGitRepoAsync(root: string) {
 async function installDependenciesAsync(projectRoot: string, packageManager: 'yarn' | 'npm') {
   Logger.global.info('Installing dependencies...');
 
+  const options = { cwd: projectRoot };
   if (packageManager === 'yarn') {
-    await spawnAsync('yarnpkg', ['install'], {
-      cwd: projectRoot,
-      stdio: 'inherit',
-    });
+    const yarn = new YarnPackageManager(options);
+    const version = await yarn.versionAsync();
+    const nodeLinker = await yarn.getConfigAsync('nodeLinker');
+    if (semver.satisfies(version, '>=2.0.0-rc.24') && nodeLinker !== 'node-modules') {
+      const yarnRc = path.join(projectRoot, '.yarnrc.yml');
+      let yamlString = '';
+      try {
+        yamlString = fs.readFileSync(yarnRc, 'utf8');
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          throw error;
+        }
+      }
+      const config = yamlString ? yaml.safeLoad(yamlString) : {};
+      config.nodeLinker = 'node-modules';
+      Logger.global.warn(
+        `Yarn v${version} detected, enabling experimental Yarn v2 support using the node-modules plugin.`
+      );
+      Logger.global.info(`Writing ${yarnRc}...`);
+      fs.writeFileSync(yarnRc, yaml.safeDump(config));
+    }
+    await yarn.installAsync();
   } else {
-    await spawnAsync('npm', ['install'], {
-      cwd: projectRoot,
-      stdio: 'inherit',
-    });
+    await new NpmPackageManager(options).installAsync();
   }
 }
 
@@ -231,24 +265,23 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
 
   let { username } = user;
 
-  const { exp } = await readConfigJsonAsync(root);
+  // Evaluate the project config and throw an error if the `sdkVersion` cannot be found.
+  const { exp } = getConfig(root);
 
   const name = exp.slug;
   const { version, sdkVersion } = exp;
 
-  const configName = configFilename(root);
-
-  if (!sdkVersion) {
-    throw new Error(`sdkVersion is missing from ${configName}`);
-  }
-
   if (!name) {
     // slug is made programmatically for app.json
-    throw new Error(`slug field is missing from exp.json.`);
+    throw new Error(
+      `Cannot find the project's \`slug\`. Please add a \`name\` or \`slug\` field in the project's \`app.json\` or \`app.config.js\`). ex: \`"slug": "my-project"\``
+    );
   }
 
   if (!version) {
-    throw new Error(`Can't get version of package.`);
+    throw new Error(
+      `Cannot find the project's \`version\`. Please define it in one of the project's config files: \`package.json\`, \`app.json\`, or \`app.config.js\`. ex: \`"version": "1.0.0"\``
+    );
   }
 
   const remotePackageName = name;
@@ -263,7 +296,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
       remoteUsername,
       remotePackageName,
       remoteFullPackageName,
-      sdkVersion,
+      sdkVersion: sdkVersion!,
       iosBundleIdentifier,
       androidPackage,
     },

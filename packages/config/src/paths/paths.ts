@@ -3,7 +3,7 @@ import path from 'path';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 
 import resolveFrom from 'resolve-from';
-import { readConfigJson } from '../Config';
+import { getConfig } from '../Config';
 import { resolveModule } from '../Modules';
 import { getManagedExtensions } from './extensions';
 
@@ -59,7 +59,7 @@ export function getEntryPointWithExtensions(
   entryFiles: string[],
   extensions: string[]
 ): string {
-  const { exp, pkg } = readConfigJson(projectRoot, true, true);
+  const { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   // This will first look in the `app.json`s `expo.entryPoint` field for a potential main file.
   // We check the Expo config first in case you want your project to start differently with Expo then in a standalone environment.

@@ -1,10 +1,5 @@
 /* eslint-env node */
-
-import { ExpoConfig, getWebOutputPath, readConfigJson, readConfigJsonAsync } from '@expo/config';
-import fs from 'fs';
-import path from 'path';
-import url from 'url';
-
+import { ExpoConfig, getConfig, getWebOutputPath } from '@expo/config';
 import {
   ensureSlash,
   getAbsolutePathWithProjectRoot,
@@ -12,7 +7,11 @@ import {
   getModulesPath,
   getPossibleProjectRoot,
 } from '@expo/config/paths';
-import { Environment, FilePaths } from '../types';
+import fs from 'fs';
+import path from 'path';
+import url from 'url';
+
+import { Environment, FilePaths, Mode } from '../types';
 import getMode from './getMode';
 
 function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePaths {
@@ -42,12 +41,19 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
     return path.resolve(modulesPath, ...props);
   }
 
+  let appMain: string | null = null;
+  try {
+    appMain = getEntryPoint(inputProjectRoot, ['./index', './src/index'], ['web']);
+  } catch (_) {
+    // ignore the error
+  }
+
   return {
     absolute,
     includeModule: getIncludeModule,
     packageJson: packageJsonPath,
     root: path.resolve(inputProjectRoot),
-    appMain: getEntryPoint(inputProjectRoot, ['./index', './src/index'], ['web']),
+    appMain,
     modules: modulesPath,
     servedPath: getServedPath(inputProjectRoot),
     template: {
@@ -81,7 +87,9 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
  * @category env
  */
 export function getPaths(projectRoot: string): FilePaths {
-  const { exp } = readConfigJson(projectRoot, true, true);
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
   return parsePaths(projectRoot, exp);
 }
 
@@ -94,7 +102,7 @@ export function getPaths(projectRoot: string): FilePaths {
 export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
   let exp;
   try {
-    exp = (await readConfigJsonAsync(projectRoot, true, true)).exp;
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
   } catch (error) {}
   return parsePaths(projectRoot, exp);
 }
@@ -106,7 +114,9 @@ export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
  * @category env
  */
 export function getServedPath(projectRoot: string): string {
-  const { pkg } = readConfigJson(projectRoot, true, true);
+  const { pkg } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
   const envPublicUrl = process.env.WEB_PUBLIC_URL;
 
   // We use `WEB_PUBLIC_URL` environment variable or "homepage" field to infer
@@ -126,10 +136,9 @@ export function getServedPath(projectRoot: string): string {
  * @param env
  * @category env
  */
-export function getPublicPaths({
-  projectRoot,
-  ...env
-}: Pick<Environment, 'mode' | 'projectRoot'>): {
+export function getPublicPaths(
+  env: Pick<Environment, 'mode' | 'projectRoot'>
+): {
   /**
    * Webpack uses `publicPath` to determine where the app is being served from.
    * It requires a trailing slash, or the file assets will get an incorrect path.
@@ -144,8 +153,9 @@ export function getPublicPaths({
    */
   publicUrl: string;
 } {
-  if (getMode(env) === 'production') {
-    const publicPath = getServedPath(projectRoot);
+  const parsedMode = getMode(env);
+  if (parsedMode === 'production') {
+    const publicPath = getServedPath(env.projectRoot);
     return {
       publicPath,
       publicUrl: publicPath.slice(0, -1),
@@ -162,7 +172,9 @@ export function getPublicPaths({
  * @category env
  */
 export function getProductionPath(projectRoot: string): string {
-  const { exp } = readConfigJson(projectRoot, true, true);
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
   return getAbsolutePathWithProjectRoot(projectRoot, getWebOutputPath(exp));
 }
 

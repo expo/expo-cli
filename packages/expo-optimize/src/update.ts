@@ -12,7 +12,7 @@ function shouldUseYarn() {
 }
 
 export default async function shouldUpdate() {
-  const packageJson = () => require('../package.json');
+  const packageJson = () => require('expo-optimize/package.json');
 
   const update = checkForUpdate(packageJson()).catch(() => null);
 

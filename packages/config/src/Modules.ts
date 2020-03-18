@@ -1,6 +1,8 @@
 import resolveFrom from 'resolve-from';
 import { stat, statSync } from 'fs-extra';
+import { join, resolve } from 'path';
 import { ExpoConfig } from './Config.types';
+import { ConfigError } from './Errors';
 
 export function resolveModule(
   request: string,
@@ -46,4 +48,21 @@ export function fileExists(file: string): boolean {
   } catch (e) {
     return false;
   }
+}
+
+export function getRootPackageJsonPath(
+  projectRoot: string,
+  exp: Pick<ExpoConfig, 'nodeModulesPath'>
+): string {
+  const packageJsonPath =
+    'nodeModulesPath' in exp && typeof exp.nodeModulesPath === 'string'
+      ? join(resolve(projectRoot, exp.nodeModulesPath), 'package.json')
+      : join(projectRoot, 'package.json');
+  if (!fileExists(packageJsonPath)) {
+    throw new ConfigError(
+      `The expected package.json path: ${packageJsonPath} does not exist`,
+      'MODULE_NOT_FOUND'
+    );
+  }
+  return packageJsonPath;
 }

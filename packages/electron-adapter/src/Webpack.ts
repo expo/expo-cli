@@ -25,7 +25,6 @@ export function withExpoWebpack(
   const env: any = {
     platform: 'electron',
     projectRoot,
-    mode: config.mode === 'production' ? config.mode : 'development',
     locations: getPaths(projectRoot),
   };
   if (!config.plugins) config.plugins = [];

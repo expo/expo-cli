@@ -1,11 +1,113 @@
 import JsonFile, { JSONObject } from '@expo/json-file';
-import fs from 'fs-extra';
 import path from 'path';
 import slug from 'slugify';
 
-import { AppJSONConfig, ExpRc, ExpoConfig, PackageJSONConfig, ProjectConfig } from './Config.types';
+import {
+  AppJSONConfig,
+  ConfigContext,
+  ExpRc,
+  ExpoConfig,
+  GetConfigOptions,
+  PackageJSONConfig,
+  Platform,
+  ProjectConfig,
+} from './Config.types';
+
 import { ConfigError } from './Errors';
+import { findAndEvalConfig } from './getConfig';
+import { getRootPackageJsonPath, projectHasModule } from './Modules';
 import { getExpoSDKVersion } from './Project';
+
+/**
+ * Get all platforms that a project is currently capable of running.
+ *
+ * @param projectRoot
+ * @param exp
+ */
+function getSupportedPlatforms(
+  projectRoot: string,
+  exp: Pick<ExpoConfig, 'nodeModulesPath'>
+): Platform[] {
+  const platforms: Platform[] = [];
+  if (projectHasModule('react-native', projectRoot, exp)) {
+    platforms.push('ios', 'android');
+  }
+  if (projectHasModule('react-native-web', projectRoot, exp)) {
+    platforms.push('web');
+  }
+  return platforms;
+}
+
+function getConfigContext(
+  projectRoot: string,
+  options: GetConfigOptions
+): { context: ConfigContext; pkg: JSONObject } {
+  // TODO(Bacon): This doesn't support changing the location of the package.json
+  const packageJsonPath = getRootPackageJsonPath(projectRoot, {});
+  const pkg = JsonFile.read(packageJsonPath);
+
+  const configPath = options.configPath || customConfigPaths[projectRoot];
+
+  // If the app.json exists, we'll read it and pass it to the app.config.js for further modification
+  const { configPath: appJsonConfigPath } = findConfigFile(projectRoot);
+  let rawConfig: JSONObject = {};
+  try {
+    rawConfig = JsonFile.read(appJsonConfigPath, { json5: true });
+    if (typeof rawConfig.expo === 'object') {
+      rawConfig = rawConfig.expo as JSONObject;
+    }
+  } catch (_) {}
+
+  const { exp: configFromPkg } = ensureConfigHasDefaultValues(projectRoot, rawConfig, pkg, true);
+
+  return {
+    pkg,
+    context: {
+      projectRoot,
+      configPath,
+      config: configFromPkg,
+    },
+  };
+}
+
+/**
+ * Evaluate the config for an Expo project.
+ * If a function is exported from the `app.config.js` then a partial config will be passed as an argument.
+ * The partial config is composed from any existing app.json, and certain fields from the `package.json` like name and description.
+ *
+ *
+ * **Example**
+ * ```js
+ * module.exports = function({ config }) {
+ *   // mutate the config before returning it.
+ *   config.slug = 'new slug'
+ *   return config;
+ * }
+ *
+ * **Supports**
+ * - `app.config.js`
+ * - `app.config.json`
+ * - `app.json`
+ *
+ * @param projectRoot the root folder containing all of your application code
+ * @param options enforce criteria for a project config
+ */
+export function getConfig(projectRoot: string, options: GetConfigOptions = {}): ProjectConfig {
+  const { context, pkg } = getConfigContext(projectRoot, options);
+
+  const config = findAndEvalConfig(context) ?? context.config;
+
+  return {
+    ...ensureConfigHasDefaultValues(projectRoot, config, pkg, options.skipSDKVersionRequirement),
+    rootConfig: config as AppJSONConfig,
+  };
+}
+
+export function getPackageJson(projectRoot: string): PackageJSONConfig {
+  // TODO(Bacon): This doesn't support changing the location of the package.json
+  const packageJsonPath = getRootPackageJsonPath(projectRoot, {});
+  return JsonFile.read(packageJsonPath);
+}
 
 export function readConfigJson(
   projectRoot: string,
@@ -110,30 +212,16 @@ function parseAndValidateRootConfig(
     );
   }
   return {
-    exp,
-    rootConfig: outputRootConfig,
+    exp: { ...exp },
+    rootConfig: { ...outputRootConfig },
   };
-}
-
-function getRootPackageJsonPath(projectRoot: string, exp: ExpoConfig): string {
-  const packageJsonPath =
-    'nodeModulesPath' in exp && typeof exp.nodeModulesPath === 'string'
-      ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json')
-      : path.join(projectRoot, 'package.json');
-  if (!fs.existsSync(packageJsonPath)) {
-    throw new ConfigError(
-      `The expected package.json path: ${packageJsonPath} does not exist`,
-      'MODULE_NOT_FOUND'
-    );
-  }
-  return packageJsonPath;
 }
 
 function ensureConfigHasDefaultValues(
   projectRoot: string,
   exp: ExpoConfig,
   pkg: JSONObject,
-  skipNativeValidation: boolean = false
+  skipSDKVersionRequirement: boolean = false
 ): { exp: ExpoConfig; pkg: PackageJSONConfig } {
   if (!exp) exp = {};
 
@@ -160,11 +248,11 @@ function ensureConfigHasDefaultValues(
   try {
     exp.sdkVersion = getExpoSDKVersion(projectRoot, exp);
   } catch (error) {
-    if (!skipNativeValidation) throw error;
+    if (!skipSDKVersionRequirement) throw error;
   }
 
   if (!exp.platforms) {
-    exp.platforms = ['android', 'ios'];
+    exp.platforms = getSupportedPlatforms(projectRoot, exp);
   }
 
   return { exp, pkg };
@@ -176,7 +264,7 @@ export async function writeConfigJsonAsync(
 ): Promise<ProjectConfig> {
   const { configPath } = findConfigFile(projectRoot);
   let { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot);
-  exp = { ...exp, ...options };
+  exp = { ...rootConfig.expo, ...options };
   rootConfig = { ...rootConfig, expo: exp };
 
   await JsonFile.writeAsync(configPath, rootConfig, { json5: false });
@@ -187,3 +275,5 @@ export async function writeConfigJsonAsync(
     rootConfig,
   };
 }
+
+export * from './Config.types';

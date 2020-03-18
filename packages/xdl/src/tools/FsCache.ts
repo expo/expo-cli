@@ -43,6 +43,11 @@ class Cacher<T> {
   }
 
   async getAsync(): Promise<T> {
+    // Let user opt out of cache for debugging purposes
+    if (process.env.SKIP_CACHE) {
+      return await this.refresher();
+    }
+
     let mtime: Date;
     try {
       const stats = await fs.stat(this.filename);
@@ -66,7 +71,12 @@ class Cacher<T> {
     let failedRefresh = null;
 
     // if mtime + ttl >= now, attempt to fetch the value, otherwise read from disk
-    if (new Date().getTime() - mtime.getTime() > this.ttlMilliseconds) {
+    // alternatively, if ttlMilliseconds is 0 we also update every time, regardless of the times.
+    // this is a workaround for the issue described in https://github.com/expo/expo-cli/issues/1683
+    if (
+      this.ttlMilliseconds === 0 ||
+      new Date().getTime() - mtime.getTime() > this.ttlMilliseconds
+    ) {
       try {
         fromCache = await this.refresher();
 

@@ -1,14 +1,13 @@
-import * as ConfigUtils from '@expo/config';
 import * as osascript from '@expo/osascript';
+import { getConfig } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
 import glob from 'glob-promise';
 import os from 'os';
 import path from 'path';
-import url from 'url';
-import semver from 'semver';
 import ProgressBar from 'progress';
+import semver from 'semver';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
@@ -371,13 +370,12 @@ export async function _installExpoOnSimulatorAsync(url?: string) {
     if (warningTimer) {
       clearTimeout(warningTimer);
     }
-    return setTimeout(
-      () =>
-        Logger.global.info(
-          'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'
-        ),
-      INSTALL_WARNING_TIMEOUT
-    );
+    return setTimeout(() => {
+      Logger.global.info('');
+      Logger.global.info(
+        'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'
+      );
+    }, INSTALL_WARNING_TIMEOUT);
   };
 
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
@@ -507,8 +505,9 @@ export async function openProjectAsync(
   let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
     hostType: 'localhost',
   });
-
-  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
 
   let result = await openUrlInSimulatorSafeAsync(projectUrl, !!exp.isDetached);
   if (result.success) {

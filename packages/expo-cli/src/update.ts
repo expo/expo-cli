@@ -1,6 +1,6 @@
 import { ModuleVersion } from '@expo/xdl';
 
-import packageJSON from '../package.json';
+const packageJSON = require('../package.json');
 
 const ModuleVersionChecker = ModuleVersion.createModuleVersionChecker(
   packageJSON.name,

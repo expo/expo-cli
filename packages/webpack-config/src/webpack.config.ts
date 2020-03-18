@@ -35,6 +35,9 @@ import {
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 import { overrideWithPropertyOrConfig } from './utils';
 
+// Source maps are resource heavy and can cause out of memory issue for large source files.
+const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
+
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
   { devtool }: { devtool?: Options.Devtool }
@@ -45,7 +48,7 @@ function getDevtool(
       // When big assets are involved sources maps can become expensive and cause your process to run out of memory.
       return devtool;
     }
-    return 'source-map';
+    return shouldUseSourceMap ? 'source-map' : false;
   }
   if (development) {
     return 'cheap-module-source-map';
@@ -55,12 +58,14 @@ function getDevtool(
 
 function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output {
   const commonOutput: Output = {
-    sourceMapFilename: '[chunkhash].map',
     // We inferred the "public path" (such as / or /my-project) from homepage.
     // We use "/" in development.
     publicPath,
     // Build folder (default `web-build`)
     path: locations.production.folder,
+    // this defaults to 'window', but by setting it to 'this' then
+    // module chunks which are built will work in web workers as well.
+    globalObject: 'this',
   };
 
   if (mode === 'production') {
@@ -70,7 +75,7 @@ function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output
     // Point sourcemap entries to original disk location (format as URL on Windows)
     commonOutput.devtoolModuleFilenameTemplate = (
       info: webpack.DevtoolModuleFilenameTemplateInfo
-    ): string => locations.absolute(info.absoluteResourcePath).replace(/\\/g, '/');
+    ): string => path.relative(locations.root, info.absoluteResourcePath).replace(/\\/g, '/');
   } else {
     // Add comments that describe the file import/exports.
     // This will make it easier to debug.
@@ -125,10 +130,6 @@ export default async function(
   // In solutions like Gatsby the main entry point doesn't need to be known.
   if (locations.appMain) {
     appEntry.push(locations.appMain);
-  } else {
-    throw new Error(
-      `The entry point for your project couldn't be found. Please define it in the package.json main field`
-    );
   }
 
   // Add a loose requirement on the ResizeObserver polyfill if it's installed...
@@ -162,6 +163,38 @@ export default async function(
     generatePWAImageAssets = env.pwa;
   }
 
+  const filesToCopy = [
+    {
+      from: locations.template.folder,
+      to: locations.production.folder,
+      // We generate new versions of these based on the templates
+      ignore: [
+        'expo-service-worker.js',
+        'favicon.ico',
+        'serve.json',
+        'index.html',
+        'icon.png',
+        // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
+        'register-service-worker.js',
+      ],
+    },
+    {
+      from: locations.template.serveJson,
+      to: locations.production.serveJson,
+    },
+    {
+      from: locations.template.favicon,
+      to: locations.production.favicon,
+    },
+  ];
+
+  if (env.offline !== false) {
+    filesToCopy.push({
+      from: locations.template.serviceWorker,
+      to: locations.production.serviceWorker,
+    });
+  }
+
   let webpackConfig: DevConfiguration = {
     mode,
     entry: {
@@ -183,35 +216,7 @@ export default async function(
           verbose: false,
         }),
       // Copy the template files over
-      isProd &&
-        new CopyWebpackPlugin([
-          {
-            from: locations.template.folder,
-            to: locations.production.folder,
-            // We generate new versions of these based on the templates
-            ignore: [
-              'expo-service-worker.js',
-              'favicon.ico',
-              'serve.json',
-              'index.html',
-              'icon.png',
-              // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
-              'register-service-worker.js',
-            ],
-          },
-          {
-            from: locations.template.serveJson,
-            to: locations.production.serveJson,
-          },
-          {
-            from: locations.template.favicon,
-            to: locations.production.favicon,
-          },
-          {
-            from: locations.template.serviceWorker,
-            to: locations.production.serviceWorker,
-          },
-        ]),
+      isProd && new CopyWebpackPlugin(filesToCopy),
 
       // Generate the `index.html`
       new ExpoHtmlWebpackPlugin(env),
@@ -253,13 +258,33 @@ export default async function(
           filename: 'static/css/[name].[contenthash:8].css',
           chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
         }),
-
-      // Generate a manifest file which contains a mapping of all asset filenames
-      // to their corresponding output file so that tools can pick it up without
-      // having to parse `index.html`.
+      // Generate an asset manifest file with the following content:
+      // - "files" key: Mapping of all asset filenames to their corresponding
+      //   output file so that tools can pick it up without having to parse
+      //   `index.html`
+      // - "entrypoints" key: Array of files which are included in `index.html`,
+      //   can be used to reconstruct the HTML if necessary
       new ManifestPlugin({
         fileName: 'asset-manifest.json',
         publicPath,
+        filter: ({ path }) => {
+          // Remove compressed versions and service workers
+          return !(path.endsWith('.gz') || path.endsWith('worker.js'));
+        },
+        generate: (seed: Record<string, any>, files, entrypoints) => {
+          const manifestFiles = files.reduce<Record<string, string>>((manifest, file) => {
+            if (file.name) {
+              manifest[file.name] = file.path;
+            }
+            return manifest;
+          }, seed);
+          const entrypointFiles = entrypoints.app.filter(fileName => !fileName.endsWith('.map'));
+
+          return {
+            files: manifestFiles,
+            entrypoints: entrypointFiles,
+          };
+        },
       }),
 
       deepScopeAnalysisEnabled && new WebpackDeepScopeAnalysisPlugin(),

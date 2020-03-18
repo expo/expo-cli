@@ -1,4 +1,4 @@
-import { readConfigJsonAsync } from '@expo/config';
+import { getConfig } from '@expo/config';
 import { Api, ApiV2, FormData, Project, UserManager } from '@expo/xdl';
 import dateFormat from 'dateformat';
 
@@ -54,27 +54,19 @@ export default (program: any) => {
 
       // TODO(ville): handle the API result for not authenticated user instead of checking upfront
       const user = await UserManager.ensureLoggedInAsync();
-      const { exp } = await readConfigJsonAsync(projectDir);
+      const { exp } = getConfig(projectDir, {
+        skipSDKVersionRequirement: true,
+      });
 
       let result: any;
-      if (process.env.EXPO_NEXT_API) {
-        const api = ApiV2.clientForUser(user);
-        result = await api.postAsync('publish/history', {
-          owner: exp.owner,
-          slug: await Project.getSlugAsync(projectDir, options),
-          version: VERSION,
-          releaseChannel: options.releaseChannel,
-          count: options.count,
-          platform: options.platform,
-        });
-      } else {
+      if (process.env.EXPO_LEGACY_API === 'true') {
         // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
         let formData = new FormData();
         formData.append('queryType', 'history');
         if (exp.owner) {
           formData.append('owner', exp.owner);
         }
-        formData.append('slug', await Project.getSlugAsync(projectDir, options));
+        formData.append('slug', await Project.getSlugAsync(projectDir));
         formData.append('version', VERSION);
         if (options.releaseChannel) {
           formData.append('releaseChannel', options.releaseChannel);
@@ -88,6 +80,16 @@ export default (program: any) => {
 
         result = await Api.callMethodAsync('publishInfo', [], 'post', null, {
           formData,
+        });
+      } else {
+        const api = ApiV2.clientForUser(user);
+        result = await api.postAsync('publish/history', {
+          owner: exp.owner,
+          slug: await Project.getSlugAsync(projectDir),
+          version: VERSION,
+          releaseChannel: options.releaseChannel,
+          count: options.count,
+          platform: options.platform,
         });
       }
 
@@ -151,18 +153,13 @@ export default (program: any) => {
 
       // TODO(ville): handle the API result for not authenticated user instead of checking upfront
       const user = await UserManager.ensureLoggedInAsync();
-      const { exp } = await readConfigJsonAsync(projectDir);
-      const slug = await Project.getSlugAsync(projectDir, options);
+      const { exp } = getConfig(projectDir, {
+        skipSDKVersionRequirement: true,
+      });
+      const slug = await Project.getSlugAsync(projectDir);
 
       let result: any;
-      if (process.env.EXPO_NEXT_API) {
-        const api = ApiV2.clientForUser(user);
-        result = await api.postAsync('publish/details', {
-          owner: exp.owner,
-          publishId: options.publishId,
-          slug,
-        });
-      } else {
+      if (process.env.EXPO_LEGACY_API === 'true') {
         let formData = new FormData();
         formData.append('queryType', 'details');
 
@@ -174,6 +171,13 @@ export default (program: any) => {
 
         result = await Api.callMethodAsync('publishInfo', null, 'post', null, {
           formData,
+        });
+      } else {
+        const api = ApiV2.clientForUser(user);
+        result = await api.postAsync('publish/details', {
+          owner: exp.owner,
+          publishId: options.publishId,
+          slug,
         });
       }
 

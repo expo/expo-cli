@@ -154,7 +154,7 @@ async function action(projectDir: string, command: Command) {
     initialConfig = await promptForManagedConfig(parentDir, dirName, options);
   }
 
-  let packageManager: 'npm' | 'yarn' | undefined;
+  let packageManager: 'npm' | 'yarn' = 'npm';
   if (options.yarn) {
     packageManager = 'yarn';
   } else if (options.npm) {
@@ -163,6 +163,7 @@ async function action(projectDir: string, command: Command) {
     packageManager = 'yarn';
     log('Using Yarn to install packages. You can pass --npm to use npm instead.');
   } else {
+    packageManager = 'npm';
     log('Using npm to install packages. You can pass --yarn to use Yarn instead.');
   }
 
@@ -264,15 +265,12 @@ async function promptForBareConfig(
     }
     projectName = dirName;
   } else {
-    ({ projectName } = await prompt([
-      {
-        type: 'input',
-        name: 'projectName',
-        message: 'What is the name of your project?',
-        filter: (name: string) => name.trim(),
-        validate: (name: string) => validateProjectName(name),
-      },
-    ]));
+    ({ projectName } = await prompt({
+      name: 'projectName',
+      message: 'What is the name of your project?',
+      filter: (name: string) => name.trim(),
+      validate: (name: string) => validateProjectName(name),
+    }));
   }
 
   return {
@@ -280,6 +278,7 @@ async function promptForBareConfig(
     displayName: options.name || projectName,
     expo: {
       name: options.name || projectName,
+      slug: projectName,
     },
   };
 }

@@ -1,4 +1,4 @@
-import { fileExists, getWebOutputPath, readConfigJsonAsync } from '@expo/config';
+import { fileExists, getConfig, getWebOutputPath } from '@expo/config';
 import { isAvailableAsync, sharpAsync } from '@expo/image-utils';
 import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
@@ -72,7 +72,9 @@ async function getAssetFilesAsync(
   projectDir: string,
   options: OptimizationOptions
 ): Promise<{ allFiles: string[]; selectedFiles: string[] }> {
-  const { exp } = await readConfigJsonAsync(projectDir, true, true);
+  const { exp } = getConfig(projectDir, {
+    skipSDKVersionRequirement: true,
+  });
   const webOutputPath = await getWebOutputPath(exp);
   const { assetBundlePatterns } = exp;
   const globOptions = {

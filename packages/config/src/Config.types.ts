@@ -520,6 +520,14 @@ export type WebPlatformConfig = {
    * Configuration for PWA splash screens.
    */
   splash?: WebSplashScreen;
+  config?: {
+    /**
+     * [Firebase Configuration Object](https://support.google.com/firebase/answer/7015592) Firebase web configuration.
+     */
+    firebase?: {
+      [key: string]: any;
+    };
+  };
 };
 
 /**
@@ -915,4 +923,21 @@ export type ExpoConfig = {
 };
 export type ExpRc = { [key: string]: any };
 export type Platform = 'android' | 'ios' | 'web';
-export type ConfigErrorCode = 'NO_APP_JSON' | 'NOT_OBJECT' | 'NO_EXPO' | 'MODULE_NOT_FOUND';
+export type ConfigErrorCode =
+  | 'NO_APP_JSON'
+  | 'NOT_OBJECT'
+  | 'NO_EXPO'
+  | 'MODULE_NOT_FOUND'
+  | 'INVALID_MODE'
+  | 'INVALID_CONFIG';
+
+export type ConfigContext = {
+  projectRoot: string;
+  configPath?: string;
+  config: Partial<ExpoConfig>;
+};
+
+export type GetConfigOptions = {
+  configPath?: string;
+  skipSDKVersionRequirement?: boolean;
+};

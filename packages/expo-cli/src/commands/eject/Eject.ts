@@ -29,7 +29,10 @@ export type EjectAsyncOptions = {
 const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string): Promise<void> {
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  // We just need the custom `nodeModulesPath` from the config.
+  const { exp, pkg } = await ConfigUtils.getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
 
   const pkgsWithExtraSetup = await JsonFile.readAsync(
     ConfigUtils.resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
@@ -248,11 +251,14 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
   pkg.scripts.ios = 'react-native run-ios';
   pkg.scripts.android = 'react-native run-android';
 
-  if (pkg.scripts.postinstall) {
-    pkg.scripts.postinstall = `jetify && ${pkg.scripts.postinstall}`;
-    log(chalk.bgYellow.black('jetifier has been added to your existing postinstall script.'));
-  } else {
-    pkg.scripts.postinstall = `jetify`;
+  // Jetifier is only needed for SDK 34 & 35
+  if (Versions.lteSdkVersion(exp, '35.0.0')) {
+    if (pkg.scripts.postinstall) {
+      pkg.scripts.postinstall = `jetify && ${pkg.scripts.postinstall}`;
+      log(chalk.bgYellow.black('jetifier has been added to your existing postinstall script.'));
+    } else {
+      pkg.scripts.postinstall = `jetify`;
+    }
   }
 
   // The template may have some dependencies beyond react/react-native/react-native-unimodules,
@@ -273,9 +279,13 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
     ...defaultDevDependencies,
     ...pkg.devDependencies,
   });
-  combinedDevDependencies['jetifier'] = defaultDevDependencies['jetifier'];
-  pkg.devDependencies = combinedDevDependencies;
 
+  // Jetifier is only needed for SDK 34 & 35
+  if (Versions.lteSdkVersion(exp, '35.0.0')) {
+    combinedDevDependencies['jetifier'] = defaultDevDependencies['jetifier'];
+  }
+
+  pkg.devDependencies = combinedDevDependencies;
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
   log(chalk.green('Your package.json is up to date!'));
 
@@ -316,6 +326,7 @@ if (Platform.OS === 'web') {
   const packageManager = PackageManager.createForProject(projectRoot, { log });
   await packageManager.installAsync();
 
+  // --Apply app config to iOS and Android projects here--
   // If the bundleIdentifier exists then set it on the project
   if (exp.ios?.bundleIdentifier) {
     IosWorkspace.setBundleIdentifier(projectRoot, exp.ios?.bundleIdentifier);
@@ -324,6 +335,12 @@ if (Platform.OS === 'web') {
   log.newLine();
 }
 
+/**
+ * Returns a name that adheres to Xcode and Android naming conventions.
+ *
+ * - package name: https://docs.oracle.com/javase/tutorial/java/package/namingpkgs.html
+ * @param projectRoot
+ */
 async function getAppNamesAsync(
   projectRoot: string
 ): Promise<{ displayName: string; name: string }> {
@@ -369,14 +386,6 @@ async function getAppNamesAsync(
   return { displayName, name };
 }
 
-function stripDashes(s: string): string {
-  let ret = '';
-
-  for (let c of s) {
-    if (c !== ' ' && c !== '-') {
-      ret += c;
-    }
-  }
-
-  return ret;
+export function stripDashes(s: string): string {
+  return s.replace(/\s|-/g, '');
 }

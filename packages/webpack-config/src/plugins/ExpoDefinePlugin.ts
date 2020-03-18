@@ -1,5 +1,5 @@
 import { ExpoConfig, createEnvironmentConstants } from '@expo/config';
-import { DefinePlugin } from 'webpack';
+import { DefinePlugin as OriginalDefinePlugin } from 'webpack';
 
 import { Environment, Mode } from '../types';
 import { getConfig, getMode, getPaths, getPublicPaths } from '../env';
@@ -25,7 +25,7 @@ export function createClientEnvironment(
   publicPath: string,
   nativeAppManifest: ExpoConfig
 ): ClientEnv {
-  const environment = mode || 'development';
+  const environment = getMode({ mode });
   const __DEV__ = environment !== 'production';
 
   const ENV_VAR_REGEX = /^(EXPO_|REACT_NATIVE_|CI$)/i;
@@ -67,21 +67,21 @@ export function createClientEnvironment(
 }
 
 /**
- * Required for `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/
+ * Required for `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/.
  * This surfaces the `app.json` (config) as an environment variable which is then parsed by `expo-constants`.
  * @category plugins
  */
-export default class ExpoDefinePlugin extends DefinePlugin {
+export default class DefinePlugin extends OriginalDefinePlugin {
   static createClientEnvironment = createClientEnvironment;
   static fromEnv = (
     env: Pick<Environment, 'projectRoot' | 'mode' | 'config' | 'locations'>
-  ): ExpoDefinePlugin => {
+  ): DefinePlugin => {
     const mode = getMode(env);
     const { publicUrl } = getPublicPaths(env);
     const config = env.config || getConfig(env);
     const locations = env.locations || getPaths(env.projectRoot);
     const productionManifestPath = locations.production.manifest;
-    return new ExpoDefinePlugin({
+    return new DefinePlugin({
       mode,
       publicUrl,
       config,

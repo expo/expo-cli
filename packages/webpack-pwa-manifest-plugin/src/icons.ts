@@ -62,14 +62,7 @@ async function getBufferWithMimeAsync(
   if (!supportedMimeTypes.includes(mimeType)) {
     imagePath = src;
   } else {
-    let localSrc = src;
-
-    // In case the icon is a remote URL we need to download it first
-    if (src.startsWith('http')) {
-      localSrc = await downloadImage(src);
-    }
-
-    const imageData = await resize(localSrc, mimeType, width, height, resizeMode, color!);
+    const imageData = await resize(src, mimeType, width, height, resizeMode, color!);
     if (imageData instanceof Buffer) {
       return imageData;
     } else {
@@ -85,7 +78,7 @@ async function getBufferWithMimeAsync(
 
 async function downloadImage(url: string): Promise<string> {
   const outputPath = temporary.directory();
-  const localPath = path.join(outputPath, path.basename(url));
+  const localPath = path.join(outputPath, path.basename(stripQueryParams(url)));
 
   const response = await fetch(url);
   if (!response.ok) {
@@ -272,6 +265,24 @@ function createCacheKey(icon: Icon): string {
 
 const cacheKeys: { [key: string]: string } = {};
 
+const cacheDownloadedKeys: { [key: string]: string } = {};
+
+function stripQueryParams(url: string): string {
+  return url.split('?')[0].split('#')[0];
+}
+
+async function downloadOrUseCachedImage(url: string): Promise<string> {
+  if (url in cacheDownloadedKeys) {
+    return cacheDownloadedKeys[url];
+  }
+  if (url.startsWith('http')) {
+    cacheDownloadedKeys[url] = await downloadImage(url);
+  } else {
+    cacheDownloadedKeys[url] = url;
+  }
+  return cacheDownloadedKeys[url];
+}
+
 export async function parseIconsAsync(
   projectRoot: string,
   inputIcons: Icon[],
@@ -288,6 +299,8 @@ export async function parseIconsAsync(
 
   for (const icon of inputIcons) {
     const cacheKey = createCacheKey(icon);
+    icon.src = await downloadOrUseCachedImage(icon.src);
+
     if (!(cacheKey in cacheKeys)) {
       cacheKeys[cacheKey] = await ensureCacheDirectory(projectRoot, cacheKey);
     }

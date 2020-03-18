@@ -3,7 +3,8 @@ import {
   PackageJSONConfig,
   configFilename,
   fileExistsAsync,
-  readConfigJsonAsync,
+  getConfig,
+  getPackageJson,
   resolveModule,
 } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
@@ -114,7 +115,7 @@ export async function validateWithSchemaFileAsync(
   projectRoot: string,
   schemaPath: string
 ): Promise<{ schemaErrorMessage: string | undefined; assetsErrorMessage: string | undefined }> {
-  let { exp } = await readConfigJsonAsync(projectRoot);
+  let { exp } = getConfig(projectRoot);
   let schema = JSON.parse(await fs.readFile(schemaPath, 'utf8'));
   return validateWithSchema(projectRoot, exp, schema.schema, 'exp.json', 'UNVERSIONED', true);
 }
@@ -171,7 +172,7 @@ async function _validateExpJsonAsync(
   allowNetwork: boolean
 ): Promise<number> {
   if (!exp || !pkg) {
-    // readConfigJsonAsync already logged an error
+    // getConfig already logged an error
     return FATAL;
   }
 
@@ -383,7 +384,8 @@ async function _validateReactNativeVersionAsync(
 }
 
 async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
-  let { exp } = await readConfigJsonAsync(projectRoot);
+  // Just need `nodeModulesPath` so it doesn't matter if expo is installed or the sdkVersion is defined.
+  let { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   let nodeModulesPath = projectRoot;
   if (exp.nodeModulesPath) {
     nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
@@ -448,7 +450,7 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
 
   let exp, pkg;
   try {
-    const config = await readConfigJsonAsync(projectRoot);
+    const config = getConfig(projectRoot);
     exp = config.exp;
     pkg = config.pkg;
   } catch (e) {
@@ -490,7 +492,7 @@ export const EXPO_SDK_NOT_INSTALLED = 1;
 export const EXPO_SDK_NOT_IMPORTED = 2;
 
 export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStatus> {
-  let { pkg } = await readConfigJsonAsync(projectRoot);
+  const { pkg } = getPackageJson(projectRoot);
 
   try {
     if (

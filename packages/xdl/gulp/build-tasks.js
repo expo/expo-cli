@@ -8,7 +8,7 @@ const request = require('request');
 const sourcemaps = require('gulp-sourcemaps');
 const rimraf = require('rimraf');
 
-const packageJson = require('../package.json');
+const packageJson = require('@expo/xdl/package.json');
 
 const paths = {
   source: {
@@ -19,10 +19,14 @@ const paths = {
   caches: 'caches',
 };
 
+const tsconfig = require('../tsconfig.json');
+const excluded = tsconfig.exclude.map(exclude => '!' + exclude);
+const sourcePaths = Object.values(paths.source).concat(excluded);
+
 const tasks = {
   babel() {
     return gulp
-      .src([paths.source.js, paths.source.ts])
+      .src(sourcePaths)
       .pipe(changed(paths.build))
       .pipe(plumber())
       .pipe(
@@ -40,7 +44,7 @@ const tasks = {
   },
 
   watchBabel(done) {
-    gulp.watch([paths.source.js, paths.source.ts], tasks.babel);
+    gulp.watch(sourcePaths, tasks.babel);
     done();
   },
 

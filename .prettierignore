@@ -2,6 +2,7 @@
 /packages/dev-tools/build
 /packages/expo-cli/build
 /packages/json-file/build
+/packages/plist/build
 /packages/schemer/build
 /packages/xdl/build
 package.json

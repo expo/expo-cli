@@ -1,6 +1,6 @@
 {
   "name": "@expo/package-manager",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "description": "A library for installing and finding packages in a node project",
   "main": "build/PackageManager.js",
   "types": "build/PackageManager.d.ts",
@@ -45,7 +45,7 @@
     "stream": "^0.0.2"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "^0.2.5"
+    "@expo/babel-preset-cli": "0.2.6"
   },
   "publishConfig": {
     "access": "public"

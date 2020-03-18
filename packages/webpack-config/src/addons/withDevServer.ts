@@ -77,7 +77,7 @@ export function isDevConfig(input: AnyConfiguration): input is DevConfiguration 
   return input && input.mode === 'development';
 }
 
-type SelectiveEnv = Pick<Environment, 'locations' | 'projectRoot' | 'https'>;
+type SelectiveEnv = Pick<Environment, 'mode' | 'locations' | 'projectRoot' | 'https'>;
 
 type DevServerOptions = {
   allowedHost?: string;

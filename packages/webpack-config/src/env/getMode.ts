@@ -13,7 +13,7 @@ export default function getMode({
 }: {
   production?: boolean;
   development?: boolean;
-  mode?: Mode;
+  mode?: string;
 }): Mode {
   if (mode === undefined) {
     if (process.env.NODE_ENV != null && isValidMode(process.env.NODE_ENV)) {
@@ -31,9 +31,9 @@ export default function getMode({
 }
 
 function isValidMode(inputMode?: string): boolean {
-  let mode;
+  let mode = inputMode || '';
   if (typeof inputMode === 'string') {
     mode = inputMode.toLowerCase();
   }
-  return mode === 'production' || mode === 'development';
+  return !!mode && ['none', 'production', 'development'].includes(mode);
 }

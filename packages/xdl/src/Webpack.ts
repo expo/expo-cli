@@ -320,7 +320,9 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
 }
 
 export async function getProjectNameAsync(projectRoot: string): Promise<string> {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, true);
+  const { exp } = ConfigUtils.getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
   const { webName } = ConfigUtils.getNameFromConfig(exp);
   return webName;
 }
