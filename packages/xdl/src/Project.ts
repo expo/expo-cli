@@ -938,9 +938,9 @@ export async function publishAsync(
           'AndroidManifest.xml'
         );
         let androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
-        let expoUpdateUrlRegex = /<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="[^"]*" \/>/;
-        let expoSdkVersionRegex = /<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="[^"]*" \/>/;
-        let expoReleaseChannelRegex = /<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="[^"]*" \/>/;
+        let expoUpdateUrlRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_UPDATE_URL"[^>]+\/>/;
+        let expoSdkVersionRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_SDK_VERSION"[^>]+\/>/;
+        let expoReleaseChannelRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_RELEASE_CHANNEL"[^>]+\/>/;
 
         let expoUpdateUrlTag = `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${fullManifestUrl}" />`;
         let expoSdkVersionTag = `<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="${exp.sdkVersion}" />`;
