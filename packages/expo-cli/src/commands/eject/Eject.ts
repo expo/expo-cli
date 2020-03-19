@@ -1,5 +1,4 @@
 import {
-  IOSConfig,
   findConfigFile,
   getConfig,
   isUsingYarn,
@@ -7,7 +6,7 @@ import {
   resolveModule,
 } from '@expo/config';
 import JsonFile from '@expo/json-file';
-import { Exp, IosPlist, IosWorkspace, Versions } from '@expo/xdl';
+import { Exp, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import fse from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
@@ -19,8 +18,10 @@ import terminalLink from 'terminal-link';
 
 import * as PackageManager from '@expo/package-manager';
 import log from '../../log';
-import prompt, { Question } from '../../prompt';
+import prompt from '../../prompt';
 import { validateGitStatusAsync } from '../utils/ProjectUtils';
+import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
+import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 
 type ValidationErrorMessage = string;
 
@@ -272,52 +273,6 @@ if (Platform.OS === 'web') {
   log('Installing new packages...');
   const packageManager = PackageManager.createForProject(projectRoot, { log });
   await packageManager.installAsync();
-}
-
-// TODO: it's silly and kind of fragile that we look at app config to determine the
-// ios project paths
-// * Overall this function needs to be revamped, just a placeholder for now!
-function getIOSPaths(projectRoot: string) {
-  let iosProjectDirectory;
-
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-
-  let projectName = exp.name;
-  if (!projectName) {
-    throw new Error('Need a name ;O');
-  }
-
-  iosProjectDirectory = path.join(projectRoot, 'ios', projectName);
-
-  return {
-    projectName,
-    iosProjectDirectory,
-  };
-}
-
-async function configureIOSProjectAsync(projectRoot: string) {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-
-  IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, exp.ios!.bundleIdentifier!);
-  const { iosProjectDirectory } = getIOSPaths(projectRoot);
-  await IosPlist.modifyAsync(iosProjectDirectory, 'Info', infoPlist => {
-    infoPlist = IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(exp, infoPlist);
-    infoPlist = IOSConfig.Name.setDisplayName(exp, infoPlist);
-    infoPlist = IOSConfig.Scheme.setScheme(exp, infoPlist);
-    infoPlist = IOSConfig.Version.setVersion(exp, infoPlist);
-    infoPlist = IOSConfig.Version.setBuildNumber(exp, infoPlist);
-    infoPlist = IOSConfig.DeviceFamily.setDeviceFamily(exp, infoPlist);
-    infoPlist = IOSConfig.RequiresFullScreen.setRequiresFullScreen(exp, infoPlist);
-    infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(exp, infoPlist);
-    return infoPlist;
-  });
-
-  // log.newLine();
-}
-
-async function configureAndroidProjectAsync(projectRoot: string) {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  // TODO: implement this ;P
 }
 
 /**
