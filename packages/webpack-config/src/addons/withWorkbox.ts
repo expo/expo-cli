@@ -31,14 +31,7 @@ export type OfflineOptions = {
 };
 
 const defaultInjectManifestOptions = {
-  exclude: [
-    /\.LICENSE$/,
-    /\.map$/,
-    /asset-manifest\.json$/,
-    /\.js\.gz$/,
-    // Exclude all apple touch images because they're cached locally after the PWA is added.
-    // /^\bapple.*\.png$/,
-  ],
+  exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/, /\.js\.gz$/],
 };
 
 const runtimeCache = {

@@ -25,7 +25,6 @@ import {
 } from './plugins';
 import {
   withAlias,
-  withCompression,
   withDevServer,
   withNodeMocks,
   withOptimizations,
@@ -326,7 +325,7 @@ export default async function(
   };
 
   if (isProd) {
-    webpackConfig = withCompression(withOptimizations(webpackConfig), env);
+    webpackConfig = withOptimizations(webpackConfig);
   } else {
     webpackConfig = withDevServer(webpackConfig, env, {
       allowedHost: argv.allowedHost,
