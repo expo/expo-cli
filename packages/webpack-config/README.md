@@ -390,12 +390,6 @@ import { withOptimizations } from '@expo/webpack-config/addons';
 import { withReporting } from '@expo/webpack-config/addons';
 ```
 
-#### `withCompression`
-
-```js
-import { withCompression } from '@expo/webpack-config/addons';
-```
-
 #### `withAlias`
 
 Add aliases for React Native web.
@@ -574,6 +568,10 @@ Tools for resolving fields, or searching and indexing loaders and plugins.
 ```js
 import { resolveEntryAsync } from '@expo/webpack-config/utils';
 ```
+
+## What it does not do
+
+- **Gzip compression:** This was supported in beta but later removed in favor of hosting providers like [Now](http://now.sh/) and [Netlify](https://www.netlify.com/) automatically compressing files in the server.
 
 ## License
 
