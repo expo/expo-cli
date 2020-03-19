@@ -99,7 +99,7 @@
     "uuid": "3.3.2",
     "validator": "11.0.0",
     "webpack": "4.39.0",
-    "webpack-dev-server": "3.2.0",
+    "webpack-dev-server": "3.10.3",
     "xcode": "^2.1.0",
     "xmldom": "0.1.27"
   },
