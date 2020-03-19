@@ -121,9 +121,6 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
         log('Skipping credentials check...');
         return;
       }
-      log(
-        'Gathering and validating necessary credentials. To skip this step, pass in the --skip-credentials-check flag'
-      );
       await this.produceCredentials(context, experienceName, bundleIdentifier);
     } catch (e) {
       log(
