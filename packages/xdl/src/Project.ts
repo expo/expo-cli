@@ -41,7 +41,7 @@ import treekill from 'tree-kill';
 import urljoin from 'url-join';
 import { promisify } from 'util';
 import uuid from 'uuid';
-import { Builder, Parser } from 'xml2js';
+import { js2xml, xml2js } from 'xml-js';
 
 import * as Analytics from './Analytics';
 import * as Android from './Android';
@@ -293,9 +293,9 @@ async function _resolveManifestAssets(
 ) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
-      manifest.sdkVersion
-    )).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
+    const assetSchemas = (
+      await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)
+    ).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
 
     // Get the URLs
     const urls = await Promise.all(
@@ -939,9 +939,8 @@ export async function publishAsync(
           'AndroidManifest.xml'
         );
         const androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
-        const parser = new Parser();
         try {
-          const manifest = await parser.parseStringPromise(androidManifestXmlFile);
+          const manifest = xml2js(androidManifestXmlFile);
           _ensureMetaDataExists(manifest, 'expo.modules.updates.EXPO_UPDATE_URL', fullManifestUrl);
           _ensureMetaDataExists(manifest, 'expo.modules.updates.EXPO_SDK_VERSION', exp.sdkVersion);
           if (options.releaseChannel) {
@@ -951,7 +950,13 @@ export async function publishAsync(
               options.releaseChannel
             );
           }
-          fs.writeFileSync(androidManifestXmlPath, new Builder().buildObject(manifest));
+          fs.writeFileSync(
+            androidManifestXmlPath,
+            js2xml(manifest, {
+              indentAttributes: true,
+              spaces: 2,
+            })
+          );
         } catch (e) {
           console.warn(
             'Failed to modify meta-data tags in AndroidManifest.xml. Make sure your meta-data tags are set correctly as per the expo-updates documentation.'
@@ -981,43 +986,36 @@ export async function publishAsync(
 }
 
 function _ensureMetaDataExists(manifest: any, name: string, value: string): void {
-  const mainApplicationIndex = _findMainApplicationIndex(manifest);
-  const mainApplication = manifest.manifest.application[mainApplicationIndex];
+  const mainApplication = _findMainApplication(manifest);
 
-  const metaData = mainApplication['meta-data'] || [];
-  const existingMetaDataIndex = metaData.findIndex(
-    (metaData: any) =>
-      metaData['$'] && (metaData['$']['android:name'] === name || metaData['$']['name'] === name)
-  );
-  if (existingMetaDataIndex < 0) {
-    metaData.push({
-      $: {
-        'android:name': name,
-        'android:value': value,
-      },
-    });
-  } else {
-    metaData[existingMetaDataIndex]['$']['android:value'] = value;
+  for (const element of mainApplication.elements) {
+    if (element.name === 'meta-data' && element.attributes['android:name'] === name) {
+      element.attributes['android:value'] = value;
+      return;
+    }
   }
 
-  mainApplication['meta-data'] = metaData;
-  manifest.manifest.application[mainApplicationIndex] = mainApplication;
+  mainApplication.elements.unshift({
+    type: 'element',
+    name: 'meta-data',
+    attributes: {
+      'android:name': name,
+      'android:value': value,
+    },
+  });
 }
 
-function _findMainApplicationIndex(manifest: any): number {
-  if (
-    !manifest.manifest ||
-    !manifest.manifest.application ||
-    !Array.isArray(manifest.manifest.application)
-  ) {
-    throw new Error('Unexpected AndroidManifest format');
+function _findMainApplication(manifest: any): any {
+  const rootElements = manifest.elements[0].elements;
+  for (const element of rootElements) {
+    if (
+      element.name === 'application' &&
+      element.attributes['android:name'] === '.MainApplication'
+    ) {
+      return element;
+    }
   }
-  const { application } = manifest.manifest;
-  return application.findIndex(
-    (application: any) =>
-      application['$']['android:name'] === '.MainApplication' ||
-      application['$']['name'] === '.MainApplication'
-  );
+  throw new Error('Could not find MainApplication');
 }
 
 async function _uploadArtifactsAsync({
@@ -1972,7 +1970,7 @@ export async function startReactNativeServerAsync(
       ...process.env,
       REACT_NATIVE_APP_ROOT: projectRoot,
       ELECTRON_RUN_AS_NODE: '1',
-      ...nodePath ? { NODE_PATH: nodePath } : {},
+      ...(nodePath ? { NODE_PATH: nodePath } : {}),
     },
     silent: true,
   });
