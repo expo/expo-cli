@@ -49,7 +49,7 @@ The main options used to configure how `@expo/webpack-config` works.
 | --------------------------- | --------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
 | `projectRoot`               | `string`                                | required    | Root of the Expo project.                                                       |
 | `https`                     | `boolean`                               | `false`     | Should the dev server use https protocol.                                       |
-| `offline`                   | `boolean`                               | `true`      | Passing `false` will disable offline support and skip adding a service worker.   |
+| `offline`                   | `boolean`                               | `true`      | Passing `false` will disable offline support and skip adding a service worker.  |
 | `mode`                      | `Mode`                                  | required    | The Webpack mode to bundle the project in.                                      |
 | `platform`                  | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for. Only `web` and `electron` are supported.     |
 | `removeUnusedImportExports` | `boolean`                               | `false`     | Enables advanced tree-shaking with deep scope analysis.                         |
@@ -187,7 +187,7 @@ module.exports = async function(env, argv) {
 };
 ```
 
-- This will do the following: 
+- This will do the following:
   - Skip registering [`register-service-worker.js`](./web-default/register-service-worker.js) in the Webpack config `entry`.
   - Skip including the [Webpack Workbox plugin][workbox] and creating the `web/service-worker.js`.
   - Skip including the [`web/expo-service-worker.js`](./web-default/expo-service-worker.js)
@@ -232,12 +232,6 @@ import { withOptimizations } from '@expo/webpack-config/addons';
 
 ```js
 import { withReporting } from '@expo/webpack-config/addons';
-```
-
-#### `withCompression`
-
-```js
-import { withCompression } from '@expo/webpack-config/addons';
 ```
 
 #### `withAlias`
@@ -418,6 +412,10 @@ Tools for resolving fields, or searching and indexing loaders and plugins.
 ```js
 import { resolveEntryAsync } from '@expo/webpack-config/utils';
 ```
+
+## What it does not do
+
+- **Gzip compression:** This was supported in beta but later removed in favor of hosting providers like [Now](http://now.sh/) and [Netlify](https://www.netlify.com/) automatically compressing files in the server.
 
 ## License
 
