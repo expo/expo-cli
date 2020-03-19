@@ -49,6 +49,7 @@ export default function(program: Command) {
       '--public-url <url>',
       'The URL of an externally hosted manifest (for self-hosted apps).'
     )
+    .option('--skip-credentials-check', 'Skip checking credentials.')
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )

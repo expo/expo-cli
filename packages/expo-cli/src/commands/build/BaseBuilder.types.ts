@@ -21,6 +21,7 @@ export type IosOptions = CommonOptions & {
   pushId?: string;
   pushP8Path?: string;
   provisioningProfilePath?: string;
+  skipCredentialsCheck?: boolean;
 };
 
 export type AndroidOptions = CommonOptions & {
