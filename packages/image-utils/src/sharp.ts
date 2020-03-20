@@ -1,12 +1,13 @@
 import semver from 'semver';
 import spawnAsync from '@expo/spawn-async';
+import resolveFrom from 'resolve-from';
 import { Options, SharpCommandOptions, SharpGlobalOptions } from './sharp.types';
 
 const SHARP_HELP_PATTERN = /\n\nSpecify --help for available options/g;
 
 export async function isAvailableAsync(): Promise<boolean> {
   try {
-    return !!await findSharpBinAsync();
+    return !!(await findSharpBinAsync());
   } catch (_) {
     return false;
   }
@@ -70,6 +71,7 @@ function getCommandOptions(commands: SharpCommandOptions[]): string[] {
 }
 
 let _sharpBin: string | null = null;
+let _sharpInstance: any | null = null;
 
 async function findSharpBinAsync(): Promise<string> {
   if (_sharpBin) {
@@ -106,6 +108,41 @@ async function findSharpBinAsync(): Promise<string> {
   }
   _sharpBin = 'sharp';
   return _sharpBin;
+}
+
+export async function findSharpInstanceAsync(): Promise<any | null> {
+  if (_sharpInstance) {
+    return _sharpInstance;
+  }
+  // Ensure sharp-cli version is correct
+  await findSharpBinAsync();
+
+  // Attempt to use local sharp package
+  try {
+    const sharp = require('sharp');
+    _sharpInstance = sharp;
+    return sharp;
+  } catch (_) {}
+
+  // Attempt to resolve the sharp instance used by the global CLI
+  let sharpCliPath;
+  try {
+    sharpCliPath = (await spawnAsync('which', ['sharp'])).stdout.toString().trim();
+  } catch (e) {
+    throw new Error(`Failed to find the instance of sharp used by the global sharp-cli package.`);
+  }
+
+  // resolve sharp from the sharp-cli package
+  const sharpPath = resolveFrom.silent(sharpCliPath, 'sharp');
+
+  if (sharpPath) {
+    try {
+      // attempt to require the global sharp package
+      _sharpInstance = require(sharpPath);
+    } catch (_) {}
+  }
+
+  return _sharpInstance;
 }
 
 function notFoundError(requiredCliVersion: string): Error {
