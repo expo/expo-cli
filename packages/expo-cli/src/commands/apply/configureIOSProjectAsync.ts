@@ -37,6 +37,8 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
     infoPlist = IOSConfig.DeviceFamily.setDeviceFamily(exp, infoPlist);
     infoPlist = IOSConfig.RequiresFullScreen.setRequiresFullScreen(exp, infoPlist);
     infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(exp, infoPlist);
+    infoPlist = IOSConfig.Branch.setBranchApiKey(exp, infoPlist);
+    infoPlist = IOSConfig.UsesNonExemptEncryption.setUsesNonExemptEncryption(exp, infoPlist);
     return infoPlist;
   });
 

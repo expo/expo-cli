@@ -9,4 +9,5 @@ export type InfoPlist = {
   CFBundleDisplayName?: string;
   CFBundleName?: string;
   CFBundleURLTypes?: Array<URLScheme>;
+  ITSAppUsesNonExemptEncryption?: boolean;
 };

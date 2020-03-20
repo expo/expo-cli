@@ -249,8 +249,11 @@ function _isAppleUsageDescriptionKey(key: string): boolean {
  */
 async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<void> {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
-  const config = context.config;
+  const baseConfig = context.config;
   const privateConfig = _getPrivateConfig(context);
+
+  // Add the ios.config properties back to the config
+  const config = { ...baseConfig, ios: { ...baseConfig.ios, config: _getPrivateConfig(context) } };
 
   let result = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
     // make sure this happens first:
@@ -278,6 +281,8 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     infoPlist = IOSConfig.DeviceFamily.setDeviceFamily(config, infoPlist);
     infoPlist = IOSConfig.RequiresFullScreen.setRequiresFullScreen(config, infoPlist);
     infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(config, infoPlist);
+    infoPlist = IOSConfig.UsesNonExemptEncryption.setUsesNonExemptEncryption(config, infoPlist);
+    infoPlist = IOSConfig.Branch.setBranchApiKey(config, infoPlist);
 
     // maybe set additional linking schemes from services like fb and google
     let serviceLinkingSchemes = [];
@@ -334,16 +339,6 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
         config.facebookAdvertiserIDCollectionEnabled || false;
     }
 
-    // set ITSAppUsesNonExemptEncryption to let people skip manually
-    // entering it in iTunes Connect
-    if (
-      privateConfig &&
-      privateConfig.hasOwnProperty('usesNonExemptEncryption') &&
-      privateConfig.usesNonExemptEncryption === false
-    ) {
-      infoPlist.ITSAppUsesNonExemptEncryption = false;
-    }
-
     // google maps api key
     if (privateConfig && privateConfig.googleMapsApiKey) {
       infoPlist.GMSApiKey = privateConfig.googleMapsApiKey;
@@ -374,12 +369,6 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
         },
       ],
     };
-
-    if (privateConfig && privateConfig.branch) {
-      infoPlist.branch_key = {
-        live: privateConfig.branch.apiKey,
-      };
-    }
 
     // TODO(brentvatne): we will need a way in bare workflow to know what permissions are needed for iOS apps.
     // We currently add usage descriptions for all of them in Expo client / standalone apps in managed workflow.

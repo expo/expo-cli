@@ -1,3 +1,4 @@
+import * as Branch from './Branch';
 import * as BundleIdenitifer from './BundleIdentifier';
 import * as DeviceFamily from './DeviceFamily';
 import * as Version from './Version';
@@ -6,6 +7,7 @@ import * as Scheme from './Scheme';
 import * as CustomInfoPlistEntries from './CustomInfoPlistEntries';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as RequiresFullScreen from './RequiresFullScreen';
+import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
 
 import { InfoPlist } from './IosConfig.types';
 
@@ -13,13 +15,15 @@ import { InfoPlist } from './IosConfig.types';
 // https://devblogs.microsoft.com/typescript/announcing-typescript-3-8-beta/#export-star-as-namespace-syntax
 // .. but we should wait for this to be the default VSCode version.
 export {
+  Branch,
   BundleIdenitifer,
   CustomInfoPlistEntries,
   DeviceFamily,
+  InfoPlist,
   Name,
+  RequiresFullScreen,
   Scheme,
   UserInterfaceStyle,
+  UsesNonExemptEncryption,
   Version,
-  InfoPlist,
-  RequiresFullScreen,
 };
