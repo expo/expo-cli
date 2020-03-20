@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import get from 'lodash/get';
 import path from 'path';
 
-import { ExpoConfig, IOSConfig } from '@expo/config';
+import { ExpoConfig } from '@expo/config';
 import * as AssetBundle from './AssetBundle';
 import {
   getManifestAsync,
@@ -249,45 +249,44 @@ function _isAppleUsageDescriptionKey(key: string): boolean {
  */
 async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<void> {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
-  const baseConfig = context.config;
+  const config = context.config;
   const privateConfig = _getPrivateConfig(context);
-
-  // Add the ios.config properties back to the config
-  const config = { ...baseConfig, ios: { ...baseConfig.ios, config: _getPrivateConfig(context) } };
 
   let result = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
     // make sure this happens first:
-    // apply any custom information from ios.infoPlist prior to all other Expo config
-    infoPlist = IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(config, infoPlist);
+    // apply any custom information from ios.infoPlist prior to all other exponent config
+    let usageDescriptionKeysConfigured: { [key: string]: any } = {};
+    if (config.ios && config.ios.infoPlist) {
+      let extraConfig = config.ios.infoPlist;
+      for (let key in extraConfig) {
+        if (extraConfig.hasOwnProperty(key)) {
+          infoPlist[key] = extraConfig[key];
+
+          // if the user provides *UsageDescription keys, don't override them later.
+          if (_isAppleUsageDescriptionKey(key)) {
+            usageDescriptionKeysConfigured[key] = true;
+          }
+        }
+      }
+    }
 
     // bundle id
-    let bundleIdentifier = IOSConfig.BundleIdenitifer.getBundleIdentifier(config);
-    if (!bundleIdentifier) {
+    infoPlist.CFBundleIdentifier =
+      config.ios && config.ios.bundleIdentifier ? config.ios.bundleIdentifier : null;
+    if (!infoPlist.CFBundleIdentifier) {
       throw new Error(`Cannot configure an iOS app with no bundle identifier.`);
     }
-    infoPlist = IOSConfig.BundleIdenitifer.setBundleIdentifier(config, infoPlist);
 
     // app name
-    infoPlist = IOSConfig.Name.setName(config, infoPlist);
-    if (context.build.isExpoClientBuild()) {
-      infoPlist = IOSConfig.Name.setDisplayName('Expo (Custom)', infoPlist);
-    } else {
-      infoPlist = IOSConfig.Name.setDisplayName(config, infoPlist);
-    }
+    infoPlist.CFBundleName = config.name;
+    infoPlist.CFBundleDisplayName = context.build.isExpoClientBuild()
+      ? 'Expo (Custom)'
+      : config.name;
 
-    infoPlist = IOSConfig.Scheme.setScheme(config, infoPlist);
-    infoPlist = IOSConfig.Version.setVersion(config, infoPlist);
-    infoPlist = IOSConfig.Version.setBuildNumber(config, infoPlist);
-    infoPlist = IOSConfig.DeviceFamily.setDeviceFamily(config, infoPlist);
-    infoPlist = IOSConfig.RequiresFullScreen.setRequiresFullScreen(config, infoPlist);
-    infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(config, infoPlist);
-    infoPlist = IOSConfig.UsesNonExemptEncryption.setUsesNonExemptEncryption(config, infoPlist);
-    infoPlist = IOSConfig.Branch.setBranchApiKey(config, infoPlist);
-
-    // maybe set additional linking schemes from services like fb and google
-    let serviceLinkingSchemes = [];
+    // determine app linking schemes
+    let linkingSchemes = config.scheme ? [config.scheme] : [];
     if (config.facebookScheme && config.facebookScheme.startsWith('fb')) {
-      serviceLinkingSchemes.push(config.facebookScheme);
+      linkingSchemes.push(config.facebookScheme);
     }
 
     if (
@@ -295,14 +294,13 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       privateConfig.googleSignIn &&
       privateConfig.googleSignIn.reservedClientId
     ) {
-      serviceLinkingSchemes.push(privateConfig.googleSignIn.reservedClientId);
+      linkingSchemes.push(privateConfig.googleSignIn.reservedClientId);
     }
 
     // remove exp scheme, add app scheme(s)
     infoPlist.CFBundleURLTypes = [
-      ...infoPlist.CFBundleURLTypes,
       {
-        CFBundleURLSchemes: serviceLinkingSchemes,
+        CFBundleURLSchemes: linkingSchemes,
       },
       {
         // Add the generic oauth redirect, it's important that it has the name
@@ -339,6 +337,16 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
         config.facebookAdvertiserIDCollectionEnabled || false;
     }
 
+    // set ITSAppUsesNonExemptEncryption to let people skip manually
+    // entering it in iTunes Connect
+    if (
+      privateConfig &&
+      privateConfig.hasOwnProperty('usesNonExemptEncryption') &&
+      privateConfig.usesNonExemptEncryption === false
+    ) {
+      infoPlist.ITSAppUsesNonExemptEncryption = false;
+    }
+
     // google maps api key
     if (privateConfig && privateConfig.googleMapsApiKey) {
       infoPlist.GMSApiKey = privateConfig.googleMapsApiKey;
@@ -356,8 +364,12 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       privateConfig && privateConfig.googleMobileAdsAutoInit
     );
 
-    // NOTE(brentvatne):
-    // As far as I know there is no point of including an API key for Fabric on iOS?
+    // use version from manifest
+    let version = config.version ? config.version : '0.0.0';
+    let buildNumber = config.ios && config.ios.buildNumber ? config.ios.buildNumber : '1';
+    infoPlist.CFBundleShortVersionString = version;
+    infoPlist.CFBundleVersion = buildNumber;
+
     infoPlist.Fabric = {
       APIKey:
         (privateConfig && privateConfig.fabric && privateConfig.fabric.apiKey) ||
@@ -370,18 +382,45 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       ],
     };
 
-    // TODO(brentvatne): we will need a way in bare workflow to know what permissions are needed for iOS apps.
-    // We currently add usage descriptions for all of them in Expo client / standalone apps in managed workflow.
+    if (privateConfig && privateConfig.branch) {
+      infoPlist.branch_key = {
+        live: privateConfig.branch.apiKey,
+      };
+    }
+
     let permissionsAppName = config.name ? config.name : 'this app';
-    let customInfoPlistEntries = IOSConfig.CustomInfoPlistEntries.getCustomInfoPlistEntries(config);
     for (let key in infoPlist) {
       if (
         infoPlist.hasOwnProperty(key) &&
         _isAppleUsageDescriptionKey(key) &&
-        !customInfoPlistEntries.hasOwnProperty(key)
+        !usageDescriptionKeysConfigured.hasOwnProperty(key)
       ) {
         infoPlist[key] = infoPlist[key].replace('Expo experiences', permissionsAppName);
       }
+    }
+
+    // 1 is iPhone, 2 is iPad
+    infoPlist.UIDeviceFamily = config.ios && config.ios.supportsTablet ? [1, 2] : [1];
+
+    // allow iPad-only
+    if (config.ios && config.ios.isTabletOnly) {
+      infoPlist.UIDeviceFamily = [2];
+    }
+
+    // Whether requires full screen on iPad
+    infoPlist.UIRequiresFullScreen = config.ios && config.ios.requireFullScreen;
+    if (infoPlist.UIRequiresFullScreen == null) {
+      // NOTES: This is defaulted to `true` for now to match the behavior prior to SDK 34, but will change to `false` in a future SDK version.
+      infoPlist.UIRequiresFullScreen = true;
+    }
+    // Cast to make sure that it is a boolean.
+    infoPlist.UIRequiresFullScreen = Boolean(infoPlist.UIRequiresFullScreen);
+
+    // Put `ios.userInterfaceStyle` into `UIUserInterfaceStyle` property of Info.plist
+    const userInterfaceStyle = config.ios && config.ios.userInterfaceStyle;
+    if (userInterfaceStyle) {
+      // To convert our config value to the InfoPlist value, we can just capitalize it.
+      infoPlist.UIUserInterfaceStyle = _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle);
     }
 
     // context-specific plist changes
@@ -563,4 +602,21 @@ export async function configureAsync(context: AnyStandaloneContext): Promise<voi
       fs.remove(intermediatesDirectory),
     ]);
   }
+}
+
+function _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle: string): string | undefined {
+  switch (userInterfaceStyle) {
+    case 'light':
+      return 'Light';
+    case 'dark':
+      return 'Dark';
+    case 'automatic':
+      return 'Automatic';
+    default:
+      logger.warn(
+        `User interface style "${userInterfaceStyle}" is not supported. Supported values: "light", "dark", "automatic".`
+      );
+  }
+
+  return undefined;
 }
