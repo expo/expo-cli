@@ -1,7 +1,19 @@
+import ora from 'ora';
+import { getConfig } from '@expo/config';
 import { ApiV2, Project, UserManager } from '@expo/xdl';
 import { Command } from 'commander';
 import log from '../log';
+import prompt from '../prompt';
 import * as table from '../commands/utils/cli-table';
+import {
+  Publication,
+  RollbackOptions,
+  getPublicationDetailAsync,
+  getPublishHistoryAsync,
+  printPublicationDetailAsync,
+  rollbackPublicationFromChannelAsync,
+  setPublishToChannelAsync,
+} from './utils/PublishUtils';
 
 export default function(program: Command) {
   program
@@ -27,14 +39,11 @@ export default function(program: Command) {
         if (!options.publishId) {
           throw new Error('You must specify a publish id. You can find ids using publish:history.');
         }
-        const user = await UserManager.ensureLoggedInAsync();
-        const api = ApiV2.clientForUser(user);
         try {
-          let result = await api.postAsync('publish/set', {
-            releaseChannel: options.releaseChannel,
-            publishId: options.publishId,
-            slug: await Project.getSlugAsync(projectDir),
-          });
+          const result = await setPublishToChannelAsync(
+            projectDir,
+            options as { releaseChannel: string; publishId: string }
+          );
           let tableString = table.printTableJson(
             result.queryResult,
             'Channel Set Status ',
@@ -50,28 +59,35 @@ export default function(program: Command) {
     .command('publish:rollback [project-dir]')
     .alias('pr')
     .description('Rollback an update to a channel.')
-    .option('--channel-id <channel-id>', 'The channel id to rollback in the channel. (Required)')
+    .option('--channel-id <channel-id>', 'This flag is deprecated.')
+    .option('-c, --release-channel <channel-name>', 'The channel to rollback from. (Required)')
+    .option('-s, --sdk-version <version>', 'The sdk version to rollback. (Required)')
+    .option('-p, --platform <ios|android>', 'The platform to rollback.')
     .asyncActionProjectDir(
-      async (projectDir: string, options: { channelId?: string }): Promise<void> => {
-        if (!options.channelId) {
-          throw new Error('You must specify a channel id. You can find ids using publish:history.');
+      async (
+        projectDir: string,
+        options: {
+          releaseChannel?: string;
+          sdkVersion?: string;
+          platform?: string;
+          channelId?: string;
         }
-        const user = await UserManager.getCurrentUserAsync();
-        const api = ApiV2.clientForUser(user);
-        try {
-          let result = await api.postAsync('publish/rollback', {
-            channelId: options.channelId,
-            slug: await Project.getSlugAsync(projectDir),
-          });
-          let tableString = table.printTableJson(
-            result.queryResult,
-            'Channel Rollback Status ',
-            'SUCCESS'
-          );
-          console.log(tableString);
-        } catch (e) {
-          log.error(e);
+      ): Promise<void> => {
+        if (options.channelId) {
+          throw new Error('This flag is deprecated');
         }
+        if (!options.releaseChannel) {
+          throw new Error('You must specify a release channel.');
+        }
+        if (!options.sdkVersion) {
+          throw new Error('You must specify an sdk version.');
+        }
+        if (options.platform) {
+          if (options.platform !== 'android' && options.platform !== 'ios') {
+            throw new Error('Platform must be either android or ios');
+          }
+        }
+        await rollbackPublicationFromChannelAsync(projectDir, options as RollbackOptions);
       }
     );
 }
