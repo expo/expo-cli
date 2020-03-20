@@ -64,7 +64,20 @@ async function fetchCredentials(
 ): Promise<Credentials | undefined | null> {
   // this doesn't hit our mac rpc channel, so it needs significantly less debugging
   let credentials;
-  if (process.env.EXPO_NEXT_API) {
+  if (process.env.EXPO_LEGACY_API === 'true') {
+    const response = await Api.callMethodAsync('getCredentials', [], 'post', {
+      username,
+      experienceName,
+      bundleIdentifier,
+      platform,
+      decrypt,
+    });
+
+    if (response.err) {
+      throw new Error('Error fetching credentials.');
+    }
+    credentials = response.credentials;
+  } else {
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
 
@@ -90,19 +103,6 @@ async function fetchCredentials(
         credentials = {};
       }
     }
-  } else {
-    const response = await Api.callMethodAsync('getCredentials', [], 'post', {
-      username,
-      experienceName,
-      bundleIdentifier,
-      platform,
-      decrypt,
-    });
-
-    if (response.err) {
-      throw new Error('Error fetching credentials.');
-    }
-    credentials = response.credentials;
   }
   return credentials;
 }
@@ -113,18 +113,7 @@ export async function updateCredentialsForPlatform(
   userCredentialsIds: Array<number>,
   metadata: CredentialMetadata
 ): Promise<void> {
-  if (process.env.EXPO_NEXT_API) {
-    const { experienceName } = metadata;
-    const user = await UserManager.ensureLoggedInAsync();
-    const api = ApiV2.clientForUser(user);
-    const result = await api.putAsync(`credentials/android/keystore/${experienceName}`, {
-      credentials: newCredentials,
-    });
-
-    if (!result) {
-      throw new Error('Error updating credentials.');
-    }
-  } else {
+  if (process.env.EXPO_LECACY_API) {
     const { err, credentials } = await Api.callMethodAsync('updateCredentials', [], 'post', {
       credentials: newCredentials,
       userCredentialsIds,
@@ -135,6 +124,17 @@ export async function updateCredentialsForPlatform(
     if (err || !credentials) {
       throw new Error('Error updating credentials.');
     }
+  } else {
+    const { experienceName } = metadata;
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    const result = await api.putAsync(`credentials/android/keystore/${experienceName}`, {
+      credentials: newCredentials,
+    });
+
+    if (result.data.errors) {
+      throw new Error(`Error updating credentials: ${JSON.stringify(result.data.errors)}}`);
+    }
   }
 }
 
@@ -143,11 +143,7 @@ export async function removeCredentialsForPlatform(
   metadata: CredentialMetadata
 ): Promise<void> {
   // doesn't go through mac rpc, no request id needed
-  if (process.env.EXPO_NEXT_API) {
-    const user = await UserManager.ensureLoggedInAsync();
-    const api = ApiV2.clientForUser(user);
-    await api.deleteAsync(`credentials/android/keystore/${metadata.experienceName}`);
-  } else {
+  if (process.env.EXPO_LEGACY_API) {
     const { err } = await Api.callMethodAsync('deleteCredentials', [], 'post', {
       platform,
       ...metadata,
@@ -156,5 +152,9 @@ export async function removeCredentialsForPlatform(
     if (err) {
       throw new Error('Error deleting credentials.');
     }
+  } else {
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    await api.deleteAsync(`credentials/android/keystore/${metadata.experienceName}`);
   }
 }
