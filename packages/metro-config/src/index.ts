@@ -1,31 +1,11 @@
-/**
- * Configuration file of Metro.
- */
-import { existsSync } from 'fs-extra';
+import path from 'path';
 // @ts-ignore - no typed definition for the package
 import { createBlacklist } from 'metro';
 // @ts-ignore - no typed definition for the package
 import { loadConfig } from 'metro-config';
-import path from 'path';
 
-import { ExpoConfig, readConfigJson, resolveModule } from '@expo/config';
-import loadInputConfig from './config';
-import findSymlinkedModules from './findSymlinkedModules';
-import { Config } from './types';
-
-function resolveSymlinksForRoots(roots: string[]): string[] {
-  return roots.reduce<string[]>(
-    (arr, rootPath) => arr.concat(findSymlinkedModules(rootPath, roots)),
-    [...roots]
-  );
-}
-
-function getWatchFolders(): string[] {
-  const root = process.env.REACT_NATIVE_APP_ROOT;
-  return root ? resolveSymlinksForRoots([path.resolve(root)]) : [];
-}
-
-const getBlacklistRE: () => RegExp = () => createBlacklist([/.*\/__fixtures__\/.*/]);
+import { readConfigJson, resolveModule } from '@expo/config';
+import resolveReactNativePath from './config/resolveReactNativePath';
 
 const INTERNAL_CALLSITES_REGEX = new RegExp(
   [
@@ -42,7 +22,7 @@ export interface MetroConfig {
     blacklistRE: RegExp;
     platforms: string[];
     providesModuleNodeModules: string[];
-    hasteImplModulePath: string | undefined;
+    hasteImplModulePath?: string;
   };
   serializer: {
     getModulesRunBeforeMainModule: () => string[];
@@ -64,30 +44,25 @@ export interface MetroConfig {
   reporter?: any;
 }
 
-export const getDefaultConfig = (ctx: Config): MetroConfig => {
-  const { exp } = readConfigJson(ctx.root, true, true);
+export function getDefaultConfig(projectRoot: string, options: ConfigOptionsT): MetroConfig {
+  const { exp } = readConfigJson(projectRoot, true, true);
+  const reactNativePath = resolveReactNativePath(projectRoot);
 
-  // TODO: Bacon: Use with NODE_ENV=test
-  const hasteImplPath = path.join(ctx.reactNativePath, 'jest/hasteImpl.js');
   return {
     resolver: {
-      // TODO: Bacon: add support for the module field
       resolverMainFields: ['react-native', 'browser', 'main'],
-      blacklistRE: getBlacklistRE(),
-      platforms: [...ctx.haste.platforms, 'native'],
-      providesModuleNodeModules: ctx.haste.providesModuleNodeModules,
-      hasteImplModulePath: existsSync(hasteImplPath) ? hasteImplPath : undefined,
+      blacklistRE: createBlacklist([/.*\/__fixtures__\/.*/]),
+      platforms: ['ios', 'android', 'native'],
+      providesModuleNodeModules: ['react-native'],
     },
     serializer: {
       getModulesRunBeforeMainModule: () => [
-        require.resolve(path.join(ctx.reactNativePath, 'Libraries/Core/InitializeCore')),
+        require.resolve(path.join(reactNativePath, 'Libraries/Core/InitializeCore')),
         // TODO: Bacon: load Expo side-effects
       ],
-      getPolyfills: () => require(path.join(ctx.reactNativePath, 'rn-get-polyfills'))(),
+      getPolyfills: () => require(path.join(reactNativePath, 'rn-get-polyfills'))(),
     },
-    server: {
-      port: Number(process.env.RCT_METRO_PORT) || 8081,
-    },
+    server: { port: options.port || 8081 },
     symbolicator: {
       customizeFrame: (frame: { file: string | null }) => {
         const collapse = Boolean(frame.file && INTERNAL_CALLSITES_REGEX.test(frame.file));
@@ -96,15 +71,15 @@ export const getDefaultConfig = (ctx: Config): MetroConfig => {
     },
     transformer: {
       // TODO: Bacon: Use babel-preset-expo by default to always support web
-      babelTransformerPath: resolveModule('metro-react-native-babel-transformer', ctx.root, exp),
+      babelTransformerPath: resolveModule('metro-react-native-babel-transformer', projectRoot, exp),
       // TODO: Bacon: Add path for web platform
-      assetRegistryPath: path.join(ctx.reactNativePath, 'Libraries/Image/AssetRegistry'),
+      assetRegistryPath: path.join(reactNativePath, 'Libraries/Image/AssetRegistry'),
       // TODO: Ville: Check if an absolute path is needed here.
-      assetPlugins: ['expo/tools/hashAssetFiles'],
+      assetPlugins: [resolveModule('expo/tools/hashAssetFiles', projectRoot, exp)],
     },
-    watchFolders: getWatchFolders(),
+    watchFolders: [projectRoot],
   };
-};
+}
 
 export interface ConfigOptionsT {
   maxWorkers?: number;
@@ -122,15 +97,10 @@ export interface ConfigOptionsT {
  *
  * This allows the CLI to always overwrite the file settings.
  */
-export default async function load(
+export async function load(
   projectRoot: string,
   options: ConfigOptionsT = {}
 ): Promise<MetroConfig> {
-  const ctx = loadInputConfig(projectRoot);
-
-  const defaultConfig = getDefaultConfig(ctx);
-
-  const metroConfig = await loadConfig({ cwd: ctx.root, projectRoot, ...options }, defaultConfig);
-
-  return metroConfig;
+  const defaultConfig = getDefaultConfig(projectRoot, options);
+  return loadConfig({ cwd: projectRoot, projectRoot, ...options }, defaultConfig);
 }
