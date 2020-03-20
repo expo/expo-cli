@@ -868,7 +868,8 @@ export async function publishAsync(
           shellPlist.releaseChannel = options.releaseChannel;
           return shellPlist;
         });
-      } else if (fs.existsSync(path.join(supportingDirectory, 'Expo.plist'))) {
+      }
+      if (fs.existsSync(path.join(supportingDirectory, 'Expo.plist'))) {
         // This is an app with expo-updates installed, set properties in Expo.plist
         await IosPlist.modifyAsync(supportingDirectory, 'Expo', (configPlist: any) => {
           configPlist.EXUpdatesURL = fullManifestUrl;
@@ -926,7 +927,8 @@ export async function publishAsync(
           `RELEASE_CHANNEL = "${options.releaseChannel}"`,
           constantsPath
         );
-      } else {
+      }
+      if (pkg.dependencies['expo-updates']) {
         // This is an app with expo-updates installed, so set the applicable meta-data properties in
         // AndroidManifest.xml
         let androidManifestXmlPath = path.join(
