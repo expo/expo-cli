@@ -48,7 +48,7 @@ export type StandaloneContextDataService = {
 
 class StandaloneContext {
   data?: StandaloneContextDataUser | StandaloneContextDataService;
-  config: any; // same as underlying app.json or manifest - corresponds to the "PublicConfig" type
+  config: any; // same as underlying app.json or manifest
 
   static createUserContext = (
     projectPath: string,
