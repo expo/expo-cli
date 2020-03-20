@@ -36,6 +36,7 @@ interface WebpackSettings {
 
 type CLIWebOptions = {
   dev?: boolean;
+  clear?: boolean;
   pwa?: boolean;
   nonInteractive?: boolean;
   port?: number;
@@ -45,6 +46,7 @@ type CLIWebOptions = {
 
 type BundlingOptions = {
   dev?: boolean;
+  clear?: boolean;
   pwa?: boolean;
   isImageEditingEnabled?: boolean;
   webpackEnv?: Object;
@@ -86,6 +88,14 @@ export function printConnectionInstructions(projectRoot: string, options = {}) {
   });
 }
 
+async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<void> {
+  const cacheFolder = path.join(projectRoot, '.expo', 'web', 'cache', mode);
+  try {
+    withTag(chalk.dim(`Clearing ${mode} cache directory...`));
+    await fs.remove(cacheFolder);
+  } catch (_) {}
+}
+
 export async function startAsync(
   projectRoot: string,
   options: CLIWebOptions = {},
@@ -112,6 +122,10 @@ export async function startAsync(
   const fullOptions = transformCLIOptions(options);
 
   const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, fullOptions);
+
+  if (fullOptions.clear) {
+    await clearWebCacheAsync(projectRoot, env.mode);
+  }
 
   if (env.https) {
     if (!process.env.SSL_CRT_FILE || !process.env.SSL_KEY_FILE) {
@@ -313,6 +327,10 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
     // Force production
     mode: 'production',
   });
+
+  if (fullOptions.clear) {
+    await clearWebCacheAsync(projectRoot, env.mode);
+  }
 
   const config = await createWebpackConfigAsync(env, fullOptions);
 
