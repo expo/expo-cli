@@ -6,8 +6,6 @@ import path from 'path';
 // ios project paths
 // * Overall this function needs to be revamped, just a placeholder for now!
 function getIOSPaths(projectRoot: string) {
-  let iosProjectDirectory;
-
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   let projectName = exp.name;
@@ -15,11 +13,13 @@ function getIOSPaths(projectRoot: string) {
     throw new Error('Need a name ;O');
   }
 
-  iosProjectDirectory = path.join(projectRoot, 'ios', projectName);
+  const iosProjectDirectory = path.join(projectRoot, 'ios', projectName);
+  const iconPath = path.join(iosProjectDirectory, 'Assets.xcassets', 'AppIcon.appiconset');
 
   return {
     projectName,
     iosProjectDirectory,
+    iconPath,
   };
 }
 
@@ -27,7 +27,7 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, exp.ios!.bundleIdentifier!);
-  const { iosProjectDirectory } = getIOSPaths(projectRoot);
+  const { iosProjectDirectory, iconPath } = getIOSPaths(projectRoot);
   await IosPlist.modifyAsync(iosProjectDirectory, 'Info', infoPlist => {
     infoPlist = IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(exp, infoPlist);
     infoPlist = IOSConfig.Name.setDisplayName(exp, infoPlist);
@@ -41,6 +41,4 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
     infoPlist = IOSConfig.UsesNonExemptEncryption.setUsesNonExemptEncryption(exp, infoPlist);
     return infoPlist;
   });
-
-  // log.newLine();
 }
