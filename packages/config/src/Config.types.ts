@@ -940,4 +940,5 @@ export type ConfigContext = {
 export type GetConfigOptions = {
   configPath?: string;
   skipSDKVersionRequirement?: boolean;
+  strict?: boolean;
 };

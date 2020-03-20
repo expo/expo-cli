@@ -450,9 +450,12 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
 
   let exp, pkg;
   try {
-    const config = getConfig(projectRoot);
+    const config = getConfig(projectRoot, {
+      strict: true,
+    });
     exp = config.exp;
     pkg = config.pkg;
+    ProjectUtils.clearNotification(projectRoot, 'doctor-config-json-not-read');
   } catch (e) {
     ProjectUtils.logError(
       projectRoot,
@@ -460,7 +463,7 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
       `Error: could not load config json at ${projectRoot}: ${e.toString()}`,
       'doctor-config-json-not-read'
     );
-    return FATAL;
+    return ERROR;
   }
 
   let status = await _checkNpmVersionAsync(projectRoot);
