@@ -1,6 +1,7 @@
+import { ImageFormat, ResizeMode } from './Image.types';
 import { convertFormat, jimpAsync } from './jimp';
-import { isAvailableAsync, sharpAsync } from './sharp';
-import { ImageFormat, ResizeMode, SharpCommandOptions, SharpGlobalOptions } from './sharp.types';
+import { findSharpInstanceAsync, isAvailableAsync, sharpAsync } from './sharp';
+import { SharpCommandOptions, SharpGlobalOptions } from './sharp.types';
 
 export async function imageAsync(
   options: SharpGlobalOptions,
@@ -15,6 +16,6 @@ export async function imageAsync(
   );
 }
 
-export { jimpAsync, isAvailableAsync, sharpAsync };
+export { jimpAsync, findSharpInstanceAsync, isAvailableAsync, sharpAsync };
 
 export { SharpGlobalOptions, SharpCommandOptions, ResizeMode, ImageFormat };

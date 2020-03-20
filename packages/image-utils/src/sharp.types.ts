@@ -1,3 +1,5 @@
+import { ImageFormat, ResizeMode } from './Image.types';
+
 export type SharpGlobalOptions = {
   compressionLevel?: '';
   format?: ImageFormat;
@@ -16,10 +18,6 @@ export type FlattenOptions = {
   operation: 'flatten';
   background: string;
 };
-
-export type ResizeMode = 'contain' | 'cover' | 'fill' | 'inside' | 'outside';
-
-export type ImageFormat = 'input' | 'jpeg' | 'jpg' | 'png' | 'raw' | 'tiff' | 'webp';
 
 export type RemoveAlphaOptions = {
   operation: 'removeAlpha';
