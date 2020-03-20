@@ -146,7 +146,7 @@ async function processImageAsync(
   let imageBuffer: Buffer | null = await getImageFromCacheAsync(fileName, cacheKey);
   if (!imageBuffer) {
     // Putting the warning here will prevent the warning from showing if all images were reused from the cache
-    if (!hasWarned && !await isAvailableAsync()) {
+    if (!hasWarned && !(await isAvailableAsync())) {
       hasWarned = true;
       // TODO: Bacon: Fallback to nodejs image resizing as native doesn't work in the host environment.
       console.log();
@@ -270,10 +270,6 @@ function createCacheKey(icon: Icon): string {
 const cacheKeys: { [key: string]: string } = {};
 
 const cacheDownloadedKeys: { [key: string]: string } = {};
-
-function stripQueryParams(url: string): string {
-  return url.split('?')[0].split('#')[0];
-}
 
 async function downloadOrUseCachedImage(url: string): Promise<string> {
   if (url in cacheDownloadedKeys) {
