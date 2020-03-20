@@ -132,8 +132,8 @@ export async function updateCredentialsForPlatform(
       credentials: newCredentials,
     });
 
-    if (!result) {
-      throw new Error('Error updating credentials.');
+    if (result.data.errors) {
+      throw new Error(`Error updating credentials: ${JSON.stringify(result.data.errors)}}`);
     }
   }
 }
