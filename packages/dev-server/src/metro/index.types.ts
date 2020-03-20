@@ -1,7 +1,7 @@
-import http from 'http';
-import connect from 'connect';
-import { Server as HttpServer } from 'http';
+import http, { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
+
+import connect from 'connect';
 
 export type MetroServer = HttpServer | HttpsServer;
 

@@ -1,6 +1,6 @@
 import http from 'http';
 
-import { ProjectUtils, Logger } from '@expo/xdl';
+import { Logger, ProjectUtils } from '@expo/xdl';
 import { createMiddlewareWithURL } from '../utils';
 import { RawRequest } from '../index.types';
 
