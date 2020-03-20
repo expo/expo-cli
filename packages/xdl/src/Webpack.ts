@@ -1,7 +1,10 @@
 import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
+import * as devcert from 'devcert';
+import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';
+import * as path from 'path';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import { Urls, choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
@@ -110,11 +113,24 @@ export async function startAsync(
 
   const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, fullOptions);
 
-  const config = await createWebpackConfigAsync(env, fullOptions);
+  if (env.https) {
+    if (!process.env.SSL_CRT_FILE || !process.env.SSL_KEY_FILE) {
+      const ssl = await getSSLCertAsync({
+        name: 'localhost',
+        directory: projectRoot,
+      });
+      if (ssl) {
+        process.env.SSL_CRT_FILE = ssl.certPath;
+        process.env.SSL_KEY_FILE = ssl.keyPath;
+      }
+    }
+  }
 
+  const config = await createWebpackConfigAsync(env, fullOptions);
   const port = await getAvailablePortAsync({
     defaultPort: options.port,
   });
+
   webpackServerPort = port;
 
   ProjectUtils.logInfo(
@@ -175,7 +191,7 @@ export async function startAsync(
   });
 
   const host = ip.address();
-  const url = `${protocol}://${host}:${webpackServerPort}`;
+  const url = `${protocol}://${host}:${port}`;
   return {
     url,
     server,
@@ -440,4 +456,40 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
     https,
     ...(options.webpackEnv || {}),
   };
+}
+
+async function getSSLCertAsync({
+  name,
+  directory,
+}: {
+  name: string;
+  directory: string;
+}): Promise<{ keyPath: string; certPath: string } | false> {
+  console.log(
+    chalk.magenta`Ensuring auto SSL certificate is created (you might need to re-run with sudo)`
+  );
+  try {
+    const result = await devcert.certificateFor(name);
+    if (result) {
+      const { key, cert } = result;
+      const folder = path.join(directory, '.expo', 'web', 'development', 'ssl');
+      await fs.ensureDir(folder);
+
+      const keyPath = path.join(folder, `key-${name}.pem`);
+      await fs.writeFile(keyPath, key);
+
+      const certPath = path.join(folder, `cert-${name}.pem`);
+      await fs.writeFile(certPath, cert);
+
+      return {
+        keyPath,
+        certPath,
+      };
+    }
+    return result;
+  } catch (error) {
+    console.log(`Error creating SSL certificates: ${error}`);
+  }
+
+  return false;
 }

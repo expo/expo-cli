@@ -146,14 +146,17 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   return queryParams;
 }
 
-export async function constructWebAppUrlAsync(projectRoot: string): Promise<string | null> {
+export async function constructWebAppUrlAsync(
+  projectRoot: string,
+  options: { hostType?: 'localhost' | 'lan' | 'tunnel' } = {}
+): Promise<string | null> {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.webpackServerPort) {
     return null;
   }
 
   const { https, hostType } = await ProjectSettings.readAsync(projectRoot);
-  const host = hostType === 'localhost' ? 'localhost' : ip.address();
+  const host = (options.hostType ?? hostType) === 'localhost' ? 'localhost' : ip.address();
 
   let urlType = 'http';
   if (https === true) {
