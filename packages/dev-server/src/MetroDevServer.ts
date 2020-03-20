@@ -1,14 +1,15 @@
 import Metro from 'metro';
 import { createDevServerMiddleware } from '@react-native-community/dev-server-api';
+import * as MetroConfig from '@expo/metro-config';
 
 export type MetroMiddlewareOptions = {
   projectRoot: string;
   watchFolders: Array<string>;
   port: number;
-  host: string;
-  key: string;
-  cert: string;
-  https: boolean;
+  host?: string;
+  key?: string;
+  cert?: string;
+  https?: boolean;
 };
 
 export async function runMetroDevServerAsync(options: MetroMiddlewareOptions) {
@@ -23,9 +24,8 @@ export async function runMetroDevServerAsync(options: MetroMiddlewareOptions) {
     },
   };
 
-  const metroConfig: any = {
-    reporter,
-  };
+  const metroConfig = await MetroConfig.load(options.projectRoot);
+  metroConfig.reporter = reporter;
 
   const { middleware, attachToServer } = createDevServerMiddleware({
     host: options.host,
