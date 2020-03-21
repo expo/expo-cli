@@ -14,6 +14,12 @@ type JimpGlobalOptions = Omit<SharpGlobalOptions, 'input'> & {
   originalInput: string;
 };
 
+export async function resizeBufferAsync(buffer: Buffer, sizes: number[]): Promise<Buffer[]> {
+  const jimpImage = await Jimp.read(buffer);
+  const mime = jimpImage.getMIME();
+  return Promise.all(sizes.map(size => jimpImage.resize(size, size).getBufferAsync(mime)));
+}
+
 export function convertFormat(format?: string): string | undefined {
   if (typeof format === 'undefined') return format;
 
@@ -85,22 +91,23 @@ export async function resize(
   { input, quality = 100 }: JimpGlobalOptions,
   { background, position, fit, width, height = Jimp.AUTO }: Omit<ResizeOptions, 'operation'>
 ): Promise<Jimp> {
-  const initialImage = await getJimpImageAsync(input);
+  let initialImage = await getJimpImageAsync(input);
   const jimpPosition = convertPosition(position);
   const jimpQuality = typeof quality !== 'number' ? 100 : quality;
   if (fit === 'cover') {
-    return await initialImage.cover(width, height, jimpPosition).quality(jimpQuality);
+    initialImage = initialImage.cover(width, height, jimpPosition);
   } else if (fit === 'contain') {
-    let resizedImage = await initialImage.contain(width, height, jimpPosition).quality(jimpQuality);
-    if (background) {
-      resizedImage = await resizedImage.background(Jimp.cssColorToHex(background));
-    }
-    return resizedImage;
+    initialImage = initialImage.contain(width, height, jimpPosition);
   } else {
     throw new Error(
       `Unsupported fit: ${fit}. Please choose either 'cover', or 'contain' when using Jimp`
     );
   }
+  if (background) {
+    initialImage = initialImage.background(Jimp.cssColorToHex(background));
+  }
+
+  return await initialImage.quality(jimpQuality);
 }
 
 async function flatten(

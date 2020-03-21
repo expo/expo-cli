@@ -5,6 +5,25 @@ import { Options, SharpCommandOptions, SharpGlobalOptions } from './sharp.types'
 
 const SHARP_HELP_PATTERN = /\n\nSpecify --help for available options/g;
 
+export async function resizeBufferAsync(buffer: Buffer, sizes: number[]): Promise<Buffer[]> {
+  const sharp = await findSharpInstanceAsync();
+
+  const metadata = await sharp(buffer).metadata();
+  // Create buffer for each size
+  const resizedBuffers = await Promise.all(
+    sizes.map(dimension => {
+      const density = (dimension / Math.max(metadata.width, metadata.height)) * metadata.density;
+      return sharp(buffer, {
+        density: isNaN(density) ? undefined : Math.ceil(density),
+      })
+        .resize(dimension, dimension, { fit: 'contain', background: 'transparent' })
+        .toBuffer();
+    })
+  );
+
+  return resizedBuffers;
+}
+
 export async function isAvailableAsync(): Promise<boolean> {
   try {
     return !!(await findSharpBinAsync());
