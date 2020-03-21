@@ -1,5 +1,3 @@
-import JsonFile from '@expo/json-file';
-
 import { getConfig } from './Config';
 import { AppJSONConfig, ExpoConfig } from './Config.types';
 
@@ -324,42 +322,4 @@ export function ensurePWAConfig(
     config.web.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
   }
   return config;
-}
-
-export function createEnvironmentConstants(appManifest: ExpoConfig, pwaManifestLocation: string) {
-  let web;
-  try {
-    web = JsonFile.read(pwaManifestLocation);
-  } catch (e) {
-    web = {};
-  }
-
-  return {
-    ...appManifest,
-    name: appManifest.displayName || appManifest.name,
-    /**
-     * Omit app.json properties that get removed during the native turtle build
-     *
-     * `facebookScheme`
-     * `facebookAppId`
-     * `facebookDisplayName`
-     */
-    facebookScheme: undefined,
-    facebookAppId: undefined,
-    facebookDisplayName: undefined,
-
-    // Remove iOS and Android.
-    ios: undefined,
-    android: undefined,
-
-    // Use the PWA `manifest.json` as the native web manifest.
-    web: {
-      ...web,
-
-      // Pass through config properties that are not stored in the
-      // PWA `manifest.json`, but still need to be accessible
-      // through `Constants.manifest`.
-      config: appManifest.web?.config,
-    },
-  };
 }
