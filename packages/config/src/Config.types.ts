@@ -427,14 +427,6 @@ export type WebPlatformConfig = {
       [option: string]: any;
     };
     /**
-     * Configuration for enabling webpack report and `stats.json`. See `BundleAnalyzerPlugin.Options` from `webpack-bundle-analyzer`.
-     * @deprecated
-     */
-    report?: {
-      // TODO: Bacon: BundleAnalyzerPlugin.Options
-      [option: string]: any;
-    };
-    /**
      * Configuration for customizing the service worker. See `GenerateSWOptions` from `workbox-webpack-plugin`.
      */
     serviceWorker?: {

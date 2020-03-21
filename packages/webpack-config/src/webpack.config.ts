@@ -1,8 +1,8 @@
 /** @internal */ /** */
 /* eslint-env node */
-
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
 import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
+import chalk from 'chalk';
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import PnpWebpackPlugin from 'pnp-webpack-plugin';
@@ -23,13 +23,7 @@ import {
   ExpoInterpolateHtmlPlugin,
   ExpoProgressBarPlugin,
 } from './plugins';
-import {
-  withAlias,
-  withDevServer,
-  withNodeMocks,
-  withOptimizations,
-  withReporting,
-} from './addons';
+import { withAlias, withDevServer, withNodeMocks, withOptimizations } from './addons';
 
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 import { overrideWithPropertyOrConfig } from './utils';
@@ -97,6 +91,13 @@ export default async function(
   env: Environment,
   argv: Arguments = {}
 ): Promise<Configuration | DevConfiguration> {
+  if ('report' in env) {
+    console.warn(
+      chalk.bgRed.black(
+        `The \`report\` property of \`@expo/webpack-config\` is now deprecated.\nhttps://expo.fyi/webpack-report-property-is-deprecated`
+      )
+    );
+  }
   const config = getConfig(env);
   const mode = getMode(env);
   const isDev = mode === 'development';
@@ -332,5 +333,5 @@ export default async function(
     });
   }
 
-  return withReporting(withNodeMocks(withAlias(webpackConfig)), env);
+  return withNodeMocks(withAlias(webpackConfig));
 }
