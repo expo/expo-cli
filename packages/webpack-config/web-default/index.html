@@ -5,15 +5,14 @@
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <title>%WEB_TITLE%</title>
     <link rel="shortcut icon" href="%WEB_PUBLIC_URL%favicon.ico" />
-    <!-- TODO: Bacon: build a reliable system for testing these style changes -->
     <style>
       /**
-       * Building on the RNWeb reset:
+       * Extend the react-native-web reset:
        * https://github.com/necolas/react-native-web/blob/master/packages/react-native-web/src/exports/StyleSheet/initialRules.js
        */
       html,
       body,
-      #%ROOT_ID% {
+      #root {
         width: 100%;
         /* To smooth any scrolling behavior */
         -webkit-overflow-scrolling: touch;
@@ -22,7 +21,7 @@
         /* Allows content to fill the viewport and go beyond the bottom */
         min-height: 100%;
       }
-      #%ROOT_ID% {
+      #root {
         flex-shrink: 0;
         flex-basis: auto;
         flex-grow: 1;

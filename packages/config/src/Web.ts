@@ -102,7 +102,6 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
 
   const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
   const noJavaScriptMessage = webDangerous.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
-  const rootId = webBuild.rootId || DEFAULT_ROOT_ID;
   const buildOutputPath = getWebOutputPath(appJSON);
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor;
@@ -173,7 +172,6 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
       build: {
         ...webBuild,
         output: buildOutputPath,
-        rootId,
         publicPath,
       },
       dangerous: {

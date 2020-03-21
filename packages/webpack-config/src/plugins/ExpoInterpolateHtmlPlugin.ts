@@ -27,8 +27,7 @@ export default class InterpolateHtmlPlugin extends OriginalInterpolateHtmlPlugin
     const config = env.config || getConfig(env);
     const { publicPath } = getPublicPaths(env);
 
-    const { build: buildConfig = {}, lang } = config.web;
-    const { rootId } = buildConfig;
+    const { lang } = config.web;
     const { noJavaScriptMessage } = config.web.dangerous;
     const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
@@ -37,7 +36,8 @@ export default class InterpolateHtmlPlugin extends OriginalInterpolateHtmlPlugin
       WEB_TITLE: config.web.name,
       NO_SCRIPT: noJSComponent,
       LANG_ISO_CODE: lang,
-      ROOT_ID: rootId,
+      // This is for legacy ejected web/index.html files
+      ROOT_ID: 'root',
     });
   };
 }
