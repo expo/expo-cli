@@ -5,7 +5,8 @@ import { Command } from 'commander';
 import fs from 'fs-extra';
 import { dirname, join, relative, resolve } from 'path';
 
-import { HTMLOutput, generateAsync, generateManifestAsync } from '.';
+import { HTMLOutput } from './Manifest.types';
+import { generateAsync, generateManifestAsync } from '.';
 import { htmlTagObjectToString } from './HTML';
 import shouldUpdate from './update';
 

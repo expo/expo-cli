@@ -1,18 +1,9 @@
 /** @internal */ /** */
 /* eslint-env node */
-import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
+import { projectHasModule } from '@expo/config';
 import chalk from 'chalk';
-import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
-import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
-import PnpWebpackPlugin from 'pnp-webpack-plugin';
-import ManifestPlugin from 'webpack-manifest-plugin';
-import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
-import { boolish } from 'getenv';
-import path from 'path';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
-import { readFileSync } from 'fs-extra';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
 import {
   IconOptions,
   getChromeIconConfig,
@@ -20,25 +11,34 @@ import {
   getSafariIconConfig,
   getSafariStartupImageConfig,
 } from 'expo-pwa';
-import { projectHasModule } from '@expo/config';
+import { readFileSync } from 'fs-extra';
+import { boolish } from 'getenv';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { parse } from 'node-html-parser';
+import path from 'path';
+import PnpWebpackPlugin from 'pnp-webpack-plugin';
+import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
+import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
+import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
+import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
+import ManifestPlugin from 'webpack-manifest-plugin';
+
+import { withAlias, withDevServer, withNodeMocks, withOptimizations } from './addons';
 import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
 import { createAllLoaders } from './loaders';
 import {
+  ApplePwaWebpackPlugin,
+  ChromeIconsWebpackPlugin,
   ExpoDefinePlugin,
   ExpoHtmlWebpackPlugin,
   ExpoInterpolateHtmlPlugin,
   ExpoProgressBarPlugin,
+  ExpoPwaManifestWebpackPlugin,
+  FaviconWebpackPlugin,
 } from './plugins';
-import { withAlias, withDevServer, withNodeMocks, withOptimizations } from './addons';
-
+import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 import { overrideWithPropertyOrConfig } from './utils';
-import ChromeIconsWebpackPlugin from './plugins/ChromeIconsWebpackPlugin';
-import ApplePwaWebpackPlugin from './plugins/ApplePwaWebpackPlugin';
-import FaviconWebpackPlugin from './plugins/FaviconWebpackPlugin';
-import ExpoPwaManifestWebpackPlugin from './plugins/ExpoPwaManifestWebpackPlugin';
-import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);

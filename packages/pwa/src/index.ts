@@ -3,8 +3,8 @@ import * as Image from '@expo/image-utils';
 import * as path from 'path';
 
 import { assembleOrientationMedia, getDevices } from './Splash';
-import { createPWAManifestFromWebConfig, getConfigForPWA } from './Web';
-import { HTMLOutput, IconOptions, Manifest, ProjectOptions, SplashIcon } from './Web.types';
+import { createPWAManifestFromWebConfig, getConfigForPWA } from './Manifest';
+import { HTMLOutput, IconOptions, Manifest, ProjectOptions, SplashIcon } from './Manifest.types';
 
 export async function generateAsync(
   type: string,
@@ -278,6 +278,6 @@ export {
   getSafariIconConfig,
   getFaviconIconConfig,
   getChromeIconConfig,
-} from './Web';
+} from './Manifest';
 
-export { IconOptions, ProjectOptions, HTMLOutput } from './Web.types';
+export { IconOptions, ProjectOptions, HTMLOutput } from './Manifest.types';
