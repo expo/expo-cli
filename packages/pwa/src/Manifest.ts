@@ -7,7 +7,7 @@ import {
   getWebOutputPath,
 } from '@expo/config';
 
-import { IconOptions, Manifest } from './Web.types';
+import { IconOptions, Manifest } from './Manifest.types';
 
 // To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
 const DEFAULT_VIEWPORT =

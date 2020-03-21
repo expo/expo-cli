@@ -1,4 +1,4 @@
-import * as Web from '../Web';
+import * as Manifest from '../Manifest';
 
 describe('createPWAManifestFromWebConfig', () => {
   // Important for ensuring that we keep the manifest minimal
@@ -8,7 +8,7 @@ describe('createPWAManifestFromWebConfig', () => {
       // Even if this is true, we will correct the error by not including it.
       preferRelatedApplications: true,
     };
-    const manifest = Web.createPWAManifestFromWebConfig(config);
+    const manifest = Manifest.createPWAManifestFromWebConfig(config);
     expect(manifest.prefer_related_applications).not.toBeDefined();
     expect(manifest.related_applications).not.toBeDefined();
   });
@@ -17,12 +17,12 @@ describe('createPWAManifestFromWebConfig', () => {
       relatedApplications: [{}],
       preferRelatedApplications: true,
     };
-    const manifest = Web.createPWAManifestFromWebConfig(config);
+    const manifest = Manifest.createPWAManifestFromWebConfig(config);
     expect(manifest.prefer_related_applications).toBe(true);
     expect(manifest.related_applications).toBeDefined();
   });
   it(`validates that the object is defined`, () => {
-    expect(() => Web.createPWAManifestFromWebConfig(null)).toThrow(`must be a valid object`);
+    expect(() => Manifest.createPWAManifestFromWebConfig(null)).toThrow(`must be a valid object`);
   });
 });
 
@@ -35,7 +35,7 @@ describe('getChromeIconConfig', () => {
       android: { icon: 'android-icon' },
       icon: 'icon',
     };
-    const icon = Web.getChromeIconConfig(config);
+    const icon = Manifest.getChromeIconConfig(config);
     expect(icon.src).toBe(config.android.icon);
   });
   it(`uses icon when android.icon is not defined`, () => {
@@ -43,7 +43,7 @@ describe('getChromeIconConfig', () => {
       android: { icon: undefined },
       icon: 'icon',
     };
-    const icon = Web.getChromeIconConfig(config);
+    const icon = Manifest.getChromeIconConfig(config);
     expect(icon.src).toBe(config.icon);
   });
 });
@@ -53,7 +53,7 @@ describe('getFaviconIconConfig', () => {
       web: { favicon: 'web-favicon' },
       icon: 'icon',
     };
-    const icon = Web.getFaviconIconConfig(config);
+    const icon = Manifest.getFaviconIconConfig(config);
     expect(icon.src).toBe(config.web.favicon);
   });
   it(`uses icon when web.favicon is not defined`, () => {
@@ -61,7 +61,7 @@ describe('getFaviconIconConfig', () => {
       web: { favicon: undefined },
       icon: 'icon',
     };
-    const icon = Web.getFaviconIconConfig(config);
+    const icon = Manifest.getFaviconIconConfig(config);
     expect(icon.src).toBe(config.icon);
   });
 });
@@ -71,7 +71,7 @@ describe('getSafariIconConfig', () => {
       ios: { icon: 'ios-icon' },
       icon: 'icon',
     };
-    const icon = Web.getSafariIconConfig(config);
+    const icon = Manifest.getSafariIconConfig(config);
     expect(icon.src).toBe(config.ios.icon);
   });
   it(`uses icon when ios.icon is not defined`, () => {
@@ -79,7 +79,7 @@ describe('getSafariIconConfig', () => {
       ios: { icon: undefined },
       icon: 'icon',
     };
-    const icon = Web.getSafariIconConfig(config);
+    const icon = Manifest.getSafariIconConfig(config);
     expect(icon.src).toBe(config.icon);
   });
 });
@@ -90,7 +90,7 @@ describe('getSafariStartupImageConfig', () => {
       ios: { splash: { image: 'ios-splash' } },
       splash: { image: 'splash' },
     };
-    const icon = Web.getSafariStartupImageConfig(config);
+    const icon = Manifest.getSafariStartupImageConfig(config);
     expect(icon.src).toBe(config.web.splash.image);
   });
   it(`returns null if to web.splash.image is null, and fallbacks are defined`, () => {
@@ -99,7 +99,7 @@ describe('getSafariStartupImageConfig', () => {
       ios: { splash: { image: 'ios-splash' } },
       splash: { image: 'splash' },
     };
-    const icon = Web.getSafariStartupImageConfig(config);
+    const icon = Manifest.getSafariStartupImageConfig(config);
     expect(icon).toBe(null);
   });
   it(`uses ios.splash when web.splash isn't defined`, () => {
@@ -108,7 +108,7 @@ describe('getSafariStartupImageConfig', () => {
       ios: { splash: { image: 'ios-splash' } },
       splash: { image: 'splash' },
     };
-    const icon = Web.getSafariStartupImageConfig(config);
+    const icon = Manifest.getSafariStartupImageConfig(config);
     expect(icon.src).toBe(config.ios.splash.image);
   });
   it(`uses splash when web.splash and ios.splash aren't defined`, () => {
@@ -117,7 +117,7 @@ describe('getSafariStartupImageConfig', () => {
       ios: {},
       splash: { image: 'splash' },
     };
-    const icon = Web.getSafariStartupImageConfig(config);
+    const icon = Manifest.getSafariStartupImageConfig(config);
     expect(icon.src).toBe(config.splash.image);
   });
   it(`uses resizeMode and backgroundColor from splash object`, () => {
@@ -126,7 +126,7 @@ describe('getSafariStartupImageConfig', () => {
       ios: {},
       splash: { image: 'splash', resizeMode: 'random', backgroundColor: 'orange' } as any,
     };
-    const icon = Web.getSafariStartupImageConfig(config);
+    const icon = Manifest.getSafariStartupImageConfig(config);
     expect(icon.resizeMode).toBe(config.splash.resizeMode);
     expect(icon.backgroundColor).toBe(config.splash.backgroundColor);
     expect(icon.src).toBe(config.splash.image);
