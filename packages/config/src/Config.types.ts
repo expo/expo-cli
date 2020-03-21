@@ -411,12 +411,6 @@ export type WebPlatformConfig = {
     [key: string]: any;
 
     /**
-     * ID of the root DOM element in your index.html. By default this is "root".
-     * @fallback root
-     */
-    rootId?: string;
-
-    /**
      * Choose a custom style of source mapping to enhance the debugging process. These values can affect build and rebuild speed dramatically.
      */
     devtool?: Devtool;
@@ -430,14 +424,6 @@ export type WebPlatformConfig = {
      */
     minifyHTML?: {
       // TODO: Bacon: HtmlWebpackPlugin.Options
-      [option: string]: any;
-    };
-    /**
-     * Configuration for enabling webpack report and `stats.json`. See `BundleAnalyzerPlugin.Options` from `webpack-bundle-analyzer`.
-     * @deprecated
-     */
-    report?: {
-      // TODO: Bacon: BundleAnalyzerPlugin.Options
       [option: string]: any;
     };
     /**

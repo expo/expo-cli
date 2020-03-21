@@ -13,7 +13,6 @@ import { IconOptions, Manifest } from './Web.types';
 const DEFAULT_VIEWPORT =
   'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1.00001,viewport-fit=cover';
 // Use root to work better with create-react-app
-const DEFAULT_ROOT_ID = `root`;
 const DEFAULT_LANGUAGE_ISO_CODE = `en`;
 const DEFAULT_NO_JS_MESSAGE = `Oh no! It looks like JavaScript is not enabled in your browser.`;
 const DEFAULT_BACKGROUND_COLOR = '#ffffff';
@@ -63,7 +62,6 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
 
   const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
   const noJavaScriptMessage = webDangerous.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
-  const rootId = webBuild.rootId || DEFAULT_ROOT_ID;
   const buildOutputPath = getWebOutputPath(appJSON);
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor;
@@ -134,7 +132,6 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
       build: {
         ...webBuild,
         output: buildOutputPath,
-        rootId,
         publicPath,
       },
       dangerous: {
