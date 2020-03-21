@@ -1,4 +1,5 @@
-import { ImageFormat, ResizeMode } from './Image.types';
+import { generateFaviconAsync, generateImageAsync } from './Image';
+import { ImageFormat, ImageOptions, ResizeMode } from './Image.types';
 import { convertFormat, jimpAsync } from './jimp';
 import { findSharpInstanceAsync, isAvailableAsync, sharpAsync } from './sharp';
 import { SharpCommandOptions, SharpGlobalOptions } from './sharp.types';
@@ -16,6 +17,13 @@ export async function imageAsync(
   );
 }
 
-export { jimpAsync, findSharpInstanceAsync, isAvailableAsync, sharpAsync };
+export {
+  jimpAsync,
+  findSharpInstanceAsync,
+  isAvailableAsync,
+  sharpAsync,
+  generateImageAsync,
+  generateFaviconAsync,
+};
 
-export { SharpGlobalOptions, SharpCommandOptions, ResizeMode, ImageFormat };
+export { SharpGlobalOptions, SharpCommandOptions, ResizeMode, ImageFormat, ImageOptions };
