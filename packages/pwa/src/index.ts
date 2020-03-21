@@ -30,8 +30,8 @@ export async function generateSplashAsync(
 ): Promise<HTMLOutput[]> {
   const cacheType = 'apple-touch-startup-image';
 
-  // You cannot lock iOS PWA orientation, we should produce every splash screen.
-  // orientation
+  // You cannot lock iOS PWA orientation, we should produce every splash screen
+  // orientation. We don't however because in iOS 13 it's far more rare to see landscape splash screens.
   const devices = getDevices();
 
   const icons: SplashIcon[] = Array.isArray(icon) ? icon : [];
