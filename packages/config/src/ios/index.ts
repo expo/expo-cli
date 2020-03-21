@@ -8,6 +8,7 @@ import * as CustomInfoPlistEntries from './CustomInfoPlistEntries';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as RequiresFullScreen from './RequiresFullScreen';
 import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
+import * as Entitlements from './Entitlements';
 
 import { InfoPlist } from './IosConfig.types';
 
@@ -15,6 +16,7 @@ import { InfoPlist } from './IosConfig.types';
 // https://devblogs.microsoft.com/typescript/announcing-typescript-3-8-beta/#export-star-as-namespace-syntax
 // .. but we should wait for this to be the default VSCode version.
 export {
+  Entitlements,
   Branch,
   BundleIdenitifer,
   CustomInfoPlistEntries,
