@@ -1,11 +1,9 @@
 import chalk from 'chalk';
 import * as yup from 'yup';
 
-import { Environment, InputEnvironment, Report } from '../types';
+import { Environment, InputEnvironment } from '../types';
 import { getPaths } from './paths';
 import getConfig from './getConfig';
-
-import { enableWithPropertyOrConfig } from '../utils';
 
 const environmentSchema = yup.object({
   config: yup.object().notRequired(),
@@ -24,33 +22,6 @@ const environmentSchema = yup.object({
     .oneOf(['ios', 'android', 'web', 'electron'])
     .default('web'),
 });
-
-const DEFAULT_REPORT = {
-  verbose: false,
-  path: 'web-report',
-  statsFilename: 'stats.json',
-  reportFilename: 'report.html',
-};
-
-const reportSchema = yup.object({
-  verbose: yup.boolean().default(DEFAULT_REPORT.verbose),
-  path: yup.string().default(DEFAULT_REPORT.path),
-  statsFilename: yup.string().default(DEFAULT_REPORT.statsFilename),
-  reportFilename: yup.string().default(DEFAULT_REPORT.reportFilename),
-});
-
-/**
- *
- * @param report
- * @category env
- */
-export function validateReport(report: boolean | Report): Report | null {
-  const reportConfig = enableWithPropertyOrConfig(report, DEFAULT_REPORT, true);
-  if (!reportConfig) return null;
-
-  const filledReport: Report = reportSchema.validateSync(reportConfig);
-  return filledReport;
-}
 
 /**
  *
@@ -73,10 +44,6 @@ export function validateEnvironment(env: InputEnvironment): Environment {
 
   if (!env.config) {
     filledEnv.config = getConfig(filledEnv);
-  }
-
-  if (typeof env.report !== 'undefined') {
-    filledEnv.report = validateReport(env.report);
   }
 
   return filledEnv;

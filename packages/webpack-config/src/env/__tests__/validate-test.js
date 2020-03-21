@@ -1,12 +1,7 @@
 /* eslint-env node */
 import path from 'path';
 
-import {
-  _resetWarnings,
-  validateEnvironment,
-  validateReport,
-  warnEnvironmentDeprecation,
-} from '../validate';
+import { _resetWarnings, validateEnvironment, warnEnvironmentDeprecation } from '../validate';
 
 const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
 const mode = 'development';
@@ -28,22 +23,12 @@ it(`auto fills a truthy report`, () => {
   const { projectRoot: outputProjectRoot, locations, config, ...env } = validateEnvironment({
     projectRoot,
     mode,
-    report: true,
   });
 
   expect(outputProjectRoot).toBe(projectRoot);
   expect(locations).toBeDefined();
   expect(config).toBeDefined();
   expect(env).toMatchSnapshot();
-  expect(env.report).toBeDefined();
-});
-
-it(`can override a report value`, () => {
-  expect(
-    validateReport({
-      statsFilename: 'custom-stats.json',
-    }).statsFilename
-  ).toBe('custom-stats.json');
 });
 
 it(`throws when the projectRoot isn't defined`, () => {

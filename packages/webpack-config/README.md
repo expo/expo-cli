@@ -45,17 +45,16 @@ module.exports = async function(env, argv) {
 
 The main options used to configure how `@expo/webpack-config` works.
 
-| name                        | type                                    | default     | description                                                                     |
-| --------------------------- | --------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
-| `projectRoot`               | `string`                                | required    | Root of the Expo project.                                                       |
-| `https`                     | `boolean`                               | `false`     | Should the dev server use https protocol.                                       |
-| `offline`                   | `boolean`                               | `true`      | Passing `false` will disable offline support and skip adding a service worker.  |
-| `mode`                      | `Mode`                                  | required    | The Webpack mode to bundle the project in.                                      |
-| `platform`                  | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for. Only `web` and `electron` are supported.     |
-| `removeUnusedImportExports` | `boolean`                               | `false`     | Enables advanced tree-shaking with deep scope analysis.                         |
-| `pwa`                       | `boolean`                               | `true`      | Generate the PWA image assets in production mode.                               |
-| `report`                    | `Report`                                | `undefined` | Configure Webpack bundle reports. Using this adds significant time to rebuilds. |
-| `babel`                     | [`ExpoBabelOptions`](#ExpoBabelOptions) | `undefined` | Control how the default Babel loader is configured.                             |
+| name                        | type                                    | default     | description                                                                    |
+| --------------------------- | --------------------------------------- | ----------- | ------------------------------------------------------------------------------ |
+| `projectRoot`               | `string`                                | required    | Root of the Expo project.                                                      |
+| `https`                     | `boolean`                               | `false`     | Should the dev server use https protocol.                                      |
+| `offline`                   | `boolean`                               | `true`      | Passing `false` will disable offline support and skip adding a service worker. |
+| `mode`                      | `Mode`                                  | required    | The Webpack mode to bundle the project in.                                     |
+| `platform`                  | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for. Only `web` and `electron` are supported.    |
+| `removeUnusedImportExports` | `boolean`                               | `false`     | Enables advanced tree-shaking with deep scope analysis.                        |
+| `pwa`                       | `boolean`                               | `true`      | Generate the PWA image assets in production mode.                              |
+| `babel`                     | [`ExpoBabelOptions`](#ExpoBabelOptions) | `undefined` | Control how the default Babel loader is configured.                            |
 
 ### `Environment` internal
 
@@ -226,12 +225,6 @@ import { withWorkbox } from '@expo/webpack-config/addons';
 
 ```js
 import { withOptimizations } from '@expo/webpack-config/addons';
-```
-
-#### `withReporting`
-
-```js
-import { withReporting } from '@expo/webpack-config/addons';
 ```
 
 #### `withAlias`
