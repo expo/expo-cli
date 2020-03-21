@@ -1,75 +1,28 @@
 import semver from 'semver';
 import spawnAsync from '@expo/spawn-async';
 import resolveFrom from 'resolve-from';
-
-export type SharpGlobalOptions = {
-  compressionLevel?: '';
-  format?: ImageFormat;
-  input: string;
-  limitInputPixels?: number;
-  output: string;
-  progressive?: boolean;
-  quality?: number;
-  withMetadata?: boolean;
-  [key: string]: string | number | boolean | undefined | null;
-};
-
-export type SharpCommandOptions = RemoveAlphaOptions | ResizeOptions | FlattenOptions;
-
-type FlattenOptions = {
-  operation: 'flatten';
-  background: string;
-};
-
-export type ResizeMode = 'contain' | 'cover' | 'fill' | 'inside' | 'outside';
-
-export type ImageFormat = 'input' | 'jpeg' | 'jpg' | 'png' | 'raw' | 'tiff' | 'webp';
-
-type RemoveAlphaOptions = {
-  operation: 'removeAlpha';
-};
-
-type Position =
-  | 'center'
-  | 'centre'
-  | 'north'
-  | 'east'
-  | 'south'
-  | 'west'
-  | 'northeast'
-  | 'southeast'
-  | 'southwest'
-  | 'northwest'
-  | 'top'
-  | 'right'
-  | 'bottom'
-  | 'left'
-  | 'right top'
-  | 'right bottom'
-  | 'left bottom'
-  | 'left top'
-  | 'entropy'
-  | 'attention';
-
-type ResizeOptions = {
-  operation: 'resize';
-  background?: string;
-  fastShrinkOnLoad?: boolean;
-  fit?: ResizeMode;
-  height?: number;
-  kernel?: 'nearest' | 'cubic' | 'mitchell' | 'lanczos2' | 'lanczos3';
-  position?: Position;
-  width: number;
-  withoutEnlargement?: boolean;
-};
-
-type Options =
-  | {}
-  | {
-      [key: string]: boolean | number | string | undefined;
-    };
+import { Options, SharpCommandOptions, SharpGlobalOptions } from './sharp.types';
 
 const SHARP_HELP_PATTERN = /\n\nSpecify --help for available options/g;
+
+export async function resizeBufferAsync(buffer: Buffer, sizes: number[]): Promise<Buffer[]> {
+  const sharp = await findSharpInstanceAsync();
+
+  const metadata = await sharp(buffer).metadata();
+  // Create buffer for each size
+  const resizedBuffers = await Promise.all(
+    sizes.map(dimension => {
+      const density = (dimension / Math.max(metadata.width, metadata.height)) * metadata.density;
+      return sharp(buffer, {
+        density: isNaN(density) ? undefined : Math.ceil(density),
+      })
+        .resize(dimension, dimension, { fit: 'contain', background: 'transparent' })
+        .toBuffer();
+    })
+  );
+
+  return resizedBuffers;
+}
 
 export async function isAvailableAsync(): Promise<boolean> {
   try {

@@ -307,7 +307,6 @@ export default async function(
         mode,
         publicUrl,
         config,
-        productionManifestPath: locations.production.manifest,
       }),
 
       // This is necessary to emit hot updates (currently CSS only):

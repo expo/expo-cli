@@ -56,7 +56,14 @@ function getConfigContext(
     if (typeof rawConfig.expo === 'object') {
       rawConfig = rawConfig.expo as JSONObject;
     }
-  } catch (_) {}
+  } catch (err) {
+    if (
+      options.strict &&
+      err.code !== 'ENOENT' // File not found. This is OK, because app.json is optional.
+    ) {
+      throw err;
+    }
+  }
 
   const { exp: configFromPkg } = ensureConfigHasDefaultValues(projectRoot, rawConfig, pkg, true);
 

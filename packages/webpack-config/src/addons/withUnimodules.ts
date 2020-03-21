@@ -114,7 +114,6 @@ export default function withUnimodules(
       mode,
       publicUrl,
       config,
-      productionManifestPath: locations.production.manifest,
     })
   );
 

@@ -864,6 +864,8 @@ export async function publishAsync(
       }
     }
 
+    let fullManifestUrl = response.url.replace('exp://', 'https://');
+
     if (exp.ios && exp.ios.publishManifestPath) {
       await _writeArtifactSafelyAsync(
         projectRoot,
@@ -873,10 +875,22 @@ export async function publishAsync(
       );
       const context = StandaloneContext.createUserContext(projectRoot, exp);
       const { supportingDirectory } = IosWorkspace.getPaths(context);
-      await IosPlist.modifyAsync(supportingDirectory, 'EXShell', (shellPlist: any) => {
-        shellPlist.releaseChannel = options.releaseChannel;
-        return shellPlist;
-      });
+      if (fs.existsSync(path.join(supportingDirectory, 'EXShell.plist'))) {
+        // This is an ExpoKit app, set properties in EXShell.plist
+        await IosPlist.modifyAsync(supportingDirectory, 'EXShell', (shellPlist: any) => {
+          shellPlist.releaseChannel = options.releaseChannel;
+          return shellPlist;
+        });
+      }
+      if (fs.existsSync(path.join(supportingDirectory, 'Expo.plist'))) {
+        // This is an app with expo-updates installed, set properties in Expo.plist
+        await IosPlist.modifyAsync(supportingDirectory, 'Expo', (configPlist: any) => {
+          configPlist.EXUpdatesURL = fullManifestUrl;
+          configPlist.EXUpdatesReleaseChannel = options.releaseChannel;
+          configPlist.EXUpdatesSDKVersion = exp.sdkVersion;
+          return configPlist;
+        });
+      }
     }
 
     if (exp.android && exp.android.publishManifestPath) {
@@ -888,10 +902,7 @@ export async function publishAsync(
       );
     }
 
-    // We need to add EmbeddedResponse instances on Android to tell the runtime
-    // that the shell app manifest and bundle is packaged.
     if (exp.android && exp.android.publishManifestPath && exp.android.publishBundlePath) {
-      let fullManifestUrl = response.url.replace('exp://', 'https://');
       let constantsPath = path.join(
         projectRoot,
         'android',
@@ -905,26 +916,88 @@ export async function publishAsync(
         'generated',
         'AppConstants.java'
       );
-      await ExponentTools.deleteLinesInFileAsync(
-        `START EMBEDDED RESPONSES`,
-        `END EMBEDDED RESPONSES`,
-        constantsPath
-      );
-      await ExponentTools.regexFileAsync(
-        '// ADD EMBEDDED RESPONSES HERE',
-        `
-        // ADD EMBEDDED RESPONSES HERE
-        // START EMBEDDED RESPONSES
-        embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-        embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
-        // END EMBEDDED RESPONSES`,
-        constantsPath
-      );
-      await ExponentTools.regexFileAsync(
-        /RELEASE_CHANNEL = "[^"]*"/,
-        `RELEASE_CHANNEL = "${options.releaseChannel}"`,
-        constantsPath
-      );
+      if (fs.existsSync(constantsPath)) {
+        // This is an ExpoKit app
+        // We need to add EmbeddedResponse instances on Android to tell the runtime
+        // that the shell app manifest and bundle is packaged.
+        await ExponentTools.deleteLinesInFileAsync(
+          `START EMBEDDED RESPONSES`,
+          `END EMBEDDED RESPONSES`,
+          constantsPath
+        );
+        await ExponentTools.regexFileAsync(
+          '// ADD EMBEDDED RESPONSES HERE',
+          `
+          // ADD EMBEDDED RESPONSES HERE
+          // START EMBEDDED RESPONSES
+          embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
+          embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
+          // END EMBEDDED RESPONSES`,
+          constantsPath
+        );
+        await ExponentTools.regexFileAsync(
+          /RELEASE_CHANNEL = "[^"]*"/,
+          `RELEASE_CHANNEL = "${options.releaseChannel}"`,
+          constantsPath
+        );
+      }
+      if (pkg.dependencies['expo-updates']) {
+        // This is an app with expo-updates installed, so set the applicable meta-data properties in
+        // AndroidManifest.xml
+        let androidManifestXmlPath = path.join(
+          projectRoot,
+          'android',
+          'app',
+          'src',
+          'main',
+          'AndroidManifest.xml'
+        );
+        let androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
+        let expoUpdateUrlRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_UPDATE_URL"[^>]+\/>/;
+        let expoSdkVersionRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_SDK_VERSION"[^>]+\/>/;
+        let expoReleaseChannelRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_RELEASE_CHANNEL"[^>]+\/>/;
+
+        let expoUpdateUrlTag = `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${fullManifestUrl}" />`;
+        let expoSdkVersionTag = `<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="${exp.sdkVersion}" />`;
+        let expoReleaseChannelTag = `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${options.releaseChannel}" />`;
+
+        let tagsToInsert = [];
+        if (androidManifestXmlFile.search(expoUpdateUrlRegex) < 0) {
+          tagsToInsert.push(expoUpdateUrlTag);
+        }
+        if (androidManifestXmlFile.search(expoSdkVersionRegex) < 0) {
+          tagsToInsert.push(expoSdkVersionTag);
+        }
+        if (androidManifestXmlFile.search(expoReleaseChannelRegex) < 0) {
+          tagsToInsert.push(expoReleaseChannelTag);
+        }
+        if (tagsToInsert.length) {
+          // try to insert the meta-data tags that aren't found
+          await ExponentTools.regexFileAsync(
+            /<activity\s+android:name=".MainActivity"/,
+            `${tagsToInsert.join('\n      ')}
+
+      <activity
+        android:name=".MainActivity"`,
+            androidManifestXmlPath
+          );
+        }
+        await ExponentTools.regexFileAsync(
+          expoUpdateUrlRegex,
+          expoUpdateUrlTag,
+          androidManifestXmlPath
+        );
+        await ExponentTools.regexFileAsync(
+          expoSdkVersionRegex,
+          expoSdkVersionTag,
+          androidManifestXmlPath
+        );
+        await ExponentTools.regexFileAsync(
+          expoReleaseChannelRegex,
+          expoReleaseChannelTag,
+          androidManifestXmlPath
+        );
+      }
     }
   }
 
