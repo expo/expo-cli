@@ -1,8 +1,7 @@
 import { ExpoConfig, setCustomConfigPath } from '@expo/config';
+import * as Image from '@expo/image-utils';
 import * as path from 'path';
 
-import * as Cache from './Cache';
-import * as Image from './Image';
 import { assembleOrientationMedia, getDevices } from './Splash';
 import { createPWAManifestFromWebConfig, getConfigForPWA } from './Web';
 import { HTMLOutput, IconOptions, Manifest, ProjectOptions, SplashIcon } from './Web.types';
@@ -88,7 +87,7 @@ export async function generateSplashAsync(
     )
   );
 
-  await Cache.clearUnusedCachesAsync(projectRoot, cacheType);
+  await Image.Cache.clearUnusedCachesAsync(projectRoot, cacheType);
 
   return data;
 }
@@ -131,7 +130,7 @@ export async function generateAppleIconAsync(
 
   // Don't clear the caches if no generation was performed.
   if (!sizes.length) {
-    await Cache.clearUnusedCachesAsync(projectRoot, cacheType);
+    await Image.Cache.clearUnusedCachesAsync(projectRoot, cacheType);
   }
 
   return data;
@@ -172,7 +171,7 @@ export async function generateChromeIconAsync(
 
   // Don't clear the caches if no generation was performed.
   if (!sizes.length) {
-    await Cache.clearUnusedCachesAsync(projectRoot, cacheType);
+    await Image.Cache.clearUnusedCachesAsync(projectRoot, cacheType);
   }
 
   return data;
@@ -226,7 +225,7 @@ export async function generateFaviconAsync(
 
   const faviconBuffer = await Image.generateFaviconAsync(largestImageBuffer, dimensions);
 
-  await Cache.clearUnusedCachesAsync(projectRoot, cacheType);
+  await Image.Cache.clearUnusedCachesAsync(projectRoot, cacheType);
 
   return [
     data[0],
@@ -281,4 +280,4 @@ export {
   getChromeIconConfig,
 } from './Web';
 
-export { IconOptions, Icon, ProjectOptions, HTMLOutput } from './Web.types';
+export { IconOptions, ProjectOptions, HTMLOutput } from './Web.types';

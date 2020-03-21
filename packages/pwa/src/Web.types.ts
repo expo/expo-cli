@@ -1,4 +1,4 @@
-import { ResizeMode } from '@expo/image-utils';
+import { ImageOptions } from '@expo/image-utils';
 
 export type Direction = 'ltr' | 'rtl' | 'auto';
 
@@ -40,16 +40,6 @@ export type Manifest = Partial<{
   crossorigin: CrossOrigin;
 }>;
 
-export type Icon = {
-  src: string;
-  name?: string;
-  resizeMode: ResizeMode;
-  backgroundColor: string;
-  width: number;
-  height: number;
-  padding?: number;
-};
-
 export type WebpackAsset = {
   source: Buffer;
   path: string;
@@ -60,7 +50,7 @@ export type HtmlTag = {
   attributes: { rel?: string; href?: string; media?: string; sizes?: string; type?: string };
 };
 
-export type SplashIcon = Icon & {
+export type SplashIcon = ImageOptions & {
   media: string;
 };
 
@@ -73,5 +63,5 @@ export type ProjectOptions = {
 
 export type HTMLOutput = { asset: WebpackAsset; tag?: HtmlTag; manifest?: ManifestIcon };
 
-export type IconOptions = Omit<Icon, 'name' | 'width' | 'height'>;
+export type IconOptions = Omit<ImageOptions, 'name' | 'width' | 'height'>;
 export type ManifestIcon = { src: string; sizes: string; type: 'image/png'; purpose?: string };

@@ -38,7 +38,6 @@ type CLIWebOptions = {
   dev?: boolean;
   clear?: boolean;
   pwa?: boolean;
-  clear?: boolean;
   nonInteractive?: boolean;
   port?: number;
   unimodulesOnly?: boolean;
@@ -49,7 +48,6 @@ type BundlingOptions = {
   dev?: boolean;
   clear?: boolean;
   pwa?: boolean;
-  clear?: boolean;
   isImageEditingEnabled?: boolean;
   webpackEnv?: Object;
   mode?: 'development' | 'production' | 'test' | 'none';
