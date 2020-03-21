@@ -9,7 +9,6 @@ const DEFAULT_VIEWPORT =
 // Use root to work better with create-react-app
 const DEFAULT_BUILD_PATH = `web-build`;
 const DEFAULT_LANGUAGE_ISO_CODE = `en`;
-const DEFAULT_NO_JS_MESSAGE = `Oh no! It looks like JavaScript is not enabled in your browser.`;
 const DEFAULT_BACKGROUND_COLOR = '#ffffff';
 const DEFAULT_START_URL = '.';
 const DEFAULT_DISPLAY = 'standalone';
@@ -100,7 +99,6 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   const { appName, webName } = getNameFromConfig(appJSON);
 
   const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
-  const noJavaScriptMessage = webDangerous.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
   const buildOutputPath = getWebOutputPath(appJSON);
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor;
@@ -173,10 +171,7 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
         output: buildOutputPath,
         publicPath,
       },
-      dangerous: {
-        ...webDangerous,
-        noJavaScriptMessage,
-      },
+      dangerous: webDangerous,
       scope,
       crossorigin,
       description,

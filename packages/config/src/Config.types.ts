@@ -496,11 +496,6 @@ export type WebPlatformConfig = {
      * Viewport meta tag for your index.html. By default this is optimized for mobile usage, disabling zooming, and resizing for iPhone X.
      */
     viewport?: string;
-    /**
-     * Message that is rendered when the browser using your page doesn't have JS enabled.
-     * @fallback Oh no! It looks like JavaScript is not enabled in your browser.
-     */
-    noJavaScriptMessage?: string;
   };
   /**
    * Configuration for PWA splash screens.
