@@ -281,10 +281,10 @@ import { getMode } from '@expo/webpack-config/env';
 import { validateEnvironment } from '@expo/webpack-config/env';
 ```
 
-#### `aliases`
+#### `getAliases`
 
 ```js
-import { aliases } from '@expo/webpack-config/env';
+import { getAliases } from '@expo/webpack-config/env';
 ```
 
 #### `getPaths`
