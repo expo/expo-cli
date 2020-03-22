@@ -3,9 +3,6 @@ import { AppJSONConfig, ExpoConfig } from './Config.types';
 
 const APP_JSON_FILE_NAME = 'app.json';
 
-// To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
-const DEFAULT_VIEWPORT =
-  'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1.00001,viewport-fit=cover';
 // Use root to work better with create-react-app
 const DEFAULT_BUILD_PATH = `web-build`;
 const DEFAULT_LANGUAGE_ISO_CODE = `en`;
@@ -109,7 +106,6 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   const shortName = webManifest.shortName || webName;
   const display = webManifest.display || DEFAULT_DISPLAY;
   const startUrl = webManifest.startUrl || DEFAULT_START_URL;
-  const webViewport = meta.viewport || DEFAULT_VIEWPORT;
   const { scope, crossorigin } = webManifest;
   const barStyle = apple.barStyle || webManifest.barStyle || DEFAULT_STATUS_BAR;
 
@@ -164,7 +160,6 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
           touchFullscreen: apple.touchFullscreen || 'yes',
           barStyle,
         },
-        viewport: webViewport,
       },
       build: {
         ...webBuild,

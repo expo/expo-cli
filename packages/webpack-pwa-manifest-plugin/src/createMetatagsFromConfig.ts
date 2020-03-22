@@ -27,14 +27,7 @@ function populateMetatagObject(schema, input): { [key: string]: any } {
 export default function createMetatagsFromConfig(config: ExpoConfig = {}): { [key: string]: any } {
   const { web = {} } = config;
   const { themeColor, meta = {} } = web;
-  const {
-    viewport,
-    googleSiteVerification,
-    apple = {},
-    twitter = {},
-    openGraph = {},
-    microsoft = {},
-  } = meta;
+  const { googleSiteVerification, apple = {}, twitter = {}, openGraph = {}, microsoft = {} } = meta;
 
   const openGraphMetatags = populateMetatagObject(Metatags.openGraph, openGraph);
   const twitterMetatags = populateMetatagObject(Metatags.twitter, twitter);
@@ -51,7 +44,6 @@ export default function createMetatagsFromConfig(config: ExpoConfig = {}): { [ke
   };
 
   const metaTags: { [key: string]: any } = {
-    viewport,
     description: config.description,
     ...openGraphMetatags,
     ...microsoftMetatags,

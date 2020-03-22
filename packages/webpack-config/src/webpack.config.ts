@@ -13,6 +13,8 @@ import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
 import path from 'path';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
+import { readFileSync } from 'fs-extra';
+import { parse } from 'node-html-parser';
 
 import { projectHasModule } from '@expo/config';
 import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
@@ -25,6 +27,7 @@ import {
 } from './plugins';
 import { withAlias, withDevServer, withNodeMocks, withOptimizations } from './addons';
 
+import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 import { overrideWithPropertyOrConfig } from './utils';
 
@@ -195,6 +198,8 @@ export default async function(
     });
   }
 
+  const templateIndex = parse(readFileSync(locations.template.indexHtml, { encoding: 'utf8' }));
+
   let webpackConfig: DevConfiguration = {
     mode,
     entry: {
@@ -219,7 +224,7 @@ export default async function(
       isProd && new CopyWebpackPlugin(filesToCopy),
 
       // Generate the `index.html`
-      new ExpoHtmlWebpackPlugin(env),
+      new ExpoHtmlWebpackPlugin(env, templateIndex),
 
       ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
 

@@ -491,11 +491,6 @@ export type WebPlatformConfig = {
    */
   dangerous?: {
     [key: string]: any;
-
-    /**
-     * Viewport meta tag for your index.html. By default this is optimized for mobile usage, disabling zooming, and resizing for iPhone X.
-     */
-    viewport?: string;
   };
   /**
    * Configuration for PWA splash screens.
