@@ -1,5 +1,4 @@
 import { AnyConfiguration } from '../types';
-import { aliases } from '../env';
 
 /**
  * Inject the required aliases for using React Native web and the extended Expo web ecosystem. Optionally can also safely append aliases to a Webpack config.
@@ -15,7 +14,6 @@ export default function withAlias(
   // Mix in aliases
   if (!webpackConfig.resolve) webpackConfig.resolve = {};
   webpackConfig.resolve.alias = {
-    ...aliases,
     ...(webpackConfig.resolve.alias || {}),
     ...alias,
   };

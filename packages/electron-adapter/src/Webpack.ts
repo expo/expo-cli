@@ -1,7 +1,7 @@
 import { withAlias } from '@expo/webpack-config/addons';
 import { createBabelLoaderFromEnvironment } from '@expo/webpack-config/loaders';
 import { ExpoDefinePlugin, ExpoInterpolateHtmlPlugin } from '@expo/webpack-config/plugins';
-import { getConfig, getModuleFileExtensions, getPaths } from '@expo/webpack-config/env';
+import { getAliases, getConfig, getModuleFileExtensions, getPaths } from '@expo/webpack-config/env';
 import {
   getPluginsByName,
   getRulesByMatchingFiles,
@@ -16,11 +16,11 @@ export function withExpoWebpack(
   config: AnyConfiguration,
   options: { projectRoot?: string; skipEntry?: boolean } = {}
 ) {
+  const projectRoot = options.projectRoot || process.cwd();
+
   // Support React Native aliases
   // @ts-ignore: webpack version mismatch
-  config = withAlias(config);
-
-  const projectRoot = options.projectRoot || process.cwd();
+  config = withAlias(config, getAliases(projectRoot));
 
   const env: any = {
     platform: 'electron',

@@ -15,7 +15,14 @@ import path from 'path';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 
 import { projectHasModule } from '@expo/config';
-import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
+import {
+  getAliases,
+  getConfig,
+  getMode,
+  getModuleFileExtensions,
+  getPathsAsync,
+  getPublicPaths,
+} from './env';
 import { createAllLoaders } from './loaders';
 import {
   ExpoDefinePlugin,
@@ -333,5 +340,5 @@ export default async function(
     });
   }
 
-  return withNodeMocks(withAlias(webpackConfig));
+  return withNodeMocks(withAlias(webpackConfig, getAliases(env.projectRoot)));
 }
