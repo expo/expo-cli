@@ -41,13 +41,7 @@ export async function runMetroDevServerAsync(options: MetroMiddlewareOptions) {
     return middleware.use(metroMiddleware);
   };
 
-  const serverInstance = await Metro.runServer(metroConfig, {
-    host: options.host,
-    secure: options.https,
-    secureCert: options.cert,
-    secureKey: options.key,
-    hmrEnabled: true,
-  });
+  const serverInstance = await Metro.runServer(metroConfig, { hmrEnabled: true });
 
   const { eventsSocket } = attachToServer(serverInstance);
   reportEvent = eventsSocket.reportEvent;
