@@ -1,8 +1,37 @@
-import { ExpoConfig, createEnvironmentConstants } from '@expo/config';
+import { ExpoConfig } from '@expo/config';
 import { DefinePlugin as OriginalDefinePlugin } from 'webpack';
 
 import { Environment, Mode } from '../types';
-import { getConfig, getMode, getPaths, getPublicPaths } from '../env';
+import { getConfig, getMode, getPublicPaths } from '../env';
+
+function createEnvironmentConstants(appManifest: ExpoConfig) {
+  return {
+    ...appManifest,
+    name: appManifest.displayName || appManifest.name,
+    /**
+     * Omit app.json properties that get removed during the native turtle build
+     *
+     * `facebookScheme`
+     * `facebookAppId`
+     * `facebookDisplayName`
+     */
+    facebookScheme: undefined,
+    facebookAppId: undefined,
+    facebookDisplayName: undefined,
+
+    // Remove iOS and Android.
+    ios: undefined,
+    android: undefined,
+
+    // Use the PWA `manifest.json` as the native web manifest.
+    web: {
+      // Pass through config properties that are not stored in the
+      // PWA `manifest.json`, but still need to be accessible
+      // through `Constants.manifest`.
+      config: appManifest.web?.config,
+    },
+  };
+}
 
 /**
  * @internal
@@ -20,7 +49,7 @@ export interface ClientEnv {
  * @param nativeAppManifest public values to be used in `expo-constants`.
  * @internal
  */
-export function createClientEnvironment(
+function createClientEnvironment(
   mode: Mode,
   publicPath: string,
   nativeAppManifest: ExpoConfig
@@ -79,28 +108,15 @@ export default class DefinePlugin extends OriginalDefinePlugin {
     const mode = getMode(env);
     const { publicUrl } = getPublicPaths(env);
     const config = env.config || getConfig(env);
-    const locations = env.locations || getPaths(env.projectRoot);
-    const productionManifestPath = locations.production.manifest;
     return new DefinePlugin({
       mode,
       publicUrl,
       config,
-      productionManifestPath,
     });
   };
 
-  constructor({
-    mode,
-    publicUrl,
-    productionManifestPath,
-    config,
-  }: {
-    mode: Mode;
-    publicUrl: string;
-    productionManifestPath: string;
-    config: ExpoConfig;
-  }) {
-    const publicAppManifest = createEnvironmentConstants(config, productionManifestPath);
+  constructor({ mode, publicUrl, config }: { mode: Mode; publicUrl: string; config: ExpoConfig }) {
+    const publicAppManifest = createEnvironmentConstants(config);
 
     const environmentVariables = createClientEnvironment(mode, publicUrl, publicAppManifest);
 

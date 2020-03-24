@@ -298,7 +298,6 @@ export const manifest: CustomizeOption[] = [
         '/.expo/*',
         '# Expo Web',
         '/web-build/*',
-        '/web-report/*',
         '# Expo Native',
         '*.jks',
         '*.p8',

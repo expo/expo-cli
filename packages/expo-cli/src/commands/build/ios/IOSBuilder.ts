@@ -117,6 +117,10 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     await this.clearAndRevokeCredentialsIfRequested(context, { experienceName, bundleIdentifier });
 
     try {
+      if (this.options.skipCredentialsCheck) {
+        log('Skipping credentials check...');
+        return;
+      }
       await this.produceCredentials(context, experienceName, bundleIdentifier);
     } catch (e) {
       log(

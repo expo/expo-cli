@@ -1,4 +1,6 @@
-import { ImageFormat, ResizeMode, isAvailableAsync, sharpAsync } from '@expo/image-utils';
+import { ImageFormat, ResizeMode, imageAsync, isAvailableAsync } from '@expo/image-utils';
+import chalk from 'chalk';
+import crypto from 'crypto';
 import fs from 'fs-extra';
 import mime from 'mime';
 import fetch from 'node-fetch';
@@ -6,14 +8,11 @@ import path from 'path';
 import stream from 'stream';
 import temporary from 'tempy';
 import util from 'util';
-import chalk from 'chalk';
 
-import crypto from 'crypto';
 import { IconError } from './Errors';
 import { AnySize, ImageSize, joinURI, toArray, toSize } from './utils';
 import { fromStartupImage } from './validators/Apple';
 import { Icon, ManifestIcon, ManifestOptions } from './WebpackPWAManifestPlugin.types';
-import { resize as jimpResize } from './ImageComposite';
 
 const supportedMimeTypes = ['image/png', 'image/jpeg', 'image/webp'];
 
@@ -116,6 +115,16 @@ async function cacheImageAsync(fileName: string, buffer: Buffer, cacheKey: strin
 
 let hasWarned: boolean = false;
 
+function stripQueryParams(url: string): string {
+  if (url.startsWith('http')) {
+    return url
+      .split('?')[0]
+      .split('#')[0]
+      .toLowerCase();
+  }
+  return url;
+}
+
 async function processImageAsync(
   size: AnySize,
   icon: Icon,
@@ -126,7 +135,7 @@ async function processImageAsync(
   if (width <= 0 || height <= 0) {
     throw Error(`Failed to process image with invalid size: { width: ${width}, height: ${height}}`);
   }
-  const mimeType = mime.getType(icon.src);
+  const mimeType = mime.getType(stripQueryParams(icon.src));
   if (!mimeType) {
     throw new Error(`Invalid mimeType for image with source: ${icon.src}`);
   }
@@ -140,7 +149,6 @@ async function processImageAsync(
     if (!hasWarned && !(await isAvailableAsync())) {
       hasWarned = true;
       // TODO: Bacon: Fallback to nodejs image resizing as native doesn't work in the host environment.
-      console.log('ff', cacheKey, fileName, dimensions);
       console.log();
       console.log(
         chalk.bgYellow.black(
@@ -195,15 +203,11 @@ async function resize(
   fit: ResizeMode = 'contain',
   background: string
 ): Promise<string | Buffer> {
-  if (!(await isAvailableAsync())) {
-    return await jimpResize(inputPath, mimeType, width, height, fit, background);
-  }
-
   const format = ensureValidMimeType(mimeType.split('/')[1]);
   const outputPath = temporary.directory();
 
   try {
-    await sharpAsync(
+    await imageAsync(
       {
         input: inputPath,
         output: outputPath,
@@ -266,10 +270,6 @@ function createCacheKey(icon: Icon): string {
 const cacheKeys: { [key: string]: string } = {};
 
 const cacheDownloadedKeys: { [key: string]: string } = {};
-
-function stripQueryParams(url: string): string {
-  return url.split('?')[0].split('#')[0];
-}
 
 async function downloadOrUseCachedImage(url: string): Promise<string> {
   if (url in cacheDownloadedKeys) {

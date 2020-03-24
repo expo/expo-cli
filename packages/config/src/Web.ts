@@ -1,5 +1,3 @@
-import JsonFile from '@expo/json-file';
-
 import { getConfig } from './Config';
 import { AppJSONConfig, ExpoConfig } from './Config.types';
 
@@ -9,10 +7,8 @@ const APP_JSON_FILE_NAME = 'app.json';
 const DEFAULT_VIEWPORT =
   'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1.00001,viewport-fit=cover';
 // Use root to work better with create-react-app
-const DEFAULT_ROOT_ID = `root`;
 const DEFAULT_BUILD_PATH = `web-build`;
 const DEFAULT_LANGUAGE_ISO_CODE = `en`;
-const DEFAULT_NO_JS_MESSAGE = `Oh no! It looks like JavaScript is not enabled in your browser.`;
 const DEFAULT_BACKGROUND_COLOR = '#ffffff';
 const DEFAULT_START_URL = '.';
 const DEFAULT_DISPLAY = 'standalone';
@@ -103,8 +99,6 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   const { appName, webName } = getNameFromConfig(appJSON);
 
   const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
-  const noJavaScriptMessage = webDangerous.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
-  const rootId = webBuild.rootId || DEFAULT_ROOT_ID;
   const buildOutputPath = getWebOutputPath(appJSON);
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor;
@@ -175,13 +169,9 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
       build: {
         ...webBuild,
         output: buildOutputPath,
-        rootId,
         publicPath,
       },
-      dangerous: {
-        ...webDangerous,
-        noJavaScriptMessage,
-      },
+      dangerous: webDangerous,
       scope,
       crossorigin,
       description,
@@ -324,42 +314,4 @@ export function ensurePWAConfig(
     config.web.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
   }
   return config;
-}
-
-export function createEnvironmentConstants(appManifest: ExpoConfig, pwaManifestLocation: string) {
-  let web;
-  try {
-    web = JsonFile.read(pwaManifestLocation);
-  } catch (e) {
-    web = {};
-  }
-
-  return {
-    ...appManifest,
-    name: appManifest.displayName || appManifest.name,
-    /**
-     * Omit app.json properties that get removed during the native turtle build
-     *
-     * `facebookScheme`
-     * `facebookAppId`
-     * `facebookDisplayName`
-     */
-    facebookScheme: undefined,
-    facebookAppId: undefined,
-    facebookDisplayName: undefined,
-
-    // Remove iOS and Android.
-    ios: undefined,
-    android: undefined,
-
-    // Use the PWA `manifest.json` as the native web manifest.
-    web: {
-      ...web,
-
-      // Pass through config properties that are not stored in the
-      // PWA `manifest.json`, but still need to be accessible
-      // through `Constants.manifest`.
-      config: appManifest.web?.config,
-    },
-  };
 }

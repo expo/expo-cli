@@ -27,12 +27,6 @@ export type InputEnvironment = {
   removeUnusedImportExports?: boolean;
   pwa?: boolean;
   offline?: boolean;
-  report?: {
-    verbose: boolean;
-    path: string;
-    statsFilename: string;
-    reportFilename: string;
-  };
   babel?: {
     dangerouslyAddModulePathsToTranspile: string[];
   };
@@ -86,13 +80,6 @@ export type Environment = {
    */
   pwa?: boolean;
   /**
-   * Configure Webpack bundle reports.
-   * Using this adds time to rebuilds, you should only use it in production mode.
-   *
-   * Passing an empty object defaults to `true`.
-   */
-  report?: Report;
-  /**
    * Control how the default Babel loader is configured.
    */
   babel?: ExpoBabelOptions;
@@ -117,16 +104,6 @@ export type ExpoBabelOptions = {
    * Add the names of node_modules that should be included transpilation step.
    */
   dangerouslyAddModulePathsToTranspile: string[];
-};
-
-/**
- * Configure Webpack bundle reports.
- */
-export type Report = {
-  verbose: boolean;
-  path: string;
-  statsFilename: string;
-  reportFilename: string;
 };
 
 type PathResolver = (...input: string[]) => string;
