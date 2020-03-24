@@ -11,9 +11,7 @@ import Logger from './Logger';
 import { LogTag, logWarning } from './project/ProjectUtils';
 import * as UrlUtils from './UrlUtils';
 
-export interface WebpackConfiguration extends webpack.Configuration {
-  devServer?: WebpackDevServerConfiguration;
-}
+export type WebpackConfiguration = webpack.Configuration;
 
 export type WebEnvironment = {
   projectRoot: string;
