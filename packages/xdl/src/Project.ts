@@ -2379,7 +2379,7 @@ export async function startAsync(
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
   } else {
-    if (Versions.gteSdkVersion(exp, '37.0.0')) {
+    if (Versions.gteSdkVersion(exp, '36.0.0')) {
       await startExpoServerAsync(projectRoot);
     } else {
       await startExpoServerAsync(projectRoot, { skipMetro: true });
