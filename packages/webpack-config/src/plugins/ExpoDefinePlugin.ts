@@ -37,8 +37,7 @@ function createEnvironmentConstants(appManifest: ExpoConfig) {
  * @internal
  */
 export interface ClientEnv {
-  __DEV__: boolean;
-  'process.env': { [key: string]: string };
+  [key: string]: OriginalDefinePlugin.CodeValueObject;
 }
 
 /**
