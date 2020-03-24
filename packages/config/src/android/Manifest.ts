@@ -6,7 +6,7 @@ import path from 'path';
 
 const USES_PERMISSION = 'uses-permission';
 
-type Document = { [key: string]: any };
+export type Document = { [key: string]: any };
 
 export function removePermissions(doc: Document, permissionNames?: string[]) {
   const targetNames = permissionNames ? permissionNames.map(ensurePermissionNameFormat) : null;
@@ -162,7 +162,7 @@ export async function getProjectAndroidManifestPathAsync(
   return null;
 }
 
-export async function readAsync(manifestPath: string): Promise<Document> {
+export async function readAndroidManifestAsync(manifestPath: string): Promise<Document> {
   const contents = await fs.readFile(manifestPath, { encoding: 'utf8', flag: 'r' });
   const parser = new Parser();
   const manifest = parser.parseStringPromise(contents);
@@ -178,7 +178,7 @@ export async function persistAndroidPermissionsAsync(
   if (!manifestPath) {
     return false;
   }
-  const manifest = await readAsync(manifestPath);
+  const manifest = await readAndroidManifestAsync(manifestPath);
   removePermissions(manifest);
   const results = ensurePermissions(manifest, permissions);
   if (Object.values(results).reduce((prev, current) => prev && current, true) === false) {

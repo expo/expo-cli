@@ -9,7 +9,7 @@
     "prepare": "yarn run clean && yarn build",
     "clean": "rm -rf build ./tsconfig.tsbuildinfo",
     "lint": "eslint .",
-    "test": "jest"
+    "test": "jest -i"
   },
   "jest": {
     "testEnvironment": "node",
