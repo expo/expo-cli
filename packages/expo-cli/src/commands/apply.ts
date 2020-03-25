@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import configureIOSProjectAsync from './apply/configureIOSProjectAsync';
 import configureAndroidProjectAsync from './apply/configureAndroidProjectAsync';
+import { logConfigWarningsAndroid, logConfigWarningsIOS } from './utils/logConfigWarnings';
 
 type Options = {
   platform?: string;
@@ -19,10 +20,12 @@ export default function(program: Command) {
       async (projectDir: string, options: Options) => {
         if (!options.platform || options.platform === 'ios') {
           await configureIOSProjectAsync(projectDir);
+          logConfigWarningsIOS();
         }
 
         if (!options.platform || options.platform === 'android') {
           await configureAndroidProjectAsync(projectDir);
+          logConfigWarningsAndroid();
         }
       },
       /* skipProjectValidation: */ true,

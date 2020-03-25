@@ -4,11 +4,23 @@ import path from 'path';
 import { sync as globSync } from 'glob';
 import fs from 'fs-extra';
 import { ExpoConfig } from '../Config.types';
+import { addWarningIOS } from '../WarningAggregator';
 
-export function setICloudEntitlement(config: ExpoConfig, appleTeamId: string, projectRoot: string) {
+export function setICloudEntitlement(
+  config: ExpoConfig,
+  _appleTeamId: string,
+  entitlementsPlist: any
+) {
   if (config.ios?.usesIcloudStorage) {
     // TODO: need access to the appleTeamId for this one!
+    addWarningIOS(
+      'ios.usesIcloudStorage',
+      'Enable the iCloud Storage Entitlement from the Capabilities tab in your Xcode project.'
+      // TODO: add a link to a docs page with more information on how to do this
+    );
   }
+
+  return entitlementsPlist;
 }
 
 export function setAppleSignInEntitlement(config: ExpoConfig, entitlementsPlist: any) {

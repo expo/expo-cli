@@ -10,17 +10,20 @@ import * as RequiresFullScreen from './RequiresFullScreen';
 import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
 import * as Entitlements from './Entitlements';
 
+import * as Icons from './Icons';
+
 import { InfoPlist } from './IosConfig.types';
 
 // We can change this to export * as X with TypeScript 3.8+
 // https://devblogs.microsoft.com/typescript/announcing-typescript-3-8-beta/#export-star-as-namespace-syntax
 // .. but we should wait for this to be the default VSCode version.
 export {
-  Entitlements,
   Branch,
   BundleIdenitifer,
   CustomInfoPlistEntries,
   DeviceFamily,
+  Entitlements,
+  Icons,
   InfoPlist,
   Name,
   RequiresFullScreen,

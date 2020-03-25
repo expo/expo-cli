@@ -159,11 +159,15 @@ export class YarnPackageManager implements PackageManager {
   options: SpawnOptions;
   private log: Logger;
 
-  constructor({ cwd, log }: { cwd: string; log?: Logger }) {
+  constructor({ cwd, log, silent }: { cwd: string; log?: Logger; silent?: boolean }) {
     this.log = log || console.log;
     this.options = {
       cwd,
-      stdio: ['inherit', 'inherit', 'pipe'],
+      ...(silent
+        ? { ignoreStdio: true }
+        : {
+            stdio: ['inherit', 'inherit', 'pipe'],
+          }),
     };
   }
   get name() {
@@ -189,7 +193,9 @@ export class YarnPackageManager implements PackageManager {
 
   // Private
   private async _runAsync(args: string[]) {
-    this.log(`> yarn ${args.join(' ')}`);
+    if (!this.options.ignoreStdio) {
+      this.log(`> yarn ${args.join(' ')}`);
+    }
     const promise = spawnAsync('yarnpkg', args, this.options);
     if (promise.child.stderr) {
       promise.child.stderr.pipe(new YarnStderrTransform()).pipe(process.stderr);
@@ -198,7 +204,12 @@ export class YarnPackageManager implements PackageManager {
   }
 }
 
-export type CreateForProjectOptions = { npm?: boolean; yarn?: boolean; log?: Logger };
+export type CreateForProjectOptions = {
+  npm?: boolean;
+  yarn?: boolean;
+  log?: Logger;
+  silent?: boolean;
+};
 
 export function createForProject(
   projectRoot: string,
@@ -214,7 +225,7 @@ export function createForProject(
   } else {
     PackageManager = NpmPackageManager;
   }
-  return new PackageManager({ cwd: projectRoot, log: options.log });
+  return new PackageManager({ cwd: projectRoot, log: options.log, silent: options.silent });
 }
 
 export function getModulesPath(projectRoot: string): string {

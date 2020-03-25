@@ -19,9 +19,10 @@ import terminalLink from 'terminal-link';
 import * as PackageManager from '@expo/package-manager';
 import log from '../../log';
 import prompt from '../../prompt';
-import { validateGitStatusAsync } from '../utils/ProjectUtils';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
+import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
+import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 
 type ValidationErrorMessage = string;
 
@@ -39,30 +40,37 @@ const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
  * Entry point into the eject process, delegates to other helpers to perform various steps.
  */
 export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions) {
-  await validateGitStatusAsync();
-  log.nested('');
+  if (await maybeBailOnGitStatusAsync()) return;
 
   await createNativeProjectsFromTemplateAsync(projectRoot);
 
-  log.nested('Applying iOS configuration');
+  log.newLine();
+  log.nested(chalk.underline('Applying iOS configuration'));
   await configureIOSProjectAsync(projectRoot);
-
-  log.nested('Applying Android configuration');
-  await configureAndroidProjectAsync(projectRoot);
-
-  log.nested(chalk.green('Ejected successfully!'));
+  logConfigWarningsIOS();
   log.newLine();
 
-  // TODO: run pod install automatically
-  log.nested(
-    `Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
-  );
-  log.nested('');
-  log.nested(`  cd ios`);
-  log.nested(`  pod install`);
-  log.nested('');
+  log.nested(chalk.underline('Applying Android configuration'));
+  await configureAndroidProjectAsync(projectRoot);
+  logConfigWarningsAndroid();
 
-  log.nested('Then you can run the project:');
+  log.nested(chalk.underline('Next steps'));
+  // TODO: run pod install automatically!
+  log.newLine();
+
+  log.nested(
+    `- 🍎 Make sure you have CocoaPods installed then initialize the project workspace: ${chalk.bold(
+      'cd ios && pod install'
+    )}`
+  );
+  log.nested(
+    `- 💡 You may want to use ${chalk.bold(
+      'npx @react-native-community/cli doctor'
+    )} to handle installing CocoaPods for you, along with any other tools that your app may need to run your ejected app.`
+  );
+
+  log.newLine();
+  log.nested(chalk.underline('When you are ready to run your project'));
   log.nested('');
   let packageManager = isUsingYarn(projectRoot) ? 'yarn' : 'npm';
   log.nested(`  ${packageManager === 'npm' ? 'npm run android' : 'yarn android'}`);
@@ -159,7 +167,6 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     appJson.expo.entryPoint = EXPO_APP_ENTRY;
   }
 
-  log.newLine();
   log('Updating app.json...');
   await fse.writeFile(path.resolve('app.json'), JSON.stringify(appJson, null, 2));
 
@@ -176,7 +183,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
     defaultDependencies = createDependenciesMap(dependencies);
     defaultDevDependencies = createDependenciesMap(devDependencies);
-    log('Successfully copied template native code.');
+    log('Created native project files.');
   } catch (e) {
     log(chalk.red(e.message));
     log(chalk.red(`Ejecting failed 😢 - see the output above for more information.`));
@@ -244,7 +251,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    * Add new app entry points
    */
   log(`Adding entry point...`);
-  if (pkg.main !== EXPO_APP_ENTRY) {
+  if (pkg.main !== EXPO_APP_ENTRY && pkg.main) {
     log(
       chalk.yellow(
         `Removing "main": ${pkg.main} from package.json. We recommend using index.js instead.`
@@ -265,13 +272,12 @@ if (Platform.OS === 'web') {
 }
 `;
   await fse.writeFile(path.resolve('index.js'), indexjs);
-  log(chalk.green('Added new entry points!'));
-
-  log('Removing node_modules...');
-  await fse.remove('node_modules');
+  log(chalk.green('Added index.js entry point'));
 
   log('Installing new packages...');
-  const packageManager = PackageManager.createForProject(projectRoot, { log });
+  await fse.remove('node_modules');
+  // TODO: show spinner
+  const packageManager = PackageManager.createForProject(projectRoot, { log, silent: true });
   await packageManager.installAsync();
 }
 

@@ -1,6 +1,7 @@
 import * as IOSConfig from './ios';
 import * as AndroidConfig from './android';
-export { IOSConfig, AndroidConfig };
+import * as WarningAggregator from './WarningAggregator';
+export { IOSConfig, AndroidConfig, WarningAggregator };
 export * from './Modules';
 export * from './Web';
 export * from './Config';
