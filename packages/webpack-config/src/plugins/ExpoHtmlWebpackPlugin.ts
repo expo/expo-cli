@@ -1,5 +1,7 @@
 import OriginalHtmlWebpackPlugin from 'html-webpack-plugin';
+import chalk from 'chalk';
 
+import { HTMLLinkNode } from './ModifyHtmlWebpackPlugin';
 import { Environment } from '../types';
 import { getConfig, getMode, getPaths } from '../env';
 import { overrideWithPropertyOrConfig } from '../utils';
@@ -23,7 +25,7 @@ const DEFAULT_MINIFY = {
  * @category plugins
  */
 export default class HtmlWebpackPlugin extends OriginalHtmlWebpackPlugin {
-  constructor(env: Environment) {
+  constructor(env: Environment, templateHtmlData?: any) {
     const locations = env.locations || getPaths(env.projectRoot);
     const config = getConfig(env);
     const isProduction = getMode(env) === 'production';
@@ -37,6 +39,29 @@ export default class HtmlWebpackPlugin extends OriginalHtmlWebpackPlugin {
       DEFAULT_MINIFY
     );
 
+    let meta: Record<string, any> = {};
+
+    if (templateHtmlData && templateHtmlData.querySelectorAll) {
+      // @ts-ignore
+      const templateMeta = templateHtmlData.querySelectorAll('meta');
+
+      // Ensure there is no viewport meta tag in the default `web/index.html`.
+      // Because the viewport tag has been moved into the template, this will
+      // ensure that legacy `web/index.html`s get a viewport meta tag added to them.
+      if (!templateMeta.some((node: any) => node.getAttribute('name') === 'viewport')) {
+        console.warn(
+          chalk.bgYellow.black(
+            'Warning: No viewport meta tag is defined in the <head /> of `web/index.html`. Please update your `web/index.html` to include one. The default value is:\n\n'
+          ) +
+            chalk.magenta(
+              '<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1.00001,viewport-fit=cover">'
+            )
+        );
+        meta.viewport =
+          'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1.00001, viewport-fit=cover';
+      }
+    }
+
     super({
       // The file to write the HTML to.
       filename: locations.production.indexHtml,
@@ -47,6 +72,7 @@ export default class HtmlWebpackPlugin extends OriginalHtmlWebpackPlugin {
       minify,
       // The `webpack` require path to the template.
       template: locations.template.indexHtml,
+      meta,
     });
   }
 }
