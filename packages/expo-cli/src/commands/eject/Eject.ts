@@ -1,4 +1,5 @@
 import {
+  WarningAggregator as ConfigWarningAggregator,
   findConfigFile,
   getConfig,
   isUsingYarn,
@@ -46,14 +47,30 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   await createNativeProjectsFromTemplateAsync(projectRoot);
 
   log.newLine();
-  log.nested(`🍎 ${chalk.bold('Applying iOS configuration')}`);
+  let applyingIOSConfigStep = logNewSection('Applying iOS configuration');
   await configureIOSProjectAsync(projectRoot);
-  logConfigWarningsIOS();
+  if (ConfigWarningAggregator.hasWarningsIOS()) {
+    applyingIOSConfigStep.stopAndPersist({
+      symbol: '⚠️ ',
+      text: 'iOS configuration applied with warnings:',
+    });
+    logConfigWarningsIOS();
+  } else {
+    applyingIOSConfigStep.succeed('All project configuration applied to iOS project');
+  }
   log.newLine();
 
-  log.nested(`🤖 ${chalk.bold('Applying Android configuration')}`);
+  let applyingAndroidConfigStep = logNewSection('Applying Android configuration');
   await configureAndroidProjectAsync(projectRoot);
-  logConfigWarningsAndroid();
+  if (ConfigWarningAggregator.hasWarningsAndroid()) {
+    applyingAndroidConfigStep.stopAndPersist({
+      symbol: '⚠️ ',
+      text: 'Android configuration applied with warnings:',
+    });
+    logConfigWarningsAndroid();
+  } else {
+    applyingAndroidConfigStep.succeed('All project configuration applied to Android project');
+  }
 
   // TODO: integrate this with the above warnings
   await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
@@ -114,6 +131,12 @@ function createDependenciesMap(dependencies: any): DependenciesMap {
     }
   }
   return outputMap;
+}
+
+function logNewSection(title: string) {
+  let spinner = ora(chalk.bold(title));
+  spinner.start();
+  return spinner;
 }
 
 async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
@@ -180,19 +203,21 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     appJson.expo.entryPoint = EXPO_APP_ENTRY;
   }
 
-  log(`⚙️  ${chalk.bold('Updating app configuration (app.json)')}`);
+  let updatingAppConfigStep = logNewSection('Updating app configuration (app.json)');
   await fse.writeFile(path.resolve('app.json'), JSON.stringify(appJson, null, 2));
   // TODO: if app.config.js, need to provide some other info here
-  log(chalk.green('- Configuration has been updated.'));
+  updatingAppConfigStep.succeed('App configuration (app.json) updated.');
 
   /**
    * Extract the template and copy the ios and android directories over to the project directory
    */
   let defaultDependencies: any = {};
   let defaultDevDependencies: any = {};
+  log.newLine();
+  let creatingNativeProjectStep = logNewSection(
+    'Creating native project directories (./ios and ./android)'
+  );
   try {
-    log.newLine();
-    log(`🏗  ${chalk.bold('Creating native project directories (./ios and ./android)')}`);
     const tempDir = temporary.directory();
     await Exp.extractTemplateAppAsync(templateSpec, tempDir, appJson);
     fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
@@ -200,10 +225,12 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
     defaultDependencies = createDependenciesMap(dependencies);
     defaultDevDependencies = createDependenciesMap(devDependencies);
-    log(chalk.green('- Native project files created.'));
+    creatingNativeProjectStep.succeed('Created native project directories (./ios and ./android).');
   } catch (e) {
     log(chalk.red(e.message));
-    log(chalk.red(`Ejecting failed 😢 - see the output above for more information.`));
+    creatingNativeProjectStep.fail(
+      'Failed to create the native project - see the output above for more information.'
+    );
     log(
       chalk.yellow(
         'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
@@ -217,7 +244,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    * start` rather than `expo start` after ejecting, for example.
    */
   log.newLine();
-  log(`📝 ${chalk.bold(`Updating your package.json scripts, dependencies, and main file`)}`);
+  let updatingPackageJsonStep = logNewSection(
+    'Updating your package.json scripts, dependencies, and main file'
+  );
   if (!pkg.scripts) {
     pkg.scripts = {};
   }
@@ -230,7 +259,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   if (Versions.lteSdkVersion(exp, '35.0.0')) {
     if (pkg.scripts.postinstall) {
       pkg.scripts.postinstall = `jetify && ${pkg.scripts.postinstall}`;
-      log(chalk.bgYellow.black('jetifier has been added to your existing postinstall script.'));
+      log(chalk.green('jetifier has been added to your existing postinstall script.'));
     } else {
       pkg.scripts.postinstall = `jetify`;
     }
@@ -278,6 +307,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   delete pkg.main;
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
 
+  // TODO: this needs to change for sdk 37+
   const indexjs = `import { AppRegistry, Platform } from 'react-native';
 import App from './App';
 
@@ -289,24 +319,18 @@ if (Platform.OS === 'web') {
 }
 `;
   await fse.writeFile(path.resolve('index.js'), indexjs);
-  log(chalk.green('- Updated package.json and added index.js entry point.'));
+  updatingPackageJsonStep.succeed('Updated package.json and added index.js entry point.');
 
   log.newLine();
-  let spinner = ora(chalk.bold('Installing dependencies'));
-  spinner.start();
+  let installingDependenciesStep = logNewSection('Installing dependencies');
   await fse.remove('node_modules');
-  // TODO: show spinner
   const packageManager = PackageManager.createForProject(projectRoot, { log, silent: true });
   try {
     await packageManager.installAsync();
-    spinner.stopAndPersist({ symbol: '📦' });
-    log.nested(chalk.green('- Installed dependencies successfully.'));
+    installingDependenciesStep.succeed('Installed dependencies');
   } catch (e) {
-    spinner.stopAndPersist();
-    log.nested(
-      chalk.red(
-        'Something when wrong installing dependencies, check your package manager logfile. Continuing with ejecting, you can debug this afterwards.'
-      )
+    installingDependenciesStep.fail(
+      'Something when wrong installing dependencies, check your package manager logfile. Continuing with ejecting, you can debug this afterwards.'
     );
   }
 }
