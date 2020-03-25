@@ -46,12 +46,12 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   await createNativeProjectsFromTemplateAsync(projectRoot);
 
   log.newLine();
-  log.nested(`🍎 ${chalk.underline('Applying iOS configuration')}`);
+  log.nested(`🍎 ${chalk.bold('Applying iOS configuration')}`);
   await configureIOSProjectAsync(projectRoot);
   logConfigWarningsIOS();
   log.newLine();
 
-  log.nested(`🤖 ${chalk.underline('Applying Android configuration')}`);
+  log.nested(`🤖 ${chalk.bold('Applying Android configuration')}`);
   await configureAndroidProjectAsync(projectRoot);
   logConfigWarningsAndroid();
 
@@ -59,7 +59,7 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
 
   log.newLine();
-  log.nested(`➡️  ${chalk.underline('Next steps')}`);
+  log.nested(`➡️  ${chalk.bold('Next steps')}`);
   // TODO: run pod install automatically!
 
   log.nested(
@@ -79,7 +79,7 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   );
 
   log.newLine();
-  log.nested(`☑️  ${chalk.underline('When you are ready to run your project')}`);
+  log.nested(`☑️  ${chalk.bold('When you are ready to run your project')}`);
   log.nested('To compile and run your project, execute one of the following commands:');
   let packageManager = isUsingYarn(projectRoot) ? 'yarn' : 'npm';
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
@@ -177,7 +177,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     appJson.expo.entryPoint = EXPO_APP_ENTRY;
   }
 
-  log(`⚙️  ${chalk.underline('Updating app configuration (app.json)')}`);
+  log(`⚙️  ${chalk.bold('Updating app configuration (app.json)')}`);
   await fse.writeFile(path.resolve('app.json'), JSON.stringify(appJson, null, 2));
   // TODO: if app.config.js, need to provide some other info here
   log(chalk.green('- Configuration has been updated.'));
@@ -189,7 +189,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   let defaultDevDependencies: any = {};
   try {
     log.newLine();
-    log(`🏗  ${chalk.underline('Creating native project directories (./ios and ./android)')}`);
+    log(`🏗  ${chalk.bold('Creating native project directories (./ios and ./android)')}`);
     const tempDir = temporary.directory();
     await Exp.extractTemplateAppAsync(templateSpec, tempDir, appJson);
     fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
@@ -214,7 +214,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    * start` rather than `expo start` after ejecting, for example.
    */
   log.newLine();
-  log(`📝 ${chalk.underline(`Updating your package.json scripts, dependencies, and main file`)}`);
+  log(`📝 ${chalk.bold(`Updating your package.json scripts, dependencies, and main file`)}`);
   if (!pkg.scripts) {
     pkg.scripts = {};
   }
@@ -289,7 +289,7 @@ if (Platform.OS === 'web') {
   log(chalk.green('- Updated package.json and added index.js entry point.'));
 
   log.newLine();
-  let spinner = ora(chalk.underline('Installing dependencies'));
+  let spinner = ora(chalk.bold('Installing dependencies'));
   spinner.start();
   await fse.remove('node_modules');
   // TODO: show spinner
