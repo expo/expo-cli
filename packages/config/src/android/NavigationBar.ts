@@ -12,6 +12,7 @@ import {
   writeColorsXMLAsync,
 } from './Colors';
 import { ExpoConfig } from '../Config.types';
+import { addWarningAndroid } from '../WarningAggregator';
 
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 const WINDOW_LIGHT_NAVIGATION_BAR = 'android:windowLightNavigationBar';
@@ -44,8 +45,9 @@ export async function setNavigationBarConfig(config: ExpoConfig, projectDirector
 
   if (immersiveMode) {
     // Immersive mode needs to be set programatically
-    console.log(
-      'Hiding the Android navigation bar must be done programatically. Please see the Android documentation: https://developer.android.com/training/system-ui/immersive'
+    addWarningAndroid(
+      'androidNavigationBar.visible',
+      'Hiding the navigation bar must be done programmatically. Refer to the Android documentation - https://developer.android.com/training/system-ui/immersive - for instructions.'
     );
   }
   if (hexString) {

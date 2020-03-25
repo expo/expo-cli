@@ -30,6 +30,18 @@ async function modifyAndroidManifestAsync(
   await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
 }
 
+async function modifyMainActivityJavaAsync(
+  projectRoot: string,
+  callback: (mainActivityJava: string) => string
+) {
+  let mainActivityJavaPath = globSync(
+    path.join(projectRoot, 'android/app/src/main/java/**/MainActivity.java')
+  )[0];
+  let mainActivityString = fs.readFileSync(mainActivityJavaPath).toString();
+  let result = callback(mainActivityString);
+  fs.writeFileSync(mainActivityJavaPath, result);
+}
+
 export default async function configureAndroidProjectAsync(projectRoot: string) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
@@ -66,6 +78,14 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     return androidManifest;
   });
 
+  await modifyMainActivityJavaAsync(projectRoot, mainActivity => {
+    mainActivity = AndroidConfig.UserInterfaceStyle.addOnConfigurationChangedMainActivity(
+      exp,
+      mainActivity
+    );
+    return mainActivity;
+  });
+
   // Modify colors.xml and styles.xml
   await AndroidConfig.RootViewBackgroundColor.setRootViewBackgroundColor(exp, projectRoot);
   await AndroidConfig.NavigationBar.setNavigationBarConfig(exp, projectRoot);
@@ -74,4 +94,8 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
 
   // add google-services.json to project
   await AndroidConfig.GoogleServices.setGoogleServicesFile(exp, projectRoot);
+
+  // TODOs
+  await AndroidConfig.Icon.setIconAsync(exp, projectRoot);
+  await AndroidConfig.AdaptiveIcon.setAdaptiveIconAsync(exp, projectRoot);
 }

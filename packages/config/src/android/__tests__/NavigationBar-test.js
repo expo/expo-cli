@@ -10,7 +10,8 @@ import { readStylesXMLAsync } from '../Styles';
 import { getProjectColorsXMLPathAsync, readColorsXMLAsync } from '../Colors';
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleStylesXMLPath = resolve(fixturesPath, 'styles.xml');
-
+jest.mock('../../WarningAggregator');
+const { addWarningAndroid } = require('../../WarningAggregator');
 describe('Android navigation bar', () => {
   it(`returns 'translucent' if no status bar color is provided`, () => {
     expect(getNavigationBarColor({})).toBe(null);
@@ -82,16 +83,14 @@ describe('Android navigation bar', () => {
       ).toMatch('true');
     });
 
-    it(`logs to console if androidNavigationBar.visible is provided`, async () => {
-      console.log = jest.fn();
+    it(`adds android warning androidNavigationBar.visible is provided`, async () => {
+      addWarningAndroid.mockImplementationOnce();
 
       await setNavigationBarConfig(
         { androidNavigationBar: { visible: 'leanback' } },
         projectDirectory
       );
-      expect(console.log).toHaveBeenCalledWith(
-        'Hiding the Android navigation bar must be done programatically. Please see the Android documentation: https://developer.android.com/training/system-ui/immersive'
-      );
+      expect(addWarningAndroid).toHaveBeenCalledTimes(1);
     });
   });
 });
