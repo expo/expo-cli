@@ -1,21 +1,14 @@
 import withAlias from '../withAlias';
-import { aliases } from '../../env';
 
 it(`defines default aliases`, () => {
   expect(
-    withAlias({
-      mode: 'production',
-    }).resolve.alias
-  ).toStrictEqual(aliases);
-});
-
-it(`uses existing aliases over defaults`, () => {
-  expect(
-    withAlias({
-      mode: 'production',
-      resolve: { alias: { 'react-native$': 'foobar' } },
-    }).resolve.alias['react-native$']
-  ).toBe('foobar');
+    withAlias(
+      {
+        mode: 'production',
+      },
+      { foo: 'bar' }
+    ).resolve.alias
+  ).toStrictEqual({ foo: 'bar' });
 });
 
 it(`allows for custom input aliases`, () => {

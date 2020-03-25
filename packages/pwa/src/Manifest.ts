@@ -9,12 +9,8 @@ import {
 
 import { IconOptions, Manifest } from './Manifest.types';
 
-// To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
-const DEFAULT_VIEWPORT =
-  'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1.00001,viewport-fit=cover';
 // Use root to work better with create-react-app
 const DEFAULT_LANGUAGE_ISO_CODE = `en`;
-const DEFAULT_NO_JS_MESSAGE = `Oh no! It looks like JavaScript is not enabled in your browser.`;
 const DEFAULT_BACKGROUND_COLOR = '#ffffff';
 const DEFAULT_START_URL = '.';
 const DEFAULT_DISPLAY = 'standalone';
@@ -61,7 +57,6 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   const { appName, webName } = getNameFromConfig(appJSON);
 
   const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
-  const noJavaScriptMessage = webDangerous.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
   const buildOutputPath = getWebOutputPath(appJSON);
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor;
@@ -72,7 +67,6 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   const shortName = webManifest.shortName || webName;
   const display = webManifest.display || DEFAULT_DISPLAY;
   const startUrl = webManifest.startUrl || DEFAULT_START_URL;
-  const webViewport = meta.viewport || DEFAULT_VIEWPORT;
   const { scope, crossorigin } = webManifest;
   const barStyle = apple.barStyle || webManifest.barStyle || DEFAULT_STATUS_BAR;
 
@@ -127,17 +121,13 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
           touchFullscreen: apple.touchFullscreen || 'yes',
           barStyle,
         },
-        viewport: webViewport,
       },
       build: {
         ...webBuild,
         output: buildOutputPath,
         publicPath,
       },
-      dangerous: {
-        ...webDangerous,
-        noJavaScriptMessage,
-      },
+      dangerous: webDangerous,
       scope,
       crossorigin,
       description,

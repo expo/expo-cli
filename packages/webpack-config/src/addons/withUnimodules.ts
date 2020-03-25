@@ -2,6 +2,7 @@ import path from 'path';
 
 import { getPossibleProjectRoot } from '@expo/config/paths';
 import {
+  getAliases,
   getConfig,
   getMode,
   getModuleFileExtensions,
@@ -30,7 +31,10 @@ export default function withUnimodules(
   env: InputEnvironment = {},
   argv: Arguments = {}
 ): AnyConfiguration {
-  webpackConfig = withAlias(webpackConfig);
+  // @ts-ignore: We should attempt to use the project root that the other config is already using (used for Gatsby support).
+  env.projectRoot = env.projectRoot || webpackConfig.context || getPossibleProjectRoot();
+
+  webpackConfig = withAlias(webpackConfig, getAliases(env.projectRoot));
 
   if (!webpackConfig.module) webpackConfig.module = { rules: [] };
   else if (!webpackConfig.module.rules)
@@ -39,9 +43,6 @@ export default function withUnimodules(
   if (!webpackConfig.plugins) webpackConfig.plugins = [];
   if (!webpackConfig.resolve) webpackConfig.resolve = {};
   if (!webpackConfig.output) webpackConfig.output = {};
-
-  // @ts-ignore: We should attempt to use the project root that the other config is already using (used for Gatsby support).
-  env.projectRoot = env.projectRoot || webpackConfig.context || getPossibleProjectRoot();
 
   // Attempt to use the input webpack config mode
   env.mode = env.mode || webpackConfig.mode;

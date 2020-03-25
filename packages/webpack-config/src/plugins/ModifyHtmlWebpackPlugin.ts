@@ -14,6 +14,8 @@ export type HTMLPluginData = {
 
 export type HTMLLinkNode = {
   rel?: string;
+  name?: string;
+  content?: string;
   media?: string;
   href?: string;
   sizes?: string;

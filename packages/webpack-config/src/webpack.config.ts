@@ -1,5 +1,11 @@
 /** @internal */ /** */
 /* eslint-env node */
+import PnpWebpackPlugin from 'pnp-webpack-plugin';
+import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
+import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
+import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
+import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
+import ManifestPlugin from 'webpack-manifest-plugin';
 import { projectHasModule } from '@expo/config';
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
@@ -16,15 +22,16 @@ import { boolish } from 'getenv';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { parse } from 'node-html-parser';
 import path from 'path';
-import PnpWebpackPlugin from 'pnp-webpack-plugin';
-import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
-import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
-import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
-import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
-import ManifestPlugin from 'webpack-manifest-plugin';
 
 import { withAlias, withDevServer, withNodeMocks, withOptimizations } from './addons';
-import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
+import {
+  getAliases,
+  getConfig,
+  getMode,
+  getModuleFileExtensions,
+  getPathsAsync,
+  getPublicPaths,
+} from './env';
 import { createAllLoaders } from './loaders';
 import {
   ApplePwaWebpackPlugin,
@@ -254,7 +261,7 @@ export default async function(
       isProd && new CopyWebpackPlugin(filesToCopy),
 
       // Generate the `index.html`
-      new ExpoHtmlWebpackPlugin(env),
+      new ExpoHtmlWebpackPlugin(env, templateIndex),
 
       ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
 
@@ -407,5 +414,5 @@ export default async function(
     });
   }
 
-  return withNodeMocks(withAlias(webpackConfig));
+  return withNodeMocks(withAlias(webpackConfig, getAliases(env.projectRoot)));
 }
