@@ -9,7 +9,8 @@ import semver from 'semver';
 
 import log from '../log';
 import prompt from '../prompt';
-import { findProjectRootAsync, validateGitStatusAsync } from './utils/ProjectUtils';
+import { findProjectRootAsync } from './utils/ProjectUtils';
+import maybeBailOnGitStatusAsync from './utils/maybeBailOnGitStatusAsync';
 
 type DependencyList = Record<string, string>;
 
@@ -126,35 +127,6 @@ export function getDependenciesFromBundledNativeModules({
 
   return result;
 }
-
-async function maybeBailOnGitStatusAsync(): Promise<boolean> {
-  const isGitStatusClean = await validateGitStatusAsync();
-  log.newLine();
-
-  // Give people a chance to bail out if git working tree is dirty
-  if (!isGitStatusClean) {
-    if (program.nonInteractive) {
-      log.warn(
-        `Git status is dirty but the command will continue because nonInteractive is enabled.`
-      );
-      return false;
-    }
-
-    const answer = await prompt({
-      type: 'confirm',
-      name: 'ignoreDirtyGit',
-      message: `Would you like to proceed?`,
-    });
-
-    if (!answer.ignoreDirtyGit) {
-      return true;
-    }
-
-    log.newLine();
-  }
-  return false;
-}
-
 async function maybeBailOnUnsafeFunctionalityAsync(
   exp: Pick<ConfigUtils.ExpoConfig, 'sdkVersion'>
 ): Promise<boolean> {

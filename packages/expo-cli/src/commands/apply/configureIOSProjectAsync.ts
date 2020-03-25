@@ -1,7 +1,6 @@
 import { IosPlist } from '@expo/xdl';
 import { IOSConfig, getConfig } from '@expo/config';
 import path from 'path';
-import fs from 'fs-extra';
 
 // TODO: it's silly and kind of fragile that we look at app config to determine the
 // ios project paths
@@ -24,16 +23,18 @@ function getIOSPaths(projectRoot: string) {
   };
 }
 
-function modifyEntitlementsPlistAsync(projectRoot: string, callback: (plist: any) => any) {
+async function modifyEntitlementsPlistAsync(projectRoot: string, callback: (plist: any) => any) {
   let entitlementsPath = IOSConfig.Entitlements.getEntitlementsPath(projectRoot);
   let directory = path.dirname(entitlementsPath);
   let filename = path.basename(entitlementsPath, 'plist');
-  return IosPlist.modifyAsync(directory, filename, callback);
+  await IosPlist.modifyAsync(directory, filename, callback);
+  await IosPlist.cleanBackupAsync(directory, filename, false);
 }
 
-function modifyInfoPlistAsync(projectRoot: string, callback: (plist: any) => any) {
+async function modifyInfoPlistAsync(projectRoot: string, callback: (plist: any) => any) {
   const { iosProjectDirectory } = getIOSPaths(projectRoot);
-  return IosPlist.modifyAsync(iosProjectDirectory, 'Info', callback);
+  await IosPlist.modifyAsync(iosProjectDirectory, 'Info', callback);
+  await IosPlist.cleanBackupAsync(iosProjectDirectory, 'Info', false);
 }
 
 export default async function configureIOSProjectAsync(projectRoot: string) {
@@ -53,13 +54,25 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
     infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(exp, infoPlist);
     infoPlist = IOSConfig.Branch.setBranchApiKey(exp, infoPlist);
     infoPlist = IOSConfig.UsesNonExemptEncryption.setUsesNonExemptEncryption(exp, infoPlist);
+
+    // Placeholders
     return infoPlist;
   });
 
   // Configure entitlements/capabilities
   await modifyEntitlementsPlistAsync(projectRoot, entitlementsPlist => {
-    // IOSConfig.Entitlements.setICloudEntitlement(exp, 'TODO-GET-APPLE-TEAM-ID', projectRoot);
+    // TODO: We don't have a mechanism for getting the apple team id here yet
+    entitlementsPlist = IOSConfig.Entitlements.setICloudEntitlement(
+      exp,
+      'TODO-GET-APPLE-TEAM-ID',
+      entitlementsPlist
+    );
+
     entitlementsPlist = IOSConfig.Entitlements.setAppleSignInEntitlement(exp, entitlementsPlist);
     return entitlementsPlist;
   });
+
+  // Other
+  await IOSConfig.Icons.setIconsAsync(exp, projectRoot);
+  // await IOSConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
 }
