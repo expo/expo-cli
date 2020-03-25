@@ -2,11 +2,7 @@ import _ from 'lodash';
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectAndroidManifestPathAsync,
-  readAndroidManifestAsync,
-  writeAndroidManifestAsync,
-} from './Manifest';
+import { Document } from './Manifest';
 
 // TODO: make it so intent filters aren't written again if you run the command again
 
@@ -14,23 +10,17 @@ export function getIntentFilters(config: ExpoConfig) {
   return config.android?.intentFilters ?? [];
 }
 
-export async function setAndroidIntentFilters(config: ExpoConfig, projectDirectory: string) {
+export async function setAndroidIntentFilters(config: ExpoConfig, manifestDocument: Document) {
   const intentFilters = getIntentFilters(config);
   if (!intentFilters.length) {
-    return false;
-  }
-
-  const manifestPath = await getProjectAndroidManifestPathAsync(projectDirectory);
-  if (!manifestPath) {
-    return false;
+    return manifestDocument;
   }
 
   let intentFiltersXML = renderIntentFilters(intentFilters).join('');
   const parser = new Parser();
   const intentFiltersJSON = await parser.parseStringPromise(intentFiltersXML);
-  let androidManifestJson = await readAndroidManifestAsync(manifestPath);
 
-  let mainActivity = androidManifestJson.manifest.application[0].activity.filter(
+  let mainActivity = manifestDocument.manifest.application[0].activity.filter(
     (e: any) => e['$']['android:name'] === '.MainActivity'
   );
 
@@ -38,14 +28,7 @@ export async function setAndroidIntentFilters(config: ExpoConfig, projectDirecto
     intentFiltersJSON['intent-filter']
   );
 
-  try {
-    await writeAndroidManifestAsync(manifestPath, androidManifestJson);
-  } catch (e) {
-    throw new Error(
-      `Error setting Android intent filters. Cannot write new AndroidManifest.xml to ${manifestPath}.`
-    );
-  }
-  return true;
+  return manifestDocument;
 }
 
 export default function renderIntentFilters(intentFilters: any) {

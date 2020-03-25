@@ -1,28 +1,18 @@
 import { Parser } from 'xml2js';
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectAndroidManifestPathAsync,
-  readAndroidManifestAsync,
-  writeAndroidManifestAsync,
-} from './Manifest';
+import { Document } from './Manifest';
 
 export function getScheme(config: ExpoConfig) {
   return typeof config.scheme === 'string' ? config.scheme : null;
 }
 
-export async function setScheme(config: ExpoConfig, projectDirectory: string) {
+export async function setScheme(config: ExpoConfig, manifestDocument: Document) {
   let scheme = getScheme(config);
   if (!scheme) {
     return false;
   }
 
-  const manifestPath = await getProjectAndroidManifestPathAsync(projectDirectory);
-  if (!manifestPath) {
-    return false;
-  }
-
-  let androidManifestJson = await readAndroidManifestAsync(manifestPath);
-  let mainActivity = androidManifestJson.manifest.application[0].activity.filter(
+  let mainActivity = manifestDocument.manifest.application[0].activity.filter(
     (e: any) => e['$']['android:name'] === '.MainActivity'
   );
 
@@ -45,12 +35,5 @@ export async function setScheme(config: ExpoConfig, projectDirectory: string) {
     mainActivity[0]['intent-filter'] = intentFiltersJSON['intent-filter'];
   }
 
-  try {
-    await writeAndroidManifestAsync(manifestPath, androidManifestJson);
-  } catch (e) {
-    throw new Error(
-      `Error setting Android orientation. Cannot write new AndroidManifest.xml to ${manifestPath}.`
-    );
-  }
-  return true;
+  return manifestDocument;
 }

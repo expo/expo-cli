@@ -1,9 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectAndroidManifestPathAsync,
-  readAndroidManifestAsync,
-  writeAndroidManifestAsync,
-} from './Manifest';
+import { Document } from './Manifest';
 
 export function getPackage(config: ExpoConfig) {
   if (config.android && config.android.package) {
@@ -23,22 +19,10 @@ export function setPackageInBuildGradle(config: ExpoConfig, buildGradle: string)
   return buildGradle.replace(pattern, `applicationId '${packageName}'`);
 }
 
-export async function setPackageInAndroidManifest(config: ExpoConfig, projectDirectory: string) {
+export async function setPackageInAndroidManifest(config: ExpoConfig, manifestDocument: Document) {
   let packageName = getPackage(config);
-  let manifestPath = await getProjectAndroidManifestPathAsync(projectDirectory);
-  if (!packageName || !manifestPath) {
-    return false;
-  }
 
-  let androidManifestJson = await readAndroidManifestAsync(manifestPath);
-  androidManifestJson['manifest']['$']['package'] = packageName;
+  manifestDocument['manifest']['$']['package'] = packageName;
 
-  try {
-    await writeAndroidManifestAsync(manifestPath, androidManifestJson);
-  } catch (e) {
-    throw new Error(
-      `Error setting Android package. Cannot write new AndroidManifest.xml to ${manifestPath}.`
-    );
-  }
-  return true;
+  return manifestDocument;
 }

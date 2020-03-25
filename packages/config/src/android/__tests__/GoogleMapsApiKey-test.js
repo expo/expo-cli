@@ -18,7 +18,6 @@ describe('Android google maps api key', () => {
   });
 
   describe('sets google maps key in AndroidManifest.xml if given', () => {
-    const projectDirectory = resolve(fixturesPath, 'tmp/');
     const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
 
     beforeAll(async () => {
@@ -31,14 +30,12 @@ describe('Android google maps api key', () => {
     });
 
     it('add google maps key', async () => {
-      expect(
-        await setGoogleMapsApiKey(
-          { android: { config: { googleMaps: { apiKey: 'MY-API-KEY' } } } },
-          projectDirectory
-        )
-      ).toBe(true);
-
       let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
+      androidManifestJson = await setGoogleMapsApiKey(
+        { android: { config: { googleMaps: { apiKey: 'MY-API-KEY' } } } },
+        androidManifestJson
+      );
+
       let mainApplication = androidManifestJson.manifest.application.filter(
         e => e['$']['android:name'] === '.MainApplication'
       )[0];

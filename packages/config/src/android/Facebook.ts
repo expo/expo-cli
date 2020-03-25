@@ -1,10 +1,6 @@
 import { Parser } from 'xml2js';
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectAndroidManifestPathAsync,
-  readAndroidManifestAsync,
-  writeAndroidManifestAsync,
-} from './Manifest';
+import { Document } from './Manifest';
 
 const facebookSchemeActivity = (scheme: string) => `
 <activity
@@ -46,7 +42,7 @@ export function getFacebookAdvertiserIDCollection(config: ExpoConfig) {
     : null;
 }
 
-export async function setFacebookConfig(config: ExpoConfig, projectDirectory: string) {
+export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
   const scheme = getFacebookScheme(config);
   const appId = getFacebookAppId(config);
   const displayName = getFacebookDisplayName(config);
@@ -54,13 +50,7 @@ export async function setFacebookConfig(config: ExpoConfig, projectDirectory: st
   const autoLogAppEvents = getFacebookAutoLogAppEvents(config);
   const advertiserIdCollection = getFacebookAdvertiserIDCollection(config);
 
-  const manifestPath = await getProjectAndroidManifestPathAsync(projectDirectory);
-  if (!manifestPath) {
-    return false;
-  }
-
-  let androidManifestJson = await readAndroidManifestAsync(manifestPath);
-  let mainApplication = androidManifestJson.manifest.application.filter(
+  let mainApplication = manifestDocument.manifest.application.filter(
     (e: any) => e['$']['android:name'] === '.MainApplication'
   )[0];
 
@@ -69,6 +59,7 @@ export async function setFacebookConfig(config: ExpoConfig, projectDirectory: st
     const parser = new Parser();
     const facebookSchemeActivityJSON = await parser.parseStringPromise(facebookSchemeActivityXML);
 
+    //TODO: don't write if facebook scheme activity is already present
     if (mainApplication.hasOwnProperty('activity')) {
       mainApplication['activity'] = mainApplication['activity'].concat(
         facebookSchemeActivityJSON['activity']
@@ -113,14 +104,7 @@ export async function setFacebookConfig(config: ExpoConfig, projectDirectory: st
     );
   }
 
-  try {
-    await writeAndroidManifestAsync(manifestPath, androidManifestJson);
-  } catch (e) {
-    throw new Error(
-      `Error setting Android Google Maps API key. Cannot write new AndroidManifest.xml to ${manifestPath}.`
-    );
-  }
-  return true;
+  return manifestDocument;
 }
 
 function addMetaDataItemToMainApplication(

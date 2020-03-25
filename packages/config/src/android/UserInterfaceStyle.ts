@@ -1,9 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectAndroidManifestPathAsync,
-  readAndroidManifestAsync,
-  writeAndroidManifestAsync,
-} from './Manifest';
+import { Document } from './Manifest';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';
 
@@ -25,32 +21,19 @@ export function getUserInterfaceStyle(config: ExpoConfig): string {
   return result ?? null;
 }
 
-export async function setUiModeAndroidManifest(config: ExpoConfig, projectDirectory: string) {
+export async function setUiModeAndroidManifest(config: ExpoConfig, manifestDocument: Document) {
   let userInterfaceStyle = getUserInterfaceStyle(config);
   if (!userInterfaceStyle) {
-    return false;
+    return manifestDocument;
   }
 
-  const manifestPath = await getProjectAndroidManifestPathAsync(projectDirectory);
-  if (!manifestPath) {
-    return false;
-  }
-
-  let androidManifestJson = await readAndroidManifestAsync(manifestPath);
-  let mainActivity = androidManifestJson.manifest.application[0].activity.filter(
+  let mainActivity = manifestDocument.manifest.application[0].activity.filter(
     (e: any) => e['$']['android:name'] === '.MainActivity'
   );
   mainActivity[0]['$'][CONFIG_CHANGES_ATTRIBUTE] =
     'keyboard|keyboardHidden|orientation|screenSize|uiMode';
 
-  try {
-    await writeAndroidManifestAsync(manifestPath, androidManifestJson);
-  } catch (e) {
-    throw new Error(
-      `Error setting Android user interface style. Cannot write new AndroidManifest.xml to ${manifestPath}.`
-    );
-  }
-  return true;
+  return manifestDocument;
 }
 
 export function addOnConfigurationChangedMainActivity(

@@ -1,24 +1,18 @@
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectAndroidManifestPathAsync,
-  readAndroidManifestAsync,
-  writeAndroidManifestAsync,
-} from './Manifest';
+import { Document } from './Manifest';
 
 export function getBranchApiKey(config: ExpoConfig) {
   return config.android?.config?.branch?.apiKey ?? null;
 }
 
-export async function setBranchApiKey(config: ExpoConfig, projectDirectory: string) {
+export async function setBranchApiKey(config: ExpoConfig, manifestDocument: Document) {
   const apiKey = getBranchApiKey(config);
-  const manifestPath = await getProjectAndroidManifestPathAsync(projectDirectory);
 
-  if (!apiKey || !manifestPath) {
-    return false;
+  if (!apiKey) {
+    return manifestDocument;
   }
 
-  let androidManifestJson = await readAndroidManifestAsync(manifestPath);
-  let mainApplication = androidManifestJson.manifest.application.filter(
+  let mainApplication = manifestDocument.manifest.application.filter(
     (e: any) => e['$']['android:name'] === '.MainApplication'
   )[0];
 
@@ -42,12 +36,5 @@ export async function setBranchApiKey(config: ExpoConfig, projectDirectory: stri
     mainApplication['meta-data'] = [newBranchApiKeyItem];
   }
 
-  try {
-    await writeAndroidManifestAsync(manifestPath, androidManifestJson);
-  } catch (e) {
-    throw new Error(
-      `Error setting Android Branch API key. Cannot write new AndroidManifest.xml to ${manifestPath}.`
-    );
-  }
-  return true;
+  return manifestDocument;
 }

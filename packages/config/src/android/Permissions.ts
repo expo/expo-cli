@@ -1,9 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectAndroidManifestPathAsync,
-  readAndroidManifestAsync,
-  writeAndroidManifestAsync,
-} from './Manifest';
+import { Document } from './Manifest';
 
 type XMLPermission = { $: { 'android:name': string } };
 
@@ -58,12 +54,7 @@ export function getAndroidPermissions(config: ExpoConfig): string[] {
   return config.android?.permissions ?? [];
 }
 
-export async function setAndroidPermissions(config: ExpoConfig, projectDirectory: string) {
-  const manifestPath = await getProjectAndroidManifestPathAsync(projectDirectory);
-  if (!manifestPath) {
-    return false;
-  }
-
+export async function setAndroidPermissions(config: ExpoConfig, manifestDocument: Document) {
   const permissions = getAndroidPermissions(config);
   let permissionsToAdd = [];
   if (permissions === null) {
@@ -75,12 +66,11 @@ export async function setAndroidPermissions(config: ExpoConfig, projectDirectory
     permissionsToAdd = [...providedPermissions, ...requiredPermissions];
   }
 
-  let androidManifestJson = await readAndroidManifestAsync(manifestPath);
   let manifestPermissions: XMLPermission[] = [];
-  if (!androidManifestJson.manifest.hasOwnProperty('uses-permission')) {
-    androidManifestJson.manifest['uses-permission'] = [];
+  if (!manifestDocument.manifest.hasOwnProperty('uses-permission')) {
+    manifestDocument.manifest['uses-permission'] = [];
   }
-  manifestPermissions = androidManifestJson.manifest['uses-permission'];
+  manifestPermissions = manifestDocument.manifest['uses-permission'];
 
   permissionsToAdd.forEach(permission => {
     if (!isPermissionAlreadyRequested(permission, manifestPermissions)) {
@@ -88,14 +78,7 @@ export async function setAndroidPermissions(config: ExpoConfig, projectDirectory
     }
   });
 
-  try {
-    await writeAndroidManifestAsync(manifestPath, androidManifestJson);
-  } catch (e) {
-    throw new Error(
-      `Error setting Android permissions. Cannot write new AndroidManifest.xml to ${manifestPath}.`
-    );
-  }
-  return true;
+  return manifestDocument;
 }
 
 export function isPermissionAlreadyRequested(

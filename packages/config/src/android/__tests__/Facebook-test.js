@@ -38,7 +38,6 @@ describe('Android facebook config', () => {
   });
 
   describe('write Facebook config to androidmanifest.xml correctly', () => {
-    const projectDirectory = resolve(fixturesPath, 'tmp/');
     const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
 
     beforeAll(async () => {
@@ -51,6 +50,7 @@ describe('Android facebook config', () => {
     });
 
     it('adds scheme, appid, display name, autolog events, auto init, advertiser id collection', async () => {
+      let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
       const facebookConfig = {
         facebookScheme: 'myscheme',
         facebookAppId: 'my-app-id',
@@ -59,9 +59,7 @@ describe('Android facebook config', () => {
         facebookAutoInitEnabled: 'true',
         facebookAdvertiserIDCollectionEnabled: 'false',
       };
-      expect(await setFacebookConfig(facebookConfig, projectDirectory)).toBe(true);
-
-      let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
+      androidManifestJson = await setFacebookConfig(facebookConfig, androidManifestJson);
       let mainApplication = androidManifestJson.manifest.application.filter(
         e => e['$']['android:name'] === '.MainApplication'
       )[0];

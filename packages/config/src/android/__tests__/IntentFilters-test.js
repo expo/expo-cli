@@ -8,7 +8,6 @@ const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.x
 
 describe('Android intent filters', () => {
   const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
-  const projectDirectory = resolve(fixturesPath, 'tmp/');
 
   beforeAll(async () => {
     await fs.ensureDir(dirname(appManifestPath));
@@ -23,50 +22,26 @@ describe('Android intent filters', () => {
     expect(getIntentFilters({})).toEqual([]);
   });
 
-  it(`returns false if bad project directory`, async () => {
-    expect(
-      await setAndroidIntentFilters(
-        {
-          android: {
-            intentFilters: [
-              {
-                action: 'VIEW',
-                data: {
-                  scheme: 'https',
-                  host: '*.myapp.io',
-                },
-                category: ['BROWSABLE', 'DEFAULT'],
-              },
-            ],
-          },
-        },
-        'bad/directory/'
-      )
-    ).toBe(false);
-  });
-
   it(`writes intent filter to android manifest`, async () => {
-    expect(
-      await setAndroidIntentFilters(
-        {
-          android: {
-            intentFilters: [
-              {
-                action: 'VIEW',
-                data: {
-                  scheme: 'https',
-                  host: '*.myapp.io',
-                },
-                category: ['BROWSABLE', 'DEFAULT'],
-              },
-            ],
-          },
-        },
-        projectDirectory
-      )
-    ).toBe(true);
-
     let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
+    androidManifestJson = await setAndroidIntentFilters(
+      {
+        android: {
+          intentFilters: [
+            {
+              action: 'VIEW',
+              data: {
+                scheme: 'https',
+                host: '*.myapp.io',
+              },
+              category: ['BROWSABLE', 'DEFAULT'],
+            },
+          ],
+        },
+      },
+      androidManifestJson
+    );
+
     expect(
       androidManifestJson.manifest.application[0].activity.filter(
         e => e['$']['android:name'] === '.MainActivity'

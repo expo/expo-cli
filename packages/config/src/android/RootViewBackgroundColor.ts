@@ -59,7 +59,7 @@ export async function setRootViewBackgroundColor(config: ExpoConfig, projectDire
     await writeStylesXMLAsync(stylesPath, stylesJSON);
   } catch (e) {
     throw new Error(
-      `Error setting Android root view background color. Cannot write new AndroidManifest.xml to ${stylesPath}.`
+      `Error setting Android root view background color. Cannot write new styles.xml to ${stylesPath}.`
     );
   }
   return true;

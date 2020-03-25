@@ -1,9 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectAndroidManifestPathAsync,
-  readAndroidManifestAsync,
-  writeAndroidManifestAsync,
-} from './Manifest';
+import { Document } from './Manifest';
 
 export function getGoogleMobileAdsAppId(config: ExpoConfig) {
   return config.android?.config?.googleMobileAdsAppId ?? null;
@@ -13,18 +9,11 @@ export function getGoogleMobileAdsAutoInit(config: ExpoConfig) {
   return config.android?.config?.googleMobileAdsAutoInit ?? false;
 }
 
-export async function setGoogleMobileAdsConfig(config: ExpoConfig, projectDirectory: string) {
+export async function setGoogleMobileAdsConfig(config: ExpoConfig, manifestDocument: Document) {
   const appId = getGoogleMobileAdsAppId(config);
   const autoInit = getGoogleMobileAdsAutoInit(config);
 
-  const manifestPath = await getProjectAndroidManifestPathAsync(projectDirectory);
-
-  if (!appId || !manifestPath) {
-    return false;
-  }
-
-  let androidManifestJson = await readAndroidManifestAsync(manifestPath);
-  let mainApplication = androidManifestJson.manifest.application.filter(
+  let mainApplication = manifestDocument.manifest.application.filter(
     (e: any) => e['$']['android:name'] === '.MainApplication'
   )[0];
 
@@ -70,12 +59,5 @@ export async function setGoogleMobileAdsConfig(config: ExpoConfig, projectDirect
     mainApplication['meta-data'] = [newDelayAutoInit];
   }
 
-  try {
-    await writeAndroidManifestAsync(manifestPath, androidManifestJson);
-  } catch (e) {
-    throw new Error(
-      `Error setting Android Google Mobile Ads config. Cannot write new AndroidManifest.xml to ${manifestPath}.`
-    );
-  }
-  return true;
+  return manifestDocument;
 }

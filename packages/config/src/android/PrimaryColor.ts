@@ -49,7 +49,7 @@ export async function setPrimaryColor(config: ExpoConfig, projectDirectory: stri
     await writeStylesXMLAsync(stylesPath, stylesJSON);
   } catch (e) {
     throw new Error(
-      `Error setting Android primary color. Cannot write new AndroidManifest.xml to ${stylesPath}.`
+      `Error setting Android primary color. Cannot write new styles.xml to ${stylesPath}.`
     );
   }
   return true;

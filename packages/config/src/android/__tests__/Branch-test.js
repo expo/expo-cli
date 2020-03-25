@@ -18,7 +18,6 @@ describe('Android branch test', () => {
   });
 
   describe('sets branch api key in AndroidManifest.xml if given', () => {
-    const projectDirectory = resolve(fixturesPath, 'tmp/');
     const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
 
     beforeAll(async () => {
@@ -31,14 +30,11 @@ describe('Android branch test', () => {
     });
 
     it('add branch api key', async () => {
-      expect(
-        await setBranchApiKey(
-          { android: { config: { branch: { apiKey: 'MY-API-KEY' } } } },
-          projectDirectory
-        )
-      ).toBe(true);
-
       let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
+      androidManifestJson = await setBranchApiKey(
+        { android: { config: { branch: { apiKey: 'MY-API-KEY' } } } },
+        androidManifestJson
+      );
       let mainApplication = androidManifestJson.manifest.application.filter(
         e => e['$']['android:name'] === '.MainApplication'
       )[0];

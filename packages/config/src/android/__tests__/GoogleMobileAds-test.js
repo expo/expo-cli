@@ -39,18 +39,16 @@ describe('Android permissions', () => {
     });
 
     it('add google mobile ads app config', async () => {
-      expect(
-        await setGoogleMobileAdsConfig(
-          {
-            android: {
-              config: { googleMobileAdsAppId: 'MY-API-KEY', googleMobileAdsAutoInit: false },
-            },
-          },
-          projectDirectory
-        )
-      ).toBe(true);
-
       let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
+      androidManifestJson = await setGoogleMobileAdsConfig(
+        {
+          android: {
+            config: { googleMobileAdsAppId: 'MY-API-KEY', googleMobileAdsAutoInit: false },
+          },
+        },
+        androidManifestJson
+      );
+
       let mainApplication = androidManifestJson.manifest.application.filter(
         e => e['$']['android:name'] === '.MainApplication'
       )[0];
@@ -65,7 +63,7 @@ describe('Android permissions', () => {
         e => e['$']['android:name'] === 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT'
       );
       expect(usesLibraryItem).toHaveLength(1);
-      expect(usesLibraryItem[0]['$']['android:value']).toMatch('true');
+      expect(usesLibraryItem[0]['$']['android:value']).toBe(true);
     });
   });
 });

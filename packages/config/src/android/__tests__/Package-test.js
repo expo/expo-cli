@@ -37,7 +37,6 @@ describe('package', () => {
   });
 
   describe('sets the package in AndroidManifest.xml if package is given', () => {
-    const projectDirectory = resolve(fixturesPath, 'tmp/');
     const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
 
     beforeAll(async () => {
@@ -50,13 +49,12 @@ describe('package', () => {
     });
 
     it('adds package to android manifest', async () => {
-      expect(
-        await setPackageInAndroidManifest(
-          { android: { package: 'com.test.package' } },
-          projectDirectory
-        )
-      ).toBe(true);
       let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
+      androidManifestJson = await setPackageInAndroidManifest(
+        { android: { package: 'com.test.package' } },
+        androidManifestJson
+      );
+
       expect(androidManifestJson['manifest']['$']['package']).toMatch('com.test.package');
     });
   });

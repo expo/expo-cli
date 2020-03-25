@@ -16,7 +16,6 @@ describe('scheme', () => {
   });
 
   describe('sets the android:scheme in AndroidManifest.xml if scheme is given', () => {
-    const projectDirectory = resolve(fixturesPath, 'tmp/');
     const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
 
     beforeAll(async () => {
@@ -29,8 +28,9 @@ describe('scheme', () => {
     });
 
     it('adds scheme to android manifest', async () => {
-      expect(await setScheme({ scheme: 'myapp' }, projectDirectory)).toBe(true);
       let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
+      androidManifestJson = await setScheme({ scheme: 'myapp' }, androidManifestJson);
+
       let intentFilters = androidManifestJson.manifest.application[0].activity.filter(
         e => e['$']['android:name'] === '.MainActivity'
       )[0]['intent-filter'];

@@ -1,24 +1,14 @@
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectAndroidManifestPathAsync,
-  readAndroidManifestAsync,
-  writeAndroidManifestAsync,
-} from './Manifest';
+import { Document } from './Manifest';
 
 export function getGoogleMapsApiKey(config: ExpoConfig) {
   return config.android?.config?.googleMaps?.apiKey ?? null;
 }
 
-export async function setGoogleMapsApiKey(config: ExpoConfig, projectDirectory: string) {
+export async function setGoogleMapsApiKey(config: ExpoConfig, manifestDocument: Document) {
   const apiKey = getGoogleMapsApiKey(config);
-  const manifestPath = await getProjectAndroidManifestPathAsync(projectDirectory);
 
-  if (!apiKey || !manifestPath) {
-    return false;
-  }
-
-  let androidManifestJson = await readAndroidManifestAsync(manifestPath);
-  let mainApplication = androidManifestJson.manifest.application.filter(
+  let mainApplication = manifestDocument.manifest.application.filter(
     (e: any) => e['$']['android:name'] === '.MainApplication'
   )[0];
 
@@ -65,12 +55,5 @@ export async function setGoogleMapsApiKey(config: ExpoConfig, projectDirectory: 
     mainApplication['uses-library'] = [newUsesLibraryItem];
   }
 
-  try {
-    await writeAndroidManifestAsync(manifestPath, androidManifestJson);
-  } catch (e) {
-    throw new Error(
-      `Error setting Android Google Maps API key. Cannot write new AndroidManifest.xml to ${manifestPath}.`
-    );
-  }
-  return true;
+  return manifestDocument;
 }

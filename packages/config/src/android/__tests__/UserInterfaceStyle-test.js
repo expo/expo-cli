@@ -70,7 +70,6 @@ describe('User interface style', () => {
   });
 
   describe('write file correctly', () => {
-    const projectDirectory = resolve(fixturesPath, 'tmp/');
     const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
 
     beforeAll(async () => {
@@ -83,16 +82,17 @@ describe('User interface style', () => {
     });
 
     it(`sets the android:configChanges in AndroidManifest.xml if userInterfaceStyle is given`, async () => {
-      expect(
-        await setUiModeAndroidManifest({ userInterfaceStyle: 'light' }, projectDirectory)
-      ).toBe(true);
-      //read file
-    });
+      let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
 
-    it(`makes no changes to the androidManifest or MainActivity if userInterfaceStyle value provided`, async () => {
-      expect(await setUiModeAndroidManifest({}, projectDirectory)).toBe(false);
-      expect(addOnConfigurationChangedMainActivity({}, EXAMPLE_MAIN_ACTIVITY_BEFORE)).toMatch(
-        EXAMPLE_MAIN_ACTIVITY_BEFORE
+      androidManifestJson = await setUiModeAndroidManifest(
+        { userInterfaceStyle: 'light' },
+        androidManifestJson
+      );
+      let mainActivity = androidManifestJson.manifest.application[0].activity.filter(
+        e => e['$']['android:name'] === '.MainActivity'
+      );
+      expect(mainActivity[0]['$']['android:configChanges']).toMatch(
+        'keyboard|keyboardHidden|orientation|screenSize|uiMode'
       );
     });
   });

@@ -18,7 +18,6 @@ describe('Android permissions', () => {
   });
 
   describe('adds permissions in AndroidManifest.xml if given', () => {
-    const projectDirectory = resolve(fixturesPath, 'tmp/');
     const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
 
     beforeAll(async () => {
@@ -36,16 +35,13 @@ describe('Android permissions', () => {
         'com.android.launcher.permission.INSTALL_SHORTCUT',
         'com.android.launcher.permission.INSTALL_SHORTCUT',
       ];
-      expect(
-        await setAndroidPermissions(
-          { android: { permissions: givenPermissions } },
-          projectDirectory
-        )
-      ).toBe(true);
+      let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
+      androidManifestJson = await setAndroidPermissions(
+        { android: { permissions: givenPermissions } },
+        androidManifestJson
+      );
 
-      let manifestPermissionsJSON = (await readAndroidManifestAsync(appManifestPath)).manifest[
-        'uses-permission'
-      ];
+      let manifestPermissionsJSON = androidManifestJson.manifest['uses-permission'];
       let manifestPermissions = manifestPermissionsJSON.map(e => e['$']['android:name']);
 
       expect(

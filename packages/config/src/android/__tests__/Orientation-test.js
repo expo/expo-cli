@@ -1,5 +1,6 @@
 import fs, { ensureDir } from 'fs-extra';
 import { dirname, resolve } from 'path';
+import { readAndroidManifestAsync } from '../Manifest';
 
 import { getOrientation, setAndroidOrientation } from '../Orientation';
 
@@ -16,9 +17,8 @@ describe('Android orientation', () => {
   });
 
   describe('File changes', () => {
-    const projectDirectory = resolve(fixturesPath, 'tmp/');
     const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
-
+    let androidManifestJson;
     beforeAll(async () => {
       await fs.ensureDir(dirname(appManifestPath));
       await fs.copyFile(sampleManifestPath, appManifestPath);
@@ -29,21 +29,29 @@ describe('Android orientation', () => {
     });
 
     it('adds orientation attribute if not present', async () => {
-      expect(await setAndroidOrientation({ orientation: 'landscape' }, projectDirectory)).toBe(
-        true
+      androidManifestJson = await readAndroidManifestAsync(appManifestPath);
+      androidManifestJson = await setAndroidOrientation(
+        { orientation: 'landscape' },
+        androidManifestJson
       );
+
+      let mainActivity = androidManifestJson.manifest.application[0].activity.filter(
+        e => e['$']['android:name'] === '.MainActivity'
+      );
+      expect(mainActivity[0]['$']['android:screenOrientation']).toMatch('landscape');
     });
 
     it('replaces orientation attribute if present', async () => {
-      expect(await setAndroidOrientation({ orientation: 'portrait' }, projectDirectory)).toBe(true);
-    });
+      androidManifestJson = await readAndroidManifestAsync(appManifestPath);
 
-    it('does nothing if no orientation is provided', async () => {
-      expect(await setAndroidOrientation({}, projectDirectory)).toBe(false);
-    });
-
-    it('does nothing if no android manifest', async () => {
-      expect(await setAndroidOrientation({}, 'wrong/path')).toBe(false);
+      androidManifestJson = await setAndroidOrientation(
+        { orientation: 'portrait' },
+        androidManifestJson
+      );
+      let mainActivity = androidManifestJson.manifest.application[0].activity.filter(
+        e => e['$']['android:name'] === '.MainActivity'
+      );
+      expect(mainActivity[0]['$']['android:screenOrientation']).toMatch('portrait');
     });
   });
 });
