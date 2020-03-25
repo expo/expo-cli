@@ -96,6 +96,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   await AndroidConfig.GoogleServices.setGoogleServicesFile(exp, projectRoot);
 
   // TODOs
+  await AndroidConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
   await AndroidConfig.Icon.setIconAsync(exp, projectRoot);
   await AndroidConfig.AdaptiveIcon.setAdaptiveIconAsync(exp, projectRoot);
 }

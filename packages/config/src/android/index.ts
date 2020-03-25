@@ -16,6 +16,7 @@ import * as Permissions from './Permissions';
 import * as PrimaryColor from './PrimaryColor';
 import * as RootViewBackgroundColor from './RootViewBackgroundColor';
 import * as Scheme from './Scheme';
+import * as SplashScreen from './SplashScreen';
 import * as StatusBar from './StatusBar';
 import * as Styles from './Styles';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
@@ -39,6 +40,7 @@ export {
   PrimaryColor,
   RootViewBackgroundColor,
   Scheme,
+  SplashScreen,
   StatusBar,
   Styles,
   UserInterfaceStyle,
