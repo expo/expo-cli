@@ -168,7 +168,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   appJson.expo.ios = appJson.expo.ios ?? {};
   appJson.expo.ios.bundleIdentifier = bundleIdentifier;
 
-  // TODO: get or prompt for android package!
+  let packageName = await getOrPromptForPackage(projectRoot);
+  appJson.expo.android = appJson.expo.android ?? {};
+  appJson.expo.android.package = packageName;
 
   if (appJson.expo.entryPoint && appJson.expo.entryPoint !== EXPO_APP_ENTRY) {
     log(
@@ -385,6 +387,33 @@ async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<stri
 
   log.newLine();
   return bundleIdentifier;
+}
+
+async function getOrPromptForPackage(projectRoot: string): Promise<string> {
+  let { exp } = getConfig(projectRoot);
+
+  if (exp.android?.package) {
+    return exp.android.package;
+  }
+
+  // TODO: add example based on slug or name
+  log(
+    `Now we need to know your ${terminalLink(
+      'Android package',
+      'https://expo.fyi/android-package'
+    )}. You can change this in the future if you need to.`
+  );
+
+  const { packageName } = await prompt([
+    {
+      name: 'packageName',
+      message: `What would you like your package to be named?`,
+      validate: (value: string) => /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value),
+    },
+  ]);
+
+  log.newLine();
+  return packageName;
 }
 
 /**
