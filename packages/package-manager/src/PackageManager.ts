@@ -68,9 +68,16 @@ export class NpmPackageManager implements PackageManager {
   options: SpawnOptions;
   private log: Logger;
 
-  constructor({ cwd, log }: { cwd: string; log?: Logger }) {
+  constructor({ cwd, log, silent }: { cwd: string; log?: Logger; silent?: boolean }) {
     this.log = log || console.log;
-    this.options = { cwd, stdio: ['inherit', 'inherit', 'pipe'] };
+    this.options = {
+      cwd,
+      ...(silent
+        ? { ignoreStdio: true }
+        : {
+            stdio: ['inherit', 'inherit', 'pipe'],
+          }),
+    };
   }
   get name() {
     return 'npm';
@@ -109,9 +116,11 @@ export class NpmPackageManager implements PackageManager {
 
   // Private
   private async _runAsync(args: string[]) {
-    this.log(`> npm ${args.join(' ')}`);
+    if (!this.options.ignoreStdio) {
+      this.log(`> npm ${args.join(' ')}`);
+    }
     const promise = spawnAsync('npm', [...args], this.options);
-    if (promise.child.stderr) {
+    if (promise.child.stderr && !this.options.ignoreStdio) {
       promise.child.stderr
         .pipe(split(/\r?\n/, (line: string) => line + '\n'))
         .pipe(new NpmStderrTransform())
@@ -197,7 +206,7 @@ export class YarnPackageManager implements PackageManager {
       this.log(`> yarn ${args.join(' ')}`);
     }
     const promise = spawnAsync('yarnpkg', args, this.options);
-    if (promise.child.stderr) {
+    if (promise.child.stderr && !this.options.ignoreStdio) {
       promise.child.stderr.pipe(new YarnStderrTransform()).pipe(process.stderr);
     }
     return promise;
@@ -225,6 +234,7 @@ export function createForProject(
   } else {
     PackageManager = NpmPackageManager;
   }
+
   return new PackageManager({ cwd: projectRoot, log: options.log, silent: options.silent });
 }
 

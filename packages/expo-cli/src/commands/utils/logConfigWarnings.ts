@@ -7,16 +7,14 @@ export function logConfigWarningsIOS() {
   if (warningsIOS.length) {
     log.nested(
       chalk.yellow(
-        chalk.bold(
-          `Your iOS project requires additional configuration for the following properties:`
-        )
+        `⚠️  Your iOS project requires additional configuration for the following properties in order to work the same as in the Expo client:`
       )
     );
     warningsIOS.forEach(([property, warning]) => {
       log.nested(chalk.yellow(`- ${chalk.bold(property)}: ${warning}`));
     });
   } else {
-    log.nested(chalk.green('All project configuration has been applied to your iOS project.'));
+    log.nested(chalk.green('- All project configuration has been applied to your iOS project.'));
   }
 }
 
@@ -25,15 +23,15 @@ export function logConfigWarningsAndroid() {
   if (warningsAndroid.length) {
     log.nested(
       chalk.yellow(
-        chalk.bold(
-          `Your Android project requires additional configuration for the following properties:`
-        )
+        `⚠️  Your Android project requires additional configuration for the following properties in order to work the same as in the Expo client:`
       )
     );
     warningsAndroid.forEach(([property, warning]) => {
       log.nested(chalk.yellow(`- ${chalk.bold(property)}: ${warning}`));
     });
   } else {
-    log.nested(chalk.green('All project configuration has been applied to your Android project.'));
+    log.nested(
+      chalk.green('- All project configuration has been applied to your Android project.')
+    );
   }
 }

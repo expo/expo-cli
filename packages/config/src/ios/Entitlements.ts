@@ -43,6 +43,9 @@ function createEntitlementsFile(projectRoot: string) {
    * Write file from template
    */
   const entitlementsPath = getDefaultEntitlementsPath(projectRoot);
+  if (!fs.pathExistsSync(path.dirname(entitlementsPath))) {
+    fs.mkdirSync(path.dirname(entitlementsPath));
+  }
   fs.writeFileSync(entitlementsPath, ENTITLEMENTS_TEMPLATE);
   const entitlementsRelativePath = entitlementsPath.replace(`${projectRoot}/ios/`, '');
 

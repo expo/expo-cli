@@ -15,6 +15,7 @@ import path from 'path';
 import semver from 'semver';
 import temporary from 'tempy';
 import terminalLink from 'terminal-link';
+import ora from 'ora';
 
 import * as PackageManager from '@expo/package-manager';
 import log from '../../log';
@@ -45,38 +46,45 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   await createNativeProjectsFromTemplateAsync(projectRoot);
 
   log.newLine();
-  log.nested(chalk.underline('Applying iOS configuration'));
+  log.nested(`🍎 ${chalk.underline('Applying iOS configuration')}`);
   await configureIOSProjectAsync(projectRoot);
   logConfigWarningsIOS();
   log.newLine();
 
-  log.nested(chalk.underline('Applying Android configuration'));
+  log.nested(`🤖 ${chalk.underline('Applying Android configuration')}`);
   await configureAndroidProjectAsync(projectRoot);
   logConfigWarningsAndroid();
 
-  log.nested(chalk.underline('Next steps'));
-  // TODO: run pod install automatically!
+  // TODO: integrate this with the above warnings
+  await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
+
   log.newLine();
+  log.nested(`➡️  ${chalk.underline('Next steps')}`);
+  // TODO: run pod install automatically!
 
   log.nested(
-    `- 🍎 Make sure you have CocoaPods installed then initialize the project workspace: ${chalk.bold(
+    `- 👆 Review the logs above and look for any ${chalk.yellow(
+      'warnings'
+    )} that might need follow-up.`
+  );
+  log.nested(
+    `- 💡 You may want to run ${chalk.bold(
+      'npx @react-native-community/cli doctor'
+    )} to help installing CocoaPods for and any other tools that your app may need to run your native projects.`
+  );
+  log.nested(
+    `- 🍫 With CocoaPods installed, initialize the project workspace: ${chalk.bold(
       'cd ios && pod install'
     )}`
   );
-  log.nested(
-    `- 💡 You may want to use ${chalk.bold(
-      'npx @react-native-community/cli doctor'
-    )} to handle installing CocoaPods for you, along with any other tools that your app may need to run your ejected app.`
-  );
 
   log.newLine();
-  log.nested(chalk.underline('When you are ready to run your project'));
-  log.nested('');
+  log.nested(`☑️  ${chalk.underline('When you are ready to run your project')}`);
+  log.nested('To compile and run your project, execute one of the following commands:');
   let packageManager = isUsingYarn(projectRoot) ? 'yarn' : 'npm';
-  log.nested(`  ${packageManager === 'npm' ? 'npm run android' : 'yarn android'}`);
-  log.nested(`  ${packageManager === 'npm' ? 'npm run ios' : 'yarn ios'}`);
-
-  await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
+  log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
+  log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
+  log.newLine();
 }
 
 /**
@@ -159,16 +167,20 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   appJson.expo.ios = appJson.expo.ios ?? {};
   appJson.expo.ios.bundleIdentifier = bundleIdentifier;
 
+  // TODO: get or prompt for android package!
+
   if (appJson.expo.entryPoint && appJson.expo.entryPoint !== EXPO_APP_ENTRY) {
     log(
-      chalk.yellow(`expo.entryPoint is already configured, we recommend using "${EXPO_APP_ENTRY}`)
+      chalk.yellow(`- expo.entryPoint is already configured, we recommend using "${EXPO_APP_ENTRY}`)
     );
   } else {
     appJson.expo.entryPoint = EXPO_APP_ENTRY;
   }
 
-  log('Updating app.json...');
+  log(`⚙️  ${chalk.underline('Updating app configuration (app.json)')}`);
   await fse.writeFile(path.resolve('app.json'), JSON.stringify(appJson, null, 2));
+  // TODO: if app.config.js, need to provide some other info here
+  log(chalk.green('- Configuration has been updated.'));
 
   /**
    * Extract the template and copy the ios and android directories over to the project directory
@@ -176,6 +188,8 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   let defaultDependencies: any = {};
   let defaultDevDependencies: any = {};
   try {
+    log.newLine();
+    log(`🏗  ${chalk.underline('Creating native project directories (./ios and ./android)')}`);
     const tempDir = temporary.directory();
     await Exp.extractTemplateAppAsync(templateSpec, tempDir, appJson);
     fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
@@ -183,11 +197,15 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
     defaultDependencies = createDependenciesMap(dependencies);
     defaultDevDependencies = createDependenciesMap(devDependencies);
-    log('Created native project files.');
+    log(chalk.green('- Native project files created.'));
   } catch (e) {
     log(chalk.red(e.message));
     log(chalk.red(`Ejecting failed 😢 - see the output above for more information.`));
-    log(chalk.yellow('You may want to delete the `ios` and/or `android` directories.'));
+    log(
+      chalk.yellow(
+        'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
+      )
+    );
     process.exit(1);
   }
 
@@ -195,7 +213,8 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    * Update package.json scripts - `npm start` should default to `react-native
    * start` rather than `expo start` after ejecting, for example.
    */
-  log(`Updating your package.json...`);
+  log.newLine();
+  log(`📝 ${chalk.underline(`Updating your package.json scripts, dependencies, and main file`)}`);
   if (!pkg.scripts) {
     pkg.scripts = {};
   }
@@ -250,13 +269,8 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   /**
    * Add new app entry points
    */
-  log(`Adding entry point...`);
   if (pkg.main !== EXPO_APP_ENTRY && pkg.main) {
-    log(
-      chalk.yellow(
-        `Removing "main": ${pkg.main} from package.json. We recommend using index.js instead.`
-      )
-    );
+    log(`🚨 Removing "main": ${pkg.main} from package.json. We recommend using index.js instead.`);
   }
   delete pkg.main;
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
@@ -272,13 +286,26 @@ if (Platform.OS === 'web') {
 }
 `;
   await fse.writeFile(path.resolve('index.js'), indexjs);
-  log(chalk.green('Added index.js entry point'));
+  log(chalk.green('- Updated package.json and added index.js entry point.'));
 
-  log('Installing new packages...');
+  log.newLine();
+  let spinner = ora(chalk.underline('Installing dependencies'));
+  spinner.start();
   await fse.remove('node_modules');
   // TODO: show spinner
   const packageManager = PackageManager.createForProject(projectRoot, { log, silent: true });
-  await packageManager.installAsync();
+  try {
+    await packageManager.installAsync();
+    spinner.stopAndPersist({ symbol: '📦' });
+    log.nested(chalk.green('- Installed dependencies successfully.'));
+  } catch (e) {
+    spinner.stopAndPersist();
+    log.nested(
+      chalk.red(
+        'Something when wrong installing dependencies, check your package manager logfile. Continuing with ejecting, you can debug this afterwards.'
+      )
+    );
+  }
 }
 
 /**
@@ -340,7 +367,6 @@ async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<stri
   }
 
   // TODO: add example based on slug or name
-  log.newLine();
   log(
     `Now we need to know your ${terminalLink(
       'iOS bundle identifier',
@@ -356,6 +382,7 @@ async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<stri
     },
   ]);
 
+  log.newLine();
   return bundleIdentifier;
 }
 
@@ -381,7 +408,7 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
   }
 
   let plural = packagesToWarn.length > 1;
-  log.nested('');
+  log.newLine();
   log.nested(
     chalk.yellow(
       `Warning: your app includes ${chalk.bold(`${packagesToWarn.length}`)} package${
