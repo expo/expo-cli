@@ -6,6 +6,8 @@ import fs from 'fs-extra';
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
 
+// TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
+
 export function setICloudEntitlement(
   config: ExpoConfig,
   _appleTeamId: string,
@@ -28,6 +30,28 @@ export function setAppleSignInEntitlement(config: ExpoConfig, entitlementsPlist:
     return {
       ...entitlementsPlist,
       'com.apple.developer.applesignin': ['Default'],
+    };
+  }
+
+  return entitlementsPlist;
+}
+
+export function setAccessesContactNotes(config: ExpoConfig, entitlementsPlist: any) {
+  if (config.ios?.accessesContactNotes) {
+    return {
+      ...entitlementsPlist,
+      'com.apple.developer.contacts.notes': config.ios.accessesContactNotes,
+    };
+  }
+
+  return entitlementsPlist;
+}
+
+export function setAssociatedDomains(config: ExpoConfig, entitlementsPlist: any) {
+  if (config.ios?.associatedDomains) {
+    return {
+      ...entitlementsPlist,
+      'com.apple.developer.associated-domains': config.ios.associatedDomains,
     };
   }
 

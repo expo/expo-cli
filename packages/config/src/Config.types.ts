@@ -640,6 +640,12 @@ export type IosPlatformConfig = {
    */
   usesAppleSignIn?: boolean;
   /**
+   * A boolean value indicating if the app may access the notes stored in contacts. See Contacts docs for details.
+   * @fallback false
+   */
+  accessesContactNotes?: boolean;
+
+  /**
    * Configuration for loading and splash screen for standalone iOS apps.
    */
   splash?: {

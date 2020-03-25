@@ -69,6 +69,8 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
     );
 
     entitlementsPlist = IOSConfig.Entitlements.setAppleSignInEntitlement(exp, entitlementsPlist);
+    entitlementsPlist = IOSConfig.Entitlements.setAccessesContactNotes(exp, entitlementsPlist);
+    entitlementsPlist = IOSConfig.Entitlements.setAssociatedDomains(exp, entitlementsPlist);
     return entitlementsPlist;
   });
 
