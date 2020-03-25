@@ -25,7 +25,7 @@ export function getStatusBarStyle(config: ExpoConfig) {
   return config.androidStatusBar?.barStyle || 'light-content';
 }
 
-export async function setStatusBarColor(config: ExpoConfig, projectDirectory: string) {
+export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: string) {
   let hexString = getStatusBarColor(config);
   let statusBarStyle = getStatusBarStyle(config);
 

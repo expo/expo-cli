@@ -1,6 +1,9 @@
 import { ExpoConfig } from '../Config.types';
-
-const DEFAULT_PACKAGE_NAME = 'com.helloworld';
+import {
+  getProjectAndroidManifestPathAsync,
+  readAndroidManifestAsync,
+  writeAndroidManifestAsync,
+} from './Manifest';
 
 export function getPackage(config: ExpoConfig) {
   if (config.android && config.android.package) {
@@ -10,30 +13,32 @@ export function getPackage(config: ExpoConfig) {
   return null;
 }
 
-export function setPackageInBuildGradle(
-  config: ExpoConfig,
-  buildGradle: string,
-  packageNameToReplace = DEFAULT_PACKAGE_NAME
-) {
+export function setPackageInBuildGradle(config: ExpoConfig, buildGradle: string) {
   let packageName = getPackage(config);
   if (packageName === null) {
     return buildGradle;
   }
 
-  let pattern = new RegExp(`applicationId ['"]${packageNameToReplace}['"]`);
+  let pattern = new RegExp(`applicationId ['"].*['"]`);
   return buildGradle.replace(pattern, `applicationId '${packageName}'`);
 }
 
-export function setPackageInAndroidManifest(
-  config: ExpoConfig,
-  androidManifest: string,
-  packageNameToReplace = DEFAULT_PACKAGE_NAME
-) {
+export async function setPackageInAndroidManifest(config: ExpoConfig, projectDirectory: string) {
   let packageName = getPackage(config);
-  if (packageName === null) {
-    return androidManifest;
+  let manifestPath = await getProjectAndroidManifestPathAsync(projectDirectory);
+  if (!packageName || !manifestPath) {
+    return false;
   }
 
-  let pattern = new RegExp(`package="${packageNameToReplace}"`);
-  return androidManifest.replace(pattern, `package="${packageName}"`);
+  let androidManifestJson = await readAndroidManifestAsync(manifestPath);
+  androidManifestJson['manifest']['$']['package'] = packageName;
+
+  try {
+    await writeAndroidManifestAsync(manifestPath, androidManifestJson);
+  } catch (e) {
+    throw new Error(
+      `Error setting Android package. Cannot write new AndroidManifest.xml to ${manifestPath}.`
+    );
+  }
+  return true;
 }

@@ -1,47 +1,25 @@
+import { dirname, resolve } from 'path';
+import fs from 'fs-extra';
 import { getPackage, setPackageInAndroidManifest, setPackageInBuildGradle } from '../Package';
+import { readAndroidManifestAsync } from '../Manifest';
 
-// TODO: use fixtures for manifest/build.gradle instead of inline strings
-
-const EXAMPLE_ANDROID_MANIFEST = `
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.helloworld">
-    <application
-    android:name=".MainApplication"
-    android:label="@string/app_name"
-    android:icon="@mipmap/ic_launcher"
-    android:roundIcon="@mipmap/ic_launcher_round"
-    android:allowBackup="false"
-    android:theme="@style/AppTheme">
-    <activity
-      android:name=".MainActivity"
-      android:label="@string/app_name"
-      android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
-      android:windowSoftInputMode="adjustResize">
-      <intent-filter>
-          <action android:name="android.intent.action.MAIN" />
-          <category android:name="android.intent.category.LAUNCHER" />
-      </intent-filter>
-    </activity>
-    <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" />
-  </application>
-
-</manifest>
-`;
+const fixturesPath = resolve(__dirname, 'fixtures');
+const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
 
 const EXAMPLE_BUILD_GRADLE = `
-android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
-
-    defaultConfig {
-        applicationId "com.helloworld"
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
-    }
-}
-`;
+  android {
+      compileSdkVersion rootProject.ext.compileSdkVersion
+      buildToolsVersion rootProject.ext.buildToolsVersion
+  
+      defaultConfig {
+          applicationId "com.helloworld"
+          minSdkVersion rootProject.ext.minSdkVersion
+          targetSdkVersion rootProject.ext.targetSdkVersion
+          versionCode 1
+          versionName "1.0"
+      }
+  }
+  `;
 
 describe('package', () => {
   it(`returns null if no package is provided`, () => {
@@ -58,11 +36,28 @@ describe('package', () => {
     ).toMatch("applicationId 'my.new.app'");
   });
 
-  it(`sets the android:name in AndroidManifest.xml if package is given`, () => {
-    expect(
-      setPackageInAndroidManifest({ android: { package: 'my.new.app' } }, EXAMPLE_ANDROID_MANIFEST)
-    ).toMatch('package="my.new.app"');
-  });
+  describe('sets the package in AndroidManifest.xml if package is given', () => {
+    const projectDirectory = resolve(fixturesPath, 'tmp/');
+    const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
 
-  // TODO: add test cases for passing in a different package name to replace in third param
+    beforeAll(async () => {
+      await fs.ensureDir(dirname(appManifestPath));
+      await fs.copyFile(sampleManifestPath, appManifestPath);
+    });
+
+    afterAll(async () => {
+      await fs.remove(resolve(fixturesPath, 'tmp/'));
+    });
+
+    it('adds package to android manifest', async () => {
+      expect(
+        await setPackageInAndroidManifest(
+          { android: { package: 'com.test.package' } },
+          projectDirectory
+        )
+      ).toBe(true);
+      let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
+      expect(androidManifestJson['manifest']['$']['package']).toMatch('com.test.package');
+    });
+  });
 });

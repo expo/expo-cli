@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import { dirname, resolve } from 'path';
-import { getStatusBarColor, getStatusBarStyle, setStatusBarColor } from '../StatusBar';
+import { getStatusBarColor, getStatusBarStyle, setStatusBarConfig } from '../StatusBar';
 import { readStylesXMLAsync } from '../Styles';
 import { getProjectColorsXMLPathAsync, readColorsXMLAsync } from '../Colors';
 const fixturesPath = resolve(__dirname, 'fixtures');
@@ -43,7 +43,7 @@ describe('Android status bar', () => {
 
     it(`sets the colorPrimaryDark item in styles.xml and adds color to colors.xml if 'androidStatusBar.backgroundColor' is given`, async () => {
       expect(
-        await setStatusBarColor(
+        await setStatusBarConfig(
           { androidStatusBar: { backgroundColor: '#654321', barStyle: 'dark-content' } },
           projectDirectory
         )
@@ -68,7 +68,7 @@ describe('Android status bar', () => {
     });
 
     it(`sets the status bar to translucent if no 'androidStatusBar.backgroundColor' is given`, async () => {
-      expect(await setStatusBarColor({}, projectDirectory)).toBe(true);
+      expect(await setStatusBarConfig({}, projectDirectory)).toBe(true);
     });
   });
 });
