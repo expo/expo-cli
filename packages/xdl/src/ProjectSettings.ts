@@ -32,6 +32,7 @@ type PackagerInfo = {
   ngrokPid?: number | null;
   devToolsPort?: number | null;
   webpackServerPort?: number | null;
+  target?: 'managed' | 'bare';
 };
 const packagerInfoFile = 'packager-info.json';
 

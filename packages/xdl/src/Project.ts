@@ -9,7 +9,7 @@ import {
 } from '@expo/config';
 
 import slug from 'slugify';
-import { getManagedExtensions } from '@expo/config/paths';
+import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import axios from 'axios';
@@ -20,6 +20,7 @@ import delayAsync from 'delay-async';
 import express from 'express';
 import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
+import glob from 'glob-promise';
 import HashIds from 'hashids';
 import joi from 'joi';
 import chunk from 'lodash/chunk';
@@ -129,6 +130,7 @@ export type StartOptions = {
   nonPersistent?: boolean;
   maxWorkers?: number;
   webOnly?: boolean;
+  target?: 'managed' | 'bare';
 };
 
 type PublishOptions = {
@@ -182,6 +184,30 @@ export async function currentStatus(projectDir: string): Promise<ProjectStatus> 
   } else {
     return 'exited';
   }
+}
+
+export async function isBareWorkflowProject(projectDir: string): Promise<boolean> {
+  const { pkg } = getConfig(projectDir, {
+    skipSDKVersionRequirement: true,
+  });
+  if (pkg.dependencies && pkg.dependencies.expokit) {
+    return false;
+  }
+
+  if (fs.existsSync(path.resolve(projectDir, 'ios'))) {
+    const xcodeprojFiles = await glob(path.join(projectDir, 'ios', '/**/*.xcodeproj'));
+    if (xcodeprojFiles && xcodeprojFiles.length) {
+      return true;
+    }
+  }
+  if (fs.existsSync(path.resolve(projectDir, 'android'))) {
+    const gradleFiles = await glob(path.join(projectDir, 'android', '/**/*.gradle'));
+    if (gradleFiles && gradleFiles.length) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 // DECPRECATED: use UrlUtils.constructManifestUrlAsync
@@ -1871,11 +1897,17 @@ export async function startReactNativeServerAsync(
 
   const customLogReporterPath: string = require.resolve(path.join(__dirname, 'reporter'));
 
+  // TODO: Bacon: Support .mjs (short-lived JS modules extension that some packages use)
+  const sourceExtsConfig = { isTS: true, isReact: true, isModern: false };
+  const sourceExts =
+    options.target === 'bare'
+      ? getBareExtensions([], sourceExtsConfig)
+      : getManagedExtensions([], sourceExtsConfig);
+
   let packagerOpts: { [key: string]: any } = {
     port: packagerPort,
     customLogReporterPath,
-    // TODO: Bacon: Support .mjs (short-lived JS modules extension that some packages use)
-    sourceExts: getManagedExtensions([], { isTS: true, isReact: true, isModern: false }),
+    sourceExts,
   };
 
   if (options.nonPersistent && Versions.lteSdkVersion(exp, '32.0.0')) {
