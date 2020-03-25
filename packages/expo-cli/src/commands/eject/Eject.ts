@@ -52,7 +52,7 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   if (ConfigWarningAggregator.hasWarningsIOS()) {
     applyingIOSConfigStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: 'iOS configuration applied with warnings:',
+      text: chalk.red('iOS configuration applied with warnings that should be fixed:'),
     });
     logConfigWarningsIOS();
   } else {
@@ -65,7 +65,7 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   if (ConfigWarningAggregator.hasWarningsAndroid()) {
     applyingAndroidConfigStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: 'Android configuration applied with warnings:',
+      text: 'Android configuration applied with warnings that should be fixed:',
     });
     logConfigWarningsAndroid();
   } else {
@@ -80,14 +80,12 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   // TODO: run pod install automatically!
 
   log.nested(
-    `- 👆 Review the logs above and look for any ${chalk.yellow(
-      'warnings'
-    )} that might need follow-up.`
+    `- 👆 Review the logs above and look for any warnings (⚠️ ) that might need follow-up.`
   );
   log.nested(
     `- 💡 You may want to run ${chalk.bold(
       'npx @react-native-community/cli doctor'
-    )} to help installing CocoaPods for and any other tools that your app may need to run your native projects.`
+    )} to help installing CocoaPods and any other tools that your app may need to run your native projects.`
   );
   log.nested(
     `- 🍫 With CocoaPods installed, initialize the project workspace: ${chalk.bold(
@@ -195,10 +193,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   appJson.expo.android = appJson.expo.android ?? {};
   appJson.expo.android.package = packageName;
 
+  // TODO: remove entryPoint and log about it for sdk 37 changes
   if (appJson.expo.entryPoint && appJson.expo.entryPoint !== EXPO_APP_ENTRY) {
-    log(
-      chalk.yellow(`- expo.entryPoint is already configured, we recommend using "${EXPO_APP_ENTRY}`)
-    );
+    log(`- expo.entryPoint is already configured, we recommend using "${EXPO_APP_ENTRY}`);
   } else {
     appJson.expo.entryPoint = EXPO_APP_ENTRY;
   }
@@ -461,29 +458,25 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
     return;
   }
 
-  let plural = packagesToWarn.length > 1;
   log.newLine();
-  log.nested(
-    chalk.yellow(
-      `Warning: your app includes ${chalk.bold(`${packagesToWarn.length}`)} package${
-        plural ? 's' : ''
-      } that require${plural ? '' : 's'} additional setup. See the following URL${
-        plural ? 's' : ''
-      } for instructions.`
-    )
+  let warnAdditionalSetupStep = logNewSection(
+    'Checking if any additional setup steps are required for installed SDK packages.'
   );
-  log.nested(
-    chalk.yellow(
-      `Your app may not build/run until the additional setup for ${
-        plural ? 'these packages' : 'this package'
-      } has been completed.`
-    )
-  );
-  log.nested('');
-  packagesToWarn.forEach(pkgName => {
-    log.nested(chalk.yellow(`- ${chalk.bold(pkgName)}: ${pkgsWithExtraSetup[pkgName]}`));
+
+  let plural = packagesToWarn.length > 1;
+
+  warnAdditionalSetupStep.stopAndPersist({
+    symbol: '⚠️ ',
+    text: chalk.red(
+      `Your app includes ${chalk.bold(`${packagesToWarn.length}`)} package${
+        plural ? 's' : ''
+      } that require${plural ? '' : 's'} additional setup in order to run:`
+    ),
   });
-  log.nested('');
+
+  packagesToWarn.forEach(pkgName => {
+    log.nested(`- ${chalk.bold(pkgName)}: ${pkgsWithExtraSetup[pkgName]}`);
+  });
 }
 
 export function stripDashes(s: string): string {
