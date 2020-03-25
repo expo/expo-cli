@@ -46,6 +46,9 @@ export function addOnConfigurationChangedMainActivity(
   }
 
   // Cruzan: this is not ideal, but I'm not sure of a better way to handle writing to MainActivity.java
+  if (MainActivity.match(`onConfigurationChanged`)?.length) {
+    return MainActivity;
+  }
   let pattern = new RegExp(`public class MainActivity extends ReactActivity {`);
   return MainActivity.replace(pattern, ON_CONFIGURATION_CHANGED);
 }
