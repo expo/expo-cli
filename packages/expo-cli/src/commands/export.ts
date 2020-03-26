@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import validator from 'validator';
 import path from 'path';
 import targz from 'targz';
-import { Project, UrlUtils } from '@expo/xdl';
+import { Project, ProjectSettings, UrlUtils } from '@expo/xdl';
 import { Command } from 'commander';
 
 import log from '../log';
@@ -20,6 +20,7 @@ type Options = {
   dev: boolean;
   clear: boolean;
   quiet: boolean;
+  target?: 'managed' | 'bare';
   dumpAssetmap: boolean;
   dumpSourcemap: boolean;
   maxWorkers?: number;
@@ -43,17 +44,36 @@ export async function action(projectDir: string, options: Options) {
     console.warn(`Dev Mode: publicUrl ${options.publicUrl} does not conform to HTTP format.`);
   }
 
+  const target =
+    options.target ?? ((await Project.isBareWorkflowProjectAsync(projectDir)) ? 'bare' : 'managed');
+
   const status = await Project.currentStatus(projectDir);
+  let shouldStartOurOwn = false;
+
+  if (status === 'running') {
+    const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectDir);
+    const runningPackagerTarget = packagerInfo.target ?? 'managed';
+    if (target !== runningPackagerTarget) {
+      log(
+        'Found an existing Expo CLI instance running for this project but the target did not match.'
+      );
+      await Project.stopAsync(projectDir);
+      log('Starting a new Expo CLI instance...');
+      shouldStartOurOwn = true;
+    }
+  } else {
+    log('Unable to find an existing Expo CLI instance for this directory; starting a new one...');
+    shouldStartOurOwn = true;
+  }
 
   let startedOurOwn = false;
-  if (status !== 'running') {
-    log('Unable to find an existing Expo CLI instance for this directory, starting a new one...');
-
+  if (shouldStartOurOwn) {
     installExitHooks(projectDir);
 
-    const startOpts: { reset: boolean; nonPersistent: boolean; maxWorkers?: number } = {
+    const startOpts: Project.StartOptions = {
       reset: !!options.clear,
       nonPersistent: true,
+      target,
     };
     if (options.maxWorkers) {
       startOpts.maxWorkers = options.maxWorkers;
@@ -94,21 +114,21 @@ export async function action(projectDir: string, options: Options) {
     await fs.ensureDir(tmpFolder);
 
     // Download the urls into a tmp dir
-    const downloadDecompressPromises = options.mergeSrcUrl.map(async (url: string): Promise<
-      void
-    > => {
-      // Add the absolute paths to srcDir
-      const uniqFilename = `${path.basename(url, '.tar.gz')}_${crypto
-        .randomBytes(16)
-        .toString('hex')}`;
-      const tmpFileCompressed = path.resolve(tmpFolder, uniqFilename + '_compressed');
-      const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
-      await download(url, tmpFileCompressed);
-      await decompress(tmpFileCompressed, tmpFolderUncompressed);
+    const downloadDecompressPromises = options.mergeSrcUrl.map(
+      async (url: string): Promise<void> => {
+        // Add the absolute paths to srcDir
+        const uniqFilename = `${path.basename(url, '.tar.gz')}_${crypto
+          .randomBytes(16)
+          .toString('hex')}`;
+        const tmpFileCompressed = path.resolve(tmpFolder, uniqFilename + '_compressed');
+        const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
+        await download(url, tmpFileCompressed);
+        await decompress(tmpFileCompressed, tmpFolderUncompressed);
 
-      // add the decompressed folder to be merged
-      mergeSrcDirs.push(tmpFolderUncompressed);
-    });
+        // add the decompressed folder to be merged
+        mergeSrcDirs.push(tmpFolderUncompressed);
+      }
+    );
 
     await Promise.all(downloadDecompressPromises);
   }
@@ -190,6 +210,10 @@ export default function(program: Command) {
     .option('--dev', 'Configures static files for developing locally using a non-https server')
     .option('-s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
+    .option(
+      '-t, --target [env]',
+      'Target environment for which this export is intended. Options are `managed` or `bare`.'
+    )
     .option('--merge-src-dir [dir]', 'A repeatable source dir to merge in.', collect, [])
     .option(
       '--merge-src-url [url]',
