@@ -14,10 +14,10 @@ import semver from 'semver';
 import { installExitHooks } from '../exit';
 import log from '../log';
 import sendTo from '../sendTo';
-import urlOpts from '../urlOpts';
+import urlOpts, { URLOptions } from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
 
-type NormalizedOptions = {
+type NormalizedOptions = URLOptions & {
   webOnly?: boolean;
   dev?: boolean;
   minify?: boolean;
@@ -77,6 +77,15 @@ async function normalizeOptionsAsync(
   }
   if (hasBooleanArg(rawArgs, 'https')) {
     opts.https = getBooleanArg(rawArgs, 'https');
+  }
+  if (hasBooleanArg(rawArgs, 'android')) {
+    opts.android = getBooleanArg(rawArgs, 'android');
+  }
+  if (hasBooleanArg(rawArgs, 'ios')) {
+    opts.ios = getBooleanArg(rawArgs, 'ios');
+  }
+  if (hasBooleanArg(rawArgs, 'web')) {
+    opts.web = getBooleanArg(rawArgs, 'web');
   }
   if (hasBooleanArg(rawArgs, 'localhost')) {
     opts.localhost = getBooleanArg(rawArgs, 'localhost');
