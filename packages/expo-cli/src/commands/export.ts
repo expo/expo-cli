@@ -20,7 +20,7 @@ type Options = {
   dev: boolean;
   clear: boolean;
   quiet: boolean;
-  target?: 'managed' | 'bare';
+  target?: Project.ProjectTarget;
   dumpAssetmap: boolean;
   dumpSourcemap: boolean;
   maxWorkers?: number;
@@ -44,8 +44,7 @@ export async function action(projectDir: string, options: Options) {
     console.warn(`Dev Mode: publicUrl ${options.publicUrl} does not conform to HTTP format.`);
   }
 
-  const target =
-    options.target ?? ((await Project.isBareWorkflowProjectAsync(projectDir)) ? 'bare' : 'managed');
+  const target = options.target ?? (await Project.getDefaultTargetAsync(projectDir));
 
   const status = await Project.currentStatus(projectDir);
   let shouldStartOurOwn = false;

@@ -14,7 +14,7 @@ type Options = {
   clear?: boolean;
   sendTo?: string | boolean;
   quiet?: boolean;
-  target?: 'managed' | 'bare';
+  target?: Project.ProjectTarget;
   releaseChannel?: string;
   duringBuild?: boolean;
   maxWorkers?: number;
@@ -42,8 +42,7 @@ export async function action(projectDir: string, options: Options = {}) {
     );
   }
 
-  const target =
-    options.target ?? ((await Project.isBareWorkflowProjectAsync(projectDir)) ? 'bare' : 'managed');
+  const target = options.target ?? (await Project.getDefaultTargetAsync(projectDir));
 
   const status = await Project.currentStatus(projectDir);
   let shouldStartOurOwn = false;
