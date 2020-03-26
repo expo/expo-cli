@@ -125,6 +125,12 @@ export type AndroidPlatformConfig = {
   versionCode?: number;
 
   /**
+   * The background color for your app, behind any of your React views. This is also known as the root view background color. This value should be a 6 character long hex color string, eg: '#000000'. Default is white — '#ffffff'.
+   * Overrides the top-level `backgroundColor` key if it is present.
+   */
+  backgroundColor?: string;
+
+  /**
    * Local path or remote url to an image to use for your app's icon on Android. If specified, this overrides the top-level `icon` key. We recommend that you use a 1024x1024 png file (transparency is recommended for the Google Play Store). This icon will appear on the home screen and within the Expo app.
    */
   icon?: Icon;
@@ -147,6 +153,12 @@ export type AndroidPlatformConfig = {
    * [Firebase Configuration File](https://support.google.com/firebase/answer/7015592) google-services.json file for configuring Firebase.
    */
   googleServicesFile?: string;
+
+  /**
+   * Configuration to force the app to always use the light or dark user-interface appearance, such as \"dark mode\", or make it automatically adapt to the system preferences. If not provided, defaults to `light`.
+   * @fallback light
+   */
+  userInterfaceStyle?: 'light' | 'dark' | 'automatic';
 
   config?: {
     /**
@@ -185,6 +197,15 @@ export type AndroidPlatformConfig = {
      * [Google Mobile Ads App ID](https://support.google.com/admob/answer/6232340) Google AdMob App ID.
      */
     googleMobileAdsAppId?: string;
+    /**
+     *  A boolean indicating whether to initialize Google App Measurement and begin sending
+     *  user-level event data to Google immediately when the app starts. The default in Expo
+     *  (Client and in standalone apps) is `false`.
+     *
+     *  Sets the opposite of the given value to the following tag in AndroidManifest.xml:
+     *  https://developers.google.com/admob/android/eu-consent#delay_app_measurement_optional
+     */
+    googleMobileAdsAutoInit: boolean;
     /**
      * [Google Sign-In Android SDK](https://developers.google.com/identity/sign-in/android/start-integrating) keys for your standalone app.
      */
@@ -250,7 +271,7 @@ export type AndroidPlatformConfig = {
         ]
       }]
      */
-  intentFilters?: IntentFilter | IntentFilter[];
+  intentFilters?: IntentFilter[];
 };
 
 // tslint:disable-next-line:max-line-length
@@ -551,6 +572,13 @@ export type IosPlatformConfig = {
    * @pattern ^[A-Za-z0-9\\.]+$
    */
   buildNumber?: string;
+
+  /**
+   * The background color for your app, behind any of your React views. This is also known as the root view background color. This value should be a 6 character long hex color string, eg: '#000000'. Default is white — '#ffffff'.
+   * Overrides the top-level `backgroundColor` key if it is present.
+   */
+  backgroundColor?: string;
+
   /**
    * Local path or remote URL to an image to use for your app's icon on iOS. If specified, this overrides the top-level `icon` key. Use a 1024x1024 icon which follows Apple's interface guidelines for icons, including color profile and transparency. Expo will generate the other required sizes. This icon will appear on the home screen and within the Expo app.
    */
@@ -694,6 +722,10 @@ export type ExpoConfig = {
    */
   slug?: string;
   /**
+   * The background color for your app, behind any of your React views. This is also known as the root view background color. This value should be a 6 character long hex color string, eg: '#000000'. Default is white — '#ffffff'.
+   */
+  backgroundColor?: string;
+  /**
    * The username of the account under which this app is published. If not specified, the app is published as the currently signed-in user.
    */
   owner?: string;
@@ -780,7 +812,7 @@ export type ExpoConfig = {
     /**
      * Determines whether to show or hide the bottom navigation bar. When set to `false`, both the navigation bar and the status bar are hidden by enabling full-screen mode, as recommended by the Android documentation.
      */
-    visible?: boolean;
+    visible?: 'leanback' | 'immersive' | 'sticky-immersive';
     /**
      * Configure the navigation bar icons to have a light or dark color. Supported on Android Oreo and newer.
      */

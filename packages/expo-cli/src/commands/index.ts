@@ -5,7 +5,6 @@ const COMMANDS = [
   // old command build:status is the same as new build:status so we disable it when the new one is available
   // new command only for testing, shouldn't be visible for users
   process.env.EXPO_ENABLE_NEW_TURTLE ? require('./build-native') : require('./build'),
-  process.env.EXPO_DEV && require('./apply'),
   require('./bundle-assets'),
   require('./client'),
   require('./credentials'),
@@ -37,6 +36,10 @@ const COMMANDS = [
   require('./webhooks'),
   require('./whoami'),
 ];
+
+if (process.env.EXPO_DEV) {
+  COMMANDS.push(require('./apply'));
+}
 
 export function registerCommands(program: Command) {
   COMMANDS.forEach(commandModule => {
