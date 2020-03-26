@@ -1,22 +1,29 @@
 /** @internal */ /** */
 /* eslint-env node */
-import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
-import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
-import chalk from 'chalk';
-import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
-import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import PnpWebpackPlugin from 'pnp-webpack-plugin';
-import ManifestPlugin from 'webpack-manifest-plugin';
+import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
-import { boolish } from 'getenv';
-import path from 'path';
-import { CleanWebpackPlugin } from 'clean-webpack-plugin';
-import { readFileSync } from 'fs-extra';
-import { parse } from 'node-html-parser';
-
+import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
+import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
+import ManifestPlugin from 'webpack-manifest-plugin';
 import { projectHasModule } from '@expo/config';
+import chalk from 'chalk';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
+import {
+  IconOptions,
+  getChromeIconConfig,
+  getFaviconIconConfig,
+  getSafariIconConfig,
+  getSafariStartupImageConfig,
+} from 'expo-pwa';
+import { readFileSync } from 'fs-extra';
+import { boolish } from 'getenv';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import { parse } from 'node-html-parser';
+import path from 'path';
+
+import { withAlias, withDevServer, withNodeMocks, withOptimizations } from './addons';
 import {
   getAliases,
   getConfig,
@@ -27,13 +34,15 @@ import {
 } from './env';
 import { createAllLoaders } from './loaders';
 import {
+  ApplePwaWebpackPlugin,
+  ChromeIconsWebpackPlugin,
   ExpoDefinePlugin,
   ExpoHtmlWebpackPlugin,
   ExpoInterpolateHtmlPlugin,
   ExpoProgressBarPlugin,
+  ExpoPwaManifestWebpackPlugin,
+  FaviconWebpackPlugin,
 } from './plugins';
-import { withAlias, withDevServer, withNodeMocks, withOptimizations } from './addons';
-
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 import { overrideWithPropertyOrConfig } from './utils';
@@ -180,7 +189,6 @@ export default async function(
       // We generate new versions of these based on the templates
       ignore: [
         'expo-service-worker.js',
-        'favicon.ico',
         'serve.json',
         'index.html',
         'icon.png',
@@ -192,10 +200,6 @@ export default async function(
       from: locations.template.serveJson,
       to: locations.production.serveJson,
     },
-    {
-      from: locations.template.favicon,
-      to: locations.production.favicon,
-    },
   ];
 
   if (env.offline !== false) {
@@ -206,6 +210,32 @@ export default async function(
   }
 
   const templateIndex = parse(readFileSync(locations.template.indexHtml, { encoding: 'utf8' }));
+
+  // @ts-ignore
+  const templateLinks = templateIndex.querySelectorAll('link');
+  const links: HTMLLinkNode[] = templateLinks.map((value: any) => ({
+    rel: value.getAttribute('rel'),
+    media: value.getAttribute('media'),
+    href: value.getAttribute('href'),
+    sizes: value.getAttribute('sizes'),
+    node: value,
+  }));
+
+  const [manifestLink] = links.filter(
+    link => typeof link.rel === 'string' && link.rel.split(' ').includes('manifest')
+  );
+  let templateManifest = locations.template.manifest;
+  if (manifestLink && manifestLink.href) {
+    templateManifest = locations.template.get(manifestLink.href);
+  }
+
+  const ensureSourceAbsolute = (input: IconOptions | null): IconOptions | null => {
+    if (!input) return input;
+    return {
+      ...input,
+      src: locations.absolute(input.src),
+    };
+  };
 
   let webpackConfig: DevConfiguration = {
     mode,
@@ -235,13 +265,47 @@ export default async function(
 
       ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
 
-      new WebpackPWAManifestPlugin(config, {
-        publicPath,
-        projectRoot: env.projectRoot,
-        noResources: !generatePWAImageAssets,
-        filename: locations.production.manifest,
-        HtmlWebpackPlugin: ExpoHtmlWebpackPlugin,
-      }),
+      env.pwa &&
+        new ExpoPwaManifestWebpackPlugin(
+          {
+            template: templateManifest,
+            path: 'manifest.json',
+            publicPath,
+          },
+          config
+        ),
+      new FaviconWebpackPlugin(
+        {
+          projectRoot: env.projectRoot,
+          publicPath,
+          links,
+        },
+        ensureSourceAbsolute(getFaviconIconConfig(config))
+      ),
+      generatePWAImageAssets &&
+        new ApplePwaWebpackPlugin(
+          {
+            projectRoot: env.projectRoot,
+            publicPath,
+            links,
+          },
+          {
+            name: env.config.web.shortName,
+            isFullScreen: env.config.web.meta.apple.touchFullscreen,
+            isWebAppCapable: env.config.web.meta.apple.mobileWebAppCapable,
+            barStyle: env.config.web.meta.apple.barStyle,
+          },
+          ensureSourceAbsolute(getSafariIconConfig(env.config)),
+          ensureSourceAbsolute(getSafariStartupImageConfig(env.config))
+        ),
+      generatePWAImageAssets &&
+        new ChromeIconsWebpackPlugin(
+          {
+            projectRoot: env.projectRoot,
+            publicPath,
+          },
+          ensureSourceAbsolute(getChromeIconConfig(config))
+        ),
 
       // This gives some necessary context to module not found errors, such as
       // the requesting resource.
@@ -279,6 +343,11 @@ export default async function(
         fileName: 'asset-manifest.json',
         publicPath,
         filter: ({ path }) => {
+          if (
+            path.match(/(apple-touch-startup-image|apple-touch-icon|chrome-icon|precache-manifest)/)
+          ) {
+            return false;
+          }
           // Remove compressed versions and service workers
           return !(path.endsWith('.gz') || path.endsWith('worker.js'));
         },

@@ -79,6 +79,162 @@ Control how the default Babel loader is configured.
 
 ## Guides
 
+### PWAs
+
+- See the docs for [`expo-pwa`](../pwa) to learn more about creating the assets manually.
+- Disable automatic PWA generation with `expo build:web --no-pwa`.
+- `expo build:web` will automatically skip any PWA asset that's already linked in the project's local `web/index.html`.
+- Having sharp CLI installed globally will speed up asset generation, if it's not installed, Jimp will be used instead.
+
+#### Chrome PWAs
+
+##### Manifest.json
+
+The `manifest.json` will be created using the values in the project's `app.config.js`:
+
+Generating the `manifest.json` will be skipped if the following exists in the project's `web/index.html`:
+
+<details><summary>Show HTML</summary>
+
+```html
+<link rel="manifest" href="..." />
+```
+
+</details>
+
+If the `icons` array is defined in your `manifest.json`, then Chrome PWA icon generation will be skipped.
+
+##### Chrome PWA Icons
+
+Icons will be generated using the file defined in your `app.config.js` under `android.icon` and it'll fallback to `icon`.
+
+<details><summary>Show manifest.json</summary>
+
+```json
+{
+  "icons": [
+    {
+      "src": "...",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "...",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "...",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+</details>
+
+#### Favicons
+
+Favicons will be generated using the file defined in your `app.config.js` under `web.favicon` and it'll fallback to `icon`.
+
+Asset generation for Favicons will be individually skipped if any of the following fields exist in your `web/index.html`:
+
+<details><summary>Show HTML</summary>
+
+```html
+<link rel="icon" type="image/png" sizes="16x16" href="..." />
+<link rel="icon" type="image/png" sizes="32x32" href="..." />
+<link rel="shortcut icon" href="..." />
+```
+
+</details>
+
+#### Safari PWAs
+
+Icons will be generated using the file defined in your `app.config.js` under `ios.icon` and it'll fallback to `icon`. The splash screens look at `ios.splash` and fallback to `splash`.
+
+Asset generation for Safari PWA icons/splash screens will be individually skipped if any of the following fields exist in your `web/index.html`:
+
+##### Icons
+
+<details><summary>Show HTML</summary>
+
+```html
+<link rel="apple-touch-icon" sizes="180x180" href="..." />
+```
+
+</details>
+
+##### Splash Screens
+
+<details><summary>Show HTML</summary>
+
+```html
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+  href="..."
+/>
+```
+
+</details>
+
 ### Include modules
 
 You may find that you want to include universal modules that aren't part of the default modules. You can do this by customizing the Webpack config:

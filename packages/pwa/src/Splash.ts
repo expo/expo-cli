@@ -1,5 +1,4 @@
-import { isLandscape, isPortrait, isValid } from './Orientation';
-import { Icon, Orientation, StartupImage } from '../WebpackPWAManifestPlugin.types';
+import { Orientation, isLandscape, isPortrait, isValid } from './Orientation';
 
 interface Device {
   names: string[];
@@ -34,7 +33,7 @@ const Devices: Device[] = [
   { names: ['iPad Mini', 'iPad Air'], width: 1536, height: 2048, scale: 2, isTablet: true },
 ];
 
-function assembleOrientationMedia(
+export function assembleOrientationMedia(
   width: number,
   height: number,
   scale: number,
@@ -53,13 +52,14 @@ function assembleOrientationMedia(
   return query.join(' and ');
 }
 
-function getDevices({
-  orientation = 'natural',
+export function getDevices({
+  // disable landscape PWAs by default
+  orientation = 'portrait',
   supportsTablet = true,
 }: {
-  orientation: Orientation;
-  supportsTablet: boolean;
-}): (Device & { orientations: Orientation[] })[] {
+  orientation?: Orientation;
+  supportsTablet?: boolean;
+} = {}): (Device & { orientations: Orientation[] })[] {
   if (!isValid(orientation)) {
     throw new Error(`${orientation} is not a valid orientation`);
   }
@@ -80,29 +80,4 @@ function getDevices({
   }
 
   return devices.map(device => ({ ...device, orientations }));
-}
-
-export function fromStartupImage({ src, resizeMode, destination, color }: Icon): StartupImage[] {
-  // You cannot lock iOS PWA orientation, we should produce every splash screen.
-  // orientation
-  const devices = getDevices({ orientation: 'any', supportsTablet: false });
-
-  const startupImages: StartupImage[] = [];
-  for (const device of devices) {
-    const { width, height } = device;
-    for (const orientation of device.orientations) {
-      const size = orientation === 'portrait' ? [width, height] : [height, width];
-      startupImages.push({
-        ios: 'startup',
-        src,
-        sizes: [size],
-        scale: device.scale,
-        media: assembleOrientationMedia(device.width, device.height, device.scale, orientation),
-        destination,
-        resizeMode,
-        color,
-      });
-    }
-  }
-  return startupImages;
 }

@@ -4,6 +4,7 @@ import path from 'path';
 import stream from 'stream';
 import temporary from 'tempy';
 import util from 'util';
+import Jimp from 'jimp';
 
 // cache downloaded images into memory
 const cacheDownloadedKeys: Record<string, string> = {};
@@ -26,7 +27,6 @@ export async function downloadOrUseCachedImage(url: string): Promise<string> {
 
 export async function downloadImage(url: string): Promise<string> {
   const outputPath = temporary.directory();
-  const localPath = path.join(outputPath, path.basename(stripQueryParams(url)));
 
   const response = await fetch(url);
   if (!response.ok) {
@@ -35,7 +35,20 @@ export async function downloadImage(url: string): Promise<string> {
 
   // Download to local file
   const streamPipeline = util.promisify(stream.pipeline);
+  const localPath = path.join(outputPath, path.basename(stripQueryParams(url)));
   await streamPipeline(response.body, fs.createWriteStream(localPath));
+
+  // If an image URL doesn't have a name, get the mime type and move the file.
+  const img = await Jimp.read(localPath);
+  const mime = img
+    .getMIME()
+    .split('/')
+    .pop()!;
+  if (!localPath.endsWith(mime)) {
+    const newPath = path.join(outputPath, `image.${mime}`);
+    await fs.move(localPath, newPath);
+    return newPath;
+  }
 
   return localPath;
 }

@@ -522,11 +522,6 @@ export type WebSplashScreen = {
    * Local path or remote url to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
    */
   image: Image;
-
-  /**
-   * Whether your standalone iOS app supports tablet screen sizes. Defaults to `false`.
-   */
-  supportsTablet?: boolean;
 };
 
 export type IosPlatformConfig = {

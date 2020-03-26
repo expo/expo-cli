@@ -1,10 +1,15 @@
-import { getConfig } from './Config';
-import { AppJSONConfig, ExpoConfig } from './Config.types';
+import {
+  AppJSONConfig,
+  ExpoConfig,
+  WebPlatformConfig,
+  getConfig,
+  getNameFromConfig,
+  getWebOutputPath,
+} from '@expo/config';
 
-const APP_JSON_FILE_NAME = 'app.json';
+import { IconOptions, Manifest } from './Manifest.types';
 
 // Use root to work better with create-react-app
-const DEFAULT_BUILD_PATH = `web-build`;
 const DEFAULT_LANGUAGE_ISO_CODE = `en`;
 const DEFAULT_BACKGROUND_COLOR = '#ffffff';
 const DEFAULT_START_URL = '.';
@@ -12,27 +17,7 @@ const DEFAULT_DISPLAY = 'standalone';
 const DEFAULT_STATUS_BAR = 'black-translucent';
 const DEFAULT_LANG_DIR = 'auto';
 const DEFAULT_ORIENTATION = 'any';
-const ICON_SIZES = [192, 512];
-const MAX_SHORT_NAME_LENGTH = 12;
 const DEFAULT_PREFER_RELATED_APPLICATIONS = true;
-
-export function getWebOutputPath(config: { [key: string]: any } = {}): string {
-  if (process.env.WEBPACK_BUILD_OUTPUT_PATH) {
-    return process.env.WEBPACK_BUILD_OUTPUT_PATH;
-  }
-  const web = getWebManifestFromConfig(config);
-  const { build = {} } = web;
-  return build.output || DEFAULT_BUILD_PATH;
-}
-
-export async function validateShortName(shortName: string): Promise<void> {
-  // Validate short name
-  if (shortName.length > MAX_SHORT_NAME_LENGTH) {
-    console.warn(
-      `PWA short name should be 12 characters or less, otherwise it'll be curtailed on the mobile device homepage. You should define web.shortName in your ${APP_JSON_FILE_NAME} as a string that is ${MAX_SHORT_NAME_LENGTH} or less characters.`
-    );
-  }
-}
 
 // Convert expo value to PWA value
 function ensurePWAorientation(orientation: string): string {
@@ -56,33 +41,9 @@ function sanitizePublicPath(publicPath: unknown): string {
   return publicPath + '/';
 }
 
-export function getConfigForPWA(
-  projectRoot: string,
-  getAbsolutePath: (...pathComponents: string[]) => string,
-  options: { templateIcon: string }
-) {
+export function getConfigForPWA(projectRoot: string) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  return ensurePWAConfig(exp, getAbsolutePath, options);
-}
-
-export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webName: string } {
-  // For RN CLI support
-  const appManifest = exp.expo || exp;
-  const { web = {} } = appManifest;
-
-  // rn-cli apps use a displayName value as well.
-  const appName = exp.displayName || appManifest.displayName || appManifest.name;
-  const webName = web.name || appName;
-
-  return {
-    appName,
-    webName,
-  };
-}
-
-function getWebManifestFromConfig(config: { [key: string]: any } = {}): { [key: string]: any } {
-  const appManifest = config.expo || config || {};
-  return appManifest.web || {};
+  return ensurePWAConfig(exp);
 }
 
 function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
@@ -230,83 +191,116 @@ function inferWebRelatedApplicationsFromConfig({ web = {}, ios = {}, android = {
   return relatedApplications;
 }
 
-function inferWebHomescreenIcons(
-  config: any = {},
-  getAbsolutePath: (...pathComponents: string[]) => string,
-  options: any
-) {
-  const { web = {}, ios = {} } = config;
-  if (Array.isArray(web.icons)) {
-    return web.icons;
+export function getSafariStartupImageConfig(config: ExpoConfig): IconOptions | null {
+  // enforce no defaults
+  const splashScreenObject = (input: any): IconOptions | null => {
+    if (!input.image) return null;
+    return {
+      resizeMode: input.resizeMode,
+      src: input.image,
+      backgroundColor: input.backgroundColor,
+    };
+  };
+
+  // Allow empty objects
+  if (isObject(config.web?.splash)) {
+    return splashScreenObject(config.web?.splash);
   }
-  let icons = [];
-  let icon;
-  if (web.icon || config.icon) {
-    icon = getAbsolutePath(web.icon || config.icon);
-  } else {
-    // Use template icon
-    icon = options.templateIcon;
+  if (isObject(config.ios?.splash)) {
+    return splashScreenObject(config.ios?.splash);
   }
-  const destination = `apple/icons`;
-  icons.push({ src: icon, size: ICON_SIZES, destination });
-  const iOSIcon = config.icon || ios.icon;
-  if (iOSIcon) {
-    const iOSIconPath = getAbsolutePath(iOSIcon);
-    icons.push({
-      ios: true,
-      sizes: 180,
-      src: iOSIconPath,
-      destination,
-    });
+  if (isObject(config.splash)) {
+    return splashScreenObject(config.splash);
   }
-  return icons;
+  return null;
 }
 
-function inferWebStartupImages(
-  config: ExpoConfig,
-  getAbsolutePath: (...pathComponents: string[]) => string,
-  options: Object
-) {
-  const { icon, splash = {}, primaryColor } = config;
-  const { web } = config;
-  // @ts-ignore
-  if (Array.isArray(web?.startupImages)) {
-    // @ts-ignore
-    return web?.startupImages;
-  }
+export function getSafariIconConfig(config: ExpoConfig): IconOptions | null {
+  const validate = (input: string): IconOptions => ({
+    resizeMode: 'contain',
+    src: input,
+    backgroundColor: 'transparent',
+  });
 
-  let startupImages = [];
-
-  let splashImageSource;
-  const possibleIconSrc = web?.splash?.image || splash.image || icon;
-  if (possibleIconSrc) {
-    const resizeMode = web?.splash?.resizeMode || splash.resizeMode || 'contain';
-    const backgroundColor =
-      web?.splash?.backgroundColor || splash.backgroundColor || primaryColor || '#ffffff';
-    splashImageSource = getAbsolutePath(possibleIconSrc);
-    startupImages.push({
-      resizeMode,
-      color: backgroundColor,
-      src: splashImageSource,
-      supportsTablet:
-        web?.splash?.supportsTablet === undefined ? true : web?.splash?.supportsTablet,
-      orientation: web?.orientation,
-      destination: `apple/splash`,
-    });
+  // Allow empty objects
+  if (typeof config.ios?.icon === 'string') {
+    return validate(config.ios.icon);
   }
-  return startupImages;
+  if (typeof config.icon === 'string') {
+    return validate(config.icon);
+  }
+  return null;
 }
 
-export function ensurePWAConfig(
-  appJSON: AppJSONConfig | ExpoConfig,
-  getAbsolutePath: ((...pathComponents: string[]) => string) | undefined,
-  options: object
-): ExpoConfig {
+export function getFaviconIconConfig(config: ExpoConfig): IconOptions | null {
+  const validate = (input: string): IconOptions => ({
+    resizeMode: 'contain',
+    src: input,
+    backgroundColor: 'transparent',
+  });
+
+  // Allow empty objects
+  if (typeof config.web?.favicon === 'string') {
+    return validate(config.web.favicon);
+  }
+  if (typeof config.icon === 'string') {
+    return validate(config.icon);
+  }
+  return null;
+}
+
+export function getChromeIconConfig(config: ExpoConfig): IconOptions | null {
+  const validate = (input: string): IconOptions => ({
+    resizeMode: 'contain',
+    src: input,
+    backgroundColor: 'transparent',
+  });
+
+  // Allow empty objects
+  if (typeof config.android?.icon === 'string') {
+    return validate(config.android.icon);
+  }
+  if (typeof config.icon === 'string') {
+    return validate(config.icon);
+  }
+  return null;
+}
+
+function ensurePWAConfig(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   const config = applyWebDefaults(appJSON);
-  if (getAbsolutePath) {
-    if (!config.web) config.web = {};
-    config.web.icons = inferWebHomescreenIcons(config, getAbsolutePath, options);
-    config.web.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
-  }
   return config;
+}
+
+function isObject(item: any): item is Record<any, any> {
+  return typeof item === 'object' && !Array.isArray(item) && item !== null;
+}
+
+export function createPWAManifestFromWebConfig(config?: WebPlatformConfig): Manifest {
+  if (!isObject(config)) {
+    throw new Error('Web config must be a valid object');
+  }
+
+  const manifest: Manifest = {
+    background_color: config.backgroundColor,
+    description: config.description,
+    dir: config.dir,
+    display: config.display,
+    lang: config.lang,
+    name: config.name,
+    orientation: config.orientation,
+    scope: config.scope,
+    short_name: config.shortName,
+    start_url:
+      typeof config.startUrl === 'undefined' ? '/?utm_source=web_app_manifest' : config.startUrl,
+    theme_color: config.themeColor,
+    crossorigin: config.crossorigin,
+  };
+
+  // Avoid defining an empty array, or setting prefer_related_applications to true when no applications are defined.
+  if (Array.isArray(config.relatedApplications) && config.relatedApplications.length > 0) {
+    manifest.related_applications = config.relatedApplications;
+    manifest.prefer_related_applications = config.preferRelatedApplications;
+  }
+
+  return manifest;
 }

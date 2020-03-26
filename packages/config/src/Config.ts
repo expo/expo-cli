@@ -283,4 +283,27 @@ export async function writeConfigJsonAsync(
   };
 }
 
-export * from './Config.types';
+const DEFAULT_BUILD_PATH = `web-build`;
+
+export function getWebOutputPath(config: { [key: string]: any } = {}): string {
+  if (process.env.WEBPACK_BUILD_OUTPUT_PATH) {
+    return process.env.WEBPACK_BUILD_OUTPUT_PATH;
+  }
+  const expo = config.expo || config || {};
+  return expo?.web?.build?.output || DEFAULT_BUILD_PATH;
+}
+
+export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webName: string } {
+  // For RN CLI support
+  const appManifest = exp.expo || exp;
+  const { web = {} } = appManifest;
+
+  // rn-cli apps use a displayName value as well.
+  const appName = exp.displayName || appManifest.displayName || appManifest.name;
+  const webName = web.name || appName;
+
+  return {
+    appName,
+    webName,
+  };
+}
