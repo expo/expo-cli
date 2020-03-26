@@ -1,5 +1,4 @@
-import { dirname, resolve } from 'path';
-import fs from 'fs-extra';
+import { resolve } from 'path';
 import { getScheme, setScheme } from '../Scheme';
 import { readAndroidManifestAsync } from '../Manifest';
 
@@ -15,32 +14,19 @@ describe('scheme', () => {
     expect(getScheme({ scheme: 'myapp' })).toBe('myapp');
   });
 
-  describe('sets the android:scheme in AndroidManifest.xml if scheme is given', () => {
-    const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
+  it('adds scheme to android manifest', async () => {
+    let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
+    androidManifestJson = await setScheme({ scheme: 'myapp' }, androidManifestJson);
 
-    beforeAll(async () => {
-      await fs.ensureDir(dirname(appManifestPath));
-      await fs.copyFile(sampleManifestPath, appManifestPath);
+    let intentFilters = androidManifestJson.manifest.application[0].activity.filter(
+      e => e['$']['android:name'] === '.MainActivity'
+    )[0]['intent-filter'];
+    let schemeIntent = intentFilters.filter(e => {
+      if (e.hasOwnProperty('data')) {
+        return e['data'][0]['$']['android:scheme'] === 'myapp';
+      }
+      return false;
     });
-
-    afterAll(async () => {
-      await fs.remove(resolve(fixturesPath, 'tmp/'));
-    });
-
-    it('adds scheme to android manifest', async () => {
-      let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
-      androidManifestJson = await setScheme({ scheme: 'myapp' }, androidManifestJson);
-
-      let intentFilters = androidManifestJson.manifest.application[0].activity.filter(
-        e => e['$']['android:name'] === '.MainActivity'
-      )[0]['intent-filter'];
-      let schemeIntent = intentFilters.filter(e => {
-        if (e.hasOwnProperty('data')) {
-          return e['data'][0]['$']['android:scheme'] === 'myapp';
-        }
-        return false;
-      });
-      expect(schemeIntent).toHaveLength(1);
-    });
+    expect(schemeIntent).toHaveLength(1);
   });
 });

@@ -1,5 +1,4 @@
-import fs from 'fs-extra';
-import { dirname, resolve } from 'path';
+import { fs, vol } from 'memfs';
 import {
   getNavigationBarColor,
   getNavigationBarImmersiveMode,
@@ -7,9 +6,10 @@ import {
   setNavigationBarConfig,
 } from '../NavigationBar';
 import { readStylesXMLAsync } from '../Styles';
-import { getProjectColorsXMLPathAsync, readColorsXMLAsync } from '../Colors';
-const fixturesPath = resolve(__dirname, 'fixtures');
-const sampleStylesXMLPath = resolve(fixturesPath, 'styles.xml');
+import { readColorsXMLAsync } from '../Colors';
+import { sampleStylesXML } from './StatusBar-test';
+jest.mock('fs');
+
 jest.mock('../../WarningAggregator');
 const { addWarningAndroid } = require('../../WarningAggregator');
 describe('Android navigation bar', () => {
@@ -45,29 +45,28 @@ describe('Android navigation bar', () => {
   });
 
   describe('e2e: write navigation color and style to files correctly', () => {
-    const projectDirectory = resolve(fixturesPath, 'tmp/');
-    const stylesXMLPath = resolve(fixturesPath, 'tmp/android/app/src/main/res/values/styles.xml');
-
     beforeAll(async () => {
-      await fs.ensureDir(dirname(stylesXMLPath));
-      await fs.copyFile(sampleStylesXMLPath, stylesXMLPath);
+      const directoryJSON = {
+        './android/app/src/main/res/values/styles.xml': sampleStylesXML,
+      };
+      vol.fromJSON(directoryJSON, '/app');
     });
 
     afterAll(async () => {
-      await fs.remove(resolve(fixturesPath, 'tmp/'));
+      vol.reset();
     });
 
     it(`sets the navigationBarColor item in styles.xml and adds color to colors.xml if 'androidNavigationBar.backgroundColor' is given. sets windowLightNavigation bar true`, async () => {
       expect(
         await setNavigationBarConfig(
           { androidNavigationBar: { backgroundColor: '#111111', barStyle: 'dark-content' } },
-          projectDirectory
+          '/app'
         )
       ).toBe(true);
 
-      let stylesJSON = await readStylesXMLAsync(stylesXMLPath);
-      let colorsXMLPath = await getProjectColorsXMLPathAsync(projectDirectory);
-      let colorsJSON = await readColorsXMLAsync(colorsXMLPath);
+      let stylesJSON = await readStylesXMLAsync('/app/android/app/src/main/res/values/styles.xml');
+      let colorsJSON = await readColorsXMLAsync('/app/android/app/src/main/res/values/colors.xml');
+
       expect(
         stylesJSON.resources.style
           .filter(e => e['$']['name'] === 'AppTheme')[0]
@@ -86,10 +85,7 @@ describe('Android navigation bar', () => {
     it(`adds android warning androidNavigationBar.visible is provided`, async () => {
       addWarningAndroid.mockImplementationOnce();
 
-      await setNavigationBarConfig(
-        { androidNavigationBar: { visible: 'leanback' } },
-        projectDirectory
-      );
+      await setNavigationBarConfig({ androidNavigationBar: { visible: 'leanback' } }, '/app');
       expect(addWarningAndroid).toHaveBeenCalledTimes(1);
     });
   });

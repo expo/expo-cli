@@ -1,10 +1,9 @@
-import fs from 'fs-extra';
-import { dirname, resolve } from 'path';
+import { fs, vol } from 'memfs';
 import { getRootViewBackgroundColor, setRootViewBackgroundColor } from '../RootViewBackgroundColor';
 import { readStylesXMLAsync } from '../Styles';
-import { getProjectColorsXMLPathAsync, readColorsXMLAsync } from '../Colors';
-const fixturesPath = resolve(__dirname, 'fixtures');
-const sampleStylesXMLPath = resolve(fixturesPath, 'styles.xml');
+import { readColorsXMLAsync } from '../Colors';
+import { sampleStylesXML } from './StatusBar-test';
+jest.mock('fs');
 
 describe('Root view background color', () => {
   it(`returns null if no backgroundColor is provided`, () => {
@@ -25,26 +24,23 @@ describe('Root view background color', () => {
   });
 
   describe('write colors.xml correctly', () => {
-    const projectDirectory = resolve(fixturesPath, 'tmp/');
-    const stylesXMLPath = resolve(fixturesPath, 'tmp/android/app/src/main/res/values/styles.xml');
-
     beforeAll(async () => {
-      await fs.ensureDir(dirname(stylesXMLPath));
-      await fs.copyFile(sampleStylesXMLPath, stylesXMLPath);
+      const directoryJSON = {
+        './android/app/src/main/res/values/styles.xml': sampleStylesXML,
+      };
+      vol.fromJSON(directoryJSON, '/app');
     });
 
     afterAll(async () => {
-      await fs.remove(resolve(fixturesPath, 'tmp/'));
+      vol.reset();
     });
 
     it(`sets the android:windowBackground in Styles.xml if backgroundColor is given`, async () => {
-      expect(
-        await setRootViewBackgroundColor({ backgroundColor: '#654321' }, projectDirectory)
-      ).toBe(true);
+      expect(await setRootViewBackgroundColor({ backgroundColor: '#654321' }, '/app')).toBe(true);
 
-      let stylesJSON = await readStylesXMLAsync(stylesXMLPath);
-      let colorsXMLPath = await getProjectColorsXMLPathAsync(projectDirectory);
-      let colorsJSON = await readColorsXMLAsync(colorsXMLPath);
+      let stylesJSON = await readStylesXMLAsync('/app/android/app/src/main/res/values/styles.xml');
+      let colorsJSON = await readColorsXMLAsync('/app/android/app/src/main/res/values/colors.xml');
+
       expect(
         stylesJSON.resources.style
           .filter(e => e['$']['name'] === 'AppTheme')[0]

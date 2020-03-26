@@ -1,5 +1,4 @@
-import { dirname, resolve } from 'path';
-import fs from 'fs-extra';
+import { resolve } from 'path';
 import { getBranchApiKey, setBranchApiKey } from '../Branch';
 import { readAndroidManifestAsync } from '../Manifest';
 
@@ -17,33 +16,20 @@ describe('Android branch test', () => {
     );
   });
 
-  describe('sets branch api key in AndroidManifest.xml if given', () => {
-    const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
+  it('sets branch api key in AndroidManifest.xml if given', async () => {
+    let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
+    androidManifestJson = await setBranchApiKey(
+      { android: { config: { branch: { apiKey: 'MY-API-KEY' } } } },
+      androidManifestJson
+    );
+    let mainApplication = androidManifestJson.manifest.application.filter(
+      e => e['$']['android:name'] === '.MainApplication'
+    )[0];
 
-    beforeAll(async () => {
-      await fs.ensureDir(dirname(appManifestPath));
-      await fs.copyFile(sampleManifestPath, appManifestPath);
-    });
-
-    afterAll(async () => {
-      await fs.remove(resolve(fixturesPath, 'tmp/'));
-    });
-
-    it('add branch api key', async () => {
-      let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
-      androidManifestJson = await setBranchApiKey(
-        { android: { config: { branch: { apiKey: 'MY-API-KEY' } } } },
-        androidManifestJson
-      );
-      let mainApplication = androidManifestJson.manifest.application.filter(
-        e => e['$']['android:name'] === '.MainApplication'
-      )[0];
-
-      let apiKeyItem = mainApplication['meta-data'].filter(
-        e => e['$']['android:name'] === 'io.branch.sdk.BranchKey'
-      );
-      expect(apiKeyItem).toHaveLength(1);
-      expect(apiKeyItem[0]['$']['android:value']).toMatch('MY-API-KEY');
-    });
+    let apiKeyItem = mainApplication['meta-data'].filter(
+      e => e['$']['android:name'] === 'io.branch.sdk.BranchKey'
+    );
+    expect(apiKeyItem).toHaveLength(1);
+    expect(apiKeyItem[0]['$']['android:value']).toMatch('MY-API-KEY');
   });
 });

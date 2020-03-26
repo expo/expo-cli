@@ -1,10 +1,9 @@
-import fs from 'fs-extra';
-import { dirname, resolve } from 'path';
+import { fs, vol } from 'memfs';
 import { getPrimaryColor, setPrimaryColor } from '../PrimaryColor';
 import { readStylesXMLAsync } from '../Styles';
-import { getProjectColorsXMLPathAsync, readColorsXMLAsync } from '../Colors';
-const fixturesPath = resolve(__dirname, 'fixtures');
-const sampleStylesXMLPath = resolve(fixturesPath, 'styles.xml');
+import { readColorsXMLAsync } from '../Colors';
+import { sampleStylesXML } from './StatusBar-test';
+jest.mock('fs');
 
 describe('Android primary color', () => {
   it(`returns default if no primary color is provided`, () => {
@@ -16,24 +15,22 @@ describe('Android primary color', () => {
   });
 
   describe('E2E: write primary color to colors.xml and styles.xml correctly', () => {
-    const projectDirectory = resolve(fixturesPath, 'tmp/');
-    const stylesXMLPath = resolve(fixturesPath, 'tmp/android/app/src/main/res/values/styles.xml');
-
     beforeAll(async () => {
-      await fs.ensureDir(dirname(stylesXMLPath));
-      await fs.copyFile(sampleStylesXMLPath, stylesXMLPath);
+      const directoryJSON = {
+        './android/app/src/main/res/values/styles.xml': sampleStylesXML,
+      };
+      vol.fromJSON(directoryJSON, '/app');
     });
 
     afterAll(async () => {
-      await fs.remove(resolve(fixturesPath, 'tmp/'));
+      vol.reset();
     });
 
     it(`sets the colorPrimary item in Styles.xml if backgroundColor is given`, async () => {
-      expect(await setPrimaryColor({ primaryColor: '#654321' }, projectDirectory)).toBe(true);
+      expect(await setPrimaryColor({ primaryColor: '#654321' }, '/app')).toBe(true);
 
-      let stylesJSON = await readStylesXMLAsync(stylesXMLPath);
-      let colorsXMLPath = await getProjectColorsXMLPathAsync(projectDirectory);
-      let colorsJSON = await readColorsXMLAsync(colorsXMLPath);
+      let stylesJSON = await readStylesXMLAsync('/app/android/app/src/main/res/values/styles.xml');
+      let colorsJSON = await readColorsXMLAsync('/app/android/app/src/main/res/values/colors.xml');
 
       expect(
         stylesJSON.resources.style

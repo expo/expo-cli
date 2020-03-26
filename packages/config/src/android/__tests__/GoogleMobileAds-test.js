@@ -1,5 +1,4 @@
-import { dirname, resolve } from 'path';
-import fs from 'fs-extra';
+import { resolve } from 'path';
 import {
   getGoogleMobileAdsAppId,
   getGoogleMobileAdsAutoInit,
@@ -25,45 +24,31 @@ describe('Android permissions', () => {
     ).toBe(true);
   });
 
-  describe('sets google maps key in AndroidManifest.xml if given', () => {
-    const projectDirectory = resolve(fixturesPath, 'tmp/');
-    const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
-
-    beforeAll(async () => {
-      await fs.ensureDir(dirname(appManifestPath));
-      await fs.copyFile(sampleManifestPath, appManifestPath);
-    });
-
-    afterAll(async () => {
-      await fs.remove(resolve(fixturesPath, 'tmp/'));
-    });
-
-    it('add google mobile ads app config', async () => {
-      let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
-      androidManifestJson = await setGoogleMobileAdsConfig(
-        {
-          android: {
-            config: { googleMobileAdsAppId: 'MY-API-KEY', googleMobileAdsAutoInit: false },
-          },
+  it('add google mobile ads app config to androidmanifest.xml', async () => {
+    let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
+    androidManifestJson = await setGoogleMobileAdsConfig(
+      {
+        android: {
+          config: { googleMobileAdsAppId: 'MY-API-KEY', googleMobileAdsAutoInit: false },
         },
-        androidManifestJson
-      );
+      },
+      androidManifestJson
+    );
 
-      let mainApplication = androidManifestJson.manifest.application.filter(
-        e => e['$']['android:name'] === '.MainApplication'
-      )[0];
+    let mainApplication = androidManifestJson.manifest.application.filter(
+      e => e['$']['android:name'] === '.MainApplication'
+    )[0];
 
-      let apiKeyItem = mainApplication['meta-data'].filter(
-        e => e['$']['android:name'] === 'com.google.android.gms.ads.APPLICATION_ID'
-      );
-      expect(apiKeyItem).toHaveLength(1);
-      expect(apiKeyItem[0]['$']['android:value']).toMatch('MY-API-KEY');
+    let apiKeyItem = mainApplication['meta-data'].filter(
+      e => e['$']['android:name'] === 'com.google.android.gms.ads.APPLICATION_ID'
+    );
+    expect(apiKeyItem).toHaveLength(1);
+    expect(apiKeyItem[0]['$']['android:value']).toMatch('MY-API-KEY');
 
-      let usesLibraryItem = mainApplication['meta-data'].filter(
-        e => e['$']['android:name'] === 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT'
-      );
-      expect(usesLibraryItem).toHaveLength(1);
-      expect(usesLibraryItem[0]['$']['android:value']).toBe(true);
-    });
+    let usesLibraryItem = mainApplication['meta-data'].filter(
+      e => e['$']['android:name'] === 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT'
+    );
+    expect(usesLibraryItem).toHaveLength(1);
+    expect(usesLibraryItem[0]['$']['android:value']).toBe(true);
   });
 });

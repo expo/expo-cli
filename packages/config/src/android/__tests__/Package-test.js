@@ -1,5 +1,4 @@
-import { dirname, resolve } from 'path';
-import fs from 'fs-extra';
+import { resolve } from 'path';
 import { getPackage, setPackageInAndroidManifest, setPackageInBuildGradle } from '../Package';
 import { readAndroidManifestAsync } from '../Manifest';
 
@@ -36,26 +35,13 @@ describe('package', () => {
     ).toMatch("applicationId 'my.new.app'");
   });
 
-  describe('sets the package in AndroidManifest.xml if package is given', () => {
-    const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
+  it('adds package to android manifest', async () => {
+    let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
+    androidManifestJson = await setPackageInAndroidManifest(
+      { android: { package: 'com.test.package' } },
+      androidManifestJson
+    );
 
-    beforeAll(async () => {
-      await fs.ensureDir(dirname(appManifestPath));
-      await fs.copyFile(sampleManifestPath, appManifestPath);
-    });
-
-    afterAll(async () => {
-      await fs.remove(resolve(fixturesPath, 'tmp/'));
-    });
-
-    it('adds package to android manifest', async () => {
-      let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
-      androidManifestJson = await setPackageInAndroidManifest(
-        { android: { package: 'com.test.package' } },
-        androidManifestJson
-      );
-
-      expect(androidManifestJson['manifest']['$']['package']).toMatch('com.test.package');
-    });
+    expect(androidManifestJson['manifest']['$']['package']).toMatch('com.test.package');
   });
 });

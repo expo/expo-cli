@@ -1,10 +1,17 @@
-import fs from 'fs-extra';
-import { dirname, resolve } from 'path';
+import { fs, vol } from 'memfs';
 import { getStatusBarColor, getStatusBarStyle, setStatusBarConfig } from '../StatusBar';
 import { readStylesXMLAsync } from '../Styles';
-import { getProjectColorsXMLPathAsync, readColorsXMLAsync } from '../Colors';
-const fixturesPath = resolve(__dirname, 'fixtures');
-const sampleStylesXMLPath = resolve(fixturesPath, 'styles.xml');
+import { readColorsXMLAsync } from '../Colors';
+jest.mock('fs');
+
+export const sampleStylesXML = `
+<resources>
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="android:windowBackground">#222222</item>
+    </style>
+</resources>`;
 
 describe('Android status bar', () => {
   it(`returns 'translucent' if no status bar color is provided`, () => {
@@ -29,29 +36,27 @@ describe('Android status bar', () => {
   });
 
   describe('e2e: write statusbar color and style to files correctly', () => {
-    const projectDirectory = resolve(fixturesPath, 'tmp/');
-    const stylesXMLPath = resolve(fixturesPath, 'tmp/android/app/src/main/res/values/styles.xml');
-
     beforeAll(async () => {
-      await fs.ensureDir(dirname(stylesXMLPath));
-      await fs.copyFile(sampleStylesXMLPath, stylesXMLPath);
+      const directoryJSON = {
+        './android/app/src/main/res/values/styles.xml': sampleStylesXML,
+      };
+      vol.fromJSON(directoryJSON, '/app');
     });
 
     afterAll(async () => {
-      await fs.remove(resolve(fixturesPath, 'tmp/'));
+      vol.reset();
     });
 
     it(`sets the colorPrimaryDark item in styles.xml and adds color to colors.xml if 'androidStatusBar.backgroundColor' is given`, async () => {
       expect(
         await setStatusBarConfig(
           { androidStatusBar: { backgroundColor: '#654321', barStyle: 'dark-content' } },
-          projectDirectory
+          '/app'
         )
       ).toBe(true);
 
-      let stylesJSON = await readStylesXMLAsync(stylesXMLPath);
-      let colorsXMLPath = await getProjectColorsXMLPathAsync(projectDirectory);
-      let colorsJSON = await readColorsXMLAsync(colorsXMLPath);
+      let stylesJSON = await readStylesXMLAsync('/app/android/app/src/main/res/values/styles.xml');
+      let colorsJSON = await readColorsXMLAsync('/app/android/app/src/main/res/values/colors.xml');
       expect(
         stylesJSON.resources.style
           .filter(e => e['$']['name'] === 'AppTheme')[0]
@@ -68,7 +73,7 @@ describe('Android status bar', () => {
     });
 
     it(`sets the status bar to translucent if no 'androidStatusBar.backgroundColor' is given`, async () => {
-      expect(await setStatusBarConfig({}, projectDirectory)).toBe(true);
+      expect(await setStatusBarConfig({}, '/app')).toBe(true);
     });
   });
 });

@@ -1,5 +1,4 @@
-import fs from 'fs-extra';
-import { dirname, resolve } from 'path';
+import { resolve } from 'path';
 import {
   ON_CONFIGURATION_CHANGED,
   addOnConfigurationChangedMainActivity,
@@ -69,31 +68,18 @@ describe('User interface style', () => {
     ).toMatch(ON_CONFIGURATION_CHANGED);
   });
 
-  describe('write file correctly', () => {
-    const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
+  it(`sets the android:configChanges in AndroidManifest.xml if userInterfaceStyle is given`, async () => {
+    let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
 
-    beforeAll(async () => {
-      await fs.ensureDir(dirname(appManifestPath));
-      await fs.copyFile(sampleManifestPath, appManifestPath);
-    });
-
-    afterAll(async () => {
-      await fs.remove(resolve(fixturesPath, 'tmp/'));
-    });
-
-    it(`sets the android:configChanges in AndroidManifest.xml if userInterfaceStyle is given`, async () => {
-      let androidManifestJson = await readAndroidManifestAsync(appManifestPath);
-
-      androidManifestJson = await setUiModeAndroidManifest(
-        { userInterfaceStyle: 'light' },
-        androidManifestJson
-      );
-      let mainActivity = androidManifestJson.manifest.application[0].activity.filter(
-        e => e['$']['android:name'] === '.MainActivity'
-      );
-      expect(mainActivity[0]['$']['android:configChanges']).toMatch(
-        'keyboard|keyboardHidden|orientation|screenSize|uiMode'
-      );
-    });
+    androidManifestJson = await setUiModeAndroidManifest(
+      { userInterfaceStyle: 'light' },
+      androidManifestJson
+    );
+    let mainActivity = androidManifestJson.manifest.application[0].activity.filter(
+      e => e['$']['android:name'] === '.MainActivity'
+    );
+    expect(mainActivity[0]['$']['android:configChanges']).toMatch(
+      'keyboard|keyboardHidden|orientation|screenSize|uiMode'
+    );
   });
 });

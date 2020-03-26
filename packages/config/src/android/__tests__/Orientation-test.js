@@ -1,5 +1,4 @@
-import fs, { ensureDir } from 'fs-extra';
-import { dirname, resolve } from 'path';
+import { resolve } from 'path';
 import { readAndroidManifestAsync } from '../Manifest';
 
 import { getOrientation, setAndroidOrientation } from '../Orientation';
@@ -17,19 +16,9 @@ describe('Android orientation', () => {
   });
 
   describe('File changes', () => {
-    const appManifestPath = resolve(fixturesPath, 'tmp/android/app/src/main/AndroidManifest.xml');
     let androidManifestJson;
-    beforeAll(async () => {
-      await fs.ensureDir(dirname(appManifestPath));
-      await fs.copyFile(sampleManifestPath, appManifestPath);
-    });
-
-    afterAll(async () => {
-      await fs.remove(resolve(fixturesPath, 'tmp/'));
-    });
-
     it('adds orientation attribute if not present', async () => {
-      androidManifestJson = await readAndroidManifestAsync(appManifestPath);
+      androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
       androidManifestJson = await setAndroidOrientation(
         { orientation: 'landscape' },
         androidManifestJson
@@ -42,7 +31,7 @@ describe('Android orientation', () => {
     });
 
     it('replaces orientation attribute if present', async () => {
-      androidManifestJson = await readAndroidManifestAsync(appManifestPath);
+      androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
 
       androidManifestJson = await setAndroidOrientation(
         { orientation: 'portrait' },
