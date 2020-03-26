@@ -5,7 +5,7 @@ import { Project, UrlUtils } from '@expo/xdl';
 
 import CommandError from '../CommandError';
 import log from '../log';
-import urlOpts from '../urlOpts';
+import urlOpts, { URLOptions } from '../urlOpts';
 import printRunInstructionsAsync from '../printRunInstructionsAsync';
 
 type ProjectUrlOptions = Command & {
@@ -63,7 +63,7 @@ async function getWebAppUrlAsync(projectDir: string): Promise<string> {
   return webAppUrl;
 }
 
-async function action(projectDir: string, options: ProjectUrlOptions) {
+async function action(projectDir: string, options: ProjectUrlOptions & URLOptions) {
   await urlOpts.optsAsync(projectDir, options);
 
   if ((await Project.currentStatus(projectDir)) !== 'running') {

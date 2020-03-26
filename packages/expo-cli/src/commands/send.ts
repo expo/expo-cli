@@ -5,9 +5,9 @@ import { UrlUtils, UserSettings } from '@expo/xdl';
 import askUser from '../askUser';
 import log from '../log';
 import sendTo from '../sendTo';
-import urlOpts from '../urlOpts';
+import urlOpts, { URLOptions } from '../urlOpts';
 
-async function action(projectDir: string, options: { sendTo?: string }) {
+async function action(projectDir: string, options: { sendTo?: string } & URLOptions) {
   await urlOpts.optsAsync(projectDir, options);
 
   let url = await UrlUtils.constructManifestUrlAsync(projectDir);
