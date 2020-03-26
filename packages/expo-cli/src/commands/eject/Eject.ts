@@ -65,7 +65,7 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   if (ConfigWarningAggregator.hasWarningsAndroid()) {
     applyingAndroidConfigStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: 'Android configuration applied with warnings that should be fixed:',
+      text: chalk.red('Android configuration applied with warnings that should be fixed:'),
     });
     logConfigWarningsAndroid();
   } else {
