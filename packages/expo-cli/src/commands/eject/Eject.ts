@@ -349,7 +349,7 @@ async function promptForNativeAppNamesAsync(
 
   let { displayName, name } = appJson;
   if (!displayName || !name) {
-    log("We have a couple of questions to ask you about how you'd like to name your app:");
+    log('First, we want to clarify what names we should use for your app:');
     ({ displayName, name } = await prompt(
       [
         {
@@ -379,6 +379,8 @@ async function promptForNativeAppNamesAsync(
       }
     ));
   }
+
+  log.newLine();
 
   return { displayName, name };
 }

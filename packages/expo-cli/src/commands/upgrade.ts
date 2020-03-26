@@ -6,6 +6,7 @@ import chalk from 'chalk';
 import program, { Command } from 'commander';
 import _ from 'lodash';
 import semver from 'semver';
+import ora from 'ora';
 
 import log from '../log';
 import prompt from '../prompt';
@@ -25,6 +26,12 @@ export type TargetSDKVersion = Pick<
   Versions.SDKVersion,
   'expoReactNativeTag' | 'facebookReactVersion' | 'facebookReactNativeVersion' | 'relatedPackages'
 >;
+
+function logNewSection(title: string) {
+  let spinner = ora(chalk.bold(title));
+  spinner.start();
+  return spinner;
+}
 
 export function maybeFormatSdkVersion(sdkVersionString: string | null): string | null {
   if (typeof sdkVersionString !== 'string' || sdkVersionString === 'UNVERSIONED') {
@@ -191,6 +198,8 @@ async function shouldBailWhenUsingLatest(
       return true;
     }
   }
+
+  log.newLine();
   return false;
 }
 
@@ -210,8 +219,10 @@ async function shouldUpgradeSimulatorAsync(): Promise<boolean> {
       default: false,
     });
 
+    log.newLine();
     return answer.upgradeSimulator;
   }
+
   return false;
 }
 
@@ -226,7 +237,6 @@ async function maybeUpgradeSimulatorAsync() {
         );
       }
     }
-    log.newLine();
   }
 }
 
@@ -246,8 +256,10 @@ async function shouldUpgradeEmulatorAsync(): Promise<boolean> {
       default: false,
     });
 
+    log.newLine();
     return answer.upgradeAndroid;
   }
+
   return false;
 }
 
@@ -366,22 +378,34 @@ export async function upgradeAsync(
     npm: options.npm,
     yarn: options.yarn,
     log,
+    silent: true,
   });
 
   log.addNewLineIfNone();
-  log(chalk.underline.bold('Installing the expo package...'));
+  let installingPackageStep = logNewSection('Installing the expo package...');
   log.addNewLineIfNone();
-  await packageManager.addAsync(`expo@^${targetSdkVersionString}`);
+  try {
+    await packageManager.addAsync(`expo@^${targetSdkVersionString}`);
+  } catch (e) {
+    installingPackageStep.fail(`Failed to install expo package with error: ${e.message}`);
+  } finally {
+    installingPackageStep.succeed(`Installed expo@^${targetSdkVersionString}.`);
+  }
 
   // Remove sdkVersion from app.json
+  let removingSdkVersionStep = logNewSection('Validating configuration.');
   try {
     const { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
     if (rootConfig.expo.sdkVersion && rootConfig.expo.sdkVersion !== 'UNVERSIONED') {
       log.addNewLineIfNone();
-      log(chalk.underline.bold('Removing deprecated sdkVersion property from the app.json...'));
       await ConfigUtils.writeConfigJsonAsync(projectRoot, { sdkVersion: undefined });
+      removingSdkVersionStep.succeed('Removed deprecated sdkVersion field from app.json.');
+    } else {
+      removingSdkVersionStep.succeed('Validated configuration.');
     }
-  } catch (_) {}
+  } catch (_) {
+    removingSdkVersionStep.fail('Unable to validate configuration.');
+  }
 
   // Evaluate project config (app.config.js)
   const { exp: currentExp } = ConfigUtils.getConfig(projectRoot);
@@ -391,12 +415,14 @@ export async function upgradeAsync(
     currentExp.sdkVersion !== 'UNVERSIONED'
   ) {
     log.addNewLineIfNone();
-    log(
-      chalk.underline.bold("Please manually delete the sdkVersion in your project's app.config...")
+    removingSdkVersionStep.warn(
+      'Please manually delete the sdkVersion field in your project app.config file, it is depreacted.'
     );
   }
 
-  log(chalk.bold.underline('Updating packages to compatible versions (where known)...'));
+  let updatingPackagesStep = logNewSection(
+    'Updating packages to compatible versions (where known).'
+  );
   log.addNewLineIfNone();
 
   // Get all updated packages
@@ -420,19 +446,27 @@ export async function upgradeAsync(
     await packageManager.addAsync(...dependenciesAsStringArray);
   }
 
+  updatingPackagesStep.succeed('Updated known packages to compatible versions.');
+
   // Clear metro bundler cache
   log.addNewLineIfNone();
-  log(chalk.bold.underline('Clearing the packager cache...'));
-  await Project.startReactNativeServerAsync(projectRoot, { reset: true, nonPersistent: true });
-  await Project.stopReactNativeServerAsync(projectRoot);
+  let clearingCacheStep = logNewSection('Clearing the packager cache.');
+  try {
+    await Project.startReactNativeServerAsync(projectRoot, { reset: true, nonPersistent: true });
+    await Project.stopReactNativeServerAsync(projectRoot);
+  } catch (e) {
+    clearingCacheStep.fail(`Failed to clear packager cache with error: ${e.message}`);
+  } finally {
+    clearingCacheStep.succeed('Cleared packager cache.');
+  }
 
-  log.addNewLineIfNone();
-  log(chalk.underline.bold.green(`Automated upgrade steps complete.`));
+  log.newLine();
+  log(chalk.bold.green(`👏 Automated upgrade steps complete.`));
   log(chalk.bold.grey(`...but this doesn't mean everything is done yet!`));
   log.newLine();
 
   // List packages that were updated
-  log(chalk.bold(`The following packages were updated:`));
+  log(chalk.bold(`✅ The following packages were updated:`));
   log(chalk.grey.bold([...Object.keys(updates), ...['expo']].join(', ')));
   log.addNewLineIfNone();
 
@@ -446,7 +480,7 @@ export async function upgradeAsync(
     log.addNewLineIfNone();
     log(
       chalk.bold(
-        `The following packages were ${chalk.underline(
+        `🚨 The following packages were ${chalk.underline(
           'not'
         )} updated. You should check the READMEs for those repositories to determine what version is compatible with your new set of packages:`
       )
