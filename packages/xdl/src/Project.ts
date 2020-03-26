@@ -186,7 +186,7 @@ export async function currentStatus(projectDir: string): Promise<ProjectStatus> 
   }
 }
 
-export async function isBareWorkflowProject(projectDir: string): Promise<boolean> {
+export async function isBareWorkflowProjectAsync(projectDir: string): Promise<boolean> {
   const { pkg } = getConfig(projectDir, {
     skipSDKVersionRequirement: true,
   });

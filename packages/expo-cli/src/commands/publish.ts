@@ -43,7 +43,7 @@ export async function action(projectDir: string, options: Options = {}) {
   }
 
   const target =
-    options.target ?? ((await Project.isBareWorkflowProject(projectDir)) ? 'bare' : 'managed');
+    options.target ?? ((await Project.isBareWorkflowProjectAsync(projectDir)) ? 'bare' : 'managed');
 
   const status = await Project.currentStatus(projectDir);
   let shouldStartOurOwn = false;
