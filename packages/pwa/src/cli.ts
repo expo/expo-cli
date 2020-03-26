@@ -169,7 +169,7 @@ async function generateAssets(
   const items = await generateAsync(
     type,
     { projectRoot: resolve(projectRoot || process.cwd()), publicPath: resolve(publicPath) },
-    { src: resolve(src), backgroundColor, resizeMode }
+    { src, backgroundColor, resizeMode }
   );
 
   const outputPath = resolve(output);
