@@ -130,7 +130,7 @@ export type StartOptions = {
   nonPersistent?: boolean;
   maxWorkers?: number;
   webOnly?: boolean;
-  target?: 'managed' | 'bare';
+  target?: ProjectTarget;
 };
 
 type PublishOptions = {
@@ -184,6 +184,17 @@ export async function currentStatus(projectDir: string): Promise<ProjectStatus> 
   } else {
     return 'exited';
   }
+}
+
+export type ProjectTarget = 'managed' | 'bare';
+
+export async function getDefaultTargetAsync(projectDir: string): Promise<ProjectTarget> {
+  const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
+  // before SDK 37, always default to managed to preserve previous behavior
+  if (exp.sdkVersion && semver.lt(exp.sdkVersion, '37.0.0')) {
+    return 'managed';
+  }
+  return (await isBareWorkflowProjectAsync(projectDir)) ? 'bare' : 'managed';
 }
 
 export async function isBareWorkflowProjectAsync(projectDir: string): Promise<boolean> {
