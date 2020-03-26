@@ -1,6 +1,6 @@
 import { getConfig } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
-import { Exp, Project } from '@expo/xdl';
+import { Exp, Project, ProjectSettings } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';
@@ -14,6 +14,7 @@ type Options = {
   clear?: boolean;
   sendTo?: string | boolean;
   quiet?: boolean;
+  target?: 'managed' | 'bare';
   releaseChannel?: string;
   duringBuild?: boolean;
   maxWorkers?: number;
@@ -40,16 +41,37 @@ export async function action(projectDir: string, options: Options = {}) {
       )}.`
     );
   }
+
+  const target =
+    options.target ?? ((await Project.isBareWorkflowProjectAsync(projectDir)) ? 'bare' : 'managed');
+
   const status = await Project.currentStatus(projectDir);
+  let shouldStartOurOwn = false;
+
+  if (status === 'running') {
+    const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectDir);
+    const runningPackagerTarget = packagerInfo.target ?? 'managed';
+    if (target !== runningPackagerTarget) {
+      log(
+        'Found an existing Expo CLI instance running for this project but the target did not match.'
+      );
+      await Project.stopAsync(projectDir);
+      log('Starting a new Expo CLI instance...');
+      shouldStartOurOwn = true;
+    }
+  } else {
+    log('Unable to find an existing Expo CLI instance for this directory; starting a new one...');
+    shouldStartOurOwn = true;
+  }
 
   let startedOurOwn = false;
-  if (status !== 'running') {
-    log('Unable to find an existing Expo CLI instance for this directory, starting a new one...');
+  if (shouldStartOurOwn) {
     installExitHooks(projectDir);
 
-    const startOpts: { reset?: boolean; nonPersistent: boolean; maxWorkers?: number } = {
+    const startOpts: Project.StartOptions = {
       reset: options.clear,
       nonPersistent: true,
+      target,
     };
     if (options.maxWorkers) {
       startOpts.maxWorkers = options.maxWorkers;
@@ -141,6 +163,10 @@ export default function(program: Command) {
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
     .option('-s, --send-to [dest]', 'A phone number or email address to send a link to')
     .option('-c, --clear', 'Clear the React Native packager cache')
+    .option(
+      '-t, --target [env]',
+      'Target environment for which this publish is intended. Options are `managed` or `bare`.'
+    )
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .option(

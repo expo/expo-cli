@@ -58,7 +58,27 @@ export function getManagedExtensions(
   const fileExtensions = getExtensions(platforms, getLanguageExtensionsInOrder(languageOptions), [
     'expo',
   ]);
-  // Always add this last with no platform extension
+  // Always add these last
+  _addMiscellaneousExtensions(fileExtensions);
+  return fileExtensions;
+}
+
+export function getBareExtensions(
+  platforms: string[],
+  languageOptions: LanguageOptions = { isTS: true, isModern: true, isReact: true }
+): string[] {
+  const fileExtensions = getExtensions(
+    platforms,
+    getLanguageExtensionsInOrder(languageOptions),
+    []
+  );
+  // Always add these last
+  _addMiscellaneousExtensions(fileExtensions);
+  return fileExtensions;
+}
+
+function _addMiscellaneousExtensions(fileExtensions: string[]): string[] {
+  // Always add these with no platform extension
   // In the future we may want to add platform and workspace extensions to json.
   fileExtensions.push('json');
   fileExtensions.push('wasm');
