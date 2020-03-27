@@ -620,6 +620,7 @@ export async function exportForAppHosting(
 
   exp.publishedTime = new Date().toISOString();
   exp.commitTime = new Date().toISOString();
+  exp.releaseId = uuid.v4();
 
   // generate revisionId and id the same way www does
   const hashIds = new HashIds(uuid.v1(), 10);
@@ -641,28 +642,39 @@ export async function exportForAppHosting(
   exp.id = `@${username}/${exp.slug}`;
 
   // save the android manifest
-  exp.bundleUrl = urljoin(publicUrl, 'bundles', androidBundleUrl);
-  exp.platform = 'android';
+  const androidManifest = {
+    ...exp,
+    bundleUrl: urljoin(publicUrl, 'bundles', androidBundleUrl),
+    platform: 'android',
+    dependencies: Object.keys(pkg.dependencies),
+  };
   await _writeArtifactSafelyAsync(
     projectRoot,
     null,
     path.join(outputDir, 'android-index.json'),
-    JSON.stringify({ ...exp, dependencies: Object.keys(pkg.dependencies) })
+    JSON.stringify(androidManifest)
   );
 
   // save the ios manifest
-  exp.bundleUrl = urljoin(publicUrl, 'bundles', iosBundleUrl);
-  exp.platform = 'ios';
+  const iosManifest = {
+    ...exp,
+    bundleUrl: urljoin(publicUrl, 'bundles', iosBundleUrl),
+    platform: 'ios',
+    dependencies: Object.keys(pkg.dependencies),
+  };
   await _writeArtifactSafelyAsync(
     projectRoot,
     null,
     path.join(outputDir, 'ios-index.json'),
-    JSON.stringify(exp)
+    JSON.stringify(iosManifest)
   );
+
+  let iosSourceMap = null;
+  let androidSourceMap = null;
 
   // build source maps
   if (options.dumpSourcemap) {
-    const { iosSourceMap, androidSourceMap } = await _buildSourceMapsAsync(projectRoot, exp);
+    ({ iosSourceMap, androidSourceMap } = await _buildSourceMapsAsync(projectRoot));
     // write the sourcemap files
     const iosMapName = `ios-${iosBundleHash}.map`;
     const iosMapPath = path.join(outputDir, 'bundles', iosMapName);
@@ -696,6 +708,21 @@ export async function exportForAppHosting(
       debugHtml
     );
   }
+
+  // configure embedded files for expo-updates or ExpoKit
+  await _configureEmbeddedFilesAsync({
+    projectRoot,
+    pkg,
+    exp,
+    iosManifestUrl: urljoin(publicUrl, 'ios-index.json'),
+    iosManifest,
+    iosBundle,
+    iosSourceMap,
+    androidManifestUrl: urljoin(publicUrl, 'android-index.json'),
+    androidManifest,
+    androidBundle,
+    androidSourceMap,
+  });
 }
 
 // truncate the last n lines in a file
@@ -836,21 +863,15 @@ export async function publishAsync(
     throw e;
   }
 
-  await _maybeWriteArtifactsToDiskAsync({
-    exp,
-    projectRoot,
-    iosBundle,
-    androidBundle,
-    iosSourceMap,
-    androidSourceMap,
-  });
+  let androidManifest = {};
+  let iosManifest = {};
 
   if (
     validPostPublishHooks.length ||
     (exp.ios && exp.ios.publishManifestPath) ||
     (exp.android && exp.android.publishManifestPath)
   ) {
-    let [androidManifest, iosManifest] = await Promise.all([
+    [androidManifest, iosManifest] = await Promise.all([
       ExponentTools.getManifestAsync(response.url, {
         'Exponent-SDK-Version': exp.sdkVersion,
         'Exponent-Platform': 'android',
@@ -900,143 +921,23 @@ export async function publishAsync(
         logger.global.warn(`Warning: postPublish hook '${hook.file}' failed: ${e.stack}`);
       }
     }
-
-    let fullManifestUrl = response.url.replace('exp://', 'https://');
-
-    if (exp.ios && exp.ios.publishManifestPath) {
-      await _writeArtifactSafelyAsync(
-        projectRoot,
-        'ios.publishManifestPath',
-        exp.ios.publishManifestPath,
-        JSON.stringify(iosManifest)
-      );
-      const context = StandaloneContext.createUserContext(projectRoot, exp);
-      const { supportingDirectory } = IosWorkspace.getPaths(context);
-      if (fs.existsSync(path.join(supportingDirectory, 'EXShell.plist'))) {
-        // This is an ExpoKit app, set properties in EXShell.plist
-        await IosPlist.modifyAsync(supportingDirectory, 'EXShell', (shellPlist: any) => {
-          shellPlist.releaseChannel = options.releaseChannel;
-          return shellPlist;
-        });
-      }
-      if (fs.existsSync(path.join(supportingDirectory, 'Expo.plist'))) {
-        // This is an app with expo-updates installed, set properties in Expo.plist
-        await IosPlist.modifyAsync(supportingDirectory, 'Expo', (configPlist: any) => {
-          configPlist.EXUpdatesURL = fullManifestUrl;
-          configPlist.EXUpdatesReleaseChannel = options.releaseChannel;
-          configPlist.EXUpdatesSDKVersion = exp.sdkVersion;
-          return configPlist;
-        });
-      }
-    }
-
-    if (exp.android && exp.android.publishManifestPath) {
-      await _writeArtifactSafelyAsync(
-        projectRoot,
-        'android.publishManifestPath',
-        exp.android.publishManifestPath,
-        JSON.stringify(androidManifest)
-      );
-    }
-
-    if (exp.android && exp.android.publishManifestPath && exp.android.publishBundlePath) {
-      let constantsPath = path.join(
-        projectRoot,
-        'android',
-        'app',
-        'src',
-        'main',
-        'java',
-        'host',
-        'exp',
-        'exponent',
-        'generated',
-        'AppConstants.java'
-      );
-      if (fs.existsSync(constantsPath)) {
-        // This is an ExpoKit app
-        // We need to add EmbeddedResponse instances on Android to tell the runtime
-        // that the shell app manifest and bundle is packaged.
-        await ExponentTools.deleteLinesInFileAsync(
-          `START EMBEDDED RESPONSES`,
-          `END EMBEDDED RESPONSES`,
-          constantsPath
-        );
-        await ExponentTools.regexFileAsync(
-          '// ADD EMBEDDED RESPONSES HERE',
-          `
-          // ADD EMBEDDED RESPONSES HERE
-          // START EMBEDDED RESPONSES
-          embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-          embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
-          // END EMBEDDED RESPONSES`,
-          constantsPath
-        );
-        await ExponentTools.regexFileAsync(
-          /RELEASE_CHANNEL = "[^"]*"/,
-          `RELEASE_CHANNEL = "${options.releaseChannel}"`,
-          constantsPath
-        );
-      }
-      if (pkg.dependencies['expo-updates']) {
-        // This is an app with expo-updates installed, so set the applicable meta-data properties in
-        // AndroidManifest.xml
-        let androidManifestXmlPath = path.join(
-          projectRoot,
-          'android',
-          'app',
-          'src',
-          'main',
-          'AndroidManifest.xml'
-        );
-        let androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
-        let expoUpdateUrlRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_UPDATE_URL"[^>]+\/>/;
-        let expoSdkVersionRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_SDK_VERSION"[^>]+\/>/;
-        let expoReleaseChannelRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_RELEASE_CHANNEL"[^>]+\/>/;
-
-        let expoUpdateUrlTag = `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${fullManifestUrl}" />`;
-        let expoSdkVersionTag = `<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="${exp.sdkVersion}" />`;
-        let expoReleaseChannelTag = `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${options.releaseChannel}" />`;
-
-        let tagsToInsert = [];
-        if (androidManifestXmlFile.search(expoUpdateUrlRegex) < 0) {
-          tagsToInsert.push(expoUpdateUrlTag);
-        }
-        if (androidManifestXmlFile.search(expoSdkVersionRegex) < 0) {
-          tagsToInsert.push(expoSdkVersionTag);
-        }
-        if (androidManifestXmlFile.search(expoReleaseChannelRegex) < 0) {
-          tagsToInsert.push(expoReleaseChannelTag);
-        }
-        if (tagsToInsert.length) {
-          // try to insert the meta-data tags that aren't found
-          await ExponentTools.regexFileAsync(
-            /<activity\s+android:name=".MainActivity"/,
-            `${tagsToInsert.join('\n      ')}
-
-      <activity
-        android:name=".MainActivity"`,
-            androidManifestXmlPath
-          );
-        }
-        await ExponentTools.regexFileAsync(
-          expoUpdateUrlRegex,
-          expoUpdateUrlTag,
-          androidManifestXmlPath
-        );
-        await ExponentTools.regexFileAsync(
-          expoSdkVersionRegex,
-          expoSdkVersionTag,
-          androidManifestXmlPath
-        );
-        await ExponentTools.regexFileAsync(
-          expoReleaseChannelRegex,
-          expoReleaseChannelTag,
-          androidManifestXmlPath
-        );
-      }
-    }
   }
+
+  const fullManifestUrl = response.url.replace('exp://', 'https://');
+  await _configureEmbeddedFilesAsync({
+    projectRoot,
+    pkg,
+    exp,
+    releaseChannel: options.releaseChannel ?? 'default',
+    iosManifestUrl: fullManifestUrl,
+    iosManifest,
+    iosBundle,
+    iosSourceMap,
+    androidManifestUrl: fullManifestUrl,
+    androidManifest,
+    androidBundle,
+    androidSourceMap,
+  });
 
   // TODO: move to postPublish hook
   if (exp.isKernel) {
@@ -1055,6 +956,208 @@ export async function publishAsync(
         ? `${response.url}?release-channel=${options.releaseChannel}`
         : response.url,
   };
+}
+
+async function _configureEmbeddedFilesAsync({
+  projectRoot,
+  pkg,
+  exp,
+  releaseChannel,
+  iosManifestUrl,
+  iosManifest,
+  iosBundle,
+  iosSourceMap,
+  androidManifestUrl,
+  androidManifest,
+  androidBundle,
+  androidSourceMap,
+}: {
+  projectRoot: string;
+  pkg: PackageJSONConfig;
+  exp: PublicConfig;
+  releaseChannel?: string;
+  iosManifestUrl: string;
+  iosManifest: any;
+  iosBundle: string;
+  iosSourceMap: string | null;
+  androidManifestUrl: string;
+  androidManifest: any;
+  androidBundle: string;
+  androidSourceMap: string | null;
+}) {
+  if (exp.android && exp.android.publishBundlePath) {
+    await _writeArtifactSafelyAsync(
+      projectRoot,
+      'android.publishBundlePath',
+      exp.android.publishBundlePath,
+      androidBundle
+    );
+  }
+
+  if (exp.ios && exp.ios.publishBundlePath) {
+    await _writeArtifactSafelyAsync(
+      projectRoot,
+      'ios.publishBundlePath',
+      exp.ios.publishBundlePath,
+      iosBundle
+    );
+  }
+
+  if (exp.android && exp.android.publishSourceMapPath && androidSourceMap) {
+    await _writeArtifactSafelyAsync(
+      projectRoot,
+      'android.publishSourceMapPath',
+      exp.android.publishSourceMapPath,
+      androidSourceMap
+    );
+  }
+
+  if (exp.ios && exp.ios.publishSourceMapPath && iosSourceMap) {
+    await _writeArtifactSafelyAsync(
+      projectRoot,
+      'ios.publishSourceMapPath',
+      exp.ios.publishSourceMapPath,
+      iosSourceMap
+    );
+  }
+
+  if (exp.ios && exp.ios.publishManifestPath) {
+    await _writeArtifactSafelyAsync(
+      projectRoot,
+      'ios.publishManifestPath',
+      exp.ios.publishManifestPath,
+      JSON.stringify(iosManifest)
+    );
+    const context = StandaloneContext.createUserContext(projectRoot, exp);
+    const { supportingDirectory } = IosWorkspace.getPaths(context);
+    if (releaseChannel && fs.existsSync(path.join(supportingDirectory, 'EXShell.plist'))) {
+      // This is an ExpoKit app, set properties in EXShell.plist
+      await IosPlist.modifyAsync(supportingDirectory, 'EXShell', (shellPlist: any) => {
+        shellPlist.releaseChannel = releaseChannel;
+        return shellPlist;
+      });
+    }
+    if (fs.existsSync(path.join(supportingDirectory, 'Expo.plist'))) {
+      // This is an app with expo-updates installed, set properties in Expo.plist
+      await IosPlist.modifyAsync(supportingDirectory, 'Expo', (configPlist: any) => {
+        configPlist.EXUpdatesURL = iosManifestUrl;
+        configPlist.EXUpdatesSDKVersion = exp.sdkVersion;
+        if (releaseChannel) {
+          configPlist.EXUpdatesReleaseChannel = releaseChannel;
+        }
+        return configPlist;
+      });
+    }
+  }
+
+  if (exp.android && exp.android.publishManifestPath) {
+    await _writeArtifactSafelyAsync(
+      projectRoot,
+      'android.publishManifestPath',
+      exp.android.publishManifestPath,
+      JSON.stringify(androidManifest)
+    );
+
+    let constantsPath = path.join(
+      projectRoot,
+      'android',
+      'app',
+      'src',
+      'main',
+      'java',
+      'host',
+      'exp',
+      'exponent',
+      'generated',
+      'AppConstants.java'
+    );
+    if (fs.existsSync(constantsPath)) {
+      // This is an ExpoKit app
+      // We need to add EmbeddedResponse instances on Android to tell the runtime
+      // that the shell app manifest and bundle is packaged.
+      await ExponentTools.deleteLinesInFileAsync(
+        `START EMBEDDED RESPONSES`,
+        `END EMBEDDED RESPONSES`,
+        constantsPath
+      );
+      await ExponentTools.regexFileAsync(
+        '// ADD EMBEDDED RESPONSES HERE',
+        `
+        // ADD EMBEDDED RESPONSES HERE
+        // START EMBEDDED RESPONSES
+        embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
+        embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
+        // END EMBEDDED RESPONSES`,
+        constantsPath
+      );
+      if (releaseChannel) {
+        await ExponentTools.regexFileAsync(
+          /RELEASE_CHANNEL = "[^"]*"/,
+          `RELEASE_CHANNEL = "${releaseChannel}"`,
+          constantsPath
+        );
+      }
+    }
+    if (pkg.dependencies['expo-updates']) {
+      // This is an app with expo-updates installed, so set the applicable meta-data properties in
+      // AndroidManifest.xml
+      let androidManifestXmlPath = path.join(
+        projectRoot,
+        'android',
+        'app',
+        'src',
+        'main',
+        'AndroidManifest.xml'
+      );
+      let androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
+      let expoUpdateUrlRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_UPDATE_URL"[^>]+\/>/;
+      let expoSdkVersionRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_SDK_VERSION"[^>]+\/>/;
+      let expoReleaseChannelRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_RELEASE_CHANNEL"[^>]+\/>/;
+
+      let expoUpdateUrlTag = `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${androidManifestUrl}" />`;
+      let expoSdkVersionTag = `<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="${exp.sdkVersion}" />`;
+      let expoReleaseChannelTag = `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${releaseChannel}" />`;
+
+      let tagsToInsert = [];
+      if (androidManifestXmlFile.search(expoUpdateUrlRegex) < 0) {
+        tagsToInsert.push(expoUpdateUrlTag);
+      }
+      if (androidManifestXmlFile.search(expoSdkVersionRegex) < 0) {
+        tagsToInsert.push(expoSdkVersionTag);
+      }
+      if (releaseChannel && androidManifestXmlFile.search(expoReleaseChannelRegex) < 0) {
+        tagsToInsert.push(expoReleaseChannelTag);
+      }
+      if (tagsToInsert.length) {
+        // try to insert the meta-data tags that aren't found
+        await ExponentTools.regexFileAsync(
+          /<activity\s+android:name=".MainActivity"/,
+          `${tagsToInsert.join('\n      ')}
+
+    <activity
+      android:name=".MainActivity"`,
+          androidManifestXmlPath
+        );
+      }
+      await ExponentTools.regexFileAsync(
+        expoUpdateUrlRegex,
+        expoUpdateUrlTag,
+        androidManifestXmlPath
+      );
+      await ExponentTools.regexFileAsync(
+        expoSdkVersionRegex,
+        expoSdkVersionTag,
+        androidManifestXmlPath
+      );
+      if (releaseChannel) {
+        await ExponentTools.regexFileAsync(
+          expoReleaseChannelRegex,
+          expoReleaseChannelTag,
+          androidManifestXmlPath
+        );
+      }
+    }
+  }
 }
 
 async function _uploadArtifactsAsync({
@@ -1175,7 +1278,7 @@ async function _maybeBuildSourceMapsAsync(
   options = { force: false }
 ) {
   if (options.force) {
-    return _buildSourceMapsAsync(projectRoot, exp);
+    return _buildSourceMapsAsync(projectRoot);
   } else {
     return { iosSourceMap: null, androidSourceMap: null };
   }
@@ -1186,7 +1289,7 @@ async function _maybeBuildSourceMapsAsync(
 // enable sourcemap building, but for now it's very fast, most apps in
 // production should use sourcemaps for error reporting, and in the worst
 // case, adding a few seconds to a postPublish hook isn't too annoying
-async function _buildSourceMapsAsync(projectRoot: string, exp: ExpoConfig) {
+async function _buildSourceMapsAsync(projectRoot: string) {
   let entryPoint = Exp.determineEntryPoint(projectRoot);
   let sourceMapUrl = await UrlUtils.constructSourceMapUrlAsync(projectRoot, entryPoint);
 
@@ -1360,58 +1463,6 @@ async function _writeArtifactSafelyAsync(
     logger.global.warn(errorMsg);
   } else {
     await fs.writeFile(pathToWrite, artifact);
-  }
-}
-
-async function _maybeWriteArtifactsToDiskAsync({
-  exp,
-  projectRoot,
-  iosBundle,
-  androidBundle,
-  iosSourceMap,
-  androidSourceMap,
-}: {
-  exp: ExpoConfig;
-  projectRoot: string;
-  iosBundle: string;
-  androidBundle: string;
-  iosSourceMap: string | null;
-  androidSourceMap: string | null;
-}) {
-  if (exp.android && exp.android.publishBundlePath) {
-    await _writeArtifactSafelyAsync(
-      projectRoot,
-      'android.publishBundlePath',
-      exp.android.publishBundlePath,
-      androidBundle
-    );
-  }
-
-  if (exp.ios && exp.ios.publishBundlePath) {
-    await _writeArtifactSafelyAsync(
-      projectRoot,
-      'ios.publishBundlePath',
-      exp.ios.publishBundlePath,
-      iosBundle
-    );
-  }
-
-  if (exp.android && exp.android.publishSourceMapPath && androidSourceMap) {
-    await _writeArtifactSafelyAsync(
-      projectRoot,
-      'android.publishSourceMapPath',
-      exp.android.publishSourceMapPath,
-      androidSourceMap
-    );
-  }
-
-  if (exp.ios && exp.ios.publishSourceMapPath && iosSourceMap) {
-    await _writeArtifactSafelyAsync(
-      projectRoot,
-      'ios.publishSourceMapPath',
-      exp.ios.publishSourceMapPath,
-      iosSourceMap
-    );
   }
 }
 
