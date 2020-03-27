@@ -899,6 +899,10 @@ export type ExpoConfig = {
    * Used for Facebook native login. Starts with 'fb' and followed by a string of digits, like 'fb1234567890'. You can find your scheme at https://developers.facebook.com/docs/facebook-login/ios in the 'Configuring Your info.plist' section.
    */
   facebookScheme?: string;
+  facebookAutoInitEnabled?: boolean;
+  facebookAutoLogAppEventsEnabled?: boolean;
+  facebookAdvertiserIDCollectionEnabled?: boolean;
+
   /**
    * Is app detached
    * @generated

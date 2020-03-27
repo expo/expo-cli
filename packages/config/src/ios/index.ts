@@ -9,8 +9,13 @@ import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as RequiresFullScreen from './RequiresFullScreen';
 import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
 import * as Entitlements from './Entitlements';
+import * as Facebook from './Facebook';
+import * as Google from './Google';
 
+// Placeholders
 import * as Icons from './Icons';
+import * as SplashScreen from './SplashScreen';
+import * as Locales from './Locales';
 
 import { InfoPlist } from './IosConfig.types';
 
@@ -23,7 +28,11 @@ export {
   CustomInfoPlistEntries,
   DeviceFamily,
   Entitlements,
+  Facebook,
+  Google,
   Icons,
+  Locales,
+  SplashScreen,
   InfoPlist,
   Name,
   RequiresFullScreen,

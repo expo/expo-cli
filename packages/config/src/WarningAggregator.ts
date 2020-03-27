@@ -1,5 +1,6 @@
-let _warningsIOS: Array<Array<string>> = [];
-let _warningsAndroid: Array<Array<string>> = [];
+type WarningArray = [string, string, string | undefined];
+let _warningsIOS: Array<WarningArray> = [];
+let _warningsAndroid: Array<WarningArray> = [];
 
 export function hasWarningsIOS() {
   return !!_warningsIOS.length;
@@ -9,12 +10,12 @@ export function hasWarningsAndroid() {
   return !!_warningsAndroid.length;
 }
 
-export function addWarningAndroid(tag: string, text: string) {
-  _warningsAndroid = [..._warningsAndroid, [tag, text]];
+export function addWarningAndroid(tag: string, text: string, link?: string) {
+  _warningsAndroid = [..._warningsAndroid, [tag, text, link]];
 }
 
-export function addWarningIOS(tag: string, text: string) {
-  _warningsIOS = [..._warningsIOS, [tag, text]];
+export function addWarningIOS(tag: string, text: string, link?: string) {
+  _warningsIOS = [..._warningsIOS, [tag, text, link]];
 }
 
 export function flushWarningsAndroid() {

@@ -378,9 +378,9 @@ async function promptForNativeAppNamesAsync(
         nonInteractiveHelp: 'Please specify "displayName" and "name" in app.json.',
       }
     ));
-  }
 
-  log.newLine();
+    log.newLine();
+  }
 
   return { displayName, name };
 }

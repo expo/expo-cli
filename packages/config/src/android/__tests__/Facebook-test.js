@@ -42,9 +42,9 @@ describe('Android facebook config', () => {
       facebookScheme: 'myscheme',
       facebookAppId: 'my-app-id',
       facebookDisplayName: 'my-display-name',
-      facebookAutoLogAppEventsEnabled: 'false',
-      facebookAutoInitEnabled: 'true',
-      facebookAdvertiserIDCollectionEnabled: 'false',
+      facebookAutoLogAppEventsEnabled: false,
+      facebookAutoInitEnabled: true,
+      facebookAdvertiserIDCollectionEnabled: false,
     };
     androidManifestJson = await setFacebookConfig(facebookConfig, androidManifestJson);
     let mainApplication = androidManifestJson.manifest.application.filter(
@@ -71,7 +71,7 @@ describe('Android facebook config', () => {
     );
     expect(autoLogAppEventsEnabled).toHaveLength(1);
     expect(autoLogAppEventsEnabled[0]['$']['android:value']).toMatch(
-      facebookConfig.facebookAutoLogAppEventsEnabled
+      facebookConfig.facebookAutoLogAppEventsEnabled.toString()
     );
 
     let advertiserIDCollectionEnabled = mainApplication['meta-data'].filter(
@@ -79,7 +79,7 @@ describe('Android facebook config', () => {
     );
     expect(advertiserIDCollectionEnabled).toHaveLength(1);
     expect(advertiserIDCollectionEnabled[0]['$']['android:value']).toMatch(
-      facebookConfig.facebookAdvertiserIDCollectionEnabled
+      facebookConfig.facebookAdvertiserIDCollectionEnabled.toString()
     );
 
     let autoInitEnabled = mainApplication['meta-data'].filter(
@@ -87,7 +87,7 @@ describe('Android facebook config', () => {
     );
     expect(autoInitEnabled).toHaveLength(1);
     expect(autoInitEnabled[0]['$']['android:value']).toMatch(
-      facebookConfig.facebookAutoInitEnabled
+      facebookConfig.facebookAutoInitEnabled.toString()
     );
   });
 });

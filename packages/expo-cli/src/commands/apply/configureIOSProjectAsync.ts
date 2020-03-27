@@ -54,8 +54,8 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
     infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(exp, infoPlist);
     infoPlist = IOSConfig.Branch.setBranchApiKey(exp, infoPlist);
     infoPlist = IOSConfig.UsesNonExemptEncryption.setUsesNonExemptEncryption(exp, infoPlist);
+    infoPlist = IOSConfig.Facebook.setFacebookConfig(exp, infoPlist);
 
-    // Placeholders
     return infoPlist;
   });
 
@@ -76,5 +76,7 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
 
   // Other
   await IOSConfig.Icons.setIconsAsync(exp, projectRoot);
-  // await IOSConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
+  await IOSConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
+  await IOSConfig.Locales.setLocalesAsync(exp, projectRoot);
+  // await IOSConfig.Google.copyGoogleServicesAsync(exp, projectRoot);
 }

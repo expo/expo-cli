@@ -4,13 +4,13 @@ import { getConfig } from '@expo/config';
 import * as Eject from './eject/Eject';
 import * as LegacyEject from './eject/LegacyEject';
 
-// Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3
 async function action(
   projectDir: string,
   options: LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions
 ) {
   let { exp } = getConfig(projectDir);
   if (Versions.lteSdkVersion(exp, '36.0.0')) {
+    // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3
     await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
   } else {
     await Eject.ejectAsync(projectDir, options as Eject.EjectAsyncOptions);

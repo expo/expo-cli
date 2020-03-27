@@ -86,21 +86,21 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
       'com.facebook.sdk.AutoInitEnabled',
-      autoInitEnabled
+      autoInitEnabled ? 'true' : 'false'
     );
   }
   if (autoLogAppEvents !== null) {
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
       'com.facebook.sdk.AutoLogAppEventsEnabled',
-      autoLogAppEvents
+      autoLogAppEvents ? 'true' : 'false'
     );
   }
   if (advertiserIdCollection !== null) {
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
       'com.facebook.sdk.AdvertiserIDCollectionEnabled',
-      advertiserIdCollection
+      advertiserIdCollection ? 'true' : 'false'
     );
   }
 

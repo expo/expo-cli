@@ -10,4 +10,10 @@ export type InfoPlist = {
   CFBundleName?: string;
   CFBundleURLTypes?: Array<URLScheme>;
   ITSAppUsesNonExemptEncryption?: boolean;
+  LSApplicationQueriesSchemes?: Array<string>;
+  FacebookAppID?: string;
+  FacebookDisplayName?: string;
+  FacebookAutoInitEnabled?: boolean;
+  FacebookAutoLogAppEventsEnabled?: boolean;
+  FacebookAdvertiserIDCollectionEnabled?: boolean;
 };
