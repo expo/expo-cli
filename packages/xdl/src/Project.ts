@@ -1926,7 +1926,17 @@ export async function startReactNativeServerAsync(
   }
 
   if (Versions.gteSdkVersion(exp, '33.0.0')) {
-    packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+    // starting with SDK 37, we bundle this plugin with the expo-asset package instead of expo,
+    // so check there first and fall back to expo if we can't find it in expo-asset
+    try {
+      packagerOpts.assetPlugins = resolveModule(
+        'expo-asset/tools/hashAssetFiles',
+        projectRoot,
+        exp
+      );
+    } catch (e) {
+      packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+    }
   }
 
   if (options.maxWorkers) {
