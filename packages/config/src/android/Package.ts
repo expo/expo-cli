@@ -48,14 +48,6 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
   let currentPackagePath = path.join(packageRoot, ...currentPackageName.split('.'));
   let newPackagePath = path.join(packageRoot, ...newPackageName.split('.'));
 
-  console.log({
-    packageRoot,
-    currentPackageName,
-    currentPackagePath,
-    newPackageName,
-    newPackagePath,
-  });
-
   // Create the new directory
   fs.mkdirpSync(newPackagePath);
 
