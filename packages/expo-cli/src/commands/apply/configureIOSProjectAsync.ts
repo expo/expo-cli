@@ -2,6 +2,14 @@ import { IosPlist } from '@expo/xdl';
 import { IOSConfig, getConfig } from '@expo/config';
 import path from 'path';
 
+// TODO: come up with a better solution for using app.json expo.name in various places
+function sanitizedName(name: string) {
+  return name
+    .replace(/[\W_]+/g, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
 // TODO: it's silly and kind of fragile that we look at app config to determine the
 // ios project paths
 // * Overall this function needs to be revamped, just a placeholder for now!
@@ -13,7 +21,7 @@ function getIOSPaths(projectRoot: string) {
     throw new Error('Need a name ;O');
   }
 
-  const iosProjectDirectory = path.join(projectRoot, 'ios', projectName);
+  const iosProjectDirectory = path.join(projectRoot, 'ios', sanitizedName(projectName));
   const iconPath = path.join(iosProjectDirectory, 'Assets.xcassets', 'AppIcon.appiconset');
 
   return {

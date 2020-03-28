@@ -138,17 +138,10 @@ function logNewSection(title: string) {
 }
 
 async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
-  const useYarn = isUsingYarn(projectRoot);
-  const npmOrYarn = useYarn ? 'yarn' : 'npm';
-
   // We need the SDK version to proceed
   const { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   if (!exp.sdkVersion) {
     throw new Error(`Unable to find the project's SDK version. Are you in the correct directory?`);
-  }
-
-  if (!Versions.gteSdkVersion(exp, '34.0.0')) {
-    throw new Error(`Ejecting to a bare project is only available for SDK 34 and higher`);
   }
 
   // Validate that the template exists
@@ -180,10 +173,8 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   // Just to be sure
   appJson.expo = appJson.expo ?? {};
 
-  let { displayName, name } = await promptForNativeAppNamesAsync(projectRoot);
-  appJson.displayName = displayName;
+  let name = await promptForNativeAppNameAsync(projectRoot);
   appJson.expo.name = name;
-  appJson.name = name;
 
   let bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
   appJson.expo.ios = appJson.expo.ios ?? {};
@@ -216,9 +207,10 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   );
   try {
     const tempDir = temporary.directory();
-    await Exp.extractTemplateAppAsync(templateSpec, tempDir, appJson);
+    await Exp.extractTemplateAppAsync(templateSpec, tempDir, appJson.expo);
     fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
     fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
+    fse.copySync(path.join(tempDir, 'index.js'), path.join(projectRoot, 'index.js'));
     const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
     defaultDependencies = createDependenciesMap(dependencies);
     defaultDevDependencies = createDependenciesMap(devDependencies);
@@ -251,16 +243,6 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   pkg.scripts.start = 'react-native start';
   pkg.scripts.ios = 'react-native run-ios';
   pkg.scripts.android = 'react-native run-android';
-
-  // Jetifier is only needed for SDK 34 & 35
-  if (Versions.lteSdkVersion(exp, '35.0.0')) {
-    if (pkg.scripts.postinstall) {
-      pkg.scripts.postinstall = `jetify && ${pkg.scripts.postinstall}`;
-      log(chalk.green('jetifier has been added to your existing postinstall script.'));
-    } else {
-      pkg.scripts.postinstall = `jetify`;
-    }
-  }
 
   /**
    * Update package.json dependencies by combining the dependencies in the project we are ejecting
@@ -304,21 +286,12 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   delete pkg.main;
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
 
-  // TODO: this needs to change for sdk 37+
-  const indexjs = `import { AppRegistry, Platform } from 'react-native';
-import App from './App';
-
-AppRegistry.registerComponent('${appJson.name}', () => App);
-
-if (Platform.OS === 'web') {
-  const rootTag = document.getElementById('root') || document.getElementById('main');
-  AppRegistry.runApplication('${appJson.name}', { rootTag });
-}
-`;
-  await fse.writeFile(path.resolve('index.js'), indexjs);
   updatingPackageJsonStep.succeed('Updated package.json and added index.js entry point.');
-
   log.newLine();
+
+  /**
+   * Install dependencies
+   */
   let installingDependenciesStep = logNewSection('Installing dependencies');
   await fse.remove('node_modules');
   const packageManager = PackageManager.createForProject(projectRoot, { log, silent: true });
@@ -332,57 +305,32 @@ if (Platform.OS === 'web') {
   }
 }
 
-/**
- * Returns a name that adheres to Xcode and Android naming conventions.
- *
- * - package name: https://docs.oracle.com/javase/tutorial/java/package/namingpkgs.html
- * @param projectRoot
- */
-async function promptForNativeAppNamesAsync(
-  projectRoot: string
-): Promise<{ displayName: string; name: string }> {
-  const { configPath, configName } = findConfigFile(projectRoot);
-  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
+async function promptForNativeAppNameAsync(projectRoot: string): Promise<string> {
+  const { exp } = await readConfigJsonAsync(projectRoot);
 
-  const configBuffer = await fse.readFile(configPath);
-  const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
-
-  let { displayName, name } = appJson;
-  if (!displayName || !name) {
+  let { name } = exp;
+  if (!name) {
     log('First, we want to clarify what names we should use for your app:');
-    ({ displayName, name } = await prompt(
+    ({ name } = await prompt(
       [
         {
-          name: 'displayName',
+          name: 'name',
           message: "What should your app appear as on a user's home screen?",
-          default: name || exp.name,
+          default: exp.name,
           validate({ length }: string): true | ValidationErrorMessage {
             return length ? true : 'App display name cannot be empty.';
           },
         },
-        {
-          name: 'name',
-          message: 'What should your Android Studio and Xcode projects be called?',
-          default: pkg.name ? stripDashes(pkg.name) : undefined,
-          validate(value: string): true | ValidationErrorMessage {
-            if (value.length === 0) {
-              return 'Project name cannot be empty.';
-            } else if (value.includes('-') || value.includes(' ')) {
-              return 'Project name cannot contain hyphens or spaces.';
-            }
-            return true;
-          },
-        },
       ],
       {
-        nonInteractiveHelp: 'Please specify "displayName" and "name" in app.json.',
+        nonInteractiveHelp: 'Please specify "expo.name" in app.json / app.config.js.',
       }
     ));
 
     log.newLine();
   }
 
-  return { displayName, name };
+  return name!;
 }
 
 async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<string> {

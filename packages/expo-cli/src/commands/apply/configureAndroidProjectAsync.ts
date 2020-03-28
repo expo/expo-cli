@@ -62,14 +62,22 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
       exp,
       androidManifest
     );
-    androidManifest = await AndroidConfig.GoogleMobileAds.setGoogleMobileAdsConfig(
-      exp,
-      androidManifest
-    );
-    androidManifest = await AndroidConfig.GoogleMapsApiKey.setGoogleMapsApiKey(
-      exp,
-      androidManifest
-    );
+
+    /** TODO: These two things cause problems, find out why!
+     * INSTALL_PARSE_FAILED_MANIFEST_MALFORMED: Failed parse during
+     * installPackageLI: /data/app/vmdl139489845.tmp/base.apk (at Binary XML
+     * file line #62): <meta-data> requires an android:value or
+     * android:resource attribute
+     */
+    // androidManifest = await AndroidConfig.GoogleMobileAds.setGoogleMobileAdsConfig(
+    //   exp,
+    //   androidManifest
+    // );
+    // androidManifest = await AndroidConfig.GoogleMapsApiKey.setGoogleMapsApiKey(
+    //   exp,
+    //   androidManifest
+    // );
+
     androidManifest = await AndroidConfig.IntentFilters.setAndroidIntentFilters(
       exp,
       androidManifest
@@ -85,6 +93,9 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     );
     return mainActivity;
   });
+
+  // If we renamed the package, we should also move it around and rename it in source files
+  await AndroidConfig.Package.renamePackageOnDisk(exp, projectRoot);
 
   // Modify colors.xml and styles.xml
   await AndroidConfig.RootViewBackgroundColor.setRootViewBackgroundColor(exp, projectRoot);

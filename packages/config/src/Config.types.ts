@@ -1,7 +1,7 @@
 export type PackageJSONConfig = { [key: string]: any };
 export type ProjectConfig = { exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig };
 export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
-export type BareAppConfig = { name: string; displayName: string; [key: string]: any };
+export type BareAppConfig = { name: string; [key: string]: any };
 
 type ExpoOrientation = 'default' | 'portrait' | 'landscape';
 type ExpoPrivacy = 'public' | 'unlisted';

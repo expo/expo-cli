@@ -3,7 +3,7 @@ import { ExpoConfig } from '../Config.types';
 
 export function getSupportsTablet(config: ExpoConfig) {
   if (config.ios?.supportsTablet) {
-    return true;
+    return config.ios?.supportsTablet;
   }
 
   return false;
@@ -11,12 +11,13 @@ export function getSupportsTablet(config: ExpoConfig) {
 
 export function getIsTabletOnly(config: ExpoConfig) {
   if (config.ios?.isTabletOnly) {
-    return true;
+    return config.ios.isTabletOnly;
   }
 
   return false;
 }
 
+// TODO: this isn't enough! need to also update pbxproj to add TARGETED_DEVICE_FAMILY
 export function getDeviceFamilies(config: ExpoConfig) {
   let supportsTablet = getSupportsTablet(config);
   let isTabletOnly = getIsTabletOnly(config);
