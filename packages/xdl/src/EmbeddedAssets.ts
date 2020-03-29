@@ -7,6 +7,7 @@ import * as IosPlist from './detach/IosPlist';
 // @ts-ignore IosWorkspace not yet converted to TypeScript
 import * as IosWorkspace from './detach/IosWorkspace';
 import StandaloneContext from './detach/StandaloneContext';
+import logger from './Logger';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 
 export type EmbeddedAssetsConfiguration = {
@@ -37,6 +38,7 @@ export async function configureAsync(config: EmbeddedAssetsConfiguration) {
 async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfiguration) {
   const {
     projectRoot,
+    pkg,
     exp,
     iosManifest,
     iosBundle,
@@ -46,57 +48,100 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
     androidSourceMap,
   } = config;
 
+  let androidBundlePath;
+  let androidManifestPath;
+  let androidSourceMapPath;
+  let iosBundlePath;
+  let iosManifestPath;
+  let iosSourceMapPath;
+
+  // set defaults
+  if (pkg.dependencies['expo-updates']) {
+    const context = StandaloneContext.createUserContext(projectRoot, exp);
+    const { supportingDirectory } = IosWorkspace.getPaths(context);
+    const androidAssetsDir = path.join(projectRoot, 'android', 'app', 'src', 'main', 'assets');
+
+    await fs.ensureDir(supportingDirectory);
+    await fs.ensureDir(androidAssetsDir);
+
+    androidBundlePath = path.join(androidAssetsDir, 'shell-app.bundle');
+    androidManifestPath = path.join(androidAssetsDir, 'shell-app-manifest.json');
+    iosBundlePath = path.join(supportingDirectory, 'shell-app.bundle');
+    iosManifestPath = path.join(supportingDirectory, 'shell-app-manifest.json');
+
+    if (!fs.existsSync(iosBundlePath) || !fs.existsSync(iosManifestPath)) {
+      logger.global.warn(
+        'Creating shell-app-manifest.json and shell-app.bundle inside of your ios/<project>/Supporting directory.\nBe sure to add these files to your Xcode project. More info at https://expo.fyi/embedded-assets'
+      );
+    }
+  }
+
+  // allow custom overrides
   if (exp.android && exp.android.publishBundlePath) {
+    androidBundlePath = exp.android.publishBundlePath;
+  }
+  if (exp.android && exp.android.publishManifestPath) {
+    androidManifestPath = exp.android.publishManifestPath;
+  }
+  if (exp.android && exp.android.publishSourceMapPath) {
+    androidSourceMapPath = exp.android.publishSourceMapPath;
+  }
+  if (exp.ios && exp.ios.publishBundlePath) {
+    iosBundlePath = exp.ios.publishBundlePath;
+  }
+  if (exp.ios && exp.ios.publishManifestPath) {
+    iosManifestPath = exp.ios.publishManifestPath;
+  }
+  if (exp.ios && exp.ios.publishSourceMapPath) {
+    iosSourceMapPath = exp.ios.publishSourceMapPath;
+  }
+
+  if (androidBundlePath) {
     await writeArtifactSafelyAsync(
       projectRoot,
       'android.publishBundlePath',
-      exp.android.publishBundlePath,
+      androidBundlePath,
       androidBundle
     );
   }
 
-  if (exp.ios && exp.ios.publishBundlePath) {
+  if (androidManifestPath) {
     await writeArtifactSafelyAsync(
       projectRoot,
-      'ios.publishBundlePath',
-      exp.ios.publishBundlePath,
-      iosBundle
+      'android.publishManifestPath',
+      androidManifestPath,
+      JSON.stringify(androidManifest)
     );
   }
 
-  if (exp.android && exp.android.publishSourceMapPath && androidSourceMap) {
+  if (androidSourceMapPath && androidSourceMap) {
     await writeArtifactSafelyAsync(
       projectRoot,
       'android.publishSourceMapPath',
-      exp.android.publishSourceMapPath,
+      androidSourceMapPath,
       androidSourceMap
     );
   }
 
-  if (exp.ios && exp.ios.publishSourceMapPath && iosSourceMap) {
-    await writeArtifactSafelyAsync(
-      projectRoot,
-      'ios.publishSourceMapPath',
-      exp.ios.publishSourceMapPath,
-      iosSourceMap
-    );
+  if (iosBundlePath) {
+    await writeArtifactSafelyAsync(projectRoot, 'ios.publishBundlePath', iosBundlePath, iosBundle);
   }
 
-  if (exp.ios && exp.ios.publishManifestPath) {
+  if (iosManifestPath) {
     await writeArtifactSafelyAsync(
       projectRoot,
       'ios.publishManifestPath',
-      exp.ios.publishManifestPath,
+      iosManifestPath,
       JSON.stringify(iosManifest)
     );
   }
 
-  if (exp.android && exp.android.publishManifestPath) {
+  if (iosSourceMapPath && iosSourceMap) {
     await writeArtifactSafelyAsync(
       projectRoot,
-      'android.publishManifestPath',
-      exp.android.publishManifestPath,
-      JSON.stringify(androidManifest)
+      'ios.publishSourceMapPath',
+      iosSourceMapPath,
+      iosSourceMap
     );
   }
 }
