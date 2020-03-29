@@ -60,6 +60,21 @@ export default class HtmlWebpackPlugin extends OriginalHtmlWebpackPlugin {
         meta.viewport =
           'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1.00001, viewport-fit=cover';
       }
+      // Meta tag to define a suggested color that browsers should use to customize the display of the page or of the surrounding user interface.
+      // The meta tag overrides any theme-color set in the web app manifest.
+      if (
+        config.web?.themeColor &&
+        !templateMeta.some((node: any) => node.getAttribute('name') === 'theme-color')
+      ) {
+        meta['theme-color'] = config.web?.themeColor;
+      }
+
+      if (
+        config.web?.description &&
+        !templateMeta.some((node: any) => node.getAttribute('name') === 'description')
+      ) {
+        meta['description'] = config.web?.description;
+      }
     }
 
     super({

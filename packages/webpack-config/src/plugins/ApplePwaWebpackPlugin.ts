@@ -35,8 +35,8 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
   ): Promise<HTMLPluginData> {
     // Meta
     if (this.meta.isWebAppCapable) {
-      data.assetTags.meta.push(metaTag('apple-mobile-web-app-capable', 'yes'));
       data.assetTags.meta.push(metaTag('mobile-web-app-capable', 'yes'));
+      data.assetTags.meta.push(metaTag('apple-mobile-web-app-capable', 'yes'));
     }
     if (this.meta.isFullScreen) {
       data.assetTags.meta.push(metaTag('apple-touch-fullscreen', 'yes'));
