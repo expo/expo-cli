@@ -1,6 +1,7 @@
 import path from 'path';
 
 import spawnAsync from '@expo/spawn-async';
+import { ProjectSettings } from '@expo/xdl';
 import temporary from 'tempy';
 
 import { EXPO_CLI, runAsync } from '../TestUtils';
@@ -26,4 +27,35 @@ test('start --offline', async () => {
     }
   });
   cli.stderr.pipe(process.stderr);
+});
+
+test('start --offline with existing packager info', async () => {
+  await ProjectSettings.setPackagerInfoAsync(tempDir, {
+    devToolsPort: 19002,
+    expoServerPort: 19001,
+    packagerPort: 19000,
+    packagerPid: 1337,
+  });
+
+  const promise = spawnAsync(EXPO_CLI, ['start', '--offline'], { cwd: projectDir });
+  const cli = promise.child;
+
+  cli.stderr.pipe(process.stderr);
+  cli.stdout.on('data', data => {
+    process.stdout.write(data);
+    if (/Your native app is running/.test(data.toString())) {
+      cli.kill('SIGINT');
+    }
+  });
+
+  try {
+    await promise;
+  } finally {
+    await ProjectSettings.setPackagerInfoAsync(tempDir, {
+      devToolsPort: null,
+      expoServerPort: null,
+      packagerPort: null,
+      packagerPid: null,
+    });
+  }
 });
