@@ -64,14 +64,14 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
     await fs.ensureDir(supportingDirectory);
     await fs.ensureDir(androidAssetsDir);
 
-    androidBundlePath = path.join(androidAssetsDir, 'shell-app.bundle');
-    androidManifestPath = path.join(androidAssetsDir, 'shell-app-manifest.json');
-    iosBundlePath = path.join(supportingDirectory, 'shell-app.bundle');
-    iosManifestPath = path.join(supportingDirectory, 'shell-app-manifest.json');
+    androidBundlePath = path.join(androidAssetsDir, 'app.bundle');
+    androidManifestPath = path.join(androidAssetsDir, 'app.manifest');
+    iosBundlePath = path.join(supportingDirectory, 'app.bundle');
+    iosManifestPath = path.join(supportingDirectory, 'app.manifest');
 
     if (!fs.existsSync(iosBundlePath) || !fs.existsSync(iosManifestPath)) {
       logger.global.warn(
-        'Creating shell-app-manifest.json and shell-app.bundle inside of your ios/<project>/Supporting directory.\nBe sure to add these files to your Xcode project. More info at https://expo.fyi/embedded-assets'
+        'Creating app.manifest and app.bundle inside of your ios/<project>/Supporting directory.\nBe sure to add these files to your Xcode project. More info at https://expo.fyi/embedded-assets'
       );
     }
   }
