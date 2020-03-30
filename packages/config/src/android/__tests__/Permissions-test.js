@@ -1,6 +1,6 @@
 import { dirname, resolve } from 'path';
 import fs from 'fs-extra';
-import * as Manifest from '../Manifest';
+import * as Manifest from '../index';
 const fixturesPath = resolve(__dirname, 'fixtures');
 const manifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
 

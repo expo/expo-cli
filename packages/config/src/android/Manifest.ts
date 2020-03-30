@@ -116,6 +116,15 @@ export async function resolveInputOptionsAsync(options: InputOptions): Promise<D
   throw new Error('Cannot resolve a valid AndroidManifest.xml');
 }
 
+export async function resolveOutputOptionsAsync(options: InputOptions): Promise<string> {
+  if (options.manifestPath) return options.manifestPath;
+  if (options.projectRoot) {
+    const manifestPath = await getAndroidManifestPathAsync(options.projectRoot);
+    return resolveOutputOptionsAsync({ manifestPath });
+  }
+  throw new Error('Cannot resolve an output for writing AndroidManifest.xml');
+}
+
 export async function getPackageAsync(options: InputOptions): Promise<string | null> {
   const manifest = await resolveInputOptionsAsync(options);
   return manifest.manifest?.['$']?.package ?? null;

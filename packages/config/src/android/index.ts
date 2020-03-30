@@ -1,3 +1,3 @@
 export * from './Manifest';
-export * from './Schemes';
+export { getSchemesAsync, modifySchemesAsync } from './Schemes';
 export * from './Permissions';
