@@ -1,4 +1,3 @@
-import rimraf from 'rimraf';
 import path from 'path';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
@@ -55,14 +54,27 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
   globSync(path.join(currentPackagePath, '**', '*')).forEach(filepath => {
     let relativePath = filepath.replace(currentPackagePath, '');
     if (fs.lstatSync(filepath).isFile()) {
-      fs.copySync(filepath, path.join(newPackagePath, relativePath));
+      fs.moveSync(filepath, path.join(newPackagePath, relativePath));
     } else {
       fs.mkdirpSync(filepath);
     }
   });
 
-  // Remove the old directory entirely
-  rimraf.sync(path.join(packageRoot, currentPackageName.split('.')[0]));
+  // Remove the old directory recursively from com/old/package to com/old and com,
+  // as long as the directories are empty
+  let oldPathParts = currentPackageName.split('.');
+  while (oldPathParts.length) {
+    let pathToCheck = path.join(packageRoot, ...oldPathParts);
+    try {
+      let files = fs.readdirSync(pathToCheck);
+      if (files.length === 0) {
+        fs.rmdirSync(pathToCheck);
+      }
+    } catch (_) {
+    } finally {
+      oldPathParts.pop();
+    }
+  }
 
   const filesToUpdate = [
     ...globSync(path.join(newPackagePath, '**', '*')),

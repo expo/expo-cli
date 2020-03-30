@@ -117,5 +117,12 @@ public class SomeClass {
       expect(fs.readFileSync(buckPath).toString()).toMatch('package = "xyz.bront.app"');
       expect(fs.readFileSync(buckPath).toString()).not.toMatch('com.lololol');
     });
+
+    it('does not clobber itself if package has similar parts', () => {
+      renamePackageOnDisk({ android: { package: 'com.bront' } }, '/myapp');
+      let mainActivityPath = '/myapp/android/app/src/main/java/com/bront/MainActivity.java';
+      expect(fs.existsSync(mainActivityPath)).toBeTruthy();
+      expect(fs.readFileSync(mainActivityPath).toString()).toMatch('package com.bront');
+    });
   });
 });
