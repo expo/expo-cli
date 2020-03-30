@@ -28,7 +28,7 @@ async function action(
     if (Versions.lteSdkVersion({ sdkVersion: latestReleasedVersion.version }, '36.0.0')) {
       await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
     } else {
-      if (await userWantsToEjectWithoutUpgradingAsync()) {
+      if (options.force || (await userWantsToEjectWithoutUpgradingAsync())) {
         await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
       }
     }
