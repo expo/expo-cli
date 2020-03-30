@@ -58,7 +58,7 @@ describe('Android facebook config', () => {
       e => e['$']['android:name'] === 'com.facebook.sdk.ApplicationId'
     );
     expect(applicationId).toHaveLength(1);
-    expect(applicationId[0]['$']['android:value']).toMatch(facebookConfig.facebookAppId);
+    expect(applicationId[0]['$']['android:value']).toMatch('@string/facebook_app_id');
 
     let displayName = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'com.facebook.sdk.ApplicationName'

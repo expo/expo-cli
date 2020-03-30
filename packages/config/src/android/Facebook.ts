@@ -1,6 +1,13 @@
 import { Parser } from 'xml2js';
 import { ExpoConfig } from '../Config.types';
 import { Document } from './Manifest';
+import {
+  getProjectStringsXMLPathAsync,
+  readStringsXMLAsync,
+  setStringItem,
+  writeStringsXMLAsync,
+} from './Strings';
+import { XMLItem } from './Styles';
 
 const facebookSchemeActivity = (scheme: string) => `
 <activity
@@ -42,6 +49,31 @@ export function getFacebookAdvertiserIDCollection(config: ExpoConfig) {
     : null;
 }
 
+export async function setFacebookAppIdString(config: ExpoConfig, projectDirectory: string) {
+  const appId = getFacebookAppId(config);
+  if (!appId) {
+    return false;
+  }
+
+  const stringsPath = await getProjectStringsXMLPathAsync(projectDirectory);
+  if (!stringsPath) {
+    throw new Error(`There was a problem setting your Facebook App ID in ${stringsPath}.`);
+  }
+
+  let stringsJSON = await readStringsXMLAsync(stringsPath);
+  let stringItemToAdd: XMLItem[] = [{ _: appId, $: { name: 'facebook_app_id' } }];
+  stringsJSON = setStringItem(stringItemToAdd, stringsJSON);
+
+  try {
+    await writeStringsXMLAsync(stringsPath, stringsJSON);
+  } catch (e) {
+    throw new Error(
+      `Error setting Android navigation bar color. Cannot write strings.xml to ${stringsPath}.`
+    );
+  }
+  return true;
+}
+
 export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
   const scheme = getFacebookScheme(config);
   const appId = getFacebookAppId(config);
@@ -72,7 +104,7 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
       'com.facebook.sdk.ApplicationId',
-      appId
+      '@string/facebook_app_id' // The corresponding string is set in setFacebookAppIdString
     );
   }
   if (displayName) {
