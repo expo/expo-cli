@@ -20,10 +20,17 @@ async function action(
   options: LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions
 ) {
   let { exp } = getConfig(projectDir);
+
+  // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3 for ExpoKit
   if (Versions.lteSdkVersion(exp, '36.0.0')) {
-    // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3
-    if (await userWantsToEjectWithoutUpgradingAsync()) {
+    // Don't show a warning if we haven't released SDK 37 yet
+    let latestReleasedVersion = await Versions.newestReleasedSdkVersionAsync();
+    if (Versions.lteSdkVersion({ sdkVersion: latestReleasedVersion.version }, '36.0.0')) {
       await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
+    } else {
+      if (await userWantsToEjectWithoutUpgradingAsync()) {
+        await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
+      }
     }
   } else {
     await Eject.ejectAsync(projectDir, options as Eject.EjectAsyncOptions);
