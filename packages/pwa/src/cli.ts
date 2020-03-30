@@ -69,67 +69,76 @@ function assetCommand(name: string, examples: string[] = []): Command {
 assetCommand('icon', ['--platform safari -i ./icon.png', '--platform chrome -i ./icon.png'])
   .description('Generate the home screen icons for a PWA')
   .option('--platform', 'Platform to generate for: safari, chrome')
-  .action((inputProjectRoot: string, options: IconAssetCommandOptions) => {
+  .action(async (inputProjectRoot: string, options: IconAssetCommandOptions) => {
     validateSourceArgument(options.input, 'favicon');
     const projectRoot = inputProjectRoot ?? process.cwd();
     const output = options.output ?? join(projectRoot, 'web');
 
-    generateAssets(projectRoot, options.platform + '-icon', {
-      src: options.input,
-      output,
-      publicPath: options.public || output,
-      resizeMode: options.resize,
-      color: options.color || 'transparent',
-    })
-      .then(shouldUpdate)
-      .catch(commandDidThrowAsync);
+    try {
+      await generateAssets(projectRoot, options.platform + '-icon', {
+        src: options.input,
+        output,
+        publicPath: options.public || output,
+        resizeMode: options.resize,
+        color: options.color || 'transparent',
+      });
+      await shouldUpdate();
+    } catch (error) {
+      await commandDidThrowAsync(error);
+    }
   });
 
 assetCommand('favicon', ['-i ./icon.png'])
   .description('Generate the favicons for a website')
-  .action((inputProjectRoot: string, options: AssetCommandOptions) => {
+  .action(async (inputProjectRoot: string, options: AssetCommandOptions) => {
     validateSourceArgument(options.input, 'favicon');
     const projectRoot = inputProjectRoot ?? process.cwd();
     const output = options.output ?? join(projectRoot, 'web');
 
-    generateAssets(projectRoot, 'favicon', {
-      src: options.input,
-      output,
-      publicPath: options.public || output,
-      resizeMode: options.resize,
-      color: options.color || 'transparent',
-    })
-      .then(shouldUpdate)
-      .catch(commandDidThrowAsync);
+    try {
+      await generateAssets(projectRoot, 'favicon', {
+        src: options.input,
+        output,
+        publicPath: options.public || output,
+        resizeMode: options.resize,
+        color: options.color || 'transparent',
+      });
+      await shouldUpdate();
+    } catch (error) {
+      await commandDidThrowAsync(error);
+    }
   });
 
 assetCommand('splash', ['--color blue --resize cover -i ./splash.png'])
   .description('Generate the Safari splash screens for a PWA')
-  .action((inputProjectRoot: string, options: AssetCommandOptions) => {
+  .action(async (inputProjectRoot: string, options: AssetCommandOptions) => {
     validateSourceArgument(options.input, 'favicon');
     const projectRoot = inputProjectRoot ?? process.cwd();
     const output = options.output ?? join(projectRoot, 'web');
 
-    generateAssets(projectRoot, 'splash', {
-      src: options.input,
-      output,
-      publicPath: options.public || output,
-      resizeMode: options.resize,
-      color: options.color || 'white',
-    })
-      .then(shouldUpdate)
-      .catch(commandDidThrowAsync);
+    try {
+      await generateAssets(projectRoot, 'splash', {
+        src: options.input,
+        output,
+        publicPath: options.public || output,
+        resizeMode: options.resize,
+        color: options.color || 'white',
+      });
+      await shouldUpdate();
+    } catch (error) {
+      await commandDidThrowAsync(error);
+    }
   });
 
 outputCommand('manifest', ['-i ./random.config.js'])
   .description('Generate the PWA manifest from an Expo project config')
-  .action((inputProjectRoot: string, options: ManifestCommandOptions) => {
+  .action(async (inputProjectRoot: string, options: ManifestCommandOptions) => {
     const projectRoot = resolve(inputProjectRoot ?? process.cwd());
     const output = options.output ?? join(projectRoot, 'web');
     const publicPath = resolve(options.public ?? output);
     const outputPath = resolve(output);
 
-    (async () => {
+    try {
       const items = await generateManifestAsync(
         {
           projectRoot: resolve(projectRoot),
@@ -138,9 +147,10 @@ outputCommand('manifest', ['-i ./random.config.js'])
         options.input ? resolve(options.input) : undefined
       );
       await resolveOutputAsync(publicPath, outputPath, items);
-    })()
-      .then(shouldUpdate)
-      .catch(commandDidThrowAsync);
+      await shouldUpdate();
+    } catch (error) {
+      await commandDidThrowAsync(error);
+    }
   });
 
 program.parse(process.argv);
