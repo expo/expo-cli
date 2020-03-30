@@ -17,16 +17,19 @@ beforeAll(async () => {
 });
 
 test('start --offline', async () => {
-  const promise = spawnAsync(EXPO_CLI, ['start', '--offline'], {
-    cwd: projectDir,
-  });
+  const promise = spawnAsync(EXPO_CLI, ['start', '--offline'], { cwd: projectDir });
   const cli = promise.child;
-  cli.stdout.pipe(process.stdout).on('data', data => {
-    if (/Your native app is running/.test(data.toString())) {
-      cli.kill('SIGINT');
-    }
-  });
+
   cli.stderr.pipe(process.stderr);
+  cli.stdout
+    .on('data', data => {
+      if (/Your native app is running/.test(data.toString())) {
+        cli.kill('SIGINT');
+      }
+    })
+    .pipe(process.stdout);
+
+  await promise;
 });
 
 test('start --offline with existing packager info', async () => {
@@ -41,12 +44,13 @@ test('start --offline with existing packager info', async () => {
   const cli = promise.child;
 
   cli.stderr.pipe(process.stderr);
-  cli.stdout.on('data', data => {
-    process.stdout.write(data);
-    if (/Your native app is running/.test(data.toString())) {
-      cli.kill('SIGINT');
-    }
-  });
+  cli.stdout
+    .on('data', data => {
+      if (/Your native app is running/.test(data.toString())) {
+        cli.kill('SIGINT');
+      }
+    })
+    .pipe(process.stdout);
 
   try {
     await promise;
