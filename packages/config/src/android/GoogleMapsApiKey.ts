@@ -24,7 +24,7 @@ export async function setGoogleMapsApiKey(config: ExpoConfig, manifestDocument: 
       'android:value': apiKey,
     },
   };
-  if (mainApplication.hasOwnProperty('meta-data')) {
+  if ('meta-data' in mainApplication) {
     existingMetaDataItem = mainApplication['meta-data'].filter(
       (e: any) => e['$']['android:name'] === 'com.google.android.geo.API_KEY'
     );
