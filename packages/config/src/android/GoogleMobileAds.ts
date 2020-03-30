@@ -13,6 +13,10 @@ export async function setGoogleMobileAdsConfig(config: ExpoConfig, manifestDocum
   const appId = getGoogleMobileAdsAppId(config);
   const autoInit = getGoogleMobileAdsAutoInit(config);
 
+  if (!appId) {
+    return manifestDocument;
+  }
+
   let mainApplication = manifestDocument.manifest.application.filter(
     (e: any) => e['$']['android:name'] === '.MainApplication'
   )[0];

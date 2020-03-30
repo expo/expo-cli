@@ -63,20 +63,14 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
       androidManifest
     );
 
-    /** TODO: These two things cause problems, find out why!
-     * INSTALL_PARSE_FAILED_MANIFEST_MALFORMED: Failed parse during
-     * installPackageLI: /data/app/vmdl139489845.tmp/base.apk (at Binary XML
-     * file line #62): <meta-data> requires an android:value or
-     * android:resource attribute
-     */
-    // androidManifest = await AndroidConfig.GoogleMobileAds.setGoogleMobileAdsConfig(
-    //   exp,
-    //   androidManifest
-    // );
-    // androidManifest = await AndroidConfig.GoogleMapsApiKey.setGoogleMapsApiKey(
-    //   exp,
-    //   androidManifest
-    // );
+    androidManifest = await AndroidConfig.GoogleMobileAds.setGoogleMobileAdsConfig(
+      exp,
+      androidManifest
+    );
+    androidManifest = await AndroidConfig.GoogleMapsApiKey.setGoogleMapsApiKey(
+      exp,
+      androidManifest
+    );
 
     androidManifest = await AndroidConfig.IntentFilters.setAndroidIntentFilters(
       exp,
