@@ -3,8 +3,8 @@ import { Builder } from 'xml2js';
 import {
   Document,
   InputOptions,
-  getAndroidManifestPathAsync,
-  readAsync,
+  resolveInputOptionsAsync,
+  resolveOutputOptionsAsync,
   writeAndroidManifestAsync,
 } from './Manifest';
 
@@ -70,24 +70,6 @@ function getSingleTaskIntentFilterProps(doc: Document): IntentFilterProps[] {
   return outputSchemes;
 }
 
-async function resolveInputOptionsAsync(options: InputOptions): Promise<Document> {
-  if (options.manifest) return options.manifest;
-  if (options.manifestPath) return await readAsync(options.manifestPath);
-  if (options.projectRoot) {
-    const manifestPath = await getAndroidManifestPathAsync(options.projectRoot);
-    return resolveInputOptionsAsync({ manifestPath });
-  }
-  throw new Error('Cannot resolve a valid AndroidManifest.xml');
-}
-async function resolveOutputOptionsAsync(options: InputOptions): Promise<string> {
-  if (options.manifestPath) return options.manifestPath;
-  if (options.projectRoot) {
-    const manifestPath = await getAndroidManifestPathAsync(options.projectRoot);
-    return resolveOutputOptionsAsync({ manifestPath });
-  }
-  throw new Error('Cannot resolve an output for writing AndroidManifest.xml');
-}
-
 export async function getSchemesAsync(options: InputOptions): Promise<string[]> {
   const manifest = await resolveInputOptionsAsync(options);
   return getSingleTaskIntentFilterProps(manifest).reduce<string[]>(
@@ -96,11 +78,36 @@ export async function getSchemesAsync(options: InputOptions): Promise<string[]> 
   );
 }
 
+export function ensureManifestHasValidIntentFilter(manifest: Document): boolean {
+  for (let application of manifest.manifest['application']) {
+    for (let activity of application.activity) {
+      if (activity?.['$']?.['android:launchMode'] === 'singleTask') {
+        for (let intentFilter of activity['intent-filter']) {
+          // Parse valid intent filters...
+          const properties = propertiesFromIntentFilter(intentFilter);
+          if (isValidRedirectIntentFilter(properties)) {
+            return true;
+          }
+        }
+        activity['intent-filter'].push({
+          action: [{ $: { 'android:name': 'android.intent.action.VIEW' } }],
+          category: [
+            { $: { 'android:name': 'android.intent.category.DEFAULT' } },
+            { $: { 'android:name': 'android.intent.category.BROWSABLE' } },
+          ],
+        });
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 export async function modifySchemesAsync(
   options: InputOptions,
   scheme: { uri: string },
   modification: { operation: 'add' | 'remove'; dryRun?: boolean }
-): Promise<void> {
+): Promise<Document> {
   const manifest = await resolveInputOptionsAsync(options);
   const schemes = await getSchemesAsync({ manifest });
   const shouldAdd = modification.operation === 'add';
@@ -108,37 +115,14 @@ export async function modifySchemesAsync(
     throw new Error(`URI scheme "${scheme.uri}" already exists in AndroidManifest.xml`);
   }
   if (!shouldAdd && !schemes.includes(scheme.uri)) {
-    throw new Error(`URI scheme "${scheme.uri}" doesn't exist in the AndroidManifest.xml`);
+    throw new Error(`URI scheme "${scheme.uri}" does not exist in the AndroidManifest.xml`);
   }
 
-  function ensureManifestHasValidIntentFilter(manifest: Document): boolean {
-    const applications: { [key: string]: any }[] = manifest.manifest['application'] || [];
-
-    for (let application of applications) {
-      for (let activity of application.activity) {
-        if (activity?.['$']?.['android:launchMode'] === 'singleTask') {
-          for (let intentFilter of activity['intent-filter']) {
-            // Parse valid intent filters...
-            const properties = propertiesFromIntentFilter(intentFilter);
-            if (isValidRedirectIntentFilter(properties)) {
-              return true;
-            }
-          }
-          activity['intent-filter'].push({
-            action: [{ $: { 'android:name': 'android.intent.action.VIEW' } }],
-            category: [
-              { $: { 'android:name': 'android.intent.category.DEFAULT' } },
-              { $: { 'android:name': 'android.intent.category.BROWSABLE' } },
-            ],
-          });
-          return true;
-        }
-      }
-    }
-    return false;
+  if (!ensureManifestHasValidIntentFilter(manifest)) {
+    throw new Error(
+      `Cannot ${modification.operation} scheme "${scheme.uri}" because the provided manifest does not have a valid Activity with \`android:launchMode="singleTask"\``
+    );
   }
-
-  ensureManifestHasValidIntentFilter(manifest);
 
   const applications: { [key: string]: any }[] = manifest.manifest['application'] || [];
 
@@ -175,13 +159,13 @@ export async function modifySchemesAsync(
     }
   }
 
-  const outputPath = await resolveOutputOptionsAsync(options);
-
   if (modification.dryRun) {
-    console.log('Write manifest to: ', outputPath);
+    console.log('Write manifest:');
     const manifestXml = new Builder().buildObject(manifest);
     console.log(manifestXml);
-    return;
+    return manifest;
   }
+  const outputPath = await resolveOutputOptionsAsync(options);
   await writeAndroidManifestAsync(outputPath, manifest);
+  return manifest;
 }
