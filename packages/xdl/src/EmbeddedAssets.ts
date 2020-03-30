@@ -35,6 +35,55 @@ export async function configureAsync(config: EmbeddedAssetsConfiguration) {
   await _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config);
 }
 
+export function getEmbeddedManifestPath(
+  platform: 'ios' | 'android',
+  projectRoot: string,
+  exp: PublicConfig
+): string {
+  if (platform === 'ios') {
+    return exp.ios && exp.ios.publishManifestPath
+      ? exp.ios.publishManifestPath
+      : _getDefaultEmbeddedManifestPath(platform, projectRoot, exp);
+  } else if (platform === 'android') {
+    return exp.android && exp.android.publishManifestPath
+      ? exp.android.publishManifestPath
+      : _getDefaultEmbeddedManifestPath(platform, projectRoot, exp);
+  }
+  return _getDefaultEmbeddedManifestPath(platform, projectRoot, exp);
+}
+
+function _getDefaultEmbeddedManifestPath(
+  platform: 'ios' | 'android',
+  projectRoot: string,
+  exp: PublicConfig
+): string {
+  return path.join(_getDefaultEmbeddedAssetDir(platform, projectRoot, exp), 'app.manifest');
+}
+
+function _getDefaultEmbeddedBundlePath(
+  platform: 'ios' | 'android',
+  projectRoot: string,
+  exp: PublicConfig
+): string {
+  return path.join(_getDefaultEmbeddedAssetDir(platform, projectRoot, exp), 'app.bundle');
+}
+
+function _getDefaultEmbeddedAssetDir(
+  platform: 'ios' | 'android',
+  projectRoot: string,
+  exp: PublicConfig
+): string {
+  if (platform === 'ios') {
+    const context = StandaloneContext.createUserContext(projectRoot, exp);
+    const { supportingDirectory } = IosWorkspace.getPaths(context);
+    return supportingDirectory;
+  } else if (platform === 'android') {
+    return path.join(projectRoot, 'android', 'app', 'src', 'main', 'assets');
+  } else {
+    throw new Error('Embedding assets is not supported for platform ' + platform);
+  }
+}
+
 async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfiguration) {
   const {
     projectRoot,
@@ -57,17 +106,16 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
 
   // set defaults
   if (pkg.dependencies['expo-updates']) {
-    const context = StandaloneContext.createUserContext(projectRoot, exp);
-    const { supportingDirectory } = IosWorkspace.getPaths(context);
-    const androidAssetsDir = path.join(projectRoot, 'android', 'app', 'src', 'main', 'assets');
+    const defaultAndroidDir = _getDefaultEmbeddedAssetDir('android', projectRoot, exp);
+    const defaultIosDir = _getDefaultEmbeddedAssetDir('ios', projectRoot, exp);
 
-    await fs.ensureDir(supportingDirectory);
-    await fs.ensureDir(androidAssetsDir);
+    await fs.ensureDir(defaultIosDir);
+    await fs.ensureDir(defaultAndroidDir);
 
-    androidBundlePath = path.join(androidAssetsDir, 'app.bundle');
-    androidManifestPath = path.join(androidAssetsDir, 'app.manifest');
-    iosBundlePath = path.join(supportingDirectory, 'app.bundle');
-    iosManifestPath = path.join(supportingDirectory, 'app.manifest');
+    androidBundlePath = _getDefaultEmbeddedBundlePath('android', projectRoot, exp);
+    androidManifestPath = _getDefaultEmbeddedManifestPath('android', projectRoot, exp);
+    iosBundlePath = _getDefaultEmbeddedBundlePath('ios', projectRoot, exp);
+    iosManifestPath = _getDefaultEmbeddedManifestPath('ios', projectRoot, exp);
 
     if (!fs.existsSync(iosBundlePath) || !fs.existsSync(iosManifestPath)) {
       logger.global.warn(
