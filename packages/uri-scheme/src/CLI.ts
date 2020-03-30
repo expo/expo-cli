@@ -1,0 +1,129 @@
+#!/usr/bin/env node
+import chalk from 'chalk';
+import { Command } from 'commander';
+
+import shouldUpdate from './update';
+import * as URIScheme from './URIScheme';
+import { Options } from './Options';
+
+const packageJson = () => require('../package.json');
+
+export const program = new Command(packageJson().name).version(packageJson().version);
+
+function buildCommand(name: string, examples: string[] = []): Command {
+  return program
+    .command(`${name} [uri-protocol]`)
+    .option('-a, --android', 'Apply action to Android')
+    .option('-i, --ios', 'Apply action to iOS ')
+    .on('--help', () => {
+      if (!examples.length) return;
+      console.log();
+      console.log('Examples:');
+      console.log();
+      for (const example of examples) {
+        console.log(`  $ uri-scheme ${name} ${example}`);
+      }
+      console.log();
+    });
+}
+
+buildCommand('add', ['com.app', 'myapp'])
+  .description('Add URI schemes to a native app')
+  .option('-n, --name <string>', 'Name to use on iOS.')
+  .option('-r, --role <string>', 'Role to use on iOS: Editor, Viewer')
+  .option('--dry-run', 'View the proposed change')
+  .action(async (uri: string, args: any) => {
+    try {
+      const options = await parseArgsAsync(uri, args);
+      await URIScheme.addAsync(options);
+      shouldUpdate();
+    } catch (error) {
+      commandDidThrowAsync(error);
+    }
+  });
+
+buildCommand('remove', ['com.app', 'myapp'])
+  .description('Remove URI schemes from a native app')
+  .option('--dry-run', 'View the proposed change')
+  .action(async (uri: string, args: any) => {
+    try {
+      const options = await parseArgsAsync(uri, args);
+      await URIScheme.removeAsync(options);
+      shouldUpdate();
+    } catch (error) {
+      commandDidThrowAsync(error);
+    }
+  });
+
+buildCommand('open', ['com.app://oauth', 'http://expo.io'])
+  .description('Open a URI scheme in a running simulator or emulator')
+  .action(async (uri: string, args: any) => {
+    try {
+      const options = await parseArgsAsync(uri, args);
+      await URIScheme.openAsync(options);
+      shouldUpdate();
+    } catch (error) {
+      commandDidThrowAsync(error);
+    }
+  });
+
+buildCommand('list')
+  .description('List the existing URI scheme prefixes for a native app')
+  .action(async (uri: string, args: any) => {
+    try {
+      const options = await parseArgsAsync(uri, args);
+      await URIScheme.listAsync(options);
+      shouldUpdate();
+    } catch (error) {
+      commandDidThrowAsync(error);
+    }
+  });
+
+async function parseArgsAsync(uri: string, options: Options): Promise<Options> {
+  const projectRoot = process.cwd();
+  let platforms = URIScheme.getAvailablePlatforms(projectRoot);
+
+  if (!options.android && !options.ios) {
+    for (const key of platforms) {
+      // @ts-ignore: Set iOS and Android props.
+      options[key] = true;
+    }
+  } else {
+    if (options.android) {
+      if (!platforms.includes('android')) {
+        throw new Error('Android not supported');
+      }
+    }
+    if (options.ios) {
+      if (!platforms.includes('ios')) {
+        throw new Error('iOS not supported');
+      }
+    }
+  }
+
+  return {
+    ...options,
+    uri,
+    projectRoot,
+  };
+}
+
+export function run() {
+  program.parse(process.argv);
+}
+
+async function commandDidThrowAsync(reason: any) {
+  console.log();
+  console.log('Aborting run');
+  if (reason.command) {
+    console.log(`  ${chalk.magenta(reason.command)} has failed.`);
+  } else {
+    console.log(chalk.black.bgRed`An unexpected error was encountered. Please report it as a bug:`);
+    console.log(reason);
+  }
+  console.log();
+
+  await shouldUpdate();
+
+  process.exit(1);
+}
