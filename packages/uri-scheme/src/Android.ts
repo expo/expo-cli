@@ -6,6 +6,9 @@ import path from 'path';
 
 import { Options } from './Options';
 
+const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
+const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
+
 export function isAvailable(projectRoot: string): boolean {
   const reactNativeAndroid = sync(
     path.join(projectRoot, 'android/app/src/main/AndroidManifest.xml')
@@ -24,25 +27,50 @@ export async function removeAsync({ dryRun, uri, projectRoot }: Options): Promis
   await modifySchemesAsync({ manifestPath }, { uri }, { operation: 'remove', dryRun });
 }
 
-export async function openAsync({ projectRoot, uri }: Options): Promise<void> {
+function whichADB(): string {
+  if (process.env.ANDROID_HOME) {
+    return `${process.env.ANDROID_HOME}/platform-tools/adb`;
+  }
+  return 'adb';
+}
+
+export async function getAdbOutputAsync(args: string[]): Promise<string> {
+  const adb = whichADB();
+
+  try {
+    let result = await spawnAsync(adb, args);
+    return result.stdout;
+  } catch (e) {
+    const err = e.stderr || e.stdout;
+    let errorMessage = err?.trim();
+    if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
+      errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
+    }
+    throw new Error(errorMessage);
+  }
+}
+
+async function openUrlAsync(...props: (string | null)[]): Promise<string> {
+  const output = await getAdbOutputAsync([
+    'shell',
+    'am',
+    'start',
+    '-a',
+    'android.intent.action.VIEW',
+    '-d',
+    ...(props.filter(Boolean) as string[]),
+  ]);
+  if (output.includes(CANT_START_ACTIVITY_ERROR)) {
+    throw new Error(output.substring(output.indexOf('Error: ')));
+  }
+
+  return output;
+}
+
+export async function openAsync({ projectRoot, uri }: Options): Promise<string> {
   const manifestPath = getConfigPath(projectRoot);
   const androidPackage = await getPackageAsync({ manifestPath });
-  if (!androidPackage) throw new Error('Android: Failed to resolve android package');
-  await spawnAsync(
-    'adb',
-    [
-      'shell',
-      'am',
-      'start',
-      '-W',
-      '-a',
-      'android.intent.action.VIEW',
-      '-d',
-      `"${uri}"`,
-      androidPackage,
-    ],
-    { stdio: 'inherit' }
-  );
+  return await openUrlAsync(uri, androidPackage);
 }
 
 export async function getAsync({ projectRoot }: Options): Promise<string[]> {
