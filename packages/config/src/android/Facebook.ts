@@ -68,7 +68,7 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
     await writeStringsXMLAsync(stringsPath, stringsJSON);
   } catch (e) {
     throw new Error(
-      `Error setting Android navigation bar color. Cannot write strings.xml to ${stringsPath}.`
+      `Error setting facebookAppId. Cannot write strings.xml to ${stringsPath}.`
     );
   }
   return true;
