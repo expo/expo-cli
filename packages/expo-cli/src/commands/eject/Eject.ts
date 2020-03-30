@@ -92,6 +92,11 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
       'cd ios && pod install'
     )}`
   );
+  log.nested(
+    `- 🔑 Download your Android keystore (if you're not sure if you need to, just run the command and see): ${chalk.bold(
+      'expo fetch:android:keystore'
+    )}`
+  );
 
   log.newLine();
   log.nested(`☑️  ${chalk.bold('When you are ready to run your project')}`);
