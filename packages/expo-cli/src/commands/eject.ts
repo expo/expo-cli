@@ -3,6 +3,17 @@ import { Versions } from '@expo/xdl';
 import { getConfig } from '@expo/config';
 import * as Eject from './eject/Eject';
 import * as LegacyEject from './eject/LegacyEject';
+import prompt from '../prompt';
+
+async function userWantsToEjectWithoutUpgradingAsync() {
+  const answer = await prompt({
+    type: 'confirm',
+    name: 'ejectWithoutUpgrading',
+    message: `We recommend upgrading to the latest SDK version before ejecting. SDK 37 introduces support for OTA updates and notifications in ejected projects, and includes many features that make ejecting your project easier. Would you like to continue ejecting anyways?`,
+  });
+
+  return answer.ejectWithoutUpgrading;
+}
 
 async function action(
   projectDir: string,
@@ -11,7 +22,9 @@ async function action(
   let { exp } = getConfig(projectDir);
   if (Versions.lteSdkVersion(exp, '36.0.0')) {
     // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3
-    await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
+    if (await userWantsToEjectWithoutUpgradingAsync()) {
+      await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
+    }
   } else {
     await Eject.ejectAsync(projectDir, options as Eject.EjectAsyncOptions);
   }
