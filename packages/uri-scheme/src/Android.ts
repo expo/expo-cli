@@ -69,7 +69,10 @@ async function openUrlAsync(...props: (string | null)[]): Promise<string> {
 
 export async function openAsync({ projectRoot, uri }: Options): Promise<string> {
   const manifestPath = getConfigPath(projectRoot);
-  const androidPackage = await getPackageAsync({ manifestPath });
+  let androidPackage: string | null = null;
+  try {
+    androidPackage = await getPackageAsync({ manifestPath });
+  } catch {}
   return await openUrlAsync(uri, androidPackage);
 }
 
