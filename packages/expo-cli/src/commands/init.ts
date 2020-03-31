@@ -298,7 +298,7 @@ async function promptForManagedConfig(
       validate: (name: string) => validateName(parentDir, name),
     }));
   }
-  const expo: ExpoConfig = { slug };
+  const expo: ExpoConfig = { name: slug, slug };
   if (options.name) {
     expo.name = options.name;
   }
