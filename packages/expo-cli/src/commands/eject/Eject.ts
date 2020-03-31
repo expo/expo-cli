@@ -206,7 +206,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    */
   let defaultDependencies: any = {};
   let defaultDevDependencies: any = {};
-  log.newLine();
+  // NOTE(brentvatne): Removing spaces between steps for now, add back when
+  // there is some additioanl context for steps
+  // log.newLine();
   let creatingNativeProjectStep = logNewSection(
     'Creating native project directories (./ios and ./android)'
   );
@@ -237,7 +239,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    * Update package.json scripts - `npm start` should default to `react-native
    * start` rather than `expo start` after ejecting, for example.
    */
-  log.newLine();
+  // NOTE(brentvatne): Removing spaces between steps for now, add back when
+  // there is some additioanl context for steps
+  // log.newLine();
   let updatingPackageJsonStep = logNewSection(
     'Updating your package.json scripts, dependencies, and main file'
   );
@@ -292,7 +296,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
 
   updatingPackageJsonStep.succeed('Updated package.json and added index.js entry point.');
-  log.newLine();
+  // NOTE(brentvatne): Removing spaces between steps for now, add back when
+  // there is some additioanl context for steps
+  // log.newLine();
 
   /**
    * Install dependencies
