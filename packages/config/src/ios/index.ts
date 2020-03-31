@@ -11,6 +11,7 @@ import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
 import * as Entitlements from './Entitlements';
 import * as Facebook from './Facebook';
 import * as Google from './Google';
+import * as Orientation from './Orientation';
 
 // Placeholders
 import * as Icons from './Icons';
@@ -35,6 +36,7 @@ export {
   SplashScreen,
   InfoPlist,
   Name,
+  Orientation,
   RequiresFullScreen,
   Scheme,
   UserInterfaceStyle,

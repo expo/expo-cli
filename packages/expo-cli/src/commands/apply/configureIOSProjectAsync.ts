@@ -53,16 +53,17 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   // Configure the Info.plist
   await modifyInfoPlistAsync(projectRoot, infoPlist => {
     infoPlist = IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(exp, infoPlist);
-    infoPlist = IOSConfig.Name.setDisplayName(exp, infoPlist);
-    infoPlist = IOSConfig.Scheme.setScheme(exp, infoPlist);
-    infoPlist = IOSConfig.Version.setVersion(exp, infoPlist);
-    infoPlist = IOSConfig.Version.setBuildNumber(exp, infoPlist);
-    infoPlist = IOSConfig.DeviceFamily.setDeviceFamily(exp, infoPlist);
-    infoPlist = IOSConfig.RequiresFullScreen.setRequiresFullScreen(exp, infoPlist);
-    infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(exp, infoPlist);
     infoPlist = IOSConfig.Branch.setBranchApiKey(exp, infoPlist);
-    infoPlist = IOSConfig.UsesNonExemptEncryption.setUsesNonExemptEncryption(exp, infoPlist);
+    infoPlist = IOSConfig.DeviceFamily.setDeviceFamily(exp, infoPlist);
     infoPlist = IOSConfig.Facebook.setFacebookConfig(exp, infoPlist);
+    infoPlist = IOSConfig.Name.setDisplayName(exp, infoPlist);
+    infoPlist = IOSConfig.Orientation.setOrientation(exp, infoPlist);
+    infoPlist = IOSConfig.RequiresFullScreen.setRequiresFullScreen(exp, infoPlist);
+    infoPlist = IOSConfig.Scheme.setScheme(exp, infoPlist);
+    infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(exp, infoPlist);
+    infoPlist = IOSConfig.UsesNonExemptEncryption.setUsesNonExemptEncryption(exp, infoPlist);
+    infoPlist = IOSConfig.Version.setBuildNumber(exp, infoPlist);
+    infoPlist = IOSConfig.Version.setVersion(exp, infoPlist);
 
     return infoPlist;
   });

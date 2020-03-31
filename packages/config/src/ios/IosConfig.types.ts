@@ -3,6 +3,12 @@ export type URLScheme = {
   CFBundleURLSchemes: [string];
 };
 
+export type InterfaceOrientation =
+  | 'UIInterfaceOrientationPortrait'
+  | 'UIInterfaceOrientationPortraitUpsideDown'
+  | 'UIInterfaceOrientationLandscapeLeft'
+  | 'UIInterfaceOrientationLandscapeRight';
+
 export type InfoPlist = {
   CFBundleShortVersionString?: string;
   CFBundleVersion?: string;
@@ -16,4 +22,5 @@ export type InfoPlist = {
   FacebookAutoInitEnabled?: boolean;
   FacebookAutoLogAppEventsEnabled?: boolean;
   FacebookAdvertiserIDCollectionEnabled?: boolean;
+  UISupportedInterfaceOrientations?: Array<InterfaceOrientation>;
 };
