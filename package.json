@@ -8,7 +8,7 @@
     "postbootstrap": "lerna run prepare --stream",
     "prebootstrap": "yarn",
     "publish": "echo \"This script is deprecated. Run \\\"node ./scripts/publish.js\\\" instead.\"; exit 1",
-    "start": "yarn run bootstrap && lerna run watch --parallel --ignore @expo/dev-tools",
+    "start": "yarn run bootstrap && lerna run watch --parallel --ignore @expo/dev-tools --ignore expo-optimize --ignore @expo/next-adapter --ignore @expo/electron-adapter",
     "tsc": "echo 'You are trying to run \"tsc\" in the workspace root. Run it from an individual package instead.' && exit 1",
     "lint": "eslint . --ext js,ts",
     "test-coverage": "jest --coverage && codecov"

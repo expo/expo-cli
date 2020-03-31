@@ -88,6 +88,7 @@ describe('determineEntryPoint', () => {
       '/expo-app-entry/App.js': 'console.log("lol")',
     });
   });
+
   afterEach(() => vol.reset());
 
   it('exists-no-platform', () => {

@@ -322,6 +322,16 @@ export const setBuildFlags = ({ dev, minify }, { client }) => {
 };
 
 export const sendProjectUrl = async (recipient, props) => {
+  if (!props.data.user.username) {
+    props.dispatch({
+      type: 'ADD_TOAST',
+      toast: {
+        id: 'authentication-required',
+        name: 'info',
+        text: 'Authentication is required. Please check the terminal to log in.',
+      },
+    });
+  }
   try {
     await props.client.mutate({
       mutation: gql`

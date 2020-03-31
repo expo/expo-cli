@@ -72,9 +72,8 @@ async function getAssetFilesAsync(
   projectDir: string,
   options: OptimizationOptions
 ): Promise<{ allFiles: string[]; selectedFiles: string[] }> {
-  const { exp } = await getConfig(projectDir, {
+  const { exp } = getConfig(projectDir, {
     skipSDKVersionRequirement: true,
-    mode: 'production',
   });
   const webOutputPath = await getWebOutputPath(exp);
   const { assetBundlePatterns } = exp;
@@ -188,7 +187,7 @@ export async function optimizeAsync(
       continue;
     }
 
-    if (!await isAvailableAsync()) {
+    if (!(await isAvailableAsync())) {
       console.log(
         chalk.bold.red(
           `\u203A Cannot optimize images without sharp-cli.\n\u203A Run this command again after successfully installing sharp with \`${chalk.magenta`npm install -g sharp-cli`}\``

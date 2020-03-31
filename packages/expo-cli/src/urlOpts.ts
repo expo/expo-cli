@@ -6,6 +6,16 @@ import { Command } from 'commander';
 
 import CommandError from './CommandError';
 
+export type URLOptions = {
+  android?: boolean;
+  ios?: boolean;
+  web?: boolean;
+  host?: 'lan' | 'tunnel' | 'localhost';
+  tunnel?: boolean;
+  lan?: boolean;
+  localhost?: boolean;
+};
+
 function addOptions(program: Command) {
   program
     .option('-a, --android', 'Opens your app in Expo on a connected Android device')
@@ -36,6 +46,7 @@ async function optsAsync(projectDir: string, options: any) {
   opts.hostType = 'lan';
 
   if (options.offline) {
+    // TODO: maybe let people know that we will force localhost with offline?
     ConnectionStatus.setIsOffline(true);
     opts.hostType = 'localhost';
   }
@@ -59,7 +70,10 @@ function printQRCode(url: string) {
   qrcodeTerminal.generate(url, code => console.log(`${indentString(code, 2)}\n`));
 }
 
-async function handleMobileOptsAsync(projectDir: string, options: any) {
+async function handleMobileOptsAsync(
+  projectDir: string,
+  options: Pick<URLOptions, 'ios' | 'android' | 'web'> & { webOnly?: boolean }
+) {
   await Promise.all([
     (async () => {
       if (options.android) {

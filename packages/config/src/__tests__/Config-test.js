@@ -99,19 +99,16 @@ describe('readConfigJson', () => {
     it(`will throw if the app.json is missing`, () => {
       expect(() => readConfigJson('/no-config')).toThrow(/does not contain a valid app\.json/);
       // No config is required for new method
-      expect(() => getConfig('/no-config', { mode: 'development' })).not.toThrow();
+      expect(() => getConfig('/no-config')).not.toThrow();
     });
 
     it(`will throw if the expo package is missing`, () => {
       expect(() => readConfigJson('/no-package', true)).toThrow(
         /Cannot determine which native SDK version your project uses/
       );
-      expect(() =>
-        getConfig('/no-package', { mode: 'development', skipSDKVersionRequirement: false })
-      ).toThrow(/Cannot determine which native SDK version your project uses/);
-    });
-    it(`will throw if an invalid mode is used to get the config`, () => {
-      expect(() => getConfig('/no-config', { mode: 'invalid' })).toThrow(/Invalid mode/);
+      expect(() => getConfig('/no-package', { skipSDKVersionRequirement: false })).toThrow(
+        /Cannot determine which native SDK version your project uses/
+      );
     });
   });
 });

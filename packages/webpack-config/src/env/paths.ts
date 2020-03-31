@@ -13,9 +13,8 @@ import url from 'url';
 
 import { Environment, FilePaths, Mode } from '../types';
 import getMode from './getMode';
-import { getConfigMode } from './getConfigMode';
 
-function parsePaths(projectRoot: string, mode: Mode, nativeAppManifest?: ExpoConfig): FilePaths {
+function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePaths {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();
 
   function absolute(...pathComponents: string[]): string {
@@ -56,7 +55,7 @@ function parsePaths(projectRoot: string, mode: Mode, nativeAppManifest?: ExpoCon
     root: path.resolve(inputProjectRoot),
     appMain,
     modules: modulesPath,
-    servedPath: getServedPath(inputProjectRoot, mode),
+    servedPath: getServedPath(inputProjectRoot),
     template: {
       get: templatePath,
       folder: templatePath(),
@@ -87,13 +86,11 @@ function parsePaths(projectRoot: string, mode: Mode, nativeAppManifest?: ExpoCon
  * @param projectRoot
  * @category env
  */
-export function getPaths(projectRoot: string, mode?: string): FilePaths {
-  const configMode = getConfigMode(getMode({ mode }));
+export function getPaths(projectRoot: string): FilePaths {
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
-    mode: configMode,
   });
-  return parsePaths(projectRoot, configMode, exp);
+  return parsePaths(projectRoot, exp);
 }
 
 /**
@@ -102,14 +99,12 @@ export function getPaths(projectRoot: string, mode?: string): FilePaths {
  * @param projectRoot
  * @category env
  */
-export async function getPathsAsync(projectRoot: string, mode?: string): Promise<FilePaths> {
-  const configMode = getConfigMode(getMode({ mode }));
-
+export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
   let exp;
   try {
-    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode: configMode }).exp;
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
   } catch (error) {}
-  return parsePaths(projectRoot, configMode, exp);
+  return parsePaths(projectRoot, exp);
 }
 
 /**
@@ -118,12 +113,9 @@ export async function getPathsAsync(projectRoot: string, mode?: string): Promise
  * @param projectRoot
  * @category env
  */
-export function getServedPath(projectRoot: string, mode?: string): string {
-  const configMode = getConfigMode(getMode({ mode }));
-
+export function getServedPath(projectRoot: string): string {
   const { pkg } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
-    mode: configMode,
   });
   const envPublicUrl = process.env.WEB_PUBLIC_URL;
 
@@ -163,7 +155,7 @@ export function getPublicPaths(
 } {
   const parsedMode = getMode(env);
   if (parsedMode === 'production') {
-    const publicPath = getServedPath(env.projectRoot, parsedMode);
+    const publicPath = getServedPath(env.projectRoot);
     return {
       publicPath,
       publicUrl: publicPath.slice(0, -1),
@@ -179,12 +171,9 @@ export function getPublicPaths(
  * @param projectRoot
  * @category env
  */
-export function getProductionPath(projectRoot: string, mode?: string): string {
-  const configMode = getConfigMode(getMode({ mode }));
-
+export function getProductionPath(projectRoot: string): string {
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
-    mode: configMode,
   });
   return getAbsolutePathWithProjectRoot(projectRoot, getWebOutputPath(exp));
 }

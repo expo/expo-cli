@@ -1,4 +1,4 @@
-import { readExpRcAsync } from '@expo/config';
+import { getConfig, readExpRcAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import child_process from 'child_process';
 import chalk from 'chalk';
@@ -18,7 +18,6 @@ import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
-import { getProjectConfigAsync } from './Config';
 
 let _lastUrl: string | null = null;
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
@@ -125,7 +124,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
     let result = await spawnAsync(adb, args);
     return result.stdout;
   } catch (e) {
-    let errorMessage = _.trim(e.stderr);
+    let errorMessage = _.trim(e.stderr || e.stdout);
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
@@ -260,9 +259,23 @@ export async function installExpoAsync(url?: string) {
   return result;
 }
 
-export async function uninstallExpoAsync() {
+export async function uninstallExpoAsync(): Promise<string | undefined> {
   Logger.global.info('Uninstalling Expo from Android device.');
-  return await getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
+
+  // we need to check if its installed, else we might bump into "Failure [DELETE_FAILED_INTERNAL_ERROR]"
+  const isInstalled = await _isExpoInstalledAsync();
+  if (!isInstalled) {
+    return;
+  }
+
+  try {
+    return await getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
+  } catch (e) {
+    Logger.global.error(
+      'Could not uninstall Expo client from your device, please uninstall Expo client manually and try again.'
+    );
+    throw e;
+  }
 }
 
 export async function upgradeExpoAsync(url?: string): Promise<boolean> {
@@ -378,7 +391,7 @@ export async function openProjectAsync(
     await startAdbReverseAsync(projectRoot);
 
     let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
-    const { exp } = await getProjectConfigAsync(projectRoot, {
+    const { exp } = getConfig(projectRoot, {
       skipSDKVersionRequirement: true,
     });
 
@@ -507,9 +520,7 @@ const splashScreenDPIConstraints = [
  * @since SDK33
  */
 export async function checkSplashScreenImages(projectDir: string): Promise<void> {
-  const { exp } = await getProjectConfigAsync(projectDir, {
-    skipSDKVersionRequirement: false,
-  });
+  const { exp } = getConfig(projectDir);
 
   // return before SDK33
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {

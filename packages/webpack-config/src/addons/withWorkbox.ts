@@ -36,8 +36,8 @@ const defaultInjectManifestOptions = {
     /\.map$/,
     /asset-manifest\.json$/,
     /\.js\.gz$/,
-    // Exclude all apple touch images because they're cached locally after the PWA is added.
-    // /^\bapple.*\.png$/,
+    // Exclude all apple touch and chrome images because they're cached locally after the PWA is added.
+    /(apple-touch-startup-image|chrome-icon|apple-touch-icon).*\.png$/,
   ],
 };
 
@@ -90,7 +90,7 @@ export default function withWorkbox(
     injectManifestOptions = {},
   } = options;
 
-  const locations = getPaths(projectRoot!, webpackConfig.mode);
+  const locations = getPaths(projectRoot!);
 
   webpackConfig.plugins.push(
     new CopyPlugin([

@@ -1,7 +1,7 @@
 module.exports = () => ({
   presets: [
     [
-      '@babel/preset-env',
+      require.resolve('@babel/preset-env'),
       {
         targets: {
           node: '8.9.0',
@@ -9,12 +9,12 @@ module.exports = () => ({
         modules: false,
       },
     ],
-    '@babel/preset-typescript',
+    require.resolve('@babel/preset-typescript'),
   ],
   plugins: [
-    '@babel/plugin-proposal-class-properties',
-    ['@babel/plugin-transform-modules-commonjs', { lazy: source => true }],
-    '@babel/plugin-proposal-optional-chaining',
-    '@babel/plugin-proposal-nullish-coalescing-operator',
+    require.resolve('@babel/plugin-proposal-class-properties'),
+    [require.resolve('@babel/plugin-transform-modules-commonjs'), { lazy: source => true }],
+    require.resolve('@babel/plugin-proposal-optional-chaining'),
+    require.resolve('@babel/plugin-proposal-nullish-coalescing-operator'),
   ],
 });

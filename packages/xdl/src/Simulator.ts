@@ -1,4 +1,5 @@
 import * as osascript from '@expo/osascript';
+import { getConfig } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
@@ -17,7 +18,6 @@ import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
 import XDLError from './XDLError';
-import { getProjectConfigAsync } from './Config';
 
 let _lastUrl: string | null = null;
 
@@ -505,7 +505,7 @@ export async function openProjectAsync(
   let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
     hostType: 'localhost',
   });
-  const { exp } = await getProjectConfigAsync(projectRoot, {
+  const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 

@@ -56,14 +56,20 @@ function getConfigContext(
     if (typeof rawConfig.expo === 'object') {
       rawConfig = rawConfig.expo as JSONObject;
     }
-  } catch (_) {}
+  } catch (err) {
+    if (
+      options.strict &&
+      err.code !== 'ENOENT' // File not found. This is OK, because app.json is optional.
+    ) {
+      throw err;
+    }
+  }
 
   const { exp: configFromPkg } = ensureConfigHasDefaultValues(projectRoot, rawConfig, pkg, true);
 
   return {
     pkg,
     context: {
-      mode: options.mode,
       projectRoot,
       configPath,
       config: configFromPkg,
@@ -76,11 +82,10 @@ function getConfigContext(
  * If a function is exported from the `app.config.js` then a partial config will be passed as an argument.
  * The partial config is composed from any existing app.json, and certain fields from the `package.json` like name and description.
  *
- * You should use the supplied `mode` option in an `app.config.js` instead of `process.env.NODE_ENV`
  *
  * **Example**
  * ```js
- * module.exports = function({ config, mode }) {
+ * module.exports = function({ config }) {
  *   // mutate the config before returning it.
  *   config.slug = 'new slug'
  *   return config;
@@ -94,14 +99,7 @@ function getConfigContext(
  * @param projectRoot the root folder containing all of your application code
  * @param options enforce criteria for a project config
  */
-export function getConfig(projectRoot: string, options: GetConfigOptions): ProjectConfig {
-  if (!['development', 'production'].includes(options.mode)) {
-    throw new ConfigError(
-      `Invalid mode "${options.mode}" was used to evaluate the project config.`,
-      'INVALID_MODE'
-    );
-  }
-
+export function getConfig(projectRoot: string, options: GetConfigOptions = {}): ProjectConfig {
   const { context, pkg } = getConfigContext(projectRoot, options);
 
   const config = findAndEvalConfig(context) ?? context.config;
@@ -282,6 +280,30 @@ export async function writeConfigJsonAsync(
     exp,
     pkg,
     rootConfig,
+  };
+}
+const DEFAULT_BUILD_PATH = `web-build`;
+
+export function getWebOutputPath(config: { [key: string]: any } = {}): string {
+  if (process.env.WEBPACK_BUILD_OUTPUT_PATH) {
+    return process.env.WEBPACK_BUILD_OUTPUT_PATH;
+  }
+  const expo = config.expo || config || {};
+  return expo?.web?.build?.output || DEFAULT_BUILD_PATH;
+}
+
+export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webName: string } {
+  // For RN CLI support
+  const appManifest = exp.expo || exp;
+  const { web = {} } = appManifest;
+
+  // rn-cli apps use a displayName value as well.
+  const appName = exp.displayName || appManifest.displayName || appManifest.name;
+  const webName = web.name || appName;
+
+  return {
+    appName,
+    webName,
   };
 }
 

@@ -67,7 +67,7 @@ export async function validateGitStatusAsync(): Promise<boolean> {
     log.nested(
       `It's recommended to ${chalk.bold(
         'commit all your changes before proceeding'
-      )},\nso you can revert the changes made by this command if necessary.`
+      )}, so you can revert the changes made by this command if necessary.`
     );
   } else {
     log.nested("We couldn't find a git repository in your project directory.");

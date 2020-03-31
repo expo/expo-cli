@@ -73,6 +73,10 @@ workflows:
           e: node-10
           requires:
             - build10
+      - test-expo-pwa:
+          e: node-10
+          requires:
+            - build10
       - test-coverage:
           e: node-12
           requires:
@@ -210,6 +214,16 @@ jobs:
         type: executor
     executor: << parameters.e >>
     working_directory: ~/expo-cli/packages/schemer
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test
+  test-expo-pwa:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/pwa
     steps:
       - attach_workspace:
           at: '~'

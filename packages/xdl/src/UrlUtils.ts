@@ -1,4 +1,4 @@
-import { readConfigJsonAsync, resolveModule } from '@expo/config';
+import { getConfig, resolveModule } from '@expo/config';
 import joi from 'joi';
 import os from 'os';
 import url from 'url';
@@ -125,7 +125,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
 
   queryParams += '&hot=false';
 
-  let { exp } = await readConfigJsonAsync(projectRoot);
+  let { exp } = getConfig(projectRoot);
 
   // SDK11 to SDK32 require us to inject hashAssetFiles through the params, but this is not
   // needed with SDK33+
@@ -146,14 +146,17 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   return queryParams;
 }
 
-export async function constructWebAppUrlAsync(projectRoot: string): Promise<string | null> {
+export async function constructWebAppUrlAsync(
+  projectRoot: string,
+  options: { hostType?: 'localhost' | 'lan' | 'tunnel' } = {}
+): Promise<string | null> {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.webpackServerPort) {
     return null;
   }
 
   const { https, hostType } = await ProjectSettings.readAsync(projectRoot);
-  const host = hostType === 'localhost' ? 'localhost' : ip.address();
+  const host = (options.hostType ?? hostType) === 'localhost' ? 'localhost' : ip.address();
 
   let urlType = 'http';
   if (https === true) {
@@ -207,7 +210,7 @@ export async function constructUrlAsync(
   } else {
     protocol = 'exp';
 
-    let { exp } = await readConfigJsonAsync(projectRoot);
+    let { exp } = getConfig(projectRoot);
     if (exp.detach) {
       if (exp.scheme && Versions.gteSdkVersion(exp, '27.0.0')) {
         protocol = exp.scheme;
@@ -259,10 +262,12 @@ export async function constructUrlAsync(
   } else {
     let ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.expoServerNgrokUrl;
     if (!ngrokUrl || typeof ngrokUrl !== 'string') {
+      // TODO: if you start with --tunnel flag then this warning will always
+      // show up right before the tunnel starts...
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
-        'Tunnel URL not found, falled back to LAN URL.',
+        'Tunnel URL not found (it might not be ready yet), falling back to LAN URL.',
         'tunnel-url-not-found'
       );
       return constructUrlAsync(

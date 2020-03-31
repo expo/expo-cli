@@ -3,6 +3,7 @@ import {
   PackageJSONConfig,
   configFilename,
   fileExistsAsync,
+  getConfig,
   getPackageJson,
   resolveModule,
 } from '@expo/config';
@@ -14,7 +15,7 @@ import _ from 'lodash';
 import path from 'path';
 import semver from 'semver';
 
-import Config, { getProjectConfigAsync } from '../Config';
+import Config from '../Config';
 import * as Versions from '../Versions';
 import * as Watchman from '../Watchman';
 import * as ExpSchema from './ExpSchema';
@@ -114,7 +115,7 @@ export async function validateWithSchemaFileAsync(
   projectRoot: string,
   schemaPath: string
 ): Promise<{ schemaErrorMessage: string | undefined; assetsErrorMessage: string | undefined }> {
-  let { exp } = await getProjectConfigAsync(projectRoot, { skipSDKVersionRequirement: false });
+  let { exp } = getConfig(projectRoot);
   let schema = JSON.parse(await fs.readFile(schemaPath, 'utf8'));
   return validateWithSchema(projectRoot, exp, schema.schema, 'exp.json', 'UNVERSIONED', true);
 }
@@ -171,7 +172,7 @@ async function _validateExpJsonAsync(
   allowNetwork: boolean
 ): Promise<number> {
   if (!exp || !pkg) {
-    // getProjectConfigAsync already logged an error
+    // getConfig already logged an error
     return FATAL;
   }
 
@@ -384,7 +385,7 @@ async function _validateReactNativeVersionAsync(
 
 async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
   // Just need `nodeModulesPath` so it doesn't matter if expo is installed or the sdkVersion is defined.
-  let { exp } = await getProjectConfigAsync(projectRoot, { skipSDKVersionRequirement: true });
+  let { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   let nodeModulesPath = projectRoot;
   if (exp.nodeModulesPath) {
     nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
@@ -449,9 +450,12 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
 
   let exp, pkg;
   try {
-    const config = await getProjectConfigAsync(projectRoot, { skipSDKVersionRequirement: false });
+    const config = getConfig(projectRoot, {
+      strict: true,
+    });
     exp = config.exp;
     pkg = config.pkg;
+    ProjectUtils.clearNotification(projectRoot, 'doctor-config-json-not-read');
   } catch (e) {
     ProjectUtils.logError(
       projectRoot,
@@ -459,7 +463,7 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
       `Error: could not load config json at ${projectRoot}: ${e.toString()}`,
       'doctor-config-json-not-read'
     );
-    return FATAL;
+    return ERROR;
   }
 
   let status = await _checkNpmVersionAsync(projectRoot);

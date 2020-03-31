@@ -1,7 +1,6 @@
 import { vol } from 'memfs';
 
-import { readConfigJson } from '../Config';
-import { getWebOutputPath } from '../Web';
+import { getWebOutputPath, readConfigJson } from '../Config';
 
 jest.mock('fs');
 jest.mock('resolve-from');

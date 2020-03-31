@@ -1,7 +1,7 @@
 export type PackageJSONConfig = { [key: string]: any };
 export type ProjectConfig = { exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig };
 export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
-export type BareAppConfig = { name: string; displayName: string; [key: string]: any };
+export type BareAppConfig = { name: string; [key: string]: any };
 
 type ExpoOrientation = 'default' | 'portrait' | 'landscape';
 type ExpoPrivacy = 'public' | 'unlisted';
@@ -125,6 +125,12 @@ export type AndroidPlatformConfig = {
   versionCode?: number;
 
   /**
+   * The background color for your app, behind any of your React views. This is also known as the root view background color. This value should be a 6 character long hex color string, eg: '#000000'. Default is white — '#ffffff'.
+   * Overrides the top-level `backgroundColor` key if it is present.
+   */
+  backgroundColor?: string;
+
+  /**
    * Local path or remote url to an image to use for your app's icon on Android. If specified, this overrides the top-level `icon` key. We recommend that you use a 1024x1024 png file (transparency is recommended for the Google Play Store). This icon will appear on the home screen and within the Expo app.
    */
   icon?: Icon;
@@ -147,6 +153,12 @@ export type AndroidPlatformConfig = {
    * [Firebase Configuration File](https://support.google.com/firebase/answer/7015592) google-services.json file for configuring Firebase.
    */
   googleServicesFile?: string;
+
+  /**
+   * Configuration to force the app to always use the light or dark user-interface appearance, such as \"dark mode\", or make it automatically adapt to the system preferences. If not provided, defaults to `light`.
+   * @fallback light
+   */
+  userInterfaceStyle?: 'light' | 'dark' | 'automatic';
 
   config?: {
     /**
@@ -185,6 +197,15 @@ export type AndroidPlatformConfig = {
      * [Google Mobile Ads App ID](https://support.google.com/admob/answer/6232340) Google AdMob App ID.
      */
     googleMobileAdsAppId?: string;
+    /**
+     *  A boolean indicating whether to initialize Google App Measurement and begin sending
+     *  user-level event data to Google immediately when the app starts. The default in Expo
+     *  (Client and in standalone apps) is `false`.
+     *
+     *  Sets the opposite of the given value to the following tag in AndroidManifest.xml:
+     *  https://developers.google.com/admob/android/eu-consent#delay_app_measurement_optional
+     */
+    googleMobileAdsAutoInit: boolean;
     /**
      * [Google Sign-In Android SDK](https://developers.google.com/identity/sign-in/android/start-integrating) keys for your standalone app.
      */
@@ -250,7 +271,7 @@ export type AndroidPlatformConfig = {
         ]
       }]
      */
-  intentFilters?: IntentFilter | IntentFilter[];
+  intentFilters?: IntentFilter[];
 };
 
 // tslint:disable-next-line:max-line-length
@@ -411,12 +432,6 @@ export type WebPlatformConfig = {
     [key: string]: any;
 
     /**
-     * ID of the root DOM element in your index.html. By default this is "root".
-     * @fallback root
-     */
-    rootId?: string;
-
-    /**
      * Choose a custom style of source mapping to enhance the debugging process. These values can affect build and rebuild speed dramatically.
      */
     devtool?: Devtool;
@@ -430,14 +445,6 @@ export type WebPlatformConfig = {
      */
     minifyHTML?: {
       // TODO: Bacon: HtmlWebpackPlugin.Options
-      [option: string]: any;
-    };
-    /**
-     * Configuration for enabling webpack report and `stats.json`. See `BundleAnalyzerPlugin.Options` from `webpack-bundle-analyzer`.
-     * @deprecated
-     */
-    report?: {
-      // TODO: Bacon: BundleAnalyzerPlugin.Options
       [option: string]: any;
     };
     /**
@@ -505,16 +512,6 @@ export type WebPlatformConfig = {
    */
   dangerous?: {
     [key: string]: any;
-
-    /**
-     * Viewport meta tag for your index.html. By default this is optimized for mobile usage, disabling zooming, and resizing for iPhone X.
-     */
-    viewport?: string;
-    /**
-     * Message that is rendered when the browser using your page doesn't have JS enabled.
-     * @fallback Oh no! It looks like JavaScript is not enabled in your browser.
-     */
-    noJavaScriptMessage?: string;
   };
   /**
    * Configuration for PWA splash screens.
@@ -546,11 +543,6 @@ export type WebSplashScreen = {
    * Local path or remote url to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
    */
   image: Image;
-
-  /**
-   * Whether your standalone iOS app supports tablet screen sizes. Defaults to `false`.
-   */
-  supportsTablet?: boolean;
 };
 
 export type IosPlatformConfig = {
@@ -580,6 +572,13 @@ export type IosPlatformConfig = {
    * @pattern ^[A-Za-z0-9\\.]+$
    */
   buildNumber?: string;
+
+  /**
+   * The background color for your app, behind any of your React views. This is also known as the root view background color. This value should be a 6 character long hex color string, eg: '#000000'. Default is white — '#ffffff'.
+   * Overrides the top-level `backgroundColor` key if it is present.
+   */
+  backgroundColor?: string;
+
   /**
    * Local path or remote URL to an image to use for your app's icon on iOS. If specified, this overrides the top-level `icon` key. Use a 1024x1024 icon which follows Apple's interface guidelines for icons, including color profile and transparency. Expo will generate the other required sizes. This icon will appear on the home screen and within the Expo app.
    */
@@ -669,6 +668,12 @@ export type IosPlatformConfig = {
    */
   usesAppleSignIn?: boolean;
   /**
+   * A boolean value indicating if the app may access the notes stored in contacts. See Contacts docs for details.
+   * @fallback false
+   */
+  accessesContactNotes?: boolean;
+
+  /**
    * Configuration for loading and splash screen for standalone iOS apps.
    */
   splash?: {
@@ -716,6 +721,10 @@ export type ExpoConfig = {
    * @pattern ^[a-zA-Z0-9_\\-]+$
    */
   slug?: string;
+  /**
+   * The background color for your app, behind any of your React views. This is also known as the root view background color. This value should be a 6 character long hex color string, eg: '#000000'. Default is white — '#ffffff'.
+   */
+  backgroundColor?: string;
   /**
    * The username of the account under which this app is published. If not specified, the app is published as the currently signed-in user.
    */
@@ -801,7 +810,7 @@ export type ExpoConfig = {
    */
   androidNavigationBar?: {
     /**
-     * Determines how and when the navigation bar is shown.
+     * Determines how and when the navigation bar is shown. Boolean type added for backwards-compatibility (pre SDK-37)
      */
     visible?: 'leanback' | 'immersive' | 'sticky-immersive' | boolean;
     /**
@@ -890,6 +899,10 @@ export type ExpoConfig = {
    * Used for Facebook native login. Starts with 'fb' and followed by a string of digits, like 'fb1234567890'. You can find your scheme at https://developers.facebook.com/docs/facebook-login/ios in the 'Configuring Your info.plist' section.
    */
   facebookScheme?: string;
+  facebookAutoInitEnabled?: boolean;
+  facebookAutoLogAppEventsEnabled?: boolean;
+  facebookAdvertiserIDCollectionEnabled?: boolean;
+
   /**
    * Is app detached
    * @generated
@@ -931,17 +944,14 @@ export type ConfigErrorCode =
   | 'INVALID_MODE'
   | 'INVALID_CONFIG';
 
-export type ConfigMode = 'development' | 'production';
-
 export type ConfigContext = {
   projectRoot: string;
   configPath?: string;
   config: Partial<ExpoConfig>;
-  mode: ConfigMode;
 };
 
 export type GetConfigOptions = {
-  mode: ConfigMode;
   configPath?: string;
   skipSDKVersionRequirement?: boolean;
+  strict?: boolean;
 };

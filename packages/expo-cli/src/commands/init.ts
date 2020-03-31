@@ -154,7 +154,7 @@ async function action(projectDir: string, command: Command) {
     initialConfig = await promptForManagedConfig(parentDir, dirName, options);
   }
 
-  let packageManager: 'npm' | 'yarn' | undefined;
+  let packageManager: 'npm' | 'yarn' = 'npm';
   if (options.yarn) {
     packageManager = 'yarn';
   } else if (options.npm) {
@@ -163,6 +163,7 @@ async function action(projectDir: string, command: Command) {
     packageManager = 'yarn';
     log('Using Yarn to install packages. You can pass --npm to use npm instead.');
   } else {
+    packageManager = 'npm';
     log('Using npm to install packages. You can pass --yarn to use Yarn instead.');
   }
 
@@ -274,7 +275,6 @@ async function promptForBareConfig(
 
   return {
     name: projectName,
-    displayName: options.name || projectName,
     expo: {
       name: options.name || projectName,
       slug: projectName,

@@ -1,4 +1,4 @@
-import { ExpoConfig, PackageJSONConfig, readConfigJsonAsync, resolveModule } from '@expo/config';
+import { ExpoConfig, PackageJSONConfig, getConfig, resolveModule } from '@expo/config';
 // @ts-ignore: not typed
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
@@ -14,10 +14,10 @@ import semver from 'semver';
 import { installExitHooks } from '../exit';
 import log from '../log';
 import sendTo from '../sendTo';
-import urlOpts from '../urlOpts';
+import urlOpts, { URLOptions } from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
 
-type NormalizedOptions = {
+type NormalizedOptions = URLOptions & {
   webOnly?: boolean;
   dev?: boolean;
   minify?: boolean;
@@ -26,6 +26,10 @@ type NormalizedOptions = {
   clear?: boolean;
   maxWorkers?: number;
   sendTo?: string;
+  host?: string;
+  lan?: boolean;
+  localhost?: boolean;
+  tunnel?: boolean;
 };
 
 type Options = NormalizedOptions & {
@@ -73,6 +77,27 @@ async function normalizeOptionsAsync(
   }
   if (hasBooleanArg(rawArgs, 'https')) {
     opts.https = getBooleanArg(rawArgs, 'https');
+  }
+  if (hasBooleanArg(rawArgs, 'android')) {
+    opts.android = getBooleanArg(rawArgs, 'android');
+  }
+  if (hasBooleanArg(rawArgs, 'ios')) {
+    opts.ios = getBooleanArg(rawArgs, 'ios');
+  }
+  if (hasBooleanArg(rawArgs, 'web')) {
+    opts.web = getBooleanArg(rawArgs, 'web');
+  }
+  if (hasBooleanArg(rawArgs, 'localhost')) {
+    opts.localhost = getBooleanArg(rawArgs, 'localhost');
+  }
+  if (hasBooleanArg(rawArgs, 'lan')) {
+    opts.lan = getBooleanArg(rawArgs, 'lan');
+  }
+  if (hasBooleanArg(rawArgs, 'tunnel')) {
+    opts.tunnel = getBooleanArg(rawArgs, 'tunnel');
+  }
+  if (options.host) {
+    opts.host = options.host;
   }
 
   await cacheOptionsAsync(projectDir, opts);
@@ -246,7 +271,9 @@ async function configureProjectAsync(
 
   log(chalk.gray(`Starting project at ${projectDir}`));
 
-  const { exp, pkg } = await readConfigJsonAsync(projectDir, options.webOnly);
+  const { exp, pkg } = getConfig(projectDir, {
+    skipSDKVersionRequirement: options.webOnly,
+  });
 
   const rootPath = path.resolve(projectDir);
 

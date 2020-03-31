@@ -1,4 +1,4 @@
-import { AppJSONConfig, BareAppConfig } from '@expo/config';
+import { AppJSONConfig, BareAppConfig, getConfig } from '@expo/config';
 
 import { getEntryPoint } from '@expo/config/paths';
 import fs from 'fs-extra';
@@ -9,7 +9,7 @@ import JsonFile from '@expo/json-file';
 import Minipass from 'minipass';
 import pacote, { PackageSpec } from 'pacote';
 import { Readable } from 'stream';
-import tar from 'tar';
+import tar, { ReadEntry } from 'tar';
 import yaml from 'js-yaml';
 
 import { NpmPackageManager, YarnPackageManager } from '@expo/package-manager';
@@ -22,10 +22,6 @@ import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as ProjectSettings from './ProjectSettings';
-import { getProjectConfigAsync } from './Config';
-
-// TODO(ville): update when this has landed: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
-type ReadEntry = any;
 
 const supportedPlatforms = ['ios', 'android', 'web'];
 
@@ -48,6 +44,13 @@ export function determineEntryPoint(projectRoot: string, platform?: string): str
   return path.relative(projectRoot, entry);
 }
 
+function sanitizedName(name: string) {
+  return name
+    .replace(/[\W_]+/g, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
 class Transformer extends Minipass {
   data: string;
   config: AppJSONConfig | BareAppConfig;
@@ -63,9 +66,9 @@ class Transformer extends Minipass {
   }
   end() {
     let replaced = this.data
-      .replace(/Hello App Display Name/g, this.config.displayName || this.config.name)
-      .replace(/HelloWorld/g, this.config.name)
-      .replace(/helloworld/g, this.config.name.toLowerCase());
+      .replace(/Hello App Display Name/g, this.config.name)
+      .replace(/HelloWorld/g, sanitizedName(this.config.name))
+      .replace(/helloworld/g, sanitizedName(this.config.name.toLowerCase()));
     super.write(replaced);
     return super.end();
   }
@@ -158,10 +161,15 @@ async function extractTemplateAppAsyncImpl(
         if (config.name) {
           // Rewrite paths for bare workflow
           entry.path = entry.path
-            .replace(/HelloWorld/g, config.name)
-            .replace(/helloworld/g, config.name.toLowerCase());
+            .replace(
+              /HelloWorld/g,
+              entry.path.includes('android')
+                ? sanitizedName(config.name.toLowerCase())
+                : sanitizedName(config.name)
+            )
+            .replace(/helloworld/g, sanitizedName(config.name).toLowerCase());
         }
-        if (/^file$/i.test(entry.type) && path.basename(entry.path) === 'gitignore') {
+        if (entry.type && /^file$/i.test(entry.type) && path.basename(entry.path) === 'gitignore') {
           // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
           // See: https://github.com/npm/npm/issues/1862
           entry.path = entry.path.replace(/gitignore$/, '.gitignore');
@@ -267,7 +275,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   let { username } = user;
 
   // Evaluate the project config and throw an error if the `sdkVersion` cannot be found.
-  const { exp } = await getProjectConfigAsync(root, { skipSDKVersionRequirement: false });
+  const { exp } = getConfig(root);
 
   const name = exp.slug;
   const { version, sdkVersion } = exp;
