@@ -275,7 +275,6 @@ async function promptForBareConfig(
 
   return {
     name: projectName,
-    displayName: options.name || projectName,
     expo: {
       name: options.name || projectName,
       slug: projectName,
