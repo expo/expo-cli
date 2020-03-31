@@ -134,6 +134,45 @@ export function getDependenciesFromBundledNativeModules({
 
   return result;
 }
+
+async function makeBreakingChangesToConfig(
+  projectRoot: string,
+  targetSdkVersionString: string
+): Promise<void> {
+  let { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp: currentExp } = ConfigUtils.getConfig(projectRoot, {
+    mode: 'development',
+  });
+
+  switch (targetSdkVersionString) {
+    case '37.0.0':
+      if (rootConfig?.expo?.androidNavigationBar?.visible !== undefined) {
+        if (rootConfig?.expo.androidNavigationBar?.visible === false) {
+          log(
+            chalk.underline.bold(
+              'Updating "androidNavigationBar.visible" property in app.json to "leanback"...'
+            )
+          );
+          rootConfig.expo.androidNavigationBar.visible = 'leanback';
+        } else if (rootConfig?.expo.androidNavigationBar?.visible === true) {
+          log(
+            chalk.underline.bold(
+              'Removing extraneous "androidNavigationBar.visible" property in app.json...'
+            )
+          );
+          delete rootConfig?.expo.androidNavigationBar?.visible;
+        }
+        await ConfigUtils.writeConfigJsonAsync(projectRoot, rootConfig.expo);
+      } else if (currentExp?.androidNavigationBar?.visible !== undefined) {
+        log(
+          chalk.underline.bold(
+            `⚠️  Please manually update "androidNavigationBar.visible" according to these docs https://docs.expo.io/versions/latest/workflow/configuration/#androidnavigationbar`
+          )
+        );
+      }
+  }
+}
+
 async function maybeBailOnUnsafeFunctionalityAsync(
   exp: Pick<ConfigUtils.ExpoConfig, 'sdkVersion'>
 ): Promise<boolean> {
@@ -416,13 +455,22 @@ export async function upgradeAsync(
   ) {
     log.addNewLineIfNone();
     removingSdkVersionStep.warn(
-      'Please manually delete the sdkVersion field in your project app.config file, it is depreacted.'
+      'Please manually delete the sdkVersion field in your project app.config file, it is deprecated.'
     );
   }
+
+  log.addNewLineIfNone();
+  log(
+    chalk.underline.bold(
+      'Updating your app.json to account for breaking changes (if applicable)...'
+    )
+  );
+  await makeBreakingChangesToConfig(projectRoot, targetSdkVersionString);
 
   let updatingPackagesStep = logNewSection(
     'Updating packages to compatible versions (where known).'
   );
+
   log.addNewLineIfNone();
 
   // Get all updated packages
