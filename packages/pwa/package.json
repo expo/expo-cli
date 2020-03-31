@@ -1,6 +1,6 @@
 {
   "name": "expo-pwa",
-  "version": "0.0.1-alpha.1",
+  "version": "0.0.1-alpha.2",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -36,8 +36,8 @@
   },
   "dependencies": {
     "@expo/babel-preset-cli": "^0.2.5",
-    "@expo/config": "2.7.0",
-    "@expo/image-utils": "0.2.16",
+    "@expo/config": "3.0.0",
+    "@expo/image-utils": "0.2.17",
     "@expo/json-file": "^8.2.5",
     "chalk": "2.4.2",
     "commander": "2.20.0",
