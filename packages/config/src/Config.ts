@@ -14,9 +14,11 @@ import {
 } from './Config.types';
 
 import { ConfigError } from './Errors';
-import { findAndEvalConfig } from './getConfig';
+import { findAndEvalConfig, findDynamicConfigPath } from './getConfig';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
 import { getExpoSDKVersion } from './Project';
+
+export { findDynamicConfigPath };
 
 /**
  * Get all platforms that a project is currently capable of running.

@@ -1,6 +1,7 @@
 import {
   WarningAggregator as ConfigWarningAggregator,
   findConfigFile,
+  findDynamicConfigPath,
   getConfig,
   isUsingYarn,
   readConfigJsonAsync,
@@ -23,7 +24,11 @@ import log from '../../log';
 import prompt from '../../prompt';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
-import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
+import {
+  logConfigWarningsAndroid,
+  logConfigWarningsIOS,
+  logWarningArray,
+} from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 
 type ValidationErrorMessage = string;
@@ -143,7 +148,7 @@ function logNewSection(title: string) {
 
 async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
   // We need the SDK version to proceed
-  const { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  let { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   if (!exp.sdkVersion) {
     throw new Error(`Unable to find the project's SDK version. Are you in the correct directory?`);
   }
@@ -164,41 +169,82 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   }
 
   /**
-   * Set names to be used for the native projects and configure appEntry so users can continue
-   * to use Expo client on ejected projects, even though we change the "main" to index.js for bare.
-   *
-   * TODO: app.config.js will become more prominent and we can't depend on
-   * being able to write to the config
+   * Ensure we have the required fields that we need to eject
    */
-  const { configPath, configName } = findConfigFile(projectRoot);
-  const configBuffer = await fse.readFile(configPath);
-  const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
+  let name = exp.name;
+  let bundleIdentifier = exp.ios?.bundleIdentifier;
+  let packageName = exp.android?.package;
+  let entryPoint = exp.appEntry;
+  const dynamicConfigPath = findDynamicConfigPath(projectRoot);
+  const configName = dynamicConfigPath ? path.basename(dynamicConfigPath) : 'app.json';
 
-  // Just to be sure
-  appJson.expo = appJson.expo ?? {};
+  if (dynamicConfigPath) {
+    let updatingAppConfigStep = logNewSection(`Updating app configuration (${configName})`);
+    let warnings: Array<[string, string, string | undefined]> = [];
+    if (!name) {
+      warnings.push(['name', 'A project name is required.', undefined]);
+    }
 
-  let name = await promptForNativeAppNameAsync(projectRoot);
-  appJson.expo.name = name;
+    if (!bundleIdentifier) {
+      warnings.push([
+        'ios.bundleIdentifier',
+        'An iOS bundle identifier is required.',
+        'https://expo.fyi/bundle-identifier',
+      ]);
+    }
 
-  let bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
-  appJson.expo.ios = appJson.expo.ios ?? {};
-  appJson.expo.ios.bundleIdentifier = bundleIdentifier;
+    if (!packageName) {
+      warnings.push([
+        'android.package',
+        'An Android package is required.',
+        'https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#2-configure-appjson',
+      ]);
+    }
 
-  let packageName = await getOrPromptForPackage(projectRoot);
-  appJson.expo.android = appJson.expo.android ?? {};
-  appJson.expo.android.package = packageName;
+    if (entryPoint) {
+      warnings.push(['entryPoint', 'Remove the entryPoint field.', undefined]);
+    }
 
-  // TODO: remove entryPoint and log about it for sdk 37 changes
-  if (appJson.expo.entryPoint && appJson.expo.entryPoint !== EXPO_APP_ENTRY) {
-    log(`- expo.entryPoint is already configured, we recommend using "${EXPO_APP_ENTRY}`);
-  } else {
-    appJson.expo.entryPoint = EXPO_APP_ENTRY;
+    if (warnings.length) {
+      updatingAppConfigStep.fail(
+        `We are unable to continue with ejecting until you make the following changes to ${configName}:`
+      );
+      logWarningArray(warnings);
+      process.exit(-1);
+    } else {
+      updatingAppConfigStep.succeed(`No update to ${configName} needed.`);
+    }
+  } else if (configName === 'app.json') {
+    const { configPath, configName } = findConfigFile(projectRoot);
+    const configBuffer = await fse.readFile(configPath);
+    const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
+    appJson.expo = appJson.expo ?? {};
+
+    name = await promptForNativeAppNameAsync(projectRoot);
+    appJson.expo.name = name;
+
+    bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
+    appJson.expo.ios = appJson.expo.ios ?? {};
+    appJson.expo.ios.bundleIdentifier = bundleIdentifier;
+
+    packageName = await getOrPromptForPackage(projectRoot);
+    appJson.expo.android = appJson.expo.android ?? {};
+    appJson.expo.android.package = packageName;
+
+    let updatingAppConfigStep = logNewSection(`Updating app configuration (${configName})`);
+
+    if (appJson.expo.entryPoint) {
+      updatingAppConfigStep.succeed(
+        'App configuration (app.json) updated. Please note that expo.entryPoint has been removed.'
+      );
+      delete appJson.expo.entryPoint;
+    } else {
+      updatingAppConfigStep.succeed('App configuration (app.json) updated.');
+    }
+
+    await fse.writeFile(path.resolve('app.json'), JSON.stringify(appJson, null, 2));
+    exp = appJson.expo;
   }
-
-  let updatingAppConfigStep = logNewSection('Updating app configuration (app.json)');
-  await fse.writeFile(path.resolve('app.json'), JSON.stringify(appJson, null, 2));
-  // TODO: if app.config.js, need to provide some other info here
-  updatingAppConfigStep.succeed('App configuration (app.json) updated.');
 
   /**
    * Extract the template and copy the ios and android directories over to the project directory
@@ -206,14 +252,14 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   let defaultDependencies: any = {};
   let defaultDevDependencies: any = {};
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
-  // there is some additioanl context for steps
+  // there is some additional context for steps
   // log.newLine();
   let creatingNativeProjectStep = logNewSection(
     'Creating native project directories (./ios and ./android)'
   );
   try {
     const tempDir = temporary.directory();
-    await Exp.extractTemplateAppAsync(templateSpec, tempDir, appJson.expo);
+    await Exp.extractTemplateAppAsync(templateSpec, tempDir, { name: name! });
     fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
     fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
     fse.copySync(path.join(tempDir, 'index.js'), path.join(projectRoot, 'index.js'));
@@ -239,7 +285,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    * start` rather than `expo start` after ejecting, for example.
    */
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
-  // there is some additioanl context for steps
+  // there is some additional context for steps
   // log.newLine();
   let updatingPackageJsonStep = logNewSection(
     'Updating your package.json scripts, dependencies, and main file'
@@ -296,7 +342,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
 
   updatingPackageJsonStep.succeed('Updated package.json and added index.js entry point.');
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
-  // there is some additioanl context for steps
+  // there is some additional context for steps
   // log.newLine();
 
   /**

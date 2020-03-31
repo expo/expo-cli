@@ -128,7 +128,7 @@ export async function extractAndInitializeTemplateApp(
 export async function extractTemplateAppAsync(
   templateSpec: PackageSpec,
   targetPath: string,
-  config: AppJSONConfig | BareAppConfig
+  config: AppJSONConfig | BareAppConfig | { name: string }
 ) {
   await pacote.tarball.stream(
     templateSpec,

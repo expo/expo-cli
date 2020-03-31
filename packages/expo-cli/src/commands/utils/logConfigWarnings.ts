@@ -3,15 +3,21 @@ import { WarningAggregator } from '@expo/config';
 import chalk from 'chalk';
 import log from '../../log';
 
-export function logConfigWarningsIOS() {
-  let warningsIOS = WarningAggregator.flushWarningsIOS();
-  if (warningsIOS.length) {
-    warningsIOS.forEach(([property, warning, link]) => {
+type WarningArray = [string, string, string | undefined];
+
+export function logWarningArray(warnings: Array<WarningArray>) {
+  if (warnings.length) {
+    warnings.forEach(([property, warning, link]) => {
       log.nested(formatOutput(property, warning, link));
     });
   }
 
-  return !!warningsIOS;
+  return !!warnings;
+}
+
+export function logConfigWarningsIOS() {
+  let warningsIOS = WarningAggregator.flushWarningsIOS();
+  return logWarningArray(warningsIOS);
 }
 
 export function logConfigWarningsAndroid() {

@@ -33,43 +33,36 @@ function reduceExpoObject(config?: ExpoConfig): ExpoConfig | null {
   return config;
 }
 
-export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
-  // TODO(Bacon): Support custom config path with `findConfigFile`
-  // TODO(Bacon): Should we support `expo` or `app` field with an object in the `package.json` too?
-
-  function testFileName(configFilePath: string): null | Partial<ExpoConfig> {
-    if (!fileExists(configFilePath)) return null;
-
-    try {
-      return evalConfig(configFilePath, request);
-    } catch (error) {
-      // If the file doesn't exist then we should skip it and continue searching.
-      if (!isMissingFileCode(error.code)) {
-        throw error;
-      }
-    }
-    return null;
+export function findDynamicConfigPath(
+  projectRoot: string,
+  requestedConfigPath?: string
+): string | null {
+  function testFileName(configPath: string): string | null {
+    if (!fileExists(configPath)) return null;
+    return configPath;
   }
 
-  if (request.configPath) {
-    const config = testFileName(request.configPath);
-    if (config) {
-      return reduceExpoObject(serializeAndEvaluate(config));
-    } else {
-      throw new ConfigError(
-        `Config with custom path ${request.configPath} couldn't be parsed.`,
-        'INVALID_CONFIG'
-      );
-    }
+  if (requestedConfigPath) {
+    const config = testFileName(requestedConfigPath);
+    if (config) return config;
   }
 
   for (const configFileName of allowedConfigFileNames) {
-    const configFilePath = path.resolve(request.projectRoot, configFileName);
-    const config = testFileName(configFilePath);
-    if (config) return reduceExpoObject(serializeAndEvaluate(config));
+    const configPath = testFileName(path.resolve(projectRoot, configFileName));
+    if (configPath) return configPath;
   }
 
   return null;
+}
+
+export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
+  const configPath = findDynamicConfigPath(request.projectRoot, request.configPath);
+  if (configPath) {
+    const config = evalConfig(configPath, request);
+    return reduceExpoObject(serializeAndEvaluate(config));
+  } else {
+    return null;
+  }
 }
 
 // We cannot use async config resolution right now because Next.js doesn't support async configs.
