@@ -68,7 +68,7 @@ function assetCommand(name: string, examples: string[] = []): Command {
 
 assetCommand('icon', ['--platform safari -i ./icon.png', '--platform chrome -i ./icon.png'])
   .description('Generate the home screen icons for a PWA')
-  .option('--platform', 'Platform to generate for: safari, chrome')
+  .option('--platform [string]', 'Platform to generate for: safari, chrome')
   .action(async (inputProjectRoot: string, options: IconAssetCommandOptions) => {
     validateSourceArgument(options.input, 'favicon');
     const projectRoot = inputProjectRoot ?? process.cwd();
