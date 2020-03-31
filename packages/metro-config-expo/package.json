@@ -1,5 +1,5 @@
 {
-  "name": "@expo/metro-config",
+  "name": "metro-config-expo",
   "version": "0.0.0",
   "description": "A Metro config for running React Native projects with the Metro bundler",
   "main": "build/index.js",

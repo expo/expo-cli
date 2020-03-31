@@ -1,18 +1,11 @@
 import Metro from 'metro';
 import { createDevServerMiddleware } from '@react-native-community/dev-server-api';
-import * as MetroConfig from '@expo/metro-config';
+import * as ExpoMetroConfig from 'metro-config-expo';
 
-export type MetroMiddlewareOptions = {
-  projectRoot: string;
-  watchFolders: Array<string>;
-  port: number;
-  host?: string;
-  key?: string;
-  cert?: string;
-  https?: boolean;
-};
-
-export async function runMetroDevServerAsync(options: MetroMiddlewareOptions) {
+export async function runMetroDevServerAsync(
+  projectRoot: string,
+  options: ExpoMetroConfig.LoadConfigOptions
+) {
   let reportEvent: ((event: any) => void) | undefined;
   const reporter = {
     update(event: any) {
@@ -24,11 +17,10 @@ export async function runMetroDevServerAsync(options: MetroMiddlewareOptions) {
     },
   };
 
-  const metroConfig = await MetroConfig.load(options.projectRoot);
+  const metroConfig = await ExpoMetroConfig.load(projectRoot, options);
   metroConfig.reporter = reporter;
 
   const { middleware, attachToServer } = createDevServerMiddleware({
-    host: options.host,
     port: metroConfig.server.port,
     watchFolders: metroConfig.watchFolders,
   });

@@ -3,9 +3,9 @@ import path from 'path';
 import { createBlacklist } from 'metro';
 // @ts-ignore - no typed definition for the package
 import { loadConfig } from 'metro-config';
+import { ConfigT } from 'metro-config/src/configTypes';
 
 import { readConfigJson, resolveModule } from '@expo/config';
-import resolveReactNativePath from './config/resolveReactNativePath';
 
 const INTERNAL_CALLSITES_REGEX = new RegExp(
   [
@@ -16,37 +16,9 @@ const INTERNAL_CALLSITES_REGEX = new RegExp(
   ].join('|')
 );
 
-export interface MetroConfig {
-  resolver: {
-    resolverMainFields: string[];
-    blacklistRE: RegExp;
-    platforms: string[];
-    providesModuleNodeModules: string[];
-    hasteImplModulePath?: string;
-  };
-  serializer: {
-    getModulesRunBeforeMainModule: () => string[];
-    getPolyfills: () => any;
-  };
-  server: {
-    port: number;
-    enhanceMiddleware?: Function;
-  };
-  symbolicator: {
-    customizeFrame: (frame: { file: string | null }) => { collapse: boolean };
-  };
-  transformer: {
-    babelTransformerPath: string;
-    assetRegistryPath: string;
-    assetPlugins?: Array<string>;
-  };
-  watchFolders: string[];
-  reporter?: any;
-}
-
-export function getDefaultConfig(projectRoot: string, options: ConfigOptionsT): MetroConfig {
+export function getDefaultConfig(projectRoot: string, options: LoadConfigOptions): ConfigT {
   const { exp } = readConfigJson(projectRoot, true, true);
-  const reactNativePath = resolveReactNativePath(projectRoot);
+  const reactNativePath = resolveModule('react-native', projectRoot, exp);
 
   return {
     resolver: {
@@ -81,7 +53,7 @@ export function getDefaultConfig(projectRoot: string, options: ConfigOptionsT): 
   };
 }
 
-export interface ConfigOptionsT {
+export interface LoadConfigOptions {
   maxWorkers?: number;
   port?: number;
   resetCache?: boolean;
@@ -97,10 +69,7 @@ export interface ConfigOptionsT {
  *
  * This allows the CLI to always overwrite the file settings.
  */
-export async function load(
-  projectRoot: string,
-  options: ConfigOptionsT = {}
-): Promise<MetroConfig> {
+export async function load(projectRoot: string, options: LoadConfigOptions = {}): Promise<ConfigT> {
   const defaultConfig = getDefaultConfig(projectRoot, options);
   return loadConfig({ cwd: projectRoot, projectRoot, ...options }, defaultConfig);
 }
