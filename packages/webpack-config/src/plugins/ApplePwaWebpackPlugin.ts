@@ -20,7 +20,7 @@ function logWarning(type: string, message: string) {
 }
 export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
   constructor(
-    private pwaOptions: ProjectOptions & { links: HTMLLinkNode[] },
+    private pwaOptions: ProjectOptions & { links: HTMLLinkNode[]; meta: HTMLLinkNode[] },
     private meta: ApplePwaMeta,
     private icon: IconOptions | null,
     private startupImage: IconOptions | null
@@ -34,17 +34,26 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
     data: HTMLPluginData
   ): Promise<HTMLPluginData> {
     // Meta
+
+    const hasMetaTagWithName = (name: string): boolean => {
+      return this.pwaOptions.meta.some(v => v.name === name);
+    };
+
     if (this.meta.isWebAppCapable) {
-      data.assetTags.meta.push(metaTag('mobile-web-app-capable', 'yes'));
-      data.assetTags.meta.push(metaTag('apple-mobile-web-app-capable', 'yes'));
+      if (!hasMetaTagWithName('mobile-web-app-capable')) {
+        data.assetTags.meta.push(metaTag('mobile-web-app-capable', 'yes'));
+      }
+      if (!hasMetaTagWithName('apple-mobile-web-app-capable')) {
+        data.assetTags.meta.push(metaTag('apple-mobile-web-app-capable', 'yes'));
+      }
     }
-    if (this.meta.isFullScreen) {
+    if (this.meta.isFullScreen && !hasMetaTagWithName('apple-touch-fullscreen')) {
       data.assetTags.meta.push(metaTag('apple-touch-fullscreen', 'yes'));
     }
-    if (this.meta.name) {
+    if (this.meta.name && !hasMetaTagWithName('apple-mobile-web-app-title')) {
       data.assetTags.meta.push(metaTag('apple-mobile-web-app-title', this.meta.name));
     }
-    if (this.meta.barStyle) {
+    if (this.meta.barStyle && !hasMetaTagWithName('apple-mobile-web-app-status-bar-style')) {
       data.assetTags.meta.push(
         metaTag('apple-mobile-web-app-status-bar-style', this.meta.barStyle)
       );
