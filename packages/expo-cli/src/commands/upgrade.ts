@@ -7,6 +7,7 @@ import program, { Command } from 'commander';
 import _ from 'lodash';
 import semver from 'semver';
 import ora from 'ora';
+import terminalLink from 'terminal-link';
 
 import log from '../log';
 import prompt from '../prompt';
@@ -135,41 +136,54 @@ export function getDependenciesFromBundledNativeModules({
   return result;
 }
 
-async function makeBreakingChangesToConfig(
+async function makeBreakingChangesToConfigAsync(
   projectRoot: string,
   targetSdkVersionString: string
 ): Promise<void> {
+  let step = logNewSection(
+    'Updating your app.json to account for breaking changes (if applicable)...'
+  );
+
   let { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
   const { exp: currentExp } = ConfigUtils.getConfig(projectRoot, {
-    mode: 'development',
+    skipSDKVersionRequirement: true,
   });
 
-  switch (targetSdkVersionString) {
-    case '37.0.0':
-      if (rootConfig?.expo?.androidNavigationBar?.visible !== undefined) {
-        if (rootConfig?.expo.androidNavigationBar?.visible === false) {
-          log(
-            chalk.underline.bold(
-              'Updating "androidNavigationBar.visible" property in app.json to "leanback"...'
-            )
-          );
-          rootConfig.expo.androidNavigationBar.visible = 'leanback';
-        } else if (rootConfig?.expo.androidNavigationBar?.visible === true) {
-          log(
-            chalk.underline.bold(
-              'Removing extraneous "androidNavigationBar.visible" property in app.json...'
-            )
-          );
-          delete rootConfig?.expo.androidNavigationBar?.visible;
+  try {
+    switch (targetSdkVersionString) {
+      case '37.0.0':
+        if (rootConfig?.expo?.androidNavigationBar?.visible !== undefined) {
+          if (rootConfig?.expo.androidNavigationBar?.visible === false) {
+            step.succeed(
+              `Updated "androidNavigationBar.visible" property in app.json to "leanback"...`
+            );
+            rootConfig.expo.androidNavigationBar.visible = 'leanback';
+          } else if (rootConfig?.expo.androidNavigationBar?.visible === true) {
+            step.succeed(
+              `Removed extraneous "androidNavigationBar.visible" property in app.json...`
+            );
+            delete rootConfig?.expo.androidNavigationBar?.visible;
+          }
+          await ConfigUtils.writeConfigJsonAsync(projectRoot, rootConfig.expo);
+        } else if (currentExp?.androidNavigationBar?.visible !== undefined) {
+          step.stopAndPersist({
+            symbol: '⚠️ ',
+            text: chalk.red(
+              `Please manually update "androidNavigationBar.visible" according to ${terminalLink(
+                'this documentation',
+                'https://docs.expo.io/versions/latest/workflow/configuration/#androidnavigationbar'
+              )}`
+            ),
+          });
         }
-        await ConfigUtils.writeConfigJsonAsync(projectRoot, rootConfig.expo);
-      } else if (currentExp?.androidNavigationBar?.visible !== undefined) {
-        log(
-          chalk.underline.bold(
-            `⚠️  Please manually update "androidNavigationBar.visible" according to these docs https://docs.expo.io/versions/latest/workflow/configuration/#androidnavigationbar`
-          )
-        );
-      }
+        break;
+      default:
+        step.succeed('No breaking changes necessary to app.json config.');
+    }
+  } catch (e) {
+    step.fail(
+      `Something went wrong when attempting to update app.json configuration: ${e.message}`
+    );
   }
 }
 
@@ -224,6 +238,7 @@ async function shouldBailWhenUsingLatest(
       log.warn(
         `You are already using the latest SDK version but the command will continue because nonInteractive is enabled.`
       );
+      log.newLine();
       return false;
     }
     const answer = await prompt({
@@ -234,11 +249,11 @@ async function shouldBailWhenUsingLatest(
 
     if (!answer.attemptUpdateAgain) {
       log('Follow the Expo blog at https://blog.expo.io for new release information!');
+      log.newLine();
       return true;
     }
   }
 
-  log.newLine();
   return false;
 }
 
@@ -459,13 +474,7 @@ export async function upgradeAsync(
     );
   }
 
-  log.addNewLineIfNone();
-  log(
-    chalk.underline.bold(
-      'Updating your app.json to account for breaking changes (if applicable)...'
-    )
-  );
-  await makeBreakingChangesToConfig(projectRoot, targetSdkVersionString);
+  await makeBreakingChangesToConfigAsync(projectRoot, targetSdkVersionString);
 
   let updatingPackagesStep = logNewSection(
     'Updating packages to compatible versions (where known).'
