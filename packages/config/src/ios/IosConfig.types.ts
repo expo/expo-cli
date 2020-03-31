@@ -23,4 +23,5 @@ export type InfoPlist = {
   FacebookAutoLogAppEventsEnabled?: boolean;
   FacebookAdvertiserIDCollectionEnabled?: boolean;
   UISupportedInterfaceOrientations?: Array<InterfaceOrientation>;
+  GMSApiKey?: string;
 };

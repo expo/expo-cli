@@ -1,10 +1,16 @@
-// @ts-ignore
-import { project as Project } from 'xcode';
 import path from 'path';
 import { sync as globSync } from 'glob';
 import fs from 'fs-extra';
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
+import {
+  getPbxproj,
+  getProjectName,
+  getSourceRoot,
+  isBuildConfig,
+  removeComments,
+  removeTestHosts,
+} from './utils/Xcodeproj';
 
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
 
@@ -79,9 +85,9 @@ function createEntitlementsFile(projectRoot: string) {
   const project = getPbxproj(projectRoot);
   project.addFile(entitlementsPath, {}, 'Pods');
   Object.entries(project.pbxXCBuildConfigurationSection())
-    .filter(filterComments)
-    .filter(filterConfig)
-    .filter(filterHosts)
+    .filter(removeComments)
+    .filter(isBuildConfig)
+    .filter(removeTestHosts)
     .forEach(({ 1: { buildSettings } }: any) => {
       buildSettings.CODE_SIGN_ENTITLEMENTS = entitlementsRelativePath;
     });
@@ -91,8 +97,8 @@ function createEntitlementsFile(projectRoot: string) {
 }
 
 function getDefaultEntitlementsPath(projectRoot: string) {
-  const project = getPbxproj(projectRoot);
-  return path.join(projectRoot, 'ios', project.productName, `${project.productName}.entitlements`);
+  const projectName = getProjectName(projectRoot);
+  return path.join(projectRoot, 'ios', projectName, `${projectName}.entitlements`);
 }
 
 const ENTITLEMENTS_TEMPLATE = `
@@ -123,47 +129,4 @@ function getExistingEntitlementsPath(projectRoot: string): string | null {
   }
 
   return entitlementsPath;
-}
-
-/**
- * TODO: These should probably be reused
- */
-
-function filterComments([item]: any[]): boolean {
-  return !item.endsWith(`_comment`);
-}
-
-function filterConfig(input: any[]): boolean {
-  const {
-    1: { isa },
-  } = input;
-  return isa === 'XCBuildConfiguration';
-}
-
-function filterHosts(input: any[]): boolean {
-  const {
-    1: { buildSettings },
-  } = input;
-
-  return !buildSettings.TEST_HOST;
-}
-
-/**
- * Get the pbxproj for the given path
- */
-function getPbxproj(projectRoot: string) {
-  const pbxprojPaths = globSync(path.join(projectRoot, 'ios', '*', 'project.pbxproj'));
-  const [pbxprojPath, ...otherPbxprojPaths] = pbxprojPaths;
-
-  if (pbxprojPaths.length > 1) {
-    console.warn(
-      `Found multiple pbxproject files paths, using ${pbxprojPath}. Other paths ${JSON.stringify(
-        otherPbxprojPaths
-      )} ignored.`
-    );
-  }
-
-  const project = Project(pbxprojPath);
-  project.parseSync();
-  return project;
 }

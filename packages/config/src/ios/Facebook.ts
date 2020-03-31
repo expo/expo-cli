@@ -132,6 +132,9 @@ export function setFacebookApplicationQuerySchemes(config: ExpoConfig, infoPlist
     return infoPlist;
   }
 
+  // TODO: it's actually necessary to add more query schemes (specific to the
+  // app) to support all of the features that the Facebook SDK provides, should
+  // we sync those here too?
   let updatedSchemes = [
     ...existingSchemes,
     'fbapi',

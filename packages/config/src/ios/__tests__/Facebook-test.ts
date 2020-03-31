@@ -14,7 +14,7 @@ import {
   setFacebookDisplayName,
 } from '../Facebook';
 
-describe('iOS facebook config', () => {
+describe('ios facebook config', () => {
   it(`returns null from all getters if no value provided`, () => {
     expect(getFacebookScheme({})).toBe(null);
     expect(getFacebookAppId({})).toBe(null);
