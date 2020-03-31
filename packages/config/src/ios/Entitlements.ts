@@ -80,10 +80,9 @@ function createEntitlementsFile(projectRoot: string) {
   const entitlementsRelativePath = entitlementsPath.replace(`${projectRoot}/ios/`, '');
 
   /**
-   * Add file to pbxproj as a resource and set under CODE_SIGN_ENTITLEMENTS
+   * Add file to pbxproj under CODE_SIGN_ENTITLEMENTS
    */
   const project = getPbxproj(projectRoot);
-  project.addFile(entitlementsPath, {}, 'Pods');
   Object.entries(project.pbxXCBuildConfigurationSection())
     .filter(removeComments)
     .filter(isBuildConfig)
@@ -98,7 +97,9 @@ function createEntitlementsFile(projectRoot: string) {
 
 function getDefaultEntitlementsPath(projectRoot: string) {
   const projectName = getProjectName(projectRoot);
-  return path.join(projectRoot, 'ios', projectName, `${projectName}.entitlements`);
+  const project = getPbxproj(projectRoot);
+  const productName = project.productName;
+  return path.join(projectRoot, 'ios', projectName, `${productName}.entitlements`);
 }
 
 const ENTITLEMENTS_TEMPLATE = `

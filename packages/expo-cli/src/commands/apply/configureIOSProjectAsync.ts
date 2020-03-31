@@ -7,12 +7,12 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
 
   IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, exp.ios!.bundleIdentifier!);
   IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
+  IOSConfig.DeviceFamily.setDeviceFamily(exp, projectRoot);
 
   // Configure the Info.plist
   await modifyInfoPlistAsync(projectRoot, infoPlist => {
     infoPlist = IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(exp, infoPlist);
     infoPlist = IOSConfig.Branch.setBranchApiKey(exp, infoPlist);
-    infoPlist = IOSConfig.DeviceFamily.setDeviceFamily(exp, infoPlist);
     infoPlist = IOSConfig.Facebook.setFacebookConfig(exp, infoPlist);
     infoPlist = IOSConfig.Google.setGoogleConfig(exp, infoPlist);
     infoPlist = IOSConfig.Name.setDisplayName(exp, infoPlist);

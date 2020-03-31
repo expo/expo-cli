@@ -1,5 +1,8 @@
-import { InfoPlist } from './IosConfig.types';
+import fs from 'fs-extra';
+
 import { ExpoConfig } from '../Config.types';
+import { getPbxproj, isBuildConfig, removeComments, removeTestHosts } from './utils/Xcodeproj';
+import { addWarningIOS } from '../WarningAggregator';
 
 export function getSupportsTablet(config: ExpoConfig) {
   if (config.ios?.supportsTablet) {
@@ -17,7 +20,6 @@ export function getIsTabletOnly(config: ExpoConfig) {
   return false;
 }
 
-// TODO: this isn't enough! need to also update pbxproj to add TARGETED_DEVICE_FAMILY
 export function getDeviceFamilies(config: ExpoConfig) {
   let supportsTablet = getSupportsTablet(config);
   let isTabletOnly = getIsTabletOnly(config);
@@ -32,9 +34,37 @@ export function getDeviceFamilies(config: ExpoConfig) {
   }
 }
 
-export function setDeviceFamily(config: ExpoConfig, infoPlist: InfoPlist) {
-  return {
-    ...infoPlist,
-    UIDeviceFamily: getDeviceFamilies(config),
-  };
+/**
+ * Add to pbxproj under TARGETED_DEVICE_FAMILY
+ */
+export function setDeviceFamily(config: ExpoConfig, projectRoot: string) {
+  const deviceFamilies = getDeviceFamilies(config);
+
+  let supportsTablet = getSupportsTablet(config);
+  let isTabletOnly = getIsTabletOnly(config);
+
+  if (isTabletOnly) {
+    addWarningIOS(
+      'isTabletOnly',
+      'You will need to configure this in the "General" tab for your project target in Xcode.'
+    );
+  } else if (supportsTablet) {
+    addWarningIOS(
+      'supportsTablet',
+      'You will need to configure this in the "General" tab for your project target in Xcode.'
+    );
+  }
+
+  // TODO: we might need to actually fork the "xcode" package to make this work
+  // See: https://github.com/apache/cordova-node-xcode/issues/86
+  //
+  // const project = getPbxproj(projectRoot);
+  // Object.entries(project.pbxXCBuildConfigurationSection())
+  //   .filter(removeComments)
+  //   .filter(isBuildConfig)
+  //   .filter(removeTestHosts)
+  //   .forEach(({ 1: { buildSettings } }: any) => {
+  //     buildSettings.TARGETED_DEVICE_FAMILY = '1';
+  //   });
+  // fs.writeFileSync(project.filepath, project.writeSync());
 }
