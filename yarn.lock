@@ -9243,6 +9243,15 @@ expect@^24.9.0:
     jest-message-util "^24.9.0"
     jest-regex-util "^24.9.0"
 
+expo-yarn-workspaces@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/expo-yarn-workspaces/-/expo-yarn-workspaces-1.2.1.tgz#7efb0392f7270b47ca34bfc7791d2e2d8b3d45f5"
+  integrity sha512-2pFvXpVkjsHIll+WI0+2bs2AGniTu7jSiT7IOY3yVkyEZyUTb5IVJx3egde5PWPK7VSVt8X3GwxHDbHP87pVUw==
+  dependencies:
+    debug "^4.1.1"
+    find-yarn-workspace-root "^1.2.0"
+    mkdirp "^0.5.1"
+
 express@4.16.4:
   version "4.16.4"
   resolved "https://registry.yarnpkg.com/express/-/express-4.16.4.tgz#fddef61926109e24c515ea97fd2f1bdbf62df12e"
@@ -9734,7 +9743,7 @@ find-up@^4.1.0:
     locate-path "^5.0.0"
     path-exists "^4.0.0"
 
-find-yarn-workspace-root@^1.2.1:
+find-yarn-workspace-root@^1.2.0, find-yarn-workspace-root@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/find-yarn-workspace-root/-/find-yarn-workspace-root-1.2.1.tgz#40eb8e6e7c2502ddfaa2577c176f221422f860db"
   integrity sha512-dVtfb0WuQG+8Ag2uWkbG79hOUzEsRrhBzgfn86g2sJPkzmcpGdghbNTfUKGTxymFrY/tLIodDzLoW9nOJ4FY8Q==
