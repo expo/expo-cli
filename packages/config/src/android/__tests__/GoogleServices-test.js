@@ -1,6 +1,11 @@
 import fs from 'fs-extra';
 import { resolve } from 'path';
-import { getGoogleServicesFilePath, setGoogleServicesFile } from '../GoogleServices';
+import {
+  applyPlugin,
+  getGoogleServicesFilePath,
+  setClassPath,
+  setGoogleServicesFile,
+} from '../GoogleServices';
 
 jest.mock('fs-extra');
 const fixturesPath = resolve(__dirname, 'fixtures');
@@ -63,5 +68,82 @@ describe('google services file', () => {
       resolve(fixturesPath, 'google-services.json'),
       resolve(fixturesPath, customTargetPath)
     );
+  });
+
+  describe('setting classpath', () => {
+    const validConfig = { android: { googleServicesFile: 'g.json' } };
+    const EXAMPLE_BUILD_GRADLE = `
+buildscript {
+    ext {
+        buildToolsVersion = "28.0.3"
+    }
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.5.3'
+
+    }
+}
+  `;
+
+    const EXPECTED_BUILD_GRADLE = `
+buildscript {
+    ext {
+        buildToolsVersion = "28.0.3"
+    }
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.google.gms:google-services:4.3.3'
+        classpath 'com.android.tools.build:gradle:3.5.3'
+
+    }
+}
+  `;
+    it(`sets classpath in build.gradle if needed`, () => {
+      expect(setClassPath(validConfig, EXAMPLE_BUILD_GRADLE)).toEqual(EXPECTED_BUILD_GRADLE);
+    });
+
+    it(`does not set classpath in build.gradle multiple times`, () => {
+      expect(setClassPath(validConfig, EXPECTED_BUILD_GRADLE)).toEqual(EXPECTED_BUILD_GRADLE);
+    });
+  });
+
+  describe('applying plugin', () => {
+    const validConfig = { android: { googleServicesFile: 'g.json' } };
+    const EXAMPLE_APP_BUILD_GRADLE = `
+// Blah blah blah
+task copyDownloadableDepsToLibs(type: Copy) {
+    from configurations.compile
+    into 'libs'
+}
+
+apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle");
+applyNativeModulesAppBuildGradle(project)`;
+
+    const EXPECTED_APP_BUILD_GRADLE = `
+// Blah blah blah
+task copyDownloadableDepsToLibs(type: Copy) {
+    from configurations.compile
+    into 'libs'
+}
+
+apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle");
+applyNativeModulesAppBuildGradle(project)
+apply plugin: 'com.google.gms.google-services'`;
+
+    it(`applies the plugin in app/build.gradle if needed`, () => {
+      expect(applyPlugin(validConfig, EXAMPLE_APP_BUILD_GRADLE)).toEqual(EXPECTED_APP_BUILD_GRADLE);
+    });
+
+    it(`does not apply the plugin multiple times`, () => {
+      expect(applyPlugin(validConfig, EXPECTED_APP_BUILD_GRADLE)).toEqual(
+        EXPECTED_APP_BUILD_GRADLE
+      );
+    });
   });
 });
