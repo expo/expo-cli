@@ -85,18 +85,18 @@ describe('getConfig', () => {
     it('uses a custom location', () => {
       const projectRoot = path.resolve(fixtures.customLocationJson);
       const customConfigPath = path.resolve(projectRoot, 'src/app.staging.json');
-      setCustomConfigPath(fixtures.customLocationJson, customConfigPath);
+      setCustomConfigPath(projectRoot, customConfigPath);
 
       const { exp } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
       // Ensure the expo object is reduced out. See #1542.
       // Also test that a nested expo object isn't recursively reduced.
-      expect(exp.expo).toStrictEqual({ name: 'invalid-reduced' });
+      expect(exp.expo).toStrictEqual({ name: 'app-staging-expo-expo-name' });
       // name is read from the correct config at the custom location.
-      expect(exp.name).toBe('app-staging-json');
+      expect(exp.name).toBe('app-staging-expo-name');
       // slug should be copied from name if it wasn't defined.
-      expect(exp.slug).toBe('app-staging-json');
+      expect(exp.slug).toBe('app-staging-expo-name');
       // Version comes from package.json in the root.
       expect(exp.version).toBe('1.0.0');
       // No packages are installed and no platforms are specified.
@@ -104,14 +104,14 @@ describe('getConfig', () => {
 
       // Ensure this works
       resetAllCustomFixtureLocations();
-      // After the rest, read the root config and ensure it doesn't match the custom location config.
+      // After the reset, read the root config and ensure it doesn't match the custom location config.
       const { exp: baseExp } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
       // name is read from the default config.
-      expect(baseExp.name).toBe('app-json');
-      // A base app.json is parsed differently, ensure the app.config.js parsing doesn't accidentally reduce the "expo" object multiple times.
-      expect(baseExp.expo).toStrictEqual({ name: 'invalid-reduced' });
+      expect(baseExp.name).toBe('app-expo-name');
+      // A base app.json is parsed differently, ensure the app.json parsing doesn't accidentally reduce the "expo" object multiple times.
+      expect(baseExp.expo).toStrictEqual({ name: 'app-expo-expo-name' });
     });
   });
 });
