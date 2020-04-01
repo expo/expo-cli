@@ -7,6 +7,7 @@ import * as IosPlist from './detach/IosPlist';
 // @ts-ignore IosWorkspace not yet converted to TypeScript
 import * as IosWorkspace from './detach/IosWorkspace';
 import StandaloneContext from './detach/StandaloneContext';
+import logger from './Logger';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 
 export type EmbeddedAssetsConfiguration = {
@@ -34,9 +35,59 @@ export async function configureAsync(config: EmbeddedAssetsConfiguration) {
   await _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config);
 }
 
+export function getEmbeddedManifestPath(
+  platform: 'ios' | 'android',
+  projectRoot: string,
+  exp: PublicConfig
+): string {
+  if (platform === 'ios') {
+    return exp.ios && exp.ios.publishManifestPath
+      ? exp.ios.publishManifestPath
+      : _getDefaultEmbeddedManifestPath(platform, projectRoot, exp);
+  } else if (platform === 'android') {
+    return exp.android && exp.android.publishManifestPath
+      ? exp.android.publishManifestPath
+      : _getDefaultEmbeddedManifestPath(platform, projectRoot, exp);
+  }
+  return _getDefaultEmbeddedManifestPath(platform, projectRoot, exp);
+}
+
+function _getDefaultEmbeddedManifestPath(
+  platform: 'ios' | 'android',
+  projectRoot: string,
+  exp: PublicConfig
+): string {
+  return path.join(_getDefaultEmbeddedAssetDir(platform, projectRoot, exp), 'app.manifest');
+}
+
+function _getDefaultEmbeddedBundlePath(
+  platform: 'ios' | 'android',
+  projectRoot: string,
+  exp: PublicConfig
+): string {
+  return path.join(_getDefaultEmbeddedAssetDir(platform, projectRoot, exp), 'app.bundle');
+}
+
+function _getDefaultEmbeddedAssetDir(
+  platform: 'ios' | 'android',
+  projectRoot: string,
+  exp: PublicConfig
+): string {
+  if (platform === 'ios') {
+    const context = StandaloneContext.createUserContext(projectRoot, exp);
+    const { supportingDirectory } = IosWorkspace.getPaths(context);
+    return supportingDirectory;
+  } else if (platform === 'android') {
+    return path.join(projectRoot, 'android', 'app', 'src', 'main', 'assets');
+  } else {
+    throw new Error('Embedding assets is not supported for platform ' + platform);
+  }
+}
+
 async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfiguration) {
   const {
     projectRoot,
+    pkg,
     exp,
     iosManifest,
     iosBundle,
@@ -46,57 +97,99 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
     androidSourceMap,
   } = config;
 
+  let androidBundlePath;
+  let androidManifestPath;
+  let androidSourceMapPath;
+  let iosBundlePath;
+  let iosManifestPath;
+  let iosSourceMapPath;
+
+  // set defaults
+  if (pkg.dependencies['expo-updates']) {
+    const defaultAndroidDir = _getDefaultEmbeddedAssetDir('android', projectRoot, exp);
+    const defaultIosDir = _getDefaultEmbeddedAssetDir('ios', projectRoot, exp);
+
+    await fs.ensureDir(defaultIosDir);
+    await fs.ensureDir(defaultAndroidDir);
+
+    androidBundlePath = _getDefaultEmbeddedBundlePath('android', projectRoot, exp);
+    androidManifestPath = _getDefaultEmbeddedManifestPath('android', projectRoot, exp);
+    iosBundlePath = _getDefaultEmbeddedBundlePath('ios', projectRoot, exp);
+    iosManifestPath = _getDefaultEmbeddedManifestPath('ios', projectRoot, exp);
+
+    if (!fs.existsSync(iosBundlePath) || !fs.existsSync(iosManifestPath)) {
+      logger.global.warn(
+        'Creating app.manifest and app.bundle inside of your ios/<project>/Supporting directory.\nBe sure to add these files to your Xcode project. More info at https://expo.fyi/embedded-assets'
+      );
+    }
+  }
+
+  // allow custom overrides
   if (exp.android && exp.android.publishBundlePath) {
+    androidBundlePath = exp.android.publishBundlePath;
+  }
+  if (exp.android && exp.android.publishManifestPath) {
+    androidManifestPath = exp.android.publishManifestPath;
+  }
+  if (exp.android && exp.android.publishSourceMapPath) {
+    androidSourceMapPath = exp.android.publishSourceMapPath;
+  }
+  if (exp.ios && exp.ios.publishBundlePath) {
+    iosBundlePath = exp.ios.publishBundlePath;
+  }
+  if (exp.ios && exp.ios.publishManifestPath) {
+    iosManifestPath = exp.ios.publishManifestPath;
+  }
+  if (exp.ios && exp.ios.publishSourceMapPath) {
+    iosSourceMapPath = exp.ios.publishSourceMapPath;
+  }
+
+  if (androidBundlePath) {
     await writeArtifactSafelyAsync(
       projectRoot,
       'android.publishBundlePath',
-      exp.android.publishBundlePath,
+      androidBundlePath,
       androidBundle
     );
   }
 
-  if (exp.ios && exp.ios.publishBundlePath) {
+  if (androidManifestPath) {
     await writeArtifactSafelyAsync(
       projectRoot,
-      'ios.publishBundlePath',
-      exp.ios.publishBundlePath,
-      iosBundle
+      'android.publishManifestPath',
+      androidManifestPath,
+      JSON.stringify(androidManifest)
     );
   }
 
-  if (exp.android && exp.android.publishSourceMapPath && androidSourceMap) {
+  if (androidSourceMapPath && androidSourceMap) {
     await writeArtifactSafelyAsync(
       projectRoot,
       'android.publishSourceMapPath',
-      exp.android.publishSourceMapPath,
+      androidSourceMapPath,
       androidSourceMap
     );
   }
 
-  if (exp.ios && exp.ios.publishSourceMapPath && iosSourceMap) {
-    await writeArtifactSafelyAsync(
-      projectRoot,
-      'ios.publishSourceMapPath',
-      exp.ios.publishSourceMapPath,
-      iosSourceMap
-    );
+  if (iosBundlePath) {
+    await writeArtifactSafelyAsync(projectRoot, 'ios.publishBundlePath', iosBundlePath, iosBundle);
   }
 
-  if (exp.ios && exp.ios.publishManifestPath) {
+  if (iosManifestPath) {
     await writeArtifactSafelyAsync(
       projectRoot,
       'ios.publishManifestPath',
-      exp.ios.publishManifestPath,
+      iosManifestPath,
       JSON.stringify(iosManifest)
     );
   }
 
-  if (exp.android && exp.android.publishManifestPath) {
+  if (iosSourceMapPath && iosSourceMap) {
     await writeArtifactSafelyAsync(
       projectRoot,
-      'android.publishManifestPath',
-      exp.android.publishManifestPath,
-      JSON.stringify(androidManifest)
+      'ios.publishSourceMapPath',
+      iosSourceMapPath,
+      iosSourceMap
     );
   }
 }

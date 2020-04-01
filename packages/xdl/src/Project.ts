@@ -871,7 +871,8 @@ export async function publishAsync(
   if (
     validPostPublishHooks.length ||
     (exp.ios && exp.ios.publishManifestPath) ||
-    (exp.android && exp.android.publishManifestPath)
+    (exp.android && exp.android.publishManifestPath) ||
+    pkg.dependencies['expo-updates']
   ) {
     [androidManifest, iosManifest] = await Promise.all([
       ExponentTools.getManifestAsync(response.url, {
