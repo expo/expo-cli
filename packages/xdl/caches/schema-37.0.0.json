@@ -234,8 +234,9 @@
         "type": "object",
         "properties": {
           "visible": {
-            "description": "Determines whether to show or hide the bottom navigation bar. When set to `false`, both the navigation bar and the status bar are hidden by enabling full-screen mode, as recommended by the Android documentation.",
-            "type": "boolean"
+            "description": "Determines how and when the navigation bar is shown.",
+            "type": "string",
+            "enum": ["leanback", "immersive", "sticky-immersive"]
           },
           "barStyle": {
             "description": "Configure the navigation bar icons to have a light or dark color. Supported on Android Oreo and newer.",
