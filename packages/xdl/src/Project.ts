@@ -1782,6 +1782,7 @@ export async function startReactNativeServerAsync(
     delete packagerOpts.customLogReporterPath;
   }
   const userPackagerOpts = exp.packagerOpts;
+
   if (userPackagerOpts) {
     // The RN CLI expects rn-cli.config.js's path to be absolute. We use the
     // project root to resolve relative paths since that was the original
@@ -1793,6 +1794,9 @@ export async function startReactNativeServerAsync(
     packagerOpts = {
       ...packagerOpts,
       ...userPackagerOpts,
+      // In order to prevent people from forgetting to include the .expo extension or other things
+      // NOTE(brentvatne): we should probably do away with packagerOpts soon in favor of @expo/metro-config!
+      sourceExts: uniq([...packagerOpts.sourceExts, ...userPackagerOpts.sourceExts]),
     };
 
     if (userPackagerOpts.port !== undefined && userPackagerOpts.port !== null) {
