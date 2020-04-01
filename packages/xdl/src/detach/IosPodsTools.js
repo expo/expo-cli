@@ -414,6 +414,7 @@ use_unimodules!(
     'expo-notifications',
     'expo-splash-screen',
     'expo-image',
+    'expo-updates',
   ],
 )`,
       2
