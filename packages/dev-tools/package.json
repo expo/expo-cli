@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.10.16",
+  "version": "0.10.17",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development ts-node ./server/dev-server",
@@ -36,7 +36,7 @@
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.8.3",
     "@expo/babel-preset-cli": "0.2.7",
-    "@expo/xdl": "57.8.1",
+    "@expo/xdl": "57.8.2",
     "anser": "^1.4.7",
     "apollo-cache-inmemory": "^1.1.12",
     "apollo-client": "^2.2.8",
