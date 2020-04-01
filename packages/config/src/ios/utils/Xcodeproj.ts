@@ -25,6 +25,7 @@ export function addFileToGroup(filepath: string, groupName: string, project: Pro
   file.fileRef = project.generateUuid();
   project.addToPbxFileReferenceSection(file);
   project.addToPbxBuildFileSection(file);
+  project.addToPbxSourcesBuildPhase(file);
   let group = project.pbxGroupByName(groupName);
   if (!group) {
     throw Error(`Group by name ${groupName} not found!`);
