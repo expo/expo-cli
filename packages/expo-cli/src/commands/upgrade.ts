@@ -175,10 +175,12 @@ async function makeBreakingChangesToConfigAsync(
               )}`
             ),
           });
+        } else {
+          step.succeed('No additional changes necessary to app.json config.');
         }
         break;
       default:
-        step.succeed('No breaking changes necessary to app.json config.');
+        step.succeed('No additional changes necessary to app.json config.');
     }
   } catch (e) {
     step.fail(
