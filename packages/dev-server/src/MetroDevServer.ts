@@ -1,6 +1,6 @@
 import Metro from 'metro';
 import { createDevServerMiddleware } from '@react-native-community/dev-server-api';
-import * as ExpoMetroConfig from 'metro-config-expo';
+import * as ExpoMetroConfig from 'expo-metro-config';
 
 export async function runMetroDevServerAsync(
   projectRoot: string,
