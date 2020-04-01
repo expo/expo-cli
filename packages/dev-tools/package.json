@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.10.20",
+  "version": "0.10.21",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development ts-node ./server/dev-server",
@@ -20,7 +20,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@expo/config": "3.0.2",
+    "@expo/config": "3.0.3",
     "base64url": "3.0.1",
     "express": "4.16.4",
     "freeport-async": "2.0.0",
