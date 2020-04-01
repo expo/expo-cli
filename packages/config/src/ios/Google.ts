@@ -81,11 +81,11 @@ export function setGoogleServicesFile(config: ExpoConfig, projectRoot: string) {
   let googleServiceFilePath = path.resolve(projectRoot, googleServicesFileRelativePath);
   fs.copyFileSync(
     googleServiceFilePath,
-    path.join(getSourceRoot(projectRoot), 'GoogleServices-Info.plist')
+    path.join(getSourceRoot(projectRoot), 'GoogleService-Info.plist')
   );
 
   let project = getPbxproj(projectRoot);
   let projectName = getProjectName(projectRoot);
-  project = addFileToGroup(`${projectName}/GoogleServices-Info.plist`, projectName, project);
+  project = addFileToGroup(`${projectName}/GoogleService-Info.plist`, projectName, project);
   fs.writeFileSync(project.filepath, project.writeSync());
 }
