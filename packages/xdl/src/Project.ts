@@ -1951,7 +1951,7 @@ function shouldExposeEnvironmentVariableInManifest(key: string) {
 
 export async function startExpoServerAsync(
   projectRoot: string,
-  options: { skipMetro?: boolean } = {}
+  options: StartOptions & { skipMetro?: boolean } = {}
 ): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
@@ -2114,8 +2114,7 @@ export async function startExpoServerAsync(
   });
 
   if (!options.skipMetro) {
-    await runMetroDevServerAsync({
-      projectRoot,
+    await runMetroDevServerAsync(projectRoot, {
       watchFolders: [projectRoot],
       port: expoServerPort,
     });
@@ -2380,9 +2379,9 @@ export async function startAsync(
     return exp;
   } else {
     if (Versions.gteSdkVersion(exp, '36.0.0')) {
-      await startExpoServerAsync(projectRoot);
+      await startExpoServerAsync(projectRoot, options);
     } else {
-      await startExpoServerAsync(projectRoot, { skipMetro: true });
+      await startExpoServerAsync(projectRoot, { ...options, skipMetro: true });
       await startReactNativeServerAsync(projectRoot, options, verbose);
     }
     DevSession.startSession(projectRoot, exp, 'native');

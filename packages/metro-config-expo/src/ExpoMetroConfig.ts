@@ -53,7 +53,7 @@ export function getDefaultConfig(projectRoot: string, options: LoadConfigOptions
   };
 }
 
-export interface LoadConfigOptions {
+export interface ConfigOptions {
   maxWorkers?: number;
   port?: number;
   resetCache?: boolean;
