@@ -1,4 +1,4 @@
-import { getManagedExtensions } from '@expo/config/paths';
+import { getBareExtensions } from '@expo/config/paths';
 
 /**
  * Get the platform specific platform extensions in the format that Webpack expects (with a dot prefix).
@@ -8,5 +8,5 @@ import { getManagedExtensions } from '@expo/config/paths';
  */
 export function getModuleFileExtensions(...platforms: string[]): string[] {
   // Webpack requires a `.` before each value
-  return getManagedExtensions(platforms).map(value => `.${value}`);
+  return getBareExtensions(platforms).map(value => `.${value}`);
 }
