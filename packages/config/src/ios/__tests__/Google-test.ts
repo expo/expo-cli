@@ -33,8 +33,8 @@ describe('ios google config', () => {
       })
     ).toBe('000');
     expect(
-      getGoogleServicesFile({ ios: { googleServicesFile: './path/to/GoogleServices-Info.plist' } })
-    ).toBe('./path/to/GoogleServices-Info.plist');
+      getGoogleServicesFile({ ios: { googleServicesFile: './path/to/GoogleService-Info.plist' } })
+    ).toBe('./path/to/GoogleService-Info.plist');
   });
 
   it(`sets the google maps api key if provided or returns plist`, () => {
