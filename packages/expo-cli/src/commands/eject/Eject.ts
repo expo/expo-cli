@@ -308,12 +308,12 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   /**
    * Install dependencies
    */
-  let installingDependenciesStep = logNewSection('Installing dependencies');
+  let installingDependenciesStep = logNewSection('Installing dependencies.');
   await fse.remove('node_modules');
   const packageManager = PackageManager.createForProject(projectRoot, { log, silent: true });
   try {
     await packageManager.installAsync();
-    installingDependenciesStep.succeed('Installed dependencies');
+    installingDependenciesStep.succeed('Installed dependencies.');
   } catch (e) {
     installingDependenciesStep.fail(
       'Something when wrong installing dependencies, check your package manager logfile. Continuing with ejecting, you can debug this afterwards.'
