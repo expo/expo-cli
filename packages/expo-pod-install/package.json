@@ -1,47 +1,36 @@
 {
   "name": "@expo/pod-install",
   "version": "0.0.0",
-  "main": "build",
+  "main": "build/CocoaPods.js",
   "keywords": [
     "cocoapods",
     "pod-install",
-    "npx",
     "ios"
   ],
   "description": "Ensure CocoaPods are installed in your project",
   "repository": {
     "type": "git",
-    "url": "https://github.com/expo/pod-install.git"
+    "url": "https://github.com/expo/expo-cli.git"
   },
   "author": "Expo <support@expo.io>",
   "license": "MIT",
-  "bin": {
-    "pod-install": "./cli.js"
-  },
   "files": [
-    "build",
-    "cli.js"
+    "build"
   ],
   "scripts": {
-    "prepare": "yarn run clean && yarn run build",
     "lint": "eslint .",
     "watch": "tsc --watch",
     "build": "tsc",
-    "watch:ncc": "yarn run build -w",
-    "build:ncc": "ncc build ./src/index.ts -o build/",
-    "build:ncc:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
-    "clean": "rimraf ./build/"
+    "prepare": "yarn run clean && yarn build",
+    "clean": "rm -rf build ./tsconfig.tsbuildinfo"
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.7",
-    "@types/node": "^12.12.31",
-    "@zeit/ncc": "^0.20.5",
     "rimraf": "^3.0.2"
   },
   "dependencies": {
     "@expo/spawn-async": "1.5.0",
     "chalk": "2.4.2",
-    "commander": "2.20.0",
     "sudo-prompt": "9.1.1",
     "update-check": "1.5.3"
   }

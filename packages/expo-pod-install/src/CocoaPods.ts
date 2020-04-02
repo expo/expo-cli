@@ -4,9 +4,8 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 import sudo from 'sudo-prompt';
 
-const packageJSON = require('../package.json');
-
 export function spawnSudoAsync(command: string): Promise<void> {
+  const packageJSON = require('../package.json');
   return new Promise((resolve, reject) => {
     sudo.exec(command, { name: packageJSON.name }, error => {
       if (error) {
