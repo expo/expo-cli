@@ -13,7 +13,6 @@ module.exports = api => {
           },
         },
       ],
-      [require.resolve('@babel/plugin-proposal-decorators'), { legacy: true }],
     ],
   };
 };

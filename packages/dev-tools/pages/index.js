@@ -170,277 +170,284 @@ const createSourceQuery = typename => gql`
   ${MessageFragment}
 `;
 
-@withRedux(initStore, state => state)
-class IndexPageContents extends React.Component {
-  state = {};
+const IndexPageContents = withRedux(
+  initStore,
+  state => state
+)(
+  class IndexPageContents extends React.Component {
+    state = {};
 
-  _handleDeviceSelect = options => State.sourceSelect(options, this.props);
-  _handleSectionDrag = options => State.sourceSwap(options, this.props);
-  _handleSectionSelect = options => State.sectionSelect(options, this.props);
-  _handleSectionDismiss = () => State.sectionClear(this.props);
-  _handleChangeSectionCount = count => State.sectionCount({ count }, this.props);
-  _handleUpdateState = options => State.update(options, this.props);
-  _handleSimulatorClickIOS = () => State.openSimulator('IOS', this.props);
-  _handleStartWebClick = () => State.openBrowser(this.props);
-  _handleSimulatorClickAndroid = () => State.openSimulator('ANDROID', this.props);
-  _handleHostTypeClick = hostType => State.setHostType({ hostType }, this.props);
-  _handlePublishProject = options => State.publishProject(options, this.props);
-  _handleToggleProductionMode = () => {
-    const dev = !this.props.data.currentProject.settings.dev;
-    State.setBuildFlags({ dev, minify: !dev }, this.props);
-  };
+    _handleDeviceSelect = options => State.sourceSelect(options, this.props);
+    _handleSectionDrag = options => State.sourceSwap(options, this.props);
+    _handleSectionSelect = options => State.sectionSelect(options, this.props);
+    _handleSectionDismiss = () => State.sectionClear(this.props);
+    _handleChangeSectionCount = count => State.sectionCount({ count }, this.props);
+    _handleUpdateState = options => State.update(options, this.props);
+    _handleSimulatorClickIOS = () => State.openSimulator('IOS', this.props);
+    _handleStartWebClick = () => State.openBrowser(this.props);
+    _handleSimulatorClickAndroid = () => State.openSimulator('ANDROID', this.props);
+    _handleHostTypeClick = hostType => State.setHostType({ hostType }, this.props);
+    _handlePublishProject = options => State.publishProject(options, this.props);
+    _handleToggleProductionMode = () => {
+      const dev = !this.props.data.currentProject.settings.dev;
+      State.setBuildFlags({ dev, minify: !dev }, this.props);
+    };
 
-  _handleSubmitPhoneNumberOrEmail = async () =>
-    await State.sendProjectUrl(this.props.recipient, this.props);
-  _handleKeyPress = event => {
-    if (event.key === 'l' && event.ctrlKey) {
-      if (this.props.data.projectManagerLayout.selected) {
-        State.clearMessages({ source: this.props.data.projectManagerLayout.selected }, this.props);
-      } else if (this.props.data.projectManagerLayout.sources.length) {
-        State.clearMessages(
-          { source: this.props.data.projectManagerLayout.sources[0] },
-          this.props
-        );
+    _handleSubmitPhoneNumberOrEmail = async () =>
+      await State.sendProjectUrl(this.props.recipient, this.props);
+    _handleKeyPress = event => {
+      if (event.key === 'l' && event.ctrlKey) {
+        if (this.props.data.projectManagerLayout.selected) {
+          State.clearMessages(
+            { source: this.props.data.projectManagerLayout.selected },
+            this.props
+          );
+        } else if (this.props.data.projectManagerLayout.sources.length) {
+          State.clearMessages(
+            { source: this.props.data.projectManagerLayout.sources[0] },
+            this.props
+          );
+        }
+      }
+    };
+    _handleClearMessages = source => State.clearMessages({ source }, this.props);
+
+    componentDidMount() {
+      if (this.props.data.userSettings.sendTo) {
+        this._handleUpdateState({
+          recipient: this.props.data.userSettings.sendTo,
+        });
+      }
+
+      const subscriptionObservable = this.props.client.subscribe({
+        query: subscriptionQuery,
+        variables: {
+          after: this.props.data.currentProject.messages.pageInfo.lastCursor,
+        },
+      });
+      this.querySubscription = subscriptionObservable.subscribe({
+        next: result => this.updateCurrentData(result),
+        // error: this.updateError,
+      });
+      this.pollingObservable = this.props.client.watchQuery({
+        query: projectPollQuery,
+      });
+      this.pollingObservable.startPolling(60000);
+
+      document.addEventListener('keypress', this._handleKeyPress);
+
+      this.updateTitle();
+    }
+
+    componentDidUpdate() {
+      this.updateTitle();
+    }
+
+    componentWillUnmount() {
+      if (this.querySubscription) {
+        this.querySubscription.unsubscribe();
+      }
+      if (this.pollingObservable) {
+        this.pollingObservable.stopPolling();
+      }
+      document.removeEventListener('keypress', this._handleKeyPress);
+    }
+
+    updateCurrentData(result) {
+      if (result.data.messages.__typename === 'SourceClearedPayload') {
+        this.clearMessagesFromSource(result.data.messages.source);
+      } else if (result.data.messages.type === 'ADDED') {
+        const hostType = this.props.data.currentProject.settings.hostType;
+        const typename = result.data.messages.node.__typename;
+        if (
+          (hostType === 'tunnel' && typename === 'TunnelReady') ||
+          (hostType !== 'tunnel' && typename === 'MetroInitializeStarted')
+        ) {
+          this.pollingObservable.refetch();
+        }
+        this.addNewMessage(result.data.messages);
+      } else if (result.data.messages.type === 'DELETED') {
+        this.removeMessage(result.data.messages.node);
       }
     }
-  };
-  _handleClearMessages = source => State.clearMessages({ source }, this.props);
 
-  componentDidMount() {
-    if (this.props.data.userSettings.sendTo) {
-      this._handleUpdateState({
-        recipient: this.props.data.userSettings.sendTo,
+    addNewMessage({ cursor, node: message }) {
+      const typename = message.source.__typename;
+      const fragment = createSourceQuery(typename);
+      const id = message.source.id;
+      let existingSource;
+      try {
+        existingSource = this.props.client.readFragment({ id, fragment });
+      } catch (e) {
+        // XXX(@fson): refetching all data
+        this.props.refetch();
+        return;
+      }
+
+      let unreadCount = existingSource.messages.unreadCount;
+      let lastReadCursor = existingSource.messages.pageInfo.lastReadCursor;
+      const { currentProject, projectManagerLayout } = this.props.data;
+      const { sections } = getSections(currentProject, projectManagerLayout);
+      if (!document.hidden && sections.find(section => section.id === id)) {
+        lastReadCursor = cursor;
+        State.updateLastRead({ sourceId: id, sourceType: typename, lastReadCursor }, this.props);
+      } else {
+        unreadCount += 1;
+      }
+
+      const newMessages = {
+        __typename: 'MessageConnection',
+        unreadCount,
+        count: existingSource.messages.count + 1,
+        nodes: [...existingSource.messages.nodes, message],
+        pageInfo: {
+          __typename: 'PageInfo',
+          lastReadCursor,
+        },
+      };
+      this.props.client.writeFragment({
+        id,
+        fragment,
+        data: {
+          id,
+          __typename: typename,
+          messages: newMessages,
+        },
       });
     }
 
-    const subscriptionObservable = this.props.client.subscribe({
-      query: subscriptionQuery,
-      variables: {
-        after: this.props.data.currentProject.messages.pageInfo.lastCursor,
-      },
-    });
-    this.querySubscription = subscriptionObservable.subscribe({
-      next: result => this.updateCurrentData(result),
-      // error: this.updateError,
-    });
-    this.pollingObservable = this.props.client.watchQuery({
-      query: projectPollQuery,
-    });
-    this.pollingObservable.startPolling(60000);
-
-    document.addEventListener('keypress', this._handleKeyPress);
-
-    this.updateTitle();
-  }
-
-  componentDidUpdate() {
-    this.updateTitle();
-  }
-
-  componentWillUnmount() {
-    if (this.querySubscription) {
-      this.querySubscription.unsubscribe();
-    }
-    if (this.pollingObservable) {
-      this.pollingObservable.stopPolling();
-    }
-    document.removeEventListener('keypress', this._handleKeyPress);
-  }
-
-  updateCurrentData(result) {
-    if (result.data.messages.__typename === 'SourceClearedPayload') {
-      this.clearMessagesFromSource(result.data.messages.source);
-    } else if (result.data.messages.type === 'ADDED') {
-      const hostType = this.props.data.currentProject.settings.hostType;
-      const typename = result.data.messages.node.__typename;
-      if (
-        (hostType === 'tunnel' && typename === 'TunnelReady') ||
-        (hostType !== 'tunnel' && typename === 'MetroInitializeStarted')
-      ) {
-        this.pollingObservable.refetch();
+    removeMessage(message) {
+      const typename = message.source.__typename;
+      const fragment = createSourceQuery(typename);
+      const id = message.source.id;
+      let existingSource;
+      try {
+        existingSource = this.props.client.readFragment({ id, fragment });
+      } catch (e) {
+        // XXX(@fson): refetching all data
+        this.props.refetch();
+        return;
       }
-      this.addNewMessage(result.data.messages);
-    } else if (result.data.messages.type === 'DELETED') {
-      this.removeMessage(result.data.messages.node);
-    }
-  }
-
-  addNewMessage({ cursor, node: message }) {
-    const typename = message.source.__typename;
-    const fragment = createSourceQuery(typename);
-    const id = message.source.id;
-    let existingSource;
-    try {
-      existingSource = this.props.client.readFragment({ id, fragment });
-    } catch (e) {
-      // XXX(@fson): refetching all data
-      this.props.refetch();
-      return;
-    }
-
-    let unreadCount = existingSource.messages.unreadCount;
-    let lastReadCursor = existingSource.messages.pageInfo.lastReadCursor;
-    const { currentProject, projectManagerLayout } = this.props.data;
-    const { sections } = getSections(currentProject, projectManagerLayout);
-    if (!document.hidden && sections.find(section => section.id === id)) {
-      lastReadCursor = cursor;
-      State.updateLastRead({ sourceId: id, sourceType: typename, lastReadCursor }, this.props);
-    } else {
-      unreadCount += 1;
-    }
-
-    const newMessages = {
-      __typename: 'MessageConnection',
-      unreadCount,
-      count: existingSource.messages.count + 1,
-      nodes: [...existingSource.messages.nodes, message],
-      pageInfo: {
-        __typename: 'PageInfo',
-        lastReadCursor,
-      },
-    };
-    this.props.client.writeFragment({
-      id,
-      fragment,
-      data: {
+      const newNodes = existingSource.messages.nodes.filter(
+        existingMessage => existingMessage.id !== message.id
+      );
+      const newMessages = {
+        __typename: 'MessageConnection',
+        count: newNodes.length,
+        nodes: newNodes,
+      };
+      this.props.client.writeFragment({
         id,
-        __typename: typename,
-        messages: newMessages,
-      },
-    });
-  }
-
-  removeMessage(message) {
-    const typename = message.source.__typename;
-    const fragment = createSourceQuery(typename);
-    const id = message.source.id;
-    let existingSource;
-    try {
-      existingSource = this.props.client.readFragment({ id, fragment });
-    } catch (e) {
-      // XXX(@fson): refetching all data
-      this.props.refetch();
-      return;
-    }
-    const newNodes = existingSource.messages.nodes.filter(
-      existingMessage => existingMessage.id !== message.id
-    );
-    const newMessages = {
-      __typename: 'MessageConnection',
-      count: newNodes.length,
-      nodes: newNodes,
-    };
-    this.props.client.writeFragment({
-      id,
-      fragment,
-      data: {
-        id,
-        __typename: typename,
-        messages: newMessages,
-      },
-    });
-  }
-
-  clearMessagesFromSource(source) {
-    this.props.client.writeFragment({
-      id: source.id,
-      fragment: gql`
-        fragment ClearMessagesFragment on Source {
-          messages {
-            count
-            unreadCount
-            nodes
-          }
-        }
-      `,
-      data: {
-        __typename: source.__typename,
-        messages: {
-          __typename: 'MessageConnection',
-          count: 0,
-          unreadCount: 0,
-          nodes: [],
+        fragment,
+        data: {
+          id,
+          __typename: typename,
+          messages: newMessages,
         },
-      },
-    });
-  }
+      });
+    }
 
-  getTotalUnreadCount() {
-    const { currentProject } = this.props.data;
-    let count = 0;
-    currentProject.sources.forEach(source => {
-      count += source.messages.unreadCount;
-    });
-    return count;
-  }
+    clearMessagesFromSource(source) {
+      this.props.client.writeFragment({
+        id: source.id,
+        fragment: gql`
+          fragment ClearMessagesFragment on Source {
+            messages {
+              count
+              unreadCount
+              nodes
+            }
+          }
+        `,
+        data: {
+          __typename: source.__typename,
+          messages: {
+            __typename: 'MessageConnection',
+            count: 0,
+            unreadCount: 0,
+            nodes: [],
+          },
+        },
+      });
+    }
 
-  updateTitle() {
-    if (this.props.data) {
-      const { name } = this.props.data.currentProject.config;
-      const unreadCount = this.getTotalUnreadCount();
-      let title;
-      if (unreadCount > 0) {
-        title = `(${unreadCount}) ${name} on Expo Developer Tools`;
-      } else {
-        title = `${name} on Expo Developer Tools`;
-      }
-      if (title !== document.title) {
-        document.title = title;
+    getTotalUnreadCount() {
+      const { currentProject } = this.props.data;
+      let count = 0;
+      currentProject.sources.forEach(source => {
+        count += source.messages.unreadCount;
+      });
+      return count;
+    }
+
+    updateTitle() {
+      if (this.props.data) {
+        const { name } = this.props.data.currentProject.config;
+        const unreadCount = this.getTotalUnreadCount();
+        let title;
+        if (unreadCount > 0) {
+          title = `(${unreadCount}) ${name} on Expo Developer Tools`;
+        } else {
+          title = `${name} on Expo Developer Tools`;
+        }
+        if (title !== document.title) {
+          document.title = title;
+        }
       }
     }
+
+    render() {
+      const {
+        data: { currentProject, projectManagerLayout, processInfo, user },
+        loading,
+        error,
+        disconnected,
+      } = this.props;
+
+      const { sections, sources } = getSections(currentProject, projectManagerLayout);
+      const count = sections.length;
+      const selectedId = projectManagerLayout.selected && projectManagerLayout.selected.id;
+
+      return (
+        <Root>
+          <ProjectManager
+            loading={loading}
+            error={error}
+            disconnected={disconnected}
+            project={currentProject}
+            user={user}
+            processInfo={processInfo}
+            renderableSections={sections}
+            sections={sources}
+            count={count}
+            userAddress={this.props.userAddress}
+            selectedId={selectedId}
+            recipient={this.props.recipient}
+            dispatch={this.props.dispatch}
+            isPublishing={this.props.isPublishing}
+            isActiveDeviceAndroid={this.props.isActiveDeviceAndroid}
+            isActiveDeviceIOS={this.props.isActiveDeviceIOS}
+            isProduction={this.state.isProduction}
+            onPublishProject={this._handlePublishProject}
+            onToggleProductionMode={this._handleToggleProductionMode}
+            onHostTypeClick={this._handleHostTypeClick}
+            onSimulatorClickIOS={this._handleSimulatorClickIOS}
+            onStartWebClick={this._handleStartWebClick}
+            onSimulatorClickAndroid={this._handleSimulatorClickAndroid}
+            onSectionDrag={this._handleSectionDrag}
+            onSectionDismiss={this._handleSectionDismiss}
+            onSectionSelect={this._handleSectionSelect}
+            onSubmitPhoneNumberOrEmail={this._handleSubmitPhoneNumberOrEmail}
+            onChangeSectionCount={this._handleChangeSectionCount}
+            onDeviceSelect={this._handleDeviceSelect}
+            onClearMessages={this._handleClearMessages}
+            onUpdateState={this._handleUpdateState}
+          />
+        </Root>
+      );
+    }
   }
-
-  render() {
-    const {
-      data: { currentProject, projectManagerLayout, processInfo, user },
-      loading,
-      error,
-      disconnected,
-    } = this.props;
-
-    const { sections, sources } = getSections(currentProject, projectManagerLayout);
-    const count = sections.length;
-    const selectedId = projectManagerLayout.selected && projectManagerLayout.selected.id;
-
-    return (
-      <Root>
-        <ProjectManager
-          loading={loading}
-          error={error}
-          disconnected={disconnected}
-          project={currentProject}
-          user={user}
-          processInfo={processInfo}
-          renderableSections={sections}
-          sections={sources}
-          count={count}
-          userAddress={this.props.userAddress}
-          selectedId={selectedId}
-          recipient={this.props.recipient}
-          dispatch={this.props.dispatch}
-          isPublishing={this.props.isPublishing}
-          isActiveDeviceAndroid={this.props.isActiveDeviceAndroid}
-          isActiveDeviceIOS={this.props.isActiveDeviceIOS}
-          isProduction={this.state.isProduction}
-          onPublishProject={this._handlePublishProject}
-          onToggleProductionMode={this._handleToggleProductionMode}
-          onHostTypeClick={this._handleHostTypeClick}
-          onSimulatorClickIOS={this._handleSimulatorClickIOS}
-          onStartWebClick={this._handleStartWebClick}
-          onSimulatorClickAndroid={this._handleSimulatorClickAndroid}
-          onSectionDrag={this._handleSectionDrag}
-          onSectionDismiss={this._handleSectionDismiss}
-          onSectionSelect={this._handleSectionSelect}
-          onSubmitPhoneNumberOrEmail={this._handleSubmitPhoneNumberOrEmail}
-          onChangeSectionCount={this._handleChangeSectionCount}
-          onDeviceSelect={this._handleDeviceSelect}
-          onClearMessages={this._handleClearMessages}
-          onUpdateState={this._handleUpdateState}
-        />
-      </Root>
-    );
-  }
-}
+);
 
 function getSections(currentProject, projectManagerLayout) {
   const sources = currentProject.sources.filter(source => {
