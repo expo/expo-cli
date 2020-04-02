@@ -58,7 +58,13 @@ export interface LoadOptions {
   sourceExts?: string[];
 }
 
-export async function loadAsync(projectRoot: string, options: LoadOptions = {}): Promise<ConfigT> {
-  const defaultConfig = getDefaultConfig(projectRoot);
-  return loadConfig({ cwd: projectRoot, projectRoot, ...options }, defaultConfig);
+export async function loadAsync(
+  projectRoot: string,
+  { reporter, ...options }: LoadOptions = {}
+): Promise<ConfigT> {
+  let defaultConfig = getDefaultConfig(projectRoot);
+  if (reporter) {
+    defaultConfig = { ...defaultConfig, reporter };
+  }
+  return await loadConfig({ cwd: projectRoot, projectRoot, ...options }, defaultConfig);
 }
