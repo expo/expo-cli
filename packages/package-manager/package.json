@@ -2,8 +2,7 @@
   "name": "@expo/package-manager",
   "version": "0.0.8",
   "description": "A library for installing and finding packages in a node project",
-  "main": "build/PackageManager.js",
-  "types": "build/PackageManager.d.ts",
+  "main": "build",
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",

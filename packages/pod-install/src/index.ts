@@ -1,4 +1,6 @@
-import { CocoaPodsManager } from '@expo/package-manager/build/CocoaPodsManager';
+#!/usr/bin/env node
+
+import { CocoaPodsPackageManager } from '@expo/package-manager/build/CocoaPodsPackageManager';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import { resolve } from 'path';
@@ -29,15 +31,15 @@ async function runAsync(): Promise<void> {
     console.log(chalk.red('CocoaPods is only supported on darwin machines'));
     return;
   }
-  if (!CocoaPodsManager.isUsingPods(projectRoot)) {
+  if (!CocoaPodsPackageManager.isUsingPods(projectRoot)) {
     console.log(chalk.yellow('CocoaPods is not supported in this project'));
     return;
   }
 
-  if (!(await CocoaPodsManager.isCLIInstalledAsync())) {
-    await CocoaPodsManager.installCLIAsync({ nonInteractive: program.nonInteractive });
+  if (!(await CocoaPodsPackageManager.isCLIInstalledAsync())) {
+    await CocoaPodsPackageManager.installCLIAsync({ nonInteractive: program.nonInteractive });
   }
-  const manager = new CocoaPodsManager({ cwd: projectRoot });
+  const manager = new CocoaPodsPackageManager({ cwd: projectRoot });
   await manager.installAsync();
 }
 
