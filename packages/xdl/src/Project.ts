@@ -193,7 +193,7 @@ export type ProjectTarget = 'managed' | 'bare';
 export async function getDefaultTargetAsync(projectDir: string): Promise<ProjectTarget> {
   const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
   // before SDK 37, always default to managed to preserve previous behavior
-  if (exp.sdkVersion && semver.lt(exp.sdkVersion, '37.0.0')) {
+  if (exp.sdkVersion && exp.sdkVersion !== 'UNVERSIONED' && semver.lt(exp.sdkVersion, '37.0.0')) {
     return 'managed';
   }
   return (await isBareWorkflowProjectAsync(projectDir)) ? 'bare' : 'managed';
