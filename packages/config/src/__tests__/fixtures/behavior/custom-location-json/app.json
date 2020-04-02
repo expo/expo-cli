@@ -1,9 +1,9 @@
 {
-  "name": "failed-to-reduced",
+  "name": "app-name",
   "expo": {
-    "name": "app-json",
+    "name": "app-expo-name",
     "expo": {
-      "name": "invalid-reduced"
+      "name": "app-expo-expo-name"
     }
   }
 }

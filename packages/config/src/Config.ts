@@ -282,7 +282,6 @@ export async function writeConfigJsonAsync(
     rootConfig,
   };
 }
-
 const DEFAULT_BUILD_PATH = `web-build`;
 
 export function getWebOutputPath(config: { [key: string]: any } = {}): string {
@@ -307,3 +306,5 @@ export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webN
     webName,
   };
 }
+
+export * from './Config.types';

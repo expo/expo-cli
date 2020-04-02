@@ -220,6 +220,13 @@ export default async function(
     sizes: value.getAttribute('sizes'),
     node: value,
   }));
+  // @ts-ignore
+  const templateMeta = templateIndex.querySelectorAll('meta');
+  const meta: HTMLLinkNode[] = templateMeta.map((value: any) => ({
+    name: value.getAttribute('name'),
+    content: value.getAttribute('content'),
+    node: value,
+  }));
 
   const [manifestLink] = links.filter(
     link => typeof link.rel === 'string' && link.rel.split(' ').includes('manifest')
@@ -288,6 +295,7 @@ export default async function(
             projectRoot: env.projectRoot,
             publicPath,
             links,
+            meta,
           },
           {
             name: env.config.web.shortName,

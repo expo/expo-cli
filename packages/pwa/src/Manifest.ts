@@ -11,23 +11,19 @@ import { IconOptions, Manifest } from './Manifest.types';
 
 // Use root to work better with create-react-app
 const DEFAULT_LANGUAGE_ISO_CODE = `en`;
-const DEFAULT_BACKGROUND_COLOR = '#ffffff';
-const DEFAULT_START_URL = '.';
 const DEFAULT_DISPLAY = 'standalone';
 const DEFAULT_STATUS_BAR = 'black-translucent';
-const DEFAULT_LANG_DIR = 'auto';
-const DEFAULT_ORIENTATION = 'any';
 const DEFAULT_PREFER_RELATED_APPLICATIONS = true;
 
 // Convert expo value to PWA value
-function ensurePWAorientation(orientation: string): string {
+function ensurePWAorientation(orientation: string): string | undefined {
   if (orientation && typeof orientation === 'string') {
     let webOrientation = orientation.toLowerCase();
     if (webOrientation !== 'default') {
       return webOrientation;
     }
   }
-  return DEFAULT_ORIENTATION;
+  return undefined;
 }
 
 function sanitizePublicPath(publicPath: unknown): string {
@@ -63,10 +59,10 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   const description = appManifest.description;
   // The theme_color sets the color of the tool bar, and may be reflected in the app's preview in task switchers.
   const webThemeColor = webManifest.themeColor || primaryColor;
-  const dir = webManifest.dir || DEFAULT_LANG_DIR;
+  const dir = webManifest.dir;
   const shortName = webManifest.shortName || webName;
   const display = webManifest.display || DEFAULT_DISPLAY;
-  const startUrl = webManifest.startUrl || DEFAULT_START_URL;
+  const startUrl = webManifest.startUrl;
   const { scope, crossorigin } = webManifest;
   const barStyle = apple.barStyle || webManifest.barStyle || DEFAULT_STATUS_BAR;
 
@@ -78,8 +74,7 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
    * The background_color should be the same color as the load page,
    * to provide a smooth transition from the splash screen to your app.
    */
-  const backgroundColor =
-    webManifest.backgroundColor || splash.backgroundColor || DEFAULT_BACKGROUND_COLOR; // No default background color
+  const backgroundColor = webManifest.backgroundColor || splash.backgroundColor; // No default background color
 
   /**
    *
@@ -175,7 +170,6 @@ function inferWebRelatedApplicationsFromConfig({ web = {}, ios = {}, android = {
   const { package: androidPackage, playStoreUrl } = android;
   if (androidPackage) {
     const PLATFORM_PLAY = 'play';
-
     const alreadyHasAndroidApp = relatedApplications.some(
       ({ platform }: { platform: string }) => platform === PLATFORM_PLAY
     );
@@ -283,11 +277,9 @@ export function createPWAManifestFromWebConfig(config?: WebPlatformConfig): Mani
   const manifest: Manifest = {
     background_color: config.backgroundColor,
     description: config.description,
-    dir: config.dir,
     display: config.display,
     lang: config.lang,
     name: config.name,
-    orientation: config.orientation,
     scope: config.scope,
     short_name: config.shortName,
     start_url:
@@ -295,6 +287,15 @@ export function createPWAManifestFromWebConfig(config?: WebPlatformConfig): Mani
     theme_color: config.themeColor,
     crossorigin: config.crossorigin,
   };
+
+  // Browser will default to auto
+  if (config.dir) {
+    manifest.dir = config.dir.toLowerCase() as any;
+  }
+
+  if (config.orientation) {
+    manifest.orientation = config.orientation.toLowerCase() as any;
+  }
 
   // Avoid defining an empty array, or setting prefer_related_applications to true when no applications are defined.
   if (Array.isArray(config.relatedApplications) && config.relatedApplications.length > 0) {
