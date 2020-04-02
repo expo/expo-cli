@@ -314,7 +314,7 @@ export default function(program: Command) {
     )
     .option(
       '-t, --template [name]',
-      'Specify which template to use. Valid options are "blank", "tabs", "bare-minimum" or any npm package that includes an Expo project template.'
+      'Specify which template to use. Valid options are "blank", "tabs", "bare-minimum" or a package on npm (e.g. "expo-template-bare-typescript") that includes an Expo project template.'
     )
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
