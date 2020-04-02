@@ -58,7 +58,7 @@ export interface LoadOptions {
   sourceExts?: string[];
 }
 
-export async function load(projectRoot: string, options: LoadOptions = {}): Promise<ConfigT> {
+export async function loadAsync(projectRoot: string, options: LoadOptions = {}): Promise<ConfigT> {
   const defaultConfig = getDefaultConfig(projectRoot);
   return loadConfig({ cwd: projectRoot, projectRoot, ...options }, defaultConfig);
 }
