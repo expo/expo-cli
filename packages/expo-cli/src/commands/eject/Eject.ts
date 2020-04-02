@@ -45,39 +45,16 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   if (await maybeBailOnGitStatusAsync()) return;
 
   await createNativeProjectsFromTemplateAsync(projectRoot);
+  await installNodeModulesAsync(projectRoot);
 
-  log.newLine();
-  let applyingIOSConfigStep = logNewSection('Applying iOS configuration');
-  await configureIOSProjectAsync(projectRoot);
-  if (ConfigWarningAggregator.hasWarningsIOS()) {
-    applyingIOSConfigStep.stopAndPersist({
-      symbol: '⚠️ ',
-      text: chalk.red('iOS configuration applied with warnings that should be fixed:'),
-    });
-    logConfigWarningsIOS();
-  } else {
-    applyingIOSConfigStep.succeed('All project configuration applied to iOS project');
-  }
-  log.newLine();
+  await configureIOSStepAsync(projectRoot);
+  await configureAndroidStepAsync(projectRoot);
 
-  let applyingAndroidConfigStep = logNewSection('Applying Android configuration');
-  await configureAndroidProjectAsync(projectRoot);
-  if (ConfigWarningAggregator.hasWarningsAndroid()) {
-    applyingAndroidConfigStep.stopAndPersist({
-      symbol: '⚠️ ',
-      text: chalk.red('Android configuration applied with warnings that should be fixed:'),
-    });
-    logConfigWarningsAndroid();
-  } else {
-    applyingAndroidConfigStep.succeed('All project configuration applied to Android project');
-  }
-
-  // TODO: integrate this with the above warnings
+  let podsInstalled = await installPodsAsync(projectRoot);
   await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
 
   log.newLine();
   log.nested(`➡️  ${chalk.bold('Next steps')}`);
-  // TODO: run pod install automatically!
 
   log.nested(
     `- 👆 Review the logs above and look for any warnings (⚠️ ) that might need follow-up.`
@@ -85,13 +62,15 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   log.nested(
     `- 💡 You may want to run ${chalk.bold(
       'npx @react-native-community/cli doctor'
-    )} to help installing CocoaPods and any other tools that your app may need to run your native projects.`
+    )} to help install any tools that your app may need to run your native projects.`
   );
-  log.nested(
-    `- 🍫 With CocoaPods installed, initialize the project workspace: ${chalk.bold(
-      'cd ios && pod install'
-    )}`
-  );
+  if (!podsInstalled) {
+    log.nested(
+      `- 🍫 When CocoaPods is installed, initialize the project workspace: ${chalk.bold(
+        'cd ios && pod install'
+      )}`
+    );
+  }
   log.nested(
     `- 🔑 Download your Android keystore (if you're not sure if you need to, just run the command and see): ${chalk.bold(
       'expo fetch:android:keystore'
@@ -107,32 +86,101 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
 }
 
-/**
- * Create an object of type DependenciesMap a dependencies object or throw if not valid.
- *
- * @param dependencies - ideally an object of type {[key]: string} - if not then this will error.
- */
-function createDependenciesMap(dependencies: any): DependenciesMap {
-  if (typeof dependencies !== 'object') {
-    throw new Error(`Dependency map is invalid, expected object but got ${typeof dependencies}`);
+async function configureIOSStepAsync(projectRoot: string) {
+  log.newLine();
+  let applyingIOSConfigStep = logNewSection('Applying iOS configuration');
+  await configureIOSProjectAsync(projectRoot);
+  if (ConfigWarningAggregator.hasWarningsIOS()) {
+    applyingIOSConfigStep.stopAndPersist({
+      symbol: '⚠️ ',
+      text: chalk.red('iOS configuration applied with warnings that should be fixed:'),
+    });
+    logConfigWarningsIOS();
+  } else {
+    applyingIOSConfigStep.succeed('All project configuration applied to iOS project');
   }
+  log.newLine();
+}
 
-  const outputMap: DependenciesMap = {};
-  if (!dependencies) return outputMap;
+async function installPodsAsync(projectRoot: string) {
+  log.newLine();
+  let step = logNewSection('Installing CocoaPods.');
+  if (process.platform !== 'darwin') {
+    step.succeed('Skipped installing CocoaPods because operating system is not on macOS.');
+    return false;
+  }
+  const packageManager = new PackageManager.CocoaPodsPackageManager({
+    cwd: path.join(projectRoot, 'ios'),
+    log,
+    silent: !process.env.EXPO_DEBUG,
+  });
 
-  for (const key of Object.keys(dependencies)) {
-    const value = dependencies[key];
-    if (typeof value === 'string') {
-      outputMap[key] = value;
-    } else {
-      throw new Error(
-        `Dependency for key \`${key}\` should be a \`string\`, instead got: \`{ ${key}: ${JSON.stringify(
-          value
-        )} }\``
-      );
+  if (!(await packageManager.isCLIInstalledAsync())) {
+    try {
+      // prompt user -- do you want to install cocoapods right now?
+      step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
+      step.render();
+      await packageManager.installCLIAsync();
+      step.succeed('Installed CocoaPods CLI');
+      step = logNewSection('Running `pod install` in the `ios` directory.');
+    } catch (e) {
+      step.stopAndPersist({
+        symbol: '⚠️ ',
+        text: chalk.red(
+          'Unable to install the CocoaPods CLI. Continuing with ejecting, you can install CocoaPods afterwards.'
+        ),
+      });
+      if (e.message) {
+        log(`- ${e.message}`);
+      }
+      return false;
     }
   }
-  return outputMap;
+
+  try {
+    await packageManager.installAsync();
+    step.succeed('Installed pods and initialized Xcode workspace.');
+    return true;
+  } catch (e) {
+    step.stopAndPersist({
+      symbol: '⚠️ ',
+      text: chalk.red(
+        'Something when wrong running `pod install` in the `ios` directory. Continuing with ejecting, you can debug this afterwards.'
+      ),
+    });
+    if (e.message) {
+      log(`- ${e.message}`);
+    }
+    return false;
+  }
+}
+
+async function installNodeModulesAsync(projectRoot: string) {
+  let installingDependenciesStep = logNewSection('Installing JavaScript dependencies.');
+  await fse.remove('node_modules');
+  const packageManager = PackageManager.createForProject(projectRoot, { log, silent: true });
+  try {
+    await packageManager.installAsync();
+    installingDependenciesStep.succeed('Installed JavaScript dependencies.');
+  } catch (e) {
+    installingDependenciesStep.fail(
+      'Something when wrong installing dependencies, check your package manager logfile. Continuing with ejecting, you can debug this afterwards.'
+    );
+  }
+}
+
+async function configureAndroidStepAsync(projectRoot: string) {
+  let applyingAndroidConfigStep = logNewSection('Applying Android configuration');
+  await configureAndroidProjectAsync(projectRoot);
+  if (ConfigWarningAggregator.hasWarningsAndroid()) {
+    applyingAndroidConfigStep.stopAndPersist({
+      symbol: '⚠️ ',
+      text: chalk.red('Android configuration applied with warnings that should be fixed:'),
+    });
+    logConfigWarningsAndroid();
+  } else {
+    applyingAndroidConfigStep.succeed('All project configuration applied to Android project');
+  }
 }
 
 function logNewSection(title: string) {
@@ -301,24 +349,34 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
 
   updatingPackageJsonStep.succeed('Updated package.json and added index.js entry point.');
-  // NOTE(brentvatne): Removing spaces between steps for now, add back when
-  // there is some additioanl context for steps
-  // log.newLine();
+}
 
-  /**
-   * Install dependencies
-   */
-  let installingDependenciesStep = logNewSection('Installing dependencies.');
-  await fse.remove('node_modules');
-  const packageManager = PackageManager.createForProject(projectRoot, { log, silent: true });
-  try {
-    await packageManager.installAsync();
-    installingDependenciesStep.succeed('Installed dependencies.');
-  } catch (e) {
-    installingDependenciesStep.fail(
-      'Something when wrong installing dependencies, check your package manager logfile. Continuing with ejecting, you can debug this afterwards.'
-    );
+/**
+ * Create an object of type DependenciesMap a dependencies object or throw if not valid.
+ *
+ * @param dependencies - ideally an object of type {[key]: string} - if not then this will error.
+ */
+function createDependenciesMap(dependencies: any): DependenciesMap {
+  if (typeof dependencies !== 'object') {
+    throw new Error(`Dependency map is invalid, expected object but got ${typeof dependencies}`);
   }
+
+  const outputMap: DependenciesMap = {};
+  if (!dependencies) return outputMap;
+
+  for (const key of Object.keys(dependencies)) {
+    const value = dependencies[key];
+    if (typeof value === 'string') {
+      outputMap[key] = value;
+    } else {
+      throw new Error(
+        `Dependency for key \`${key}\` should be a \`string\`, instead got: \`{ ${key}: ${JSON.stringify(
+          value
+        )} }\``
+      );
+    }
+  }
+  return outputMap;
 }
 
 async function promptForNativeAppNameAsync(projectRoot: string): Promise<string> {
