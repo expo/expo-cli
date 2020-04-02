@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "DevTools",
+    "name": "Expo Developer Tools",
     "slug": "devtools-client",
     "platforms": ["web"],
     "version": "0.11.0",

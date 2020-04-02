@@ -508,11 +508,6 @@ export default class IndexPage extends React.Component {
   }
 
   render() {
-    if (!process.browser) {
-      // Server-side rendering for static HTML export.
-      return null;
-    }
-
     if (!this.state.client) {
       return null;
     }

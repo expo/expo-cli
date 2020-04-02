@@ -2,7 +2,7 @@ import { graphiqlExpress } from 'apollo-server-express';
 import { Project } from '@expo/xdl';
 import express from 'express';
 import http from 'http';
-import next from 'next';
+import path from 'path';
 import openBrowser from 'react-dev-utils/openBrowser';
 
 import { createAuthenticationContextAsync, startGraphQLServer } from './DevToolsServer';
@@ -16,9 +16,6 @@ async function run(): Promise<void> {
       throw new Error('No project dir specified.\nUsage: yarn dev <project-dir>');
     }
 
-    const app: any = next({ dev: true });
-    await app.prepare();
-
     const server = express();
     const authenticationContext = await createAuthenticationContextAsync({ port: PORT });
     server.get('/dev-tools-info', authenticationContext.requestHandler);
@@ -31,7 +28,12 @@ async function run(): Promise<void> {
         },
       })
     );
-    server.get('*', app.getRequestHandler());
+
+    server.use(express.static(path.join(__dirname, '/../client/')));
+
+    server.get('*', (req, res) => {
+      res.sendFile(path.join(__dirname, '/../client/index.html'));
+    });
 
     const httpServer = http.createServer(server);
     await new Promise((resolve, reject) => {

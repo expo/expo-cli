@@ -1,10 +1,7 @@
 {
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
+    "start": "expo start --web",
     "eject": "expo eject"
   },
   "dependencies": {
@@ -20,7 +17,31 @@
     "@types/react": "~16.9.23",
     "@types/react-native": "~0.61.17",
     "babel-preset-expo": "~8.1.0",
-    "typescript": "~3.8.3"
+    "typescript": "~3.8.3",
+    "//": "Application Specific Dependencies",
+    "anser": "^1.4.7",
+    "apollo-cache-inmemory": "^1.1.12",
+    "apollo-client": "^2.2.8",
+    "apollo-link-http": "^1.5.4",
+    "apollo-link-ws": "^1.0.8",
+    "babel-plugin-module-resolver": "^3.1.1",
+    "copy-to-clipboard": "^3.0.8",
+    "emotion": "^9.2.9",
+    "graphql-tag": "^2.9.1",
+    "has-ansi": "^3.0.0",
+    "p-timeout": "3.1.0",
+    "qrcode.react": "0.8.0",
+    "react-apollo": "^2.1.3",
+    "react-dnd": "^2.5.4",
+    "react-dnd-html5-backend": "^2.5.4",
+    "react-emotion": "^9.2.9",
+    "react-redux": "^5.0.7",
+    "react-textarea-autosize": "^6.1.0",
+    "redux": "^3.7.2",
+    "slugify": "^1.0.2",
+    "velocity-react": "^1.4.1",
+    "subscriptions-transport-ws": "0.9.8",
+    "lodash": "^4.17.15"
   },
   "private": true
 }
