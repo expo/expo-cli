@@ -102,7 +102,7 @@ export class CocoaPodsPackageManager implements PackageManager {
 
   private async _installAsync(shouldUpdate: boolean = true): Promise<void> {
     try {
-      await this._runAsync(['pod']);
+      await this._runAsync(['install']);
     } catch (error) {
       const stderr = error.stderr ?? error.stdout;
 
