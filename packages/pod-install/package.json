@@ -1,6 +1,6 @@
 {
-  "name": "pod-install",
-  "version": "0.0.0-alpha.2",
+  "name": "@expo/pod-install",
+  "version": "0.0.0",
   "main": "build",
   "keywords": [
     "cocoapods",
@@ -23,12 +23,13 @@
     "cli.js"
   ],
   "scripts": {
-    "prepare": "yarn run clean && yarn run build:prod",
+    "prepare": "yarn run clean && yarn run build",
     "lint": "eslint .",
     "watch": "tsc --watch",
+    "build": "tsc",
     "watch:ncc": "yarn run build -w",
-    "build": "ncc build ./src/index.ts -o build/",
-    "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
+    "build:ncc": "ncc build ./src/index.ts -o build/",
+    "build:ncc:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
