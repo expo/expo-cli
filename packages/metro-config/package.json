@@ -2,7 +2,7 @@
   "name": "@expo/metro-config",
   "version": "0.0.0",
   "description": "A Metro config for running React Native projects with the Metro bundler",
-  "main": "build/index.js",
+  "main": "build/ExpoMetroConfig.js",
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
