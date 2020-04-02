@@ -2,8 +2,7 @@
   "name": "@expo/package-manager",
   "version": "0.0.8",
   "description": "A library for installing and finding packages in a node project",
-  "main": "build/PackageManager.js",
-  "types": "build/PackageManager.d.ts",
+  "main": "build",
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
@@ -42,7 +41,8 @@
     "fs-extra": "^8.1.0",
     "npm-package-arg": "^7.0.0",
     "split": "^1.0.1",
-    "stream": "^0.0.2"
+    "stream": "^0.0.2",
+    "sudo-prompt": "9.1.1"
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.7"
