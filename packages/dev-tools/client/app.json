@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "DevTools",
+    "slug": "devtools-client",
+    "platforms": ["web"],
+    "version": "0.11.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"]
+  }
+}
