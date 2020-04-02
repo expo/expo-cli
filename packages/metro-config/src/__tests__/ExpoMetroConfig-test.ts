@@ -1,22 +1,8 @@
 import path from 'path';
 
-import fs from 'fs-extra';
-import temporary from 'tempy';
-
 import { getDefaultConfig, loadAsync } from '../ExpoMetroConfig';
 
-const projectRoot = temporary.directory();
-
-beforeAll(() => {
-  fs.writeJSONSync(path.join(projectRoot, 'package.json'), {
-    dependencies: {
-      metro: '0.56.0',
-      'react-native': '0.61.4',
-    },
-  });
-  fs.outputFileSync(path.join(projectRoot, 'node_modules/react-native/index.js'), '');
-  fs.outputFileSync(path.join(projectRoot, 'node_modules/expo/tools/hashAssetFiles'), '');
-});
+const projectRoot = path.join(__dirname, '__fixtures__', 'hello-world');
 
 describe('getDefaultConfig', () => {
   it('loads default configuration', async () => {

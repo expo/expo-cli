@@ -42,11 +42,11 @@
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.2.1",
     "@types/jest": "^25.1.4",
-    "fs-extra": "^9.0.0",
+    "expo": "37",
     "jest": "^25.2.6",
     "metro": "^0.59.0",
     "metro-config": "^0.59.0",
-    "tempy": "^0.5.0",
+    "react-native": "0.61.4",
     "typescript": "3.4.5"
   },
   "publishConfig": {
