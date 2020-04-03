@@ -29,10 +29,10 @@ async function run(): Promise<void> {
       })
     );
 
-    server.use(express.static(path.join(__dirname, '/../client/')));
+    server.use(express.static(path.resolve(__dirname, '../client/')));
 
-    server.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, '/../client/index.html'));
+    server.get('*', (_, res) => {
+      res.sendFile(path.resolve(__dirname, '../client/index.html'));
     });
 
     const httpServer = http.createServer(server);
