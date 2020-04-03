@@ -194,6 +194,13 @@ export class CocoaPodsPackageManager implements PackageManager {
     throw new Error('Unimplemented');
   }
 
+  async removeLockfileAsync() {
+    throw new Error('Unimplemented');
+  }
+  async cleanAsync() {
+    throw new Error('Unimplemented');
+  }
+
   // Private
   private async podRepoUpdateAsync(): Promise<void> {
     try {

@@ -441,14 +441,15 @@ export async function upgradeAsync(
   });
 
   log.addNewLineIfNone();
-  let installingPackageStep = logNewSection('Installing the expo package...');
+  const expoPackageToInstall = `expo@^${targetSdkVersionString}`;
+  let installingPackageStep = logNewSection(`Installing the ${expoPackageToInstall} package...`);
   log.addNewLineIfNone();
   try {
-    await packageManager.addAsync(`expo@^${targetSdkVersionString}`);
+    await packageManager.addAsync(expoPackageToInstall);
   } catch (e) {
     installingPackageStep.fail(`Failed to install expo package with error: ${e.message}`);
   } finally {
-    installingPackageStep.succeed(`Installed expo@^${targetSdkVersionString}.`);
+    installingPackageStep.succeed(`Installed ${expoPackageToInstall}`);
   }
 
   // Remove sdkVersion from app.json
@@ -522,8 +523,10 @@ export async function upgradeAsync(
 
   updatingPackagesStep.succeed('Updated known packages to compatible versions.');
 
-  // Clear metro bundler cache
-  log.addNewLineIfNone();
+  // Remove package-lock.json and node_modules if using npm instead of yarn. See the function
+  // for more information on why.
+  await maybeCleanNpmStateAsync(packageManager);
+
   let clearingCacheStep = logNewSection('Clearing the packager cache.');
   try {
     await Project.startReactNativeServerAsync(projectRoot, { reset: true, nonPersistent: true });
@@ -612,6 +615,46 @@ export async function upgradeAsync(
       releaseNotesUrls.forEach(url => {
         log(chalk.bold(`- ${url}`));
       });
+    }
+  }
+}
+
+async function maybeCleanNpmStateAsync(packageManager: PackageManager.PackageManager) {
+  // We don't trust npm to properly handle deduping dependencies so we need to
+  // clear the lockfile and node_modules.
+  // https://forums.expo.io/t/sdk-37-unrecognized-font-family/35201
+  // https://twitter.com/geoffreynyaga/status/1246170581109743617
+  if (packageManager instanceof PackageManager.NpmPackageManager) {
+    let cleaningNpmStateStep = logNewSection(
+      'Removing package-lock.json and deleting node_modules.'
+    );
+
+    let shouldInstallNodeModules = true;
+    try {
+      await packageManager.removeLockfileAsync();
+      await packageManager.cleanAsync();
+      cleaningNpmStateStep.succeed('Removed package-lock.json and deleted node_modules.');
+    } catch {
+      shouldInstallNodeModules = false;
+      cleaningNpmStateStep.fail(
+        'Unable to remove package-lock.json and delete node_modules. We recommend doing this to ensure that the upgrade goes smoothly when using npm instead of yarn.'
+      );
+    }
+
+    if (shouldInstallNodeModules) {
+      let reinstallingNodeModulesStep = logNewSection(
+        'Installing node_modules and rebuilding package-lock.json.'
+      );
+      try {
+        await packageManager.installAsync();
+        reinstallingNodeModulesStep.succeed(
+          'Installed node_modules and rebuilt package-lock.json.'
+        );
+      } catch {
+        reinstallingNodeModulesStep.fail(
+          'Running npm install failed. Please check npm-error.log for more information.'
+        );
+      }
     }
   }
 }

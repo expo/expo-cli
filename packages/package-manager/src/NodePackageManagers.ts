@@ -8,6 +8,7 @@ import npmPackageArg from 'npm-package-arg';
 import path from 'path';
 import split from 'split';
 import { Transform } from 'stream';
+import rimraf from 'rimraf';
 
 import { Logger, PackageManager } from './PackageManager';
 
@@ -105,6 +106,25 @@ export class NpmPackageManager implements PackageManager {
     return stdout.trim();
   }
 
+  async removeLockfileAsync() {
+    if (!this.options.cwd) {
+      throw new Error('cwd required for NpmPackageManager.removeLockfileAsync');
+    }
+    let lockfilePath = path.join(this.options.cwd, 'package-lock.json');
+    if (fs.existsSync(lockfilePath)) {
+      fs.removeSync(lockfilePath);
+    }
+  }
+  async cleanAsync() {
+    if (!this.options.cwd) {
+      throw new Error('cwd required for NpmPackageManager.cleanAsync');
+    }
+    let nodeModulesPath = path.join(this.options.cwd, 'node_modules');
+    if (fs.existsSync(nodeModulesPath)) {
+      rimraf.sync(nodeModulesPath);
+    }
+  }
+
   // Private
   private async _runAsync(args: string[]) {
     if (!this.options.ignoreStdio) {
@@ -189,6 +209,25 @@ export class YarnPackageManager implements PackageManager {
   async getConfigAsync(key: string) {
     const { stdout } = await spawnAsync('yarnpkg', ['config', 'get', key], { stdio: 'pipe' });
     return stdout.trim();
+  }
+
+  async removeLockfileAsync() {
+    if (!this.options.cwd) {
+      throw new Error('cwd required for YarnPackageManager.removeLockfileAsync');
+    }
+    let lockfilePath = path.join(this.options.cwd, 'yarn-lock.json');
+    if (fs.existsSync(lockfilePath)) {
+      fs.removeSync(lockfilePath);
+    }
+  }
+  async cleanAsync() {
+    if (!this.options.cwd) {
+      throw new Error('cwd required for YarnPackageManager.cleanAsync');
+    }
+    let nodeModulesPath = path.join(this.options.cwd, 'node_modules');
+    if (fs.existsSync(nodeModulesPath)) {
+      rimraf.sync(nodeModulesPath);
+    }
   }
 
   // Private

@@ -9,6 +9,8 @@ export interface PackageManager {
   addDevAsync(...names: string[]): Promise<void>;
   versionAsync(): Promise<string>;
   getConfigAsync(key: string): Promise<string>;
+  removeLockfileAsync(): Promise<void>;
+  cleanAsync(): Promise<void>;
 }
 
 export function getPossibleProjectRoot(): string {
