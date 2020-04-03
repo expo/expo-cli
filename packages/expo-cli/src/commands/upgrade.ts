@@ -255,6 +255,8 @@ async function shouldBailWhenUsingLatest(
       log.newLine();
       return true;
     }
+
+    log.newLine();
   }
 
   return false;
@@ -612,8 +614,6 @@ export async function upgradeAsync(
       });
     }
   }
-
-  log.addNewLineIfNone();
 }
 
 export default function(program: Command) {
