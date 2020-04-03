@@ -314,7 +314,7 @@ async function installPodsAsync(projectRoot: string) {
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
     log,
-    silent: getenv.boolish(process.env.EXPO_DEBUG, true),
+    silent: getenv.boolish('EXPO_DEBUG', true),
   });
 
   if (!(await packageManager.isCLIInstalledAsync())) {
