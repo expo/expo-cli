@@ -113,18 +113,7 @@ export async function updateCredentialsForPlatform(
   userCredentialsIds: Array<number>,
   metadata: CredentialMetadata
 ): Promise<void> {
-  if (process.env.EXPO_NEXT_API) {
-    const { experienceName } = metadata;
-    const user = await UserManager.ensureLoggedInAsync();
-    const api = ApiV2.clientForUser(user);
-    const result = await api.putAsync(`credentials/android/keystore/${experienceName}`, {
-      credentials: newCredentials,
-    });
-
-    if (result.data.errors) {
-      throw new Error(`Error updating credentials: ${JSON.stringify(result.data.errors)}}`);
-    }
-  } else {
+  if (process.env.EXPO_LECACY_API) {
     const { err, credentials } = await Api.callMethodAsync('updateCredentials', [], 'post', {
       credentials: newCredentials,
       userCredentialsIds,
@@ -134,6 +123,17 @@ export async function updateCredentialsForPlatform(
 
     if (err || !credentials) {
       throw new Error('Error updating credentials.');
+    }
+  } else {
+    const { experienceName } = metadata;
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    const result = await api.putAsync(`credentials/android/keystore/${experienceName}`, {
+      credentials: newCredentials,
+    });
+
+    if (result.data.errors) {
+      throw new Error(`Error updating credentials: ${JSON.stringify(result.data.errors)}}`);
     }
   }
 }
