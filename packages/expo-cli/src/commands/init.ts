@@ -13,6 +13,7 @@ import trimStart from 'lodash/trimStart';
 import wordwrap from 'wordwrap';
 import * as PackageManager from '@expo/package-manager';
 import path from 'path';
+import getenv from 'getenv';
 import prompt from '../prompt';
 import log from '../log';
 import CommandError from '../CommandError';
@@ -305,7 +306,7 @@ async function installPodsAsync(projectRoot: string) {
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
     log,
-    silent: !process.env.EXPO_DEBUG,
+    silent: getenv.boolish(process.env.EXPO_DEBUG, true),
   });
 
   if (!(await packageManager.isCLIInstalledAsync())) {

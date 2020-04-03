@@ -163,6 +163,8 @@ async function installNodeModulesAsync(projectRoot: string) {
     await packageManager.installAsync();
     installingDependenciesStep.succeed('Installed JavaScript dependencies.');
   } catch (e) {
+    // It doesn't matter for the rest of the process if this fails because the other steps can handle it gracefully.
+    // CocoaPods will fail to install but otherwise things will work fine.
     installingDependenciesStep.fail(
       'Something when wrong installing dependencies, check your package manager logfile. Continuing with ejecting, you can debug this afterwards.'
     );
