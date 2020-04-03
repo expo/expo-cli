@@ -55,16 +55,12 @@ export async function startAsync(projectDir: string): Promise<string> {
 
   const authenticationContext = await createAuthenticationContextAsync({ port });
   server.get('/dev-tools-info', authenticationContext.requestHandler);
-  server.use(
-    '/_next',
-    express.static(path.join(__dirname, '../client/_next'), {
-      // All paths in the _next folder include hashes, so they can be cached more aggressively.
-      immutable: true,
-      maxAge: '1y',
-      setHeaders,
-    })
-  );
-  server.use(express.static(path.join(__dirname, '../client'), { setHeaders }));
+
+  server.use(express.static(path.resolve(__dirname, '../client/'), { setHeaders }));
+
+  server.get('*', (_, res) => {
+    res.sendFile(path.resolve(__dirname, '../client/index.html'));
+  });
 
   const listenHostname = devtoolsHost();
   const httpServer = http.createServer(server);
