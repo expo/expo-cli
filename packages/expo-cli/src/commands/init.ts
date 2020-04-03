@@ -201,7 +201,7 @@ async function action(projectDir: string, command: Command) {
     // check if git is installed
     // check if inside git repo
     await Exp.initGitRepoAsync(projectPath, { silent: true });
-  } catch (_) {
+  } catch {
     // todo: check if git is installed, bail out
   }
 
@@ -209,8 +209,10 @@ async function action(projectDir: string, command: Command) {
   try {
     await Exp.installDependenciesAsync(projectPath, packageManager, { silent: true });
     installJsDepsStep.succeed('Installed JavaScript dependencies.');
-  } catch (e) {
-    installJsDepsStep.fail('Something when wrong installing JavaScript dependencies.');
+  } catch {
+    installJsDepsStep.fail(
+      `Something when wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to initialize the app.`
+    );
   }
 
   let cdPath = path.relative(process.cwd(), projectPath);
