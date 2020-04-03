@@ -350,7 +350,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   delete pkg.main;
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
 
-  updatingPackageJsonStep.succeed('Updated package.json and added index.js entry point.');
+  updatingPackageJsonStep.succeed(
+    'Updated package.json and added index.js entry point for iOS and Android.'
+  );
 }
 
 /**

@@ -57,6 +57,7 @@ const FEATURED_TEMPLATES = [
 ];
 
 const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum', 'expo-template-bare-typescript'];
+const isMacOS = process.platform === 'darwin';
 
 async function action(projectDir: string, command: Command) {
   const options: Options = {
@@ -233,7 +234,7 @@ async function action(projectDir: string, command: Command) {
         `⚠️  Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
       );
       log.nested('');
-      log.nested(`  cd ${cdPath || '.'}/ios`);
+      log.nested(`  cd ${cdPath ?? '.'}/ios`);
       log.nested(`  pod install`);
       log.nested('');
     }
@@ -277,9 +278,9 @@ function logProjectReady({
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
 
   let macOSComment = '';
-  const isMacOS = process.platform === 'darwin';
   if (!isMacOS && workflow === 'bare') {
-    macOSComment = ' # you need to use macOS to build the iOS project';
+    macOSComment =
+      ' # you need to use macOS to build the iOS project - use managed workflow if you need to do iOS development without a Mac';
   } else if (!isMacOS && workflow === 'managed') {
     macOSComment = ' # requires an iOS device or access to a macOS for a simulator';
   }
@@ -296,6 +297,11 @@ function logProjectReady({
         'android'
       )} directories with their respective IDEs.`
     );
+    // TODO: add equivalent of this or some command to wrap it:
+    // # ios
+    // $ open -a Xcode ./ios/{PROJECT_NAME}.xcworkspace
+    // # android
+    // $ open -a /Applications/Android\\ Studio.app ./android
   }
 }
 
