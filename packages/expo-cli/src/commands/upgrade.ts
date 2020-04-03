@@ -366,6 +366,8 @@ export async function upgradeAsync(
   // Maybe bail out early if people are trying to update to the current version
   if (await shouldBailWhenUsingLatest(currentSdkVersionString, targetSdkVersionString)) return;
 
+  const platforms = exp.platforms || [];
+
   if (
     targetSdkVersionString === latestSdkVersionString &&
     currentSdkVersionString !== targetSdkVersionString &&
@@ -400,6 +402,16 @@ export async function upgradeAsync(
       targetSdkVersionString = selectedSdkVersionString;
       log.newLine();
     }
+
+    // Check if we can, and probably should, upgrade the (ios) simulator
+    if (platforms.includes('ios')) {
+      await maybeUpgradeSimulatorAsync();
+    }
+
+    // Check if we can, and probably should, upgrade the android client
+    if (platforms.includes('android')) {
+      await maybeUpgradeEmulatorAsync();
+    }
   } else if (!targetSdkVersion) {
     if (program.nonInteractive) {
       log.warn(
@@ -419,18 +431,6 @@ export async function upgradeAsync(
         return;
       }
     }
-  }
-
-  const platforms = exp.platforms || [];
-
-  // Check if we can, and probably should, upgrade the (ios) simulator
-  if (platforms.includes('ios')) {
-    await maybeUpgradeSimulatorAsync();
-  }
-
-  // Check if we can, and probably should, upgrade the android client
-  if (platforms.includes('android')) {
-    await maybeUpgradeEmulatorAsync();
   }
 
   let packageManager = PackageManager.createForProject(projectRoot, {
