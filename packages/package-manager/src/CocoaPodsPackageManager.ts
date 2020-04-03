@@ -20,7 +20,7 @@ export class CocoaPodsPackageManager implements PackageManager {
   }
 
   static async gemInstallCLIAsync(
-    nonInteractive: boolean,
+    nonInteractive: boolean = false,
     spawnOptions: SpawnOptions = { stdio: 'inherit' }
   ): Promise<void> {
     const options = ['install', 'cocoapods', '--no-document'];
@@ -46,11 +46,11 @@ export class CocoaPodsPackageManager implements PackageManager {
   }
 
   static async installCLIAsync({
-    nonInteractive,
-    spawnOptions,
+    nonInteractive = false,
+    spawnOptions = { stdio: 'inherit' },
   }: {
-    nonInteractive: boolean;
-    spawnOptions: SpawnOptions;
+    nonInteractive?: boolean;
+    spawnOptions?: SpawnOptions;
   }): Promise<boolean> {
     if (!spawnOptions) {
       spawnOptions = { stdio: 'inherit' };
