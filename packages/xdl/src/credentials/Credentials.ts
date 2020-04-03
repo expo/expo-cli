@@ -121,8 +121,8 @@ export async function updateCredentialsForPlatform(
       credentials: newCredentials,
     });
 
-    if (result.data.errors) {
-      throw new Error(`Error updating credentials: ${JSON.stringify(result.data.errors)}}`);
+    if (result.errors) {
+      throw new Error(`Error updating credentials: ${JSON.stringify(result.errors)}}`);
     }
   } else {
     const { err, credentials } = await Api.callMethodAsync('updateCredentials', [], 'post', {
