@@ -530,10 +530,16 @@ export async function upgradeAsync(
   let clearingCacheStep = logNewSection('Clearing the packager cache.');
   try {
     await Project.startReactNativeServerAsync(projectRoot, { reset: true, nonPersistent: true });
-    await Project.stopReactNativeServerAsync(projectRoot);
   } catch (e) {
     clearingCacheStep.fail(`Failed to clear packager cache with error: ${e.message}`);
   } finally {
+    try {
+      // Ensure that we at least attempt to stop the server even if it failed to clear the cache
+      // It was pointed out to me that "Connecting to Metro bundler failed." could occur which would lead
+      // to the upgrade command not exiting upon completion because, I believe, the server remained open.
+      await Project.stopReactNativeServerAsync(projectRoot);
+    } catch {}
+
     clearingCacheStep.succeed('Cleared packager cache.');
   }
 
