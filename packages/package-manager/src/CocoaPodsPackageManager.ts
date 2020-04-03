@@ -6,8 +6,6 @@ import path from 'path';
 
 import { Logger, PackageManager, spawnSudoAsync } from './PackageManager';
 
-type PackageManagerOptions = { cwd: string; log?: Logger; silent?: boolean };
-
 export class CocoaPodsPackageManager implements PackageManager {
   options: SpawnOptions;
   private log: Logger;
