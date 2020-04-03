@@ -625,7 +625,7 @@ export async function upgradeAsync(
   }
 }
 
-async function maybeCleanNpmStateAsync(packageManager: PackageManager.PackageManager) {
+async function maybeCleanNpmStateAsync(packageManager: any) {
   // We don't trust npm to properly handle deduping dependencies so we need to
   // clear the lockfile and node_modules.
   // https://forums.expo.io/t/sdk-37-unrecognized-font-family/35201
