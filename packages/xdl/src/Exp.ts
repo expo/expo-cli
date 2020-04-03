@@ -86,17 +86,46 @@ function createFileTransform(config: AppJSONConfig | BareAppConfig) {
   };
 }
 
+/**
+ * Extract a template app to a given file path, initialize a git repo, install
+ * npm dependencies, and log information about each of the steps.
+ *
+ * @deprecated - callers want to have more control over the logging around each
+ * step, this is deprecated in favor of calling the methods that it is made up
+ * of individually
+ */
 export async function extractAndInitializeTemplateApp(
   templateSpec: PackageSpec,
   projectRoot: string,
   packageManager: 'yarn' | 'npm' = 'npm',
   config: AppJSONConfig | BareAppConfig
 ) {
+  Logger.notifications.warn(
+    'extractAndInitializeTemplateApp is deprecated. Use extractAndPrepareTemplateAppAsync instead.'
+  );
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Extracting project files...');
-  await extractTemplateAppAsync(templateSpec, projectRoot, config);
+  await extractAndPrepareTemplateAppAsync(templateSpec, projectRoot, config);
+  Logger.notifications.info(
+    { code: NotificationCode.PROGRESS },
+    'Initializing a git repository...'
+  );
+  await initGitRepoAsync(projectRoot);
+  Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Installing dependencies...');
+  await installDependenciesAsync(projectRoot, packageManager);
 
-  // Update files
-  Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Customizing project...');
+  return projectRoot;
+}
+
+/**
+ * Extract a template app to a given file path and clean up any properties left over from npm to
+ * prepare it for usage.
+ */
+export async function extractAndPrepareTemplateAppAsync(
+  templateSpec: PackageSpec,
+  projectRoot: string,
+  config: AppJSONConfig | BareAppConfig
+) {
+  await extractTemplateAppAsync(templateSpec, projectRoot, config);
 
   let appFile = new JsonFile(path.join(projectRoot, 'app.json'));
   let appJson = merge(await appFile.readAsync(), config);
@@ -119,12 +148,12 @@ export async function extractAndInitializeTemplateApp(
   delete packageJson._from;
   await packageFile.writeAsync(packageJson);
 
-  await initGitRepoAsync(projectRoot);
-  await installDependenciesAsync(projectRoot, packageManager);
-
   return projectRoot;
 }
 
+/**
+ * Extract a template app to a given file path.
+ */
 export async function extractTemplateAppAsync(
   templateSpec: PackageSpec,
   targetPath: string,
@@ -133,7 +162,7 @@ export async function extractTemplateAppAsync(
   await pacote.tarball.stream(
     templateSpec,
     tarStream => {
-      return extractTemplateAppAsyncImpl(templateSpec, targetPath, config, tarStream);
+      return extractTemplateAppAsyncImpl(targetPath, config, tarStream);
     },
     {
       cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
@@ -144,7 +173,6 @@ export async function extractTemplateAppAsync(
 }
 
 async function extractTemplateAppAsyncImpl(
-  templateSpec: PackageSpec,
   targetPath: string,
   config: AppJSONConfig | BareAppConfig,
   tarStream: Readable
@@ -183,35 +211,41 @@ async function extractTemplateAppAsyncImpl(
   });
 }
 
-async function initGitRepoAsync(root: string) {
+export async function initGitRepoAsync(
+  root: string,
+  flags: { silent: boolean } = { silent: false }
+) {
   // let's see if we're in a git tree
-  let insideGit = true;
   try {
     await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
       cwd: root,
     });
-    Logger.global.debug('New project is already inside of a git repo, skipping git init.');
+    !flags.silent &&
+      Logger.global.debug('New project is already inside of a git repo, skipping git init.');
   } catch (e) {
-    if (e.errno == 'ENOENT') {
-      Logger.global.warn('Unable to initialize git repo. `git` not in PATH.');
+    if (e.errno === 'ENOENT') {
+      !flags.silent && Logger.global.warn('Unable to initialize git repo. `git` not in PATH.');
+      return false;
     }
-    insideGit = false;
   }
 
-  if (!insideGit) {
-    try {
-      await spawnAsync('git', ['init'], { cwd: root });
-      Logger.global.info('Initialized a git repository.');
-    } catch (e) {
-      // no-op -- this is just a convenience and we don't care if it fails
-    }
+  // not in git tree, so let's init
+  try {
+    await spawnAsync('git', ['init'], { cwd: root });
+    !flags.silent && Logger.global.info('Initialized a git repository.');
+    return true;
+  } catch (e) {
+    // no-op -- this is just a convenience and we don't care if it fails
+    return false;
   }
 }
 
-async function installDependenciesAsync(projectRoot: string, packageManager: 'yarn' | 'npm') {
-  Logger.global.info('Installing dependencies...');
-
-  const options = { cwd: projectRoot };
+export async function installDependenciesAsync(
+  projectRoot: string,
+  packageManager: 'yarn' | 'npm',
+  flags: { silent: boolean } = { silent: false }
+) {
+  const options = { cwd: projectRoot, silent: flags.silent };
   if (packageManager === 'yarn') {
     const yarn = new YarnPackageManager(options);
     const version = await yarn.versionAsync();
@@ -228,10 +262,11 @@ async function installDependenciesAsync(projectRoot: string, packageManager: 'ya
       }
       const config = yamlString ? yaml.safeLoad(yamlString) : {};
       config.nodeLinker = 'node-modules';
-      Logger.global.warn(
-        `Yarn v${version} detected, enabling experimental Yarn v2 support using the node-modules plugin.`
-      );
-      Logger.global.info(`Writing ${yarnRc}...`);
+      !flags.silent &&
+        Logger.global.warn(
+          `Yarn v${version} detected, enabling experimental Yarn v2 support using the node-modules plugin.`
+        );
+      !flags.silent && Logger.global.info(`Writing ${yarnRc}...`);
       fs.writeFileSync(yarnRc, yaml.safeDump(config));
     }
     await yarn.installAsync();

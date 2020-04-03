@@ -8,6 +8,7 @@ import _ from 'lodash';
 import semver from 'semver';
 import ora from 'ora';
 import terminalLink from 'terminal-link';
+import getenv from 'getenv';
 
 import log from '../log';
 import prompt from '../prompt';
@@ -254,6 +255,8 @@ async function shouldBailWhenUsingLatest(
       log.newLine();
       return true;
     }
+
+    log.newLine();
   }
 
   return false;
@@ -434,7 +437,7 @@ export async function upgradeAsync(
     npm: options.npm,
     yarn: options.yarn,
     log,
-    silent: true,
+    silent: getenv.boolish('EXPO_DEBUG', true),
   });
 
   log.addNewLineIfNone();
@@ -497,12 +500,24 @@ export async function upgradeAsync(
 
   // Install dev dependencies
   if (devDependenciesAsStringArray.length) {
-    await packageManager.addDevAsync(...devDependenciesAsStringArray);
+    try {
+      await packageManager.addDevAsync(...devDependenciesAsStringArray);
+    } catch (e) {
+      updatingPackagesStep.fail(
+        `Failed to upgrade JavaScript devDependencies: ${devDependenciesAsStringArray.join(' ')}`
+      );
+    }
   }
 
   // Install dependencies
   if (dependenciesAsStringArray.length) {
-    await packageManager.addAsync(...dependenciesAsStringArray);
+    try {
+      await packageManager.addAsync(...dependenciesAsStringArray);
+    } catch (e) {
+      updatingPackagesStep.fail(
+        `Failed to upgrade JavaScript dependencies: ${dependenciesAsStringArray.join(' ')}`
+      );
+    }
   }
 
   updatingPackagesStep.succeed('Updated known packages to compatible versions.');
@@ -599,8 +614,6 @@ export async function upgradeAsync(
       });
     }
   }
-
-  log.addNewLineIfNone();
 }
 
 export default function(program: Command) {
