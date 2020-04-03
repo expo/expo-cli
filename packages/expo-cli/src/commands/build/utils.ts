@@ -9,10 +9,9 @@ export async function checkIfSdkIsSupported(
 ): Promise<void> {
   const isSupported = await Versions.canTurtleBuildSdkVersion(sdkVersion, platform);
   const minimumSdkVersionSupported = await Versions.oldestSupportedMajorVersionAsync();
-  const majorSdkVersion = sdkVersion.split('.')[0];
+  const majorSdkVersion = Number(sdkVersion.split('.')[0]);
 
   if (!isSupported) {
-    const storeName = platform === 'ios' ? 'Apple App Store' : 'Google Play Store';
     log.error(
       chalk.red(
         'Unsupported SDK version: our app builders ' +
