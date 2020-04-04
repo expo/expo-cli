@@ -326,10 +326,9 @@ export const manifest: CustomizeOption[] = [
 async function readPackageJsonAsync(
   projectRoot: string
 ): Promise<{ scripts: { build?: string }; [key: string]: any }> {
-  const { pkg } = getPackageJson(projectRoot);
+  const pkg = getPackageJson(projectRoot);
 
-  return {
-    scripts: {},
-    ...pkg,
-  };
+  if (!pkg.scripts) pkg.scripts = {};
+
+  return pkg;
 }
