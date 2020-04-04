@@ -58,14 +58,10 @@ async function saveImageToPathAsync(projectRoot: string, pathOrURL: string, outP
 async function getManifestAsync(url: string, headers: any, options: any = {}) {
   const buildPhaseLogger =
     options.logger || LoggerDetach.withFields({ buildPhase: 'reading manifest' });
-  const requestOptions = {
-    url: url.replace('exp://', 'http://'),
-    headers,
-  };
 
   let response;
   try {
-    response = await _retryPromise(() => axios.get(requestOptions.url));
+    response = await _retryPromise(() => axios.get(url.replace('exp://', 'http://'), { headers }));
   } catch (err) {
     buildPhaseLogger.error(err);
     throw new Error('Failed to fetch manifest from www');
