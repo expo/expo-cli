@@ -20,13 +20,11 @@ function logReady() {
 // @ts-ignore enquirer has no exported member 'MultiSelect'
 async function runNonInteractiveFlowAsync(projectRoot: string): Promise<void> {
   const customizations = manifest.filter(({ type }) => type === 'required');
-  const promises: Promise<void>[] = [];
   for (const customization of customizations) {
     if (customization.onEnabledAsync({ projectRoot, force: false })) {
-      promises.push(customization.onSelectAsync({ projectRoot, force: true }));
+      await customization.onSelectAsync({ projectRoot, force: true });
     }
   }
-  await Promise.all(promises);
   logReady();
 }
 
