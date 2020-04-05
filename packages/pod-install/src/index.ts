@@ -31,9 +31,13 @@ async function runAsync(): Promise<void> {
     console.log(chalk.red('CocoaPods is only supported on darwin machines'));
     return;
   }
-  if (!CocoaPodsPackageManager.isUsingPods(projectRoot)) {
+
+  const possibleProjectRoot = CocoaPodsPackageManager.getPodProjectRoot(projectRoot);
+  if (!possibleProjectRoot) {
     console.log(chalk.yellow('CocoaPods is not supported in this project'));
     return;
+  } else {
+    projectRoot = possibleProjectRoot;
   }
 
   if (!(await CocoaPodsPackageManager.isCLIInstalledAsync())) {

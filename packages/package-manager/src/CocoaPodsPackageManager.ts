@@ -1,6 +1,5 @@
 import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import chalk from 'chalk';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -11,11 +10,14 @@ export class CocoaPodsPackageManager implements PackageManager {
   private log: Logger;
   private silent: boolean;
 
+  static getPodProjectRoot(projectRoot: string): string | null {
+    if (CocoaPodsPackageManager.isUsingPods(projectRoot)) return projectRoot;
+    const iosProject = path.join(projectRoot, 'ios');
+    if (CocoaPodsPackageManager.isUsingPods(iosProject)) return iosProject;
+    return null;
+  }
+
   static isUsingPods(projectRoot: string): boolean {
-    const workspaceRoot = findWorkspaceRoot(projectRoot);
-    if (workspaceRoot) {
-      return fs.existsSync(path.join(workspaceRoot, 'ios', 'Podfile'));
-    }
     return fs.existsSync(path.join(projectRoot, 'Podfile'));
   }
 
