@@ -344,8 +344,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   /**
    * Add new app entry points
    */
+  let removedPkgMain;
   if (pkg.main !== EXPO_APP_ENTRY && pkg.main) {
-    log(`🚨 Removing "main": ${pkg.main} from package.json. We recommend using index.js instead.`);
+    removedPkgMain = pkg.main;
   }
   delete pkg.main;
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
@@ -353,6 +354,14 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   updatingPackageJsonStep.succeed(
     'Updated package.json and added index.js entry point for iOS and Android.'
   );
+  if (removedPkgMain) {
+    log(
+      `- Removed ${chalk.bold(
+        `"main": "${removedPkgMain}"`
+      )} from package.json because we recommend using index.js as main instead.`
+    );
+    log.newLine();
+  }
 }
 
 /**
