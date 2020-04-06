@@ -1,4 +1,4 @@
-import { getConfig } from '@expo/config';
+import { ProjectTarget, getConfig, getDefaultTargetAsync } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
 import { Exp, Project, ProjectSettings } from '@expo/xdl';
 import chalk from 'chalk';
@@ -14,7 +14,7 @@ type Options = {
   clear?: boolean;
   sendTo?: string | boolean;
   quiet?: boolean;
-  target?: Project.ProjectTarget;
+  target?: ProjectTarget;
   releaseChannel?: string;
   duringBuild?: boolean;
   maxWorkers?: number;
@@ -42,7 +42,7 @@ export async function action(projectDir: string, options: Options = {}) {
     );
   }
 
-  const target = options.target ?? (await Project.getDefaultTargetAsync(projectDir));
+  const target = options.target ?? (await getDefaultTargetAsync(projectDir));
 
   const status = await Project.currentStatus(projectDir);
   let shouldStartOurOwn = false;

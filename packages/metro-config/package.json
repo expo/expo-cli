@@ -46,8 +46,7 @@
     "jest": "^25.2.6",
     "metro": "^0.59.0",
     "metro-config": "^0.59.0",
-    "react-native": "0.61.4",
-    "typescript": "3.4.5"
+    "react-native": "0.61.4"
   },
   "publishConfig": {
     "access": "public"

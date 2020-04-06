@@ -5,14 +5,22 @@ import { getDefaultConfig, loadAsync } from '../ExpoMetroConfig';
 const projectRoot = path.join(__dirname, '__fixtures__', 'hello-world');
 
 describe('getDefaultConfig', () => {
+  const propertyMatchers = {
+    transformer: {
+      assetPlugins: expect.arrayContaining([expect.stringContaining('hashAssetFiles')]),
+      assetRegistryPath: expect.stringContaining('AssetRegistry'),
+      babelTransformerPath: expect.stringContaining('transformer.js'),
+    },
+  };
+
   it('loads default configuration', async () => {
-    expect(await getDefaultConfig(projectRoot)).toMatchSnapshot({
-      transformer: {
-        assetPlugins: expect.arrayContaining([expect.stringContaining('hashAssetFiles')]),
-        assetRegistryPath: expect.stringContaining('AssetRegistry'),
-        babelTransformerPath: expect.stringContaining('transformer.js'),
-      },
-    });
+    expect(await getDefaultConfig(projectRoot)).toMatchSnapshot(propertyMatchers);
+  });
+
+  it('loads default configuration for bare apps', async () => {
+    expect(await getDefaultConfig(projectRoot, { target: 'bare' })).toMatchSnapshot(
+      propertyMatchers
+    );
   });
 });
 

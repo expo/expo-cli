@@ -2,6 +2,7 @@ import {
   ExpoConfig,
   PackageJSONConfig,
   Platform,
+  ProjectTarget,
   configFilename,
   getConfig,
   readExpRcAsync,
@@ -187,41 +188,6 @@ export async function currentStatus(projectDir: string): Promise<ProjectStatus> 
   } else {
     return 'exited';
   }
-}
-
-export type ProjectTarget = 'managed' | 'bare';
-
-export async function getDefaultTargetAsync(projectDir: string): Promise<ProjectTarget> {
-  const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
-  // before SDK 37, always default to managed to preserve previous behavior
-  if (exp.sdkVersion && exp.sdkVersion !== 'UNVERSIONED' && semver.lt(exp.sdkVersion, '37.0.0')) {
-    return 'managed';
-  }
-  return (await isBareWorkflowProjectAsync(projectDir)) ? 'bare' : 'managed';
-}
-
-export async function isBareWorkflowProjectAsync(projectDir: string): Promise<boolean> {
-  const { pkg } = getConfig(projectDir, {
-    skipSDKVersionRequirement: true,
-  });
-  if (pkg.dependencies && pkg.dependencies.expokit) {
-    return false;
-  }
-
-  if (fs.existsSync(path.resolve(projectDir, 'ios'))) {
-    const xcodeprojFiles = await glob(path.join(projectDir, 'ios', '/**/*.xcodeproj'));
-    if (xcodeprojFiles && xcodeprojFiles.length) {
-      return true;
-    }
-  }
-  if (fs.existsSync(path.resolve(projectDir, 'android'))) {
-    const gradleFiles = await glob(path.join(projectDir, 'android', '/**/*.gradle'));
-    if (gradleFiles && gradleFiles.length) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 // DECPRECATED: use UrlUtils.constructManifestUrlAsync

@@ -1,6 +1,9 @@
 import JsonFile, { JSONObject } from '@expo/json-file';
 import path from 'path';
 import slug from 'slugify';
+import fs from 'fs-extra';
+import globby from 'globby';
+import semver from 'semver';
 
 import {
   AppJSONConfig,
@@ -11,6 +14,7 @@ import {
   PackageJSONConfig,
   Platform,
   ProjectConfig,
+  ProjectTarget,
 } from './Config.types';
 
 import { ConfigError } from './Errors';
@@ -305,6 +309,39 @@ export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webN
     appName,
     webName,
   };
+}
+
+export async function getDefaultTargetAsync(projectRoot: string): Promise<ProjectTarget> {
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  // before SDK 37, always default to managed to preserve previous behavior
+  if (exp.sdkVersion && exp.sdkVersion !== 'UNVERSIONED' && semver.lt(exp.sdkVersion, '37.0.0')) {
+    return 'managed';
+  }
+  return (await isBareWorkflowProjectAsync(projectRoot)) ? 'bare' : 'managed';
+}
+
+async function isBareWorkflowProjectAsync(projectRoot: string): Promise<boolean> {
+  const { pkg } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
+  if (pkg.dependencies && pkg.dependencies.expokit) {
+    return false;
+  }
+
+  if (fs.existsSync(path.resolve(projectRoot, 'ios'))) {
+    const xcodeprojFiles = await globby([path.join(projectRoot, 'ios', '/**/*.xcodeproj')]);
+    if (xcodeprojFiles.length) {
+      return true;
+    }
+  }
+  if (fs.existsSync(path.resolve(projectRoot, 'android'))) {
+    const gradleFiles = await globby([path.join(projectRoot, 'android', '/**/*.gradle')]);
+    if (gradleFiles.length) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export * from './Config.types';

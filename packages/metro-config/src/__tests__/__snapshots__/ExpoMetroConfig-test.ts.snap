@@ -13,6 +13,57 @@ Object {
       "browser",
       "main",
     ],
+    "sourceExts": Array [
+      "expo.ts",
+      "expo.tsx",
+      "expo.js",
+      "expo.jsx",
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "wasm",
+    ],
+  },
+  "serializer": Object {
+    "getModulesRunBeforeMainModule": [Function],
+    "getPolyfills": [Function],
+  },
+  "symbolicator": Object {
+    "customizeFrame": [Function],
+  },
+  "transformer": Object {
+    "assetPlugins": ArrayContaining [
+      StringContaining "hashAssetFiles",
+    ],
+    "assetRegistryPath": StringContaining "AssetRegistry",
+    "babelTransformerPath": StringContaining "transformer.js",
+  },
+}
+`;
+
+exports[`getDefaultConfig loads default configuration for bare apps 1`] = `
+Object {
+  "resolver": Object {
+    "platforms": Array [
+      "ios",
+      "android",
+      "native",
+    ],
+    "resolverMainFields": Array [
+      "react-native",
+      "browser",
+      "main",
+    ],
+    "sourceExts": Array [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "wasm",
+    ],
   },
   "serializer": Object {
     "getModulesRunBeforeMainModule": [Function],
