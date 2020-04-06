@@ -33,7 +33,7 @@
     "build"
   ],
   "dependencies": {
-    "@expo/config": "3.0.4"
+    "@expo/config": "3.0.5"
   },
   "peerDependencies": {
     "metro": "^0.56.0",
