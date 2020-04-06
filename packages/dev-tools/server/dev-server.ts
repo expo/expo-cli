@@ -2,8 +2,6 @@ import { graphiqlExpress } from 'apollo-server-express';
 import { Project } from '@expo/xdl';
 import express from 'express';
 import http from 'http';
-import path from 'path';
-import openBrowser from 'react-dev-utils/openBrowser';
 
 import { createAuthenticationContextAsync, startGraphQLServer } from './DevToolsServer';
 
@@ -29,12 +27,6 @@ async function run(): Promise<void> {
       })
     );
 
-    server.use(express.static(path.resolve(__dirname, '../client/')));
-
-    server.get('*', (_, res) => {
-      res.sendFile(path.resolve(__dirname, '../client/index.html'));
-    });
-
     const httpServer = http.createServer(server);
     await new Promise((resolve, reject) => {
       httpServer.once('error', reject);
@@ -46,7 +38,9 @@ async function run(): Promise<void> {
     await Project.startAsync(projectDir);
     let url = `http://localhost:${PORT}`;
     console.log(`Development server running at ${url}`);
-    openBrowser(url);
+    console.log(
+      'Run `cd ../client/ && expo start --web-only` in a new tab to develop the DevTools UI.'
+    );
   } catch (error) {
     console.error(error);
     process.exit(1);

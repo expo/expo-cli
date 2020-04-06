@@ -170,10 +170,7 @@ const createSourceQuery = typename => gql`
   ${MessageFragment}
 `;
 
-const IndexPageContents = withRedux(
-  initStore,
-  state => state
-)(
+const IndexPageContents = withRedux(initStore, state => state)(
   class IndexPageContents extends React.Component {
     state = {};
 
@@ -480,7 +477,10 @@ export default class IndexPage extends React.Component {
   }
 
   async connect() {
-    const response = await pTimeout(fetch('/dev-tools-info'), 10000);
+    const response = await pTimeout(
+      fetch(__DEV__ ? 'http://localhost:3333/dev-tools-info' : '/dev-tools-info'),
+      10000
+    );
     if (!response.ok) {
       throw new Error(`Dev Tools API returned an error: ${response.status}`);
     }
