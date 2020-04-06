@@ -137,6 +137,7 @@ export type StartOptions = {
 
 type PublishOptions = {
   releaseChannel?: string;
+  target?: ProjectTarget;
 };
 
 type PackagerOptions = {
@@ -563,6 +564,8 @@ export async function exportForAppHosting(
   } = {}
 ): Promise<void> {
   await _validatePackagerReadyAsync(projectRoot);
+  const defaultTarget = await getDefaultTargetAsync(projectRoot);
+  const target = options.publishOptions?.target ?? defaultTarget;
 
   // build the bundles
   let packagerOpts = {
@@ -724,6 +727,7 @@ export async function exportForAppHosting(
     androidManifest,
     androidBundle,
     androidSourceMap,
+    target,
   });
 }
 
@@ -787,6 +791,7 @@ export async function publishAsync(
   options: PublishOptions = {}
 ): Promise<{ url: string; ids: string[]; err?: string }> {
   const user = await UserManager.ensureLoggedInAsync();
+  const target = options.target ?? (await getDefaultTargetAsync(projectRoot));
   await _validatePackagerReadyAsync(projectRoot);
   Analytics.logEvent('Publish', {
     projectRoot,
@@ -940,6 +945,7 @@ export async function publishAsync(
     androidManifest,
     androidBundle,
     androidSourceMap,
+    target,
   });
 
   // TODO: move to postPublish hook
