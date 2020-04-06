@@ -1,6 +1,6 @@
 {
   "name": "@expo/metro-config",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A Metro config for running React Native projects with the Metro bundler",
   "main": "build/ExpoMetroConfig.js",
   "scripts": {
@@ -33,14 +33,14 @@
     "build"
   ],
   "dependencies": {
-    "@expo/config": "3.0.5"
+    "@expo/config": "3.0.6"
   },
   "peerDependencies": {
     "metro": "^0.56.0",
     "metro-config": "^0.56.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "^0.2.1",
+    "@expo/babel-preset-cli": "0.2.8",
     "@types/jest": "^25.1.4",
     "expo": "37",
     "jest": "^25.2.6",

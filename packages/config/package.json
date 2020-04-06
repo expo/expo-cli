@@ -1,6 +1,6 @@
 {
   "name": "@expo/config",
-  "version": "3.0.5",
+  "version": "3.0.6",
   "description": "A library for interacting with the app.json",
   "main": "build/index.js",
   "scripts": {
@@ -45,9 +45,9 @@
   ],
   "dependencies": {
     "@babel/register": "^7.8.3",
-    "@expo/babel-preset-cli": "0.2.7",
-    "@expo/json-file": "8.2.7",
-    "@expo/plist": "^0.0.1",
+    "@expo/babel-preset-cli": "0.2.8",
+    "@expo/json-file": "8.2.8",
+    "@expo/plist": "0.0.2",
     "@types/invariant": "^2.2.30",
     "find-yarn-workspace-root": "^1.2.1",
     "fs-extra": "^7.0.1",
