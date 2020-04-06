@@ -8,11 +8,17 @@ export async function checkIfSdkIsSupported(
   platform: 'android' | 'ios'
 ): Promise<void> {
   const isSupported = await Versions.canTurtleBuildSdkVersion(sdkVersion, platform);
+  const minimumSdkVersionSupported = await Versions.oldestSupportedMajorVersionAsync();
+  const majorSdkVersion = Number(sdkVersion.split('.')[0]);
+  const { version: latestSDKVersion } = await Versions.newestReleasedSdkVersionAsync();
+
   if (!isSupported) {
-    const storeName = platform === 'ios' ? 'Apple App Store' : 'Google Play Store';
     log.error(
       chalk.red(
-        `Unsupported SDK version: our app builders don't have support for ${sdkVersion} version yet. Submitting the app to the ${storeName} may result in an unexpected behavior.`
+        'Unsupported SDK version: our app builders ' +
+          (majorSdkVersion < minimumSdkVersionSupported
+            ? `no longer support SDK version ${majorSdkVersion}. Please upgrade to at least SDK ${minimumSdkVersionSupported}, or to the latest SDK version (${latestSDKVersion}).`
+            : `do not support SDK version ${majorSdkVersion}, yet. The latest SDK version is ${latestSDKVersion}.`)
       )
     );
     throw new Error('Unsupported SDK version');
