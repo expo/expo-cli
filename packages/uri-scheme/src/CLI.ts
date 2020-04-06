@@ -2,9 +2,9 @@
 import chalk from 'chalk';
 import { Command } from 'commander';
 
+import { CommandError, Options } from './Options';
 import shouldUpdate from './update';
 import * as URIScheme from './URIScheme';
-import { Options } from './Options';
 
 const packageJson = () => require('../package.json');
 
@@ -91,12 +91,12 @@ async function parseArgsAsync(uri: string, options: Options): Promise<Options> {
   } else {
     if (options.android) {
       if (!platforms.includes('android')) {
-        throw new Error('Android not supported');
+        throw new CommandError('Android not supported');
       }
     }
     if (options.ios) {
       if (!platforms.includes('ios')) {
-        throw new Error('iOS not supported');
+        throw new CommandError('iOS not supported');
       }
     }
   }
@@ -114,10 +114,17 @@ export function run() {
 
 async function commandDidThrowAsync(reason: any) {
   console.log();
-  console.log('Aborting run');
   if (reason.command) {
-    console.log(`  ${chalk.magenta(reason.command)} has failed.`);
+    console.log(
+      chalk.red(`\u203A ${chalk.bold(`npx ${packageJson().name} ${reason.command}`)} has failed.`)
+    );
+    console.log();
+  }
+  if (reason.origin === 'uri-scheme') {
+    console.log(chalk.black.bgRed(reason.message));
   } else {
+    console.log('Aborting run');
+
     console.log(chalk.black.bgRed`An unexpected error was encountered. Please report it as a bug:`);
     console.log(reason);
   }

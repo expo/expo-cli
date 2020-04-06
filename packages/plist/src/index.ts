@@ -13,9 +13,4 @@ export interface PlistArray extends ReadonlyArray<PlistValue> {}
 // The instance of this type is passed to 'xmlbuilder' module as it is.
 export type PlistBuildOptions = XMLToStringOptions;
 
-export enum CFBundleTypeRole {
-  Editor = 'Editor',
-  Viewer = 'Viewer',
-}
-
 export default { parse, build };

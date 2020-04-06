@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-import plist, { CFBundleTypeRole, PlistObject } from '@expo/plist';
+import * as Scheme from '@expo/config/build/ios/Scheme';
+import plist, { PlistObject } from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import fs from 'fs';
 import { sync } from 'glob';
 import path from 'path';
 
-import { Options } from './Options';
+import { CommandError, Options } from './Options';
 
 export function isAvailable(projectRoot: string): boolean {
   const reactNativeIos = sync(path.join(projectRoot, 'ios', '*.xcodeproj'));
@@ -14,38 +15,48 @@ export function isAvailable(projectRoot: string): boolean {
   return !!currentIos.length || !!reactNativeIos.length;
 }
 
-function ensureCFBundleTypeRole(value?: string): CFBundleTypeRole {
-  if (value?.toLowerCase() === 'viewer') {
-    return CFBundleTypeRole.Viewer;
+export async function addAsync({ uri, projectRoot, dryRun }: Options): Promise<void> {
+  const infoPlistPath = getConfigPath(projectRoot);
+
+  let config = readConfig(infoPlistPath);
+
+  if (Scheme.hasScheme(uri, config)) {
+    throw new CommandError(
+      `iOS: URI scheme "${uri}" already exists in Info.plist at: ${infoPlistPath}`,
+      'add'
+    );
   }
-  return CFBundleTypeRole.Editor;
+
+  config = Scheme.appendScheme(uri, config);
+
+  if (dryRun) {
+    console.log(chalk.magenta('Write plist to: ', infoPlistPath));
+    console.log(formatConfig(config));
+    return;
+  }
+  writeConfig(infoPlistPath, config);
 }
 
-export async function addAsync({ role, name, uri, projectRoot, dryRun }: Options): Promise<void> {
-  const infoPlistPath = getConfigPath(projectRoot);
-  appendPlistUriScheme(
-    infoPlistPath,
-    { uri, name, role: ensureCFBundleTypeRole(role) },
-    true,
-    dryRun
-  );
-}
-
-export async function removeAsync({
-  uri,
-  projectRoot,
-  role,
-  name,
-  dryRun,
-}: Options): Promise<void> {
+export async function removeAsync({ uri, projectRoot, dryRun }: Options): Promise<void> {
   const infoPlistPath = getConfigPath(projectRoot);
 
-  appendPlistUriScheme(
-    infoPlistPath,
-    { uri, name, role: ensureCFBundleTypeRole(role) },
-    false,
-    dryRun
-  );
+  let config = readConfig(infoPlistPath);
+
+  if (!Scheme.hasScheme(uri, config)) {
+    throw new CommandError(
+      `iOS: URI scheme "${uri}" already exists in Info.plist at: ${infoPlistPath}`,
+      'remove'
+    );
+  }
+
+  config = Scheme.removeScheme(uri, config);
+
+  if (dryRun) {
+    console.log(chalk.magenta('Write plist to: ', infoPlistPath));
+    console.log(formatConfig(config));
+    return;
+  }
+  writeConfig(infoPlistPath, config);
 }
 
 export async function openAsync({ uri }: Options): Promise<void> {
@@ -84,75 +95,19 @@ export function getConfigPath(projectRoot: string): string {
   return infoPlistPaths[0];
 }
 
-function appendPlistUriScheme(
-  plistPath: string,
-  scheme: { uri: string; name?: string; role?: CFBundleTypeRole },
-  shouldAdd: boolean,
-  dryRun: boolean = false
-) {
+function readConfig(path: string): any {
   // Read Plist as source
-  const rawPlist = fs.readFileSync(plistPath, 'utf8');
+  const rawPlist = fs.readFileSync(path, 'utf8');
+  return { ...plist.parse(rawPlist) };
+}
 
-  const plistObject = { ...plist.parse(rawPlist) };
-
-  if (!shouldAdd && !plistObject.CFBundleURLTypes) {
-    return;
-  }
-  if (!plistObject.CFBundleURLTypes) plistObject.CFBundleURLTypes = [];
-
-  const inputRole = scheme.role || 'Editor';
-  const inputName = scheme.name || scheme.uri;
-
-  if (shouldAdd) {
-    if (
-      plistObject.CFBundleURLTypes.some(({ CFBundleURLSchemes: schemes }: any) =>
-        schemes.includes(scheme.uri)
-      )
-    ) {
-      throw new Error(
-        `iOS: URI scheme "${scheme.uri}" already exists in Info.plist at: ${plistPath}`
-      );
-    }
-    // @ts-ignore
-    plistObject.CFBundleURLTypes.push({
-      CFBundleTypeRole: inputRole,
-      CFBundleURLName: inputName,
-      CFBundleURLSchemes: [scheme.uri],
-    });
-  } else {
-    if (
-      !plistObject.CFBundleURLTypes.some(({ CFBundleURLSchemes: schemes }: any) =>
-        schemes.includes(scheme.uri)
-      )
-    ) {
-      throw new Error(
-        `iOS: URI scheme "${scheme.uri}" does not exist in the Info.plist at: ${plistPath}`
-      );
-    }
-
-    plistObject.CFBundleURLTypes = plistObject.CFBundleURLTypes.map((url: any) => {
-      const ind = url.CFBundleURLSchemes.indexOf(scheme.uri);
-      if (ind > -1) {
-        url.CFBundleURLSchemes.splice(ind, 1);
-        if (url.CFBundleURLSchemes.length === 0) {
-          return undefined;
-        }
-      }
-      return url;
-    }).filter(Boolean);
-  }
-
+function formatConfig(plistObject: any): string {
   // attempt to match default Info.plist format
   const format = { pretty: true, indent: `\t` };
-
   const xml = plist.build(plistObject, format);
+  return xml;
+}
 
-  if (dryRun) {
-    console.log(chalk.magenta('Write plist to: ', plistPath));
-    console.log(xml);
-    return;
-  }
-  if (xml !== rawPlist) {
-    fs.writeFileSync(plistPath, xml);
-  }
+function writeConfig(path: string, plistObject: any) {
+  fs.writeFileSync(path, formatConfig(plistObject));
 }

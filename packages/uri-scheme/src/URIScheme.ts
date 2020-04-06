@@ -2,9 +2,10 @@
 import chalk from 'chalk';
 
 import enquirer from 'enquirer';
+import { relative } from 'path';
 import * as Android from './Android';
 import * as Ios from './Ios';
-import { Options } from './Options';
+import { CommandError, Options } from './Options';
 
 export function getAvailablePlatforms(projectRoot: string): string[] {
   let platforms: string[] = [];
@@ -20,10 +21,10 @@ export function getAvailablePlatforms(projectRoot: string): string[] {
  */
 function ensureUriString(uri: any): string {
   if (!uri) {
-    throw new Error('Please supply a URI protocol');
+    throw new CommandError('Please supply a URI protocol');
   }
   if (typeof uri !== 'string') {
-    throw new Error(`URI protocol should be of type string. Instead got: ${typeof uri}`);
+    throw new CommandError(`URI protocol should be of type string. Instead got: ${typeof uri}`);
   }
 
   return uri.trim();
@@ -54,7 +55,7 @@ async function normalizeUriProtocolAsync(uri: any): Promise<string> {
       });
       if (answer) return normalizedUri;
     } else {
-      throw new Error(
+      throw new CommandError(
         `Supplied URI protocol "${trimmedUri}" does not appear to be spec compliant: http://www.ietf.org/rfc/rfc2396.txt`
       );
     }
@@ -106,14 +107,23 @@ export async function openAsync(options: Options): Promise<void> {
 export async function listAsync(options: Options): Promise<void> {
   if (options.ios) {
     const schemes = await Ios.getAsync(options);
-    logPlatformMessage('iOS', `Schemes for config: ${Ios.getConfigPath(options.projectRoot)}`);
+    logPlatformMessage(
+      'iOS',
+      `Schemes for config: ./${relative(
+        options.projectRoot,
+        Ios.getConfigPath(options.projectRoot)
+      )}`
+    );
     logSchemes(schemes);
   }
   if (options.android) {
     const schemes = await Android.getAsync(options);
     logPlatformMessage(
       'Android',
-      `Schemes for config: ${Android.getConfigPath(options.projectRoot)}`
+      `Schemes for config: ./${relative(
+        options.projectRoot,
+        Android.getConfigPath(options.projectRoot)
+      )}`
     );
     logSchemes(schemes);
   }
@@ -123,6 +133,6 @@ function logPlatformMessage(platform: string, message: string): void {
   console.log(chalk.magenta(`\u203A ${chalk.bold(platform)}: ${message}`));
 }
 function logSchemes(schemes: string[]): void {
-  for (const scheme of schemes) console.log(scheme);
+  for (const scheme of schemes) console.log(`${chalk.dim('\u203A ')}${scheme}${chalk.dim('://')}`);
   console.log('');
 }

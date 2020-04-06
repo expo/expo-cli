@@ -4,74 +4,7 @@ import { Builder, Parser } from 'xml2js';
 import { EOL } from 'os';
 import path from 'path';
 
-const USES_PERMISSION = 'uses-permission';
-
 export type Document = { [key: string]: any };
-
-export function removePermissions(doc: Document, permissionNames?: string[]) {
-  const targetNames = permissionNames ? permissionNames.map(ensurePermissionNameFormat) : null;
-  const permissions = doc.manifest[USES_PERMISSION] || [];
-  let nextPermissions = [];
-  for (let attribute of permissions) {
-    if (targetNames) {
-      const value = attribute['$']['android:name'] || attribute['$']['name'];
-      if (!targetNames.includes(value)) {
-        nextPermissions.push(attribute);
-      }
-    }
-  }
-
-  doc.manifest[USES_PERMISSION] = nextPermissions;
-}
-
-export function addPermission(doc: Document, permissionName: string): void {
-  const usesPermissions: { [key: string]: any }[] = doc.manifest[USES_PERMISSION] || [];
-  usesPermissions.push({
-    $: { 'android:name': permissionName },
-  });
-  doc.manifest[USES_PERMISSION] = usesPermissions;
-}
-
-export function ensurePermissions(
-  doc: Document,
-  permissionNames: string[]
-): { [permission: string]: boolean } {
-  const permissions = getPermissions(doc);
-
-  const results: { [permission: string]: boolean } = {};
-  for (const permissionName of permissionNames) {
-    const targetName = ensurePermissionNameFormat(permissionName);
-    if (!permissions.includes(targetName)) {
-      addPermission(doc, targetName);
-      results[permissionName] = true;
-    } else {
-      results[permissionName] = false;
-    }
-  }
-  return results;
-}
-
-export function ensurePermission(doc: Document, permissionName: string): boolean {
-  const permissions = getPermissions(doc);
-  const targetName = ensurePermissionNameFormat(permissionName);
-
-  if (!permissions.includes(targetName)) {
-    addPermission(doc, targetName);
-    return true;
-  }
-  return false;
-}
-
-export function ensurePermissionNameFormat(permissionName: string): string {
-  if (permissionName.includes('.')) {
-    const com = permissionName.split('.');
-    const name = com.pop() as string;
-    return [...com, name.toUpperCase()].join('.');
-  } else {
-    // If shorthand form like `WRITE_CONTACTS` is provided, expand it to `android.permission.WRITE_CONTACTS`.
-    return ensurePermissionNameFormat(`android.permission.${permissionName}`);
-  }
-}
 
 export type InputOptions = {
   manifestPath?: string | null;
@@ -179,28 +112,6 @@ export async function resolveInputOptionsAsync(options: InputOptions): Promise<D
   if (options.projectRoot) {
     const manifestPath = await getAndroidManifestPathAsync(options.projectRoot);
     return resolveInputOptionsAsync({ manifestPath });
-  }
-}
-
-export async function persistAndroidPermissionsAsync(
-  projectDir: string,
-  permissions: string[]
-): Promise<boolean> {
-  const manifestPath = await getProjectAndroidManifestPathAsync(projectDir);
-  // The Android Manifest takes priority over the app.json
-  if (!manifestPath) {
-    return false;
-  }
-  const manifest = await readAndroidManifestAsync(manifestPath);
-  removePermissions(manifest);
-  const results = ensurePermissions(manifest, permissions);
-  if (Object.values(results).reduce((prev, current) => prev && current, true) === false) {
-    const failed = Object.keys(results).filter(key => !results[key]);
-    throw new Error(
-      `Failed to write the following permissions to the native AndroidManifest.xml: ${failed.join(
-        ', '
-      )}`
-    );
   }
   throw new Error('Cannot resolve a valid AndroidManifest.xml');
 }
