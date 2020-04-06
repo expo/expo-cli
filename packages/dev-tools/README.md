@@ -11,6 +11,6 @@ Expo Developer Tools supports:
 
 ## Developing
 
-- Start any Expo project with `expo start`
-- Run `yarn start ./path/to/project`
-- Chrome should open to `http://localhost:3333/`
+- Run `yarn dev-server ./path/to/project` in one terminal.
+- Open another terminal and run `yarn dev-ui`.
+- Chrome should open to `http://localhost:19002/`. You can close this and open `http://localhost:19006/` which is the DevTools UI you are currently developing.
