@@ -1,6 +1,7 @@
 import { ExpoConfig, PackageJSONConfig } from '@expo/config';
 import fs from 'fs-extra';
 import path from 'path';
+import { ProjectTarget } from './Project';
 
 import * as ExponentTools from './detach/ExponentTools';
 import * as IosPlist from './detach/IosPlist';
@@ -23,6 +24,7 @@ export type EmbeddedAssetsConfiguration = {
   androidManifest: any;
   androidBundle: string;
   androidSourceMap: string | null;
+  target: ProjectTarget;
 };
 
 type PublicConfig = ExpoConfig & {
@@ -104,8 +106,8 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
   let iosManifestPath;
   let iosSourceMapPath;
 
-  // set defaults
-  if (pkg.dependencies['expo-updates']) {
+  // set defaults for expo-updates
+  if (pkg.dependencies['expo-updates'] && config.target !== 'managed') {
     const defaultAndroidDir = _getDefaultEmbeddedAssetDir('android', projectRoot, exp);
     const defaultIosDir = _getDefaultEmbeddedAssetDir('ios', projectRoot, exp);
 
@@ -253,7 +255,7 @@ async function _maybeConfigureExpoKitEmbeddedAssetsAsync(config: EmbeddedAssetsC
 }
 
 async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAssetsConfiguration) {
-  if (!config.pkg.dependencies['expo-updates']) {
+  if (!config.pkg.dependencies['expo-updates'] || config.target === 'managed') {
     return;
   }
 
