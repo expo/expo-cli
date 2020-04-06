@@ -38,9 +38,7 @@ async function run(): Promise<void> {
     await Project.startAsync(projectDir);
     let url = `http://localhost:${PORT}`;
     console.log(`Development server running at ${url}`);
-    console.log(
-      'Run `cd ../client/ && expo start --web-only` in a new tab to develop the DevTools UI.'
-    );
+    console.log('Run `yarn dev-ui` in a new tab to develop the DevTools UI.');
   } catch (error) {
     console.error(error);
     process.exit(1);

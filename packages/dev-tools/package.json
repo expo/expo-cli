@@ -3,14 +3,14 @@
   "version": "0.10.33",
   "main": "build/server/index.js",
   "scripts": {
-    "dev": "NODE_ENV=development ts-node ./server/dev-server",
+    "dev-server": "NODE_ENV=development nodemon --watch server -e js,ts --exec \"ts-node ./server/dev-server\"",
+    "dev-ui": "cd client && expo start --web-only",
     "build": "yarn clean && yarn build-server && yarn extract-fragment-types && yarn build-client",
     "build-client": "NODE_ENV=production cd client && expo build:web && mv web-build ../build/client",
     "build-server": "NODE_ENV=production tsc",
     "extract-fragment-types": "ts-node ./server/extract-fragment-types",
     "clean": "rm -rf ./build",
     "prepare": "yarn build",
-    "start": "yarn dev",
     "test": "jest --config jest.config.js"
   },
   "files": [
@@ -40,7 +40,9 @@
     "babel-jest": "^24.9.0",
     "expo-cli": "3.17.11",
     "jest": "^24.9.0",
-    "ts-node": "^8.6.2"
+    "nodemon": "^2.0.2",
+    "ts-node": "^8.6.2",
+    "typescript": "~3.8.3"
   },
   "license": "MIT",
   "repository": {
