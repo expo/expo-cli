@@ -75,7 +75,7 @@ class Transformer extends Minipass {
 }
 
 // Binary files, don't process these (avoid decoding as utf8)
-const binaryExtensions = ['.png', '.jar'];
+const binaryExtensions = ['.png', '.jar', '.keystore'];
 
 function createFileTransform(config: AppJSONConfig | BareAppConfig) {
   return function transformFile(entry: ReadEntry) {
