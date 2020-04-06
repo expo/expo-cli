@@ -113,7 +113,7 @@ export async function updateCredentialsForPlatform(
   userCredentialsIds: Array<number>,
   metadata: CredentialMetadata
 ): Promise<void> {
-  if (process.env.EXPO_LECACY_API) {
+  if (process.env.EXPO_LEGACY_API) {
     const { err, credentials } = await Api.callMethodAsync('updateCredentials', [], 'post', {
       credentials: newCredentials,
       userCredentialsIds,
@@ -132,8 +132,8 @@ export async function updateCredentialsForPlatform(
       credentials: newCredentials,
     });
 
-    if (result.data.errors) {
-      throw new Error(`Error updating credentials: ${JSON.stringify(result.data.errors)}}`);
+    if (result.errors) {
+      throw new Error(`Error updating credentials: ${JSON.stringify(result.errors)}}`);
     }
   }
 }

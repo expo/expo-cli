@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getDefaultConfig loads default configuration 1`] = `
+Object {
+  "resolver": Object {
+    "platforms": Array [
+      "ios",
+      "android",
+      "native",
+    ],
+    "resolverMainFields": Array [
+      "react-native",
+      "browser",
+      "main",
+    ],
+  },
+  "serializer": Object {
+    "getModulesRunBeforeMainModule": [Function],
+    "getPolyfills": [Function],
+  },
+  "symbolicator": Object {
+    "customizeFrame": [Function],
+  },
+  "transformer": Object {
+    "assetPlugins": ArrayContaining [
+      StringContaining "hashAssetFiles",
+    ],
+    "assetRegistryPath": StringContaining "AssetRegistry",
+    "babelTransformerPath": StringContaining "transformer.js",
+  },
+}
+`;

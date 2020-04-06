@@ -13,6 +13,6 @@
     "strict": true,
     "target": "ES2016",
     "skipLibCheck": true,
-    "typeRoots": [ "./ts-declarations", "node_modules/@types" ]
+    "typeRoots": ["./ts-declarations", "node_modules/@types", "../../node_modules/@types"]
   }
 }

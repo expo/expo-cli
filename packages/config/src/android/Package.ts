@@ -85,9 +85,7 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
     try {
       if (fs.lstatSync(filepath).isFile()) {
         let contents = fs.readFileSync(filepath).toString();
-        while (contents.includes(currentPackageName)) {
-          contents = contents.replace(currentPackageName, newPackageName);
-        }
+        contents = contents.replace(new RegExp(currentPackageName, 'g'), newPackageName);
         fs.writeFileSync(filepath, contents);
       }
     } catch (_) {}

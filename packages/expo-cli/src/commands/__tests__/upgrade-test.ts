@@ -169,6 +169,8 @@ describe('upgradeAsync', () => {
     });
     jest.mock('@expo/package-manager', () => {
       return {
+        YarnPackageManager: jest.fn(),
+        NpmPackageManager: jest.fn(),
         createForProject() {
           return {
             addAsync: jest.fn(),
