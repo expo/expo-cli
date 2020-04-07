@@ -69,12 +69,12 @@ export async function addAsync(options: Options): Promise<void> {
   options.uri = await normalizeUriProtocolAsync(options.uri);
 
   if (options.ios) {
-    await Ios.addAsync(options);
-    logPlatformMessage('iOS', `Added URI protocol "${options.uri}" to project`);
+    if (await Ios.addAsync(options))
+      logPlatformMessage('iOS', `Added URI protocol "${options.uri}" to project`);
   }
   if (options.android) {
-    await Android.addAsync(options);
-    logPlatformMessage('Android', `Added URI protocol "${options.uri}" to project`);
+    if (await Android.addAsync(options))
+      logPlatformMessage('Android', `Added URI protocol "${options.uri}" to project`);
   }
 }
 
@@ -82,12 +82,12 @@ export async function removeAsync(options: Options): Promise<void> {
   options.uri = ensureUriString(options.uri);
 
   if (options.ios) {
-    await Ios.removeAsync(options);
-    logPlatformMessage('iOS', `Removed URI protocol "${options.uri}" from project`);
+    if (await Ios.removeAsync(options))
+      logPlatformMessage('iOS', `Removed URI protocol "${options.uri}" from project`);
   }
   if (options.android) {
-    await Android.removeAsync(options);
-    logPlatformMessage('Android', `Removed URI protocol "${options.uri}" from project`);
+    if (await Android.removeAsync(options))
+      logPlatformMessage('Android', `Removed URI protocol "${options.uri}" from project`);
   }
 }
 

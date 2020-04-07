@@ -23,7 +23,7 @@ export function isAvailable(projectRoot: string): boolean {
   return !!currentAndroid.length || !!reactNativeAndroid.length;
 }
 
-export async function addAsync({ dryRun, uri, projectRoot }: Options): Promise<void> {
+export async function addAsync({ dryRun, uri, projectRoot }: Options): Promise<boolean> {
   const manifestPath = getConfigPath(projectRoot);
   let manifest = await readConfigAsync(manifestPath);
 
@@ -34,10 +34,12 @@ export async function addAsync({ dryRun, uri, projectRoot }: Options): Promise<v
     );
   }
   if (Scheme.hasScheme(uri, manifest)) {
-    throw new CommandError(
-      `Android: URI scheme "${uri}" already exists in AndroidManifest.xml at: ${manifestPath}`,
-      'add'
+    console.log(
+      chalk.yellow(
+        `\u203A Android: URI scheme "${uri}" already exists in AndroidManifest.xml at: ${manifestPath}`
+      )
     );
+    return false;
   }
 
   manifest = Scheme.appendScheme(uri, manifest);
@@ -45,12 +47,13 @@ export async function addAsync({ dryRun, uri, projectRoot }: Options): Promise<v
   if (dryRun) {
     console.log(chalk.magenta('Write manifest to: ', manifestPath));
     console.log(formatAndroidManifest(manifest));
-    return;
+    return false;
   }
   await writeConfigAsync(manifestPath, manifest);
+  return true;
 }
 
-export async function removeAsync({ dryRun, uri, projectRoot }: Options): Promise<void> {
+export async function removeAsync({ dryRun, uri, projectRoot }: Options): Promise<boolean> {
   const manifestPath = getConfigPath(projectRoot);
   let manifest = await readConfigAsync(manifestPath);
 
@@ -61,11 +64,13 @@ export async function removeAsync({ dryRun, uri, projectRoot }: Options): Promis
     );
   }
 
-  if (Scheme.hasScheme(uri, manifest)) {
-    throw new CommandError(
-      `Android: URI scheme "${uri}" does not exist in AndroidManifest.xml at: ${manifestPath}`,
-      'remove'
+  if (!Scheme.hasScheme(uri, manifest)) {
+    console.log(
+      chalk.yellow(
+        `\u203A Android: URI scheme "${uri}" does not exist in AndroidManifest.xml at: ${manifestPath}`
+      )
     );
+    return false;
   }
 
   manifest = Scheme.removeScheme(uri, manifest);
@@ -73,9 +78,10 @@ export async function removeAsync({ dryRun, uri, projectRoot }: Options): Promis
   if (dryRun) {
     console.log(chalk.magenta('Write manifest to: ', manifestPath));
     console.log(formatAndroidManifest(manifest));
-    return;
+    return false;
   }
   await writeConfigAsync(manifestPath, manifest);
+  return true;
 }
 
 function whichADB(): string {
@@ -129,7 +135,7 @@ export async function openAsync({ projectRoot, uri }: Options): Promise<string> 
 
 export async function getAsync({ projectRoot }: Options): Promise<string[]> {
   const manifestPath = getConfigPath(projectRoot);
-  const manifest = readConfigAsync(manifestPath);
+  const manifest = await readConfigAsync(manifestPath);
   return await Scheme.getSchemesFromManifest(manifest);
 }
 

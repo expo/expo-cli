@@ -7,7 +7,7 @@ import fs from 'fs';
 import { sync } from 'glob';
 import path from 'path';
 
-import { CommandError, Options } from './Options';
+import { Options } from './Options';
 
 export function isAvailable(projectRoot: string): boolean {
   const reactNativeIos = sync(path.join(projectRoot, 'ios', '*.xcodeproj'));
@@ -15,16 +15,18 @@ export function isAvailable(projectRoot: string): boolean {
   return !!currentIos.length || !!reactNativeIos.length;
 }
 
-export async function addAsync({ uri, projectRoot, dryRun }: Options): Promise<void> {
+export async function addAsync({ uri, projectRoot, dryRun }: Options): Promise<boolean> {
   const infoPlistPath = getConfigPath(projectRoot);
 
   let config = readConfig(infoPlistPath);
 
   if (Scheme.hasScheme(uri, config)) {
-    throw new CommandError(
-      `iOS: URI scheme "${uri}" already exists in Info.plist at: ${infoPlistPath}`,
-      'add'
+    console.log(
+      chalk.yellow(
+        `\u203A iOS: URI scheme "${uri}" already exists in Info.plist at: ${infoPlistPath}`
+      )
     );
+    return false;
   }
 
   config = Scheme.appendScheme(uri, config);
@@ -32,21 +34,24 @@ export async function addAsync({ uri, projectRoot, dryRun }: Options): Promise<v
   if (dryRun) {
     console.log(chalk.magenta('Write plist to: ', infoPlistPath));
     console.log(formatConfig(config));
-    return;
+    return false;
   }
   writeConfig(infoPlistPath, config);
+  return true;
 }
 
-export async function removeAsync({ uri, projectRoot, dryRun }: Options): Promise<void> {
+export async function removeAsync({ uri, projectRoot, dryRun }: Options): Promise<boolean> {
   const infoPlistPath = getConfigPath(projectRoot);
 
   let config = readConfig(infoPlistPath);
 
   if (!Scheme.hasScheme(uri, config)) {
-    throw new CommandError(
-      `iOS: URI scheme "${uri}" already exists in Info.plist at: ${infoPlistPath}`,
-      'remove'
+    console.log(
+      chalk.yellow(
+        `\u203A iOS: URI scheme "${uri}" does not exist in Info.plist at: ${infoPlistPath}`
+      )
     );
+    return false;
   }
 
   config = Scheme.removeScheme(uri, config);
@@ -54,9 +59,10 @@ export async function removeAsync({ uri, projectRoot, dryRun }: Options): Promis
   if (dryRun) {
     console.log(chalk.magenta('Write plist to: ', infoPlistPath));
     console.log(formatConfig(config));
-    return;
+    return false;
   }
   writeConfig(infoPlistPath, config);
+  return true;
 }
 
 export async function openAsync({ uri }: Options): Promise<void> {
