@@ -1686,41 +1686,42 @@ function _isAppRegistryStartupMessage(body: any[]) {
   );
 }
 
+type ConsoleLogLevel = 'info' | 'warn' | 'error' | 'debug';
+
 function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: string, logs: any) {
   for (let i = 0; i < logs.length; i++) {
-    let log = logs[i];
+    const log = logs[i];
     let body = typeof log.body === 'string' ? [log.body] : log.body;
     let { level } = log;
 
     if (_isIgnorableBugReportingExtraData(body)) {
-      level = logger.DEBUG;
+      level = 'debug';
     }
     if (_isAppRegistryStartupMessage(body)) {
       body = [`Running application on ${deviceName}.`];
     }
 
-    let string = body
-      .map((obj: any) => {
-        if (typeof obj === 'undefined') {
-          return 'undefined';
-        }
-        if (obj === 'null') {
-          return 'null';
-        }
-        if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
-          return obj;
-        }
-        try {
-          return JSON.stringify(obj);
-        } catch (e) {
-          return obj.toString();
-        }
-      })
-      .join(' ');
-
-    ProjectUtils.logWithLevel(
-      projectRoot,
-      level,
+    const args = body.map((obj: any) => {
+      if (typeof obj === 'undefined') {
+        return 'undefined';
+      }
+      if (obj === 'null') {
+        return 'null';
+      }
+      if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
+        return obj;
+      }
+      try {
+        return JSON.stringify(obj);
+      } catch (e) {
+        return obj.toString();
+      }
+    });
+    const logLevel =
+      level === 'info' || level === 'warn' || level === 'error' || level === 'debug'
+        ? (level as ConsoleLogLevel)
+        : 'info';
+    ProjectUtils.getLogger(projectRoot)[logLevel](
       {
         tag: 'device',
         deviceId,
@@ -1729,7 +1730,7 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
         shouldHide: log.shouldHide,
         includesStack: log.includesStack,
       },
-      string
+      ...args
     );
   }
 }

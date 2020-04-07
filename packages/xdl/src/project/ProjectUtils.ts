@@ -33,6 +33,10 @@ export type LogFields = {
   _expoEventType?: 'TUNNEL_READY';
 };
 
+export function getLogger(projectRoot: string): Log {
+  return _getLogger(projectRoot);
+}
+
 export function logWithLevel(
   projectRoot: string,
   level: string,
