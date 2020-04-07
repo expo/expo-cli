@@ -5,6 +5,7 @@ import {
   ProjectTarget,
   configFilename,
   getConfig,
+  getDefaultTarget,
   readExpRcAsync,
   resolveModule,
 } from '@expo/config';
@@ -21,7 +22,6 @@ import delayAsync from 'delay-async';
 import express from 'express';
 import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
-import glob from 'glob-promise';
 import HashIds from 'hashids';
 import joi from 'joi';
 import chunk from 'lodash/chunk';
@@ -50,7 +50,6 @@ import ApiV2 from './ApiV2';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 import Config from './Config';
 import * as ExponentTools from './detach/ExponentTools';
-import StandaloneContext from './detach/StandaloneContext';
 import * as DevSession from './DevSession';
 import * as EmbeddedAssets from './EmbeddedAssets';
 import { maySkipManifestValidation } from './Env';
@@ -530,7 +529,7 @@ export async function exportForAppHosting(
   } = {}
 ): Promise<void> {
   await _validatePackagerReadyAsync(projectRoot);
-  const defaultTarget = await getDefaultTargetAsync(projectRoot);
+  const defaultTarget = getDefaultTarget(projectRoot);
   const target = options.publishOptions?.target ?? defaultTarget;
 
   // build the bundles
@@ -757,7 +756,7 @@ export async function publishAsync(
   options: PublishOptions = {}
 ): Promise<{ url: string; ids: string[]; err?: string }> {
   const user = await UserManager.ensureLoggedInAsync();
-  const target = options.target ?? (await getDefaultTargetAsync(projectRoot));
+  const target = options.target ?? getDefaultTarget(projectRoot);
   await _validatePackagerReadyAsync(projectRoot);
   Analytics.logEvent('Publish', {
     projectRoot,
