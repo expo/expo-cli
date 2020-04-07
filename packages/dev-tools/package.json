@@ -9,6 +9,7 @@
     "build-server": "NODE_ENV=production tsc",
     "extract-fragment-types": "ts-node ./server/extract-fragment-types",
     "clean": "rm -rf ./build",
+    "postinstall": "cd client && yarn",
     "prepare": "yarn build",
     "test": "jest --config jest.config.js"
   },
