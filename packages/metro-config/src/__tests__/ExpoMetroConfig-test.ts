@@ -23,16 +23,10 @@ describe('getDefaultConfig', () => {
 
   it('complains about an invalid target setting', () => {
     process.env.EXPO_TARGET = 'bare';
-    // @ts-ignore incorrect `target` value passed on purpose
-    expect(() => getDefaultConfig(projectRoot, { target: 'blooper' }))
-      .toThrowErrorMatchingInlineSnapshot(`
-      "Invalid target: 'blooper'. Debug info: 
-      {
-        \\"options.target\\": \\"blooper\\",
-        \\"EXPO_TARGET\\": \\"bare\\",
-        \\"default\\": \\"managed\\"
-      }"
-    `);
+    expect(() =>
+      // @ts-ignore incorrect `target` value passed on purpose
+      getDefaultConfig(projectRoot, { target: 'blooper' })
+    ).toThrowErrorMatchingSnapshot();
   });
 });
 
