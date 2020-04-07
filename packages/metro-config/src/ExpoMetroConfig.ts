@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { ProjectTarget, getConfig, getDefaultTargetAsync, resolveModule } from '@expo/config';
+import { ProjectTarget, getConfig, getDefaultTarget, resolveModule } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import { Reporter } from 'metro';
 import { ConfigT, InputConfigT, loadConfig } from 'metro-config';
@@ -29,7 +29,20 @@ export function getDefaultConfig(
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const reactNativePath = resolveModule('react-native', projectRoot, exp);
 
-  const target = options.target ?? getDefaultTargetAsync(projectRoot);
+  const target = options.target ?? process.env.EXPO_TARGET ?? getDefaultTarget(projectRoot);
+  if (!(target === 'managed' || target === 'bare')) {
+    throw new Error(
+      `Invalid target: '${target}'. Debug info: \n${JSON.stringify(
+        {
+          'options.target': options.target,
+          EXPO_TARGET: process.env.EXPO_TARGET,
+          default: getDefaultTarget(projectRoot),
+        },
+        null,
+        2
+      )}`
+    );
+  }
   const sourceExtsConfig = { isTS: true, isReact: true, isModern: false };
   const sourceExts =
     target === 'bare'

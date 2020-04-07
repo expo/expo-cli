@@ -311,16 +311,16 @@ export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webN
   };
 }
 
-export async function getDefaultTargetAsync(projectRoot: string): Promise<ProjectTarget> {
+export function getDefaultTarget(projectRoot: string): ProjectTarget {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   // before SDK 37, always default to managed to preserve previous behavior
   if (exp.sdkVersion && exp.sdkVersion !== 'UNVERSIONED' && semver.lt(exp.sdkVersion, '37.0.0')) {
     return 'managed';
   }
-  return (await isBareWorkflowProjectAsync(projectRoot)) ? 'bare' : 'managed';
+  return isBareWorkflowProject(projectRoot) ? 'bare' : 'managed';
 }
 
-async function isBareWorkflowProjectAsync(projectRoot: string): Promise<boolean> {
+function isBareWorkflowProject(projectRoot: string): boolean {
   const { pkg } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
@@ -329,13 +329,13 @@ async function isBareWorkflowProjectAsync(projectRoot: string): Promise<boolean>
   }
 
   if (fs.existsSync(path.resolve(projectRoot, 'ios'))) {
-    const xcodeprojFiles = await globby([path.join(projectRoot, 'ios', '/**/*.xcodeproj')]);
+    const xcodeprojFiles = globby.sync([path.join(projectRoot, 'ios', '/**/*.xcodeproj')]);
     if (xcodeprojFiles.length) {
       return true;
     }
   }
   if (fs.existsSync(path.resolve(projectRoot, 'android'))) {
-    const gradleFiles = await globby([path.join(projectRoot, 'android', '/**/*.gradle')]);
+    const gradleFiles = globby.sync([path.join(projectRoot, 'android', '/**/*.gradle')]);
     if (gradleFiles.length) {
       return true;
     }

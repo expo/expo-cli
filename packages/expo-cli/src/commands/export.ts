@@ -5,7 +5,7 @@ import validator from 'validator';
 import path from 'path';
 import targz from 'targz';
 import { Project, ProjectSettings, UrlUtils } from '@expo/xdl';
-import { ProjectTarget, getDefaultTargetAsync } from '@expo/config';
+import { ProjectTarget, getDefaultTarget } from '@expo/config';
 import { Command } from 'commander';
 
 import log from '../log';
@@ -45,7 +45,7 @@ export async function action(projectDir: string, options: Options) {
     console.warn(`Dev Mode: publicUrl ${options.publicUrl} does not conform to HTTP format.`);
   }
 
-  const target = options.target ?? (await getDefaultTargetAsync(projectDir));
+  const target = options.target ?? getDefaultTarget(projectDir);
 
   const status = await Project.currentStatus(projectDir);
   let shouldStartOurOwn = false;

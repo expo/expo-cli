@@ -13,14 +13,26 @@ describe('getDefaultConfig', () => {
     },
   };
 
-  it('loads default configuration', async () => {
-    expect(await getDefaultConfig(projectRoot)).toMatchSnapshot(propertyMatchers);
+  it('loads default configuration', () => {
+    expect(getDefaultConfig(projectRoot)).toMatchSnapshot(propertyMatchers);
   });
 
-  it('loads default configuration for bare apps', async () => {
-    expect(await getDefaultConfig(projectRoot, { target: 'bare' })).toMatchSnapshot(
-      propertyMatchers
-    );
+  it('loads default configuration for bare apps', () => {
+    expect(getDefaultConfig(projectRoot, { target: 'bare' })).toMatchSnapshot(propertyMatchers);
+  });
+
+  it('complains about an invalid target setting', () => {
+    process.env.EXPO_TARGET = 'bare';
+    // @ts-ignore incorrect `target` value passed on purpose
+    expect(() => getDefaultConfig(projectRoot, { target: 'blooper' }))
+      .toThrowErrorMatchingInlineSnapshot(`
+      "Invalid target: 'blooper'. Debug info: 
+      {
+        \\"options.target\\": \\"blooper\\",
+        \\"EXPO_TARGET\\": \\"bare\\",
+        \\"default\\": \\"managed\\"
+      }"
+    `);
   });
 });
 
