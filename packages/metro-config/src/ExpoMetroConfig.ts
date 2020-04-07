@@ -1,6 +1,7 @@
 import path from 'path';
 
-import { getConfig, resolveModule } from '@expo/config';
+import { ProjectTarget, getConfig, getDefaultTarget, resolveModule } from '@expo/config';
+import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import { Reporter } from 'metro';
 import { ConfigT, InputConfigT, loadConfig } from 'metro-config';
 
@@ -17,14 +18,42 @@ const INTERNAL_CALLSITES_REGEX = new RegExp(
   ].join('|')
 );
 
-export function getDefaultConfig(projectRoot: string): InputConfigT {
+export interface DefaultConfigOptions {
+  target?: ProjectTarget;
+}
+
+export function getDefaultConfig(
+  projectRoot: string,
+  options: DefaultConfigOptions = {}
+): InputConfigT {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const reactNativePath = resolveModule('react-native', projectRoot, exp);
+
+  const target = options.target ?? process.env.EXPO_TARGET ?? getDefaultTarget(projectRoot);
+  if (!(target === 'managed' || target === 'bare')) {
+    throw new Error(
+      `Invalid target: '${target}'. Debug info: \n${JSON.stringify(
+        {
+          'options.target': options.target,
+          EXPO_TARGET: process.env.EXPO_TARGET,
+          default: getDefaultTarget(projectRoot),
+        },
+        null,
+        2
+      )}`
+    );
+  }
+  const sourceExtsConfig = { isTS: true, isReact: true, isModern: false };
+  const sourceExts =
+    target === 'bare'
+      ? getBareExtensions([], sourceExtsConfig)
+      : getManagedExtensions([], sourceExtsConfig);
 
   return {
     resolver: {
       resolverMainFields: ['react-native', 'browser', 'main'],
       platforms: ['ios', 'android', 'native'],
+      sourceExts,
     },
     serializer: {
       getModulesRunBeforeMainModule: () => [
@@ -54,17 +83,16 @@ export interface LoadOptions {
   port?: number;
   reporter?: Reporter;
   resetCache?: boolean;
-  // TODO(ville): make this a part of the default config?
-  sourceExts?: string[];
+  target?: ProjectTarget;
 }
 
 export async function loadAsync(
   projectRoot: string,
-  { reporter, ...options }: LoadOptions = {}
+  { reporter, target, ...metroOptions }: LoadOptions = {}
 ): Promise<ConfigT> {
-  let defaultConfig = getDefaultConfig(projectRoot);
+  let defaultConfig = getDefaultConfig(projectRoot, { target });
   if (reporter) {
     defaultConfig = { ...defaultConfig, reporter };
   }
-  return await loadConfig({ cwd: projectRoot, projectRoot, ...options }, defaultConfig);
+  return await loadConfig({ cwd: projectRoot, projectRoot, ...metroOptions }, defaultConfig);
 }

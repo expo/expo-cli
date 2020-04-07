@@ -2,8 +2,10 @@ import {
   ExpoConfig,
   PackageJSONConfig,
   Platform,
+  ProjectTarget,
   configFilename,
   getConfig,
+  getDefaultTarget,
   readExpRcAsync,
   resolveModule,
 } from '@expo/config';
@@ -20,7 +22,6 @@ import delayAsync from 'delay-async';
 import express from 'express';
 import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
-import glob from 'glob-promise';
 import HashIds from 'hashids';
 import joi from 'joi';
 import chunk from 'lodash/chunk';
@@ -49,7 +50,6 @@ import ApiV2 from './ApiV2';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 import Config from './Config';
 import * as ExponentTools from './detach/ExponentTools';
-import StandaloneContext from './detach/StandaloneContext';
 import * as DevSession from './DevSession';
 import * as EmbeddedAssets from './EmbeddedAssets';
 import { maySkipManifestValidation } from './Env';
@@ -187,41 +187,6 @@ export async function currentStatus(projectDir: string): Promise<ProjectStatus> 
   } else {
     return 'exited';
   }
-}
-
-export type ProjectTarget = 'managed' | 'bare';
-
-export async function getDefaultTargetAsync(projectDir: string): Promise<ProjectTarget> {
-  const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
-  // before SDK 37, always default to managed to preserve previous behavior
-  if (exp.sdkVersion && exp.sdkVersion !== 'UNVERSIONED' && semver.lt(exp.sdkVersion, '37.0.0')) {
-    return 'managed';
-  }
-  return (await isBareWorkflowProjectAsync(projectDir)) ? 'bare' : 'managed';
-}
-
-export async function isBareWorkflowProjectAsync(projectDir: string): Promise<boolean> {
-  const { pkg } = getConfig(projectDir, {
-    skipSDKVersionRequirement: true,
-  });
-  if (pkg.dependencies && pkg.dependencies.expokit) {
-    return false;
-  }
-
-  if (fs.existsSync(path.resolve(projectDir, 'ios'))) {
-    const xcodeprojFiles = await glob(path.join(projectDir, 'ios', '/**/*.xcodeproj'));
-    if (xcodeprojFiles && xcodeprojFiles.length) {
-      return true;
-    }
-  }
-  if (fs.existsSync(path.resolve(projectDir, 'android'))) {
-    const gradleFiles = await glob(path.join(projectDir, 'android', '/**/*.gradle'));
-    if (gradleFiles && gradleFiles.length) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 // DECPRECATED: use UrlUtils.constructManifestUrlAsync
@@ -564,7 +529,7 @@ export async function exportForAppHosting(
   } = {}
 ): Promise<void> {
   await _validatePackagerReadyAsync(projectRoot);
-  const defaultTarget = await getDefaultTargetAsync(projectRoot);
+  const defaultTarget = getDefaultTarget(projectRoot);
   const target = options.publishOptions?.target ?? defaultTarget;
 
   // build the bundles
@@ -791,7 +756,7 @@ export async function publishAsync(
   options: PublishOptions = {}
 ): Promise<{ url: string; ids: string[]; err?: string }> {
   const user = await UserManager.ensureLoggedInAsync();
-  const target = options.target ?? (await getDefaultTargetAsync(projectRoot));
+  const target = options.target ?? getDefaultTarget(projectRoot);
   await _validatePackagerReadyAsync(projectRoot);
   Analytics.logEvent('Publish', {
     projectRoot,
@@ -2369,6 +2334,12 @@ export async function startAsync(
     projectRoot,
     developerTool: Config.developerTool,
   });
+
+  if (options.target) {
+    // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
+    // called from metro.config.js and the --target option is used to override the default target.
+    process.env.EXPO_TARGET = options.target;
+  }
 
   let { exp } = getConfig(projectRoot);
   if (options.webOnly) {
