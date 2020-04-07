@@ -1,14 +1,11 @@
-import fs from 'fs-extra';
-import { dirname, resolve } from 'path';
+import { resolve } from 'path';
 
 import { format, readAndroidManifestAsync } from '../Manifest';
 import {
   ensurePermission,
-  ensurePermissionNameFormat,
   ensurePermissions,
   getAndroidPermissions,
   getPermissions,
-  persistAndroidPermissionsAsync,
   removePermissions,
   requiredPermissions,
   setAndroidPermissions,
@@ -111,38 +108,5 @@ describe('Permissions', () => {
     expect(getPermissions(manifest).length).toBe(3);
 
     expect(format(manifest)).toMatchSnapshot();
-  });
-
-  describe('E2E', () => {
-    beforeEach(async () => {
-      await fs.remove(resolve(fixturesPath, 'android'));
-    });
-    afterAll(async () => {
-      await fs.remove(resolve(fixturesPath, 'android'));
-    });
-
-    const appManifestPath = resolve(fixturesPath, 'android/app/src/main/AndroidManifest.xml');
-
-    it(`replaces and persists permissions`, async () => {
-      await fs.ensureDir(dirname(appManifestPath));
-      await fs.copyFile(sampleManifestPath, appManifestPath);
-
-      const permissionsToPersist = [
-        'CAMERA',
-        'android.permission.WRITE_CALENDAR',
-        'com.anddoes.launcher.permission.UPDATE_COUNT',
-        'com.sonyericsson.home.permission.BROADCAST_BADGE',
-      ];
-      expect(await persistAndroidPermissionsAsync(fixturesPath, permissionsToPersist)).toBe(true);
-
-      const manifest = await readAndroidManifestAsync(appManifestPath);
-      expect(getPermissions(manifest)).toStrictEqual(
-        permissionsToPersist.map(ensurePermissionNameFormat)
-      );
-    });
-
-    it(`returns false when the native project cannot be found`, async () => {
-      expect(await persistAndroidPermissionsAsync(fixturesPath, [])).toBe(false);
-    });
   });
 });
