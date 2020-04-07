@@ -25,7 +25,7 @@ export function isAvailable(projectRoot: string): boolean {
 
 export async function addAsync({ dryRun, uri, projectRoot }: Options): Promise<void> {
   const manifestPath = getConfigPath(projectRoot);
-  let manifest = readConfigAsync(manifestPath);
+  let manifest = await readConfigAsync(manifestPath);
 
   if (!Scheme.ensureManifestHasValidIntentFilter(manifest)) {
     throw new CommandError(
@@ -52,7 +52,7 @@ export async function addAsync({ dryRun, uri, projectRoot }: Options): Promise<v
 
 export async function removeAsync({ dryRun, uri, projectRoot }: Options): Promise<void> {
   const manifestPath = getConfigPath(projectRoot);
-  let manifest = readConfigAsync(manifestPath);
+  let manifest = await readConfigAsync(manifestPath);
 
   if (!Scheme.ensureManifestHasValidIntentFilter(manifest)) {
     throw new CommandError(
