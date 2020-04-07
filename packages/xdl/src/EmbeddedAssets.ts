@@ -1,7 +1,6 @@
-import { ExpoConfig, PackageJSONConfig } from '@expo/config';
+import { ExpoConfig, PackageJSONConfig, ProjectTarget } from '@expo/config';
 import fs from 'fs-extra';
 import path from 'path';
-import { ProjectTarget } from './Project';
 
 import * as ExponentTools from './detach/ExponentTools';
 import * as IosPlist from './detach/IosPlist';
