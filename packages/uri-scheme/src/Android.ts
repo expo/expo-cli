@@ -98,12 +98,12 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
     let result = await spawnAsync(adb, args);
     return result.stdout;
   } catch (e) {
-    const err = e.stderr || e.stdout;
-    let errorMessage = err?.trim();
+    const err: string = e.stderr || e.stdout || '';
+    let errorMessage = err.trim();
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
-    throw new Error(errorMessage);
+    throw new CommandError(errorMessage);
   }
 }
 
@@ -118,7 +118,7 @@ async function openUrlAsync(...props: (string | null)[]): Promise<string> {
     ...(props.filter(Boolean) as string[]),
   ]);
   if (output.includes(CANT_START_ACTIVITY_ERROR)) {
-    throw new Error(output.substring(output.indexOf('Error: ')));
+    throw new CommandError(output.substring(output.indexOf('Error: ')));
   }
 
   return output;
@@ -146,7 +146,7 @@ export async function getProjectIdAsync({ projectRoot }: Options): Promise<strin
   const manifest = await readConfigAsync(manifestPath);
   const androidPackage = await getPackageAsync(manifest);
   if (!androidPackage)
-    throw new Error(
+    throw new CommandError(
       `Android: Failed to resolve android package for Manifest at path: ${manifestPath}`
     );
   return androidPackage;
