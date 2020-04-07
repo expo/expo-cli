@@ -64,11 +64,15 @@ export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): 
   return formatted.trim();
 }
 
+export function formatAndroidManifest(manifest: any): string {
+  return new Builder().buildObject(manifest);
+}
+
 export async function writeAndroidManifestAsync(
   manifestPath: string,
   manifest: any
 ): Promise<void> {
-  const manifestXml = new Builder().buildObject(manifest);
+  const manifestXml = formatAndroidManifest(manifest);
   await fs.ensureDir(path.dirname(manifestPath));
   await fs.writeFile(manifestPath, manifestXml);
 }

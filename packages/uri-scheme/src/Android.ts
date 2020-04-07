@@ -1,10 +1,16 @@
-import { getSchemesAsync, modifySchemesAsync } from '@expo/config/build/android/Schemes';
-import { getPackageAsync } from '@expo/config/build/android/Manifest';
+import {
+  formatAndroidManifest,
+  getPackageAsync,
+  readAndroidManifestAsync,
+  writeAndroidManifestAsync,
+} from '@expo/config/build/android/Manifest';
+import * as Scheme from '@expo/config/build/android/Scheme';
 import spawnAsync from '@expo/spawn-async';
+import chalk from 'chalk';
 import { sync } from 'glob';
 import path from 'path';
 
-import { Options } from './Options';
+import { CommandError, Options } from './Options';
 
 const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
@@ -19,12 +25,57 @@ export function isAvailable(projectRoot: string): boolean {
 
 export async function addAsync({ dryRun, uri, projectRoot }: Options): Promise<void> {
   const manifestPath = getConfigPath(projectRoot);
-  await modifySchemesAsync({ manifestPath }, { uri }, { operation: 'add', dryRun });
+  let manifest = readConfigAsync(manifestPath);
+
+  if (!Scheme.ensureManifestHasValidIntentFilter(manifest)) {
+    throw new CommandError(
+      `Cannot add scheme "${uri}" because the provided manifest does not have a valid Activity with \`android:launchMode="singleTask"\``,
+      'add'
+    );
+  }
+  if (Scheme.hasScheme(uri, manifest)) {
+    throw new CommandError(
+      `Android: URI scheme "${uri}" already exists in AndroidManifest.xml at: ${manifestPath}`,
+      'add'
+    );
+  }
+
+  manifest = Scheme.appendScheme(uri, manifest);
+
+  if (dryRun) {
+    console.log(chalk.magenta('Write manifest to: ', manifestPath));
+    console.log(formatAndroidManifest(manifest));
+    return;
+  }
+  await writeConfigAsync(manifestPath, manifest);
 }
 
 export async function removeAsync({ dryRun, uri, projectRoot }: Options): Promise<void> {
   const manifestPath = getConfigPath(projectRoot);
-  await modifySchemesAsync({ manifestPath }, { uri }, { operation: 'remove', dryRun });
+  let manifest = readConfigAsync(manifestPath);
+
+  if (!Scheme.ensureManifestHasValidIntentFilter(manifest)) {
+    throw new CommandError(
+      `Cannot remove scheme "${uri}" because the provided manifest does not have a valid Activity with \`android:launchMode="singleTask"\``,
+      'remove'
+    );
+  }
+
+  if (Scheme.hasScheme(uri, manifest)) {
+    throw new CommandError(
+      `Android: URI scheme "${uri}" does not exist in AndroidManifest.xml at: ${manifestPath}`,
+      'remove'
+    );
+  }
+
+  manifest = Scheme.removeScheme(uri, manifest);
+
+  if (dryRun) {
+    console.log(chalk.magenta('Write manifest to: ', manifestPath));
+    console.log(formatAndroidManifest(manifest));
+    return;
+  }
+  await writeConfigAsync(manifestPath, manifest);
 }
 
 function whichADB(): string {
@@ -78,7 +129,8 @@ export async function openAsync({ projectRoot, uri }: Options): Promise<string> 
 
 export async function getAsync({ projectRoot }: Options): Promise<string[]> {
   const manifestPath = getConfigPath(projectRoot);
-  return await getSchemesAsync({ manifestPath });
+  const manifest = readConfigAsync(manifestPath);
+  return await Scheme.getSchemesFromManifest(manifest);
 }
 
 export async function getProjectIdAsync({ projectRoot }: Options): Promise<string> {
@@ -98,4 +150,13 @@ export function getConfigPath(projectRoot: string): string {
   }
   const manifestPaths = sync(path.join(projectRoot, 'app/src/main/AndroidManifest.xml'));
   return manifestPaths[0];
+}
+
+async function readConfigAsync(path: string): Promise<any> {
+  let androidManifestJSON = await readAndroidManifestAsync(path);
+  return androidManifestJSON;
+}
+
+async function writeConfigAsync(path: string, result: any) {
+  await writeAndroidManifestAsync(path, result);
 }
