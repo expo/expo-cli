@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 
-import { formatAndroidManifest, readAndroidManifestAsync } from '../Manifest';
+import { readAndroidManifestAsync } from '../Manifest';
 import {
   appendScheme,
   ensureManifestHasValidIntentFilter,
