@@ -64,15 +64,11 @@ export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): 
   return formatted.trim();
 }
 
-export function formatAndroidManifest(manifest: any): string {
-  return new Builder().buildObject(manifest);
-}
-
 export async function writeAndroidManifestAsync(
   manifestPath: string,
   manifest: any
 ): Promise<void> {
-  const manifestXml = formatAndroidManifest(manifest);
+  const manifestXml = format(manifest);
   await fs.ensureDir(path.dirname(manifestPath));
   await fs.writeFile(manifestPath, manifestXml);
 }
@@ -92,16 +88,6 @@ export async function getProjectAndroidManifestPathAsync(
 
   return null;
 }
-export async function getAndroidManifestPathAsync(projectDir: string): Promise<string | null> {
-  try {
-    const manifestPath = path.join(projectDir, 'app/src/main/AndroidManifest.xml');
-    if ((await fs.stat(manifestPath)).isFile()) {
-      return manifestPath;
-    }
-  } catch (error) {}
-
-  return null;
-}
 
 export async function readAndroidManifestAsync(manifestPath: string): Promise<Document> {
   const contents = await fs.readFile(manifestPath, { encoding: 'utf8', flag: 'r' });
@@ -110,26 +96,6 @@ export async function readAndroidManifestAsync(manifestPath: string): Promise<Do
   return manifest;
 }
 
-export async function resolveInputOptionsAsync(options: InputOptions): Promise<Document> {
-  if (options.manifest) return options.manifest;
-  if (options.manifestPath) return await readAndroidManifestAsync(options.manifestPath);
-  if (options.projectRoot) {
-    const manifestPath = await getAndroidManifestPathAsync(options.projectRoot);
-    return resolveInputOptionsAsync({ manifestPath });
-  }
-  throw new Error('Cannot resolve a valid AndroidManifest.xml');
-}
-
-export async function resolveOutputOptionsAsync(options: InputOptions): Promise<string> {
-  if (options.manifestPath) return options.manifestPath;
-  if (options.projectRoot) {
-    const manifestPath = await getAndroidManifestPathAsync(options.projectRoot);
-    return resolveOutputOptionsAsync({ manifestPath });
-  }
-  throw new Error('Cannot resolve an output for writing AndroidManifest.xml');
-}
-
-export async function getPackageAsync(options: InputOptions): Promise<string | null> {
-  const manifest = await resolveInputOptionsAsync(options);
+export async function getPackageAsync(manifest: Document): Promise<string | null> {
   return manifest.manifest?.['$']?.package ?? null;
 }

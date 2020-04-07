@@ -1,5 +1,5 @@
 import {
-  formatAndroidManifest,
+  format,
   getPackageAsync,
   readAndroidManifestAsync,
   writeAndroidManifestAsync,
@@ -46,7 +46,7 @@ export async function addAsync({ dryRun, uri, projectRoot }: Options): Promise<b
 
   if (dryRun) {
     console.log(chalk.magenta('Write manifest to: ', manifestPath));
-    console.log(formatAndroidManifest(manifest));
+    console.log(format(manifest));
     return false;
   }
   await writeConfigAsync(manifestPath, manifest);
@@ -77,7 +77,7 @@ export async function removeAsync({ dryRun, uri, projectRoot }: Options): Promis
 
   if (dryRun) {
     console.log(chalk.magenta('Write manifest to: ', manifestPath));
-    console.log(formatAndroidManifest(manifest));
+    console.log(format(manifest));
     return false;
   }
   await writeConfigAsync(manifestPath, manifest);
@@ -126,9 +126,11 @@ async function openUrlAsync(...props: (string | null)[]): Promise<string> {
 
 export async function openAsync({ projectRoot, uri }: Options): Promise<string> {
   const manifestPath = getConfigPath(projectRoot);
+  const manifest = await readConfigAsync(manifestPath);
+
   let androidPackage: string | null = null;
   try {
-    androidPackage = await getPackageAsync({ manifestPath });
+    androidPackage = await getPackageAsync(manifest);
   } catch {}
   return await openUrlAsync(uri, androidPackage);
 }
@@ -141,7 +143,8 @@ export async function getAsync({ projectRoot }: Options): Promise<string[]> {
 
 export async function getProjectIdAsync({ projectRoot }: Options): Promise<string> {
   const manifestPath = getConfigPath(projectRoot);
-  const androidPackage = await getPackageAsync({ manifestPath });
+  const manifest = await readConfigAsync(manifestPath);
+  const androidPackage = await getPackageAsync(manifest);
   if (!androidPackage)
     throw new Error(
       `Android: Failed to resolve android package for Manifest at path: ${manifestPath}`
