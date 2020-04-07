@@ -355,7 +355,6 @@ function runAsync(programName: string) {
     program.name(programName);
     program
       .version(packageJSON.version)
-      .option('-o, --output [format]', 'Output format. pretty (default), raw')
       .option(
         '--non-interactive',
         'Fail, if an interactive prompt would be required to continue. Enabled by default if stdin is not a TTY.'
