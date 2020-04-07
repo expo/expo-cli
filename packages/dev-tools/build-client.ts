@@ -20,7 +20,13 @@ async function run(): Promise<void> {
 
     console.log('\n', 'Moving build files from ./client/web-build to ./build/client');
 
-    fs.rmdirSync(devToolsClientDistPath, { recursive: true });
+    try {
+      fs.statSync(devToolsClientDistPath);
+      fs.rmdirSync(devToolsClientDistPath, { recursive: true });
+    } catch (e) {
+      // if statSync throws, that means that the directory doesn't exist and rmdirSync won't get run as well.
+    }
+
     fs.renameSync(devToolsClientBuildPath, devToolsClientDistPath);
 
     console.log('\n', 'Build completed successfully!', '\n');
