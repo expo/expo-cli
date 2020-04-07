@@ -1,7 +1,9 @@
 import { graphiqlExpress } from 'apollo-server-express';
-import { Project } from '@expo/xdl';
+import { Project, Webpack } from '@expo/xdl';
 import express from 'express';
 import http from 'http';
+import path from 'path';
+import { chdir } from 'process';
 
 import { createAuthenticationContextAsync, startGraphQLServer } from './DevToolsServer';
 
@@ -38,7 +40,12 @@ async function run(): Promise<void> {
     await Project.startAsync(projectDir);
     let url = `http://localhost:${PORT}`;
     console.log(`Development server running at ${url}`);
-    console.log('Run `yarn dev-ui` in a new tab to develop the DevTools UI.');
+
+    const devToolsClientPath = path.resolve(__dirname, '../client');
+
+    chdir(devToolsClientPath);
+
+    await Webpack.openAsync(devToolsClientPath);
   } catch (error) {
     console.error(error);
     process.exit(1);
