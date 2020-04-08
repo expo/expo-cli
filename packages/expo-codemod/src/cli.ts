@@ -17,6 +17,13 @@ export async function runAsync(argv: string[]) {
   const [transform, ...paths] = options._.slice(2);
   const parser = options.parser;
 
+  if (options.list) {
+    const list = await listTransformsForSdkVersionAsync(options.list);
+    console.log(list.join(', '));
+    process.exit(0);
+    return;
+  }
+
   const transforms = await listTransformsAsync();
   if (options.help || !transform || paths.length === 0) {
     console.log(`
@@ -30,6 +37,8 @@ Options:
   -h, --help                       print this help message
   -p, --parser <babel|flow|ts|tsx> parser to use to parse the source files
                                    (default: babel, ts or tsx based on the file extension)
+  -l, --list <sdkVersion>          list all available transforms for sdk versions
+                                   (e.g. 36 or 37)
 
 Transforms available:
   ${transforms.join('\n  ')}`);
@@ -122,4 +131,9 @@ async function transformAsync({
 async function listTransformsAsync() {
   const modules = await globby(['*.js'], { cwd: transformDir });
   return modules.map(filename => path.basename(filename, '.js'));
+}
+
+async function listTransformsForSdkVersionAsync(majorSdkVersion: string) {
+  const transforms = await listTransformsAsync();
+  return transforms.filter(name => name.startsWith(`sdk${majorSdkVersion}`));
 }

@@ -2,6 +2,7 @@ import * as ConfigUtils from '@expo/config';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Android, Project, Simulator, Versions } from '@expo/xdl';
+import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import _ from 'lodash';
@@ -14,6 +15,7 @@ import log from '../log';
 import prompt from '../prompt';
 import { findProjectRootAsync } from './utils/ProjectUtils';
 import maybeBailOnGitStatusAsync from './utils/maybeBailOnGitStatusAsync';
+import { SDKVersion } from '@expo/xdl/src/Versions';
 
 type DependencyList = Record<string, string>;
 
@@ -188,6 +190,61 @@ async function makeBreakingChangesToConfigAsync(
       `Something went wrong when attempting to update app.json configuration: ${e.message}`
     );
   }
+}
+
+async function makeChangesToCodeAsync(
+  projectRoot: string,
+  targetSdkVersion: SDKVersion,
+  targetSdkVersionString: string,
+): Promise<string[]> {
+  const step = logNewSection('Checking if your code requires additional changes...');
+  const majorSdkVersion = targetSdkVersionString.split('.')[0];
+  let transforms: string[] = [];
+
+  try {
+    const transformList = await spawnAsync('npx', ['expo-codemod', '--list', majorSdkVersion], { cwd: projectRoot });
+    const transformParsed = transformList.output[0]?.split(', ');
+
+    transforms = transformParsed
+      .filter(transform => transform.startsWith('sdk'))
+      .map(transform => transform.trim());
+  } catch (error) {
+    step.stopAndPersist({
+      symbol: '⚠️',
+      text: chalk.yellow(
+        `Please check if your ${terminalLink(
+          'code requires additional changes',
+          targetSdkVersion.releaseNoteUrl || 'https://docs.expo.io/versions/latest/workflow/upgrading-expo-sdk-walkthrough/'
+        )}`,
+      ),
+    });
+    return [];
+  }
+
+  if (transforms.length === 0) {
+    step.succeed('No additonal changes required.');
+    return [];
+  }
+
+  try {
+    for (const transform of transforms) {
+      step.start(`Applying code change: ${transform}`);
+      await spawnAsync('npx', ['expo-codemod', transform, '.'], { cwd: projectRoot });
+    }
+  } catch (error) {
+    step.stopAndPersist({
+      symbol: '⚠️',
+      text: chalk.red(
+        `Please manually update your${terminalLink(
+          'code for the required changes',
+          targetSdkVersion.releaseNoteUrl || 'https://docs.expo.io/versions/latest/workflow/upgrading-expo-sdk-walkthrough/'
+        )}`,
+      ),
+    });
+  }
+
+  step.succeed(`Updated your code with additional changes.`);
+  return transforms;
 }
 
 async function maybeBailOnUnsafeFunctionalityAsync(
@@ -543,6 +600,9 @@ export async function upgradeAsync(
     clearingCacheStep.succeed('Cleared packager cache.');
   }
 
+  // Run codemod to automatically upgrade imports from separated modules and install them if necessary
+  const transforms = await makeChangesToCodeAsync(projectRoot, targetSdkVersion, targetSdkVersionString);
+
   log.newLine();
   log(chalk.bold.green(`👏 Automated upgrade steps complete.`));
   log(chalk.bold.grey(`...but this doesn't mean everything is done yet!`));
@@ -582,6 +642,14 @@ export async function upgradeAsync(
         )} in your ios directory before re-building the iOS project.`
       )
     );
+    log.addNewLineIfNone();
+  }
+
+  // Log the applied transforms, if any
+  if (transforms.length) {
+    log.addNewLineIfNone();
+    log(chalk.bold(`🆕 The following code changes were applied:`));
+    log(chalk.grey.bold(transforms.join(', ')));
     log.addNewLineIfNone();
   }
 
