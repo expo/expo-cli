@@ -195,14 +195,16 @@ async function makeBreakingChangesToConfigAsync(
 async function makeChangesToCodeAsync(
   projectRoot: string,
   targetSdkVersion: SDKVersion,
-  targetSdkVersionString: string,
+  targetSdkVersionString: string
 ): Promise<string[]> {
   const step = logNewSection('Checking if your code requires additional changes...');
   const majorSdkVersion = targetSdkVersionString.split('.')[0];
   let transforms: string[] = [];
 
   try {
-    const transformList = await spawnAsync('npx', ['expo-codemod', '--list', majorSdkVersion], { cwd: projectRoot });
+    const transformList = await spawnAsync('npx', ['expo-codemod', '--list', majorSdkVersion], {
+      cwd: projectRoot,
+    });
     const transformParsed = transformList.output[0]?.split(', ');
 
     transforms = transformParsed
@@ -214,8 +216,9 @@ async function makeChangesToCodeAsync(
       text: chalk.yellow(
         `Please check if your ${terminalLink(
           'code requires additional changes',
-          targetSdkVersion.releaseNoteUrl || 'https://docs.expo.io/versions/latest/workflow/upgrading-expo-sdk-walkthrough/'
-        )}`,
+          targetSdkVersion.releaseNoteUrl ||
+            'https://docs.expo.io/versions/latest/workflow/upgrading-expo-sdk-walkthrough/'
+        )}`
       ),
     });
     return [];
@@ -237,10 +240,12 @@ async function makeChangesToCodeAsync(
       text: chalk.red(
         `Please manually update your${terminalLink(
           'code for the required changes',
-          targetSdkVersion.releaseNoteUrl || 'https://docs.expo.io/versions/latest/workflow/upgrading-expo-sdk-walkthrough/'
-        )}`,
+          targetSdkVersion.releaseNoteUrl ||
+            'https://docs.expo.io/versions/latest/workflow/upgrading-expo-sdk-walkthrough/'
+        )}`
       ),
     });
+    return [];
   }
 
   step.succeed(`Updated your code with additional changes.`);
@@ -601,7 +606,11 @@ export async function upgradeAsync(
   }
 
   // Run codemod to automatically upgrade imports from separated modules and install them if necessary
-  const transforms = await makeChangesToCodeAsync(projectRoot, targetSdkVersion, targetSdkVersionString);
+  const transforms = await makeChangesToCodeAsync(
+    projectRoot,
+    targetSdkVersion,
+    targetSdkVersionString
+  );
 
   log.newLine();
   log(chalk.bold.green(`👏 Automated upgrade steps complete.`));
