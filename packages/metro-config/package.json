@@ -30,7 +30,8 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/metro-config#readme",
   "files": [
-    "build"
+    "build",
+    "transformer.js"
   ],
   "dependencies": {
     "@expo/config": "3.0.7"
@@ -43,6 +44,7 @@
     "@expo/babel-preset-cli": "0.2.8",
     "@types/jest": "^25.1.4",
     "expo": "37",
+    "globby": "^11.0.0",
     "jest": "^25.2.6",
     "metro": "^0.59.0",
     "metro-config": "^0.59.0",
