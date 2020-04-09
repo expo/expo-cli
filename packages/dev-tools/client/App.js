@@ -170,7 +170,10 @@ const createSourceQuery = typename => gql`
   ${MessageFragment}
 `;
 
-const IndexPageContents = withRedux(initStore, state => state)(
+const IndexPageContents = withRedux(
+  initStore,
+  state => state
+)(
   class IndexPageContents extends React.Component {
     state = {};
 
