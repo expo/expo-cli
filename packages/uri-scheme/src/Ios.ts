@@ -71,23 +71,11 @@ export async function openAsync({ uri }: Options): Promise<void> {
   });
 }
 
-function getSchemesFromPlist(plistObject: PlistObject): string[] {
-  if (Array.isArray(plistObject.CFBundleURLTypes)) {
-    return plistObject.CFBundleURLTypes.reduce((prev, curr) => {
-      if (Array.isArray(curr.CFBundleURLSchemes)) {
-        return [...prev, ...curr.CFBundleURLSchemes];
-      }
-      return prev;
-    }, []);
-  }
-  return [];
-}
-
 export async function getAsync({ projectRoot }: Options): Promise<string[]> {
   const infoPlistPath = getConfigPath(projectRoot);
   const rawPlist = fs.readFileSync(infoPlistPath, 'utf8');
   const plistObject = plist.parse(rawPlist) as PlistObject;
-  const schemes = getSchemesFromPlist(plistObject);
+  const schemes = Scheme.getSchemesFromPlist(plistObject);
   return schemes;
 }
 
