@@ -39,12 +39,7 @@ function parseSdkMajorVersion(expSdkVersion: string) {
 function saveUrlToPathAsync(url: string, path: string) {
   return new Promise(function(resolve, reject) {
     let stream = fs.createWriteStream(path);
-    stream.on('close', () => {
-      if (_getFilesizeInBytes(path) < 10) {
-        reject(new Error(`${url} is too small`));
-      }
-      resolve();
-    });
+    stream.on('close', resolve);
     stream.on('error', reject);
     pipeRequest({ url, timeout: 20000 })
       .on('error', reject)

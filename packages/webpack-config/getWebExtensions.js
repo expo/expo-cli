@@ -1,5 +1,5 @@
-const { getManagedExtensions } = require('@expo/config/paths');
+const { getBareExtensions } = require('@expo/config/paths');
 
 module.exports = function getWebExtensions() {
-  return getManagedExtensions(['web']);
+  return getBareExtensions(['web']);
 };

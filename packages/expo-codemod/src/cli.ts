@@ -1,5 +1,6 @@
 import path from 'path';
 import parse from 'yargs-parser';
+import chalk from 'chalk';
 import globby from 'globby';
 import multimatch from 'multimatch';
 import spawnAsync from '@expo/spawn-async';
@@ -67,14 +68,26 @@ Transforms available:
     }
   }
 
-  if (transform === 'sdk33-imports') {
+  if (transform === 'sdk33-imports' || transform === 'sdk37-imports') {
     const packages = Object.keys(totalStats).sort();
     if (packages.length) {
       console.log(
-        `Added imports from ${packages.length} packages.\nTo install the correct versions of these packages you can run this expo-cli command:`
+        chalk.bold(
+          `\n🆕 Added imports from ${packages.length} packages. Installing packages with \`expo install\`...`
+        )
       );
-      console.log();
-      console.log(`expo install ${packages.join(' ')}`);
+      console.log(`> expo install ${packages.join(' ')}`);
+      try {
+        await spawnAsync('expo', ['install', ...packages], { stdio: 'inherit' });
+      } catch (error) {
+        console.error(chalk.red('\n⚠️  expo install failed.'));
+        console.log(chalk.dim(error.stack));
+        console.error(
+          chalk.red('To finish the codemod, please install the added packages manually using:')
+        );
+        console.log(chalk.bold.red(`> expo install ${packages.join(' ')}`));
+        process.exit(1);
+      }
     }
   }
 }
@@ -89,7 +102,7 @@ async function transformAsync({
   transform: string;
 }) {
   const transformFile = path.join(transformDir, `${transform}.js`);
-  if (transform === 'sdk33-imports') {
+  if (transform === 'sdk33-imports' || transform === 'sdk37-imports') {
     // Dry run to gather stats about which packages need to be installed.
     const { stats } = await Runner.run(transformFile, files, {
       dry: true,

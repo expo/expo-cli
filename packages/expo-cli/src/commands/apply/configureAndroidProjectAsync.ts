@@ -7,6 +7,16 @@ async function modifyBuildGradleAsync(
   projectRoot: string,
   callback: (buildGradle: string) => string
 ) {
+  let buildGradlePath = path.join(projectRoot, 'android', 'build.gradle');
+  let buildGradleString = fs.readFileSync(buildGradlePath).toString();
+  let result = callback(buildGradleString);
+  fs.writeFileSync(buildGradlePath, result);
+}
+
+async function modifyAppBuildGradleAsync(
+  projectRoot: string,
+  callback: (buildGradle: string) => string
+) {
   let buildGradlePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
   let buildGradleString = fs.readFileSync(buildGradlePath).toString();
   let result = callback(buildGradleString);
@@ -46,6 +56,12 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   await modifyBuildGradleAsync(projectRoot, (buildGradle: string) => {
+    buildGradle = AndroidConfig.GoogleServices.setClassPath(exp, buildGradle);
+    return buildGradle;
+  });
+
+  await modifyAppBuildGradleAsync(projectRoot, (buildGradle: string) => {
+    buildGradle = AndroidConfig.GoogleServices.applyPlugin(exp, buildGradle);
     buildGradle = AndroidConfig.Package.setPackageInBuildGradle(exp, buildGradle);
     buildGradle = AndroidConfig.Version.setVersionCode(exp, buildGradle);
     buildGradle = AndroidConfig.Version.setVersionName(exp, buildGradle);

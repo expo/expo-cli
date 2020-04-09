@@ -317,7 +317,24 @@ export async function assertDeviceReadyAsync() {
 }
 
 async function _openUrlAsync(url: string) {
-  let output = await getAdbOutputAsync([
+  // NOTE(brentvatne): temporary workaround! launch expo client first, then
+  // launch the project!
+  // https://github.com/expo/expo/issues/7772
+  // adb shell monkey -p host.exp.exponent -c android.intent.category.LAUNCHER 1
+  let openClient = await getAdbOutputAsync([
+    'shell',
+    'monkey',
+    '-p',
+    'host.exp.exponent',
+    '-c',
+    'android.intent.category.LAUNCHER',
+    '1',
+  ]);
+  if (openClient.includes(CANT_START_ACTIVITY_ERROR)) {
+    throw new Error(openClient.substring(openClient.indexOf('Error: ')));
+  }
+
+  let openProject = await getAdbOutputAsync([
     'shell',
     'am',
     'start',
@@ -326,11 +343,11 @@ async function _openUrlAsync(url: string) {
     '-d',
     url,
   ]);
-  if (output.includes(CANT_START_ACTIVITY_ERROR)) {
-    throw new Error(output.substring(output.indexOf('Error: ')));
+  if (openProject.includes(CANT_START_ACTIVITY_ERROR)) {
+    throw new Error(openProject.substring(openProject.indexOf('Error: ')));
   }
 
-  return output;
+  return openProject;
 }
 
 async function attemptToStartEmulatorOrAssertAsync() {

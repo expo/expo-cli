@@ -8,6 +8,7 @@ import _ from 'lodash';
 import semver from 'semver';
 import ora from 'ora';
 import terminalLink from 'terminal-link';
+import getenv from 'getenv';
 
 import log from '../log';
 import prompt from '../prompt';
@@ -163,6 +164,10 @@ async function makeBreakingChangesToConfigAsync(
               `Removed extraneous "androidNavigationBar.visible" property in app.json...`
             );
             delete rootConfig?.expo.androidNavigationBar?.visible;
+          } else {
+            // They had some invalid property for androidNavigationBar already...
+            step.succeed('No additional changes necessary to app.json config.');
+            return;
           }
           await ConfigUtils.writeConfigJsonAsync(projectRoot, rootConfig.expo);
         } else if (currentExp?.androidNavigationBar?.visible !== undefined) {
@@ -175,10 +180,12 @@ async function makeBreakingChangesToConfigAsync(
               )}`
             ),
           });
+        } else {
+          step.succeed('No additional changes necessary to app.json config.');
         }
         break;
       default:
-        step.succeed('No breaking changes necessary to app.json config.');
+        step.succeed('No additional changes necessary to app.json config.');
     }
   } catch (e) {
     step.fail(
@@ -252,6 +259,8 @@ async function shouldBailWhenUsingLatest(
       log.newLine();
       return true;
     }
+
+    log.newLine();
   }
 
   return false;
@@ -361,6 +370,8 @@ export async function upgradeAsync(
   // Maybe bail out early if people are trying to update to the current version
   if (await shouldBailWhenUsingLatest(currentSdkVersionString, targetSdkVersionString)) return;
 
+  const platforms = exp.platforms || [];
+
   if (
     targetSdkVersionString === latestSdkVersionString &&
     currentSdkVersionString !== targetSdkVersionString &&
@@ -395,6 +406,16 @@ export async function upgradeAsync(
       targetSdkVersionString = selectedSdkVersionString;
       log.newLine();
     }
+
+    // Check if we can, and probably should, upgrade the (ios) simulator
+    if (platforms.includes('ios')) {
+      await maybeUpgradeSimulatorAsync();
+    }
+
+    // Check if we can, and probably should, upgrade the android client
+    if (platforms.includes('android')) {
+      await maybeUpgradeEmulatorAsync();
+    }
   } else if (!targetSdkVersion) {
     if (program.nonInteractive) {
       log.warn(
@@ -416,34 +437,23 @@ export async function upgradeAsync(
     }
   }
 
-  const platforms = exp.platforms || [];
-
-  // Check if we can, and probably should, upgrade the (ios) simulator
-  if (platforms.includes('ios')) {
-    await maybeUpgradeSimulatorAsync();
-  }
-
-  // Check if we can, and probably should, upgrade the android client
-  if (platforms.includes('android')) {
-    await maybeUpgradeEmulatorAsync();
-  }
-
   let packageManager = PackageManager.createForProject(projectRoot, {
     npm: options.npm,
     yarn: options.yarn,
     log,
-    silent: true,
+    silent: getenv.boolish('EXPO_DEBUG', true),
   });
 
   log.addNewLineIfNone();
-  let installingPackageStep = logNewSection('Installing the expo package...');
+  const expoPackageToInstall = `expo@^${targetSdkVersionString}`;
+  let installingPackageStep = logNewSection(`Installing the ${expoPackageToInstall} package...`);
   log.addNewLineIfNone();
   try {
-    await packageManager.addAsync(`expo@^${targetSdkVersionString}`);
+    await packageManager.addAsync(expoPackageToInstall);
   } catch (e) {
     installingPackageStep.fail(`Failed to install expo package with error: ${e.message}`);
   } finally {
-    installingPackageStep.succeed(`Installed expo@^${targetSdkVersionString}.`);
+    installingPackageStep.succeed(`Installed ${expoPackageToInstall}`);
   }
 
   // Remove sdkVersion from app.json
@@ -495,25 +505,45 @@ export async function upgradeAsync(
 
   // Install dev dependencies
   if (devDependenciesAsStringArray.length) {
-    await packageManager.addDevAsync(...devDependenciesAsStringArray);
+    try {
+      await packageManager.addDevAsync(...devDependenciesAsStringArray);
+    } catch (e) {
+      updatingPackagesStep.fail(
+        `Failed to upgrade JavaScript devDependencies: ${devDependenciesAsStringArray.join(' ')}`
+      );
+    }
   }
 
   // Install dependencies
   if (dependenciesAsStringArray.length) {
-    await packageManager.addAsync(...dependenciesAsStringArray);
+    try {
+      await packageManager.addAsync(...dependenciesAsStringArray);
+    } catch (e) {
+      updatingPackagesStep.fail(
+        `Failed to upgrade JavaScript dependencies: ${dependenciesAsStringArray.join(' ')}`
+      );
+    }
   }
 
   updatingPackagesStep.succeed('Updated known packages to compatible versions.');
 
-  // Clear metro bundler cache
-  log.addNewLineIfNone();
+  // Remove package-lock.json and node_modules if using npm instead of yarn. See the function
+  // for more information on why.
+  await maybeCleanNpmStateAsync(packageManager);
+
   let clearingCacheStep = logNewSection('Clearing the packager cache.');
   try {
     await Project.startReactNativeServerAsync(projectRoot, { reset: true, nonPersistent: true });
-    await Project.stopReactNativeServerAsync(projectRoot);
   } catch (e) {
     clearingCacheStep.fail(`Failed to clear packager cache with error: ${e.message}`);
   } finally {
+    try {
+      // Ensure that we at least attempt to stop the server even if it failed to clear the cache
+      // It was pointed out to me that "Connecting to Metro bundler failed." could occur which would lead
+      // to the upgrade command not exiting upon completion because, I believe, the server remained open.
+      await Project.stopReactNativeServerAsync(projectRoot);
+    } catch {}
+
     clearingCacheStep.succeed('Cleared packager cache.');
   }
 
@@ -597,8 +627,46 @@ export async function upgradeAsync(
       });
     }
   }
+}
 
-  log.addNewLineIfNone();
+async function maybeCleanNpmStateAsync(packageManager: any) {
+  // We don't trust npm to properly handle deduping dependencies so we need to
+  // clear the lockfile and node_modules.
+  // https://forums.expo.io/t/sdk-37-unrecognized-font-family/35201
+  // https://twitter.com/geoffreynyaga/status/1246170581109743617
+  if (packageManager instanceof PackageManager.NpmPackageManager) {
+    let cleaningNpmStateStep = logNewSection(
+      'Removing package-lock.json and deleting node_modules.'
+    );
+
+    let shouldInstallNodeModules = true;
+    try {
+      await packageManager.removeLockfileAsync();
+      await packageManager.cleanAsync();
+      cleaningNpmStateStep.succeed('Removed package-lock.json and deleted node_modules.');
+    } catch {
+      shouldInstallNodeModules = false;
+      cleaningNpmStateStep.fail(
+        'Unable to remove package-lock.json and delete node_modules. We recommend doing this to ensure that the upgrade goes smoothly when using npm instead of yarn.'
+      );
+    }
+
+    if (shouldInstallNodeModules) {
+      let reinstallingNodeModulesStep = logNewSection(
+        'Installing node_modules and rebuilding package-lock.json.'
+      );
+      try {
+        await packageManager.installAsync();
+        reinstallingNodeModulesStep.succeed(
+          'Installed node_modules and rebuilt package-lock.json.'
+        );
+      } catch {
+        reinstallingNodeModulesStep.fail(
+          'Running npm install failed. Please check npm-error.log for more information.'
+        );
+      }
+    }
+  }
 }
 
 export default function(program: Command) {

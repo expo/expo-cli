@@ -936,6 +936,8 @@ export type ExpoConfig = {
 };
 export type ExpRc = { [key: string]: any };
 export type Platform = 'android' | 'ios' | 'web';
+export type ProjectTarget = 'managed' | 'bare';
+
 export type ConfigErrorCode =
   | 'NO_APP_JSON'
   | 'NOT_OBJECT'

@@ -1,9 +1,4 @@
-import {
-  createForProject,
-  getModulesPath,
-  getPossibleProjectRoot,
-  isUsingYarn,
-} from '../PackageManager';
+import { createForProject, getModulesPath, getPossibleProjectRoot, isUsingYarn } from '../index';
 
 describe('createForProject', () => {
   const projectRoot = '/foo/';

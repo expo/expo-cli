@@ -18,6 +18,8 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Changed
 
+- added `expo-notifications`, `expo-image` and `expo-splash-screen` to the list of unimodules excluded when generating a `Podfile` for shell apps
+
 ### Removed
 
 - `ProjectUtils.readConfigJsonAsync` from `xdl` in favor of `readConfigJsonAsync` from `@expo/config`
