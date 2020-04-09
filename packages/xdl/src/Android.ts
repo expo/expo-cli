@@ -309,7 +309,7 @@ export async function upgradeExpoAsync(url?: string): Promise<boolean> {
 export async function assertDeviceReadyAsync() {
   const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
 
-  if (!(await _isDeviceAuthorizedAsync())) {
+  if (!await _isDeviceAuthorizedAsync()) {
     throw new Error(
       `This computer is not authorized to debug the device. Please follow the instructions here to enable USB debugging:\n${genymotionMessage}`
     );
@@ -317,7 +317,24 @@ export async function assertDeviceReadyAsync() {
 }
 
 async function _openUrlAsync(url: string) {
-  let output = await getAdbOutputAsync([
+  // NOTE(brentvatne): temporary workaround! launch expo client first, then
+  // launch the project!
+  // https://github.com/expo/expo/issues/7772
+  // adb shell monkey -p host.exp.exponent -c android.intent.category.LAUNCHER 1
+  let openClient = await getAdbOutputAsync([
+    'shell',
+    'monkey',
+    '-p',
+    'host.exp.exponent',
+    '-c',
+    'android.intent.category.LAUNCHER',
+    '1',
+  ]);
+  if (openClient.includes(CANT_START_ACTIVITY_ERROR)) {
+    throw new Error(openClient.substring(openClient.indexOf('Error: ')));
+  }
+
+  let openProject = await getAdbOutputAsync([
     'shell',
     'am',
     'start',
@@ -326,17 +343,17 @@ async function _openUrlAsync(url: string) {
     '-d',
     url,
   ]);
-  if (output.includes(CANT_START_ACTIVITY_ERROR)) {
-    throw new Error(output.substring(output.indexOf('Error: ')));
+  if (openProject.includes(CANT_START_ACTIVITY_ERROR)) {
+    throw new Error(openProject.substring(openProject.indexOf('Error: ')));
   }
 
-  return output;
+  return openProject;
 }
 
 async function attemptToStartEmulatorOrAssertAsync() {
-  if (!(await _isDeviceAttachedAsync())) {
+  if (!await _isDeviceAttachedAsync()) {
     // If no devices or emulators are attached we should attempt to open one.
-    if (!(await maybeStartAnyEmulatorAsync())) {
+    if (!await maybeStartAnyEmulatorAsync()) {
       const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
       throw new Error(
         `No Android connected device found, and no emulators could be started automatically.\nPlease connect a device or create an emulator (https://docs.expo.io/versions/latest/workflow/android-studio-emulator).\nThen follow the instructions here to enable USB debugging:\n${genymotionMessage}`
@@ -351,7 +368,7 @@ async function openUrlAsync(url: string, isDetached: boolean = false): Promise<v
     await attemptToStartEmulatorOrAssertAsync();
 
     let installedExpo = false;
-    if (!isDetached && !(await _isExpoInstalledAsync())) {
+    if (!isDetached && !await _isExpoInstalledAsync()) {
       await installExpoAsync();
       installedExpo = true;
     }
@@ -437,7 +454,7 @@ export async function startAdbReverseAsync(projectRoot: string): Promise<boolean
   ];
 
   for (let port of adbReversePorts) {
-    if (!(await adbReverse(port))) {
+    if (!await adbReverse(port)) {
       return false;
     }
   }
@@ -462,7 +479,7 @@ export async function stopAdbReverseAsync(projectRoot: string): Promise<void> {
 }
 
 async function adbReverse(port: number) {
-  if (!(await _isDeviceAuthorizedAsync())) {
+  if (!await _isDeviceAuthorizedAsync()) {
     return false;
   }
 
@@ -476,7 +493,7 @@ async function adbReverse(port: number) {
 }
 
 async function adbReverseRemove(port: number) {
-  if (!(await _isDeviceAuthorizedAsync())) {
+  if (!await _isDeviceAuthorizedAsync()) {
     return false;
   }
 
