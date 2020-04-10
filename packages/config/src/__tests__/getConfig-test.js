@@ -1,14 +1,13 @@
 import { join } from 'path';
 
-import { findAndEvalConfig } from '../getConfig';
+import { getConfigFilePaths } from '../Config';
+import { getDynamicConfig } from '../getConfig';
 
-describe('findAndEvalConfig', () => {
+describe('getDynamicConfig', () => {
   it(`throws a useful error for JS configs with a syntax error`, () => {
-    expect(() =>
-      findAndEvalConfig({
-        projectRoot: join(__dirname, 'fixtures/behavior/syntax-error'),
-        config: {},
-      })
-    ).toThrowError('Unexpected token (3:4)');
+    const paths = getConfigFilePaths(join(__dirname, 'fixtures/behavior/syntax-error'));
+    expect(() => getDynamicConfig(paths.dynamicConfigPath, {})).toThrowError(
+      'Unexpected token (3:4)'
+    );
   });
 });
