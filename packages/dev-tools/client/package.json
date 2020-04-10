@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.8.6",
+    "@expo/webpack-config": "^0.11.20",
     "@types/react": "~16.9.23",
     "@types/react-native": "~0.61.17",
     "babel-plugin-emotion": "^10.0.33",

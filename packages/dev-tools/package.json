@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "NODE_ENV=development nodemon --watch server -e js,ts --exec \"ts-node ./server/dev-server\"",
     "build": "yarn clean && yarn build-server && yarn extract-fragment-types && yarn build-client",
-    "build-client": "NODE_ENV=production ts-node ./build-client",
+    "build-client": "NODE_ENV=production GENERATE_SOURCEMAP=false ts-node ./build-client",
     "build-server": "NODE_ENV=production tsc",
     "extract-fragment-types": "ts-node ./server/extract-fragment-types",
     "clean": "rm -rf ./build",
