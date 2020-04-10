@@ -482,4 +482,30 @@ function isDynamicFilePath(filePath: string): boolean {
   return !!filePath.match(/\.[j|t]s$/);
 }
 
+/**
+ * Returns a string describing the configurations used for the given project root.
+ * Will return null if no config is found.
+ *
+ * @param projectRoot
+ * @param projectConfig
+ */
+export function getProjectConfigDescription(
+  projectRoot: string,
+  projectConfig: ProjectConfig
+): string | null {
+  if (projectConfig.dynamicConfigPath) {
+    const relativeDynamicConfigPath = path.relative(projectRoot, projectConfig.dynamicConfigPath);
+    if (projectConfig.staticConfigPath) {
+      return `Using dynamic config \`${relativeDynamicConfigPath}\` and static config \`${path.relative(
+        projectRoot,
+        projectConfig.staticConfigPath
+      )}\``;
+    }
+    return `Using dynamic config \`${relativeDynamicConfigPath}\``;
+  } else if (projectConfig.staticConfigPath) {
+    return `Using static config \`${path.relative(projectRoot, projectConfig.staticConfigPath)}\``;
+  }
+  return null;
+}
+
 export * from './Config.types';
