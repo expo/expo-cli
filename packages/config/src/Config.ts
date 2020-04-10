@@ -236,7 +236,10 @@ function ensureConfigHasDefaultValues(
 ): { exp: ExpoConfig; pkg: PackageJSONConfig } {
   if (!exp) exp = {};
 
-  if (!exp.name && typeof pkg.name === 'string') {
+  if (!exp.name) {
+    if (typeof pkg.name !== 'string') {
+      pkg.name = path.basename(projectRoot);
+    }
     exp.name = pkg.name;
   }
 
