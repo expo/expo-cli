@@ -140,7 +140,7 @@ export async function action(projectDir: string, options: Options = {}) {
     }
 
     log('Published');
-    log('Your URL is\n\n' + chalk.underline(url) + '\n');
+    log('Your project manifest URL is\n\n' + chalk.underline(url) + '\n');
     log.raw(url);
 
     if (recipient) {
