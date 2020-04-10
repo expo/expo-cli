@@ -7,6 +7,10 @@ import { ConfigError, errorFromJSON } from './Errors';
 import { fileExists } from './Modules';
 import { serializeAndEvaluate } from './Serialize';
 
+type RawDynamicConfig = AppJSONConfig | Partial<ExpoConfig> | null;
+
+type DynamicConfigResults = { config: RawDynamicConfig; exportedObjectType: string };
+
 function isMissingFileCode(code: string): boolean {
   return ['ENOENT', 'MODULE_NOT_FOUND', 'ENOTDIR'].includes(code);
 }
@@ -14,7 +18,7 @@ function isMissingFileCode(code: string): boolean {
 function readConfigFile(
   configFilePath: string,
   context: ConfigContext
-): null | Partial<ExpoConfig> {
+): null | DynamicConfigResults {
   if (!fileExists(configFilePath)) return null;
 
   try {
@@ -28,10 +32,7 @@ function readConfigFile(
   return null;
 }
 
-export function getDynamicConfig(
-  configPath: string,
-  request: ConfigContext
-): AppJSONConfig | ExpoConfig | null {
+export function getDynamicConfig(configPath: string, request: ConfigContext): DynamicConfigResults {
   const config = readConfigFile(configPath, request);
   if (config) {
     return serializeAndEvaluate(config);
@@ -49,7 +50,7 @@ export function getStaticConfig(configPath: string): AppJSONConfig | ExpoConfig 
 
 // We cannot use async config resolution right now because Next.js doesn't support async configs.
 // If they don't add support for async Webpack configs then we may need to pull support for Next.js.
-function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoConfig> {
+function evalConfig(configFile: string, request: ConfigContext): DynamicConfigResults {
   try {
     const spawnResults = spawnSync(
       'node',
@@ -71,8 +72,9 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
         // Log out the logs from the config
         console.log(log);
       }
-      // Parse the final log of the script, it's the serialized config
-      return JSON.parse(lastLog);
+      // Parse the final log of the script, it's the serialized config and exported object type.
+      const results = JSON.parse(lastLog);
+      return results;
     } else {
       // Parse the error data and throw it as expected
       const errorData = JSON.parse(spawnResults.stderr.toString('utf8'));

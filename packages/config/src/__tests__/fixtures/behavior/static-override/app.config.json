@@ -1,3 +1,6 @@
 {
-  "name": "app-config-json"
+  "name": "app-config-json",
+  "slug": "app-config-json",
+  "version": "1.0.0",
+  "platforms": []
 }
