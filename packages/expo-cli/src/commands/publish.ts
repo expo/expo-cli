@@ -160,17 +160,24 @@ export async function action(projectDir: string, options: Options = {}) {
       );
     }
 
-    // TODO: replace with websiteUrl from server when it is available, if that makes sense.
-    let websiteUrl = url.replace('exp.host', 'expo.io');
-    log(
-      `The project page is: ${terminalLink(websiteUrl, websiteUrl)}. ${terminalLink(
-        'Learn more.',
-        'https://expo.fyi/project-page'
-      )}`
-    );
+    if (target === 'managed') {
+      // TODO: replace with websiteUrl from server when it is available, if that makes sense.
+      let websiteUrl = url.replace('exp.host', 'expo.io');
+      log(
+        `The project page is: ${terminalLink(websiteUrl, websiteUrl)}. ${terminalLink(
+          'Learn more.',
+          'https://expo.fyi/project-page'
+        )}`
+      );
 
-    if (recipient) {
-      await sendTo.sendUrlAsync(websiteUrl, recipient);
+      if (recipient) {
+        await sendTo.sendUrlAsync(websiteUrl, recipient);
+      }
+    } else {
+      // This seems pointless in bare?? Leaving it out
+      // if (recipient) {
+      //   await sendTo.sendUrlAsync(url, recipient);
+      // }
     }
   } finally {
     if (startedOurOwn) {
