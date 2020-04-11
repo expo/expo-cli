@@ -4,7 +4,6 @@ import program from 'commander';
 
 import log from '../../log';
 import prompt from '../../prompt';
-import { AndroidOptions, IosOptions } from './BaseBuilder.types';
 
 export async function checkIfSdkIsSupported(
   sdkVersion: string,
