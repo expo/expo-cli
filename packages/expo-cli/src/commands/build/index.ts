@@ -29,12 +29,7 @@ export default function(program: Command) {
       '--apple-id <login>',
       'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
     )
-    .option(
-      '-t --type <build>',
-      'Type of build: [archive|simulator].',
-      /^(archive|simulator)$/i,
-      'archive'
-    )
+    .option('-t --type <build>', 'Type of build: [archive|simulator].', 'archive')
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
     .option('--no-publish', 'Disable automatic publishing before building.')
     .option('--no-wait', 'Exit immediately after scheduling build.')
@@ -84,7 +79,7 @@ export default function(program: Command) {
     .option('--keystore-alias <alias>', 'Keystore Alias')
     .option('--generate-keystore', 'Generate Keystore if one does not exist')
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
-    .option('-t --type <build>', 'Type of build: [app-bundle|apk].', /^(app-bundle|apk)$/i, 'apk')
+    .option('-t --type <build>', 'Type of build: [app-bundle|apk].', 'apk')
     .description(
       'Build a standalone APK or App Bundle for your project, signed and ready for submission to the Google Play Store.'
     )
