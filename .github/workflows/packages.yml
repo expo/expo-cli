@@ -1,7 +1,7 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-# To get proper caching for monorepos we use actions/cache@eb78578266b7cec649ab65b6f1534bd6040c838b (from master branch) 
+# To get proper caching for monorepos we use actions/cache@eb78578266b7cec649ab65b6f1534bd6040c838b (from master branch)
 # instead of actions/cache@1. Support for monorepos will be available in actions/cache@2.
 
 name: Test Package
@@ -38,11 +38,10 @@ jobs:
             */*/node_modules
           key: n-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}
       # Run yarn and learna to build packages
-      - name: Bootstrap 
+      - name: Bootstrap
         # Optionally skip running bootstrap if the cache is configured
         if: steps.learna-cache.outputs.cache-hit != 'true'
         run: yarn bootstrap
-
 
   test:
     strategy:
@@ -74,9 +73,9 @@ jobs:
             node_modules
             */*/build
             */*/node_modules
-          key: n-${{ runner.os }}-${{ node-version }}-${{ hashFiles('yarn.lock') }}
+          key: n-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}
       # Run yarn and learna to build packages
-      - run: Bootstrap 
+      - name: Bootstrap
         # Optionally skip running bootstrap if the cache is configured
         if: steps.learna-cache.outputs.cache-hit != 'true'
         run: yarn bootstrap
