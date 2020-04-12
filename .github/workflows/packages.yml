@@ -8,7 +8,7 @@ name: Test Package
 on: [pull_request]
 
 jobs:
-  dependencies:
+  setup:
     strategy:
       matrix:
         # Run tests with all of these node versions/systems :]
@@ -51,9 +51,9 @@ jobs:
         node-version: [10.x]
         # os: [ubuntu-latest, windows-latest, macOS-latest]
         os: [ubuntu-latest]
-    # needs: dependencies
     name: ${{ matrix.package }} with Node ${{ matrix.node-version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    needs: setup
     steps:
       # Check out code
       - uses: actions/checkout@v2
