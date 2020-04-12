@@ -1,0 +1,73 @@
+# Useful resource: https://github.com/actions/starter-workflows
+
+name: Test Package
+on: [pull_request]
+
+
+jobs:
+  dependencies:
+    runs-on: ubuntu-latest
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: setup yarn-cache
+        id: yarn-cache
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - name: cache yarn global cache
+        if: runner.os != 'macos-latest'
+        uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - name: cache node_modules
+        uses: actions/cache@v1
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+
+  test:
+    strategy:
+      matrix:
+        package: [dev-tools, json-file, expo-codemod, webpack-config]
+        # Run tests with all of these node versions/systems :]
+        node-version: [10.x, 12.x]
+        # os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest]
+    needs: dependencies
+    name: ${{ matrix.package }} with Node ${{ matrix.node-version }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: setup yarn-cache
+        id: yarn-cache
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: cache yarn global cache
+        if: runner.os != 'macos-latest'
+        uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - name: cache node_modules
+        uses: actions/cache@v1
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ matrix.node-version }}-${{ hashFiles('**/yarn.lock') }}
+      - run: yarn
+      - run: yarn bootstrap
+        env:
+          CI: true
+      - name: Test ${{ matrix.package }}
+        run: cd packages/${{ matrix.package }} && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
+        env:
+          CI: true
