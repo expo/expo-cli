@@ -25,29 +25,22 @@ jobs:
         uses: actions/setup-node@master
         with:
           node-version: ${{ matrix.node-version }}
-      # Rehydrate yarn
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
 
-      - name: Yarn cache
-        uses: actions/cache@v1
-        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+      - name: restore lerna
+        id: cache
+        uses: actions/cache@eb78578266b7cec649ab65b6f1534bd6040c838b
         with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      - name: Yarn install
-          if: steps.yarn-cache.outputs.cache-hit != 'true'
-         run: yarn install --frozen-lockfile
+          path: |
+            node_modules
+            */*/node_modules
+          key: n-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Install Dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: yarn
 
-      # Setup Learna
-      - name: Learna bootstrap
-        run: yarn lerna bootstrap
-      - name: Learna prepare
-        run: yarn lerna run prepare --stream
-      
+      # Setup Learna - run manually so we don't run yarn more than needed
+      - run: yarn lerna bootstrap && yarn lerna run prepare --stream
+
       # Save state
       - name: Persist to Workspace
         uses: actions/upload-artifact@master
