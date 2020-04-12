@@ -6,7 +6,6 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "postbootstrap": "lerna run prepare --stream",
-    "prebootstrap": "yarn",
     "postinstall": "expo-yarn-workspaces check-workspace-dependencies",
     "publish": "echo \"This script is deprecated. Run \\\"node ./scripts/publish.js\\\" instead.\"; exit 1",
     "start": "lerna run watch --parallel --ignore @expo/dev-tools --ignore expo-optimize --ignore @expo/next-adapter --ignore @expo/electron-adapter",
