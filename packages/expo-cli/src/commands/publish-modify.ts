@@ -74,17 +74,17 @@ export default function(program: Command) {
         }
       ): Promise<void> => {
         if (options.channelId) {
-          throw new Error('This flag is deprecated');
+          throw new Error('This flag is deprecated and does not do anything. Please use --release-channel and --sdk-version instead.');
         }
         if (!options.releaseChannel) {
-          throw new Error('You must specify a release channel.');
+          throw new Error('You must specify a release channel with -c or --release-channel. For example, -c default.');
         }
         if (!options.sdkVersion) {
-          throw new Error('You must specify an sdk version.');
+          throw new Error('You must specify an SDK version with -s or --sdk-version. For example, -s 37.0.0');
         }
         if (options.platform) {
           if (options.platform !== 'android' && options.platform !== 'ios') {
-            throw new Error('Platform must be either android or ios');
+            throw new Error('Platform must be either android or ios. Leave out the platform flag to target both platforms.');
           }
         }
         await rollbackPublicationFromChannelAsync(projectDir, options as RollbackOptions);
