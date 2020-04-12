@@ -17,6 +17,7 @@ jobs:
         os: [ubuntu-latest]
     name: Learna with Node ${{ matrix.node-version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    steps:
       # Check out code
       - uses: actions/checkout@v2
         with:
