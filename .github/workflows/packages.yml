@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@master
         with:
           name: dependencies-${{ matrix.os }}-${{ matrix.node-version }}
-          path: '/'
+          path: '~'
 
   test:
     strategy:
