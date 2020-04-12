@@ -1,32 +1,47 @@
-# Useful resource: https://github.com/actions/starter-workflows
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+# To get proper caching for monorepos we use actions/cache@eb78578266b7cec649ab65b6f1534bd6040c838b (from master branch) 
+# instead of actions/cache@1. Support for monorepos will be available in actions/cache@2.
 
 name: Test Package
 on: [pull_request]
 
 jobs:
-  dependencies:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-      - name: setup yarn-cache
-        id: yarn-cache
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-      - name: cache yarn global cache
-        if: runner.os != 'macos-latest'
-        uses: actions/cache@v1
-        with:
-          path: ${{ steps.yarn-cache.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      - name: cache node_modules
-        uses: actions/cache@v1
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
+  # dependencies:
+  #   strategy:
+  #     matrix:
+  #       # Run tests with all of these node versions/systems :]
+  #       node-version: [10.x, 12.x]
+  #       # os: [ubuntu-latest, windows-latest, macOS-latest]
+  #       os: [ubuntu-latest]
+  #   name: Learna with Node ${{ matrix.node-version }} (${{ matrix.os }})
+  #   runs-on: ${{ matrix.os }}
+  #     # Check out code
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 1
+  #     # Setup node
+  #     - name: Use Node.js ${{ matrix.node-version }}
+  #       uses: actions/setup-node@v1
+  #       with:
+  #         node-version: ${{ matrix.node-version }}
+  #     # Setup Learna cache
+  #     - name: restore lerna
+  #       id: learna-cache
+  #       uses: actions/cache@master
+  #       with:
+  #         path: |
+  #           node_modules
+  #           */*/build
+  #           */*/node_modules
+  #         key: n-${{ runner.os }}-${{ node-version }}-${{ hashFiles('yarn.lock') }}
+  #     # Run yarn and learna to build packages
+  #     - run: Bootstrap 
+  #       # Optionally skip running bootstrap if the cache is configured
+  #       if: steps.learna-cache.outputs.cache-hit != 'true'
+  #       run: yarn bootstrap
+
 
   test:
     strategy:
@@ -36,37 +51,36 @@ jobs:
         node-version: [10.x, 12.x]
         # os: [ubuntu-latest, windows-latest, macOS-latest]
         os: [ubuntu-latest]
-    needs: dependencies
+    # needs: dependencies
     name: ${{ matrix.package }} with Node ${{ matrix.node-version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v1
+      # Check out code
+      - uses: actions/checkout@v2
         with:
           fetch-depth: 1
-      - name: setup yarn-cache
-        id: yarn-cache
-        run: echo "::set-output name=dir::$(yarn cache dir)"
+      # Setup node
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: cache yarn global cache
-        if: runner.os != 'macos-latest'
-        uses: actions/cache@v1
+      # Setup Learna cache
+      - name: restore lerna
+        id: learna-cache
+        uses: actions/cache@master
         with:
-          path: ${{ steps.yarn-cache.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      - name: cache node_modules
-        uses: actions/cache@v1
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ matrix.node-version }}-${{ hashFiles('**/yarn.lock') }}
-      - run: yarn
-      - run: yarn bootstrap
-        env:
-          CI: true
+          path: |
+            node_modules
+            */*/build
+            */*/node_modules
+          key: n-${{ runner.os }}-${{ node-version }}-${{ hashFiles('yarn.lock') }}
+      # Run yarn and learna to build packages
+      - run: Bootstrap 
+        # Optionally skip running bootstrap if the cache is configured
+        if: steps.learna-cache.outputs.cache-hit != 'true'
+        run: yarn bootstrap
+
+      # Test package
       - name: Test ${{ matrix.package }}
         run: cd packages/${{ matrix.package }} && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
         env:
