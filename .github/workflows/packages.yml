@@ -8,41 +8,6 @@ name: Test Package
 on: [pull_request]
 
 jobs:
-  # dependencies:
-  #   strategy:
-  #     matrix:
-  #       # Run tests with all of these node versions/systems :]
-  #       node-version: [10.x, 12.x]
-  #       # os: [ubuntu-latest, windows-latest, macOS-latest]
-  #       os: [ubuntu-latest]
-  #   name: Learna with Node ${{ matrix.node-version }} (${{ matrix.os }})
-  #   runs-on: ${{ matrix.os }}
-  #     # Check out code
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         fetch-depth: 1
-  #     # Setup node
-  #     - name: Use Node.js ${{ matrix.node-version }}
-  #       uses: actions/setup-node@v1
-  #       with:
-  #         node-version: ${{ matrix.node-version }}
-  #     # Setup Learna cache
-  #     - name: restore lerna
-  #       id: learna-cache
-  #       uses: actions/cache@master
-  #       with:
-  #         path: |
-  #           node_modules
-  #           */*/build
-  #           */*/node_modules
-  #         key: n-${{ runner.os }}-${{ node-version }}-${{ hashFiles('yarn.lock') }}
-  #     # Run yarn and learna to build packages
-  #     - run: Bootstrap 
-  #       # Optionally skip running bootstrap if the cache is configured
-  #       if: steps.learna-cache.outputs.cache-hit != 'true'
-  #       run: yarn bootstrap
-
-
   test:
     strategy:
       matrix:
@@ -73,7 +38,7 @@ jobs:
             node_modules
             */*/build
             */*/node_modules
-          key: n-${{ runner.os }}-${{ node-version }}-${{ hashFiles('yarn.lock') }}
+          key: n-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}
       # Run yarn and learna to build packages
       - run: Bootstrap 
         # Optionally skip running bootstrap if the cache is configured
