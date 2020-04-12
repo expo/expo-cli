@@ -8,40 +8,32 @@ name: Test Package
 on: [pull_request]
 
 jobs:
-  setup:
+  dependencies:
     strategy:
       matrix:
         # Run tests with all of these node versions/systems :]
         node-version: [10.x]
         # os: [ubuntu-latest, windows-latest, macOS-latest]
         os: [ubuntu-latest]
-    name: Learna with Node ${{ matrix.node-version }} (${{ matrix.os }})
+    name: Yarn Install with Node ${{ matrix.node-version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     steps:
-      # Check out code
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 1
-      # Setup node
+      - name: Checkout
+        uses: actions/checkout@master
+
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@master
         with:
           node-version: ${{ matrix.node-version }}
-      # Setup Learna cache
-      - name: restore lerna
-        id: learna-cache
-        uses: actions/cache@master
-        with:
-          path: |
-            node_modules
-            */*/build
-            */*/node_modules
-          key: n-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}
-      # Run yarn and learna to build packages
-      - name: Bootstrap
-        # Optionally skip running bootstrap if the cache is configured
-        if: steps.learna-cache.outputs.cache-hit != 'true'
+
+      - name: Install
         run: yarn bootstrap
+
+      - name: Persist to Workspace
+        uses: actions/upload-artifact@master
+        with:
+          name: dependencies-${{ matrix.os }}-${{ matrix.node-version }}
+          path: expo-cli
 
   test:
     strategy:
@@ -51,36 +43,24 @@ jobs:
         node-version: [10.x]
         # os: [ubuntu-latest, windows-latest, macOS-latest]
         os: [ubuntu-latest]
+    needs: dependencies
     name: ${{ matrix.package }} with Node ${{ matrix.node-version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    needs: setup
     steps:
-      # Check out code
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 1
-      # Setup node
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-      # Setup Learna cache
-      - name: restore lerna
-        id: learna-cache
-        uses: actions/cache@master
-        with:
-          path: |
-            node_modules
-            */*/build
-            */*/node_modules
-          key: n-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}
-      # Run yarn and learna to build packages
-      - name: Bootstrap
-        # Optionally skip running bootstrap if the cache is configured
-        if: steps.learna-cache.outputs.cache-hit != 'true'
-        run: yarn bootstrap
+      # - uses: actions/checkout@v2
+      #   with:
+      #     fetch-depth: 1
 
-      # Test package
+      # - name: Use Node.js ${{ matrix.node-version }}
+      #   uses: actions/setup-node@v1
+      #   with:
+      #     node-version: ${{ matrix.node-version }}
+
+      - name: Attach Workspace
+        uses: actions/download-artifact@master
+        with:
+          name: dependencies-${{ matrix.os }}-${{ matrix.node-version }}
+
       - name: Test ${{ matrix.package }}
         run: cd packages/${{ matrix.package }} && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
         env:
