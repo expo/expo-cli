@@ -30,6 +30,23 @@ export async function action(projectDir: string, options: Options = {}) {
     );
     process.exit(1);
   }
+
+  const { exp, pkg } = getConfig(projectDir, {
+    skipSDKVersionRequirement: true,
+  });
+
+  if (pkg.dependencies['expo-updates'] && pkg.dependencies['expokit']) {
+    log.warn(
+      `Warning: You have both the ${chalk.bold('expokit')} and ${chalk.bold('expo-updates')} packages installed in package.json.`
+    );
+    log.warn(
+      `These two packages are incompatible and ${chalk.bold('publishing updates with expo-updates will not work if expokit is installed.')}`
+    );
+    log.warn(
+      `If you intent to use ${chalk.bold('expo-updates')}, please remove ${chalk.bold('expokit')} from your dependencies.`
+    );
+  }
+
   const hasOptimized = fs.existsSync(path.join(projectDir, '/.expo-shared/assets.json'));
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!hasOptimized && !nonInteractive) {
@@ -105,10 +122,6 @@ export async function action(projectDir: string, options: Options = {}) {
       sdkVersion,
     });
   }
-
-  const { exp } = getConfig(projectDir, {
-    skipSDKVersionRequirement: true,
-  });
 
   if (
     'userHasBuiltExperienceBefore' in buildStatus &&
