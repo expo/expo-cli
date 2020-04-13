@@ -1,4 +1,4 @@
-import { ExpoConfig, PackageJSONConfig } from '@expo/config';
+import { ExpoConfig, PackageJSONConfig, ProjectTarget, getConfig } from '@expo/config';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -23,6 +23,7 @@ export type EmbeddedAssetsConfiguration = {
   androidManifest: any;
   androidBundle: string;
   androidSourceMap: string | null;
+  target: ProjectTarget;
 };
 
 type PublicConfig = ExpoConfig & {
@@ -74,9 +75,8 @@ function _getDefaultEmbeddedAssetDir(
   exp: PublicConfig
 ): string {
   if (platform === 'ios') {
-    const context = StandaloneContext.createUserContext(projectRoot, exp);
-    const { supportingDirectory } = IosWorkspace.getPaths(context);
-    return supportingDirectory;
+    const { iosSupportingDirectory } = getIOSPaths(projectRoot);
+    return iosSupportingDirectory;
   } else if (platform === 'android') {
     return path.join(projectRoot, 'android', 'app', 'src', 'main', 'assets');
   } else {
@@ -104,8 +104,8 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
   let iosManifestPath;
   let iosSourceMapPath;
 
-  // set defaults
-  if (pkg.dependencies['expo-updates']) {
+  // set defaults for expo-updates
+  if (pkg.dependencies['expo-updates'] && config.target === 'bare') {
     const defaultAndroidDir = _getDefaultEmbeddedAssetDir('android', projectRoot, exp);
     const defaultIosDir = _getDefaultEmbeddedAssetDir('ios', projectRoot, exp);
 
@@ -253,14 +253,13 @@ async function _maybeConfigureExpoKitEmbeddedAssetsAsync(config: EmbeddedAssetsC
 }
 
 async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAssetsConfiguration) {
-  if (!config.pkg.dependencies['expo-updates']) {
+  if (!config.pkg.dependencies['expo-updates'] || config.target === 'managed') {
     return;
   }
 
   const { projectRoot, exp, releaseChannel, iosManifestUrl, androidManifestUrl } = config;
 
-  const context = StandaloneContext.createUserContext(projectRoot, exp);
-  const { supportingDirectory } = IosWorkspace.getPaths(context);
+  const { iosSupportingDirectory: supportingDirectory } = getIOSPaths(projectRoot);
 
   // iOS expo-updates
   if (fs.existsSync(path.join(supportingDirectory, 'Expo.plist'))) {
@@ -327,4 +326,43 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
       androidManifestXmlPath
     );
   }
+}
+
+/** The code below here is duplicated from expo-cli currently **/
+
+// TODO: come up with a better solution for using app.json expo.name in various places
+function sanitizedName(name: string) {
+  return name
+    .replace(/[\W_]+/g, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+// TODO: it's silly and kind of fragile that we look at app config to determine
+// the ios project paths. Overall this function needs to be revamped, just a
+// placeholder for now! Make this more robust when we support applying config
+// at any time (currently it's only applied on eject).
+export function getIOSPaths(projectRoot: string) {
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+
+  let projectName = exp.name;
+  if (!projectName) {
+    throw new Error('Your project needs a name in app.json/app.config.js.');
+  }
+
+  const iosProjectDirectory = path.join(projectRoot, 'ios', sanitizedName(projectName));
+  const iosSupportingDirectory = path.join(
+    projectRoot,
+    'ios',
+    sanitizedName(projectName),
+    'Supporting'
+  );
+  const iconPath = path.join(iosProjectDirectory, 'Assets.xcassets', 'AppIcon.appiconset');
+
+  return {
+    projectName,
+    iosProjectDirectory,
+    iosSupportingDirectory,
+    iconPath,
+  };
 }

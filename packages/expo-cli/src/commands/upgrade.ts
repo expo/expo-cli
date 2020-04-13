@@ -164,6 +164,10 @@ async function makeBreakingChangesToConfigAsync(
               `Removed extraneous "androidNavigationBar.visible" property in app.json...`
             );
             delete rootConfig?.expo.androidNavigationBar?.visible;
+          } else {
+            // They had some invalid property for androidNavigationBar already...
+            step.succeed('No additional changes necessary to app.json config.');
+            return;
           }
           await ConfigUtils.writeConfigJsonAsync(projectRoot, rootConfig.expo);
         } else if (currentExp?.androidNavigationBar?.visible !== undefined) {

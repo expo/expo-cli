@@ -1,10 +1,11 @@
-import { getConfig } from '@expo/config';
+import { ProjectTarget, getConfig, getDefaultTarget } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
 import { Exp, Project, ProjectSettings } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
+import terminalLink from 'terminal-link';
 
 import { installExitHooks } from '../exit';
 import log from '../log';
@@ -14,7 +15,7 @@ type Options = {
   clear?: boolean;
   sendTo?: string | boolean;
   quiet?: boolean;
-  target?: Project.ProjectTarget;
+  target?: ProjectTarget;
   releaseChannel?: string;
   duringBuild?: boolean;
   maxWorkers?: number;
@@ -42,7 +43,7 @@ export async function action(projectDir: string, options: Options = {}) {
     );
   }
 
-  const target = options.target ?? (await Project.getDefaultTargetAsync(projectDir));
+  const target = options.target ?? getDefaultTarget(projectDir);
 
   const status = await Project.currentStatus(projectDir);
   let shouldStartOurOwn = false;
@@ -139,12 +140,44 @@ export async function action(projectDir: string, options: Options = {}) {
       simpleSpinner.stop();
     }
 
-    log('Published');
-    log('Your URL is\n\n' + chalk.underline(url) + '\n');
-    log.raw(url);
+    log('Publish complete');
+    log.newLine();
 
-    if (recipient) {
-      await sendTo.sendUrlAsync(url, recipient);
+    let exampleManifestUrl = getExampleManifestUrl(url, exp.sdkVersion);
+    if (exampleManifestUrl) {
+      log(
+        `The manifest URL is: ${terminalLink(url, exampleManifestUrl)}. ${terminalLink(
+          'Learn more.',
+          'https://expo.fyi/manifest-url'
+        )}`
+      );
+    } else {
+      log(
+        `The manifest URL is: ${terminalLink(url, url)}. ${terminalLink(
+          'Learn more.',
+          'https://expo.fyi/manifest-url'
+        )}`
+      );
+    }
+
+    if (target === 'managed') {
+      // TODO: replace with websiteUrl from server when it is available, if that makes sense.
+      let websiteUrl = url.replace('exp.host', 'expo.io');
+      log(
+        `The project page is: ${terminalLink(websiteUrl, websiteUrl)}. ${terminalLink(
+          'Learn more.',
+          'https://expo.fyi/project-page'
+        )}`
+      );
+
+      if (recipient) {
+        await sendTo.sendUrlAsync(websiteUrl, recipient);
+      }
+    } else {
+      // This seems pointless in bare?? Leaving it out
+      // if (recipient) {
+      //   await sendTo.sendUrlAsync(url, recipient);
+      // }
     }
   } finally {
     if (startedOurOwn) {
@@ -152,6 +185,25 @@ export async function action(projectDir: string, options: Options = {}) {
     }
   }
   return result;
+}
+
+function getExampleManifestUrl(url: string, sdkVersion: string | undefined): string | null {
+  if (!sdkVersion) {
+    return null;
+  }
+
+  if (url.includes('release-channel') && url.includes('?release-channel')) {
+    return (
+      url.replace('?release-channel', '/index.exp?release-channel') + `&sdkVersion=${sdkVersion}`
+    );
+  } else if (url.includes('?') && !url.includes('release-channel')) {
+    // This is the only relevant url query param we are aware of at the time of
+    // writing this code, so if there is some other param included we don't know
+    // how to deal with it and log nothing.
+    return null;
+  } else {
+    return `${url}/index.exp?sdkVersion=${sdkVersion}`;
+  }
 }
 
 export default function(program: Command) {

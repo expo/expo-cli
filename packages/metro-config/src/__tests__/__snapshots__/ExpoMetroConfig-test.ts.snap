@@ -1,5 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`getDefaultConfig complains about an invalid target setting 1`] = `
+"Invalid target: 'blooper'. Debug info: 
+{
+  \\"options.target\\": \\"blooper\\",
+  \\"EXPO_TARGET\\": \\"bare\\",
+  \\"default\\": \\"managed\\"
+}"
+`;
+
 exports[`getDefaultConfig loads default configuration 1`] = `
 Object {
   "resolver": Object {
@@ -12,6 +21,57 @@ Object {
       "react-native",
       "browser",
       "main",
+    ],
+    "sourceExts": Array [
+      "expo.ts",
+      "expo.tsx",
+      "expo.js",
+      "expo.jsx",
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "wasm",
+    ],
+  },
+  "serializer": Object {
+    "getModulesRunBeforeMainModule": [Function],
+    "getPolyfills": [Function],
+  },
+  "symbolicator": Object {
+    "customizeFrame": [Function],
+  },
+  "transformer": Object {
+    "assetPlugins": ArrayContaining [
+      StringContaining "hashAssetFiles",
+    ],
+    "assetRegistryPath": StringContaining "AssetRegistry",
+    "babelTransformerPath": StringContaining "transformer.js",
+  },
+}
+`;
+
+exports[`getDefaultConfig loads default configuration for bare apps 1`] = `
+Object {
+  "resolver": Object {
+    "platforms": Array [
+      "ios",
+      "android",
+      "native",
+    ],
+    "resolverMainFields": Array [
+      "react-native",
+      "browser",
+      "main",
+    ],
+    "sourceExts": Array [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "wasm",
     ],
   },
   "serializer": Object {
