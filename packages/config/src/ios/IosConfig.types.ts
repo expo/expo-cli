@@ -1,6 +1,6 @@
 export type URLScheme = {
   CFBundleURLName?: string;
-  CFBundleURLSchemes: [string];
+  CFBundleURLSchemes: string[];
 };
 
 export type InterfaceOrientation =
