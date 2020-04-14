@@ -234,7 +234,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   appJson.expo.ios = appJson.expo.ios ?? {};
   appJson.expo.ios.bundleIdentifier = bundleIdentifier;
 
-  let packageName = await getOrPromptForPackage(projectRoot);
+  let packageName = await getOrPromptForPackage(projectRoot, bundleIdentifier);
   appJson.expo.android = appJson.expo.android ?? {};
   appJson.expo.android.package = packageName;
 
@@ -420,7 +420,10 @@ async function promptForNativeAppNameAsync(projectRoot: string): Promise<string>
   return name!;
 }
 
-async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<string> {
+async function getOrPromptForBundleIdentifier(
+  projectRoot: string,
+  defaultValue?: string
+): Promise<string> {
   let { exp } = getConfig(projectRoot);
 
   if (exp.ios?.bundleIdentifier) {
@@ -438,6 +441,7 @@ async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<stri
   const { bundleIdentifier } = await prompt([
     {
       name: 'bundleIdentifier',
+      default: defaultValue,
       message: `What would you like your bundle identifier to be?`,
       validate: (value: string) => /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value),
     },
@@ -447,7 +451,7 @@ async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<stri
   return bundleIdentifier;
 }
 
-async function getOrPromptForPackage(projectRoot: string): Promise<string> {
+async function getOrPromptForPackage(projectRoot: string, defaultValue?: string): Promise<string> {
   let { exp } = getConfig(projectRoot);
 
   if (exp.android?.package) {
@@ -465,6 +469,7 @@ async function getOrPromptForPackage(projectRoot: string): Promise<string> {
   const { packageName } = await prompt([
     {
       name: 'packageName',
+      default: defaultValue,
       message: `What would you like your package to be named?`,
       validate: (value: string) => /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value),
     },
