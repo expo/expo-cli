@@ -323,7 +323,9 @@ export class CreateOrReuseDistributionCert implements IView {
     const { action } = await prompt(question);
 
     if (action === 'GENERATE') {
-      const distCert = await new CreateIosDist().create(ctx);
+      const distCert = await new CreateIosDist({ nonInteractive: this._nonInteractive }).create(
+        ctx
+      );
       await this.assignDistCert(ctx, distCert.id);
       return null;
     } else if (action === 'CHOOSE_EXISTING') {

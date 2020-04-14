@@ -200,6 +200,7 @@ export class CreateOrReuseProvisioningProfile implements IView {
         experienceName: this._experienceName,
         bundleIdentifier: this._bundleIdentifier,
         distCert: this._distCert,
+        nonInteractive: this._nonInteractive,
       });
     }
 
@@ -268,6 +269,7 @@ export class CreateOrReuseProvisioningProfile implements IView {
         experienceName: this._experienceName,
         bundleIdentifier: this._bundleIdentifier,
         distCert: this._distCert,
+        nonInteractive: this._nonInteractive,
       });
     } else if (action === 'CHOOSE_EXISTING') {
       return new UseExistingProvisioningProfile({

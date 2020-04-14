@@ -323,7 +323,7 @@ export class CreateOrReusePushKey implements IView {
     const { action } = await prompt(question);
 
     if (action === 'GENERATE') {
-      const pushKey = await new CreateIosPush().create(ctx);
+      const pushKey = await new CreateIosPush({ nonInteractive: this._nonInteractive }).create(ctx);
       await this.assignPushKey(ctx, pushKey.id);
       return null;
     } else if (action === 'CHOOSE_EXISTING') {
