@@ -261,6 +261,7 @@ Command.prototype.asyncActionProjectDir = function(
 
         if (bar) {
           log.setBundleProgressBar(null);
+          bar.terminate();
           bar = null;
 
           if (err) {
