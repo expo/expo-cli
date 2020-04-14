@@ -18,6 +18,7 @@ import wordwrap from 'wordwrap';
 import { loginOrRegisterIfLoggedOut } from '../../accounts';
 import log from '../../log';
 import urlOpts from '../../urlOpts';
+import { startEditorAsync } from '../utils/EditorUtils';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
@@ -56,16 +57,17 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
  \u203A Press ${platformInfo}.
  \u203A Press ${b`c`} to show info on ${u`c`}onnecting new devices.
  \u203A Press ${b`d`} to open DevTools in the default web browser.
- \u203A Press ${b`shift-d`} to ${
-    openDevToolsAtStartup ? 'disable' : 'enable'
-  } automatically opening ${u`D`}evTools at startup.${
-    options.webOnly ? '' : `\n \u203A Press ${b`e`} to send an app link with ${u`e`}mail.`
-  }
+ \u203A Press ${b`shift-d`} to ${openDevToolsAtStartup
+    ? 'disable'
+    : 'enable'} automatically opening ${u`D`}evTools at startup.${options.webOnly
+    ? ''
+    : `\n \u203A Press ${b`e`} to send an app link with ${u`e`}mail.`}
  \u203A Press ${b`p`} to toggle ${u`p`}roduction mode. (current mode: ${i(devMode)})
  \u203A Press ${b`r`} to ${u`r`}estart bundler, or ${b`shift-r`} to restart and clear cache.
- \u203A Press ${b`s`} to ${u`s`}ign ${
-    username ? `out. (Signed in as ${i('@' + username)}.)` : 'in.'
-  }
+ \u203A Press ${b`o`} to ${u`o`}pen the project in your editor.
+ \u203A Press ${b`s`} to ${u`s`}ign ${username
+    ? `out. (Signed in as ${i('@' + username)}.)`
+    : 'in.'}
 `);
 };
 
@@ -102,6 +104,7 @@ export const printServerInfo = async (
   log.nested(item(`Scan the QR code above with the Expo app (Android) or the Camera app (iOS).`));
   log.nested(item(`Press ${b`a`} for Android emulator${iosInfo}, or ${webInfo}.`));
   log.nested(item(`Press ${b`e`} to send a link to your phone with email.`));
+  log.nested(item(`Press ${b`o`} to open the project in your editor.`));
   if (!username) {
     log.nested(item(`Press ${b`s`} to sign in and enable more options.`));
   }
@@ -270,7 +273,7 @@ export const startAsync = async (projectDir: string, options: StartOptions) => {
       }
       case 'D': {
         clearConsole();
-        const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', true));
+        const enabled = !await UserSettings.getAsync('openDevToolsAtStartup', true);
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
         log(
           `Automatically opening DevTools ${b(
@@ -324,6 +327,9 @@ Please reload the project in the Expo app for the change to take effect.`
         printHelp();
         break;
       }
+      case 'o':
+        log('Trying to open the project in your editor...');
+        await startEditorAsync(projectDir);
     }
   }
 };
