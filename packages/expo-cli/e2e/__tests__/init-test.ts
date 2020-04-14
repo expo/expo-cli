@@ -28,3 +28,27 @@ xtest('init', async () => {
   expect(appJson).toHaveProperty(['expo', 'name'], 'Hello');
   expect(appJson).toHaveProperty(['expo', 'slug'], 'hello-world');
 });
+
+test('init with android package and bundle identifier', async () => {
+  jest.setTimeout(60000);
+  const cwd = temporary.directory();
+  const { stdout } = await runAsync(
+    [
+      'init',
+      'hello-world',
+      '--template',
+      'blank',
+      '--name',
+      'Hello',
+      '--android-package',
+      'host.expo.android',
+      '--ios-bundle-identifier',
+      'host.expo.ios',
+    ],
+    { cwd, env: { ...process.env, YARN_CACHE_FOLDER: path.join(cwd, 'yarn-cache') } }
+  );
+  expect(stdout).toContain(`Your project is ready`);
+  const appJson = await JsonFile.readAsync(path.join(cwd, 'hello-world/app.json'));
+  expect(appJson).toHaveProperty(['expo', 'android', 'package'], 'host.expo.android');
+  expect(appJson).toHaveProperty(['expo', 'ios', 'bundleIdentifier'], 'host.expo.ios');
+});
