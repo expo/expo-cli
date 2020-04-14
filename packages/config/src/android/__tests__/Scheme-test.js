@@ -23,6 +23,13 @@ describe('scheme', () => {
     expect(getScheme({ scheme: 'myapp' })).toBe('myapp');
   });
 
+  it('does not add scheme if none provided', async () => {
+    let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
+    androidManifestJson = await setScheme({}, androidManifestJson);
+
+    expect(androidManifestJson).toEqual(androidManifestJson);
+  });
+
   it('adds scheme to android manifest', async () => {
     let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
     androidManifestJson = await setScheme({ scheme: 'myapp' }, androidManifestJson);

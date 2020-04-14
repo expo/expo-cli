@@ -15,7 +15,7 @@ export function getScheme(config: ExpoConfig) {
 export async function setScheme(config: ExpoConfig, manifestDocument: Document) {
   let scheme = getScheme(config);
   if (!scheme) {
-    return false;
+    return manifestDocument;
   }
 
   let mainActivity = manifestDocument.manifest.application[0].activity.filter(
