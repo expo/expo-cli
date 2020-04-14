@@ -1,5 +1,5 @@
+import spawnAsync from '@expo/spawn-async';
 import editors from 'env-editor';
-import open from 'open';
 import log from '../../log';
 
 export function guessEditor() {
@@ -15,7 +15,7 @@ export async function startEditorAsync(path: string, options: { editor?: string 
 
   if (editor) {
     try {
-      await open(path, { app: editor.binary });
+      await spawnAsync(editor.binary, [path]);
       return true;
     } catch {}
   }
