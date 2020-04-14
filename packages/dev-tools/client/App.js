@@ -476,7 +476,7 @@ export default class IndexPage extends React.Component {
   }
 
   componentDidMount() {
-    this.connect().catch(error => this.setState({ disconnected: true }));
+    this.connect().catch(() => this.setState({ disconnected: true }));
   }
 
   async connect() {
