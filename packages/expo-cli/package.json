@@ -105,6 +105,7 @@
     "detect-indent": "^6.0.0",
     "detect-newline": "^3.0.0",
     "enquirer": "^2.3.2",
+    "env-editor": "^0.4.1",
     "envinfo": "7.5.0",
     "es6-error": "3.2.0",
     "expo-optimize": "0.1.17",
