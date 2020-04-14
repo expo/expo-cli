@@ -3,18 +3,11 @@ import spawnAsyncQuiet, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import fs from 'fs-extra';
 import _ from 'lodash';
 import path from 'path';
-import pipeRequest from 'request';
-import Request from 'request-promise-native';
+import axios from 'axios';
 import { Readable } from 'stream';
 
 import XDLError from '../XDLError';
 import LoggerDetach, { Logger, pipeOutputToLogger } from './Logger';
-
-// `request-promise-native` discourages using pipe. Noticed some issues with
-// error handling so when using pipe use the original request lib instead.
-const request = Request.defaults({
-  resolveWithFullResponse: true,
-});
 
 function _getFilesizeInBytes(path: string) {
   let stats = fs.statSync(path);
@@ -36,61 +29,41 @@ function parseSdkMajorVersion(expSdkVersion: string) {
   return sdkMajorVersion;
 }
 
-function saveUrlToPathAsync(url: string, path: string) {
+async function saveUrlToPathAsync(url: string, path: string, timeout = 20000) {
+  const response = await axios.get(url, { responseType: 'stream', timeout });
+
   return new Promise(function(resolve, reject) {
     let stream = fs.createWriteStream(path);
     stream.on('close', resolve);
     stream.on('error', reject);
-    pipeRequest({ url, timeout: 20000 })
-      .on('error', reject)
-      .pipe(stream);
+    response.data.on('error', reject).pipe(stream);
   });
 }
 
-function saveImageToPathAsync(projectRoot: string, pathOrURL: string, outPath: string) {
+async function saveImageToPathAsync(projectRoot: string, pathOrURL: string, outPath: string) {
   const localPath = path.resolve(projectRoot, pathOrURL);
-  return new Promise(function(resolve, reject) {
-    let stream = fs.createWriteStream(outPath);
-    stream.on('close', () => {
-      if (_getFilesizeInBytes(outPath) < 10) {
-        throw new Error(`{filename} is too small`);
-      }
-      resolve();
-    });
-    stream.on('error', reject);
-    if (fs.existsSync(localPath)) {
-      fs.createReadStream(localPath).pipe(stream);
-    } else {
-      pipeRequest(pathOrURL).pipe(stream);
-    }
-  });
+
+  if (fs.existsSync(localPath)) {
+    await fs.copy(localPath, outPath);
+  } else {
+    await saveUrlToPathAsync(pathOrURL, outPath, 0);
+  }
 }
 
 async function getManifestAsync(url: string, headers: any, options: any = {}) {
   const buildPhaseLogger =
     options.logger || LoggerDetach.withFields({ buildPhase: 'reading manifest' });
-  const requestOptions = {
-    url: url.replace('exp://', 'http://'),
-    headers,
-  };
 
   let response;
   try {
-    response = await _retryPromise(() => request(requestOptions));
+    response = await _retryPromise(() => axios.get(url.replace('exp://', 'http://'), { headers }));
   } catch (err) {
     buildPhaseLogger.error(err);
     throw new Error('Failed to fetch manifest from www');
   }
-  const responseBody = response.body;
-  buildPhaseLogger.info('Using manifest:', responseBody);
-  let manifest;
-  try {
-    manifest = JSON.parse(responseBody);
-  } catch (e) {
-    throw new Error(`Unable to parse manifest: ${e}`);
-  }
 
-  return manifest;
+  buildPhaseLogger.info('Using manifest:', JSON.stringify(response.data, null, 2));
+  return response.data;
 }
 
 async function _retryPromise<T>(fn: (...args: any[]) => T, retries = 5): Promise<T> {

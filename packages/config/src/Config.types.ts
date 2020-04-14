@@ -1,5 +1,31 @@
 export type PackageJSONConfig = { [key: string]: any };
-export type ProjectConfig = { exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig };
+export type ProjectConfig = {
+  /**
+   * Fully evaluated Expo config with default values injected.
+   */
+  exp: ExpoConfig;
+  /**
+   * Project package.json object with default values injected.
+   */
+  pkg: PackageJSONConfig;
+  /**
+   * Unaltered static config (app.config.json, app.json, or custom json config).
+   * For legacy, an empty object will be returned even if no static config exists.
+   */
+  rootConfig: AppJSONConfig;
+  /**
+   * Path to the static json config file if it exists.
+   * If a project has an app.config.js and an app.json then app.json will be returned.
+   * If a project has an app.config.json and an app.json then app.config.json will be returned.
+   * Returns null if no static config file exists.
+   */
+  staticConfigPath: string | null;
+  /**
+   * Path to an app.config.js or app.config.ts.
+   * Returns null if no dynamic config file exists.
+   */
+  dynamicConfigPath: string | null;
+};
 export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
 export type BareAppConfig = { name: string; [key: string]: any };
 
@@ -944,16 +970,20 @@ export type ConfigErrorCode =
   | 'NO_EXPO'
   | 'MODULE_NOT_FOUND'
   | 'INVALID_MODE'
+  | 'INVALID_FORMAT'
   | 'INVALID_CONFIG';
 
 export type ConfigContext = {
   projectRoot: string;
-  configPath?: string;
+  /**
+   * The static config path either app.json, app.config.json, or a custom user-defined config.
+   */
+  staticConfigPath: string | null;
+  packageJsonPath: string | null;
   config: Partial<ExpoConfig>;
 };
 
 export type GetConfigOptions = {
-  configPath?: string;
   skipSDKVersionRequirement?: boolean;
   strict?: boolean;
 };

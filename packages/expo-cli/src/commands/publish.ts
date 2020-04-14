@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
+import terminalLink from 'terminal-link';
 
 import { installExitHooks } from '../exit';
 import log from '../log';
@@ -29,6 +30,23 @@ export async function action(projectDir: string, options: Options = {}) {
     );
     process.exit(1);
   }
+
+  const { exp, pkg } = getConfig(projectDir, {
+    skipSDKVersionRequirement: true,
+  });
+
+  if (pkg.dependencies['expo-updates'] && pkg.dependencies['expokit']) {
+    log.warn(
+      `Warning: You have both the ${chalk.bold('expokit')} and ${chalk.bold('expo-updates')} packages installed in package.json.`
+    );
+    log.warn(
+      `These two packages are incompatible and ${chalk.bold('publishing updates with expo-updates will not work if expokit is installed.')}`
+    );
+    log.warn(
+      `If you intent to use ${chalk.bold('expo-updates')}, please remove ${chalk.bold('expokit')} from your dependencies.`
+    );
+  }
+
   const hasOptimized = fs.existsSync(path.join(projectDir, '/.expo-shared/assets.json'));
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!hasOptimized && !nonInteractive) {
@@ -105,10 +123,6 @@ export async function action(projectDir: string, options: Options = {}) {
     });
   }
 
-  const { exp } = getConfig(projectDir, {
-    skipSDKVersionRequirement: true,
-  });
-
   if (
     'userHasBuiltExperienceBefore' in buildStatus &&
     buildStatus.userHasBuiltExperienceBefore &&
@@ -139,12 +153,44 @@ export async function action(projectDir: string, options: Options = {}) {
       simpleSpinner.stop();
     }
 
-    log('Published');
-    log('Your URL is\n\n' + chalk.underline(url) + '\n');
-    log.raw(url);
+    log('Publish complete');
+    log.newLine();
 
-    if (recipient) {
-      await sendTo.sendUrlAsync(url, recipient);
+    let exampleManifestUrl = getExampleManifestUrl(url, exp.sdkVersion);
+    if (exampleManifestUrl) {
+      log(
+        `The manifest URL is: ${terminalLink(url, exampleManifestUrl)}. ${terminalLink(
+          'Learn more.',
+          'https://expo.fyi/manifest-url'
+        )}`
+      );
+    } else {
+      log(
+        `The manifest URL is: ${terminalLink(url, url)}. ${terminalLink(
+          'Learn more.',
+          'https://expo.fyi/manifest-url'
+        )}`
+      );
+    }
+
+    if (target === 'managed') {
+      // TODO: replace with websiteUrl from server when it is available, if that makes sense.
+      let websiteUrl = url.replace('exp.host', 'expo.io');
+      log(
+        `The project page is: ${terminalLink(websiteUrl, websiteUrl)}. ${terminalLink(
+          'Learn more.',
+          'https://expo.fyi/project-page'
+        )}`
+      );
+
+      if (recipient) {
+        await sendTo.sendUrlAsync(websiteUrl, recipient);
+      }
+    } else {
+      // This seems pointless in bare?? Leaving it out
+      // if (recipient) {
+      //   await sendTo.sendUrlAsync(url, recipient);
+      // }
     }
   } finally {
     if (startedOurOwn) {
@@ -152,6 +198,25 @@ export async function action(projectDir: string, options: Options = {}) {
     }
   }
   return result;
+}
+
+function getExampleManifestUrl(url: string, sdkVersion: string | undefined): string | null {
+  if (!sdkVersion) {
+    return null;
+  }
+
+  if (url.includes('release-channel') && url.includes('?release-channel')) {
+    return (
+      url.replace('?release-channel', '/index.exp?release-channel') + `&sdkVersion=${sdkVersion}`
+    );
+  } else if (url.includes('?') && !url.includes('release-channel')) {
+    // This is the only relevant url query param we are aware of at the time of
+    // writing this code, so if there is some other param included we don't know
+    // how to deal with it and log nothing.
+    return null;
+  } else {
+    return `${url}/index.exp?sdkVersion=${sdkVersion}`;
+  }
 }
 
 export default function(program: Command) {
