@@ -76,10 +76,20 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
       'expo fetch:android:keystore'
     )}`
   );
+  log.nested(
+    `- 🚀 ${terminalLink(
+      'expo-updates',
+      'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+    )} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
+      'expo publish'
+    )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
+  );
 
   log.newLine();
   log.nested(`☑️  ${chalk.bold('When you are ready to run your project')}`);
-  log.nested('To compile and run your project, execute one of the following commands:');
+  log.nested(
+    'To compile and run your project in development, execute one of the following commands:'
+  );
   let packageManager = isUsingYarn(projectRoot) ? 'yarn' : 'npm';
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
