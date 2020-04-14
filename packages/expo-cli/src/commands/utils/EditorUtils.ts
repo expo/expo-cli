@@ -21,7 +21,7 @@ export async function startEditorAsync(path: string, options: { editor?: string 
   }
 
   log.error(
-    'Could not open editor, you can set it by defining the $EDITOR env var with the binary of your editor. (e.g. "code" or "atom")'
+    'Could not open editor, you can set it by defining the $EDITOR environment variable with the binary of your editor. (e.g. "code" or "atom")'
   );
   return false;
 }
