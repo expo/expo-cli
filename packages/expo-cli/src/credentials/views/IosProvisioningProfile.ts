@@ -11,7 +11,6 @@ import { Context, IView } from '../context';
 import {
   IosAppCredentials,
   IosCredentials,
-  IosDistCredentials,
   appleTeamSchema,
   provisioningProfileSchema,
 } from '../credentials';
@@ -25,11 +24,15 @@ import {
   ProvisioningProfileManager,
 } from '../../appleApi';
 
+type CliOptions = {
+  nonInteractive?: boolean;
+};
+
 export type ProvisioningProfileOptions = {
   experienceName: string;
   bundleIdentifier: string;
   distCert: DistCert;
-};
+} & CliOptions;
 
 export class RemoveProvisioningProfile implements IView {
   shouldRevoke: boolean;
@@ -81,12 +84,14 @@ export class CreateProvisioningProfile implements IView {
   _experienceName: string;
   _bundleIdentifier: string;
   _distCert: DistCert;
+  _nonInteractive: boolean;
 
   constructor(options: ProvisioningProfileOptions) {
     const { experienceName, bundleIdentifier, distCert } = options;
     this._experienceName = experienceName;
     this._bundleIdentifier = bundleIdentifier;
     this._distCert = distCert;
+    this._nonInteractive = options.nonInteractive ?? false;
   }
 
   async create(ctx: Context): Promise<ProvisioningProfile> {
@@ -121,11 +126,13 @@ export class CreateProvisioningProfile implements IView {
   }
 
   async provideOrGenerate(ctx: Context): Promise<ProvisioningProfile> {
-    const userProvided = await askForUserProvided(provisioningProfileSchema);
-    if (userProvided) {
-      // userProvided profiles don't come with ProvisioningProfileId's (only accessible from Apple Portal API)
-      log(chalk.yellow('Provisioning profile: Unable to validate uploaded profile.'));
-      return userProvided;
+    if (!this._nonInteractive) {
+      const userProvided = await askForUserProvided(provisioningProfileSchema);
+      if (userProvided) {
+        // userProvided profiles don't come with ProvisioningProfileId's (only accessible from Apple Portal API)
+        log(chalk.yellow('Provisioning profile: Unable to validate uploaded profile.'));
+        return userProvided;
+      }
     }
     return await generateProvisioningProfile(ctx, this._bundleIdentifier, this._distCert);
   }
@@ -163,12 +170,14 @@ export class CreateOrReuseProvisioningProfile implements IView {
   _experienceName: string;
   _bundleIdentifier: string;
   _distCert: DistCert;
+  _nonInteractive: boolean;
 
   constructor(options: ProvisioningProfileOptions) {
     const { experienceName, bundleIdentifier, distCert } = options;
     this._experienceName = experienceName;
     this._bundleIdentifier = bundleIdentifier;
     this._distCert = distCert;
+    this._nonInteractive = options.nonInteractive ?? false;
   }
 
   choosePreferred(profiles: ProvisioningProfileInfo[]): ProvisioningProfileInfo {
@@ -202,6 +211,7 @@ export class CreateOrReuseProvisioningProfile implements IView {
         experienceName: this._experienceName,
         bundleIdentifier: this._bundleIdentifier,
         distCert: this._distCert,
+        nonInteractive: this._nonInteractive,
       });
     }
 
@@ -216,19 +226,25 @@ export class CreateOrReuseProvisioningProfile implements IView {
       pageSize: Infinity,
     };
 
-    const { confirm } = await prompt(confirmQuestion);
-    if (confirm) {
-      log(`Using Provisioning Profile: ${autoselectedProfile.provisioningProfileId}`);
-      await configureAndUpdateProvisioningProfile(
-        ctx,
-        this._experienceName,
-        this._bundleIdentifier,
-        this._distCert,
-        autoselectedProfile
-      );
-      return null;
+    if (!this._nonInteractive) {
+      const { confirm } = await prompt(confirmQuestion);
+      if (!confirm) {
+        return await this._createOrReuse(ctx);
+      }
     }
 
+    log(`Using Provisioning Profile: ${autoselectedProfile.provisioningProfileId}`);
+    await configureAndUpdateProvisioningProfile(
+      ctx,
+      this._experienceName,
+      this._bundleIdentifier,
+      this._distCert,
+      autoselectedProfile
+    );
+    return null;
+  }
+
+  async _createOrReuse(ctx: Context): Promise<IView | null> {
     const choices = [
       {
         name: '[Choose existing provisioning profile] (Recommended)',

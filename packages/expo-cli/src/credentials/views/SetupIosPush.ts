@@ -9,11 +9,13 @@ import log from '../../log';
 export class SetupIosPush implements IView {
   _experienceName: string;
   _bundleIdentifier: string;
+  _nonInteractive: boolean;
 
   constructor(options: iosPushView.PushKeyOptions) {
     const { experienceName, bundleIdentifier } = options;
     this._experienceName = experienceName;
     this._bundleIdentifier = bundleIdentifier;
+    this._nonInteractive = options.nonInteractive ?? false;
   }
 
   async open(ctx: Context): Promise<IView | null> {
@@ -49,27 +51,18 @@ export class SetupIosPush implements IView {
       this._bundleIdentifier
     );
 
-    if (!configuredPushKey) {
-      return new iosPushView.CreateOrReusePushKey({
-        experienceName: this._experienceName,
-        bundleIdentifier: this._bundleIdentifier,
-      });
-    }
-
-    if (!ctx.hasAppleCtx) {
-      throw new Error(`This workflow requires you to provide your Apple Credentials.`);
-    }
-
-    // check if valid
-    const isValid = await iosPushView.validatePushKey(ctx, configuredPushKey);
-
-    if (isValid) {
-      return null;
+    if (configuredPushKey) {
+      // we dont need to setup if we have a valid push key on file
+      const isValid = await iosPushView.validatePushKey(ctx, configuredPushKey);
+      if (isValid) {
+        return null;
+      }
     }
 
     return new iosPushView.CreateOrReusePushKey({
       experienceName: this._experienceName,
       bundleIdentifier: this._bundleIdentifier,
+      nonInteractive: this._nonInteractive,
     });
   }
 }
