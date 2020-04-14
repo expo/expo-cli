@@ -23,6 +23,8 @@ type Options = {
   yarn: boolean;
   yes: boolean;
   name?: string;
+  androidPackage?: string;
+  iosBundleIdentifier?: string;
 };
 
 const FEATURED_TEMPLATES = [
@@ -64,6 +66,8 @@ async function action(projectDir: string, command: Command) {
     yarn: !!command.yarn,
     npm: !!command.npm,
     template: command.template,
+    androidPackage: command.androidPackage,
+    iosBundleIdentifier: command.iosBundleIdentifier,
     /// XXX(ville): this is necessary because with Commander.js, when the --name
     // option is not set, `command.name` will point to `Command.prototype.name`.
     name: typeof command.name === 'string' ? ((command.name as unknown) as string) : undefined,
@@ -93,6 +97,20 @@ async function action(projectDir: string, command: Command) {
     );
   } else {
     parentDir = process.cwd();
+  }
+
+  if (options.androidPackage) {
+    const validationResult = validateAndroidPackage(options.androidPackage);
+    if (validationResult !== true) {
+      throw new CommandError('INVALID_ANDROID_PACKAGE', validationResult);
+    }
+  }
+
+  if (options.iosBundleIdentifier) {
+    const validationResult = validateIosBundleIdentifier(options.iosBundleIdentifier);
+    if (validationResult !== true) {
+      throw new CommandError('INVALID_IOS_BUNDLE_IDENTIFIER', validationResult);
+    }
   }
 
   let templateSpec;
@@ -389,6 +407,22 @@ function validateProjectName(name: string) {
   );
 }
 
+function validateAndroidPackage(name: string) {
+  return (
+    /^[a-zA-Z][a-zA-Z0-9\_]*(\.[a-zA-Z][a-zA-Z0-9\_]*)+$/.test(name) ||
+    'Android package name may only contain lowercase and uppercase letters (a-z, A-Z), numbers (0-9) and underscores (_), separated by periods (.), received ' +
+      name
+  );
+}
+
+function validateIosBundleIdentifier(name: string) {
+  return (
+    /^[a-zA-Z][a-zA-Z0-9\-\.]+$/.test(name) ||
+    "iOS bundle identifier may only contain lowercase and uppercase letters (a-z, A-Z), numbers (0-9), hyphens (-), periods (.) and can't end on a period, received " +
+      name
+  );
+}
+
 function isNonExistentOrEmptyDir(dir: string) {
   try {
     return fs.statSync(dir).isDirectory() && fs.readdirSync(dir).length === 0;
@@ -423,10 +457,13 @@ async function promptForBareConfig(
 
   return {
     name: projectName,
-    expo: {
-      name: options.name || projectName,
-      slug: projectName,
-    },
+    expo: addAdditionalManifestConfig(
+      {
+        name: options.name || projectName,
+        slug: projectName,
+      },
+      options
+    ),
   };
 }
 
@@ -450,7 +487,21 @@ async function promptForManagedConfig(
   if (options.name) {
     expo.name = options.name;
   }
-  return { expo };
+  return { expo: addAdditionalManifestConfig(expo, options) };
+}
+
+function addAdditionalManifestConfig(expo: ExpoConfig, options: Options) {
+  if (options.androidPackage) {
+    expo.android = expo.android || {};
+    expo.android.package = options.androidPackage;
+  }
+
+  if (options.iosBundleIdentifier) {
+    expo.ios = expo.ios || {};
+    expo.ios.bundleIdentifier = options.iosBundleIdentifier;
+  }
+
+  return expo;
 }
 
 export default function(program: Command) {
@@ -468,5 +519,7 @@ export default function(program: Command) {
     .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
     .option('--name [name]', 'The name of your app visible on the home screen.')
     .option('--yes', 'Use default options. Same as "expo init . --template blank')
+    .option('--android-package [name]', 'The package name for your Android standalone app')
+    .option('--ios-bundle-identifier [name]', 'The bundle identifier for your iOS standalone app')
     .asyncAction(action);
 }
