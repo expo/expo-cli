@@ -309,7 +309,7 @@ export async function upgradeExpoAsync(url?: string): Promise<boolean> {
 export async function assertDeviceReadyAsync() {
   const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
 
-  if (!await _isDeviceAuthorizedAsync()) {
+  if (!(await _isDeviceAuthorizedAsync())) {
     throw new Error(
       `This computer is not authorized to debug the device. Please follow the instructions here to enable USB debugging:\n${genymotionMessage}`
     );
@@ -351,9 +351,9 @@ async function _openUrlAsync(url: string) {
 }
 
 async function attemptToStartEmulatorOrAssertAsync() {
-  if (!await _isDeviceAttachedAsync()) {
+  if (!(await _isDeviceAttachedAsync())) {
     // If no devices or emulators are attached we should attempt to open one.
-    if (!await maybeStartAnyEmulatorAsync()) {
+    if (!(await maybeStartAnyEmulatorAsync())) {
       const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
       throw new Error(
         `No Android connected device found, and no emulators could be started automatically.\nPlease connect a device or create an emulator (https://docs.expo.io/versions/latest/workflow/android-studio-emulator).\nThen follow the instructions here to enable USB debugging:\n${genymotionMessage}`
@@ -368,7 +368,7 @@ async function openUrlAsync(url: string, isDetached: boolean = false): Promise<v
     await attemptToStartEmulatorOrAssertAsync();
 
     let installedExpo = false;
-    if (!isDetached && !await _isExpoInstalledAsync()) {
+    if (!isDetached && !(await _isExpoInstalledAsync())) {
       await installExpoAsync();
       installedExpo = true;
     }
@@ -454,7 +454,7 @@ export async function startAdbReverseAsync(projectRoot: string): Promise<boolean
   ];
 
   for (let port of adbReversePorts) {
-    if (!await adbReverse(port)) {
+    if (!(await adbReverse(port))) {
       return false;
     }
   }
@@ -479,7 +479,7 @@ export async function stopAdbReverseAsync(projectRoot: string): Promise<void> {
 }
 
 async function adbReverse(port: number) {
-  if (!await _isDeviceAuthorizedAsync()) {
+  if (!(await _isDeviceAuthorizedAsync())) {
     return false;
   }
 
@@ -493,7 +493,7 @@ async function adbReverse(port: number) {
 }
 
 async function adbReverseRemove(port: number) {
-  if (!await _isDeviceAuthorizedAsync()) {
+  if (!(await _isDeviceAuthorizedAsync())) {
     return false;
   }
 
@@ -619,5 +619,14 @@ but their sizes mismatch expected ones: [dpi: provided (expected)] ${androidSpla
       )
       .join(', ')}
 See https://docs.expo.io/versions/latest/guides/splash-screens/#differences-between-environments---android for more information`);
+  }
+}
+
+export async function maybeStopAdbDaemonAsync() {
+  try {
+    await getAdbOutputAsync(['kill-server']);
+    return true;
+  } catch {
+    return false;
   }
 }
