@@ -150,7 +150,12 @@ class ProjectManagerSection extends React.Component {
     }
 
     let logElements = this.props.data.messages.nodes.map(message => (
-      <Log key={message.id} message={message} />
+      <Log
+        type={this.props.data.__typename}
+        name={this.props.data.name}
+        key={message.id}
+        message={message}
+      />
     ));
 
     return this.props.connectDropTarget(

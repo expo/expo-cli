@@ -1,101 +1,104 @@
 import React from 'react';
-import { css, cx } from 'react-emotion';
 import hasAnsi from 'has-ansi';
 import { ansiToJson } from 'anser';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Clipboard,
+  Package,
+  Smartphone,
+} from 'react-feather';
 
 import * as Constants from 'app/common/constants';
+import { semanticColors } from 'app/common/colors';
 import * as Strings from 'app/common/strings';
 import StackTrace from './StackTrace';
 
-const STYLES_LOG = css`
-  font-family: ${Constants.fontFamilies.mono};
-  display: flex;
-  justify-content: flex-start;
-  font-size: 12px;
-  margin-bottom: 12px;
-`;
-
-const STYLES_LOG_COL_TIMESTAMP = css`
-  color: ${Constants.colors.logTimestamp};
-  flex-shrink: 0;
-  font-size: 10px;
-  margin: 0 8px 4px 0;
-  overflow-wrap: break-word;
-`;
-
-const STYLES_LOG_COL_CONTEXT = css`
-  color: ${Constants.colors.logContext};
-  flex-shrink: 0;
-  font-size: 10px;
-  margin: 0 8px 4px 0;
-  text-transform: uppercase;
-  overflow-wrap: break-word;
-  margin-right: 8px;
-`;
-
-const STYLES_LOG_COL_CONTENT = css`
-  font-family: ${Constants.fontFamilies.mono};
-  width: 100%;
-  min-width: 25%;
-  line-height: 14px;
-  overflow-wrap: break-word;
-  white-space: pre-wrap;
-`;
-
-const STYLES_LOG_LEFT = css`
-  flex-shrink: 0;
-  width: 64px;
-`;
-
-const STYLES_LOG_COL_LEVEL = css`
-  flex-shrink: 0;
-  font-size: 10px;
-  margin: 1px 8px 4px 0;
-  text-transform: uppercase;
-  overflow-wrap: break-word;
-  margin-right: 8px;
-`;
-
-const logLevelLabel = level => {
+const getLogLevelStyles = level => {
   switch (level) {
     case 'DEBUG':
-      return 'Debug';
+      return {
+        containerTint: {
+          backgroundColor: semanticColors.defaultLogBackground,
+        },
+        iconColor: semanticColors.defaultLogIconColor,
+        buttonTint: {
+          backgroundColor: semanticColors.defaultLogBackground,
+        },
+      };
     case 'INFO':
-      return 'Info';
+      return {
+        containerTint: {
+          backgroundColor: semanticColors.defaultLogBackground,
+        },
+        iconColor: semanticColors.defaultLogIconColor,
+        buttonTint: {
+          backgroundColor: semanticColors.defaultLogBackground,
+        },
+      };
     case 'WARN':
-      return 'Warning';
+      return {
+        containerTint: {
+          backgroundColor: semanticColors.warningLogBackground,
+        },
+        iconColor: semanticColors.warningLogIconColor,
+        buttonTint: {
+          backgroundColor: semanticColors.warningLogBackground,
+        },
+      };
     case 'ERROR':
-      return 'Error';
+      return {
+        containerTint: {
+          backgroundColor: semanticColors.errorLogBackground,
+        },
+        iconColor: semanticColors.errorLogIconColor,
+        buttonTint: {
+          backgroundColor: semanticColors.errorLogBackground,
+        },
+      };
+  }
+};
+
+const getLogLevelIcon = (level, type) => {
+  const color = {
+    DEBUG: semanticColors.defaultLogIconColor,
+    INFO: semanticColors.defaultLogIconColor,
+    WARN: semanticColors.warningLogIconColor,
+    ERROR: semanticColors.errorLogIconColor,
+  }[level];
+
+  switch (type) {
+    case 'Device':
+      return <Smartphone color={color} size={16} />;
+    case 'Process':
+      return <Package color={color} size={16} />;
+    case 'Issues':
+      return <AlertTriangle color={color} size={16} />;
+    case 'ERROR':
+      return null;
   }
 };
 
 export default class Log extends React.Component {
-  renderMessageContent({ msg, level }) {
+  state = { collapsed: true };
+  renderMessageContent({ msg }) {
     if (!hasAnsi(msg)) {
       return (
-        <div
-          className={cx(
-            STYLES_LOG_COL_CONTENT,
-            level ? css({ color: Constants.logLevel[level] }) : null
-          )}>
-          {msg}
-        </div>
+        <Text style={styles.logContent}>
+          {this.props.name}: {msg}
+        </Text>
       );
     }
-    const chunks = ansiToJson(msg, {
-      remove_empty: true,
-    });
-    const content = chunks.map(chunk => {
-      const style = {};
-      if (chunk.bg) {
-        style.backgroundColor = Constants.ansiColorOverrides[chunk.bg] || `rgb(${chunk.bg})`;
-      }
-      if (chunk.fg) {
-        style.color = Constants.ansiColorOverrides[chunk.fg] || `rgb(${chunk.fg})`;
-      }
-      return <span style={style}>{chunk.content}</span>;
-    });
-    return <div className={STYLES_LOG_COL_CONTENT}>{content}</div>;
+
+    return (
+      <Text style={styles.logContent}>
+        {ansiToJson(msg, {
+          remove_empty: true,
+        })}
+      </Text>
+    );
   }
 
   renderMessage(message) {
@@ -103,10 +106,10 @@ export default class Log extends React.Component {
       try {
         const data = JSON.parse(message.msg);
         return (
-          <React.Fragment>
+          <View style={styles.stackLogContainer}>
             {this.renderMessageContent({ ...message, msg: data.message })}
-            <StackTrace level={message.level} stack={data.stack} />
-          </React.Fragment>
+            <StackTrace level={message.level} collapsed={this.state.collapsed} stack={data.stack} />
+          </View>
         );
       } catch (e) {
         return this.renderMessageContent(message);
@@ -118,35 +121,93 @@ export default class Log extends React.Component {
 
   render() {
     const { message } = this.props;
+
+    const logLevelStyles = getLogLevelStyles(message.level);
+    const logLevelIcon = getLogLevelIcon(message.level, this.props.type);
+
     return (
-      <div className={STYLES_LOG}>
-        <div className={STYLES_LOG_LEFT}>
-          {message.level ? (
-            <div
-              className={STYLES_LOG_COL_LEVEL}
-              style={{
-                color: Constants.logLevelWithAlpha[message.level],
-              }}>
-              {logLevelLabel(message.level)}
-            </div>
-          ) : (
-            undefined
-          )}
+      <View style={[styles.container, logLevelStyles.containerTint]}>
+        {logLevelIcon && (
+          <View
+            accessibilityLabel={(message.level?.toLowerCase() ?? '') + ' icon'}
+            style={styles.logLevelIconContainer}>
+            {logLevelIcon}
+          </View>
+        )}
+        {this.renderMessage(message)}
+        <View style={styles.logAccessories}>
           {message.time ? (
-            <div className={STYLES_LOG_COL_TIMESTAMP}>
-              {Strings.formatTimeMilitary(message.time)}
-            </div>
+            <Text style={styles.logTime}>{Strings.formatTimeMilitary(message.time)}</Text>
           ) : (
             undefined
           )}
-          {this.props.context ? (
-            <div className={STYLES_LOG_COL_CONTEXT}>{this.props.context}</div>
-          ) : (
-            undefined
+          {message.includesStack && (
+            <TouchableOpacity
+              style={styles.buttonContainer}
+              onPress={() => this.setState(s => ({ collapsed: !s.collapsed }))}>
+              {this.state.collapsed ? (
+                <ChevronDown color="white" size={16} style={{ opacity: 0.6 }} />
+              ) : (
+                <ChevronUp color="white" size={16} style={{ opacity: 0.6 }} />
+              )}
+            </TouchableOpacity>
           )}
-        </div>
-        <div>{this.renderMessage(message)}</div>
-      </div>
+          <TouchableOpacity
+            style={styles.buttonContainer}
+            onPress={() => navigator.clipboard.writeText(message.msg)}>
+            <Clipboard color="white" size={16} style={{ opacity: 0.6 }} />
+          </TouchableOpacity>
+        </View>
+      </View>
     );
   }
 }
+
+const styles = StyleSheet.create({
+  container: {
+    borderRadius: 4,
+    padding: 8,
+    backgroundColor: semanticColors.defaultLogBackground,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8, // TODO: remove this in favor of spacer component
+    alignItems: 'flex-start',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  logContent: {
+    fontFamily: Constants.fontFamilies.mono,
+    width: '100%',
+    minWidth: '25%',
+    lineHeight: 14,
+    fontSize: 12,
+    overflowWrap: 'break-word',
+    whiteSpace: 'pre-wrap',
+    alignSelf: 'center',
+    color: semanticColors.logContent,
+  },
+  logTime: {
+    fontFamily: Constants.fontFamilies.mono,
+    color: semanticColors.logContent,
+    flexShrink: 0,
+    fontSize: 10,
+    overflowWrap: 'break-word',
+  },
+  logAccessories: {
+    flexDirection: 'row',
+    marginLeft: 16, // TODO: remove this in favor of spacer component
+    alignItems: 'center',
+  },
+  stackLogContainer: { flex: 1, alignSelf: 'center' },
+  buttonContainer: {
+    marginLeft: 8, // TODO: remove this in favor of spacer component
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 4,
+    borderRadius: 2,
+    display: 'inline-flex',
+  },
+  logLevelIconContainer: {
+    marginRight: 8, // TODO: remove this in favor of spacer component
+    padding: 4,
+  },
+});

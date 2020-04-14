@@ -8,6 +8,8 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "strict": true,
+    "allowJs": true,
+    "noImplicitAny": false,
     "baseUrl": ".",
     "paths": {
       "app/*": ["*"]
