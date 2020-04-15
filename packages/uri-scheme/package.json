@@ -1,28 +1,28 @@
 {
-  "name": "expo-optimize",
-  "version": "0.1.18",
+  "name": "uri-scheme",
+  "version": "1.0.2",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
     "expo",
-    "sharp",
-    "optimize",
-    "react-native",
-    "react-native-web"
+    "ios",
+    "uri-scheme",
+    "android"
   ],
-  "description": "Compress the assets in your project",
+  "description": "Interact with native URI schemes",
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
-    "directory": "packages/expo-optimize"
+    "directory": "packages/uri-scheme"
   },
   "author": "Expo <support@expo.io>",
   "license": "MIT",
   "bin": {
-    "expo-optimize": "./build/index.js"
+    "uri-scheme": "./cli.js"
   },
   "files": [
-    "build"
+    "build",
+    "cli.js"
   ],
   "scripts": {
     "prepare": "yarn run clean && yarn run build:prod",
@@ -35,17 +35,15 @@
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.8",
     "@expo/config": "3.1.0",
-    "@expo/image-utils": "0.2.19",
-    "@expo/json-file": "8.2.9",
+    "@expo/plist": "0.0.2",
+    "@expo/spawn-async": "1.5.0",
     "@types/node": "^12.6.8",
     "@zeit/ncc": "^0.20.5",
     "chalk": "2.4.2",
     "commander": "2.20.0",
-    "cross-spawn": "6.0.5",
+    "enquirer": "2.3.4",
     "glob": "7.1.2",
-    "pretty-bytes": "5.2.0",
     "rimraf": "2.6.3",
-    "tempy": "0.3.0",
     "update-check": "1.5.3"
   }
 }

@@ -18,6 +18,7 @@ import wordwrap from 'wordwrap';
 import { loginOrRegisterIfLoggedOut } from '../../accounts';
 import log from '../../log';
 import urlOpts from '../../urlOpts';
+import { startEditorAsync } from '../utils/EditorUtils';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
@@ -63,6 +64,7 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
   }
  \u203A Press ${b`p`} to toggle ${u`p`}roduction mode. (current mode: ${i(devMode)})
  \u203A Press ${b`r`} to ${u`r`}estart bundler, or ${b`shift-r`} to restart and clear cache.
+ \u203A Press ${b`o`} to ${u`o`}pen the project in your editor.
  \u203A Press ${b`s`} to ${u`s`}ign ${
     username ? `out. (Signed in as ${i('@' + username)}.)` : 'in.'
   }
@@ -324,6 +326,9 @@ Please reload the project in the Expo app for the change to take effect.`
         printHelp();
         break;
       }
+      case 'o':
+        log('Trying to open the project in your editor...');
+        await startEditorAsync(projectDir);
     }
   }
 };

@@ -76,10 +76,20 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
       'expo fetch:android:keystore'
     )}`
   );
+  log.nested(
+    `- 🚀 ${terminalLink(
+      'expo-updates',
+      'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+    )} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
+      'expo publish'
+    )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
+  );
 
   log.newLine();
   log.nested(`☑️  ${chalk.bold('When you are ready to run your project')}`);
-  log.nested('To compile and run your project, execute one of the following commands:');
+  log.nested(
+    'To compile and run your project in development, execute one of the following commands:'
+  );
   let packageManager = isUsingYarn(projectRoot) ? 'yarn' : 'npm';
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
@@ -234,7 +244,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   appJson.expo.ios = appJson.expo.ios ?? {};
   appJson.expo.ios.bundleIdentifier = bundleIdentifier;
 
-  let packageName = await getOrPromptForPackage(projectRoot);
+  let packageName = await getOrPromptForPackage(projectRoot, bundleIdentifier);
   appJson.expo.android = appJson.expo.android ?? {};
   appJson.expo.android.package = packageName;
 
@@ -420,7 +430,10 @@ async function promptForNativeAppNameAsync(projectRoot: string): Promise<string>
   return name!;
 }
 
-async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<string> {
+async function getOrPromptForBundleIdentifier(
+  projectRoot: string,
+  defaultValue?: string
+): Promise<string> {
   let { exp } = getConfig(projectRoot);
 
   if (exp.ios?.bundleIdentifier) {
@@ -438,6 +451,7 @@ async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<stri
   const { bundleIdentifier } = await prompt([
     {
       name: 'bundleIdentifier',
+      default: defaultValue,
       message: `What would you like your bundle identifier to be?`,
       validate: (value: string) => /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value),
     },
@@ -447,7 +461,7 @@ async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<stri
   return bundleIdentifier;
 }
 
-async function getOrPromptForPackage(projectRoot: string): Promise<string> {
+async function getOrPromptForPackage(projectRoot: string, defaultValue?: string): Promise<string> {
   let { exp } = getConfig(projectRoot);
 
   if (exp.android?.package) {
@@ -465,6 +479,7 @@ async function getOrPromptForPackage(projectRoot: string): Promise<string> {
   const { packageName } = await prompt([
     {
       name: 'packageName',
+      default: defaultValue,
       message: `What would you like your package to be named?`,
       validate: (value: string) => /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value),
     },
