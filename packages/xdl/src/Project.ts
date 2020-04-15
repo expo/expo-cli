@@ -43,6 +43,7 @@ import urljoin from 'url-join';
 import { promisify } from 'util';
 import uuid from 'uuid';
 
+import chalk from 'chalk';
 import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
@@ -75,7 +76,6 @@ import * as IosPlist from './detach/IosPlist';
 // @ts-ignore IosWorkspace not yet converted to TypeScript
 import * as IosWorkspace from './detach/IosWorkspace';
 import { ConnectionStatus } from './xdl';
-import chalk from 'chalk';
 
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
@@ -1653,20 +1653,20 @@ function _isAppRegistryStartupMessage(body: any[]) {
 }
 
 type ConsoleLogLevel = 'info' | 'warn' | 'error' | 'debug';
-  
-function convertWebColorToChalk(logObj) {
-   const { msg, colors } = logObj;
-   if (!colors) {
-    return msg;
-   }
-  
-   return msg
-    .split('%c')
-    .filter(x => x)
-    .map((part, idx) => {
-      return colors[idx] ?  chalk.hex(colors[idx])(part) : part;
-    })
-    .join('');
+
+function convertWebColorToChalk(logObj) {
+  const { msg, colors } = logObj;
+  if (!colors) {
+    return msg;
+  }
+
+  return msg
+    .split('%c')
+    .filter(x => x)
+    .map((part, idx) => {
+      return colors[idx] ? chalk.hex(colors[idx])(part) : part;
+    })
+    .join('');
 }
 
 function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: string, logs: any) {
@@ -1681,65 +1681,65 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
     if (_isAppRegistryStartupMessage(body)) {
       body = [`Running application on ${deviceName}.`];
     }
-  
-    const args = body
-        .reduce((result:any, msg: any) => {
-          if (typeof msg === 'undefined') {
-            result.push({ msg: 'undefined' });
-            return result;
-          }
-  
-          if (msg === 'null') {
-            result.push({ msg: 'null' });
-            return result;
-          }
-  
-          const last = result && result.length && result[result.length - 1];
-          if (last && last.hasWebColorHash && msg.match(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)) {
-            last.colors = last.colors || [];
-            last.colors.push(msg.trim());
-          } else if (last && last.hasWebColorHash && msg.match(/^color:/)) {
-            last.colors = last.colors || [];
-            last.colors.push(msg.replace('color:', '').trim());
-          } else {
-            const hasWebColorHash = msg.indexOf('%c') >= 0;
-            result.push({ msg, hasWebColorHash });
-          }
-          return result;
-        }, [])
-        .map(obj => {
-          if (typeof obj.msg === 'string') {
-            return convertWebColorToChalk(obj);
-          }
-  
-          if (typeof obj.msg === 'number' || typeof obj.msg === 'boolean') {
-            return obj.msg;
-          }
-  
-          try {
-            return JSON.stringify(obj.msg);
-          } catch (e) {
-            return obj.toString();
-          }
-        });
 
-      const logLevel =
+    const args = body
+      .reduce((result: any, msg: any) => {
+        if (typeof msg === 'undefined') {
+          result.push({ msg: 'undefined' });
+          return result;
+        }
+
+        if (msg === 'null') {
+          result.push({ msg: 'null' });
+          return result;
+        }
+
+        const last = result && result.length && result[result.length - 1];
+        if (last && last.hasWebColorHash && msg.match(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)) {
+          last.colors = last.colors || [];
+          last.colors.push(msg.trim());
+        } else if (last && last.hasWebColorHash && msg.match(/^color:/)) {
+          last.colors = last.colors || [];
+          last.colors.push(msg.replace('color:', '').trim());
+        } else {
+          const hasWebColorHash = msg.indexOf('%c') >= 0;
+          result.push({ msg, hasWebColorHash });
+        }
+        return result;
+      }, [])
+      .map(obj => {
+        if (typeof obj.msg === 'string') {
+          return convertWebColorToChalk(obj);
+        }
+
+        if (typeof obj.msg === 'number' || typeof obj.msg === 'boolean') {
+          return obj.msg;
+        }
+
+        try {
+          return JSON.stringify(obj.msg);
+        } catch (e) {
+          return obj.toString();
+        }
+      });
+
+    const logLevel =
       level === 'info' || level === 'warn' || level === 'error' || level === 'debug'
         ? (level as ConsoleLogLevel)
         : 'info';
-      ProjectUtils.getLogger(projectRoot)[logLevel](
-        {
-          tag: 'device',
-          deviceId,
-          deviceName,
-          groupDepth: log.groupDepth,
-          shouldHide: log.shouldHide,
-          includesStack: log.includesStack,
-        },
-        ...args
-      );
-    }
+    ProjectUtils.getLogger(projectRoot)[logLevel](
+      {
+        tag: 'device',
+        deviceId,
+        deviceName,
+        groupDepth: log.groupDepth,
+        shouldHide: log.shouldHide,
+        includesStack: log.includesStack,
+      },
+      ...args
+    );
   }
+}
 export async function startReactNativeServerAsync(
   projectRoot: string,
   options: StartOptions = {},
