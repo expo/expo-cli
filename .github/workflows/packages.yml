@@ -20,33 +20,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@master
         with:
           node-version: ${{ matrix.node-version }}
-
-      - name: restore lerna
+      - name: Cache
         id: cache
-        uses: actions/cache@eb78578266b7cec649ab65b6f1534bd6040c838b
+        uses: actions/cache@master
         with:
           path: |
-            node_modules
-            */*/node_modules
+            *
           key: n-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Install Dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: yarn
-
       # Setup Learna - run manually so we don't run yarn more than needed
       - run: yarn lerna bootstrap && yarn lerna run prepare --stream
-
-      # Save state
-      - name: Persist to Workspace
-        uses: actions/upload-artifact@master
-        with:
-          name: dependencies-${{ matrix.os }}-${{ matrix.node-version }}
-          path: '~'
 
   test:
     strategy:
@@ -60,20 +49,13 @@ jobs:
     name: ${{ matrix.package }} with Node ${{ matrix.node-version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     steps:
-      # - uses: actions/checkout@v2
-      #   with:
-      #     fetch-depth: 1
-
-      # - name: Use Node.js ${{ matrix.node-version }}
-      #   uses: actions/setup-node@v1
-      #   with:
-      #     node-version: ${{ matrix.node-version }}
-
-      - name: Attach Workspace
-        uses: actions/download-artifact@master
+      - name: Cache
+        id: cache
+        uses: actions/cache@master
         with:
-          name: dependencies-${{ matrix.os }}-${{ matrix.node-version }}
-
+          path: |
+            *
+          key: n-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Test ${{ matrix.package }}
         run: cd packages/${{ matrix.package }} && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
         env:
