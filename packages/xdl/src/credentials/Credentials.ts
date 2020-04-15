@@ -64,20 +64,7 @@ async function fetchCredentials(
 ): Promise<Credentials | undefined | null> {
   // this doesn't hit our mac rpc channel, so it needs significantly less debugging
   let credentials;
-  if (process.env.EXPO_LEGACY_API === 'true') {
-    const response = await Api.callMethodAsync('getCredentials', [], 'post', {
-      username,
-      experienceName,
-      bundleIdentifier,
-      platform,
-      decrypt,
-    });
-
-    if (response.err) {
-      throw new Error('Error fetching credentials.');
-    }
-    credentials = response.credentials;
-  } else {
+  if (process.env.EXPO_NEXT_API === 'true') {
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
 
@@ -103,6 +90,19 @@ async function fetchCredentials(
         credentials = {};
       }
     }
+  } else {
+    const response = await Api.callMethodAsync('getCredentials', [], 'post', {
+      username,
+      experienceName,
+      bundleIdentifier,
+      platform,
+      decrypt,
+    });
+
+    if (response.err) {
+      throw new Error('Error fetching credentials.');
+    }
+    credentials = response.credentials;
   }
   return credentials;
 }
@@ -113,18 +113,7 @@ export async function updateCredentialsForPlatform(
   userCredentialsIds: Array<number>,
   metadata: CredentialMetadata
 ): Promise<void> {
-  if (process.env.EXPO_LEGACY_API) {
-    const { err, credentials } = await Api.callMethodAsync('updateCredentials', [], 'post', {
-      credentials: newCredentials,
-      userCredentialsIds,
-      platform,
-      ...metadata,
-    });
-
-    if (err || !credentials) {
-      throw new Error('Error updating credentials.');
-    }
-  } else {
+  if (process.env.EXPO_NEXT_API === 'true') {
     const { experienceName } = metadata;
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
@@ -134,6 +123,17 @@ export async function updateCredentialsForPlatform(
 
     if (result.errors) {
       throw new Error(`Error updating credentials: ${JSON.stringify(result.errors)}}`);
+    } else {
+      const { err, credentials } = await Api.callMethodAsync('updateCredentials', [], 'post', {
+        credentials: newCredentials,
+        userCredentialsIds,
+        platform,
+        ...metadata,
+      });
+
+      if (err || !credentials) {
+        throw new Error('Error updating credentials.');
+      }
     }
   }
 }
@@ -143,7 +143,11 @@ export async function removeCredentialsForPlatform(
   metadata: CredentialMetadata
 ): Promise<void> {
   // doesn't go through mac rpc, no request id needed
-  if (process.env.EXPO_LEGACY_API) {
+  if (process.env.EXPO_NEXT_API === 'true') {
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    await api.deleteAsync(`credentials/android/keystore/${metadata.experienceName}`);
+  } else {
     const { err } = await Api.callMethodAsync('deleteCredentials', [], 'post', {
       platform,
       ...metadata,
@@ -152,9 +156,5 @@ export async function removeCredentialsForPlatform(
     if (err) {
       throw new Error('Error deleting credentials.');
     }
-  } else {
-    const user = await UserManager.ensureLoggedInAsync();
-    const api = ApiV2.clientForUser(user);
-    await api.deleteAsync(`credentials/android/keystore/${metadata.experienceName}`);
   }
 }
