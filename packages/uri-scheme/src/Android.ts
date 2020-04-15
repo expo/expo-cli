@@ -1,6 +1,5 @@
 import {
   format,
-  getPackageAsync,
   readAndroidManifestAsync,
   writeAndroidManifestAsync,
 } from '@expo/config/build/android/Manifest';
@@ -131,13 +130,6 @@ async function openUrlAsync(...props: (string | null)[]): Promise<string> {
 
 export async function openAsync({ projectRoot, uri, ...options }: Options): Promise<string> {
   let androidPackage: string | null = options.package ?? null;
-  if (!androidPackage) {
-    try {
-      const manifestPath = getConfigPath(projectRoot);
-      const manifest = await readConfigAsync(manifestPath);
-      androidPackage = await getPackageAsync(manifest);
-    } catch {}
-  }
   return await openUrlAsync(uri, androidPackage);
 }
 
@@ -145,17 +137,6 @@ export async function getAsync({ projectRoot }: Options): Promise<string[]> {
   const manifestPath = getConfigPath(projectRoot);
   const manifest = await readConfigAsync(manifestPath);
   return await Scheme.getSchemesFromManifest(manifest);
-}
-
-export async function getProjectIdAsync({ projectRoot }: Options): Promise<string> {
-  const manifestPath = getConfigPath(projectRoot);
-  const manifest = await readConfigAsync(manifestPath);
-  const androidPackage = await getPackageAsync(manifest);
-  if (!androidPackage)
-    throw new CommandError(
-      `Android: Failed to resolve android package for Manifest at path: ${manifestPath}`
-    );
-  return androidPackage;
 }
 
 export function getConfigPath(projectRoot: string): string {

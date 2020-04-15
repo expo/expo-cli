@@ -57,10 +57,7 @@ buildCommand('remove', ['com.app', 'myapp'])
 
 buildCommand('open', ['com.app://oauth', 'http://expo.io'])
   .description('Open a URI scheme in a running simulator or emulator')
-  .option(
-    '--package <string>',
-    'The Android package name to use when opening in an emulator. Will default to using the package in an AndroidManifest.xml.'
-  )
+  .option('--package <string>', 'The Android package name to use when opening in an emulator.')
   .action(async (uri: string, args: any) => {
     try {
       if (!args.ios && !args.android) {
