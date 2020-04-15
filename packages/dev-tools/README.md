@@ -12,4 +12,4 @@ Expo Developer Tools supports:
 ## Developing
 
 - Run `yarn dev ./path/to/expo-project`. Make sure that an `expo-cli` instance is not currently running in that directory, as this script will handle running the project for you.
-- Your browser should open to `http://localhost:19006/` which is the DevTools UI you are currently developing for.
+- Your browser should open to `http://localhost:19002/` which is the DevTools UI you are currently developing for.

@@ -49,7 +49,7 @@ export async function createAuthenticationContextAsync({
   const graphQLEndpointPath = `/${endpointUrlToken}/graphql`;
   const hostname = `${devtoolsGraphQLHost()}:${port}`;
   const webSocketGraphQLUrl = `ws://${hostname}${graphQLEndpointPath}`;
-  const allowedOrigins = [`http://${hostname}`, 'http://localhost:19006'];
+  const allowedOrigins = [`http://${hostname}`, 'http://localhost:19002'];
   return {
     clientAuthenticationToken,
     graphQLEndpointPath,
