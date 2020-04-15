@@ -137,7 +137,7 @@ Command.prototype.asyncActionProjectDir = function(
     if (opts.config) {
       const pathToConfig = path.resolve(process.cwd(), opts.config);
       if (!fs.existsSync(pathToConfig)) {
-        throw new Error(`File at provide config path does not exist: ${pathToConfig}`);
+        throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
       }
       ConfigUtils.setCustomConfigPath(projectDir, pathToConfig);
     }
