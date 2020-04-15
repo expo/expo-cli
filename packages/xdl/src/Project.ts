@@ -1654,7 +1654,13 @@ function _isAppRegistryStartupMessage(body: any[]) {
 
 type ConsoleLogLevel = 'info' | 'warn' | 'error' | 'debug';
 
-function convertWebColorToChalk(logObj) {
+type MessageWithColorSupport = {
+  msg: string;
+  colors?: Array<string>;
+  hasWebColorHash?: boolean;
+};
+
+function convertWebColorToChalk(logObj: MessageWithColorSupport): string {
   const { msg, colors } = logObj;
   if (!colors) {
     return msg;
@@ -1662,8 +1668,8 @@ function convertWebColorToChalk(logObj) {
 
   return msg
     .split('%c')
-    .filter(x => x)
-    .map((part, idx) => {
+    .filter((x: string) => x)
+    .map((part: string, idx: number) => {
       return colors[idx] ? chalk.hex(colors[idx])(part) : part;
     })
     .join('');
@@ -1683,7 +1689,7 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
     }
 
     const args = body
-      .reduce((result: any, msg: any) => {
+      .reduce((result: Array<MessageWithColorSupport>, msg: string) => {
         if (typeof msg === 'undefined') {
           result.push({ msg: 'undefined' });
           return result;
@@ -1707,7 +1713,7 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
         }
         return result;
       }, [])
-      .map(obj => {
+      .map((obj: MessageWithColorSupport) => {
         if (typeof obj.msg === 'string') {
           return convertWebColorToChalk(obj);
         }
