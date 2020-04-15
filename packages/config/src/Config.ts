@@ -1,12 +1,13 @@
 import JsonFile, { JSONObject } from '@expo/json-file';
-import path from 'path';
-import slug from 'slugify';
 import fs from 'fs-extra';
 import globby from 'globby';
+import path from 'path';
 import semver from 'semver';
+import slug from 'slugify';
 
 import {
   AppJSONConfig,
+  ConfigFilePaths,
   ExpRc,
   ExpoConfig,
   GetConfigOptions,
@@ -14,13 +15,19 @@ import {
   Platform,
   ProjectConfig,
   ProjectTarget,
+  WriteConfigOptions,
 } from './Config.types';
-
 import { ConfigError } from './Errors';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
 import { getExpoSDKVersion } from './Project';
 
+/**
+ * If a config has an `expo` object then that will be used as the config.
+ * This method reduces out other top level values if an `expo` object exists.
+ *
+ * @param config Input config object to reduce
+ */
 function reduceExpoObject(config?: any): ExpoConfig | null {
   if (!config) return config === undefined ? null : config;
 
@@ -89,7 +96,7 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
     jsonFileWithNodeModulesPath
   );
 
-  function fillAndReturnConfig(config: any) {
+  function fillAndReturnConfig(config: any, dynamicConfigObjectType: string | null) {
     return {
       ...ensureConfigHasDefaultValues(
         projectRoot,
@@ -97,6 +104,7 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
         packageJson,
         options.skipSDKVersionRequirement
       ),
+      dynamicConfigObjectType,
       rootConfig,
       dynamicConfigPath: paths.dynamicConfigPath,
       staticConfigPath: paths.staticConfigPath,
@@ -110,20 +118,23 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
 
   if (paths.dynamicConfigPath) {
     // No app.config.json or app.json but app.config.js
-    const rawDynamicConfig = getDynamicConfig(paths.dynamicConfigPath, {
-      projectRoot,
-      staticConfigPath: paths.staticConfigPath,
-      packageJsonPath,
-      config: getContextConfig(staticConfig),
-    });
+    const { exportedObjectType, config: rawDynamicConfig } = getDynamicConfig(
+      paths.dynamicConfigPath,
+      {
+        projectRoot,
+        staticConfigPath: paths.staticConfigPath,
+        packageJsonPath,
+        config: getContextConfig(staticConfig),
+      }
+    );
     // Allow for the app.config.js to `export default null;`
     // Use `dynamicConfigPath` to detect if a dynamic config exists.
     const dynamicConfig = reduceExpoObject(rawDynamicConfig) || {};
-    return fillAndReturnConfig(dynamicConfig);
+    return fillAndReturnConfig(dynamicConfig, exportedObjectType);
   }
 
   // No app.config.js but json or no config
-  return fillAndReturnConfig(staticConfig || {});
+  return fillAndReturnConfig(staticConfig || {}, null);
 }
 
 export function getPackageJson(
@@ -186,6 +197,7 @@ export function readConfigJson(
   return {
     ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
     dynamicConfigPath: null,
+    dynamicConfigObjectType: null,
     rootConfig: { ...outputRootConfig } as AppJSONConfig,
     ...paths,
   };
@@ -198,8 +210,6 @@ export async function readConfigJsonAsync(
 ): Promise<ProjectConfig> {
   return readConfigJson(projectRoot, skipValidation, skipNativeValidation);
 }
-
-type ConfigFilePaths = { staticConfigPath: string | null; dynamicConfigPath: string | null };
 
 /**
  * Get the static and dynamic config paths for a project. Also accounts for custom paths.
@@ -299,6 +309,68 @@ export function setCustomConfigPath(projectRoot: string, configPath: string): vo
   customConfigPaths[projectRoot] = configPath;
 }
 
+/**
+ * Attempt to modify an Expo project config.
+ * This will only fully work if the project is using static configs only.
+ * Otherwise 'warn' | 'fail' will return with a message about why the config couldn't be updated.
+ * The potentially modified config object will be returned for testing purposes.
+ *
+ * @param projectRoot
+ * @param modifications modifications to make to an existing config
+ * @param readOptions options for reading the current config file
+ * @param writeOptions If true, the static config file will not be rewritten
+ */
+export async function modifyConfigAsync(
+  projectRoot: string,
+  modifications: Partial<ExpoConfig>,
+  readOptions: GetConfigOptions = {},
+  writeOptions: WriteConfigOptions = {}
+): Promise<{ type: 'success' | 'warn' | 'fail'; message?: string; config: ExpoConfig | null }> {
+  const config = getConfig(projectRoot, readOptions);
+  if (config.dynamicConfigPath) {
+    // We cannot automatically write to a dynamic config.
+    /* Currently we should just use the safest approach possible, informing the user that they'll need to manually modify their dynamic config.
+
+    if (config.staticConfigPath) {
+      // Both a dynamic and a static config exist.
+      if (config.dynamicConfigObjectType === 'function') {
+        // The dynamic config exports a function, this means it possibly extends the static config.
+      } else {
+        // Dynamic config ignores the static config, there isn't a reason to automatically write to it.
+        // Instead we should warn the user to add values to their dynamic config.
+      }
+    }
+    */
+    return {
+      type: 'warn',
+      message: `Cannot automatically write to dynamic config at: ${path.relative(
+        projectRoot,
+        config.dynamicConfigPath
+      )}`,
+      config: null,
+    };
+  } else if (config.staticConfigPath) {
+    // Static with no dynamic config, this means we can append to the config automatically.
+    let outputConfig: AppJSONConfig;
+    // If the config has an expo object (app.json) then append the options to that object.
+    if (config.rootConfig.expo) {
+      outputConfig = {
+        ...config.rootConfig,
+        expo: { ...config.rootConfig.expo, ...modifications },
+      };
+    } else {
+      // Otherwise (app.config.json) just add the config modification to the top most level.
+      outputConfig = { ...config.rootConfig, ...modifications };
+    }
+    if (!writeOptions.dryRun) {
+      await JsonFile.writeAsync(config.staticConfigPath, outputConfig, { json5: false });
+    }
+    return { type: 'success', config: outputConfig };
+  }
+
+  return { type: 'fail', message: 'No config exists', config: null };
+}
+
 const APP_JSON_EXAMPLE = JSON.stringify({
   expo: {
     name: 'My app',
@@ -306,42 +378,6 @@ const APP_JSON_EXAMPLE = JSON.stringify({
     sdkVersion: '...',
   },
 });
-
-function parseAndValidateRootConfig(
-  rootConfig: JSONObject | null,
-  configName: string,
-  skipValidation: boolean,
-  projectRoot: string
-): { exp: ExpoConfig; rootConfig: JSONObject } {
-  let outputRootConfig: JSONObject | null = rootConfig;
-  if (outputRootConfig === null || typeof outputRootConfig !== 'object') {
-    if (skipValidation) {
-      outputRootConfig = { expo: {} };
-    } else {
-      throw new ConfigError(
-        `Project at path ${path.resolve(
-          projectRoot
-        )} does not contain a valid Expo config (${configName}).`,
-        'NOT_OBJECT'
-      );
-    }
-  }
-  const exp = outputRootConfig.expo as ExpoConfig;
-  if (exp === null || typeof exp !== 'object') {
-    throw new ConfigError(
-      `Property 'expo' in \`${configName}\` for project at path ${path.resolve(
-        projectRoot
-      )} is not an object. Please make sure \`${configName}\` includes a managed Expo app config like this: ${APP_JSON_EXAMPLE}`,
-      'NO_EXPO'
-    );
-  }
-  return {
-    // Spread object to ensure they aren't mutable.
-    // TODO: Maybe this should be a deep clone.
-    exp: { ...exp },
-    rootConfig: { ...outputRootConfig },
-  };
-}
 
 function ensureConfigHasDefaultValues(
   projectRoot: string,
@@ -397,7 +433,13 @@ export async function writeConfigJsonAsync(
   options: Object
 ): Promise<ProjectConfig> {
   const paths = getConfigFilePaths(projectRoot);
-  let { exp, pkg, rootConfig, staticConfigPath } = await readConfigJsonAsync(projectRoot);
+  let {
+    exp,
+    pkg,
+    rootConfig,
+    dynamicConfigObjectType,
+    staticConfigPath,
+  } = await readConfigJsonAsync(projectRoot);
   exp = { ...rootConfig.expo, ...options };
   rootConfig = { ...rootConfig, expo: exp };
 
@@ -412,6 +454,7 @@ export async function writeConfigJsonAsync(
     pkg,
     rootConfig,
     staticConfigPath,
+    dynamicConfigObjectType,
     ...paths,
   };
 }

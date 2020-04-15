@@ -25,6 +25,13 @@ export type ProjectConfig = {
    * Returns null if no dynamic config file exists.
    */
   dynamicConfigPath: string | null;
+
+  /**
+   * Returns the type of the value exported from the dynamic config.
+   * This can be used to determine if the dynamic config is potentially extending a static config when (v === 'function').
+   * Returns null if no dynamic config file exists.
+   */
+  dynamicConfigObjectType: string | null;
 };
 export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
 export type BareAppConfig = { name: string; [key: string]: any };
@@ -987,3 +994,7 @@ export type GetConfigOptions = {
   skipSDKVersionRequirement?: boolean;
   strict?: boolean;
 };
+
+export type WriteConfigOptions = { dryRun?: boolean };
+
+export type ConfigFilePaths = { staticConfigPath: string | null; dynamicConfigPath: string | null };

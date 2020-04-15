@@ -1,7 +1,40 @@
 import { join } from 'path';
 
-import { getConfigFilePaths } from '../Config';
+import { getConfigFilePaths, modifyConfigAsync } from '../Config';
 import { getDynamicConfig, getStaticConfig } from '../getConfig';
+
+describe('modifyConfigAsync', () => {
+  it(`can write to a static only config`, async () => {
+    const { type, config } = await modifyConfigAsync(
+      join(__dirname, 'fixtures/behavior/static-override'),
+      { foo: 'bar' },
+      { skipSDKVersionRequirement: true },
+      { dryRun: true }
+    );
+    expect(type).toBe('success');
+    expect(config.foo).toBe('bar');
+  });
+  it(`cannot write to a dynamic config`, async () => {
+    const { type, config } = await modifyConfigAsync(
+      join(__dirname, 'fixtures/behavior/dynamic-and-static'),
+      {},
+      { skipSDKVersionRequirement: true },
+      { dryRun: true }
+    );
+    expect(type).toBe('warn');
+    expect(config).toBe(null);
+  });
+  it(`cannot write to a project without a config`, async () => {
+    const { type, config } = await modifyConfigAsync(
+      join(__dirname, 'fixtures/behavior/no-config'),
+      {},
+      { skipSDKVersionRequirement: true },
+      { dryRun: true }
+    );
+    expect(type).toBe('fail');
+    expect(config).toBe(null);
+  });
+});
 
 describe('getDynamicConfig', () => {
   // This tests error are thrown properly and ensures that a more specific
@@ -11,6 +44,22 @@ describe('getDynamicConfig', () => {
     expect(() => getDynamicConfig(paths.dynamicConfigPath, {})).toThrowError(
       'Unexpected token (3:4)'
     );
+  });
+  it(`exports a function`, () => {
+    expect(
+      getDynamicConfig(
+        join(__dirname, 'fixtures/behavior/dynamic-export-types/exports-function.app.config.js'),
+        {}
+      ).exportedObjectType
+    ).toBe('function');
+  });
+  it(`exports an object`, () => {
+    expect(
+      getDynamicConfig(
+        join(__dirname, 'fixtures/behavior/dynamic-export-types/exports-object.app.config.js'),
+        {}
+      ).exportedObjectType
+    ).toBe('object');
   });
 });
 
