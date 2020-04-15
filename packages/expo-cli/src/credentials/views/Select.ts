@@ -170,26 +170,32 @@ export class QuitError extends Error {
   }
 }
 
-export type IQuit = (view: IView) => Promise<IView>;
-
-export async function doQuit(mainpage: IView): Promise<IView> {
-  throw new QuitError();
+export interface IQuit {
+  runAsync(mainpage: IView): Promise<IView>;
 }
 
-export async function askQuit(mainpage: IView): Promise<IView> {
-  const { selected } = await prompt([
-    {
-      type: 'list',
-      name: 'selected',
-      message: 'Do you want to quit Credential Manager',
-      choices: [
-        { value: 'exit', name: 'Quit Credential Manager' },
-        { value: 'mainpage', name: 'Go back to experience overview.' },
-      ],
-    },
-  ]);
-  if (selected === 'exit') {
-    process.exit(0);
+export class DoQuit implements IQuit {
+  async runAsync(mainpage: IView): Promise<IView> {
+    throw new QuitError();
   }
-  return mainpage;
+}
+
+export class AskQuit implements IQuit {
+  async runAsync(mainpage: IView): Promise<IView> {
+    const { selected } = await prompt([
+      {
+        type: 'list',
+        name: 'selected',
+        message: 'Do you want to quit Credential Manager',
+        choices: [
+          { value: 'exit', name: 'Quit Credential Manager' },
+          { value: 'mainpage', name: 'Go back to experience overview.' },
+        ],
+      },
+    ]);
+    if (selected === 'exit') {
+      process.exit(0);
+    }
+    return mainpage;
+  }
 }
