@@ -1670,7 +1670,7 @@ function convertWebColorToChalk(logObj: MessageWithColorSupport): string {
     .split('%c')
     .filter((x: string) => x)
     .map((part: string, idx: number) => {
-      return colors[idx] ? chalk.hex(colors[idx])(part) : part;
+      return colors[idx] ? chalk.hex(colors[idx]).inverse(part) : part;
     })
     .join('');
 }
