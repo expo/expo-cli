@@ -161,9 +161,10 @@ export async function openUrlAsync(url: string, packageName?: string) {
   }
 
   let openProject = await getAdbOutputAsync(
-    ['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', url, packageName].filter(
-      Boolean
-    )
+    ['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', url, packageName].filter<
+      string
+      // @ts-ignore: Boolean filter doesn't work well with TS
+    >(Boolean)
   );
   if (openProject.includes(CANT_START_ACTIVITY_ERROR)) {
     throw new Error(openProject.substring(openProject.indexOf('Error: ')));
