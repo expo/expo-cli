@@ -37,6 +37,7 @@
     "@expo/config": "3.1.0",
     "@expo/plist": "0.0.2",
     "@expo/spawn-async": "1.5.0",
+    "@expo/xdl": "57.8.22",
     "@types/node": "^12.6.8",
     "@zeit/ncc": "^0.20.5",
     "chalk": "2.4.2",

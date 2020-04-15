@@ -18,159 +18,32 @@ import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
+import * as Emulator from './Emulator';
 
 let _lastUrl: string | null = null;
-const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
-const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
 
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
-const EMULATOR_MAX_WAIT_TIMEOUT = 30 * 1000;
-
-function whichEmulator(): string {
-  if (process.env.ANDROID_HOME) {
-    return `${process.env.ANDROID_HOME}/emulator/emulator`;
-  }
-  return 'emulator';
-}
-function whichADB(): string {
-  if (process.env.ANDROID_HOME) {
-    return `${process.env.ANDROID_HOME}/platform-tools/adb`;
-  }
-  return 'adb';
-}
-
-/**
- * Returns a list of emulator names.
- */
-async function getEmulatorsAsync(): Promise<string[]> {
-  try {
-    const { stdout } = await spawnAsync(whichEmulator(), ['-list-avds']);
-    return stdout.split('\n').filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
-async function maybeStartEmulatorAsync(name: string): Promise<void> {
-  Logger.global.info(`\u203A Attempting to open emulator named: ${name}`);
-
-  // Start a process to open an emulator
-  const emulatorProcess = child_process.spawn(whichEmulator(), [`@${name}`], {
-    stdio: 'ignore',
-    detached: true,
-  });
-
-  emulatorProcess.unref();
-
-  return new Promise<void>((resolve, reject) => {
-    const waitTimer = setInterval(async () => {
-      if (await _isDeviceAttachedAsync()) {
-        stopWaiting();
-        resolve();
-      }
-    }, 1000);
-
-    // Reject command after timeout
-    const maxWait = setTimeout(() => {
-      const manualCommand = `${whichEmulator()} @${name}`;
-      stopWaitingAndReject(
-        `It took too long to start the Android emulator: ${name}. You can try starting the emulator manually from the terminal with: ${manualCommand}`
-      );
-    }, EMULATOR_MAX_WAIT_TIMEOUT);
-
-    const stopWaiting = () => {
-      clearTimeout(maxWait);
-      clearInterval(waitTimer);
-    };
-
-    const stopWaitingAndReject = (message: string) => {
-      stopWaiting();
-      reject(new Error(message));
-      clearInterval(waitTimer);
-    };
-
-    emulatorProcess.on('error', ({ message }) => stopWaitingAndReject(message));
-
-    emulatorProcess.on('exit', () => {
-      const manualCommand = `${whichEmulator()} @${name}`;
-      stopWaitingAndReject(
-        `The emulator (${name}) quit before it finished opening. You can try starting the emulator manually from the terminal with: ${manualCommand}`
-      );
-    });
-  });
-}
-
 async function maybeStartAnyEmulatorAsync(): Promise<boolean> {
-  const emulators = await getEmulatorsAsync();
+  const emulators = await Emulator.getEmulatorsAsync();
   if (emulators.length > 0) {
-    await maybeStartEmulatorAsync(emulators[0]);
+    Logger.global.info(`\u203A Attempting to open emulator named: ${emulators[0]}`);
+    await Emulator.maybeStartEmulatorAsync(emulators[0]);
     return true;
   }
   return false;
 }
 
-export function isPlatformSupported(): boolean {
-  return (
-    process.platform === 'darwin' || process.platform === 'win32' || process.platform === 'linux'
-  );
-}
-
-export async function getAdbOutputAsync(args: string[]): Promise<string> {
+export const isPlatformSupported = Emulator.isPlatformSupported;
+export const getAdbOutputAsync = async (args: string[]): Promise<string> => {
   await Binaries.addToPathAsync('adb');
-  const adb = whichADB();
-
-  try {
-    let result = await spawnAsync(adb, args);
-    return result.stdout;
-  } catch (e) {
-    let errorMessage = _.trim(e.stderr || e.stdout);
-    if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
-      errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
-    }
-    throw new Error(errorMessage);
-  }
-}
-
-// Device attached
-async function _isDeviceAttachedAsync() {
-  let output = await getAdbOutputAsync(['devices']);
-  const devices = output
-    .trim()
-    .split(/\r?\n/)
-    .reduce<string[]>((previous, line) => {
-      const [name, type] = line.split(/[ ,\t]+/).filter(Boolean);
-      return type === 'device' ? previous.concat(name) : previous;
-    }, []);
-  return devices.length > 0;
-}
-
-async function _isDeviceAuthorizedAsync() {
-  let devices = await getAdbOutputAsync(['devices']);
-  let lines = _.trim(devices).split(/\r?\n/);
-  lines.shift();
-  let listOfDevicesWithoutFirstLine = lines.join('\n');
-  // result looks like "072c4cf200e333c7  device" when authorized
-  // and "072c4cf200e333c7  unauthorized" when not.
-  return listOfDevicesWithoutFirstLine.includes('device');
-}
+  return await Emulator.getAdbOutputAsync(args);
+};
+export const maybeStopAdbDaemonAsync = Emulator.maybeStopAdbDaemonAsync;
 
 // Expo installed
 async function _isExpoInstalledAsync() {
-  let packages = await getAdbOutputAsync(['shell', 'pm', 'list', 'packages', '-f']);
-  let lines = packages.split(/\r?\n/);
-  for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
-    if (line.includes('host.exp.exponent.test')) {
-      continue;
-    }
-
-    if (line.includes('host.exp.exponent')) {
-      return true;
-    }
-  }
-
-  return false;
+  return await Emulator.respondsToPackagesAsync('host.exp.exponent');
 }
 
 async function _expoVersionAsync() {
@@ -309,7 +182,7 @@ export async function upgradeExpoAsync(url?: string): Promise<boolean> {
 export async function assertDeviceReadyAsync() {
   const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
 
-  if (!(await _isDeviceAuthorizedAsync())) {
+  if (!(await Emulator.isDeviceAuthorizedAsync())) {
     throw new Error(
       `This computer is not authorized to debug the device. Please follow the instructions here to enable USB debugging:\n${genymotionMessage}`
     );
@@ -317,41 +190,11 @@ export async function assertDeviceReadyAsync() {
 }
 
 async function _openUrlAsync(url: string) {
-  // NOTE(brentvatne): temporary workaround! launch expo client first, then
-  // launch the project!
-  // https://github.com/expo/expo/issues/7772
-  // adb shell monkey -p host.exp.exponent -c android.intent.category.LAUNCHER 1
-  let openClient = await getAdbOutputAsync([
-    'shell',
-    'monkey',
-    '-p',
-    'host.exp.exponent',
-    '-c',
-    'android.intent.category.LAUNCHER',
-    '1',
-  ]);
-  if (openClient.includes(CANT_START_ACTIVITY_ERROR)) {
-    throw new Error(openClient.substring(openClient.indexOf('Error: ')));
-  }
-
-  let openProject = await getAdbOutputAsync([
-    'shell',
-    'am',
-    'start',
-    '-a',
-    'android.intent.action.VIEW',
-    '-d',
-    url,
-  ]);
-  if (openProject.includes(CANT_START_ACTIVITY_ERROR)) {
-    throw new Error(openProject.substring(openProject.indexOf('Error: ')));
-  }
-
-  return openProject;
+  return await Emulator.openUrlAsync(url, 'host.exp.exponent');
 }
 
 async function attemptToStartEmulatorOrAssertAsync() {
-  if (!(await _isDeviceAttachedAsync())) {
+  if (!(await Emulator.isDeviceAttachedAsync())) {
     // If no devices or emulators are attached we should attempt to open one.
     if (!(await maybeStartAnyEmulatorAsync())) {
       const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
@@ -479,7 +322,7 @@ export async function stopAdbReverseAsync(projectRoot: string): Promise<void> {
 }
 
 async function adbReverse(port: number) {
-  if (!(await _isDeviceAuthorizedAsync())) {
+  if (!(await Emulator.isDeviceAuthorizedAsync())) {
     return false;
   }
 
@@ -493,7 +336,7 @@ async function adbReverse(port: number) {
 }
 
 async function adbReverseRemove(port: number) {
-  if (!(await _isDeviceAuthorizedAsync())) {
+  if (!(await Emulator.isDeviceAuthorizedAsync())) {
     return false;
   }
 
@@ -619,14 +462,5 @@ but their sizes mismatch expected ones: [dpi: provided (expected)] ${androidSpla
       )
       .join(', ')}
 See https://docs.expo.io/versions/latest/guides/splash-screens/#differences-between-environments---android for more information`);
-  }
-}
-
-export async function maybeStopAdbDaemonAsync() {
-  try {
-    await getAdbOutputAsync(['kill-server']);
-    return true;
-  } catch {
-    return false;
   }
 }

@@ -45,6 +45,7 @@ import uuid from 'uuid';
 
 import * as Analytics from './Analytics';
 import * as Android from './Android';
+import * as Emulator from './Emulator';
 import Api from './Api';
 import ApiV2 from './ApiV2';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
@@ -2369,7 +2370,7 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
   await stopExpoServerAsync(projectRoot);
   ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Stopping Metro bundler');
   await stopReactNativeServerAsync(projectRoot);
-  await Android.maybeStopAdbDaemonAsync();
+  await Emulator.maybeStopAdbDaemonAsync();
   if (!Config.offline) {
     try {
       await stopTunnelsAsync(projectRoot);

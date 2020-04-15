@@ -57,10 +57,20 @@ buildCommand('remove', ['com.app', 'myapp'])
 
 buildCommand('open', ['com.app://oauth', 'http://expo.io'])
   .description('Open a URI scheme in a running simulator or emulator')
+  .option(
+    '--package <string>',
+    'The Android package name to use when opening in an emulator. Will default to using the package in an AndroidManifest.xml.'
+  )
   .action(async (uri: string, args: any) => {
     try {
-      const options = await parseArgsAsync(uri, args);
-      await URIScheme.openAsync(options);
+      if (!args.ios && !args.android) {
+        throw new CommandError('Please provide a target platform with --ios or --android');
+      }
+      await URIScheme.openAsync({
+        projectRoot: process.cwd(),
+        ...args,
+        uri,
+      });
       shouldUpdate();
     } catch (error) {
       commandDidThrowAsync(error);

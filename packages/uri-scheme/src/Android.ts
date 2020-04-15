@@ -5,15 +5,45 @@ import {
   writeAndroidManifestAsync,
 } from '@expo/config/build/android/Manifest';
 import * as Scheme from '@expo/config/build/android/Scheme';
-import spawnAsync from '@expo/spawn-async';
+import * as Emulator from '@expo/xdl/build/Emulator';
 import chalk from 'chalk';
 import { sync } from 'glob';
 import path from 'path';
 
 import { CommandError, Options } from './Options';
 
-const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
-const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
+async function assertDeviceReadyAsync() {
+  const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
+
+  if (!(await Emulator.isDeviceAuthorizedAsync())) {
+    throw new Error(
+      `This computer is not authorized to debug the device. Please follow the instructions here to enable USB debugging:\n${genymotionMessage}`
+    );
+  }
+}
+
+async function attemptToStartEmulatorOrAssertAsync() {
+  if (!(await Emulator.isDeviceAttachedAsync())) {
+    // If no devices or emulators are attached we should attempt to open one.
+    if (!(await maybeStartAnyEmulatorAsync())) {
+      const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
+      throw new Error(
+        `No Android connected device found, and no emulators could be started automatically.\nPlease connect a device or create an emulator (https://docs.expo.io/versions/latest/workflow/android-studio-emulator).\nThen follow the instructions here to enable USB debugging:\n${genymotionMessage}`
+      );
+    }
+  }
+  await assertDeviceReadyAsync();
+}
+
+async function maybeStartAnyEmulatorAsync(): Promise<boolean> {
+  const emulators = await Emulator.getEmulatorsAsync();
+  if (emulators.length > 0) {
+    console.log(chalk.magenta(`\u203A Attempting to start emulator named: ${emulators[0]}`));
+    await Emulator.maybeStartEmulatorAsync(emulators[0]);
+    return true;
+  }
+  return false;
+}
 
 export function isAvailable(projectRoot: string): boolean {
   const reactNativeAndroid = sync(
@@ -84,54 +114,30 @@ export async function removeAsync({ dryRun, uri, projectRoot }: Options): Promis
   return true;
 }
 
-function whichADB(): string {
-  if (process.env.ANDROID_HOME) {
-    return `${process.env.ANDROID_HOME}/platform-tools/adb`;
-  }
-  return 'adb';
-}
-
-export async function getAdbOutputAsync(args: string[]): Promise<string> {
-  const adb = whichADB();
-
-  try {
-    let result = await spawnAsync(adb, args);
-    return result.stdout;
-  } catch (e) {
-    const err: string = e.stderr || e.stdout || '';
-    let errorMessage = err.trim();
-    if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
-      errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
-    }
-    throw new CommandError(errorMessage);
-  }
-}
-
 async function openUrlAsync(...props: (string | null)[]): Promise<string> {
-  const output = await getAdbOutputAsync([
-    'shell',
-    'am',
-    'start',
-    '-a',
-    'android.intent.action.VIEW',
-    '-d',
-    ...(props.filter(Boolean) as string[]),
-  ]);
-  if (output.includes(CANT_START_ACTIVITY_ERROR)) {
-    throw new CommandError(output.substring(output.indexOf('Error: ')));
+  await attemptToStartEmulatorOrAssertAsync();
+  const [uri, packageName] = props.filter(Boolean) as string[];
+  if (packageName) {
+    if (await Emulator.respondsToPackagesAsync(packageName)) {
+      console.log(
+        chalk.magenta(`\u203A ${chalk.bold('Android')}: Opening in app "${packageName}"`)
+      );
+    } else {
+      throw new CommandError(`No app on the Android device matches package "${packageName}"`);
+    }
   }
-
-  return output;
+  return await Emulator.openUrlAsync(uri, packageName);
 }
 
-export async function openAsync({ projectRoot, uri }: Options): Promise<string> {
-  const manifestPath = getConfigPath(projectRoot);
-  const manifest = await readConfigAsync(manifestPath);
-
-  let androidPackage: string | null = null;
-  try {
-    androidPackage = await getPackageAsync(manifest);
-  } catch {}
+export async function openAsync({ projectRoot, uri, ...options }: Options): Promise<string> {
+  let androidPackage: string | null = options.package ?? null;
+  if (!androidPackage) {
+    try {
+      const manifestPath = getConfigPath(projectRoot);
+      const manifest = await readConfigAsync(manifestPath);
+      androidPackage = await getPackageAsync(manifest);
+    } catch {}
+  }
   return await openUrlAsync(uri, androidPackage);
 }
 

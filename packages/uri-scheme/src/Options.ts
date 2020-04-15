@@ -6,6 +6,7 @@ export type Options = {
   dryRun?: boolean;
   name?: string;
   role?: string;
+  package?: string;
 };
 
 export class CommandError extends Error {
