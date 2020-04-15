@@ -5,6 +5,7 @@ import get from 'lodash/get';
 import { XDLError } from '@expo/xdl';
 
 import { Dictionary } from 'lodash';
+import terminalLink from 'terminal-link';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
 import * as utils from '../utils';
@@ -17,7 +18,7 @@ import { displayProjectCredentials } from '../../../credentials/actions/list';
 import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
 import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
 import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
-import CommandError from '../../../CommandError';
+import CommandError, { ErrorCodes } from '../../../CommandError';
 import log from '../../../log';
 
 import {
@@ -123,6 +124,15 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       }
       await this.produceCredentials(context, experienceName, bundleIdentifier);
     } catch (e) {
+      if (e.code === ErrorCodes.NON_INTERACTIVE) {
+        const here = terminalLink('here', 'https://expo.fyi/credentials-non-interactive');
+        log(
+          chalk.bold.red(
+            `Additional information needed to setup credentials in non-interactive mode.`
+          )
+        );
+        log(chalk.bold.red(`Learn more about how to resolve this ${here}.`));
+      }
       log(
         chalk.bold.red(
           'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
