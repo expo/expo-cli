@@ -24,18 +24,39 @@ jobs:
         uses: actions/setup-node@master
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Cache
-        id: cache
+      - name: Cache node_modules
+        id: cache_node_modules
         uses: actions/cache@master
         with:
           path: |
-            *
-          key: n-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-      - name: Install Dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
+            node_modules
+            */*/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+      - if: steps.cache_node_modules.outputs.cache-hit != 'true'
         run: yarn
+      - name: Cache build
+        id: cache_build
+        uses: actions/cache@master
+        with:
+          path: |
+            build/
+            */*/build/
+            */*/*.tsbuildinfo
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+      - if: steps.cache_build.outputs.cache-hit != 'true'
+        run: yarn lerna bootstrap
+      # - name: Cache
+      #   id: cache
+      #   uses: actions/cache@master
+      #   with:
+      #     path: |
+      #       *
+      #     key: n-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      # - name: Install Dependencies
+      #   if: steps.cache.outputs.cache-hit != 'true'
+      #   run: yarn
       # Setup Learna - run manually so we don't run yarn more than needed
-      - run: yarn lerna bootstrap && yarn lerna run prepare --stream
+      - run: yarn lerna run prepare --stream
 
   test:
     strategy:
@@ -49,13 +70,29 @@ jobs:
     name: ${{ matrix.package }} with Node ${{ matrix.node-version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Cache
-        id: cache
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@master
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Cache node_modules
+        id: cache_node_modules
         uses: actions/cache@master
         with:
           path: |
-            *
-          key: n-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+            node_modules
+            */*/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache build
+        id: cache_build
+        uses: actions/cache@master
+        with:
+          path: |
+            build/
+            */*/build/
+            */*/*.tsbuildinfo
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
       - name: Test ${{ matrix.package }}
         run: cd packages/${{ matrix.package }} && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
         env:
