@@ -23,7 +23,6 @@
     "testEnvironment": "node",
     "roots": [
       "__mocks__",
-      "e2e",
       "src"
     ],
     "moduleFileExtensions": [
