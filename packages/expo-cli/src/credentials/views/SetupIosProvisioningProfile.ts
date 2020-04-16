@@ -5,21 +5,28 @@ import * as iosProfileView from './IosProvisioningProfile';
 import { Context, IView } from '../context';
 import { IosDistCredentials } from '../credentials';
 
-export type ProvisioningProfileOptions = {
+type CliOptions = {
+  nonInteractive?: boolean;
+};
+
+type ProvisioningProfileOptions = {
   experienceName: string;
   bundleIdentifier: string;
   distCert: IosDistCredentials;
-};
+} & CliOptions;
+
 export class SetupIosProvisioningProfile implements IView {
   _experienceName: string;
   _bundleIdentifier: string;
   _distCert: IosDistCredentials;
+  _nonInteractive: boolean;
 
   constructor(options: ProvisioningProfileOptions) {
     const { experienceName, bundleIdentifier, distCert } = options;
     this._experienceName = experienceName;
     this._bundleIdentifier = bundleIdentifier;
     this._distCert = distCert;
+    this._nonInteractive = options.nonInteractive ?? false;
   }
 
   async open(ctx: Context): Promise<IView | null> {
@@ -46,6 +53,7 @@ export class SetupIosProvisioningProfile implements IView {
         experienceName: this._experienceName,
         bundleIdentifier: this._bundleIdentifier,
         distCert: this._distCert,
+        nonInteractive: this._nonInteractive,
       });
     }
 
@@ -78,6 +86,7 @@ export class SetupIosProvisioningProfile implements IView {
           experienceName: this._experienceName,
           bundleIdentifier: this._bundleIdentifier,
           distCert: this._distCert,
+          nonInteractive: this._nonInteractive,
         });
       }
       return null;
@@ -95,6 +104,7 @@ export class SetupIosProvisioningProfile implements IView {
         experienceName: this._experienceName,
         bundleIdentifier: this._bundleIdentifier,
         distCert: this._distCert,
+        nonInteractive: this._nonInteractive,
       });
     }
 

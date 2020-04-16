@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import isEmpty from 'lodash/isEmpty';
 import pickBy from 'lodash/pickBy';
 import get from 'lodash/get';
 import { XDLError } from '@expo/xdl';
@@ -136,6 +135,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   }
 
   async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {
+    const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
     const appCredentials = await ctx.ios.getAppCredentials(experienceName, bundleIdentifier);
 
     if (ctx.hasAppleCtx()) {
@@ -150,7 +150,10 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     if (distCertFromParams) {
       await useDistCertFromParams(ctx, appCredentials, distCertFromParams);
     } else {
-      await runCredentialsManager(ctx, new SetupIosDist({ experienceName, bundleIdentifier }));
+      await runCredentialsManager(
+        ctx,
+        new SetupIosDist({ experienceName, bundleIdentifier, nonInteractive })
+      );
     }
 
     const distributionCert = await ctx.ios.getDistCert(experienceName, bundleIdentifier);
@@ -165,7 +168,10 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     if (pushKeyFromParams) {
       await usePushKeyFromParams(ctx, appCredentials, pushKeyFromParams);
     } else {
-      await runCredentialsManager(ctx, new SetupIosPush({ experienceName, bundleIdentifier }));
+      await runCredentialsManager(
+        ctx,
+        new SetupIosPush({ experienceName, bundleIdentifier, nonInteractive })
+      );
     }
 
     const provisioningProfileFromParams = await getProvisioningProfileFromParams(this.options);
@@ -184,6 +190,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
           experienceName,
           bundleIdentifier,
           distCert: distributionCert,
+          nonInteractive,
         })
       );
     }
