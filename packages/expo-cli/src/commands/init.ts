@@ -4,8 +4,6 @@ import { Command } from 'commander';
 import { AppJSONConfig, BareAppConfig, ExpoConfig } from '@expo/config';
 import { Exp } from '@expo/xdl';
 import padEnd from 'lodash/padEnd';
-import semver from 'semver';
-import spawnAsync from '@expo/spawn-async';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
 import ora from 'ora';
@@ -164,7 +162,7 @@ async function action(projectDir: string, command: Command) {
     packageManager = 'yarn';
   } else if (options.npm) {
     packageManager = 'npm';
-  } else if (await shouldUseYarnAsync()) {
+  } else if (PackageManager.shouldUseYarn()) {
     packageManager = 'yarn';
     log.newLine();
     log('🧶 Using Yarn to install packages. You can pass --npm to use npm instead.');
@@ -400,17 +398,6 @@ function isNonExistentOrEmptyDir(dir: string) {
     }
     throw error;
   }
-}
-
-async function shouldUseYarnAsync() {
-  try {
-    let version = (await spawnAsync('yarnpkg', ['--version'])).stdout.trim();
-    if (semver.valid(version)) {
-      return true;
-    }
-  } catch (e) {}
-
-  return false;
 }
 
 async function promptForBareConfig(

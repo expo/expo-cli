@@ -9,8 +9,15 @@ import path from 'path';
 import split from 'split';
 import { Transform } from 'stream';
 import rimraf from 'rimraf';
+import isYarnOfflineAsync from './utils/isYarnOfflineAsync';
 
 import { Logger, PackageManager } from './PackageManager';
+
+/**
+ * Disable various postinstall scripts
+ * - https://github.com/opencollective/opencollective-postinstall/pull/9
+ */
+const disableAdsEnv = { DISABLE_OPENCOLLECTIVE: '1', ADBLOCK: '1' };
 
 const ansi = `(?:${ansiRegex().source})*`;
 const npmPeerDependencyWarningPattern = new RegExp(
@@ -63,6 +70,10 @@ export class NpmPackageManager implements PackageManager {
   constructor({ cwd, log, silent }: { cwd: string; log?: Logger; silent?: boolean }) {
     this.log = log || console.log;
     this.options = {
+      env: {
+        ...process.env,
+        ...disableAdsEnv,
+      },
       cwd,
       ...(silent
         ? { ignoreStdio: true }
@@ -78,6 +89,8 @@ export class NpmPackageManager implements PackageManager {
     await this._runAsync(['install']);
   }
   async addAsync(...names: string[]) {
+    if (!names.length) return this.installAsync();
+
     const { versioned, unversioned } = this._parseSpecs(names);
     if (versioned.length) {
       await this._patchAsync(versioned, 'dependencies');
@@ -88,6 +101,8 @@ export class NpmPackageManager implements PackageManager {
     }
   }
   async addDevAsync(...names: string[]) {
+    if (!names.length) return this.installAsync();
+
     const { versioned, unversioned } = this._parseSpecs(names);
     if (versioned.length) {
       await this._patchAsync(versioned, 'devDependencies');
@@ -182,6 +197,10 @@ export class YarnPackageManager implements PackageManager {
   constructor({ cwd, log, silent }: { cwd: string; log?: Logger; silent?: boolean }) {
     this.log = log || console.log;
     this.options = {
+      env: {
+        ...process.env,
+        ...disableAdsEnv,
+      },
       cwd,
       ...(silent
         ? { ignoreStdio: true }
@@ -190,17 +209,35 @@ export class YarnPackageManager implements PackageManager {
           }),
     };
   }
+
   get name() {
     return 'Yarn';
   }
+
+  private async withOfflineSupportAsync(...args: string[]): Promise<string[]> {
+    if (await isYarnOfflineAsync()) {
+      args.push('--offline');
+    }
+    // TODO: Maybe prompt about being offline and using local yarn cache.
+    return args;
+  }
+
   async installAsync() {
-    await this._runAsync(['install']);
+    const args = await this.withOfflineSupportAsync('install');
+    await this._runAsync(args);
   }
   async addAsync(...names: string[]) {
-    await this._runAsync(['add', ...names]);
+    if (!names.length) return this.installAsync();
+    const args = await this.withOfflineSupportAsync('add');
+    args.push(...names);
+
+    await this._runAsync(args);
   }
   async addDevAsync(...names: string[]) {
-    await this._runAsync(['add', '--dev', ...names]);
+    if (!names.length) return this.installAsync();
+    const args = await this.withOfflineSupportAsync('add', '--dev');
+    args.push(...names);
+    await this._runAsync(args);
   }
   async versionAsync() {
     const { stdout } = await spawnAsync('yarnpkg', ['--version'], { stdio: 'pipe' });
