@@ -12,6 +12,38 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🤷‍♂️ Chores
 
+## [Wed Apr 15 22:08:42 2020 -0700](https://github.com/expo/expo-cli/commit/c4eec5) and [Wed Apr 15 21:58:50 2020 -0700](https://github.com/expo/expo-cli/commit/c614c0)
+
+- @expo/config@3.1.1
+- @expo/dev-tools@0.12.1
+- @expo/electron-adapter@0.0.0-alpha.45
+- expo-cli@3.18.2
+- expo-optimize@0.1.19
+- @expo/metro-config@0.0.6
+- @expo/next-adapter@2.0.31
+- @expo/package-manager@0.0.14
+- pod-install@0.0.0-alpha.9
+- expo-pwa@0.0.6
+- uri-scheme@1.0.3
+- @expo/webpack-config@0.11.23
+- @expo/xdl@57.8.24
+
+### 🎉 New features
+
+- Add offline support to Yarn PackageManager (https://github.com/expo/expo-cli/pull/1892).
+- Return the given entry point as-is if it cannot be resolved using our helpers - this makes it easier to use `expo-updates` in certain monorepo setups (https://github.com/expo/expo-cli/commit/e076d56).
+
+### 🐛 Bug fixes
+
+- Temporarily revert build credentials to apiv1 in order to resolve issue with `owner` field not being respected on build (https://github.com/expo/expo-cli/commit/3b2f680).
+- Handle Ctrl+C correctly in PowerShell/CMD (https://github.com/expo/expo-cli/pull/1749).
+
+### 🤷‍♂️ Chores
+
+- Better contextual error when a non-interactive build fails in a way that we cannot recover from without user intervention (https://github.com/expo/expo-cli/pull/1891).
+- Better support for non-interactive mode in build - auto-select credentials when possible (https://github.com/expo/expo-cli/commit/c94638e).
+
+
 ## [Tue Apr 14 17:47:28 2020 -0700](https://github.com/expo/expo-cli/commit/5bc8404a0d03e0b419ba535501ea07927196ef6a)
 
 ### 📦 Packages updated
