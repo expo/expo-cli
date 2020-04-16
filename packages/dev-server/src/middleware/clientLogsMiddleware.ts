@@ -1,6 +1,8 @@
 import http from 'http';
 import Log from '@expo/bunyan';
 
+type ConsoleLogLevel = 'info' | 'warn' | 'error' | 'debug';
+
 export default function clientLogsMiddleware(logger: Log) {
   return function(
     req: http.IncomingMessage & { body?: any },
@@ -11,7 +13,7 @@ export default function clientLogsMiddleware(logger: Log) {
       const deviceId = req.headers['device-id'];
       const deviceName = req.headers['device-name'];
       if (deviceId && deviceName && req.body) {
-        _handleDeviceLogs(logger, deviceId.toString(), deviceName.toString(), req.body);
+        handleDeviceLogs(logger, deviceId.toString(), deviceName.toString(), req.body);
       }
     } catch (error) {
       logger.error({ tag: 'expo' }, `Error getting device logs: ${error} ${error.stack}`);
@@ -21,11 +23,11 @@ export default function clientLogsMiddleware(logger: Log) {
   };
 }
 
-function _isIgnorableBugReportingExtraData(body: any[]) {
+function isIgnorableBugReportingExtraData(body: any[]) {
   return body.length === 2 && body[0] === 'BugReporting extraData:';
 }
 
-function _isAppRegistryStartupMessage(body: any[]) {
+function isAppRegistryStartupMessage(body: any[]) {
   return (
     body.length === 1 &&
     (/^Running application "main" with appParams:/.test(body[0]) ||
@@ -33,18 +35,16 @@ function _isAppRegistryStartupMessage(body: any[]) {
   );
 }
 
-type ConsoleLogLevel = 'info' | 'warn' | 'error' | 'debug';
-
-function _handleDeviceLogs(logger: Log, deviceId: string, deviceName: string, logs: any) {
+function handleDeviceLogs(logger: Log, deviceId: string, deviceName: string, logs: any) {
   for (let i = 0; i < logs.length; i++) {
     const log = logs[i];
     let body = typeof log.body === 'string' ? [log.body] : log.body;
     let { level } = log;
 
-    if (_isIgnorableBugReportingExtraData(body)) {
+    if (isIgnorableBugReportingExtraData(body)) {
       level = 'debug';
     }
-    if (_isAppRegistryStartupMessage(body)) {
+    if (isAppRegistryStartupMessage(body)) {
       body = [`Running application on ${deviceName}.`];
     }
 
