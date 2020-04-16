@@ -1,9 +1,10 @@
-module.exports = function(api) {
+module.exports = api => {
   api.cache(true);
+
   return {
-    presets: ['babel-preset-expo'],
+    presets: ['next/babel'],
     plugins: [
-      'emotion',
+      ['emotion', { inline: true }],
       [
         'module-resolver',
         {
@@ -12,6 +13,7 @@ module.exports = function(api) {
           },
         },
       ],
+      [require.resolve('@babel/plugin-proposal-decorators'), { legacy: true }],
     ],
   };
 };

@@ -1,9 +1,13 @@
 import React from 'react';
-import { injectGlobal } from 'react-emotion';
+import { hydrate, injectGlobal } from 'react-emotion';
 
 import * as Constants from 'app/common/constants';
 
 import GlobalToasts from 'app/components/GlobalToasts';
+
+if (typeof window !== 'undefined') {
+  hydrate(window.__NEXT_DATA__.ids);
+}
 
 // eslint-disable-next-line no-unused-expressions
 injectGlobal`
@@ -98,7 +102,7 @@ injectGlobal`
     }
   }
 
-  #root {
+  #__next {
     height: 100%
   }
 

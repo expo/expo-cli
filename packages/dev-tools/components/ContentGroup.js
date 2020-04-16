@@ -4,8 +4,10 @@ import { VelocityTransitionGroup } from 'velocity-react';
 
 import * as Constants from 'app/common/constants';
 
-require('velocity-animate');
-require('velocity-animate/velocity.ui');
+if (process.browser) {
+  require('velocity-animate');
+  require('velocity-animate/velocity.ui');
+}
 
 const STYLES_HEADER = css`
   width: 100%;

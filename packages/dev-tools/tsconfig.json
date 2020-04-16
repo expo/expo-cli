@@ -7,7 +7,6 @@
     "declaration": false,
     "noImplicitAny": false,
     "outDir": "build/server",
-    "rootDir": "server",
-    "module": "commonjs"
+    "rootDir": "server"
   }
 }
