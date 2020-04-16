@@ -10,13 +10,13 @@ const tempDir = temporary.directory();
 const projectDir = path.join(tempDir, 'my-app');
 
 beforeAll(async () => {
-  jest.setTimeout(60000);
-  await runAsync(['init', projectDir, '--template', 'blank', '--name', 'My App'], {
-    env: { ...process.env, YARN_CACHE_FOLDER: path.join(tempDir, 'yarn-cache') },
-  });
+  // jest.setTimeout(60000);
+  // await runAsync(['init', projectDir, '--template', 'blank', '--name', 'My App'], {
+  //   env: { ...process.env, YARN_CACHE_FOLDER: path.join(tempDir, 'yarn-cache') },
+  // });
 });
 
-test('start --offline', async () => {
+xtest('start --offline', async () => {
   const promise = spawnAsync(EXPO_CLI, ['start', '--offline'], { cwd: projectDir });
   const cli = promise.child;
 
@@ -32,7 +32,7 @@ test('start --offline', async () => {
   await promise;
 });
 
-test('start --offline with existing packager info', async () => {
+xtest('start --offline with existing packager info', async () => {
   await ProjectSettings.setPackagerInfoAsync(tempDir, {
     devToolsPort: 19002,
     expoServerPort: 19001,
