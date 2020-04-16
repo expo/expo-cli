@@ -1074,6 +1074,55 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     );
   }
 
+  // Configure google-services.json
+  if (parseSdkMajorVersion(sdkVersion) >= 37) {
+    // New behavior - googleServicesFile overrides googleSignIn configuration
+    if (!manifest.android || !manifest.android.googleServicesFile) {
+      // No google-services.json file, let's use the placeholder one
+      // and insert keys manually ("the old way").
+
+      // Google sign in
+      await regexFileAsync(
+        /"current_key": "(.*?)"/,
+        `"current_key": "${googleAndroidApiKey}"`,
+        path.join(shellPath, 'app', 'google-services.json')
+      );
+      await regexFileAsync(
+        /"certificate_hash": "(.*?)"/,
+        `"certificate_hash": "${certificateHash}"`,
+        path.join(shellPath, 'app', 'google-services.json')
+      );
+    } else if (googleAndroidApiKey || certificateHash) {
+      // Both googleServicesFile and googleSignIn configuration have been provided.
+      // Let's print a helpful warning and not modify google-services.json.
+      fnLogger.warn(
+        'You have provided values for both `googleServicesFile` and `googleSignIn` in your `app.json`. Since SDK37 `googleServicesFile` overrides any other `google-services.json`-related configuration. Recommended way to fix this warning is to remove `googleSignIn` configuration from your `app.json` in favor of using only `googleServicesFile` to configure Google services.'
+      );
+    }
+  } else {
+    // Old behavior - googleSignIn overrides googleServicesFile
+
+    if (manifest.android && manifest.android.googleServicesFile) {
+      // googleServicesFile provided, let's warn the user that its contents
+      // are about to be modified.
+      fnLogger.warn(
+        'You have provided a custom `googleServicesFile` in your `app.json`. In projects below SDK37 `googleServicesFile` contents will be overridden with `googleSignIn` configuration. (Even if there is none, in which case the API key from `google-services.json` will be removed.) To mitigate this behavior upgrade to SDK37 or check out https://github.com/expo/expo/issues/7727#issuecomment-611544439 for a workaround.'
+      );
+    }
+
+    // Google sign in
+    await regexFileAsync(
+      /"current_key": "(.*?)"/,
+      `"current_key": "${googleAndroidApiKey}"`,
+      path.join(shellPath, 'app', 'google-services.json')
+    );
+    await regexFileAsync(
+      /"certificate_hash": "(.*?)"/,
+      `"certificate_hash": "${certificateHash}"`,
+      path.join(shellPath, 'app', 'google-services.json')
+    );
+  }
+
   // Set manifest url for debug mode
   if (buildMode === 'debug') {
     await regexFileAsync(
@@ -1093,18 +1142,6 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       )
     );
   }
-
-  // Google sign in
-  await regexFileAsync(
-    /"current_key": "(.*?)"/,
-    `"current_key": "${googleAndroidApiKey}"`,
-    path.join(shellPath, 'app', 'google-services.json')
-  );
-  await regexFileAsync(
-    /"certificate_hash": "(.*?)"/,
-    `"certificate_hash": "${certificateHash}"`,
-    path.join(shellPath, 'app', 'google-services.json')
-  );
 
   // Facebook configuration
 
