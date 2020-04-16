@@ -4,6 +4,7 @@ import get from 'lodash/get';
 import { XDLError } from '@expo/xdl';
 
 import { Dictionary } from 'lodash';
+import terminalLink from 'terminal-link';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
 import * as utils from '../utils';
@@ -16,7 +17,7 @@ import { displayProjectCredentials } from '../../../credentials/actions/list';
 import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
 import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
 import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
-import CommandError from '../../../CommandError';
+import CommandError, { ErrorCodes } from '../../../CommandError';
 import log from '../../../log';
 
 import {
@@ -122,16 +123,38 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       }
       await this.produceCredentials(context, experienceName, bundleIdentifier);
     } catch (e) {
-      log(
-        chalk.bold.red(
-          'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
-        )
-      );
-      throw e;
-    } finally {
-      const credentials = await context.ios.getAllCredentials();
-      displayProjectCredentials(experienceName, bundleIdentifier, credentials);
+      if (e.code === ErrorCodes.NON_INTERACTIVE) {
+        log.newLine();
+        const link = terminalLink(
+          'expo.fyi/credentials-non-interactive',
+          'https://expo.fyi/credentials-non-interactive'
+        );
+        log(
+          chalk.bold.red(
+            `Additional information needed to setup credentials in non-interactive mode.`
+          )
+        );
+        log(chalk.bold.red(`Learn more about how to resolve this: ${link}.`));
+        log.newLine();
+
+        // We don't want to display project credentials when we bail out due to
+        // non-interactive mode error, because we are unable to recover without
+        // user input.
+        throw new CommandError(
+          ErrorCodes.NON_INTERACTIVE,
+          'Unable to proceed, see the above error message.'
+        );
+      } else {
+        log(
+          chalk.bold.red(
+            'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
+          )
+        );
+      }
     }
+
+    const credentials = await context.ios.getAllCredentials();
+    displayProjectCredentials(experienceName, bundleIdentifier, credentials);
   }
 
   async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {
