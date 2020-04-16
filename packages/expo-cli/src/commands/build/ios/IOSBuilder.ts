@@ -125,24 +125,37 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       await this.produceCredentials(context, experienceName, bundleIdentifier);
     } catch (e) {
       if (e.code === ErrorCodes.NON_INTERACTIVE) {
-        const here = terminalLink('here', 'https://expo.fyi/credentials-non-interactive');
+        log.newLine();
+        const link = terminalLink(
+          'expo.fyi/credentials-non-interactive',
+          'https://expo.fyi/credentials-non-interactive'
+        );
         log(
           chalk.bold.red(
             `Additional information needed to setup credentials in non-interactive mode.`
           )
         );
-        log(chalk.bold.red(`Learn more about how to resolve this ${here}.`));
+        log(chalk.bold.red(`Learn more about how to resolve this: ${link}.`));
+        log.newLine();
+
+        // We don't want to display project credentials when we bail out due to
+        // non-interactive mode error, because we are unable to recover without
+        // user input.
+        throw new CommandError(
+          ErrorCodes.NON_INTERACTIVE,
+          'Unable to proceed, see the above error message.'
+        );
+      } else {
+        log(
+          chalk.bold.red(
+            'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
+          )
+        );
       }
-      log(
-        chalk.bold.red(
-          'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
-        )
-      );
-      throw e;
-    } finally {
-      const credentials = await context.ios.getAllCredentials();
-      displayProjectCredentials(experienceName, bundleIdentifier, credentials);
     }
+
+    const credentials = await context.ios.getAllCredentials();
+    displayProjectCredentials(experienceName, bundleIdentifier, credentials);
   }
 
   async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {
