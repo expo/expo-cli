@@ -1,4 +1,6 @@
 {
+  "name": "dev-tools-client",
+  "version": "0.1.0",
   "scripts": {
     "start": "expo start:web"
   },
@@ -35,7 +37,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.8.6",
-    "@expo/webpack-config": "^0.11.20",
+    "@expo/webpack-config": "0.12.2",
     "@types/react": "~16.9.23",
     "@types/react-native": "~0.61.17",
     "babel-plugin-emotion": "^10.0.33",
