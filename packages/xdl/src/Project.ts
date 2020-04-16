@@ -79,6 +79,7 @@ import { ConnectionStatus } from './xdl';
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
 const TUNNEL_TIMEOUT = 10 * 1000;
+const STATUS_TIMEOUT = 2 * 1000;
 
 const treekillAsync = promisify(treekill);
 const ngrokConnectAsync = promisify(ngrok.connect);
@@ -180,13 +181,30 @@ export type ProjectStatus = 'running' | 'ill' | 'exited';
 
 export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
   const { packagerPort, expoServerPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
-  if (packagerPort && expoServerPort) {
-    return 'running';
-  } else if (packagerPort || expoServerPort) {
-    return 'ill';
-  } else {
+
+  if (!packagerPort && !expoServerPort) {
     return 'exited';
+  } else if (!packagerPort || !expoServerPort) {
+    return 'ill';
   }
+
+  try {
+    const packagerUrl = await UrlUtils.constructBundleUrlAsync(projectDir, {
+      urlType: 'http',
+      hostType: 'localhost',
+    });
+
+    const status = await Promise.race([
+      _waitForRunningAsync(projectDir, `${packagerUrl}/status`),
+      delayAsync(STATUS_TIMEOUT),
+    ]);
+
+    if (status === true) {
+      return 'running';
+    }
+  } catch (e) {}
+
+  return 'ill';
 }
 
 // DECPRECATED: use UrlUtils.constructManifestUrlAsync
@@ -1484,7 +1502,7 @@ export async function buildAsync(
 ): Promise<BuildStatusResult | BuildCreatedResult> {
   /**
     This function corresponds to an apiv1 call and is deprecated.
-    Use 
+    Use
       * startBuildAsync
       * getBuildStatusAsync
     to call apiv2 instead.
