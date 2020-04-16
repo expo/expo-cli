@@ -281,10 +281,12 @@ async function configureProjectAsync(
     skipSDKVersionRequirement: options.webOnly,
   });
   const { exp, pkg } = projectConfig;
-  const message = getProjectConfigDescription(projectDir, projectConfig);
-  if (message) {
-    log(chalk.magenta(`\u203A ${message}`));
-  }
+
+  // TODO: move this function over to CLI
+  // const message = getProjectConfigDescription(projectDir, projectConfig);
+  // if (message) {
+  //   log(chalk.magenta(`\u203A ${message}`));
+  // }
 
   const rootPath = path.resolve(projectDir);
 
