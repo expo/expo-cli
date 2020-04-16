@@ -31,19 +31,37 @@ async function generateSecureRandomTokenAsync(): Promise<string> {
   });
 }
 
-export async function createAuthenticationContextAsync({ port }: { port: number }) {
+type AuthenticationContext = {
+  clientAuthenticationToken: string;
+  graphQLEndpointPath: string;
+  webSocketGraphQLUrl: string;
+  allowedOrigins: string[];
+  requestHandler: (request: express.Request, response: express.Response) => void;
+};
+
+export async function createAuthenticationContextAsync({
+  port,
+}: {
+  port: number;
+}): Promise<AuthenticationContext> {
   const clientAuthenticationToken = await generateSecureRandomTokenAsync();
   const endpointUrlToken = await generateSecureRandomTokenAsync();
   const graphQLEndpointPath = `/${endpointUrlToken}/graphql`;
   const hostname = `${devtoolsGraphQLHost()}:${port}`;
   const webSocketGraphQLUrl = `ws://${hostname}${graphQLEndpointPath}`;
-  const allowedOrigin = `http://${hostname}`;
+  const allowedOrigins = [`http://${hostname}`, 'http://localhost:19002'];
   return {
     clientAuthenticationToken,
     graphQLEndpointPath,
     webSocketGraphQLUrl,
-    allowedOrigin,
+    allowedOrigins,
     requestHandler: (request: express.Request, response: express.Response): void => {
+      const origin = request.get('origin');
+
+      if (origin && allowedOrigins.includes(origin)) {
+        response.header('Access-Control-Allow-Origin', origin);
+      }
+
       response.json({ webSocketGraphQLUrl, clientAuthenticationToken });
     },
   };
@@ -55,16 +73,12 @@ export async function startAsync(projectDir: string): Promise<string> {
 
   const authenticationContext = await createAuthenticationContextAsync({ port });
   server.get('/dev-tools-info', authenticationContext.requestHandler);
-  server.use(
-    '/_next',
-    express.static(path.join(__dirname, '../client/_next'), {
-      // All paths in the _next folder include hashes, so they can be cached more aggressively.
-      immutable: true,
-      maxAge: '1y',
-      setHeaders,
-    })
-  );
-  server.use(express.static(path.join(__dirname, '../client'), { setHeaders }));
+
+  server.use(express.static(path.resolve(__dirname, '../client/'), { setHeaders }));
+
+  server.get('*', (_, res) => {
+    res.sendFile(path.resolve(__dirname, '../client/index.html'));
+  });
 
   const listenHostname = devtoolsHost();
   const httpServer = http.createServer(server);
@@ -81,7 +95,7 @@ export async function startAsync(projectDir: string): Promise<string> {
 export function startGraphQLServer(
   projectDir: string,
   httpServer: http.Server,
-  authenticationContext: any
+  authenticationContext: AuthenticationContext
 ) {
   const layout = createLayout();
   const issues = new Issues();
@@ -115,7 +129,7 @@ export function startGraphQLServer(
       server: httpServer,
       path: authenticationContext.graphQLEndpointPath,
       verifyClient: info => {
-        return info.origin === authenticationContext.allowedOrigin;
+        return authenticationContext.allowedOrigins.includes(info.origin);
       },
     }
   );

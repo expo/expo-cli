@@ -2,7 +2,7 @@
 
 ## Starting Expo Developer Tools
 
-- Start Expo CLI with `expo start`:
+- Start Expo CLI with `expo start` (this `expo` should point to `expo-cli/packages/expo-cli/bin/expo.js`, not the `expo` you downloaded when installing `expo-cli` from NPM):
   - ✅ (1st time use) Should show a prompt asking if you want to always open devtools in the browser.
   - ✅ (after 1st time) Should automatically open devtools in the browser.
 - ✅ Should show "Metro Bundler" as a source in the sidebar and open its logs by default.

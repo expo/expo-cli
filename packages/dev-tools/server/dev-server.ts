@@ -1,9 +1,9 @@
 import { graphiqlExpress } from 'apollo-server-express';
-import { Project } from '@expo/xdl';
+import { Project, Web, Webpack } from '@expo/xdl';
 import express from 'express';
 import http from 'http';
-import next from 'next';
-import openBrowser from 'react-dev-utils/openBrowser';
+import path from 'path';
+import { chdir } from 'process';
 
 import { createAuthenticationContextAsync, startGraphQLServer } from './DevToolsServer';
 
@@ -16,8 +16,7 @@ async function run(): Promise<void> {
       throw new Error('No project dir specified.\nUsage: yarn dev <project-dir>');
     }
 
-    const app: any = next({ dev: true });
-    await app.prepare();
+    const absoluteProjectDir = path.resolve(process.cwd(), projectDir);
 
     const server = express();
     const authenticationContext = await createAuthenticationContextAsync({ port: PORT });
@@ -31,7 +30,6 @@ async function run(): Promise<void> {
         },
       })
     );
-    server.get('*', app.getRequestHandler());
 
     const httpServer = http.createServer(server);
     await new Promise((resolve, reject) => {
@@ -39,12 +37,19 @@ async function run(): Promise<void> {
       httpServer.once('listening', resolve);
       httpServer.listen(PORT, 'localhost');
     });
-    startGraphQLServer(projectDir, httpServer, authenticationContext);
+
+    startGraphQLServer(absoluteProjectDir, httpServer, authenticationContext);
     console.log('Starting project...');
-    await Project.startAsync(projectDir);
+    await Project.startAsync(absoluteProjectDir);
     let url = `http://localhost:${PORT}`;
-    console.log(`Development server running at ${url}`);
-    openBrowser(url);
+    console.log(`GraphQL server running at ${url}`);
+
+    const devToolsClientPath = path.resolve(process.cwd(), './client');
+
+    chdir(devToolsClientPath);
+
+    await Webpack.startAsync(devToolsClientPath, { port: 19002 });
+    await Web.openProjectAsync(devToolsClientPath);
   } catch (error) {
     console.error(error);
     process.exit(1);
