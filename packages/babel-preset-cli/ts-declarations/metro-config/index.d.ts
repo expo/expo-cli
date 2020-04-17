@@ -1,6 +1,16 @@
 declare module 'metro-config' {
   import { IncomingMessage, ServerResponse } from 'http';
-  import { JsTransformerConfig, Reporter } from 'metro';
+  import {
+    DeltaResult,
+    Graph,
+    Module,
+    SerializerOptions,
+    JsTransformerConfig,
+    Reporter,
+    TransformResult,
+    Server,
+    TransformVariants,
+  } from 'metro';
 
   // TODO: import { CacheStore } from 'metro-cache';
   type CacheStore = unknown;
@@ -9,17 +19,6 @@ declare module 'metro-config' {
   // TODO: import { BasicSourceMap, MixedSourceMap } from 'metro-source-map';
   type BasicSourceMap = unknown;
   type MixedSourceMap = unknown;
-  // TODO: import { DeltaResult, Graph, Module, SerializerOptions } from 'metro/src/DeltaBundler/types';
-  type DeltaResult = unknown;
-  type Graph = unknown;
-  type Module = unknown;
-  type SerializerOptions = unknown;
-  // TODO: import { TransformResult } from 'metro/src/DeltaBundler';
-  type TransformResult = unknown;
-  // TODO:  import { TransformVariants } from 'metro/src/ModuleGraph/types';
-  type TransformVariants = unknown;
-  // TODO: import Server from 'metro/src/Server';
-  type Server = unknown;
 
   //#region metro/packages/metro-config/src/configTypes.flow.js
 

@@ -24,14 +24,13 @@ export async function runMetroDevServerAsync(
 
   const { middleware, attachToServer } = createDevServerMiddleware({
     port: metroConfig.server.port,
-    // @ts-ignore can't pass a mutable array
     watchFolders: metroConfig.watchFolders,
   });
   middleware.use(clientLogsMiddleware(options.logger));
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
   // @ts-ignore can't mutate readonly config
-  metroConfig.server.enhanceMiddleware = (metroMiddleware: any, server: unknown) => {
+  metroConfig.server.enhanceMiddleware = (metroMiddleware: any, server: Metro.Server) => {
     if (customEnhanceMiddleware) {
       metroMiddleware = customEnhanceMiddleware(metroMiddleware, server);
     }
