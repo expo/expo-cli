@@ -122,18 +122,18 @@ export async function updateCredentialsForPlatform(
     });
 
     if (result.errors) {
-      throw new Error(`Error updating credentials: ${JSON.stringify(result.errors)}}`);
-    } else {
-      const { err, credentials } = await Api.callMethodAsync('updateCredentials', [], 'post', {
-        credentials: newCredentials,
-        userCredentialsIds,
-        platform,
-        ...metadata,
-      });
+      throw new Error(`Error updating credentials: ${JSON.stringify(result.errors)}`);
+    }
+  } else {
+    const { err, credentials } = await Api.callMethodAsync('updateCredentials', [], 'post', {
+      credentials: newCredentials,
+      userCredentialsIds,
+      platform,
+      ...metadata,
+    });
 
-      if (err || !credentials) {
-        throw new Error('Error updating credentials.');
-      }
+    if (err || !credentials) {
+      throw new Error('Error updating credentials.');
     }
   }
 }
