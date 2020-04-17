@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import untildify from 'untildify';
-import { Android, Credentials } from '@expo/xdl';
+import { Android, AndroidCredentials, Credentials } from '@expo/xdl';
 import chalk from 'chalk';
 import get from 'lodash/get';
 
@@ -195,9 +195,9 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
         // read the keystore
         const keystoreData = await fs.readFile(keystorePath);
 
-        const credentials = {
+        const credentials: AndroidCredentials.Keystore = {
           keystore: keystoreData.toString('base64'),
-          keystoreAlias,
+          keyAlias: keystoreAlias,
           keystorePassword,
           keyPassword,
         };

@@ -1,5 +1,6 @@
 import { Platform, getConfig } from '@expo/config';
 import { ApiV2 } from '../xdl';
+import { Keystore } from './AndroidCredentials';
 
 import Api from '../Api';
 import UserManager from '../User';
@@ -109,7 +110,7 @@ async function fetchCredentials(
 
 export async function updateCredentialsForPlatform(
   platform: 'android',
-  newCredentials: Credentials,
+  newCredentials: Keystore,
   userCredentialsIds: Array<number>,
   metadata: CredentialMetadata
 ): Promise<void> {
@@ -118,7 +119,7 @@ export async function updateCredentialsForPlatform(
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
     const result = await api.putAsync(`credentials/android/keystore/${experienceName}`, {
-      credentials: newCredentials,
+      keystore: newCredentials,
     });
 
     if (result.errors) {
