@@ -12,6 +12,16 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🤷‍♂️ Chores
 
+## [Fri Apr 17 10:02:10 2020 +0200](https://github.com/expo/expo-cli/commit/850be0)
+
+- @expo/dev-tools@0.12.2
+- expo-cli@3.18.3
+- @expo/xdl@57.8.25
+
+### 🐛 Bug fixes 
+
+- Do not override `google-services.json` contents since SDK 37 (https://github.com/expo/expo-cli/pull/1897).
+
 ## [Wed Apr 15 22:08:42 2020 -0700](https://github.com/expo/expo-cli/commit/c4eec5) and [Wed Apr 15 21:58:50 2020 -0700](https://github.com/expo/expo-cli/commit/c614c0)
 
 - @expo/config@3.1.1
