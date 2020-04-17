@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import chalk from 'chalk';
 import { Command } from 'commander';
+import { resolve } from 'path';
 
+import * as Android from './Android';
+import * as Ios from './Ios';
 import { CommandError, Options } from './Options';
 import shouldUpdate from './update';
 import * as URIScheme from './URIScheme';
@@ -31,6 +34,11 @@ buildCommand('add', ['com.app', 'myapp'])
   .description('Add URI schemes to a native app')
   .option('-n, --name <string>', 'Name to use on iOS.')
   .option('-r, --role <string>', 'Role to use on iOS: Editor, Viewer')
+  .option(
+    '--manifest-path <string>',
+    "Custom path to use for an Android project's AndroidManifest.xml"
+  )
+  .option('--info-path <string>', "Custom path to use for an iOS project's Info.plist")
   .option('--dry-run', 'View the proposed change')
   .action(async (uri: string, args: any) => {
     try {
@@ -44,6 +52,11 @@ buildCommand('add', ['com.app', 'myapp'])
 
 buildCommand('remove', ['com.app', 'myapp'])
   .description('Remove URI schemes from a native app')
+  .option(
+    '--manifest-path <string>',
+    "Custom path to use for an Android project's AndroidManifest.xml"
+  )
+  .option('--info-path <string>', "Custom path to use for an iOS project's Info.plist")
   .option('--dry-run', 'View the proposed change')
   .action(async (uri: string, args: any) => {
     try {
@@ -57,6 +70,10 @@ buildCommand('remove', ['com.app', 'myapp'])
 
 buildCommand('open', ['com.app://oauth', 'http://expo.io'])
   .description('Open a URI scheme in a running simulator or emulator')
+  .option(
+    '--manifest-path <string>',
+    "Custom path to use for an Android project's AndroidManifest.xml"
+  )
   .action(async (uri: string, args: any) => {
     try {
       const options = await parseArgsAsync(uri, args);
@@ -69,6 +86,11 @@ buildCommand('open', ['com.app://oauth', 'http://expo.io'])
 
 buildCommand('list')
   .description('List the existing URI scheme prefixes for a native app')
+  .option(
+    '--manifest-path <string>',
+    "Custom path to use for an Android project's AndroidManifest.xml"
+  )
+  .option('--info-path <string>', "Custom path to use for an iOS project's Info.plist")
   .action(async (uri: string, args: any) => {
     try {
       const options = await parseArgsAsync(uri, args);
@@ -80,8 +102,12 @@ buildCommand('list')
   });
 
 async function parseArgsAsync(uri: string, options: Options): Promise<Options> {
-  const projectRoot = process.cwd();
-  let platforms = URIScheme.getAvailablePlatforms(projectRoot);
+  const projectRoot = resolve(process.cwd());
+  options.projectRoot = projectRoot;
+  if (options.manifestPath) options.manifestPath = resolve(options.manifestPath);
+  if (options.infoPath) options.infoPath = resolve(options.infoPath);
+
+  const platforms = URIScheme.getAvailablePlatforms(options);
 
   if (!options.android && !options.ios) {
     for (const key of platforms) {
@@ -91,21 +117,29 @@ async function parseArgsAsync(uri: string, options: Options): Promise<Options> {
   } else {
     if (options.android) {
       if (!platforms.includes('android')) {
-        throw new CommandError('Android not supported');
+        throw new CommandError(
+          `Android project not found in directory "${projectRoot}".\nYou can manually select an AndroidManifest.xml with \`--manifest-path\``
+        );
       }
     }
     if (options.ios) {
       if (!platforms.includes('ios')) {
-        throw new CommandError('iOS not supported');
+        throw new CommandError(
+          `iOS project not found in directory "${projectRoot}".\nYou can manually select an Info.plist with \`--info-path\``
+        );
       }
     }
   }
 
-  return {
-    ...options,
-    uri,
-    projectRoot,
-  };
+  if (options.android && !options.manifestPath) {
+    options.manifestPath = Android.getConfigPath(projectRoot);
+  }
+  if (options.ios && !options.infoPath) {
+    options.infoPath = Ios.getConfigPath(projectRoot);
+  }
+
+  options.uri = uri;
+  return options;
 }
 
 export function run() {

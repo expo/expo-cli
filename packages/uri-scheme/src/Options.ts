@@ -6,6 +6,14 @@ export type Options = {
   dryRun?: boolean;
   name?: string;
   role?: string;
+  /**
+   * Custom path to an AndroidManifest.xml
+   */
+  manifestPath?: string;
+  /**
+   * Custom path to an Info.plist
+   */
+  infoPath?: string;
 };
 
 export class CommandError extends Error {

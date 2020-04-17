@@ -1,16 +1,42 @@
 #!/usr/bin/env node
 import chalk from 'chalk';
-
 import enquirer from 'enquirer';
+import { statSync } from 'fs';
 import { relative } from 'path';
+
 import * as Android from './Android';
 import * as Ios from './Ios';
 import { CommandError, Options } from './Options';
 
-export function getAvailablePlatforms(projectRoot: string): string[] {
+function fileExists(filePath: string): boolean {
+  try {
+    return statSync(filePath).isFile();
+  } catch {
+    return false;
+  }
+}
+export function getAvailablePlatforms(
+  options: Pick<Options, 'projectRoot' | 'infoPath' | 'manifestPath'>
+): string[] {
   let platforms: string[] = [];
-  if (Ios.isAvailable(projectRoot)) platforms.push('ios');
-  if (Android.isAvailable(projectRoot)) platforms.push('android');
+  if (options.infoPath) {
+    if (!fileExists(options.infoPath)) {
+      throw new CommandError(`Custom Info.plist does not exist at path "${options.infoPath}"`);
+    }
+    platforms.push('ios');
+  } else if (Ios.isAvailable(options.projectRoot)) {
+    platforms.push('ios');
+  }
+  if (options.manifestPath) {
+    if (!fileExists(options.manifestPath)) {
+      throw new CommandError(
+        `Custom AndroidManifest.xml does not exist at path "${options.manifestPath}"`
+      );
+    }
+    platforms.push('android');
+  } else if (Android.isAvailable(options.projectRoot)) {
+    platforms.push('android');
+  }
   return platforms;
 }
 
@@ -105,25 +131,19 @@ export async function openAsync(options: Options): Promise<void> {
 }
 
 export async function listAsync(options: Options): Promise<void> {
-  if (options.ios) {
+  if (options.infoPath) {
     const schemes = await Ios.getAsync(options);
     logPlatformMessage(
       'iOS',
-      `Schemes for config: ./${relative(
-        options.projectRoot,
-        Ios.getConfigPath(options.projectRoot)
-      )}`
+      `Schemes for config: ./${relative(options.projectRoot, options.infoPath)}`
     );
     logSchemes(schemes);
   }
-  if (options.android) {
+  if (options.manifestPath) {
     const schemes = await Android.getAsync(options);
     logPlatformMessage(
       'Android',
-      `Schemes for config: ./${relative(
-        options.projectRoot,
-        Android.getConfigPath(options.projectRoot)
-      )}`
+      `Schemes for config: ./${relative(options.projectRoot, options.manifestPath)}`
     );
     logSchemes(schemes);
   }

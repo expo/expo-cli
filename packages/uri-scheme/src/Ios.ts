@@ -5,18 +5,23 @@ import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import fs from 'fs';
 import { sync } from 'glob';
-import path from 'path';
+import { join } from 'path';
 
 import { Options } from './Options';
 
 export function isAvailable(projectRoot: string): boolean {
-  const reactNativeIos = sync(path.join(projectRoot, 'ios', '*.xcodeproj'));
-  const currentIos = sync(path.join(projectRoot, '*.xcodeproj'));
+  const reactNativeIos = sync(join(projectRoot, 'ios', '*.xcodeproj'));
+  const currentIos = sync(join(projectRoot, '*.xcodeproj'));
   return !!currentIos.length || !!reactNativeIos.length;
 }
 
-export async function addAsync({ uri, projectRoot, dryRun }: Options): Promise<boolean> {
-  const infoPlistPath = getConfigPath(projectRoot);
+export async function addAsync({
+  uri,
+  infoPath,
+  projectRoot,
+  dryRun,
+}: Pick<Options, 'uri' | 'infoPath' | 'projectRoot' | 'dryRun'>): Promise<boolean> {
+  const infoPlistPath = infoPath ?? getConfigPath(projectRoot);
 
   let config = readConfig(infoPlistPath);
 
@@ -40,8 +45,13 @@ export async function addAsync({ uri, projectRoot, dryRun }: Options): Promise<b
   return true;
 }
 
-export async function removeAsync({ uri, projectRoot, dryRun }: Options): Promise<boolean> {
-  const infoPlistPath = getConfigPath(projectRoot);
+export async function removeAsync({
+  uri,
+  infoPath,
+  projectRoot,
+  dryRun,
+}: Pick<Options, 'uri' | 'infoPath' | 'projectRoot' | 'dryRun'>): Promise<boolean> {
+  const infoPlistPath = infoPath ?? getConfigPath(projectRoot);
 
   let config = readConfig(infoPlistPath);
 
@@ -65,14 +75,17 @@ export async function removeAsync({ uri, projectRoot, dryRun }: Options): Promis
   return true;
 }
 
-export async function openAsync({ uri }: Options): Promise<void> {
+export async function openAsync({ uri }: Pick<Options, 'uri'>): Promise<void> {
   await spawnAsync('xcrun', ['simctl', 'openurl', 'booted', uri], {
     stdio: 'inherit',
   });
 }
 
-export async function getAsync({ projectRoot }: Options): Promise<string[]> {
-  const infoPlistPath = getConfigPath(projectRoot);
+export async function getAsync({
+  projectRoot,
+  infoPath,
+}: Pick<Options, 'projectRoot' | 'infoPath'>): Promise<string[]> {
+  const infoPlistPath = infoPath ?? getConfigPath(projectRoot);
   const rawPlist = fs.readFileSync(infoPlistPath, 'utf8');
   const plistObject = plist.parse(rawPlist) as PlistObject;
   const schemes = Scheme.getSchemesFromPlist(plistObject);
@@ -81,11 +94,12 @@ export async function getAsync({ projectRoot }: Options): Promise<string[]> {
 
 export function getConfigPath(projectRoot: string): string {
   // TODO: Figure out how to avoid using the Tests info.plist
-  const rnInfoPlistPaths = sync(path.join(projectRoot, 'ios', '*', 'Info.plist'));
+
+  const rnInfoPlistPaths = sync(join(projectRoot, 'ios', '*', 'Info.plist'));
   if (rnInfoPlistPaths.length) {
     return rnInfoPlistPaths[0];
   }
-  const infoPlistPaths = sync(path.join(projectRoot, '*', 'Info.plist'));
+  const infoPlistPaths = sync(join(projectRoot, '*', 'Info.plist'));
   return infoPlistPaths[0];
 }
 
