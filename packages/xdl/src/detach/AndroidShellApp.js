@@ -1081,17 +1081,26 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       // No google-services.json file, let's use the placeholder one
       // and insert keys manually ("the old way").
 
+      // Let's not modify values of the original google-services.json file
+      // if they haven't been provided (in which case, googleAndroidApiKey
+      // and certificateHash will be an empty string). This will make sure
+      // we don't modify shell app's google-services needlessly.
+
       // Google sign in
-      await regexFileAsync(
-        /"current_key": "(.*?)"/,
-        `"current_key": "${googleAndroidApiKey}"`,
-        path.join(shellPath, 'app', 'google-services.json')
-      );
-      await regexFileAsync(
-        /"certificate_hash": "(.*?)"/,
-        `"certificate_hash": "${certificateHash}"`,
-        path.join(shellPath, 'app', 'google-services.json')
-      );
+      if (googleAndroidApiKey) {
+        await regexFileAsync(
+          /"current_key": "(.*?)"/,
+          `"current_key": "${googleAndroidApiKey}"`,
+          path.join(shellPath, 'app', 'google-services.json')
+        );
+      }
+      if (certificateHash) {
+        await regexFileAsync(
+          /"certificate_hash": "(.*?)"/,
+          `"certificate_hash": "${certificateHash}"`,
+          path.join(shellPath, 'app', 'google-services.json')
+        );
+      }
     } else if (googleAndroidApiKey || certificateHash) {
       // Both googleServicesFile and googleSignIn configuration have been provided.
       // Let's print a helpful warning and not modify google-services.json.
