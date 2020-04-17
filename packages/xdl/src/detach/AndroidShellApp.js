@@ -546,13 +546,6 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     path.join(shellPath, 'app', 'build.gradle')
   );
 
-  // Push notifications
-  await regexFileAsync(
-    '"package_name": "host.exp.exponent"',
-    `"package_name": "${javaPackage}"`,
-    path.join(shellPath, 'app', 'google-services.json')
-  ); // TODO: actually use the correct file
-
   // TODO: probably don't need this in both places
   await regexFileAsync(
     /host\.exp\.exponent\.permission\.C2D_MESSAGE/g,
@@ -1075,11 +1068,29 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   }
 
   // Configure google-services.json
+  // It is either already in the shell app (placeholder or real one) or it has been added
+  // from `manifest.android.googleServicesFile`.
   if (parseSdkMajorVersion(sdkVersion) >= 37) {
     // New behavior - googleServicesFile overrides googleSignIn configuration
     if (!manifest.android || !manifest.android.googleServicesFile) {
       // No google-services.json file, let's use the placeholder one
       // and insert keys manually ("the old way").
+
+      // This seems like something we can't really get away without:
+      //
+      // 1. A project with google-services plugin won't build without
+      //    a google-services.json file (the plugin makes sure to fail the build).
+      // 2. Adding the google-services plugin conditionally and properly (to be able
+      //    to build a project without that file) is too much hassle.
+      //
+      // So, let's use `host.exp.exponent` as a placeholder for the project's
+      // javaPackage. In custom shell apps there shouldn't ever be "host.exp.exponent"
+      // so this shouldn't cause any problems for advanced users.
+      await regexFileAsync(
+        '"package_name": "host.exp.exponent"',
+        `"package_name": "${javaPackage}"`,
+        path.join(shellPath, 'app', 'google-services.json')
+      );
 
       // Let's not modify values of the original google-services.json file
       // if they haven't been provided (in which case, googleAndroidApiKey
@@ -1118,6 +1129,13 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
         'You have provided a custom `googleServicesFile` in your `app.json`. In projects below SDK37 `googleServicesFile` contents will be overridden with `googleSignIn` configuration. (Even if there is none, in which case the API key from `google-services.json` will be removed.) To mitigate this behavior upgrade to SDK37 or check out https://github.com/expo/expo/issues/7727#issuecomment-611544439 for a workaround.'
       );
     }
+
+    // Push notifications
+    await regexFileAsync(
+      '"package_name": "host.exp.exponent"',
+      `"package_name": "${javaPackage}"`,
+      path.join(shellPath, 'app', 'google-services.json')
+    );
 
     // Google sign in
     await regexFileAsync(
