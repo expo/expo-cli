@@ -1347,7 +1347,7 @@
     plist "^3.0.1"
     uuid "^3.3.3"
 
-"@expo/bunyan@3.0.2", "@expo/bunyan@^3.0.2":
+"@expo/bunyan@3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@expo/bunyan/-/bunyan-3.0.2.tgz#775680bd479a8b79ada4a5676936a58eef1579c9"
   integrity sha512-fQRc4+RG+rEw1IdjFx/5t2AvOlJT8ktv2dfObD3aW838ohZxCx1QvFUY/Gdx5JA1JY/KrHRGuEqQLH9ayiexyg==
@@ -14757,7 +14757,7 @@ metro-symbolicate@^0.56.4:
     through2 "^2.0.1"
     vlq "^1.0.0"
 
-metro@0.58.0, metro@^0.58.0:
+metro@0.58.0:
   version "0.58.0"
   resolved "https://registry.yarnpkg.com/metro/-/metro-0.58.0.tgz#c037318c112f80dc96199780c8b401ab72cfd142"
   integrity sha512-yi/REXX+/s4r7RjzXht+E+qE6nzvFIrEXO5Q61h+70Q7RODMU8EnlpXx04JYk7DevHuMhFaX+NWhCtRINzR4zA==
