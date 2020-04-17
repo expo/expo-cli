@@ -4,6 +4,7 @@ import resolveFrom from 'resolve-from';
 import { Options, SharpCommandOptions, SharpGlobalOptions } from './sharp.types';
 
 const SHARP_HELP_PATTERN = /\n\nSpecify --help for available options/g;
+const SHARP_REQUIRED_VERSION = '^1.10.0';
 
 export async function resizeBufferAsync(buffer: Buffer, sizes: number[]): Promise<Buffer[]> {
   const sharp = await findSharpInstanceAsync();
@@ -96,15 +97,12 @@ async function findSharpBinAsync(): Promise<string> {
   if (_sharpBin) {
     return _sharpBin;
   }
-  const requiredCliVersion = require('@expo/image-utils/package.json').peerDependencies[
-    'sharp-cli'
-  ];
   try {
     const sharpCliPackage = require('sharp-cli/package.json');
     const libVipsVersion = require('sharp').versions.vips;
     if (
       sharpCliPackage &&
-      semver.satisfies(sharpCliPackage.version, requiredCliVersion) &&
+      semver.satisfies(sharpCliPackage.version, SHARP_REQUIRED_VERSION) &&
       typeof sharpCliPackage.bin.sharp === 'string' &&
       typeof libVipsVersion === 'string'
     ) {
@@ -119,11 +117,11 @@ async function findSharpBinAsync(): Promise<string> {
   try {
     installedCliVersion = (await spawnAsync('sharp', ['--version'])).stdout.toString().trim();
   } catch (e) {
-    throw notFoundError(requiredCliVersion);
+    throw notFoundError(SHARP_REQUIRED_VERSION);
   }
 
-  if (!semver.satisfies(installedCliVersion, requiredCliVersion)) {
-    showVersionMismatchWarning(requiredCliVersion, installedCliVersion);
+  if (!semver.satisfies(installedCliVersion, SHARP_REQUIRED_VERSION)) {
+    showVersionMismatchWarning(SHARP_REQUIRED_VERSION, installedCliVersion);
   }
   _sharpBin = 'sharp';
   return _sharpBin;
