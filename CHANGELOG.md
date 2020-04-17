@@ -12,6 +12,16 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🤷‍♂️ Chores
 
+## [Fri Apr 17 11:20:10 2020 -0700](https://github.com/expo/expo-cli/commit/465333)
+
+- @expo/dev-tools@0.12.3
+- expo-cli@3.18.4
+- @expo/xdl@57.8.26
+
+### 🐛 Bug fixes 
+
+- Fix typo that was causing android keystore updates to fail (https://github.com/expo/expo-cli/pull/1909).
+
 ## [Fri Apr 17 10:02:10 2020 +0200](https://github.com/expo/expo-cli/commit/850be0)
 
 - @expo/dev-tools@0.12.2
