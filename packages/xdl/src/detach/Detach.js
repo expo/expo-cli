@@ -532,5 +532,8 @@ export async function bundleAssetsAsync(projectDir, args) {
       `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${ex.message}`
     );
   }
+  if (!manifest || !Object.keys(manifest).length) {
+    throw new Error(`The manifest at '${bundledManifestPath}' was empty or invalid.`);
+  }
   await AssetBundle.bundleAsync(null, manifest.bundledAssets, args.dest);
 }
