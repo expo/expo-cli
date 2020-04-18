@@ -32,7 +32,6 @@
   },
   "devDependencies": {
     "@types/base64-js": "^1.2.5",
-    "@types/jest": "^24.9.1",
     "@types/xmldom": "^0.1.29"
   },
   "publishConfig": {
