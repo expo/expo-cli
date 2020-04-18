@@ -8,7 +8,7 @@ import * as Scheme from '@expo/config/build/android/Scheme';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { sync } from 'glob';
-import path from 'path';
+import { join } from 'path';
 
 import { CommandError, Options } from './Options';
 
@@ -16,16 +16,19 @@ const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Inten
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 
 export function isAvailable(projectRoot: string): boolean {
-  const reactNativeAndroid = sync(
-    path.join(projectRoot, 'android/app/src/main/AndroidManifest.xml')
-  );
-  const currentAndroid = sync(path.join(projectRoot, 'app/src/main/AndroidManifest.xml'));
+  const reactNativeAndroid = sync(join(projectRoot, 'android/app/src/main/AndroidManifest.xml'));
+  const currentAndroid = sync(join(projectRoot, 'app/src/main/AndroidManifest.xml'));
   return !!currentAndroid.length || !!reactNativeAndroid.length;
 }
 
-export async function addAsync({ dryRun, uri, projectRoot }: Options): Promise<boolean> {
-  const manifestPath = getConfigPath(projectRoot);
-  let manifest = await readConfigAsync(manifestPath);
+export async function addAsync({
+  dryRun,
+  uri,
+  manifestPath,
+  projectRoot,
+}: Pick<Options, 'dryRun' | 'uri' | 'manifestPath' | 'projectRoot'>): Promise<boolean> {
+  const resolvedManifestPath = manifestPath ?? getConfigPath(projectRoot);
+  let manifest = await readConfigAsync(resolvedManifestPath);
 
   if (!Scheme.ensureManifestHasValidIntentFilter(manifest)) {
     throw new CommandError(
@@ -36,7 +39,7 @@ export async function addAsync({ dryRun, uri, projectRoot }: Options): Promise<b
   if (Scheme.hasScheme(uri, manifest)) {
     console.log(
       chalk.yellow(
-        `\u203A Android: URI scheme "${uri}" already exists in AndroidManifest.xml at: ${manifestPath}`
+        `\u203A Android: URI scheme "${uri}" already exists in AndroidManifest.xml at: ${resolvedManifestPath}`
       )
     );
     return false;
@@ -45,17 +48,22 @@ export async function addAsync({ dryRun, uri, projectRoot }: Options): Promise<b
   manifest = Scheme.appendScheme(uri, manifest);
 
   if (dryRun) {
-    console.log(chalk.magenta('Write manifest to: ', manifestPath));
+    console.log(chalk.magenta('Write manifest to: ', resolvedManifestPath));
     console.log(format(manifest));
     return false;
   }
-  await writeConfigAsync(manifestPath, manifest);
+  await writeConfigAsync(resolvedManifestPath, manifest);
   return true;
 }
 
-export async function removeAsync({ dryRun, uri, projectRoot }: Options): Promise<boolean> {
-  const manifestPath = getConfigPath(projectRoot);
-  let manifest = await readConfigAsync(manifestPath);
+export async function removeAsync({
+  dryRun,
+  uri,
+  manifestPath,
+  projectRoot,
+}: Pick<Options, 'dryRun' | 'uri' | 'manifestPath' | 'projectRoot'>): Promise<boolean> {
+  const resolvedManifestPath = manifestPath ?? getConfigPath(projectRoot);
+  let manifest = await readConfigAsync(resolvedManifestPath);
 
   if (!Scheme.ensureManifestHasValidIntentFilter(manifest)) {
     throw new CommandError(
@@ -67,7 +75,7 @@ export async function removeAsync({ dryRun, uri, projectRoot }: Options): Promis
   if (!Scheme.hasScheme(uri, manifest)) {
     console.log(
       chalk.yellow(
-        `\u203A Android: URI scheme "${uri}" does not exist in AndroidManifest.xml at: ${manifestPath}`
+        `\u203A Android: URI scheme "${uri}" does not exist in AndroidManifest.xml at: ${resolvedManifestPath}`
       )
     );
     return false;
@@ -76,11 +84,11 @@ export async function removeAsync({ dryRun, uri, projectRoot }: Options): Promis
   manifest = Scheme.removeScheme(uri, manifest);
 
   if (dryRun) {
-    console.log(chalk.magenta('Write manifest to: ', manifestPath));
+    console.log(chalk.magenta('Write manifest to: ', resolvedManifestPath));
     console.log(format(manifest));
     return false;
   }
-  await writeConfigAsync(manifestPath, manifest);
+  await writeConfigAsync(resolvedManifestPath, manifest);
   return true;
 }
 
@@ -124,9 +132,12 @@ async function openUrlAsync(...props: (string | null)[]): Promise<string> {
   return output;
 }
 
-export async function openAsync({ projectRoot, uri }: Options): Promise<string> {
-  const manifestPath = getConfigPath(projectRoot);
-  const manifest = await readConfigAsync(manifestPath);
+export async function openAsync({
+  projectRoot,
+  manifestPath,
+  uri,
+}: Pick<Options, 'projectRoot' | 'manifestPath' | 'uri'>): Promise<string> {
+  const manifest = await readConfigAsync(manifestPath ?? getConfigPath(projectRoot));
 
   let androidPackage: string | null = null;
   try {
@@ -135,35 +146,39 @@ export async function openAsync({ projectRoot, uri }: Options): Promise<string> 
   return await openUrlAsync(uri, androidPackage);
 }
 
-export async function getAsync({ projectRoot }: Options): Promise<string[]> {
-  const manifestPath = getConfigPath(projectRoot);
-  const manifest = await readConfigAsync(manifestPath);
+export async function getAsync({
+  projectRoot,
+  manifestPath,
+}: Pick<Options, 'projectRoot' | 'manifestPath'>): Promise<string[]> {
+  const manifest = await readConfigAsync(manifestPath ?? getConfigPath(projectRoot));
   return await Scheme.getSchemesFromManifest(manifest);
 }
 
-export async function getProjectIdAsync({ projectRoot }: Options): Promise<string> {
-  const manifestPath = getConfigPath(projectRoot);
-  const manifest = await readConfigAsync(manifestPath);
+export async function getProjectIdAsync({
+  projectRoot,
+  manifestPath,
+}: Pick<Options, 'projectRoot' | 'manifestPath'>): Promise<string> {
+  const resolvedManifestPath = manifestPath ?? getConfigPath(projectRoot);
+  const manifest = await readConfigAsync(resolvedManifestPath);
   const androidPackage = await getPackageAsync(manifest);
   if (!androidPackage)
     throw new CommandError(
-      `Android: Failed to resolve android package for Manifest at path: ${manifestPath}`
+      `Android: Failed to resolve android package for Manifest at path: ${resolvedManifestPath}`
     );
   return androidPackage;
 }
 
 export function getConfigPath(projectRoot: string): string {
-  const rnManifestPaths = sync(path.join(projectRoot, 'android/app/src/main/AndroidManifest.xml'));
+  const rnManifestPaths = sync(join(projectRoot, 'android/app/src/main/AndroidManifest.xml'));
   if (rnManifestPaths.length) {
     return rnManifestPaths[0];
   }
-  const manifestPaths = sync(path.join(projectRoot, 'app/src/main/AndroidManifest.xml'));
+  const manifestPaths = sync(join(projectRoot, 'app/src/main/AndroidManifest.xml'));
   return manifestPaths[0];
 }
 
 async function readConfigAsync(path: string): Promise<any> {
-  let androidManifestJSON = await readAndroidManifestAsync(path);
-  return androidManifestJSON;
+  return await readAndroidManifestAsync(path);
 }
 
 async function writeConfigAsync(path: string, result: any) {
