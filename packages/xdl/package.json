@@ -140,7 +140,6 @@
     "gulplog": "^1.0.0",
     "jest": "^24.9.0",
     "mock-fs": "^3.12.1",
-    "prettier": "~1.7.4",
     "promise-print": "^2.3.0",
     "rimraf": "^2.5.4"
   },
