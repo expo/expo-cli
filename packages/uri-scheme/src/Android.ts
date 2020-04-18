@@ -32,7 +32,7 @@ export async function addAsync({
 
   if (!Scheme.ensureManifestHasValidIntentFilter(manifest)) {
     throw new CommandError(
-      `Cannot add scheme "${uri}" because the provided manifest does not have a valid Activity with \`android:launchMode="singleTask"\``,
+      `Cannot add scheme "${uri}" because the provided manifest does not have a valid Activity with \`android:launchMode="singleTask"\`.\nThis guide can help you get setup properly https://expo.fyi/setup-android-uri-scheme`,
       'add'
     );
   }
@@ -67,7 +67,7 @@ export async function removeAsync({
 
   if (!Scheme.ensureManifestHasValidIntentFilter(manifest)) {
     throw new CommandError(
-      `Cannot remove scheme "${uri}" because the provided manifest does not have a valid Activity with \`android:launchMode="singleTask"\``,
+      `Cannot remove scheme "${uri}" because the provided manifest does not have a valid Activity with \`android:launchMode="singleTask"\`.\nThis guide can help you get setup properly https://expo.fyi/setup-android-uri-scheme`,
       'remove'
     );
   }
