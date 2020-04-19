@@ -12,6 +12,19 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🤷‍♂️ Chores
 
+## [Sat Apr 18 17:58:21 2020 -0700](https://github.com/expo/expo-cli/commit/4e6cfd)
+
+### 🐛 Bug fixes 
+
+- `expo start -c` will now properly clear cache as expected (https://github.com/expo/expo-cli/commit/48d67f).
+- Fix keystore uploading with apiv2 (https://github.com/expo/expo-cli/commit/9fd163).
+
+### 🤷‍♂️ Chores
+
+- Create initial commit for project (https://github.com/expo/expo-cli/commit/22017c).
+- Add useful information in uri-scheme when user does not have launchMode singleTask set (https://github.com/expo/expo-cli/commit/15899b).
+- Support custom paths in uri-scheme (https://github.com/expo/expo-cli/commit/4d2dd7).
+
 ## [Fri Apr 17 11:20:10 2020 -0700](https://github.com/expo/expo-cli/commit/465333)
 
 - @expo/dev-tools@0.12.3
