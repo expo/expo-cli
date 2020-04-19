@@ -60,11 +60,15 @@ function getBooleanArg(rawArgs: string[], argName: string): boolean {
   }
 }
 
+// The main purpose of this function is to take existing options object and
+// support boolean args with as defined in the hasBooleanArg and getBooleanArg
+// functions.
 async function normalizeOptionsAsync(
   projectDir: string,
   options: Options
 ): Promise<NormalizedOptions> {
   const opts: NormalizedOptions = {
+    ...options, // This is necessary to ensure we don't drop any options
     webOnly: options.webOnly ?? (await Web.onlySupportsWebAsync(projectDir)),
     nonInteractive: options.parent?.nonInteractive,
   };
@@ -101,9 +105,6 @@ async function normalizeOptionsAsync(
   }
   if (hasBooleanArg(rawArgs, 'tunnel')) {
     opts.tunnel = getBooleanArg(rawArgs, 'tunnel');
-  }
-  if (options.host) {
-    opts.host = options.host;
   }
 
   await cacheOptionsAsync(projectDir, opts);
