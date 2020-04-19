@@ -3,6 +3,8 @@ import chalk from 'chalk';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
+import { every, some } from 'lodash';
+import invariant from 'invariant';
 import { runAction, travelingFastlane } from './fastlane';
 import { nonEmptyInput } from '../validators';
 import log from '../log';
@@ -62,22 +64,31 @@ export async function authenticate(options: Options = {}): Promise<AppleCtx> {
 }
 
 async function _requestAppleIdCreds(options: Options): Promise<AppleCredentials> {
-  return _getAppleIdFromParams(options) || (await _promptForAppleId(options));
+  return _getAppleIdFromParams(options) || (await _promptForAppleId());
 }
 
 function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCredentials | null {
   const passedAppleIdPassword = appleIdPassword || process.env.EXPO_APPLE_PASSWORD;
-  if (appleId && passedAppleIdPassword) {
-    return {
-      appleId,
-      appleIdPassword: passedAppleIdPassword,
-    };
-  } else {
+
+  // none of the apple id params were set, assume user has no intention of passing it in
+  if (!some([appleId, passedAppleIdPassword])) {
     return null;
   }
+
+  // partial apple id params were set, assume user has intention of passing it in
+  if (!every([appleId, passedAppleIdPassword])) {
+    throw new Error(
+      'In order to provide your Apple ID credentials, you must set the `--apple-id` flag and set the EXPO_APPLE_PASSWORD env var.'
+    );
+  }
+
+  return {
+    appleId: appleId as string,
+    appleIdPassword: passedAppleIdPassword as string,
+  };
 }
 
-async function _promptForAppleId({ appleId }: Options): Promise<AppleCredentials> {
+async function _promptForAppleId(): Promise<AppleCredentials> {
   const wrap = wordwrap(process.stdout.columns || 80);
   log(
     wrap(
@@ -98,7 +109,6 @@ async function _promptForAppleId({ appleId }: Options): Promise<AppleCredentials
       name: 'appleId',
       message: `Apple ID:`,
       validate: nonEmptyInput,
-      when: !appleId,
     },
     {
       nonInteractiveHelp: 'Pass your Apple ID using the --apple-id flag.',
@@ -108,7 +118,7 @@ async function _promptForAppleId({ appleId }: Options): Promise<AppleCredentials
     {
       type: 'password',
       name: 'appleIdPassword',
-      message: answer => `Password (for ${appleId || promptAppleId}):`,
+      message: answer => `Password (for ${promptAppleId}):`,
       validate: nonEmptyInput,
     },
     {
@@ -116,7 +126,7 @@ async function _promptForAppleId({ appleId }: Options): Promise<AppleCredentials
         'Pass your Apple ID password using the EXPO_APPLE_PASSWORD environment variable',
     }
   );
-  return { appleId: appleId || promptAppleId, appleIdPassword };
+  return { appleId: promptAppleId, appleIdPassword };
 }
 
 async function _chooseTeam(teams: FastlaneTeam[], userProvidedTeamId?: string): Promise<Team> {
@@ -145,12 +155,17 @@ async function _chooseTeam(teams: FastlaneTeam[], userProvidedTeamId?: string): 
       name: `${i + 1}) ${team.teamId} "${team.name}" (${team.type})`,
       value: team,
     }));
-    const { team } = await prompt({
-      type: 'list',
-      name: 'team',
-      message: 'Which team would you like to use?',
-      choices,
-    });
+    const { team } = await prompt(
+      {
+        type: 'list',
+        name: 'team',
+        message: 'Which team would you like to use?',
+        choices,
+      },
+      {
+        nonInteractiveHelp: 'Pass in your Apple Team ID using the --team-id flag.',
+      }
+    );
     return _formatTeam(team);
   }
 }
