@@ -1,6 +1,6 @@
 {
   "name": "@expo/electron-adapter",
-  "version": "0.0.0-alpha.46",
+  "version": "0.0.0-alpha.47",
   "description": "Use Electron with Expo",
   "main": "build/Electron.js",
   "types": "build/Electron.d.ts",
@@ -44,7 +44,7 @@
   ],
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.8",
-    "@expo/webpack-config": "0.11.24"
+    "@expo/webpack-config": "0.11.25"
   },
   "publishConfig": {
     "access": "public"
@@ -54,8 +54,8 @@
     "electron": "^6.0.12"
   },
   "dependencies": {
-    "@expo/config": "3.1.1",
-    "@expo/package-manager": "0.0.14",
+    "@expo/config": "3.1.2",
+    "@expo/package-manager": "0.0.15",
     "@expo/spawn-async": "^1.5.0",
     "chalk": "^2.4.2",
     "electron-webpack": "^2.7.4",
