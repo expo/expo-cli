@@ -200,7 +200,7 @@ async function action(projectDir: string, command: Command) {
   try {
     // check if git is installed
     // check if inside git repo
-    await Exp.initGitRepoAsync(projectPath, { silent: true });
+    await Exp.initGitRepoAsync(projectPath, { silent: true, commit: true });
   } catch {
     // todo: check if git is installed, bail out
   }

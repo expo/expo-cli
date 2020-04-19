@@ -213,7 +213,7 @@ async function extractTemplateAppAsyncImpl(
 
 export async function initGitRepoAsync(
   root: string,
-  flags: { silent: boolean } = { silent: false }
+  flags: { silent: boolean; commit: boolean } = { silent: false, commit: true }
 ) {
   // let's see if we're in a git tree
   try {
@@ -233,6 +233,14 @@ export async function initGitRepoAsync(
   try {
     await spawnAsync('git', ['init'], { cwd: root });
     !flags.silent && Logger.global.info('Initialized a git repository.');
+
+    if (flags.commit) {
+      await spawnAsync('git', ['add', '--all'], { cwd: root, stdio: 'ignore' });
+      await spawnAsync('git', ['commit', '-m', 'Created a new Expo app'], {
+        cwd: root,
+        stdio: 'ignore',
+      });
+    }
     return true;
   } catch (e) {
     // no-op -- this is just a convenience and we don't care if it fails
