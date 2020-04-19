@@ -415,7 +415,7 @@ async function promptForBareConfig(
   } else {
     ({ projectName } = await prompt({
       name: 'projectName',
-      message: 'What is your app called?',
+      message: 'What would you like to name your app?',
       default: 'my-app',
       filter: (name: string) => name.trim(),
       validate: (name: string) => validateProjectName(name),
@@ -442,7 +442,7 @@ async function promptForManagedConfig(
   } else {
     ({ slug } = await prompt({
       name: 'slug',
-      message: 'What is your app called?',
+      message: 'What would you like to name your app?',
       default: 'my-app',
       filter: (name: string) => name.trim(),
       validate: (name: string) => validateName(parentDir, name),
