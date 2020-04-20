@@ -29,7 +29,7 @@ xtest('init', async () => {
   expect(appJson).toHaveProperty(['expo', 'slug'], 'hello-world');
 });
 
-test('init with android package and bundle identifier', async () => {
+xtest('init with android package and bundle identifier', async () => {
   jest.setTimeout(60000);
   const cwd = temporary.directory();
   const { stdout } = await runAsync(
