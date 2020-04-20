@@ -233,7 +233,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
           '\tEXPO_ANDROID_KEYSTORE_PASSWORD\n' +
           '\tEXPO_ANDROID_KEY_PASSWORD\n' +
           'For details, see:\n' +
-          '\thttps://docs.expo.io/versions/latest/distribution/turtle-cli/#building-for-android'
+          '\thttps://docs.expo.io/versions/latest/distribution/building-standalone-apps/#if-you-choose-to-build-for-android'
       );
     }
     return false;
