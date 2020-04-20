@@ -220,18 +220,6 @@ export async function copyInitialShellAppFilesAsync(
   isDetached,
   sdkVersion
 ) {
-  if (androidSrcPath && !isDetached) {
-    // check if Android template files exist
-    // since we take out the prebuild step later on
-    // and we should have generated those files earlier
-    await spawnAsyncThrowError('../../tools-public/check-dynamic-macros-android.sh', [], {
-      pipeToLogger: true,
-      loggerFields: { buildPhase: 'confirming that dynamic macros exist' },
-      cwd: path.join(androidSrcPath, 'app'),
-      env: process.env,
-    });
-  }
-
   const copyToShellApp = async fileName => {
     try {
       await fs.copy(path.join(androidSrcPath, fileName), path.join(shellPath, fileName));
