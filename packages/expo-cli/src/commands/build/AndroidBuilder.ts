@@ -224,7 +224,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     }
 
     // Check if user was trying to upload keystore incorretly and supply an helpful error message if so.
-    if (!!this.options.keystorePath || !!this.options.keystoreAlias) {
+    if (this.options.keystorePath || this.options.keystoreAlias) {
       throw Error(
         'When uploading your own keystore you must provide:\n' +
           '\t--keystore-path /path/to/your/keystore.jks \n' +
