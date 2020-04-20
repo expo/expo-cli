@@ -12,6 +12,7 @@ import {
 
 import slug from 'slugify';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
+import { MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import axios from 'axios';
@@ -22,6 +23,7 @@ import delayAsync from 'delay-async';
 import express from 'express';
 import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
+import getenv from 'getenv';
 import HashIds from 'hashids';
 import joi from 'joi';
 import chunk from 'lodash/chunk';
@@ -1925,30 +1927,8 @@ function shouldExposeEnvironmentVariableInManifest(key: string) {
   return key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_');
 }
 
-export async function startExpoServerAsync(projectRoot: string): Promise<void> {
-  _assertValidProjectRoot(projectRoot);
-  await stopExpoServerAsync(projectRoot);
-  let app = express();
-  app.use(
-    express.json({
-      limit: '10mb',
-    })
-  );
-  app.use(
-    express.urlencoded({
-      limit: '10mb',
-      extended: true,
-    })
-  );
-  if (
-    (ConnectionStatus.isOffline()
-      ? await Doctor.validateWithoutNetworkAsync(projectRoot)
-      : await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL
-  ) {
-    throw new Error(`Couldn't start project. Please fix the errors and restart the project.`);
-  }
-  // Serve the manifest.
-  const manifestHandler = async (req: express.Request, res: express.Response) => {
+function getManifestHandler(projectRoot: string) {
+  return async (req: express.Request, res: express.Response) => {
     try {
       // We intentionally don't `await`. We want to continue trying even
       // if there is a potential error in the package.json and don't want to slow
@@ -2059,6 +2039,32 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       });
     }
   };
+}
+
+export async function startExpoServerAsync(projectRoot: string): Promise<void> {
+  _assertValidProjectRoot(projectRoot);
+  await stopExpoServerAsync(projectRoot);
+  let app = express();
+  app.use(
+    express.json({
+      limit: '10mb',
+    })
+  );
+  app.use(
+    express.urlencoded({
+      limit: '10mb',
+      extended: true,
+    })
+  );
+  if (
+    (ConnectionStatus.isOffline()
+      ? await Doctor.validateWithoutNetworkAsync(projectRoot)
+      : await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL
+  ) {
+    throw new Error(`Couldn't start project. Please fix the errors and restart the project.`);
+  }
+  // Serve the manifest.
+  const manifestHandler = getManifestHandler(projectRoot);
   app.get('/', manifestHandler);
   app.get('/manifest', manifestHandler);
   app.get('/index.exp', manifestHandler);
@@ -2102,6 +2108,39 @@ export async function stopExpoServerAsync(projectRoot: string): Promise<void> {
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort: null,
+  });
+}
+
+async function startDevServerAsync(projectRoot: string, startOptions: StartOptions) {
+  _assertValidProjectRoot(projectRoot);
+  const options: MetroDevServerOptions = {
+    // TODO: port
+    port: undefined,
+    logger: ProjectUtils.getLogger(projectRoot),
+  };
+  if (startOptions.reset) {
+    options.resetCache = true;
+  }
+  if (startOptions.maxWorkers != null) {
+    options.maxWorkers = startOptions.maxWorkers;
+  }
+  if (startOptions.target) {
+    options.target = startOptions.target;
+  }
+  const { middleware } = await runMetroDevServerAsync(projectRoot, options);
+  middleware.use(getManifestHandler(projectRoot));
+}
+
+async function stopDevServerAsync(projectRoot: string) {
+  _assertValidProjectRoot(projectRoot);
+  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  if (packagerInfo && packagerInfo.devServerPort) {
+    try {
+      await axios.post(`http://127.0.0.1:${packagerInfo.devServerPort}/shutdown`);
+    } catch (e) {}
+  }
+  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+    devServerPort: undefined,
   });
 }
 
@@ -2346,6 +2385,9 @@ export async function startAsync(
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
+  } else if (getenv.boolish('EXPO_USE_DEV_SERVER', false)) {
+    await startDevServerAsync(projectRoot, options);
+    DevSession.startSession(projectRoot, exp, 'native');
   } else {
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync(projectRoot, options, verbose);
@@ -2369,6 +2411,7 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
   await stopExpoServerAsync(projectRoot);
   ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Stopping Metro bundler');
   await stopReactNativeServerAsync(projectRoot);
+  await stopDevServerAsync(projectRoot);
   await Android.maybeStopAdbDaemonAsync();
   if (!Config.offline) {
     try {

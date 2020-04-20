@@ -4,10 +4,9 @@ import Log from '@expo/bunyan';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 
-export async function runMetroDevServerAsync(
-  projectRoot: string,
-  options: ExpoMetroConfig.LoadOptions & { logger: Log }
-) {
+export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & { logger: Log };
+
+export async function runMetroDevServerAsync(projectRoot: string, options: MetroDevServerOptions) {
   let reportEvent: ((event: any) => void) | undefined;
   // TODO(ville): implement a reporter
   const reporter = {
@@ -41,4 +40,9 @@ export async function runMetroDevServerAsync(
 
   const { eventsSocket } = attachToServer(serverInstance);
   reportEvent = eventsSocket.reportEvent;
+
+  return {
+    server: serverInstance,
+    middleware,
+  };
 }
