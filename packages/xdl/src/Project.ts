@@ -37,6 +37,7 @@ import minimatch from 'minimatch';
 import { AddressInfo } from 'net';
 import os from 'os';
 import path from 'path';
+import http from 'http';
 import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import split from 'split';
@@ -1928,7 +1929,10 @@ function shouldExposeEnvironmentVariableInManifest(key: string) {
 }
 
 function getManifestHandler(projectRoot: string) {
-  return async (req: express.Request, res: express.Response) => {
+  return async (
+    req: express.Request | http.IncomingMessage,
+    res: express.Response | http.ServerResponse
+  ) => {
     try {
       // We intentionally don't `await`. We want to continue trying even
       // if there is a potential error in the package.json and don't want to slow
@@ -2025,8 +2029,8 @@ function getManifestHandler(projectRoot: string) {
         serverOS: os.platform(),
         serverOSVersion: os.release(),
       };
-      res.append('Exponent-Server', JSON.stringify(hostInfo));
-      res.send(manifestString);
+      res.setHeader('Exponent-Server', JSON.stringify(hostInfo));
+      res.end(manifestString);
       Analytics.logEvent('Serve Manifest', {
         projectRoot,
         developerTool: Config.developerTool,
@@ -2034,9 +2038,12 @@ function getManifestHandler(projectRoot: string) {
     } catch (e) {
       ProjectUtils.logError(projectRoot, 'expo', e.stack);
       // 5xx = Server Error HTTP code
-      res.status(520).send({
-        error: e.toString(),
-      });
+      res.statusCode = 520;
+      res.end(
+        JSON.stringify({
+          error: e.toString(),
+        })
+      );
     }
   };
 }
