@@ -17,7 +17,7 @@ const SERVICE_ACCOUNT_JSON_QUESTION: Question = {
     'The path to the file containing service account JSON, used to authenticate with Google:',
   type: 'input',
   async validate(path: string): Promise<boolean | string> {
-    const exists = await fs.pathExists(path);
+    const exists = await fs.pathExists(path.trim());
 
     if (exists) {
       return true;
