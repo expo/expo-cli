@@ -1,4 +1,4 @@
-import { getConfig } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import { ApiV2, Doctor, User, UserManager } from '@expo/xdl';
 
 import { AppleCtx, authenticate } from '../appleApi';
@@ -20,7 +20,7 @@ type CtxOptions = {
 export class Context {
   _hasProjectContext: boolean = false;
   _user?: User;
-  _manifest: any;
+  _manifest?: ExpoConfig;
   _apiClient?: ApiV2;
   _iosApiClient?: IosApi;
   _appleCtx?: AppleCtx;
@@ -31,7 +31,10 @@ export class Context {
   get hasProjectContext(): boolean {
     return this._hasProjectContext;
   }
-  get manifest(): any {
+  get manifest(): ExpoConfig {
+    if (!this._manifest) {
+      throw new Error('Manifest (app.json) not initialized.');
+    }
     return this._manifest;
   }
   get api(): ApiV2 {
@@ -45,6 +48,9 @@ export class Context {
       throw new Error('Apple context not initialized.');
     }
     return this._appleCtx;
+  }
+  set manifest(value: ExpoConfig) {
+    this._manifest = value;
   }
 
   hasAppleCtx(): boolean {
@@ -64,6 +70,9 @@ export class Context {
       const { exp } = getConfig(projectDir);
       this._manifest = exp;
       this._hasProjectContext = true;
+      this._iosApiClient = new IosApi(this.user).withProjectContext(this);
+    } else {
+      this._iosApiClient = new IosApi(this.user);
     }
 
     if (options.allowAnonymous) {
@@ -72,6 +81,5 @@ export class Context {
       this._user = await UserManager.ensureLoggedInAsync();
     }
     this._apiClient = ApiV2.clientForUser(this.user);
-    this._iosApiClient = new IosApi(this.user);
   }
 }

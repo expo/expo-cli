@@ -6,6 +6,7 @@ import assign from 'lodash/assign';
 import get from 'lodash/get';
 import pick from 'lodash/pick';
 
+import invariant from 'invariant';
 import log from '../log';
 import * as appleApi from '../appleApi';
 import {
@@ -14,15 +15,29 @@ import {
   IosDistCredentials,
   IosPushCredentials,
 } from './credentials';
+import { Context } from './context';
 
 export class IosApi {
   api: ApiV2;
+  username: string;
   credentials: IosCredentials;
   shouldRefetch: boolean = true;
 
   constructor(user: User) {
     this.api = ApiV2.clientForUser(user);
+    this.username = user.username;
     this.credentials = { appCredentials: [], userCredentials: [] };
+  }
+
+  withProjectContext(ctx: Context): IosApi {
+    invariant(ctx.hasProjectContext, 'Project context required');
+    this.username = ctx.manifest.owner ?? this.username;
+    return this;
+  }
+
+  withApiClient(apiClient: ApiV2) {
+    this.api = apiClient;
+    return this;
   }
 
   async getAllCredentials(): Promise<IosCredentials> {
@@ -34,7 +49,7 @@ export class IosApi {
 
   async _fetchAllCredentials() {
     log('Fetching available credentials');
-    this.credentials = await this.api.getAsync('credentials/ios');
+    this.credentials = await this.api.getAsync('credentials/ios', { owner: this.username });
     this.shouldRefetch = false;
   }
 
@@ -61,7 +76,10 @@ export class IosApi {
   }
 
   async createDistCert(credentials: appleApi.DistCert): Promise<IosDistCredentials> {
-    const { id } = await this.api.postAsync('credentials/ios/dist', { credentials });
+    const { id } = await this.api.postAsync('credentials/ios/dist', {
+      credentials,
+      owner: this.username,
+    });
     const newDistCert: IosDistCredentials = { ...credentials, id, type: 'dist-cert' };
     this.credentials.userCredentials.push(newDistCert);
     return newDistCert;
@@ -72,14 +90,16 @@ export class IosApi {
   ): Promise<IosDistCredentials> {
     const { id } = await this.api.putAsync(`credentials/ios/dist/${credentialsId}`, {
       credentials,
+      owner: this.username,
     });
     const updatedDistCert: IosDistCredentials = { ...credentials, id, type: 'dist-cert' };
     const credIndex = findIndex(this.credentials.userCredentials, ({ id }) => id === credentialsId);
     this.credentials.userCredentials[credIndex] = updatedDistCert;
     return updatedDistCert;
   }
+
   async deleteDistCert(credentialsId: number) {
-    await this.api.deleteAsync(`credentials/ios/dist/${credentialsId}`);
+    await this.api.deleteAsync(`credentials/ios/dist/${credentialsId}`, { owner: this.username });
     this.credentials.userCredentials = this.credentials.userCredentials.filter(
       ({ id }) => id !== credentialsId
     );
@@ -95,6 +115,7 @@ export class IosApi {
       experienceName,
       bundleIdentifier,
       userCredentialsId,
+      owner: this.username,
     });
     this._ensureAppCredentials(experienceName, bundleIdentifier);
     const credIndex = findIndex(
@@ -105,7 +126,10 @@ export class IosApi {
   }
 
   async createPushKey(credentials: appleApi.PushKey): Promise<IosPushCredentials> {
-    const { id } = await this.api.postAsync('credentials/ios/push', { credentials });
+    const { id } = await this.api.postAsync('credentials/ios/push', {
+      credentials,
+      owner: this.username,
+    });
     const newPushKey: IosPushCredentials = { ...credentials, id, type: 'push-key' };
     this.credentials.userCredentials.push(newPushKey);
     return newPushKey;
@@ -116,6 +140,7 @@ export class IosApi {
   ): Promise<IosPushCredentials> {
     const { id } = await this.api.putAsync(`credentials/ios/push/${credentialsId}`, {
       credentials,
+      owner: this.username,
     });
     const updatedPushKey: IosPushCredentials = { ...credentials, id, type: 'push-key' };
     const credIndex = findIndex(this.credentials.userCredentials, ({ id }) => id === credentialsId);
@@ -123,7 +148,7 @@ export class IosApi {
     return updatedPushKey;
   }
   async deletePushKey(credentialsId: number) {
-    await this.api.deleteAsync(`credentials/ios/push/${credentialsId}`);
+    await this.api.deleteAsync(`credentials/ios/push/${credentialsId}`, { owner: this.username });
     this.credentials.userCredentials = this.credentials.userCredentials.filter(
       ({ id }) => id !== credentialsId
     );
@@ -160,6 +185,7 @@ export class IosApi {
       experienceName,
       bundleIdentifier,
       userCredentialsId,
+      owner: this.username,
     });
     this._ensureAppCredentials(experienceName, bundleIdentifier);
     const credIndex = findIndex(
@@ -185,6 +211,7 @@ export class IosApi {
     await this.api.postAsync(`credentials/ios/pushCert/delete`, {
       experienceName,
       bundleIdentifier,
+      owner: this.username,
     });
     const credIndex = findIndex(
       this.credentials.appCredentials,
@@ -206,6 +233,7 @@ export class IosApi {
       experienceName,
       bundleIdentifier,
       credentials: { ...provisioningProfile, teamId: appleTeam.id },
+      owner: this.username,
     });
     const credIndex = findIndex(
       this.credentials.appCredentials,
@@ -248,6 +276,7 @@ export class IosApi {
     await this.api.postAsync(`credentials/ios/provisioningProfile/delete`, {
       experienceName,
       bundleIdentifier,
+      owner: this.username,
     });
     const credIndex = findIndex(
       this.credentials.appCredentials,

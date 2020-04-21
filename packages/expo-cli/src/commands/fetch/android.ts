@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import get from 'lodash/get';
 
 import { AndroidCredentials } from '@expo/xdl';
+import invariant from 'invariant';
 import { DownloadKeystore } from '../../credentials/views/AndroidCredentials';
 import { Context } from '../../credentials';
 
@@ -31,7 +32,8 @@ export async function fetchAndroidKeystoreAsync(projectDir: string): Promise<voi
   await maybeRenameExistingFile(projectDir, keystoreFilename);
   const backupKeystoreOutputPath = path.resolve(projectDir, keystoreFilename);
 
-  const view = new DownloadKeystore(ctx.manifest.slug);
+  invariant(ctx.manifest.slug, 'app.json slug field must be set');
+  const view = new DownloadKeystore(ctx.manifest.slug as string);
   await view.fetch(ctx);
   await view.save(ctx, backupKeystoreOutputPath, true);
 }
@@ -41,7 +43,8 @@ export async function fetchAndroidHashesAsync(projectDir: string): Promise<void>
   await ctx.init(projectDir);
   const outputPath = path.resolve(projectDir, `${ctx.manifest.slug}.tmp.jks`);
   try {
-    const view = new DownloadKeystore(ctx.manifest.slug);
+    invariant(ctx.manifest.slug, 'app.json slug field must be set');
+    const view = new DownloadKeystore(ctx.manifest.slug as string);
     await view.fetch(ctx);
     await view.save(ctx, outputPath);
 
@@ -76,7 +79,8 @@ export async function fetchAndroidUploadCertAsync(projectDir: string): Promise<v
   const uploadKeyPath = path.resolve(projectDir, uploadKeyFilename);
 
   try {
-    const view = new DownloadKeystore(ctx.manifest.slug);
+    invariant(ctx.manifest.slug, 'app.json slug field must be set');
+    const view = new DownloadKeystore(ctx.manifest.slug as string);
     await view.fetch(ctx);
     await view.save(ctx, keystorePath);
 

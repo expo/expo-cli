@@ -5,6 +5,7 @@ import { Android, AndroidCredentials, Credentials } from '@expo/xdl';
 import chalk from 'chalk';
 import get from 'lodash/get';
 
+import invariant from 'invariant';
 import log from '../../log';
 import BuildError from './BuildError';
 import BaseBuilder from './BaseBuilder';
@@ -93,7 +94,8 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
 
       const backupKeystoreOutputPath = path.resolve(this.projectDir, `${ctx.manifest.slug}.jks`);
 
-      const view = new DownloadKeystore(ctx.manifest.slug);
+      invariant(ctx.manifest.slug, 'app.json slug field must be set');
+      const view = new DownloadKeystore(ctx.manifest.slug as string);
       await view.fetch(ctx);
       await view.save(ctx, backupKeystoreOutputPath, true);
       await Credentials.removeCredentialsForPlatform(ANDROID, credentialMetadata);
