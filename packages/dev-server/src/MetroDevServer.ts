@@ -1,4 +1,4 @@
-import Metro from 'metro';
+import { getConfig, resolveModule } from '@expo/config';
 import { createDevServerMiddleware } from '@react-native-community/dev-server-api';
 import Log from '@expo/bunyan';
 import * as ExpoMetroConfig from '@expo/metro-config';
@@ -7,6 +7,8 @@ import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & { logger: Log };
 
 export async function runMetroDevServerAsync(projectRoot: string, options: MetroDevServerOptions) {
+  const { exp } = getConfig(projectRoot);
+  const Metro = require(resolveModule('metro', projectRoot, exp));
   let reportEvent: ((event: any) => void) | undefined;
   // TODO(ville): implement a reporter
   const reporter = {
