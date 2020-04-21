@@ -56,7 +56,7 @@ const defaultGenerateSWOptions: GenerateSWOptions = {
   ...defaultInjectManifestOptions,
   clientsClaim: true,
   skipWaiting: true,
-  navigateFallbackBlacklist: [
+  navigateFallbackDenylist: [
     // Exclude URLs starting with /_, as they're likely an API call
     new RegExp('^/_'),
     // Exclude URLs containing a dot, as they're likely a resource in
