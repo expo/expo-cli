@@ -1,4 +1,9 @@
 import { ncp } from 'ncp';
+import path from 'path';
+import { JSONObject } from '@expo/json-file';
+import { Cacher } from './tools/FsCache';
+
+import { ApiV2 } from './xdl';
 
 export function ncpAsync(source: string, dest: string, options: any = {}) {
   return new Promise((resolve, reject) => {
@@ -42,5 +47,24 @@ export class Semaphore {
         nextResolver(true);
       }
     }
+  }
+}
+
+export class XdlSchemaClient {
+  static _schemaCaches: { [version: string]: Cacher<JSONObject> } = {};
+
+  static async getAsync(sdkVersion: string): Promise<JSONObject> {
+    if (!XdlSchemaClient._schemaCaches.hasOwnProperty(sdkVersion)) {
+      XdlSchemaClient._schemaCaches[sdkVersion] = new Cacher(
+        async () => {
+          return await new ApiV2().getAsync(`project/configuration/schema/${sdkVersion}`);
+        },
+        `schema-${sdkVersion}.json`,
+        0,
+        path.join(__dirname, `../caches/schema-${sdkVersion}.json`)
+      );
+    }
+
+    return await XdlSchemaClient._schemaCaches[sdkVersion].getAsync();
   }
 }

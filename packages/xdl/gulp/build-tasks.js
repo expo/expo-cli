@@ -59,7 +59,10 @@ const tasks = {
         fse.writeJsonSync(path.join(paths.caches, 'versions.json'), data);
 
         for (let version of Object.keys(data.sdkVersions)) {
-          const { data: release } = await axios.get(`https://exp.host/--/xdl-schema/${version}`);
+          const { data: schema } = await axios.get(
+            `https://exp.host/--/api/v2/project/configuration/schema/${version}`
+          );
+          const { release } = JSON.parse(schema);
 
           fse.writeJsonSync(path.join(paths.caches, `schema-${version}.json`), release);
         }

@@ -3,7 +3,7 @@ import Schemer from '@expo/schemer';
 import fs from 'fs';
 import path from 'path';
 
-import Api from '../Api';
+import { XdlSchemaClient } from '../Utils';
 
 export type Schema = any;
 export type AssetSchema = { schema: Schema; fieldPath: string };
@@ -66,7 +66,7 @@ async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema
 
   if (!_xdlSchemaJson[sdkVersion]) {
     try {
-      _xdlSchemaJson[sdkVersion] = await Api.xdlSchemaAsync(sdkVersion);
+      _xdlSchemaJson[sdkVersion] = await XdlSchemaClient.getAsync(sdkVersion);
     } catch (e) {
       if (e.code && e.code === 'INVALID_JSON') {
         throw new Error(`Couldn't read schema from server`);
