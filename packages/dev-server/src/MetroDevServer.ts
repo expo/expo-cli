@@ -25,7 +25,7 @@ export async function runMetroDevServerAsync(projectRoot: string, options: Metro
     port: metroConfig.server.port,
     watchFolders: metroConfig.watchFolders,
   });
-  middleware.use(clientLogsMiddleware(options.logger));
+  middleware.use('/logs', clientLogsMiddleware(options.logger));
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
   // @ts-ignore can't mutate readonly config
