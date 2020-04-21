@@ -25,7 +25,6 @@ const projectSettingsDefaults: ProjectSettings = {
 };
 
 type PackagerInfo = {
-  devServerPort?: number;
   expoServerPort?: number | null;
   packagerPort?: number | null;
   packagerPid?: number | null;

@@ -2120,9 +2120,15 @@ export async function stopExpoServerAsync(projectRoot: string): Promise<void> {
 
 async function startDevServerAsync(projectRoot: string, startOptions: StartOptions) {
   _assertValidProjectRoot(projectRoot);
+
+  const port = await _getFreePortAsync(19000); // Create packager options
+  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+    expoServerPort: port,
+    packagerPort: port,
+  });
+
   const options: MetroDevServerOptions = {
-    // TODO: port
-    port: undefined,
+    port,
     logger: ProjectUtils.getLogger(projectRoot),
   };
   if (startOptions.reset) {
@@ -2136,19 +2142,6 @@ async function startDevServerAsync(projectRoot: string, startOptions: StartOptio
   }
   const { middleware } = await runMetroDevServerAsync(projectRoot, options);
   middleware.use(getManifestHandler(projectRoot));
-}
-
-async function stopDevServerAsync(projectRoot: string) {
-  _assertValidProjectRoot(projectRoot);
-  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  if (packagerInfo && packagerInfo.devServerPort) {
-    try {
-      await axios.post(`http://127.0.0.1:${packagerInfo.devServerPort}/shutdown`);
-    } catch (e) {}
-  }
-  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-    devServerPort: undefined,
-  });
 }
 
 async function _connectToNgrokAsync(
@@ -2418,7 +2411,6 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
   await stopExpoServerAsync(projectRoot);
   ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Stopping Metro bundler');
   await stopReactNativeServerAsync(projectRoot);
-  await stopDevServerAsync(projectRoot);
   await Android.maybeStopAdbDaemonAsync();
   if (!Config.offline) {
     try {
