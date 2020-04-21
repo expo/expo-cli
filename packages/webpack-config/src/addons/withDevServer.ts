@@ -17,21 +17,22 @@ import { AnyConfiguration, DevConfiguration, Environment } from '../types';
 
 // Ensure the certificate and key provided are valid and if not
 // throw an easy to debug error
-function validateKeyAndCerts({ cert, key, keyFile, crtFile }: any) {
+function validateKeyAndCerts({ cert, key, keyFile, crtFile }: any): boolean {
   let encrypted;
   try {
     // publicEncrypt will throw an error with an invalid cert
     encrypted = crypto.publicEncrypt(cert, Buffer.from('test'));
   } catch (err) {
-    throw new Error(`The certificate "${chalk.yellow(crtFile)}" is invalid.\n${err.message}`);
+    return false;
   }
 
   try {
     // privateDecrypt will throw an error with an invalid key
     crypto.privateDecrypt(key, encrypted);
   } catch (err) {
-    throw new Error(`The certificate key "${chalk.yellow(keyFile)}" is invalid.\n${err.message}`);
+    return false;
   }
+  return true;
 }
 
 // Read file and throw an error if it doesn't exist
@@ -59,8 +60,16 @@ function getHttpsConfig(projectRoot: string, isHttps: boolean): any {
       key: readEnvFile(keyFile, 'SSL_KEY_FILE'),
     };
 
-    validateKeyAndCerts({ ...config, keyFile, crtFile });
-    return config;
+    if (validateKeyAndCerts({ ...config, keyFile, crtFile })) {
+      return config;
+    } else {
+      console.log(
+        chalk.yellow(
+          `\u203A Failed to self-sign SSL certificates for HTTPS. Falling back to insecure https. You can re run with \`--no-https\` to disable HTTPS, or delete the \`.expo\` folder and try again.`
+        )
+      );
+      return true;
+    }
   }
   return isHttps;
 }
