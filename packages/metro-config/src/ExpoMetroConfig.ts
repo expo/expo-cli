@@ -27,7 +27,9 @@ export function getDefaultConfig(
   options: DefaultConfigOptions = {}
 ): InputConfigT {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  const reactNativePath = resolveModule('react-native', projectRoot, exp);
+  const reactNativePath = path.dirname(
+    resolveModule('react-native/package.json', projectRoot, exp)
+  );
 
   const target = options.target ?? process.env.EXPO_TARGET ?? getDefaultTarget(projectRoot);
   if (!(target === 'managed' || target === 'bare')) {
