@@ -37,10 +37,13 @@ jobs:
         env:
           CI: true
 
+      - name: Get Test Flag Name
+        id: cov-flag-name
+        run: echo "::set-output name=flag::$(echo ${{ matrix.package }} | perl -pe 's/(^|-)./uc($&)/ge;s/-//g')"
       - uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
           file: ./packages/${{ matrix.package }}/coverage/clover.xml # optional
-          flags: ${{ matrix.package }} # optional
+          flags: ${{ steps.cov-flag-name.outputs.flag }} # optional
           fail_ci_if_error: true # optional (default = false)
 
