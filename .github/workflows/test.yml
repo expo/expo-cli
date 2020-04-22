@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+        with:
+          fetch-depth: 1
       - run: yarn install --frozen-lockfile --check-files
       - run: yarn lerna bootstrap
       - run: yarn lerna run prepare --stream
