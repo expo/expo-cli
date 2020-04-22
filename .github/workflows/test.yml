@@ -39,7 +39,7 @@ jobs:
 
       - name: Get Test Flag Name
         id: cov-flag-name
-        run: echo "::set-output name=flag::$(echo ${{ matrix.package }} | perl -pe "s/[^a-z]+([a-z])/\U\1/gi;s/^([A-Z])/\l\1/"
+        run: echo "::set-output name=flag::$(echo ${{ matrix.package }} | perl -pe 's/[^a-z]+([a-z])/\U\1/gi;s/^([A-Z])/\l\1/')"
       - uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
