@@ -2,7 +2,6 @@ name: Test Packages
 on: [push]
 
 jobs:
-
   test:
     strategy:
       matrix:
@@ -28,12 +27,16 @@ jobs:
           path: |
             node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-      - run: yarn && yarn bootstrap
+
+      - run: yarn
+      - run: yarn lerna bootstrap
+      - run: yarn lerna run prepare --stream
 
       - name: Coverage ${{ matrix.package }}
         run: cd packages/${{ matrix.package }} && yarn test --coverage
         env:
           CI: true
+
       - uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
