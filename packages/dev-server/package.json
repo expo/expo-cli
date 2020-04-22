@@ -44,6 +44,8 @@
     "@expo/bunyan": "3.0.2",
     "@expo/config": "3.1.4",
     "@expo/metro-config": "0.0.9",
+    "body-parser": "^1.19.0",
+    "serialize-error": "^6.0.0",
     "metro": "0.58.0"
   },
   "devDependencies": {
