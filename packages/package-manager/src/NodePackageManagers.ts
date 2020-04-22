@@ -145,7 +145,9 @@ export class NpmPackageManager implements PackageManager {
     if (!this.options.ignoreStdio) {
       this.log(`> npm ${args.join(' ')}`);
     }
-    const promise = spawnAsync('npm', [...args], this.options);
+
+    // Have spawnAsync consume stdio but we don't actually do anything with it if it's ignored
+    const promise = spawnAsync('npm', [...args], { ...this.options, ignoreStdio: false });
     if (promise.child.stderr && !this.options.ignoreStdio) {
       promise.child.stderr
         .pipe(split(/\r?\n/, (line: string) => line + '\n'))
@@ -272,7 +274,9 @@ export class YarnPackageManager implements PackageManager {
     if (!this.options.ignoreStdio) {
       this.log(`> yarn ${args.join(' ')}`);
     }
-    const promise = spawnAsync('yarnpkg', args, this.options);
+
+    // Have spawnAsync consume stdio but we don't actually do anything with it if it's ignored
+    const promise = spawnAsync('yarnpkg', args, { ...this.options, ignoreStdio: false });
     if (promise.child.stderr && !this.options.ignoreStdio) {
       promise.child.stderr.pipe(new YarnStderrTransform()).pipe(process.stderr);
     }

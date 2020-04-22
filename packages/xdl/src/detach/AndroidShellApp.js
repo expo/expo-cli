@@ -220,18 +220,6 @@ export async function copyInitialShellAppFilesAsync(
   isDetached,
   sdkVersion
 ) {
-  if (androidSrcPath && !isDetached) {
-    // check if Android template files exist
-    // since we take out the prebuild step later on
-    // and we should have generated those files earlier
-    await spawnAsyncThrowError('../../tools-public/check-dynamic-macros-android.sh', [], {
-      pipeToLogger: true,
-      loggerFields: { buildPhase: 'confirming that dynamic macros exist' },
-      cwd: path.join(androidSrcPath, 'app'),
-      env: process.env,
-    });
-  }
-
   const copyToShellApp = async fileName => {
     try {
       await fs.copy(path.join(androidSrcPath, fileName), path.join(shellPath, fileName));
@@ -1245,16 +1233,16 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
   let outputPath;
   if (buildType === 'app-bundle') {
     if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 36) {
-      gradleBuildCommand = `bundle${debugOrRelease}`;
+      gradleBuildCommand = `:app:bundle${debugOrRelease}`;
       outputPath = path.join(outputDirPath, debugOrReleaseL, `app-${debugOrReleaseL}.aab`);
     } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
-      gradleBuildCommand = `bundle${debugOrRelease}`;
+      gradleBuildCommand = `:app:bundle${debugOrRelease}`;
       outputPath = path.join(outputDirPath, debugOrReleaseL, `app.aab`);
     } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
-      gradleBuildCommand = `bundle${devOrProd}Kernel${debugOrRelease}`;
+      gradleBuildCommand = `:app:bundle${devOrProd}Kernel${debugOrRelease}`;
       outputPath = path.join(outputDirPath, `${devOrProdL}Kernel${debugOrRelease}`, `app.aab`);
     } else {
-      // gradleBuildCommand = `bundle${devOrProd}MinSdk${devOrProd}Kernel${debugOrRelease}`;
+      // gradleBuildCommand = `:app:bundle${devOrProd}MinSdk${devOrProd}Kernel${debugOrRelease}`;
       // outputPath = path.join(
       //   outputDirPath,
       //   `${devOrProdL}MinSdk${devOrProd}Kernel`,
@@ -1268,10 +1256,10 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
     }
   } else {
     if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
-      gradleBuildCommand = `assemble${debugOrRelease}`;
+      gradleBuildCommand = `:app:assemble${debugOrRelease}`;
       outputPath = path.join(outputDirPath, debugOrReleaseL, `app-${debugOrReleaseL}.apk`);
     } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
-      gradleBuildCommand = `assemble${devOrProd}Kernel${debugOrRelease}`;
+      gradleBuildCommand = `:app:assemble${devOrProd}Kernel${debugOrRelease}`;
       outputPath = path.join(
         outputDirPath,
         `${devOrProdL}Kernel`,
@@ -1279,7 +1267,7 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
         `app-${devOrProdL}Kernel-${debugOrReleaseL}.apk`
       );
     } else {
-      gradleBuildCommand = `assemble${devOrProd}MinSdk${devOrProd}Kernel${debugOrRelease}`;
+      gradleBuildCommand = `:app:assemble${devOrProd}MinSdk${devOrProd}Kernel${debugOrRelease}`;
       outputPath = path.join(
         outputDirPath,
         `${devOrProdL}MinSdk${devOrProd}Kernel`,
