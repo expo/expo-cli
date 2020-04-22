@@ -71,7 +71,7 @@ export function getDefaultConfig(
       },
     },
     transformer: {
-      babelTransformerPath: require.resolve('../transformer'),
+      babelTransformerPath: require.resolve('metro-react-native-babel-transformer'),
       // TODO: Bacon: Add path for web platform
       assetRegistryPath: path.join(reactNativePath, 'Libraries/Image/AssetRegistry'),
       assetPlugins: [resolveModule('expo/tools/hashAssetFiles', projectRoot, exp)],
