@@ -1,10 +1,11 @@
-import { getConfig } from '@expo/config';
+import { ProjectTarget, getConfig, getDefaultTarget } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
-import { Exp, Project } from '@expo/xdl';
+import { Exp, Project, ProjectSettings } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
+import terminalLink from 'terminal-link';
 
 import { installExitHooks } from '../exit';
 import log from '../log';
@@ -14,6 +15,7 @@ type Options = {
   clear?: boolean;
   sendTo?: string | boolean;
   quiet?: boolean;
+  target?: ProjectTarget;
   releaseChannel?: string;
   duringBuild?: boolean;
   maxWorkers?: number;
@@ -28,6 +30,23 @@ export async function action(projectDir: string, options: Options = {}) {
     );
     process.exit(1);
   }
+
+  const { exp, pkg } = getConfig(projectDir, {
+    skipSDKVersionRequirement: true,
+  });
+
+  if (pkg.dependencies['expo-updates'] && pkg.dependencies['expokit']) {
+    log.warn(
+      `Warning: You have both the ${chalk.bold('expokit')} and ${chalk.bold('expo-updates')} packages installed in package.json.`
+    );
+    log.warn(
+      `These two packages are incompatible and ${chalk.bold('publishing updates with expo-updates will not work if expokit is installed.')}`
+    );
+    log.warn(
+      `If you intent to use ${chalk.bold('expo-updates')}, please remove ${chalk.bold('expokit')} from your dependencies.`
+    );
+  }
+
   const hasOptimized = fs.existsSync(path.join(projectDir, '/.expo-shared/assets.json'));
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!hasOptimized && !nonInteractive) {
@@ -40,16 +59,36 @@ export async function action(projectDir: string, options: Options = {}) {
       )}.`
     );
   }
+
+  const target = options.target ?? getDefaultTarget(projectDir);
+
   const status = await Project.currentStatus(projectDir);
+  let shouldStartOurOwn = false;
+
+  if (status === 'running') {
+    const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectDir);
+    const runningPackagerTarget = packagerInfo.target ?? 'managed';
+    if (target !== runningPackagerTarget) {
+      log(
+        'Found an existing Expo CLI instance running for this project but the target did not match.'
+      );
+      await Project.stopAsync(projectDir);
+      log('Starting a new Expo CLI instance...');
+      shouldStartOurOwn = true;
+    }
+  } else {
+    log('Unable to find an existing Expo CLI instance for this directory; starting a new one...');
+    shouldStartOurOwn = true;
+  }
 
   let startedOurOwn = false;
-  if (status !== 'running') {
-    log('Unable to find an existing Expo CLI instance for this directory, starting a new one...');
+  if (shouldStartOurOwn) {
     installExitHooks(projectDir);
 
-    const startOpts: { reset?: boolean; nonPersistent: boolean; maxWorkers?: number } = {
+    const startOpts: Project.StartOptions = {
       reset: options.clear,
       nonPersistent: true,
+      target,
     };
     if (options.maxWorkers) {
       startOpts.maxWorkers = options.maxWorkers;
@@ -84,10 +123,6 @@ export async function action(projectDir: string, options: Options = {}) {
     });
   }
 
-  const { exp } = getConfig(projectDir, {
-    skipSDKVersionRequirement: true,
-  });
-
   if (
     'userHasBuiltExperienceBefore' in buildStatus &&
     buildStatus.userHasBuiltExperienceBefore &&
@@ -118,12 +153,44 @@ export async function action(projectDir: string, options: Options = {}) {
       simpleSpinner.stop();
     }
 
-    log('Published');
-    log('Your URL is\n\n' + chalk.underline(url) + '\n');
-    log.raw(url);
+    log('Publish complete');
+    log.newLine();
 
-    if (recipient) {
-      await sendTo.sendUrlAsync(url, recipient);
+    let exampleManifestUrl = getExampleManifestUrl(url, exp.sdkVersion);
+    if (exampleManifestUrl) {
+      log(
+        `The manifest URL is: ${terminalLink(url, exampleManifestUrl)}. ${terminalLink(
+          'Learn more.',
+          'https://expo.fyi/manifest-url'
+        )}`
+      );
+    } else {
+      log(
+        `The manifest URL is: ${terminalLink(url, url)}. ${terminalLink(
+          'Learn more.',
+          'https://expo.fyi/manifest-url'
+        )}`
+      );
+    }
+
+    if (target === 'managed') {
+      // TODO: replace with websiteUrl from server when it is available, if that makes sense.
+      let websiteUrl = url.replace('exp.host', 'expo.io');
+      log(
+        `The project page is: ${terminalLink(websiteUrl, websiteUrl)}. ${terminalLink(
+          'Learn more.',
+          'https://expo.fyi/project-page'
+        )}`
+      );
+
+      if (recipient) {
+        await sendTo.sendUrlAsync(websiteUrl, recipient);
+      }
+    } else {
+      // This seems pointless in bare?? Leaving it out
+      // if (recipient) {
+      //   await sendTo.sendUrlAsync(url, recipient);
+      // }
     }
   } finally {
     if (startedOurOwn) {
@@ -131,6 +198,25 @@ export async function action(projectDir: string, options: Options = {}) {
     }
   }
   return result;
+}
+
+function getExampleManifestUrl(url: string, sdkVersion: string | undefined): string | null {
+  if (!sdkVersion) {
+    return null;
+  }
+
+  if (url.includes('release-channel') && url.includes('?release-channel')) {
+    return (
+      url.replace('?release-channel', '/index.exp?release-channel') + `&sdkVersion=${sdkVersion}`
+    );
+  } else if (url.includes('?') && !url.includes('release-channel')) {
+    // This is the only relevant url query param we are aware of at the time of
+    // writing this code, so if there is some other param included we don't know
+    // how to deal with it and log nothing.
+    return null;
+  } else {
+    return `${url}/index.exp?sdkVersion=${sdkVersion}`;
+  }
 }
 
 export default function(program: Command) {
@@ -141,6 +227,10 @@ export default function(program: Command) {
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
     .option('-s, --send-to [dest]', 'A phone number or email address to send a link to')
     .option('-c, --clear', 'Clear the React Native packager cache')
+    .option(
+      '-t, --target [env]',
+      'Target environment for which this publish is intended. Options are `managed` or `bare`.'
+    )
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .option(

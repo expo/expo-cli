@@ -1,15 +1,15 @@
 import log from '../log';
 
 import { Context, IView } from './context';
-import { IQuit, QuitError, askQuit, doQuit } from './views/Select';
+import { AskQuit, DoQuit, IQuit, QuitError } from './views/Select';
 
 export async function runCredentialsManagerStandalone(ctx: Context, startView: IView) {
-  const manager = new CredentialsManager(ctx, startView, askQuit);
+  const manager = new CredentialsManager(ctx, startView, new AskQuit());
   await manager.run();
 }
 
 export async function runCredentialsManager(ctx: Context, startView: IView): Promise<null> {
-  const manager = new CredentialsManager(ctx, startView, doQuit);
+  const manager = new CredentialsManager(ctx, startView, new DoQuit());
   return await manager.run();
 }
 
@@ -39,14 +39,22 @@ export class CredentialsManager {
     while (true) {
       try {
         this._currentView =
-          (await this._currentView.open(this._ctx)) || (await this._quit(this._mainView));
+          (await this._currentView.open(this._ctx)) || (await this._quit.runAsync(this._mainView));
       } catch (error) {
+        // View quit normally, exit normally
         if (error instanceof QuitError) {
           return null;
+        }
+
+        // View encountered error
+        if (this._quit instanceof DoQuit) {
+          // propagate error up
+          throw error;
         } else {
+          // fallback to interactive Quit View
           log(error);
           await new Promise(res => setTimeout(res, 1000));
-          this._currentView = await this._quit(this._mainView);
+          this._currentView = await this._quit.runAsync(this._mainView);
         }
       }
     }

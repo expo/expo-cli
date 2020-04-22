@@ -2,14 +2,16 @@ import {
   ExpoConfig,
   PackageJSONConfig,
   Platform,
+  ProjectTarget,
   configFilename,
   getConfig,
+  getDefaultTarget,
   readExpRcAsync,
   resolveModule,
 } from '@expo/config';
 
 import slug from 'slugify';
-import { getManagedExtensions } from '@expo/config/paths';
+import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import axios from 'axios';
@@ -45,10 +47,11 @@ import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
+import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 import Config from './Config';
 import * as ExponentTools from './detach/ExponentTools';
-import StandaloneContext from './detach/StandaloneContext';
 import * as DevSession from './DevSession';
+import * as EmbeddedAssets from './EmbeddedAssets';
 import { maySkipManifestValidation } from './Env';
 import { ErrorCode } from './ErrorCode';
 import * as Exp from './Exp';
@@ -129,10 +132,12 @@ export type StartOptions = {
   nonPersistent?: boolean;
   maxWorkers?: number;
   webOnly?: boolean;
+  target?: ProjectTarget;
 };
 
 type PublishOptions = {
   releaseChannel?: string;
+  target?: ProjectTarget;
 };
 
 type PackagerOptions = {
@@ -485,14 +490,14 @@ export async function mergeAppDistributions(
   const sortedIosIndexes = getSortedIndex(iosIndexes);
 
   // Save the json arrays to disk
-  await _writeArtifactSafelyAsync(
+  await writeArtifactSafelyAsync(
     projectRoot,
     null,
     path.join(outputDir, 'android-index.json'),
     JSON.stringify(sortedAndroidIndexes)
   );
 
-  await _writeArtifactSafelyAsync(
+  await writeArtifactSafelyAsync(
     projectRoot,
     null,
     path.join(outputDir, 'ios-index.json'),
@@ -524,6 +529,8 @@ export async function exportForAppHosting(
   } = {}
 ): Promise<void> {
   await _validatePackagerReadyAsync(projectRoot);
+  const defaultTarget = getDefaultTarget(projectRoot);
+  const target = options.publishOptions?.target ?? defaultTarget;
 
   // build the bundles
   let packagerOpts = {
@@ -551,8 +558,8 @@ export async function exportForAppHosting(
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 
-  await _writeArtifactSafelyAsync(projectRoot, null, iosJsPath, iosBundle);
-  await _writeArtifactSafelyAsync(projectRoot, null, androidJsPath, androidBundle);
+  await writeArtifactSafelyAsync(projectRoot, null, iosJsPath, iosBundle);
+  await writeArtifactSafelyAsync(projectRoot, null, androidJsPath, androidBundle);
   logger.global.info('Finished saving JS Bundles.');
 
   // save the assets
@@ -567,7 +574,7 @@ export async function exportForAppHosting(
     assets.forEach((asset: Asset) => {
       assetmap[asset.hash] = asset;
     });
-    await _writeArtifactSafelyAsync(
+    await writeArtifactSafelyAsync(
       projectRoot,
       null,
       path.join(outputDir, 'assetmap.json'),
@@ -583,6 +590,7 @@ export async function exportForAppHosting(
 
   exp.publishedTime = new Date().toISOString();
   exp.commitTime = new Date().toISOString();
+  exp.releaseId = uuid.v4();
 
   // generate revisionId and id the same way www does
   const hashIds = new HashIds(uuid.v1(), 10);
@@ -604,36 +612,47 @@ export async function exportForAppHosting(
   exp.id = `@${username}/${exp.slug}`;
 
   // save the android manifest
-  exp.bundleUrl = urljoin(publicUrl, 'bundles', androidBundleUrl);
-  exp.platform = 'android';
-  await _writeArtifactSafelyAsync(
+  const androidManifest = {
+    ...exp,
+    bundleUrl: urljoin(publicUrl, 'bundles', androidBundleUrl),
+    platform: 'android',
+    dependencies: Object.keys(pkg.dependencies),
+  };
+  await writeArtifactSafelyAsync(
     projectRoot,
     null,
     path.join(outputDir, 'android-index.json'),
-    JSON.stringify({ ...exp, dependencies: Object.keys(pkg.dependencies) })
+    JSON.stringify(androidManifest)
   );
 
   // save the ios manifest
-  exp.bundleUrl = urljoin(publicUrl, 'bundles', iosBundleUrl);
-  exp.platform = 'ios';
-  await _writeArtifactSafelyAsync(
+  const iosManifest = {
+    ...exp,
+    bundleUrl: urljoin(publicUrl, 'bundles', iosBundleUrl),
+    platform: 'ios',
+    dependencies: Object.keys(pkg.dependencies),
+  };
+  await writeArtifactSafelyAsync(
     projectRoot,
     null,
     path.join(outputDir, 'ios-index.json'),
-    JSON.stringify(exp)
+    JSON.stringify(iosManifest)
   );
+
+  let iosSourceMap = null;
+  let androidSourceMap = null;
 
   // build source maps
   if (options.dumpSourcemap) {
-    const { iosSourceMap, androidSourceMap } = await _buildSourceMapsAsync(projectRoot, exp);
+    ({ iosSourceMap, androidSourceMap } = await _buildSourceMapsAsync(projectRoot));
     // write the sourcemap files
     const iosMapName = `ios-${iosBundleHash}.map`;
     const iosMapPath = path.join(outputDir, 'bundles', iosMapName);
-    await _writeArtifactSafelyAsync(projectRoot, null, iosMapPath, iosSourceMap);
+    await writeArtifactSafelyAsync(projectRoot, null, iosMapPath, iosSourceMap);
 
     const androidMapName = `android-${androidBundleHash}.map`;
     const androidMapPath = path.join(outputDir, 'bundles', androidMapName);
-    await _writeArtifactSafelyAsync(projectRoot, null, androidMapPath, androidSourceMap);
+    await writeArtifactSafelyAsync(projectRoot, null, androidMapPath, androidSourceMap);
 
     // Remove original mapping to incorrect sourcemap paths
     logger.global.info('Configuring sourcemaps');
@@ -652,13 +671,29 @@ export async function exportForAppHosting(
     Open up this file in Chrome. In the Javascript developer console, navigate to the Source tab.
     You can see a red coloured folder containing the original source code from your bundle.
     `;
-    await _writeArtifactSafelyAsync(
+    await writeArtifactSafelyAsync(
       projectRoot,
       null,
       path.join(outputDir, 'debug.html'),
       debugHtml
     );
   }
+
+  // configure embedded assets for expo-updates or ExpoKit
+  await EmbeddedAssets.configureAsync({
+    projectRoot,
+    pkg,
+    exp,
+    iosManifestUrl: urljoin(publicUrl, 'ios-index.json'),
+    iosManifest,
+    iosBundle,
+    iosSourceMap,
+    androidManifestUrl: urljoin(publicUrl, 'android-index.json'),
+    androidManifest,
+    androidBundle,
+    androidSourceMap,
+    target,
+  });
 }
 
 // truncate the last n lines in a file
@@ -721,6 +756,7 @@ export async function publishAsync(
   options: PublishOptions = {}
 ): Promise<{ url: string; ids: string[]; err?: string }> {
   const user = await UserManager.ensureLoggedInAsync();
+  const target = options.target ?? getDefaultTarget(projectRoot);
   await _validatePackagerReadyAsync(projectRoot);
   Analytics.logEvent('Publish', {
     projectRoot,
@@ -799,21 +835,16 @@ export async function publishAsync(
     throw e;
   }
 
-  await _maybeWriteArtifactsToDiskAsync({
-    exp,
-    projectRoot,
-    iosBundle,
-    androidBundle,
-    iosSourceMap,
-    androidSourceMap,
-  });
+  let androidManifest = {};
+  let iosManifest = {};
 
   if (
     validPostPublishHooks.length ||
     (exp.ios && exp.ios.publishManifestPath) ||
-    (exp.android && exp.android.publishManifestPath)
+    (exp.android && exp.android.publishManifestPath) ||
+    pkg.dependencies['expo-updates']
   ) {
-    let [androidManifest, iosManifest] = await Promise.all([
+    [androidManifest, iosManifest] = await Promise.all([
       ExponentTools.getManifestAsync(response.url, {
         'Exponent-SDK-Version': exp.sdkVersion,
         'Exponent-Platform': 'android',
@@ -863,143 +894,24 @@ export async function publishAsync(
         logger.global.warn(`Warning: postPublish hook '${hook.file}' failed: ${e.stack}`);
       }
     }
-
-    let fullManifestUrl = response.url.replace('exp://', 'https://');
-
-    if (exp.ios && exp.ios.publishManifestPath) {
-      await _writeArtifactSafelyAsync(
-        projectRoot,
-        'ios.publishManifestPath',
-        exp.ios.publishManifestPath,
-        JSON.stringify(iosManifest)
-      );
-      const context = StandaloneContext.createUserContext(projectRoot, exp);
-      const { supportingDirectory } = IosWorkspace.getPaths(context);
-      if (fs.existsSync(path.join(supportingDirectory, 'EXShell.plist'))) {
-        // This is an ExpoKit app, set properties in EXShell.plist
-        await IosPlist.modifyAsync(supportingDirectory, 'EXShell', (shellPlist: any) => {
-          shellPlist.releaseChannel = options.releaseChannel;
-          return shellPlist;
-        });
-      }
-      if (fs.existsSync(path.join(supportingDirectory, 'Expo.plist'))) {
-        // This is an app with expo-updates installed, set properties in Expo.plist
-        await IosPlist.modifyAsync(supportingDirectory, 'Expo', (configPlist: any) => {
-          configPlist.EXUpdatesURL = fullManifestUrl;
-          configPlist.EXUpdatesReleaseChannel = options.releaseChannel;
-          configPlist.EXUpdatesSDKVersion = exp.sdkVersion;
-          return configPlist;
-        });
-      }
-    }
-
-    if (exp.android && exp.android.publishManifestPath) {
-      await _writeArtifactSafelyAsync(
-        projectRoot,
-        'android.publishManifestPath',
-        exp.android.publishManifestPath,
-        JSON.stringify(androidManifest)
-      );
-    }
-
-    if (exp.android && exp.android.publishManifestPath && exp.android.publishBundlePath) {
-      let constantsPath = path.join(
-        projectRoot,
-        'android',
-        'app',
-        'src',
-        'main',
-        'java',
-        'host',
-        'exp',
-        'exponent',
-        'generated',
-        'AppConstants.java'
-      );
-      if (fs.existsSync(constantsPath)) {
-        // This is an ExpoKit app
-        // We need to add EmbeddedResponse instances on Android to tell the runtime
-        // that the shell app manifest and bundle is packaged.
-        await ExponentTools.deleteLinesInFileAsync(
-          `START EMBEDDED RESPONSES`,
-          `END EMBEDDED RESPONSES`,
-          constantsPath
-        );
-        await ExponentTools.regexFileAsync(
-          '// ADD EMBEDDED RESPONSES HERE',
-          `
-          // ADD EMBEDDED RESPONSES HERE
-          // START EMBEDDED RESPONSES
-          embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-          embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
-          // END EMBEDDED RESPONSES`,
-          constantsPath
-        );
-        await ExponentTools.regexFileAsync(
-          /RELEASE_CHANNEL = "[^"]*"/,
-          `RELEASE_CHANNEL = "${options.releaseChannel}"`,
-          constantsPath
-        );
-      }
-      if (pkg.dependencies['expo-updates']) {
-        // This is an app with expo-updates installed, so set the applicable meta-data properties in
-        // AndroidManifest.xml
-        let androidManifestXmlPath = path.join(
-          projectRoot,
-          'android',
-          'app',
-          'src',
-          'main',
-          'AndroidManifest.xml'
-        );
-        let androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
-        let expoUpdateUrlRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_UPDATE_URL"[^>]+\/>/;
-        let expoSdkVersionRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_SDK_VERSION"[^>]+\/>/;
-        let expoReleaseChannelRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_RELEASE_CHANNEL"[^>]+\/>/;
-
-        let expoUpdateUrlTag = `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${fullManifestUrl}" />`;
-        let expoSdkVersionTag = `<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="${exp.sdkVersion}" />`;
-        let expoReleaseChannelTag = `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${options.releaseChannel}" />`;
-
-        let tagsToInsert = [];
-        if (androidManifestXmlFile.search(expoUpdateUrlRegex) < 0) {
-          tagsToInsert.push(expoUpdateUrlTag);
-        }
-        if (androidManifestXmlFile.search(expoSdkVersionRegex) < 0) {
-          tagsToInsert.push(expoSdkVersionTag);
-        }
-        if (androidManifestXmlFile.search(expoReleaseChannelRegex) < 0) {
-          tagsToInsert.push(expoReleaseChannelTag);
-        }
-        if (tagsToInsert.length) {
-          // try to insert the meta-data tags that aren't found
-          await ExponentTools.regexFileAsync(
-            /<activity\s+android:name=".MainActivity"/,
-            `${tagsToInsert.join('\n      ')}
-
-      <activity
-        android:name=".MainActivity"`,
-            androidManifestXmlPath
-          );
-        }
-        await ExponentTools.regexFileAsync(
-          expoUpdateUrlRegex,
-          expoUpdateUrlTag,
-          androidManifestXmlPath
-        );
-        await ExponentTools.regexFileAsync(
-          expoSdkVersionRegex,
-          expoSdkVersionTag,
-          androidManifestXmlPath
-        );
-        await ExponentTools.regexFileAsync(
-          expoReleaseChannelRegex,
-          expoReleaseChannelTag,
-          androidManifestXmlPath
-        );
-      }
-    }
   }
+
+  const fullManifestUrl = response.url.replace('exp://', 'https://');
+  await EmbeddedAssets.configureAsync({
+    projectRoot,
+    pkg,
+    exp,
+    releaseChannel: options.releaseChannel ?? 'default',
+    iosManifestUrl: fullManifestUrl,
+    iosManifest,
+    iosBundle,
+    iosSourceMap,
+    androidManifestUrl: fullManifestUrl,
+    androidManifest,
+    androidBundle,
+    androidSourceMap,
+    target,
+  });
 
   // TODO: move to postPublish hook
   if (exp.isKernel) {
@@ -1138,7 +1050,7 @@ async function _maybeBuildSourceMapsAsync(
   options = { force: false }
 ) {
   if (options.force) {
-    return _buildSourceMapsAsync(projectRoot, exp);
+    return _buildSourceMapsAsync(projectRoot);
   } else {
     return { iosSourceMap: null, androidSourceMap: null };
   }
@@ -1149,7 +1061,7 @@ async function _maybeBuildSourceMapsAsync(
 // enable sourcemap building, but for now it's very fast, most apps in
 // production should use sourcemaps for error reporting, and in the worst
 // case, adding a few seconds to a postPublish hook isn't too annoying
-async function _buildSourceMapsAsync(projectRoot: string, exp: ExpoConfig) {
+async function _buildSourceMapsAsync(projectRoot: string) {
   let entryPoint = Exp.determineEntryPoint(projectRoot);
   let sourceMapUrl = await UrlUtils.constructSourceMapUrlAsync(projectRoot, entryPoint);
 
@@ -1307,75 +1219,6 @@ async function _fetchAndSaveAssetsAsync(
   await _configureExpForAssets(projectRoot, exp, assets);
 
   return { exp, assets };
-}
-
-async function _writeArtifactSafelyAsync(
-  projectRoot: string,
-  keyName: string | null,
-  artifactPath: string,
-  artifact: string
-) {
-  const pathToWrite = path.resolve(projectRoot, artifactPath);
-  if (!fs.existsSync(path.dirname(pathToWrite))) {
-    const errorMsg = keyName
-      ? `app.json specifies: ${pathToWrite}, but that directory does not exist.`
-      : `app.json specifies ${keyName}: ${pathToWrite}, but that directory does not exist.`;
-    logger.global.warn(errorMsg);
-  } else {
-    await fs.writeFile(pathToWrite, artifact);
-  }
-}
-
-async function _maybeWriteArtifactsToDiskAsync({
-  exp,
-  projectRoot,
-  iosBundle,
-  androidBundle,
-  iosSourceMap,
-  androidSourceMap,
-}: {
-  exp: ExpoConfig;
-  projectRoot: string;
-  iosBundle: string;
-  androidBundle: string;
-  iosSourceMap: string | null;
-  androidSourceMap: string | null;
-}) {
-  if (exp.android && exp.android.publishBundlePath) {
-    await _writeArtifactSafelyAsync(
-      projectRoot,
-      'android.publishBundlePath',
-      exp.android.publishBundlePath,
-      androidBundle
-    );
-  }
-
-  if (exp.ios && exp.ios.publishBundlePath) {
-    await _writeArtifactSafelyAsync(
-      projectRoot,
-      'ios.publishBundlePath',
-      exp.ios.publishBundlePath,
-      iosBundle
-    );
-  }
-
-  if (exp.android && exp.android.publishSourceMapPath && androidSourceMap) {
-    await _writeArtifactSafelyAsync(
-      projectRoot,
-      'android.publishSourceMapPath',
-      exp.android.publishSourceMapPath,
-      androidSourceMap
-    );
-  }
-
-  if (exp.ios && exp.ios.publishSourceMapPath && iosSourceMap) {
-    await _writeArtifactSafelyAsync(
-      projectRoot,
-      'ios.publishSourceMapPath',
-      exp.ios.publishSourceMapPath,
-      iosSourceMap
-    );
-  }
 }
 
 async function _handleKernelPublishedAsync({
@@ -1808,41 +1651,42 @@ function _isAppRegistryStartupMessage(body: any[]) {
   );
 }
 
+type ConsoleLogLevel = 'info' | 'warn' | 'error' | 'debug';
+
 function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: string, logs: any) {
   for (let i = 0; i < logs.length; i++) {
-    let log = logs[i];
+    const log = logs[i];
     let body = typeof log.body === 'string' ? [log.body] : log.body;
     let { level } = log;
 
     if (_isIgnorableBugReportingExtraData(body)) {
-      level = logger.DEBUG;
+      level = 'debug';
     }
     if (_isAppRegistryStartupMessage(body)) {
       body = [`Running application on ${deviceName}.`];
     }
 
-    let string = body
-      .map((obj: any) => {
-        if (typeof obj === 'undefined') {
-          return 'undefined';
-        }
-        if (obj === 'null') {
-          return 'null';
-        }
-        if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
-          return obj;
-        }
-        try {
-          return JSON.stringify(obj);
-        } catch (e) {
-          return obj.toString();
-        }
-      })
-      .join(' ');
-
-    ProjectUtils.logWithLevel(
-      projectRoot,
-      level,
+    const args = body.map((obj: any) => {
+      if (typeof obj === 'undefined') {
+        return 'undefined';
+      }
+      if (obj === 'null') {
+        return 'null';
+      }
+      if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
+        return obj;
+      }
+      try {
+        return JSON.stringify(obj);
+      } catch (e) {
+        return obj.toString();
+      }
+    });
+    const logLevel =
+      level === 'info' || level === 'warn' || level === 'error' || level === 'debug'
+        ? (level as ConsoleLogLevel)
+        : 'info';
+    ProjectUtils.getLogger(projectRoot)[logLevel](
       {
         tag: 'device',
         deviceId,
@@ -1851,7 +1695,7 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
         shouldHide: log.shouldHide,
         includesStack: log.includesStack,
       },
-      string
+      ...args
     );
   }
 }
@@ -1871,11 +1715,17 @@ export async function startReactNativeServerAsync(
 
   const customLogReporterPath: string = require.resolve(path.join(__dirname, 'reporter'));
 
+  // TODO: Bacon: Support .mjs (short-lived JS modules extension that some packages use)
+  const sourceExtsConfig = { isTS: true, isReact: true, isModern: false };
+  const sourceExts =
+    options.target === 'bare'
+      ? getBareExtensions([], sourceExtsConfig)
+      : getManagedExtensions([], sourceExtsConfig);
+
   let packagerOpts: { [key: string]: any } = {
     port: packagerPort,
     customLogReporterPath,
-    // TODO: Bacon: Support .mjs (short-lived JS modules extension that some packages use)
-    sourceExts: getManagedExtensions([], { isTS: true, isReact: true, isModern: false }),
+    sourceExts,
   };
 
   if (options.nonPersistent && Versions.lteSdkVersion(exp, '32.0.0')) {
@@ -1883,7 +1733,17 @@ export async function startReactNativeServerAsync(
   }
 
   if (Versions.gteSdkVersion(exp, '33.0.0')) {
-    packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+    // starting with SDK 37, we bundle this plugin with the expo-asset package instead of expo,
+    // so check there first and fall back to expo if we can't find it in expo-asset
+    try {
+      packagerOpts.assetPlugins = resolveModule(
+        'expo-asset/tools/hashAssetFiles',
+        projectRoot,
+        exp
+      );
+    } catch (e) {
+      packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+    }
   }
 
   if (options.maxWorkers) {
@@ -1894,6 +1754,7 @@ export async function startReactNativeServerAsync(
     delete packagerOpts.customLogReporterPath;
   }
   const userPackagerOpts = exp.packagerOpts;
+
   if (userPackagerOpts) {
     // The RN CLI expects rn-cli.config.js's path to be absolute. We use the
     // project root to resolve relative paths since that was the original
@@ -1905,6 +1766,9 @@ export async function startReactNativeServerAsync(
     packagerOpts = {
       ...packagerOpts,
       ...userPackagerOpts,
+      // In order to prevent people from forgetting to include the .expo extension or other things
+      // NOTE(brentvatne): we should probably do away with packagerOpts soon in favor of @expo/metro-config!
+      sourceExts: uniq([...packagerOpts.sourceExts, ...(userPackagerOpts.sourceExts ?? [])]),
     };
 
     if (userPackagerOpts.port !== undefined && userPackagerOpts.port !== null) {
@@ -2471,6 +2335,12 @@ export async function startAsync(
     developerTool: Config.developerTool,
   });
 
+  if (options.target) {
+    // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
+    // called from metro.config.js and the --target option is used to override the default target.
+    process.env.EXPO_TARGET = options.target;
+  }
+
   let { exp } = getConfig(projectRoot);
   if (options.webOnly) {
     await Webpack.restartAsync(projectRoot, options);
@@ -2499,6 +2369,7 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
   await stopExpoServerAsync(projectRoot);
   ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Stopping Metro bundler');
   await stopReactNativeServerAsync(projectRoot);
+  await Android.maybeStopAdbDaemonAsync();
   if (!Config.offline) {
     try {
       await stopTunnelsAsync(projectRoot);

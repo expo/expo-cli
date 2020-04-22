@@ -1,0 +1,49 @@
+{
+  "name": "uri-scheme",
+  "version": "1.0.5",
+  "main": "build",
+  "preferGlobal": true,
+  "keywords": [
+    "expo",
+    "ios",
+    "uri-scheme",
+    "android"
+  ],
+  "description": "Interact with native URI schemes",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/uri-scheme"
+  },
+  "author": "Expo <support@expo.io>",
+  "license": "MIT",
+  "bin": {
+    "uri-scheme": "./cli.js"
+  },
+  "files": [
+    "build",
+    "cli.js"
+  ],
+  "scripts": {
+    "prepare": "yarn run clean && yarn run build:prod",
+    "lint": "eslint .",
+    "watch": "yarn run build -w",
+    "build": "ncc build ./src/index.ts -o build/",
+    "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
+    "clean": "rimraf ./build/"
+  },
+  "devDependencies": {
+    "@expo/babel-preset-cli": "0.2.8",
+    "@expo/config": "3.1.2",
+    "@expo/plist": "0.0.3",
+    "@expo/spawn-async": "1.5.0",
+    "@types/node": "^12.6.8",
+    "@zeit/ncc": "^0.20.5",
+    "chalk": "2.4.2",
+    "commander": "2.20.0",
+    "enquirer": "2.3.4",
+    "glob": "7.1.2",
+    "rimraf": "2.6.3",
+    "update-check": "1.5.3"
+  }
+}

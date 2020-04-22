@@ -7,13 +7,17 @@ The codemods can be used to transform JavaScript (.js, .jsx) and TypeScript (.ts
 ## Installation
 
 You can run `expo-codemod` using `npx` without having to install it (Node.js 8.x, 10.x or 12.x is required):
+
 ```
 npx expo-codemod
 ```
+
 Alternatively, you can install it globally:
+
 ```
 npm install --global expo-codemod
 ```
+
 (Installing with `yarn global add` works too.)
 
 ## Usage
@@ -34,12 +38,17 @@ Options:
 
 Transforms available:
   sdk33-imports
+  sdk37-imports
 ```
+
 For example, to apply the `sdk33-imports` transform to all source files in the `src` folder, run:
+
 ```
 npx expo-codemod sdk33-imports src
 ```
+
 You can also use glob patterns (make sure to wrap the patterns in quotes):
+
 ```
 npx expo-codemod sdk33-imports '**/*.js' '**/*.{ts,tsx}'
 ```
@@ -58,6 +67,7 @@ You can pass the transform filename to jscodeshift using the `--transform` optio
 ```sh
 jscodeshift --transform ./node_modules/expo-codemod/build/transforms/sdk33-imports.js --no-babel --ignore-config .gitignore .
 ```
+
 Read more about jscodeshift options [here](https://github.com/facebook/jscodeshift#usage-cli).
 
 ## Troubleshooting
@@ -68,7 +78,9 @@ As per [#676](https://github.com/expo/expo-cli/issues/676#issuecomment-505793327
 
 ## Transforms
 
-### sdk33-imports
+### `sdk33-imports`
+
+_Used to migrate a project from SDK 32 to SDK 33._
 
 Transforms imports from the `expo` package that were deprecated in Expo SDK 33 to imports from the individual packages.
 
@@ -86,4 +98,25 @@ Output:
 import { Accelerometer } from 'expo-sensors';
 import * as GestureHandler from 'react-native-gesture-handler';
 import MapView from 'react-native-maps';
+```
+
+### `sdk37-imports`
+
+_Used to migrate a project from SDK 36 to SDK 37._
+
+Transforms imports of `AuthSession` and `ScreenOrientation` that were extracted out from the `expo` package to `expo-auth-session` and `expo-screen-orientation` packages for SDK 37.
+
+#### Example
+
+Input:
+
+```js
+import { AuthSession, ScreenOrientation } from 'expo';
+```
+
+Output:
+
+```js
+import * as AuthSession from 'expo-auth-session';
+import * as ScreenOrientation from 'expo-screen-orientation';
 ```

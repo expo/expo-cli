@@ -70,10 +70,14 @@ export function getEntryPointWithExtensions(
     if (!entry) {
       // Allow for paths like: `{ "main": "expo/AppEntry" }`
       entry = resolveFromSilentWithExtensions(projectRoot, exp.entryPoint, extensions);
-      if (!entry)
-        throw new Error(
-          `Cannot resolve entry file: The \`expo.entryPoint\` field defined in your \`app.json\` points to a non-existent path.`
-        );
+
+      // If it doesn't resolve then just return the entryPoint as-is. This makes
+      // it possible for people who have an unconventional setup (eg: multiple
+      // apps in monorepo with metro at root) to customize entry point without
+      // us imposing our assumptions.
+      if (!entry) {
+        return exp.entryPoint;
+      }
     }
     return entry;
   } else if (pkg) {

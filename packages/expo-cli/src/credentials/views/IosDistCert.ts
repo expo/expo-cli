@@ -30,12 +30,22 @@ Please revoke the old ones or reuse existing from your other apps.
 Please remember that Apple Distribution Certificates are not application specific!
 `;
 
+type CliOptions = {
+  nonInteractive?: boolean;
+};
+
 export type DistCertOptions = {
   experienceName: string;
   bundleIdentifier: string;
-};
+} & CliOptions;
 
 export class CreateIosDist implements IView {
+  _nonInteractive: boolean;
+
+  constructor(options: CliOptions = {}) {
+    this._nonInteractive = options.nonInteractive ?? false;
+  }
+
   async create(ctx: Context): Promise<IosDistCredentials> {
     const newDistCert = await this.provideOrGenerate(ctx);
     return await ctx.ios.createDistCert(newDistCert);
@@ -51,10 +61,12 @@ export class CreateIosDist implements IView {
   }
 
   async provideOrGenerate(ctx: Context): Promise<DistCert> {
-    const userProvided = await promptForDistCert(ctx);
-    if (userProvided) {
-      const isValid = await validateDistributionCertificate(ctx, userProvided);
-      return isValid ? userProvided : await this.provideOrGenerate(ctx);
+    if (!this._nonInteractive) {
+      const userProvided = await promptForDistCert(ctx);
+      if (userProvided) {
+        const isValid = await validateDistributionCertificate(ctx, userProvided);
+        return isValid ? userProvided : await this.provideOrGenerate(ctx);
+      }
     }
     return await generateDistCert(ctx);
   }
@@ -232,11 +244,13 @@ export class UseExistingDistributionCert implements IView {
 export class CreateOrReuseDistributionCert implements IView {
   _experienceName: string;
   _bundleIdentifier: string;
+  _nonInteractive: boolean;
 
   constructor(options: DistCertOptions) {
     const { experienceName, bundleIdentifier } = options;
     this._experienceName = experienceName;
     this._bundleIdentifier = bundleIdentifier;
+    this._nonInteractive = options.nonInteractive ?? false;
   }
 
   async assignDistCert(ctx: Context, userCredentialsId: number) {
@@ -256,7 +270,9 @@ export class CreateOrReuseDistributionCert implements IView {
     const existingCertificates = await getValidDistCerts(ctx.ios.credentials, ctx);
 
     if (existingCertificates.length === 0) {
-      const distCert = await new CreateIosDist().create(ctx);
+      const distCert = await new CreateIosDist({ nonInteractive: this._nonInteractive }).create(
+        ctx
+      );
       await this.assignDistCert(ctx, distCert.id);
       return null;
     }
@@ -274,13 +290,20 @@ export class CreateOrReuseDistributionCert implements IView {
       pageSize: Infinity,
     };
 
-    const { confirm } = await prompt(confirmQuestion);
-    if (confirm) {
-      log(`Using Distribution Certificate: ${autoselectedCertificate.certId || '-----'}`);
-      await this.assignDistCert(ctx, autoselectedCertificate.id);
-      return null;
+    if (!this._nonInteractive) {
+      const { confirm } = await prompt(confirmQuestion);
+      if (!confirm) {
+        return await this._createOrReuse(ctx);
+      }
     }
 
+    // Use autosuggested push key
+    log(`Using Distribution Certificate: ${autoselectedCertificate.certId || '-----'}`);
+    await this.assignDistCert(ctx, autoselectedCertificate.id);
+    return null;
+  }
+
+  async _createOrReuse(ctx: Context): Promise<IView | null> {
     const choices = [
       {
         name: '[Choose existing certificate] (Recommended)',
@@ -300,7 +323,9 @@ export class CreateOrReuseDistributionCert implements IView {
     const { action } = await prompt(question);
 
     if (action === 'GENERATE') {
-      const distCert = await new CreateIosDist().create(ctx);
+      const distCert = await new CreateIosDist({ nonInteractive: this._nonInteractive }).create(
+        ctx
+      );
       await this.assignDistCert(ctx, distCert.id);
       return null;
     } else if (action === 'CHOOSE_EXISTING') {

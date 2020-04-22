@@ -5,7 +5,6 @@ import get from 'lodash/get';
 import some from 'lodash/some';
 import ora from 'ora';
 
-import inquirer from 'inquirer';
 import terminalLink from 'terminal-link';
 import prompt, { Question } from '../../prompt';
 import log from '../../log';
@@ -19,7 +18,6 @@ import {
 import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
 import { PushKey, PushKeyInfo, PushKeyManager, isPushKey } from '../../appleApi';
-import { CredentialsManager } from '../route';
 
 const APPLE_KEYS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline('two')} Push Notifactions Keys on your Apple Developer account.
@@ -27,12 +25,22 @@ Please revoke the old ones or reuse existing from your other apps.
 Please remember that Apple Keys are not application specific!
 `;
 
+type CliOptions = {
+  nonInteractive?: boolean;
+};
+
 export type PushKeyOptions = {
   experienceName: string;
   bundleIdentifier: string;
-};
+} & CliOptions;
 
 export class CreateIosPush implements IView {
+  _nonInteractive: boolean;
+
+  constructor(options: CliOptions = {}) {
+    this._nonInteractive = options.nonInteractive ?? false;
+  }
+
   async create(ctx: Context): Promise<IosPushCredentials> {
     const newPushKey = await this.provideOrGenerate(ctx);
     return await ctx.ios.createPushKey(newPushKey);
@@ -66,12 +74,14 @@ export class CreateIosPush implements IView {
   }
 
   async provideOrGenerate(ctx: Context): Promise<PushKey> {
-    const requiredQuestions = this._getRequiredQuestions(ctx);
-    const userProvided = await askForUserProvided(requiredQuestions);
-    if (userProvided) {
-      const pushKey = this._ensurePushKey(ctx, userProvided);
-      const isValid = await validatePushKey(ctx, pushKey);
-      return isValid ? userProvided : await this.provideOrGenerate(ctx);
+    if (!this._nonInteractive) {
+      const requiredQuestions = this._getRequiredQuestions(ctx);
+      const userProvided = await askForUserProvided(requiredQuestions);
+      if (userProvided) {
+        const pushKey = this._ensurePushKey(ctx, userProvided);
+        const isValid = await validatePushKey(ctx, pushKey);
+        return isValid ? userProvided : await this.provideOrGenerate(ctx);
+      }
     }
     return await generatePushKey(ctx);
   }
@@ -236,11 +246,13 @@ export class UseExistingPushNotification implements IView {
 export class CreateOrReusePushKey implements IView {
   _experienceName: string;
   _bundleIdentifier: string;
+  _nonInteractive: boolean;
 
   constructor(options: PushKeyOptions) {
     const { experienceName, bundleIdentifier } = options;
     this._experienceName = experienceName;
     this._bundleIdentifier = bundleIdentifier;
+    this._nonInteractive = options.nonInteractive ?? false;
   }
 
   async assignPushKey(ctx: Context, userCredentialsId: number) {
@@ -260,7 +272,7 @@ export class CreateOrReusePushKey implements IView {
     const existingPushKeys = await getValidPushKeys(ctx.ios.credentials, ctx);
 
     if (existingPushKeys.length === 0) {
-      const pushKey = await new CreateIosPush().create(ctx);
+      const pushKey = await new CreateIosPush({ nonInteractive: this._nonInteractive }).create(ctx);
       await this.assignPushKey(ctx, pushKey.id);
       return null;
     }
@@ -278,13 +290,20 @@ export class CreateOrReusePushKey implements IView {
       pageSize: Infinity,
     };
 
-    const { confirm } = await prompt(confirmQuestion);
-    if (confirm) {
-      log(`Using Push Key: ${autoselectedPushKey.apnsKeyId}`);
-      await this.assignPushKey(ctx, autoselectedPushKey.id);
-      return null;
+    if (!this._nonInteractive) {
+      const { confirm } = await prompt(confirmQuestion);
+      if (!confirm) {
+        return await this._createOrReuse(ctx);
+      }
     }
 
+    // Use autosuggested push key
+    log(`Using Push Key: ${autoselectedPushKey.apnsKeyId}`);
+    await this.assignPushKey(ctx, autoselectedPushKey.id);
+    return null;
+  }
+
+  async _createOrReuse(ctx: Context): Promise<IView | null> {
     const choices = [
       {
         name: '[Choose existing push key] (Recommended)',
@@ -304,7 +323,7 @@ export class CreateOrReusePushKey implements IView {
     const { action } = await prompt(question);
 
     if (action === 'GENERATE') {
-      const pushKey = await new CreateIosPush().create(ctx);
+      const pushKey = await new CreateIosPush({ nonInteractive: this._nonInteractive }).create(ctx);
       await this.assignPushKey(ctx, pushKey.id);
       return null;
     } else if (action === 'CHOOSE_EXISTING') {

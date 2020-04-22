@@ -37,6 +37,7 @@ try {
   if (result.default != null) {
     result = result.default;
   }
+  const exportedObjectType = typeof result;
   if (typeof result === 'function') {
     result = result(request);
   }
@@ -45,7 +46,7 @@ try {
     throw new ConfigError(`Config file ${configFile} cannot return a Promise.`, 'INVALID_CONFIG');
   }
 
-  console.log(JSON.stringify(serializeAndEvaluate(result)));
+  console.log(JSON.stringify({ config: serializeAndEvaluate(result), exportedObjectType }));
   process.exit(0);
 } catch (error) {
   console.error(JSON.stringify(errorToJSON(error)));

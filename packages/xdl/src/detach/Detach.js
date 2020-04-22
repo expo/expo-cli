@@ -21,6 +21,7 @@ import * as IosWorkspace from './IosWorkspace';
 import * as AndroidShellApp from './AndroidShellApp';
 
 import Api from '../Api';
+import * as EmbeddedAssets from '../EmbeddedAssets';
 import UserManager from '../User';
 import XDLError from '../XDLError';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
@@ -516,15 +517,13 @@ export async function bundleAssetsAsync(projectDir, args) {
     return;
   }
   const { exp } = options;
-  let publishManifestPath =
-    args.platform === 'ios' ? exp.ios.publishManifestPath : exp.android.publishManifestPath;
-  if (!publishManifestPath) {
+  let bundledManifestPath = EmbeddedAssets.getEmbeddedManifestPath(args.platform, projectDir, exp);
+  if (!bundledManifestPath) {
     logger.warn(
       `Skipped assets bundling because the '${args.platform}.publishManifestPath' key is not specified in the app manifest.`
     );
     return;
   }
-  let bundledManifestPath = path.join(projectDir, publishManifestPath);
   let manifest;
   try {
     manifest = JSON.parse(await fs.readFile(bundledManifestPath, 'utf8'));
@@ -532,6 +531,9 @@ export async function bundleAssetsAsync(projectDir, args) {
     throw new Error(
       `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${ex.message}`
     );
+  }
+  if (!manifest || !Object.keys(manifest).length) {
+    throw new Error(`The manifest at '${bundledManifestPath}' was empty or invalid.`);
   }
   await AssetBundle.bundleAsync(null, manifest.bundledAssets, args.dest);
 }

@@ -220,18 +220,6 @@ export async function copyInitialShellAppFilesAsync(
   isDetached,
   sdkVersion
 ) {
-  if (androidSrcPath && !isDetached) {
-    // check if Android template files exist
-    // since we take out the prebuild step later on
-    // and we should have generated those files earlier
-    await spawnAsyncThrowError('../../tools-public/check-dynamic-macros-android.sh', [], {
-      pipeToLogger: true,
-      loggerFields: { buildPhase: 'confirming that dynamic macros exist' },
-      cwd: path.join(androidSrcPath, 'app'),
-      env: process.env,
-    });
-  }
-
   const copyToShellApp = async fileName => {
     try {
       await fs.copy(path.join(androidSrcPath, fileName), path.join(shellPath, fileName));
@@ -545,13 +533,6 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     `javaMaxHeapSize "6g"`,
     path.join(shellPath, 'app', 'build.gradle')
   );
-
-  // Push notifications
-  await regexFileAsync(
-    '"package_name": "host.exp.exponent"',
-    `"package_name": "${javaPackage}"`,
-    path.join(shellPath, 'app', 'google-services.json')
-  ); // TODO: actually use the correct file
 
   // TODO: probably don't need this in both places
   await regexFileAsync(
@@ -1074,6 +1055,89 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     );
   }
 
+  // Configure google-services.json
+  // It is either already in the shell app (placeholder or real one) or it has been added
+  // from `manifest.android.googleServicesFile`.
+  if (parseSdkMajorVersion(sdkVersion) >= 37) {
+    // New behavior - googleServicesFile overrides googleSignIn configuration
+    if (!manifest.android || !manifest.android.googleServicesFile) {
+      // No google-services.json file, let's use the placeholder one
+      // and insert keys manually ("the old way").
+
+      // This seems like something we can't really get away without:
+      //
+      // 1. A project with google-services plugin won't build without
+      //    a google-services.json file (the plugin makes sure to fail the build).
+      // 2. Adding the google-services plugin conditionally and properly (to be able
+      //    to build a project without that file) is too much hassle.
+      //
+      // So, let's use `host.exp.exponent` as a placeholder for the project's
+      // javaPackage. In custom shell apps there shouldn't ever be "host.exp.exponent"
+      // so this shouldn't cause any problems for advanced users.
+      await regexFileAsync(
+        '"package_name": "host.exp.exponent"',
+        `"package_name": "${javaPackage}"`,
+        path.join(shellPath, 'app', 'google-services.json')
+      );
+
+      // Let's not modify values of the original google-services.json file
+      // if they haven't been provided (in which case, googleAndroidApiKey
+      // and certificateHash will be an empty string). This will make sure
+      // we don't modify shell app's google-services needlessly.
+
+      // Google sign in
+      if (googleAndroidApiKey) {
+        await regexFileAsync(
+          /"current_key": "(.*?)"/,
+          `"current_key": "${googleAndroidApiKey}"`,
+          path.join(shellPath, 'app', 'google-services.json')
+        );
+      }
+      if (certificateHash) {
+        await regexFileAsync(
+          /"certificate_hash": "(.*?)"/,
+          `"certificate_hash": "${certificateHash}"`,
+          path.join(shellPath, 'app', 'google-services.json')
+        );
+      }
+    } else if (googleAndroidApiKey || certificateHash) {
+      // Both googleServicesFile and googleSignIn configuration have been provided.
+      // Let's print a helpful warning and not modify google-services.json.
+      fnLogger.warn(
+        'You have provided values for both `googleServicesFile` and `googleSignIn` in your `app.json`. Since SDK37 `googleServicesFile` overrides any other `google-services.json`-related configuration. Recommended way to fix this warning is to remove `googleSignIn` configuration from your `app.json` in favor of using only `googleServicesFile` to configure Google services.'
+      );
+    }
+  } else {
+    // Old behavior - googleSignIn overrides googleServicesFile
+
+    if (manifest.android && manifest.android.googleServicesFile) {
+      // googleServicesFile provided, let's warn the user that its contents
+      // are about to be modified.
+      fnLogger.warn(
+        'You have provided a custom `googleServicesFile` in your `app.json`. In projects below SDK37 `googleServicesFile` contents will be overridden with `googleSignIn` configuration. (Even if there is none, in which case the API key from `google-services.json` will be removed.) To mitigate this behavior upgrade to SDK37 or check out https://github.com/expo/expo/issues/7727#issuecomment-611544439 for a workaround.'
+      );
+    }
+
+    // Push notifications
+    await regexFileAsync(
+      '"package_name": "host.exp.exponent"',
+      `"package_name": "${javaPackage}"`,
+      path.join(shellPath, 'app', 'google-services.json')
+    );
+
+    // Google sign in
+    await regexFileAsync(
+      /"current_key": "(.*?)"/,
+      `"current_key": "${googleAndroidApiKey}"`,
+      path.join(shellPath, 'app', 'google-services.json')
+    );
+    await regexFileAsync(
+      /"certificate_hash": "(.*?)"/,
+      `"certificate_hash": "${certificateHash}"`,
+      path.join(shellPath, 'app', 'google-services.json')
+    );
+  }
+
   // Set manifest url for debug mode
   if (buildMode === 'debug') {
     await regexFileAsync(
@@ -1093,18 +1157,6 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       )
     );
   }
-
-  // Google sign in
-  await regexFileAsync(
-    /"current_key": "(.*?)"/,
-    `"current_key": "${googleAndroidApiKey}"`,
-    path.join(shellPath, 'app', 'google-services.json')
-  );
-  await regexFileAsync(
-    /"certificate_hash": "(.*?)"/,
-    `"certificate_hash": "${certificateHash}"`,
-    path.join(shellPath, 'app', 'google-services.json')
-  );
 
   // Facebook configuration
 
@@ -1181,16 +1233,16 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
   let outputPath;
   if (buildType === 'app-bundle') {
     if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 36) {
-      gradleBuildCommand = `bundle${debugOrRelease}`;
+      gradleBuildCommand = `:app:bundle${debugOrRelease}`;
       outputPath = path.join(outputDirPath, debugOrReleaseL, `app-${debugOrReleaseL}.aab`);
     } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
-      gradleBuildCommand = `bundle${debugOrRelease}`;
+      gradleBuildCommand = `:app:bundle${debugOrRelease}`;
       outputPath = path.join(outputDirPath, debugOrReleaseL, `app.aab`);
     } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
-      gradleBuildCommand = `bundle${devOrProd}Kernel${debugOrRelease}`;
+      gradleBuildCommand = `:app:bundle${devOrProd}Kernel${debugOrRelease}`;
       outputPath = path.join(outputDirPath, `${devOrProdL}Kernel${debugOrRelease}`, `app.aab`);
     } else {
-      // gradleBuildCommand = `bundle${devOrProd}MinSdk${devOrProd}Kernel${debugOrRelease}`;
+      // gradleBuildCommand = `:app:bundle${devOrProd}MinSdk${devOrProd}Kernel${debugOrRelease}`;
       // outputPath = path.join(
       //   outputDirPath,
       //   `${devOrProdL}MinSdk${devOrProd}Kernel`,
@@ -1204,10 +1256,10 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
     }
   } else {
     if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
-      gradleBuildCommand = `assemble${debugOrRelease}`;
+      gradleBuildCommand = `:app:assemble${debugOrRelease}`;
       outputPath = path.join(outputDirPath, debugOrReleaseL, `app-${debugOrReleaseL}.apk`);
     } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
-      gradleBuildCommand = `assemble${devOrProd}Kernel${debugOrRelease}`;
+      gradleBuildCommand = `:app:assemble${devOrProd}Kernel${debugOrRelease}`;
       outputPath = path.join(
         outputDirPath,
         `${devOrProdL}Kernel`,
@@ -1215,7 +1267,7 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
         `app-${devOrProdL}Kernel-${debugOrReleaseL}.apk`
       );
     } else {
-      gradleBuildCommand = `assemble${devOrProd}MinSdk${devOrProd}Kernel${debugOrRelease}`;
+      gradleBuildCommand = `:app:assemble${devOrProd}MinSdk${devOrProd}Kernel${debugOrRelease}`;
       outputPath = path.join(
         outputDirPath,
         `${devOrProdL}MinSdk${devOrProd}Kernel`,

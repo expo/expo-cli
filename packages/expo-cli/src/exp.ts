@@ -137,7 +137,7 @@ Command.prototype.asyncActionProjectDir = function(
     if (opts.config) {
       const pathToConfig = path.resolve(process.cwd(), opts.config);
       if (!fs.existsSync(pathToConfig)) {
-        throw new Error(`File at provide config path does not exist: ${pathToConfig}`);
+        throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
       }
       ConfigUtils.setCustomConfigPath(projectDir, pathToConfig);
     }
@@ -261,6 +261,7 @@ Command.prototype.asyncActionProjectDir = function(
 
         if (bar) {
           log.setBundleProgressBar(null);
+          bar.terminate();
           bar = null;
 
           if (err) {
@@ -355,7 +356,6 @@ function runAsync(programName: string) {
     program.name(programName);
     program
       .version(packageJSON.version)
-      .option('-o, --output [format]', 'Output format. pretty (default), raw')
       .option(
         '--non-interactive',
         'Fail, if an interactive prompt would be required to continue. Enabled by default if stdin is not a TTY.'

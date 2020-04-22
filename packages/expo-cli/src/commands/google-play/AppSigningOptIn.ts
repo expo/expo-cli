@@ -185,7 +185,7 @@ export default class AppSigningOptInProcess {
       {
         // @ts-ignore
         keystorePassword: this.uploadKeystoreCredentials.keystorePassword,
-        keystoreAlias: this.uploadKeystoreCredentials.keyAlias,
+        keyAlias: this.uploadKeystoreCredentials.keyAlias,
         keyPassword: this.uploadKeystoreCredentials.keyPassword,
         keystore: (await fs.readFile(this.uploadKeystore)).toString('base64'),
       },
@@ -198,8 +198,7 @@ export default class AppSigningOptInProcess {
     );
 
     log(
-      `The original keystore is stored in ${this
-        .signKeystore}; remove it only if you are sure that Google Play App Signing is enabled for your app.`
+      `The original keystore is stored in ${this.signKeystore}; remove it only if you are sure that Google Play App Signing is enabled for your app.`
     );
     if (!this.signKeystoreCredentials) {
       throw new Error(
