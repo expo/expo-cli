@@ -77,10 +77,10 @@ workflows:
           e: node-10
           requires:
             - build10
-      - test-coverage:
-          e: node-12
-          requires:
-            - build12
+      # - test-coverage:
+      #     e: node-12
+      #     requires:
+      #       - build12
       - test-electron-adapter:
           e: node-10
           requires:
