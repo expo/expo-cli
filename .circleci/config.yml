@@ -77,10 +77,6 @@ workflows:
           e: node-10
           requires:
             - build10
-      - test-coverage:
-          e: node-12
-          requires:
-            - build12
       - test-electron-adapter:
           e: node-10
           requires:
@@ -236,16 +232,6 @@ jobs:
       - attach_workspace:
           at: "~"
       - run: yarn test
-  test-coverage:
-    parameters:
-      e:
-        type: executor
-    executor: << parameters.e >>
-    working_directory: ~/expo-cli
-    steps:
-      - attach_workspace:
-          at: "~"
-      - run: yarn test-coverage
   test-electron-adapter:
     parameters:
       e:

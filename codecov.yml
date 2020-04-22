@@ -1,0 +1,18 @@
+codecov:
+  notify:
+    require_ci_to_pass: yes
+
+coverage:
+  round: up
+  precision: 2
+  range: "30...100"
+
+  status:
+    changes: no
+    project: yes
+    patch: yes
+
+comment:
+  behavior: default
+  require_changes: false
+  layout: "header, flags, diff"
