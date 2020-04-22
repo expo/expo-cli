@@ -8,7 +8,8 @@ jobs:
       matrix:
         node-version: [12.x]
         os: [ubuntu-latest]
-        package: [config, expo-cli, json-file, package-manager, plist, pwa, schemer, xdl]
+        package:
+          [babel-preset-cli, config, expo-cli, json-file, package-manager, plist, pwa, schemer, xdl]
     name: ${{ matrix.package }} with Node ${{ matrix.node-version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     steps:
