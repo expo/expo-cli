@@ -38,6 +38,7 @@ import { AddressInfo } from 'net';
 import os from 'os';
 import path from 'path';
 import http from 'http';
+import { URL } from 'url';
 import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import split from 'split';
@@ -1928,6 +1929,13 @@ function shouldExposeEnvironmentVariableInManifest(key: string) {
   return key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_');
 }
 
+function stripPort(host: string | undefined): string | undefined {
+  if (!host) {
+    return host;
+  }
+  return new URL('/', `http://${host}`).hostname;
+}
+
 function getManifestHandler(projectRoot: string) {
   return async (
     req: express.Request | http.IncomingMessage,
@@ -1965,7 +1973,7 @@ function getManifestHandler(projectRoot: string) {
       let path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(
         platform
       )}&${queryParams}`;
-      const hostname = req.headers.host;
+      const hostname = stripPort(req.headers.host);
       manifest.bundleUrl =
         (await UrlUtils.constructBundleUrlAsync(projectRoot, bundleUrlPackagerOpts, hostname)) +
         path;
