@@ -13,7 +13,6 @@ jobs:
         with:
           fetch-depth: 1
       - run: yarn install --frozen-lockfile --check-files
-      - run: yarn lerna bootstrap
       - run: yarn lerna run prepare --stream
       - uses: actions/cache@v1
         id: cache-build
