@@ -7,6 +7,7 @@ import {
   GenerateSWOptions,
   InjectManifest,
   InjectManifestOptions,
+  RuntimeCacheRule,
 } from 'workbox-webpack-plugin';
 
 import { getPaths } from '../env';
@@ -41,8 +42,8 @@ const defaultInjectManifestOptions = {
   ],
 };
 
-const runtimeCache = {
-  handler: 'networkFirst',
+const runtimeCache: RuntimeCacheRule = {
+  handler: 'NetworkFirst',
   urlPattern: /^https?.*/,
   options: {
     cacheName: 'offlineCache',
@@ -56,14 +57,13 @@ const defaultGenerateSWOptions: GenerateSWOptions = {
   ...defaultInjectManifestOptions,
   clientsClaim: true,
   skipWaiting: true,
-  navigateFallbackBlacklist: [
+  navigateFallbackDenylist: [
     // Exclude URLs starting with /_, as they're likely an API call
     new RegExp('^/_'),
     // Exclude URLs containing a dot, as they're likely a resource in
     // public/ and not a SPA route
     new RegExp('/[^/]+\\.[^/]+$'),
   ],
-  // @ts-ignore: Webpack throws if `NetworkFirst` is not `networkFirst`
   runtimeCaching: [runtimeCache],
 };
 
