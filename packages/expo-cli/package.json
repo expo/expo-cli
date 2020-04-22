@@ -16,7 +16,7 @@
     "clean": "rm -rf build ./tsconfig.tsbuildinfo",
     "preversion": "node ./scripts/preversion.js",
     "pkg": "pkg .",
-    "test": "jest",
+    "test": "jest --config jest/unit-test-config.js",
     "test:watch": "jest --watch"
   },
   "jest": {
