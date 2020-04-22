@@ -1965,13 +1965,14 @@ function getManifestHandler(projectRoot: string) {
       let path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(
         platform
       )}&${queryParams}`;
+      const hostname = req.headers.host;
       manifest.bundleUrl =
-        (await UrlUtils.constructBundleUrlAsync(projectRoot, bundleUrlPackagerOpts, req.hostname)) +
+        (await UrlUtils.constructBundleUrlAsync(projectRoot, bundleUrlPackagerOpts, hostname)) +
         path;
-      manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot, req.hostname);
+      manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot, hostname);
       manifest.mainModuleName = mainModuleName;
-      manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, req.hostname);
-      manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, req.hostname);
+      manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, hostname);
+      manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
       await _resolveManifestAssets(
         projectRoot,
         manifest as PublicConfig,
