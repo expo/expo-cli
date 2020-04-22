@@ -2,8 +2,8 @@
 let path = require('path');
 const fs = require('fs-extra');
 
-function kebabToSnake(str) {
-  return str.replace(/-/g, '_');
+function toCamel(s) {
+  return s.replace(/(-\w)/g, m => m[1].toUpperCase());
 }
 
 async function run() {
@@ -26,7 +26,7 @@ async function run() {
       const repoLink = `./packages/${pkg}`;
 
       const codecovLink = `https://codecov.io/gh/expo/expo-cli/tree/master/packages/${pkg}/src`;
-      const codecovIcon = `https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=${kebabToSnake(
+      const codecovIcon = `https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=${toCamel(
         pkg
       )}`;
 
