@@ -151,11 +151,14 @@ export default function createBabelLoader({
     !fs.existsSync(path.join(projectRoot, 'babel.config.js')) &&
     !fs.existsSync(path.join(projectRoot, '.babelrc'))
   ) {
-    if (projectHasModule('babel-preset-expo', projectRoot, {})) {
+    // If no babel config exists then fallback on the default `babel-preset-expo`
+    // which is installed with `expo`.
+    const modulePath = projectHasModule('babel-preset-expo', projectRoot, {});
+    if (modulePath) {
       presetOptions = {
         babelrc: false,
         configFile: false,
-        presets: [require.resolve('babel-preset-expo')],
+        presets: [modulePath],
       };
     } else {
       console.log(chalk.yellow('\u203A Webpack failed to locate a valid Babel config'));
