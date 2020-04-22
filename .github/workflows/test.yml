@@ -27,9 +27,8 @@ jobs:
         with:
           path: |
             node_modules
-            */*/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-      - run: yarn && yarn lerna bootstrap
+      - run: yarn && yarn bootstrap
 
       - name: Coverage ${{ matrix.package }}
         run: cd packages/${{ matrix.package }} && yarn test --coverage
