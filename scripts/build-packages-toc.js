@@ -12,16 +12,12 @@ async function run() {
 
   let entries = [
     `\n<!-- Begin auto-generation -->\n`,
-    '| Package | Coverage | Version |',
-    '|----------|---------|--------|',
+    '| Package | Coverage |',
+    '|----------|---------|',
   ];
   for (const pkg of contents) {
     try {
       const pkgJson = require(path.join(pkgsPath, pkg, 'package.json'));
-
-      const npmLink = `https://www.npmjs.com/package/${pkgJson.name}`;
-
-      const npmIcon = `https://img.shields.io/npm/v/${pkgJson.name}.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600`;
 
       const repoLink = `./packages/${pkg}`;
 
@@ -30,12 +26,16 @@ async function run() {
         pkg
       )}`;
 
-      const npmItem = `[\`v${pkgJson.version}\`](${npmLink})`;
+      // const npmLink = `https://www.npmjs.com/package/${pkgJson.name}`;
+      // const npmIcon = `https://img.shields.io/npm/v/${pkgJson.name}.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600`;
+      // const npmItem = `[\`v${pkgJson.version}\`](${npmLink})`;
       /// With Icon, this seems to time out
       // const npmItem = `[![badges](${npmIcon})](${npmLink})`;
 
+      // Maybe do package size too https://flat.badgen.net/packagephobia/publish/pod-install
+      // Currently doesn't work with xdl or expo-cli
       entries.push(
-        `| [**\`${pkgJson.name}\`**](${repoLink}) | [![badges](${codecovIcon})](${codecovLink}) | ${npmItem} |`
+        `| [**\`${pkgJson.name}\`**](${repoLink}) | [![badges](${codecovIcon})](${codecovLink}) |`
       );
     } catch (e) {
       console.log(`Skipping ${pkg}`);
