@@ -30,6 +30,7 @@ jobs:
             babel-preset-cli,
             config,
             expo-cli,
+            expo-codemod,
             json-file,
             package-manager,
             plist,

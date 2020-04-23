@@ -45,10 +45,6 @@ workflows:
           e: node-10
           requires:
             - build10
-      - test-expo-codemod:
-          e: node-10
-          requires:
-            - build10
       - test-webpack-config-e2e:
           e: puppeteer
           requires:
@@ -128,16 +124,6 @@ jobs:
         type: executor
     executor: << parameters.e >>
     working_directory: ~/expo-cli/packages/expo-cli
-    steps:
-      - attach_workspace:
-          at: '~'
-      - run: yarn test
-  test-expo-codemod:
-    parameters:
-      e:
-        type: executor
-    executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/expo-codemod
     steps:
       - attach_workspace:
           at: '~'
