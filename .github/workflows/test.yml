@@ -25,7 +25,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [12.x]
         package:
           [babel-preset-cli, config, expo-cli, json-file, package-manager, plist, pwa, schemer, xdl]
     name: Test ${{ matrix.package }}
@@ -35,10 +34,6 @@ jobs:
         with:
           path: '.'
           key: ${{ github.sha }}
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
       - name: Coverage ${{ matrix.package }}
         run: cd packages/${{ matrix.package }} && yarn test --coverage
         env:
