@@ -89,35 +89,49 @@ async function normalizeUriProtocolAsync(uri: any): Promise<string> {
   return trimmedUri;
 }
 
-export async function addAsync(options: Options): Promise<void> {
+export async function addAsync(options: Options): Promise<string[]> {
   // Although schemes are case-insensitive, the canonical form is
   // lowercase and documents that specify schemes must do so with lowercase letters.
   options.uri = await normalizeUriProtocolAsync(options.uri);
 
+  let results: string[] = [];
   if (options.ios) {
-    if (await Ios.addAsync(options))
+    if (await Ios.addAsync(options)) {
       logPlatformMessage('iOS', `Added URI protocol "${options.uri}" to project`);
+      results.push('ios');
+    }
   }
   if (options.android) {
-    if (await Android.addAsync(options))
+    if (await Android.addAsync(options)) {
       logPlatformMessage('Android', `Added URI protocol "${options.uri}" to project`);
+      results.push('android');
+    }
   }
+  return results;
 }
 
-export async function removeAsync(options: Options): Promise<void> {
+export async function removeAsync(options: Options): Promise<string[]> {
   options.uri = ensureUriString(options.uri);
 
+  let results: string[] = [];
   if (options.ios) {
-    if (await Ios.removeAsync(options))
+    if (await Ios.removeAsync(options)) {
       logPlatformMessage('iOS', `Removed URI protocol "${options.uri}" from project`);
+      results.push('ios');
+    }
   }
   if (options.android) {
-    if (await Android.removeAsync(options))
+    if (await Android.removeAsync(options)) {
       logPlatformMessage('Android', `Removed URI protocol "${options.uri}" from project`);
+      results.push('android');
+    }
   }
+  return results;
 }
 
-export async function openAsync(options: Options): Promise<void> {
+export async function openAsync(
+  options: Pick<Options, 'uri' | 'ios' | 'android' | 'projectRoot' | 'manifestPath'>
+): Promise<void> {
   options.uri = ensureUriString(options.uri);
 
   if (options.ios) {
@@ -130,7 +144,9 @@ export async function openAsync(options: Options): Promise<void> {
   }
 }
 
-export async function listAsync(options: Options): Promise<void> {
+export async function listAsync(
+  options: Pick<Options, 'infoPath' | 'projectRoot' | 'manifestPath'>
+): Promise<void> {
   if (options.infoPath) {
     const schemes = await Ios.getAsync(options);
     logPlatformMessage(
