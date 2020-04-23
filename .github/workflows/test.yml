@@ -26,7 +26,18 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          [config, expo-cli, json-file, package-manager, plist, pwa, schemer, webpack-config, xdl]
+          [
+            babel-preset-cli,
+            config,
+            expo-cli,
+            json-file,
+            package-manager,
+            plist,
+            pwa,
+            schemer,
+            webpack-config,
+            xdl,
+          ]
     name: Test ${{ matrix.package }}
     steps:
       - uses: actions/cache@v1
