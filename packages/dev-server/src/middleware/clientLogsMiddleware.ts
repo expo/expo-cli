@@ -12,9 +12,19 @@ export default function clientLogsMiddleware(logger: Log) {
     try {
       const deviceId = req.headers['device-id'];
       const deviceName = req.headers['device-name'];
-      if (deviceId && deviceName && req.body) {
-        handleDeviceLogs(logger, deviceId.toString(), deviceName.toString(), req.body);
+      if (!deviceId) {
+        res.writeHead(400).end('Missing Device-Id.');
+        return;
       }
+      if (!deviceName) {
+        res.writeHead(400).end('Missing Device-Name.');
+        return;
+      }
+      if (!req.body) {
+        res.writeHead(400).end('Missing request body.');
+        return;
+      }
+      handleDeviceLogs(logger, deviceId.toString(), deviceName.toString(), req.body);
     } catch (error) {
       logger.error({ tag: 'expo' }, `Error getting device logs: ${error} ${error.stack}`);
       next(error);
