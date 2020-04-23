@@ -2,6 +2,7 @@ import { getConfig, resolveModule } from '@expo/config';
 import { createDevServerMiddleware } from '@react-native-community/dev-server-api';
 import Log from '@expo/bunyan';
 import * as ExpoMetroConfig from '@expo/metro-config';
+import bodyParser from 'body-parser';
 
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 import LogReporter from './LogReporter';
@@ -20,6 +21,7 @@ export async function runMetroDevServerAsync(projectRoot: string, options: Metro
     port: metroConfig.server.port,
     watchFolders: metroConfig.watchFolders,
   });
+  middleware.use(bodyParser.json());
   middleware.use('/logs', clientLogsMiddleware(options.logger));
 
   const customEnhanceMiddleware = metroConfig.server.enhanceMiddleware;
