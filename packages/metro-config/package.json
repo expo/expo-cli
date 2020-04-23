@@ -50,9 +50,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "rootDir": "src"
   }
 }
