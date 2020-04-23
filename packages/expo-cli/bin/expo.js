@@ -1,15 +1,16 @@
 #!/usr/bin/env node
-var chalk = require('chalk');
-var getenv = require('getenv');
-var semver = require('semver');
-var version = process.versions.node;
+const chalk = require('chalk');
+const getenv = require('getenv');
+const semver = require('semver');
+const version = process.versions.node;
 
-var supportedVersions = [
+const supportedVersions = [
   { range: semver.validRange('^10.13.0'), name: 'Active LTS' },
   { range: semver.validRange('^12.0.0'), name: 'Active LTS' },
   { range: semver.validRange('^13.0.0'), name: 'Current Release' },
 ];
-var isSupported = supportedVersions.some(function(supported) {
+
+const isSupported = supportedVersions.some(function(supported) {
   return semver.satisfies(version, supported.range);
 });
 
@@ -19,15 +20,15 @@ if (isSupported) {
   }
   require('../build/exp.js').run('expo');
 } else {
-  var versionInfo = supportedVersions
+  const versionInfo = supportedVersions
     .map(function(supported) {
       return '* ' + supported.range + ' (' + supported.name + ')';
     })
     .join('\n');
-  
-  const maxSupportedVersion = supportedVersions[supportedVersion.length - 1]
-  const versionIsHigherThanSupported = semver.gt(version, maxSupportedVersion.range)
-  
+
+  const maxSupportedVersion = supportedVersions[supportedVersions.length - 1];
+  const versionIsHigherThanSupported = semver.gtr(version, maxSupportedVersion.range);
+
   console.error(
     chalk.red(
       'ERROR: Node.js version ' +
