@@ -37,14 +37,6 @@ workflows:
           e: node-10
           requires:
             - build10
-      - test-config:
-          e: node-10
-          requires:
-            - build10
-      - test-json-file:
-          e: node-10
-          requires:
-            - build10
       - test-expo-cli:
           e: node-12
           requires:
@@ -57,10 +49,6 @@ workflows:
           e: node-10
           requires:
             - build10
-      - test-webpack-config-unit:
-          e: node-10
-          requires:
-            - build10
       - test-webpack-config-e2e:
           e: puppeteer
           requires:
@@ -69,19 +57,7 @@ workflows:
           e: puppeteer
           requires:
             - puppeteerEnv
-      - test-expo-schemer:
-          e: node-10
-          requires:
-            - build10
-      - test-expo-pwa:
-          e: node-10
-          requires:
-            - build10
       - test-electron-adapter:
-          e: node-10
-          requires:
-            - build10
-      - test-plist:
           e: node-10
           requires:
             - build10
@@ -118,7 +94,7 @@ jobs:
           name: Bootstrap (Link) Internal Dependencies
           command: yarn bootstrap
       - persist_to_workspace:
-          root: "~"
+          root: '~'
           paths:
             - expo-cli
       - save_cache:
@@ -134,7 +110,7 @@ jobs:
     working_directory: ~/expo-cli/packages/dev-tools
     steps:
       - attach_workspace:
-          at: "~"
+          at: '~'
       - run: yarn test
   test-config:
     parameters:
@@ -144,17 +120,7 @@ jobs:
     working_directory: ~/expo-cli/packages/config
     steps:
       - attach_workspace:
-          at: "~"
-      - run: yarn test
-  test-json-file:
-    parameters:
-      e:
-        type: executor
-    executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/json-file
-    steps:
-      - attach_workspace:
-          at: "~"
+          at: '~'
       - run: yarn test
   test-expo-cli:
     parameters:
@@ -164,7 +130,7 @@ jobs:
     working_directory: ~/expo-cli/packages/expo-cli
     steps:
       - attach_workspace:
-          at: "~"
+          at: '~'
       - run: yarn test
   test-expo-codemod:
     parameters:
@@ -174,18 +140,8 @@ jobs:
     working_directory: ~/expo-cli/packages/expo-codemod
     steps:
       - attach_workspace:
-          at: "~"
+          at: '~'
       - run: yarn test
-  test-webpack-config-unit:
-    parameters:
-      e:
-        type: executor
-    executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/webpack-config
-    steps:
-      - attach_workspace:
-          at: "~"
-      - run: yarn test:unit
   test-webpack-config-e2e:
     parameters:
       e:
@@ -194,7 +150,7 @@ jobs:
     working_directory: ~/expo-cli/packages/webpack-config
     steps:
       - attach_workspace:
-          at: "~"
+          at: '~'
       - run:
           name: Install test project dependencies
           command: cd e2e/basic && yarn; cd ../..
@@ -207,31 +163,11 @@ jobs:
     working_directory: ~/expo-cli/packages/webpack-config
     steps:
       - attach_workspace:
-          at: "~"
+          at: '~'
       - run:
           name: Install test project dependencies
           command: cd e2e/nextjs && yarn; cd ../..
       - run: yarn test:e2e:nextjs
-  test-expo-schemer:
-    parameters:
-      e:
-        type: executor
-    executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/schemer
-    steps:
-      - attach_workspace:
-          at: "~"
-      - run: yarn test
-  test-expo-pwa:
-    parameters:
-      e:
-        type: executor
-    executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/pwa
-    steps:
-      - attach_workspace:
-          at: "~"
-      - run: yarn test
   test-electron-adapter:
     parameters:
       e:
@@ -240,17 +176,7 @@ jobs:
     working_directory: ~/expo-cli/packages/electron-adapter
     steps:
       - attach_workspace:
-          at: "~"
-      - run: yarn test
-  test-plist:
-    parameters:
-      e:
-        type: executor
-    executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/plist
-    steps:
-      - attach_workspace:
-          at: "~"
+          at: '~'
       - run: yarn test
   test-metro-config:
     parameters:
@@ -260,5 +186,5 @@ jobs:
     working_directory: ~/expo-cli/packages/metro-config
     steps:
       - attach_workspace:
-          at: "~"
+          at: '~'
       - run: yarn test
