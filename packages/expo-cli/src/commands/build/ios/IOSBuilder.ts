@@ -1,3 +1,4 @@
+import os from 'os';
 import chalk from 'chalk';
 import pickBy from 'lodash/pickBy';
 import get from 'lodash/get';
@@ -5,6 +6,7 @@ import { XDLError } from '@expo/xdl';
 
 import { Dictionary } from 'lodash';
 import terminalLink from 'terminal-link';
+import semver from 'semver';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
 import * as utils from '../utils';
@@ -329,7 +331,11 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   // warns for "damaged" builds when targeting simulator
   // see: https://github.com/expo/expo-cli/issues/1197
   maybeWarnDamagedSimulator() {
-    if (this.options.type === 'simulator') {
+    // see: https://en.wikipedia.org/wiki/Darwin_%28operating_system%29#Release_history
+    const isMacOsCatalinaOrLater =
+      os.platform() === 'darwin' && semver.satisfies(os.release(), '>=19.0.0');
+
+    if (isMacOsCatalinaOrLater && this.options.type === 'simulator') {
       log.newLine();
       log(
         chalk.bold(
