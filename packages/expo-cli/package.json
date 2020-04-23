@@ -107,7 +107,6 @@
     "env-editor": "^0.4.1",
     "envinfo": "7.5.0",
     "es6-error": "3.2.0",
-    "expo-optimize": "0.1.20",
     "fs-extra": "6.0.1",
     "getenv": "0.7.0",
     "glob": "7.1.2",
