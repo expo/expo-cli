@@ -12,7 +12,81 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🤷‍♂️ Chores
 
+## [Wed Apr 22 19:05:40 2020 -0700](https://github.com/expo/expo-cli/commit/3a0e79)
+
+- @expo/babel-preset-cli@0.2.9
+- @expo/config@3.1.3
+- @expo/dev-tools@0.13.1
+- @expo/electron-adapter@0.0.0-alpha.49
+- expo-cli@3.19.1
+- expo-codemod@1.0.19
+- expo-optimize@0.1.21
+- @expo/image-utils@0.2.20
+- @expo/json-file@8.2.11
+- @expo/metro-config@0.0.8
+- @expo/next-adapter@2.1.1
+- @expo/osascript@2.0.14
+- @expo/package-manager@0.0.16
+- @expo/plist@0.0.4
+- pod-install@0.0.0-alpha.11
+- expo-pwa@0.0.9
+- @expo/schemer@1.3.10
+- uri-scheme@1.0.6
+- @expo/webpack-config@0.12.1
+- @expo/xdl@57.8.31
+
+### 🐛 Bug fixes
+
+- Fix pasting service account JSON from finder (#1943)
+- Add back sharp-cli version check back (#1907).
+- Fix the open editor hotkey on Mac with osascript (#1899)
+- Fix semver comparison in Node version compatibility check so an appropriate error is provided when using a Node version that is new and not yet supported.
+
+### 🤷‍♂️ Chores
+
+- Ignore mocks and tests in TypeScript builds (#1965)
+- Remove the optimize command from expo-cli (#1930)
+- Assorted improvements to build, testing, and coverage infra.
+
+## [Tue Apr 21 10:52:42 2020 +0200](https://github.com/expo/expo-cli/commit/771a53)
+
+ - @expo/dev-tools@0.13.0
+ - @expo/electron-adapter@0.0.0-alpha.48
+ - expo-cli@3.19.0
+ - @expo/next-adapter@2.1.0
+ - @expo/webpack-config@0.12.0
+ - @expo/xdl@57.8.30
+
+### 🐛 Bug fixes
+
+- Assemble/bundle only the :app project on turtle (https://github.com/expo/expo-cli/pull/1937).
+
+### 🤷‍♂️ Chores
+
+- Added default name for projects if no name is given (#1923)
+- Log message in `expo bundle-assets` if manifest is empty (#1912)
+- Fallback on insecure HTTPS (#1940)
+
+## [Mon Apr 20 14:52:56 2020 +0200](https://github.com/expo/expo-cli/commit/771a53)
+
+ - @expo/dev-tools@0.12.6
+ - expo-cli@3.18.7
+ - @expo/xdl@57.8.29
+
+### 🤷‍♂️ Chores
+
+- Remove call to check-dynamic-macros (https://github.com/expo/expo-cli/pull/1933).
+
 ## [Sat Apr 18 17:58:21 2020 -0700](https://github.com/expo/expo-cli/commit/4e6cfd)
+
+- @expo/dev-tools@0.12.4
+- @expo/electron-adapter@0.0.0-alpha.46
+- expo-cli@3.18.5
+- @expo/next-adapter@2.0.32
+- expo-pwa@0.0.7
+- uri-scheme@1.0.4
+- @expo/webpack-config@0.11.24
+- @expo/xdl@57.8.27
 
 ### 🐛 Bug fixes 
 
