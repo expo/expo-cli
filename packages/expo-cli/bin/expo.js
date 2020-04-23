@@ -25,14 +25,14 @@ if (isSupported) {
     })
     .join('\n');
   
-  var maxSupportedVersion = supportedVersions[supportedVersion.length - 1]
+  const maxSupportedVersion = supportedVersions[supportedVersion.length - 1]
   const versionIsHigherThanSupported = semver.gt(version, maxSupportedVersion.range)
   
   console.error(
     chalk.red(
       'ERROR: Node.js version ' +
         version +
-        ' is ' + (versionIsHigherThanSupported ? 'not yet' : 'no longer') + ' supported.\n\n' +
+        ` is ${versionIsHigherThanSupported ? 'not yet' : 'no longer'} supported.\n\n` +
         'expo-cli supports following Node.js versions:\n' +
         versionInfo
     )
