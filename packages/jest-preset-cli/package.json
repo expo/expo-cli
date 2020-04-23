@@ -1,0 +1,26 @@
+{
+  "private": true,
+  "name": "@expo/jest-preset-cli",
+  "version": "0.0.0",
+  "main": "src",
+  "description": "Shared Jest preset for Expo CLI packages",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/jest-preset"
+  },
+  "author": "Expo <support@expo.io>",
+  "license": "MIT",
+  "files": [
+    "jest-preset.js",
+    "unit",
+    "src"
+  ],
+  "dependencies": {
+    "@expo/babel-preset-cli": "0.2.9",
+    "read-pkg": "^5.2.0"
+  },
+  "devDependencies": {
+    "read-pkg-up": "^7.0.1"
+  }
+}
