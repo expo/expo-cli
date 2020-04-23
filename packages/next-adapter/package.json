@@ -60,7 +60,7 @@
     "chalk": "^3.0.0",
     "commander": "^4.0.1",
     "enquirer": "^2.3.2",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "^9.0.0",
     "update-check": "^1.5.3"
   }
 }
