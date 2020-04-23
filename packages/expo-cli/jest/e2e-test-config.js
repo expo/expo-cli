@@ -3,5 +3,5 @@ const { getConfig } = require('@expo/jest-preset-cli');
 
 module.exports = {
   ...getConfig(path.resolve(__dirname, '..')),
-  roots: ['src'],
+  roots: ['e2e'],
 };

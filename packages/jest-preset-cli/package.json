@@ -17,10 +17,7 @@
     "src"
   ],
   "dependencies": {
-    "@expo/babel-preset-cli": "0.2.9",
+    "@expo/babel-preset-cli": "0.2.10",
     "read-pkg": "^5.2.0"
-  },
-  "devDependencies": {
-    "read-pkg-up": "^7.0.1"
   }
 }

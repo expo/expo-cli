@@ -1,15 +1,3 @@
-const path = require('path');
+const { getConfig } = require('@expo/jest-preset-cli');
 
-module.exports = {
-  rootDir: path.resolve(__dirname),
-  displayName: require('./package.json').name,
-  testRegex: '/__tests__/.*(test|spec)\\.(j|t)sx?$',
-  moduleNameMapper: {
-    '^jest/(.*)': path.join(__dirname, '../../jest/$1'),
-  },
-  transform: {
-    '^.+\\.[jt]sx?$': ['babel-jest', { configFile: require.resolve('./babel.config.js') }],
-  },
-  testEnvironment: 'node',
-  resetModules: false,
-};
+module.exports = getConfig(__dirname);

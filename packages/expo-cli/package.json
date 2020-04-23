@@ -17,20 +17,8 @@
     "preversion": "node ./scripts/preversion.js",
     "pkg": "pkg .",
     "test": "jest",
-    "test:watch": "jest --watch"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "roots": [
-      "__mocks__",
-      "src"
-    ],
-    "moduleFileExtensions": [
-      "js",
-      "ts",
-      "json"
-    ],
-    "resetModules": false
+    "test:watch": "jest --watch",
+    "test:e2e": "jest --config jest/e2e-test-config.js"
   },
   "bin": {
     "expo": "./bin/expo.js",
@@ -60,6 +48,7 @@
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
     "@expo/babel-preset-cli": "0.2.11",
+    "@expo/jest-preset-cli": "^0.0.0",
     "@types/dateformat": "^3.0.0",
     "@types/inflection": "^1.5.28",
     "@types/inquirer": "6.0.3",
