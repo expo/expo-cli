@@ -61,14 +61,6 @@ workflows:
           e: node-10
           requires:
             - build10
-      - test-metro-config:
-          e: node-10
-          requires:
-            - build10
-      - test-metro-config:
-          e: node-12
-          requires:
-            - build12
 jobs:
   build:
     parameters:
@@ -108,16 +100,6 @@ jobs:
         type: executor
     executor: << parameters.e >>
     working_directory: ~/expo-cli/packages/dev-tools
-    steps:
-      - attach_workspace:
-          at: '~'
-      - run: yarn test
-  test-config:
-    parameters:
-      e:
-        type: executor
-    executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/config
     steps:
       - attach_workspace:
           at: '~'
@@ -174,16 +156,6 @@ jobs:
         type: executor
     executor: << parameters.e >>
     working_directory: ~/expo-cli/packages/electron-adapter
-    steps:
-      - attach_workspace:
-          at: '~'
-      - run: yarn test
-  test-metro-config:
-    parameters:
-      e:
-        type: executor
-    executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/metro-config
     steps:
       - attach_workspace:
           at: '~'
