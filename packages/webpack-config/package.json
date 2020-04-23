@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-config",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
   "types": "webpack.config.d.ts",
@@ -37,13 +37,13 @@
   "dependencies": {
     "@babel/core": "7.9.0",
     "@babel/runtime": "7.9.0",
-    "@expo/config": "3.1.2",
+    "@expo/config": "3.1.3",
     "babel-loader": "8.1.0",
     "chalk": "^2.4.2",
     "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "5.0.0",
     "css-loader": "^2.1.1",
-    "expo-pwa": "0.0.8",
+    "expo-pwa": "0.0.9",
     "file-loader": "4.2.0",
     "getenv": "^0.7.0",
     "html-loader": "^0.5.5",
@@ -68,7 +68,7 @@
     "yup": "^0.27.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.8",
+    "@expo/babel-preset-cli": "0.2.9",
     "@types/copy-webpack-plugin": "^5.0.0",
     "@types/html-webpack-plugin": "^3.2.0",
     "@types/node": "^12.0.12",

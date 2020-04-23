@@ -4,5 +4,6 @@
   "compilerOptions": {
     "outDir": "build",
     "rootDir": "src"
-  }
+  },
+  "exclude": ["**/__mocks__/*", "**/__tests__/*"]
 }
