@@ -17,6 +17,22 @@ import {
 } from './credentials';
 import { Context } from './context';
 
+type CredentialFields = {
+  credentials: { [key: string]: any };
+};
+
+type CredentialLookupParameters = {
+  owner: string;
+};
+
+type AppLookupParameters = {
+  bundleIdentifier: string;
+  experienceName: string;
+} & CredentialLookupParameters;
+
+type UploadUserCredentialParameters = CredentialFields & CredentialLookupParameters;
+type UploadAppCredentialParameters = CredentialFields & AppLookupParameters;
+
 export class IosApi {
   api: ApiV2;
   username: string;
@@ -47,9 +63,12 @@ export class IosApi {
     return this.credentials;
   }
 
+  async _fetchAllCredentialsApi(credentialLookupParameters: CredentialLookupParameters) {
+    return await this.api.getAsync('credentials/ios', credentialLookupParameters);
+  }
   async _fetchAllCredentials() {
     log('Fetching available credentials');
-    this.credentials = await this.api.getAsync('credentials/ios', { owner: this.username });
+    this.credentials = await this._fetchAllCredentialsApi({ owner: this.username });
     this.shouldRefetch = false;
   }
 
@@ -75,8 +94,11 @@ export class IosApi {
     return distCert || null;
   }
 
+  async _createDistCertApi(uploadUserCredentialParameters: UploadUserCredentialParameters) {
+    return await this.api.postAsync('credentials/ios/dist', uploadUserCredentialParameters);
+  }
   async createDistCert(credentials: appleApi.DistCert): Promise<IosDistCredentials> {
-    const { id } = await this.api.postAsync('credentials/ios/dist', {
+    const { id } = await this._createDistCertApi({
       credentials,
       owner: this.username,
     });
@@ -84,11 +106,21 @@ export class IosApi {
     this.credentials.userCredentials.push(newDistCert);
     return newDistCert;
   }
+
+  async _updateDistCertApi(
+    credentialsId: number,
+    uploadUserCredentialParameters: UploadUserCredentialParameters
+  ) {
+    return await this.api.putAsync(
+      `credentials/ios/dist/${credentialsId}`,
+      uploadUserCredentialParameters
+    );
+  }
   async updateDistCert(
     credentialsId: number,
     credentials: appleApi.DistCert
   ): Promise<IosDistCredentials> {
-    const { id } = await this.api.putAsync(`credentials/ios/dist/${credentialsId}`, {
+    const { id } = await this._updateDistCertApi(credentialsId, {
       credentials,
       owner: this.username,
     });
@@ -98,8 +130,14 @@ export class IosApi {
     return updatedDistCert;
   }
 
+  async _deleteDistCertApi(
+    credentialsId: number,
+    credentialLookupParameters: CredentialLookupParameters
+  ): Promise<void> {
+    await this.api.deleteAsync(`credentials/ios/dist/${credentialsId}`, credentialLookupParameters);
+  }
   async deleteDistCert(credentialsId: number) {
-    await this.api.deleteAsync(`credentials/ios/dist/${credentialsId}`, { owner: this.username });
+    await this._deleteDistCertApi(credentialsId, { owner: this.username });
     this.credentials.userCredentials = this.credentials.userCredentials.filter(
       ({ id }) => id !== credentialsId
     );
@@ -110,11 +148,20 @@ export class IosApi {
       return record;
     });
   }
-  async useDistCert(experienceName: string, bundleIdentifier: string, userCredentialsId: number) {
+
+  async _useDistCertApi(
+    userCredentialsId: number,
+    appLookupParameters: AppLookupParameters
+  ): Promise<void> {
     await this.api.postAsync('credentials/ios/use/dist', {
+      ...appLookupParameters,
+      userCredentialsId,
+    });
+  }
+  async useDistCert(experienceName: string, bundleIdentifier: string, userCredentialsId: number) {
+    await this._useDistCertApi(userCredentialsId, {
       experienceName,
       bundleIdentifier,
-      userCredentialsId,
       owner: this.username,
     });
     this._ensureAppCredentials(experienceName, bundleIdentifier);
@@ -125,8 +172,11 @@ export class IosApi {
     this.credentials.appCredentials[credIndex].distCredentialsId = userCredentialsId;
   }
 
+  async _createPushKeyApi(uploadUserCredentialParameters: UploadUserCredentialParameters) {
+    return await this.api.postAsync('credentials/ios/push', uploadUserCredentialParameters);
+  }
   async createPushKey(credentials: appleApi.PushKey): Promise<IosPushCredentials> {
-    const { id } = await this.api.postAsync('credentials/ios/push', {
+    const { id } = await this._createPushKeyApi({
       credentials,
       owner: this.username,
     });
@@ -134,11 +184,21 @@ export class IosApi {
     this.credentials.userCredentials.push(newPushKey);
     return newPushKey;
   }
+
+  async _updatePushKeyApi(
+    credentialsId: number,
+    uploadUserCredentialParameters: UploadUserCredentialParameters
+  ) {
+    return await this.api.putAsync(
+      `credentials/ios/push/${credentialsId}`,
+      uploadUserCredentialParameters
+    );
+  }
   async updatePushKey(
     credentialsId: number,
     credentials: appleApi.PushKey
   ): Promise<IosPushCredentials> {
-    const { id } = await this.api.putAsync(`credentials/ios/push/${credentialsId}`, {
+    const { id } = await this._updatePushKeyApi(credentialsId, {
       credentials,
       owner: this.username,
     });
@@ -147,8 +207,15 @@ export class IosApi {
     this.credentials.userCredentials[credIndex] = updatedPushKey;
     return updatedPushKey;
   }
+
+  async _deletePushKeyApi(
+    credentialsId: number,
+    credentialLookupParameters: CredentialLookupParameters
+  ): Promise<void> {
+    await this.api.deleteAsync(`credentials/ios/push/${credentialsId}`, credentialLookupParameters);
+  }
   async deletePushKey(credentialsId: number) {
-    await this.api.deleteAsync(`credentials/ios/push/${credentialsId}`, { owner: this.username });
+    await this._deletePushKeyApi(credentialsId, { owner: this.username });
     this.credentials.userCredentials = this.credentials.userCredentials.filter(
       ({ id }) => id !== credentialsId
     );
@@ -180,11 +247,20 @@ export class IosApi {
       | undefined;
     return pushKey || null;
   }
-  async usePushKey(experienceName: string, bundleIdentifier: string, userCredentialsId: number) {
+
+  async _usePushKeyApi(
+    userCredentialsId: number,
+    appLookupParameters: AppLookupParameters
+  ): Promise<void> {
     await this.api.postAsync('credentials/ios/use/push', {
+      ...appLookupParameters,
+      userCredentialsId,
+    });
+  }
+  async usePushKey(experienceName: string, bundleIdentifier: string, userCredentialsId: number) {
+    await this._usePushKeyApi(userCredentialsId, {
       experienceName,
       bundleIdentifier,
-      userCredentialsId,
       owner: this.username,
     });
     this._ensureAppCredentials(experienceName, bundleIdentifier);
@@ -207,8 +283,12 @@ export class IosApi {
     }
     return { pushId, pushP12, pushPassword };
   }
+
+  async _deletePushCertApi(appLookupParameters: AppLookupParameters): Promise<void> {
+    await this.api.postAsync(`credentials/ios/pushCert/delete`, appLookupParameters);
+  }
   async deletePushCert(experienceName: string, bundleIdentifier: string) {
-    await this.api.postAsync(`credentials/ios/pushCert/delete`, {
+    await this._deletePushCertApi({
       experienceName,
       bundleIdentifier,
       owner: this.username,
@@ -223,13 +303,21 @@ export class IosApi {
     );
   }
 
+  async _updateProvisioningProfileApi(
+    uploadAppCredentialParameters: UploadAppCredentialParameters
+  ): Promise<void> {
+    await this.api.postAsync(
+      `credentials/ios/provisioningProfile/update`,
+      uploadAppCredentialParameters
+    );
+  }
   async updateProvisioningProfile(
     experienceName: string,
     bundleIdentifier: string,
     provisioningProfile: appleApi.ProvisioningProfile,
     appleTeam: Pick<appleApi.Team, 'id'>
   ): Promise<appleApi.ProvisioningProfile> {
-    await this.api.postAsync(`credentials/ios/provisioningProfile/update`, {
+    await this._updateProvisioningProfileApi({
       experienceName,
       bundleIdentifier,
       credentials: { ...provisioningProfile, teamId: appleTeam.id },
@@ -272,8 +360,11 @@ export class IosApi {
     ]) as appleApi.ProvisioningProfile;
   }
 
+  async _deleteProvisioningProfileApi(appLookupParameters: AppLookupParameters): Promise<void> {
+    await this.api.postAsync(`credentials/ios/provisioningProfile/delete`, appLookupParameters);
+  }
   async deleteProvisioningProfile(experienceName: string, bundleIdentifier: string) {
-    await this.api.postAsync(`credentials/ios/provisioningProfile/delete`, {
+    await this._deleteProvisioningProfileApi({
       experienceName,
       bundleIdentifier,
       owner: this.username,

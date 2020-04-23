@@ -64,14 +64,15 @@ export class Context {
   }
 
   async init(projectDir: string, options: CtxOptions = {}) {
+    // Check if we are in project context by looking for a manifest
     const status = await Doctor.validateWithoutNetworkAsync(projectDir);
     if (status !== Doctor.FATAL) {
-      /* This manager does not need to work in project context */
       const { exp } = getConfig(projectDir);
       this._manifest = exp;
       this._hasProjectContext = true;
       this._iosApiClient = new IosApi(this.user).withProjectContext(this);
     } else {
+      /* This manager does not need to work in project context */
       this._iosApiClient = new IosApi(this.user);
     }
 
