@@ -1,6 +1,6 @@
 import {
   getCtxMock,
-  testDistCert,
+  testIosDistCredential,
   testProvisioningProfiles,
   testProvisioningProfilesFromApple,
 } from '../../test-fixtures/mocks';
@@ -45,7 +45,7 @@ describe('SetupProvisioningProfile', () => {
     const provProfOptions = {
       experienceName: 'testApp',
       bundleIdentifier: 'test.com.app',
-      distCert: testDistCert as IosDistCredentials,
+      distCert: testIosDistCredential as IosDistCredentials,
       nonInteractive: true,
     };
     const setupProvisioningProfile = new SetupIosProvisioningProfile(provProfOptions);

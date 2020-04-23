@@ -4,7 +4,7 @@ import {
 } from '../IosProvisioningProfile';
 import {
   getCtxMock,
-  testDistCert,
+  testIosDistCredential,
   testProvisioningProfiles,
   testProvisioningProfilesFromApple,
 } from '../../test-fixtures/mocks';
@@ -48,7 +48,7 @@ describe('IosProvisioningProfile', () => {
       const provProfOptions = {
         experienceName: 'testApp',
         bundleIdentifier: 'test.com.app',
-        distCert: testDistCert,
+        distCert: testIosDistCredential,
         nonInteractive: true,
       };
       const createProvisioningProfile = new CreateProvisioningProfile(provProfOptions);
@@ -67,7 +67,7 @@ describe('IosProvisioningProfile', () => {
       const provProfOptions = {
         experienceName: 'testApp',
         bundleIdentifier: 'test.com.app',
-        distCert: testDistCert,
+        distCert: testIosDistCredential,
         nonInteractive: true,
       };
       const createOrReuseProvisioningProfile = new CreateOrReuseProvisioningProfile(
@@ -92,7 +92,7 @@ describe('IosProvisioningProfile', () => {
       const provProfOptions = {
         experienceName: 'testApp',
         bundleIdentifier: 'test.com.app',
-        distCert: testDistCert,
+        distCert: testIosDistCredential,
         nonInteractive: true,
       };
       const createOrReuseProvisioningProfile = new CreateOrReuseProvisioningProfile(

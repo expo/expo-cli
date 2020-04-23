@@ -1,8 +1,12 @@
 import { CreateIosDist, CreateOrReuseDistributionCert } from '../IosDistCert';
-import { getCtxMock, testDistCert, testDistCertsFromApple } from '../../test-fixtures/mocks';
+import {
+  getCtxMock,
+  testDistCertsFromApple,
+  testIosDistCredential,
+} from '../../test-fixtures/mocks';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope
-const mockDistCertManagerCreate = jest.fn(() => testDistCert);
+const mockDistCertManagerCreate = jest.fn(() => testIosDistCredential);
 const mockDistCertManagerList = jest.fn(() => testDistCertsFromApple);
 jest.mock('../../../appleApi', () => {
   return {
