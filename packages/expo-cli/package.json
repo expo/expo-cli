@@ -96,7 +96,7 @@
     "babel-runtime": "6.26.0",
     "base32.js": "0.1.0",
     "boxen": "4.1.0",
-    "chalk": "2.4.1",
+    "chalk": "^4.0.0",
     "cli-table": "0.3.1",
     "commander": "2.17.1",
     "dateformat": "3.0.3",

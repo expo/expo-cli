@@ -57,7 +57,7 @@
     "@expo/package-manager": "0.0.16",
     "@expo/webpack-config": "0.12.1",
     "@types/next": "^8.0.6",
-    "chalk": "^3.0.0",
+    "chalk": "^4.0.0",
     "commander": "^4.0.1",
     "enquirer": "^2.3.2",
     "fs-extra": "^8.1.0",
