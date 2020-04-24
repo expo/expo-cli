@@ -3,7 +3,7 @@
 Expo CLI
 </h1>
 
-<p align="center">Tools for making Expo apps.</p>
+<p align="center">Tools for creating, running, and deploying Universal Expo and React Native apps</p>
 
 <p align="center">
      
