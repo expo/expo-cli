@@ -3,6 +3,7 @@ import { ApiV2, Doctor, User, UserManager } from '@expo/xdl';
 
 import { AppleCtx, authenticate } from '../appleApi';
 import { IosApi } from './api';
+import log from '../log';
 
 export interface IView {
   open(ctx: Context): Promise<IView | null>;
@@ -77,6 +78,11 @@ export class Context {
       this._manifest = exp;
       this._hasProjectContext = true;
       this._iosApiClient = new IosApi(this.user).withProjectContext(this);
+      log(
+        `Configuring credentials for ${this.manifest.owner ?? this.user.username} in project ${
+          this.manifest.slug
+        }`
+      );
     } else {
       /* This manager does not need to work in project context */
       this._iosApiClient = new IosApi(this.user);
