@@ -29,10 +29,7 @@ export default (program: any) => {
       'Number of logs to view, maximum 100, default 5.',
       parseInt
     )
-    .option(
-      '-p, --platform <ios|android>',
-      'Filter by platform, android or ios. Defaults to both platforms.'
-    )
+    .option('-p, --platform <ios|android>', 'Filter by platform, android or ios. Defaults to both platforms.')
     .option('-s, --sdk-version <version>', 'Filter by SDK version e.g. 35.0.0')
     .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(async (projectDir: string, options: HistoryOptions) => {
