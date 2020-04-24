@@ -11,7 +11,6 @@ import bunyan from '@expo/bunyan';
 import chalk from 'chalk';
 import ora from 'ora';
 import simpleSpinner from '@expo/simple-spinner';
-import getenv from 'getenv';
 import program, { Command, Option } from 'commander';
 import {
   Analytics,
@@ -96,12 +95,7 @@ Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boole
         log.error(err.message);
       } else {
         log.error(err.message);
-        // TODO: Is there a better way to do this? EXPO_DEBUG needs to be set to view the stack trace
-        if (getenv.boolish('EXPO_DEBUG', false)) {
-          log.error(chalk.gray(err.stack));
-        } else {
-          log.error(chalk.grey('Set EXPO_DEBUG=true in your env to view the stack trace.'));
-        }
+        log.error(chalk.gray(err.stack));
       }
 
       process.exit(1);
