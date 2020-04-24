@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 const chalk = require('chalk');
-const getenv = require('getenv');
 const semver = require('semver');
 const version = process.versions.node;
 

@@ -72,7 +72,6 @@
     "@types/split": "^1.0.0",
     "@types/targz": "^1.0.0",
     "@types/wordwrap": "^1.0.0",
-    "babel-preset-minify": "^0.5.1",
     "pkg": "^4.2.1"
   },
   "dependencies": {
