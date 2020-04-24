@@ -11,7 +11,6 @@ import bunyan from '@expo/bunyan';
 import chalk from 'chalk';
 import ora from 'ora';
 import simpleSpinner from '@expo/simple-spinner';
-import getenv from 'getenv';
 import program, { Command, Option } from 'commander';
 import {
   Analytics,
