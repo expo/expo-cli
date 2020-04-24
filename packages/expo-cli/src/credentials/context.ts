@@ -64,6 +64,12 @@ export class Context {
   }
 
   async init(projectDir: string, options: CtxOptions = {}) {
+    if (options.allowAnonymous) {
+      this._user = (await UserManager.getCurrentUserAsync()) || undefined;
+    } else {
+      this._user = await UserManager.ensureLoggedInAsync();
+    }
+
     // Check if we are in project context by looking for a manifest
     const status = await Doctor.validateWithoutNetworkAsync(projectDir);
     if (status !== Doctor.FATAL) {
@@ -76,11 +82,6 @@ export class Context {
       this._iosApiClient = new IosApi(this.user);
     }
 
-    if (options.allowAnonymous) {
-      this._user = (await UserManager.getCurrentUserAsync()) || undefined;
-    } else {
-      this._user = await UserManager.ensureLoggedInAsync();
-    }
     this._apiClient = ApiV2.clientForUser(this.user);
   }
 }
