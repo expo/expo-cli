@@ -57,7 +57,7 @@ export class XdlSchemaClient {
     if (!XdlSchemaClient._schemaCaches.hasOwnProperty(sdkVersion)) {
       XdlSchemaClient._schemaCaches[sdkVersion] = new Cacher(
         async () => {
-          return (await new ApiV2().getAsync(`project/configuration/schema/${sdkVersion}`)).schema;
+          return await new ApiV2().getAsync(`project/configuration/schema/${sdkVersion}`);
         },
         `schema-${sdkVersion}.json`,
         0,
