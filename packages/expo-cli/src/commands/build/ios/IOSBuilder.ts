@@ -1,16 +1,40 @@
-import isEmpty from 'lodash/isEmpty';
+import chalk from 'chalk';
 import pickBy from 'lodash/pickBy';
 import get from 'lodash/get';
 import { XDLError } from '@expo/xdl';
 
 import { Dictionary } from 'lodash';
+import terminalLink from 'terminal-link';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
-import * as constants from './credentials/constants';
 import * as utils from '../utils';
-import * as credentials from './credentials';
 import * as apple from '../../../appleApi';
+import prompt from '../../../prompt';
 import { ensurePNGIsNotTransparent } from './utils/image';
+import { runCredentialsManager } from '../../../credentials/route';
+import { Context } from '../../../credentials/context';
+import { displayProjectCredentials } from '../../../credentials/actions/list';
+import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
+import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
+import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
+import CommandError, { ErrorCodes } from '../../../CommandError';
+import log from '../../../log';
+
+import {
+  RemoveIosDist,
+  getDistCertFromParams,
+  useDistCertFromParams,
+} from '../../../credentials/views/IosDistCert';
+import {
+  RemoveIosPush,
+  getPushKeyFromParams,
+  usePushKeyFromParams,
+} from '../../../credentials/views/IosPushCredentials';
+import {
+  RemoveProvisioningProfile,
+  getProvisioningProfileFromParams,
+  useProvisioningProfileFromParams,
+} from '../../../credentials/views/IosProvisioningProfile';
 
 class IOSBuilder extends BaseBuilder {
   appleCtx?: apple.AppleCtx;
@@ -52,25 +76,150 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     return this.appleCtx;
   }
 
-  async prepareCredentials() {
-    // TODO: Fix forcing the username to be valid
-    const username = this.manifest.owner ?? this.user?.username!;
-    const projectMetadata = {
-      username,
-      experienceName: `@${username}/${this.manifest.slug}`,
-      sdkVersion: this.manifest.sdkVersion,
-      bundleIdentifier: get(this.manifest, 'ios.bundleIdentifier'),
-    };
-    await this.clearAndRevokeCredentialsIfRequested(projectMetadata);
+  // Try to get the user to provide Apple credentials upfront
+  // We will be able to do full validation of their iOS creds this way
+  async bestEffortAppleCtx(ctx: Context, bundleIdentifier: string) {
+    if (this.options.appleId) {
+      return await ctx.ensureAppleCtx(this.options);
+    }
 
-    const existingCredentials = await credentials.fetch(projectMetadata);
-    const missingCredentials = credentials.determineMissingCredentials(existingCredentials);
-    if (missingCredentials) {
-      await this.produceMissingCredentials(projectMetadata, missingCredentials);
+    const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
+    if (nonInteractive) {
+      return null;
+    }
+
+    const { confirm } = await prompt([
+      {
+        type: 'confirm',
+        name: 'confirm',
+        message: `Do you have access to the Apple account that will be used for submitting this app to the App Store?`,
+      },
+    ]);
+    if (confirm) {
+      return await ctx.ensureAppleCtx(this.options);
+    } else {
+      log(
+        chalk.green(
+          'No problem! 👌 \nWe can’t auto-generate credentials if you don’t have access to the main Apple account. \nBut we can still set it up if you upload your credentials.'
+        )
+      );
     }
   }
 
-  async clearAndRevokeCredentialsIfRequested(projectMetadata: any): Promise<void> {
+  async prepareCredentials() {
+    // TODO: Fix forcing the username to be valid
+    const username = this.manifest.owner ?? this.user?.username!;
+    const experienceName = `@${username}/${this.manifest.slug}`;
+    const bundleIdentifier = get(this.manifest, 'ios.bundleIdentifier');
+    const context = new Context();
+    await context.init(this.projectDir);
+    await this.bestEffortAppleCtx(context, bundleIdentifier);
+    await this.clearAndRevokeCredentialsIfRequested(context, { experienceName, bundleIdentifier });
+
+    try {
+      if (this.options.skipCredentialsCheck) {
+        log('Skipping credentials check...');
+        return;
+      }
+      await this.produceCredentials(context, experienceName, bundleIdentifier);
+    } catch (e) {
+      if (e.code === ErrorCodes.NON_INTERACTIVE) {
+        log.newLine();
+        const link = terminalLink(
+          'expo.fyi/credentials-non-interactive',
+          'https://expo.fyi/credentials-non-interactive'
+        );
+        log(
+          chalk.bold.red(
+            `Additional information needed to setup credentials in non-interactive mode.`
+          )
+        );
+        log(chalk.bold.red(`Learn more about how to resolve this: ${link}.`));
+        log.newLine();
+
+        // We don't want to display project credentials when we bail out due to
+        // non-interactive mode error, because we are unable to recover without
+        // user input.
+        throw new CommandError(
+          ErrorCodes.NON_INTERACTIVE,
+          'Unable to proceed, see the above error message.'
+        );
+      } else {
+        log(
+          chalk.bold.red(
+            'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
+          )
+        );
+      }
+    }
+
+    const credentials = await context.ios.getAllCredentials();
+    displayProjectCredentials(experienceName, bundleIdentifier, credentials);
+  }
+
+  async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {
+    const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
+    const appCredentials = await ctx.ios.getAppCredentials(experienceName, bundleIdentifier);
+
+    if (ctx.hasAppleCtx()) {
+      await apple.ensureAppExists(
+        ctx.appleCtx,
+        { experienceName, bundleIdentifier },
+        { enablePushNotifications: true }
+      );
+    }
+
+    const distCertFromParams = await getDistCertFromParams(this.options);
+    if (distCertFromParams) {
+      await useDistCertFromParams(ctx, appCredentials, distCertFromParams);
+    } else {
+      await runCredentialsManager(
+        ctx,
+        new SetupIosDist({ experienceName, bundleIdentifier, nonInteractive })
+      );
+    }
+
+    const distributionCert = await ctx.ios.getDistCert(experienceName, bundleIdentifier);
+    if (!distributionCert) {
+      throw new CommandError(
+        'INSUFFICIENT_CREDENTIALS',
+        `This build request requires a valid distribution certificate.`
+      );
+    }
+
+    const pushKeyFromParams = await getPushKeyFromParams(this.options);
+    if (pushKeyFromParams) {
+      await usePushKeyFromParams(ctx, appCredentials, pushKeyFromParams);
+    } else {
+      await runCredentialsManager(
+        ctx,
+        new SetupIosPush({ experienceName, bundleIdentifier, nonInteractive })
+      );
+    }
+
+    const provisioningProfileFromParams = await getProvisioningProfileFromParams(this.options);
+    if (provisioningProfileFromParams) {
+      await useProvisioningProfileFromParams(
+        ctx,
+        appCredentials,
+        this.options.teamId!,
+        provisioningProfileFromParams,
+        distributionCert
+      );
+    } else {
+      await runCredentialsManager(
+        ctx,
+        new SetupIosProvisioningProfile({
+          experienceName,
+          bundleIdentifier,
+          distCert: distributionCert,
+          nonInteractive,
+        })
+      );
+    }
+  }
+
+  async clearAndRevokeCredentialsIfRequested(ctx: Context, projectMetadata: any): Promise<void> {
     const {
       clearCredentials,
       clearDistCert,
@@ -85,26 +234,52 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       clearPushCert ||
       clearProvisioningProfile;
     if (shouldClearAnything) {
-      const credsToClear = await this.clearCredentialsIfRequested(projectMetadata);
-      if (credsToClear && this.options.revokeCredentials) {
-        await credentials.revoke(
-          await this.getAppleCtx(),
-          Object.keys(credsToClear),
-          projectMetadata
-        );
-      }
+      const { experienceName, bundleIdentifier } = projectMetadata;
+      const credsToClear = this.determineCredentialsToClear();
+      await this.clearCredentials(ctx, experienceName, bundleIdentifier, credsToClear);
     }
   }
 
-  async clearCredentialsIfRequested(projectMetadata: any): Promise<Dictionary<boolean> | null> {
-    const credsToClear = this.determineCredentialsToClear();
-    if (credsToClear) {
-      await credentials.clear(projectMetadata, credsToClear);
+  async clearCredentials(
+    ctx: Context,
+    experienceName: string,
+    bundleIdentifier: string,
+    credsToClear: Dictionary<boolean>
+  ): Promise<void> {
+    const shouldRevokeOnApple = this.options.revokeCredentials;
+    const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
+    const distributionCert = await ctx.ios.getDistCert(experienceName, bundleIdentifier);
+    if (credsToClear.distributionCert && distributionCert) {
+      await new RemoveIosDist(shouldRevokeOnApple, nonInteractive).removeSpecific(
+        ctx,
+        distributionCert
+      );
     }
-    return credsToClear;
+
+    const pushKey = await ctx.ios.getPushKey(experienceName, bundleIdentifier);
+    if (credsToClear.pushKey && pushKey) {
+      await new RemoveIosPush(shouldRevokeOnApple, nonInteractive).removeSpecific(ctx, pushKey);
+    }
+
+    const appCredentials = await ctx.ios.getAppCredentials(experienceName, bundleIdentifier);
+    const provisioningProfile = await ctx.ios.getProvisioningProfile(
+      experienceName,
+      bundleIdentifier
+    );
+    if (credsToClear.provisioningProfile && provisioningProfile) {
+      await new RemoveProvisioningProfile(shouldRevokeOnApple, nonInteractive).removeSpecific(
+        ctx,
+        appCredentials
+      );
+    }
+
+    const pushCert = await ctx.ios.getPushCert(experienceName, bundleIdentifier);
+    if (credsToClear.pushCert && pushCert) {
+      await ctx.ios.deletePushCert(experienceName, bundleIdentifier);
+    }
   }
 
-  determineCredentialsToClear(): Dictionary<boolean> | null {
+  determineCredentialsToClear(): Dictionary<boolean> {
     const {
       clearCredentials,
       clearDistCert,
@@ -119,47 +294,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       pushCert: Boolean(clearCredentials || clearPushCert),
       provisioningProfile: Boolean(clearCredentials || clearProvisioningProfile),
     };
-    const credsToClear = pickBy(credsToClearAll);
-    return isEmpty(credsToClear) ? null : credsToClear;
-  }
-
-  async produceMissingCredentials(projectMetadata: any, missingCredentials: any): Promise<void> {
-    const appleCtx = await this.getAppleCtx();
-    const metadata: Record<string, any> = {};
-    if (
-      missingCredentials.includes(constants.PROVISIONING_PROFILE) &&
-      !missingCredentials.includes(constants.DISTRIBUTION_CERT)
-    ) {
-      // we need to get distribution certificate serial number
-      metadata.distCertSerialNumber = await credentials.getDistributionCertSerialNumber(
-        projectMetadata
-      );
-    }
-
-    const {
-      userCredentialsIds,
-      credentials: userProvidedCredentials,
-      toGenerate,
-      metadata: metadataFromPrompt,
-    } = await credentials.prompt(appleCtx, this.options, missingCredentials, projectMetadata);
-
-    Object.assign(metadata, metadataFromPrompt);
-
-    const generatedCredentials = await credentials.generate(
-      appleCtx,
-      // @ts-ignore: Type 'undefined' is not assignable to type '("provisioningProfile" | "distributionCert" | "pushKey")[]'.
-      toGenerate,
-      metadata,
-      projectMetadata
-    );
-
-    const newCredentials = {
-      ...userProvidedCredentials,
-      ...generatedCredentials,
-      teamId: appleCtx.team.id,
-    };
-    // @ts-ignore: Argument of type 'string[] | undefined' is not assignable to parameter of type 'number[]'.
-    await credentials.update(projectMetadata, newCredentials, userCredentialsIds);
+    return pickBy(credsToClearAll);
   }
 
   async ensureProjectIsPublished() {

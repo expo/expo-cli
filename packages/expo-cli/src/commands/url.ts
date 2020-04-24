@@ -5,7 +5,7 @@ import { Project, UrlUtils } from '@expo/xdl';
 
 import CommandError from '../CommandError';
 import log from '../log';
-import urlOpts from '../urlOpts';
+import urlOpts, { URLOptions } from '../urlOpts';
 import printRunInstructionsAsync from '../printRunInstructionsAsync';
 
 type ProjectUrlOptions = Command & {
@@ -25,15 +25,15 @@ const logArtifactUrl = (platform: 'ios' | 'android') => async (
   }
 
   let res;
-  if (process.env.EXPO_NEXT_API) {
-    res = await Project.getBuildStatusAsync(projectDir, {
-      current: false,
-      ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
-    });
-  } else {
+  if (process.env.EXPO_LEGACY_API === 'true') {
     res = await Project.buildAsync(projectDir, {
       current: false,
       mode: 'status',
+      ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
+    });
+  } else {
+    res = await Project.getBuildStatusAsync(projectDir, {
+      current: false,
       ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
     });
   }
@@ -63,7 +63,7 @@ async function getWebAppUrlAsync(projectDir: string): Promise<string> {
   return webAppUrl;
 }
 
-async function action(projectDir: string, options: ProjectUrlOptions) {
+async function action(projectDir: string, options: ProjectUrlOptions & URLOptions) {
   await urlOpts.optsAsync(projectDir, options);
 
   if ((await Project.currentStatus(projectDir)) !== 'running') {

@@ -6,7 +6,6 @@ import resolveFrom from 'resolve-from';
 import { getConfig } from '../Config';
 import { resolveModule } from '../Modules';
 import { getManagedExtensions } from './extensions';
-import { ConfigMode } from '../Config.types';
 
 // https://github.com/facebook/create-react-app/blob/9750738cce89a967cc71f28390daf5d4311b193c/packages/react-scripts/config/paths.js#L22
 export function ensureSlash(inputPath: string, needsSlash: boolean): string {
@@ -48,21 +47,19 @@ export function getAbsolutePathWithProjectRoot(
 export function getEntryPoint(
   projectRoot: string,
   entryFiles: string[],
-  platforms: string[],
-  mode: ConfigMode = 'development'
+  platforms: string[]
 ): string | null {
   const extensions = getManagedExtensions(platforms);
-  return getEntryPointWithExtensions(projectRoot, entryFiles, extensions, mode);
+  return getEntryPointWithExtensions(projectRoot, entryFiles, extensions);
 }
 
 // Used to resolve the main entry file for a project.
 export function getEntryPointWithExtensions(
   projectRoot: string,
   entryFiles: string[],
-  extensions: string[],
-  mode: ConfigMode = 'development'
+  extensions: string[]
 ): string {
-  const { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode });
+  const { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   // This will first look in the `app.json`s `expo.entryPoint` field for a potential main file.
   // We check the Expo config first in case you want your project to start differently with Expo then in a standalone environment.
@@ -73,10 +70,14 @@ export function getEntryPointWithExtensions(
     if (!entry) {
       // Allow for paths like: `{ "main": "expo/AppEntry" }`
       entry = resolveFromSilentWithExtensions(projectRoot, exp.entryPoint, extensions);
-      if (!entry)
-        throw new Error(
-          `Cannot resolve entry file: The \`expo.entryPoint\` field defined in your \`app.json\` points to a non-existent path.`
-        );
+
+      // If it doesn't resolve then just return the entryPoint as-is. This makes
+      // it possible for people who have an unconventional setup (eg: multiple
+      // apps in monorepo with metro at root) to customize entry point without
+      // us imposing our assumptions.
+      if (!entry) {
+        return exp.entryPoint;
+      }
     }
     return entry;
   } else if (pkg) {

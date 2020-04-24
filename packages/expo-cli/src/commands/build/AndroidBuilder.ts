@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import untildify from 'untildify';
-import { Android, Credentials } from '@expo/xdl';
+import { Android, AndroidCredentials, Credentials } from '@expo/xdl';
 import chalk from 'chalk';
 import get from 'lodash/get';
 
@@ -195,9 +195,9 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
         // read the keystore
         const keystoreData = await fs.readFile(keystorePath);
 
-        const credentials = {
+        const credentials: AndroidCredentials.Keystore = {
           keystore: keystoreData.toString('base64'),
-          keystoreAlias,
+          keyAlias: keystoreAlias,
           keystorePassword,
           keyPassword,
         };
@@ -213,12 +213,30 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   }
 
   checkEnv(): boolean {
-    return (
+    const allEnvSet =
       !!this.options.keystorePath &&
       !!this.options.keystoreAlias &&
       !!process.env.EXPO_ANDROID_KEYSTORE_PASSWORD &&
-      !!process.env.EXPO_ANDROID_KEY_PASSWORD
-    );
+      !!process.env.EXPO_ANDROID_KEY_PASSWORD;
+
+    if (allEnvSet) {
+      return true;
+    }
+
+    // Check if user was trying to upload keystore incorretly and supply an helpful error message if so.
+    if (this.options.keystorePath || this.options.keystoreAlias) {
+      throw Error(
+        'When uploading your own keystore you must provide:\n' +
+          '\t--keystore-path /path/to/your/keystore.jks \n' +
+          '\t--keystore-alias PUT_KEYSTORE_ALIAS_HERE \n' +
+          'And set the enviroment variables:\n' +
+          '\tEXPO_ANDROID_KEYSTORE_PASSWORD\n' +
+          '\tEXPO_ANDROID_KEY_PASSWORD\n' +
+          'For details, see:\n' +
+          '\thttps://docs.expo.io/versions/latest/distribution/building-standalone-apps/#if-you-choose-to-build-for-android'
+      );
+    }
+    return false;
   }
 
   async collectAndValidateCredentialsFromCI(

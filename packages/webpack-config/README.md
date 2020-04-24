@@ -45,17 +45,16 @@ module.exports = async function(env, argv) {
 
 The main options used to configure how `@expo/webpack-config` works.
 
-| name                        | type                                    | default     | description                                                                     |
-| --------------------------- | --------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
-| `projectRoot`               | `string`                                | required    | Root of the Expo project.                                                       |
-| `https`                     | `boolean`                               | `false`     | Should the dev server use https protocol.                                       |
-| `offline`                   | `boolean`                               | `true`      | Passing `false` will disable offline support and skip adding a service worker.   |
-| `mode`                      | `Mode`                                  | required    | The Webpack mode to bundle the project in.                                      |
-| `platform`                  | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for. Only `web` and `electron` are supported.     |
-| `removeUnusedImportExports` | `boolean`                               | `false`     | Enables advanced tree-shaking with deep scope analysis.                         |
-| `pwa`                       | `boolean`                               | `true`      | Generate the PWA image assets in production mode.                               |
-| `report`                    | `Report`                                | `undefined` | Configure Webpack bundle reports. Using this adds significant time to rebuilds. |
-| `babel`                     | [`ExpoBabelOptions`](#ExpoBabelOptions) | `undefined` | Control how the default Babel loader is configured.                             |
+| name                        | type                                    | default     | description                                                                    |
+| --------------------------- | --------------------------------------- | ----------- | ------------------------------------------------------------------------------ |
+| `projectRoot`               | `string`                                | required    | Root of the Expo project.                                                      |
+| `https`                     | `boolean`                               | `false`     | Should the dev server use https protocol.                                      |
+| `offline`                   | `boolean`                               | `true`      | Passing `false` will disable offline support and skip adding a service worker. |
+| `mode`                      | `Mode`                                  | required    | The Webpack mode to bundle the project in.                                     |
+| `platform`                  | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for. Only `web` and `electron` are supported.    |
+| `removeUnusedImportExports` | `boolean`                               | `false`     | Enables advanced tree-shaking with deep scope analysis.                        |
+| `pwa`                       | `boolean`                               | `true`      | Generate the PWA image assets in production mode.                              |
+| `babel`                     | [`ExpoBabelOptions`](#ExpoBabelOptions) | `undefined` | Control how the default Babel loader is configured.                            |
 
 ### `Environment` internal
 
@@ -79,6 +78,162 @@ Control how the default Babel loader is configured.
 | `dangerouslyAddModulePathsToTranspile` | `string[]` | `undefined` | Add the names of node_modules that should be included transpilation step. |
 
 ## Guides
+
+### PWAs
+
+- See the docs for [`expo-pwa`](../pwa) to learn more about creating the assets manually.
+- Disable automatic PWA generation with `expo build:web --no-pwa`.
+- `expo build:web` will automatically skip any PWA asset that's already linked in the project's local `web/index.html`.
+- Having sharp CLI installed globally will speed up asset generation, if it's not installed, Jimp will be used instead.
+
+#### Chrome PWAs
+
+##### Manifest.json
+
+The `manifest.json` will be created using the values in the project's `app.config.js`:
+
+Generating the `manifest.json` will be skipped if the following exists in the project's `web/index.html`:
+
+<details><summary>Show HTML</summary>
+
+```html
+<link rel="manifest" href="..." />
+```
+
+</details>
+
+If the `icons` array is defined in your `manifest.json`, then Chrome PWA icon generation will be skipped.
+
+##### Chrome PWA Icons
+
+Icons will be generated using the file defined in your `app.config.js` under `android.icon` and it'll fallback to `icon`.
+
+<details><summary>Show manifest.json</summary>
+
+```json
+{
+  "icons": [
+    {
+      "src": "...",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "...",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "...",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+</details>
+
+#### Favicons
+
+Favicons will be generated using the file defined in your `app.config.js` under `web.favicon` and it'll fallback to `icon`.
+
+Asset generation for Favicons will be individually skipped if any of the following fields exist in your `web/index.html`:
+
+<details><summary>Show HTML</summary>
+
+```html
+<link rel="icon" type="image/png" sizes="16x16" href="..." />
+<link rel="icon" type="image/png" sizes="32x32" href="..." />
+<link rel="shortcut icon" href="..." />
+```
+
+</details>
+
+#### Safari PWAs
+
+Icons will be generated using the file defined in your `app.config.js` under `ios.icon` and it'll fallback to `icon`. The splash screens look at `ios.splash` and fallback to `splash`.
+
+Asset generation for Safari PWA icons/splash screens will be individually skipped if any of the following fields exist in your `web/index.html`:
+
+##### Icons
+
+<details><summary>Show HTML</summary>
+
+```html
+<link rel="apple-touch-icon" sizes="180x180" href="..." />
+```
+
+</details>
+
+##### Splash Screens
+
+<details><summary>Show HTML</summary>
+
+```html
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"
+  href="..."
+/>
+<link
+  rel="apple-touch-startup-image"
+  media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+  href="..."
+/>
+```
+
+</details>
 
 ### Include modules
 
@@ -187,7 +342,7 @@ module.exports = async function(env, argv) {
 };
 ```
 
-- This will do the following: 
+- This will do the following:
   - Skip registering [`register-service-worker.js`](./web-default/register-service-worker.js) in the Webpack config `entry`.
   - Skip including the [Webpack Workbox plugin][workbox] and creating the `web/service-worker.js`.
   - Skip including the [`web/expo-service-worker.js`](./web-default/expo-service-worker.js)
@@ -226,18 +381,6 @@ import { withWorkbox } from '@expo/webpack-config/addons';
 
 ```js
 import { withOptimizations } from '@expo/webpack-config/addons';
-```
-
-#### `withReporting`
-
-```js
-import { withReporting } from '@expo/webpack-config/addons';
-```
-
-#### `withCompression`
-
-```js
-import { withCompression } from '@expo/webpack-config/addons';
 ```
 
 #### `withAlias`
@@ -294,10 +437,10 @@ import { getMode } from '@expo/webpack-config/env';
 import { validateEnvironment } from '@expo/webpack-config/env';
 ```
 
-#### `aliases`
+#### `getAliases`
 
 ```js
-import { aliases } from '@expo/webpack-config/env';
+import { getAliases } from '@expo/webpack-config/env';
 ```
 
 #### `getPaths`
@@ -418,6 +561,10 @@ Tools for resolving fields, or searching and indexing loaders and plugins.
 ```js
 import { resolveEntryAsync } from '@expo/webpack-config/utils';
 ```
+
+## What it does not do
+
+- **Gzip compression:** This was supported in beta but later removed in favor of hosting providers like [Now](http://now.sh/) and [Netlify](https://www.netlify.com/) automatically compressing files in the server.
 
 ## License
 

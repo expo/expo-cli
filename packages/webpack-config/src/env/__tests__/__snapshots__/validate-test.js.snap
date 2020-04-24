@@ -6,12 +6,6 @@ Object {
   "mode": "development",
   "platform": "web",
   "removeUnusedImportExports": false,
-  "report": Object {
-    "path": "web-report",
-    "reportFilename": "report.html",
-    "statsFilename": "stats.json",
-    "verbose": false,
-  },
 }
 `;
 

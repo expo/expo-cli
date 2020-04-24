@@ -2,9 +2,9 @@ const path = require('path');
 const gulp = require('gulp');
 const babel = require('gulp-babel');
 const changed = require('gulp-changed');
-const fs = require('fs');
+const axios = require('axios');
+const fse = require('fs-extra');
 const plumber = require('gulp-plumber');
-const request = require('request');
 const sourcemaps = require('gulp-sourcemaps');
 const rimraf = require('rimraf');
 
@@ -53,33 +53,19 @@ const tasks = {
   },
 
   caches(done) {
-    request('https://exp.host/--/versions', (error, result, body) => {
-      if (error) {
-        throw error;
-      }
+    axios
+      .get('https://exp.host/--/versions')
+      .then(async ({ data }) => {
+        fse.writeJsonSync(path.join(paths.caches, 'versions.json'), data);
 
-      // we don't need to do anything here, just let it throw if invalid json
-      const response = JSON.parse(body);
+        for (let version of Object.keys(data.sdkVersions)) {
+          const { data: release } = await axios.get(`https://exp.host/--/xdl-schema/${version}`);
 
-      fs.writeFileSync(path.join(paths.caches, 'versions.json'), body, {
-        encoding: 'utf8',
-      });
-
-      for (let version of Object.keys(response.sdkVersions)) {
-        request(`https://exp.host/--/xdl-schema/${version}`, (error, result, body) => {
-          if (error) {
-            throw error;
-          }
-
-          JSON.parse(body);
-          fs.writeFileSync(path.join(paths.caches, `schema-${version}.json`), body, {
-            encoding: 'utf8',
-          });
-        });
-      }
-
-      done();
-    });
+          fse.writeJsonSync(path.join(paths.caches, `schema-${version}.json`), release);
+        }
+      })
+      .catch(error => done(error))
+      .then(() => done());
   },
 };
 

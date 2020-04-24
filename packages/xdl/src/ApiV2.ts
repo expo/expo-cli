@@ -10,6 +10,8 @@ import QueryString from 'querystring';
 import Config from './Config';
 import * as ConnectionStatus from './ConnectionStatus';
 
+export const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
+
 // These aren't constants because some commands switch between staging and prod
 function _rootBaseUrl() {
   return `${Config.api.scheme}://${Config.api.host}`;
@@ -192,7 +194,9 @@ export default class ApiV2Client {
       reqOptions.timeout = 1;
     }
 
-    reqOptions = merge({}, reqOptions, extraRequestOptions, uploadOptions);
+    reqOptions = merge({}, reqOptions, extraRequestOptions, uploadOptions, {
+      maxContentLength: MAX_CONTENT_LENGTH,
+    });
 
     let response;
     let result;

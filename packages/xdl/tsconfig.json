@@ -10,6 +10,7 @@
     { "path": "../image-utils" },
     { "path": "../json-file" },
     { "path": "../osascript" },
+    { "path": "../plist" },
     { "path": "../config" }
   ]
 }

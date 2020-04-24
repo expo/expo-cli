@@ -21,7 +21,6 @@ const COMMANDS = [
   require('./login'),
   require('./logout'),
   require('./opt-into-google-play-signing'),
-  require('./optimize'),
   require('./prepare-detached-build'),
   require('./publish-info'),
   require('./publish-modify'),
@@ -36,6 +35,10 @@ const COMMANDS = [
   require('./webhooks'),
   require('./whoami'),
 ];
+
+if (process.env.EXPO_DEV) {
+  COMMANDS.push(require('./apply'));
+}
 
 export function registerCommands(program: Command) {
   COMMANDS.forEach(commandModule => {

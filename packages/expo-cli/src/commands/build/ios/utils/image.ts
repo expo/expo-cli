@@ -1,18 +1,30 @@
+import { Readable } from 'stream';
+
 import fs from 'fs-extra';
 import { PNG } from 'pngjs';
 import pick from 'lodash/pick';
 import { XDLError } from '@expo/xdl';
-import request from 'request';
+import axios from 'axios';
 import validator from 'validator';
+
+async function getImageStreamAsync(imagePathOrURL: string) {
+  const isUrl = validator.isURL(imagePathOrURL, {
+    protocols: ['http', 'https'],
+    require_protocol: true,
+  });
+
+  if (isUrl) {
+    const response = await axios.get<Readable>(imagePathOrURL, { responseType: 'stream' });
+    return response.data;
+  } else {
+    return fs.createReadStream(imagePathOrURL);
+  }
+}
 
 export async function ensurePNGIsNotTransparent(imagePathOrURL: string): Promise<void> {
   let hasAlreadyResolved = false;
-  const stream = validator.isURL(imagePathOrURL, {
-    protocols: ['http', 'https'],
-    require_protocol: true,
-  })
-    ? request(imagePathOrURL)
-    : fs.createReadStream(imagePathOrURL);
+  const stream = await getImageStreamAsync(imagePathOrURL);
+
   return new Promise((res, rej) => {
     stream
       .pipe(new PNG({ filterType: 4 }))

@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  rootDir: path.resolve(__dirname, 'src'),
+  rootDir: path.resolve(__dirname),
   displayName: require('expo-codemod/package.json').name,
   testRegex: '/__(tests|testfixtures)__/.*(test|spec)\\.(j|t)sx?$',
   moduleNameMapper: {

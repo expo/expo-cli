@@ -1,0 +1,54 @@
+{
+  "name": "@expo/metro-config",
+  "version": "0.0.8",
+  "description": "A Metro config for running React Native projects with the Metro bundler",
+  "main": "build/ExpoMetroConfig.js",
+  "scripts": {
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "prepare": "yarn run clean && yarn build",
+    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "lint": "eslint .",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/metro-config"
+  },
+  "keywords": [
+    "json",
+    "react-native",
+    "expo",
+    "react",
+    "metro",
+    "metro-config"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/expo/expo-cli/issues"
+  },
+  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/metro-config#readme",
+  "files": [
+    "build",
+    "transformer.js"
+  ],
+  "dependencies": {
+    "@expo/config": "3.1.3"
+  },
+  "peerDependencies": {
+    "metro": "^0.56.0",
+    "metro-config": "^0.56.0"
+  },
+  "devDependencies": {
+    "@expo/babel-preset-cli": "0.2.9",
+    "expo": "37",
+    "globby": "^11.0.0",
+    "metro": "^0.59.0",
+    "metro-config": "^0.59.0",
+    "react-native": "0.61.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

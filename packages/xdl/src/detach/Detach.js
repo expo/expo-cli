@@ -9,7 +9,7 @@ import glob from 'glob-promise';
 import uuid from 'uuid';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
-import { findConfigFile } from '@expo/config';
+import { findConfigFile, getConfig } from '@expo/config';
 import isPlainObject from 'lodash/isPlainObject';
 
 import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
@@ -21,6 +21,7 @@ import * as IosWorkspace from './IosWorkspace';
 import * as AndroidShellApp from './AndroidShellApp';
 
 import Api from '../Api';
+import * as EmbeddedAssets from '../EmbeddedAssets';
 import UserManager from '../User';
 import XDLError from '../XDLError';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
@@ -29,7 +30,6 @@ import * as UrlUtils from '../UrlUtils';
 import * as Versions from '../Versions';
 import installPackagesAsync from './installPackagesAsync';
 import logger from './Logger';
-import { getProjectConfigAsync } from '../Config';
 
 async function yesnoAsync(message) {
   const { ok } = await inquirer.prompt([
@@ -68,7 +68,7 @@ async function _detachAsync(projectRoot, options) {
 
   let username = user.username;
   const { configName, configPath, configNamespace } = findConfigFile(projectRoot);
-  let { exp } = await getProjectConfigAsync(projectRoot, { skipSDKVersionRequirement: false });
+  let { exp } = getConfig(projectRoot);
   let experienceName = `@${username}/${exp.slug}`;
   let experienceUrl = `exp://exp.host/${experienceName}`;
 
@@ -354,7 +354,7 @@ async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory) {
 
 async function readNullableConfigJsonAsync(projectDir) {
   try {
-    return await getProjectConfigAsync(projectDir, { skipSDKVersionRequirement: false });
+    return getConfig(projectDir);
   } catch (_) {
     return null;
   }
@@ -395,7 +395,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir, args) {
     path.join(context.data.expoSourcePath, '__internal__', 'keys.json')
   );
 
-  const { exp } = await getProjectConfigAsync(expoRootDir, { skipSDKVersionRequirement: true });
+  const { exp } = getConfig(expoRootDir, { skipSDKVersionRequirement: true });
 
   await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
     // verify that we are actually in a service context and not a misconfigured project
@@ -517,15 +517,13 @@ export async function bundleAssetsAsync(projectDir, args) {
     return;
   }
   const { exp } = options;
-  let publishManifestPath =
-    args.platform === 'ios' ? exp.ios.publishManifestPath : exp.android.publishManifestPath;
-  if (!publishManifestPath) {
+  let bundledManifestPath = EmbeddedAssets.getEmbeddedManifestPath(args.platform, projectDir, exp);
+  if (!bundledManifestPath) {
     logger.warn(
       `Skipped assets bundling because the '${args.platform}.publishManifestPath' key is not specified in the app manifest.`
     );
     return;
   }
-  let bundledManifestPath = path.join(projectDir, publishManifestPath);
   let manifest;
   try {
     manifest = JSON.parse(await fs.readFile(bundledManifestPath, 'utf8'));
@@ -533,6 +531,9 @@ export async function bundleAssetsAsync(projectDir, args) {
     throw new Error(
       `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${ex.message}`
     );
+  }
+  if (!manifest || !Object.keys(manifest).length) {
+    throw new Error(`The manifest at '${bundledManifestPath}' was empty or invalid.`);
   }
   await AssetBundle.bundleAsync(null, manifest.bundledAssets, args.dest);
 }

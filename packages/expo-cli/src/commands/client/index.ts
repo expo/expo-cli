@@ -52,7 +52,6 @@ export default function(program: Command) {
         }
         const { exp } = getConfig(projectDir, {
           skipSDKVersionRequirement: true,
-          mode: 'production',
         });
 
         if (exp) {

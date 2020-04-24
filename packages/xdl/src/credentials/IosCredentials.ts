@@ -1,5 +1,7 @@
 import Api from '../Api';
 import { findP12CertSerialNumber } from '../detach/PKCS12Utils';
+import UserManager from '../User';
+import { ApiV2 } from '../xdl';
 
 export type Credentials = {
   appleId?: string;
@@ -32,15 +34,6 @@ export type CredObject = {
 
 export type CredsList = Array<CredObject>;
 
-export async function getExistingDistCerts(
-  username: string,
-  appleTeamId: string,
-  options: { provideFullCertificate?: boolean } = {}
-): Promise<CredsList> {
-  const distCerts = await getExistingUserCredentials(username, appleTeamId, 'dist-cert');
-  return formatDistCerts(distCerts, options);
-}
-
 export function formatDistCerts(distCerts: any, options: { provideFullCertificate?: boolean }) {
   return distCerts.map(({ usedByApps, userCredentialsId, certId, certP12, certPassword }: any) => {
     let serialNumber;
@@ -68,15 +61,6 @@ export function formatDistCerts(distCerts: any, options: { provideFullCertificat
   });
 }
 
-export async function getExistingPushKeys(
-  username: string,
-  appleTeamId: string,
-  options: { provideFullPushKey?: boolean } = {}
-): Promise<CredsList> {
-  const pushKeys = await getExistingUserCredentials(username, appleTeamId, 'push-key');
-  return formatPushKeys(pushKeys, options);
-}
-
 export function formatPushKeys(pushKeys: any, options: { provideFullPushKey?: boolean }) {
   return pushKeys.map(({ usedByApps, userCredentialsId, apnsKeyId, apnsKeyP8 }: any) => {
     let name = `Key ID: ${apnsKeyId}`;
@@ -93,26 +77,4 @@ export function formatPushKeys(pushKeys: any, options: { provideFullPushKey?: bo
       short: apnsKeyId,
     };
   });
-}
-
-async function getExistingUserCredentials(
-  username: string,
-  appleTeamId: string,
-  type: string
-): Promise<CredsList> {
-  const { err, certs } = await Api.callMethodAsync('getExistingUserCredentials', [], 'post', {
-    username,
-    appleTeamId,
-    type,
-  });
-
-  if (err) {
-    throw new Error('Error getting existing distribution certificates.');
-  } else {
-    return certs.map(({ usedByApps, userCredentialsId, ...rest }: any) => ({
-      usedByApps: usedByApps && usedByApps.split(';'),
-      userCredentialsId: String(userCredentialsId),
-      ...rest,
-    }));
-  }
 }

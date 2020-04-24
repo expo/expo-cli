@@ -1,4 +1,5 @@
 import JsonFile from '@expo/json-file';
+import { ProjectTarget } from '@expo/config';
 import fs from 'fs-extra';
 import defaults from 'lodash/defaults';
 import path from 'path';
@@ -32,6 +33,7 @@ type PackagerInfo = {
   ngrokPid?: number | null;
   devToolsPort?: number | null;
   webpackServerPort?: number | null;
+  target?: ProjectTarget;
 };
 const packagerInfoFile = 'packager-info.json';
 

@@ -5,11 +5,13 @@ import { Context, IView } from '../context';
 export class SetupIosDist implements IView {
   _experienceName: string;
   _bundleIdentifier: string;
+  _nonInteractive: boolean;
 
   constructor(options: iosDistView.DistCertOptions) {
     const { experienceName, bundleIdentifier } = options;
     this._experienceName = experienceName;
     this._bundleIdentifier = bundleIdentifier;
+    this._nonInteractive = options.nonInteractive ?? false;
   }
 
   async open(ctx: Context): Promise<IView | null> {
@@ -22,30 +24,18 @@ export class SetupIosDist implements IView {
       this._bundleIdentifier
     );
 
-    if (!configuredDistCert) {
-      return new iosDistView.CreateOrReuseDistributionCert({
-        experienceName: this._experienceName,
-        bundleIdentifier: this._bundleIdentifier,
-      });
-    }
-
-    if (!ctx.hasAppleCtx) {
-      throw new Error(`This workflow requires you to provide your Apple Credentials.`);
-    }
-
-    // check if valid
-    const isValid = await iosDistView.validateDistributionCertificate(
-      ctx.appleCtx,
-      configuredDistCert
-    );
-
-    if (isValid) {
-      return null;
+    if (configuredDistCert) {
+      // we dont need to setup if we have a valid dist cert on file
+      const isValid = await iosDistView.validateDistributionCertificate(ctx, configuredDistCert);
+      if (isValid) {
+        return null;
+      }
     }
 
     return new iosDistView.CreateOrReuseDistributionCert({
       experienceName: this._experienceName,
       bundleIdentifier: this._bundleIdentifier,
+      nonInteractive: this._nonInteractive,
     });
   }
 }

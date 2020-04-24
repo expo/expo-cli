@@ -1,4 +1,4 @@
-import { AppJSONConfig, BareAppConfig } from '@expo/config';
+import { AppJSONConfig, BareAppConfig, getConfig } from '@expo/config';
 
 import { getEntryPoint } from '@expo/config/paths';
 import fs from 'fs-extra';
@@ -9,7 +9,7 @@ import JsonFile from '@expo/json-file';
 import Minipass from 'minipass';
 import pacote, { PackageSpec } from 'pacote';
 import { Readable } from 'stream';
-import tar from 'tar';
+import tar, { ReadEntry } from 'tar';
 import yaml from 'js-yaml';
 
 import { NpmPackageManager, YarnPackageManager } from '@expo/package-manager';
@@ -22,10 +22,6 @@ import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as ProjectSettings from './ProjectSettings';
-import { getProjectConfigAsync } from './Config';
-
-// TODO(ville): update when this has landed: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
-type ReadEntry = any;
 
 const supportedPlatforms = ['ios', 'android', 'web'];
 
@@ -48,6 +44,13 @@ export function determineEntryPoint(projectRoot: string, platform?: string): str
   return path.relative(projectRoot, entry);
 }
 
+function sanitizedName(name: string) {
+  return name
+    .replace(/[\W_]+/g, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
 class Transformer extends Minipass {
   data: string;
   config: AppJSONConfig | BareAppConfig;
@@ -63,16 +66,16 @@ class Transformer extends Minipass {
   }
   end() {
     let replaced = this.data
-      .replace(/Hello App Display Name/g, this.config.displayName || this.config.name)
-      .replace(/HelloWorld/g, this.config.name)
-      .replace(/helloworld/g, this.config.name.toLowerCase());
+      .replace(/Hello App Display Name/g, this.config.name)
+      .replace(/HelloWorld/g, sanitizedName(this.config.name))
+      .replace(/helloworld/g, sanitizedName(this.config.name.toLowerCase()));
     super.write(replaced);
     return super.end();
   }
 }
 
 // Binary files, don't process these (avoid decoding as utf8)
-const binaryExtensions = ['.png', '.jar'];
+const binaryExtensions = ['.png', '.jar', '.keystore'];
 
 function createFileTransform(config: AppJSONConfig | BareAppConfig) {
   return function transformFile(entry: ReadEntry) {
@@ -83,17 +86,46 @@ function createFileTransform(config: AppJSONConfig | BareAppConfig) {
   };
 }
 
+/**
+ * Extract a template app to a given file path, initialize a git repo, install
+ * npm dependencies, and log information about each of the steps.
+ *
+ * @deprecated - callers want to have more control over the logging around each
+ * step, this is deprecated in favor of calling the methods that it is made up
+ * of individually
+ */
 export async function extractAndInitializeTemplateApp(
   templateSpec: PackageSpec,
   projectRoot: string,
   packageManager: 'yarn' | 'npm' = 'npm',
   config: AppJSONConfig | BareAppConfig
 ) {
+  Logger.notifications.warn(
+    'extractAndInitializeTemplateApp is deprecated. Use extractAndPrepareTemplateAppAsync instead.'
+  );
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Extracting project files...');
-  await extractTemplateAppAsync(templateSpec, projectRoot, config);
+  await extractAndPrepareTemplateAppAsync(templateSpec, projectRoot, config);
+  Logger.notifications.info(
+    { code: NotificationCode.PROGRESS },
+    'Initializing a git repository...'
+  );
+  await initGitRepoAsync(projectRoot);
+  Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Installing dependencies...');
+  await installDependenciesAsync(projectRoot, packageManager);
 
-  // Update files
-  Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Customizing project...');
+  return projectRoot;
+}
+
+/**
+ * Extract a template app to a given file path and clean up any properties left over from npm to
+ * prepare it for usage.
+ */
+export async function extractAndPrepareTemplateAppAsync(
+  templateSpec: PackageSpec,
+  projectRoot: string,
+  config: AppJSONConfig | BareAppConfig
+) {
+  await extractTemplateAppAsync(templateSpec, projectRoot, config);
 
   let appFile = new JsonFile(path.join(projectRoot, 'app.json'));
   let appJson = merge(await appFile.readAsync(), config);
@@ -116,12 +148,12 @@ export async function extractAndInitializeTemplateApp(
   delete packageJson._from;
   await packageFile.writeAsync(packageJson);
 
-  await initGitRepoAsync(projectRoot);
-  await installDependenciesAsync(projectRoot, packageManager);
-
   return projectRoot;
 }
 
+/**
+ * Extract a template app to a given file path.
+ */
 export async function extractTemplateAppAsync(
   templateSpec: PackageSpec,
   targetPath: string,
@@ -130,7 +162,7 @@ export async function extractTemplateAppAsync(
   await pacote.tarball.stream(
     templateSpec,
     tarStream => {
-      return extractTemplateAppAsyncImpl(templateSpec, targetPath, config, tarStream);
+      return extractTemplateAppAsyncImpl(targetPath, config, tarStream);
     },
     {
       cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
@@ -141,7 +173,6 @@ export async function extractTemplateAppAsync(
 }
 
 async function extractTemplateAppAsyncImpl(
-  templateSpec: PackageSpec,
   targetPath: string,
   config: AppJSONConfig | BareAppConfig,
   tarStream: Readable
@@ -158,10 +189,15 @@ async function extractTemplateAppAsyncImpl(
         if (config.name) {
           // Rewrite paths for bare workflow
           entry.path = entry.path
-            .replace(/HelloWorld/g, config.name)
-            .replace(/helloworld/g, config.name.toLowerCase());
+            .replace(
+              /HelloWorld/g,
+              entry.path.includes('android')
+                ? sanitizedName(config.name.toLowerCase())
+                : sanitizedName(config.name)
+            )
+            .replace(/helloworld/g, sanitizedName(config.name).toLowerCase());
         }
-        if (/^file$/i.test(entry.type) && path.basename(entry.path) === 'gitignore') {
+        if (entry.type && /^file$/i.test(entry.type) && path.basename(entry.path) === 'gitignore') {
           // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
           // See: https://github.com/npm/npm/issues/1862
           entry.path = entry.path.replace(/gitignore$/, '.gitignore');
@@ -175,35 +211,49 @@ async function extractTemplateAppAsyncImpl(
   });
 }
 
-async function initGitRepoAsync(root: string) {
+export async function initGitRepoAsync(
+  root: string,
+  flags: { silent: boolean; commit: boolean } = { silent: false, commit: true }
+) {
   // let's see if we're in a git tree
-  let insideGit = true;
   try {
     await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
       cwd: root,
     });
-    Logger.global.debug('New project is already inside of a git repo, skipping git init.');
+    !flags.silent &&
+      Logger.global.debug('New project is already inside of a git repo, skipping git init.');
   } catch (e) {
-    if (e.errno == 'ENOENT') {
-      Logger.global.warn('Unable to initialize git repo. `git` not in PATH.');
+    if (e.errno === 'ENOENT') {
+      !flags.silent && Logger.global.warn('Unable to initialize git repo. `git` not in PATH.');
+      return false;
     }
-    insideGit = false;
   }
 
-  if (!insideGit) {
-    try {
-      await spawnAsync('git', ['init'], { cwd: root });
-      Logger.global.info('Initialized a git repository.');
-    } catch (e) {
-      // no-op -- this is just a convenience and we don't care if it fails
+  // not in git tree, so let's init
+  try {
+    await spawnAsync('git', ['init'], { cwd: root });
+    !flags.silent && Logger.global.info('Initialized a git repository.');
+
+    if (flags.commit) {
+      await spawnAsync('git', ['add', '--all'], { cwd: root, stdio: 'ignore' });
+      await spawnAsync('git', ['commit', '-m', 'Created a new Expo app'], {
+        cwd: root,
+        stdio: 'ignore',
+      });
     }
+    return true;
+  } catch (e) {
+    // no-op -- this is just a convenience and we don't care if it fails
+    return false;
   }
 }
 
-async function installDependenciesAsync(projectRoot: string, packageManager: 'yarn' | 'npm') {
-  Logger.global.info('Installing dependencies...');
-
-  const options = { cwd: projectRoot };
+export async function installDependenciesAsync(
+  projectRoot: string,
+  packageManager: 'yarn' | 'npm',
+  flags: { silent: boolean } = { silent: false }
+) {
+  const options = { cwd: projectRoot, silent: flags.silent };
   if (packageManager === 'yarn') {
     const yarn = new YarnPackageManager(options);
     const version = await yarn.versionAsync();
@@ -220,10 +270,11 @@ async function installDependenciesAsync(projectRoot: string, packageManager: 'ya
       }
       const config = yamlString ? yaml.safeLoad(yamlString) : {};
       config.nodeLinker = 'node-modules';
-      Logger.global.warn(
-        `Yarn v${version} detected, enabling experimental Yarn v2 support using the node-modules plugin.`
-      );
-      Logger.global.info(`Writing ${yarnRc}...`);
+      !flags.silent &&
+        Logger.global.warn(
+          `Yarn v${version} detected, enabling experimental Yarn v2 support using the node-modules plugin.`
+        );
+      !flags.silent && Logger.global.info(`Writing ${yarnRc}...`);
       fs.writeFileSync(yarnRc, yaml.safeDump(config));
     }
     await yarn.installAsync();
@@ -267,7 +318,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   let { username } = user;
 
   // Evaluate the project config and throw an error if the `sdkVersion` cannot be found.
-  const { exp } = await getProjectConfigAsync(root, { skipSDKVersionRequirement: false });
+  const { exp } = getConfig(root);
 
   const name = exp.slug;
   const { version, sdkVersion } = exp;

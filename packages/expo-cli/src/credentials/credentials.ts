@@ -101,6 +101,18 @@ export const provisioningProfileSchema: CredentialSchema<appleApi.ProvisioningPr
   },
 };
 
+export const appleTeamSchema: CredentialSchema<Pick<appleApi.Team, 'id'>> = {
+  id: 'team',
+  name: 'Apple Team',
+  required: ['id'],
+  questions: {
+    id: {
+      type: 'string',
+      question: 'Apple Team ID:',
+    },
+  },
+};
+
 //
 // Android
 //

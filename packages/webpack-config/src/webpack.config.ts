@@ -1,39 +1,54 @@
 /** @internal */ /** */
 /* eslint-env node */
-
-import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
+import PnpWebpackPlugin from 'pnp-webpack-plugin';
+import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
+import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
 import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
-import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
-import PnpWebpackPlugin from 'pnp-webpack-plugin';
 import ManifestPlugin from 'webpack-manifest-plugin';
-import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
-import { boolish } from 'getenv';
-import path from 'path';
-import { CleanWebpackPlugin } from 'clean-webpack-plugin';
-
 import { projectHasModule } from '@expo/config';
-import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
+import chalk from 'chalk';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
+import {
+  IconOptions,
+  getChromeIconConfig,
+  getFaviconIconConfig,
+  getSafariIconConfig,
+  getSafariStartupImageConfig,
+} from 'expo-pwa';
+import { readFileSync } from 'fs-extra';
+import { boolish } from 'getenv';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import { parse } from 'node-html-parser';
+import path from 'path';
+
+import { withAlias, withDevServer, withNodeMocks, withOptimizations } from './addons';
+import {
+  getAliases,
+  getConfig,
+  getMode,
+  getModuleFileExtensions,
+  getPathsAsync,
+  getPublicPaths,
+} from './env';
 import { createAllLoaders } from './loaders';
 import {
+  ApplePwaWebpackPlugin,
+  ChromeIconsWebpackPlugin,
   ExpoDefinePlugin,
   ExpoHtmlWebpackPlugin,
   ExpoInterpolateHtmlPlugin,
   ExpoProgressBarPlugin,
+  ExpoPwaManifestWebpackPlugin,
+  FaviconWebpackPlugin,
 } from './plugins';
-import {
-  withAlias,
-  withCompression,
-  withDevServer,
-  withNodeMocks,
-  withOptimizations,
-  withReporting,
-} from './addons';
-
+import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 import { overrideWithPropertyOrConfig } from './utils';
+
+// Source maps are resource heavy and can cause out of memory issue for large source files.
+const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
@@ -45,7 +60,7 @@ function getDevtool(
       // When big assets are involved sources maps can become expensive and cause your process to run out of memory.
       return devtool;
     }
-    return 'source-map';
+    return shouldUseSourceMap ? 'source-map' : false;
   }
   if (development) {
     return 'cheap-module-source-map';
@@ -55,12 +70,14 @@ function getDevtool(
 
 function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output {
   const commonOutput: Output = {
-    sourceMapFilename: '[chunkhash].map',
     // We inferred the "public path" (such as / or /my-project) from homepage.
     // We use "/" in development.
     publicPath,
     // Build folder (default `web-build`)
     path: locations.production.folder,
+    // this defaults to 'window', but by setting it to 'this' then
+    // module chunks which are built will work in web workers as well.
+    globalObject: 'this',
   };
 
   if (mode === 'production') {
@@ -70,7 +87,7 @@ function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output
     // Point sourcemap entries to original disk location (format as URL on Windows)
     commonOutput.devtoolModuleFilenameTemplate = (
       info: webpack.DevtoolModuleFilenameTemplateInfo
-    ): string => locations.absolute(info.absoluteResourcePath).replace(/\\/g, '/');
+    ): string => path.relative(locations.root, info.absoluteResourcePath).replace(/\\/g, '/');
   } else {
     // Add comments that describe the file import/exports.
     // This will make it easier to debug.
@@ -93,6 +110,13 @@ export default async function(
   env: Environment,
   argv: Arguments = {}
 ): Promise<Configuration | DevConfiguration> {
+  if ('report' in env) {
+    console.warn(
+      chalk.bgRed.black(
+        `The \`report\` property of \`@expo/webpack-config\` is now deprecated.\nhttps://expo.fyi/webpack-report-property-is-deprecated`
+      )
+    );
+  }
   const config = getConfig(env);
   const mode = getMode(env);
   const isDev = mode === 'development';
@@ -107,7 +131,7 @@ export default async function(
     // isProd
   );
 
-  const locations = env.locations || (await getPathsAsync(env.projectRoot, mode));
+  const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
   const { publicPath, publicUrl } = getPublicPaths(env);
 
@@ -165,7 +189,6 @@ export default async function(
       // We generate new versions of these based on the templates
       ignore: [
         'expo-service-worker.js',
-        'favicon.ico',
         'serve.json',
         'index.html',
         'icon.png',
@@ -177,10 +200,6 @@ export default async function(
       from: locations.template.serveJson,
       to: locations.production.serveJson,
     },
-    {
-      from: locations.template.favicon,
-      to: locations.production.favicon,
-    },
   ];
 
   if (env.offline !== false) {
@@ -189,6 +208,41 @@ export default async function(
       to: locations.production.serviceWorker,
     });
   }
+
+  const templateIndex = parse(readFileSync(locations.template.indexHtml, { encoding: 'utf8' }));
+
+  // @ts-ignore
+  const templateLinks = templateIndex.querySelectorAll('link');
+  const links: HTMLLinkNode[] = templateLinks.map((value: any) => ({
+    rel: value.getAttribute('rel'),
+    media: value.getAttribute('media'),
+    href: value.getAttribute('href'),
+    sizes: value.getAttribute('sizes'),
+    node: value,
+  }));
+  // @ts-ignore
+  const templateMeta = templateIndex.querySelectorAll('meta');
+  const meta: HTMLLinkNode[] = templateMeta.map((value: any) => ({
+    name: value.getAttribute('name'),
+    content: value.getAttribute('content'),
+    node: value,
+  }));
+
+  const [manifestLink] = links.filter(
+    link => typeof link.rel === 'string' && link.rel.split(' ').includes('manifest')
+  );
+  let templateManifest = locations.template.manifest;
+  if (manifestLink && manifestLink.href) {
+    templateManifest = locations.template.get(manifestLink.href);
+  }
+
+  const ensureSourceAbsolute = (input: IconOptions | null): IconOptions | null => {
+    if (!input) return input;
+    return {
+      ...input,
+      src: locations.absolute(input.src),
+    };
+  };
 
   let webpackConfig: DevConfiguration = {
     mode,
@@ -214,17 +268,52 @@ export default async function(
       isProd && new CopyWebpackPlugin(filesToCopy),
 
       // Generate the `index.html`
-      new ExpoHtmlWebpackPlugin(env),
+      new ExpoHtmlWebpackPlugin(env, templateIndex),
 
       ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
 
-      new WebpackPWAManifestPlugin(config, {
-        publicPath,
-        projectRoot: env.projectRoot,
-        noResources: !generatePWAImageAssets,
-        filename: locations.production.manifest,
-        HtmlWebpackPlugin: ExpoHtmlWebpackPlugin,
-      }),
+      env.pwa &&
+        new ExpoPwaManifestWebpackPlugin(
+          {
+            template: templateManifest,
+            path: 'manifest.json',
+            publicPath,
+          },
+          config
+        ),
+      new FaviconWebpackPlugin(
+        {
+          projectRoot: env.projectRoot,
+          publicPath,
+          links,
+        },
+        ensureSourceAbsolute(getFaviconIconConfig(config))
+      ),
+      generatePWAImageAssets &&
+        new ApplePwaWebpackPlugin(
+          {
+            projectRoot: env.projectRoot,
+            publicPath,
+            links,
+            meta,
+          },
+          {
+            name: env.config.web.shortName,
+            isFullScreen: env.config.web.meta.apple.touchFullscreen,
+            isWebAppCapable: env.config.web.meta.apple.mobileWebAppCapable,
+            barStyle: env.config.web.meta.apple.barStyle,
+          },
+          ensureSourceAbsolute(getSafariIconConfig(env.config)),
+          ensureSourceAbsolute(getSafariStartupImageConfig(env.config))
+        ),
+      generatePWAImageAssets &&
+        new ChromeIconsWebpackPlugin(
+          {
+            projectRoot: env.projectRoot,
+            publicPath,
+          },
+          ensureSourceAbsolute(getChromeIconConfig(config))
+        ),
 
       // This gives some necessary context to module not found errors, such as
       // the requesting resource.
@@ -234,7 +323,6 @@ export default async function(
         mode,
         publicUrl,
         config,
-        productionManifestPath: locations.production.manifest,
       }),
 
       // This is necessary to emit hot updates (currently CSS only):
@@ -253,16 +341,37 @@ export default async function(
           filename: 'static/css/[name].[contenthash:8].css',
           chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
         }),
-
-      // Generate a manifest file which contains a mapping of all asset filenames
-      // to their corresponding output file so that tools can pick it up without
-      // having to parse `index.html`.
+      // Generate an asset manifest file with the following content:
+      // - "files" key: Mapping of all asset filenames to their corresponding
+      //   output file so that tools can pick it up without having to parse
+      //   `index.html`
+      // - "entrypoints" key: Array of files which are included in `index.html`,
+      //   can be used to reconstruct the HTML if necessary
       new ManifestPlugin({
         fileName: 'asset-manifest.json',
         publicPath,
         filter: ({ path }) => {
+          if (
+            path.match(/(apple-touch-startup-image|apple-touch-icon|chrome-icon|precache-manifest)/)
+          ) {
+            return false;
+          }
           // Remove compressed versions and service workers
           return !(path.endsWith('.gz') || path.endsWith('worker.js'));
+        },
+        generate: (seed: Record<string, any>, files, entrypoints) => {
+          const manifestFiles = files.reduce<Record<string, string>>((manifest, file) => {
+            if (file.name) {
+              manifest[file.name] = file.path;
+            }
+            return manifest;
+          }, seed);
+          const entrypointFiles = entrypoints.app.filter(fileName => !fileName.endsWith('.map'));
+
+          return {
+            files: manifestFiles,
+            entrypoints: entrypointFiles,
+          };
         },
       }),
 
@@ -305,7 +414,7 @@ export default async function(
   };
 
   if (isProd) {
-    webpackConfig = withCompression(withOptimizations(webpackConfig), env);
+    webpackConfig = withOptimizations(webpackConfig);
   } else {
     webpackConfig = withDevServer(webpackConfig, env, {
       allowedHost: argv.allowedHost,
@@ -313,5 +422,5 @@ export default async function(
     });
   }
 
-  return withReporting(withNodeMocks(withAlias(webpackConfig)), env);
+  return withNodeMocks(withAlias(webpackConfig, getAliases(env.projectRoot)));
 }

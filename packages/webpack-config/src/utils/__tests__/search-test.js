@@ -5,7 +5,7 @@ import path from 'path';
 import createWebpackConfigAsync from '../..';
 import * as LoaderUtils from '../search';
 
-const projectRoot = path.resolve(__dirname, '../../../tests/basic');
+const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
 
 it(`getExpoBabelLoader gets the Expo babel loader`, async () => {
   const config = await createWebpackConfigAsync({
@@ -26,7 +26,7 @@ it(`getPluginsByName gets a known plugin`, async () => {
     platform: 'web',
   });
 
-  const plugins = LoaderUtils.getPluginsByName(config, 'ExpoProgressBarPlugin');
+  const plugins = LoaderUtils.getPluginsByName(config, 'ManifestPlugin');
   expect(plugins.length).toBe(1);
   const expectedPlugin = plugins[0];
   expect(config.plugins[expectedPlugin.index]).toBe(expectedPlugin.plugin);
