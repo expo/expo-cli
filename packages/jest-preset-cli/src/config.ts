@@ -1,14 +1,10 @@
-const path = require('path');
-const readPkg = require('read-pkg');
+import path from 'path';
+import readPkg from 'read-pkg';
 
-function getConfig(cwd) {
+export function getConfig(cwd: string) {
   return {
     preset: '@expo/jest-preset-cli',
     rootDir: path.resolve(cwd),
     displayName: readPkg.sync({ cwd }).name,
   };
 }
-
-module.exports = {
-  getConfig,
-};
