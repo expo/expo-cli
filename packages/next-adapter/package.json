@@ -43,7 +43,8 @@
     "service-worker.js"
   ],
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.9"
+    "@expo/babel-preset-cli": "0.2.9",
+    "@types/prompts": "^2.0.6"
   },
   "peerDependencies": {
     "next": "^9",
@@ -59,8 +60,8 @@
     "@types/next": "^8.0.6",
     "chalk": "^4.0.0",
     "commander": "^4.0.1",
-    "enquirer": "^2.3.2",
     "fs-extra": "^8.1.0",
+    "prompts": "^2.3.2",
     "update-check": "^1.5.3"
   }
 }

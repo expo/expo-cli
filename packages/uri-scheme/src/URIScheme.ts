@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import chalk from 'chalk';
-import enquirer from 'enquirer';
+import prompts from 'prompts';
 import { statSync } from 'fs';
 import { relative } from 'path';
 
@@ -73,7 +73,7 @@ async function normalizeUriProtocolAsync(uri: any): Promise<string> {
           `\u203A Supplied URI protocol "${trimmedUri}" does not match normalized scheme "${normalizedUri}".`
         )
       );
-      const { answer } = await enquirer.prompt({
+      const { answer } = await prompts({
         type: 'confirm',
         name: 'answer',
         message: `Would you like to use "${normalizedUri}" instead?`,
