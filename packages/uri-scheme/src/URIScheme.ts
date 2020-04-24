@@ -130,7 +130,7 @@ export async function removeAsync(options: Options): Promise<string[]> {
 }
 
 export async function openAsync(
-  options: Pick<Options, 'uri' | 'ios' | 'android' | 'projectRoot' | 'manifestPath'>
+  options: Pick<Options, 'uri' | 'ios' | 'android' | 'projectRoot'> & { androidPackage?: string }
 ): Promise<void> {
   options.uri = ensureUriString(options.uri);
 
