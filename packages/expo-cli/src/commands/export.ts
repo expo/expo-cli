@@ -222,5 +222,5 @@ export default function(program: Command) {
       []
     )
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
-    .asyncActionProjectDir(action, false, true);
+    .asyncActionProjectDir(action, { checkConfig: true });
 }

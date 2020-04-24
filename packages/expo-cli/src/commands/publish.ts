@@ -37,13 +37,19 @@ export async function action(projectDir: string, options: Options = {}) {
 
   if (pkg.dependencies['expo-updates'] && pkg.dependencies['expokit']) {
     log.warn(
-      `Warning: You have both the ${chalk.bold('expokit')} and ${chalk.bold('expo-updates')} packages installed in package.json.`
+      `Warning: You have both the ${chalk.bold('expokit')} and ${chalk.bold(
+        'expo-updates'
+      )} packages installed in package.json.`
     );
     log.warn(
-      `These two packages are incompatible and ${chalk.bold('publishing updates with expo-updates will not work if expokit is installed.')}`
+      `These two packages are incompatible and ${chalk.bold(
+        'publishing updates with expo-updates will not work if expokit is installed.'
+      )}`
     );
     log.warn(
-      `If you intent to use ${chalk.bold('expo-updates')}, please remove ${chalk.bold('expokit')} from your dependencies.`
+      `If you intent to use ${chalk.bold('expo-updates')}, please remove ${chalk.bold(
+        'expokit'
+      )} from your dependencies.`
     );
   }
 
@@ -238,5 +244,5 @@ export default function(program: Command) {
       "The release channel to publish to. Default is 'default'.",
       'default'
     )
-    .asyncActionProjectDir(action, true);
+    .asyncActionProjectDir(action);
 }

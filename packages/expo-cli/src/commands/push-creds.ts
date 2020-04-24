@@ -40,7 +40,7 @@ export default function(program: Command) {
       });
 
       log('All done!');
-    }, true);
+    });
 
   program
     .command('push:android:show [project-dir]')
@@ -59,7 +59,7 @@ export default function(program: Command) {
       } else {
         throw new Error('Server returned an invalid result!');
       }
-    }, true);
+    });
 
   program
     .command('push:android:clear [project-dir]')
@@ -79,7 +79,7 @@ export default function(program: Command) {
       await apiClient.deleteAsync(`credentials/push/android/${remotePackageName}`);
 
       log('All done!');
-    }, true);
+    });
 
   const vapidSubjectDescription =
     'URL or `mailto:` URL which provides a point of contact in case the push service needs to contact the message sender.';
@@ -98,7 +98,7 @@ export default function(program: Command) {
       }
 
       await _uploadWebPushCredientials(projectDir, options);
-    }, true);
+    });
 
   program
     .command('push:web:generate [project-dir]')
@@ -112,7 +112,7 @@ export default function(program: Command) {
       const results = await _uploadWebPushCredientials(projectDir, options);
       log(chalk.green(`Your VAPID public key is: ${results.vapidPublicKey}`));
       log(chalk.green(`Your VAPID private key is: ${results.vapidPrivateKey}`));
-    }, true);
+    });
 
   program
     .command('push:web:show [project-dir]')
@@ -140,7 +140,7 @@ export default function(program: Command) {
       } else {
         throw new Error('Server returned an invalid result!');
       }
-    }, true);
+    });
 
   program
     .command('push:web:clear [project-dir]')
@@ -160,7 +160,7 @@ export default function(program: Command) {
       log("Deleting API key from Expo's servers...");
 
       await apiClient.deleteAsync(`credentials/push/web/${remotePackageName}`);
-    }, true);
+    });
 }
 
 async function _uploadWebPushCredientials(projectDir: string, options: VapidData) {

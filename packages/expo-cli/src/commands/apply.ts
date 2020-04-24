@@ -16,19 +16,15 @@ export default function(program: Command) {
     .description(
       'Take the configuration from app.json or app.config.js and apply it to a native project.'
     )
-    .asyncActionProjectDir(
-      async (projectDir: string, options: Options) => {
-        if (!options.platform || options.platform === 'ios') {
-          await configureIOSProjectAsync(projectDir);
-          logConfigWarningsIOS();
-        }
+    .asyncActionProjectDir(async (projectDir: string, options: Options) => {
+      if (!options.platform || options.platform === 'ios') {
+        await configureIOSProjectAsync(projectDir);
+        logConfigWarningsIOS();
+      }
 
-        if (!options.platform || options.platform === 'android') {
-          await configureAndroidProjectAsync(projectDir);
-          logConfigWarningsAndroid();
-        }
-      },
-      /* skipProjectValidation: */ true,
-      /* skipAuthCheck: */ true
-    );
+      if (!options.platform || options.platform === 'android') {
+        await configureAndroidProjectAsync(projectDir);
+        logConfigWarningsAndroid();
+      }
+    });
 }

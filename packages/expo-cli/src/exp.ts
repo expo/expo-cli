@@ -115,10 +115,9 @@ Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boole
 // - Runs AsyncAction with the projectDir as an argument
 Command.prototype.asyncActionProjectDir = function(
   asyncFn: Action,
-  skipProjectValidation: boolean,
-  skipAuthCheck: boolean
+  options: { checkConfig?: boolean } = {}
 ) {
-  this.option('--config [file]', 'Specify a path to app.json');
+  this.option('--config [file]', 'Specify a path to app.json or app.config.js');
   return this.asyncAction(async (projectDir: string, ...args: any[]) => {
     const opts = args[0];
 
@@ -300,7 +299,7 @@ Command.prototype.asyncActionProjectDir = function(
     // If the packager/manifest server is running and healthy, there is no need
     // to rerun Doctor because the directory was already checked previously
     // This is relevant for command such as `send`
-    if (!skipProjectValidation && (await Project.currentStatus(projectDir)) !== 'running') {
+    if (options.checkConfig && (await Project.currentStatus(projectDir)) !== 'running') {
       let spinner = ora('Making sure project is set up correctly...').start();
       log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
