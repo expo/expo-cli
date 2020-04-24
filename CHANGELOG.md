@@ -6,6 +6,9 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- Deprecate `expo ios` in favor of `expo start --ios` or pressing `i` in the terminal UI after running `expo start`. ([#1987](https://github.com/expo/expo-cli/pull/1987) by [@evanbacon](https://github.com/evanbacon))
+- Deprecate `expo android` in favor of `expo start --android` or pressing `a` in the terminal UI after running `expo start`. ([#1987](https://github.com/expo/expo-cli/pull/1987) by [@evanbacon](https://github.com/evanbacon))
+
 ### 🎉 New features
 
 ### 🐛 Bug fixes
@@ -50,12 +53,12 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ## [Tue Apr 21 10:52:42 2020 +0200](https://github.com/expo/expo-cli/commit/771a53)
 
- - @expo/dev-tools@0.13.0
- - @expo/electron-adapter@0.0.0-alpha.48
- - expo-cli@3.19.0
- - @expo/next-adapter@2.1.0
- - @expo/webpack-config@0.12.0
- - @expo/xdl@57.8.30
+- @expo/dev-tools@0.13.0
+- @expo/electron-adapter@0.0.0-alpha.48
+- expo-cli@3.19.0
+- @expo/next-adapter@2.1.0
+- @expo/webpack-config@0.12.0
+- @expo/xdl@57.8.30
 
 ### 🐛 Bug fixes
 
@@ -69,9 +72,9 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ## [Mon Apr 20 14:52:56 2020 +0200](https://github.com/expo/expo-cli/commit/771a53)
 
- - @expo/dev-tools@0.12.6
- - expo-cli@3.18.7
- - @expo/xdl@57.8.29
+- @expo/dev-tools@0.12.6
+- expo-cli@3.18.7
+- @expo/xdl@57.8.29
 
 ### 🤷‍♂️ Chores
 
@@ -88,7 +91,7 @@ This is the log of notable changes to Expo CLI and related packages.
 - @expo/webpack-config@0.11.24
 - @expo/xdl@57.8.27
 
-### 🐛 Bug fixes 
+### 🐛 Bug fixes
 
 - `expo start -c` will now properly clear cache as expected (https://github.com/expo/expo-cli/commit/48d67f).
 - Fix keystore uploading with apiv2 (https://github.com/expo/expo-cli/commit/9fd163).
@@ -105,7 +108,7 @@ This is the log of notable changes to Expo CLI and related packages.
 - expo-cli@3.18.4
 - @expo/xdl@57.8.26
 
-### 🐛 Bug fixes 
+### 🐛 Bug fixes
 
 - Fix typo that was causing android keystore updates to fail (https://github.com/expo/expo-cli/pull/1909).
 
@@ -115,7 +118,7 @@ This is the log of notable changes to Expo CLI and related packages.
 - expo-cli@3.18.3
 - @expo/xdl@57.8.25
 
-### 🐛 Bug fixes 
+### 🐛 Bug fixes
 
 - Do not override `google-services.json` contents since SDK 37 (https://github.com/expo/expo-cli/pull/1897).
 
@@ -149,7 +152,6 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - Better contextual error when a non-interactive build fails in a way that we cannot recover from without user intervention (https://github.com/expo/expo-cli/pull/1891).
 - Better support for non-interactive mode in build - auto-select credentials when possible (https://github.com/expo/expo-cli/commit/c94638e).
-
 
 ## [Tue Apr 14 17:47:28 2020 -0700](https://github.com/expo/expo-cli/commit/5bc8404a0d03e0b419ba535501ea07927196ef6a)
 
