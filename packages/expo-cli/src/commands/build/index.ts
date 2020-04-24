@@ -118,7 +118,7 @@ export default function(program: Command) {
           dev: typeof options.dev === 'undefined' ? false : options.dev,
         });
       },
-      /* skipProjectValidation: */ false,
+      /* skipProjectValidation: */ true,
       /* skipAuthCheck: */ true
     );
 

@@ -51,5 +51,5 @@ export default function(program: Command) {
     //.help('You must have the server running for this command to work')
     .option('-s, --send-to  [dest]', 'Specifies the email address to send this URL to')
     .urlOpts()
-    .asyncActionProjectDir(action);
+    .asyncActionProjectDir(action, true);
 }
