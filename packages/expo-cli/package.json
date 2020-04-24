@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "start": "yarn run prepare && yarn run watch",
-    "build": "tsc",
+    "build": "babel src --out-dir build --extensions \".ts,.tsx\" --source-maps",
     "watch": "tsc --watch",
     "prepare": "yarn run clean && yarn run build",
     "clean": "rm -rf build ./tsconfig.tsbuildinfo",
@@ -57,7 +57,8 @@
     "scripts": "build/**/*.js"
   },
   "devDependencies": {
-    "@babel/core": "^7.4.5",
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
     "@expo/babel-preset-cli": "0.2.9",
     "@types/ansi-regex": "^4.0.0",
     "@types/dateformat": "^3.0.0",
@@ -71,6 +72,7 @@
     "@types/split": "^1.0.0",
     "@types/targz": "^1.0.0",
     "@types/wordwrap": "^1.0.0",
+    "babel-preset-minify": "^0.5.1",
     "pkg": "^4.2.1"
   },
   "dependencies": {

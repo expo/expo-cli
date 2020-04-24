@@ -1,3 +1,11 @@
 module.exports = {
-  presets: ['@expo/babel-preset-cli'],
+  presets: [
+    '@expo/babel-preset-cli',
+    [
+      'minify',
+      {
+        mangle: false,
+      },
+    ],
+  ],
 };
