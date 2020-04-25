@@ -10,9 +10,14 @@ import {
   Team,
 } from '../../appleApi';
 import { IosDistCredentials, IosPushCredentials } from '../credentials';
+
+/*
+Mock Credential objects for Jester 
+*/
 const today = new Date();
 const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-export const testExperienceName = 'testApp';
+export const testSlug = 'testApp';
+export const testExperienceName = `@jester/${testSlug}`;
 export const testBundleIdentifier = 'test.com.app';
 export const testAppleTeam: Team = {
   id: 'test-team-id',
@@ -116,6 +121,12 @@ export const jester2: User = {
   sessionSecret: 'jester2-secret',
 };
 
+export function getApiV2MockCredentials(overridenMock: { [key: string]: any } = {}) {
+  const defaultCredentialsApiV2Mock = {
+    getAsync: jest.fn(() => testAllCredentials),
+  };
+  return getApiV2Mock(merge(defaultCredentialsApiV2Mock, overridenMock));
+}
 export function getApiV2Mock(overridenMock: { [key: string]: any } = {}) {
   const defaultMock = {
     sessionSecret: 'test-session',
@@ -131,12 +142,17 @@ export function getApiV2Mock(overridenMock: { [key: string]: any } = {}) {
 export const testAppJson = {
   name: 'testing 123',
   version: '0.1.0',
-  slug: 'testing-123',
+  slug: testSlug,
   sdkVersion: '33.0.0',
-  owner: 'jester2',
+  ios: { bundleIdentifier: testBundleIdentifier },
 };
-export function getCtxMock() {
-  return {
+export const testAppJsonWithDifferentOwner = {
+  ...testAppJson,
+  owner: jester2.username,
+};
+
+export function getCtxMock(overridenMock: { [key: string]: any } = {}) {
+  const defaultMock = {
     ios: {
       getDistCert: jest.fn(),
       createDistCert: jest.fn(() => testIosDistCredential),
@@ -161,4 +177,5 @@ export function getCtxMock() {
     hasProjectContext: true,
     manifest: testAppJson,
   };
+  return merge(defaultMock, overridenMock);
 }

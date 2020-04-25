@@ -1,11 +1,12 @@
 import { IosApi } from '../api';
 import {
-  getApiV2Mock,
+  getApiV2MockCredentials,
   getCtxMock,
   jester,
   jester2,
   testAllCredentials,
   testAppCredential,
+  testAppJsonWithDifferentOwner,
   testAppleTeam,
   testBundleIdentifier,
   testDistCert,
@@ -33,8 +34,8 @@ describe("IosApi - With Jester 2's Project Context", () => {
   let ctxMock;
 
   beforeEach(() => {
-    apiV2Mock = getApiV2Mock();
-    ctxMock = getCtxMock();
+    apiV2Mock = getApiV2MockCredentials();
+    ctxMock = getCtxMock({ manifest: testAppJsonWithDifferentOwner });
     iosApi = new IosApi(jester).withApiClient(apiV2Mock).withProjectContext(ctxMock);
   });
   it('getAllCredentials', async () => {
@@ -59,7 +60,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     const postAsync = jest.fn(() => {
       return { id: 666 };
     });
-    apiV2Mock = getApiV2Mock({ postAsync });
+    apiV2Mock = getApiV2MockCredentials({ postAsync });
     iosApi = iosApi.withApiClient(apiV2Mock);
     const newCred = await iosApi.createDistCert(testDistCert);
 
@@ -78,7 +79,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     const putAsync = jest.fn(() => {
       return { id: credentialsId };
     });
-    apiV2Mock = getApiV2Mock({ putAsync });
+    apiV2Mock = getApiV2MockCredentials({ putAsync });
     iosApi = iosApi.withApiClient(apiV2Mock);
     const newCred = await iosApi.updateDistCert(credentialsId, testDistCert);
 
@@ -117,7 +118,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     const postAsync = jest.fn(() => {
       return { id: 666 };
     });
-    apiV2Mock = getApiV2Mock({ postAsync });
+    apiV2Mock = getApiV2MockCredentials({ postAsync });
     iosApi = iosApi.withApiClient(apiV2Mock);
     const newCred = await iosApi.createPushKey(testPushKey);
 
@@ -136,7 +137,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     const putAsync = jest.fn(() => {
       return { id: credentialsId };
     });
-    apiV2Mock = getApiV2Mock({ putAsync });
+    apiV2Mock = getApiV2MockCredentials({ putAsync });
     iosApi = iosApi.withApiClient(apiV2Mock);
     const newCred = await iosApi.updatePushKey(credentialsId, testPushKey);
 
@@ -190,7 +191,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     };
     testAllCredentialsWithLegacyCert.appCredentials = [testAppCredentialsWithLegacyCert];
     const getAsync = jest.fn(() => testAllCredentialsWithLegacyCert);
-    apiV2Mock = getApiV2Mock({ getAsync });
+    apiV2Mock = getApiV2MockCredentials({ getAsync });
     iosApi = iosApi.withApiClient(apiV2Mock);
 
     const credsFromServer = await iosApi.getPushCert(testExperienceName, testBundleIdentifier);
