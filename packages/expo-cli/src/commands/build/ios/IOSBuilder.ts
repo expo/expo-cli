@@ -1,3 +1,4 @@
+import os from 'os';
 import chalk from 'chalk';
 import pickBy from 'lodash/pickBy';
 import get from 'lodash/get';
@@ -5,6 +6,7 @@ import { XDLError } from '@expo/xdl';
 
 import { Dictionary } from 'lodash';
 import terminalLink from 'terminal-link';
+import semver from 'semver';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
 import * as utils from '../utils';
@@ -41,6 +43,8 @@ class IOSBuilder extends BaseBuilder {
 
   async run(): Promise<void> {
     await this.validateProject();
+    this.maybeWarnDamagedSimulator();
+    log.addNewLineIfNone();
     await this.checkForBuildInProgress();
     if (this.options.type === 'archive') {
       await this.prepareCredentials();
@@ -50,6 +54,7 @@ class IOSBuilder extends BaseBuilder {
       await this.checkStatusBeforeBuild();
     }
     await this.build(publishedExpIds);
+    this.maybeWarnDamagedSimulator();
   }
 
   async validateProject() {
@@ -320,6 +325,26 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       } else {
         // something weird happened, let's assume the icon is correct
       }
+    }
+  }
+
+  // warns for "damaged" builds when targeting simulator
+  // see: https://github.com/expo/expo-cli/issues/1197
+  maybeWarnDamagedSimulator() {
+    // see: https://en.wikipedia.org/wiki/Darwin_%28operating_system%29#Release_history
+    const isMacOsCatalinaOrLater =
+      os.platform() === 'darwin' && semver.satisfies(os.release(), '>=19.0.0');
+
+    if (isMacOsCatalinaOrLater && this.options.type === 'simulator') {
+      log.newLine();
+      log(
+        chalk.bold(
+          `🚨 If the build is not installable on your simulator because of "${chalk.underline(
+            `... is damaged and can't be opened.`
+          )}", please run:`
+        )
+      );
+      log(chalk.grey.bold('xattr -rd com.apple.quarantine /path/to/your.app'));
     }
   }
 }
