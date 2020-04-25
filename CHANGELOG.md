@@ -6,10 +6,38 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+### 🤷‍♂️ Chores
+
+## [Sat Apr 25 16:26:28 2020 -0700](https://github.com/expo/expo-cli/commit/8a805d)
+
+- @expo/babel-preset-cli@0.2.10
+- @expo/config@3.1.4
+- @expo/dev-tools@0.13.2
+- @expo/electron-adapter@0.0.0-alpha.50
+- expo-cli@3.19.2
+- expo-codemod@1.0.20
+- expo-optimize@0.1.22
+- @expo/image-utils@0.2.21
+- @expo/json-file@8.2.12
+- @expo/metro-config@0.0.9
+- @expo/next-adapter@2.1.2
+- @expo/osascript@2.0.15
+- @expo/package-manager@0.0.17
+- pod-install@0.0.0-alpha.12
+- expo-pwa@0.0.10
+- @expo/schemer@1.3.11
+- uri-scheme@1.0.7
+- @expo/webpack-config@0.12.2
+- @expo/xdl@57.8.32
+
+### 🛠 Breaking changes
+
 - Deprecate `expo ios` in favor of `expo start --ios` or pressing `i` in the terminal UI after running `expo start`. ([#1987](https://github.com/expo/expo-cli/pull/1987) by [@evanbacon](https://github.com/evanbacon))
 - Deprecate `expo android` in favor of `expo start --android` or pressing `a` in the terminal UI after running `expo start`. ([#1987](https://github.com/expo/expo-cli/pull/1987) by [@evanbacon](https://github.com/evanbacon))
-
-### 🎉 New features
 
 ### 🐛 Bug fixes
 
