@@ -13,23 +13,29 @@ const isSupported = supportedVersions.some(function(supported) {
   return semver.satisfies(version, supported.range);
 });
 
-if (isSupported) {
+const versionInfo = supportedVersions
+  .map(supported => '* ' + supported.range + ' (' + supported.name + ')')
+  .join('\n');
+
+const maxSupportedVersion = supportedVersions[supportedVersions.length - 1];
+const versionIsHigherThanSupported = semver.gtr(version, maxSupportedVersion.range);
+
+if (versionIsHigherThanSupported) {
+  console.error(
+    chalk.yellow(
+      `WARNING: Node.js version ${version} has not yet been tested.\n\n` +
+        'expo-cli supports following Node.js versions:\n' +
+        versionInfo
+    )
+  );
+}
+
+if (isSupported || versionIsHigherThanSupported) {
   require('../build/exp.js').run('expo');
 } else {
-  const versionInfo = supportedVersions
-    .map(function(supported) {
-      return '* ' + supported.range + ' (' + supported.name + ')';
-    })
-    .join('\n');
-
-  const maxSupportedVersion = supportedVersions[supportedVersions.length - 1];
-  const versionIsHigherThanSupported = semver.gtr(version, maxSupportedVersion.range);
-
   console.error(
     chalk.red(
-      'ERROR: Node.js version ' +
-        version +
-        ` is ${versionIsHigherThanSupported ? 'not yet' : 'no longer'} supported.\n\n` +
+      `ERROR: Node.js version ${version} is no longer supported.\n\n` +
         'expo-cli supports following Node.js versions:\n' +
         versionInfo
     )
