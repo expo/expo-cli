@@ -5,6 +5,7 @@ import get from 'lodash/get';
 
 import { AndroidCredentials, Credentials } from '@expo/xdl';
 import { ExpoConfig } from '@expo/config';
+import invariant from 'invariant';
 import { Context } from '../../credentials';
 import { DownloadKeystore } from '../../credentials/views/AndroidCredentials';
 
@@ -31,9 +32,10 @@ export default class AppSigningOptInProcess {
   async run(): Promise<void> {
     const ctx = new Context();
     await ctx.init(this.projectDir);
-    await this.init(ctx.manifest.slug);
+    invariant(ctx.manifest.slug, 'app.json slug field must be set');
+    await this.init(ctx.manifest.slug as string);
 
-    const view = new DownloadKeystore(ctx.manifest.slug);
+    const view = new DownloadKeystore(ctx.manifest.slug as string);
     await view.fetch(ctx);
     await view.save(ctx, this.signKeystore, true);
 

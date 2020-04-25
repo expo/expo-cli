@@ -136,6 +136,7 @@ export default class ApiV2Client {
 
   async deleteAsync(
     methodName: string,
+    args: QueryParameters = {},
     extraOptions?: Partial<RequestOptions>,
     returnEntireResponse: boolean = false
   ) {
@@ -143,6 +144,7 @@ export default class ApiV2Client {
       methodName,
       {
         httpMethod: 'delete',
+        queryParameters: args,
       },
       extraOptions,
       returnEntireResponse

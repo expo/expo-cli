@@ -1,4 +1,5 @@
 import get from 'lodash/get';
+import invariant from 'invariant';
 import prompt, { ChoiceType, Question } from '../../prompt';
 import log from '../../log';
 
@@ -125,7 +126,8 @@ export class SelectAndroidExperience implements IView {
         },
       ]);
       if (runProjectContext) {
-        const view = new androidView.ExperienceView(ctx.manifest.slug, null);
+        invariant(ctx.manifest.slug, 'app.json slug field must be set');
+        const view = new androidView.ExperienceView(ctx.manifest.slug as string, null);
         CredentialsManager.get().changeMainView(view);
         return view;
       }
