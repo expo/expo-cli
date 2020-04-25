@@ -524,6 +524,7 @@ export async function bundleAssetsAsync(projectDir, args) {
     );
     return;
   }
+
   let manifest;
   try {
     manifest = JSON.parse(await fs.readFile(bundledManifestPath, 'utf8'));
@@ -535,5 +536,28 @@ export async function bundleAssetsAsync(projectDir, args) {
   if (!manifest || !Object.keys(manifest).length) {
     throw new Error(`The manifest at '${bundledManifestPath}' was empty or invalid.`);
   }
-  await AssetBundle.bundleAsync(null, manifest.bundledAssets, args.dest);
+
+  await AssetBundle.bundleAsync(null, manifest.bundledAssets, args.dest, getExportUrl(manifest));
+}
+
+/**
+ * This function extracts the exported public URL that is set in the manifest
+ * when the developer runs `expo export --public-url x`. We use this to ensure
+ * that we fetch the resources from the appropriate place when doing builds
+ * against self-hosted apps.
+ */
+function getExportUrl(manifest) {
+  const { bundleUrl } = manifest;
+  if (bundleUrl.includes(AssetBundle.DEFAULT_CDN_HOST)) {
+    return null;
+  }
+
+  try {
+    const bundleUrlParts = bundleUrl.split('/');
+    return bundleUrlParts.slice(0, bundleUrlParts.length - 2).join('/');
+  } catch (e) {
+    throw Error(
+      `Expected bundleUrl to be of the format https://domain/bundles/bundle-hash-id, ${bundleUrl} does not follow this format.`
+    );
+  }
 }
