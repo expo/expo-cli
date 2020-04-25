@@ -37,6 +37,7 @@ import {
   getProvisioningProfileFromParams,
   useProvisioningProfileFromParams,
 } from '../../../credentials/views/IosProvisioningProfile';
+import { IosAppCredentials, IosDistCredentials } from '../../../credentials/credentials';
 
 class IOSBuilder extends BaseBuilder {
   appleCtx?: apple.AppleCtx;
@@ -149,21 +150,102 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
           ErrorCodes.NON_INTERACTIVE,
           'Unable to proceed, see the above error message.'
         );
+      }
+
+      log(
+        chalk.bold.red(
+          'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
+        )
+      );
+      throw e;
+    } finally {
+      const credentials = await context.ios.getAllCredentials();
+      displayProjectCredentials(experienceName, bundleIdentifier, credentials);
+    }
+  }
+
+  async _setupDistCert(
+    ctx: Context,
+    experienceName: string,
+    bundleIdentifier: string,
+    appCredentials: IosAppCredentials
+  ): Promise<void> {
+    try {
+      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
+      const distCertFromParams = await getDistCertFromParams(this.options);
+      if (distCertFromParams) {
+        await useDistCertFromParams(ctx, appCredentials, distCertFromParams);
       } else {
-        log(
-          chalk.bold.red(
-            'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
-          )
+        await runCredentialsManager(
+          ctx,
+          new SetupIosDist({ experienceName, bundleIdentifier, nonInteractive })
         );
       }
+    } catch (e) {
+      log.error('Failed to set up Distribution Certificate');
+      throw e;
     }
+  }
 
-    const credentials = await context.ios.getAllCredentials();
-    displayProjectCredentials(experienceName, bundleIdentifier, credentials);
+  async _setupPushCert(
+    ctx: Context,
+    experienceName: string,
+    bundleIdentifier: string,
+    appCredentials: IosAppCredentials
+  ): Promise<void> {
+    try {
+      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
+      const pushKeyFromParams = await getPushKeyFromParams(this.options);
+      if (pushKeyFromParams) {
+        await usePushKeyFromParams(ctx, appCredentials, pushKeyFromParams);
+      } else {
+        await runCredentialsManager(
+          ctx,
+          new SetupIosPush({ experienceName, bundleIdentifier, nonInteractive })
+        );
+      }
+    } catch (e) {
+      log.error('Failed to set up Push Key');
+      throw e;
+    }
+  }
+
+  async _setupProvisioningProfile(
+    ctx: Context,
+    experienceName: string,
+    bundleIdentifier: string,
+    appCredentials: IosAppCredentials,
+    distributionCert: IosDistCredentials
+  ) {
+    try {
+      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
+      const provisioningProfileFromParams = await getProvisioningProfileFromParams(this.options);
+      if (provisioningProfileFromParams) {
+        await useProvisioningProfileFromParams(
+          ctx,
+          appCredentials,
+          this.options.teamId!,
+          provisioningProfileFromParams,
+          distributionCert
+        );
+      } else {
+        await runCredentialsManager(
+          ctx,
+          new SetupIosProvisioningProfile({
+            experienceName,
+            bundleIdentifier,
+            distCert: distributionCert,
+            nonInteractive,
+          })
+        );
+      }
+    } catch (e) {
+      log.error('Failed to set up Provisioning Profile');
+      throw e;
+    }
   }
 
   async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {
-    const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
     const appCredentials = await ctx.ios.getAppCredentials(experienceName, bundleIdentifier);
 
     if (ctx.hasAppleCtx()) {
@@ -173,16 +255,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
         { enablePushNotifications: true }
       );
     }
-
-    const distCertFromParams = await getDistCertFromParams(this.options);
-    if (distCertFromParams) {
-      await useDistCertFromParams(ctx, appCredentials, distCertFromParams);
-    } else {
-      await runCredentialsManager(
-        ctx,
-        new SetupIosDist({ experienceName, bundleIdentifier, nonInteractive })
-      );
-    }
+    await this._setupDistCert(ctx, experienceName, bundleIdentifier, appCredentials);
 
     const distributionCert = await ctx.ios.getDistCert(experienceName, bundleIdentifier);
     if (!distributionCert) {
@@ -192,36 +265,15 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       );
     }
 
-    const pushKeyFromParams = await getPushKeyFromParams(this.options);
-    if (pushKeyFromParams) {
-      await usePushKeyFromParams(ctx, appCredentials, pushKeyFromParams);
-    } else {
-      await runCredentialsManager(
-        ctx,
-        new SetupIosPush({ experienceName, bundleIdentifier, nonInteractive })
-      );
-    }
+    await this._setupPushCert(ctx, experienceName, bundleIdentifier, appCredentials);
 
-    const provisioningProfileFromParams = await getProvisioningProfileFromParams(this.options);
-    if (provisioningProfileFromParams) {
-      await useProvisioningProfileFromParams(
-        ctx,
-        appCredentials,
-        this.options.teamId!,
-        provisioningProfileFromParams,
-        distributionCert
-      );
-    } else {
-      await runCredentialsManager(
-        ctx,
-        new SetupIosProvisioningProfile({
-          experienceName,
-          bundleIdentifier,
-          distCert: distributionCert,
-          nonInteractive,
-        })
-      );
-    }
+    await this._setupProvisioningProfile(
+      ctx,
+      experienceName,
+      bundleIdentifier,
+      appCredentials,
+      distributionCert
+    );
   }
 
   async clearAndRevokeCredentialsIfRequested(ctx: Context, projectMetadata: any): Promise<void> {
