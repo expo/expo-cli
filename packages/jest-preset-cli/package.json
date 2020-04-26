@@ -1,27 +1,18 @@
 {
   "name": "@expo/jest-preset-cli",
   "version": "0.0.0",
-  "main": "build/index.js",
   "description": "Shared Jest preset for Expo CLI packages",
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
-    "directory": "packages/jest-preset"
+    "directory": "packages/jest-preset-cli"
   },
   "author": "Expo <support@expo.io>",
   "license": "MIT",
   "files": [
     "jest-preset.js",
-    "unit",
-    "build"
+    "unit"
   ],
-  "scripts": {
-    "start": "yarn prepare && yarn watch",
-    "watch": "tsc --watch",
-    "build": "tsc",
-    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
-    "prepare": "yarn clean && yarn build"
-  },
   "dependencies": {
     "@expo/babel-preset-cli": "0.2.10",
     "read-pkg": "^5.2.0"
