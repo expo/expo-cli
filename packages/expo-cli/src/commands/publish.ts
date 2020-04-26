@@ -47,7 +47,7 @@ export async function action(projectDir: string, options: Options = {}) {
       )}`
     );
     log.warn(
-      `If you intent to use ${chalk.bold('expo-updates')}, please remove ${chalk.bold(
+      `If you intend to use ${chalk.bold('expo-updates')}, please remove ${chalk.bold(
         'expokit'
       )} from your dependencies.`
     );
