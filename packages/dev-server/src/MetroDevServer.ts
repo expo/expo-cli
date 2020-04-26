@@ -1,5 +1,5 @@
 import { getConfig, resolveModule } from '@expo/config';
-import { createDevServerMiddleware } from '@react-native-community/dev-server-api';
+import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
 import Log from '@expo/bunyan';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import bodyParser from 'body-parser';
@@ -12,7 +12,7 @@ export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & { logger: Log 
 export async function runMetroDevServerAsync(projectRoot: string, options: MetroDevServerOptions) {
   const { exp } = getConfig(projectRoot);
   const Metro = require(resolveModule('metro', projectRoot, exp));
-  // TODO(ville): implement a reporter
+
   const reporter = new LogReporter(options.logger);
 
   const metroConfig = await ExpoMetroConfig.loadAsync(projectRoot, { reporter, ...options });
