@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.11",
-    "@expo/jest-preset-cli": "^0.0.0",
+    "@expo/jest-preset-cli": "0.0.0",
     "@types/babel__code-frame": "^7.0.1",
     "@types/fs-extra": "^7.0.0",
     "@types/json5": "^0.0.30",

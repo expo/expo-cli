@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.11",
-    "@expo/jest-preset-cli": "^0.0.0",
+    "@expo/jest-preset-cli": "0.0.0",
     "@types/globby": "^9.1.0",
     "@types/jscodeshift": "^0.6.0",
     "@types/multimatch": "^2.1.3",
