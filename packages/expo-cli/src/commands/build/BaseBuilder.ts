@@ -299,7 +299,7 @@ ${job.id}
     { interval = 30, publicUrl }: { interval?: number; publicUrl?: string } = {}
   ): Promise<any> {
     log(
-      `Waiting for build to complete.\nYou can press Ctrl+C to exit. It won't cancel the build, you'll able to monitor it at the printed URL.`
+      `Waiting for build to complete.\nYou can press Ctrl+C to exit. It won't cancel the build, you'll be able to monitor it at the printed URL.`
     );
     let spinner = ora().start();
     while (true) {
