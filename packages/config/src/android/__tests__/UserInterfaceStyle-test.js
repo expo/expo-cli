@@ -10,8 +10,7 @@ import { readAndroidManifestAsync } from '../Manifest';
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
 
-const EXAMPLE_MAIN_ACTIVITY_BEFORE = `
-package com.helloworld;
+const EXAMPLE_MAIN_ACTIVITY_BEFORE = `package com.helloworld;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
@@ -57,6 +56,17 @@ describe('User interface style', () => {
         android: { userInterfaceStyle: 'light' },
       })
     ).toBe('light');
+  });
+
+  it(`adds the require imports if needed`, () => {
+    let result = addOnConfigurationChangedMainActivity(
+      { userInterfaceStyle: 'light' },
+      EXAMPLE_MAIN_ACTIVITY_BEFORE
+    );
+
+    expect(result.split('\n')[0]).toMatch('package com.helloworld;');
+    expect(result).toMatch('import android.content.Intent;');
+    expect(result).toMatch('import android.content.res.Configuration');
   });
 
   it(`adds the onConfigurationChanged method in MainActivity.java if userInterfaceStyle is given`, () => {
