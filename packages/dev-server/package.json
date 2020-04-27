@@ -50,7 +50,6 @@
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.2.1",
-    "body-parser": "^1.19.0",
     "jest": "^25.3.0",
     "node-fetch": "^2.6.0"
   },
