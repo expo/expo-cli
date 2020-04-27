@@ -31,6 +31,7 @@
     "xmldom": "~0.1.31"
   },
   "devDependencies": {
+    "@expo/babel-preset-cli": "0.2.9",
     "@expo/jest-preset-cli": "^0.0.0",
     "@types/base64-js": "^1.2.5",
     "@types/xmldom": "^0.1.29"
