@@ -1,6 +1,6 @@
-const { getConfig } = require('@expo/jest-preset-cli');
-
 module.exports = {
-  ...getConfig(__dirname),
+  preset: '@expo/jest-preset-cli',
+  displayName: require('./package').name,
+  rootDir: __dirname,
   roots: ['__mocks__', 'src'],
 };
