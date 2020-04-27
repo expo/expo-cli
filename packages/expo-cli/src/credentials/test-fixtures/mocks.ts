@@ -130,7 +130,7 @@ export function getApiV2MockCredentials(overridenMock: { [key: string]: any } = 
 export function getApiV2Mock(overridenMock: { [key: string]: any } = {}) {
   const defaultMock = {
     sessionSecret: 'test-session',
-    getAsync: jest.fn(() => testAllCredentials),
+    getAsync: jest.fn(),
     postAsync: jest.fn(),
     putAsync: jest.fn(),
     deleteAsync: jest.fn(),
