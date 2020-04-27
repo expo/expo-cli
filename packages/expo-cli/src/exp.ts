@@ -4,6 +4,7 @@ import url from 'url';
 
 import ProgressBar from 'progress';
 import last from 'lodash/last';
+import leven from 'leven';
 import compact from 'lodash/compact';
 import findLastIndex from 'lodash/findLastIndex';
 import boxen from 'boxen';
@@ -363,9 +364,15 @@ function runAsync(programName: string) {
     });
 
     program.on('command:*', subCommand => {
-      log.warn(
-        `"${subCommand}" is not an ${programName} command. See "${programName} --help" for the full list of commands.`
+      let msg = `"${subCommand}" is not an expo command. See "expo --help" for the full list of commands.`;
+      const availableCommands = program.commands.map(cmd => cmd._name);
+      const suggestion = availableCommands.find(
+        cmd => leven(cmd, subCommand[0]) < cmd.length * 0.4
       );
+      if (suggestion) {
+        msg = `"${subCommand}" is not an expo command -- did you mean ${suggestion}?\n See "expo --help" for the full list of commands.`;
+      }
+      log.warn(msg);
     });
 
     if (typeof program.nonInteractive === 'undefined') {
