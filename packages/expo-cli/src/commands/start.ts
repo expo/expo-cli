@@ -1,8 +1,8 @@
 import {
   ExpoConfig,
   PackageJSONConfig,
+  ProjectTarget,
   getConfig,
-  getProjectConfigDescription,
   resolveModule,
 } from '@expo/config';
 // @ts-ignore: not typed
@@ -36,6 +36,7 @@ type NormalizedOptions = URLOptions & {
   lan?: boolean;
   localhost?: boolean;
   tunnel?: boolean;
+  target?: ProjectTarget;
 };
 
 type Options = NormalizedOptions & {
@@ -138,6 +139,11 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
   if (options.maxWorkers) {
     startOpts.maxWorkers = options.maxWorkers;
   }
+
+  // NOTE(brentvatne): Unlike in publish we default to managed when running `expo start` as there
+  // is currently no good reason why anyone would want to do this outside of someone who is working
+  // on the dev client
+  startOpts.target = options.target ?? 'managed';
 
   return startOpts;
 }
@@ -323,6 +329,10 @@ export default (program: any) => {
     .option('--no-minify', 'Do not minify code')
     .option('--https', 'To start webpack with https protocol')
     .option('--no-https', 'To start webpack with http protocol')
+    .option(
+      '-t, --target [env]',
+      'Experimental: target environment to start the server in. Options are `managed` or `bare`.'
+    )
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(
