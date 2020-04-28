@@ -272,6 +272,7 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
       }
       return configPlist;
     });
+    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
   }
 
   // Android expo-updates
