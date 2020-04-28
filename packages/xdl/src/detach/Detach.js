@@ -129,7 +129,6 @@ async function _detachAsync(projectRoot, options) {
     }
   }
 
-  // Modify exp.json
   exp.isDetached = true;
 
   if (!exp.detach) {
@@ -222,7 +221,6 @@ async function _detachAsync(projectRoot, options) {
   }
 
   logger.info('Writing ExpoKit configuration...');
-  // Update exp.json/app.json
   // if we're writing to app.json, we need to place the configuration under the expo key
   const config = configNamespace ? { [configNamespace]: exp } : exp;
   await fs.writeFile(configPath, JSON.stringify(config, null, 2));
