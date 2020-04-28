@@ -6,7 +6,7 @@ import log from '../log';
 async function action() {
   try {
     await UserManager.logoutAsync();
-    log('Success.');
+    log('Logged out');
   } catch (e) {
     throw new Error("Unexpected Error: Couldn't logout");
   }

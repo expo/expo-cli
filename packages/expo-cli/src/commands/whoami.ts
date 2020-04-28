@@ -1,9 +1,8 @@
-import { Command } from 'commander';
-import chalk from 'chalk';
 import { UserManager } from '@expo/xdl';
+import chalk from 'chalk';
+import { Command } from 'commander';
 
 import log from '../log';
-import CommandError from '../CommandError';
 
 async function action() {
   const user = await UserManager.getCurrentUserAsync({ silent: true });
@@ -11,7 +10,7 @@ async function action() {
     log(`Logged in as ${chalk.green(user.username)}`);
     log.raw(user.username);
   } else {
-    throw new CommandError('NOT_LOGGED_IN', 'Not logged in');
+    log(`\u203A Not logged in, run ${chalk.cyan`expo login`} to authenticate`);
   }
 }
 
