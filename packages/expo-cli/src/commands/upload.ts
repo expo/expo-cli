@@ -23,7 +23,9 @@ export default function(program: Command) {
     .description(
       'Uploads a standalone Android app to Google Play (works on macOS only). Uploads the latest build by default.'
     )
-    .asyncActionProjectDir(createUploadAction(AndroidUploader, ANDROID_OPTIONS));
+    .asyncActionProjectDir(createUploadAction(AndroidUploader, ANDROID_OPTIONS), {
+      checkConfig: true,
+    });
 
   const IOS_OPTIONS = [
     ...COMMON_OPTIONS,
@@ -79,7 +81,7 @@ export default function(program: Command) {
       console.log(`  ${LANGUAGES.join(', ')}`);
       console.log();
     })
-    .asyncActionProjectDir(createUploadAction(IOSUploader, IOS_OPTIONS));
+    .asyncActionProjectDir(createUploadAction(IOSUploader, IOS_OPTIONS), { checkConfig: true });
 }
 
 function setCommonOptions(command: Command, fileExtension: string) {

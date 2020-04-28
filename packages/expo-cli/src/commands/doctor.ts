@@ -14,5 +14,5 @@ export default function(program: Command) {
   program
     .command('doctor [project-dir]')
     .description('Diagnoses issues with your Expo project.')
-    .asyncActionProjectDir(action, /* skipProjectValidation: */ true);
+    .asyncActionProjectDir(action);
 }

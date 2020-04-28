@@ -271,8 +271,7 @@ export default function(program: Command) {
           log(chalk.green(`${result.statusUrl}`));
         }
         log.newLine();
-      },
-      true
+      }
     );
 
   program
@@ -358,7 +357,7 @@ export default function(program: Command) {
       if (await Simulator.upgradeExpoAsync(targetClient.clientUrl)) {
         log('Done!');
       }
-    }, true);
+    });
 
   program
     .command('client:install:android')
@@ -443,5 +442,5 @@ export default function(program: Command) {
       if (await Android.upgradeExpoAsync(targetClient.clientUrl)) {
         log('Done!');
       }
-    }, true);
+    });
 }
