@@ -4,13 +4,21 @@ import envinfo from 'envinfo';
 
 const packageJSON = require('../../package.json');
 
-async function action(options: never): Promise<void> {
+async function action(): Promise<void> {
   const info = await envinfo.run(
     {
       System: ['OS', 'Shell'],
       Binaries: ['Node', 'Yarn', 'npm', 'Watchman'],
       IDEs: ['Xcode', 'Android Studio'],
-      npmPackages: ['expo', 'react', 'react-native', 'react-navigation'],
+      npmPackages: [
+        'expo',
+        'react',
+        'react-dom',
+        'react-native',
+        'react-native-web',
+        'react-navigation',
+        '@expo/webpack-config',
+      ],
       npmGlobalPackages: ['expo-cli'],
     },
     {
