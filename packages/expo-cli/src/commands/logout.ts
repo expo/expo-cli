@@ -1,5 +1,5 @@
-import { Command } from 'commander';
 import { UserManager } from '@expo/xdl';
+import { Command } from 'commander';
 
 import log from '../log';
 
