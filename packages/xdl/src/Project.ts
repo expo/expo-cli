@@ -331,7 +331,7 @@ async function _resolveManifestAssets(
       logMethod(
         projectRoot,
         'expo',
-        `Unable to resolve asset "${e.localAssetPath}" from "${e.manifestField}" in your app/exp.json.`
+        `Unable to resolve asset "${e.localAssetPath}" from "${e.manifestField}" in your app.json or app.config.js`
       );
     } else {
       logMethod(
@@ -828,7 +828,7 @@ export async function publishAsync(
   } catch (e) {
     if (e.serverError === 'SCHEMA_VALIDATION_ERROR') {
       throw new Error(
-        `There was an error validating your project schema. Check for any warnings about the contents of your app/exp.json.`
+        `There was an error validating your project schema. Check for any warnings about the contents of your app.json or app.config.js.`
       );
     }
     Sentry.captureException(e);
