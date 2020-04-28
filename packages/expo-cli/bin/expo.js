@@ -23,7 +23,7 @@ const versionIsHigherThanSupported = semver.gtr(version, maxSupportedVersion.ran
 if (versionIsHigherThanSupported) {
   console.error(
     chalk.yellow(
-      `WARNING: Node.js version ${version} has not yet been tested.\n\n` +
+      `WARNING: expo-cli has not yet been tested against Node.js version ${version}. If you encounter any issues, please report them to https://github.com/expo/expo-cli/issues\n\n` +
         'expo-cli supports following Node.js versions:\n' +
         versionInfo
     )
