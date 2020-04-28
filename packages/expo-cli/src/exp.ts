@@ -366,6 +366,7 @@ function runAsync(programName: string) {
     program.on('command:*', subCommand => {
       let msg = `"${subCommand}" is not an expo command. See "expo --help" for the full list of commands.`;
       const availableCommands = program.commands.map(cmd => cmd._name);
+      // finding the best match whose edit distance is less than 40% of their length.
       const suggestion = availableCommands.find(
         cmd => leven(cmd, subCommand[0]) < cmd.length * 0.4
       );
