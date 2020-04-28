@@ -2,6 +2,7 @@ import { vol } from 'memfs';
 import IOSBuilder from '../ios/IOSBuilder';
 import { BuilderOptions } from '../BaseBuilder.types';
 import {
+  getApiV2Mock,
   getApiV2MockCredentials,
   jester,
   testAppJson,
@@ -39,36 +40,42 @@ jest.mock('commander', () => {
   };
 });
 
-function getMockXDL() {
-  const mockUser = jester;
-  const mockApiV2 = getApiV2MockCredentials();
+const mockUser = jester;
+const mockApiV2 = getApiV2MockCredentials();
+const mockedXDLModules = {
+  UserManager: {
+    ensureLoggedInAsync: jest.fn(() => mockUser),
+    getCurrentUserAsync: jest.fn(() => mockUser),
+    getCurrentUsernameAsync: jest.fn(() => mockUser.username),
+  },
+  ApiV2: {
+    clientForUser: jest.fn(() => mockApiV2),
+  },
+  Project: {
+    getBuildStatusAsync: jest.fn(() => ({ jobs: [] })),
+    getLatestReleaseAsync: jest.fn(() => ({ publicationId: 'test-publication-id' })),
+    findReusableBuildAsync: jest.fn(() => ({})),
+    startBuildAsync: jest.fn(() => ({})),
+  },
+  IosCodeSigning: {
+    validateProvisioningProfile: jest.fn(),
+  },
+  PKCS12Utils: { getP12CertFingerprint: jest.fn(), findP12CertSerialNumber: jest.fn() },
+};
+
+jest.mock('@expo/xdl', () => {
   const pkg = jest.requireActual('@expo/xdl');
-  return {
+  const xdlMock = {
     ...pkg,
-    UserManager: {
-      ...pkg.UserManager,
-      ensureLoggedInAsync: jest.fn(() => mockUser),
-      getCurrentUserAsync: jest.fn(() => mockUser),
-      getCurrentUsernameAsync: jest.fn(() => mockUser),
-    },
-    ApiV2: {
-      ...pkg.clientForUser,
-      clientForUser: jest.fn(() => mockApiV2),
-    },
-    Project: {
-      getBuildStatusAsync: jest.fn(() => ({ jobs: [] })),
-      getLatestReleaseAsync: jest.fn(() => ({ publicationId: 'test-publication-id' })),
-      findReusableBuildAsync: jest.fn(() => ({})),
-      startBuildAsync: jest.fn(() => ({})),
-    },
-    IosCodeSigning: {
-      validateProvisioningProfile: jest.fn(),
-    },
-    PKCS12Utils: {
-      getP12CertFingerprint: jest.fn(),
-    },
   };
-}
+  for (const xdlModuleName of Object.keys(mockedXDLModules)) {
+    xdlMock[xdlModuleName] = {
+      ...pkg[xdlModuleName],
+      ...mockedXDLModules[xdlModuleName],
+    };
+  }
+  return xdlMock;
+});
 
 describe('build ios', () => {
   const projectRoot = '/test-project';
@@ -97,19 +104,26 @@ describe('build ios', () => {
 
   const originalWarn = console.warn;
   const originalLog = console.log;
+  const originalError = console.error;
   beforeAll(() => {
     console.warn = jest.fn();
     console.log = jest.fn();
+    console.error = jest.fn();
   });
   afterAll(() => {
     console.warn = originalWarn;
     console.log = originalLog;
+    console.error = originalError;
   });
 
-  let mockXDL;
-  beforeEach(() => {
-    mockXDL = getMockXDL();
-    jest.mock('@expo/xdl', () => mockXDL);
+  afterEach(() => {
+    const mockedXDLModuleObjects = Object.values(mockedXDLModules);
+    for (const module of mockedXDLModuleObjects) {
+      const xdlFunctions = Object.values(module);
+      for (const xdlFunction of xdlFunctions) {
+        xdlFunction.mockClear();
+      }
+    }
   });
 
   it('archive build: basic case', async () => {
@@ -124,7 +138,81 @@ describe('build ios', () => {
     await iosBuilder.command();
 
     // expect that we get the latest release and started build
-    expect(mockXDL.Project.getLatestReleaseAsync.mock.calls.length).toBe(1);
-    expect(mockXDL.Project.startBuildAsync.mock.calls.length).toBe(1);
+    expect(mockedXDLModules.Project.getLatestReleaseAsync.mock.calls.length).toBe(1);
+    expect(mockedXDLModules.Project.startBuildAsync.mock.calls.length).toBe(1);
+  });
+  it('archive build: fails if user passes in incomplete credential flags', async () => {
+    const projectRoot = '/test-project';
+
+    const builderOptions: BuilderOptions = {
+      type: 'archive',
+      parent: { nonInteractive: true },
+      pushId: 'sdf',
+    };
+
+    const iosBuilder = new IOSBuilder(projectRoot, builderOptions);
+
+    await expect(iosBuilder.command()).rejects.toThrow();
+    // fail if we proceed to get the latest release and started build
+    expect(mockedXDLModules.Project.getLatestReleaseAsync.mock.calls.length).toBe(0);
+    expect(mockedXDLModules.Project.startBuildAsync.mock.calls.length).toBe(0);
+  });
+  it('archive build: fails if user has no credentials', async () => {
+    // Mock empty credentials call
+    const apiV2Mock = getApiV2Mock({
+      getAsync: jest.fn(() => ({ appCredentials: [], userCredentials: [] })),
+    });
+    mockedXDLModules.ApiV2.clientForUser.mockImplementationOnce(jest.fn(() => apiV2Mock));
+    const projectRoot = '/test-project';
+
+    const builderOptions: BuilderOptions = {
+      type: 'archive',
+      parent: { nonInteractive: true },
+    };
+
+    const iosBuilder = new IOSBuilder(projectRoot, builderOptions);
+    await expect(iosBuilder.command()).rejects.toThrow();
+
+    // fail if we proceed to get the latest release and started build
+    expect(mockedXDLModules.Project.getLatestReleaseAsync.mock.calls.length).toBe(0);
+    expect(mockedXDLModules.Project.startBuildAsync.mock.calls.length).toBe(0);
+  });
+  it('archive build: pass in all credentials from cli', async () => {
+    const OLD_ENV = process.env;
+
+    try {
+      process.env = { ...OLD_ENV, EXPO_IOS_DIST_P12_PASSWORD: 'sdf' };
+
+      // Mock empty credentials call
+      const apiV2Mock = getApiV2Mock({
+        getAsync: jest.fn(() => ({ appCredentials: [], userCredentials: [] })),
+        postAsync: jest.fn((endpointPath: string, params: any) => {
+          if (endpointPath === 'credentials/ios/dist' || endpointPath === 'credentials/ios/push') {
+            return { ...params, id: 1 };
+          }
+        }),
+      });
+      mockedXDLModules.ApiV2.clientForUser.mockImplementationOnce(jest.fn(() => apiV2Mock));
+      const projectRoot = '/test-project';
+
+      const builderOptions: BuilderOptions = {
+        type: 'archive',
+        parent: { nonInteractive: true },
+        teamId: 'sdf',
+        distP12Path: projectRoot + '/package.json',
+        pushP8Path: projectRoot + '/package.json',
+        pushId: 'sdf',
+        provisioningProfilePath: projectRoot + '/package.json',
+      };
+
+      const iosBuilder = new IOSBuilder(projectRoot, builderOptions);
+      await iosBuilder.command();
+
+      // expect that we get the latest release and started build
+      expect(mockedXDLModules.Project.getLatestReleaseAsync.mock.calls.length).toBe(1);
+      expect(mockedXDLModules.Project.startBuildAsync.mock.calls.length).toBe(1);
+    } finally {
+      process.env = { ...OLD_ENV };
+    }
   });
 });
