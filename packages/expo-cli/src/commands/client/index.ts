@@ -1,6 +1,6 @@
 import { Android, Simulator, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
-import CliTable from 'cli-table';
+import CliTable from 'cli-table3';
 import fs from 'fs-extra';
 import _ from 'lodash';
 import ora from 'ora';

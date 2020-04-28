@@ -1,4 +1,4 @@
-import CliTable from 'cli-table';
+import CliTable from 'cli-table3';
 import { JSONObject } from '@expo/json-file';
 
 export function printTableJsonArray(
