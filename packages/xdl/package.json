@@ -91,7 +91,7 @@
     "source-map-support": "0.4.18",
     "split": "1.0.1",
     "tar": "4.4.6",
-    "tree-kill": "1.2.0",
+    "tree-kill": "1.2.2",
     "url": "0.11.0",
     "url-join": "4.0.0",
     "util.promisify": "1.0.0",
