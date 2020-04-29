@@ -43,7 +43,7 @@
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.10",
     "expo": "37",
-    "globby": "^11.0.0",
+    "globby": "11.0.0",
     "metro": "^0.59.0",
     "metro-config": "^0.59.0",
     "react-native": "0.61.4"

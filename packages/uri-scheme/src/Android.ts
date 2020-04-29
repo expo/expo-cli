@@ -7,7 +7,7 @@ import {
 import * as Scheme from '@expo/config/build/android/Scheme';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
-import { sync } from 'glob';
+import { sync } from 'globby';
 import { join } from 'path';
 
 import { CommandError, Options } from './Options';

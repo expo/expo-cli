@@ -1,7 +1,7 @@
 import path from 'path';
 import parse from 'yargs-parser';
 import chalk from 'chalk';
-import globby from 'globby';
+import globby from 'glob';
 import multimatch from 'multimatch';
 import spawnAsync from '@expo/spawn-async';
 // @ts-ignore
