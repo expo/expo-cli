@@ -2147,7 +2147,9 @@ async function startDevServerAsync(projectRoot: string, startOptions: StartOptio
     options.maxWorkers = startOptions.maxWorkers;
   }
   if (startOptions.target) {
-    options.target = startOptions.target;
+    // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
+    // called from metro.config.js and the --target option is used to override the default target.
+    process.env.EXPO_TARGET = options.target;
   }
   const { middleware } = await runMetroDevServerAsync(projectRoot, options);
   middleware.use(getManifestHandler(projectRoot));
@@ -2382,12 +2384,6 @@ export async function startAsync(
     projectRoot,
     developerTool: Config.developerTool,
   });
-
-  if (options.target) {
-    // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
-    // called from metro.config.js and the --target option is used to override the default target.
-    process.env.EXPO_TARGET = options.target;
-  }
 
   let { exp } = getConfig(projectRoot);
   if (options.webOnly) {
