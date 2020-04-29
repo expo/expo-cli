@@ -2962,11 +2962,6 @@
   resolved "https://registry.yarnpkg.com/@types/analytics-node/-/analytics-node-3.1.1.tgz#c8543eaee47db7ae9e5007f14a5fd3f3e89b947f"
   integrity sha512-+Jrl6aQIV2uSy60DBSXflPt3+nTf/IxTVDM1gw5PhPhFi/STPDUlyiUp+zrmcEiiLQ7Y2R4jhrcQ6BcqAOclzg==
 
-"@types/ansi-regex@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@types/ansi-regex/-/ansi-regex-4.0.0.tgz#cb20bb66da7700ea9b26f16971f03f0e092eddad"
-  integrity sha512-r1W316vjsZXn1/csLC4HcCJs6jIHIzksHJd7xx+Dl+PAb0S2Dh9cR8ZsIMEfGmbBtP7JNWlf2KKahSkDP6rg3g==
-
 "@types/anymatch@*":
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/@types/anymatch/-/anymatch-1.3.1.tgz#336badc1beecb9dacc38bea2cf32adf627a8421a"
@@ -13652,13 +13647,6 @@ map-visit@^1.0.0:
   dependencies:
     object-visit "^1.0.0"
 
-match-require@2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/match-require/-/match-require-2.1.0.tgz#f67d62c4cb1d703f408fb63b55b9ae83fb25e2cc"
-  integrity sha1-9n1ixMsdcD9Aj7Y7Vbmug/sl4sw=
-  dependencies:
-    uuid "^3.0.0"
-
 matchdep@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/matchdep/-/matchdep-1.0.1.tgz#a57a33804491fbae208aba8f68380437abc2dca5"
@@ -15562,13 +15550,6 @@ onetime@^5.1.0:
   integrity sha512-5NcSkPHhwTVFIQN+TUqXoS5+dlElHXdpAWu9I0HP20YOtIi+aZ0Ct82jdlILDxjLEAWwvm+qj1m6aEtsDVmm6Q==
   dependencies:
     mimic-fn "^2.1.0"
-
-open@6.3.0:
-  version "6.3.0"
-  resolved "https://registry.yarnpkg.com/open/-/open-6.3.0.tgz#60d0b845ee38fae0631f5d739a21bd40e3d2a527"
-  integrity sha512-6AHdrJxPvAXIowO/aIaeHZ8CeMdDf7qCyRNq8NwJpinmCdXhz+NZR7ie1Too94lpciCDsG+qHGO9Mt0svA4OqA==
-  dependencies:
-    is-wsl "^1.1.0"
 
 open@^6.2.0, open@^6.3.0:
   version "6.4.0"

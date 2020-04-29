@@ -1,20 +1,7 @@
 import JsonFile from '@expo/json-file';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
-import fs from 'fs-extra';
-import path from 'path';
-
 import { ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
 import { projectHasModule } from './Modules';
-
-export function isUsingYarn(projectRoot: string): boolean {
-  const workspaceRoot = findWorkspaceRoot(projectRoot);
-  if (workspaceRoot) {
-    return fs.existsSync(path.join(workspaceRoot, 'yarn.lock'));
-  } else {
-    return fs.existsSync(path.join(projectRoot, 'yarn.lock'));
-  }
-}
 
 export function getExpoSDKVersion(
   projectRoot: string,
