@@ -1,6 +1,5 @@
 import JsonFile from '@expo/json-file';
 import { spawnSync } from 'child_process';
-import { formatExecError } from 'jest-message-util';
 
 import { AppJSONConfig, ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError, errorFromJSON } from './Errors';
@@ -51,46 +50,32 @@ export function getStaticConfig(configPath: string): AppJSONConfig | ExpoConfig 
 // We cannot use async config resolution right now because Next.js doesn't support async configs.
 // If they don't add support for async Webpack configs then we may need to pull support for Next.js.
 function evalConfig(configFile: string, request: ConfigContext): DynamicConfigResults {
-  try {
-    const spawnResults = spawnSync(
-      'node',
-      [
-        require.resolve('@expo/config/build/scripts/read-config.js'),
-        '--colors',
-        configFile,
-        JSON.stringify({ ...request, config: serializeAndEvaluate(request.config) }),
-      ],
-      {}
-    );
+  const spawnResults = spawnSync(
+    'node',
+    [
+      require.resolve('@expo/config/build/scripts/read-config.js'),
+      '--colors',
+      configFile,
+      JSON.stringify({ ...request, config: serializeAndEvaluate(request.config) }),
+    ],
+    {}
+  );
 
-    if (spawnResults.status === 0) {
-      const spawnResultString = spawnResults.stdout.toString('utf8').trim();
-      const logs = spawnResultString.split('\n');
-      // Get the last console log to prevent parsing anything logged in the config.
-      const lastLog = logs.pop()!;
-      for (const log of logs) {
-        // Log out the logs from the config
-        console.log(log);
-      }
-      // Parse the final log of the script, it's the serialized config and exported object type.
-      const results = JSON.parse(lastLog);
-      return results;
-    } else {
-      // Parse the error data and throw it as expected
-      const errorData = JSON.parse(spawnResults.stderr.toString('utf8'));
-      throw errorFromJSON(errorData);
+  if (spawnResults.status === 0) {
+    const spawnResultString = spawnResults.stdout.toString('utf8').trim();
+    const logs = spawnResultString.split('\n');
+    // Get the last console log to prevent parsing anything logged in the config.
+    const lastLog = logs.pop()!;
+    for (const log of logs) {
+      // Log out the logs from the config
+      console.log(log);
     }
-  } catch (error) {
-    if (isMissingFileCode(error.code) || !(error instanceof SyntaxError)) {
-      throw error;
-    }
-    const message = formatExecError(
-      error,
-      { rootDir: request.projectRoot, testMatch: [] },
-      { noStackTrace: true },
-      undefined,
-      true
-    );
-    throw new ConfigError(`\n${message}`, 'INVALID_CONFIG');
+    // Parse the final log of the script, it's the serialized config and exported object type.
+    const results = JSON.parse(lastLog);
+    return results;
+  } else {
+    // Parse the error data and throw it as expected
+    const errorData = JSON.parse(spawnResults.stderr.toString('utf8'));
+    throw errorFromJSON(errorData);
   }
 }
