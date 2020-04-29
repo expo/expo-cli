@@ -10,7 +10,7 @@ import LogReporter from './LogReporter';
 export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & { logger: Log };
 
 export async function runMetroDevServerAsync(projectRoot: string, options: MetroDevServerOptions) {
-  const { exp } = getConfig(projectRoot);
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const Metro = require(resolveModule('metro', projectRoot, exp));
 
   const reporter = new LogReporter(options.logger);
