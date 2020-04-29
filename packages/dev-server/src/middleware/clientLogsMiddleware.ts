@@ -47,8 +47,7 @@ function isAppRegistryStartupMessage(body: any[]): boolean {
 }
 
 function handleDeviceLogs(logger: Log, deviceId: string, deviceName: string, logs: any): void {
-  for (let i = 0; i < logs.length; i++) {
-    const log = logs[i];
+  for (const log of logs) {
     let body = typeof log.body === 'string' ? [log.body] : log.body;
     let { level } = log;
 
