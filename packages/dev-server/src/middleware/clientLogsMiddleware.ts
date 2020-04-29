@@ -1,9 +1,10 @@
 import http from 'http';
+import { HandleFunction } from 'connect';
 import Log from '@expo/bunyan';
 
 type ConsoleLogLevel = 'info' | 'warn' | 'error' | 'debug';
 
-export default function clientLogsMiddleware(logger: Log) {
+export default function clientLogsMiddleware(logger: Log): HandleFunction {
   return function(
     req: http.IncomingMessage & { body?: any },
     res: http.ServerResponse,
@@ -33,11 +34,11 @@ export default function clientLogsMiddleware(logger: Log) {
   };
 }
 
-function isIgnorableBugReportingExtraData(body: any[]) {
+function isIgnorableBugReportingExtraData(body: any[]): boolean {
   return body.length === 2 && body[0] === 'BugReporting extraData:';
 }
 
-function isAppRegistryStartupMessage(body: any[]) {
+function isAppRegistryStartupMessage(body: any[]): boolean {
   return (
     body.length === 1 &&
     (/^Running application "main" with appParams:/.test(body[0]) ||
@@ -45,7 +46,7 @@ function isAppRegistryStartupMessage(body: any[]) {
   );
 }
 
-function handleDeviceLogs(logger: Log, deviceId: string, deviceName: string, logs: any) {
+function handleDeviceLogs(logger: Log, deviceId: string, deviceName: string, logs: any): void {
   for (let i = 0; i < logs.length; i++) {
     const log = logs[i];
     let body = typeof log.body === 'string' ? [log.body] : log.body;
