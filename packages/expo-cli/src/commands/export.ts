@@ -24,20 +24,32 @@ type Options = {
   dumpAssetmap: boolean;
   dumpSourcemap: boolean;
   maxWorkers?: number;
+  force: boolean;
 };
 
 export async function action(projectDir: string, options: Options) {
   const outputPath = path.resolve(projectDir, options.outputDir);
+  let overwrite = options.force;
   if (fs.existsSync(outputPath)) {
-    const question: Question = {
-      type: 'confirm',
-      name: 'action',
-      message: `Output directory ${outputPath} already exists. Do you want to override this directories/files : \n${options.outputDir}/bundles, \n${options.outputDir}/assets, \n${options.outputDir}/ios-index.json, and \n${options.outputDir}/android-index.json ?`,
-    };
+    if (!overwrite) {
+      const question: Question = {
+        type: 'confirm',
+        name: 'action',
+        message: `Output directory ${outputPath} already exists, the following files and directories will be overwritten if they exist: \n${options.outputDir}/bundles, \n${options.outputDir}/assets, \n${options.outputDir}/ios-index.json, and \n${options.outputDir}/android-index.json. Would you like to continue?`,
+      };
 
-    const { action } = await prompt(question);
-    if (action) {
-      // If user chooses to override, remove old directories/files, except options.outputDir
+      const { action } = await prompt(question);
+      if (action) {
+        overwrite = true;
+      } else {
+        throw new CommandError(
+          'OUTPUT_DIR_EXISTS',
+          `Output directory ${outputPath} already exists. Aborting export.`
+        );
+      }
+    }
+    if (overwrite) {
+      log(`Removing old files from ${outputPath}`);
       const outputBundlesDir = path.resolve(outputPath, 'bundles');
       const outputAssetsDir = path.resolve(outputPath, 'assets');
       const outputAndroidJson = path.resolve(outputPath, 'android-index.json');
@@ -54,11 +66,6 @@ export async function action(projectDir: string, options: Options) {
       if (fs.existsSync(outputiOSJson)) {
         fs.removeSync(outputiOSJson);
       }
-    } else {
-      throw new CommandError(
-        'OUTPUT_DIR_EXISTS',
-        `Output directory ${outputPath} already exists. Aborting export.`
-      );
     }
   }
   if (!options.publicUrl) {
@@ -216,6 +223,7 @@ export default function(program: Command) {
     )
     .option('-d, --dump-assetmap', 'Dump the asset map for further processing.')
     .option('--dev', 'Configures static files for developing locally using a non-https server')
+    .option('-f, --force', '0verwrite expo generated files without showing the prompt')
     .option('-s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
     .option('--merge-src-dir [dir]', 'A repeatable source dir to merge in.', collect, [])
