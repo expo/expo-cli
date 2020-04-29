@@ -8,7 +8,7 @@ export default function clientLogsMiddleware(logger: Log): HandleFunction {
   return function(
     req: http.IncomingMessage & { body?: any },
     res: http.ServerResponse,
-    next: (err?: any) => void
+    next: (err?: Error) => void
   ) {
     try {
       const deviceId = req.headers['device-id'];
