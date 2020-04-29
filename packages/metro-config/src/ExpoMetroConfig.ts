@@ -27,7 +27,9 @@ export function getDefaultConfig(
   options: DefaultConfigOptions = {}
 ): InputConfigT {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  const reactNativePath = resolveModule('react-native', projectRoot, exp);
+  const reactNativePath = path.dirname(
+    resolveModule('react-native/package.json', projectRoot, exp)
+  );
 
   const target = options.target ?? process.env.EXPO_TARGET ?? getDefaultTarget(projectRoot);
   if (!(target === 'managed' || target === 'bare')) {
@@ -69,7 +71,7 @@ export function getDefaultConfig(
       },
     },
     transformer: {
-      babelTransformerPath: require.resolve('../transformer'),
+      babelTransformerPath: require.resolve('metro-react-native-babel-transformer'),
       // TODO: Bacon: Add path for web platform
       assetRegistryPath: path.join(reactNativePath, 'Libraries/Image/AssetRegistry'),
       assetPlugins: [resolveModule('expo/tools/hashAssetFiles', projectRoot, exp)],

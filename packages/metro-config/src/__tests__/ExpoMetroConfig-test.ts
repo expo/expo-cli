@@ -9,7 +9,7 @@ describe('getDefaultConfig', () => {
     transformer: {
       assetPlugins: expect.arrayContaining([expect.stringContaining('hashAssetFiles')]),
       assetRegistryPath: expect.stringContaining('AssetRegistry'),
-      babelTransformerPath: expect.stringContaining('transformer.js'),
+      babelTransformerPath: expect.stringContaining('metro-react-native-babel-transformer'),
     },
   };
 
