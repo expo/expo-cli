@@ -13,7 +13,7 @@
     "watch": "tsc --watch",
     "build": "tsc",
     "lint": "eslint .",
-    "clean": "rm -rf ./webpack/ ./tsconfig.tsbuildinfo",
+    "clean": "rimraf ./webpack/ ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
     "test": "jest --config jest/unit-test-config.js",
     "test:e2e:start": "EXPO_E2E_COMMAND='start' jest --config jest/e2e-test-config.json --rootDir .",
@@ -83,6 +83,7 @@
     "jest-puppeteer": "^4.3.0",
     "prettier": "^1.16.4",
     "puppeteer": "^1.19.0",
+    "rimraf": "^3.0.2",
     "serve": "^11.1.0"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df",

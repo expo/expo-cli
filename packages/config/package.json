@@ -7,7 +7,7 @@
     "watch": "tsc --watch",
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
-    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "lint": "eslint .",
     "test": "jest"
   },
@@ -64,7 +64,8 @@
     "@types/invariant": "^2.2.30",
     "@types/plist": "^3.0.1",
     "@types/xml2js": "^0.4.5",
-    "memfs": "^2.15.5"
+    "memfs": "^2.15.5",
+    "rimraf": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"

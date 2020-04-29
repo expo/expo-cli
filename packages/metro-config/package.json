@@ -7,7 +7,7 @@
     "watch": "tsc --watch",
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
-    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "lint": "eslint .",
     "test": "jest"
   },
@@ -46,7 +46,8 @@
     "globby": "^11.0.0",
     "metro": "^0.59.0",
     "metro-config": "^0.59.0",
-    "react-native": "0.61.4"
+    "react-native": "0.61.4",
+    "rimraf": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"

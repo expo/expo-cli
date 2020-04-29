@@ -8,7 +8,7 @@
     "watch": "tsc --watch",
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
-    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "lint": "eslint ."
   },
   "bin": {
@@ -44,7 +44,8 @@
   ],
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.10",
-    "@types/prompts": "^2.0.6"
+    "@types/prompts": "^2.0.6",
+    "rimraf": "^3.0.2"
   },
   "peerDependencies": {
     "next": "^9",

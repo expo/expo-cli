@@ -7,7 +7,7 @@
     "watch": "tsc --watch",
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
-    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "lint": "eslint .",
     "test": "jest"
   },
@@ -46,7 +46,8 @@
     "sudo-prompt": "9.1.1"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.10"
+    "@expo/babel-preset-cli": "0.2.10",
+    "rimraf": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"

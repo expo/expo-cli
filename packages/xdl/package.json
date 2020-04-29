@@ -14,7 +14,7 @@
     "build": "tsc --emitDeclarationOnly && gulp build",
     "prepare": "yarn run clean && yarn run build",
     "prepack": "gulp caches",
-    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "watch": "concurrently \"tsc --emitDeclarationOnly --watch\" \"gulp watch\"",
     "test": "jest --config jest/unit-test-config.js",
     "integration-tests": "jest --config jest/integration-test-config.json --rootDir ."
@@ -140,7 +140,7 @@
     "gulplog": "^1.0.0",
     "mock-fs": "^3.12.1",
     "promise-print": "^2.3.0",
-    "rimraf": "^2.5.4"
+    "rimraf": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"

@@ -9,7 +9,7 @@
     "build": "tsc",
     "test": "cd example && yarn && yarn test:build",
     "prepare": "yarn run clean && yarn build",
-    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "clean": "rimraf ./tsconfig.tsbuildinfo",
     "lint": "eslint ."
   },
   "bin": {
@@ -44,7 +44,8 @@
   ],
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.10",
-    "@expo/webpack-config": "0.12.2"
+    "@expo/webpack-config": "0.12.2",
+    "rimraf": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"
