@@ -10,7 +10,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
-## [Thu Apr 30 00:23:03 2020 +0300](https://github.com/expo/expo-cli/commit/0cb5979)
+## [Thu Apr 30 00:23:03 2020 +0300](https://github.com/expo/expo-cli/commit/945feb8b8f7228420e3b7e7918635721f81697f6)
 
 ### 🛠 Breaking changes
 
