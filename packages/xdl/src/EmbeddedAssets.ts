@@ -1,6 +1,7 @@
 import { ExpoConfig, PackageJSONConfig, ProjectTarget, getConfig } from '@expo/config';
 import fs from 'fs-extra';
 import path from 'path';
+import semver from 'semver';
 
 import * as ExponentTools from './detach/ExponentTools';
 import * as IosPlist from './detach/IosPlist';
@@ -84,6 +85,35 @@ function _getDefaultEmbeddedAssetDir(
   }
 }
 
+export function shouldEmbedAssetsForExpoUpdates(
+  projectRoot: string,
+  exp: PublicConfig,
+  pkg: PackageJSONConfig,
+  target: ProjectTarget
+): boolean {
+  if (!pkg.dependencies['expo-updates'] || target !== 'bare') {
+    return false;
+  }
+
+  // expo-updates 0.1.x relies on expo-cli automatically embedding the manifest and bundle
+  if (semver.satisfies(pkg.dependencies['expo.updates'], '~0.1.0')) {
+    return true;
+  }
+
+  // We also want to support developers who had expo-updates 0.1.x and upgraded but still rely on
+  // expo-cli's automatic embedding. If the files already exist we can assume we need to update them
+  if (
+    fs.existsSync(_getDefaultEmbeddedBundlePath('android', projectRoot, exp)) ||
+    fs.existsSync(_getDefaultEmbeddedManifestPath('android', projectRoot, exp)) ||
+    fs.existsSync(_getDefaultEmbeddedBundlePath('ios', projectRoot, exp)) ||
+    fs.existsSync(_getDefaultEmbeddedManifestPath('ios', projectRoot, exp))
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfiguration) {
   const {
     projectRoot,
@@ -95,6 +125,7 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
     androidManifest,
     androidBundle,
     androidSourceMap,
+    target,
   } = config;
 
   let androidBundlePath;
@@ -104,8 +135,7 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
   let iosManifestPath;
   let iosSourceMapPath;
 
-  // set defaults for expo-updates
-  if (pkg.dependencies['expo-updates'] && config.target === 'bare') {
+  if (shouldEmbedAssetsForExpoUpdates(projectRoot, exp, pkg, target)) {
     const defaultAndroidDir = _getDefaultEmbeddedAssetDir('android', projectRoot, exp);
     const defaultIosDir = _getDefaultEmbeddedAssetDir('ios', projectRoot, exp);
 
