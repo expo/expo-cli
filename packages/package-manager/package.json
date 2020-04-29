@@ -1,6 +1,6 @@
 {
   "name": "@expo/package-manager",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "A library for installing and finding packages in a node project",
   "main": "build",
   "scripts": {
@@ -46,7 +46,7 @@
     "sudo-prompt": "9.1.1"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.10",
+    "@expo/babel-preset-cli": "0.2.11",
     "rimraf": "^3.0.2"
   },
   "publishConfig": {
