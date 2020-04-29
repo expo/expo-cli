@@ -11,7 +11,7 @@ export default class LogReporter {
   }
 
   update(event: any) {
-    if ('error' in event && event.error instanceof Error) {
+    if (event.error instanceof Error) {
       event.error = serializeError(event.error);
     }
     // TODO(ville): replace xdl.PackagerLogsStream with a reporter to avoid serializing to JSON.
