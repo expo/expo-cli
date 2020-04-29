@@ -1,5 +1,3 @@
-import { getConfig } from '@expo/config';
-import { Api, ApiV2, FormData, Project, UserManager } from '@expo/xdl';
 import dateFormat from 'dateformat';
 
 import * as table from './utils/cli-table';
@@ -75,7 +73,7 @@ export default (program: any) => {
               colWidths.push(HORIZ_CELL_WIDTH_SMALL);
             }
           });
-          const resultRows = result.queryResult.map((publication: Publication) => ({
+          const resultRows: Publication[] = result.queryResult.map((publication: Publication) => ({
             ...publication,
             publishedTime: dateFormat(publication.publishedTime, 'ddd mmm dd yyyy HH:MM:ss Z'),
           }));
