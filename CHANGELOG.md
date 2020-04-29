@@ -12,6 +12,27 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ## [Thu Apr 30 00:23:03 2020 +0300](https://github.com/expo/expo-cli/commit/945feb8b8f7228420e3b7e7918635721f81697f6)
 
+- @expo/babel-preset-cli@0.2.11
+- @expo/config@3.2.0
+- @expo/dev-server@0.1.0
+- @expo/dev-tools@0.13.3
+- @expo/electron-adapter@0.0.0-alpha.51
+- expo-cli@3.20.0
+- expo-codemod@1.0.21
+- expo-optimize@0.1.23
+- @expo/image-utils@0.2.22
+- @expo/json-file@8.2.13
+- @expo/metro-config@0.1.0
+- @expo/next-adapter@2.1.3
+- @expo/osascript@2.0.16
+- @expo/package-manager@0.0.18
+- pod-install@0.0.0-alpha.13
+- expo-pwa@0.0.11
+- @expo/schemer@1.3.12
+- uri-scheme@1.0.8
+- @expo/webpack-config@0.12.3
+- @expo/xdl@57.9.0
+
 ### 🛠 Breaking changes
 
 - Remove `exp.json` support. Before this, `exp.json` had already been deprecated in favor of [`app.json` or `app.config.js`](https://docs.expo.io/workflow/configuration/). ([#2017](https://github.com/expo/expo-cli/pull/2017) by [@EvanBacon](https://github.com/EvanBacon)).
