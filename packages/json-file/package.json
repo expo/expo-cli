@@ -7,7 +7,7 @@
     "watch": "tsc --watch",
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
-    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "lint": "eslint .",
     "test": "jest"
   },
@@ -41,7 +41,8 @@
     "@types/fs-extra": "^7.0.0",
     "@types/json5": "^0.0.30",
     "@types/lodash": "^4.14.135",
-    "@types/write-file-atomic": "^2.1.1"
+    "@types/write-file-atomic": "^2.1.1",
+    "rimraf": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"

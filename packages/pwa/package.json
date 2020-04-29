@@ -29,10 +29,11 @@
     "lint": "eslint .",
     "watch": "tsc --watch",
     "build": "tsc",
-    "clean": "rm -rf build ./tsconfig.tsbuildinfo"
+    "clean": "rimraf build ./tsconfig.tsbuildinfo"
   },
   "devDependencies": {
-    "@types/node": "^12.6.8"
+    "@types/node": "^12.6.8",
+    "rimraf": "^3.0.2"
   },
   "dependencies": {
     "@expo/babel-preset-cli": "0.2.10",

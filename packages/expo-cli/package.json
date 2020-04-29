@@ -13,7 +13,7 @@
     "build": "babel src --out-dir build --extensions \".ts\" --source-maps --ignore \"src/**/__mocks__/*\",\"src/**/__tests__/*\"",
     "watch": "tsc --watch",
     "prepare": "yarn run clean && yarn run build",
-    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "preversion": "node ./scripts/preversion.js",
     "pkg": "pkg .",
     "test": "jest",
@@ -74,7 +74,8 @@
     "@types/targz": "^1.0.0",
     "@types/untildify": "^3.0.0",
     "@types/wordwrap": "^1.0.0",
-    "pkg": "^4.2.1"
+    "pkg": "^4.2.1",
+    "rimraf": "^3.0.2"
   },
   "dependencies": {
     "@expo/build-tools": "0.1.4",
