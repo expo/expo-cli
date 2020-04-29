@@ -3,7 +3,7 @@ import path from 'path';
 import { ProjectTarget, getConfig, getDefaultTarget, resolveModule } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import { Reporter } from 'metro';
-import { ConfigT, InputConfigT, loadConfig } from 'metro-config';
+import { ConfigT, InputConfigT } from 'metro-config';
 
 const INTERNAL_CALLSITES_REGEX = new RegExp(
   [
@@ -96,5 +96,7 @@ export async function loadAsync(
   if (reporter) {
     defaultConfig = { ...defaultConfig, reporter };
   }
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { loadConfig } = require(resolveModule('metro-config', projectRoot, exp));
   return await loadConfig({ cwd: projectRoot, projectRoot, ...metroOptions }, defaultConfig);
 }
