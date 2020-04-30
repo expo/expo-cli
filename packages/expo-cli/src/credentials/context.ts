@@ -64,6 +64,15 @@ export class Context {
     }
   }
 
+  logOwnerAndProject() {
+    // Figure out if User A is configuring credentials as admin for User B's project
+    const isProxyUser = this.manifest.owner && this.manifest.owner !== this.user.username;
+    log(
+      `Configuring credentials ${isProxyUser ? 'on behalf of' : 'for'} ${this.manifest.owner ??
+        this.user.username} in project ${this.manifest.slug}`
+    );
+  }
+
   async init(projectDir: string, options: CtxOptions = {}) {
     if (options.allowAnonymous) {
       this._user = (await UserManager.getCurrentUserAsync()) || undefined;
@@ -78,11 +87,7 @@ export class Context {
       this._manifest = exp;
       this._hasProjectContext = true;
       this._iosApiClient = new IosApi(this.user).withProjectContext(this);
-      log(
-        `Configuring credentials for ${this.manifest.owner ?? this.user.username} in project ${
-          this.manifest.slug
-        }`
-      );
+      this.logOwnerAndProject();
     } else {
       /* This manager does not need to work in project context */
       this._iosApiClient = new IosApi(this.user);
