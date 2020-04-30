@@ -281,7 +281,7 @@ function logProjectReady({
     macOSComment =
       ' # you need to use macOS to build the iOS project - use managed workflow if you need to do iOS development without a Mac';
   } else if (!isMacOS && workflow === 'managed') {
-    macOSComment = ' # requires an iOS device or access to a macOS for a simulator';
+    macOSComment = ' # requires an iOS device or macOS for access to an iOS simulator';
   }
   log.nested(
     `- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}${macOSComment}`
