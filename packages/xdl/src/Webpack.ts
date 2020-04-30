@@ -9,7 +9,7 @@ import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import { Urls, choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-
+import { isUsingYarn } from '@expo/package-manager';
 import createWebpackCompiler, { printInstructions } from './createWebpackCompiler';
 import ip from './ip';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -157,7 +157,7 @@ export async function startAsync(
 
   const protocol = env.https ? 'https' : 'http';
   const urls = prepareUrls(protocol, '::', webpackServerPort);
-  const useYarn = ConfigUtils.isUsingYarn(projectRoot);
+  const useYarn = isUsingYarn(projectRoot);
   const appName = await getProjectNameAsync(projectRoot);
   const nonInteractive = validateBoolOption(
     'nonInteractive',

@@ -126,7 +126,7 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
     log.nested('');
     log.nested('Then you can run the project:');
     log.nested('');
-    let packageManager = ConfigUtils.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
+    let packageManager = PackageManager.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
     log.nested(`  ${packageManager === 'npm' ? 'npm run android' : 'yarn android'}`);
     log.nested(`  ${packageManager === 'npm' ? 'npm run ios' : 'yarn ios'}`);
     await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
@@ -168,7 +168,7 @@ function ensureDependenciesMap(dependencies: any): DependenciesMap {
 }
 
 async function ejectToBareAsync(projectRoot: string): Promise<void> {
-  const useYarn = ConfigUtils.isUsingYarn(projectRoot);
+  const useYarn = PackageManager.isUsingYarn(projectRoot);
   const npmOrYarn = useYarn ? 'yarn' : 'npm';
   const { configPath, configName } = ConfigUtils.findConfigFile(projectRoot);
   const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
