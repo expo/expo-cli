@@ -1,6 +1,6 @@
 {
   "name": "pod-install",
-  "version": "0.0.0-alpha.12",
+  "version": "0.0.0-alpha.13",
   "main": "build",
   "keywords": [
     "cocoapods",
@@ -32,8 +32,8 @@
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.10",
-    "@expo/package-manager": "0.0.17",
+    "@expo/babel-preset-cli": "0.2.11",
+    "@expo/package-manager": "0.0.18",
     "@types/node": "^12.12.31",
     "@zeit/ncc": "^0.20.5",
     "chalk": "^4.0.0",

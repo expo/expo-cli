@@ -12,6 +12,7 @@ import {
 
 import slug from 'slugify';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
+import { MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import axios from 'axios';
@@ -22,6 +23,7 @@ import delayAsync from 'delay-async';
 import express from 'express';
 import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
+import getenv from 'getenv';
 import HashIds from 'hashids';
 import joi from 'joi';
 import chunk from 'lodash/chunk';
@@ -35,6 +37,8 @@ import minimatch from 'minimatch';
 import { AddressInfo } from 'net';
 import os from 'os';
 import path from 'path';
+import http from 'http';
+import { URL } from 'url';
 import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import split from 'split';
@@ -1925,30 +1929,18 @@ function shouldExposeEnvironmentVariableInManifest(key: string) {
   return key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_');
 }
 
-export async function startExpoServerAsync(projectRoot: string): Promise<void> {
-  _assertValidProjectRoot(projectRoot);
-  await stopExpoServerAsync(projectRoot);
-  let app = express();
-  app.use(
-    express.json({
-      limit: '10mb',
-    })
-  );
-  app.use(
-    express.urlencoded({
-      limit: '10mb',
-      extended: true,
-    })
-  );
-  if (
-    (ConnectionStatus.isOffline()
-      ? await Doctor.validateWithoutNetworkAsync(projectRoot)
-      : await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL
-  ) {
-    throw new Error(`Couldn't start project. Please fix the errors and restart the project.`);
+function stripPort(host: string | undefined): string | undefined {
+  if (!host) {
+    return host;
   }
-  // Serve the manifest.
-  const manifestHandler = async (req: express.Request, res: express.Response) => {
+  return new URL('/', `http://${host}`).hostname;
+}
+
+function getManifestHandler(projectRoot: string) {
+  return async (
+    req: express.Request | http.IncomingMessage,
+    res: express.Response | http.ServerResponse
+  ) => {
     try {
       // We intentionally don't `await`. We want to continue trying even
       // if there is a potential error in the package.json and don't want to slow
@@ -1981,13 +1973,14 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       let path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(
         platform
       )}&${queryParams}`;
+      const hostname = stripPort(req.headers.host);
       manifest.bundleUrl =
-        (await UrlUtils.constructBundleUrlAsync(projectRoot, bundleUrlPackagerOpts, req.hostname)) +
+        (await UrlUtils.constructBundleUrlAsync(projectRoot, bundleUrlPackagerOpts, hostname)) +
         path;
-      manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot, req.hostname);
+      manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot, hostname);
       manifest.mainModuleName = mainModuleName;
-      manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, req.hostname);
-      manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, req.hostname);
+      manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, hostname);
+      manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
       await _resolveManifestAssets(
         projectRoot,
         manifest as PublicConfig,
@@ -2045,8 +2038,8 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
         serverOS: os.platform(),
         serverOSVersion: os.release(),
       };
-      res.append('Exponent-Server', JSON.stringify(hostInfo));
-      res.send(manifestString);
+      res.setHeader('Exponent-Server', JSON.stringify(hostInfo));
+      res.end(manifestString);
       Analytics.logEvent('Serve Manifest', {
         projectRoot,
         developerTool: Config.developerTool,
@@ -2054,11 +2047,40 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
     } catch (e) {
       ProjectUtils.logError(projectRoot, 'expo', e.stack);
       // 5xx = Server Error HTTP code
-      res.status(520).send({
-        error: e.toString(),
-      });
+      res.statusCode = 520;
+      res.end(
+        JSON.stringify({
+          error: e.toString(),
+        })
+      );
     }
   };
+}
+
+export async function startExpoServerAsync(projectRoot: string): Promise<void> {
+  _assertValidProjectRoot(projectRoot);
+  await stopExpoServerAsync(projectRoot);
+  let app = express();
+  app.use(
+    express.json({
+      limit: '10mb',
+    })
+  );
+  app.use(
+    express.urlencoded({
+      limit: '10mb',
+      extended: true,
+    })
+  );
+  if (
+    (ConnectionStatus.isOffline()
+      ? await Doctor.validateWithoutNetworkAsync(projectRoot)
+      : await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL
+  ) {
+    throw new Error(`Couldn't start project. Please fix the errors and restart the project.`);
+  }
+  // Serve the manifest.
+  const manifestHandler = getManifestHandler(projectRoot);
   app.get('/', manifestHandler);
   app.get('/manifest', manifestHandler);
   app.get('/index.exp', manifestHandler);
@@ -2103,6 +2125,34 @@ export async function stopExpoServerAsync(projectRoot: string): Promise<void> {
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort: null,
   });
+}
+
+async function startDevServerAsync(projectRoot: string, startOptions: StartOptions) {
+  _assertValidProjectRoot(projectRoot);
+
+  const port = await _getFreePortAsync(19000); // Create packager options
+  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+    expoServerPort: port,
+    packagerPort: port,
+  });
+
+  const options: MetroDevServerOptions = {
+    port,
+    logger: ProjectUtils.getLogger(projectRoot),
+  };
+  if (startOptions.reset) {
+    options.resetCache = true;
+  }
+  if (startOptions.maxWorkers != null) {
+    options.maxWorkers = startOptions.maxWorkers;
+  }
+  if (startOptions.target) {
+    // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
+    // called from metro.config.js and the --target option is used to override the default target.
+    process.env.EXPO_TARGET = options.target;
+  }
+  const { middleware } = await runMetroDevServerAsync(projectRoot, options);
+  middleware.use(getManifestHandler(projectRoot));
 }
 
 async function _connectToNgrokAsync(
@@ -2335,17 +2385,14 @@ export async function startAsync(
     developerTool: Config.developerTool,
   });
 
-  if (options.target) {
-    // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
-    // called from metro.config.js and the --target option is used to override the default target.
-    process.env.EXPO_TARGET = options.target;
-  }
-
   let { exp } = getConfig(projectRoot);
   if (options.webOnly) {
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
+  } else if (getenv.boolish('EXPO_USE_DEV_SERVER', false)) {
+    await startDevServerAsync(projectRoot, options);
+    DevSession.startSession(projectRoot, exp, 'native');
   } else {
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync(projectRoot, options, verbose);

@@ -69,7 +69,7 @@ function printBuildTable(builds: BuildInfo[]) {
   const colWidths = [10, 15, 80];
   const refactoredBuilds = builds.map(build => ({
     ...build,
-    artifacts: get(build, 'artifacts.buildUrl', 'not available'),
+    artifacts: build.artifacts?.buildUrl ?? 'not available',
   }));
   const buildTable = printTableJsonArray(headers, refactoredBuilds, colWidths);
   console.log(buildTable);

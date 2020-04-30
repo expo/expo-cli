@@ -10,7 +10,7 @@ import semver from 'semver';
 import temporary from 'tempy';
 
 import * as PackageManager from '@expo/package-manager';
-import { loginOrRegisterIfLoggedOut } from '../../accounts';
+import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
 import { validateGitStatusAsync } from '../utils/ProjectUtils';
@@ -131,7 +131,7 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
     log.nested(`  ${packageManager === 'npm' ? 'npm run ios' : 'yarn ios'}`);
     await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
   } else if (ejectMethod === 'expokit') {
-    await loginOrRegisterIfLoggedOut();
+    await loginOrRegisterIfLoggedOutAsync();
     await Detach.detachAsync(projectRoot, options);
     log(chalk.green('Ejected successfully!'));
   } else if (ejectMethod === 'cancel') {

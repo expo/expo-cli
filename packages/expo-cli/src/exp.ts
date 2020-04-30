@@ -31,7 +31,7 @@ import {
 } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 
-import { loginOrRegisterIfLoggedOut } from './accounts';
+import { loginOrRegisterAsync } from './accounts';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
@@ -327,7 +327,7 @@ function runAsync(programName: string) {
     Analytics.setVersionName(packageJSON.version);
     _registerLogs();
 
-    UserManager.setInteractiveAuthenticationCallback(loginOrRegisterIfLoggedOut);
+    UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);
 
     if (process.env.SERVER_URL) {
       let serverUrl = process.env.SERVER_URL;
@@ -365,10 +365,10 @@ function runAsync(programName: string) {
 
     program.on('command:*', subCommand => {
       let msg = `"${subCommand}" is not an expo command. See "expo --help" for the full list of commands.`;
-      const availableCommands = program.commands.map(cmd => cmd._name);
+      const availableCommands = program.commands.map((cmd: Command) => cmd._name);
       // finding the best match whose edit distance is less than 40% of their length.
       const suggestion = availableCommands.find(
-        cmd => leven(cmd, subCommand[0]) < cmd.length * 0.4
+        (commandName: string) => leven(commandName, subCommand[0]) < commandName.length * 0.4
       );
       if (suggestion) {
         msg = `"${subCommand}" is not an expo command -- did you mean ${suggestion}?\n See "expo --help" for the full list of commands.`;
@@ -551,7 +551,7 @@ function formatCommandsAsMarkdown(commands: CommandData[]) {
 // This is the entry point of the CLI
 export function run(programName: string) {
   (async function() {
-    if (process.argv[2] == 'introspect') {
+    if (process.argv[2] === 'introspect') {
       let commands = generateCommandJSON();
       if (process.argv[3] && process.argv[3].includes('markdown')) {
         log(formatCommandsAsMarkdown(commands));
