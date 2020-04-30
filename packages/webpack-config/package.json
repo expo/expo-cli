@@ -24,7 +24,9 @@
     "test:e2e:buildNextJsFromExpoCLI": "EXPO_E2E_COMMAND='buildNextJsFromExpoCLI' jest --config jest/e2e-test-config.json --rootDir .",
     "test:e2e:startNextJsFromNextCLI": "EXPO_E2E_COMMAND='startNextJsFromNextCLI' jest --config jest/e2e-test-config.json --rootDir .",
     "test:e2e:buildNextJsFromNextCLI": "EXPO_E2E_COMMAND='buildNextJsFromNextCLI' jest --config jest/e2e-test-config.json --rootDir .",
+    "pretest:e2e": "yarn add -D puppeteer@^1.19.0",
     "test:e2e": "yarn test:e2e:start; yarn test:e2e:build",
+    "pretest:e2e:nextjs": "yarn add -D puppeteer@^1.19.0",
     "test:e2e:nextjs": "yarn test:e2e:startNextJs; yarn test:e2e:buildNextJs"
   },
   "license": "MIT",
@@ -82,7 +84,6 @@
     "@types/yup": "^0.26.24",
     "jest-puppeteer": "^4.3.0",
     "prettier": "^1.16.4",
-    "puppeteer": "^1.19.0",
     "rimraf": "^3.0.2",
     "serve": "^11.1.0"
   },
