@@ -1,6 +1,12 @@
 import path from 'path';
 
-import { ProjectTarget, getConfig, getDefaultTarget, resolveModule } from '@expo/config';
+import {
+  ProjectTarget,
+  getConfig,
+  getDefaultTarget,
+  projectHasModule,
+  resolveModule,
+} from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import { Reporter } from 'metro';
 import { ConfigT, InputConfigT } from 'metro-config';
@@ -96,7 +102,21 @@ export async function loadAsync(
   if (reporter) {
     defaultConfig = { ...defaultConfig, reporter };
   }
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  const { loadConfig } = require(resolveModule('metro-config', projectRoot, exp));
+  const { loadConfig } = importMetroConfigFromProject(projectRoot);
   return await loadConfig({ cwd: projectRoot, projectRoot, ...metroOptions }, defaultConfig);
+}
+
+function importMetroConfigFromProject(projectRoot: string) {
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+
+  const resolvedPath = projectHasModule('metro-config', projectRoot, exp);
+  if (!resolvedPath) {
+    throw new Error(
+      'Missing package "metro-config" in the project. ' +
+        'This usually means React Native is not installed. ' +
+        'Please verify that dependencies in package.json include "react-native" ' +
+        'and run `yarn` or `npm install`.'
+    );
+  }
+  return require(resolvedPath);
 }

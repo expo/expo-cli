@@ -1,4 +1,4 @@
-import { getConfig, resolveModule } from '@expo/config';
+import { getConfig, projectHasModule } from '@expo/config';
 import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
 import Log from '@expo/bunyan';
 import * as ExpoMetroConfig from '@expo/metro-config';
@@ -10,8 +10,7 @@ import LogReporter from './LogReporter';
 export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & { logger: Log };
 
 export async function runMetroDevServerAsync(projectRoot: string, options: MetroDevServerOptions) {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  const Metro = require(resolveModule('metro', projectRoot, exp));
+  const Metro = importMetroFromProject(projectRoot);
 
   const reporter = new LogReporter(options.logger);
 
@@ -42,4 +41,19 @@ export async function runMetroDevServerAsync(projectRoot: string, options: Metro
     server: serverInstance,
     middleware,
   };
+}
+
+function importMetroFromProject(projectRoot: string) {
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+
+  const resolvedPath = projectHasModule('metro', projectRoot, exp);
+  if (!resolvedPath) {
+    throw new Error(
+      'Missing package "metro" in the project. ' +
+        'This usually means React Native is not installed. ' +
+        'Please verify that dependencies in package.json include "react-native" ' +
+        'and run `yarn` or `npm install`.'
+    );
+  }
+  return require(resolvedPath);
 }
