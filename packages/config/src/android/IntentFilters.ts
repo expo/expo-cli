@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
@@ -57,8 +56,8 @@ export default function renderIntentFilters(intentFilters: any) {
 }
 
 function renderIntentFilterDatumEntries(datum: any) {
-  return _.toPairs(datum)
-    .map(entry => `android:${entry[0]}="${entry[1]}"`)
+  return Object.keys(datum)
+    .map(key => `android:${key}="${datum[key]}"`)
     .join(' ');
 }
 

@@ -1,9 +1,15 @@
 import path from 'path';
 
-import { ProjectTarget, getConfig, getDefaultTarget, resolveModule } from '@expo/config';
+import {
+  ProjectTarget,
+  getConfig,
+  getDefaultTarget,
+  projectHasModule,
+  resolveModule,
+} from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import { Reporter } from 'metro';
-import { ConfigT, InputConfigT, loadConfig } from 'metro-config';
+import { ConfigT, InputConfigT } from 'metro-config';
 
 const INTERNAL_CALLSITES_REGEX = new RegExp(
   [
@@ -27,7 +33,9 @@ export function getDefaultConfig(
   options: DefaultConfigOptions = {}
 ): InputConfigT {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  const reactNativePath = resolveModule('react-native', projectRoot, exp);
+  const reactNativePath = path.dirname(
+    resolveModule('react-native/package.json', projectRoot, exp)
+  );
 
   const target = options.target ?? process.env.EXPO_TARGET ?? getDefaultTarget(projectRoot);
   if (!(target === 'managed' || target === 'bare')) {
@@ -69,7 +77,7 @@ export function getDefaultConfig(
       },
     },
     transformer: {
-      babelTransformerPath: require.resolve('../transformer'),
+      babelTransformerPath: require.resolve('metro-react-native-babel-transformer'),
       // TODO: Bacon: Add path for web platform
       assetRegistryPath: path.join(reactNativePath, 'Libraries/Image/AssetRegistry'),
       assetPlugins: [resolveModule('expo/tools/hashAssetFiles', projectRoot, exp)],
@@ -94,5 +102,21 @@ export async function loadAsync(
   if (reporter) {
     defaultConfig = { ...defaultConfig, reporter };
   }
+  const { loadConfig } = importMetroConfigFromProject(projectRoot);
   return await loadConfig({ cwd: projectRoot, projectRoot, ...metroOptions }, defaultConfig);
+}
+
+function importMetroConfigFromProject(projectRoot: string) {
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+
+  const resolvedPath = projectHasModule('metro-config', projectRoot, exp);
+  if (!resolvedPath) {
+    throw new Error(
+      'Missing package "metro-config" in the project. ' +
+        'This usually means React Native is not installed. ' +
+        'Please verify that dependencies in package.json include "react-native" ' +
+        'and run `yarn` or `npm install`.'
+    );
+  }
+  return require(resolvedPath);
 }

@@ -24,8 +24,7 @@ To learn more about Next.js usage with Expo, check out the docs here: [Using Nex
 
 ### Contributing to the docs
 
-- [Documentation for the master branch](https://github.com/expo/expo/blob/master/docs/pages/versions/unversioned/guides/using-nextjs.md)
-- [Documentation for the latest stable release](https://docs.expo.io/versions/latest/guides/using-nextjs/)
+- [Documentation for the master branch](https://github.com/expo/expo/blob/master/docs/pages/guides/using-nextjs.md)
 
 ## License
 

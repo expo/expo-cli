@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.13.2",
+  "version": "0.13.4",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development ts-node ./server/dev-server",
@@ -8,7 +8,7 @@
     "build-client": "NODE_ENV=production next build && next export -o ./build/client",
     "build-server": "NODE_ENV=production tsc",
     "extract-fragment-types": "ts-node ./server/extract-fragment-types",
-    "clean": "rm -rf ./build",
+    "clean": "rimraf ./build",
     "prepare": "yarn run clean && yarn run build",
     "start": "yarn dev",
     "test": "jest --config jest.config.js"
@@ -20,7 +20,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@expo/config": "3.1.4",
+    "@expo/config": "3.2.0",
     "base64url": "3.0.1",
     "express": "4.16.4",
     "freeport-async": "2.0.0",
@@ -35,8 +35,8 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.8.3",
-    "@expo/babel-preset-cli": "0.2.10",
-    "@expo/xdl": "57.8.32",
+    "@expo/babel-preset-cli": "0.2.11",
+    "@expo/xdl": "57.9.1",
     "anser": "^1.4.7",
     "apollo-cache-inmemory": "^1.1.12",
     "apollo-client": "^2.2.8",
@@ -63,6 +63,7 @@
     "react-redux": "^5.0.7",
     "react-textarea-autosize": "^6.1.0",
     "redux": "^3.7.2",
+    "rimraf": "^3.0.2",
     "slugify": "^1.0.2",
     "ts-node": "^8.6.2",
     "velocity-react": "^1.4.1"

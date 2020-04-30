@@ -16,12 +16,7 @@ type CommandOptions = {
   };
 };
 
-export async function loginOrRegisterIfLoggedOut(): Promise<User> {
-  let user = await UserManager.getCurrentUserAsync();
-  if (user) {
-    return user;
-  }
-
+export async function loginOrRegisterAsync(): Promise<User> {
   log.warn('An Expo user account is required to proceed.');
 
   if (program.nonInteractive) {
@@ -60,6 +55,14 @@ export async function loginOrRegisterIfLoggedOut(): Promise<User> {
   } else {
     throw new CommandError('BAD_CHOICE', 'Not logged in.');
   }
+}
+
+export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
+  let user = await UserManager.getCurrentUserAsync();
+  if (user) {
+    return user;
+  }
+  return await loginOrRegisterAsync();
 }
 
 export async function login(options: CommandOptions): Promise<User> {

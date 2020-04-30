@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-config",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
   "types": "webpack.config.d.ts",
@@ -13,7 +13,7 @@
     "watch": "tsc --watch",
     "build": "tsc",
     "lint": "eslint .",
-    "clean": "rm -rf ./webpack/ ./tsconfig.tsbuildinfo",
+    "clean": "rimraf ./webpack/ ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
     "test": "jest --config jest/unit-test-config.js",
     "test:e2e:start": "EXPO_E2E_COMMAND='start' jest --config jest/e2e-test-config.json --rootDir .",
@@ -37,13 +37,13 @@
   "dependencies": {
     "@babel/core": "7.9.0",
     "@babel/runtime": "7.9.0",
-    "@expo/config": "3.1.4",
+    "@expo/config": "3.2.0",
     "babel-loader": "8.1.0",
     "chalk": "^4.0.0",
     "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "5.0.0",
     "css-loader": "^2.1.1",
-    "expo-pwa": "0.0.10",
+    "expo-pwa": "0.0.11",
     "file-loader": "4.2.0",
     "getenv": "^0.7.0",
     "html-loader": "^0.5.5",
@@ -68,7 +68,7 @@
     "yup": "^0.27.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.10",
+    "@expo/babel-preset-cli": "0.2.11",
     "@types/copy-webpack-plugin": "^5.0.0",
     "@types/html-webpack-plugin": "^3.2.0",
     "@types/node": "^12.0.12",
@@ -83,6 +83,7 @@
     "jest-puppeteer": "^4.3.0",
     "prettier": "^1.16.4",
     "puppeteer": "^1.19.0",
+    "rimraf": "^3.0.2",
     "serve": "^11.1.0"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df",

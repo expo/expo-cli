@@ -47,7 +47,7 @@ Object {
       StringContaining "hashAssetFiles",
     ],
     "assetRegistryPath": StringContaining "AssetRegistry",
-    "babelTransformerPath": StringContaining "transformer.js",
+    "babelTransformerPath": StringContaining "metro-react-native-babel-transformer",
   },
 }
 `;
@@ -86,7 +86,7 @@ Object {
       StringContaining "hashAssetFiles",
     ],
     "assetRegistryPath": StringContaining "AssetRegistry",
-    "babelTransformerPath": StringContaining "transformer.js",
+    "babelTransformerPath": StringContaining "metro-react-native-babel-transformer",
   },
 }
 `;

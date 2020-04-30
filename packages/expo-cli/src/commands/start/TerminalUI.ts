@@ -15,7 +15,7 @@ import trimStart from 'lodash/trimStart';
 import openBrowser from 'react-dev-utils/openBrowser';
 import readline from 'readline';
 import wordwrap from 'wordwrap';
-import { loginOrRegisterIfLoggedOut } from '../../accounts';
+import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import log from '../../log';
 import urlOpts from '../../urlOpts';
 import { startProjectInEditorAsync } from '../utils/EditorUtils';
@@ -57,17 +57,17 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
  \u203A Press ${platformInfo}.
  \u203A Press ${b`c`} to show info on ${u`c`}onnecting new devices.
  \u203A Press ${b`d`} to open DevTools in the default web browser.
- \u203A Press ${b`shift-d`} to ${openDevToolsAtStartup
-    ? 'disable'
-    : 'enable'} automatically opening ${u`D`}evTools at startup.${options.webOnly
-    ? ''
-    : `\n \u203A Press ${b`e`} to send an app link with ${u`e`}mail.`}
+ \u203A Press ${b`shift-d`} to ${
+    openDevToolsAtStartup ? 'disable' : 'enable'
+  } automatically opening ${u`D`}evTools at startup.${
+    options.webOnly ? '' : `\n \u203A Press ${b`e`} to send an app link with ${u`e`}mail.`
+  }
  \u203A Press ${b`p`} to toggle ${u`p`}roduction mode. (current mode: ${i(devMode)})
  \u203A Press ${b`r`} to ${u`r`}estart bundler, or ${b`shift-r`} to restart and clear cache.
  \u203A Press ${b`o`} to ${u`o`}pen the project in your editor.
- \u203A Press ${b`s`} to ${u`s`}ign ${username
-    ? `out. (Signed in as ${i('@' + username)}.)`
-    : 'in.'}
+ \u203A Press ${b`s`} to ${u`s`}ign ${
+    username ? `out. (Signed in as ${i('@' + username)}.)` : 'in.'
+  }
 `);
 };
 
@@ -132,7 +132,7 @@ export const startAsync = async (projectDir: string, options: StartOptions) => {
   UserManager.setInteractiveAuthenticationCallback(async () => {
     stopWaitingForCommand();
     try {
-      return await loginOrRegisterIfLoggedOut();
+      return await loginOrRegisterIfLoggedOutAsync();
     } finally {
       startWaitingForCommand();
     }
@@ -272,7 +272,7 @@ export const startAsync = async (projectDir: string, options: StartOptions) => {
       }
       case 'D': {
         clearConsole();
-        const enabled = !await UserSettings.getAsync('openDevToolsAtStartup', true);
+        const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', true));
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
         log(
           `Automatically opening DevTools ${b(
@@ -316,7 +316,7 @@ Please reload the project in the Expo app for the change to take effect.`
         } else {
           stopWaitingForCommand();
           try {
-            await loginOrRegisterIfLoggedOut();
+            await loginOrRegisterIfLoggedOutAsync();
           } catch (e) {
             log.error(e);
           } finally {
