@@ -31,7 +31,7 @@ import {
 } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 
-import { loginOrRegisterIfLoggedOut } from './accounts';
+import { loginOrRegisterAsync } from './accounts';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
@@ -327,7 +327,7 @@ function runAsync(programName: string) {
     Analytics.setVersionName(packageJSON.version);
     _registerLogs();
 
-    UserManager.setInteractiveAuthenticationCallback(loginOrRegisterIfLoggedOut);
+    UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);
 
     if (process.env.SERVER_URL) {
       let serverUrl = process.env.SERVER_URL;
