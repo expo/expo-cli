@@ -153,17 +153,17 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
           when: (answers: Record<string, Question>) => answers.uploadKeystore,
         },
         {
-          type: 'input',
-          name: 'keystoreAlias',
-          message: `Keystore Alias:`,
+          type: 'password',
+          name: 'keystorePassword',
+          message: `Keystore Password:`,
           validate: (val: string): boolean => val !== '',
           // @ts-ignore: The expected type comes from property 'when' which is declared here on type 'Question<Record<string, any>>'
           when: (answers: Record<string, Question>) => answers.uploadKeystore,
         },
         {
-          type: 'password',
-          name: 'keystorePassword',
-          message: `Keystore Password:`,
+          type: 'input',
+          name: 'keystoreAlias',
+          message: `Keystore Alias:`,
           validate: (val: string): boolean => val !== '',
           // @ts-ignore: The expected type comes from property 'when' which is declared here on type 'Question<Record<string, any>>'
           when: (answers: Record<string, Question>) => answers.uploadKeystore,
