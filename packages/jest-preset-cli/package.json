@@ -14,6 +14,6 @@
     "unit"
   ],
   "dependencies": {
-    "@expo/babel-preset-cli": "0.2.10"
+    "@expo/babel-preset-cli": "0.2.11"
   }
 }
