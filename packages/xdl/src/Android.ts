@@ -20,6 +20,8 @@ import * as Versions from './Versions';
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
 
 let _lastUrl: string | null = null;
+let _isAdbOwner: boolean | null = null;
+
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
 
@@ -116,9 +118,28 @@ export function isPlatformSupported(): boolean {
   );
 }
 
+async function adbAlreadyRunning(adb: string): Promise<boolean> {
+  try {
+    let result = await spawnAsync(adb, ['start-server']);
+    const lines = _.trim(result.stderr).split(/\r?\n/);
+    return lines.includes('* daemon started successfully') === false;
+  } catch (e) {
+    let errorMessage = _.trim(e.stderr || e.stdout);
+    if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
+      errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
+    }
+    throw new Error(errorMessage);
+  }
+}
+
 export async function getAdbOutputAsync(args: string[]): Promise<string> {
   await Binaries.addToPathAsync('adb');
   const adb = whichADB();
+
+  if (_isAdbOwner === null) {
+    const alreadyRunning = await adbAlreadyRunning(adb);
+    _isAdbOwner = alreadyRunning === false;
+  }
 
   try {
     let result = await spawnAsync(adb, args);
@@ -623,6 +644,10 @@ See https://docs.expo.io/versions/latest/guides/splash-screens/#differences-betw
 }
 
 export async function maybeStopAdbDaemonAsync() {
+  if (_isAdbOwner !== true) {
+    return false;
+  }
+
   try {
     await getAdbOutputAsync(['kill-server']);
     return true;
