@@ -2416,7 +2416,6 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
   await stopExpoServerAsync(projectRoot);
   ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Stopping Metro bundler');
   await stopReactNativeServerAsync(projectRoot);
-  await Android.maybeStopAdbDaemonAsync();
   if (!Config.offline) {
     try {
       await stopTunnelsAsync(projectRoot);
@@ -2424,6 +2423,8 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
       ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping ngrok ${e.message}`);
     }
   }
+
+  await Android.maybeStopAdbDaemonAsync();
 }
 
 export async function stopWebOnlyAsync(projectDir: string): Promise<void> {
