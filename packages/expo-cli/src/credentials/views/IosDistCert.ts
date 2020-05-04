@@ -596,6 +596,15 @@ export async function validateDistributionCertificate(ctx: Context, distribution
 
   const distCertManager = new DistCertManager(ctx.appleCtx);
   const certInfoFromApple = await distCertManager.list();
+  log(chalk.green(`==== Hello! Thank you for running this debug version of expo-cli ====`));
+  log(chalk.green(`We've received these distribution certificates from your Apple Account: `));
+  log(certInfoFromApple);
+  log(chalk.green(`We've received these distribution certificates as input from you: `));
+  log(distributionCert);
+  throw new Error(
+    `**** Please update https://github.com/expo/expo-cli/issues/2046 with your findings ****`
+  );
+
   const validDistributionCerts = await filterRevokedDistributionCerts(certInfoFromApple, [
     distributionCert,
   ]);
