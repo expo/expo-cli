@@ -2,7 +2,6 @@ import {
   WarningAggregator as ConfigWarningAggregator,
   findConfigFile,
   getConfig,
-  isUsingYarn,
   readConfigJsonAsync,
   resolveModule,
 } from '@expo/config';
@@ -90,7 +89,7 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   log.nested(
     'To compile and run your project in development, execute one of the following commands:'
   );
-  let packageManager = isUsingYarn(projectRoot) ? 'yarn' : 'npm';
+  let packageManager = PackageManager.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
