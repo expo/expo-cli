@@ -69,6 +69,7 @@ export function printInstructions(
   message += `\n\nNote that the development build is not optimized.\n`;
 
   message += `\n \u203A To create a production build, run ${chalk.bold(`expo build:web`)}`;
+  message += `\n \u203A Press ${chalk.bold(`w`)} to open the project in browser.`;
   message += `\n \u203A Press ${chalk.bold(`Ctrl+C`)} to exit.`;
 
   log(projectRoot, message, showInDevtools);
