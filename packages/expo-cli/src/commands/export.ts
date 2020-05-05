@@ -223,7 +223,7 @@ export default function(program: Command) {
     )
     .option('-d, --dump-assetmap', 'Dump the asset map for further processing.')
     .option('--dev', 'Configures static files for developing locally using a non-https server')
-    .option('-f, --force', '0verwrite expo generated files without showing the prompt')
+    .option('-f, --force', 'Overwrite files in output directory without prompting for confirmation')
     .option('-s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
     .option('--merge-src-dir [dir]', 'A repeatable source dir to merge in.', collect, [])
