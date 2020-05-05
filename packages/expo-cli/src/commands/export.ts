@@ -37,7 +37,7 @@ export async function action(projectDir: string, options: Options) {
       const question: Question = {
         type: 'confirm',
         name: 'action',
-        message: `Output directory ${outputPath} already exists, the following files and directories will be overwritten if they exist: \n${options.outputDir}/bundles, \n${options.outputDir}/assets, \n${options.outputDir}/ios-index.json, and \n${options.outputDir}/android-index.json. Would you like to continue?`,
+        message: `Output directory ${outputPath} already exists.\nThe following files and directories will be overwritten if they exist:\n- ${options.outputDir}/bundles\n- ${options.outputDir}/assets\n- ${options.outputDir}/ios-index.json\n- ${options.outputDir}/android-index.json\nWould you like to continue?`,
       };
 
       const { action } = await prompt(question);
