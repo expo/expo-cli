@@ -287,6 +287,8 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
     return;
   }
 
+  let isLikelyFirstPublish = false;
+
   const { projectRoot, exp, releaseChannel, iosManifestUrl, androidManifestUrl } = config;
 
   const { iosSupportingDirectory: supportingDirectory } = getIOSPaths(projectRoot);
@@ -295,6 +297,9 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
   if (fs.existsSync(path.join(supportingDirectory, 'Expo.plist'))) {
     // This is an app with expo-updates installed, set properties in Expo.plist
     await IosPlist.modifyAsync(supportingDirectory, 'Expo', (configPlist: any) => {
+      if (configPlist.EXUpdatesURL === 'YOUR-APP-URL-HERE') {
+        isLikelyFirstPublish = true;
+      }
       configPlist.EXUpdatesURL = iosManifestUrl;
       configPlist.EXUpdatesSDKVersion = exp.sdkVersion;
       if (releaseChannel) {
@@ -355,6 +360,15 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
       expoReleaseChannelRegex,
       expoReleaseChannelTag,
       androidManifestXmlPath
+    );
+  }
+
+  if (isLikelyFirstPublish) {
+    logger.global.warn(
+      '🚀 It looks like this your first publish for this project! ' +
+        "We've automatically set some configuration values in Expo.plist and AndroidManifest.xml. " +
+        "You'll need to make a new build with these changes before you can download the update " +
+        'you just published.'
     );
   }
 }
