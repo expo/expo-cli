@@ -16,5 +16,5 @@ export default function(program: Command) {
     .option('--platform [platform]', 'detached project platform')
     .option('--skipXcodeConfig [bool]', '[iOS only] if true, do not configure Xcode project')
     .description('Prepares a detached project for building')
-    .asyncActionProjectDir(action, true);
+    .asyncActionProjectDir(action);
 }

@@ -156,7 +156,7 @@ export class UserManagerInstance {
       throw new XDLError('NETWORK_REQUIRED', "Can't verify user without network access");
     }
 
-    let user = await this.getCurrentUserAsync();
+    let user = await this.getCurrentUserAsync({ silent: true });
     if (!user && this._interactiveAuthenticationCallbackAsync) {
       user = await this._interactiveAuthenticationCallbackAsync();
     }

@@ -49,6 +49,25 @@ export function addOnConfigurationChangedMainActivity(
   if (MainActivity.match(`onConfigurationChanged`)?.length) {
     return MainActivity;
   }
+
+  let MainActivityWithImports = addJavaImports(MainActivity, [
+    'android.content.Intent',
+    'android.content.res.Configuration',
+  ]);
+
   let pattern = new RegExp(`public class MainActivity extends ReactActivity {`);
-  return MainActivity.replace(pattern, ON_CONFIGURATION_CHANGED);
+  return MainActivityWithImports.replace(pattern, ON_CONFIGURATION_CHANGED);
+}
+
+// TODO: we should have a generic utility for doing this
+function addJavaImports(javaSource: string, javaImports: string[]): string {
+  const lines = javaSource.split('\n');
+  const lineIndexWithPackageDeclaration = lines.findIndex(line => line.match(/^package .*;$/));
+  for (let javaImport of javaImports) {
+    if (!javaSource.includes(javaImport)) {
+      const importStatement = `import ${javaImport};`;
+      lines.splice(lineIndexWithPackageDeclaration + 1, 0, importStatement);
+    }
+  }
+  return lines.join('\n');
 }

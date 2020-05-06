@@ -4,6 +4,7 @@ import url from 'url';
 
 import ProgressBar from 'progress';
 import last from 'lodash/last';
+import leven from 'leven';
 import compact from 'lodash/compact';
 import findLastIndex from 'lodash/findLastIndex';
 import boxen from 'boxen';
@@ -11,7 +12,6 @@ import bunyan from '@expo/bunyan';
 import chalk from 'chalk';
 import ora from 'ora';
 import simpleSpinner from '@expo/simple-spinner';
-import getenv from 'getenv';
 import program, { Command, Option } from 'commander';
 import {
   Analytics,
@@ -31,7 +31,7 @@ import {
 } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 
-import { loginOrRegisterIfLoggedOut } from './accounts';
+import { loginOrRegisterAsync } from './accounts';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
@@ -96,12 +96,7 @@ Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boole
         log.error(err.message);
       } else {
         log.error(err.message);
-        // TODO: Is there a better way to do this? EXPO_DEBUG needs to be set to view the stack trace
-        if (getenv.boolish('EXPO_DEBUG', false)) {
-          log.error(chalk.gray(err.stack));
-        } else {
-          log.error(chalk.grey('Set EXPO_DEBUG=true in your env to view the stack trace.'));
-        }
+        log.error(chalk.gray(err.stack));
       }
 
       process.exit(1);
@@ -121,10 +116,9 @@ Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boole
 // - Runs AsyncAction with the projectDir as an argument
 Command.prototype.asyncActionProjectDir = function(
   asyncFn: Action,
-  skipProjectValidation: boolean,
-  skipAuthCheck: boolean
+  options: { checkConfig?: boolean } = {}
 ) {
-  this.option('--config [file]', 'Specify a path to app.json');
+  this.option('--config [file]', 'Specify a path to app.json or app.config.js');
   return this.asyncAction(async (projectDir: string, ...args: any[]) => {
     const opts = args[0];
 
@@ -306,7 +300,7 @@ Command.prototype.asyncActionProjectDir = function(
     // If the packager/manifest server is running and healthy, there is no need
     // to rerun Doctor because the directory was already checked previously
     // This is relevant for command such as `send`
-    if (!skipProjectValidation && (await Project.currentStatus(projectDir)) !== 'running') {
+    if (options.checkConfig && (await Project.currentStatus(projectDir)) !== 'running') {
       let spinner = ora('Making sure project is set up correctly...').start();
       log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
@@ -333,7 +327,7 @@ function runAsync(programName: string) {
     Analytics.setVersionName(packageJSON.version);
     _registerLogs();
 
-    UserManager.setInteractiveAuthenticationCallback(loginOrRegisterIfLoggedOut);
+    UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);
 
     if (process.env.SERVER_URL) {
       let serverUrl = process.env.SERVER_URL;
@@ -370,9 +364,16 @@ function runAsync(programName: string) {
     });
 
     program.on('command:*', subCommand => {
-      log.warn(
-        `"${subCommand}" is not an ${programName} command. See "${programName} --help" for the full list of commands.`
+      let msg = `"${subCommand}" is not an expo command. See "expo --help" for the full list of commands.`;
+      const availableCommands = program.commands.map((cmd: Command) => cmd._name);
+      // finding the best match whose edit distance is less than 40% of their length.
+      const suggestion = availableCommands.find(
+        (commandName: string) => leven(commandName, subCommand[0]) < commandName.length * 0.4
       );
+      if (suggestion) {
+        msg = `"${subCommand}" is not an expo command -- did you mean ${suggestion}?\n See "expo --help" for the full list of commands.`;
+      }
+      log.warn(msg);
     });
 
     if (typeof program.nonInteractive === 'undefined') {
@@ -550,7 +551,7 @@ function formatCommandsAsMarkdown(commands: CommandData[]) {
 // This is the entry point of the CLI
 export function run(programName: string) {
   (async function() {
-    if (process.argv[2] == 'introspect') {
+    if (process.argv[2] === 'introspect') {
       let commands = generateCommandJSON();
       if (process.argv[3] && process.argv[3].includes('markdown')) {
         log(formatCommandsAsMarkdown(commands));

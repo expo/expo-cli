@@ -7,7 +7,7 @@ import {
 import * as Scheme from '@expo/config/build/android/Scheme';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
-import { sync } from 'glob';
+import { sync } from 'globby';
 import { join } from 'path';
 
 import { CommandError, Options } from './Options';
@@ -133,17 +133,10 @@ async function openUrlAsync(...props: (string | null)[]): Promise<string> {
 }
 
 export async function openAsync({
-  projectRoot,
-  manifestPath,
   uri,
-}: Pick<Options, 'projectRoot' | 'manifestPath' | 'uri'>): Promise<string> {
-  const manifest = await readConfigAsync(manifestPath ?? getConfigPath(projectRoot));
-
-  let androidPackage: string | null = null;
-  try {
-    androidPackage = await getPackageAsync(manifest);
-  } catch {}
-  return await openUrlAsync(uri, androidPackage);
+  androidPackage,
+}: Pick<Options, 'uri'> & { androidPackage?: string }): Promise<string> {
+  return await openUrlAsync(uri, androidPackage ?? null);
 }
 
 export async function getAsync({

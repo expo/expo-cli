@@ -15,10 +15,10 @@ import trimStart from 'lodash/trimStart';
 import openBrowser from 'react-dev-utils/openBrowser';
 import readline from 'readline';
 import wordwrap from 'wordwrap';
-import { loginOrRegisterIfLoggedOut } from '../../accounts';
+import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import log from '../../log';
 import urlOpts from '../../urlOpts';
-import { startEditorAsync } from '../utils/EditorUtils';
+import { startProjectInEditorAsync } from '../utils/EditorUtils';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
@@ -132,7 +132,7 @@ export const startAsync = async (projectDir: string, options: StartOptions) => {
   UserManager.setInteractiveAuthenticationCallback(async () => {
     stopWaitingForCommand();
     try {
-      return await loginOrRegisterIfLoggedOut();
+      return await loginOrRegisterIfLoggedOutAsync();
     } finally {
       startWaitingForCommand();
     }
@@ -316,7 +316,7 @@ Please reload the project in the Expo app for the change to take effect.`
         } else {
           stopWaitingForCommand();
           try {
-            await loginOrRegisterIfLoggedOut();
+            await loginOrRegisterIfLoggedOutAsync();
           } catch (e) {
             log.error(e);
           } finally {
@@ -328,7 +328,7 @@ Please reload the project in the Expo app for the change to take effect.`
       }
       case 'o':
         log('Trying to open the project in your editor...');
-        await startEditorAsync(projectDir);
+        await startProjectInEditorAsync(projectDir);
     }
   }
 };

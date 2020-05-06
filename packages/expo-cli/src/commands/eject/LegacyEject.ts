@@ -10,7 +10,7 @@ import semver from 'semver';
 import temporary from 'tempy';
 
 import * as PackageManager from '@expo/package-manager';
-import { loginOrRegisterIfLoggedOut } from '../../accounts';
+import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
 import { validateGitStatusAsync } from '../utils/ProjectUtils';
@@ -126,12 +126,12 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
     log.nested('');
     log.nested('Then you can run the project:');
     log.nested('');
-    let packageManager = ConfigUtils.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
+    let packageManager = PackageManager.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
     log.nested(`  ${packageManager === 'npm' ? 'npm run android' : 'yarn android'}`);
     log.nested(`  ${packageManager === 'npm' ? 'npm run ios' : 'yarn ios'}`);
     await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
   } else if (ejectMethod === 'expokit') {
-    await loginOrRegisterIfLoggedOut();
+    await loginOrRegisterIfLoggedOutAsync();
     await Detach.detachAsync(projectRoot, options);
     log(chalk.green('Ejected successfully!'));
   } else if (ejectMethod === 'cancel') {
@@ -168,7 +168,7 @@ function ensureDependenciesMap(dependencies: any): DependenciesMap {
 }
 
 async function ejectToBareAsync(projectRoot: string): Promise<void> {
-  const useYarn = ConfigUtils.isUsingYarn(projectRoot);
+  const useYarn = PackageManager.isUsingYarn(projectRoot);
   const npmOrYarn = useYarn ? 'yarn' : 'npm';
   const { configPath, configName } = ConfigUtils.findConfigFile(projectRoot);
   const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);

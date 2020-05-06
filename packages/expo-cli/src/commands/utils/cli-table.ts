@@ -1,9 +1,9 @@
-import CliTable from 'cli-table';
+import CliTable, { CellValue } from 'cli-table3';
 import { JSONObject } from '@expo/json-file';
 
 export function printTableJsonArray(
   headers: string[],
-  jsonArray: JSONObject[],
+  jsonArray: { [key: string]: CellValue }[],
   colWidths: number[]
 ): string {
   const table = new CliTable({

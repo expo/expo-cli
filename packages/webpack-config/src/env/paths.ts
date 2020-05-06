@@ -4,15 +4,24 @@ import {
   ensureSlash,
   getAbsolutePathWithProjectRoot,
   getEntryPoint,
-  getModulesPath,
   getPossibleProjectRoot,
 } from '@expo/config/paths';
 import fs from 'fs';
 import path from 'path';
 import url from 'url';
+import findWorkspaceRoot from 'find-yarn-workspace-root';
 
-import { Environment, FilePaths, Mode } from '../types';
+import { Environment, FilePaths } from '../types';
 import getMode from './getMode';
+
+function getModulesPath(projectRoot: string): string {
+  const workspaceRoot = findWorkspaceRoot(path.resolve(projectRoot)); // Absolute path or null
+  if (workspaceRoot) {
+    return path.resolve(workspaceRoot, 'node_modules');
+  }
+
+  return path.resolve(projectRoot, 'node_modules');
+}
 
 function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePaths {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();

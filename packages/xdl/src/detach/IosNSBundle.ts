@@ -256,8 +256,9 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     // make sure this happens first:
     // apply any custom information from ios.infoPlist prior to all other exponent config
     let usageDescriptionKeysConfigured: { [key: string]: any } = {};
+    let extraConfig;
     if (config.ios && config.ios.infoPlist) {
-      let extraConfig = config.ios.infoPlist;
+      extraConfig = config.ios.infoPlist;
       for (let key in extraConfig) {
         if (extraConfig.hasOwnProperty(key)) {
           infoPlist[key] = extraConfig[key];
@@ -268,6 +269,13 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
           }
         }
       }
+    }
+
+    // reset the status bar style to the default gray. this can be removed if we
+    // ever change expo client to use `UIStatusBarStyleDefault` instead of
+    // `UIStatusBarStyleLightContent`
+    if (!extraConfig?.UIStatusBarStyle) {
+      infoPlist.UIStatusBarStyle = 'UIStatusBarStyleDefault';
     }
 
     // bundle id

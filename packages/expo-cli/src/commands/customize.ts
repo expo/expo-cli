@@ -2,10 +2,9 @@ import * as ConfigUtils from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { Command } from 'commander';
-// @ts-ignore enquirer has no exported member 'MultiSelect'
-import { MultiSelect } from 'enquirer';
 import fs from 'fs-extra';
 import path from 'path';
+import prompts from 'prompts';
 
 import * as PackageManager from '@expo/package-manager';
 import log from '../log';
@@ -108,9 +107,12 @@ export async function action(projectDir: string = './', options: Options = { for
     const exists = fs.existsSync(localProjectFile);
 
     values.push({
-      name: file,
-      disabled: !options.force && exists ? '✔︎' : false,
-      message: options.force && exists ? chalk.red(file) : file,
+      title: file,
+      value: file,
+      // @ts-ignore: broken types
+      disabled: !options.force && exists,
+      description:
+        options.force && exists ? chalk.red('This will overwrite the existing file') : '',
     });
   }
 
@@ -125,17 +127,19 @@ export async function action(projectDir: string = './', options: Options = { for
 
   await maybeWarnToCommitAsync(projectDir);
 
-  const prompt = new MultiSelect({
-    hint: '(Use <space> to select, <return> to submit)',
-    message: `Which files would you like to generate?`,
+  const { answer } = await prompts({
+    type: 'multiselect',
+    name: 'answer',
+    message: 'Which files would you like to generate?',
+    hint: '- Space to select. Return to submit',
+    // @ts-ignore: broken types
+    warn: 'File exists, use --force to overwrite it.',
     limit: values.length,
+    instructions: '',
     choices: values,
   });
-
-  let answer;
-  try {
-    answer = await prompt.run();
-  } catch (error) {
+  if (!answer) {
+    console.log('\n\u203A Exiting...\n');
     return;
   }
   await generateFilesAsync({ projectDir, staticPath, options, answer, templateFolder });

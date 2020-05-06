@@ -1,6 +1,5 @@
 import * as ConfigUtils from '@expo/config';
 import fs from 'fs';
-import { inflect } from 'inflection';
 import JsonFile from '@expo/json-file';
 import npmPackageArg from 'npm-package-arg';
 import path from 'path';
@@ -61,14 +60,13 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   const messages = [];
   if (nativeModules.length > 0) {
     messages.push(
-      `${nativeModules.length} SDK ${exp.sdkVersion} compatible native ${inflect(
-        'modules',
-        nativeModules.length
-      )}`
+      `${nativeModules.length} SDK ${exp.sdkVersion} compatible native ${
+        nativeModules.length === 1 ? 'module' : 'modules'
+      }`
     );
   }
   if (others.length > 0) {
-    messages.push(`${others.length} other ${inflect('packages', others.length)}`);
+    messages.push(`${others.length} other ${others.length === 1 ? 'package' : 'packages'}`);
   }
   log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
   await packageManager.addAsync(...versionedPackages);

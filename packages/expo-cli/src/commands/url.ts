@@ -96,13 +96,13 @@ export default function(program: Command) {
     .description('Displays the URL you can use to view your project in Expo')
     .urlOpts()
     .allowOffline()
-    .asyncActionProjectDir(action, /* skipProjectValidation: */ true, /* skipAuthCheck: */ true);
+    .asyncActionProjectDir(action);
 
   program
     .command('url:ipa [project-dir]')
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .description('Displays the standalone iOS binary URL you can use to download your app binary')
-    .asyncActionProjectDir(logArtifactUrl('ios'), true);
+    .asyncActionProjectDir(logArtifactUrl('ios'));
 
   program
     .command('url:apk [project-dir]')
@@ -110,5 +110,5 @@ export default function(program: Command) {
     .description(
       'Displays the standalone Android binary URL you can use to download your app binary'
     )
-    .asyncActionProjectDir(logArtifactUrl('android'), true);
+    .asyncActionProjectDir(logArtifactUrl('android'));
 }

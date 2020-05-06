@@ -1,4 +1,3 @@
-import { JSONObject } from '@expo/json-file';
 import axios, { AxiosRequestConfig, Canceler } from 'axios';
 import concat from 'concat-stream';
 import ExtendableError from 'es6-error';
@@ -11,7 +10,6 @@ import Config from './Config';
 import * as ConnectionStatus from './ConnectionStatus';
 import * as Extract from './Extract';
 import * as Session from './Session';
-import { Cacher } from './tools/FsCache';
 import UserManager from './User';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
@@ -207,8 +205,6 @@ export default class ApiClient {
   static host: string = Config.api.host;
   static port: number = Config.api.port || 80;
 
-  static _schemaCaches: { [version: string]: Cacher<JSONObject> } = {};
-
   static setClientName(name: string) {
     exponentClient = name;
   }
@@ -238,21 +234,6 @@ export default class ApiClient {
   ) {
     let url = _rootBaseUrl() + path;
     return _callMethodAsync(url, method, requestBody, requestOptions);
-  }
-
-  static async xdlSchemaAsync(sdkVersion: string): Promise<JSONObject> {
-    if (!ApiClient._schemaCaches.hasOwnProperty(sdkVersion)) {
-      ApiClient._schemaCaches[sdkVersion] = new Cacher(
-        async () => {
-          return await ApiClient.callPathAsync(`/--/xdl-schema/${sdkVersion}`);
-        },
-        `schema-${sdkVersion}.json`,
-        0,
-        path.join(__dirname, `../caches/schema-${sdkVersion}.json`)
-      );
-    }
-
-    return await ApiClient._schemaCaches[sdkVersion].getAsync();
   }
 
   static async downloadAsync(

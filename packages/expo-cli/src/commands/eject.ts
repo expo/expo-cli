@@ -52,5 +52,5 @@ export default function(program: Command) {
       '-f --force',
       'Will attempt to generate an iOS project even when the system is not running macOS. Unsafe and may fail.'
     )
-    .asyncActionProjectDir(action, /* skipProjectValidation: */ false, /* skipAuthCheck: */ true);
+    .asyncActionProjectDir(action, { checkConfig: true });
 }

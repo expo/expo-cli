@@ -1,6 +1,5 @@
 import fs from 'fs-extra';
 import path from 'path';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
 
 import resolveFrom from 'resolve-from';
 import { getConfig } from '../Config';
@@ -17,15 +16,6 @@ export function ensureSlash(inputPath: string, needsSlash: boolean): string {
   } else {
     return inputPath;
   }
-}
-
-export function getModulesPath(projectRoot: string): string {
-  const workspaceRoot = findWorkspaceRoot(path.resolve(projectRoot)); // Absolute path or null
-  if (workspaceRoot) {
-    return path.resolve(workspaceRoot, 'node_modules');
-  }
-
-  return path.resolve(projectRoot, 'node_modules');
 }
 
 export function getPossibleProjectRoot(): string {

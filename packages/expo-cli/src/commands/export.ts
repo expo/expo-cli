@@ -8,6 +8,7 @@ import { Project, ProjectSettings, UrlUtils } from '@expo/xdl';
 import { ProjectTarget, getDefaultTarget } from '@expo/config';
 import { Command } from 'commander';
 
+import prompt, { Question } from '../prompt';
 import log from '../log';
 import { installExitHooks } from '../exit';
 import CommandError from '../CommandError';
@@ -25,15 +26,49 @@ type Options = {
   dumpAssetmap: boolean;
   dumpSourcemap: boolean;
   maxWorkers?: number;
+  force: boolean;
 };
 
 export async function action(projectDir: string, options: Options) {
   const outputPath = path.resolve(projectDir, options.outputDir);
+  let overwrite = options.force;
   if (fs.existsSync(outputPath)) {
-    throw new CommandError(
-      'OUTPUT_DIR_EXISTS',
-      `Output directory ${outputPath} already exists. Aborting export.`
-    );
+    if (!overwrite) {
+      const question: Question = {
+        type: 'confirm',
+        name: 'action',
+        message: `Output directory ${outputPath} already exists, the following files and directories will be overwritten if they exist: \n${options.outputDir}/bundles, \n${options.outputDir}/assets, \n${options.outputDir}/ios-index.json, and \n${options.outputDir}/android-index.json. Would you like to continue?`,
+      };
+
+      const { action } = await prompt(question);
+      if (action) {
+        overwrite = true;
+      } else {
+        throw new CommandError(
+          'OUTPUT_DIR_EXISTS',
+          `Output directory ${outputPath} already exists. Aborting export.`
+        );
+      }
+    }
+    if (overwrite) {
+      log(`Removing old files from ${outputPath}`);
+      const outputBundlesDir = path.resolve(outputPath, 'bundles');
+      const outputAssetsDir = path.resolve(outputPath, 'assets');
+      const outputAndroidJson = path.resolve(outputPath, 'android-index.json');
+      const outputiOSJson = path.resolve(outputPath, 'ios-index.json');
+      if (fs.existsSync(outputBundlesDir)) {
+        fs.removeSync(outputBundlesDir);
+      }
+      if (fs.existsSync(outputAssetsDir)) {
+        fs.removeSync(outputAssetsDir);
+      }
+      if (fs.existsSync(outputAndroidJson)) {
+        fs.removeSync(outputAndroidJson);
+      }
+      if (fs.existsSync(outputiOSJson)) {
+        fs.removeSync(outputiOSJson);
+      }
+    }
   }
   if (!options.publicUrl) {
     throw new CommandError('MISSING_PUBLIC_URL', 'Missing required option: --public-url');
@@ -208,6 +243,7 @@ export default function(program: Command) {
     )
     .option('-d, --dump-assetmap', 'Dump the asset map for further processing.')
     .option('--dev', 'Configures static files for developing locally using a non-https server')
+    .option('-f, --force', 'Overwrite files in output directory without prompting for confirmation')
     .option('-s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
     .option(
@@ -222,5 +258,5 @@ export default function(program: Command) {
       []
     )
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
-    .asyncActionProjectDir(action, false, true);
+    .asyncActionProjectDir(action, { checkConfig: true });
 }

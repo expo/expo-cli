@@ -1,0 +1,60 @@
+{
+  "name": "@expo/dev-server",
+  "version": "0.1.1",
+  "description": "Development servers for starting React Native projects",
+  "main": "build/MetroDevServer.js",
+  "scripts": {
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "prepare": "yarn run clean && yarn build",
+    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "lint": "eslint .",
+    "test": "jest"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "roots": [
+      "src"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/dev-server"
+  },
+  "keywords": [
+    "json",
+    "react-native",
+    "expo",
+    "react",
+    "metro",
+    "dev-server",
+    "bundler"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/expo/expo-cli/issues"
+  },
+  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/dev-server#readme",
+  "files": [
+    "build",
+    "!*/__tests__/*"
+  ],
+  "dependencies": {
+    "@expo/bunyan": "3.0.2",
+    "@expo/config": "3.2.0",
+    "@expo/metro-config": "0.1.1",
+    "@react-native-community/cli-server-api": "4.8.0",
+    "body-parser": "1.19.0",
+    "serialize-error": "6.0.0"
+  },
+  "devDependencies": {
+    "@expo/babel-preset-cli": "0.2.11",
+    "@types/connect": "^3.4.33",
+    "jest": "^25.3.0",
+    "node-fetch": "^2.6.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

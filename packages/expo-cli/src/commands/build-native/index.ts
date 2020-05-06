@@ -30,10 +30,10 @@ export default function(program: Command) {
       'Build an app binary for your project, signed and ready for submission to the Google Play Store / App Store.'
     )
     .option('-p --platform <platform>', 'Platform: [android|ios]', /^(android|ios)$/i)
-    .asyncActionProjectDir(buildAction);
+    .asyncActionProjectDir(buildAction, { checkConfig: true });
 
   program
     .command('build:status')
     .description(`Get the status of the latest builds for your project.`)
-    .asyncAction(statusAction);
+    .asyncAction(statusAction, { checkConfig: true });
 }

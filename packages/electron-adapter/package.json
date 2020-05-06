@@ -1,6 +1,6 @@
 {
   "name": "@expo/electron-adapter",
-  "version": "0.0.0-alpha.48",
+  "version": "0.0.0-alpha.51",
   "description": "Use Electron with Expo",
   "main": "build/Electron.js",
   "types": "build/Electron.d.ts",
@@ -9,7 +9,7 @@
     "build": "tsc",
     "test": "cd example && yarn && yarn test:build",
     "prepare": "yarn run clean && yarn build",
-    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "clean": "rimraf ./tsconfig.tsbuildinfo",
     "lint": "eslint ."
   },
   "bin": {
@@ -43,8 +43,9 @@
     "template"
   ],
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.8",
-    "@expo/webpack-config": "0.12.0"
+    "@expo/babel-preset-cli": "0.2.11",
+    "@expo/webpack-config": "0.12.3",
+    "rimraf": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"
@@ -54,10 +55,10 @@
     "electron": "^6.0.12"
   },
   "dependencies": {
-    "@expo/config": "3.1.2",
-    "@expo/package-manager": "0.0.15",
+    "@expo/config": "3.2.0",
+    "@expo/package-manager": "0.0.18",
     "@expo/spawn-async": "^1.5.0",
-    "chalk": "^2.4.2",
+    "chalk": "^4.0.0",
     "electron-webpack": "^2.7.4",
     "resolve-from": "^5.0.0"
   }

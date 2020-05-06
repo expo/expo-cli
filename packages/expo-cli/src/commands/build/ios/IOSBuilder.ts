@@ -1,3 +1,4 @@
+import os from 'os';
 import chalk from 'chalk';
 import pickBy from 'lodash/pickBy';
 import get from 'lodash/get';
@@ -5,6 +6,7 @@ import { XDLError } from '@expo/xdl';
 
 import { Dictionary } from 'lodash';
 import terminalLink from 'terminal-link';
+import semver from 'semver';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
 import * as utils from '../utils';
@@ -35,12 +37,15 @@ import {
   getProvisioningProfileFromParams,
   useProvisioningProfileFromParams,
 } from '../../../credentials/views/IosProvisioningProfile';
+import { IosAppCredentials, IosDistCredentials } from '../../../credentials/credentials';
 
 class IOSBuilder extends BaseBuilder {
   appleCtx?: apple.AppleCtx;
 
   async run(): Promise<void> {
     await this.validateProject();
+    this.maybeWarnDamagedSimulator();
+    log.addNewLineIfNone();
     await this.checkForBuildInProgress();
     if (this.options.type === 'archive') {
       await this.prepareCredentials();
@@ -50,6 +55,7 @@ class IOSBuilder extends BaseBuilder {
       await this.checkStatusBeforeBuild();
     }
     await this.build(publishedExpIds);
+    this.maybeWarnDamagedSimulator();
   }
 
   async validateProject() {
@@ -144,21 +150,102 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
           ErrorCodes.NON_INTERACTIVE,
           'Unable to proceed, see the above error message.'
         );
+      }
+
+      log(
+        chalk.bold.red(
+          'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
+        )
+      );
+      throw e;
+    } finally {
+      const credentials = await context.ios.getAllCredentials();
+      displayProjectCredentials(experienceName, bundleIdentifier, credentials);
+    }
+  }
+
+  async _setupDistCert(
+    ctx: Context,
+    experienceName: string,
+    bundleIdentifier: string,
+    appCredentials: IosAppCredentials
+  ): Promise<void> {
+    try {
+      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
+      const distCertFromParams = await getDistCertFromParams(this.options);
+      if (distCertFromParams) {
+        await useDistCertFromParams(ctx, appCredentials, distCertFromParams);
       } else {
-        log(
-          chalk.bold.red(
-            'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
-          )
+        await runCredentialsManager(
+          ctx,
+          new SetupIosDist({ experienceName, bundleIdentifier, nonInteractive })
         );
       }
+    } catch (e) {
+      log.error('Failed to set up Distribution Certificate');
+      throw e;
     }
+  }
 
-    const credentials = await context.ios.getAllCredentials();
-    displayProjectCredentials(experienceName, bundleIdentifier, credentials);
+  async _setupPushCert(
+    ctx: Context,
+    experienceName: string,
+    bundleIdentifier: string,
+    appCredentials: IosAppCredentials
+  ): Promise<void> {
+    try {
+      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
+      const pushKeyFromParams = await getPushKeyFromParams(this.options);
+      if (pushKeyFromParams) {
+        await usePushKeyFromParams(ctx, appCredentials, pushKeyFromParams);
+      } else {
+        await runCredentialsManager(
+          ctx,
+          new SetupIosPush({ experienceName, bundleIdentifier, nonInteractive })
+        );
+      }
+    } catch (e) {
+      log.error('Failed to set up Push Key');
+      throw e;
+    }
+  }
+
+  async _setupProvisioningProfile(
+    ctx: Context,
+    experienceName: string,
+    bundleIdentifier: string,
+    appCredentials: IosAppCredentials,
+    distributionCert: IosDistCredentials
+  ) {
+    try {
+      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
+      const provisioningProfileFromParams = await getProvisioningProfileFromParams(this.options);
+      if (provisioningProfileFromParams) {
+        await useProvisioningProfileFromParams(
+          ctx,
+          appCredentials,
+          this.options.teamId!,
+          provisioningProfileFromParams,
+          distributionCert
+        );
+      } else {
+        await runCredentialsManager(
+          ctx,
+          new SetupIosProvisioningProfile({
+            experienceName,
+            bundleIdentifier,
+            distCert: distributionCert,
+            nonInteractive,
+          })
+        );
+      }
+    } catch (e) {
+      log.error('Failed to set up Provisioning Profile');
+      throw e;
+    }
   }
 
   async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {
-    const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
     const appCredentials = await ctx.ios.getAppCredentials(experienceName, bundleIdentifier);
 
     if (ctx.hasAppleCtx()) {
@@ -168,16 +255,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
         { enablePushNotifications: true }
       );
     }
-
-    const distCertFromParams = await getDistCertFromParams(this.options);
-    if (distCertFromParams) {
-      await useDistCertFromParams(ctx, appCredentials, distCertFromParams);
-    } else {
-      await runCredentialsManager(
-        ctx,
-        new SetupIosDist({ experienceName, bundleIdentifier, nonInteractive })
-      );
-    }
+    await this._setupDistCert(ctx, experienceName, bundleIdentifier, appCredentials);
 
     const distributionCert = await ctx.ios.getDistCert(experienceName, bundleIdentifier);
     if (!distributionCert) {
@@ -187,36 +265,15 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       );
     }
 
-    const pushKeyFromParams = await getPushKeyFromParams(this.options);
-    if (pushKeyFromParams) {
-      await usePushKeyFromParams(ctx, appCredentials, pushKeyFromParams);
-    } else {
-      await runCredentialsManager(
-        ctx,
-        new SetupIosPush({ experienceName, bundleIdentifier, nonInteractive })
-      );
-    }
+    await this._setupPushCert(ctx, experienceName, bundleIdentifier, appCredentials);
 
-    const provisioningProfileFromParams = await getProvisioningProfileFromParams(this.options);
-    if (provisioningProfileFromParams) {
-      await useProvisioningProfileFromParams(
-        ctx,
-        appCredentials,
-        this.options.teamId!,
-        provisioningProfileFromParams,
-        distributionCert
-      );
-    } else {
-      await runCredentialsManager(
-        ctx,
-        new SetupIosProvisioningProfile({
-          experienceName,
-          bundleIdentifier,
-          distCert: distributionCert,
-          nonInteractive,
-        })
-      );
-    }
+    await this._setupProvisioningProfile(
+      ctx,
+      experienceName,
+      bundleIdentifier,
+      appCredentials,
+      distributionCert
+    );
   }
 
   async clearAndRevokeCredentialsIfRequested(ctx: Context, projectMetadata: any): Promise<void> {
@@ -320,6 +377,26 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       } else {
         // something weird happened, let's assume the icon is correct
       }
+    }
+  }
+
+  // warns for "damaged" builds when targeting simulator
+  // see: https://github.com/expo/expo-cli/issues/1197
+  maybeWarnDamagedSimulator() {
+    // see: https://en.wikipedia.org/wiki/Darwin_%28operating_system%29#Release_history
+    const isMacOsCatalinaOrLater =
+      os.platform() === 'darwin' && semver.satisfies(os.release(), '>=19.0.0');
+
+    if (isMacOsCatalinaOrLater && this.options.type === 'simulator') {
+      log.newLine();
+      log(
+        chalk.bold(
+          `🚨 If the build is not installable on your simulator because of "${chalk.underline(
+            `... is damaged and can't be opened.`
+          )}", please run:`
+        )
+      );
+      log(chalk.grey.bold('xattr -rd com.apple.quarantine /path/to/your.app'));
     }
   }
 }

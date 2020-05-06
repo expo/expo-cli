@@ -49,24 +49,27 @@ export default function(program: Command) {
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
-    .asyncActionProjectDir(async (projectDir: string, options: IosOptions) => {
-      if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
-        throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-      }
-      let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
-      if (!channelRe.test(options.releaseChannel)) {
-        log.error(
-          'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
-        );
-        process.exit(1);
-      }
-      options.type = await askBuildType(options.type, {
-        archive: 'Deploy the build to the store',
-        simulator: 'Run the build on a simulator',
-      });
-      const iosBuilder = new IOSBuilder(projectDir, options);
-      return iosBuilder.command();
-    });
+    .asyncActionProjectDir(
+      async (projectDir: string, options: IosOptions) => {
+        if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
+          throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
+        }
+        let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+        if (!channelRe.test(options.releaseChannel)) {
+          log.error(
+            'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
+          );
+          process.exit(1);
+        }
+        options.type = await askBuildType(options.type, {
+          archive: 'Deploy the build to the store',
+          simulator: 'Run the build on a simulator',
+        });
+        const iosBuilder = new IOSBuilder(projectDir, options);
+        return iosBuilder.command();
+      },
+      { checkConfig: true }
+    );
 
   program
     .command('build:android [project-dir]')
@@ -83,24 +86,27 @@ export default function(program: Command) {
     .description(
       'Build a standalone APK or App Bundle for your project, signed and ready for submission to the Google Play Store.'
     )
-    .asyncActionProjectDir(async (projectDir: string, options: AndroidOptions) => {
-      if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
-        throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-      }
-      let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
-      if (!channelRe.test(options.releaseChannel)) {
-        log.error(
-          'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
-        );
-        process.exit(1);
-      }
-      options.type = await askBuildType(options.type, {
-        apk: 'Build a package to deploy to the store or install directly on Android devices',
-        'app-bundle': 'Build an optimized bundle for the store',
-      });
-      const androidBuilder = new AndroidBuilder(projectDir, options);
-      return androidBuilder.command();
-    });
+    .asyncActionProjectDir(
+      async (projectDir: string, options: AndroidOptions) => {
+        if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
+          throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
+        }
+        let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+        if (!channelRe.test(options.releaseChannel)) {
+          log.error(
+            'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
+          );
+          process.exit(1);
+        }
+        options.type = await askBuildType(options.type, {
+          apk: 'Build a package to deploy to the store or install directly on Android devices',
+          'app-bundle': 'Build an optimized bundle for the store',
+        });
+        const androidBuilder = new AndroidBuilder(projectDir, options);
+        return androidBuilder.command();
+      },
+      { checkConfig: true }
+    );
 
   program
     .command('build:web [project-dir]')
@@ -117,9 +123,7 @@ export default function(program: Command) {
           ...options,
           dev: typeof options.dev === 'undefined' ? false : options.dev,
         });
-      },
-      /* skipProjectValidation: */ false,
-      /* skipAuthCheck: */ true
+      }
     );
 
   program
@@ -136,5 +140,5 @@ export default function(program: Command) {
       }
       const builder = new BaseBuilder(projectDir, options);
       return builder.commandCheckStatus();
-    }, /* skipProjectValidation: */ true);
+    });
 }

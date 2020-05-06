@@ -3,7 +3,7 @@
 Expo CLI
 </h1>
 
-<p align="center">Tools for making Expo apps.</p>
+<p align="center">Tools for creating, running, and deploying Universal Expo and React Native apps</p>
 
 <p align="center">
      
@@ -58,23 +58,34 @@ Expo CLI
 
 ## 🗺 Project Layout
 
-- [`expo-cli`](./packages/expo-cli)
-- [`expo-optimize`](./packages/expo-optimize)
-- [`@expo/android-manifest`](./packages/android-manifest)
-- [`@expo/babel-preset-cli`](./packages/babel-preset-cli)
-- [`@expo/config`](./packages/config)
-- [`@expo/dev-tools`](./packages/dev-tools)
-- [`@expo/electron-adapter`](./packages/electron-adapter)
-- [`@expo/expo-codemod`](./packages/expo-codemod)
-- [`@expo/image-utils`](./packages/image-utils)
-- [`@expo/json-file`](./packages/json-file)
-- [`@expo/next-adapter`](./packages/next-adapter)
-- [`@expo/osascript`](./packages/osascript)
-- [`@expo/schemer`](./packages/schemer)
-- [`@expo/traveling-fastlane`](./packages/traveling-fastlane)
-- [`@expo/webpack-config`](./packages/webpack-config)
-- [`@expo/webpack-pwa-manifest-plugin`](./packages/webpack-pwa-manifest-plugin)
-- [`@expo/xdl`](./packages/xdl)
+<!-- Begin auto-generation -->
+
+| Package                                                                   | Coverage                                                                                                                                                                                        |
+| ---                                                                       | ---                                                                                                                                                                                             |
+| [**`@expo/babel-preset-cli`**](./packages/babel-preset-cli)               | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=babelPresetCli)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/babel-preset-cli/src)               |
+| [**`@expo/config`**](./packages/config)                                   | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=config)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/config/src)                                 |
+| [**`@expo/configure-splash-screen`**](./packages/configure-splash-screen) | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=configureSplashScreen)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/configure-splash-screen/src) |
+| [**`@expo/dev-server`**](./packages/dev-server)                           | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=devServer)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/dev-server/src)                          |
+| [**`@expo/dev-tools`**](./packages/dev-tools)                             | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=devTools)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/dev-tools/src)                            |
+| [**`@expo/electron-adapter`**](./packages/electron-adapter)               | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=electronAdapter)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/electron-adapter/src)              |
+| [**`expo-cli`**](./packages/expo-cli)                                     | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=expoCli)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/expo-cli/src)                              |
+| [**`expo-codemod`**](./packages/expo-codemod)                             | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=expoCodemod)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/expo-codemod/src)                      |
+| [**`expo-optimize`**](./packages/expo-optimize)                           | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=expoOptimize)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/expo-optimize/src)                    |
+| [**`@expo/image-utils`**](./packages/image-utils)                         | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=imageUtils)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/image-utils/src)                        |
+| [**`@expo/json-file`**](./packages/json-file)                             | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=jsonFile)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/json-file/src)                            |
+| [**`@expo/metro-config`**](./packages/metro-config)                       | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=metroConfig)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/metro-config/src)                      |
+| [**`@expo/next-adapter`**](./packages/next-adapter)                       | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=nextAdapter)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/next-adapter/src)                      |
+| [**`@expo/osascript`**](./packages/osascript)                             | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=osascript)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/osascript/src)                           |
+| [**`@expo/package-manager`**](./packages/package-manager)                 | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=packageManager)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/package-manager/src)                |
+| [**`@expo/plist`**](./packages/plist)                                     | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=plist)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/plist/src)                                   |
+| [**`pod-install`**](./packages/pod-install)                               | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=podInstall)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/pod-install/src)                        |
+| [**`expo-pwa`**](./packages/pwa)                                          | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=pwa)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/pwa/src)                                       |
+| [**`@expo/schemer`**](./packages/schemer)                                 | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=schemer)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/schemer/src)                               |
+| [**`uri-scheme`**](./packages/uri-scheme)                                 | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=uriScheme)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/uri-scheme/src)                          |
+| [**`@expo/webpack-config`**](./packages/webpack-config)                   | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=webpackConfig)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/webpack-config/src)                  |
+| [**`@expo/xdl`**](./packages/xdl)                                         | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=xdl)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/xdl/src)                                       |
+
+<!-- Generated with $ node scripts/build-packages-toc.js -->
 
 ## 🏅 Badges
 

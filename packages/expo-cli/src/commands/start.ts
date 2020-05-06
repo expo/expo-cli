@@ -332,9 +332,7 @@ export default (program: any) => {
           return await startWebAction(projectDir, normalizedOptions);
         }
         return await action(projectDir, normalizedOptions);
-      },
-      /* skipProjectValidation: */ true,
-      /* skipAuthCheck: */ true
+      }
     );
 
   program
@@ -355,8 +353,6 @@ export default (program: any) => {
           projectDir,
           await normalizeOptionsAsync(projectDir, { ...options, webOnly: true })
         );
-      },
-      /* skipProjectValidation: */ true,
-      /* skipAuthCheck: */ true
+      }
     );
 };

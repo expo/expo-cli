@@ -1,12 +1,11 @@
 import path from 'path';
-import { sync as globSync } from 'glob';
+import { sync as globSync } from 'globby';
 import fs from 'fs-extra';
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
 import {
   getPbxproj,
   getProjectName,
-  getSourceRoot,
   isBuildConfig,
   removeComments,
   removeTestHosts,

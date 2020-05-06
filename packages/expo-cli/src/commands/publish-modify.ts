@@ -49,7 +49,8 @@ export default function(program: Command) {
         } catch (e) {
           log.error(e);
         }
-      }
+      },
+      { checkConfig: true }
     );
   program
     .command('publish:rollback [project-dir]')
@@ -86,7 +87,8 @@ export default function(program: Command) {
           }
         }
         await rollbackPublicationFromChannelAsync(projectDir, options as RollbackOptions);
-      }
+      },
+      { checkConfig: true }
     );
 }
 async function getUsageAsync(projectDir: string): Promise<string> {

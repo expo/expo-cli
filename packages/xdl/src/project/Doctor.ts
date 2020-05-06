@@ -2,7 +2,6 @@ import {
   ExpoConfig,
   PackageJSONConfig,
   configFilename,
-  fileExistsAsync,
   getConfig,
   getPackageJson,
   resolveModule,
@@ -111,15 +110,6 @@ async function _checkWatchmanVersionAsync(projectRoot: string) {
   }
 }
 
-export async function validateWithSchemaFileAsync(
-  projectRoot: string,
-  schemaPath: string
-): Promise<{ schemaErrorMessage: string | undefined; assetsErrorMessage: string | undefined }> {
-  let { exp } = getConfig(projectRoot);
-  let schema = JSON.parse(await fs.readFile(schemaPath, 'utf8'));
-  return validateWithSchema(projectRoot, exp, schema.schema, 'exp.json', 'UNVERSIONED', true);
-}
-
 export async function validateWithSchema(
   projectRoot: string,
   exp: any,
@@ -187,20 +177,6 @@ async function _validateExpJsonAsync(
     );
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-problem-checking-watchman-version');
-
-  const expJsonExists = await fileExistsAsync(path.join(projectRoot, 'exp.json'));
-  const appJsonExists = await fileExistsAsync(path.join(projectRoot, 'app.json'));
-
-  if (expJsonExists && appJsonExists) {
-    ProjectUtils.logWarning(
-      projectRoot,
-      'expo',
-      `Warning: Both app.json and exp.json exist in this directory. Only one should exist for a single project.`,
-      'doctor-both-app-and-exp-json'
-    );
-    return WARNING;
-  }
-  ProjectUtils.clearNotification(projectRoot, 'doctor-both-app-and-exp-json');
 
   let sdkVersion = exp.sdkVersion;
   const configName = configFilename(projectRoot);
