@@ -30,6 +30,7 @@ const SERVICE_ACCOUNT_JSON_QUESTION: Question = {
 export type AndroidPlatformOptions = PlatformOptions & {
   track: string;
   key: string;
+  releaseStatus?: 'completed' | 'draft' | 'halted' | 'inProgress';
 };
 
 export default class AndroidUploader extends BaseUploader {
@@ -45,7 +46,7 @@ export default class AndroidUploader extends BaseUploader {
 
   async _getPlatformSpecificOptions(): Promise<AndroidPlatformOptions> {
     const key = await this._getServiceAccountJSONPath();
-    return { key, track: this.options.track };
+    return { key, track: this.options.track, releaseStatus: this.options.releaseStatus };
   }
 
   async _getServiceAccountJSONPath() {
@@ -67,13 +68,13 @@ export default class AndroidUploader extends BaseUploader {
 
   async _uploadToTheStore(platformData: AndroidPlatformOptions, path: string): Promise<void> {
     const { fastlane } = this;
-    const { key, track } = platformData;
+    const { key, track, releaseStatus } = platformData;
     if (!this._exp) throw new Error('Expo Config is not defined');
 
-    await runFastlaneAsync(
-      fastlane.supplyAndroid,
-      [path, this._exp.android?.package, key, track],
-      {}
-    );
+    const args = [path, this._exp.android?.package, key, track];
+    if (releaseStatus) {
+      args.push(releaseStatus);
+    }
+    await runFastlaneAsync(fastlane.supplyAndroid, args, {});
   }
 }
