@@ -35,6 +35,24 @@ export type ProjectConfig = {
 };
 export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
 export type BareAppConfig = { name: string; [key: string]: any };
+export type HookArguments = {
+  config: any;
+  url: any;
+  exp: ExpoConfig;
+  iosBundle: string;
+  iosSourceMap: string | null;
+  iosManifest: any;
+  androidBundle: string;
+  androidSourceMap: string | null;
+  androidManifest: any;
+  projectRoot: string;
+  log: (msg: any) => void;
+};
+export type PostPublishHook = {
+  file: string;
+  config: any;
+  _fn: (input: HookArguments) => any;
+};
 
 type ExpoOrientation = 'default' | 'portrait' | 'landscape';
 type ExpoPrivacy = 'public' | 'unlisted';
@@ -959,7 +977,7 @@ export type ExpoConfig = {
    * Configuration for scripts to run to hook into the publish process
    */
   hooks?: {
-    postPublish?: string[];
+    postPublish?: PostPublishHook[];
   };
   /**
    * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/versions/latest/guides/offline-support.html)

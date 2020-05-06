@@ -2,6 +2,7 @@ import {
   ExpoConfig,
   PackageJSONConfig,
   Platform,
+  PostPublishHook,
   ProjectTarget,
   configFilename,
   getConfig,
@@ -147,26 +148,6 @@ type PublishOptions = {
 type PackagerOptions = {
   dev: boolean;
   minify: boolean;
-};
-
-type HookArguments = {
-  config: any;
-  url: any;
-  exp: PublicConfig;
-  iosBundle: string;
-  iosSourceMap: string | null;
-  iosManifest: any;
-  androidBundle: string;
-  androidSourceMap: string | null;
-  androidManifest: any;
-  projectRoot: string;
-  log: (msg: any) => void;
-};
-
-type PostPublishHook = {
-  file: string;
-  config: any;
-  _fn: (input: HookArguments) => any;
 };
 
 type Release = {
