@@ -78,8 +78,8 @@ export function getRulesAsItems(rules: RuleSetRule[]): RuleItem[] {
  * @category utils
  */
 export function getRules(config: AnyConfiguration): RuleItem[] {
-  const { preLoaders = [], postLoaders = [], rules = [] } = config.module || {};
-  return getRulesAsItems(getRulesFromRules([...preLoaders, ...postLoaders, ...rules]));
+  const { rules = [] } = config.module || {};
+  return getRulesAsItems(getRulesFromRules(rules));
 }
 
 /**
@@ -89,10 +89,8 @@ export function getRules(config: AnyConfiguration): RuleItem[] {
  * @category utils
  */
 export function getExpoBabelLoader(config: AnyConfiguration): Rule | null {
-  const { preLoaders = [], postLoaders = [], rules = [] } = config.module || {};
-  const currentRules = getRulesAsItems(
-    getRulesFromRules([...preLoaders, ...postLoaders, ...rules])
-  );
+  const { rules = [] } = config.module || {};
+  const currentRules = getRulesAsItems(getRulesFromRules(rules));
   for (const ruleItem of currentRules) {
     const rule: any = ruleItem.rule;
     if (
