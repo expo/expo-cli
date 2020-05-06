@@ -3,12 +3,7 @@ import { resolve } from 'path';
 import jimp from 'jimp';
 import fs from 'fs-extra';
 import { ExpoConfig } from '../Config.types';
-
-const IC_LAUNCHER_XML_TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@mipmap/ic_launcher_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-</adaptive-icon>`;
+import { Colors } from '.';
 
 type dpiMap = { [dpistring: string]: { folderName: string; scale: number } };
 
@@ -21,6 +16,7 @@ const dpiValues: dpiMap = {
 };
 
 const ANDROID_RES_PATH = 'android/app/src/main/res/';
+const ICON_BACKGROUND = 'iconBackground';
 const IC_LAUNCHER_PNG = 'ic_launcher.png';
 const IC_LAUNCHER_ROUND_PNG = 'ic_launcher_round.png';
 const IC_LAUNCHER_BACKGROUND_PNG = 'ic_launcher_background.png';
@@ -70,11 +66,16 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
       let iconImage = await resizeImageAsync(projectRoot, iconPath, width, height);
       if (backgroundImage && foregroundImage) {
         // if a background image is supplied, layer the foreground on top of that image.
-        let resizedBackgroundImage = await resizeImageAsync(projectRoot, iconPath, width, height);
+        let resizedBackgroundImage = await resizeImageAsync(
+          projectRoot,
+          backgroundImage,
+          width,
+          height
+        );
         iconImage = resizedBackgroundImage.composite(iconImage, 0, 0);
       }
       iconImage.write(destinationPathRegular);
-      iconImage.write(destinationPathRound);
+      iconImage.circle().write(destinationPathRound);
     } catch (e) {
       throw new Error('Encountered an issue resizing app icon: ' + e);
     }
@@ -85,7 +86,9 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
     return;
   }
 
-  // Adaptive Icon
+  // set background color in colors.xml
+  setBackgroundColor(projectRoot, backgroundColor);
+
   for (let dpi in dpiValues) {
     const { folderName, scale } = dpiValues[dpi];
     width = height = 48 * scale;
@@ -120,16 +123,17 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
         );
         finalAdpativeIconBackground.write(destinationPathAdaptiveIconBackground);
       }
-      if (backgroundColor) {
-        // TODO: Cruzan
-      }
     } catch (e) {
       throw new Error('Encountered an issue resizing adaptive app icon: ' + e);
     }
   }
 
   // create ic_launcher.xml and ic_launcher_round.xml
-  await createAdaptiveIconXmlFiles(projectRoot);
+  let icLauncherXmlString = createAdaptiveIconXmlString(
+    backgroundImage ? '' : backgroundColor,
+    backgroundImage
+  );
+  await createAdaptiveIconXmlFiles(projectRoot, icLauncherXmlString);
 }
 
 async function resizeImageAsync(
@@ -145,12 +149,42 @@ async function resizeImageAsync(
   return await jimp.read(resizedImage.source);
 }
 
-async function createAdaptiveIconXmlFiles(projectRoot: string) {
+async function setBackgroundColor(projectDir: string, backgroundColor: string) {
+  let colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectDir);
+  if (!colorsXmlPath) {
+    console.warn(
+      'Unable to find a colors.xml file in your android project. Background color is not being set.'
+    );
+    return;
+  }
+  let colorsJson = await Colors.readColorsXMLAsync(colorsXmlPath);
+  let colorItemToAdd = [
+    {
+      _: backgroundColor,
+      $: { name: ICON_BACKGROUND },
+    },
+  ];
+  Colors.setColorItem(colorItemToAdd, colorsJson);
+}
+
+const createAdaptiveIconXmlString = (
+  backgroundColor: string | null,
+  backgroundImage: string | null
+) => `<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    ${
+      backgroundImage
+        ? `<background android:drawable="@mipmap/ic_launcher_background"/>`
+        : backgroundColor
+        ? `<background android:drawable="@color/iconBackground"/>`
+        : null
+    }
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>`;
+
+async function createAdaptiveIconXmlFiles(projectRoot: string, icLauncherXmlString: string) {
   let anyDpiV26Directory = resolve(projectRoot, ANDROID_RES_PATH, 'mipmap-anydpi-v26');
   await fs.mkdir(anyDpiV26Directory);
-  await fs.writeFile(resolve(anyDpiV26Directory, 'ic_launcher.xml'), IC_LAUNCHER_XML_TEMPLATE);
-  await fs.writeFile(
-    resolve(anyDpiV26Directory, 'ic_launcher_round.xml'),
-    IC_LAUNCHER_XML_TEMPLATE
-  );
+  await fs.writeFile(resolve(anyDpiV26Directory, 'ic_launcher.xml'), icLauncherXmlString);
+  await fs.writeFile(resolve(anyDpiV26Directory, 'ic_launcher_round.xml'), icLauncherXmlString);
 }
