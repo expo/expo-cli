@@ -1,45 +1,93 @@
+import { ExpoConfig, getConfig } from '@expo/config';
+import { Result, result } from '@expo/results';
+import chalk from 'chalk';
 import pick from 'lodash/pick';
 import size from 'lodash/size';
 import { Command } from 'commander';
+
+import { getAppConfig } from './upload/submission-service/utils';
+import AndroidSubmitter, {
+  AndroidSubmissionOptions,
+} from './upload/submission-service/android/AndroidSubmitter';
+import { ArchiveSource, ArchiveSourceType } from './upload/submission-service/ArchiveSource';
+import {
+  ArchiveType,
+  ReleaseStatus,
+  ReleaseTrack,
+} from './upload/submission-service/android/AndroidSubmissionConfig';
+import {
+  ServiceAccountSource,
+  ServiceAccountSourceType,
+} from './upload/submission-service/android/ServiceAccountSource';
+import {
+  AndroidPackageSource,
+  AndroidPackageSourceType,
+} from './upload/submission-service/android/AndroidPackageSource';
 
 import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
 import AndroidUploader, { AndroidPlatformOptions } from './upload/AndroidUploader';
 import log from '../log';
 
-const COMMON_OPTIONS = ['id', 'latest', 'path'];
+const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
 
-export default function (program: Command) {
-  const ANDROID_OPTIONS = [...COMMON_OPTIONS, 'key', 'track'];
-  const androidCommand = program.command('upload:android [projectDir]').alias('ua');
-  setCommonOptions(androidCommand, '.apk');
-  androidCommand
+export default function(program: Command) {
+  program
+    .command('upload:android [projectDir]')
+    .alias('ua')
+    .option('--latest', 'uploads the latest build (default)')
+    .option('--id <id>', 'id of the build to upload')
+    .option('--path <path>', 'path to the .apk/.aab file')
+    .option('--url <url>', 'app archive url')
     .option('--key <key>', 'path to the JSON key used to authenticate with Google Play')
+    .option(
+      '--android-package <android-package>',
+      'Android package name (using expo.android.package from app.json by default)'
+    )
+    .option('--type <archive-type>', 'archive type: apk, aab', /^(apk|aab)$/i, 'apk')
     .option(
       '--track <track>',
       'the track of the application to use, choose from: production, beta, alpha, internal, rollout',
       /^(production|beta|alpha|internal|rollout)$/i,
       'internal'
     )
+    .option(
+      '--release-status <release-status>',
+      'release status (used when uploading new apks/aabs), choose from: completed, draft, halted, inProgress',
+      /^(completed|draft|halted|inProgress)$/i,
+      'completed'
+    )
+    .option(
+      '--use-submission-service',
+      'Experimental: Use Submission Service for uploading your app. The upload process will happen on Expo servers.'
+    )
+    .option('--verbose', 'Print logs from Submission Service even if the submission succeeded')
     .description(
       'Uploads a standalone Android app to Google Play (works on macOS only). Uploads the latest build by default.'
     )
-    .asyncActionProjectDir(createUploadAction(AndroidUploader, ANDROID_OPTIONS), {
-      checkConfig: true,
+    // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
+    .asyncActionProjectDir(async (projectDir: string, options: any) => {
+      if (options.useSubmissionService) {
+        const ctx: SubmissionContext = { projectDir, options };
+        await submitAndroidApp(ctx);
+      } else {
+        const legacyUploader = createLegacyUploadAction(AndroidUploader, 'android', [
+          ...SOURCE_OPTIONS,
+          'key',
+          'track',
+          'releaseStatus',
+          'useSubmissionService',
+        ]);
+        await legacyUploader(projectDir, options);
+      }
     });
 
-  const IOS_OPTIONS = [
-    ...COMMON_OPTIONS,
-    'appleId',
-    'appleIdPassword',
-    'appName',
-    'companyName',
-    'sku',
-    'language',
-    'publicUrl',
-  ];
-  const iosCommand = program.command('upload:ios [projectDir]').alias('ui');
-  setCommonOptions(iosCommand, '.ipa');
-  iosCommand
+  program
+    .command('upload:ios [projectDir]')
+    .alias('ui')
+    .option('--latest', 'uploads the latest build (default)')
+    .option('--id <id>', 'id of the build to upload')
+    .option('--path <path>', 'path to the .ipa file')
+    .option('--url <url>', 'app archive url')
     .option(
       '--apple-id <apple-id>',
       'your Apple ID username (you can also set EXPO_APPLE_ID env variable)'
@@ -81,26 +129,51 @@ export default function (program: Command) {
       console.log(`  ${LANGUAGES.join(', ')}`);
       console.log();
     })
-    .asyncActionProjectDir(createUploadAction(IOSUploader, IOS_OPTIONS), { checkConfig: true });
-}
-
-function setCommonOptions(command: Command, fileExtension: string) {
-  command
-    .option('--latest', 'uploads the latest build (default)')
-    .option('--id <id>', 'id of the build to upload')
-    .option('--path <path>', `path to the ${fileExtension} file`);
+    // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
+    .asyncActionProjectDir(
+      createLegacyUploadAction(IOSUploader, 'ios', [
+        ...SOURCE_OPTIONS,
+        'appleId',
+        'appleIdPassword',
+        'appName',
+        'companyName',
+        'sku',
+        'language',
+        'publicUrl',
+      ])
+    );
 }
 
 type AnyUploader = any;
 
-function createUploadAction(UploaderClass: AnyUploader, optionKeys: string[]) {
+function createLegacyUploadAction(
+  UploaderClass: AnyUploader,
+  platform: 'android' | 'ios',
+  optionKeys: string[]
+) {
   return async (
     projectDir: string,
     command: AndroidPlatformOptions | IosPlatformOptions
   ): Promise<void> => {
     try {
-      ensurePlatformIsSupported();
-      ensureOptionsAreValid(command);
+      if (process.platform !== 'darwin') {
+        if (platform === 'android') {
+          log.error('Local Android uploads are only supported on macOS.');
+          log(
+            chalk.bold(
+              'Try --use-submission-service flag to upload your app from Expo servers. This feature is still experimental!'
+            )
+          );
+        } else {
+          log.error('Currently, iOS uploads are only supported on macOS, sorry :(');
+        }
+        process.exit(1);
+      }
+
+      const args = pick(command, SOURCE_OPTIONS);
+      if (size(args) > 1) {
+        throw new Error(`You have to choose only one of: --path, --id, --latest, --url`);
+      }
 
       const options = pick(command, optionKeys);
       if (UploaderClass.validateOptions) {
@@ -115,16 +188,198 @@ function createUploadAction(UploaderClass: AnyUploader, optionKeys: string[]) {
   };
 }
 
-function ensurePlatformIsSupported(): void {
-  if (process.platform !== 'darwin') {
-    log.error('Unsupported platform! This feature works on macOS only.');
-    process.exit(1);
+interface SubmissionContext {
+  projectDir: string;
+  options: AndroidCommandOptions;
+}
+
+interface AndroidCommandOptions {
+  latest?: boolean;
+  id?: string;
+  path?: string;
+  url?: string;
+  archiveType?: string;
+  key?: string;
+  androidPackage?: string;
+  track?: string;
+  releaseStatus?: string;
+  useSubmissionService?: boolean;
+  verbose?: boolean;
+}
+
+async function submitAndroidApp(ctx: SubmissionContext): Promise<void> {
+  const submissionOptions = getAndroidSubmissionOptions(ctx);
+  const submitter = new AndroidSubmitter(submissionOptions, ctx.options.verbose ?? false);
+  await submitter.submit();
+}
+
+function getAndroidSubmissionOptions(ctx: SubmissionContext): AndroidSubmissionOptions {
+  const androidPackage = resolveAndroidPackage(ctx);
+  const track = resolveTrack(ctx);
+  const releaseStatus = resolveReleaseStatus(ctx);
+  const archiveSource = resolveArchiveSource(ctx);
+  const archiveType = resolveArchiveType(ctx);
+  const serviceAccountSource = resolveServiceAccountSource(ctx);
+
+  const errored = [
+    androidPackage,
+    track,
+    releaseStatus,
+    archiveSource,
+    archiveType,
+    serviceAccountSource,
+  ].filter(r => !r.ok);
+  if (errored.length > 0) {
+    const message = errored.map(err => err.reason?.message).join('\n');
+    log.error(message);
+    throw new Error('Failed to submit the app');
+  }
+
+  return {
+    androidPackage: androidPackage.enforceValue(),
+    track: track.enforceValue(),
+    releaseStatus: releaseStatus.enforceValue(),
+    archiveSource: archiveSource.enforceValue(),
+    archiveType: archiveType.enforceValue(),
+    serviceAccountSource: serviceAccountSource.enforceValue(),
+  };
+}
+
+function resolveAndroidPackage(ctx: SubmissionContext): Result<AndroidPackageSource> {
+  let androidPackage: string | undefined;
+  if (ctx.options.androidPackage) {
+    androidPackage = ctx.options.androidPackage;
+  }
+  const exp = getExpoConfig(ctx.projectDir);
+  if (exp.android?.package) {
+    androidPackage = exp.android.package;
+  }
+  if (androidPackage) {
+    return result({
+      sourceType: AndroidPackageSourceType.userDefined,
+      androidPackage,
+    });
+  } else {
+    return result({
+      sourceType: AndroidPackageSourceType.prompt,
+    });
   }
 }
 
-function ensureOptionsAreValid(command: AndroidPlatformOptions | IosPlatformOptions): void {
-  const args = pick(command, COMMON_OPTIONS);
-  if (size(args) > 1) {
-    throw new Error(`You have to choose only one of --path, --id or --latest parameters`);
+function resolveTrack(ctx: SubmissionContext): Result<ReleaseTrack> {
+  const { track } = ctx.options;
+  if (!track) {
+    return result(ReleaseTrack.production);
   }
+  if (track in ReleaseTrack) {
+    return result(ReleaseTrack[track as keyof typeof ReleaseTrack]);
+  } else {
+    return result(
+      new Error(
+        `Unsupported track: ${track} (valid options: ${Object.keys(ReleaseTrack).join(', ')})`
+      )
+    );
+  }
+}
+
+function resolveReleaseStatus(ctx: SubmissionContext): Result<ReleaseStatus> {
+  const { releaseStatus } = ctx.options;
+  if (!releaseStatus) {
+    return result(ReleaseStatus.completed);
+  }
+  if (releaseStatus in ReleaseStatus) {
+    return result(ReleaseStatus[releaseStatus as keyof typeof ReleaseStatus]);
+  } else {
+    return result(
+      new Error(
+        `Unsupported release status: ${releaseStatus} (valid options: ${Object.keys(
+          ReleaseStatus
+        ).join(', ')})`
+      )
+    );
+  }
+}
+
+function resolveArchiveSource(ctx: SubmissionContext): Result<ArchiveSource> {
+  const chosenOptions = [ctx.options.url, ctx.options.path, ctx.options.id, ctx.options.latest];
+  if (chosenOptions.filter(opt => opt).length > 1) {
+    throw new Error(`Pass only one of: --url, --path, --id, --latest`);
+  }
+  if (ctx.options.url) {
+    return result({
+      sourceType: ArchiveSourceType.url,
+      url: ctx.options.url,
+    });
+  } else if (ctx.options.path) {
+    return result({
+      sourceType: ArchiveSourceType.path,
+      path: ctx.options.path,
+    });
+  } else if (ctx.options.id) {
+    // legacy for Turtle v1
+    const { owner, slug } = getAppConfig(ctx.projectDir);
+    return result({
+      sourceType: ArchiveSourceType.buildId,
+      platform: 'android',
+      id: ctx.options.id,
+      owner,
+      slug,
+    });
+  } else if (ctx.options.latest) {
+    // legacy for Turtle v1
+    const { owner, slug } = getAppConfig(ctx.projectDir);
+    return result({
+      sourceType: ArchiveSourceType.latest,
+      platform: 'android',
+      owner,
+      slug,
+    });
+  } else {
+    return result({
+      sourceType: ArchiveSourceType.prompt,
+      platform: 'android',
+      projectDir: ctx.projectDir,
+    });
+  }
+}
+
+function resolveArchiveType(ctx: SubmissionContext): Result<ArchiveType> {
+  const { archiveType } = ctx.options;
+  if (!archiveType) {
+    return result(ArchiveType.apk);
+  }
+  if (archiveType in ArchiveType) {
+    return result(ArchiveType[archiveType as keyof typeof ArchiveType]);
+  } else {
+    return result(
+      new Error(
+        `Unsupported archive type: ${archiveType} (valid options: ${Object.keys(ArchiveType).join(
+          ', '
+        )})`
+      )
+    );
+  }
+}
+
+function resolveServiceAccountSource(ctx: SubmissionContext): Result<ServiceAccountSource> {
+  const { key } = ctx.options;
+  if (key) {
+    return result({
+      sourceType: ServiceAccountSourceType.path,
+      path: key,
+    });
+  } else {
+    return result({
+      sourceType: ServiceAccountSourceType.prompt,
+    });
+  }
+}
+
+let exp: ExpoConfig;
+function getExpoConfig(projectDir: string): ExpoConfig {
+  if (!exp) {
+    const { exp: _exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
+    exp = _exp;
+  }
+  return exp;
 }
