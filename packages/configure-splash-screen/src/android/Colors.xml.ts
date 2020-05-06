@@ -5,8 +5,9 @@ import { Element } from 'xml-js';
 import { readXmlFile, writeXmlFile, mergeXmlElements } from '../xml-manipulation';
 
 const COLORS_XML_FILE_PATH = './res/values/colors.xml';
+const COLORS_NIGHT_XML_FILE_PATH = './res/values-night/colors.xml';
 
-function configureBackgroundColor(xml: Element, backgroundColor: ColorDescriptor): Element {
+function ensureDesiredXmlContent(xml: Element, backgroundColor: ColorDescriptor): Element {
   const result = mergeXmlElements(xml, {
     elements: [
       {
@@ -35,16 +36,34 @@ function configureBackgroundColor(xml: Element, backgroundColor: ColorDescriptor
   return result;
 }
 
+async function configureBackgroundColorForFile(
+  filePath: string,
+  backgroundColor?: ColorDescriptor
+) {
+  if (!backgroundColor) {
+    return;
+  }
+  const xmlContent = await readXmlFile(filePath);
+  const configuredXmlContent = ensureDesiredXmlContent(xmlContent, backgroundColor);
+  await writeXmlFile(filePath, configuredXmlContent);
+}
+
 /**
  * @param androidMainPath Path to the main directory containing code and resources in Android project. In general that would be `android/app/src/main`.
- * @param backgroundColor
  */
 export default async function configureColorsXml(
   androidMainPath: string,
-  backgroundColor: ColorDescriptor
+  backgroundColor: ColorDescriptor,
+  darkModeBackgroundColor?: ColorDescriptor
 ) {
-  const filePath = path.resolve(androidMainPath, COLORS_XML_FILE_PATH);
-  const xmlContent = await readXmlFile(filePath);
-  const configuredXmlContent = configureBackgroundColor(xmlContent, backgroundColor);
-  await writeXmlFile(filePath, configuredXmlContent);
+  await Promise.all([
+    configureBackgroundColorForFile(
+      path.resolve(androidMainPath, COLORS_XML_FILE_PATH),
+      backgroundColor
+    ),
+    configureBackgroundColorForFile(
+      path.resolve(androidMainPath, COLORS_NIGHT_XML_FILE_PATH),
+      darkModeBackgroundColor
+    ),
+  ]);
 }
