@@ -3,13 +3,19 @@
 👋 Welcome to <br><code>pod-install</code>
 </h1>
 
-<p align="center">CocoaPods setup made easy</p>
+<p align="center">A fast, zero-dependency package for cutting down on common issues developers have when running `pod install`.</p>
 
----
+<p align="center">
+  <img src="https://flat.badgen.net/packagephobia/install/pod-install">
+  
+  <a href="https://www.npmjs.com/package/pod-install">
+    <img alt="Install pod-install instantly" src="https://flat.badgen.net/npm/dw/pod-install" target="_blank" />
+  </a>
+</p>
 
-![so light](https://flat.badgen.net/packagephobia/install/pod-install)
 
-A fast, zero-dependency package for cutting down on common issues developers have when running `pod install`.
+
+
 
 <!-- Body -->
 
