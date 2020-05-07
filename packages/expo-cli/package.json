@@ -15,7 +15,6 @@
     "prepare": "yarn run clean && yarn run build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "preversion": "node ./scripts/preversion.js",
-    "pkg": "pkg .",
     "test": "jest",
     "test:watch": "jest --watch"
   },
@@ -53,9 +52,6 @@
   "engines": {
     "node": ">=6.9.1"
   },
-  "pkg": {
-    "scripts": "build/**/*.js"
-  },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
@@ -71,7 +67,6 @@
     "@types/targz": "^1.0.0",
     "@types/untildify": "^3.0.0",
     "@types/wordwrap": "^1.0.0",
-    "pkg": "^4.2.1",
     "rimraf": "^3.0.2"
   },
   "dependencies": {
