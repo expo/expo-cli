@@ -1,6 +1,4 @@
 import { createAdaptiveIconXmlString, getAdaptiveIcon, getIcon, setIconAsync } from '../Icon';
-jest.mock('fs');
-jest.mock('@expo/image-utils');
 
 const ADAPTIVE_ICON_XML_WITH_BOTH = `
 <?xml version="1.0" encoding="utf-8"?>
