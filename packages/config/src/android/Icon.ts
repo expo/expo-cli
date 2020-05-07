@@ -48,18 +48,7 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
   // Legacy Icon for Android 7 and earlier
   for (let dpi in dpiValues) {
     const { folderName, scale } = dpiValues[dpi];
-    let destinationPathRegular = resolve(
-      projectRoot,
-      ANDROID_RES_PATH,
-      folderName,
-      IC_LAUNCHER_PNG
-    );
-    let destinationPathRound = resolve(
-      projectRoot,
-      ANDROID_RES_PATH,
-      folderName,
-      IC_LAUNCHER_ROUND_PNG
-    );
+    let dpiFolderPath = resolve(projectRoot, ANDROID_RES_PATH, folderName);
     width = height = 48 * scale;
 
     try {
@@ -74,8 +63,8 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
         );
         iconImage = resizedBackgroundImage.composite(iconImage, 0, 0);
       }
-      iconImage.write(destinationPathRegular);
-      iconImage.circle().write(destinationPathRound);
+      iconImage.write(resolve(dpiFolderPath, IC_LAUNCHER_PNG));
+      iconImage.circle().write(resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG));
     } catch (e) {
       throw new Error('Encountered an issue resizing app icon: ' + e);
     }
@@ -92,18 +81,7 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
   for (let dpi in dpiValues) {
     const { folderName, scale } = dpiValues[dpi];
     width = height = 48 * scale;
-    let destinationPathAdaptiveIconForeground = resolve(
-      projectRoot,
-      ANDROID_RES_PATH,
-      folderName,
-      IC_LAUNCHER_FOREGROUND_PNG
-    );
-    let destinationPathAdaptiveIconBackground = resolve(
-      projectRoot,
-      ANDROID_RES_PATH,
-      folderName,
-      IC_LAUNCHER_BACKGROUND_PNG
-    );
+    let dpiFolderPath = resolve(projectRoot, ANDROID_RES_PATH, folderName);
 
     try {
       let finalAdpativeIconForeground = await resizeImageAsync(
@@ -112,7 +90,7 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
         width,
         height
       );
-      finalAdpativeIconForeground.write(destinationPathAdaptiveIconForeground);
+      finalAdpativeIconForeground.write(resolve(dpiFolderPath, IC_LAUNCHER_FOREGROUND_PNG));
 
       if (backgroundImage) {
         let finalAdpativeIconBackground = await resizeImageAsync(
@@ -121,7 +99,7 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
           width,
           height
         );
-        finalAdpativeIconBackground.write(destinationPathAdaptiveIconBackground);
+        finalAdpativeIconBackground.write(resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG));
       }
     } catch (e) {
       throw new Error('Encountered an issue resizing adaptive app icon: ' + e);
@@ -164,13 +142,15 @@ async function setBackgroundColor(projectDir: string, backgroundColor: string) {
       $: { name: ICON_BACKGROUND },
     },
   ];
-  Colors.setColorItem(colorItemToAdd, colorsJson);
+  colorsJson = Colors.setColorItem(colorItemToAdd, colorsJson);
+  Colors.writeColorsXMLAsync(colorsXmlPath, colorsJson);
 }
 
-const createAdaptiveIconXmlString = (
+export const createAdaptiveIconXmlString = (
   backgroundColor: string | null,
   backgroundImage: string | null
-) => `<?xml version="1.0" encoding="utf-8"?>
+) => `
+<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     ${
       backgroundImage
@@ -184,7 +164,9 @@ const createAdaptiveIconXmlString = (
 
 async function createAdaptiveIconXmlFiles(projectRoot: string, icLauncherXmlString: string) {
   let anyDpiV26Directory = resolve(projectRoot, ANDROID_RES_PATH, 'mipmap-anydpi-v26');
-  await fs.mkdir(anyDpiV26Directory);
+  if (!fs.pathExists(anyDpiV26Directory)) {
+    await fs.mkdir(anyDpiV26Directory);
+  }
   await fs.writeFile(resolve(anyDpiV26Directory, 'ic_launcher.xml'), icLauncherXmlString);
   await fs.writeFile(resolve(anyDpiV26Directory, 'ic_launcher_round.xml'), icLauncherXmlString);
 }
