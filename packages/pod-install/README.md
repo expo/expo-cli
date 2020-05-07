@@ -3,7 +3,7 @@
 👋 Welcome to <br><code>pod-install</code>
 </h1>
 
-<p align="center">A fast, zero-dependency package for cutting down on common issues developers have when running `pod install`.</p>
+<p align="center">A fast, zero-dependency package for cutting down on common issues developers have when running <code>pod install</code>.</p>
 
 <p align="center">
   <img src="https://flat.badgen.net/packagephobia/install/pod-install">
@@ -12,9 +12,6 @@
     <img alt="Install pod-install instantly" src="https://flat.badgen.net/npm/dw/pod-install" target="_blank" />
   </a>
 </p>
-
-
-
 
 
 <!-- Body -->
