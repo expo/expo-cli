@@ -87,28 +87,35 @@ async function normalizeOptionsAsync(
   }
   if (hasBooleanArg(rawArgs, 'https')) {
     opts.https = getBooleanArg(rawArgs, 'https');
+  } else {
+    opts.https = false;
   }
+
   if (hasBooleanArg(rawArgs, 'android')) {
     opts.android = getBooleanArg(rawArgs, 'android');
   }
+
   if (hasBooleanArg(rawArgs, 'ios')) {
     opts.ios = getBooleanArg(rawArgs, 'ios');
   }
+
   if (hasBooleanArg(rawArgs, 'web')) {
     opts.web = getBooleanArg(rawArgs, 'web');
   }
+
   if (hasBooleanArg(rawArgs, 'localhost')) {
     opts.localhost = getBooleanArg(rawArgs, 'localhost');
   }
+
   if (hasBooleanArg(rawArgs, 'lan')) {
     opts.lan = getBooleanArg(rawArgs, 'lan');
   }
+
   if (hasBooleanArg(rawArgs, 'tunnel')) {
     opts.tunnel = getBooleanArg(rawArgs, 'tunnel');
   }
 
   await cacheOptionsAsync(projectDir, opts);
-
   return opts;
 }
 
