@@ -1,9 +1,10 @@
+import { getPossibleProjectRoot } from '@expo/config/paths';
 import { Configuration } from 'webpack';
 
-import { Arguments, DevConfiguration, Environment, InputEnvironment } from './types';
-import { getPublicPaths, validateEnvironment } from './env';
-import webpackConfig from './webpack.config';
 import { withWorkbox } from './addons';
+import { getPublicPaths, validateEnvironment } from './env';
+import { Arguments, DevConfiguration, Environment, InputEnvironment } from './types';
+import webpackConfig from './webpack.config';
 
 /**
  * Create the official Webpack config for loading Expo web apps.
@@ -13,9 +14,13 @@ import { withWorkbox } from './addons';
  * @category default
  */
 export default async function createWebpackConfigAsync(
-  env: InputEnvironment,
+  env: InputEnvironment = {},
   argv: Arguments = {}
 ): Promise<Configuration | DevConfiguration> {
+  if (!env.projectRoot) {
+    env.projectRoot = getPossibleProjectRoot();
+  }
+
   const environment: Environment = validateEnvironment(env);
 
   const config: Configuration | DevConfiguration = await webpackConfig(environment, argv);
