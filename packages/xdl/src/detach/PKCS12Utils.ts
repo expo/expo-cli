@@ -22,7 +22,19 @@ export function findP12CertSerialNumber(
 ): string | null {
   const certData = _getCertData(p12Buffer, passwordRaw);
   const { serialNumber } = certData;
-  return serialNumber ? certData.serialNumber.replace(/^0+/, '').toUpperCase() : null;
+  return _getSerialNumber(serialNumber);
+}
+
+function _getSerialNumber(maybeSerialNumber: any) {
+  return maybeSerialNumber ? maybeSerialNumber.replace(/^0+/, '').toUpperCase() : null;
+}
+
+export function getCertData(p12Buffer: Buffer | string, passwordRaw: string | null) {
+  const certData = _getCertData(p12Buffer, passwordRaw);
+  return {
+    ...certData,
+    serialNumber: _getSerialNumber(certData.serialNumber),
+  };
 }
 
 function _getCertData(p12Buffer: Buffer | string, passwordRaw: string | null) {
