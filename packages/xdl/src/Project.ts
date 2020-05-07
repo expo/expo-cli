@@ -2399,9 +2399,9 @@ export async function startAsync(
     DevSession.startSession(projectRoot, exp, 'native');
   }
 
-  const packagerOpts = await ProjectSettings.readAsync(projectRoot);
+  const { hostType } = await ProjectSettings.readAsync(projectRoot);
 
-  if (!Config.offline && packagerOpts.hostType === 'tunnel') {
+  if (!Config.offline && hostType === 'tunnel') {
     try {
       await startTunnelsAsync(projectRoot);
     } catch (e) {
