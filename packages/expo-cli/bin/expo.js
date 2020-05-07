@@ -20,7 +20,7 @@ if (major < 10 || (major === 10 && minor < 13) || major === 11) {
 }
 
 // If newer than, or equal to, 14.x
-if (major >= 14) {
+if (major > 14) {
   console.error(
     '\x1B[33mWARNING: expo-cli has not yet been tested against Node.js ' +
       process.version +
