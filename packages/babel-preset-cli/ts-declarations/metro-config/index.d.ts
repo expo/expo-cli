@@ -224,5 +224,11 @@ declare module 'metro-config' {
     defaultConfigOverrides: InputConfigT = {}
   ): Promise<ConfigT>;
 
+  export function getDefaultConfig(rootPath?: string): Promise<ConfigT>;
+
+  namespace getDefaultConfig {
+    function getDefaultValues(rootPath?: string): ConfigT;
+  }
+
   //#endregion
 }
