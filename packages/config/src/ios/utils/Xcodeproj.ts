@@ -2,7 +2,7 @@
 import { project as Project } from 'xcode';
 // @ts-ignore
 import pbxFile from 'xcode/lib/pbxFile';
-import { sync as globSync } from 'globby';
+import { sync as globSync } from 'glob';
 import path from 'path';
 
 export function getProjectName(projectRoot: string) {

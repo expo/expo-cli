@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { sync as globSync } from 'globby';
+import { sync as globSync } from 'glob';
 import { ExpoConfig } from '../Config.types';
 import { Document } from './Manifest';
 
