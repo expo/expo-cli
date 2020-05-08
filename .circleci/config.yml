@@ -79,10 +79,10 @@ jobs:
           name: Install Dependencies
           command: yarn install --frozen-lockfile
       - run:
-          name: Bootstrap (Link) Internal Dependencies
-          command: yarn bootstrap
+          name: Type Check and Build Packages
+          command: yarn build
       - persist_to_workspace:
-          root: '~'
+          root: "~"
           paths:
             - expo-cli
       - save_cache:
@@ -98,7 +98,7 @@ jobs:
     working_directory: ~/expo-cli/packages/dev-tools
     steps:
       - attach_workspace:
-          at: '~'
+          at: "~"
       - run: yarn test
   test-expo-cli:
     parameters:
@@ -108,7 +108,7 @@ jobs:
     working_directory: ~/expo-cli/packages/expo-cli
     steps:
       - attach_workspace:
-          at: '~'
+          at: "~"
       - run: yarn test
   test-webpack-config-e2e:
     parameters:
@@ -118,7 +118,7 @@ jobs:
     working_directory: ~/expo-cli/packages/webpack-config
     steps:
       - attach_workspace:
-          at: '~'
+          at: "~"
       - run:
           name: Install test project dependencies
           command: cd e2e/basic && yarn; cd ../..
@@ -131,7 +131,7 @@ jobs:
     working_directory: ~/expo-cli/packages/webpack-config
     steps:
       - attach_workspace:
-          at: '~'
+          at: "~"
       - run:
           name: Install test project dependencies
           command: cd e2e/nextjs && yarn; cd ../..
@@ -144,5 +144,5 @@ jobs:
     working_directory: ~/expo-cli/packages/electron-adapter
     steps:
       - attach_workspace:
-          at: '~'
+          at: "~"
       - run: yarn test

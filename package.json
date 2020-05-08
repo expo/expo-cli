@@ -4,8 +4,7 @@
     "packages/*"
   ],
   "scripts": {
-    "bootstrap": "lerna bootstrap",
-    "postbootstrap": "lerna run prepare --stream",
+    "build": "lerna run prepare --stream",
     "postinstall": "expo-yarn-workspaces check-workspace-dependencies",
     "publish": "echo \"This script is deprecated. Run \\\"node ./scripts/publish.js\\\" instead.\"; exit 1",
     "start": "lerna --ignore \"@expo/{dev-tools,next-adapter,electron-adapter}\" --ignore expo-optimize --ignore pod-install --ignore uri-scheme run watch --parallel",
