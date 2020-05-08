@@ -44,7 +44,7 @@ export async function runAsync({
   for (const customization of manifest) {
     const enabled = await customization.onEnabledAsync({ projectRoot, force });
     values.push({
-      name: customization.name,
+      title: customization.name,
       value: customization.name,
       // @ts-ignore: broken types
       disabled: !force && !enabled,
