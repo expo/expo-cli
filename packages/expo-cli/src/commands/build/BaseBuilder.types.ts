@@ -4,6 +4,7 @@ export type CommonOptions = {
   releaseChannel: string;
   publish: boolean;
   wait: boolean;
+  skipWorkflowCheck?: boolean;
   parent?: { nonInteractive: boolean };
 };
 
