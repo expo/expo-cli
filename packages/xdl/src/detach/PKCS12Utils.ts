@@ -20,12 +20,11 @@ export function findP12CertSerialNumber(
   p12Buffer: Buffer | string,
   passwordRaw: string | null
 ): string | null {
-  const certData = _getCertData(p12Buffer, passwordRaw);
-  const { serialNumber } = certData;
-  return _getSerialNumber(serialNumber);
+  const { serialNumber } = getCertData(p12Buffer, passwordRaw);
+  return serialNumber;
 }
 
-function _getSerialNumber(maybeSerialNumber: any) {
+function _processSerialNumber(maybeSerialNumber: any) {
   return maybeSerialNumber ? maybeSerialNumber.replace(/^0+/, '').toUpperCase() : null;
 }
 
@@ -33,7 +32,7 @@ export function getCertData(p12Buffer: Buffer | string, passwordRaw: string | nu
   const certData = _getCertData(p12Buffer, passwordRaw);
   return {
     ...certData,
-    serialNumber: _getSerialNumber(certData.serialNumber),
+    serialNumber: _processSerialNumber(certData.serialNumber),
   };
 }
 
