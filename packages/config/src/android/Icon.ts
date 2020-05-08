@@ -56,6 +56,10 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
         // if a background image is supplied, layer the foreground on top of that image.
         let resizedBackgroundImage = await resizeImageAsync(backgroundImage, width, height);
         iconImage = resizedBackgroundImage.composite(iconImage, 0, 0);
+      } else if (backgroundColor && foregroundImage) {
+        // if a background color is supplied, layer the foreground on top of that color.
+        let resizedBackgroundImage = new Jimp(width, height, backgroundColor);
+        iconImage = resizedBackgroundImage.composite(iconImage, 0, 0);
       }
       iconImage.write(resolve(dpiFolderPath, IC_LAUNCHER_PNG));
       iconImage.circle().write(resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG));
