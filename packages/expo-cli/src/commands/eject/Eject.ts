@@ -75,14 +75,6 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
       'expo fetch:android:keystore'
     )}`
   );
-  log.nested(
-    `- 🚀 ${terminalLink(
-      'expo-updates',
-      'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
-    )} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
-      'expo publish'
-    )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
-  );
 
   log.newLine();
   log.nested(`☑️  ${chalk.bold('When you are ready to run your project')}`);
