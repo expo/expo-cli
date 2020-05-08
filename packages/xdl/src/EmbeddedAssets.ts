@@ -95,8 +95,11 @@ export function shouldEmbedAssetsForExpoUpdates(
     return false;
   }
 
+  // semver.coerce can return null
+  const expoUpdatesVersion = semver.coerce(pkg.dependencies['expo-updates']);
+
   // expo-updates 0.1.x relies on expo-cli automatically embedding the manifest and bundle
-  if (semver.satisfies(pkg.dependencies['expo-updates'], '~0.1.0')) {
+  if (expoUpdatesVersion && semver.satisfies(expoUpdatesVersion, '~0.1.0')) {
     return true;
   }
 

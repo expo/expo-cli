@@ -3,6 +3,7 @@ import spawnAsync from '@expo/spawn-async';
 import path from 'path';
 import fs from 'fs';
 import chalk from 'chalk';
+import semver from 'semver';
 
 import CommandError from '../../CommandError';
 import log from '../../log';
@@ -45,6 +46,30 @@ export async function findProjectRootAsync(
     'NO_PROJECT',
     'No managed or bare projects found. Please make sure you are inside a project folder.'
   );
+}
+
+// If we get here and can't find expo-updates or package.json we just assume
+// that we are not using the old expo-updates
+export async function usesOldExpoUpdatesAsync(projectRoot: string): Promise<boolean> {
+  let pkgPath = path.join(projectRoot, 'package.json');
+  let pkgExists = fs.existsSync(pkgPath);
+
+  if (!pkgExists) {
+    return false;
+  }
+
+  let dependencies = await JsonFile.getAsync(pkgPath, 'dependencies', {});
+  if (!dependencies['expo-updates']) {
+    return false;
+  }
+
+  let version = dependencies['expo-updates'] as string;
+  let coercedVersion = semver.coerce(version);
+  if (coercedVersion && semver.satisfies(coercedVersion, '~0.1.0')) {
+    return true;
+  }
+
+  return false;
 }
 
 export async function validateGitStatusAsync(): Promise<boolean> {

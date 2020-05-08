@@ -24,6 +24,7 @@ import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
+import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 
 type ValidationErrorMessage = string;
 
@@ -75,6 +76,17 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
       'expo fetch:android:keystore'
     )}`
   );
+
+  if (await usesOldExpoUpdatesAsync(projectRoot)) {
+    log.nested(
+      `- 🚀 ${terminalLink(
+        'expo-updates',
+        'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+      )} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
+        'expo publish'
+      )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
+    );
+  }
 
   log.newLine();
   log.nested(`☑️  ${chalk.bold('When you are ready to run your project')}`);
@@ -352,7 +364,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    * Add new app entry points
    */
   let removedPkgMain;
-  if (pkg.main !== EXPO_APP_ENTRY && pkg.main) {
+  if (pkg.main !== EXPO_APP_ENTRY && pkg.main !== 'index.js' && pkg.main) {
     removedPkgMain = pkg.main;
   }
   delete pkg.main;
