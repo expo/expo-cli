@@ -1,6 +1,6 @@
 {
   "name": "@expo/configure-splash-screen",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Supplementary module for 'expo-splash-screen' providing cli configuration command",
   "bin": {
     "configure-splash-screen": "./bin/configure.js",
