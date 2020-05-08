@@ -1,13 +1,11 @@
-import { createAdaptiveIconXmlString, getAdaptiveIcon, getIcon, setIconAsync } from '../Icon';
+import { createAdaptiveIconXmlString, getAdaptiveIcon, getIcon } from '../Icon';
 
-const ADAPTIVE_ICON_XML_WITH_BOTH = `
-<?xml version="1.0" encoding="utf-8"?>
+const ADAPTIVE_ICON_XML_WITH_BOTH = `<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@mipmap/ic_launcher_background"/>
     <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
 </adaptive-icon>`;
-const ADAPTIVE_ICON_XML_WITH_BACKGROUND_COLOR = `
-<?xml version="1.0" encoding="utf-8"?>
+const ADAPTIVE_ICON_XML_WITH_BACKGROUND_COLOR = `<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/iconBackground"/>
     <foreground android:drawable="@mipmap/ic_launcher_foreground"/>

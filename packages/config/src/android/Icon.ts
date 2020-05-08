@@ -1,9 +1,8 @@
-import { generateImageAsync } from '@expo/image-utils';
 import { resolve } from 'path';
-import jimp from 'jimp';
+import Jimp from 'jimp';
 import fs from 'fs-extra';
 import { ExpoConfig } from '../Config.types';
-import { Colors } from '.';
+import * as Colors from './Colors';
 
 type dpiMap = { [dpistring: string]: { folderName: string; scale: number } };
 
@@ -52,15 +51,10 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
     width = height = 48 * scale;
 
     try {
-      let iconImage = await resizeImageAsync(projectRoot, iconPath, width, height);
+      let iconImage = await resizeImageAsync(iconPath, width, height);
       if (backgroundImage && foregroundImage) {
         // if a background image is supplied, layer the foreground on top of that image.
-        let resizedBackgroundImage = await resizeImageAsync(
-          projectRoot,
-          backgroundImage,
-          width,
-          height
-        );
+        let resizedBackgroundImage = await resizeImageAsync(backgroundImage, width, height);
         iconImage = resizedBackgroundImage.composite(iconImage, 0, 0);
       }
       iconImage.write(resolve(dpiFolderPath, IC_LAUNCHER_PNG));
@@ -84,21 +78,11 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
     let dpiFolderPath = resolve(projectRoot, ANDROID_RES_PATH, folderName);
 
     try {
-      let finalAdpativeIconForeground = await resizeImageAsync(
-        projectRoot,
-        foregroundImage,
-        width,
-        height
-      );
+      let finalAdpativeIconForeground = await resizeImageAsync(foregroundImage, width, height);
       finalAdpativeIconForeground.write(resolve(dpiFolderPath, IC_LAUNCHER_FOREGROUND_PNG));
 
       if (backgroundImage) {
-        let finalAdpativeIconBackground = await resizeImageAsync(
-          projectRoot,
-          backgroundImage,
-          width,
-          height
-        );
+        let finalAdpativeIconBackground = await resizeImageAsync(backgroundImage, width, height);
         finalAdpativeIconBackground.write(resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG));
       }
     } catch (e) {
@@ -114,17 +98,10 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
   await createAdaptiveIconXmlFiles(projectRoot, icLauncherXmlString);
 }
 
-async function resizeImageAsync(
-  projectRoot: string,
-  imagePath: string,
-  width: number,
-  height: number
-) {
-  let resizedImage = await generateImageAsync(
-    { projectRoot, cacheType: '' },
-    { src: imagePath, width, height, resizeMode: 'contain', backgroundColor: '' }
-  );
-  return await jimp.read(resizedImage.source);
+async function resizeImageAsync(imagePath: string, width: number, height: number) {
+  let imageBuffer = (await Jimp.read(imagePath)).resize(width, height).quality(100);
+
+  return imageBuffer;
 }
 
 async function setBackgroundColor(projectDir: string, backgroundColor: string) {
@@ -149,8 +126,7 @@ async function setBackgroundColor(projectDir: string, backgroundColor: string) {
 export const createAdaptiveIconXmlString = (
   backgroundColor: string | null,
   backgroundImage: string | null
-) => `
-<?xml version="1.0" encoding="utf-8"?>
+) => `<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     ${
       backgroundImage
@@ -164,9 +140,8 @@ export const createAdaptiveIconXmlString = (
 
 async function createAdaptiveIconXmlFiles(projectRoot: string, icLauncherXmlString: string) {
   let anyDpiV26Directory = resolve(projectRoot, ANDROID_RES_PATH, 'mipmap-anydpi-v26');
-  if (!fs.pathExists(anyDpiV26Directory)) {
-    await fs.mkdir(anyDpiV26Directory);
-  }
+  await fs.mkdirp(anyDpiV26Directory);
+
   await fs.writeFile(resolve(anyDpiV26Directory, 'ic_launcher.xml'), icLauncherXmlString);
   await fs.writeFile(resolve(anyDpiV26Directory, 'ic_launcher_round.xml'), icLauncherXmlString);
 }
