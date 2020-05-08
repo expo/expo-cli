@@ -34,7 +34,7 @@
     "jest": "^25.2.6",
     "lerna": "3.4.1",
     "lint-staged": "^8.0.4",
-    "prettier": "^1.19.0"
+    "prettier": "^2.0.5"
   },
   "resolutions": {
     "@types/webpack": "4.41.8"
