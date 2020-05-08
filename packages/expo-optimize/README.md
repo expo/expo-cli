@@ -57,7 +57,7 @@ Read more about how this package works here: [Image compression in Expo projects
 ## Related
 
 - [sharp](https://sharp.pixelplumbing.com/) - native image editing library for node
-- [expo-cli](https://docs.expo.io/versions/latest/workflow/expo-cli/) - the original location for this command
+- [expo-cli](https://docs.expo.io/workflow/expo-cli/) - the original location for this command
   <!-- - [react-native-cli optimize](https://github.com/react-native-community/cli/pull/419) - an alias for this command -->
 
 ## License
@@ -77,4 +77,4 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
     </a>
 </p>
 
-[abp]: https://docs.expo.io/versions/latest/workflow/configuration/#assetbundlepatterns
+[abp]: https://docs.expo.io/workflow/configuration/#assetbundlepatterns

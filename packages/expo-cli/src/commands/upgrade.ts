@@ -176,7 +176,7 @@ async function makeBreakingChangesToConfigAsync(
             text: chalk.red(
               `Please manually update "androidNavigationBar.visible" according to ${terminalLink(
                 'this documentation',
-                'https://docs.expo.io/versions/latest/workflow/configuration/#androidnavigationbar'
+                'https://docs.expo.io/workflow/configuration/#androidnavigationbar'
               )}`
             ),
           });
@@ -209,7 +209,7 @@ async function maybeBailOnUnsafeFunctionalityAsync(
     const answer = await prompt({
       type: 'confirm',
       name: 'attemptOldUpdate',
-      message: `This command works best on SDK 33 and higher. We can try updating for you, but you will likely need to follow up with the instructions from https://docs.expo.io/versions/latest/workflow/upgrading-expo-sdk-walkthrough/. Continue anyways?`,
+      message: `This command works best on SDK 33 and higher. We can try updating for you, but you will likely need to follow up with the instructions from https://docs.expo.io/workflow/upgrading-expo-sdk-walkthrough/. Continue anyways?`,
     });
 
     if (!answer.attemptOldUpdate) {

@@ -46,6 +46,6 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
     </a>
 </p>
 
-[docs]: https://docs.expo.io/versions/latest/guides/using-electron/
+[docs]: https://docs.expo.io/guides/using-electron/
 [master-docs]: https://github.com/expo/expo/blob/master/docs/pages/versions/unversioned/guides/using-electron.md
 [expo-cli-issues]: https://github.com/expo/expo-cli/issues

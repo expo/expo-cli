@@ -115,4 +115,4 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
     </a>
 </p>
 
-[abp]: https://docs.expo.io/versions/latest/workflow/configuration/#assetbundlepatterns
+[abp]: https://docs.expo.io/workflow/configuration/#assetbundlepatterns

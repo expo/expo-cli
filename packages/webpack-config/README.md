@@ -583,5 +583,5 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
     </a>
 </p>
 
-[docs]: https://docs.expo.io/versions/latest/guides/customizing-webpack/
+[docs]: https://docs.expo.io/guides/customizing-webpack/
 [docs-latest]: https://github.com/expo/expo/blob/master/docs/pages/versions/unversioned/guides/customizing-webpack.md

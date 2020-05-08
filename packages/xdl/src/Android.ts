@@ -356,7 +356,7 @@ async function attemptToStartEmulatorOrAssertAsync() {
     if (!(await maybeStartAnyEmulatorAsync())) {
       const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
       throw new Error(
-        `No Android connected device found, and no emulators could be started automatically.\nPlease connect a device or create an emulator (https://docs.expo.io/versions/latest/workflow/android-studio-emulator).\nThen follow the instructions here to enable USB debugging:\n${genymotionMessage}`
+        `No Android connected device found, and no emulators could be started automatically.\nPlease connect a device or create an emulator (https://docs.expo.io/workflow/android-studio-emulator).\nThen follow the instructions here to enable USB debugging:\n${genymotionMessage}`
       );
     }
   }
@@ -605,7 +605,7 @@ export async function checkSplashScreenImages(projectDir: string): Promise<void>
 Be aware that your splash image will be used as xxxhdpi asset and its ${chalk.bold(
       'actual size will be different'
     )} depending on device's DPI.
-See https://docs.expo.io/versions/latest/guides/splash-screens/#differences-between-environments---android for more information`);
+See https://docs.expo.io/guides/splash-screens/#splash-screen-api-limitations-on-android for more information`);
     return;
   }
 
@@ -618,7 +618,7 @@ but their sizes mismatch expected ones: [dpi: provided (expected)] ${androidSpla
           `${dpi}: ${width}x${height} (${expectedWidth}x${expectedHeight})`
       )
       .join(', ')}
-See https://docs.expo.io/versions/latest/guides/splash-screens/#differences-between-environments---android for more information`);
+See https://docs.expo.io/guides/splash-screens/#splash-screen-api-limitations-on-android for more information`);
   }
 }
 

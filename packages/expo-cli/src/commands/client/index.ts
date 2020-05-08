@@ -188,7 +188,7 @@ export default function(program: Command) {
           );
           log(table.toString());
           log(
-            'See https://docs.expo.io/versions/latest/guides/adhoc-builds/#optional-additional-configuration-steps for more details.'
+            'See https://docs.expo.io/guides/adhoc-builds/#optional-additional-configuration-steps for more details.'
           );
         }
 
