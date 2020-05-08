@@ -82,7 +82,9 @@ export default function(program: Command) {
     .asyncActionProjectDir(
       async (projectDir: string, options: IosOptions) => {
         if (!options.skipWorkflowCheck) {
-          await maybeBailOnWorkflowWarning(projectDir, 'ios');
+          if (await maybeBailOnWorkflowWarning(projectDir, 'ios')) {
+            return;
+          }
         }
 
         if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
