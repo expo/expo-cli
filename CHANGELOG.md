@@ -10,6 +10,19 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu Apr 30 18:45:00 2020 +0300](https://github.com/expo/expo-cli/commit/efa712a70ce470714129af085ff746eb7e4e323d)
+
+### 🐛 Bug fixes
+
+- Resolve and import metro-config from the project ([#2048](https://github.com/expo/expo-cli/pull/2048) by [@fson](https://github.com/fson)).
+- Remove excessive warnings when session is logged out. ([#2053](https://github.com/expo/expo-cli/pull/2053) by [@jkhales](https://github.ciom/jkhales)).
+
+  - @expo/dev-server@0.1.1
+  - @expo/dev-tools@0.13.4
+  - expo-cli@3.20.1
+  - @expo/metro-config@0.1.1
+  - @expo/xdl@57.9.1
+
 ## [Thu Apr 30 00:23:03 2020 +0300](https://github.com/expo/expo-cli/commit/945feb8b8f7228420e3b7e7918635721f81697f6)
 
 - @expo/babel-preset-cli@0.2.11
