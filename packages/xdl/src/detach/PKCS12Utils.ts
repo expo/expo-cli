@@ -24,7 +24,7 @@ export function findP12CertSerialNumber(
   return serialNumber;
 }
 
-function _processSerialNumber(maybeSerialNumber: any) {
+function _processSerialNumber(maybeSerialNumber: string | null | undefined) {
   return maybeSerialNumber ? maybeSerialNumber.replace(/^0+/, '').toUpperCase() : null;
 }
 
