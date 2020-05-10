@@ -48,7 +48,7 @@
     "xml-js": "^1.6.11"
   },
   "peerDependencies": {
-    "expo-splash-screen": "1.0.0"
+    "expo-splash-screen": "*"
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.11",
