@@ -20,9 +20,20 @@ export function findP12CertSerialNumber(
   p12Buffer: Buffer | string,
   passwordRaw: string | null
 ): string | null {
+  const { serialNumber } = getCertData(p12Buffer, passwordRaw);
+  return serialNumber;
+}
+
+function _processSerialNumber(maybeSerialNumber: string | null | undefined) {
+  return maybeSerialNumber ? maybeSerialNumber.replace(/^0+/, '').toUpperCase() : null;
+}
+
+export function getCertData(p12Buffer: Buffer | string, passwordRaw: string | null) {
   const certData = _getCertData(p12Buffer, passwordRaw);
-  const { serialNumber } = certData;
-  return serialNumber ? certData.serialNumber.replace(/^0+/, '').toUpperCase() : null;
+  return {
+    ...certData,
+    serialNumber: _processSerialNumber(certData.serialNumber),
+  };
 }
 
 function _getCertData(p12Buffer: Buffer | string, passwordRaw: string | null) {
