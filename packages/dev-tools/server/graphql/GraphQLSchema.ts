@@ -576,7 +576,22 @@ const resolvers = {
     },
     async setProjectSettings(parent, { settings }, context) {
       const currentProject = context.getCurrentProject();
+      let previousSettings = await ProjectSettings.readAsync(currentProject.projectDir);
       let updatedSettings = await ProjectSettings.setAsync(currentProject.projectDir, settings);
+
+      // If 'tunnel' wasn't previously configured and it will be as a result of this request, start tunnels.
+      if (previousSettings.hostType !== 'tunnel' && updatedSettings.hostType === 'tunnel') {
+        try {
+          await Project.startTunnelsAsync(currentProject.projectDir);
+        } catch (e) {
+          ProjectUtils.logWarning(
+            currentProject.projectDir,
+            'expo',
+            `Error starting tunnel ${e.message}`
+          );
+        }
+      }
+
       return {
         ...currentProject,
         settings: updatedSettings,
