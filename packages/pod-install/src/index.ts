@@ -16,10 +16,17 @@ const program = new Command(packageJSON.name)
   .arguments('<project-directory>')
   .usage(`${chalk.green('<project-directory>')} [options]`)
   .description('Install pods in your project')
+  .option('--quiet', 'Only print errors')
   .option('--non-interactive', 'Disable interactive prompts')
   .action((inputProjectRoot: string) => (projectRoot = inputProjectRoot))
   .allowUnknownOption()
   .parse(process.argv);
+
+const info = (message: string) => {
+  if (!program.quiet) {
+    console.log(message);
+  }
+};
 
 async function runAsync(): Promise<void> {
   if (typeof projectRoot === 'string') {
@@ -28,13 +35,13 @@ async function runAsync(): Promise<void> {
   projectRoot = resolve(projectRoot);
 
   if (process.platform !== 'darwin') {
-    console.log(chalk.red('CocoaPods is only supported on darwin machines'));
+    info(chalk.red('CocoaPods is only supported on darwin machines'));
     return;
   }
 
   const possibleProjectRoot = CocoaPodsPackageManager.getPodProjectRoot(projectRoot);
   if (!possibleProjectRoot) {
-    console.log(chalk.yellow('CocoaPods is not supported in this project'));
+    info(chalk.yellow('CocoaPods is not supported in this project'));
     return;
   } else {
     projectRoot = possibleProjectRoot;
@@ -49,10 +56,12 @@ async function runAsync(): Promise<void> {
 
 (async () => {
   program.parse(process.argv);
-  console.log('Scanning for pods...');
+  info('Scanning for pods...');
   try {
     await runAsync();
-    await shouldUpdate();
+    if (!program.quiet) {
+      await shouldUpdate();
+    }
   } catch (reason) {
     console.log();
     console.log('Aborting run');
@@ -63,7 +72,9 @@ async function runAsync(): Promise<void> {
       console.log(reason);
     }
     console.log();
-    await shouldUpdate();
+    if (!program.quiet) {
+      await shouldUpdate();
+    }
     process.exit(1);
   }
 })();
