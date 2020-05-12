@@ -24,7 +24,7 @@ Expo CLI
 </p>
 
 <p align="center">
-  <a aria-label="expo documentation" href="https://docs.expo.io/workflow/expo-cli">📚 Read the Documentation</a>
+  <a aria-label="expo documentation" href="https://docs.expo.io/workflow/expo-cli/">📚 Read the Documentation</a>
   |
   <a aria-label="contribute to expo cli" href="https://github.com/expo/expo-cli/blob/master/CONTRIBUTING.md"><b>Contributing to Expo CLI</b></a>
 </p>
