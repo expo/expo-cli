@@ -25,4 +25,4 @@ function getExpoConfig(projectDir: string): ExpoConfig {
   return exp;
 }
 
-export { getAppConfig };
+export { getAppConfig, getExpoConfig };

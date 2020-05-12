@@ -3,7 +3,7 @@ import { Platform } from '@expo/config';
 import ora from 'ora';
 import validator from 'validator';
 
-import { getAppConfig } from './utils';
+import { getAppConfig } from './utils/config';
 import prompt from '../../../prompt';
 import { UploadType, uploadAsync } from '../../../uploads';
 import { existingFile } from '../../../validators';
