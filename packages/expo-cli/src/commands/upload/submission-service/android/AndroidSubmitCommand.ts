@@ -29,10 +29,10 @@ class AndroidSubmitCommand {
 
   constructor(private ctx: AndroidSubmissionContext) {}
 
-  async run(): Promise<void> {
+  async runAsync(): Promise<void> {
     const submissionOptions = this.getAndroidSubmissionOptions();
     const submitter = new AndroidSubmitter(submissionOptions, this.ctx.options.verbose ?? false);
-    await submitter.submit();
+    await submitter.submitAsync();
   }
 
   private getAndroidSubmissionOptions(): AndroidSubmissionOptions {
