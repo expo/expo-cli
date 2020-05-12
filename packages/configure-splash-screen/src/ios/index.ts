@@ -1,8 +1,8 @@
-import { ColorDescriptor } from 'color-string';
 import fs from 'fs-extra';
 
-import { ResizeMode } from '../constants';
-import configureAssets from './Assets';
+import { ResizeMode, Parameters } from '../constants';
+import configureImageAsset from './ImageAsset';
+import configureBackgroundAsset from './BackgroundAsset';
 import configureInfoPlist from './Info.plist';
 import configureStoryboard from './Storyboard';
 import readPbxProject from './pbxproj';
@@ -10,23 +10,21 @@ import readPbxProject from './pbxproj';
 export default async function configureIos(
   projectRootPath: string,
   {
-    imagePath,
     resizeMode,
     backgroundColor,
-  }: {
-    imagePath?: string;
-    resizeMode: ResizeMode;
-    backgroundColor: ColorDescriptor;
-  }
+    darkModeBackgroundColor,
+    imagePath,
+    darkModeImagePath,
+  }: Parameters & { resizeMode: ResizeMode }
 ) {
   const iosProject = await readPbxProject(projectRootPath);
 
   await Promise.all([
     configureInfoPlist(iosProject.projectPath),
-    configureAssets(iosProject.projectPath, imagePath),
+    configureImageAsset(iosProject.projectPath, imagePath, darkModeImagePath),
+    configureBackgroundAsset(iosProject.projectPath, backgroundColor, darkModeBackgroundColor),
     configureStoryboard(iosProject, {
       resizeMode,
-      backgroundColor,
       splashScreenImagePresent: !!imagePath,
     }),
   ]);

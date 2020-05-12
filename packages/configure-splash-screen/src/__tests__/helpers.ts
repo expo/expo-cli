@@ -1,4 +1,5 @@
 import { fs } from 'memfs';
+import sharp from 'sharp';
 
 const actualFs = jest.requireActual('fs') as typeof fs;
 
@@ -8,7 +9,7 @@ const actualFs = jest.requireActual('fs') as typeof fs;
  * @param fsJSON
  * @param rootDir
  */
-export function getDirFromFS(fsJSON: Record<string, string>, rootDir: string) {
+export function getDirFromFS(fsJSON: Record<string, string | null>, rootDir: string) {
   return Object.entries(fsJSON)
     .filter(([path, value]) => value !== null && path.startsWith(rootDir))
     .reduce<Record<string, string>>(
@@ -29,4 +30,12 @@ export async function readFileFromActualFS(filePath: string): Promise<string | B
       else resolve(data);
     })
   );
+}
+
+export async function getPng1x1FileContent(colorString: string) {
+  return (
+    await sharp({ create: { width: 1, height: 1, channels: 4, background: colorString } })
+      .png()
+      .toBuffer()
+  ).toString();
 }

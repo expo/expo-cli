@@ -21,7 +21,7 @@ describe('Colors.xml', () => {
     const filePathDarkMode = `${androidMainPath}/res/values-night/colors.xml`;
 
     it('creates correct file', async () => {
-      await configureColorsXml(androidMainPath, colorString.get('red'));
+      await configureColorsXml(androidMainPath, colorString.get('red')!);
       const actual = vol.readFileSync(filePath, 'utf-8');
       const expected = `<?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -33,7 +33,7 @@ describe('Colors.xml', () => {
     });
 
     it('creates correct file for dark mode', async () => {
-      await configureColorsXml(androidMainPath, colorString.get('red'), colorString.get('green'));
+      await configureColorsXml(androidMainPath, colorString.get('red')!, colorString.get('green')!);
       const actual = vol.readFileSync(filePathDarkMode, 'utf-8');
       const expected = `<?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -54,7 +54,7 @@ describe('Colors.xml', () => {
 </resources>
 `
       );
-      await configureColorsXml(androidMainPath, colorString.get('green'));
+      await configureColorsXml(androidMainPath, colorString.get('green')!);
       const actual = vol.readFileSync(filePath, 'utf-8');
       const expected = `<?xml version="1.0" encoding="utf-8"?>
 <resources>

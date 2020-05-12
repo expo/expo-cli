@@ -1,4 +1,3 @@
-import { ColorDescriptor } from 'color-string';
 import path from 'path';
 
 import { ResizeMode } from '../constants';
@@ -36,11 +35,9 @@ export default async function configureStoryboard(
   iosProject: IosProject,
   {
     resizeMode,
-    backgroundColor,
     splashScreenImagePresent,
   }: {
     resizeMode: ResizeMode;
-    backgroundColor: ColorDescriptor;
     splashScreenImagePresent: boolean;
   }
 ) {
@@ -56,12 +53,6 @@ export default async function configureStoryboard(
       throw new Error(`resizeMode = ${resizeMode} is not supported for iOS platform.`);
   }
 
-  const [r, g, b, a] = backgroundColor.value;
-  const red = r / 255;
-  const green = g / 255;
-  const blue = b / 255;
-  const alpha = a;
-
   const filePath = path.resolve(iosProject.projectPath, STORYBOARD_FILE_PATH);
   await createDirAndWriteFile(
     filePath,
@@ -69,7 +60,7 @@ export default async function configureStoryboard(
 <document
   type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB"
   version="3.0"
-  toolsVersion="15705"
+  toolsVersion="16096"
   targetRuntime="iOS.CocoaTouch"
   propertyAccessControl="none"
   useAutolayout="YES"
@@ -79,10 +70,11 @@ export default async function configureStoryboard(
   colorMatched="YES"
   initialViewController="EXPO-VIEWCONTROLLER-1"
 >
-  <device id="retina6_1" orientation="portrait" appearance="light"/>
+  <device id="retina5_5" orientation="portrait" appearance="light"/>
   <dependencies>
     <deployment identifier="iOS"/>
-    <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
+    <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
+    <capability name="Safe area layout guides" minToolsVersion="9.0"/>
     <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
   </dependencies>
   <scenes>
@@ -94,30 +86,77 @@ export default async function configureStoryboard(
           id="EXPO-VIEWCONTROLLER-1"
           sceneMemberID="viewController"
         >
-          <imageView
+          <view
             key="view"
-            clipsSubviews="YES"
             userInteractionEnabled="NO"
-            contentMode="${contentMode}"
-            horizontalHuggingPriority="251"
-            verticalHuggingPriority="251"${
-              splashScreenImagePresent ? '\n            image="SplashScreen"' : ''
-            }
-            id="EXPO-IMAGEVIEW-1"
+            contentMode="scaleToFill"
+            insetsLayoutMarginsFromSafeArea="NO"
+            id="EXPO-ContainerView"
+            userLabel="ContainerView"
           >
-            <rect key="frame" x="0.0" y="0.0" width="800" height="1600"/>
+            <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-            <color key="backgroundColor" red="${red}" green="${green}" blue="${blue}" alpha="${alpha}" colorSpace="custom" customColorSpace="sRGB"/>
-          </imageView>
-          <size key="freeformSize" width="800" height="1600"/>
+            <subviews>
+              <imageView
+                userInteractionEnabled="NO"
+                contentMode="scaleAspectFill"
+                horizontalHuggingPriority="251"
+                verticalHuggingPriority="251"
+                insetsLayoutMarginsFromSafeArea="NO"
+                image="SplashScreenBackground"
+                translatesAutoresizingMaskIntoConstraints="NO"
+                id="EXPO-SplashScreenBackground"
+                userLabel="SplashScreenBackground"
+              >
+                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+              </imageView>${
+                !splashScreenImagePresent
+                  ? ''
+                  : `
+              <imageView
+                clipsSubviews="YES"
+                userInteractionEnabled="NO"
+                contentMode="${contentMode}"
+                horizontalHuggingPriority="251"
+                verticalHuggingPriority="251"
+                translatesAutoresizingMaskIntoConstraints="NO"
+                image="SplashScreen"
+                id="EXPO-SplashScreen"
+                userLabel="SplashScreen"
+              >
+                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+              </imageView>`
+              }
+            </subviews>
+            <constraints>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="1gX-mQ-vu6"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="6tX-OG-Sck"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="ABX-8g-7v4"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="jkI-2V-eW5"/>${
+                !splashScreenImagePresent
+                  ? ''
+                  : `
+              <constraint firstItem="EXPO-SplashScreen" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="2VS-Uz-0LU"/>
+              <constraint firstItem="EXPO-SplashScreen" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="LhH-Ei-DKo"/>
+              <constraint firstItem="EXPO-SplashScreen" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="I6l-TP-6fn"/>
+              <constraint firstItem="EXPO-SplashScreen" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="nbp-HC-eaG"/>`
+              }
+            </constraints>
+            <viewLayoutGuide key="safeArea" id="Rmq-lb-GrQ"/>
+          </view>
         </viewController>
         <placeholder placeholderIdentifier="IBFirstResponder" id="EXPO-PLACEHOLDER-1" userLabel="First Responder" sceneMemberID="firstResponder"/>
       </objects>
-      <point key="canvasLocation" x="141" y="130"/>
+      <point key="canvasLocation" x="140.625" y="129.4921875"/>
     </scene>
   </scenes>
-  <resources>
-    <image name="SplashScreen" width="600" height="1200"/>
+  <resources>${
+    !splashScreenImagePresent
+      ? ''
+      : `
+    <image name="SplashScreen" width="414" height="736"/>`
+  }
+    <image name="SplashScreenBackground" width="1" height="1"/>
   </resources>
 </document>
 `

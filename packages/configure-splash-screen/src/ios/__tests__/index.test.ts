@@ -1,8 +1,8 @@
 import colorString from 'color-string';
-import { vol, fs } from 'memfs';
+import { vol } from 'memfs';
 import * as path from 'path';
 
-import { getDirFromFS } from '../../__tests__/helpers';
+import { getDirFromFS, readFileFromActualFS, getPng1x1FileContent } from '../../__tests__/helpers';
 import { ResizeMode } from '../../constants';
 import configureIos from '../index';
 import reactNativeProject from './fixtures/react-native-project-structure';
@@ -10,7 +10,6 @@ import reactNativeProjectWithSplashScreenConfiured from './fixtures/react-native
 
 // in `__mocks__/fs.ts` memfs is being used as a mocking library
 jest.mock('fs');
-const actualFs = jest.requireActual('fs') as typeof fs;
 // in `__mocks__/xcode.ts` parsing job for `.pbxproj` is performed synchronously on single tread
 jest.mock('xcode');
 
@@ -26,12 +25,18 @@ describe('ios', () => {
     it('configures project correctly with defaults', async () => {
       await configureIos('/app', {
         resizeMode: ResizeMode.CONTAIN,
-        backgroundColor: colorString.get('#E3F29238'),
+        backgroundColor: colorString.get('#E3F29238')!,
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
       // I don't compare `.pbxproj` as every time it is filled with new UUIDs
       delete received['ios/ReactNativeProject.xcodeproj/project.pbxproj'];
-      expect(received).toEqual(reactNativeProjectWithSplashScreenConfiured);
+      const expected = {
+        ...reactNativeProjectWithSplashScreenConfiured,
+        'ios/ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/background.png': await getPng1x1FileContent(
+          '#E3F29238'
+        ),
+      };
+      expect(received).toEqual(expected);
     });
 
     it('configures project with an image and ResizeMode.COVER', async () => {
@@ -39,19 +44,14 @@ describe('ios', () => {
         __dirname,
         '../../__tests__/fixtures/background.png'
       );
-      const backgroundImage = await new Promise<Buffer | string>((resolve, reject) =>
-        actualFs.readFile(backgroundImagePath, 'utf-8', (error, data) => {
-          if (error) reject(error);
-          else resolve(data);
-        })
-      );
+      const backgroundImage = await readFileFromActualFS(backgroundImagePath);
 
       vol.fromJSON(reactNativeProjectWithSplashScreenConfiured, '/app');
       vol.mkdirpSync('/assets');
       vol.writeFileSync('/assets/background.png', backgroundImage);
       await configureIos('/app', {
         resizeMode: ResizeMode.COVER,
-        backgroundColor: colorString.get('yellow'),
+        backgroundColor: colorString.get('yellow')!,
         imagePath: '/assets/background.png',
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
@@ -59,6 +59,9 @@ describe('ios', () => {
       delete received['ios/ReactNativeProject.xcodeproj/project.pbxproj'];
       const expected = {
         ...reactNativeProjectWithSplashScreenConfiured,
+        'ios/ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/background.png': await getPng1x1FileContent(
+          'yellow'
+        ),
         'ios/ReactNativeProject/Images.xcassets/SplashScreen.imageset/splashscreen.png': backgroundImage,
         'ios/ReactNativeProject/Images.xcassets/SplashScreen.imageset/Contents.json': `{
   "images": [
@@ -84,11 +87,35 @@ describe('ios', () => {
         'ios/ReactNativeProject/SplashScreen.storyboard': reactNativeProjectWithSplashScreenConfiured[
           'ios/ReactNativeProject/SplashScreen.storyboard'
         ]
-          .replace(/(?<=verticalHuggingPriority="251")/, '\n            image="SplashScreen"')
-          .replace('scaleAspectFit', 'scaleAspectFill')
           .replace(
-            '<color key="backgroundColor" red="0.8901960784313725" green="0.9490196078431372" blue="0.5725490196078431" alpha="0.22" colorSpace="custom" customColorSpace="sRGB"/>',
-            '<color key="backgroundColor" red="1" green="1" blue="0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>'
+            /(?<=\/imageView>)/,
+            `
+              <imageView
+                clipsSubviews="YES"
+                userInteractionEnabled="NO"
+                contentMode="scaleAspectFill"
+                horizontalHuggingPriority="251"
+                verticalHuggingPriority="251"
+                translatesAutoresizingMaskIntoConstraints="NO"
+                image="SplashScreen"
+                id="EXPO-SplashScreen"
+                userLabel="SplashScreen"
+              >
+                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+              </imageView>`
+          )
+          .replace(
+            /(?<=id="jkI-2V-eW5"\/>)/,
+            `
+              <constraint firstItem="EXPO-SplashScreen" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="2VS-Uz-0LU"/>
+              <constraint firstItem="EXPO-SplashScreen" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="LhH-Ei-DKo"/>
+              <constraint firstItem="EXPO-SplashScreen" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="I6l-TP-6fn"/>
+              <constraint firstItem="EXPO-SplashScreen" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="nbp-HC-eaG"/>`
+          )
+          .replace(
+            /(?<=resources>)/,
+            `
+    <image name="SplashScreen" width="414" height="736"/>`
           ),
       };
       expect(received).toEqual(expected);

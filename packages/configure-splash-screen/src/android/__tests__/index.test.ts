@@ -1,5 +1,5 @@
 import * as colorString from 'color-string';
-import { vol, fs } from 'memfs';
+import { vol } from 'memfs';
 import * as path from 'path';
 
 import { getDirFromFS, readFileFromActualFS } from '../../__tests__/helpers';
@@ -31,7 +31,7 @@ describe('android', () => {
     it('configures project correctly with defaults', async () => {
       await configureAndroid('/app', {
         resizeMode: ResizeMode.CONTAIN,
-        backgroundColor: colorString.get('#E3F29238'),
+        backgroundColor: colorString.get('#E3F29238')!,
       });
 
       const received = getDirFromFS(vol.toJSON(), '/app');
@@ -42,7 +42,7 @@ describe('android', () => {
       vol.fromJSON(reactNativeProjectWithSplashScreenConfigured, '/app');
       await configureAndroid('/app', {
         resizeMode: ResizeMode.NATIVE,
-        backgroundColor: colorString.get('rgba(35, 123, 217, 0.5)'),
+        backgroundColor: colorString.get('rgba(35, 123, 217, 0.5)')!,
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
       const expected = {
@@ -70,7 +70,7 @@ describe('android', () => {
       vol.writeFileSync('/assets/background.png', backgroundImage);
       await configureAndroid('/app', {
         resizeMode: ResizeMode.COVER,
-        backgroundColor: colorString.get('yellow'),
+        backgroundColor: colorString.get('yellow')!,
         imagePath: '/assets/background.png',
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
@@ -90,8 +90,8 @@ describe('android', () => {
     it('configures project correctly with only different colors for color modes and without images', async () => {
       await configureAndroid('/app', {
         resizeMode: ResizeMode.CONTAIN,
-        backgroundColor: colorString.get('#E3F29238'),
-        darkModeBackgroundColor: colorString.get('#65E3A2'),
+        backgroundColor: colorString.get('#E3F29238')!,
+        darkModeBackgroundColor: colorString.get('#65E3A2')!,
       });
 
       const received = getDirFromFS(vol.toJSON(), '/app');
@@ -110,8 +110,8 @@ describe('android', () => {
     it('configures project correctly with different colors and one image for both color modes', async () => {
       await configureAndroid('/app', {
         resizeMode: ResizeMode.CONTAIN,
-        backgroundColor: colorString.get('#E3F29238'),
-        darkModeBackgroundColor: colorString.get('#65E3A2'),
+        backgroundColor: colorString.get('#E3F29238')!,
+        darkModeBackgroundColor: colorString.get('#65E3A2')!,
         imagePath: '/assets/background.png',
       });
 
@@ -136,8 +136,8 @@ describe('android', () => {
       vol.writeFileSync('/assets/background_dark.png', backgroundImageDark);
       await configureAndroid('/app', {
         resizeMode: ResizeMode.CONTAIN,
-        backgroundColor: colorString.get('#E3F29238'),
-        darkModeBackgroundColor: colorString.get('#65E3A2'),
+        backgroundColor: colorString.get('#E3F29238')!,
+        darkModeBackgroundColor: colorString.get('#65E3A2')!,
         imagePath: '/assets/background.png',
         darkModeImagePath: '/assets/background_dark.png',
       });

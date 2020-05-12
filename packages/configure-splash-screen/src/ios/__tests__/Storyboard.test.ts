@@ -1,4 +1,3 @@
-import * as colorString from 'color-string';
 import { vol } from 'memfs';
 
 import { ResizeMode } from '../../constants';
@@ -27,7 +26,6 @@ describe('Storyboard', () => {
       const iosProject = await readPbxProject(iosProjectPath);
       await configureStoryboard(iosProject, {
         resizeMode: ResizeMode.COVER,
-        backgroundColor: colorString.get('#3DCE8719'),
         splashScreenImagePresent: false,
       });
       const actual = vol.readFileSync(filePath, 'utf-8');
@@ -35,7 +33,7 @@ describe('Storyboard', () => {
 <document
   type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB"
   version="3.0"
-  toolsVersion="15705"
+  toolsVersion="16096"
   targetRuntime="iOS.CocoaTouch"
   propertyAccessControl="none"
   useAutolayout="YES"
@@ -45,10 +43,11 @@ describe('Storyboard', () => {
   colorMatched="YES"
   initialViewController="EXPO-VIEWCONTROLLER-1"
 >
-  <device id="retina6_1" orientation="portrait" appearance="light"/>
+  <device id="retina5_5" orientation="portrait" appearance="light"/>
   <dependencies>
     <deployment identifier="iOS"/>
-    <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
+    <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
+    <capability name="Safe area layout guides" minToolsVersion="9.0"/>
     <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
   </dependencies>
   <scenes>
@@ -60,28 +59,47 @@ describe('Storyboard', () => {
           id="EXPO-VIEWCONTROLLER-1"
           sceneMemberID="viewController"
         >
-          <imageView
+          <view
             key="view"
-            clipsSubviews="YES"
             userInteractionEnabled="NO"
-            contentMode="scaleAspectFill"
-            horizontalHuggingPriority="251"
-            verticalHuggingPriority="251"
-            id="EXPO-IMAGEVIEW-1"
+            contentMode="scaleToFill"
+            insetsLayoutMarginsFromSafeArea="NO"
+            id="EXPO-ContainerView"
+            userLabel="ContainerView"
           >
-            <rect key="frame" x="0.0" y="0.0" width="800" height="1600"/>
+            <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-            <color key="backgroundColor" red="0.23921568627450981" green="0.807843137254902" blue="0.5294117647058824" alpha="0.1" colorSpace="custom" customColorSpace="sRGB"/>
-          </imageView>
-          <size key="freeformSize" width="800" height="1600"/>
+            <subviews>
+              <imageView
+                userInteractionEnabled="NO"
+                contentMode="scaleAspectFill"
+                horizontalHuggingPriority="251"
+                verticalHuggingPriority="251"
+                insetsLayoutMarginsFromSafeArea="NO"
+                image="SplashScreenBackground"
+                translatesAutoresizingMaskIntoConstraints="NO"
+                id="EXPO-SplashScreenBackground"
+                userLabel="SplashScreenBackground"
+              >
+                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+              </imageView>
+            </subviews>
+            <constraints>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="1gX-mQ-vu6"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="6tX-OG-Sck"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="ABX-8g-7v4"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="jkI-2V-eW5"/>
+            </constraints>
+            <viewLayoutGuide key="safeArea" id="Rmq-lb-GrQ"/>
+          </view>
         </viewController>
         <placeholder placeholderIdentifier="IBFirstResponder" id="EXPO-PLACEHOLDER-1" userLabel="First Responder" sceneMemberID="firstResponder"/>
       </objects>
-      <point key="canvasLocation" x="141" y="130"/>
+      <point key="canvasLocation" x="140.625" y="129.4921875"/>
     </scene>
   </scenes>
   <resources>
-    <image name="SplashScreen" width="600" height="1200"/>
+    <image name="SplashScreenBackground" width="1" height="1"/>
   </resources>
 </document>
 `;
@@ -95,7 +113,7 @@ describe('Storyboard', () => {
 <document
   type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB"
   version="3.0"
-  toolsVersion="15705"
+  toolsVersion="16096"
   targetRuntime="iOS.CocoaTouch"
   propertyAccessControl="none"
   useAutolayout="YES"
@@ -105,10 +123,11 @@ describe('Storyboard', () => {
   colorMatched="YES"
   initialViewController="EXPO-VIEWCONTROLLER-1"
 >
-  <device id="retina6_1" orientation="portrait" appearance="light"/>
+  <device id="retina5_5" orientation="portrait" appearance="light"/>
   <dependencies>
     <deployment identifier="iOS"/>
-    <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
+    <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
+    <capability name="Safe area layout guides" minToolsVersion="9.0"/>
     <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
   </dependencies>
   <scenes>
@@ -120,28 +139,46 @@ describe('Storyboard', () => {
           id="EXPO-VIEWCONTROLLER-1"
           sceneMemberID="viewController"
         >
-          <imageView
+          <view
             key="view"
-            clipsSubviews="YES"
             userInteractionEnabled="NO"
-            contentMode="scaleAspectFill"
-            horizontalHuggingPriority="251"
-            verticalHuggingPriority="251"
-            id="EXPO-IMAGEVIEW-1"
+            contentMode="scaleToFill"
+            insetsLayoutMarginsFromSafeArea="NO"
+            id="EXPO-ContainerView"
+            userLabel="ContainerView"
           >
-            <rect key="frame" x="0.0" y="0.0" width="800" height="1600"/>
+            <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-            <color key="backgroundColor" red="0.23921568627450981" green="0.807843137254902" blue="0.5294117647058824" alpha="0.1" colorSpace="custom" customColorSpace="sRGB"/>
-          </imageView>
-          <size key="freeformSize" width="800" height="1600"/>
+            <subviews>
+              <imageView
+                userInteractionEnabled="NO"
+                contentMode="scaleAspectFill"
+                horizontalHuggingPriority="251"
+                verticalHuggingPriority="251"
+                insetsLayoutMarginsFromSafeArea="NO"
+                image="SplashScreenBackground"
+                translatesAutoresizingMaskIntoConstraints="NO"
+                id="EXPO-SplashScreenBackground"
+                userLabel="SplashScreenBackground"
+              >
+                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+              </imageView>
+            </subviews>
+            <constraints>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="1gX-mQ-vu6"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="6tX-OG-Sck"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="ABX-8g-7v4"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="jkI-2V-eW5"/>
+            </constraints>
+          </view>
         </viewController>
         <placeholder placeholderIdentifier="IBFirstResponder" id="EXPO-PLACEHOLDER-1" userLabel="First Responder" sceneMemberID="firstResponder"/>
       </objects>
-      <point key="canvasLocation" x="141" y="130"/>
+      <point key="canvasLocation" x="140.625" y="129.4921875"/>
     </scene>
   </scenes>
   <resources>
-    <image name="SplashScreen" width="600" height="1200"/>
+    <image name="SplashScreenBackground" width="1" height="1"/>
   </resources>
 </document>
 `
@@ -149,7 +186,6 @@ describe('Storyboard', () => {
       const iosProject = await readPbxProject(iosProjectPath);
       await configureStoryboard(iosProject, {
         resizeMode: ResizeMode.CONTAIN,
-        backgroundColor: colorString.get('rgba(56, 145, 231, 0.78)'),
         splashScreenImagePresent: true,
       });
       const actual = vol.readFileSync(filePath, 'utf-8');
@@ -157,7 +193,7 @@ describe('Storyboard', () => {
 <document
   type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB"
   version="3.0"
-  toolsVersion="15705"
+  toolsVersion="16096"
   targetRuntime="iOS.CocoaTouch"
   propertyAccessControl="none"
   useAutolayout="YES"
@@ -167,10 +203,11 @@ describe('Storyboard', () => {
   colorMatched="YES"
   initialViewController="EXPO-VIEWCONTROLLER-1"
 >
-  <device id="retina6_1" orientation="portrait" appearance="light"/>
+  <device id="retina5_5" orientation="portrait" appearance="light"/>
   <dependencies>
     <deployment identifier="iOS"/>
-    <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
+    <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
+    <capability name="Safe area layout guides" minToolsVersion="9.0"/>
     <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
   </dependencies>
   <scenes>
@@ -182,29 +219,65 @@ describe('Storyboard', () => {
           id="EXPO-VIEWCONTROLLER-1"
           sceneMemberID="viewController"
         >
-          <imageView
+          <view
             key="view"
-            clipsSubviews="YES"
             userInteractionEnabled="NO"
-            contentMode="scaleAspectFit"
-            horizontalHuggingPriority="251"
-            verticalHuggingPriority="251"
-            image="SplashScreen"
-            id="EXPO-IMAGEVIEW-1"
+            contentMode="scaleToFill"
+            insetsLayoutMarginsFromSafeArea="NO"
+            id="EXPO-ContainerView"
+            userLabel="ContainerView"
           >
-            <rect key="frame" x="0.0" y="0.0" width="800" height="1600"/>
+            <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-            <color key="backgroundColor" red="0.2196078431372549" green="0.5686274509803921" blue="0.9058823529411765" alpha="0.78" colorSpace="custom" customColorSpace="sRGB"/>
-          </imageView>
-          <size key="freeformSize" width="800" height="1600"/>
+            <subviews>
+              <imageView
+                userInteractionEnabled="NO"
+                contentMode="scaleAspectFill"
+                horizontalHuggingPriority="251"
+                verticalHuggingPriority="251"
+                insetsLayoutMarginsFromSafeArea="NO"
+                image="SplashScreenBackground"
+                translatesAutoresizingMaskIntoConstraints="NO"
+                id="EXPO-SplashScreenBackground"
+                userLabel="SplashScreenBackground"
+              >
+                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+              </imageView>
+              <imageView
+                clipsSubviews="YES"
+                userInteractionEnabled="NO"
+                contentMode="scaleAspectFit"
+                horizontalHuggingPriority="251"
+                verticalHuggingPriority="251"
+                translatesAutoresizingMaskIntoConstraints="NO"
+                image="SplashScreen"
+                id="EXPO-SplashScreen"
+                userLabel="SplashScreen"
+              >
+                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+              </imageView>
+            </subviews>
+            <constraints>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="1gX-mQ-vu6"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="6tX-OG-Sck"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="ABX-8g-7v4"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="jkI-2V-eW5"/>
+              <constraint firstItem="EXPO-SplashScreen" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="2VS-Uz-0LU"/>
+              <constraint firstItem="EXPO-SplashScreen" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="LhH-Ei-DKo"/>
+              <constraint firstItem="EXPO-SplashScreen" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="I6l-TP-6fn"/>
+              <constraint firstItem="EXPO-SplashScreen" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="nbp-HC-eaG"/>
+            </constraints>
+            <viewLayoutGuide key="safeArea" id="Rmq-lb-GrQ"/>
+          </view>
         </viewController>
         <placeholder placeholderIdentifier="IBFirstResponder" id="EXPO-PLACEHOLDER-1" userLabel="First Responder" sceneMemberID="firstResponder"/>
       </objects>
-      <point key="canvasLocation" x="141" y="130"/>
+      <point key="canvasLocation" x="140.625" y="129.4921875"/>
     </scene>
   </scenes>
   <resources>
-    <image name="SplashScreen" width="600" height="1200"/>
+    <image name="SplashScreen" width="414" height="736"/>
+    <image name="SplashScreenBackground" width="1" height="1"/>
   </resources>
 </document>
 `;
@@ -216,7 +289,6 @@ describe('Storyboard', () => {
       await expect(async () => {
         await configureStoryboard(iosProject, {
           resizeMode: ResizeMode.NATIVE,
-          backgroundColor: colorString.get('red'),
           splashScreenImagePresent: false,
         });
       }).rejects.toThrow();
@@ -227,7 +299,6 @@ describe('Storyboard', () => {
       const original = iosProject.pbxProject.writeSync();
       await configureStoryboard(iosProject, {
         resizeMode: ResizeMode.COVER,
-        backgroundColor: colorString.get('#3DCE8719'),
         splashScreenImagePresent: false,
       });
 
@@ -249,13 +320,11 @@ describe('Storyboard', () => {
       const iosProject = await readPbxProject(iosProjectPath);
       await configureStoryboard(iosProject, {
         resizeMode: ResizeMode.COVER,
-        backgroundColor: colorString.get('#3DCE8719'),
         splashScreenImagePresent: false,
       });
       const afterFirstCall = iosProject.pbxProject.writeSync();
       await configureStoryboard(iosProject, {
         resizeMode: ResizeMode.COVER,
-        backgroundColor: colorString.get('#3DCE8719'),
         splashScreenImagePresent: false,
       });
       const afterSecondCall = iosProject.pbxProject.writeSync();

@@ -1,25 +1,19 @@
-import { vol, fs } from 'memfs';
+import { vol } from 'memfs';
 import * as path from 'path';
 
-import { getDirFromFS } from '../../__tests__/helpers';
+import { getDirFromFS, readFileFromActualFS } from '../../__tests__/helpers';
 import configureDrawables from '../Drawables';
 import reactNativeProject from './fixtures/react-native-project-structure';
 
 // in `__mocks__/fs.ts` memfs is being used as a mocking library
 jest.mock('fs');
-const actualFs = jest.requireActual('fs') as typeof fs;
 
 describe('Drawables', () => {
   describe('configureDrawables', () => {
     const backgroundImagePath = path.resolve(__dirname, '../../__tests__/fixtures/background.png');
     let backgroundImage: string | Buffer = '';
     beforeAll(async () => {
-      backgroundImage = await new Promise<Buffer | string>((resolve, reject) =>
-        actualFs.readFile(backgroundImagePath, 'utf-8', (error, data) => {
-          if (error) reject(error);
-          else resolve(data);
-        })
-      );
+      backgroundImage = await readFileFromActualFS(backgroundImagePath);
     });
 
     beforeEach(() => {
