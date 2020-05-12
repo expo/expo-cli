@@ -30,7 +30,7 @@ class AndroidSubmitter {
     let submissionCompleted = false;
     let submissionStatus: SubmissionStatus | null = null;
     let submission: Submission | null = null;
-    const submissionSpinner = ora('Submitting your app to Google App Store').start();
+    const submissionSpinner = ora('Submitting your app to Google Play Store').start();
     while (!submissionCompleted) {
       // sleep for 5 seconds
       await sleep(5 * 1000);
