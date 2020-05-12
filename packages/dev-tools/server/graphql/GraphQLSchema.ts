@@ -584,7 +584,7 @@ const resolvers = {
         try {
           await Project.startTunnelsAsync(currentProject.projectDir);
         } catch (e) {
-          ProjectUtils.logDebug(
+          ProjectUtils.logWarning(
             currentProject.projectDir,
             'expo',
             `Error starting tunnel ${e.message}`
