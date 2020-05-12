@@ -523,7 +523,7 @@ async function generatePushKey(ctx: Context): Promise<PushKey> {
           {}
         );
 
-      // https://docs.expo.io/versions/latest/distribution/app-signing/#summary
+      // https://docs.expo.io/distribution/app-signing/#summary
       const here = terminalLink('here', 'https://bit.ly/3cfJJkQ');
       log(chalk.grey(`⚠️  Revoking a Push Key will affect other apps that rely on it`));
       log(chalk.grey(`ℹ️  Learn more ${here}`));

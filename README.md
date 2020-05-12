@@ -6,7 +6,7 @@ Expo CLI
 <p align="center">Tools for creating, running, and deploying Universal Expo and React Native apps</p>
 
 <p align="center">
-     
+
   <a aria-label="Join our forums" href="https://forums.expo.io" target="_blank">
     <img alt="" src="https://img.shields.io/badge/Ask%20Questions%20-blue.svg?style=flat-square&logo=discourse&logoWidth=15&labelColor=000000&color=4630EB">
   </a>
@@ -20,11 +20,11 @@ Expo CLI
     <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/master">
     <img alt="Circle CI" src="https://flat.badgen.net/circleci/github/expo/expo-cli?label=Circle%20CI&labelColor=555555&icon=circleci">
   </a>
-  
+
 </p>
 
 <p align="center">
-  <a aria-label="expo documentation" href="https://docs.expo.io/versions/latest/workflow/expo-cli">📚 Read the Documentation</a>
+  <a aria-label="expo documentation" href="https://docs.expo.io/workflow/expo-cli/">📚 Read the Documentation</a>
   |
   <a aria-label="contribute to expo cli" href="https://github.com/expo/expo-cli/blob/master/CONTRIBUTING.md"><b>Contributing to Expo CLI</b></a>
 </p>
@@ -52,9 +52,9 @@ Expo CLI
 
 <p>Learn about building and deploying universal apps <a aria-label="expo documentation" href="https://docs.expo.io">in our official docs!</a></p>
 
-- [Using the CLI](https://docs.expo.io/versions/latest/workflow/expo-cli/)
-- [App.json Configuration](https://docs.expo.io/versions/latest/workflow/configuration/)
-- [Building and Deploying apps](https://docs.expo.io/versions/latest/introduction/walkthrough/#building-and-deploying)
+- [Using the CLI](https://docs.expo.io/workflow/expo-cli/)
+- [App.json Configuration](https://docs.expo.io/workflow/configuration/)
+- [Building and Deploying apps](https://docs.expo.io/introduction/walkthrough/#building-and-deploying)
 
 ## 🗺 Project Layout
 
@@ -108,7 +108,7 @@ If you like the Expo CLI and want to help make it better then check out our [con
 
 ## ❓ FAQ
 
-If you have questions about Expo and want answers, then check out our [Frequently Asked Questions](https://docs.expo.io/versions/latest/introduction/faq/)!
+If you have questions about Expo and want answers, then check out our [Frequently Asked Questions](https://docs.expo.io/introduction/faq/)!
 
 If you still have questions you can ask them on our [forums](https://forums.expo.io) or on Twitter [@Expo](https://twitter.com/expo).
 

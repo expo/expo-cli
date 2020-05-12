@@ -19,7 +19,7 @@ The [Expo CLI GitHub repository](https://github.com/expo/expo-cli) contains the 
 - `expo-cli`: Expo CLI is the command line interface for developing, building and sharing Expo apps.
 - `@expo/dev-tools`: the web-based graphical user interface included in Expo CLI for quickly viewing logs, connecting testing devices, deploying updates and more.
 - `xdl`: the Expo development library is a dependency of both the CLI and Dev Tools user interfaces, doing all the heavy lifting behind the scenes.
-- `@expo/schemer`: a library for validating [Expo configuration files](https://docs.expo.io/versions/latest/workflow/configuration).
+- `@expo/schemer`: a library for validating [Expo configuration files](https://docs.expo.io/workflow/configuration/).
 - `@expo/json-file`: a library for reading and writing JSON files.
 - `@expo/osascript`: a library for working with `osascript` which runs AppleScript code on macOS.
 - `@expo/traveling-fastlane-darwin`/`@expo/traveling-fastlane-linux`: JavaScript wrappers for managing iOS certs, based on [Fastlane](https://fastlane.tools), which is a Ruby based app automation tool.

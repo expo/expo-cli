@@ -43,7 +43,7 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
     </a>
 </p>
 
-[docs]: https://docs.expo.io/versions/latest/guides/using-nextjs/
+[docs]: https://docs.expo.io/guides/using-nextjs/
 [nextjs]: https://nextjs.org/
 [next-docs]: https://nextjs.org/docs
 [custom-document]: https://nextjs.org/docs#custom-document

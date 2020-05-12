@@ -416,8 +416,10 @@ export default class PackagerLogsStream {
     const moduleName = match[1];
     const relativePath = path.relative(this._projectRoot, originModulePath);
 
+    // todo: check if we need to re-add this header
+    // https://github.com/expo/expo/commit/f1624cace73fc569402e4304b4b494afa053e046#diff-3bc168b28fe19df4560d1324b96cfa84L103
     const DOCS_PAGE_URL =
-      'https://docs.expo.io/versions/latest/introduction/faq/#can-i-use-nodejs-packages-with-expo';
+      'https://docs.expo.io/introduction/faq/#can-i-use-nodejs-packages-with-expo';
 
     if (NODE_STDLIB_MODULES.includes(moduleName)) {
       if (originModulePath.includes('node_modules')) {

@@ -33,7 +33,7 @@ export default class BaseUploader {
     await this._removeBuildFileIfDownloaded(buildPath);
     log(
       `Please also see our docs (${chalk.underline(
-        'https://docs.expo.io/versions/latest/distribution/uploading-apps/'
+        'https://docs.expo.io/distribution/uploading-apps/'
       )}) to learn more about the upload process.`
     );
   }

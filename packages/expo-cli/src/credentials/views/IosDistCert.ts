@@ -506,7 +506,7 @@ async function generateDistCert(ctx: Context): Promise<DistCert> {
           {}
         );
 
-      // https://docs.expo.io/versions/latest/distribution/app-signing/#summary
+      // https://docs.expo.io/distribution/app-signing/#summary
       const here = terminalLink('here', 'https://bit.ly/3cfJJkQ');
       log(
         chalk.grey(`✅  Distribution Certificates can be revoked with no production side effects`)
