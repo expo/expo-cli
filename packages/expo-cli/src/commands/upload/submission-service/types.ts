@@ -1,6 +1,7 @@
 export interface SubmissionContext<T extends SubmitCommandOptions> {
   projectDir: string;
-  options: T;
+  commandOptions: T;
+  mode: SubmissionMode;
 }
 
 export interface SubmitCommandOptions {
@@ -11,3 +12,10 @@ export interface SubmitCommandOptions {
   verbose?: boolean;
   useSubmissionService?: boolean;
 }
+
+enum SubmissionMode {
+  online = 'online',
+  offline = 'offline',
+}
+
+export { SubmissionMode };

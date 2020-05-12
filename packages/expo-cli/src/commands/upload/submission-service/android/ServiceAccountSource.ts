@@ -1,5 +1,3 @@
-import fs from 'fs-extra';
-
 import prompt from '../../../../prompt';
 import { existingFile } from '../../../../validators';
 import log from '../../../../log';
@@ -40,7 +38,7 @@ async function handlePathSourceAsync(source: ServiceAccountPathSource): Promise<
     log.warn(`File ${source.path} doesn't exist.`);
     return await getServiceAccountAsync({ sourceType: ServiceAccountSourceType.prompt });
   }
-  return await fs.readFile(source.path, 'utf-8');
+  return source.path;
 }
 
 async function handlePromptSourceAsync(_source: ServiceAccountPromptSource): Promise<string> {

@@ -41,6 +41,7 @@ async function uploadWithPresignedPostAsync(src: Readable, presignedPost: S3Pres
   }
   form.append('file', src);
   const formBuffer = await convertFormDataToBuffer(form);
+  // add progress bar
   const result = await axios.post(presignedPost.url, formBuffer, {
     headers: form.getHeaders(),
     maxContentLength: formBuffer.byteLength,
@@ -49,8 +50,8 @@ async function uploadWithPresignedPostAsync(src: Readable, presignedPost: S3Pres
 }
 
 async function convertFormDataToBuffer(formData: FormData): Promise<Buffer> {
-  return new Promise(resolve => {
-    formData.pipe(concat({ encoding: 'buffer' }, data => resolve(data)));
+  return new Promise((resolve) => {
+    formData.pipe(concat({ encoding: 'buffer' }, (data) => resolve(data)));
   });
 }
 
