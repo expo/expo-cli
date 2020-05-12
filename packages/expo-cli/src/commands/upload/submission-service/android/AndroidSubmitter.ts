@@ -1,30 +1,149 @@
+import os from 'os';
+
+import fs from 'fs-extra';
 import pick from 'lodash/pick';
 import ora from 'ora';
 
 import { AndroidSubmissionConfig } from './AndroidSubmissionConfig';
 import { ServiceAccountSource, getServiceAccountAsync } from './ServiceAccountSource';
-import { ArchiveSource, getArchiveUrlAsync } from '../ArchiveSource';
-import SubmissionService, { Platform, Submission, SubmissionStatus } from '../SubmissionService';
 import { AndroidPackageSource, getAndroidPackageAsync } from './AndroidPackageSource';
-import { sleep } from '../../../utils/promise';
+import { AndroidSubmissionContext } from './types';
+
+import SubmissionService, { Platform, Submission, SubmissionStatus } from '../SubmissionService';
+import { ArchiveSource, getArchiveLocationAsync } from '../ArchiveSource';
 import { displayLogs } from '../utils/logs';
+import { runTravelingFastlaneAsync } from '../utils/travelingFastlane';
+import { SubmissionMode } from '../types';
+import { sleep } from '../../../utils/promise';
 
 export interface AndroidSubmissionOptions
   extends Pick<AndroidSubmissionConfig, 'archiveType' | 'track' | 'releaseStatus'> {
-  androidPackage: AndroidPackageSource;
+  androidPackageSource: AndroidPackageSource;
   archiveSource: ArchiveSource;
   serviceAccountSource: ServiceAccountSource;
 }
 
-class AndroidSubmitter {
-  constructor(private options: AndroidSubmissionOptions, private verbose: boolean = false) {}
+interface ResolvedSourceOptions {
+  androidPackage: string;
+  archiveLocation: string;
+  serviceAccountPath: string;
+}
 
-  async submitAsync() {
-    const submissionConfig = await this.formatSubmissionConfig();
+class AndroidSubmitter {
+  constructor(private ctx: AndroidSubmissionContext, private options: AndroidSubmissionOptions) {}
+
+  async submitAsync(): Promise<void> {
+    const resolvedSourceOptions = await this.resolveSourceOptions();
+    if (this.ctx.mode === SubmissionMode.online) {
+      const submissionConfig = await AndroidOnlineSubmitter.formatSubmissionConfig(
+        this.options,
+        resolvedSourceOptions
+      );
+      const onlineSubmitter = new AndroidOnlineSubmitter(
+        submissionConfig,
+        this.ctx.commandOptions.verbose ?? false
+      );
+      await onlineSubmitter.submitAsync();
+    } else {
+      const submissionConfig = await AndroidOfflineSubmitter.formatSubmissionConfig(
+        this.options,
+        resolvedSourceOptions
+      );
+      const offlineSubmitter = new AndroidOfflineSubmitter(submissionConfig);
+      await offlineSubmitter.submitAsync();
+    }
+  }
+
+  private async resolveSourceOptions(): Promise<ResolvedSourceOptions> {
+    const androidPackage = await getAndroidPackageAsync(this.options.androidPackageSource);
+    const archiveLocation = await getArchiveLocationAsync(
+      this.ctx.mode,
+      this.options.archiveSource
+    );
+    const serviceAccountPath = await getServiceAccountAsync(this.options.serviceAccountSource);
+    return {
+      androidPackage,
+      archiveLocation,
+      serviceAccountPath,
+    };
+  }
+}
+
+interface AndroidOfflineSubmissionConfig
+  extends Pick<
+    AndroidSubmissionConfig,
+    'archiveType' | 'track' | 'releaseStatus' | 'androidPackage'
+  > {
+  archivePath: string;
+  serviceAccountPath: string;
+}
+
+class AndroidOfflineSubmitter {
+  static async formatSubmissionConfig(
+    options: AndroidSubmissionOptions,
+    { archiveLocation, androidPackage, serviceAccountPath }: ResolvedSourceOptions
+  ): Promise<AndroidOfflineSubmissionConfig> {
+    return {
+      androidPackage,
+      archivePath: archiveLocation,
+      serviceAccountPath,
+      ...pick(options, 'archiveType', 'track', 'releaseStatus'),
+    };
+  }
+
+  constructor(private submissionConfig: AndroidOfflineSubmissionConfig) {}
+
+  async submitAsync(): Promise<void> {
+    const {
+      archivePath,
+      androidPackage,
+      serviceAccountPath,
+      track,
+      releaseStatus,
+    } = this.submissionConfig;
+
+    // TODO: check if `fastlane supply` works on linux
+    const travelingFastlane = require('@expo/traveling-fastlane-darwin')();
+    const args = [archivePath, androidPackage, serviceAccountPath, track];
+    if (releaseStatus) {
+      args.push(releaseStatus);
+    }
+    try {
+      await runTravelingFastlaneAsync(travelingFastlane.supplyAndroid, args);
+    } finally {
+      if (archivePath.startsWith(os.tmpdir())) {
+        await fs.remove(archivePath);
+      }
+    }
+  }
+}
+
+type AndroidOnlineSubmissionConfig = AndroidSubmissionConfig;
+
+class AndroidOnlineSubmitter {
+  static async formatSubmissionConfig(
+    options: AndroidSubmissionOptions,
+    { archiveLocation, androidPackage, serviceAccountPath }: ResolvedSourceOptions
+  ): Promise<AndroidOnlineSubmissionConfig> {
+    const serviceAccount = await fs.readFile(serviceAccountPath, 'utf-8');
+    return {
+      androidPackage,
+      archiveUrl: archiveLocation,
+      serviceAccount,
+      ...pick(options, 'archiveType', 'track', 'releaseStatus'),
+    };
+  }
+
+  constructor(
+    private submissionConfig: AndroidOnlineSubmissionConfig,
+    private verbose: boolean = false
+  ) {}
+
+  async submitAsync(): Promise<void> {
     const scheduleSpinner = ora('Scheduling submission').start();
     const submissionId = await SubmissionService.startSubmissionAsync(
       Platform.ANDROID,
-      submissionConfig
+      this.submissionConfig
     );
     scheduleSpinner.succeed();
     let submissionCompleted = false;
@@ -35,7 +154,7 @@ class AndroidSubmitter {
       // sleep for 5 seconds
       await sleep(5 * 1000);
       submission = await SubmissionService.getSubmissionAsync(submissionId);
-      submissionSpinner.text = getStatusText(submission.status);
+      submissionSpinner.text = AndroidOnlineSubmitter.getStatusText(submission.status);
       submissionStatus = submission.status;
       if (submissionStatus === SubmissionStatus.ERRORED) {
         submissionCompleted = true;
@@ -53,31 +172,19 @@ class AndroidSubmitter {
     }
   }
 
-  private async formatSubmissionConfig(): Promise<AndroidSubmissionConfig> {
-    const androidPackage = await getAndroidPackageAsync(this.options.androidPackage);
-    const archiveUrl = await getArchiveUrlAsync(this.options.archiveSource);
-    const serviceAccount = await getServiceAccountAsync(this.options.serviceAccountSource);
-    return {
-      androidPackage,
-      archiveUrl,
-      serviceAccount,
-      ...pick(this.options, 'archiveType', 'track', 'releaseStatus'),
-    };
+  private static getStatusText(status: SubmissionStatus): string {
+    if (status === SubmissionStatus.IN_QUEUE) {
+      return 'Submitting your app to Google Play Store: waiting for an available submitter';
+    } else if (status === SubmissionStatus.IN_PROGRESS) {
+      return 'Submitting your app to Google Play Store: submission in progress';
+    } else if (status === SubmissionStatus.FINISHED) {
+      return 'Successfully submitted your app to Google Play Store!';
+    } else if (status === SubmissionStatus.ERRORED) {
+      return 'Something went wrong when submitting your app to Google Play Store. See logs below.';
+    } else {
+      throw new Error('This should never happen');
+    }
   }
 }
-
-const getStatusText = (status: SubmissionStatus): string => {
-  if (status === SubmissionStatus.IN_QUEUE) {
-    return 'Submitting your app to Google Play Store: waiting for an available submitter';
-  } else if (status === SubmissionStatus.IN_PROGRESS) {
-    return 'Submitting your app to Google Play Store: submission in progress';
-  } else if (status === SubmissionStatus.FINISHED) {
-    return 'Successfully submitted your app to Google Play Store!';
-  } else if (status === SubmissionStatus.ERRORED) {
-    return 'Something went wrong when submitting your app to Google Play Store. See logs below.';
-  } else {
-    throw new Error('This should never happen');
-  }
-};
 
 export default AndroidSubmitter;

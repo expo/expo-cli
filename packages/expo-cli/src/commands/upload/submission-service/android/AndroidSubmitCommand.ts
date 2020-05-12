@@ -1,29 +1,26 @@
 import { Result, result } from '@expo/results';
 
 import AndroidSubmitter, { AndroidSubmissionOptions } from './AndroidSubmitter';
-import { ArchiveSource, ArchiveSourceType } from '../ArchiveSource';
 import { ArchiveType, ReleaseStatus, ReleaseTrack } from './AndroidSubmissionConfig';
 import { ServiceAccountSource, ServiceAccountSourceType } from './ServiceAccountSource';
 import { AndroidPackageSource, AndroidPackageSourceType } from './AndroidPackageSource';
-import { SubmissionContext, SubmitCommandOptions } from '../types';
+import { AndroidSubmissionContext, AndroidSubmitCommandOptions } from './types';
+
+import { ArchiveSource, ArchiveSourceType } from '../ArchiveSource';
+import { SubmissionMode } from '../types';
 import { getAppConfig, getExpoConfig } from '../utils/config';
 import log from '../../../../log';
 
-export interface AndroidSubmitCommandOptions extends SubmitCommandOptions {
-  archiveType?: string;
-  key?: string;
-  androidPackage?: string;
-  track?: string;
-  releaseStatus?: string;
-}
-
-type AndroidSubmissionContext = SubmissionContext<AndroidSubmitCommandOptions>;
-
 class AndroidSubmitCommand {
-  static createContext(projectDir: string, options: AndroidSubmitCommandOptions) {
+  static createContext(
+    mode: SubmissionMode,
+    projectDir: string,
+    commandOptions: AndroidSubmitCommandOptions
+  ): AndroidSubmissionContext {
     return {
+      mode,
       projectDir,
-      options,
+      commandOptions,
     };
   }
 
@@ -31,12 +28,12 @@ class AndroidSubmitCommand {
 
   async runAsync(): Promise<void> {
     const submissionOptions = this.getAndroidSubmissionOptions();
-    const submitter = new AndroidSubmitter(submissionOptions, this.ctx.options.verbose ?? false);
+    const submitter = new AndroidSubmitter(this.ctx, submissionOptions);
     await submitter.submitAsync();
   }
 
   private getAndroidSubmissionOptions(): AndroidSubmissionOptions {
-    const androidPackage = this.resolveAndroidPackage();
+    const androidPackageSource = this.resolveAndroidPackageSource();
     const track = this.resolveTrack();
     const releaseStatus = this.resolveReleaseStatus();
     const archiveSource = this.resolveArchiveSource();
@@ -44,7 +41,7 @@ class AndroidSubmitCommand {
     const serviceAccountSource = this.resolveServiceAccountSource();
 
     const errored = [
-      androidPackage,
+      androidPackageSource,
       track,
       releaseStatus,
       archiveSource,
@@ -58,7 +55,7 @@ class AndroidSubmitCommand {
     }
 
     return {
-      androidPackage: androidPackage.enforceValue(),
+      androidPackageSource: androidPackageSource.enforceValue(),
       track: track.enforceValue(),
       releaseStatus: releaseStatus.enforceValue(),
       archiveSource: archiveSource.enforceValue(),
@@ -67,10 +64,10 @@ class AndroidSubmitCommand {
     };
   }
 
-  private resolveAndroidPackage(): Result<AndroidPackageSource> {
+  private resolveAndroidPackageSource(): Result<AndroidPackageSource> {
     let androidPackage: string | undefined;
-    if (this.ctx.options.androidPackage) {
-      androidPackage = this.ctx.options.androidPackage;
+    if (this.ctx.commandOptions.androidPackage) {
+      androidPackage = this.ctx.commandOptions.androidPackage;
     }
     const exp = getExpoConfig(this.ctx.projectDir);
     if (exp.android?.package) {
@@ -89,7 +86,7 @@ class AndroidSubmitCommand {
   }
 
   private resolveTrack(): Result<ReleaseTrack> {
-    const { track } = this.ctx.options;
+    const { track } = this.ctx.commandOptions;
     if (!track) {
       return result(ReleaseTrack.production);
     }
@@ -105,7 +102,7 @@ class AndroidSubmitCommand {
   }
 
   private resolveReleaseStatus(): Result<ReleaseStatus> {
-    const { releaseStatus } = this.ctx.options;
+    const { releaseStatus } = this.ctx.commandOptions;
     if (!releaseStatus) {
       return result(ReleaseStatus.completed);
     }
@@ -124,35 +121,35 @@ class AndroidSubmitCommand {
 
   private resolveArchiveSource(): Result<ArchiveSource> {
     const chosenOptions = [
-      this.ctx.options.url,
-      this.ctx.options.path,
-      this.ctx.options.id,
-      this.ctx.options.latest,
+      this.ctx.commandOptions.url,
+      this.ctx.commandOptions.path,
+      this.ctx.commandOptions.id,
+      this.ctx.commandOptions.latest,
     ];
     if (chosenOptions.filter((opt) => opt).length > 1) {
       throw new Error(`Pass only one of: --url, --path, --id, --latest`);
     }
-    if (this.ctx.options.url) {
+    if (this.ctx.commandOptions.url) {
       return result({
         sourceType: ArchiveSourceType.url,
-        url: this.ctx.options.url,
+        url: this.ctx.commandOptions.url,
       });
-    } else if (this.ctx.options.path) {
+    } else if (this.ctx.commandOptions.path) {
       return result({
         sourceType: ArchiveSourceType.path,
-        path: this.ctx.options.path,
+        path: this.ctx.commandOptions.path,
       });
-    } else if (this.ctx.options.id) {
+    } else if (this.ctx.commandOptions.id) {
       // legacy for Turtle v1
       const { owner, slug } = getAppConfig(this.ctx.projectDir);
       return result({
         sourceType: ArchiveSourceType.buildId,
         platform: 'android',
-        id: this.ctx.options.id,
+        id: this.ctx.commandOptions.id,
         owner,
         slug,
       });
-    } else if (this.ctx.options.latest) {
+    } else if (this.ctx.commandOptions.latest) {
       // legacy for Turtle v1
       const { owner, slug } = getAppConfig(this.ctx.projectDir);
       return result({
@@ -171,7 +168,7 @@ class AndroidSubmitCommand {
   }
 
   private resolveArchiveType(): Result<ArchiveType> {
-    const { archiveType } = this.ctx.options;
+    const { archiveType } = this.ctx.commandOptions;
     if (!archiveType) {
       return result(ArchiveType.apk);
     }
@@ -189,7 +186,7 @@ class AndroidSubmitCommand {
   }
 
   private resolveServiceAccountSource(): Result<ServiceAccountSource> {
-    const { key } = this.ctx.options;
+    const { key } = this.ctx.commandOptions;
     if (key) {
       return result({
         sourceType: ServiceAccountSourceType.path,

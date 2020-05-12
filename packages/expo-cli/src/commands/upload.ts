@@ -4,9 +4,9 @@ import size from 'lodash/size';
 import { Command } from 'commander';
 
 import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
-import AndroidUploader, { AndroidPlatformOptions } from './upload/AndroidUploader';
 import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
 import log from '../log';
+import { SubmissionMode } from './upload/submission-service/types';
 
 const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
 
@@ -46,20 +46,15 @@ export default function (program: Command) {
     )
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: any) => {
-      if (options.useSubmissionService) {
-        const ctx = AndroidSubmitCommand.createContext(projectDir, options);
-        const command = new AndroidSubmitCommand(ctx);
-        await command.runAsync();
-      } else {
-        const legacyUploader = createLegacyUploadAction(AndroidUploader, 'android', [
-          ...SOURCE_OPTIONS,
-          'key',
-          'track',
-          'releaseStatus',
-          'useSubmissionService',
-        ]);
-        await legacyUploader(projectDir, options);
-      }
+      // TODO: remove this once we verify `fastlane supply` works on linux / windows
+      checkRuntimePlatform('android');
+
+      const submissionMode = options.useSubmissionService
+        ? SubmissionMode.online
+        : SubmissionMode.offline;
+      const ctx = AndroidSubmitCommand.createContext(submissionMode, projectDir, options);
+      const command = new AndroidSubmitCommand(ctx);
+      await command.runAsync();
     });
 
   program
@@ -111,60 +106,37 @@ export default function (program: Command) {
       console.log();
     })
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
-    .asyncActionProjectDir(
-      createLegacyUploadAction(IOSUploader, 'ios', [
-        ...SOURCE_OPTIONS,
-        'appleId',
-        'appleIdPassword',
-        'appName',
-        'companyName',
-        'sku',
-        'language',
-        'publicUrl',
-      ])
-    );
+    .asyncActionProjectDir(async (projectDir: string, options: IosPlatformOptions) => {
+      try {
+        // TODO: remove this once we verify `fastlane supply` works on linux / windows
+        checkRuntimePlatform('ios');
+
+        const args = pick(options, SOURCE_OPTIONS);
+        if (size(args) > 1) {
+          throw new Error(`You have to choose only one of: --path, --id, --latest, --url`);
+        }
+        IOSUploader.validateOptions(options);
+        const uploader = new IOSUploader(projectDir, options);
+        await uploader.upload();
+      } catch (err) {
+        log.error('Failed to upload the standalone app to the app store.');
+        throw err;
+      }
+    });
 }
 
-type AnyUploader = any;
-
-function createLegacyUploadAction(
-  UploaderClass: AnyUploader,
-  platform: 'android' | 'ios',
-  optionKeys: string[]
-) {
-  return async (
-    projectDir: string,
-    command: AndroidPlatformOptions | IosPlatformOptions
-  ): Promise<void> => {
-    try {
-      if (process.platform !== 'darwin') {
-        if (platform === 'android') {
-          log.error('Local Android uploads are only supported on macOS.');
-          log(
-            chalk.bold(
-              'Try --use-submission-service flag to upload your app from Expo servers. This feature is still experimental!'
-            )
-          );
-        } else {
-          log.error('Currently, iOS uploads are only supported on macOS, sorry :(');
-        }
-        process.exit(1);
-      }
-
-      const args = pick(command, SOURCE_OPTIONS);
-      if (size(args) > 1) {
-        throw new Error(`You have to choose only one of: --path, --id, --latest, --url`);
-      }
-
-      const options = pick(command, optionKeys);
-      if (UploaderClass.validateOptions) {
-        UploaderClass.validateOptions(options);
-      }
-      const uploader = new UploaderClass(projectDir, options);
-      await uploader.upload();
-    } catch (err) {
-      log.error('Failed to upload the standalone app to the app store.');
-      throw err;
+function checkRuntimePlatform(targetPlatform: 'android' | 'ios'): void {
+  if (process.platform !== 'darwin') {
+    if (targetPlatform === 'android') {
+      log.error('Local Android uploads are only supported on macOS.');
+      log(
+        chalk.bold(
+          'Try --use-submission-service flag to upload your app from Expo servers. This feature is still experimental!'
+        )
+      );
+    } else {
+      log.error('Currently, iOS uploads are only supported on macOS, sorry :(');
     }
-  };
+    process.exit(1);
+  }
 }
