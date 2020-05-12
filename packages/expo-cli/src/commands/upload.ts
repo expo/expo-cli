@@ -40,7 +40,7 @@ export default function (program: Command) {
       '--use-submission-service',
       'Experimental: Use Submission Service for uploading your app. The upload process will happen on Expo servers.'
     )
-    .option('--verbose', 'Print logs from Submission Service even if the submission succeeded')
+    .option('--verbose', 'Print logs from Submission Service even if the submission succeeds')
     .description(
       'Uploads a standalone Android app to Google Play (works on macOS only). Uploads the latest build by default.'
     )

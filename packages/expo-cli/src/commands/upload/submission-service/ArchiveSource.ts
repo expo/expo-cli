@@ -139,7 +139,7 @@ async function handleBuildIdSourceAsync(source: ArchiveBuildIdSource): Promise<s
     slug: source.slug,
   });
   if (!build) {
-    throw new Error(`Couldn't find build with id: ${source.id}`);
+    throw new Error(`Couldn't find build for id ${source.id}`);
   }
   return build.artifacts.url;
 }
