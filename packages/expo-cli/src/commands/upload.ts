@@ -1,36 +1,16 @@
-import { ExpoConfig, getConfig } from '@expo/config';
-import { Result, result } from '@expo/results';
 import chalk from 'chalk';
 import pick from 'lodash/pick';
 import size from 'lodash/size';
 import { Command } from 'commander';
 
-import { getAppConfig } from './upload/submission-service/utils';
-import AndroidSubmitter, {
-  AndroidSubmissionOptions,
-} from './upload/submission-service/android/AndroidSubmitter';
-import { ArchiveSource, ArchiveSourceType } from './upload/submission-service/ArchiveSource';
-import {
-  ArchiveType,
-  ReleaseStatus,
-  ReleaseTrack,
-} from './upload/submission-service/android/AndroidSubmissionConfig';
-import {
-  ServiceAccountSource,
-  ServiceAccountSourceType,
-} from './upload/submission-service/android/ServiceAccountSource';
-import {
-  AndroidPackageSource,
-  AndroidPackageSourceType,
-} from './upload/submission-service/android/AndroidPackageSource';
-
 import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
 import AndroidUploader, { AndroidPlatformOptions } from './upload/AndroidUploader';
+import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
 import log from '../log';
 
 const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('upload:android [projectDir]')
     .alias('ua')
@@ -67,8 +47,9 @@ export default function(program: Command) {
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: any) => {
       if (options.useSubmissionService) {
-        const ctx: SubmissionContext = { projectDir, options };
-        await submitAndroidApp(ctx);
+        const ctx = AndroidSubmitCommand.createContext(projectDir, options);
+        const command = new AndroidSubmitCommand(ctx);
+        await command.run();
       } else {
         const legacyUploader = createLegacyUploadAction(AndroidUploader, 'android', [
           ...SOURCE_OPTIONS,
@@ -186,200 +167,4 @@ function createLegacyUploadAction(
       throw err;
     }
   };
-}
-
-interface SubmissionContext {
-  projectDir: string;
-  options: AndroidCommandOptions;
-}
-
-interface AndroidCommandOptions {
-  latest?: boolean;
-  id?: string;
-  path?: string;
-  url?: string;
-  archiveType?: string;
-  key?: string;
-  androidPackage?: string;
-  track?: string;
-  releaseStatus?: string;
-  useSubmissionService?: boolean;
-  verbose?: boolean;
-}
-
-async function submitAndroidApp(ctx: SubmissionContext): Promise<void> {
-  const submissionOptions = getAndroidSubmissionOptions(ctx);
-  const submitter = new AndroidSubmitter(submissionOptions, ctx.options.verbose ?? false);
-  await submitter.submit();
-}
-
-function getAndroidSubmissionOptions(ctx: SubmissionContext): AndroidSubmissionOptions {
-  const androidPackage = resolveAndroidPackage(ctx);
-  const track = resolveTrack(ctx);
-  const releaseStatus = resolveReleaseStatus(ctx);
-  const archiveSource = resolveArchiveSource(ctx);
-  const archiveType = resolveArchiveType(ctx);
-  const serviceAccountSource = resolveServiceAccountSource(ctx);
-
-  const errored = [
-    androidPackage,
-    track,
-    releaseStatus,
-    archiveSource,
-    archiveType,
-    serviceAccountSource,
-  ].filter(r => !r.ok);
-  if (errored.length > 0) {
-    const message = errored.map(err => err.reason?.message).join('\n');
-    log.error(message);
-    throw new Error('Failed to submit the app');
-  }
-
-  return {
-    androidPackage: androidPackage.enforceValue(),
-    track: track.enforceValue(),
-    releaseStatus: releaseStatus.enforceValue(),
-    archiveSource: archiveSource.enforceValue(),
-    archiveType: archiveType.enforceValue(),
-    serviceAccountSource: serviceAccountSource.enforceValue(),
-  };
-}
-
-function resolveAndroidPackage(ctx: SubmissionContext): Result<AndroidPackageSource> {
-  let androidPackage: string | undefined;
-  if (ctx.options.androidPackage) {
-    androidPackage = ctx.options.androidPackage;
-  }
-  const exp = getExpoConfig(ctx.projectDir);
-  if (exp.android?.package) {
-    androidPackage = exp.android.package;
-  }
-  if (androidPackage) {
-    return result({
-      sourceType: AndroidPackageSourceType.userDefined,
-      androidPackage,
-    });
-  } else {
-    return result({
-      sourceType: AndroidPackageSourceType.prompt,
-    });
-  }
-}
-
-function resolveTrack(ctx: SubmissionContext): Result<ReleaseTrack> {
-  const { track } = ctx.options;
-  if (!track) {
-    return result(ReleaseTrack.production);
-  }
-  if (track in ReleaseTrack) {
-    return result(ReleaseTrack[track as keyof typeof ReleaseTrack]);
-  } else {
-    return result(
-      new Error(
-        `Unsupported track: ${track} (valid options: ${Object.keys(ReleaseTrack).join(', ')})`
-      )
-    );
-  }
-}
-
-function resolveReleaseStatus(ctx: SubmissionContext): Result<ReleaseStatus> {
-  const { releaseStatus } = ctx.options;
-  if (!releaseStatus) {
-    return result(ReleaseStatus.completed);
-  }
-  if (releaseStatus in ReleaseStatus) {
-    return result(ReleaseStatus[releaseStatus as keyof typeof ReleaseStatus]);
-  } else {
-    return result(
-      new Error(
-        `Unsupported release status: ${releaseStatus} (valid options: ${Object.keys(
-          ReleaseStatus
-        ).join(', ')})`
-      )
-    );
-  }
-}
-
-function resolveArchiveSource(ctx: SubmissionContext): Result<ArchiveSource> {
-  const chosenOptions = [ctx.options.url, ctx.options.path, ctx.options.id, ctx.options.latest];
-  if (chosenOptions.filter(opt => opt).length > 1) {
-    throw new Error(`Pass only one of: --url, --path, --id, --latest`);
-  }
-  if (ctx.options.url) {
-    return result({
-      sourceType: ArchiveSourceType.url,
-      url: ctx.options.url,
-    });
-  } else if (ctx.options.path) {
-    return result({
-      sourceType: ArchiveSourceType.path,
-      path: ctx.options.path,
-    });
-  } else if (ctx.options.id) {
-    // legacy for Turtle v1
-    const { owner, slug } = getAppConfig(ctx.projectDir);
-    return result({
-      sourceType: ArchiveSourceType.buildId,
-      platform: 'android',
-      id: ctx.options.id,
-      owner,
-      slug,
-    });
-  } else if (ctx.options.latest) {
-    // legacy for Turtle v1
-    const { owner, slug } = getAppConfig(ctx.projectDir);
-    return result({
-      sourceType: ArchiveSourceType.latest,
-      platform: 'android',
-      owner,
-      slug,
-    });
-  } else {
-    return result({
-      sourceType: ArchiveSourceType.prompt,
-      platform: 'android',
-      projectDir: ctx.projectDir,
-    });
-  }
-}
-
-function resolveArchiveType(ctx: SubmissionContext): Result<ArchiveType> {
-  const { archiveType } = ctx.options;
-  if (!archiveType) {
-    return result(ArchiveType.apk);
-  }
-  if (archiveType in ArchiveType) {
-    return result(ArchiveType[archiveType as keyof typeof ArchiveType]);
-  } else {
-    return result(
-      new Error(
-        `Unsupported archive type: ${archiveType} (valid options: ${Object.keys(ArchiveType).join(
-          ', '
-        )})`
-      )
-    );
-  }
-}
-
-function resolveServiceAccountSource(ctx: SubmissionContext): Result<ServiceAccountSource> {
-  const { key } = ctx.options;
-  if (key) {
-    return result({
-      sourceType: ServiceAccountSourceType.path,
-      path: key,
-    });
-  } else {
-    return result({
-      sourceType: ServiceAccountSourceType.prompt,
-    });
-  }
-}
-
-let exp: ExpoConfig;
-function getExpoConfig(projectDir: string): ExpoConfig {
-  if (!exp) {
-    const { exp: _exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
-    exp = _exp;
-  }
-  return exp;
 }
