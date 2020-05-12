@@ -49,7 +49,7 @@ export default function (program: Command) {
       if (options.useSubmissionService) {
         const ctx = AndroidSubmitCommand.createContext(projectDir, options);
         const command = new AndroidSubmitCommand(ctx);
-        await command.run();
+        await command.runAsync();
       } else {
         const legacyUploader = createLegacyUploadAction(AndroidUploader, 'android', [
           ...SOURCE_OPTIONS,
