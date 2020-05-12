@@ -63,7 +63,7 @@ async function getArchiveUrlAsync(source: ArchiveSource): Promise<string> {
     case ArchiveSourceType.url:
       return await handleUrlSourceAsync(source);
     case ArchiveSourceType.latest:
-      return await handleLatestsSourceAsync(source);
+      return await handleLatestSourceAsync(source);
     case ArchiveSourceType.path:
       return await handlePathSourceAsync(source);
     case ArchiveSourceType.buildId:
@@ -77,7 +77,7 @@ async function handleUrlSourceAsync(source: ArchiveUrlSource): Promise<string> {
   return source.url;
 }
 
-async function handleLatestsSourceAsync(source: ArchiveLatestSource): Promise<string> {
+async function handleLatestSourceAsync(source: ArchiveLatestSource): Promise<string> {
   const builds = await StandaloneBuild.getStandaloneBuilds(
     {
       platform: source.platform,
