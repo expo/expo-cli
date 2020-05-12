@@ -51,7 +51,6 @@ export type HookArguments = {
 export type PostPublishHook = {
   file: string;
   config: any;
-  _fn: (input: HookArguments) => any;
 };
 
 type ExpoOrientation = 'default' | 'portrait' | 'landscape';

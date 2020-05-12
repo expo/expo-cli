@@ -1,5 +1,6 @@
 import {
   ExpoConfig,
+  HookArguments,
   PackageJSONConfig,
   Platform,
   PostPublishHook,
@@ -129,6 +130,10 @@ type PublicConfig = ExpoConfig & {
 
 type SelfHostedIndex = PublicConfig & {
   dependencies: string[];
+};
+
+type LoadedPostPublishHook = PostPublishHook & {
+  _fn: (input: HookArguments) => any;
 };
 
 export type StartOptions = {
@@ -762,7 +767,7 @@ export async function publishAsync(
   // TODO: refactor this out to a function, throw error if length doesn't match
   let { hooks } = exp;
   delete exp.hooks;
-  let validPostPublishHooks: PostPublishHook[] = [];
+  let validPostPublishHooks: LoadedPostPublishHook[] = [];
   if (hooks && hooks.postPublish) {
     hooks.postPublish.forEach((hook: any) => {
       let { file } = hook;
