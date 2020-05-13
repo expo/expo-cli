@@ -52,7 +52,8 @@ async function handlePromptSourceAsync(_source: ServiceAccountPromptSource): Pro
 async function askForServiceAccountPathAsync(): Promise<string> {
   const { filePath } = await prompt({
     name: 'filePath',
-    message: 'Path to the Service Account file:',
+    message: 'Path to Google Service Account file:',
+    default: 'google-service-account.json',
     type: 'input',
     validate: async (path: string): Promise<boolean | string> => {
       if (!(await existingFile(path, false))) {
