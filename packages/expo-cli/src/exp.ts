@@ -47,12 +47,12 @@ ApiV2.setClientName(packageJSON.version);
 
 // The following prototyped functions are not used here, but within in each file found in `./commands`
 // Extending commander to easily add more options to certain command line arguments
-Command.prototype.urlOpts = function() {
+Command.prototype.urlOpts = function () {
   urlOpts.addOptions(this);
   return this;
 };
 
-Command.prototype.allowOffline = function() {
+Command.prototype.allowOffline = function () {
   this.option('--offline', 'Allows this command to run while offline');
   return this;
 };
@@ -65,7 +65,7 @@ export type Action = (...args: any[]) => void;
 
 // asyncAction is a wrapper for all commands/actions to be executed after commander is done
 // parsing the command input
-Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boolean) {
+Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: boolean) {
   return this.action(async (...args: any[]) => {
     if (!skipUpdateCheck) {
       try {
@@ -75,9 +75,6 @@ Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boole
 
     try {
       let options = last(args);
-      if (options.output === 'raw') {
-        log.config.raw = true;
-      }
       if (options.offline) {
         Config.offline = true;
       }
@@ -114,7 +111,7 @@ Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boole
 // - Attaches the bundling logger
 // - Checks if the project directory is valid or not
 // - Runs AsyncAction with the projectDir as an argument
-Command.prototype.asyncActionProjectDir = function(
+Command.prototype.asyncActionProjectDir = function (
   asyncFn: Action,
   options: { checkConfig?: boolean } = {}
 ) {
@@ -263,8 +260,9 @@ Command.prototype.asyncActionProjectDir = function(
           } else {
             log(
               chalk.green(
-                `Finished building JavaScript bundle in ${endTime.getTime() -
-                  startTime.getTime()}ms.`
+                `Finished building JavaScript bundle in ${
+                  endTime.getTime() - startTime.getTime()
+                }ms.`
               )
             );
           }
@@ -363,7 +361,7 @@ function runAsync(programName: string) {
       process.exit(0);
     });
 
-    program.on('command:*', subCommand => {
+    program.on('command:*', (subCommand) => {
       let msg = `"${subCommand}" is not an expo command. See "expo --help" for the full list of commands.`;
       const availableCommands = program.commands.map((cmd: Command) => cmd._name);
       // finding the best match whose edit distance is less than 40% of their length.
@@ -550,7 +548,7 @@ function formatCommandsAsMarkdown(commands: CommandData[]) {
 
 // This is the entry point of the CLI
 export function run(programName: string) {
-  (async function() {
+  (async function () {
     if (process.argv[2] === 'introspect') {
       let commands = generateCommandJSON();
       if (process.argv[3] && process.argv[3].includes('markdown')) {
@@ -561,7 +559,7 @@ export function run(programName: string) {
     } else {
       await Promise.all([writePathAsync(), runAsync(programName)]);
     }
-  })().catch(e => {
+  })().catch((e) => {
     console.error('Uncaught Error', e);
     process.exit(1);
   });

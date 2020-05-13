@@ -13,7 +13,6 @@ async function action(projectDir: string, options: { sendTo?: string } & URLOpti
   let url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
   log('Your project manifest URL is\n\n' + chalk.underline(url) + '\n');
-  log.raw(url);
 
   let shouldQuit = false;
   if (await urlOpts.handleMobileOptsAsync(projectDir, options)) {
@@ -44,7 +43,7 @@ async function action(projectDir: string, options: { sendTo?: string } & URLOpti
   process.exit();
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('send [project-dir]')
     .description('Sends a link to your project to an email address')

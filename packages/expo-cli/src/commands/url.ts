@@ -80,7 +80,6 @@ async function action(projectDir: string, options: ProjectUrlOptions & URLOption
   urlOpts.printQRCode(url);
 
   log('Your URL is\n\n' + chalk.underline(url) + '\n');
-  log.raw(url);
 
   if (!options.web) {
     await printRunInstructionsAsync();
@@ -88,7 +87,7 @@ async function action(projectDir: string, options: ProjectUrlOptions & URLOption
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('url [project-dir]')
     .alias('u')
