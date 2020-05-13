@@ -467,7 +467,7 @@ async function promptForManagedConfig(
   return { expo };
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('init [project-dir]')
     .alias('i')

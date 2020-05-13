@@ -483,10 +483,9 @@ function formatDistCert(
       "\n    ❓ Validity of this certificate on Apple's servers is unknown."
     );
   }
-  return `Distribution Certificate (Cert ID: ${distCert.certId ||
-    '-----'}, Serial number: ${serialNumber}, Team ID: ${
-    distCert.teamId
-  })${usedByString}${validityText}`;
+  return `Distribution Certificate (Cert ID: ${
+    distCert.certId || '-----'
+  }, Serial number: ${serialNumber}, Team ID: ${distCert.teamId})${usedByString}${validityText}`;
 }
 
 async function generateDistCert(ctx: Context): Promise<DistCert> {

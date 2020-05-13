@@ -3,7 +3,7 @@ import boxen from 'boxen';
 
 import chalk from 'chalk';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('android [project-dir]')
     .description(chalk.yellow`Deprecated: Opens your app in Expo on a connected Android device`)

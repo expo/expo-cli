@@ -11,81 +11,81 @@ function parseFixture(string: string) {
   return plist.parse(intro + string + '</plist>');
 }
 
-describe('parse()', function() {
-  describe('boolean', function() {
-    it('should parse a <true> node into a Boolean `true` value', function() {
+describe('parse()', function () {
+  describe('boolean', function () {
+    it('should parse a <true> node into a Boolean `true` value', function () {
       const parsed = parseFixture('<true/>');
       assert.strictEqual(parsed, true);
     });
 
-    it('should parse a <false> node into a Boolean `false` value', function() {
+    it('should parse a <false> node into a Boolean `false` value', function () {
       const parsed = parseFixture('<false/>');
       assert.strictEqual(parsed, false);
     });
   });
 
-  describe('integer', function() {
-    it('should throw an Error when parsing an empty integer', function() {
-      assert.throws(function() {
+  describe('integer', function () {
+    it('should throw an Error when parsing an empty integer', function () {
+      assert.throws(function () {
         parseFixture('<integer/>');
       });
     });
 
-    it('should parse an <integer> node into a Number', function() {
+    it('should parse an <integer> node into a Number', function () {
       const parsed = parseFixture('<integer>14</integer>');
       assert.strictEqual(parsed, 14);
     });
   });
 
-  describe('real', function() {
-    it('should throw an Error when parsing an empty real', function() {
-      assert.throws(function() {
+  describe('real', function () {
+    it('should throw an Error when parsing an empty real', function () {
+      assert.throws(function () {
         parseFixture('<real/>');
       });
     });
 
-    it('should parse a <real> node into a Number', function() {
+    it('should parse a <real> node into a Number', function () {
       const parsed = parseFixture('<real>3.14</real>');
       assert.strictEqual(parsed, 3.14);
     });
   });
 
-  describe('string', function() {
-    it('should parse a self closing string', function() {
+  describe('string', function () {
+    it('should parse a self closing string', function () {
       const parsed = parseFixture('<string/>');
       assert.strictEqual(parsed, '');
     });
 
-    it('should parse an empty string', function() {
+    it('should parse an empty string', function () {
       const parsed = parseFixture('<string></string>');
       assert.strictEqual(parsed, '');
     });
 
-    it('should parse the string contents', function() {
+    it('should parse the string contents', function () {
       const parsed = parseFixture('<string>test</string>');
       assert.strictEqual(parsed, 'test');
     });
 
-    it('should parse a string with comments', function() {
+    it('should parse a string with comments', function () {
       const parsed = parseFixture('<string>a<!-- comment --> string</string>');
       assert.strictEqual(parsed, 'a string');
     });
   });
 
-  describe('data', function() {
-    it('should parse an empty data tag into an empty Buffer', function() {
+  describe('data', function () {
+    it('should parse an empty data tag into an empty Buffer', function () {
       const parsed = parseFixture('<data/>');
       assert(Buffer.isBuffer(parsed));
       assert.strictEqual(parsed.toString('utf-8'), '');
     });
 
-    it('should parse a <data> node into a Buffer', function() {
+    it('should parse a <data> node into a Buffer', function () {
       const parsed = parseFixture('<data>4pyTIMOgIGxhIG1vZGU=</data>');
       assert(Buffer.isBuffer(parsed));
       assert.strictEqual(parsed.toString('utf8'), '✓ à la mode');
     });
 
-    it('should parse a <data> node with newlines into a Buffer', function() {
+    it('should parse a <data> node with newlines into a Buffer', function () {
       const xml = `
 <data>4pyTIMOgIGxhIG
 1v
@@ -98,84 +98,84 @@ U=</data>
     });
   });
 
-  describe('date', function() {
-    it('should throw an error when parsing an empty date', function() {
-      assert.throws(function() {
+  describe('date', function () {
+    it('should throw an error when parsing an empty date', function () {
+      assert.throws(function () {
         parseFixture('<date/>');
       });
     });
 
-    it('should parse a <date> node into a Date', function() {
+    it('should parse a <date> node into a Date', function () {
       const parsed = parseFixture('<date>2010-02-08T21:41:23Z</date>');
       assert(parsed instanceof Date);
       assert.strictEqual(parsed.getTime(), 1265665283000);
     });
   });
 
-  describe('array', function() {
-    it('should parse an empty array', function() {
+  describe('array', function () {
+    it('should parse an empty array', function () {
       const parsed = parseFixture('<array/>');
       assert.deepEqual(parsed, []);
     });
 
-    it('should parse an array with one element', function() {
+    it('should parse an array with one element', function () {
       const parsed = parseFixture('<array><true/></array>');
       assert.deepEqual(parsed, [true]);
     });
 
-    it('should parse an array with multiple elements', function() {
+    it('should parse an array with multiple elements', function () {
       const parsed = parseFixture('<array><string>1</string><string>2</string></array>');
       assert.deepEqual(parsed, ['1', '2']);
     });
 
-    it('should parse empty elements inside an array', function() {
+    it('should parse empty elements inside an array', function () {
       const parsed = parseFixture('<array><string/><false/></array>');
       assert.deepEqual(parsed, ['', false]);
     });
   });
 
-  describe('dict', function() {
-    it('should throw if key is missing', function() {
-      assert.throws(function() {
+  describe('dict', function () {
+    it('should throw if key is missing', function () {
+      assert.throws(function () {
         parseFixture('<dict><string>x</string></dict>');
       });
     });
 
-    it('should throw if two keys follow each other', function() {
-      assert.throws(function() {
+    it('should throw if two keys follow each other', function () {
+      assert.throws(function () {
         parseFixture('<dict><key>a</key><key>b</key></dict>');
       });
     });
 
-    it('should throw if value is missing', function() {
-      assert.throws(function() {
+    it('should throw if value is missing', function () {
+      assert.throws(function () {
         parseFixture('<dict><key>a</key></dict>');
       });
     });
 
-    it('should parse an empty key', function() {
+    it('should parse an empty key', function () {
       const parsed = parseFixture('<dict><key/><string>1</string></dict>');
       assert.deepEqual(parsed, { '': '1' });
     });
 
-    it('should parse an empty value', function() {
+    it('should parse an empty value', function () {
       const parsed = parseFixture('<dict><key>a</key><string/></dict>');
       assert.deepEqual(parsed, { a: '' });
     });
 
-    it('should parse multiple key/value pairs', function() {
+    it('should parse multiple key/value pairs', function () {
       const parsed = parseFixture('<dict><key>a</key><true/><key>b</key><false/></dict>');
       assert.deepEqual(parsed, { a: true, b: false });
     });
 
-    it('should parse nested data structures', function() {
+    it('should parse nested data structures', function () {
       const parsed = parseFixture('<dict><key>a</key><dict><key>a1</key><true/></dict></dict>');
       assert.deepEqual(parsed, { a: { a1: true } });
     });
   });
 
-  describe('integration', function() {
-    it('should parse a plist file with XML comments', function() {
+  describe('integration', function () {
+    it('should parse a plist file with XML comments', function () {
       const xml = `      
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -206,7 +206,7 @@ U=</data>
       });
     });
 
-    it('should parse a plist file with CDATA content', function() {
+    it('should parse a plist file with CDATA content', function () {
       const xml = `
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
       });
     });
 
-    it('should parse an example "Cordova.plist" file', function() {
+    it('should parse an example "Cordova.plist" file', function () {
       const xml = `
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -395,7 +395,7 @@ int main(int argc, char *argv[])
       });
     });
 
-    it('should parse an example "Xcode-Info.plist" file', function() {
+    it('should parse an example "Xcode-Info.plist" file', function () {
       const xml = `
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

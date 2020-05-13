@@ -35,7 +35,7 @@ export async function ensurePNGIsNotTransparent(imagePathOrURL: string): Promise
           res();
         }
       })
-      .on('parsed', function() {
+      .on('parsed', function () {
         if (hasAlreadyResolved) {
           return;
         }

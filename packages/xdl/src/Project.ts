@@ -1,7 +1,9 @@
 import {
   ExpoConfig,
+  HookArguments,
   PackageJSONConfig,
   Platform,
+  PostPublishHook,
   ProjectTarget,
   configFilename,
   getConfig,
@@ -130,6 +132,10 @@ type SelfHostedIndex = PublicConfig & {
   dependencies: string[];
 };
 
+type LoadedPostPublishHook = PostPublishHook & {
+  _fn: (input: HookArguments) => any;
+};
+
 export type StartOptions = {
   reset?: boolean;
   nonInteractive?: boolean;
@@ -147,26 +153,6 @@ type PublishOptions = {
 type PackagerOptions = {
   dev: boolean;
   minify: boolean;
-};
-
-type HookArguments = {
-  config: any;
-  url: any;
-  exp: PublicConfig;
-  iosBundle: string;
-  iosSourceMap: string | null;
-  iosManifest: any;
-  androidBundle: string;
-  androidSourceMap: string | null;
-  androidManifest: any;
-  projectRoot: string;
-  log: (msg: any) => void;
-};
-
-type PostPublishHook = {
-  file: string;
-  config: any;
-  _fn: (input: HookArguments) => any;
 };
 
 type Release = {
@@ -548,17 +534,11 @@ export async function exportForAppHosting(
   await fs.ensureDir(bundlesPathToWrite);
 
   const { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
-  const iosBundleHash = crypto
-    .createHash('md5')
-    .update(iosBundle)
-    .digest('hex');
+  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto
-    .createHash('md5')
-    .update(androidBundle)
-    .digest('hex');
+  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 
@@ -781,7 +761,7 @@ export async function publishAsync(
   // TODO: refactor this out to a function, throw error if length doesn't match
   let { hooks } = exp;
   delete exp.hooks;
-  let validPostPublishHooks: PostPublishHook[] = [];
+  let validPostPublishHooks: LoadedPostPublishHook[] = [];
   if (hooks && hooks.postPublish) {
     hooks.postPublish.forEach((hook: any) => {
       let { file } = hook;

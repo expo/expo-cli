@@ -8,7 +8,7 @@ import log from '../log';
 
 const COMMON_OPTIONS = ['id', 'latest', 'path'];
 
-export default function(program: Command) {
+export default function (program: Command) {
   const ANDROID_OPTIONS = [...COMMON_OPTIONS, 'key', 'track'];
   const androidCommand = program.command('upload:android [projectDir]').alias('ua');
   setCommonOptions(androidCommand, '.apk');
@@ -76,7 +76,7 @@ export default function(program: Command) {
     .description(
       'Uploads a standalone app to Apple TestFlight (works on macOS only). Uploads the latest build by default.'
     )
-    .on('--help', function() {
+    .on('--help', function () {
       console.log('Available languages:');
       console.log(`  ${LANGUAGES.join(', ')}`);
       console.log();

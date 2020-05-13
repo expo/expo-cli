@@ -194,20 +194,9 @@ export async function logKeystoreHashes(keystoreInfo: KeystoreInfo, linePrefix: 
   try {
     await exportCertBinary(keystoreInfo, certFile);
     const data = await fs.readFile(certFile);
-    const googleHash = crypto
-      .createHash('sha1')
-      .update(data)
-      .digest('hex')
-      .toUpperCase();
-    const googleHash256 = crypto
-      .createHash('sha256')
-      .update(data)
-      .digest('hex')
-      .toUpperCase();
-    const fbHash = crypto
-      .createHash('sha1')
-      .update(data)
-      .digest('base64');
+    const googleHash = crypto.createHash('sha1').update(data).digest('hex').toUpperCase();
+    const googleHash256 = crypto.createHash('sha256').update(data).digest('hex').toUpperCase();
+    const fbHash = crypto.createHash('sha1').update(data).digest('base64');
     log.info(
       `${linePrefix}Google Certificate Fingerprint:     ${googleHash.replace(
         /(.{2}(?!$))/g,

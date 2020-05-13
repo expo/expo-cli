@@ -106,7 +106,7 @@ function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output
   return commonOutput;
 }
 
-export default async function(
+export default async function (
   env: Environment,
   argv: Arguments = {}
 ): Promise<Configuration | DevConfiguration> {

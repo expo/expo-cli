@@ -2,7 +2,7 @@ import { Command } from 'commander';
 
 import generateModuleAsync from './generate-module/generateModuleAsync';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('generate-module [new-module-project]')
     .option(

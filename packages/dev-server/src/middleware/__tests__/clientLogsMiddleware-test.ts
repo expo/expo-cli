@@ -92,9 +92,7 @@ async function createServerAsync() {
       },
     ],
   });
-  const app = connect()
-    .use(bodyParser.json())
-    .use(clientLogsMiddleware(logger));
+  const app = connect().use(bodyParser.json()).use(clientLogsMiddleware(logger));
 
   const server = http.createServer(app);
   await new Promise((resolve, reject) =>

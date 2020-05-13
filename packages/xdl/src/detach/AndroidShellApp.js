@@ -148,7 +148,7 @@ function backgroundImagesForApp(shellPath, manifest, isDetached) {
     const splash = _.get(manifest, 'android.splash');
     const results = _.reduce(
       imageKeys,
-      function(acc, imageKey) {
+      function (acc, imageKey) {
         let url = getRemoteOrLocalUrl(splash, imageKey, isDetached);
         if (url) {
           acc.push({

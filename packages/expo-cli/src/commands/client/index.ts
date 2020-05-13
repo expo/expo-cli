@@ -24,7 +24,7 @@ import { CreateIosDist } from '../../credentials/views/IosDistCert';
 import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/IosProvisioningProfileAdhoc';
 import { runCredentialsManager } from '../../credentials/route';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('client:ios [project-dir]')
     .option(

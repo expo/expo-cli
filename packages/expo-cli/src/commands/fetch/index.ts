@@ -7,7 +7,7 @@ import {
 } from './android';
 import fetchIosCerts from './ios';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('fetch:ios:certs [project-dir]')
     .description(
