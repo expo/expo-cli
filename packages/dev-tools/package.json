@@ -16,9 +16,6 @@
   "files": [
     "build"
   ],
-  "jest": {
-    "testEnvironment": "node"
-  },
   "dependencies": {
     "@expo/config": "3.2.3",
     "base64url": "3.0.1",

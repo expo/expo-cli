@@ -11,18 +11,6 @@
     "lint": "eslint .",
     "test": "jest"
   },
-  "jest": {
-    "testEnvironment": "node",
-    "roots": [
-      "__mocks__",
-      "src"
-    ],
-    "moduleFileExtensions": [
-      "js",
-      "json"
-    ],
-    "resetModules": false
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
