@@ -2,7 +2,7 @@ import boxen from 'boxen';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('ios [project-dir]')
     .description(

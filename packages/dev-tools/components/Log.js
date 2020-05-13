@@ -129,21 +129,15 @@ export default class Log extends React.Component {
               }}>
               {logLevelLabel(message.level)}
             </div>
-          ) : (
-            undefined
-          )}
+          ) : undefined}
           {message.time ? (
             <div className={STYLES_LOG_COL_TIMESTAMP}>
               {Strings.formatTimeMilitary(message.time)}
             </div>
-          ) : (
-            undefined
-          )}
+          ) : undefined}
           {this.props.context ? (
             <div className={STYLES_LOG_COL_CONTEXT}>{this.props.context}</div>
-          ) : (
-            undefined
-          )}
+          ) : undefined}
         </div>
         <div>{this.renderMessage(message)}</div>
       </div>

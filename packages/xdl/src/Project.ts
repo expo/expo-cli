@@ -548,17 +548,11 @@ export async function exportForAppHosting(
   await fs.ensureDir(bundlesPathToWrite);
 
   const { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
-  const iosBundleHash = crypto
-    .createHash('md5')
-    .update(iosBundle)
-    .digest('hex');
+  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto
-    .createHash('md5')
-    .update(androidBundle)
-    .digest('hex');
+  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 

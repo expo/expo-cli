@@ -72,7 +72,7 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   await packageManager.addAsync(...versionedPackages);
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('install [packages...]')
     .alias('add')

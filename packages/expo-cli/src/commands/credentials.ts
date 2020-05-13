@@ -10,7 +10,7 @@ type Options = {
   platform?: 'android' | 'ios';
 };
 
-export default function(program: CommanderStatic) {
+export default function (program: CommanderStatic) {
   program
     .command('credentials:manager')
     .description('Manage your credentials')

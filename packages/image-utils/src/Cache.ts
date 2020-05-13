@@ -11,19 +11,13 @@ const cacheKeys: { [key: string]: string } = {};
 // Calculate SHA256 Checksum value of a file based on its contents
 function calculateHash(filePath: string): string {
   const contents = filePath.startsWith('http') ? filePath : readFileSync(filePath);
-  return crypto
-    .createHash('sha256')
-    .update(contents)
-    .digest('hex');
+  return crypto.createHash('sha256').update(contents).digest('hex');
 }
 
 // Create a hash key for caching the images between builds
 export function createCacheKey(fileSource: string, properties: string[]): string {
   const hash = calculateHash(fileSource);
-  return [hash]
-    .concat(properties)
-    .filter(Boolean)
-    .join('-');
+  return [hash].concat(properties).filter(Boolean).join('-');
 }
 
 export async function createCacheKeyWithDirectoryAsync(

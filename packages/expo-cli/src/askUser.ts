@@ -26,7 +26,7 @@ export default {
 };
 
 if (require.main === module) {
-  askForSendToAsync().then(function(sendTo) {
+  askForSendToAsync().then(function (sendTo) {
     console.log('Your email address is', sendTo);
   });
 }

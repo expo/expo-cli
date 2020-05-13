@@ -32,7 +32,7 @@ function parseSdkMajorVersion(expSdkVersion: string) {
 async function saveUrlToPathAsync(url: string, path: string, timeout = 20000) {
   const response = await axios.get(url, { responseType: 'stream', timeout });
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     let stream = fs.createWriteStream(path);
     stream.on('close', resolve);
     stream.on('error', reject);

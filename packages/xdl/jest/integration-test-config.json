@@ -1,13 +1,7 @@
 {
   "testEnvironment": "node",
-  "roots": [
-    "src"
-  ],
+  "roots": ["src"],
   "setupTestFrameworkScriptFile": "<rootDir>/jest/integration-test-setup.js",
-  "moduleFileExtensions": [
-    "js",
-    "json",
-    "node"
-  ],
+  "moduleFileExtensions": ["js", "json", "node"],
   "testRegex": "__integration_tests__/.*\\.js$"
 }

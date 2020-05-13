@@ -145,7 +145,7 @@ export async function action(projectDir: string = './', options: Options = { for
   await generateFilesAsync({ projectDir, staticPath, options, answer, templateFolder });
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('customize:web [project-dir]')
     .description('Generate static web files into your project.')

@@ -23,7 +23,7 @@ async function statusAction() {
   printBuildTable(result.builds);
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('build [project-dir]')
     .description(

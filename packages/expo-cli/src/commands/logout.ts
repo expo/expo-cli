@@ -12,9 +12,6 @@ async function action() {
   }
 }
 
-export default function(program: Command) {
-  program
-    .command('logout')
-    .description('Logout from your Expo account')
-    .asyncAction(action);
+export default function (program: Command) {
+  program.command('logout').description('Logout from your Expo account').asyncAction(action);
 }

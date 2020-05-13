@@ -115,10 +115,7 @@ function filterImages(files: string[], projectDir: string) {
 // Calculate SHA256 Checksum value of a file based on its contents
 function calculateHash(filePath: string): string {
   const contents = readFileSync(filePath);
-  return crypto
-    .createHash('sha256')
-    .update(contents)
-    .digest('hex');
+  return crypto.createHash('sha256').update(contents).digest('hex');
 }
 
 export type OptimizationOptions = {

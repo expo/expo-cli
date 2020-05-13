@@ -225,7 +225,7 @@ function getExampleManifestUrl(url: string, sdkVersion: string | undefined): str
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('publish [project-dir]')
     .alias('p')

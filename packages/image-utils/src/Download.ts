@@ -40,10 +40,7 @@ export async function downloadImage(url: string): Promise<string> {
 
   // If an image URL doesn't have a name, get the mime type and move the file.
   const img = await Jimp.read(localPath);
-  const mime = img
-    .getMIME()
-    .split('/')
-    .pop()!;
+  const mime = img.getMIME().split('/').pop()!;
   if (!localPath.endsWith(mime)) {
     const newPath = path.join(outputPath, `image.${mime}`);
     await fs.move(localPath, newPath);

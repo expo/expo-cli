@@ -16,7 +16,7 @@
 
 # To bump a version of fastlane
 
-1. Go to `Gemfile` and change version. 
+1. Go to `Gemfile` and change version.
 2. Using the ruby interpreter (and associated ruby tools) provided by
    `brew install ruby@2.2` or whatever is the version of the
    interpreter built by `traveling-ruby`, do `bundle install`. This
@@ -25,5 +25,4 @@
    the `Rakefile`, the `VERSION` variable. Then also change in the
    `darwin` and `linux` packages in publishing, need to change in
    `index.js` and their respective `package.json`
-4. Now can just run `rake package`, this will end up doing an `npm
-   publish` as well.
+4. Now can just run `rake package`, this will end up doing an `npm publish` as well.

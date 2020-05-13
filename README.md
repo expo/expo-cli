@@ -61,7 +61,7 @@ Expo CLI
 <!-- Begin auto-generation -->
 
 | Package                                                                   | Coverage                                                                                                                                                                                        |
-| ---                                                                       | ---                                                                                                                                                                                             |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [**`@expo/babel-preset-cli`**](./packages/babel-preset-cli)               | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=babelPresetCli)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/babel-preset-cli/src)               |
 | [**`@expo/config`**](./packages/config)                                   | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=config)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/config/src)                                 |
 | [**`@expo/configure-splash-screen`**](./packages/configure-splash-screen) | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=configureSplashScreen)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/configure-splash-screen/src) |

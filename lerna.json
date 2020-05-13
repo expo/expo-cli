@@ -3,7 +3,5 @@
   "registry": "https://registry.npmjs.org/",
   "useWorkspaces": true,
   "version": "independent",
-  "packages": [
-    "packages/*"
-  ]
+  "packages": ["packages/*"]
 }

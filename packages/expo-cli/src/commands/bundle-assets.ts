@@ -27,7 +27,7 @@ async function action(projectDir: string, options: Options) {
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('bundle-assets [project-dir]')
     .option('--dest [dest]', 'Destination directory for assets')

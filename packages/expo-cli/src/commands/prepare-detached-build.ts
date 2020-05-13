@@ -10,7 +10,7 @@ async function action(projectDir: string, options: Options) {
   await Detach.prepareDetachedBuildAsync(projectDir, options);
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('prepare-detached-build [project-dir]')
     .option('--platform [platform]', 'detached project platform')
