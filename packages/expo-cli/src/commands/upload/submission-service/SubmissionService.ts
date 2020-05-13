@@ -28,6 +28,12 @@ enum SubmissionStatus {
 
 interface SubmissionInfo {
   logsUrl?: string;
+  error?: SubmissionError;
+}
+
+export interface SubmissionError {
+  errorCode: string;
+  message: string;
 }
 
 // TODO: add `| iOSSubmissionConfig` when iOS submissions are supported
