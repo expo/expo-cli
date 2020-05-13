@@ -1,13 +1,12 @@
 import { ProjectTarget, getConfig, getDefaultTarget } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
-import { Exp, Project, ProjectSettings } from '@expo/xdl';
+import { Exp, Project } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
 import terminalLink from 'terminal-link';
 
-import { installExitHooks } from '../exit';
 import log from '../log';
 import sendTo from '../sendTo';
 
@@ -68,42 +67,6 @@ export async function action(projectDir: string, options: Options = {}) {
 
   const target = options.target ?? getDefaultTarget(projectDir);
 
-  const status = await Project.currentStatus(projectDir);
-  let shouldStartOurOwn = false;
-
-  if (status === 'running') {
-    const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectDir);
-    const runningPackagerTarget = packagerInfo.target ?? 'managed';
-    if (target !== runningPackagerTarget) {
-      log(
-        'Found an existing Expo CLI instance running for this project but the target did not match.'
-      );
-      await Project.stopAsync(projectDir);
-      log('Starting a new Expo CLI instance...');
-      shouldStartOurOwn = true;
-    }
-  } else {
-    log('Unable to find an existing Expo CLI instance for this directory; starting a new one...');
-    shouldStartOurOwn = true;
-  }
-
-  let startedOurOwn = false;
-  if (shouldStartOurOwn) {
-    installExitHooks(projectDir);
-
-    const startOpts: Project.StartOptions = {
-      reset: options.clear,
-      nonPersistent: true,
-      target,
-    };
-    if (options.maxWorkers) {
-      startOpts.maxWorkers = options.maxWorkers;
-    }
-
-    await Project.startAsync(projectDir, startOpts, !options.quiet);
-    startedOurOwn = true;
-  }
-
   const recipient = await sendTo.getRecipient(options.sendTo);
   log(`Publishing to channel '${options.releaseChannel}'...`);
 
@@ -136,61 +99,54 @@ export async function action(projectDir: string, options: Options = {}) {
     simpleSpinner.start();
   }
 
-  let result;
-  try {
-    result = await Project.publishAsync(projectDir, {
-      releaseChannel: options.releaseChannel,
-    });
+  const result = await Project.publishAsync(projectDir, {
+    releaseChannel: options.releaseChannel,
+  });
 
-    const url = result.url;
+  const url = result.url;
 
-    if (options.quiet) {
-      simpleSpinner.stop();
+  if (options.quiet) {
+    simpleSpinner.stop();
+  }
+
+  log('Publish complete');
+  log.newLine();
+
+  const exampleManifestUrl = getExampleManifestUrl(url, exp.sdkVersion);
+  if (exampleManifestUrl) {
+    log(
+      `The manifest URL is: ${terminalLink(url, exampleManifestUrl)}. ${terminalLink(
+        'Learn more.',
+        'https://expo.fyi/manifest-url'
+      )}`
+    );
+  } else {
+    log(
+      `The manifest URL is: ${terminalLink(url, url)}. ${terminalLink(
+        'Learn more.',
+        'https://expo.fyi/manifest-url'
+      )}`
+    );
+  }
+
+  if (target === 'managed') {
+    // TODO: replace with websiteUrl from server when it is available, if that makes sense.
+    const websiteUrl = url.replace('exp.host', 'expo.io');
+    log(
+      `The project page is: ${terminalLink(websiteUrl, websiteUrl)}. ${terminalLink(
+        'Learn more.',
+        'https://expo.fyi/project-page'
+      )}`
+    );
+
+    if (recipient) {
+      await sendTo.sendUrlAsync(websiteUrl, recipient);
     }
-
-    log('Publish complete');
-    log.newLine();
-
-    const exampleManifestUrl = getExampleManifestUrl(url, exp.sdkVersion);
-    if (exampleManifestUrl) {
-      log(
-        `The manifest URL is: ${terminalLink(url, exampleManifestUrl)}. ${terminalLink(
-          'Learn more.',
-          'https://expo.fyi/manifest-url'
-        )}`
-      );
-    } else {
-      log(
-        `The manifest URL is: ${terminalLink(url, url)}. ${terminalLink(
-          'Learn more.',
-          'https://expo.fyi/manifest-url'
-        )}`
-      );
-    }
-
-    if (target === 'managed') {
-      // TODO: replace with websiteUrl from server when it is available, if that makes sense.
-      const websiteUrl = url.replace('exp.host', 'expo.io');
-      log(
-        `The project page is: ${terminalLink(websiteUrl, websiteUrl)}. ${terminalLink(
-          'Learn more.',
-          'https://expo.fyi/project-page'
-        )}`
-      );
-
-      if (recipient) {
-        await sendTo.sendUrlAsync(websiteUrl, recipient);
-      }
-    } else {
-      // This seems pointless in bare?? Leaving it out
-      // if (recipient) {
-      //   await sendTo.sendUrlAsync(url, recipient);
-      // }
-    }
-  } finally {
-    if (startedOurOwn) {
-      await Project.stopAsync(projectDir);
-    }
+  } else {
+    // This seems pointless in bare?? Leaving it out
+    // if (recipient) {
+    //   await sendTo.sendUrlAsync(url, recipient);
+    // }
   }
   return result;
 }

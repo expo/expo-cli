@@ -80,49 +80,15 @@ export async function action(projectDir: string, options: Options) {
     console.warn(`Dev Mode: publicUrl ${options.publicUrl} does not conform to HTTP format.`);
   }
 
-  const target = options.target ?? getDefaultTarget(projectDir);
-
-  const status = await Project.currentStatus(projectDir);
-  let shouldStartOurOwn = false;
-
-  if (status === 'running') {
-    const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectDir);
-    const runningPackagerTarget = packagerInfo.target ?? 'managed';
-    if (target !== runningPackagerTarget) {
-      log(
-        'Found an existing Expo CLI instance running for this project but the target did not match.'
-      );
-      await Project.stopAsync(projectDir);
-      log('Starting a new Expo CLI instance...');
-      shouldStartOurOwn = true;
-    }
-  } else {
-    log('Unable to find an existing Expo CLI instance for this directory; starting a new one...');
-    shouldStartOurOwn = true;
-  }
-
-  let startedOurOwn = false;
-  if (shouldStartOurOwn) {
-    installExitHooks(projectDir);
-
-    const startOpts: Project.StartOptions = {
-      reset: !!options.clear,
-      nonPersistent: true,
-      target,
-    };
-    if (options.maxWorkers) {
-      startOpts.maxWorkers = options.maxWorkers;
-    }
-    log('Exporting your app...');
-    await Project.startAsync(projectDir, startOpts, !options.quiet);
-    startedOurOwn = true;
-  }
-
   // Make outputDir an absolute path if it isnt already
   const exportOptions = {
     dumpAssetmap: options.dumpAssetmap,
     dumpSourcemap: options.dumpSourcemap,
     isDev: options.dev,
+    publishOptions: {
+      resetCache: !!options.clear,
+      target: options.target ?? getDefaultTarget(projectDir),
+    },
   };
   const absoluteOutputDir = path.resolve(process.cwd(), options.outputDir);
   await Project.exportForAppHosting(
@@ -132,11 +98,6 @@ export async function action(projectDir: string, options: Options) {
     absoluteOutputDir,
     exportOptions
   );
-
-  if (startedOurOwn) {
-    log('Terminating server processes.');
-    await Project.stopAsync(projectDir);
-  }
 
   // Merge src dirs/urls into a multimanifest if specified
   const mergeSrcDirs = [];
@@ -245,7 +206,7 @@ export default function (program: Command) {
     .option('--dev', 'Configures static files for developing locally using a non-https server')
     .option('-f, --force', 'Overwrite files in output directory without prompting for confirmation')
     .option('-s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
-    .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
+    .option('-q, --quiet', 'Suppress verbose output.')
     .option(
       '-t, --target [env]',
       'Target environment for which this export is intended. Options are `managed` or `bare`.'

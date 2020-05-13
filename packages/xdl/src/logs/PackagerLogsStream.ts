@@ -253,9 +253,7 @@ export default class PackagerLogsStream {
 
       case 'initialize_started':
         chunk._metroEventType = 'METRO_INITIALIZE_STARTED';
-        chunk.msg = msg.port
-          ? `Starting Metro Bundler on port ${msg.port}.`
-          : 'Starting Metro Bundler.';
+        chunk.msg = 'Starting Metro Bundler.';
         break;
       case 'initialize_done':
         chunk.msg = `Metro Bundler ready.`;

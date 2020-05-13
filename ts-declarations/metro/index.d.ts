@@ -13,7 +13,7 @@ declare module 'metro' {
     readonly width: number | null | undefined;
   };
 
-  type AssetData = AssetDataWithoutFiles & { readonly files: Array<string> };
+  export type AssetData = AssetDataWithoutFiles & { readonly files: Array<string> };
 
   //#endregion
   //#region metro/src/DeltaBundler/types.flow.js
@@ -431,7 +431,7 @@ declare module 'metro' {
 
   type MetroSourceMapOrMappings = MixedSourceMap | Array<MetroSourceMapSegmentTuple>;
 
-  type BundleOptions = {
+  export interface BundleOptions {
     bundleType: BundleType;
     customTransformOptions: CustomTransformOptions;
     dev: boolean;
@@ -448,7 +448,7 @@ declare module 'metro' {
     sourceMapUrl: string | null | undefined;
     sourceUrl: string | null | undefined;
     createModuleIdFactory?: () => (path: string) => number;
-  };
+  }
 
   type ModuleTransportLike = {
     readonly code: string;
@@ -458,7 +458,7 @@ declare module 'metro' {
     readonly sourcePath: string;
   };
 
-  type OutputOptions = {
+  export interface OutputOptions {
     bundleOutput: string;
     bundleEncoding?: 'utf8' | 'utf16le' | 'ascii';
     dev?: boolean;
@@ -467,9 +467,9 @@ declare module 'metro' {
     sourcemapOutput?: string;
     sourcemapSourcesRoot?: string;
     sourcemapUseAbsolutePath?: boolean;
-  };
+  }
 
-  type RequestOptions = {
+  export interface RequestOptions {
     entryFile: string;
     inlineSourceMap?: boolean;
     sourceMapUrl?: string;
@@ -478,7 +478,7 @@ declare module 'metro' {
     platform: string;
     createModuleIdFactory?: () => (path: string) => number;
     onProgress?: (transformedFileCount: number, totalFileCount: number) => void;
-  };
+  }
 
   //#endregion
 }
