@@ -115,7 +115,6 @@ export async function validateWithSchema(
   exp: any,
   schema: any,
   configName: string,
-  sdkVersion: string,
   validateAssets: boolean
 ): Promise<{ schemaErrorMessage: string | undefined; assetsErrorMessage: string | undefined }> {
   let schemaErrorMessage;
@@ -129,7 +128,7 @@ export async function validateWithSchema(
     if (e instanceof SchemerError) {
       schemaErrorMessage = `Error: Problem${
         e.errors.length > 1 ? 's' : ''
-      } validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/workflow/configuration/`;
+      } validating fields in ${configName}. See https://docs.expo.io/workflow/configuration/`;
       schemaErrorMessage += e.errors.map(formatValidationError).join('');
     }
   }
@@ -224,7 +223,6 @@ async function _validateExpJsonAsync(
         exp,
         schema,
         configName,
-        sdkVersion,
         allowNetwork
       );
 
