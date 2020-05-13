@@ -5,7 +5,7 @@ import Log from '@expo/bunyan';
 type ConsoleLogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 export default function clientLogsMiddleware(logger: Log): HandleFunction {
-  return function(
+  return function (
     req: http.IncomingMessage & { body?: any },
     res: http.ServerResponse,
     next: (err?: Error) => void

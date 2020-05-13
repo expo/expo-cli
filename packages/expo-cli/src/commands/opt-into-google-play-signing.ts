@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import AppSigningOptInProcess from './google-play/AppSigningOptIn';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('opt-in-google-play-signing [project-dir]')
     .description(

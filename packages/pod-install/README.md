@@ -13,7 +13,6 @@
   </a>
 </p>
 
-
 <!-- Body -->
 
 ## 🚀 Usage
@@ -39,14 +38,14 @@ But now you can simply instruct users to run `npx pod-install`.
 
 This package will do the following:
 
-- Check if the machine is darwin. 
+- Check if the machine is darwin.
   - If not then it'll quit with a helpful error message.
 - Ensure CocoaPods CLI is installed on the machine.
   - If not then it'll try to install CocoaPods CLI, first with gem, then with homebrew.
 - Check if there is an Xcode project in the current directory
   - If not then it'll try again in an `ios/` directory (if one exists).
 - Run `pod install`
-  - If `pod install` fails because the repo is out of date, then it'll run `pod repo update` and try again. 
+  - If `pod install` fails because the repo is out of date, then it'll run `pod repo update` and try again.
 
 ## ⚙️ Options
 

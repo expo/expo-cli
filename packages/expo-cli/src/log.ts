@@ -97,7 +97,7 @@ function log(...args: any[]) {
   });
 }
 
-log.nested = function(message: any) {
+log.nested = function (message: any) {
   respectProgressBars(() => {
     consoleLog(message);
   });
@@ -137,7 +137,7 @@ log.error = function error(...args: any[]) {
   });
 };
 
-log.nestedError = function(message: string) {
+log.nestedError = function (message: string) {
   respectProgressBars(() => {
     consoleError(chalk.red(message));
   });
@@ -153,13 +153,13 @@ log.warn = function warn(...args: any[]) {
   });
 };
 
-log.nestedWarn = function(message: string) {
+log.nestedWarn = function (message: string) {
   respectProgressBars(() => {
     consoleWarn(chalk.yellow(message));
   });
 };
 
-log.gray = function(...args: any[]) {
+log.gray = function (...args: any[]) {
   if (log.config.raw) {
     return;
   }
@@ -169,7 +169,7 @@ log.gray = function(...args: any[]) {
   });
 };
 
-log.raw = function(...args: any[]) {
+log.raw = function (...args: any[]) {
   if (!log.config.raw) {
     return;
   }

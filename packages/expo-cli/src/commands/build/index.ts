@@ -38,7 +38,7 @@ async function maybeBailOnWorkflowWarning(projectDir: string, platform: 'ios' | 
   return !answer.ignoreWorkflowWarning;
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('build:ios [project-dir]')
     .alias('bi')

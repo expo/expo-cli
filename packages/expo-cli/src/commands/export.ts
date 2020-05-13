@@ -226,7 +226,7 @@ function collect<T>(val: T, memo: Array<T>): Array<T> {
   return memo;
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('export [project-dir]')
     .description('Exports the static files of the app for hosting it on a web server.')

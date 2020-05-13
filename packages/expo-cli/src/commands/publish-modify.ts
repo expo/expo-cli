@@ -11,7 +11,7 @@ import {
   setPublishToChannelAsync,
 } from './utils/PublishUtils';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('publish:set [project-dir]')
     .alias('ps')

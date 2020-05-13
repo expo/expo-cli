@@ -16,10 +16,10 @@ export function htmlTagObjectToString(
   xhtml: boolean = false
 ): string {
   const attributes = Object.keys(tagDefinition.attributes || {})
-    .filter(function(attributeName) {
+    .filter(function (attributeName) {
       return tagDefinition.attributes[attributeName] !== false;
     })
-    .map(function(attributeName) {
+    .map(function (attributeName) {
       if (tagDefinition.attributes[attributeName] === true) {
         return xhtml ? attributeName + '="' + attributeName + '"' : attributeName;
       }

@@ -420,8 +420,9 @@ async function selectPushCredFromList(
     }
 
     const pushCert = pushCred as IosAppCredentials;
-    return `Push Certificate (PushId: ${pushCert.credentials.pushId || '------'}, TeamId: ${pushCert
-      .credentials.teamId || '-------'} used in ${pushCert.experienceName})`;
+    return `Push Certificate (PushId: ${pushCert.credentials.pushId || '------'}, TeamId: ${
+      pushCert.credentials.teamId || '-------'
+    } used in ${pushCert.experienceName})`;
   };
 
   const question: Question = {

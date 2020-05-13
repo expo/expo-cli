@@ -67,9 +67,7 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
   try {
     await writeStringsXMLAsync(stringsPath, stringsJSON);
   } catch (e) {
-    throw new Error(
-      `Error setting facebookAppId. Cannot write strings.xml to ${stringsPath}.`
-    );
+    throw new Error(`Error setting facebookAppId. Cannot write strings.xml to ${stringsPath}.`);
   }
   return true;
 }

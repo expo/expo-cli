@@ -17,18 +17,8 @@
       },
       "privacy": {
         "description": "Either `public` or `unlisted`. If not provided, defaults to `unlisted`. In the future `private` will be supported. `unlisted` hides the experience from search results.",
-        "enum": [
-          "public",
-          "unlisted"
-        ],
-        "type": [
-          "array",
-          "boolean",
-          "number",
-          "object",
-          "string",
-          "null"
-        ]
+        "enum": ["public", "unlisted"],
+        "type": ["array", "boolean", "number", "object", "string", "null"]
       },
       "sdkVersion": {
         "description": "The Expo sdkVersion to run the project on. This should line up with the version specified in your package.json.",
@@ -44,19 +34,8 @@
       },
       "orientation": {
         "description": "Lock your app to a specific orientation with `portrait` or `landscape`. Defaults to no lock.",
-        "enum": [
-          "default",
-          "portrait",
-          "landscape"
-        ],
-        "type": [
-          "array",
-          "boolean",
-          "number",
-          "object",
-          "string",
-          "null"
-        ]
+        "enum": ["default", "portrait", "landscape"],
+        "type": ["array", "boolean", "number", "object", "string", "null"]
       },
       "primaryColor": {
         "description": "On Android, this will determine the color of your app in the multitasker. Currently this is not used on iOS, but it may be used for other purposes in the future.",
@@ -106,18 +85,8 @@
           },
           "androidMode": {
             "description": "Show each push notification individually (`default`) or collapse into one (`collapse`).",
-            "enum": [
-              "default",
-              "collapse"
-            ],
-            "type": [
-              "array",
-              "boolean",
-              "number",
-              "object",
-              "string",
-              "null"
-            ]
+            "enum": ["default", "collapse"],
+            "type": ["array", "boolean", "number", "object", "string", "null"]
           },
           "androidCollapsedTitle": {
             "description": "If `androidMode` is set to `collapse`, this title is used for the collapsed notification message. eg: `'#{unread_notifications} new interactions'`.",
@@ -141,18 +110,8 @@
           },
           "exponentIconColor": {
             "description": "If no icon is provided, we will show the Expo logo. You can choose between `white` and `blue`.",
-            "enum": [
-              "white",
-              "blue"
-            ],
-            "type": [
-              "array",
-              "boolean",
-              "number",
-              "object",
-              "string",
-              "null"
-            ]
+            "enum": ["white", "blue"],
+            "type": ["array", "boolean", "number", "object", "string", "null"]
           },
           "exponentIconGrayscale": {
             "description": "Similar to `exponentIconColor` but instead indicate if it should be grayscale (`1`) or not (`0`).",
@@ -203,10 +162,7 @@
           "barStyle": {
             "description": "Configure the statusbar icons to have light or dark color.",
             "type": "string",
-            "enum": [
-              "light-content",
-              "dark-content"
-            ]
+            "enum": ["light-content", "dark-content"]
           },
           "backgroundColor": {
             "description": "Configuration for android statusbar.",

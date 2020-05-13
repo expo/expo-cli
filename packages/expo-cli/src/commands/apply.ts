@@ -8,7 +8,7 @@ type Options = {
   // todo: probably let people pass an ios or android directory in case they don't follow the convention
 };
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('apply [project-dir]')
     .option(

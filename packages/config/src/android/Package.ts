@@ -20,10 +20,7 @@ function getCurrentPackageName(projectRoot: string) {
   let packageRoot = getPackageRoot(projectRoot);
   let mainApplicationPath = globSync(path.join(packageRoot, '**', 'MainApplication.java'))[0];
   let packagePath = path.dirname(mainApplicationPath);
-  let packagePathParts = packagePath
-    .replace(packageRoot, '')
-    .split(path.sep)
-    .filter(Boolean);
+  let packagePathParts = packagePath.replace(packageRoot, '').split(path.sep).filter(Boolean);
 
   return packagePathParts.join('.');
 }

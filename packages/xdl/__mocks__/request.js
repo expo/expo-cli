@@ -3,7 +3,7 @@
 let extend = require('extend');
 
 function asyncCallback(cb) {
-  return function(...args) {
+  return function (...args) {
     setImmediate(() => cb.apply(this, args));
   };
 }

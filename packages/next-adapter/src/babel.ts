@@ -2,7 +2,7 @@
 
 let hasCheckedModules = false;
 
-module.exports = function(api: any) {
+module.exports = function (api: any) {
   // Detect web usage (this may change in the future if Next.js changes the loader to `next-babel-loader`)
   const isWeb = api.caller((caller?: { name: string }) => caller && caller.name === 'babel-loader');
 

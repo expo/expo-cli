@@ -30,9 +30,7 @@ export default class ContentGroup extends React.Component {
           leave={{ animation: 'slideUp', duration: 300 }}>
           {this.props.isActive ? (
             <div className={STYLES_CHILDREN}>{this.props.children}</div>
-          ) : (
-            undefined
-          )}
+          ) : undefined}
         </VelocityTransitionGroup>
       </div>
     );

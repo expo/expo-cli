@@ -44,7 +44,7 @@ async function action(projectDir: string, options: { sendTo?: string } & URLOpti
   process.exit();
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('send [project-dir]')
     .description('Sends a link to your project to an email address')

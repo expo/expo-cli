@@ -49,11 +49,7 @@ function _ensureDeveloperCertificateIsValid(plistData, distCertFingerprint) {
 
 function _genDerCertFingerprint(certBase64) {
   const certBuffer = Buffer.from(certBase64, 'base64');
-  return crypto
-    .createHash('sha1')
-    .update(certBuffer)
-    .digest('hex')
-    .toUpperCase();
+  return crypto.createHash('sha1').update(certBuffer).digest('hex').toUpperCase();
 }
 
 function _ensureBundleIdentifierIsValid(plistData, expectedBundleIdentifier) {

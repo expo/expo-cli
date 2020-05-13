@@ -8,12 +8,7 @@ export function getP12CertFingerprint(
   const certData = _getCertData(p12Buffer, passwordRaw);
   const certAsn1 = forge.pki.certificateToAsn1(certData);
   const certDer = forge.asn1.toDer(certAsn1).getBytes();
-  return forge.md.sha1
-    .create()
-    .update(certDer)
-    .digest()
-    .toHex()
-    .toUpperCase();
+  return forge.md.sha1.create().update(certDer).digest().toHex().toUpperCase();
 }
 
 export function findP12CertSerialNumber(
