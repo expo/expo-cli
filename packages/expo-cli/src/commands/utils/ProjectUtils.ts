@@ -1,5 +1,6 @@
 import JsonFile from '@expo/json-file';
 import spawnAsync from '@expo/spawn-async';
+import { getConfig } from '@expo/config';
 import path from 'path';
 import fs from 'fs';
 import chalk from 'chalk';
@@ -15,31 +16,24 @@ export async function findProjectRootAsync(
   let dir = base;
 
   do {
-    let pkgPath = path.join(dir, 'package.json');
-    let appJsonPath = path.join(dir, 'app.json');
-    let pkgExists = fs.existsSync(pkgPath);
-    let appJsonExists = fs.existsSync(appJsonPath);
+    try {
+      // This will throw if there is no package.json in the directory
+      const { pkg, dynamicConfigPath, staticConfigPath } = getConfig(dir, {
+        skipSDKVersionRequirement: true,
+      });
 
-    if (pkgExists && appJsonExists) {
-      let pkg = await JsonFile.readAsync(pkgPath);
-      let expo = await JsonFile.getAsync(path.join(dir, 'app.json'), 'expo', null);
-
-      let workflow: 'managed' | 'bare';
-      if (expo && pkg.dependencies && pkg.dependencies.hasOwnProperty('react-native-unimodules')) {
-        workflow = 'bare';
-      } else if (!expo) {
-        workflow = 'bare';
-      } else {
-        workflow = 'managed';
-      }
+      const dirIncludesAppConfig = dynamicConfigPath || staticConfigPath;
+      const isManaged =
+        dirIncludesAppConfig && !pkg.dependencies.hasOwnProperty('react-native-unimodules');
+      const workflow = isManaged ? 'managed' : 'bare';
 
       return { projectRoot: dir, workflow };
-    } else if (pkgExists && !appJsonExists) {
-      return { projectRoot: dir, workflow: 'bare' };
+    } catch {
+      // Expected to throw if no package.json is present
+    } finally {
+      previous = dir;
+      dir = path.dirname(dir);
     }
-
-    previous = dir;
-    dir = path.dirname(dir);
   } while (dir !== previous);
 
   throw new CommandError(
