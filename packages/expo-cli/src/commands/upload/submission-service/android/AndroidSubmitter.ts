@@ -164,12 +164,7 @@ class AndroidOnlineSubmitter {
         submissionSpinner.succeed();
       }
     }
-    if (
-      submissionStatus === SubmissionStatus.ERRORED ||
-      (submissionStatus === SubmissionStatus.FINISHED && this.verbose)
-    ) {
-      await displayLogs(submission);
-    }
+    await displayLogs(submission, submissionStatus, this.verbose);
   }
 
   private static getStatusText(status: SubmissionStatus): string {
@@ -180,7 +175,7 @@ class AndroidOnlineSubmitter {
     } else if (status === SubmissionStatus.FINISHED) {
       return 'Successfully submitted your app to Google Play Store!';
     } else if (status === SubmissionStatus.ERRORED) {
-      return 'Something went wrong when submitting your app to Google Play Store. See logs below.';
+      return 'Something went wrong when submitting your app to Google Play Store.';
     } else {
       throw new Error('This should never happen');
     }
