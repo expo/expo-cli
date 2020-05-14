@@ -277,8 +277,7 @@ async function shouldUpgradeSimulatorAsync(): Promise<boolean> {
     let answer = await prompt({
       type: 'confirm',
       name: 'upgradeSimulator',
-      message:
-        'You might have to upgrade your iOS simulator. Before you can do that, you have to run the simulator. Do you want to upgrade it now?',
+      message: 'Would you like to upgrade the Expo app in the iOS simulator?',
       default: false,
     });
 
@@ -307,15 +306,14 @@ async function shouldUpgradeEmulatorAsync(): Promise<boolean> {
   // Check if we can, and probably should, upgrade the android client
   if (Android.isPlatformSupported()) {
     if (program.nonInteractive) {
-      log.warn(`Skipping attempt to upgrade the client app on the Android emulator.`);
+      log.warn(`Skipping attempt to upgrade the Expo app on the Android emulator.`);
       return false;
     }
 
     const answer = await prompt({
       type: 'confirm',
       name: 'upgradeAndroid',
-      message:
-        'You might have to upgrade your Android client. Before you can do that, you have to run the emulator, or plug a device in. Do you want to upgrade it now?',
+      message: 'Would you like to upgrade the Expo app in the Android emulator?',
       default: false,
     });
 
