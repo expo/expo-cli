@@ -6,7 +6,13 @@ import { ServiceAccountSource, ServiceAccountSourceType } from './ServiceAccount
 import { AndroidPackageSource, AndroidPackageSourceType } from './AndroidPackageSource';
 import { AndroidSubmissionContext, AndroidSubmitCommandOptions } from './types';
 
-import { ArchiveSource, ArchiveSourceType } from '../ArchiveSource';
+import {
+  ArchiveFileSource,
+  ArchiveFileSourceType,
+  ArchiveSource,
+  ArchiveTypeSource,
+  ArchiveTypeSourceType,
+} from '../archive-source';
 import { SubmissionMode } from '../types';
 import { getAppConfig, getExpoConfig } from '../utils/config';
 import log from '../../../../log';
@@ -37,7 +43,6 @@ class AndroidSubmitCommand {
     const track = this.resolveTrack();
     const releaseStatus = this.resolveReleaseStatus();
     const archiveSource = this.resolveArchiveSource();
-    const archiveType = this.resolveArchiveType();
     const serviceAccountSource = this.resolveServiceAccountSource();
 
     const errored = [
@@ -45,7 +50,6 @@ class AndroidSubmitCommand {
       track,
       releaseStatus,
       archiveSource,
-      archiveType,
       serviceAccountSource,
     ].filter((r) => !r.ok);
     if (errored.length > 0) {
@@ -59,7 +63,6 @@ class AndroidSubmitCommand {
       track: track.enforceValue(),
       releaseStatus: releaseStatus.enforceValue(),
       archiveSource: archiveSource.enforceValue(),
-      archiveType: archiveType.enforceValue(),
       serviceAccountSource: serviceAccountSource.enforceValue(),
     };
   }
@@ -120,68 +123,75 @@ class AndroidSubmitCommand {
   }
 
   private resolveArchiveSource(): Result<ArchiveSource> {
-    const chosenOptions = [
-      this.ctx.commandOptions.url,
-      this.ctx.commandOptions.path,
-      this.ctx.commandOptions.id,
-      this.ctx.commandOptions.latest,
-    ];
+    return result({
+      archiveFile: this.resolveArchiveFileSource(),
+      archiveType: this.resolveArchiveTypeSource(),
+    });
+  }
+
+  private resolveArchiveFileSource(): ArchiveFileSource {
+    const { url, path, id, latest } = this.ctx.commandOptions;
+    const chosenOptions = [url, path, id, latest];
     if (chosenOptions.filter((opt) => opt).length > 1) {
       throw new Error(`Pass only one of: --url, --path, --id, --latest`);
     }
-    if (this.ctx.commandOptions.url) {
-      return result({
-        sourceType: ArchiveSourceType.url,
-        url: this.ctx.commandOptions.url,
-      });
-    } else if (this.ctx.commandOptions.path) {
-      return result({
-        sourceType: ArchiveSourceType.path,
-        path: this.ctx.commandOptions.path,
-      });
-    } else if (this.ctx.commandOptions.id) {
+    if (url) {
+      return {
+        sourceType: ArchiveFileSourceType.url,
+        url,
+      };
+    } else if (path) {
+      return {
+        sourceType: ArchiveFileSourceType.path,
+        path,
+      };
+    } else if (id) {
       // legacy for Turtle v1
       const { owner, slug } = getAppConfig(this.ctx.projectDir);
-      return result({
-        sourceType: ArchiveSourceType.buildId,
+      return {
+        sourceType: ArchiveFileSourceType.buildId,
         platform: 'android',
-        id: this.ctx.commandOptions.id,
+        id,
         owner,
         slug,
-      });
-    } else if (this.ctx.commandOptions.latest) {
+      };
+    } else if (latest) {
       // legacy for Turtle v1
       const { owner, slug } = getAppConfig(this.ctx.projectDir);
-      return result({
-        sourceType: ArchiveSourceType.latest,
+      return {
+        sourceType: ArchiveFileSourceType.latest,
         platform: 'android',
         owner,
         slug,
-      });
+      };
     } else {
-      return result({
-        sourceType: ArchiveSourceType.prompt,
+      return {
+        sourceType: ArchiveFileSourceType.prompt,
         platform: 'android',
         projectDir: this.ctx.projectDir,
-      });
+      };
     }
   }
 
-  private resolveArchiveType(): Result<ArchiveType> {
-    const { archiveType } = this.ctx.commandOptions;
-    if (!archiveType) {
-      return result(ArchiveType.apk);
-    }
-    if (archiveType in ArchiveType) {
-      return result(ArchiveType[archiveType as keyof typeof ArchiveType]);
+  private resolveArchiveTypeSource(): ArchiveTypeSource {
+    const { archiveType: rawArchiveType } = this.ctx.commandOptions;
+    if (rawArchiveType) {
+      if (!(rawArchiveType in ArchiveType)) {
+        throw new Error(
+          `Unsupported archive type: ${rawArchiveType} (valid options: ${Object.keys(
+            ArchiveType
+          ).join(', ')})`
+        );
+      }
+      const archiveType = rawArchiveType as ArchiveType;
+      return {
+        sourceType: ArchiveTypeSourceType.parameter,
+        archiveType,
+      };
     } else {
-      return result(
-        new Error(
-          `Unsupported archive type: ${archiveType} (valid options: ${Object.keys(ArchiveType).join(
-            ', '
-          )})`
-        )
-      );
+      return {
+        sourceType: ArchiveTypeSourceType.infer,
+      };
     }
   }
 

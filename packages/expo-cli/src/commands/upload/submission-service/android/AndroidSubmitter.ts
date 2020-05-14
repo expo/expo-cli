@@ -10,14 +10,14 @@ import { AndroidPackageSource, getAndroidPackageAsync } from './AndroidPackageSo
 import { AndroidSubmissionContext } from './types';
 
 import SubmissionService, { Platform, Submission, SubmissionStatus } from '../SubmissionService';
-import { ArchiveSource, getArchiveLocationAsync } from '../ArchiveSource';
+import { Archive, ArchiveSource, getArchiveAsync } from '../archive-source';
 import { displayLogs } from '../utils/logs';
 import { runTravelingFastlaneAsync } from '../utils/travelingFastlane';
 import { SubmissionMode } from '../types';
 import { sleep } from '../../../utils/promise';
 
 export interface AndroidSubmissionOptions
-  extends Pick<AndroidSubmissionConfig, 'archiveType' | 'track' | 'releaseStatus'> {
+  extends Pick<AndroidSubmissionConfig, 'track' | 'releaseStatus'> {
   androidPackageSource: AndroidPackageSource;
   archiveSource: ArchiveSource;
   serviceAccountSource: ServiceAccountSource;
@@ -25,7 +25,7 @@ export interface AndroidSubmissionOptions
 
 interface ResolvedSourceOptions {
   androidPackage: string;
-  archiveLocation: string;
+  archive: Archive;
   serviceAccountPath: string;
 }
 
@@ -56,14 +56,11 @@ class AndroidSubmitter {
 
   private async resolveSourceOptions(): Promise<ResolvedSourceOptions> {
     const androidPackage = await getAndroidPackageAsync(this.options.androidPackageSource);
-    const archiveLocation = await getArchiveLocationAsync(
-      this.ctx.mode,
-      this.options.archiveSource
-    );
+    const archive = await getArchiveAsync(this.ctx.mode, this.options.archiveSource);
     const serviceAccountPath = await getServiceAccountAsync(this.options.serviceAccountSource);
     return {
       androidPackage,
-      archiveLocation,
+      archive,
       serviceAccountPath,
     };
   }
@@ -81,13 +78,14 @@ interface AndroidOfflineSubmissionConfig
 class AndroidOfflineSubmitter {
   static async formatSubmissionConfig(
     options: AndroidSubmissionOptions,
-    { archiveLocation, androidPackage, serviceAccountPath }: ResolvedSourceOptions
+    { archive, androidPackage, serviceAccountPath }: ResolvedSourceOptions
   ): Promise<AndroidOfflineSubmissionConfig> {
     return {
       androidPackage,
-      archivePath: archiveLocation,
+      archivePath: archive.location,
+      archiveType: archive.type,
       serviceAccountPath,
-      ...pick(options, 'archiveType', 'track', 'releaseStatus'),
+      ...pick(options, 'track', 'releaseStatus'),
     };
   }
 
@@ -96,6 +94,7 @@ class AndroidOfflineSubmitter {
   async submitAsync(): Promise<void> {
     const {
       archivePath,
+      archiveType,
       androidPackage,
       serviceAccountPath,
       track,
@@ -104,7 +103,7 @@ class AndroidOfflineSubmitter {
 
     // TODO: check if `fastlane supply` works on linux
     const travelingFastlane = require('@expo/traveling-fastlane-darwin')();
-    const args = [archivePath, androidPackage, serviceAccountPath, track];
+    const args = [archivePath, androidPackage, serviceAccountPath, track, archiveType];
     if (releaseStatus) {
       args.push(releaseStatus);
     }
@@ -123,14 +122,15 @@ type AndroidOnlineSubmissionConfig = AndroidSubmissionConfig;
 class AndroidOnlineSubmitter {
   static async formatSubmissionConfig(
     options: AndroidSubmissionOptions,
-    { archiveLocation, androidPackage, serviceAccountPath }: ResolvedSourceOptions
+    { archive, androidPackage, serviceAccountPath }: ResolvedSourceOptions
   ): Promise<AndroidOnlineSubmissionConfig> {
     const serviceAccount = await fs.readFile(serviceAccountPath, 'utf-8');
     return {
       androidPackage,
-      archiveUrl: archiveLocation,
+      archiveUrl: archive.location,
+      archiveType: archive.type,
       serviceAccount,
-      ...pick(options, 'archiveType', 'track', 'releaseStatus'),
+      ...pick(options, 'track', 'releaseStatus'),
     };
   }
 
