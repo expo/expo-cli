@@ -335,6 +335,8 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    *   for example RNGH and Reanimated. We should prefer the version that is already being used
    *   in the project for those, but swap the react/react-native/react-native-unimodules versions
    *   with the ones in the template.
+   * - The same applies to expo-updates -- since some native project configuration may depend on the
+   *   version, we should always use the version of expo-updates in the template.
    */
 
   const combinedDependencies: DependenciesMap = createDependenciesMap({
@@ -342,7 +344,12 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     ...pkg.dependencies,
   });
 
-  for (const dependenciesKey of ['react', 'react-native-unimodules', 'react-native']) {
+  for (const dependenciesKey of [
+    'react',
+    'react-native-unimodules',
+    'react-native',
+    'expo-updates',
+  ]) {
     combinedDependencies[dependenciesKey] = defaultDependencies[dependenciesKey];
   }
   const combinedDevDependencies: DependenciesMap = createDependenciesMap({
