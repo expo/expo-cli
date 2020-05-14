@@ -53,7 +53,7 @@ async function askForServiceAccountPathAsync(): Promise<string> {
   const { filePath } = await prompt({
     name: 'filePath',
     message: 'Path to Google Service Account file:',
-    default: 'google-service-account.json',
+    default: 'api-0000000000000000000-111111-abc123abc123.json',
     type: 'input',
     validate: async (path: string): Promise<boolean | string> => {
       if (!(await existingFile(path, false))) {
