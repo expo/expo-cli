@@ -34,7 +34,7 @@ class AndroidSubmitCommand {
   constructor(private ctx: AndroidSubmissionContext) {}
 
   async runAsync(): Promise<void> {
-    if (this.ctx.mode === SubmissionMode.online) {
+    if (this.ctx.mode === SubmissionMode.online && !(await UserManager.getCurrentUserAsync())) {
       await UserManager.ensureLoggedInAsync();
       log.addNewLineIfNone();
     }

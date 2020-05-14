@@ -13,16 +13,15 @@ const SubmissionErrorMessages: Record<SubmissionErrorCode, string> = {
     'TODO(improve this message) First submission of the app needs to be performed manually.',
 };
 
-function printSubmissionError(error: SubmissionError): void {
+function printSubmissionError(error: SubmissionError): boolean {
   if ((Object.values(SubmissionErrorCode) as string[]).includes(error.errorCode)) {
     const errorCode = error.errorCode as SubmissionErrorCode;
     log.addNewLineIfNone();
-    if (errorCode !== SubmissionErrorCode.ANDROID_UNKNOWN_ERROR) {
-      log('Try the following tip to fix the error:');
-    }
     log(SubmissionErrorMessages[errorCode]);
+    return errorCode === SubmissionErrorCode.ANDROID_UNKNOWN_ERROR;
   } else {
     log(error.message);
+    return true;
   }
 }
 

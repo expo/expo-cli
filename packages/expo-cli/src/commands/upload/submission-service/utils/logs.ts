@@ -3,28 +3,40 @@ import isError from 'lodash/isError';
 import axios from 'axios';
 
 import log from '../../../../log';
-import { Submission } from '../SubmissionService';
+import { Submission, SubmissionStatus } from '../SubmissionService';
 import { printSubmissionError } from './errors';
 
-async function displayLogs(submission: Submission | null): Promise<void> {
-  if (submission?.submissionInfo?.logsUrl) {
-    const { data } = await axios.get(submission.submissionInfo.logsUrl);
-    const logs = parseLogs(data);
-    log.addNewLineIfNone();
-    const prefix = log.chalk.blueBright('[logs] ');
-    for (const { level, msg } of logs) {
-      const msgWithPrefix = `${prefix}${msg}`;
-      if (level === 'error') {
-        log.error(msgWithPrefix);
-      } else if (level === 'warn') {
-        log.warn(msgWithPrefix);
-      } else {
-        log(msgWithPrefix);
-      }
-    }
+async function displayLogs(
+  submission: Submission | null,
+  status: SubmissionStatus | null,
+  verbose: boolean
+): Promise<void> {
+  let printedUnknownError = false;
+  if (status === SubmissionStatus.ERRORED && submission?.submissionInfo?.error) {
+    printedUnknownError = printSubmissionError(submission.submissionInfo.error);
   }
-  if (submission?.submissionInfo?.error) {
-    printSubmissionError(submission.submissionInfo.error);
+  if ((printedUnknownError || verbose) && submission) {
+    await downloadAndPrintSubmissionLogs(submission);
+  }
+}
+
+async function downloadAndPrintSubmissionLogs(submission: Submission): Promise<void> {
+  if (!submission.submissionInfo?.logsUrl) {
+    return;
+  }
+  const { data } = await axios.get(submission.submissionInfo.logsUrl);
+  const logs = parseLogs(data);
+  log.addNewLineIfNone();
+  const prefix = log.chalk.blueBright('[logs] ');
+  for (const { level, msg } of logs) {
+    const msgWithPrefix = `${prefix}${msg}`;
+    if (level === 'error') {
+      log.error(msgWithPrefix);
+    } else if (level === 'warn') {
+      log.warn(msgWithPrefix);
+    } else {
+      log(msgWithPrefix);
+    }
   }
 }
 
