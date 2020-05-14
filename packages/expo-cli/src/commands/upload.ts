@@ -23,7 +23,7 @@ export default function (program: Command) {
       '--android-package <android-package>',
       'Android package name (using expo.android.package from app.json by default)'
     )
-    .option('--type <archive-type>', 'archive type: apk, aab', /^(apk|aab)$/i, 'apk')
+    .option('--type <archive-type>', 'archive type: apk, aab', /^(apk|aab)$/i)
     .option(
       '--track <track>',
       'the track of the application to use, choose from: production, beta, alpha, internal, rollout',
@@ -40,7 +40,7 @@ export default function (program: Command) {
       '--use-submission-service',
       'Experimental: Use Submission Service for uploading your app. The upload process will happen on Expo servers.'
     )
-    .option('--verbose', 'Print logs from Submission Service even if the submission succeeds')
+    .option('--verbose', 'Always print logs from Submission Service')
     .description(
       'Uploads a standalone Android app to Google Play (works on macOS only). Uploads the latest build by default.'
     )
