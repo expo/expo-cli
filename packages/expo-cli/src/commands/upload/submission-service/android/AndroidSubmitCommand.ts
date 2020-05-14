@@ -1,4 +1,5 @@
 import { Result, result } from '@expo/results';
+import { UserManager } from '@expo/xdl';
 
 import AndroidSubmitter, { AndroidSubmissionOptions } from './AndroidSubmitter';
 import { ArchiveType, ReleaseStatus, ReleaseTrack } from './AndroidSubmissionConfig';
@@ -33,6 +34,11 @@ class AndroidSubmitCommand {
   constructor(private ctx: AndroidSubmissionContext) {}
 
   async runAsync(): Promise<void> {
+    if (this.ctx.mode === SubmissionMode.online) {
+      await UserManager.ensureLoggedInAsync();
+      log.addNewLineIfNone();
+    }
+
     const submissionOptions = this.getAndroidSubmissionOptions();
     const submitter = new AndroidSubmitter(this.ctx, submissionOptions);
     await submitter.submitAsync();

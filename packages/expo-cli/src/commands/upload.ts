@@ -47,7 +47,9 @@ export default function (program: Command) {
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: any) => {
       // TODO: remove this once we verify `fastlane supply` works on linux / windows
-      checkRuntimePlatform('android');
+      if (!options.useSubmissionService) {
+        checkRuntimePlatform('android');
+      }
 
       const submissionMode = options.useSubmissionService
         ? SubmissionMode.online
