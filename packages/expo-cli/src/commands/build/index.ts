@@ -95,10 +95,6 @@ export default function (program: Command) {
     )
     .asyncActionProjectDir(
       async (projectDir: string, options: IosOptions) => {
-        if (options.config) {
-          setCustomConfigPath(projectDir, options.config);
-        }
-
         if (!options.skipWorkflowCheck) {
           if (
             await maybeBailOnWorkflowWarning({
@@ -149,10 +145,6 @@ export default function (program: Command) {
     )
     .asyncActionProjectDir(
       async (projectDir: string, options: AndroidOptions) => {
-        if (options.config) {
-          setCustomConfigPath(projectDir, options.config);
-        }
-
         if (!options.skipWorkflowCheck) {
           if (
             await maybeBailOnWorkflowWarning({
