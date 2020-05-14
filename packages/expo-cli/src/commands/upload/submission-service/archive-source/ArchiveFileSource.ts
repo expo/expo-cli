@@ -1,18 +1,17 @@
 import os from 'os';
 import { basename as pathBasename, join as pathJoin } from 'path';
 
-import { StandaloneBuild } from '@expo/xdl';
 import { Platform } from '@expo/config';
-
+import { StandaloneBuild } from '@expo/xdl';
 import validator from 'validator';
 
-import { getAppConfig } from './utils/config';
-import prompt from '../../../prompt';
-import { existingFile } from '../../../validators';
-import { SubmissionMode } from './types';
-import { downloadAppArchiveAsync, uploadAppArchiveAsync } from './utils/files';
+import { downloadAppArchiveAsync, uploadAppArchiveAsync } from '../utils/files';
+import { getAppConfig } from '../utils/config';
+import { existingFile } from '../../../../validators';
+import prompt from '../../../../prompt';
+import { SubmissionMode } from '../types';
 
-enum ArchiveSourceType {
+enum ArchiveFileSourceType {
   url,
   latest,
   path,
@@ -20,68 +19,68 @@ enum ArchiveSourceType {
   prompt,
 }
 
-interface ArchiveSourceBase {
-  sourceType: ArchiveSourceType;
+interface ArchiveFileSourceBase {
+  sourceType: ArchiveFileSourceType;
 }
 
-interface ArchiveUrlSource extends ArchiveSourceBase {
-  sourceType: ArchiveSourceType.url;
+interface ArchiveFileUrlSource extends ArchiveFileSourceBase {
+  sourceType: ArchiveFileSourceType.url;
   url: string;
 }
 
-interface ArchiveLatestSource extends ArchiveSourceBase {
-  sourceType: ArchiveSourceType.latest;
+interface ArchiveFileLatestSource extends ArchiveFileSourceBase {
+  sourceType: ArchiveFileSourceType.latest;
   platform: Platform;
   owner?: string;
   slug: string;
 }
 
-interface ArchivePathSource extends ArchiveSourceBase {
-  sourceType: ArchiveSourceType.path;
+interface ArchiveFilePathSource extends ArchiveFileSourceBase {
+  sourceType: ArchiveFileSourceType.path;
   path: string;
 }
 
-interface ArchiveBuildIdSource extends ArchiveSourceBase {
-  sourceType: ArchiveSourceType.buildId;
+interface ArchiveFileBuildIdSource extends ArchiveFileSourceBase {
+  sourceType: ArchiveFileSourceType.buildId;
   platform: Platform;
   id: string;
   owner?: string;
   slug: string;
 }
 
-interface ArchivePromptSource extends ArchiveSourceBase {
-  sourceType: ArchiveSourceType.prompt;
+interface ArchiveFilePromptSource extends ArchiveFileSourceBase {
+  sourceType: ArchiveFileSourceType.prompt;
   platform: Platform;
   projectDir: string;
 }
 
-export type ArchiveSource =
-  | ArchiveUrlSource
-  | ArchiveLatestSource
-  | ArchivePathSource
-  | ArchiveBuildIdSource
-  | ArchivePromptSource;
+export type ArchiveFileSource =
+  | ArchiveFileUrlSource
+  | ArchiveFileLatestSource
+  | ArchiveFilePathSource
+  | ArchiveFileBuildIdSource
+  | ArchiveFilePromptSource;
 
-async function getArchiveLocationAsync(
+async function getArchiveFileLocationAsync(
   mode: SubmissionMode,
-  source: ArchiveSource
+  source: ArchiveFileSource
 ): Promise<string> {
   switch (source.sourceType) {
-    case ArchiveSourceType.prompt:
+    case ArchiveFileSourceType.prompt:
       return await handlePromptSourceAsync(mode, source);
-    case ArchiveSourceType.url: {
+    case ArchiveFileSourceType.url: {
       const url = await handleUrlSourceAsync(source);
       return await getArchiveLocationForUrlAsync(mode, url);
     }
-    case ArchiveSourceType.latest: {
+    case ArchiveFileSourceType.latest: {
       const url = await handleLatestSourceAsync(source);
       return await getArchiveLocationForUrlAsync(mode, url);
     }
-    case ArchiveSourceType.path: {
+    case ArchiveFileSourceType.path: {
       const path = await handlePathSourceAsync(source);
       return getArchiveLocationForPathAsync(mode, path);
     }
-    case ArchiveSourceType.buildId: {
+    case ArchiveFileSourceType.buildId: {
       const url = await handleBuildIdSourceAsync(source);
       return await getArchiveLocationForUrlAsync(mode, url);
     }
@@ -105,11 +104,11 @@ async function getArchiveLocationForPathAsync(mode: SubmissionMode, path: string
   }
 }
 
-async function handleUrlSourceAsync(source: ArchiveUrlSource): Promise<string> {
+async function handleUrlSourceAsync(source: ArchiveFileUrlSource): Promise<string> {
   return source.url;
 }
 
-async function handleLatestSourceAsync(source: ArchiveLatestSource): Promise<string> {
+async function handleLatestSourceAsync(source: ArchiveFileLatestSource): Promise<string> {
   const builds = await StandaloneBuild.getStandaloneBuilds(
     {
       platform: source.platform,
@@ -124,14 +123,14 @@ async function handleLatestSourceAsync(source: ArchiveLatestSource): Promise<str
   return builds[0].artifacts.url;
 }
 
-async function handlePathSourceAsync(source: ArchivePathSource): Promise<string> {
+async function handlePathSourceAsync(source: ArchiveFilePathSource): Promise<string> {
   if (!(await existingFile(source.path))) {
     throw new Error(`${source.path} doesn't exist`);
   }
   return source.path;
 }
 
-async function handleBuildIdSourceAsync(source: ArchiveBuildIdSource): Promise<string> {
+async function handleBuildIdSourceAsync(source: ArchiveFileBuildIdSource): Promise<string> {
   const build = await StandaloneBuild.getStandaloneBuildById({
     platform: source.platform,
     id: source.id,
@@ -146,65 +145,65 @@ async function handleBuildIdSourceAsync(source: ArchiveBuildIdSource): Promise<s
 
 async function handlePromptSourceAsync(
   mode: SubmissionMode,
-  source: ArchivePromptSource
+  source: ArchiveFilePromptSource
 ): Promise<string> {
   const { sourceType: sourceTypeRaw } = await prompt({
     name: 'sourceType',
     type: 'list',
     message: 'What would you like to submit?',
     choices: [
-      { name: 'I have a url to the app archive', value: ArchiveSourceType.url },
+      { name: 'I have a url to the app archive', value: ArchiveFileSourceType.url },
       {
         name: "I'd like to upload the app archive from my computer",
-        value: ArchiveSourceType.path,
+        value: ArchiveFileSourceType.path,
       },
       {
         name: 'The lastest build from Expo Servers',
-        value: ArchiveSourceType.latest,
+        value: ArchiveFileSourceType.latest,
       },
       {
         name: 'A build identified by a build id',
-        value: ArchiveSourceType.buildId,
+        value: ArchiveFileSourceType.buildId,
       },
     ],
   });
-  const sourceType = sourceTypeRaw as ArchiveSourceType;
+  const sourceType = sourceTypeRaw as ArchiveFileSourceType;
   switch (sourceType) {
-    case ArchiveSourceType.url: {
+    case ArchiveFileSourceType.url: {
       const url = await askForArchiveUrlAsync();
-      return getArchiveLocationAsync(mode, {
-        sourceType: ArchiveSourceType.url,
+      return getArchiveFileLocationAsync(mode, {
+        sourceType: ArchiveFileSourceType.url,
         url,
       });
     }
-    case ArchiveSourceType.path: {
+    case ArchiveFileSourceType.path: {
       const path = await askForArchivePathAsync();
-      return getArchiveLocationAsync(mode, {
-        sourceType: ArchiveSourceType.path,
+      return getArchiveFileLocationAsync(mode, {
+        sourceType: ArchiveFileSourceType.path,
         path,
       });
     }
-    case ArchiveSourceType.latest: {
+    case ArchiveFileSourceType.latest: {
       const { owner, slug } = getAppConfig(source.projectDir);
-      return getArchiveLocationAsync(mode, {
-        sourceType: ArchiveSourceType.latest,
+      return getArchiveFileLocationAsync(mode, {
+        sourceType: ArchiveFileSourceType.latest,
         platform: source.platform,
         owner,
         slug,
       });
     }
-    case ArchiveSourceType.buildId: {
+    case ArchiveFileSourceType.buildId: {
       const id = await askForBuildIdAsync();
       const { owner, slug } = getAppConfig(source.projectDir);
-      return getArchiveLocationAsync(mode, {
-        sourceType: ArchiveSourceType.buildId,
+      return getArchiveFileLocationAsync(mode, {
+        sourceType: ArchiveFileSourceType.buildId,
         platform: source.platform,
         owner,
         slug,
         id,
       });
     }
-    case ArchiveSourceType.prompt:
+    case ArchiveFileSourceType.prompt:
       throw new Error('This should never happen');
   }
 }
@@ -252,4 +251,4 @@ function validateUrl(url: string): boolean {
   });
 }
 
-export { ArchiveSourceType, getArchiveLocationAsync };
+export { ArchiveFileSourceType, getArchiveFileLocationAsync };
