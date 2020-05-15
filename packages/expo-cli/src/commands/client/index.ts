@@ -61,6 +61,12 @@ export default function (program: Command) {
         }
         if (!exp.ios) exp.ios = {};
 
+        if (!_.has(exp, 'facebookAppId') || !_.has(exp, 'facebookScheme')) {
+          const disabledReason = exp
+            ? `facebookAppId or facebookScheme are missing from app configuration. `
+            : 'No custom configuration file could be found. You will need to provide a json file with valid facebookAppId and facebookScheme fields.';
+          disabledServices.facebookLogin = { name: 'Facebook Login', reason: disabledReason };
+        }
         if (!_.has(exp, 'ios.config.googleMapsApiKey')) {
           const disabledReason = exp
             ? `ios.config.googleMapsApiKey does not exist in the app configuration.`
