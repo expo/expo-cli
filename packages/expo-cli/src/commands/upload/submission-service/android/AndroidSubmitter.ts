@@ -1,10 +1,21 @@
 import os from 'os';
 
+import Table from 'cli-table3';
 import fs from 'fs-extra';
-import pick from 'lodash/pick';
 import ora from 'ora';
+import chunk from 'lodash/chunk';
+import curryRight from 'lodash/curryRight';
+import omit from 'lodash/omit';
+import pick from 'lodash/pick';
 
-import { AndroidSubmissionConfig } from './AndroidSubmissionConfig';
+import log from '../../../../log';
+
+import {
+  AndroidSubmissionConfig,
+  ArchiveType,
+  ReleaseStatus,
+  ReleaseTrack,
+} from './AndroidSubmissionConfig';
 import { ServiceAccountSource, getServiceAccountAsync } from './ServiceAccountSource';
 import { AndroidPackageSource, getAndroidPackageAsync } from './AndroidPackageSource';
 import { AndroidSubmissionContext } from './types';
@@ -35,7 +46,7 @@ class AndroidSubmitter {
   async submitAsync(): Promise<void> {
     const resolvedSourceOptions = await this.resolveSourceOptions();
     if (this.ctx.mode === SubmissionMode.online) {
-      const submissionConfig = await AndroidOnlineSubmitter.formatSubmissionConfig(
+      const submissionConfig = await AndroidOnlineSubmitter.formatSubmissionConfigAndPrintSummary(
         this.options,
         resolvedSourceOptions
       );
@@ -45,7 +56,7 @@ class AndroidSubmitter {
       );
       await onlineSubmitter.submitAsync();
     } else {
-      const submissionConfig = await AndroidOfflineSubmitter.formatSubmissionConfig(
+      const submissionConfig = await AndroidOfflineSubmitter.formatSubmissionConfigAndPrintSummary(
         this.options,
         resolvedSourceOptions
       );
@@ -76,17 +87,22 @@ interface AndroidOfflineSubmissionConfig
 }
 
 class AndroidOfflineSubmitter {
-  static async formatSubmissionConfig(
+  static async formatSubmissionConfigAndPrintSummary(
     options: AndroidSubmissionOptions,
     { archive, androidPackage, serviceAccountPath }: ResolvedSourceOptions
   ): Promise<AndroidOfflineSubmissionConfig> {
-    return {
+    const submissionConfig = {
       androidPackage,
       archivePath: archive.location,
       archiveType: archive.type,
       serviceAccountPath,
       ...pick(options, 'track', 'releaseStatus'),
     };
+    printSummary({
+      ...omit(submissionConfig, 'serviceAccount'),
+      mode: SubmissionMode.offline,
+    });
+    return submissionConfig;
   }
 
   constructor(private submissionConfig: AndroidOfflineSubmissionConfig) {}
@@ -120,18 +136,24 @@ class AndroidOfflineSubmitter {
 type AndroidOnlineSubmissionConfig = AndroidSubmissionConfig;
 
 class AndroidOnlineSubmitter {
-  static async formatSubmissionConfig(
+  static async formatSubmissionConfigAndPrintSummary(
     options: AndroidSubmissionOptions,
     { archive, androidPackage, serviceAccountPath }: ResolvedSourceOptions
   ): Promise<AndroidOnlineSubmissionConfig> {
     const serviceAccount = await fs.readFile(serviceAccountPath, 'utf-8');
-    return {
+    const submissionConfig = {
       androidPackage,
       archiveUrl: archive.location,
       archiveType: archive.type,
       serviceAccount,
       ...pick(options, 'track', 'releaseStatus'),
     };
+    printSummary({
+      ...omit(submissionConfig, 'serviceAccount'),
+      serviceAccountPath,
+      mode: SubmissionMode.online,
+    });
+    return submissionConfig;
   }
 
   constructor(
@@ -180,6 +202,66 @@ class AndroidOnlineSubmitter {
       throw new Error('This should never happen');
     }
   }
+}
+
+interface Summary {
+  androidPackage: string;
+  archivePath?: string;
+  archiveUrl?: string;
+  archiveType: ArchiveType;
+  serviceAccountPath: string;
+  track: ReleaseTrack;
+  releaseStatus?: ReleaseStatus;
+  mode: SubmissionMode;
+}
+
+const SummaryHumanReadableKeys: Record<keyof Summary, string> = {
+  androidPackage: 'Android package',
+  archivePath: 'Archive path',
+  archiveUrl: 'Archive URL',
+  archiveType: 'Archive type',
+  serviceAccountPath: 'Google Service Account',
+  track: 'Release track',
+  releaseStatus: 'Release status',
+  mode: 'Submission mode',
+};
+
+const SummaryHumanReadableValues: Partial<Record<keyof Summary, Function>> = {
+  mode: (mode: SubmissionMode): string => {
+    if (mode === SubmissionMode.online) {
+      return 'Using Submission Service';
+    } else {
+      return 'Submitting the app from this computer';
+    }
+  },
+  archivePath: curryRight(breakWord)(50),
+  archiveUrl: curryRight(breakWord)(50),
+};
+
+function breakWord(word: string, chars: number): string {
+  return chunk(word, chars)
+    .map((arr) => arr.join(''))
+    .join('\n');
+}
+
+function printSummary(summary: Summary): void {
+  const table = new Table({
+    colWidths: [25, 55],
+    wordWrap: true,
+  });
+  table.push([
+    {
+      colSpan: 2,
+      content: log.chalk.bold('Android Submission Summary'),
+      hAlign: 'center',
+    },
+  ]);
+  for (const [key, value] of Object.entries(summary)) {
+    const displayKey = SummaryHumanReadableKeys[key as keyof Summary];
+    const displayValue = SummaryHumanReadableValues[key as keyof Summary]?.(value) ?? value;
+    table.push([displayKey, displayValue]);
+  }
+  console.info(table.toString());
 }
 
 export default AndroidSubmitter;
