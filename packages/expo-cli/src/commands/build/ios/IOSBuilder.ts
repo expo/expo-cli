@@ -68,7 +68,7 @@ class IOSBuilder extends BaseBuilder {
       throw new XDLError(
         'INVALID_OPTIONS',
         `Your project must have a bundleIdentifier set in app.json.
-See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#2-configure-appjson`
+See https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appjson`
       );
     }
     await utils.checkIfSdkIsSupported(sdkVersion!, PLATFORMS.IOS);

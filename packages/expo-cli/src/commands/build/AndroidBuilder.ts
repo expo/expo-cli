@@ -44,7 +44,7 @@ export default class AndroidBuilder extends BaseBuilder {
     await utils.checkIfSdkIsSupported(this.manifest.sdkVersion!, ANDROID);
     if (!get(this.manifest, 'android.package')) {
       throw new BuildError(`Your project must have an Android package set in app.json
-See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#2-configure-appjson`);
+See https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appjson`);
     }
     const androidPackage = get(this.manifest, 'android.package');
     if (!androidPackage) {
@@ -62,21 +62,25 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       this.projectDir,
       ANDROID
     );
-
+    log.newLine();
     log.warn(
-      `Clearing your Android build credentials from our build servers is a ${chalk.red(
+      `⚠️  Clearing your Android build credentials from our build servers is a ${chalk.red(
         'PERMANENT and IRREVERSIBLE action.'
       )}`
     );
     log.warn(
-      'Android keystores must be identical to the one previously used to submit your app to the Google Play Store.'
+      chalk.bold(
+        'Android keystores must be identical to the one previously used to submit your app to the Google Play Store.'
+      )
     );
     log.warn(
-      'Please read https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#if-you-choose-to-build-for-android for more info before proceeding.'
+      'Please read https://docs.expo.io/distribution/building-standalone-apps/#if-you-choose-to-build-for-android for more info before proceeding.'
     );
+    log.newLine();
     log.warn(
-      "We'll store a backup of your Android keystore in this directory in case you decide to delete it from our servers."
+      chalk.bold('Your keystore will be backed up to your current directory if you continue.')
     );
+    log.newLine();
     let questions: Question[] = [
       {
         type: 'confirm',
@@ -235,7 +239,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
           '\tEXPO_ANDROID_KEYSTORE_PASSWORD\n' +
           '\tEXPO_ANDROID_KEY_PASSWORD\n' +
           'For details, see:\n' +
-          '\thttps://docs.expo.io/versions/latest/distribution/building-standalone-apps/#if-you-choose-to-build-for-android'
+          '\thttps://docs.expo.io/distribution/building-standalone-apps/#if-you-choose-to-build-for-android'
       );
     }
     return false;
