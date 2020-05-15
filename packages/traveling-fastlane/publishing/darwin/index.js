@@ -1,12 +1,9 @@
 'use strict';
 
 const { join } = require('path');
-const { version } = require('./package.json');
-
-const TRAVELING_FASTLANE = `traveling-fastlane-${version}-osx`;
 
 module.exports = () => {
-  let p = join.bind(null, __dirname, TRAVELING_FASTLANE);
+  let p = join.bind(null, __dirname, 'dist');
   return {
     appProduce: p('app_produce'),
     authenticate: p('authenticate'),
