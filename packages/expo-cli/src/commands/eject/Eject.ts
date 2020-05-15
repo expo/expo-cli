@@ -316,27 +316,33 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    */
 
   let updatingMetroConfigStep = logNewSection('Adding Metro bundler configuration');
-  if (
-    fse.existsSync(path.join(projectRoot, 'metro.config.js')) ||
-    fse.existsSync(path.join(projectRoot, 'metro.config.json')) ||
-    pkg.metro
-  ) {
+  try {
+    if (
+      fse.existsSync(path.join(projectRoot, 'metro.config.js')) ||
+      fse.existsSync(path.join(projectRoot, 'metro.config.json')) ||
+      pkg.metro ||
+      fse.existsSync(path.join(projectRoot, 'rn-cli.config.js'))
+    ) {
+      throw new Error('Existing Metro configuration found; not overwriting.');
+    }
+
+    fse.copySync(path.join(tempDir, 'metro.config.js'), path.join(projectRoot, 'metro.config.js'));
+    updatingMetroConfigStep.succeed('Added Metro bundler configuration.');
+  } catch (e) {
     updatingMetroConfigStep.stopAndPersist({
       symbol: '⚠️ ',
       text: chalk.red('Metro bundler configuration not applied:'),
     });
+    log.nested(`- ${e.message}`);
     log.nested(
       `- You will need to add the ${chalk.bold(
         'hashAssetFiles'
-      )} plugin to your existing Metro configuration. ${terminalLink(
+      )} plugin to your Metro configuration. ${terminalLink(
         'Example.',
         'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md#metroconfigjs'
       )}`
     );
     log.newLine();
-  } else {
-    fse.copySync(path.join(tempDir, 'metro.config.js'), path.join(projectRoot, 'metro.config.js'));
-    updatingMetroConfigStep.succeed('Added Metro bundler configuration.');
   }
 
   /**
