@@ -3,35 +3,83 @@ import path from 'path';
 
 const SPLASH_SCREEN_FILENAME = 'splashscreen_image.png';
 
-const DRAWABLES_CONFIGS = {
+type DRAWABLE_SIZE = 'default' | 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
+type THEME = 'light' | 'dark';
+
+const DRAWABLES_CONFIGS: {
+  [key in DRAWABLE_SIZE]: {
+    modes: {
+      [key in THEME]: {
+        path: string;
+      };
+    };
+    dimensionsMultiplier: number;
+  };
+} = {
   default: {
-    path: `./res/drawable/${SPLASH_SCREEN_FILENAME}`,
-    darkModePath: `./res/drawable-night/${SPLASH_SCREEN_FILENAME}`,
+    modes: {
+      light: {
+        path: `./res/drawable/${SPLASH_SCREEN_FILENAME}`,
+      },
+      dark: {
+        path: `./res/drawable-night/${SPLASH_SCREEN_FILENAME}`,
+      },
+    },
     dimensionsMultiplier: 1,
   },
   mdpi: {
-    path: `./res/drawable-mdpi/${SPLASH_SCREEN_FILENAME}`,
-    darkModePath: `./res/drawable-night-mdpi/${SPLASH_SCREEN_FILENAME}`,
+    modes: {
+      light: {
+        path: `./res/drawable-mdpi/${SPLASH_SCREEN_FILENAME}`,
+      },
+      dark: {
+        path: `./res/drawable-night-mdpi/${SPLASH_SCREEN_FILENAME}`,
+      },
+    },
     dimensionsMultiplier: 1,
   },
   hdpi: {
-    path: `./res/drawable-hdpi/${SPLASH_SCREEN_FILENAME}`,
-    darkModePath: `./res/drawable-night-hdpi/${SPLASH_SCREEN_FILENAME}`,
+    modes: {
+      light: {
+        path: `./res/drawable-hdpi/${SPLASH_SCREEN_FILENAME}`,
+      },
+      dark: {
+        path: `./res/drawable-night-hdpi/${SPLASH_SCREEN_FILENAME}`,
+      },
+    },
     dimensionsMultiplier: 1.5,
   },
   xhdpi: {
-    path: `./res/drawable-xhdpi/${SPLASH_SCREEN_FILENAME}`,
-    darkModePath: `./res/drawable-night-xhdpi/${SPLASH_SCREEN_FILENAME}`,
+    modes: {
+      light: {
+        path: `./res/drawable-xhdpi/${SPLASH_SCREEN_FILENAME}`,
+      },
+      dark: {
+        path: `./res/drawable-night-xhdpi/${SPLASH_SCREEN_FILENAME}`,
+      },
+    },
     dimensionsMultiplier: 2,
   },
   xxhdpi: {
-    path: `./res/drawable-xxhdpi/${SPLASH_SCREEN_FILENAME}`,
-    darkModePath: `./res/drawable-night-xxhdpi/${SPLASH_SCREEN_FILENAME}`,
+    modes: {
+      light: {
+        path: `./res/drawable-xxhdpi/${SPLASH_SCREEN_FILENAME}`,
+      },
+      dark: {
+        path: `./res/drawable-night-xxhdpi/${SPLASH_SCREEN_FILENAME}`,
+      },
+    },
     dimensionsMultiplier: 3,
   },
   xxxhdpi: {
-    path: `./res/drawable-xxxhdpi/${SPLASH_SCREEN_FILENAME}`,
-    darkModePath: `./res/drawable-night-xxxhdpi/${SPLASH_SCREEN_FILENAME}`,
+    modes: {
+      light: {
+        path: `./res/drawable-xxxhdpi/${SPLASH_SCREEN_FILENAME}`,
+      },
+      dark: {
+        path: `./res/drawable-night-xxxhdpi/${SPLASH_SCREEN_FILENAME}`,
+      },
+    },
     dimensionsMultiplier: 4,
   },
 };
@@ -65,27 +113,25 @@ export default async function configureDrawables(
   darkModeSplashScreenImagePath?: string
 ) {
   await Promise.all(
-    Object.values(DRAWABLES_CONFIGS).map(
-      async ({ path: drawbalePath, darkModePath: darkModeDrawablePath }) => {
-        await Promise.all(
-          [drawbalePath, darkModeDrawablePath].map(async filePath => {
-            if (await fs.pathExists(path.resolve(androidMainPath, filePath))) {
-              await fs.remove(path.resolve(androidMainPath, filePath));
-            }
-          })
-        );
-      }
-    )
+    Object.values(DRAWABLES_CONFIGS).map(async ({ modes }) => {
+      await Promise.all(
+        Object.values(modes).map(async ({ path: filePath }) => {
+          if (await fs.pathExists(path.resolve(androidMainPath, filePath))) {
+            await fs.remove(path.resolve(androidMainPath, filePath));
+          }
+        })
+      );
+    })
   );
 
   await Promise.all([
     copyDrawableFile(
       splashScreenImagePath,
-      path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.path)
+      path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.modes.light.path)
     ),
     copyDrawableFile(
       darkModeSplashScreenImagePath,
-      path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.darkModePath)
+      path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.modes.dark.path)
     ),
   ]);
 }
