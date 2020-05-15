@@ -1,5 +1,6 @@
 import { Result, result } from '@expo/results';
 import { UserManager } from '@expo/xdl';
+import validator from 'validator';
 
 import AndroidSubmitter, { AndroidSubmissionOptions } from './AndroidSubmitter';
 import { ArchiveType, ReleaseStatus, ReleaseTrack } from './AndroidSubmissionConfig';
@@ -15,7 +16,7 @@ import {
   ArchiveTypeSourceType,
 } from '../archive-source';
 import { SubmissionMode } from '../types';
-import { getAppConfig, getExpoConfig } from '../utils/config';
+import { getExpoConfig } from '../utils/config';
 import log from '../../../../log';
 
 class AndroidSubmitCommand {
@@ -141,34 +142,36 @@ class AndroidSubmitCommand {
     if (chosenOptions.filter((opt) => opt).length > 1) {
       throw new Error(`Pass only one of: --url, --path, --id, --latest`);
     }
+
     if (url) {
       return {
         sourceType: ArchiveFileSourceType.url,
         url,
+        platform: 'android',
+        projectDir: this.ctx.projectDir,
       };
     } else if (path) {
       return {
         sourceType: ArchiveFileSourceType.path,
         path,
+        platform: 'android',
+        projectDir: this.ctx.projectDir,
       };
     } else if (id) {
-      // legacy for Turtle v1
-      const { owner, slug } = getAppConfig(this.ctx.projectDir);
+      if (!validator.isUUID(id)) {
+        throw new Error(`${id} is not a id`);
+      }
       return {
         sourceType: ArchiveFileSourceType.buildId,
-        platform: 'android',
         id,
-        owner,
-        slug,
+        platform: 'android',
+        projectDir: this.ctx.projectDir,
       };
     } else if (latest) {
-      // legacy for Turtle v1
-      const { owner, slug } = getAppConfig(this.ctx.projectDir);
       return {
         sourceType: ArchiveFileSourceType.latest,
         platform: 'android',
-        owner,
-        slug,
+        projectDir: this.ctx.projectDir,
       };
     } else {
       return {
