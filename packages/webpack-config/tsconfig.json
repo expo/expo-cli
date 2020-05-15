@@ -1,5 +1,5 @@
 {
-  "extends": "@expo/babel-preset-cli/tsconfig.base",
+  "extends": "../../tsconfig.base",
   "include": ["src/**/*"],
   "compilerOptions": {
     "outDir": "webpack",
