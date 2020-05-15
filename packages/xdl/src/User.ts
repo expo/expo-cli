@@ -221,7 +221,10 @@ export class UserManagerInstance {
           Logger.global.warn('Fetching the user profile failed');
           Logger.global.warn(e);
         }
-        return null;
+        if (e.code === 'UNAUTHORIZED_ERROR') {
+          return null;
+        }
+        throw e;
       }
     } finally {
       this._getSessionLock.release();
