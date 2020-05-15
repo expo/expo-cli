@@ -163,29 +163,41 @@ class AndroidOnlineSubmitter {
 
   async submitAsync(): Promise<void> {
     const scheduleSpinner = ora('Scheduling submission').start();
-    const submissionId = await SubmissionService.startSubmissionAsync(
-      Platform.ANDROID,
-      this.submissionConfig
-    );
-    scheduleSpinner.succeed();
+    let submissionId: string;
+    try {
+      submissionId = await SubmissionService.startSubmissionAsync(
+        Platform.ANDROID,
+        this.submissionConfig
+      );
+      scheduleSpinner.succeed();
+    } catch (err) {
+      scheduleSpinner.fail('Failed to schedule submission');
+      throw err;
+    }
+
     let submissionCompleted = false;
     let submissionStatus: SubmissionStatus | null = null;
     let submission: Submission | null = null;
     const submissionSpinner = ora('Submitting your app to Google Play Store').start();
-    while (!submissionCompleted) {
-      // sleep for 5 seconds
-      await sleep(5 * 1000);
-      submission = await SubmissionService.getSubmissionAsync(submissionId);
-      submissionSpinner.text = AndroidOnlineSubmitter.getStatusText(submission.status);
-      submissionStatus = submission.status;
-      if (submissionStatus === SubmissionStatus.ERRORED) {
-        submissionCompleted = true;
-        submissionSpinner.fail();
-      } else if (submissionStatus === SubmissionStatus.FINISHED) {
-        submissionCompleted = true;
-        submissionSpinner.succeed();
+    try {
+      while (!submissionCompleted) {
+        // sleep for 5 seconds
+        await sleep(5 * 1000);
+        submission = await SubmissionService.getSubmissionAsync(submissionId);
+        submissionSpinner.text = AndroidOnlineSubmitter.getStatusText(submission.status);
+        submissionStatus = submission.status;
+        if (submissionStatus === SubmissionStatus.ERRORED) {
+          submissionCompleted = true;
+          submissionSpinner.fail();
+        } else if (submissionStatus === SubmissionStatus.FINISHED) {
+          submissionCompleted = true;
+          submissionSpinner.succeed();
+        }
       }
+    } catch (err) {
+      submissionSpinner.fail(AndroidOnlineSubmitter.getStatusText(SubmissionStatus.ERRORED));
     }
+
     await displayLogs(submission, submissionStatus, this.verbose);
   }
 
