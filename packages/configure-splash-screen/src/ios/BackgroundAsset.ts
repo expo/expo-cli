@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
-import colorString, { ColorDescriptor } from 'color-string';
-import sharp from 'sharp';
+import { ColorDescriptor } from 'color-string';
+import { PNG } from 'pngjs';
 
 import { writeContentsJsonFile } from './Contents.json';
 
@@ -30,17 +30,25 @@ async function createContentsJsonFile(
 }
 
 async function createPngFile(filePath: string, color: ColorDescriptor) {
-  const fileContent = await sharp({
-    create: {
-      width: 1,
-      height: 1,
-      channels: 4,
-      background: colorString.to.rgb(color.value),
-    },
-  })
-    .png()
-    .toBuffer();
-  await fs.writeFile(filePath, fileContent);
+  const png = new PNG({
+    width: 1,
+    height: 1,
+    bitDepth: 8,
+    colorType: 6,
+    inputColorType: 6,
+    inputHasAlpha: true,
+  });
+  const [r, g, b, a] = color.value;
+  const bitmap = new Uint8Array([r, g, b, a * 255]);
+  const buffer = Buffer.from(bitmap);
+  png.data = buffer;
+
+  return new Promise(resolve => {
+    png
+      .pack()
+      .pipe(fs.createWriteStream(filePath))
+      .on('finish', resolve);
+  });
 }
 
 async function createFiles(

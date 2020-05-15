@@ -44,6 +44,7 @@
     "core-js": "^3.6.5",
     "fs-extra": "^9.0.0",
     "inquirer": "^7.1.0",
+    "pngjs": "^5.0.0",
     "xcode": "^3.0.0",
     "xml-js": "^1.6.11"
   },
@@ -56,13 +57,11 @@
     "@types/fs-extra": "^8.1.0",
     "@types/inquirer": "^6.5.0",
     "@types/jest": "^25.2.1",
-    "@types/sharp": "^0.25.0",
     "babel-jest": "^26.0.1",
     "eslint": "^6.8.0",
     "jest": "^26.0.1",
     "memfs": "^3.1.2",
     "rimraf": "^3.0.2",
-    "sharp": "^0.25.2",
     "ts-jest": "^25.4.0"
   },
   "gitHead": "58cc7088dae609832c85dba393372ed1a06b00db"

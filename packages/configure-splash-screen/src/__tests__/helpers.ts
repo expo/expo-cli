@@ -1,5 +1,6 @@
 import { fs } from 'memfs';
-import sharp from 'sharp';
+import { PNG } from 'pngjs';
+import colorString from 'color-string';
 
 const actualFs = jest.requireActual('fs') as typeof fs;
 
@@ -32,10 +33,27 @@ export async function readFileFromActualFS(filePath: string): Promise<string | B
   );
 }
 
-export async function getPng1x1FileContent(colorString: string) {
-  return (
-    await sharp({ create: { width: 1, height: 1, channels: 4, background: colorString } })
-      .png()
-      .toBuffer()
-  ).toString();
+export async function getPng1x1FileContent(color: string) {
+  const png = new PNG({
+    width: 1,
+    height: 1,
+    bitDepth: 8,
+    colorType: 6,
+    inputColorType: 6,
+    inputHasAlpha: true,
+  });
+  const [r, g, b, a] = colorString.get(color).value;
+  png.data = Buffer.from(new Uint8Array([r, g, b, a * 255]));
+  return new Promise(resolve => {
+    const chunks = [];
+    png
+      .pack()
+      .on('data', data => {
+        chunks.push(data);
+      })
+      .once('end', () => {
+        const buffer = Buffer.concat(chunks);
+        resolve(buffer.toString());
+      });
+  });
 }
