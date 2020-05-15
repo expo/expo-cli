@@ -253,7 +253,7 @@ const SummaryHumanReadableValues: Partial<Record<keyof Summary, Function>> = {
 
 function breakWord(word: string, chars: number): string {
   return chunk(word, chars)
-    .map((arr) => arr.join(''))
+    .map(arr => arr.join(''))
     .join('\n');
 }
 
