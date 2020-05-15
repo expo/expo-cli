@@ -280,8 +280,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   let creatingNativeProjectStep = logNewSection(
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
+  let tempDir;
   try {
-    const tempDir = temporary.directory();
+    tempDir = temporary.directory();
     await Exp.extractTemplateAppAsync(templateSpec, tempDir, appJson.expo);
     fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
     fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
@@ -307,6 +308,35 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
       )
     );
     process.exit(1);
+  }
+
+  /**
+   * Add metro config, or warn if metro config already exists. The developer will need to add the
+   * hashAssetFiles plugin manually.
+   */
+
+  let updatingMetroConfigStep = logNewSection('Adding Metro bundler configuration');
+  if (
+    fse.existsSync(path.join(projectRoot, 'metro.config.js')) ||
+    fse.existsSync(path.join(projectRoot, 'metro.config.json')) ||
+    pkg.metro
+  ) {
+    updatingMetroConfigStep.stopAndPersist({
+      symbol: '⚠️ ',
+      text: chalk.red('Metro bundler configuration not applied:'),
+    });
+    log.nested(
+      `- You will need to add the ${chalk.bold(
+        'hashAssetFiles'
+      )} plugin to your existing Metro configuration. ${terminalLink(
+        'Example.',
+        'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md#metroconfigjs'
+      )}`
+    );
+    log.newLine();
+  } else {
+    fse.copySync(path.join(tempDir, 'metro.config.js'), path.join(projectRoot, 'metro.config.js'));
+    updatingMetroConfigStep.succeed('Added Metro bundler configuration.');
   }
 
   /**
