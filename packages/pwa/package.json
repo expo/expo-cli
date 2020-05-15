@@ -1,6 +1,6 @@
 {
   "name": "expo-pwa",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -32,14 +32,14 @@
     "clean": "rimraf build ./tsconfig.tsbuildinfo"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.13",
+    "@expo/babel-preset-cli": "0.2.14",
     "@types/node": "^12.6.8",
     "rimraf": "^3.0.2"
   },
   "dependencies": {
-    "@expo/config": "3.2.4",
-    "@expo/image-utils": "0.2.25",
-    "@expo/json-file": "8.2.16",
+    "@expo/config": "3.2.5",
+    "@expo/image-utils": "0.2.26",
+    "@expo/json-file": "8.2.17",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "fs-extra": "^9.0.0",
