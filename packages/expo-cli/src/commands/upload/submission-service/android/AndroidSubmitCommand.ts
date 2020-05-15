@@ -58,9 +58,9 @@ class AndroidSubmitCommand {
       releaseStatus,
       archiveSource,
       serviceAccountSource,
-    ].filter((r) => !r.ok);
+    ].filter(r => !r.ok);
     if (errored.length > 0) {
-      const message = errored.map((err) => err.reason?.message).join('\n');
+      const message = errored.map(err => err.reason?.message).join('\n');
       log.error(message);
       throw new Error('Failed to submit the app');
     }
@@ -139,7 +139,7 @@ class AndroidSubmitCommand {
   private resolveArchiveFileSource(): ArchiveFileSource {
     const { url, path, id, latest } = this.ctx.commandOptions;
     const chosenOptions = [url, path, id, latest];
-    if (chosenOptions.filter((opt) => opt).length > 1) {
+    if (chosenOptions.filter(opt => opt).length > 1) {
       throw new Error(`Pass only one of: --url, --path, --id, --latest`);
     }
 
