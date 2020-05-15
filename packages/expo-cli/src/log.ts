@@ -73,9 +73,9 @@ function getPrefix(chalkColor: Color) {
 
 function withPrefixAndTextColor(args: any[], chalkColor: Color = chalk.gray) {
   if (program.nonInteractive) {
-    return [getPrefix(chalkColor), ...args.map(arg => chalkColor(arg))];
+    return [getPrefix(chalkColor), ...args.map((arg) => chalkColor(arg))];
   } else {
-    return args.map(arg => chalkColor(arg));
+    return args.map((arg) => chalkColor(arg));
   }
 }
 
@@ -88,10 +88,6 @@ function withPrefix(args: any[], chalkColor = chalk.gray) {
 }
 
 function log(...args: any[]) {
-  if (log.config.raw) {
-    return;
-  }
-
   respectProgressBars(() => {
     consoleLog(...withPrefix(args));
   });
@@ -128,10 +124,6 @@ log.setSpinner = function setSpinner(oraSpinner: any) {
 };
 
 log.error = function error(...args: any[]) {
-  if (log.config.raw) {
-    return;
-  }
-
   respectProgressBars(() => {
     consoleError(...withPrefixAndTextColor(args, chalk.red));
   });
@@ -144,10 +136,6 @@ log.nestedError = function (message: string) {
 };
 
 log.warn = function warn(...args: any[]) {
-  if (log.config.raw) {
-    return;
-  }
-
   respectProgressBars(() => {
     consoleWarn(...withPrefixAndTextColor(args, chalk.yellow));
   });
@@ -160,29 +148,11 @@ log.nestedWarn = function (message: string) {
 };
 
 log.gray = function (...args: any[]) {
-  if (log.config.raw) {
-    return;
-  }
-
   respectProgressBars(() => {
     consoleLog(...withPrefixAndTextColor(args));
   });
 };
 
-log.raw = function (...args: any[]) {
-  if (!log.config.raw) {
-    return;
-  }
-
-  respectProgressBars(() => {
-    consoleLog(...args);
-  });
-};
-
 log.chalk = chalk;
-
-log.config = {
-  raw: false,
-};
 
 export default log;

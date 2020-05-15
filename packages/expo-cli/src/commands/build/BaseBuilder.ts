@@ -176,7 +176,6 @@ Please see the docs (${chalk.underline(
     numberOfRemainingPriorityBuilds: number;
     hasUnlimitedPriorityBuilds?: boolean;
   }) {
-    log.raw();
     log('=================');
     log(' Builds Statuses ');
     log('=================\n');
@@ -318,7 +317,7 @@ ${job.id}
       }
       const job = fp.compose(
         fp.head,
-        fp.filter(job => buildId && (job as any).id === buildId),
+        fp.filter((job) => buildId && (job as any).id === buildId),
         fp.getOr([], 'jobs')
       )(res);
 

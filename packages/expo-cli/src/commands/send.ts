@@ -13,7 +13,6 @@ async function action(projectDir: string, options: { sendTo?: string } & URLOpti
   let url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
   log('Your project manifest URL is\n\n' + chalk.underline(url) + '\n');
-  log.raw(url);
 
   let shouldQuit = false;
   if (await urlOpts.handleMobileOptsAsync(projectDir, options)) {

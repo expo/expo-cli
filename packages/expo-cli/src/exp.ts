@@ -75,9 +75,6 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
 
     try {
       let options = last(args);
-      if (options.output === 'raw') {
-        log.config.raw = true;
-      }
       if (options.offline) {
         Config.offline = true;
       }
@@ -364,7 +361,7 @@ function runAsync(programName: string) {
       process.exit(0);
     });
 
-    program.on('command:*', subCommand => {
+    program.on('command:*', (subCommand) => {
       let msg = `"${subCommand}" is not an expo command. See "expo --help" for the full list of commands.`;
       const availableCommands = program.commands.map((cmd: Command) => cmd._name);
       // finding the best match whose edit distance is less than 40% of their length.
@@ -562,7 +559,7 @@ export function run(programName: string) {
     } else {
       await Promise.all([writePathAsync(), runAsync(programName)]);
     }
-  })().catch(e => {
+  })().catch((e) => {
     console.error('Uncaught Error', e);
     process.exit(1);
   });
