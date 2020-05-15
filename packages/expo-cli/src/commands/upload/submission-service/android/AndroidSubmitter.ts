@@ -196,6 +196,7 @@ class AndroidOnlineSubmitter {
       }
     } catch (err) {
       submissionSpinner.fail(AndroidOnlineSubmitter.getStatusText(SubmissionStatus.ERRORED));
+      throw err;
     }
 
     await displayLogs(submission, submissionStatus, this.verbose);
