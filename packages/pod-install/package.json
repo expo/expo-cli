@@ -1,6 +1,6 @@
 {
   "name": "pod-install",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "build",
   "keywords": [
     "cocoapods",
@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.13",
-    "@expo/package-manager": "0.0.21",
+    "@expo/package-manager": "0.0.22",
     "@types/node": "^12.12.31",
     "@zeit/ncc": "^0.20.5",
     "chalk": "^4.0.0",

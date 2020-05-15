@@ -1,6 +1,6 @@
 {
   "name": "@expo/config",
-  "version": "3.2.3",
+  "version": "3.2.4",
   "description": "A library for interacting with the app.json",
   "main": "build/index.js",
   "scripts": {
@@ -45,8 +45,8 @@
   ],
   "dependencies": {
     "@babel/register": "^7.8.3",
-    "@expo/json-file": "8.2.15",
-    "@expo/plist": "0.0.4",
+    "@expo/json-file": "8.2.16",
+    "@expo/plist": "0.0.5",
     "fs-extra": "^7.0.1",
     "globby": "^11.0.0",
     "invariant": "^2.2.4",
