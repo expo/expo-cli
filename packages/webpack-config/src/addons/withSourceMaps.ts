@@ -54,6 +54,7 @@ export default function withPlatformSourceMaps(
   if (!webpackConfig.plugins) webpackConfig.plugins = [];
 
   webpackConfig.plugins.push(createSourceMapPlugin(webpackConfig, env));
+  webpackConfig.devtool = false;
 
   return webpackConfig;
 }
