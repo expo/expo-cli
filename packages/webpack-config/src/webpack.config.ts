@@ -106,6 +106,13 @@ function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output
   return commonOutput;
 }
 
+function getPlatforms(platform: string): string[] {
+  if (platform === 'ios' || platform === 'android') {
+    return [platform, 'native'];
+  }
+  return [platform];
+}
+
 export default async function (
   env: Environment,
   argv: Arguments = {}
@@ -121,6 +128,10 @@ export default async function (
   const mode = getMode(env);
   const isDev = mode === 'development';
   const isProd = mode === 'production';
+
+  // Because the native React runtime is different to the browser we need to make
+  // some core modifications to webpack.
+  const isNative = ['ios', 'android'].includes(env.platform);
 
   // Enables deep scope analysis in production mode.
   // Remove unused import/exports
@@ -177,7 +188,7 @@ export default async function (
     appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
   }
 
-  let generatePWAImageAssets: boolean = !isDev;
+  let generatePWAImageAssets: boolean = !isNative && !isDev;
   if (!isDev && typeof env.pwa !== 'undefined') {
     generatePWAImageAssets = env.pwa;
   }
@@ -325,6 +336,13 @@ export default async function (
         config,
       }),
 
+      // Disable chunking on native
+      // https://gist.github.com/glennreyes/f538a369db0c449b681e86ef7f86a254#file-razzle-config-js
+      isNative &&
+        new webpack.optimize.LimitChunkCountPlugin({
+          maxChunks: 1,
+        }),
+
       // This is necessary to emit hot updates (currently CSS only):
       isDev && new HotModuleReplacementPlugin(),
 
@@ -398,7 +416,7 @@ export default async function (
     },
     resolve: {
       mainFields: ['browser', 'module', 'main'],
-      extensions: getModuleFileExtensions('web'),
+      extensions: getModuleFileExtensions(...getPlatforms(env.platform ?? 'web')),
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
         // guards against forgotten dependencies and such.
