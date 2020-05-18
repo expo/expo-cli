@@ -74,7 +74,12 @@ function getDevtool(
   return false;
 }
 
-function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output {
+function getOutput(
+  locations: FilePaths,
+  mode: Mode,
+  publicPath: string,
+  platform: Environment['platform']
+): Output {
   const commonOutput: Output = {
     // We inferred the "public path" (such as / or /my-project) from homepage.
     // We use "/" in development.
@@ -109,7 +114,20 @@ function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output
     ): string => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/');
   }
 
+  if (isPlatformNative(platform)) {
+    // Give the output bundle a constant name to prevent caching.
+    // Also there are no actual files generated in dev.
+    commonOutput.filename = `index.bundle`;
+  }
+
   return commonOutput;
+}
+
+function isPlatformNative(platform: string): boolean {
+  if (platform === 'ios' || platform === 'android') {
+    return true;
+  }
+  return false;
 }
 
 function getPlatforms(platform: string): string[] {
@@ -272,7 +290,7 @@ export default async function (
     devtool,
     context: __dirname,
     // configures where the build ends up
-    output: getOutput(locations, mode, publicPath),
+    output: getOutput(locations, mode, publicPath, env.platform),
     plugins: [
       // Delete the build folder
       isProd &&
