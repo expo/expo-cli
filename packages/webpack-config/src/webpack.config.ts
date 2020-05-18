@@ -457,6 +457,11 @@ export default async function (
 
   webpackConfig = withPlatformSourceMaps(webpackConfig, env);
 
+  if (isNative) {
+    // https://github.com/webpack/webpack/blob/f06086c53b2277e421604c5cea6f32f5c5b6d117/declarations/WebpackOptions.d.ts#L504-L518
+    webpackConfig.target = 'webworker';
+  }
+
   if (isProd) {
     webpackConfig = withOptimizations(webpackConfig);
   } else {
