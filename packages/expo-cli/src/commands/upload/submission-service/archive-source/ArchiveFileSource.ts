@@ -88,12 +88,14 @@ async function getArchiveLocationForUrlAsync(mode: SubmissionMode, url: string):
     return url;
   } else {
     const tmpPath = pathJoin(os.tmpdir(), pathBasename(url));
+    log('Downloading your app archive');
     return downloadAppArchiveAsync(url, tmpPath);
   }
 }
 
 async function getArchiveLocationForPathAsync(mode: SubmissionMode, path: string): Promise<string> {
   if (mode === SubmissionMode.online) {
+    log('Uploading your app archive to the temporary storage');
     return await uploadAppArchiveAsync(path);
   } else {
     return path;
