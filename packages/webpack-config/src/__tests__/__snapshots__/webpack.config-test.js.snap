@@ -3,12 +3,12 @@
 exports[`ios ios development 1`] = `
 Object {
   "bail": false,
-  "context": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
+  "context": "e2e/basic",
   "devServer": Object {
     "before": [Function],
     "clientLogLevel": "none",
     "compress": true,
-    "contentBase": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default",
+    "contentBase": "web-default",
     "disableHostCheck": true,
     "headers": Object {
       "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization",
@@ -41,7 +41,7 @@ Object {
       Object {
         "oneOf": Array [
           Object {
-            "exclude": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default",
+            "exclude": "web-default",
             "test": /\\\\\\.html\\$/,
             "use": Array [
               "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/html-loader/index.js",
@@ -65,7 +65,7 @@ Object {
               "options": Object {
                 "babelrc": false,
                 "cacheCompression": false,
-                "cacheDirectory": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/.expo/ios/cache/development/babel-loader",
+                "cacheDirectory": "e2e/basic/.expo/ios/cache/development/babel-loader",
                 "cacheIdentifier": "custom-value-to-skip-babel-config-error",
                 "caller": Object {
                   "__dangerous_rule_id": "expo-babel-loader",
@@ -76,7 +76,7 @@ Object {
                 "compact": false,
                 "configFile": true,
                 "inputSourceMap": true,
-                "root": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
+                "root": "e2e/basic",
                 "sourceMaps": true,
                 "sourceType": "unambiguous",
               },
@@ -90,9 +90,9 @@ Object {
           },
           Object {
             "include": Array [
-              "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
-              "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
-              "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
+              "e2e/basic",
+              "e2e/basic/node_modules/react-native-vector-icons",
+              "e2e/basic/node_modules/@expo/vector-icons",
             ],
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
@@ -118,7 +118,7 @@ Object {
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/node_modules/file-loader/dist/cjs.js",
+            "loader": "node_modules/file-loader/dist/cjs.js",
             "options": Object {
               "name": "static/media/[name].[hash:8].[ext]",
             },
@@ -133,7 +133,7 @@ Object {
     "devtoolModuleFilenameTemplate": [Function],
     "filename": "index.bundle",
     "globalObject": "this",
-    "path": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build",
+    "path": "e2e/basic/web-build",
     "pathinfo": true,
     "publicPath": "/",
   },
@@ -142,7 +142,7 @@ Object {
     "maxEntrypointSize": 600000,
   },
   "plugins": Array [
-    HtmlWebpackPlugin {
+    Object {
       "assetJson": undefined,
       "childCompilationOutputName": undefined,
       "childCompilerHash": undefined,
@@ -154,7 +154,7 @@ Object {
         "compile": true,
         "excludeChunks": Array [],
         "favicon": false,
-        "filename": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build/index.html",
+        "filename": "e2e/basic/web-build/index.html",
         "hash": false,
         "inject": true,
         "meta": Object {
@@ -162,7 +162,7 @@ Object {
         },
         "minify": false,
         "showErrors": true,
-        "template": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default/index.html",
+        "template": "web-default/index.html",
         "templateContent": false,
         "templateParameters": [Function],
         "title": "basic",
@@ -170,7 +170,7 @@ Object {
       },
       "version": 4,
     },
-    InterpolateHtmlPlugin {
+    Object {
       "htmlWebpackPlugin": [Function],
       "replacements": Object {
         "LANG_ISO_CODE": "en",
@@ -180,7 +180,7 @@ Object {
         "WEB_TITLE": "basic",
       },
     },
-    FaviconWebpackPlugin {
+    Object {
       "favicon": Object {
         "backgroundColor": "transparent",
         "resizeMode": "contain",
@@ -189,18 +189,18 @@ Object {
       "modifyOptions": Object {},
       "pwaOptions": Object {
         "links": Array [],
-        "projectRoot": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
+        "projectRoot": "e2e/basic",
         "publicPath": "/",
       },
     },
-    ModuleNotFoundPlugin {
-      "appPath": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
+    Object {
+      "appPath": "e2e/basic",
       "getRelativePath": [Function],
       "prettierError": [Function],
       "useYarnCommand": [Function],
       "yarnLockFile": undefined,
     },
-    DefinePlugin {
+    Object {
       "definitions": Object {
         "__DEV__": true,
         "process.env": Object {
@@ -210,21 +210,21 @@ Object {
         },
       },
     },
-    LimitChunkCountPlugin {
+    Object {
       "options": Object {
         "maxChunks": 1,
       },
     },
-    HotModuleReplacementPlugin {
+    Object {
       "fullBuildTimeout": 200,
       "multiStep": undefined,
       "options": Object {},
       "requestTimeout": 10000,
     },
-    WatchMissingNodeModulesPlugin {
-      "nodeModulesPath": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/node_modules",
+    Object {
+      "nodeModulesPath": "e2e/basic/node_modules",
     },
-    ManifestPlugin {
+    Object {
       "opts": Object {
         "basePath": "",
         "fileName": "asset-manifest.json",
@@ -239,7 +239,7 @@ Object {
         "writeToFileEmit": false,
       },
     },
-    WebpackBar {
+    Object {
       "handler": [Function],
       "modulesCount": 500,
       "options": Object {
@@ -252,13 +252,13 @@ Object {
       },
       "profile": false,
       "reporters": Array [
-        FancyReporter {},
+        Object {},
       ],
       "showActiveModules": true,
       "showEntries": false,
       "showModules": true,
     },
-    SourceMapDevToolPlugin {
+    Object {
       "fallbackModuleFilenameTemplate": "webpack://[namespace]/[resourcePath]?[hash]",
       "moduleFilenameTemplate": [Function],
       "namespace": "",
@@ -273,12 +273,12 @@ Object {
       "sourceMappingURLComment": "
 //# sourceMappingURL=[url]",
     },
-    CopyPlugin {
+    Object {
       "options": Object {},
       "patterns": Array [
         Object {
-          "from": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default/register-service-worker.js",
-          "to": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build/register-service-worker.js",
+          "from": "web-default/register-service-worker.js",
+          "to": "e2e/basic/web-build/register-service-worker.js",
           "transform": [Function],
         },
       ],
@@ -338,7 +338,7 @@ Object {
 exports[`ios ios production 1`] = `
 Object {
   "bail": true,
-  "context": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
+  "context": "e2e/basic",
   "devtool": false,
   "entry": [Function],
   "mode": "production",
@@ -352,7 +352,7 @@ Object {
       Object {
         "oneOf": Array [
           Object {
-            "exclude": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default",
+            "exclude": "web-default",
             "test": /\\\\\\.html\\$/,
             "use": Array [
               "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/html-loader/index.js",
@@ -376,7 +376,7 @@ Object {
               "options": Object {
                 "babelrc": false,
                 "cacheCompression": false,
-                "cacheDirectory": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/.expo/ios/cache/production/babel-loader",
+                "cacheDirectory": "e2e/basic/.expo/ios/cache/production/babel-loader",
                 "cacheIdentifier": "custom-value-to-skip-babel-config-error",
                 "caller": Object {
                   "__dangerous_rule_id": "expo-babel-loader",
@@ -387,7 +387,7 @@ Object {
                 "compact": true,
                 "configFile": true,
                 "inputSourceMap": true,
-                "root": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
+                "root": "e2e/basic",
                 "sourceMaps": true,
                 "sourceType": "unambiguous",
               },
@@ -401,9 +401,9 @@ Object {
           },
           Object {
             "include": Array [
-              "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
-              "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
-              "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
+              "e2e/basic",
+              "e2e/basic/node_modules/react-native-vector-icons",
+              "e2e/basic/node_modules/@expo/vector-icons",
             ],
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
@@ -429,7 +429,7 @@ Object {
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/node_modules/file-loader/dist/cjs.js",
+            "loader": "node_modules/file-loader/dist/cjs.js",
             "options": Object {
               "name": "static/media/[name].[hash:8].[ext]",
             },
@@ -442,7 +442,7 @@ Object {
   "optimization": Object {
     "minimize": true,
     "minimizer": Array [
-      TerserPlugin {
+      Object {
         "options": Object {
           "cache": true,
           "cacheKeys": [Function],
@@ -475,7 +475,7 @@ Object {
           "warningsFilter": [Function],
         },
       },
-      OptimizeCssAssetsWebpackPlugin {
+      Object {
         "deleteAssetsMap": Object {},
         "options": Object {
           "assetNameRegExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
@@ -523,7 +523,7 @@ Object {
     "devtoolModuleFilenameTemplate": [Function],
     "filename": "index.bundle",
     "globalObject": "this",
-    "path": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build",
+    "path": "e2e/basic/web-build",
     "publicPath": "/",
   },
   "performance": Object {
@@ -531,11 +531,11 @@ Object {
     "maxEntrypointSize": 600000,
   },
   "plugins": Array [
-    CleanWebpackPlugin {
+    Object {
       "apply": [Function],
       "cleanAfterEveryBuildPatterns": Array [],
       "cleanOnceBeforeBuildPatterns": Array [
-        "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build",
+        "e2e/basic/web-build",
       ],
       "cleanStaleWebpackAssets": true,
       "currentAssets": Array [],
@@ -549,11 +549,11 @@ Object {
       "removeFiles": [Function],
       "verbose": false,
     },
-    CopyPlugin {
+    Object {
       "options": Object {},
       "patterns": Array [
         Object {
-          "from": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default",
+          "from": "web-default",
           "ignore": Array [
             "expo-service-worker.js",
             "serve.json",
@@ -561,19 +561,19 @@ Object {
             "icon.png",
             "register-service-worker.js",
           ],
-          "to": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build",
+          "to": "e2e/basic/web-build",
         },
         Object {
-          "from": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default/serve.json",
-          "to": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build/serve.json",
+          "from": "web-default/serve.json",
+          "to": "e2e/basic/web-build/serve.json",
         },
         Object {
-          "from": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default/expo-service-worker.js",
-          "to": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build/expo-service-worker.js",
+          "from": "web-default/expo-service-worker.js",
+          "to": "e2e/basic/web-build/expo-service-worker.js",
         },
       ],
     },
-    HtmlWebpackPlugin {
+    Object {
       "assetJson": undefined,
       "childCompilationOutputName": undefined,
       "childCompilerHash": undefined,
@@ -585,7 +585,7 @@ Object {
         "compile": true,
         "excludeChunks": Array [],
         "favicon": false,
-        "filename": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build/index.html",
+        "filename": "e2e/basic/web-build/index.html",
         "hash": false,
         "inject": true,
         "meta": Object {
@@ -604,7 +604,7 @@ Object {
           "useShortDoctype": true,
         },
         "showErrors": true,
-        "template": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default/index.html",
+        "template": "web-default/index.html",
         "templateContent": false,
         "templateParameters": [Function],
         "title": "basic",
@@ -612,7 +612,7 @@ Object {
       },
       "version": 4,
     },
-    InterpolateHtmlPlugin {
+    Object {
       "htmlWebpackPlugin": [Function],
       "replacements": Object {
         "LANG_ISO_CODE": "en",
@@ -622,7 +622,7 @@ Object {
         "WEB_TITLE": "basic",
       },
     },
-    FaviconWebpackPlugin {
+    Object {
       "favicon": Object {
         "backgroundColor": "transparent",
         "resizeMode": "contain",
@@ -631,18 +631,18 @@ Object {
       "modifyOptions": Object {},
       "pwaOptions": Object {
         "links": Array [],
-        "projectRoot": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
+        "projectRoot": "e2e/basic",
         "publicPath": "/",
       },
     },
-    ModuleNotFoundPlugin {
-      "appPath": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
+    Object {
+      "appPath": "e2e/basic",
       "getRelativePath": [Function],
       "prettierError": [Function],
       "useYarnCommand": [Function],
       "yarnLockFile": undefined,
     },
-    DefinePlugin {
+    Object {
       "definitions": Object {
         "__DEV__": false,
         "process.env": Object {
@@ -652,18 +652,18 @@ Object {
         },
       },
     },
-    LimitChunkCountPlugin {
+    Object {
       "options": Object {
         "maxChunks": 1,
       },
     },
-    MiniCssExtractPlugin {
+    Object {
       "options": Object {
         "chunkFilename": "static/css/[name].[contenthash:8].chunk.css",
         "filename": "static/css/[name].[contenthash:8].css",
       },
     },
-    ManifestPlugin {
+    Object {
       "opts": Object {
         "basePath": "",
         "fileName": "asset-manifest.json",
@@ -678,7 +678,7 @@ Object {
         "writeToFileEmit": false,
       },
     },
-    WebpackBar {
+    Object {
       "handler": [Function],
       "modulesCount": 500,
       "options": Object {
@@ -691,13 +691,13 @@ Object {
       },
       "profile": false,
       "reporters": Array [
-        FancyReporter {},
+        Object {},
       ],
       "showActiveModules": true,
       "showEntries": false,
       "showModules": true,
     },
-    SourceMapDevToolPlugin {
+    Object {
       "fallbackModuleFilenameTemplate": "webpack://[namespace]/[resourcePath]?[hash]",
       "moduleFilenameTemplate": [Function],
       "namespace": "",
@@ -710,17 +710,17 @@ Object {
       "sourceMappingURLComment": "
 //# sourceMappingURL=[url]",
     },
-    CopyPlugin {
+    Object {
       "options": Object {},
       "patterns": Array [
         Object {
-          "from": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default/register-service-worker.js",
-          "to": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build/register-service-worker.js",
+          "from": "web-default/register-service-worker.js",
+          "to": "e2e/basic/web-build/register-service-worker.js",
           "transform": [Function],
         },
       ],
     },
-    GenerateSW {
+    Object {
       "config": Object {
         "chunks": Array [],
         "clientsClaim": true,
@@ -812,12 +812,12 @@ Object {
 exports[`web web development 1`] = `
 Object {
   "bail": false,
-  "context": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/src",
+  "context": "src",
   "devServer": Object {
     "before": [Function],
     "clientLogLevel": "none",
     "compress": true,
-    "contentBase": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default",
+    "contentBase": "web-default",
     "disableHostCheck": true,
     "headers": Object {
       "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization",
@@ -850,7 +850,7 @@ Object {
       Object {
         "oneOf": Array [
           Object {
-            "exclude": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default",
+            "exclude": "web-default",
             "test": /\\\\\\.html\\$/,
             "use": Array [
               "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/html-loader/index.js",
@@ -874,7 +874,7 @@ Object {
               "options": Object {
                 "babelrc": false,
                 "cacheCompression": false,
-                "cacheDirectory": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/.expo/web/cache/development/babel-loader",
+                "cacheDirectory": "e2e/basic/.expo/web/cache/development/babel-loader",
                 "cacheIdentifier": "custom-value-to-skip-babel-config-error",
                 "caller": Object {
                   "__dangerous_rule_id": "expo-babel-loader",
@@ -885,7 +885,7 @@ Object {
                 "compact": false,
                 "configFile": true,
                 "inputSourceMap": true,
-                "root": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
+                "root": "e2e/basic",
                 "sourceMaps": true,
                 "sourceType": "unambiguous",
               },
@@ -899,9 +899,9 @@ Object {
           },
           Object {
             "include": Array [
-              "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
-              "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
-              "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
+              "e2e/basic",
+              "e2e/basic/node_modules/react-native-vector-icons",
+              "e2e/basic/node_modules/@expo/vector-icons",
             ],
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
@@ -927,7 +927,7 @@ Object {
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/node_modules/file-loader/dist/cjs.js",
+            "loader": "node_modules/file-loader/dist/cjs.js",
             "options": Object {
               "name": "static/media/[name].[hash:8].[ext]",
             },
@@ -952,7 +952,7 @@ Object {
     "devtoolModuleFilenameTemplate": [Function],
     "filename": "static/js/bundle.js",
     "globalObject": "this",
-    "path": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build",
+    "path": "e2e/basic/web-build",
     "pathinfo": true,
     "publicPath": "/",
   },
@@ -961,7 +961,7 @@ Object {
     "maxEntrypointSize": 600000,
   },
   "plugins": Array [
-    HtmlWebpackPlugin {
+    Object {
       "assetJson": undefined,
       "childCompilationOutputName": undefined,
       "childCompilerHash": undefined,
@@ -973,7 +973,7 @@ Object {
         "compile": true,
         "excludeChunks": Array [],
         "favicon": false,
-        "filename": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build/index.html",
+        "filename": "e2e/basic/web-build/index.html",
         "hash": false,
         "inject": true,
         "meta": Object {
@@ -981,7 +981,7 @@ Object {
         },
         "minify": false,
         "showErrors": true,
-        "template": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default/index.html",
+        "template": "web-default/index.html",
         "templateContent": false,
         "templateParameters": [Function],
         "title": "basic",
@@ -989,7 +989,7 @@ Object {
       },
       "version": 4,
     },
-    InterpolateHtmlPlugin {
+    Object {
       "htmlWebpackPlugin": [Function],
       "replacements": Object {
         "LANG_ISO_CODE": "en",
@@ -999,7 +999,7 @@ Object {
         "WEB_TITLE": "basic",
       },
     },
-    FaviconWebpackPlugin {
+    Object {
       "favicon": Object {
         "backgroundColor": "transparent",
         "resizeMode": "contain",
@@ -1008,18 +1008,18 @@ Object {
       "modifyOptions": Object {},
       "pwaOptions": Object {
         "links": Array [],
-        "projectRoot": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
+        "projectRoot": "e2e/basic",
         "publicPath": "/",
       },
     },
-    ModuleNotFoundPlugin {
-      "appPath": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
+    Object {
+      "appPath": "e2e/basic",
       "getRelativePath": [Function],
       "prettierError": [Function],
       "useYarnCommand": [Function],
       "yarnLockFile": undefined,
     },
-    DefinePlugin {
+    Object {
       "definitions": Object {
         "__DEV__": true,
         "process.env": Object {
@@ -1029,16 +1029,16 @@ Object {
         },
       },
     },
-    HotModuleReplacementPlugin {
+    Object {
       "fullBuildTimeout": 200,
       "multiStep": undefined,
       "options": Object {},
       "requestTimeout": 10000,
     },
-    WatchMissingNodeModulesPlugin {
-      "nodeModulesPath": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/node_modules",
+    Object {
+      "nodeModulesPath": "e2e/basic/node_modules",
     },
-    ManifestPlugin {
+    Object {
       "opts": Object {
         "basePath": "",
         "fileName": "asset-manifest.json",
@@ -1053,7 +1053,7 @@ Object {
         "writeToFileEmit": false,
       },
     },
-    WebpackBar {
+    Object {
       "handler": [Function],
       "modulesCount": 500,
       "options": Object {
@@ -1066,18 +1066,18 @@ Object {
       },
       "profile": false,
       "reporters": Array [
-        FancyReporter {},
+        Object {},
       ],
       "showActiveModules": true,
       "showEntries": false,
       "showModules": true,
     },
-    CopyPlugin {
+    Object {
       "options": Object {},
       "patterns": Array [
         Object {
-          "from": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default/register-service-worker.js",
-          "to": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build/register-service-worker.js",
+          "from": "web-default/register-service-worker.js",
+          "to": "e2e/basic/web-build/register-service-worker.js",
           "transform": [Function],
         },
       ],
@@ -1142,7 +1142,7 @@ Object {
 exports[`web web production 1`] = `
 Object {
   "bail": true,
-  "context": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/src",
+  "context": "src",
   "devtool": "source-map",
   "entry": [Function],
   "mode": "production",
@@ -1156,7 +1156,7 @@ Object {
       Object {
         "oneOf": Array [
           Object {
-            "exclude": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default",
+            "exclude": "web-default",
             "test": /\\\\\\.html\\$/,
             "use": Array [
               "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/html-loader/index.js",
@@ -1180,7 +1180,7 @@ Object {
               "options": Object {
                 "babelrc": false,
                 "cacheCompression": false,
-                "cacheDirectory": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/.expo/web/cache/production/babel-loader",
+                "cacheDirectory": "e2e/basic/.expo/web/cache/production/babel-loader",
                 "cacheIdentifier": "custom-value-to-skip-babel-config-error",
                 "caller": Object {
                   "__dangerous_rule_id": "expo-babel-loader",
@@ -1191,7 +1191,7 @@ Object {
                 "compact": true,
                 "configFile": true,
                 "inputSourceMap": true,
-                "root": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
+                "root": "e2e/basic",
                 "sourceMaps": true,
                 "sourceType": "unambiguous",
               },
@@ -1205,9 +1205,9 @@ Object {
           },
           Object {
             "include": Array [
-              "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
-              "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
-              "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
+              "e2e/basic",
+              "e2e/basic/node_modules/react-native-vector-icons",
+              "e2e/basic/node_modules/@expo/vector-icons",
             ],
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
@@ -1233,7 +1233,7 @@ Object {
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/node_modules/file-loader/dist/cjs.js",
+            "loader": "node_modules/file-loader/dist/cjs.js",
             "options": Object {
               "name": "static/media/[name].[hash:8].[ext]",
             },
@@ -1256,7 +1256,7 @@ Object {
   "optimization": Object {
     "minimize": true,
     "minimizer": Array [
-      TerserPlugin {
+      Object {
         "options": Object {
           "cache": true,
           "cacheKeys": [Function],
@@ -1289,7 +1289,7 @@ Object {
           "warningsFilter": [Function],
         },
       },
-      OptimizeCssAssetsWebpackPlugin {
+      Object {
         "deleteAssetsMap": Object {},
         "options": Object {
           "assetNameRegExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
@@ -1340,7 +1340,7 @@ Object {
     "devtoolModuleFilenameTemplate": [Function],
     "filename": "static/js/[name].[contenthash:8].js",
     "globalObject": "this",
-    "path": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build",
+    "path": "e2e/basic/web-build",
     "publicPath": "/",
   },
   "performance": Object {
@@ -1348,266 +1348,20 @@ Object {
     "maxEntrypointSize": 600000,
   },
   "plugins": Array [
-    CleanWebpackPlugin {
-      "apply": [Function],
-      "cleanAfterEveryBuildPatterns": Array [],
-      "cleanOnceBeforeBuildPatterns": Array [
-        "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build",
-      ],
-      "cleanStaleWebpackAssets": true,
-      "currentAssets": Array [],
-      "dangerouslyAllowCleanPatternsOutsideProject": false,
-      "dry": false,
-      "handleDone": [Function],
-      "handleInitial": [Function],
-      "initialClean": false,
-      "outputPath": "",
-      "protectWebpackAssets": true,
-      "removeFiles": [Function],
-      "verbose": false,
-    },
-    CopyPlugin {
-      "options": Object {},
-      "patterns": Array [
-        Object {
-          "from": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default",
-          "ignore": Array [
-            "expo-service-worker.js",
-            "serve.json",
-            "index.html",
-            "icon.png",
-            "register-service-worker.js",
-          ],
-          "to": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build",
-        },
-        Object {
-          "from": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default/serve.json",
-          "to": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build/serve.json",
-        },
-        Object {
-          "from": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default/expo-service-worker.js",
-          "to": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build/expo-service-worker.js",
-        },
-      ],
-    },
-    HtmlWebpackPlugin {
-      "assetJson": undefined,
-      "childCompilationOutputName": undefined,
-      "childCompilerHash": undefined,
-      "hash": undefined,
-      "options": Object {
-        "cache": true,
-        "chunks": "all",
-        "chunksSortMode": "auto",
-        "compile": true,
-        "excludeChunks": Array [],
-        "favicon": false,
-        "filename": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build/index.html",
-        "hash": false,
-        "inject": true,
-        "meta": Object {
-          "description": "A Neat Expo App",
-        },
-        "minify": Object {
-          "collapseWhitespace": true,
-          "keepClosingSlash": true,
-          "minifyCSS": true,
-          "minifyJS": true,
-          "minifyURLs": true,
-          "removeComments": true,
-          "removeEmptyAttributes": true,
-          "removeRedundantAttributes": true,
-          "removeStyleLinkTypeAttributes": true,
-          "useShortDoctype": true,
-        },
-        "showErrors": true,
-        "template": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default/index.html",
-        "templateContent": false,
-        "templateParameters": [Function],
-        "title": "basic",
-        "xhtml": false,
-      },
-      "version": 4,
-    },
-    InterpolateHtmlPlugin {
-      "htmlWebpackPlugin": [Function],
-      "replacements": Object {
-        "LANG_ISO_CODE": "en",
-        "NO_SCRIPT": "<form action=\\"\\" style=\\"background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;\\"><div style=\\"font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;\\"> <p>Oh no! It looks like JavaScript is not enabled in your browser.</p> <p style=\\"margin:20px 0;\\"> <button type=\\"submit\\" style=\\"background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-weight: bold; line-height: 20px; padding: 6px 16px;\\">Reload</button> </p> </div> </form>",
-        "ROOT_ID": "root",
-        "WEB_PUBLIC_URL": "/",
-        "WEB_TITLE": "basic",
-      },
-    },
-    FaviconWebpackPlugin {
-      "favicon": Object {
-        "backgroundColor": "transparent",
-        "resizeMode": "contain",
-        "src": "https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true",
-      },
-      "modifyOptions": Object {},
-      "pwaOptions": Object {
-        "links": Array [],
-        "projectRoot": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
-        "publicPath": "/",
-      },
-    },
-    ApplePwaWebpackPlugin {
-      "icon": Object {
-        "backgroundColor": "transparent",
-        "resizeMode": "contain",
-        "src": "https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true",
-      },
-      "meta": Object {
-        "barStyle": "black-translucent",
-        "isFullScreen": "yes",
-        "isWebAppCapable": "yes",
-        "name": "basic",
-      },
-      "modifyOptions": Object {},
-      "pwaOptions": Object {
-        "links": Array [],
-        "meta": Array [
-          Object {
-            "content": undefined,
-            "name": undefined,
-            "node": <meta />,
-          },
-          Object {
-            "content": "IE=edge",
-            "name": undefined,
-            "node": <meta />,
-          },
-          Object {
-            "content": "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1.00001, viewport-fit=cover",
-            "name": "viewport",
-            "node": <meta />,
-          },
-        ],
-        "projectRoot": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
-        "publicPath": "/",
-      },
-      "startupImage": Object {
-        "backgroundColor": "#ffffff",
-        "resizeMode": "contain",
-        "src": "https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/splash.png?raw=true",
-      },
-    },
-    ChromeIconsWebpackPlugin {
-      "icon": Object {
-        "backgroundColor": "transparent",
-        "resizeMode": "contain",
-        "src": "https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true",
-      },
-      "options": Object {
-        "projectRoot": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
-        "publicPath": "/",
-      },
-    },
-    ModuleNotFoundPlugin {
-      "appPath": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic",
-      "getRelativePath": [Function],
-      "prettierError": [Function],
-      "useYarnCommand": [Function],
-      "yarnLockFile": undefined,
-    },
-    DefinePlugin {
-      "definitions": Object {
-        "__DEV__": false,
-        "process.env": Object {
-          "APP_MANIFEST": "{\\"name\\":\\"basic\\",\\"description\\":\\"A Neat Expo App\\",\\"version\\":\\"1.0.0\\",\\"icon\\":\\"https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true\\",\\"splash\\":{\\"image\\":\\"https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/splash.png?raw=true\\",\\"resizeMode\\":\\"contain\\",\\"backgroundColor\\":\\"#ffffff\\"},\\"web\\":{},\\"slug\\":\\"basic\\",\\"sdkVersion\\":\\"37.0.0\\",\\"platforms\\":[\\"ios\\",\\"android\\"]}",
-          "NODE_ENV": "\\"production\\"",
-          "PUBLIC_URL": "\\"\\"",
-        },
-      },
-    },
-    MiniCssExtractPlugin {
-      "options": Object {
-        "chunkFilename": "static/css/[name].[contenthash:8].chunk.css",
-        "filename": "static/css/[name].[contenthash:8].css",
-      },
-    },
-    ManifestPlugin {
-      "opts": Object {
-        "basePath": "",
-        "fileName": "asset-manifest.json",
-        "filter": [Function],
-        "generate": [Function],
-        "map": null,
-        "publicPath": "/",
-        "seed": null,
-        "serialize": [Function],
-        "sort": null,
-        "transformExtensions": /\\^\\(gz\\|map\\)\\$/i,
-        "writeToFileEmit": false,
-      },
-    },
-    WebpackBar {
-      "handler": [Function],
-      "modulesCount": 500,
-      "options": Object {
-        "color": "green",
-        "name": "Expo Webpack",
-        "reporter": null,
-        "reporters": Array [
-          "fancy",
-        ],
-      },
-      "profile": false,
-      "reporters": Array [
-        FancyReporter {},
-      ],
-      "showActiveModules": true,
-      "showEntries": false,
-      "showModules": true,
-    },
-    CopyPlugin {
-      "options": Object {},
-      "patterns": Array [
-        Object {
-          "from": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/web-default/register-service-worker.js",
-          "to": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-config/e2e/basic/web-build/register-service-worker.js",
-          "transform": [Function],
-        },
-      ],
-    },
-    GenerateSW {
-      "config": Object {
-        "chunks": Array [],
-        "clientsClaim": true,
-        "exclude": Array [
-          /\\\\\\.LICENSE\\$/,
-          /\\\\\\.map\\$/,
-          /asset-manifest\\\\\\.json\\$/,
-          /\\\\\\.js\\\\\\.gz\\$/,
-          /\\(apple-touch-startup-image\\|chrome-icon\\|apple-touch-icon\\)\\.\\*\\\\\\.png\\$/,
-        ],
-        "excludeChunks": Array [],
-        "importScripts": Array [],
-        "importWorkboxFrom": "cdn",
-        "importsDirectory": "",
-        "navigateFallback": "index.html",
-        "navigateFallbackBlacklist": Array [
-          /\\^\\\\/_/,
-          /\\\\/\\[\\^\\\\/\\]\\+\\\\\\.\\[\\^\\\\/\\]\\+\\$/,
-        ],
-        "precacheManifestFilename": "precache-manifest.[manifestHash].js",
-        "runtimeCaching": Array [
-          Object {
-            "handler": "networkFirst",
-            "options": Object {
-              "cacheName": "offlineCache",
-              "expiration": Object {
-                "maxEntries": 200,
-              },
-            },
-            "urlPattern": /\\^https\\?\\.\\*/,
-          },
-        ],
-        "skipWaiting": true,
-        "swDest": "service-worker.js",
-      },
-    },
+    "CleanWebpackPlugin",
+    "CopyPlugin",
+    "HtmlWebpackPlugin",
+    "InterpolateHtmlPlugin",
+    "FaviconWebpackPlugin",
+    "ApplePwaWebpackPlugin",
+    "ChromeIconsWebpackPlugin",
+    "ModuleNotFoundPlugin",
+    "DefinePlugin",
+    "MiniCssExtractPlugin",
+    "ManifestPlugin",
+    "WebpackBar",
+    "CopyPlugin",
+    "GenerateSW",
   ],
   "resolve": Object {
     "alias": Object {
