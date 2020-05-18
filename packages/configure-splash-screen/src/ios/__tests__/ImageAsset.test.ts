@@ -81,7 +81,7 @@ describe('ImageAsset', () => {
       expect(imageSetResult).toEqual(false);
     });
 
-    it(`create per-appearance files while dark mode is enabled`, async () => {
+    it(`creates per-appearance files while dark mode is enabled`, async () => {
       await configureImageAsset(
         iosProjectPath,
         '/assets/background.png',

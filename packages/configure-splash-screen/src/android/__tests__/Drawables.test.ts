@@ -29,7 +29,7 @@ describe('Drawables', () => {
     const filePath = `${androidMainPath}/res/drawable/splashscreen_image.png`;
     const filePathDarkMode = `${androidMainPath}/res/drawable-night/splashscreen_image.png`;
 
-    it('create correct file', async () => {
+    it('creates correct file', async () => {
       await configureDrawables(androidMainPath, '/assets/background.png');
       const received = getDirFromFS(vol.toJSON(), '/app');
       const expected = {
@@ -39,7 +39,7 @@ describe('Drawables', () => {
       expect(received).toEqual(expected);
     });
 
-    it('create correct file for dark mode', async () => {
+    it('creates correct file for dark mode', async () => {
       await configureDrawables(androidMainPath, '/assets/background.png', '/assets/background.png');
       const received = getDirFromFS(vol.toJSON(), '/app');
       const expected = {

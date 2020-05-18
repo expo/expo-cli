@@ -63,7 +63,7 @@ describe('BackgrooundAsset', () => {
       expect(imageResult).toEqual(await getPng1x1FileContent('#2F8825'));
     });
 
-    it(`create per-appearance files while dark mode is enabled`, async () => {
+    it(`creates per-appearance files while dark mode is enabled`, async () => {
       await configureBackgroundAsset(
         iosProjectPath,
         colorString.get('#FEFEFE'),
