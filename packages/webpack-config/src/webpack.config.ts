@@ -288,7 +288,8 @@ export default async function (
     // Fail out on the first error instead of tolerating it.
     bail: isProd,
     devtool,
-    context: __dirname,
+    // TODO(Bacon): Simplify this while ensuring gatsby support continues to work.
+    context: isNative ? env.projectRoot ?? __dirname : __dirname,
     // configures where the build ends up
     output: getOutput(locations, mode, publicPath, env.platform),
     plugins: [
@@ -333,10 +334,10 @@ export default async function (
             meta,
           },
           {
-            name: env.config.web.shortName,
-            isFullScreen: env.config.web.meta.apple.touchFullscreen,
-            isWebAppCapable: env.config.web.meta.apple.mobileWebAppCapable,
-            barStyle: env.config.web.meta.apple.barStyle,
+            name: env.config.web?.shortName,
+            isFullScreen: env.config.web?.meta.apple.touchFullscreen,
+            isWebAppCapable: env.config.web?.meta.apple.mobileWebAppCapable,
+            barStyle: env.config.web?.meta.apple.barStyle,
           },
           ensureSourceAbsolute(getSafariIconConfig(env.config)),
           ensureSourceAbsolute(getSafariStartupImageConfig(env.config))
@@ -471,5 +472,9 @@ export default async function (
     });
   }
 
-  return withNodeMocks(withAlias(webpackConfig, getAliases(env.projectRoot)));
+  if (!isNative) {
+    webpackConfig = withNodeMocks(withAlias(webpackConfig, getAliases(env.projectRoot)));
+  }
+
+  return webpackConfig;
 }
