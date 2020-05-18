@@ -1,34 +1,31 @@
-import { ColorDescriptor } from 'color-string';
 import path from 'path';
 
-import { ResizeMode } from '../constants';
-import configureAndroidManifestXML from './AndroidManifest.xml';
-import configureColorsXML from './Colors.xml';
-import configureDrawableXML from './Drawable.xml';
+import { ResizeMode, Parameters } from '../constants';
+import configureAndroidManifestXml from './AndroidManifest.xml';
+import configureColorsXml from './Colors.xml';
+import configureDrawableXml from './Drawable.xml';
 import configureDrawables from './Drawables';
 import configureMainActivity from './MainActivity';
-import configureStylesXML from './Styles.xml';
+import configureStylesXml from './Styles.xml';
 
 export default async function configureAndroid(
   projectRootPath: string,
   {
-    imagePath,
     resizeMode,
     backgroundColor,
-  }: {
-    imagePath?: string;
-    resizeMode: ResizeMode;
-    backgroundColor: ColorDescriptor;
-  }
+    darkModeBackgroundColor,
+    imagePath,
+    darkModeImagePath,
+  }: Parameters & { resizeMode: ResizeMode }
 ) {
   const androidMainPath = path.resolve(projectRootPath, 'android/app/src/main');
 
   await Promise.all([
-    configureDrawables(androidMainPath, imagePath),
-    configureColorsXML(androidMainPath, backgroundColor),
-    configureDrawableXML(androidMainPath, resizeMode),
-    configureStylesXML(androidMainPath),
-    configureAndroidManifestXML(androidMainPath),
+    configureDrawables(androidMainPath, imagePath, darkModeImagePath),
+    configureColorsXml(androidMainPath, backgroundColor, darkModeBackgroundColor),
+    configureDrawableXml(androidMainPath, resizeMode),
+    configureStylesXml(androidMainPath),
+    configureAndroidManifestXml(androidMainPath),
     configureMainActivity(projectRootPath, resizeMode),
   ]);
 }

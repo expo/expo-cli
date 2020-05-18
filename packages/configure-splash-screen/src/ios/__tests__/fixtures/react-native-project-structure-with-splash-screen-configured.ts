@@ -208,7 +208,7 @@ static void InitializeFlipper(UIApplication *application) {
 <document
   type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB"
   version="3.0"
-  toolsVersion="15705"
+  toolsVersion="16096"
   targetRuntime="iOS.CocoaTouch"
   propertyAccessControl="none"
   useAutolayout="YES"
@@ -218,10 +218,11 @@ static void InitializeFlipper(UIApplication *application) {
   colorMatched="YES"
   initialViewController="EXPO-VIEWCONTROLLER-1"
 >
-  <device id="retina6_1" orientation="portrait" appearance="light"/>
+  <device id="retina5_5" orientation="portrait" appearance="light"/>
   <dependencies>
     <deployment identifier="iOS"/>
-    <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
+    <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
+    <capability name="Safe area layout guides" minToolsVersion="9.0"/>
     <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
   </dependencies>
   <scenes>
@@ -233,29 +234,69 @@ static void InitializeFlipper(UIApplication *application) {
           id="EXPO-VIEWCONTROLLER-1"
           sceneMemberID="viewController"
         >
-          <imageView
+          <view
             key="view"
-            clipsSubviews="YES"
             userInteractionEnabled="NO"
-            contentMode="scaleAspectFit"
-            horizontalHuggingPriority="251"
-            verticalHuggingPriority="251"
-            id="EXPO-IMAGEVIEW-1"
+            contentMode="scaleToFill"
+            insetsLayoutMarginsFromSafeArea="NO"
+            id="EXPO-ContainerView"
+            userLabel="ContainerView"
           >
-            <rect key="frame" x="0.0" y="0.0" width="800" height="1600"/>
+            <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-            <color key="backgroundColor" red="0.8901960784313725" green="0.9490196078431372" blue="0.5725490196078431" alpha="0.22" colorSpace="custom" customColorSpace="sRGB"/>
-          </imageView>
-          <size key="freeformSize" width="800" height="1600"/>
+            <subviews>
+              <imageView
+                userInteractionEnabled="NO"
+                contentMode="scaleAspectFill"
+                horizontalHuggingPriority="251"
+                verticalHuggingPriority="251"
+                insetsLayoutMarginsFromSafeArea="NO"
+                image="SplashScreenBackground"
+                translatesAutoresizingMaskIntoConstraints="NO"
+                id="EXPO-SplashScreenBackground"
+                userLabel="SplashScreenBackground"
+              >
+                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+              </imageView>
+            </subviews>
+            <constraints>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="1gX-mQ-vu6"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="6tX-OG-Sck"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="ABX-8g-7v4"/>
+              <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="jkI-2V-eW5"/>
+            </constraints>
+            <viewLayoutGuide key="safeArea" id="Rmq-lb-GrQ"/>
+          </view>
         </viewController>
         <placeholder placeholderIdentifier="IBFirstResponder" id="EXPO-PLACEHOLDER-1" userLabel="First Responder" sceneMemberID="firstResponder"/>
       </objects>
-      <point key="canvasLocation" x="141" y="130"/>
+      <point key="canvasLocation" x="140.625" y="129.4921875"/>
     </scene>
   </scenes>
   <resources>
-    <image name="SplashScreen" width="600" height="1200"/>
+    <image name="SplashScreenBackground" width="1" height="1"/>
   </resources>
 </document>
 `,
+  'ios/ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/Contents.json': `{
+  "images": [
+    {
+      "idiom": "universal",
+      "filename": "background.png",
+      "scale": "1x"
+    },
+    {
+      "idiom": "universal",
+      "scale": "2x"
+    },
+    {
+      "idiom": "universal",
+      "scale": "3x"
+    }
+  ],
+  "info": {
+    "version": 1,
+    "author": "xcode"
+  }
+}`,
 };

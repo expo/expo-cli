@@ -1,21 +1,13 @@
 #!/usr/bin/env node
 
 import program from 'commander';
-import colorString, { ColorDescriptor } from 'color-string';
+import colorString from 'color-string';
 import fs from 'fs-extra';
 import path from 'path';
 
 import configureAndroid from './android';
-import { ResizeMode, Platform } from './constants';
+import { ResizeMode, Platform, Parameters } from './constants';
 import configureIos from './ios';
-
-/**
- * These arguments have to be provided by the user or omitted if possible.
- */
-interface Arguments {
-  backgroundColor: ColorDescriptor;
-  imagePath?: string;
-}
 
 /**
  * These might be optionally provided by the user. There are default values for them.
@@ -25,7 +17,7 @@ interface Options {
   platform: Platform;
 }
 
-async function action(configuration: Arguments & Options) {
+async function action(configuration: Parameters & Options) {
   const { platform, ...restParams } = configuration;
   const rootDir = path.resolve();
   switch (platform) {
@@ -53,49 +45,125 @@ function logErrorAndExit(errorMessage: string): never {
 }
 
 /**
+ * @param imagePath Path to a file.
+ * @param parameterName Parameter name to log in error when file is not valid.
+ * @returns Absolute path to the valid image file.
+ */
+async function validateImagePath(imagePath: string, parameterName: string): Promise<string> {
+  const resolvedImagePath = path.resolve(imagePath);
+  // check if `imagePath` exists
+  if (!(await fs.pathExists(resolvedImagePath))) {
+    logErrorAndExit(
+      `error: Invalid path '${imagePath}' for argument '${parameterName}'. File does not exist.`
+    );
+  }
+
+  // check if `imagePath` is a readable .png file
+  if (path.extname(resolvedImagePath) !== '.png') {
+    logErrorAndExit(
+      `error: Invalid path '${imagePath}' for argument '${parameterName}'. File is not a .png file.`
+    );
+  }
+  return resolvedImagePath;
+}
+
+/**
  * Ensures following semantic requirements are met:
- * @param configuration.imagePath path that points to a valid .png file
- * @param configuration.resizeMode ResizeMode.NATIVE is selected only with Platform.ANDROID
- * @param configuration.backgroundColor is valid hex #RGB/#RGBA color
+ * - `resizeMode = ResizeMode.NATIVE` is selected only with `platform = Platform.ANDROID`
+ * - `backgroundColor` is valid css-formatted color
+ * - `imagePathOrDarkModeBackgroundColor` is a path to a valid .png file (and then this script assumes no dark mode) or a valid css-formatted color for dark mode (and then this script assumes dark mode is supported)
+ * - `imagePath` is present only if darkMode is enabled and then it is a path to valid .png file
+ * - `darkModeImagePath` is present only if darkMode is enabled and then it is a path to valid .png file for dark mode
  */
 async function validateConfiguration(
-  configuration: Options & Omit<Arguments, 'backgroundColor'> & { backgroundColor: string }
-): never | Promise<Options & Arguments> {
-  const { resizeMode, imagePath: imagePathString, platform } = configuration;
+  configuration: Options & {
+    backgroundColor: string;
+    imagePathOrDarkModeBackgroundColor?: string;
+    imagePath?: string;
+    darkModeImagePath?: string;
+  }
+): Promise<Options & Parameters> {
+  const {
+    resizeMode,
+    platform,
+    backgroundColor,
+    imagePathOrDarkModeBackgroundColor,
+    imagePath,
+    darkModeImagePath,
+  } = configuration;
 
   // check for `native` resizeMode being selected only for `android` platform
   if (resizeMode === ResizeMode.NATIVE && platform !== Platform.ANDROID) {
     logErrorAndExit(`error: Invalid resizeMode '${resizeMode}' for platform '${platform}'.`);
   }
 
-  const backgroundColor = colorString.get(configuration.backgroundColor);
-  if (!backgroundColor) {
-    logErrorAndExit(
-      `error: Invalid value '${configuration.backgroundColor}' for argument 'backgroundColor'.`
+  const parsedBackgroundColor = colorString.get(backgroundColor);
+  if (!parsedBackgroundColor) {
+    logErrorAndExit(`error: Invalid value '${backgroundColor}' for argument 'backgroundColor'.`);
+  }
+
+  // only backgroundColor is provided
+  if (!imagePathOrDarkModeBackgroundColor) {
+    return {
+      resizeMode,
+      platform,
+      backgroundColor: parsedBackgroundColor,
+    };
+  }
+
+  const parsedDarkModeBackgroundColor = colorString.get(imagePathOrDarkModeBackgroundColor);
+  if (!parsedDarkModeBackgroundColor) {
+    // imagePathOrDarkModeBackgroundColor should be a path to an image file
+    const resolvedImagePath = await validateImagePath(
+      imagePathOrDarkModeBackgroundColor,
+      'imagePathOrDarkModeBackgroundColor'
     );
-  }
 
-  if (imagePathString) {
-    const imagePath = path.resolve(imagePathString);
-    // check if `imagePath` exists
-    if (!(await fs.pathExists(imagePath))) {
+    // check if there're no other arguments passed at this point
+    if (imagePath) {
       logErrorAndExit(
-        `error: Invalid path '${imagePathString}' for argument 'imagePath'. File does not exist. Provide path to a valid .png file.`
+        `error: As the second argument is recognized as a path to an image file, dark mode is not not supported.`
       );
     }
 
-    // check if `imagePath` is a readable .png file
-    if (path.extname(imagePath) !== '.png') {
-      logErrorAndExit(
-        `error: Invalid path '${imagePathString}' for argument 'imagePath'. File is not a .png file. Provide path to a valid .png file.`
-      );
-    }
+    return {
+      resizeMode,
+      platform,
+      backgroundColor: parsedBackgroundColor,
+      imagePath: resolvedImagePath,
+    };
   }
 
-  return {
-    ...configuration,
-    backgroundColor,
+  if (!imagePath) {
+    return {
+      resizeMode,
+      platform,
+      backgroundColor: parsedBackgroundColor,
+      darkModeBackgroundColor: parsedDarkModeBackgroundColor,
+    };
+  }
+
+  const resolvedImagePath = await validateImagePath(imagePath, 'imagePath');
+  const result = {
+    resizeMode,
+    platform,
+    backgroundColor: parsedBackgroundColor,
+    darkModeBackgroundColor: parsedDarkModeBackgroundColor,
+    imagePath: resolvedImagePath,
   };
+
+  if (darkModeImagePath) {
+    const resolvedDarkModeImagePath = await validateImagePath(
+      darkModeImagePath,
+      'darkModeImagePath'
+    );
+    return {
+      ...result,
+      darkModeImagePath: resolvedDarkModeImagePath,
+    };
+  }
+
+  return result;
 }
 
 function validateResizeMode(userInput: string) {
@@ -113,12 +181,20 @@ function validatePlatform(userInput: string) {
 }
 
 program
-  .arguments('<backgroundColor> [imagePath]')
+  .arguments(
+    '<backgroundColor> [imagePathOrDarkModeBackgroundColor] [imagePath] [darkModeImagePath]'
+  )
   .description(
-    'Idempotent operation that configures native splash screens using passed .png file that would be used in native splash screen.',
+    'Idempotent operation that configures native splash screens using provided backgroundColor and optional .png file. Supports light and dark modes configuration. Dark mode is supported only on iOS 13+ and Android 10+.',
     {
-      backgroundColor: `Valid css-formatted color (hex (#RRGGBB[AA]), rgb[a], hsl[a], named color (https://drafts.csswg.org/css-color/#named-colors)) that would be used as background color for native splash screen view.`,
-      imagePath: `Path to a valid .png image.`,
+      backgroundColor:
+        'Valid css-formatted color (hex (#RRGGBB[AA]), rgb[a], hsl[a], named color (https://drafts.csswg.org/css-color/#named-colors)) that would be used as the background color for native splash screen view.',
+      imagePathOrDarkModeBackgroundColor:
+        'Path to a valid .png image or valid css-formatted color (see lightBackgroundColor supported formats). When script detects that this argument is a path to a .png file, it assumes dark mode is not supported. Otherwise this argument is treated as a background color for native splash screen in dark mode.',
+      imagePath:
+        'Path to valid .png image that will be displayed in native splash screen. This argument is available only if dark mode support is detected.',
+      darkModeImagePath:
+        'Path to valid .png image that will be displayed in native splash screen in dark mode only. If this argument is not specified then image from imagePath will be used in dark mode as well. This argument is available only if dark mode support is detected.',
     }
   )
   .allowUnknownOption(false)
@@ -139,10 +215,19 @@ program
   .action(
     async (
       backgroundColor: string,
+      imagePathOrDarkModeBackgroundColor: string | undefined,
       imagePath: string | undefined,
+      darkModeImagePath: string | undefined,
       { resizeMode, platform }: program.Command & Options
     ) => {
-      const configuration = { imagePath, backgroundColor, resizeMode, platform };
+      const configuration = {
+        backgroundColor,
+        imagePathOrDarkModeBackgroundColor,
+        imagePath,
+        darkModeImagePath,
+        resizeMode,
+        platform,
+      };
       const validatedConfiguration = await validateConfiguration(configuration);
       return action(validatedConfiguration);
     }

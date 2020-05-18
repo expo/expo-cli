@@ -11,7 +11,7 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "prepare": "yarn run clean && yarn run build",
-    "clean": "rimraf build ./tsconfig.tsbuildinfo",
+    "clean": "rimraf bin build ./tsconfig.tsbuildinfo",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx,.d.ts src",
     "test": "jest",
     "test:watch": "jest --watch"
@@ -44,6 +44,7 @@
     "core-js": "^3.6.5",
     "fs-extra": "^9.0.0",
     "inquirer": "^7.1.0",
+    "pngjs": "^5.0.0",
     "xcode": "^3.0.0",
     "xml-js": "^1.6.11"
   },

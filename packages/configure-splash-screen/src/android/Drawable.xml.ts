@@ -10,7 +10,7 @@ import {
   ExpectedElementType,
 } from '../xml-manipulation';
 
-const DRAWABLE_XML_FILE_PATH = `./res/drawable/splashscreen.xml`;
+const DRAWABLE_XML_FILE_PATH = './res/drawable/splashscreen.xml';
 
 function configureDrawable(xml: Element, resizeMode: ResizeMode): Element {
   const expected: ExpectedElementsType = {
@@ -60,7 +60,6 @@ function configureDrawable(xml: Element, resizeMode: ResizeMode): Element {
 
 /**
  * @param androidMainPath Path to the main directory containing code and resources in Android project. In general that would be `android/app/src/main`.
- * @param resizeMode
  */
 export default async function configureDrawableXml(
   androidMainPath: string,

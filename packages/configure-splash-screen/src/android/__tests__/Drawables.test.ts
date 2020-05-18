@@ -1,25 +1,19 @@
-import { vol, fs } from 'memfs';
+import { vol } from 'memfs';
 import * as path from 'path';
 
-import { getDirFromFS } from '../../__tests__/helpers';
+import { getDirFromFS, readFileFromActualFS } from '../../__tests__/helpers';
 import configureDrawables from '../Drawables';
 import reactNativeProject from './fixtures/react-native-project-structure';
 
 // in `__mocks__/fs.ts` memfs is being used as a mocking library
 jest.mock('fs');
-const actualFs = jest.requireActual('fs') as typeof fs;
 
 describe('Drawables', () => {
   describe('configureDrawables', () => {
     const backgroundImagePath = path.resolve(__dirname, '../../__tests__/fixtures/background.png');
     let backgroundImage: string | Buffer = '';
     beforeAll(async () => {
-      backgroundImage = await new Promise<Buffer | string>((resolve, reject) =>
-        actualFs.readFile(backgroundImagePath, 'utf-8', (error, data) => {
-          if (error) reject(error);
-          else resolve(data);
-        })
-      );
+      backgroundImage = await readFileFromActualFS(backgroundImagePath);
     });
 
     beforeEach(() => {
@@ -33,13 +27,25 @@ describe('Drawables', () => {
 
     const androidMainPath = '/app/android/app/src/main';
     const filePath = `${androidMainPath}/res/drawable/splashscreen_image.png`;
+    const filePathDarkMode = `${androidMainPath}/res/drawable-night/splashscreen_image.png`;
 
-    it('create correct file', async () => {
+    it('creates correct file', async () => {
       await configureDrawables(androidMainPath, '/assets/background.png');
       const received = getDirFromFS(vol.toJSON(), '/app');
       const expected = {
         ...reactNativeProject,
         [filePath.replace('/app/', '')]: backgroundImage,
+      };
+      expect(received).toEqual(expected);
+    });
+
+    it('creates correct file for dark mode', async () => {
+      await configureDrawables(androidMainPath, '/assets/background.png', '/assets/background.png');
+      const received = getDirFromFS(vol.toJSON(), '/app');
+      const expected = {
+        ...reactNativeProject,
+        [filePath.replace('/app/', '')]: backgroundImage,
+        [filePathDarkMode.replace('/app/', '')]: backgroundImage,
       };
       expect(received).toEqual(expected);
     });
@@ -52,6 +58,12 @@ describe('Drawables', () => {
         'drawable-xhdpi',
         'drawable-xxhdpi',
         'drawable-xxxhdpi',
+        'drawable-night',
+        'drawable-night-mdpi',
+        'drawable-night-hdpi',
+        'drawable-night-xhdpi',
+        'drawable-night-xxhdpi',
+        'drawable-night-xxxhdpi',
       ]) {
         const filePath = path.resolve(androidMainPath, 'res', dir, 'splashscreen_image.png');
         vol.mkdirpSync(path.dirname(filePath));
