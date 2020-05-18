@@ -179,37 +179,54 @@ export default async function (
     }
   );
 
-  const appEntry: string[] = [];
+  let appEntry: string[] = [];
 
   // In solutions like Gatsby the main entry point doesn't need to be known.
   if (locations.appMain) {
     appEntry.push(locations.appMain);
   }
 
-  // Add a loose requirement on the ResizeObserver polyfill if it's installed...
-  // Avoid `withEntry` as we don't need so much complexity with this config.
-  const resizeObserverPolyfill = projectHasModule(
-    'resize-observer-polyfill/dist/ResizeObserver.global',
-    env.projectRoot,
-    config
-  );
-  if (resizeObserverPolyfill) {
-    appEntry.unshift(resizeObserverPolyfill);
-  }
+  if (isNative) {
+    const reactNativeModulePath = projectHasModule(
+      'react-native',
+      env.projectRoot,
+      env.config ?? {}
+    );
+    if (reactNativeModulePath) {
+      appEntry = [
+        path.join(reactNativeModulePath, 'Libraries/polyfills/console.js'),
+        path.join(reactNativeModulePath, 'Libraries/polyfills/error-guard.js'),
+        path.join(reactNativeModulePath, 'Libraries/polyfills/Object.es7.js'),
+        path.join(reactNativeModulePath, 'Libraries/Core/InitializeCore.js'),
+        ...appEntry,
+      ];
+    }
+  } else {
+    // Add a loose requirement on the ResizeObserver polyfill if it's installed...
+    // Avoid `withEntry` as we don't need so much complexity with this config.
+    const resizeObserverPolyfill = projectHasModule(
+      'resize-observer-polyfill/dist/ResizeObserver.global',
+      env.projectRoot,
+      config
+    );
+    if (resizeObserverPolyfill) {
+      appEntry.unshift(resizeObserverPolyfill);
+    }
 
-  if (isDev) {
-    // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
-    // Include an alternative client for WebpackDevServer. A client's job is to
-    // connect to WebpackDevServer by a socket and get notified about changes.
-    // When you save a file, the client will either apply hot updates (in case
-    // of CSS changes), or refresh the page (in case of JS changes). When you
-    // make a syntax error, this client will display a syntax error overlay.
-    // Note: instead of the default WebpackDevServer client, we use a custom one
-    // to bring better experience for Create React App users. You can replace
-    // the line below with these two lines if you prefer the stock client:
-    // require.resolve('webpack-dev-server/client') + '?/',
-    // require.resolve('webpack/hot/dev-server'),
-    appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
+    if (isDev) {
+      // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
+      // Include an alternative client for WebpackDevServer. A client's job is to
+      // connect to WebpackDevServer by a socket and get notified about changes.
+      // When you save a file, the client will either apply hot updates (in case
+      // of CSS changes), or refresh the page (in case of JS changes). When you
+      // make a syntax error, this client will display a syntax error overlay.
+      // Note: instead of the default WebpackDevServer client, we use a custom one
+      // to bring better experience for Create React App users. You can replace
+      // the line below with these two lines if you prefer the stock client:
+      // require.resolve('webpack-dev-server/client') + '?/',
+      // require.resolve('webpack/hot/dev-server'),
+      appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
+    }
   }
 
   let generatePWAImageAssets: boolean = !isNative && !isDev;
