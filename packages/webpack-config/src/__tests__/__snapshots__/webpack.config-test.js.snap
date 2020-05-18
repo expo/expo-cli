@@ -3,12 +3,12 @@
 exports[`ios ios development 1`] = `
 Object {
   "bail": false,
-  "context": "e2e/basic",
+  "context": "packages/webpack-config/e2e/basic",
   "devServer": Object {
     "before": [Function],
     "clientLogLevel": "none",
     "compress": true,
-    "contentBase": "web-default",
+    "contentBase": "packages/webpack-config/web-default",
     "disableHostCheck": true,
     "headers": Object {
       "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization",
@@ -41,16 +41,16 @@ Object {
       Object {
         "oneOf": Array [
           Object {
-            "exclude": "web-default",
+            "exclude": "packages/webpack-config/web-default",
             "test": /\\\\\\.html\\$/,
             "use": Array [
-              "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/html-loader/index.js",
+              "node_modules/html-loader/index.js",
             ],
           },
           Object {
             "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
             "use": Object {
-              "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/url-loader/dist/cjs.js",
+              "loader": "node_modules/url-loader/dist/cjs.js",
               "options": Object {
                 "limit": 1000,
                 "name": "static/media/[name].[hash:8].[ext]",
@@ -61,11 +61,11 @@ Object {
             "include": [Function],
             "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
             "use": Object {
-              "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/babel-loader/lib/index.js",
+              "loader": "node_modules/babel-loader/lib/index.js",
               "options": Object {
                 "babelrc": false,
                 "cacheCompression": false,
-                "cacheDirectory": "e2e/basic/.expo/ios/cache/development/babel-loader",
+                "cacheDirectory": "packages/webpack-config/e2e/basic/.expo/ios/cache/development/babel-loader",
                 "cacheIdentifier": "custom-value-to-skip-babel-config-error",
                 "caller": Object {
                   "__dangerous_rule_id": "expo-babel-loader",
@@ -76,7 +76,7 @@ Object {
                 "compact": false,
                 "configFile": true,
                 "inputSourceMap": true,
-                "root": "e2e/basic",
+                "root": "packages/webpack-config/e2e/basic",
                 "sourceMaps": true,
                 "sourceType": "unambiguous",
               },
@@ -85,19 +85,19 @@ Object {
           Object {
             "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
             "use": Object {
-              "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/worker-loader/dist/cjs.js",
+              "loader": "node_modules/worker-loader/dist/cjs.js",
             },
           },
           Object {
             "include": Array [
-              "e2e/basic",
-              "e2e/basic/node_modules/react-native-vector-icons",
-              "e2e/basic/node_modules/@expo/vector-icons",
+              "packages/webpack-config/e2e/basic",
+              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
+              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
             ],
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
               Object {
-                "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/url-loader/dist/cjs.js",
+                "loader": "node_modules/url-loader/dist/cjs.js",
                 "options": Object {
                   "limit": 50000,
                   "name": "./fonts/[name].[ext]",
@@ -108,8 +108,8 @@ Object {
           Object {
             "test": /\\\\\\.\\(css\\)\\$/,
             "use": Array [
-              "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/style-loader/index.js",
-              "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/css-loader/dist/cjs.js",
+              "node_modules/style-loader/index.js",
+              "node_modules/css-loader/dist/cjs.js",
             ],
           },
           Object {
@@ -118,7 +118,7 @@ Object {
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "node_modules/file-loader/dist/cjs.js",
+            "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
             "options": Object {
               "name": "static/media/[name].[hash:8].[ext]",
             },
@@ -133,7 +133,7 @@ Object {
     "devtoolModuleFilenameTemplate": [Function],
     "filename": "index.bundle",
     "globalObject": "this",
-    "path": "e2e/basic/web-build",
+    "path": "packages/webpack-config/e2e/basic/web-build",
     "pathinfo": true,
     "publicPath": "/",
   },
@@ -154,7 +154,7 @@ Object {
         "compile": true,
         "excludeChunks": Array [],
         "favicon": false,
-        "filename": "e2e/basic/web-build/index.html",
+        "filename": "packages/webpack-config/e2e/basic/web-build/index.html",
         "hash": false,
         "inject": true,
         "meta": Object {
@@ -162,7 +162,7 @@ Object {
         },
         "minify": false,
         "showErrors": true,
-        "template": "web-default/index.html",
+        "template": "packages/webpack-config/web-default/index.html",
         "templateContent": false,
         "templateParameters": [Function],
         "title": "basic",
@@ -189,12 +189,12 @@ Object {
       "modifyOptions": Object {},
       "pwaOptions": Object {
         "links": Array [],
-        "projectRoot": "e2e/basic",
+        "projectRoot": "packages/webpack-config/e2e/basic",
         "publicPath": "/",
       },
     },
     Object {
-      "appPath": "e2e/basic",
+      "appPath": "packages/webpack-config/e2e/basic",
       "getRelativePath": [Function],
       "prettierError": [Function],
       "useYarnCommand": [Function],
@@ -222,7 +222,7 @@ Object {
       "requestTimeout": 10000,
     },
     Object {
-      "nodeModulesPath": "e2e/basic/node_modules",
+      "nodeModulesPath": "packages/webpack-config/e2e/basic/node_modules",
     },
     Object {
       "opts": Object {
@@ -277,8 +277,8 @@ Object {
       "options": Object {},
       "patterns": Array [
         Object {
-          "from": "web-default/register-service-worker.js",
-          "to": "e2e/basic/web-build/register-service-worker.js",
+          "from": "packages/webpack-config/web-default/register-service-worker.js",
+          "to": "packages/webpack-config/e2e/basic/web-build/register-service-worker.js",
           "transform": [Function],
         },
       ],
@@ -338,7 +338,7 @@ Object {
 exports[`ios ios production 1`] = `
 Object {
   "bail": true,
-  "context": "e2e/basic",
+  "context": "packages/webpack-config/e2e/basic",
   "devtool": false,
   "entry": [Function],
   "mode": "production",
@@ -352,16 +352,16 @@ Object {
       Object {
         "oneOf": Array [
           Object {
-            "exclude": "web-default",
+            "exclude": "packages/webpack-config/web-default",
             "test": /\\\\\\.html\\$/,
             "use": Array [
-              "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/html-loader/index.js",
+              "node_modules/html-loader/index.js",
             ],
           },
           Object {
             "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
             "use": Object {
-              "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/url-loader/dist/cjs.js",
+              "loader": "node_modules/url-loader/dist/cjs.js",
               "options": Object {
                 "limit": 1000,
                 "name": "static/media/[name].[hash:8].[ext]",
@@ -372,11 +372,11 @@ Object {
             "include": [Function],
             "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
             "use": Object {
-              "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/babel-loader/lib/index.js",
+              "loader": "node_modules/babel-loader/lib/index.js",
               "options": Object {
                 "babelrc": false,
                 "cacheCompression": false,
-                "cacheDirectory": "e2e/basic/.expo/ios/cache/production/babel-loader",
+                "cacheDirectory": "packages/webpack-config/e2e/basic/.expo/ios/cache/production/babel-loader",
                 "cacheIdentifier": "custom-value-to-skip-babel-config-error",
                 "caller": Object {
                   "__dangerous_rule_id": "expo-babel-loader",
@@ -387,7 +387,7 @@ Object {
                 "compact": true,
                 "configFile": true,
                 "inputSourceMap": true,
-                "root": "e2e/basic",
+                "root": "packages/webpack-config/e2e/basic",
                 "sourceMaps": true,
                 "sourceType": "unambiguous",
               },
@@ -396,19 +396,19 @@ Object {
           Object {
             "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
             "use": Object {
-              "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/worker-loader/dist/cjs.js",
+              "loader": "node_modules/worker-loader/dist/cjs.js",
             },
           },
           Object {
             "include": Array [
-              "e2e/basic",
-              "e2e/basic/node_modules/react-native-vector-icons",
-              "e2e/basic/node_modules/@expo/vector-icons",
+              "packages/webpack-config/e2e/basic",
+              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
+              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
             ],
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
               Object {
-                "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/url-loader/dist/cjs.js",
+                "loader": "node_modules/url-loader/dist/cjs.js",
                 "options": Object {
                   "limit": 50000,
                   "name": "./fonts/[name].[ext]",
@@ -419,8 +419,8 @@ Object {
           Object {
             "test": /\\\\\\.\\(css\\)\\$/,
             "use": Array [
-              "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/style-loader/index.js",
-              "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/css-loader/dist/cjs.js",
+              "node_modules/style-loader/index.js",
+              "node_modules/css-loader/dist/cjs.js",
             ],
           },
           Object {
@@ -429,7 +429,7 @@ Object {
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "node_modules/file-loader/dist/cjs.js",
+            "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
             "options": Object {
               "name": "static/media/[name].[hash:8].[ext]",
             },
@@ -523,7 +523,7 @@ Object {
     "devtoolModuleFilenameTemplate": [Function],
     "filename": "index.bundle",
     "globalObject": "this",
-    "path": "e2e/basic/web-build",
+    "path": "packages/webpack-config/e2e/basic/web-build",
     "publicPath": "/",
   },
   "performance": Object {
@@ -535,7 +535,7 @@ Object {
       "apply": [Function],
       "cleanAfterEveryBuildPatterns": Array [],
       "cleanOnceBeforeBuildPatterns": Array [
-        "e2e/basic/web-build",
+        "packages/webpack-config/e2e/basic/web-build",
       ],
       "cleanStaleWebpackAssets": true,
       "currentAssets": Array [],
@@ -553,7 +553,7 @@ Object {
       "options": Object {},
       "patterns": Array [
         Object {
-          "from": "web-default",
+          "from": "packages/webpack-config/web-default",
           "ignore": Array [
             "expo-service-worker.js",
             "serve.json",
@@ -561,15 +561,15 @@ Object {
             "icon.png",
             "register-service-worker.js",
           ],
-          "to": "e2e/basic/web-build",
+          "to": "packages/webpack-config/e2e/basic/web-build",
         },
         Object {
-          "from": "web-default/serve.json",
-          "to": "e2e/basic/web-build/serve.json",
+          "from": "packages/webpack-config/web-default/serve.json",
+          "to": "packages/webpack-config/e2e/basic/web-build/serve.json",
         },
         Object {
-          "from": "web-default/expo-service-worker.js",
-          "to": "e2e/basic/web-build/expo-service-worker.js",
+          "from": "packages/webpack-config/web-default/expo-service-worker.js",
+          "to": "packages/webpack-config/e2e/basic/web-build/expo-service-worker.js",
         },
       ],
     },
@@ -585,7 +585,7 @@ Object {
         "compile": true,
         "excludeChunks": Array [],
         "favicon": false,
-        "filename": "e2e/basic/web-build/index.html",
+        "filename": "packages/webpack-config/e2e/basic/web-build/index.html",
         "hash": false,
         "inject": true,
         "meta": Object {
@@ -604,7 +604,7 @@ Object {
           "useShortDoctype": true,
         },
         "showErrors": true,
-        "template": "web-default/index.html",
+        "template": "packages/webpack-config/web-default/index.html",
         "templateContent": false,
         "templateParameters": [Function],
         "title": "basic",
@@ -631,12 +631,12 @@ Object {
       "modifyOptions": Object {},
       "pwaOptions": Object {
         "links": Array [],
-        "projectRoot": "e2e/basic",
+        "projectRoot": "packages/webpack-config/e2e/basic",
         "publicPath": "/",
       },
     },
     Object {
-      "appPath": "e2e/basic",
+      "appPath": "packages/webpack-config/e2e/basic",
       "getRelativePath": [Function],
       "prettierError": [Function],
       "useYarnCommand": [Function],
@@ -714,8 +714,8 @@ Object {
       "options": Object {},
       "patterns": Array [
         Object {
-          "from": "web-default/register-service-worker.js",
-          "to": "e2e/basic/web-build/register-service-worker.js",
+          "from": "packages/webpack-config/web-default/register-service-worker.js",
+          "to": "packages/webpack-config/e2e/basic/web-build/register-service-worker.js",
           "transform": [Function],
         },
       ],
@@ -812,12 +812,12 @@ Object {
 exports[`web web development 1`] = `
 Object {
   "bail": false,
-  "context": "src",
+  "context": "packages/webpack-config/src",
   "devServer": Object {
     "before": [Function],
     "clientLogLevel": "none",
     "compress": true,
-    "contentBase": "web-default",
+    "contentBase": "packages/webpack-config/web-default",
     "disableHostCheck": true,
     "headers": Object {
       "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization",
@@ -850,16 +850,16 @@ Object {
       Object {
         "oneOf": Array [
           Object {
-            "exclude": "web-default",
+            "exclude": "packages/webpack-config/web-default",
             "test": /\\\\\\.html\\$/,
             "use": Array [
-              "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/html-loader/index.js",
+              "node_modules/html-loader/index.js",
             ],
           },
           Object {
             "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
             "use": Object {
-              "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/url-loader/dist/cjs.js",
+              "loader": "node_modules/url-loader/dist/cjs.js",
               "options": Object {
                 "limit": 1000,
                 "name": "static/media/[name].[hash:8].[ext]",
@@ -870,11 +870,11 @@ Object {
             "include": [Function],
             "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
             "use": Object {
-              "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/babel-loader/lib/index.js",
+              "loader": "node_modules/babel-loader/lib/index.js",
               "options": Object {
                 "babelrc": false,
                 "cacheCompression": false,
-                "cacheDirectory": "e2e/basic/.expo/web/cache/development/babel-loader",
+                "cacheDirectory": "packages/webpack-config/e2e/basic/.expo/web/cache/development/babel-loader",
                 "cacheIdentifier": "custom-value-to-skip-babel-config-error",
                 "caller": Object {
                   "__dangerous_rule_id": "expo-babel-loader",
@@ -885,7 +885,7 @@ Object {
                 "compact": false,
                 "configFile": true,
                 "inputSourceMap": true,
-                "root": "e2e/basic",
+                "root": "packages/webpack-config/e2e/basic",
                 "sourceMaps": true,
                 "sourceType": "unambiguous",
               },
@@ -894,19 +894,19 @@ Object {
           Object {
             "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
             "use": Object {
-              "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/worker-loader/dist/cjs.js",
+              "loader": "node_modules/worker-loader/dist/cjs.js",
             },
           },
           Object {
             "include": Array [
-              "e2e/basic",
-              "e2e/basic/node_modules/react-native-vector-icons",
-              "e2e/basic/node_modules/@expo/vector-icons",
+              "packages/webpack-config/e2e/basic",
+              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
+              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
             ],
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
               Object {
-                "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/url-loader/dist/cjs.js",
+                "loader": "node_modules/url-loader/dist/cjs.js",
                 "options": Object {
                   "limit": 50000,
                   "name": "./fonts/[name].[ext]",
@@ -917,8 +917,8 @@ Object {
           Object {
             "test": /\\\\\\.\\(css\\)\\$/,
             "use": Array [
-              "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/style-loader/index.js",
-              "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/css-loader/dist/cjs.js",
+              "node_modules/style-loader/index.js",
+              "node_modules/css-loader/dist/cjs.js",
             ],
           },
           Object {
@@ -927,7 +927,7 @@ Object {
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "node_modules/file-loader/dist/cjs.js",
+            "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
             "options": Object {
               "name": "static/media/[name].[hash:8].[ext]",
             },
@@ -952,7 +952,7 @@ Object {
     "devtoolModuleFilenameTemplate": [Function],
     "filename": "static/js/bundle.js",
     "globalObject": "this",
-    "path": "e2e/basic/web-build",
+    "path": "packages/webpack-config/e2e/basic/web-build",
     "pathinfo": true,
     "publicPath": "/",
   },
@@ -973,7 +973,7 @@ Object {
         "compile": true,
         "excludeChunks": Array [],
         "favicon": false,
-        "filename": "e2e/basic/web-build/index.html",
+        "filename": "packages/webpack-config/e2e/basic/web-build/index.html",
         "hash": false,
         "inject": true,
         "meta": Object {
@@ -981,7 +981,7 @@ Object {
         },
         "minify": false,
         "showErrors": true,
-        "template": "web-default/index.html",
+        "template": "packages/webpack-config/web-default/index.html",
         "templateContent": false,
         "templateParameters": [Function],
         "title": "basic",
@@ -1008,12 +1008,12 @@ Object {
       "modifyOptions": Object {},
       "pwaOptions": Object {
         "links": Array [],
-        "projectRoot": "e2e/basic",
+        "projectRoot": "packages/webpack-config/e2e/basic",
         "publicPath": "/",
       },
     },
     Object {
-      "appPath": "e2e/basic",
+      "appPath": "packages/webpack-config/e2e/basic",
       "getRelativePath": [Function],
       "prettierError": [Function],
       "useYarnCommand": [Function],
@@ -1036,7 +1036,7 @@ Object {
       "requestTimeout": 10000,
     },
     Object {
-      "nodeModulesPath": "e2e/basic/node_modules",
+      "nodeModulesPath": "packages/webpack-config/e2e/basic/node_modules",
     },
     Object {
       "opts": Object {
@@ -1076,8 +1076,8 @@ Object {
       "options": Object {},
       "patterns": Array [
         Object {
-          "from": "web-default/register-service-worker.js",
-          "to": "e2e/basic/web-build/register-service-worker.js",
+          "from": "packages/webpack-config/web-default/register-service-worker.js",
+          "to": "packages/webpack-config/e2e/basic/web-build/register-service-worker.js",
           "transform": [Function],
         },
       ],
@@ -1142,7 +1142,7 @@ Object {
 exports[`web web production 1`] = `
 Object {
   "bail": true,
-  "context": "src",
+  "context": "packages/webpack-config/src",
   "devtool": "source-map",
   "entry": [Function],
   "mode": "production",
@@ -1156,16 +1156,16 @@ Object {
       Object {
         "oneOf": Array [
           Object {
-            "exclude": "web-default",
+            "exclude": "packages/webpack-config/web-default",
             "test": /\\\\\\.html\\$/,
             "use": Array [
-              "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/html-loader/index.js",
+              "node_modules/html-loader/index.js",
             ],
           },
           Object {
             "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
             "use": Object {
-              "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/url-loader/dist/cjs.js",
+              "loader": "node_modules/url-loader/dist/cjs.js",
               "options": Object {
                 "limit": 1000,
                 "name": "static/media/[name].[hash:8].[ext]",
@@ -1176,11 +1176,11 @@ Object {
             "include": [Function],
             "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
             "use": Object {
-              "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/babel-loader/lib/index.js",
+              "loader": "node_modules/babel-loader/lib/index.js",
               "options": Object {
                 "babelrc": false,
                 "cacheCompression": false,
-                "cacheDirectory": "e2e/basic/.expo/web/cache/production/babel-loader",
+                "cacheDirectory": "packages/webpack-config/e2e/basic/.expo/web/cache/production/babel-loader",
                 "cacheIdentifier": "custom-value-to-skip-babel-config-error",
                 "caller": Object {
                   "__dangerous_rule_id": "expo-babel-loader",
@@ -1191,7 +1191,7 @@ Object {
                 "compact": true,
                 "configFile": true,
                 "inputSourceMap": true,
-                "root": "e2e/basic",
+                "root": "packages/webpack-config/e2e/basic",
                 "sourceMaps": true,
                 "sourceType": "unambiguous",
               },
@@ -1200,19 +1200,19 @@ Object {
           Object {
             "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
             "use": Object {
-              "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/worker-loader/dist/cjs.js",
+              "loader": "node_modules/worker-loader/dist/cjs.js",
             },
           },
           Object {
             "include": Array [
-              "e2e/basic",
-              "e2e/basic/node_modules/react-native-vector-icons",
-              "e2e/basic/node_modules/@expo/vector-icons",
+              "packages/webpack-config/e2e/basic",
+              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
+              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
             ],
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
               Object {
-                "loader": "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/url-loader/dist/cjs.js",
+                "loader": "node_modules/url-loader/dist/cjs.js",
                 "options": Object {
                   "limit": 50000,
                   "name": "./fonts/[name].[ext]",
@@ -1223,8 +1223,8 @@ Object {
           Object {
             "test": /\\\\\\.\\(css\\)\\$/,
             "use": Array [
-              "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/style-loader/index.js",
-              "/Users/evanbacon/Documents/GitHub/expo-cli/node_modules/css-loader/dist/cjs.js",
+              "node_modules/style-loader/index.js",
+              "node_modules/css-loader/dist/cjs.js",
             ],
           },
           Object {
@@ -1233,7 +1233,7 @@ Object {
               /\\\\\\.html\\$/,
               /\\\\\\.json\\$/,
             ],
-            "loader": "node_modules/file-loader/dist/cjs.js",
+            "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
             "options": Object {
               "name": "static/media/[name].[hash:8].[ext]",
             },
@@ -1340,7 +1340,7 @@ Object {
     "devtoolModuleFilenameTemplate": [Function],
     "filename": "static/js/[name].[contenthash:8].js",
     "globalObject": "this",
-    "path": "e2e/basic/web-build",
+    "path": "packages/webpack-config/e2e/basic/web-build",
     "publicPath": "/",
   },
   "performance": Object {

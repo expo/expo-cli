@@ -5,30 +5,24 @@ import createConfig from '..';
 
 const projectRoot = dirname(require.resolve('@expo/webpack-config/e2e/basic'));
 
-xdescribe(`ios`, () => {
+describe(`ios`, () => {
   it('ios development', async () => {
     const config = await createConfig({ mode: 'development', platform: 'ios', projectRoot });
-    const normalized = normalizePaths(config, value =>
-      value.split('packages/webpack-config/').pop()
-    );
+    const normalized = normalizePaths(config, value => value.split('expo-cli/').pop());
 
     expect(normalized).toMatchSnapshot();
   });
   it('ios production', async () => {
     const config = await createConfig({ mode: 'production', platform: 'ios', projectRoot });
-    const normalized = normalizePaths(config, value =>
-      value.split('packages/webpack-config/').pop()
-    );
+    const normalized = normalizePaths(config, value => value.split('expo-cli/').pop());
 
     expect(normalized).toMatchSnapshot();
   });
 });
 describe(`web`, () => {
-  xit('web development', async () => {
+  it('web development', async () => {
     const config = await createConfig({ mode: 'development', platform: 'web', projectRoot });
-    const normalized = normalizePaths(config, value =>
-      value.split('packages/webpack-config/').pop()
-    );
+    const normalized = normalizePaths(config, value => value.split('expo-cli/').pop());
 
     expect(normalized).toMatchSnapshot();
   });
@@ -41,9 +35,7 @@ describe(`web`, () => {
     for (const plugin of plugins) {
       config.plugins.push(plugin.constructor.name);
     }
-    const normalized = normalizePaths(config, value =>
-      value.split('packages/webpack-config/').pop()
-    );
+    const normalized = normalizePaths(config, value => value.split('expo-cli/').pop());
 
     expect(normalized).toMatchSnapshot();
   });
