@@ -35,5 +35,10 @@ export default async function createWebpackConfigAsync(
   }
   const { workbox = {} } = argv;
   const publicUrl = workbox.publicUrl || getPublicPaths(environment).publicUrl;
-  return withWorkbox(config, { projectRoot: environment.projectRoot, ...workbox, publicUrl });
+  return withWorkbox(config, {
+    projectRoot: environment.projectRoot,
+    ...workbox,
+    publicUrl,
+    platform: env.platform,
+  });
 }

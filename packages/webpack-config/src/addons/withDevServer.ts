@@ -86,7 +86,7 @@ export function isDevConfig(input: AnyConfiguration): input is DevConfiguration 
   return input && input.mode === 'development';
 }
 
-type SelectiveEnv = Pick<Environment, 'mode' | 'locations' | 'projectRoot' | 'https'>;
+type SelectiveEnv = Pick<Environment, 'mode' | 'locations' | 'projectRoot' | 'https' | 'platform'>;
 
 type DevServerOptions = {
   allowedHost?: string;
@@ -124,7 +124,7 @@ export function createDevServer(
   { allowedHost, proxy }: DevServerOptions = {}
 ): WebpackDevServerConfiguration {
   const { https = false } = env;
-  const locations = env.locations || getPaths(env.projectRoot);
+  const locations = env.locations || getPaths(env.projectRoot, env);
   // https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/config/webpackDevServer.config.js
   return {
     // Enable gzip compression of generated files.

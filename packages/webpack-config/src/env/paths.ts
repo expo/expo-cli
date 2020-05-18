@@ -11,7 +11,7 @@ import path from 'path';
 import url from 'url';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 
-import { Environment, FilePaths } from '../types';
+import { Environment, FilePaths, InputEnvironment } from '../types';
 import getMode from './getMode';
 
 function getModulesPath(projectRoot: string): string {
@@ -23,7 +23,18 @@ function getModulesPath(projectRoot: string): string {
   return path.resolve(projectRoot, 'node_modules');
 }
 
-function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePaths {
+function getPlatformExtensions(platform: string): string[] {
+  if (platform === 'ios' || platform === 'android') {
+    return [platform, 'native'];
+  }
+  return [platform];
+}
+
+function parsePaths(
+  projectRoot: string,
+  nativeAppManifest?: ExpoConfig,
+  env: Pick<InputEnvironment, 'platform'> = {}
+): FilePaths {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();
 
   function absolute(...pathComponents: string[]): string {
@@ -35,7 +46,7 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
   const productionPath = absolute(getWebOutputPath(nativeAppManifest));
 
   function templatePath(filename: string = ''): string {
-    const overridePath = absolute('web', filename);
+    const overridePath = absolute(env.platform ?? 'web', filename);
     if (fs.existsSync(overridePath)) {
       return overridePath;
     }
@@ -52,7 +63,11 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
 
   let appMain: string | null = null;
   try {
-    appMain = getEntryPoint(inputProjectRoot, ['./index', './src/index'], ['web']);
+    appMain = getEntryPoint(
+      inputProjectRoot,
+      ['./index', './src/index'],
+      getPlatformExtensions(env.platform ?? 'web')
+    );
   } catch (_) {
     // ignore the error
   }
@@ -95,11 +110,14 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
  * @param projectRoot
  * @category env
  */
-export function getPaths(projectRoot: string): FilePaths {
+export function getPaths(
+  projectRoot: string,
+  env: Pick<InputEnvironment, 'platform'> = {}
+): FilePaths {
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
-  return parsePaths(projectRoot, exp);
+  return parsePaths(projectRoot, exp, env);
 }
 
 /**
@@ -108,12 +126,15 @@ export function getPaths(projectRoot: string): FilePaths {
  * @param projectRoot
  * @category env
  */
-export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
+export async function getPathsAsync(
+  projectRoot: string,
+  env: Pick<InputEnvironment, 'platform'> = {}
+): Promise<FilePaths> {
   let exp;
   try {
     exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
   } catch (error) {}
-  return parsePaths(projectRoot, exp);
+  return parsePaths(projectRoot, exp, env);
 }
 
 /**
