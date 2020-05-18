@@ -23,7 +23,13 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { parse } from 'node-html-parser';
 import path from 'path';
 
-import { withAlias, withDevServer, withNodeMocks, withOptimizations } from './addons';
+import {
+  withAlias,
+  withDevServer,
+  withNodeMocks,
+  withOptimizations,
+  withPlatformSourceMaps,
+} from './addons';
 import {
   getAliases,
   getConfig,
@@ -430,6 +436,8 @@ export default async function (
     // TODO: Bacon: Remove this higher value
     performance: boolish('CI', false) ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
   };
+
+  webpackConfig = withPlatformSourceMaps(webpackConfig, env);
 
   if (isProd) {
     webpackConfig = withOptimizations(webpackConfig);
