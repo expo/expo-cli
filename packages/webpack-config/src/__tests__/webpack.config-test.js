@@ -10,6 +10,9 @@ describe(`ios`, () => {
     const config = await createConfig({ mode: 'development', platform: 'ios', projectRoot });
     const normalized = normalizePaths(config, value => value.split('expo-cli/').pop());
 
+    // performance is disabled in CI
+    delete normalized.performance;
+
     expect(normalized).toMatchSnapshot();
   });
   it('ios production', async () => {
@@ -23,6 +26,9 @@ describe(`web`, () => {
   it('web development', async () => {
     const config = await createConfig({ mode: 'development', platform: 'web', projectRoot });
     const normalized = normalizePaths(config, value => value.split('expo-cli/').pop());
+
+    // performance is disabled in CI
+    delete normalized.performance;
 
     expect(normalized).toMatchSnapshot();
   });
