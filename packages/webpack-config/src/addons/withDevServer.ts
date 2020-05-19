@@ -189,8 +189,6 @@ export function createDevServer(
     inline: !isNative,
 
     mimeTypes,
-    // Soon this will be default
-    transportMode: 'ws',
 
     before(app, server) {
       // Everything we add here is for web support
