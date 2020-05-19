@@ -50,6 +50,10 @@ async function handlePromptSourceAsync(_source: ServiceAccountPromptSource): Pro
 }
 
 async function askForServiceAccountPathAsync(): Promise<string> {
+  log(
+    'We need a Google Service Account JSON key to upload your app to Google Play Store.\n' +
+      "If you're not sure how to create one, learn more here: https://expo.fyi/creating-google-service-account"
+  );
   const { filePath } = await prompt({
     name: 'filePath',
     message: 'Path to Google Service Account file:',
