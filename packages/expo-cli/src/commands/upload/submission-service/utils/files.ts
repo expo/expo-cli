@@ -1,42 +1,44 @@
+import stream from 'stream';
+import { promisify } from 'util';
+
 import fs from 'fs-extra';
-import axios from 'axios';
+import got, { Progress } from 'got';
 import ProgressBar from 'progress';
 
 import { UploadType, uploadAsync } from '../../../../uploads';
 
+const pipeline = promisify(stream.pipeline);
+
 async function downloadAppArchiveAsync(url: string, dest: string): Promise<string> {
-  const response = await axios.get(url, { responseType: 'stream' });
-  const fileSize = Number(response.headers['content-length']);
-  const bar = new ProgressBar('[:bar] :percent :etas', {
-    complete: '=',
-    incomplete: ' ',
-    total: fileSize,
-  });
-  response.data.pipe(fs.createWriteStream(dest));
-  return new Promise((resolve, reject): void => {
-    response.data.on('data', (data: { length: number }) => bar.tick(data.length));
-    response.data.on('end', () => resolve(dest));
-    response.data.on('error', reject);
-  });
+  const downloadStream = got.stream(url).on('downloadProgress', trackProgress());
+  await pipeline(downloadStream, fs.createWriteStream(dest));
+  return dest;
 }
 
 async function uploadAppArchiveAsync(path: string): Promise<string> {
   const fileSize = (await fs.stat(path)).size;
-  let bar: ProgressBar | null;
+  return await uploadAsync(UploadType.SUBMISSION_APP_ARCHIVE, path, trackProgress(fileSize));
+}
+
+type ProgressTracker = (progress: Progress) => void;
+
+function trackProgress(_total?: number): ProgressTracker {
+  let bar: ProgressBar | null = null;
   let transferredSoFar = 0;
-  const archiveUrl = await uploadAsync(UploadType.SUBMISSION_APP_ARCHIVE, path, progress => {
-    if (!bar) {
+  return (progress: Progress) => {
+    if (!bar && (progress.total !== undefined || _total !== undefined)) {
+      const total = (_total ?? progress.total) as number;
       bar = new ProgressBar('[:bar] :percent :etas', {
         complete: '=',
         incomplete: ' ',
-        total: progress.total || fileSize,
+        total,
       });
     }
-    bar.tick(progress.transferred - transferredSoFar);
+    if (bar) {
+      bar.tick(progress.transferred - transferredSoFar);
+    }
     transferredSoFar = progress.transferred;
-  });
-
-  return archiveUrl;
+  };
 }
 
 export { downloadAppArchiveAsync, uploadAppArchiveAsync };

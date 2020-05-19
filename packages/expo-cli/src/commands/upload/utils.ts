@@ -1,25 +1,31 @@
+import stream from 'stream';
+import { promisify } from 'util';
+
 import { ExponentTools } from '@expo/xdl';
-import get from 'lodash/get';
 import fs from 'fs-extra';
+import get from 'lodash/get';
+import got from 'got';
 import ProgressBar from 'progress';
-import axios from 'axios';
 
 const { spawnAsyncThrowError } = ExponentTools;
+const pipeline = promisify(stream.pipeline);
 
 export async function downloadFile(url: string, dest: string): Promise<string> {
-  const response = await axios.get(url, { responseType: 'stream' });
-  const fileSize = Number(response.headers['content-length']);
-  const bar = new ProgressBar('Downloading [:bar] :percent :etas', {
-    complete: '=',
-    incomplete: ' ',
-    total: fileSize,
+  let bar: ProgressBar | null;
+  let transferredSoFar = 0;
+  const downloadStream = got.stream(url).on('downloadProgress', progress => {
+    if (!bar) {
+      bar = new ProgressBar('Downloading [:bar] :percent :etas', {
+        complete: '=',
+        incomplete: ' ',
+        total: progress.total,
+      });
+    }
+    bar.tick(progress.transferred - transferredSoFar);
+    transferredSoFar = progress.transferred;
   });
-  response.data.pipe(fs.createWriteStream(dest));
-  return new Promise((resolve, reject): void => {
-    response.data.on('data', (data: { length: number }) => bar.tick(data.length));
-    response.data.on('end', () => resolve(dest));
-    response.data.on('error', reject);
-  });
+  await pipeline(downloadStream, fs.createWriteStream(dest));
+  return dest;
 }
 
 export async function runFastlaneAsync(

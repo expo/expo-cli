@@ -1,6 +1,6 @@
 import attempt from 'lodash/attempt';
 import isError from 'lodash/isError';
-import axios from 'axios';
+import got from 'got';
 
 import log from '../../../../log';
 import { Submission, SubmissionStatus } from '../SubmissionService';
@@ -24,7 +24,7 @@ async function downloadAndPrintSubmissionLogs(submission: Submission): Promise<v
   if (!submission.submissionInfo?.logsUrl) {
     return;
   }
-  const { data } = await axios.get(submission.submissionInfo.logsUrl);
+  const { body: data } = await got.get(submission.submissionInfo.logsUrl);
   const logs = parseLogs(data);
   log.addNewLineIfNone();
   const prefix = log.chalk.blueBright('[logs] ');
