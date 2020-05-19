@@ -137,10 +137,6 @@ Object {
     "pathinfo": true,
     "publicPath": "/",
   },
-  "performance": Object {
-    "maxAssetSize": 600000,
-    "maxEntrypointSize": 600000,
-  },
   "plugins": Array [
     Object {
       "assetJson": undefined,
@@ -955,10 +951,6 @@ Object {
     "path": "packages/webpack-config/e2e/basic/web-build",
     "pathinfo": true,
     "publicPath": "/",
-  },
-  "performance": Object {
-    "maxAssetSize": 600000,
-    "maxEntrypointSize": 600000,
   },
   "plugins": Array [
     Object {
