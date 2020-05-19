@@ -179,37 +179,54 @@ export default async function (
     }
   );
 
-  const appEntry: string[] = [];
+  let appEntry: string[] = [];
 
   // In solutions like Gatsby the main entry point doesn't need to be known.
   if (locations.appMain) {
     appEntry.push(locations.appMain);
   }
 
-  // Add a loose requirement on the ResizeObserver polyfill if it's installed...
-  // Avoid `withEntry` as we don't need so much complexity with this config.
-  const resizeObserverPolyfill = projectHasModule(
-    'resize-observer-polyfill/dist/ResizeObserver.global',
-    env.projectRoot,
-    config
-  );
-  if (resizeObserverPolyfill) {
-    appEntry.unshift(resizeObserverPolyfill);
-  }
+  if (isNative) {
+    const reactNativeModulePath = projectHasModule(
+      'react-native',
+      env.projectRoot,
+      env.config ?? {}
+    );
+    if (reactNativeModulePath) {
+      appEntry = [
+        path.join(reactNativeModulePath, 'Libraries/polyfills/console.js'),
+        path.join(reactNativeModulePath, 'Libraries/polyfills/error-guard.js'),
+        path.join(reactNativeModulePath, 'Libraries/polyfills/Object.es7.js'),
+        path.join(reactNativeModulePath, 'Libraries/Core/InitializeCore.js'),
+        ...appEntry,
+      ];
+    }
+  } else {
+    // Add a loose requirement on the ResizeObserver polyfill if it's installed...
+    // Avoid `withEntry` as we don't need so much complexity with this config.
+    const resizeObserverPolyfill = projectHasModule(
+      'resize-observer-polyfill/dist/ResizeObserver.global',
+      env.projectRoot,
+      config
+    );
+    if (resizeObserverPolyfill) {
+      appEntry.unshift(resizeObserverPolyfill);
+    }
 
-  if (isDev) {
-    // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
-    // Include an alternative client for WebpackDevServer. A client's job is to
-    // connect to WebpackDevServer by a socket and get notified about changes.
-    // When you save a file, the client will either apply hot updates (in case
-    // of CSS changes), or refresh the page (in case of JS changes). When you
-    // make a syntax error, this client will display a syntax error overlay.
-    // Note: instead of the default WebpackDevServer client, we use a custom one
-    // to bring better experience for Create React App users. You can replace
-    // the line below with these two lines if you prefer the stock client:
-    // require.resolve('webpack-dev-server/client') + '?/',
-    // require.resolve('webpack/hot/dev-server'),
-    appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
+    if (isDev) {
+      // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
+      // Include an alternative client for WebpackDevServer. A client's job is to
+      // connect to WebpackDevServer by a socket and get notified about changes.
+      // When you save a file, the client will either apply hot updates (in case
+      // of CSS changes), or refresh the page (in case of JS changes). When you
+      // make a syntax error, this client will display a syntax error overlay.
+      // Note: instead of the default WebpackDevServer client, we use a custom one
+      // to bring better experience for Create React App users. You can replace
+      // the line below with these two lines if you prefer the stock client:
+      // require.resolve('webpack-dev-server/client') + '?/',
+      // require.resolve('webpack/hot/dev-server'),
+      appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
+    }
   }
 
   let generatePWAImageAssets: boolean = !isNative && !isDev;
@@ -288,7 +305,8 @@ export default async function (
     // Fail out on the first error instead of tolerating it.
     bail: isProd,
     devtool,
-    context: __dirname,
+    // TODO(Bacon): Simplify this while ensuring gatsby support continues to work.
+    context: isNative ? env.projectRoot ?? __dirname : __dirname,
     // configures where the build ends up
     output: getOutput(locations, mode, publicPath, env.platform),
     plugins: [
@@ -333,10 +351,10 @@ export default async function (
             meta,
           },
           {
-            name: env.config.web.shortName,
-            isFullScreen: env.config.web.meta.apple.touchFullscreen,
-            isWebAppCapable: env.config.web.meta.apple.mobileWebAppCapable,
-            barStyle: env.config.web.meta.apple.barStyle,
+            name: env.config.web?.shortName,
+            isFullScreen: env.config.web?.meta.apple.touchFullscreen,
+            isWebAppCapable: env.config.web?.meta.apple.mobileWebAppCapable,
+            barStyle: env.config.web?.meta.apple.barStyle,
           },
           ensureSourceAbsolute(getSafariIconConfig(env.config)),
           ensureSourceAbsolute(getSafariStartupImageConfig(env.config))
@@ -457,6 +475,11 @@ export default async function (
 
   webpackConfig = withPlatformSourceMaps(webpackConfig, env);
 
+  if (isNative) {
+    // https://github.com/webpack/webpack/blob/f06086c53b2277e421604c5cea6f32f5c5b6d117/declarations/WebpackOptions.d.ts#L504-L518
+    webpackConfig.target = 'webworker';
+  }
+
   if (isProd) {
     webpackConfig = withOptimizations(webpackConfig);
   } else {
@@ -466,5 +489,9 @@ export default async function (
     });
   }
 
-  return withNodeMocks(withAlias(webpackConfig, getAliases(env.projectRoot)));
+  if (!isNative) {
+    webpackConfig = withNodeMocks(withAlias(webpackConfig, getAliases(env.projectRoot)));
+  }
+
+  return webpackConfig;
 }

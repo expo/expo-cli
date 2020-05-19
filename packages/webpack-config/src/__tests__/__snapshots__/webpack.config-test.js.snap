@@ -1,0 +1,952 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ios ios development 1`] = `
+Object {
+  "bail": false,
+  "context": "packages/webpack-config/e2e/basic",
+  "devServer": Object {
+    "before": [Function],
+    "clientLogLevel": "none",
+    "compress": true,
+    "contentBase": "packages/webpack-config/web-default",
+    "disableHostCheck": true,
+    "headers": Object {
+      "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Origin": "*",
+    },
+    "historyApiFallback": Object {
+      "disableDotRule": true,
+    },
+    "host": "0.0.0.0",
+    "hot": true,
+    "https": false,
+    "overlay": false,
+    "proxy": undefined,
+    "public": undefined,
+    "publicPath": "/",
+    "quiet": true,
+    "watchContentBase": true,
+  },
+  "devtool": false,
+  "entry": [Function],
+  "mode": "development",
+  "module": Object {
+    "rules": Array [
+      Object {
+        "parser": Object {
+          "requireEnsure": false,
+        },
+      },
+      Object {
+        "oneOf": Array [
+          Object {
+            "exclude": "packages/webpack-config/web-default",
+            "test": /\\\\\\.html\\$/,
+            "use": Array [
+              "node_modules/html-loader/index.js",
+            ],
+          },
+          Object {
+            "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
+            "use": Object {
+              "loader": "node_modules/url-loader/dist/cjs.js",
+              "options": Object {
+                "limit": 1000,
+                "name": "static/media/[name].[hash:8].[ext]",
+              },
+            },
+          },
+          Object {
+            "include": [Function],
+            "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+            "use": Object {
+              "loader": "node_modules/babel-loader/lib/index.js",
+              "options": Object {
+                "babelrc": false,
+                "cacheCompression": false,
+                "cacheDirectory": "packages/webpack-config/e2e/basic/.expo/ios/cache/development/babel-loader",
+                "cacheIdentifier": "custom-value-to-skip-babel-config-error",
+                "caller": Object {
+                  "__dangerous_rule_id": "expo-babel-loader",
+                  "bundler": "webpack",
+                  "mode": "development",
+                  "platform": "ios",
+                },
+                "compact": false,
+                "configFile": true,
+                "inputSourceMap": true,
+                "root": "packages/webpack-config/e2e/basic",
+                "sourceMaps": true,
+                "sourceType": "unambiguous",
+              },
+            },
+          },
+          Object {
+            "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
+            "use": Object {
+              "loader": "node_modules/worker-loader/dist/cjs.js",
+            },
+          },
+          Object {
+            "include": Array [
+              "packages/webpack-config/e2e/basic",
+              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
+              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
+            ],
+            "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
+            "use": Array [
+              Object {
+                "loader": "node_modules/url-loader/dist/cjs.js",
+                "options": Object {
+                  "limit": 50000,
+                  "name": "./fonts/[name].[ext]",
+                },
+              },
+            ],
+          },
+          Object {
+            "test": /\\\\\\.\\(css\\)\\$/,
+            "use": Array [
+              "node_modules/style-loader/index.js",
+              "node_modules/css-loader/dist/cjs.js",
+            ],
+          },
+          Object {
+            "exclude": Array [
+              /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+              /\\\\\\.html\\$/,
+              /\\\\\\.json\\$/,
+            ],
+            "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
+            "options": Object {
+              "name": "static/media/[name].[hash:8].[ext]",
+            },
+          },
+        ],
+      },
+    ],
+    "strictExportPresence": false,
+  },
+  "output": Object {
+    "chunkFilename": "static/js/[name].chunk.js",
+    "devtoolModuleFilenameTemplate": [Function],
+    "filename": "index.bundle",
+    "globalObject": "this",
+    "path": "packages/webpack-config/e2e/basic/web-build",
+    "pathinfo": true,
+    "publicPath": "/",
+  },
+  "plugins": Array [
+    "HtmlWebpackPlugin",
+    "InterpolateHtmlPlugin",
+    "FaviconWebpackPlugin",
+    "ModuleNotFoundPlugin",
+    "DefinePlugin",
+    "LimitChunkCountPlugin",
+    "HotModuleReplacementPlugin",
+    "WatchMissingNodeModulesPlugin",
+    "ManifestPlugin",
+    "WebpackBar",
+    "SourceMapDevToolPlugin",
+    "CopyPlugin",
+  ],
+  "resolve": Object {
+    "extensions": Array [
+      ".ios.ts",
+      ".ios.tsx",
+      ".ios.mjs",
+      ".ios.js",
+      ".ios.jsx",
+      ".native.ts",
+      ".native.tsx",
+      ".native.mjs",
+      ".native.js",
+      ".native.jsx",
+      ".ts",
+      ".tsx",
+      ".mjs",
+      ".js",
+      ".jsx",
+      ".json",
+      ".wasm",
+    ],
+    "mainFields": Array [
+      "browser",
+      "module",
+      "main",
+    ],
+    "plugins": Array [
+      Object {
+        "apply": [Function],
+        "bind": [Function],
+        "forkTsCheckerOptions": [Function],
+        "makePlugin": [Function],
+        "moduleLoader": [Function],
+        "topLevelLoader": Object {
+          "apply": [Function],
+        },
+        "tsLoaderOptions": [Function],
+      },
+    ],
+    "symlinks": false,
+  },
+  "resolveLoader": Object {
+    "plugins": Array [
+      Object {
+        "apply": [Function],
+      },
+    ],
+  },
+  "target": "webworker",
+}
+`;
+
+exports[`ios ios production 1`] = `
+Object {
+  "bail": true,
+  "context": "packages/webpack-config/e2e/basic",
+  "devtool": false,
+  "entry": [Function],
+  "mode": "production",
+  "module": Object {
+    "rules": Array [
+      Object {
+        "parser": Object {
+          "requireEnsure": false,
+        },
+      },
+      Object {
+        "oneOf": Array [
+          Object {
+            "exclude": "packages/webpack-config/web-default",
+            "test": /\\\\\\.html\\$/,
+            "use": Array [
+              "node_modules/html-loader/index.js",
+            ],
+          },
+          Object {
+            "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
+            "use": Object {
+              "loader": "node_modules/url-loader/dist/cjs.js",
+              "options": Object {
+                "limit": 1000,
+                "name": "static/media/[name].[hash:8].[ext]",
+              },
+            },
+          },
+          Object {
+            "include": [Function],
+            "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+            "use": Object {
+              "loader": "node_modules/babel-loader/lib/index.js",
+              "options": Object {
+                "babelrc": false,
+                "cacheCompression": false,
+                "cacheDirectory": "packages/webpack-config/e2e/basic/.expo/ios/cache/production/babel-loader",
+                "cacheIdentifier": "custom-value-to-skip-babel-config-error",
+                "caller": Object {
+                  "__dangerous_rule_id": "expo-babel-loader",
+                  "bundler": "webpack",
+                  "mode": "production",
+                  "platform": "ios",
+                },
+                "compact": true,
+                "configFile": true,
+                "inputSourceMap": true,
+                "root": "packages/webpack-config/e2e/basic",
+                "sourceMaps": true,
+                "sourceType": "unambiguous",
+              },
+            },
+          },
+          Object {
+            "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
+            "use": Object {
+              "loader": "node_modules/worker-loader/dist/cjs.js",
+            },
+          },
+          Object {
+            "include": Array [
+              "packages/webpack-config/e2e/basic",
+              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
+              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
+            ],
+            "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
+            "use": Array [
+              Object {
+                "loader": "node_modules/url-loader/dist/cjs.js",
+                "options": Object {
+                  "limit": 50000,
+                  "name": "./fonts/[name].[ext]",
+                },
+              },
+            ],
+          },
+          Object {
+            "test": /\\\\\\.\\(css\\)\\$/,
+            "use": Array [
+              "node_modules/style-loader/index.js",
+              "node_modules/css-loader/dist/cjs.js",
+            ],
+          },
+          Object {
+            "exclude": Array [
+              /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+              /\\\\\\.html\\$/,
+              /\\\\\\.json\\$/,
+            ],
+            "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
+            "options": Object {
+              "name": "static/media/[name].[hash:8].[ext]",
+            },
+          },
+        ],
+      },
+    ],
+    "strictExportPresence": false,
+  },
+  "optimization": Object {
+    "minimize": true,
+    "minimizer": Array [
+      Object {
+        "options": Object {
+          "cache": true,
+          "cacheKeys": [Function],
+          "chunkFilter": [Function],
+          "exclude": undefined,
+          "extractComments": false,
+          "include": undefined,
+          "minify": undefined,
+          "parallel": true,
+          "sourceMap": false,
+          "terserOptions": Object {
+            "compress": Object {
+              "comparisons": false,
+              "inline": 2,
+              "warnings": false,
+            },
+            "mangle": Object {
+              "safari10": true,
+            },
+            "output": Object {
+              "ascii_only": true,
+              "comments": false,
+              "ecma": 5,
+            },
+            "parse": Object {
+              "ecma": 8,
+            },
+          },
+          "test": /\\\\\\.m\\?js\\(\\\\\\?\\.\\*\\)\\?\\$/i,
+          "warningsFilter": [Function],
+        },
+      },
+      Object {
+        "deleteAssetsMap": Object {},
+        "options": Object {
+          "assetNameRegExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
+          "assetProcessors": Array [
+            Object {
+              "phase": "compilation.optimize-chunk-assets",
+              "processor": [Function],
+              "regExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
+            },
+          ],
+          "canPrint": undefined,
+          "cssProcessor": [Function],
+          "cssProcessorOptions": Object {
+            "map": false,
+            "parser": [Function],
+          },
+          "cssProcessorPluginOptions": Object {},
+        },
+        "phaseAssetProcessors": Object {
+          "compilation.optimize-assets": Array [],
+          "compilation.optimize-chunk-assets": Array [
+            Object {
+              "phase": "compilation.optimize-chunk-assets",
+              "processor": [Function],
+              "regExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
+            },
+          ],
+          "emit": Array [],
+        },
+        "pluginDescriptor": Object {
+          "name": "OptimizeCssAssetsWebpackPlugin",
+        },
+      },
+    ],
+    "noEmitOnErrors": true,
+    "nodeEnv": false,
+    "runtimeChunk": true,
+    "splitChunks": Object {
+      "chunks": "all",
+      "name": false,
+    },
+  },
+  "output": Object {
+    "chunkFilename": "static/js/[name].[contenthash:8].chunk.js",
+    "devtoolModuleFilenameTemplate": [Function],
+    "filename": "index.bundle",
+    "globalObject": "this",
+    "path": "packages/webpack-config/e2e/basic/web-build",
+    "publicPath": "/",
+  },
+  "plugins": Array [
+    "CleanWebpackPlugin",
+    "CopyPlugin",
+    "HtmlWebpackPlugin",
+    "InterpolateHtmlPlugin",
+    "FaviconWebpackPlugin",
+    "ModuleNotFoundPlugin",
+    "DefinePlugin",
+    "LimitChunkCountPlugin",
+    "MiniCssExtractPlugin",
+    "ManifestPlugin",
+    "WebpackBar",
+    "SourceMapDevToolPlugin",
+    "CopyPlugin",
+    "GenerateSW",
+  ],
+  "resolve": Object {
+    "extensions": Array [
+      ".ios.ts",
+      ".ios.tsx",
+      ".ios.mjs",
+      ".ios.js",
+      ".ios.jsx",
+      ".native.ts",
+      ".native.tsx",
+      ".native.mjs",
+      ".native.js",
+      ".native.jsx",
+      ".ts",
+      ".tsx",
+      ".mjs",
+      ".js",
+      ".jsx",
+      ".json",
+      ".wasm",
+    ],
+    "mainFields": Array [
+      "browser",
+      "module",
+      "main",
+    ],
+    "plugins": Array [
+      Object {
+        "apply": [Function],
+        "bind": [Function],
+        "forkTsCheckerOptions": [Function],
+        "makePlugin": [Function],
+        "moduleLoader": [Function],
+        "topLevelLoader": Object {
+          "apply": [Function],
+        },
+        "tsLoaderOptions": [Function],
+      },
+    ],
+    "symlinks": false,
+  },
+  "resolveLoader": Object {
+    "plugins": Array [
+      Object {
+        "apply": [Function],
+      },
+    ],
+  },
+  "target": "webworker",
+}
+`;
+
+exports[`web web development 1`] = `
+Object {
+  "bail": false,
+  "context": "packages/webpack-config/src",
+  "devServer": Object {
+    "before": [Function],
+    "clientLogLevel": "none",
+    "compress": true,
+    "contentBase": "packages/webpack-config/web-default",
+    "disableHostCheck": true,
+    "headers": Object {
+      "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Origin": "*",
+    },
+    "historyApiFallback": Object {
+      "disableDotRule": true,
+    },
+    "host": "0.0.0.0",
+    "hot": true,
+    "https": false,
+    "overlay": false,
+    "proxy": undefined,
+    "public": undefined,
+    "publicPath": "/",
+    "quiet": true,
+    "watchContentBase": true,
+  },
+  "devtool": "cheap-module-source-map",
+  "entry": [Function],
+  "mode": "development",
+  "module": Object {
+    "rules": Array [
+      Object {
+        "parser": Object {
+          "requireEnsure": false,
+        },
+      },
+      Object {
+        "oneOf": Array [
+          Object {
+            "exclude": "packages/webpack-config/web-default",
+            "test": /\\\\\\.html\\$/,
+            "use": Array [
+              "node_modules/html-loader/index.js",
+            ],
+          },
+          Object {
+            "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
+            "use": Object {
+              "loader": "node_modules/url-loader/dist/cjs.js",
+              "options": Object {
+                "limit": 1000,
+                "name": "static/media/[name].[hash:8].[ext]",
+              },
+            },
+          },
+          Object {
+            "include": [Function],
+            "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+            "use": Object {
+              "loader": "node_modules/babel-loader/lib/index.js",
+              "options": Object {
+                "babelrc": false,
+                "cacheCompression": false,
+                "cacheDirectory": "packages/webpack-config/e2e/basic/.expo/web/cache/development/babel-loader",
+                "cacheIdentifier": "custom-value-to-skip-babel-config-error",
+                "caller": Object {
+                  "__dangerous_rule_id": "expo-babel-loader",
+                  "bundler": "webpack",
+                  "mode": "development",
+                  "platform": "web",
+                },
+                "compact": false,
+                "configFile": true,
+                "inputSourceMap": true,
+                "root": "packages/webpack-config/e2e/basic",
+                "sourceMaps": true,
+                "sourceType": "unambiguous",
+              },
+            },
+          },
+          Object {
+            "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
+            "use": Object {
+              "loader": "node_modules/worker-loader/dist/cjs.js",
+            },
+          },
+          Object {
+            "include": Array [
+              "packages/webpack-config/e2e/basic",
+              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
+              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
+            ],
+            "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
+            "use": Array [
+              Object {
+                "loader": "node_modules/url-loader/dist/cjs.js",
+                "options": Object {
+                  "limit": 50000,
+                  "name": "./fonts/[name].[ext]",
+                },
+              },
+            ],
+          },
+          Object {
+            "test": /\\\\\\.\\(css\\)\\$/,
+            "use": Array [
+              "node_modules/style-loader/index.js",
+              "node_modules/css-loader/dist/cjs.js",
+            ],
+          },
+          Object {
+            "exclude": Array [
+              /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+              /\\\\\\.html\\$/,
+              /\\\\\\.json\\$/,
+            ],
+            "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
+            "options": Object {
+              "name": "static/media/[name].[hash:8].[ext]",
+            },
+          },
+        ],
+      },
+    ],
+    "strictExportPresence": false,
+  },
+  "node": Object {
+    "child_process": "empty",
+    "dgram": "empty",
+    "dns": "mock",
+    "fs": "empty",
+    "http2": "empty",
+    "module": "empty",
+    "net": "empty",
+    "tls": "empty",
+  },
+  "output": Object {
+    "chunkFilename": "static/js/[name].chunk.js",
+    "devtoolModuleFilenameTemplate": [Function],
+    "filename": "static/js/bundle.js",
+    "globalObject": "this",
+    "path": "packages/webpack-config/e2e/basic/web-build",
+    "pathinfo": true,
+    "publicPath": "/",
+  },
+  "plugins": Array [
+    "HtmlWebpackPlugin",
+    "InterpolateHtmlPlugin",
+    "FaviconWebpackPlugin",
+    "ModuleNotFoundPlugin",
+    "DefinePlugin",
+    "HotModuleReplacementPlugin",
+    "WatchMissingNodeModulesPlugin",
+    "ManifestPlugin",
+    "WebpackBar",
+    "CopyPlugin",
+  ],
+  "resolve": Object {
+    "alias": Object {
+      "react-native$": "react-native-web",
+      "react-native/Libraries/Components/View/ViewStylePropTypes$": "react-native-web/dist/exports/View/ViewStylePropTypes",
+      "react-native/Libraries/EventEmitter/NativeEventEmitter$": "react-native-web/dist/vendor/react-native/NativeEventEmitter",
+      "react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$": "react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter",
+      "react-native/Libraries/Image/AssetSourceResolver$": "expo-asset/build/AssetSourceResolver",
+      "react-native/Libraries/Image/assetPathUtils$": "expo-asset/build/Image/assetPathUtils",
+      "react-native/Libraries/Image/resolveAssetSource$": "expo-asset/build/resolveAssetSource",
+      "react-native/Libraries/vendor/emitter/EventEmitter$": "react-native-web/dist/vendor/react-native/emitter/EventEmitter",
+      "react-native/Libraries/vendor/emitter/EventSubscriptionVendor$": "react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor",
+    },
+    "extensions": Array [
+      ".web.ts",
+      ".web.tsx",
+      ".web.mjs",
+      ".web.js",
+      ".web.jsx",
+      ".ts",
+      ".tsx",
+      ".mjs",
+      ".js",
+      ".jsx",
+      ".json",
+      ".wasm",
+    ],
+    "mainFields": Array [
+      "browser",
+      "module",
+      "main",
+    ],
+    "plugins": Array [
+      Object {
+        "apply": [Function],
+        "bind": [Function],
+        "forkTsCheckerOptions": [Function],
+        "makePlugin": [Function],
+        "moduleLoader": [Function],
+        "topLevelLoader": Object {
+          "apply": [Function],
+        },
+        "tsLoaderOptions": [Function],
+      },
+    ],
+    "symlinks": false,
+  },
+  "resolveLoader": Object {
+    "plugins": Array [
+      Object {
+        "apply": [Function],
+      },
+    ],
+  },
+}
+`;
+
+exports[`web web production 1`] = `
+Object {
+  "bail": true,
+  "context": "packages/webpack-config/src",
+  "devtool": "source-map",
+  "entry": [Function],
+  "mode": "production",
+  "module": Object {
+    "rules": Array [
+      Object {
+        "parser": Object {
+          "requireEnsure": false,
+        },
+      },
+      Object {
+        "oneOf": Array [
+          Object {
+            "exclude": "packages/webpack-config/web-default",
+            "test": /\\\\\\.html\\$/,
+            "use": Array [
+              "node_modules/html-loader/index.js",
+            ],
+          },
+          Object {
+            "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
+            "use": Object {
+              "loader": "node_modules/url-loader/dist/cjs.js",
+              "options": Object {
+                "limit": 1000,
+                "name": "static/media/[name].[hash:8].[ext]",
+              },
+            },
+          },
+          Object {
+            "include": [Function],
+            "test": /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+            "use": Object {
+              "loader": "node_modules/babel-loader/lib/index.js",
+              "options": Object {
+                "babelrc": false,
+                "cacheCompression": false,
+                "cacheDirectory": "packages/webpack-config/e2e/basic/.expo/web/cache/production/babel-loader",
+                "cacheIdentifier": "custom-value-to-skip-babel-config-error",
+                "caller": Object {
+                  "__dangerous_rule_id": "expo-babel-loader",
+                  "bundler": "webpack",
+                  "mode": "production",
+                  "platform": "web",
+                },
+                "compact": true,
+                "configFile": true,
+                "inputSourceMap": true,
+                "root": "packages/webpack-config/e2e/basic",
+                "sourceMaps": true,
+                "sourceType": "unambiguous",
+              },
+            },
+          },
+          Object {
+            "test": /\\\\\\.worker\\\\\\.\\(js\\|mjs\\|ts\\)\\$/,
+            "use": Object {
+              "loader": "node_modules/worker-loader/dist/cjs.js",
+            },
+          },
+          Object {
+            "include": Array [
+              "packages/webpack-config/e2e/basic",
+              "packages/webpack-config/e2e/basic/node_modules/react-native-vector-icons",
+              "packages/webpack-config/e2e/basic/node_modules/@expo/vector-icons",
+            ],
+            "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
+            "use": Array [
+              Object {
+                "loader": "node_modules/url-loader/dist/cjs.js",
+                "options": Object {
+                  "limit": 50000,
+                  "name": "./fonts/[name].[ext]",
+                },
+              },
+            ],
+          },
+          Object {
+            "test": /\\\\\\.\\(css\\)\\$/,
+            "use": Array [
+              "node_modules/style-loader/index.js",
+              "node_modules/css-loader/dist/cjs.js",
+            ],
+          },
+          Object {
+            "exclude": Array [
+              /\\\\\\.\\(mjs\\|\\[jt\\]sx\\?\\)\\$/,
+              /\\\\\\.html\\$/,
+              /\\\\\\.json\\$/,
+            ],
+            "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
+            "options": Object {
+              "name": "static/media/[name].[hash:8].[ext]",
+            },
+          },
+        ],
+      },
+    ],
+    "strictExportPresence": false,
+  },
+  "node": Object {
+    "child_process": "empty",
+    "dgram": "empty",
+    "dns": "mock",
+    "fs": "empty",
+    "http2": "empty",
+    "module": "empty",
+    "net": "empty",
+    "tls": "empty",
+  },
+  "optimization": Object {
+    "minimize": true,
+    "minimizer": Array [
+      Object {
+        "options": Object {
+          "cache": true,
+          "cacheKeys": [Function],
+          "chunkFilter": [Function],
+          "exclude": undefined,
+          "extractComments": false,
+          "include": undefined,
+          "minify": undefined,
+          "parallel": true,
+          "sourceMap": true,
+          "terserOptions": Object {
+            "compress": Object {
+              "comparisons": false,
+              "inline": 2,
+              "warnings": false,
+            },
+            "mangle": Object {
+              "safari10": true,
+            },
+            "output": Object {
+              "ascii_only": true,
+              "comments": false,
+              "ecma": 5,
+            },
+            "parse": Object {
+              "ecma": 8,
+            },
+          },
+          "test": /\\\\\\.m\\?js\\(\\\\\\?\\.\\*\\)\\?\\$/i,
+          "warningsFilter": [Function],
+        },
+      },
+      Object {
+        "deleteAssetsMap": Object {},
+        "options": Object {
+          "assetNameRegExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
+          "assetProcessors": Array [
+            Object {
+              "phase": "compilation.optimize-chunk-assets",
+              "processor": [Function],
+              "regExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
+            },
+          ],
+          "canPrint": undefined,
+          "cssProcessor": [Function],
+          "cssProcessorOptions": Object {
+            "map": Object {
+              "annotation": true,
+              "inline": false,
+            },
+            "parser": [Function],
+          },
+          "cssProcessorPluginOptions": Object {},
+        },
+        "phaseAssetProcessors": Object {
+          "compilation.optimize-assets": Array [],
+          "compilation.optimize-chunk-assets": Array [
+            Object {
+              "phase": "compilation.optimize-chunk-assets",
+              "processor": [Function],
+              "regExp": /\\\\\\.css\\(\\\\\\?\\.\\*\\)\\?\\$/i,
+            },
+          ],
+          "emit": Array [],
+        },
+        "pluginDescriptor": Object {
+          "name": "OptimizeCssAssetsWebpackPlugin",
+        },
+      },
+    ],
+    "noEmitOnErrors": true,
+    "nodeEnv": false,
+    "runtimeChunk": true,
+    "splitChunks": Object {
+      "chunks": "all",
+      "name": false,
+    },
+  },
+  "output": Object {
+    "chunkFilename": "static/js/[name].[contenthash:8].chunk.js",
+    "devtoolModuleFilenameTemplate": [Function],
+    "filename": "static/js/[name].[contenthash:8].js",
+    "globalObject": "this",
+    "path": "packages/webpack-config/e2e/basic/web-build",
+    "publicPath": "/",
+  },
+  "plugins": Array [
+    "CleanWebpackPlugin",
+    "CopyPlugin",
+    "HtmlWebpackPlugin",
+    "InterpolateHtmlPlugin",
+    "FaviconWebpackPlugin",
+    "ApplePwaWebpackPlugin",
+    "ChromeIconsWebpackPlugin",
+    "ModuleNotFoundPlugin",
+    "DefinePlugin",
+    "MiniCssExtractPlugin",
+    "ManifestPlugin",
+    "WebpackBar",
+    "CopyPlugin",
+    "GenerateSW",
+  ],
+  "resolve": Object {
+    "alias": Object {
+      "react-native$": "react-native-web",
+      "react-native/Libraries/Components/View/ViewStylePropTypes$": "react-native-web/dist/exports/View/ViewStylePropTypes",
+      "react-native/Libraries/EventEmitter/NativeEventEmitter$": "react-native-web/dist/vendor/react-native/NativeEventEmitter",
+      "react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$": "react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter",
+      "react-native/Libraries/Image/AssetSourceResolver$": "expo-asset/build/AssetSourceResolver",
+      "react-native/Libraries/Image/assetPathUtils$": "expo-asset/build/Image/assetPathUtils",
+      "react-native/Libraries/Image/resolveAssetSource$": "expo-asset/build/resolveAssetSource",
+      "react-native/Libraries/vendor/emitter/EventEmitter$": "react-native-web/dist/vendor/react-native/emitter/EventEmitter",
+      "react-native/Libraries/vendor/emitter/EventSubscriptionVendor$": "react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor",
+    },
+    "extensions": Array [
+      ".web.ts",
+      ".web.tsx",
+      ".web.mjs",
+      ".web.js",
+      ".web.jsx",
+      ".ts",
+      ".tsx",
+      ".mjs",
+      ".js",
+      ".jsx",
+      ".json",
+      ".wasm",
+    ],
+    "mainFields": Array [
+      "browser",
+      "module",
+      "main",
+    ],
+    "plugins": Array [
+      Object {
+        "apply": [Function],
+        "bind": [Function],
+        "forkTsCheckerOptions": [Function],
+        "makePlugin": [Function],
+        "moduleLoader": [Function],
+        "topLevelLoader": Object {
+          "apply": [Function],
+        },
+        "tsLoaderOptions": [Function],
+      },
+    ],
+    "symlinks": false,
+  },
+  "resolveLoader": Object {
+    "plugins": Array [
+      Object {
+        "apply": [Function],
+      },
+    ],
+  },
+}
+`;

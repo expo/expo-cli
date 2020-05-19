@@ -26,7 +26,7 @@ const DEFAULT_MINIFY = {
  */
 export default class HtmlWebpackPlugin extends OriginalHtmlWebpackPlugin {
   constructor(env: Environment, templateHtmlData?: any) {
-    const locations = env.locations || getPaths(env.projectRoot);
+    const locations = env.locations || getPaths(env.projectRoot, env);
     const config = getConfig(env);
     const isProduction = getMode(env) === 'production';
 

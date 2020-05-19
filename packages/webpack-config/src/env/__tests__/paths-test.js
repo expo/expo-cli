@@ -35,7 +35,7 @@ it(`has consistent defaults`, async () => {
 });
 
 it(`matches sync and async results`, async () => {
-  const locations = getPaths(projectRoot);
+  const locations = getPaths(projectRoot, { platform: 'web' });
   const normalized = defaultNormalize(locations);
 
   const locationsAsync = await getPathsAsync(projectRoot);

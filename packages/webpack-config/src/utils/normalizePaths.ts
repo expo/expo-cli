@@ -11,6 +11,8 @@ export default function normalizePaths(
 ): any {
   if (initial == null) {
     return initial;
+  } else if (initial instanceof RegExp) {
+    return initial;
   } else if (typeof initial === 'string') {
     return transformString(initial);
   } else if (Array.isArray(initial)) {

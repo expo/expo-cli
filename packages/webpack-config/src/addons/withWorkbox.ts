@@ -11,7 +11,7 @@ import {
 } from 'workbox-webpack-plugin';
 
 import { getPaths } from '../env';
-import { AnyConfiguration } from '../types';
+import { AnyConfiguration, Environment } from '../types';
 import { resolveEntryAsync } from '../utils';
 
 /**
@@ -19,6 +19,7 @@ import { resolveEntryAsync } from '../utils';
  */
 export type OfflineOptions = {
   projectRoot?: string;
+  platform?: Environment['platform'];
   serviceWorkerPath?: string;
   autoRegister?: boolean;
   dev?: boolean;
@@ -91,7 +92,7 @@ export default function withWorkbox(
     injectManifestOptions = {},
   } = options;
 
-  const locations = getPaths(projectRoot!);
+  const locations = getPaths(projectRoot!, { platform: options.platform });
 
   webpackConfig.plugins.push(
     new CopyPlugin([
