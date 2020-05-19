@@ -138,147 +138,18 @@ Object {
     "publicPath": "/",
   },
   "plugins": Array [
-    Object {
-      "assetJson": undefined,
-      "childCompilationOutputName": undefined,
-      "childCompilerHash": undefined,
-      "hash": undefined,
-      "options": Object {
-        "cache": true,
-        "chunks": "all",
-        "chunksSortMode": "auto",
-        "compile": true,
-        "excludeChunks": Array [],
-        "favicon": false,
-        "filename": "packages/webpack-config/e2e/basic/web-build/index.html",
-        "hash": false,
-        "inject": true,
-        "meta": Object {
-          "description": "A Neat Expo App",
-        },
-        "minify": false,
-        "showErrors": true,
-        "template": "packages/webpack-config/web-default/index.html",
-        "templateContent": false,
-        "templateParameters": [Function],
-        "title": "basic",
-        "xhtml": false,
-      },
-      "version": 4,
-    },
-    Object {
-      "htmlWebpackPlugin": [Function],
-      "replacements": Object {
-        "LANG_ISO_CODE": "en",
-        "NO_SCRIPT": "<form action=\\"\\" style=\\"background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;\\"><div style=\\"font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;\\"> <p>Oh no! It looks like JavaScript is not enabled in your browser.</p> <p style=\\"margin:20px 0;\\"> <button type=\\"submit\\" style=\\"background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-weight: bold; line-height: 20px; padding: 6px 16px;\\">Reload</button> </p> </div> </form>",
-        "ROOT_ID": "root",
-        "WEB_PUBLIC_URL": "/",
-        "WEB_TITLE": "basic",
-      },
-    },
-    Object {
-      "favicon": Object {
-        "backgroundColor": "transparent",
-        "resizeMode": "contain",
-        "src": "https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true",
-      },
-      "modifyOptions": Object {},
-      "pwaOptions": Object {
-        "links": Array [],
-        "projectRoot": "packages/webpack-config/e2e/basic",
-        "publicPath": "/",
-      },
-    },
-    Object {
-      "appPath": "packages/webpack-config/e2e/basic",
-      "getRelativePath": [Function],
-      "prettierError": [Function],
-      "useYarnCommand": [Function],
-      "yarnLockFile": undefined,
-    },
-    Object {
-      "definitions": Object {
-        "__DEV__": true,
-        "process.env": Object {
-          "APP_MANIFEST": "{\\"name\\":\\"basic\\",\\"description\\":\\"A Neat Expo App\\",\\"version\\":\\"1.0.0\\",\\"icon\\":\\"https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true\\",\\"splash\\":{\\"image\\":\\"https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/splash.png?raw=true\\",\\"resizeMode\\":\\"contain\\",\\"backgroundColor\\":\\"#ffffff\\"},\\"web\\":{},\\"slug\\":\\"basic\\",\\"sdkVersion\\":\\"37.0.0\\",\\"platforms\\":[\\"ios\\",\\"android\\"]}",
-          "NODE_ENV": "\\"development\\"",
-          "PUBLIC_URL": "\\"\\"",
-        },
-      },
-    },
-    Object {
-      "options": Object {
-        "maxChunks": 1,
-      },
-    },
-    Object {
-      "fullBuildTimeout": 200,
-      "multiStep": undefined,
-      "options": Object {},
-      "requestTimeout": 10000,
-    },
-    Object {
-      "nodeModulesPath": "packages/webpack-config/e2e/basic/node_modules",
-    },
-    Object {
-      "opts": Object {
-        "basePath": "",
-        "fileName": "asset-manifest.json",
-        "filter": [Function],
-        "generate": [Function],
-        "map": null,
-        "publicPath": "/",
-        "seed": null,
-        "serialize": [Function],
-        "sort": null,
-        "transformExtensions": /\\^\\(gz\\|map\\)\\$/i,
-        "writeToFileEmit": false,
-      },
-    },
-    Object {
-      "handler": [Function],
-      "modulesCount": 500,
-      "options": Object {
-        "color": "green",
-        "name": "Expo Webpack",
-        "reporter": null,
-        "reporters": Array [
-          "fancy",
-        ],
-      },
-      "profile": false,
-      "reporters": Array [
-        Object {},
-      ],
-      "showActiveModules": true,
-      "showEntries": false,
-      "showModules": true,
-    },
-    Object {
-      "fallbackModuleFilenameTemplate": "webpack://[namespace]/[resourcePath]?[hash]",
-      "moduleFilenameTemplate": [Function],
-      "namespace": "",
-      "options": Object {
-        "columns": false,
-        "filename": undefined,
-        "module": true,
-        "moduleFilenameTemplate": [Function],
-        "test": /\\\\\\.\\(js\\|tsx\\?\\|\\(js\\)\\?bundle\\)\\(\\$\\|\\\\\\?\\)/i,
-      },
-      "sourceMapFilename": undefined,
-      "sourceMappingURLComment": "
-//# sourceMappingURL=[url]",
-    },
-    Object {
-      "options": Object {},
-      "patterns": Array [
-        Object {
-          "from": "packages/webpack-config/web-default/register-service-worker.js",
-          "to": "packages/webpack-config/e2e/basic/web-build/register-service-worker.js",
-          "transform": [Function],
-        },
-      ],
-    },
+    "HtmlWebpackPlugin",
+    "InterpolateHtmlPlugin",
+    "FaviconWebpackPlugin",
+    "ModuleNotFoundPlugin",
+    "DefinePlugin",
+    "LimitChunkCountPlugin",
+    "HotModuleReplacementPlugin",
+    "WatchMissingNodeModulesPlugin",
+    "ManifestPlugin",
+    "WebpackBar",
+    "SourceMapDevToolPlugin",
+    "CopyPlugin",
   ],
   "resolve": Object {
     "extensions": Array [
@@ -522,237 +393,21 @@ Object {
     "path": "packages/webpack-config/e2e/basic/web-build",
     "publicPath": "/",
   },
-  "performance": Object {
-    "maxAssetSize": 600000,
-    "maxEntrypointSize": 600000,
-  },
   "plugins": Array [
-    Object {
-      "apply": [Function],
-      "cleanAfterEveryBuildPatterns": Array [],
-      "cleanOnceBeforeBuildPatterns": Array [
-        "packages/webpack-config/e2e/basic/web-build",
-      ],
-      "cleanStaleWebpackAssets": true,
-      "currentAssets": Array [],
-      "dangerouslyAllowCleanPatternsOutsideProject": false,
-      "dry": false,
-      "handleDone": [Function],
-      "handleInitial": [Function],
-      "initialClean": false,
-      "outputPath": "",
-      "protectWebpackAssets": true,
-      "removeFiles": [Function],
-      "verbose": false,
-    },
-    Object {
-      "options": Object {},
-      "patterns": Array [
-        Object {
-          "from": "packages/webpack-config/web-default",
-          "ignore": Array [
-            "expo-service-worker.js",
-            "serve.json",
-            "index.html",
-            "icon.png",
-            "register-service-worker.js",
-          ],
-          "to": "packages/webpack-config/e2e/basic/web-build",
-        },
-        Object {
-          "from": "packages/webpack-config/web-default/serve.json",
-          "to": "packages/webpack-config/e2e/basic/web-build/serve.json",
-        },
-        Object {
-          "from": "packages/webpack-config/web-default/expo-service-worker.js",
-          "to": "packages/webpack-config/e2e/basic/web-build/expo-service-worker.js",
-        },
-      ],
-    },
-    Object {
-      "assetJson": undefined,
-      "childCompilationOutputName": undefined,
-      "childCompilerHash": undefined,
-      "hash": undefined,
-      "options": Object {
-        "cache": true,
-        "chunks": "all",
-        "chunksSortMode": "auto",
-        "compile": true,
-        "excludeChunks": Array [],
-        "favicon": false,
-        "filename": "packages/webpack-config/e2e/basic/web-build/index.html",
-        "hash": false,
-        "inject": true,
-        "meta": Object {
-          "description": "A Neat Expo App",
-        },
-        "minify": Object {
-          "collapseWhitespace": true,
-          "keepClosingSlash": true,
-          "minifyCSS": true,
-          "minifyJS": true,
-          "minifyURLs": true,
-          "removeComments": true,
-          "removeEmptyAttributes": true,
-          "removeRedundantAttributes": true,
-          "removeStyleLinkTypeAttributes": true,
-          "useShortDoctype": true,
-        },
-        "showErrors": true,
-        "template": "packages/webpack-config/web-default/index.html",
-        "templateContent": false,
-        "templateParameters": [Function],
-        "title": "basic",
-        "xhtml": false,
-      },
-      "version": 4,
-    },
-    Object {
-      "htmlWebpackPlugin": [Function],
-      "replacements": Object {
-        "LANG_ISO_CODE": "en",
-        "NO_SCRIPT": "<form action=\\"\\" style=\\"background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;\\"><div style=\\"font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;\\"> <p>Oh no! It looks like JavaScript is not enabled in your browser.</p> <p style=\\"margin:20px 0;\\"> <button type=\\"submit\\" style=\\"background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-weight: bold; line-height: 20px; padding: 6px 16px;\\">Reload</button> </p> </div> </form>",
-        "ROOT_ID": "root",
-        "WEB_PUBLIC_URL": "/",
-        "WEB_TITLE": "basic",
-      },
-    },
-    Object {
-      "favicon": Object {
-        "backgroundColor": "transparent",
-        "resizeMode": "contain",
-        "src": "https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true",
-      },
-      "modifyOptions": Object {},
-      "pwaOptions": Object {
-        "links": Array [],
-        "projectRoot": "packages/webpack-config/e2e/basic",
-        "publicPath": "/",
-      },
-    },
-    Object {
-      "appPath": "packages/webpack-config/e2e/basic",
-      "getRelativePath": [Function],
-      "prettierError": [Function],
-      "useYarnCommand": [Function],
-      "yarnLockFile": undefined,
-    },
-    Object {
-      "definitions": Object {
-        "__DEV__": false,
-        "process.env": Object {
-          "APP_MANIFEST": "{\\"name\\":\\"basic\\",\\"description\\":\\"A Neat Expo App\\",\\"version\\":\\"1.0.0\\",\\"icon\\":\\"https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true\\",\\"splash\\":{\\"image\\":\\"https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/splash.png?raw=true\\",\\"resizeMode\\":\\"contain\\",\\"backgroundColor\\":\\"#ffffff\\"},\\"web\\":{},\\"slug\\":\\"basic\\",\\"sdkVersion\\":\\"37.0.0\\",\\"platforms\\":[\\"ios\\",\\"android\\"]}",
-          "NODE_ENV": "\\"production\\"",
-          "PUBLIC_URL": "\\"\\"",
-        },
-      },
-    },
-    Object {
-      "options": Object {
-        "maxChunks": 1,
-      },
-    },
-    Object {
-      "options": Object {
-        "chunkFilename": "static/css/[name].[contenthash:8].chunk.css",
-        "filename": "static/css/[name].[contenthash:8].css",
-      },
-    },
-    Object {
-      "opts": Object {
-        "basePath": "",
-        "fileName": "asset-manifest.json",
-        "filter": [Function],
-        "generate": [Function],
-        "map": null,
-        "publicPath": "/",
-        "seed": null,
-        "serialize": [Function],
-        "sort": null,
-        "transformExtensions": /\\^\\(gz\\|map\\)\\$/i,
-        "writeToFileEmit": false,
-      },
-    },
-    Object {
-      "handler": [Function],
-      "modulesCount": 500,
-      "options": Object {
-        "color": "green",
-        "name": "Expo Webpack",
-        "reporter": null,
-        "reporters": Array [
-          "fancy",
-        ],
-      },
-      "profile": false,
-      "reporters": Array [
-        Object {},
-      ],
-      "showActiveModules": true,
-      "showEntries": false,
-      "showModules": true,
-    },
-    Object {
-      "fallbackModuleFilenameTemplate": "webpack://[namespace]/[resourcePath]?[hash]",
-      "moduleFilenameTemplate": [Function],
-      "namespace": "",
-      "options": Object {
-        "filename": undefined,
-        "moduleFilenameTemplate": [Function],
-        "test": /\\\\\\.\\(js\\|tsx\\?\\|\\(js\\)\\?bundle\\)\\(\\$\\|\\\\\\?\\)/i,
-      },
-      "sourceMapFilename": undefined,
-      "sourceMappingURLComment": "
-//# sourceMappingURL=[url]",
-    },
-    Object {
-      "options": Object {},
-      "patterns": Array [
-        Object {
-          "from": "packages/webpack-config/web-default/register-service-worker.js",
-          "to": "packages/webpack-config/e2e/basic/web-build/register-service-worker.js",
-          "transform": [Function],
-        },
-      ],
-    },
-    Object {
-      "config": Object {
-        "chunks": Array [],
-        "clientsClaim": true,
-        "exclude": Array [
-          /\\\\\\.LICENSE\\$/,
-          /\\\\\\.map\\$/,
-          /asset-manifest\\\\\\.json\\$/,
-          /\\\\\\.js\\\\\\.gz\\$/,
-          /\\(apple-touch-startup-image\\|chrome-icon\\|apple-touch-icon\\)\\.\\*\\\\\\.png\\$/,
-        ],
-        "excludeChunks": Array [],
-        "importScripts": Array [],
-        "importWorkboxFrom": "cdn",
-        "importsDirectory": "",
-        "navigateFallback": "index.html",
-        "navigateFallbackBlacklist": Array [
-          /\\^\\\\/_/,
-          /\\\\/\\[\\^\\\\/\\]\\+\\\\\\.\\[\\^\\\\/\\]\\+\\$/,
-        ],
-        "precacheManifestFilename": "precache-manifest.[manifestHash].js",
-        "runtimeCaching": Array [
-          Object {
-            "handler": "networkFirst",
-            "options": Object {
-              "cacheName": "offlineCache",
-              "expiration": Object {
-                "maxEntries": 200,
-              },
-            },
-            "urlPattern": /\\^https\\?\\.\\*/,
-          },
-        ],
-        "skipWaiting": true,
-        "swDest": "service-worker.js",
-      },
-    },
+    "CleanWebpackPlugin",
+    "CopyPlugin",
+    "HtmlWebpackPlugin",
+    "InterpolateHtmlPlugin",
+    "FaviconWebpackPlugin",
+    "ModuleNotFoundPlugin",
+    "DefinePlugin",
+    "LimitChunkCountPlugin",
+    "MiniCssExtractPlugin",
+    "ManifestPlugin",
+    "WebpackBar",
+    "SourceMapDevToolPlugin",
+    "CopyPlugin",
+    "GenerateSW",
   ],
   "resolve": Object {
     "extensions": Array [
@@ -953,127 +608,16 @@ Object {
     "publicPath": "/",
   },
   "plugins": Array [
-    Object {
-      "assetJson": undefined,
-      "childCompilationOutputName": undefined,
-      "childCompilerHash": undefined,
-      "hash": undefined,
-      "options": Object {
-        "cache": true,
-        "chunks": "all",
-        "chunksSortMode": "auto",
-        "compile": true,
-        "excludeChunks": Array [],
-        "favicon": false,
-        "filename": "packages/webpack-config/e2e/basic/web-build/index.html",
-        "hash": false,
-        "inject": true,
-        "meta": Object {
-          "description": "A Neat Expo App",
-        },
-        "minify": false,
-        "showErrors": true,
-        "template": "packages/webpack-config/web-default/index.html",
-        "templateContent": false,
-        "templateParameters": [Function],
-        "title": "basic",
-        "xhtml": false,
-      },
-      "version": 4,
-    },
-    Object {
-      "htmlWebpackPlugin": [Function],
-      "replacements": Object {
-        "LANG_ISO_CODE": "en",
-        "NO_SCRIPT": "<form action=\\"\\" style=\\"background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;\\"><div style=\\"font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;\\"> <p>Oh no! It looks like JavaScript is not enabled in your browser.</p> <p style=\\"margin:20px 0;\\"> <button type=\\"submit\\" style=\\"background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-weight: bold; line-height: 20px; padding: 6px 16px;\\">Reload</button> </p> </div> </form>",
-        "ROOT_ID": "root",
-        "WEB_PUBLIC_URL": "/",
-        "WEB_TITLE": "basic",
-      },
-    },
-    Object {
-      "favicon": Object {
-        "backgroundColor": "transparent",
-        "resizeMode": "contain",
-        "src": "https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true",
-      },
-      "modifyOptions": Object {},
-      "pwaOptions": Object {
-        "links": Array [],
-        "projectRoot": "packages/webpack-config/e2e/basic",
-        "publicPath": "/",
-      },
-    },
-    Object {
-      "appPath": "packages/webpack-config/e2e/basic",
-      "getRelativePath": [Function],
-      "prettierError": [Function],
-      "useYarnCommand": [Function],
-      "yarnLockFile": undefined,
-    },
-    Object {
-      "definitions": Object {
-        "__DEV__": true,
-        "process.env": Object {
-          "APP_MANIFEST": "{\\"name\\":\\"basic\\",\\"description\\":\\"A Neat Expo App\\",\\"version\\":\\"1.0.0\\",\\"icon\\":\\"https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true\\",\\"splash\\":{\\"image\\":\\"https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/splash.png?raw=true\\",\\"resizeMode\\":\\"contain\\",\\"backgroundColor\\":\\"#ffffff\\"},\\"web\\":{},\\"slug\\":\\"basic\\",\\"sdkVersion\\":\\"37.0.0\\",\\"platforms\\":[\\"ios\\",\\"android\\"]}",
-          "NODE_ENV": "\\"development\\"",
-          "PUBLIC_URL": "\\"\\"",
-        },
-      },
-    },
-    Object {
-      "fullBuildTimeout": 200,
-      "multiStep": undefined,
-      "options": Object {},
-      "requestTimeout": 10000,
-    },
-    Object {
-      "nodeModulesPath": "packages/webpack-config/e2e/basic/node_modules",
-    },
-    Object {
-      "opts": Object {
-        "basePath": "",
-        "fileName": "asset-manifest.json",
-        "filter": [Function],
-        "generate": [Function],
-        "map": null,
-        "publicPath": "/",
-        "seed": null,
-        "serialize": [Function],
-        "sort": null,
-        "transformExtensions": /\\^\\(gz\\|map\\)\\$/i,
-        "writeToFileEmit": false,
-      },
-    },
-    Object {
-      "handler": [Function],
-      "modulesCount": 500,
-      "options": Object {
-        "color": "green",
-        "name": "Expo Webpack",
-        "reporter": null,
-        "reporters": Array [
-          "fancy",
-        ],
-      },
-      "profile": false,
-      "reporters": Array [
-        Object {},
-      ],
-      "showActiveModules": true,
-      "showEntries": false,
-      "showModules": true,
-    },
-    Object {
-      "options": Object {},
-      "patterns": Array [
-        Object {
-          "from": "packages/webpack-config/web-default/register-service-worker.js",
-          "to": "packages/webpack-config/e2e/basic/web-build/register-service-worker.js",
-          "transform": [Function],
-        },
-      ],
-    },
+    "HtmlWebpackPlugin",
+    "InterpolateHtmlPlugin",
+    "FaviconWebpackPlugin",
+    "ModuleNotFoundPlugin",
+    "DefinePlugin",
+    "HotModuleReplacementPlugin",
+    "WatchMissingNodeModulesPlugin",
+    "ManifestPlugin",
+    "WebpackBar",
+    "CopyPlugin",
   ],
   "resolve": Object {
     "alias": Object {
@@ -1334,10 +878,6 @@ Object {
     "globalObject": "this",
     "path": "packages/webpack-config/e2e/basic/web-build",
     "publicPath": "/",
-  },
-  "performance": Object {
-    "maxAssetSize": 600000,
-    "maxEntrypointSize": 600000,
   },
   "plugins": Array [
     "CleanWebpackPlugin",
