@@ -386,7 +386,7 @@ export default async function (
         }),
 
       // This is necessary to emit hot updates (currently CSS only):
-      isDev && new HotModuleReplacementPlugin(),
+      !isNative && isDev && new HotModuleReplacementPlugin(),
 
       // If you require a missing module and then `npm install` it, you still have
       // to restart the development server for Webpack to discover it. This plugin
@@ -394,7 +394,8 @@ export default async function (
       // See https://github.com/facebook/create-react-app/issues/186
       isDev && new WatchMissingNodeModulesPlugin(locations.modules),
 
-      isProd &&
+      !isNative &&
+        isProd &&
         new MiniCssExtractPlugin({
           // Options similar to the same options in webpackOptions.output
           // both options are optional
@@ -407,33 +408,36 @@ export default async function (
       //   `index.html`
       // - "entrypoints" key: Array of files which are included in `index.html`,
       //   can be used to reconstruct the HTML if necessary
-      new ManifestPlugin({
-        fileName: 'asset-manifest.json',
-        publicPath,
-        filter: ({ path }) => {
-          if (
-            path.match(/(apple-touch-startup-image|apple-touch-icon|chrome-icon|precache-manifest)/)
-          ) {
-            return false;
-          }
-          // Remove compressed versions and service workers
-          return !(path.endsWith('.gz') || path.endsWith('worker.js'));
-        },
-        generate: (seed: Record<string, any>, files, entrypoints) => {
-          const manifestFiles = files.reduce<Record<string, string>>((manifest, file) => {
-            if (file.name) {
-              manifest[file.name] = file.path;
+      !isNative &&
+        new ManifestPlugin({
+          fileName: 'asset-manifest.json',
+          publicPath,
+          filter: ({ path }) => {
+            if (
+              path.match(
+                /(apple-touch-startup-image|apple-touch-icon|chrome-icon|precache-manifest)/
+              )
+            ) {
+              return false;
             }
-            return manifest;
-          }, seed);
-          const entrypointFiles = entrypoints.app.filter(fileName => !fileName.endsWith('.map'));
+            // Remove compressed versions and service workers
+            return !(path.endsWith('.gz') || path.endsWith('worker.js'));
+          },
+          generate: (seed: Record<string, any>, files, entrypoints) => {
+            const manifestFiles = files.reduce<Record<string, string>>((manifest, file) => {
+              if (file.name) {
+                manifest[file.name] = file.path;
+              }
+              return manifest;
+            }, seed);
+            const entrypointFiles = entrypoints.app.filter(fileName => !fileName.endsWith('.map'));
 
-          return {
-            files: manifestFiles,
-            entrypoints: entrypointFiles,
-          };
-        },
-      }),
+            return {
+              files: manifestFiles,
+              entrypoints: entrypointFiles,
+            };
+          },
+        }),
 
       deepScopeAnalysisEnabled && new WebpackDeepScopeAnalysisPlugin(),
 
