@@ -2,41 +2,20 @@ import { vol } from 'memfs';
 import { ApiV2 } from '@expo/xdl';
 
 import { getPublicationDetailAsync, getPublishHistoryAsync } from '../utils/PublishUtils';
+import { jester } from '../../credentials/test-fixtures/mocks';
+import { mockExpoXDL } from '../../__tests__/utils';
 
 jest.mock('fs');
 jest.mock('resolve-from');
-jest.mock('ora', () =>
-  jest.fn(() => {
-    return {
-      start: jest.fn(() => {
-        return { stop: jest.fn(), succeed: jest.fn() };
-      }),
-    };
-  })
-);
-jest.mock('@expo/xdl', () => {
-  const user = {
-    kind: 'user',
-    username: 'test-username',
-    nickname: 'test-nickname',
-    userId: 'test-id',
-    picture: 'test-pic',
-    currentConnection: 'Username-Password-Authentication',
-    sessionSecret: 'test-session-secret',
-  };
-  const pkg = jest.requireActual('@expo/xdl');
-  return {
-    ...pkg,
-    UserManager: {
-      ...pkg.UserManager,
-      ensureLoggedInAsync: jest.fn(() => user),
-      getCurrentUserAsync: jest.fn(() => user),
-    },
-    ApiV2: {
-      ...pkg.clientForUser,
-      clientForUser: jest.fn(),
-    },
-  };
+
+mockExpoXDL({
+  UserManager: {
+    ensureLoggedInAsync: jest.fn(() => jester),
+    getCurrentUserAsync: jest.fn(() => jester),
+  },
+  ApiV2: {
+    clientForUser: jest.fn(),
+  },
 });
 
 describe('publish details', () => {
@@ -56,7 +35,7 @@ describe('publish details', () => {
     version: '0.1.0',
     slug: 'testing-123',
     sdkVersion: '33.0.0',
-    owner: 'test-user',
+    owner: jester.username,
   });
 
   beforeAll(() => {
@@ -94,7 +73,7 @@ describe('publish details', () => {
 
     expect(postAsync.mock.calls.length).toBe(1);
     expect(postAsync).toHaveBeenCalledWith('publish/details', {
-      owner: 'test-user',
+      owner: jester.username,
       publishId: 'test-uuid',
       slug: 'testing-123',
     });
@@ -120,7 +99,7 @@ describe('publish details', () => {
       platform: 'ios',
       releaseChannel: 'test-channel',
       sdkVersion: '35.0.0',
-      owner: 'test-user',
+      owner: jester.username,
       slug: 'testing-123',
       version: 2,
     });

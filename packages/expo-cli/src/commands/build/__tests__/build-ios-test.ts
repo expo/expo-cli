@@ -7,17 +7,10 @@ import {
   jester,
   testAppJson,
 } from '../../../credentials/test-fixtures/mocks';
+import { mockExpoXDL } from '../../../__tests__/utils';
 
 jest.mock('fs');
-jest.mock('ora', () =>
-  jest.fn(() => {
-    return {
-      start: jest.fn(() => {
-        return { stop: jest.fn(), succeed: jest.fn(), fail: jest.fn() };
-      }),
-    };
-  })
-);
+
 jest.mock('@expo/plist', () => {
   const plistModule = jest.requireActual('@expo/plist');
   return {
@@ -40,13 +33,12 @@ jest.mock('commander', () => {
   };
 });
 
-const mockUser = jester;
 const mockApiV2 = getApiV2MockCredentials();
 const mockedXDLModules = {
   UserManager: {
-    ensureLoggedInAsync: jest.fn(() => mockUser),
-    getCurrentUserAsync: jest.fn(() => mockUser),
-    getCurrentUsernameAsync: jest.fn(() => mockUser.username),
+    ensureLoggedInAsync: jest.fn(() => jester),
+    getCurrentUserAsync: jest.fn(() => jester),
+    getCurrentUsernameAsync: jest.fn(() => jester.username),
   },
   ApiV2: {
     clientForUser: jest.fn(() => mockApiV2),
@@ -62,20 +54,7 @@ const mockedXDLModules = {
   },
   PKCS12Utils: { getP12CertFingerprint: jest.fn(), findP12CertSerialNumber: jest.fn() },
 };
-
-jest.mock('@expo/xdl', () => {
-  const pkg = jest.requireActual('@expo/xdl');
-  const xdlMock = {
-    ...pkg,
-  };
-  for (const xdlModuleName of Object.keys(mockedXDLModules)) {
-    xdlMock[xdlModuleName] = {
-      ...pkg[xdlModuleName],
-      ...mockedXDLModules[xdlModuleName],
-    };
-  }
-  return xdlMock;
-});
+mockExpoXDL(mockedXDLModules);
 
 describe('build ios', () => {
   const projectRoot = '/test-project';

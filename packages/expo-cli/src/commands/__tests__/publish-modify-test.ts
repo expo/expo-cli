@@ -5,41 +5,20 @@ import {
   rollbackPublicationFromChannelAsync,
   setPublishToChannelAsync,
 } from '../utils/PublishUtils';
+import { jester } from '../../credentials/test-fixtures/mocks';
+import { mockExpoXDL } from '../../__tests__/utils';
 
 jest.mock('fs');
 jest.mock('resolve-from');
-jest.mock('ora', () =>
-  jest.fn(() => {
-    return {
-      start: jest.fn(() => {
-        return { stop: jest.fn(), succeed: jest.fn() };
-      }),
-    };
-  })
-);
-jest.mock('@expo/xdl', () => {
-  const user = {
-    kind: 'user',
-    username: 'test-username',
-    nickname: 'test-nickname',
-    userId: 'test-id',
-    picture: 'test-pic',
-    currentConnection: 'Username-Password-Authentication',
-    sessionSecret: 'test-session-secret',
-  };
-  const pkg = jest.requireActual('@expo/xdl');
-  return {
-    ...pkg,
-    UserManager: {
-      ...pkg.UserManager,
-      ensureLoggedInAsync: jest.fn(() => user),
-      getCurrentUserAsync: jest.fn(() => user),
-    },
-    ApiV2: {
-      ...pkg.clientForUser,
-      clientForUser: jest.fn(),
-    },
-  };
+
+mockExpoXDL({
+  UserManager: {
+    ensureLoggedInAsync: jest.fn(() => jester),
+    getCurrentUserAsync: jest.fn(() => jester),
+  },
+  ApiV2: {
+    clientForUser: jest.fn(),
+  },
 });
 
 describe('publish details', () => {
@@ -59,7 +38,7 @@ describe('publish details', () => {
     version: '0.1.0',
     slug: 'testing-123',
     sdkVersion: '33.0.0',
-    owner: 'test-user',
+    owner: jester.username,
   });
 
   beforeAll(() => {
@@ -133,7 +112,7 @@ describe('publish details', () => {
       releaseChannel: 'test-channel',
       slug: 'testing-123',
       count: 2,
-      owner: 'test-user',
+      owner: jester.username,
       platform: 'ios',
       sdkVersion: '35.0.0',
       version: 2,
@@ -176,7 +155,7 @@ describe('publish details', () => {
       releaseChannel: 'test-channel',
       slug: 'testing-123',
       count: 2,
-      owner: 'test-user',
+      owner: jester.username,
       platform: 'ios',
       sdkVersion: '35.0.0',
       version: 2,
@@ -221,7 +200,7 @@ describe('publish details', () => {
       releaseChannel: 'test-channel',
       slug: 'testing-123',
       count: 2,
-      owner: 'test-user',
+      owner: jester.username,
       platform: 'ios',
       sdkVersion: '35.0.0',
       version: 2,
@@ -229,7 +208,7 @@ describe('publish details', () => {
     expect(postAsync).toHaveBeenCalledWith('publish/details', {
       slug: 'testing-123',
       publishId: 'test-publication-uuid-1',
-      owner: 'test-user',
+      owner: jester.username,
     });
     expect(postAsync).toHaveBeenCalledWith('publish/set', {
       slug: 'testing-123',
@@ -275,7 +254,7 @@ describe('publish details', () => {
       releaseChannel: 'test-channel',
       slug: 'testing-123',
       count: 2,
-      owner: 'test-user',
+      owner: jester.username,
       platform: 'ios',
       sdkVersion: '35.0.0',
       version: 2,
@@ -284,7 +263,7 @@ describe('publish details', () => {
       releaseChannel: 'test-channel',
       slug: 'testing-123',
       count: 2,
-      owner: 'test-user',
+      owner: jester.username,
       platform: 'android',
       sdkVersion: '35.0.0',
       version: 2,
@@ -292,12 +271,12 @@ describe('publish details', () => {
     expect(postAsync).toHaveBeenCalledWith('publish/details', {
       slug: 'testing-123',
       publishId: 'test-publication-uuid-ios-1',
-      owner: 'test-user',
+      owner: jester.username,
     });
     expect(postAsync).toHaveBeenCalledWith('publish/details', {
       slug: 'testing-123',
       publishId: 'test-publication-uuid-android-1',
-      owner: 'test-user',
+      owner: jester.username,
     });
     expect(postAsync).toHaveBeenCalledWith('publish/set', {
       slug: 'testing-123',
