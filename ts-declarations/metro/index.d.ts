@@ -2,7 +2,7 @@ declare module 'metro' {
   //#region metro/src/Assets.js
 
   type AssetDataWithoutFiles = {
-    readonly __packager_asset: boolean;
+    readonly __packager_asset: true;
     readonly fileSystemLocation: string;
     readonly hash: string;
     readonly height: number | null | undefined;

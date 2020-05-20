@@ -17,14 +17,13 @@ export type BundleOptions = {
   minify?: boolean;
   sourceMapUrl?: string;
 };
+export type BundleAssetWithFileHashes = Metro.AssetData & {
+  fileHashes: string[]; // added by the hashAssets asset plugin
+};
 export type BundleOutput = {
   code: string;
   map: string;
-  assets: ReadonlyArray<
-    Metro.AssetData & {
-      fileHashes?: string[]; // added by the hashAssets asset plugin
-    }
-  >;
+  assets: ReadonlyArray<BundleAssetWithFileHashes>;
 };
 
 export async function runMetroDevServerAsync(
@@ -114,7 +113,9 @@ export async function bundleAsync(
       },
     });
     const { code, map } = await metroServer.build(bundleOptions);
-    const assets = await metroServer.getAssets(bundleOptions);
+    const assets = (await metroServer.getAssets(bundleOptions)) as ReadonlyArray<
+      BundleAssetWithFileHashes
+    >;
     reporter.update({
       buildID,
       type: 'bundle_build_done',
