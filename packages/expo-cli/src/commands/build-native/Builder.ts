@@ -5,7 +5,7 @@ import { Platform, prepareJob } from '@expo/build-tools';
 import { TurtleApi, User } from '@expo/xdl';
 import fs from 'fs-extra';
 import ora from 'ora';
-import uuidv4 from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 
 import { getLogsUrl, makeProjectTarball, waitForBuildEnd } from './utils';
 import log from '../../log';
@@ -38,7 +38,7 @@ export default class Builder {
   }
 
   async buildProject(projectDir: string, options: Options) {
-    const tarPath = path.join(os.tmpdir(), `${uuidv4()}.tar.gz`);
+    const tarPath = path.join(os.tmpdir(), `${uuid()}.tar.gz`);
     try {
       await makeProjectTarball(tarPath);
 
