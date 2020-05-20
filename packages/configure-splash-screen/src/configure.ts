@@ -6,18 +6,25 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import configureAndroid from './android';
-import { ResizeMode, Platform, Parameters } from './constants';
+import {
+  ResizeMode,
+  Platform,
+  Arguments,
+  StatusBarStyle,
+  StatusBarOptions,
+  AndroidOnlyStatusBarOptions,
+} from './constants';
 import configureIos from './ios';
 
 /**
  * These might be optionally provided by the user. There are default values for them.
  */
-interface Options {
+interface Options extends StatusBarOptions, AndroidOnlyStatusBarOptions {
   resizeMode: ResizeMode;
   platform: Platform;
 }
 
-async function action(configuration: Parameters & Options) {
+async function action(configuration: Arguments & Options) {
   const { platform, ...restParams } = configuration;
   const rootDir = path.resolve();
   switch (platform) {
@@ -36,7 +43,9 @@ async function action(configuration: Parameters & Options) {
 }
 
 function getAvailableOptions(o: object) {
-  return Object.values(o).join(' | ');
+  return Object.values(o)
+    .map(v => `"${v}"`)
+    .join(' | ');
 }
 
 function logErrorAndExit(errorMessage: string): never {
@@ -49,7 +58,10 @@ function logErrorAndExit(errorMessage: string): never {
  * @param parameterName Parameter name to log in error when file is not valid.
  * @returns Absolute path to the valid image file.
  */
-async function validateImagePath(imagePath: string, parameterName: string): Promise<string> {
+async function validateArgumentImagePath(
+  imagePath: string,
+  parameterName: string
+): Promise<string> {
   const resolvedImagePath = path.resolve(imagePath);
   // check if `imagePath` exists
   if (!(await fs.pathExists(resolvedImagePath))) {
@@ -69,115 +81,161 @@ async function validateImagePath(imagePath: string, parameterName: string): Prom
 
 /**
  * Ensures following semantic requirements are met:
- * - `resizeMode = ResizeMode.NATIVE` is selected only with `platform = Platform.ANDROID`
- * - `backgroundColor` is valid css-formatted color
- * - `imagePathOrDarkModeBackgroundColor` is a path to a valid .png file (and then this script assumes no dark mode) or a valid css-formatted color for dark mode (and then this script assumes dark mode is supported)
- * - `imagePath` is present only if darkMode is enabled and then it is a path to valid .png file
- * - `darkModeImagePath` is present only if darkMode is enabled and then it is a path to valid .png file for dark mode
+ * - PARAMETERS:
+ *   - `backgroundColor` is valid css-formatted color
+ *   - `imagePathOrDarkModeBackgroundColor` is a path to a valid .png file (then `darkMode = false`) or a valid css-formatted color for dark mode (then `darkMode = true`)
+ *   - `imagePath` is present only if `darkMode = true` and then it is a path to valid .png file
+ *   - `darkModeImagePath` is present only if `darkMode = true` and then it is a path to valid .png file for dark mode
+ * - OPTIONS:
+ *   - `resizeMode = NATIVE` is selected only with `platform = ANDROID`
+ *   - `statusBarBackgroundColor` is provided only if `platform = ANDROID`
+ *   - `statusBarTranslucent` is provided only if `platform = ANDROID`
+ *   - `darkModeStatusBarStyle` is provided only if `darkMode = true`
+ *   - `darkModeStatusBarBackgroundColor` is provided only if `platform = ANDROID` and `darkMode = true`
  */
 async function validateConfiguration(
-  configuration: Options & {
+  configuration: {
     backgroundColor: string;
     imagePathOrDarkModeBackgroundColor?: string;
     imagePath?: string;
     darkModeImagePath?: string;
-  }
-): Promise<Options & Parameters> {
+  } & Options
+): Promise<Arguments & Options> {
   const {
-    resizeMode,
     platform,
+    resizeMode,
     backgroundColor,
     imagePathOrDarkModeBackgroundColor,
     imagePath,
     darkModeImagePath,
+    darkModeStatusBarStyle,
+    statusBarBackgroundColor,
+    darkModeStatusBarBackgroundColor,
+    statusBarTranslucent,
   } = configuration;
 
-  // check for `native` resizeMode being selected only for `android` platform
-  if (resizeMode === ResizeMode.NATIVE && platform !== Platform.ANDROID) {
-    logErrorAndExit(`error: Invalid resizeMode '${resizeMode}' for platform '${platform}'.`);
-  }
-
+  // first argument `backgroundColor` is valid css-formatted color
   const parsedBackgroundColor = colorString.get(backgroundColor);
   if (!parsedBackgroundColor) {
     logErrorAndExit(`error: Invalid value '${backgroundColor}' for argument 'backgroundColor'.`);
   }
 
-  // only backgroundColor is provided
-  if (!imagePathOrDarkModeBackgroundColor) {
-    return {
-      resizeMode,
-      platform,
-      backgroundColor: parsedBackgroundColor,
-    };
+  const result: Arguments & Options = {
+    ...configuration,
+    backgroundColor: parsedBackgroundColor,
+  };
+
+  let darkMode = false;
+
+  // `imagePathOrDarkModeBackgroundColor` is a path to a valid .png file (then `darkMode = false`) or a valid css-formatted color for dark mode (then `darkMode = true`)
+  if (imagePathOrDarkModeBackgroundColor) {
+    const parsedDarkModeBackgroundColor = colorString.get(imagePathOrDarkModeBackgroundColor);
+    if (parsedDarkModeBackgroundColor) {
+      darkMode = true;
+      result.darkModeBackgroundColor = parsedDarkModeBackgroundColor;
+    } else {
+      darkMode = false;
+      // it's not a color, then it should be a path to an image file
+      result.imagePath = await validateArgumentImagePath(
+        imagePathOrDarkModeBackgroundColor,
+        'imagePathOrDarkModeBackgroundColor'
+      );
+    }
   }
 
-  const parsedDarkModeBackgroundColor = colorString.get(imagePathOrDarkModeBackgroundColor);
-  if (!parsedDarkModeBackgroundColor) {
-    // imagePathOrDarkModeBackgroundColor should be a path to an image file
-    const resolvedImagePath = await validateImagePath(
-      imagePathOrDarkModeBackgroundColor,
-      'imagePathOrDarkModeBackgroundColor'
-    );
-
-    // check if there're no other arguments passed at this point
-    if (imagePath) {
+  // `imagePath` is present only if `darkMode = true` and then it is a path to valid .png file
+  if (imagePath) {
+    if (!darkMode) {
       logErrorAndExit(
-        `error: As the second argument is recognized as a path to an image file, dark mode is not not supported.`
+        `error: As the second argument is recognized as a path to an image file, dark mode is not enabled and no more arguments are expected.`
       );
     }
 
-    return {
-      resizeMode,
-      platform,
-      backgroundColor: parsedBackgroundColor,
-      imagePath: resolvedImagePath,
-    };
+    result.imagePath = await validateArgumentImagePath(imagePath, 'imagePath');
   }
 
-  if (!imagePath) {
-    return {
-      resizeMode,
-      platform,
-      backgroundColor: parsedBackgroundColor,
-      darkModeBackgroundColor: parsedDarkModeBackgroundColor,
-    };
-  }
-
-  const resolvedImagePath = await validateImagePath(imagePath, 'imagePath');
-  const result = {
-    resizeMode,
-    platform,
-    backgroundColor: parsedBackgroundColor,
-    darkModeBackgroundColor: parsedDarkModeBackgroundColor,
-    imagePath: resolvedImagePath,
-  };
-
+  // `darkModeImagePath` is present only if `darkMode = true` and then it is a path to valid .png file for dark mode
   if (darkModeImagePath) {
-    const resolvedDarkModeImagePath = await validateImagePath(
+    if (!darkMode) {
+      logErrorAndExit(
+        `error: As the second argument is recognized as a path to an image file, dark mode is not enabled and no more arguments are expected.`
+      );
+    }
+
+    result.darkModeImagePath = await validateArgumentImagePath(
       darkModeImagePath,
       'darkModeImagePath'
     );
-    return {
-      ...result,
-      darkModeImagePath: resolvedDarkModeImagePath,
-    };
+  }
+
+  // `resizeMode = NATIVE` is selected only with `platform = ANDROID`
+  if (resizeMode === ResizeMode.NATIVE && platform !== Platform.ANDROID) {
+    logErrorAndExit(`error: Invalid resizeMode '${resizeMode}' for platform '${platform}'.`);
+  }
+
+  // `statusBarBackgroundColor` is provided only if `platform = ANDROID`
+  if (statusBarBackgroundColor && platform !== Platform.ANDROID) {
+    logErrorAndExit(
+      `error: Option 'statusbar-background-color' is not available for platform '${platform}'.`
+    );
+  }
+
+  // `statusBarTranslucent` is provided only if `platform = ANDROID`
+  if (statusBarTranslucent && platform !== Platform.ANDROID) {
+    logErrorAndExit(
+      `error: Option 'statusbar-translucent' is not available for platform '${platform}'.`
+    );
+  }
+
+  // `darkModeStatusBarStyle` is provided only if `darkMode = true`
+  if (darkModeStatusBarStyle && !darkMode) {
+    logErrorAndExit(
+      `error: Option 'dark-mode-statusbar-style' is not available when dark mode is not enabled.`
+    );
+  }
+
+  // `darkModeStatusBarBackgroundColor` is provided only if `platform = ANDROID` and `darkMode = true`
+  if (darkModeStatusBarBackgroundColor) {
+    if (!darkMode) {
+      logErrorAndExit(
+        `error: Option 'dark-mode-statusbar-background-color' is not available when dark mode is not enabled.`
+      );
+    }
+
+    if (platform !== Platform.ANDROID) {
+      logErrorAndExit(
+        `error: Option 'dark-mode-statusbar-background-color' is not available for platform '${platform}'.`
+      );
+    }
+  }
+
+  // `darkModeStatusBarStyle` is provided only if `darkMode = true`
+  if (darkModeStatusBarStyle && !darkMode) {
+    logErrorAndExit(
+      `error: Option 'dark-mode-statusbar-style' is not available when dark mode is not enabled.`
+    );
   }
 
   return result;
 }
 
-function validateResizeMode(userInput: string) {
-  if (!Object.values<string>(ResizeMode).includes(userInput)) {
-    logErrorAndExit(`error: Unknown value '${userInput}' for option 'resizeMode'.`);
-  }
-  return userInput;
+function generateEnumOptionValidatingFunction(optionName: string, availableOptionsEnum: {}) {
+  return (userInput: string) => {
+    if (!Object.values<string>(availableOptionsEnum).includes(userInput)) {
+      logErrorAndExit(`error: Unknown value '${userInput}' for option '${optionName}'.`);
+    }
+    return userInput;
+  };
 }
 
-function validatePlatform(userInput: string) {
-  if (!Object.values<string>(Platform).includes(userInput)) {
-    logErrorAndExit(`error: Unknown value '${userInput}' for option 'platform'.`);
-  }
-  return userInput;
+function generateColorOptionValidatingFunction(optionName: string) {
+  return (userInput: string) => {
+    const parsedColor = colorString.get(userInput);
+    if (!parsedColor) {
+      logErrorAndExit(`error: Invalid value '${userInput}' for option '${optionName}'.`);
+    }
+    return parsedColor;
+  };
 }
 
 program
@@ -190,7 +248,7 @@ program
       backgroundColor:
         'Valid css-formatted color (hex (#RRGGBB[AA]), rgb[a], hsl[a], named color (https://drafts.csswg.org/css-color/#named-colors)) that would be used as the background color for native splash screen view.',
       imagePathOrDarkModeBackgroundColor:
-        'Path to a valid .png image or valid css-formatted color (see lightBackgroundColor supported formats). When script detects that this argument is a path to a .png file, it assumes dark mode is not supported. Otherwise this argument is treated as a background color for native splash screen in dark mode.',
+        'Path to a valid .png image or valid css-formatted color (see backgroundColor supported formats). When script detects that this argument is a path to a .png file, it assumes dark mode is not supported. Otherwise this argument is treated as a background color for native splash screen in dark mode.',
       imagePath:
         'Path to valid .png image that will be displayed in native splash screen. This argument is available only if dark mode support is detected.',
       darkModeImagePath:
@@ -203,14 +261,41 @@ program
     `ResizeMode to be used for native splash screen image. Available values: ${getAvailableOptions(
       ResizeMode
     )} (only available for android platform)).`,
-    validateResizeMode,
+    generateEnumOptionValidatingFunction('resize-mode', ResizeMode),
     ResizeMode.CONTAIN
   )
   .option(
     '-p, --platform [platform]',
     `Selected platform to configure. Available values: ${getAvailableOptions(Platform)}.`,
-    validatePlatform,
+    generateEnumOptionValidatingFunction('platform', Platform),
     Platform.ALL
+  )
+  .option(
+    '--statusbar-style [statusBarStyle]',
+    `Customizes the color of the StatusBar icons. Available values: ${getAvailableOptions(
+      StatusBarStyle
+    )}.`,
+    generateEnumOptionValidatingFunction('statusbar-style', StatusBarStyle),
+    StatusBarStyle.DEFAULT
+  )
+  .option(
+    '--dark-mode-statusbar-style',
+    `The very same as 'statusbar-style' option, but applied only in dark mode.`
+  )
+  .option('--statusbar-hidden', `Hides the StatusBar.`, false)
+  .option(
+    '--statusbar-background-color [statusBarBackgroundColor]',
+    `(only for Android platform) Customizes the background color of the StatusBar. Valid css-formatted color (see backgroundColor supported formats).`,
+    generateColorOptionValidatingFunction('statusbar-background-color')
+  )
+  .option(
+    '--dark-mode-statusbar-background-color [darkModeStatusBarBackgroundColor]',
+    `(only for Android platform) The very same as 'statusbar-background-color' option, but applied only in dark mode.`,
+    generateColorOptionValidatingFunction('dark-mode-statusbar-background-color')
+  )
+  .option(
+    '--statusbar-translucent',
+    `(only for Android platform) Makes the StatusBar translucent (enables drawing under the StatusBar area).`
   )
   .action(
     async (
@@ -218,15 +303,14 @@ program
       imagePathOrDarkModeBackgroundColor: string | undefined,
       imagePath: string | undefined,
       darkModeImagePath: string | undefined,
-      { resizeMode, platform }: program.Command & Options
+      options: Options
     ) => {
       const configuration = {
         backgroundColor,
         imagePathOrDarkModeBackgroundColor,
         imagePath,
         darkModeImagePath,
-        resizeMode,
-        platform,
+        ...options,
       };
       const validatedConfiguration = await validateConfiguration(configuration);
       return action(validatedConfiguration);

@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 
-import { ResizeMode, Parameters } from '../constants';
+import { ResizeMode, Arguments, StatusBarOptions } from '../constants';
 import configureImageAsset from './ImageAsset';
 import configureBackgroundAsset from './BackgroundAsset';
 import configureInfoPlist from './Info.plist';
@@ -15,7 +15,10 @@ export default async function configureIos(
     darkModeBackgroundColor,
     imagePath,
     darkModeImagePath,
-  }: Parameters & { resizeMode: ResizeMode }
+    statusBarHidden,
+    statusBarStyle,
+    darkModeStatusBarStyle,
+  }: Arguments & StatusBarOptions & { resizeMode: ResizeMode }
 ) {
   const iosProject = await readPbxProject(projectRootPath);
 
