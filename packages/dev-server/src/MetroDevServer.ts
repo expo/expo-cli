@@ -50,7 +50,7 @@ function importMetroFromProject(projectRoot: string) {
   if (!resolvedPath) {
     throw new Error(
       'Missing package "metro" in the project. ' +
-        'This usually means React Native is not installed. ' +
+        'This usually means `react-native` is not installed. ' +
         'Please verify that dependencies in package.json include "react-native" ' +
         'and run `yarn` or `npm install`.'
     );

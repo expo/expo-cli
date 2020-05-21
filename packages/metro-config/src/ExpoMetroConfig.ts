@@ -122,7 +122,7 @@ function importMetroConfigFromProject(projectRoot: string): typeof MetroConfig {
   if (!resolvedPath) {
     throw new Error(
       'Missing package "metro-config" in the project. ' +
-        'This usually means React Native is not installed. ' +
+        'This usually means `react-native` is not installed. ' +
         'Please verify that dependencies in package.json include "react-native" ' +
         'and run `yarn` or `npm install`.'
     );

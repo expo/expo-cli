@@ -35,7 +35,7 @@ npx expo-optimize <project-directory> [options]
 
 ## 🤔 Why?
 
-We created `optimize` to improve our docs and websites (Next, Gatsby, React), and our native apps (React Native & Expo). Optimizing images can noticeable improve your native app and website's **TTI** (or time-to-interaction) which means less time on splash screens and quicker delivery over poor network connections.
+We created `optimize` to improve our docs and websites (Next, Gatsby, React), and our native apps (React & Expo). Optimizing images can noticeable improve your native app and website's **TTI** (or time-to-interaction) which means less time on splash screens and quicker delivery over poor network connections.
 
 ## ⚙️ Options
 

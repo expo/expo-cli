@@ -18,7 +18,7 @@ export function withExpoWebpack(
 ) {
   const projectRoot = options.projectRoot || process.cwd();
 
-  // Support React Native aliases
+  // Support react-native-web aliases
   // @ts-ignore: webpack version mismatch
   config = withAlias(config, getAliases(projectRoot));
 

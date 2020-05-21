@@ -1,7 +1,7 @@
 import { AnyConfiguration } from '../types';
 
 /**
- * Inject the required aliases for using React Native web and the extended Expo web ecosystem. Optionally can also safely append aliases to a Webpack config.
+ * Apply aliases to a Webpack config
  *
  * @param webpackConfig Existing Webpack config to modify.
  * @param alias Extra aliases to inject

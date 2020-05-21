@@ -35,7 +35,7 @@
 
 ## Issues
 
-- Add an error to your app, e.g. incorrect React Native version or an invalid field in `app.json`.
+- Add an error to your app, e.g. incorrect react-native version or an invalid field in `app.json`.
 - ✅ "Issues" log source should appear as the first item in the left sidebar.
 - ✅ Should be able to open Issues in a log panel.
 - ✅ "Issues" should disappear when there's no more errors.
