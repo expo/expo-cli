@@ -119,7 +119,7 @@ class AndroidOfflineSubmitter {
     } = this.submissionConfig;
 
     // TODO: check if `fastlane supply` works on linux
-    const travelingFastlane = require('@expo/traveling-fastlane-darwin')();
+    const travelingFastlane = require(`@expo/traveling-fastlane-${os.platform()}`)();
     const args = [archivePath, androidPackage, serviceAccountPath, track, archiveType];
     if (releaseStatus) {
       args.push(releaseStatus);
