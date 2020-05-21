@@ -114,7 +114,7 @@ describe(AndroidSubmitCommand, () => {
       (runTravelingFastlaneAsync as jest.Mock).mockClear();
     });
 
-    it('executes supply from traveling-fastlane', async () => {
+    it('executes supply_android from traveling-fastlane', async () => {
       const options: AndroidSubmitCommandOptions = {
         path: '/apks/fake.apk',
         archiveType: 'apk',

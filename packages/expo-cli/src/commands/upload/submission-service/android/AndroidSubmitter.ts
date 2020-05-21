@@ -8,8 +8,6 @@ import curryRight from 'lodash/curryRight';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
 
-import log from '../../../../log';
-
 import {
   AndroidSubmissionConfig,
   ArchiveType,
@@ -27,6 +25,7 @@ import { displayLogs } from '../utils/logs';
 import { runTravelingFastlaneAsync } from '../utils/travelingFastlane';
 import { SubmissionMode } from '../types';
 import { sleep } from '../../../utils/promise';
+import log from '../../../../log';
 
 export interface AndroidSubmissionOptions
   extends Pick<AndroidSubmissionConfig, 'track' | 'releaseStatus'> {
