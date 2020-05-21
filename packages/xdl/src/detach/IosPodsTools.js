@@ -411,7 +411,6 @@ use_unimodules!(
     'expo-bluetooth',
     'expo-in-app-purchases',
     'expo-payments-stripe',
-    'expo-notifications',
     'expo-splash-screen',
     'expo-image',
     'expo-updates',
