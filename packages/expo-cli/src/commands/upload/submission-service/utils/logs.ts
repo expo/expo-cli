@@ -3,7 +3,7 @@ import isError from 'lodash/isError';
 import got from 'got';
 
 import log from '../../../../log';
-import { Submission, SubmissionStatus } from '../SubmissionService';
+import { Submission, SubmissionStatus } from '../SubmissionService.types';
 import { printSubmissionError } from './errors';
 
 async function displayLogs(

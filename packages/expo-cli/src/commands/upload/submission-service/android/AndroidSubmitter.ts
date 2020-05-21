@@ -20,7 +20,8 @@ import { ServiceAccountSource, getServiceAccountAsync } from './ServiceAccountSo
 import { AndroidPackageSource, getAndroidPackageAsync } from './AndroidPackageSource';
 import { AndroidSubmissionContext } from './types';
 
-import SubmissionService, { Platform, Submission, SubmissionStatus } from '../SubmissionService';
+import SubmissionService, { DEFAULT_CHECK_INTERVAL_MS } from '../SubmissionService';
+import { Platform, Submission, SubmissionStatus } from '../SubmissionService.types';
 import { Archive, ArchiveSource, getArchiveAsync } from '../archive-source';
 import { displayLogs } from '../utils/logs';
 import { runTravelingFastlaneAsync } from '../utils/travelingFastlane';
@@ -181,8 +182,7 @@ class AndroidOnlineSubmitter {
     const submissionSpinner = ora('Submitting your app to Google Play Store').start();
     try {
       while (!submissionCompleted) {
-        // sleep for 5 seconds
-        await sleep(5 * 1000);
+        await sleep(DEFAULT_CHECK_INTERVAL_MS);
         submission = await SubmissionService.getSubmissionAsync(submissionId);
         submissionSpinner.text = AndroidOnlineSubmitter.getStatusText(submission.status);
         submissionStatus = submission.status;
