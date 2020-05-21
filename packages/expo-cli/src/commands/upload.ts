@@ -41,9 +41,7 @@ export default function (program: Command) {
       'Experimental: Use Submission Service for uploading your app. The upload process will happen on Expo servers.'
     )
     .option('--verbose', 'Always print logs from Submission Service')
-    .description(
-      'Uploads a standalone Android app to Google Play (works on macOS only). Uploads the latest build by default.'
-    )
+    .description('Uploads an Android standalone app to Google Play Store.')
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: any) => {
       // TODO: remove this once we verify `fastlane supply` works on linux / windows
