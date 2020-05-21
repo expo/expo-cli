@@ -1,50 +1,19 @@
 import { ApiV2, UserManager } from '@expo/xdl';
 import { JSONObject } from '@expo/json-file';
 
-import { AndroidSubmissionConfig } from './android/AndroidSubmissionConfig';
-
-export interface Submission {
-  id: string;
-  accountId: string;
-  userId: string;
-  platform: Platform;
-  status: SubmissionStatus;
-  submissionInfo?: SubmissionInfo;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-enum Platform {
-  IOS = 'ios',
-  ANDROID = 'android',
-}
-
-enum SubmissionStatus {
-  IN_QUEUE = 'in-queue',
-  IN_PROGRESS = 'in-progress',
-  FINISHED = 'finished',
-  ERRORED = 'errored',
-}
-
-interface SubmissionInfo {
-  logsUrl?: string;
-  error?: SubmissionError;
-}
-
-export interface SubmissionError {
-  errorCode: string;
-  message: string;
-}
-
-// TODO: add `| iOSSubmissionConfig` when iOS submissions are supported
-type SubmissionConfig = AndroidSubmissionConfig;
+import {
+  Platform,
+  StartSubmissionResult,
+  Submission,
+  SubmissionConfig,
+} from './SubmissionService.types';
 
 const SubmissionService = {
   startSubmissionAsync,
   getSubmissionAsync,
 };
 
-type StartSubmissionResult = string;
+const DEFAULT_CHECK_INTERVAL_MS = 5 * 1000; // 5 secs
 
 async function startSubmissionAsync(
   platform: Platform,
@@ -70,4 +39,4 @@ async function getApiClientForUser(): Promise<ApiV2> {
 }
 
 export default SubmissionService;
-export { Platform, SubmissionStatus };
+export { DEFAULT_CHECK_INTERVAL_MS };

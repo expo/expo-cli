@@ -1,4 +1,4 @@
-import { SubmissionError } from '../SubmissionService';
+import { SubmissionError } from '../SubmissionService.types';
 import log from '../../../../log';
 
 enum SubmissionErrorCode {

@@ -5,7 +5,7 @@ import {
   maybeFormatSdkVersion,
   upgradeAsync,
 } from '../upgrade';
-import { mockExpoXDL } from '../../__tests__/utils';
+import { mockExpoXDL } from '../../__tests__/mock-utils';
 
 jest.mock('fs');
 jest.mock('resolve-from');
