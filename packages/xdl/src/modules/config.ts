@@ -443,6 +443,11 @@ const expoUniversalModules = [
     sdkVersions: '>=35.0.0',
   },
   {
+    podName: 'EXNotifications',
+    libName: 'expo-notifications',
+    sdkVersions: '>=38.0.0',
+  },
+  {
     podName: 'EXPaymentsStripe',
     libName: 'expo-payments-stripe',
     sdkVersions: '>=30.0.0',
