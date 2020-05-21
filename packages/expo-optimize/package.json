@@ -28,13 +28,15 @@
     "prepare": "yarn run clean && yarn run build:prod",
     "lint": "eslint .",
     "watch": "yarn run build -w",
-    "build": "ncc build ./src/index.ts -o build/",
-    "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
+    "build": "ncc build ./src/index.ts -o build/ -e @expo/config",
+    "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register -e @expo/config",
     "clean": "rimraf ./build/"
+  },
+  "dependencies": {
+    "@expo/config": "3.2.6"
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.15",
-    "@expo/config": "3.2.6",
     "@expo/image-utils": "0.2.27",
     "@expo/json-file": "8.2.18",
     "@types/node": "^12.6.8",
