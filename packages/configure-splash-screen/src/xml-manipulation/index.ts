@@ -7,8 +7,11 @@ type WithExplicitNewValue<T> = T | ExplicitNewValue<T>;
 
 type ExpectedElementAttributes = Record<string, WithExplicitNewValue<string | number | undefined>>;
 type WithExplicitIndex<T> = T & { idx?: number };
+type WithDeletionFlag<T> = T & { deletionFlag?: boolean };
 
-type ExpectedElements = WithExplicitNewValue<WithExplicitIndex<ExpectedElement>[]>;
+type ExpectedElements = WithExplicitNewValue<
+  WithExplicitIndex<WithDeletionFlag<ExpectedElement>>[]
+>;
 
 export type ExpectedElementType = {
   name: string;
@@ -121,18 +124,24 @@ function mergeXmlElementsLists(
     return current;
   }
 
-  const result: WithExplicitIndex<Element>[] = [];
+  const result: WithExplicitIndex<WithDeletionFlag<Element>>[] = [];
 
   for (const currentElement of current) {
     const idxInExpected = expected.findIndex(el => compareElements(currentElement, el));
     if (idxInExpected !== -1) {
       const { idx, ...element } = expected.splice(idxInExpected, 1)[0];
-      result.push({ idx, ...mergeXmlElements(currentElement, element) });
+      if (!element.deletionFlag) {
+        result.push({ idx, ...mergeXmlElements(currentElement, element) });
+      }
     } else {
       result.push(currentElement);
     }
   }
-  result.push(...expected.map(({ idx, ...el }) => ({ idx, ...convertToElement(el) })));
+  result.push(
+    ...expected
+      .filter(({ deletionFlag }) => !deletionFlag)
+      .map(({ idx, ...el }) => ({ idx, ...convertToElement(el) }))
+  );
   const sortedResult = sortWithExplicitIndex(result);
   return sortedResult;
 }
@@ -152,7 +161,9 @@ function convertToElement(expectedElement: ExpectedElement): Element {
   }
   if (isElementsType(expectedElement)) {
     return {
-      elements: unboxExplicitNewValue(expectedElement.elements).map(convertToElement),
+      elements: unboxExplicitNewValue(expectedElement.elements)
+        .filter(({ deletionFlag }) => !deletionFlag)
+        .map(convertToElement),
       type: 'element',
     };
   }
@@ -165,7 +176,9 @@ function convertToElement(expectedElement: ExpectedElement): Element {
     result.attributes = convertExpectedAttributes(attributes);
   }
   if (elements) {
-    result.elements = unboxExplicitNewValue(elements).map(convertToElement);
+    result.elements = unboxExplicitNewValue(elements)
+      .filter(({ deletionFlag }) => !deletionFlag)
+      .map(convertToElement);
   }
   return result;
 }

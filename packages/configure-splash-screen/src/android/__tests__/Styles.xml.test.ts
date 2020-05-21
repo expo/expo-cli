@@ -52,5 +52,45 @@ describe('Styles.xml', () => {
 `;
       expect(actual).toEqual(expected);
     });
+
+    it('adds fullscreen flag', async () => {
+      await configureStylesXml(androidMainPath, true);
+      const actual = vol.readFileSync(filePath, 'utf-8');
+      const expected = `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <!-- Customize your theme here. -->
+    <item name="android:textColor">#000000</item>
+  </style>
+  <style name="Theme.App.SplashScreen" parent="Theme.AppCompat.Light.NoActionBar">
+    <!-- Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually -->
+    <item name="android:windowBackground">@drawable/splashscreen</item>
+    <item name="android:windowFullscreen">true</item>
+    <!-- Customize your splash screen theme here -->
+  </style>
+</resources>
+`;
+      expect(actual).toEqual(expected);
+    });
+
+    it('removes fullscreen flag', async () => {
+      await configureStylesXml(androidMainPath, true);
+      await configureStylesXml(androidMainPath);
+      const actual = vol.readFileSync(filePath, 'utf-8');
+      const expected = `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <!-- Customize your theme here. -->
+    <item name="android:textColor">#000000</item>
+  </style>
+  <style name="Theme.App.SplashScreen" parent="Theme.AppCompat.Light.NoActionBar">
+    <!-- Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually -->
+    <item name="android:windowBackground">@drawable/splashscreen</item>
+    <!-- Customize your splash screen theme here -->
+  </style>
+</resources>
+`;
+      expect(actual).toEqual(expected);
+    });
   });
 });

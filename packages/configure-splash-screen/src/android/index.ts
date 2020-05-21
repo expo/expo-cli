@@ -30,7 +30,7 @@ export default async function configureAndroid(
     configureDrawables(androidMainPath, imagePath, darkModeImagePath),
     configureColorsXml(androidMainPath, backgroundColor, darkModeBackgroundColor),
     configureDrawableXml(androidMainPath, resizeMode),
-    configureStylesXml(androidMainPath),
+    configureStylesXml(androidMainPath, statusBarHidden),
     configureAndroidManifestXml(androidMainPath),
     configureMainActivity(projectRootPath, resizeMode),
   ]);

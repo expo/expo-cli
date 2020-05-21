@@ -24,6 +24,17 @@ interface Options extends StatusBarOptions, AndroidOnlyStatusBarOptions {
   platform: Platform;
 }
 
+const AVAILABLE_OPTIONS_NAMES = new Set([
+  'resizeMode',
+  'platform',
+  'statusBarHidden',
+  'statusBarStyle',
+  'darkModeStatusBarStyle',
+  'statusBarTranslucent',
+  'statusBarBackgroundColor',
+  'darkModeStatusBarBackgroundColor',
+]);
+
 async function action(configuration: Arguments & Options) {
   const { platform, ...restParams } = configuration;
   const rootDir = path.resolve();
@@ -112,6 +123,8 @@ async function validateConfiguration(
     statusBarBackgroundColor,
     darkModeStatusBarBackgroundColor,
     statusBarTranslucent,
+    statusBarStyle,
+    statusBarHidden,
   } = configuration;
 
   // first argument `backgroundColor` is valid css-formatted color
@@ -121,8 +134,17 @@ async function validateConfiguration(
   }
 
   const result: Arguments & Options = {
-    ...configuration,
+    platform,
+    resizeMode,
     backgroundColor: parsedBackgroundColor,
+    imagePath,
+    darkModeImagePath,
+    darkModeStatusBarStyle,
+    statusBarBackgroundColor,
+    darkModeStatusBarBackgroundColor,
+    statusBarTranslucent,
+    statusBarStyle,
+    statusBarHidden,
   };
 
   let darkMode = false;
@@ -238,6 +260,21 @@ function generateColorOptionValidatingFunction(optionName: string) {
   };
 }
 
+function filterAndConvertOptionsKeys(commenderObject: object): Options {
+  return Object.entries(commenderObject)
+    .map<[string, any]>(([key, value]) => {
+      if (key.startsWith('statusbar')) {
+        return [key.replace('statusbar', 'statusBar'), value];
+      }
+      return [key, value];
+    })
+    .filter(([key]) => AVAILABLE_OPTIONS_NAMES.has(key))
+    .reduce((acc, [key, value]) => {
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, any>) as Options;
+}
+
 program
   .arguments(
     '<backgroundColor> [imagePathOrDarkModeBackgroundColor] [imagePath] [darkModeImagePath]'
@@ -282,7 +319,7 @@ program
     '--dark-mode-statusbar-style',
     `The very same as 'statusbar-style' option, but applied only in dark mode.`
   )
-  .option('--statusbar-hidden', `Hides the StatusBar.`, false)
+  .option('--statusbar-hidden', `Hides the StatusBar.`)
   .option(
     '--statusbar-background-color [statusBarBackgroundColor]',
     `(only for Android platform) Customizes the background color of the StatusBar. Valid css-formatted color (see backgroundColor supported formats).`,
@@ -303,14 +340,14 @@ program
       imagePathOrDarkModeBackgroundColor: string | undefined,
       imagePath: string | undefined,
       darkModeImagePath: string | undefined,
-      options: Options
+      options: object
     ) => {
       const configuration = {
         backgroundColor,
         imagePathOrDarkModeBackgroundColor,
         imagePath,
         darkModeImagePath,
-        ...options,
+        ...filterAndConvertOptionsKeys(options),
       };
       const validatedConfiguration = await validateConfiguration(configuration);
       return action(validatedConfiguration);

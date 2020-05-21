@@ -5,7 +5,7 @@ import { readXmlFile, writeXmlFile, mergeXmlElements } from '../xml-manipulation
 
 const STYLES_XML_FILE_PATH = './res/values/styles.xml';
 
-function configureStyle(xml: Element): Element {
+function configureStyle(xml: Element, { statusBarHidden }: { statusBarHidden?: boolean }): Element {
   const result = mergeXmlElements(xml, {
     elements: [
       {
@@ -35,6 +35,14 @@ function configureStyle(xml: Element): Element {
                 ],
               },
               {
+                deletionFlag: statusBarHidden === undefined,
+                name: 'item',
+                attributes: {
+                  name: 'android:windowFullscreen',
+                },
+                elements: [{ text: String(statusBarHidden) }],
+              },
+              {
                 comment: ` Customize your splash screen theme here `,
               },
             ],
@@ -49,9 +57,12 @@ function configureStyle(xml: Element): Element {
 /**
  * @param androidMainPath Path to the main directory containing code and resources in Android project. In general that would be `android/app/src/main`.
  */
-export default async function configureStylesXml(androidMainPath: string) {
+export default async function configureStylesXml(
+  androidMainPath: string,
+  statusBarHidden?: boolean
+) {
   const filePath = path.resolve(androidMainPath, STYLES_XML_FILE_PATH);
   const xmlContent = await readXmlFile(filePath);
-  const configuredXmlContent = configureStyle(xmlContent);
+  const configuredXmlContent = configureStyle(xmlContent, { statusBarHidden });
   await writeXmlFile(filePath, configuredXmlContent);
 }
