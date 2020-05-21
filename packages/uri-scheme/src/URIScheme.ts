@@ -95,18 +95,30 @@ export async function addAsync(options: Options): Promise<string[]> {
   options.uri = await normalizeUriProtocolAsync(options.uri);
 
   let results: string[] = [];
+  let actionOccurred = false;
   if (options.ios) {
     if (await Ios.addAsync(options)) {
+      actionOccurred = true;
       logPlatformMessage('iOS', `Added URI protocol "${options.uri}" to project`);
       results.push('ios');
     }
   }
   if (options.android) {
     if (await Android.addAsync(options)) {
+      actionOccurred = true;
       logPlatformMessage('Android', `Added URI protocol "${options.uri}" to project`);
       results.push('android');
     }
   }
+
+  if (!actionOccurred) {
+    console.log(
+      chalk.yellow(
+        'No URI schemes could be added. Please ensure there is a native project available.'
+      )
+    );
+  }
+
   return results;
 }
 
@@ -114,17 +126,29 @@ export async function removeAsync(options: Options): Promise<string[]> {
   options.uri = ensureUriString(options.uri);
 
   let results: string[] = [];
+  let actionOccurred = false;
+
   if (options.ios) {
     if (await Ios.removeAsync(options)) {
+      actionOccurred = true;
       logPlatformMessage('iOS', `Removed URI protocol "${options.uri}" from project`);
       results.push('ios');
     }
   }
   if (options.android) {
     if (await Android.removeAsync(options)) {
+      actionOccurred = true;
       logPlatformMessage('Android', `Removed URI protocol "${options.uri}" from project`);
       results.push('android');
     }
+  }
+
+  if (!actionOccurred) {
+    console.log(
+      chalk.yellow(
+        'No URI schemes could be removed. Please ensure there is a native project available.'
+      )
+    );
   }
   return results;
 }
@@ -147,7 +171,10 @@ export async function openAsync(
 export async function listAsync(
   options: Pick<Options, 'infoPath' | 'projectRoot' | 'manifestPath'>
 ): Promise<void> {
+  let actionOccurred = false;
+
   if (options.infoPath) {
+    actionOccurred = true;
     const schemes = await Ios.getAsync(options);
     logPlatformMessage(
       'iOS',
@@ -156,12 +183,17 @@ export async function listAsync(
     logSchemes(schemes);
   }
   if (options.manifestPath) {
+    actionOccurred = true;
     const schemes = await Android.getAsync(options);
     logPlatformMessage(
       'Android',
       `Schemes for config: ./${relative(options.projectRoot, options.manifestPath)}`
     );
     logSchemes(schemes);
+  }
+
+  if (!actionOccurred) {
+    console.log(chalk.yellow('Could not find any native URI schemes to list.'));
   }
 }
 
