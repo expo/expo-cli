@@ -9,6 +9,8 @@ import {
 } from '../../../credentials/test-fixtures/mocks';
 import { mockExpoXDL } from '../../../__tests__/utils';
 
+jest.setTimeout(10 * 1000); // 10s
+
 jest.mock('fs');
 
 jest.mock('@expo/plist', () => {
