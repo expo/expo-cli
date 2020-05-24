@@ -101,7 +101,7 @@ export function getDependenciesFromBundledNativeModules({
 
   if (!targetSdkVersion) {
     log.warn(
-      `Supported React, React Native, and React DOM versions are unknown because we don't have version information for the target SDK, please update them manually.`
+      `Supported react, react-native, and react-dom versions are unknown because we don't have version information for the target SDK, please update them manually.`
     );
     return result;
   }

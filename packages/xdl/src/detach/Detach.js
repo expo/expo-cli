@@ -237,7 +237,7 @@ async function _detachAsync(projectRoot, options) {
   } else if (process.env.EXPO_VIEW_DIR) {
     // ignore, using test directory
   } else {
-    throw new Error(`Expo's React Native fork does not support this SDK version.`);
+    throw new Error(`Expo's fork of react-native does not support this SDK version.`);
   }
 
   // Add expokitNpmPackage if it is supported. Was added before SDK 29.

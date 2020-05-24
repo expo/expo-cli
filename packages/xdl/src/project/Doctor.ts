@@ -389,7 +389,7 @@ async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
     return FATAL;
   }
 
-  // Check to make sure react native is installed
+  // Check to make sure react-native is installed
   try {
     resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
     ProjectUtils.clearNotification(projectRoot, 'doctor-react-native-not-installed');
@@ -398,7 +398,7 @@ async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
       ProjectUtils.logError(
         projectRoot,
         'expo',
-        `Error: React Native is not installed. Please run \`npm install\` in your project directory.`,
+        `Error: react-native is not installed. Please run \`npm install\` or \`yarn\` in your project directory.`,
         'doctor-react-native-not-installed'
       );
       return FATAL;

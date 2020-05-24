@@ -423,9 +423,9 @@ export default class PackagerLogsStream {
 
     if (NODE_STDLIB_MODULES.includes(moduleName)) {
       if (originModulePath.includes('node_modules')) {
-        return `The package at "${relativePath}" attempted to import the Node standard library module "${moduleName}". It failed because React Native does not include the Node standard library. Read more at ${DOCS_PAGE_URL}`;
+        return `The package at "${relativePath}" attempted to import the Node standard library module "${moduleName}". It failed because the native React runtime does not include the Node standard library. Read more at ${DOCS_PAGE_URL}`;
       } else {
-        return `You attempted attempted to import the Node standard library module "${moduleName}" from "${relativePath}". It failed because React Native does not include the Node standard library. Read more at ${DOCS_PAGE_URL}`;
+        return `You attempted attempted to import the Node standard library module "${moduleName}" from "${relativePath}". It failed because the native React runtime does not include the Node standard library. Read more at ${DOCS_PAGE_URL}`;
       }
     }
     return `Unable to resolve "${moduleName}" from "${relativePath}"`;

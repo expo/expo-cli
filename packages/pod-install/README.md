@@ -21,7 +21,7 @@
 npx pod-install
 ```
 
-👋 **Notice:** This package is not limited to React Native projects, you can use it with any iOS or Xcode project using CocoaPods (like Ionic, or Flutter).
+👋 **Notice:** This package is not limited to native React projects, you can use it with any iOS or Xcode project using CocoaPods (like Ionic, or Flutter).
 
 ## 🤔 Why?
 
