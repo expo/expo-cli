@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-
 var match = process.version.match(/v(\d+)\.(\d+)/);
 var major = parseInt(match[1], 10);
 var minor = parseInt(match[2], 10);
+var os = require('os');
 
 // If older than 10.13, or if 11.x
 if (major < 10 || (major === 10 && minor < 13) || major === 11) {
@@ -30,6 +30,13 @@ if (major > 14) {
       '\x1B[33m* >=10.13.0 <11.0.0 (Active LTS)\x1B[39m\n' +
       '\x1B[33m* >=12.0.0 <13.0.0 (Active LTS)\x1B[39m\n' +
       '\x1B[33m* >=13.0.0 <14.0.0 (Current Release)\x1B[39m'
+  );
+}
+
+// check for windows OS
+if (os.platform() === 'win32') {
+  console.warn(
+    'Please avoid using cmd.exe for development. Instead use PowerShell or Bash via WSL'
   );
 }
 
