@@ -1,6 +1,6 @@
 import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import chalk from 'chalk';
-import fs from 'fs-extra';
+import { existsSync } from 'fs';
 import path from 'path';
 
 import { Logger, PackageManager, spawnSudoAsync } from './PackageManager';
@@ -18,7 +18,7 @@ export class CocoaPodsPackageManager implements PackageManager {
   }
 
   static isUsingPods(projectRoot: string): boolean {
-    return fs.existsSync(path.join(projectRoot, 'Podfile'));
+    return existsSync(path.join(projectRoot, 'Podfile'));
   }
 
   static async gemInstallCLIAsync(
@@ -38,9 +38,11 @@ export class CocoaPodsPackageManager implements PackageManager {
       await spawnSudoAsync(`gem ${options.join(' ')}`);
     }
   }
+
   static async brewLinkCLIAsync(spawnOptions: SpawnOptions = { stdio: 'inherit' }): Promise<void> {
     await spawnAsync('brew', ['link', 'cocoapods'], spawnOptions);
   }
+
   static async brewInstallCLIAsync(
     spawnOptions: SpawnOptions = { stdio: 'inherit' }
   ): Promise<void> {
