@@ -1,11 +1,17 @@
 /* global page */
 import getenv from 'getenv';
+import config from '../../jest-puppeteer.config';
 
 // We know that CI works in this process, but we want to test that it matches the process that our app runs in.
 const isInCI = getenv.boolish('CI', false);
 const type = getenv.string('EXPO_E2E_COMMAND');
 
 const isProduction = ['build'].includes(type);
+
+let response;
+beforeEach(async () => {
+  response = await page.goto(config.url);
+});
 
 it(`should match a text element`, async () => {
   await expect(page).toMatchElement('div[data-testid="basic-text"]', {
