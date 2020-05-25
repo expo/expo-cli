@@ -244,23 +244,36 @@ async function handlePromptSourceAsync(
 }
 
 async function askForArchiveUrlAsync(): Promise<string> {
+  const defaultArchiveUrl = 'https://url.to/your/archive.aab';
   const { url } = await prompt({
     name: 'url',
     message: 'URL:',
+    default: defaultArchiveUrl,
     type: 'input',
-    validate: (url: string): string | boolean =>
-      validateUrl(url) || `${url} does not conform to HTTP format`,
+    validate: (url: string): string | boolean => {
+      if (url === defaultArchiveUrl) {
+        return 'That was just an example URL, meant to show you the format that we expect for the response.';
+      } else if (!validateUrl(url)) {
+        return `${url} does not conform to HTTP format`;
+      } else {
+        return true;
+      }
+    },
   });
   return url;
 }
 
 async function askForArchivePathAsync(): Promise<string> {
+  const defaultArchivePath = '/path/to/your/archive.aab';
   const { path } = await prompt({
     name: 'path',
-    message: 'Path to the app archive file:',
+    message: 'Path to the app archive file (aab or apk):',
+    default: defaultArchivePath,
     type: 'input',
     validate: async (path: string): Promise<boolean | string> => {
-      if (!(await existingFile(path, false))) {
+      if (path === defaultArchivePath) {
+        return 'That was just an example path, meant to show you the format that we expect for the response.';
+      } else if (!(await existingFile(path, false))) {
         return `File ${path} doesn't exist.`;
       } else {
         return true;
