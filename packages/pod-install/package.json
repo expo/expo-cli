@@ -35,7 +35,7 @@
     "@expo/babel-preset-cli": "0.2.15",
     "@expo/package-manager": "0.0.24",
     "@types/node": "^12.12.31",
-    "@zeit/ncc": "^0.20.5",
+    "@zeit/ncc": "^0.22.3",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "rimraf": "^3.0.2",

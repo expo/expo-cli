@@ -40,7 +40,7 @@
     "@expo/image-utils": "0.2.27",
     "@expo/json-file": "8.2.18",
     "@types/node": "^12.6.8",
-    "@zeit/ncc": "^0.20.5",
+    "@zeit/ncc": "^0.22.3",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "cross-spawn": "6.0.5",

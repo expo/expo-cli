@@ -29,4 +29,6 @@ node_modules
 /build
 /expo-cli/build
 
+/dist
+
 dist-bin/

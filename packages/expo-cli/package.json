@@ -11,6 +11,7 @@
   "scripts": {
     "start": "yarn run prepare && yarn run watch",
     "build": "tsc --emitDeclarationOnly && babel src --out-dir build --extensions \".ts\" --source-maps --ignore \"src/**/__mocks__/*\",\"src/**/__tests__/*\"",
+    "build:prod": "cross-env NODE_OPTIONS='--max-old-space-size=4096' ncc build src/exp.ts --out build --minify --no-cache --external @expo/config --external  @expo/webpack-config/web-default/index.html --external uglify-js",
     "watch": "tsc --watch",
     "prepare": "yarn run clean && yarn run build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
@@ -54,6 +55,8 @@
     "@types/targz": "^1.0.0",
     "@types/untildify": "^3.0.0",
     "@types/wordwrap": "^1.0.0",
+    "@zeit/ncc": "^0.22.3",
+    "cross-env": "^7.0.2",
     "rimraf": "^3.0.2"
   },
   "dependencies": {
