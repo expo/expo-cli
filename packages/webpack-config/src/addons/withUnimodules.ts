@@ -35,6 +35,7 @@ export default function withUnimodules(
   // @ts-ignore: We should attempt to use the project root that the other config is already using (used for Gatsby support).
   env.projectRoot = env.projectRoot || webpackConfig.context || getPossibleProjectRoot();
 
+  // Add native react aliases
   webpackConfig = withAlias(webpackConfig, getAliases(env.projectRoot));
 
   if (!webpackConfig.module) webpackConfig.module = { rules: [] };
