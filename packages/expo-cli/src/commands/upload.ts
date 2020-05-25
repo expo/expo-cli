@@ -131,7 +131,7 @@ function checkRuntimePlatform(targetPlatform: 'android' | 'ios'): void {
       log.error('Local Android uploads are only supported on macOS.');
       log(
         chalk.bold(
-          'Try --use-submission-service flag to upload your app from Expo servers. This feature is still experimental!'
+          'Try the --use-submission-service flag to upload your app from Expo servers. This feature is behind a flag because it is experimental.'
         )
       );
     } else {

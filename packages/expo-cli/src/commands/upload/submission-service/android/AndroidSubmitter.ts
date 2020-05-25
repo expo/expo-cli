@@ -241,7 +241,7 @@ const SummaryHumanReadableKeys: Record<keyof Summary, string> = {
 const SummaryHumanReadableValues: Partial<Record<keyof Summary, Function>> = {
   mode: (mode: SubmissionMode): string => {
     if (mode === SubmissionMode.online) {
-      return 'Using Submission Service';
+      return 'Using Expo Submission Service';
     } else {
       return 'Submitting the app from this computer';
     }
