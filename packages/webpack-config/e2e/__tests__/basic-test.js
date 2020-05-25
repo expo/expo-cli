@@ -10,6 +10,7 @@ const isProduction = ['buildNextJsFromNextCLI', 'buildNextJsFromExpoCLI', 'build
 
 let response;
 beforeEach(async () => {
+  jest.setTimeout(60000);
   response = await page.goto(config.url);
 });
 
@@ -35,24 +36,20 @@ if (config.hasServerSideRendering) {
         text: 'Has SW installed',
         timeout: 2000,
       });
-    }, 2500);
+    });
   }
 }
 
-describe('Optional polyfills', () => {
-  if (!config.hasServerSideRendering) {
-    it(`should have resize-observer polyfill added`, async () => {
-      const ciID = 'div[data-testid="has-resize-observer"]';
-      if (isInCI) {
-        await expect(page).toMatchElement(ciID, {
-          text: 'Has ResizeObserver polyfill',
-        });
-      } else {
-        await expect(page).not.toMatchElement(ciID);
-      }
+if (!config.hasServerSideRendering) {
+  it(`should have resize-observer polyfill added`, async () => {
+    const resizeObserverTextId = 'div[data-testid="has-resize-observer"]';
+
+    await expect(page).toMatchElement(resizeObserverTextId, {
+      text: 'Has ResizeObserver polyfill',
+      timeout: 3000,
     });
-  }
-});
+  });
+}
 
 describe('DefinePlugin', () => {
   it(`should be aware of process.env.CI`, async () => {

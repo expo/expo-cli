@@ -9511,10 +9511,10 @@ expand-tilde@^2.0.0, expand-tilde@^2.0.2:
   dependencies:
     homedir-polyfill "^1.0.1"
 
-expect-puppeteer@^4.3.0:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/expect-puppeteer/-/expect-puppeteer-4.3.0.tgz#732a3c94ab44af0c7d947040ad3e3637a0359bf3"
-  integrity sha512-p8N/KSVPG9PAOJlftK5f1n3JrULJ6Qq1EQ8r/n9xzkX2NmXbK8PcnJnkSAEzEHrMycELKGnlJV7M5nkgm+wEWA==
+expect-puppeteer@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/expect-puppeteer/-/expect-puppeteer-4.4.0.tgz#1c948af08acdd6c8cbdb7f90e617f44d86888886"
+  integrity sha512-6Ey4Xy2xvmuQu7z7YQtMsaMV0EHJRpVxIDOd5GRrm04/I3nkTKIutELfECsLp6le+b3SSa3cXhPiw6PgqzxYWA==
 
 expect@^25.2.6:
   version "25.2.6"
@@ -10161,7 +10161,7 @@ find-pkg@^0.1.2:
   dependencies:
     find-file-up "^0.1.2"
 
-find-process@^1.4.2:
+find-process@^1.4.3:
   version "1.4.3"
   resolved "https://registry.yarnpkg.com/find-process/-/find-process-1.4.3.tgz#25f9105dc32e42abad4636752c37c51cd57dce45"
   integrity sha512-+IA+AUsQCf3uucawyTwMWcY+2M3FXq3BRvw3S+j5Jvydjk31f/+NPWpYZOJs+JUs2GvxH4Yfr6Wham0ZtRLlPA==
@@ -12847,17 +12847,17 @@ jest-config@^26.0.1:
     micromatch "^4.0.2"
     pretty-format "^26.0.1"
 
-jest-dev-server@^4.3.0:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/jest-dev-server/-/jest-dev-server-4.3.0.tgz#27c9cdc96d9f735bc90a309ca39305b76f2c0edd"
-  integrity sha512-bC9flKY2G1honQ/UI0gEhb0wFnDhpFr7xidC8Nk+evi7TgnNtfsGIzzF2dcIhF1G9BGF0n/M7CJrMAzwQhyTPA==
+jest-dev-server@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/jest-dev-server/-/jest-dev-server-4.4.0.tgz#557113faae2877452162696aa94c1e44491ab011"
+  integrity sha512-STEHJ3iPSC8HbrQ3TME0ozGX2KT28lbT4XopPxUm2WimsX3fcB3YOptRh12YphQisMhfqNSNTZUmWyT3HEXS2A==
   dependencies:
-    chalk "^2.4.2"
+    chalk "^3.0.0"
     cwd "^0.10.0"
-    find-process "^1.4.2"
-    prompts "^2.1.0"
-    spawnd "^4.0.0"
-    tree-kill "^1.2.1"
+    find-process "^1.4.3"
+    prompts "^2.3.0"
+    spawnd "^4.4.0"
+    tree-kill "^1.2.2"
     wait-on "^3.3.0"
 
 jest-diff@^25.1.0, jest-diff@^25.2.6:
@@ -13025,14 +13025,14 @@ jest-environment-node@^26.0.1:
     jest-mock "^26.0.1"
     jest-util "^26.0.1"
 
-jest-environment-puppeteer@^4.3.0:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/jest-environment-puppeteer/-/jest-environment-puppeteer-4.3.0.tgz#49ac781c4b50459485af031cfb16ad1fd75d31ac"
-  integrity sha512-ZighMsU39bnacn2ylyHb88CB+ldgCfXGD3lS78k4PEo8A8xyt6+2mxmSR62FH3Y7K+W2gPDu5+QM3/LZuq42fQ==
+jest-environment-puppeteer@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/jest-environment-puppeteer/-/jest-environment-puppeteer-4.4.0.tgz#d82a37e0e0c51b63cc6b15dea101d53967508860"
+  integrity sha512-iV8S8+6qkdTM6OBR/M9gKywEk8GDSOe05hspCs5D8qKSwtmlUfdtHfB4cakdc68lC6YfK3AUsLirpfgodCHjzQ==
   dependencies:
-    chalk "^2.4.2"
+    chalk "^3.0.0"
     cwd "^0.10.0"
-    jest-dev-server "^4.3.0"
+    jest-dev-server "^4.4.0"
     merge-deep "^3.0.2"
 
 jest-get-type@^24.9.0:
@@ -13318,13 +13318,13 @@ jest-pnp-resolver@^1.2.1:
   resolved "https://registry.yarnpkg.com/jest-pnp-resolver/-/jest-pnp-resolver-1.2.1.tgz#ecdae604c077a7fbc70defb6d517c3c1c898923a"
   integrity sha512-pgFw2tm54fzgYvc/OHrnysABEObZCUNFnhjoRjaVOCN8NYc032/gVjPaHD4Aq6ApkSieWtfKAFQtmDKAmhupnQ==
 
-jest-puppeteer@^4.3.0:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/jest-puppeteer/-/jest-puppeteer-4.3.0.tgz#432273c2c2c75fbec40d7659b75cbcc7c4ae57ad"
-  integrity sha512-WXhaWlbQl01xadZyNmdZntrtIr8uWUmgjPogDih7dOnr3G/xRr3A034SCqdjwV6fE0tqz7c5hwO8oBTyGZPRgA==
+jest-puppeteer@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/jest-puppeteer/-/jest-puppeteer-4.4.0.tgz#4b906e638a5e3782ed865e7b673c82047b85952e"
+  integrity sha512-ZaiCTlPZ07B9HW0erAWNX6cyzBqbXMM7d2ugai4epBDKpKvRDpItlRQC6XjERoJELKZsPziFGS0OhhUvTvQAXA==
   dependencies:
-    expect-puppeteer "^4.3.0"
-    jest-environment-puppeteer "^4.3.0"
+    expect-puppeteer "^4.4.0"
+    jest-environment-puppeteer "^4.4.0"
 
 jest-regex-util@^25.2.6:
   version "25.2.6"
@@ -18626,7 +18626,7 @@ promise@^7.0.1, promise@^7.1.1:
   dependencies:
     asap "~2.0.3"
 
-prompts@^2.0.1, prompts@^2.1.0, prompts@^2.3.2:
+prompts@^2.0.1, prompts@^2.3.0, prompts@^2.3.2:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/prompts/-/prompts-2.3.2.tgz#480572d89ecf39566d2bd3fe2c9fccb7c4c0b068"
   integrity sha512-Q06uKs2CkNYVID0VqwfAl9mipo99zkBv/n2JtWY89Yxa3ZabWSrs0e2KTudKVa3peLUvYXMefDqIleLPVUBZMA==
@@ -20659,15 +20659,15 @@ spawn-command@^0.0.2-1:
   resolved "https://registry.yarnpkg.com/spawn-command/-/spawn-command-0.0.2-1.tgz#62f5e9466981c1b796dc5929937e11c9c6921bd0"
   integrity sha1-YvXpRmmBwbeW3Fkpk34RycaSG9A=
 
-spawnd@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/spawnd/-/spawnd-4.0.0.tgz#b27ee6e7ec55c6ec232c05a21418cf35a77e0409"
-  integrity sha512-ql3qhJnhAkvXpaqKBWOqou1rUTSQhFRaZkyOT+MTFB4xY3X+brgw6LTWV2wHuE9A6YPhrNe1cbg7S+jAYnbC0Q==
+spawnd@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/spawnd/-/spawnd-4.4.0.tgz#bb52c5b34a22e3225ae1d3acb873b2cd58af0886"
+  integrity sha512-jLPOfB6QOEgMOQY15Z6+lwZEhH3F5ncXxIaZ7WHPIapwNNLyjrs61okj3VJ3K6tmP5TZ6cO0VAu9rEY4MD4YQg==
   dependencies:
     exit "^0.1.2"
     signal-exit "^3.0.2"
-    tree-kill "^1.2.1"
-    wait-port "^0.2.2"
+    tree-kill "^1.2.2"
+    wait-port "^0.2.7"
 
 spdx-correct@^3.0.0:
   version "3.1.0"
@@ -21800,7 +21800,7 @@ tr46@^2.0.0:
   dependencies:
     punycode "^2.1.1"
 
-tree-kill@1.2.2, tree-kill@^1.2.1:
+tree-kill@1.2.2, tree-kill@^1.2.1, tree-kill@^1.2.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/tree-kill/-/tree-kill-1.2.2.tgz#4ca09a9092c88b73a7cdc5e8a01b507b0790a0cc"
   integrity sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==
@@ -22639,10 +22639,10 @@ wait-on@^3.3.0:
     request "^2.88.0"
     rx "^4.1.0"
 
-wait-port@^0.2.2:
-  version "0.2.6"
-  resolved "https://registry.yarnpkg.com/wait-port/-/wait-port-0.2.6.tgz#261e615adb2e10c8b91c836722c85919ccf081cc"
-  integrity sha512-nXE5Yp0Zs1obhFVc0Da7WVJc3y0LxoCq3j4mtV0NdI5P/ZvRdKp5yhuojvMOcOxSwpQL1hGbOgMNQ+4wpRpwCA==
+wait-port@^0.2.7:
+  version "0.2.7"
+  resolved "https://registry.yarnpkg.com/wait-port/-/wait-port-0.2.7.tgz#cdb4b78e662328099b187c7bb75fe0aa9cb6eb6c"
+  integrity sha512-pJ6cSBIa0w1sDg4y/wXN4bmvhM9OneOvwdFHo647L2NShBi/oXG4lRaLic5cO1HaYGbUhEvratPfl/WMlIC+tg==
   dependencies:
     chalk "^2.4.2"
     commander "^3.0.2"
