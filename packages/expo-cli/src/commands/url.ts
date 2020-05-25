@@ -1,6 +1,5 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import fp from 'lodash/fp';
 import { Project, UrlUtils } from '@expo/xdl';
 
 import CommandError from '../CommandError';
@@ -26,23 +25,19 @@ const logArtifactUrl = (platform: 'ios' | 'android') => async (
 
   let res;
   if (process.env.EXPO_LEGACY_API === 'true') {
-    res = await Project.buildAsync(projectDir, {
+    res = (await Project.buildAsync(projectDir, {
       current: false,
       mode: 'status',
       ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
-    });
+    })) as Project.BuildStatusResult;
   } else {
     res = await Project.getBuildStatusAsync(projectDir, {
       current: false,
       ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
     });
   }
-  const url = fp.compose(
-    fp.get(['artifacts', 'url']),
-    fp.head,
-    fp.filter((job: any) => platform && job.platform === platform),
-    fp.getOr([], 'jobs')
-  )(res as any);
+  const url = res.jobs?.filter((job: Project.BuildJobFields) => job.platform === platform)[0]
+    ?.artifacts?.url;
   if (url) {
     log.nested(url);
   } else {
@@ -87,7 +82,7 @@ async function action(projectDir: string, options: ProjectUrlOptions & URLOption
   }
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
     .command('url [project-dir]')
     .alias('u')

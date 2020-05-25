@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import replaceString from 'replace-string';
-import _ from 'lodash';
+import get from 'lodash/get';
 import globby from 'globby';
 import uuid from 'uuid';
 
@@ -132,9 +132,9 @@ function getRemoteOrLocalUrl(manifest, key, isDetached) {
   // in detached apps, `manifest` is actually just app.json, so there are no remote url fields
   // we should return a local url starting with file:// instead
   if (isDetached) {
-    return _.get(manifest, key);
+    return get(manifest, key);
   }
-  return _.get(manifest, `${key}Url`);
+  return get(manifest, `${key}Url`);
 }
 
 function backgroundImagesForApp(shellPath, manifest, isDetached) {
@@ -144,23 +144,19 @@ function backgroundImagesForApp(shellPath, manifest, isDetached) {
   //   {url: 'anotherURlToDownload', path: 'anotherPathToSaveTo'},
   // ]
   let basePath = path.join(shellPath, 'app', 'src', 'main', 'res');
-  if (_.get(manifest, 'android.splash')) {
-    const splash = _.get(manifest, 'android.splash');
-    const results = _.reduce(
-      imageKeys,
-      function (acc, imageKey) {
-        let url = getRemoteOrLocalUrl(splash, imageKey, isDetached);
-        if (url) {
-          acc.push({
-            url,
-            path: path.join(basePath, `drawable-${imageKey}`, 'shell_launch_background_image.png'),
-          });
-        }
+  const splash = manifest.android?.splash;
+  if (splash) {
+    const results = imageKeys.reduce(function(acc, imageKey) {
+      let url = getRemoteOrLocalUrl(splash, imageKey, isDetached);
+      if (url) {
+        acc.push({
+          url,
+          path: path.join(basePath, `drawable-${imageKey}`, 'shell_launch_background_image.png'),
+        });
+      }
 
-        return acc;
-      },
-      []
-    );
+      return acc;
+    }, []);
 
     // No splash screen images declared in 'android.splash' configuration, proceed to general one
     if (results.length !== 0) {
@@ -719,7 +715,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   }
 
   // Add app-specific intent filters
-  const intentFilters = _.get(manifest, 'android.intentFilters');
+  const intentFilters = get(manifest, 'android.intentFilters');
   if (intentFilters) {
     if (isDetached) {
       await regexFileAsync(
@@ -1355,7 +1351,7 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
     });
     await fs.copy(
       outputPath,
-      _.get(context, 'build.android.outputFile') || `/tmp/shell-debug.${ext}`
+      get(context, 'build.android.outputFile') || `/tmp/shell-debug.${ext}`
     );
     await ExponentTools.removeIfExists(outputPath);
   }

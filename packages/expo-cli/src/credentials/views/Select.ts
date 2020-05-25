@@ -1,4 +1,3 @@
-import get from 'lodash/get';
 import invariant from 'invariant';
 import prompt, { ChoiceType, Question } from '../../prompt';
 import log from '../../log';
@@ -135,7 +134,7 @@ export class SelectAndroidExperience implements IView {
     this.askAboutProjectMode = false;
 
     if (this.androidCredentials.length === 0) {
-      this.androidCredentials = get(await ctx.api.getAsync('credentials/android'), 'credentials');
+      this.androidCredentials = (await ctx.api.getAsync('credentials/android')).credentials;
     }
     await displayAndroidCredentials(this.androidCredentials);
 

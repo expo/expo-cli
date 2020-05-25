@@ -3,7 +3,6 @@ import findIndex from 'lodash/findIndex';
 import find from 'lodash/find';
 import omit from 'lodash/omit';
 import assign from 'lodash/assign';
-import get from 'lodash/get';
 import pick from 'lodash/pick';
 
 import invariant from 'invariant';
@@ -275,9 +274,9 @@ export class IosApi {
     bundleIdentifier: string
   ): Promise<{ pushId: string; pushP12: string; pushPassword: string } | null> {
     const appCredentials = await this.getAppCredentials(experienceName, bundleIdentifier);
-    const pushId = get(appCredentials, 'credentials.pushId');
-    const pushP12 = get(appCredentials, 'credentials.pushP12');
-    const pushPassword = get(appCredentials, 'credentials.pushPassword');
+    const pushId = appCredentials.credentials.pushId;
+    const pushP12 = appCredentials.credentials.pushP12;
+    const pushPassword = appCredentials.credentials.pushPassword;
     if (!pushId || !pushP12 || !pushPassword) {
       return null;
     }
@@ -350,7 +349,7 @@ export class IosApi {
     bundleIdentifier: string
   ): Promise<appleApi.ProvisioningProfile | null> {
     const appCredentials = await this.getAppCredentials(experienceName, bundleIdentifier);
-    const provisioningProfile = get(appCredentials, 'credentials.provisioningProfile');
+    const provisioningProfile = appCredentials.credentials.provisioningProfile;
     if (!provisioningProfile) {
       return null;
     }

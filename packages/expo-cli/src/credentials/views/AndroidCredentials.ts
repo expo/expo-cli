@@ -1,5 +1,4 @@
 import { ApiV2, AndroidCredentials as Credentials } from '@expo/xdl';
-import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -34,9 +33,9 @@ export class ExperienceView implements IView {
       const appCredentials: AndroidCredentials = await ctx.api.getAsync(
         `credentials/android/@${ctx.user.username}/${this.experience}`
       );
-      this.experienceName = get(appCredentials, 'experienceName');
-      this.keystore = get(appCredentials, 'keystore');
-      this.pushCredentials = get(appCredentials, 'pushCredentials');
+      this.experienceName = appCredentials.experienceName;
+      this.keystore = appCredentials.keystore;
+      this.pushCredentials = appCredentials.pushCredentials;
     }
     if (!this.experienceName) {
       this.experienceName = `@${ctx.user.username}/${this.experience}`;

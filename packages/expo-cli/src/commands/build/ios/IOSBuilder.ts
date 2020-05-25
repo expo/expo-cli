@@ -1,10 +1,8 @@
 import os from 'os';
 import chalk from 'chalk';
 import pickBy from 'lodash/pickBy';
-import get from 'lodash/get';
 import { XDLError } from '@expo/xdl';
 
-import { Dictionary } from 'lodash';
 import terminalLink from 'terminal-link';
 import semver from 'semver';
 import BaseBuilder from '../BaseBuilder';
@@ -39,6 +37,14 @@ import {
 } from '../../../credentials/views/IosProvisioningProfile';
 import { IosAppCredentials, IosDistCredentials } from '../../../credentials/credentials';
 
+function missingBundleIdentifierError() {
+  return new XDLError(
+    'INVALID_OPTIONS',
+    `Your project must have a bundleIdentifier set in app.json.
+See https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appjson`
+  );
+}
+
 class IOSBuilder extends BaseBuilder {
   appleCtx?: apple.AppleCtx;
 
@@ -59,17 +65,13 @@ class IOSBuilder extends BaseBuilder {
   }
 
   async validateProject() {
-    const bundleIdentifier = get(this.manifest, 'ios.bundleIdentifier');
+    const bundleIdentifier = this.manifest.ios?.bundleIdentifier;
     const sdkVersion = this.manifest.sdkVersion;
 
     await this.validateIcon();
 
     if (!bundleIdentifier) {
-      throw new XDLError(
-        'INVALID_OPTIONS',
-        `Your project must have a bundleIdentifier set in app.json.
-See https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appjson`
-      );
+      throw missingBundleIdentifierError();
     }
     await utils.checkIfSdkIsSupported(sdkVersion!, PLATFORMS.IOS);
   }
@@ -116,7 +118,8 @@ See https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appj
     // TODO: Fix forcing the username to be valid
     const username = this.manifest.owner ?? this.user?.username!;
     const experienceName = `@${username}/${this.manifest.slug}`;
-    const bundleIdentifier = get(this.manifest, 'ios.bundleIdentifier');
+    const bundleIdentifier = this.manifest.ios?.bundleIdentifier;
+    if (!bundleIdentifier) throw missingBundleIdentifierError();
     const context = new Context();
     await context.init(this.projectDir);
     await this.bestEffortAppleCtx(context, bundleIdentifier);
@@ -301,7 +304,7 @@ See https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appj
     ctx: Context,
     experienceName: string,
     bundleIdentifier: string,
-    credsToClear: Dictionary<boolean>
+    credsToClear: { [name: string]: boolean }
   ): Promise<void> {
     const shouldRevokeOnApple = this.options.revokeCredentials;
     const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
@@ -336,7 +339,7 @@ See https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appj
     }
   }
 
-  determineCredentialsToClear(): Dictionary<boolean> {
+  determineCredentialsToClear(): { [name: string]: boolean } {
     const {
       clearCredentials,
       clearDistCert,
@@ -369,7 +372,11 @@ See https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appj
   // validates whether the icon doesn't have transparency
   async validateIcon() {
     try {
-      const icon = get(this.manifest, 'ios.icon', this.manifest.icon);
+      const icon = this.manifest.ios?.icon ?? this.manifest.icon;
+      if (!icon) {
+        // icon is optional
+        return;
+      }
       await ensurePNGIsNotTransparent(icon);
     } catch (err) {
       if (err instanceof XDLError) {

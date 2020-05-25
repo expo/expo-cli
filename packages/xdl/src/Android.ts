@@ -3,7 +3,7 @@ import spawnAsync from '@expo/spawn-async';
 import child_process from 'child_process';
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import _ from 'lodash';
+import some from 'lodash/some';
 import path from 'path';
 import ProgressBar from 'progress';
 
@@ -124,7 +124,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
     let result = await spawnAsync(adb, args);
     return result.stdout;
   } catch (e) {
-    let errorMessage = _.trim(e.stderr || e.stdout);
+    let errorMessage = (e.stderr || e.stdout || e.message).trim();
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
@@ -147,7 +147,7 @@ async function _isDeviceAttachedAsync() {
 
 async function _isDeviceAuthorizedAsync() {
   let devices = await getAdbOutputAsync(['devices']);
-  let lines = _.trim(devices).split(/\r?\n/);
+  let lines = devices.trim().split(/\r?\n/);
   lines.shift();
   let listOfDevicesWithoutFirstLine = lines.join('\n');
   // result looks like "072c4cf200e333c7  device" when authorized
@@ -507,7 +507,12 @@ async function adbReverseRemove(port: number) {
   }
 }
 
-const splashScreenDPIConstraints = [
+type DPIConstraint = {
+  dpi: 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
+  sizeMultiplier: number;
+};
+
+const splashScreenDPIConstraints: readonly DPIConstraint[] = [
   {
     dpi: 'mdpi',
     sizeMultiplier: 1,
@@ -544,15 +549,14 @@ export async function checkSplashScreenImages(projectDir: string): Promise<void>
     return;
   }
 
-  const splashScreenMode =
-    _.get(exp, 'android.splash.resizeMode') || _.get(exp, 'splash.resizeMode', 'contain');
+  const splashScreenMode = exp.android?.splash?.resizeMode ?? exp.splash?.resizeMode ?? 'contain';
 
   // only mode `native` is handled by this check
   if (splashScreenMode === 'contain' || splashScreenMode === 'cover') {
     return;
   }
 
-  const generalSplashImagePath = _.get(exp, 'splash.image');
+  const generalSplashImagePath = exp.splash?.image;
   if (!generalSplashImagePath) {
     Logger.global.warn(
       `Couldn't read '${chalk.italic('splash.image')}' from ${chalk.italic(
@@ -571,10 +575,10 @@ export async function checkSplashScreenImages(projectDir: string): Promise<void>
     return;
   }
 
-  const androidSplash = _.get(exp, 'android.splash');
+  const androidSplash = exp.android?.splash;
   const androidSplashImages = [];
   for (const { dpi, sizeMultiplier } of splashScreenDPIConstraints) {
-    const imageRelativePath = _.get(androidSplash, dpi);
+    const imageRelativePath = androidSplash?.[dpi];
     if (imageRelativePath) {
       const splashImage = await getImageDimensionsAsync(projectDir, imageRelativePath);
       if (!splashImage) {
@@ -609,7 +613,7 @@ See https://docs.expo.io/guides/splash-screens/#splash-screen-api-limitations-on
     return;
   }
 
-  if (_.some(androidSplashImages, ({ sizeMatches }) => !sizeMatches)) {
+  if (some(androidSplashImages, ({ sizeMatches }) => !sizeMatches)) {
     Logger.global
       .warn(`Splash resizeMode is set to 'native' and you've provided different images for different DPIs,
 but their sizes mismatch expected ones: [dpi: provided (expected)] ${androidSplashImages
