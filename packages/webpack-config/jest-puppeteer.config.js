@@ -37,50 +37,6 @@ const config = {
       debug: true,
     },
   },
-  startNextJsFromExpoCLI: {
-    url: 'http://localhost:8000',
-    launch,
-    server: {
-      command: `../expo-cli/bin/expo.js start e2e/nextjs/ --web-only --dev --non-interactive --no-https`,
-      port: 8000,
-      launchTimeout: 30000,
-      debug: true,
-    },
-    hasServerSideRendering: true,
-  },
-  buildNextJsFromExpoCLI: {
-    url: 'http://localhost:8000',
-    launch,
-    server: {
-      command: `../expo-cli/bin/expo.js start e2e/nextjs/ --web-only --no-dev --non-interactive --no-https`,
-      port: 8000,
-      launchTimeout: 30000,
-      debug: true,
-    },
-    hasServerSideRendering: true,
-  },
-  startNextJsFromNextCLI: {
-    url: 'http://localhost:8000',
-    launch,
-    server: {
-      command: `cd e2e/nextjs && yarn next dev -p 8000`,
-      port: 8000,
-      launchTimeout: 30000,
-      debug: true,
-    },
-    hasServerSideRendering: true,
-  },
-  buildNextJsFromNextCLI: {
-    url: 'http://localhost:8000',
-    launch,
-    server: {
-      command: `cd e2e/nextjs && yarn next build && yarn next start -p 8000`,
-      port: 8000,
-      launchTimeout: 30000,
-      debug: true,
-    },
-    hasServerSideRendering: true,
-  },
 }[process.env.EXPO_E2E_COMMAND];
 
 assert(process.env.EXPO_E2E_COMMAND, `EXPO_E2E_COMMAND must be defined`);
