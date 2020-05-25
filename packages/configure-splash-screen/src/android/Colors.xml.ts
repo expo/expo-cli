@@ -53,8 +53,17 @@ async function configureBackgroundColorForFile(
  */
 export default async function configureColorsXml(
   androidMainPath: string,
-  backgroundColor: ColorDescriptor,
-  darkModeBackgroundColor?: ColorDescriptor
+  {
+    backgroundColor,
+    darkModeBackgroundColor,
+    statusBarBackgroundColor,
+    darkModeStatusBarBackgroundColor,
+  }: {
+    backgroundColor: ColorDescriptor;
+    darkModeBackgroundColor?: ColorDescriptor;
+    statusBarBackgroundColor?: ColorDescriptor;
+    darkModeStatusBarBackgroundColor?: ColorDescriptor;
+  }
 ) {
   await Promise.all([
     configureBackgroundColorForFile(

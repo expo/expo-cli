@@ -8,6 +8,77 @@ jest.mock('fs');
 
 describe('MainActivity', () => {
   describe('configureMainActivity', () => {
+    function generateMainActivityFileContent({
+      addOnCreateAt,
+      kotlin,
+      addSplashScreenShowWith,
+    }: {
+      kotlin?: boolean;
+      addOnCreateAt?: 'BOTTOM' | 'TOP';
+      addSplashScreenShowWith?: 'CONTAIN' | 'COVER' | 'NATIVE';
+    } = {}) {
+      const LE = kotlin ? '' : ';';
+      const onCreate = `${
+        kotlin
+          ? `
+  override fun onCreate(savedInstanceState: Bundle?)`
+          : `
+  @Override
+  protected void onCreate(Bundle savedInstanceState)`
+      } {
+    super.onCreate(savedInstanceState)${LE}${
+        !addSplashScreenShowWith
+          ? ''
+          : `
+    // SplashScreen.show(...) has to be called after super.onCreate(...)
+    // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
+    SplashScreen.show(this, SplashScreenImageResizeMode.${addSplashScreenShowWith}, ${
+              kotlin ? 'ReactRootView::class.java' : 'ReactRootView.class'
+            })${LE}`
+      }
+  }
+`;
+
+      return `package com.reactnativeproject${LE}
+${
+  !addOnCreateAt
+    ? ''
+    : `
+import android.os.Bundle${LE}
+`
+}
+import com.facebook.react.ReactActivity${LE}
+import com.facebook.react.ReactRootView${LE}
+${
+  !addSplashScreenShowWith
+    ? ''
+    : `
+import expo.modules.splashscreen.SplashScreen${LE}
+import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}
+`
+}
+${
+  kotlin
+    ? 'class MainActivity : ReactActivity()'
+    : 'public class MainActivity extends ReactActivity'
+} {${addOnCreateAt !== 'TOP' ? '' : onCreate}
+  /**
+   * Returns the name of the main component registered from JavaScript. This is used to schedule
+   * rendering of the component.
+   */${
+     kotlin
+       ? `
+  override fun getMainComponentName(): String`
+       : `
+  @Override
+  protected String getMainComponentName()`
+   } {
+    return "react-native-project"${LE}
+  }${addOnCreateAt !== 'BOTTOM' ? '' : onCreate}
+}
+`;
+    }
+
     beforeEach(() => {
       vol.fromJSON(reactNativeProject, '/app');
     });
@@ -22,96 +93,21 @@ describe('MainActivity', () => {
       it('inserts onCreate() with SplashScreen registration', async () => {
         await configureMainActivity(projectRootPath, ResizeMode.CONTAIN);
         const actual = vol.readFileSync(filePath, 'utf-8');
-        const expected = `package com.reactnativeproject;
-
-import android.os.Bundle;
-
-import com.facebook.react.ReactActivity;
-import com.facebook.react.ReactRootView;
-
-import expo.modules.splashscreen.SplashScreen;
-import expo.modules.splashscreen.SplashScreenImageResizeMode;
-
-public class MainActivity extends ReactActivity {
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    // SplashScreen.show(...) has to be called after super.onCreate(...)
-    // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.CONTAIN, ReactRootView.class);
-  }
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  @Override
-  protected String getMainComponentName() {
-    return "react-native-project";
-  }
-}
-`;
+        const expected = generateMainActivityFileContent({
+          addSplashScreenShowWith: 'CONTAIN',
+          addOnCreateAt: 'TOP',
+        });
         expect(actual).toEqual(expected);
       });
 
       it('adds SplashScreen registration to onCreate()', async () => {
-        vol.writeFileSync(
-          filePath,
-          `package com.reactnativeproject;
-
-import android.os.Bundle;
-
-import com.facebook.react.ReactActivity;
-import com.facebook.react.ReactRootView;
-
-public class MainActivity extends ReactActivity {
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  @Override
-  protected String getMainComponentName() {
-    return "react-native-project";
-  }
-
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-  }
-}
-`
-        );
+        vol.writeFileSync(filePath, generateMainActivityFileContent({ addOnCreateAt: 'BOTTOM' }));
         await configureMainActivity(projectRootPath, ResizeMode.CONTAIN);
         const actual = vol.readFileSync(filePath, 'utf-8');
-        const expected = `package com.reactnativeproject;
-
-import android.os.Bundle;
-
-import com.facebook.react.ReactActivity;
-import com.facebook.react.ReactRootView;
-
-import expo.modules.splashscreen.SplashScreen;
-import expo.modules.splashscreen.SplashScreenImageResizeMode;
-
-public class MainActivity extends ReactActivity {
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  @Override
-  protected String getMainComponentName() {
-    return "react-native-project";
-  }
-
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    // SplashScreen.show(...) has to be called after super.onCreate(...)
-    // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.CONTAIN, ReactRootView.class);
-  }
-}
-`;
+        const expected = generateMainActivityFileContent({
+          addSplashScreenShowWith: 'CONTAIN',
+          addOnCreateAt: 'BOTTOM',
+        });
         expect(actual).toEqual(expected);
       });
 
@@ -119,67 +115,17 @@ public class MainActivity extends ReactActivity {
         it('NATIVE', async () => {
           vol.writeFileSync(
             filePath,
-            `package com.reactnativeproject;
-
-import android.os.Bundle;
-
-import com.facebook.react.ReactActivity;
-import com.facebook.react.ReactRootView;
-
-import expo.modules.splashscreen.SplashScreen;
-import expo.modules.splashscreen.SplashScreenImageResizeMode;
-
-public class MainActivity extends ReactActivity {
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    // SplashScreen.show(...) has to called after super.onCreate(...)
-    // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.CONTAIN, ReactRootView.class);
-  }
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  @Override
-  protected String getMainComponentName() {
-    return "react-native-project";
-  }
-}
-`
+            generateMainActivityFileContent({
+              addOnCreateAt: 'TOP',
+              addSplashScreenShowWith: 'CONTAIN',
+            })
           );
           await configureMainActivity(projectRootPath, ResizeMode.NATIVE);
           const actual = vol.readFileSync(filePath, 'utf-8');
-          const expected = `package com.reactnativeproject;
-
-import android.os.Bundle;
-
-import com.facebook.react.ReactActivity;
-import com.facebook.react.ReactRootView;
-
-import expo.modules.splashscreen.SplashScreen;
-import expo.modules.splashscreen.SplashScreenImageResizeMode;
-
-public class MainActivity extends ReactActivity {
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    // SplashScreen.show(...) has to called after super.onCreate(...)
-    // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.NATIVE, ReactRootView.class);
-  }
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  @Override
-  protected String getMainComponentName() {
-    return "react-native-project";
-  }
-}
-`;
+          const expected = generateMainActivityFileContent({
+            addSplashScreenShowWith: 'NATIVE',
+            addOnCreateAt: 'TOP',
+          });
           expect(actual).toEqual(expected);
         });
       });
@@ -193,112 +139,35 @@ public class MainActivity extends ReactActivity {
 
       beforeEach(() => {
         vol.unlinkSync(filePathJava);
-        vol.writeFileSync(
-          filePath,
-          `package com.reactnativeproject
-
-import com.facebook.react.ReactActivity
-
-class MainActivity : ReactActivity() {
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  override fun getMainComponentName(): String {
-    return "react-native-project"
-  }
-}
-`
-        );
+        vol.writeFileSync(filePath, generateMainActivityFileContent({ kotlin: true }));
       });
 
       it('inserts onCreate() with SplashScreen registration', async () => {
         await configureMainActivity(projectRootPath, ResizeMode.CONTAIN);
         const actual = vol.readFileSync(filePath, 'utf-8');
-        const expected = `package com.reactnativeproject
-
-import android.os.Bundle
-
-import com.facebook.react.ReactActivity
-import com.facebook.react.ReactRootView
-
-import expo.modules.splashscreen.SplashScreen
-import expo.modules.splashscreen.SplashScreenImageResizeMode
-
-class MainActivity : ReactActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    // SplashScreen.show(...) has to be called after super.onCreate(...)
-    // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.CONTAIN, ReactRootView::class.java)
-  }
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  override fun getMainComponentName(): String {
-    return "react-native-project"
-  }
-}
-`;
+        const expected = generateMainActivityFileContent({
+          kotlin: true,
+          addOnCreateAt: 'TOP',
+          addSplashScreenShowWith: 'CONTAIN',
+        });
         expect(actual).toEqual(expected);
       });
 
       it('adds SplashScreen registration to onCreate()', async () => {
         vol.writeFileSync(
           filePath,
-          `package com.reactnativeproject
-
-import android.os.Bundle
-
-import com.facebook.react.ReactActivity
-import com.facebook.react.ReactRootView
-
-class MainActivity : ReactActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-  }
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  override fun getMainComponentName(): String {
-    return "react-native-project"
-  }
-}
-`
+          generateMainActivityFileContent({
+            kotlin: true,
+            addOnCreateAt: 'TOP',
+          })
         );
         await configureMainActivity(projectRootPath, ResizeMode.CONTAIN);
         const actual = vol.readFileSync(filePath, 'utf-8');
-        const expected = `package com.reactnativeproject
-
-import android.os.Bundle
-
-import com.facebook.react.ReactActivity
-import com.facebook.react.ReactRootView
-
-import expo.modules.splashscreen.SplashScreen
-import expo.modules.splashscreen.SplashScreenImageResizeMode
-
-class MainActivity : ReactActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    // SplashScreen.show(...) has to be called after super.onCreate(...)
-    // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.CONTAIN, ReactRootView::class.java)
-  }
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  override fun getMainComponentName(): String {
-    return "react-native-project"
-  }
-}
-`;
+        const expected = generateMainActivityFileContent({
+          kotlin: true,
+          addOnCreateAt: 'TOP',
+          addSplashScreenShowWith: 'CONTAIN',
+        });
         expect(actual).toEqual(expected);
       });
 
@@ -306,63 +175,19 @@ class MainActivity : ReactActivity() {
         it('NATIVE', async () => {
           vol.writeFileSync(
             filePath,
-            `package com.reactnativeproject
-
-import android.os.Bundle
-
-import com.facebook.react.ReactActivity
-import com.facebook.react.ReactRootView
-
-import expo.modules.splashscreen.SplashScreen
-import expo.modules.splashscreen.SplashScreenImageResizeMode
-
-class MainActivity : ReactActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    // SplashScreen.show(...) has to be called after super.onCreate(...)
-    // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.CONTAIN, ReactRootView::class.java)
-  }
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  override fun getMainComponentName(): String {
-    return "react-native-project"
-  }
-}
-`
+            generateMainActivityFileContent({
+              kotlin: true,
+              addOnCreateAt: 'TOP',
+              addSplashScreenShowWith: 'CONTAIN',
+            })
           );
           await configureMainActivity(projectRootPath, ResizeMode.NATIVE);
           const actual = vol.readFileSync(filePath, 'utf-8');
-          const expected = `package com.reactnativeproject
-
-import android.os.Bundle
-
-import com.facebook.react.ReactActivity
-import com.facebook.react.ReactRootView
-
-import expo.modules.splashscreen.SplashScreen
-import expo.modules.splashscreen.SplashScreenImageResizeMode
-
-class MainActivity : ReactActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    // SplashScreen.show(...) has to be called after super.onCreate(...)
-    // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.NATIVE, ReactRootView::class.java)
-  }
-
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  override fun getMainComponentName(): String {
-    return "react-native-project"
-  }
-}
-`;
+          const expected = generateMainActivityFileContent({
+            kotlin: true,
+            addSplashScreenShowWith: 'NATIVE',
+            addOnCreateAt: 'TOP',
+          });
           expect(actual).toEqual(expected);
         });
       });

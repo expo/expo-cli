@@ -3,22 +3,26 @@ import { Element } from 'xml-js';
 
 import fs from 'fs-extra';
 import { readXmlFile, writeXmlFile, mergeXmlElements, xmlElementsEqual } from '../xml-manipulation';
-import { StatusBarStyle, ResizeMode } from '../constants';
+import { StatusBarStyle } from '../constants';
 
 const STYLES_XML_FILE_PATH = './res/values/styles.xml';
-const STYLES_DARK_XML_FILE_PATH = './res/values-night/styles.xml';
 const STYLES_V23_XML_FILE_PATH = './res/values-v23/styles.xml';
 const STYLES_DARK_V23_XML_FILE_PATH = './res/values-night-v23/styles.xml';
 
 const STYLE_NAME = 'Theme.App.SplashScreen';
-
 function configureStyle(
   xml: Element,
   {
     statusBarHidden,
     statusBarStyle,
-  }: { statusBarHidden?: boolean; statusBarStyle?: StatusBarStyle }
+    addStatusBarBackgroundColor,
+  }: {
+    statusBarHidden?: boolean;
+    statusBarStyle?: StatusBarStyle;
+    addStatusBarBackgroundColor?: boolean;
+  }
 ): Element {
+  let idx = 0;
   const result = mergeXmlElements(xml, {
     elements: [
       {
@@ -32,11 +36,11 @@ function configureStyle(
             },
             elements: [
               {
-                idx: 0,
+                idx: idx++,
                 comment: ` Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually `,
               },
               {
-                idx: 1,
+                idx: idx++,
                 name: 'item',
                 attributes: {
                   name: 'android:windowBackground',
@@ -48,7 +52,7 @@ function configureStyle(
                 ],
               },
               {
-                idx: 2,
+                idx: statusBarHidden === undefined ? undefined : idx++,
                 deletionFlag: statusBarHidden === undefined,
                 name: 'item',
                 attributes: {
@@ -57,7 +61,10 @@ function configureStyle(
                 elements: [{ text: String(statusBarHidden) }],
               },
               {
-                idx: statusBarHidden === undefined ? 2 : 3,
+                idx:
+                  statusBarStyle === undefined || statusBarStyle === StatusBarStyle.DEFAULT
+                    ? undefined
+                    : idx++,
                 deletionFlag:
                   statusBarStyle === undefined || statusBarStyle === StatusBarStyle.DEFAULT,
                 name: 'item',
@@ -74,6 +81,15 @@ function configureStyle(
                         : '',
                   },
                 ],
+              },
+              {
+                idx: addStatusBarBackgroundColor ? idx++ : undefined,
+                deletionFlag: !addStatusBarBackgroundColor,
+                name: 'item',
+                attributes: {
+                  name: 'statusBarColor',
+                },
+                elements: [{ text: '@color/splashscreen_statusbar_color' }],
               },
               {
                 comment: ` Customize your splash screen theme here `,
@@ -164,10 +180,12 @@ export default async function configureStylesXml(
     statusBarHidden,
     statusBarStyle = StatusBarStyle.DEFAULT,
     darkModeStatusBarStyle,
+    addStatusBarBackgroundColor = false,
   }: {
     statusBarHidden?: boolean;
     statusBarStyle?: StatusBarStyle;
     darkModeStatusBarStyle?: StatusBarStyle;
+    addStatusBarBackgroundColor?: boolean;
   } = {}
 ) {
   const filePath = path.resolve(androidMainPath, STYLES_XML_FILE_PATH);
@@ -179,14 +197,19 @@ export default async function configureStylesXml(
   const v23XmlContent = await readXmlFile(v23FilePath, contentWithSingleStyle);
   const v23DarkXmlContent = await readXmlFile(v23DarkFilePath, contentWithSingleStyle);
 
-  const configuredXmlContent = configureStyle(xmlContent, { statusBarHidden });
+  const configuredXmlContent = configureStyle(xmlContent, {
+    statusBarHidden,
+    addStatusBarBackgroundColor,
+  });
   const configuredV23XmlContent = configureStyle(v23XmlContent, {
     statusBarHidden,
     statusBarStyle,
+    addStatusBarBackgroundColor,
   });
   const configuredV23DarkXmlContent = configureStyle(v23DarkXmlContent, {
     statusBarHidden,
     statusBarStyle: darkModeStatusBarStyle ?? statusBarStyle,
+    addStatusBarBackgroundColor,
   });
 
   if (areStyleElementsEqual(configuredV23DarkXmlContent, configuredV23XmlContent)) {

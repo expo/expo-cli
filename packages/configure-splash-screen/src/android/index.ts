@@ -30,12 +30,18 @@ export default async function configureAndroid(
 
   await Promise.all([
     configureDrawables(androidMainPath, imagePath, darkModeImagePath),
-    configureColorsXml(androidMainPath, backgroundColor, darkModeBackgroundColor),
+    configureColorsXml(androidMainPath, {
+      backgroundColor,
+      darkModeBackgroundColor,
+      statusBarBackgroundColor,
+      darkModeStatusBarBackgroundColor,
+    }),
     configureDrawableXml(androidMainPath, resizeMode),
     configureStylesXml(androidMainPath, {
       statusBarHidden,
       statusBarStyle,
       darkModeStatusBarStyle,
+      addStatusBarBackgroundColor: !!statusBarBackgroundColor,
     }),
     configureAndroidManifestXml(androidMainPath),
     configureMainActivity(projectRootPath, resizeMode),
