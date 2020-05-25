@@ -95,7 +95,7 @@ async function getArchiveLocationForUrlAsync(mode: SubmissionMode, url: string):
 
 async function getArchiveLocationForPathAsync(mode: SubmissionMode, path: string): Promise<string> {
   if (mode === SubmissionMode.online) {
-    log('Uploading your app archive to the temporary storage');
+    log('Uploading your app archive to the Expo Submission Service');
     return await uploadAppArchiveAsync(path);
   } else {
     return path;
