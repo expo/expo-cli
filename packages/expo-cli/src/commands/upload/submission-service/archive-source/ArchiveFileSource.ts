@@ -123,7 +123,11 @@ async function handleLatestSourceAsync(
     1
   );
   if (builds.length === 0) {
-    log.error("Couldn't find any builds for this project.");
+    log.error(
+      log.chalk.bold(
+        "Couldn't find any builds for this project on Expo servers. It looks like you haven't run expo build:android yet."
+      )
+    );
     return getArchiveFileLocationAsync(mode, {
       sourceType: ArchiveFileSourceType.prompt,
       platform: source.platform,
@@ -138,7 +142,7 @@ async function handlePathSourceAsync(
   source: ArchiveFilePathSource
 ): Promise<string> {
   if (!(await existingFile(source.path))) {
-    log.error(`${source.path} doesn't exist`);
+    log.error(log.chalk.bold(`${source.path} doesn't exist`));
     return getArchiveFileLocationAsync(mode, {
       sourceType: ArchiveFileSourceType.prompt,
       platform: source.platform,
@@ -167,7 +171,7 @@ async function handleBuildIdSourceAsync(
   }
 
   if (!build) {
-    log.error(`Couldn't find build for id ${source.id}`);
+    log.error(log.chalk.bold(`Couldn't find build for id ${source.id}`));
     return getArchiveFileLocationAsync(mode, {
       sourceType: ArchiveFileSourceType.prompt,
       platform: source.platform,
