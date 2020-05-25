@@ -1,5 +1,3 @@
-import terminalLink from 'terminal-link';
-import chalk from 'chalk';
 import prompt from '../../../../prompt';
 import { existingFile } from '../../../../validators';
 import log from '../../../../log';
@@ -53,10 +51,10 @@ async function handlePromptSourceAsync(_source: ServiceAccountPromptSource): Pro
 
 async function askForServiceAccountPathAsync(): Promise<string> {
   log(
-    `${chalk.bold(
+    `${log.chalk.bold(
       'A Google Service Account JSON key is required to upload your app to Google Play Store'
     )}.\n` +
-      `If you're not sure what this is or how to create one, learn more here: ${terminalLink(
+      `If you're not sure what this is or how to create one, learn more here: ${log.terminalLink(
         'expo.fyi/creating-google-service-account',
         'https://expo.fyi/creating-google-service-account'
       )}`
