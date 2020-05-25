@@ -1,10 +1,9 @@
-import ora from 'ora';
 import chalk from 'chalk';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
-import { every, some } from 'lodash';
-import invariant from 'invariant';
+import every from 'lodash/every';
+import some from 'lodash/some';
 import { runAction, travelingFastlane } from './fastlane';
 import { nonEmptyInput } from '../validators';
 import log from '../log';

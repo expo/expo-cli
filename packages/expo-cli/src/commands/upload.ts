@@ -1,5 +1,4 @@
 import pick from 'lodash/pick';
-import size from 'lodash/size';
 import { Command } from 'commander';
 
 import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
@@ -8,7 +7,7 @@ import log from '../log';
 
 const COMMON_OPTIONS = ['id', 'latest', 'path'];
 
-export default function (program: Command) {
+export default function(program: Command) {
   const ANDROID_OPTIONS = [...COMMON_OPTIONS, 'key', 'track'];
   const androidCommand = program.command('upload:android [projectDir]').alias('ua');
   setCommonOptions(androidCommand, '.apk');
@@ -76,7 +75,7 @@ export default function (program: Command) {
     .description(
       'Uploads a standalone app to Apple TestFlight (works on macOS only). Uploads the latest build by default.'
     )
-    .on('--help', function () {
+    .on('--help', function() {
       console.log('Available languages:');
       console.log(`  ${LANGUAGES.join(', ')}`);
       console.log();
@@ -124,7 +123,7 @@ function ensurePlatformIsSupported(): void {
 
 function ensureOptionsAreValid(command: AndroidPlatformOptions | IosPlatformOptions): void {
   const args = pick(command, COMMON_OPTIONS);
-  if (size(args) > 1) {
+  if (Object.keys(args).length > 1) {
     throw new Error(`You have to choose only one of --path, --id or --latest parameters`);
   }
 }

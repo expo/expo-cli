@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import toPairs from 'lodash/toPairs';
 
 export default function renderIntentFilters(intentFilters: any) {
   // returns an array of <intent-filter> tags:
@@ -26,7 +26,7 @@ export default function renderIntentFilters(intentFilters: any) {
 }
 
 function renderIntentFilterDatumEntries(datum: any) {
-  return _.toPairs(datum)
+  return toPairs(datum)
     .map(entry => `android:${entry[0]}="${entry[1]}"`)
     .join(' ');
 }

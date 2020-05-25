@@ -534,11 +534,17 @@ export async function exportForAppHosting(
   await fs.ensureDir(bundlesPathToWrite);
 
   const { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
-  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
+  const iosBundleHash = crypto
+    .createHash('md5')
+    .update(iosBundle)
+    .digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
+  const androidBundleHash = crypto
+    .createHash('md5')
+    .update(androidBundle)
+    .digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 
@@ -1338,11 +1344,46 @@ async function getConfigAsync(
   }
 }
 
-// TODO(ville): add the full type
-type BuildJob = unknown;
+type JobState = 'pending' | 'started' | 'in-progress' | 'finished' | 'errored' | 'sent-to-queue';
+
+export type TurtleMode = 'normal' | 'high' | 'high_only';
+
+// https://github.com/expo/universe/blob/283efaba3acfdefdc7db12f649516b6d6a94bec4/server/www/src/data/entities/builds/BuildJobEntity.ts#L25-L56
+export interface BuildJobFields {
+  id: string;
+  experienceName: string;
+  status: JobState;
+  platform: 'ios' | 'android';
+  userId: string | null;
+  experienceId: string;
+  artifactId: string | null;
+  nonce: string | null;
+  artifacts: {
+    url?: string;
+    manifestPlistUrl?: string;
+  } | null;
+  config: {
+    buildType?: string;
+    releaseChannel?: string;
+    bundleIdentifier?: string;
+  };
+  logs: object | null;
+  extraData: {
+    request_id?: string;
+    turtleMode?: TurtleMode;
+  } | null;
+  created: Date;
+  updated: Date;
+  expirationDate: Date;
+  sdkVersion: string | null;
+  turtleVersion: string | null;
+  buildDuration: number | null;
+  priority: string;
+  accountId: string | null;
+}
 
 export type BuildStatusResult = {
-  jobs: BuildJob[];
+  jobs: BuildJobFields[];
   err: null;
   userHasBuiltAppBefore: boolean;
   userHasBuiltExperienceBefore: boolean;

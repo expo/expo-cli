@@ -1,5 +1,4 @@
 import { ExponentTools } from '@expo/xdl';
-import get from 'lodash/get';
 import fs from 'fs-extra';
 import ProgressBar from 'progress';
 import axios from 'axios';
@@ -75,7 +74,7 @@ export async function runFastlaneAsync(
     let message =
       res.reason !== 'Unknown reason'
         ? res.reason
-        : get(res, 'rawDump.message', 'Unknown error when running fastlane');
+        : res.rawDump?.message ?? 'Unknown error when running fastlane';
     message = `${message}${
       res?.rawDump?.backtrace
         ? `\n${res.rawDump.backtrace.map((i: string) => `    ${i}`).join('\n')}`

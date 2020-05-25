@@ -1,7 +1,6 @@
 import { ExpoConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
 import forEach from 'lodash/forEach';
-import get from 'lodash/get';
 import pickBy from 'lodash/pickBy';
 import path from 'path';
 import semver from 'semver';
@@ -245,7 +244,7 @@ export async function canTurtleBuildSdkVersion(
   }
 
   const supportedVersions = await getSdkVersionsSupportedByTurtle();
-  const supportedVersionsForPlatform = get(supportedVersions, platform, [] as string[]);
+  const supportedVersionsForPlatform: string[] = supportedVersions[platform] ?? [];
   return supportedVersionsForPlatform.indexOf(sdkVersion) !== -1;
 }
 

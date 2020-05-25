@@ -1,7 +1,9 @@
 import crypto from 'crypto';
 import path from 'path';
 
-import _ from 'lodash';
+import attempt from 'lodash/attempt';
+import isError from 'lodash/isError';
+import omit from 'lodash/omit';
 import fs from 'fs-extra';
 import glob from 'glob-promise';
 import minimatch from 'minimatch';
@@ -49,7 +51,11 @@ function _ensureDeveloperCertificateIsValid(plistData, distCertFingerprint) {
 
 function _genDerCertFingerprint(certBase64) {
   const certBuffer = Buffer.from(certBase64, 'base64');
-  return crypto.createHash('sha1').update(certBuffer).digest('hex').toUpperCase();
+  return crypto
+    .createHash('sha1')
+    .update(certBuffer)
+    .digest('hex')
+    .toUpperCase();
 }
 
 function _ensureBundleIdentifierIsValid(plistData, expectedBundleIdentifier) {
@@ -223,8 +229,8 @@ async function createEntitlementsFile({
   }
   const archiveEntitlementsPath = entitlementsPaths[0];
   const archiveEntitlementsRaw = await fs.readFile(archiveEntitlementsPath);
-  const archiveEntitlementsData = _.attempt(plist.parse, String(archiveEntitlementsRaw));
-  if (_.isError(archiveEntitlementsData)) {
+  const archiveEntitlementsData = attempt(plist.parse, String(archiveEntitlementsRaw));
+  if (isError(archiveEntitlementsData)) {
     throw new Error(`Error when parsing plist: ${archiveEntitlementsData.message}`);
   }
 
@@ -236,10 +242,10 @@ async function createEntitlementsFile({
     }
   });
 
-  let generatedEntitlements = _.omit(entitlements, blacklistedEntitlementKeys);
+  let generatedEntitlements = omit(entitlements, blacklistedEntitlementKeys);
 
   if (!manifest.ios.usesIcloudStorage) {
-    generatedEntitlements = _.omit(generatedEntitlements, blacklistedEntitlementKeysWithoutICloud);
+    generatedEntitlements = omit(generatedEntitlements, blacklistedEntitlementKeysWithoutICloud);
   } else {
     const ubiquityKvKey = 'com.apple.developer.ubiquity-kvstore-identifier';
     if (generatedEntitlements[ubiquityKvKey]) {
@@ -249,17 +255,17 @@ async function createEntitlementsFile({
     generatedEntitlements['com.apple.developer.icloud-services'] = ['CloudDocuments'];
   }
   if (!manifest.ios.associatedDomains) {
-    generatedEntitlements = _.omit(generatedEntitlements, 'com.apple.developer.associated-domains');
+    generatedEntitlements = omit(generatedEntitlements, 'com.apple.developer.associated-domains');
   }
   if (!manifest.ios.usesAppleSignIn) {
-    generatedEntitlements = _.omit(generatedEntitlements, 'com.apple.developer.applesignin');
+    generatedEntitlements = omit(generatedEntitlements, 'com.apple.developer.applesignin');
   }
   if (generatedEntitlements[icloudContainerEnvKey]) {
     const envs = generatedEntitlements[icloudContainerEnvKey].filter(i => i === 'Production');
     generatedEntitlements[icloudContainerEnvKey] = envs;
   }
 
-  const generatedEntitlementsPlistData = _.attempt(plist.build, generatedEntitlements);
+  const generatedEntitlementsPlistData = attempt(plist.build, generatedEntitlements);
   await fs.writeFile(generatedEntitlementsPath, generatedEntitlementsPlistData, {
     mode: 0o755,
   });

@@ -2,7 +2,6 @@ import chalk from 'chalk';
 import dateformat from 'dateformat';
 import fs from 'fs-extra';
 import every from 'lodash/every';
-import get from 'lodash/get';
 import some from 'lodash/some';
 import ora from 'ora';
 import { IosCodeSigning } from '@expo/xdl';
@@ -340,12 +339,12 @@ export class CreateOrReuseDistributionCert implements IView {
 }
 
 function getOptionsFromProjectContext(ctx: Context): DistCertOptions | null {
-  const experience = get(ctx, 'manifest.slug');
-  const owner = get(ctx, 'manifest.owner');
+  const experience = ctx.manifest.slug;
+  const owner = ctx.manifest.owner;
   const experienceName = `@${owner || ctx.user.username}/${experience}`;
-  const bundleIdentifier = get(ctx, 'manifest.ios.bundleIdentifier');
+  const bundleIdentifier = ctx.manifest.ios?.bundleIdentifier;
   if (!experience || !bundleIdentifier) {
-    log.error(`slug and ios.bundleIdentifier needs to be defined`);
+    log.error(`slug and ios.bundleIdentifier need to be defined`);
     return null;
   }
 
@@ -483,9 +482,10 @@ function formatDistCert(
       "\n    ❓ Validity of this certificate on Apple's servers is unknown."
     );
   }
-  return `Distribution Certificate (Cert ID: ${
-    distCert.certId || '-----'
-  }, Serial number: ${serialNumber}, Team ID: ${distCert.teamId})${usedByString}${validityText}`;
+  return `Distribution Certificate (Cert ID: ${distCert.certId ||
+    '-----'}, Serial number: ${serialNumber}, Team ID: ${
+    distCert.teamId
+  })${usedByString}${validityText}`;
 }
 
 async function generateDistCert(ctx: Context): Promise<DistCert> {

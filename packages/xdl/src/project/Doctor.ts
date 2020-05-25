@@ -10,7 +10,6 @@ import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import getenv from 'getenv';
-import _ from 'lodash';
 import path from 'path';
 import semver from 'semver';
 
@@ -32,7 +31,7 @@ const WARN_NPM_VERSION_RANGES = ['>= 5.0.0 < 5.7.0'];
 const BAD_NPM_VERSION_RANGES = ['>= 5.0.0 <= 5.0.3'];
 
 function _isNpmVersionWithinRanges(npmVersion: string, ranges: string[]) {
-  return _.some(ranges, range => semver.satisfies(npmVersion, range));
+  return ranges.some(range => semver.satisfies(npmVersion, range));
 }
 
 async function _checkNpmVersionAsync(projectRoot: string) {
@@ -45,7 +44,7 @@ async function _checkNpmVersionAsync(projectRoot: string) {
     } catch (e) {}
 
     let npmVersionResponse = await spawnAsync('npm', ['--version']);
-    let npmVersion = _.trim(npmVersionResponse.stdout);
+    let npmVersion = npmVersionResponse.stdout.trim();
 
     if (
       semver.lt(npmVersion, MIN_NPM_VERSION) ||
@@ -207,7 +206,7 @@ async function _validateExpJsonAsync(
     ProjectUtils.logError(
       projectRoot,
       'expo',
-      `Error: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`,
+      `Error: Invalid sdkVersion. Valid options are ${Object.keys(sdkVersions).join(', ')}`,
       'doctor-invalid-sdk-version'
     );
     return ERROR;

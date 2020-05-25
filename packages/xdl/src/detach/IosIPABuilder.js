@@ -1,4 +1,5 @@
-import _ from 'lodash';
+import attempt from 'lodash/attempt';
+import isError from 'lodash/isError';
 import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
@@ -124,8 +125,8 @@ export default function createIPABuilder(buildParams) {
       }
     );
     const plistRaw = output.join('');
-    const plistData = _.attempt(plist.parse, plistRaw);
-    if (_.isError(plistData)) {
+    const plistData = attempt(plist.parse, plistRaw);
+    if (isError(plistData)) {
       throw new Error(`Error when parsing plist: ${plistData.message}`);
     }
     return plistData;

@@ -117,7 +117,8 @@ export default class AppSigningOptInProcess {
     log(`Saving upload keystore to ${this.uploadKeystore}...`);
     this.uploadKeystoreCredentials = await AndroidCredentials.generateUploadKeystore(
       this.uploadKeystore,
-      get(exp, 'android.package'),
+      // @ts-ignore android package might be undefined here
+      exp.android?.package,
       `@${username}/${exp.slug}`
     );
 
