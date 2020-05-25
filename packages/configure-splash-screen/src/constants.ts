@@ -14,8 +14,8 @@ export enum Platform {
 
 export enum StatusBarStyle {
   DEFAULT = 'default',
-  LIGHT = 'light-content',
-  DARK = 'dark-content',
+  LIGHT_CONTENT = 'light-content',
+  DARK_CONTENT = 'dark-content',
 }
 
 /**

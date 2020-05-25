@@ -263,10 +263,7 @@ function generateColorOptionValidatingFunction(optionName: string) {
 function filterAndConvertOptionsKeys(commenderObject: object): Options {
   return Object.entries(commenderObject)
     .map<[string, any]>(([key, value]) => {
-      if (key.startsWith('statusbar')) {
-        return [key.replace('statusbar', 'statusBar'), value];
-      }
-      return [key, value];
+      return [key.replace('statusbar', 'statusBar').replace('Statusbar', 'StatusBar'), value];
     })
     .filter(([key]) => AVAILABLE_OPTIONS_NAMES.has(key))
     .reduce((acc, [key, value]) => {
@@ -316,7 +313,7 @@ program
     StatusBarStyle.DEFAULT
   )
   .option(
-    '--dark-mode-statusbar-style',
+    '--dark-mode-statusbar-style [darkModeStatusBarStyle]',
     `The very same as 'statusbar-style' option, but applied only in dark mode.`
   )
   .option('--statusbar-hidden', `Hides the StatusBar.`)

@@ -22,7 +22,9 @@ export default async function configureAndroid(
     statusBarTranslucent,
     statusBarBackgroundColor,
     darkModeStatusBarBackgroundColor,
-  }: Arguments & StatusBarOptions & AndroidOnlyStatusBarOptions & { resizeMode: ResizeMode }
+  }: Arguments &
+    Partial<StatusBarOptions> &
+    Partial<AndroidOnlyStatusBarOptions> & { resizeMode: ResizeMode }
 ) {
   const androidMainPath = path.resolve(projectRootPath, 'android/app/src/main');
 
@@ -30,7 +32,11 @@ export default async function configureAndroid(
     configureDrawables(androidMainPath, imagePath, darkModeImagePath),
     configureColorsXml(androidMainPath, backgroundColor, darkModeBackgroundColor),
     configureDrawableXml(androidMainPath, resizeMode),
-    configureStylesXml(androidMainPath, statusBarHidden),
+    configureStylesXml(androidMainPath, {
+      statusBarHidden,
+      statusBarStyle,
+      darkModeStatusBarStyle,
+    }),
     configureAndroidManifestXml(androidMainPath),
     configureMainActivity(projectRootPath, resizeMode),
   ]);

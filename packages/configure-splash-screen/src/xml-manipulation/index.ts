@@ -1,4 +1,5 @@
 import { Element, js2xml, xml2js, Attributes } from 'xml-js';
+import deepEqual from 'deep-equal';
 
 import { readFileWithFallback, createDirAndWriteFile } from '../file-helpers';
 
@@ -146,7 +147,15 @@ function mergeXmlElementsLists(
   return sortedResult;
 }
 
-function convertToElement(expectedElement: ExpectedElement): Element {
+function convertToElement({
+  idx,
+  ...expectedElement
+}: WithExplicitIndex<ExpectedElement>): Element {
+  // @ts-ignore
+  if (expectedElement.deletionFlag) {
+    throw new Error('Cannot convert ExpectedElement to Element when deletionFlag is set');
+  }
+
   if (isCommentType(expectedElement)) {
     return {
       ...expectedElement,
@@ -263,11 +272,21 @@ export function mergeXmlElements(current: Element, expected: ExpectedElement): E
   return result;
 }
 
+/**
+ * @param filePath
+ * @param fallbackContent
+ */
 export async function readXmlFile(
   filePath: string,
-  fallbackContent: string = `<?xml version="1.0" encoding="utf-8"?>`
+  fallbackContent: Element | string = `<?xml version="1.0" encoding="utf-8"?>`
 ): Promise<Element> {
-  const fileContent = await readFileWithFallback(filePath, fallbackContent);
+  const fileContent = await readFileWithFallback(
+    filePath,
+    typeof fallbackContent === 'string' ? fallbackContent : 'fallbackToElement'
+  );
+  if (fileContent === 'fallbackToElement' && typeof fallbackContent === 'object') {
+    return fallbackContent;
+  }
   const fileXml = xml2js(fileContent);
   return fileXml as Element;
 }
@@ -279,4 +298,40 @@ export async function writeXmlFile(filePath: string, xml: Element) {
     '$1$2$4$5'
   );
   await createDirAndWriteFile(filePath, `${correctedFile}\n`);
+}
+
+/**
+ * Checks whether two xmlElements are equal in terms of their structure
+ */
+export function xmlElementsEqual(
+  a: Element,
+  b: Element,
+  { disregardComments = true }: { disregardComments?: boolean } = {}
+): boolean {
+  const filteredA = !disregardComments ? a : removeComments(a);
+  const filteredB = !disregardComments ? b : removeComments(b);
+  return deepEqual(filteredA, filteredB);
+}
+
+function removeComments(e: Element): Element | undefined {
+  if (e.type === 'comment') {
+    return;
+  }
+  const result = Object.entries(e)
+    .map(([key, value]): [string, any] => {
+      if (key === 'elements' && Array.isArray(value)) {
+        const filteredValue = value
+          .map(removeComments)
+          .filter((el): el is Element => el !== undefined);
+        return [key, filteredValue.length > 0 ? filteredValue : undefined];
+      }
+      return [key, value];
+    })
+    .filter(([_, value]) => value !== undefined)
+    .reduce((acc, [key, value]) => {
+      // @ts-ignore
+      acc[key] = value;
+      return acc;
+    }, {});
+  return result;
 }
