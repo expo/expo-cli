@@ -2,13 +2,13 @@ import {
   ExpoConfig,
   PackageJSONConfig,
   getConfig,
-  getProjectConfigDescription,
+  // getProjectConfigDescription,
   resolveModule,
 } from '@expo/config';
 // @ts-ignore: not typed
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
-import { Project, ProjectSettings, UrlUtils, UserSettings, Versions, Webpack } from '@expo/xdl';
+import { Project, ProjectSettings, UrlUtils, UserSettings, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import attempt from 'lodash/attempt';
 import intersection from 'lodash/intersection';
