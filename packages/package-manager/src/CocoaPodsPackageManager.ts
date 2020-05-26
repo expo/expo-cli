@@ -199,6 +199,7 @@ export class CocoaPodsPackageManager implements PackageManager {
   async removeLockfileAsync() {
     throw new Error('Unimplemented');
   }
+
   async cleanAsync() {
     throw new Error('Unimplemented');
   }

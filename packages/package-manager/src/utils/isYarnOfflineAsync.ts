@@ -2,13 +2,15 @@ import { execSync } from 'child_process';
 import dns from 'dns';
 import url from 'url';
 
-function getNpmProxy(): string | null {
+export function getNpmProxy(): string | null {
   if (process.env.https_proxy) {
     return process.env.https_proxy ?? null;
   }
 
   try {
-    const httpsProxy = execSync('npm config get https-proxy').toString().trim();
+    const httpsProxy = execSync('npm config get https-proxy')
+      .toString()
+      .trim();
     return httpsProxy !== 'null' ? httpsProxy : null;
   } catch (e) {
     return null;
