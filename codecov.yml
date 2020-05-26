@@ -10,11 +10,7 @@ coverage:
   status:
     changes: no
     patch: yes
-    project:
-      default:
-        target: auto
-        # Disable errors failing PRs when the coverage is too low
-        threshold: null
+    project: no
 
 comment:
   behavior: default
