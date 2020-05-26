@@ -1,7 +1,6 @@
 import { Credentials, UrlUtils } from '@expo/xdl';
 import { ExpoConfig } from '@expo/config';
 import chalk from 'chalk';
-import has from 'lodash/has';
 import pick from 'lodash/pick';
 import intersection from 'lodash/intersection';
 
@@ -111,7 +110,7 @@ export default class IOSUploader extends BaseUploader {
   }
 
   _ensureExperienceIsValid(exp: ExpoConfig): void {
-    if (!has(exp, 'ios.bundleIdentifier')) {
+    if (!exp.ios?.bundleIdentifier) {
       throw new Error(`You must specify an iOS bundle identifier in app.json.`);
     }
   }
