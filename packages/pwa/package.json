@@ -43,7 +43,7 @@
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "fs-extra": "^9.0.0",
-    "glob": "7.1.2",
+    "globby": "11.0.0",
     "update-check": "1.5.3"
   }
 }
