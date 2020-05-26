@@ -1,7 +1,7 @@
 import { Element, js2xml, xml2js, Attributes } from 'xml-js';
 import deepEqual from 'deep-equal';
 
-import { readFileWithFallback, createDirAndWriteFile } from '../file-helpers';
+import { readFileWithFallback, createDirAndWriteFile, removeFileIfExists } from '../file-helpers';
 
 type ExplicitNewValue<T> = { newValue: T };
 type WithExplicitNewValue<T> = T | ExplicitNewValue<T>;
@@ -334,4 +334,27 @@ function removeComments(e: Element): Element | undefined {
       return acc;
     }, {});
   return result;
+}
+
+/**
+ * Check if given `element` has some meaningful data:
+ * - if so: write it to the file
+ * - if no: remove file completely
+ * Function assumes that the structure of the input `element` is correct (`element.elements[name = resources]`).
+ */
+export async function writeXmlFileOrRemoveFileUponNoResources(
+  filePath: string,
+  element: Element,
+  { disregardComments }: { disregardComments?: boolean } = {}
+) {
+  if (
+    element.elements?.[0].name === 'resources' &&
+    element.elements[0].elements?.filter(({ type }) =>
+      disregardComments ? type !== 'comment' : true
+    ).length === 0
+  ) {
+    await removeFileIfExists(filePath);
+  } else {
+    await writeXmlFile(filePath, element);
+  }
 }

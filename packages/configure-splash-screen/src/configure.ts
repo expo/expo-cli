@@ -101,8 +101,8 @@ async function validateArgumentImagePath(
  *   - `resizeMode = NATIVE` is selected only with `platform = ANDROID`
  *   - `statusBarBackgroundColor` is provided only if `platform = ANDROID`
  *   - `statusBarTranslucent` is provided only if `platform = ANDROID`
- *   - `darkModeStatusBarStyle` is provided only if `darkMode = true`
- *   - `darkModeStatusBarBackgroundColor` is provided only if `platform = ANDROID` and `darkMode = true`
+ *   - `darkModeStatusBarStyle` is provided only if `darkMode = true` and `statusBarStyle` is provided.
+ *   - `darkModeStatusBarBackgroundColor` is provided only if `platform = ANDROID` and `darkMode = true` and `statusBarBackgroundColor` is provided.
  */
 async function validateConfiguration(
   configuration: {
@@ -209,14 +209,22 @@ async function validateConfiguration(
     );
   }
 
-  // `darkModeStatusBarStyle` is provided only if `darkMode = true`
-  if (darkModeStatusBarStyle && !darkMode) {
-    logErrorAndExit(
-      `error: Option 'dark-mode-statusbar-style' is not available when dark mode is not enabled.`
-    );
+  // `darkModeStatusBarStyle` is provided only if `darkMode = true` and `statusBarStyle` is provided
+  if (darkModeStatusBarStyle) {
+    if (!darkMode) {
+      logErrorAndExit(
+        `error: Option 'dark-mode-statusbar-style' is not available when dark mode is not enabled.`
+      );
+    }
+
+    if (!statusBarStyle) {
+      logErrorAndExit(
+        `error: Option 'dark-mode-statusbar-style' is not available unless 'statusbar-style' is also provided.`
+      );
+    }
   }
 
-  // `darkModeStatusBarBackgroundColor` is provided only if `platform = ANDROID` and `darkMode = true`
+  // `darkModeStatusBarBackgroundColor` is provided only if `platform = ANDROID` and `darkMode = true` and `statusBarBackgroundColor` is provided.
   if (darkModeStatusBarBackgroundColor) {
     if (!darkMode) {
       logErrorAndExit(
@@ -227,6 +235,12 @@ async function validateConfiguration(
     if (platform !== Platform.ANDROID) {
       logErrorAndExit(
         `error: Option 'dark-mode-statusbar-background-color' is not available for platform '${platform}'.`
+      );
+    }
+
+    if (!statusBarBackgroundColor) {
+      logErrorAndExit(
+        `error: Option 'dark-mode-statusbar-background-color' is not available unless 'statusbar-background-color' is also provided.`
       );
     }
   }
@@ -314,7 +328,7 @@ program
   )
   .option(
     '--dark-mode-statusbar-style [darkModeStatusBarStyle]',
-    `The very same as 'statusbar-style' option, but applied only in dark mode.`
+    `The very same as 'statusbar-style' option, but applied only in dark mode. Available only if 'statusbar-style' is provided.`
   )
   .option('--statusbar-hidden', `Hides the StatusBar.`)
   .option(
@@ -324,7 +338,7 @@ program
   )
   .option(
     '--dark-mode-statusbar-background-color [darkModeStatusBarBackgroundColor]',
-    `(only for Android platform) The very same as 'statusbar-background-color' option, but applied only in dark mode.`,
+    `(only for Android platform) The very same as 'statusbar-background-color' option, but applied only in dark mode. Available only if 'statusbar-style' is provided.`,
     generateColorOptionValidatingFunction('dark-mode-statusbar-background-color')
   )
   .option(

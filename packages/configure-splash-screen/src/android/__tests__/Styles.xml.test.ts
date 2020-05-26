@@ -15,11 +15,13 @@ describe('Styles.xml', () => {
       addOtherAttributes,
       windowFullscreenItemValue,
       windowLightStatusBarItemValue,
+      addStatusBarColor,
     }: {
       addOtherStyle?: boolean;
       addOtherAttributes?: boolean;
       windowFullscreenItemValue?: boolean;
       windowLightStatusBarItemValue?: boolean;
+      addStatusBarColor?: boolean;
     } = {}) {
       return `<?xml version="1.0" encoding="utf-8"?>
 <resources>${
@@ -43,6 +45,11 @@ describe('Styles.xml', () => {
           ? ''
           : `
     <item name="android:windowLightStatusBar">${String(windowLightStatusBarItemValue)}</item>`
+      }${
+        !addStatusBarColor
+          ? ''
+          : `
+    <item name="android:statusBarColor">@color/splashscreen_statusbar_color</item>`
       }${
         !addOtherAttributes
           ? ''
@@ -240,6 +247,126 @@ describe('Styles.xml', () => {
         const v23NightExpected = generateStylesFileContent({
           addOtherAttributes: true,
           windowLightStatusBarItemValue: false,
+        });
+        expect(result).toEqual(expected);
+        expect(v23Result).toEqual(v23Expected);
+        expect(v23NightResult).toEqual(v23NightExpected);
+      });
+    });
+
+    describe('handles statusBarBackgroundColor', () => {
+      it('adds statusBarBackgroundColor item to the style config', async () => {
+        vol.mkdirpSync(path.dirname(v23FilePath));
+        vol.mkdirpSync(path.dirname(v23NightFilePath));
+        vol.writeFileSync(
+          filePath,
+          generateStylesFileContent({
+            windowFullscreenItemValue: true,
+            addOtherStyle: true,
+            addOtherAttributes: true,
+          })
+        );
+        vol.writeFileSync(
+          v23FilePath,
+          generateStylesFileContent({
+            windowFullscreenItemValue: true,
+            addOtherAttributes: true,
+          })
+        );
+        vol.writeFileSync(
+          v23NightFilePath,
+          generateStylesFileContent({
+            windowFullscreenItemValue: true,
+            addOtherAttributes: true,
+          })
+        );
+
+        await configureStylesXml(androidMainPath, {
+          statusBarHidden: true,
+          statusBarStyle: StatusBarStyle.DARK_CONTENT,
+          darkModeStatusBarStyle: StatusBarStyle.LIGHT_CONTENT,
+          addStatusBarBackgroundColor: true,
+        });
+
+        const result = vol.readFileSync(filePath, 'utf-8');
+        const v23Result = vol.readFileSync(v23FilePath, 'utf-8');
+        const v23NightResult = vol.readFileSync(v23NightFilePath, 'utf-8');
+        const expected = generateStylesFileContent({
+          windowFullscreenItemValue: true,
+          addOtherStyle: true,
+          addOtherAttributes: true,
+          addStatusBarColor: true,
+        });
+        const v23Expected = generateStylesFileContent({
+          windowFullscreenItemValue: true,
+          windowLightStatusBarItemValue: true,
+          addOtherAttributes: true,
+          addStatusBarColor: true,
+        });
+        const v23NightExpected = generateStylesFileContent({
+          windowFullscreenItemValue: true,
+          windowLightStatusBarItemValue: false,
+          addOtherAttributes: true,
+          addStatusBarColor: true,
+        });
+        expect(result).toEqual(expected);
+        expect(v23Result).toEqual(v23Expected);
+        expect(v23NightResult).toEqual(v23NightExpected);
+      });
+
+      it('removes statusBarBackgroundColor item from the style config', async () => {
+        vol.mkdirpSync(path.dirname(v23FilePath));
+        vol.mkdirpSync(path.dirname(v23NightFilePath));
+        vol.writeFileSync(
+          filePath,
+          generateStylesFileContent({
+            windowFullscreenItemValue: true,
+            addOtherStyle: true,
+            addOtherAttributes: true,
+            addStatusBarColor: true,
+          })
+        );
+        vol.writeFileSync(
+          v23FilePath,
+          generateStylesFileContent({
+            windowFullscreenItemValue: true,
+            addOtherAttributes: true,
+            addStatusBarColor: true,
+          })
+        );
+        vol.writeFileSync(
+          v23NightFilePath,
+          generateStylesFileContent({
+            windowFullscreenItemValue: true,
+            addOtherAttributes: true,
+            addStatusBarColor: true,
+          })
+        );
+
+        await configureStylesXml(androidMainPath, {
+          statusBarHidden: true,
+          statusBarStyle: StatusBarStyle.DARK_CONTENT,
+          darkModeStatusBarStyle: StatusBarStyle.LIGHT_CONTENT,
+          addStatusBarBackgroundColor: false,
+        });
+
+        const result = vol.readFileSync(filePath, 'utf-8');
+        const v23Result = vol.readFileSync(v23FilePath, 'utf-8');
+        const v23NightResult = vol.readFileSync(v23NightFilePath, 'utf-8');
+        const expected = generateStylesFileContent({
+          windowFullscreenItemValue: true,
+          addOtherStyle: true,
+          addOtherAttributes: true,
+        });
+        const v23Expected = generateStylesFileContent({
+          windowFullscreenItemValue: true,
+          windowLightStatusBarItemValue: true,
+          addOtherAttributes: true,
+        });
+        const v23NightExpected = generateStylesFileContent({
+          windowFullscreenItemValue: true,
+          windowLightStatusBarItemValue: false,
+          addOtherAttributes: true,
         });
         expect(result).toEqual(expected);
         expect(v23Result).toEqual(v23Expected);

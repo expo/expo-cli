@@ -1,8 +1,13 @@
 import path from 'path';
 import { Element } from 'xml-js';
 
-import fs from 'fs-extra';
-import { readXmlFile, writeXmlFile, mergeXmlElements, xmlElementsEqual } from '../xml-manipulation';
+import {
+  readXmlFile,
+  writeXmlFile,
+  mergeXmlElements,
+  xmlElementsEqual,
+  writeXmlFileOrRemoveFileUponNoResources,
+} from '../xml-manipulation';
 import { StatusBarStyle } from '../constants';
 
 const STYLES_XML_FILE_PATH = './res/values/styles.xml';
@@ -87,7 +92,7 @@ function configureStyle(
                 deletionFlag: !addStatusBarBackgroundColor,
                 name: 'item',
                 attributes: {
-                  name: 'statusBarColor',
+                  name: 'android:statusBarColor',
                 },
                 elements: [{ text: '@color/splashscreen_statusbar_color' }],
               },
@@ -156,22 +161,6 @@ function elementWithStyleElement(element: Element): Element | undefined {
 }
 
 /**
- * Check if given newContent has some meaningful data:
- * - if so: write it to the file
- * - if no: remove file completely
- * Function assumes that the structure of the input `element` is correct (`element.elements[name = resources]`).
- */
-async function writeXmlFileOrRemoveFileUponNoContent(filePath: string, element: Element) {
-  if (element.elements?.[0].name === 'resources' && element.elements[0].elements?.length === 0) {
-    if (await fs.pathExists(filePath)) {
-      await fs.unlink(filePath);
-    }
-  } else {
-    await writeXmlFile(filePath, element);
-  }
-}
-
-/**
  * @param androidMainPath Path to the main directory containing code and resources in Android project. In general that would be `android/app/src/main`.
  */
 export default async function configureStylesXml(
@@ -188,6 +177,12 @@ export default async function configureStylesXml(
     addStatusBarBackgroundColor?: boolean;
   } = {}
 ) {
+  if (darkModeStatusBarStyle && !statusBarStyle) {
+    throw new Error(
+      `'darkModeStatusBarStyle' is available only if 'statusBarStyle' is provided as well.`
+    );
+  }
+
   const filePath = path.resolve(androidMainPath, STYLES_XML_FILE_PATH);
   const v23FilePath = path.resolve(androidMainPath, STYLES_V23_XML_FILE_PATH);
   const v23DarkFilePath = path.resolve(androidMainPath, STYLES_DARK_V23_XML_FILE_PATH);
@@ -213,7 +208,7 @@ export default async function configureStylesXml(
   });
 
   if (areStyleElementsEqual(configuredV23DarkXmlContent, configuredV23XmlContent)) {
-    await writeXmlFileOrRemoveFileUponNoContent(
+    await writeXmlFileOrRemoveFileUponNoResources(
       v23DarkFilePath,
       removeStyleElement(configuredV23DarkXmlContent)
     );
@@ -222,7 +217,7 @@ export default async function configureStylesXml(
   }
 
   if (areStyleElementsEqual(configuredV23XmlContent, configuredXmlContent)) {
-    await writeXmlFileOrRemoveFileUponNoContent(
+    await writeXmlFileOrRemoveFileUponNoResources(
       v23FilePath,
       removeStyleElement(configuredV23XmlContent)
     );
