@@ -1,8 +1,7 @@
 import os from 'os';
 import path from 'path';
 
-import { JSONObject } from '@expo/json-file';
-import { Android, Platform, prepareJob } from '@expo/build-tools';
+import { Platform, prepareJob } from '@expo/build-tools';
 import { ApiV2, FormData, User } from '@expo/xdl';
 import axios from 'axios';
 import concat from 'concat-stream';
@@ -13,7 +12,6 @@ import ora from 'ora';
 import { v4 as uuid } from 'uuid';
 
 import { makeProjectTarball, waitForBuildEnd } from './utils';
-import log from '../../log';
 
 export interface StatusResult {
   builds: BuildInfo[];
