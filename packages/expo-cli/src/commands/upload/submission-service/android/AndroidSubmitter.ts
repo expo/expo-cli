@@ -117,8 +117,8 @@ class AndroidOfflineSubmitter {
       releaseStatus,
     } = this.submissionConfig;
 
-    // TODO: check if `fastlane supply` works on linux
-    const travelingFastlane = require(`@expo/traveling-fastlane-${os.platform()}`)();
+    const travelingFastlanePkgName = this.resolveTravelingFastlanePkgName();
+    const travelingFastlane = require(travelingFastlanePkgName)();
     const args = [archivePath, androidPackage, serviceAccountPath, track, archiveType];
     if (releaseStatus) {
       args.push(releaseStatus);
@@ -129,6 +129,15 @@ class AndroidOfflineSubmitter {
       if (archivePath.startsWith(os.tmpdir())) {
         await fs.remove(archivePath);
       }
+    }
+  }
+
+  private resolveTravelingFastlanePkgName(): string {
+    const osPlatform = os.platform();
+    if (osPlatform === 'darwin') {
+      return '@expo/traveling-fastlane-darwin';
+    } else {
+      return '@expo/traveling-fastlane-linux';
     }
   }
 }
