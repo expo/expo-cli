@@ -9,7 +9,7 @@ export default function withExpo(nextConfig: NextConfig = {}): NextConfig {
     pageExtensions: getBareExtensions(['web']),
     webpack(config: AnyConfiguration, options: any): AnyConfiguration {
       // Prevent define plugin from overwriting Next.js environment.
-      process.env.EXPO_WEBPACK_DEFINE_ENVIRONMENT_KEYS = 'true';
+      process.env.EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS = 'true';
 
       const expoConfig = withUnimodules(
         config,

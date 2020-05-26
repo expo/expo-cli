@@ -59,7 +59,7 @@ export function createClientEnvironment(
   const ENV_VAR_REGEX = /^(EXPO_|REACT_NATIVE_|CI$)/i;
   const SECRET_REGEX = /(PASSWORD|SECRET|TOKEN)/i;
 
-  const shouldDefineKeys = boolish('EXPO_WEBPACK_DEFINE_ENVIRONMENT_KEYS', false);
+  const shouldDefineKeys = boolish('EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS', false);
 
   const prefix = shouldDefineKeys ? 'process.env.' : '';
 

@@ -1,7 +1,7 @@
 import { createClientEnvironment } from '../ExpoDefinePlugin';
 
 beforeEach(() => {
-  delete process.env.EXPO_WEBPACK_DEFINE_ENVIRONMENT_KEYS;
+  delete process.env.EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS;
 });
 
 it(`defines process.env as an object by default`, () => {
@@ -14,7 +14,7 @@ it(`defines process.env as an object by default`, () => {
 });
 
 it(`defines process.env explicitly as keys`, () => {
-  process.env.EXPO_WEBPACK_DEFINE_ENVIRONMENT_KEYS = 'true';
+  process.env.EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS = 'true';
 
   const env = createClientEnvironment('development', '/', { foo: 'bar' });
 
