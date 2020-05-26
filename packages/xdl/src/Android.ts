@@ -3,7 +3,6 @@ import spawnAsync from '@expo/spawn-async';
 import child_process from 'child_process';
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import some from 'lodash/some';
 import path from 'path';
 import ProgressBar from 'progress';
 
@@ -613,7 +612,7 @@ See https://docs.expo.io/guides/splash-screens/#splash-screen-api-limitations-on
     return;
   }
 
-  if (some(androidSplashImages, ({ sizeMatches }) => !sizeMatches)) {
+  if (androidSplashImages.some(({ sizeMatches }) => !sizeMatches)) {
     Logger.global
       .warn(`Splash resizeMode is set to 'native' and you've provided different images for different DPIs,
 but their sizes mismatch expected ones: [dpi: provided (expected)] ${androidSplashImages
