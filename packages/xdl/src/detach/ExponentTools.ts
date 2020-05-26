@@ -1,7 +1,6 @@
 import { ExpoConfig, Platform } from '@expo/config';
 import spawnAsyncQuiet, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import fs from 'fs-extra';
-import last from 'lodash/last';
 import isObject from 'lodash/isObject';
 import path from 'path';
 import axios from 'axios';
@@ -33,7 +32,7 @@ function parseSdkMajorVersion(expSdkVersion: string) {
 async function saveUrlToPathAsync(url: string, path: string, timeout = 20000) {
   const response = await axios.get(url, { responseType: 'stream', timeout });
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     let stream = fs.createWriteStream(path);
     stream.on('close', resolve);
     stream.on('error', reject);
@@ -126,7 +125,7 @@ async function spawnAsync(
 
 function createSpawner(buildPhase: string, logger?: Logger) {
   return (command: string, ...args: any[]) => {
-    const lastArg = last(args);
+    const lastArg = args[args.length - 1];
     const optionsFromArg = isObject(lastArg) ? args.pop() : {};
 
     const options = { ...optionsFromArg, pipeToLogger: true };
