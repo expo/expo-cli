@@ -75,3 +75,43 @@ it(`can get the directory of a pods project`, async () => {
   fs.writeFileSync(path.join(projectRoot, 'Podfile'), '...');
   expect(CocoaPodsPackageManager.getPodProjectRoot(projectRoot)).toBe(projectRoot);
 });
+
+describe('isAvailable', () => {
+  let platform: string;
+  let originalLog: any;
+  beforeAll(() => {
+    platform = process.platform;
+    originalLog = console.log;
+  });
+  afterEach(() => {
+    Object.defineProperty(process, 'platform', {
+      value: platform,
+    });
+    console.log = originalLog;
+  });
+  it(`does not support non-darwin machines`, () => {
+    // set the platform to something other than darwin
+    Object.defineProperty(process, 'platform', {
+      value: 'something-random',
+    });
+    console.log = jest.fn();
+    expect(CocoaPodsPackageManager.isAvailable(projectRoot, false)).toBe(false);
+    expect(console.log).toBeCalledTimes(1);
+  });
+  it(`does not support projects without Podfiles`, async () => {
+    // ensure the platform is darwin
+    Object.defineProperty(process, 'platform', {
+      value: 'darwin',
+    });
+    // create a fake project without a Podfile
+    const projectRoot = getRoot('cocoapods-detect-available');
+    await fs.ensureDir(projectRoot);
+
+    let message = '';
+    console.log = jest.fn(msg => (message = msg));
+
+    expect(CocoaPodsPackageManager.isAvailable(projectRoot, false)).toBe(false);
+    expect(console.log).toBeCalledTimes(1);
+    expect(message).toMatch(/not supported in this project/);
+  });
+});
