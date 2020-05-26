@@ -5,7 +5,6 @@ import { Android, Project, Simulator, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import pickBy from 'lodash/pickBy';
-import has from 'lodash/has';
 import difference from 'lodash/difference';
 import semver from 'semver';
 import ora from 'ora';
@@ -496,11 +495,11 @@ export async function upgradeAsync(
   let updates = await getUpdatedDependenciesAsync(projectRoot, workflow, targetSdkVersion);
 
   // Split updated packages by dependencies and devDependencies
-  let devDependencies = pickBy(updates, (_version, name) => has(pkg.devDependencies, name));
+  let devDependencies = pickBy(updates, (_version, name) => pkg.devDependencies?.[name]);
   let devDependenciesAsStringArray = Object.keys(devDependencies).map(
     name => `${name}@${updates[name]}`
   );
-  let dependencies = pickBy(updates, (_version, name) => has(pkg.dependencies, name));
+  let dependencies = pickBy(updates, (_version, name) => pkg.dependencies?.[name]);
   let dependenciesAsStringArray = Object.keys(dependencies).map(name => `${name}@${updates[name]}`);
 
   // Install dev dependencies
@@ -669,7 +668,7 @@ async function maybeCleanNpmStateAsync(packageManager: any) {
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('upgrade [targetSdkVersion]')
     .alias('update')
