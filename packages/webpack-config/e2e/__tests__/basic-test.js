@@ -10,6 +10,7 @@ const isProduction = ['build'].includes(type);
 
 let response;
 beforeEach(async () => {
+  jest.setTimeout(60000);
   response = await page.goto(config.url);
 });
 
@@ -27,15 +28,13 @@ if (isProduction) {
       text: 'Has SW installed',
       timeout: 2000,
     });
-  }, 2500);
+  });
 }
 
-describe('Optional polyfills', () => {
-  it(`should have resize-observer polyfill added`, async () => {
-    const elementId = 'div[data-testid="has-resize-observer"]';
-    await expect(page).toMatchElement(elementId, {
-      text: 'Has ResizeObserver polyfill',
-    });
+it(`should have resize-observer polyfill added`, async () => {
+  const elementId = 'div[data-testid="has-resize-observer"]';
+  await expect(page).toMatchElement(elementId, {
+    text: 'Has ResizeObserver polyfill',
   });
 });
 

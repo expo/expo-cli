@@ -18,7 +18,7 @@
     "test": "jest --config jest/unit-test-config.js",
     "test:e2e:start": "EXPO_E2E_COMMAND='start' jest --config jest/e2e-test-config.json --rootDir .",
     "test:e2e:build": "EXPO_E2E_COMMAND='build' jest --config jest/e2e-test-config.json --rootDir .",
-    "pretest:e2e": "yarn add -D puppeteer@^1.19.0",
+    "pretest:e2e": "yarn add -D puppeteer@^3.1.0",
     "test:e2e": "yarn test:e2e:start; yarn test:e2e:build"
   },
   "license": "MIT",
@@ -75,7 +75,7 @@
     "@types/webpack-manifest-plugin": "^2.1.0",
     "@types/workbox-webpack-plugin": "^4.1.0",
     "@types/yup": "^0.26.24",
-    "jest-puppeteer": "^4.3.0",
+    "jest-puppeteer": "^4.4.0",
     "prettier": "^1.16.4",
     "rimraf": "^3.0.2",
     "serve": "^11.1.0"
