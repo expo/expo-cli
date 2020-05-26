@@ -1,6 +1,6 @@
 {
   "name": "@expo/configure-splash-screen",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Supplementary module for 'expo-splash-screen' providing cli configuration command",
   "bin": {
     "configure-splash-screen": "./bin/configure.js",
@@ -52,7 +52,7 @@
     "expo-splash-screen": "*"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.15",
+    "@expo/babel-preset-cli": "0.2.16",
     "@types/color-string": "^1.5.0",
     "@types/fs-extra": "^8.1.0",
     "@types/inquirer": "^6.5.0",
