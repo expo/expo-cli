@@ -304,7 +304,7 @@ class IOSBuilder extends BaseBuilder {
     ctx: Context,
     experienceName: string,
     bundleIdentifier: string,
-    credsToClear: { [name: string]: boolean }
+    credsToClear: Record<string, boolean>
   ): Promise<void> {
     const shouldRevokeOnApple = this.options.revokeCredentials;
     const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
