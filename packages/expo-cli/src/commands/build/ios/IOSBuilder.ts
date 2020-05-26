@@ -339,7 +339,7 @@ class IOSBuilder extends BaseBuilder {
     }
   }
 
-  determineCredentialsToClear(): { [name: string]: boolean } {
+  determineCredentialsToClear(): Record<string, boolean> {
     const {
       clearCredentials,
       clearDistCert,
