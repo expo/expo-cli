@@ -9,8 +9,8 @@ coverage:
 
   status:
     changes: no
-    project: yes
     patch: yes
+    project: no
 
 comment:
   behavior: default
