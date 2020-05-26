@@ -148,12 +148,16 @@ export async function _openAndBootSimulatorAsync() {
 }
 
 export async function _isSimulatorRunningAsync() {
-  let zeroMeansNo = (
-    await osascript.execAsync(
-      'tell app "System Events" to count processes whose name is "Simulator"'
-    )
-  ).trim();
-  if (zeroMeansNo === '0') {
+  try {
+    let zeroMeansNo = (
+      await osascript.execAsync(
+        'tell app "System Events" to count processes whose name is "Simulator"'
+      )
+    ).trim();
+    if (zeroMeansNo === '0') {
+      return false;
+    }
+  } catch (e) {
     return false;
   }
 
