@@ -6,7 +6,7 @@ import config from '../../jest-puppeteer.config';
 const isInCI = getenv.boolish('CI', false);
 const type = getenv.string('EXPO_E2E_COMMAND');
 
-const isProduction = ['buildNextJsFromNextCLI', 'buildNextJsFromExpoCLI', 'build'].includes(type);
+const isProduction = ['build'].includes(type);
 
 let response;
 beforeEach(async () => {
@@ -20,36 +20,23 @@ it(`should match a text element`, async () => {
   });
 });
 
-if (config.hasServerSideRendering) {
-  it(`should match a text element server-side`, async () => {
-    const sourceCode = await response.text();
-    expect(sourceCode).toEqual(
-      expect.stringContaining('Open up App.js to start working on your app!')
-    );
-  });
-} else {
-  if (isProduction) {
-    it(`should register expo service worker`, async () => {
-      const swID = 'div[data-testid="has-sw-text"]';
+if (isProduction) {
+  it(`should register expo service worker`, async () => {
+    const swID = 'div[data-testid="has-sw-text"]';
 
-      await expect(page).toMatchElement(swID, {
-        text: 'Has SW installed',
-        timeout: 2000,
-      });
-    });
-  }
-}
-
-if (!config.hasServerSideRendering) {
-  it(`should have resize-observer polyfill added`, async () => {
-    const resizeObserverTextId = 'div[data-testid="has-resize-observer"]';
-
-    await expect(page).toMatchElement(resizeObserverTextId, {
-      text: 'Has ResizeObserver polyfill',
-      timeout: 3000,
+    await expect(page).toMatchElement(swID, {
+      text: 'Has SW installed',
+      timeout: 2000,
     });
   });
 }
+
+it(`should have resize-observer polyfill added`, async () => {
+  const elementId = 'div[data-testid="has-resize-observer"]';
+  await expect(page).toMatchElement(elementId, {
+    text: 'Has ResizeObserver polyfill',
+  });
+});
 
 describe('DefinePlugin', () => {
   it(`should be aware of process.env.CI`, async () => {
@@ -67,19 +54,4 @@ describe('DefinePlugin', () => {
       text: `A Neat Expo App`,
     });
   });
-
-  if (config.hasServerSideRendering) {
-    it(`should be aware of process.env.CI server-side`, async () => {
-      const sourceCode = await response.text();
-      if (isInCI) {
-        expect(sourceCode).toEqual(expect.stringContaining('Has CI env'));
-      } else {
-        expect(sourceCode).not.toEqual(expect.stringContaining('Has CI env'));
-      }
-    });
-    it(`should have manifest from expo-constants server-side`, async () => {
-      const sourceCode = await response.text();
-      expect(sourceCode).toEqual(expect.stringContaining(`A Neat Expo App`));
-    });
-  }
 });
