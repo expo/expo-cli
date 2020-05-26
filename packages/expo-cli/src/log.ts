@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import terminalLink from 'terminal-link';
 import program from 'commander';
 
 type Color = (...text: string[]) => string;
@@ -73,9 +74,9 @@ function getPrefix(chalkColor: Color) {
 
 function withPrefixAndTextColor(args: any[], chalkColor: Color = chalk.gray) {
   if (program.nonInteractive) {
-    return [getPrefix(chalkColor), ...args.map((arg) => chalkColor(arg))];
+    return [getPrefix(chalkColor), ...args.map(arg => chalkColor(arg))];
   } else {
-    return args.map((arg) => chalkColor(arg));
+    return args.map(arg => chalkColor(arg));
   }
 }
 
@@ -154,5 +155,6 @@ log.gray = function (...args: any[]) {
 };
 
 log.chalk = chalk;
+log.terminalLink = terminalLink;
 
 export default log;

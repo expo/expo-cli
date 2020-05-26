@@ -3,7 +3,7 @@ import { ApiV2 } from '@expo/xdl';
 
 import { getPublicationDetailAsync, getPublishHistoryAsync } from '../utils/PublishUtils';
 import { jester } from '../../credentials/test-fixtures/mocks';
-import { mockExpoXDL } from '../../__tests__/utils';
+import { mockExpoXDL } from '../../__tests__/mock-utils';
 
 jest.mock('fs');
 jest.mock('resolve-from');
