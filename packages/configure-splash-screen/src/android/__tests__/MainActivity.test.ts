@@ -12,10 +12,12 @@ describe('MainActivity', () => {
       addOnCreateAt,
       kotlin,
       addSplashScreenShowWith,
+      statusBarTranslucent = false,
     }: {
       kotlin?: boolean;
       addOnCreateAt?: 'BOTTOM' | 'TOP';
       addSplashScreenShowWith?: 'CONTAIN' | 'COVER' | 'NATIVE';
+      statusBarTranslucent?: boolean;
     } = {}) {
       const LE = kotlin ? '' : ';';
       const onCreate = `${
@@ -32,9 +34,7 @@ describe('MainActivity', () => {
           : `
     // SplashScreen.show(...) has to be called after super.onCreate(...)
     // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.${addSplashScreenShowWith}, ${
-              kotlin ? 'ReactRootView::class.java' : 'ReactRootView.class'
-            })${LE}`
+    SplashScreen.show(this, SplashScreenImageResizeMode.${addSplashScreenShowWith}, ${statusBarTranslucent})${LE}`
       }
   }
 `;
@@ -48,7 +48,6 @@ import android.os.Bundle${LE}
 `
 }
 import com.facebook.react.ReactActivity${LE}
-import com.facebook.react.ReactRootView${LE}
 ${
   !addSplashScreenShowWith
     ? ''
@@ -125,6 +124,19 @@ ${
           const expected = generateMainActivityFileContent({
             addSplashScreenShowWith: 'NATIVE',
             addOnCreateAt: 'TOP',
+          });
+          expect(actual).toEqual(expected);
+        });
+      });
+
+      describe('handles statusBarTranslucent flag', () => {
+        it('enable statusBar translucency', async () => {
+          await configureMainActivity(projectRootPath, ResizeMode.CONTAIN, true);
+          const actual = vol.readFileSync(filePath, 'utf-8');
+          const expected = generateMainActivityFileContent({
+            addSplashScreenShowWith: 'CONTAIN',
+            addOnCreateAt: 'TOP',
+            statusBarTranslucent: true,
           });
           expect(actual).toEqual(expected);
         });

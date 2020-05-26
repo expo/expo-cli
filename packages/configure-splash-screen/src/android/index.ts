@@ -44,6 +44,6 @@ export default async function configureAndroid(
       addStatusBarBackgroundColor: !!statusBarBackgroundColor,
     }),
     configureAndroidManifestXml(androidMainPath),
-    configureMainActivity(projectRootPath, resizeMode),
+    configureMainActivity(projectRootPath, resizeMode, statusBarTranslucent),
   ]);
 }
