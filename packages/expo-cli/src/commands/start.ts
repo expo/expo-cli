@@ -2,7 +2,6 @@ import {
   ExpoConfig,
   PackageJSONConfig,
   getConfig,
-  // getProjectConfigDescription,
   resolveModule,
 } from '@expo/config';
 // @ts-ignore: not typed
