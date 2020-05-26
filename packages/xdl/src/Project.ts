@@ -31,7 +31,6 @@ import joi from 'joi';
 import chunk from 'lodash/chunk';
 import escapeRegExp from 'lodash/escapeRegExp';
 import get from 'lodash/get';
-import reduce from 'lodash/reduce';
 import set from 'lodash/set';
 import uniq from 'lodash/uniq';
 import md5hex from 'md5hex';
@@ -534,17 +533,11 @@ export async function exportForAppHosting(
   await fs.ensureDir(bundlesPathToWrite);
 
   const { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
-  const iosBundleHash = crypto
-    .createHash('md5')
-    .update(iosBundle)
-    .digest('hex');
+  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto
-    .createHash('md5')
-    .update(androidBundle)
-    .digest('hex');
+  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 
@@ -1800,9 +1793,8 @@ export async function startReactNativeServerAsync(
       packagerPort = userPackagerOpts.port;
     }
   }
-  let cliOpts = reduce(
-    packagerOpts,
-    (opts, val, key) => {
+  let cliOpts = packagerOpts.reduce(
+    (opts: any, val: any, key: string) => {
       // If the packager opt value is boolean, don't set
       // --[opt] [value], just set '--opt'
       if (val && typeof val === 'boolean') {
