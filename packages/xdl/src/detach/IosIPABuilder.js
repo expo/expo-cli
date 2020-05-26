@@ -1,5 +1,3 @@
-import attempt from 'lodash/attempt';
-import isError from 'lodash/isError';
 import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
@@ -125,11 +123,11 @@ export default function createIPABuilder(buildParams) {
       }
     );
     const plistRaw = output.join('');
-    const plistData = attempt(plist.parse, plistRaw);
-    if (isError(plistData)) {
-      throw new Error(`Error when parsing plist: ${plistData.message}`);
+    try {
+      return plist.parse(plistRaw);
+    } catch (error) {
+      throw new Error(`Error when parsing plist: ${error.message}`);
     }
-    return plistData;
   }
 
   const getProvisioningProfileDirPath = () =>
