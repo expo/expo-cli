@@ -197,7 +197,7 @@ async function handlePromptSourceAsync(
         value: ArchiveFileSourceType.path,
       },
       {
-        name: 'The lastest build from Expo servers',
+        name: 'The latest build from Expo servers',
         value: ArchiveFileSourceType.latest,
       },
       {
