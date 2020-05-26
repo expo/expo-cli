@@ -21,6 +21,19 @@
     "pretest:e2e": "yarn add -D puppeteer@^3.1.0",
     "test:e2e": "yarn test:e2e:start; yarn test:e2e:build"
   },
+  "files": [
+    "addons",
+    "env",
+    "loaders",
+    "plugins",
+    "template",
+    "utils",
+    "web-default",
+    "webpack",
+    "getWebExtensions.js",
+    "webpack.config.d.ts",
+    "webpack.config.js"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=8.10"
