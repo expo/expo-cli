@@ -7,7 +7,6 @@ import axios from 'axios';
 import concat from 'concat-stream';
 import fs from 'fs-extra';
 import md5File from 'md5-file/promise';
-import toPairs from 'lodash/toPairs';
 import ora from 'ora';
 import { v4 as uuid } from 'uuid';
 
@@ -77,7 +76,7 @@ async function uploadWithPresignedURL(presignedPost: PresignedPost, file: string
   const fileStream = fs.createReadStream(file);
 
   const form = new FormData();
-  for (const [fieldKey, fieldValue] of toPairs(presignedPost.fields)) {
+  for (const [fieldKey, fieldValue] of Object.entries(presignedPost.fields)) {
     form.append(fieldKey, fieldValue);
   }
   form.append('file', fileStream);
