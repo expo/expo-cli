@@ -115,10 +115,12 @@ export default class AppSigningOptInProcess {
 
   async prepareKeystores(username: string, exp: ExpoConfig): Promise<void> {
     log(`Saving upload keystore to ${this.uploadKeystore}...`);
+    if (!exp.android?.package) {
+      throw new Error('Missing android.package configuration.');
+    }
     this.uploadKeystoreCredentials = await AndroidCredentials.generateUploadKeystore(
       this.uploadKeystore,
-      // @ts-ignore android package might be undefined here
-      exp.android?.package,
+      exp.android.package,
       `@${username}/${exp.slug}`
     );
 
