@@ -5,7 +5,7 @@ import JsonFile from '@expo/json-file';
 import path from 'path';
 import process from 'process';
 import rimraf from 'rimraf';
-import glob from 'glob-promise';
+import glob from 'globby';
 import uuid from 'uuid';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
