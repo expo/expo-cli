@@ -11,8 +11,8 @@ import boxen from 'boxen';
 import { Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 
-import * as ProjectUtils from './project/ProjectUtils';
-import { logEnvironmentInfo, shouldWebpackClearLogs } from './Web';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { logEnvironmentInfo, shouldWebpackClearLogs } from './WebpackEnvironment';
 
 const CONSOLE_TAG = 'expo';
 

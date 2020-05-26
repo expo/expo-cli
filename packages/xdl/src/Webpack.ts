@@ -12,19 +12,18 @@ import { Urls, choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerU
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
-import createWebpackCompiler, { printInstructions } from './createWebpackCompiler';
 import ip from './ip';
 import Logger from './Logger';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as UrlUtils from './UrlUtils';
+import createWebpackCompiler, { printInstructions } from './webpack-utils/createWebpackCompiler';
+import { DEFAULT_PORT, HOST, isDebugModeEnabled } from './webpack-utils/WebpackEnvironment';
 import XDLError from './XDLError';
 
-export const HOST = getenv.string('WEB_HOST', '0.0.0.0');
-export const DEFAULT_PORT = getenv.int('WEB_PORT', 19006);
 const WEBPACK_LOG_TAG = 'expo';
 
-export type DevServer = WebpackDevServer | http.Server;
+type DevServer = WebpackDevServer | http.Server;
 
 let webpackDevServerInstance: DevServer | null = null;
 let webpackServerPort: number | null = null;
@@ -58,6 +57,17 @@ type BundlingOptions = {
   nonInteractive?: boolean;
   unimodulesOnly?: boolean;
   onWebpackFinished?: (error?: Error) => void;
+};
+
+type WebpackConfiguration = webpack.Configuration;
+
+export type WebEnvironment = {
+  projectRoot: string;
+  isImageEditingEnabled: boolean;
+  // deprecated
+  pwa: boolean;
+  mode: 'development' | 'production' | 'test' | 'none';
+  https: boolean;
 };
 
 export async function restartAsync(
@@ -363,6 +373,11 @@ export function getPort(): number | null {
   return webpackServerPort;
 }
 
+/**
+ * Get the URL for the running instance of Webpack dev server.
+ *
+ * @param projectRoot
+ */
 export async function getUrlAsync(projectRoot: string): Promise<string | null> {
   const devServer = getServer(projectRoot);
   if (!devServer) {
@@ -373,13 +388,13 @@ export async function getUrlAsync(projectRoot: string): Promise<string | null> {
   return `${protocol}://${host}:${webpackServerPort}`;
 }
 
-export async function getProtocolAsync(projectRoot: string): Promise<'http' | 'https'> {
+async function getProtocolAsync(projectRoot: string): Promise<'http' | 'https'> {
   // TODO: Bacon: Handle when not in expo
   const { https } = await ProjectSettings.readAsync(projectRoot);
   return https === true ? 'https' : 'http';
 }
 
-export async function getAvailablePortAsync(
+async function getAvailablePortAsync(
   options: { host?: string; defaultPort?: number } = {}
 ): Promise<number> {
   try {
@@ -396,7 +411,7 @@ export async function getAvailablePortAsync(
   }
 }
 
-export function setMode(mode: 'development' | 'production' | 'test' | 'none'): void {
+function setMode(mode: 'development' | 'production' | 'test' | 'none'): void {
   process.env.BABEL_ENV = mode;
   process.env.NODE_ENV = mode;
 }
@@ -513,48 +528,6 @@ async function getSSLCertAsync({
   }
 
   return false;
-}
-
-export type WebpackConfiguration = webpack.Configuration;
-
-export type WebEnvironment = {
-  projectRoot: string;
-  isImageEditingEnabled: boolean;
-  // deprecated
-  pwa: boolean;
-  mode: 'development' | 'production' | 'test' | 'none';
-  https: boolean;
-};
-
-// When you have errors in the production build that aren't present in the development build you can use `EXPO_WEB_DEBUG=true expo start --no-dev` to debug those errors.
-// - Prevent the production build from being minified
-// - Include file path info comments in the bundle
-export function isDebugModeEnabled(): boolean {
-  return getenv.boolish('EXPO_WEB_DEBUG', false);
-}
-
-export function isInfoEnabled(): boolean {
-  return getenv.boolish('EXPO_WEB_INFO', false);
-}
-
-export function shouldWebpackClearLogs(): boolean {
-  return !isDebugModeEnabled() && !isInfoEnabled() && !getenv.boolish('EXPO_DEBUG', false);
-}
-
-export function logEnvironmentInfo(
-  projectRoot: string,
-  tag: ProjectUtils.LogTag,
-  config: webpack.Configuration
-): void {
-  if (isDebugModeEnabled() && config.mode === 'production') {
-    ProjectUtils.logWarning(
-      projectRoot,
-      tag,
-      `Webpack is bundling your project in \`production\` mode with the ${chalk.bold(
-        '`EXPO_WEB_DEBUG`'
-      )} environment variable enabled. You should toggle it off before building for production.`
-    );
-  }
 }
 
 function applyEnvironmentVariables(config: WebpackConfiguration): WebpackConfiguration {

@@ -1,24 +1,20 @@
 import { getConfig } from '@expo/config';
 import * as Webpack from './Webpack';
+import * as WebpackEnvironment from './webpack-utils/WebpackEnvironment';
 /**
- * @deprecated use Webpack.isDebugModeEnabled() instead
+ * @deprecated this is not publicly exposed anymore.
  */
-export const isDebugModeEnabled = Webpack.isDebugModeEnabled;
+export const isDebugModeEnabled = WebpackEnvironment.isDebugModeEnabled;
 
 /**
- * @deprecated use Webpack.isInfoEnabled() instead
+ * @deprecated this is not publicly exposed anymore.
  */
-export const isInfoEnabled = Webpack.isInfoEnabled;
+export const isInfoEnabled = WebpackEnvironment.isInfoEnabled;
 
 /**
- * @deprecated use Webpack.shouldWebpackClearLogs() instead
+ * @deprecated this is not publicly exposed anymore.
  */
-export const shouldWebpackClearLogs = Webpack.shouldWebpackClearLogs;
-
-/**
- * @deprecated use Webpack.logEnvironmentInfo() instead
- */
-export const logEnvironmentInfo = Webpack.logEnvironmentInfo;
+export const shouldWebpackClearLogs = WebpackEnvironment.shouldWebpackClearLogs;
 
 /**
  * @deprecated use Webpack.invokeWebpackConfigAsync() instead
