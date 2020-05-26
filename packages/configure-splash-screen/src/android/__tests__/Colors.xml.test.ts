@@ -78,8 +78,8 @@ describe('Colors.xml', () => {
         });
         const result = vol.readFileSync(filePath, 'utf-8');
         const expected = generateColorsFileContent({
-          backgroundColor: '#644B7D80',
-          statusBarColor: '#78559B66',
+          backgroundColor: '#80644B7D',
+          statusBarColor: '#6678559B',
         });
         expect(result).toEqual(expected);
       });
@@ -91,7 +91,7 @@ describe('Colors.xml', () => {
         });
         const darkResult = vol.readFileSync(darkFilePath, 'utf-8');
         const darkExpected = generateColorsFileContent({
-          statusBarColor: '#221586CC',
+          statusBarColor: '#CC221586',
         });
         expect(darkResult).toEqual(darkExpected);
       });
@@ -119,7 +119,7 @@ describe('Colors.xml', () => {
         });
         const darkResult = vol.readFileSync(darkFilePath, 'utf-8');
         const darkExpected = generateColorsFileContent({
-          backgroundColor: '#57575933',
+          backgroundColor: '#33575759',
           statusBarColor: '#387C3A',
         });
         expect(darkResult).toEqual(darkExpected);

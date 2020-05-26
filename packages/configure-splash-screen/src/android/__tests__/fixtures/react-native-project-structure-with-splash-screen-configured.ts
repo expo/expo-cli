@@ -64,7 +64,7 @@ public class MainActivity extends ReactActivity {
   'android/app/src/main/res/values/colors.xml': `<?xml version="1.0" encoding="utf-8"?>
 <resources>
   <!-- Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually -->
-  <color name="splashscreen_background">#E3F29238</color>
+  <color name="splashscreen_background">#38E3F292</color>
 </resources>
 `,
   'android/app/src/main/res/values/styles.xml': `<?xml version="1.0" encoding="utf-8"?>

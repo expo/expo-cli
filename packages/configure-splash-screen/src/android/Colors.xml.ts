@@ -41,7 +41,7 @@ function ensureDesiredXmlContent(
             },
             elements: [
               {
-                text: backgroundColor ? colorString.to.hex(backgroundColor.value) : '',
+                text: backgroundColor ? getAndroidStyleHex(backgroundColor) : '',
               },
             ],
           },
@@ -54,9 +54,7 @@ function ensureDesiredXmlContent(
             },
             elements: [
               {
-                text: statusBarBackgroundColor
-                  ? colorString.to.hex(statusBarBackgroundColor.value)
-                  : '',
+                text: statusBarBackgroundColor ? getAndroidStyleHex(statusBarBackgroundColor) : '',
               },
             ],
           },
@@ -65,6 +63,17 @@ function ensureDesiredXmlContent(
     ],
   });
   return result;
+}
+
+/**
+ * css-recognized hex is of format `#RRGGBB(AA)` or `#RGB(A)`, while Android accepts `#(AA)RRGGBB` or `#(A)RGB` (https://developer.android.com/guide/topics/resources/color-list-resource)
+ * This function converts only format `#RRGGBBAA` into `#AARRGGBB`.
+ */
+function getAndroidStyleHex(color: ColorDescriptor): string {
+  return colorString.to
+    .hex(color.value)
+    .replace(/^(#)([0-F]{2})([0-F]{4})([0-F]{2}$)/i, '$1$4$2$3')
+    .replace(/^(#)([0-F])([0-F]{2})([0-F])$/i, '$1$4$2$3');
 }
 
 /**
