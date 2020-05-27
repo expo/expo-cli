@@ -4,7 +4,6 @@ import url from 'url';
 
 import ProgressBar from 'progress';
 import leven from 'leven';
-import compact from 'lodash/compact';
 import findLastIndex from 'lodash/findLastIndex';
 import boxen from 'boxen';
 import bunyan from '@expo/bunyan';
@@ -162,7 +161,7 @@ Command.prototype.asyncActionProjectDir = function (
         return line.startsWith('node_modules');
       };
 
-      const stackFrames: string[] = compact(stack.split('\n'));
+      const stackFrames: string[] = stack.split('\n').filter((line: string) => line);
       let lastAppCodeFrameIndex = findLastIndex(stackFrames, (line: string) => {
         return !isLibraryFrame(line);
       });
