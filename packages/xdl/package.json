@@ -1,6 +1,6 @@
 {
   "name": "@expo/xdl",
-  "version": "57.9.11",
+  "version": "57.9.12",
   "description": "The Expo Development Library",
   "main": "build/xdl.js",
   "files": [
