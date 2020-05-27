@@ -1,4 +1,5 @@
 import * as ConfigUtils from '@expo/config';
+import { isUsingYarn } from '@expo/package-manager';
 import chalk from 'chalk';
 import * as devcert from 'devcert';
 import fs from 'fs-extra';
@@ -6,22 +7,23 @@ import getenv from 'getenv';
 import http from 'http';
 import * as path from 'path';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
+import openBrowser from 'react-dev-utils/openBrowser';
 import { Urls, choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-import { isUsingYarn } from '@expo/package-manager';
-import createWebpackCompiler, { printInstructions } from './createWebpackCompiler';
+
 import ip from './ip';
+import Logger from './Logger';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
-import * as Web from './Web';
+import * as UrlUtils from './UrlUtils';
+import createWebpackCompiler, { printInstructions } from './webpack-utils/createWebpackCompiler';
+import { DEFAULT_PORT, HOST, isDebugModeEnabled } from './webpack-utils/WebpackEnvironment';
 import XDLError from './XDLError';
 
-export const HOST = getenv.string('WEB_HOST', '0.0.0.0');
-export const DEFAULT_PORT = getenv.int('WEB_PORT', 19006);
 const WEBPACK_LOG_TAG = 'expo';
 
-export type DevServer = WebpackDevServer | http.Server;
+type DevServer = WebpackDevServer | http.Server;
 
 let webpackDevServerInstance: DevServer | null = null;
 let webpackServerPort: number | null = null;
@@ -55,6 +57,17 @@ type BundlingOptions = {
   nonInteractive?: boolean;
   unimodulesOnly?: boolean;
   onWebpackFinished?: (error?: Error) => void;
+};
+
+type WebpackConfiguration = webpack.Configuration;
+
+export type WebEnvironment = {
+  projectRoot: string;
+  isImageEditingEnabled: boolean;
+  // deprecated
+  pwa: boolean;
+  mode: 'development' | 'production' | 'test' | 'none';
+  https: boolean;
 };
 
 export async function restartAsync(
@@ -232,7 +245,7 @@ export async function openAsync(projectRoot: string, options?: BundlingOptions):
   if (!webpackDevServerInstance) {
     await startAsync(projectRoot, options);
   }
-  await Web.openProjectAsync(projectRoot);
+  await openProjectAsync(projectRoot);
 }
 
 export async function compileWebAppAsync(
@@ -292,7 +305,7 @@ export async function compileWebAppAsync(
   return { warnings };
 }
 
-export async function bundleWebAppAsync(projectRoot: string, config: Web.WebpackConfiguration) {
+export async function bundleWebAppAsync(projectRoot: string, config: WebpackConfiguration) {
   const compiler = webpack(config);
 
   try {
@@ -360,6 +373,11 @@ export function getPort(): number | null {
   return webpackServerPort;
 }
 
+/**
+ * Get the URL for the running instance of Webpack dev server.
+ *
+ * @param projectRoot
+ */
 export async function getUrlAsync(projectRoot: string): Promise<string | null> {
   const devServer = getServer(projectRoot);
   if (!devServer) {
@@ -370,13 +388,13 @@ export async function getUrlAsync(projectRoot: string): Promise<string | null> {
   return `${protocol}://${host}:${webpackServerPort}`;
 }
 
-export async function getProtocolAsync(projectRoot: string): Promise<'http' | 'https'> {
+async function getProtocolAsync(projectRoot: string): Promise<'http' | 'https'> {
   // TODO: Bacon: Handle when not in expo
   const { https } = await ProjectSettings.readAsync(projectRoot);
   return https === true ? 'https' : 'http';
 }
 
-export async function getAvailablePortAsync(
+async function getAvailablePortAsync(
   options: { host?: string; defaultPort?: number } = {}
 ): Promise<number> {
   try {
@@ -393,7 +411,7 @@ export async function getAvailablePortAsync(
   }
 }
 
-export function setMode(mode: 'development' | 'production' | 'test' | 'none'): void {
+function setMode(mode: 'development' | 'production' | 'test' | 'none'): void {
   process.env.BABEL_ENV = mode;
   process.env.NODE_ENV = mode;
 }
@@ -419,9 +437,9 @@ function transformCLIOptions(options: CLIWebOptions): BundlingOptions {
 }
 
 async function createWebpackConfigAsync(
-  env: Web.WebEnvironment,
+  env: WebEnvironment,
   options: CLIWebOptions = {}
-): Promise<Web.WebpackConfiguration> {
+): Promise<WebpackConfiguration> {
   setMode(env.mode);
 
   let config;
@@ -429,7 +447,7 @@ async function createWebpackConfigAsync(
     const { withUnimodules } = require('@expo/webpack-config/addons');
     config = withUnimodules({}, env);
   } else {
-    config = await Web.invokeWebpackConfigAsync(env);
+    config = await invokeWebpackConfigAsync(env);
   }
 
   return config;
@@ -455,7 +473,7 @@ async function applyOptionsToProjectSettingsAsync(
 async function getWebpackConfigEnvFromBundlingOptionsAsync(
   projectRoot: string,
   options: BundlingOptions
-): Promise<Web.WebEnvironment> {
+): Promise<WebEnvironment> {
   let { dev, https } = await applyOptionsToProjectSettingsAsync(projectRoot, options);
 
   const mode = typeof options.mode === 'string' ? options.mode : dev ? 'development' : 'production';
@@ -510,4 +528,83 @@ async function getSSLCertAsync({
   }
 
   return false;
+}
+
+function applyEnvironmentVariables(config: WebpackConfiguration): WebpackConfiguration {
+  // Use EXPO_DEBUG_WEB=true to enable debugging features for cases where the prod build
+  // has errors that aren't caught in development mode.
+  // Related: https://github.com/expo/expo-cli/issues/614
+  if (isDebugModeEnabled() && config.mode === 'production') {
+    console.log(chalk.bgYellow.black('Bundling the project in debug mode.'));
+
+    const output = config.output || {};
+    const optimization = config.optimization || {};
+
+    // Enable line to line mapped mode for all/specified modules.
+    // Line to line mapped mode uses a simple SourceMap where each line of the generated source is mapped to the same line of the original source.
+    // It’s a performance optimization. Only use it if your performance need to be better and you are sure that input lines match which generated lines.
+    // true enables it for all modules (not recommended)
+    output.devtoolLineToLine = true;
+
+    // Add comments that describe the file import/exports.
+    // This will make it easier to debug.
+    output.pathinfo = true;
+    // Instead of numeric ids, give modules readable names for better debugging.
+    optimization.namedModules = true;
+    // Instead of numeric ids, give chunks readable names for better debugging.
+    optimization.namedChunks = true;
+    // Readable ids for better debugging.
+    // @ts-ignore Property 'moduleIds' does not exist.
+    optimization.moduleIds = 'named';
+    // if optimization.namedChunks is enabled optimization.chunkIds is set to 'named'.
+    // This will manually enable it just to be safe.
+    // @ts-ignore Property 'chunkIds' does not exist.
+    optimization.chunkIds = 'named';
+
+    if (optimization.splitChunks) {
+      optimization.splitChunks.name = true;
+    }
+
+    Object.assign(config, { output, optimization });
+  }
+
+  return config;
+}
+
+export async function invokeWebpackConfigAsync(
+  env: WebEnvironment,
+  argv?: string[]
+): Promise<WebpackConfiguration> {
+  // Check if the project has a webpack.config.js in the root.
+  const projectWebpackConfig = path.resolve(env.projectRoot, 'webpack.config.js');
+  let config: WebpackConfiguration;
+  if (fs.existsSync(projectWebpackConfig)) {
+    const webpackConfig = require(projectWebpackConfig);
+    if (typeof webpackConfig === 'function') {
+      config = await webpackConfig(env, argv);
+    } else {
+      config = webpackConfig;
+    }
+  } else {
+    // Fallback to the default expo webpack config.
+    const createExpoWebpackConfigAsync = require('@expo/webpack-config');
+    config = await createExpoWebpackConfigAsync(env, argv);
+  }
+  return applyEnvironmentVariables(config);
+}
+
+export async function openProjectAsync(
+  projectRoot: string
+): Promise<{ success: true; url: string } | { success: false; error: Error }> {
+  try {
+    let url = await UrlUtils.constructWebAppUrlAsync(projectRoot, { hostType: 'localhost' });
+    if (!url) {
+      throw new Error('Webpack Dev Server is not running');
+    }
+    openBrowser(url);
+    return { success: true, url };
+  } catch (e) {
+    Logger.global.error(`Couldn't start project on web: ${e.message}`);
+    return { success: false, error: e };
+  }
 }
