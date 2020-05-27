@@ -20,6 +20,10 @@ export default async function createWebpackConfigAsync(
   if (!env.projectRoot) {
     env.projectRoot = getPossibleProjectRoot();
   }
+  if (!env.platform) {
+    // @ts-ignore
+    env.platform = process.env.EXPO_WEBPACK_PLATFORM;
+  }
 
   const environment: Environment = validateEnvironment(env);
 
@@ -35,6 +39,12 @@ export default async function createWebpackConfigAsync(
   }
   const { workbox = {} } = argv;
   const publicUrl = workbox.publicUrl || getPublicPaths(environment).publicUrl;
+
+  // No SW for native
+  if (['ios', 'android'].includes(env.platform || '')) {
+    return config;
+  }
+
   return withWorkbox(config, {
     projectRoot: environment.projectRoot,
     ...workbox,

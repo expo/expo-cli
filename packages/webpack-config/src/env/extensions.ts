@@ -10,3 +10,11 @@ export function getModuleFileExtensions(...platforms: string[]): string[] {
   // Webpack requires a `.` before each value
   return getBareExtensions(platforms).map(value => `.${value}`);
 }
+
+export function getNativeModuleFileExtensions(...platforms: string[]): string[] {
+  // Webpack requires a `.` before each value
+  // Disable modern when using `react-native`
+  return getBareExtensions(platforms, { isReact: true, isTS: true, isModern: false }).map(
+    value => `.${value}`
+  );
+}
