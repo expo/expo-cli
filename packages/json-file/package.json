@@ -32,7 +32,6 @@
     "fs-extra": "^8.0.1",
     "json5": "^1.0.1",
     "lodash": "^4.17.15",
-    "util.promisify": "^1.0.0",
     "write-file-atomic": "^2.3.0"
   },
   "devDependencies": {

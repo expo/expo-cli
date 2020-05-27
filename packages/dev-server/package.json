@@ -45,6 +45,7 @@
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.16",
     "@types/connect": "^3.4.33",
+    "connect": "^3.7.0",
     "jest": "^25.3.0",
     "node-fetch": "^2.6.0"
   },
