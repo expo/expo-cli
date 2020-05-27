@@ -1792,19 +1792,16 @@ export async function startReactNativeServerAsync(
       packagerPort = userPackagerOpts.port;
     }
   }
-  let cliOpts = packagerOpts.reduce(
-    (opts: any, val: any, key: string) => {
-      // If the packager opt value is boolean, don't set
-      // --[opt] [value], just set '--opt'
-      if (val && typeof val === 'boolean') {
-        opts.push(`--${key}`);
-      } else if (val) {
-        opts.push(`--${key}`, val);
-      }
-      return opts;
-    },
-    ['start']
-  );
+  const cliOpts = ['start'];
+  for (const [key, val] of Object.entries(packagerOpts)) {
+    // If the packager opt value is boolean, don't set
+    // --[opt] [value], just set '--opt'
+    if (val && typeof val === 'boolean') {
+      cliOpts.push(`--${key}`);
+    } else if (val) {
+      cliOpts.push(`--${key}`, val);
+    }
+  }
 
   if (process.env.EXPO_DEBUG) {
     cliOpts.push('--verbose');
