@@ -36,7 +36,7 @@
     "@expo/babel-preset-cli": "0.2.16",
     "@expo/json-file": "8.2.20",
     "@expo/plist": "0.0.8",
-    "fs-extra": "^7.0.1",
+    "fs-extra": "9.0.0",
     "glob": "7.1.6",
     "globby": "^11.0.0",
     "invariant": "^2.2.4",
@@ -47,6 +47,7 @@
     "xml2js": "^0.4.23"
   },
   "devDependencies": {
+    "@types/fs-extra": "^9.0.1",
     "@types/invariant": "^2.2.30",
     "@types/xml2js": "^0.4.5",
     "memfs": "^2.15.5",

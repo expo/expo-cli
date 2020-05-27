@@ -45,6 +45,7 @@
   ],
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.16",
+    "@types/fs-extra": "^9.0.1",
     "@types/prompts": "^2.0.6",
     "rimraf": "^3.0.2"
   },
@@ -62,7 +63,7 @@
     "@types/next": "^8.0.6",
     "chalk": "^4.0.0",
     "commander": "^4.0.1",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "9.0.0",
     "prompts": "^2.3.2",
     "update-check": "^1.5.3"
   }
