@@ -1,7 +1,6 @@
 import JsonFile from '@expo/json-file';
 import { ProjectTarget } from '@expo/config';
 import fs from 'fs-extra';
-import defaults from 'lodash/defaults';
 import path from 'path';
 
 export type ProjectSettings = {
@@ -60,8 +59,7 @@ export async function readAsync(projectRoot: string): Promise<ProjectSettings> {
   }
   migrateDeprecatedSettings(projectSettings);
   // Set defaults for any missing fields
-  defaults(projectSettings, projectSettingsDefaults);
-  return projectSettings;
+  return { ...projectSettingsDefaults, ...projectSettings };
 }
 
 function migrateDeprecatedSettings(projectSettings: any): void {
@@ -90,9 +88,10 @@ export async function setAsync(
       cantReadFileDefault: projectSettingsDefaults,
     });
   } catch (e) {
-    return await projectSettingsJsonFile(projectRoot).writeAsync(
-      defaults(json, projectSettingsDefaults)
-    );
+    return await projectSettingsJsonFile(projectRoot).writeAsync({
+      ...projectSettingsDefaults,
+      ...json,
+    });
   }
 }
 
