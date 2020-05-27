@@ -1,8 +1,6 @@
 import crypto from 'crypto';
 import path from 'path';
 
-import attempt from 'lodash/attempt';
-import isError from 'lodash/isError';
 import omit from 'lodash/omit';
 import fs from 'fs-extra';
 import glob from 'glob-promise';
@@ -51,11 +49,7 @@ function _ensureDeveloperCertificateIsValid(plistData, distCertFingerprint) {
 
 function _genDerCertFingerprint(certBase64) {
   const certBuffer = Buffer.from(certBase64, 'base64');
-  return crypto
-    .createHash('sha1')
-    .update(certBuffer)
-    .digest('hex')
-    .toUpperCase();
+  return crypto.createHash('sha1').update(certBuffer).digest('hex').toUpperCase();
 }
 
 function _ensureBundleIdentifierIsValid(plistData, expectedBundleIdentifier) {
@@ -228,10 +222,12 @@ async function createEntitlementsFile({
     throw new Error('Found more than one entitlements file.');
   }
   const archiveEntitlementsPath = entitlementsPaths[0];
-  const archiveEntitlementsRaw = await fs.readFile(archiveEntitlementsPath);
-  const archiveEntitlementsData = attempt(plist.parse, String(archiveEntitlementsRaw));
-  if (isError(archiveEntitlementsData)) {
-    throw new Error(`Error when parsing plist: ${archiveEntitlementsData.message}`);
+  const archiveEntitlementsRaw = await fs.readFile(archiveEntitlementsPath, 'utf8');
+  let archiveEntitlementsData;
+  try {
+    archiveEntitlementsData = plist.parse(archiveEntitlementsRaw);
+  } catch (error) {
+    throw new Error(`Error when parsing plist: ${error.message}`);
   }
 
   const entitlements = { ...decodedProvisioningProfileEntitlements };
@@ -265,7 +261,7 @@ async function createEntitlementsFile({
     generatedEntitlements[icloudContainerEnvKey] = envs;
   }
 
-  const generatedEntitlementsPlistData = attempt(plist.build, generatedEntitlements);
+  const generatedEntitlementsPlistData = plist.build(generatedEntitlements);
   await fs.writeFile(generatedEntitlementsPath, generatedEntitlementsPlistData, {
     mode: 0o755,
   });
