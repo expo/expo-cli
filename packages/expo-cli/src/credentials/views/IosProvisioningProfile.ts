@@ -113,8 +113,7 @@ export class CreateProvisioningProfile implements IView {
     await this.create(ctx);
 
     log(chalk.green('Successfully created Provisioning Profile\n'));
-    const appCredentials = find(
-      ctx.ios.credentials.appCredentials,
+    const appCredentials = ctx.ios.credentials.appCredentials.find(
       app =>
         app.experienceName === this._experienceName &&
         app.bundleIdentifier === this._bundleIdentifier
