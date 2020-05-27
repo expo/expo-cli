@@ -44,7 +44,7 @@
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "cross-spawn": "6.0.5",
-    "globby": "11.0.0",
+    "glob": "7.1.6",
     "pretty-bytes": "5.2.0",
     "rimraf": "2.6.3",
     "tempy": "0.3.0",

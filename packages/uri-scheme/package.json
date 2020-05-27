@@ -43,7 +43,7 @@
     "@zeit/ncc": "^0.20.5",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
-    "globby": "11.0.0",
+    "glob": "7.1.6",
     "prompts": "^2.3.2",
     "rimraf": "2.6.3",
     "update-check": "1.5.3"

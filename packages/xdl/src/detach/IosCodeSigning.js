@@ -3,7 +3,7 @@ import path from 'path';
 
 import omit from 'lodash/omit';
 import fs from 'fs-extra';
-import glob from 'globby';
+import glob from 'glob-promise';
 import minimatch from 'minimatch';
 import plist from '@expo/plist';
 

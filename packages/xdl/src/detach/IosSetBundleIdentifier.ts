@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { sync } from 'globby';
+import { sync } from 'glob';
 import { join } from 'path';
 // @ts-ignore
 import { project as Project } from 'xcode';

@@ -4,7 +4,7 @@ import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
 import crypto from 'crypto';
 import { ensureDirSync, move, readFileSync, statSync, unlinkSync } from 'fs-extra';
-import glob from 'globby';
+import glob from 'glob';
 import { basename, join, parse, relative } from 'path';
 import prettyBytes from 'pretty-bytes';
 import temporary from 'tempy';

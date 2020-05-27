@@ -3,7 +3,7 @@ import { getConfig } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
-import glob from 'globby';
+import glob from 'glob-promise';
 import os from 'os';
 import path from 'path';
 import ProgressBar from 'progress';

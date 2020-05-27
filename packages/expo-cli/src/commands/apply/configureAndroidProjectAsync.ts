@@ -1,5 +1,5 @@
 import { AndroidConfig, getConfig } from '@expo/config';
-import { sync as globSync } from 'globby';
+import { sync as globSync } from 'glob';
 import fs from 'fs-extra';
 import path from 'path';
 

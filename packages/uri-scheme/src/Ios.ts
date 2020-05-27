@@ -4,7 +4,7 @@ import plist, { PlistObject } from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import fs from 'fs';
-import { sync } from 'globby';
+import { sync } from 'glob';
 import { join } from 'path';
 
 import { Options } from './Options';

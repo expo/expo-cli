@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import glob from 'globby';
+import glob from 'glob-promise';
 import indentString from 'indent-string';
 import JsonFile from '@expo/json-file';
 import path from 'path';
