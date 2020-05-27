@@ -2,7 +2,6 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import find from 'lodash/find';
 import ora from 'ora';
-import every from 'lodash/every';
 import plist, { PlistObject } from '@expo/plist';
 import { IosCodeSigning, PKCS12Utils } from '@expo/xdl';
 import prompt, { Question } from '../../prompt';
@@ -474,12 +473,12 @@ export async function getProvisioningProfileFromParams(builderOptions: {
   const { provisioningProfilePath, teamId } = builderOptions;
 
   // none of the provisioningProfile params were set, assume user has no intention of passing it in
-  if (!provisioningProfilePath) {
+  if (!provisioningProfilePath && !teamId) {
     return null;
   }
 
   // partial provisioningProfile params were set, assume user has intention of passing it in
-  if (!every([provisioningProfilePath, teamId])) {
+  if (!(provisioningProfilePath && teamId)) {
     throw new Error(
       'In order to provide a Provisioning Profile through the CLI parameters, you have to pass --provisioning-profile-path and --team-id parameters.'
     );

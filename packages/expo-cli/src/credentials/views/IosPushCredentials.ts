@@ -1,8 +1,6 @@
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import every from 'lodash/every';
 import get from 'lodash/get';
-import some from 'lodash/some';
 import ora from 'ora';
 
 import terminalLink from 'terminal-link';
@@ -599,12 +597,12 @@ export async function getPushKeyFromParams(builderOptions: {
   const { pushId, pushP8Path, teamId } = builderOptions;
 
   // none of the pushKey params were set, assume user has no intention of passing it in
-  if (!some([pushId, pushP8Path])) {
+  if (!pushId && !pushP8Path) {
     return null;
   }
 
   // partial pushKey params were set, assume user has intention of passing it in
-  if (!every([pushId, pushP8Path, teamId])) {
+  if (!(pushId && pushP8Path && teamId)) {
     throw new Error(
       'In order to provide a Push Key through the CLI parameters, you have to pass --push-id, --push-p8-path and --team-id parameters.'
     );
@@ -612,7 +610,7 @@ export async function getPushKeyFromParams(builderOptions: {
 
   return {
     apnsKeyId: pushId,
-    apnsKeyP8: await fs.readFile(pushP8Path as string, 'base64'),
+    apnsKeyP8: await fs.readFile(pushP8Path, 'base64'),
     teamId,
   } as PushKey;
 }

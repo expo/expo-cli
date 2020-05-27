@@ -1,8 +1,6 @@
 import chalk from 'chalk';
 import dateformat from 'dateformat';
 import fs from 'fs-extra';
-import every from 'lodash/every';
-import some from 'lodash/some';
 import ora from 'ora';
 import { IosCodeSigning } from '@expo/xdl';
 
@@ -482,10 +480,9 @@ function formatDistCert(
       "\n    ❓ Validity of this certificate on Apple's servers is unknown."
     );
   }
-  return `Distribution Certificate (Cert ID: ${distCert.certId ||
-    '-----'}, Serial number: ${serialNumber}, Team ID: ${
-    distCert.teamId
-  })${usedByString}${validityText}`;
+  return `Distribution Certificate (Cert ID: ${
+    distCert.certId || '-----'
+  }, Serial number: ${serialNumber}, Team ID: ${distCert.teamId})${usedByString}${validityText}`;
 }
 
 async function generateDistCert(ctx: Context): Promise<DistCert> {
@@ -655,12 +652,12 @@ export async function getDistCertFromParams(builderOptions: {
   const certPassword = process.env.EXPO_IOS_DIST_P12_PASSWORD;
 
   // none of the distCert params were set, assume user has no intention of passing it in
-  if (!some([distP12Path, certPassword])) {
+  if (!distP12Path && !certPassword) {
     return null;
   }
 
   // partial distCert params were set, assume user has intention of passing it in
-  if (!every([distP12Path, certPassword, teamId])) {
+  if (!(distP12Path && certPassword && teamId)) {
     throw new Error(
       'In order to provide a Distribution Certificate through the CLI parameters, you have to pass --dist-p12-path parameter, --team-id parameter and set EXPO_IOS_DIST_P12_PASSWORD environment variable.'
     );

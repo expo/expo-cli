@@ -2,8 +2,6 @@ import chalk from 'chalk';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
-import every from 'lodash/every';
-import some from 'lodash/some';
 import { runAction, travelingFastlane } from './fastlane';
 import { nonEmptyInput } from '../validators';
 import log from '../log';
@@ -70,12 +68,12 @@ function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCred
   const passedAppleIdPassword = appleIdPassword || process.env.EXPO_APPLE_PASSWORD;
 
   // none of the apple id params were set, assume user has no intention of passing it in
-  if (!some([appleId, passedAppleIdPassword])) {
+  if (!appleId && !passedAppleIdPassword) {
     return null;
   }
 
   // partial apple id params were set, assume user has intention of passing it in
-  if (!every([appleId, passedAppleIdPassword])) {
+  if (!(appleId && passedAppleIdPassword)) {
     throw new Error(
       'In order to provide your Apple ID credentials, you must set the --apple-id flag and set the EXPO_APPLE_PASSWORD environment variable.'
     );
