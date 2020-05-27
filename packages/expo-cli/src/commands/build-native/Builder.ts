@@ -1,19 +1,16 @@
 import os from 'os';
 import path from 'path';
 
-import { JSONObject } from '@expo/json-file';
-import { Android, Platform, prepareJob } from '@expo/build-tools';
+import { Platform, prepareJob } from '@expo/build-tools';
 import { ApiV2, FormData, User } from '@expo/xdl';
 import axios from 'axios';
 import concat from 'concat-stream';
 import fs from 'fs-extra';
 import md5File from 'md5-file/promise';
-import toPairs from 'lodash/toPairs';
 import ora from 'ora';
 import { v4 as uuid } from 'uuid';
 
 import { makeProjectTarball, waitForBuildEnd } from './utils';
-import log from '../../log';
 
 export interface StatusResult {
   builds: BuildInfo[];
@@ -79,7 +76,7 @@ async function uploadWithPresignedURL(presignedPost: PresignedPost, file: string
   const fileStream = fs.createReadStream(file);
 
   const form = new FormData();
-  for (const [fieldKey, fieldValue] of toPairs(presignedPost.fields)) {
+  for (const [fieldKey, fieldValue] of Object.entries(presignedPost.fields)) {
     form.append(fieldKey, fieldValue);
   }
   form.append('file', fileStream);

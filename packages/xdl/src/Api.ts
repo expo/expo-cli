@@ -3,7 +3,6 @@ import concat from 'concat-stream';
 import ExtendableError from 'es6-error';
 import FormData from 'form-data';
 import fs from 'fs-extra';
-import isString from 'lodash/isString';
 import path from 'path';
 
 import Config from './Config';
@@ -108,7 +107,7 @@ async function _callMethodAsync(
   }
   let responseBody = response.data;
   var responseObj;
-  if (isString(responseBody)) {
+  if (typeof responseBody === 'string') {
     try {
       responseObj = JSON.parse(responseBody);
     } catch (e) {

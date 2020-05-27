@@ -1,8 +1,6 @@
 import { Credentials, UrlUtils } from '@expo/xdl';
 import { ExpoConfig } from '@expo/config';
 import chalk from 'chalk';
-import has from 'lodash/has';
-import get from 'lodash/get';
 import pick from 'lodash/pick';
 import intersection from 'lodash/intersection';
 
@@ -112,7 +110,7 @@ export default class IOSUploader extends BaseUploader {
   }
 
   _ensureExperienceIsValid(exp: ExpoConfig): void {
-    if (!has(exp, 'ios.bundleIdentifier')) {
+    if (!exp.ios?.bundleIdentifier) {
       throw new Error(`You must specify an iOS bundle identifier in app.json.`);
     }
   }
@@ -133,7 +131,7 @@ export default class IOSUploader extends BaseUploader {
   async _getAppleTeamId(appleIdCrentials: AppleIdCredentials): Promise<string | undefined> {
     const credentialMetadata = await Credentials.getCredentialMetadataAsync(this.projectDir, 'ios');
     const credential = await Credentials.getCredentialsForPlatform(credentialMetadata);
-    let teamId = get(credential, 'teamId', undefined);
+    let teamId = credential?.teamId;
     if (teamId) {
       return teamId;
     } else {

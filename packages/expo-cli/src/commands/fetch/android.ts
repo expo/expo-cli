@@ -1,6 +1,5 @@
 import path from 'path';
 import fs from 'fs-extra';
-import get from 'lodash/get';
 
 import { AndroidCredentials } from '@expo/xdl';
 import invariant from 'invariant';
@@ -48,11 +47,12 @@ export async function fetchAndroidHashesAsync(projectDir: string): Promise<void>
     await view.fetch(ctx);
     await view.save(ctx, outputPath);
 
-    // @ts-ignore: keyPassword isn't defined
     await AndroidCredentials.logKeystoreHashes({
       keystorePath: outputPath,
-      keystorePassword: get(view, 'credentials.keystorePassword'),
-      keyAlias: get(view, 'credentials.keyAlias'),
+      // @ts-ignore keystorePassword can not be undefined
+      keystorePassword: view.credentials?.keystorePassword,
+      // @ts-ignore keyAlias can not be undefined
+      keyAlias: view.credentials?.keyAlias,
     });
     log(
       `\nNote: if you are using Google Play signing, this app will be signed with a different key after publishing to the store, and you'll need to use the hashes displayed in the Google Play console.`
@@ -88,8 +88,10 @@ export async function fetchAndroidUploadCertAsync(projectDir: string): Promise<v
     await AndroidCredentials.exportCertBase64(
       {
         keystorePath,
-        keystorePassword: get(view, 'credentials.keystorePassword'),
-        keyAlias: get(view, 'credentials.keyAlias'),
+        // @ts-ignore keystorePassword can not be undefined
+        keystorePassword: view.credentials?.keystorePassword,
+        // @ts-ignore keyAlias can not be undefined
+        keyAlias: view.credentials?.keyAlias,
       },
       uploadKeyPath
     );

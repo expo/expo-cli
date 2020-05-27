@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 export default function renderIntentFilters(intentFilters: any) {
   // returns an array of <intent-filter> tags:
   // [
@@ -26,7 +24,7 @@ export default function renderIntentFilters(intentFilters: any) {
 }
 
 function renderIntentFilterDatumEntries(datum: any) {
-  return _.toPairs(datum)
+  return Object.entries(datum)
     .map(entry => `android:${entry[0]}="${entry[1]}"`)
     .join(' ');
 }

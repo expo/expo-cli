@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { uniqBy } from 'lodash';
+import uniqBy from 'lodash/uniqBy';
 import log from '../log';
 import * as table from '../commands/utils/cli-table';
 import {
@@ -11,7 +11,7 @@ import {
   setPublishToChannelAsync,
 } from './utils/PublishUtils';
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
     .command('publish:set [project-dir]')
     .alias('ps')

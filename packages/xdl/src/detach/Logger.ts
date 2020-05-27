@@ -1,5 +1,6 @@
 import bunyan from '@expo/bunyan';
-import _ from 'lodash';
+import isEmpty from 'lodash/isEmpty';
+import isPlainObject from 'lodash/isPlainObject';
 import { Readable } from 'stream';
 
 export enum LogLevel {
@@ -54,13 +55,13 @@ export class Logger {
 
   logLine(level: LogLevel, ...args: any[]) {
     const argsToLog = [...args];
-    const extraFieldsFromArgsExist = _.isPlainObject(_.first(args));
+    const extraFieldsFromArgsExist = isPlainObject(args[0]);
     const extraFieldsFromArgs = extraFieldsFromArgsExist ? args[0] : {};
     if (extraFieldsFromArgsExist) {
       argsToLog.shift();
     }
     const extraFields = { ...extraFieldsFromArgs, ...this.extraFields };
-    if (!_.isEmpty(extraFields)) {
+    if (!isEmpty(extraFields)) {
       argsToLog.unshift(extraFields);
     }
 
@@ -101,7 +102,7 @@ function logMultiline(data: any, extraFields: any) {
   lines.forEach(line => {
     if (line) {
       const args = [line];
-      if (!_.isEmpty(extraFields)) {
+      if (!isEmpty(extraFields)) {
         args.unshift(extraFields);
       }
       LoggerDetach.info(...args);
