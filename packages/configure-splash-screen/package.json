@@ -3,15 +3,15 @@
   "version": "0.1.8",
   "description": "Supplementary module for 'expo-splash-screen' providing cli configuration command",
   "bin": {
-    "configure-splash-screen": "./bin/configure.js",
-    "expo-splash-screen": "./bin/configure.js"
+    "configure-splash-screen": "./build/configure.js",
+    "expo-splash-screen": "./build/configure.js"
   },
   "scripts": {
     "start": "yarn run prepare",
     "build": "tsc",
     "watch": "tsc --watch",
     "prepare": "yarn run clean && yarn run build",
-    "clean": "rimraf bin build ./tsconfig.tsbuildinfo",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx,.d.ts src",
     "test": "jest",
     "test:watch": "jest --watch"
@@ -63,6 +63,9 @@
     "memfs": "^3.1.2",
     "rimraf": "^3.0.2",
     "ts-jest": "^25.4.0"
-  },
+  }, 
+  "files": [
+    "build"
+  ],
   "gitHead": "58cc7088dae609832c85dba393372ed1a06b00db"
 }
