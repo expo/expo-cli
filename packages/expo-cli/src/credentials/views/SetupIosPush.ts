@@ -27,9 +27,9 @@ export class SetupIosPush implements IView {
       this._experienceName,
       this._bundleIdentifier
     );
-    const deprecatedPushId = appCredentials.credentials.pushId;
-    const deprecatedPushP12 = appCredentials.credentials.pushP12;
-    const deprecatedPushPassword = appCredentials.credentials.pushPassword;
+    const deprecatedPushId = appCredentials?.credentials?.pushId;
+    const deprecatedPushP12 = appCredentials?.credentials?.pushP12;
+    const deprecatedPushPassword = appCredentials?.credentials?.pushPassword;
     if (deprecatedPushId && deprecatedPushP12 && deprecatedPushPassword) {
       const confirmQuestion: Question = {
         type: 'confirm',
