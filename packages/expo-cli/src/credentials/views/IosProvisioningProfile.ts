@@ -1,6 +1,5 @@
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import find from 'lodash/find';
 import ora from 'ora';
 import plist, { PlistObject } from '@expo/plist';
 import { IosCodeSigning, PKCS12Utils } from '@expo/xdl';
