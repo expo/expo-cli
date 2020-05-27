@@ -3,7 +3,6 @@ import path from 'path';
 import url from 'url';
 
 import ProgressBar from 'progress';
-import last from 'lodash/last';
 import leven from 'leven';
 import compact from 'lodash/compact';
 import findLastIndex from 'lodash/findLastIndex';
@@ -74,7 +73,7 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
     }
 
     try {
-      let options = last(args);
+      let options = args[args.length - 1];
       if (options.offline) {
         Config.offline = true;
       }
@@ -361,7 +360,7 @@ function runAsync(programName: string) {
       process.exit(0);
     });
 
-    program.on('command:*', (subCommand) => {
+    program.on('command:*', subCommand => {
       let msg = `"${subCommand}" is not an expo command. See "expo --help" for the full list of commands.`;
       const availableCommands = program.commands.map((cmd: Command) => cmd._name);
       // finding the best match whose edit distance is less than 40% of their length.
@@ -559,7 +558,7 @@ export function run(programName: string) {
     } else {
       await Promise.all([writePathAsync(), runAsync(programName)]);
     }
-  })().catch((e) => {
+  })().catch(e => {
     console.error('Uncaught Error', e);
     process.exit(1);
   });
