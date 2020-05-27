@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import uniq from 'lodash/uniq';
 import fs from 'fs-extra';
 import { AndroidCredentials as Android } from '@expo/xdl';
 import {
@@ -125,11 +124,13 @@ export function displayIosUserCredentials(
 
   if (credentials) {
     const field = userCredentials.type === 'push-key' ? 'pushCredentialsId' : 'distCredentialsId';
-    const usedByApps = uniq(
-      credentials.appCredentials
-        .filter(c => c[field] === userCredentials.id)
-        .map(c => `${c.experienceName} (${c.bundleIdentifier})`)
-    ).join(',\n      ');
+    const usedByApps = [
+      ...new Set(
+        credentials.appCredentials
+          .filter(c => c[field] === userCredentials.id)
+          .map(c => `${c.experienceName} (${c.bundleIdentifier})`)
+      ),
+    ].join(',\n      ');
     const usedByAppsText = usedByApps ? `used by\n      ${usedByApps}` : 'not used by any apps';
     log(`    ${chalk.gray(usedByAppsText)}`);
   }

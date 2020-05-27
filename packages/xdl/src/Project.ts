@@ -32,7 +32,6 @@ import chunk from 'lodash/chunk';
 import escapeRegExp from 'lodash/escapeRegExp';
 import get from 'lodash/get';
 import set from 'lodash/set';
-import uniq from 'lodash/uniq';
 import md5hex from 'md5hex';
 import minimatch from 'minimatch';
 import { AddressInfo } from 'net';
@@ -1786,7 +1785,7 @@ export async function startReactNativeServerAsync(
       ...userPackagerOpts,
       // In order to prevent people from forgetting to include the .expo extension or other things
       // NOTE(brentvatne): we should probably do away with packagerOpts soon in favor of @expo/metro-config!
-      sourceExts: uniq([...packagerOpts.sourceExts, ...(userPackagerOpts.sourceExts ?? [])]),
+      sourceExts: [...new Set([...packagerOpts.sourceExts, ...userPackagerOpts.sourceExts])],
     };
 
     if (userPackagerOpts.port !== undefined && userPackagerOpts.port !== null) {
