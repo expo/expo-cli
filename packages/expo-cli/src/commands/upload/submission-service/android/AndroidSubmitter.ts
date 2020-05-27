@@ -4,7 +4,6 @@ import Table from 'cli-table3';
 import fs from 'fs-extra';
 import ora from 'ora';
 import chunk from 'lodash/chunk';
-import curryRight from 'lodash/curryRight';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
 
@@ -255,8 +254,8 @@ const SummaryHumanReadableValues: Partial<Record<keyof Summary, Function>> = {
       return 'Submitting the app from this computer';
     }
   },
-  archivePath: curryRight(breakWord)(50),
-  archiveUrl: curryRight(breakWord)(50),
+  archivePath: (path: string) => breakWord(path, 50),
+  archiveUrl: (url: string) => breakWord(url, 50),
 };
 
 function breakWord(word: string, chars: number): string {
