@@ -3,7 +3,6 @@ import { promisify } from 'util';
 
 import { ExponentTools } from '@expo/xdl';
 import fs from 'fs-extra';
-import get from 'lodash/get';
 import got from 'got';
 import ProgressBar from 'progress';
 

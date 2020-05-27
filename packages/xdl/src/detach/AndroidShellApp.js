@@ -1,7 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
 import replaceString from 'replace-string';
-import get from 'lodash/get';
 import globby from 'globby';
 import uuid from 'uuid';
 
@@ -128,15 +127,6 @@ exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(a
   );
 };
 
-function getRemoteOrLocalUrl(manifest, key, isDetached) {
-  // in detached apps, `manifest` is actually just app.json, so there are no remote url fields
-  // we should return a local url starting with file:// instead
-  if (isDetached) {
-    return get(manifest, key);
-  }
-  return get(manifest, `${key}Url`);
-}
-
 function backgroundImagesForApp(shellPath, manifest, isDetached) {
   // returns an array like:
   // [
@@ -144,10 +134,10 @@ function backgroundImagesForApp(shellPath, manifest, isDetached) {
   //   {url: 'anotherURlToDownload', path: 'anotherPathToSaveTo'},
   // ]
   let basePath = path.join(shellPath, 'app', 'src', 'main', 'res');
-  const splash = manifest.android?.splash;
+  const splash = manifest && manifest.android && manifest.android.splash;
   if (splash) {
-    const results = imageKeys.reduce(function(acc, imageKey) {
-      let url = getRemoteOrLocalUrl(splash, imageKey, isDetached);
+    const results = imageKeys.reduce(function (acc, imageKey) {
+      let url = isDetached ? splash[imageKey] : splash[`${imageKey}Url`];
       if (url) {
         acc.push({
           url,
@@ -164,7 +154,9 @@ function backgroundImagesForApp(shellPath, manifest, isDetached) {
     }
   }
 
-  let url = getRemoteOrLocalUrl(manifest, 'splash.image', isDetached);
+  let url = isDetached
+    ? manifest.splash && manifest.splash.image
+    : manifest.splash && manifest.splash.imageUrl;
   if (url) {
     return [
       {
@@ -715,7 +707,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   }
 
   // Add app-specific intent filters
-  const intentFilters = get(manifest, 'android.intentFilters');
+  const intentFilters = manifest.android.intentFilters;
   if (intentFilters) {
     if (isDetached) {
       await regexFileAsync(
@@ -1351,7 +1343,8 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
     });
     await fs.copy(
       outputPath,
-      get(context, 'build.android.outputFile') || `/tmp/shell-debug.${ext}`
+      (context.build && context.build.android && context.build.android.outputFile) ||
+        `/tmp/shell-debug.${ext}`
     );
     await ExponentTools.removeIfExists(outputPath);
   }

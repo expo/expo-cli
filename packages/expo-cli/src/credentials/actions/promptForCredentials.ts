@@ -1,7 +1,6 @@
 import path from 'path';
 import untildify from 'untildify';
 import fs from 'fs-extra';
-import get from 'lodash/get';
 import once from 'lodash/once';
 
 import prompt, { Question as PromptQuestion } from '../../prompt';
@@ -24,7 +23,7 @@ export type CredentialSchema<T> = {
   dependsOn?: string;
   name: string;
   required: Array<string>;
-  questions?: {
+  questions: {
     [key: string]: Question;
   };
   deprecated?: boolean;
@@ -57,7 +56,7 @@ export async function getCredentialsFromUser<T extends Results>(
 ): Promise<T | null> {
   const results: Results = {};
   for (const field of credentialType.required) {
-    results[field] = await askQuestionAndProcessAnswer(get(credentialType, `questions.${field}`));
+    results[field] = await askQuestionAndProcessAnswer(credentialType?.questions?.[field]);
   }
   return results as T;
 }
