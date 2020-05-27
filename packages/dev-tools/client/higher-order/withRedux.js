@@ -2,7 +2,7 @@ import { Provider, connect } from 'react-redux';
 
 import * as React from 'react';
 
-const __NEXT_REDUX_STORE__ = '__NEXT_REDUX_STORE__';
+const __REDUX_STORE__ = '__REDUX_STORE__';
 const isCallOnServer = () => Object.prototype.toString.call(global.process) === '[object process]';
 
 // NOTE(jim):
@@ -12,11 +12,11 @@ const getOrCreateStore = (initStore, initialState) => {
     return initStore(initialState);
   }
 
-  if (!window[__NEXT_REDUX_STORE__]) {
-    window[__NEXT_REDUX_STORE__] = initStore(initialState);
+  if (!window[__REDUX_STORE__]) {
+    window[__REDUX_STORE__] = initStore(initialState);
   }
 
-  return window[__NEXT_REDUX_STORE__];
+  return window[__REDUX_STORE__];
 };
 
 export default (initStore, ...connectArgs) => Component => {

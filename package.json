@@ -1,7 +1,8 @@
 {
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "packages/dev-tools/client"
   ],
   "scripts": {
     "format": "prettier --write .",

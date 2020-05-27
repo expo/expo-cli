@@ -72,7 +72,7 @@ async function maybeStartEmulatorAsync(name: string): Promise<void> {
     }, 1000);
 
     // Reject command after timeout
-    const maxWait = setTimeout(() => {
+    const maxWait = global.setTimeout(() => {
       const manualCommand = `${whichEmulator()} @${name}`;
       stopWaitingAndReject(
         `It took too long to start the Android emulator: ${name}. You can try starting the emulator manually from the terminal with: ${manualCommand}`
@@ -236,7 +236,7 @@ export async function installExpoAsync(url?: string) {
     if (warningTimer) {
       clearTimeout(warningTimer);
     }
-    return setTimeout(() => {
+    return global.setTimeout(() => {
       Logger.global.info('');
       Logger.global.info(
         'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'

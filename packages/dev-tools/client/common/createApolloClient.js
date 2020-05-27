@@ -2,7 +2,7 @@ import { ApolloClient } from 'apollo-client';
 import { InMemoryCache, IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
 import { WebSocketLink } from 'apollo-link-ws';
 
-import introspectionQueryResultData from '../fragmentTypes.json';
+import introspectionQueryResultData from '../../fragmentTypes.json';
 
 export default function createApolloClient(subscriptionClient) {
   const fragmentMatcher = new IntrospectionFragmentMatcher({

@@ -370,7 +370,7 @@ export async function _installExpoOnSimulatorAsync(url?: string) {
     if (warningTimer) {
       clearTimeout(warningTimer);
     }
-    return setTimeout(() => {
+    return global.setTimeout(() => {
       Logger.global.info('');
       Logger.global.info(
         'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'

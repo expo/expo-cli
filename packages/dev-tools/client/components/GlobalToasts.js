@@ -123,32 +123,31 @@ export class Toast extends React.Component {
   }
 }
 
-@connect(state => {
+export default connect(state => {
   return {
     toasts: state.toasts,
   };
-})
-class GlobalToasts extends React.Component {
-  _handleDismiss = id => {
-    this.props.dispatch({
-      type: 'REMOVE_TOAST',
-      id,
-    });
-  };
+})(
+  class GlobalToasts extends React.Component {
+    _handleDismiss = id => {
+      this.props.dispatch({
+        type: 'REMOVE_TOAST',
+        id,
+      });
+    };
 
-  render() {
-    return (
-      <div className={STYLES_TOAST_CONTAINER}>
-        {this.props.toasts.map(t => {
-          return (
-            <Toast key={t.id} name={t.name} onDismiss={() => this._handleDismiss(t.id)}>
-              {t.text}
-            </Toast>
-          );
-        })}
-      </div>
-    );
+    render() {
+      return (
+        <div className={STYLES_TOAST_CONTAINER}>
+          {this.props.toasts.map(t => {
+            return (
+              <Toast key={t.id} name={t.name} onDismiss={() => this._handleDismiss(t.id)}>
+                {t.text}
+              </Toast>
+            );
+          })}
+        </div>
+      );
+    }
   }
-}
-
-export default GlobalToasts;
+);
