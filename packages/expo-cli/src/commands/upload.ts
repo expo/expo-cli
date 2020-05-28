@@ -1,45 +1,68 @@
+import chalk from 'chalk';
 import pick from 'lodash/pick';
-import size from 'lodash/size';
 import { Command } from 'commander';
 
 import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
-import AndroidUploader, { AndroidPlatformOptions } from './upload/AndroidUploader';
+import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
 import log from '../log';
+import { SubmissionMode } from './upload/submission-service/types';
 
-const COMMON_OPTIONS = ['id', 'latest', 'path'];
+const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
 
 export default function (program: Command) {
-  const ANDROID_OPTIONS = [...COMMON_OPTIONS, 'key', 'track'];
-  const androidCommand = program.command('upload:android [projectDir]').alias('ua');
-  setCommonOptions(androidCommand, '.apk');
-  androidCommand
+  program
+    .command('upload:android [projectDir]')
+    .alias('ua')
+    .option('--latest', 'uploads the latest build (default)')
+    .option('--id <id>', 'id of the build to upload')
+    .option('--path <path>', 'path to the .apk/.aab file')
+    .option('--url <url>', 'app archive url')
     .option('--key <key>', 'path to the JSON key used to authenticate with Google Play')
+    .option(
+      '--android-package <android-package>',
+      'Android package name (using expo.android.package from app.json by default)'
+    )
+    .option('--type <archive-type>', 'archive type: apk, aab', /^(apk|aab)$/i)
     .option(
       '--track <track>',
       'the track of the application to use, choose from: production, beta, alpha, internal, rollout',
       /^(production|beta|alpha|internal|rollout)$/i,
       'internal'
     )
-    .description(
-      'Uploads a standalone Android app to Google Play (works on macOS only). Uploads the latest build by default.'
+    .option(
+      '--release-status <release-status>',
+      'release status (used when uploading new apks/aabs), choose from: completed, draft, halted, inProgress',
+      /^(completed|draft|halted|inProgress)$/i,
+      'completed'
     )
-    .asyncActionProjectDir(createUploadAction(AndroidUploader, ANDROID_OPTIONS), {
-      checkConfig: true,
+    .option(
+      '--use-submission-service',
+      'Experimental: Use Submission Service for uploading your app. The upload process will happen on Expo servers.'
+    )
+    .option('--verbose', 'Always print logs from Submission Service')
+    .description('Uploads an Android standalone app to Google Play Store.')
+    // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
+    .asyncActionProjectDir(async (projectDir: string, options: any) => {
+      // TODO: remove this once we verify `fastlane supply` works on linux / windows
+      if (!options.useSubmissionService) {
+        checkRuntimePlatform('android');
+      }
+
+      const submissionMode = options.useSubmissionService
+        ? SubmissionMode.online
+        : SubmissionMode.offline;
+      const ctx = AndroidSubmitCommand.createContext(submissionMode, projectDir, options);
+      const command = new AndroidSubmitCommand(ctx);
+      await command.runAsync();
     });
 
-  const IOS_OPTIONS = [
-    ...COMMON_OPTIONS,
-    'appleId',
-    'appleIdPassword',
-    'appName',
-    'companyName',
-    'sku',
-    'language',
-    'publicUrl',
-  ];
-  const iosCommand = program.command('upload:ios [projectDir]').alias('ui');
-  setCommonOptions(iosCommand, '.ipa');
-  iosCommand
+  program
+    .command('upload:ios [projectDir]')
+    .alias('ui')
+    .option('--latest', 'uploads the latest build (default)')
+    .option('--id <id>', 'id of the build to upload')
+    .option('--path <path>', 'path to the .ipa file')
+    .option('--url <url>', 'app archive url')
     .option(
       '--apple-id <apple-id>',
       'your Apple ID username (you can also set EXPO_APPLE_ID env variable)'
@@ -81,50 +104,38 @@ export default function (program: Command) {
       console.log(`  ${LANGUAGES.join(', ')}`);
       console.log();
     })
-    .asyncActionProjectDir(createUploadAction(IOSUploader, IOS_OPTIONS), { checkConfig: true });
-}
+    // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
+    .asyncActionProjectDir(async (projectDir: string, options: IosPlatformOptions) => {
+      try {
+        // TODO: remove this once we verify `fastlane supply` works on linux / windows
+        checkRuntimePlatform('ios');
 
-function setCommonOptions(command: Command, fileExtension: string) {
-  command
-    .option('--latest', 'uploads the latest build (default)')
-    .option('--id <id>', 'id of the build to upload')
-    .option('--path <path>', `path to the ${fileExtension} file`);
-}
-
-type AnyUploader = any;
-
-function createUploadAction(UploaderClass: AnyUploader, optionKeys: string[]) {
-  return async (
-    projectDir: string,
-    command: AndroidPlatformOptions | IosPlatformOptions
-  ): Promise<void> => {
-    try {
-      ensurePlatformIsSupported();
-      ensureOptionsAreValid(command);
-
-      const options = pick(command, optionKeys);
-      if (UploaderClass.validateOptions) {
-        UploaderClass.validateOptions(options);
+        const args = pick(options, SOURCE_OPTIONS);
+        if (Object.keys(args).length > 1) {
+          throw new Error(`You have to choose only one of: --path, --id, --latest, --url`);
+        }
+        IOSUploader.validateOptions(options);
+        const uploader = new IOSUploader(projectDir, options);
+        await uploader.upload();
+      } catch (err) {
+        log.error('Failed to upload the standalone app to the app store.');
+        throw err;
       }
-      const uploader = new UploaderClass(projectDir, options);
-      await uploader.upload();
-    } catch (err) {
-      log.error('Failed to upload the standalone app to the app store.');
-      throw err;
-    }
-  };
+    });
 }
 
-function ensurePlatformIsSupported(): void {
+function checkRuntimePlatform(targetPlatform: 'android' | 'ios'): void {
   if (process.platform !== 'darwin') {
-    log.error('Unsupported platform! This feature works on macOS only.');
+    if (targetPlatform === 'android') {
+      log.error('Local Android uploads are only supported on macOS.');
+      log(
+        chalk.bold(
+          'Try the --use-submission-service flag to upload your app from Expo servers. This feature is behind a flag because it is experimental.'
+        )
+      );
+    } else {
+      log.error('Currently, iOS uploads are only supported on macOS, sorry :(');
+    }
     process.exit(1);
-  }
-}
-
-function ensureOptionsAreValid(command: AndroidPlatformOptions | IosPlatformOptions): void {
-  const args = pick(command, COMMON_OPTIONS);
-  if (size(args) > 1) {
-    throw new Error(`You have to choose only one of --path, --id or --latest parameters`);
   }
 }

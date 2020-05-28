@@ -1,8 +1,5 @@
 import chalk from 'chalk';
-import uniq from 'lodash/uniq';
-import isEmpty from 'lodash/isEmpty';
 import fs from 'fs-extra';
-import get from 'lodash/get';
 import { AndroidCredentials as Android } from '@expo/xdl';
 import {
   AndroidCredentials,
@@ -117,7 +114,7 @@ export function displayIosUserCredentials(
       )}`
     );
   } else {
-    log.warn(`  Unknown key type ${get(userCredentials, 'type')}`);
+    log.warn(`  Unknown key type ${(userCredentials as any).type}`);
   }
   log(
     `    Apple Team ID: ${chalk.green(
@@ -127,11 +124,13 @@ export function displayIosUserCredentials(
 
   if (credentials) {
     const field = userCredentials.type === 'push-key' ? 'pushCredentialsId' : 'distCredentialsId';
-    const usedByApps = uniq(
-      credentials.appCredentials
-        .filter(c => c[field] === userCredentials.id)
-        .map(c => `${c.experienceName} (${c.bundleIdentifier})`)
-    ).join(',\n      ');
+    const usedByApps = [
+      ...new Set(
+        credentials.appCredentials
+          .filter(c => c[field] === userCredentials.id)
+          .map(c => `${c.experienceName} (${c.bundleIdentifier})`)
+      ),
+    ].join(',\n      ');
     const usedByAppsText = usedByApps ? `used by\n      ${usedByApps}` : 'not used by any apps';
     log(`    ${chalk.gray(usedByAppsText)}`);
   }
@@ -154,8 +153,8 @@ export async function displayAndroidAppCredentials(credentials: AndroidCredentia
 
     log(chalk.green(credentials.experienceName));
     log(chalk.bold('  Upload Keystore hashes'));
-    if (!isEmpty(credentials.keystore)) {
-      const storeBuf = Buffer.from(get(credentials, 'keystore.keystore'), 'base64');
+    if (credentials.keystore?.keystore) {
+      const storeBuf = Buffer.from(credentials.keystore.keystore, 'base64');
       await fs.writeFile(tmpFilename, storeBuf);
       await Android.logKeystoreHashes(
         {
@@ -168,10 +167,7 @@ export async function displayAndroidAppCredentials(credentials: AndroidCredentia
       log('    -----------------------');
     }
     log(chalk.bold('  Push Notifications credentials'));
-    log(
-      '    FCM Api Key: ',
-      get(credentials, 'pushCredentials.fcmApiKey', '---------------------')
-    );
+    log('    FCM Api Key: ', credentials.pushCredentials?.fcmApiKey, '---------------------');
     log('\n');
   } catch (error) {
     log.error('  Failed to parse the keystore', error);

@@ -2,7 +2,6 @@ import { readFile, readFileSync } from 'fs';
 import { promisify } from 'util';
 
 import get from 'lodash/get';
-import has from 'lodash/has';
 import set from 'lodash/set';
 import JSON5 from 'json5';
 import writeFileAtomic from 'write-file-atomic';
@@ -196,7 +195,7 @@ async function getAsync<TJSONObject extends JSONObject, K extends keyof TJSONObj
   options?: Options<TJSONObject>
 ): Promise<any> {
   const object = await readAsync(file, options);
-  if (defaultValue === undefined && !has(object, key)) {
+  if (defaultValue === undefined && !(key in object)) {
     throw new JsonFileError(`No value at key path "${key}" in JSON object from: ${file}`);
   }
   return get(object, key, defaultValue);

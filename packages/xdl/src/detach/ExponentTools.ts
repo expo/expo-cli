@@ -1,7 +1,7 @@
 import { ExpoConfig, Platform } from '@expo/config';
 import spawnAsyncQuiet, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import fs from 'fs-extra';
-import _ from 'lodash';
+import isObject from 'lodash/isObject';
 import path from 'path';
 import axios from 'axios';
 import { Readable } from 'stream';
@@ -125,8 +125,8 @@ async function spawnAsync(
 
 function createSpawner(buildPhase: string, logger?: Logger) {
   return (command: string, ...args: any[]) => {
-    const lastArg = _.last(args);
-    const optionsFromArg = _.isObject(lastArg) ? args.pop() : {};
+    const lastArg = args[args.length - 1];
+    const optionsFromArg = isObject(lastArg) ? args.pop() : {};
 
     const options = { ...optionsFromArg, pipeToLogger: true };
     if (buildPhase) {

@@ -4,7 +4,8 @@ import * as PackageManager from '@expo/package-manager';
 import { Android, Project, Simulator, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
-import _ from 'lodash';
+import pickBy from 'lodash/pickBy';
+import difference from 'lodash/difference';
 import semver from 'semver';
 import ora from 'ora';
 import terminalLink from 'terminal-link';
@@ -494,11 +495,11 @@ export async function upgradeAsync(
   let updates = await getUpdatedDependenciesAsync(projectRoot, workflow, targetSdkVersion);
 
   // Split updated packages by dependencies and devDependencies
-  let devDependencies = _.pickBy(updates, (_version, name) => _.has(pkg.devDependencies, name));
+  let devDependencies = pickBy(updates, (_version, name) => pkg.devDependencies?.[name]);
   let devDependenciesAsStringArray = Object.keys(devDependencies).map(
     name => `${name}@${updates[name]}`
   );
-  let dependencies = _.pickBy(updates, (_version, name) => _.has(pkg.dependencies, name));
+  let dependencies = pickBy(updates, (_version, name) => pkg.dependencies?.[name]);
   let dependenciesAsStringArray = Object.keys(dependencies).map(name => `${name}@${updates[name]}`);
 
   // Install dev dependencies
@@ -557,7 +558,7 @@ export async function upgradeAsync(
 
   // List packages that were not updated
   let allDependencies = { ...pkg.dependencies, ...pkg.devDependencies };
-  let untouchedDependencies = _.difference(Object.keys(allDependencies), [
+  let untouchedDependencies = difference(Object.keys(allDependencies), [
     ...Object.keys(updates),
     'expo',
   ]);
@@ -598,7 +599,7 @@ export async function upgradeAsync(
     );
   }
 
-  let skippedSdkVersions = _.pickBy(sdkVersions, (_data, sdkVersionString) => {
+  let skippedSdkVersions = pickBy(sdkVersions, (_data, sdkVersionString) => {
     return (
       semver.lt(sdkVersionString, targetSdkVersionString) &&
       semver.gt(sdkVersionString, currentSdkVersionString)

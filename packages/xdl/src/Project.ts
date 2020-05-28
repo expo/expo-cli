@@ -31,9 +31,7 @@ import joi from 'joi';
 import chunk from 'lodash/chunk';
 import escapeRegExp from 'lodash/escapeRegExp';
 import get from 'lodash/get';
-import reduce from 'lodash/reduce';
 import set from 'lodash/set';
-import uniq from 'lodash/uniq';
 import md5hex from 'md5hex';
 import minimatch from 'minimatch';
 import { AddressInfo } from 'net';
@@ -1338,11 +1336,46 @@ async function getConfigAsync(
   }
 }
 
-// TODO(ville): add the full type
-type BuildJob = unknown;
+type JobState = 'pending' | 'started' | 'in-progress' | 'finished' | 'errored' | 'sent-to-queue';
+
+export type TurtleMode = 'normal' | 'high' | 'high_only';
+
+// https://github.com/expo/universe/blob/283efaba3acfdefdc7db12f649516b6d6a94bec4/server/www/src/data/entities/builds/BuildJobEntity.ts#L25-L56
+export interface BuildJobFields {
+  id: string;
+  experienceName: string;
+  status: JobState;
+  platform: 'ios' | 'android';
+  userId: string | null;
+  experienceId: string;
+  artifactId: string | null;
+  nonce: string | null;
+  artifacts: {
+    url?: string;
+    manifestPlistUrl?: string;
+  } | null;
+  config: {
+    buildType?: string;
+    releaseChannel?: string;
+    bundleIdentifier?: string;
+  };
+  logs: object | null;
+  extraData: {
+    request_id?: string;
+    turtleMode?: TurtleMode;
+  } | null;
+  created: Date;
+  updated: Date;
+  expirationDate: Date;
+  sdkVersion: string | null;
+  turtleVersion: string | null;
+  buildDuration: number | null;
+  priority: string;
+  accountId: string | null;
+}
 
 export type BuildStatusResult = {
-  jobs: BuildJob[];
+  jobs: BuildJobFields[];
   err: null;
   userHasBuiltAppBefore: boolean;
   userHasBuiltExperienceBefore: boolean;
@@ -1752,27 +1785,23 @@ export async function startReactNativeServerAsync(
       ...userPackagerOpts,
       // In order to prevent people from forgetting to include the .expo extension or other things
       // NOTE(brentvatne): we should probably do away with packagerOpts soon in favor of @expo/metro-config!
-      sourceExts: uniq([...packagerOpts.sourceExts, ...(userPackagerOpts.sourceExts ?? [])]),
+      sourceExts: [...new Set([...packagerOpts.sourceExts, ...userPackagerOpts.sourceExts])],
     };
 
     if (userPackagerOpts.port !== undefined && userPackagerOpts.port !== null) {
       packagerPort = userPackagerOpts.port;
     }
   }
-  let cliOpts = reduce(
-    packagerOpts,
-    (opts, val, key) => {
-      // If the packager opt value is boolean, don't set
-      // --[opt] [value], just set '--opt'
-      if (val && typeof val === 'boolean') {
-        opts.push(`--${key}`);
-      } else if (val) {
-        opts.push(`--${key}`, val);
-      }
-      return opts;
-    },
-    ['start']
-  );
+  const cliOpts = ['start'];
+  for (const [key, val] of Object.entries(packagerOpts)) {
+    // If the packager opt value is boolean, don't set
+    // --[opt] [value], just set '--opt'
+    if (val && typeof val === 'boolean') {
+      cliOpts.push(`--${key}`);
+    } else if (val) {
+      cliOpts.push(`--${key}`, val);
+    }
+  }
 
   if (process.env.EXPO_DEBUG) {
     cliOpts.push('--verbose');

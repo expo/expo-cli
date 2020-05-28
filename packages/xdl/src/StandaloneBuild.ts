@@ -1,27 +1,39 @@
 import { Platform } from '@expo/config';
-import _ from 'lodash';
 
 import ApiV2Client from './ApiV2';
 import UserManager from './User';
 
 interface StandaloneBuildParams {
-  id?: string;
   platform: Platform;
-  limit: number;
+  id?: string;
   slug: string;
   owner?: string;
 }
 
-export async function getStandaloneBuilds({
-  id,
-  platform,
-  limit,
-  slug,
-  owner,
-}: StandaloneBuildParams) {
+export type Build = any;
+
+export async function getStandaloneBuilds(
+  { platform, slug, owner, id }: StandaloneBuildParams,
+  limit?: number
+): Promise<Build[]> {
   const user = await UserManager.ensureLoggedInAsync();
   const api = ApiV2Client.clientForUser(user);
-  const params = { id, slug, platform, limit, status: 'finished', owner };
-  const { builds } = await api.getAsync('standalone-build/get', params);
-  return id || limit === 1 ? _.first(builds) : builds;
+  const { builds } = await api.getAsync('standalone-build/get', {
+    id,
+    slug,
+    platform,
+    limit,
+    status: 'finished',
+    owner,
+  });
+  return builds;
+}
+
+export async function getStandaloneBuildById(queryParams: StandaloneBuildParams): Promise<Build> {
+  const builds = await getStandaloneBuilds(queryParams, 1);
+  if (builds.length === 0) {
+    return null;
+  } else {
+    return builds[0];
+  }
 }

@@ -11,7 +11,6 @@ import {
   Webpack,
 } from '@expo/xdl';
 import chalk from 'chalk';
-import trimStart from 'lodash/trimStart';
 import openBrowser from 'react-dev-utils/openBrowser';
 import readline from 'readline';
 import wordwrap from 'wordwrap';
@@ -88,7 +87,7 @@ export const printServerInfo = async (
   urlOpts.printQRCode(url);
   const wrap = wordwrap(2, process.stdout.columns || 80);
   const wrapItem = wordwrap(4, process.stdout.columns || 80);
-  const item = (text: string): string => '  \u2022 ' + trimStart(wrapItem(text));
+  const item = (text: string): string => '  \u2022 ' + wrapItem(text).trimStart();
   const iosInfo = process.platform === 'darwin' ? `, or ${b('i')} for iOS simulator` : '';
   const webInfo = `${b`w`} to run on ${u`w`}eb`;
   log.nested(wrap(u('To run the app with live reloading, choose one of:')));

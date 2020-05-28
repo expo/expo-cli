@@ -1,9 +1,5 @@
 import { ApiV2, User } from '@expo/xdl';
-import findIndex from 'lodash/findIndex';
-import find from 'lodash/find';
 import omit from 'lodash/omit';
-import assign from 'lodash/assign';
-import get from 'lodash/get';
 import pick from 'lodash/pick';
 
 import invariant from 'invariant';
@@ -80,8 +76,7 @@ export class IosApi {
       await this._fetchAllCredentials();
     }
     this._ensureAppCredentials(experienceName, bundleIdentifier);
-    const credIndex = findIndex(
-      this.credentials.appCredentials,
+    const credIndex = this.credentials.appCredentials.findIndex(
       app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     );
     const distCertExpoId = this.credentials.appCredentials[credIndex].distCredentialsId;
@@ -125,7 +120,7 @@ export class IosApi {
       owner: this.username,
     });
     const updatedDistCert: IosDistCredentials = { ...credentials, id, type: 'dist-cert' };
-    const credIndex = findIndex(this.credentials.userCredentials, ({ id }) => id === credentialsId);
+    const credIndex = this.credentials.userCredentials.findIndex(({ id }) => id === credentialsId);
     this.credentials.userCredentials[credIndex] = updatedDistCert;
     return updatedDistCert;
   }
@@ -165,8 +160,7 @@ export class IosApi {
       owner: this.username,
     });
     this._ensureAppCredentials(experienceName, bundleIdentifier);
-    const credIndex = findIndex(
-      this.credentials.appCredentials,
+    const credIndex = this.credentials.appCredentials.findIndex(
       app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     );
     this.credentials.appCredentials[credIndex].distCredentialsId = userCredentialsId;
@@ -203,7 +197,7 @@ export class IosApi {
       owner: this.username,
     });
     const updatedPushKey: IosPushCredentials = { ...credentials, id, type: 'push-key' };
-    const credIndex = findIndex(this.credentials.userCredentials, ({ id }) => id === credentialsId);
+    const credIndex = this.credentials.userCredentials.findIndex(({ id }) => id === credentialsId);
     this.credentials.userCredentials[credIndex] = updatedPushKey;
     return updatedPushKey;
   }
@@ -234,8 +228,7 @@ export class IosApi {
       await this._fetchAllCredentials();
     }
     this._ensureAppCredentials(experienceName, bundleIdentifier);
-    const credIndex = findIndex(
-      this.credentials.appCredentials,
+    const credIndex = this.credentials.appCredentials.findIndex(
       app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     );
     const pushKeyId = this.credentials.appCredentials[credIndex].pushCredentialsId;
@@ -264,8 +257,7 @@ export class IosApi {
       owner: this.username,
     });
     this._ensureAppCredentials(experienceName, bundleIdentifier);
-    const credIndex = findIndex(
-      this.credentials.appCredentials,
+    const credIndex = this.credentials.appCredentials.findIndex(
       app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     );
     this.credentials.appCredentials[credIndex].pushCredentialsId = userCredentialsId;
@@ -275,9 +267,9 @@ export class IosApi {
     bundleIdentifier: string
   ): Promise<{ pushId: string; pushP12: string; pushPassword: string } | null> {
     const appCredentials = await this.getAppCredentials(experienceName, bundleIdentifier);
-    const pushId = get(appCredentials, 'credentials.pushId');
-    const pushP12 = get(appCredentials, 'credentials.pushP12');
-    const pushPassword = get(appCredentials, 'credentials.pushPassword');
+    const pushId = appCredentials.credentials.pushId;
+    const pushP12 = appCredentials.credentials.pushP12;
+    const pushPassword = appCredentials.credentials.pushPassword;
     if (!pushId || !pushP12 || !pushPassword) {
       return null;
     }
@@ -293,8 +285,7 @@ export class IosApi {
       bundleIdentifier,
       owner: this.username,
     });
-    const credIndex = findIndex(
-      this.credentials.appCredentials,
+    const credIndex = this.credentials.appCredentials.findIndex(
       app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     );
     this.credentials.appCredentials[credIndex].credentials = omit(
@@ -323,11 +314,10 @@ export class IosApi {
       credentials: { ...provisioningProfile, teamId: appleTeam.id },
       owner: this.username,
     });
-    const credIndex = findIndex(
-      this.credentials.appCredentials,
+    const credIndex = this.credentials.appCredentials.findIndex(
       app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     );
-    assign(this.credentials.appCredentials[credIndex].credentials, provisioningProfile);
+    Object.assign(this.credentials.appCredentials[credIndex].credentials, provisioningProfile);
     return provisioningProfile;
   }
 
@@ -339,8 +329,7 @@ export class IosApi {
       await this._fetchAllCredentials();
     }
     this._ensureAppCredentials(experienceName, bundleIdentifier);
-    return find(
-      this.credentials.appCredentials,
+    return this.credentials.appCredentials.find(
       app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     )!;
   }
@@ -350,7 +339,7 @@ export class IosApi {
     bundleIdentifier: string
   ): Promise<appleApi.ProvisioningProfile | null> {
     const appCredentials = await this.getAppCredentials(experienceName, bundleIdentifier);
-    const provisioningProfile = get(appCredentials, 'credentials.provisioningProfile');
+    const provisioningProfile = appCredentials.credentials.provisioningProfile;
     if (!provisioningProfile) {
       return null;
     }
@@ -369,8 +358,7 @@ export class IosApi {
       bundleIdentifier,
       owner: this.username,
     });
-    const credIndex = findIndex(
-      this.credentials.appCredentials,
+    const credIndex = this.credentials.appCredentials.findIndex(
       app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     );
     this.credentials.appCredentials[credIndex].credentials = omit(

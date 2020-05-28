@@ -1,8 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';
-import get from 'lodash/get';
-import has from 'lodash/has';
 import pascalCase from 'pascal-case';
 
 import {
@@ -208,8 +206,8 @@ async function _createStandaloneContextAsync(args) {
   }
 
   let bundleExecutable = args.type === 'client' ? EXPONENT_APP : EXPOKIT_APP;
-  if (has(manifest, 'ios.infoPlist.CFBundleExecutable')) {
-    bundleExecutable = get(manifest, 'ios.infoPlist.CFBundleExecutable');
+  if (manifest.ios && manifest.ios.infoPlist && manifest.ios.infoPlist.CFBundleExecutable) {
+    bundleExecutable = manifest.ios.infoPlist.CFBundleExecutable;
   } else if (privateConfig && privateConfig.bundleIdentifier) {
     bundleExecutable = pascalCase(privateConfig.bundleIdentifier);
   }

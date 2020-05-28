@@ -1,5 +1,5 @@
 import uuidv1 from 'uuid/v1';
-import _ from 'lodash';
+import difference from 'lodash/difference';
 import fs from 'fs-extra';
 
 import _logger from './Logger';
@@ -103,7 +103,7 @@ export async function cleanUpKeychains() {
       }
 
       if (shouldCleanSearchList) {
-        const newSearchList = _.difference(allKeychainsList, turtleKeychainsList);
+        const newSearchList = difference(allKeychainsList, turtleKeychainsList);
         await spawnAsyncThrowError('security', ['list-keychains', '-s', ...newSearchList], {
           stdio: 'pipe',
         });

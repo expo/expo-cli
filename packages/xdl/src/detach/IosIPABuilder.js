@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
@@ -124,11 +123,11 @@ export default function createIPABuilder(buildParams) {
       }
     );
     const plistRaw = output.join('');
-    const plistData = _.attempt(plist.parse, plistRaw);
-    if (_.isError(plistData)) {
-      throw new Error(`Error when parsing plist: ${plistData.message}`);
+    try {
+      return plist.parse(plistRaw);
+    } catch (error) {
+      throw new Error(`Error when parsing plist: ${error.message}`);
     }
-    return plistData;
   }
 
   const getProvisioningProfileDirPath = () =>

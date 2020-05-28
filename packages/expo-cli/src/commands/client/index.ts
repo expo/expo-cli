@@ -2,7 +2,6 @@ import { Android, Simulator, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
 import fs from 'fs-extra';
-import _ from 'lodash';
 import ora from 'ora';
 import path from 'path';
 import { Command } from 'commander';
@@ -61,19 +60,19 @@ export default function (program: Command) {
         }
         if (!exp.ios) exp.ios = {};
 
-        if (!_.has(exp, 'facebookAppId') || !_.has(exp, 'facebookScheme')) {
+        if (!exp.facebookAppId || !exp.facebookScheme) {
           const disabledReason = exp
             ? `facebookAppId or facebookScheme are missing from app configuration. `
             : 'No custom configuration file could be found. You will need to provide a json file with valid facebookAppId and facebookScheme fields.';
           disabledServices.facebookLogin = { name: 'Facebook Login', reason: disabledReason };
         }
-        if (!_.has(exp, 'ios.config.googleMapsApiKey')) {
+        if (!exp.ios.config?.googleMapsApiKey) {
           const disabledReason = exp
             ? `ios.config.googleMapsApiKey does not exist in the app configuration.`
             : 'No custom configuration file could be found. You will need to provide a json file with a valid ios.config.googleMapsApiKey field.';
           disabledServices.googleMaps = { name: 'Google Maps', reason: disabledReason };
         }
-        if (_.has(exp, 'ios.googleServicesFile')) {
+        if (exp.ios.googleServicesFile) {
           const contents = await fs.readFile(
             path.resolve(projectDir, exp.ios.googleServicesFile!),
             'base64'

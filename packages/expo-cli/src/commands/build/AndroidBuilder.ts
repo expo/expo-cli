@@ -3,7 +3,6 @@ import path from 'path';
 import untildify from 'untildify';
 import { Android, AndroidCredentials, Credentials } from '@expo/xdl';
 import chalk from 'chalk';
-import get from 'lodash/get';
 
 import invariant from 'invariant';
 import log from '../../log';
@@ -42,13 +41,10 @@ export default class AndroidBuilder extends BaseBuilder {
 
   async validateProject() {
     await utils.checkIfSdkIsSupported(this.manifest.sdkVersion!, ANDROID);
-    if (!get(this.manifest, 'android.package')) {
+    const androidPackage = this.manifest.android?.package;
+    if (!androidPackage) {
       throw new BuildError(`Your project must have an Android package set in app.json
 See https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appjson`);
-    }
-    const androidPackage = get(this.manifest, 'android.package');
-    if (!androidPackage) {
-      throw new BuildError('Your project must have an Android package set in app.json.');
     }
     if (!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(androidPackage)) {
       throw new BuildError(

@@ -7,7 +7,7 @@ import {
   jester,
   testAppJson,
 } from '../../../credentials/test-fixtures/mocks';
-import { mockExpoXDL } from '../../../__tests__/utils';
+import { mockExpoXDL } from '../../../__tests__/mock-utils';
 
 jest.setTimeout(10 * 1000); // 10s
 
