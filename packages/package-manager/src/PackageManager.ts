@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import { realpathSync } from 'fs';
 import sudo from 'sudo-prompt';
 
 export type Logger = (...args: any[]) => void;
@@ -14,7 +14,7 @@ export interface PackageManager {
 }
 
 export function getPossibleProjectRoot(): string {
-  return fs.realpathSync(process.cwd());
+  return realpathSync(process.cwd());
 }
 
 export function spawnSudoAsync(command: string): Promise<void> {

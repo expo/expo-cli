@@ -7,12 +7,7 @@ import { CocoaPodsPackageManager } from '../CocoaPodsPackageManager';
 const projectRoot = getTemporaryPath();
 
 function getTemporaryPath() {
-  return path.join(
-    os.tmpdir(),
-    Math.random()
-      .toString(36)
-      .substring(2)
-  );
+  return path.join(os.tmpdir(), Math.random().toString(36).substring(2));
 }
 function getRoot(...args) {
   return path.join(projectRoot, ...args);
