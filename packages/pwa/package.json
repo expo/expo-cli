@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.16",
+    "@types/fs-extra": "^9.0.1",
     "@types/node": "^12.6.8",
     "rimraf": "^3.0.2"
   },
@@ -42,7 +43,7 @@
     "@expo/json-file": "8.2.20",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
-    "fs-extra": "^9.0.0",
+    "fs-extra": "9.0.0",
     "update-check": "1.5.3"
   }
 }
