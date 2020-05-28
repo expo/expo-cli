@@ -54,7 +54,6 @@
     "@expo/babel-preset-cli": "0.2.16",
     "@types/color-string": "^1.5.0",
     "@types/fs-extra": "^9.0.1",
-    "@types/inquirer": "^6.5.0",
     "@types/jest": "^25.2.1",
     "babel-jest": "^26.0.1",
     "eslint": "^6.8.0",
