@@ -20,10 +20,7 @@ describe('Info.plist', () => {
     const filePath = `${iosProjectPath}/Info.plist`;
 
     it('updates the file correctly', async () => {
-      await configureInfoPlist(iosProjectPath, {
-        statusBarStyle: StatusBarStyle.DEFAULT,
-        statusBarHidden: false,
-      });
+      await configureInfoPlist(iosProjectPath);
       const actual = vol.readFileSync(filePath, 'utf-8');
       expect(actual).toMatch(
         /<key>UILaunchStoryboardName<\/key>(\n|.)*<string>SplashScreen<\/string>/
@@ -33,7 +30,6 @@ describe('Info.plist', () => {
     describe('StatusBar configuration', () => {
       it('inserts UIStatusBarHidden', async () => {
         await configureInfoPlist(iosProjectPath, {
-          statusBarStyle: StatusBarStyle.DEFAULT,
           statusBarHidden: true,
         });
         const actual = vol.readFileSync(filePath, 'utf-8');
@@ -42,11 +38,9 @@ describe('Info.plist', () => {
 
       it('updates UIStatusBarHidden', async () => {
         await configureInfoPlist(iosProjectPath, {
-          statusBarStyle: StatusBarStyle.DEFAULT,
           statusBarHidden: true,
         });
         await configureInfoPlist(iosProjectPath, {
-          statusBarStyle: StatusBarStyle.DEFAULT,
           statusBarHidden: false,
         });
         const actual = vol.readFileSync(filePath, 'utf-8');
@@ -56,7 +50,6 @@ describe('Info.plist', () => {
       it('inserts UIStatusBarStyle', async () => {
         await configureInfoPlist(iosProjectPath, {
           statusBarStyle: StatusBarStyle.LIGHT_CONTENT,
-          statusBarHidden: false,
         });
         const actual = vol.readFileSync(filePath, 'utf-8');
         expect(actual).toMatch(
@@ -67,11 +60,9 @@ describe('Info.plist', () => {
       it('updates UIStatusBarStyle', async () => {
         await configureInfoPlist(iosProjectPath, {
           statusBarStyle: StatusBarStyle.LIGHT_CONTENT,
-          statusBarHidden: false,
         });
         await configureInfoPlist(iosProjectPath, {
           statusBarStyle: StatusBarStyle.DARK_CONTENT,
-          statusBarHidden: false,
         });
         const actual = vol.readFileSync(filePath, 'utf-8');
         expect(actual).toMatch(

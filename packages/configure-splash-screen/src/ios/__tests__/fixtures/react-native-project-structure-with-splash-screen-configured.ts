@@ -54,10 +54,6 @@ export default {
   </array>
   <key>UIViewControllerBasedStatusBarAppearance</key>
   <false/>
-  <key>UIStatusBarHidden</key>
-  <false/>
-  <key>UIStatusBarStyle</key>
-  <string>UIStatusBarStyleDefault</string>
 </dict>
 </plist>
 `,

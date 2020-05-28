@@ -67,7 +67,9 @@ function ensureDesiredXmlContent(
 
 /**
  * css-recognized hex is of format `#RRGGBB(AA)` or `#RGB(A)`, while Android accepts `#(AA)RRGGBB` or `#(A)RGB` (https://developer.android.com/guide/topics/resources/color-list-resource)
- * This function converts only format `#RRGGBBAA` into `#AARRGGBB`.
+ * This function converts following formats:
+ * - `#RRGGBBAA` ➡️ `#AARRGGBB`,
+ * - `#RGBA` ➡️ `#ARGB`.
  */
 function getAndroidStyleHex(color: ColorDescriptor): string {
   return colorString.to

@@ -26,8 +26,6 @@ describe('ios', () => {
       await configureIos('/app', {
         resizeMode: ResizeMode.CONTAIN,
         backgroundColor: colorString.get('#E3F29238')!,
-        statusBarHidden: false,
-        statusBarStyle: StatusBarStyle.DEFAULT,
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
       // I don't compare `.pbxproj` as every time it is filled with new UUIDs
@@ -55,8 +53,6 @@ describe('ios', () => {
         resizeMode: ResizeMode.COVER,
         backgroundColor: colorString.get('yellow')!,
         imagePath: '/assets/background.png',
-        statusBarHidden: false,
-        statusBarStyle: StatusBarStyle.DEFAULT,
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
       // I don't compare `.pbxproj` as every time it is filled with new UUIDs

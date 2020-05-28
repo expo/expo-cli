@@ -17,7 +17,7 @@ export default async function configureIos(
     darkModeImagePath,
     statusBarHidden,
     statusBarStyle,
-  }: Arguments & StatusBarOptions & { resizeMode: ResizeMode }
+  }: Arguments & Partial<StatusBarOptions> & { resizeMode: ResizeMode }
 ) {
   const iosProject = await readPbxProject(projectRootPath);
 

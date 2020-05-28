@@ -18,7 +18,7 @@ function getUIStatusBarStyle(statusBarStyle: StatusBarStyle) {
  */
 export default async function configureInfoPlist(
   iosProjectPath: string,
-  { statusBarHidden, statusBarStyle }: StatusBarOptions
+  { statusBarHidden, statusBarStyle }: Partial<StatusBarOptions> = {}
 ) {
   const filePath = path.resolve(iosProjectPath, INFO_PLIST_FILE_PATH);
   const fileContent = await fs.readFile(filePath, 'utf-8');
@@ -47,6 +47,19 @@ export default async function configureInfoPlist(
     })
     // StatusBar hiding
     .applyAction(content => {
+      if (statusBarHidden === undefined) {
+        const [succeeded, newContent] = replace(content, {
+          replaceContent: '',
+          replacePattern: /^.*<key>UIStatusBarHidden<\/key>(.|\n)*?<.*\/>.*$/m,
+        });
+        return [newContent, 'statusBarHidingRemoved', succeeded];
+      }
+      return [content, 'statusBarHidingRemoved', false];
+    })
+    .applyAction((content, { statusBarHidingRemoved }) => {
+      if (statusBarHidingRemoved || statusBarHidden === undefined) {
+        return [content, 'statusBarHidingReplaced', false];
+      }
       const [succeeded, newContent] = replace(content, {
         replaceContent: String(statusBarHidden),
         replacePattern: /(?<=<key>UIStatusBarHidden<\/key>(.|\n)*?<).*(?=\/>)/m,
@@ -54,7 +67,7 @@ export default async function configureInfoPlist(
       return [newContent, 'statusBarHidingReplaced', succeeded];
     })
     .applyAction((content, { statusBarHidingReplaced }) => {
-      if (statusBarHidingReplaced) {
+      if (statusBarHidingReplaced || statusBarHidden === undefined) {
         return [content, 'statusBarHidingInserted', false];
       }
       const [succeeded, newContent] = insert(
@@ -69,6 +82,19 @@ export default async function configureInfoPlist(
     })
     // StatusBar style
     .applyAction(content => {
+      if (statusBarStyle === undefined) {
+        const [succeeded, newContent] = replace(content, {
+          replacePattern: /^.*<key>UIStatusBarStyle<\/key>(.|\n)*?<string>.*<\/string>.*$/m,
+          replaceContent: '',
+        });
+        return [newContent, 'statusBarStyleRemoved', succeeded];
+      }
+      return [content, 'statusBarStyleRemoved', false];
+    })
+    .applyAction((content, { statusBarStyleRemoved }) => {
+      if (statusBarStyleRemoved || statusBarStyle === undefined) {
+        return [content, 'statusBarStyleReplaced', false];
+      }
       const [succeeded, newContent] = replace(content, {
         replaceContent: getUIStatusBarStyle(statusBarStyle),
         replacePattern: /(?<=<key>UIStatusBarStyle<\/key>(.|\n)*?<string>).*(?=<\/string>)/m,
@@ -76,7 +102,7 @@ export default async function configureInfoPlist(
       return [newContent, 'statusBarStyleReplaced', succeeded];
     })
     .applyAction((content, { statusBarStyleReplaced }) => {
-      if (statusBarStyleReplaced) {
+      if (statusBarStyleReplaced || statusBarStyle === undefined) {
         return [content, 'statusBarStyleInserted', false];
       }
       const [succeeded, newContent] = insert(
