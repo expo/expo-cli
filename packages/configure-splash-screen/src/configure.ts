@@ -101,8 +101,8 @@ async function validateArgumentImagePath(
  *   - `resizeMode = NATIVE` is selected only with `platform = ANDROID`
  *   - `statusBarBackgroundColor` is provided only if `platform = ANDROID`
  *   - `statusBarTranslucent` is provided only if `platform = ANDROID`
- *   - `darkModeStatusBarStyle` is provided only if `darkMode = true` and `statusBarStyle` is provided.
- *   - `darkModeStatusBarBackgroundColor` is provided only if `platform = ANDROID` and `darkMode = true` and `statusBarBackgroundColor` is provided.
+ *   - `darkModeStatusBarStyle` is provided only if `platform = ANDROID` and `darkMode = true` and `statusBarStyle` is provided
+ *   - `darkModeStatusBarBackgroundColor` is provided only if `platform = ANDROID` and `darkMode = true` and `statusBarBackgroundColor` is provided
  */
 async function validateConfiguration(
   configuration: {
@@ -209,8 +209,14 @@ async function validateConfiguration(
     );
   }
 
-  // `darkModeStatusBarStyle` is provided only if `darkMode = true` and `statusBarStyle` is provided
+  // `darkModeStatusBarStyle` is provided only if`platform = ANDROID` and `darkMode = true` and `statusBarStyle` is provided
   if (darkModeStatusBarStyle) {
+    if (platform !== Platform.ANDROID) {
+      logErrorAndExit(
+        `error: Option 'dark-mode-statusbar-style' is not available for platform '${platform}'.`
+      );
+    }
+
     if (!darkMode) {
       logErrorAndExit(
         `error: Option 'dark-mode-statusbar-style' is not available when dark mode is not enabled.`
@@ -328,7 +334,7 @@ program
   )
   .option(
     '--dark-mode-statusbar-style [darkModeStatusBarStyle]',
-    `The very same as 'statusbar-style' option, but applied only in dark mode. Available only if 'statusbar-style' is provided.`
+    `(only for Android platform) The very same as 'statusbar-style' option, but applied only in dark mode. Available only if 'statusbar-style' is provided.`
   )
   .option('--statusbar-hidden', `Hides the StatusBar.`)
   .option(

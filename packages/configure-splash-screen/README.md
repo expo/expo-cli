@@ -17,14 +17,17 @@ You can use it to configure your native iOS and Android project according to you
 
 - Configures background color for native splash screen.
 - Configures [`expo-splash-screen`](https://github.com/expo/expo/tree/master/packages/expo-splash-screen) to show given `.png` image.
-- Supports [`CONTAIN`](https://github.com/expo/expo/tree/master/packages/expo-splash-screen#contain-resize-mode) and [`COVER`](https://github.com/expo/expo/tree/master/packages/expo-splash-screen#cover-resize-mode) modes from [`expo-splash-screen`](https://github.com/expo/expo/tree/master/packages/expo-splash-screen)
+- Supports [`CONTAIN`](https://github.com/expo/expo/tree/master/packages/expo-splash-screen#contain-resize-mode) and [`COVER`](https://github.com/expo/expo/tree/master/packages/expo-splash-screen#cover-resize-mode) modes from [`expo-splash-screen`](https://github.com/expo/expo/tree/master/packages/expo-splash-screen).
+- Configures the `StatusBar`'s attributes:
+  - `hiding`,
+  - `style`.
 
 ### 🤖 Android
 
 - Configures background color for native splash screen.
 - Configures `expo-splash-screen` to show given `.png` image.
 - Supports [`CONTAIN`](https://github.com/expo/expo/tree/master/packages/expo-splash-screen#contain-resize-mode), [`COVER`](https://github.com/expo/expo/tree/master/packages/expo-splash-screen#cover-resize-mode) and [`NATIVE`](https://github.com/expo/expo/tree/master/packages/expo-splash-screen#native-resize-mode) modes from [`expo-splash-screen`](https://github.com/expo/expo/tree/master/packages/expo-splash-screen).
-- Configures the `StatusBar` component's attributes:
+- Configures the `StatusBar`'s attributes:
   - `hiding`,
   - `style`,
   - `backgroundColor`,
@@ -49,7 +52,7 @@ yarn run @expo/configure-splash-screen [options] <backgroundColor> [imagePathOrD
 - `-r, --resize-mode [resizeMode]` - ResizeMode to be used for native splash screen image. Available values: "contain" | "cover" | "native" (only available for android platform)) (default: "contain"). See [resize modes](https://github.com/expo/expo/tree/master/packages/expo-splash-screen#built-in-splash-screen-image-resize-modes) for more information.
 - `-p, --platform [platform]` - Selected platform to configure. Available values: "android" | "ios" | "all". (default: "all")
 - `--statusbar-style [statusBarStyle]` - Customizes the color of the StatusBar icons. Available values: "default" | "light-content" | "dark-content". (default: "default")
-- `--dark-mode-statusbar-style [darkModeStatusBarStyle]` - The very same as 'statusbar-style' option, but applied only in dark mode. Available only if 'statusbar-style' is provided.
+- `--dark-mode-statusbar-style [darkModeStatusBarStyle]` - (only for Android platform) The very same as 'statusbar-style' option, but applied only in dark mode. Available only if 'statusbar-style' is provided.
 - `--statusbar-hidden` - Hides the StatusBar.
 - `--statusbar-background-color [statusBarBackgroundColor]` - (only for Android platform) Customizes the background color of the StatusBar. Valid css-formatted color (see backgroundColor supported formats).
 - `--dark-mode-statusbar-background-color [darkModeStatusBarBackgroundColor]` - (only for Android platform) The very same as 'statusbar-background-color' option, but applied only in dark mode. Available only if `statusbar-style` is provided.

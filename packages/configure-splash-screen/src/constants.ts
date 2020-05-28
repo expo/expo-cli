@@ -40,7 +40,6 @@ export interface Arguments {
 export interface StatusBarOptions {
   statusBarHidden: boolean;
   statusBarStyle: StatusBarStyle;
-  darkModeStatusBarStyle?: StatusBarStyle;
 }
 
 /**
@@ -48,6 +47,7 @@ export interface StatusBarOptions {
  * Android only
  */
 export interface AndroidOnlyStatusBarOptions {
+  darkModeStatusBarStyle?: StatusBarStyle;
   statusBarTranslucent?: true;
   statusBarBackgroundColor?: ColorDescriptor;
   darkModeStatusBarBackgroundColor?: ColorDescriptor;

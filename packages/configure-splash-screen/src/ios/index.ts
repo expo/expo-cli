@@ -17,13 +17,12 @@ export default async function configureIos(
     darkModeImagePath,
     statusBarHidden,
     statusBarStyle,
-    darkModeStatusBarStyle,
   }: Arguments & StatusBarOptions & { resizeMode: ResizeMode }
 ) {
   const iosProject = await readPbxProject(projectRootPath);
 
   await Promise.all([
-    configureInfoPlist(iosProject.projectPath),
+    configureInfoPlist(iosProject.projectPath, { statusBarHidden, statusBarStyle }),
     configureImageAsset(iosProject.projectPath, imagePath, darkModeImagePath),
     configureBackgroundAsset(iosProject.projectPath, backgroundColor, darkModeBackgroundColor),
     configureStoryboard(iosProject, {

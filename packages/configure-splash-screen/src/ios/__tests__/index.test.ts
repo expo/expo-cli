@@ -3,7 +3,7 @@ import { vol } from 'memfs';
 import * as path from 'path';
 
 import { getDirFromFS, readFileFromActualFS, getPng1x1FileContent } from '../../__tests__/helpers';
-import { ResizeMode } from '../../constants';
+import { ResizeMode, StatusBarStyle } from '../../constants';
 import configureIos from '../index';
 import reactNativeProject from './fixtures/react-native-project-structure';
 import reactNativeProjectWithSplashScreenConfiured from './fixtures/react-native-project-structure-with-splash-screen-configured';
@@ -26,6 +26,8 @@ describe('ios', () => {
       await configureIos('/app', {
         resizeMode: ResizeMode.CONTAIN,
         backgroundColor: colorString.get('#E3F29238')!,
+        statusBarHidden: false,
+        statusBarStyle: StatusBarStyle.DEFAULT,
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
       // I don't compare `.pbxproj` as every time it is filled with new UUIDs
@@ -53,6 +55,8 @@ describe('ios', () => {
         resizeMode: ResizeMode.COVER,
         backgroundColor: colorString.get('yellow')!,
         imagePath: '/assets/background.png',
+        statusBarHidden: false,
+        statusBarStyle: StatusBarStyle.DEFAULT,
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
       // I don't compare `.pbxproj` as every time it is filled with new UUIDs
