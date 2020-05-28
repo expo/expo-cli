@@ -82,7 +82,7 @@ async function action(projectDir: string, options: ProjectUrlOptions & URLOption
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('url [project-dir]')
     .alias('u')
