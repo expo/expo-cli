@@ -7,11 +7,11 @@ import * as Colors from './Colors';
 type dpiMap = { [dpistring: string]: { folderName: string; scale: number } };
 
 const dpiValues: dpiMap = {
-  xxxhdpi: { folderName: 'mipmap-xxxhdpi', scale: 4 },
-  xxhdpi: { folderName: 'mipmap-xxhdpi', scale: 3 },
-  xhdpi: { folderName: 'mipmap-xhdpi', scale: 2 },
-  hdpi: { folderName: 'mipmap-hdpi', scale: 1.5 },
   mdpi: { folderName: 'mipmap-mdpi', scale: 1 },
+  hdpi: { folderName: 'mipmap-hdpi', scale: 1.5 },
+  xhdpi: { folderName: 'mipmap-xhdpi', scale: 2 },
+  xxhdpi: { folderName: 'mipmap-xxhdpi', scale: 3 },
+  xxxhdpi: { folderName: 'mipmap-xxxhdpi', scale: 4 },
 };
 
 const ANDROID_RES_PATH = 'android/app/src/main/res/';
@@ -38,27 +38,27 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
   let icon = foregroundImage || getIcon(config);
 
   if (!icon) {
-    return;
+    return null;
   }
 
   const iconPath = resolve(projectRoot, icon);
-  let width, height;
+  let length: number;
 
   // Legacy Icon for Android 7 and earlier
   for (let dpi in dpiValues) {
     const { folderName, scale } = dpiValues[dpi];
     let dpiFolderPath = resolve(projectRoot, ANDROID_RES_PATH, folderName);
-    width = height = 48 * scale;
+    length = 48 * scale;
 
     try {
-      let iconImage = await resizeImageAsync(iconPath, width, height);
+      let iconImage = await resizeImageAsync(iconPath, length);
       if (backgroundImage && foregroundImage) {
         // if a background image is supplied, layer the foreground on top of that image.
-        let resizedBackgroundImage = await resizeImageAsync(backgroundImage, width, height);
+        let resizedBackgroundImage = await resizeImageAsync(backgroundImage, length);
         iconImage = resizedBackgroundImage.composite(iconImage, 0, 0);
       } else if (backgroundColor && foregroundImage) {
         // if a background color is supplied, layer the foreground on top of that color.
-        let resizedBackgroundImage = new Jimp(width, height, backgroundColor);
+        let resizedBackgroundImage = new Jimp(length, backgroundColor);
         iconImage = resizedBackgroundImage.composite(iconImage, 0, 0);
       }
       iconImage.write(resolve(dpiFolderPath, IC_LAUNCHER_PNG));
@@ -70,7 +70,7 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
 
   if (!foregroundImage) {
     // If no foreground image, we shouldn't configure the Android Adaptive Icon
-    return;
+    return null;
   }
 
   // set background color in colors.xml
@@ -78,15 +78,15 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
 
   for (let dpi in dpiValues) {
     const { folderName, scale } = dpiValues[dpi];
-    width = height = 48 * scale;
+    length = 48 * scale;
     let dpiFolderPath = resolve(projectRoot, ANDROID_RES_PATH, folderName);
 
     try {
-      let finalAdpativeIconForeground = await resizeImageAsync(foregroundImage, width, height);
+      let finalAdpativeIconForeground = await resizeImageAsync(foregroundImage, length);
       finalAdpativeIconForeground.write(resolve(dpiFolderPath, IC_LAUNCHER_FOREGROUND_PNG));
 
       if (backgroundImage) {
-        let finalAdpativeIconBackground = await resizeImageAsync(backgroundImage, width, height);
+        let finalAdpativeIconBackground = await resizeImageAsync(backgroundImage, length);
         finalAdpativeIconBackground.write(resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG));
       }
     } catch (e) {
@@ -100,15 +100,16 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
     backgroundImage
   );
   await createAdaptiveIconXmlFiles(projectRoot, icLauncherXmlString);
+  return true;
 }
 
-async function resizeImageAsync(imagePath: string, width: number, height: number) {
-  let imageBuffer = (await Jimp.read(imagePath)).resize(width, height).quality(100);
+async function resizeImageAsync(imagePath: string, length: number) {
+  let imageBuffer = (await Jimp.read(imagePath)).resize(length, length).quality(100);
 
   return imageBuffer;
 }
 
-async function setBackgroundColor(projectDir: string, backgroundColor: string) {
+export async function setBackgroundColor(projectDir: string, backgroundColor: string) {
   let colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectDir);
   if (!colorsXmlPath) {
     console.warn(
