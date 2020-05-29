@@ -1780,12 +1780,15 @@ export async function startReactNativeServerAsync(
       userPackagerOpts.config = path.resolve(projectRoot, userPackagerOpts.config);
     }
 
+    // Provide a fallback if the value isn't given
+    const userSourceExts = userPackagerOpts.sourceExts ?? [];
+
     packagerOpts = {
       ...packagerOpts,
       ...userPackagerOpts,
       // In order to prevent people from forgetting to include the .expo extension or other things
       // NOTE(brentvatne): we should probably do away with packagerOpts soon in favor of @expo/metro-config!
-      sourceExts: [...new Set([...packagerOpts.sourceExts, ...userPackagerOpts.sourceExts])],
+      sourceExts: [...new Set([...packagerOpts.sourceExts, ...userSourceExts])],
     };
 
     if (userPackagerOpts.port !== undefined && userPackagerOpts.port !== null) {
