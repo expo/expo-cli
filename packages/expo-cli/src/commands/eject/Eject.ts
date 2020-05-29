@@ -434,7 +434,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   // - node_modules/expo/AppEntry.js
   // - expo/AppEntry.js
   // - expo/AppEntry
-  if (!(pkg.main ?? '').includes('expo/AppEntry') && pkg.main !== 'index.js' && pkg.main) {
+  if (!isPkgMainExpoAppEntry(pkg.main) && pkg.main !== 'index.js' && pkg.main) {
     // Save the custom
     removedPkgMain = pkg.main;
   }
@@ -636,4 +636,23 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
 
 export function stripDashes(s: string): string {
   return s.replace(/\s|-/g, '');
+}
+
+/**
+ * Returns true if the input string matches the default expo main field.
+ *
+ * - ./node_modules/expo/AppEntry
+ * - ./node_modules/expo/AppEntry.js
+ * - node_modules/expo/AppEntry.js
+ * - expo/AppEntry.js
+ * - expo/AppEntry
+ *
+ * @param input package.json main field
+ */
+export function isPkgMainExpoAppEntry(input?: string): boolean {
+  const main = input || '';
+  if (main.startsWith('./')) {
+    return main.includes('node_modules/expo/AppEntry');
+  }
+  return main.includes('expo/AppEntry');
 }
