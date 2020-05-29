@@ -1,16 +1,14 @@
-import get from 'lodash/get';
 import invariant from 'invariant';
 import prompt, { ChoiceType, Question } from '../../prompt';
 import log from '../../log';
 
 import * as androidView from './AndroidCredentials';
-import * as iosAppView from './IosAppCredentials';
 import * as iosPushView from './IosPushCredentials';
 import * as iosDistView from './IosDistCert';
 import * as iosProvisionigProfileView from './IosProvisioningProfile';
 
 import { Context, IView } from '../context';
-import { AndroidCredentials, IosCredentials } from '../credentials';
+import { AndroidCredentials } from '../credentials';
 import { CredentialsManager } from '../route';
 import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
 
@@ -135,7 +133,7 @@ export class SelectAndroidExperience implements IView {
     this.askAboutProjectMode = false;
 
     if (this.androidCredentials.length === 0) {
-      this.androidCredentials = get(await ctx.api.getAsync('credentials/android'), 'credentials');
+      this.androidCredentials = (await ctx.api.getAsync('credentials/android'))?.credentials;
     }
     await displayAndroidCredentials(this.androidCredentials);
 

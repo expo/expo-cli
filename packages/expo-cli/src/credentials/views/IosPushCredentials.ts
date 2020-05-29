@@ -1,8 +1,5 @@
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import every from 'lodash/every';
-import get from 'lodash/get';
-import some from 'lodash/some';
 import ora from 'ora';
 
 import terminalLink from 'terminal-link';
@@ -99,7 +96,7 @@ export class RemoveIosPush implements IView {
   async open(ctx: Context): Promise<IView | null> {
     const selected = await selectPushCredFromList(ctx);
     if (!selected) {
-    } else if (!get(selected, 'type')) {
+    } else if (!('type' in selected)) {
       await this.removePushCert(ctx, selected as IosAppCredentials);
       log(chalk.green('Successfully removed Push Certificate'));
     } else {
@@ -365,10 +362,10 @@ function getValidityStatus(
 }
 
 function getOptionsFromProjectContext(ctx: Context): PushKeyOptions | null {
-  const experience = get(ctx, 'manifest.slug');
-  const owner = get(ctx, 'manifest.owner');
+  const experience = ctx.manifest?.slug;
+  const owner = ctx.manifest?.owner;
   const experienceName = `@${owner || ctx.user.username}/${experience}`;
-  const bundleIdentifier = get(ctx, 'manifest.ios.bundleIdentifier');
+  const bundleIdentifier = ctx.manifest?.ios?.bundleIdentifier;
   if (!experience || !bundleIdentifier) {
     log.error(`slug and ios.bundleIdentifier needs to be defined`);
     return null;
@@ -411,7 +408,7 @@ async function selectPushCredFromList(
   }
 
   const getName = (pushCred: IosPushCredentials | IosAppCredentials) => {
-    if (get(pushCred, 'type') === 'push-key') {
+    if ('type' in pushCred) {
       return formatPushKey(
         pushCred as IosPushCredentials,
         iosCredentials,
@@ -442,11 +439,11 @@ function getAppsUsingPushCred(
   iosCredentials: IosCredentials,
   pushCred: IosPushCredentials | IosAppCredentials
 ): IosAppCredentials[] {
-  if (get(pushCred, 'type') === 'push-key') {
+  if ('type' in pushCred) {
     return iosCredentials.appCredentials.filter(
       cred => cred.pushCredentialsId === (pushCred as IosPushCredentials).id
     );
-  } else if (get(pushCred, 'credentials.pushP12') && get(pushCred, 'credentials.pushPassword')) {
+  } else if (pushCred.credentials?.pushP12 && pushCred.credentials?.pushPassword) {
     return [pushCred as IosAppCredentials];
   }
   return [];
@@ -599,12 +596,12 @@ export async function getPushKeyFromParams(builderOptions: {
   const { pushId, pushP8Path, teamId } = builderOptions;
 
   // none of the pushKey params were set, assume user has no intention of passing it in
-  if (!some([pushId, pushP8Path])) {
+  if (!pushId && !pushP8Path) {
     return null;
   }
 
   // partial pushKey params were set, assume user has intention of passing it in
-  if (!every([pushId, pushP8Path, teamId])) {
+  if (!(pushId && pushP8Path && teamId)) {
     throw new Error(
       'In order to provide a Push Key through the CLI parameters, you have to pass --push-id, --push-p8-path and --team-id parameters.'
     );
@@ -612,7 +609,7 @@ export async function getPushKeyFromParams(builderOptions: {
 
   return {
     apnsKeyId: pushId,
-    apnsKeyP8: await fs.readFile(pushP8Path as string, 'base64'),
+    apnsKeyP8: await fs.readFile(pushP8Path, 'base64'),
     teamId,
   } as PushKey;
 }

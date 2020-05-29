@@ -1,7 +1,6 @@
 import path from 'path';
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import get from 'lodash/get';
 
 import { AndroidCredentials, Credentials } from '@expo/xdl';
 import { ExpoConfig } from '@expo/config';
@@ -40,9 +39,12 @@ export default class AppSigningOptInProcess {
     await view.save(ctx, this.signKeystore, true);
 
     this.signKeystoreCredentials = {
-      keystorePassword: get(view, 'credentials.keystorePassword'),
-      keyAlias: get(view, 'credentials.keyAlias'),
-      keyPassword: get(view, 'credentials.keyPassword'),
+      // @ts-ignore possibly undefined
+      keystorePassword: view.credentials?.keystorePassword,
+      // @ts-ignore possibly undefined
+      keyAlias: view.credentials?.keyAlias,
+      // @ts-ignore possibly undefined
+      keyPassword: view.credentials?.keyPassword,
     };
 
     try {
@@ -115,9 +117,12 @@ export default class AppSigningOptInProcess {
 
   async prepareKeystores(username: string, exp: ExpoConfig): Promise<void> {
     log(`Saving upload keystore to ${this.uploadKeystore}...`);
+    if (!exp.android?.package) {
+      throw new Error('Missing android.package configuration.');
+    }
     this.uploadKeystoreCredentials = await AndroidCredentials.generateUploadKeystore(
       this.uploadKeystore,
-      get(exp, 'android.package'),
+      exp.android.package,
       `@${username}/${exp.slug}`
     );
 

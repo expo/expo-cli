@@ -5,7 +5,7 @@
     "module": "CommonJS",
     "lib": ["es2018", "es2020.string"],
     "rootDir": "./src",
-    "outDir": "./bin",
+    "outDir": "./build",
     "esModuleInterop": true
   },
   "include": ["./src"],

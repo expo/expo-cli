@@ -1,17 +1,10 @@
-import {
-  ExpoConfig,
-  PackageJSONConfig,
-  getConfig,
-  resolveModule,
-} from '@expo/config';
+import { ExpoConfig, PackageJSONConfig, getConfig, projectHasModule } from '@expo/config';
 // @ts-ignore: not typed
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
 import { Project, ProjectSettings, UrlUtils, UserSettings, Versions } from '@expo/xdl';
 import chalk from 'chalk';
-import attempt from 'lodash/attempt';
 import intersection from 'lodash/intersection';
-import isError from 'lodash/isError';
 import path from 'path';
 import openBrowser from 'react-dev-utils/openBrowser';
 import semver from 'semver';
@@ -217,10 +210,12 @@ async function validateDependenciesVersions(
     return;
   }
 
-  const bundleNativeModulesPath = attempt(() =>
-    resolveModule('expo/bundledNativeModules.json', projectDir, exp)
+  const bundleNativeModulesPath = projectHasModule(
+    'expo/bundledNativeModules.json',
+    projectDir,
+    exp
   );
-  if (isError(bundleNativeModulesPath)) {
+  if (!bundleNativeModulesPath) {
     log.warn(
       `Your project is in SDK version >= 33.0.0, but the ${chalk.underline(
         'expo'

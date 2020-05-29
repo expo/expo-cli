@@ -1,4 +1,3 @@
-import get from 'lodash/get';
 import forge from 'node-forge';
 
 export function getP12CertFingerprint(
@@ -43,7 +42,7 @@ function _getCertData(p12Buffer: Buffer | string, passwordRaw: string | null) {
   const p12Asn1 = forge.asn1.fromDer(p12Der);
   const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
   const certBagType = forge.pki.oids.certBag;
-  const certData = get(p12.getBags({ bagType: certBagType }), [certBagType, 0, 'cert']);
+  const certData = p12.getBags({ bagType: certBagType })?.[certBagType]?.[0]?.cert;
   if (!certData) {
     throw new Error("_getCertData: couldn't find cert bag");
   }

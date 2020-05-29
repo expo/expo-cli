@@ -1,7 +1,6 @@
 import spawnAsync from '@expo/spawn-async';
 import { ApiV2 } from '@expo/xdl';
 import delayAsync from 'delay-async';
-import get from 'lodash/get';
 import ora from 'ora';
 
 import log from '../../log';
@@ -22,7 +21,7 @@ async function waitForBuildEnd(
     switch (buildInfo.status) {
       case 'finished':
         spinner.succeed('Build finished.');
-        return get(buildInfo, 'artifacts.buildUrl', '');
+        return buildInfo.artifacts?.buildUrl ?? '';
       case 'in-queue':
         spinner.text = 'Build queued...';
         break;

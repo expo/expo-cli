@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 
-import _ from 'lodash';
+import get from 'lodash/get';
 import Ajv from 'ajv';
 import imageProbe from 'probe-image-size';
 import readChunk from 'read-chunk';
@@ -40,15 +40,13 @@ export default class Schemer {
   manualValidationErrors: Array<ValidationError>;
   // Schema is a JSON Schema object
   constructor(schema: Object, options: Options = {}) {
-    this.options = _.extend(
-      {
-        allErrors: true,
-        verbose: true,
-        format: 'full',
-        metaValidation: true,
-      },
-      options
-    );
+    this.options = {
+      allErrors: true,
+      verbose: true,
+      format: 'full',
+      metaValidation: true,
+      ...options,
+    };
 
     this.ajv = new Ajv(this.options);
     this.schema = schema;
@@ -87,7 +85,7 @@ export default class Schemer {
         });
       case 'pattern': {
         //@TODO Parse the message in a less hacky way. Perhaps for regex validation errors, embed the error message under the meta tag?
-        const regexHuman = _.get(parentSchema, 'meta.regexHuman');
+        const regexHuman = meta?.regexHuman;
         const regexErrorMessage = regexHuman
           ? `'${dataPath}' should be a ${regexHuman[0].toLowerCase() + regexHuman.slice(1)}`
           : `'${dataPath}' ${message}`;
@@ -116,8 +114,7 @@ export default class Schemer {
     if (this.ajv.errors) {
       valErrors = this.ajv.errors.map(e => this._formatAjvErrorMessage(e));
     }
-    const bothErrors = _.concat(valErrors, this.manualValidationErrors);
-    return bothErrors;
+    return [...valErrors, ...this.manualValidationErrors];
   }
 
   _throwOnErrors() {
@@ -157,7 +154,7 @@ export default class Schemer {
         const fieldPath = schemaPointerToFieldPath(jsonPointer);
         assets.push({
           fieldPath,
-          data: _.get(data, fieldPath),
+          data: get(data, fieldPath),
           meta: subSchema.meta,
         });
       }

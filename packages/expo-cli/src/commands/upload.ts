@@ -1,6 +1,5 @@
 import chalk from 'chalk';
 import pick from 'lodash/pick';
-import size from 'lodash/size';
 import { Command } from 'commander';
 
 import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
@@ -112,7 +111,7 @@ export default function (program: Command) {
         checkRuntimePlatform('ios');
 
         const args = pick(options, SOURCE_OPTIONS);
-        if (size(args) > 1) {
+        if (Object.keys(args).length > 1) {
           throw new Error(`You have to choose only one of: --path, --id, --latest, --url`);
         }
         IOSUploader.validateOptions(options);

@@ -41,7 +41,7 @@ const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 /**
  * Entry point into the eject process, delegates to other helpers to perform various steps.
  */
-export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions) {
+export async function ejectAsync(projectRoot: string, options?: EjectAsyncOptions): Promise<void> {
   if (await maybeBailOnGitStatusAsync()) return;
 
   await createNativeProjectsFromTemplateAsync(projectRoot);

@@ -349,6 +349,10 @@ module.exports = async function(env, argv) {
 
 [workbox]: https://developers.google.com/web/tools/workbox
 
+## Environment Variables
+
+- `EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS`: Should the define plugin explicitly set environment variables like `process.env.FOO` instead of creating an object like `proces.env: { FOO }`. Defaults to `false`. Next.js uses this to prevent overwriting injected environment variables.
+
 ## Exports
 
 ### addons

@@ -1,17 +1,17 @@
 {
   "name": "@expo/configure-splash-screen",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Supplementary module for 'expo-splash-screen' providing cli configuration command",
   "bin": {
-    "configure-splash-screen": "./bin/configure.js",
-    "expo-splash-screen": "./bin/configure.js"
+    "configure-splash-screen": "./build/configure.js",
+    "expo-splash-screen": "./build/configure.js"
   },
   "scripts": {
     "start": "yarn run prepare",
     "build": "tsc",
     "watch": "tsc --watch",
     "prepare": "yarn run clean && yarn run build",
-    "clean": "rimraf bin build ./tsconfig.tsbuildinfo",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx,.d.ts src",
     "test": "jest",
     "test:watch": "jest --watch"
@@ -42,8 +42,7 @@
     "color-string": "^1.5.3",
     "commander": "^5.1.0",
     "core-js": "^3.6.5",
-    "fs-extra": "^9.0.0",
-    "inquirer": "^7.1.0",
+    "fs-extra": "9.0.0",
     "pngjs": "^5.0.0",
     "xcode": "^3.0.0",
     "xml-js": "^1.6.11"
@@ -54,8 +53,7 @@
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.16",
     "@types/color-string": "^1.5.0",
-    "@types/fs-extra": "^8.1.0",
-    "@types/inquirer": "^6.5.0",
+    "@types/fs-extra": "^9.0.1",
     "@types/jest": "^25.2.1",
     "babel-jest": "^26.0.1",
     "eslint": "^6.8.0",
@@ -64,5 +62,8 @@
     "rimraf": "^3.0.2",
     "ts-jest": "^25.4.0"
   },
+  "files": [
+    "build"
+  ],
   "gitHead": "58cc7088dae609832c85dba393372ed1a06b00db"
 }

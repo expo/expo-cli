@@ -1,5 +1,4 @@
 import fs from 'fs-extra';
-import get from 'lodash/get';
 import path from 'path';
 
 import { ExpoConfig } from '@expo/config';
@@ -79,7 +78,7 @@ async function _cleanPropertyListBackupsAsync(
   context: AnyStandaloneContext,
   backupPath: string
 ): Promise<void> {
-  if (get(context, 'build.ios.buildType') !== 'client') {
+  if (context.build?.ios?.buildType !== 'client') {
     await IosPlist.cleanBackupAsync(backupPath, 'EXShell', false);
   }
   await IosPlist.cleanBackupAsync(backupPath, 'Info', false);
@@ -510,11 +509,11 @@ async function _configureGoogleServicesPlistAsync(context: AnyStandaloneContext)
   if (context instanceof StandaloneContextUser) {
     return;
   }
-  if (get(context, 'data.manifest.ios.googleServicesFile')) {
+  if (context.data.manifest.ios?.googleServicesFile) {
     const { supportingDirectory } = IosWorkspace.getPaths(context);
     await fs.writeFile(
       path.join(supportingDirectory, 'GoogleService-Info.plist'),
-      get(context, 'data.manifest.ios.googleServicesFile'),
+      context.data.manifest.ios?.googleServicesFile,
       'base64'
     );
   }

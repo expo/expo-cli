@@ -1,5 +1,4 @@
 import ora from 'ora';
-import get from 'lodash/get';
 import dateformat from 'dateformat';
 import chalk from 'chalk';
 import CommandError, { ErrorCodes } from '../CommandError';
@@ -66,7 +65,7 @@ export class PushKeyManager {
       };
     } catch (err) {
       spinner.stop();
-      const resultString = get(err, 'rawDump.resultString');
+      const resultString = err.rawDump?.resultString;
       if (resultString && resultString.match(/maximum allowed number of Keys/)) {
         throw new CommandError(
           ErrorCodes.APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR,

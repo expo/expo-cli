@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import url from 'url';
 
-import takeRight from 'lodash/takeRight';
 import pMap from 'p-map';
 import pRetry from 'p-retry';
 import urlJoin from 'url-join';
@@ -58,7 +57,7 @@ function createAssetsUrlResolver(
         `Could not resolve asset URLs relative to "${publishedUrl}". Published URL must be an absolute URL.`
       );
     }
-    const maybeExpoDomain = takeRight(hostname.split('.'), 2).join('.');
+    const maybeExpoDomain = hostname.split('.').slice(-2).join('.');
     if (!EXPO_DOMAINS.includes(maybeExpoDomain)) {
       assetsDirUrl = url.resolve(publishedUrl, assetUrlOverride);
     }

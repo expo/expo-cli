@@ -1,8 +1,7 @@
-import fs from 'fs';
+import { readFile, readFileSync } from 'fs';
 import { promisify } from 'util';
 
 import get from 'lodash/get';
-import has from 'lodash/has';
 import set from 'lodash/set';
 import JSON5 from 'json5';
 import writeFileAtomic from 'write-file-atomic';
@@ -10,7 +9,7 @@ import { codeFrameColumns } from '@babel/code-frame';
 
 import JsonFileError from './JsonFileError';
 
-const readFileAsync = promisify(fs.readFile);
+const readFileAsync = promisify(readFile);
 const writeFileAtomicAsync: (
   filename: string,
   data: string | Buffer,
@@ -133,7 +132,7 @@ function read<TJSONObject extends JSONObject>(
 ): TJSONObject {
   let json;
   try {
-    json = fs.readFileSync(file, 'utf8');
+    json = readFileSync(file, 'utf8');
   } catch (error) {
     let defaultValue = cantReadFileDefault(options);
     if (defaultValue === undefined) {
@@ -196,7 +195,7 @@ async function getAsync<TJSONObject extends JSONObject, K extends keyof TJSONObj
   options?: Options<TJSONObject>
 ): Promise<any> {
   const object = await readAsync(file, options);
-  if (defaultValue === undefined && !has(object, key)) {
+  if (defaultValue === undefined && !(key in object)) {
     throw new JsonFileError(`No value at key path "${key}" in JSON object from: ${file}`);
   }
   return get(object, key, defaultValue);

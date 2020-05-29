@@ -1,6 +1,6 @@
 {
   "name": "uri-scheme",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.16",
-    "@expo/config": "3.2.7",
+    "@expo/config": "3.2.8",
     "@expo/plist": "0.0.8",
     "@expo/spawn-async": "1.5.0",
     "@types/node": "^12.6.8",
@@ -43,7 +43,7 @@
     "@zeit/ncc": "^0.20.5",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
-    "glob": "7.1.2",
+    "glob": "7.1.6",
     "prompts": "^2.3.2",
     "rimraf": "2.6.3",
     "update-check": "1.5.3"
