@@ -118,7 +118,14 @@ jobs:
       - run:
           name: Install test project dependencies
           command: cd e2e/basic && yarn; cd ../..
-      - run: yarn test:e2e
+      # Install puppeteer in CI to improve local yarn speed
+      - run:
+          name: Install Puppeteer
+          command: yarn add -D puppeteer@3.1.0
+      # Test starting an Expo web project
+      - run: yarn test:e2e:start
+      # Test building an Expo web project
+      - run: yarn test:e2e:build
   test-electron-adapter:
     parameters:
       e:

@@ -17,9 +17,7 @@
     "prepare": "yarn run clean && yarn run build",
     "test": "jest --config jest/unit-test-config.js",
     "test:e2e:start": "EXPO_E2E_COMMAND='start' jest --config jest/e2e-test-config.json --rootDir .",
-    "test:e2e:build": "EXPO_E2E_COMMAND='build' jest --config jest/e2e-test-config.json --rootDir .",
-    "pretest:e2e": "yarn add -D puppeteer@^3.1.0",
-    "test:e2e": "yarn test:e2e:start; yarn test:e2e:build"
+    "test:e2e:build": "EXPO_E2E_COMMAND='build' jest --config jest/e2e-test-config.json --rootDir ."
   },
   "files": [
     "addons",

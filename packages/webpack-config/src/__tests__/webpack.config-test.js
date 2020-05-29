@@ -23,6 +23,17 @@ function normalizeConfig(config) {
   return normalized;
 }
 
+let originalCiValue;
+
+beforeAll(() => {
+  originalCiValue = process.env.CI;
+  process.env.CI = 'true';
+});
+
+afterAll(() => {
+  process.env.CI = originalCiValue;
+});
+
 describe(`ios`, () => {
   it('ios development', async () => {
     const config = await createConfig({ mode: 'development', platform: 'ios', projectRoot });

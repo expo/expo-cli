@@ -59,6 +59,8 @@ import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
 const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', true);
 
+const isCI = boolish('CI', false);
+
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
   { devtool }: { devtool?: Options.Devtool }
@@ -137,7 +139,7 @@ function getPlatformsExtensions(platform: string): string[] {
   return getModuleFileExtensions(platform);
 }
 
-export default async function (
+export default async function(
   env: Environment,
   argv: Arguments = {}
 ): Promise<Configuration | DevConfiguration> {
@@ -473,7 +475,8 @@ export default async function (
 
       deepScopeAnalysisEnabled && new WebpackDeepScopeAnalysisPlugin(),
 
-      new ExpoProgressBarPlugin(),
+      // Skip using a progress bar in CI
+      !isCI && new ExpoProgressBarPlugin(),
     ].filter(Boolean),
     module: {
       strictExportPresence: false,
@@ -505,7 +508,7 @@ export default async function (
     // our own (CRA) hints via the FileSizeReporter
 
     // TODO: Bacon: Remove this higher value
-    performance: boolish('CI', false) ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
+    performance: isCI ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
   };
 
   if (!shouldUseNativeCodeLoading) {

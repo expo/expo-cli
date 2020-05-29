@@ -162,7 +162,6 @@ Object {
     "DefinePlugin",
     "LimitChunkCountPlugin",
     "WatchMissingNodeModulesPlugin",
-    "WebpackBar",
   ],
   "resolve": Object {
     "extensions": Array [
@@ -418,7 +417,6 @@ Object {
     "ModuleNotFoundPlugin",
     "DefinePlugin",
     "LimitChunkCountPlugin",
-    "WebpackBar",
   ],
   "resolve": Object {
     "extensions": Array [
@@ -621,7 +619,6 @@ Object {
     "HotModuleReplacementPlugin",
     "WatchMissingNodeModulesPlugin",
     "ManifestPlugin",
-    "WebpackBar",
     "CopyPlugin",
   ],
   "resolve": Object {
@@ -891,7 +888,6 @@ Object {
     "DefinePlugin",
     "MiniCssExtractPlugin",
     "ManifestPlugin",
-    "WebpackBar",
     "CopyPlugin",
     "GenerateSW",
   ],
