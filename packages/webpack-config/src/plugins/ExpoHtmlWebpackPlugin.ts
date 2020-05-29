@@ -1,7 +1,6 @@
 import OriginalHtmlWebpackPlugin from 'html-webpack-plugin';
 import chalk from 'chalk';
 
-import { HTMLLinkNode } from './ModifyHtmlWebpackPlugin';
 import { Environment } from '../types';
 import { getConfig, getMode, getPaths } from '../env';
 import { overrideWithPropertyOrConfig } from '../utils';
@@ -25,6 +24,8 @@ const DEFAULT_MINIFY = {
  * @category plugins
  */
 export default class HtmlWebpackPlugin extends OriginalHtmlWebpackPlugin {
+  private platform: string;
+
   constructor(env: Environment, templateHtmlData?: any) {
     const locations = env.locations || getPaths(env.projectRoot, env);
     const config = getConfig(env);
@@ -89,5 +90,25 @@ export default class HtmlWebpackPlugin extends OriginalHtmlWebpackPlugin {
       template: locations.template.indexHtml,
       meta,
     });
+    this.platform = env.platform;
+  }
+
+  generatedScriptTags(jsAssets: any) {
+    const isNative = ['ios', 'android'].includes(this.platform);
+    if (!isNative) {
+      // @ts-ignore
+      return super.generatedScriptTags(jsAssets);
+    }
+    return jsAssets.map((scriptAsset: any) => ({
+      tagName: 'script',
+      voidTag: false,
+      attributes: {
+        // @ts-ignore
+        defer: this.options.scriptLoading !== 'blocking',
+        type: 'application/expo+javascript',
+        'data-platform': this.platform,
+        src: scriptAsset,
+      },
+    }));
   }
 }

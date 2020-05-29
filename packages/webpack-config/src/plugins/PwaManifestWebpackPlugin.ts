@@ -22,6 +22,8 @@ export type PwaManifestOptions = {
 };
 
 export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
+  rel: string = 'manifest';
+
   constructor(private pwaOptions: PwaManifestOptions, manifest: any) {
     super({
       path: pwaOptions.path,
@@ -68,7 +70,7 @@ export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
                 tagName: 'link',
                 voidTag: true,
                 attributes: {
-                  rel: 'manifest',
+                  rel: this.rel,
                   href: path.join(this.pwaOptions.publicPath, this.pwaOptions.path),
                 },
               });
