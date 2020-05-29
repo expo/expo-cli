@@ -434,7 +434,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   // - node_modules/expo/AppEntry.js
   // - expo/AppEntry.js
   // - expo/AppEntry
-  if (!pkg.main.includes('expo/AppEntry') && pkg.main !== 'index.js' && pkg.main) {
+  if (!(pkg.main ?? '').includes('expo/AppEntry') && pkg.main !== 'index.js' && pkg.main) {
     // Save the custom
     removedPkgMain = pkg.main;
   }
