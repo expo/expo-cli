@@ -56,6 +56,8 @@ import { overrideWithPropertyOrConfig } from './utils';
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
 
+const isCI = boolish('CI', false);
+
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
   { devtool }: { devtool?: Options.Devtool }
@@ -441,7 +443,8 @@ export default async function (
 
       deepScopeAnalysisEnabled && new WebpackDeepScopeAnalysisPlugin(),
 
-      new ExpoProgressBarPlugin(),
+      // Skip using a progress bar in CI
+      !isCI && new ExpoProgressBarPlugin(),
     ].filter(Boolean),
     module: {
       strictExportPresence: false,
@@ -474,7 +477,7 @@ export default async function (
     // our own (CRA) hints via the FileSizeReporter
 
     // TODO: Bacon: Remove this higher value
-    performance: boolish('CI', false) ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
+    performance: isCI ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
   };
 
   webpackConfig = withPlatformSourceMaps(webpackConfig, env);
