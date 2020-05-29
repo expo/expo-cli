@@ -121,7 +121,7 @@ jobs:
       # Install puppeteer in CI to improve local yarn speed
       - run:
           name: Install Puppeteer
-          command: yarn add -D puppeteer@^3.1.0
+          command: yarn add -D puppeteer@3.1.0
       # Test starting an Expo web project
       - run: yarn test:e2e:start
       # Test building an Expo web project
