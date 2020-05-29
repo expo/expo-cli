@@ -1,27 +1,29 @@
 import {
   WarningAggregator as ConfigWarningAggregator,
+  ExpoConfig,
+  PackageJSONConfig,
   findConfigFile,
   getConfig,
   readConfigJsonAsync,
   resolveModule,
 } from '@expo/config';
 import JsonFile from '@expo/json-file';
-import { Exp, Versions } from '@expo/xdl';
+import * as PackageManager from '@expo/package-manager';
+import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
 import fse from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
+import ora from 'ora';
 import pacote from 'pacote';
 import path from 'path';
 import semver from 'semver';
 import temporary from 'tempy';
 import terminalLink from 'terminal-link';
-import ora from 'ora';
 
-import * as PackageManager from '@expo/package-manager';
 import log from '../../log';
 import prompt from '../../prompt';
-import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
+import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
@@ -40,6 +42,13 @@ const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 /**
  * Entry point into the eject process, delegates to other helpers to perform various steps.
+ *
+ * 1. Verify git is clean
+ * 2. Create native projects (ios, android)
+ * 3. Install node modules
+ * 4. Apply config to native projects
+ * 5. Install CocoaPods
+ * 6. Log project info
  */
 export async function ejectAsync(projectRoot: string, options?: EjectAsyncOptions): Promise<void> {
   if (await maybeBailOnGitStatusAsync()) return;
@@ -47,6 +56,7 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
   await createNativeProjectsFromTemplateAsync(projectRoot);
   await installNodeModulesAsync(projectRoot);
 
+  // Apply Expo config to native projects
   await configureIOSStepAsync(projectRoot);
   await configureAndroidStepAsync(projectRoot);
 
@@ -168,6 +178,11 @@ async function installPodsAsync(projectRoot: string) {
   }
 }
 
+/**
+ * Wraps PackageManager to install node modules and adds CLI logs.
+ *
+ * @param projectRoot
+ */
 async function installNodeModulesAsync(projectRoot: string) {
   let installingDependenciesStep = logNewSection('Installing JavaScript dependencies.');
   await fse.remove('node_modules');
@@ -212,13 +227,23 @@ function logNewSection(title: string) {
 
 async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
   // We need the SDK version to proceed
-  const { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  if (!exp.sdkVersion) {
-    throw new Error(`Unable to find the project's SDK version. Are you in the correct directory?`);
+
+  let exp: ExpoConfig;
+  let pkg: PackageJSONConfig;
+  try {
+    const config = getConfig(projectRoot);
+    exp = config.exp;
+    pkg = config.pkg;
+  } catch (error) {
+    // TODO(Bacon): Currently this is already handled in the command
+    console.log();
+    console.log(chalk.red(error.message));
+    console.log();
+    process.exit(1);
   }
 
   // Validate that the template exists
-  let sdkMajorVersionNumber = semver.major(exp.sdkVersion);
+  let sdkMajorVersionNumber = semver.major(exp.sdkVersion!);
   let templateSpec = npmPackageArg(`expo-template-bare-minimum@sdk-${sdkMajorVersionNumber}`);
   try {
     await pacote.manifest(templateSpec);
@@ -241,7 +266,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    */
   const { configPath, configName } = findConfigFile(projectRoot);
   const configBuffer = await fse.readFile(configPath);
-  const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
+  const appJson = ['app.json', 'app.config.json'].includes(configName)
+    ? JSON.parse(configBuffer.toString())
+    : {};
 
   // Just to be sure
   appJson.expo = appJson.expo ?? {};
@@ -393,21 +420,22 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     ...pkg.devDependencies,
   });
 
-  // Jetifier is only needed for SDK 34 & 35
-  if (Versions.lteSdkVersion(exp, '35.0.0')) {
-    combinedDevDependencies['jetifier'] = defaultDevDependencies['jetifier'];
-  }
-
   // Save the dependencies
   pkg.dependencies = combinedDependencies;
   pkg.devDependencies = combinedDevDependencies;
-  await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
 
   /**
    * Add new app entry points
    */
   let removedPkgMain;
-  if (pkg.main !== EXPO_APP_ENTRY && pkg.main !== 'index.js' && pkg.main) {
+  // Check that the pkg.main doesn't match:
+  // - ./node_modules/expo/AppEntry
+  // - ./node_modules/expo/AppEntry.js
+  // - node_modules/expo/AppEntry.js
+  // - expo/AppEntry.js
+  // - expo/AppEntry
+  if (!pkg.main.includes('expo/AppEntry') && pkg.main !== 'index.js' && pkg.main) {
+    // Save the custom
     removedPkgMain = pkg.main;
   }
   delete pkg.main;
@@ -577,8 +605,8 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
   const pkgsWithExtraSetup = await JsonFile.readAsync(
     resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
   );
-  const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(pkgName =>
-    pkgsWithExtraSetup.hasOwnProperty(pkgName)
+  const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(
+    pkgName => pkgName in pkgsWithExtraSetup
   );
 
   if (packagesToWarn.length === 0) {

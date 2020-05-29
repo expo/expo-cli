@@ -75,6 +75,7 @@ const expoMinConfig = {
   },
 };
 
+// Test that the default case works (`expo eject`)
 it(`can eject a minimal project`, async () => {
   const projectName = 'default-eject-minimal';
   // Create a minimal project
@@ -110,10 +111,43 @@ it(`can eject a minimal project`, async () => {
 
   const outputPkgJson = await JsonFile.readAsync(path.join(projectRoot, 'package.json'));
 
-  // Test that the scripts were rewritten
+  // Scripts should be rewritten to use react-native-community/cli
   expect(outputPkgJson.scripts['ios']).toBe('react-native run-ios');
   expect(outputPkgJson.scripts['android']).toBe('react-native run-android');
   expect(outputPkgJson.scripts['web']).toBe('expo web');
+  // The eject command should be deleted
+  expect(outputPkgJson.scripts['eject']).not.toBeDefined();
+  // The react-native fork is replaced with the upstream react-native version
+  expect(outputPkgJson.dependencies['react-native']).not.toBe(
+    minimumNativePkgJson.dependencies['react-native']
+  );
+});
+
+// Test that a reasonable error is thrown when there are no modules installed
+it(`warns the user to install modules if the sdkVersion is not defined`, async () => {
+  const projectName = 'warn-to-install';
+  // Create a minimal project
+  const projectRoot = getRoot(projectName);
+  // Create the project root aot
+  await fs.ensureDir(projectRoot);
+
+  // Create a package.json
+  fs.writeFileSync(path.join(projectRoot, 'package.json'), JSON.stringify(minimumNativePkgJson));
+
+  // TODO(Bacon): We shouldn't need this
+  fs.writeFileSync(
+    path.join(projectRoot, 'app.json'),
+    // Erase the sdkVersion
+    JSON.stringify({ expo: { ...expoMinConfig, sdkVersion: undefined } })
+  );
+
+  expect.assertions(1);
+  try {
+    // Run a standard eject command
+    await spawnAsync(EXPO_CLI, ['eject'], { cwd: projectRoot });
+  } catch (e) {
+    expect(e.stdout).toMatch(/Cannot determine which native SDK version your project uses/);
+  }
 });
 
 // TODO(Bacon): Test more cases after cleaning up the cmd
