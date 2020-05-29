@@ -78,6 +78,9 @@ jobs:
       - name: Install puppeteer
         working-directory: packages/webpack-config
         run: yarn add -D puppeteer@3.1.0
+      - name: Install test project dependencies
+        working-directory: packages/webpack-config/e2e/basic
+        run: yarn
       # Test starting an Expo web project
       - name: Test starting Webpack
         working-directory: packages/webpack-config
