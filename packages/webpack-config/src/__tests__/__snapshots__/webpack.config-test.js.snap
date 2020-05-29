@@ -37,8 +37,16 @@ Object {
     "quiet": true,
     "watchContentBase": true,
   },
-  "devtool": false,
-  "entry": [Function],
+  "devtool": "cheap-module-source-map",
+  "entry": Object {
+    "app": Array [
+      "node_modules/react-native/Libraries/polyfills/console.js",
+      "node_modules/react-native/Libraries/polyfills/error-guard.js",
+      "node_modules/react-native/Libraries/polyfills/Object.es7.js",
+      "node_modules/react-native/Libraries/Core/InitializeCore.js",
+      "packages/webpack-config/e2e/basic/index.js",
+    ],
+  },
   "mode": "development",
   "module": Object {
     "rules": Array [
@@ -140,7 +148,7 @@ Object {
   "output": Object {
     "chunkFilename": "static/js/[name].chunk.js",
     "devtoolModuleFilenameTemplate": [Function],
-    "filename": "index.bundle",
+    "filename": "static/js/bundle.js",
     "globalObject": "this",
     "path": "packages/webpack-config/e2e/basic/web-build",
     "pathinfo": true,
@@ -149,39 +157,29 @@ Object {
   "plugins": Array [
     "HtmlWebpackPlugin",
     "InterpolateHtmlPlugin",
-    "FaviconWebpackPlugin",
+    "ExpoAppManifestWebpackPlugin",
     "ModuleNotFoundPlugin",
     "DefinePlugin",
     "LimitChunkCountPlugin",
     "WatchMissingNodeModulesPlugin",
     "WebpackBar",
-    "SourceMapDevToolPlugin",
-    "CopyPlugin",
   ],
   "resolve": Object {
     "extensions": Array [
       ".ios.ts",
       ".ios.tsx",
-      ".ios.mjs",
       ".ios.js",
       ".ios.jsx",
       ".native.ts",
       ".native.tsx",
-      ".native.mjs",
       ".native.js",
       ".native.jsx",
       ".ts",
       ".tsx",
-      ".mjs",
       ".js",
       ".jsx",
       ".json",
       ".wasm",
-    ],
-    "mainFields": Array [
-      "browser",
-      "module",
-      "main",
     ],
     "plugins": Array [
       Object {
@@ -213,8 +211,16 @@ exports[`ios ios production 1`] = `
 Object {
   "bail": true,
   "context": "packages/webpack-config/e2e/basic",
-  "devtool": false,
-  "entry": [Function],
+  "devtool": "source-map",
+  "entry": Object {
+    "app": Array [
+      "node_modules/react-native/Libraries/polyfills/console.js",
+      "node_modules/react-native/Libraries/polyfills/error-guard.js",
+      "node_modules/react-native/Libraries/polyfills/Object.es7.js",
+      "node_modules/react-native/Libraries/Core/InitializeCore.js",
+      "packages/webpack-config/e2e/basic/index.js",
+    ],
+  },
   "mode": "production",
   "module": Object {
     "rules": Array [
@@ -326,7 +332,7 @@ Object {
           "include": undefined,
           "minify": undefined,
           "parallel": true,
-          "sourceMap": false,
+          "sourceMap": true,
           "terserOptions": Object {
             "compress": Object {
               "comparisons": false,
@@ -363,7 +369,10 @@ Object {
           "canPrint": undefined,
           "cssProcessor": [Function],
           "cssProcessorOptions": Object {
-            "map": false,
+            "map": Object {
+              "annotation": true,
+              "inline": false,
+            },
             "parser": [Function],
           },
           "cssProcessorPluginOptions": Object {},
@@ -395,7 +404,7 @@ Object {
   "output": Object {
     "chunkFilename": "static/js/[name].[contenthash:8].chunk.js",
     "devtoolModuleFilenameTemplate": [Function],
-    "filename": "index.bundle",
+    "filename": "static/js/[name].[contenthash:8].js",
     "globalObject": "this",
     "path": "packages/webpack-config/e2e/basic/web-build",
     "publicPath": "/",
@@ -405,39 +414,28 @@ Object {
     "CopyPlugin",
     "HtmlWebpackPlugin",
     "InterpolateHtmlPlugin",
-    "FaviconWebpackPlugin",
+    "ExpoAppManifestWebpackPlugin",
     "ModuleNotFoundPlugin",
     "DefinePlugin",
     "LimitChunkCountPlugin",
     "WebpackBar",
-    "SourceMapDevToolPlugin",
-    "CopyPlugin",
-    "GenerateSW",
   ],
   "resolve": Object {
     "extensions": Array [
       ".ios.ts",
       ".ios.tsx",
-      ".ios.mjs",
       ".ios.js",
       ".ios.jsx",
       ".native.ts",
       ".native.tsx",
-      ".native.mjs",
       ".native.js",
       ".native.jsx",
       ".ts",
       ".tsx",
-      ".mjs",
       ".js",
       ".jsx",
       ".json",
       ".wasm",
-    ],
-    "mainFields": Array [
-      "browser",
-      "module",
-      "main",
     ],
     "plugins": Array [
       Object {
@@ -628,6 +626,7 @@ Object {
   ],
   "resolve": Object {
     "alias": Object {
+      "@react-native-community/netinfo": "react-native-web/dist/exports/NetInfo",
       "react-native$": "react-native-web",
       "react-native/Libraries/Components/View/ViewStylePropTypes$": "react-native-web/dist/exports/View/ViewStylePropTypes",
       "react-native/Libraries/EventEmitter/NativeEventEmitter$": "react-native-web/dist/vendor/react-native/NativeEventEmitter",
@@ -651,11 +650,6 @@ Object {
       ".jsx",
       ".json",
       ".wasm",
-    ],
-    "mainFields": Array [
-      "browser",
-      "module",
-      "main",
     ],
     "plugins": Array [
       Object {
@@ -904,6 +898,7 @@ Object {
   ],
   "resolve": Object {
     "alias": Object {
+      "@react-native-community/netinfo": "react-native-web/dist/exports/NetInfo",
       "react-native$": "react-native-web",
       "react-native/Libraries/Components/View/ViewStylePropTypes$": "react-native-web/dist/exports/View/ViewStylePropTypes",
       "react-native/Libraries/EventEmitter/NativeEventEmitter$": "react-native-web/dist/vendor/react-native/NativeEventEmitter",
@@ -927,11 +922,6 @@ Object {
       ".jsx",
       ".json",
       ".wasm",
-    ],
-    "mainFields": Array [
-      "browser",
-      "module",
-      "main",
     ],
     "plugins": Array [
       Object {
