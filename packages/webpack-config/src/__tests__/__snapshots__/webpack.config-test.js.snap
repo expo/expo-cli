@@ -626,7 +626,6 @@ Object {
   ],
   "resolve": Object {
     "alias": Object {
-      "@react-native-community/netinfo": "react-native-web/dist/exports/NetInfo",
       "react-native$": "react-native-web",
       "react-native/Libraries/Components/View/ViewStylePropTypes$": "react-native-web/dist/exports/View/ViewStylePropTypes",
       "react-native/Libraries/EventEmitter/NativeEventEmitter$": "react-native-web/dist/vendor/react-native/NativeEventEmitter",
@@ -898,7 +897,6 @@ Object {
   ],
   "resolve": Object {
     "alias": Object {
-      "@react-native-community/netinfo": "react-native-web/dist/exports/NetInfo",
       "react-native$": "react-native-web",
       "react-native/Libraries/Components/View/ViewStylePropTypes$": "react-native-web/dist/exports/View/ViewStylePropTypes",
       "react-native/Libraries/EventEmitter/NativeEventEmitter$": "react-native-web/dist/vendor/react-native/NativeEventEmitter",
