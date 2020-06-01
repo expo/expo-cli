@@ -1,27 +1,29 @@
 import {
   WarningAggregator as ConfigWarningAggregator,
+  ExpoConfig,
+  PackageJSONConfig,
   findConfigFile,
   getConfig,
   readConfigJsonAsync,
   resolveModule,
 } from '@expo/config';
 import JsonFile from '@expo/json-file';
-import { Exp, Versions } from '@expo/xdl';
+import * as PackageManager from '@expo/package-manager';
+import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
 import fse from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
+import ora from 'ora';
 import pacote from 'pacote';
 import path from 'path';
 import semver from 'semver';
 import temporary from 'tempy';
 import terminalLink from 'terminal-link';
-import ora from 'ora';
 
-import * as PackageManager from '@expo/package-manager';
 import log from '../../log';
 import prompt from '../../prompt';
-import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
+import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
@@ -40,6 +42,13 @@ const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 /**
  * Entry point into the eject process, delegates to other helpers to perform various steps.
+ *
+ * 1. Verify git is clean
+ * 2. Create native projects (ios, android)
+ * 3. Install node modules
+ * 4. Apply config to native projects
+ * 5. Install CocoaPods
+ * 6. Log project info
  */
 export async function ejectAsync(projectRoot: string, options?: EjectAsyncOptions): Promise<void> {
   if (await maybeBailOnGitStatusAsync()) return;
@@ -47,6 +56,7 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
   await createNativeProjectsFromTemplateAsync(projectRoot);
   await installNodeModulesAsync(projectRoot);
 
+  // Apply Expo config to native projects
   await configureIOSStepAsync(projectRoot);
   await configureAndroidStepAsync(projectRoot);
 
@@ -168,6 +178,11 @@ async function installPodsAsync(projectRoot: string) {
   }
 }
 
+/**
+ * Wraps PackageManager to install node modules and adds CLI logs.
+ *
+ * @param projectRoot
+ */
 async function installNodeModulesAsync(projectRoot: string) {
   let installingDependenciesStep = logNewSection('Installing JavaScript dependencies.');
   await fse.remove('node_modules');
@@ -212,13 +227,23 @@ function logNewSection(title: string) {
 
 async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
   // We need the SDK version to proceed
-  const { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  if (!exp.sdkVersion) {
-    throw new Error(`Unable to find the project's SDK version. Are you in the correct directory?`);
+
+  let exp: ExpoConfig;
+  let pkg: PackageJSONConfig;
+  try {
+    const config = getConfig(projectRoot);
+    exp = config.exp;
+    pkg = config.pkg;
+  } catch (error) {
+    // TODO(Bacon): Currently this is already handled in the command
+    console.log();
+    console.log(chalk.red(error.message));
+    console.log();
+    process.exit(1);
   }
 
   // Validate that the template exists
-  let sdkMajorVersionNumber = semver.major(exp.sdkVersion);
+  let sdkMajorVersionNumber = semver.major(exp.sdkVersion!);
   let templateSpec = npmPackageArg(`expo-template-bare-minimum@sdk-${sdkMajorVersionNumber}`);
   try {
     await pacote.manifest(templateSpec);
@@ -241,7 +266,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    */
   const { configPath, configName } = findConfigFile(projectRoot);
   const configBuffer = await fse.readFile(configPath);
-  const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
+  const appJson = ['app.json', 'app.config.json'].includes(configName)
+    ? JSON.parse(configBuffer.toString())
+    : {};
 
   // Just to be sure
   appJson.expo = appJson.expo ?? {};
@@ -287,10 +314,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
     fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
     fse.copySync(path.join(tempDir, 'index.js'), path.join(projectRoot, 'index.js'));
-    await mergeGitIgnoreAsync(
-      path.join(projectRoot, '.gitignore'),
-      path.join(tempDir, '.gitignore')
-    );
+    mergeGitIgnoreFiles(path.join(projectRoot, '.gitignore'), path.join(tempDir, '.gitignore'));
     const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
     defaultDependencies = createDependenciesMap(dependencies);
     defaultDevDependencies = createDependenciesMap(devDependencies);
@@ -393,21 +417,22 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     ...pkg.devDependencies,
   });
 
-  // Jetifier is only needed for SDK 34 & 35
-  if (Versions.lteSdkVersion(exp, '35.0.0')) {
-    combinedDevDependencies['jetifier'] = defaultDevDependencies['jetifier'];
-  }
-
   // Save the dependencies
   pkg.dependencies = combinedDependencies;
   pkg.devDependencies = combinedDevDependencies;
-  await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
 
   /**
    * Add new app entry points
    */
   let removedPkgMain;
-  if (pkg.main !== EXPO_APP_ENTRY && pkg.main !== 'index.js' && pkg.main) {
+  // Check that the pkg.main doesn't match:
+  // - ./node_modules/expo/AppEntry
+  // - ./node_modules/expo/AppEntry.js
+  // - node_modules/expo/AppEntry.js
+  // - expo/AppEntry.js
+  // - expo/AppEntry
+  if (!isPkgMainExpoAppEntry(pkg.main) && pkg.main !== 'index.js' && pkg.main) {
+    // Save the custom
     removedPkgMain = pkg.main;
   }
   delete pkg.main;
@@ -541,27 +566,48 @@ async function getOrPromptForPackage(projectRoot: string, defaultValue?: string)
   return packageName;
 }
 
-async function mergeGitIgnoreAsync(targetGitIgnorePath: string, sourceGitIgnorePath: string) {
+/**
+ * Merge two gitignore files together and add a generated header.
+ *
+ * @param targetGitIgnorePath
+ * @param sourceGitIgnorePath
+ */
+export function mergeGitIgnoreFiles(
+  targetGitIgnorePath: string,
+  sourceGitIgnorePath: string
+): string | null {
   if (!fse.existsSync(targetGitIgnorePath)) {
     // No gitignore in the project already, no need to merge anything into anything. I guess they
     // are not using git :O
-    return;
+    return null;
   }
 
   if (!fse.existsSync(sourceGitIgnorePath)) {
     // Maybe we don't have a gitignore in the template project
-    return;
+    return null;
   }
 
   let targetGitIgnore = fse.readFileSync(targetGitIgnorePath).toString();
   let sourceGitIgnore = fse.readFileSync(sourceGitIgnorePath).toString();
+  const merged = mergeGitIgnoreContents(targetGitIgnore, sourceGitIgnore);
+  fse.writeFileSync(targetGitIgnorePath, merged);
 
-  let mergedGitIgnore = `${targetGitIgnore}
+  return merged;
+}
+
+/**
+ * Merge the contents of two gitignores together and add a generated header.
+ *
+ * @param targetGitIgnore contents of the existing gitignore
+ * @param sourceGitIgnore contents of the extra gitignore
+ */
+function mergeGitIgnoreContents(targetGitIgnore: string, sourceGitIgnore: string): string {
+  // TODO(Bacon): Add version this section with a tag (expo-cli@x.x.x)
+  return `${targetGitIgnore}
 # The following contents were automatically generated by expo-cli during eject
 # ----------------------------------------------------------------------------
 
 ${sourceGitIgnore}`;
-  fse.writeFileSync(targetGitIgnorePath, mergedGitIgnore);
 }
 
 /**
@@ -577,8 +623,8 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
   const pkgsWithExtraSetup = await JsonFile.readAsync(
     resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
   );
-  const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(pkgName =>
-    pkgsWithExtraSetup.hasOwnProperty(pkgName)
+  const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(
+    pkgName => pkgName in pkgsWithExtraSetup
   );
 
   if (packagesToWarn.length === 0) {
@@ -608,4 +654,23 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
 
 export function stripDashes(s: string): string {
   return s.replace(/\s|-/g, '');
+}
+
+/**
+ * Returns true if the input string matches the default expo main field.
+ *
+ * - ./node_modules/expo/AppEntry
+ * - ./node_modules/expo/AppEntry.js
+ * - node_modules/expo/AppEntry.js
+ * - expo/AppEntry.js
+ * - expo/AppEntry
+ *
+ * @param input package.json main field
+ */
+export function isPkgMainExpoAppEntry(input?: string): boolean {
+  const main = input || '';
+  if (main.startsWith('./')) {
+    return main.includes('node_modules/expo/AppEntry');
+  }
+  return main.includes('expo/AppEntry');
 }
