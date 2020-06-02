@@ -80,6 +80,8 @@ async function _cleanPropertyListBackupsAsync(
 ): Promise<void> {
   if (context.build?.ios?.buildType !== 'client') {
     await IosPlist.cleanBackupAsync(backupPath, 'EXShell', false);
+    await IosPlist.cleanBackupAsync(backupPath, 'EXSDKVersions', false);
+    await IosPlist.cleanBackupAsync(backupPath, 'EXBuildConstants', false);
   }
   await IosPlist.cleanBackupAsync(backupPath, 'Info', false);
   // TODO: support this in user contexts as well
