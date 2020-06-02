@@ -17,7 +17,6 @@ const COMMANDS = [
   require('./generate-module'),
   require('./init'),
   require('./install'),
-  require('./ios'),
   require('./login'),
   require('./logout'),
   require('./opt-into-google-play-signing'),
