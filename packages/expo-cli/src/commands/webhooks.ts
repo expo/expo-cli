@@ -1,150 +1,165 @@
+import crypto from 'crypto';
+
 import { Command } from 'commander';
-import { Exp, Webhooks } from '@expo/xdl';
+import ora from 'ora';
+import invariant from 'invariant';
+import CliTable from 'cli-table3';
+import { ApiV2, UserManager } from '@expo/xdl';
+import { findConfigFile, getConfig } from '@expo/config';
+
 import chalk from 'chalk';
-import inquirer from 'inquirer';
-import validator from 'validator';
-
 import log from '../log';
+import CommandError, { ErrorCodes } from '../CommandError';
 
-type Options = { url?: string; secret?: string; event?: string };
+const SECRET_MIN_LENGTH = 16;
+const SECRET_MAX_LENGTH = 1000;
 
-const WEBHOOK_TYPES = ['build'];
+type WebhookEvent = 'build';
+type Webhook = {
+  id: string;
+  url: string;
+  event: WebhookEvent;
+  secret?: string;
+};
 
 export default function (program: Command) {
   program
-    .command('webhooks:set [project-dir]')
-    .option('--url <webhook-url>', 'Webhook to be called after building the app.')
-    .option('--event <webhook-type>', 'Type of webhook: [build].')
-    .option(
-      '--secret <webhook-secret>',
-      'Secret to be used to calculate the webhook request payload signature (check docs for more details). It has to be at least 16 characters long.'
-    )
-    .description(`Set a webhook for the project.`)
-    .asyncActionProjectDir(async (projectDir: string, _options: Options) => {
-      const options = await _sanitizeOptions(_options);
-      const secret = options.secret;
-      const webhookData = { ...options, secret };
-      const {
-        args: { remoteFullPackageName: experienceName },
-      } = await Exp.getPublishInfoAsync(projectDir);
-      log(`Setting ${webhookData.event} webhook and secret for ${experienceName}`);
-      try {
-        await Webhooks.setWebhookAsync(experienceName, webhookData);
-      } catch (e) {
-        log.error(e);
-        throw new Error('Unable to set webhook and secret for this project.');
-      }
-
-      log('All done!');
-    });
-
+    .command('webhooks [project-dir]')
+    .description('List webhooks on a project.')
+    .asyncActionProjectDir(listAsync);
   program
-    .command('webhooks:show [project-dir]')
-    .description(`Show webhooks for the project.`)
-    .asyncActionProjectDir(async (projectDir: string) => {
-      const {
-        args: { remoteFullPackageName: experienceName },
-      } = await Exp.getPublishInfoAsync(projectDir);
-
-      log(`Fetching webhooks for ${experienceName}`);
-
-      try {
-        const webhooks = await Webhooks.getWebhooksAsync(experienceName);
-        if (!webhooks || webhooks.length === 0) {
-          log(chalk.bold("You don't have any webhook set for this project."));
-        } else {
-          for (const webhook of webhooks) {
-            const { event, url, secret } = webhook;
-            log();
-            log(`Webhook type: ${chalk.bold(event)}`);
-            log(`Webhook URL: ${chalk.bold(url)}`);
-            log(`Webhook secret: ${chalk.bold(secret)}`);
-          }
-        }
-      } catch (e) {
-        log.error(e);
-        throw new Error('Unable to fetch webhooks for this project.');
-      }
-    });
-
+    .command('webhooks:add [project-dir]')
+    .description('Add a webhook to a project.')
+    .option('--url <url>', 'URL the webhook will request. (Required)')
+    .option('--event <event-type>', 'Event type triggering the webhook. [build] (Required)')
+    .option('--secret <secret>', 'Value used to sign the request with in Expo-Signature header.')
+    .asyncActionProjectDir(addAsync);
   program
-    .command('webhooks:clear [project-dir]')
-    .option('--event <webhook-type>', 'Type of webhook: [build].')
-    .description(`Clear a webhook associated with this project.`)
-    .asyncActionProjectDir(async (projectDir: string, options: { event?: string }) => {
-      const event = _sanitizeEvent(options.event);
-      const {
-        args: { remoteFullPackageName: experienceName },
-      } = await Exp.getPublishInfoAsync(projectDir);
-
-      log(`Clearing webhooks for ${experienceName}`);
-
-      try {
-        await Webhooks.deleteWebhooksAsync(experienceName, event);
-      } catch (e) {
-        log.error(e);
-        throw new Error('Unable to clear webhook and secret for this project.');
-      }
-      log('All done!');
-    });
+    .command('webhooks:remove [project-dir]')
+    .option('--id <id>', 'ID of the webhook to remove.')
+    .description('Remove a webhook from a project.')
+    .asyncActionProjectDir(removeAsync);
+  program
+    .command('webhooks:update [project-dir]')
+    .option('--id <id>', 'ID of the webhook to update.')
+    .option('--url [url]', 'URL the webhook will request.')
+    .option('--event [event-type]', 'Event type triggering the webhook. [build]')
+    .option('--secret [secret]', 'Value used to sign the request with in Expo-Signature header.')
+    .description('Update a webhook on a project.')
+    .asyncActionProjectDir(updateAsync);
 }
 
-async function _sanitizeOptions(options: Options): Promise<Webhooks.WebhookData> {
-  let { url, secret, event: _event = 'build' } = options;
+async function listAsync(projectRoot: string) {
+  const { experienceName, project, client } = await setupAsync(projectRoot);
 
-  const event = _sanitizeEvent(_event);
-  if (!event) {
-    throw new Error('Webhook type has to be provided');
+  const webhooks = await client.getAsync(`projects/${project.id}/webhooks`);
+  if (webhooks.length) {
+    const table = new CliTable({ head: ['Webhook ID', 'URL', 'Event'] });
+    table.push(...webhooks.map((hook: Webhook) => [hook.id, hook.url, hook.event]));
+    log(table.toString());
+  } else {
+    log(`${chalk.bold(experienceName)} has no webhooks.`);
+    log('Use `expo webhooks:add` to add one.');
   }
+}
 
-  if (!url) {
-    throw new Error('You must provide --url parameter');
-  }
-  const isValidUrl = validator.isURL(url, {
-    protocols: ['http', 'https'],
-    require_protocol: true,
-  });
-  if (!isValidUrl) {
-    throw new Error(
-      'The provided webhook URL is invalid and must be an absolute URL, including a scheme.'
-    );
-  }
+async function addAsync(
+  projectRoot: string,
+  { url, event, ...options }: { url?: string; event?: WebhookEvent; secret?: string }
+) {
+  invariant(typeof url === 'string' && /^https?/.test(url), '--url: a HTTP URL is required');
+  invariant(typeof event === 'string', '--event: string is required');
+  const secret = validateSecret(options) || generateSecret();
 
+  const { experienceName, project, client } = await setupAsync(projectRoot);
+
+  const spinner = ora(`Adding webhook to ${experienceName}`).start();
+  await client.postAsync(`projects/${project.id}/webhooks`, { url, event, secret });
+  spinner.succeed();
+}
+
+async function updateAsync(
+  projectRoot: string,
+  {
+    id,
+    url,
+    event,
+    ...options
+  }: { id?: string; url?: string; event?: WebhookEvent; secret?: string }
+) {
+  invariant(typeof id === 'string', '--id must be a  webhook ID');
+  invariant(event == null || typeof event === 'string', '--event: string is required');
+  let secret = validateSecret(options);
+
+  const { project, client } = await setupAsync(projectRoot);
+
+  const webhook = await client.getAsync(`projects/${project.id}/webhooks/${id}`);
+  event = event ?? webhook.event;
+  secret = secret ?? webhook.secret;
+
+  const spinner = ora(`Updating webhook ${id}`).start();
+  await client.patchAsync(`projects/${project.id}/webhooks/${id}`, { url, event, secret });
+  spinner.succeed();
+}
+
+async function removeAsync(projectRoot: string, { id }: { id?: string }) {
+  invariant(typeof id === 'string', '--id must be a  webhook ID');
+  const { project, client } = await setupAsync(projectRoot);
+
+  await client.deleteAsync(`projects/${project.id}/webhooks/${id}`);
+}
+
+function validateSecret({ secret }: { secret?: string }): string | null {
   if (secret) {
-    const secretString = String(secret);
-    if (secretString.length < 16 || secretString.length > 1000) {
-      throw new Error('Webhook secret has be at least 16 and not more than 1000 characters long');
-    }
-  } else {
-    secret = await _askForSecret();
-  }
-
-  return { url, secret, event };
-}
-
-function _sanitizeEvent(event: string | undefined, required = false): string | undefined {
-  if (!event) {
-    // we don't have anything to sanitize here, continue
-    return event;
-  }
-
-  if (!WEBHOOK_TYPES.includes(event)) {
-    throw new Error(`Unsupported webhook type: ${event}`);
-  }
-
-  return event;
-}
-
-async function _askForSecret(): Promise<string> {
-  const { secret } = await inquirer.prompt({
-    type: 'password',
-    name: 'secret',
-    message: 'Webhook secret (at least 16 and not more than 1000 characters):',
-  });
-  if (secret.length < 16 || secret.length > 1000) {
-    log.error('Webhook secret has be at least 16 and not more than 1000 characters long');
-    return await _askForSecret();
-  } else {
+    invariant(
+      secret.length >= SECRET_MIN_LENGTH && secret.length < SECRET_MAX_LENGTH,
+      `--secret: should be ${SECRET_MIN_LENGTH}-${SECRET_MAX_LENGTH} characters long`
+    );
     return secret;
   }
+  return null;
+}
+
+function generateSecret() {
+  // Create a 60 characters long secret from 30 random bytes.
+  const randomSecret = crypto.randomBytes(30).toString('hex');
+  log(chalk.underline('Webhook signing secret:'));
+  log(randomSecret);
+  return randomSecret;
+}
+
+async function setupAsync(projectRoot: string) {
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { slug } = exp;
+  if (!slug) {
+    throw new CommandError(
+      ErrorCodes.MISSING_SLUG,
+      `expo.slug is not defined in ${findConfigFile(projectRoot).configName}`
+    );
+  }
+  const user = await UserManager.ensureLoggedInAsync();
+  const client = ApiV2.clientForUser(user);
+  const experienceName = `@${exp.owner ?? user.username}/${exp.slug}`;
+  try {
+    const projects = await client.getAsync('projects', {
+      experienceName,
+    });
+    if (projects.length === 0) {
+      throw projectNotFoundError(experienceName);
+    }
+    const project = projects[0];
+    return { experienceName, project, client };
+  } catch (error) {
+    if (error.code === 'EXPERIENCE_NOT_FOUND') {
+      throw projectNotFoundError(experienceName);
+    } else {
+      throw error;
+    }
+  }
+}
+function projectNotFoundError(experienceName: string) {
+  return new CommandError(
+    ErrorCodes.PROJECT_NOT_FOUND,
+    `Project ${experienceName} not found. The project is created the first time you run \`expo publish\` or build the project (https://docs.expo.io/distribution/building-standalone-apps/).`
+  );
 }
