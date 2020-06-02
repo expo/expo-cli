@@ -86,14 +86,19 @@ class IOSBuilder extends BaseBuilder {
 
   // Try to get the user to provide Apple credentials upfront
   // We will be able to do full validation of their iOS creds this way
-  async bestEffortAppleCtx(ctx: Context, bundleIdentifier: string) {
+  async bestEffortAppleCtx(ctx: Context): Promise<void> {
+    if (ctx.hasAppleCtx()) {
+      // skip prompts if already have apple ctx
+      return;
+    }
     if (this.options.appleId) {
+      // skip prompts and auto authenticate if flags are passed
       return await ctx.ensureAppleCtx(this.options);
     }
 
     const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
     if (nonInteractive) {
-      return null;
+      return;
     }
 
     const { confirm } = await prompt([
@@ -122,14 +127,16 @@ class IOSBuilder extends BaseBuilder {
     if (!bundleIdentifier) throw missingBundleIdentifierError();
     const context = new Context();
     await context.init(this.projectDir);
-    await this.bestEffortAppleCtx(context, bundleIdentifier);
+
     await this.clearAndRevokeCredentialsIfRequested(context, { experienceName, bundleIdentifier });
 
+    if (this.options.skipCredentialsCheck) {
+      log('Skipping credentials check...');
+      return;
+    }
+    await this.bestEffortAppleCtx(context);
+
     try {
-      if (this.options.skipCredentialsCheck) {
-        log('Skipping credentials check...');
-        return;
-      }
       await this.produceCredentials(context, experienceName, bundleIdentifier);
     } catch (e) {
       if (e.code === ErrorCodes.NON_INTERACTIVE) {
