@@ -58,7 +58,7 @@ function evalConfig(configFile: string, request: ConfigContext): DynamicConfigRe
       configFile,
       JSON.stringify({ ...request, config: serializeAndEvaluate(request.config) }),
     ],
-    {}
+    { cwd: request.projectRoot }
   );
 
   if (spawnResults.status === 0) {
