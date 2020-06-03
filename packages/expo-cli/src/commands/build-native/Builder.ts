@@ -6,7 +6,7 @@ import { ApiV2, FormData, User } from '@expo/xdl';
 import axios from 'axios';
 import concat from 'concat-stream';
 import fs from 'fs-extra';
-import md5File from 'md5-file/promise';
+import md5File from 'md5-file';
 import ora from 'ora';
 import { v4 as uuid } from 'uuid';
 
