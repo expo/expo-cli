@@ -10,8 +10,6 @@ import ApiV2 from './ApiV2';
 
 import * as Binaries from './Binaries';
 
-import * as Webhooks from './Webhooks';
-
 import Config from './Config';
 
 import * as ConnectionStatus from './ConnectionStatus';
@@ -104,7 +102,6 @@ export { AndroidShellApp };
 export { Api };
 export { ApiV2 };
 export { Binaries };
-export { Webhooks };
 export { Config };
 export { Credentials };
 export { AndroidCredentials };
