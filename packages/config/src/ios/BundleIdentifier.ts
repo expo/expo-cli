@@ -66,7 +66,7 @@ export function updateBundleIdentifierForPbxproj(pbxprojPath: string, bundleIden
  */
 export function setBundleIdentifierForPbxproj(projectRoot: string, bundleIdentifier: string) {
   // Get all pbx projects in the ${projectRoot}/ios directory
-  const pbxprojPaths = globSync(join(projectRoot, 'ios', '*', 'project.pbxproj'));
+  const pbxprojPaths = globSync('ios/*/project.pbxproj', { cwd: projectRoot });
 
   for (const pbxprojPath of pbxprojPaths) {
     updateBundleIdentifierForPbxproj(pbxprojPath, bundleIdentifier);
@@ -80,7 +80,7 @@ export function setBundleIdentifierForPbxproj(projectRoot: string, bundleIdentif
 const defaultBundleId = '$(PRODUCT_BUNDLE_IDENTIFIER)';
 
 export function resetAllPlistBundleIdentifiers(projectRoot: string) {
-  const infoPlistPaths = globSync(join(projectRoot, 'ios', '*', 'Info.plist'));
+  const infoPlistPaths = globSync('ios/*/Info.plist', { cwd: projectRoot });
 
   for (const plistPath of infoPlistPaths) {
     resetPlistBundleIdentifier(plistPath);

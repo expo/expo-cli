@@ -115,7 +115,7 @@ const ENTITLEMENTS_TEMPLATE = `
  * Get the path to an existing entitlements file or use the default
  */
 function getExistingEntitlementsPath(projectRoot: string): string | null {
-  const entitlementsPaths = globSync(path.join(projectRoot, 'ios', '*', '.entitlements'));
+  const entitlementsPaths = globSync('ios/*/.entitlements', { cwd: projectRoot });
   if (entitlementsPaths.length === 0) {
     return null;
   }

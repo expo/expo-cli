@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import glob from 'glob-promise';
+import { sync as globSync } from 'glob';
 import indentString from 'indent-string';
 import JsonFile from '@expo/json-file';
 import path from 'path';
@@ -240,7 +240,7 @@ async function _renderVersionedReactNativePostinstallsAsync(
 }
 
 async function _concatTemplateFilesInDirectoryAsync(directory, filterFn) {
-  let templateFilenames = (await glob(path.join(directory, '*.rb'))).sort();
+  let templateFilenames = globSync('*.rb', { cwd: directory }).sort();
   let filteredTemplateFilenames = filterFn ? templateFilenames.filter(filterFn) : templateFilenames;
   let templateStrings = [];
   // perform this in series in order to get deterministic output

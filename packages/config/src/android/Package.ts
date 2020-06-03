@@ -18,7 +18,9 @@ function getPackageRoot(projectRoot: string) {
 
 function getCurrentPackageName(projectRoot: string) {
   let packageRoot = getPackageRoot(projectRoot);
-  let mainApplicationPath = globSync(path.join(packageRoot, '**', 'MainApplication.java'))[0];
+  let mainApplicationPath = globSync('**/MainApplication.java', {
+    cwd: packageRoot,
+  })[0];
   let packagePath = path.dirname(mainApplicationPath);
   let packagePathParts = packagePath.replace(packageRoot, '').split(path.sep).filter(Boolean);
 
@@ -48,7 +50,7 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
   fs.mkdirpSync(newPackagePath);
 
   // Move everything from the old directory over
-  globSync(path.join(currentPackagePath, '**', '*')).forEach(filepath => {
+  globSync('**/*', { cwd: currentPackagePath }).forEach(filepath => {
     let relativePath = filepath.replace(currentPackagePath, '');
     if (fs.lstatSync(filepath).isFile()) {
       fs.moveSync(filepath, path.join(newPackagePath, relativePath));
@@ -74,7 +76,7 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
   }
 
   const filesToUpdate = [
-    ...globSync(path.join(newPackagePath, '**', '*')),
+    ...globSync('**/*', { cwd: newPackagePath }),
     path.join(projectRoot, 'android', 'app', 'BUCK'),
   ];
   // Replace all occurrences of the path in the project

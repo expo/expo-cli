@@ -3,7 +3,7 @@ import path from 'path';
 
 import omit from 'lodash/omit';
 import fs from 'fs-extra';
-import glob from 'glob-promise';
+import { sync as globSync } from 'glob';
 import minimatch from 'minimatch';
 import plist from '@expo/plist';
 
@@ -214,8 +214,9 @@ async function createEntitlementsFile({
 }) {
   const decodedProvisioningProfileEntitlements = plistData.Entitlements;
 
-  const entitlementsPattern = path.join(archivePath, 'Products/Applications/*.app/*.entitlements');
-  const entitlementsPaths = await glob(entitlementsPattern);
+  const entitlementsPaths = globSync('Products/Applications/*.app/*.entitlements', {
+    cwd: archivePath,
+  });
   if (entitlementsPaths.length === 0) {
     throw new Error("Didn't find any generated entitlements file in archive.");
   } else if (entitlementsPaths.length !== 1) {

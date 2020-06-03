@@ -3,7 +3,7 @@ import { getConfig } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
-import glob from 'glob-promise';
+import { sync as globSync } from 'glob';
 import os from 'os';
 import path from 'path';
 import ProgressBar from 'progress';
@@ -272,10 +272,9 @@ export async function _isExpoAppInstalledOnCurrentBootedSimulatorAsync() {
     return false;
   }
   let simDir = await _dirForSimulatorDevice(device.udid);
-  let matches = await glob(
-    './data/Containers/Data/Application/**/Snapshots/host.exp.Exponent{,**}',
-    { cwd: simDir }
-  );
+  let matches = globSync('data/Containers/Data/Application/**/Snapshots/host.exp.Exponent{,**}', {
+    cwd: simDir,
+  });
 
   return matches.length > 0;
 }
@@ -295,7 +294,7 @@ export async function _expoVersionOnCurrentBootedSimulatorAsync() {
     return null;
   }
   let simDir = await _dirForSimulatorDevice(device.udid);
-  let matches = await glob('./data/Containers/Bundle/Application/*/Exponent-*.app', {
+  let matches = globSync('data/Containers/Bundle/Application/*/Exponent-*.app', {
     cwd: simDir,
   });
 
