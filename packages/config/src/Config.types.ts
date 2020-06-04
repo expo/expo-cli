@@ -49,13 +49,11 @@ export type HookArguments = {
   log: (msg: any) => void;
 };
 
-type BaseHook = {
+export type Hook = {
   file: string;
   config: any;
 };
 
-export type PostPublishHook = BaseHook;
-export type PostExportHook = BaseHook;
 export type HookType = 'postPublish' | 'postExport';
 
 type ExpoOrientation = 'default' | 'portrait' | 'landscape';
@@ -981,9 +979,9 @@ export type ExpoConfig = {
    * Configuration for scripts to run to hook into the publish process
    */
   hooks?: {
-    postPublish?: PostPublishHook[];
-    postExport?: PostExportHook[];
+    [key in HookType]?: Hook[];
   };
+
   /**
    * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/guides/offline-support/)
    */

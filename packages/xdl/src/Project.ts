@@ -1,11 +1,10 @@
 import {
   ExpoConfig,
+  Hook,
   HookArguments,
   HookType,
   PackageJSONConfig,
   Platform,
-  PostExportHook,
-  PostPublishHook,
   ProjectTarget,
   configFilename,
   getConfig,
@@ -132,7 +131,7 @@ type SelfHostedIndex = PublicConfig & {
   dependencies: string[];
 };
 
-type LoadedHook = PostPublishHook & {
+type LoadedHook = BaseHook & {
   _fn: (input: HookArguments) => any;
 };
 
