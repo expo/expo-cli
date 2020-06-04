@@ -427,7 +427,7 @@ async function selectPushCredFromList(
     name: 'credentialsIndex',
     message: 'Select credentials from list',
     choices: pushCredentials.map((entry, index) => ({
-      name: getName(entry),
+      name: getName(entry).replace(/\n/g, ' '),
       value: index,
     })),
   };

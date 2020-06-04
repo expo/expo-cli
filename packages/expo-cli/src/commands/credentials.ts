@@ -10,6 +10,8 @@ type Options = {
   platform?: 'android' | 'ios';
 };
 
+console.log('Welcome to the ALPHA version of expo cli!');
+
 export default function (program: CommanderStatic) {
   program
     .command('credentials:manager')

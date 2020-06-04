@@ -409,7 +409,10 @@ async function selectDistCertFromList(
     name: 'credentialsIndex',
     message: 'Select certificate from the list.',
     choices: distCerts.map((entry, index) => ({
-      name: formatDistCert(entry, iosCredentials, getValidityStatus(entry, validDistCerts)),
+      name: formatDistCert(entry, iosCredentials, getValidityStatus(entry, validDistCerts)).replace(
+        /\n/g,
+        ' '
+      ),
       value: index,
     })),
   };
