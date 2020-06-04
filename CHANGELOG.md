@@ -10,6 +10,276 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu Jun 4 10:01:50 2020 +0200](https://github.com/expo/expo-cli/commit/eb8409e9e18ea9c208a79f998596469b40145ca7)
+
+### 🐛 Bug fixes
+
+- Fix behavior of the `--skip-credentials-check` flag for `expo build:ios` ([#2213](https://github.com/expo/expo-cli/pull/2213) by [@quinlanj](https://github.com/quinlanj)).
+- Fix buggy import of the `md5-file` package - caused issues with uploading submissions to AWS S3 - ([https://github.com/expo/expo-cli/commit/f875c67e1eb1614031715a9a645a8516e467f620](https://github.com/expo/expo-cli/commit/f875c67e1eb1614031715a9a645a8516e467f620) by [@dsokal](https://github.com/dsokal)).
+
+### 📦 Packages updated
+
+- expo-cli@3.21.5
+
+## [Tue Jun 2 13:03:08 2020 +0200](https://github.com/expo/expo-cli/commit/39a705ade41e7fd6807ab05288ddeab7ca17138d)
+
+### 📦 Packages updated
+
+- @expo/config@3.2.9
+- @expo/configure-splash-screen@0.1.10
+- @expo/dev-server@0.1.10
+- @expo/dev-tools@0.13.16
+- @expo/electron-adapter@0.0.0-alpha.60
+- expo-cli@3.21.4
+- expo-optimize@0.1.32
+- @expo/image-utils@0.2.29
+- @expo/json-file@8.2.21
+- @expo/metro-config@0.1.10
+- @expo/next-adapter@2.1.12
+- @expo/package-manager@0.0.27
+- pod-install@0.1.6
+- expo-pwa@0.0.20
+- uri-scheme@1.0.17
+- @expo/webpack-config@0.12.12
+- @expo/xdl@57.9.13
+
+## [Wed May 27 15:42:30 2020 +0300](https://github.com/expo/expo-cli/commit/eaff0bcc27a4a1221e54c453d98a0691af23792c)
+
+### 📦 Packages updated
+
+- @expo/configure-splash-screen@0.1.9
+- @expo/dev-tools@0.13.15
+- expo-cli@3.21.3
+- @expo/xdl@57.9.12
+
+## [Wed May 27 14:40:55 2020 +0300](https://github.com/expo/expo-cli/commit/e5c0a33bc95b222f9df36b5ba97061ddfe539555)
+
+### 📦 Packages updated
+
+- @expo/config@3.2.8
+- @expo/dev-server@0.1.9
+- @expo/dev-tools@0.13.14
+- @expo/electron-adapter@0.0.0-alpha.59
+- expo-cli@3.21.2
+- expo-codemod@1.0.27
+- expo-optimize@0.1.31
+- @expo/json-file@8.2.20
+- @expo/metro-config@0.1.9
+- @expo/next-adapter@2.1.11
+- @expo/package-manager@0.0.26
+- pod-install@0.1.5
+- expo-pwa@0.0.19
+- @expo/schemer@1.3.19
+- uri-scheme@1.0.16
+- @expo/webpack-config@0.12.11
+- @expo/xdl@57.9.11
+
+## [Tue May 26 15:46:04 2020 +0200](https://github.com/expo/expo-cli/commit/f115be93ed1054bc09bdd8d2a4b4d6dfb6bf4e17)
+
+### 📦 Packages updated
+
+- expo-cli@3.21.1
+
+## [Tue May 26 14:12:57 2020 +0200](https://github.com/expo/expo-cli/commit/ed5afaafe5388d5d6b6ae02cdf5c9984bae4bea0)
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.16
+- @expo/config@3.2.7
+- @expo/configure-splash-screen@0.1.8
+- @expo/dev-server@0.1.8
+- @expo/dev-tools@0.13.13
+- @expo/electron-adapter@0.0.0-alpha.58
+- expo-cli@3.21.0
+- expo-codemod@1.0.26
+- expo-optimize@0.1.30
+- @expo/image-utils@0.2.28
+- @expo/json-file@8.2.19
+- @expo/metro-config@0.1.8
+- @expo/next-adapter@2.1.10
+- @expo/osascript@2.0.22
+- @expo/package-manager@0.0.25
+- @expo/plist@0.0.8
+- pod-install@0.1.4
+- expo-pwa@0.0.18
+- @expo/schemer@1.3.18
+- uri-scheme@1.0.15
+- @expo/webpack-config@0.12.10
+- @expo/xdl@57.9.10
+
+## [Fri May 15 16:55:55 2020 -0700](https://github.com/expo/expo-cli/commit/b17349f344e165f5ee386f07bae110d73eafefac)
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.12
+- expo-cli@3.20.9
+- @expo/xdl@57.9.9
+
+## [Fri May 15 12:26:08 2020 -0700](https://github.com/expo/expo-cli/commit/03aa7e0f4ab2f53a29a540a58a7d3efda475eaca)
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.15
+- @expo/config@3.2.6
+- @expo/configure-splash-screen@0.1.7
+- @expo/dev-server@0.1.7
+- @expo/dev-tools@0.13.11
+- @expo/electron-adapter@0.0.0-alpha.57
+- expo-cli@3.20.8
+- expo-codemod@1.0.25
+- expo-optimize@0.1.29
+- @expo/image-utils@0.2.27
+- @expo/json-file@8.2.18
+- @expo/metro-config@0.1.7
+- @expo/next-adapter@2.1.9
+- @expo/osascript@2.0.21
+- @expo/package-manager@0.0.24
+- @expo/plist@0.0.7
+- pod-install@0.1.3
+- expo-pwa@0.0.17
+- @expo/schemer@1.3.17
+- uri-scheme@1.0.14
+- @expo/webpack-config@0.12.9
+- @expo/xdl@57.9.8
+
+## [Thu May 14 22:34:45 2020 -0700](https://github.com/expo/expo-cli/commit/21770d9b7da6e591643be6bc52634a6232b5bea4)
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.14
+- @expo/config@3.2.5
+- @expo/configure-splash-screen@0.1.6
+- @expo/dev-server@0.1.6
+- @expo/dev-tools@0.13.10
+- @expo/electron-adapter@0.0.0-alpha.56
+- expo-cli@3.20.7
+- expo-codemod@1.0.24
+- expo-optimize@0.1.28
+- @expo/image-utils@0.2.26
+- @expo/json-file@8.2.17
+- @expo/metro-config@0.1.6
+- @expo/next-adapter@2.1.8
+- @expo/osascript@2.0.20
+- @expo/package-manager@0.0.23
+- @expo/plist@0.0.6
+- pod-install@0.1.2
+- expo-pwa@0.0.16
+- @expo/schemer@1.3.16
+- uri-scheme@1.0.13
+- @expo/webpack-config@0.12.8
+- @expo/xdl@57.9.7
+
+## [Thu May 14 18:36:58 2020 -0700](https://github.com/expo/expo-cli/commit/ae467cf329a73dbec1e607f6b2a4f9fce5aa63db)
+
+### 📦 Packages updated
+
+- @expo/config@3.2.4
+- @expo/configure-splash-screen@0.1.5
+- @expo/dev-server@0.1.5
+- @expo/dev-tools@0.13.9
+- @expo/electron-adapter@0.0.0-alpha.55
+- expo-cli@3.20.6
+- expo-optimize@0.1.27
+- @expo/image-utils@0.2.25
+- @expo/json-file@8.2.16
+- @expo/metro-config@0.1.5
+- @expo/next-adapter@2.1.7
+- @expo/osascript@2.0.19
+- @expo/package-manager@0.0.22
+- @expo/plist@0.0.5
+- pod-install@0.1.1
+- expo-pwa@0.0.15
+- @expo/schemer@1.3.15
+- uri-scheme@1.0.12
+- @expo/webpack-config@0.12.7
+- @expo/xdl@57.9.6
+
+## [Tue May 12 16:09:06 2020 -0700](https://github.com/expo/expo-cli/commit/4b7d38ed4823c9d0cc70dc44cf271d1232fc27ef)
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.13
+- @expo/config@3.2.3
+- @expo/configure-splash-screen@0.1.4
+- @expo/dev-server@0.1.4
+- @expo/dev-tools@0.13.8
+- @expo/electron-adapter@0.0.0-alpha.54
+- expo-cli@3.20.5
+- expo-codemod@1.0.23
+- expo-optimize@0.1.26
+- @expo/image-utils@0.2.24
+- @expo/json-file@8.2.15
+- @expo/metro-config@0.1.4
+- @expo/next-adapter@2.1.6
+- @expo/osascript@2.0.18
+- @expo/package-manager@0.0.21
+- pod-install@0.1.0
+- expo-pwa@0.0.14
+- @expo/schemer@1.3.14
+- uri-scheme@1.0.11
+- @expo/webpack-config@0.12.6
+- @expo/xdl@57.9.5
+
+## [Mon May 11 13:22:29 2020 -0700](https://github.com/expo/expo-cli/commit/21334851c174e4283a0f1833fc09cc18623091ff)
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.12
+- @expo/config@3.2.2
+- @expo/configure-splash-screen@0.1.3
+- @expo/dev-server@0.1.3
+- @expo/dev-tools@0.13.7
+- @expo/electron-adapter@0.0.0-alpha.53
+- expo-cli@3.20.4
+- expo-codemod@1.0.22
+- expo-optimize@0.1.25
+- @expo/image-utils@0.2.23
+- @expo/json-file@8.2.14
+- @expo/metro-config@0.1.3
+- @expo/next-adapter@2.1.5
+- @expo/osascript@2.0.17
+- @expo/package-manager@0.0.20
+- pod-install@0.0.0-alpha.15
+- expo-pwa@0.0.13
+- @expo/schemer@1.3.13
+- uri-scheme@1.0.10
+- @expo/webpack-config@0.12.5
+- @expo/xdl@57.9.4
+
+## [Sat May 9 17:18:56 2020 -0700](https://github.com/expo/expo-cli/commit/21995b53c5d70f01ddae9f17c22b475aabfe0e93)
+
+### 📦 Packages updated
+
+- @expo/configure-splash-screen@0.1.2
+
+## [Thu May 7 21:47:13 2020 -0700](https://github.com/expo/expo-cli/commit/000d0d28d3b8a5e4a83bb985d3132a837cbb985d)
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.6
+- expo-cli@3.20.3
+- @expo/xdl@57.9.3
+
+## [Thu May 7 21:29:36 2020 -0700](https://github.com/expo/expo-cli/commit/4ef85a2a6a286db1dea6b931fa87bcae9de8acde)
+
+### 📦 Packages updated
+
+- @expo/config@3.2.1
+- @expo/configure-splash-screen@0.1.1
+- @expo/dev-server@0.1.2
+- @expo/dev-tools@0.13.5
+- @expo/electron-adapter@0.0.0-alpha.52
+- expo-cli@3.20.2
+- expo-optimize@0.1.24
+- @expo/metro-config@0.1.2
+- @expo/next-adapter@2.1.4
+- @expo/package-manager@0.0.19
+- pod-install@0.0.0-alpha.14
+- expo-pwa@0.0.12
+- uri-scheme@1.0.9
+- @expo/webpack-config@0.12.4
+- @expo/xdl@57.9.2
+
 ## [Thu Apr 30 18:45:00 2020 +0300](https://github.com/expo/expo-cli/commit/efa712a70ce470714129af085ff746eb7e4e323d)
 
 ### 🐛 Bug fixes
