@@ -28,6 +28,11 @@ export type CredentialSchema<T> = {
   };
   deprecated?: boolean;
   migrationDocs?: string;
+  provideMethodQuestion?: {
+    question?: string;
+    expoGenerated?: string;
+    manually?: string;
+  };
 };
 
 const EXPERT_PROMPT = once(() =>
@@ -44,7 +49,7 @@ upload matches that Team ID and App ID.
 export async function askForUserProvided<T extends Results>(
   schema: CredentialSchema<T>
 ): Promise<T | null> {
-  if (await willUserProvideCredentialsType(schema.name)) {
+  if (await willUserProvideCredentialsType(schema)) {
     EXPERT_PROMPT();
     return await getCredentialsFromUser(schema);
   }
@@ -61,14 +66,20 @@ export async function getCredentialsFromUser<T extends Results>(
   return results as T;
 }
 
-async function willUserProvideCredentialsType(name: string) {
+async function willUserProvideCredentialsType<T>(schema: CredentialSchema<T>) {
   const { answer } = await prompt({
     type: 'list',
     name: 'answer',
-    message: `Will you provide your own ${name}?`,
+    message: schema?.provideMethodQuestion?.question ?? `Will you provide your own ${schema.name}?`,
     choices: [
-      { name: 'Let Expo handle the process', value: false },
-      { name: 'I want to upload my own file', value: true },
+      {
+        name: schema?.provideMethodQuestion?.expoGenerated ?? 'Let Expo handle the process',
+        value: false,
+      },
+      {
+        name: schema?.provideMethodQuestion?.manually ?? 'I want to upload my own file',
+        value: true,
+      },
     ],
   });
   return answer;

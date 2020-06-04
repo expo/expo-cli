@@ -1,4 +1,4 @@
-import { IosApi } from '../api';
+import { IosApi } from '../api/ios';
 import {
   getApiV2MockCredentials,
   getCtxMock,

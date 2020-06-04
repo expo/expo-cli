@@ -1,5 +1,10 @@
+import path from 'path';
+import os from 'os';
+
 import chalk from 'chalk';
 import fs from 'fs-extra';
+import { v4 as uuid } from 'uuid';
+
 import { AndroidCredentials as Android } from '@expo/xdl';
 import {
   AndroidCredentials,
@@ -145,12 +150,8 @@ export async function displayAndroidCredentials(credentialsList: AndroidCredenti
 }
 
 export async function displayAndroidAppCredentials(credentials: AndroidCredentials) {
-  const tmpFilename = `expo_tmp_keystore_file.jks`;
+  const tmpFilename = path.join(os.tmpdir(), `expo_tmp_keystore_${uuid()}file.jks`);
   try {
-    if (await fs.pathExists(tmpFilename)) {
-      await fs.unlink(tmpFilename);
-    }
-
     log(chalk.green(credentials.experienceName));
     log(chalk.bold('  Upload Keystore hashes'));
     if (credentials.keystore?.keystore) {
@@ -167,14 +168,12 @@ export async function displayAndroidAppCredentials(credentials: AndroidCredentia
       log('    -----------------------');
     }
     log(chalk.bold('  Push Notifications credentials'));
-    log('    FCM Api Key: ', credentials.pushCredentials?.fcmApiKey, '---------------------');
+    log('    FCM Api Key: ', credentials.pushCredentials?.fcmApiKey ?? '---------------------');
     log('\n');
   } catch (error) {
     log.error('  Failed to parse the keystore', error);
     log('\n');
   } finally {
-    if (await fs.pathExists(tmpFilename)) {
-      await fs.unlink(tmpFilename);
-    }
+    await fs.remove(tmpFilename);
   }
 }

@@ -3,15 +3,15 @@ import omit from 'lodash/omit';
 import pick from 'lodash/pick';
 
 import invariant from 'invariant';
-import log from '../log';
-import * as appleApi from '../appleApi';
+import log from '../../log';
+import * as appleApi from '../../appleApi';
 import {
   IosAppCredentials,
   IosCredentials,
   IosDistCredentials,
   IosPushCredentials,
-} from './credentials';
-import { Context } from './context';
+} from '../credentials';
+import { Context } from '../context';
 
 type CredentialFields = {
   credentials: { [key: string]: any };
