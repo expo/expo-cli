@@ -503,8 +503,8 @@ function prepareHooks(
 ) {
   const validHooks: LoadedHook[] = [];
 
-  if (hooks !== undefined && hooks[hookType]) {
-    hooks[hookType].forEach((hook: any) => {
+  if (hooks) {
+    hooks[hookType]?.forEach((hook: any) => {
       let { file } = hook;
       let fn = _requireFromProject(file, projectRoot, exp);
       if (typeof fn !== 'function') {
@@ -517,7 +517,7 @@ function prepareHooks(
       }
     });
 
-    if (validHooks.length !== hooks[hookType].length) {
+    if (validHooks.length !== hooks[hookType]?.length) {
       logger.global.error();
 
       throw new XDLError(
