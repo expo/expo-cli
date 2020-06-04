@@ -3,9 +3,9 @@ let path = require('path');
 let spawnAsync = require('@expo/spawn-async');
 
 let lerna = path.join(__dirname, '../node_modules/.bin/lerna');
-const shouldPrerelease = isPrelease();
+const shouldPrerelease = isPrerelease();
 
-function isPrelease() {
+function isPrerelease() {
   const bumpFlagIndex = process.argv.findIndex(arg => arg === '--bump');
   const prereleaseArgIndex = process.argv.findIndex(arg => arg === 'prerelease');
   return (
