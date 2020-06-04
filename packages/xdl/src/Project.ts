@@ -508,7 +508,7 @@ function prepareHooks(
       let fn = _requireFromProject(file, projectRoot, exp);
       if (typeof fn !== 'function') {
         logger.global.error(
-          `Unable to load ${hookType}Hook: '${file}'. The module does not export a function.`
+          `Unable to load ${hookType} hook: '${file}'. The module does not export a function.`
         );
       } else {
         hook._fn = fn;
@@ -516,12 +516,12 @@ function prepareHooks(
       }
     });
 
-    if (validHooks.length !== hooks[hookType]?.length) {
+    if (hooks[hookType] !== undefined && validHooks.length !== hooks[hookType]?.length) {
       logger.global.error();
 
       throw new XDLError(
         'HOOK_INITIALIZATION_ERROR',
-        `Please fix your ${hookType} hook configuration.`
+        `Please fix your ${hookType} hook configuration`
       );
     }
   }
