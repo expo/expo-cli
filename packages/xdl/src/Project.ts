@@ -131,7 +131,7 @@ type SelfHostedIndex = PublicConfig & {
   dependencies: string[];
 };
 
-type LoadedHook = BaseHook & {
+type LoadedHook = Hook & {
   _fn: (input: HookArguments) => any;
 };
 
