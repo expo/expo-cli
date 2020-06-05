@@ -23,9 +23,3 @@ async function askForSendToAsync(): Promise<string> {
 export default {
   askForSendToAsync,
 };
-
-if (require.main === module) {
-  askForSendToAsync().then(function(sendTo) {
-    console.log('Your email address is', sendTo);
-  });
-}
