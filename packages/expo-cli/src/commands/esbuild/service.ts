@@ -36,8 +36,8 @@ export async function buildAsync(
       },
     });
     const output = fs.readFileSync(outputPath, 'utf8');
-    await fs.writeFile(outputPath, 'var global = global || this;\n' + output);
-    console.log('success', { output, stderr, warnings });
+    await fs.writeFile(outputPath, 'var global=global||this;' + output);
+    console.log('success', { stderr, warnings });
   } catch ({ stderr, errors, warnings }) {
     console.error('failure', { stderr, errors, warnings });
   }
