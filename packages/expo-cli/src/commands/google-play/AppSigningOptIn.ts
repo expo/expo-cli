@@ -66,7 +66,7 @@ export default class AppSigningOptInProcess {
 
   async init(slug: string): Promise<void> {
     log.warn(
-      'Make sure you are not using Google Play App Signing already as this process will remove your current keystore from Expo servers.'
+      'Make sure you are not using Google Play App Signing already as this process will remove your current Keystore from Expo servers.'
     );
     log(
       `You can check whether you are using Google Play App Signing here: ${chalk.underline(
@@ -122,7 +122,7 @@ export default class AppSigningOptInProcess {
   }
 
   async prepareKeystores(username: string, exp: ExpoConfig): Promise<void> {
-    log(`Saving upload keystore to ${this.uploadKeystore}...`);
+    log(`Saving Upload Keystore to ${this.uploadKeystore}...`);
     if (!exp.android?.package) {
       throw new Error('Missing android.package configuration.');
     }
@@ -144,7 +144,7 @@ export default class AppSigningOptInProcess {
 
     await AndroidCredentials.logKeystoreCredentials(
       this.uploadKeystoreCredentials,
-      'Credentials for upload keystore'
+      'Credentials for Upload Keystore'
     );
 
     log('App signing certificate');
@@ -170,7 +170,7 @@ export default class AppSigningOptInProcess {
 
     log.warn(
       `The next step will ${chalk.red(
-        'remove your current keystore from Expo servers'
+        'remove your current Keystore from Expo servers'
       )}. Make sure that private key is uploaded successfully and compare the hashes displayed above with the ones printed in the console.`
     );
     const { confirm: confirmUpload } = await prompt([
@@ -189,7 +189,7 @@ export default class AppSigningOptInProcess {
 
     if (!this.uploadKeystoreCredentials) {
       throw new Error(
-        'Android uploading keystore credentials are not defined. Cannot update credentials.'
+        'Android Upload Keystore credentials are not defined. Cannot update credentials.'
       );
     }
 
@@ -201,11 +201,11 @@ export default class AppSigningOptInProcess {
     });
 
     log(
-      `The original keystore is stored in ${this.signKeystore}; remove it only if you are sure that Google Play App Signing is enabled for your app.`
+      `The original Keystore is stored in ${this.signKeystore}; remove it only if you are sure that Google Play App Signing is enabled for your app.`
     );
     if (!this.signKeystoreCredentials) {
       throw new Error(
-        'Android signing keystore credentials are not defined. Cannot log credentials.'
+        'Android Signing Keystore credentials are not defined. Cannot log credentials.'
       );
     }
     AndroidCredentials.logKeystoreCredentials(

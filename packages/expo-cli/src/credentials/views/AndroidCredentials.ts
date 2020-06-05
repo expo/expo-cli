@@ -35,7 +35,7 @@ class ExperienceView implements IView {
           { value: 'remove-keystore', name: 'Remove keystore' },
           { value: 'update-fcm-key', name: 'Update FCM Api Key' },
           { value: 'fetch-keystore', name: 'Download Keystore from the Expo servers' },
-          // { value: 'fetch-public-cert', name: 'Extract public cert from keystore' },
+          // { value: 'fetch-public-cert', name: 'Extract public cert from Keystore' },
           // {
           //   value: 'fetch-private-signing-key',
           //   name:

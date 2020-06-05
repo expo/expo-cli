@@ -25,12 +25,12 @@ export class AndroidApi {
   }
 
   public async fetchKeystore(experienceName: string): Promise<Keystore | null> {
-    await this._ensureCredntials(experienceName);
-    return this.credentials[experienceName]?.keystore;
+    await this._ensureCredentialsFetched(experienceName);
+    return this.credentials[experienceName]?.keystore || null;
   }
 
   public async fetchCredentials(experienceName: string): Promise<AndroidCredentials> {
-    await this._ensureCredntials(experienceName);
+    await this._ensureCredentialsFetched(experienceName);
     return this.credentials[experienceName];
   }
 
@@ -59,7 +59,7 @@ export class AndroidApi {
     }
   }
 
-  private async _ensureCredntials(experienceName: string): Promise<void> {
+  private async _ensureCredentialsFetched(experienceName: string): Promise<void> {
     if (!this.credentials[experienceName]) {
       const response = await this.api.getAsync(`credentials/android/${experienceName}`);
       this.credentials[experienceName] = {

@@ -171,7 +171,7 @@ export async function displayAndroidAppCredentials(credentials: AndroidCredentia
     log('    FCM Api Key: ', credentials.pushCredentials?.fcmApiKey ?? '---------------------');
     log('\n');
   } catch (error) {
-    log.error('  Failed to parse the keystore', error);
+    log.error('  Failed to parse the Keystore', error);
     log('\n');
   } finally {
     await fs.remove(tmpFilename);

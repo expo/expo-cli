@@ -21,6 +21,7 @@ type CtxOptions = {
 
 export class Context {
   _hasProjectContext: boolean = false;
+  _projectDir?: string;
   _user?: User;
   _manifest?: ExpoConfig;
   _apiClient?: ApiV2;
@@ -33,6 +34,9 @@ export class Context {
   }
   get hasProjectContext(): boolean {
     return this._hasProjectContext;
+  }
+  get projectDir(): string {
+    return this._projectDir as string;
   }
   get manifest(): ExpoConfig {
     if (!this._manifest) {
@@ -85,6 +89,7 @@ export class Context {
     } else {
       this._user = await UserManager.ensureLoggedInAsync();
     }
+    this._projectDir = projectDir;
 
     // Check if we are in project context by looking for a manifest
     const status = await Doctor.validateWithoutNetworkAsync(projectDir);
@@ -98,6 +103,7 @@ export class Context {
     } else {
       /* This manager does not need to work in project context */
       this._iosApiClient = new IosApi(this.user);
+      this._androidApiClient = new AndroidApi(this.user);
     }
 
     this._apiClient = ApiV2.clientForUser(this.user);

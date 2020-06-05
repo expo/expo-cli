@@ -31,7 +31,7 @@ export type CredentialSchema<T> = {
   provideMethodQuestion?: {
     question?: string;
     expoGenerated?: string;
-    manually?: string;
+    userProvided?: string;
   };
 };
 
@@ -77,7 +77,7 @@ async function willUserProvideCredentialsType<T>(schema: CredentialSchema<T>) {
         value: false,
       },
       {
-        name: schema?.provideMethodQuestion?.manually ?? 'I want to upload my own file',
+        name: schema?.provideMethodQuestion?.userProvided ?? 'I want to upload my own file',
         value: true,
       },
     ],

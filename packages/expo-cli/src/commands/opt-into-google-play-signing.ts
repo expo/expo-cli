@@ -5,7 +5,7 @@ export default function (program: Command) {
   program
     .command('opt-in-google-play-signing [project-dir]')
     .description(
-      'Switch from the old method of signing APKs to the new App Signing by Google Play. The APK will be signed with an upload key and after uploading it to the store, app will be re-signed with the key from the original keystore.'
+      'Switch from the old method of signing APKs to the new App Signing by Google Play. The APK will be signed with an upload key and after uploading it to the store, app will be re-signed with the key from the original Keystore.'
     )
     .asyncActionProjectDir(
       async (projectDir: string) => {

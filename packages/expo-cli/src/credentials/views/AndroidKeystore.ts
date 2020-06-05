@@ -20,6 +20,9 @@ class UpdateKeystore implements IView {
   constructor(private experienceName: string) {}
 
   async open(ctx: Context): Promise<IView | null> {
+    if (await ctx.android.fetchKeystore(this.experienceName)) {
+      this.displayWarning();
+    }
     const keystore = await this.provideOrGenerate(ctx);
 
     await ctx.android.updateKeystore(this.experienceName, keystore);
@@ -51,7 +54,7 @@ class UpdateKeystore implements IView {
       };
     } catch (error) {
       log.warn(
-        "If you don't provide your own Android keystore, it will be generated on our servers during the next build"
+        'Failed to generate Android Keystore, it will be generated on Expo servers during the build'
       );
       throw error;
     } finally {
@@ -68,7 +71,7 @@ class UpdateKeystore implements IView {
     );
     log.warn(
       chalk.bold(
-        'Android keystores must be identical to the one previously used to submit your app to the Google Play Store.'
+        'Android Keystore must be identical to the one previously used to submit your app to the Google Play Store.'
       )
     );
   }
@@ -78,11 +81,11 @@ class RemoveKeystore implements IView {
   constructor(private experienceName: string) {}
 
   async open(ctx: Context): Promise<IView | null> {
-    this.displayWarning();
     if (!(await ctx.android.fetchKeystore(this.experienceName))) {
       log.warn('There is no valid Keystore defined for this app');
       return null;
     }
+    this.displayWarning();
     let questions: Question[] = [
       {
         type: 'confirm',
@@ -92,7 +95,7 @@ class RemoveKeystore implements IView {
     ];
     const answers = await prompt(questions);
     if (answers.confirm) {
-      log('Backing up your Android keystore now...');
+      log('Backing up your Android Keystore now...');
       await new DownloadKeystore(this.experienceName, {
         displayCredentials: true,
         outputPath: `${this.experienceName}.bak.jks`.replace('/', '__'),
@@ -100,7 +103,7 @@ class RemoveKeystore implements IView {
     }
 
     await ctx.android.removeKeystore(this.experienceName);
-    log(chalk.green('Keystore removed  successfully'));
+    log(chalk.green('Keystore removed successfully'));
     return null;
   }
 
@@ -113,7 +116,7 @@ class RemoveKeystore implements IView {
     );
     log.warn(
       chalk.bold(
-        'Android keystores must be identical to the one previously used to submit your app to the Google Play Store.'
+        'Android Keystore must be identical to the one previously used to submit your app to the Google Play Store.'
       )
     );
     log.warn(
@@ -121,7 +124,7 @@ class RemoveKeystore implements IView {
     );
     log.newLine();
     log.warn(
-      chalk.bold('Your keystore will be backed up to your current directory if you continue.')
+      chalk.bold('Your Keystore will be backed up to your current directory if you continue.')
     );
     log.newLine();
   }
@@ -157,7 +160,7 @@ class DownloadKeystore implements IView {
     const keystorePath =
       this.options?.outputPath ?? `${this.experienceName.replace('/', '__')}.bak.jks`;
 
-    await fs.remove(keystorePath); // TODO: make sure not to override
+    await maybeRenameExistingFile(ctx.projectDir, keystorePath);
     if (!this.options?.quiet) {
       log(chalk.green(`Saving Keystore to ${keystorePath}`));
     }
@@ -192,7 +195,7 @@ async function getKeystoreFromParams(options: {
   if (!keystorePath || !keyAlias || !keystorePassword || !keyPassword) {
     console.log(keystorePath, keyAlias, keystorePassword, keyPassword);
     throw new Error(
-      'In order to provide a Keystore through the CLI parameters, you have to pass --keystore-alias parameter, --keystore-path parameter and set EXPO_ANDROID_KEY_PASSWORD and EXPO_ANDROID_KEYSTORE_PASSWORD environment variables.'
+      'In order to provide a Keystore through the CLI parameters, you have to pass --keystore-alias, --keystore-path parameters and set EXPO_ANDROID_KEY_PASSWORD and EXPO_ANDROID_KEYSTORE_PASSWORD environment variables.'
     );
   }
   try {
