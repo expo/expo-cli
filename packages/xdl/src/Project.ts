@@ -727,12 +727,6 @@ export async function exportForAppHosting(
     );
   }
 
-  if (
-    validPostExportHooks.length ||
-    (exp.ios && exp.ios.publishManifestPath) ||
-    (exp.android && exp.android.publishManifestPath) ||
-    EmbeddedAssets.shouldEmbedAssetsForExpoUpdates(projectRoot, exp, pkg, target)
-  ) {
     const hookOptions = {
       url: null,
       exp,
