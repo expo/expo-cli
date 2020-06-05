@@ -517,8 +517,6 @@ function prepareHooks(
     });
 
     if (hooks[hookType] !== undefined && validHooks.length !== hooks[hookType]?.length) {
-      logger.global.error();
-
       throw new XDLError(
         'HOOK_INITIALIZATION_ERROR',
         `Please fix your ${hookType} hook configuration`
