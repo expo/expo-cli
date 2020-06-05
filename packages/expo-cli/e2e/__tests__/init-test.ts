@@ -5,12 +5,12 @@ import temporary from 'tempy';
 
 import { runAsync, tryRunAsync } from '../TestUtils';
 
-xtest('init --help', async () => {
+test('init --help', async () => {
   const { stdout } = await runAsync(['init', '--help']);
   expect(stdout).toMatch('Usage: init');
 });
 
-xtest('init (no dir name)', async () => {
+test('init (no dir name)', async () => {
   const { status, stderr } = await tryRunAsync(['init']);
   expect(status).not.toBe(0);
   expect(stderr).toMatch('The project dir argument is required in non-interactive mode.');
