@@ -725,29 +725,28 @@ export async function exportForAppHosting(
     );
   }
 
-    const hookOptions = {
-      url: null,
-      exp,
-      iosBundle,
-      iosSourceMap,
-      iosManifest,
-      androidBundle,
-      androidSourceMap,
-      androidManifest,
-      projectRoot,
-      log: (msg: any) => {
-        logger.global.info({ quiet: true }, msg);
-      },
-    };
+  const hookOptions = {
+    url: null,
+    exp,
+    iosBundle,
+    iosSourceMap,
+    iosManifest,
+    androidBundle,
+    androidSourceMap,
+    androidManifest,
+    projectRoot,
+    log: (msg: any) => {
+      logger.global.info({ quiet: true }, msg);
+    },
+  };
 
-    for (let hook of validPostExportHooks) {
-      logger.global.info(`Running postExport hook: ${hook.file}`);
+  for (let hook of validPostExportHooks) {
+    logger.global.info(`Running postExport hook: ${hook.file}`);
 
-      try {
-        runHook(hook, hookOptions);
-      } catch (e) {
-        logger.global.warn(`Warning: postExport hook '${hook.file}' failed: ${e.stack}`);
-      }
+    try {
+      runHook(hook, hookOptions);
+    } catch (e) {
+      logger.global.warn(`Warning: postExport hook '${hook.file}' failed: ${e.stack}`);
     }
   }
 
