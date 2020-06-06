@@ -687,10 +687,10 @@ export async function exportForAppHosting(
   let iosSourceMap = null;
   let androidSourceMap = null;
 
-  // build source maps
-  if (options.dumpSourcemap) {
+  // Build sourcemaps when `postExport` hook is set up or when `dumpSourcemap` argument is passed
+  if (options.dumpSourcemap || (hooks?.postExport && hooks.postExport?.length > 0)) {
     ({ iosSourceMap, androidSourceMap } = await _buildSourceMapsAsync(projectRoot));
-    // write the sourcemap files
+    // Write the sourcemap files
     const iosMapName = `ios-${iosBundleHash}.map`;
     const iosMapPath = path.join(outputDir, 'bundles', iosMapName);
     await writeArtifactSafelyAsync(projectRoot, null, iosMapPath, iosSourceMap);
