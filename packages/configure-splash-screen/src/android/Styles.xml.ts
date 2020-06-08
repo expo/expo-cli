@@ -140,7 +140,7 @@ function removeStyleElement(element: Element): Element {
 }
 
 /**
- * Created proper element structure with single `style` element disregarding all other styles.
+ * Creates proper element structure with single `style` element disregarding all other styles.
  * Use to create more specific configuration file, but preserving previous attributes.
  * Function assumes that the structure of the input `element` is correct (`element.elements[name = resources].elements[name = style, attributes.name = STYLE_NAME]`).
  */

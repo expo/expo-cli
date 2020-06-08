@@ -10,7 +10,7 @@ jest.mock('fs');
 
 describe('Drawable.xml', () => {
   describe('configureDrawableXml', () => {
-    function generateDrawbleFileContent({ addBitmapItem }: { addBitmapItem?: boolean } = {}) {
+    function generateDrawableFileContent({ addBitmapItem }: { addBitmapItem?: boolean } = {}) {
       return `<?xml version="1.0" encoding="utf-8"?>
 <!--
   This file was created by '@expo/configure-splash-screen' and some of it's content shouldn't be modified by hand
@@ -42,7 +42,7 @@ describe('Drawable.xml', () => {
     it('creates correct file', async () => {
       await configureDrawableXml(androidMainPath, ResizeMode.NATIVE);
       const actual = vol.readFileSync(filePath, 'utf-8');
-      const expected = generateDrawbleFileContent({ addBitmapItem: true });
+      const expected = generateDrawableFileContent({ addBitmapItem: true });
       expect(actual).toEqual(expected);
     });
 
@@ -51,16 +51,16 @@ describe('Drawable.xml', () => {
       vol.writeFileSync(filePath, `<?xml version="1.0" encoding="utf-8"?>`);
       await configureDrawableXml(androidMainPath, ResizeMode.COVER);
       const actual = vol.readFileSync(filePath, 'utf-8');
-      const expected = generateDrawbleFileContent();
+      const expected = generateDrawableFileContent();
       expect(actual).toEqual(expected);
     });
 
     it('removes bitmap element if mode is not NATIVE', async () => {
       vol.mkdirpSync(fileDirPath);
-      vol.writeFileSync(filePath, generateDrawbleFileContent({ addBitmapItem: true }));
+      vol.writeFileSync(filePath, generateDrawableFileContent({ addBitmapItem: true }));
       await configureDrawableXml(androidMainPath, ResizeMode.CONTAIN);
       const actual = vol.readFileSync(filePath, 'utf-8');
-      const expected = generateDrawbleFileContent();
+      const expected = generateDrawableFileContent();
       expect(actual).toEqual(expected);
     });
   });
