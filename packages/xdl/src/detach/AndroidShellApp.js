@@ -388,6 +388,11 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     versionCode = manifest.android.versionCode;
   }
 
+  let allowBackup = true;
+  if (manifest.android.allowBackup !== undefined) {
+    allowBackup = manifest.android.allowBackup;
+  }
+
   if (!javaPackage) {
     throw new Error(
       'Must specify androidPackage option (either from manifest or on command line).'
@@ -534,6 +539,15 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       /host\.exp\.exponent\.permission\.C2D_MESSAGE/g,
       `${javaPackage}.permission.C2D_MESSAGE`,
       path.join(shellPath, 'expoview', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
+
+  // Optionally disable backups. This flag is present by default in AndroidManifest.xml
+  if (!allowBackup) {
+    await regexFileAsync(
+      'android:allowBackup="true"',
+      'android:allowBackup="false"',
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
 

@@ -178,6 +178,13 @@ export type AndroidPlatformConfig = {
   versionCode?: number;
 
   /**
+   * Configure the `android:allowBackup` attribute in the AndroidManifest. Backups are enabled by default.
+   * If this is set to false, no backup or restore of the application will ever be performed, even by a full-system backup:
+   * https://developer.android.com/guide/topics/manifest/application-element#allowbackup
+   */
+  allowBackup?: boolean;
+
+  /**
    * The background color for your app, behind any of your React views. This is also known as the root view background color. This value should be a 6 character long hex color string, eg: '#000000'. Default is white — '#ffffff'.
    * Overrides the top-level `backgroundColor` key if it is present.
    */
