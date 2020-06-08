@@ -1,9 +1,10 @@
 import {
   ExpoConfig,
+  Hook,
   HookArguments,
+  HookType,
   PackageJSONConfig,
   Platform,
-  PostPublishHook,
   ProjectTarget,
   configFilename,
   getConfig,
@@ -130,7 +131,7 @@ type SelfHostedIndex = PublicConfig & {
   dependencies: string[];
 };
 
-type LoadedPostPublishHook = PostPublishHook & {
+type LoadedHook = Hook & {
   _fn: (input: HookArguments) => any;
 };
 
@@ -493,6 +494,55 @@ export async function mergeAppDistributions(
   );
 }
 
+function prepareHooks(
+  hooks: ExpoConfig['hooks'],
+  hookType: HookType,
+  projectRoot: string,
+  exp: ExpoConfig
+) {
+  const validHooks: LoadedHook[] = [];
+
+  if (hooks) {
+    hooks[hookType]?.forEach((hook: any) => {
+      let { file } = hook;
+      let fn = _requireFromProject(file, projectRoot, exp);
+      if (typeof fn !== 'function') {
+        logger.global.error(
+          `Unable to load ${hookType} hook: '${file}'. The module does not export a function.`
+        );
+      } else {
+        hook._fn = fn;
+        validHooks.push(hook);
+      }
+    });
+
+    if (hooks[hookType] !== undefined && validHooks.length !== hooks[hookType]?.length) {
+      throw new XDLError(
+        'HOOK_INITIALIZATION_ERROR',
+        `Please fix your ${hookType} hook configuration`
+      );
+    }
+  }
+
+  return validHooks;
+}
+
+export async function runHook(hook: LoadedHook, hookOptions: Omit<HookArguments, 'config'>) {
+  let result = hook._fn({
+    config: hook.config,
+    ...hookOptions,
+  });
+
+  // If it's a promise, wait for it to resolve
+  if (result && result.then) {
+    result = await result;
+  }
+
+  if (result) {
+    logger.global.info({ quiet: true }, result);
+  }
+}
+
 /**
  * Apps exporting for self hosting will have the files created in the project directory the following way:
 .
@@ -517,6 +567,7 @@ export async function exportForAppHosting(
   } = {}
 ): Promise<void> {
   await _validatePackagerReadyAsync(projectRoot);
+
   const defaultTarget = getDefaultTarget(projectRoot);
   const target = options.publishOptions?.target ?? defaultTarget;
 
@@ -525,6 +576,7 @@ export async function exportForAppHosting(
     dev: !!options.isDev,
     minify: true,
   };
+
   // make output dirs if not exists
   const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
   await fs.ensureDir(assetPathToWrite);
@@ -542,6 +594,7 @@ export async function exportForAppHosting(
 
   await writeArtifactSafelyAsync(projectRoot, null, iosJsPath, iosBundle);
   await writeArtifactSafelyAsync(projectRoot, null, androidJsPath, androidBundle);
+
   logger.global.info('Finished saving JS Bundles.');
 
   // save the assets
@@ -552,10 +605,13 @@ export async function exportForAppHosting(
 
   if (options.dumpAssetmap) {
     logger.global.info('Dumping asset map.');
+
     const assetmap: { [hash: string]: Asset } = {};
+
     assets.forEach((asset: Asset) => {
       assetmap[asset.hash] = asset;
     });
+
     await writeArtifactSafelyAsync(
       projectRoot,
       null,
@@ -565,7 +621,9 @@ export async function exportForAppHosting(
   }
 
   // Delete keys that are normally deleted in the publish process
+  let { hooks } = exp;
   delete exp.hooks;
+  let validPostExportHooks: LoadedHook[] = prepareHooks(hooks, 'postExport', projectRoot, exp);
 
   // Add assetUrl to manifest
   exp.assetUrlOverride = assetUrl;
@@ -587,10 +645,13 @@ export async function exportForAppHosting(
   if (!exp.slug) {
     throw new XDLError('INVALID_MANIFEST', 'Must provide a slug field in the app.json manifest.');
   }
+
   let username = await UserManager.getCurrentUsernameAsync();
+
   if (!username) {
     username = ANONYMOUS_USERNAME;
   }
+
   exp.id = `@${username}/${exp.slug}`;
 
   // save the android manifest
@@ -600,6 +661,7 @@ export async function exportForAppHosting(
     platform: 'android',
     dependencies: Object.keys(pkg.dependencies),
   };
+
   await writeArtifactSafelyAsync(
     projectRoot,
     null,
@@ -614,6 +676,7 @@ export async function exportForAppHosting(
     platform: 'ios',
     dependencies: Object.keys(pkg.dependencies),
   };
+
   await writeArtifactSafelyAsync(
     projectRoot,
     null,
@@ -624,10 +687,10 @@ export async function exportForAppHosting(
   let iosSourceMap = null;
   let androidSourceMap = null;
 
-  // build source maps
-  if (options.dumpSourcemap) {
+  // Build sourcemaps when `postExport` hook is set up or when `dumpSourcemap` argument is passed
+  if (options.dumpSourcemap || (hooks?.postExport && hooks.postExport?.length > 0)) {
     ({ iosSourceMap, androidSourceMap } = await _buildSourceMapsAsync(projectRoot));
-    // write the sourcemap files
+    // Write the sourcemap files
     const iosMapName = `ios-${iosBundleHash}.map`;
     const iosMapPath = path.join(outputDir, 'bundles', iosMapName);
     await writeArtifactSafelyAsync(projectRoot, null, iosMapPath, iosSourceMap);
@@ -653,12 +716,38 @@ export async function exportForAppHosting(
     Open up this file in Chrome. In the Javascript developer console, navigate to the Source tab.
     You can see a red coloured folder containing the original source code from your bundle.
     `;
+
     await writeArtifactSafelyAsync(
       projectRoot,
       null,
       path.join(outputDir, 'debug.html'),
       debugHtml
     );
+  }
+
+  const hookOptions = {
+    url: null,
+    exp,
+    iosBundle,
+    iosSourceMap,
+    iosManifest,
+    androidBundle,
+    androidSourceMap,
+    androidManifest,
+    projectRoot,
+    log: (msg: any) => {
+      logger.global.info({ quiet: true }, msg);
+    },
+  };
+
+  for (let hook of validPostExportHooks) {
+    logger.global.info(`Running postExport hook: ${hook.file}`);
+
+    try {
+      runHook(hook, hookOptions);
+    } catch (e) {
+      logger.global.warn(`Warning: postExport hook '${hook.file}' failed: ${e.stack}`);
+    }
   }
 
   // configure embedded assets for expo-updates or ExpoKit
@@ -759,30 +848,7 @@ export async function publishAsync(
   // TODO: refactor this out to a function, throw error if length doesn't match
   let { hooks } = exp;
   delete exp.hooks;
-  let validPostPublishHooks: LoadedPostPublishHook[] = [];
-  if (hooks && hooks.postPublish) {
-    hooks.postPublish.forEach((hook: any) => {
-      let { file } = hook;
-      let fn = _requireFromProject(file, projectRoot, exp);
-      if (typeof fn !== 'function') {
-        logger.global.error(
-          `Unable to load postPublishHook: '${file}'. The module does not export a function.`
-        );
-      } else {
-        hook._fn = fn;
-        validPostPublishHooks.push(hook);
-      }
-    });
-
-    if (validPostPublishHooks.length !== hooks.postPublish.length) {
-      logger.global.error();
-
-      throw new XDLError(
-        'HOOK_INITIALIZATION_ERROR',
-        'Please fix your postPublish hook configuration.'
-      );
-    }
-  }
+  let validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
 
   let { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot);
 
@@ -859,19 +925,7 @@ export async function publishAsync(
     for (let hook of validPostPublishHooks) {
       logger.global.info(`Running postPublish hook: ${hook.file}`);
       try {
-        let result = hook._fn({
-          config: hook.config,
-          ...hookOptions,
-        });
-
-        // If it's a promise, wait for it to resolve
-        if (result && result.then) {
-          result = await result;
-        }
-
-        if (result) {
-          logger.global.info({ quiet: true }, result);
-        }
+        runHook(hook, hookOptions);
       } catch (e) {
         logger.global.warn(`Warning: postPublish hook '${hook.file}' failed: ${e.stack}`);
       }
