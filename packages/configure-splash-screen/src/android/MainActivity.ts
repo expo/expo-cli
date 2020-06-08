@@ -11,7 +11,8 @@ import { insert, replace } from '../string-helpers';
  */
 export default async function configureMainActivity(
   projectRootPath: string,
-  resizeMode: ResizeMode
+  resizeMode: ResizeMode,
+  statusBarTranslucent: boolean = false
 ) {
   // eslint-disable-next-line
   const mainApplicationPath = projectConfig(projectRootPath)?.mainFilePath;
@@ -30,6 +31,7 @@ export default async function configureMainActivity(
     throw new Error(`Failed to find 'MainActivity' file.`);
   }
 
+  const LE = isJava ? ';' : '';
   const fileContent = await fs.readFile(
     isJava ? mainActivityPathJava : mainActivityPathKotlin,
     'utf-8'
@@ -39,8 +41,8 @@ export default async function configureMainActivity(
     .applyAction(content => {
       const [succeeded, newContent] = replace(content, {
         replacePattern: /^import expo\.modules\.splashscreen\.SplashScreen.*?\nimport expo\.modules\.splashscreen\.SplashScreenImageResizeMode.*?$/m,
-        replaceContent: `import expo.modules.splashscreen.SplashScreen${isJava ? ';' : ''}
-import expo.modules.splashscreen.SplashScreenImageResizeMode${isJava ? ';' : ''}`,
+        replaceContent: `import expo.modules.splashscreen.SplashScreen${LE}
+import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}`,
       });
       return [newContent, 'replacedSplashImports', succeeded];
     })
@@ -50,38 +52,18 @@ import expo.modules.splashscreen.SplashScreenImageResizeMode${isJava ? ';' : ''}
       }
       const [succeeded, newContent] = insert(content, {
         insertPattern: isJava ? /(?=public class .* extends .* {.*$)/m : /(?=class .* : .* {.*$)/m,
-        insertContent: `import expo.modules.splashscreen.SplashScreen${isJava ? ';' : ''}
-import expo.modules.splashscreen.SplashScreenImageResizeMode${isJava ? ';' : ''}
+        insertContent: `import expo.modules.splashscreen.SplashScreen${LE}
+import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}
 
 `,
       });
       return [newContent, 'insertedSplashImports', succeeded];
     })
-    // importing ReactRootView
-    .applyAction(content => {
-      const [succeeded, newContent] = replace(content, {
-        replacePattern: /^import com\.facebook\.react\.ReactRootView.*?$/m,
-        replaceContent: `import com.facebook.react.ReactRootView${isJava ? ';' : ''}`,
-      });
-      return [newContent, 'replacedReactImport', succeeded];
-    })
-    .applyAction((content, { replacedReactImport }) => {
-      if (replacedReactImport) {
-        return [content, 'insertedReactImport', false];
-      }
-      const [succeeded, newContent] = insert(content, {
-        insertPattern: /(?<=import com\.facebook\.react\.ReactActivity.*?$)/m,
-        insertContent: `\nimport com.facebook.react.ReactRootView${isJava ? ';' : ''}`,
-      });
-      return [newContent, 'insertedReactImport', succeeded];
-    })
     // registering SplashScreen in onCreate()
     .applyAction(content => {
       const [succeeded, newContent] = replace(content, {
         replacePattern: /(?<=super\.onCreate(.|\n)*?)SplashScreen\.show\(this, SplashScreenImageResizeMode\..*\).*$/m,
-        replaceContent: `SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${
-          isJava ? 'ReactRootView.class);' : 'ReactRootView::class.java)'
-        }`,
+        replaceContent: `SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${statusBarTranslucent})${LE}`,
       });
       return [newContent, 'replacedInOnCreate', succeeded];
     })
@@ -94,9 +76,7 @@ import expo.modules.splashscreen.SplashScreenImageResizeMode${isJava ? ';' : ''}
         insertContent: `
     // SplashScreen.show(...) has to be called after super.onCreate(...)
     // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${
-          isJava ? 'ReactRootView.class);' : 'ReactRootView::class.java)'
-        }`,
+    SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${statusBarTranslucent})${LE}`,
       });
       return [newContent, 'insertedInOnCreate', succeeded];
     })
@@ -116,12 +96,10 @@ import expo.modules.splashscreen.SplashScreenImageResizeMode${isJava ? ';' : ''}
   protected void onCreate(Bundle savedInstanceState`
       : 'override fun onCreate(savedInstanceState: Bundle?'
   }) {
-    super.onCreate(savedInstanceState)${isJava ? ';' : ''}
+    super.onCreate(savedInstanceState)${LE}
     // SplashScreen.show(...) has to be called after super.onCreate(...)
     // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${
-          isJava ? 'ReactRootView.class);' : 'ReactRootView::class.java)'
-        }
+    SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${statusBarTranslucent})${LE}
   }
 `,
       });
@@ -144,7 +122,7 @@ import expo.modules.splashscreen.SplashScreenImageResizeMode${isJava ? ';' : ''}
       }
       const [succeeded, newContent] = insert(content, {
         insertPattern: /(?<=(^.*?package .*?$))/m,
-        insertContent: `\n\nimport android.os.Bundle${isJava ? ';' : ''}`,
+        insertContent: `\n\nimport android.os.Bundle${LE}`,
       });
       return [newContent, 'insertedBundleImport', succeeded];
     });

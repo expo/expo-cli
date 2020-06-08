@@ -12,10 +12,16 @@ export enum Platform {
   ALL = 'all',
 }
 
+export enum StatusBarStyle {
+  DEFAULT = 'default',
+  LIGHT_CONTENT = 'light-content',
+  DARK_CONTENT = 'dark-content',
+}
+
 /**
  * These arguments have to be provided by the user or omitted if possible.
  */
-export interface Parameters {
+export interface Arguments {
   backgroundColor: ColorDescriptor;
   /**
    * Absolute path
@@ -26,4 +32,23 @@ export interface Parameters {
    * Absolute path
    */
   darkModeImagePath?: string;
+}
+
+/**
+ * These might be optionally provided by the user. There are default values for them.
+ */
+export interface StatusBarOptions {
+  statusBarHidden: boolean;
+  statusBarStyle: StatusBarStyle;
+}
+
+/**
+ * These might be optionally provided by the user. There are default values for them.
+ * Android only
+ */
+export interface AndroidOnlyStatusBarOptions {
+  darkModeStatusBarStyle?: StatusBarStyle;
+  statusBarTranslucent?: true;
+  statusBarBackgroundColor?: ColorDescriptor;
+  darkModeStatusBarBackgroundColor?: ColorDescriptor;
 }
