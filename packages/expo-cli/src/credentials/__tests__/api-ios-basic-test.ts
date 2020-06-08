@@ -12,7 +12,7 @@ import {
   testLegacyPushCert,
   testProvisioningProfile,
   testPushKey,
-} from '../test-fixtures/mocks';
+} from '../test-fixtures/mocks-ios';
 
 const originalWarn = console.warn;
 const originalLog = console.log;

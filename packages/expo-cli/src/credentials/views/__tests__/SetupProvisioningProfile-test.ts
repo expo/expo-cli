@@ -3,7 +3,7 @@ import {
   testIosDistCredential,
   testProvisioningProfiles,
   testProvisioningProfilesFromApple,
-} from '../../test-fixtures/mocks';
+} from '../../test-fixtures/mocks-ios';
 import { SetupIosProvisioningProfile } from '../SetupIosProvisioningProfile';
 import { IosDistCredentials } from '../../credentials';
 

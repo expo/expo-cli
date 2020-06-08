@@ -12,7 +12,7 @@ import {
 import { IosDistCredentials, IosPushCredentials } from '../credentials';
 
 /*
-Mock Credential objects for Jester 
+Mock Credential objects for Jester
 */
 const today = new Date();
 const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);

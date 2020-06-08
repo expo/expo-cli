@@ -10,11 +10,9 @@ import { v4 as uuid } from 'uuid';
 
 import { askForUserProvided, getCredentialsFromUser } from '../actions/promptForCredentials';
 import { Context, IView } from '../context';
-import { keystoreSchema } from '../credentials';
+import { Keystore, keystoreSchema } from '../credentials';
 import prompt, { Question } from '../../prompt';
 import log from '../../log';
-
-type Keystore = AndroidCredentials.Keystore;
 
 class UpdateKeystore implements IView {
   constructor(private experienceName: string) {}

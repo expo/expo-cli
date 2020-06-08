@@ -3,7 +3,7 @@ import {
   getCtxMock,
   testDistCertsFromApple,
   testIosDistCredential,
-} from '../../test-fixtures/mocks';
+} from '../../test-fixtures/mocks-ios';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope
 const mockDistCertManagerCreate = jest.fn(() => testIosDistCredential);

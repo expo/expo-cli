@@ -7,7 +7,7 @@ import {
   testIosDistCredential,
   testProvisioningProfiles,
   testProvisioningProfilesFromApple,
-} from '../../test-fixtures/mocks';
+} from '../../test-fixtures/mocks-ios';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope
 const mockProvProfManagerCreate = jest.fn(() => testProvisioningProfiles);

@@ -13,6 +13,11 @@ export class AndroidApi {
     this.api = ApiV2.clientForUser(user);
   }
 
+  public withApiClient(client: ApiV2) {
+    this.api = client;
+    return this;
+  }
+
   public async fetchAll(): Promise<{ [key: string]: AndroidCredentials }> {
     if (this.shouldRefetchAll) {
       this.credentials = keyBy(
@@ -35,6 +40,7 @@ export class AndroidApi {
   }
 
   public async updateKeystore(experienceName: string, keystore: Keystore): Promise<void> {
+    await this._ensureCredentialsFetched(experienceName);
     await this.api.putAsync(`credentials/android/keystore/${experienceName}`, { keystore });
     this.credentials[experienceName] = {
       experienceName,
@@ -44,6 +50,7 @@ export class AndroidApi {
   }
 
   public async updateFcmKey(experienceName: string, fcmApiKey: string): Promise<void> {
+    await this._ensureCredentialsFetched(experienceName);
     await this.api.putAsync(`credentials/android/push/${experienceName}`, { fcmApiKey });
     this.credentials[experienceName] = {
       experienceName,
@@ -53,6 +60,7 @@ export class AndroidApi {
   }
 
   public async removeKeystore(experienceName: string): Promise<void> {
+    await this._ensureCredentialsFetched(experienceName);
     await this.api.deleteAsync(`credentials/android/keystore/${experienceName}`);
     if (this.credentials[experienceName]) {
       this.credentials[experienceName].keystore = null;
