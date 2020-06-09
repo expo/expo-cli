@@ -8,7 +8,11 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- Generalize creation of android files in unimodule, not to rely on hardcoded paths so much ([#2245](https://github.com/expo/expo-cli/pull/2245)) by [@mczernek](https://github.com/mczernek)).
+
 ### 🐛 Bug fixes
+
+- Fix module name not being changed in `unimodules.json` ([#2245](https://github.com/expo/expo-cli/pull/2245)) by [@mczernek](https://github.com/mczernek)).
 
 ## [Thu Jun 4 10:01:50 2020 +0200](https://github.com/expo/expo-cli/commit/eb8409e9e18ea9c208a79f998596469b40145ca7)
 
