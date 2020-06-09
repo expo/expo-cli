@@ -1387,7 +1387,8 @@ async function _waitForRunningAsync(
   retries: number = 300
 ): Promise<true> {
   try {
-    const response = await axios.get(url, {
+    const response = await axios.request({
+      url,
       responseType: 'text',
       proxy: false,
     });
@@ -1992,7 +1993,10 @@ export async function stopExpoServerAsync(projectRoot: string): Promise<void> {
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (packagerInfo && packagerInfo.expoServerPort) {
     try {
-      await axios.post(`http://127.0.0.1:${packagerInfo.expoServerPort}/shutdown`);
+      await axios.request({
+        method: 'post',
+        url: `http://127.0.0.1:${packagerInfo.expoServerPort}/shutdown`,
+      });
     } catch (e) {}
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
