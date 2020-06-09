@@ -1,7 +1,8 @@
 {
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "packages/xdl/publish-test-app"
   ],
   "scripts": {
     "format": "prettier --write .",

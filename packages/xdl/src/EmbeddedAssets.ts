@@ -91,7 +91,7 @@ export function shouldEmbedAssetsForExpoUpdates(
   pkg: PackageJSONConfig,
   target: ProjectTarget
 ): boolean {
-  if (!pkg.dependencies['expo-updates'] || target !== 'bare') {
+  if (!pkg.dependencies?.['expo-updates'] || target !== 'bare') {
     return false;
   }
 
@@ -286,7 +286,7 @@ async function _maybeConfigureExpoKitEmbeddedAssetsAsync(config: EmbeddedAssetsC
 }
 
 async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAssetsConfiguration) {
-  if (!config.pkg.dependencies['expo-updates'] || config.target === 'managed') {
+  if (!config.pkg.dependencies?.['expo-updates'] || config.target === 'managed') {
     return;
   }
 
