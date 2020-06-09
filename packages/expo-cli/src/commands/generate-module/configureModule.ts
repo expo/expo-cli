@@ -159,43 +159,37 @@ async function configureAndroid(
   { javaPackage, jsPackageName, viewManager }: ModuleConfiguration
 ) {
   const androidPath = path.join(modulePath, 'android');
-  const sourceFilesPath = path.join(
-    androidPath,
-    'src',
-    'main',
-    'kotlin',
-    'expo',
-    'modules',
-    'template'
-  );
-  const destinationFilesPath = path.join(
-    androidPath,
-    'src',
-    'main',
-    'kotlin',
-    ...javaPackage.split('.')
-  );
+  const templatePackagePath = path.join('expo', 'modules', 'template');
+  const targetPackagePath = javaPackage
+    .split('.')
+    .reduce((previous, next) => path.join(previous, next), '');
 
   // remove ViewManager from template
   if (!viewManager) {
-    removeFiles(sourceFilesPath, [`ModuleTemplateView.kt`, `ModuleTemplateViewManager.kt`]);
-
-    replaceContent(path.join(sourceFilesPath, 'ModuleTemplatePackage.kt'), packageContent =>
-      packageContent
-        .replace(/(^\s+)+(^.*?){1}createViewManagers[\s\W\w]+?\}/m, '')
-        .replace(/^.*ViewManager$/, '')
-    );
+    removeViewManagers(androidPath);
   }
-
-  await fse.mkdirp(destinationFilesPath);
-  await fse.copy(sourceFilesPath, destinationFilesPath);
-
-  // Remove leaf directory content
-  await fse.remove(sourceFilesPath);
-  // Cleanup all empty subdirs up to provided rootDir
-  await removeUponEmptyOrOnlyEmptySubdirs(path.join(androidPath, 'src', 'main', 'kotlin', 'expo'));
+  // Map dir -> array of files within
+  const sourceFilesPaths = await allFilesWithPathContaining(androidPath, templatePackagePath);
 
   const moduleName = jsPackageName.startsWith('Expo') ? jsPackageName.substring(4) : jsPackageName;
+
+  //iterate thru dirs
+  for (let sourcePath of Object.keys(sourceFilesPaths)) {
+    const destinationPath = sourcePath.replace(templatePackagePath, targetPackagePath);
+
+    await fse.mkdirp(destinationPath);
+    for (let file of sourceFilesPaths[sourcePath]) {
+      await fse.copy(
+        path.join(sourcePath, file),
+        path.join(destinationPath, file.replace('ModuleTemplate', moduleName))
+      );
+      await fse.remove(path.join(sourcePath, file));
+    }
+  }
+
+  // Cleanup all empty subdirs up to provided rootDir
+  await removeUponEmptyOrOnlyEmptySubdirs(path.join(androidPath, 'src'));
+
   await replaceContents(androidPath, singleFileContent =>
     singleFileContent
       .replace(/expo\.modules\.template/g, javaPackage)
@@ -208,15 +202,23 @@ async function configureAndroid(
       .replace(/versionCode \d+/, 'versionCode 1')
       .replace(/versionName ['"][\w.-]+['"]/, "versionName '1.0.0'")
   );
-  await renameFilesWithExtensions(
-    destinationFilesPath,
-    ['.kt'],
-    [
-      { from: 'ModuleTemplateModule', to: `${moduleName}Module` },
-      { from: 'ModuleTemplatePackage', to: `${moduleName}Package` },
-      { from: 'ModuleTemplateView', to: `${moduleName}View` },
-      { from: 'ModuleTemplateViewManager', to: `${moduleName}ViewManager` },
-    ]
+}
+
+function removeViewManagers(androidPath: string) {
+  const sourceFilesPath = path.join(
+    androidPath,
+    'src',
+    'main',
+    'java',
+    'expo',
+    'modules',
+    'template'
+  );
+  removeFiles(androidPath, [`ModuleTemplateView.kt`, `ModuleTemplateViewManager.kt`]);
+  replaceContent(path.join(sourceFilesPath, 'ModuleTemplatePackage.kt'), packageContent =>
+    packageContent
+      .replace(/(^\s+)+(^.*?){1}createViewManagers[\s\W\w]+?\}/m, '')
+      .replace(/^.*ViewManager$/, '')
   );
 }
 
@@ -291,12 +293,73 @@ async function configureNPM(
       .replace(/ExpoModuleTemplate/g, jsPackageName)
       .replace(/ModuleTemplate/g, moduleNameWithoutExpoPrefix)
   );
+  await replaceContent(path.join(modulePath, 'unimodule.json'), singleFileContent =>
+    singleFileContent.replace(/expo-module-template/g, npmModuleName)
+  );
   await replaceContent(path.join(modulePath, 'README.md'), readmeContent =>
     readmeContent
       .replace(/expo-module-template/g, npmModuleName)
       .replace(/ExpoModuleTemplate/g, jsPackageName)
       .replace(/EXModuleTemplate/g, podName)
   );
+}
+
+/**
+ * Returns a map of directiories mapped to its files, recursively from directory passed as @param dirPath, only when path contains @param containing
+ * @param dirPath Path to scan recursively
+ * @param containing Path part to look for
+ * @param result directories mapped to array containing its files
+ */
+export async function allFilesWithPathContaining(dirPath: string, containing: string) {
+  const all = await readAllFilesIn(dirPath);
+  const keys = Object.keys(all).filter(key => key.includes(containing));
+  const result: { [key: string]: string[] } = {};
+  for (let key of keys) {
+    result[key] = all[key];
+  }
+  return result;
+}
+
+/**
+ * Returns a map of directiories mapped to its files, recursively from directory passed as @param dirPath
+ * @param dirPath Path to scan recursively
+ * @param result directories mapped to array containing its files
+ */
+async function readAllFilesIn(
+  dirPath: string,
+  result: { [key: string]: string[] } = {}
+): Promise<{ [key: string]: string[] }> {
+  if (!fse.existsSync(dirPath)) {
+    console.error('Dir does not exists! ', dirPath);
+    return {};
+  }
+  var files = await fse.readdir(dirPath);
+  const [filesInDir, dirsInDir] = partition(files, file => isFile(dirPath, file));
+  if (filesInDir && filesInDir.length > 0) {
+    result[dirPath] = filesInDir;
+  }
+  for (let dir of dirsInDir) {
+    result = await readAllFilesIn(path.join(dirPath, dir), result);
+  }
+  return result;
+}
+
+function partition<T>(array: T[], cond: (element: T) => Boolean) {
+  return array.reduce<T[][]>(
+    (acc, element) => {
+      if (cond(element)) {
+        acc[0] = [...acc[0], element];
+      } else {
+        acc[1] = [...acc[1], element];
+      }
+      return acc;
+    },
+    [[] as T[], [] as T[]]
+  );
+}
+
+function isFile(dir: string, name: string): Boolean {
+  return fse.statSync(path.join(dir, name)).isFile();
 }
 
 /**
