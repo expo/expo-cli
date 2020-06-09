@@ -19,10 +19,6 @@ beforeAll(async () => {
   await fs.mkdirp(projectRoot);
 });
 
-afterAll(async () => {
-  await fs.remove(projectRoot);
-});
-
 const minimumNativePkgJson = {
   dependencies: {
     expo: '37.0.11',
