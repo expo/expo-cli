@@ -9,7 +9,10 @@ import type Metro from 'metro';
 import LogReporter from './LogReporter';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 
-export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & { logger: Log };
+export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
+  logger: Log;
+  quiet?: boolean;
+};
 export type BundleOptions = {
   entryPoint: string;
   platform: Platform;
@@ -93,12 +96,14 @@ export async function bundleAsync(
       sourceMapUrl: bundle.sourceMapUrl,
       createModuleIdFactory: config.serializer.createModuleIdFactory,
       onProgress: (transformedFileCount: number, totalFileCount: number) => {
-        reporter.update({
-          buildID,
-          type: 'bundle_transform_progressed',
-          transformedFileCount,
-          totalFileCount,
-        });
+        if (!options.quiet) {
+          reporter.update({
+            buildID,
+            type: 'bundle_transform_progressed',
+            transformedFileCount,
+            totalFileCount,
+          });
+        }
       },
     };
     reporter.update({
@@ -136,7 +141,9 @@ function importMetroFromProject(projectRoot: string): typeof Metro {
   const resolvedPath = projectHasModule('metro', projectRoot, exp);
   if (!resolvedPath) {
     throw new Error(
-      'Missing package "metro" in the project. ' +
+      'Missing package "metro" in the project at ' +
+        projectRoot +
+        '. ' +
         'This usually means `react-native` is not installed. ' +
         'Please verify that dependencies in package.json include "react-native" ' +
         'and run `yarn` or `npm install`.'
