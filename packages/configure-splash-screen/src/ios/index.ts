@@ -6,6 +6,7 @@ import configureBackgroundAsset from './BackgroundAsset';
 import configureInfoPlist from './Info.plist';
 import configureStoryboard from './Storyboard';
 import readPbxProject from './pbxproj';
+import configureAppDelegate from './AppDelegate';
 
 export default async function configureIos(
   projectRootPath: string,
@@ -29,6 +30,7 @@ export default async function configureIos(
       resizeMode,
       splashScreenImagePresent: !!imagePath,
     }),
+    configureAppDelegate(iosProject.projectPath),
   ]);
 
   await fs.writeFile(iosProject.pbxProject.filepath, iosProject.pbxProject.writeSync());
