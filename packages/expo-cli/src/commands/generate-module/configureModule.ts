@@ -2,6 +2,7 @@ import fse from 'fs-extra';
 import path from 'path';
 import walkSync from 'klaw-sync';
 import { ModuleConfiguration } from './ModuleConfiguration';
+import { validatePushKey } from '../../credentials/views/IosPushCredentials';
 
 const asyncForEach = async <T>(
   array: T[],
@@ -174,11 +175,11 @@ async function configureAndroid(
   const moduleName = jsPackageName.startsWith('Expo') ? jsPackageName.substring(4) : jsPackageName;
 
   //iterate thru dirs
-  for (let sourcePath of Object.keys(sourceFilesPaths)) {
+  for (let [sourcePath, files] of Object.entries(sourceFilesPaths)) {
     const destinationPath = sourcePath.replace(templatePackagePath, targetPackagePath);
 
     await fse.mkdirp(destinationPath);
-    for (let file of sourceFilesPaths[sourcePath]) {
+    for (let file of files) {
       await fse.copy(
         path.join(sourcePath, file),
         path.join(destinationPath, file.replace('ModuleTemplate', moduleName))
@@ -310,14 +311,17 @@ async function configureNPM(
  * @param containing Path part to look for
  * @param result directories mapped to array containing its files
  */
-export async function allFilesWithPathContaining(dirPath: string, containing: string) {
+export async function allFilesWithPathContaining(
+  dirPath: string,
+  containing: string
+): Promise<Record<string, string[]>> {
   const all = await readAllFilesIn(dirPath);
-  const keys = Object.keys(all).filter(key => key.includes(containing));
-  const result: { [key: string]: string[] } = {};
-  for (let key of keys) {
-    result[key] = all[key];
-  }
-  return result;
+  return Object.entries(all)
+    .filter(entry => entry[0].includes(containing))
+    .reduce<Record<string, string[]>>((acc, [key, value]) => {
+      acc[key] = value;
+      return acc;
+    }, {});
 }
 
 /**
@@ -327,8 +331,8 @@ export async function allFilesWithPathContaining(dirPath: string, containing: st
  */
 async function readAllFilesIn(
   dirPath: string,
-  result: { [key: string]: string[] } = {}
-): Promise<{ [key: string]: string[] }> {
+  result: Record<string, string[]> = {}
+): Promise<Record<string, string[]>> {
   if (!fse.existsSync(dirPath)) {
     console.error('Dir does not exists! ', dirPath);
     return {};
