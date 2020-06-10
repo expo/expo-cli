@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import { Command } from 'commander';
-import { AppJSONConfig, BareAppConfig, ExpoConfig } from '@expo/config';
-import { Exp } from '@expo/xdl';
+import { AppJSONConfig, BareAppConfig, ExpoConfig, readConfigJsonAsync } from '@expo/config';
+import { Exp, User, UserManager } from '@expo/xdl';
 import padEnd from 'lodash/padEnd';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
@@ -226,6 +226,15 @@ async function action(projectDir: string, command: Command) {
       podsInstalled = await installPodsAsync(projectPath);
     } catch (_) {}
 
+    let didConfigureUpdatesProjectFiles = false;
+    const user = await UserManager.getCurrentUserAsync();
+    if (user) {
+      try {
+        await configureUpdatesProjectFilesAsync(projectPath, initialConfig as BareAppConfig, user);
+        didConfigureUpdatesProjectFiles = true;
+      } catch {}
+    }
+
     log.newLine();
     let showPublishBeforeBuildWarning = await usesOldExpoUpdatesAsync(projectPath);
     await logProjectReadyAsync({
@@ -233,6 +242,8 @@ async function action(projectDir: string, command: Command) {
       packageManager,
       workflow: 'bare',
       showPublishBeforeBuildWarning,
+      didConfigureUpdatesProjectFiles,
+      username: user?.username,
     });
     if (!podsInstalled && process.platform === 'darwin') {
       log.newLine();
@@ -255,11 +266,15 @@ function logProjectReadyAsync({
   packageManager,
   workflow,
   showPublishBeforeBuildWarning,
+  didConfigureUpdatesProjectFiles,
+  username,
 }: {
   cdPath: string;
   packageManager: string;
   workflow: 'managed' | 'bare';
   showPublishBeforeBuildWarning?: boolean;
+  didConfigureUpdatesProjectFiles?: boolean;
+  username?: string;
 }) {
   log.nested(chalk.bold(`✅ Your project is ready!`));
   log.newLine();
@@ -315,12 +330,76 @@ function logProjectReadyAsync({
           'expo publish'
         )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
       );
+    } else if (didConfigureUpdatesProjectFiles) {
+      log.nested(
+        `- 🚀 ${terminalLink(
+          'expo-updates',
+          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        )} has been configured in your project. If you publish this project under a different user account than ${chalk.bold(
+          username
+        )}, you'll need to update the configuration in Expo.plist and AndroidManifest.xml before making a release build.`
+      );
+    } else {
+      log.nested(
+        `- 🚀 ${terminalLink(
+          'expo-updates',
+          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        )} has been installed in your project. Before you do a release build, you'll need to configure a few values in Expo.plist and AndroidManifest.xml in order for updates to work.`
+      );
     }
     // TODO: add equivalent of this or some command to wrap it:
     // # ios
     // $ open -a Xcode ./ios/{PROJECT_NAME}.xcworkspace
     // # android
     // $ open -a /Applications/Android\\ Studio.app ./android
+  }
+}
+
+async function configureUpdatesProjectFilesAsync(
+  projectRoot: string,
+  initialConfig: BareAppConfig,
+  user: User
+) {
+  const expoPlistPath = path.join(
+    projectRoot,
+    'ios',
+    initialConfig.name,
+    'Supporting',
+    'Expo.plist'
+  );
+  const androidManifestPath = path.join(
+    projectRoot,
+    'android',
+    'app',
+    'src',
+    'main',
+    'AndroidManifest.xml'
+  );
+
+  const appUrl = `https://exp.host/@${user.username}/${initialConfig.name}`;
+  const sdkVersion = (await readConfigJsonAsync(projectRoot)).exp.sdkVersion;
+
+  if (!sdkVersion) {
+    throw new Error('Could not determine project SDK version.');
+  }
+
+  await maybeConfigureUpdatesProjectFileAsync(expoPlistPath, appUrl, sdkVersion);
+  await maybeConfigureUpdatesProjectFileAsync(androidManifestPath, appUrl, sdkVersion);
+}
+
+async function maybeConfigureUpdatesProjectFileAsync(
+  path: string,
+  appUrl: string,
+  sdkVersion: string
+) {
+  if (fs.existsSync(path)) {
+    const fileContents = fs.readFileSync(path).toString();
+    fs.writeFileSync(
+      path,
+      fileContents
+        .replace(/YOUR-APP-URL-HERE/g, appUrl)
+        .replace(/YOUR-APP-SDK-VERSION-HERE/g, sdkVersion)
+    );
   }
 }
 
