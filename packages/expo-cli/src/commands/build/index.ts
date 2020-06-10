@@ -136,7 +136,7 @@ export default function (program: Command) {
     .option('--no-wait', 'Exit immediately after triggering build.')
     .option('--keystore-path <app.jks>', 'Path to your Keystore.')
     .option('--keystore-alias <alias>', 'Keystore Alias')
-    .option('--generate-keystore', 'Generate Keystore if one does not exist')
+    .option('--generate-keystore', '[deprecated] Generate Keystore if one does not exist')
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .option('--skip-workflow-check', 'Skip warning about build service bare workflow limitations.')
     .option('-t --type <build>', 'Type of build: [app-bundle|apk].')
@@ -145,6 +145,11 @@ export default function (program: Command) {
     )
     .asyncActionProjectDir(
       async (projectDir: string, options: AndroidOptions) => {
+        if (options.generateKeystore) {
+          log.warn(
+            `The --generate-keystore flag is deprecated and does not do anything. A Keystore will always be generated on the Expo servers if it's missing.`
+          );
+        }
         if (!options.skipWorkflowCheck) {
           if (
             await maybeBailOnWorkflowWarning({
