@@ -1,26 +1,44 @@
-import { BuildType, Platform } from '@expo/build-tools';
+import { Platform } from '@expo/build-tools';
+import { getConfig } from '@expo/config';
 import { User, UserManager } from '@expo/xdl';
 import { Command } from 'commander';
 
 import log from '../../log';
-import Builder, { Options } from './Builder';
+import Builder, { BuilderContext } from './Builder';
 import { printBuildTable } from './utils';
 
-async function buildAction(projectDir: string, options: Options) {
-  if (!options.platform || !Object.values(Platform).includes(options.platform)) {
+async function buildAction(
+  projectDir: string,
+  { platform }: { platform: Platform }
+): Promise<void> {
+  if (!platform || !Object.values(Platform).includes(platform)) {
     throw new Error('Pass valid platform: [android|ios]');
   }
-  const user: User = await UserManager.ensureLoggedInAsync();
-  const builder = new Builder(user);
-  const buildArtifactUrl = await builder.buildProject(projectDir, options);
+  const ctx = await createBuilderContextAsync(projectDir);
+  const builder = new Builder(ctx);
+  const buildArtifactUrl = await builder.buildProjectAsync(platform);
   log(`Artifact url: ${buildArtifactUrl}`);
 }
 
-async function statusAction() {
-  const user: User = await UserManager.ensureLoggedInAsync();
-  const builder = new Builder(user);
-  const result = await builder.getLatestBuilds();
+async function statusAction(projectDir: string): Promise<void> {
+  const ctx = await createBuilderContextAsync(projectDir);
+  const builder = new Builder(ctx);
+  const result = await builder.getLatestBuildsAsync();
   printBuildTable(result.builds);
+}
+
+async function createBuilderContextAsync(projectDir: string): Promise<BuilderContext> {
+  const user: User = await UserManager.ensureLoggedInAsync();
+  const { exp } = getConfig(projectDir);
+  const accountName = exp.owner || user.username;
+  const projectName = exp.slug || 'untitled';
+  return {
+    projectDir,
+    user,
+    accountName,
+    projectName,
+    exp,
+  };
 }
 
 export default function (program: Command) {
@@ -35,5 +53,5 @@ export default function (program: Command) {
   program
     .command('build:status')
     .description(`Get the status of the latest builds for your project.`)
-    .asyncAction(statusAction, { checkConfig: true });
+    .asyncActionProjectDir(statusAction, { checkConfig: true });
 }

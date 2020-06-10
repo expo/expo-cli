@@ -7,11 +7,11 @@ import log from '../../log';
 import { printTableJsonArray } from '../utils/cli-table';
 import { BuildInfo } from './Builder';
 
-async function waitForBuildEnd(
+async function waitForBuildEndAsync(
   client: ApiV2,
   buildId: string,
   { timeoutSec = 1800, intervalSec = 30 } = {}
-) {
+): Promise<string> {
   log('Waiting for build to complete. You can press Ctrl+C to exit.');
   const spinner = ora().start();
   let time = new Date().getTime();
@@ -44,7 +44,7 @@ async function waitForBuildEnd(
   );
 }
 
-async function makeProjectTarball(tarPath: string) {
+async function makeProjectTarballAsync(tarPath: string): Promise<void> {
   const spinner = ora('Making project tarball').start();
   const changes = (await spawnAsync('git', ['status', '-s'])).stdout;
   if (changes.length > 0) {
@@ -74,4 +74,4 @@ function printBuildTable(builds: BuildInfo[]) {
   console.log(buildTable);
 }
 
-export { waitForBuildEnd, makeProjectTarball, printBuildTable };
+export { waitForBuildEndAsync, makeProjectTarballAsync, printBuildTable };
