@@ -5,7 +5,7 @@ import {
   rollbackPublicationFromChannelAsync,
   setPublishToChannelAsync,
 } from '../utils/PublishUtils';
-import { jester } from '../../credentials/test-fixtures/mocks';
+import { jester } from '../../credentials/test-fixtures/mocks-ios';
 import { mockExpoXDL } from '../../__tests__/mock-utils';
 import { createTestProject } from '../../__tests__/project-utils';
 

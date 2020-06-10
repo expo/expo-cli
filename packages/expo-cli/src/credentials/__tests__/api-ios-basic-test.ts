@@ -1,12 +1,10 @@
-import { IosApi } from '../api';
+import { IosApi } from '../api/ios';
 import {
   getApiV2MockCredentials,
   getCtxMock,
   jester,
-  jester2,
   testAllCredentials,
   testAppCredential,
-  testAppJsonWithDifferentOwner,
   testAppleTeam,
   testBundleIdentifier,
   testDistCert,
@@ -14,7 +12,7 @@ import {
   testLegacyPushCert,
   testProvisioningProfile,
   testPushKey,
-} from '../test-fixtures/mocks';
+} from '../test-fixtures/mocks-ios';
 
 const originalWarn = console.warn;
 const originalLog = console.log;
@@ -28,15 +26,13 @@ afterAll(() => {
 });
 beforeEach(() => {});
 
-describe("IosApi - With Jester 2's Project Context", () => {
+describe('IosApi - Basic Tests', () => {
   let iosApi;
   let apiV2Mock;
-  let ctxMock;
 
   beforeEach(() => {
     apiV2Mock = getApiV2MockCredentials();
-    ctxMock = getCtxMock({ manifest: testAppJsonWithDifferentOwner });
-    iosApi = new IosApi(jester).withApiClient(apiV2Mock).withProjectContext(ctxMock);
+    iosApi = new IosApi(jester).withApiClient(apiV2Mock);
   });
   it('getAllCredentials', async () => {
     const credsFromServer = await iosApi.getAllCredentials();
@@ -45,7 +41,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
     expect(credsFromMemory).toMatchObject(credsFromServer);
-    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester2.username });
+    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester.username });
   });
   it('getDistCert', async () => {
     const credsFromServer = await iosApi.getDistCert(testExperienceName, testBundleIdentifier);
@@ -54,7 +50,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
     expect(credsFromMemory).toMatchObject(credsFromServer);
-    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester2.username });
+    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester.username });
   });
   it('createDistCert', async () => {
     const postAsync = jest.fn(() => {
@@ -67,7 +63,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     expect(apiV2Mock.postAsync.mock.calls.length).toBe(1);
     expect(apiV2Mock.postAsync).toBeCalledWith('credentials/ios/dist', {
       credentials: testDistCert,
-      owner: jester2.username,
+      owner: jester.username,
     });
     expect(newCred).toMatchObject({
       ...testDistCert,
@@ -86,7 +82,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     expect(apiV2Mock.putAsync.mock.calls.length).toBe(1);
     expect(apiV2Mock.putAsync).toBeCalledWith(`credentials/ios/dist/${credentialsId}`, {
       credentials: testDistCert,
-      owner: jester2.username,
+      owner: jester.username,
     });
     expect(newCred).toMatchObject({
       ...testDistCert,
@@ -99,7 +95,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
 
     expect(apiV2Mock.deleteAsync.mock.calls.length).toBe(1);
     expect(apiV2Mock.deleteAsync).toBeCalledWith(`credentials/ios/dist/${credentialsId}`, {
-      owner: jester2.username,
+      owner: jester.username,
     });
   });
   it('useDistCert', async () => {
@@ -111,7 +107,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
       experienceName: testExperienceName,
       bundleIdentifier: testBundleIdentifier,
       userCredentialsId: credentialsId,
-      owner: jester2.username,
+      owner: jester.username,
     });
   });
   it('createPushKey', async () => {
@@ -125,7 +121,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     expect(apiV2Mock.postAsync.mock.calls.length).toBe(1);
     expect(apiV2Mock.postAsync).toBeCalledWith('credentials/ios/push', {
       credentials: testPushKey,
-      owner: jester2.username,
+      owner: jester.username,
     });
     expect(newCred).toMatchObject({
       ...testPushKey,
@@ -144,7 +140,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     expect(apiV2Mock.putAsync.mock.calls.length).toBe(1);
     expect(apiV2Mock.putAsync).toBeCalledWith(`credentials/ios/push/${credentialsId}`, {
       credentials: testPushKey,
-      owner: jester2.username,
+      owner: jester.username,
     });
     expect(newCred).toMatchObject({
       ...testPushKey,
@@ -157,7 +153,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
 
     expect(apiV2Mock.deleteAsync.mock.calls.length).toBe(1);
     expect(apiV2Mock.deleteAsync).toBeCalledWith(`credentials/ios/push/${credentialsId}`, {
-      owner: jester2.username,
+      owner: jester.username,
     });
   });
   it('getPushKey', async () => {
@@ -167,7 +163,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
     expect(credsFromMemory).toMatchObject(credsFromServer);
-    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester2.username });
+    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester.username });
   });
   it('usePushKey', async () => {
     const credentialsId = 666;
@@ -178,7 +174,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
       experienceName: testExperienceName,
       bundleIdentifier: testBundleIdentifier,
       userCredentialsId: credentialsId,
-      owner: jester2.username,
+      owner: jester.username,
     });
   });
   it('getPushCert', async () => {
@@ -200,7 +196,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
     expect(credsFromMemory).toMatchObject(credsFromServer);
-    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester2.username });
+    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester.username });
   });
   it('deletePushCert', async () => {
     // this call wont work unless we fetch credentials first
@@ -211,7 +207,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     expect(apiV2Mock.postAsync).toBeCalledWith(`credentials/ios/pushCert/delete`, {
       experienceName: testExperienceName,
       bundleIdentifier: testBundleIdentifier,
-      owner: jester2.username,
+      owner: jester.username,
     });
   });
   it('updateProvisioningProfile', async () => {
@@ -231,7 +227,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
       experienceName: testExperienceName,
       bundleIdentifier: testBundleIdentifier,
       credentials: { ...testProvisioningProfile, teamId: testAppleTeam.id },
-      owner: jester2.username,
+      owner: jester.username,
     });
   });
   it('getAppCredentials', async () => {
@@ -247,7 +243,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
     expect(credsFromMemory).toMatchObject(credsFromServer);
-    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester2.username });
+    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester.username });
   });
   it('getProvisioningProfile', async () => {
     const credsFromServer = await iosApi.getProvisioningProfile(
@@ -262,7 +258,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
     expect(credsFromMemory).toMatchObject(credsFromServer);
-    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester2.username });
+    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester.username });
   });
   it('deleteProvisioningProfile', async () => {
     // this call wont work unless we fetch credentials first
@@ -273,7 +269,7 @@ describe("IosApi - With Jester 2's Project Context", () => {
     expect(apiV2Mock.postAsync).toBeCalledWith(`credentials/ios/provisioningProfile/delete`, {
       experienceName: testExperienceName,
       bundleIdentifier: testBundleIdentifier,
-      owner: jester2.username,
+      owner: jester.username,
     });
   });
 });

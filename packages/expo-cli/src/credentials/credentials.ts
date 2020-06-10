@@ -121,15 +121,22 @@ export type FcmCredentials = {
   fcmApiKey: string;
 };
 
+export type Keystore = Android.Keystore;
+
 export type AndroidCredentials = {
   experienceName: string;
-  keystore: Android.Keystore | null;
+  keystore: Keystore | null;
   pushCredentials: FcmCredentials | null;
 };
 
 export const keystoreSchema: CredentialSchema<Android.Keystore> = {
   id: 'keystore',
   name: 'Android Keystore',
+  provideMethodQuestion: {
+    question: `Would you like to upload a Keystore or have us generate one for you?\nIf you don't know what this means, let us generate it! :)`,
+    expoGenerated: 'Generate new keystore',
+    userProvided: 'I want to upload my own file',
+  },
   required: ['keystore', 'keystorePassword', 'keyAlias', 'keyPassword'],
   questions: {
     keystore: {

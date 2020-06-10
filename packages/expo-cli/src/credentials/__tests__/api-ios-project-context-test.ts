@@ -1,10 +1,12 @@
-import { IosApi } from '../api';
+import { IosApi } from '../api/ios';
 import {
   getApiV2MockCredentials,
   getCtxMock,
   jester,
+  jester2,
   testAllCredentials,
   testAppCredential,
+  testAppJsonWithDifferentOwner,
   testAppleTeam,
   testBundleIdentifier,
   testDistCert,
@@ -12,7 +14,7 @@ import {
   testLegacyPushCert,
   testProvisioningProfile,
   testPushKey,
-} from '../test-fixtures/mocks';
+} from '../test-fixtures/mocks-ios';
 
 const originalWarn = console.warn;
 const originalLog = console.log;
@@ -26,13 +28,15 @@ afterAll(() => {
 });
 beforeEach(() => {});
 
-describe('IosApi - Basic Tests', () => {
+describe("IosApi - With Jester 2's Project Context", () => {
   let iosApi;
   let apiV2Mock;
+  let ctxMock;
 
   beforeEach(() => {
     apiV2Mock = getApiV2MockCredentials();
-    iosApi = new IosApi(jester).withApiClient(apiV2Mock);
+    ctxMock = getCtxMock({ manifest: testAppJsonWithDifferentOwner });
+    iosApi = new IosApi(jester).withApiClient(apiV2Mock).withProjectContext(ctxMock);
   });
   it('getAllCredentials', async () => {
     const credsFromServer = await iosApi.getAllCredentials();
@@ -41,7 +45,7 @@ describe('IosApi - Basic Tests', () => {
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
     expect(credsFromMemory).toMatchObject(credsFromServer);
-    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester.username });
+    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester2.username });
   });
   it('getDistCert', async () => {
     const credsFromServer = await iosApi.getDistCert(testExperienceName, testBundleIdentifier);
@@ -50,7 +54,7 @@ describe('IosApi - Basic Tests', () => {
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
     expect(credsFromMemory).toMatchObject(credsFromServer);
-    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester.username });
+    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester2.username });
   });
   it('createDistCert', async () => {
     const postAsync = jest.fn(() => {
@@ -63,7 +67,7 @@ describe('IosApi - Basic Tests', () => {
     expect(apiV2Mock.postAsync.mock.calls.length).toBe(1);
     expect(apiV2Mock.postAsync).toBeCalledWith('credentials/ios/dist', {
       credentials: testDistCert,
-      owner: jester.username,
+      owner: jester2.username,
     });
     expect(newCred).toMatchObject({
       ...testDistCert,
@@ -82,7 +86,7 @@ describe('IosApi - Basic Tests', () => {
     expect(apiV2Mock.putAsync.mock.calls.length).toBe(1);
     expect(apiV2Mock.putAsync).toBeCalledWith(`credentials/ios/dist/${credentialsId}`, {
       credentials: testDistCert,
-      owner: jester.username,
+      owner: jester2.username,
     });
     expect(newCred).toMatchObject({
       ...testDistCert,
@@ -95,7 +99,7 @@ describe('IosApi - Basic Tests', () => {
 
     expect(apiV2Mock.deleteAsync.mock.calls.length).toBe(1);
     expect(apiV2Mock.deleteAsync).toBeCalledWith(`credentials/ios/dist/${credentialsId}`, {
-      owner: jester.username,
+      owner: jester2.username,
     });
   });
   it('useDistCert', async () => {
@@ -107,7 +111,7 @@ describe('IosApi - Basic Tests', () => {
       experienceName: testExperienceName,
       bundleIdentifier: testBundleIdentifier,
       userCredentialsId: credentialsId,
-      owner: jester.username,
+      owner: jester2.username,
     });
   });
   it('createPushKey', async () => {
@@ -121,7 +125,7 @@ describe('IosApi - Basic Tests', () => {
     expect(apiV2Mock.postAsync.mock.calls.length).toBe(1);
     expect(apiV2Mock.postAsync).toBeCalledWith('credentials/ios/push', {
       credentials: testPushKey,
-      owner: jester.username,
+      owner: jester2.username,
     });
     expect(newCred).toMatchObject({
       ...testPushKey,
@@ -140,7 +144,7 @@ describe('IosApi - Basic Tests', () => {
     expect(apiV2Mock.putAsync.mock.calls.length).toBe(1);
     expect(apiV2Mock.putAsync).toBeCalledWith(`credentials/ios/push/${credentialsId}`, {
       credentials: testPushKey,
-      owner: jester.username,
+      owner: jester2.username,
     });
     expect(newCred).toMatchObject({
       ...testPushKey,
@@ -153,7 +157,7 @@ describe('IosApi - Basic Tests', () => {
 
     expect(apiV2Mock.deleteAsync.mock.calls.length).toBe(1);
     expect(apiV2Mock.deleteAsync).toBeCalledWith(`credentials/ios/push/${credentialsId}`, {
-      owner: jester.username,
+      owner: jester2.username,
     });
   });
   it('getPushKey', async () => {
@@ -163,7 +167,7 @@ describe('IosApi - Basic Tests', () => {
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
     expect(credsFromMemory).toMatchObject(credsFromServer);
-    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester.username });
+    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester2.username });
   });
   it('usePushKey', async () => {
     const credentialsId = 666;
@@ -174,7 +178,7 @@ describe('IosApi - Basic Tests', () => {
       experienceName: testExperienceName,
       bundleIdentifier: testBundleIdentifier,
       userCredentialsId: credentialsId,
-      owner: jester.username,
+      owner: jester2.username,
     });
   });
   it('getPushCert', async () => {
@@ -196,7 +200,7 @@ describe('IosApi - Basic Tests', () => {
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
     expect(credsFromMemory).toMatchObject(credsFromServer);
-    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester.username });
+    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester2.username });
   });
   it('deletePushCert', async () => {
     // this call wont work unless we fetch credentials first
@@ -207,7 +211,7 @@ describe('IosApi - Basic Tests', () => {
     expect(apiV2Mock.postAsync).toBeCalledWith(`credentials/ios/pushCert/delete`, {
       experienceName: testExperienceName,
       bundleIdentifier: testBundleIdentifier,
-      owner: jester.username,
+      owner: jester2.username,
     });
   });
   it('updateProvisioningProfile', async () => {
@@ -227,7 +231,7 @@ describe('IosApi - Basic Tests', () => {
       experienceName: testExperienceName,
       bundleIdentifier: testBundleIdentifier,
       credentials: { ...testProvisioningProfile, teamId: testAppleTeam.id },
-      owner: jester.username,
+      owner: jester2.username,
     });
   });
   it('getAppCredentials', async () => {
@@ -243,7 +247,7 @@ describe('IosApi - Basic Tests', () => {
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
     expect(credsFromMemory).toMatchObject(credsFromServer);
-    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester.username });
+    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester2.username });
   });
   it('getProvisioningProfile', async () => {
     const credsFromServer = await iosApi.getProvisioningProfile(
@@ -258,7 +262,7 @@ describe('IosApi - Basic Tests', () => {
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
     expect(credsFromMemory).toMatchObject(credsFromServer);
-    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester.username });
+    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/ios', { owner: jester2.username });
   });
   it('deleteProvisioningProfile', async () => {
     // this call wont work unless we fetch credentials first
@@ -269,7 +273,7 @@ describe('IosApi - Basic Tests', () => {
     expect(apiV2Mock.postAsync).toBeCalledWith(`credentials/ios/provisioningProfile/delete`, {
       experienceName: testExperienceName,
       bundleIdentifier: testBundleIdentifier,
-      owner: jester.username,
+      owner: jester2.username,
     });
   });
 });

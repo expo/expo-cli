@@ -2,11 +2,12 @@ import path from 'path';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 
-import { AndroidCredentials, Credentials } from '@expo/xdl';
+import { AndroidCredentials } from '@expo/xdl';
 import { ExpoConfig } from '@expo/config';
 import invariant from 'invariant';
 import { Context } from '../../credentials';
-import { DownloadKeystore } from '../../credentials/views/AndroidCredentials';
+import { runCredentialsManager } from '../../credentials/route';
+import { DownloadKeystore, useKeystore } from '../../credentials/views/AndroidKeystore';
 
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
@@ -33,18 +34,23 @@ export default class AppSigningOptInProcess {
     await ctx.init(this.projectDir);
     invariant(ctx.manifest.slug, 'app.json slug field must be set');
     await this.init(ctx.manifest.slug as string);
+    const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
 
-    const view = new DownloadKeystore(ctx.manifest.slug as string);
-    await view.fetch(ctx);
-    await view.save(ctx, this.signKeystore, true);
+    const view = new DownloadKeystore(experienceName, {
+      outputPath: this.signKeystore,
+      quiet: true,
+    });
+    await runCredentialsManager(ctx, view);
+    const keystore = await ctx.android.fetchKeystore(experienceName);
+    if (!keystore) {
+      log.warn('There is no valid Keystore defined for this app');
+      return;
+    }
 
     this.signKeystoreCredentials = {
-      // @ts-ignore possibly undefined
-      keystorePassword: view.credentials?.keystorePassword,
-      // @ts-ignore possibly undefined
-      keyAlias: view.credentials?.keyAlias,
-      // @ts-ignore possibly undefined
-      keyPassword: view.credentials?.keyPassword,
+      keystorePassword: keystore.keystorePassword,
+      keyAlias: keystore.keyAlias,
+      keyPassword: keystore.keyPassword,
     };
 
     try {
@@ -55,12 +61,12 @@ export default class AppSigningOptInProcess {
       await this.cleanup(true);
       return;
     }
-    await this.afterStoreSubmit(ctx.user.username, ctx.manifest);
+    await this.afterStoreSubmit(ctx);
   }
 
   async init(slug: string): Promise<void> {
     log.warn(
-      'Make sure you are not using Google Play App Signing already as this process will remove your current keystore from Expo servers.'
+      'Make sure you are not using Google Play App Signing already as this process will remove your current Keystore from Expo servers.'
     );
     log(
       `You can check whether you are using Google Play App Signing here: ${chalk.underline(
@@ -116,7 +122,7 @@ export default class AppSigningOptInProcess {
   }
 
   async prepareKeystores(username: string, exp: ExpoConfig): Promise<void> {
-    log(`Saving upload keystore to ${this.uploadKeystore}...`);
+    log(`Saving Upload Keystore to ${this.uploadKeystore}...`);
     if (!exp.android?.package) {
       throw new Error('Missing android.package configuration.');
     }
@@ -138,7 +144,7 @@ export default class AppSigningOptInProcess {
 
     await AndroidCredentials.logKeystoreCredentials(
       this.uploadKeystoreCredentials,
-      'Credentials for upload keystore'
+      'Credentials for Upload Keystore'
     );
 
     log('App signing certificate');
@@ -153,7 +159,7 @@ export default class AppSigningOptInProcess {
     });
   }
 
-  async afterStoreSubmit(username: string, exp: ExpoConfig): Promise<void> {
+  async afterStoreSubmit(ctx: Context): Promise<void> {
     log.warn(
       `On the previously opened Google Play console page, upload ${chalk.underline(
         this.privateSigningKey
@@ -164,7 +170,7 @@ export default class AppSigningOptInProcess {
 
     log.warn(
       `The next step will ${chalk.red(
-        'remove your current keystore from Expo servers'
+        'remove your current Keystore from Expo servers'
       )}. Make sure that private key is uploaded successfully and compare the hashes displayed above with the ones printed in the console.`
     );
     const { confirm: confirmUpload } = await prompt([
@@ -183,33 +189,23 @@ export default class AppSigningOptInProcess {
 
     if (!this.uploadKeystoreCredentials) {
       throw new Error(
-        'Android uploading keystore credentials are not defined. Cannot update credentials.'
+        'Android Upload Keystore credentials are not defined. Cannot update credentials.'
       );
     }
 
-    await Credentials.updateCredentialsForPlatform(
-      'android',
-      {
-        // @ts-ignore
-        keystorePassword: this.uploadKeystoreCredentials.keystorePassword,
-        keyAlias: this.uploadKeystoreCredentials.keyAlias,
-        keyPassword: this.uploadKeystoreCredentials.keyPassword,
-        keystore: (await fs.readFile(this.uploadKeystore)).toString('base64'),
-      },
-      [],
-      {
-        platform: 'android',
-        username,
-        experienceName: `@${username}/${exp.slug}`,
-      }
-    );
+    await useKeystore(ctx, `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`, {
+      keystorePassword: this.uploadKeystoreCredentials.keystorePassword,
+      keyAlias: this.uploadKeystoreCredentials.keyAlias,
+      keyPassword: this.uploadKeystoreCredentials.keyPassword,
+      keystore: (await fs.readFile(this.uploadKeystore)).toString('base64'),
+    });
 
     log(
-      `The original keystore is stored in ${this.signKeystore}; remove it only if you are sure that Google Play App Signing is enabled for your app.`
+      `The original Keystore is stored in ${this.signKeystore}; remove it only if you are sure that Google Play App Signing is enabled for your app.`
     );
     if (!this.signKeystoreCredentials) {
       throw new Error(
-        'Android signing keystore credentials are not defined. Cannot log credentials.'
+        'Android Signing Keystore credentials are not defined. Cannot log credentials.'
       );
     }
     AndroidCredentials.logKeystoreCredentials(

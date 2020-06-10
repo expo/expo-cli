@@ -6,7 +6,7 @@ import {
   getApiV2MockCredentials,
   jester,
   testAppJson,
-} from '../../../credentials/test-fixtures/mocks';
+} from '../../../credentials/test-fixtures/mocks-ios';
 import { mockExpoXDL } from '../../../__tests__/mock-utils';
 
 jest.setTimeout(10 * 1000); // 10s
