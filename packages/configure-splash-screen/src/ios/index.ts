@@ -30,7 +30,7 @@ export default async function configureIos(
       resizeMode,
       splashScreenImagePresent: !!imagePath,
     }),
-    configureAppDelegate(iosProject.projectPath),
+    configureAppDelegate(iosProject),
   ]);
 
   await fs.writeFile(iosProject.pbxProject.filepath, iosProject.pbxProject.writeSync());
