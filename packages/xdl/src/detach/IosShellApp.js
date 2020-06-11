@@ -206,9 +206,9 @@ async function _createStandaloneContextAsync(args) {
   }
 
   let bundleExecutable = args.type === 'client' ? EXPONENT_APP : EXPOKIT_APP;
-  if (manifest.ios && manifest.ios.infoPlist && manifest.ios.infoPlist.CFBundleExecutable) {
+  if (manifest?.ios?.infoPlist?.CFBundleExecutable) {
     bundleExecutable = manifest.ios.infoPlist.CFBundleExecutable;
-  } else if (privateConfig && privateConfig.bundleIdentifier) {
+  } else if (privateConfig?.bundleIdentifier) {
     bundleExecutable = pascalCase(privateConfig.bundleIdentifier);
   }
 
