@@ -41,7 +41,7 @@ export async function runMetroDevServerAsync(
 
   const { middleware, attachToServer } = createDevServerMiddleware({
     port: metroConfig.server.port,
-    watchFolders: [...metroConfig.watchFolders],
+    watchFolders: metroConfig.watchFolders,
   });
   middleware.use(bodyParser.json());
   middleware.use('/logs', clientLogsMiddleware(options.logger));
