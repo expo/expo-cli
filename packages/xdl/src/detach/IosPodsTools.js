@@ -63,7 +63,7 @@ function _renderExpoKitDependency(options, sdkVersion) {
   let attributes;
   if (options.expoKitPath) {
     attributes = {
-      path: options.expoKitPath,
+      path: path.join(options.expoKitPath, 'ios'),
     };
   } else if (options.expoKitTag) {
     attributes = {
