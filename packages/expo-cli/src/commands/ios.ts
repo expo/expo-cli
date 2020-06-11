@@ -7,7 +7,7 @@ import { readFile } from 'fs-extra';
 import path from 'path';
 import { buildAsync } from './esbuild/service';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('ios [project-dir]')
     .description(
@@ -15,13 +15,16 @@ export default function(program: Command) {
     )
     .allowOffline()
     .asyncActionProjectDir(async (projectRoot: string) => {
-      const filename = Exp.determineEntryPoint(projectRoot, 'ios');
+      const platform = process.env.EXPO_PLATFORM ?? 'ios';
+
+      const filename = Exp.determineEntryPoint(projectRoot, platform);
       // const contents = await readFile(filename, 'utf8');
       // console.log(filename, contents);
       await buildAsync(
         projectRoot,
         path.resolve(filename),
-        path.join(projectRoot, 'public/index.js')
+        platform,
+        path.join(projectRoot, `public/index.${platform}.js`)
       );
       // console.log(data);
     });
