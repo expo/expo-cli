@@ -9054,10 +9054,10 @@ es6-weak-map@^2.0.1:
     es6-iterator "^2.0.3"
     es6-symbol "^3.1.1"
 
-esbuild@^0.4.3:
-  version "0.4.3"
-  resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.4.3.tgz#228e108f849128a2b2e64d524235fef58236912b"
-  integrity sha512-LKCkYlFZMDsUcUx1r5jmnTrtufBsgCvhtdAk0530RLO83PJo2ke2z/FybFCAzm2LGIpL+Sinhg4nUOA3BSpHjg==
+esbuild@~0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.5.0.tgz#868bc5e3ece824c0bf6db6f3c381e799987973b2"
+  integrity sha512-IZx4M86eTFxMqbF9hL5O+uJOonYN6mIZ9dCoK+Lh197kWqNuE+25HZGggVBm1VcCfEBZ6e2oLM2Fwx2tDkLztw==
 
 escape-html@~1.0.3:
   version "1.0.3"

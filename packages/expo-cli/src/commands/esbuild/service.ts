@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 // import { resolveModule } from '@expo/config';
-// import { getBareExtensions } from '@expo/config/paths';
+import { getBareExtensions } from '@expo/config/paths';
 
 export async function buildAsync(
   projectRoot: string,
@@ -14,16 +14,18 @@ export async function buildAsync(
   console.log('Building: ', mainFile);
   console.log('output: ', outputPath);
   try {
-    const { stderr, warnings } = await build({
+    const { warnings } = await build({
       entryPoints: [
         // resolveModule('react-native/build/polyfills/console.js', projectRoot, {}),
         // resolveModule('react-native/build/polyfills/error-guard.js', projectRoot, {}),
         // resolveModule('react-native/build/polyfills/Object.es7.js', projectRoot, {}),
         mainFile,
       ],
-      // resolveExtensions: getBareExtensions(['ios', 'native'], { isReact: true, isTS: true, isModern: false }).map(
-      //   value => `.${value}`
-      // ),
+      resolveExtensions: getBareExtensions(['ios', 'native'], {
+        isReact: true,
+        isTS: true,
+        isModern: false,
+      }).map(value => `.${value}`),
       minify: true,
       bundle: true,
       sourcemap: true,
@@ -37,7 +39,7 @@ export async function buildAsync(
     });
     const output = fs.readFileSync(outputPath, 'utf8');
     await fs.writeFile(outputPath, 'var global=global||this;' + output);
-    console.log('success', { stderr, warnings });
+    console.log('success', { warnings });
   } catch ({ stderr, errors, warnings }) {
     console.error('failure', { stderr, errors, warnings });
   }
