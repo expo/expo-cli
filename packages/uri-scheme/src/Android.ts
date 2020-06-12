@@ -1,3 +1,5 @@
+import { existsSync } from 'fs';
+import path from 'path';
 import {
   format,
   getPackageAsync,
@@ -7,7 +9,6 @@ import {
 import * as Scheme from '@expo/config/build/android/Scheme';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
-import { sync as globSync } from 'glob';
 
 import { CommandError, Options } from './Options';
 
@@ -15,11 +16,10 @@ const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Inten
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 
 export function isAvailable(projectRoot: string): boolean {
-  const reactNativeAndroid = globSync('android/app/src/main/AndroidManifest.xml', {
-    cwd: projectRoot,
-  });
-  const currentAndroid = globSync('app/src/main/AndroidManifest.xml', { cwd: projectRoot });
-  return currentAndroid.length > 0 || reactNativeAndroid.length > 0;
+  return (
+    existsSync(path.join(projectRoot, 'android/app/src/main/AndroidManifest.xml')) ||
+    existsSync(path.join(projectRoot, 'app/src/main/AndroidManifest.xml'))
+  );
 }
 
 export async function addAsync({
@@ -163,14 +163,16 @@ export async function getProjectIdAsync({
 }
 
 export function getConfigPath(projectRoot: string): string {
-  const rnManifestPaths = globSync('android/app/src/main/AndroidManifest.xml', {
-    cwd: projectRoot,
-  });
-  if (rnManifestPaths.length) {
-    return rnManifestPaths[0];
+  const paths = [
+    'android/app/src/main/AndroidManifest.xml',
+    'app/src/main/AndroidManifest.xml',
+  ].map(relative => path.join(projectRoot, relative));
+  for (const manifestPath of paths) {
+    if (existsSync(manifestPath)) {
+      return manifestPath;
+    }
   }
-  const manifestPaths = globSync('app/src/main/AndroidManifest.xml', { cwd: projectRoot });
-  return manifestPaths[0];
+  throw new Error(`Could not find AndroidManifest.xml, looked in: ${paths.join(', ')}`);
 }
 
 async function readConfigAsync(path: string): Promise<any> {
