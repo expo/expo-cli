@@ -5,7 +5,7 @@ import JsonFile from '@expo/json-file';
 import path from 'path';
 import process from 'process';
 import rimraf from 'rimraf';
-import glob from 'glob-promise';
+import { sync as globSync } from 'glob';
 import uuid from 'uuid';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
@@ -446,7 +446,10 @@ async function prepareDetachedUserContextIosAsync(projectDir, exp, args) {
   }
   let rnPodDirectory = path.join(podsDirectory, 'React');
   if (isDirectory(rnPodDirectory)) {
-    let rnFilesToDelete = await glob(rnPodDirectory + '/**/*.@(js|json)');
+    let rnFilesToDelete = globSync('**/*.@(js|json)', {
+      absolute: true,
+      cwd: rnPodDirectory,
+    });
     if (rnFilesToDelete) {
       for (let i = 0; i < rnFilesToDelete.length; i++) {
         await fs.unlink(rnFilesToDelete[i]);
@@ -486,10 +489,10 @@ export async function prepareDetachedBuildAsync(projectDir, args) {
   if (args.platform === 'ios') {
     await prepareDetachedBuildIosAsync(projectDir, args);
   } else {
-    let androidProjectDirectory = path.join(projectDir, 'android');
-    let expoBuildConstantsMatches = await glob(
-      androidProjectDirectory + '/**/DetachBuildConstants.java'
-    );
+    let expoBuildConstantsMatches = globSync('android/**/DetachBuildConstants.java', {
+      absolute: true,
+      cwd: projectDir,
+    });
     if (expoBuildConstantsMatches && expoBuildConstantsMatches.length) {
       let expoBuildConstants = expoBuildConstantsMatches[0];
       let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);

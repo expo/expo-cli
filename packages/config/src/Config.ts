@@ -1,6 +1,6 @@
 import JsonFile, { JSONObject } from '@expo/json-file';
 import fs from 'fs-extra';
-import globby from 'globby';
+import { sync as globSync } from 'glob';
 import path from 'path';
 import semver from 'semver';
 import slug from 'slugify';
@@ -500,17 +500,19 @@ function isBareWorkflowProject(projectRoot: string): boolean {
     return false;
   }
 
-  if (fs.existsSync(path.resolve(projectRoot, 'ios'))) {
-    const xcodeprojFiles = globby.sync([path.join(projectRoot, 'ios', '/**/*.xcodeproj')]);
-    if (xcodeprojFiles.length) {
-      return true;
-    }
+  const xcodeprojFiles = globSync('ios/**/*.xcodeproj', {
+    absolute: true,
+    cwd: projectRoot,
+  });
+  if (xcodeprojFiles.length) {
+    return true;
   }
-  if (fs.existsSync(path.resolve(projectRoot, 'android'))) {
-    const gradleFiles = globby.sync([path.join(projectRoot, 'android', '/**/*.gradle')]);
-    if (gradleFiles.length) {
-      return true;
-    }
+  const gradleFiles = globSync('android/**/*.gradle', {
+    absolute: true,
+    cwd: projectRoot,
+  });
+  if (gradleFiles.length) {
+    return true;
   }
 
   return false;

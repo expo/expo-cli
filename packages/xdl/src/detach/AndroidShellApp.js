@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import replaceString from 'replace-string';
-import globby from 'globby';
+import { sync as globSync } from 'glob';
 import uuid from 'uuid';
 
 import { createAndWriteIconsToPathAsync } from './AndroidIcons';
@@ -881,12 +881,10 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   // Splash Background
   if (backgroundImages && backgroundImages.length > 0) {
     // Delete the placeholder images
-    (
-      await globby(['**/shell_launch_background_image.png'], {
-        cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
-        absolute: true,
-      })
-    ).forEach(filePath => {
+    globSync('**/shell_launch_background_image.png', {
+      cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
+      absolute: true,
+    }).forEach(filePath => {
       fs.removeSync(filePath);
     });
 

@@ -4,14 +4,13 @@ import plist, { PlistObject } from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import fs from 'fs';
-import { sync } from 'glob';
-import { join } from 'path';
+import { sync as globSync } from 'glob';
 
 import { Options } from './Options';
 
 export function isAvailable(projectRoot: string): boolean {
-  const reactNativeIos = sync(join(projectRoot, 'ios', '*.xcodeproj'));
-  const currentIos = sync(join(projectRoot, '*.xcodeproj'));
+  const reactNativeIos = globSync('ios/*.xcodeproj', { absolute: true, cwd: projectRoot });
+  const currentIos = globSync('*.xcodeproj', { absolute: true, cwd: projectRoot });
   return !!currentIos.length || !!reactNativeIos.length;
 }
 
@@ -95,11 +94,11 @@ export async function getAsync({
 export function getConfigPath(projectRoot: string): string {
   // TODO: Figure out how to avoid using the Tests info.plist
 
-  const rnInfoPlistPaths = sync(join(projectRoot, 'ios', '*', 'Info.plist'));
+  const rnInfoPlistPaths = globSync('ios/*/Info.plist', { absolute: true, cwd: projectRoot });
   if (rnInfoPlistPaths.length) {
     return rnInfoPlistPaths[0];
   }
-  const infoPlistPaths = sync(join(projectRoot, '*', 'Info.plist'));
+  const infoPlistPaths = globSync('*/Info.plist', { absolute: true, cwd: projectRoot });
   return infoPlistPaths[0];
 }
 
