@@ -23,6 +23,20 @@ it('exports the project for a self-hosted production deployment', async () => {
     }
   );
   const distPath = path.join(projectRoot, 'dist');
+
+  const assetMap = JsonFile.read(path.join(distPath, 'assetmap.json'));
+  expect(deepRelativizePaths(projectRoot, assetMap)).toMatchSnapshot({}, 'assetmap');
+
+  expect(JsonFile.read(path.join(distPath, 'android-index.json'))).toMatchSnapshot(
+    {
+      commitTime: expect.any(String),
+      publishedTime: expect.any(String),
+      releaseId: expect.any(String),
+      revisionId: expect.any(String),
+    },
+    'android-index'
+  );
+
   // List output files with sizes for snapshotting.
   // This is to make sure that any changes to the output are intentional.
   // Posix path formatting is used to make paths the same across OSes.
@@ -33,17 +47,6 @@ it('exports the project for a self-hosted production deployment', async () => {
       })`
   );
   expect(distFiles).toMatchSnapshot();
-  const assetMap = JsonFile.read(path.join(distPath, 'assetmap.json'));
-  expect(deepRelativizePaths(projectRoot, assetMap)).toMatchSnapshot({}, 'assetmap');
-  expect(JsonFile.read(path.join(distPath, 'android-index.json'))).toMatchSnapshot(
-    {
-      commitTime: expect.any(String),
-      publishedTime: expect.any(String),
-      releaseId: expect.any(String),
-      revisionId: expect.any(String),
-    },
-    'android-index'
-  );
 });
 
 function deepRelativizePaths(root: string, data: any) {
