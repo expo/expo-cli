@@ -21,8 +21,8 @@ function fileExists(projectName: string, filePath: string) {
   return fs.existsSync(path.join(tempDir, projectName, filePath));
 }
 
-// 3 minutes -- React Native takes a while to install
-const extendedTimeout = 3 * 1000 * 60;
+// 4 minutes -- React Native takes a while to install
+const extendedTimeout = 4 * 1000 * 60;
 
 beforeAll(async () => {
   jest.setTimeout(extendedTimeout);
