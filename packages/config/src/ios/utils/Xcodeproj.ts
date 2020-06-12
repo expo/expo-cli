@@ -14,7 +14,7 @@ export function getProjectName(projectRoot: string) {
 export function getSourceRoot(projectRoot: string) {
   const paths = globSync('ios/*/AppDelegate.m', {
     absolute: true,
-    cwd: path.join(projectRoot, 'ios'),
+    cwd: projectRoot,
   });
   return path.dirname(paths[0]);
 }
