@@ -28,7 +28,7 @@ import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import HashIds from 'hashids';
-import joi from 'joi';
+import joi from '@hapi/joi';
 import chunk from 'lodash/chunk';
 import escapeRegExp from 'lodash/escapeRegExp';
 import get from 'lodash/get';
@@ -584,11 +584,17 @@ export async function exportForAppHosting(
   await fs.ensureDir(bundlesPathToWrite);
 
   const { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
-  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
+  const iosBundleHash = crypto
+    .createHash('md5')
+    .update(iosBundle)
+    .digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
+  const androidBundleHash = crypto
+    .createHash('md5')
+    .update(androidBundle)
+    .digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 
@@ -1023,14 +1029,8 @@ async function _getPublishExpConfigAsync(
   exp: PublicConfig;
   pkg: PackageJSONConfig;
 }> {
-  let schema = joi.object().keys({
-    releaseChannel: joi.string(),
-  });
-
-  // Validate schema
-  const { error } = joi.validate(options, schema);
-  if (error) {
-    throw new XDLError('INVALID_OPTIONS', error.toString());
+  if (options.releaseChannel != null && typeof options.releaseChannel !== 'string') {
+    throw new XDLError('INVALID_OPTIONS', 'releaseChannel must be a string');
   }
   options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
 
@@ -2425,12 +2425,8 @@ export async function setOptionsAsync(
   }
 ): Promise<void> {
   _assertValidProjectRoot(projectRoot); // Check to make sure all options are valid
-  let schema = joi.object().keys({
-    packagerPort: joi.number().integer(),
-  });
-  const { error } = joi.validate(options, schema);
-  if (error) {
-    throw new XDLError('INVALID_OPTIONS', error.toString());
+  if (options.packagerPort != null && Number.isInteger(options.packagerPort)) {
+    throw new XDLError('INVALID_OPTIONS', 'packagerPort must be an integer');
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, options);
 }
