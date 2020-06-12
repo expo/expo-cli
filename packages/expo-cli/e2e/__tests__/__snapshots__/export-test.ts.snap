@@ -2,7 +2,7 @@
 
 exports[`exports the project for a self-hosted production deployment 1`] = `
 Array [
-  "dist/android-index.json (616 B)",
+  "dist/android-index.json (621 B)",
   "dist/assetmap.json (22.7 kB)",
   "dist/assets (dir)",
   "dist/assets/0886a6b127c6057cee83f9c65c7ffd62 (26.2 kB)",
@@ -37,9 +37,9 @@ Array [
   "dist/assets/f6c6f6c8cb7784254ad00056f6fbd74e (34.1 kB)",
   "dist/assets/fdc01171a7a7ea76b187afcd162dee7d (3.99 kB)",
   "dist/bundles (dir)",
-  "dist/bundles/android-930929123ef73a680e92ed0a73e9401f.js (1.13 MB)",
-  "dist/bundles/ios-e37882b4fa07b414f3bb29a293e05c56.js (1.12 MB)",
-  "dist/ios-index.json (608 B)",
+  "dist/bundles/android-9ff9d603937b05ff1c6951d1d25c095b.js (1.13 MB)",
+  "dist/bundles/ios-c28e36357a94460780763f13aacebd2f.js (1.12 MB)",
+  "dist/ios-index.json (613 B)",
 ]
 `;
 
@@ -49,14 +49,14 @@ Object {
     "package": "com.example.minimal",
   },
   "assetUrlOverride": "./assets",
-  "bundleUrl": "https://example.com/export-test-app/bundles/android-930929123ef73a680e92ed0a73e9401f.js",
+  "bundleUrl": "https://example.com/export-test-app/bundles/android-9ff9d603937b05ff1c6951d1d25c095b.js",
   "commitTime": Any<String>,
   "dependencies": Array [
     "expo",
     "react",
     "react-native",
   ],
-  "id": "@fson/export-test-app",
+  "id": "@anonymous/export-test-app",
   "ios": Object {
     "bundleIdentifier": "com.example.minimal",
   },
