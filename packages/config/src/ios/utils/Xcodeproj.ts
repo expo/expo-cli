@@ -12,7 +12,10 @@ export function getProjectName(projectRoot: string) {
 }
 
 export function getSourceRoot(projectRoot: string) {
-  const paths = globSync('ios/*/AppDelegate.m', { cwd: projectRoot });
+  const paths = globSync('ios/*/AppDelegate.m', {
+    absolute: true,
+    cwd: path.join(projectRoot, 'ios'),
+  });
   return path.dirname(paths[0]);
 }
 
@@ -39,7 +42,7 @@ export function addFileToGroup(filepath: string, groupName: string, project: Pro
  * Get the pbxproj for the given path
  */
 export function getPbxproj(projectRoot: string) {
-  const pbxprojPaths = globSync('ios/*/project.pbxproj', { cwd: projectRoot });
+  const pbxprojPaths = globSync('ios/*/project.pbxproj', { absolute: true, cwd: projectRoot });
   const [pbxprojPath, ...otherPbxprojPaths] = pbxprojPaths;
 
   if (pbxprojPaths.length > 1) {

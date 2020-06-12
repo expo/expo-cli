@@ -240,7 +240,7 @@ async function _renderVersionedReactNativePostinstallsAsync(
 }
 
 async function _concatTemplateFilesInDirectoryAsync(directory, filterFn) {
-  let templateFilenames = globSync('*.rb', { cwd: directory }).sort();
+  let templateFilenames = globSync('*.rb', { absolute: true, cwd: directory }).sort();
   let filteredTemplateFilenames = filterFn ? templateFilenames.filter(filterFn) : templateFilenames;
   let templateStrings = [];
   // perform this in series in order to get deterministic output

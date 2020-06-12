@@ -215,6 +215,7 @@ async function createEntitlementsFile({
   const decodedProvisioningProfileEntitlements = plistData.Entitlements;
 
   const entitlementsPaths = globSync('Products/Applications/*.app/*.entitlements', {
+    absolute: true,
     cwd: archivePath,
   });
   if (entitlementsPaths.length === 0) {

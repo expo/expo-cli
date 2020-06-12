@@ -19,6 +19,7 @@ function getPackageRoot(projectRoot: string) {
 function getCurrentPackageName(projectRoot: string) {
   let packageRoot = getPackageRoot(projectRoot);
   let mainApplicationPath = globSync('**/MainApplication.java', {
+    absolute: true,
     cwd: packageRoot,
   })[0];
   let packagePath = path.dirname(mainApplicationPath);

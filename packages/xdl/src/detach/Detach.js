@@ -447,6 +447,7 @@ async function prepareDetachedUserContextIosAsync(projectDir, exp, args) {
   let rnPodDirectory = path.join(podsDirectory, 'React');
   if (isDirectory(rnPodDirectory)) {
     let rnFilesToDelete = globSync('**/*.@(js|json)', {
+      absolute: true,
       cwd: rnPodDirectory,
     });
     if (rnFilesToDelete) {
@@ -489,6 +490,7 @@ export async function prepareDetachedBuildAsync(projectDir, args) {
     await prepareDetachedBuildIosAsync(projectDir, args);
   } else {
     let expoBuildConstantsMatches = globSync('android/**/DetachBuildConstants.java', {
+      absolute: true,
       cwd: projectDir,
     });
     if (expoBuildConstantsMatches && expoBuildConstantsMatches.length) {

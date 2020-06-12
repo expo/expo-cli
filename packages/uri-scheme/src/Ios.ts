@@ -9,8 +9,8 @@ import { sync as globSync } from 'glob';
 import { Options } from './Options';
 
 export function isAvailable(projectRoot: string): boolean {
-  const reactNativeIos = globSync('ios/*.xcodeproj', { cwd: projectRoot });
-  const currentIos = globSync('*.xcodeproj', { cwd: projectRoot });
+  const reactNativeIos = globSync('ios/*.xcodeproj', { absolute: true, cwd: projectRoot });
+  const currentIos = globSync('*.xcodeproj', { absolute: true, cwd: projectRoot });
   return !!currentIos.length || !!reactNativeIos.length;
 }
 
@@ -94,11 +94,11 @@ export async function getAsync({
 export function getConfigPath(projectRoot: string): string {
   // TODO: Figure out how to avoid using the Tests info.plist
 
-  const rnInfoPlistPaths = globSync('ios/*/Info.plist', { cwd: projectRoot });
+  const rnInfoPlistPaths = globSync('ios/*/Info.plist', { absolute: true, cwd: projectRoot });
   if (rnInfoPlistPaths.length) {
     return rnInfoPlistPaths[0];
   }
-  const infoPlistPaths = globSync('*/Info.plist', { cwd: projectRoot });
+  const infoPlistPaths = globSync('*/Info.plist', { absolute: true, cwd: projectRoot });
   return infoPlistPaths[0];
 }
 

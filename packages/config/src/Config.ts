@@ -501,12 +501,14 @@ function isBareWorkflowProject(projectRoot: string): boolean {
   }
 
   const xcodeprojFiles = globSync('ios/**/*.xcodeproj', {
+    absolute: true,
     cwd: projectRoot,
   });
   if (xcodeprojFiles.length) {
     return true;
   }
   const gradleFiles = globSync('android/**/*.gradle', {
+    absolute: true,
     cwd: projectRoot,
   });
   if (gradleFiles.length) {

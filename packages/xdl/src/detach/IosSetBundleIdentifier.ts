@@ -7,7 +7,7 @@ import plist, { PlistObject } from '@expo/plist';
 const defaultBundleId = '$(PRODUCT_BUNDLE_IDENTIFIER)';
 
 export function resetAllPlistBundleIdentifiers(projectRoot: string) {
-  const infoPlistPaths = globSync('ios/*/Info.plist', { cwd: projectRoot });
+  const infoPlistPaths = globSync('ios/*/Info.plist', { absolute: true, cwd: projectRoot });
 
   for (const plistPath of infoPlistPaths) {
     resetPlistBundleIdentifier(plistPath);
@@ -82,7 +82,7 @@ export function updateBundleIdentifierForPbxproj(pbxprojPath: string, bundleIden
 
 export function setBundleIdentifier(projectRoot: string, bundleIdentifier: string) {
   // Get all pbx projects
-  const pbxprojPaths = globSync('ios/*/project.pbxproj', { cwd: projectRoot });
+  const pbxprojPaths = globSync('ios/*/project.pbxproj', { absolute: true, cwd: projectRoot });
 
   for (const pbxprojPath of pbxprojPaths) {
     updateBundleIdentifierForPbxproj(pbxprojPath, bundleIdentifier);
