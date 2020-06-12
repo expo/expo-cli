@@ -50,8 +50,8 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
   fs.mkdirpSync(newPackagePath);
 
   // Move everything from the old directory over
-  globSync('**/*', { cwd: currentPackagePath }).forEach(filepath => {
-    let relativePath = filepath.replace(currentPackagePath, '');
+  globSync('**/*', { cwd: currentPackagePath }).forEach(relativePath => {
+    let filepath = path.join(currentPackagePath, relativePath);
     if (fs.lstatSync(filepath).isFile()) {
       fs.moveSync(filepath, path.join(newPackagePath, relativePath));
     } else {
@@ -76,7 +76,7 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
   }
 
   const filesToUpdate = [
-    ...globSync('**/*', { cwd: newPackagePath }),
+    ...globSync('**/*', { cwd: newPackagePath, absolute: true }),
     path.join(projectRoot, 'android', 'app', 'BUCK'),
   ];
   // Replace all occurrences of the path in the project
