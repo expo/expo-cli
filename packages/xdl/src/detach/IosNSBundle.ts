@@ -1,5 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { sync } from 'glob';
+
+// @ts-ignore: No TS support
+import { project as Project } from 'xcode';
 
 import { ExpoConfig } from '@expo/config';
 import * as AssetBundle from './AssetBundle';
@@ -522,6 +526,31 @@ async function _configureGoogleServicesPlistAsync(context: AnyStandaloneContext)
   }
 }
 
+async function _configureAdSupportAsync(context: AnyStandaloneContext): Promise<void> {
+  if (context instanceof StandaloneContextUser) {
+    return;
+  }
+
+  if (!context.config.ios || !context.config.ios.enableAdSupport) {
+    return;
+  }
+
+  const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
+  const { iosProjectDirectory } = IosWorkspace.getPaths(context);
+
+  const pbxprojPaths = sync(path.join(iosProjectDirectory, '*', 'project.pbxproj'));
+
+  for (const pbxprojPath of pbxprojPaths) {
+    buildPhaseLogger.info(`Adding AdSupport framework to ${pbxprojPath}`);
+
+    const project = Project(pbxprojPath);
+    await project.parse();
+    project.addFramework('AdSupport.framework');
+
+    await fs.writeFile(pbxprojPath, project.writeSync());
+  }
+}
+
 export async function configureAsync(context: AnyStandaloneContext): Promise<void> {
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
 
@@ -552,6 +581,7 @@ export async function configureAsync(context: AnyStandaloneContext): Promise<voi
     await _configureEntitlementsAsync(context);
     await _configureConstantsPlistAsync(context);
     await _configureGoogleServicesPlistAsync(context);
+    await _configureAdSupportAsync(context);
     if (!isExpoClientBuild) {
       await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
       await IosLocalization.writeLocalizationResourcesAsync({
