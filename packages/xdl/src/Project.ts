@@ -152,6 +152,8 @@ type Release = {
 
 export type ProjectStatus = 'running' | 'ill' | 'exited';
 
+type BundlesByPlatform = { android: BundleOutput; ios: BundleOutput };
+
 export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
   const { packagerPort, expoServerPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
   if (packagerPort && expoServerPort) {
@@ -976,7 +978,7 @@ async function _collectAssets(
   projectRoot: string,
   exp: PublicConfig,
   hostedAssetPrefix: string,
-  bundles: { android: BundleOutput; ios: BundleOutput }
+  bundles: BundlesByPlatform
 ): Promise<Asset[]> {
   // Resolve manifest assets to their hosted URL and add them to the list of assets to
   // be uploaded. Modifies exp.
@@ -1050,7 +1052,7 @@ async function _configureExpForAssets(projectRoot: string, exp: ExpoConfig, asse
 async function publishAssetsAsync(
   projectRoot: string,
   exp: PublicConfig,
-  bundles: { android: BundleOutput; ios: BundleOutput }
+  bundles: BundlesByPlatform
 ) {
   logger.global.info('Analyzing assets');
 
@@ -1076,7 +1078,7 @@ async function exportAssetsAsync(
   exp: PublicConfig,
   hostedUrl: string,
   outputDir: string,
-  bundles: { android: BundleOutput; ios: BundleOutput }
+  bundles: BundlesByPlatform
 ) {
   logger.global.info('Analyzing assets');
 
