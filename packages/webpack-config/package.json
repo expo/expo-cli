@@ -50,7 +50,7 @@
     "css-loader": "^2.1.1",
     "expo-pwa": "0.0.20",
     "file-loader": "4.2.0",
-    "find-yarn-workspace-root": "^1.2.1",
+    "find-yarn-workspace-root": "~2.0.0",
     "getenv": "^0.7.0",
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "4.0.0-alpha.2",
