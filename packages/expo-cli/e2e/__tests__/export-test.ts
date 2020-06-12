@@ -10,10 +10,16 @@ import { createMinimalProjectAsync, runAsync } from '../TestUtils';
 it('exports the project for a self-hosted production deployment', async () => {
   jest.setTimeout(4 * 60e3);
   const projectRoot = await createMinimalProjectAsync(temporary.directory(), 'export-test-app');
+  const dotExpoHomeDirectory = path.join(projectRoot, '../.expo');
   await runAsync(
     ['export', '--public-url', 'https://example.com/export-test-app/', '--dump-assetmap'],
     {
       cwd: projectRoot,
+      env: {
+        ...process.env,
+        // Isolate the test from global state such as the currently signed in user.
+        __UNSAFE_EXPO_HOME_DIRECTORY: dotExpoHomeDirectory,
+      },
     }
   );
   const distPath = path.join(projectRoot, 'dist');
