@@ -25,27 +25,33 @@ type Webhook = {
 export default function (program: Command) {
   program
     .command('webhooks [project-dir]')
-    .description('List webhooks on a project.')
+    .description('List all webhooks for a project.')
     .asyncActionProjectDir(listAsync);
   program
     .command('webhooks:add [project-dir]')
-    .description('Add a webhook to a project.')
-    .option('--url <url>', 'URL the webhook will request. (Required)')
-    .option('--event <event-type>', 'Event type triggering the webhook. [build] (Required)')
-    .option('--secret <secret>', 'Value used to sign the request with in Expo-Signature header.')
+    .description('Add webhook to a project.')
+    .option('--url <url>', 'URL to request. (Required)')
+    .option('--event <event-type>', 'Event type that triggers the webhook. [build] (Required)')
+    .option(
+      '--secret <secret>',
+      "Secret used to create a hash signature of the request payload, provided in the 'Expo-Signature' header."
+    )
     .asyncActionProjectDir(addAsync);
   program
     .command('webhooks:remove [project-dir]')
     .option('--id <id>', 'ID of the webhook to remove.')
-    .description('Remove a webhook from a project.')
+    .description('Delete a webhook.')
     .asyncActionProjectDir(removeAsync);
   program
     .command('webhooks:update [project-dir]')
     .option('--id <id>', 'ID of the webhook to update.')
     .option('--url [url]', 'URL the webhook will request.')
-    .option('--event [event-type]', 'Event type triggering the webhook. [build]')
-    .option('--secret [secret]', 'Value used to sign the request with in Expo-Signature header.')
-    .description('Update a webhook on a project.')
+    .option('--event [event-type]', 'Event type that triggers the webhook. [build]')
+    .option(
+      '--secret [secret]',
+      "Secret used to create a hash signature of the request payload, provided in the 'Expo-Signature' header."
+    )
+    .description('Update a webhook for a project.')
     .asyncActionProjectDir(updateAsync);
 }
 
@@ -87,7 +93,7 @@ async function updateAsync(
     ...options
   }: { id?: string; url?: string; event?: WebhookEvent; secret?: string }
 ) {
-  invariant(typeof id === 'string', '--id must be a  webhook ID');
+  invariant(typeof id === 'string', '--id must be a webhook ID');
   invariant(event == null || typeof event === 'string', '--event: string is required');
   let secret = validateSecret(options);
 
@@ -103,7 +109,7 @@ async function updateAsync(
 }
 
 async function removeAsync(projectRoot: string, { id }: { id?: string }) {
-  invariant(typeof id === 'string', '--id must be a  webhook ID');
+  invariant(typeof id === 'string', '--id must be a webhook ID');
   const { project, client } = await setupAsync(projectRoot);
 
   await client.deleteAsync(`projects/${project.id}/webhooks/${id}`);
