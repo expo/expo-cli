@@ -227,10 +227,14 @@ async function action(projectDir: string, command: Command) {
     } catch (_) {}
 
     let didConfigureUpdatesProjectFiles = false;
-    const user = await UserManager.getCurrentUserAsync();
-    if (user) {
+    const username = await UserManager.getCurrentUsernameAsync();
+    if (username) {
       try {
-        await configureUpdatesProjectFilesAsync(projectPath, initialConfig as BareAppConfig, user);
+        await configureUpdatesProjectFilesAsync(
+          projectPath,
+          initialConfig as BareAppConfig,
+          username
+        );
         didConfigureUpdatesProjectFiles = true;
       } catch {}
     }
@@ -243,7 +247,7 @@ async function action(projectDir: string, command: Command) {
       workflow: 'bare',
       showPublishBeforeBuildWarning,
       didConfigureUpdatesProjectFiles,
-      username: user?.username,
+      username,
     });
     if (!podsInstalled && process.platform === 'darwin') {
       log.newLine();
@@ -274,7 +278,7 @@ function logProjectReadyAsync({
   workflow: 'managed' | 'bare';
   showPublishBeforeBuildWarning?: boolean;
   didConfigureUpdatesProjectFiles?: boolean;
-  username?: string;
+  username?: string | null;
 }) {
   log.nested(chalk.bold(`✅ Your project is ready!`));
   log.newLine();
@@ -358,25 +362,12 @@ function logProjectReadyAsync({
 async function configureUpdatesProjectFilesAsync(
   projectRoot: string,
   initialConfig: BareAppConfig,
-  user: User
+  username: string
 ) {
-  const expoPlistPath = path.join(
-    projectRoot,
-    'ios',
-    initialConfig.name,
-    'Supporting',
-    'Expo.plist'
-  );
-  const androidManifestPath = path.join(
-    projectRoot,
-    'android',
-    'app',
-    'src',
-    'main',
-    'AndroidManifest.xml'
-  );
+  const expoPlistPath = path.join(projectRoot, 'ios', initialConfig.name, 'Supporting/Expo.plist');
+  const androidManifestPath = path.join(projectRoot, 'android/app/src/main/AndroidManifest.xml');
 
-  const appUrl = `https://exp.host/@${user.username}/${initialConfig.name}`;
+  const appUrl = `https://exp.host/@${username}/${initialConfig.name}`;
   const sdkVersion = (await readConfigJsonAsync(projectRoot)).exp.sdkVersion;
 
   if (!sdkVersion) {
@@ -392,15 +383,20 @@ async function maybeConfigureUpdatesProjectFileAsync(
   appUrl: string,
   sdkVersion: string
 ) {
-  if (fs.existsSync(path)) {
-    const fileContents = fs.readFileSync(path).toString();
-    fs.writeFileSync(
-      path,
-      fileContents
-        .replace(/YOUR-APP-URL-HERE/g, appUrl)
-        .replace(/YOUR-APP-SDK-VERSION-HERE/g, sdkVersion)
-    );
+  let fileContents;
+  try {
+    fileContents = fs.readFileSync(path, 'utf8');
+  } catch (error) {
+    if (error.code === 'ENOENT') return;
+    // File doesn't exist
+    else throw error;
   }
+  fs.writeFileSync(
+    path,
+    fileContents
+      .replace(/YOUR-APP-URL-HERE/g, appUrl)
+      .replace(/YOUR-APP-SDK-VERSION-HERE/g, sdkVersion)
+  );
 }
 
 async function installPodsAsync(projectRoot: string) {
