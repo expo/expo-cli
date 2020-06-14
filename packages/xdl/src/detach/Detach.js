@@ -31,6 +31,8 @@ import * as Versions from '../Versions';
 import installPackagesAsync from './installPackagesAsync';
 import logger from './Logger';
 
+const SERVICE_CONTEXT_PROJECT_NAME = 'exponent-view-template';
+
 async function yesnoAsync(message) {
   const { ok } = await inquirer.prompt([
     {
@@ -360,7 +362,7 @@ async function readNullableConfigJsonAsync(projectDir) {
 
 async function prepareDetachedBuildIosAsync(projectDir, args) {
   const config = await readNullableConfigJsonAsync(projectDir);
-  if (config) {
+  if (config && config.exp.name !== SERVICE_CONTEXT_PROJECT_NAME) {
     return prepareDetachedUserContextIosAsync(projectDir, config.exp, args);
   } else {
     return prepareDetachedServiceContextIosAsync(projectDir, args);
@@ -513,7 +515,7 @@ export async function prepareDetachedBuildAsync(projectDir, args) {
 // `android/app/expo.gradle` for an example).
 export async function bundleAssetsAsync(projectDir, args) {
   const options = await readNullableConfigJsonAsync(projectDir);
-  if (!options) {
+  if (!options || options.exp.name === SERVICE_CONTEXT_PROJECT_NAME) {
     // Don't run assets bundling for the service context.
     return;
   }

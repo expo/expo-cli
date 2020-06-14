@@ -137,6 +137,10 @@ export class StandaloneContextService extends StandaloneContext {
   ) {
     super();
   }
+
+  isAnonymous = () => {
+    return true;
+  };
 }
 
 export type AnyStandaloneContext = StandaloneContextUser | StandaloneContextService;
