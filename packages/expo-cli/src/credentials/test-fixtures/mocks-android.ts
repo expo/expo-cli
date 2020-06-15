@@ -116,12 +116,14 @@ export function getCtxMock(overridenMock: { [key: string]: any } = {}) {
       fetchAll: jest.fn(),
       fetchKeystore: jest.fn(() => testKeystore),
       updateKeystore: jest.fn(),
+      removeKeystore: jest.fn(),
     },
     ensureAppleCtx: jest.fn(),
     user: jest.fn(),
     hasAppleCtx: jest.fn(() => true),
     hasProjectContext: true,
     manifest: testAppJson,
+    projectDir: '.',
   };
   return merge(defaultMock, overridenMock);
 }
