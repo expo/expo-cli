@@ -764,7 +764,7 @@ export type ExpoConfig = {
   /**
    * The name of your app as it appears both within Expo and on your home screen as a standalone app.
    */
-  name?: string;
+  name: string;
   /**
    * A short description of what your app is and why it is great.
    */
@@ -773,7 +773,7 @@ export type ExpoConfig = {
    * The friendly url name for publishing. eg: `expo.io/@your-username/slug`.
    * @pattern ^[a-zA-Z0-9_\\-]+$
    */
-  slug?: string;
+  slug: string;
   /**
    * The background color for your app, behind any of your React views. This is also known as the root view background color. This value should be a 6 character long hex color string, eg: '#000000'. Default is white — '#ffffff'.
    */
@@ -794,11 +794,11 @@ export type ExpoConfig = {
   /**
    * Your app version, use whatever versioning scheme that you like.
    */
-  version?: string;
+  version: string;
   /**
    * Platforms that your project explicitly supports. If not specified, it defaults to `[\"ios\", \"android\"]`.
    */
-  platforms?: Platform[];
+  platforms: Platform[];
   /**
    * If you would like to share the source code of your app on Github, enter the URL for the repository here and it will be linked to from your Expo project page.
    * @pattern ^https://github\\.com/

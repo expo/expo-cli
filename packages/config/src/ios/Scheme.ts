@@ -1,11 +1,11 @@
 import { InfoPlist, URLScheme } from './IosConfig.types';
 import { ExpoConfig } from '../Config.types';
 
-export function getScheme(config: ExpoConfig): string | null {
+export function getScheme(config: Pick<ExpoConfig, 'scheme'>): string | null {
   return typeof config.scheme === 'string' ? config.scheme : null;
 }
 
-export function setScheme(config: ExpoConfig, infoPlist: InfoPlist): InfoPlist {
+export function setScheme(config: Pick<ExpoConfig, 'scheme'>, infoPlist: InfoPlist): InfoPlist {
   let scheme = getScheme(config);
   if (!scheme) {
     return infoPlist;
