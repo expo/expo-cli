@@ -98,10 +98,10 @@ class RemoveKeystore implements IView {
         displayCredentials: true,
         outputPath: `${this.experienceName}.bak.jks`.replace('/', '__'),
       }).open(ctx);
-    }
 
-    await ctx.android.removeKeystore(this.experienceName);
-    log(chalk.green('Keystore removed successfully'));
+      await ctx.android.removeKeystore(this.experienceName);
+      log(chalk.green('Keystore removed successfully'));
+    }
     return null;
   }
 
