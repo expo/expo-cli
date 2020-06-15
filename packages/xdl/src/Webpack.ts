@@ -354,7 +354,7 @@ export async function getProjectNameAsync(projectRoot: string): Promise<string> 
   const { exp } = ConfigUtils.getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
-  const { webName } = ConfigUtils.getNameFromConfig(exp);
+  const webName = ConfigUtils.getNameFromConfig(exp).webName ?? exp.name;
   return webName;
 }
 
