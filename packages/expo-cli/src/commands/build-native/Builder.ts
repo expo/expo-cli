@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { makeProjectTarballAsync, waitForBuildEndAsync } from './utils';
 import log from '../../log';
 import { UploadType, uploadAsync } from '../../uploads';
+import { createProgressTracker } from '../utils/progress';
 
 export interface StatusResult {
   builds: BuildInfo[];
@@ -84,17 +85,21 @@ export default class Builder {
   private async buildAsync(platform: Platform, projectId: string): Promise<string> {
     const tarPath = path.join(os.tmpdir(), `${uuidv4()}.tar.gz`);
     try {
-      await makeProjectTarballAsync(tarPath);
+      const fileSize = await makeProjectTarballAsync(tarPath);
 
       log('Uploading project to AWS S3');
-      const archiveUrl = await uploadAsync(UploadType.TURTLE_PROJECT_SOURCES, tarPath);
+      const archiveUrl = await uploadAsync(
+        UploadType.TURTLE_PROJECT_SOURCES,
+        tarPath,
+        createProgressTracker(fileSize)
+      );
 
       const job = await prepareJob(platform, archiveUrl, this.ctx.projectDir);
       const { buildId } = await this.client.postAsync(`projects/${projectId}/builds`, {
         job: job as any,
       });
 
-      return await waitForBuildEndAsync(this.client, buildId);
+      return await waitForBuildEndAsync(this.client, projectId, buildId);
     } finally {
       await fs.remove(tarPath);
     }
