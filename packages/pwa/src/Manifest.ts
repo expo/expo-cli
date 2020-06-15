@@ -7,7 +7,7 @@ import {
   getWebOutputPath,
 } from '@expo/config';
 
-import { IconOptions, Manifest } from './Manifest.types';
+import { IconOptions, Manifest, PWAConfig } from './Manifest.types';
 
 // Use root to work better with create-react-app
 const DEFAULT_LANGUAGE_ISO_CODE = `en`;
@@ -37,12 +37,12 @@ function sanitizePublicPath(publicPath: unknown): string {
   return publicPath + '/';
 }
 
-export function getConfigForPWA(projectRoot: string) {
+export function getConfigForPWA(projectRoot: string): PWAConfig {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   return ensurePWAConfig(exp);
 }
 
-function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
+function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): PWAConfig {
   // For RN CLI support
   const appManifest = appJSON.expo || appJSON || {};
   const { web: webManifest = {}, splash = {}, ios = {}, android = {} } = appManifest;
@@ -260,7 +260,7 @@ export function getChromeIconConfig(config: ExpoConfig): IconOptions | null {
   return null;
 }
 
-function ensurePWAConfig(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
+function ensurePWAConfig(appJSON: AppJSONConfig | ExpoConfig): PWAConfig {
   const config = applyWebDefaults(appJSON);
   return config;
 }

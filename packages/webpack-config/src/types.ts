@@ -4,6 +4,7 @@ import {
   ProxyConfigMap,
   Configuration as WebpackDevServerConfiguration,
 } from 'webpack-dev-server';
+import { PWAConfig } from 'expo-pwa';
 
 export interface DevConfiguration extends WebpackConfiguration {
   devServer?: WebpackDevServerConfiguration;
@@ -44,7 +45,7 @@ export type Environment = {
    *
    * @default undefined
    */
-  config: { [key: string]: any };
+  config: PWAConfig;
   /**
    * Paths used to locate where things are.
    */
