@@ -63,6 +63,11 @@ export async function generateSplashAsync(
   const data = await Promise.all<HTMLOutput>(
     icons.map(
       async (icon: SplashIcon): Promise<HTMLOutput> => {
+        // Ensure the default `splash.resizeMode` is used here:
+        // https://docs.expo.io/workflow/configuration/#splash
+        if (!icon.resizeMode) {
+          icon.resizeMode = 'contain';
+        }
         const { source, name } = await Image.generateImageAsync({ projectRoot, cacheType }, icon);
 
         const href = `pwa/apple-touch-startup-image/${name}`;
