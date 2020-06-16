@@ -1,23 +1,25 @@
 import spawnAsync from '@expo/spawn-async';
 import { ApiV2 } from '@expo/xdl';
 import delayAsync from 'delay-async';
+import fs from 'fs-extra';
 import ora from 'ora';
 
 import log from '../../log';
 import { printTableJsonArray } from '../utils/cli-table';
 import { BuildInfo } from './Builder';
 
-async function waitForBuildEnd(
+async function waitForBuildEndAsync(
   client: ApiV2,
+  projectId: string,
   buildId: string,
   { timeoutSec = 1800, intervalSec = 30 } = {}
-) {
+): Promise<string> {
   log('Waiting for build to complete. You can press Ctrl+C to exit.');
   const spinner = ora().start();
   let time = new Date().getTime();
   const endTime = time + timeoutSec * 1000;
   while (time <= endTime) {
-    const buildInfo: BuildInfo = await client.getAsync(`builds/${buildId}`);
+    const buildInfo: BuildInfo = await client.getAsync(`projects/${projectId}/builds/${buildId}`);
     switch (buildInfo.status) {
       case 'finished':
         spinner.succeed('Build finished.');
@@ -44,7 +46,7 @@ async function waitForBuildEnd(
   );
 }
 
-async function makeProjectTarball(tarPath: string) {
+async function makeProjectTarballAsync(tarPath: string): Promise<number> {
   const spinner = ora('Making project tarball').start();
   const changes = (await spawnAsync('git', ['status', '-s'])).stdout;
   if (changes.length > 0) {
@@ -61,6 +63,9 @@ async function makeProjectTarball(tarPath: string) {
     'HEAD',
   ]);
   spinner.succeed('Project tarball created.');
+
+  const { size } = await fs.stat(tarPath);
+  return size;
 }
 
 function printBuildTable(builds: BuildInfo[]) {
@@ -74,4 +79,4 @@ function printBuildTable(builds: BuildInfo[]) {
   console.log(buildTable);
 }
 
-export { waitForBuildEnd, makeProjectTarball, printBuildTable };
+export { waitForBuildEndAsync, makeProjectTarballAsync, printBuildTable };
