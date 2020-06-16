@@ -19,6 +19,7 @@ import * as Scheme from './Scheme';
 import * as SplashScreen from './SplashScreen';
 import * as StatusBar from './StatusBar';
 import * as Styles from './Styles';
+import * as Updates from './Updates';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as Version from './Version';
 
@@ -43,6 +44,7 @@ export {
   SplashScreen,
   StatusBar,
   Styles,
+  Updates,
   UserInterfaceStyle,
   Version,
 };
