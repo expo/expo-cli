@@ -6,6 +6,16 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+### 📦 Packages updated
+
+## [Mon Jun 15 14:40:35 2020 +0200](https://github.com/expo/expo-cli/commit/6b4992ca3bc4e23d32c5fc95110d3750c54dedfe)
+
+### 🛠 Breaking changes
+
 - Remove `opt-in-google-play-signing` command ([#2247](https://github.com/expo/expo-cli/pull/2247) by [@wkozyra95](https://github.com/wkozyra95)).
 - Drop support for Node.js 13.x.x and 12.0.0-12.13.0 ([#2219](https://github.com/expo/expo-cli/pull/2219) by [@fson](https://github.com/fson)).
 
@@ -16,6 +26,24 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🐛 Bug fixes
 
 - Set EXPO_TARGET to correct value when starting dev server ([#2250](https://github.com/expo/expo-cli/pull/2250) by [esamelson](https://github.com/esamelson)).
+
+### 📦 Packages updated
+
+- @expo/config@3.2.10
+- @expo/configure-splash-screen@0.1.12
+- @expo/dev-server@0.1.11
+- @expo/dev-tools@0.13.17
+- @expo/electron-adapter@0.0.0
+- expo-cli@3.21.6
+- expo-optimize@0.1.33
+- @expo/metro-config@0.1.11
+- @expo/next-adapter@2.1.13
+- @expo/package-manager@0.0.28
+- pod-install@0.1.7
+- expo-pwa@0.0.21
+- uri-scheme@1.0.18
+- @expo/webpack-config@0.12.13
+- @expo/xdl@57.9.14
 
 ## [Thu Jun 4 10:01:50 2020 +0200](https://github.com/expo/expo-cli/commit/eb8409e9e18ea9c208a79f998596469b40145ca7)
 
