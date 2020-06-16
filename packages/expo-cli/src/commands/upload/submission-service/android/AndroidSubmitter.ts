@@ -1,5 +1,6 @@
 import os from 'os';
 
+import { UserManager } from '@expo/xdl';
 import Table from 'cli-table3';
 import fs from 'fs-extra';
 import ora from 'ora';
@@ -23,8 +24,10 @@ import { Archive, ArchiveSource, getArchiveAsync } from '../archive-source';
 import { displayLogs } from '../utils/logs';
 import { runTravelingFastlaneAsync } from '../utils/travelingFastlane';
 import { SubmissionMode } from '../types';
+import { getExpoConfig } from '../utils/config';
 import { sleep } from '../../../utils/promise';
 import log from '../../../../log';
+import { ensureProjectExistsAsync } from '../../../../projects';
 
 export interface AndroidSubmissionOptions
   extends Pick<AndroidSubmissionConfig, 'track' | 'releaseStatus'> {
@@ -45,23 +48,37 @@ class AndroidSubmitter {
   async submitAsync(): Promise<void> {
     const resolvedSourceOptions = await this.resolveSourceOptions();
     if (this.ctx.mode === SubmissionMode.online) {
-      const submissionConfig = await AndroidOnlineSubmitter.formatSubmissionConfigAndPrintSummary(
-        this.options,
-        resolvedSourceOptions
-      );
-      const onlineSubmitter = new AndroidOnlineSubmitter(
-        submissionConfig,
-        this.ctx.commandOptions.verbose ?? false
-      );
-      await onlineSubmitter.submitAsync();
+      await this.submitOnlineAsync(resolvedSourceOptions);
     } else {
-      const submissionConfig = await AndroidOfflineSubmitter.formatSubmissionConfigAndPrintSummary(
-        this.options,
-        resolvedSourceOptions
-      );
-      const offlineSubmitter = new AndroidOfflineSubmitter(submissionConfig);
-      await offlineSubmitter.submitAsync();
+      await this.submitOfflineAsync(resolvedSourceOptions);
     }
+  }
+
+  private async submitOnlineAsync(resolvedSourceOptions: ResolvedSourceOptions): Promise<void> {
+    let user = await UserManager.ensureLoggedInAsync();
+    const exp = getExpoConfig(this.ctx.projectDir);
+    const projectId = await ensureProjectExistsAsync(user, {
+      accountName: exp.owner || user.username,
+      projectName: exp.slug,
+    });
+    const submissionConfig = await AndroidOnlineSubmitter.formatSubmissionConfigAndPrintSummary(
+      { ...this.options, projectId },
+      resolvedSourceOptions
+    );
+    const onlineSubmitter = new AndroidOnlineSubmitter(
+      submissionConfig,
+      this.ctx.commandOptions.verbose ?? false
+    );
+    await onlineSubmitter.submitAsync();
+  }
+
+  private async submitOfflineAsync(resolvedSourceOptions: ResolvedSourceOptions) {
+    const submissionConfig = await AndroidOfflineSubmitter.formatSubmissionConfigAndPrintSummary(
+      this.options,
+      resolvedSourceOptions
+    );
+    const offlineSubmitter = new AndroidOfflineSubmitter(submissionConfig);
+    await offlineSubmitter.submitAsync();
   }
 
   private async resolveSourceOptions(): Promise<ResolvedSourceOptions> {
@@ -141,11 +158,14 @@ class AndroidOfflineSubmitter {
   }
 }
 
-type AndroidOnlineSubmissionConfig = AndroidSubmissionConfig;
+export type AndroidOnlineSubmissionConfig = AndroidSubmissionConfig & { projectId: string };
+interface AndroidOnlineSubmissionOptions extends AndroidSubmissionOptions {
+  projectId: string;
+}
 
 class AndroidOnlineSubmitter {
   static async formatSubmissionConfigAndPrintSummary(
-    options: AndroidSubmissionOptions,
+    options: AndroidOnlineSubmissionOptions,
     { archive, androidPackage, serviceAccountPath }: ResolvedSourceOptions
   ): Promise<AndroidOnlineSubmissionConfig> {
     const serviceAccount = await fs.readFile(serviceAccountPath, 'utf-8');
@@ -154,7 +174,7 @@ class AndroidOnlineSubmitter {
       archiveUrl: archive.location,
       archiveType: archive.type,
       serviceAccount,
-      ...pick(options, 'track', 'releaseStatus'),
+      ...pick(options, 'track', 'releaseStatus', 'projectId'),
     };
     printSummary({
       ...omit(submissionConfig, 'serviceAccount'),
@@ -175,6 +195,7 @@ class AndroidOnlineSubmitter {
     try {
       submissionId = await SubmissionService.startSubmissionAsync(
         Platform.ANDROID,
+        this.submissionConfig.projectId,
         this.submissionConfig
       );
       scheduleSpinner.succeed();
@@ -190,7 +211,10 @@ class AndroidOnlineSubmitter {
     try {
       while (!submissionCompleted) {
         await sleep(DEFAULT_CHECK_INTERVAL_MS);
-        submission = await SubmissionService.getSubmissionAsync(submissionId);
+        submission = await SubmissionService.getSubmissionAsync(
+          this.submissionConfig.projectId,
+          submissionId
+        );
         submissionSpinner.text = AndroidOnlineSubmitter.getStatusText(submission.status);
         submissionStatus = submission.status;
         if (submissionStatus === SubmissionStatus.ERRORED) {
@@ -233,6 +257,7 @@ interface Summary {
   track: ReleaseTrack;
   releaseStatus?: ReleaseStatus;
   mode: SubmissionMode;
+  projectId?: string;
 }
 
 const SummaryHumanReadableKeys: Record<keyof Summary, string> = {
@@ -244,6 +269,7 @@ const SummaryHumanReadableKeys: Record<keyof Summary, string> = {
   track: 'Release track',
   releaseStatus: 'Release status',
   mode: 'Submission mode',
+  projectId: 'Project ID',
 };
 
 const SummaryHumanReadableValues: Partial<Record<keyof Summary, Function>> = {

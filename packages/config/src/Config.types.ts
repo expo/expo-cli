@@ -56,8 +56,11 @@ export type Hook = {
 
 export type HookType = 'postPublish' | 'postExport';
 
+export enum ProjectPrivacy {
+  PUBLIC = 'public',
+  UNLISTED = 'unlisted',
+}
 type ExpoOrientation = 'default' | 'portrait' | 'landscape';
-type ExpoPrivacy = 'public' | 'unlisted';
 type SplashResizeMode = 'cover' | 'contain';
 
 /**
@@ -785,7 +788,7 @@ export type ExpoConfig = {
   /**
    * Either `public` or `unlisted`. If not provided, defaults to `unlisted`. In the future `private` will be supported. `unlisted` hides the experience from search results.
    */
-  privacy?: ExpoPrivacy;
+  privacy?: ProjectPrivacy;
   /**
    * The Expo sdkVersion to run the project on. This should line up with the version specified in your package.json.
    * @pattern ^(\\d+\\.\\d+\\.\\d+)|(UNVERSIONED)$

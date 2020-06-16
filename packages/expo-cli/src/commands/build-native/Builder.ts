@@ -11,6 +11,7 @@ import { makeProjectTarballAsync, waitForBuildEndAsync } from './utils';
 import log from '../../log';
 import { UploadType, uploadAsync } from '../../uploads';
 import { createProgressTracker } from '../utils/progress';
+import { ensureProjectExistsAsync } from '../../projects';
 
 export interface StatusResult {
   builds: BuildInfo[];
@@ -26,11 +27,6 @@ export interface BuildInfo {
 interface BuildArtifacts {
   buildUrl?: string;
   logsUrl: string;
-}
-
-interface PresignedPost {
-  url: string;
-  fields: object;
 }
 
 export interface BuilderContext {
@@ -51,35 +47,16 @@ export default class Builder {
   }
 
   async buildProjectAsync(platform: Platform): Promise<string> {
-    const projectId = await this.ensureProjectExistsAsync();
+    const projectId = await ensureProjectExistsAsync(this.ctx.user, {
+      accountName: this.ctx.accountName,
+      projectName: this.ctx.projectName,
+    });
     return await this.buildAsync(platform, projectId);
   }
 
   async getLatestBuildsAsync(): Promise<StatusResult> {
     throw new Error('not implemented yet');
     // return await this.client.getAsync('builds');
-  }
-
-  private async ensureProjectExistsAsync(): Promise<string> {
-    const { accountName, projectName } = this.ctx;
-
-    try {
-      const [{ id }] = await this.client.getAsync('projects', {
-        experienceName: `@${accountName}/${projectName}`,
-      });
-      return id;
-    } catch (err) {
-      if (err.code !== 'EXPERIENCE_NOT_FOUND') {
-        throw err;
-      }
-    }
-
-    const { id } = await this.client.postAsync('projects', {
-      accountName,
-      projectName,
-      privacy: this.ctx.exp.privacy || 'public',
-    });
-    return id;
   }
 
   private async buildAsync(platform: Platform, projectId: string): Promise<string> {
