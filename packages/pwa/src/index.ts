@@ -285,4 +285,4 @@ export {
   getChromeIconConfig,
 } from './Manifest';
 
-export { IconOptions, ProjectOptions, HTMLOutput } from './Manifest.types';
+export { IconOptions, ProjectOptions, HTMLOutput, PWAConfig } from './Manifest.types';

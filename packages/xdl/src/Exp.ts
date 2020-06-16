@@ -1,4 +1,4 @@
-import { AppJSONConfig, BareAppConfig, getConfig } from '@expo/config';
+import { BareAppConfig, ExpoConfig, getConfig } from '@expo/config';
 
 import { getEntryPoint } from '@expo/config/paths';
 import fs from 'fs-extra';
@@ -22,6 +22,9 @@ import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as ProjectSettings from './ProjectSettings';
+
+type AppJsonInput = { expo: Partial<ExpoConfig> & { name: string } };
+type TemplateConfig = { name: string };
 
 const supportedPlatforms = ['ios', 'android', 'web'];
 
@@ -53,9 +56,9 @@ function sanitizedName(name: string) {
 
 class Transformer extends Minipass {
   data: string;
-  config: AppJSONConfig | BareAppConfig;
+  config: TemplateConfig;
 
-  constructor(config: AppJSONConfig | BareAppConfig) {
+  constructor(config: TemplateConfig) {
     super();
     this.data = '';
     this.config = config;
@@ -77,7 +80,7 @@ class Transformer extends Minipass {
 // Binary files, don't process these (avoid decoding as utf8)
 const binaryExtensions = ['.png', '.jar', '.keystore'];
 
-function createFileTransform(config: AppJSONConfig | BareAppConfig) {
+function createFileTransform(config: TemplateConfig) {
   return function transformFile(entry: ReadEntry) {
     if (!binaryExtensions.includes(path.extname(entry.path)) && config.name) {
       return new Transformer(config);
@@ -98,7 +101,7 @@ export async function extractAndInitializeTemplateApp(
   templateSpec: PackageSpec,
   projectRoot: string,
   packageManager: 'yarn' | 'npm' = 'npm',
-  config: AppJSONConfig | BareAppConfig
+  config: AppJsonInput | BareAppConfig
 ) {
   Logger.notifications.warn(
     'extractAndInitializeTemplateApp is deprecated. Use extractAndPrepareTemplateAppAsync instead.'
@@ -123,9 +126,11 @@ export async function extractAndInitializeTemplateApp(
 export async function extractAndPrepareTemplateAppAsync(
   templateSpec: PackageSpec,
   projectRoot: string,
-  config: AppJSONConfig | BareAppConfig
+  config: AppJsonInput | BareAppConfig
 ) {
-  await extractTemplateAppAsync(templateSpec, projectRoot, config);
+  await extractTemplateAppAsync(templateSpec, projectRoot, {
+    name: 'name' in config ? config.name : config.expo.name,
+  });
 
   let appFile = new JsonFile(path.join(projectRoot, 'app.json'));
   let appJson = merge(await appFile.readAsync(), config);
@@ -157,7 +162,7 @@ export async function extractAndPrepareTemplateAppAsync(
 export async function extractTemplateAppAsync(
   templateSpec: PackageSpec,
   targetPath: string,
-  config: AppJSONConfig | BareAppConfig
+  config: { name?: string }
 ) {
   await pacote.tarball.stream(
     templateSpec,
@@ -174,7 +179,7 @@ export async function extractTemplateAppAsync(
 
 async function extractTemplateAppAsyncImpl(
   targetPath: string,
-  config: AppJSONConfig | BareAppConfig,
+  config: { name?: string },
   tarStream: Readable
 ) {
   await fs.mkdirp(targetPath);

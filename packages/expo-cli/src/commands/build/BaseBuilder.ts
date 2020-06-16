@@ -16,7 +16,7 @@ import { BuilderOptions } from './BaseBuilder.types';
 const secondsToMilliseconds = (seconds: number): number => seconds * 1000;
 
 export default class BaseBuilder {
-  manifest: ExpoConfig = {};
+  manifest: ExpoConfig = getConfig(this.projectDir).exp;
   user?: User;
 
   constructor(public projectDir: string, public options: BuilderOptions = {}) {}
@@ -54,9 +54,6 @@ export default class BaseBuilder {
   }
 
   async prepareProjectInfo(): Promise<void> {
-    // always use local json to unify behavior between regular apps and self hosted ones
-    const { exp } = getConfig(this.projectDir);
-    this.manifest = exp;
     this.user = await UserManager.ensureLoggedInAsync();
 
     await this.checkProjectConfig();

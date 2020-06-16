@@ -447,7 +447,7 @@ async function promptForManagedConfig(
   parentDir: string,
   dirName: string | undefined,
   options: Options
-): Promise<AppJSONConfig> {
+): Promise<{ expo: Pick<ExpoConfig, 'name' | 'slug'> }> {
   let slug;
   if (dirName) {
     slug = dirName;
@@ -460,7 +460,7 @@ async function promptForManagedConfig(
       validate: (name: string) => validateName(parentDir, name),
     }));
   }
-  const expo: ExpoConfig = { name: slug, slug };
+  const expo = { name: slug, slug };
   if (options.name) {
     expo.name = options.name;
   }

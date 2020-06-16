@@ -1,5 +1,4 @@
-import { ExpoConfig } from '@expo/config';
-import { getConfigForPWA } from 'expo-pwa';
+import { PWAConfig, getConfigForPWA } from 'expo-pwa';
 
 import { Environment } from '../types';
 
@@ -9,7 +8,7 @@ import { Environment } from '../types';
  * @param env Environment properties used for getting the Expo project config.
  * @category env
  */
-function getConfig(env: Pick<Environment, 'projectRoot' | 'config'>): ExpoConfig {
+function getConfig(env: Pick<Environment, 'projectRoot' | 'config'>): PWAConfig {
   if (env.config) {
     return env.config;
   }

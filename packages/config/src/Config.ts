@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import path from 'path';
 import semver from 'semver';
-import slug from 'slugify';
+import slugify from 'slugify';
 
 import {
   AppJSONConfig,
@@ -325,7 +325,11 @@ export async function modifyConfigAsync(
   modifications: Partial<ExpoConfig>,
   readOptions: GetConfigOptions = {},
   writeOptions: WriteConfigOptions = {}
-): Promise<{ type: 'success' | 'warn' | 'fail'; message?: string; config: ExpoConfig | null }> {
+): Promise<{
+  type: 'success' | 'warn' | 'fail';
+  message?: string;
+  config: ExpoConfig | AppJSONConfig | null;
+}> {
   const config = getConfig(projectRoot, readOptions);
   if (config.dynamicConfigPath) {
     // We cannot automatically write to a dynamic config.
@@ -351,7 +355,7 @@ export async function modifyConfigAsync(
     };
   } else if (config.staticConfigPath) {
     // Static with no dynamic config, this means we can append to the config automatically.
-    let outputConfig: AppJSONConfig;
+    let outputConfig: ExpoConfig | AppJSONConfig;
     // If the config has an expo object (app.json) then append the options to that object.
     if (config.rootConfig.expo) {
       outputConfig = {
@@ -381,51 +385,46 @@ const APP_JSON_EXAMPLE = JSON.stringify({
 
 function ensureConfigHasDefaultValues(
   projectRoot: string,
-  exp: ExpoConfig,
+  exp: Partial<ExpoConfig>,
   pkg: JSONObject,
   skipSDKVersionRequirement: boolean = false
 ): { exp: ExpoConfig; pkg: PackageJSONConfig } {
-  if (!exp) exp = {};
+  // Defaults for package.json fields
+  const pkgName = typeof pkg.name === 'string' ? pkg.name : path.basename(projectRoot);
+  const pkgVersion = typeof pkg.version === 'string' ? pkg.version : '1.0.0';
 
-  if (!exp.name) {
-    if (typeof pkg.name !== 'string') {
-      pkg.name = path.basename(projectRoot);
-    }
-    exp.name = pkg.name;
+  const pkgWithDefaults = { ...pkg, name: pkgName, version: pkgVersion };
+
+  // Defaults for app.json/app.config.js fields
+  const name = exp.name ?? pkgName;
+  const slug = exp.slug ?? slugify(name.toLowerCase());
+  const version = exp.version ?? pkgVersion;
+  const nodeModulesPath = exp.nodeModulesPath
+    ? path.resolve(projectRoot, exp.nodeModulesPath)
+    : undefined;
+  let description = exp.description;
+  if (!description && typeof pkg.description === 'string') {
+    description = pkg.description;
   }
 
-  if (!exp.description && typeof pkg.description === 'string') {
-    exp.description = pkg.description;
-  }
+  const expWithDefaults = { ...exp, name, slug, version, nodeModulesPath, description };
 
-  if (!exp.slug && typeof exp.name === 'string') {
-    exp.slug = slug(exp.name.toLowerCase());
-  }
-
-  if (!exp.version) {
-    if (typeof pkg.version === 'string') {
-      exp.version = pkg.version;
-    } else {
-      pkg.version = '1.0.0';
-    }
-    exp.version = pkg.version;
-  }
-
-  if (exp.nodeModulesPath) {
-    exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
-  }
-
+  let sdkVersion;
   try {
-    exp.sdkVersion = getExpoSDKVersion(projectRoot, exp);
+    sdkVersion = getExpoSDKVersion(projectRoot, expWithDefaults);
   } catch (error) {
     if (!skipSDKVersionRequirement) throw error;
   }
 
-  if (!exp.platforms) {
-    exp.platforms = getSupportedPlatforms(projectRoot, exp);
+  let platforms = exp.platforms;
+  if (!platforms) {
+    platforms = getSupportedPlatforms(projectRoot, expWithDefaults);
   }
 
-  return { exp, pkg };
+  return {
+    exp: { ...expWithDefaults, sdkVersion, platforms },
+    pkg: pkgWithDefaults,
+  };
 }
 
 export async function writeConfigJsonAsync(
@@ -468,7 +467,9 @@ export function getWebOutputPath(config: { [key: string]: any } = {}): string {
   return expo?.web?.build?.output || DEFAULT_BUILD_PATH;
 }
 
-export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webName: string } {
+export function getNameFromConfig(
+  exp: Partial<ExpoConfig> | AppJSONConfig = {}
+): { appName?: string; webName?: string } {
   // For RN CLI support
   const appManifest = exp.expo || exp;
   const { web = {} } = appManifest;

@@ -9,7 +9,7 @@ import {
 } from '../../../credentials/test-fixtures/mocks-ios';
 import { mockExpoXDL } from '../../../__tests__/mock-utils';
 
-jest.setTimeout(10 * 1000); // 10s
+jest.setTimeout(30e3); // 30s
 
 jest.mock('fs');
 
