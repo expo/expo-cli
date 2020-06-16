@@ -32,6 +32,7 @@ jobs:
             dev-server,
             expo-cli,
             expo-codemod,
+            image-utils,
             json-file,
             metro-config,
             package-manager,
