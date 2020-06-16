@@ -3,7 +3,7 @@
 exports[`exports the project for a self-hosted production deployment 1`] = `
 Array [
   "dist/android-index.json (621 B)",
-  "dist/assetmap.json (22.7 kB)",
+  "dist/assetmap.json (size ignored)",
   "dist/assets (dir)",
   "dist/assets/0886a6b127c6057cee83f9c65c7ffd62 (26.2 kB)",
   "dist/assets/09dd345dbd4ec5a0874841d5749ac153 (30.2 kB)",

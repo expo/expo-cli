@@ -41,13 +41,21 @@ it('exports the project for a self-hosted production deployment', async () => {
   // This is to make sure that any changes to the output are intentional.
   // Posix path formatting is used to make paths the same across OSes.
   const distFiles = klawSync(distPath).map(
-    entry =>
-      `${path.posix.relative(projectRoot, entry.path)} (${
-        entry.stats.isDirectory() ? 'dir' : prettyBytes(entry.stats.size)
-      })`
+    entry => `${path.posix.relative(projectRoot, entry.path)} (${formatFileSize(entry)})`
   );
   expect(distFiles).toMatchSnapshot();
 });
+
+function formatFileSize(item: klawSync.Item) {
+  if (item.stats.isDirectory()) {
+    return 'dir';
+  } else if (path.basename(item.path) === 'assetmap.json') {
+    // ignore the file size of assetmap.json
+    return 'size ignored';
+  } else {
+    return prettyBytes(item.stats.size);
+  }
+}
 
 function deepRelativizePaths(root: string, data: any) {
   if (typeof data === 'string') {
