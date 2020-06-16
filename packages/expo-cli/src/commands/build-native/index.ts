@@ -31,7 +31,7 @@ async function createBuilderContextAsync(projectDir: string): Promise<BuilderCon
   const user: User = await UserManager.ensureLoggedInAsync();
   const { exp } = getConfig(projectDir);
   const accountName = exp.owner || user.username;
-  const projectName = exp.slug || 'untitled';
+  const projectName = exp.slug;
   return {
     projectDir,
     user,
