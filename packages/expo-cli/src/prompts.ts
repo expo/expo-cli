@@ -8,16 +8,16 @@ export { PromptType, PromptObject };
 type CliPrompts = PromptObject | PromptObject[];
 
 export default function prompt(
-  cliPrompts: CliPrompts,
+  questions: Question | Question[],
   { nonInteractiveHelp }: { nonInteractiveHelp?: string } = {}
 ) {
-  const nPrompts = Array.isArray(cliPrompts) ? cliPrompts.length : 1;
+  questions = Array.isArray(questions) ? questions : [questions];
   if (program.nonInteractive && nPrompts !== 0) {
     let message = `Input is required, but Expo CLI is in non-interactive mode.\n`;
     if (nonInteractiveHelp) {
       message += nonInteractiveHelp;
     } else {
-      const question: any = Array.isArray(cliPrompts) ? cliPrompts[0] : cliPrompts;
+      const question = questions[0];
       message += `Required input:\n${(question.message || '').trim().replace(/^/gm, '> ')}`;
     }
     throw new CommandError('NON_INTERACTIVE', message);
