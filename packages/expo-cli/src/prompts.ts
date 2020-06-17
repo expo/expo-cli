@@ -1,5 +1,5 @@
 import program from 'commander';
-import prompts, { Choice, PromptType, PromptObject as Question } from 'prompts';
+import prompts, { Choice, Options, PromptType, PromptObject as Question } from 'prompts';
 
 import CommandError from './CommandError';
 
@@ -7,7 +7,7 @@ export { PromptType, Question };
 
 export default function prompt(
   questions: Question | Question[],
-  { nonInteractiveHelp }: { nonInteractiveHelp?: string } = {}
+  { nonInteractiveHelp, ...options }: { nonInteractiveHelp?: string } & Options = {}
 ) {
   questions = Array.isArray(questions) ? questions : [questions];
   if (program.nonInteractive && questions.length !== 0) {
@@ -29,6 +29,7 @@ export default function prompt(
     onCancel() {
       throw new CommandError('ABORTED');
     },
+    ...options,
   });
 }
 
