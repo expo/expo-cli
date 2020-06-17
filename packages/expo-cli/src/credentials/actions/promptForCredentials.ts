@@ -3,7 +3,7 @@ import untildify from 'untildify';
 import fs from 'fs-extra';
 import once from 'lodash/once';
 
-import prompt, { Question as PromptQuestion } from '../../prompt';
+import prompts, { Question as PromptQuestion } from '../../prompts';
 import log from '../../log';
 import * as validators from '../../validators';
 
@@ -67,17 +67,17 @@ export async function getCredentialsFromUser<T extends Results>(
 }
 
 async function willUserProvideCredentialsType<T>(schema: CredentialSchema<T>) {
-  const { answer } = await prompt({
-    type: 'list',
+  const { answer } = await prompts({
+    type: 'select',
     name: 'answer',
     message: schema?.provideMethodQuestion?.question ?? `Will you provide your own ${schema.name}?`,
     choices: [
       {
-        name: schema?.provideMethodQuestion?.expoGenerated ?? 'Let Expo handle the process',
+        title: schema?.provideMethodQuestion?.expoGenerated ?? 'Let Expo handle the process',
         value: false,
       },
       {
-        name: schema?.provideMethodQuestion?.userProvided ?? 'I want to upload my own file',
+        title: schema?.provideMethodQuestion?.userProvided ?? 'I want to upload my own file',
         value: true,
       },
     ],
@@ -87,7 +87,7 @@ async function willUserProvideCredentialsType<T>(schema: CredentialSchema<T>) {
 
 async function askQuestionAndProcessAnswer(definition: Question): Promise<string> {
   const questionObject = buildQuestionObject(definition);
-  const { input } = await prompt(questionObject);
+  const { input } = await prompts(questionObject);
   return await processAnswer(definition, input);
 }
 
@@ -95,24 +95,24 @@ function buildQuestionObject({ type, question }: Question): PromptQuestion {
   switch (type) {
     case 'string':
       return {
-        type: 'input',
+        type: 'text',
         name: 'input',
         message: question,
       };
     case 'file':
       return {
-        type: 'input',
+        type: 'text',
         name: 'input',
         message: question,
-        filter: produceAbsolutePath,
-        validate: validators.existingFile,
+        format: produceAbsolutePath,
+        validate: validators.promptsExistingFile,
       } as PromptQuestion;
     case 'password':
       return {
         type: 'password',
         name: 'input',
         message: question,
-        validate: validators.nonEmptyInput,
+        validate: validators.promptsNonEmptyInput,
       };
   }
 }

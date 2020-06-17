@@ -1,5 +1,4 @@
 import { Android } from '@expo/xdl';
-import pick from 'lodash/pick';
 
 import { Context } from '../../credentials';
 import { runCredentialsManager } from '../../credentials/route';
@@ -11,8 +10,6 @@ import {
 import { SetupAndroidKeystore } from '../../credentials/views/SetupAndroidKeystore';
 import BuildError from './BuildError';
 import BaseBuilder from './BaseBuilder';
-import prompt, { Question } from '../../prompt';
-import log from '../../log';
 import * as utils from './utils';
 import { PLATFORMS, Platform } from './constants';
 
