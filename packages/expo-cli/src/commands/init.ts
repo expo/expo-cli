@@ -39,9 +39,9 @@ const FEATURED_TEMPLATES = [
     description: 'same as blank but with TypeScript configuration',
   },
   {
-    shortName: 'tabs',
+    shortName: 'tabs (TypeScript)',
     name: 'expo-template-tabs',
-    description: 'several example screens and tabs using react-navigation',
+    description: 'several example screens and tabs using react-navigation and TypeScript',
   },
   '----- Bare workflow -----',
   {
