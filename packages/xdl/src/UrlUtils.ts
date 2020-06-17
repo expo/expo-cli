@@ -1,5 +1,5 @@
 import { getConfig, resolveModule } from '@expo/config';
-import joi from 'joi';
+import joi from '@hapi/joi';
 import os from 'os';
 import url from 'url';
 import validator from 'validator';
@@ -184,7 +184,7 @@ export async function constructUrlAsync(
       urlRandomness: joi.string().optional().allow(null),
     });
 
-    const { error } = joi.validate(opts, schema);
+    const { error } = schema.validate(opts);
     if (error) {
       throw new XDLError('INVALID_OPTIONS', error.toString());
     }
