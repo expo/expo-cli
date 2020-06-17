@@ -6,6 +6,7 @@
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
+    "test": "jest",
     "prepare": "yarn run clean && yarn build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo"
   },
