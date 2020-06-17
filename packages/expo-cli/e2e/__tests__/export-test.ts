@@ -12,7 +12,14 @@ it('exports the project for a self-hosted production deployment', async () => {
   const projectRoot = await createMinimalProjectAsync(temporary.directory(), 'export-test-app');
   const dotExpoHomeDirectory = path.join(projectRoot, '../.expo');
   await runAsync(
-    ['export', '--public-url', 'https://example.com/export-test-app/', '--dump-assetmap'],
+    [
+      'export',
+      '--public-url',
+      'https://example.com/export-test-app/',
+      '--dump-assetmap',
+      '--max-workers',
+      '1',
+    ],
     {
       cwd: projectRoot,
       env: {
