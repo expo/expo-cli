@@ -294,7 +294,7 @@ export default function (program: Command) {
       }
 
       const sdkVersions = await Versions.sdkVersionsAsync();
-      const latestSdk = await Versions.newestSdkVersionAsync();
+      const latestSdk = await Versions.newestReleasedSdkVersionAsync();
       const currentSdk = sdkVersions[currentSdkVersion!];
       const recommendedClient = currentSdk
         ? ClientUpgradeUtils.getClient(currentSdk, 'ios')
@@ -379,7 +379,7 @@ export default function (program: Command) {
       }
 
       const sdkVersions = await Versions.sdkVersionsAsync();
-      const latestSdk = await Versions.newestSdkVersionAsync();
+      const latestSdk = await Versions.newestReleasedSdkVersionAsync();
       const currentSdk = sdkVersions[currentSdkVersion!];
       const recommendedClient = currentSdk
         ? ClientUpgradeUtils.getClient(currentSdk, 'android')
