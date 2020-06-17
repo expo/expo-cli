@@ -3,7 +3,7 @@ import prompts, { Choice, PromptObject, PromptType } from 'prompts';
 
 import CommandError from './CommandError';
 
-export { PromptType, PromptObject };
+export { PromptType, PromptObject as Question };
 
 type CliPrompts = PromptObject | PromptObject[];
 
