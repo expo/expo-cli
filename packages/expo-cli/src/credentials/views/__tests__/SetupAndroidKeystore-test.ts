@@ -1,8 +1,15 @@
+import commandExists from 'command-exists';
+
 import { getCtxMock, testExperienceName } from '../../test-fixtures/mocks-android';
 import { SetupAndroidKeystore } from '../SetupAndroidKeystore';
 import { UpdateKeystore } from '../AndroidKeystore';
 
 jest.mock('../../actions/list');
+jest.mock('command-exists');
+
+(commandExists as any).mockImplementation(() => {
+  return true;
+});
 
 const originalWarn = console.warn;
 const originalLog = console.log;
