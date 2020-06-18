@@ -200,6 +200,7 @@ async function _downloadAsync(
   await fs.rename(tmpPath, outputPath);
 }
 
+/** @deprecated use ApiV2, got or GraphQL depending on use case. */
 export default class ApiClient {
   static host: string = Config.api.host;
   static port: number = Config.api.port || 80;

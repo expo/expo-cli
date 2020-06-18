@@ -14,7 +14,6 @@ import yaml from 'js-yaml';
 
 import { NpmPackageManager, YarnPackageManager } from '@expo/package-manager';
 import semver from 'semver';
-import Api from './Api';
 import ApiV2 from './ApiV2';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
@@ -28,6 +27,7 @@ type TemplateConfig = { name: string };
 
 const supportedPlatforms = ['ios', 'android', 'web'];
 
+/** @deprecated use getEntryPoint from @expo/config/paths */
 export function determineEntryPoint(projectRoot: string, platform?: string): string {
   if (platform && !supportedPlatforms.includes(platform)) {
     throw new Error(
@@ -313,6 +313,7 @@ type PublishInfo = {
 };
 
 // TODO: remove / change, no longer publishInfo, this is just used for signing
+/** @deprecated use getConfig from @expo/config */
 export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   const user = await UserManager.ensureLoggedInAsync();
 
