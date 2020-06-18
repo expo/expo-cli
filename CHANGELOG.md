@@ -22,7 +22,6 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - Fix `expo build:android` throwing `_joi(...).default.strict is not a function` ([#2277](https://github.com/expo/expo-cli/issues/2277) by [@byCedric](https://github.com/byCedric)).
 - Replace `newestSdkVersionAsync` with `newestReleasedSdkVersionAsync` ([#2266](https://github.com/expo/expo-cli/pull/2266) by [@cruzach](https://github.com/cruzach)).
-- Upgrade Fastlane dependency to fix Apple 2FA. ([#2273](https://github.com/expo/expo-cli/pull/2273) by [@quinlanj](https://github.com/quinlanj)).
 - Use default `splash.resizeMode` on web ([#2268](https://github.com/expo/expo-cli/pull/2268) by [@EvanBacon](https://github.com/EvanBacon)).
 
 ### 📦 Packages updated
