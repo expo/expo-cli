@@ -12,6 +12,35 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 📦 Packages updated
 
+## [Thu Jun 18 11:13:34 2020 +0300](https://github.com/expo/expo-cli/commit/d868f8e4340f40a39f8e3a0d3b0c63f0ed116544)
+
+### 🎉 New features
+
+- Add `EXPO_IMAGE_UTILS_NO_SHARP` environment variable: it can be used to disable `sharp-cli` for image processing. ([#2269](https://github.com/expo/expo-cli/pull/2269) by [@EvanBacon](https://github.com/EvanBacon)).
+
+### 🐛 Bug fixes
+
+- Fix `expo build:android` throwing `_joi(...).default.strict is not a function` ([#2277](https://github.com/expo/expo-cli/issues/2277) by [@byCedric](https://github.com/byCedric)).
+- Replace `newestSdkVersionAsync` with `newestReleasedSdkVersionAsync` ([#2266](https://github.com/expo/expo-cli/pull/2266) by [@cruzach](https://github.com/cruzach)).
+- Upgrade Fastlane dependency to fix Apple 2FA. ([#2273](https://github.com/expo/expo-cli/pull/2273) by [@quinlanj](https://github.com/quinlanj)).
+- Use default `splash.resizeMode` on web ([#2268](https://github.com/expo/expo-cli/pull/2268) by [@EvanBacon](https://github.com/EvanBacon)).
+
+### 📦 Packages updated
+
+- @expo/config@3.2.11
+- @expo/dev-server@0.1.12
+- @expo/dev-tools@0.13.18
+- @expo/electron-adapter@0.0.1
+- expo-cli@3.21.7
+- expo-optimize@0.1.34
+- @expo/image-utils@0.3.0
+- @expo/metro-config@0.1.12
+- @expo/next-adapter@2.1.14
+- expo-pwa@0.0.22
+- uri-scheme@1.0.19
+- @expo/webpack-config@0.12.14
+- @expo/xdl@57.9.15
+
 ## [Mon Jun 15 14:40:35 2020 +0200](https://github.com/expo/expo-cli/commit/6b4992ca3bc4e23d32c5fc95110d3750c54dedfe)
 
 ### 🛠 Breaking changes
