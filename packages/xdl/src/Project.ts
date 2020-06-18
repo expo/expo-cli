@@ -584,17 +584,11 @@ export async function exportForAppHosting(
   await fs.ensureDir(bundlesPathToWrite);
 
   const { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
-  const iosBundleHash = crypto
-    .createHash('md5')
-    .update(iosBundle)
-    .digest('hex');
+  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto
-    .createHash('md5')
-    .update(androidBundle)
-    .digest('hex');
+  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 
@@ -1478,10 +1472,10 @@ function _validateOptions(options: any) {
     releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
     bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-.]+$/),
     publicUrl: joi.string(),
-    sdkVersion: joi.strict(),
+    sdkVersion: joi.string().strict(),
   });
 
-  const { error } = joi.validate(options, schema);
+  const { error } = schema.validate(options);
   if (error) {
     throw new XDLError('INVALID_OPTIONS', error.toString());
   }
@@ -1555,7 +1549,7 @@ export async function buildAsync(
 ): Promise<BuildStatusResult | BuildCreatedResult> {
   /**
     This function corresponds to an apiv1 call and is deprecated.
-    Use 
+    Use
       * startBuildAsync
       * getBuildStatusAsync
     to call apiv2 instead.

@@ -110,7 +110,7 @@
     "@types/fs-extra": "^9.0.1",
     "@types/getenv": "^0.7.0",
     "@types/hashids": "^1.0.30",
-    "@types/joi": "^14.3.3",
+    "@types/hapi__joi": "^17.1.2",
     "@types/js-yaml": "^3.12.2",
     "@types/minipass": "^2.2.0",
     "@types/ncp": "^2.0.1",
