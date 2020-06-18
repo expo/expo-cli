@@ -1,6 +1,6 @@
 {
   "name": "expo-pwa",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -38,8 +38,8 @@
     "rimraf": "^3.0.2"
   },
   "dependencies": {
-    "@expo/config": "3.2.10",
-    "@expo/image-utils": "0.2.29",
+    "@expo/config": "3.2.11",
+    "@expo/image-utils": "0.3.0",
     "@expo/json-file": "8.2.21",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
