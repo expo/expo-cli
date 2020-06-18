@@ -23,20 +23,12 @@ const logArtifactUrl = (platform: 'ios' | 'android') => async (
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
   }
 
-  let res;
-  if (process.env.EXPO_LEGACY_API === 'true') {
-    res = (await Project.buildAsync(projectDir, {
-      current: false,
-      mode: 'status',
-      ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
-    })) as Project.BuildStatusResult;
-  } else {
-    res = await Project.getBuildStatusAsync(projectDir, {
-      current: false,
-      ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
-    });
-  }
-  const url = res.jobs?.filter((job: Project.BuildJobFields) => job.platform === platform)[0]
+  const result = await Project.getBuildStatusAsync(projectDir, {
+    current: false,
+    ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
+  });
+
+  const url = result.jobs?.filter((job: Project.BuildJobFields) => job.platform === platform)[0]
     ?.artifacts?.url;
   if (url) {
     log.nested(url);

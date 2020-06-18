@@ -92,30 +92,6 @@ describe('User Sessions', () => {
     expect(sessionSecret).toBe(undefined);
   });
 
-  it('should use the token in apiv1', async () => {
-    const UserManager = _newTestUserManager();
-    await UserManager.loginAsync('user-pass', {
-      username: userForTest.username,
-      password: userForTestPassword,
-    });
-
-    let formData = new FormData();
-    formData.append('queryType', 'history');
-    formData.append('slug', 'foobar');
-
-    let response = await Api.callMethodAsync(
-      'publishInfo',
-      [],
-      'post',
-      null,
-      {
-        formData,
-      },
-      true
-    );
-    expect(response.status).toBe(200);
-  });
-
   it('should use the token in apiv2', async () => {
     const UserManager = _newTestUserManager();
     await UserManager.loginAsync('user-pass', {

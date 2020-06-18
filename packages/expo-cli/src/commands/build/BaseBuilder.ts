@@ -81,25 +81,14 @@ export default class BaseBuilder {
 
   async checkForBuildInProgress() {
     log('Checking if there is a build in progress...\n');
-    let buildStatus;
-    if (process.env.EXPO_LEGACY_API === 'true') {
-      buildStatus = await Project.buildAsync(this.projectDir, {
-        mode: 'status',
-        platform: this.platform(),
-        current: true,
-        releaseChannel: this.options.releaseChannel,
-        publicUrl: this.options.publicUrl,
-        sdkVersion: this.manifest.sdkVersion,
-      } as any);
-    } else {
-      buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
-        platform: this.platform(),
-        current: true,
-        releaseChannel: this.options.releaseChannel,
-        publicUrl: this.options.publicUrl,
-        sdkVersion: this.manifest.sdkVersion,
-      } as any);
-    }
+    const buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
+      platform: this.platform(),
+      current: true,
+      releaseChannel: this.options.releaseChannel,
+      publicUrl: this.options.publicUrl,
+      sdkVersion: this.manifest.sdkVersion,
+    } as any);
+
     if ('jobs' in buildStatus && buildStatus.jobs?.length > 0) {
       throw new BuildError('Cannot start a new build, as there is already an in-progress build.');
     }
@@ -108,33 +97,22 @@ export default class BaseBuilder {
   async checkStatus(platform: 'all' | 'ios' | 'android' = 'all'): Promise<void> {
     log('Fetching build history...\n');
 
-    let buildStatus: Project.BuildStatusResult | Project.BuildCreatedResult;
-    if (process.env.EXPO_LEGACY_API === 'true') {
-      buildStatus = await Project.buildAsync(this.projectDir, {
-        mode: 'status',
-        platform,
-        current: false,
-        releaseChannel: this.options.releaseChannel,
-      });
-    } else {
-      buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
-        platform,
-        current: false,
-        releaseChannel: this.options.releaseChannel,
-      });
-    }
+    const buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
+      platform,
+      current: false,
+      releaseChannel: this.options.releaseChannel,
+    });
+
     if ('err' in buildStatus && buildStatus.err) {
       throw new Error('Error getting current build status for this project.');
     }
 
-    // @ts-ignore: Property 'jobs' does not exist on type 'BuildCreatedResult'.
     if (!(buildStatus.jobs && buildStatus.jobs.length)) {
       log('No currently active or previous builds for this project.');
       return;
     }
 
     await this.logBuildStatuses({
-      // @ts-ignore: Property 'jobs' does not exist on type 'BuildCreatedResult'.
       jobs: buildStatus.jobs,
       canPurchasePriorityBuilds: buildStatus.canPurchasePriorityBuilds,
       numberOfRemainingPriorityBuilds: buildStatus.numberOfRemainingPriorityBuilds,
@@ -297,20 +275,12 @@ ${job.id}
     );
     let spinner = ora().start();
     while (true) {
-      let res;
-      if (process.env.EXPO_LEGACY_API === 'true') {
-        res = (await Project.buildAsync(this.projectDir, {
-          current: false,
-          mode: 'status',
-          ...(publicUrl ? { publicUrl } : {}),
-        })) as Project.BuildStatusResult;
-      } else {
-        res = await Project.getBuildStatusAsync(this.projectDir, {
-          current: false,
-          ...(publicUrl ? { publicUrl } : {}),
-        });
-      }
-      const job = res.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId)[0];
+      const result = await Project.getBuildStatusAsync(this.projectDir, {
+        current: false,
+        ...(publicUrl ? { publicUrl } : {}),
+      });
+
+      const job = result.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId)[0];
 
       switch (job.status) {
         case 'finished':
@@ -340,55 +310,29 @@ ${job.id}
     const platform = this.platform();
     const bundleIdentifier = this.manifest.ios?.bundleIdentifier;
 
-    let result: any;
-    if (process.env.EXPO_LEGACY_API === 'true') {
-      let opts: Record<string, any> = {
-        mode: 'create',
-        expIds,
-        platform,
-        releaseChannel: this.options.releaseChannel,
-        ...(publicUrl ? { publicUrl } : {}),
+    let opts: Record<string, any> = {
+      expIds,
+      platform,
+      releaseChannel: this.options.releaseChannel,
+      ...(publicUrl ? { publicUrl } : {}),
+    };
+
+    if (platform === PLATFORMS.IOS) {
+      opts = {
+        ...opts,
+        type: this.options.type,
+        bundleIdentifier,
       };
-
-      if (platform === PLATFORMS.IOS) {
-        opts = {
-          ...opts,
-          type: this.options.type,
-          bundleIdentifier,
-        };
-      } else if (platform === PLATFORMS.ANDROID) {
-        opts = {
-          ...opts,
-          type: this.options.type,
-        };
-      }
-
-      // call out to build api here with url
-      result = await Project.buildAsync(this.projectDir, opts);
-    } else {
-      let opts: Record<string, any> = {
-        expIds,
-        platform,
-        releaseChannel: this.options.releaseChannel,
-        ...(publicUrl ? { publicUrl } : {}),
+    } else if (platform === PLATFORMS.ANDROID) {
+      opts = {
+        ...opts,
+        type: this.options.type,
       };
-
-      if (platform === PLATFORMS.IOS) {
-        opts = {
-          ...opts,
-          type: this.options.type,
-          bundleIdentifier,
-        };
-      } else if (platform === PLATFORMS.ANDROID) {
-        opts = {
-          ...opts,
-          type: this.options.type,
-        };
-      }
-
-      // call out to build api here with url
-      result = await Project.startBuildAsync(this.projectDir, opts);
     }
+
+    // call out to build api here with url
+    const result = await Project.startBuildAsync(this.projectDir, opts);
+
     const { id: buildId, priority, canPurchasePriorityBuilds } = result;
 
     log('Build started, it may take a few minutes to complete.');

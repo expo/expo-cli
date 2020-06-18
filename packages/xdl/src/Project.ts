@@ -369,33 +369,15 @@ export async function getLatestReleaseAsync(
     owner?: string;
   }
 ): Promise<Release | null> {
-  let result;
-  if (process.env.EXPO_LEGACY_API === 'true') {
-    // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
-    let formData = new FormData();
-    formData.append('queryType', 'history');
-    formData.append('slug', await getSlugAsync(projectRoot));
-    if (options.owner) {
-      formData.append('owner', options.owner);
-    }
-    formData.append('version', '2');
-    formData.append('count', '1');
-    formData.append('releaseChannel', options.releaseChannel);
-    formData.append('platform', options.platform);
-    result = await Api.callMethodAsync('publishInfo', [], 'post', null, {
-      formData,
-    });
-  } else {
-    const user = await UserManager.ensureLoggedInAsync();
-    const api = ApiV2.clientForUser(user);
-    result = await api.postAsync('publish/history', {
-      owner: options.owner,
-      slug: await getSlugAsync(projectRoot),
-      releaseChannel: options.releaseChannel,
-      count: 1,
-      platform: options.platform,
-    });
-  }
+  const user = await UserManager.ensureLoggedInAsync();
+  const api = ApiV2.clientForUser(user);
+  const result = await api.postAsync('publish/history', {
+    owner: options.owner,
+    slug: await getSlugAsync(projectRoot),
+    releaseChannel: options.releaseChannel,
+    count: 1,
+    platform: options.platform,
+  });
   const { queryResult } = result;
   if (queryResult && queryResult.length > 0) {
     return queryResult[0];
@@ -990,15 +972,9 @@ async function _uploadArtifactsAsync({
   formData.append('androidBundle', androidBundle, 'androidBundle');
   formData.append('options', JSON.stringify(options));
 
-  let response: any;
-  if (process.env.EXPO_LEGACY_API === 'true') {
-    response = await Api.callMethodAsync('publish', null, 'put', null, { formData });
-  } else {
-    const user = await UserManager.ensureLoggedInAsync();
-    const api = ApiV2.clientForUser(user);
-    response = await api.uploadFormDataAsync('publish/new', formData);
-  }
-  return response;
+  const user = await UserManager.ensureLoggedInAsync();
+  const api = ApiV2.clientForUser(user);
+  return await api.uploadFormDataAsync('publish/new', formData);
 }
 
 async function _validatePackagerReadyAsync(projectRoot: string) {
@@ -1308,14 +1284,10 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
   });
 
   // Collect list of assets missing on host
-  let result;
-  if (process.env.EXPO_LEGACY_API === 'true') {
-    result = await Api.callMethodAsync('assetsMetadata', [], 'post', { keys: Object.keys(paths) });
-  } else {
-    const user = await UserManager.ensureLoggedInAsync();
-    const api = ApiV2.clientForUser(user);
-    result = await api.postAsync('assets/metadata', { keys: Object.keys(paths) });
-  }
+  const user = await UserManager.ensureLoggedInAsync();
+  const api = ApiV2.clientForUser(user);
+  const result = await api.postAsync('assets/metadata', { keys: Object.keys(paths) });
+
   const metas = result.metadata;
   const missing = Object.keys(paths).filter(key => !metas[key].exists);
 
@@ -1336,13 +1308,9 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
         formData.append(key, fs.createReadStream(paths[key]), paths[key]);
       }
 
-      if (process.env.EXPO_LEGACY_API === 'true') {
-        await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
-      } else {
-        const user = await UserManager.ensureLoggedInAsync();
-        const api = ApiV2.clientForUser(user);
-        await api.uploadFormDataAsync('assets/upload', formData);
-      }
+      const user = await UserManager.ensureLoggedInAsync();
+      const api = ApiV2.clientForUser(user);
+      await api.uploadFormDataAsync('assets/upload', formData);
     })
   );
 }
@@ -1541,35 +1509,6 @@ export async function startBuildAsync(
 
   const api = ApiV2.clientForUser(user);
   return await api.putAsync('build/start', { manifest: exp, options });
-}
-
-export async function buildAsync(
-  projectRoot: string,
-  options: GetExpConfigOptions = {}
-): Promise<BuildStatusResult | BuildCreatedResult> {
-  /**
-    This function corresponds to an apiv1 call and is deprecated.
-    Use
-      * startBuildAsync
-      * getBuildStatusAsync
-    to call apiv2 instead.
-   */
-  await UserManager.ensureLoggedInAsync();
-  _assertValidProjectRoot(projectRoot);
-
-  Analytics.logEvent('Build Shell App', {
-    projectRoot,
-    developerTool: Config.developerTool,
-    platform: options.platform,
-  });
-
-  _validateOptions(options);
-  const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
-  if (options.mode === 'create') {
-    _validateManifest(options, exp, configName, configPrefix);
-  }
-
-  return await Api.callMethodAsync('build', [], 'put', { manifest: exp, options });
 }
 
 async function _waitForRunningAsync(
@@ -2067,23 +2006,14 @@ function getManifestHandler(projectRoot: string) {
             _cachedSignedManifest.signedManifest = manifestString;
           } else {
             let publishInfo = await Exp.getPublishInfoAsync(projectRoot);
+            const user = await UserManager.ensureLoggedInAsync();
 
-            let signedManifest;
-            if (process.env.EXPO_LEGACY_API === 'true') {
-              signedManifest = await Api.callMethodAsync(
-                'signManifest',
-                [publishInfo.args],
-                'post',
-                manifest
-              );
-            } else {
-              const user = await UserManager.ensureLoggedInAsync();
-              const api = ApiV2.clientForUser(user);
-              signedManifest = await api.postAsync('manifest/sign', {
-                args: publishInfo.args,
-                manifest,
-              });
-            }
+            const api = ApiV2.clientForUser(user);
+            const signedManifest = await api.postAsync('manifest/sign', {
+              args: publishInfo.args,
+              manifest,
+            });
+
             _cachedSignedManifest.manifestString = manifestString;
             _cachedSignedManifest.signedManifest = signedManifest.response;
             manifestString = signedManifest.response;

@@ -361,19 +361,13 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
 }
 
 export async function sendAsync(recipient: string, url_: string, allowUnauthed: boolean = true) {
-  let result;
-  if (process.env.EXPO_LEGACY_API === 'true') {
-    result = await Api.callMethodAsync('send', [recipient, url_, allowUnauthed]);
-  } else {
-    const user = await UserManager.ensureLoggedInAsync();
-    const api = ApiV2.clientForUser(user);
-    result = await api.postAsync('send-project', {
-      emailOrPhone: recipient,
-      url: url_,
-      includeExpoLinks: allowUnauthed,
-    });
-  }
-  return result;
+  const user = await UserManager.ensureLoggedInAsync();
+  const api = ApiV2.clientForUser(user);
+  return await api.postAsync('send-project', {
+    emailOrPhone: recipient,
+    url: url_,
+    includeExpoLinks: allowUnauthed,
+  });
 }
 
 // TODO: figure out where these functions should live
