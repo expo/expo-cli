@@ -100,7 +100,7 @@ async function updateClientUrlAndVersionAsync(
   const isLatest = sdkVersion === Object.keys(versions.sdkVersions).sort(semver.rcompare)[0];
 
   // For compatibility reasons we have to maintain that global config, but only when we're updating the most recent SDK.
-  if (isReleased && isLatest) {
+  if (!sdkVersion || (isReleased && isLatest)) {
     versions[`${platform}Version`] = appVersion;
     versions[`${platform}Url`] = clientUrl;
   }
