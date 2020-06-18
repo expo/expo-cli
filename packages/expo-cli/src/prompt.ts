@@ -6,6 +6,7 @@ export { Question, ChoiceType };
 
 type CliQuestions = Question | Question[];
 
+// note(cedric): this prompt is now deprecated in favor of ./prompts
 export default function prompt(
   questions: CliQuestions,
   { nonInteractiveHelp }: { nonInteractiveHelp?: string } = {}
