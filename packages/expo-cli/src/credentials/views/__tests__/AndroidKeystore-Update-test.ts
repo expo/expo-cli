@@ -37,7 +37,7 @@ describe('UpdateKeystore', () => {
 
       (prompt as any)
         .mockImplementationOnce(() => ({ answer: false })) // Let expo handle
-        .mockImplementationOnce(() => {
+        .mockImplementation(() => {
           throw new Error("shouldn't happen");
         });
 
@@ -76,7 +76,7 @@ describe('UpdateKeystore', () => {
 
       (prompt as any)
         .mockImplementationOnce(() => ({ answer: false })) // Let expo handle
-        .mockImplementationOnce(() => {
+        .mockImplementation(() => {
           throw new Error("shouldn't happen");
         });
 

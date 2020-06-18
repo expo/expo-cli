@@ -41,7 +41,7 @@ describe('RemoveKeystore', () => {
       const ctx = getCtxMock();
       (prompt as any)
         .mockImplementationOnce(() => ({ confirm: false })) // prompt with warning message, abort
-        .mockImplementationOnce(x => {
+        .mockImplementation(x => {
           throw new Error("shouldn't happen");
         });
 
@@ -68,7 +68,7 @@ describe('RemoveKeystore', () => {
           }
           return { confirm: undefined };
         })
-        .mockImplementationOnce(() => {
+        .mockImplementation(() => {
           throw new Error("shouldn't happen");
         });
 
@@ -89,7 +89,7 @@ describe('RemoveKeystore', () => {
           fetchKeystore: jest.fn().mockImplementationOnce(() => null),
         },
       });
-      (prompt as any).mockImplementationOnce(() => {
+      (prompt as any).mockImplementation(() => {
         throw new Error("shouldn't happen");
       });
 
