@@ -111,23 +111,12 @@ export async function action(projectDir: string, options: Options = {}) {
     args: { sdkVersion },
   } = await Exp.getPublishInfoAsync(projectDir);
 
-  let buildStatus;
-  if (process.env.EXPO_LEGACY_API === 'true') {
-    buildStatus = await Project.buildAsync(projectDir, {
-      mode: 'status',
-      platform: 'all',
-      current: true,
-      releaseChannel: options.releaseChannel,
-      sdkVersion,
-    });
-  } else {
-    buildStatus = await Project.getBuildStatusAsync(projectDir, {
-      platform: 'all',
-      current: true,
-      releaseChannel: options.releaseChannel,
-      sdkVersion,
-    });
-  }
+  const buildStatus = await Project.getBuildStatusAsync(projectDir, {
+    platform: 'all',
+    current: true,
+    releaseChannel: options.releaseChannel,
+    sdkVersion,
+  });
 
   if (
     'userHasBuiltExperienceBefore' in buildStatus &&
