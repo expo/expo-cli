@@ -74,13 +74,14 @@ async function modifyExpoPlistAsync(projectRoot: string, callback: (plist: any) 
   const supportingDirectory = path.join(iosProjectDirectory, 'Supporting');
   try {
     await IosPlist.modifyAsync(supportingDirectory, 'Expo', callback);
-    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
   } catch (error) {
     WarningAggregator.addWarningIOS(
       'updates',
       'Expo.plist configuration could not be applied. You will need to create Expo.plist if it does not exist and add Updates configuration manually.',
       'https://docs.expo.io/bare/updating-your-app/#configuration-options'
     );
+  } finally {
+    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
   }
 }
 

@@ -99,3 +99,30 @@ export async function readAndroidManifestAsync(manifestPath: string): Promise<Do
 export async function getPackageAsync(manifest: Document): Promise<string | null> {
   return manifest.manifest?.['$']?.package ?? null;
 }
+
+export function addMetaDataItemToMainApplication(
+  mainApplication: any,
+  itemName: string,
+  itemValue: string
+) {
+  let existingMetaDataItem;
+  const newItem = {
+    $: {
+      'android:name': itemName,
+      'android:value': itemValue,
+    },
+  };
+  if (mainApplication.hasOwnProperty('meta-data')) {
+    existingMetaDataItem = mainApplication['meta-data'].filter(
+      (e: any) => e['$']['android:name'] === itemName
+    );
+    if (existingMetaDataItem.length) {
+      existingMetaDataItem[0]['$']['android:value'] = itemValue;
+    } else {
+      mainApplication['meta-data'].push(newItem);
+    }
+  } else {
+    mainApplication['meta-data'] = [newItem];
+  }
+  return mainApplication;
+}
