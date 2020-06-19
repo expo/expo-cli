@@ -1,9 +1,10 @@
-import { IosPlist } from '@expo/xdl';
-import { IOSConfig, getConfig } from '@expo/config';
+import { IosPlist, UserManager } from '@expo/xdl';
+import { IOSConfig, WarningAggregator, getConfig } from '@expo/config';
 import path from 'path';
 
 export default async function configureIOSProjectAsync(projectRoot: string) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const username = await UserManager.getCurrentUsernameAsync();
 
   IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, exp.ios!.bundleIdentifier!);
   IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
@@ -25,6 +26,12 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
     infoPlist = IOSConfig.Version.setVersion(exp, infoPlist);
 
     return infoPlist;
+  });
+
+  // Configure Expo.plist
+  await modifyExpoPlistAsync(projectRoot, expoPlist => {
+    expoPlist = IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
+    return expoPlist;
   });
 
   // Configure entitlements/capabilities
@@ -60,6 +67,22 @@ async function modifyInfoPlistAsync(projectRoot: string, callback: (plist: any) 
   const { iosProjectDirectory } = getIOSPaths(projectRoot);
   await IosPlist.modifyAsync(iosProjectDirectory, 'Info', callback);
   await IosPlist.cleanBackupAsync(iosProjectDirectory, 'Info', false);
+}
+
+async function modifyExpoPlistAsync(projectRoot: string, callback: (plist: any) => any) {
+  const { iosProjectDirectory } = getIOSPaths(projectRoot);
+  const supportingDirectory = path.join(iosProjectDirectory, 'Supporting');
+  try {
+    await IosPlist.modifyAsync(supportingDirectory, 'Expo', callback);
+  } catch (error) {
+    WarningAggregator.addWarningIOS(
+      'updates',
+      'Expo.plist configuration could not be applied. You will need to create Expo.plist if it does not exist and add Updates configuration manually.',
+      'https://docs.expo.io/bare/updating-your-app/#configuration-options'
+    );
+  } finally {
+    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
+  }
 }
 
 // TODO: come up with a better solution for using app.json expo.name in various places
