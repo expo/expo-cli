@@ -1,8 +1,15 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import { Command } from 'commander';
-import { AppJSONConfig, BareAppConfig, ExpoConfig, readConfigJsonAsync } from '@expo/config';
-import { Exp, User, UserManager } from '@expo/xdl';
+import {
+  AndroidConfig,
+  BareAppConfig,
+  ExpoConfig,
+  IOSConfig,
+  getConfig,
+  readConfigJsonAsync,
+} from '@expo/config';
+import { Exp, IosPlist, User, UserManager } from '@expo/xdl';
 import padEnd from 'lodash/padEnd';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
@@ -364,39 +371,27 @@ async function configureUpdatesProjectFilesAsync(
   initialConfig: BareAppConfig,
   username: string
 ) {
-  const expoPlistPath = path.join(projectRoot, 'ios', initialConfig.name, 'Supporting/Expo.plist');
-  const androidManifestPath = path.join(projectRoot, 'android/app/src/main/AndroidManifest.xml');
-
-  const appUrl = `https://exp.host/@${username}/${initialConfig.name}`;
-  const sdkVersion = (await readConfigJsonAsync(projectRoot)).exp.sdkVersion;
-
-  if (!sdkVersion) {
-    throw new Error('Could not determine project SDK version.');
-  }
-
-  await maybeConfigureUpdatesProjectFileAsync(expoPlistPath, appUrl, sdkVersion);
-  await maybeConfigureUpdatesProjectFileAsync(androidManifestPath, appUrl, sdkVersion);
-}
-
-async function maybeConfigureUpdatesProjectFileAsync(
-  path: string,
-  appUrl: string,
-  sdkVersion: string
-) {
-  let fileContents;
+  const { exp } = await getConfig(projectRoot);
+  const supportingDirectory = path.join(projectRoot, 'ios', initialConfig.name, 'Supporting');
   try {
-    fileContents = fs.readFileSync(path, 'utf8');
-  } catch (error) {
-    if (error.code === 'ENOENT') return;
-    // File doesn't exist
-    else throw error;
+    await IosPlist.modifyAsync(supportingDirectory, 'Expo', expoPlist => {
+      return IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
+    });
+  } finally {
+    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
   }
-  fs.writeFileSync(
-    path,
-    fileContents
-      .replace(/YOUR-APP-URL-HERE/g, appUrl)
-      .replace(/YOUR-APP-SDK-VERSION-HERE/g, sdkVersion)
+
+  const androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
+    projectRoot
   );
+  if (!androidManifestPath) {
+    throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectRoot}"`);
+  }
+  const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
+    androidManifestPath
+  );
+  const result = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifestJSON, username);
+  await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
 }
 
 async function installPodsAsync(projectRoot: string) {
