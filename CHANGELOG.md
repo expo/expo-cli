@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- `expo install` now also uses `bundledNativeModules.json` on bare projects.
+
 ### 🐛 Bug fixes
 
 ### 📦 Packages updated
