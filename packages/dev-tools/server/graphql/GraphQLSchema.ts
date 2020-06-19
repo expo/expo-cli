@@ -687,4 +687,4 @@ const resolvers = {
   },
 };
 
-export default makeExecutableSchema({ typeDefs, resolvers });
+export default makeExecutableSchema({ typeDefs: [...typeDefs], resolvers });

@@ -21,11 +21,11 @@
     "base64url": "3.0.1",
     "express": "4.16.4",
     "freeport-async": "2.0.0",
-    "graphql": "0.13.2",
-    "graphql-tools": "3.0.0",
+    "graphql": "15.1.0",
+    "graphql-tools": "6.0.10",
     "iterall": "1.2.2",
     "lodash": "^4.17.15",
-    "subscriptions-transport-ws": "0.9.8"
+    "subscriptions-transport-ws": "0.9.16"
   },
   "peerDependencies": {
     "@expo/xdl": "*"
@@ -45,7 +45,7 @@
     "copy-to-clipboard": "^3.0.8",
     "emotion": "^9.2.9",
     "emotion-server": "^9.2.9",
-    "graphql-tag": "^2.9.1",
+    "graphql-tag": "^2.10.3",
     "has-ansi": "^3.0.0",
     "http-proxy-middleware": "^0.18.0",
     "next": "^8.0.0",
