@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- `expo upload:android --use-submission-service` is now ensuring the project is registered on Expo Servers before submitting a build.
+
 ### 🐛 Bug fixes
 
 ### 📦 Packages updated
