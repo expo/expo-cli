@@ -8,11 +8,30 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
-- `expo upload:android --use-submission-service` is now ensuring the project is registered on Expo Servers before submitting a build.
-
 ### 🐛 Bug fixes
 
 ### 📦 Packages updated
+
+## [Fri Jun 19 10:36:25 2020 +0200](https://github.com/expo/expo-cli/commit/4bc7d72f46f33349a974bfb38f1ee325297a2c16)
+
+### 🎉 New features
+
+- `expo upload:android --use-submission-service` is now ensuring the project is registered on Expo Servers before submitting a build.
+
+### 📦 Packages updated
+
+- @expo/config@3.2.12
+- @expo/dev-server@0.1.13
+- @expo/dev-tools@0.13.19
+- @expo/electron-adapter@0.0.2
+- expo-cli@3.21.8
+- expo-optimize@0.1.35
+- @expo/metro-config@0.1.13
+- @expo/next-adapter@2.1.15
+- expo-pwa@0.0.23
+- uri-scheme@1.0.20
+- @expo/webpack-config@0.12.15
+- @expo/xdl@57.9.16
 
 ## [Thu Jun 18 11:13:34 2020 +0300](https://github.com/expo/expo-cli/commit/d868f8e4340f40a39f8e3a0d3b0c63f0ed116544)
 
