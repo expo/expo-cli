@@ -8,11 +8,21 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
-- `expo install` now also uses `bundledNativeModules.json` on bare projects.
-
 ### 🐛 Bug fixes
 
 ### 📦 Packages updated
+
+## [Fri Jun 19 11:46:02 2020 -0700](https://github.com/expo/expo-cli/commit/d983fade1414f674c7dfff1c853d3e82fd787207)
+
+### 🎉 New features
+
+- `expo install` now also uses `bundledNativeModules.json` on bare projects.
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.20
+- expo-cli@3.21.9
+- @expo/xdl@57.9.17
 
 ## [Fri Jun 19 10:36:25 2020 +0200](https://github.com/expo/expo-cli/commit/4bc7d72f46f33349a974bfb38f1ee325297a2c16)
 
