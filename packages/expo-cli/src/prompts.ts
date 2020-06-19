@@ -36,3 +36,9 @@ export default function prompt(
 // todo: replace this workaround, its still selectable by the cursor
 // see: https://github.com/terkelg/prompts/issues/254
 prompt.separator = (title: string): Choice => ({ title, disable: true, value: undefined });
+
+/**
+ * Expose inject method to answering questions programatically, for testing purposes.
+ * @see https://github.com/terkelg/prompts#injectvalues
+ */
+prompt.inject = prompts.inject;
