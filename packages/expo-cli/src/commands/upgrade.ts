@@ -451,6 +451,7 @@ export async function upgradeAsync(
     await packageManager.addAsync(expoPackageToInstall);
   } catch (e) {
     installingPackageStep.fail(`Failed to install expo package with error: ${e.message}`);
+    throw e;
   } finally {
     installingPackageStep.succeed(`Installed ${expoPackageToInstall}`);
   }
