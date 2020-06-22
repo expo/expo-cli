@@ -12,6 +12,7 @@ import * as Entitlements from './Entitlements';
 import * as Facebook from './Facebook';
 import * as Google from './Google';
 import * as Orientation from './Orientation';
+import * as Updates from './Updates';
 
 // Placeholders
 import * as Icons from './Icons';
@@ -39,6 +40,7 @@ export {
   Orientation,
   RequiresFullScreen,
   Scheme,
+  Updates,
   UserInterfaceStyle,
   UsesNonExemptEncryption,
   Version,

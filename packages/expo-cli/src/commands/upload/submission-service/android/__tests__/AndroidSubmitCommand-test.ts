@@ -1,4 +1,5 @@
 import { vol } from 'memfs';
+import { v4 as uuidv4 } from 'uuid';
 
 import { AndroidSubmitCommandOptions } from '../types';
 import { SubmissionMode } from '../../types';
@@ -15,10 +16,13 @@ import { jester } from '../../../../../__tests__/user-fixtures';
 import SubmissionService from '../../SubmissionService';
 import { Platform, Submission, SubmissionStatus } from '../../SubmissionService.types';
 import { runTravelingFastlaneAsync } from '../../utils/travelingFastlane';
+import { ensureProjectExistsAsync } from '../../../../../projects';
+import { AndroidOnlineSubmissionConfig } from '../AndroidSubmitter';
 
 jest.mock('fs');
 jest.mock('../../SubmissionService');
 jest.mock('../../utils/travelingFastlane');
+jest.mock('../../../../../projects');
 
 mockExpoXDL({
   UserManager: {
@@ -51,6 +55,10 @@ describe(AndroidSubmitCommand, () => {
     vol.reset();
   });
 
+  afterEach(() => {
+    (ensureProjectExistsAsync as jest.Mock).mockClear();
+  });
+
   describe('online mode', () => {
     const originalStartSubmissionAsync = SubmissionService.startSubmissionAsync;
     const originalGetSubmissionAsync = SubmissionService.getSubmissionAsync;
@@ -68,6 +76,7 @@ describe(AndroidSubmitCommand, () => {
     });
 
     it('sends a request to Submission Service', async () => {
+      const projectId = uuidv4();
       (SubmissionService.getSubmissionAsync as jest.Mock).mockImplementationOnce(
         async (id: string): Promise<Submission> => {
           const actualSubmission = await originalGetSubmissionAsync(id);
@@ -77,6 +86,7 @@ describe(AndroidSubmitCommand, () => {
           };
         }
       );
+      (ensureProjectExistsAsync as jest.Mock).mockImplementationOnce(() => projectId);
 
       const options: AndroidSubmitCommandOptions = {
         url: 'http://expo.io/fake.apk',
@@ -93,17 +103,19 @@ describe(AndroidSubmitCommand, () => {
       const command = new AndroidSubmitCommand(ctx);
       await command.runAsync();
 
-      const androidSubmissionConfig: AndroidSubmissionConfig = {
+      const androidSubmissionConfig: AndroidOnlineSubmissionConfig = {
         archiveUrl: 'http://expo.io/fake.apk',
         archiveType: ArchiveType.apk,
         androidPackage: testProject.appJSON.expo.android?.package,
         serviceAccount: fakeFiles['/google-service-account.json'],
         releaseStatus: ReleaseStatus.draft,
         track: ReleaseTrack.internal,
+        projectId,
       };
 
       expect(SubmissionService.startSubmissionAsync).toHaveBeenCalledWith(
         Platform.ANDROID,
+        projectId,
         androidSubmissionConfig
       );
     });

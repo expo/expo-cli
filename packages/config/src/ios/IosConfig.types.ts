@@ -25,3 +25,13 @@ export type InfoPlist = {
   UISupportedInterfaceOrientations?: Array<InterfaceOrientation>;
   GMSApiKey?: string;
 };
+
+export type ExpoPlist = {
+  EXUpdatesCheckOnLaunch?: string;
+  EXUpdatesEnabled?: boolean;
+  EXUpdatesLaunchWaitMs?: number;
+  EXUpdatesReleaseChannel?: string;
+  EXUpdatesRuntimeVersion?: string;
+  EXUpdatesSDKVersion?: string;
+  EXUpdatesURL?: string;
+};

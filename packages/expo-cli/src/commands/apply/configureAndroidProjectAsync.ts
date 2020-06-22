@@ -2,6 +2,7 @@ import { AndroidConfig, getConfig } from '@expo/config';
 import { sync as globSync } from 'glob';
 import fs from 'fs-extra';
 import path from 'path';
+import { UserManager } from '@expo/xdl';
 
 async function modifyBuildGradleAsync(
   projectRoot: string,
@@ -54,6 +55,7 @@ async function modifyMainActivityJavaAsync(
 
 export default async function configureAndroidProjectAsync(projectRoot: string) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const username = await UserManager.getCurrentUsernameAsync();
 
   await modifyBuildGradleAsync(projectRoot, (buildGradle: string) => {
     buildGradle = AndroidConfig.GoogleServices.setClassPath(exp, buildGradle);
@@ -93,6 +95,8 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
       exp,
       androidManifest
     );
+
+    androidManifest = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifest, username);
 
     return androidManifest;
   });

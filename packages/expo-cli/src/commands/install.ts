@@ -11,11 +11,9 @@ import log from '../log';
 
 async function installAsync(packages: string[], options: PackageManager.CreateForProjectOptions) {
   let projectRoot: string;
-  let workflow: 'managed' | 'bare';
   try {
     const info = await findProjectRootAsync(process.cwd());
     projectRoot = info.projectRoot;
-    workflow = info.workflow;
   } catch (error) {
     if (error.code !== 'NO_PROJECT') {
       // An unknown error occurred.
@@ -36,9 +34,13 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
     log,
   });
 
-  if (workflow === 'bare') {
-    return await packageManager.addAsync(...packages);
-  }
+  // This ends up being confusing for people. If they're using expo install,
+  // let's just install the deps such that they work in the client even if
+  // it's a bare project.
+  //
+  // if (workflow === 'bare') {
+  //   return await packageManager.addAsync(...packages);
+  // }
 
   const { exp } = ConfigUtils.getConfig(projectRoot);
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
@@ -114,7 +116,7 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   await packageManager.addAsync(...versionedPackages);
 }
 
-export default function(program: Command) {
+export default function install(program: Command) {
   program
     .command('install [packages...]')
     .alias('add')

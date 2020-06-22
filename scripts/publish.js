@@ -74,8 +74,8 @@ async function run() {
       stdio: 'inherit',
     });
     console.log('✅ Published', name);
-    console.log('❗❗❗ Make sure CHANGELOG.md is up to date ❗❗❗');
   }
+  console.log('❗❗❗ Make sure CHANGELOG.md is up to date ❗❗❗');
 }
 
 run().catch(error => {
