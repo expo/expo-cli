@@ -1,8 +1,8 @@
 import { vol } from 'memfs';
 
-import { ResizeMode } from '../../constants';
 import configureMainActivity from '../MainActivity';
 import reactNativeProject from './fixtures/react-native-project-structure';
+import { SplashScreenImageResizeMode } from '../../constants';
 
 jest.mock('fs');
 
@@ -90,7 +90,10 @@ ${
       const filePath = '/app/android/app/src/main/java/com/reactnativeproject/MainActivity.java';
 
       it('inserts onCreate() with SplashScreen registration', async () => {
-        await configureMainActivity(projectRootPath, ResizeMode.CONTAIN);
+        await configureMainActivity(projectRootPath, {
+          backgroundColor: [0, 0, 0, 0],
+          imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
+        });
         const actual = vol.readFileSync(filePath, 'utf-8');
         const expected = generateMainActivityFileContent({
           addSplashScreenShowWith: 'CONTAIN',
@@ -101,7 +104,10 @@ ${
 
       it('adds SplashScreen registration to onCreate()', async () => {
         vol.writeFileSync(filePath, generateMainActivityFileContent({ addOnCreateAt: 'BOTTOM' }));
-        await configureMainActivity(projectRootPath, ResizeMode.CONTAIN);
+        await configureMainActivity(projectRootPath, {
+          backgroundColor: [0, 0, 0, 0],
+          imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
+        });
         const actual = vol.readFileSync(filePath, 'utf-8');
         const expected = generateMainActivityFileContent({
           addSplashScreenShowWith: 'CONTAIN',
@@ -119,7 +125,10 @@ ${
               addSplashScreenShowWith: 'CONTAIN',
             })
           );
-          await configureMainActivity(projectRootPath, ResizeMode.NATIVE);
+          await configureMainActivity(projectRootPath, {
+            backgroundColor: [0, 0, 0, 0],
+            imageResizeMode: SplashScreenImageResizeMode.NATIVE,
+          });
           const actual = vol.readFileSync(filePath, 'utf-8');
           const expected = generateMainActivityFileContent({
             addSplashScreenShowWith: 'NATIVE',
@@ -131,7 +140,13 @@ ${
 
       describe('handles statusBarTranslucent flag', () => {
         it('enable statusBar translucency', async () => {
-          await configureMainActivity(projectRootPath, ResizeMode.CONTAIN, true);
+          await configureMainActivity(projectRootPath, {
+            backgroundColor: [0, 0, 0, 0],
+            imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
+            statusBar: {
+              translucent: true,
+            },
+          });
           const actual = vol.readFileSync(filePath, 'utf-8');
           const expected = generateMainActivityFileContent({
             addSplashScreenShowWith: 'CONTAIN',
@@ -155,7 +170,10 @@ ${
       });
 
       it('inserts onCreate() with SplashScreen registration', async () => {
-        await configureMainActivity(projectRootPath, ResizeMode.CONTAIN);
+        await configureMainActivity(projectRootPath, {
+          backgroundColor: [0, 0, 0, 0],
+          imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
+        });
         const actual = vol.readFileSync(filePath, 'utf-8');
         const expected = generateMainActivityFileContent({
           kotlin: true,
@@ -173,7 +191,10 @@ ${
             addOnCreateAt: 'TOP',
           })
         );
-        await configureMainActivity(projectRootPath, ResizeMode.CONTAIN);
+        await configureMainActivity(projectRootPath, {
+          backgroundColor: [0, 0, 0, 0],
+          imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
+        });
         const actual = vol.readFileSync(filePath, 'utf-8');
         const expected = generateMainActivityFileContent({
           kotlin: true,
@@ -193,7 +214,10 @@ ${
               addSplashScreenShowWith: 'CONTAIN',
             })
           );
-          await configureMainActivity(projectRootPath, ResizeMode.NATIVE);
+          await configureMainActivity(projectRootPath, {
+            backgroundColor: [0, 0, 0, 0],
+            imageResizeMode: SplashScreenImageResizeMode.NATIVE,
+          });
           const actual = vol.readFileSync(filePath, 'utf-8');
           const expected = generateMainActivityFileContent({
             kotlin: true,

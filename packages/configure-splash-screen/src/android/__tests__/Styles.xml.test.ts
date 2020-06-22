@@ -1,7 +1,7 @@
 import { vol } from 'memfs';
 import * as path from 'path';
 
-import { StatusBarStyle } from '../../constants';
+import { SplashScreenStatusBarStyle } from '../../constants';
 import configureStylesXml from '../Styles.xml';
 import reactNativeProject from './fixtures/react-native-project-structure';
 
@@ -77,14 +77,18 @@ describe('Styles.xml', () => {
 
     it('creates correct file', async () => {
       vol.unlinkSync(filePath);
-      await configureStylesXml(androidMainPath);
+      await configureStylesXml(androidMainPath, {
+        backgroundColor: [0, 0, 0, 0],
+      });
       const actual = vol.readFileSync(filePath, 'utf-8');
       const expected = generateStylesFileContent();
       expect(actual).toEqual(expected);
     });
 
     it('updates existing file', async () => {
-      await configureStylesXml(androidMainPath);
+      await configureStylesXml(androidMainPath, {
+        backgroundColor: [0, 0, 0, 0],
+      });
       const actual = vol.readFileSync(filePath, 'utf-8');
       const expected = generateStylesFileContent({ addOtherStyle: true });
       expect(actual).toEqual(expected);
@@ -93,7 +97,10 @@ describe('Styles.xml', () => {
     describe('handles statusBarHidden', () => {
       it('adds flag', async () => {
         await configureStylesXml(androidMainPath, {
-          statusBarHidden: true,
+          backgroundColor: [0, 0, 0, 0],
+          statusBar: {
+            hidden: true,
+          },
         });
         const actual = vol.readFileSync(filePath, 'utf-8');
         const expected = generateStylesFileContent({
@@ -105,9 +112,14 @@ describe('Styles.xml', () => {
 
       it('removes flag', async () => {
         await configureStylesXml(androidMainPath, {
-          statusBarHidden: true,
+          backgroundColor: [0, 0, 0, 0],
+          statusBar: {
+            hidden: true,
+          },
         });
-        await configureStylesXml(androidMainPath);
+        await configureStylesXml(androidMainPath, {
+          backgroundColor: [0, 0, 0, 0],
+        });
         const actual = vol.readFileSync(filePath, 'utf-8');
         const expected = generateStylesFileContent({ addOtherStyle: true });
         expect(actual).toEqual(expected);
@@ -117,7 +129,12 @@ describe('Styles.xml', () => {
     describe('handles statusBarStyle', () => {
       it('creates correct regular and v23 files when given statusBarStyle', async () => {
         vol.unlinkSync(filePath);
-        await configureStylesXml(androidMainPath, { statusBarStyle: StatusBarStyle.LIGHT_CONTENT });
+        await configureStylesXml(androidMainPath, {
+          backgroundColor: [0, 0, 0, 0],
+          statusBar: {
+            style: SplashScreenStatusBarStyle.LIGHT_CONTENT,
+          },
+        });
         const result = vol.readFileSync(filePath, 'utf-8');
         const v23Result = vol.readFileSync(v23FilePath, 'utf-8');
         const v23NightResult = vol.existsSync(v23NightFilePath);
@@ -130,9 +147,14 @@ describe('Styles.xml', () => {
 
       it('creates correct v23 and v23-night files when given statusBarStyle and darkModeStatusBarStyle', async () => {
         await configureStylesXml(androidMainPath, {
-          statusBarHidden: true,
-          statusBarStyle: StatusBarStyle.LIGHT_CONTENT,
-          darkModeStatusBarStyle: StatusBarStyle.DARK_CONTENT,
+          backgroundColor: [0, 0, 0, 0],
+          statusBar: {
+            style: SplashScreenStatusBarStyle.LIGHT_CONTENT,
+            hidden: true,
+          },
+          darkMode: {
+            statusBar: { style: SplashScreenStatusBarStyle.DARK_CONTENT },
+          },
         });
         const v23Result = vol.readFileSync(v23FilePath, 'utf-8');
         const v23NightResult = vol.readFileSync(v23NightFilePath, 'utf-8');
@@ -150,13 +172,23 @@ describe('Styles.xml', () => {
 
       it('updates every file according to new configuration', async () => {
         await configureStylesXml(androidMainPath, {
-          statusBarHidden: false,
-          statusBarStyle: StatusBarStyle.LIGHT_CONTENT,
-          darkModeStatusBarStyle: StatusBarStyle.DARK_CONTENT,
+          backgroundColor: [0, 0, 0, 0],
+          statusBar: {
+            hidden: false,
+            style: SplashScreenStatusBarStyle.LIGHT_CONTENT,
+          },
+          darkMode: {
+            statusBar: { style: SplashScreenStatusBarStyle.DARK_CONTENT },
+          },
         });
         await configureStylesXml(androidMainPath, {
-          statusBarStyle: StatusBarStyle.DARK_CONTENT,
-          darkModeStatusBarStyle: StatusBarStyle.LIGHT_CONTENT,
+          backgroundColor: [0, 0, 0, 0],
+          statusBar: {
+            style: SplashScreenStatusBarStyle.DARK_CONTENT,
+          },
+          darkMode: {
+            statusBar: { style: SplashScreenStatusBarStyle.LIGHT_CONTENT },
+          },
         });
         const result = vol.readFileSync(filePath, 'utf-8');
         const v23Result = vol.readFileSync(v23FilePath, 'utf-8');
@@ -188,7 +220,12 @@ describe('Styles.xml', () => {
             windowLightStatusBarItemValue: false,
           })
         );
-        await configureStylesXml(androidMainPath, { statusBarStyle: StatusBarStyle.DARK_CONTENT });
+        await configureStylesXml(androidMainPath, {
+          backgroundColor: [0, 0, 0, 0],
+          statusBar: {
+            style: SplashScreenStatusBarStyle.DARK_CONTENT,
+          },
+        });
         const v23NightResult = vol.existsSync(v23NightFilePath);
         expect(v23NightResult).toEqual(false);
       });
@@ -211,8 +248,11 @@ describe('Styles.xml', () => {
           })
         );
         await configureStylesXml(androidMainPath, {
-          statusBarHidden: true,
-          statusBarStyle: StatusBarStyle.DEFAULT,
+          backgroundColor: [0, 0, 0, 0],
+          statusBar: {
+            hidden: true,
+            style: SplashScreenStatusBarStyle.DEFAULT,
+          },
         });
         const v23Result = vol.existsSync(v23FilePath);
         const v23NightResult = vol.existsSync(v23NightFilePath);
@@ -230,8 +270,13 @@ describe('Styles.xml', () => {
           })
         );
         await configureStylesXml(androidMainPath, {
-          statusBarStyle: StatusBarStyle.DARK_CONTENT,
-          darkModeStatusBarStyle: StatusBarStyle.LIGHT_CONTENT,
+          backgroundColor: [0, 0, 0, 0],
+          statusBar: {
+            style: SplashScreenStatusBarStyle.DARK_CONTENT,
+          },
+          darkMode: {
+            statusBar: { style: SplashScreenStatusBarStyle.LIGHT_CONTENT },
+          },
         });
         const result = vol.readFileSync(filePath, 'utf-8');
         const v23Result = vol.readFileSync(v23FilePath, 'utf-8');
@@ -282,10 +327,15 @@ describe('Styles.xml', () => {
         );
 
         await configureStylesXml(androidMainPath, {
-          statusBarHidden: true,
-          statusBarStyle: StatusBarStyle.DARK_CONTENT,
-          darkModeStatusBarStyle: StatusBarStyle.LIGHT_CONTENT,
-          addStatusBarBackgroundColor: true,
+          backgroundColor: [0, 0, 0, 0],
+          statusBar: {
+            hidden: true,
+            style: SplashScreenStatusBarStyle.DARK_CONTENT,
+            backgroundColor: [0, 0, 0, 0],
+          },
+          darkMode: {
+            statusBar: { style: SplashScreenStatusBarStyle.LIGHT_CONTENT },
+          },
         });
 
         const result = vol.readFileSync(filePath, 'utf-8');
@@ -344,10 +394,14 @@ describe('Styles.xml', () => {
         );
 
         await configureStylesXml(androidMainPath, {
-          statusBarHidden: true,
-          statusBarStyle: StatusBarStyle.DARK_CONTENT,
-          darkModeStatusBarStyle: StatusBarStyle.LIGHT_CONTENT,
-          addStatusBarBackgroundColor: false,
+          backgroundColor: [0, 0, 0, 0],
+          statusBar: {
+            hidden: true,
+            style: SplashScreenStatusBarStyle.DARK_CONTENT,
+          },
+          darkMode: {
+            statusBar: { style: SplashScreenStatusBarStyle.LIGHT_CONTENT },
+          },
         });
 
         const result = vol.readFileSync(filePath, 'utf-8');
