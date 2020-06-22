@@ -4,6 +4,7 @@ import prompts from '../../../prompts';
 import { mockExpoXDL } from '../../../__tests__/mock-utils';
 
 jest.mock('../../actions/list');
+jest.mock('../../../prompts');
 jest.mock('fs-extra');
 mockExpoXDL({
   AndroidCredentials: {
@@ -21,20 +22,29 @@ afterAll(() => {
   console.warn = originalWarn;
   console.log = originalLog;
 });
+beforeEach(() => {
+  (prompts as any).mockReset();
+  (prompts as any).mockImplementation(() => {
+    throw new Error('Should not be called');
+  });
+});
 
 describe('UpdateKeystore', () => {
   describe('existing credentials', () => {
     it('should check credentials and generate new', async () => {
       const ctx = getCtxMock();
 
-      prompts.inject([
-        false, // Keystore source - Let Expo handle
-      ]);
+      (prompts as any)
+        .mockImplementationOnce(() => ({ answer: false })) // Let expo handle
+        .mockImplementation(() => {
+          throw new Error("shouldn't happen");
+        });
 
       const view = new UpdateKeystore(testExperienceName);
       const lastView = await view.open(ctx);
 
       expect(lastView).toBe(null);
+      expect((prompts as any).mock.calls.length).toBe(1);
       expect(ctx.android.fetchKeystore.mock.calls.length).toBe(1);
       expect(ctx.android.updateKeystore.mock.calls.length).toBe(1);
     });
@@ -42,15 +52,15 @@ describe('UpdateKeystore', () => {
     it('should check credentials and ask users for them', async () => {
       const ctx = getCtxMock();
 
-      prompts.inject([
-        true, // Keystore source - User provided
-        'test', // Keystore credentials
-      ]);
+      (prompts as any)
+        .mockImplementationOnce(() => ({ answer: true })) // user specified
+        .mockImplementation(() => ({ input: 'test' })); // keystore credentials
 
       const view = new UpdateKeystore(testExperienceName);
       const lastView = await view.open(ctx);
 
       expect(lastView).toBe(null);
+      expect((prompts as any).mock.calls.length).toBe(5);
       expect(ctx.android.fetchKeystore.mock.calls.length).toBe(1);
       expect(ctx.android.updateKeystore.mock.calls.length).toBe(1);
     });
@@ -63,14 +73,17 @@ describe('UpdateKeystore', () => {
         },
       });
 
-      prompts.inject([
-        false, // Keystore source - Let Expo handle
-      ]);
+      (prompts as any)
+        .mockImplementationOnce(() => ({ answer: false })) // Let expo handle
+        .mockImplementation(() => {
+          throw new Error("shouldn't happen");
+        });
 
       const view = new UpdateKeystore(testExperienceName);
       const lastView = await view.open(ctx);
 
       expect(lastView).toBe(null);
+      expect((prompts as any).mock.calls.length).toBe(1);
       expect(ctx.android.fetchKeystore.mock.calls.length).toBe(1);
       expect(ctx.android.updateKeystore.mock.calls.length).toBe(1);
     });
@@ -82,15 +95,15 @@ describe('UpdateKeystore', () => {
         },
       });
 
-      prompts.inject([
-        true, // Keystore source - User provided
-        'test', // Keystore credentials
-      ]);
+      (prompts as any)
+        .mockImplementationOnce(() => ({ answer: true })) // user specified
+        .mockImplementation(() => ({ input: 'test' })); // keystore credentials
 
       const view = new UpdateKeystore(testExperienceName);
       const lastView = await view.open(ctx);
 
       expect(lastView).toBe(null);
+      expect((prompts as any).mock.calls.length).toBe(5);
       expect(ctx.android.fetchKeystore.mock.calls.length).toBe(1);
       expect(ctx.android.updateKeystore.mock.calls.length).toBe(1);
     });
