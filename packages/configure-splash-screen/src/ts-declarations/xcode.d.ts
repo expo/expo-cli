@@ -17,7 +17,7 @@ declare module 'xcode' {
     fileEncoding?: number;
     defaultEncoding?: number;
     sourceTree: string;
-    includeInIndex: number;
+    includeInIndex?: number;
     explicitFileType?: unknown;
     settings?: object;
     uuid?: string;
