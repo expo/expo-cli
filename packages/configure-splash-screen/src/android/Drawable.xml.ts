@@ -1,7 +1,8 @@
 import path from 'path';
 import { Element } from 'xml-js';
 
-import { ResizeMode } from '../constants';
+import { SplashScreenImageResizeMode, SplashScreenImageResizeModeType } from '../constants';
+import { AndroidSplashScreenConfig } from '../types';
 import {
   mergeXmlElements,
   readXmlFile,
@@ -12,7 +13,7 @@ import {
 
 const DRAWABLE_XML_FILE_PATH = './res/drawable/splashscreen.xml';
 
-function configureDrawable(xml: Element, resizeMode: ResizeMode): Element {
+function configureDrawable(xml: Element, resizeMode?: SplashScreenImageResizeModeType): Element {
   const expected: ExpectedElementsType = {
     elements: [
       {
@@ -33,7 +34,7 @@ function configureDrawable(xml: Element, resizeMode: ResizeMode): Element {
               },
             },
           ] as ExpectedElementType[]).concat(
-            resizeMode !== ResizeMode.NATIVE
+            resizeMode !== SplashScreenImageResizeMode.NATIVE
               ? []
               : [
                   {
@@ -63,10 +64,10 @@ function configureDrawable(xml: Element, resizeMode: ResizeMode): Element {
  */
 export default async function configureDrawableXml(
   androidMainPath: string,
-  resizeMode: ResizeMode
+  config: AndroidSplashScreenConfig
 ) {
   const filePath = path.resolve(androidMainPath, DRAWABLE_XML_FILE_PATH);
   const xmlContent = await readXmlFile(filePath);
-  const configuredXmlContent = configureDrawable(xmlContent, resizeMode);
+  const configuredXmlContent = configureDrawable(xmlContent, config.imageResizeMode);
   await writeXmlFile(filePath, configuredXmlContent);
 }

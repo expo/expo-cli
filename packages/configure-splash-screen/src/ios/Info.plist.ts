@@ -1,13 +1,14 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import StateManager from '../StateManager';
-import { StatusBarOptions, StatusBarStyle } from '../constants';
-import { replace, insert } from '../string-helpers';
+import { SplashScreenStatusBarStyleType } from '../constants';
+import { IosSplashScreenConfig } from '../types';
+import StateManager from '../utils/StateManager';
+import { replace, insert } from '../utils/string-utils';
 
 const INFO_PLIST_FILE_PATH = 'Info.plist';
 
-function getUIStatusBarStyle(statusBarStyle: StatusBarStyle) {
+function getUIStatusBarStyle(statusBarStyle: SplashScreenStatusBarStyleType) {
   return `UIStatusBarStyle${statusBarStyle
     .replace(/(^\w)|(-\w)/g, s => s.toUpperCase())
     .replace(/-/g, '')}`;
@@ -18,8 +19,11 @@ function getUIStatusBarStyle(statusBarStyle: StatusBarStyle) {
  */
 export default async function configureInfoPlist(
   iosProjectPath: string,
-  { statusBarHidden, statusBarStyle }: Partial<StatusBarOptions> = {}
+  config: IosSplashScreenConfig
 ) {
+  const statusBarHidden: boolean | undefined = config.statusBar?.hidden;
+  const statusBarStyle: SplashScreenStatusBarStyleType | undefined = config.statusBar?.style;
+
   const filePath = path.resolve(iosProjectPath, INFO_PLIST_FILE_PATH);
   const fileContent = await fs.readFile(filePath, 'utf-8');
   const { state: newContent } = new StateManager<string, boolean>(fileContent)

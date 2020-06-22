@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { AndroidSplashScreenConfig } from '../types';
 
 const SPLASH_SCREEN_FILENAME = 'splashscreen_image.png';
 
@@ -109,8 +110,7 @@ async function copyDrawableFile(srcPath: string | undefined, dstPath: string) {
  */
 export default async function configureDrawables(
   androidMainPath: string,
-  splashScreenImagePath?: string,
-  darkModeSplashScreenImagePath?: string
+  config: AndroidSplashScreenConfig
 ) {
   await Promise.all(
     Object.values(DRAWABLES_CONFIGS).map(async ({ modes }) => {
@@ -126,11 +126,11 @@ export default async function configureDrawables(
 
   await Promise.all([
     copyDrawableFile(
-      splashScreenImagePath,
+      config.imagePath,
       path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.modes.light.path)
     ),
     copyDrawableFile(
-      darkModeSplashScreenImagePath,
+      config.darkMode?.imagePath,
       path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.modes.dark.path)
     ),
   ]);

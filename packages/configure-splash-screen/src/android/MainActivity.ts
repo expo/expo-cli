@@ -2,18 +2,21 @@ import { projectConfig } from '@react-native-community/cli-platform-android';
 import fs from 'fs-extra';
 import path from 'path';
 
-import StateManager from '../StateManager';
-import { ResizeMode } from '../constants';
-import { insert, replace } from '../string-helpers';
+import StateManager from '../utils/StateManager';
+import { SplashScreenImageResizeMode } from '../constants';
+import { insert, replace } from '../utils/string-utils';
+import { AndroidSplashScreenConfig } from '../types';
 
 /**
  * Injects specific code to MainActivity that would trigger SplashScreen mounting process.
  */
 export default async function configureMainActivity(
   projectRootPath: string,
-  resizeMode: ResizeMode,
-  statusBarTranslucent: boolean = false
+  config: AndroidSplashScreenConfig
 ) {
+  const resizeMode = config.imageResizeMode ?? SplashScreenImageResizeMode.CONTAIN;
+  const statusBarTranslucent: boolean = config.statusBar?.translucent ?? false;
+
   // eslint-disable-next-line
   const mainApplicationPath = projectConfig(projectRootPath)?.mainFilePath;
 
