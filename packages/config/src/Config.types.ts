@@ -216,6 +216,12 @@ export type AndroidPlatformConfig = {
    */
   userInterfaceStyle?: 'light' | 'dark' | 'automatic';
 
+  /**
+   * Whether to allow the application to participate in the backup and restore infrastructure. If this attribute is set to false, no backup or restore of the application will ever be performed. Defaults to the Android default, which is true.
+   * @fallback true
+   */
+  allowBackup?: boolean;
+
   config?: {
     /**
      * [Branch](https://branch.io/) key to hook up Branch linking services.

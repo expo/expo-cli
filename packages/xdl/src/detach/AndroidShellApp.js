@@ -754,6 +754,14 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     );
   }
 
+  if (manifest.android && manifest.android.allowBackup === false) {
+    await regexFileAsync(
+      `android:allowBackup="true"`,
+      `android:allowBackup="false"`,
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
+
   // Add permissions
   if (manifest.android && manifest.android.permissions) {
     const whitelist = [];
