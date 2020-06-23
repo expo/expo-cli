@@ -1,56 +1,4 @@
-import { UrlUtils, Webpack } from '@expo/xdl';
-import { setCustomConfigPath } from '@expo/config';
-import { Command } from 'commander';
-import chalk from 'chalk';
-import BaseBuilder from './BaseBuilder';
-import IOSBuilder from './ios/IOSBuilder';
-import AndroidBuilder from './AndroidBuilder';
-import log from '../../log';
-import CommandError from '../../CommandError';
-import * as ProjectUtils from '../utils/ProjectUtils';
-import { askBuildType } from './utils';
-import prompt from '../../prompt';
-
-import { AndroidOptions, IosOptions } from './BaseBuilder.types';
-
-async function maybeBailOnWorkflowWarning({
-  projectDir,
-  platform,
-  nonInteractive,
-}: {
-  projectDir: string;
-  platform: 'ios' | 'android';
-  nonInteractive: boolean;
-}) {
-  const { workflow } = await ProjectUtils.findProjectRootAsync(projectDir);
-  if (workflow === 'managed') {
-    return false;
-  }
-
-  const command = `expo build:${platform}`;
-  log.warn(chalk.bold(`⚠️  ${command} currently only supports managed workflow apps.`));
-  log.warn(
-    `If you proceed with this command, we can run the build for you but it will not include any custom native modules or changes that you have made to your local native projects.`
-  );
-  log.warn(
-    `Unless you are sure that you know what you are doing, we recommend aborting the build and doing a native release build through ${
-      platform === 'ios' ? 'Xcode' : 'Android Studio'
-    }.`
-  );
-
-  if (nonInteractive) {
-    log.warn(`Skipping confirmation prompt because non-interactive mode is enabled.`);
-    return false;
-  }
-
-  const answer = await prompt({
-    type: 'confirm',
-    name: 'ignoreWorkflowWarning',
-    message: `Would you like to proceed?`,
-  });
-
-  return !answer.ignoreWorkflowWarning;
-}
+import type { Command } from 'commander';
 
 export default function (program: Command) {
   program
@@ -94,35 +42,9 @@ export default function (program: Command) {
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
     .asyncActionProjectDir(
-      async (projectDir: string, options: IosOptions) => {
-        if (!options.skipWorkflowCheck) {
-          if (
-            await maybeBailOnWorkflowWarning({
-              projectDir,
-              platform: 'ios',
-              nonInteractive: program.nonInteractive,
-            })
-          ) {
-            return;
-          }
-        }
-
-        if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
-          throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-        }
-        let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
-        if (!channelRe.test(options.releaseChannel)) {
-          log.error(
-            'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
-          );
-          process.exit(1);
-        }
-        options.type = await askBuildType(options.type, {
-          archive: 'Deploy the build to the store',
-          simulator: 'Run the build on a simulator',
-        });
-        const iosBuilder = new IOSBuilder(projectDir, options);
-        return iosBuilder.command();
+      async (projectDir: string, options: any) => {
+        const command = await import('./ios');
+        command.default(projectDir, options);
       },
       { checkConfig: true }
     );
@@ -144,40 +66,9 @@ export default function (program: Command) {
       'Build a standalone APK or App Bundle for your project, signed and ready for submission to the Google Play Store.'
     )
     .asyncActionProjectDir(
-      async (projectDir: string, options: AndroidOptions) => {
-        if (options.generateKeystore) {
-          log.warn(
-            `The --generate-keystore flag is deprecated and does not do anything. A Keystore will always be generated on the Expo servers if it's missing.`
-          );
-        }
-        if (!options.skipWorkflowCheck) {
-          if (
-            await maybeBailOnWorkflowWarning({
-              projectDir,
-              platform: 'android',
-              nonInteractive: program.nonInteractive,
-            })
-          ) {
-            return;
-          }
-        }
-
-        if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
-          throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-        }
-        let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
-        if (!channelRe.test(options.releaseChannel)) {
-          log.error(
-            'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
-          );
-          process.exit(1);
-        }
-        options.type = await askBuildType(options.type, {
-          apk: 'Build a package to deploy to the store or install directly on Android devices',
-          'app-bundle': 'Build an optimized bundle for the store',
-        });
-        const androidBuilder = new AndroidBuilder(projectDir, options);
-        return androidBuilder.command();
+      async (projectDir: string, options: any) => {
+        const command = await import('./android');
+        await command.default(projectDir, options);
       },
       { checkConfig: true }
     );
@@ -192,11 +83,9 @@ export default function (program: Command) {
     .option('-d, --dev', 'Turns dev flag on before bundling')
     .description('Build a production bundle for your project, compressed and ready for deployment.')
     .asyncActionProjectDir(
-      (projectDir: string, options: { pwa: boolean; clear: boolean; dev: boolean }) => {
-        return Webpack.bundleAsync(projectDir, {
-          ...options,
-          dev: typeof options.dev === 'undefined' ? false : options.dev,
-        });
+      async (projectDir: string, options: { pwa: boolean; clear: boolean; dev: boolean }) => {
+        const command = await import('./web');
+        await command.default(projectDir, options);
       }
     );
 
@@ -209,10 +98,7 @@ export default function (program: Command) {
     )
     .description(`Gets the status of a current (or most recently finished) build for your project.`)
     .asyncActionProjectDir(async (projectDir: string, options: { publicUrl?: string }) => {
-      if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
-        throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-      }
-      const builder = new BaseBuilder(projectDir, options);
-      return builder.commandCheckStatus();
+      const command = await import('./status');
+      await command.default(projectDir, options);
     });
 }

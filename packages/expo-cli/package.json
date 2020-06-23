@@ -11,7 +11,7 @@
   "scripts": {
     "start": "yarn run prepare && yarn run watch",
     "build": "tsc --emitDeclarationOnly && babel src --out-dir build --extensions \".ts\" --source-maps --ignore \"src/**/__mocks__/*\",\"src/**/__tests__/*\"",
-    "build:prod": "cross-env NODE_OPTIONS='--max-old-space-size=4096' ncc build src/exp.ts --out build --minify --no-cache --external @expo/config --external  @expo/webpack-config/web-default/index.html --external uglify-js",
+    "build:prod": "cross-env NODE_OPTIONS='--max-old-space-size=4096' ncc build src/index.ts --out build --no-cache --external @expo/config --external @expo/webpack-config/web-default/index.html --external uglify-js --external devcert",
     "watch": "tsc --watch",
     "prepare": "yarn run clean && yarn run build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",

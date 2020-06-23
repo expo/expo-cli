@@ -36,4 +36,4 @@ if (major > 14) {
   process.exit(1);
 }
 
-require('../build/exp.js').run('expo');
+require('../build/index.js').run('expo');
