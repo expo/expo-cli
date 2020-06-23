@@ -18,9 +18,8 @@ export function getPossibleProjectRoot(): string {
 }
 
 export function spawnSudoAsync(command: string): Promise<void> {
-  const packageJSON = require('../package.json');
   return new Promise((resolve, reject) => {
-    sudo.exec(command, { name: packageJSON.name }, error => {
+    sudo.exec(command, { name: 'pod install' }, error => {
       if (error) {
         reject(error);
       }
