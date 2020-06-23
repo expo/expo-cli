@@ -226,7 +226,7 @@ async function validateDependenciesVersions(
 
   const bundledNativeModules = await JsonFile.readAsync(bundleNativeModulesPath);
   const bundledNativeModulesNames = Object.keys(bundledNativeModules);
-  const projectDependencies = Object.keys(pkg.dependencies);
+  const projectDependencies = Object.keys(pkg.dependencies || []);
 
   const modulesToCheck = intersection(bundledNativeModulesNames, projectDependencies);
   const incorrectDeps = [];
