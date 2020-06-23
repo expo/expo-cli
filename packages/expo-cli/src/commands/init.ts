@@ -386,16 +386,14 @@ async function configureUpdatesProjectFilesAsync(
   const result = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifestJSON, username);
   await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
 
-  // apply iOS config if on macOS
-  if (process.platform === 'darwin') {
-    const supportingDirectory = path.join(projectRoot, 'ios', initialConfig.name, 'Supporting');
-    try {
-      await IosPlist.modifyAsync(supportingDirectory, 'Expo', expoPlist => {
-        return IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
-      });
-    } finally {
-      await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
-    }
+  // apply iOS config
+  const supportingDirectory = path.join(projectRoot, 'ios', initialConfig.name, 'Supporting');
+  try {
+    await IosPlist.modifyAsync(supportingDirectory, 'Expo', expoPlist => {
+      return IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
+    });
+  } finally {
+    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
   }
 }
 
