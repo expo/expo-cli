@@ -372,15 +372,8 @@ async function configureUpdatesProjectFilesAsync(
   username: string
 ) {
   const { exp } = await getConfig(projectRoot);
-  const supportingDirectory = path.join(projectRoot, 'ios', initialConfig.name, 'Supporting');
-  try {
-    await IosPlist.modifyAsync(supportingDirectory, 'Expo', expoPlist => {
-      return IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
-    });
-  } finally {
-    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
-  }
 
+  // apply Android config
   const androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
     projectRoot
   );
@@ -392,6 +385,18 @@ async function configureUpdatesProjectFilesAsync(
   );
   const result = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifestJSON, username);
   await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
+
+  // apply iOS config if on macOS
+  if (process.platform === 'darwin') {
+    const supportingDirectory = path.join(projectRoot, 'ios', initialConfig.name, 'Supporting');
+    try {
+      await IosPlist.modifyAsync(supportingDirectory, 'Expo', expoPlist => {
+        return IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
+      });
+    } finally {
+      await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
+    }
+  }
 }
 
 async function installPodsAsync(projectRoot: string) {
