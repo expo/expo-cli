@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import program, { Command } from 'commander';
-import { BareAppConfig, ExpoConfig } from '@expo/config';
-import { Exp } from '@expo/xdl';
+import { AndroidConfig, BareAppConfig, ExpoConfig, IOSConfig, getConfig } from '@expo/config';
+import { Exp, IosPlist, UserManager } from '@expo/xdl';
 import padEnd from 'lodash/padEnd';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
@@ -226,6 +226,19 @@ async function action(projectDir: string, command: Command) {
       podsInstalled = await installPodsAsync(projectPath);
     } catch (_) {}
 
+    let didConfigureUpdatesProjectFiles = false;
+    const username = await UserManager.getCurrentUsernameAsync();
+    if (username) {
+      try {
+        await configureUpdatesProjectFilesAsync(
+          projectPath,
+          initialConfig as BareAppConfig,
+          username
+        );
+        didConfigureUpdatesProjectFiles = true;
+      } catch {}
+    }
+
     log.newLine();
     let showPublishBeforeBuildWarning = await usesOldExpoUpdatesAsync(projectPath);
     await logProjectReadyAsync({
@@ -233,6 +246,8 @@ async function action(projectDir: string, command: Command) {
       packageManager,
       workflow: 'bare',
       showPublishBeforeBuildWarning,
+      didConfigureUpdatesProjectFiles,
+      username,
     });
     if (!podsInstalled && isMacOS) {
       log.newLine();
@@ -255,11 +270,15 @@ function logProjectReadyAsync({
   packageManager,
   workflow,
   showPublishBeforeBuildWarning,
+  didConfigureUpdatesProjectFiles,
+  username,
 }: {
   cdPath: string;
   packageManager: string;
   workflow: 'managed' | 'bare';
   showPublishBeforeBuildWarning?: boolean;
+  didConfigureUpdatesProjectFiles?: boolean;
+  username?: string | null;
 }) {
   log.nested(chalk.bold(`✅ Your project is ready!`));
   log.newLine();
@@ -315,12 +334,59 @@ function logProjectReadyAsync({
           'expo publish'
         )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
       );
+    } else if (didConfigureUpdatesProjectFiles) {
+      log.nested(
+        `- 🚀 ${terminalLink(
+          'expo-updates',
+          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        )} has been configured in your project. If you publish this project under a different user account than ${chalk.bold(
+          username
+        )}, you'll need to update the configuration in Expo.plist and AndroidManifest.xml before making a release build.`
+      );
+    } else {
+      log.nested(
+        `- 🚀 ${terminalLink(
+          'expo-updates',
+          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        )} has been installed in your project. Before you do a release build, you'll need to configure a few values in Expo.plist and AndroidManifest.xml in order for updates to work.`
+      );
     }
     // TODO: add equivalent of this or some command to wrap it:
     // # ios
     // $ open -a Xcode ./ios/{PROJECT_NAME}.xcworkspace
     // # android
     // $ open -a /Applications/Android\\ Studio.app ./android
+  }
+}
+
+async function configureUpdatesProjectFilesAsync(
+  projectRoot: string,
+  initialConfig: BareAppConfig,
+  username: string
+) {
+  const { exp } = await getConfig(projectRoot);
+
+  // apply Android config
+  const androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
+    projectRoot
+  );
+  if (!androidManifestPath) {
+    throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectRoot}"`);
+  }
+  const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
+    androidManifestPath
+  );
+  const result = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifestJSON, username);
+  await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
+
+  // apply iOS config
+  const supportingDirectory = path.join(projectRoot, 'ios', initialConfig.name, 'Supporting');
+  try {
+    await IosPlist.modifyAsync(supportingDirectory, 'Expo', expoPlist => {
+      return IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
+    });
+  } finally {
+    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
   }
 }
 
