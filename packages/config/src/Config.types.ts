@@ -217,7 +217,7 @@ export type AndroidPlatformConfig = {
   userInterfaceStyle?: 'light' | 'dark' | 'automatic';
 
   /**
-   * Whether to allow the application to participate in the backup and restore infrastructure. If this attribute is set to false, no backup or restore of the application will ever be performed. Defaults to the Android default, which is true.
+   * Allows your user's app data to be automatically backed up to their Google Drive. If this is set to false, no backup or restore of the application will ever be performed (this is useful if your app deals with sensitive information). Defaults to the Android default, which is true.
    * @fallback true
    */
   allowBackup?: boolean;
