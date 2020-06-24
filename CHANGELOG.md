@@ -10,6 +10,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+- Add ttf and otf to binary extensions to fix font in tabs project.
+
 ### 📦 Packages updated
 
 ## [Fri Jun 19 11:46:02 2020 -0700](https://github.com/expo/expo-cli/commit/d983fade1414f674c7dfff1c853d3e82fd787207)
