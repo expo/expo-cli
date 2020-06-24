@@ -117,10 +117,6 @@ export default function (program: Command) {
           );
           process.exit(1);
         }
-        options.type = await askBuildType(options.type, {
-          archive: 'Deploy the build to the store',
-          simulator: 'Run the build on a simulator',
-        });
         const iosBuilder = new IOSBuilder(projectDir, options);
         return iosBuilder.command();
       },

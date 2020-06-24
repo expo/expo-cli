@@ -2,9 +2,11 @@ import os from 'os';
 import chalk from 'chalk';
 import pickBy from 'lodash/pickBy';
 import { XDLError } from '@expo/xdl';
+import program from 'commander';
 
 import terminalLink from 'terminal-link';
 import semver from 'semver';
+import { modifyConfigAsync } from '@expo/config';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
 import * as utils from '../utils';
@@ -37,19 +39,21 @@ import {
 } from '../../../credentials/views/IosProvisioningProfile';
 import { IosAppCredentials, IosDistCredentials } from '../../../credentials/credentials';
 
+const noBundleIdMessage = `Your project must have a \`bundleIdentifier\` set in the Expo config (app.json or app.config.js).
+See https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appjson`;
 function missingBundleIdentifierError() {
-  return new XDLError(
-    'INVALID_OPTIONS',
-    `Your project must have a bundleIdentifier set in app.json.
-See https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appjson`
-  );
+  return new XDLError('INVALID_OPTIONS', noBundleIdMessage);
 }
 
 class IOSBuilder extends BaseBuilder {
   appleCtx?: apple.AppleCtx;
 
   async run(): Promise<void> {
-    await this.validateProject();
+    // This gets run after all other validation to prevent users from having to answer this question multiple times.
+    this.options.type = await utils.askBuildType(this.options.type!, {
+      archive: 'Deploy the build to the store',
+      simulator: 'Run the build on a simulator',
+    });
     this.maybeWarnDamagedSimulator();
     log.addNewLineIfNone();
     await this.checkForBuildInProgress();
@@ -61,19 +65,8 @@ class IOSBuilder extends BaseBuilder {
       await this.checkStatusBeforeBuild();
     }
     await this.build(publishedExpIds);
+    // TODO: Why is this invoked twice?
     this.maybeWarnDamagedSimulator();
-  }
-
-  async validateProject() {
-    const bundleIdentifier = this.manifest.ios?.bundleIdentifier;
-    const sdkVersion = this.manifest.sdkVersion;
-
-    await this.validateIcon();
-
-    if (!bundleIdentifier) {
-      throw missingBundleIdentifierError();
-    }
-    await utils.checkIfSdkIsSupported(sdkVersion!, PLATFORMS.IOS);
   }
 
   async getAppleCtx(): Promise<apple.AppleCtx> {
@@ -119,9 +112,95 @@ class IOSBuilder extends BaseBuilder {
     }
   }
 
+  // All config validation should happen here before any build logic takes place.
+  // It's important that the errors are revealed in a thoughtful manner.
+  async checkProjectConfig(): Promise<void> {
+    // Run this first because the error messages are related
+    // to ExpoKit which is harder to change than the bundle ID.
+    await super.checkProjectConfig();
+
+    // Check the SDK version next as it's the second hardest thing to change.
+    const sdkVersion = this.manifest.sdkVersion;
+
+    await utils.checkIfSdkIsSupported(sdkVersion!, PLATFORMS.IOS);
+
+    // Validate the icon third since it's fairly easy to modify.
+    await this.validateIcon();
+
+    // Check the bundle ID and possibly prompt the user to add a new one.
+    const bundleIdentifier = this.manifest.ios?.bundleIdentifier;
+
+    if (!bundleIdentifier) {
+      // bail out in non-interactive mode using a familiar error.
+      if (program.nonInteractive) {
+        throw missingBundleIdentifierError();
+      }
+
+      // Recommend a bundle ID based on the username and project slug.
+      const username = await this.getUsernameAsync();
+      const recommendedBundleId = username ? `com.${username}.${this.manifest.slug}` : undefined;
+
+      // Prompt the user for the bundle ID.
+      // Even if the project is using a dynamic config we can still
+      // prompt a better error message, recommend a default value, and help the user
+      // validate their custom bundle ID upfront.
+      const bundleIdPrompt = await prompt([
+        {
+          name: 'bundleIdentifier',
+          default: recommendedBundleId,
+          // The Apple helps people know this isn't an EAS feature.
+          message: `What would you like your  bundle identifier to be?`,
+          validate: (value: string) => /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value),
+        },
+      ]);
+
+      const modificiation = await modifyConfigAsync(
+        this.projectDir,
+        { ios: { bundleIdentifier: bundleIdPrompt.bundleIdentifier } },
+        { skipSDKVersionRequirement: true }
+      );
+
+      if (modificiation.type === 'fail') {
+        // No app config exists. I think that the command will fail before it gets to this point anyways.
+        // In the future we may be able to automatically create one.
+        throw missingBundleIdentifierError();
+      } else if (modificiation.type === 'warn') {
+        // The project is using a dynamic config, give the user a helpful log and bail out.
+        log.newLine();
+        log(log.chalk.yellow(modificiation.message));
+        log(log.chalk.cyan(`Please add the following to your Expo config, and try again... `));
+
+        log.newLine();
+        log(
+          JSON.stringify({ ios: { bundleIdentifier: bundleIdPrompt.bundleIdentifier } }, null, 2)
+        );
+        log.newLine();
+
+        log(
+          log.chalk.dim(
+            `For more info: https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appjson`
+          )
+        );
+        process.exit(1);
+      } else {
+        log.newLine();
+        // Success!
+        log(`Your  bundle identifier is now: ${bundleIdPrompt.bundleIdentifier}`);
+        log.newLine();
+      }
+
+      // Update with the latest bundle ID
+      this.updateProjectConfig();
+    }
+  }
+
+  private async getUsernameAsync(): Promise<string | undefined> {
+    if (this.manifest.owner) return this.manifest.owner;
+    return (await this.getUserAsync())?.username;
+  }
+
   async prepareCredentials() {
-    // TODO: Fix forcing the username to be valid
-    const username = this.manifest.owner ?? this.user?.username!;
+    const username = await this.getUsernameAsync();
     const experienceName = `@${username}/${this.manifest.slug}`;
     const bundleIdentifier = this.manifest.ios?.bundleIdentifier;
     if (!bundleIdentifier) throw missingBundleIdentifierError();
@@ -378,6 +457,7 @@ class IOSBuilder extends BaseBuilder {
 
   // validates whether the icon doesn't have transparency
   async validateIcon() {
+    // TODO: maybe recommend the icon builder website.
     try {
       const icon = this.manifest.ios?.icon ?? this.manifest.icon;
       if (!icon) {
