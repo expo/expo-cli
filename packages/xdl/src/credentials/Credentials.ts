@@ -18,6 +18,7 @@ export type CredentialMetadata = {
 
 export { Ios };
 
+/** @deprecated */
 export async function getCredentialMetadataAsync(
   projectRoot: string,
   platform: Platform
@@ -40,6 +41,7 @@ export async function getCredentialMetadataAsync(
   };
 }
 
+/** @deprecated */
 export async function credentialsExistForPlatformAsync(
   metadata: CredentialMetadata
 ): Promise<boolean> {
@@ -47,18 +49,21 @@ export async function credentialsExistForPlatformAsync(
   return !!credentials;
 }
 
+/** @deprecated */
 export async function getEncryptedCredentialsForPlatformAsync(
   metadata: CredentialMetadata
 ): Promise<Credentials | undefined | null> {
   return fetchCredentials(metadata, false);
 }
 
+/** @deprecated */
 export async function getCredentialsForPlatform(
   metadata: CredentialMetadata
 ): Promise<Credentials | undefined | null> {
   return fetchCredentials(metadata, true);
 }
 
+/** @deprecated use expo-cli/src/credentials/api */
 async function fetchCredentials(
   { username, experienceName, bundleIdentifier, platform }: CredentialMetadata,
   decrypt: boolean
@@ -108,6 +113,7 @@ async function fetchCredentials(
   return credentials;
 }
 
+/** @deprecated use expo-cli/src/credentials/api */
 export async function updateCredentialsForPlatform(
   platform: 'android',
   newCredentials: Keystore,

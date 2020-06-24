@@ -5,6 +5,7 @@ import semver from 'semver';
 
 import { Cacher } from './FsCache';
 
+/** @deprecated just use the update-check npm package */
 function createModuleVersionChecker(name: string, currentVersion: string) {
   const UpdateCacher = new Cacher(
     async () => {
