@@ -8,6 +8,14 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+### 📦 Packages updated
+
+## [Tue Jun 23 17:55:00 2020 -0700](https://github.com/expo/expo-cli/commit/4bc73721d5a46fcac35096a0e86a1ceaa333b459)
+
+### 🎉 New features
+
 - Configure expo-updates on expo init in bare projects.
 
 ### 🐛 Bug fixes
@@ -17,6 +25,19 @@ This is the log of notable changes to Expo CLI and related packages.
 - Replace calls to /bin/cp and /bin/rm with their xplat equivalents in fs-extra in xdl's IosPlist.
 
 ### 📦 Packages updated
+
+- @expo/config@3.2.13
+- @expo/dev-server@0.1.14
+- @expo/dev-tools@0.13.21
+- @expo/electron-adapter@0.0.3
+- expo-cli@3.21.10
+- expo-optimize@0.1.36
+- @expo/metro-config@0.1.14
+- @expo/next-adapter@2.1.16
+- expo-pwa@0.0.24
+- uri-scheme@1.0.21
+- @expo/webpack-config@0.12.16
+- @expo/xdl@57.9.18
 
 ## [Fri Jun 19 11:46:02 2020 -0700](https://github.com/expo/expo-cli/commit/d983fade1414f674c7dfff1c853d3e82fd787207)
 
