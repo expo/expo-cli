@@ -334,7 +334,7 @@ function logProjectReadyAsync({
 
     if (showPublishBeforeBuildWarning) {
       log.nested(
-        `- 🚀 ${terminalLink(
+        `🚀 ${terminalLink(
           'expo-updates',
           'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
         )} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
@@ -343,7 +343,7 @@ function logProjectReadyAsync({
       );
     } else if (didConfigureUpdatesProjectFiles) {
       log.nested(
-        `- 🚀 ${terminalLink(
+        `🚀 ${terminalLink(
           'expo-updates',
           'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
         )} has been configured in your project. If you publish this project under a different user account than ${chalk.bold(
@@ -352,7 +352,7 @@ function logProjectReadyAsync({
       );
     } else {
       log.nested(
-        `- 🚀 ${terminalLink(
+        `🚀 ${terminalLink(
           'expo-updates',
           'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
         )} has been installed in your project. Before you do a release build, you'll need to configure a few values in Expo.plist and AndroidManifest.xml in order for updates to work.`
