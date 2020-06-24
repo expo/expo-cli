@@ -216,6 +216,12 @@ export type AndroidPlatformConfig = {
    */
   userInterfaceStyle?: 'light' | 'dark' | 'automatic';
 
+  /**
+   * Allows your user's app data to be automatically backed up to their Google Drive. If this is set to false, no backup or restore of the application will ever be performed (this is useful if your app deals with sensitive information). Defaults to the Android default, which is true.
+   * @fallback true
+   */
+  allowBackup?: boolean;
+
   config?: {
     /**
      * [Branch](https://branch.io/) key to hook up Branch linking services.
