@@ -7,6 +7,7 @@ import {
   readConfigJsonAsync,
   resolveModule,
 } from '@expo/config';
+import program from 'commander';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Exp } from '@expo/xdl';
@@ -143,7 +144,10 @@ async function installPodsAsync(projectRoot: string) {
       // prompt user -- do you want to install cocoapods right now?
       step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
       step.render();
-      await packageManager.installCLIAsync();
+      await PackageManager.CocoaPodsPackageManager.installCLIAsync({
+        nonInteractive: program.nonInteractive,
+        spawnOptions: packageManager.options,
+      });
       step.succeed('Installed CocoaPods CLI');
       step = logNewSection('Running `pod install` in the `ios` directory.');
     } catch (e) {

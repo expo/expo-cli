@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import fs from 'fs';
-import { Command } from 'commander';
-import { AppJSONConfig, BareAppConfig, ExpoConfig } from '@expo/config';
+import program, { Command } from 'commander';
+import { BareAppConfig, ExpoConfig } from '@expo/config';
 import { Exp } from '@expo/xdl';
 import padEnd from 'lodash/padEnd';
 import npmPackageArg from 'npm-package-arg';
@@ -234,7 +234,7 @@ async function action(projectDir: string, command: Command) {
       workflow: 'bare',
       showPublishBeforeBuildWarning,
     });
-    if (!podsInstalled && process.platform === 'darwin') {
+    if (!podsInstalled && isMacOS) {
       log.newLine();
       log.nested(
         `⚠️  Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
@@ -326,7 +326,7 @@ function logProjectReadyAsync({
 
 async function installPodsAsync(projectRoot: string) {
   let step = logNewSection('Installing CocoaPods.');
-  if (process.platform !== 'darwin') {
+  if (!isMacOS) {
     step.succeed('Skipped installing CocoaPods because operating system is not on macOS.');
     return false;
   }
@@ -340,7 +340,10 @@ async function installPodsAsync(projectRoot: string) {
     try {
       step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
       step.render();
-      await packageManager.installCLIAsync();
+      await PackageManager.CocoaPodsPackageManager.installCLIAsync({
+        nonInteractive: program.nonInteractive,
+        spawnOptions: packageManager.options,
+      });
       step.succeed('Installed CocoaPods CLI');
       step = logNewSection('Running `pod install` in the `ios` directory.');
     } catch (e) {
