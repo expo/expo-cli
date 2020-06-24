@@ -8,9 +8,13 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- Configure expo-updates on expo init in bare projects.
+
 ### 🐛 Bug fixes
 
 - Add ttf and otf to binary extensions to fix font in tabs project.
+- Upgrade fastlane.
+- Replace calls to /bin/cp and /bin/rm with their xplat equivalents in fs-extra in xdl's IosPlist.
 
 ### 📦 Packages updated
 
