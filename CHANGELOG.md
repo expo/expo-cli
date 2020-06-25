@@ -6,6 +6,16 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+### 📦 Packages updated
+
+## [Thu Jun 25 13:06:44 2020 -0700](https://github.com/expo/expo-cli/commit/8a03a18faa1af8711947698bba94c227f6ece5ec)
+
+### 🛠 Breaking changes
+
 - Mark unused XDL functions as deprecated
 
 ### 🎉 New features
@@ -21,6 +31,21 @@ This is the log of notable changes to Expo CLI and related packages.
 - Fix client_log warning in SDK 38 apps
 
 ### 📦 Packages updated
+
+- @expo/config@3.2.14
+- @expo/dev-server@0.1.15
+- @expo/dev-tools@0.13.22
+- @expo/electron-adapter@0.0.4
+- expo-cli@3.21.11
+- expo-optimize@0.1.37
+- @expo/metro-config@0.1.15
+- @expo/next-adapter@2.1.17
+- @expo/package-manager@0.0.29
+- pod-install@0.1.8
+- expo-pwa@0.0.25
+- uri-scheme@1.0.22
+- @expo/webpack-config@0.12.17
+- @expo/xdl@57.9.19
 
 ## [Tue Jun 23 17:55:00 2020 -0700](https://github.com/expo/expo-cli/commit/4bc73721d5a46fcac35096a0e86a1ceaa333b459)
 
