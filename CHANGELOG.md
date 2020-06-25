@@ -10,9 +10,19 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+### 📦 Packages updated
+
+## [Thu Jun 25 14:51:58 2020 -0700](https://github.com/expo/expo-cli/commit/9fcad4c28b250bcf5a7a8c3f91ef79c1420cdeee)
+
+### 🐛 Bug fixes
+
 - Fix `expo upgrade` in projects that use dynamic configuration
 
 ### 📦 Packages updated
+
+- @expo/dev-tools@0.13.23
+- expo-cli@3.21.12
+- @expo/xdl@57.9.20
 
 ## [Thu Jun 25 13:06:44 2020 -0700](https://github.com/expo/expo-cli/commit/8a03a18faa1af8711947698bba94c227f6ece5ec)
 
