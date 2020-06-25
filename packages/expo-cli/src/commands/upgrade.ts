@@ -452,9 +452,7 @@ export async function upgradeAsync(
   } catch (e) {
     installingPackageStep.fail(`Failed to install expo package with error: ${e.message}`);
     throw e;
-  } finally {
-    installingPackageStep.succeed(`Installed ${expoPackageToInstall}`);
-  }
+  installingPackageStep.succeed(`Installed ${expoPackageToInstall}`);
 
   // Remove sdkVersion from app.json
   let removingSdkVersionStep = logNewSection('Validating configuration.');
