@@ -64,7 +64,6 @@ class IOSBuilder extends BaseBuilder {
       await this.checkStatusBeforeBuild();
     }
     await this.build(publishedExpIds);
-    // TODO: Why is this invoked twice?
     this.maybeWarnDamagedSimulator();
   }
 
@@ -155,7 +154,7 @@ class IOSBuilder extends BaseBuilder {
             name: 'bundleIdentifier',
             default: recommendedBundleId,
             // The Apple helps people know this isn't an EAS feature.
-            message: `What would you like your  bundle identifier to be?`,
+            message: `What would you like your iOS bundle identifier to be?`,
             validate: (value: string) => /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value),
           },
         ],
@@ -172,7 +171,7 @@ class IOSBuilder extends BaseBuilder {
       if (modification.type === 'success') {
         log.newLine();
         // Success!
-        log(`Your  bundle identifier is now: ${bundleIdPrompt.bundleIdentifier}`);
+        log(`Your iOS bundle identifier is now: ${bundleIdPrompt.bundleIdentifier}`);
         log.newLine();
       } else {
         log.newLine();
@@ -182,7 +181,7 @@ class IOSBuilder extends BaseBuilder {
         } else {
           log(
             log.chalk.yellow(
-              'No Expo config was found. Please create an `app.config.json` in your project root.'
+              'No Expo config was found. Please create an Expo config (`app.config.js` or `app.json`) in your project root.'
             )
           );
         }
