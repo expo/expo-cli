@@ -81,6 +81,10 @@ type ReportableEvent =
       type: 'initialize_done';
     }
   | {
+      type: 'client_log';
+      data: any;
+    }
+  | {
       type: 'initialize_failed';
       port: number;
       error: MetroError;
@@ -237,6 +241,7 @@ export default class PackagerLogsStream {
       }
       return;
     }
+
     switch (msg.type) {
       // Bundle transform events
       case 'bundle_build_started':
@@ -295,6 +300,7 @@ export default class PackagerLogsStream {
         chunk.msg = this._formatWorkerChunk('stderr', msg.chunk);
         break;
       // Ignored events.
+      case 'client_log':
       case 'dep_graph_loading':
       case 'dep_graph_loaded':
       case 'global_cache_error':
