@@ -110,12 +110,11 @@ export class SelectIosExperience implements IView {
 }
 
 export class SelectAndroidExperience implements IView {
-  private androidCredentials: AndroidCredentials[] = [];
   private askAboutProjectMode = true;
 
   async open(ctx: Context): Promise<IView | null> {
     if (ctx.hasProjectContext && this.askAboutProjectMode) {
-      const experienceName = `@${ctx.user.username}/${ctx.manifest.slug}`;
+      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
       const { runProjectContext } = await prompt([
         {
           type: 'confirm',
@@ -133,15 +132,15 @@ export class SelectAndroidExperience implements IView {
     this.askAboutProjectMode = false;
 
     const credentials = await ctx.android.fetchAll();
-    await displayAndroidCredentials(this.androidCredentials);
+    await displayAndroidCredentials(Object.values(credentials));
 
     const question: Question = {
       type: 'list',
       name: 'experienceName',
       message: 'Select application',
-      choices: this.androidCredentials.map((cred, index) => ({
+      choices: Object.values(credentials).map(cred => ({
         name: cred.experienceName,
-        value: index,
+        value: cred.experienceName,
       })),
       pageSize: Infinity,
     };
