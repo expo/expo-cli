@@ -17,9 +17,6 @@ const { ANDROID } = PLATFORMS;
 
 export default class AndroidBuilder extends BaseBuilder {
   async run(): Promise<void> {
-    // Validate project
-    await this.validateProject();
-
     // Check SplashScreen images sizes
     await Android.checkSplashScreenImages(this.projectDir);
 
@@ -38,8 +35,15 @@ export default class AndroidBuilder extends BaseBuilder {
     await this.build(publishedExpIds);
   }
 
-  async validateProject() {
+  async checkProjectConfig(): Promise<void> {
+    // Run this first because the error messages are related
+    // to ExpoKit which is harder to change than the bundle ID.
+    await super.checkProjectConfig();
+
     await utils.checkIfSdkIsSupported(this.manifest.sdkVersion!, ANDROID);
+
+    // Check the android package name
+    // TODO: Attempt to automatically write this value.
     const androidPackage = this.manifest.android?.package;
     if (!androidPackage) {
       throw new BuildError(`Your project must have an Android package set in app.json

@@ -1,25 +1,44 @@
-import { ExpoConfig, getConfig } from '@expo/config';
+import { ExpoConfig, ProjectConfig, getConfig } from '@expo/config';
 import { Project, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import ora from 'ora';
 import semver from 'semver';
 
-import * as UrlUtils from '../utils/url';
 import log from '../../log';
 import { action as publishAction } from '../publish';
+import * as UrlUtils from '../utils/url';
+import { BuilderOptions } from './BaseBuilder.types';
 import BuildError from './BuildError';
 import { PLATFORMS, Platform } from './constants';
-
-import { BuilderOptions } from './BaseBuilder.types';
 
 const secondsToMilliseconds = (seconds: number): number => seconds * 1000;
 
 export default class BaseBuilder {
-  manifest: ExpoConfig = getConfig(this.projectDir).exp;
-  user?: User;
+  protected projectConfig: ProjectConfig;
+  manifest: ExpoConfig;
+  private user?: User;
+  private loadedUser: boolean = false;
 
-  constructor(public projectDir: string, public options: BuilderOptions = {}) {}
+  // Lazy load the user authentication check.
+  async getUserAsync(): Promise<User | undefined> {
+    // ensure we don't do multiple fetch requests when the user isn't logged in.
+    if (this.loadedUser) return this.user;
+    this.loadedUser = true;
+    this.user = await UserManager.ensureLoggedInAsync();
+    return this.user;
+  }
+
+  constructor(public projectDir: string, public options: BuilderOptions = {}) {
+    this.projectConfig = getConfig(this.projectDir);
+    this.manifest = this.projectConfig.exp;
+  }
+
+  protected updateProjectConfig() {
+    // Update the project config
+    this.projectConfig = getConfig(this.projectDir);
+    this.manifest = this.projectConfig.exp;
+  }
 
   async command() {
     try {
@@ -54,9 +73,9 @@ export default class BaseBuilder {
   }
 
   async prepareProjectInfo(): Promise<void> {
-    this.user = await UserManager.ensureLoggedInAsync();
-
     await this.checkProjectConfig();
+    // TODO: Move this since it can add delay
+    await this.getUserAsync();
   }
 
   async checkProjectConfig(): Promise<void> {

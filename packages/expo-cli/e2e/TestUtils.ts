@@ -1,5 +1,4 @@
 import path from 'path';
-
 import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 
 export const EXPO_CLI = path.join(__dirname, '../bin/expo.js');
