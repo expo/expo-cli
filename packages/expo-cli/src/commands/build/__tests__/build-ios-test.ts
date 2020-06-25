@@ -59,6 +59,7 @@ const mockedXDLModules = {
 mockExpoXDL(mockedXDLModules);
 
 describe('build ios', () => {
+  const projectRootNoBundleId = '/test-project-no-bundle-id';
   const projectRoot = '/test-project';
   const packageJson = JSON.stringify(
     {
@@ -76,6 +77,9 @@ describe('build ios', () => {
     vol.fromJSON({
       [projectRoot + '/package.json']: packageJson,
       [projectRoot + '/app.json']: appJson,
+      // no bundle id
+      [projectRootNoBundleId + '/package.json']: packageJson,
+      [projectRootNoBundleId + '/app.config.json']: JSON.stringify({ sdkVersion: '38.0.0' }),
     });
   });
 
@@ -107,6 +111,23 @@ describe('build ios', () => {
     }
   });
 
+  it('fails if no bundle-id is used in non-interactive mode', async () => {
+    const projectRoot = '/test-project-no-bundle-id';
+
+    const builderOptions: BuilderOptions = {
+      type: 'archive',
+      parent: { nonInteractive: true },
+    };
+
+    const iosBuilder = new IOSBuilder(projectRoot, builderOptions);
+    await expect(iosBuilder.command()).rejects.toThrow(
+      /Your project must have a \`bundleIdentifier\` set in the Expo config/
+    );
+
+    // expect that we get the latest release and started build
+    // expect(mockedXDLModules.Project.getLatestReleaseAsync.mock.calls.length).toBe(1);
+    // expect(mockedXDLModules.Project.startBuildAsync.mock.calls.length).toBe(1);
+  });
   it('archive build: basic case', async () => {
     const projectRoot = '/test-project';
 

@@ -1,5 +1,4 @@
 import path from 'path';
-import fs from 'fs-extra';
 import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 
 export const EXPO_CLI = path.join(__dirname, '../bin/expo.js');
@@ -24,14 +23,4 @@ export async function tryRunAsync(args: string[], options?: SpawnOptions): Promi
     }
     throw error;
   }
-}
-
-// This will bypass doctor checks
-export async function generateFakeReactNativeAsync(projectRoot: string): Promise<void> {
-  await fs.ensureDir(path.join(projectRoot, 'node_modules/react-native/local-cli'));
-  fs.writeFileSync(
-    path.join(projectRoot, 'node_modules/react-native/package.json'),
-    JSON.stringify({ name: 'react-native', version: '0.61.0' })
-  );
-  fs.writeFileSync(path.join(projectRoot, 'node_modules/react-native/local-cli/cli.js'), '');
 }
