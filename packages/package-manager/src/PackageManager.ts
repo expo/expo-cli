@@ -32,6 +32,9 @@ export async function spawnSudoAsync(command: string[], spawnOptions: SpawnOptio
   } else {
     // Attempt to use sudo to run the command on Mac and Linux.
     // TODO(Bacon): Make a v of sudo-prompt that's win32 only for better bundle size.
+    console.log(
+      'Your password might be needed to install CocoaPods CLI: https://guides.cocoapods.org/using/getting-started.html#installation'
+    );
     await spawnAsync('sudo', command, spawnOptions);
   }
 }
