@@ -6,11 +6,19 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- Mark unused XDL functions as deprecated
+
 ### 🎉 New features
+
+- Prompt for iOS bundle identifier on build
+- Add allowBackup customization feature for android
+- Make the tabs template use TypeScript
+- Use sudo for CocoaPods installation in pod-install, as recommended by CocoaPods docs
 
 ### 🐛 Bug fixes
 
 - Fix `expo credentials:manager` listing all credentials on android and respect owner field` ([#2311](https://github.com/expo/expo-cli/pull/2311) by [@wkozyra95](https://github.com/wkozyra95)).
+- Fix client_log warning in SDK 38 apps
 
 ### 📦 Packages updated
 
