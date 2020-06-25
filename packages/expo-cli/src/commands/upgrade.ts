@@ -146,13 +146,27 @@ async function makeBreakingChangesToConfigAsync(
     'Updating your app.json to account for breaking changes (if applicable)...'
   );
 
-  let { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
-  const { exp: currentExp } = ConfigUtils.getConfig(projectRoot, {
+  const { exp: currentExp, dynamicConfigPath } = ConfigUtils.getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
+  // Bail out early if we have a dynamic config!
+  if (dynamicConfigPath) {
+    // IMPORTANT: this must be updated whenever you apply a new breaking change!
+    if (targetSdkVersionString === '37.0.0') {
+      step.succeed(
+        `Only static configuration files can be updated, please update ${dynamicConfigPath} manually according to the release notes.`
+      );
+    } else {
+      step.succeed('No additional changes necessary to app config.');
+    }
+    return;
+  }
+
+  let { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
   try {
     switch (targetSdkVersionString) {
+      // IMPORTANT: adding a new case here? be sure to update the dynamic config situation above
       case '37.0.0':
         if (rootConfig?.expo?.androidNavigationBar?.visible !== undefined) {
           if (rootConfig?.expo.androidNavigationBar?.visible === false) {
@@ -455,32 +469,35 @@ export async function upgradeAsync(
   }
   installingPackageStep.succeed(`Installed ${expoPackageToInstall}`);
 
-  // Remove sdkVersion from app.json
+  // Evaluate project config (app.config.js)
+  const { exp: currentExp, dynamicConfigPath } = ConfigUtils.getConfig(projectRoot);
+
   let removingSdkVersionStep = logNewSection('Validating configuration.');
-  try {
-    const { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
-    if (rootConfig.expo.sdkVersion && rootConfig.expo.sdkVersion !== 'UNVERSIONED') {
+  if (dynamicConfigPath) {
+    if (
+      !Versions.gteSdkVersion(currentExp, targetSdkVersionString) &&
+      currentExp.sdkVersion !== 'UNVERSIONED'
+    ) {
       log.addNewLineIfNone();
-      await ConfigUtils.writeConfigJsonAsync(projectRoot, { sdkVersion: undefined });
-      removingSdkVersionStep.succeed('Removed deprecated sdkVersion field from app.json.');
+      removingSdkVersionStep.warn(
+        'Please manually delete the sdkVersion field in your project app.config file. It is now automatically determined based on the expo package version in your package.json.'
+      );
     } else {
       removingSdkVersionStep.succeed('Validated configuration.');
     }
-  } catch (_) {
-    removingSdkVersionStep.fail('Unable to validate configuration.');
-  }
-
-  // Evaluate project config (app.config.js)
-  const { exp: currentExp } = ConfigUtils.getConfig(projectRoot);
-
-  if (
-    !Versions.gteSdkVersion(currentExp, targetSdkVersionString) &&
-    currentExp.sdkVersion !== 'UNVERSIONED'
-  ) {
-    log.addNewLineIfNone();
-    removingSdkVersionStep.warn(
-      'Please manually delete the sdkVersion field in your project app.config file, it is deprecated.'
-    );
+  } else {
+    try {
+      const { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+      if (rootConfig.expo.sdkVersion && rootConfig.expo.sdkVersion !== 'UNVERSIONED') {
+        log.addNewLineIfNone();
+        await ConfigUtils.writeConfigJsonAsync(projectRoot, { sdkVersion: undefined });
+        removingSdkVersionStep.succeed('Removed deprecated sdkVersion field from app.json.');
+      } else {
+        removingSdkVersionStep.succeed('Validated configuration.');
+      }
+    } catch (_) {
+      removingSdkVersionStep.fail('Unable to validate configuration.');
+    }
   }
 
   await makeBreakingChangesToConfigAsync(projectRoot, targetSdkVersionString);
