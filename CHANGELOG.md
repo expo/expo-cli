@@ -10,11 +10,19 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+### 📦 Packages updated
+
+## [Fri Jun 26 11:37:33 2020 -0700](https://github.com/expo/expo-cli/commit/8a9d17f699c07747c8198d5670eb779006e9b961)
+
+### 🐛 Bug fixes
+
 - Fix bug in credential manager when the user specifies a push key manually and appleCtx is not intialized.
 - Simplify findProjectRootAsync to not use getConfig and swallow its errors.
 - Workaround for iOS eject entitlements step failing on Windows - try/catch and warn if it doesn't work.
 
 ### 📦 Packages updated
+
+- expo-cli@3.21.13
 
 ## [Thu Jun 25 14:51:58 2020 -0700](https://github.com/expo/expo-cli/commit/9fcad4c28b250bcf5a7a8c3f91ef79c1420cdeee)
 
