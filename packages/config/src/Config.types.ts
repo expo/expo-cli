@@ -267,7 +267,7 @@ export type AndroidPlatformConfig = {
      *  Sets the opposite of the given value to the following tag in AndroidManifest.xml:
      *  https://developers.google.com/admob/android/eu-consent#delay_app_measurement_optional
      */
-    googleMobileAdsAutoInit: boolean;
+    googleMobileAdsAutoInit?: boolean;
     /**
      * [Google Sign-In Android SDK](https://developers.google.com/identity/sign-in/android/start-integrating) keys for your standalone app.
      */
