@@ -12,6 +12,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - Fix bug in credential manager when the user specifies a push key manually and appleCtx is not intialized.
 - Simplify findProjectRootAsync to not use getConfig and swallow its errors.
+- Workaround for iOS eject entitlements step failing on Windows - try/catch and warn if it doesn't work.
 
 ### 📦 Packages updated
 

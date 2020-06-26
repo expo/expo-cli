@@ -34,20 +34,28 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
     return expoPlist;
   });
 
-  // Configure entitlements/capabilities
-  await modifyEntitlementsPlistAsync(projectRoot, entitlementsPlist => {
-    // TODO: We don't have a mechanism for getting the apple team id here yet
-    entitlementsPlist = IOSConfig.Entitlements.setICloudEntitlement(
-      exp,
-      'TODO-GET-APPLE-TEAM-ID',
-      entitlementsPlist
-    );
+  // TODO: fix this on Windows! We will ignore errors for now so people can just proceed
+  try {
+    // Configure entitlements/capabilities
+    await modifyEntitlementsPlistAsync(projectRoot, entitlementsPlist => {
+      // TODO: We don't have a mechanism for getting the apple team id here yet
+      entitlementsPlist = IOSConfig.Entitlements.setICloudEntitlement(
+        exp,
+        'TODO-GET-APPLE-TEAM-ID',
+        entitlementsPlist
+      );
 
-    entitlementsPlist = IOSConfig.Entitlements.setAppleSignInEntitlement(exp, entitlementsPlist);
-    entitlementsPlist = IOSConfig.Entitlements.setAccessesContactNotes(exp, entitlementsPlist);
-    entitlementsPlist = IOSConfig.Entitlements.setAssociatedDomains(exp, entitlementsPlist);
-    return entitlementsPlist;
-  });
+      entitlementsPlist = IOSConfig.Entitlements.setAppleSignInEntitlement(exp, entitlementsPlist);
+      entitlementsPlist = IOSConfig.Entitlements.setAccessesContactNotes(exp, entitlementsPlist);
+      entitlementsPlist = IOSConfig.Entitlements.setAssociatedDomains(exp, entitlementsPlist);
+      return entitlementsPlist;
+    });
+  } catch (e) {
+    WarningAggregator.addWarningIOS(
+      'entitlements',
+      'iOS entitlements could not be applied. Please ensure that contact notes, Apple Sign In, and associated domains entitlements are properly configured if you use them in your app.'
+    );
+  }
 
   // Other
   await IOSConfig.Icons.setIconsAsync(exp, projectRoot);
