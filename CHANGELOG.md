@@ -10,6 +10,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+- Fix bug in credential manager when the user specifies a push key manually and appleCtx is not intialized.
+
 ### 📦 Packages updated
 
 ## [Thu Jun 25 14:51:58 2020 -0700](https://github.com/expo/expo-cli/commit/9fcad4c28b250bcf5a7a8c3f91ef79c1420cdeee)
