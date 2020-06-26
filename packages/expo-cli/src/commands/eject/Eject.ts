@@ -28,6 +28,7 @@ import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
+import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
 
 type ValidationErrorMessage = string;
 
@@ -284,7 +285,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   appJson.expo.ios = appJson.expo.ios ?? {};
   appJson.expo.ios.bundleIdentifier = bundleIdentifier;
 
-  let packageName = await getOrPromptForPackage(projectRoot, bundleIdentifier);
+  let packageName = await getOrPromptForPackage(projectRoot);
   appJson.expo.android = appJson.expo.android ?? {};
   appJson.expo.android.package = packageName;
 
@@ -509,65 +510,6 @@ async function promptForNativeAppNameAsync(projectRoot: string): Promise<string>
   }
 
   return name!;
-}
-
-async function getOrPromptForBundleIdentifier(
-  projectRoot: string,
-  defaultValue?: string
-): Promise<string> {
-  let { exp } = getConfig(projectRoot);
-
-  if (exp.ios?.bundleIdentifier) {
-    return exp.ios.bundleIdentifier;
-  }
-
-  // TODO: add example based on slug or name
-  log(
-    `Now we need to know your ${terminalLink(
-      'iOS bundle identifier',
-      'https://expo.fyi/bundle-identifier'
-    )}. You can change this in the future if you need to.`
-  );
-
-  const { bundleIdentifier } = await prompt([
-    {
-      name: 'bundleIdentifier',
-      default: defaultValue,
-      message: `What would you like your bundle identifier to be?`,
-      validate: (value: string) => /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value),
-    },
-  ]);
-
-  log.newLine();
-  return bundleIdentifier;
-}
-
-async function getOrPromptForPackage(projectRoot: string, defaultValue?: string): Promise<string> {
-  let { exp } = getConfig(projectRoot);
-
-  if (exp.android?.package) {
-    return exp.android.package;
-  }
-
-  // TODO: add example based on slug or name
-  log(
-    `Now we need to know your ${terminalLink(
-      'Android package',
-      'https://expo.fyi/android-package'
-    )}. You can change this in the future if you need to.`
-  );
-
-  const { packageName } = await prompt([
-    {
-      name: 'packageName',
-      default: defaultValue,
-      message: `What would you like your package to be named?`,
-      validate: (value: string) => /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value),
-    },
-  ]);
-
-  log.newLine();
-  return packageName;
 }
 
 /**

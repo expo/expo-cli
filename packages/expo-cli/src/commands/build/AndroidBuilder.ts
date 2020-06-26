@@ -12,6 +12,7 @@ import BuildError from './BuildError';
 import BaseBuilder from './BaseBuilder';
 import * as utils from './utils';
 import { PLATFORMS, Platform } from './constants';
+import { getOrPromptForPackage } from '../eject/ConfigValidation';
 
 const { ANDROID } = PLATFORMS;
 
@@ -43,17 +44,9 @@ export default class AndroidBuilder extends BaseBuilder {
     await utils.checkIfSdkIsSupported(this.manifest.sdkVersion!, ANDROID);
 
     // Check the android package name
-    // TODO: Attempt to automatically write this value.
-    const androidPackage = this.manifest.android?.package;
-    if (!androidPackage) {
-      throw new BuildError(`Your project must have an Android package set in app.json
-See https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appjson`);
-    }
-    if (!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(androidPackage)) {
-      throw new BuildError(
-        "Invalid format of Android package name (only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter)"
-      );
-    }
+    await getOrPromptForPackage(this.projectDir);
+
+    this.updateProjectConfig();
   }
 
   platform(): Platform {
