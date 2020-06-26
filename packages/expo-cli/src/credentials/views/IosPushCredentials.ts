@@ -186,12 +186,7 @@ export class UpdateIosPush implements IView {
     }
 
     const newPushKey = await this.provideOrGenerate(ctx);
-    const credentials = {
-      ...newPushKey,
-      teamId: ctx.appleCtx.team.id,
-      teamName: ctx.appleCtx.team.name,
-    };
-    await ctx.ios.updatePushKey(selected.id, credentials);
+    await ctx.ios.updatePushKey(selected.id, newPushKey);
   }
 
   async provideOrGenerate(ctx: Context): Promise<PushKey> {

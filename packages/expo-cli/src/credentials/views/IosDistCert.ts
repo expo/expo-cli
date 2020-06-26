@@ -177,12 +177,7 @@ export class UpdateIosDist implements IView {
     }
 
     const newDistCert = await this.provideOrGenerate(ctx);
-    await ctx.ensureAppleCtx();
-    await ctx.ios.updateDistCert(selected.id, {
-      ...newDistCert,
-      teamId: ctx.appleCtx.team.id,
-      teamName: ctx.appleCtx.team.name,
-    });
+    await ctx.ios.updateDistCert(selected.id, newDistCert);
 
     for (const appCredentials of apps) {
       log(
