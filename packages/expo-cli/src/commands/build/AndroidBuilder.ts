@@ -18,6 +18,12 @@ const { ANDROID } = PLATFORMS;
 
 export default class AndroidBuilder extends BaseBuilder {
   async run(): Promise<void> {
+    // This gets run after all other validation to prevent users from having to answer this question multiple times.
+    this.options.type = await utils.askBuildType(this.options.type!, {
+      apk: 'Build a package to deploy to the store or install directly on Android devices',
+      'app-bundle': 'Build an optimized bundle for the store',
+    });
+
     // Check SplashScreen images sizes
     await Android.checkSplashScreenImages(this.projectDir);
 
