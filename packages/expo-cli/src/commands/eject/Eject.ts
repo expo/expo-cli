@@ -281,13 +281,15 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   let name = await promptForNativeAppNameAsync(projectRoot);
   appJson.expo.name = name;
 
-  let bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
-  appJson.expo.ios = appJson.expo.ios ?? {};
-  appJson.expo.ios.bundleIdentifier = bundleIdentifier;
-
+  // Prompt for the Android package first because it's more strict than the bundle identifier
+  // this means you'll have a better chance at matching the bundle identifier with the package name.
   let packageName = await getOrPromptForPackage(projectRoot);
   appJson.expo.android = appJson.expo.android ?? {};
   appJson.expo.android.package = packageName;
+
+  let bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
+  appJson.expo.ios = appJson.expo.ios ?? {};
+  appJson.expo.ios.bundleIdentifier = bundleIdentifier;
 
   // TODO: remove entryPoint and log about it for sdk 37 changes
   if (appJson.expo.entryPoint && appJson.expo.entryPoint !== EXPO_APP_ENTRY) {
