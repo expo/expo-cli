@@ -1,53 +1,99 @@
 import { Platform } from '@expo/build-tools';
-import { getConfig } from '@expo/config';
-import { User, UserManager } from '@expo/xdl';
+import { ApiV2 } from '@expo/xdl';
 import { Command } from 'commander';
 
 import log from '../../log';
-import Builder, { BuilderContext } from './Builder';
+import { createBuilderContextAsync, startBuildAsync, waitForBuildEndAsync } from './build';
+import { AndroidBuilder } from './android';
+import { iOSBuilder } from './ios';
+import { CredentialsSource, EasConfig, EasJsonReader } from '../../easJson';
 import { printBuildTable } from './utils';
+import * as UrlUtils from '../utils/url';
 
-async function buildAction(
-  projectDir: string,
-  { platform }: { platform: Platform }
-): Promise<void> {
-  if (!platform || !Object.values(Platform).includes(platform)) {
-    throw new Error('Pass valid platform: [android|ios]');
+interface Options {
+  platform: 'android' | 'ios' | 'all';
+  skipCredentialsCheck?: boolean; // TODO: noop for now
+  wait?: boolean;
+  profile: string;
+}
+
+export async function buildAction(projectDir: string, options: Options): Promise<void> {
+  const { platform, profile } = options;
+  if (!platform || !['android', 'ios', 'all'].includes(platform)) {
+    throw new Error(
+      `-p/--platform is required, valid platforms: ${log.chalk.bold('android')}, ${log.chalk.bold(
+        'ios'
+      )}, ${log.chalk.bold('all')}`
+    );
   }
-  const ctx = await createBuilderContextAsync(projectDir);
-  const builder = new Builder(ctx);
-  const buildArtifactUrl = await builder.buildProjectAsync(platform);
-  log(`Artifact url: ${buildArtifactUrl}`);
+  const easConfig: EasConfig = await new EasJsonReader(projectDir, platform).readAsync(profile);
+
+  const ctx = await createBuilderContextAsync(projectDir, easConfig);
+  const client = ApiV2.clientForUser(ctx.user);
+  const scheduledBuilds: Array<{ platform: Platform; buildId: string }> = [];
+
+  if ([Platform.Android, 'all'].includes(options.platform)) {
+    const builder = new AndroidBuilder(ctx);
+    const buildId = await startBuildAsync(client, builder);
+    scheduledBuilds.push({ platform: Platform.Android, buildId });
+  }
+  if ([Platform.iOS, 'all'].includes(options.platform)) {
+    const builder = new iOSBuilder(ctx);
+    const buildId = await startBuildAsync(client, builder);
+    scheduledBuilds.push({ platform: Platform.iOS, buildId });
+  }
+
+  if (scheduledBuilds.length === 1) {
+    const { buildId } = scheduledBuilds[0];
+    const logsUrl = UrlUtils.constructBuildLogsUrl({
+      buildId,
+      username: ctx.user.username,
+      v2: true,
+    });
+    log(`Logs url: ${logsUrl}`); // replace with logs url
+  } else {
+    scheduledBuilds.forEach(({ buildId, platform }) => {
+      const logsUrl = UrlUtils.constructBuildLogsUrl({
+        buildId,
+        username: ctx.user.username,
+        v2: true,
+      });
+      log(`Platform: ${platform}, Logs url: ${logsUrl}`); // replace with logs url
+    });
+  }
+  if (options.wait) {
+    const buildInfo = await waitForBuildEndAsync(
+      client,
+      ctx.projectId,
+      scheduledBuilds.map(i => i.buildId)
+    );
+    if (buildInfo.length === 1) {
+      log(`Artifact url: ${buildInfo[0]?.artifacts?.buildUrl ?? ''}`);
+    } else {
+      buildInfo
+        .filter(i => i?.status === 'finished')
+        .forEach(build => {
+          log(`Platform: ${build?.platform}, Artifact url: ${build?.artifacts?.buildUrl ?? ''}`);
+        });
+    }
+  }
 }
 
 async function statusAction(projectDir: string): Promise<void> {
-  const ctx = await createBuilderContextAsync(projectDir);
-  const builder = new Builder(ctx);
-  const result = await builder.getLatestBuildsAsync();
-  printBuildTable(result.builds);
-}
-
-async function createBuilderContextAsync(projectDir: string): Promise<BuilderContext> {
-  const user: User = await UserManager.ensureLoggedInAsync();
-  const { exp } = getConfig(projectDir);
-  const accountName = exp.owner || user.username;
-  const projectName = exp.slug;
-  return {
-    projectDir,
-    user,
-    accountName,
-    projectName,
-    exp,
-  };
+  throw new Error('not implemented yet');
 }
 
 export default function (program: Command) {
-  program
+  const buildCmd = program
     .command('build [project-dir]')
     .description(
-      'Build an app binary for your project, signed and ready for submission to the Google Play Store / App Store.'
+      'Build an app binary for your project, signed and ready for submission to the Google Play Store.'
     )
-    .option('-p --platform <platform>', 'Platform: [android|ios]', /^(android|ios)$/i)
+    .allowUnknownOption()
+    .option('-p --platform <platform>')
+    .option('--skip-credentials-check', 'Skip checking credentials', false)
+    .option('--no-wait', 'Exit immediately after triggering build.', false)
+    .option('--profile <profile>', 'Build profile', 'release')
     .asyncActionProjectDir(buildAction, { checkConfig: true });
 
   program
