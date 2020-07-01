@@ -9,7 +9,9 @@ const basicPackageJson = {
   version: '0.1.0',
   description: 'fake description',
   main: 'index.js',
-  dependencies: {},
+  dependencies: {
+    expo: '0.0.0',
+  },
 };
 
 const basicAppJson = {};
@@ -59,10 +61,14 @@ describe('findProjectRootAsync', () => {
     });
   });
 
-  describe('no app.json, no react-native-unimodules', () => {
+  describe('no app.json, no expo, no react-native-unimodules', () => {
     beforeAll(() => {
+      const vanillaPackageJson = {
+        ...basicPackageJson,
+        dependencies: {},
+      };
       vol.fromJSON({
-        [`${exampleProjectPath}/package.json`]: JSON.stringify(basicPackageJson),
+        [`${exampleProjectPath}/package.json`]: JSON.stringify(vanillaPackageJson),
       });
     });
 

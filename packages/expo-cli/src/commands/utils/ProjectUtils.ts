@@ -1,6 +1,5 @@
 import JsonFile from '@expo/json-file';
 import spawnAsync from '@expo/spawn-async';
-import { getConfig } from '@expo/config';
 import path from 'path';
 import fs from 'fs';
 import chalk from 'chalk';
@@ -18,13 +17,10 @@ export async function findProjectRootAsync(
   do {
     try {
       // This will throw if there is no package.json in the directory
-      const { pkg, dynamicConfigPath, staticConfigPath } = getConfig(dir, {
-        skipSDKVersionRequirement: true,
-      });
-
-      const dirIncludesAppConfig = dynamicConfigPath || staticConfigPath;
-      const isManaged =
-        dirIncludesAppConfig && !pkg.dependencies.hasOwnProperty('react-native-unimodules');
+      const pkg = await JsonFile.readAsync(path.join(dir, 'package.json'));
+      const hasReactNativeUnimodules = pkg.dependencies?.hasOwnProperty('react-native-unimodules');
+      const hasExpo = pkg.dependencies?.hasOwnProperty('expo');
+      const isManaged = hasExpo && !hasReactNativeUnimodules;
       const workflow = isManaged ? 'managed' : 'bare';
 
       return { projectRoot: dir, workflow };
