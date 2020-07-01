@@ -139,7 +139,7 @@ function getPlatformsExtensions(platform: string): string[] {
   return getModuleFileExtensions(platform);
 }
 
-export default async function(
+export default async function (
   env: Environment,
   argv: Arguments = {}
 ): Promise<Configuration | DevConfiguration> {
@@ -242,19 +242,22 @@ export default async function(
     generatePWAImageAssets = env.pwa;
   }
 
-  const filesToCopy = [
+  const filesToCopy: any[] = [
     {
       from: locations.template.folder,
       to: locations.production.folder,
-      // We generate new versions of these based on the templates
-      ignore: [
-        'expo-service-worker.js',
-        'serve.json',
-        'index.html',
-        'icon.png',
-        // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
-        'register-service-worker.js',
-      ],
+      globOptions: {
+        dot: true,
+        // We generate new versions of these based on the templates
+        ignore: [
+          'expo-service-worker.js',
+          'serve.json',
+          'index.html',
+          'icon.png',
+          // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
+          'register-service-worker.js',
+        ],
+      },
     },
     {
       from: locations.template.serveJson,
@@ -341,7 +344,7 @@ export default async function(
           verbose: false,
         }),
       // Copy the template files over
-      isProd && new CopyWebpackPlugin(filesToCopy),
+      isProd && new CopyWebpackPlugin({ patterns: filesToCopy }),
 
       // Generate the `index.html`
       new ExpoHtmlWebpackPlugin(env, templateIndex),
