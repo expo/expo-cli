@@ -51,10 +51,10 @@ The main options used to configure how `@expo/webpack-config` works.
 | `https`                     | `boolean`                               | `false`     | Should the dev server use https protocol.                                      |
 | `offline`                   | `boolean`                               | `true`      | Passing `false` will disable offline support and skip adding a service worker. |
 | `mode`                      | `Mode`                                  | required    | The Webpack mode to bundle the project in.                                     |
-| `platform`                  | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for. Only `web` and `electron` are supported.    |
-| `removeUnusedImportExports` | `boolean`                               | `false`     | Enables advanced tree-shaking with deep scope analysis.                        |
+| `platform`                  | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for.                                             |
 | `pwa`                       | `boolean`                               | `true`      | Generate the PWA image assets in production mode.                              |
 | `babel`                     | [`ExpoBabelOptions`](#ExpoBabelOptions) | `undefined` | Control how the default Babel loader is configured.                            |
+| `removeUnusedImportExports` | `boolean`                               | `false`     | Enables advanced tree-shaking with deep scope analysis.                        |
 
 ### `Environment` internal
 
@@ -65,9 +65,9 @@ The main options used to configure how `@expo/webpack-config` works.
 
 ### `ExpoPlatform`
 
-| type                                     | description                                                                 |
-| ---------------------------------------- | --------------------------------------------------------------------------- |
-| `'ios' | 'android' | 'web' | 'electron'` | The target platform to bundle for. Only `web` and `electron` are supported. |
+| type                                     | description                                                                                                |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `'ios' | 'android' | 'web' | 'electron'` | The target platform to bundle for. Native platforms are experimental and require a special native runtime. |
 
 ### `ExpoBabelOptions`
 
