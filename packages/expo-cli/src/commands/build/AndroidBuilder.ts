@@ -12,11 +12,18 @@ import BuildError from './BuildError';
 import BaseBuilder from './BaseBuilder';
 import * as utils from './utils';
 import { PLATFORMS, Platform } from './constants';
+import { getOrPromptForPackage } from '../eject/ConfigValidation';
 
 const { ANDROID } = PLATFORMS;
 
 export default class AndroidBuilder extends BaseBuilder {
   async run(): Promise<void> {
+    // This gets run after all other validation to prevent users from having to answer this question multiple times.
+    this.options.type = await utils.askBuildType(this.options.type!, {
+      apk: 'Build a package to deploy to the store or install directly on Android devices',
+      'app-bundle': 'Build an optimized bundle for the store',
+    });
+
     // Check SplashScreen images sizes
     await Android.checkSplashScreenImages(this.projectDir);
 
@@ -43,17 +50,9 @@ export default class AndroidBuilder extends BaseBuilder {
     await utils.checkIfSdkIsSupported(this.manifest.sdkVersion!, ANDROID);
 
     // Check the android package name
-    // TODO: Attempt to automatically write this value.
-    const androidPackage = this.manifest.android?.package;
-    if (!androidPackage) {
-      throw new BuildError(`Your project must have an Android package set in app.json
-See https://docs.expo.io/distribution/building-standalone-apps/#2-configure-appjson`);
-    }
-    if (!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(androidPackage)) {
-      throw new BuildError(
-        "Invalid format of Android package name (only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter)"
-      );
-    }
+    await getOrPromptForPackage(this.projectDir);
+
+    this.updateProjectConfig();
   }
 
   platform(): Platform {

@@ -168,10 +168,7 @@ export default function (program: Command) {
           );
           process.exit(1);
         }
-        options.type = await askBuildType(options.type, {
-          apk: 'Build a package to deploy to the store or install directly on Android devices',
-          'app-bundle': 'Build an optimized bundle for the store',
-        });
+
         const androidBuilder = new AndroidBuilder(projectDir, options);
         return androidBuilder.command();
       },

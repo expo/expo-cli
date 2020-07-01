@@ -5,7 +5,6 @@ import { XDLError } from '@expo/xdl';
 
 import terminalLink from 'terminal-link';
 import semver from 'semver';
-import { modifyConfigAsync } from '@expo/config';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
 import * as utils from '../utils';
@@ -37,6 +36,7 @@ import {
   useProvisioningProfileFromParams,
 } from '../../../credentials/views/IosProvisioningProfile';
 import { IosAppCredentials, IosDistCredentials } from '../../../credentials/credentials';
+import { getOrPromptForBundleIdentifier } from '../../eject/ConfigValidation';
 
 const noBundleIdMessage = `Your project must have a \`bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
 
@@ -126,77 +126,9 @@ class IOSBuilder extends BaseBuilder {
     await this.validateIcon();
 
     // Check the bundle ID and possibly prompt the user to add a new one.
-    const bundleIdentifier = this.manifest.ios?.bundleIdentifier;
-
-    if (!bundleIdentifier) {
-      // Recommend a bundle ID based on the username and project slug.
-      const username = await this.getUsernameAsync();
-      const recommendedBundleId = username ? `com.${username}.${this.manifest.slug}` : undefined;
-
-      log.newLine();
-      log(
-        log.chalk.cyan(
-          `Now we need to know your ${terminalLink(
-            'iOS bundle identifier',
-            'https://expo.fyi/bundle-identifier'
-          )}.\nYou can change this in the future if you need to.`
-        )
-      );
-      log.newLine();
-
-      // Prompt the user for the bundle ID.
-      // Even if the project is using a dynamic config we can still
-      // prompt a better error message, recommend a default value, and help the user
-      // validate their custom bundle ID upfront.
-      const bundleIdPrompt = await prompt(
-        [
-          {
-            name: 'bundleIdentifier',
-            default: recommendedBundleId,
-            // The Apple helps people know this isn't an EAS feature.
-            message: `What would you like your iOS bundle identifier to be?`,
-            validate: (value: string) => /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value),
-          },
-        ],
-        {
-          nonInteractiveHelp: noBundleIdMessage,
-        }
-      );
-
-      const modification = await modifyConfigAsync(
-        this.projectDir,
-        { ios: { bundleIdentifier: bundleIdPrompt.bundleIdentifier } },
-        { skipSDKVersionRequirement: true }
-      );
-      if (modification.type === 'success') {
-        log.newLine();
-        // Success!
-        log(`Your iOS bundle identifier is now: ${bundleIdPrompt.bundleIdentifier}`);
-        log.newLine();
-      } else {
-        log.newLine();
-        if (modification.type === 'warn') {
-          // The project is using a dynamic config, give the user a helpful log and bail out.
-          log(log.chalk.yellow(modification.message));
-        } else {
-          log(
-            log.chalk.yellow(
-              'No Expo config was found. Please create an Expo config (`app.config.js` or `app.json`) in your project root.'
-            )
-          );
-        }
-
-        log(log.chalk.cyan(`Please add the following to your Expo config, and try again... `));
-        log.newLine();
-        log(
-          JSON.stringify({ ios: { bundleIdentifier: bundleIdPrompt.bundleIdentifier } }, null, 2)
-        );
-        log.newLine();
-        process.exit(1);
-      }
-      // Update with the latest bundle ID
-      this.updateProjectConfig();
-    }
+    await getOrPromptForBundleIdentifier(this.projectDir);
+    // Update with the latest bundle ID
+    this.updateProjectConfig();
   }
 
   private async getUsernameAsync(): Promise<string | undefined> {
