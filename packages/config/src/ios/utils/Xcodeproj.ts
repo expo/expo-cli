@@ -7,8 +7,7 @@ import path from 'path';
 
 export function getProjectName(projectRoot: string) {
   const sourceRoot = getSourceRoot(projectRoot);
-  const sourceRootParts = sourceRoot.split(path.sep);
-  return sourceRootParts[sourceRootParts.length - 1];
+  return path.basename(sourceRoot);
 }
 
 export function getSourceRoot(projectRoot: string) {
