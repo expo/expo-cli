@@ -39,13 +39,7 @@ it(`throws when the projectRoot isn't defined`, () => {
 
 it(`throws when an invalid mode is provided`, () => {
   expect(() => validateEnvironment({ projectRoot: '', mode: '-invalid-' })).toThrowError(
-    'mode must be one of the following values:'
-  );
-});
-
-it(`throws when an invalid platform is provided`, () => {
-  expect(() => validateEnvironment({ projectRoot: '', platform: '-invalid-' })).toThrowError(
-    'must be one of the following values:'
+    'requires a valid `mode` string which should be one of'
   );
 });
 

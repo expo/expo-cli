@@ -23,7 +23,6 @@ export type InputEnvironment = {
   development?: boolean;
   config?: AnyObject;
   locations?: FilePaths;
-  polyfill?: boolean;
   mode?: Mode;
   removeUnusedImportExports?: boolean;
   pwa?: boolean;
@@ -84,12 +83,6 @@ export type Environment = {
    * Control how the default Babel loader is configured.
    */
   babel?: ExpoBabelOptions;
-  /**
-   * Includes all Babel polyfills.
-   *
-   * @deprecated
-   */
-  polyfill?: boolean;
 };
 
 /**

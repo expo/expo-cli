@@ -1,29 +1,11 @@
 import chalk from 'chalk';
-import * as yup from 'yup';
 
 import { Environment, InputEnvironment } from '../types';
 import { getPaths } from './paths';
 import getConfig from './getConfig';
 
-const environmentSchema = yup.object({
-  config: yup.object().notRequired(),
-  locations: yup.object().notRequired(),
-  https: yup.boolean().default(false),
-  polyfill: yup.boolean().notRequired(),
-  removeUnusedImportExports: yup.boolean().default(false),
-  pwa: yup.boolean().notRequired(),
-  offline: yup.boolean().notRequired(),
-  projectRoot: yup.string().required(),
-  mode: yup
-    .mixed<'production' | 'development' | 'none'>()
-    .oneOf(['production', 'development', 'none']),
-  platform: yup
-    .mixed<'ios' | 'android' | 'web' | 'electron'>()
-    .oneOf(['ios', 'android', 'web', 'electron'])
-    .default('web'),
-});
-
 /**
+ * Validate the environment options and apply default values.
  *
  * @param env
  * @category env
@@ -36,17 +18,39 @@ export function validateEnvironment(env: InputEnvironment): Environment {
   }
   warnEnvironmentDeprecation(env, true);
 
-  const filledEnv: any = environmentSchema.validateSync(env);
+  const validModes = ['development', 'production', 'none'];
+  if (!env.mode || !validModes.includes(env.mode)) {
+    throw new Error(
+      `@expo/webpack-config requires a valid \`mode\` string which should be one of: ${validModes.join(
+        ', '
+      )}`
+    );
+  }
 
+  // Default to web. Allow any arbitrary platform.
+  if (typeof env.platform === 'undefined') {
+    env.platform = 'web';
+  }
+  // No https by default since it doesn't work well across different browsers and devices.
+  if (typeof env.https === 'undefined') {
+    env.https = false;
+  }
+  // This is experimental and might be removed in the future.
+  if (typeof env.removeUnusedImportExports === 'undefined') {
+    env.removeUnusedImportExports = false;
+  }
+
+  // Ensure the locations are defined.
   if (!env.locations) {
-    filledEnv.locations = getPaths(env.projectRoot, env);
+    env.locations = getPaths(env.projectRoot, env);
   }
 
+  // Ensure the config is evaluated.
   if (!env.config) {
-    filledEnv.config = getConfig(filledEnv);
+    env.config = getConfig(env as Environment);
   }
 
-  return filledEnv;
+  return env as Environment;
 }
 
 let warned: { [key: string]: boolean } = {};
@@ -70,7 +74,7 @@ export function warnEnvironmentDeprecation(env: InputEnvironment, warnOnce: bool
   const warnings: { [key: string]: string } = {
     production: 'Please use `mode: "production"` instead.',
     development: 'Please use `mode: "development"` instead.',
-    polyfill: '',
+    polyfill: 'Please include polyfills manually in your project.',
   };
 
   for (const warning of Object.keys(warnings)) {
