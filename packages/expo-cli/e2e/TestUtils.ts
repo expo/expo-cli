@@ -102,7 +102,7 @@ export async function createMinimalProjectAsync(
 
   // TODO(Bacon): We shouldn't need this
   // Install the packages so eject can infer the versions
-  await spawnAsync('yarn', [], { cwd: projectRoot });
+  await spawnAsync('yarn', [], { cwd: projectRoot, stdio: ['ignore', 'inherit', 'inherit'] });
 
   return projectRoot;
 }
