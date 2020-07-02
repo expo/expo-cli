@@ -61,7 +61,7 @@
     "hashids": "1.1.4",
     "idx": "2.4.0",
     "indent-string": "3.2.0",
-    "inquirer": "5.2.0",
+    "inquirer": "7.3.0",
     "internal-ip": "4.3.0",
     "invariant": "2.2.4",
     "js-yaml": "^3.13.1",
