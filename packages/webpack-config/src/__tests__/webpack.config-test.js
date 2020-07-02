@@ -16,7 +16,7 @@ function normalizeConfig(config) {
   }
 
   // Make the paths be relative to the project
-  const normalized = normalizePaths(config, value => value.split('expo-cli/').pop());
+  const normalized = normalizePaths(config, value => value.split('cli/').pop());
 
   // performance is disabled in CI
   delete normalized.performance;

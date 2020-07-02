@@ -70,8 +70,7 @@
     "webpack-manifest-plugin": "^2.2.0",
     "webpackbar": "^4.0.0",
     "workbox-webpack-plugin": "^3.6.3",
-    "worker-loader": "^2.0.0",
-    "yup": "^0.27.0"
+    "worker-loader": "^2.0.0"
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.16",
@@ -85,7 +84,6 @@
     "@types/webpack-dev-server": "3.10.1",
     "@types/webpack-manifest-plugin": "^2.1.0",
     "@types/workbox-webpack-plugin": "^4.1.0",
-    "@types/yup": "^0.26.24",
     "jest-puppeteer": "^4.4.0",
     "prettier": "^1.16.4",
     "rimraf": "^3.0.2",
