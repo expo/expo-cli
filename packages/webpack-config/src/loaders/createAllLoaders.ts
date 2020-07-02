@@ -7,6 +7,15 @@ import createBabelLoader from './createBabelLoader';
 import createFontLoader from './createFontLoader';
 import createWorkerLoader from './createWorkerLoader';
 
+// Inline resources as Base64 when there is less reason to parallelize their download. The
+// heuristic we use is whether the resource would fit within a TCP/IP packet that we would
+// send to request the resource.
+//
+// An Ethernet MTU is usually 1500. IP headers are 20 (v4) or 40 (v6) bytes and TCP
+// headers are 40 bytes. HTTP response headers vary and are around 400 bytes. This leaves
+// about 1000 bytes for content to fit in a packet.
+const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
+
 /**
  * This is needed for webpack to import static images in JavaScript files.
  * "url" loader works like "file" loader except that it embeds assets
@@ -21,14 +30,7 @@ export const imageLoaderRule: Rule = {
   use: {
     loader: require.resolve('url-loader'),
     options: {
-      // Inline resources as Base64 when there is less reason to parallelize their download. The
-      // heuristic we use is whether the resource would fit within a TCP/IP packet that we would
-      // send to request the resource.
-      //
-      // An Ethernet MTU is usually 1500. IP headers are 20 (v4) or 40 (v6) bytes and TCP
-      // headers are 40 bytes. HTTP response headers vary and are around 400 bytes. This leaves
-      // about 1000 bytes for content to fit in a packet.
-      limit: 1000,
+      limit: imageInlineSizeLimit,
       name: 'static/media/[name].[hash:8].[ext]',
     },
   },

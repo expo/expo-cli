@@ -98,6 +98,7 @@ export default function withWorkbox(
     new CopyPlugin({
       patterns: [
         {
+          force: true,
           from: locations.template.registerServiceWorker,
           to: locations.production.registerServiceWorker,
           transform(content) {

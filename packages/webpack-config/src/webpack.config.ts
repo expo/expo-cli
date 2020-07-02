@@ -23,6 +23,7 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { parse } from 'node-html-parser';
 import path from 'path';
 
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import {
   withAlias,
   withDevServer,
@@ -58,6 +59,7 @@ import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
 const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', true);
+const shouldUseReactRefresh = boolish('EXPO_WEBPACK_FAST_REFRESH', false);
 
 const isCI = boolish('CI', false);
 
@@ -187,6 +189,7 @@ export default async function (
   if (locations.appMain) {
     appEntry.push(locations.appMain);
   }
+  const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
 
   if (isNative) {
     const reactNativeModulePath = projectHasModule(
@@ -233,7 +236,7 @@ export default async function (
       // the line below with these two lines if you prefer the stock client:
       // require.resolve('webpack-dev-server/client') + '?/',
       // require.resolve('webpack/hot/dev-server'),
-      appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
+      appEntry.unshift(webpackDevClientEntry);
     }
   }
 
@@ -424,6 +427,16 @@ export default async function (
 
       // This is necessary to emit hot updates (currently CSS only):
       !isNative && isDev && new HotModuleReplacementPlugin(),
+
+      // Experimental hot reloading for React .
+      // https://github.com/facebook/react/tree/master/packages/react-refresh
+      isDev &&
+        shouldUseReactRefresh &&
+        new ReactRefreshWebpackPlugin({
+          overlay: {
+            entry: webpackDevClientEntry,
+          },
+        }),
 
       // If you require a missing module and then `npm install` it, you still have
       // to restart the development server for Webpack to discover it. This plugin
