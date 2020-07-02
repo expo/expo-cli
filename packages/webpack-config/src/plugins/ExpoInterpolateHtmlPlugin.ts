@@ -17,6 +17,7 @@ export default class InterpolateHtmlPlugin extends OriginalInterpolateHtmlPlugin
     const config = env.config || getConfig(env);
     const { publicPath } = getPublicPaths(env);
 
+    // @ts-ignore
     return new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
       WEB_PUBLIC_URL: publicPath,
       // @ts-ignore Type 'string | undefined' is not assignable to type 'string'.
