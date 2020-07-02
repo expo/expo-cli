@@ -241,10 +241,6 @@ export function createDevServer(
       app.use(evalSourceMapMiddleware(server));
       // This lets us open files from the runtime error overlay.
       app.use(errorOverlayMiddleware());
-    },
-    after(app) {
-      // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
-      app.use(redirectServedPath(publicUrlOrPath));
 
       // This service worker file is effectively a 'no-op' that will reset any
       // previous service worker registered for the same host:port combination.
@@ -252,6 +248,10 @@ export function createDevServer(
       // it used the same host and port.
       // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
       app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
+    },
+    after(app) {
+      // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
+      app.use(redirectServedPath(publicUrlOrPath));
     },
     // Without disabling this on native, you get the error `Can't find variable self`.
     inline: !isNative,
