@@ -57,6 +57,7 @@
     "@types/targz": "^1.0.0",
     "@types/untildify": "^3.0.0",
     "@types/wordwrap": "^1.0.0",
+    "pretty-bytes": "^5.3.0",
     "rimraf": "^3.0.2"
   },
   "dependencies": {
