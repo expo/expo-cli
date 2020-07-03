@@ -1991,34 +1991,14 @@ function getManifestHandler(projectRoot: string) {
       if (!currentSession || Config.offline) {
         manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
       }
-      let manifestString = JSON.stringify(manifest);
+      let manifestString;
       if (req.headers['exponent-accept-signature']) {
-        if (_cachedSignedManifest.manifestString === manifestString) {
-          manifestString = _cachedSignedManifest.signedManifest;
-        } else {
-          if (!currentSession || Config.offline) {
-            const unsignedManifest = {
-              manifestString,
-              signature: 'UNSIGNED',
-            };
-            _cachedSignedManifest.manifestString = manifestString;
-            manifestString = JSON.stringify(unsignedManifest);
-            _cachedSignedManifest.signedManifest = manifestString;
-          } else {
-            let publishInfo = await Exp.getPublishInfoAsync(projectRoot);
-            const user = await UserManager.ensureLoggedInAsync();
-
-            const api = ApiV2.clientForUser(user);
-            const signedManifest = await api.postAsync('manifest/sign', {
-              args: publishInfo.args,
-              manifest,
-            });
-
-            _cachedSignedManifest.manifestString = manifestString;
-            _cachedSignedManifest.signedManifest = signedManifest.response;
-            manifestString = signedManifest.response;
-          }
-        }
+        manifestString =
+          !currentSession || Config.offline
+            ? getUnsignedManifestString(manifest)
+            : await getSignedManifestStringAsync(manifest, currentSession);
+      } else {
+        manifestString = JSON.stringify(manifest);
       }
       const hostInfo = {
         host: hostUUID,
@@ -2045,6 +2025,34 @@ function getManifestHandler(projectRoot: string) {
       );
     }
   };
+}
+
+export async function getSignedManifestStringAsync(
+  manifest: ExpoConfig,
+  currentSession: { sessionSecret: string }
+) {
+  const manifestString = JSON.stringify(manifest);
+  if (_cachedSignedManifest.manifestString === manifestString) {
+    return _cachedSignedManifest.signedManifest;
+  }
+  const { response } = await ApiV2.clientForUser(currentSession).postAsync('manifest/sign', {
+    args: {
+      remoteUsername: manifest.owner ?? (await UserManager.getCurrentUsernameAsync()),
+      remotePackageName: manifest.slug,
+    },
+    manifest,
+  });
+  _cachedSignedManifest.manifestString = manifestString;
+  _cachedSignedManifest.signedManifest = response;
+  return response;
+}
+
+export function getUnsignedManifestString(manifest: ExpoConfig) {
+  const unsignedManifest = {
+    manifestString: JSON.stringify(manifest),
+    signature: 'UNSIGNED',
+  };
+  return JSON.stringify(unsignedManifest);
 }
 
 export async function startExpoServerAsync(projectRoot: string): Promise<void> {
