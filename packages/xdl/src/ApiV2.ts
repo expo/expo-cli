@@ -44,7 +44,7 @@ export class ApiV2Error extends ExtendableError {
 }
 
 type RequestOptions = {
-  httpMethod: 'get' | 'post' | 'put' | 'delete';
+  httpMethod: 'get' | 'post' | 'put' | 'patch' | 'delete';
   queryParameters?: QueryParameters;
   body?: JSONObject;
   timeout?: Number;
@@ -127,6 +127,23 @@ export default class ApiV2Client {
       methodName,
       {
         httpMethod: 'put',
+        body: data,
+      },
+      extraOptions,
+      returnEntireResponse
+    );
+  }
+
+  async patchAsync(
+    methodName: string,
+    data: JSONObject,
+    extraOptions?: Partial<RequestOptions>,
+    returnEntireResponse: boolean = false
+  ) {
+    return this._requestAsync(
+      methodName,
+      {
+        httpMethod: 'patch',
         body: data,
       },
       extraOptions,
