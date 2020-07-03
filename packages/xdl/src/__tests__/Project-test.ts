@@ -1,7 +1,9 @@
 import { ExpoConfig } from '@expo/config';
-import { AxiosRequestConfig } from 'axios';
+import axios from 'axios';
 
 import { getSignedManifestStringAsync, getUnsignedManifestString } from '../Project';
+
+jest.mock('axios');
 
 const mockManifest: ExpoConfig = {
   name: 'Hello',
@@ -17,28 +19,45 @@ const mockSignedManifestResponse = JSON.stringify({
   version: '1.0.0',
 });
 
-jest.mock('axios', () => ({
-  request: jest.fn(async (options: AxiosRequestConfig) => {
-    if (options.url.endsWith('/--/api/v2/manifest/sign')) {
-      expect(options.data.args).toEqual({
-        remoteUsername: mockManifest.owner,
-        remotePackageName: mockManifest.slug,
-      });
-      expect(options.data.manifest).toEqual(mockManifest);
-      const data = { data: { response: mockSignedManifestResponse } };
-      return { status: 200, data };
-    } else {
-      throw new Error('Test tried to make a request to unmocked endpoint (' + options.url + ')');
-    }
-  }),
-}));
-
 describe('getSignedManifestStringAsync', () => {
   it('calls the server API to sign a manifest', async () => {
+    const requestFunction = axios.request as jest.MockedFunction<typeof axios.request>;
+    requestFunction.mockReturnValueOnce(
+      Promise.resolve({
+        status: 200,
+        data: { data: { response: mockSignedManifestResponse } },
+      })
+    );
     const manifestString = await getSignedManifestStringAsync(mockManifest, {
       sessionSecret: 'SECRET',
     });
     expect(manifestString).toBe(mockSignedManifestResponse);
+    expect(requestFunction.mock.calls[0][0]).toMatchInlineSnapshot(`
+      Object {
+        "data": Object {
+          "args": Object {
+            "remotePackageName": "hello-world",
+            "remoteUsername": "ownername",
+          },
+          "manifest": Object {
+            "name": "Hello",
+            "owner": "ownername",
+            "platforms": Array [
+              "ios",
+            ],
+            "slug": "hello-world",
+            "version": "1.0.0",
+          },
+        },
+        "headers": Object {
+          "Expo-Session": "SECRET",
+          "Exponent-Client": "xdl",
+        },
+        "maxContentLength": 104857600,
+        "method": "post",
+        "url": "https://exp.host/--/api/v2/manifest/sign",
+      }
+    `);
   });
 });
 
