@@ -21,21 +21,29 @@ export default function (program: Command) {
       if (!options.apiKey || options.apiKey.length === 0) {
         throw new Error('Must specify an API key to upload with --api-key.');
       }
-
-      log('Reading project configuration...');
-
-      const {
-        args: { remotePackageName },
-      } = await Exp.getPublishInfoAsync(projectDir);
-
       log('Logging in...');
 
       let user = await UserManager.getCurrentUserAsync();
+      if (!user) {
+        throw new Error('You must be logged in to proceed.');
+      }
       let apiClient = ApiV2.clientForUser(user);
 
-      log("Setting API key on Expo's servers...");
+      log('Reading project configuration...');
+      const { exp } = ConfigUtils.getConfig(projectDir, { skipSDKVersionRequirement: true });
+      let { username } = user;
+      if (exp.owner) {
+        username = exp.owner;
+      }
 
-      await apiClient.putAsync(`credentials/push/android/${remotePackageName}`, {
+      const isProxyUser = username !== user.username;
+      log(
+        `Setting API key on Expo's servers for project ${exp.slug}${
+          isProxyUser ? ` on behalf of ${username}` : ''
+        }...`
+      );
+
+      await apiClient.putAsync(`credentials/android/push/@${username}/${exp.slug}`, {
         fcmApiKey: options.apiKey,
       });
 
@@ -46,18 +54,35 @@ export default function (program: Command) {
     .command('push:android:show [project-dir]')
     .description('Print the value currently in use for FCM notifications for this project.')
     .asyncActionProjectDir(async (projectDir: string) => {
-      const {
-        args: { remotePackageName },
-      } = await Exp.getPublishInfoAsync(projectDir);
+      log('Logging in...');
+
       let user = await UserManager.getCurrentUserAsync();
+      if (!user) {
+        throw new Error('You must be logged in to proceed.');
+      }
+
+      log('Reading project configuration...');
+      const { exp } = ConfigUtils.getConfig(projectDir, { skipSDKVersionRequirement: true });
+      let { username } = user;
+      if (exp.owner) {
+        username = exp.owner;
+      }
+
+      const isProxyUser = username !== user.username;
+      log(
+        `Getting API key on Expo's servers for project ${exp.slug}${
+          isProxyUser ? ` on behalf of ${username}` : ''
+        }...`
+      );
       let apiClient = ApiV2.clientForUser(user);
-
-      let result = await apiClient.getAsync(`credentials/push/android/${remotePackageName}`);
-
-      if (result.status === 'ok' && result.fcmApiKey) {
-        console.log(JSON.stringify(result));
+      const { fcmApiKey } = await apiClient.getAsync(
+        `credentials/android/push/@${username}/${exp.slug}`
+      );
+      if (fcmApiKey) {
+        log(`FCM Api Key: ${fcmApiKey}`);
       } else {
-        throw new Error('Server returned an invalid result!');
+        log(`There is no FCM Api Key configured for this project`);
+        process.exit(1);
       }
     });
 
@@ -65,18 +90,28 @@ export default function (program: Command) {
     .command('push:android:clear [project-dir]')
     .description('Deletes a previously uploaded FCM credential.')
     .asyncActionProjectDir(async (projectDir: string) => {
-      log('Reading project configuration...');
-      const {
-        args: { remotePackageName },
-      } = await Exp.getPublishInfoAsync(projectDir);
-
       log('Logging in...');
       let user = await UserManager.getCurrentUserAsync();
+      if (!user) {
+        throw new Error('You must be logged in to proceed.');
+      }
+
+      log('Reading project configuration...');
+      const { exp } = ConfigUtils.getConfig(projectDir, { skipSDKVersionRequirement: true });
+      let { username } = user;
+      if (exp.owner) {
+        username = exp.owner;
+      }
       let apiClient = ApiV2.clientForUser(user);
 
-      log("Deleting API key from Expo's servers...");
+      const isProxyUser = username !== user.username;
+      log(
+        `Deleting API key on Expo's servers for project ${exp.slug}${
+          isProxyUser ? ` on behalf of ${username}` : ''
+        }...`
+      );
 
-      await apiClient.deleteAsync(`credentials/push/android/${remotePackageName}`);
+      await apiClient.deleteAsync(`credentials/android/push/@${username}/${exp.slug}`);
 
       log('All done!');
     });
