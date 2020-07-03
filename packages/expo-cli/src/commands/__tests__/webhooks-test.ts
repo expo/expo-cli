@@ -16,6 +16,9 @@ mockExpoXDL({
       return mockApiClient;
     },
   },
+  UserManager: {
+    ensureLoggedInAsync: jest.fn(() => ({ username: 'testuser' })),
+  },
 });
 
 const config: ExpoConfig = {
