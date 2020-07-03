@@ -79,9 +79,10 @@ export default function (program: Command) {
         `credentials/android/push/@${username}/${exp.slug}`
       );
       if (fcmApiKey) {
-        console.log(`FCM Api Key: ${fcmApiKey}`);
+        log(`FCM Api Key: ${fcmApiKey}`);
       } else {
-        console.log(`There is no FCM Api Key configured for this project`);
+        log(`There is no FCM Api Key configured for this project`);
+        process.exit(1);
       }
     });
 
