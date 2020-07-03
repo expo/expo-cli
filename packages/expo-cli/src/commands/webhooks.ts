@@ -84,7 +84,7 @@ async function addAsync(
   spinner.succeed();
 }
 
-async function updateAsync(
+export async function updateAsync(
   projectRoot: string,
   {
     id,
@@ -134,7 +134,7 @@ function generateSecret() {
   return randomSecret;
 }
 
-async function setupAsync(projectRoot: string) {
+export async function setupAsync(projectRoot: string) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const { slug } = exp;
   if (!slug) {
