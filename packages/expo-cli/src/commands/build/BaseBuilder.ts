@@ -186,7 +186,12 @@ Please see the docs (${chalk.underline(
         packageExtension = 'APK';
       }
 
-      log(`### ${i} | ${platform} | ${UrlUtils.constructBuildLogsUrl(job.id, username!)} ###`);
+      log(
+        `### ${i} | ${platform} | ${UrlUtils.constructBuildLogsUrl({
+          buildId: job.id,
+          username: username ?? undefined,
+        })} ###`
+      );
 
       const hasPriorityBuilds =
         buildStatus.numberOfRemainingPriorityBuilds > 0 || buildStatus.hasUnlimitedPriorityBuilds;
@@ -371,7 +376,7 @@ ${job.id}
     if (buildId) {
       log(
         `You can monitor the build at\n\n ${chalk.underline(
-          UrlUtils.constructBuildLogsUrl(buildId, username ?? undefined)
+          UrlUtils.constructBuildLogsUrl({ buildId, username: username ?? undefined })
         )}\n`
       );
     }

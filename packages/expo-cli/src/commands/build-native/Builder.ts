@@ -12,6 +12,7 @@ import log from '../../log';
 import { UploadType, uploadAsync } from '../../uploads';
 import { createProgressTracker } from '../utils/progress';
 import { ensureProjectExistsAsync } from '../../projects';
+import * as UrlUtils from '../utils/url';
 
 export interface StatusResult {
   builds: BuildInfo[];
@@ -75,6 +76,12 @@ export default class Builder {
       const { buildId } = await this.client.postAsync(`projects/${projectId}/builds`, {
         job: job as any,
       });
+
+      log(
+        `You can monitor the build at\n\n ${log.chalk.underline(
+          UrlUtils.constructBuildLogsUrl({ buildId, username: this.ctx.user.username, v2: true })
+        )}\n`
+      );
 
       return await waitForBuildEndAsync(this.client, projectId, buildId);
     } finally {
