@@ -113,7 +113,12 @@ describe('publishAsync', () => {
       username: 'testing',
       password: 'fake-password',
     });
-    const result = await publishAsync(projectRoot, { quiet: true, resetCache: true });
+    process.env.EXPO_USE_DEV_SERVER = 'true';
+    const result = await publishAsync(projectRoot, { resetCache: true });
     expect(result.url).toBe('https://test.exp.host/@testing/publish-test-app');
+
+    process.env.EXPO_USE_DEV_SERVER = 'false';
+    const resultOld = await publishAsync(projectRoot, { resetCache: true });
+    expect(resultOld.url).toBe('https://test.exp.host/@testing/publish-test-app');
   });
 });
