@@ -12,6 +12,40 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 📦 Packages updated
 
+## [Tue, 7 Jul 2020 11:39:19 -0700](https://github.com/expo/expo-cli/commit/e6de6aae5c90f006bff7b89e55cd702103a177e8)
+
+### 🎉 New features
+
+- [expo-cli] print turtle v2 build logs url
+- [cli] add owner support for push:android cmds ([#2330](https://github.com/expo/expo-cli/issues/2330))
+- [expo-cli] give another attempt to enter apple id credentials if it fails authentication with Apple ([#2338](https://github.com/expo/expo-cli/issues/2338))
+- Add owner field support to expo start ([#2329](https://github.com/expo/expo-cli/issues/2329))
+- Updated webpack version ([#2336](https://github.com/expo/expo-cli/issues/2336))
+- [expo-cli] implement webhooks v2 ([#2212](https://github.com/expo/expo-cli/issues/2212))
+- Add e2e tests for `expo export` ([#2237](https://github.com/expo/expo-cli/issues/2237))
+- [expo-cli] Combined ID prompts for build and eject ([#2313](https://github.com/expo/expo-cli/issues/2313))
+- Upgraded copy-webpack-plugin ([#2334](https://github.com/expo/expo-cli/issues/2334))
+
+### 🐛 Bug fixes
+
+- fix(config): use basename to avoid mixed path separators from glob ([#2319](https://github.com/expo/expo-cli/issues/2319))
+[webpack-config] Remove yup validation ([#2335](https://github.com/expo/expo-cli/issues/2335))
+
+### 📦 Packages updated
+
+- @expo/config@3.2.15
+- @expo/dev-server@0.1.16
+- @expo/dev-tools@0.13.24
+- @expo/electron-adapter@0.0.5
+- expo-cli@3.22.0
+- expo-optimize@0.1.38
+- @expo/metro-config@0.1.16
+- @expo/next-adapter@2.1.18
+- expo-pwa@0.0.26
+- uri-scheme@1.0.23
+- @expo/webpack-config@0.12.18
+- @expo/xdl@57.9.21
+
 ## [Fri Jun 26 11:37:33 2020 -0700](https://github.com/expo/expo-cli/commit/8a9d17f699c07747c8198d5670eb779006e9b961)
 
 ### 🐛 Bug fixes
