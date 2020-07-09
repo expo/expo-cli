@@ -2013,6 +2013,7 @@ function getManifestHandler(projectRoot: string) {
       Analytics.logEvent('Serve Manifest', {
         projectRoot,
         developerTool: Config.developerTool,
+        sdkVersion: manifest.sdkVersion ?? null,
       });
     } catch (e) {
       ProjectUtils.logError(projectRoot, 'expo', e.stack);
@@ -2375,12 +2376,13 @@ export async function startAsync(
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   _assertValidProjectRoot(projectRoot);
+  let { exp } = getConfig(projectRoot);
   Analytics.logEvent('Start Project', {
     projectRoot,
     developerTool: Config.developerTool,
+    sdkVersion: exp.sdkVersion ?? null,
   });
 
-  let { exp } = getConfig(projectRoot);
   if (options.webOnly) {
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
