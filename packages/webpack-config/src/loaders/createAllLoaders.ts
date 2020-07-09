@@ -31,6 +31,8 @@ export const imageLoaderRule: Rule = {
     loader: require.resolve('url-loader'),
     options: {
       limit: imageInlineSizeLimit,
+      // Interop assets like Metro bundler
+      esModule: false,
       name: 'static/media/[name].[hash:8].[ext]',
     },
   },
@@ -55,6 +57,8 @@ export const fallbackLoaderRule: Rule = {
   // Excludes: js, jsx, ts, tsx, html, json
   exclude: [/\.(mjs|[jt]sx?)$/, /\.html$/, /\.json$/],
   options: {
+    // Interop assets like Metro bundler
+    esModule: false,
     name: 'static/media/[name].[hash:8].[ext]',
   },
 };
