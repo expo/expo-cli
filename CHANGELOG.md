@@ -12,6 +12,21 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 📦 Packages updated
 
+## [Thu, 9 Jul 2020 13:45:20 -0700](https://github.com/expo/expo-cli/commit/30981cf510b4f72b365751ca4d83f43ed13a6cdc)
+
+### 🐛 Bug fixes
+
+- [webpack-config] Interop assets like Metro bundler ([#2346](https://github.com/expo/expo-cli/issues/2346))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.25
+- @expo/electron-adapter@0.0.6
+- expo-cli@3.22.1
+- @expo/next-adapter@2.1.19
+- @expo/webpack-config@0.12.19
+- @expo/xdl@57.9.22
+
 ## [Tue, 7 Jul 2020 11:39:19 -0700](https://github.com/expo/expo-cli/commit/e6de6aae5c90f006bff7b89e55cd702103a177e8)
 
 ### 🎉 New features
