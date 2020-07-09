@@ -14,7 +14,7 @@ import createWorkerLoader from './createWorkerLoader';
 // An Ethernet MTU is usually 1500. IP headers are 20 (v4) or 40 (v6) bytes and TCP
 // headers are 40 bytes. HTTP response headers vary and are around 400 bytes. This leaves
 // about 1000 bytes for content to fit in a packet.
-const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
+const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '1000');
 
 /**
  * This is needed for webpack to import static images in JavaScript files.
@@ -31,6 +31,8 @@ export const imageLoaderRule: Rule = {
     loader: require.resolve('url-loader'),
     options: {
       limit: imageInlineSizeLimit,
+      // Interop assets like Metro bundler
+      esModule: false,
       name: 'static/media/[name].[hash:8].[ext]',
     },
   },
@@ -55,6 +57,8 @@ export const fallbackLoaderRule: Rule = {
   // Excludes: js, jsx, ts, tsx, html, json
   exclude: [/\.(mjs|[jt]sx?)$/, /\.html$/, /\.json$/],
   options: {
+    // Interop assets like Metro bundler
+    esModule: false,
     name: 'static/media/[name].[hash:8].[ext]',
   },
 };

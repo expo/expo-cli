@@ -72,7 +72,8 @@ Object {
             "use": Object {
               "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
               "options": Object {
-                "limit": 10000,
+                "esModule": false,
+                "limit": 1000,
                 "name": "static/media/[name].[hash:8].[ext]",
               },
             },
@@ -119,6 +120,7 @@ Object {
               Object {
                 "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
                 "options": Object {
+                  "esModule": false,
                   "limit": 50000,
                   "name": "./fonts/[name].[ext]",
                 },
@@ -140,6 +142,7 @@ Object {
             ],
             "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
             "options": Object {
+              "esModule": false,
               "name": "static/media/[name].[hash:8].[ext]",
             },
           },
@@ -245,7 +248,8 @@ Object {
             "use": Object {
               "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
               "options": Object {
-                "limit": 10000,
+                "esModule": false,
+                "limit": 1000,
                 "name": "static/media/[name].[hash:8].[ext]",
               },
             },
@@ -292,6 +296,7 @@ Object {
               Object {
                 "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
                 "options": Object {
+                  "esModule": false,
                   "limit": 50000,
                   "name": "./fonts/[name].[ext]",
                 },
@@ -313,6 +318,7 @@ Object {
             ],
             "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
             "options": Object {
+              "esModule": false,
               "name": "static/media/[name].[hash:8].[ext]",
             },
           },
@@ -520,7 +526,8 @@ Object {
             "use": Object {
               "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
               "options": Object {
-                "limit": 10000,
+                "esModule": false,
+                "limit": 1000,
                 "name": "static/media/[name].[hash:8].[ext]",
               },
             },
@@ -567,6 +574,7 @@ Object {
               Object {
                 "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
                 "options": Object {
+                  "esModule": false,
                   "limit": 50000,
                   "name": "./fonts/[name].[ext]",
                 },
@@ -588,6 +596,7 @@ Object {
             ],
             "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
             "options": Object {
+              "esModule": false,
               "name": "static/media/[name].[hash:8].[ext]",
             },
           },
@@ -705,7 +714,8 @@ Object {
             "use": Object {
               "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
               "options": Object {
-                "limit": 10000,
+                "esModule": false,
+                "limit": 1000,
                 "name": "static/media/[name].[hash:8].[ext]",
               },
             },
@@ -752,6 +762,7 @@ Object {
               Object {
                 "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
                 "options": Object {
+                  "esModule": false,
                   "limit": 50000,
                   "name": "./fonts/[name].[ext]",
                 },
@@ -773,6 +784,7 @@ Object {
             ],
             "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
             "options": Object {
+              "esModule": false,
               "name": "static/media/[name].[hash:8].[ext]",
             },
           },
