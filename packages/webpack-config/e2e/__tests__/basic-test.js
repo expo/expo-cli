@@ -42,16 +42,23 @@ describe('Basic', () => {
 
   describe('Asset loader', () => {
     it(`should load an image as a string like Metro`, async () => {
-      const elementId = getTestIdQuery('expo-asset-raw-image');
+      const elementId = getTestIdQuery('asset-raw-image');
       await expect(page).toMatchElement(elementId, {
         text: 'data:image/png;base64',
       });
     });
 
     it(`should load a font as a string like Metro`, async () => {
-      const elementId = getTestIdQuery('expo-asset-raw-font');
+      const elementId = getTestIdQuery('asset-raw-font');
       await expect(page).toMatchElement(elementId, {
         text: 'data:font/ttf;base64,ZXhwbyBpcyB0aGUgYmVzdA==',
+      });
+    });
+
+    it(`should load a random file as a string like Metro`, async () => {
+      const elementId = getTestIdQuery('asset-raw-wildcard');
+      await expect(page).toMatchElement(elementId, {
+        text: 'string',
       });
     });
   });
