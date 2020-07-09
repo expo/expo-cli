@@ -24,6 +24,10 @@ function AspectView(props) {
   );
 }
 
+// These assets will be used to ensure that the file-loader and url-loader are loading the assets properly.
+const imageAsset = require('./img.png');
+const fontAsset = require('./font.ttf');
+
 export default function App() {
   // Test that the SW is registered
   const [isSWRegistered, setSW] = React.useState(null);
@@ -41,6 +45,8 @@ export default function App() {
       <AspectView style={{ aspectRatio: 1, backgroundColor: 'green', width: 40 }} />
       <Text testID="basic-text">Open up App.js to start working on your app!</Text>
       <Text testID="expo-constants-manifest">{JSON.stringify(Constants.manifest)}</Text>
+      <Text testID="expo-asset-raw-image">{imageAsset}</Text>
+      <Text testID="expo-asset-raw-font">{fontAsset}</Text>
       {boolish('CI', false) && <Text testID="has-ci-text">Has CI env</Text>}
       {isSWRegistered && <Text testID="has-sw-text">Has SW installed</Text>}
       {global.ResizeObserver && (
