@@ -91,7 +91,7 @@ import * as Webpack from './Webpack';
 import XDLError from './XDLError';
 export { ConnectionStatus };
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
   installSourceMapSupport();
 }
 export { Analytics };
