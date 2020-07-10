@@ -1,7 +1,8 @@
 import { vol } from 'memfs';
 
+import { CredentialsSource } from '../../../easJson';
 import { Context } from '../../context';
-import { iOSCredentialsProvider } from '../ios';
+import iOSCredentialsProvider from '../iOSCredentialsProvider';
 
 const providerOptions = {
   projectName: 'slug123',
@@ -151,7 +152,7 @@ describe('iOSCredentialsProvider', () => {
       expect(hasLocal).toBe(false);
     });
   });
-  describe('when calling useRemoteAsync', () => {
+  describe('when calling getCredentialsAsync with src=remote', () => {
     it('should not throw if credentials are valid', async () => {
       mockGetProvisioningProfile.mockImplementation(() => ({
         provisioningProfile: 'profileBase64',
@@ -163,7 +164,9 @@ describe('iOSCredentialsProvider', () => {
       }));
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await expect(provider.useRemoteAsync()).resolves.not.toThrowError();
+      await expect(
+        provider.getCredentialsAsync(CredentialsSource.REMOTE)
+      ).resolves.not.toThrowError();
     });
     it('should return false if provisioning profile is missing', async () => {
       mockGetDistCert.mockImplementation(() => ({
@@ -172,7 +175,7 @@ describe('iOSCredentialsProvider', () => {
       }));
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await expect(provider.useRemoteAsync()).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError();
     });
     it('should return false if dist cert is missging', async () => {
       mockGetProvisioningProfile.mockImplementation(() => ({
@@ -181,15 +184,15 @@ describe('iOSCredentialsProvider', () => {
       }));
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await expect(provider.useRemoteAsync()).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError();
     });
     it('should return false if there are no credentials', async () => {
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await expect(provider.useRemoteAsync()).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError();
     });
   });
-  describe.skip('when calling useLocalAsync', () => {
+  describe('when calling useLocalAsync', () => {
     it('should resolve sucesfully when credentials are valid', async () => {
       vol.fromJSON({
         './credentials.json': JSON.stringify({
@@ -207,7 +210,9 @@ describe('iOSCredentialsProvider', () => {
 
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await provider.useLocalAsync();
+      await expect(
+        provider.getCredentialsAsync(CredentialsSource.LOCAL)
+      ).resolves.not.toThrowError();
     });
     it('should throw error if there are missing fields', async () => {
       vol.fromJSON({
@@ -224,7 +229,7 @@ describe('iOSCredentialsProvider', () => {
       });
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await expect(provider.useLocalAsync()).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.LOCAL)).rejects.toThrowError();
     });
     it('should throw error if file is missing', async () => {
       vol.fromJSON({
@@ -241,12 +246,12 @@ describe('iOSCredentialsProvider', () => {
       });
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await expect(provider.useLocalAsync()).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.LOCAL)).rejects.toThrowError();
     });
     it('should return false if there are no credentials.json file', async () => {
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await expect(provider.useLocalAsync()).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.LOCAL)).rejects.toThrowError();
     });
   });
   describe('when calling isLocalSyncedAsync', () => {
@@ -330,8 +335,7 @@ describe('iOSCredentialsProvider', () => {
       }));
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await provider.useLocalAsync();
-      expect(await provider.getCredentialsAsync()).toEqual({
+      expect(await provider.getCredentialsAsync(CredentialsSource.LOCAL)).toEqual({
         provisioningProfile: 'c29tZWJpbmFyeWNvbnRlbnQ=',
         distributionCertificate: {
           certP12: 'c29tZWJpbmFyeWNvbnRlbnQy',
@@ -363,8 +367,7 @@ describe('iOSCredentialsProvider', () => {
       }));
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await provider.useRemoteAsync();
-      expect(await provider.getCredentialsAsync()).toEqual({
+      expect(await provider.getCredentialsAsync(CredentialsSource.REMOTE)).toEqual({
         provisioningProfile: 'remoteProvProfile',
         distributionCertificate: {
           certP12: 'remoteCert',

@@ -3,6 +3,7 @@ import { runCredentialsManager } from '../route';
 import { Context } from '../context';
 import { credentialsJson } from '../local';
 import { CredentialsProvider } from './provider';
+import { CredentialsSource } from '../../easJson';
 
 export interface iOSCredentials {
   provisioningProfile: string;
@@ -18,7 +19,7 @@ interface Options {
   bundleIdentifier: string;
 }
 
-export class iOSCredentialsProvider implements CredentialsProvider {
+export default class iOSCredentialsProvider implements CredentialsProvider {
   public readonly platform = 'ios';
   private readonly ctx = new Context();
   private credentials?: iOSCredentials;
@@ -58,19 +59,6 @@ export class iOSCredentialsProvider implements CredentialsProvider {
     }
   }
 
-  public async useRemoteAsync(): Promise<void> {
-    await runCredentialsManager(
-      this.ctx,
-      new SetupIosBuildCredentials({
-        experienceName: this.projectFullName,
-        bundleIdentifier: this.options.bundleIdentifier,
-      })
-    );
-    this.credentials = await this.getRemoteAsync();
-  }
-  public async useLocalAsync(): Promise<void> {
-    this.credentials = await this.getLocalAsync();
-  }
   public async isLocalSyncedAsync(): Promise<boolean> {
     const [remote, local] = await Promise.allSettled([this.getRemoteAsync(), this.getLocalAsync()]);
     if (remote.status === 'fulfilled' && local.status === 'fulfilled') {
@@ -84,16 +72,28 @@ export class iOSCredentialsProvider implements CredentialsProvider {
     }
     return true;
   }
-  public async getCredentialsAsync(): Promise<iOSCredentials> {
-    if (!this.credentials) {
-      throw new Error('credentials not specified'); // shouldn't happen
+  public async getCredentialsAsync(
+    src: CredentialsSource.LOCAL | CredentialsSource.REMOTE
+  ): Promise<iOSCredentials> {
+    switch (src) {
+      case CredentialsSource.LOCAL:
+        return await this.getLocalAsync();
+      case CredentialsSource.REMOTE:
+        return await this.getRemoteAsync();
     }
-    return this.credentials;
   }
+
   private async getLocalAsync(): Promise<iOSCredentials> {
     return await credentialsJson.readIosAsync(this.projectDir);
   }
   private async getRemoteAsync(): Promise<iOSCredentials> {
+    await runCredentialsManager(
+      this.ctx,
+      new SetupIosBuildCredentials({
+        experienceName: this.projectFullName,
+        bundleIdentifier: this.options.bundleIdentifier,
+      })
+    );
     const distCert = await this.ctx.ios.getDistCert(
       this.projectFullName,
       this.options.bundleIdentifier

@@ -149,7 +149,7 @@ export class EasJsonReader {
   private validateBuildProfile<T>(
     platform: 'android' | 'ios' | 'all',
     buildProfileName: string,
-    buildProfile?: any
+    buildProfile?: { workflow: Workflow } & object
   ): T {
     if (!buildProfile) {
       throw new Error(`There is no profile named ${buildProfileName} for platform ${platform}`);

@@ -4,6 +4,7 @@ import { runCredentialsManager } from '../route';
 import { Context } from '../context';
 import { credentialsJson } from '../local';
 import { CredentialsProvider } from './provider';
+import { CredentialsSource } from '../../easJson';
 import log from '../../log';
 
 export interface AndroidCredentials {
@@ -15,14 +16,13 @@ interface Options {
   accountName: string;
 }
 
-export class AndroidCredentialsProvider implements CredentialsProvider {
+export default class AndroidCredentialsProvider implements CredentialsProvider {
   public readonly platform = 'android';
   private readonly ctx = new Context();
-  private credentials?: AndroidCredentials;
 
   constructor(private projectDir: string, private options: Options) {}
 
-  get projectFullName(): string {
+  private get projectFullName(): string {
     const { projectName, accountName } = this.options;
     return `@${accountName}/${projectName}`;
   }
@@ -48,28 +48,6 @@ export class AndroidCredentialsProvider implements CredentialsProvider {
     }
   }
 
-  public async useRemoteAsync(): Promise<void> {
-    await runCredentialsManager(
-      this.ctx,
-      new SetupAndroidKeystore(this.projectFullName, {
-        allowMissingKeystore: false,
-      })
-    );
-    const keystore = await this.ctx.android.fetchKeystore(this.projectFullName);
-    if (!keystore || !this.isValidKeystore(keystore)) {
-      throw new Error('Unable to set up credentials');
-    }
-    this.credentials = { keystore };
-  }
-
-  public async useLocalAsync(): Promise<void> {
-    const credentials = await credentialsJson.readAndroidAsync(this.projectDir);
-    if (!this.isValidKeystore(credentials.keystore)) {
-      throw new Error('Invalid keystore in credentials.json');
-    }
-    this.credentials = credentials;
-  }
-
   public async isLocalSyncedAsync(): Promise<boolean> {
     const [remote, local] = await Promise.allSettled([
       this.ctx.android.fetchKeystore(this.projectFullName),
@@ -89,11 +67,37 @@ export class AndroidCredentialsProvider implements CredentialsProvider {
     return true;
   }
 
-  public async getCredentialsAsync(): Promise<AndroidCredentials> {
-    if (!this.credentials) {
-      throw new Error('credentials not specified'); // shouldn't happen
+  public async getCredentialsAsync(
+    src: CredentialsSource.LOCAL | CredentialsSource.REMOTE
+  ): Promise<AndroidCredentials> {
+    switch (src) {
+      case CredentialsSource.LOCAL:
+        return await this.getLocalAsync();
+      case CredentialsSource.REMOTE:
+        return await this.getRemoteAsync();
     }
-    return this.credentials;
+  }
+
+  private async getRemoteAsync(): Promise<AndroidCredentials> {
+    await runCredentialsManager(
+      this.ctx,
+      new SetupAndroidKeystore(this.projectFullName, {
+        allowMissingKeystore: false,
+      })
+    );
+    const keystore = await this.ctx.android.fetchKeystore(this.projectFullName);
+    if (!keystore || !this.isValidKeystore(keystore)) {
+      throw new Error('Unable to set up credentials');
+    }
+    return { keystore };
+  }
+
+  private async getLocalAsync(): Promise<AndroidCredentials> {
+    const credentials = await credentialsJson.readAndroidAsync(this.projectDir);
+    if (!this.isValidKeystore(credentials.keystore)) {
+      throw new Error('Invalid keystore in credentials.json');
+    }
+    return credentials;
   }
 
   private isValidKeystore(keystore?: Keystore | null) {

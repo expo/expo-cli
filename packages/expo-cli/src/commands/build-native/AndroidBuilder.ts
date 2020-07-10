@@ -1,9 +1,11 @@
-import { Android, BuildType, Job, Platform, validateJob } from '@expo/build-tools';
+import { Android, BuildType, Job, Platform, sanitizeJob } from '@expo/build-tools';
 
 import { Keystore } from '../../credentials/credentials';
-import { ensureCredentialsAsync } from './credentials';
+import AndroidCredentialsProvider, {
+  AndroidCredentials,
+} from '../../credentials/provider/AndroidCredentialsProvider';
 import { credentialsJson } from '../../credentials/local';
-import { AndroidCredentials, AndroidCredentialsProvider } from '../../credentials/provider/android';
+import { ensureCredentialsAsync } from './credentials';
 import prompt from '../../prompts';
 import { Builder, BuilderContext } from './build';
 import {
@@ -25,6 +27,7 @@ interface CommonJobProperties {
 class AndroidBuilder implements Builder {
   private credentials?: AndroidCredentials;
   private buildProfile: AndroidBuildProfile;
+  private credentialsPrepared: boolean = false;
 
   constructor(public readonly ctx: BuilderContext) {
     if (!ctx.eas.builds.android) {
@@ -34,6 +37,7 @@ class AndroidBuilder implements Builder {
   }
 
   public async ensureCredentialsAsync(): Promise<void> {
+    this.credentialsPrepared = true;
     if (!this.shouldLoadCredentials()) {
       return;
     }
@@ -42,19 +46,22 @@ class AndroidBuilder implements Builder {
       accountName: this.ctx.accountName,
     });
     await provider.initAsync();
-    await ensureCredentialsAsync(
+    const credentialsSource = await ensureCredentialsAsync(
       provider,
       this.buildProfile.workflow,
       this.buildProfile.credentialsSource
     );
-    this.credentials = await provider.getCredentialsAsync();
+    this.credentials = await provider.getCredentialsAsync(credentialsSource);
   }
 
   public async prepareJobAsync(archiveUrl: string): Promise<Job> {
+    if (!this.credentialsPrepared) {
+      throw new Error('ensureCredentialsAsync should be called before prepareJobAsync');
+    }
     if (this.buildProfile.workflow === Workflow.Generic) {
-      return validateJob(await this.prepareGenericJobAsync(archiveUrl, this.buildProfile));
+      return sanitizeJob(await this.prepareGenericJobAsync(archiveUrl, this.buildProfile));
     } else if (this.buildProfile.workflow === Workflow.Managed) {
-      return validateJob(await this.prepareManagedJobAsync(archiveUrl, this.buildProfile));
+      return sanitizeJob(await this.prepareManagedJobAsync(archiveUrl, this.buildProfile));
     } else {
       throw new Error("Unknown workflow. Shouldn't happen");
     }
@@ -106,11 +113,11 @@ class AndroidBuilder implements Builder {
   }
 
   private shouldLoadCredentials(): boolean {
-    return !!(
+    return (
       this.buildProfile.workflow === Workflow.Managed ||
       (this.buildProfile.workflow === Workflow.Generic && !this.buildProfile.withoutCredentials)
     );
   }
 }
 
-export { AndroidBuilder };
+export default AndroidBuilder;

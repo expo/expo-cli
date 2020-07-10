@@ -1,1 +1,1 @@
-export * from './provider';
+export { CredentialsProvider } from './provider';

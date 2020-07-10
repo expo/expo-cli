@@ -5,7 +5,7 @@ import { EasJsonReader } from '../easJson';
 jest.mock('fs-extra');
 
 describe('eas.json', () => {
-  test('valid minimal android eas.json', async () => {
+  test('minimal valid android eas.json', async () => {
     fs.readFile.mockImplementationOnce(() =>
       JSON.stringify({
         builds: {
@@ -27,7 +27,7 @@ describe('eas.json', () => {
       },
     }).toEqual(easJson);
   });
-  test('valid minimal ios eas.json', async () => {
+  test('minimal valid ios eas.json', async () => {
     fs.readFile.mockImplementationOnce(() =>
       JSON.stringify({
         builds: {
@@ -49,7 +49,7 @@ describe('eas.json', () => {
       },
     }).toEqual(easJson);
   });
-  test('valid minimal eas.json for both platforms', async () => {
+  test('minimal valid eas.json for both platforms', async () => {
     fs.readFile.mockImplementationOnce(() =>
       JSON.stringify({
         builds: {

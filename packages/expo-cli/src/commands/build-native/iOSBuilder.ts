@@ -1,8 +1,10 @@
-import { BuildType, Job, Platform, iOS, validateJob } from '@expo/build-tools';
+import { BuildType, Job, Platform, iOS, sanitizeJob } from '@expo/build-tools';
 
 import { Keystore } from '../../credentials/credentials';
 import { Context } from '../../credentials/context';
-import { iOSCredentials, iOSCredentialsProvider } from '../../credentials/provider/ios';
+import iOSCredentialsProvider, {
+  iOSCredentials,
+} from '../../credentials/provider/iOSCredentialsProvider';
 import { ensureCredentialsAsync } from './credentials';
 import { Builder, BuilderContext } from './build';
 import {
@@ -38,9 +40,9 @@ class iOSBuilder implements Builder {
 
   public async prepareJobAsync(archiveUrl: string): Promise<Job> {
     if (this.buildProfile.workflow === Workflow.Generic) {
-      return validateJob(await this.prepareGenericJobAsync(archiveUrl, this.buildProfile));
+      return sanitizeJob(await this.prepareGenericJobAsync(archiveUrl, this.buildProfile));
     } else if (this.buildProfile.workflow === Workflow.Managed) {
-      return validateJob(await this.prepareManagedJobAsync(archiveUrl, this.buildProfile));
+      return sanitizeJob(await this.prepareManagedJobAsync(archiveUrl, this.buildProfile));
     } else {
       throw new Error("Unknown workflow. Shouldn't happen");
     }
@@ -60,12 +62,12 @@ class iOSBuilder implements Builder {
       bundleIdentifier,
     });
     await provider.initAsync();
-    await ensureCredentialsAsync(
+    const credentialsSource = await ensureCredentialsAsync(
       provider,
       this.buildProfile.workflow,
       this.buildProfile.credentialsSource
     );
-    this.credentials = await provider.getCredentialsAsync();
+    this.credentials = await provider.getCredentialsAsync(credentialsSource);
   }
 
   private async prepareJobCommonAsync(archiveUrl: string): Promise<Partial<CommonJobProperties>> {
@@ -111,7 +113,7 @@ class iOSBuilder implements Builder {
   }
 
   private shouldLoadCredentials(): boolean {
-    return !!(
+    return (
       (this.buildProfile.workflow === Workflow.Managed &&
         this.buildProfile.buildType === 'archive') ||
       this.buildProfile.workflow === Workflow.Generic
@@ -119,4 +121,4 @@ class iOSBuilder implements Builder {
   }
 }
 
-export { iOSBuilder };
+export default iOSBuilder;

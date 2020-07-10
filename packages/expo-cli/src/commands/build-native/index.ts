@@ -2,19 +2,44 @@ import { Platform } from '@expo/build-tools';
 import { ApiV2 } from '@expo/xdl';
 import { Command } from 'commander';
 
-import log from '../../log';
-import { createBuilderContextAsync, startBuildAsync, waitForBuildEndAsync } from './build';
-import { AndroidBuilder } from './android';
-import { iOSBuilder } from './ios';
 import { CredentialsSource, EasConfig, EasJsonReader } from '../../easJson';
-import { printBuildTable } from './utils';
-import * as UrlUtils from '../utils/url';
+import log from '../../log';
+import { ensureProjectExistsAsync } from '../../projects';
+import {
+  BuilderContext,
+  createBuilderContextAsync,
+  startBuildAsync,
+  waitForBuildEndAsync,
+} from './build';
+import AndroidBuilder from './AndroidBuilder';
+import iOSBuilder from './iOSBuilder';
+import { printBuildResults, printBuildTable, printLogsUrls } from './utils';
 
 interface Options {
   platform: 'android' | 'ios' | 'all';
   skipCredentialsCheck?: boolean; // TODO: noop for now
   wait?: boolean;
   profile: string;
+}
+
+async function startBuildsAsync(
+  ctx: BuilderContext,
+  projectId: string,
+  platform: Options['platform']
+): Promise<Array<{ platform: 'android' | 'ios'; buildId: string }>> {
+  const client = ApiV2.clientForUser(ctx.user);
+  let scheduledBuilds: Array<{ platform: 'android' | 'ios'; buildId: string }> = [];
+  if (['android', 'all'].includes(platform)) {
+    const builder = new AndroidBuilder(ctx);
+    const buildId = await startBuildAsync(client, builder, projectId);
+    scheduledBuilds.push({ platform: 'android', buildId });
+  }
+  if (['ios', 'all'].includes(platform)) {
+    const builder = new iOSBuilder(ctx);
+    const buildId = await startBuildAsync(client, builder, projectId);
+    scheduledBuilds.push({ platform: 'ios', buildId });
+  }
+  return scheduledBuilds;
 }
 
 export async function buildAction(projectDir: string, options: Options): Promise<void> {
@@ -27,55 +52,21 @@ export async function buildAction(projectDir: string, options: Options): Promise
     );
   }
   const easConfig: EasConfig = await new EasJsonReader(projectDir, platform).readAsync(profile);
-
   const ctx = await createBuilderContextAsync(projectDir, easConfig);
-  const client = ApiV2.clientForUser(ctx.user);
-  const scheduledBuilds: Array<{ platform: Platform; buildId: string }> = [];
+  const projectId = await ensureProjectExistsAsync(ctx.user, {
+    accountName: ctx.accountName,
+    projectName: ctx.projectName,
+  });
+  const scheduledBuilds = await startBuildsAsync(ctx, projectId, options.platform);
+  printLogsUrls(ctx.accountName, scheduledBuilds);
 
-  if ([Platform.Android, 'all'].includes(options.platform)) {
-    const builder = new AndroidBuilder(ctx);
-    const buildId = await startBuildAsync(client, builder);
-    scheduledBuilds.push({ platform: Platform.Android, buildId });
-  }
-  if ([Platform.iOS, 'all'].includes(options.platform)) {
-    const builder = new iOSBuilder(ctx);
-    const buildId = await startBuildAsync(client, builder);
-    scheduledBuilds.push({ platform: Platform.iOS, buildId });
-  }
-
-  if (scheduledBuilds.length === 1) {
-    const { buildId } = scheduledBuilds[0];
-    const logsUrl = UrlUtils.constructBuildLogsUrl({
-      buildId,
-      username: ctx.user.username,
-      v2: true,
-    });
-    log(`Logs url: ${logsUrl}`); // replace with logs url
-  } else {
-    scheduledBuilds.forEach(({ buildId, platform }) => {
-      const logsUrl = UrlUtils.constructBuildLogsUrl({
-        buildId,
-        username: ctx.user.username,
-        v2: true,
-      });
-      log(`Platform: ${platform}, Logs url: ${logsUrl}`); // replace with logs url
-    });
-  }
   if (options.wait) {
     const buildInfo = await waitForBuildEndAsync(
-      client,
-      ctx.projectId,
+      ctx,
+      projectId,
       scheduledBuilds.map(i => i.buildId)
     );
-    if (buildInfo.length === 1) {
-      log(`Artifact url: ${buildInfo[0]?.artifacts?.buildUrl ?? ''}`);
-    } else {
-      buildInfo
-        .filter(i => i?.status === 'finished')
-        .forEach(build => {
-          log(`Platform: ${build?.platform}, Artifact url: ${build?.artifacts?.buildUrl ?? ''}`);
-        });
-    }
+    printBuildResults(buildInfo);
   }
 }
 

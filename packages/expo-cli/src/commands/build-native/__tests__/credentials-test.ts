@@ -23,10 +23,9 @@ function crateMockCredentialsProvider({
 }: any): CredentialsProvider {
   let credentials;
   return {
+    platform: 'android',
     hasRemoteAsync: jest.fn().mockImplementation(() => hasRemote || false),
     hasLocalAsync: jest.fn().mockImplementation(() => hasLocal || false),
-    useRemoteAsync: jest.fn(),
-    useLocalAsync: jest.fn(),
     isLocalSyncedAsync: jest.fn().mockImplementation(() => isLocalSynced || false),
   } as CredentialsProvider;
 }
@@ -42,16 +41,16 @@ describe('ensureCredentialsAsync', () => {
         hasRemote: false,
         hasLocal: true,
       });
-      await ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.AUTO);
-      expect(provider.useLocalAsync).toHaveBeenCalled();
+      const src = await ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.AUTO);
+      expect(src).toBe('local');
     });
     it('should use remote if there are only remote credentials', async () => {
       const provider = crateMockCredentialsProvider({
         hasRemote: true,
         hasLocal: false,
       });
-      await ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.AUTO);
-      expect(provider.useRemoteAsync).toHaveBeenCalled();
+      const src = await ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.AUTO);
+      expect(src).toBe('remote');
     });
     it('should use local when local and remote are the same', async () => {
       const provider = crateMockCredentialsProvider({
@@ -59,9 +58,9 @@ describe('ensureCredentialsAsync', () => {
         hasLocal: true,
         isLocalSynced: true,
       });
-      await ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.AUTO);
+      const src = await ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.AUTO);
       expect(prompts).toHaveBeenCalledTimes(0);
-      expect(provider.useLocalAsync).toHaveBeenCalled();
+      expect(src).toBe('local');
     });
     it('should ask when local and remote are not the same (select local)', async () => {
       const provider = crateMockCredentialsProvider({
@@ -72,9 +71,9 @@ describe('ensureCredentialsAsync', () => {
       (prompts as any).mockImplementation(() => {
         return { select: 'local' };
       });
-      await ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.AUTO);
+      const src = await ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.AUTO);
       expect(prompts).toHaveBeenCalledTimes(1);
-      expect(provider.useLocalAsync).toHaveBeenCalledTimes(1);
+      expect(src).toBe('local');
     });
     it('should ask when local and remote are not the same (select remote)', async () => {
       const provider = crateMockCredentialsProvider({
@@ -85,9 +84,9 @@ describe('ensureCredentialsAsync', () => {
       (prompts as any).mockImplementation(() => {
         return { select: 'remote' };
       });
-      await ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.AUTO);
+      const src = await ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.AUTO);
       expect(prompts).toHaveBeenCalledTimes(1);
-      expect(provider.useRemoteAsync).toHaveBeenCalledTimes(1);
+      expect(src).toBe('remote');
     });
   });
 
@@ -97,16 +96,16 @@ describe('ensureCredentialsAsync', () => {
         hasRemote: false,
         hasLocal: true,
       });
-      await ensureCredentialsAsync(provider, Workflow.Managed, CredentialsSource.AUTO);
-      expect(provider.useLocalAsync).toHaveBeenCalled();
+      const src = await ensureCredentialsAsync(provider, Workflow.Managed, CredentialsSource.AUTO);
+      expect(src).toBe('local');
     });
     it('should use remote if there are only remote credentials', async () => {
       const provider = crateMockCredentialsProvider({
         hasRemote: true,
         hasLocal: false,
       });
-      await ensureCredentialsAsync(provider, Workflow.Managed, CredentialsSource.AUTO);
-      expect(provider.useRemoteAsync).toHaveBeenCalled();
+      const src = await ensureCredentialsAsync(provider, Workflow.Managed, CredentialsSource.AUTO);
+      expect(src).toBe('remote');
     });
     it('should use local when local and remote are the same', async () => {
       const provider = crateMockCredentialsProvider({
@@ -114,9 +113,9 @@ describe('ensureCredentialsAsync', () => {
         hasLocal: true,
         isLocalSynced: true,
       });
-      await ensureCredentialsAsync(provider, Workflow.Managed, CredentialsSource.AUTO);
+      const src = await ensureCredentialsAsync(provider, Workflow.Managed, CredentialsSource.AUTO);
       expect(prompts).toHaveBeenCalledTimes(0);
-      expect(provider.useLocalAsync).toHaveBeenCalled();
+      expect(src).toBe('local');
     });
 
     it('should use local even if remote have different credentials', async () => {
@@ -125,9 +124,9 @@ describe('ensureCredentialsAsync', () => {
         hasLocal: true,
         isLocalSynced: false,
       });
-      await ensureCredentialsAsync(provider, Workflow.Managed, CredentialsSource.AUTO);
+      const src = await ensureCredentialsAsync(provider, Workflow.Managed, CredentialsSource.AUTO);
       expect(prompts).toHaveBeenCalledTimes(0);
-      expect(provider.useLocalAsync).toHaveBeenCalledTimes(1);
+      expect(src).toBe('local');
     });
   });
 
@@ -138,23 +137,9 @@ describe('ensureCredentialsAsync', () => {
         hasLocal: true,
         isLocalSynced: false,
       });
-      await ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.LOCAL);
+      const src = await ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.LOCAL);
       expect(prompts).toHaveBeenCalledTimes(0);
-      expect(provider.useLocalAsync).toHaveBeenCalledTimes(1);
-    });
-    it('should fail when useLocalAsync throws error', async () => {
-      const provider = crateMockCredentialsProvider({
-        hasRemote: true,
-        hasLocal: true,
-        isLocalSynced: false,
-      });
-      (provider.useLocalAsync as any).mockImplementation(() => {
-        throw new Error('no local credentials');
-      });
-      const promise = ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.LOCAL);
-      expect(promise).rejects.toThrowError();
-      expect(prompts).toHaveBeenCalledTimes(0);
-      expect(provider.useLocalAsync).toHaveBeenCalledTimes(1);
+      expect(src).toBe('local');
     });
   });
 
@@ -165,23 +150,13 @@ describe('ensureCredentialsAsync', () => {
         hasLocal: true,
         isLocalSynced: false,
       });
-      await ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.REMOTE);
+      const src = await ensureCredentialsAsync(
+        provider,
+        Workflow.Generic,
+        CredentialsSource.REMOTE
+      );
       expect(prompts).toHaveBeenCalledTimes(0);
-      expect(provider.useRemoteAsync).toHaveBeenCalledTimes(1);
-    });
-    it('should fail when useRemoteAsync throws error', async () => {
-      const provider = crateMockCredentialsProvider({
-        hasRemote: true,
-        hasLocal: true,
-        isLocalSynced: false,
-      });
-      (provider.useRemoteAsync as any).mockImplementation(() => {
-        throw new Error('no remote credentials');
-      });
-      const promise = ensureCredentialsAsync(provider, Workflow.Generic, CredentialsSource.REMOTE);
-      expect(promise).rejects.toThrowError();
-      expect(prompts).toHaveBeenCalledTimes(0);
-      expect(provider.useRemoteAsync).toHaveBeenCalledTimes(1);
+      expect(src).toBe('remote');
     });
   });
 });

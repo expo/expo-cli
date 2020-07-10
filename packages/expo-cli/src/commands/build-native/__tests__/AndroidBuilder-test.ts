@@ -1,7 +1,7 @@
 import { vol } from 'memfs';
 import { User } from '@expo/xdl';
 
-import { AndroidBuilder } from '../android';
+import AndroidBuilder from '../AndroidBuilder';
 
 jest.mock('fs');
 jest.mock('../../../credentials/context', () => {

@@ -1,9 +1,10 @@
 import spawnAsync from '@expo/spawn-async';
-import { ApiV2 } from '@expo/xdl';
+import { ApiV2, UserManager } from '@expo/xdl';
 import fs from 'fs-extra';
 import ora from 'ora';
 
 import log from '../../log';
+import * as UrlUtils from '../utils/url';
 import { printTableJsonArray } from '../utils/cli-table';
 import { BuildInfo } from './build';
 
@@ -40,4 +41,41 @@ function printBuildTable(builds: BuildInfo[]) {
   console.log(buildTable);
 }
 
-export { makeProjectTarballAsync, printBuildTable };
+async function printLogsUrls(
+  accountName: string,
+  builds: Array<{ platform: 'android' | 'ios'; buildId: string }>
+): Promise<void> {
+  const user = await UserManager.ensureLoggedInAsync();
+  if (builds.length === 1) {
+    const { buildId } = builds[0];
+    const logsUrl = UrlUtils.constructBuildLogsUrl({
+      buildId,
+      username: accountName,
+      v2: true,
+    });
+    log(`Logs url: ${logsUrl}`);
+  } else {
+    builds.forEach(({ buildId, platform }) => {
+      const logsUrl = UrlUtils.constructBuildLogsUrl({
+        buildId,
+        username: user.username,
+        v2: true,
+      });
+      log(`Platform: ${platform}, Logs url: ${logsUrl}`);
+    });
+  }
+}
+
+async function printBuildResults(buildInfo: Array<BuildInfo | null>): Promise<void> {
+  if (buildInfo.length === 1) {
+    log(`Artifact url: ${buildInfo[0]?.artifacts?.buildUrl ?? ''}`);
+  } else {
+    buildInfo
+      .filter(i => i?.status === 'finished')
+      .forEach(build => {
+        log(`Platform: ${build?.platform}, Artifact url: ${build?.artifacts?.buildUrl ?? ''}`);
+      });
+  }
+}
+
+export { makeProjectTarballAsync, printBuildTable, printLogsUrls, printBuildResults };

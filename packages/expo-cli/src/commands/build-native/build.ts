@@ -15,7 +15,6 @@ import { makeProjectTarballAsync } from './utils';
 import log from '../../log';
 import { UploadType, uploadAsync } from '../../uploads';
 import { createProgressTracker } from '../utils/progress';
-import { ensureProjectExistsAsync } from '../../projects';
 
 export interface BuildInfo {
   status: string;
@@ -35,7 +34,6 @@ export interface BuilderContext {
   user: User;
   accountName: string;
   projectName: string;
-  projectId: string;
   exp: ExpoConfig;
 }
 
@@ -54,7 +52,6 @@ export async function createBuilderContextAsync(
   const accountName = exp.owner || user.username;
   const projectName = exp.slug;
 
-  const projectId = await ensureProjectExistsAsync(user, { accountName, projectName });
   return {
     eas,
     projectDir,
@@ -62,11 +59,14 @@ export async function createBuilderContextAsync(
     accountName,
     projectName,
     exp,
-    projectId,
   };
 }
 
-export async function startBuildAsync(client: ApiV2, builder: Builder): Promise<string> {
+export async function startBuildAsync(
+  client: ApiV2,
+  builder: Builder,
+  projectId: string
+): Promise<string> {
   const tarPath = path.join(os.tmpdir(), `${uuidv4()}.tar.gz`);
   try {
     await builder.ensureCredentialsAsync();
@@ -82,7 +82,7 @@ export async function startBuildAsync(client: ApiV2, builder: Builder): Promise<
 
     const job = await builder.prepareJobAsync(archiveUrl);
     log('Starting build');
-    const { buildId } = await client.postAsync(`projects/${builder.ctx.projectId}/builds`, {
+    const { buildId } = await client.postAsync(`projects/${projectId}/builds`, {
       job: job as any,
     });
     return buildId;
@@ -92,11 +92,12 @@ export async function startBuildAsync(client: ApiV2, builder: Builder): Promise<
 }
 
 export async function waitForBuildEndAsync(
-  client: ApiV2,
+  ctx: BuilderContext,
   projectId: string,
   buildIds: string[],
   { timeoutSec = 1800, intervalSec = 30 } = {}
 ): Promise<Array<BuildInfo | null>> {
+  const client = ApiV2.clientForUser(ctx.user);
   log('Waiting for build to complete. You can press Ctrl+C to exit.');
   const spinner = ora().start();
   let time = new Date().getTime();
@@ -148,7 +149,7 @@ export async function waitForBuildEndAsync(
           finished && chalk.green(`Builds finished: ${finished}`),
           unknownState && chalk.red(`Builds in unknown state: ${unknownState}`),
         ]
-          .filter(i => !!i)
+          .filter(i => i)
           .join('\t');
       }
     }

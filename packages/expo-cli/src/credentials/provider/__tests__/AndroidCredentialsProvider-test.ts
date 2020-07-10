@@ -1,7 +1,8 @@
 import { vol } from 'memfs';
 
+import { CredentialsSource } from '../../../easJson';
 import { Context } from '../../context';
-import { AndroidCredentialsProvider } from '../android';
+import AndroidCredentialsProvider from '../AndroidCredentialsProvider';
 
 const providerOptions = {
   projectName: 'slug123',
@@ -134,7 +135,7 @@ describe('AndroidCredentialsProvider', () => {
       expect(hasLocal).toBe(false);
     });
   });
-  describe('when calling useRemoteAsync', () => {
+  describe('when calling getCredentialsAsync with src remote', () => {
     it('should not throw if credentials are valid', async () => {
       mockFetchKeystore.mockImplementation(() => ({
         keystore: 'base64kesytoredata',
@@ -144,7 +145,9 @@ describe('AndroidCredentialsProvider', () => {
       }));
       const provider = new AndroidCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await expect(provider.useRemoteAsync()).resolves.not.toThrowError();
+      await expect(
+        provider.getCredentialsAsync(CredentialsSource.REMOTE)
+      ).resolves.not.toThrowError();
     });
     it('should return false if there are missing fields', async () => {
       mockFetchKeystore.mockImplementation(() => ({
@@ -154,12 +157,12 @@ describe('AndroidCredentialsProvider', () => {
       }));
       const provider = new AndroidCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await expect(provider.useRemoteAsync()).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError();
     });
     it('should return false if there are no credentials', async () => {
       const provider = new AndroidCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await expect(provider.useRemoteAsync()).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError();
     });
   });
   describe('when calling useLocalAsync', () => {
@@ -180,26 +183,9 @@ describe('AndroidCredentialsProvider', () => {
 
       const provider = new AndroidCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await provider.useLocalAsync();
-    });
-    it('should resolve sucesfully when credentials are valid', async () => {
-      vol.fromJSON({
-        './credentials.json': JSON.stringify({
-          android: {
-            keystore: {
-              keystorePath: './test.jks',
-              keystorePassword: 'pass1',
-              keyAlias: 'alias1',
-              keyPassword: 'keypass',
-            },
-          },
-        }),
-        './test.jks': 'somebinarycontent',
-      });
-
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
-      await provider.initAsync();
-      await provider.useLocalAsync();
+      await expect(
+        provider.getCredentialsAsync(CredentialsSource.LOCAL)
+      ).resolves.not.toThrowError();
     });
     it('should throw error if there are missing fields', async () => {
       vol.fromJSON({
@@ -216,7 +202,7 @@ describe('AndroidCredentialsProvider', () => {
       });
       const provider = new AndroidCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await expect(provider.useLocalAsync()).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.LOCAL)).rejects.toThrowError();
     });
     it('should throw error if file is missing', async () => {
       vol.fromJSON({
@@ -233,12 +219,12 @@ describe('AndroidCredentialsProvider', () => {
       });
       const provider = new AndroidCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await expect(provider.useLocalAsync()).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.LOCAL)).rejects.toThrowError();
     });
     it('should return false if there are no credentials.json file', async () => {
       const provider = new AndroidCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await expect(provider.useLocalAsync()).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.LOCAL)).rejects.toThrowError();
     });
   });
   describe('when calling isLocalSyncedAsync', () => {
@@ -316,8 +302,7 @@ describe('AndroidCredentialsProvider', () => {
       });
       const provider = new AndroidCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await provider.useLocalAsync();
-      expect(await provider.getCredentialsAsync()).toEqual({
+      expect(await provider.getCredentialsAsync(CredentialsSource.LOCAL)).toEqual({
         keystore: {
           keystore: 'c29tZWJpbmFyeWNvbnRlbnQ=',
           keystorePassword: 'pass2',
@@ -348,8 +333,7 @@ describe('AndroidCredentialsProvider', () => {
       });
       const provider = new AndroidCredentialsProvider('.', providerOptions);
       await provider.initAsync();
-      await provider.useRemoteAsync();
-      expect(await provider.getCredentialsAsync()).toEqual({
+      expect(await provider.getCredentialsAsync(CredentialsSource.REMOTE)).toEqual({
         keystore: {
           keystore: 'c29tZWJpbmFyeWNvbnRlbnQ=',
           keystorePassword: 'pass1',
