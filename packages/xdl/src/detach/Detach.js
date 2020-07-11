@@ -175,7 +175,7 @@ async function _detachAsync(projectRoot, options) {
     }
     if (!exp.ios.bundleIdentifier) {
       logger.info(
-        `You'll need to specify an iOS bundle identifier. See: https://docs.expo.io/workflow/configuration/#ios`
+        `You'll need to specify an iOS bundle identifier. See: https://docs.expo.io/versions/latest/config/app/#ios`
       );
       const { iosBundleIdentifier } = await inquirer.prompt([
         {
@@ -199,7 +199,7 @@ async function _detachAsync(projectRoot, options) {
     }
     if (!exp.android.package) {
       logger.info(
-        `You'll need to specify an Android package name. See: https://docs.expo.io/workflow/configuration/#android`
+        `You'll need to specify an Android package name. See: https://docs.expo.io/versions/latest/config/app/#android`
       );
       const { androidPackage } = await inquirer.prompt([
         {

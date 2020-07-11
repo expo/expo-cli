@@ -191,7 +191,7 @@ async function makeBreakingChangesToConfigAsync(
             text: chalk.red(
               `Please manually update "androidNavigationBar.visible" according to ${terminalLink(
                 'this documentation',
-                'https://docs.expo.io/workflow/configuration/#androidnavigationbar'
+                'https://docs.expo.io/versions/latest/config/app/#androidnavigationbar'
               )}`
             ),
           });
