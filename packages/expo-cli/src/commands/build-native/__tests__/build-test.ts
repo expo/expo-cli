@@ -9,17 +9,6 @@ const mockedUser = {
   username: 'jester',
 };
 
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
-
 const mockProjectUrl = 'http://fakeurl.com';
 const mockPostAsync = jest.fn();
 jest.mock('fs');
@@ -128,10 +117,23 @@ function setupProjectConfig(overrideConfig: any) {
   });
 }
 
+const originalWarn = console.warn;
+const originalLog = console.log;
+beforeAll(() => {
+  console.warn = jest.fn();
+  console.log = jest.fn();
+});
+afterAll(() => {
+  console.warn = originalWarn;
+  console.log = originalLog;
+});
+
 beforeEach(() => {
   vol.reset();
   mockPostAsync.mockReset();
 });
+
+jest.setTimeout(30000);
 
 describe('build command', () => {
   describe('android generic job', () => {
@@ -148,6 +150,7 @@ describe('build command', () => {
         wait: false,
         profile: 'release',
       });
+      expect(mockPostAsync).toBeCalledTimes(1);
       expect(postArguments?.url).toEqual('projects/fakeProjectId/builds');
       expect(postArguments?.body?.job).toEqual({
         platform: 'android',
@@ -180,6 +183,7 @@ describe('build command', () => {
         wait: false,
         profile: 'release',
       });
+      expect(mockPostAsync).toBeCalledTimes(1);
       expect(postArguments?.url).toEqual('projects/fakeProjectId/builds');
       expect(postArguments?.body?.job).toEqual({
         platform: 'ios',
@@ -198,6 +202,7 @@ describe('build command', () => {
   describe('both platforms generic job', () => {
     it('should go through build process', async () => {
       const postArguments: any[] = [];
+      mockPostAsync.mockReset();
       mockPostAsync.mockImplementationOnce((url, body) => {
         postArguments.push({ url, body });
         return { buildId: 'fakeAndroidBuildId' };
@@ -213,6 +218,7 @@ describe('build command', () => {
         profile: 'release',
       });
 
+      expect(mockPostAsync).toBeCalledTimes(2);
       expect(postArguments).toEqual(
         expect.arrayContaining([
           {
