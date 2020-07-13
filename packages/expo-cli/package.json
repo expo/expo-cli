@@ -62,7 +62,7 @@
     "rimraf": "^3.0.2"
   },
   "dependencies": {
-    "@expo/build-tools": "0.1.8",
+    "@expo/build-tools": "^0.1.10",
     "@expo/bunyan": "3.0.2",
     "@expo/config": "3.2.15",
     "@expo/dev-tools": "0.13.25",

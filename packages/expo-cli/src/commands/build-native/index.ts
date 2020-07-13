@@ -83,7 +83,7 @@ export default function (program: Command) {
     .allowUnknownOption()
     .option('-p --platform <platform>')
     .option('--skip-credentials-check', 'Skip checking credentials', false)
-    .option('--no-wait', 'Exit immediately after triggering build.', false)
+    .option('--no-wait', 'Exit immediately after scheduling build', false)
     .option('--profile <profile>', 'Build profile', 'release')
     .asyncActionProjectDir(buildAction, { checkConfig: true });
 

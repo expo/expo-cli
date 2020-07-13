@@ -107,15 +107,15 @@ class iOSBuilder implements Builder {
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
       type: BuildType.Managed,
-      packageJson: 'packageJson',
-      manifest: 'manifest',
+      packageJson: { example: 'packageJson' },
+      manifest: { example: 'manifest' },
     };
   }
 
   private shouldLoadCredentials(): boolean {
     return (
       (this.buildProfile.workflow === Workflow.Managed &&
-        this.buildProfile.buildType === 'archive') ||
+        this.buildProfile.buildType !== 'simulator') ||
       this.buildProfile.workflow === Workflow.Generic
     );
   }
