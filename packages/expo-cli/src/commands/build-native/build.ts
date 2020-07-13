@@ -103,11 +103,15 @@ export async function waitForBuildEndAsync(
   let time = new Date().getTime();
   const endTime = time + timeoutSec * 1000;
   while (time <= endTime) {
-    const buildInfo: (BuildInfo | null)[] = (
-      await Promise.allSettled(
-        buildIds.map(buildId => client.getAsync(`projects/${projectId}/builds/${buildId}`))
-      )
-    ).map(build => (build.status === 'fulfilled' ? build.value : null));
+    const buildInfo: (BuildInfo | null)[] = await Promise.all(
+      buildIds.map(buildId => {
+        try {
+          return client.getAsync(`projects/${projectId}/builds/${buildId}`);
+        } catch (err) {
+          return null;
+        }
+      })
+    );
     if (buildInfo.length === 1) {
       switch (buildInfo[0]?.status) {
         case 'finished':

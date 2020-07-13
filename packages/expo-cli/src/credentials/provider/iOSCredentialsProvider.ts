@@ -60,18 +60,21 @@ export default class iOSCredentialsProvider implements CredentialsProvider {
   }
 
   public async isLocalSyncedAsync(): Promise<boolean> {
-    const [remote, local] = await Promise.allSettled([this.getRemoteAsync(), this.getLocalAsync()]);
-    if (remote.status === 'fulfilled' && local.status === 'fulfilled') {
-      const r = remote.value;
-      const l = local.value;
+    try {
+      const [remote, local] = await Promise.all([this.getRemoteAsync(), this.getLocalAsync()]);
+      const r = remote;
+      const l = local;
       return !!(
         r.provisioningProfile === l.provisioningProfile &&
         r.distributionCertificate.certP12 === l.distributionCertificate.certP12 &&
         r.distributionCertificate.certPassword === l.distributionCertificate.certPassword
       );
+      return true;
+    } catch (_) {
+      return false;
     }
-    return true;
   }
+
   public async getCredentialsAsync(
     src: CredentialsSource.LOCAL | CredentialsSource.REMOTE
   ): Promise<iOSCredentials> {

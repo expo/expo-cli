@@ -49,13 +49,13 @@ export default class AndroidCredentialsProvider implements CredentialsProvider {
   }
 
   public async isLocalSyncedAsync(): Promise<boolean> {
-    const [remote, local] = await Promise.allSettled([
-      this.ctx.android.fetchKeystore(this.projectFullName),
-      await credentialsJson.readAndroidAsync(this.projectDir),
-    ]);
-    if (remote.status === 'fulfilled' && local.status === 'fulfilled') {
-      const r = remote.value!;
-      const l = local.value.keystore!;
+    try {
+      const [remote, local] = await Promise.all([
+        this.ctx.android.fetchKeystore(this.projectFullName),
+        await credentialsJson.readAndroidAsync(this.projectDir),
+      ]);
+      const r = remote!;
+      const l = local?.keystore!;
       return !!(
         r.keystore === l.keystore &&
         r.keystorePassword === l.keystorePassword &&
@@ -63,8 +63,10 @@ export default class AndroidCredentialsProvider implements CredentialsProvider {
         r.keyPassword === l.keyPassword &&
         this.isValidKeystore(r)
       );
+      return true;
+    } catch (_) {
+      return false;
     }
-    return true;
   }
 
   public async getCredentialsAsync(
