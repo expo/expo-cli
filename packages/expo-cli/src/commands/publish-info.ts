@@ -65,7 +65,7 @@ export default (program: any) => {
 
           // colWidths contains the cell size of each header
           let colWidths: number[] = [];
-          let bigCells = new Set(['publicationId', 'publishedTime']);
+          let bigCells = new Set(['publicationId', 'publishedTime', 'channel']);
           headers.forEach(header => {
             if (bigCells.has(header)) {
               colWidths.push(HORIZ_CELL_WIDTH_BIG);
