@@ -2036,7 +2036,8 @@ export async function getSignedManifestStringAsync(
   if (_cachedSignedManifest.manifestString === manifestString) {
     return _cachedSignedManifest.signedManifest;
   }
-  const { response } = await ApiV2.clientForUser(currentSession).postAsync('manifest/sign', {
+  const user = await UserManager.ensureLoggedInAsync();
+  const { response } = await ApiV2.clientForUser(user).postAsync('manifest/sign', {
     args: {
       remoteUsername: manifest.owner ?? (await UserManager.getCurrentUsernameAsync()),
       remotePackageName: manifest.slug,
