@@ -83,25 +83,33 @@ export function pipeOutputToLogger(
     stderr: null,
   },
   extraFields = {},
-  { stdoutOnly = false } = {}
+  {
+    stdoutOnly = false,
+    loggerLineTransformer,
+  }: { stdoutOnly?: boolean; loggerLineTransformer?: (line: any) => any } = {}
 ) {
   if (stdout) {
-    stdout.on('data', line => logMultiline(line, { ...extraFields, source: 'stdout' }));
+    stdout.on('data', chunk =>
+      logMultiline(chunk, { ...extraFields, source: 'stdout' }, loggerLineTransformer)
+    );
   }
   if (stderr) {
     const source = stdoutOnly ? 'stdout' : 'stderr';
-    stderr.on('data', line => logMultiline(line, { ...extraFields, source }));
+    stderr.on('data', chunk =>
+      logMultiline(chunk, { ...extraFields, source }, loggerLineTransformer)
+    );
   }
 }
 
-function logMultiline(data: any, extraFields: any) {
+function logMultiline(data: any, extraFields: any, loggerLineTransformer?: (line: any) => any) {
   if (!data) {
     return;
   }
   const lines = String(data).split('\n');
   lines.forEach(line => {
-    if (line) {
-      const args = [line];
+    const lineToPrint = loggerLineTransformer ? loggerLineTransformer(line) : line;
+    if (lineToPrint) {
+      const args = [lineToPrint];
       if (!isEmpty(extraFields)) {
         args.unshift(extraFields);
       }
