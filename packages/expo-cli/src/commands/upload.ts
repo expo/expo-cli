@@ -9,7 +9,7 @@ import { SubmissionMode } from './upload/submission-service/types';
 
 const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
     .command('upload:android [projectDir]')
     .alias('ua')
@@ -76,7 +76,7 @@ export default function (program: Command) {
     )
     .option(
       '--apple-id-password <apple-id-password>',
-      'your Apple ID password (you can also set EXPO_APPLE_ID_PASSWORD env variable)'
+      'your Apple ID password (you can also set EXPO_APPLE_PASSWORD env variable)'
     )
     .option(
       '--app-name <app-name>',
@@ -99,7 +99,7 @@ export default function (program: Command) {
     .description(
       'Uploads a standalone app to Apple TestFlight (works on macOS only). Uploads the latest build by default.'
     )
-    .on('--help', function () {
+    .on('--help', function() {
       console.log('Available languages:');
       console.log(`  ${LANGUAGES.join(', ')}`);
       console.log();

@@ -144,14 +144,16 @@ export default class IOSUploader extends BaseUploader {
     const appleCredsKeys = ['appleId', 'appleIdPassword'];
     const result: AppleCreds = pick(this.options, appleCredsKeys);
 
-    if (process.env.EXPO_APPLE_ID) {
-      result.appleId = process.env.EXPO_APPLE_ID;
-    }
+    const appleId = result.appleId ?? process.env.EXPO_APPLE_ID;
+    const appleIdPassword =
+      result.appleIdPassword ??
+      process.env.EXPO_APPLE_PASSWORD ??
+      process.env.EXPO_APPLE_ID_PASSWORD;
+
     if (process.env.EXPO_APPLE_ID_PASSWORD) {
-      result.appleIdPassword = process.env.EXPO_APPLE_ID_PASSWORD;
+      log.error('EXPO_APPLE_ID_PASSWORD is deprecated, please use EXPO_APPLE_PASSWORD instead!');
     }
 
-    const { appleId, appleIdPassword } = result;
     if (appleId && appleIdPassword) {
       return {
         appleId,
