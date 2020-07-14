@@ -37,8 +37,8 @@ Array [
   "dist/assets/f6c6f6c8cb7784254ad00056f6fbd74e (34.1 kB)",
   "dist/assets/fdc01171a7a7ea76b187afcd162dee7d (3.99 kB)",
   "dist/bundles (dir)",
-  "dist/bundles/android-c4ea517338911877202704d353e4b9ed.js (1.13 MB)",
-  "dist/bundles/ios-eff1c9af2e4dcf1c2217f4ada4db2dc6.js (1.12 MB)",
+  "dist/bundles/android-3a2672da067816389ac33f1bcbb4a78a.js (1.13 MB)",
+  "dist/bundles/ios-cb481eb604922019260028d33ea85c47.js (1.12 MB)",
   "dist/ios-index.json (613 B)",
 ]
 `;
@@ -49,7 +49,7 @@ Object {
     "package": "com.example.minimal",
   },
   "assetUrlOverride": "./assets",
-  "bundleUrl": "https://example.com/export-test-app/bundles/android-c4ea517338911877202704d353e4b9ed.js",
+  "bundleUrl": "https://example.com/export-test-app/bundles/android-3a2672da067816389ac33f1bcbb4a78a.js",
   "commitTime": Any<String>,
   "dependencies": Array [
     "expo",
