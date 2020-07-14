@@ -9,12 +9,6 @@ import { Readable } from 'stream';
 import XDLError from '../XDLError';
 import LoggerDetach, { Logger, pipeOutputToLogger } from './Logger';
 
-function _getFilesizeInBytes(path: string) {
-  let stats = fs.statSync(path);
-  let fileSizeInBytes = stats['size'];
-  return fileSizeInBytes;
-}
-
 function parseSdkMajorVersion(expSdkVersion: string) {
   // We assume that the unversioned SDK is the latest
   if (expSdkVersion === 'UNVERSIONED') {
