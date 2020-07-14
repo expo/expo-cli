@@ -116,12 +116,12 @@ export default class IOSUploader extends BaseUploader {
   }
 
   async _getPlatformSpecificOptions(): Promise<{ [key: string]: any }> {
-    const appleIdCrentials = await this._getAppleIdCredentials();
-    const appleTeamId = await this._getAppleTeamId(appleIdCrentials);
+    const appleIdCredentials = await this._getAppleIdCredentials();
+    const appleTeamId = await this._getAppleTeamId(appleIdCredentials);
     const appName = await this._getAppName();
     const otherOptions = pick(this.options, ['language', 'sku', 'companyName']);
     return {
-      ...appleIdCrentials,
+      ...appleIdCredentials,
       appName,
       ...otherOptions,
       appleTeamId,
