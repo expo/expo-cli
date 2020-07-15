@@ -151,7 +151,7 @@ export default class IOSUploader extends BaseUploader {
     }
     if (result.appleIdPassword && process.env.EXPO_APPLE_PASSWORD) {
       log.warn(
-        `You've provided contradictory Apple IDs. You should provide either the EXPO_APPLE_PASSWORD env or the --apple-id-password flag, not both. Falling back to --apple-id-password.`
+        `You've provided contradictory Apple passwords. You should provide either the EXPO_APPLE_PASSWORD env or the --apple-id-password flag, not both. Falling back to --apple-id-password.`
       );
     }
     const appleId = result.appleId ?? process.env.EXPO_APPLE_ID;
