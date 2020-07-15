@@ -2030,6 +2030,7 @@ function getManifestHandler(projectRoot: string) {
 
 export async function getSignedManifestStringAsync(
   manifest: ExpoConfig,
+  // NOTE: we currently ignore the currentSession that is passed in, see the note below about analytics.
   currentSession: { sessionSecret: string }
 ) {
   const manifestString = JSON.stringify(manifest);

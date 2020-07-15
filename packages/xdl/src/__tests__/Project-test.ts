@@ -5,6 +5,12 @@ import { getSignedManifestStringAsync, getUnsignedManifestString } from '../Proj
 
 jest.mock('axios');
 
+jest.mock('../User', () => ({
+  ensureLoggedInAsync: () => ({
+    sessionSecret: 'SECRET',
+  }),
+}));
+
 const mockManifest: ExpoConfig = {
   name: 'Hello',
   slug: 'hello-world',
