@@ -76,6 +76,7 @@ export type AsyncSpawnOptions = SpawnOptions & {
   loggerFields?: any;
   pipeToLogger?: boolean | { stdout?: boolean; stderr?: boolean };
   stdoutOnly?: boolean;
+  loggerLineTransformer?: (line: any) => any;
 };
 
 async function spawnAsyncThrowError(

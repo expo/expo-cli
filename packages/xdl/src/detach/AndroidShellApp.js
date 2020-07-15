@@ -1292,6 +1292,15 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
         ANDROID_KEYSTORE_PATH: androidBuildConfiguration.keystore,
         ANDROID_KEYSTORE_PASSWORD: androidBuildConfiguration.keystorePassword,
       },
+      loggerLineTransformer: line => {
+        if (!line) {
+          return null;
+        } else if (line.match(/^\.+$/)) {
+          return null;
+        } else {
+          return line;
+        }
+      },
     });
 
     if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
