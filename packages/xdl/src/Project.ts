@@ -2036,6 +2036,8 @@ export async function getSignedManifestStringAsync(
   if (_cachedSignedManifest.manifestString === manifestString) {
     return _cachedSignedManifest.signedManifest;
   }
+  // WARNING: Removing the following line will regress analytics, see: https://github.com/expo/expo-cli/pull/2357
+  // TODO: make this more obvious from code
   const user = await UserManager.ensureLoggedInAsync();
   const { response } = await ApiV2.clientForUser(user).postAsync('manifest/sign', {
     args: {
