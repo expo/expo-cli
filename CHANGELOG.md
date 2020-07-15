@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [xdl] Log output from Gradle Wrapper is a lot cleaner now. It doesn't print dots when the appropriate Gradle version is being downloaded ([#2355](https://github.com/expo/expo-cli/pull/2355)).
+
 ### 🐛 Bug fixes
 
 ### 📦 Packages updated
@@ -57,7 +59,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🐛 Bug fixes
 
 - fix(config): use basename to avoid mixed path separators from glob ([#2319](https://github.com/expo/expo-cli/issues/2319))
-[webpack-config] Remove yup validation ([#2335](https://github.com/expo/expo-cli/issues/2335))
+- [webpack-config] Remove yup validation ([#2335](https://github.com/expo/expo-cli/issues/2335))
 
 ### 📦 Packages updated
 
