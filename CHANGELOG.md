@@ -12,6 +12,19 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 📦 Packages updated
 
+## [Tue, 14 Jul 2020 21:37:53 -0700](https://github.com/expo/expo-cli/commit/2607c01f75eae079dd7ce4a8295cc7f47921096c)
+
+### 🐛 Bug fixes
+
+- [xdl] fix analytics for expo start ([#2357](https://github.com/expo/expo-cli/issues/2357))
+- [xdl] Update link to third party library docs
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.27
+- expo-cli@3.22.3
+- @expo/xdl@57.9.24
+
 ## [Thu, 9 Jul 2020 13:45:20 -0700](https://github.com/expo/expo-cli/commit/30981cf510b4f72b365751ca4d83f43ed13a6cdc)
 
 ### 🐛 Bug fixes
