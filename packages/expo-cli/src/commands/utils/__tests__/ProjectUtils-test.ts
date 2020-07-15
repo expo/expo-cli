@@ -105,9 +105,15 @@ describe('findProjectRootAsync', () => {
 
   describe('no valid project', () => {
     it('throws an error if no package.json in directory or its parents', async () => {
-      expect(findProjectRootAsync(exampleProjectPath)).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"No managed or bare projects found. Please make sure you are inside a project folder."`
-      );
+      expect.assertions(1);
+
+      try {
+        await findProjectRootAsync(exampleProjectPath);
+      } catch (e) {
+        expect(e).toMatchInlineSnapshot(
+          `[CommandError: No managed or bare projects found. Please make sure you are inside a project folder.]`
+        );
+      }
     });
   });
 });

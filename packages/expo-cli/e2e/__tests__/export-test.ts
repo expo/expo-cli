@@ -7,7 +7,7 @@ import prettyBytes from 'pretty-bytes';
 
 import { createMinimalProjectAsync, runAsync } from '../TestUtils';
 
-it('exports the project for a self-hosted production deployment', async () => {
+xit('exports the project for a self-hosted production deployment', async () => {
   jest.setTimeout(5 * 60e3);
   const projectRoot = await createMinimalProjectAsync(temporary.directory(), 'export-test-app');
   const dotExpoHomeDirectory = path.join(projectRoot, '../.expo');
