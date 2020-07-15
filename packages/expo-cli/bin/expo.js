@@ -18,7 +18,7 @@ var supportedVersions =
   '* >=14.0.0  <15.0.0 (Current Release)\n';
 
 // If newer than the current release
-if (major > 14) {
+if (major >= 14) {
   console.warn(
     yellow(
       'WARNING: expo-cli has not yet been tested against Node.js ' +
@@ -29,7 +29,7 @@ if (major > 14) {
         supportedVersions
     )
   );
-} else if (!((major === 10 && minor >= 13) || (major === 12 && minor >= 13) || major === 14)) {
+} else if (!((major === 10 && minor >= 13) || (major === 12 && minor >= 13))) {
   console.error(
     red('ERROR: Node.js ' + process.version + ' is no longer supported.\n\n' + supportedVersions)
   );
