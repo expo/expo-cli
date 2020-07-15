@@ -266,6 +266,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
     modules,
     buildType,
     buildMode,
+    gradleArgs,
   } = args;
 
   const exponentDir = exponentDirectory(workingDir);
@@ -330,7 +331,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
   await prepareEnabledModules(shellPath, modules);
 
   if (!args.skipBuild) {
-    await buildShellAppAsync(context, sdkVersion, buildType, buildMode);
+    await buildShellAppAsync(context, sdkVersion, buildType, buildMode, gradleArgs);
   }
 };
 
@@ -1201,7 +1202,13 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   }
 }
 
-async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
+async function buildShellAppAsync(
+  context,
+  sdkVersion,
+  buildType,
+  buildMode,
+  userProvidedGradleArgs
+) {
   let shellPath = shellPathForContext(context);
   const ext = buildType === 'app-bundle' ? 'aab' : 'apk';
 
@@ -1277,7 +1284,7 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
   if (isRelease) {
     const androidBuildConfiguration = context.build.android;
 
-    const gradleArgs = [gradleBuildCommand];
+    const gradleArgs = [...(userProvidedGradleArgs || []), gradleBuildCommand];
     if (process.env.GRADLE_DAEMON_DISABLED) {
       gradleArgs.unshift('--no-daemon');
     }
