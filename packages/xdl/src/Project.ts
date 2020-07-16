@@ -2362,7 +2362,7 @@ export async function setOptionsAsync(
   }
 ): Promise<void> {
   _assertValidProjectRoot(projectRoot); // Check to make sure all options are valid
-  if (options.packagerPort != null && Number.isInteger(options.packagerPort)) {
+  if (options.packagerPort != null && !Number.isInteger(options.packagerPort)) {
     throw new XDLError('INVALID_OPTIONS', 'packagerPort must be an integer');
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, options);
