@@ -9,11 +9,11 @@ import { SubmissionMode } from './upload/submission-service/types';
 
 const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('upload:android [projectDir]')
     .alias('ua')
-    .option('--latest', 'uploads the latest build (default)')
+    .option('--latest', 'uploads the latest build')
     .option('--id <id>', 'id of the build to upload')
     .option('--path <path>', 'path to the .apk/.aab file')
     .option('--url <url>', 'app archive url')
@@ -99,7 +99,7 @@ export default function(program: Command) {
     .description(
       'Uploads a standalone app to Apple TestFlight (works on macOS only). Uploads the latest build by default.'
     )
-    .on('--help', function() {
+    .on('--help', function () {
       console.log('Available languages:');
       console.log(`  ${LANGUAGES.join(', ')}`);
       console.log();
