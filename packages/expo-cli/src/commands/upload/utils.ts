@@ -6,6 +6,8 @@ import fs from 'fs-extra';
 import got from 'got';
 import ProgressBar from 'progress';
 
+import log from '../../log';
+
 const { spawnAsyncThrowError } = ExponentTools;
 const pipeline = promisify(stream.pipeline);
 
@@ -73,7 +75,15 @@ export async function runFastlaneAsync(
 
   const { stderr } = await spawnAsyncThrowError(program, args, spawnOptions);
 
-  const res = JSON.parse(stderr);
+  let res;
+  try {
+    res = JSON.parse(stderr);
+  } catch {
+    // Log unparseable stderr message, but consider it a success
+    log(`Unexpected fastlane message: ${stderr}`);
+    return { result: 'success', rawDump: { message: stderr } };
+  }
+
   if (res.result !== 'failure') {
     return res;
   } else {
