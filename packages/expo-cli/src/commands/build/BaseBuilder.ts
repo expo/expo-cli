@@ -20,13 +20,8 @@ export default class BaseBuilder {
   private user?: User;
   private loadedUser: boolean = false;
 
-  // Lazy load the user authentication check.
-  async getUserAsync(): Promise<User | undefined> {
-    // ensure we don't do multiple fetch requests when the user isn't logged in.
-    if (this.loadedUser) return this.user;
-    this.loadedUser = true;
-    this.user = await UserManager.ensureLoggedInAsync();
-    return this.user;
+  async getUserAsync(): Promise<User> {
+    return await UserManager.ensureLoggedInAsync();
   }
 
   constructor(public projectDir: string, public options: BuilderOptions = {}) {

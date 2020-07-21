@@ -2,6 +2,7 @@ import invariant from 'invariant';
 
 import prompt, { ChoiceType, Question } from '../../prompt';
 import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
+import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
 import { CredentialsManager } from '../route';
 import * as androidView from './AndroidCredentials';
@@ -28,7 +29,9 @@ export class SelectPlatform implements IView {
 
 export class SelectIosExperience implements IView {
   async open(ctx: Context): Promise<IView | null> {
-    const iosCredentials = await ctx.ios.getAllCredentials();
+    const accountName =
+      (ctx.hasProjectContext ? ctx.manifest.owner : undefined) ?? ctx.user.username;
+    const iosCredentials = await ctx.ios.getAllCredentials(accountName);
 
     await displayIosCredentials(iosCredentials);
 
@@ -77,29 +80,44 @@ export class SelectIosExperience implements IView {
     };
 
     const { action } = await prompt(question);
-    return this.handleAction(ctx, action);
+    return this.handleAction(ctx, accountName, action);
   }
 
-  handleAction(ctx: Context, action: string): IView | null {
+  getAppLookupParamsFromContext(ctx: Context): AppLookupParams {
+    const projectName = ctx.manifest.slug;
+    const accountName = ctx.manifest.owner || ctx.user.username;
+    const bundleIdentifier = ctx.manifest.ios?.bundleIdentifier;
+    if (!bundleIdentifier) {
+      throw new Error(`ios.bundleIdentifier need to be defined`);
+    }
+
+    return { accountName, projectName, bundleIdentifier };
+  }
+
+  handleAction(ctx: Context, accountName: string, action: string): IView | null {
     switch (action) {
       case 'create-ios-push':
-        return new iosPushView.CreateIosPush();
+        return new iosPushView.CreateIosPush(accountName);
       case 'update-ios-push':
-        return new iosPushView.UpdateIosPush();
+        return new iosPushView.UpdateIosPush(accountName);
       case 'remove-ios-push':
-        return new iosPushView.RemoveIosPush();
+        return new iosPushView.RemoveIosPush(accountName);
       case 'create-ios-dist':
-        return new iosDistView.CreateIosDist();
+        return new iosDistView.CreateIosDist(accountName);
       case 'update-ios-dist':
-        return new iosDistView.UpdateIosDist();
+        return new iosDistView.UpdateIosDist(accountName);
       case 'remove-ios-dist':
-        return new iosDistView.RemoveIosDist();
-      case 'use-existing-push-ios':
-        return iosPushView.UseExistingPushNotification.withProjectContext(ctx);
-      case 'use-existing-dist-ios':
-        return iosDistView.UseExistingDistributionCert.withProjectContext(ctx);
+        return new iosDistView.RemoveIosDist(accountName);
+      case 'use-existing-push-ios': {
+        const app = this.getAppLookupParamsFromContext(ctx);
+        return new iosPushView.UseExistingPushNotification(app);
+      }
+      case 'use-existing-dist-ios': {
+        const app = this.getAppLookupParamsFromContext(ctx);
+        return new iosDistView.UseExistingDistributionCert(app);
+      }
       case 'remove-provisioning-profile':
-        return new iosProvisionigProfileView.RemoveProvisioningProfile();
+        return new iosProvisionigProfileView.RemoveProvisioningProfile(accountName);
       default:
         throw new Error('Unknown action selected');
     }

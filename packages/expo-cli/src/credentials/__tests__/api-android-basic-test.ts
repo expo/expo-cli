@@ -1,7 +1,6 @@
-import { AndroidApi } from '../api/android';
+import AndroidApi from '../api/AndroidApi';
 import {
   getApiV2MockCredentials,
-  jester,
   testExperienceName,
   testJester2ExperienceName,
   testKeystore,
@@ -27,7 +26,7 @@ describe('AndroidApi - Basic Tests', () => {
 
   beforeEach(() => {
     apiV2Mock = getApiV2MockCredentials();
-    androidApi = new AndroidApi(jester).withApiClient(apiV2Mock);
+    androidApi = new AndroidApi(apiV2Mock);
   });
   it('fetchAll', async () => {
     const credsFromServer = await androidApi.fetchAll();

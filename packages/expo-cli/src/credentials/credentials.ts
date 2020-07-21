@@ -31,10 +31,6 @@ export type IosAppCredentials = {
   };
 };
 
-export type IosAllAppCredentials = IosAppCredentials & {
-  pushCredentials?: appleApi.PushKey;
-};
-
 export type IosPushCredentials = {
   id: number;
   type: 'push-key';

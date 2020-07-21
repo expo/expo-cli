@@ -1,5 +1,6 @@
 import {
   getCtxMock,
+  testAppLookupParams,
   testDistCertsFromApple,
   testIosDistCredential,
 } from '../../test-fixtures/mocks-ios';
@@ -36,13 +37,12 @@ beforeEach(() => {
 
 describe('SetupIosDist', () => {
   it('Basic Case - Create or Reuse', async () => {
-    const ctx = getCtxMock();
-    const distCertOptions = {
-      experienceName: 'testApp',
-      bundleIdentifier: 'test.com.app',
-      nonInteractive: true,
-    };
-    const setupIosDist = new SetupIosDist(distCertOptions);
+    const ctx = getCtxMock({
+      ios: {
+        getDistCert: jest.fn(),
+      },
+    });
+    const setupIosDist = new SetupIosDist(testAppLookupParams, true);
     const createOrReuse = await setupIosDist.open(ctx as any);
     await createOrReuse.open(ctx as any);
 

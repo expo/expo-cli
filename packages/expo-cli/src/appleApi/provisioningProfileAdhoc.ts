@@ -50,6 +50,10 @@ export class ProvisioningProfileAdhocManager {
     delete adhocProvisioningProfile.provisioningProfileCreateTimestamp;
     delete adhocProvisioningProfile.provisioningProfileName;
 
-    return adhocProvisioningProfile;
+    return {
+      ...adhocProvisioningProfile,
+      teamId: this.ctx.team.id,
+      teamName: this.ctx.team.name,
+    };
   }
 }
