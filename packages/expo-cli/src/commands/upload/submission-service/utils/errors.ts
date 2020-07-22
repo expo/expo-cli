@@ -2,6 +2,8 @@ import { SubmissionError } from '../SubmissionService.types';
 import log from '../../../../log';
 
 enum SubmissionErrorCode {
+  ARCHIVE_DOWNLOAD_NOT_FOUND_ERROR = 'SUBMISSION_SERVICE_COMMON_ARCHIVE_DOWNLOAD_NOT_FOUND_ERROR',
+  ARCHIVE_DOWNLOAD_FORBIDDEN_ERROR = 'SUBMISSION_SERVICE_COMMON_ARCHIVE_DOWNLOAD_FORBIDDEN_ERROR',
   ANDROID_UNKNOWN_ERROR = 'SUBMISSION_SERVICE_ANDROID_UNKNOWN_ERROR',
   ANDROID_FIRST_UPLOAD_ERROR = 'SUBMISSION_SERVICE_ANDROID_FIRST_UPLOAD_ERROR',
   ANDROID_OLD_VERSION_CODE_ERROR = 'SUBMISSION_SERVICE_ANDROID_OLD_VERSION_CODE_ERROR',
@@ -9,6 +11,10 @@ enum SubmissionErrorCode {
 }
 
 const SubmissionErrorMessages: Record<SubmissionErrorCode, string> = {
+  [SubmissionErrorCode.ARCHIVE_DOWNLOAD_NOT_FOUND_ERROR]:
+    "Failed to download the archive file (Response code: 404 Not Found). Please make sure the URL you've provided is correct.",
+  [SubmissionErrorCode.ARCHIVE_DOWNLOAD_FORBIDDEN_ERROR]:
+    'Failed to download the archive file (Response code: 403 Forbidden). This is most probably caused by trying to upload an expired build. All Expo builds expire after 30 days.',
   [SubmissionErrorCode.ANDROID_UNKNOWN_ERROR]:
     "We couldn't figure out what went wrong. Please see logs to learn more.",
   [SubmissionErrorCode.ANDROID_FIRST_UPLOAD_ERROR]:
