@@ -1,7 +1,7 @@
 import { SubmissionContext, SubmitCommandOptions } from '../types';
 
 export interface AndroidSubmitCommandOptions extends SubmitCommandOptions {
-  archiveType?: string;
+  type?: string;
   key?: string;
   androidPackage?: string;
   track?: string;

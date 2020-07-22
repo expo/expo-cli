@@ -4,6 +4,7 @@ import { Command } from 'commander';
 
 import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
 import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
+import { AndroidSubmitCommandOptions } from './upload/submission-service/android/types';
 import log from '../log';
 import { SubmissionMode } from './upload/submission-service/types';
 
@@ -42,7 +43,7 @@ export default function (program: Command) {
     .option('--verbose', 'Always print logs from Submission Service')
     .description('Uploads an Android standalone app to Google Play Store.')
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
-    .asyncActionProjectDir(async (projectDir: string, options: any) => {
+    .asyncActionProjectDir(async (projectDir: string, options: AndroidSubmitCommandOptions) => {
       // TODO: remove this once we verify `fastlane supply` works on linux / windows
       if (!options.useSubmissionService) {
         checkRuntimePlatform('android');

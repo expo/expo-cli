@@ -4,12 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AndroidSubmitCommandOptions } from '../types';
 import { SubmissionMode } from '../../types';
 import AndroidSubmitCommand from '../AndroidSubmitCommand';
-import {
-  AndroidSubmissionConfig,
-  ArchiveType,
-  ReleaseStatus,
-  ReleaseTrack,
-} from '../AndroidSubmissionConfig';
+import { ArchiveType, ReleaseStatus, ReleaseTrack } from '../AndroidSubmissionConfig';
 import { mockExpoXDL } from '../../../../../__tests__/mock-utils';
 import { createTestProject } from '../../../../../__tests__/project-utils';
 import { jester } from '../../../../../__tests__/user-fixtures';
@@ -78,8 +73,8 @@ describe(AndroidSubmitCommand, () => {
     it('sends a request to Submission Service', async () => {
       const projectId = uuidv4();
       (SubmissionService.getSubmissionAsync as jest.Mock).mockImplementationOnce(
-        async (id: string): Promise<Submission> => {
-          const actualSubmission = await originalGetSubmissionAsync(id);
+        async (projectId: string, submissionId: string): Promise<Submission> => {
+          const actualSubmission = await originalGetSubmissionAsync(projectId, submissionId);
           return {
             ...actualSubmission,
             status: SubmissionStatus.FINISHED,
@@ -90,7 +85,7 @@ describe(AndroidSubmitCommand, () => {
 
       const options: AndroidSubmitCommandOptions = {
         url: 'http://expo.io/fake.apk',
-        archiveType: 'apk',
+        type: 'apk',
         key: '/google-service-account.json',
         track: 'internal',
         releaseStatus: 'draft',
@@ -129,7 +124,7 @@ describe(AndroidSubmitCommand, () => {
     it('executes supply_android from traveling-fastlane', async () => {
       const options: AndroidSubmitCommandOptions = {
         path: '/apks/fake.apk',
-        archiveType: 'apk',
+        type: 'apk',
         key: '/google-service-account.json',
         track: 'internal',
         releaseStatus: 'draft',
