@@ -14,7 +14,7 @@ const SubmissionErrorMessages: Record<SubmissionErrorCode, string> = {
   [SubmissionErrorCode.ARCHIVE_DOWNLOAD_NOT_FOUND_ERROR]:
     "Failed to download the archive file (Response code: 404 Not Found). Please make sure the URL you've provided is correct.",
   [SubmissionErrorCode.ARCHIVE_DOWNLOAD_FORBIDDEN_ERROR]:
-    'Failed to download the archive file (Response code: 403 Forbidden). This is most probably caused by trying to upload an expired build. All Expo builds expire after 30 days.',
+    'Failed to download the archive file (Response code: 403 Forbidden). This is most probably caused by trying to upload an expired build artifact. All Expo build artifacts expire after 30 days.',
   [SubmissionErrorCode.ANDROID_UNKNOWN_ERROR]:
     "We couldn't figure out what went wrong. Please see logs to learn more.",
   [SubmissionErrorCode.ANDROID_FIRST_UPLOAD_ERROR]:
