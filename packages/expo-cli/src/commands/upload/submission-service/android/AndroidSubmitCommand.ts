@@ -183,7 +183,7 @@ class AndroidSubmitCommand {
   }
 
   private resolveArchiveTypeSource(): ArchiveTypeSource {
-    const { archiveType: rawArchiveType } = this.ctx.commandOptions;
+    const { type: rawArchiveType } = this.ctx.commandOptions;
     if (rawArchiveType) {
       if (!(rawArchiveType in ArchiveType)) {
         throw new Error(

@@ -13,6 +13,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🐛 Bug fixes
 
 - [xdl] Fix incorrect check of the packager port in the "setOptionsAsync" function [#2270](https://github.com/expo/expo-cli/issues/2270)
+- [expo-cli] expo upload:android - Fix passing archive type from command line [#2383](https://github.com/expo/expo-cli/pull/2383)
 
 ### 📦 Packages updated
 
