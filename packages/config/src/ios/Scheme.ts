@@ -1,19 +1,30 @@
 import { InfoPlist, URLScheme } from './IosConfig.types';
 import { ExpoConfig } from '../Config.types';
 
-export function getScheme(config: Pick<ExpoConfig, 'scheme'>): string | null {
-  return typeof config.scheme === 'string' ? config.scheme : null;
+export function getScheme(config: { scheme?: string | string[] }): string[] {
+  if (Array.isArray(config.scheme)) {
+    function validate(value: any): value is string {
+      return typeof value === 'string';
+    }
+    return config.scheme.filter<string>(validate);
+  } else if (typeof config.scheme === 'string') {
+    return [config.scheme];
+  }
+  return [];
 }
 
-export function setScheme(config: Pick<ExpoConfig, 'scheme'>, infoPlist: InfoPlist): InfoPlist {
-  let scheme = getScheme(config);
-  if (!scheme) {
+export function setScheme(
+  config: Pick<ExpoConfig, 'scheme' | 'ios'>,
+  infoPlist: InfoPlist
+): InfoPlist {
+  let scheme = [...getScheme(config), ...getScheme(config.ios ?? {})];
+  if (scheme.length === 0) {
     return infoPlist;
   }
 
   return {
     ...infoPlist,
-    CFBundleURLTypes: [{ CFBundleURLSchemes: [scheme] }],
+    CFBundleURLTypes: [{ CFBundleURLSchemes: scheme }],
   };
 }
 

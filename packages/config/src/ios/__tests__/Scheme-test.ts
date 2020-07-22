@@ -1,17 +1,22 @@
 import { getScheme, getSchemesFromPlist, hasScheme, removeScheme, setScheme } from '../Scheme';
 
 describe('scheme', () => {
-  it(`returns null if no scheme is provided`, () => {
-    expect(getScheme({})).toBe(null);
+  it(`returns empty array if no scheme is provided`, () => {
+    expect(getScheme({})).toStrictEqual([]);
   });
 
   it(`returns the scheme if provided`, () => {
-    expect(getScheme({ scheme: 'myapp' })).toBe('myapp');
+    expect(getScheme({ scheme: 'myapp' })).toStrictEqual(['myapp']);
+    expect(
+      getScheme({
+        scheme: ['myapp', 'other', null],
+      })
+    ).toStrictEqual(['myapp', 'other']);
   });
 
   it(`sets the CFBundleUrlTypes if scheme is given`, () => {
-    expect(setScheme({ scheme: 'myapp' }, {})).toMatchObject({
-      CFBundleURLTypes: [{ CFBundleURLSchemes: ['myapp'] }],
+    expect(setScheme({ scheme: ['myapp', 'more'] }, {})).toMatchObject({
+      CFBundleURLTypes: [{ CFBundleURLSchemes: ['myapp', 'more'] }],
     });
   });
 
