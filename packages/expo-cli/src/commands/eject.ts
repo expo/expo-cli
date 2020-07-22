@@ -46,7 +46,7 @@ async function action(
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('eject [project-dir]')
     .description(
