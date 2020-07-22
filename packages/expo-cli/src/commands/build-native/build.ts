@@ -15,8 +15,16 @@ import { UploadType, uploadAsync } from '../../uploads';
 import { createProgressTracker } from '../utils/progress';
 import { makeProjectTarballAsync } from './utils';
 
+export enum BuildStatus {
+  IN_QUEUE = 'in-queue',
+  IN_PROGRESS = 'in-progress',
+  ERRORED = 'errored',
+  FINISHED = 'finished',
+}
+
 export interface BuildInfo {
-  status: string;
+  id: string;
+  status: BuildStatus;
   platform: Platform;
   createdAt: string;
   artifacts?: BuildArtifacts;
@@ -113,16 +121,16 @@ export async function waitForBuildEndAsync(
     );
     if (buildInfo.length === 1) {
       switch (buildInfo[0]?.status) {
-        case 'finished':
+        case BuildStatus.FINISHED:
           spinner.succeed('Build finished.');
           return buildInfo;
-        case 'in-queue':
+        case BuildStatus.IN_QUEUE:
           spinner.text = 'Build queued...';
           break;
-        case 'in-progress':
+        case BuildStatus.IN_PROGRESS:
           spinner.text = 'Build in progress...';
           break;
-        case 'errored':
+        case BuildStatus.ERRORED:
           spinner.fail('Build failed.');
           throw new Error(`Standalone build failed!`);
         default:
@@ -130,20 +138,25 @@ export async function waitForBuildEndAsync(
           throw new Error(`Unknown status: ${buildInfo} - aborting!`);
       }
     } else {
-      if (buildInfo.filter(build => build?.status === 'finished').length === buildInfo.length) {
+      if (
+        buildInfo.filter(build => build?.status === BuildStatus.FINISHED).length ===
+        buildInfo.length
+      ) {
         spinner.succeed('All build have finished.');
         return buildInfo;
       } else if (
-        buildInfo.filter(build => ['finished', 'errored'].includes(build?.status ?? '')).length ===
-        buildInfo.length
+        buildInfo.filter(build =>
+          build?.status ? [BuildStatus.FINISHED, BuildStatus.ERRORED].includes(build.status) : false
+        ).length === buildInfo.length
       ) {
         spinner.fail('Some of the builds failed.');
         return buildInfo;
       } else {
-        const inQueue = buildInfo.filter(build => build?.status === 'in-queue').length;
-        const inProgress = buildInfo.filter(build => build?.status === 'in-progress').length;
-        const errored = buildInfo.filter(build => build?.status === 'errored').length;
-        const finished = buildInfo.filter(build => build?.status === 'finished').length;
+        const inQueue = buildInfo.filter(build => build?.status === BuildStatus.IN_QUEUE).length;
+        const inProgress = buildInfo.filter(build => build?.status === BuildStatus.IN_PROGRESS)
+          .length;
+        const errored = buildInfo.filter(build => build?.status === BuildStatus.ERRORED).length;
+        const finished = buildInfo.filter(build => build?.status === BuildStatus.FINISHED).length;
         const unknownState = buildInfo.length - inQueue - inProgress - errored - finished;
         spinner.text = [
           inQueue && `Builds in queue: ${inQueue}`,

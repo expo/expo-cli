@@ -31,13 +31,32 @@ async function makeProjectTarballAsync(tarPath: string) {
 }
 
 function printBuildTable(builds: BuildInfo[]) {
-  const headers = ['platform', 'status', 'artifacts'];
-  const colWidths = [10, 15, 80];
-  const refactoredBuilds = builds.map(build => ({
-    ...build,
-    artifacts: build.artifacts?.buildUrl ?? 'not available',
-  }));
+  const headers = ['started', 'platform', 'status', 'artifact'];
+  const colWidths = [24, 10, 13, 41];
+
+  const refactoredBuilds = builds.map(build => {
+    const buildUrl = build.artifacts?.buildUrl;
+
+    return {
+      started: new Intl.DateTimeFormat('en', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(new Date(build.createdAt)),
+      platform: build.platform,
+      status: build.status.replace(/-/g, ' '),
+      artifact: buildUrl
+        ? // Trim the URL here, otherwise if printTableJsonArray trims it, it incorrectly removes the escape to end the link
+          // Which makes everything in the terminal a link after printing the table
+          log.terminalLink(buildUrl.length > 38 ? `${buildUrl.slice(0, 38)}…` : buildUrl, buildUrl)
+        : 'not available',
+    };
+  });
+
   const buildTable = printTableJsonArray(headers, refactoredBuilds, colWidths);
+
   console.log(buildTable);
 }
 
