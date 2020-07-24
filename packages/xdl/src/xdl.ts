@@ -107,7 +107,6 @@ export { ProjectUtils };
 export { Simulator };
 export { ThirdParty };
 export { TurtleApi };
-export { UpdateVersions };
 export { UrlUtils };
 export { UserManager, User, RegistrationData };
 export { UserSettings };
