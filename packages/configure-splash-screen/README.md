@@ -38,7 +38,7 @@ You can use it to configure your native iOS and Android project according to you
 Command syntax:
 
 ```
-yarn run @expo/configure-splash-screen [options] <backgroundColor> [imagePathOrDarkModeBackgroundColor] [imagePath] [darkModeImagePath]
+yarn run configure-splash-screen [options] <backgroundColor> [imagePathOrDarkModeBackgroundColor] [imagePath] [darkModeImagePath]
 ```
 
 ### Arguments
