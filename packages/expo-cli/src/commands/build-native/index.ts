@@ -5,13 +5,13 @@ import { Command } from 'commander';
 import { CredentialsSource, EasConfig, EasJsonReader } from '../../easJson';
 import log from '../../log';
 import { ensureProjectExistsAsync } from '../../projects';
+import AndroidBuilder from './AndroidBuilder';
 import {
   BuilderContext,
   createBuilderContextAsync,
   startBuildAsync,
   waitForBuildEndAsync,
 } from './build';
-import AndroidBuilder from './AndroidBuilder';
 import iOSBuilder from './iOSBuilder';
 import { printBuildResults, printBuildTable, printLogsUrls } from './utils';
 
@@ -26,9 +26,9 @@ async function startBuildsAsync(
   ctx: BuilderContext,
   projectId: string,
   platform: Options['platform']
-): Promise<Array<{ platform: 'android' | 'ios'; buildId: string }>> {
+): Promise<{ platform: 'android' | 'ios'; buildId: string }[]> {
   const client = ApiV2.clientForUser(ctx.user);
-  let scheduledBuilds: Array<{ platform: 'android' | 'ios'; buildId: string }> = [];
+  const scheduledBuilds: { platform: 'android' | 'ios'; buildId: string }[] = [];
   if (['android', 'all'].includes(platform)) {
     const builder = new AndroidBuilder(ctx);
     const buildId = await startBuildAsync(client, builder, projectId);

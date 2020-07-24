@@ -1,5 +1,3 @@
-import path from 'path';
-
 import {
   ProjectTarget,
   getConfig,
@@ -11,6 +9,7 @@ import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import { Reporter } from 'metro';
 // Import only the types here, the values will be imported from the project, at runtime.
 import type MetroConfig from 'metro-config';
+import path from 'path';
 
 const INTERNAL_CALLSITES_REGEX = new RegExp(
   [

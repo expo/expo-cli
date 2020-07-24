@@ -1,7 +1,7 @@
+import spawnAsync from '@expo/spawn-async';
 import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
-import spawnAsync from '@expo/spawn-async';
 
 import * as Versions from '../Versions';
 
@@ -11,7 +11,7 @@ export async function updateSdkVersionsAsync(
   facebookRNVersion: string,
   facebookReactVersion: string
 ) {
-  let versions = await Versions.versionsAsync();
+  const versions = await Versions.versionsAsync();
   versions.sdkVersions[sdkVersion] = {
     ...versions.sdkVersions[sdkVersion],
     expoReactNativeTag: reactNativeTag,
@@ -27,14 +27,14 @@ export async function updateIOSSimulatorBuild(
   appVersion: string,
   sdkVersion?: string
 ) {
-  let tempAppPath = path.join(process.cwd(), 'temp-app.tar.gz');
+  const tempAppPath = path.join(process.cwd(), 'temp-app.tar.gz');
 
   await spawnAsync('tar', ['-zcvf', tempAppPath, '-C', pathToApp, '.'], {
     cwd: process.cwd(),
     stdio: ['ignore', 'ignore', 'inherit'], // only stderr
   });
 
-  let file = fs.createReadStream(tempAppPath);
+  const file = fs.createReadStream(tempAppPath);
 
   console.log('Uploading...');
 
@@ -62,7 +62,7 @@ export async function updateAndroidApk(
   appVersion: string,
   sdkVersion?: string
 ) {
-  let file = fs.createReadStream(pathToApp);
+  const file = fs.createReadStream(pathToApp);
 
   console.log('Uploading...');
 

@@ -1,9 +1,9 @@
 import chalk from 'chalk';
 
-import prompt from '../../prompts';
-import log from '../../log';
 import CommandError, { ErrorCodes } from '../../CommandError';
 import * as appleApi from '../../appleApi';
+import log from '../../log';
+import prompt from '../../prompts';
 import { Context, IView } from '../context';
 import { runCredentialsManager } from '../route';
 import { SetupIosDist } from './SetupIosDist';

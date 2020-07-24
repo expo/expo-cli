@@ -1,10 +1,13 @@
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import ora from 'ora';
-
 import terminalLink from 'terminal-link';
-import prompt, { Question } from '../../prompt';
+
+import { PushKey, PushKeyInfo, PushKeyManager, isPushKey } from '../../appleApi';
 import log from '../../log';
+import prompt, { Question } from '../../prompt';
+import { displayIosUserCredentials } from '../actions/list';
+import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
 import { Context, IView } from '../context';
 import {
   IosAppCredentials,
@@ -12,9 +15,6 @@ import {
   IosPushCredentials,
   pushKeySchema,
 } from '../credentials';
-import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
-import { displayIosUserCredentials } from '../actions/list';
-import { PushKey, PushKeyInfo, PushKeyManager, isPushKey } from '../../appleApi';
 
 const APPLE_KEYS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline('two')} Push Notifactions Keys on your Apple Developer account.

@@ -1,4 +1,5 @@
 import * as ConfigUtils from '@expo/config';
+import * as PackageManager from '@expo/package-manager';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { Command } from 'commander';
@@ -6,7 +7,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import prompts from 'prompts';
 
-import * as PackageManager from '@expo/package-manager';
 import log from '../log';
 
 type Options = { force: boolean };
@@ -48,7 +48,7 @@ async function generateFilesAsync({
   answer: string[];
   templateFolder: string;
 }) {
-  let promises = [];
+  const promises = [];
 
   for (const file of answer) {
     if (Object.keys(dependencyMap).includes(file)) {
@@ -100,7 +100,7 @@ export async function action(projectDir: string = './', options: Options = { for
     ...Object.keys(dependencyMap),
     ...files.map(file => path.join(staticPath, file)),
   ];
-  let values = [];
+  const values = [];
 
   for (const file of allFiles) {
     const localProjectFile = path.resolve(projectDir, file);

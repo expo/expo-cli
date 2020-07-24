@@ -1,3 +1,4 @@
+import camelCase from 'camelcase';
 import {
   API,
   FileInfo,
@@ -10,7 +11,6 @@ import {
   JSXIdentifier,
   TSTypeParameter,
 } from 'jscodeshift';
-import camelCase from 'camelcase';
 
 const namedImports = new Map([
   ['Accelerometer', 'expo-sensors'],

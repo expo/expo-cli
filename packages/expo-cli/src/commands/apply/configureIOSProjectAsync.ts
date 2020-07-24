@@ -1,5 +1,5 @@
-import { IosPlist, UserManager } from '@expo/xdl';
 import { IOSConfig, WarningAggregator, getConfig } from '@expo/config';
+import { IosPlist, UserManager } from '@expo/xdl';
 import path from 'path';
 
 export default async function configureIOSProjectAsync(projectRoot: string) {
@@ -64,9 +64,9 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
 }
 
 async function modifyEntitlementsPlistAsync(projectRoot: string, callback: (plist: any) => any) {
-  let entitlementsPath = IOSConfig.Entitlements.getEntitlementsPath(projectRoot);
-  let directory = path.dirname(entitlementsPath);
-  let filename = path.basename(entitlementsPath, 'plist');
+  const entitlementsPath = IOSConfig.Entitlements.getEntitlementsPath(projectRoot);
+  const directory = path.dirname(entitlementsPath);
+  const filename = path.basename(entitlementsPath, 'plist');
   await IosPlist.modifyAsync(directory, filename, callback);
   await IosPlist.cleanBackupAsync(directory, filename, false);
 }
@@ -108,7 +108,7 @@ function sanitizedName(name: string) {
 function getIOSPaths(projectRoot: string) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
-  let projectName = exp.name;
+  const projectName = exp.name;
   if (!projectName) {
     throw new Error('Your project needs a name in app.json/app.config.js.');
   }

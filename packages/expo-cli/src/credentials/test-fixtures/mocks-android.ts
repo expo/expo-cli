@@ -1,5 +1,6 @@
 import { User } from '@expo/xdl';
 import merge from 'lodash/merge';
+
 import { AndroidCredentials } from '../credentials';
 import { testKeystore2Base64, testKeystoreBase64 } from './mock-keystore';
 

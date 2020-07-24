@@ -1,94 +1,50 @@
 import { install as installSourceMapSupport } from 'source-map-support';
 
 import * as Analytics from './Analytics';
-
 import * as Android from './Android';
-
 import Api from './Api';
-
 import ApiV2 from './ApiV2';
-
 import * as Binaries from './Binaries';
-
 import Config from './Config';
-
 import * as ConnectionStatus from './ConnectionStatus';
-
-import * as Credentials from './credentials/Credentials';
-
-import * as AndroidCredentials from './credentials/AndroidCredentials';
-
-import * as Doctor from './project/Doctor';
-
 import * as Env from './Env';
-
-import * as ExponentTools from './detach/ExponentTools';
-
 import { ErrorCode } from './ErrorCode';
-
 import * as Exp from './Exp';
-
-import * as ExpSchema from './project/ExpSchema';
-
 import * as FileSystem from './FileSystem';
-
-import FormData from './tools/FormData';
-
-import * as FsCache from './tools/FsCache';
-
-import * as ImageUtils from './tools/ImageUtils';
-
-import * as StandaloneBuild from './StandaloneBuild';
-
-import * as IosIcons from './detach/IosIcons';
-
-import * as IosKeychain from './detach/IosKeychain';
-
-import * as IosPlist from './detach/IosPlist';
-
 import Logger from './Logger';
-
-import LoggerDetach from './detach/Logger';
-
-import * as ModuleVersion from './tools/ModuleVersion';
-
-import * as Modules from './modules/Modules';
-
 import NotificationCode from './NotificationCode';
-
-import PackagerLogsStream, { LogRecord, LogUpdater } from './logs/PackagerLogsStream';
-
-import * as PKCS12Utils from './detach/PKCS12Utils';
-
 import * as Project from './Project';
-
 import * as ProjectSettings from './ProjectSettings';
-
-import * as ProjectUtils from './project/ProjectUtils';
-
 import * as Simulator from './Simulator';
-
+import * as StandaloneBuild from './StandaloneBuild';
 import * as ThirdParty from './ThirdParty';
-
 import TurtleApi from './TurtleApi';
-
-import * as UpdateVersions from './tools/UpdateVersions';
-
 import * as UrlUtils from './UrlUtils';
-
 import UserManager, { RegistrationData, User } from './User';
-
 import UserSettings from './UserSettings';
-
 import * as Utils from './Utils';
-
 import * as Versions from './Versions';
-
 import * as Web from './Web';
-
 import * as Webpack from './Webpack';
-
 import XDLError from './XDLError';
+import * as AndroidCredentials from './credentials/AndroidCredentials';
+import * as Credentials from './credentials/Credentials';
+import * as ExponentTools from './detach/ExponentTools';
+import * as IosIcons from './detach/IosIcons';
+import * as IosKeychain from './detach/IosKeychain';
+import * as IosPlist from './detach/IosPlist';
+import LoggerDetach from './detach/Logger';
+import * as PKCS12Utils from './detach/PKCS12Utils';
+import PackagerLogsStream, { LogRecord, LogUpdater } from './logs/PackagerLogsStream';
+import * as Modules from './modules/Modules';
+import * as Doctor from './project/Doctor';
+import * as ExpSchema from './project/ExpSchema';
+import * as ProjectUtils from './project/ProjectUtils';
+import FormData from './tools/FormData';
+import * as FsCache from './tools/FsCache';
+import * as ImageUtils from './tools/ImageUtils';
+import * as ModuleVersion from './tools/ModuleVersion';
+import * as UpdateVersions from './tools/UpdateVersions';
 export { ConnectionStatus };
 
 if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {

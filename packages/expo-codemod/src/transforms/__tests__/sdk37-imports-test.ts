@@ -1,5 +1,6 @@
 // @ts-ignore
 import { defineInlineTest } from 'jscodeshift/dist/testUtils';
+
 import transform from '../sdk37-imports';
 
 // Unchanged code

@@ -1,11 +1,10 @@
+import { codeFrameColumns } from '@babel/code-frame';
 import { readFile, readFileSync } from 'fs';
-import { promisify } from 'util';
-
+import JSON5 from 'json5';
 import get from 'lodash/get';
 import set from 'lodash/set';
-import JSON5 from 'json5';
+import { promisify } from 'util';
 import writeFileAtomic from 'write-file-atomic';
-import { codeFrameColumns } from '@babel/code-frame';
 
 import JsonFileError from './JsonFileError';
 
@@ -100,7 +99,7 @@ export default class JsonFile<TJSONObject extends JSONObject> {
   }
 
   async mergeAsync(
-    sources: Partial<TJSONObject> | Array<Partial<TJSONObject>>,
+    sources: Partial<TJSONObject> | Partial<TJSONObject>[],
     options?: Options<TJSONObject>
   ): Promise<TJSONObject> {
     return mergeAsync<TJSONObject>(this.file, sources, this._getOptions(options));
@@ -110,7 +109,7 @@ export default class JsonFile<TJSONObject extends JSONObject> {
     return deleteKeyAsync(this.file, key, this._getOptions(options));
   }
 
-  async deleteKeysAsync(keys: Array<string>, options?: Options<TJSONObject>) {
+  async deleteKeysAsync(keys: string[], options?: Options<TJSONObject>) {
     return deleteKeysAsync(this.file, keys, this._getOptions(options));
   }
 
@@ -134,7 +133,7 @@ function read<TJSONObject extends JSONObject>(
   try {
     json = readFileSync(file, 'utf8');
   } catch (error) {
-    let defaultValue = cantReadFileDefault(options);
+    const defaultValue = cantReadFileDefault(options);
     if (defaultValue === undefined) {
       throw new JsonFileError(`Can't read JSON file: ${file}`, error, error.code);
     } else {
@@ -152,7 +151,7 @@ async function readAsync<TJSONObject extends JSONObject>(
   try {
     json = await readFileAsync(file, 'utf8');
   } catch (error) {
-    let defaultValue = cantReadFileDefault(options);
+    const defaultValue = cantReadFileDefault(options);
     if (defaultValue === undefined) {
       throw new JsonFileError(`Can't read JSON file: ${file}`, error, error.code);
     } else {
@@ -173,11 +172,11 @@ function parseJsonString<TJSONObject extends JSONObject>(
       return JSON.parse(json);
     }
   } catch (e) {
-    let defaultValue = jsonParseErrorDefault(options);
+    const defaultValue = jsonParseErrorDefault(options);
     if (defaultValue === undefined) {
-      let location = locationFromSyntaxError(e, json);
+      const location = locationFromSyntaxError(e, json);
       if (location) {
-        let codeFrame = codeFrameColumns(json, { start: location });
+        const codeFrame = codeFrameColumns(json, { start: location });
         e.codeFrame = codeFrame;
         e.message += `\n${codeFrame}`;
       }
@@ -239,7 +238,7 @@ async function setAsync<TJSONObject extends JSONObject>(
 
 async function mergeAsync<TJSONObject extends JSONObject>(
   file: string,
-  sources: Partial<TJSONObject> | Array<Partial<TJSONObject>>,
+  sources: Partial<TJSONObject> | Partial<TJSONObject>[],
   options?: Options<TJSONObject>
 ): Promise<TJSONObject> {
   const object = await readAsync(file, options);
@@ -261,14 +260,14 @@ async function deleteKeyAsync<TJSONObject extends JSONObject>(
 
 async function deleteKeysAsync<TJSONObject extends JSONObject>(
   file: string,
-  keys: Array<string>,
+  keys: string[],
   options?: Options<TJSONObject>
 ): Promise<TJSONObject> {
   const object = await readAsync(file, options);
   let didDelete = false;
 
   for (let i = 0; i < keys.length; i++) {
-    let key = keys[i];
+    const key = keys[i];
     if (object.hasOwnProperty(key)) {
       delete object[key];
       didDelete = true;
@@ -327,10 +326,10 @@ function locationFromSyntaxError(error: any, sourceString: string) {
     return { line: error.lineNumber, column: error.columnNumber };
   }
   // JSON SyntaxError only includes the index in the message.
-  let match = /at position (\d+)/.exec(error.message);
+  const match = /at position (\d+)/.exec(error.message);
   if (match) {
-    let index = parseInt(match[1], 10);
-    let lines = sourceString.slice(0, index + 1).split('\n');
+    const index = parseInt(match[1], 10);
+    const lines = sourceString.slice(0, index + 1).split('\n');
     return { line: lines.length, column: lines[lines.length - 1].length };
   }
 

@@ -1,7 +1,7 @@
+import chalk from 'chalk';
+import { IconOptions, ProjectOptions, generateFaviconAsync } from 'expo-pwa';
 import { Compiler, compilation } from 'webpack';
 
-import { IconOptions, ProjectOptions, generateFaviconAsync } from 'expo-pwa';
-import chalk from 'chalk';
 import ModifyHtmlWebpackPlugin, { HTMLLinkNode, HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 
 function logNotice(type: string, message: string) {

@@ -1,6 +1,5 @@
-import * as iosDistView from './IosDistCert';
-
 import { Context, IView } from '../context';
+import * as iosDistView from './IosDistCert';
 
 export class SetupIosDist implements IView {
   _experienceName: string;

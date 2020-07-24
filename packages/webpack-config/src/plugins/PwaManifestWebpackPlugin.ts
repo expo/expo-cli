@@ -1,5 +1,6 @@
-import { Compiler, Plugin, compilation } from 'webpack';
 import * as path from 'path';
+import { Compiler, Plugin, compilation } from 'webpack';
+
 import JsonWebpackPlugin from './JsonWebpackPlugin';
 import { HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 

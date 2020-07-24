@@ -4,6 +4,9 @@ import path from 'path';
 import rimraf from 'rimraf';
 
 import Api from '../Api';
+import * as Utils from '../Utils';
+import * as Versions from '../Versions';
+import * as Modules from '../modules/Modules';
 import {
   isDirectory,
   parseSdkMajorVersion,
@@ -11,12 +14,9 @@ import {
   spawnAsyncThrowError,
   transformFileContentsAsync,
 } from './ExponentTools';
-import { renderPodfileAsync } from './IosPodsTools.js';
 import * as IosPlist from './IosPlist';
+import { renderPodfileAsync } from './IosPodsTools.js';
 import logger from './Logger';
-import * as Utils from '../Utils';
-import * as Versions from '../Versions';
-import * as Modules from '../modules/Modules';
 import installPackagesAsync from './installPackagesAsync';
 
 export { setBundleIdentifier } from './IosSetBundleIdentifier';
@@ -119,7 +119,10 @@ async function _renameAndMoveProjectFilesAsync(context, projectDirectory, projec
   ];
 
   filesToMove.forEach(async fileName => {
-    let destFileName = path.join(path.dirname(fileName), `${projectName}${path.extname(fileName)}`);
+    const destFileName = path.join(
+      path.dirname(fileName),
+      `${projectName}${path.extname(fileName)}`
+    );
     await spawnAsyncThrowError('/bin/mv', [
       path.join(projectDirectory, fileName),
       path.join(projectDirectory, destFileName),
@@ -153,7 +156,7 @@ async function _renderPodfileFromTemplateAsync(
 ) {
   const { iosProjectDirectory, projectName } = getPaths(context);
   let podfileTemplateFilename;
-  let podfileSubstitutions = {
+  const podfileSubstitutions = {
     TARGET_NAME: projectName,
   };
   let reactNativeDependencyPath;
@@ -369,7 +372,7 @@ function getPaths(context) {
   } else if (context.isAnonymous()) {
     projectName = 'ExpoKitApp';
   } else if (context.config && context.config.name) {
-    let projectNameLabel = context.config.name;
+    const projectNameLabel = context.config.name;
     projectName = projectNameLabel.replace(/[^a-z0-9_-]/gi, '-').toLowerCase();
   } else {
     throw new Error('Cannot configure an Expo project with no name.');
@@ -435,7 +438,7 @@ async function getNewestSdkVersionSupportedAsync(context) {
     });
     let highestMajorComponent = 0;
     allVersions.forEach(version => {
-      let majorComponent = parseSdkMajorVersion(version);
+      const majorComponent = parseSdkMajorVersion(version);
       if (majorComponent > highestMajorComponent) {
         highestMajorComponent = majorComponent;
         newestVersion = version;

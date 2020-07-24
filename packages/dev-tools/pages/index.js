@@ -1,18 +1,15 @@
-import React from 'react';
-import gql from 'graphql-tag';
-import { ApolloProvider, Query } from 'react-apollo';
-import { SubscriptionClient } from 'subscriptions-transport-ws';
-import pTimeout from 'p-timeout';
-
-import * as State from 'app/common/state';
 import createApolloClient from 'app/common/createApolloClient';
+import * as State from 'app/common/state';
 import { initStore } from 'app/common/store';
-
-import withRedux from 'app/higher-order/withRedux';
-
-import Root from 'app/components/Root';
 import IndexPageErrors from 'app/components/IndexPageErrors';
 import ProjectManager from 'app/components/ProjectManager';
+import Root from 'app/components/Root';
+import withRedux from 'app/higher-order/withRedux';
+import gql from 'graphql-tag';
+import pTimeout from 'p-timeout';
+import React from 'react';
+import { ApolloProvider, Query } from 'react-apollo';
+import { SubscriptionClient } from 'subscriptions-transport-ws';
 
 const MessageFragment = gql`
   fragment MessageFragment on Message {

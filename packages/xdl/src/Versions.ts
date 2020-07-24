@@ -5,9 +5,9 @@ import path from 'path';
 import semver from 'semver';
 
 import ApiV2Client from './ApiV2';
-import { Cacher } from './tools/FsCache';
 import UserManager from './User';
 import XDLError from './XDLError';
+import { Cacher } from './tools/FsCache';
 
 export type SDKVersion = {
   androidExpoViewUrl?: string;
@@ -79,7 +79,7 @@ export async function setVersionsAsync(value: any) {
 // the versions endpoint, but in some cases we only want to list out released
 // versions
 export async function releasedSdkVersionsAsync(): Promise<SDKVersions> {
-  let sdkVersions = await sdkVersionsAsync();
+  const sdkVersions = await sdkVersionsAsync();
   return pickBy(sdkVersions, (data, _sdkVersionString) => !!data.releaseNoteUrl);
 }
 

@@ -2,10 +2,10 @@ import chalk from 'chalk';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
-import { runAction, travelingFastlane } from './fastlane';
-import { nonEmptyInput } from '../validators';
 import log from '../log';
 import prompt from '../prompt';
+import { nonEmptyInput } from '../validators';
+import { runAction, travelingFastlane } from './fastlane';
 
 const APPLE_IN_HOUSE_TEAM_TYPE = 'in-house';
 

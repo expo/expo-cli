@@ -1,7 +1,7 @@
 import * as colorString from 'color-string';
 import { vol } from 'memfs';
-
 import { dirname } from 'path';
+
 import configureColorsXml from '../Colors.xml';
 import reactNativeProject from './fixtures/react-native-project-structure';
 

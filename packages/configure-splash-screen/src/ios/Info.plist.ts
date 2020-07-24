@@ -2,8 +2,8 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import StateManager from '../StateManager';
-import { replace, insert } from '../string-helpers';
 import { StatusBarOptions, StatusBarStyle } from '../constants';
+import { replace, insert } from '../string-helpers';
 
 const INFO_PLIST_FILE_PATH = 'Info.plist';
 

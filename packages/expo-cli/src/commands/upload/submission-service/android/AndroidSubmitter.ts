@@ -1,13 +1,23 @@
-import os from 'os';
-
 import { UserManager } from '@expo/xdl';
 import Table from 'cli-table3';
 import fs from 'fs-extra';
-import ora from 'ora';
 import chunk from 'lodash/chunk';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
+import ora from 'ora';
+import os from 'os';
 
+import log from '../../../../log';
+import { ensureProjectExistsAsync } from '../../../../projects';
+import { sleep } from '../../../utils/promise';
+import SubmissionService, { DEFAULT_CHECK_INTERVAL_MS } from '../SubmissionService';
+import { Platform, Submission, SubmissionStatus } from '../SubmissionService.types';
+import { Archive, ArchiveSource, getArchiveAsync } from '../archive-source';
+import { SubmissionMode } from '../types';
+import { getExpoConfig } from '../utils/config';
+import { displayLogs } from '../utils/logs';
+import { runTravelingFastlaneAsync } from '../utils/travelingFastlane';
+import { AndroidPackageSource, getAndroidPackageAsync } from './AndroidPackageSource';
 import {
   AndroidSubmissionConfig,
   ArchiveType,
@@ -15,19 +25,7 @@ import {
   ReleaseTrack,
 } from './AndroidSubmissionConfig';
 import { ServiceAccountSource, getServiceAccountAsync } from './ServiceAccountSource';
-import { AndroidPackageSource, getAndroidPackageAsync } from './AndroidPackageSource';
 import { AndroidSubmissionContext } from './types';
-
-import SubmissionService, { DEFAULT_CHECK_INTERVAL_MS } from '../SubmissionService';
-import { Platform, Submission, SubmissionStatus } from '../SubmissionService.types';
-import { Archive, ArchiveSource, getArchiveAsync } from '../archive-source';
-import { displayLogs } from '../utils/logs';
-import { runTravelingFastlaneAsync } from '../utils/travelingFastlane';
-import { SubmissionMode } from '../types';
-import { getExpoConfig } from '../utils/config';
-import { sleep } from '../../../utils/promise';
-import log from '../../../../log';
-import { ensureProjectExistsAsync } from '../../../../projects';
 
 export interface AndroidSubmissionOptions
   extends Pick<AndroidSubmissionConfig, 'track' | 'releaseStatus'> {
@@ -55,7 +53,7 @@ class AndroidSubmitter {
   }
 
   private async submitOnlineAsync(resolvedSourceOptions: ResolvedSourceOptions): Promise<void> {
-    let user = await UserManager.ensureLoggedInAsync();
+    const user = await UserManager.ensureLoggedInAsync();
     const exp = getExpoConfig(this.ctx.projectDir);
     const projectId = await ensureProjectExistsAsync(user, {
       accountName: exp.owner || user.username,

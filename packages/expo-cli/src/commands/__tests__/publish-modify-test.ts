@@ -1,13 +1,13 @@
-import { vol } from 'memfs';
 import { ApiV2 } from '@expo/xdl';
+import { vol } from 'memfs';
 
+import { mockExpoXDL } from '../../__tests__/mock-utils';
+import { createTestProject } from '../../__tests__/project-utils';
+import { jester } from '../../credentials/test-fixtures/mocks-ios';
 import {
   rollbackPublicationFromChannelAsync,
   setPublishToChannelAsync,
 } from '../utils/PublishUtils';
-import { jester } from '../../credentials/test-fixtures/mocks-ios';
-import { mockExpoXDL } from '../../__tests__/mock-utils';
-import { createTestProject } from '../../__tests__/project-utils';
 
 jest.mock('fs');
 jest.mock('resolve-from');

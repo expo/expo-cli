@@ -1,6 +1,6 @@
-import ora from 'ora';
-import dateformat from 'dateformat';
 import chalk from 'chalk';
+import dateformat from 'dateformat';
+import ora from 'ora';
 
 import CommandError, { ErrorCodes } from '../CommandError';
 import { AppleCtx } from './authenticate';

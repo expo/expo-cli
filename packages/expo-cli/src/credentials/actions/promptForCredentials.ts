@@ -1,10 +1,10 @@
-import path from 'path';
-import untildify from 'untildify';
 import fs from 'fs-extra';
 import once from 'lodash/once';
+import path from 'path';
+import untildify from 'untildify';
 
-import prompts, { Question as PromptQuestion } from '../../prompts';
 import log from '../../log';
+import prompts, { Question as PromptQuestion } from '../../prompts';
 import * as validators from '../../validators';
 
 export type Question = {
@@ -22,7 +22,7 @@ export type CredentialSchema<T> = {
   canReuse?: boolean;
   dependsOn?: string;
   name: string;
-  required: Array<string>;
+  required: string[];
   questions: {
     [key: string]: Question;
   };

@@ -6,10 +6,10 @@ import {
   getEntryPoint,
   getPossibleProjectRoot,
 } from '@expo/config/paths';
+import findWorkspaceRoot from 'find-yarn-workspace-root';
 import fs from 'fs';
 import path from 'path';
 import url from 'url';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
 
 import { Environment, FilePaths, InputEnvironment } from '../types';
 import getMode from './getMode';

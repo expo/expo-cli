@@ -5,11 +5,11 @@ import url from 'url';
 import validator from 'validator';
 
 import Config from './Config';
-import ip from './ip';
-import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
+import ip from './ip';
+import * as ProjectUtils from './project/ProjectUtils';
 
 export async function constructBundleUrlAsync(
   projectRoot: string,
@@ -29,16 +29,16 @@ export async function constructManifestUrlAsync(
 
 // gets the base manifest URL and removes the scheme
 export async function constructHostUriAsync(projectRoot: string, requestHostname?: string) {
-  let urlString = await constructUrlAsync(projectRoot, null, false, requestHostname);
+  const urlString = await constructUrlAsync(projectRoot, null, false, requestHostname);
   // we need to use node's legacy urlObject api since the newer one doesn't like empty protocols
-  let urlObj = url.parse(urlString);
+  const urlObj = url.parse(urlString);
   urlObj.protocol = '';
   urlObj.slashes = false;
   return url.format(urlObj);
 }
 
 export async function constructLogUrlAsync(projectRoot: string, requestHostname?: string) {
-  let baseUrl = await constructUrlAsync(projectRoot, { urlType: 'http' }, false, requestHostname);
+  const baseUrl = await constructUrlAsync(projectRoot, { urlType: 'http' }, false, requestHostname);
   return `${baseUrl}/logs`;
 }
 
@@ -47,7 +47,7 @@ export async function constructUrlWithExtensionAsync(
   entryPoint: string,
   ext: string,
   requestHostname?: string,
-  opts?: Object
+  opts?: object
 ) {
   const defaultOpts = {
     dev: false,
@@ -63,10 +63,10 @@ export async function constructUrlWithExtensionAsync(
     requestHostname
   );
 
-  let mainModulePath = guessMainModulePath(entryPoint);
+  const mainModulePath = guessMainModulePath(entryPoint);
   bundleUrl += `/${mainModulePath}.${ext}`;
 
-  let queryParams = await constructBundleQueryParamsAsync(projectRoot, opts);
+  const queryParams = await constructBundleQueryParamsAsync(projectRoot, opts);
   return `${bundleUrl}?${queryParams}`;
 }
 
@@ -74,7 +74,7 @@ export async function constructPublishUrlAsync(
   projectRoot: string,
   entryPoint: string,
   requestHostname?: string,
-  opts?: Object
+  opts?: object
 ) {
   return await constructUrlWithExtensionAsync(
     projectRoot,
@@ -125,15 +125,15 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
 
   queryParams += '&hot=false';
 
-  let { exp } = getConfig(projectRoot);
+  const { exp } = getConfig(projectRoot);
 
   // SDK11 to SDK32 require us to inject hashAssetFiles through the params, but this is not
   // needed with SDK33+
-  let supportsAssetPlugins = Versions.gteSdkVersion(exp, '11.0.0');
-  let usesAssetPluginsQueryParam = supportsAssetPlugins && Versions.lteSdkVersion(exp, '32.0.0');
+  const supportsAssetPlugins = Versions.gteSdkVersion(exp, '11.0.0');
+  const usesAssetPluginsQueryParam = supportsAssetPlugins && Versions.lteSdkVersion(exp, '32.0.0');
   if (usesAssetPluginsQueryParam) {
     // Use an absolute path here so that we can not worry about symlinks/relative requires
-    let pluginModule = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+    const pluginModule = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
     queryParams += `&assetPlugin=${encodeURIComponent(pluginModule)}`;
   } else if (!supportsAssetPlugins) {
     // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
@@ -150,7 +150,7 @@ export async function constructWebAppUrlAsync(
   projectRoot: string,
   options: { hostType?: 'localhost' | 'lan' | 'tunnel' } = {}
 ): Promise<string | null> {
-  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.webpackServerPort) {
     return null;
   }
@@ -173,7 +173,7 @@ export async function constructUrlAsync(
   requestHostname?: string
 ): Promise<string> {
   if (opts) {
-    let schema = joi.object().keys({
+    const schema = joi.object().keys({
       urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol'),
       lanType: joi.any().valid('ip', 'hostname'),
       hostType: joi.any().valid('localhost', 'lan', 'tunnel'),
@@ -190,14 +190,14 @@ export async function constructUrlAsync(
     }
   }
 
-  let defaultOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
+  const defaultOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
   if (!opts) {
     opts = defaultOpts;
   } else {
     opts = Object.assign({}, defaultOpts, opts);
   }
 
-  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
 
   let protocol;
   if (opts.urlType === 'http') {
@@ -207,7 +207,7 @@ export async function constructUrlAsync(
   } else {
     protocol = 'exp';
 
-    let { exp } = getConfig(projectRoot);
+    const { exp } = getConfig(projectRoot);
     if (exp.detach) {
       if (exp.scheme && Versions.gteSdkVersion(exp, '27.0.0')) {
         protocol = exp.scheme;
@@ -257,7 +257,7 @@ export async function constructUrlAsync(
     }
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
   } else {
-    let ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.expoServerNgrokUrl;
+    const ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.expoServerNgrokUrl;
     if (!ngrokUrl || typeof ngrokUrl !== 'string') {
       // TODO: if you start with --tunnel flag then this warning will always
       // show up right before the tunnel starts...
@@ -275,7 +275,7 @@ export async function constructUrlAsync(
       );
     } else {
       ProjectUtils.clearNotification(projectRoot, 'tunnel-url-not-found');
-      let pnu = url.parse(ngrokUrl);
+      const pnu = url.parse(ngrokUrl);
       hostname = pnu.hostname;
       port = pnu.port;
     }
@@ -311,11 +311,11 @@ export function guessMainModulePath(entryPoint: string): string {
 }
 
 export function randomIdentifier(length: number = 6): string {
-  let alphabet = '23456789qwertyuipasdfghjkzxcvbnm';
+  const alphabet = '23456789qwertyuipasdfghjkzxcvbnm';
   let result = '';
   for (let i = 0; i < length; i++) {
-    let j = Math.floor(Math.random() * alphabet.length);
-    let c = alphabet.substr(j, 1);
+    const j = Math.floor(Math.random() * alphabet.length);
+    const c = alphabet.substr(j, 1);
     result += c;
   }
   return result;

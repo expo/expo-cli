@@ -1,17 +1,17 @@
+import { ProjectTarget, getDefaultTarget } from '@expo/config';
+import { Project, ProjectSettings, UrlUtils } from '@expo/xdl';
 import axios from 'axios';
+import { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
-import validator from 'validator';
 import path from 'path';
 import targz from 'targz';
-import { Project, ProjectSettings, UrlUtils } from '@expo/xdl';
-import { ProjectTarget, getDefaultTarget } from '@expo/config';
-import { Command } from 'commander';
+import validator from 'validator';
 
-import prompt, { Question } from '../prompt';
-import log from '../log';
-import { installExitHooks } from '../exit';
 import CommandError from '../CommandError';
+import { installExitHooks } from '../exit';
+import log from '../log';
+import prompt, { Question } from '../prompt';
 
 type Options = {
   outputDir: string;
@@ -221,7 +221,7 @@ const decompress = async (src: string, dest: string): Promise<null> => {
   });
 };
 
-function collect<T>(val: T, memo: Array<T>): Array<T> {
+function collect<T>(val: T, memo: T[]): T[] {
   memo.push(val);
   return memo;
 }

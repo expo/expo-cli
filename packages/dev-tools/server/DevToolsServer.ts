@@ -1,18 +1,18 @@
 import { Logger, PackagerLogsStream, ProjectSettings, ProjectUtils } from '@expo/xdl';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
-// @ts-ignore
-import * as graphql from 'graphql';
+import base64url from 'base64url';
+import crypto from 'crypto';
 import express from 'express';
 import freeportAsync from 'freeport-async';
-import path from 'path';
+import * as graphql from 'graphql';
 import http from 'http';
-import crypto from 'crypto';
-import base64url from 'base64url';
+import path from 'path';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
+// @ts-ignore
 
 import AsyncIterableRingBuffer from './graphql/AsyncIterableRingBuffer';
 import GraphQLSchema from './graphql/GraphQLSchema';
-import createContext, { PROCESS_SOURCE } from './graphql/createContext';
 import Issues, { Issue } from './graphql/Issues';
+import createContext, { PROCESS_SOURCE } from './graphql/createContext';
 
 const serverStartTimeUTCString = new Date().toUTCString();
 

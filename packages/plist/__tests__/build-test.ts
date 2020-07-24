@@ -1,4 +1,5 @@
 import assert from 'assert';
+
 import plist from '../src';
 
 describe('plist', function () {

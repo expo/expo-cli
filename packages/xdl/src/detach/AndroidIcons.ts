@@ -49,7 +49,7 @@ async function _resizeIconsAsync(
   url: string,
   isDetached: boolean
 ) {
-  let baseImagePath = path.join(resPath, filename);
+  const baseImagePath = path.join(resPath, filename);
 
   try {
     if (isDetached) {
@@ -65,8 +65,8 @@ async function _resizeIconsAsync(
   await Promise.all(
     Object.entries(iconScales).map(async ([folderSuffix, iconScale]) => {
       // adaptive icons (mdpiSize 108) must be placed in a -v26 folder
-      let subdirectoryName = `${prefix}${folderSuffix}${mdpiSize === 108 ? '-v26' : ''}`;
-      let destinationPath = path.join(resPath, subdirectoryName);
+      const subdirectoryName = `${prefix}${folderSuffix}${mdpiSize === 108 ? '-v26' : ''}`;
+      const destinationPath = path.join(resPath, subdirectoryName);
       await spawnAsyncThrowError('/bin/cp', [baseImagePath, filename], {
         stdio: 'inherit',
         cwd: destinationPath,
@@ -112,7 +112,7 @@ async function createAndWriteIconsToPathAsync(
   resPath: string,
   isDetached: boolean
 ) {
-  let manifest = context.config; // manifest or app.json
+  const manifest = context.config; // manifest or app.json
   let iconUrl =
     manifest.android && manifest.android.iconUrl ? manifest.android.iconUrl : manifest.iconUrl;
   let notificationIconUrl = manifest.notification ? manifest.notification.iconUrl : null;

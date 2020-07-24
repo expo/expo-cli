@@ -1,12 +1,15 @@
+import { IosCodeSigning } from '@expo/xdl';
 import chalk from 'chalk';
 import dateformat from 'dateformat';
 import fs from 'fs-extra';
 import ora from 'ora';
-import { IosCodeSigning } from '@expo/xdl';
-
 import terminalLink from 'terminal-link';
-import prompt, { Question } from '../../prompt';
+
+import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';
 import log from '../../log';
+import prompt, { Question } from '../../prompt';
+import { displayIosUserCredentials } from '../actions/list';
+import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
 import { Context, IView } from '../context';
 import {
   IosAppCredentials,
@@ -14,9 +17,6 @@ import {
   IosDistCredentials,
   distCertSchema,
 } from '../credentials';
-import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
-import { displayIosUserCredentials } from '../actions/list';
-import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';
 import { RemoveProvisioningProfile } from './IosProvisioningProfile';
 
 const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `
@@ -505,7 +505,7 @@ async function generateDistCert(ctx: Context): Promise<DistCert> {
       log(chalk.grey(`ℹ️  Learn more ${here}`));
       log();
 
-      let { revoke } = await prompt([
+      const { revoke } = await prompt([
         {
           type: 'checkbox',
           name: 'revoke',

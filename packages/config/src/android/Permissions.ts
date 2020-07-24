@@ -101,8 +101,8 @@ export function addPermissionToManifest(permission: string, manifestPermissions:
 export function removePermissions(doc: Document, permissionNames?: string[]) {
   const targetNames = permissionNames ? permissionNames.map(ensurePermissionNameFormat) : null;
   const permissions = doc.manifest[USES_PERMISSION] || [];
-  let nextPermissions = [];
-  for (let attribute of permissions) {
+  const nextPermissions = [];
+  for (const attribute of permissions) {
     if (targetNames) {
       const value = attribute['$']['android:name'] || attribute['$']['name'];
       if (!targetNames.includes(value)) {

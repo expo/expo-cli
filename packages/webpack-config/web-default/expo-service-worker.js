@@ -31,7 +31,7 @@ self.addEventListener('push', event => {
   }
 
   const title = payload.title;
-  let options = {
+  const options = {
     body: payload.body,
     data: payload.data || {},
   };
@@ -58,7 +58,7 @@ self.addEventListener('notificationclick', event => {
 
       let appClient;
 
-      let path = event.notification.data._webPath || '/';
+      const path = event.notification.data._webPath || '/';
 
       // If we already have a window open, use it.
       for (const client of allClients) {

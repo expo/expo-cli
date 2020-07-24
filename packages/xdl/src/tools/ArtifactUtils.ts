@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
+
 import logger from '../Logger';
 
 export async function writeArtifactSafelyAsync(

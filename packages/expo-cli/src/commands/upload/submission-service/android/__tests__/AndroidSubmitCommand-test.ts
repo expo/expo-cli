@@ -1,18 +1,18 @@
 import { vol } from 'memfs';
 import { v4 as uuidv4 } from 'uuid';
 
-import { AndroidSubmitCommandOptions } from '../types';
-import { SubmissionMode } from '../../types';
-import AndroidSubmitCommand from '../AndroidSubmitCommand';
-import { ArchiveType, ReleaseStatus, ReleaseTrack } from '../AndroidSubmissionConfig';
 import { mockExpoXDL } from '../../../../../__tests__/mock-utils';
 import { createTestProject } from '../../../../../__tests__/project-utils';
 import { jester } from '../../../../../__tests__/user-fixtures';
+import { ensureProjectExistsAsync } from '../../../../../projects';
 import SubmissionService from '../../SubmissionService';
 import { Platform, Submission, SubmissionStatus } from '../../SubmissionService.types';
+import { SubmissionMode } from '../../types';
 import { runTravelingFastlaneAsync } from '../../utils/travelingFastlane';
-import { ensureProjectExistsAsync } from '../../../../../projects';
+import { ArchiveType, ReleaseStatus, ReleaseTrack } from '../AndroidSubmissionConfig';
+import AndroidSubmitCommand from '../AndroidSubmitCommand';
 import { AndroidOnlineSubmissionConfig } from '../AndroidSubmitter';
+import { AndroidSubmitCommandOptions } from '../types';
 
 jest.mock('fs');
 jest.mock('../../SubmissionService');

@@ -3,7 +3,7 @@
 const { join } = require('path');
 
 module.exports = () => {
-  let p = join.bind(null, __dirname, 'dist');
+  const p = join.bind(null, __dirname, 'dist');
   return {
     appProduce: p('app_produce'),
     authenticate: p('authenticate'),

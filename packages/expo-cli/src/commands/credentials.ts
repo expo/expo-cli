@@ -1,4 +1,5 @@
 import { CommanderStatic } from 'commander';
+
 import { Context, runCredentialsManagerStandalone } from '../credentials';
 import {
   SelectAndroidExperience,

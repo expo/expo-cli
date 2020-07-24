@@ -1,6 +1,7 @@
-import temporary from 'tempy';
-import path from 'path';
 import fs from 'fs-extra';
+import path from 'path';
+import temporary from 'tempy';
+
 import { isPkgMainExpoAppEntry, mergeGitIgnoreFiles, stripDashes } from '../Eject';
 
 const testRoot = temporary.directory();

@@ -1,6 +1,3 @@
-import QueryString from 'querystring';
-import { URL } from 'url';
-
 import { JSONObject, JSONValue } from '@expo/json-file';
 import axios, { AxiosRequestConfig } from 'axios';
 import concat from 'concat-stream';
@@ -8,6 +5,8 @@ import ExtendableError from 'es6-error';
 import fs from 'fs-extra';
 import idx from 'idx';
 import merge from 'lodash/merge';
+import QueryString from 'querystring';
+import { URL } from 'url';
 
 import Config from './Config';
 import FormData from './tools/FormData';
@@ -134,7 +133,7 @@ export default class TurtleApiClient {
     const { data } = convertedFormData;
     const headers = projectFormData.getHeaders();
 
-    let reqOptions: AxiosRequestConfig = {
+    const reqOptions: AxiosRequestConfig = {
       method: 'post',
       url: formattedUrl.href,
       data,
@@ -165,8 +164,8 @@ export default class TurtleApiClient {
     }
 
     if (result.errors && result.errors.length) {
-      let responseError = result.errors[0];
-      let error = new TurtleApiError(responseError.message, responseError.code);
+      const responseError = result.errors[0];
+      const error = new TurtleApiError(responseError.message, responseError.code);
       error.serverStack = responseError.stack;
       error.details = responseError.details;
       throw error;

@@ -1,7 +1,6 @@
-import { css } from 'react-emotion';
-
-import * as React from 'react';
 import * as Constants from 'app/common/constants';
+import * as React from 'react';
+import { css } from 'react-emotion';
 
 const STYLES_LARGE_BUTTON = css`
   font-family: ${Constants.fontFamilies.demi};

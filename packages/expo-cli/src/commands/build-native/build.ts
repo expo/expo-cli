@@ -1,20 +1,19 @@
-import os from 'os';
-import path from 'path';
-
 import { Job, Platform } from '@expo/build-tools';
 import { ExpoConfig, getConfig } from '@expo/config';
 import { ApiV2, User, UserManager } from '@expo/xdl';
+import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
 import ora from 'ora';
-import chalk from 'chalk';
+import os from 'os';
+import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 import { EasConfig } from '../../easJson';
-import { makeProjectTarballAsync } from './utils';
 import log from '../../log';
 import { UploadType, uploadAsync } from '../../uploads';
 import { createProgressTracker } from '../utils/progress';
+import { makeProjectTarballAsync } from './utils';
 
 export interface BuildInfo {
   status: string;
@@ -96,7 +95,7 @@ export async function waitForBuildEndAsync(
   projectId: string,
   buildIds: string[],
   { timeoutSec = 1800, intervalSec = 30 } = {}
-): Promise<Array<BuildInfo | null>> {
+): Promise<(BuildInfo | null)[]> {
   const client = ApiV2.clientForUser(ctx.user);
   log('Waiting for build to complete. You can press Ctrl+C to exit.');
   const spinner = ora().start();

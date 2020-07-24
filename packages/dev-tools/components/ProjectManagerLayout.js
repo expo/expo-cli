@@ -1,9 +1,7 @@
-import { css } from 'react-emotion';
-
-import * as React from 'react';
 import * as Constants from 'app/common/constants';
-
 import ProjectManagerSection from 'app/components/ProjectManagerSection';
+import * as React from 'react';
+import { css } from 'react-emotion';
 
 const STYLES_MAIN_SECTION = css`
   background: ${Constants.colors.black};

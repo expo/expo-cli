@@ -1,8 +1,8 @@
 import { vol } from 'memfs';
 
+import { StatusBarStyle } from '../../constants';
 import configureInfoPlist from '../Info.plist';
 import reactNativeProject from './fixtures/react-native-project-structure';
-import { StatusBarStyle } from '../../constants';
 
 // in `__mocks__/fs.ts` memfs is being used as a mocking library
 jest.mock('fs');

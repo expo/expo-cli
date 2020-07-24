@@ -1,8 +1,7 @@
-import QRCodeReact from 'qrcode.react';
-import { css } from 'react-emotion';
-
-import * as React from 'react';
 import * as Constants from 'app/common/constants';
+import QRCodeReact from 'qrcode.react';
+import * as React from 'react';
+import { css } from 'react-emotion';
 
 const PADDING = 8;
 

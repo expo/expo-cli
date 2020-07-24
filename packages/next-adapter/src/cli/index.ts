@@ -3,9 +3,8 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import { resolve } from 'path';
 
-import shouldUpdate from './update';
-
 import { runAsync } from '../customize';
+import shouldUpdate from './update';
 
 let projectDirectory: string = '';
 

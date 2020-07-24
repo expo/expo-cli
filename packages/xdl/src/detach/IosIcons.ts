@@ -1,6 +1,8 @@
 import path from 'path';
 
+import { getImageDimensionsAsync, resizeImageAsync } from '../tools/ImageUtils';
 import { saveImageToPathAsync, saveUrlToPathAsync, spawnAsyncThrowError } from './ExponentTools';
+import logger from './Logger';
 import {
   AnyStandaloneContext,
   StandaloneContextDataService,
@@ -8,8 +10,6 @@ import {
   StandaloneContextService,
   StandaloneContextUser,
 } from './StandaloneContext';
-import { getImageDimensionsAsync, resizeImageAsync } from '../tools/ImageUtils';
-import logger from './Logger';
 
 function _getAppleIconQualifier(iconSize: number, iconResolution: number): string {
   let iconQualifier;
@@ -85,8 +85,8 @@ async function createAndWriteIconsToPathAsync(
       // We need to wait for all of these to finish!
       await Promise.all(
         iconResolutions.map(async iconResolution => {
-          let iconQualifier = _getAppleIconQualifier(iconSize, iconResolution);
-          let iconKey = `iconUrl${iconQualifier}`;
+          const iconQualifier = _getAppleIconQualifier(iconSize, iconResolution);
+          const iconKey = `iconUrl${iconQualifier}`;
           let rawIconFilename;
           let usesDefault = false;
           if (context instanceof StandaloneContextService) {
@@ -114,8 +114,8 @@ async function createAndWriteIconsToPathAsync(
             }
           }
 
-          let iconFilename = `AppIcon${iconQualifier}.png`;
-          let iconSizePx = iconSize * iconResolution;
+          const iconFilename = `AppIcon${iconQualifier}.png`;
+          const iconSizePx = iconSize * iconResolution;
           await spawnAsyncThrowError('/bin/cp', [rawIconFilename, iconFilename], {
             stdio: 'inherit',
             cwd: destinationIconPath,

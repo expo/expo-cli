@@ -2,9 +2,9 @@ import { ExpoConfig, getConfig } from '@expo/config';
 import { ApiV2, Doctor, User, UserManager } from '@expo/xdl';
 
 import { AppleCtx, authenticate } from '../appleApi';
+import log from '../log';
 import { AndroidApi } from './api/android';
 import { IosApi } from './api/ios';
-import log from '../log';
 
 export interface IView {
   open(ctx: Context): Promise<IView | null>;

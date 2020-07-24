@@ -12,7 +12,7 @@ export async function setBranchApiKey(config: ExpoConfig, manifestDocument: Docu
     return manifestDocument;
   }
 
-  let mainApplication = manifestDocument.manifest.application.filter(
+  const mainApplication = manifestDocument.manifest.application.filter(
     (e: any) => e['$']['android:name'] === '.MainApplication'
   )[0];
 

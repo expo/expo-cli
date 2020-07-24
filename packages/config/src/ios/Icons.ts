@@ -12,7 +12,7 @@ export function getIcons(config: ExpoConfig) {
 }
 
 export function setIconsAsync(config: ExpoConfig, projectRoot: string) {
-  let icon = getIcons(config);
+  const icon = getIcons(config);
   if (!icon) {
     return;
   }

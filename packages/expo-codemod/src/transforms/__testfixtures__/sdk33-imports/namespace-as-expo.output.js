@@ -1,12 +1,11 @@
+import * as Expo from 'expo';
+import { BlurView } from 'expo-blur';
+import Constants from 'expo-constants';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import * as Expo from 'expo';
-
 import MapView from 'react-native-maps';
-import { BlurView } from 'expo-blur';
-import * as DocumentPicker from 'expo-document-picker';
-import Constants from 'expo-constants';
-import * as FileSystem from 'expo-file-system';
 
 Expo.Updates.addListener(() => {});
 

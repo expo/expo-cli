@@ -1,13 +1,14 @@
 import { vol } from 'memfs';
-import IOSBuilder from '../ios/IOSBuilder';
-import { BuilderOptions } from '../BaseBuilder.types';
+
+import { mockExpoXDL } from '../../../__tests__/mock-utils';
 import {
   getApiV2Mock,
   getApiV2MockCredentials,
   jester,
   testAppJson,
 } from '../../../credentials/test-fixtures/mocks-ios';
-import { mockExpoXDL } from '../../../__tests__/mock-utils';
+import { BuilderOptions } from '../BaseBuilder.types';
+import IOSBuilder from '../ios/IOSBuilder';
 
 jest.setTimeout(30e3); // 30s
 

@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 
-import prompt from '../../prompt';
 import log from '../../log';
+import prompt from '../../prompt';
 import { Context, IView } from '../context';
 
 export class UpdateFcmKey implements IView {

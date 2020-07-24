@@ -1,8 +1,9 @@
-import ora from 'ora';
 import { IosCodeSigning } from '@expo/xdl';
-import { runAction, travelingFastlane } from './fastlane';
+import ora from 'ora';
+
 import { AppleCtx } from './authenticate';
 import { DistCert, DistCertInfo } from './distributionCert';
+import { runAction, travelingFastlane } from './fastlane';
 
 export type ProvisioningProfileInfo = {
   name: string;

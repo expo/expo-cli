@@ -1,7 +1,6 @@
-import path from 'path';
-
 import Joi from '@hapi/joi';
 import fs from 'fs-extra';
+import path from 'path';
 
 import { Keystore } from '../credentials';
 

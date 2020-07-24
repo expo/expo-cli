@@ -1,35 +1,33 @@
 // Set EXPO_VIEW_DIR to universe/exponent to test locally
 
-import fs from 'fs-extra';
+import { findConfigFile, getConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
+import spawnAsync from '@expo/spawn-async';
+import fs from 'fs-extra';
+import { sync as globSync } from 'glob';
+import inquirer from 'inquirer';
+import isPlainObject from 'lodash/isPlainObject';
 import path from 'path';
 import process from 'process';
 import rimraf from 'rimraf';
-import { sync as globSync } from 'glob';
 import uuid from 'uuid';
-import inquirer from 'inquirer';
-import spawnAsync from '@expo/spawn-async';
-import { findConfigFile, getConfig } from '@expo/config';
-import isPlainObject from 'lodash/isPlainObject';
-
-import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
-
-import * as AssetBundle from './AssetBundle';
-import * as IosPlist from './IosPlist';
-import * as IosNSBundle from './IosNSBundle';
-import * as IosWorkspace from './IosWorkspace';
-import * as AndroidShellApp from './AndroidShellApp';
 
 import Api from '../Api';
 import * as EmbeddedAssets from '../EmbeddedAssets';
+import * as UrlUtils from '../UrlUtils';
 import UserManager from '../User';
+import * as Versions from '../Versions';
 import XDLError from '../XDLError';
+import * as AndroidShellApp from './AndroidShellApp';
+import * as AssetBundle from './AssetBundle';
+import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
+import * as IosNSBundle from './IosNSBundle';
+import * as IosPlist from './IosPlist';
+import * as IosWorkspace from './IosWorkspace';
+import logger from './Logger';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
-import * as UrlUtils from '../UrlUtils';
-import * as Versions from '../Versions';
 import installPackagesAsync from './installPackagesAsync';
-import logger from './Logger';
 
 const SERVICE_CONTEXT_PROJECT_NAME = 'exponent-view-template';
 
@@ -45,7 +43,7 @@ async function yesnoAsync(message) {
 }
 
 export async function detachAsync(projectRoot, options = {}) {
-  let originalLogger = logger.loggerObj;
+  const originalLogger = logger.loggerObj;
   logger.configure({
     trace: options.verbose ? console.trace.bind(console) : () => {},
     debug: options.verbose ? console.debug.bind(console) : () => {},
@@ -62,21 +60,21 @@ export async function detachAsync(projectRoot, options = {}) {
 }
 
 async function _detachAsync(projectRoot, options) {
-  let user = await UserManager.ensureLoggedInAsync();
+  const user = await UserManager.ensureLoggedInAsync();
 
   if (!user) {
     throw new Error('Internal error -- somehow detach is being run in offline mode.');
   }
 
-  let username = user.username;
+  const username = user.username;
   const { configName, configPath, configNamespace } = findConfigFile(projectRoot);
   let { exp } = getConfig(projectRoot);
-  let experienceName = `@${username}/${exp.slug}`;
-  let experienceUrl = `exp://exp.host/${experienceName}`;
+  const experienceName = `@${username}/${exp.slug}`;
+  const experienceUrl = `exp://exp.host/${experienceName}`;
 
   // Check to make sure project isn't fully detached already
-  let hasIosDirectory = isDirectory(path.join(projectRoot, 'ios'));
-  let hasAndroidDirectory = isDirectory(path.join(projectRoot, 'android'));
+  const hasIosDirectory = isDirectory(path.join(projectRoot, 'ios'));
+  const hasAndroidDirectory = isDirectory(path.join(projectRoot, 'android'));
 
   if (hasIosDirectory && hasAndroidDirectory) {
     throw new XDLError(
@@ -87,7 +85,7 @@ async function _detachAsync(projectRoot, options) {
 
   // Project was already detached on Windows or Linux
   if (!hasIosDirectory && hasAndroidDirectory && process.platform === 'darwin') {
-    let response = await yesnoAsync(
+    const response = await yesnoAsync(
       `This will add an Xcode project and leave your existing Android project alone. Enter 'yes' to continue:`
     );
     if (!response) {
@@ -137,8 +135,8 @@ async function _detachAsync(projectRoot, options) {
     exp.detach = {};
   }
 
-  let detachedUUID = uuid.v4().replace(/-/g, '');
-  let generatedScheme = `exp${detachedUUID}`;
+  const detachedUUID = uuid.v4().replace(/-/g, '');
+  const generatedScheme = `exp${detachedUUID}`;
 
   if (!exp.detach.scheme && !Versions.gteSdkVersion(exp, '27.0.0')) {
     // set this for legacy purposes
@@ -152,7 +150,7 @@ async function _detachAsync(projectRoot, options) {
     exp.scheme = generatedScheme;
   }
 
-  let expoDirectory = path.join(projectRoot, '.expo-source');
+  const expoDirectory = path.join(projectRoot, '.expo-source');
   fs.mkdirpSync(expoDirectory);
   const context = StandaloneContext.createUserContext(projectRoot, exp, experienceUrl);
 
@@ -214,7 +212,7 @@ async function _detachAsync(projectRoot, options) {
       exp.android.package = androidPackage;
     }
 
-    let androidDirectory = path.join(expoDirectory, 'android');
+    const androidDirectory = path.join(expoDirectory, 'android');
     rimraf.sync(androidDirectory);
     fs.mkdirpSync(androidDirectory);
     await detachAndroidAsync(context, sdkVersionConfig.androidExpoViewUrl);
@@ -290,7 +288,7 @@ async function detachAndroidAsync(context, expoViewUrl) {
   }
 
   logger.info('Moving Android project files...');
-  let androidProjectDirectory = path.join(context.data.projectPath, 'android');
+  const androidProjectDirectory = path.join(context.data.projectPath, 'android');
   let tmpExpoDirectory;
   if (process.env.EXPO_VIEW_DIR) {
     // Only for testing
@@ -342,7 +340,7 @@ async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory) {
   try {
     const podfileLock = await fs.readFile(podfileLockPath, 'utf8');
     const expoKitVersionRegex = /ExpoKit\/Core\W?\(([0-9.]+)\)/gi;
-    let match = expoKitVersionRegex.exec(podfileLock);
+    const match = expoKitVersionRegex.exec(podfileLock);
     expoKitVersion = match[1];
   } catch (e) {
     throw new Error(
@@ -422,7 +420,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir, args) {
 
 async function _readDefaultApiKeysAsync(jsonFilePath) {
   if (fs.existsSync(jsonFilePath)) {
-    let keys = {};
+    const keys = {};
     const allKeys = await new JsonFile(jsonFilePath).readAsync();
     const validKeys = ['AMPLITUDE_KEY', 'GOOGLE_MAPS_IOS_API_KEY'];
     for (const key in allKeys) {
@@ -437,18 +435,18 @@ async function _readDefaultApiKeysAsync(jsonFilePath) {
 
 async function prepareDetachedUserContextIosAsync(projectDir, exp, args) {
   const context = StandaloneContext.createUserContext(projectDir, exp);
-  let { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(context);
+  const { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(context);
 
   logger.info(`Preparing iOS build at ${iosProjectDirectory}...`);
   // These files cause @providesModule naming collisions
   // but are not available until after `pod install` has run.
-  let podsDirectory = path.join(iosProjectDirectory, 'Pods');
+  const podsDirectory = path.join(iosProjectDirectory, 'Pods');
   if (!isDirectory(podsDirectory)) {
     throw new Error(`Can't find directory ${podsDirectory}, make sure you've run pod install.`);
   }
-  let rnPodDirectory = path.join(podsDirectory, 'React');
+  const rnPodDirectory = path.join(podsDirectory, 'React');
   if (isDirectory(rnPodDirectory)) {
-    let rnFilesToDelete = globSync('**/*.@(js|json)', {
+    const rnFilesToDelete = globSync('**/*.@(js|json)', {
       absolute: true,
       cwd: rnPodDirectory,
     });
@@ -465,7 +463,7 @@ async function prepareDetachedUserContextIosAsync(projectDir, exp, args) {
     const expoKitVersion = await _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory);
 
     // populate development url
-    let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
+    const devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
 
     // populate default api keys
     const defaultApiKeys = await _readDefaultApiKeysAsync(
@@ -491,13 +489,13 @@ export async function prepareDetachedBuildAsync(projectDir, args) {
   if (args.platform === 'ios') {
     await prepareDetachedBuildIosAsync(projectDir, args);
   } else {
-    let expoBuildConstantsMatches = globSync('android/**/DetachBuildConstants.java', {
+    const expoBuildConstantsMatches = globSync('android/**/DetachBuildConstants.java', {
       absolute: true,
       cwd: projectDir,
     });
     if (expoBuildConstantsMatches && expoBuildConstantsMatches.length) {
-      let expoBuildConstants = expoBuildConstantsMatches[0];
-      let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
+      const expoBuildConstants = expoBuildConstantsMatches[0];
+      const devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
       await regexFileAsync(
         /DEVELOPMENT_URL = "[^"]*";/,
         `DEVELOPMENT_URL = "${devUrl}";`,
@@ -520,7 +518,11 @@ export async function bundleAssetsAsync(projectDir, args) {
     return;
   }
   const { exp } = options;
-  let bundledManifestPath = EmbeddedAssets.getEmbeddedManifestPath(args.platform, projectDir, exp);
+  const bundledManifestPath = EmbeddedAssets.getEmbeddedManifestPath(
+    args.platform,
+    projectDir,
+    exp
+  );
   if (!bundledManifestPath) {
     logger.warn(
       `Skipped assets bundling because the '${args.platform}.publishManifestPath' key is not specified in the app manifest.`

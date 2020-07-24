@@ -1,8 +1,7 @@
 import fs from 'fs-extra';
-import { Builder, Parser } from 'xml2js';
-
 import { EOL } from 'os';
 import path from 'path';
+import { Builder, Parser } from 'xml2js';
 
 export type Document = { [key: string]: any };
 

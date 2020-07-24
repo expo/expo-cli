@@ -7,11 +7,11 @@ import {
   readConfigJsonAsync,
   resolveModule,
 } from '@expo/config';
-import program from 'commander';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
+import program from 'commander';
 import fse from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
 import ora from 'ora';
@@ -25,9 +25,9 @@ import log from '../../log';
 import prompt from '../../prompt';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
+import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
-import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
 
 type ValidationErrorMessage = string;
@@ -62,7 +62,7 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
   await configureIOSStepAsync(projectRoot);
   await configureAndroidStepAsync(projectRoot);
 
-  let podsInstalled = await installPodsAsync(projectRoot);
+  const podsInstalled = await installPodsAsync(projectRoot);
   await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
 
   log.newLine();
@@ -105,7 +105,7 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
   log.nested(
     'To compile and run your project in development, execute one of the following commands:'
   );
-  let packageManager = PackageManager.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
+  const packageManager = PackageManager.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
@@ -113,7 +113,7 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
 
 async function configureIOSStepAsync(projectRoot: string) {
   log.newLine();
-  let applyingIOSConfigStep = logNewSection('Applying iOS configuration');
+  const applyingIOSConfigStep = logNewSection('Applying iOS configuration');
   await configureIOSProjectAsync(projectRoot);
   if (ConfigWarningAggregator.hasWarningsIOS()) {
     applyingIOSConfigStep.stopAndPersist({
@@ -189,7 +189,7 @@ async function installPodsAsync(projectRoot: string) {
  * @param projectRoot
  */
 async function installNodeModulesAsync(projectRoot: string) {
-  let installingDependenciesStep = logNewSection('Installing JavaScript dependencies.');
+  const installingDependenciesStep = logNewSection('Installing JavaScript dependencies.');
   await fse.remove('node_modules');
   const packageManager = PackageManager.createForProject(projectRoot, { log, silent: true });
   try {
@@ -211,7 +211,7 @@ async function installNodeModulesAsync(projectRoot: string) {
 }
 
 async function configureAndroidStepAsync(projectRoot: string) {
-  let applyingAndroidConfigStep = logNewSection('Applying Android configuration');
+  const applyingAndroidConfigStep = logNewSection('Applying Android configuration');
   await configureAndroidProjectAsync(projectRoot);
   if (ConfigWarningAggregator.hasWarningsAndroid()) {
     applyingAndroidConfigStep.stopAndPersist({
@@ -225,7 +225,7 @@ async function configureAndroidStepAsync(projectRoot: string) {
 }
 
 function logNewSection(title: string) {
-  let spinner = ora(chalk.bold(title));
+  const spinner = ora(chalk.bold(title));
   spinner.start();
   return spinner;
 }
@@ -248,8 +248,8 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   }
 
   // Validate that the template exists
-  let sdkMajorVersionNumber = semver.major(exp.sdkVersion!);
-  let templateSpec = npmPackageArg(`expo-template-bare-minimum@sdk-${sdkMajorVersionNumber}`);
+  const sdkMajorVersionNumber = semver.major(exp.sdkVersion!);
+  const templateSpec = npmPackageArg(`expo-template-bare-minimum@sdk-${sdkMajorVersionNumber}`);
   try {
     await pacote.manifest(templateSpec);
   } catch (e) {
@@ -278,16 +278,16 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   // Just to be sure
   appJson.expo = appJson.expo ?? {};
 
-  let name = await promptForNativeAppNameAsync(projectRoot);
+  const name = await promptForNativeAppNameAsync(projectRoot);
   appJson.expo.name = name;
 
   // Prompt for the Android package first because it's more strict than the bundle identifier
   // this means you'll have a better chance at matching the bundle identifier with the package name.
-  let packageName = await getOrPromptForPackage(projectRoot);
+  const packageName = await getOrPromptForPackage(projectRoot);
   appJson.expo.android = appJson.expo.android ?? {};
   appJson.expo.android.package = packageName;
 
-  let bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
+  const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
   appJson.expo.ios = appJson.expo.ios ?? {};
   appJson.expo.ios.bundleIdentifier = bundleIdentifier;
 
@@ -298,7 +298,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     appJson.expo.entryPoint = EXPO_APP_ENTRY;
   }
 
-  let updatingAppConfigStep = logNewSection('Updating app configuration (app.json)');
+  const updatingAppConfigStep = logNewSection('Updating app configuration (app.json)');
   await fse.writeFile(path.resolve('app.json'), JSON.stringify(appJson, null, 2));
   // TODO: if app.config.js, need to provide some other info here
   updatingAppConfigStep.succeed('App configuration (app.json) updated.');
@@ -311,7 +311,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additioanl context for steps
   // log.newLine();
-  let creatingNativeProjectStep = logNewSection(
+  const creatingNativeProjectStep = logNewSection(
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
   let tempDir;
@@ -346,7 +346,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    * hashAssetFiles plugin manually.
    */
 
-  let updatingMetroConfigStep = logNewSection('Adding Metro bundler configuration');
+  const updatingMetroConfigStep = logNewSection('Adding Metro bundler configuration');
   try {
     if (
       fse.existsSync(path.join(projectRoot, 'metro.config.js')) ||
@@ -383,7 +383,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additioanl context for steps
   // log.newLine();
-  let updatingPackageJsonStep = logNewSection(
+  const updatingPackageJsonStep = logNewSection(
     'Updating your package.json scripts, dependencies, and main file'
   );
   if (!pkg.scripts) {
@@ -535,8 +535,8 @@ export function mergeGitIgnoreFiles(
     return null;
   }
 
-  let targetGitIgnore = fse.readFileSync(targetGitIgnorePath).toString();
-  let sourceGitIgnore = fse.readFileSync(sourceGitIgnorePath).toString();
+  const targetGitIgnore = fse.readFileSync(targetGitIgnorePath).toString();
+  const sourceGitIgnore = fse.readFileSync(sourceGitIgnorePath).toString();
   const merged = mergeGitIgnoreContents(targetGitIgnore, sourceGitIgnore);
   fse.writeFileSync(targetGitIgnorePath, merged);
 
@@ -580,11 +580,11 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
   }
 
   log.newLine();
-  let warnAdditionalSetupStep = logNewSection(
+  const warnAdditionalSetupStep = logNewSection(
     'Checking if any additional setup steps are required for installed SDK packages.'
   );
 
-  let plural = packagesToWarn.length > 1;
+  const plural = packagesToWarn.length > 1;
 
   warnAdditionalSetupStep.stopAndPersist({
     symbol: '⚠️ ',

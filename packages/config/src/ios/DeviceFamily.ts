@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 
 import { ExpoConfig } from '../Config.types';
-import { getPbxproj, isBuildConfig, removeComments, removeTestHosts } from './utils/Xcodeproj';
 import { addWarningIOS } from '../WarningAggregator';
+import { getPbxproj, isBuildConfig, removeComments, removeTestHosts } from './utils/Xcodeproj';
 
 export function getSupportsTablet(config: ExpoConfig) {
   if (config.ios?.supportsTablet) {
@@ -21,8 +21,8 @@ export function getIsTabletOnly(config: ExpoConfig) {
 }
 
 export function getDeviceFamilies(config: ExpoConfig) {
-  let supportsTablet = getSupportsTablet(config);
-  let isTabletOnly = getIsTabletOnly(config);
+  const supportsTablet = getSupportsTablet(config);
+  const isTabletOnly = getIsTabletOnly(config);
 
   // 1 is iPhone, 2 is iPad
   if (isTabletOnly) {
@@ -40,8 +40,8 @@ export function getDeviceFamilies(config: ExpoConfig) {
 export function setDeviceFamily(config: ExpoConfig, projectRoot: string) {
   const deviceFamilies = getDeviceFamilies(config);
 
-  let supportsTablet = getSupportsTablet(config);
-  let isTabletOnly = getIsTabletOnly(config);
+  const supportsTablet = getSupportsTablet(config);
+  const isTabletOnly = getIsTabletOnly(config);
 
   if (isTabletOnly) {
     addWarningIOS(

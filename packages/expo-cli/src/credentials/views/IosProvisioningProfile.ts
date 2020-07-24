@@ -1,19 +1,9 @@
+import plist, { PlistObject } from '@expo/plist';
+import { IosCodeSigning, PKCS12Utils } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import ora from 'ora';
-import plist, { PlistObject } from '@expo/plist';
-import { IosCodeSigning, PKCS12Utils } from '@expo/xdl';
-import prompt, { Question } from '../../prompt';
-import log from '../../log';
-import { Context, IView } from '../context';
-import {
-  IosAppCredentials,
-  IosCredentials,
-  appleTeamSchema,
-  provisioningProfileSchema,
-} from '../credentials';
-import { askForUserProvided, getCredentialsFromUser } from '../actions/promptForCredentials';
-import { displayIosAppCredentials } from '../actions/list';
+
 import {
   AppleCtx,
   DistCert,
@@ -21,6 +11,17 @@ import {
   ProvisioningProfileInfo,
   ProvisioningProfileManager,
 } from '../../appleApi';
+import log from '../../log';
+import prompt, { Question } from '../../prompt';
+import { displayIosAppCredentials } from '../actions/list';
+import { askForUserProvided, getCredentialsFromUser } from '../actions/promptForCredentials';
+import { Context, IView } from '../context';
+import {
+  IosAppCredentials,
+  IosCredentials,
+  appleTeamSchema,
+  provisioningProfileSchema,
+} from '../credentials';
 
 type CliOptions = {
   nonInteractive?: boolean;

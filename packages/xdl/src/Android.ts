@@ -1,7 +1,7 @@
 import { getConfig, readExpRcAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
-import child_process from 'child_process';
 import chalk from 'chalk';
+import child_process from 'child_process';
 import fs from 'fs-extra';
 import path from 'path';
 import ProgressBar from 'progress';
@@ -12,11 +12,11 @@ import * as Binaries from './Binaries';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import * as ProjectSettings from './ProjectSettings';
-import { getImageDimensionsAsync } from './tools/ImageUtils';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
+import { getImageDimensionsAsync } from './tools/ImageUtils';
 
 let _lastUrl: string | null = null;
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
@@ -120,7 +120,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
   const adb = whichADB();
 
   try {
-    let result = await spawnAsync(adb, args);
+    const result = await spawnAsync(adb, args);
     return result.stdout;
   } catch (e) {
     let errorMessage = (e.stderr || e.stdout || e.message).trim();
@@ -133,7 +133,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
 
 // Device attached
 async function _isDeviceAttachedAsync() {
-  let output = await getAdbOutputAsync(['devices']);
+  const output = await getAdbOutputAsync(['devices']);
   const devices = output
     .trim()
     .split(/\r?\n/)
@@ -145,10 +145,10 @@ async function _isDeviceAttachedAsync() {
 }
 
 async function _isDeviceAuthorizedAsync() {
-  let devices = await getAdbOutputAsync(['devices']);
-  let lines = devices.trim().split(/\r?\n/);
+  const devices = await getAdbOutputAsync(['devices']);
+  const lines = devices.trim().split(/\r?\n/);
   lines.shift();
-  let listOfDevicesWithoutFirstLine = lines.join('\n');
+  const listOfDevicesWithoutFirstLine = lines.join('\n');
   // result looks like "072c4cf200e333c7  device" when authorized
   // and "072c4cf200e333c7  unauthorized" when not.
   return listOfDevicesWithoutFirstLine.includes('device');
@@ -156,10 +156,10 @@ async function _isDeviceAuthorizedAsync() {
 
 // Expo installed
 async function _isExpoInstalledAsync() {
-  let packages = await getAdbOutputAsync(['shell', 'pm', 'list', 'packages', '-f']);
-  let lines = packages.split(/\r?\n/);
+  const packages = await getAdbOutputAsync(['shell', 'pm', 'list', 'packages', '-f']);
+  const lines = packages.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
+    const line = lines[i];
     if (line.includes('host.exp.exponent.test')) {
       continue;
     }
@@ -173,10 +173,10 @@ async function _isExpoInstalledAsync() {
 }
 
 async function _expoVersionAsync() {
-  let info = await getAdbOutputAsync(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
+  const info = await getAdbOutputAsync(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
 
-  let regex = /versionName=([0-9.]+)/;
-  let regexMatch = regex.exec(info);
+  const regex = /versionName=([0-9.]+)/;
+  const regexMatch = regex.exec(info);
   if (!regexMatch || regexMatch.length < 2) {
     return null;
   }
@@ -198,8 +198,8 @@ async function _checkExpoUpToDateAsync() {
 }
 
 function _apkCacheDirectory() {
-  let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  let dir = path.join(dotExpoHomeDirectory, 'android-apk-cache');
+  const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+  const dir = path.join(dotExpoHomeDirectory, 'android-apk-cache');
   fs.mkdirpSync(dir);
   return dir;
 }
@@ -208,8 +208,8 @@ export async function downloadApkAsync(
   url?: string,
   downloadProgressCallback?: (roundedProgress: number) => void
 ) {
-  let versions = await Versions.versionsAsync();
-  let apkPath = path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`);
+  const versions = await Versions.versionsAsync();
+  const apkPath = path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`);
 
   if (await fs.pathExists(apkPath)) {
     return apkPath;
@@ -245,13 +245,13 @@ export async function installExpoAsync(url?: string) {
 
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   warningTimer = setWarningTimer();
-  let path = await downloadApkAsync(url, progress => bar.tick(1, progress));
+  const path = await downloadApkAsync(url, progress => bar.tick(1, progress));
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
   Logger.global.info(`Installing Expo on device`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   warningTimer = setWarningTimer();
-  let result = await getAdbOutputAsync(['install', path]);
+  const result = await getAdbOutputAsync(['install', path]);
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
   clearTimeout(warningTimer);
@@ -320,7 +320,7 @@ async function _openUrlAsync(url: string) {
   // launch the project!
   // https://github.com/expo/expo/issues/7772
   // adb shell monkey -p host.exp.exponent -c android.intent.category.LAUNCHER 1
-  let openClient = await getAdbOutputAsync([
+  const openClient = await getAdbOutputAsync([
     'shell',
     'monkey',
     '-p',
@@ -333,7 +333,7 @@ async function _openUrlAsync(url: string) {
     throw new Error(openClient.substring(openClient.indexOf('Error: ')));
   }
 
-  let openProject = await getAdbOutputAsync([
+  const openProject = await getAdbOutputAsync([
     'shell',
     'am',
     'start',
@@ -406,7 +406,7 @@ export async function openProjectAsync(
   try {
     await startAdbReverseAsync(projectRoot);
 
-    let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
+    const projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
     const { exp } = getConfig(projectRoot, {
       skipSDKVersionRequirement: true,
     });
@@ -446,13 +446,13 @@ export async function startAdbReverseAsync(projectRoot: string): Promise<boolean
   const expRc = await readExpRcAsync(projectRoot);
   const userDefinedAdbReversePorts = expRc.extraAdbReversePorts || [];
 
-  let adbReversePorts = [
+  const adbReversePorts = [
     packagerInfo.packagerPort,
     packagerInfo.expoServerPort,
     ...userDefinedAdbReversePorts,
   ];
 
-  for (let port of adbReversePorts) {
+  for (const port of adbReversePorts) {
     if (!(await adbReverse(port))) {
       return false;
     }
@@ -466,13 +466,13 @@ export async function stopAdbReverseAsync(projectRoot: string): Promise<void> {
   const expRc = await readExpRcAsync(projectRoot);
   const userDefinedAdbReversePorts = expRc.extraAdbReversePorts || [];
 
-  let adbReversePorts = [
+  const adbReversePorts = [
     packagerInfo.packagerPort,
     packagerInfo.expoServerPort,
     ...userDefinedAdbReversePorts,
   ];
 
-  for (let port of adbReversePorts) {
+  for (const port of adbReversePorts) {
     await adbReverseRemove(port);
   }
 }

@@ -1,12 +1,10 @@
 import { BuildType, Job, Platform, iOS, sanitizeJob } from '@expo/build-tools';
 
-import { Keystore } from '../../credentials/credentials';
 import { Context } from '../../credentials/context';
+import { Keystore } from '../../credentials/credentials';
 import iOSCredentialsProvider, {
   iOSCredentials,
 } from '../../credentials/provider/iOSCredentialsProvider';
-import { ensureCredentialsAsync } from './credentials';
-import { Builder, BuilderContext } from './build';
 import {
   CredentialsSource,
   Workflow,
@@ -14,6 +12,8 @@ import {
   iOSGenericBuildProfile,
   iOSManagedBuildProfile,
 } from '../../easJson';
+import { Builder, BuilderContext } from './build';
+import { ensureCredentialsAsync } from './credentials';
 
 interface CommonJobProperties {
   platform: Platform.iOS;

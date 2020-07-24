@@ -1,7 +1,8 @@
 /* eslint-env jest */
+import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
-import fs from 'fs-extra';
+
 import { CocoaPodsPackageManager } from '../CocoaPodsPackageManager';
 
 const projectRoot = getTemporaryPath();

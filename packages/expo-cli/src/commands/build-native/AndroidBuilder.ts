@@ -1,13 +1,10 @@
 import { Android, BuildType, Job, Platform, sanitizeJob } from '@expo/build-tools';
 
 import { Keystore } from '../../credentials/credentials';
+import { credentialsJson } from '../../credentials/local';
 import AndroidCredentialsProvider, {
   AndroidCredentials,
 } from '../../credentials/provider/AndroidCredentialsProvider';
-import { credentialsJson } from '../../credentials/local';
-import { ensureCredentialsAsync } from './credentials';
-import prompt from '../../prompts';
-import { Builder, BuilderContext } from './build';
 import {
   AndroidBuildProfile,
   AndroidGenericBuildProfile,
@@ -15,6 +12,9 @@ import {
   CredentialsSource,
   Workflow,
 } from '../../easJson';
+import prompt from '../../prompts';
+import { Builder, BuilderContext } from './build';
+import { ensureCredentialsAsync } from './credentials';
 
 interface CommonJobProperties {
   platform: Platform.Android;

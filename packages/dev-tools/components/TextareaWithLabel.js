@@ -1,9 +1,7 @@
-import { css } from 'react-emotion';
-
-import * as React from 'react';
 import * as Constants from 'app/common/constants';
-
 import { Toast } from 'app/components/GlobalToasts';
+import * as React from 'react';
+import { css } from 'react-emotion';
 import UnstyledTextArea from 'react-textarea-autosize';
 
 const STYLES_CONTAINER = css`

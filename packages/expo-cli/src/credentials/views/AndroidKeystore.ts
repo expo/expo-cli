@@ -1,18 +1,17 @@
-import os from 'os';
-import path from 'path';
-
 import { AndroidCredentials } from '@expo/xdl';
 import chalk from 'chalk';
-import omit from 'lodash/omit';
 import fs from 'fs-extra';
+import omit from 'lodash/omit';
 import ora from 'ora';
+import os from 'os';
+import path from 'path';
 import { v4 as uuid } from 'uuid';
 
+import log from '../../log';
+import prompt, { Question } from '../../prompt';
 import { askForUserProvided, getCredentialsFromUser } from '../actions/promptForCredentials';
 import { Context, IView } from '../context';
 import { Keystore, keystoreSchema } from '../credentials';
-import prompt, { Question } from '../../prompt';
-import log from '../../log';
 
 class UpdateKeystore implements IView {
   constructor(private experienceName: string) {}
@@ -84,7 +83,7 @@ class RemoveKeystore implements IView {
       return null;
     }
     this.displayWarning();
-    let questions: Question[] = [
+    const questions: Question[] = [
       {
         type: 'confirm',
         name: 'confirm',
@@ -215,7 +214,7 @@ async function useKeystore(ctx: Context, experienceName: string, keystore: Keyst
 }
 
 async function maybeRenameExistingFile(projectDir: string, filename: string) {
-  let desiredFilePath = path.resolve(projectDir, filename);
+  const desiredFilePath = path.resolve(projectDir, filename);
 
   if (await fs.pathExists(desiredFilePath)) {
     let num = 1;

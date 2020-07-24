@@ -4,7 +4,7 @@ import { projectHasModule } from '@expo/config';
 
 export function getAliases(projectRoot: string): Record<string, string> {
   // Even if the module isn't installed, react-native should be aliased to react-native-web for better errors.
-  let aliases: Record<string, string> = {
+  const aliases: Record<string, string> = {
     // Alias direct react-native imports to react-native-web
     'react-native$': 'react-native-web',
     // Alias internal react-native modules to react-native-web

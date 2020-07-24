@@ -1,6 +1,7 @@
 import { resolve } from 'path';
-import * as Updates from '../Updates';
+
 import { readAndroidManifestAsync } from '../Manifest';
+import * as Updates from '../Updates';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
@@ -43,35 +44,35 @@ describe('Android Updates config', () => {
       },
     };
     androidManifestJson = await Updates.setUpdatesConfig(config, androidManifestJson, 'user');
-    let mainApplication = androidManifestJson.manifest.application.filter(
+    const mainApplication = androidManifestJson.manifest.application.filter(
       e => e['$']['android:name'] === '.MainApplication'
     )[0];
 
-    let updateUrl = mainApplication['meta-data'].filter(
+    const updateUrl = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'expo.modules.updates.EXPO_UPDATE_URL'
     );
     expect(updateUrl).toHaveLength(1);
     expect(updateUrl[0]['$']['android:value']).toMatch('https://exp.host/@owner/my-app');
 
-    let sdkVersion = mainApplication['meta-data'].filter(
+    const sdkVersion = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'expo.modules.updates.EXPO_SDK_VERSION'
     );
     expect(sdkVersion).toHaveLength(1);
     expect(sdkVersion[0]['$']['android:value']).toMatch('37.0.0');
 
-    let enabled = mainApplication['meta-data'].filter(
+    const enabled = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'expo.modules.updates.ENABLED'
     );
     expect(enabled).toHaveLength(1);
     expect(enabled[0]['$']['android:value']).toMatch('false');
 
-    let checkOnLaunch = mainApplication['meta-data'].filter(
+    const checkOnLaunch = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH'
     );
     expect(checkOnLaunch).toHaveLength(1);
     expect(checkOnLaunch[0]['$']['android:value']).toMatch('NEVER');
 
-    let timeout = mainApplication['meta-data'].filter(
+    const timeout = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS'
     );
     expect(timeout).toHaveLength(1);

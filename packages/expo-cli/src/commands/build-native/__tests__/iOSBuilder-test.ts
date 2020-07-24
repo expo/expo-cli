@@ -1,5 +1,5 @@
-import { vol } from 'memfs';
 import { User } from '@expo/xdl';
+import { vol } from 'memfs';
 
 import iOSBuilder from '../iOSBuilder';
 

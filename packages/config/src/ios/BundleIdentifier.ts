@@ -1,11 +1,12 @@
+import plist, { PlistObject } from '@expo/plist';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import { join } from 'path';
 // @ts-ignore
 import { project as Project } from 'xcode';
-import plist, { PlistObject } from '@expo/plist';
-import { InfoPlist } from './IosConfig.types';
+
 import { ExpoConfig } from '../Config.types';
+import { InfoPlist } from './IosConfig.types';
 
 export function getBundleIdentifier(config: ExpoConfig) {
   return config.ios && config.ios.bundleIdentifier ? config.ios.bundleIdentifier : null;
@@ -17,7 +18,7 @@ export function getBundleIdentifier(config: ExpoConfig) {
  */
 
 export function setBundleIdentifier(config: ExpoConfig, infoPlist: InfoPlist) {
-  let bundleIdentifier = getBundleIdentifier(config);
+  const bundleIdentifier = getBundleIdentifier(config);
 
   if (!bundleIdentifier) {
     return infoPlist;

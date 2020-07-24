@@ -6,20 +6,20 @@ import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';
 import * as path from 'path';
+import { Urls, choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import openBrowser from 'react-dev-utils/openBrowser';
-import { Urls, choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
-import ip from './ip';
 import Logger from './Logger';
-import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as UrlUtils from './UrlUtils';
-import createWebpackCompiler, { printInstructions } from './webpack-utils/createWebpackCompiler';
-import { DEFAULT_PORT, HOST, isDebugModeEnabled } from './webpack-utils/WebpackEnvironment';
 import XDLError from './XDLError';
+import ip from './ip';
+import * as ProjectUtils from './project/ProjectUtils';
+import { DEFAULT_PORT, HOST, isDebugModeEnabled } from './webpack-utils/WebpackEnvironment';
+import createWebpackCompiler, { printInstructions } from './webpack-utils/createWebpackCompiler';
 
 const WEBPACK_LOG_TAG = 'expo';
 
@@ -51,7 +51,7 @@ type BundlingOptions = {
   clear?: boolean;
   pwa?: boolean;
   isImageEditingEnabled?: boolean;
-  webpackEnv?: Object;
+  webpackEnv?: object;
   mode?: 'development' | 'production' | 'test' | 'none';
   https?: boolean;
   nonInteractive?: boolean;
@@ -121,7 +121,7 @@ export async function startAsync(
     );
   }
 
-  let serverName = 'Webpack';
+  const serverName = 'Webpack';
 
   if (webpackDevServerInstance) {
     ProjectUtils.logError(
@@ -457,7 +457,7 @@ async function applyOptionsToProjectSettingsAsync(
   projectRoot: string,
   options: BundlingOptions
 ): Promise<ProjectSettings.Settings> {
-  let newSettings: Partial<ProjectSettings.Settings> = {};
+  const newSettings: Partial<ProjectSettings.Settings> = {};
   // Change settings before reading them
   if (typeof options.https === 'boolean') {
     newSettings.https = options.https;
@@ -474,7 +474,7 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   projectRoot: string,
   options: BundlingOptions
 ): Promise<WebEnvironment> {
-  let { dev, https } = await applyOptionsToProjectSettingsAsync(projectRoot, options);
+  const { dev, https } = await applyOptionsToProjectSettingsAsync(projectRoot, options);
 
   const mode = typeof options.mode === 'string' ? options.mode : dev ? 'development' : 'production';
 
@@ -597,7 +597,7 @@ export async function openProjectAsync(
   projectRoot: string
 ): Promise<{ success: true; url: string } | { success: false; error: Error }> {
   try {
-    let url = await UrlUtils.constructWebAppUrlAsync(projectRoot, { hostType: 'localhost' });
+    const url = await UrlUtils.constructWebAppUrlAsync(projectRoot, { hostType: 'localhost' });
     if (!url) {
       throw new Error('Webpack Dev Server is not running');
     }

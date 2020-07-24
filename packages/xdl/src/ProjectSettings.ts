@@ -1,5 +1,5 @@
-import JsonFile from '@expo/json-file';
 import { ProjectTarget } from '@expo/config';
+import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -119,10 +119,10 @@ export async function setPackagerInfoAsync(
 }
 
 export function dotExpoProjectDirectory(projectRoot: string): string {
-  let dirPath = path.join(projectRoot, '.expo');
+  const dirPath = path.join(projectRoot, '.expo');
   try {
     // move .exponent to .expo
-    let oldDirPath = path.join(projectRoot, '.exponent');
+    const oldDirPath = path.join(projectRoot, '.exponent');
     if (fs.statSync(oldDirPath).isDirectory()) {
       fs.renameSync(oldDirPath, dirPath);
     }
@@ -135,7 +135,7 @@ export function dotExpoProjectDirectory(projectRoot: string): string {
 }
 
 export function dotExpoProjectDirectoryExists(projectRoot: string): boolean {
-  let dirPath = path.join(projectRoot, '.expo');
+  const dirPath = path.join(projectRoot, '.expo');
   try {
     if (fs.statSync(dirPath).isDirectory()) {
       return true;
@@ -148,6 +148,6 @@ export function dotExpoProjectDirectoryExists(projectRoot: string): boolean {
 }
 
 export async function getPackagerOptsAsync(projectRoot: string): Promise<ProjectSettings> {
-  let projectSettings = await readAsync(projectRoot);
+  const projectSettings = await readAsync(projectRoot);
   return projectSettings;
 }

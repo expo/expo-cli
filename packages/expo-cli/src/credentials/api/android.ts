@@ -1,8 +1,8 @@
 import { ApiV2, User } from '@expo/xdl';
 import keyBy from 'lodash/keyBy';
 
-import { AndroidCredentials, Keystore } from '../credentials';
 import { Context } from '../context';
+import { AndroidCredentials, Keystore } from '../credentials';
 
 export class AndroidApi {
   private api: ApiV2;

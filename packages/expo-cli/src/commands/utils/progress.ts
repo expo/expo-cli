@@ -1,5 +1,5 @@
-import ProgressBar from 'progress';
 import { Progress } from 'got';
+import ProgressBar from 'progress';
 
 type ProgressTracker = (progress: Progress) => void;
 

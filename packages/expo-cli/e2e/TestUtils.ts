@@ -1,8 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-
 import { ExpoConfig } from '@expo/config';
 import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
+import fs from 'fs';
+import path from 'path';
 
 export const EXPO_CLI = path.join(__dirname, '../bin/expo.js');
 

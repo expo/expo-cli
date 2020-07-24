@@ -1,27 +1,27 @@
+import { getConfig, setCustomConfigPath } from '@expo/config';
 import { Android, Simulator, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
+import { Command } from 'commander';
 import fs from 'fs-extra';
 import ora from 'ora';
 import path from 'path';
-import { Command } from 'commander';
 
-import { getConfig, setCustomConfigPath } from '@expo/config';
 import CommandError from '../../CommandError';
+import * as appleApi from '../../appleApi';
+import { runAction, travelingFastlane } from '../../appleApi/fastlane';
+import { Context } from '../../credentials/context';
+import { runCredentialsManager } from '../../credentials/route';
+import { CreateIosDist } from '../../credentials/views/IosDistCert';
+import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/IosProvisioningProfileAdhoc';
+import { SetupIosDist } from '../../credentials/views/SetupIosDist';
+import { SetupIosPush } from '../../credentials/views/SetupIosPush';
 import log from '../../log';
 import prompt from '../../prompt';
 import urlOpts from '../../urlOpts';
-import * as appleApi from '../../appleApi';
-import { runAction, travelingFastlane } from '../../appleApi/fastlane';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
-import { SetupIosDist } from '../../credentials/views/SetupIosDist';
-import { SetupIosPush } from '../../credentials/views/SetupIosPush';
-import { Context } from '../../credentials/context';
-import { CreateIosDist } from '../../credentials/views/IosDistCert';
-import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/IosProvisioningProfileAdhoc';
-import { runCredentialsManager } from '../../credentials/route';
 
 export default function (program: Command) {
   program

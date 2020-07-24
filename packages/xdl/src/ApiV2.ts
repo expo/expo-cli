@@ -47,7 +47,7 @@ type RequestOptions = {
   httpMethod: 'get' | 'post' | 'put' | 'patch' | 'delete';
   queryParameters?: QueryParameters;
   body?: JSONObject;
-  timeout?: Number;
+  timeout?: number;
 };
 
 type UploadOptions = {
@@ -232,8 +232,8 @@ export default class ApiV2Client {
     }
 
     if (result.errors && result.errors.length) {
-      let responseError = result.errors[0];
-      let error = new ApiV2Error(responseError.message, responseError.code);
+      const responseError = result.errors[0];
+      const error = new ApiV2Error(responseError.message, responseError.code);
       error.serverStack = responseError.stack;
       error.details = responseError.details;
       throw error;

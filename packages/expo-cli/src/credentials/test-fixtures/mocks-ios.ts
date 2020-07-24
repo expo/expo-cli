@@ -1,5 +1,6 @@
 import { User } from '@expo/xdl';
 import merge from 'lodash/merge';
+
 import {
   DistCert,
   DistCertInfo,

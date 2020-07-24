@@ -1,9 +1,9 @@
 import { Platform, getConfig } from '@expo/config';
-import { ApiV2 } from '../xdl';
-import { Keystore } from './AndroidCredentials';
 
 import Api from '../Api';
 import UserManager from '../User';
+import { ApiV2 } from '../xdl';
+import { Keystore } from './AndroidCredentials';
 import * as Ios from './IosCredentials';
 
 export type Credentials = Ios.Credentials; // can't import android types from typescript
@@ -117,7 +117,7 @@ async function fetchCredentials(
 export async function updateCredentialsForPlatform(
   platform: 'android',
   newCredentials: Keystore,
-  userCredentialsIds: Array<number>,
+  userCredentialsIds: number[],
   metadata: CredentialMetadata
 ): Promise<void> {
   if (process.env.EXPO_NEXT_API === 'true') {

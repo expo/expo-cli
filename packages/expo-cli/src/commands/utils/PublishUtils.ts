@@ -1,9 +1,10 @@
 import { getConfig } from '@expo/config';
 import { Api, ApiV2, FormData, Project, UserManager } from '@expo/xdl';
 import ora from 'ora';
-import * as table from './cli-table';
+
 import log from '../../log';
 import prompt from '../../prompt';
+import * as table from './cli-table';
 
 export type HistoryOptions = {
   releaseChannel?: string;
@@ -248,14 +249,14 @@ export async function printPublicationDetailAsync(
     return;
   }
 
-  let manifest = detail.manifest;
+  const manifest = detail.manifest;
   delete detail.manifest;
 
   // Print general release info
-  let generalTableString = table.printTableJson(detail, 'Release Description');
+  const generalTableString = table.printTableJson(detail, 'Release Description');
   console.log(generalTableString);
 
   // Print manifest info
-  let manifestTableString = table.printTableJson(manifest, 'Manifest Details');
+  const manifestTableString = table.printTableJson(manifest, 'Manifest Details');
   console.log(manifestTableString);
 }

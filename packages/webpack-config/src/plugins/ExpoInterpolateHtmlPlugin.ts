@@ -1,8 +1,8 @@
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 import OriginalInterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
 
-import HtmlWebpackPlugin from 'html-webpack-plugin';
-import { Environment } from '../types';
 import { getConfig, getPublicPaths } from '../env';
+import { Environment } from '../types';
 
 /**
  * Add variables to the `index.html`.

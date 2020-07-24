@@ -1,5 +1,3 @@
-import { existsSync } from 'fs';
-import path from 'path';
 import {
   format,
   getPackageAsync,
@@ -9,6 +7,8 @@ import {
 import * as Scheme from '@expo/config/build/android/Scheme';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
+import { existsSync } from 'fs';
+import path from 'path';
 
 import { CommandError, Options } from './Options';
 
@@ -104,7 +104,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
   const adb = whichADB();
 
   try {
-    let result = await spawnAsync(adb, args);
+    const result = await spawnAsync(adb, args);
     return result.stdout;
   } catch (e) {
     const err: string = e.stderr || e.stdout || '';

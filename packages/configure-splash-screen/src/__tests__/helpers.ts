@@ -1,6 +1,6 @@
+import colorString from 'color-string';
 import { fs } from 'memfs';
 import { PNG } from 'pngjs';
-import colorString from 'color-string';
 
 const actualFs = jest.requireActual('fs') as typeof fs;
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import path from 'path';
 
+import { ConfigContext } from '../Config.types';
 import { ConfigError, errorToJSON } from '../Errors';
 import { serializeAndEvaluate } from '../Serialize';
-import { ConfigContext } from '../Config.types';
 
 'use strict';
 

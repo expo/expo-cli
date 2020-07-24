@@ -18,9 +18,9 @@ import {
   WriteConfigOptions,
 } from './Config.types';
 import { ConfigError } from './Errors';
-import { getDynamicConfig, getStaticConfig } from './getConfig';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
 import { getExpoSDKVersion } from './Project';
+import { getDynamicConfig, getStaticConfig } from './getConfig';
 
 /**
  * If a config has an `expo` object then that will be used as the config.
@@ -429,7 +429,7 @@ function ensureConfigHasDefaultValues(
 
 export async function writeConfigJsonAsync(
   projectRoot: string,
-  options: Object
+  options: object
 ): Promise<ProjectConfig> {
   const paths = getConfigFilePaths(projectRoot);
   let {

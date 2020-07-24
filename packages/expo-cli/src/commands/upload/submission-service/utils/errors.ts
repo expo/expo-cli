@@ -1,5 +1,5 @@
-import { SubmissionError } from '../SubmissionService.types';
 import log from '../../../../log';
+import { SubmissionError } from '../SubmissionService.types';
 
 enum SubmissionErrorCode {
   ARCHIVE_DOWNLOAD_NOT_FOUND_ERROR = 'SUBMISSION_SERVICE_COMMON_ARCHIVE_DOWNLOAD_NOT_FOUND_ERROR',

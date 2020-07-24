@@ -1,7 +1,8 @@
 import { Command } from 'commander';
 import uniqBy from 'lodash/uniqBy';
-import log from '../log';
+
 import * as table from '../commands/utils/cli-table';
+import log from '../log';
 import {
   Publication,
   RollbackOptions,
@@ -40,7 +41,7 @@ export default function (program: Command) {
             projectDir,
             options as { releaseChannel: string; publishId: string }
           );
-          let tableString = table.printTableJson(
+          const tableString = table.printTableJson(
             result.queryResult,
             'Channel Set Status ',
             'SUCCESS'

@@ -1,14 +1,14 @@
-import { InfoPlist } from './IosConfig.types';
 import { ExpoConfig } from '../Config.types';
+import { InfoPlist } from './IosConfig.types';
 
 export function getUserInterfaceStyle(config: ExpoConfig) {
-  let result = config.ios?.userInterfaceStyle ?? config.userInterfaceStyle;
+  const result = config.ios?.userInterfaceStyle ?? config.userInterfaceStyle;
   return result ?? null;
 }
 
 export function setUserInterfaceStyle(config: ExpoConfig, infoPlist: InfoPlist) {
-  let userInterfaceStyle = getUserInterfaceStyle(config);
-  let UIUserInterfaceStyle = _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle);
+  const userInterfaceStyle = getUserInterfaceStyle(config);
+  const UIUserInterfaceStyle = _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle);
 
   if (!UIUserInterfaceStyle) {
     return infoPlist;

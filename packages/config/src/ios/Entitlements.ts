@@ -1,6 +1,7 @@
-import path from 'path';
-import { sync as globSync } from 'glob';
 import fs from 'fs-extra';
+import { sync as globSync } from 'glob';
+import path from 'path';
+
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
 import {
@@ -119,7 +120,7 @@ function getExistingEntitlementsPath(projectRoot: string): string | null {
   if (entitlementsPaths.length === 0) {
     return null;
   }
-  let [entitlementsPath, ...otherEntitlementsPaths] = entitlementsPaths[0];
+  const [entitlementsPath, ...otherEntitlementsPaths] = entitlementsPaths[0];
 
   if (entitlementsPaths.length > 1) {
     console.warn(

@@ -1,6 +1,12 @@
+import chalk from 'chalk';
+import crypto from 'crypto';
+import fs from 'fs-extra';
+import { boolish } from 'getenv';
+import * as path from 'path';
 import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
 // @ts-ignore
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
+import ignoredFiles from 'react-dev-utils/ignoredFiles';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
 import {
@@ -8,13 +14,7 @@ import {
   ProxyConfigMap,
   Configuration as WebpackDevServerConfiguration,
 } from 'webpack-dev-server';
-import ignoredFiles from 'react-dev-utils/ignoredFiles';
 
-import fs from 'fs-extra';
-import * as path from 'path';
-import crypto from 'crypto';
-import chalk from 'chalk';
-import { boolish } from 'getenv';
 import { getPaths, getPublicPaths } from '../env';
 import { AnyConfiguration, DevConfiguration, Environment } from '../types';
 

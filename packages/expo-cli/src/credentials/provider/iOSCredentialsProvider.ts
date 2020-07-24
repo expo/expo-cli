@@ -1,9 +1,9 @@
-import { SetupIosBuildCredentials } from '../views/SetupIosBuildCredentials';
-import { runCredentialsManager } from '../route';
+import { CredentialsSource } from '../../easJson';
 import { Context } from '../context';
 import { credentialsJson } from '../local';
+import { runCredentialsManager } from '../route';
+import { SetupIosBuildCredentials } from '../views/SetupIosBuildCredentials';
 import { CredentialsProvider } from './provider';
-import { CredentialsSource } from '../../easJson';
 
 export interface iOSCredentials {
   provisioningProfile: string;

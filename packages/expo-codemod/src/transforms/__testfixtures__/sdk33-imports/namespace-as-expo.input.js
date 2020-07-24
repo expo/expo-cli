@@ -1,6 +1,6 @@
+import * as Expo from 'expo';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import * as Expo from 'expo';
 
 Expo.Updates.addListener(() => {});
 

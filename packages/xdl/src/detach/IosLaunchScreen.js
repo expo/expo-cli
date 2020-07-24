@@ -11,8 +11,8 @@ import {
   transformFileContentsAsync,
 } from './ExponentTools';
 import * as IosWorkspace from './IosWorkspace';
-import StandaloneContext from './StandaloneContext';
 import _logger from './Logger';
+import StandaloneContext from './StandaloneContext';
 
 const logger = _logger.withFields({ buildPhase: 'configuring NSBundle' });
 
@@ -132,7 +132,7 @@ async function _saveImageAssetsAsync(context) {
 }
 
 function _setBackgroundImageResizeMode(manifest, dom) {
-  let backgroundViewMode = (() => {
+  const backgroundViewMode = (() => {
     let mode;
     if (!manifest) {
       return ASPECT_FIT;

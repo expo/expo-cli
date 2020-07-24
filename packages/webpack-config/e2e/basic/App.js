@@ -25,8 +25,8 @@ function AspectView(props) {
 }
 
 // These assets will be used to ensure that the file-loader and url-loader are loading the assets properly.
-const imageAsset = require('./img.png');
 const fontAsset = require('./font.ttf');
+const imageAsset = require('./img.png');
 // This tests that the wildcard (.*) loader is working properly.
 const randomAsset = require('./random.bacon');
 
