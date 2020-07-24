@@ -44,8 +44,6 @@ import FormData from './tools/FormData';
 import * as FsCache from './tools/FsCache';
 import * as ImageUtils from './tools/ImageUtils';
 import * as ModuleVersion from './tools/ModuleVersion';
-import * as UpdateVersions from './tools/UpdateVersions';
-export { ConnectionStatus };
 
 const AndroidShellApp: any = require('./detach/AndroidShellApp.js');
 const Detach: any = require('./detach/Detach.js');
@@ -68,6 +66,7 @@ export { Binaries };
 export { Config };
 export { Credentials };
 export { AndroidCredentials };
+export { ConnectionStatus };
 
 export { Detach };
 export { Doctor };

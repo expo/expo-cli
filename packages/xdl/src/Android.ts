@@ -3,6 +3,7 @@ import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import child_process from 'child_process';
 import fs from 'fs-extra';
+import trim from 'lodash/trim';
 import path from 'path';
 import ProgressBar from 'progress';
 
@@ -119,11 +120,11 @@ export function isPlatformSupported(): boolean {
 
 async function adbAlreadyRunning(adb: string): Promise<boolean> {
   try {
-    let result = await spawnAsync(adb, ['start-server']);
-    const lines = _.trim(result.stderr).split(/\r?\n/);
+    const result = await spawnAsync(adb, ['start-server']);
+    const lines = trim(result.stderr).split(/\r?\n/);
     return lines.includes('* daemon started successfully') === false;
   } catch (e) {
-    let errorMessage = _.trim(e.stderr || e.stdout);
+    let errorMessage = trim(e.stderr || e.stdout);
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
