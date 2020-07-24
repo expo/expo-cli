@@ -1,6 +1,7 @@
 import os from 'os';
 import chalk from 'chalk';
 import pickBy from 'lodash/pickBy';
+import pick from 'lodash/pick';
 import { XDLError } from '@expo/xdl';
 
 import terminalLink from 'terminal-link';
@@ -70,7 +71,12 @@ class IOSBuilder extends BaseBuilder {
   async getAppleCtx(): Promise<apple.AppleCtx> {
     if (!this.appleCtx) {
       await apple.setup();
-      this.appleCtx = await apple.authenticate(this.options);
+
+      const appleApiOptions: apple.Options = pick(this.options, ['appleId', 'teamId']);
+      if (this.options.appleId && process.env.EXPO_APPLE_PASSWORD) {
+        appleApiOptions.appleIdPassword = process.env.EXPO_APPLE_PASSWORD;
+      }
+      this.appleCtx = await apple.authenticate(appleApiOptions);
     }
     return this.appleCtx;
   }
