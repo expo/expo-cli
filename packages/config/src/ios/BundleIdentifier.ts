@@ -4,8 +4,16 @@ import { sync as globSync } from 'glob';
 // @ts-ignore
 import { project as Project } from 'xcode';
 
-import { ExpoConfig } from '../Config.types';
 import { InfoPlist } from './IosConfig.types';
+import {
+  ConfigurationSectionEntry,
+  getXCBuildConfigurationSection,
+  getXCConfigurationLists,
+  isBuildConfig,
+  isNotComment,
+  isNotTestHost,
+} from './utils/Xcodeproj';
+import { ExpoConfig } from '../Config.types';
 
 export function getBundleIdentifier(config: ExpoConfig) {
   return config.ios && config.ios.bundleIdentifier ? config.ios.bundleIdentifier : null;
@@ -31,28 +39,41 @@ export function setBundleIdentifier(config: ExpoConfig, infoPlist: InfoPlist) {
 
 /**
  * Updates the bundle identifier for a given pbxproj
- * * @param pbxprojPath Path to pbxproj file
- * @param bundleIdentifier Bundle identifier to set in the pbxproj
+ *
+ * @param {string} pbxprojPath Path to pbxproj file
+ * @param {string} bundleIdentifier Bundle identifier to set in the pbxproj
+ * @param {boolean} [updateProductName=true]  Whether to update PRODUCT_NAME
  */
 
-export function updateBundleIdentifierForPbxproj(pbxprojPath: string, bundleIdentifier: string) {
+export function updateBundleIdentifierForPbxproj(
+  pbxprojPath: string,
+  bundleIdentifier: string,
+  updateProductName: boolean = true
+) {
   const project = Project(pbxprojPath);
   project.parseSync();
 
-  Object.entries(project.pbxXCBuildConfigurationSection())
-    .filter(filterComments)
-    .filter(filterConfig)
-    .filter(filterHosts)
-    .forEach(({ 1: { buildSettings } }: any) => {
-      if (buildSettings.PRODUCT_BUNDLE_IDENTIFIER === bundleIdentifier) {
+  const configurationLists = getXCConfigurationLists(project);
+  // TODO(dsokal): figure out if configuring only the entries from the first configuration list is fine
+  const buildConfigurations = configurationLists[0].buildConfigurations.map(i => i.value);
+
+  Object.entries(getXCBuildConfigurationSection(project))
+    .filter(isNotComment)
+    .filter(isBuildConfig)
+    .filter(isNotTestHost)
+    .filter(([key]: ConfigurationSectionEntry) => buildConfigurations.includes(key))
+    .forEach(([, item]: ConfigurationSectionEntry) => {
+      if (item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER === bundleIdentifier) {
         return;
       }
 
-      buildSettings.PRODUCT_BUNDLE_IDENTIFIER = `"${bundleIdentifier}"`;
+      item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER = `"${bundleIdentifier}"`;
 
-      const productName = bundleIdentifier.split('.').pop();
-      if (!productName?.includes('$')) {
-        buildSettings.PRODUCT_NAME = productName;
+      if (updateProductName) {
+        const productName = bundleIdentifier.split('.').pop();
+        if (!productName?.includes('$')) {
+          item.buildSettings.PRODUCT_NAME = productName;
+        }
       }
     });
   fs.writeFileSync(pbxprojPath, project.writeSync());
@@ -61,15 +82,20 @@ export function updateBundleIdentifierForPbxproj(pbxprojPath: string, bundleIden
 /**
  * Updates the bundle identifier for pbx projects inside the ios directory of the given project root
  *
- * @param projectRoot Path to project root containing the ios directory
- * @param bundleIdentifier Desired bundle identifier
+ * @param {string} projectRoot Path to project root containing the ios directory
+ * @param {string} bundleIdentifier Desired bundle identifier
+ * @param {boolean} [updateProductName=true]  Whether to update PRODUCT_NAME
  */
-export function setBundleIdentifierForPbxproj(projectRoot: string, bundleIdentifier: string) {
+export function setBundleIdentifierForPbxproj(
+  projectRoot: string,
+  bundleIdentifier: string,
+  updateProductName: boolean = true
+) {
   // Get all pbx projects in the ${projectRoot}/ios directory
   const pbxprojPaths = globSync('ios/*/project.pbxproj', { absolute: true, cwd: projectRoot });
 
   for (const pbxprojPath of pbxprojPaths) {
-    updateBundleIdentifierForPbxproj(pbxprojPath, bundleIdentifier);
+    updateBundleIdentifierForPbxproj(pbxprojPath, bundleIdentifier, updateProductName);
   }
 }
 
@@ -109,23 +135,4 @@ export function resetPlistBundleIdentifier(plistPath: string) {
       fs.writeFileSync(plistPath, xml);
     }
   }
-}
-
-function filterComments([item]: any[]): boolean {
-  return !item.endsWith(`_comment`);
-}
-
-function filterConfig(input: any[]): boolean {
-  const {
-    1: { isa },
-  } = input;
-  return isa === 'XCBuildConfiguration';
-}
-
-function filterHosts(input: any[]): boolean {
-  const {
-    1: { buildSettings },
-  } = input;
-
-  return !buildSettings.TEST_HOST;
 }

@@ -10,6 +10,7 @@ import { InfoPlist } from './IosConfig.types';
 import * as Locales from './Locales';
 import * as Name from './Name';
 import * as Orientation from './Orientation';
+import * as ProvisioningProfile from './ProvisioningProfile';
 import * as RequiresFullScreen from './RequiresFullScreen';
 import * as Scheme from './Scheme';
 import * as SplashScreen from './SplashScreen';
@@ -35,6 +36,7 @@ export {
   InfoPlist,
   Name,
   Orientation,
+  ProvisioningProfile,
   RequiresFullScreen,
   Scheme,
   Updates,
