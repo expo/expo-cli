@@ -1,8 +1,11 @@
 import { BuildType, Job, Platform, iOS, sanitizeJob } from '@expo/build-tools';
+import { IOSConfig } from '@expo/config';
+import ora from 'ora';
 
 import iOSCredentialsProvider, {
   iOSCredentials,
 } from '../../credentials/provider/iOSCredentialsProvider';
+import * as ProvisioningProfileUtils from '../../credentials/utils/provisioningProfile';
 import {
   Workflow,
   iOSBuildProfile,
@@ -11,6 +14,9 @@ import {
 } from '../../easJson';
 import { Builder, BuilderContext } from './build';
 import { ensureCredentialsAsync } from './credentials';
+import * as gitUtils from './utils/git';
+import log from '../../log';
+import prompts from '../../prompts';
 
 interface CommonJobProperties {
   platform: Platform.iOS;
@@ -25,6 +31,7 @@ interface CommonJobProperties {
 }
 
 class iOSBuilder implements Builder {
+  private bundleIdentifier?: string;
   private credentials?: iOSCredentials;
   private buildProfile: iOSBuildProfile;
 
@@ -49,14 +56,14 @@ class iOSBuilder implements Builder {
     if (!this.shouldLoadCredentials()) {
       return;
     }
-    const bundleIdentifier = this.ctx.exp?.ios?.bundleIdentifier;
-    if (!bundleIdentifier) {
+    this.bundleIdentifier = this.ctx.exp?.ios?.bundleIdentifier;
+    if (!this.bundleIdentifier) {
       throw new Error('"expo.ios.bundleIdentifier" field is required in your app.json');
     }
     const provider = new iOSCredentialsProvider(this.ctx.projectDir, {
       projectName: this.ctx.projectName,
       accountName: this.ctx.accountName,
-      bundleIdentifier,
+      bundleIdentifier: this.bundleIdentifier,
     });
     await provider.initAsync();
     const credentialsSource = await ensureCredentialsAsync(
@@ -65,6 +72,63 @@ class iOSBuilder implements Builder {
       this.buildProfile.credentialsSource
     );
     this.credentials = await provider.getCredentialsAsync(credentialsSource);
+  }
+
+  public async configureProjectAsync(): Promise<void> {
+    if (!this.credentials || !this.bundleIdentifier) {
+      throw new Error('Call ensureCredentialsAsync first!');
+    }
+    // TODO: add simulator flow
+    // assuming we're building for app store
+
+    const spinner = ora('Making sure your iOS project is set up properly');
+
+    const profileName = ProvisioningProfileUtils.readProfileName(
+      this.credentials.provisioningProfile
+    );
+    const appleTeam = ProvisioningProfileUtils.readAppleTeam(this.credentials.provisioningProfile);
+
+    const { projectDir } = this.ctx;
+    IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(
+      projectDir,
+      this.bundleIdentifier,
+      false
+    );
+    IOSConfig.ProvisioningProfile.setProvisioningProfileForPbxproj(projectDir, {
+      profileName,
+      appleTeamId: appleTeam.teamId,
+    });
+
+    try {
+      await gitUtils.ensureGitStatusIsCleanAsync();
+      spinner.succeed();
+    } catch (err) {
+      if (/Please commit all changes/.exec(err.message)) {
+        spinner.succeed('We configured your iOS project to build it on the Expo servers');
+        log.newLine();
+        log('Please review the following changes and pass the message to make the commit.');
+        log.newLine();
+        await gitUtils.showDiff();
+        log.newLine();
+        const { confirm } = await prompts({
+          type: 'confirm',
+          name: 'confirm',
+          message: 'Can we commit these changes for you?',
+        });
+        if (confirm) {
+          await gitUtils.commitChangesAsync();
+          log.newLine();
+          log('✅ Successfully commited the configuration changes.');
+        } else {
+          throw new Error(
+            "Aborting, run the build command once you're ready. Make sure commit any changes you've made."
+          );
+        }
+      } else {
+        spinner.fail();
+        throw err;
+      }
+    }
   }
 
   private async prepareJobCommonAsync(archiveUrl: string): Promise<Partial<CommonJobProperties>> {
