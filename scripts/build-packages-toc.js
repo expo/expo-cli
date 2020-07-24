@@ -60,13 +60,13 @@ async function run() {
 
       const repoLink = `./packages/${pkg}`;
 
-      const codecovLink = `https://codecov.io/gh/expo/expo-cli/tree/master/packages/${pkg}/src`;
-      const codecovIcon = `https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=${toCamel(
-        pkg
-      )}`;
+      // const codecovLink = `https://codecov.io/gh/expo/expo-cli/tree/master/packages/${pkg}/src`;
+      // const codecovIcon = `https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=${toCamel(
+      //   pkg
+      // )}`;
 
-      // const npmLink = `https://www.npmjs.com/package/${pkgJson.name}`;
-      // const npmIcon = `https://img.shields.io/npm/v/${pkgJson.name}.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600`;
+      const npmLink = `https://www.npmjs.com/package/${pkgJson.name}`;
+      const npmIcon = `https://img.shields.io/npm/v/${pkgJson.name}.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600`;
       // const npmItem = `[\`v${pkgJson.version}\`](${npmLink})`;
       /// With Icon, this seems to time out
       // const npmItem = `[![badges](${npmIcon})](${npmLink})`;
@@ -75,7 +75,7 @@ async function run() {
       // Currently doesn't work with xdl or expo-cli
       entries.push([
         `[**\`${pkgJson.name}\`**](${repoLink})`,
-        `[![badges](${codecovIcon})](${codecovLink})`,
+        `[![badges](${npmIcon})](${npmLink})`,
       ]);
     } catch (e) {
       console.log(`Skipping ${pkg}`);
