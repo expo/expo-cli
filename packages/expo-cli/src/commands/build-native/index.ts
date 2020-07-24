@@ -1,8 +1,7 @@
-import { Platform } from '@expo/build-tools';
 import { ApiV2 } from '@expo/xdl';
 import { Command } from 'commander';
 
-import { CredentialsSource, EasConfig, EasJsonReader } from '../../easJson';
+import { EasConfig, EasJsonReader } from '../../easJson';
 import log from '../../log';
 import { ensureProjectExistsAsync } from '../../projects';
 import AndroidBuilder from './AndroidBuilder';
@@ -13,7 +12,7 @@ import {
   waitForBuildEndAsync,
 } from './build';
 import iOSBuilder from './iOSBuilder';
-import { printBuildResults, printBuildTable, printLogsUrls } from './utils';
+import { printBuildResults, printLogsUrls } from './utils';
 
 interface Options {
   platform: 'android' | 'ios' | 'all';
@@ -75,7 +74,7 @@ async function statusAction(projectDir: string): Promise<void> {
 }
 
 export default function (program: Command) {
-  const buildCmd = program
+  program
     .command('build [project-dir]')
     .description(
       'Build an app binary for your project, signed and ready for submission to the Google Play Store.'

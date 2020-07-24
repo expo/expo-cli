@@ -1,9 +1,7 @@
-import { Keystore } from '../../credentials/credentials';
 import { CredentialsProvider } from '../../credentials/provider';
 import { CredentialsSource, Workflow } from '../../easJson';
 import log from '../../log';
 import prompts from '../../prompts';
-import { BuilderContext } from './build';
 
 const platformMapName = {
   ios: 'iOS',

@@ -1,9 +1,8 @@
-import { AndroidCredentials } from '@expo/xdl';
 import commandExists from 'command-exists';
 
 import log from '../../log';
 import { Context, IView } from '../context';
-import { DownloadKeystore, UpdateKeystore } from './AndroidKeystore';
+import { UpdateKeystore } from './AndroidKeystore';
 
 interface Options {
   nonInteractive?: boolean;

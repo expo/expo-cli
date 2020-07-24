@@ -11,7 +11,6 @@ import {
 } from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
 import * as IosIcons from './IosIcons';
-
 // @ts-ignore: No TS support
 import * as IosLaunchScreen from './IosLaunchScreen';
 // @ts-ignore: No TS support

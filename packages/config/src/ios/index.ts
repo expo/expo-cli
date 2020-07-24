@@ -5,8 +5,6 @@ import * as DeviceFamily from './DeviceFamily';
 import * as Entitlements from './Entitlements';
 import * as Facebook from './Facebook';
 import * as Google from './Google';
-
-// Placeholders
 import * as Icons from './Icons';
 import { InfoPlist } from './IosConfig.types';
 import * as Locales from './Locales';

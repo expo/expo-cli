@@ -1,4 +1,4 @@
-import { Compiler, Plugin, compilation } from 'webpack';
+import { Compiler, Plugin } from 'webpack';
 
 function maybeFetchPlugin(compiler: Compiler, name: string): Plugin | undefined {
   return compiler.options?.plugins

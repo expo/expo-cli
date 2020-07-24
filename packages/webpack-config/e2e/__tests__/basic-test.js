@@ -14,10 +14,9 @@ function getTestIdQuery(testId) {
 }
 
 // This needs to be evaluated to load the page
-let response;
 beforeEach(async () => {
   jest.setTimeout(60000);
-  response = await page.goto(config.url);
+  await page.goto(config.url);
 });
 
 describe('Basic', () => {

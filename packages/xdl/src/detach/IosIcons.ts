@@ -5,8 +5,6 @@ import { saveImageToPathAsync, saveUrlToPathAsync, spawnAsyncThrowError } from '
 import logger from './Logger';
 import {
   AnyStandaloneContext,
-  StandaloneContextDataService,
-  StandaloneContextDataUser,
   StandaloneContextService,
   StandaloneContextUser,
 } from './StandaloneContext';

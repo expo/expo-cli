@@ -1,4 +1,3 @@
-import { User } from '@expo/xdl';
 import merge from 'lodash/merge';
 import { vol } from 'memfs';
 

@@ -4,8 +4,6 @@ import * as Exp from '../Exp';
 
 jest.mock('fs');
 
-const fs = require('fs');
-
 describe('determineEntryPoint', () => {
   beforeEach(() => {
     const packageJson = JSON.stringify(

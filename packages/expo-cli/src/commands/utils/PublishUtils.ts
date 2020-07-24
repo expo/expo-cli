@@ -1,5 +1,5 @@
 import { getConfig } from '@expo/config';
-import { Api, ApiV2, FormData, Project, UserManager } from '@expo/xdl';
+import { ApiV2, Project, UserManager } from '@expo/xdl';
 import ora from 'ora';
 
 import log from '../../log';

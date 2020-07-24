@@ -1,5 +1,5 @@
 import spawnAsync from '@expo/spawn-async';
-import { ApiV2, UserManager } from '@expo/xdl';
+import { UserManager } from '@expo/xdl';
 import fs from 'fs-extra';
 import ora from 'ora';
 

@@ -1,7 +1,4 @@
-import Api from '../Api';
-import UserManager from '../User';
 import { findP12CertSerialNumber } from '../detach/PKCS12Utils';
-import { ApiV2 } from '../xdl';
 
 export type Credentials = {
   appleId?: string;

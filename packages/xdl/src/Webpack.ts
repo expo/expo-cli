@@ -178,8 +178,6 @@ export async function startAsync(
     !process.stdout.isTTY
   );
 
-  let server: DevServer;
-
   devServerInfo = {
     urls,
     protocol,
@@ -189,7 +187,7 @@ export async function startAsync(
     port: webpackServerPort!,
   };
 
-  server = await new Promise(resolve => {
+  const server: DevServer = await new Promise(resolve => {
     // Create a webpack compiler that is configured with custom messages.
     const compiler = createWebpackCompiler({
       projectRoot,

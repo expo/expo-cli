@@ -12,13 +12,13 @@ import { Environment } from '../types';
 export default class InterpolateHtmlPlugin extends OriginalInterpolateHtmlPlugin {
   static fromEnv = (
     env: Pick<Environment, 'mode' | 'config' | 'locations' | 'projectRoot'>,
-    HtmlWebpackPlugin: HtmlWebpackPlugin
+    htmlWebpackPlugin: HtmlWebpackPlugin
   ): InterpolateHtmlPlugin => {
     const config = env.config || getConfig(env);
     const { publicPath } = getPublicPaths(env);
 
     // @ts-ignore
-    return new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
+    return new InterpolateHtmlPlugin(htmlWebpackPlugin, {
       WEB_PUBLIC_URL: publicPath,
       // @ts-ignore Type 'string | undefined' is not assignable to type 'string'.
       WEB_TITLE: config.web?.name,

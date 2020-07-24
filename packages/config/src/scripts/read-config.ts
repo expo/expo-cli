@@ -1,11 +1,11 @@
 #!/usr/bin/env node
+'use strict';
+
 import path from 'path';
 
 import { ConfigContext } from '../Config.types';
 import { ConfigError, errorToJSON } from '../Errors';
 import { serializeAndEvaluate } from '../Serialize';
-
-'use strict';
 
 // Makes the script crash on unhandled rejections instead of silently
 // ignoring them. In the future, promise rejections that are not handled will

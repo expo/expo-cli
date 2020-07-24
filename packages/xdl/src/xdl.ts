@@ -47,13 +47,20 @@ import * as ModuleVersion from './tools/ModuleVersion';
 import * as UpdateVersions from './tools/UpdateVersions';
 export { ConnectionStatus };
 
+const AndroidShellApp: any = require('./detach/AndroidShellApp.js');
+const Detach: any = require('./detach/Detach.js');
+const IosCodeSigning = require('./detach/IosCodeSigning.js');
+const IosIPABuilder = require('./detach/IosIPABuilder.js').default;
+const IosPodsTools = require('./detach/IosPodsTools.js');
+const IosShellApp = require('./detach/IosShellApp.js');
+const IosWorkspace = require('./detach/IosWorkspace');
+
 if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
   installSourceMapSupport();
 }
 export { Analytics };
 export { Android };
 
-const AndroidShellApp: any = require('./detach/AndroidShellApp.js');
 export { AndroidShellApp };
 export { Api };
 export { ApiV2 };
@@ -62,7 +69,6 @@ export { Config };
 export { Credentials };
 export { AndroidCredentials };
 
-const Detach: any = require('./detach/Detach.js');
 export { Detach };
 export { Doctor };
 export { Env };
@@ -77,21 +83,16 @@ export { ImageUtils };
 export { StandaloneBuild };
 export { IosIcons };
 
-const IosIPABuilder = require('./detach/IosIPABuilder.js').default;
 export { IosIPABuilder };
 export { IosKeychain };
 
-const IosWorkspace = require('./detach/IosWorkspace');
 export { IosWorkspace };
 export { IosPlist };
 
-const IosPodsTools = require('./detach/IosPodsTools.js');
 export { IosPodsTools };
 
-const IosShellApp = require('./detach/IosShellApp.js');
 export { IosShellApp };
 
-const IosCodeSigning = require('./detach/IosCodeSigning.js');
 export { IosCodeSigning };
 export { Logger };
 export { LoggerDetach };

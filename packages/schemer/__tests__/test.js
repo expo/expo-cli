@@ -1,3 +1,5 @@
+/* eslint-disable import/order */
+
 import { ErrorCodes } from '../src/Error';
 import Schemer from '../src/index';
 

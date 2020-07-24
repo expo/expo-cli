@@ -3,11 +3,9 @@ import HashIds from 'hashids';
 import path from 'path';
 import uuid from 'uuid';
 
-import Api from '../Api';
 import ApiV2Client from '../ApiV2';
 import { UserManagerInstance } from '../User';
 import UserSettings from '../UserSettings';
-import FormData from '../tools/FormData';
 
 const _makeShortId = (salt, minLength = 10) => {
   const hashIds = new HashIds(salt, minLength);

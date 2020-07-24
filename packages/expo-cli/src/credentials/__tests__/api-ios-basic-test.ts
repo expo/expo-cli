@@ -1,7 +1,6 @@
 import { IosApi } from '../api/ios';
 import {
   getApiV2MockCredentials,
-  getCtxMock,
   jester,
   testAllCredentials,
   testAppCredential,

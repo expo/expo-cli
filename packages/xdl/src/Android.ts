@@ -172,17 +172,17 @@ async function _isExpoInstalledAsync() {
   return false;
 }
 
-async function _expoVersionAsync() {
-  const info = await getAdbOutputAsync(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
+// async function _expoVersionAsync() {
+//   const info = await getAdbOutputAsync(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
 
-  const regex = /versionName=([0-9.]+)/;
-  const regexMatch = regex.exec(info);
-  if (!regexMatch || regexMatch.length < 2) {
-    return null;
-  }
+//   const regex = /versionName=([0-9.]+)/;
+//   const regexMatch = regex.exec(info);
+//   if (!regexMatch || regexMatch.length < 2) {
+//     return null;
+//   }
 
-  return regexMatch[1];
-}
+//   return regexMatch[1];
+// }
 
 // NOTE(brentvatne): Temporarily remove this. We should take care of installing
 // automatically, not just warn.

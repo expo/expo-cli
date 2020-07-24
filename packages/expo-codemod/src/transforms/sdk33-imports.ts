@@ -1,4 +1,3 @@
-import camelCase from 'camelcase';
 import {
   API,
   FileInfo,
@@ -180,10 +179,6 @@ export default function transform(fileInfo: FileInfo, api: API, options: object)
   }
 
   return root.toSource({ quote: 'single' });
-}
-
-function makeNamespaceObjectName(packageName: string) {
-  return camelCase(packageName, { pascalCase: true });
 }
 
 function findNonNamespaceImports(j: JSCodeshift, root: any, sourceName: string) {

@@ -122,7 +122,7 @@ describe('build ios', () => {
 
     const iosBuilder = new IOSBuilder(projectRoot, builderOptions);
     await expect(iosBuilder.command()).rejects.toThrow(
-      /Your project must have a \`bundleIdentifier\` set in the Expo config/
+      /Your project must have a `bundleIdentifier` set in the Expo config/
     );
 
     // expect that we get the latest release and started build

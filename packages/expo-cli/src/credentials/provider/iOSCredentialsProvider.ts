@@ -69,7 +69,6 @@ export default class iOSCredentialsProvider implements CredentialsProvider {
         r.distributionCertificate.certP12 === l.distributionCertificate.certP12 &&
         r.distributionCertificate.certPassword === l.distributionCertificate.certPassword
       );
-      return true;
     } catch (_) {
       return false;
     }

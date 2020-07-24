@@ -7,7 +7,6 @@ import { addWarningIOS } from '../WarningAggregator';
 import {
   getPbxproj,
   getProjectName,
-  getSourceRoot,
   isBuildConfig,
   removeComments,
   removeTestHosts,

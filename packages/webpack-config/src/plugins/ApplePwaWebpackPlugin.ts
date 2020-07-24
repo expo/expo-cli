@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { IconOptions, ProjectOptions, generateAppleIconAsync, generateSplashAsync } from 'expo-pwa';
-import { Compiler, compilation } from 'webpack';
+import { Compiler } from 'webpack';
 
 import ModifyHtmlWebpackPlugin, { HTMLLinkNode, HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 

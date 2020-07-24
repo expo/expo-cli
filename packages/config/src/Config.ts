@@ -163,7 +163,7 @@ export function readConfigJson(
   const rawStaticConfig = paths.staticConfigPath ? getStaticConfig(paths.staticConfigPath) : null;
 
   const getConfigName = (): string => {
-    if (paths.staticConfigPath) ` \`${path.basename(paths.staticConfigPath)}\``;
+    if (paths.staticConfigPath) return ` \`${path.basename(paths.staticConfigPath)}\``;
     return '';
   };
 

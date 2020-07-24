@@ -1,4 +1,4 @@
-import { fs, vol } from 'memfs';
+import { vol } from 'memfs';
 
 import { readColorsXMLAsync } from '../Colors';
 import { getStatusBarColor, getStatusBarStyle, setStatusBarConfig } from '../StatusBar';

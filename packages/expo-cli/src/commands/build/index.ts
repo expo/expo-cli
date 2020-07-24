@@ -1,4 +1,3 @@
-import { setCustomConfigPath } from '@expo/config';
 import { UrlUtils, Webpack } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
@@ -11,7 +10,6 @@ import AndroidBuilder from './AndroidBuilder';
 import BaseBuilder from './BaseBuilder';
 import { AndroidOptions, IosOptions } from './BaseBuilder.types';
 import IOSBuilder from './ios/IOSBuilder';
-import { askBuildType } from './utils';
 
 async function maybeBailOnWorkflowWarning({
   projectDir,

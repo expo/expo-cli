@@ -247,7 +247,6 @@ async function createDetachedAsync(context) {
   );
   logger.info(`Creating ExpoKit workspace at ${iosProjectDirectory}...`);
 
-  const isServiceContext = context.type === 'service';
   const standaloneSdkVersion = await getNewestSdkVersionSupportedAsync(context);
 
   let iosClientVersion;
@@ -364,7 +363,6 @@ function getPaths(context) {
   let iosProjectDirectory;
   let projectName;
   let supportingDirectory;
-  let intermediatesDirectory;
   let projectRootDirectory;
 
   if (context.build.isExpoClientBuild()) {
@@ -395,7 +393,7 @@ function getPaths(context) {
   }
   // sandbox intermediates directory by workspace so that concurrently operating
   // contexts do not interfere with one another.
-  intermediatesDirectory = path.join(
+  const intermediatesDirectory = path.join(
     iosProjectDirectory,
     context.build.isExpoClientBuild() ? 'ExponentIntermediates' : 'ExpoKitIntermediates'
   );

@@ -12,7 +12,6 @@ import {
 } from './ExponentTools';
 import * as IosWorkspace from './IosWorkspace';
 import _logger from './Logger';
-import StandaloneContext from './StandaloneContext';
 
 const logger = _logger.withFields({ buildPhase: 'configuring NSBundle' });
 

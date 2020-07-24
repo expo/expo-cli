@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-import CommandError, { ErrorCodes } from '../../CommandError';
+import CommandError from '../../CommandError';
 import * as appleApi from '../../appleApi';
 import log from '../../log';
 import prompt from '../../prompts';

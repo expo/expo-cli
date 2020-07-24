@@ -2,14 +2,13 @@ import { AndroidCredentials } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import omit from 'lodash/omit';
-import ora from 'ora';
 import os from 'os';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
 
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
-import { askForUserProvided, getCredentialsFromUser } from '../actions/promptForCredentials';
+import { askForUserProvided } from '../actions/promptForCredentials';
 import { Context, IView } from '../context';
 import { Keystore, keystoreSchema } from '../credentials';
 

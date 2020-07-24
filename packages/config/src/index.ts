@@ -1,3 +1,4 @@
+/* eslint-disable import/export */
 import * as WarningAggregator from './WarningAggregator';
 import * as AndroidConfig from './android';
 import * as IOSConfig from './ios';

@@ -49,7 +49,7 @@ export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): 
         if (pad !== 0) {
           pad -= 1;
         }
-      } else if (line.match(/^<\w([^>]*[^\/])?>.*$/)) {
+      } else if (line.match(/^<\w([^>]*[^/])?>.*$/)) {
         indent = 1;
       } else {
         indent = 0;

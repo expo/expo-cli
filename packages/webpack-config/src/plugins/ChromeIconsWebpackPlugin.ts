@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { IconOptions, ProjectOptions, generateChromeIconAsync } from 'expo-pwa';
-import { Compiler, compilation } from 'webpack';
+import { Compiler } from 'webpack';
 
 import { BeforeEmitOptions } from './JsonWebpackPlugin';
 import ModifyJsonWebpackPlugin from './ModifyJsonWebpackPlugin';

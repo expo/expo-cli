@@ -4,6 +4,7 @@ const COMMANDS = [
   require('./android'),
   // old command build:status is the same as new build:status so we disable it when the new one is available
   // new command only for testing, shouldn't be visible for users
+  // eslint-disable-next-line import/order
   process.env.EXPO_ENABLE_NEW_TURTLE ? require('./build-native') : require('./build'),
   require('./bundle-assets'),
   require('./client'),
@@ -21,9 +22,9 @@ const COMMANDS = [
   require('./login'),
   require('./logout'),
   require('./prepare-detached-build'),
+  require('./publish'),
   require('./publish-info'),
   require('./publish-modify'),
-  require('./publish'),
   require('./push-creds'),
   require('./register'),
   require('./send'),

@@ -1,8 +1,5 @@
-import fs from 'fs-extra';
-
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
-import { getPbxproj, isBuildConfig, removeComments, removeTestHosts } from './utils/Xcodeproj';
 
 export function getSupportsTablet(config: ExpoConfig) {
   if (config.ios?.supportsTablet) {
@@ -38,8 +35,6 @@ export function getDeviceFamilies(config: ExpoConfig) {
  * Add to pbxproj under TARGETED_DEVICE_FAMILY
  */
 export function setDeviceFamily(config: ExpoConfig, projectRoot: string) {
-  const deviceFamilies = getDeviceFamilies(config);
-
   const supportsTablet = getSupportsTablet(config);
   const isTabletOnly = getIsTabletOnly(config);
 

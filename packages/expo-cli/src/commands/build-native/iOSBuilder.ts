@@ -1,12 +1,9 @@
 import { BuildType, Job, Platform, iOS, sanitizeJob } from '@expo/build-tools';
 
-import { Context } from '../../credentials/context';
-import { Keystore } from '../../credentials/credentials';
 import iOSCredentialsProvider, {
   iOSCredentials,
 } from '../../credentials/provider/iOSCredentialsProvider';
 import {
-  CredentialsSource,
   Workflow,
   iOSBuildProfile,
   iOSGenericBuildProfile,

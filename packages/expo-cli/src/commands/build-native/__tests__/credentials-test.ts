@@ -21,7 +21,6 @@ function crateMockCredentialsProvider({
   hasLocal,
   isLocalSynced,
 }: any): CredentialsProvider {
-  let credentials;
   return {
     platform: 'android',
     hasRemoteAsync: jest.fn().mockImplementation(() => hasRemote || false),

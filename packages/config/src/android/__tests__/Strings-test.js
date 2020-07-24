@@ -1,4 +1,4 @@
-import { fs, vol } from 'memfs';
+import { vol } from 'memfs';
 
 import { setFacebookAppIdString } from '../Facebook';
 import { readStringsXMLAsync } from '../Strings';

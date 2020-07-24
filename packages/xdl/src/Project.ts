@@ -49,7 +49,6 @@ import uuid from 'uuid';
 
 import * as Analytics from './Analytics';
 import * as Android from './Android';
-import Api from './Api';
 import ApiV2 from './ApiV2';
 import Config from './Config';
 import * as DevSession from './DevSession';
@@ -69,9 +68,7 @@ import * as Watchman from './Watchman';
 import * as Webpack from './Webpack';
 import XDLError from './XDLError';
 import * as ExponentTools from './detach/ExponentTools';
-import * as IosPlist from './detach/IosPlist';
 // @ts-ignore IosWorkspace not yet converted to TypeScript
-import * as IosWorkspace from './detach/IosWorkspace';
 import * as Doctor from './project/Doctor';
 import * as ExpSchema from './project/ExpSchema';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -483,18 +480,20 @@ function prepareHooks(
   const validHooks: LoadedHook[] = [];
 
   if (hooks) {
-    hooks[hookType]?.forEach((hook: any) => {
-      const { file } = hook;
-      const fn = _requireFromProject(file, projectRoot, exp);
-      if (typeof fn !== 'function') {
-        logger.global.error(
-          `Unable to load ${hookType} hook: '${file}'. The module does not export a function.`
-        );
-      } else {
-        hook._fn = fn;
-        validHooks.push(hook);
-      }
-    });
+    if (hooks[hookType]) {
+      hooks[hookType]!.forEach((hook: any) => {
+        const { file } = hook;
+        const fn = _requireFromProject(file, projectRoot, exp);
+        if (typeof fn !== 'function') {
+          logger.global.error(
+            `Unable to load ${hookType} hook: '${file}'. The module does not export a function.`
+          );
+        } else {
+          hook._fn = fn;
+          validHooks.push(hook);
+        }
+      });
+    }
 
     if (hooks[hookType] !== undefined && validHooks.length !== hooks[hookType]?.length) {
       throw new XDLError(
@@ -1551,7 +1550,7 @@ const METRO_VERBOSE_WARNING = 'Run CLI with --verbose flag for more details.';
 
 // Remove these constants and related code when SDK35 isn't supported anymore
 // Context: https://github.com/expo/expo-cli/issues/1074
-const NODE_12_WINDOWS_METRO_ERROR = `Invalid regular expression: /(.*\\__fixtures__\\.*|node_modules[\\\]react[\\\]dist[\\\].*|website\\node_modules\\.*|heapCapture\\bundle\.js|.*\\__tests__\\.*)$/: Unterminated character class`;
+const NODE_12_WINDOWS_METRO_ERROR = `Invalid regular expression: /(.*\\__fixtures__\\.*|node_modules[\\]react[\\]dist[\\].*|website\\node_modules\\.*|heapCapture\\bundle.js|.*\\__tests__\\.*)$/: Unterminated character class`;
 const NODE_12_WINDOWS_METRO_SUGGESTION = `\nUnable to start the project due to a documented incompatibility between Node 12 LTS and Expo SDK 35 on Windows.
 Please refer to this GitHub comment for a solution:
 https://github.com/expo/expo-cli/issues/1074#issuecomment-559220752\n`;

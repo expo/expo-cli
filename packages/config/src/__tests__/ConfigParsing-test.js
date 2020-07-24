@@ -19,7 +19,7 @@ describe('getConfig', () => {
     });
     it('parses a ts config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/ts');
-      const { exp, staticConfigPath } = getConfig(projectRoot, {
+      const { exp } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
       expect(exp.foo).toBe('bar+value');
