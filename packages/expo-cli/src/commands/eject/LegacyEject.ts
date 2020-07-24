@@ -1,5 +1,6 @@
 import * as ConfigUtils from '@expo/config';
 import JsonFile from '@expo/json-file';
+import * as PackageManager from '@expo/package-manager';
 import { Detach, Exp, IosWorkspace, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import fse from 'fs-extra';
@@ -9,7 +10,6 @@ import path from 'path';
 import semver from 'semver';
 import temporary from 'tempy';
 
-import * as PackageManager from '@expo/package-manager';
 import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
@@ -45,7 +45,7 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
     return;
   }
 
-  let plural = packagesToWarn.length > 1;
+  const plural = packagesToWarn.length > 1;
   log.nested('');
   log.nested(
     chalk.yellow(
@@ -74,7 +74,7 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
   await validateGitStatusAsync();
   log.nested('');
 
-  let reactNativeOptionMessage = "Bare: I'd like a bare React Native project.";
+  const reactNativeOptionMessage = "Bare: I'd like a bare React Native project.";
 
   const questions: Question[] = [
     {
@@ -126,7 +126,7 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
     log.nested('');
     log.nested('Then you can run the project:');
     log.nested('');
-    let packageManager = PackageManager.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
+    const packageManager = PackageManager.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
     log.nested(`  ${packageManager === 'npm' ? 'npm run android' : 'yarn android'}`);
     log.nested(`  ${packageManager === 'npm' ? 'npm run ios' : 'yarn ios'}`);
     await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
@@ -186,8 +186,8 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
   }
 
   // Validate that the template exists
-  let sdkMajorVersionNumber = semver.major(exp.sdkVersion);
-  let templateSpec = npmPackageArg(`expo-template-bare-minimum@sdk-${sdkMajorVersionNumber}`);
+  const sdkMajorVersionNumber = semver.major(exp.sdkVersion);
+  const templateSpec = npmPackageArg(`expo-template-bare-minimum@sdk-${sdkMajorVersionNumber}`);
   try {
     await pacote.manifest(templateSpec);
   } catch (e) {
@@ -203,7 +203,7 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
   /**
    * Customize app.json
    */
-  let { displayName, name } = await getAppNamesAsync(projectRoot);
+  const { displayName, name } = await getAppNamesAsync(projectRoot);
   appJson.displayName = displayName;
   appJson.name = name;
 

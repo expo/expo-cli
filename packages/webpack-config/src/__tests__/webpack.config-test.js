@@ -1,7 +1,7 @@
 import { dirname } from 'path';
 
-import normalizePaths from '../utils/normalizePaths';
 import createConfig from '..';
+import normalizePaths from '../utils/normalizePaths';
 
 const projectRoot = dirname(require.resolve('@expo/webpack-config/e2e/basic'));
 
@@ -16,12 +16,25 @@ function normalizeConfig(config) {
   }
 
   // Make the paths be relative to the project
-  const normalized = normalizePaths(config, value => value.split('expo-cli/').pop());
+  const normalized = normalizePaths(config, value => value.split('cli/').pop());
+
+  delete normalized.devServer?.watchOptions;
 
   // performance is disabled in CI
   delete normalized.performance;
   return normalized;
 }
+
+let originalCiValue;
+
+beforeAll(() => {
+  originalCiValue = process.env.CI;
+  process.env.CI = 'true';
+});
+
+afterAll(() => {
+  process.env.CI = originalCiValue;
+});
 
 describe(`ios`, () => {
   it('ios development', async () => {

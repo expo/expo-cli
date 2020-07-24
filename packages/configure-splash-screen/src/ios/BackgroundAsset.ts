@@ -1,6 +1,6 @@
+import { ColorDescriptor } from 'color-string';
 import fs from 'fs-extra';
 import path from 'path';
-import { ColorDescriptor } from 'color-string';
 import { PNG } from 'pngjs';
 
 import { writeContentsJsonFile } from './Contents.json';
@@ -44,10 +44,7 @@ async function createPngFile(filePath: string, color: ColorDescriptor) {
   png.data = buffer;
 
   return new Promise(resolve => {
-    png
-      .pack()
-      .pipe(fs.createWriteStream(filePath))
-      .on('finish', resolve);
+    png.pack().pipe(fs.createWriteStream(filePath)).on('finish', resolve);
   });
 }
 

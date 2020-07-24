@@ -1,10 +1,10 @@
+import { RegistrationData, User, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import program from 'commander';
 
-import { RegistrationData, User, UserManager } from '@expo/xdl';
 import CommandError from './CommandError';
-import prompt, { Question } from './prompt';
 import log from './log';
+import prompt, { Question } from './prompt';
 
 UserManager.initialize();
 
@@ -58,7 +58,7 @@ export async function loginOrRegisterAsync(): Promise<User> {
 }
 
 export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
-  let user = await UserManager.getCurrentUserAsync();
+  const user = await UserManager.getCurrentUserAsync();
   if (user) {
     return user;
   }
@@ -132,7 +132,7 @@ async function _usernamePasswordAuth(username?: string, password?: string): Prom
     password: password || answers.password,
   };
 
-  let user = await UserManager.loginAsync('user-pass', data);
+  const user = await UserManager.loginAsync('user-pass', data);
 
   if (user) {
     console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);

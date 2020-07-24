@@ -1,17 +1,17 @@
 import { ExpoConfig } from '../Config.types';
 import {
+  getProjectColorsXMLPathAsync,
+  readColorsXMLAsync,
+  setColorItem,
+  writeColorsXMLAsync,
+} from './Colors';
+import {
   XMLItem,
   getProjectStylesXMLPathAsync,
   readStylesXMLAsync,
   setStylesItem,
   writeStylesXMLAsync,
 } from './Styles';
-import {
-  getProjectColorsXMLPathAsync,
-  readColorsXMLAsync,
-  setColorItem,
-  writeColorsXMLAsync,
-} from './Colors';
 
 const COLOR_PRIMARY_KEY = 'colorPrimary';
 const DEFAULT_PRIMARY_COLOR = '#023c69';
@@ -21,7 +21,7 @@ export function getPrimaryColor(config: ExpoConfig) {
 }
 
 export async function setPrimaryColor(config: ExpoConfig, projectDirectory: string) {
-  let hexString = getPrimaryColor(config);
+  const hexString = getPrimaryColor(config);
 
   const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
   const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
@@ -32,8 +32,8 @@ export async function setPrimaryColor(config: ExpoConfig, projectDirectory: stri
   let stylesJSON = await readStylesXMLAsync(stylesPath);
   let colorsJSON = await readColorsXMLAsync(colorsPath);
 
-  let colorItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
-  let styleItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
+  const colorItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
+  const styleItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
 
   colorItemToAdd[0]._ = hexString;
   colorItemToAdd[0].$.name = COLOR_PRIMARY_KEY;

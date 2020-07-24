@@ -58,7 +58,7 @@ describe('android', () => {
         ),
         'android/app/src/main/res/values/colors.xml': reactNativeProjectWithSplashScreenConfigured[
           'android/app/src/main/res/values/colors.xml'
-        ].replace('#E3F29238', '#237BD980'),
+        ].replace('#38E3F292', '#80237BD9'),
       };
 
       expect(received).toEqual(expected);
@@ -81,7 +81,7 @@ describe('android', () => {
         ].replace('CONTAIN', 'COVER'),
         'android/app/src/main/res/values/colors.xml': reactNativeProjectWithSplashScreenConfigured[
           'android/app/src/main/res/values/colors.xml'
-        ].replace('#E3F29238', '#FFFF00'),
+        ].replace('#38E3F292', '#FFFF00'),
         'android/app/src/main/res/drawable/splashscreen_image.png': backgroundImage,
       };
       expect(received).toEqual(expected);

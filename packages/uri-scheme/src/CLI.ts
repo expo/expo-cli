@@ -6,8 +6,8 @@ import { resolve } from 'path';
 import * as Android from './Android';
 import * as Ios from './Ios';
 import { CommandError, Options } from './Options';
-import shouldUpdate from './update';
 import * as URIScheme from './URIScheme';
+import shouldUpdate from './update';
 
 const packageJson = () => require('../package.json');
 

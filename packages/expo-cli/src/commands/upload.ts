@@ -1,11 +1,11 @@
 import chalk from 'chalk';
-import pick from 'lodash/pick';
-import size from 'lodash/size';
 import { Command } from 'commander';
+import pick from 'lodash/pick';
 
+import log from '../log';
 import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
 import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
-import log from '../log';
+import { AndroidSubmitCommandOptions } from './upload/submission-service/android/types';
 import { SubmissionMode } from './upload/submission-service/types';
 
 const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
@@ -14,7 +14,7 @@ export default function (program: Command) {
   program
     .command('upload:android [projectDir]')
     .alias('ua')
-    .option('--latest', 'uploads the latest build (default)')
+    .option('--latest', 'uploads the latest build')
     .option('--id <id>', 'id of the build to upload')
     .option('--path <path>', 'path to the .apk/.aab file')
     .option('--url <url>', 'app archive url')
@@ -43,7 +43,7 @@ export default function (program: Command) {
     .option('--verbose', 'Always print logs from Submission Service')
     .description('Uploads an Android standalone app to Google Play Store.')
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
-    .asyncActionProjectDir(async (projectDir: string, options: any) => {
+    .asyncActionProjectDir(async (projectDir: string, options: AndroidSubmitCommandOptions) => {
       // TODO: remove this once we verify `fastlane supply` works on linux / windows
       if (!options.useSubmissionService) {
         checkRuntimePlatform('android');
@@ -77,7 +77,7 @@ export default function (program: Command) {
     )
     .option(
       '--apple-id-password <apple-id-password>',
-      'your Apple ID password (you can also set EXPO_APPLE_ID_PASSWORD env variable)'
+      'your Apple ID password (you can also set EXPO_APPLE_PASSWORD env variable)'
     )
     .option(
       '--app-name <app-name>',
@@ -112,7 +112,7 @@ export default function (program: Command) {
         checkRuntimePlatform('ios');
 
         const args = pick(options, SOURCE_OPTIONS);
-        if (size(args) > 1) {
+        if (Object.keys(args).length > 1) {
           throw new Error(`You have to choose only one of: --path, --id, --latest, --url`);
         }
         IOSUploader.validateOptions(options);

@@ -1,8 +1,7 @@
-import path from 'path';
-
-import fs from 'fs-extra';
-import chalk from 'chalk';
 import { Credentials, Exp } from '@expo/xdl';
+import chalk from 'chalk';
+import fs from 'fs-extra';
+import path from 'path';
 
 import log from '../../log';
 

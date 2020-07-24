@@ -1,6 +1,6 @@
 type WarningArray = [string, string, string | undefined];
-let _warningsIOS: Array<WarningArray> = [];
-let _warningsAndroid: Array<WarningArray> = [];
+let _warningsIOS: WarningArray[] = [];
+let _warningsAndroid: WarningArray[] = [];
 
 export function hasWarningsIOS() {
   return !!_warningsIOS.length;
@@ -19,13 +19,13 @@ export function addWarningIOS(tag: string, text: string, link?: string) {
 }
 
 export function flushWarningsAndroid() {
-  let result = _warningsAndroid;
+  const result = _warningsAndroid;
   _warningsAndroid = [];
   return result;
 }
 
 export function flushWarningsIOS() {
-  let result = _warningsIOS;
+  const result = _warningsIOS;
   _warningsIOS = [];
   return result;
 }

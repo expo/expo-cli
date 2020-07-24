@@ -1,5 +1,4 @@
 import simpleSpinner from '@expo/simple-spinner';
-
 import { Exp, UserSettings } from '@expo/xdl';
 
 import askUser from './askUser';

@@ -1,3 +1,4 @@
+/* eslint-disable */
 /* (The MIT License)
 
 Copyright (c) 2010-2017 Nathan Rajlich <nathan@tootallnate.net>

@@ -1,7 +1,7 @@
+import * as Constants from 'app/common/constants';
+import * as React from 'react';
 import { css } from 'react-emotion';
 
-import * as React from 'react';
-import * as Constants from 'app/common/constants';
 import OptionsButton from './OptionsButton';
 
 const STYLES_CONTAINER = css`
@@ -36,7 +36,7 @@ export default class ContentGroupHeader extends React.Component {
       );
     }
 
-    let deviceElement = (
+    const deviceElement = (
       <OptionsButton
         isActive={this.props.isDeviceActive}
         isDisabled={this.props.isDisabled}

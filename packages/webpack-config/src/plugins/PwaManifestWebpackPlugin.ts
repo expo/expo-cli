@@ -1,5 +1,6 @@
-import { Compiler, Plugin, compilation } from 'webpack';
 import * as path from 'path';
+import { Compiler, Plugin, compilation as compilationNS } from 'webpack';
+
 import JsonWebpackPlugin from './JsonWebpackPlugin';
 import { HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 
@@ -22,6 +23,8 @@ export type PwaManifestOptions = {
 };
 
 export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
+  rel: string = 'manifest';
+
   constructor(private pwaOptions: PwaManifestOptions, manifest: any) {
     super({
       path: pwaOptions.path,
@@ -34,7 +37,7 @@ export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
     super.apply(compiler);
     compiler.hooks.make.tapPromise(
       this.constructor.name,
-      async (compilation: compilation.Compilation) => {
+      async (compilation: compilationNS.Compilation) => {
         // Hook into the html-webpack-plugin processing and add the html
         const HtmlWebpackPlugin = maybeFetchPlugin(compiler, 'HtmlWebpackPlugin') as any;
         if (HtmlWebpackPlugin) {
@@ -68,7 +71,7 @@ export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
                 tagName: 'link',
                 voidTag: true,
                 attributes: {
-                  rel: 'manifest',
+                  rel: this.rel,
                   href: path.join(this.pwaOptions.publicPath, this.pwaOptions.path),
                 },
               });

@@ -1,6 +1,7 @@
-import path from 'path';
 import fs from 'fs-extra';
+import path from 'path';
 import { Builder, Parser } from 'xml2js';
+
 import { Document } from './Manifest';
 import { XMLItem } from './Styles';
 
@@ -39,7 +40,7 @@ export async function writeStringsXMLAsync(
 
 export function setStringItem(itemToAdd: XMLItem[], stringFileContentsJSON: Document) {
   if (stringFileContentsJSON.resources.string) {
-    let stringNameExists = stringFileContentsJSON.resources.string.filter(
+    const stringNameExists = stringFileContentsJSON.resources.string.filter(
       (e: XMLItem) => e['$'].name === itemToAdd[0]['$'].name
     )[0];
     if (stringNameExists) {

@@ -1,6 +1,6 @@
+import log from '../../../../log';
 import prompt from '../../../../prompt';
 import { existingFile } from '../../../../validators';
-import log from '../../../../log';
 
 enum ServiceAccountSourceType {
   path,

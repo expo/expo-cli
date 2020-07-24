@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import program from 'commander';
 
 import log from '../../log';
-import prompt from '../../prompt';
+import prompts from '../../prompts';
 
 export async function checkIfSdkIsSupported(
   sdkVersion: string,
@@ -50,14 +50,14 @@ export async function askBuildType<T extends string>(
     return allowedTypes[0];
   }
 
-  const { answer } = await prompt({
-    type: 'list',
+  const { answer } = await prompts({
+    type: 'select',
     name: 'answer',
     message: 'Choose the build type you would like:',
     choices: allowedTypes.map(type => ({
+      title: type,
       value: type,
-      short: type,
-      name: `${type} ${chalk.gray(`- ${availableTypes[type]}`)}`,
+      description: availableTypes[type],
     })),
   });
 

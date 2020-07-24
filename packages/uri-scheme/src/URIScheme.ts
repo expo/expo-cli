@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import chalk from 'chalk';
-import prompts from 'prompts';
 import { statSync } from 'fs';
 import { relative } from 'path';
+import prompts from 'prompts';
 
 import * as Android from './Android';
 import * as Ios from './Ios';
@@ -18,7 +18,7 @@ function fileExists(filePath: string): boolean {
 export function getAvailablePlatforms(
   options: Pick<Options, 'projectRoot' | 'infoPath' | 'manifestPath'>
 ): string[] {
-  let platforms: string[] = [];
+  const platforms: string[] = [];
   if (options.infoPath) {
     if (!fileExists(options.infoPath)) {
       throw new CommandError(`Custom Info.plist does not exist at path "${options.infoPath}"`);
@@ -94,7 +94,7 @@ export async function addAsync(options: Options): Promise<string[]> {
   // lowercase and documents that specify schemes must do so with lowercase letters.
   options.uri = await normalizeUriProtocolAsync(options.uri);
 
-  let results: string[] = [];
+  const results: string[] = [];
   let actionOccurred = false;
   if (options.ios) {
     if (await Ios.addAsync(options)) {
@@ -125,7 +125,7 @@ export async function addAsync(options: Options): Promise<string[]> {
 export async function removeAsync(options: Options): Promise<string[]> {
   options.uri = ensureUriString(options.uri);
 
-  let results: string[] = [];
+  const results: string[] = [];
   let actionOccurred = false;
 
   if (options.ios) {

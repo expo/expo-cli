@@ -1,18 +1,16 @@
-import { Credentials, UrlUtils } from '@expo/xdl';
 import { ExpoConfig } from '@expo/config';
+import { Credentials, UrlUtils } from '@expo/xdl';
 import chalk from 'chalk';
-import has from 'lodash/has';
-import get from 'lodash/get';
-import pick from 'lodash/pick';
 import intersection from 'lodash/intersection';
+import pick from 'lodash/pick';
 
-import BaseUploader, { PlatformOptions } from './BaseUploader';
+import CommandError from '../../CommandError';
+import { authenticate } from '../../appleApi';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
-import { runFastlaneAsync } from './utils';
-import CommandError from '../../CommandError';
 import { nonEmptyInput } from '../../validators';
-import { authenticate } from '../../appleApi';
+import BaseUploader, { PlatformOptions } from './BaseUploader';
+import { runFastlaneAsync } from './utils';
 
 const PLATFORM = 'ios';
 
@@ -112,18 +110,18 @@ export default class IOSUploader extends BaseUploader {
   }
 
   _ensureExperienceIsValid(exp: ExpoConfig): void {
-    if (!has(exp, 'ios.bundleIdentifier')) {
+    if (!exp.ios?.bundleIdentifier) {
       throw new Error(`You must specify an iOS bundle identifier in app.json.`);
     }
   }
 
   async _getPlatformSpecificOptions(): Promise<{ [key: string]: any }> {
-    const appleIdCrentials = await this._getAppleIdCredentials();
-    const appleTeamId = await this._getAppleTeamId(appleIdCrentials);
+    const appleIdCredentials = await this._getAppleIdCredentials();
+    const appleTeamId = await this._getAppleTeamId(appleIdCredentials);
     const appName = await this._getAppName();
     const otherOptions = pick(this.options, ['language', 'sku', 'companyName']);
     return {
-      ...appleIdCrentials,
+      ...appleIdCredentials,
       appName,
       ...otherOptions,
       appleTeamId,
@@ -133,7 +131,7 @@ export default class IOSUploader extends BaseUploader {
   async _getAppleTeamId(appleIdCrentials: AppleIdCredentials): Promise<string | undefined> {
     const credentialMetadata = await Credentials.getCredentialMetadataAsync(this.projectDir, 'ios');
     const credential = await Credentials.getCredentialsForPlatform(credentialMetadata);
-    let teamId = get(credential, 'teamId', undefined);
+    const teamId = credential?.teamId;
     if (teamId) {
       return teamId;
     } else {
@@ -146,14 +144,26 @@ export default class IOSUploader extends BaseUploader {
     const appleCredsKeys = ['appleId', 'appleIdPassword'];
     const result: AppleCreds = pick(this.options, appleCredsKeys);
 
-    if (process.env.EXPO_APPLE_ID) {
-      result.appleId = process.env.EXPO_APPLE_ID;
+    if (result.appleId && process.env.EXPO_APPLE_ID) {
+      log.warn(
+        `You've provided contradictory Apple IDs. You should provide either the EXPO_APPLE_ID env or the --apple-id flag, not both. Falling back to --apple-id.`
+      );
     }
+    if (result.appleIdPassword && process.env.EXPO_APPLE_PASSWORD) {
+      log.warn(
+        `You've provided contradictory Apple passwords. You should provide either the EXPO_APPLE_PASSWORD env or the --apple-id-password flag, not both. Falling back to --apple-id-password.`
+      );
+    }
+    const appleId = result.appleId ?? process.env.EXPO_APPLE_ID;
+    const appleIdPassword =
+      result.appleIdPassword ??
+      process.env.EXPO_APPLE_PASSWORD ??
+      process.env.EXPO_APPLE_ID_PASSWORD;
+
     if (process.env.EXPO_APPLE_ID_PASSWORD) {
-      result.appleIdPassword = process.env.EXPO_APPLE_ID_PASSWORD;
+      log.error('EXPO_APPLE_ID_PASSWORD is deprecated, please use EXPO_APPLE_PASSWORD instead!');
     }
 
-    const { appleId, appleIdPassword } = result;
     if (appleId && appleIdPassword) {
       return {
         appleId,

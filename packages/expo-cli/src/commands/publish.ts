@@ -23,7 +23,7 @@ type Options = {
 };
 
 export async function action(projectDir: string, options: Options = {}) {
-  let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+  const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
   if (options.releaseChannel && !channelRe.test(options.releaseChannel)) {
     log.error(
       'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
@@ -104,30 +104,19 @@ export async function action(projectDir: string, options: Options = {}) {
     startedOurOwn = true;
   }
 
-  let recipient = await sendTo.getRecipient(options.sendTo);
+  const recipient = await sendTo.getRecipient(options.sendTo);
   log(`Publishing to channel '${options.releaseChannel}'...`);
 
   const {
     args: { sdkVersion },
   } = await Exp.getPublishInfoAsync(projectDir);
 
-  let buildStatus;
-  if (process.env.EXPO_LEGACY_API === 'true') {
-    buildStatus = await Project.buildAsync(projectDir, {
-      mode: 'status',
-      platform: 'all',
-      current: true,
-      releaseChannel: options.releaseChannel,
-      sdkVersion,
-    });
-  } else {
-    buildStatus = await Project.getBuildStatusAsync(projectDir, {
-      platform: 'all',
-      current: true,
-      releaseChannel: options.releaseChannel,
-      sdkVersion,
-    });
-  }
+  const buildStatus = await Project.getBuildStatusAsync(projectDir, {
+    platform: 'all',
+    current: true,
+    releaseChannel: options.releaseChannel,
+    sdkVersion,
+  });
 
   if (
     'userHasBuiltExperienceBefore' in buildStatus &&
@@ -153,7 +142,7 @@ export async function action(projectDir: string, options: Options = {}) {
       releaseChannel: options.releaseChannel,
     });
 
-    let url = result.url;
+    const url = result.url;
 
     if (options.quiet) {
       simpleSpinner.stop();
@@ -162,7 +151,7 @@ export async function action(projectDir: string, options: Options = {}) {
     log('Publish complete');
     log.newLine();
 
-    let exampleManifestUrl = getExampleManifestUrl(url, exp.sdkVersion);
+    const exampleManifestUrl = getExampleManifestUrl(url, exp.sdkVersion);
     if (exampleManifestUrl) {
       log(
         `The manifest URL is: ${terminalLink(url, exampleManifestUrl)}. ${terminalLink(
@@ -181,7 +170,7 @@ export async function action(projectDir: string, options: Options = {}) {
 
     if (target === 'managed') {
       // TODO: replace with websiteUrl from server when it is available, if that makes sense.
-      let websiteUrl = url.replace('exp.host', 'expo.io');
+      const websiteUrl = url.replace('exp.host', 'expo.io');
       log(
         `The project page is: ${terminalLink(websiteUrl, websiteUrl)}. ${terminalLink(
           'Learn more.',

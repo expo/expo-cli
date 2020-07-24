@@ -319,7 +319,7 @@ export class UserManagerInstance {
     sessionSecret: string;
   }): Promise<User> {
     let user;
-    let api = ApiV2Client.clientForUser({
+    const api = ApiV2Client.clientForUser({
       sessionSecret,
     });
 

@@ -1,6 +1,7 @@
 import spawnAsync from '@expo/spawn-async';
 import { FileSystem } from '@expo/xdl';
 import editors from 'env-editor';
+
 import log from '../../log';
 
 export function guessEditor() {

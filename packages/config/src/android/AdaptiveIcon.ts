@@ -7,7 +7,7 @@ export function getAdaptiveIcon(config: ExpoConfig) {
 }
 
 export async function setAdaptiveIconAsync(config: ExpoConfig, projectRoot: string) {
-  let icon = getAdaptiveIcon(config);
+  const icon = getAdaptiveIcon(config);
   if (!icon) {
     return;
   }

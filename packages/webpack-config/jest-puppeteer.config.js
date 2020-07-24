@@ -20,7 +20,7 @@ const config = {
     server: {
       command: `../expo-cli/bin/expo.js start e2e/basic/ --web-only --non-interactive --https`,
       port: 5000,
-      launchTimeout: 30000,
+      launchTimeout: 60000,
       debug: true,
     },
   },
@@ -33,7 +33,7 @@ const config = {
         : `node jest/build-project.js e2e/basic/ && serve e2e/basic/web-build`,
       // The default serve-cli port
       port: 5000,
-      launchTimeout: 30000,
+      launchTimeout: 60000,
       debug: true,
     },
   },

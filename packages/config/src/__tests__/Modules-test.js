@@ -1,4 +1,5 @@
 import { vol } from 'memfs';
+
 import { moduleNameFromPath, projectHasModule } from '../Modules';
 
 jest.mock('fs');

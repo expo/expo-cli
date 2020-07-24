@@ -1,18 +1,13 @@
-import get from 'lodash/get';
 import invariant from 'invariant';
-import prompt, { ChoiceType, Question } from '../../prompt';
-import log from '../../log';
 
+import prompt, { ChoiceType, Question } from '../../prompt';
+import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
+import { Context, IView } from '../context';
+import { CredentialsManager } from '../route';
 import * as androidView from './AndroidCredentials';
-import * as iosAppView from './IosAppCredentials';
-import * as iosPushView from './IosPushCredentials';
 import * as iosDistView from './IosDistCert';
 import * as iosProvisionigProfileView from './IosProvisioningProfile';
-
-import { Context, IView } from '../context';
-import { AndroidCredentials, IosCredentials } from '../credentials';
-import { CredentialsManager } from '../route';
-import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
+import * as iosPushView from './IosPushCredentials';
 
 export class SelectPlatform implements IView {
   async open(ctx: Context): Promise<IView | null> {
@@ -112,12 +107,11 @@ export class SelectIosExperience implements IView {
 }
 
 export class SelectAndroidExperience implements IView {
-  androidCredentials: AndroidCredentials[] = [];
-  askAboutProjectMode = true;
+  private askAboutProjectMode = true;
 
   async open(ctx: Context): Promise<IView | null> {
     if (ctx.hasProjectContext && this.askAboutProjectMode) {
-      const experienceName = `@${ctx.user.username}/${ctx.manifest.slug}`;
+      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
       const { runProjectContext } = await prompt([
         {
           type: 'confirm',
@@ -127,38 +121,29 @@ export class SelectAndroidExperience implements IView {
       ]);
       if (runProjectContext) {
         invariant(ctx.manifest.slug, 'app.json slug field must be set');
-        const view = new androidView.ExperienceView(ctx.manifest.slug as string, null);
+        const view = new androidView.ExperienceView(experienceName);
         CredentialsManager.get().changeMainView(view);
         return view;
       }
     }
     this.askAboutProjectMode = false;
 
-    if (this.androidCredentials.length === 0) {
-      this.androidCredentials = get(await ctx.api.getAsync('credentials/android'), 'credentials');
-    }
-    await displayAndroidCredentials(this.androidCredentials);
+    const credentials = await ctx.android.fetchAll();
+    await displayAndroidCredentials(Object.values(credentials));
 
     const question: Question = {
       type: 'list',
-      name: 'appIndex',
+      name: 'experienceName',
       message: 'Select application',
-      choices: this.androidCredentials.map((cred, index) => ({
+      choices: Object.values(credentials).map(cred => ({
         name: cred.experienceName,
-        value: index,
+        value: cred.experienceName,
       })),
       pageSize: Infinity,
     };
+    const { experienceName } = await prompt(question);
 
-    const { appIndex } = await prompt(question);
-
-    const matchName = this.androidCredentials[appIndex].experienceName.match(/@[\w.-]+\/([\w.-]+)/);
-    if (matchName && matchName[1]) {
-      return new androidView.ExperienceView(matchName[1], this.androidCredentials[appIndex]);
-    } else {
-      log.error('Invalid experience name');
-    }
-    return null;
+    return new androidView.ExperienceView(experienceName);
   }
 }
 

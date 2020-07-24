@@ -1,6 +1,7 @@
 import { resolve } from 'path';
-import { getPackage, setPackageInAndroidManifest, setPackageInBuildGradle } from '../Package';
+
 import { readAndroidManifestAsync } from '../Manifest';
+import { getPackage, setPackageInAndroidManifest, setPackageInBuildGradle } from '../Package';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');

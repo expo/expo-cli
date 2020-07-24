@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { ResizeMode, Parameters } from '../constants';
+import { ResizeMode, Arguments, StatusBarOptions, AndroidOnlyStatusBarOptions } from '../constants';
 import configureAndroidManifestXml from './AndroidManifest.xml';
 import configureColorsXml from './Colors.xml';
 import configureDrawableXml from './Drawable.xml';
@@ -16,16 +16,34 @@ export default async function configureAndroid(
     darkModeBackgroundColor,
     imagePath,
     darkModeImagePath,
-  }: Parameters & { resizeMode: ResizeMode }
+    statusBarHidden,
+    statusBarStyle,
+    darkModeStatusBarStyle,
+    statusBarTranslucent,
+    statusBarBackgroundColor,
+    darkModeStatusBarBackgroundColor,
+  }: Arguments &
+    Partial<StatusBarOptions> &
+    Partial<AndroidOnlyStatusBarOptions> & { resizeMode: ResizeMode }
 ) {
   const androidMainPath = path.resolve(projectRootPath, 'android/app/src/main');
 
   await Promise.all([
     configureDrawables(androidMainPath, imagePath, darkModeImagePath),
-    configureColorsXml(androidMainPath, backgroundColor, darkModeBackgroundColor),
+    configureColorsXml(androidMainPath, {
+      backgroundColor,
+      darkModeBackgroundColor,
+      statusBarBackgroundColor,
+      darkModeStatusBarBackgroundColor,
+    }),
     configureDrawableXml(androidMainPath, resizeMode),
-    configureStylesXml(androidMainPath),
+    configureStylesXml(androidMainPath, {
+      statusBarHidden,
+      statusBarStyle,
+      darkModeStatusBarStyle,
+      addStatusBarBackgroundColor: !!statusBarBackgroundColor,
+    }),
     configureAndroidManifestXml(androidMainPath),
-    configureMainActivity(projectRootPath, resizeMode),
+    configureMainActivity(projectRootPath, resizeMode, statusBarTranslucent),
   ]);
 }

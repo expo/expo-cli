@@ -9,10 +9,7 @@ coverage:
 
   status:
     changes: no
-    project: yes
     patch: yes
+    project: no
 
-comment:
-  behavior: default
-  require_changes: false
-  layout: 'header, flags, diff'
+comment: false

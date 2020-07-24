@@ -1,9 +1,11 @@
-import { Command } from 'commander';
+import { ExpoConfig, getConfig } from '@expo/config';
 import { Versions } from '@expo/xdl';
-import { getConfig } from '@expo/config';
+import chalk from 'chalk';
+import { Command } from 'commander';
+
+import prompt from '../prompt';
 import * as Eject from './eject/Eject';
 import * as LegacyEject from './eject/LegacyEject';
-import prompt from '../prompt';
 
 async function userWantsToEjectWithoutUpgradingAsync() {
   const answer = await prompt({
@@ -19,12 +21,20 @@ async function action(
   projectDir: string,
   options: LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions
 ) {
-  let { exp } = getConfig(projectDir);
+  let exp: ExpoConfig;
+  try {
+    exp = getConfig(projectDir).exp;
+  } catch (error) {
+    console.log();
+    console.log(chalk.red(error.message));
+    console.log();
+    process.exit(1);
+  }
 
   // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3 for ExpoKit
   if (Versions.lteSdkVersion(exp, '36.0.0')) {
     // Don't show a warning if we haven't released SDK 37 yet
-    let latestReleasedVersion = await Versions.newestReleasedSdkVersionAsync();
+    const latestReleasedVersion = await Versions.newestReleasedSdkVersionAsync();
     if (Versions.lteSdkVersion({ sdkVersion: latestReleasedVersion.version }, '36.0.0')) {
       await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
     } else {
@@ -52,5 +62,5 @@ export default function (program: Command) {
       '-f --force',
       'Will attempt to generate an iOS project even when the system is not running macOS. Unsafe and may fail.'
     )
-    .asyncActionProjectDir(action, { checkConfig: true });
+    .asyncActionProjectDir(action);
 }

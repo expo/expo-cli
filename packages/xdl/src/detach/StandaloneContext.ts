@@ -104,11 +104,12 @@ class StandaloneContext {
 
   /**
    *  On iOS we begin configuring standalone apps before we have any information about the
-   *  project's manifest.
+   *  project's manifest. By default let's treat all contexts as non-anonymous and override
+   *  it in contexts that needs this to be different.
    */
-  isAnonymous = () => {
-    return this instanceof StandaloneContextService && !this.config;
-  };
+  isAnonymous() {
+    return false;
+  }
 }
 
 export class StandaloneContextUser extends StandaloneContext {
@@ -136,6 +137,14 @@ export class StandaloneContextService extends StandaloneContext {
     public build: StandaloneBuildFlags
   ) {
     super();
+  }
+
+  /**
+   *  On iOS we begin configuring standalone apps before we have any information about the
+   *  project's manifest.
+   */
+  isAnonymous() {
+    return true;
   }
 }
 

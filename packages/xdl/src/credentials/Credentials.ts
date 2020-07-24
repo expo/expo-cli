@@ -1,9 +1,9 @@
 import { Platform, getConfig } from '@expo/config';
-import { ApiV2 } from '../xdl';
-import { Keystore } from './AndroidCredentials';
 
 import Api from '../Api';
 import UserManager from '../User';
+import { ApiV2 } from '../xdl';
+import { Keystore } from './AndroidCredentials';
 import * as Ios from './IosCredentials';
 
 export type Credentials = Ios.Credentials; // can't import android types from typescript
@@ -18,6 +18,7 @@ export type CredentialMetadata = {
 
 export { Ios };
 
+/** @deprecated */
 export async function getCredentialMetadataAsync(
   projectRoot: string,
   platform: Platform
@@ -40,6 +41,7 @@ export async function getCredentialMetadataAsync(
   };
 }
 
+/** @deprecated */
 export async function credentialsExistForPlatformAsync(
   metadata: CredentialMetadata
 ): Promise<boolean> {
@@ -47,18 +49,21 @@ export async function credentialsExistForPlatformAsync(
   return !!credentials;
 }
 
+/** @deprecated */
 export async function getEncryptedCredentialsForPlatformAsync(
   metadata: CredentialMetadata
 ): Promise<Credentials | undefined | null> {
   return fetchCredentials(metadata, false);
 }
 
+/** @deprecated */
 export async function getCredentialsForPlatform(
   metadata: CredentialMetadata
 ): Promise<Credentials | undefined | null> {
   return fetchCredentials(metadata, true);
 }
 
+/** @deprecated use expo-cli/src/credentials/api */
 async function fetchCredentials(
   { username, experienceName, bundleIdentifier, platform }: CredentialMetadata,
   decrypt: boolean
@@ -108,10 +113,11 @@ async function fetchCredentials(
   return credentials;
 }
 
+/** @deprecated use expo-cli/src/credentials/api */
 export async function updateCredentialsForPlatform(
   platform: 'android',
   newCredentials: Keystore,
-  userCredentialsIds: Array<number>,
+  userCredentialsIds: number[],
   metadata: CredentialMetadata
 ): Promise<void> {
   if (process.env.EXPO_NEXT_API === 'true') {

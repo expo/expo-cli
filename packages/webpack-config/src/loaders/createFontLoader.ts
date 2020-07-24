@@ -18,6 +18,8 @@ export default function createFontLoader(
       {
         loader: require.resolve('url-loader'),
         options: {
+          // Interop assets like Metro bundler
+          esModule: false,
           limit: 50000,
           name: './fonts/[name].[ext]',
         },

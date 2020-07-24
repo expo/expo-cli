@@ -1,12 +1,12 @@
-import path from 'path';
-import { sync as globSync } from 'glob';
 import fs from 'fs-extra';
+import { sync as globSync } from 'glob';
+import path from 'path';
+
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
 import {
   getPbxproj,
   getProjectName,
-  getSourceRoot,
   isBuildConfig,
   removeComments,
   removeTestHosts,
@@ -115,11 +115,11 @@ const ENTITLEMENTS_TEMPLATE = `
  * Get the path to an existing entitlements file or use the default
  */
 function getExistingEntitlementsPath(projectRoot: string): string | null {
-  const entitlementsPaths = globSync(path.join(projectRoot, 'ios', '*', '.entitlements'));
+  const entitlementsPaths = globSync('ios/*/.entitlements', { absolute: true, cwd: projectRoot });
   if (entitlementsPaths.length === 0) {
     return null;
   }
-  let [entitlementsPath, ...otherEntitlementsPaths] = entitlementsPaths[0];
+  const [entitlementsPath, ...otherEntitlementsPaths] = entitlementsPaths[0];
 
   if (entitlementsPaths.length > 1) {
     console.warn(

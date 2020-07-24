@@ -1,39 +1,93 @@
-import { BuildType, Platform } from '@expo/build-tools';
-import { User, UserManager } from '@expo/xdl';
+import { ApiV2 } from '@expo/xdl';
 import { Command } from 'commander';
 
+import { EasConfig, EasJsonReader } from '../../easJson';
 import log from '../../log';
-import Builder, { Options } from './Builder';
-import { printBuildTable } from './utils';
+import { ensureProjectExistsAsync } from '../../projects';
+import AndroidBuilder from './AndroidBuilder';
+import {
+  BuilderContext,
+  createBuilderContextAsync,
+  startBuildAsync,
+  waitForBuildEndAsync,
+} from './build';
+import iOSBuilder from './iOSBuilder';
+import { printBuildResults, printLogsUrls } from './utils';
 
-async function buildAction(projectDir: string, options: Options) {
-  if (!options.platform || !Object.values(Platform).includes(options.platform)) {
-    throw new Error('Pass valid platform: [android|ios]');
-  }
-  const user: User = await UserManager.ensureLoggedInAsync();
-  const builder = new Builder(user);
-  const buildArtifactUrl = await builder.buildProject(projectDir, options);
-  log(`Artifact url: ${buildArtifactUrl}`);
+interface Options {
+  platform: 'android' | 'ios' | 'all';
+  skipCredentialsCheck?: boolean; // TODO: noop for now
+  wait?: boolean;
+  profile: string;
 }
 
-async function statusAction() {
-  const user: User = await UserManager.ensureLoggedInAsync();
-  const builder = new Builder(user);
-  const result = await builder.getLatestBuilds();
-  printBuildTable(result.builds);
+async function startBuildsAsync(
+  ctx: BuilderContext,
+  projectId: string,
+  platform: Options['platform']
+): Promise<{ platform: 'android' | 'ios'; buildId: string }[]> {
+  const client = ApiV2.clientForUser(ctx.user);
+  const scheduledBuilds: { platform: 'android' | 'ios'; buildId: string }[] = [];
+  if (['android', 'all'].includes(platform)) {
+    const builder = new AndroidBuilder(ctx);
+    const buildId = await startBuildAsync(client, builder, projectId);
+    scheduledBuilds.push({ platform: 'android', buildId });
+  }
+  if (['ios', 'all'].includes(platform)) {
+    const builder = new iOSBuilder(ctx);
+    const buildId = await startBuildAsync(client, builder, projectId);
+    scheduledBuilds.push({ platform: 'ios', buildId });
+  }
+  return scheduledBuilds;
+}
+
+export async function buildAction(projectDir: string, options: Options): Promise<void> {
+  const { platform, profile } = options;
+  if (!platform || !['android', 'ios', 'all'].includes(platform)) {
+    throw new Error(
+      `-p/--platform is required, valid platforms: ${log.chalk.bold('android')}, ${log.chalk.bold(
+        'ios'
+      )}, ${log.chalk.bold('all')}`
+    );
+  }
+  const easConfig: EasConfig = await new EasJsonReader(projectDir, platform).readAsync(profile);
+  const ctx = await createBuilderContextAsync(projectDir, easConfig);
+  const projectId = await ensureProjectExistsAsync(ctx.user, {
+    accountName: ctx.accountName,
+    projectName: ctx.projectName,
+  });
+  const scheduledBuilds = await startBuildsAsync(ctx, projectId, options.platform);
+  printLogsUrls(ctx.accountName, scheduledBuilds);
+
+  if (options.wait) {
+    const buildInfo = await waitForBuildEndAsync(
+      ctx,
+      projectId,
+      scheduledBuilds.map(i => i.buildId)
+    );
+    printBuildResults(buildInfo);
+  }
+}
+
+async function statusAction(projectDir: string): Promise<void> {
+  throw new Error('not implemented yet');
 }
 
 export default function (program: Command) {
   program
     .command('build [project-dir]')
     .description(
-      'Build an app binary for your project, signed and ready for submission to the Google Play Store / App Store.'
+      'Build an app binary for your project, signed and ready for submission to the Google Play Store.'
     )
-    .option('-p --platform <platform>', 'Platform: [android|ios]', /^(android|ios)$/i)
+    .allowUnknownOption()
+    .option('-p --platform <platform>')
+    .option('--skip-credentials-check', 'Skip checking credentials', false)
+    .option('--no-wait', 'Exit immediately after scheduling build', false)
+    .option('--profile <profile>', 'Build profile', 'release')
     .asyncActionProjectDir(buildAction, { checkConfig: true });
 
   program
     .command('build:status')
     .description(`Get the status of the latest builds for your project.`)
-    .asyncAction(statusAction, { checkConfig: true });
+    .asyncActionProjectDir(statusAction, { checkConfig: true });
 }

@@ -1,10 +1,9 @@
-import React from 'react';
-import gql from 'graphql-tag';
-import uniqBy from 'lodash/uniqBy';
-import set from 'lodash/fp/set';
 import { ApolloError } from 'apollo-client';
-
 import * as Sets from 'app/common/sets';
+import gql from 'graphql-tag';
+import set from 'lodash/fp/set';
+import uniqBy from 'lodash/uniqBy';
+import React from 'react';
 
 const delay = time => new Promise(resolve => window.setTimeout(resolve, time));
 
@@ -188,7 +187,7 @@ export const openBrowser = async props => {
 
   let hasError = false;
   try {
-    let result = await props.client.mutate({
+    const result = await props.client.mutate({
       mutation: gql`
         mutation OpenWeb {
           openWeb {

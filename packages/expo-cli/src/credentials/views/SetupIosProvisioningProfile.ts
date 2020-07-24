@@ -1,9 +1,9 @@
 import chalk from 'chalk';
-import log from '../../log';
-import * as iosProfileView from './IosProvisioningProfile';
 
+import log from '../../log';
 import { Context, IView } from '../context';
 import { IosDistCredentials } from '../credentials';
+import * as iosProfileView from './IosProvisioningProfile';
 
 type CliOptions = {
   nonInteractive?: boolean;

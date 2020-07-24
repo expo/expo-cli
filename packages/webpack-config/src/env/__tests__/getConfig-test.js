@@ -1,8 +1,9 @@
 /* eslint-env node */
 
 import path from 'path';
-import getConfig from '../getConfig';
+
 import { normalizePaths } from '../../utils';
+import getConfig from '../getConfig';
 
 const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
 const env = { projectRoot };

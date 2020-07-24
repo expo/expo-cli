@@ -1,8 +1,7 @@
 import fs from 'fs-extra';
-import { Builder, Parser } from 'xml2js';
-
 import { EOL } from 'os';
 import path from 'path';
+import { Builder, Parser } from 'xml2js';
 
 export type Document = { [key: string]: any };
 
@@ -50,7 +49,7 @@ export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): 
         if (pad !== 0) {
           pad -= 1;
         }
-      } else if (line.match(/^<\w([^>]*[^\/])?>.*$/)) {
+      } else if (line.match(/^<\w([^>]*[^/])?>.*$/)) {
         indent = 1;
       } else {
         indent = 0;
@@ -98,4 +97,31 @@ export async function readAndroidManifestAsync(manifestPath: string): Promise<Do
 
 export async function getPackageAsync(manifest: Document): Promise<string | null> {
   return manifest.manifest?.['$']?.package ?? null;
+}
+
+export function addMetaDataItemToMainApplication(
+  mainApplication: any,
+  itemName: string,
+  itemValue: string
+) {
+  let existingMetaDataItem;
+  const newItem = {
+    $: {
+      'android:name': itemName,
+      'android:value': itemValue,
+    },
+  };
+  if (mainApplication.hasOwnProperty('meta-data')) {
+    existingMetaDataItem = mainApplication['meta-data'].filter(
+      (e: any) => e['$']['android:name'] === itemName
+    );
+    if (existingMetaDataItem.length) {
+      existingMetaDataItem[0]['$']['android:value'] = itemValue;
+    } else {
+      mainApplication['meta-data'].push(newItem);
+    }
+  } else {
+    mainApplication['meta-data'] = [newItem];
+  }
+  return mainApplication;
 }

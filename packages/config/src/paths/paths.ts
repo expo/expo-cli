@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
-
 import resolveFrom from 'resolve-from';
+
 import { getConfig } from '../Config';
 import { resolveModule } from '../Modules';
 import { getManagedExtensions } from './extensions';

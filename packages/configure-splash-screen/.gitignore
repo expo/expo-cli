@@ -1,3 +1,4 @@
 # TypeScript incremental compilation cache
 *.tsbuildinfo
-bin
+/bin
+/build

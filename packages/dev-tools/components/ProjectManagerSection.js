@@ -1,14 +1,12 @@
-import React from 'react';
-import { css } from 'react-emotion';
-import { DropTarget } from 'react-dnd';
-
 import * as Constants from 'app/common/constants';
 import { Trash } from 'app/common/svg';
-
-import ProjectManagerSectionHeader from 'app/components/ProjectManagerSectionHeader';
 import Boundary from 'app/components/Boundary';
-import LoggerIcon from 'app/components/LoggerIcon';
 import Log from 'app/components/Log';
+import LoggerIcon from 'app/components/LoggerIcon';
+import ProjectManagerSectionHeader from 'app/components/ProjectManagerSectionHeader';
+import React from 'react';
+import { DropTarget } from 'react-dnd';
+import { css } from 'react-emotion';
 
 const STYLES_BOUNDARY = css`
   height: 100%;
@@ -93,12 +91,12 @@ class ProjectManagerSection extends React.Component {
 
   // TODO: When upgrading to React 16.3, switch to getSnapshotBeforeUpdate
   componentWillUpdate(nextProps) {
-    let prevProps = this.props;
+    const prevProps = this.props;
     if (
       this.refs.logContainer &&
       prevProps.data.messages.nodes.length < nextProps.data.messages.nodes.length
     ) {
-      let { scrollHeight, scrollTop, clientHeight } = this.refs.logContainer;
+      const { scrollHeight, scrollTop, clientHeight } = this.refs.logContainer;
       this.scrollOffsetFromBottom = scrollHeight - (scrollTop + clientHeight);
     } else {
       this.scrollOffsetFromBottom = null;
@@ -112,7 +110,7 @@ class ProjectManagerSection extends React.Component {
   }
 
   scrollToEnd() {
-    let element = this.refs.logContainer;
+    const element = this.refs.logContainer;
     if (element) {
       element.scrollTop = element.scrollHeight - element.clientHeight;
     }
@@ -149,7 +147,7 @@ class ProjectManagerSection extends React.Component {
       );
     }
 
-    let logElements = this.props.data.messages.nodes.map(message => (
+    const logElements = this.props.data.messages.nodes.map(message => (
       <Log key={message.id} message={message} />
     ));
 

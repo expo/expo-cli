@@ -1,7 +1,8 @@
 import fs from 'fs-extra';
-import path from 'path';
 import HashIds from 'hashids';
+import path from 'path';
 import uuid from 'uuid';
+
 import ApiV2Client from '../ApiV2';
 import { UserManagerInstance } from '../User';
 

@@ -1,21 +1,22 @@
-import chalk from 'chalk';
-import fs from 'fs';
-import { Command } from 'commander';
-import { AppJSONConfig, BareAppConfig, ExpoConfig } from '@expo/config';
-import { Exp } from '@expo/xdl';
-import padEnd from 'lodash/padEnd';
-import npmPackageArg from 'npm-package-arg';
-import pacote from 'pacote';
-import ora from 'ora';
-import trimStart from 'lodash/trimStart';
-import wordwrap from 'wordwrap';
+import { AndroidConfig, BareAppConfig, ExpoConfig, IOSConfig, getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
-import path from 'path';
+import { Exp, IosPlist, UserManager } from '@expo/xdl';
+import chalk from 'chalk';
+import program, { Command } from 'commander';
+import fs from 'fs';
 import getenv from 'getenv';
+import padEnd from 'lodash/padEnd';
+import trimStart from 'lodash/trimStart';
+import npmPackageArg from 'npm-package-arg';
+import ora from 'ora';
+import pacote from 'pacote';
+import path from 'path';
 import terminalLink from 'terminal-link';
-import prompt from '../prompt';
-import log from '../log';
+import wordwrap from 'wordwrap';
+
 import CommandError from '../CommandError';
+import log from '../log';
+import prompt from '../prompt';
 import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 
 type Options = {
@@ -39,9 +40,9 @@ const FEATURED_TEMPLATES = [
     description: 'same as blank but with TypeScript configuration',
   },
   {
-    shortName: 'tabs',
+    shortName: 'tabs (TypeScript)',
     name: 'expo-template-tabs',
-    description: 'several example screens and tabs using react-navigation',
+    description: 'several example screens and tabs using react-navigation and TypeScript',
   },
   '----- Bare workflow -----',
   {
@@ -80,10 +81,10 @@ async function action(projectDir: string, command: Command) {
   let dirName;
 
   if (projectDir) {
-    let root = path.resolve(projectDir);
+    const root = path.resolve(projectDir);
     parentDir = path.dirname(root);
     dirName = path.basename(root);
-    let validationResult = validateName(parentDir, dirName);
+    const validationResult = validateName(parentDir, dirName);
     if (validationResult !== true) {
       throw new CommandError('INVALID_PROJECT_DIR', validationResult);
     }
@@ -150,8 +151,8 @@ async function action(projectDir: string, command: Command) {
   }
 
   let initialConfig;
-  let templateManifest = await pacote.manifest(templateSpec);
-  let isBare = BARE_WORKFLOW_TEMPLATES.includes(templateManifest.name);
+  const templateManifest = await pacote.manifest(templateSpec);
+  const isBare = BARE_WORKFLOW_TEMPLATES.includes(templateManifest.name);
   if (isBare) {
     initialConfig = await promptForBareConfig(parentDir, dirName, options);
   } else {
@@ -175,7 +176,7 @@ async function action(projectDir: string, command: Command) {
     log.newLine();
   }
 
-  let extractTemplateStep = logNewSection('Downloading and extracting project files.');
+  const extractTemplateStep = logNewSection('Downloading and extracting project files.');
   let projectPath;
   try {
     projectPath = await Exp.extractAndPrepareTemplateAppAsync(
@@ -206,7 +207,7 @@ async function action(projectDir: string, command: Command) {
     // todo: check if git is installed, bail out
   }
 
-  let installJsDepsStep = logNewSection('Installing JavaScript dependencies.');
+  const installJsDepsStep = logNewSection('Installing JavaScript dependencies.');
   try {
     await Exp.installDependenciesAsync(projectPath, packageManager, { silent: true });
     installJsDepsStep.succeed('Installed JavaScript dependencies.');
@@ -226,15 +227,30 @@ async function action(projectDir: string, command: Command) {
       podsInstalled = await installPodsAsync(projectPath);
     } catch (_) {}
 
+    let didConfigureUpdatesProjectFiles = false;
+    const username = await UserManager.getCurrentUsernameAsync();
+    if (username) {
+      try {
+        await configureUpdatesProjectFilesAsync(
+          projectPath,
+          initialConfig as BareAppConfig,
+          username
+        );
+        didConfigureUpdatesProjectFiles = true;
+      } catch {}
+    }
+
     log.newLine();
-    let showPublishBeforeBuildWarning = await usesOldExpoUpdatesAsync(projectPath);
+    const showPublishBeforeBuildWarning = await usesOldExpoUpdatesAsync(projectPath);
     await logProjectReadyAsync({
       cdPath,
       packageManager,
       workflow: 'bare',
       showPublishBeforeBuildWarning,
+      didConfigureUpdatesProjectFiles,
+      username,
     });
-    if (!podsInstalled && process.platform === 'darwin') {
+    if (!podsInstalled && isMacOS) {
       log.newLine();
       log.nested(
         `⚠️  Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
@@ -255,11 +271,15 @@ function logProjectReadyAsync({
   packageManager,
   workflow,
   showPublishBeforeBuildWarning,
+  didConfigureUpdatesProjectFiles,
+  username,
 }: {
   cdPath: string;
   packageManager: string;
   workflow: 'managed' | 'bare';
   showPublishBeforeBuildWarning?: boolean;
+  didConfigureUpdatesProjectFiles?: boolean;
+  username?: string | null;
 }) {
   log.nested(chalk.bold(`✅ Your project is ready!`));
   log.newLine();
@@ -308,12 +328,28 @@ function logProjectReadyAsync({
 
     if (showPublishBeforeBuildWarning) {
       log.nested(
-        `- 🚀 ${terminalLink(
+        `🚀 ${terminalLink(
           'expo-updates',
           'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
         )} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
           'expo publish'
         )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
+      );
+    } else if (didConfigureUpdatesProjectFiles) {
+      log.nested(
+        `🚀 ${terminalLink(
+          'expo-updates',
+          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        )} has been configured in your project. If you publish this project under a different user account than ${chalk.bold(
+          username
+        )}, you'll need to update the configuration in Expo.plist and AndroidManifest.xml before making a release build.`
+      );
+    } else {
+      log.nested(
+        `🚀 ${terminalLink(
+          'expo-updates',
+          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        )} has been installed in your project. Before you do a release build, you'll need to configure a few values in Expo.plist and AndroidManifest.xml in order for updates to work.`
       );
     }
     // TODO: add equivalent of this or some command to wrap it:
@@ -324,9 +360,40 @@ function logProjectReadyAsync({
   }
 }
 
+async function configureUpdatesProjectFilesAsync(
+  projectRoot: string,
+  initialConfig: BareAppConfig,
+  username: string
+) {
+  const { exp } = await getConfig(projectRoot);
+
+  // apply Android config
+  const androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
+    projectRoot
+  );
+  if (!androidManifestPath) {
+    throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectRoot}"`);
+  }
+  const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
+    androidManifestPath
+  );
+  const result = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifestJSON, username);
+  await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
+
+  // apply iOS config
+  const supportingDirectory = path.join(projectRoot, 'ios', initialConfig.name, 'Supporting');
+  try {
+    await IosPlist.modifyAsync(supportingDirectory, 'Expo', expoPlist => {
+      return IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
+    });
+  } finally {
+    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
+  }
+}
+
 async function installPodsAsync(projectRoot: string) {
   let step = logNewSection('Installing CocoaPods.');
-  if (process.platform !== 'darwin') {
+  if (!isMacOS) {
     step.succeed('Skipped installing CocoaPods because operating system is not on macOS.');
     return false;
   }
@@ -340,7 +407,10 @@ async function installPodsAsync(projectRoot: string) {
     try {
       step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
       step.render();
-      await packageManager.installCLIAsync();
+      await PackageManager.CocoaPodsPackageManager.installCLIAsync({
+        nonInteractive: program.nonInteractive,
+        spawnOptions: packageManager.options,
+      });
       step.succeed('Installed CocoaPods CLI');
       step = logNewSection('Running `pod install` in the `ios` directory.');
     } catch (e) {
@@ -376,7 +446,7 @@ async function installPodsAsync(projectRoot: string) {
 }
 
 function logNewSection(title: string) {
-  let spinner = ora(chalk.bold(title));
+  const spinner = ora(chalk.bold(title));
   spinner.start();
   return spinner;
 }
@@ -388,7 +458,7 @@ function validateName(parentDir: string, name: string | undefined) {
   if (!/^[a-z0-9@.\-_]+$/i.test(name)) {
     return 'The project name can only contain URL-friendly characters.';
   }
-  let dir = path.join(parentDir, name);
+  const dir = path.join(parentDir, name);
   if (!isNonExistentOrEmptyDir(dir)) {
     return `The path "${dir}" already exists. Please choose a different parent directory or project name.`;
   }
@@ -419,7 +489,7 @@ async function promptForBareConfig(
 ): Promise<BareAppConfig> {
   let projectName: string;
   if (dirName) {
-    let validationResult = validateProjectName(dirName);
+    const validationResult = validateProjectName(dirName);
     if (validationResult !== true) {
       throw new CommandError('INVALID_PROJECT_NAME', validationResult);
     }
@@ -447,7 +517,7 @@ async function promptForManagedConfig(
   parentDir: string,
   dirName: string | undefined,
   options: Options
-): Promise<AppJSONConfig> {
+): Promise<{ expo: Pick<ExpoConfig, 'name' | 'slug'> }> {
   let slug;
   if (dirName) {
     slug = dirName;
@@ -460,7 +530,7 @@ async function promptForManagedConfig(
       validate: (name: string) => validateName(parentDir, name),
     }));
   }
-  const expo: ExpoConfig = { name: slug, slug };
+  const expo = { name: slug, slug };
   if (options.name) {
     expo.name = options.name;
   }

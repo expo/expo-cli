@@ -7,7 +7,6 @@ import {
   setGoogleMobileAdsAppId,
   setGoogleSignInReservedClientId,
 } from '../Google';
-
 import { appendScheme } from '../Scheme';
 
 jest.mock('../Scheme', () => ({

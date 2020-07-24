@@ -1,15 +1,15 @@
+import { IosCodeSigning } from '@expo/xdl';
 import chalk from 'chalk';
 import dateformat from 'dateformat';
 import fs from 'fs-extra';
-import every from 'lodash/every';
-import get from 'lodash/get';
-import some from 'lodash/some';
 import ora from 'ora';
-import { IosCodeSigning } from '@expo/xdl';
-
 import terminalLink from 'terminal-link';
-import prompt, { Question } from '../../prompt';
+
+import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';
 import log from '../../log';
+import prompt, { Question } from '../../prompt';
+import { displayIosUserCredentials } from '../actions/list';
+import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
 import { Context, IView } from '../context';
 import {
   IosAppCredentials,
@@ -17,9 +17,6 @@ import {
   IosDistCredentials,
   distCertSchema,
 } from '../credentials';
-import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
-import { displayIosUserCredentials } from '../actions/list';
-import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';
 import { RemoveProvisioningProfile } from './IosProvisioningProfile';
 
 const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `
@@ -180,12 +177,7 @@ export class UpdateIosDist implements IView {
     }
 
     const newDistCert = await this.provideOrGenerate(ctx);
-    await ctx.ensureAppleCtx();
-    await ctx.ios.updateDistCert(selected.id, {
-      ...newDistCert,
-      teamId: ctx.appleCtx.team.id,
-      teamName: ctx.appleCtx.team.name,
-    });
+    await ctx.ios.updateDistCert(selected.id, newDistCert);
 
     for (const appCredentials of apps) {
       log(
@@ -340,12 +332,12 @@ export class CreateOrReuseDistributionCert implements IView {
 }
 
 function getOptionsFromProjectContext(ctx: Context): DistCertOptions | null {
-  const experience = get(ctx, 'manifest.slug');
-  const owner = get(ctx, 'manifest.owner');
+  const experience = ctx.manifest.slug;
+  const owner = ctx.manifest.owner;
   const experienceName = `@${owner || ctx.user.username}/${experience}`;
-  const bundleIdentifier = get(ctx, 'manifest.ios.bundleIdentifier');
+  const bundleIdentifier = ctx.manifest.ios?.bundleIdentifier;
   if (!experience || !bundleIdentifier) {
-    log.error(`slug and ios.bundleIdentifier needs to be defined`);
+    log.error(`slug and ios.bundleIdentifier need to be defined`);
     return null;
   }
 
@@ -513,7 +505,7 @@ async function generateDistCert(ctx: Context): Promise<DistCert> {
       log(chalk.grey(`ℹ️  Learn more ${here}`));
       log();
 
-      let { revoke } = await prompt([
+      const { revoke } = await prompt([
         {
           type: 'checkbox',
           name: 'revoke',
@@ -655,12 +647,12 @@ export async function getDistCertFromParams(builderOptions: {
   const certPassword = process.env.EXPO_IOS_DIST_P12_PASSWORD;
 
   // none of the distCert params were set, assume user has no intention of passing it in
-  if (!some([distP12Path, certPassword])) {
+  if (!distP12Path && !certPassword) {
     return null;
   }
 
   // partial distCert params were set, assume user has intention of passing it in
-  if (!every([distP12Path, certPassword, teamId])) {
+  if (!(distP12Path && certPassword && teamId)) {
     throw new Error(
       'In order to provide a Distribution Certificate through the CLI parameters, you have to pass --dist-p12-path parameter, --team-id parameter and set EXPO_IOS_DIST_P12_PASSWORD environment variable.'
     );

@@ -1,19 +1,13 @@
 import { ExpoConfig, Platform } from '@expo/config';
 import spawnAsyncQuiet, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
-import fs from 'fs-extra';
-import _ from 'lodash';
-import path from 'path';
 import axios from 'axios';
+import fs from 'fs-extra';
+import isObject from 'lodash/isObject';
+import path from 'path';
 import { Readable } from 'stream';
 
 import XDLError from '../XDLError';
 import LoggerDetach, { Logger, pipeOutputToLogger } from './Logger';
-
-function _getFilesizeInBytes(path: string) {
-  let stats = fs.statSync(path);
-  let fileSizeInBytes = stats['size'];
-  return fileSizeInBytes;
-}
 
 function parseSdkMajorVersion(expSdkVersion: string) {
   // We assume that the unversioned SDK is the latest
@@ -23,7 +17,7 @@ function parseSdkMajorVersion(expSdkVersion: string) {
 
   let sdkMajorVersion = 0;
   try {
-    let versionComponents = expSdkVersion.split('.').map(number => parseInt(number, 10));
+    const versionComponents = expSdkVersion.split('.').map(number => parseInt(number, 10));
     sdkMajorVersion = versionComponents[0];
   } catch (_) {}
   return sdkMajorVersion;
@@ -33,7 +27,7 @@ async function saveUrlToPathAsync(url: string, path: string, timeout = 20000) {
   const response = await axios.get(url, { responseType: 'stream', timeout });
 
   return new Promise(function (resolve, reject) {
-    let stream = fs.createWriteStream(path);
+    const stream = fs.createWriteStream(path);
     stream.on('close', resolve);
     stream.on('error', reject);
     response.data.on('error', reject).pipe(stream);
@@ -82,6 +76,7 @@ export type AsyncSpawnOptions = SpawnOptions & {
   loggerFields?: any;
   pipeToLogger?: boolean | { stdout?: boolean; stderr?: boolean };
   stdoutOnly?: boolean;
+  loggerLineTransformer?: (line: any) => any;
 };
 
 async function spawnAsyncThrowError(
@@ -99,7 +94,7 @@ async function spawnAsyncThrowError(
   }
   const promise = spawnAsyncQuiet(command, args, options);
   if (pipeToLogger && promise.child) {
-    let streams: { stdout?: Readable | null; stderr?: Readable | null } = {};
+    const streams: { stdout?: Readable | null; stderr?: Readable | null } = {};
     if (pipeToLogger === true || pipeToLogger.stdout) {
       streams.stdout = promise.child.stdout;
     }
@@ -125,8 +120,8 @@ async function spawnAsync(
 
 function createSpawner(buildPhase: string, logger?: Logger) {
   return (command: string, ...args: any[]) => {
-    const lastArg = _.last(args);
-    const optionsFromArg = _.isObject(lastArg) ? args.pop() : {};
+    const lastArg = args[args.length - 1];
+    const optionsFromArg = isObject(lastArg) ? args.pop() : {};
 
     const options = { ...optionsFromArg, pipeToLogger: true };
     if (buildPhase) {
@@ -145,8 +140,8 @@ async function transformFileContentsAsync(
   filename: string,
   transform: (input: string) => string | null
 ) {
-  let fileString = await fs.readFile(filename, 'utf8');
-  let newFileString = transform(fileString);
+  const fileString = await fs.readFile(filename, 'utf8');
+  const newFileString = transform(fileString);
   if (newFileString !== null) {
     await fs.writeFile(filename, newFileString);
   }
@@ -204,8 +199,8 @@ async function regexFileAsync(
   replace: string,
   filename: string
 ): Promise<void> {
-  let file = await fs.readFile(filename);
-  let fileString = file.toString();
+  const file = await fs.readFile(filename);
+  const fileString = file.toString();
   await fs.writeFile(filename, fileString.replace(regex, replace));
 }
 
@@ -215,10 +210,10 @@ async function deleteLinesInFileAsync(
   endRegex: RegExp | string,
   filename: string
 ): Promise<void> {
-  let file = await fs.readFile(filename);
-  let fileString = file.toString();
-  let lines = fileString.split(/\r?\n/);
-  let filteredLines = [];
+  const file = await fs.readFile(filename);
+  const fileString = file.toString();
+  const lines = fileString.split(/\r?\n/);
+  const filteredLines = [];
   let inDeleteRange = false;
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].match(startRegex)) {

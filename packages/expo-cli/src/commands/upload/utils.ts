@@ -1,11 +1,9 @@
-import stream from 'stream';
-import { promisify } from 'util';
-
 import { ExponentTools } from '@expo/xdl';
 import fs from 'fs-extra';
-import get from 'lodash/get';
 import got from 'got';
 import ProgressBar from 'progress';
+import stream from 'stream';
+import { promisify } from 'util';
 
 const { spawnAsyncThrowError } = ExponentTools;
 const pipeline = promisify(stream.pipeline);
@@ -81,7 +79,7 @@ export async function runFastlaneAsync(
     let message =
       res.reason !== 'Unknown reason'
         ? res.reason
-        : get(res, 'rawDump.message', 'Unknown error when running fastlane');
+        : res.rawDump?.message ?? 'Unknown error when running fastlane';
     message = `${message}${
       res?.rawDump?.backtrace
         ? `\n${res.rawDump.backtrace.map((i: string) => `    ${i}`).join('\n')}`

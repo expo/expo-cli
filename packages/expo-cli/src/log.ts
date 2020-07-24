@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-import terminalLink from 'terminal-link';
 import program from 'commander';
+import terminalLink from 'terminal-link';
 
 type Color = (...text: string[]) => string;
 
@@ -13,7 +13,7 @@ function _updateIsLastLineNewLine(args: any[]) {
   if (args.length === 0) {
     _isLastLineNewLine = true;
   } else {
-    let lastArg = args[args.length - 1];
+    const lastArg = args[args.length - 1];
     if (typeof lastArg === 'string' && (lastArg === '' || lastArg.match(/[\r\n]$/))) {
       _isLastLineNewLine = true;
     } else {

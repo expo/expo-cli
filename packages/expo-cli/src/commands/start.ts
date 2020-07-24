@@ -1,18 +1,10 @@
-import {
-  ExpoConfig,
-  PackageJSONConfig,
-  getConfig,
-  getProjectConfigDescription,
-  resolveModule,
-} from '@expo/config';
+import { ExpoConfig, PackageJSONConfig, getConfig, projectHasModule } from '@expo/config';
 // @ts-ignore: not typed
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
-import { Project, ProjectSettings, UrlUtils, UserSettings, Versions, Web } from '@expo/xdl';
+import { Project, ProjectSettings, UrlUtils, UserSettings, Versions } from '@expo/xdl';
 import chalk from 'chalk';
-import attempt from 'lodash/attempt';
 import intersection from 'lodash/intersection';
-import isError from 'lodash/isError';
 import path from 'path';
 import openBrowser from 'react-dev-utils/openBrowser';
 import semver from 'semver';
@@ -60,6 +52,25 @@ function getBooleanArg(rawArgs: string[], argName: string): boolean {
   }
 }
 
+/**
+ * If the project config `platforms` only contains the "web" field.
+ * If no `platforms` array is defined this could still resolve true because platforms
+ * will be inferred from the existence of `react-native-web` and `react-native`.
+ *
+ * @param projectRoot
+ */
+function isWebOnly(projectRoot: string): boolean {
+  // TODO(Bacon): Limit the amount of times that the config is evaluated
+  // currently we read it the first time without the SDK version then later read it with the SDK version if react-native is installed.
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
+  if (Array.isArray(exp.platforms) && exp.platforms.length === 1) {
+    return exp.platforms[0] === 'web';
+  }
+  return false;
+}
+
 // The main purpose of this function is to take existing options object and
 // support boolean args with as defined in the hasBooleanArg and getBooleanArg
 // functions.
@@ -69,7 +80,7 @@ async function normalizeOptionsAsync(
 ): Promise<NormalizedOptions> {
   const opts: NormalizedOptions = {
     ...options, // This is necessary to ensure we don't drop any options
-    webOnly: options.webOnly ?? (await Web.onlySupportsWebAsync(projectDir)),
+    webOnly: options.webOnly ?? isWebOnly(projectDir),
     nonInteractive: options.parent?.nonInteractive,
   };
 
@@ -199,10 +210,12 @@ async function validateDependenciesVersions(
     return;
   }
 
-  const bundleNativeModulesPath = attempt(() =>
-    resolveModule('expo/bundledNativeModules.json', projectDir, exp)
+  const bundleNativeModulesPath = projectHasModule(
+    'expo/bundledNativeModules.json',
+    projectDir,
+    exp
   );
-  if (isError(bundleNativeModulesPath)) {
+  if (!bundleNativeModulesPath) {
     log.warn(
       `Your project is in SDK version >= 33.0.0, but the ${chalk.underline(
         'expo'
@@ -213,7 +226,7 @@ async function validateDependenciesVersions(
 
   const bundledNativeModules = await JsonFile.readAsync(bundleNativeModulesPath);
   const bundledNativeModulesNames = Object.keys(bundledNativeModules);
-  const projectDependencies = Object.keys(pkg.dependencies);
+  const projectDependencies = Object.keys(pkg.dependencies || []);
 
   const modulesToCheck = intersection(bundledNativeModulesNames, projectDependencies);
   const incorrectDeps = [];

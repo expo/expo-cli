@@ -1,6 +1,7 @@
-import resolveFrom from 'resolve-from';
 import { stat, statSync } from 'fs-extra';
 import { join, resolve } from 'path';
+import resolveFrom from 'resolve-from';
+
 import { ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
 

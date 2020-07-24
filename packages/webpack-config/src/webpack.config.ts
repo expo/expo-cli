@@ -1,12 +1,7 @@
 /** @internal */ /** */
 /* eslint-env node */
-import PnpWebpackPlugin from 'pnp-webpack-plugin';
-import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
-import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
-import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
-import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
-import ManifestPlugin from 'webpack-manifest-plugin';
 import { projectHasModule } from '@expo/config';
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
@@ -22,6 +17,12 @@ import { boolish } from 'getenv';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { parse } from 'node-html-parser';
 import path from 'path';
+import PnpWebpackPlugin from 'pnp-webpack-plugin';
+import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
+import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
+import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
+import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
+import ManifestPlugin from 'webpack-manifest-plugin';
 
 import {
   withAlias,
@@ -35,6 +36,7 @@ import {
   getConfig,
   getMode,
   getModuleFileExtensions,
+  getNativeModuleFileExtensions,
   getPathsAsync,
   getPublicPaths,
 } from './env';
@@ -49,12 +51,17 @@ import {
   ExpoPwaManifestWebpackPlugin,
   FaviconWebpackPlugin,
 } from './plugins';
+import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 import { overrideWithPropertyOrConfig } from './utils';
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
+const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', true);
+const shouldUseReactRefresh = boolish('EXPO_WEBPACK_FAST_REFRESH', false);
+
+const isCI = boolish('CI', false);
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
@@ -114,7 +121,7 @@ function getOutput(
     ): string => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/');
   }
 
-  if (isPlatformNative(platform)) {
+  if (!shouldUseNativeCodeLoading && isPlatformNative(platform)) {
     // Give the output bundle a constant name to prevent caching.
     // Also there are no actual files generated in dev.
     commonOutput.filename = `index.bundle`;
@@ -124,17 +131,14 @@ function getOutput(
 }
 
 function isPlatformNative(platform: string): boolean {
-  if (platform === 'ios' || platform === 'android') {
-    return true;
-  }
-  return false;
+  return ['ios', 'android'].includes(platform);
 }
 
-function getPlatforms(platform: string): string[] {
-  if (platform === 'ios' || platform === 'android') {
-    return [platform, 'native'];
+function getPlatformsExtensions(platform: string): string[] {
+  if (isPlatformNative(platform)) {
+    return getNativeModuleFileExtensions(platform, 'native');
   }
-  return [platform];
+  return getModuleFileExtensions(platform);
 }
 
 export default async function (
@@ -179,12 +183,13 @@ export default async function (
     }
   );
 
-  let appEntry: string[] = [];
+  const appEntry: string[] = [];
 
   // In solutions like Gatsby the main entry point doesn't need to be known.
   if (locations.appMain) {
     appEntry.push(locations.appMain);
   }
+  const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
 
   if (isNative) {
     const reactNativeModulePath = projectHasModule(
@@ -193,13 +198,19 @@ export default async function (
       env.config ?? {}
     );
     if (reactNativeModulePath) {
-      appEntry = [
-        path.join(reactNativeModulePath, 'Libraries/polyfills/console.js'),
-        path.join(reactNativeModulePath, 'Libraries/polyfills/error-guard.js'),
-        path.join(reactNativeModulePath, 'Libraries/polyfills/Object.es7.js'),
-        path.join(reactNativeModulePath, 'Libraries/Core/InitializeCore.js'),
-        ...appEntry,
-      ];
+      for (const polyfill of [
+        'Core/InitializeCore.js',
+        'polyfills/Object.es7.js',
+        'polyfills/error-guard.js',
+        'polyfills/console.js',
+      ]) {
+        const resolvedPolyfill = projectHasModule(
+          `react-native/Libraries/${polyfill}`,
+          env.projectRoot,
+          env.config ?? {}
+        );
+        if (resolvedPolyfill) appEntry.unshift(resolvedPolyfill);
+      }
     }
   } else {
     // Add a loose requirement on the ResizeObserver polyfill if it's installed...
@@ -225,7 +236,7 @@ export default async function (
       // the line below with these two lines if you prefer the stock client:
       // require.resolve('webpack-dev-server/client') + '?/',
       // require.resolve('webpack/hot/dev-server'),
-      appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
+      appEntry.unshift(webpackDevClientEntry);
     }
   }
 
@@ -234,19 +245,22 @@ export default async function (
     generatePWAImageAssets = env.pwa;
   }
 
-  const filesToCopy = [
+  const filesToCopy: any[] = [
     {
       from: locations.template.folder,
       to: locations.production.folder,
-      // We generate new versions of these based on the templates
-      ignore: [
-        'expo-service-worker.js',
-        'serve.json',
-        'index.html',
-        'icon.png',
-        // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
-        'register-service-worker.js',
-      ],
+      globOptions: {
+        dot: true,
+        // We generate new versions of these based on the templates
+        ignore: [
+          'expo-service-worker.js',
+          'serve.json',
+          'index.html',
+          'icon.png',
+          // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
+          'register-service-worker.js',
+        ],
+      },
     },
     {
       from: locations.template.serveJson,
@@ -296,6 +310,21 @@ export default async function (
     };
   };
 
+  // TODO(Bacon): Move to expo/config - manifest code from XDL Project
+  const publicConfig = {
+    ...config,
+    xde: true,
+    developer: {
+      tool: 'expo-cli',
+      projectRoot: env.projectRoot,
+    },
+    packagerOpts: {
+      dev: !isProd,
+      minify: isProd,
+      https: env.https,
+    },
+  };
+
   let webpackConfig: DevConfiguration = {
     mode,
     entry: {
@@ -318,12 +347,22 @@ export default async function (
           verbose: false,
         }),
       // Copy the template files over
-      isProd && new CopyWebpackPlugin(filesToCopy),
+      isProd && new CopyWebpackPlugin({ patterns: filesToCopy }),
 
       // Generate the `index.html`
       new ExpoHtmlWebpackPlugin(env, templateIndex),
 
       ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
+
+      isNative &&
+        new ExpoAppManifestWebpackPlugin(
+          {
+            template: locations.template.get('app.config.json'),
+            path: 'app.config.json',
+            publicPath,
+          },
+          publicConfig
+        ),
 
       env.pwa &&
         new ExpoPwaManifestWebpackPlugin(
@@ -334,14 +373,15 @@ export default async function (
           },
           config
         ),
-      new FaviconWebpackPlugin(
-        {
-          projectRoot: env.projectRoot,
-          publicPath,
-          links,
-        },
-        ensureSourceAbsolute(getFaviconIconConfig(config))
-      ),
+      !isNative &&
+        new FaviconWebpackPlugin(
+          {
+            projectRoot: env.projectRoot,
+            publicPath,
+            links,
+          },
+          ensureSourceAbsolute(getFaviconIconConfig(config))
+        ),
       generatePWAImageAssets &&
         new ApplePwaWebpackPlugin(
           {
@@ -387,6 +427,16 @@ export default async function (
 
       // This is necessary to emit hot updates (currently CSS only):
       !isNative && isDev && new HotModuleReplacementPlugin(),
+
+      // Experimental hot reloading for React .
+      // https://github.com/facebook/react/tree/master/packages/react-refresh
+      isDev &&
+        shouldUseReactRefresh &&
+        new ReactRefreshWebpackPlugin({
+          overlay: {
+            entry: webpackDevClientEntry,
+          },
+        }),
 
       // If you require a missing module and then `npm install` it, you still have
       // to restart the development server for Webpack to discover it. This plugin
@@ -441,7 +491,8 @@ export default async function (
 
       deepScopeAnalysisEnabled && new WebpackDeepScopeAnalysisPlugin(),
 
-      new ExpoProgressBarPlugin(),
+      // Skip using a progress bar in CI
+      !isCI && new ExpoProgressBarPlugin(),
     ].filter(Boolean),
     module: {
       strictExportPresence: false,
@@ -461,8 +512,7 @@ export default async function (
       ],
     },
     resolve: {
-      mainFields: ['browser', 'module', 'main'],
-      extensions: getModuleFileExtensions(...getPlatforms(env.platform ?? 'web')),
+      extensions: getPlatformsExtensions(env.platform),
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
         // guards against forgotten dependencies and such.
@@ -474,10 +524,12 @@ export default async function (
     // our own (CRA) hints via the FileSizeReporter
 
     // TODO: Bacon: Remove this higher value
-    performance: boolish('CI', false) ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
+    performance: isCI ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
   };
 
-  webpackConfig = withPlatformSourceMaps(webpackConfig, env);
+  if (!shouldUseNativeCodeLoading) {
+    webpackConfig = withPlatformSourceMaps(webpackConfig, env);
+  }
 
   if (isNative) {
     // https://github.com/webpack/webpack/blob/f06086c53b2277e421604c5cea6f32f5c5b6d117/declarations/WebpackOptions.d.ts#L504-L518

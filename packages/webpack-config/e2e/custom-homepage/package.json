@@ -1,16 +1,15 @@
 {
   "name": "webpack-config-custom-homepage-test",
   "homepage": "http://expo.github.io/homepage-defined",
-  "version": "1.0.0",
   "main": "./index",
   "dependencies": {
-    "react": "16.8.3",
-    "react-dom": "^16.8.6",
-    "react-native": "https://github.com/expo/react-native/archive/sdk-33.0.0.tar.gz",
-    "react-native-web": "^0.11.5"
+    "expo": "37.0.11",
+    "react": "16.9.0",
+    "react-dom": "16.9.0",
+    "react-native-web": "0.11.7"
   },
   "devDependencies": {
-    "babel-preset-expo": "^6.0.0"
+    "@babel/core": "7.9.0"
   },
   "private": true
 }

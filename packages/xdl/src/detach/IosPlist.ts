@@ -1,6 +1,6 @@
+import plist from '@expo/plist';
 import fs from 'fs-extra';
 import path from 'path';
-import plist from '@expo/plist';
 
 import { spawnAsyncThrowError } from './ExponentTools';
 import logger from './Logger';
@@ -19,9 +19,9 @@ function _getNormalizedPlistFilename(plistName: string) {
  *  @param plistName base filename of property list. if no extension, assumes .plist
  */
 async function modifyAsync(plistPath: string, plistName: string, transform: (config: any) => any) {
-  let plistFilename = _getNormalizedPlistFilename(plistName);
-  let configPlistName = path.join(plistPath, plistFilename);
-  let configFilename = path.join(plistPath, `${plistName}.json`);
+  const plistFilename = _getNormalizedPlistFilename(plistName);
+  const configPlistName = path.join(plistPath, plistFilename);
+  const configFilename = path.join(plistPath, `${plistName}.json`);
 
   // grab original plist as json object
   let config;
@@ -33,7 +33,7 @@ async function modifyAsync(plistPath: string, plistName: string, transform: (con
       '-o',
       configFilename,
     ]);
-    let configContents = await fs.readFile(configFilename, 'utf8');
+    const configContents = await fs.readFile(configFilename, 'utf8');
 
     try {
       config = JSON.parse(configContents);
@@ -50,7 +50,7 @@ async function modifyAsync(plistPath: string, plistName: string, transform: (con
   config = transform(config);
 
   // back up old plist and swap in modified one
-  await spawnAsyncThrowError('/bin/cp', [configPlistName, `${configPlistName}.bak`]);
+  fs.copyFileSync(configPlistName, `${configPlistName}.bak`);
   await fs.writeFile(configFilename, JSON.stringify(config));
   if (process.platform === 'darwin') {
     await spawnAsyncThrowError('plutil', [
@@ -74,8 +74,8 @@ async function createBlankAsync(plistPath: string, plistName: string) {
   await fs.writeFile(tmpConfigFile, JSON.stringify(emptyConfig));
 
   // convert to plist
-  let plistFilename = _getNormalizedPlistFilename(plistName);
-  let configPlistName = path.join(plistPath, plistFilename);
+  const plistFilename = _getNormalizedPlistFilename(plistName);
+  const configPlistName = path.join(plistPath, plistFilename);
   if (process.platform === 'darwin') {
     await spawnAsyncThrowError('plutil', [
       '-convert',
@@ -89,13 +89,13 @@ async function createBlankAsync(plistPath: string, plistName: string) {
   }
 
   // remove tmp json file
-  await spawnAsyncThrowError('/bin/rm', [tmpConfigFile]);
+  fs.removeSync(tmpConfigFile);
 }
 
 async function cleanBackupAsync(plistPath: string, plistName: string, restoreOriginal = true) {
-  let plistFilename = _getNormalizedPlistFilename(plistName);
-  let configPlistName = path.join(plistPath, plistFilename);
-  let configFilename = path.join(plistPath, `${plistName}.json`);
+  const plistFilename = _getNormalizedPlistFilename(plistName);
+  const configPlistName = path.join(plistPath, plistFilename);
+  const configFilename = path.join(plistPath, `${plistName}.json`);
   const backupPlistPath = `${configPlistName}.bak`;
 
   if (restoreOriginal && (await fs.pathExists(backupPlistPath))) {

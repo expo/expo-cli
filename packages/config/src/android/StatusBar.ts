@@ -1,3 +1,10 @@
+import { ExpoConfig } from '../Config.types';
+import {
+  getProjectColorsXMLPathAsync,
+  readColorsXMLAsync,
+  setColorItem,
+  writeColorsXMLAsync,
+} from './Colors';
 import {
   XMLItem,
   getProjectStylesXMLPathAsync,
@@ -5,13 +12,6 @@ import {
   setStylesItem,
   writeStylesXMLAsync,
 } from './Styles';
-import {
-  getProjectColorsXMLPathAsync,
-  readColorsXMLAsync,
-  setColorItem,
-  writeColorsXMLAsync,
-} from './Colors';
-import { ExpoConfig } from '../Config.types';
 
 const COLOR_PRIMARY_DARK_KEY = 'colorPrimaryDark';
 const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
@@ -26,8 +26,8 @@ export function getStatusBarStyle(config: ExpoConfig) {
 }
 
 export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: string) {
-  let hexString = getStatusBarColor(config);
-  let statusBarStyle = getStatusBarStyle(config);
+  const hexString = getStatusBarColor(config);
+  const statusBarStyle = getStatusBarStyle(config);
 
   const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
   const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
@@ -38,14 +38,14 @@ export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: s
   let stylesJSON = await readStylesXMLAsync(stylesPath);
   let colorsJSON = await readColorsXMLAsync(colorsPath);
 
-  let styleItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
+  const styleItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
   if (hexString === 'translucent') {
     // translucent status bar set in theme
     styleItemToAdd[0]._ = 'true';
     styleItemToAdd[0].$.name = WINDOW_TRANSLUCENT_STATUS;
   } else {
     // Need to add a color key to colors.xml to use in styles.xml
-    let colorItemToAdd: XMLItem[] = [{ _: hexString, $: { name: COLOR_PRIMARY_DARK_KEY } }];
+    const colorItemToAdd: XMLItem[] = [{ _: hexString, $: { name: COLOR_PRIMARY_DARK_KEY } }];
     colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
 
     styleItemToAdd[0]._ = `@color/${COLOR_PRIMARY_DARK_KEY}`;
@@ -54,7 +54,7 @@ export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: s
 
   // Default is light-content, don't need to do anything to set it
   if (statusBarStyle === 'dark-content') {
-    let statusBarStyleItem: XMLItem[] = [{ _: 'true', $: { name: WINDOW_LIGHT_STATUS_BAR } }];
+    const statusBarStyleItem: XMLItem[] = [{ _: 'true', $: { name: WINDOW_LIGHT_STATUS_BAR } }];
     stylesJSON = setStylesItem(statusBarStyleItem, stylesJSON);
   }
 

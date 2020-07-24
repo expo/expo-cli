@@ -1,9 +1,7 @@
-import { css } from 'react-emotion';
-
-import * as React from 'react';
 import * as SVG from 'app/common/svg';
-
 import SmallSquareButton from 'app/components/SmallSquareButton';
+import * as React from 'react';
+import { css } from 'react-emotion';
 
 const STYLES_TOOLBAR = css`
   display: flex;

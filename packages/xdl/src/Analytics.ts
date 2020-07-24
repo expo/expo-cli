@@ -49,8 +49,8 @@ export function logEvent(name: string, properties: any = {}) {
 }
 
 function _getContext() {
-  let platform = PLATFORM_TO_ANALYTICS_PLATFORM[os.platform()] || os.platform();
-  let context = {
+  const platform = PLATFORM_TO_ANALYTICS_PLATFORM[os.platform()] || os.platform();
+  const context = {
     ip: ip.address(),
     device: {
       model: platform,

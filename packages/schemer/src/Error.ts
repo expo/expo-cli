@@ -1,8 +1,8 @@
 import ExtendableError from 'es6-error';
 
 export class SchemerError extends ExtendableError {
-  errors: Array<ValidationError>;
-  constructor(errors: Array<ValidationError>) {
+  errors: ValidationError[];
+  constructor(errors: ValidationError[]) {
     const message = errors.map(e => e.message).join('\n');
     super(message);
     this.errors = errors;

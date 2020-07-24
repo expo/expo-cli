@@ -6,7 +6,7 @@ const xdl = require('../xdl');
 
 describe('simulator', () => {
   xit('opens and loads url in expo', async () => {
-    let Simulator = xdl.Simulator;
+    const Simulator = xdl.Simulator;
     if (!(await Simulator._isSimulatorInstalledAsync())) {
       throw new Error("Simulator isn't installed on this computer; can't run this test.");
     }

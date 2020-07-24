@@ -1,17 +1,15 @@
 import { UrlUtils, Webpack } from '@expo/xdl';
-import { setCustomConfigPath } from '@expo/config';
-import { Command } from 'commander';
 import chalk from 'chalk';
-import BaseBuilder from './BaseBuilder';
-import IOSBuilder from './ios/IOSBuilder';
-import AndroidBuilder from './AndroidBuilder';
-import log from '../../log';
-import CommandError from '../../CommandError';
-import * as ProjectUtils from '../utils/ProjectUtils';
-import { askBuildType } from './utils';
-import prompt from '../../prompt';
+import { Command } from 'commander';
 
+import CommandError from '../../CommandError';
+import log from '../../log';
+import prompt from '../../prompt';
+import * as ProjectUtils from '../utils/ProjectUtils';
+import AndroidBuilder from './AndroidBuilder';
+import BaseBuilder from './BaseBuilder';
 import { AndroidOptions, IosOptions } from './BaseBuilder.types';
+import IOSBuilder from './ios/IOSBuilder';
 
 async function maybeBailOnWorkflowWarning({
   projectDir,
@@ -110,17 +108,13 @@ export default function (program: Command) {
         if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
           throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
         }
-        let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+        const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
         if (!channelRe.test(options.releaseChannel)) {
           log.error(
             'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
           );
           process.exit(1);
         }
-        options.type = await askBuildType(options.type, {
-          archive: 'Deploy the build to the store',
-          simulator: 'Run the build on a simulator',
-        });
         const iosBuilder = new IOSBuilder(projectDir, options);
         return iosBuilder.command();
       },
@@ -136,7 +130,7 @@ export default function (program: Command) {
     .option('--no-wait', 'Exit immediately after triggering build.')
     .option('--keystore-path <app.jks>', 'Path to your Keystore.')
     .option('--keystore-alias <alias>', 'Keystore Alias')
-    .option('--generate-keystore', 'Generate Keystore if one does not exist')
+    .option('--generate-keystore', '[deprecated] Generate Keystore if one does not exist')
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .option('--skip-workflow-check', 'Skip warning about build service bare workflow limitations.')
     .option('-t --type <build>', 'Type of build: [app-bundle|apk].')
@@ -145,6 +139,11 @@ export default function (program: Command) {
     )
     .asyncActionProjectDir(
       async (projectDir: string, options: AndroidOptions) => {
+        if (options.generateKeystore) {
+          log.warn(
+            `The --generate-keystore flag is deprecated and does not do anything. A Keystore will always be generated on the Expo servers if it's missing.`
+          );
+        }
         if (!options.skipWorkflowCheck) {
           if (
             await maybeBailOnWorkflowWarning({
@@ -160,17 +159,14 @@ export default function (program: Command) {
         if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
           throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
         }
-        let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+        const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
         if (!channelRe.test(options.releaseChannel)) {
           log.error(
             'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
           );
           process.exit(1);
         }
-        options.type = await askBuildType(options.type, {
-          apk: 'Build a package to deploy to the store or install directly on Android devices',
-          'app-bundle': 'Build an optimized bundle for the store',
-        });
+
         const androidBuilder = new AndroidBuilder(projectDir, options);
         return androidBuilder.command();
       },

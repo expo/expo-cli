@@ -1,28 +1,27 @@
+import { getConfig, setCustomConfigPath } from '@expo/config';
 import { Android, Simulator, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
+import { Command } from 'commander';
 import fs from 'fs-extra';
-import _ from 'lodash';
 import ora from 'ora';
 import path from 'path';
-import { Command } from 'commander';
 
-import { getConfig, setCustomConfigPath } from '@expo/config';
 import CommandError from '../../CommandError';
+import * as appleApi from '../../appleApi';
+import { runAction, travelingFastlane } from '../../appleApi/fastlane';
+import { Context } from '../../credentials/context';
+import { runCredentialsManager } from '../../credentials/route';
+import { CreateIosDist } from '../../credentials/views/IosDistCert';
+import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/IosProvisioningProfileAdhoc';
+import { SetupIosDist } from '../../credentials/views/SetupIosDist';
+import { SetupIosPush } from '../../credentials/views/SetupIosPush';
 import log from '../../log';
 import prompt from '../../prompt';
 import urlOpts from '../../urlOpts';
-import * as appleApi from '../../appleApi';
-import { runAction, travelingFastlane } from '../../appleApi/fastlane';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
-import { SetupIosDist } from '../../credentials/views/SetupIosDist';
-import { SetupIosPush } from '../../credentials/views/SetupIosPush';
-import { Context } from '../../credentials/context';
-import { CreateIosDist } from '../../credentials/views/IosDistCert';
-import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/IosProvisioningProfileAdhoc';
-import { runCredentialsManager } from '../../credentials/route';
 
 export default function (program: Command) {
   program
@@ -61,19 +60,19 @@ export default function (program: Command) {
         }
         if (!exp.ios) exp.ios = {};
 
-        if (!_.has(exp, 'facebookAppId') || !_.has(exp, 'facebookScheme')) {
+        if (!exp.facebookAppId || !exp.facebookScheme) {
           const disabledReason = exp
             ? `facebookAppId or facebookScheme are missing from app configuration. `
             : 'No custom configuration file could be found. You will need to provide a json file with valid facebookAppId and facebookScheme fields.';
           disabledServices.facebookLogin = { name: 'Facebook Login', reason: disabledReason };
         }
-        if (!_.has(exp, 'ios.config.googleMapsApiKey')) {
+        if (!exp.ios.config?.googleMapsApiKey) {
           const disabledReason = exp
             ? `ios.config.googleMapsApiKey does not exist in the app configuration.`
             : 'No custom configuration file could be found. You will need to provide a json file with a valid ios.config.googleMapsApiKey field.';
           disabledServices.googleMaps = { name: 'Google Maps', reason: disabledReason };
         }
-        if (_.has(exp, 'ios.googleServicesFile')) {
+        if (exp.ios.googleServicesFile) {
           const contents = await fs.readFile(
             path.resolve(projectDir, exp.ios.googleServicesFile!),
             'base64'
@@ -295,7 +294,7 @@ export default function (program: Command) {
       }
 
       const sdkVersions = await Versions.sdkVersionsAsync();
-      const latestSdk = await Versions.newestSdkVersionAsync();
+      const latestSdk = await Versions.newestReleasedSdkVersionAsync();
       const currentSdk = sdkVersions[currentSdkVersion!];
       const recommendedClient = currentSdk
         ? ClientUpgradeUtils.getClient(currentSdk, 'ios')
@@ -380,7 +379,7 @@ export default function (program: Command) {
       }
 
       const sdkVersions = await Versions.sdkVersionsAsync();
-      const latestSdk = await Versions.newestSdkVersionAsync();
+      const latestSdk = await Versions.newestReleasedSdkVersionAsync();
       const currentSdk = sdkVersions[currentSdkVersion!];
       const recommendedClient = currentSdk
         ? ClientUpgradeUtils.getClient(currentSdk, 'android')

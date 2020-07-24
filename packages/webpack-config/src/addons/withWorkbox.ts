@@ -7,7 +7,6 @@ import {
   GenerateSWOptions,
   InjectManifest,
   InjectManifestOptions,
-  RuntimeCacheRule,
 } from 'workbox-webpack-plugin';
 
 import { getPaths } from '../env';
@@ -95,18 +94,21 @@ export default function withWorkbox(
   const locations = getPaths(projectRoot!, { platform: options.platform });
 
   webpackConfig.plugins.push(
-    new CopyPlugin([
-      {
-        from: locations.template.registerServiceWorker,
-        to: locations.production.registerServiceWorker,
-        transform(content) {
-          return content
-            .toString()
-            .replace('SW_PUBLIC_URL', publicUrl)
-            .replace('SW_PUBLIC_SCOPE', ensureSlash(scope || publicUrl, true));
+    new CopyPlugin({
+      patterns: [
+        {
+          force: true,
+          from: locations.template.registerServiceWorker,
+          to: locations.production.registerServiceWorker,
+          transform(content) {
+            return content
+              .toString()
+              .replace('SW_PUBLIC_URL', publicUrl)
+              .replace('SW_PUBLIC_SCOPE', ensureSlash(scope || publicUrl, true));
+          },
         },
-      },
-    ])
+      ],
+    })
   );
 
   // Always register general service worker

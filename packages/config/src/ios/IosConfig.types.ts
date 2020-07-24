@@ -14,14 +14,24 @@ export type InfoPlist = {
   CFBundleVersion?: string;
   CFBundleDisplayName?: string;
   CFBundleName?: string;
-  CFBundleURLTypes?: Array<URLScheme>;
+  CFBundleURLTypes?: URLScheme[];
   ITSAppUsesNonExemptEncryption?: boolean;
-  LSApplicationQueriesSchemes?: Array<string>;
+  LSApplicationQueriesSchemes?: string[];
   FacebookAppID?: string;
   FacebookDisplayName?: string;
   FacebookAutoInitEnabled?: boolean;
   FacebookAutoLogAppEventsEnabled?: boolean;
   FacebookAdvertiserIDCollectionEnabled?: boolean;
-  UISupportedInterfaceOrientations?: Array<InterfaceOrientation>;
+  UISupportedInterfaceOrientations?: InterfaceOrientation[];
   GMSApiKey?: string;
+};
+
+export type ExpoPlist = {
+  EXUpdatesCheckOnLaunch?: string;
+  EXUpdatesEnabled?: boolean;
+  EXUpdatesLaunchWaitMs?: number;
+  EXUpdatesReleaseChannel?: string;
+  EXUpdatesRuntimeVersion?: string;
+  EXUpdatesSDKVersion?: string;
+  EXUpdatesURL?: string;
 };

@@ -1,5 +1,5 @@
-import { ApiV2, UserManager } from '@expo/xdl';
 import { JSONObject } from '@expo/json-file';
+import { ApiV2, UserManager } from '@expo/xdl';
 
 import {
   Platform,
@@ -17,19 +17,22 @@ const DEFAULT_CHECK_INTERVAL_MS = 5 * 1000; // 5 secs
 
 async function startSubmissionAsync(
   platform: Platform,
+  projectId: string,
   config: SubmissionConfig
 ): Promise<StartSubmissionResult> {
   const api = await getApiClientForUser();
-  const { submissionId } = await api.postAsync('app-stores/submissions', {
+  const { submissionId } = await api.postAsync(`projects/${projectId}/app-store-submissions`, {
     platform,
     config: (config as unknown) as JSONObject,
   });
   return submissionId;
 }
 
-async function getSubmissionAsync(submissionId: string): Promise<Submission> {
+async function getSubmissionAsync(projectId: string, submissionId: string): Promise<Submission> {
   const api = await getApiClientForUser();
-  const result: Submission = await api.getAsync(`app-stores/submissions/${submissionId}`);
+  const result: Submission = await api.getAsync(
+    `projects/${projectId}/app-store-submissions/${submissionId}`
+  );
   return result;
 }
 

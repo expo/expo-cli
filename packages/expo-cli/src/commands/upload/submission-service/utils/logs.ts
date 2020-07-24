@@ -1,5 +1,3 @@
-import attempt from 'lodash/attempt';
-import isError from 'lodash/isError';
 import got from 'got';
 
 import log from '../../../../log';
@@ -49,8 +47,10 @@ function parseLogs(logs: string): Log[] {
   const lines = logs.split('\n');
   const result: Log[] = [];
   for (const line of lines) {
-    const parsedLine = attempt(() => JSON.parse(line));
-    if (isError(parsedLine)) {
+    let parsedLine;
+    try {
+      parsedLine = JSON.parse(line);
+    } catch (error) {
       continue;
     }
     let level: Log['level'];

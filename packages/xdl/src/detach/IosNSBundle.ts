@@ -1,8 +1,7 @@
+import { ExpoConfig } from '@expo/config';
 import fs from 'fs-extra';
-import get from 'lodash/get';
 import path from 'path';
 
-import { ExpoConfig } from '@expo/config';
 import * as AssetBundle from './AssetBundle';
 import {
   getManifestAsync,
@@ -12,7 +11,6 @@ import {
 } from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
 import * as IosIcons from './IosIcons';
-
 // @ts-ignore: No TS support
 import * as IosLaunchScreen from './IosLaunchScreen';
 // @ts-ignore: No TS support
@@ -58,8 +56,8 @@ function _configureInfoPlistForLocalDevelopment(config: any, exp: ExpoConfig): E
  */
 function _logDeveloperInfoForLocalDevelopment(infoPlist: any[]): void {
   // warn about *UsageDescription changes
-  let usageKeysConfigured = [];
-  for (let key in infoPlist) {
+  const usageKeysConfigured = [];
+  for (const key in infoPlist) {
     if (key in infoPlist && key.includes('UsageDescription')) {
       usageKeysConfigured.push(key);
     }
@@ -79,8 +77,11 @@ async function _cleanPropertyListBackupsAsync(
   context: AnyStandaloneContext,
   backupPath: string
 ): Promise<void> {
-  if (get(context, 'build.ios.buildType') !== 'client') {
+  if (context.build?.ios?.buildType !== 'client') {
     await IosPlist.cleanBackupAsync(backupPath, 'EXShell', false);
+    // [dsokal] it's probably ok to clean up those two for client but no one knows if it's true for sure
+    await IosPlist.cleanBackupAsync(backupPath, 'EXSDKVersions', false);
+    await IosPlist.cleanBackupAsync(backupPath, 'EXBuildConstants', false);
   }
   await IosPlist.cleanBackupAsync(backupPath, 'Info', false);
   // TODO: support this in user contexts as well
@@ -113,7 +114,7 @@ async function _maybeLegacyPreloadKernelManifestAndBundleAsync(
   bundleFilename: string
 ): Promise<void> {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
-  let sdkVersionSupported = await IosWorkspace.getNewestSdkVersionSupportedAsync(context);
+  const sdkVersionSupported = await IosWorkspace.getNewestSdkVersionSupportedAsync(context);
 
   if (parseSdkMajorVersion(sdkVersionSupported) < 26) {
     logger.info('Preloading Expo kernel JS...');
@@ -141,7 +142,7 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
     logger.info(
       'Your iOS ExpoKit project will not contain an .entitlements file by default. If you need specific Apple entitlements, enable them manually via Xcode or the Apple Developer website.'
     );
-    let keysToFlag = [];
+    const keysToFlag = [];
     if (exp.ios && exp.ios.usesIcloudStorage) {
       keysToFlag.push('ios.usesIcloudStorage');
     }
@@ -252,14 +253,14 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
   const config = context.config;
   const privateConfig = _getPrivateConfig(context);
 
-  let result = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
+  const result = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
     // make sure this happens first:
     // apply any custom information from ios.infoPlist prior to all other exponent config
-    let usageDescriptionKeysConfigured: { [key: string]: any } = {};
+    const usageDescriptionKeysConfigured: { [key: string]: any } = {};
     let extraConfig;
     if (config.ios && config.ios.infoPlist) {
       extraConfig = config.ios.infoPlist;
-      for (let key in extraConfig) {
+      for (const key in extraConfig) {
         if (extraConfig.hasOwnProperty(key)) {
           infoPlist[key] = extraConfig[key];
 
@@ -292,7 +293,7 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       : config.name;
 
     // determine app linking schemes
-    let linkingSchemes = config.scheme ? [config.scheme] : [];
+    const linkingSchemes = config.scheme ? [config.scheme] : [];
     if (config.facebookScheme && config.facebookScheme.startsWith('fb')) {
       linkingSchemes.push(config.facebookScheme);
     }
@@ -373,8 +374,8 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     );
 
     // use version from manifest
-    let version = config.version ? config.version : '0.0.0';
-    let buildNumber = config.ios && config.ios.buildNumber ? config.ios.buildNumber : '1';
+    const version = config.version ? config.version : '0.0.0';
+    const buildNumber = config.ios && config.ios.buildNumber ? config.ios.buildNumber : '1';
     infoPlist.CFBundleShortVersionString = version;
     infoPlist.CFBundleVersion = buildNumber;
 
@@ -396,8 +397,8 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       };
     }
 
-    let permissionsAppName = config.name ? config.name : 'this app';
-    for (let key in infoPlist) {
+    const permissionsAppName = config.name ? config.name : 'this app';
+    for (const key in infoPlist) {
       if (
         infoPlist.hasOwnProperty(key) &&
         _isAppleUsageDescriptionKey(key) &&
@@ -510,11 +511,11 @@ async function _configureGoogleServicesPlistAsync(context: AnyStandaloneContext)
   if (context instanceof StandaloneContextUser) {
     return;
   }
-  if (get(context, 'data.manifest.ios.googleServicesFile')) {
+  if (context.data.manifest.ios?.googleServicesFile) {
     const { supportingDirectory } = IosWorkspace.getPaths(context);
     await fs.writeFile(
       path.join(supportingDirectory, 'GoogleService-Info.plist'),
-      get(context, 'data.manifest.ios.googleServicesFile'),
+      context.data.manifest.ios?.googleServicesFile,
       'base64'
     );
   }
@@ -523,7 +524,7 @@ async function _configureGoogleServicesPlistAsync(context: AnyStandaloneContext)
 export async function configureAsync(context: AnyStandaloneContext): Promise<void> {
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
 
-  let {
+  const {
     intermediatesDirectory,
     iosProjectDirectory,
     projectName,

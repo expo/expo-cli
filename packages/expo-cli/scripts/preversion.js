@@ -1,6 +1,6 @@
-let { bold } = require('chalk');
-let boxen = require('boxen');
-let inquirer = require('inquirer');
+const boxen = require('boxen');
+const { bold } = require('chalk');
+const inquirer = require('inquirer');
 
 console.log(
   boxen(bold("Please complete these checks before publishing the 'expo-cli' package:"), {
