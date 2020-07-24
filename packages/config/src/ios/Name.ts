@@ -1,5 +1,5 @@
-import { InfoPlist } from './IosConfig.types';
 import { ExpoConfig } from '../Config.types';
+import { InfoPlist } from './IosConfig.types';
 
 export function getName(config: ExpoConfig) {
   return typeof config.name === 'string' ? config.name : null;
@@ -32,7 +32,7 @@ export function setDisplayName(configOrName: ExpoConfig | string, infoPlist: Inf
  * sometimes on the App Store
  */
 export function setName(config: ExpoConfig, infoPlist: InfoPlist) {
-  let name = getName(config);
+  const name = getName(config);
 
   if (!name) {
     return infoPlist;

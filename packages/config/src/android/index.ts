@@ -1,14 +1,13 @@
-import * as Manifest from './Manifest';
-
 import * as AdaptiveIcon from './AdaptiveIcon';
 import * as Branch from './Branch';
 import * as Colors from './Colors';
-import * as Icon from './Icon';
 import * as Facebook from './Facebook';
 import * as GoogleMapsApiKey from './GoogleMapsApiKey';
 import * as GoogleMobileAds from './GoogleMobileAds';
 import * as GoogleServices from './GoogleServices';
+import * as Icon from './Icon';
 import * as IntentFilters from './IntentFilters';
+import * as Manifest from './Manifest';
 import * as NavigationBar from './NavigationBar';
 import * as Orientation from './Orientation';
 import * as Package from './Package';

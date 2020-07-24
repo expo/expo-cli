@@ -9,7 +9,7 @@ export default class JsonFileError extends Error {
   isJsonFileError: true;
 
   constructor(message: string, cause?: Error, code?: string) {
-    let fullMessage = cause ? `${message}\n└─ Cause: ${cause.name}: ${cause.message}` : message;
+    const fullMessage = cause ? `${message}\n└─ Cause: ${cause.name}: ${cause.message}` : message;
     super(fullMessage);
     this.name = this.constructor.name;
     this.cause = cause;

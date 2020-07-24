@@ -1,5 +1,5 @@
-import { vol } from 'memfs';
 import colorString from 'color-string';
+import { vol } from 'memfs';
 
 import { getPng1x1FileContent } from '../../__tests__/helpers';
 import configureBackgroundAsset from '../BackgroundAsset';

@@ -1,5 +1,5 @@
-import { release } from 'os';
 import fs from 'fs-extra';
+import { release } from 'os';
 
 import { WSL_BASH_PATH } from './fastlane';
 

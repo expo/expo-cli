@@ -1,11 +1,11 @@
 import spawnAsync from '@expo/spawn-async';
-import { ApiV2, UserManager } from '@expo/xdl';
+import { UserManager } from '@expo/xdl';
 import fs from 'fs-extra';
 import ora from 'ora';
 
 import log from '../../log';
-import * as UrlUtils from '../utils/url';
 import { printTableJsonArray } from '../utils/cli-table';
+import * as UrlUtils from '../utils/url';
 import { BuildInfo } from './build';
 
 async function makeProjectTarballAsync(tarPath: string) {
@@ -43,7 +43,7 @@ function printBuildTable(builds: BuildInfo[]) {
 
 async function printLogsUrls(
   accountName: string,
-  builds: Array<{ platform: 'android' | 'ios'; buildId: string }>
+  builds: { platform: 'android' | 'ios'; buildId: string }[]
 ): Promise<void> {
   const user = await UserManager.ensureLoggedInAsync();
   if (builds.length === 1) {
@@ -66,7 +66,7 @@ async function printLogsUrls(
   }
 }
 
-async function printBuildResults(buildInfo: Array<BuildInfo | null>): Promise<void> {
+async function printBuildResults(buildInfo: (BuildInfo | null)[]): Promise<void> {
   if (buildInfo.length === 1) {
     log(`Artifact url: ${buildInfo[0]?.artifacts?.buildUrl ?? ''}`);
   } else {

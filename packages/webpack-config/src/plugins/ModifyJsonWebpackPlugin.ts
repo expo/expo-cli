@@ -1,4 +1,4 @@
-import { Compiler, Plugin, compilation } from 'webpack';
+import { Compiler, Plugin, compilation as compilationNS } from 'webpack';
 
 import { BeforeEmitOptions } from './JsonWebpackPlugin';
 
@@ -17,7 +17,7 @@ function maybeFetchPlugin(compiler: Compiler, name: string): Plugin | undefined 
 export default class ModifyJsonWebpackPlugin {
   async modifyAsync(
     compiler: Compiler,
-    compilation: compilation.Compilation,
+    compilation: compilationNS.Compilation,
     data: BeforeEmitOptions
   ): Promise<BeforeEmitOptions> {
     return data;

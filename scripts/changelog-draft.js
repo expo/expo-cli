@@ -18,7 +18,7 @@ if (!previousRelease) {
 }
 
 async function getCommitsAsync() {
-  let result = await spawnAsync('git', ['log', `${previousRelease}..HEAD`, '--oneline']);
+  const result = await spawnAsync('git', ['log', `${previousRelease}..HEAD`, '--oneline']);
   return formatCommits(result.stdout);
 }
 
@@ -44,8 +44,8 @@ function formatCommit(commitStr) {
 }
 
 async function getPublishedPackagesAsync() {
-  let result = await spawnAsync('git', ['log', '--format=%s%b', '--max-count=1']);
-  let commit = result.stdout;
+  const result = await spawnAsync('git', ['log', '--format=%s%b', '--max-count=1']);
+  const commit = result.stdout;
   if (!commit.includes('Publish -')) {
     throw new Error(
       'This script only works when the most recent commit is the auto-generated publish commit'

@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 
 import { ResizeMode, Arguments, StatusBarOptions } from '../constants';
-import configureImageAsset from './ImageAsset';
 import configureBackgroundAsset from './BackgroundAsset';
+import configureImageAsset from './ImageAsset';
 import configureInfoPlist from './Info.plist';
 import configureStoryboard from './Storyboard';
 import readPbxProject from './pbxproj';

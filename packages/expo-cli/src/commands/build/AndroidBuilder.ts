@@ -8,11 +8,11 @@ import {
   useKeystore,
 } from '../../credentials/views/AndroidKeystore';
 import { SetupAndroidKeystore } from '../../credentials/views/SetupAndroidKeystore';
-import BuildError from './BuildError';
-import BaseBuilder from './BaseBuilder';
-import * as utils from './utils';
-import { PLATFORMS, Platform } from './constants';
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
+import BaseBuilder from './BaseBuilder';
+import BuildError from './BuildError';
+import { PLATFORMS, Platform } from './constants';
+import * as utils from './utils';
 
 const { ANDROID } = PLATFORMS;
 
@@ -32,7 +32,7 @@ export default class AndroidBuilder extends BaseBuilder {
     // Check for existing credentials, collect any missing credentials, and validate them
     await this.collectAndValidateCredentials();
     // Publish the current experience, if necessary
-    let publishedExpIds = this.options.publicUrl ? undefined : await this.ensureReleaseExists();
+    const publishedExpIds = this.options.publicUrl ? undefined : await this.ensureReleaseExists();
 
     if (!this.options.publicUrl) {
       await this.checkStatusBeforeBuild();

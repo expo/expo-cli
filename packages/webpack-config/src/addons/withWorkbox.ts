@@ -7,7 +7,6 @@ import {
   GenerateSWOptions,
   InjectManifest,
   InjectManifestOptions,
-  RuntimeCacheRule,
 } from 'workbox-webpack-plugin';
 
 import { getPaths } from '../env';

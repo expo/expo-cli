@@ -1,8 +1,9 @@
 /* eslint-env node */
 
 import path from 'path';
-import { getPaths, getPathsAsync, getPublicPaths, getServedPath } from '../paths';
+
 import { normalizePaths } from '../../utils';
+import { getPaths, getPathsAsync, getPublicPaths, getServedPath } from '../paths';
 
 const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
 const projectRootCustomHomepage = path.resolve(__dirname, '../../../e2e/custom-homepage');

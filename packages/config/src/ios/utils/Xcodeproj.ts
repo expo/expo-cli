@@ -1,9 +1,10 @@
 // @ts-ignore
+import { sync as globSync } from 'glob';
+import path from 'path';
+// @ts-ignore
 import { project as Project } from 'xcode';
 // @ts-ignore
 import pbxFile from 'xcode/lib/pbxFile';
-import { sync as globSync } from 'glob';
-import path from 'path';
 
 export function getProjectName(projectRoot: string) {
   const sourceRoot = getSourceRoot(projectRoot);
@@ -22,13 +23,13 @@ export function getSourceRoot(projectRoot: string) {
 // higher level function exposed by the xcode library, but we should find out how to do
 // that and replace this with it
 export function addFileToGroup(filepath: string, groupName: string, project: Project) {
-  let file = new pbxFile(filepath);
+  const file = new pbxFile(filepath);
   file.uuid = project.generateUuid();
   file.fileRef = project.generateUuid();
   project.addToPbxFileReferenceSection(file);
   project.addToPbxBuildFileSection(file);
   project.addToPbxSourcesBuildPhase(file);
-  let group = project.pbxGroupByName(groupName);
+  const group = project.pbxGroupByName(groupName);
   if (!group) {
     throw Error(`Group by name ${groupName} not found!`);
   }

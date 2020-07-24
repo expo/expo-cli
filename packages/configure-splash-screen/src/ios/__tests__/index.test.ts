@@ -3,7 +3,7 @@ import { vol } from 'memfs';
 import * as path from 'path';
 
 import { getDirFromFS, readFileFromActualFS, getPng1x1FileContent } from '../../__tests__/helpers';
-import { ResizeMode, StatusBarStyle } from '../../constants';
+import { ResizeMode } from '../../constants';
 import configureIos from '../index';
 import reactNativeProject from './fixtures/react-native-project-structure';
 import reactNativeProjectWithSplashScreenConfiured from './fixtures/react-native-project-structure-with-splash-screen-configured';

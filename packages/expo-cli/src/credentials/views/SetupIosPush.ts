@@ -1,9 +1,9 @@
 import { prompt } from 'inquirer';
-import * as iosPushView from './IosPushCredentials';
 
-import { Context, IView } from '../context';
-import { Question } from '../../prompt';
 import log from '../../log';
+import { Question } from '../../prompt';
+import { Context, IView } from '../context';
+import * as iosPushView from './IosPushCredentials';
 
 export class SetupIosPush implements IView {
   _experienceName: string;

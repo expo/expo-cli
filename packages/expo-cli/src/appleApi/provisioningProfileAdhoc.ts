@@ -1,7 +1,7 @@
 import ora from 'ora';
 
-import { runAction, travelingFastlane } from './fastlane';
 import { AppleCtx } from './authenticate';
+import { runAction, travelingFastlane } from './fastlane';
 import { ProvisioningProfile } from './provisioningProfile';
 
 export class ProvisioningProfileAdhocManager {

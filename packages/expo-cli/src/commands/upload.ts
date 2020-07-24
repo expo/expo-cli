@@ -1,11 +1,11 @@
 import chalk from 'chalk';
-import pick from 'lodash/pick';
 import { Command } from 'commander';
+import pick from 'lodash/pick';
 
+import log from '../log';
 import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
 import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
 import { AndroidSubmitCommandOptions } from './upload/submission-service/android/types';
-import log from '../log';
 import { SubmissionMode } from './upload/submission-service/types';
 
 const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];

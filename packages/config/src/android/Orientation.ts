@@ -13,7 +13,7 @@ export async function setAndroidOrientation(config: ExpoConfig, manifestDocument
     return manifestDocument;
   }
 
-  let mainActivity = manifestDocument.manifest.application[0].activity.filter(
+  const mainActivity = manifestDocument.manifest.application[0].activity.filter(
     (e: any) => e['$']['android:name'] === '.MainActivity'
   );
   mainActivity[0]['$'][SCREEN_ORIENTATION_ATTRIBUTE] = orientation;

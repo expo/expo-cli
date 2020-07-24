@@ -22,7 +22,7 @@ describe('custom Info.plist entries', () => {
 
   it(`sets the entries on the provided plist object if given`, () => {
     const baseInfoPlist = { CFBundleDisplayName: 'My App' };
-    let result = setCustomInfoPlistEntries(
+    const result = setCustomInfoPlistEntries(
       { ios: { infoPlist: customInfoPlistEntries } },
       baseInfoPlist
     );

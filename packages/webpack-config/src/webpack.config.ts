@@ -1,12 +1,7 @@
 /** @internal */ /** */
 /* eslint-env node */
-import PnpWebpackPlugin from 'pnp-webpack-plugin';
-import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
-import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
-import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
-import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
-import ManifestPlugin from 'webpack-manifest-plugin';
 import { projectHasModule } from '@expo/config';
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
@@ -22,8 +17,13 @@ import { boolish } from 'getenv';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { parse } from 'node-html-parser';
 import path from 'path';
+import PnpWebpackPlugin from 'pnp-webpack-plugin';
+import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
+import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
+import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
+import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
+import ManifestPlugin from 'webpack-manifest-plugin';
 
-import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import {
   withAlias,
   withDevServer,
@@ -51,10 +51,10 @@ import {
   ExpoPwaManifestWebpackPlugin,
   FaviconWebpackPlugin,
 } from './plugins';
+import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 import { overrideWithPropertyOrConfig } from './utils';
-import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
@@ -183,7 +183,7 @@ export default async function (
     }
   );
 
-  let appEntry: string[] = [];
+  const appEntry: string[] = [];
 
   // In solutions like Gatsby the main entry point doesn't need to be known.
   if (locations.appMain) {
@@ -311,7 +311,7 @@ export default async function (
   };
 
   // TODO(Bacon): Move to expo/config - manifest code from XDL Project
-  let publicConfig = {
+  const publicConfig = {
     ...config,
     xde: true,
     developer: {

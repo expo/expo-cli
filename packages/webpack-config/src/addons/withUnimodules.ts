@@ -1,7 +1,7 @@
-import path from 'path';
-
 import { getPossibleProjectRoot } from '@expo/config/paths';
+import path from 'path';
 import { ExternalsFunctionElement } from 'webpack';
+
 import {
   getAliases,
   getConfig,

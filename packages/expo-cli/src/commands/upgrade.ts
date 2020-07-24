@@ -4,12 +4,12 @@ import * as PackageManager from '@expo/package-manager';
 import { Android, Project, Simulator, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
-import pickBy from 'lodash/pickBy';
-import difference from 'lodash/difference';
-import semver from 'semver';
-import ora from 'ora';
-import terminalLink from 'terminal-link';
 import getenv from 'getenv';
+import difference from 'lodash/difference';
+import pickBy from 'lodash/pickBy';
+import ora from 'ora';
+import semver from 'semver';
+import terminalLink from 'terminal-link';
 
 import log from '../log';
 import prompt from '../prompt';
@@ -31,7 +31,7 @@ export type TargetSDKVersion = Pick<
 >;
 
 function logNewSection(title: string) {
-  let spinner = ora(chalk.bold(title));
+  const spinner = ora(chalk.bold(title));
   spinner.start();
   return spinner;
 }
@@ -142,7 +142,7 @@ async function makeBreakingChangesToConfigAsync(
   projectRoot: string,
   targetSdkVersionString: string
 ): Promise<void> {
-  let step = logNewSection(
+  const step = logNewSection(
     'Updating your app.json to account for breaking changes (if applicable)...'
   );
 
@@ -163,7 +163,7 @@ async function makeBreakingChangesToConfigAsync(
     return;
   }
 
-  let { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
   try {
     switch (targetSdkVersionString) {
       // IMPORTANT: adding a new case here? be sure to update the dynamic config situation above
@@ -289,7 +289,7 @@ async function shouldUpgradeSimulatorAsync(): Promise<boolean> {
       return false;
     }
 
-    let answer = await prompt({
+    const answer = await prompt({
       type: 'confirm',
       name: 'upgradeSimulator',
       message: 'Would you like to upgrade the Expo app in the iOS simulator?',
@@ -307,7 +307,7 @@ async function maybeUpgradeSimulatorAsync() {
   // Check if we can, and probably should, upgrade the (ios) simulator
   if (Simulator.isPlatformSupported()) {
     if (await shouldUpgradeSimulatorAsync()) {
-      let result = await Simulator.upgradeExpoAsync();
+      const result = await Simulator.upgradeExpoAsync();
       if (!result) {
         log.error(
           "The upgrade of your simulator didn't go as planned. You might have to reinstall it manually with expo client:install:ios."
@@ -364,7 +364,7 @@ export async function upgradeAsync(
   },
   options: Options
 ) {
-  let { exp, pkg } = await ConfigUtils.getConfig(projectRoot);
+  const { exp, pkg } = await ConfigUtils.getConfig(projectRoot);
 
   if (await maybeBailOnGitStatusAsync()) return;
 
@@ -372,10 +372,10 @@ export async function upgradeAsync(
 
   await stopExpoServerAsync(projectRoot);
 
-  let currentSdkVersionString = exp.sdkVersion!;
-  let sdkVersions = await Versions.releasedSdkVersionsAsync();
-  let latestSdkVersion = await Versions.newestReleasedSdkVersionAsync();
-  let latestSdkVersionString = latestSdkVersion.version;
+  const currentSdkVersionString = exp.sdkVersion!;
+  const sdkVersions = await Versions.releasedSdkVersionsAsync();
+  const latestSdkVersion = await Versions.newestReleasedSdkVersionAsync();
+  const latestSdkVersionString = latestSdkVersion.version;
   let targetSdkVersionString =
     maybeFormatSdkVersion(requestedSdkVersion) || latestSdkVersion.version;
   let targetSdkVersion = sdkVersions[targetSdkVersionString];
@@ -390,7 +390,7 @@ export async function upgradeAsync(
     currentSdkVersionString !== targetSdkVersionString &&
     !program.nonInteractive
   ) {
-    let answer = await prompt({
+    const answer = await prompt({
       type: 'confirm',
       name: 'updateToLatestSdkVersion',
       message: `You are currently using SDK ${currentSdkVersionString}. Would you like to update to the latest version, ${latestSdkVersion.version}?`,
@@ -399,11 +399,11 @@ export async function upgradeAsync(
     log.newLine();
 
     if (!answer.updateToLatestSdkVersion) {
-      let sdkVersionStringOptions = Object.keys(sdkVersions).filter(
+      const sdkVersionStringOptions = Object.keys(sdkVersions).filter(
         v => semver.lte('33.0.0', v) && !Versions.gteSdkVersion(exp, v)
       );
 
-      let { selectedSdkVersionString } = await prompt({
+      const { selectedSdkVersionString } = await prompt({
         type: 'list',
         name: 'selectedSdkVersionString',
         message: 'Choose a SDK version to upgrade to:',
@@ -438,7 +438,7 @@ export async function upgradeAsync(
       // If they provide an apparently unsupported sdk version then let people try
       // anyways, maybe we want to use this for testing alpha versions or
       // something...
-      let answer = await prompt({
+      const answer = await prompt({
         type: 'confirm',
         name: 'attemptUnknownUpdate',
         message: `You provided the target SDK version value of ${targetSdkVersionString} which does not seem to exist. But hey, I'm just a program, what do I know. Do you want to try to upgrade to it anyways?`,
@@ -450,7 +450,7 @@ export async function upgradeAsync(
     }
   }
 
-  let packageManager = PackageManager.createForProject(projectRoot, {
+  const packageManager = PackageManager.createForProject(projectRoot, {
     npm: options.npm,
     yarn: options.yarn,
     log,
@@ -459,7 +459,7 @@ export async function upgradeAsync(
 
   log.addNewLineIfNone();
   const expoPackageToInstall = `expo@^${targetSdkVersionString}`;
-  let installingPackageStep = logNewSection(`Installing the ${expoPackageToInstall} package...`);
+  const installingPackageStep = logNewSection(`Installing the ${expoPackageToInstall} package...`);
   log.addNewLineIfNone();
   try {
     await packageManager.addAsync(expoPackageToInstall);
@@ -472,7 +472,7 @@ export async function upgradeAsync(
   // Evaluate project config (app.config.js)
   const { exp: currentExp, dynamicConfigPath } = ConfigUtils.getConfig(projectRoot);
 
-  let removingSdkVersionStep = logNewSection('Validating configuration.');
+  const removingSdkVersionStep = logNewSection('Validating configuration.');
   if (dynamicConfigPath) {
     if (
       !Versions.gteSdkVersion(currentExp, targetSdkVersionString) &&
@@ -502,22 +502,24 @@ export async function upgradeAsync(
 
   await makeBreakingChangesToConfigAsync(projectRoot, targetSdkVersionString);
 
-  let updatingPackagesStep = logNewSection(
+  const updatingPackagesStep = logNewSection(
     'Updating packages to compatible versions (where known).'
   );
 
   log.addNewLineIfNone();
 
   // Get all updated packages
-  let updates = await getUpdatedDependenciesAsync(projectRoot, workflow, targetSdkVersion);
+  const updates = await getUpdatedDependenciesAsync(projectRoot, workflow, targetSdkVersion);
 
   // Split updated packages by dependencies and devDependencies
-  let devDependencies = pickBy(updates, (_version, name) => pkg.devDependencies?.[name]);
-  let devDependenciesAsStringArray = Object.keys(devDependencies).map(
+  const devDependencies = pickBy(updates, (_version, name) => pkg.devDependencies?.[name]);
+  const devDependenciesAsStringArray = Object.keys(devDependencies).map(
     name => `${name}@${updates[name]}`
   );
-  let dependencies = pickBy(updates, (_version, name) => pkg.dependencies?.[name]);
-  let dependenciesAsStringArray = Object.keys(dependencies).map(name => `${name}@${updates[name]}`);
+  const dependencies = pickBy(updates, (_version, name) => pkg.dependencies?.[name]);
+  const dependenciesAsStringArray = Object.keys(dependencies).map(
+    name => `${name}@${updates[name]}`
+  );
 
   // Install dev dependencies
   if (devDependenciesAsStringArray.length) {
@@ -547,7 +549,7 @@ export async function upgradeAsync(
   // for more information on why.
   await maybeCleanNpmStateAsync(packageManager);
 
-  let clearingCacheStep = logNewSection('Clearing the packager cache.');
+  const clearingCacheStep = logNewSection('Clearing the packager cache.');
   try {
     await Project.startReactNativeServerAsync(projectRoot, { reset: true, nonPersistent: true });
   } catch (e) {
@@ -574,8 +576,8 @@ export async function upgradeAsync(
   log.addNewLineIfNone();
 
   // List packages that were not updated
-  let allDependencies = { ...pkg.dependencies, ...pkg.devDependencies };
-  let untouchedDependencies = difference(Object.keys(allDependencies), [
+  const allDependencies = { ...pkg.dependencies, ...pkg.devDependencies };
+  const untouchedDependencies = difference(Object.keys(allDependencies), [
     ...Object.keys(updates),
     'expo',
   ]);
@@ -616,18 +618,18 @@ export async function upgradeAsync(
     );
   }
 
-  let skippedSdkVersions = pickBy(sdkVersions, (_data, sdkVersionString) => {
+  const skippedSdkVersions = pickBy(sdkVersions, (_data, sdkVersionString) => {
     return (
       semver.lt(sdkVersionString, targetSdkVersionString) &&
       semver.gt(sdkVersionString, currentSdkVersionString)
     );
   });
 
-  let skippedSdkVersionKeys = Object.keys(skippedSdkVersions);
+  const skippedSdkVersionKeys = Object.keys(skippedSdkVersions);
   if (skippedSdkVersionKeys.length) {
     log.newLine();
 
-    let releaseNotesUrls = Object.values(skippedSdkVersions)
+    const releaseNotesUrls = Object.values(skippedSdkVersions)
       .map(data => data.releaseNoteUrl)
       .filter(releaseNoteUrl => releaseNoteUrl)
       .reverse();
@@ -651,7 +653,7 @@ async function maybeCleanNpmStateAsync(packageManager: any) {
   // https://forums.expo.io/t/sdk-37-unrecognized-font-family/35201
   // https://twitter.com/geoffreynyaga/status/1246170581109743617
   if (packageManager instanceof PackageManager.NpmPackageManager) {
-    let cleaningNpmStateStep = logNewSection(
+    const cleaningNpmStateStep = logNewSection(
       'Removing package-lock.json and deleting node_modules.'
     );
 
@@ -668,7 +670,7 @@ async function maybeCleanNpmStateAsync(packageManager: any) {
     }
 
     if (shouldInstallNodeModules) {
-      let reinstallingNodeModulesStep = logNewSection(
+      const reinstallingNodeModulesStep = logNewSection(
         'Installing node_modules and rebuilding package-lock.json.'
       );
       try {

@@ -59,7 +59,7 @@ export class CocoaPodsPackageManager implements PackageManager {
     if (!spawnOptions) {
       spawnOptions = { stdio: 'inherit' };
     }
-    let silent = !!spawnOptions.ignoreStdio;
+    const silent = !!spawnOptions.ignoreStdio;
 
     try {
       !silent && console.log(chalk.magenta(`\u203A Attempting to install CocoaPods with Gem`));

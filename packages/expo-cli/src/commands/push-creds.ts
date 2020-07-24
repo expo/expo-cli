@@ -1,8 +1,8 @@
-import fse from 'fs-extra';
+import * as ConfigUtils from '@expo/config';
+import { ApiV2, Exp, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { ApiV2, Exp, UserManager } from '@expo/xdl';
-import * as ConfigUtils from '@expo/config';
+import fse from 'fs-extra';
 
 import log from '../log';
 
@@ -23,11 +23,11 @@ export default function (program: Command) {
       }
       log('Logging in...');
 
-      let user = await UserManager.getCurrentUserAsync();
+      const user = await UserManager.getCurrentUserAsync();
       if (!user) {
         throw new Error('You must be logged in to proceed.');
       }
-      let apiClient = ApiV2.clientForUser(user);
+      const apiClient = ApiV2.clientForUser(user);
 
       log('Reading project configuration...');
       const { exp } = ConfigUtils.getConfig(projectDir, { skipSDKVersionRequirement: true });
@@ -56,7 +56,7 @@ export default function (program: Command) {
     .asyncActionProjectDir(async (projectDir: string) => {
       log('Logging in...');
 
-      let user = await UserManager.getCurrentUserAsync();
+      const user = await UserManager.getCurrentUserAsync();
       if (!user) {
         throw new Error('You must be logged in to proceed.');
       }
@@ -74,7 +74,7 @@ export default function (program: Command) {
           isProxyUser ? ` on behalf of ${username}` : ''
         }...`
       );
-      let apiClient = ApiV2.clientForUser(user);
+      const apiClient = ApiV2.clientForUser(user);
       const { fcmApiKey } = await apiClient.getAsync(
         `credentials/android/push/@${username}/${exp.slug}`
       );
@@ -91,7 +91,7 @@ export default function (program: Command) {
     .description('Deletes a previously uploaded FCM credential.')
     .asyncActionProjectDir(async (projectDir: string) => {
       log('Logging in...');
-      let user = await UserManager.getCurrentUserAsync();
+      const user = await UserManager.getCurrentUserAsync();
       if (!user) {
         throw new Error('You must be logged in to proceed.');
       }
@@ -102,7 +102,7 @@ export default function (program: Command) {
       if (exp.owner) {
         username = exp.owner;
       }
-      let apiClient = ApiV2.clientForUser(user);
+      const apiClient = ApiV2.clientForUser(user);
 
       const isProxyUser = username !== user.username;
       log(
@@ -253,7 +253,7 @@ async function _uploadWebPushCredientials(projectDir: string, options: VapidData
   log(`Reading app.json...`);
   const { configPath } = ConfigUtils.findConfigFile(projectDir);
   const appJson = JSON.parse(await fse.readFile(configPath).then(value => value.toString()));
-  let changedProperties = [];
+  const changedProperties = [];
 
   if (user) {
     if (appJson.expo.owner && appJson.expo.owner !== user.username) {

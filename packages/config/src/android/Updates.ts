@@ -35,7 +35,7 @@ export async function setUpdatesConfig(
   manifestDocument: Document,
   username: string | null
 ) {
-  let mainApplication = manifestDocument.manifest.application.filter(
+  const mainApplication = manifestDocument.manifest.application.filter(
     (e: any) => e['$']['android:name'] === '.MainApplication'
   )[0];
 

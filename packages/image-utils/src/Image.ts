@@ -21,7 +21,7 @@ async function resizeImagesAsync(buffer: Buffer, sizes: number[]): Promise<Buffe
 }
 
 async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
-  let sharp: any = await getSharpAsync();
+  const sharp: any = await getSharpAsync();
   const { width, height, backgroundColor, resizeMode } = imageOptions;
   if (!sharp) {
     const inputOptions: any = { input: imageOptions.src, quality: 100 };

@@ -1,5 +1,6 @@
 const babel = require('@babel/core');
 const { wrap } = require('jest-snapshot-serializer-raw');
+
 const preset = require('..');
 
 function transform(input, options = {}) {

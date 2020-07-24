@@ -1,7 +1,6 @@
 import { vol } from 'memfs';
 
 import { CredentialsSource } from '../../../easJson';
-import { Context } from '../../context';
 import iOSCredentialsProvider from '../iOSCredentialsProvider';
 
 const providerOptions = {

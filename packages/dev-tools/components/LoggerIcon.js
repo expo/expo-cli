@@ -1,5 +1,5 @@
-import * as React from 'react';
 import * as SVG from 'app/common/svg';
+import * as React from 'react';
 
 export default props => {
   if (props.type === 'Process') {

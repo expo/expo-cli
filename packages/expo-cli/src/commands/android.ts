@@ -1,7 +1,6 @@
-import { Command } from 'commander';
 import boxen from 'boxen';
-
 import chalk from 'chalk';
+import { Command } from 'commander';
 
 export default function (program: Command) {
   program

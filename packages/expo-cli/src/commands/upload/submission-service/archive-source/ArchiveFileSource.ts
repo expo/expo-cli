@@ -1,16 +1,15 @@
-import os from 'os';
-import { basename as pathBasename, join as pathJoin } from 'path';
-
 import { Platform } from '@expo/config';
 import { StandaloneBuild } from '@expo/xdl';
+import os from 'os';
+import { basename as pathBasename, join as pathJoin } from 'path';
 import validator from 'validator';
 
-import { downloadAppArchiveAsync, uploadAppArchiveAsync } from '../utils/files';
-import { getAppConfig } from '../utils/config';
-import { existingFile } from '../../../../validators';
-import prompt from '../../../../prompt';
-import { SubmissionMode } from '../types';
 import log from '../../../../log';
+import prompt from '../../../../prompt';
+import { existingFile } from '../../../../validators';
+import { SubmissionMode } from '../types';
+import { getAppConfig } from '../utils/config';
+import { downloadAppArchiveAsync, uploadAppArchiveAsync } from '../utils/files';
 
 enum ArchiveFileSourceType {
   url,

@@ -1,16 +1,13 @@
 import invariant from 'invariant';
-import prompt, { ChoiceType, Question } from '../../prompt';
-import log from '../../log';
 
+import prompt, { ChoiceType, Question } from '../../prompt';
+import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
+import { Context, IView } from '../context';
+import { CredentialsManager } from '../route';
 import * as androidView from './AndroidCredentials';
-import * as iosPushView from './IosPushCredentials';
 import * as iosDistView from './IosDistCert';
 import * as iosProvisionigProfileView from './IosProvisioningProfile';
-
-import { Context, IView } from '../context';
-import { AndroidCredentials } from '../credentials';
-import { CredentialsManager } from '../route';
-import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
+import * as iosPushView from './IosPushCredentials';
 
 export class SelectPlatform implements IView {
   async open(ctx: Context): Promise<IView | null> {

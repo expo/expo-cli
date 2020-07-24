@@ -1,5 +1,5 @@
-import { InfoPlist } from './IosConfig.types';
 import { ExpoConfig } from '../Config.types';
+import { InfoPlist } from './IosConfig.types';
 import { appendScheme } from './Scheme';
 
 /**
@@ -50,12 +50,12 @@ export function setFacebookConfig(config: ExpoConfig, infoPlist: InfoPlist) {
 }
 
 export function setFacebookScheme(config: ExpoConfig, infoPlist: InfoPlist) {
-  let facebookScheme = getFacebookScheme(config);
+  const facebookScheme = getFacebookScheme(config);
   return appendScheme(facebookScheme, infoPlist);
 }
 
 export function setFacebookAutoInitEnabled(config: ExpoConfig, infoPlist: InfoPlist) {
-  let facebookAutoInitEnabled = getFacebookAutoInitEnabled(config);
+  const facebookAutoInitEnabled = getFacebookAutoInitEnabled(config);
 
   if (facebookAutoInitEnabled === null) {
     return infoPlist;
@@ -68,7 +68,7 @@ export function setFacebookAutoInitEnabled(config: ExpoConfig, infoPlist: InfoPl
 }
 
 export function setFacebookAutoLogAppEventsEnabled(config: ExpoConfig, infoPlist: InfoPlist) {
-  let facebookAutoLogAppEventsEnabled = getFacebookAutoLogAppEvents(config);
+  const facebookAutoLogAppEventsEnabled = getFacebookAutoLogAppEvents(config);
 
   if (facebookAutoLogAppEventsEnabled === null) {
     return infoPlist;
@@ -81,7 +81,7 @@ export function setFacebookAutoLogAppEventsEnabled(config: ExpoConfig, infoPlist
 }
 
 export function setFacebookAdvertiserIDCollectionEnabled(config: ExpoConfig, infoPlist: InfoPlist) {
-  let facebookAdvertiserIDCollectionEnabled = getFacebookAdvertiserIDCollection(config);
+  const facebookAdvertiserIDCollectionEnabled = getFacebookAdvertiserIDCollection(config);
 
   if (facebookAdvertiserIDCollectionEnabled === null) {
     return infoPlist;
@@ -94,7 +94,7 @@ export function setFacebookAdvertiserIDCollectionEnabled(config: ExpoConfig, inf
 }
 
 export function setFacebookAppId(config: ExpoConfig, infoPlist: InfoPlist) {
-  let facebookAppId = getFacebookAppId(config);
+  const facebookAppId = getFacebookAppId(config);
   if (facebookAppId) {
     return {
       ...infoPlist,
@@ -106,7 +106,7 @@ export function setFacebookAppId(config: ExpoConfig, infoPlist: InfoPlist) {
 }
 
 export function setFacebookDisplayName(config: ExpoConfig, infoPlist: InfoPlist) {
-  let facebookDisplayName = getFacebookDisplayName(config);
+  const facebookDisplayName = getFacebookDisplayName(config);
 
   if (facebookDisplayName) {
     return {
@@ -119,13 +119,13 @@ export function setFacebookDisplayName(config: ExpoConfig, infoPlist: InfoPlist)
 }
 
 export function setFacebookApplicationQuerySchemes(config: ExpoConfig, infoPlist: InfoPlist) {
-  let facebookAppId = getFacebookAppId(config);
+  const facebookAppId = getFacebookAppId(config);
 
   if (!facebookAppId) {
     return infoPlist;
   }
 
-  let existingSchemes = infoPlist.LSApplicationQueriesSchemes || [];
+  const existingSchemes = infoPlist.LSApplicationQueriesSchemes || [];
 
   // already inlcuded, no need to add again
   if (existingSchemes.includes('fbapi')) {
@@ -135,7 +135,7 @@ export function setFacebookApplicationQuerySchemes(config: ExpoConfig, infoPlist
   // TODO: it's actually necessary to add more query schemes (specific to the
   // app) to support all of the features that the Facebook SDK provides, should
   // we sync those here too?
-  let updatedSchemes = [
+  const updatedSchemes = [
     ...existingSchemes,
     'fbapi',
     'fb-messenger-api',

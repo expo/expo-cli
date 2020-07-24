@@ -1,15 +1,14 @@
-import crypto from 'crypto';
-
-import { Command } from 'commander';
-import ora from 'ora';
-import invariant from 'invariant';
-import CliTable from 'cli-table3';
-import { ApiV2, UserManager } from '@expo/xdl';
 import { findConfigFile, getConfig } from '@expo/config';
-
+import { ApiV2, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
-import log from '../log';
+import CliTable from 'cli-table3';
+import { Command } from 'commander';
+import crypto from 'crypto';
+import invariant from 'invariant';
+import ora from 'ora';
+
 import CommandError, { ErrorCodes } from '../CommandError';
+import log from '../log';
 
 const SECRET_MIN_LENGTH = 16;
 const SECRET_MAX_LENGTH = 1000;

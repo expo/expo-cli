@@ -1,8 +1,7 @@
+import * as Constants from 'app/common/constants';
 import React from 'react';
 import { css } from 'react-emotion';
 import { VelocityTransitionGroup } from 'velocity-react';
-
-import * as Constants from 'app/common/constants';
 
 if (process.browser) {
   require('velocity-animate');

@@ -1,6 +1,7 @@
 import { Command } from 'commander';
-import configureIOSProjectAsync from './apply/configureIOSProjectAsync';
+
 import configureAndroidProjectAsync from './apply/configureAndroidProjectAsync';
+import configureIOSProjectAsync from './apply/configureIOSProjectAsync';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from './utils/logConfigWarnings';
 
 type Options = {

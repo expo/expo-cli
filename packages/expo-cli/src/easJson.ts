@@ -1,8 +1,7 @@
-import path from 'path';
-
-import Joi from '@hapi/joi';
 import { Platform } from '@expo/build-tools';
+import Joi from '@hapi/joi';
 import fs from 'fs-extra';
+import path from 'path';
 
 // TODO(wkozyra95): move it to @expo/config or to separate package
 

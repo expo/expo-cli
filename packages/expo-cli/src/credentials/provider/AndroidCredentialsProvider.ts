@@ -1,11 +1,10 @@
-import { SetupAndroidKeystore } from '../views/SetupAndroidKeystore';
-import { Keystore } from '../credentials';
-import { runCredentialsManager } from '../route';
-import { Context } from '../context';
-import { credentialsJson } from '../local';
-import { CredentialsProvider } from './provider';
 import { CredentialsSource } from '../../easJson';
-import log from '../../log';
+import { Context } from '../context';
+import { Keystore } from '../credentials';
+import { credentialsJson } from '../local';
+import { runCredentialsManager } from '../route';
+import { SetupAndroidKeystore } from '../views/SetupAndroidKeystore';
+import { CredentialsProvider } from './provider';
 
 export interface AndroidCredentials {
   keystore: Keystore;
@@ -63,7 +62,6 @@ export default class AndroidCredentialsProvider implements CredentialsProvider {
         r.keyPassword === l.keyPassword &&
         this.isValidKeystore(r)
       );
-      return true;
     } catch (_) {
       return false;
     }

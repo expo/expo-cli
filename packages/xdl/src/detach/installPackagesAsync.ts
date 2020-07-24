@@ -44,7 +44,7 @@ export default async function installPackagesAsync(
 
 async function yarnExistsAsync() {
   try {
-    let version = (await spawnAsync('yarnpkg', ['--version'])).stdout.trim();
+    const version = (await spawnAsync('yarnpkg', ['--version'])).stdout.trim();
     return !!semver.valid(version);
   } catch (e) {
     return false;

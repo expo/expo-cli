@@ -1,7 +1,7 @@
 import { dirname } from 'path';
 
-import normalizePaths from '../utils/normalizePaths';
 import createConfig from '..';
+import normalizePaths from '../utils/normalizePaths';
 
 const projectRoot = dirname(require.resolve('@expo/webpack-config/e2e/basic'));
 

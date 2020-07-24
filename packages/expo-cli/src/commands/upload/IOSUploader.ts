@@ -1,16 +1,16 @@
-import { Credentials, UrlUtils } from '@expo/xdl';
 import { ExpoConfig } from '@expo/config';
+import { Credentials, UrlUtils } from '@expo/xdl';
 import chalk from 'chalk';
-import pick from 'lodash/pick';
 import intersection from 'lodash/intersection';
+import pick from 'lodash/pick';
 
-import BaseUploader, { PlatformOptions } from './BaseUploader';
+import CommandError from '../../CommandError';
+import { authenticate } from '../../appleApi';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
-import { runFastlaneAsync } from './utils';
-import CommandError from '../../CommandError';
 import { nonEmptyInput } from '../../validators';
-import { authenticate } from '../../appleApi';
+import BaseUploader, { PlatformOptions } from './BaseUploader';
+import { runFastlaneAsync } from './utils';
 
 const PLATFORM = 'ios';
 
@@ -131,7 +131,7 @@ export default class IOSUploader extends BaseUploader {
   async _getAppleTeamId(appleIdCrentials: AppleIdCredentials): Promise<string | undefined> {
     const credentialMetadata = await Credentials.getCredentialMetadataAsync(this.projectDir, 'ios');
     const credential = await Credentials.getCredentialsForPlatform(credentialMetadata);
-    let teamId = credential?.teamId;
+    const teamId = credential?.teamId;
     if (teamId) {
       return teamId;
     } else {

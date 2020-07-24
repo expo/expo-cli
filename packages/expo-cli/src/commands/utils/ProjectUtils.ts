@@ -1,8 +1,8 @@
 import JsonFile from '@expo/json-file';
 import spawnAsync from '@expo/spawn-async';
-import path from 'path';
-import fs from 'fs';
 import chalk from 'chalk';
+import fs from 'fs';
+import path from 'path';
 import semver from 'semver';
 
 import CommandError from '../../CommandError';
@@ -41,20 +41,20 @@ export async function findProjectRootAsync(
 // If we get here and can't find expo-updates or package.json we just assume
 // that we are not using the old expo-updates
 export async function usesOldExpoUpdatesAsync(projectRoot: string): Promise<boolean> {
-  let pkgPath = path.join(projectRoot, 'package.json');
-  let pkgExists = fs.existsSync(pkgPath);
+  const pkgPath = path.join(projectRoot, 'package.json');
+  const pkgExists = fs.existsSync(pkgPath);
 
   if (!pkgExists) {
     return false;
   }
 
-  let dependencies = await JsonFile.getAsync(pkgPath, 'dependencies', {});
+  const dependencies = await JsonFile.getAsync(pkgPath, 'dependencies', {});
   if (!dependencies['expo-updates']) {
     return false;
   }
 
-  let version = dependencies['expo-updates'] as string;
-  let coercedVersion = semver.coerce(version);
+  const version = dependencies['expo-updates'] as string;
+  const coercedVersion = semver.coerce(version);
   if (coercedVersion && semver.satisfies(coercedVersion, '~0.1.0')) {
     return true;
   }
@@ -65,7 +65,7 @@ export async function usesOldExpoUpdatesAsync(projectRoot: string): Promise<bool
 export async function validateGitStatusAsync(): Promise<boolean> {
   let workingTreeStatus = 'unknown';
   try {
-    let result = await spawnAsync('git', ['status', '--porcelain']);
+    const result = await spawnAsync('git', ['status', '--porcelain']);
     workingTreeStatus = result.stdout === '' ? 'clean' : 'dirty';
   } catch (e) {
     // Maybe git is not installed?

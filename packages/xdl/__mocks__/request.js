@@ -1,6 +1,6 @@
 'use strict';
 
-let extend = require('extend');
+const extend = require('extend');
 
 function asyncCallback(cb) {
   return function (...args) {

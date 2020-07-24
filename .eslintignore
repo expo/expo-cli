@@ -6,6 +6,8 @@ vendor
 # Ignore build artifacts
 /packages/*/build
 /packages/osascript/lib
+/packages/webpack-config/webpack
+/packages/config/src/__tests__/fixtures/behavior/syntax-error
 # Generated
 .next
 .expo

@@ -1,42 +1,41 @@
-import os from 'os';
+import { XDLError } from '@expo/xdl';
 import chalk from 'chalk';
 import pickBy from 'lodash/pickBy';
-import { XDLError } from '@expo/xdl';
-
-import terminalLink from 'terminal-link';
+import os from 'os';
 import semver from 'semver';
-import BaseBuilder from '../BaseBuilder';
-import { PLATFORMS } from '../constants';
-import * as utils from '../utils';
-import * as apple from '../../../appleApi';
-import prompt from '../../../prompt';
-import { ensurePNGIsNotTransparent } from './utils/image';
-import { runCredentialsManager } from '../../../credentials/route';
-import { Context } from '../../../credentials/context';
-import { displayProjectCredentials } from '../../../credentials/actions/list';
-import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
-import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
-import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
-import CommandError, { ErrorCodes } from '../../../CommandError';
-import log from '../../../log';
+import terminalLink from 'terminal-link';
 
+import CommandError, { ErrorCodes } from '../../../CommandError';
+import * as apple from '../../../appleApi';
+import { displayProjectCredentials } from '../../../credentials/actions/list';
+import { Context } from '../../../credentials/context';
+import { IosAppCredentials, IosDistCredentials } from '../../../credentials/credentials';
+import { runCredentialsManager } from '../../../credentials/route';
 import {
   RemoveIosDist,
   getDistCertFromParams,
   useDistCertFromParams,
 } from '../../../credentials/views/IosDistCert';
 import {
-  RemoveIosPush,
-  getPushKeyFromParams,
-  usePushKeyFromParams,
-} from '../../../credentials/views/IosPushCredentials';
-import {
   RemoveProvisioningProfile,
   getProvisioningProfileFromParams,
   useProvisioningProfileFromParams,
 } from '../../../credentials/views/IosProvisioningProfile';
-import { IosAppCredentials, IosDistCredentials } from '../../../credentials/credentials';
+import {
+  RemoveIosPush,
+  getPushKeyFromParams,
+  usePushKeyFromParams,
+} from '../../../credentials/views/IosPushCredentials';
+import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
+import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
+import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
+import log from '../../../log';
+import prompt from '../../../prompt';
 import { getOrPromptForBundleIdentifier } from '../../eject/ConfigValidation';
+import BaseBuilder from '../BaseBuilder';
+import { PLATFORMS } from '../constants';
+import * as utils from '../utils';
+import { ensurePNGIsNotTransparent } from './utils/image';
 
 const noBundleIdMessage = `Your project must have a \`bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
 

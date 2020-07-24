@@ -1,14 +1,13 @@
-import path from 'path';
-import fs from 'fs';
-
-import get from 'lodash/get';
 import Ajv from 'ajv';
+import fs from 'fs';
+import traverse from 'json-schema-traverse';
+import get from 'lodash/get';
+import path from 'path';
 import imageProbe from 'probe-image-size';
 import readChunk from 'read-chunk';
-import traverse from 'json-schema-traverse';
 
-import { fieldPathToSchema, schemaPointerToFieldPath } from './Util';
 import { SchemerError, ValidationError } from './Error';
+import { fieldPathToSchema, schemaPointerToFieldPath } from './Util';
 
 type Options = {
   allErrors?: boolean;
@@ -35,11 +34,11 @@ export { SchemerError, ValidationError, ErrorCodes, ErrorCode } from './Error';
 export default class Schemer {
   options: Options;
   ajv: Ajv.Ajv;
-  schema: Object;
+  schema: object;
   rootDir: string;
-  manualValidationErrors: Array<ValidationError>;
+  manualValidationErrors: ValidationError[];
   // Schema is a JSON Schema object
-  constructor(schema: Object, options: Options = {}) {
+  constructor(schema: object, options: Options = {}) {
     this.options = {
       allErrors: true,
       verbose: true,
@@ -148,7 +147,7 @@ export default class Schemer {
   }
 
   async _validateAssetsAsync(data: any) {
-    let assets: AssetField[] = [];
+    const assets: AssetField[] = [];
     traverse(this.schema, { allKeys: true }, (subSchema, jsonPointer, a, b, c, d, property) => {
       if (property && subSchema.meta && subSchema.meta.asset) {
         const fieldPath = schemaPointerToFieldPath(jsonPointer);

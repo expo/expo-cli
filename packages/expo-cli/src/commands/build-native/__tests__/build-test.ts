@@ -1,9 +1,8 @@
-import { vol } from 'memfs';
 import merge from 'lodash/merge';
-import { User } from '@expo/xdl';
+import { vol } from 'memfs';
 
-import { buildAction } from '../index';
 import { mockExpoXDL } from '../../../__tests__/mock-utils';
+import { buildAction } from '../index';
 
 const mockedUser = {
   username: 'jester',

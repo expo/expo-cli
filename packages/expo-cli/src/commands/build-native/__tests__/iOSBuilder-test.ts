@@ -1,5 +1,4 @@
 import { vol } from 'memfs';
-import { User } from '@expo/xdl';
 
 import iOSBuilder from '../iOSBuilder';
 
@@ -31,14 +30,6 @@ const pprofile = {
 const cert = {
   content: 'certp12content',
   base64: 'Y2VydHAxMmNvbnRlbnQ=',
-};
-
-const appJson = {
-  expo: {
-    ios: {
-      bundleIdentifier: 'example.bundle.identifier',
-    },
-  },
 };
 
 function setupCredentialsConfig() {

@@ -1,11 +1,11 @@
-import path from 'path';
-import os from 'os';
-
+import { AndroidCredentials as Android } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
+import os from 'os';
+import path from 'path';
 import { v4 as uuid } from 'uuid';
 
-import { AndroidCredentials as Android } from '@expo/xdl';
+import log from '../../log';
 import {
   AndroidCredentials,
   IosAppCredentials,
@@ -13,8 +13,6 @@ import {
   IosDistCredentials,
   IosPushCredentials,
 } from '../credentials';
-
-import log from '../../log';
 
 export async function displayProjectCredentials(
   experienceName: string,

@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
+import pascalCase from 'pascal-case';
 import path from 'path';
 import rimraf from 'rimraf';
-import pascalCase from 'pascal-case';
 
 import {
   getManifestAsync,
@@ -11,9 +11,9 @@ import {
 } from './ExponentTools';
 import * as IosNSBundle from './IosNSBundle';
 import * as IosWorkspace from './IosWorkspace';
+import logger from './Logger';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
-import logger from './Logger';
 
 export const EXPOKIT_APP = 'ExpoKitApp';
 export const EXPONENT_APP = 'Exponent';
@@ -147,7 +147,7 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
   process.env.COCOAPODS_DISABLE_STATS = true;
 
   // install
-  let cocoapodsArgs = ['install'];
+  const cocoapodsArgs = ['install'];
   if (isRepoUpdateEnabled) {
     cocoapodsArgs.push('--repo-update');
   }
@@ -179,13 +179,13 @@ async function _createStandaloneContextAsync(args) {
   } else {
     workspaceSourcePath = path.join(expoSourcePath, '..', 'shellAppWorkspaces', 'default', 'ios');
   }
-  let { privateConfigFile, privateConfigData } = args;
+  const { privateConfigFile, privateConfigData } = args;
 
   let privateConfig;
   if (privateConfigData) {
     privateConfig = privateConfigData;
   } else if (privateConfigFile) {
-    let privateConfigContents = await fs.readFile(privateConfigFile, 'utf8');
+    const privateConfigContents = await fs.readFile(privateConfigFile, 'utf8');
     privateConfig = JSON.parse(privateConfigContents);
   }
 

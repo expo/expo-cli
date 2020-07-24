@@ -5,6 +5,7 @@ import FormData from 'form-data';
 import fs from 'fs-extra';
 import path from 'path';
 
+import { MAX_CONTENT_LENGTH } from './ApiV2';
 import Config from './Config';
 import * as ConnectionStatus from './ConnectionStatus';
 import * as Extract from './Extract';
@@ -12,7 +13,6 @@ import * as Session from './Session';
 import UserManager from './User';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
-import { MAX_CONTENT_LENGTH } from './ApiV2';
 
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;
@@ -57,7 +57,7 @@ async function _callMethodAsync(
   const session = await UserManager.getSessionAsync();
   const skipValidationToken = process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN'];
 
-  let headers: any = {
+  const headers: any = {
     'Exp-ClientId': clientId,
     'Exponent-Client': exponentClient,
   };
@@ -85,9 +85,9 @@ async function _callMethodAsync(
   }
 
   if (requestOptions.formData) {
-    let { formData, ...rest } = requestOptions;
-    let convertedFormData = await _convertFormDataToBuffer(formData);
-    let { data } = convertedFormData;
+    const { formData, ...rest } = requestOptions;
+    const convertedFormData = await _convertFormDataToBuffer(formData);
+    const { data } = convertedFormData;
     options.headers = {
       ...options.headers,
       ...formData.getHeaders(),
@@ -101,11 +101,11 @@ async function _callMethodAsync(
     options.timeout = 1;
   }
 
-  let response = await axios.request(options);
+  const response = await axios.request(options);
   if (!response) {
     throw new Error('Unexpected error: Request failed.');
   }
-  let responseBody = response.data;
+  const responseBody = response.data;
   var responseObj;
   if (typeof responseBody === 'string') {
     try {
@@ -120,7 +120,7 @@ async function _callMethodAsync(
     responseObj = responseBody;
   }
   if (responseObj.err) {
-    let err = new ApiError(
+    const err = new ApiError(
       responseObj.code || 'API_ERROR',
       'API Response Error: ' + responseObj.err
     );
@@ -149,7 +149,7 @@ async function _downloadAsync(
   let promptShown = false;
   let currentProgress = 0;
 
-  let { cancel, token } = axios.CancelToken.source();
+  const { cancel, token } = axios.CancelToken.source();
 
   let warningTimer = setTimeout(() => {
     if (retryFunction) {
@@ -164,9 +164,9 @@ async function _downloadAsync(
     responseType: 'stream',
     cancelToken: token,
   };
-  let response = await axios(url, config);
+  const response = await axios(url, config);
   await new Promise(resolve => {
-    let totalDownloadSize = response.data.headers['content-length'];
+    const totalDownloadSize = response.data.headers['content-length'];
     let downloadProgress = 0;
     response.data
       .on('data', (chunk: Buffer) => {
@@ -217,7 +217,7 @@ export default class ApiClient {
     requestOptions: RequestOptions = {},
     returnEntireResponse: boolean = false
   ) {
-    let url =
+    const url =
       _apiBaseUrl() +
       '/' +
       encodeURIComponent(methodName) +
@@ -232,7 +232,7 @@ export default class ApiClient {
     requestBody?: any,
     requestOptions: RequestOptions = {}
   ) {
-    let url = _rootBaseUrl() + path;
+    const url = _rootBaseUrl() + path;
     return _callMethodAsync(url, method, requestBody, requestOptions);
   }
 
@@ -244,8 +244,8 @@ export default class ApiClient {
     retryFunction?: RetryCallback
   ): Promise<void> {
     if (extract) {
-      let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-      let tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');
+      const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+      const tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');
       await _downloadAsync(url, tmpPath, progressFunction);
       await Extract.extractAsync(tmpPath, outputPath);
       fs.removeSync(tmpPath);

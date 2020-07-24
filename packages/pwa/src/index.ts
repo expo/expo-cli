@@ -2,9 +2,9 @@ import { ExpoConfig, setCustomConfigPath } from '@expo/config';
 import * as Image from '@expo/image-utils';
 import * as path from 'path';
 
-import { assembleOrientationMedia, getDevices } from './Splash';
 import { createPWAManifestFromWebConfig, getConfigForPWA } from './Manifest';
 import { HTMLOutput, IconOptions, Manifest, ProjectOptions, SplashIcon } from './Manifest.types';
+import { assembleOrientationMedia, getDevices } from './Splash';
 
 export async function generateAsync(
   type: string,

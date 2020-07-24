@@ -1,7 +1,4 @@
-import Api from '../Api';
 import { findP12CertSerialNumber } from '../detach/PKCS12Utils';
-import UserManager from '../User';
-import { ApiV2 } from '../xdl';
 
 export type Credentials = {
   appleId?: string;
@@ -32,7 +29,7 @@ export type CredObject = {
   };
 };
 
-export type CredsList = Array<CredObject>;
+export type CredsList = CredObject[];
 
 export function formatDistCerts(distCerts: any, options: { provideFullCertificate?: boolean }) {
   return distCerts.map(({ usedByApps, userCredentialsId, certId, certP12, certPassword }: any) => {

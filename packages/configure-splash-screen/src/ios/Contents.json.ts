@@ -5,15 +5,15 @@ export async function writeContentsJsonFile(
   filename: string,
   darkModeFilename?: string
 ) {
-  const images: Array<{
+  const images: {
     idiom: 'universal';
     filename?: string;
     scale: '1x' | '2x' | '3x';
-    appearances?: Array<{
+    appearances?: {
       appearance: 'luminosity';
       value: 'dark';
-    }>;
-  }> = [
+    }[];
+  }[] = [
     {
       idiom: 'universal' as const,
       filename,

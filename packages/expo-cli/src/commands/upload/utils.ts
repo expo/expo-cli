@@ -1,10 +1,9 @@
-import stream from 'stream';
-import { promisify } from 'util';
-
 import { ExponentTools } from '@expo/xdl';
 import fs from 'fs-extra';
 import got from 'got';
 import ProgressBar from 'progress';
+import stream from 'stream';
+import { promisify } from 'util';
 
 const { spawnAsyncThrowError } = ExponentTools;
 const pipeline = promisify(stream.pipeline);

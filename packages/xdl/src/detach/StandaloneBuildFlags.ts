@@ -32,7 +32,7 @@ class StandaloneBuildFlags {
     configuration: StandaloneBuildConfiguration,
     ios?: StandaloneBuildIosFlags
   ): StandaloneBuildFlags => {
-    let flags = new StandaloneBuildFlags();
+    const flags = new StandaloneBuildFlags();
     flags.configuration = configuration;
     flags.ios = ios;
     flags.isExpoClientBuild = () => ios?.buildType === 'client';
@@ -43,7 +43,7 @@ class StandaloneBuildFlags {
     configuration: StandaloneBuildConfiguration,
     android?: StandaloneBuildAndroidFlags
   ): StandaloneBuildFlags => {
-    let flags = new StandaloneBuildFlags();
+    const flags = new StandaloneBuildFlags();
     flags.configuration = configuration;
     flags.android = android;
     flags.isExpoClientBuild = () => false;

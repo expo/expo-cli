@@ -1,4 +1,5 @@
 import { vol } from 'memfs';
+
 import credentialsJson from '../credentialsJson';
 
 jest.mock('fs');

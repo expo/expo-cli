@@ -1,9 +1,8 @@
 /* eslint-env node */
 import { IncomingMessage, Server, ServerResponse, createServer } from 'http';
-
+import next from 'next';
 import { join } from 'path';
 import { parse } from 'url';
-import next from 'next';
 
 export function handleRequest(
   { projectRoot, app, handle }: { projectRoot: string; app: NextApp; handle: Function },

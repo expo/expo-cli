@@ -1,7 +1,7 @@
-import { ensureCredentialsAsync } from '../credentials';
 import { CredentialsProvider } from '../../../credentials/provider';
 import { CredentialsSource, Workflow } from '../../../easJson';
 import prompts from '../../../prompts';
+import { ensureCredentialsAsync } from '../credentials';
 
 jest.mock('../../../prompts');
 
@@ -21,7 +21,6 @@ function crateMockCredentialsProvider({
   hasLocal,
   isLocalSynced,
 }: any): CredentialsProvider {
-  let credentials;
   return {
     platform: 'android',
     hasRemoteAsync: jest.fn().mockImplementation(() => hasRemote || false),

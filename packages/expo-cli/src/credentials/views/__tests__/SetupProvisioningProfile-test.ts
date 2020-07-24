@@ -1,3 +1,4 @@
+import { IosDistCredentials } from '../../credentials';
 import {
   getCtxMock,
   testIosDistCredential,
@@ -5,7 +6,6 @@ import {
   testProvisioningProfilesFromApple,
 } from '../../test-fixtures/mocks-ios';
 import { SetupIosProvisioningProfile } from '../SetupIosProvisioningProfile';
-import { IosDistCredentials } from '../../credentials';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope
 const mockProvProfManagerCreate = jest.fn(() => testProvisioningProfiles);

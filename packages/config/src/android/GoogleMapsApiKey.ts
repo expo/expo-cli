@@ -12,7 +12,7 @@ export async function setGoogleMapsApiKey(config: ExpoConfig, manifestDocument: 
     return manifestDocument;
   }
 
-  let mainApplication = manifestDocument.manifest.application.filter(
+  const mainApplication = manifestDocument.manifest.application.filter(
     (e: any) => e['$']['android:name'] === '.MainApplication'
   )[0];
 

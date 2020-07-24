@@ -21,7 +21,7 @@ const stateUpdateDeviceWithLog = (state, action) => {
     return { ...state };
   }
 
-  let devices = state.devices.map(device => {
+  const devices = state.devices.map(device => {
     if (device.id === action.log.deviceId) {
       return {
         ...device,

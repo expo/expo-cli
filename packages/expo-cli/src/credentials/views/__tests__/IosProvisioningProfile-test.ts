@@ -1,13 +1,13 @@
 import {
-  CreateOrReuseProvisioningProfile,
-  CreateProvisioningProfile,
-} from '../IosProvisioningProfile';
-import {
   getCtxMock,
   testIosDistCredential,
   testProvisioningProfiles,
   testProvisioningProfilesFromApple,
 } from '../../test-fixtures/mocks-ios';
+import {
+  CreateOrReuseProvisioningProfile,
+  CreateProvisioningProfile,
+} from '../IosProvisioningProfile';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope
 const mockProvProfManagerCreate = jest.fn(() => testProvisioningProfiles);

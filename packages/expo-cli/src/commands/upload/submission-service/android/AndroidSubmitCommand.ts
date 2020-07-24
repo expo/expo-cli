@@ -2,12 +2,7 @@ import { Result, result } from '@expo/results';
 import { UserManager } from '@expo/xdl';
 import validator from 'validator';
 
-import AndroidSubmitter, { AndroidSubmissionOptions } from './AndroidSubmitter';
-import { ArchiveType, ReleaseStatus, ReleaseTrack } from './AndroidSubmissionConfig';
-import { ServiceAccountSource, ServiceAccountSourceType } from './ServiceAccountSource';
-import { AndroidPackageSource, AndroidPackageSourceType } from './AndroidPackageSource';
-import { AndroidSubmissionContext, AndroidSubmitCommandOptions } from './types';
-
+import log from '../../../../log';
 import {
   ArchiveFileSource,
   ArchiveFileSourceType,
@@ -17,7 +12,11 @@ import {
 } from '../archive-source';
 import { SubmissionMode } from '../types';
 import { getExpoConfig } from '../utils/config';
-import log from '../../../../log';
+import { AndroidPackageSource, AndroidPackageSourceType } from './AndroidPackageSource';
+import { ArchiveType, ReleaseStatus, ReleaseTrack } from './AndroidSubmissionConfig';
+import AndroidSubmitter, { AndroidSubmissionOptions } from './AndroidSubmitter';
+import { ServiceAccountSource, ServiceAccountSourceType } from './ServiceAccountSource';
+import { AndroidSubmissionContext, AndroidSubmitCommandOptions } from './types';
 
 class AndroidSubmitCommand {
   static createContext(

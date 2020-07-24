@@ -1,4 +1,5 @@
 import { UserSettings } from '@expo/xdl';
+
 import prompt from './prompt';
 
 async function askForSendToAsync(): Promise<string> {

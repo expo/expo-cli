@@ -1,16 +1,15 @@
-import path from 'path';
-import fs from 'fs-extra';
-
 import { AndroidCredentials } from '@expo/xdl';
+import fs from 'fs-extra';
 import invariant from 'invariant';
+import path from 'path';
+
+import { Context } from '../../credentials';
 import { runCredentialsManager } from '../../credentials/route';
 import { DownloadKeystore } from '../../credentials/views/AndroidKeystore';
-import { Context } from '../../credentials';
-
 import log from '../../log';
 
 async function maybeRenameExistingFile(projectDir: string, filename: string) {
-  let desiredFilePath = path.resolve(projectDir, filename);
+  const desiredFilePath = path.resolve(projectDir, filename);
 
   if (await fs.pathExists(desiredFilePath)) {
     let num = 1;

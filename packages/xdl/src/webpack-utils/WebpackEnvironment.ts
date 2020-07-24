@@ -1,6 +1,6 @@
+import chalk from 'chalk';
 import getenv from 'getenv';
 import { Configuration } from 'webpack';
-import chalk from 'chalk';
 
 import { LogTag, logWarning } from '../project/ProjectUtils';
 

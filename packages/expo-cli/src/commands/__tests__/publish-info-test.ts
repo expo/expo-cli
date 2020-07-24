@@ -1,9 +1,9 @@
-import { vol } from 'memfs';
 import { ApiV2 } from '@expo/xdl';
+import { vol } from 'memfs';
 
-import { getPublicationDetailAsync, getPublishHistoryAsync } from '../utils/PublishUtils';
-import { jester } from '../../credentials/test-fixtures/mocks-ios';
 import { mockExpoXDL } from '../../__tests__/mock-utils';
+import { jester } from '../../credentials/test-fixtures/mocks-ios';
+import { getPublicationDetailAsync, getPublishHistoryAsync } from '../utils/PublishUtils';
 
 jest.mock('fs');
 jest.mock('resolve-from');

@@ -1,6 +1,6 @@
+import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
 import { realpathSync } from 'fs';
 import sudo from 'sudo-prompt';
-import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
 
 export type Logger = (...args: any[]) => void;
 

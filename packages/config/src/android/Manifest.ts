@@ -1,8 +1,7 @@
 import fs from 'fs-extra';
-import { Builder, Parser } from 'xml2js';
-
 import { EOL } from 'os';
 import path from 'path';
+import { Builder, Parser } from 'xml2js';
 
 export type Document = { [key: string]: any };
 
@@ -50,7 +49,7 @@ export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): 
         if (pad !== 0) {
           pad -= 1;
         }
-      } else if (line.match(/^<\w([^>]*[^\/])?>.*$/)) {
+      } else if (line.match(/^<\w([^>]*[^/])?>.*$/)) {
         indent = 1;
       } else {
         indent = 0;

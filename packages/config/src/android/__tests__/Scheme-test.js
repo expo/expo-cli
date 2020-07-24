@@ -34,10 +34,10 @@ describe('scheme', () => {
     let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
     androidManifestJson = await setScheme({ scheme: 'myapp' }, androidManifestJson);
 
-    let intentFilters = androidManifestJson.manifest.application[0].activity.filter(
+    const intentFilters = androidManifestJson.manifest.application[0].activity.filter(
       e => e['$']['android:name'] === '.MainActivity'
     )[0]['intent-filter'];
-    let schemeIntent = intentFilters.filter(e => {
+    const schemeIntent = intentFilters.filter(e => {
       if (e.hasOwnProperty('data')) {
         return e['data'][0]['$']['android:scheme'] === 'myapp';
       }
@@ -48,8 +48,8 @@ describe('scheme', () => {
 });
 
 function removeSingleTaskFromActivities(manifest) {
-  for (let application of manifest.manifest['application']) {
-    for (let activity of application.activity) {
+  for (const application of manifest.manifest['application']) {
+    for (const activity of application.activity) {
       if (activity['$']['android:launchMode'] === 'singleTask') {
         delete activity['$']['android:launchMode'];
       }
@@ -85,7 +85,7 @@ describe('Schemes', () => {
   });
 
   it(`detect when a duplicate might be added`, async () => {
-    let manifest = await readAndroidManifestAsync(sampleManifestPath);
+    const manifest = await readAndroidManifestAsync(sampleManifestPath);
     ensureManifestHasValidIntentFilter(manifest);
 
     const modifiedManifest = appendScheme('myapp.test', manifest);

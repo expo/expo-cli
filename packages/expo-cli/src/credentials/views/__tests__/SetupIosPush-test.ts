@@ -1,9 +1,9 @@
-import { SetupIosPush } from '../SetupIosPush';
 import {
   getCtxMock,
   testIosPushCredential,
   testPushKeysFromApple,
 } from '../../test-fixtures/mocks-ios';
+import { SetupIosPush } from '../SetupIosPush';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope
 const mockPushKeyManagerCreate = jest.fn(() => testIosPushCredential);

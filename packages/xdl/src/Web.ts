@@ -1,4 +1,5 @@
 import { getConfig } from '@expo/config';
+
 import * as Webpack from './Webpack';
 import * as WebpackEnvironment from './webpack-utils/WebpackEnvironment';
 /**

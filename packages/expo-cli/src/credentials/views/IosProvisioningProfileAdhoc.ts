@@ -1,8 +1,9 @@
 import chalk from 'chalk';
-import { Context, IView } from '../context';
+
 import { ProvisioningProfile } from '../../appleApi';
 import { ProvisioningProfileAdhocManager } from '../../appleApi/provisioningProfileAdhoc';
 import log from '../../log';
+import { Context, IView } from '../context';
 
 export type ProvisioningProfileAdhocOptions = {
   experienceName: string;

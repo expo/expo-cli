@@ -85,9 +85,9 @@ export default class BaseBuilder {
     }
 
     // Warn user if building a project using the next deprecated SDK version
-    let oldestSupportedMajorVersion = await Versions.oldestSupportedMajorVersionAsync();
+    const oldestSupportedMajorVersion = await Versions.oldestSupportedMajorVersionAsync();
     if (semver.major(this.manifest.sdkVersion!) === oldestSupportedMajorVersion) {
-      let { version } = await Versions.newestReleasedSdkVersionAsync();
+      const { version } = await Versions.newestReleasedSdkVersionAsync();
       log.warn(
         `\nSDK${oldestSupportedMajorVersion} will be ${chalk.bold(
           'deprecated'
@@ -163,7 +163,7 @@ Please see the docs (${chalk.underline(
   }
 
   async logBuildStatuses(buildStatus: {
-    jobs: Array<Record<string, any>>;
+    jobs: Record<string, any>[];
     canPurchasePriorityBuilds: boolean;
     numberOfRemainingPriorityBuilds: number;
     hasUnlimitedPriorityBuilds?: boolean;
@@ -297,7 +297,7 @@ ${job.id}
     log(
       `Waiting for build to complete.\nYou can press Ctrl+C to exit. It won't cancel the build, you'll be able to monitor it at the printed URL.`
     );
-    let spinner = ora().start();
+    const spinner = ora().start();
     while (true) {
       const result = await Project.getBuildStatusAsync(this.projectDir, {
         current: false,
@@ -329,7 +329,7 @@ ${job.id}
     }
   }
 
-  async build(expIds?: Array<string>) {
+  async build(expIds?: string[]) {
     const { publicUrl } = this.options;
     const platform = this.platform();
     const bundleIdentifier = this.manifest.ios?.bundleIdentifier;

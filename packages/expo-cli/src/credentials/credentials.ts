@@ -1,6 +1,7 @@
 import { AndroidCredentials as Android } from '@expo/xdl';
-import { CredentialSchema } from './actions/promptForCredentials';
+
 import * as appleApi from '../appleApi';
+import { CredentialSchema } from './actions/promptForCredentials';
 
 //
 // iOS

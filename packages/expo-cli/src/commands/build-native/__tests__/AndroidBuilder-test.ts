@@ -1,5 +1,4 @@
 import { vol } from 'memfs';
-import { User } from '@expo/xdl';
 
 import AndroidBuilder from '../AndroidBuilder';
 
