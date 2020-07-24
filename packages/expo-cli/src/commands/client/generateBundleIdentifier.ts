@@ -1,6 +1,6 @@
+// @ts-ignore: Not typed
 import { Encoder as Base32Encoder } from 'base32.js';
 import crypto from 'crypto';
-// @ts-ignore: Not typed
 
 export default function generateBundleIdentifier(teamId: string): string {
   return `dev.expo.client.${base32(sha(teamId))}`;

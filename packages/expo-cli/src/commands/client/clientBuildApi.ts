@@ -12,7 +12,7 @@ export type ClientBuildRequestOptions = {
   addUdid: any;
   email: any;
   bundleIdentifier: string;
-  customAppConfig: ExpoConfig | object;
+  customAppConfig: Partial<ExpoConfig>;
 };
 
 export async function createClientBuildRequest({

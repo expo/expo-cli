@@ -1,11 +1,11 @@
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import globby from 'globby';
+// @ts-ignore
 import Runner from 'jscodeshift/src/Runner';
 import multimatch from 'multimatch';
 import path from 'path';
 import parse from 'yargs-parser';
-// @ts-ignore
 
 const jscodeshift = require.resolve('jscodeshift/bin/jscodeshift.js');
 const transformDir = path.join(__dirname, 'transforms');

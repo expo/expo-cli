@@ -261,7 +261,10 @@ async function validateConfiguration(
   return result;
 }
 
-function generateEnumOptionValidatingFunction(optionName: string, availableOptionsEnum: object) {
+function generateEnumOptionValidatingFunction(
+  optionName: string,
+  availableOptionsEnum: { [s: string]: string }
+) {
   return (userInput: string) => {
     if (!Object.values<string>(availableOptionsEnum).includes(userInput)) {
       logErrorAndExit(`error: Unknown value '${userInput}' for option '${optionName}'.`);

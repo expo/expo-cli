@@ -1,6 +1,7 @@
 // @ts-ignore
 import { sync as globSync } from 'glob';
 import path from 'path';
+// @ts-ignore
 import { project as Project } from 'xcode';
 // @ts-ignore
 import pbxFile from 'xcode/lib/pbxFile';

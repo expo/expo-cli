@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { Compiler, Plugin } from 'webpack';
+import { Compiler, Plugin, compilation as compilationNS } from 'webpack';
 
 import JsonWebpackPlugin from './JsonWebpackPlugin';
 import { HTMLPluginData } from './ModifyHtmlWebpackPlugin';
@@ -37,7 +37,7 @@ export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
     super.apply(compiler);
     compiler.hooks.make.tapPromise(
       this.constructor.name,
-      async (compilation: compilation.Compilation) => {
+      async (compilation: compilationNS.Compilation) => {
         // Hook into the html-webpack-plugin processing and add the html
         const HtmlWebpackPlugin = maybeFetchPlugin(compiler, 'HtmlWebpackPlugin') as any;
         if (HtmlWebpackPlugin) {

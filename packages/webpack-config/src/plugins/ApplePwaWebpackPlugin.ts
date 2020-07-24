@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { IconOptions, ProjectOptions, generateAppleIconAsync, generateSplashAsync } from 'expo-pwa';
-import { Compiler } from 'webpack';
+import { Compiler, compilation as compilationNS } from 'webpack';
 
 import ModifyHtmlWebpackPlugin, { HTMLLinkNode, HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 
@@ -29,7 +29,7 @@ export default class ApplePwaWebpackPlugin extends ModifyHtmlWebpackPlugin {
 
   async modifyAsync(
     compiler: Compiler,
-    compilation: compilation.Compilation,
+    compilation: compilationNS.Compilation,
     data: HTMLPluginData
   ): Promise<HTMLPluginData> {
     // Meta
