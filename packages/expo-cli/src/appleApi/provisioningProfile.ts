@@ -16,6 +16,8 @@ export type ProvisioningProfileInfo = {
 export type ProvisioningProfile = {
   provisioningProfileId?: string;
   provisioningProfile: string;
+  teamId: string;
+  teamName?: string;
 };
 
 export class ProvisioningProfileManager {
@@ -53,7 +55,11 @@ export class ProvisioningProfileManager {
     ];
     const result = await runAction(travelingFastlane.manageProvisioningProfiles, args);
     spinner.succeed();
-    return result;
+    return {
+      ...result,
+      teamId: this.ctx.team.id,
+      teamName: this.ctx.team.name,
+    };
   }
 
   async list(bundleIdentifier: string): Promise<ProvisioningProfileInfo[]> {
@@ -68,7 +74,11 @@ export class ProvisioningProfileManager {
     ];
     const { profiles } = await runAction(travelingFastlane.manageProvisioningProfiles, args);
     spinner.succeed();
-    return profiles;
+    return profiles.map((profile: Omit<ProvisioningProfileInfo, 'teamId' | 'teamName'>) => ({
+      ...profile,
+      teamId: this.ctx.team.id,
+      teamName: this.ctx.team.name,
+    }));
   }
 
   async create<T extends DistCert>(
@@ -96,7 +106,11 @@ export class ProvisioningProfileManager {
     ];
     const result = await runAction(travelingFastlane.manageProvisioningProfiles, args);
     spinner.succeed();
-    return result;
+    return {
+      ...result,
+      teamId: this.ctx.team.id,
+      teamName: this.ctx.team.name,
+    };
   }
 
   async revoke(bundleIdentifier: string) {

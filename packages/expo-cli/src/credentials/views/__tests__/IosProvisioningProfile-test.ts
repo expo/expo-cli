@@ -1,6 +1,6 @@
 import {
   getCtxMock,
-  testIosDistCredential,
+  testAppLookupParams,
   testProvisioningProfiles,
   testProvisioningProfilesFromApple,
 } from '../../test-fixtures/mocks-ios';
@@ -45,13 +45,7 @@ describe('IosProvisioningProfile', () => {
   describe('CreateProvisioningProfile', () => {
     it('Basic Case - Create a Provisioning Profile and save it to Expo Servers', async () => {
       const ctx = getCtxMock();
-      const provProfOptions = {
-        experienceName: 'testApp',
-        bundleIdentifier: 'test.com.app',
-        distCert: testIosDistCredential,
-        nonInteractive: true,
-      };
-      const createProvisioningProfile = new CreateProvisioningProfile(provProfOptions);
+      const createProvisioningProfile = new CreateProvisioningProfile(testAppLookupParams, true);
       await createProvisioningProfile.open(ctx as any);
 
       // expect provisioning profile is created
@@ -64,14 +58,9 @@ describe('IosProvisioningProfile', () => {
   describe('CreateOrReuseProvisioningProfile', () => {
     it('Use Autosuggested Provisioning Profile ', async () => {
       const ctx = getCtxMock();
-      const provProfOptions = {
-        experienceName: 'testApp',
-        bundleIdentifier: 'test.com.app',
-        distCert: testIosDistCredential,
-        nonInteractive: true,
-      };
       const createOrReuseProvisioningProfile = new CreateOrReuseProvisioningProfile(
-        provProfOptions
+        testAppLookupParams,
+        true
       );
       await createOrReuseProvisioningProfile.open(ctx as any);
 
@@ -89,14 +78,9 @@ describe('IosProvisioningProfile', () => {
       mockProvProfManagerList.mockImplementation(() => [] as any);
 
       const ctx = getCtxMock();
-      const provProfOptions = {
-        experienceName: 'testApp',
-        bundleIdentifier: 'test.com.app',
-        distCert: testIosDistCredential,
-        nonInteractive: true,
-      };
       const createOrReuseProvisioningProfile = new CreateOrReuseProvisioningProfile(
-        provProfOptions
+        testAppLookupParams,
+        true
       );
       const createProvisioningProfile = await createOrReuseProvisioningProfile.open(ctx as any);
       await createProvisioningProfile.open(ctx as any);

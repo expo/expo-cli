@@ -10,6 +10,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - [xdl] Log output from Gradle Wrapper is a lot cleaner now. It doesn't print dots when the appropriate Gradle version is being downloaded ([#2355](https://github.com/expo/expo-cli/pull/2355)).
 - [expo-cli] expo upload:android - Add better error messages when downloading archive file failed [#2384](https://github.com/expo/expo-cli/pull/2384).
+- [expo-cli] perfomance improvment for operations on credentials (more efficient internal caching) [#2380](https://github.com/expo/expo-cli/pull/2380).
 
 ### 🐛 Bug fixes
 

@@ -3,6 +3,7 @@ import dateformat from 'dateformat';
 import ora from 'ora';
 
 import CommandError, { ErrorCodes } from '../CommandError';
+import log from '../log';
 import { AppleCtx } from './authenticate';
 import { runAction, travelingFastlane } from './fastlane';
 
@@ -78,15 +79,21 @@ export class PushKeyManager {
 
   async revoke(ids: string[]) {
     const spinner = ora(`Revoking Push Key on Apple Servers...`).start();
-    const args = [
-      'revoke',
-      this.ctx.appleId,
-      this.ctx.appleIdPassword,
-      this.ctx.team.id,
-      ids.join(','),
-    ];
-    await runAction(travelingFastlane.managePushKeys, args);
-    spinner.succeed();
+    try {
+      const args = [
+        'revoke',
+        this.ctx.appleId,
+        this.ctx.appleIdPassword,
+        this.ctx.team.id,
+        ids.join(','),
+      ];
+      await runAction(travelingFastlane.managePushKeys, args);
+      spinner.succeed();
+    } catch (error) {
+      log.error(error);
+      spinner.fail('Failed to revoke Push Key on Apple Servers');
+      throw error;
+    }
   }
 
   format({ id, name }: PushKeyInfo): string {

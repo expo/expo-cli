@@ -1,4 +1,5 @@
 import { CredentialsSource } from '../../easJson';
+import { AppLookupParams } from '../api/IosApi';
 import { Context } from '../context';
 import { credentialsJson } from '../local';
 import { runCredentialsManager } from '../route';
@@ -13,37 +14,20 @@ export interface iOSCredentials {
   };
 }
 
-interface Options {
-  projectName: string;
-  accountName: string;
-  bundleIdentifier: string;
-}
-
 export default class iOSCredentialsProvider implements CredentialsProvider {
   public readonly platform = 'ios';
   private readonly ctx = new Context();
   private credentials?: iOSCredentials;
 
-  constructor(private projectDir: string, private options: Options) {}
-
-  get projectFullName(): string {
-    const { projectName, accountName } = this.options;
-    return `@${accountName}/${projectName}`;
-  }
+  constructor(private projectDir: string, private app: AppLookupParams) {}
 
   public async initAsync() {
     await this.ctx.init(this.projectDir);
   }
 
   public async hasRemoteAsync(): Promise<boolean> {
-    const distCert = await this.ctx.ios.getDistCert(
-      this.projectFullName,
-      this.options.bundleIdentifier
-    );
-    const provisioningProfile = await this.ctx.ios.getProvisioningProfile(
-      this.projectFullName,
-      this.options.bundleIdentifier
-    );
+    const distCert = await this.ctx.ios.getDistCert(this.app);
+    const provisioningProfile = await this.ctx.ios.getProvisioningProfile(this.app);
     return !!(distCert && provisioningProfile);
   }
 
@@ -89,24 +73,12 @@ export default class iOSCredentialsProvider implements CredentialsProvider {
     return await credentialsJson.readIosAsync(this.projectDir);
   }
   private async getRemoteAsync(): Promise<iOSCredentials> {
-    await runCredentialsManager(
-      this.ctx,
-      new SetupIosBuildCredentials({
-        experienceName: this.projectFullName,
-        bundleIdentifier: this.options.bundleIdentifier,
-      })
-    );
-    const distCert = await this.ctx.ios.getDistCert(
-      this.projectFullName,
-      this.options.bundleIdentifier
-    );
+    await runCredentialsManager(this.ctx, new SetupIosBuildCredentials(this.app));
+    const distCert = await this.ctx.ios.getDistCert(this.app);
     if (!distCert) {
       throw new Error('Missing distribution certificate'); // shouldn't happen
     }
-    const provisioningProfile = await this.ctx.ios.getProvisioningProfile(
-      this.projectFullName,
-      this.options.bundleIdentifier
-    );
+    const provisioningProfile = await this.ctx.ios.getProvisioningProfile(this.app);
     if (!provisioningProfile) {
       throw new Error('Missing provisioning profile'); // shouldn't happen
     }

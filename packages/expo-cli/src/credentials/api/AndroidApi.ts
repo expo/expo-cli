@@ -1,21 +1,13 @@
-import { ApiV2, User } from '@expo/xdl';
+import { ApiV2 } from '@expo/xdl';
 import keyBy from 'lodash/keyBy';
 
 import { AndroidCredentials, Keystore } from '../credentials';
 
-export class AndroidApi {
-  private api: ApiV2;
+export default class AndroidApi {
   private shouldRefetchAll: boolean = true;
   private credentials: { [key: string]: AndroidCredentials } = {};
 
-  constructor(user: User) {
-    this.api = ApiV2.clientForUser(user);
-  }
-
-  public withApiClient(client: ApiV2) {
-    this.api = client;
-    return this;
-  }
+  constructor(private api: ApiV2) {}
 
   public async fetchAll(): Promise<{ [key: string]: AndroidCredentials }> {
     if (this.shouldRefetchAll) {
