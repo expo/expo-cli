@@ -12,11 +12,11 @@ import {
   iOSGenericBuildProfile,
   iOSManagedBuildProfile,
 } from '../../easJson';
+import log from '../../log';
+import prompts from '../../prompts';
 import { Builder, BuilderContext } from './build';
 import { ensureCredentialsAsync } from './credentials';
 import * as gitUtils from './utils/git';
-import log from '../../log';
-import prompts from '../../prompts';
 
 interface CommonJobProperties {
   platform: Platform.iOS;

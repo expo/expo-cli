@@ -1,8 +1,8 @@
 import { UserManager } from '@expo/xdl';
 
 import log from '../../../log';
-import * as UrlUtils from '../../utils/url';
 import { printTableJsonArray } from '../../utils/cli-table';
+import * as UrlUtils from '../../utils/url';
 import { BuildInfo } from '../build';
 
 function printBuildTable(builds: BuildInfo[]) {

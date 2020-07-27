@@ -4,6 +4,7 @@ import { sync as globSync } from 'glob';
 // @ts-ignore
 import { project as Project } from 'xcode';
 
+import { ExpoConfig } from '../Config.types';
 import { InfoPlist } from './IosConfig.types';
 import {
   ConfigurationSectionEntry,
@@ -13,7 +14,6 @@ import {
   isNotComment,
   isNotTestHost,
 } from './utils/Xcodeproj';
-import { ExpoConfig } from '../Config.types';
 
 export function getBundleIdentifier(config: ExpoConfig) {
   return config.ios && config.ios.bundleIdentifier ? config.ios.bundleIdentifier : null;
