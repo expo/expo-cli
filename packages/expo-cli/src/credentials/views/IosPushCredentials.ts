@@ -96,6 +96,7 @@ export class RemoveIosPush implements IView {
   }
 
   async removePushCert(ctx: Context, app: AppLookupParams): Promise<void> {
+    log('Removing Push Certificate');
     await ctx.ios.deletePushCert(app);
   }
 
@@ -105,6 +106,7 @@ export class RemoveIosPush implements IView {
     const appsList = apps.map(appCred => appCred.experienceName).join(', ');
 
     if (appsList && !this.nonInteractive) {
+      log('Removing Push Key');
       const { confirm } = await prompt([
         {
           type: 'confirm',

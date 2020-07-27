@@ -290,6 +290,17 @@ class IOSBuilder extends BaseBuilder {
   ): Promise<void> {
     const shouldRevokeOnApple = this.options.revokeCredentials;
     const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
+
+    const provisioningProfile = await ctx.ios.getProvisioningProfile(appLookupParams);
+    if (credsToClear.provisioningProfile && provisioningProfile) {
+      const view = new RemoveProvisioningProfile(
+        appLookupParams.accountName,
+        shouldRevokeOnApple,
+        nonInteractive
+      );
+      await view.removeSpecific(ctx, appLookupParams);
+    }
+
     const distributionCert = await ctx.ios.getDistCert(appLookupParams);
     if (credsToClear.distributionCert && distributionCert) {
       const view = new RemoveIosDist(
@@ -308,16 +319,6 @@ class IOSBuilder extends BaseBuilder {
         nonInteractive
       );
       await view.removeSpecific(ctx, pushKey);
-    }
-
-    const provisioningProfile = await ctx.ios.getProvisioningProfile(appLookupParams);
-    if (credsToClear.provisioningProfile && provisioningProfile) {
-      const view = new RemoveProvisioningProfile(
-        appLookupParams.accountName,
-        shouldRevokeOnApple,
-        nonInteractive
-      );
-      await view.removeSpecific(ctx, appLookupParams);
     }
 
     const pushCert = await ctx.ios.getPushCert(appLookupParams);

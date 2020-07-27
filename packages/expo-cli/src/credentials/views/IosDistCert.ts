@@ -74,6 +74,7 @@ export class RemoveIosDist implements IView {
     const appsList = apps.map(appCred => chalk.green(appCred.experienceName)).join(', ');
 
     if (appsList && !this.nonInteractive) {
+      log('Removing Distribution Certificate');
       const { confirm } = await prompt([
         {
           type: 'confirm',
