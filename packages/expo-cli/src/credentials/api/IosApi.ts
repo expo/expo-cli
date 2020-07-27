@@ -209,9 +209,9 @@ export default class IosApi {
     appLookupParams: AppLookupParams
   ): Promise<{ pushId: string; pushP12: string; pushPassword: string } | null> {
     const appCredentials = await this.getAppCredentials(appLookupParams);
-    const pushId = appCredentials.credentials.pushId;
-    const pushP12 = appCredentials.credentials.pushP12;
-    const pushPassword = appCredentials.credentials.pushPassword;
+    const pushId = appCredentials?.credentials?.pushId;
+    const pushP12 = appCredentials?.credentials?.pushP12;
+    const pushPassword = appCredentials?.credentials?.pushPassword;
     if (!pushId || !pushP12 || !pushPassword) {
       return null;
     }
@@ -235,7 +235,7 @@ export default class IosApi {
     appLookupParams: AppLookupParams
   ): Promise<appleApi.ProvisioningProfile | null> {
     const appCredentials = await this.getAppCredentials(appLookupParams);
-    const provisioningProfile = appCredentials.credentials.provisioningProfile;
+    const provisioningProfile = appCredentials?.credentials?.provisioningProfile;
     if (!provisioningProfile) {
       return null;
     }
