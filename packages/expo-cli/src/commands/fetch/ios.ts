@@ -48,7 +48,7 @@ async function fetchIosCerts(projectDir: string): Promise<void> {
     }
     if (apnsKeyP8) {
       const apnsKeyP8Path = inProjectDir(`${remotePackageName}_apns_key.p8`);
-      await fs.writeFile(apnsKeyP8Path, apnsKeyP8);
+      await fs.writeFile(apnsKeyP8Path, Buffer.from(apnsKeyP8, 'base64'));
       log('Wrote push key credentials to disk.');
     }
     if (pushP12) {
