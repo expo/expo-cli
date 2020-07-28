@@ -121,7 +121,7 @@ class iOSBuilder implements Builder {
           log('✅ Successfully commited the configuration changes.');
         } else {
           throw new Error(
-            "Aborting, run the build command once you're ready. Make sure commit any changes you've made."
+            "Aborting, run the build command once you're ready. Make sure to commit any changes you've made."
           );
         }
       } else {
