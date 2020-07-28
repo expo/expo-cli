@@ -567,7 +567,7 @@ export async function getPushKeyFromParams(builderOptions: {
 
   return {
     apnsKeyId: pushId,
-    apnsKeyP8: await fs.readFile(pushP8Path, 'base64'),
+    apnsKeyP8: await fs.readFile(pushP8Path, 'utf8'),
     teamId,
   } as PushKey;
 }
