@@ -41,8 +41,9 @@ describe('SetupIosPush', () => {
       ios: {
         getPushKey: jest.fn(),
       },
+      nonInteractive: true,
     });
-    const setupIosPush = new SetupIosPush(testAppLookupParams, true);
+    const setupIosPush = new SetupIosPush(testAppLookupParams);
     const createOrReuse = await setupIosPush.open(ctx as any);
     await createOrReuse.open(ctx as any);
 

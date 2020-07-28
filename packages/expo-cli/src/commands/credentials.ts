@@ -9,6 +9,9 @@ import {
 
 type Options = {
   platform?: 'android' | 'ios';
+  parent?: {
+    nonInteractive: boolean;
+  };
 };
 
 export default function (program: CommanderStatic) {
@@ -19,7 +22,9 @@ export default function (program: CommanderStatic) {
     .asyncAction(async (options: Options) => {
       const projectDir = process.cwd();
       const context = new Context();
-      await context.init(projectDir);
+      await context.init(projectDir, {
+        nonInteractive: options.parent?.nonInteractive,
+      });
       let mainpage;
       if (options.platform === 'android') {
         mainpage = new SelectAndroidExperience();

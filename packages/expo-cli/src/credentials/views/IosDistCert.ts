@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import ora from 'ora';
 import terminalLink from 'terminal-link';
 
+import CommandError from '../../CommandError';
 import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
@@ -24,7 +25,7 @@ Please remember that Apple Distribution Certificates are not application specifi
 `;
 
 export class CreateIosDist implements IView {
-  constructor(private accountName: string, private nonInteractive: boolean = false) {}
+  constructor(private accountName: string) {}
 
   async create(ctx: Context): Promise<IosDistCredentials> {
     const newDistCert = await this.provideOrGenerate(ctx);
@@ -41,7 +42,7 @@ export class CreateIosDist implements IView {
   }
 
   async provideOrGenerate(ctx: Context): Promise<DistCert> {
-    if (!this.nonInteractive) {
+    if (!ctx.nonInteractive) {
       const userProvided = await promptForDistCert(ctx);
       if (userProvided) {
         const isValid = await validateDistributionCertificate(ctx, userProvided);
@@ -53,11 +54,7 @@ export class CreateIosDist implements IView {
 }
 
 export class RemoveIosDist implements IView {
-  constructor(
-    private accountName: string,
-    private shouldRevoke: boolean = false,
-    private nonInteractive: boolean = false
-  ) {}
+  constructor(private accountName: string, private shouldRevoke: boolean = false) {}
 
   async open(ctx: Context): Promise<IView | null> {
     const selected = await selectDistCertFromList(ctx, this.accountName);
@@ -73,7 +70,7 @@ export class RemoveIosDist implements IView {
     const apps = credentials.appCredentials.filter(cred => cred.distCredentialsId === selected.id);
     const appsList = apps.map(appCred => chalk.green(appCred.experienceName)).join(', ');
 
-    if (appsList && !this.nonInteractive) {
+    if (appsList && !ctx.nonInteractive) {
       log('Removing Distribution Certificate');
       const { confirm } = await prompt([
         {
@@ -93,7 +90,7 @@ export class RemoveIosDist implements IView {
 
     let shouldRevoke = this.shouldRevoke;
     if (selected.certId) {
-      if (!shouldRevoke && !this.nonInteractive) {
+      if (!shouldRevoke && !ctx.nonInteractive) {
         const { revoke } = await prompt([
           {
             type: 'confirm',
@@ -121,11 +118,7 @@ export class RemoveIosDist implements IView {
       log(
         `Removing Provisioning Profile for ${appCredentials.experienceName} (${appCredentials.bundleIdentifier})`
       );
-      const view = new RemoveProvisioningProfile(
-        this.accountName,
-        shouldRevoke,
-        this.nonInteractive
-      );
+      const view = new RemoveProvisioningProfile(this.accountName, shouldRevoke);
       await view.removeSpecific(ctx, appLookupParams);
     }
   }
@@ -156,6 +149,13 @@ export class UpdateIosDist implements IView {
     const appsList = apps.map(appCred => chalk.green(appCred.experienceName)).join(', ');
 
     if (apps.length > 1) {
+      if (ctx.nonInteractive) {
+        throw new CommandError(
+          'NON_INTERACTIVE',
+          `Start the CLI without the '--non-interactive' flag to update the certificate used by ${appsList}.`
+        );
+      }
+
       const question: Question = {
         type: 'confirm',
         name: 'confirm',
@@ -216,7 +216,7 @@ export class UseExistingDistributionCert implements IView {
 }
 
 export class CreateOrReuseDistributionCert implements IView {
-  constructor(private app: AppLookupParams, private nonInteractive: boolean = false) {}
+  constructor(private app: AppLookupParams) {}
 
   async assignDistCert(ctx: Context, userCredentialsId: number) {
     await ctx.ios.useDistCert(this.app, userCredentialsId);
@@ -238,9 +238,7 @@ export class CreateOrReuseDistributionCert implements IView {
     );
 
     if (existingCertificates.length === 0) {
-      const distCert = await new CreateIosDist(this.app.accountName, this.nonInteractive).create(
-        ctx
-      );
+      const distCert = await new CreateIosDist(this.app.accountName).create(ctx);
       await this.assignDistCert(ctx, distCert.id);
       return null;
     }
@@ -258,7 +256,7 @@ export class CreateOrReuseDistributionCert implements IView {
       pageSize: Infinity,
     };
 
-    if (!this.nonInteractive) {
+    if (!ctx.nonInteractive) {
       const { confirm } = await prompt(confirmQuestion);
       if (!confirm) {
         return await this._createOrReuse(ctx);
@@ -291,9 +289,7 @@ export class CreateOrReuseDistributionCert implements IView {
     const { action } = await prompt(question);
 
     if (action === 'GENERATE') {
-      const distCert = await new CreateIosDist(this.app.accountName, this.nonInteractive).create(
-        ctx
-      );
+      const distCert = await new CreateIosDist(this.app.accountName).create(ctx);
       await this.assignDistCert(ctx, distCert.id);
       return null;
     } else if (action === 'CHOOSE_EXISTING') {
@@ -451,6 +447,14 @@ async function generateDistCert(ctx: Context, accountName: string): Promise<Dist
       const certs = await manager.list();
       log.warn('Maximum number of Distribution Certificates generated on Apple Developer Portal.');
       log.warn(APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR);
+
+      if (ctx.nonInteractive) {
+        throw new CommandError(
+          'NON_INTERACTIVE',
+          "Start the CLI without the '--non-interactive' flag to revoke existing certificates."
+        );
+      }
+
       const credentials = await ctx.ios.getAllCredentials(accountName);
       const usedByExpo = credentials.userCredentials
         .filter((cert): cert is IosDistCredentials => cert.type === 'dist-cert' && !!cert.certId)

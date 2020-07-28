@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import ora from 'ora';
 import terminalLink from 'terminal-link';
 
+import CommandError from '../../CommandError';
 import { PushKey, PushKeyInfo, PushKeyManager, isPushKey } from '../../appleApi';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
@@ -24,7 +25,7 @@ Please remember that Apple Keys are not application specific!
 `;
 
 export class CreateIosPush implements IView {
-  constructor(private accountName: string, private nonInteractive: boolean = false) {}
+  constructor(private accountName: string) {}
 
   async create(ctx: Context): Promise<IosPushCredentials> {
     const newPushKey = await this.provideOrGenerate(ctx);
@@ -60,7 +61,7 @@ export class CreateIosPush implements IView {
   }
 
   async provideOrGenerate(ctx: Context): Promise<PushKey> {
-    if (!this.nonInteractive) {
+    if (!ctx.nonInteractive) {
       const requiredQuestions = this._getRequiredQuestions(ctx);
       const userProvided = await askForUserProvided(requiredQuestions);
       if (userProvided) {
@@ -74,13 +75,16 @@ export class CreateIosPush implements IView {
 }
 
 export class RemoveIosPush implements IView {
-  constructor(
-    private accountName: string,
-    private shouldRevoke: boolean = false,
-    private nonInteractive: boolean = false
-  ) {}
+  constructor(private accountName: string, private shouldRevoke: boolean = false) {}
 
   async open(ctx: Context): Promise<IView | null> {
+    if (ctx.nonInteractive) {
+      throw new CommandError(
+        'NON_INTERACTIVE',
+        "Start the CLI without the '--non-interactive' flag to select a push notification credential to remove."
+      );
+    }
+
     const selected = await selectPushCredFromList(ctx, this.accountName);
     if (selected) {
       if (!('type' in selected)) {
@@ -105,7 +109,7 @@ export class RemoveIosPush implements IView {
     const apps = getAppsUsingPushCred(credentials, selected);
     const appsList = apps.map(appCred => appCred.experienceName).join(', ');
 
-    if (appsList && !this.nonInteractive) {
+    if (appsList && !ctx.nonInteractive) {
       log('Removing Push Key');
       const { confirm } = await prompt([
         {
@@ -124,7 +128,7 @@ export class RemoveIosPush implements IView {
     await ctx.ios.deletePushKey(selected.id, this.accountName);
 
     let shouldRevoke = this.shouldRevoke;
-    if (!shouldRevoke && !this.nonInteractive) {
+    if (!shouldRevoke && !ctx.nonInteractive) {
       const { revoke } = await prompt([
         {
           type: 'confirm',
@@ -146,6 +150,13 @@ export class UpdateIosPush implements IView {
   constructor(private accountName: string) {}
 
   async open(ctx: Context) {
+    if (ctx.nonInteractive) {
+      throw new CommandError(
+        'NON_INTERACTIVE',
+        "Start the CLI without the '--non-interactive' flag to select a push notification credential to update."
+      );
+    }
+
     const selected = (await selectPushCredFromList(ctx, this.accountName, {
       allowLegacy: false,
     })) as IosPushCredentials;
@@ -169,6 +180,13 @@ export class UpdateIosPush implements IView {
     const appsList = apps.map(appCred => appCred.experienceName).join(', ');
 
     if (apps.length > 1) {
+      if (ctx.nonInteractive) {
+        throw new CommandError(
+          'NON_INTERACTIVE',
+          `Updating credentials will affect all applications that are using this key (${appsList}). Start the CLI without the '--non-interactive' flag to confirm.`
+        );
+      }
+
       const question: Question = {
         type: 'confirm',
         name: 'confirm',
@@ -199,6 +217,13 @@ export class UseExistingPushNotification implements IView {
   constructor(private app: AppLookupParams) {}
 
   async open(ctx: Context): Promise<IView | null> {
+    if (ctx.nonInteractive) {
+      throw new CommandError(
+        'NON_INTERACTIVE',
+        "Start the CLI without the '--non-interactive' flag to select a push notification credential to use."
+      );
+    }
+
     const selected = (await selectPushCredFromList(ctx, this.app.accountName, {
       allowLegacy: false,
     })) as IosPushCredentials;
@@ -215,7 +240,7 @@ export class UseExistingPushNotification implements IView {
 }
 
 export class CreateOrReusePushKey implements IView {
-  constructor(private app: AppLookupParams, private nonInteractive: boolean) {}
+  constructor(private app: AppLookupParams) {}
 
   async assignPushKey(ctx: Context, userCredentialsId: number) {
     await ctx.ios.usePushKey(this.app, userCredentialsId);
@@ -237,9 +262,7 @@ export class CreateOrReusePushKey implements IView {
     );
 
     if (existingPushKeys.length === 0) {
-      const pushKey = await new CreateIosPush(this.app.accountName, this.nonInteractive).create(
-        ctx
-      );
+      const pushKey = await new CreateIosPush(this.app.accountName).create(ctx);
       await this.assignPushKey(ctx, pushKey.id);
       return null;
     }
@@ -257,7 +280,7 @@ export class CreateOrReusePushKey implements IView {
       pageSize: Infinity,
     };
 
-    if (!this.nonInteractive) {
+    if (!ctx.nonInteractive) {
       const { confirm } = await prompt(confirmQuestion);
       if (!confirm) {
         return await this._createOrReuse(ctx);
@@ -290,9 +313,7 @@ export class CreateOrReusePushKey implements IView {
     const { action } = await prompt(question);
 
     if (action === 'GENERATE') {
-      const pushKey = await new CreateIosPush(this.app.accountName, this.nonInteractive).create(
-        ctx
-      );
+      const pushKey = await new CreateIosPush(this.app.accountName).create(ctx);
       await this.assignPushKey(ctx, pushKey.id);
       return null;
     } else if (action === 'CHOOSE_EXISTING') {
@@ -471,6 +492,14 @@ async function generatePushKey(ctx: Context, accountName: string): Promise<PushK
       const keys = await manager.list();
       log.warn('Maximum number of Push Notifications Keys generated on Apple Developer Portal.');
       log.warn(APPLE_KEYS_TOO_MANY_GENERATED_ERROR);
+
+      if (ctx.nonInteractive) {
+        throw new CommandError(
+          'NON_INTERACTIVE',
+          "Start the CLI without the '--non-interactive' to revoke push notification keys."
+        );
+      }
+
       const credentials = await ctx.ios.getAllCredentials(accountName);
       const usedByExpo = credentials.userCredentials
         .filter((cert): cert is IosPushCredentials => cert.type === 'push-key')

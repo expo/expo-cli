@@ -44,8 +44,9 @@ describe('SetupProvisioningProfile', () => {
       ios: {
         getProvisioningProfile: jest.fn(),
       },
+      nonInteractive: true,
     });
-    const setupProvisioningProfile = new SetupIosProvisioningProfile(testAppLookupParams, true);
+    const setupProvisioningProfile = new SetupIosProvisioningProfile(testAppLookupParams);
     const createOrReuse = await setupProvisioningProfile.open(ctx as any);
     await createOrReuse.open(ctx as any);
 

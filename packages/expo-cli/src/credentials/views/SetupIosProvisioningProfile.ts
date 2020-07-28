@@ -12,7 +12,7 @@ interface ProvisioningProfileOptions {
 }
 
 export class SetupIosProvisioningProfile implements IView {
-  constructor(private app: AppLookupParams, private nonInteractive: boolean = false) {}
+  constructor(private app: AppLookupParams) {}
 
   async open(ctx: Context): Promise<IView | null> {
     if (!ctx.user) {
@@ -35,7 +35,7 @@ export class SetupIosProvisioningProfile implements IView {
     // The configured profile is associated with some other dist cert
     const configuredWithSameDistCert = appCredentials.distCredentialsId === distCert.id;
     if (!configuredProfile || !configuredWithSameDistCert) {
-      return new iosProfileView.CreateOrReuseProvisioningProfile(this.app, this.nonInteractive);
+      return new iosProfileView.CreateOrReuseProvisioningProfile(this.app);
     }
 
     if (!ctx.hasAppleCtx()) {
@@ -63,7 +63,7 @@ export class SetupIosProvisioningProfile implements IView {
         this.app.bundleIdentifier
       );
       if (!isValid) {
-        return new iosProfileView.CreateOrReuseProvisioningProfile(this.app, this.nonInteractive);
+        return new iosProfileView.CreateOrReuseProvisioningProfile(this.app);
       }
       return null;
     }
@@ -76,7 +76,7 @@ export class SetupIosProvisioningProfile implements IView {
 
     // Profile can't be found on Apple servers
     if (!profileFromApple) {
-      return new iosProfileView.CreateOrReuseProvisioningProfile(this.app, this.nonInteractive);
+      return new iosProfileView.CreateOrReuseProvisioningProfile(this.app);
     }
 
     await iosProfileView.configureAndUpdateProvisioningProfile(

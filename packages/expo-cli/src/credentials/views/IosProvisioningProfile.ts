@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import invariant from 'invariant';
 import ora from 'ora';
 
+import CommandError from '../../CommandError';
 import {
   AppleCtx,
   DistCert,
@@ -27,11 +28,7 @@ import {
 import * as provisioningProfileUtils from '../utils/provisioningProfile';
 
 export class RemoveProvisioningProfile implements IView {
-  constructor(
-    private accountName: string,
-    private shouldRevoke: boolean = false,
-    private nonInteractive: boolean = false
-  ) {}
+  constructor(private accountName: string, private shouldRevoke: boolean = false) {}
 
   async open(ctx: Context): Promise<IView | null> {
     const credentials = await ctx.ios.getAllCredentials(this.accountName);
@@ -53,7 +50,7 @@ export class RemoveProvisioningProfile implements IView {
     await ctx.ios.deleteProvisioningProfile(app);
 
     let shouldRevoke = this.shouldRevoke;
-    if (!shouldRevoke && !this.nonInteractive) {
+    if (!shouldRevoke && !ctx.nonInteractive) {
       const { revoke } = await prompt([
         {
           type: 'confirm',
@@ -74,7 +71,7 @@ export class RemoveProvisioningProfile implements IView {
 }
 
 export class CreateProvisioningProfile implements IView {
-  constructor(private app: AppLookupParams, private nonInteractive: boolean = false) {}
+  constructor(private app: AppLookupParams) {}
 
   async create(ctx: Context): Promise<ProvisioningProfile> {
     const provisioningProfile = await this.provideOrGenerate(ctx);
@@ -92,7 +89,7 @@ export class CreateProvisioningProfile implements IView {
   }
 
   async provideOrGenerate(ctx: Context): Promise<ProvisioningProfile> {
-    if (!this.nonInteractive) {
+    if (!ctx.nonInteractive) {
       const userProvided = await askForUserProvided(provisioningProfileSchema);
       if (userProvided) {
         // userProvided profiles don't come with ProvisioningProfileId's (only accessible from Apple Portal API)
@@ -114,6 +111,14 @@ export class UseExistingProvisioningProfile implements IView {
 
   async open(ctx: Context): Promise<IView | null> {
     await ctx.ensureAppleCtx();
+
+    if (ctx.nonInteractive) {
+      throw new CommandError(
+        'NON_INTERACTIVE',
+        "Start the CLI without the '--non-interactive' flag to select a distribution certificate."
+      );
+    }
+
     const selected = await selectProfileFromApple(ctx.appleCtx, this.app.bundleIdentifier);
     if (selected) {
       const distCert = await ctx.ios.getDistCert(this.app);
@@ -126,7 +131,7 @@ export class UseExistingProvisioningProfile implements IView {
 }
 
 export class CreateOrReuseProvisioningProfile implements IView {
-  constructor(private app: AppLookupParams, private nonInteractive: boolean = false) {}
+  constructor(private app: AppLookupParams) {}
 
   choosePreferred(
     profiles: ProvisioningProfileInfo[],
@@ -147,14 +152,14 @@ export class CreateOrReuseProvisioningProfile implements IView {
     }
 
     if (!ctx.hasAppleCtx()) {
-      return new CreateProvisioningProfile(this.app, this.nonInteractive);
+      return new CreateProvisioningProfile(this.app);
     }
 
     const ppManager = new ProvisioningProfileManager(ctx.appleCtx);
     const existingProfiles = await ppManager.list(this.app.bundleIdentifier);
 
     if (existingProfiles.length === 0) {
-      return new CreateProvisioningProfile(this.app, this.nonInteractive);
+      return new CreateProvisioningProfile(this.app);
     }
 
     const distCert = await ctx.ios.getDistCert(this.app);
@@ -171,7 +176,7 @@ export class CreateOrReuseProvisioningProfile implements IView {
       pageSize: Infinity,
     };
 
-    if (!this.nonInteractive) {
+    if (!ctx.nonInteractive) {
       const { confirm } = await prompt(confirmQuestion);
       if (!confirm) {
         return await this._createOrReuse(ctx);
@@ -203,7 +208,7 @@ export class CreateOrReuseProvisioningProfile implements IView {
     const { action } = await prompt(question);
 
     if (action === 'GENERATE') {
-      return new CreateProvisioningProfile(this.app, this.nonInteractive);
+      return new CreateProvisioningProfile(this.app);
     } else if (action === 'CHOOSE_EXISTING') {
       return new UseExistingProvisioningProfile(this.app);
     }

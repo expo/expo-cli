@@ -44,8 +44,8 @@ beforeEach(() => {
 describe('IosProvisioningProfile', () => {
   describe('CreateProvisioningProfile', () => {
     it('Basic Case - Create a Provisioning Profile and save it to Expo Servers', async () => {
-      const ctx = getCtxMock();
-      const createProvisioningProfile = new CreateProvisioningProfile(testAppLookupParams, true);
+      const ctx = getCtxMock({ nonInteractive: true });
+      const createProvisioningProfile = new CreateProvisioningProfile(testAppLookupParams);
       await createProvisioningProfile.open(ctx as any);
 
       // expect provisioning profile is created
@@ -57,10 +57,9 @@ describe('IosProvisioningProfile', () => {
   });
   describe('CreateOrReuseProvisioningProfile', () => {
     it('Use Autosuggested Provisioning Profile ', async () => {
-      const ctx = getCtxMock();
+      const ctx = getCtxMock({ nonInteractive: true });
       const createOrReuseProvisioningProfile = new CreateOrReuseProvisioningProfile(
-        testAppLookupParams,
-        true
+        testAppLookupParams
       );
       await createOrReuseProvisioningProfile.open(ctx as any);
 
@@ -77,10 +76,9 @@ describe('IosProvisioningProfile', () => {
       // no available certs on apple dev portal
       mockProvProfManagerList.mockImplementation(() => [] as any);
 
-      const ctx = getCtxMock();
+      const ctx = getCtxMock({ nonInteractive: true });
       const createOrReuseProvisioningProfile = new CreateOrReuseProvisioningProfile(
-        testAppLookupParams,
-        true
+        testAppLookupParams
       );
       const createProvisioningProfile = await createOrReuseProvisioningProfile.open(ctx as any);
       await createProvisioningProfile.open(ctx as any);

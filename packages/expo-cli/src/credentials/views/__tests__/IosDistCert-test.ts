@@ -39,8 +39,8 @@ beforeEach(() => {
 describe('IosDistCert', () => {
   describe('CreateIosDist', () => {
     it('Basic Case - Create a Dist Cert and save it to Expo Servers', async () => {
-      const ctx = getCtxMock();
-      const createIosDist = new CreateIosDist(jester.username, true);
+      const ctx = getCtxMock({ nonInteractive: true });
+      const createIosDist = new CreateIosDist(jester.username);
       await createIosDist.open(ctx as any);
 
       // expect dist cert is created
@@ -52,8 +52,8 @@ describe('IosDistCert', () => {
   });
   describe('CreateOrReuseDistributionCert', () => {
     it('Reuse Autosuggested Dist Cert ', async () => {
-      const ctx = getCtxMock();
-      const createOrReuseIosDist = new CreateOrReuseDistributionCert(testAppLookupParams, true);
+      const ctx = getCtxMock({ nonInteractive: true });
+      const createOrReuseIosDist = new CreateOrReuseDistributionCert(testAppLookupParams);
       await createOrReuseIosDist.open(ctx as any);
 
       // expect suggested dist cert is used
@@ -69,9 +69,9 @@ describe('IosDistCert', () => {
       // no available certs on apple dev portal
       mockDistCertManagerList.mockImplementation(() => [] as any);
 
-      const ctx = getCtxMock();
+      const ctx = getCtxMock({ nonInteractive: true });
 
-      const createOrReuseIosDist = new CreateOrReuseDistributionCert(testAppLookupParams, true);
+      const createOrReuseIosDist = new CreateOrReuseDistributionCert(testAppLookupParams);
       await createOrReuseIosDist.open(ctx as any);
 
       // expect dist cert is used

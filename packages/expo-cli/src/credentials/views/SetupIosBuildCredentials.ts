@@ -11,7 +11,7 @@ import { SetupIosDist } from './SetupIosDist';
 import { SetupIosProvisioningProfile } from './SetupIosProvisioningProfile';
 
 export class SetupIosBuildCredentials implements IView {
-  constructor(private app: AppLookupParams, private nonInteractive: boolean = false) {}
+  constructor(private app: AppLookupParams) {}
 
   async open(ctx: Context): Promise<IView | null> {
     await this.bestEffortAppleCtx(ctx);
@@ -35,10 +35,7 @@ export class SetupIosBuildCredentials implements IView {
     }
 
     try {
-      await runCredentialsManager(
-        ctx,
-        new SetupIosProvisioningProfile(this.app, this.nonInteractive)
-      );
+      await runCredentialsManager(ctx, new SetupIosProvisioningProfile(this.app));
     } catch (error) {
       log.error('Failed to set up Provisioning Profile');
       throw error;
@@ -55,7 +52,7 @@ export class SetupIosBuildCredentials implements IView {
       return;
     }
 
-    if (this.nonInteractive) {
+    if (ctx.nonInteractive) {
       return;
     }
 

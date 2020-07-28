@@ -60,13 +60,15 @@ export default class AndroidBuilder extends BaseBuilder {
   }
 
   async collectAndValidateCredentials(): Promise<void> {
+    const nonInteractive = this.options.parent?.nonInteractive;
+
     const ctx = new Context();
-    await ctx.init(this.projectDir);
+    await ctx.init(this.projectDir, { nonInteractive });
 
     const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
 
     if (this.options.clearCredentials) {
-      if (this.options.parent?.nonInteractive) {
+      if (nonInteractive) {
         throw new BuildError(
           'Clearing your Android build credentials from our build servers is a PERMANENT and IRREVERSIBLE action, it\'s not supported when combined with the "--non-interactive" option'
         );
@@ -81,7 +83,7 @@ export default class AndroidBuilder extends BaseBuilder {
       await runCredentialsManager(
         ctx,
         new SetupAndroidKeystore(experienceName, {
-          nonInteractive: this.options.parent?.nonInteractive,
+          nonInteractive,
           allowMissingKeystore: true,
         })
       );

@@ -1,5 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
 
+import CommandError from '../../CommandError';
 import log from '../../log';
 import prompt from '../../prompt';
 import { displayAndroidAppCredentials } from '../actions/list';
