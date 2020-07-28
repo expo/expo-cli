@@ -15,7 +15,7 @@ import {
   isNotTestHost,
 } from './utils/Xcodeproj';
 
-export function getBundleIdentifier(config: ExpoConfig) {
+function getBundleIdentifier(config: ExpoConfig): string | null {
   return config.ios && config.ios.bundleIdentifier ? config.ios.bundleIdentifier : null;
 }
 
@@ -23,8 +23,7 @@ export function getBundleIdentifier(config: ExpoConfig) {
  * In Turtle v1 we set the bundleIdentifier directly on Info.plist rather
  * than in pbxproj
  */
-
-export function setBundleIdentifier(config: ExpoConfig, infoPlist: InfoPlist) {
+function setBundleIdentifier(config: ExpoConfig, infoPlist: InfoPlist): InfoPlist {
   const bundleIdentifier = getBundleIdentifier(config);
 
   if (!bundleIdentifier) {
@@ -45,16 +44,15 @@ export function setBundleIdentifier(config: ExpoConfig, infoPlist: InfoPlist) {
  * @param {boolean} [updateProductName=true]  Whether to update PRODUCT_NAME
  */
 
-export function updateBundleIdentifierForPbxproj(
+function updateBundleIdentifierForPbxproj(
   pbxprojPath: string,
   bundleIdentifier: string,
   updateProductName: boolean = true
-) {
+): void {
   const project = Project(pbxprojPath);
   project.parseSync();
 
   const configurationLists = getXCConfigurationLists(project);
-  // TODO(dsokal): figure out if configuring only the entries from the first configuration list is fine
   const buildConfigurations = configurationLists[0].buildConfigurations.map(i => i.value);
 
   Object.entries(getXCBuildConfigurationSection(project))
@@ -86,11 +84,11 @@ export function updateBundleIdentifierForPbxproj(
  * @param {string} bundleIdentifier Desired bundle identifier
  * @param {boolean} [updateProductName=true]  Whether to update PRODUCT_NAME
  */
-export function setBundleIdentifierForPbxproj(
+function setBundleIdentifierForPbxproj(
   projectRoot: string,
   bundleIdentifier: string,
   updateProductName: boolean = true
-) {
+): void {
   // Get all pbx projects in the ${projectRoot}/ios directory
   const pbxprojPaths = globSync('ios/*/project.pbxproj', { absolute: true, cwd: projectRoot });
 
@@ -105,7 +103,7 @@ export function setBundleIdentifierForPbxproj(
 
 const defaultBundleId = '$(PRODUCT_BUNDLE_IDENTIFIER)';
 
-export function resetAllPlistBundleIdentifiers(projectRoot: string) {
+function resetAllPlistBundleIdentifiers(projectRoot: string): void {
   const infoPlistPaths = globSync('ios/*/Info.plist', { absolute: true, cwd: projectRoot });
 
   for (const plistPath of infoPlistPaths) {
@@ -113,7 +111,7 @@ export function resetAllPlistBundleIdentifiers(projectRoot: string) {
   }
 }
 
-export function resetPlistBundleIdentifier(plistPath: string) {
+function resetPlistBundleIdentifier(plistPath: string): void {
   const rawPlist = fs.readFileSync(plistPath, 'utf8');
   const plistObject = plist.parse(rawPlist) as PlistObject;
 
@@ -136,3 +134,12 @@ export function resetPlistBundleIdentifier(plistPath: string) {
     }
   }
 }
+
+export {
+  getBundleIdentifier,
+  setBundleIdentifier,
+  updateBundleIdentifierForPbxproj,
+  setBundleIdentifierForPbxproj,
+  resetAllPlistBundleIdentifiers,
+  resetPlistBundleIdentifier,
+};
