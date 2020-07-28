@@ -19,7 +19,7 @@ import iOSBuilder from './iOSBuilder';
 import { ensureGitStatusIsCleanAsync } from './utils/git';
 import { printBuildResults, printBuildTable, printLogsUrls } from './utils/misc';
 
-enum BuildPlatform {
+export enum BuildPlatform {
   ANDROID = 'android',
   IOS = 'ios',
   ALL = 'all',
