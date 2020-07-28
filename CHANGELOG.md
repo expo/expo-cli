@@ -17,7 +17,7 @@ This is the log of notable changes to Expo CLI and related packages.
 - [xdl] Fix incorrect check of the packager port in the "setOptionsAsync" function [#2270](https://github.com/expo/expo-cli/issues/2270)
 - [expo-cli] expo upload:android - Fix passing archive type from command line [#2383](https://github.com/expo/expo-cli/pull/2383)
 - [expo-cli] check `when` field when inquirer is used in noninteractive mode [#2393](https://github.com/expo/expo-cli/pull/2393)
-- [expo-cli] base64 decode when saving p8 file [#2404](https://github.com/expo/expo-cli/pull/2404)
+- [expo-cli] do not base64 encode push notification [#2406](https://github.com/expo/expo-cli/pull/2406)
 
 ### 📦 Packages updated
 
