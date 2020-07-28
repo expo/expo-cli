@@ -41,7 +41,7 @@ async function startBuildsAsync(
   ctx: BuilderContext,
   projectId: string,
   platform: BuildOptions['platform']
-): Promise<Array<{ platform: BuildPlatform.ANDROID | BuildPlatform.IOS; buildId: string }>> {
+): Promise<{ platform: BuildPlatform.ANDROID | BuildPlatform.IOS; buildId: string }[]> {
   const client = ApiV2.clientForUser(ctx.user);
   const scheduledBuilds: {
     platform: BuildPlatform.ANDROID | BuildPlatform.IOS;
