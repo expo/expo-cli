@@ -1,5 +1,6 @@
 import { prompt } from 'inquirer';
 
+import CommandError from '../../CommandError';
 import log from '../../log';
 import { Question } from '../../prompt';
 import { AppLookupParams } from '../api/IosApi';
@@ -7,7 +8,7 @@ import { Context, IView } from '../context';
 import * as iosPushView from './IosPushCredentials';
 
 export class SetupIosPush implements IView {
-  constructor(private app: AppLookupParams, private nonInteractive: boolean = false) {}
+  constructor(private app: AppLookupParams) {}
 
   async open(ctx: Context): Promise<IView | null> {
     if (!ctx.user) {
@@ -20,6 +21,13 @@ export class SetupIosPush implements IView {
     const deprecatedPushP12 = appCredentials?.credentials?.pushP12;
     const deprecatedPushPassword = appCredentials?.credentials?.pushPassword;
     if (deprecatedPushId && deprecatedPushP12 && deprecatedPushPassword) {
+      if (ctx.nonInteractive) {
+        throw new CommandError(
+          'NON_INTERACTIVE',
+          "We've detected legacy Push Certificates on file. Start the CLI without the '--non-interactive' flag to upgrade to the newer standard."
+        );
+      }
+
       const confirmQuestion: Question = {
         type: 'confirm',
         name: 'confirm',
@@ -44,6 +52,6 @@ export class SetupIosPush implements IView {
       }
     }
 
-    return new iosPushView.CreateOrReusePushKey(this.app, this.nonInteractive);
+    return new iosPushView.CreateOrReusePushKey(this.app);
   }
 }

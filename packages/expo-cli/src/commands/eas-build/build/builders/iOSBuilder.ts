@@ -56,7 +56,10 @@ class iOSBuilder implements Builder {
     if (!this.shouldLoadCredentials()) {
       return;
     }
-    const bundleIdentifier = await getBundleIdentifier(this.ctx);
+    const bundleIdentifier = this.ctx.exp?.ios?.bundleIdentifier;
+    if (!bundleIdentifier) {
+      throw new Error('"expo.ios.bundleIdentifier" field is required in your app.json');
+    }
     const provider = new iOSCredentialsProvider(this.ctx.projectDir, {
       projectName: this.ctx.projectName,
       accountName: this.ctx.accountName,
@@ -66,7 +69,8 @@ class iOSBuilder implements Builder {
     const credentialsSource = await ensureCredentialsAsync(
       provider,
       this.buildProfile.workflow,
-      this.buildProfile.credentialsSource
+      this.buildProfile.credentialsSource,
+      this.ctx.nonInteractive
     );
     this.credentials = await provider.getCredentialsAsync(credentialsSource);
   }
@@ -175,7 +179,6 @@ class iOSBuilder implements Builder {
     );
   }
 }
-
 const getBundleIdentifier = once(_getBundleIdentifier);
 
 async function _getBundleIdentifier(ctx: BuilderContext): Promise<string> {

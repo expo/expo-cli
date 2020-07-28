@@ -141,7 +141,10 @@ class IOSBuilder extends BaseBuilder {
       bundleIdentifier,
     };
     const context = new Context();
-    await context.init(this.projectDir, this.options);
+    await context.init(this.projectDir, {
+      ...this.options,
+      nonInteractive: this.options.parent?.nonInteractive,
+    });
 
     if (this.options.skipCredentialsCheck) {
       log('Skipping credentials check...');
@@ -197,7 +200,7 @@ class IOSBuilder extends BaseBuilder {
       if (distCertFromParams) {
         await useDistCertFromParams(ctx, appLookupParams, distCertFromParams);
       } else {
-        await runCredentialsManager(ctx, new SetupIosDist(appLookupParams, nonInteractive));
+        await runCredentialsManager(ctx, new SetupIosDist(appLookupParams));
       }
     } catch (e) {
       log.error('Failed to set up Distribution Certificate');
@@ -212,7 +215,7 @@ class IOSBuilder extends BaseBuilder {
       if (pushKeyFromParams) {
         await usePushKeyFromParams(ctx, appLookupParams, pushKeyFromParams);
       } else {
-        await runCredentialsManager(ctx, new SetupIosPush(appLookupParams, nonInteractive));
+        await runCredentialsManager(ctx, new SetupIosPush(appLookupParams));
       }
     } catch (e) {
       log.error('Failed to set up Push Key');
@@ -229,10 +232,7 @@ class IOSBuilder extends BaseBuilder {
       if (provisioningProfileFromParams) {
         await useProvisioningProfileFromParams(ctx, appLookupParams, provisioningProfileFromParams);
       } else {
-        await runCredentialsManager(
-          ctx,
-          new SetupIosProvisioningProfile(appLookupParams, nonInteractive)
-        );
+        await runCredentialsManager(ctx, new SetupIosProvisioningProfile(appLookupParams));
       }
     } catch (e) {
       log.error('Failed to set up Provisioning Profile');
@@ -278,35 +278,22 @@ class IOSBuilder extends BaseBuilder {
     credsToClear: Record<string, boolean>
   ): Promise<void> {
     const shouldRevokeOnApple = this.options.revokeCredentials;
-    const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
 
     const provisioningProfile = await ctx.ios.getProvisioningProfile(appLookupParams);
     if (credsToClear.provisioningProfile && provisioningProfile) {
-      const view = new RemoveProvisioningProfile(
-        appLookupParams.accountName,
-        shouldRevokeOnApple,
-        nonInteractive
-      );
+      const view = new RemoveProvisioningProfile(appLookupParams.accountName, shouldRevokeOnApple);
       await view.removeSpecific(ctx, appLookupParams);
     }
 
     const distributionCert = await ctx.ios.getDistCert(appLookupParams);
     if (credsToClear.distributionCert && distributionCert) {
-      const view = new RemoveIosDist(
-        appLookupParams.accountName,
-        shouldRevokeOnApple,
-        nonInteractive
-      );
+      const view = new RemoveIosDist(appLookupParams.accountName, shouldRevokeOnApple);
       await view.removeSpecific(ctx, distributionCert);
     }
 
     const pushKey = await ctx.ios.getPushKey(appLookupParams);
     if (credsToClear.pushKey && pushKey) {
-      const view = new RemoveIosPush(
-        appLookupParams.accountName,
-        shouldRevokeOnApple,
-        nonInteractive
-      );
+      const view = new RemoveIosPush(appLookupParams.accountName, shouldRevokeOnApple);
       await view.removeSpecific(ctx, pushKey);
     }
 

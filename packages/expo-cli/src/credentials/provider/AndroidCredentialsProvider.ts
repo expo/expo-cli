@@ -27,7 +27,9 @@ export default class AndroidCredentialsProvider implements CredentialsProvider {
   }
 
   public async initAsync() {
-    await this.ctx.init(this.projectDir);
+    await this.ctx.init(this.projectDir, {
+      nonInteractive: this.ctx.nonInteractive,
+    });
   }
 
   public async hasRemoteAsync(): Promise<boolean> {

@@ -39,8 +39,8 @@ beforeEach(() => {
 describe('IosPushCredentials', () => {
   describe('CreateIosPush', () => {
     it('Basic Case - Create a Push Key and save it to Expo Servers', async () => {
-      const ctx = getCtxMock();
-      const createIosPush = new CreateIosPush(jester.username, true /* nonInteractive */);
+      const ctx = getCtxMock({ nonInteractive: true });
+      const createIosPush = new CreateIosPush(jester.username);
       await createIosPush.open(ctx as any);
 
       // expect push key is created
@@ -52,8 +52,8 @@ describe('IosPushCredentials', () => {
   });
   describe('CreateOrReusePushKey', () => {
     it('Reuse Autosuggested Push Key ', async () => {
-      const ctx = getCtxMock();
-      const createOrReusePushKey = new CreateOrReusePushKey(testAppLookupParams, true);
+      const ctx = getCtxMock({ nonInteractive: true });
+      const createOrReusePushKey = new CreateOrReusePushKey(testAppLookupParams);
       await createOrReusePushKey.open(ctx as any);
 
       // expect suggested push key is used
@@ -69,8 +69,8 @@ describe('IosPushCredentials', () => {
       // no available keys on apple dev portal
       mockPushKeyManagerList.mockImplementation(() => [] as any);
 
-      const ctx = getCtxMock();
-      const createOrReusePushKey = new CreateOrReusePushKey(testAppLookupParams, true);
+      const ctx = getCtxMock({ nonInteractive: true });
+      const createOrReusePushKey = new CreateOrReusePushKey(testAppLookupParams);
       await createOrReusePushKey.open(ctx as any);
 
       // expect suggested push key is used

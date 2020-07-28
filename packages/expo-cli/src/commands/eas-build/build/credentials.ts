@@ -1,3 +1,4 @@
+import CommandError from '../../../CommandError';
 import { CredentialsProvider } from '../../../credentials/provider';
 import { CredentialsSource, Workflow } from '../../../easJson';
 import log from '../../../log';
@@ -10,7 +11,8 @@ const platformMapName = {
 
 async function ensureCredentialsAutoAsync(
   provider: CredentialsProvider,
-  workflow: Workflow
+  workflow: Workflow,
+  nonInteractive: boolean
 ): Promise<CredentialsSource.LOCAL | CredentialsSource.REMOTE> {
   const platform = platformMapName[provider.platform];
   switch (workflow) {
@@ -25,9 +27,17 @@ async function ensureCredentialsAutoAsync(
       const hasRemote = await provider.hasRemoteAsync();
       if (hasRemote && hasLocal) {
         if (!(await provider.isLocalSyncedAsync())) {
-          log(
-            `Contents of your local credentials.json for ${platform} are not the same as credentials on Expo servers`
-          );
+          if (nonInteractive) {
+            throw new CommandError(
+              'NON_INTERACTIVE',
+              `Contents of your local credentials.json for ${platform} are not the same as credentials on Expo servers. To use the desired credentials, set the "builds.${platform}.{profile}.credentialsSource" field in the credentials.json file to one of the following: "local", "remote".`
+            );
+          } else {
+            log(
+              `Contents of your local credentials.json for ${platform} are not the same as credentials on Expo servers`
+            );
+          }
+
           const { select } = await prompts({
             type: 'select',
             name: 'select',
@@ -46,9 +56,17 @@ async function ensureCredentialsAutoAsync(
       } else if (hasRemote) {
         return CredentialsSource.REMOTE;
       } else {
-        log.warn(
-          `Credentials for this app are not configured and there is no entry in credentials.json for ${platform}`
-        );
+        if (nonInteractive) {
+          throw new CommandError(
+            'NON_INTERACTIVE',
+            `Credentials for this app are not configured and there is no entry in credentials.json for ${platform}. Either configure credentials.json, or launch the build without "--non-interactive" flag to get a prompt to generate credentials automatically.`
+          );
+        } else {
+          log.warn(
+            `Credentials for this app are not configured and there is no entry in credentials.json for ${platform}`
+          );
+        }
+
         const { confirm } = await prompts({
           type: 'confirm',
           name: 'confirm',
@@ -67,7 +85,8 @@ async function ensureCredentialsAutoAsync(
 export async function ensureCredentialsAsync(
   provider: CredentialsProvider,
   workflow: Workflow,
-  src: CredentialsSource
+  src: CredentialsSource,
+  nonInteractive: boolean
 ): Promise<CredentialsSource.LOCAL | CredentialsSource.REMOTE> {
   switch (src) {
     case CredentialsSource.LOCAL:
@@ -75,6 +94,6 @@ export async function ensureCredentialsAsync(
     case CredentialsSource.REMOTE:
       return CredentialsSource.REMOTE;
     case CredentialsSource.AUTO:
-      return await ensureCredentialsAutoAsync(provider, workflow);
+      return await ensureCredentialsAutoAsync(provider, workflow, nonInteractive);
   }
 }

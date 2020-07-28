@@ -11,6 +11,7 @@ export interface BuilderContext {
   accountName: string;
   projectName: string;
   exp: ExpoConfig;
+  nonInteractive: boolean;
 }
 
 export interface Builder {

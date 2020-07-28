@@ -130,6 +130,7 @@ export class SelectAndroidExperience implements IView {
   async open(ctx: Context): Promise<IView | null> {
     if (ctx.hasProjectContext && this.askAboutProjectMode) {
       const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+
       const { runProjectContext } = await prompt([
         {
           type: 'confirm',
@@ -137,6 +138,7 @@ export class SelectAndroidExperience implements IView {
           message: `You are currently in a directory with ${experienceName} experience. Do you want to select it?`,
         },
       ]);
+
       if (runProjectContext) {
         invariant(ctx.manifest.slug, 'app.json slug field must be set');
         const view = new androidView.ExperienceView(experienceName);

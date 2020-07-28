@@ -3,7 +3,7 @@ import { Context, IView } from '../context';
 import * as iosDistView from './IosDistCert';
 
 export class SetupIosDist implements IView {
-  constructor(private app: AppLookupParams, private nonInteractive: boolean = false) {}
+  constructor(private app: AppLookupParams) {}
 
   async open(ctx: Context): Promise<IView | null> {
     if (!ctx.user) {
@@ -20,6 +20,6 @@ export class SetupIosDist implements IView {
       }
     }
 
-    return new iosDistView.CreateOrReuseDistributionCert(this.app, this.nonInteractive);
+    return new iosDistView.CreateOrReuseDistributionCert(this.app);
   }
 }

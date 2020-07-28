@@ -41,8 +41,9 @@ describe('SetupIosDist', () => {
       ios: {
         getDistCert: jest.fn(),
       },
+      nonInteractive: true,
     });
-    const setupIosDist = new SetupIosDist(testAppLookupParams, true);
+    const setupIosDist = new SetupIosDist(testAppLookupParams);
     const createOrReuse = await setupIosDist.open(ctx as any);
     await createOrReuse.open(ctx as any);
 

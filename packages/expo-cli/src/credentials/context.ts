@@ -19,6 +19,7 @@ interface AppleCtxOptions {
 
 interface CtxOptions extends AppleCtxOptions {
   allowAnonymous?: boolean;
+  nonInteractive?: boolean;
 }
 
 export class Context {
@@ -31,6 +32,11 @@ export class Context {
   _androidApiClient?: AndroidApi;
   _appleCtxOptions?: AppleCtxOptions;
   _appleCtx?: AppleCtx;
+  _nonInteractive?: boolean;
+
+  get nonInteractive(): boolean {
+    return this._nonInteractive === true;
+  }
 
   get user(): User {
     return this._user as User;
@@ -97,6 +103,7 @@ export class Context {
     this._iosApiClient = new IosApi(this.api);
     this._androidApiClient = new AndroidApi(this.api);
     this._appleCtxOptions = pick(options, ['appleId', 'appleIdPassword', 'teamId']);
+    this._nonInteractive = options.nonInteractive;
 
     // Check if we are in project context by looking for a manifest
     const status = await Doctor.validateWithoutNetworkAsync(projectDir);

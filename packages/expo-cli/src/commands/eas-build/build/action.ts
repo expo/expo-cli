@@ -25,6 +25,9 @@ interface BuildOptions {
   skipCredentialsCheck?: boolean; // TODO: noop for now
   wait?: boolean;
   profile: string;
+  parent?: {
+    nonInteractive: boolean;
+  };
 }
 
 async function buildAction(projectDir: string, options: BuildOptions): Promise<void> {
@@ -42,7 +45,11 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
   await ensureGitStatusIsCleanAsync();
 
   const easConfig: EasConfig = await new EasJsonReader(projectDir, platform).readAsync(profile);
-  const ctx = await createBuilderContextAsync(projectDir, easConfig);
+  const ctx = await createBuilderContextAsync(
+    projectDir,
+    easConfig,
+    options.parent?.nonInteractive
+  );
   const projectId = await ensureProjectExistsAsync(ctx.user, {
     accountName: ctx.accountName,
     projectName: ctx.projectName,
@@ -62,7 +69,8 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
 
 async function createBuilderContextAsync(
   projectDir: string,
-  eas: EasConfig
+  eas: EasConfig,
+  nonInteractive: boolean = false
 ): Promise<BuilderContext> {
   const user: User = await UserManager.ensureLoggedInAsync();
   const { exp } = getConfig(projectDir);
@@ -76,6 +84,7 @@ async function createBuilderContextAsync(
     accountName,
     projectName,
     exp,
+    nonInteractive,
   };
 }
 

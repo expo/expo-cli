@@ -35,7 +35,16 @@ export default function (program: Command) {
       'Build a custom version of the Expo client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
     )
     .asyncActionProjectDir(
-      async (projectDir: string, options: { appleId?: string; config?: string }) => {
+      async (
+        projectDir: string,
+        options: {
+          appleId?: string;
+          config?: string;
+          parent?: {
+            nonInteractive: boolean;
+          };
+        }
+      ) => {
         const disabledServices: { [key: string]: { name: string; reason: string } } = {
           pushNotifications: {
             name: 'Push Notifications',
@@ -83,7 +92,11 @@ export default function (program: Command) {
 
         const user = await UserManager.getCurrentUserAsync();
         const context = new Context();
-        await context.init(projectDir, { ...options, allowAnonymous: true });
+        await context.init(projectDir, {
+          ...options,
+          allowAnonymous: true,
+          nonInteractive: options.parent?.nonInteractive,
+        });
         await context.ensureAppleCtx();
         const appleContext = context.appleCtx;
         if (user) {

@@ -45,7 +45,8 @@ class AndroidBuilder implements Builder {
     const credentialsSource = await ensureCredentialsAsync(
       provider,
       this.buildProfile.workflow,
-      this.buildProfile.credentialsSource
+      this.buildProfile.credentialsSource,
+      this.ctx.nonInteractive
     );
     this.credentials = await provider.getCredentialsAsync(credentialsSource);
   }
