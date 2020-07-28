@@ -1,5 +1,6 @@
 import { ExpoConfig, getConfig } from '@expo/config';
 import { ApiV2, Doctor, User, UserManager } from '@expo/xdl';
+import pick from 'lodash/pick';
 
 import { AppleCtx, authenticate } from '../appleApi';
 import log from '../log';
@@ -10,14 +11,15 @@ export interface IView {
   open(ctx: Context): Promise<IView | null>;
 }
 
-type AppleCtxOptions = {
+interface AppleCtxOptions {
   appleId?: string;
   appleIdPassword?: string;
-};
+  teamId?: string;
+}
 
-type CtxOptions = {
+interface CtxOptions extends AppleCtxOptions {
   allowAnonymous?: boolean;
-};
+}
 
 export class Context {
   _hasProjectContext: boolean = false;
@@ -27,6 +29,7 @@ export class Context {
   _apiClient?: ApiV2;
   _iosApiClient?: IosApi;
   _androidApiClient?: AndroidApi;
+  _appleCtxOptions?: AppleCtxOptions;
   _appleCtx?: AppleCtx;
 
   get user(): User {
@@ -67,9 +70,9 @@ export class Context {
     return !!this._appleCtx;
   }
 
-  async ensureAppleCtx(options: AppleCtxOptions = {}) {
+  async ensureAppleCtx() {
     if (!this._appleCtx) {
-      this._appleCtx = await authenticate(options);
+      this._appleCtx = await authenticate(this._appleCtxOptions);
     }
   }
 
@@ -93,6 +96,7 @@ export class Context {
     this._apiClient = ApiV2.clientForUser(this.user);
     this._iosApiClient = new IosApi(this.api);
     this._androidApiClient = new AndroidApi(this.api);
+    this._appleCtxOptions = pick(options, ['appleId', 'appleIdPassword', 'teamId']);
 
     // Check if we are in project context by looking for a manifest
     const status = await Doctor.validateWithoutNetworkAsync(projectDir);

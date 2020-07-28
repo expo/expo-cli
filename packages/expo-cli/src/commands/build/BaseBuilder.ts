@@ -17,8 +17,6 @@ const secondsToMilliseconds = (seconds: number): number => seconds * 1000;
 export default class BaseBuilder {
   protected projectConfig: ProjectConfig;
   manifest: ExpoConfig;
-  private user?: User;
-  private loadedUser: boolean = false;
 
   async getUserAsync(): Promise<User> {
     return await UserManager.ensureLoggedInAsync();

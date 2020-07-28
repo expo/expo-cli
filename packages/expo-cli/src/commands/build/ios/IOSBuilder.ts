@@ -49,8 +49,6 @@ interface AppLookupParams {
 }
 
 class IOSBuilder extends BaseBuilder {
-  appleCtx?: apple.AppleCtx;
-
   async run(): Promise<void> {
     // This gets run after all other validation to prevent users from having to answer this question multiple times.
     this.options.type = await utils.askBuildType(this.options.type!, {
@@ -71,14 +69,6 @@ class IOSBuilder extends BaseBuilder {
     this.maybeWarnDamagedSimulator();
   }
 
-  async getAppleCtx(): Promise<apple.AppleCtx> {
-    if (!this.appleCtx) {
-      await apple.setup();
-      this.appleCtx = await apple.authenticate(this.options);
-    }
-    return this.appleCtx;
-  }
-
   // Try to get the user to provide Apple credentials upfront
   // We will be able to do full validation of their iOS creds this way
   async bestEffortAppleCtx(ctx: Context): Promise<void> {
@@ -88,7 +78,7 @@ class IOSBuilder extends BaseBuilder {
     }
     if (this.options.appleId) {
       // skip prompts and auto authenticate if flags are passed
-      return await ctx.ensureAppleCtx(this.options);
+      return await ctx.ensureAppleCtx();
     }
 
     const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
@@ -104,7 +94,7 @@ class IOSBuilder extends BaseBuilder {
       },
     ]);
     if (confirm) {
-      return await ctx.ensureAppleCtx(this.options);
+      return await ctx.ensureAppleCtx();
     } else {
       log(
         chalk.green(
@@ -151,15 +141,14 @@ class IOSBuilder extends BaseBuilder {
       bundleIdentifier,
     };
     const context = new Context();
-    await context.init(this.projectDir);
-
-    await this.clearAndRevokeCredentialsIfRequested(context, appLookupParams);
+    await context.init(this.projectDir, this.options);
 
     if (this.options.skipCredentialsCheck) {
       log('Skipping credentials check...');
       return;
     }
     await this.bestEffortAppleCtx(context);
+    await this.clearAndRevokeCredentialsIfRequested(context, appLookupParams);
 
     try {
       await this.produceCredentials(context, appLookupParams);
