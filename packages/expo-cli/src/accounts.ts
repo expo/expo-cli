@@ -22,7 +22,7 @@ export async function loginOrRegisterAsync(): Promise<User> {
   if (program.nonInteractive) {
     throw new CommandError(
       'NOT_LOGGED_IN',
-      `Not logged in. Use \`${program.name} login -u username -p password\` to log in.`
+      `Not logged in. Use \`${program.name()} login -u username -p password\` to log in.`
     );
   }
 
