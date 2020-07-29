@@ -83,8 +83,8 @@ export default function (program: Command) {
 
         const user = await UserManager.getCurrentUserAsync();
         const context = new Context();
-        await context.init(projectDir, { allowAnonymous: true });
-        await context.ensureAppleCtx(options);
+        await context.init(projectDir, { ...options, allowAnonymous: true });
+        await context.ensureAppleCtx();
         const appleContext = context.appleCtx;
         if (user) {
           await context.ios.getAllCredentials(user.username); // initialize credentials

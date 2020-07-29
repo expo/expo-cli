@@ -104,7 +104,11 @@ export default function (program: Command) {
             return;
           }
         }
-
+        if (options.skipCredentialsCheck && options.clearCredentials) {
+          throw new CommandError(
+            "--skip-credentials-check and --clear-credentials can't be used together"
+          );
+        }
         if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
           throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
         }
