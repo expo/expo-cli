@@ -1,5 +1,6 @@
 import { User } from '@expo/xdl';
 import merge from 'lodash/merge';
+
 import {
   DistCert,
   DistCertInfo,
@@ -12,19 +13,25 @@ import {
 import { IosDistCredentials, IosPushCredentials } from '../credentials';
 
 /*
-Mock Credential objects for Jester 
+Mock Credential objects for Jester
 */
 const today = new Date();
 const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
 export const testSlug = 'testApp';
 export const testExperienceName = `@jester/${testSlug}`;
 export const testBundleIdentifier = 'test.com.app';
+export const testAppLookupParams = {
+  accountName: 'jester',
+  projectName: testSlug,
+  bundleIdentifier: testBundleIdentifier,
+};
 export const testAppleTeam: Team = {
   id: 'test-team-id',
 };
 export const testProvisioningProfile: ProvisioningProfile = {
   provisioningProfileId: 'test-id',
   provisioningProfile: 'test',
+  teamId: 'id',
 };
 export const testProvisioningProfiles = [testProvisioningProfile];
 export const testProvisioningProfileFromApple: ProvisioningProfileInfo = {
@@ -35,6 +42,7 @@ export const testProvisioningProfileFromApple: ProvisioningProfileInfo = {
   certificates: [],
   provisioningProfileId: testProvisioningProfile.provisioningProfileId,
   provisioningProfile: testProvisioningProfile.provisioningProfile,
+  teamId: 'id',
 };
 export const testProvisioningProfilesFromApple = [testProvisioningProfileFromApple];
 
@@ -93,6 +101,11 @@ export const testAppCredential = {
     ...testProvisioningProfile,
   },
 };
+export const testAllCredentialsForApp = {
+  ...testAppCredential,
+  pushCredentials: testPushKey,
+  distCredentials: testDistCert,
+};
 export const testAppCredentials = [testAppCredential];
 export const testAllCredentials = {
   userCredentials: [...testIosDistCredentials, ...testIosPushCredentials],
@@ -123,7 +136,7 @@ export const jester2: User = {
 
 export function getApiV2MockCredentials(overridenMock: { [key: string]: any } = {}) {
   const defaultCredentialsApiV2Mock = {
-    getAsync: jest.fn(() => testAllCredentials),
+    getAsync: jest.fn(url => testAllCredentials),
   };
   return getApiV2Mock(merge(defaultCredentialsApiV2Mock, overridenMock));
 }
@@ -139,6 +152,56 @@ export function getApiV2Mock(overridenMock: { [key: string]: any } = {}) {
   };
   return merge(defaultMock, overridenMock);
 }
+
+export function getApiClientMock(overridenMock: { [key: string]: any } = {}) {
+  // by default all method throw exceptions to make sure that we only what is expected
+  const defaultMock = {
+    getAllCredentialsApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+    getAllCredentialsForAppApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+    getUserCredentialsByIdApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+    createDistCertApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+    updateDistCertApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+    deleteDistCertApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+    useDistCertApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+    createPushKeyApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+    updatePushKeyApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+    deletePushKeyApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+    usePushKeyApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+    deletePushCertApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+    updateProvisioningProfileApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+    deleteProvisioningProfileApi: jest.fn(() => {
+      throw new Error('unexpected call');
+    }),
+  };
+  return merge(defaultMock, overridenMock);
+}
+
 export const testAppJson = {
   name: 'testing 123',
   version: '0.1.0',
@@ -154,16 +217,16 @@ export const testAppJsonWithDifferentOwner = {
 export function getCtxMock(overridenMock: { [key: string]: any } = {}) {
   const defaultMock = {
     ios: {
-      getDistCert: jest.fn(),
+      getDistCert: jest.fn(() => testDistCert),
       createDistCert: jest.fn(() => testIosDistCredential),
       useDistCert: jest.fn(),
-      getPushKey: jest.fn(),
+      getPushKey: jest.fn(() => testPushKey),
       createPushKey: jest.fn(() => testIosPushCredential),
       usePushKey: jest.fn(),
       updateProvisioningProfile: jest.fn(),
       getAppCredentials: jest.fn(() => testAppCredentials),
-      getProvisioningProfile: jest.fn(),
-      credentials: testAllCredentials,
+      getProvisioningProfile: jest.fn(() => testProvisioningProfile),
+      getAllCredentials: jest.fn(() => testAllCredentials),
     },
     appleCtx: {
       appleId: 'test-id',

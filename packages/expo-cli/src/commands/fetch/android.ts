@@ -1,15 +1,15 @@
-import path from 'path';
-import fs from 'fs-extra';
-
 import { AndroidCredentials } from '@expo/xdl';
+import fs from 'fs-extra';
 import invariant from 'invariant';
-import { DownloadKeystore } from '../../credentials/views/AndroidCredentials';
-import { Context } from '../../credentials';
+import path from 'path';
 
+import { Context } from '../../credentials';
+import { runCredentialsManager } from '../../credentials/route';
+import { DownloadKeystore } from '../../credentials/views/AndroidKeystore';
 import log from '../../log';
 
 async function maybeRenameExistingFile(projectDir: string, filename: string) {
-  let desiredFilePath = path.resolve(projectDir, filename);
+  const desiredFilePath = path.resolve(projectDir, filename);
 
   if (await fs.pathExists(desiredFilePath)) {
     let num = 1;
@@ -30,11 +30,16 @@ export async function fetchAndroidKeystoreAsync(projectDir: string): Promise<voi
   const keystoreFilename = `${ctx.manifest.slug}.jks`;
   await maybeRenameExistingFile(projectDir, keystoreFilename);
   const backupKeystoreOutputPath = path.resolve(projectDir, keystoreFilename);
+  const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
 
   invariant(ctx.manifest.slug, 'app.json slug field must be set');
-  const view = new DownloadKeystore(ctx.manifest.slug as string);
-  await view.fetch(ctx);
-  await view.save(ctx, backupKeystoreOutputPath, true);
+  await runCredentialsManager(
+    ctx,
+    new DownloadKeystore(experienceName, {
+      outputPath: backupKeystoreOutputPath,
+      displayCredentials: true,
+    })
+  );
 }
 
 export async function fetchAndroidHashesAsync(projectDir: string): Promise<void> {
@@ -43,28 +48,29 @@ export async function fetchAndroidHashesAsync(projectDir: string): Promise<void>
   const outputPath = path.resolve(projectDir, `${ctx.manifest.slug}.tmp.jks`);
   try {
     invariant(ctx.manifest.slug, 'app.json slug field must be set');
-    const view = new DownloadKeystore(ctx.manifest.slug as string);
-    await view.fetch(ctx);
-    await view.save(ctx, outputPath);
-
-    await AndroidCredentials.logKeystoreHashes({
-      keystorePath: outputPath,
-      // @ts-ignore keystorePassword can not be undefined
-      keystorePassword: view.credentials?.keystorePassword,
-      // @ts-ignore keyAlias can not be undefined
-      keyAlias: view.credentials?.keyAlias,
+    const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+    const view = new DownloadKeystore(experienceName, {
+      outputPath,
+      quiet: true,
     });
-    log(
-      `\nNote: if you are using Google Play signing, this app will be signed with a different key after publishing to the store, and you'll need to use the hashes displayed in the Google Play console.`
-    );
-  } finally {
-    try {
-      fs.unlink(outputPath);
-    } catch (err) {
-      if (err.code !== 'ENOENT') {
-        log.error(err);
-      }
+    await runCredentialsManager(ctx, view);
+    const keystore = await ctx.android.fetchKeystore(experienceName);
+
+    if (keystore) {
+      await AndroidCredentials.logKeystoreHashes({
+        keystorePath: outputPath,
+        keystorePassword: keystore.keystorePassword,
+        keyAlias: keystore.keyAlias,
+        keyPassword: keystore.keyPassword,
+      });
+      log(
+        `\nNote: if you are using Google Play signing, this app will be signed with a different key after publishing to the store, and you'll need to use the hashes displayed in the Google Play console.`
+      );
+    } else {
+      log.warn('There is no valid Keystore defined for this app');
     }
+  } finally {
+    await fs.remove(outputPath);
   }
 }
 
@@ -80,28 +86,28 @@ export async function fetchAndroidUploadCertAsync(projectDir: string): Promise<v
 
   try {
     invariant(ctx.manifest.slug, 'app.json slug field must be set');
-    const view = new DownloadKeystore(ctx.manifest.slug as string);
-    await view.fetch(ctx);
-    await view.save(ctx, keystorePath);
+    const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+    const view = new DownloadKeystore(experienceName, {
+      outputPath: keystorePath,
+      quiet: true,
+    });
+    await runCredentialsManager(ctx, view);
+    const keystore = await ctx.android.fetchKeystore(experienceName);
 
-    log(`Writing upload key to ${uploadKeyPath}`);
-    await AndroidCredentials.exportCertBase64(
-      {
-        keystorePath,
-        // @ts-ignore keystorePassword can not be undefined
-        keystorePassword: view.credentials?.keystorePassword,
-        // @ts-ignore keyAlias can not be undefined
-        keyAlias: view.credentials?.keyAlias,
-      },
-      uploadKeyPath
-    );
-  } finally {
-    try {
-      await fs.unlink(keystorePath);
-    } catch (err) {
-      if (err.code !== 'ENOENT') {
-        log.error(err);
-      }
+    if (keystore) {
+      log(`Writing upload key to ${uploadKeyPath}`);
+      await AndroidCredentials.exportCertBase64(
+        {
+          keystorePath,
+          keystorePassword: keystore.keystorePassword,
+          keyAlias: keystore.keyAlias,
+        },
+        uploadKeyPath
+      );
+    } else {
+      log.warn('There is no valid Keystore defined for this app');
     }
+  } finally {
+    await fs.remove(keystorePath);
   }
 }

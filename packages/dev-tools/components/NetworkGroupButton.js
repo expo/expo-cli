@@ -1,9 +1,7 @@
-import { css } from 'react-emotion';
-
-import * as React from 'react';
 import * as Constants from 'app/common/constants';
-
 import Loader from 'app/components/Loader';
+import * as React from 'react';
+import { css } from 'react-emotion';
 
 const STYLES_CONTAINER = css`
   font-family: ${Constants.fontFamilies.regular};

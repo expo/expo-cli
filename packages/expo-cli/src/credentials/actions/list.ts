@@ -1,6 +1,12 @@
+import { AndroidCredentials as Android } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import { AndroidCredentials as Android } from '@expo/xdl';
+import os from 'os';
+import path from 'path';
+import { v4 as uuid } from 'uuid';
+
+import log from '../../log';
+import { AppLookupParams } from '../api/IosApi';
 import {
   AndroidCredentials,
   IosAppCredentials,
@@ -9,20 +15,15 @@ import {
   IosPushCredentials,
 } from '../credentials';
 
-import log from '../../log';
-
-export async function displayProjectCredentials(
-  experienceName: string,
-  bundleIdentifier: string,
-  credentials: IosCredentials
-): Promise<void> {
-  const appCredential = credentials.appCredentials.find(
-    appCredential =>
-      appCredential.experienceName === experienceName &&
-      appCredential.bundleIdentifier === bundleIdentifier
-  );
-
-  if (!appCredential) {
+export function displayProjectCredentials(
+  appLookupParams: AppLookupParams,
+  appCredentials?: IosAppCredentials | null,
+  pushKey?: IosPushCredentials | null,
+  distCert?: IosDistCredentials | null
+): void {
+  const experienceName = `@${appLookupParams.accountName}/${appLookupParams.projectName}`;
+  const bundleIdentifier = appLookupParams.bundleIdentifier;
+  if (!appCredentials) {
     log(
       chalk.bold(
         `No credentials configured for app ${experienceName} with bundle identifier ${bundleIdentifier}\n`
@@ -33,21 +34,15 @@ export async function displayProjectCredentials(
 
   log();
   log(chalk.bold('Project Credential Configuration:'));
-  displayIosAppCredentials(appCredential);
+  displayIosAppCredentials(appCredentials);
   log();
 
-  const distCertId = appCredential.distCredentialsId;
-  const distCert =
-    distCertId && credentials.userCredentials.find(credential => credential.id === distCertId);
   if (distCert) {
-    displayIosUserCredentials(distCert, credentials);
+    displayIosUserCredentials(distCert);
   }
 
-  const pushKeyId = appCredential.pushCredentialsId;
-  const pushKey =
-    pushKeyId && credentials.userCredentials.find(credential => credential.id === pushKeyId);
   if (pushKey) {
-    displayIosUserCredentials(pushKey, credentials);
+    displayIosUserCredentials(pushKey);
   }
 }
 
@@ -145,12 +140,8 @@ export async function displayAndroidCredentials(credentialsList: AndroidCredenti
 }
 
 export async function displayAndroidAppCredentials(credentials: AndroidCredentials) {
-  const tmpFilename = `expo_tmp_keystore_file.jks`;
+  const tmpFilename = path.join(os.tmpdir(), `expo_tmp_keystore_${uuid()}file.jks`);
   try {
-    if (await fs.pathExists(tmpFilename)) {
-      await fs.unlink(tmpFilename);
-    }
-
     log(chalk.green(credentials.experienceName));
     log(chalk.bold('  Upload Keystore hashes'));
     if (credentials.keystore?.keystore) {
@@ -167,14 +158,12 @@ export async function displayAndroidAppCredentials(credentials: AndroidCredentia
       log('    -----------------------');
     }
     log(chalk.bold('  Push Notifications credentials'));
-    log('    FCM Api Key: ', credentials.pushCredentials?.fcmApiKey, '---------------------');
+    log('    FCM Api Key: ', credentials.pushCredentials?.fcmApiKey ?? '---------------------');
     log('\n');
   } catch (error) {
-    log.error('  Failed to parse the keystore', error);
+    log.error('  Failed to parse the Keystore', error);
     log('\n');
   } finally {
-    if (await fs.pathExists(tmpFilename)) {
-      await fs.unlink(tmpFilename);
-    }
+    await fs.remove(tmpFilename);
   }
 }

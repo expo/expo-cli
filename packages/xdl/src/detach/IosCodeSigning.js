@@ -1,14 +1,13 @@
+import plist from '@expo/plist';
 import crypto from 'crypto';
+import fs from 'fs-extra';
+import { sync as globSync } from 'glob';
+import omit from 'lodash/omit';
+import minimatch from 'minimatch';
 import path from 'path';
 
-import omit from 'lodash/omit';
-import fs from 'fs-extra';
-import glob from 'glob-promise';
-import minimatch from 'minimatch';
-import plist from '@expo/plist';
-
-import { findP12CertSerialNumber, getP12CertFingerprint } from './PKCS12Utils';
 import { spawnAsyncThrowError } from './ExponentTools';
+import { findP12CertSerialNumber, getP12CertFingerprint } from './PKCS12Utils';
 
 async function ensureCertificateValid({ certPath, certPassword, teamID }) {
   const certData = await fs.readFile(certPath);
@@ -214,8 +213,10 @@ async function createEntitlementsFile({
 }) {
   const decodedProvisioningProfileEntitlements = plistData.Entitlements;
 
-  const entitlementsPattern = path.join(archivePath, 'Products/Applications/*.app/*.entitlements');
-  const entitlementsPaths = await glob(entitlementsPattern);
+  const entitlementsPaths = globSync('Products/Applications/*.app/*.entitlements', {
+    absolute: true,
+    cwd: archivePath,
+  });
   if (entitlementsPaths.length === 0) {
     throw new Error("Didn't find any generated entitlements file in archive.");
   } else if (entitlementsPaths.length !== 1) {

@@ -1,12 +1,11 @@
 import fs from 'fs-extra';
-import path from 'path';
 import HashIds from 'hashids';
+import path from 'path';
 import uuid from 'uuid';
+
 import ApiV2Client from '../ApiV2';
-import Api from '../Api';
 import { UserManagerInstance } from '../User';
 import UserSettings from '../UserSettings';
-import FormData from '../tools/FormData';
 
 const _makeShortId = (salt, minLength = 10) => {
   const hashIds = new HashIds(salt, minLength);
@@ -75,7 +74,7 @@ describe('User Sessions', () => {
     expect(user.sessionSecret).not.toBe(undefined);
 
     // expect session to be in state.json
-    let { sessionSecret } = await UserSettings.getAsync('auth', {});
+    const { sessionSecret } = await UserSettings.getAsync('auth', {});
     expect(sessionSecret).not.toBe(undefined);
   });
   it('should remove a session token upon logout', async () => {
@@ -88,32 +87,8 @@ describe('User Sessions', () => {
     await UserManager.logoutAsync();
 
     // expect session to be removed
-    let { sessionSecret } = await UserSettings.getAsync('auth', {});
+    const { sessionSecret } = await UserSettings.getAsync('auth', {});
     expect(sessionSecret).toBe(undefined);
-  });
-
-  it('should use the token in apiv1', async () => {
-    const UserManager = _newTestUserManager();
-    await UserManager.loginAsync('user-pass', {
-      username: userForTest.username,
-      password: userForTestPassword,
-    });
-
-    let formData = new FormData();
-    formData.append('queryType', 'history');
-    formData.append('slug', 'foobar');
-
-    let response = await Api.callMethodAsync(
-      'publishInfo',
-      [],
-      'post',
-      null,
-      {
-        formData,
-      },
-      true
-    );
-    expect(response.status).toBe(200);
   });
 
   it('should use the token in apiv2', async () => {

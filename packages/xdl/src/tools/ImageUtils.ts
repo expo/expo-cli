@@ -1,6 +1,5 @@
-import path from 'path';
 import fs from 'fs';
-
+import path from 'path';
 import probeImageSize from 'probe-image-size';
 
 import { spawnAsyncThrowError } from '../detach/ExponentTools';

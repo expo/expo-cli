@@ -1,9 +1,10 @@
-import { SetupIosPush } from '../SetupIosPush';
 import {
   getCtxMock,
+  testAppLookupParams,
   testIosPushCredential,
   testPushKeysFromApple,
-} from '../../test-fixtures/mocks';
+} from '../../test-fixtures/mocks-ios';
+import { SetupIosPush } from '../SetupIosPush';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope
 const mockPushKeyManagerCreate = jest.fn(() => testIosPushCredential);
@@ -36,13 +37,12 @@ beforeEach(() => {
 
 describe('SetupIosPush', () => {
   it('Basic Case - Create or Reuse', async () => {
-    const ctx = getCtxMock();
-    const pushKeyOptions = {
-      experienceName: 'testApp',
-      bundleIdentifier: 'test.com.app',
-      nonInteractive: true,
-    };
-    const setupIosPush = new SetupIosPush(pushKeyOptions);
+    const ctx = getCtxMock({
+      ios: {
+        getPushKey: jest.fn(),
+      },
+    });
+    const setupIosPush = new SetupIosPush(testAppLookupParams, true);
     const createOrReuse = await setupIosPush.open(ctx as any);
     await createOrReuse.open(ctx as any);
 

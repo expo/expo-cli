@@ -23,3 +23,9 @@ export async function readFileWithFallback(filePath: string, fallbackContent?: s
   }
   throw Error(`File not found ${filePath}`);
 }
+
+export async function removeFileIfExists(filePath: string) {
+  if (await fs.pathExists(filePath)) {
+    await fs.unlink(filePath);
+  }
+}

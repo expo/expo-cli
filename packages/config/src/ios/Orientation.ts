@@ -1,5 +1,5 @@
-import { InfoPlist } from './IosConfig.types';
 import { ExpoConfig } from '../Config.types';
+import { InfoPlist } from './IosConfig.types';
 
 export function getOrientation(config: ExpoConfig) {
   if (config.orientation) {

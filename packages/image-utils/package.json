@@ -1,11 +1,12 @@
 {
   "name": "@expo/image-utils",
-  "version": "0.2.29",
+  "version": "0.3.0",
   "description": "A package used by Expo CLI for processing images",
   "main": "build/index.js",
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
+    "test": "jest",
     "prepare": "yarn run clean && yarn build",
     "clean": "rimraf build ./tsconfig.tsbuildinfo"
   },

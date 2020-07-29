@@ -1,9 +1,9 @@
 import { vol } from 'memfs';
 import * as path from 'path';
 
+import { readFileFromActualFS } from '../../__tests__/helpers';
 import configureImageAsset from '../ImageAsset';
 import reactNativeProject from './fixtures/react-native-project-structure';
-import { readFileFromActualFS } from '../../__tests__/helpers';
 
 // in `__mocks__/fs.ts` memfs is being used as a mocking library
 jest.mock('fs');

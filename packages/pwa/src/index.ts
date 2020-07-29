@@ -2,9 +2,9 @@ import { ExpoConfig, setCustomConfigPath } from '@expo/config';
 import * as Image from '@expo/image-utils';
 import * as path from 'path';
 
-import { assembleOrientationMedia, getDevices } from './Splash';
 import { createPWAManifestFromWebConfig, getConfigForPWA } from './Manifest';
 import { HTMLOutput, IconOptions, Manifest, ProjectOptions, SplashIcon } from './Manifest.types';
+import { assembleOrientationMedia, getDevices } from './Splash';
 
 export async function generateAsync(
   type: string,
@@ -63,6 +63,11 @@ export async function generateSplashAsync(
   const data = await Promise.all<HTMLOutput>(
     icons.map(
       async (icon: SplashIcon): Promise<HTMLOutput> => {
+        // Ensure the default `splash.resizeMode` is used here:
+        // https://docs.expo.io/versions/latest/config/app/#splash
+        if (!icon.resizeMode) {
+          icon.resizeMode = 'contain';
+        }
         const { source, name } = await Image.generateImageAsync({ projectRoot, cacheType }, icon);
 
         const href = `pwa/apple-touch-startup-image/${name}`;
@@ -280,4 +285,4 @@ export {
   getChromeIconConfig,
 } from './Manifest';
 
-export { IconOptions, ProjectOptions, HTMLOutput } from './Manifest.types';
+export { IconOptions, ProjectOptions, HTMLOutput, PWAConfig } from './Manifest.types';

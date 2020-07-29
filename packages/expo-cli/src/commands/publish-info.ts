@@ -1,6 +1,5 @@
 import dateFormat from 'dateformat';
 
-import * as table from './utils/cli-table';
 import {
   DetailOptions,
   HistoryOptions,
@@ -9,6 +8,7 @@ import {
   getPublishHistoryAsync,
   printPublicationDetailAsync,
 } from './utils/PublishUtils';
+import * as table from './utils/cli-table';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;
 const HORIZ_CELL_WIDTH_BIG = 40;
@@ -44,8 +44,8 @@ export default (program: any) => {
 
         if (result.queryResult && result.queryResult.length > 0) {
           // Print general publication info
-          let sampleItem = result.queryResult[0]; // get a sample item
-          let generalTableString = table.printTableJson(
+          const sampleItem = result.queryResult[0]; // get a sample item
+          const generalTableString = table.printTableJson(
             {
               fullName: sampleItem.fullName,
             },
@@ -54,7 +54,7 @@ export default (program: any) => {
           console.log(generalTableString);
 
           // Print info specific to each publication
-          let headers = [
+          const headers = [
             'publishedTime',
             'appVersion',
             'sdkVersion',
@@ -64,8 +64,8 @@ export default (program: any) => {
           ];
 
           // colWidths contains the cell size of each header
-          let colWidths: number[] = [];
-          let bigCells = new Set(['publicationId', 'publishedTime']);
+          const colWidths: number[] = [];
+          const bigCells = new Set(['publicationId', 'publishedTime', 'channel']);
           headers.forEach(header => {
             if (bigCells.has(header)) {
               colWidths.push(HORIZ_CELL_WIDTH_BIG);
@@ -77,7 +77,7 @@ export default (program: any) => {
             ...publication,
             publishedTime: dateFormat(publication.publishedTime, 'ddd mmm dd yyyy HH:MM:ss Z'),
           }));
-          let tableString = table.printTableJsonArray(headers, resultRows, colWidths);
+          const tableString = table.printTableJsonArray(headers, resultRows, colWidths);
           console.log(tableString);
         } else {
           throw new Error('No records found matching your query.');

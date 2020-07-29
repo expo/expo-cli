@@ -5,9 +5,9 @@ import path from 'path';
 import semver from 'semver';
 
 import ApiV2Client from './ApiV2';
-import { Cacher } from './tools/FsCache';
 import UserManager from './User';
 import XDLError from './XDLError';
+import { Cacher } from './tools/FsCache';
 
 export type SDKVersion = {
   androidExpoViewUrl?: string;
@@ -79,7 +79,7 @@ export async function setVersionsAsync(value: any) {
 // the versions endpoint, but in some cases we only want to list out released
 // versions
 export async function releasedSdkVersionsAsync(): Promise<SDKVersions> {
-  let sdkVersions = await sdkVersionsAsync();
+  const sdkVersions = await sdkVersionsAsync();
   return pickBy(sdkVersions, (data, _sdkVersionString) => !!data.releaseNoteUrl);
 }
 
@@ -194,12 +194,12 @@ export async function facebookReactNativeVersionsAsync(): Promise<string[]> {
 }
 
 export async function facebookReactNativeVersionToExpoVersionAsync(
-  facebookReactNativeVersion: string
+  outerFacebookReactNativeVersion: string
 ): Promise<string | null> {
-  if (!semver.valid(facebookReactNativeVersion)) {
+  if (!semver.valid(outerFacebookReactNativeVersion)) {
     throw new XDLError(
       'INVALID_VERSION',
-      `${facebookReactNativeVersion} is not a valid version. Must be in the form of x.y.z`
+      `${outerFacebookReactNativeVersion} is not a valid version. Must be in the form of x.y.z`
     );
   }
 
@@ -208,8 +208,8 @@ export async function facebookReactNativeVersionToExpoVersionAsync(
 
   for (const [version, { facebookReactNativeVersion }] of Object.entries(sdkVersions)) {
     if (
-      semver.major(facebookReactNativeVersion) === semver.major(facebookReactNativeVersion) &&
-      semver.minor(facebookReactNativeVersion) === semver.minor(facebookReactNativeVersion) &&
+      semver.major(outerFacebookReactNativeVersion) === semver.major(facebookReactNativeVersion) &&
+      semver.minor(outerFacebookReactNativeVersion) === semver.minor(facebookReactNativeVersion) &&
       (!currentSdkVersion || semver.gt(version, currentSdkVersion))
     ) {
       currentSdkVersion = version;

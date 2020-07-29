@@ -1,11 +1,12 @@
 import { resolve } from 'path';
+
+import { readAndroidManifestAsync } from '../Manifest';
 import {
   ON_CONFIGURATION_CHANGED,
   addOnConfigurationChangedMainActivity,
   getUserInterfaceStyle,
   setUiModeAndroidManifest,
 } from '../UserInterfaceStyle';
-import { readAndroidManifestAsync } from '../Manifest';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
@@ -59,7 +60,7 @@ describe('User interface style', () => {
   });
 
   it(`adds the require imports if needed`, () => {
-    let result = addOnConfigurationChangedMainActivity(
+    const result = addOnConfigurationChangedMainActivity(
       { userInterfaceStyle: 'light' },
       EXAMPLE_MAIN_ACTIVITY_BEFORE
     );
@@ -85,7 +86,7 @@ describe('User interface style', () => {
       { userInterfaceStyle: 'light' },
       androidManifestJson
     );
-    let mainActivity = androidManifestJson.manifest.application[0].activity.filter(
+    const mainActivity = androidManifestJson.manifest.application[0].activity.filter(
       e => e['$']['android:name'] === '.MainActivity'
     );
     expect(mainActivity[0]['$']['android:configChanges']).toMatch(

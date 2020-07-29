@@ -1,5 +1,6 @@
-import uniqBy from 'lodash/uniqBy';
 import { $$asyncIterator } from 'iterall';
+import uniqBy from 'lodash/uniqBy';
+
 import eventEmitterToAsyncIterator from '../asynciterators/eventEmitterToAsyncIterator';
 
 export const ISSUES_SOURCE = {

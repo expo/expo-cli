@@ -1,5 +1,6 @@
 const chalk = require('chalk');
 const fs = require('fs-extra');
+
 const { copyTemplateToProject, ensureMinProjectSetupAsync } = require('../');
 process.on('unhandledRejection', err => {
   throw err;

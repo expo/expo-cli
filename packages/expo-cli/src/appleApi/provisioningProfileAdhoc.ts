@@ -1,7 +1,7 @@
 import ora from 'ora';
 
-import { runAction, travelingFastlane } from './fastlane';
 import { AppleCtx } from './authenticate';
+import { runAction, travelingFastlane } from './fastlane';
 import { ProvisioningProfile } from './provisioningProfile';
 
 export class ProvisioningProfileAdhocManager {
@@ -50,6 +50,10 @@ export class ProvisioningProfileAdhocManager {
     delete adhocProvisioningProfile.provisioningProfileCreateTimestamp;
     delete adhocProvisioningProfile.provisioningProfileName;
 
-    return adhocProvisioningProfile;
+    return {
+      ...adhocProvisioningProfile,
+      teamId: this.ctx.team.id,
+      teamName: this.ctx.team.name,
+    };
   }
 }

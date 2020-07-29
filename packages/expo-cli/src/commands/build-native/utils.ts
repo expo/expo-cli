@@ -1,50 +1,14 @@
 import spawnAsync from '@expo/spawn-async';
-import { ApiV2 } from '@expo/xdl';
-import delayAsync from 'delay-async';
+import { UserManager } from '@expo/xdl';
+import fs from 'fs-extra';
 import ora from 'ora';
 
 import log from '../../log';
 import { printTableJsonArray } from '../utils/cli-table';
-import { BuildInfo } from './Builder';
+import * as UrlUtils from '../utils/url';
+import { BuildInfo } from './build';
 
-async function waitForBuildEnd(
-  client: ApiV2,
-  buildId: string,
-  { timeoutSec = 1800, intervalSec = 30 } = {}
-) {
-  log('Waiting for build to complete. You can press Ctrl+C to exit.');
-  const spinner = ora().start();
-  let time = new Date().getTime();
-  const endTime = time + timeoutSec * 1000;
-  while (time <= endTime) {
-    const buildInfo: BuildInfo = await client.getAsync(`builds/${buildId}`);
-    switch (buildInfo.status) {
-      case 'finished':
-        spinner.succeed('Build finished.');
-        return buildInfo.artifacts?.buildUrl ?? '';
-      case 'in-queue':
-        spinner.text = 'Build queued...';
-        break;
-      case 'in-progress':
-        spinner.text = 'Build in progress...';
-        break;
-      case 'errored':
-        spinner.fail('Build failed.');
-        throw new Error(`Standalone build failed!`);
-      default:
-        spinner.warn('Unknown status.');
-        throw new Error(`Unknown status: ${buildInfo} - aborting!`);
-    }
-    time = new Date().getTime();
-    await delayAsync(intervalSec * 1000);
-  }
-  spinner.warn('Timed out.');
-  throw new Error(
-    'Timeout reached! It is taking longer than expected to finish the build, aborting...'
-  );
-}
-
-async function makeProjectTarball(tarPath: string) {
+async function makeProjectTarballAsync(tarPath: string) {
   const spinner = ora('Making project tarball').start();
   const changes = (await spawnAsync('git', ['status', '-s'])).stdout;
   if (changes.length > 0) {
@@ -61,17 +25,76 @@ async function makeProjectTarball(tarPath: string) {
     'HEAD',
   ]);
   spinner.succeed('Project tarball created.');
+
+  const { size } = await fs.stat(tarPath);
+  return size;
 }
 
 function printBuildTable(builds: BuildInfo[]) {
-  const headers = ['platform', 'status', 'artifacts'];
-  const colWidths = [10, 15, 80];
-  const refactoredBuilds = builds.map(build => ({
-    ...build,
-    artifacts: build.artifacts?.buildUrl ?? 'not available',
-  }));
+  const headers = ['started', 'platform', 'status', 'artifact'];
+  const colWidths = [24, 10, 13, 41];
+
+  const refactoredBuilds = builds.map(build => {
+    const buildUrl = build.artifacts?.buildUrl;
+
+    return {
+      started: new Intl.DateTimeFormat('en', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(new Date(build.createdAt)),
+      platform: build.platform,
+      status: build.status.replace(/-/g, ' '),
+      artifact: buildUrl
+        ? // Trim the URL here, otherwise if printTableJsonArray trims it, it incorrectly removes the escape to end the link
+          // Which makes everything in the terminal a link after printing the table
+          log.terminalLink(buildUrl.length > 38 ? `${buildUrl.slice(0, 38)}…` : buildUrl, buildUrl)
+        : 'not available',
+    };
+  });
+
   const buildTable = printTableJsonArray(headers, refactoredBuilds, colWidths);
+
   console.log(buildTable);
 }
 
-export { waitForBuildEnd, makeProjectTarball, printBuildTable };
+async function printLogsUrls(
+  accountName: string,
+  builds: { platform: 'android' | 'ios'; buildId: string }[]
+): Promise<void> {
+  const user = await UserManager.ensureLoggedInAsync();
+  if (builds.length === 1) {
+    const { buildId } = builds[0];
+    const logsUrl = UrlUtils.constructBuildLogsUrl({
+      buildId,
+      username: accountName,
+      v2: true,
+    });
+    log(`Logs url: ${logsUrl}`);
+  } else {
+    builds.forEach(({ buildId, platform }) => {
+      const logsUrl = UrlUtils.constructBuildLogsUrl({
+        buildId,
+        username: user.username,
+        v2: true,
+      });
+      log(`Platform: ${platform}, Logs url: ${logsUrl}`);
+    });
+  }
+}
+
+async function printBuildResults(buildInfo: (BuildInfo | null)[]): Promise<void> {
+  if (buildInfo.length === 1) {
+    log(`Artifact url: ${buildInfo[0]?.artifacts?.buildUrl ?? ''}`);
+  } else {
+    buildInfo
+      .filter(i => i?.status === 'finished')
+      .forEach(build => {
+        log(`Platform: ${build?.platform}, Artifact url: ${build?.artifacts?.buildUrl ?? ''}`);
+      });
+  }
+}
+
+export { makeProjectTarballAsync, printBuildTable, printLogsUrls, printBuildResults };

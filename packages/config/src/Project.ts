@@ -1,4 +1,5 @@
 import JsonFile from '@expo/json-file';
+
 import { ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
 import { projectHasModule } from './Modules';

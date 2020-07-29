@@ -1,10 +1,9 @@
-import path from 'path';
-
 import spawnAsync from '@expo/spawn-async';
 import { ProjectSettings } from '@expo/xdl';
+import path from 'path';
 import temporary from 'tempy';
 
-import { EXPO_CLI, runAsync } from '../TestUtils';
+import { EXPO_CLI } from '../TestUtils';
 
 const tempDir = temporary.directory();
 const projectDir = path.join(tempDir, 'my-app');

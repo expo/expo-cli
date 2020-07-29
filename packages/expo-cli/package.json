@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "3.21.4",
+  "version": "3.22.4-alpha.1",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -43,8 +43,10 @@
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
     "@expo/babel-preset-cli": "0.2.16",
+    "@types/command-exists": "^1.2.0",
     "@types/dateformat": "^3.0.0",
     "@types/fs-extra": "^9.0.1",
+    "@types/hapi__joi": "^17.1.2",
     "@types/inquirer": "6.0.3",
     "@types/klaw-sync": "^6.0.0",
     "@types/md5-file": "^4.0.2",
@@ -56,26 +58,29 @@
     "@types/targz": "^1.0.0",
     "@types/untildify": "^3.0.0",
     "@types/wordwrap": "^1.0.0",
+    "pretty-bytes": "^5.3.0",
     "rimraf": "^3.0.2"
   },
   "dependencies": {
-    "@expo/build-tools": "0.1.8",
+    "@expo/build-tools": "^0.1.10",
     "@expo/bunyan": "3.0.2",
-    "@expo/config": "3.2.9",
-    "@expo/dev-tools": "0.13.16",
+    "@expo/config": "3.2.15",
+    "@expo/dev-tools": "0.13.28-alpha.1",
     "@expo/json-file": "8.2.21",
-    "@expo/package-manager": "0.0.27",
+    "@expo/package-manager": "0.0.29",
     "@expo/plist": "0.0.8",
     "@expo/results": "^1.0.0",
     "@expo/simple-spinner": "1.0.2",
     "@expo/spawn-async": "1.5.0",
-    "@expo/xdl": "57.9.13",
+    "@expo/xdl": "57.9.25-alpha.1",
+    "@hapi/joi": "^17.1.1",
     "axios": "0.19.0",
     "babel-runtime": "6.26.0",
     "base32.js": "0.1.0",
     "boxen": "4.1.0",
     "chalk": "^4.0.0",
     "cli-table3": "^0.6.0",
+    "command-exists": "^1.2.8",
     "commander": "2.17.1",
     "concat-stream": "1.6.2",
     "dateformat": "3.0.3",
@@ -101,7 +106,7 @@
     "progress": "2.0.3",
     "prompts": "^2.3.2",
     "qrcode-terminal": "0.11.0",
-    "react-dev-utils": "9.0.3",
+    "react-dev-utils": "~10.2.1",
     "semver": "5.5.0",
     "slash": "1.0.0",
     "targz": "^1.0.1",
@@ -113,8 +118,8 @@
     "wordwrap": "1.0.0"
   },
   "optionalDependencies": {
-    "@expo/traveling-fastlane-darwin": "1.14.0",
-    "@expo/traveling-fastlane-linux": "1.14.0"
+    "@expo/traveling-fastlane-darwin": "1.15.1",
+    "@expo/traveling-fastlane-linux": "1.15.1"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df"
 }

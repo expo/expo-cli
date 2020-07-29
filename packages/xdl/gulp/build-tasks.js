@@ -1,14 +1,13 @@
-const path = require('path');
+const packageJson = require('@expo/xdl/package.json');
+const axios = require('axios');
+const fse = require('fs-extra');
 const gulp = require('gulp');
 const babel = require('gulp-babel');
 const changed = require('gulp-changed');
-const axios = require('axios');
-const fse = require('fs-extra');
 const plumber = require('gulp-plumber');
 const sourcemaps = require('gulp-sourcemaps');
+const path = require('path');
 const rimraf = require('rimraf');
-
-const packageJson = require('@expo/xdl/package.json');
 
 const paths = {
   source: {
@@ -58,7 +57,7 @@ const tasks = {
       .then(async ({ data }) => {
         fse.writeJsonSync(path.join(paths.caches, 'versions.json'), data);
 
-        for (let version of Object.keys(data.sdkVersions)) {
+        for (const version of Object.keys(data.sdkVersions)) {
           const {
             data: { data: schema },
           } = await axios.get(`https://exp.host/--/api/v2/project/configuration/schema/${version}`);

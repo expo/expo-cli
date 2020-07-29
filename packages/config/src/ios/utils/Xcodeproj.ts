@@ -1,18 +1,21 @@
 // @ts-ignore
+import { sync as globSync } from 'glob';
+import path from 'path';
+// @ts-ignore
 import { project as Project } from 'xcode';
 // @ts-ignore
 import pbxFile from 'xcode/lib/pbxFile';
-import { sync as globSync } from 'glob';
-import path from 'path';
 
 export function getProjectName(projectRoot: string) {
   const sourceRoot = getSourceRoot(projectRoot);
-  const sourceRootParts = sourceRoot.split(path.sep);
-  return sourceRootParts[sourceRootParts.length - 1];
+  return path.basename(sourceRoot);
 }
 
 export function getSourceRoot(projectRoot: string) {
-  const paths = globSync(path.join(projectRoot, 'ios', '*', 'AppDelegate.m'));
+  const paths = globSync('ios/*/AppDelegate.m', {
+    absolute: true,
+    cwd: projectRoot,
+  });
   return path.dirname(paths[0]);
 }
 
@@ -20,13 +23,13 @@ export function getSourceRoot(projectRoot: string) {
 // higher level function exposed by the xcode library, but we should find out how to do
 // that and replace this with it
 export function addFileToGroup(filepath: string, groupName: string, project: Project) {
-  let file = new pbxFile(filepath);
+  const file = new pbxFile(filepath);
   file.uuid = project.generateUuid();
   file.fileRef = project.generateUuid();
   project.addToPbxFileReferenceSection(file);
   project.addToPbxBuildFileSection(file);
   project.addToPbxSourcesBuildPhase(file);
-  let group = project.pbxGroupByName(groupName);
+  const group = project.pbxGroupByName(groupName);
   if (!group) {
     throw Error(`Group by name ${groupName} not found!`);
   }
@@ -39,7 +42,7 @@ export function addFileToGroup(filepath: string, groupName: string, project: Pro
  * Get the pbxproj for the given path
  */
 export function getPbxproj(projectRoot: string) {
-  const pbxprojPaths = globSync(path.join(projectRoot, 'ios', '*', 'project.pbxproj'));
+  const pbxprojPaths = globSync('ios/*/project.pbxproj', { absolute: true, cwd: projectRoot });
   const [pbxprojPath, ...otherPbxprojPaths] = pbxprojPaths;
 
   if (pbxprojPaths.length > 1) {

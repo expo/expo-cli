@@ -1,8 +1,9 @@
 import { ExpoConfig } from '@expo/config';
-import { DefinePlugin as OriginalDefinePlugin } from 'webpack';
 import { boolish } from 'getenv';
-import { Environment, Mode } from '../types';
+import { DefinePlugin as OriginalDefinePlugin } from 'webpack';
+
 import { getConfig, getMode, getPublicPaths } from '../env';
+import { Environment, Mode } from '../types';
 
 function createEnvironmentConstants(appManifest: ExpoConfig) {
   return {

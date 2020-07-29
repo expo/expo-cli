@@ -2,10 +2,10 @@ import chalk from 'chalk';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
-import { runAction, travelingFastlane } from './fastlane';
-import { nonEmptyInput } from '../validators';
 import log from '../log';
 import prompt from '../prompt';
+import { nonEmptyInput } from '../validators';
+import { runAction, travelingFastlane } from './fastlane';
 
 const APPLE_IN_HOUSE_TEAM_TYPE = 'in-house';
 
@@ -55,6 +55,14 @@ export async function authenticate(options: Options = {}): Promise<AppleCtx> {
     const team = await _chooseTeam(teams, options.teamId);
     return { appleId, appleIdPassword, team, fastlaneSession };
   } catch (err) {
+    if (err.rawDump?.match(/Invalid username and password combination/)) {
+      log(chalk.red('Invalid username and password combination, try again.'));
+      const anotherPromptResult = await _promptForAppleId({
+        firstAttempt: false,
+        previousAppleId: appleId,
+      });
+      return authenticate({ ...options, ...anotherPromptResult });
+    }
     log(chalk.red('Authentication with Apple Developer Portal failed!'));
     throw err;
   }
@@ -85,20 +93,25 @@ function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCred
   };
 }
 
-async function _promptForAppleId(): Promise<AppleCredentials> {
-  const wrap = wordwrap(process.stdout.columns || 80);
-  log(
-    wrap(
-      'Please enter your Apple Developer Program account credentials. ' +
-        'These credentials are needed to manage certificates, keys and provisioning profiles ' +
-        `in your Apple Developer account.`
-    )
-  );
+async function _promptForAppleId({
+  firstAttempt = true,
+  previousAppleId,
+}: { firstAttempt?: boolean; previousAppleId?: string } = {}): Promise<AppleCredentials> {
+  if (firstAttempt) {
+    const wrap = wordwrap(process.stdout.columns || 80);
+    log(
+      wrap(
+        'Please enter your Apple Developer Program account credentials. ' +
+          'These credentials are needed to manage certificates, keys and provisioning profiles ' +
+          `in your Apple Developer account.`
+      )
+    );
 
-  // https://docs.expo.io/distribution/security/#apple-developer-account-credentials
-  const here = terminalLink('here', 'https://bit.ly/2VtGWhU');
-  log(wrap(chalk.bold(`The password is only used to authenticate with Apple and never stored`)));
-  log(wrap(chalk.grey(`Learn more ${here}`)));
+    // https://docs.expo.io/distribution/security/#apple-developer-account-credentials
+    const here = terminalLink('here', 'https://bit.ly/2VtGWhU');
+    log(wrap(chalk.bold(`The password is only used to authenticate with Apple and never stored`)));
+    log(wrap(chalk.grey(`Learn more ${here}`)));
+  }
 
   const { appleId: promptAppleId } = await prompt(
     {
@@ -106,6 +119,7 @@ async function _promptForAppleId(): Promise<AppleCredentials> {
       name: 'appleId',
       message: `Apple ID:`,
       validate: nonEmptyInput,
+      ...(previousAppleId && { default: previousAppleId }),
     },
     {
       nonInteractiveHelp: 'Pass your Apple ID using the --apple-id flag.',
@@ -115,7 +129,7 @@ async function _promptForAppleId(): Promise<AppleCredentials> {
     {
       type: 'password',
       name: 'appleIdPassword',
-      message: answer => `Password (for ${promptAppleId}):`,
+      message: () => `Password (for ${promptAppleId}):`,
       validate: nonEmptyInput,
     },
     {

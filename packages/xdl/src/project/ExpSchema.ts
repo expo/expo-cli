@@ -1,9 +1,8 @@
-import path from 'path';
-import { JSONObject } from '@expo/json-file';
-
 import { getConfig } from '@expo/config';
+import { JSONObject } from '@expo/json-file';
 import Schemer from '@expo/schemer';
 import fs from 'fs';
+import path from 'path';
 
 import ApiV2 from '../ApiV2';
 import { Cacher } from '../tools/FsCache';
@@ -11,8 +10,8 @@ import { Cacher } from '../tools/FsCache';
 export type Schema = any;
 export type AssetSchema = { schema: Schema; fieldPath: string };
 
-let _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
-let _schemaCaches: { [version: string]: Cacher<JSONObject> } = {};
+const _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
+const _schemaCaches: { [version: string]: Cacher<JSONObject> } = {};
 
 export async function validatorFromProjectRoot(projectRoot: string): Promise<Schemer> {
   const { exp } = getConfig(projectRoot);
@@ -23,7 +22,7 @@ export async function validatorFromProjectRoot(projectRoot: string): Promise<Sch
 }
 
 export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
-  let json = await _getSchemaJSONAsync(sdkVersion);
+  const json = await _getSchemaJSONAsync(sdkVersion);
   return json.schema;
 }
 

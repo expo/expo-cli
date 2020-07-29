@@ -5,22 +5,21 @@ Object {
   "bail": false,
   "context": "packages/webpack-config/e2e/basic",
   "devServer": Object {
+    "after": [Function],
     "before": [Function],
     "clientLogLevel": "none",
     "compress": true,
     "contentBase": "packages/webpack-config/web-default",
+    "contentBasePublicPath": "/",
     "disableHostCheck": true,
-    "headers": Object {
-      "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-      "Access-Control-Allow-Origin": "*",
-    },
     "historyApiFallback": Object {
       "disableDotRule": true,
+      "index": "/",
     },
     "host": "0.0.0.0",
     "hot": true,
     "https": false,
+    "injectClient": false,
     "inline": false,
     "mimeTypes": Object {
       "force": true,
@@ -35,6 +34,10 @@ Object {
     "public": undefined,
     "publicPath": "/",
     "quiet": true,
+    "sockHost": undefined,
+    "sockPath": undefined,
+    "sockPort": undefined,
+    "transportMode": "ws",
     "watchContentBase": true,
   },
   "devtool": "cheap-module-source-map",
@@ -61,14 +64,15 @@ Object {
             "exclude": "packages/webpack-config/web-default",
             "test": /\\\\\\.html\\$/,
             "use": Array [
-              "node_modules/html-loader/index.js",
+              "node_modules/html-loader/dist/cjs.js",
             ],
           },
           Object {
             "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
             "use": Object {
-              "loader": "node_modules/url-loader/dist/cjs.js",
+              "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
               "options": Object {
+                "esModule": false,
                 "limit": 1000,
                 "name": "static/media/[name].[hash:8].[ext]",
               },
@@ -114,8 +118,9 @@ Object {
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
               Object {
-                "loader": "node_modules/url-loader/dist/cjs.js",
+                "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
                 "options": Object {
+                  "esModule": false,
                   "limit": 50000,
                   "name": "./fonts/[name].[ext]",
                 },
@@ -125,7 +130,7 @@ Object {
           Object {
             "test": /\\\\\\.\\(css\\)\\$/,
             "use": Array [
-              "node_modules/style-loader/index.js",
+              "node_modules/style-loader/dist/cjs.js",
               "node_modules/css-loader/dist/cjs.js",
             ],
           },
@@ -137,6 +142,7 @@ Object {
             ],
             "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
             "options": Object {
+              "esModule": false,
               "name": "static/media/[name].[hash:8].[ext]",
             },
           },
@@ -234,14 +240,15 @@ Object {
             "exclude": "packages/webpack-config/web-default",
             "test": /\\\\\\.html\\$/,
             "use": Array [
-              "node_modules/html-loader/index.js",
+              "node_modules/html-loader/dist/cjs.js",
             ],
           },
           Object {
             "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
             "use": Object {
-              "loader": "node_modules/url-loader/dist/cjs.js",
+              "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
               "options": Object {
+                "esModule": false,
                 "limit": 1000,
                 "name": "static/media/[name].[hash:8].[ext]",
               },
@@ -287,8 +294,9 @@ Object {
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
               Object {
-                "loader": "node_modules/url-loader/dist/cjs.js",
+                "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
                 "options": Object {
+                  "esModule": false,
                   "limit": 50000,
                   "name": "./fonts/[name].[ext]",
                 },
@@ -298,7 +306,7 @@ Object {
           Object {
             "test": /\\\\\\.\\(css\\)\\$/,
             "use": Array [
-              "node_modules/style-loader/index.js",
+              "node_modules/style-loader/dist/cjs.js",
               "node_modules/css-loader/dist/cjs.js",
             ],
           },
@@ -310,6 +318,7 @@ Object {
             ],
             "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
             "options": Object {
+              "esModule": false,
               "name": "static/media/[name].[hash:8].[ext]",
             },
           },
@@ -325,9 +334,8 @@ Object {
         "options": Object {
           "cache": true,
           "cacheKeys": [Function],
-          "chunkFilter": [Function],
           "exclude": undefined,
-          "extractComments": false,
+          "extractComments": true,
           "include": undefined,
           "minify": undefined,
           "parallel": true,
@@ -466,22 +474,21 @@ Object {
   "bail": false,
   "context": "packages/webpack-config/src",
   "devServer": Object {
+    "after": [Function],
     "before": [Function],
     "clientLogLevel": "none",
     "compress": true,
     "contentBase": "packages/webpack-config/web-default",
+    "contentBasePublicPath": "/",
     "disableHostCheck": true,
-    "headers": Object {
-      "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-      "Access-Control-Allow-Origin": "*",
-    },
     "historyApiFallback": Object {
       "disableDotRule": true,
+      "index": "/",
     },
     "host": "0.0.0.0",
     "hot": true,
     "https": false,
+    "injectClient": false,
     "inline": true,
     "mimeTypes": undefined,
     "overlay": false,
@@ -489,6 +496,10 @@ Object {
     "public": undefined,
     "publicPath": "/",
     "quiet": true,
+    "sockHost": undefined,
+    "sockPath": undefined,
+    "sockPort": undefined,
+    "transportMode": "ws",
     "watchContentBase": true,
   },
   "devtool": "cheap-module-source-map",
@@ -507,14 +518,15 @@ Object {
             "exclude": "packages/webpack-config/web-default",
             "test": /\\\\\\.html\\$/,
             "use": Array [
-              "node_modules/html-loader/index.js",
+              "node_modules/html-loader/dist/cjs.js",
             ],
           },
           Object {
             "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
             "use": Object {
-              "loader": "node_modules/url-loader/dist/cjs.js",
+              "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
               "options": Object {
+                "esModule": false,
                 "limit": 1000,
                 "name": "static/media/[name].[hash:8].[ext]",
               },
@@ -560,8 +572,9 @@ Object {
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
               Object {
-                "loader": "node_modules/url-loader/dist/cjs.js",
+                "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
                 "options": Object {
+                  "esModule": false,
                   "limit": 50000,
                   "name": "./fonts/[name].[ext]",
                 },
@@ -571,7 +584,7 @@ Object {
           Object {
             "test": /\\\\\\.\\(css\\)\\$/,
             "use": Array [
-              "node_modules/style-loader/index.js",
+              "node_modules/style-loader/dist/cjs.js",
               "node_modules/css-loader/dist/cjs.js",
             ],
           },
@@ -583,6 +596,7 @@ Object {
             ],
             "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
             "options": Object {
+              "esModule": false,
               "name": "static/media/[name].[hash:8].[ext]",
             },
           },
@@ -692,14 +706,15 @@ Object {
             "exclude": "packages/webpack-config/web-default",
             "test": /\\\\\\.html\\$/,
             "use": Array [
-              "node_modules/html-loader/index.js",
+              "node_modules/html-loader/dist/cjs.js",
             ],
           },
           Object {
             "test": /\\\\\\.\\(gif\\|jpe\\?g\\|png\\|svg\\)\\$/,
             "use": Object {
-              "loader": "node_modules/url-loader/dist/cjs.js",
+              "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
               "options": Object {
+                "esModule": false,
                 "limit": 1000,
                 "name": "static/media/[name].[hash:8].[ext]",
               },
@@ -745,8 +760,9 @@ Object {
             "test": /\\\\\\.\\(woff2\\?\\|eot\\|ttf\\|otf\\)\\$/,
             "use": Array [
               Object {
-                "loader": "node_modules/url-loader/dist/cjs.js",
+                "loader": "packages/webpack-config/node_modules/url-loader/dist/cjs.js",
                 "options": Object {
+                  "esModule": false,
                   "limit": 50000,
                   "name": "./fonts/[name].[ext]",
                 },
@@ -756,7 +772,7 @@ Object {
           Object {
             "test": /\\\\\\.\\(css\\)\\$/,
             "use": Array [
-              "node_modules/style-loader/index.js",
+              "node_modules/style-loader/dist/cjs.js",
               "node_modules/css-loader/dist/cjs.js",
             ],
           },
@@ -768,6 +784,7 @@ Object {
             ],
             "loader": "packages/webpack-config/node_modules/file-loader/dist/cjs.js",
             "options": Object {
+              "esModule": false,
               "name": "static/media/[name].[hash:8].[ext]",
             },
           },
@@ -793,9 +810,8 @@ Object {
         "options": Object {
           "cache": true,
           "cacheKeys": [Function],
-          "chunkFilter": [Function],
           "exclude": undefined,
-          "extractComments": false,
+          "extractComments": true,
           "include": undefined,
           "minify": undefined,
           "parallel": true,

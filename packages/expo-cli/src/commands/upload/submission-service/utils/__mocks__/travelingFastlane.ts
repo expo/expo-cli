@@ -1,6 +1,6 @@
 async function _runTravelingFastlaneAsync(
   command: string,
-  args: ReadonlyArray<string>,
+  args: readonly string[],
   envs?: Record<string, string>
 ): Promise<{ [key: string]: any }> {
   return {};

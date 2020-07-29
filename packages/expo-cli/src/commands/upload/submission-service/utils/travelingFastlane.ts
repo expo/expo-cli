@@ -2,7 +2,7 @@ import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
 
 async function runTravelingFastlaneAsync(
   command: string,
-  args: ReadonlyArray<string>,
+  args: readonly string[],
   envs?: Record<string, string>
 ): Promise<{ [key: string]: any }> {
   const spawnOptions: SpawnOptions = {

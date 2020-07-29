@@ -18,7 +18,7 @@ export default function normalizePaths(
   } else if (Array.isArray(initial)) {
     return initial.map(value => normalizePaths(value, transformString));
   } else if (typeof initial === 'object') {
-    let result: { [key: string]: any } = {};
+    const result: { [key: string]: any } = {};
     for (const prop of Object.keys(initial)) {
       result[prop] = normalizePaths(initial[prop], transformString);
     }

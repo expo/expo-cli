@@ -1,8 +1,8 @@
 // @flow
 // adapted from 'graphql-subscriptions' package
 
-import { $$asyncIterator } from 'iterall';
 import { EventEmitter } from 'events';
+import { $$asyncIterator } from 'iterall';
 
 export default function eventEmitterToAsyncIterator<T>(
   eventEmitter: EventEmitter,

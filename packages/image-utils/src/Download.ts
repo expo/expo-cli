@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
+import Jimp from 'jimp';
 import fetch from 'node-fetch';
 import path from 'path';
 import stream from 'stream';
 import temporary from 'tempy';
 import util from 'util';
-import Jimp from 'jimp';
 
 // cache downloaded images into memory
 const cacheDownloadedKeys: Record<string, string> = {};

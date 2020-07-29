@@ -1,8 +1,7 @@
-import http from 'http';
-
-import bodyParser from 'body-parser';
 import bunyan from '@expo/bunyan';
+import bodyParser from 'body-parser';
 import connect from 'connect';
+import http from 'http';
 import fetch from 'node-fetch';
 
 import clientLogsMiddleware from '../clientLogsMiddleware';

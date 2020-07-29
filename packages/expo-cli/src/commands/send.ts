@@ -1,29 +1,26 @@
+import { UrlUtils, UserSettings } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { UrlUtils, UserSettings } from '@expo/xdl';
 
 import askUser from '../askUser';
 import log from '../log';
 import sendTo from '../sendTo';
 import urlOpts, { URLOptions } from '../urlOpts';
 
-async function action(projectDir: string, options: { sendTo?: string } & URLOptions) {
+type Options = URLOptions & { sendTo?: string };
+
+async function action(projectDir: string, options: Options) {
   await urlOpts.optsAsync(projectDir, options);
 
-  let url = await UrlUtils.constructManifestUrlAsync(projectDir);
+  const url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
   log('Your project manifest URL is\n\n' + chalk.underline(url) + '\n');
 
-  let shouldQuit = false;
   if (await urlOpts.handleMobileOptsAsync(projectDir, options)) {
-    shouldQuit = true;
-  }
-
-  if (shouldQuit) {
     return;
   }
 
-  var recipient;
+  let recipient;
   if (typeof options.sendTo !== 'boolean') {
     recipient = options.sendTo;
   } else {
@@ -39,16 +36,13 @@ async function action(projectDir: string, options: { sendTo?: string } & URLOpti
   } else {
     log.gray("(Not sending anything because you didn't specify a recipient.)");
   }
-
-  process.exit();
 }
 
 export default function (program: Command) {
   program
     .command('send [project-dir]')
-    .description('Sends a link to your project to an email address')
-    //.help('You must have the server running for this command to work')
-    .option('-s, --send-to  [dest]', 'Specifies the email address to send this URL to')
+    .description(`Send the project's url to an email address`)
+    .option('-s, --send-to  [dest]', 'Email address to send the URL to')
     .urlOpts()
     .asyncActionProjectDir(action);
 }

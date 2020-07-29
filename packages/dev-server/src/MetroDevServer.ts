@@ -1,11 +1,11 @@
-import { getConfig, projectHasModule } from '@expo/config';
-import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
 import Log from '@expo/bunyan';
+import { getConfig, projectHasModule } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
+import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
 import bodyParser from 'body-parser';
 
-import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 import LogReporter from './LogReporter';
+import clientLogsMiddleware from './middleware/clientLogsMiddleware';
 
 export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & { logger: Log };
 

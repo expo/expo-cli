@@ -15,11 +15,11 @@ export async function setAndroidIntentFilters(config: ExpoConfig, manifestDocume
     return manifestDocument;
   }
 
-  let intentFiltersXML = renderIntentFilters(intentFilters).join('');
+  const intentFiltersXML = renderIntentFilters(intentFilters).join('');
   const parser = new Parser();
   const intentFiltersJSON = await parser.parseStringPromise(intentFiltersXML);
 
-  let mainActivity = manifestDocument.manifest.application[0].activity.filter(
+  const mainActivity = manifestDocument.manifest.application[0].activity.filter(
     (e: any) => e['$']['android:name'] === '.MainActivity'
   );
 

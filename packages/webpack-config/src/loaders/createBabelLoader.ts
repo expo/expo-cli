@@ -3,9 +3,9 @@ import { projectHasModule } from '@expo/config';
 import { getPossibleProjectRoot } from '@expo/config/paths';
 import chalk from 'chalk';
 import fs from 'fs-extra';
+import { boolish } from 'getenv';
 import path from 'path';
 import { Rule } from 'webpack';
-import { boolish } from 'getenv';
 
 import { getConfig, getMode, getPaths } from '../env';
 import { Environment, Mode } from '../types';

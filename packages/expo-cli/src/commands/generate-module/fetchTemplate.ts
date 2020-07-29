@@ -1,8 +1,8 @@
-import path from 'path';
+import { Logger } from '@expo/xdl';
+import chalk from 'chalk';
 import fse from 'fs-extra';
 import pacote from 'pacote';
-import chalk from 'chalk';
-import { Logger } from '@expo/xdl';
+import path from 'path';
 
 const DEFAULT_TEMPLATE = 'expo-module-template@latest';
 

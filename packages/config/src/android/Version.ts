@@ -12,12 +12,12 @@ export function setVersionName(
   buildGradle: string,
   versionToReplace = DEFAULT_VERSION_NAME
 ) {
-  let versionName = getVersionName(config);
+  const versionName = getVersionName(config);
   if (versionName === null) {
     return buildGradle;
   }
 
-  let pattern = new RegExp(`versionName "${versionToReplace}"`);
+  const pattern = new RegExp(`versionName "${versionToReplace}"`);
   return buildGradle.replace(pattern, `versionName "${versionName}"`);
 }
 
@@ -30,11 +30,11 @@ export function setVersionCode(
   buildGradle: string,
   versionCodeToReplace = DEFAULT_VERSION_CODE
 ) {
-  let versionCode = getVersionCode(config);
+  const versionCode = getVersionCode(config);
   if (versionCode === null) {
     return buildGradle;
   }
 
-  let pattern = new RegExp(`versionCode ${versionCodeToReplace}`);
+  const pattern = new RegExp(`versionCode ${versionCodeToReplace}`);
   return buildGradle.replace(pattern, `versionCode ${versionCode}`);
 }

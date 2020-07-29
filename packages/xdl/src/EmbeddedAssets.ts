@@ -3,12 +3,12 @@ import fs from 'fs-extra';
 import path from 'path';
 import semver from 'semver';
 
+import logger from './Logger';
 import * as ExponentTools from './detach/ExponentTools';
 import * as IosPlist from './detach/IosPlist';
 // @ts-ignore IosWorkspace not yet converted to TypeScript
 import * as IosWorkspace from './detach/IosWorkspace';
 import StandaloneContext from './detach/StandaloneContext';
-import logger from './Logger';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 
 export type EmbeddedAssetsConfiguration = {
@@ -243,7 +243,7 @@ async function _maybeConfigureExpoKitEmbeddedAssetsAsync(config: EmbeddedAssetsC
   }
 
   // Android ExpoKit
-  let constantsPath = path.join(
+  const constantsPath = path.join(
     projectRoot,
     'android',
     'app',
@@ -314,7 +314,7 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
   }
 
   // Android expo-updates
-  let androidManifestXmlPath = path.join(
+  const androidManifestXmlPath = path.join(
     projectRoot,
     'android',
     'app',
@@ -322,16 +322,16 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
     'main',
     'AndroidManifest.xml'
   );
-  let androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
-  let expoUpdateUrlRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_UPDATE_URL"[^>]+\/>/;
-  let expoSdkVersionRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_SDK_VERSION"[^>]+\/>/;
-  let expoReleaseChannelRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_RELEASE_CHANNEL"[^>]+\/>/;
+  const androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
+  const expoUpdateUrlRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_UPDATE_URL"[^>]+\/>/;
+  const expoSdkVersionRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_SDK_VERSION"[^>]+\/>/;
+  const expoReleaseChannelRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_RELEASE_CHANNEL"[^>]+\/>/;
 
-  let expoUpdateUrlTag = `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${androidManifestUrl}" />`;
-  let expoSdkVersionTag = `<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="${exp.sdkVersion}" />`;
-  let expoReleaseChannelTag = `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${releaseChannel}" />`;
+  const expoUpdateUrlTag = `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${androidManifestUrl}" />`;
+  const expoSdkVersionTag = `<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="${exp.sdkVersion}" />`;
+  const expoReleaseChannelTag = `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${releaseChannel}" />`;
 
-  let tagsToInsert = [];
+  const tagsToInsert = [];
   if (androidManifestXmlFile.search(expoUpdateUrlRegex) < 0) {
     tagsToInsert.push(expoUpdateUrlTag);
   }
@@ -393,7 +393,7 @@ function sanitizedName(name: string) {
 export function getIOSPaths(projectRoot: string) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
-  let projectName = exp.name;
+  const projectName = exp.name;
   if (!projectName) {
     throw new Error('Your project needs a name in app.json/app.config.js.');
   }

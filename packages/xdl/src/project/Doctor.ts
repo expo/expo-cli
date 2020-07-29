@@ -37,14 +37,14 @@ function _isNpmVersionWithinRanges(npmVersion: string, ranges: string[]) {
 async function _checkNpmVersionAsync(projectRoot: string) {
   try {
     try {
-      let yarnVersionResponse = await spawnAsync('yarnpkg', ['--version']);
+      const yarnVersionResponse = await spawnAsync('yarnpkg', ['--version']);
       if (yarnVersionResponse.status === 0) {
         return NO_ISSUES;
       }
     } catch (e) {}
 
-    let npmVersionResponse = await spawnAsync('npm', ['--version']);
-    let npmVersion = npmVersionResponse.stdout.trim();
+    const npmVersionResponse = await spawnAsync('npm', ['--version']);
+    const npmVersion = npmVersionResponse.stdout.trim();
 
     if (
       semver.lt(npmVersion, MIN_NPM_VERSION) ||
@@ -87,7 +87,7 @@ async function _checkWatchmanVersionAsync(projectRoot: string) {
     return;
   }
 
-  let watchmanVersion = await Watchman.unblockAndGetVersionAsync(projectRoot);
+  const watchmanVersion = await Watchman.unblockAndGetVersionAsync(projectRoot);
 
   // If we can't get the watchman version, `getVersionAsync` will return `null`
   if (!watchmanVersion) {
@@ -118,7 +118,7 @@ export async function validateWithSchema(
 ): Promise<{ schemaErrorMessage: string | undefined; assetsErrorMessage: string | undefined }> {
   let schemaErrorMessage;
   let assetsErrorMessage;
-  let validator = new Schemer(schema, { rootDir: projectRoot });
+  const validator = new Schemer(schema, { rootDir: projectRoot });
 
   // Validate the schema itself
   try {
@@ -176,7 +176,7 @@ async function _validateExpJsonAsync(
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-problem-checking-watchman-version');
 
-  let sdkVersion = exp.sdkVersion;
+  const sdkVersion = exp.sdkVersion;
   const configName = configFilename(projectRoot);
 
   // Warn if sdkVersion is UNVERSIONED
@@ -190,7 +190,7 @@ async function _validateExpJsonAsync(
     return ERROR;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
-  let sdkVersions = await Versions.sdkVersionsAsync();
+  const sdkVersions = await Versions.sdkVersionsAsync();
   if (!sdkVersions) {
     ProjectUtils.logError(
       projectRoot,
@@ -216,8 +216,8 @@ async function _validateExpJsonAsync(
   // Skip validation if the correct token is set in env
   if (sdkVersion !== 'UNVERSIONED') {
     try {
-      let schema = await ExpSchema.getSchemaAsync(sdkVersion);
-      let { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
+      const schema = await ExpSchema.getSchemaAsync(sdkVersion);
+      const { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
         projectRoot,
         exp,
         schema,
@@ -323,8 +323,8 @@ async function _validateReactNativeVersionAsync(
     ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
 
     try {
-      let reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
-      let sdkVersionObject = sdkVersions[sdkVersion];
+      const reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
+      const sdkVersionObject = sdkVersions[sdkVersion];
 
       // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
       if (
@@ -358,7 +358,7 @@ async function _validateReactNativeVersionAsync(
 
 async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
   // Just need `nodeModulesPath` so it doesn't matter if expo is installed or the sdkVersion is defined.
-  let { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   let nodeModulesPath = projectRoot;
   if (exp.nodeModulesPath) {
     nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
@@ -366,7 +366,7 @@ async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
 
   // Check to make sure node_modules exists at all
   try {
-    let result = fs.statSync(path.join(nodeModulesPath, 'node_modules'));
+    const result = fs.statSync(path.join(nodeModulesPath, 'node_modules'));
     if (!result.isDirectory()) {
       ProjectUtils.logError(
         projectRoot,
@@ -452,7 +452,7 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
   status = Math.max(status, expStatus);
 
   if (exp && !exp.ignoreNodeModulesValidation) {
-    let nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
+    const nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
     if (nodeModulesStatus > status) {
       return nodeModulesStatus;
     }
@@ -481,8 +481,8 @@ export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStat
       return EXPO_SDK_NOT_INSTALLED;
     }
 
-    let mainFilePath = path.join(projectRoot, pkg.main);
-    let mainFile = await fs.readFile(mainFilePath, 'utf8');
+    const mainFilePath = path.join(projectRoot, pkg.main);
+    const mainFile = await fs.readFile(mainFilePath, 'utf8');
 
     // TODO: support separate .ios.js and .android.js files
     if (mainFile.includes(`from 'expo'`) || mainFile.includes(`require('expo')`)) {

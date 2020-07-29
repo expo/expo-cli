@@ -1,5 +1,5 @@
-import { graphiqlExpress } from 'apollo-server-express';
 import { Project } from '@expo/xdl';
+import { graphiqlExpress } from 'apollo-server-express';
 import express from 'express';
 import http from 'http';
 import next from 'next';
@@ -42,7 +42,7 @@ async function run(): Promise<void> {
     startGraphQLServer(projectDir, httpServer, authenticationContext);
     console.log('Starting project...');
     await Project.startAsync(projectDir);
-    let url = `http://localhost:${PORT}`;
+    const url = `http://localhost:${PORT}`;
     console.log(`Development server running at ${url}`);
     openBrowser(url);
   } catch (error) {

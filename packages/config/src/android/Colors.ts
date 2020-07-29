@@ -1,6 +1,7 @@
-import path from 'path';
 import fs from 'fs-extra';
+import path from 'path';
 import { Builder, Parser } from 'xml2js';
+
 import { Document } from './Manifest';
 import { XMLItem } from './Styles';
 
@@ -36,7 +37,7 @@ export async function writeColorsXMLAsync(colorsPath: string, colorsContent: any
 
 export function setColorItem(itemToAdd: XMLItem[], colorFileContentsJSON: Document) {
   if (colorFileContentsJSON.resources.color) {
-    let colorNameExists = colorFileContentsJSON.resources.color.filter(
+    const colorNameExists = colorFileContentsJSON.resources.color.filter(
       (e: XMLItem) => e['$'].name === itemToAdd[0]['$'].name
     )[0];
     if (colorNameExists) {

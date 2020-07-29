@@ -61,6 +61,30 @@ describe('getDynamicConfig', () => {
       ).exportedObjectType
     ).toBe('object');
   });
+
+  describe('process.cwd in a child process', () => {
+    const originalCwd = process.cwd();
+    const projectRoot = join(__dirname, 'fixtures/behavior/dynamic-cwd');
+
+    beforeEach(() => {
+      process.chdir(__dirname);
+    });
+
+    afterEach(() => {
+      process.chdir(originalCwd);
+    });
+
+    it('process.cwd in read-config script is not equal to the project root', () => {
+      const { config } = getDynamicConfig(join(projectRoot, 'app.config.ts'), {});
+      expect(config.processCwd).toBe(__dirname);
+    });
+    it('process.cwd in read-config script is equal to the project root', () => {
+      const { config } = getDynamicConfig(join(projectRoot, 'app.config.ts'), {
+        projectRoot,
+      });
+      expect(config.processCwd).toBe(projectRoot);
+    });
+  });
 });
 
 describe('getStaticConfig', () => {

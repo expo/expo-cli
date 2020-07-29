@@ -1,3 +1,11 @@
+import { ExpoConfig } from '../Config.types';
+import { addWarningAndroid } from '../WarningAggregator';
+import {
+  getProjectColorsXMLPathAsync,
+  readColorsXMLAsync,
+  setColorItem,
+  writeColorsXMLAsync,
+} from './Colors';
 import {
   XMLItem,
   getProjectStylesXMLPathAsync,
@@ -5,14 +13,6 @@ import {
   setStylesItem,
   writeStylesXMLAsync,
 } from './Styles';
-import {
-  getProjectColorsXMLPathAsync,
-  readColorsXMLAsync,
-  setColorItem,
-  writeColorsXMLAsync,
-} from './Colors';
-import { ExpoConfig } from '../Config.types';
-import { addWarningAndroid } from '../WarningAggregator';
 
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 const WINDOW_LIGHT_NAVIGATION_BAR = 'android:windowLightNavigationBar';
@@ -51,16 +51,16 @@ export async function setNavigationBarConfig(config: ExpoConfig, projectDirector
     );
   }
   if (hexString) {
-    let colorItemToAdd: XMLItem[] = [{ _: hexString, $: { name: NAVIGATION_BAR_COLOR } }];
+    const colorItemToAdd: XMLItem[] = [{ _: hexString, $: { name: NAVIGATION_BAR_COLOR } }];
     colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
 
-    let styleItemToAdd: XMLItem[] = [
+    const styleItemToAdd: XMLItem[] = [
       { _: `@color/${NAVIGATION_BAR_COLOR}`, $: { name: `android:${NAVIGATION_BAR_COLOR}` } },
     ];
     stylesJSON = setStylesItem(styleItemToAdd, stylesJSON);
   }
   if (barStyle === 'dark-content') {
-    let navigationBarStyleItem: XMLItem[] = [
+    const navigationBarStyleItem: XMLItem[] = [
       { _: 'true', $: { name: WINDOW_LIGHT_NAVIGATION_BAR } },
     ];
     stylesJSON = setStylesItem(navigationBarStyleItem, stylesJSON);

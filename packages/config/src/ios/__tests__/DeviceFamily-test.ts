@@ -1,9 +1,4 @@
-import {
-  getDeviceFamilies,
-  getIsTabletOnly,
-  getSupportsTablet,
-  setDeviceFamily,
-} from '../DeviceFamily';
+import { getDeviceFamilies, getIsTabletOnly, getSupportsTablet } from '../DeviceFamily';
 
 const TABLET_AND_PHONE_SUPPORTED = [1, 2];
 const ONLY_PHONE_SUPPORTED = [1];

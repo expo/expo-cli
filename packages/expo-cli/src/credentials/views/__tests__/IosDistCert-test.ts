@@ -1,9 +1,11 @@
-import { CreateIosDist, CreateOrReuseDistributionCert } from '../IosDistCert';
 import {
   getCtxMock,
+  jester,
+  testAppLookupParams,
   testDistCertsFromApple,
   testIosDistCredential,
-} from '../../test-fixtures/mocks';
+} from '../../test-fixtures/mocks-ios';
+import { CreateIosDist, CreateOrReuseDistributionCert } from '../IosDistCert';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope
 const mockDistCertManagerCreate = jest.fn(() => testIosDistCredential);
@@ -38,10 +40,7 @@ describe('IosDistCert', () => {
   describe('CreateIosDist', () => {
     it('Basic Case - Create a Dist Cert and save it to Expo Servers', async () => {
       const ctx = getCtxMock();
-      const cliOptions = {
-        nonInteractive: true,
-      };
-      const createIosDist = new CreateIosDist(cliOptions);
+      const createIosDist = new CreateIosDist(jester.username, true);
       await createIosDist.open(ctx as any);
 
       // expect dist cert is created
@@ -54,12 +53,7 @@ describe('IosDistCert', () => {
   describe('CreateOrReuseDistributionCert', () => {
     it('Reuse Autosuggested Dist Cert ', async () => {
       const ctx = getCtxMock();
-      const distCertOptions = {
-        experienceName: 'testApp',
-        bundleIdentifier: 'test.com.app',
-        nonInteractive: true,
-      };
-      const createOrReuseIosDist = new CreateOrReuseDistributionCert(distCertOptions);
+      const createOrReuseIosDist = new CreateOrReuseDistributionCert(testAppLookupParams, true);
       await createOrReuseIosDist.open(ctx as any);
 
       // expect suggested dist cert is used
@@ -77,12 +71,7 @@ describe('IosDistCert', () => {
 
       const ctx = getCtxMock();
 
-      const distCertOptions = {
-        experienceName: 'testApp',
-        bundleIdentifier: 'test.com.app',
-        nonInteractive: true,
-      };
-      const createOrReuseIosDist = new CreateOrReuseDistributionCert(distCertOptions);
+      const createOrReuseIosDist = new CreateOrReuseDistributionCert(testAppLookupParams, true);
       await createOrReuseIosDist.open(ctx as any);
 
       // expect dist cert is used

@@ -18,7 +18,7 @@ export default function (program: Command) {
   program
     .command('fetch:android:keystore [project-dir]')
     .description(
-      "Fetch this project's Android keystore. Writes keystore to PROJECT_DIR/PROJECT_NAME.jks and prints passwords to stdout."
+      "Fetch this project's Android Keystore. Writes Keystore to PROJECT_DIR/PROJECT_NAME.jks and prints passwords to stdout."
     )
     .asyncActionProjectDir(fetchAndroidKeystoreAsync);
 

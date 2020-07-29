@@ -8,11 +8,22 @@ export function getExpoDomainUrl(): string {
   }
 }
 
-export function constructBuildLogsUrl(buildId: string, username?: string): string {
-  if (username) {
+export function constructBuildLogsUrl({
+  buildId,
+  username,
+  v2 = false,
+}: {
+  buildId: string;
+  username?: string;
+  v2?: boolean;
+}): string {
+  if (v2) {
+    return `${getExpoDomainUrl()}/dashboard/${username}/builds/v2/${buildId}`;
+  } else if (username) {
     return `${getExpoDomainUrl()}/dashboard/${username}/builds/${buildId}`;
+  } else {
+    return `${getExpoDomainUrl()}/builds/${buildId}`;
   }
-  return `${getExpoDomainUrl()}/builds/${buildId}`;
 }
 
 export function constructTurtleStatusUrl(): string {

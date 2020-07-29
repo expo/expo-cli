@@ -1,8 +1,7 @@
+import * as Constants from 'app/common/constants';
+import findLastIndex from 'lodash/findLastIndex';
 import React from 'react';
 import { css, cx } from 'react-emotion';
-import findLastIndex from 'lodash/findLastIndex';
-
-import * as Constants from 'app/common/constants';
 
 const STYLES = css`
   font-family: ${Constants.fontFamilies.mono};
@@ -31,7 +30,7 @@ export default class StackTrace extends React.Component {
 
   render() {
     const level = this.props.level;
-    let lines = this.props.stack.split(/\r?\n/);
+    const lines = this.props.stack.split(/\r?\n/);
     if (/^node_modules\/react-native\/Libraries\/ReactNative\/YellowBox\.js/.test(lines[0])) {
       lines.shift();
     }

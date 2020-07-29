@@ -1,7 +1,7 @@
-import path from 'path';
-
 import { getPossibleProjectRoot } from '@expo/config/paths';
+import path from 'path';
 import { ExternalsFunctionElement } from 'webpack';
+
 import {
   getAliases,
   getConfig,
@@ -187,7 +187,7 @@ export function ignoreExternalModules(
     }
     return ((ctx, req, cb) => {
       const relPath = path.join('node_modules', req);
-      return shouldIncludeModule(relPath) ? cb(undefined, undefined) : external(ctx, req, cb);
+      return shouldIncludeModule(relPath) ? cb(null, []) : external(ctx, req, cb);
     }) as ExternalsFunctionElement;
   });
 

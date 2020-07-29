@@ -1,5 +1,5 @@
-const process = require('process');
 const path = require('path');
+const process = require('process');
 
 const { Webpack } = require('../../xdl');
 

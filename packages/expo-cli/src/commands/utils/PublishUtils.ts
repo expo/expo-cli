@@ -1,9 +1,10 @@
 import { getConfig } from '@expo/config';
-import { Api, ApiV2, FormData, Project, UserManager } from '@expo/xdl';
+import { ApiV2, Project, UserManager } from '@expo/xdl';
 import ora from 'ora';
-import * as table from './cli-table';
+
 import log from '../../log';
 import prompt from '../../prompt';
+import * as table from './cli-table';
 
 export type HistoryOptions = {
   releaseChannel?: string;
@@ -76,45 +77,16 @@ export async function getPublishHistoryAsync(
     skipSDKVersionRequirement: true,
   });
 
-  let result: any;
-  if (process.env.EXPO_LEGACY_API === 'true') {
-    // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
-    let formData = new FormData();
-    formData.append('queryType', 'history');
-    if (exp.owner) {
-      formData.append('owner', exp.owner);
-    }
-    formData.append('slug', await Project.getSlugAsync(projectDir));
-    formData.append('version', VERSION);
-    if (options.releaseChannel) {
-      formData.append('releaseChannel', options.releaseChannel);
-    }
-    if (options.count) {
-      formData.append('count', options.count);
-    }
-    if (options.platform) {
-      formData.append('platform', options.platform);
-    }
-    if (options.sdkVersion) {
-      formData.append('sdkVersion', options.sdkVersion);
-    }
-
-    result = await Api.callMethodAsync('publishInfo', [], 'post', null, {
-      formData,
-    });
-  } else {
-    const api = ApiV2.clientForUser(user);
-    result = await api.postAsync('publish/history', {
-      owner: exp.owner,
-      slug: await Project.getSlugAsync(projectDir),
-      version: VERSION,
-      releaseChannel: options.releaseChannel,
-      count: options.count,
-      platform: options.platform,
-      sdkVersion: options.sdkVersion,
-    });
-  }
-  return result;
+  const api = ApiV2.clientForUser(user);
+  return await api.postAsync('publish/history', {
+    owner: exp.owner,
+    slug: await Project.getSlugAsync(projectDir),
+    version: VERSION,
+    releaseChannel: options.releaseChannel,
+    count: options.count,
+    platform: options.platform,
+    sdkVersion: options.sdkVersion,
+  });
 }
 
 export async function setPublishToChannelAsync(
@@ -253,28 +225,13 @@ export async function getPublicationDetailAsync(
     skipSDKVersionRequirement: true,
   });
   const slug = await Project.getSlugAsync(projectDir);
-  let result: any;
-  if (process.env.EXPO_LEGACY_API === 'true') {
-    let formData = new FormData();
-    formData.append('queryType', 'details');
 
-    if (exp.owner) {
-      formData.append('owner', exp.owner);
-    }
-    formData.append('publishId', options.publishId);
-    formData.append('slug', slug);
-
-    result = await Api.callMethodAsync('publishInfo', null, 'post', null, {
-      formData,
-    });
-  } else {
-    const api = ApiV2.clientForUser(user);
-    result = await api.postAsync('publish/details', {
-      owner: exp.owner,
-      publishId: options.publishId,
-      slug,
-    });
-  }
+  const api = ApiV2.clientForUser(user);
+  const result = await api.postAsync('publish/details', {
+    owner: exp.owner,
+    publishId: options.publishId,
+    slug,
+  });
 
   if (!result.queryResult) {
     throw new Error('No records found matching your query.');
@@ -292,14 +249,14 @@ export async function printPublicationDetailAsync(
     return;
   }
 
-  let manifest = detail.manifest;
+  const manifest = detail.manifest;
   delete detail.manifest;
 
   // Print general release info
-  let generalTableString = table.printTableJson(detail, 'Release Description');
+  const generalTableString = table.printTableJson(detail, 'Release Description');
   console.log(generalTableString);
 
   // Print manifest info
-  let manifestTableString = table.printTableJson(manifest, 'Manifest Details');
+  const manifestTableString = table.printTableJson(manifest, 'Manifest Details');
   console.log(manifestTableString);
 }

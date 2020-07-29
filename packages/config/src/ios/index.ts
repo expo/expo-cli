@@ -1,24 +1,22 @@
 import * as Branch from './Branch';
 import * as BundleIdenitifer from './BundleIdentifier';
-import * as DeviceFamily from './DeviceFamily';
-import * as Version from './Version';
-import * as Name from './Name';
-import * as Scheme from './Scheme';
 import * as CustomInfoPlistEntries from './CustomInfoPlistEntries';
-import * as UserInterfaceStyle from './UserInterfaceStyle';
-import * as RequiresFullScreen from './RequiresFullScreen';
-import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
+import * as DeviceFamily from './DeviceFamily';
 import * as Entitlements from './Entitlements';
 import * as Facebook from './Facebook';
 import * as Google from './Google';
-import * as Orientation from './Orientation';
-
-// Placeholders
 import * as Icons from './Icons';
-import * as SplashScreen from './SplashScreen';
-import * as Locales from './Locales';
-
 import { InfoPlist } from './IosConfig.types';
+import * as Locales from './Locales';
+import * as Name from './Name';
+import * as Orientation from './Orientation';
+import * as RequiresFullScreen from './RequiresFullScreen';
+import * as Scheme from './Scheme';
+import * as SplashScreen from './SplashScreen';
+import * as Updates from './Updates';
+import * as UserInterfaceStyle from './UserInterfaceStyle';
+import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
+import * as Version from './Version';
 
 // We can change this to export * as X with TypeScript 3.8+
 // https://devblogs.microsoft.com/typescript/announcing-typescript-3-8-beta/#export-star-as-namespace-syntax
@@ -39,6 +37,7 @@ export {
   Orientation,
   RequiresFullScreen,
   Scheme,
+  Updates,
   UserInterfaceStyle,
   UsesNonExemptEncryption,
   Version,

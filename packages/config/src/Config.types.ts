@@ -48,13 +48,19 @@ export type HookArguments = {
   projectRoot: string;
   log: (msg: any) => void;
 };
-export type PostPublishHook = {
+
+export type Hook = {
   file: string;
   config: any;
 };
 
+export type HookType = 'postPublish' | 'postExport';
+
+export enum ProjectPrivacy {
+  PUBLIC = 'public',
+  UNLISTED = 'unlisted',
+}
 type ExpoOrientation = 'default' | 'portrait' | 'landscape';
-type ExpoPrivacy = 'public' | 'unlisted';
 type SplashResizeMode = 'cover' | 'contain';
 
 /**
@@ -195,6 +201,11 @@ export type AndroidPlatformConfig = {
   playStoreUrl?: string;
 
   /**
+   * Configuration to select the handeling of notifications in android between the legacy notifications API and new notifications API (released with SKD 38)
+   */
+  useNextNotificationsApi?: boolean;
+
+  /**
    * List of permissions used by the standalone app. Remove the field to use the default list of permissions.\n\n  Example: `[ \"CAMERA\", \"ACCESS_FINE_LOCATION\" ]`.\n\n  You can specify the following permissions depending on what you need:\n\n- `ACCESS_COARSE_LOCATION`\n- `ACCESS_FINE_LOCATION`\n- `CAMERA`\n- `MANAGE_DOCUMENTS`\n- `READ_CONTACTS`\n- `READ_EXTERNAL_STORAGE`\n- `READ_INTERNAL_STORAGE`\n- `READ_PHONE_STATE`\n- `RECORD_AUDIO`\n- `USE_FINGERPRINT`\n- `VIBRATE`\n- `WAKE_LOCK`\n- `WRITE_EXTERNAL_STORAGE`\n- `com.anddoes.launcher.permission.UPDATE_COUNT`\n- `com.android.launcher.permission.INSTALL_SHORTCUT`\n- `com.google.android.c2dm.permission.RECEIVE`\n- `com.google.android.gms.permission.ACTIVITY_RECOGNITION`\n- `com.google.android.providers.gsf.permission.READ_GSERVICES`\n- `com.htc.launcher.permission.READ_SETTINGS`\n- `com.htc.launcher.permission.UPDATE_SHORTCUT`\n- `com.majeur.launcher.permission.UPDATE_BADGE`\n- `com.sec.android.provider.badge.permission.READ`\n- `com.sec.android.provider.badge.permission.WRITE`\n- `com.sonyericsson.home.permission.BROADCAST_BADGE`
    */
   permissions?: string[];
@@ -209,6 +220,12 @@ export type AndroidPlatformConfig = {
    * @fallback light
    */
   userInterfaceStyle?: 'light' | 'dark' | 'automatic';
+
+  /**
+   * Allows your user's app data to be automatically backed up to their Google Drive. If this is set to false, no backup or restore of the application will ever be performed (this is useful if your app deals with sensitive information). Defaults to the Android default, which is true.
+   * @fallback true
+   */
+  allowBackup?: boolean;
 
   config?: {
     /**
@@ -761,7 +778,7 @@ export type ExpoConfig = {
   /**
    * The name of your app as it appears both within Expo and on your home screen as a standalone app.
    */
-  name?: string;
+  name: string;
   /**
    * A short description of what your app is and why it is great.
    */
@@ -770,7 +787,7 @@ export type ExpoConfig = {
    * The friendly url name for publishing. eg: `expo.io/@your-username/slug`.
    * @pattern ^[a-zA-Z0-9_\\-]+$
    */
-  slug?: string;
+  slug: string;
   /**
    * The background color for your app, behind any of your React views. This is also known as the root view background color. This value should be a 6 character long hex color string, eg: '#000000'. Default is white — '#ffffff'.
    */
@@ -782,7 +799,7 @@ export type ExpoConfig = {
   /**
    * Either `public` or `unlisted`. If not provided, defaults to `unlisted`. In the future `private` will be supported. `unlisted` hides the experience from search results.
    */
-  privacy?: ExpoPrivacy;
+  privacy?: ProjectPrivacy;
   /**
    * The Expo sdkVersion to run the project on. This should line up with the version specified in your package.json.
    * @pattern ^(\\d+\\.\\d+\\.\\d+)|(UNVERSIONED)$
@@ -791,11 +808,11 @@ export type ExpoConfig = {
   /**
    * Your app version, use whatever versioning scheme that you like.
    */
-  version?: string;
+  version: string;
   /**
    * Platforms that your project explicitly supports. If not specified, it defaults to `[\"ios\", \"android\"]`.
    */
-  platforms?: Platform[];
+  platforms: Platform[];
   /**
    * If you would like to share the source code of your app on Github, enter the URL for the repository here and it will be linked to from your Expo project page.
    * @pattern ^https://github\\.com/
@@ -976,8 +993,9 @@ export type ExpoConfig = {
    * Configuration for scripts to run to hook into the publish process
    */
   hooks?: {
-    postPublish?: PostPublishHook[];
+    [key in HookType]?: Hook[];
   };
+
   /**
    * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/guides/offline-support/)
    */

@@ -1,14 +1,18 @@
+import deepEqual from 'deep-equal';
 import { Element, js2xml, xml2js, Attributes } from 'xml-js';
 
-import { readFileWithFallback, createDirAndWriteFile } from '../file-helpers';
+import { readFileWithFallback, createDirAndWriteFile, removeFileIfExists } from '../file-helpers';
 
 type ExplicitNewValue<T> = { newValue: T };
 type WithExplicitNewValue<T> = T | ExplicitNewValue<T>;
 
 type ExpectedElementAttributes = Record<string, WithExplicitNewValue<string | number | undefined>>;
 type WithExplicitIndex<T> = T & { idx?: number };
+type WithDeletionFlag<T> = T & { deletionFlag?: boolean };
 
-type ExpectedElements = WithExplicitNewValue<WithExplicitIndex<ExpectedElement>[]>;
+type ExpectedElements = WithExplicitNewValue<
+  WithExplicitIndex<WithDeletionFlag<ExpectedElement>>[]
+>;
 
 export type ExpectedElementType = {
   name: string;
@@ -121,23 +125,37 @@ function mergeXmlElementsLists(
     return current;
   }
 
-  const result: WithExplicitIndex<Element>[] = [];
+  const result: WithExplicitIndex<WithDeletionFlag<Element>>[] = [];
 
   for (const currentElement of current) {
     const idxInExpected = expected.findIndex(el => compareElements(currentElement, el));
     if (idxInExpected !== -1) {
       const { idx, ...element } = expected.splice(idxInExpected, 1)[0];
-      result.push({ idx, ...mergeXmlElements(currentElement, element) });
+      if (!element.deletionFlag) {
+        result.push({ idx, ...mergeXmlElements(currentElement, element) });
+      }
     } else {
       result.push(currentElement);
     }
   }
-  result.push(...expected.map(({ idx, ...el }) => ({ idx, ...convertToElement(el) })));
+  result.push(
+    ...expected
+      .filter(({ deletionFlag }) => !deletionFlag)
+      .map(({ idx, ...el }) => ({ idx, ...convertToElement(el) }))
+  );
   const sortedResult = sortWithExplicitIndex(result);
   return sortedResult;
 }
 
-function convertToElement(expectedElement: ExpectedElement): Element {
+function convertToElement({
+  idx,
+  ...expectedElement
+}: WithExplicitIndex<ExpectedElement>): Element {
+  // @ts-ignore
+  if (expectedElement.deletionFlag) {
+    throw new Error('Cannot convert ExpectedElement to Element when deletionFlag is set');
+  }
+
   if (isCommentType(expectedElement)) {
     return {
       ...expectedElement,
@@ -152,7 +170,9 @@ function convertToElement(expectedElement: ExpectedElement): Element {
   }
   if (isElementsType(expectedElement)) {
     return {
-      elements: unboxExplicitNewValue(expectedElement.elements).map(convertToElement),
+      elements: unboxExplicitNewValue(expectedElement.elements)
+        .filter(({ deletionFlag }) => !deletionFlag)
+        .map(convertToElement),
       type: 'element',
     };
   }
@@ -165,7 +185,9 @@ function convertToElement(expectedElement: ExpectedElement): Element {
     result.attributes = convertExpectedAttributes(attributes);
   }
   if (elements) {
-    result.elements = unboxExplicitNewValue(elements).map(convertToElement);
+    result.elements = unboxExplicitNewValue(elements)
+      .filter(({ deletionFlag }) => !deletionFlag)
+      .map(convertToElement);
   }
   return result;
 }
@@ -250,11 +272,21 @@ export function mergeXmlElements(current: Element, expected: ExpectedElement): E
   return result;
 }
 
+/**
+ * @param filePath
+ * @param fallbackContent
+ */
 export async function readXmlFile(
   filePath: string,
-  fallbackContent: string = `<?xml version="1.0" encoding="utf-8"?>`
+  fallbackContent: Element | string = `<?xml version="1.0" encoding="utf-8"?>`
 ): Promise<Element> {
-  const fileContent = await readFileWithFallback(filePath, fallbackContent);
+  const fileContent = await readFileWithFallback(
+    filePath,
+    typeof fallbackContent === 'string' ? fallbackContent : 'fallbackToElement'
+  );
+  if (fileContent === 'fallbackToElement' && typeof fallbackContent === 'object') {
+    return fallbackContent;
+  }
   const fileXml = xml2js(fileContent);
   return fileXml as Element;
 }
@@ -266,4 +298,63 @@ export async function writeXmlFile(filePath: string, xml: Element) {
     '$1$2$4$5'
   );
   await createDirAndWriteFile(filePath, `${correctedFile}\n`);
+}
+
+/**
+ * Checks whether two xmlElements are equal in terms of their structure
+ */
+export function xmlElementsEqual(
+  a: Element,
+  b: Element,
+  { disregardComments = true }: { disregardComments?: boolean } = {}
+): boolean {
+  const filteredA = !disregardComments ? a : removeComments(a);
+  const filteredB = !disregardComments ? b : removeComments(b);
+  return deepEqual(filteredA, filteredB);
+}
+
+function removeComments(e: Element): Element | undefined {
+  if (e.type === 'comment') {
+    return;
+  }
+  const result = Object.entries(e)
+    .map(([key, value]): [string, any] => {
+      if (key === 'elements' && Array.isArray(value)) {
+        const filteredValue = value
+          .map(removeComments)
+          .filter((el): el is Element => el !== undefined);
+        return [key, filteredValue.length > 0 ? filteredValue : undefined];
+      }
+      return [key, value];
+    })
+    .filter(([_, value]) => value !== undefined)
+    .reduce((acc, [key, value]) => {
+      // @ts-ignore
+      acc[key] = value;
+      return acc;
+    }, {});
+  return result;
+}
+
+/**
+ * Check if given `element` has some meaningful data:
+ * - if so: write it to the file
+ * - if no: remove file completely
+ * Function assumes that the structure of the input `element` is correct (`element.elements[name = resources]`).
+ */
+export async function writeXmlFileOrRemoveFileUponNoResources(
+  filePath: string,
+  element: Element,
+  { disregardComments }: { disregardComments?: boolean } = {}
+) {
+  if (
+    element.elements?.[0].name === 'resources' &&
+    element.elements[0].elements?.filter(({ type }) =>
+      disregardComments ? type !== 'comment' : true
+    ).length === 0
+  ) {
+    await removeFileIfExists(filePath);
+  } else {
+    await writeXmlFile(filePath, element);
+  }
 }

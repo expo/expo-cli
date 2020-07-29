@@ -1,16 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import url from 'url';
-
-import ProgressBar from 'progress';
-import leven from 'leven';
-import findLastIndex from 'lodash/findLastIndex';
-import boxen from 'boxen';
 import bunyan from '@expo/bunyan';
-import chalk from 'chalk';
-import ora from 'ora';
+import * as ConfigUtils from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
-import program, { Command, Option } from 'commander';
 import {
   Analytics,
   Api,
@@ -27,13 +17,22 @@ import {
   ProjectUtils,
   UserManager,
 } from '@expo/xdl';
-import * as ConfigUtils from '@expo/config';
+import boxen from 'boxen';
+import chalk from 'chalk';
+import program, { Command, Option } from 'commander';
+import fs from 'fs';
+import leven from 'leven';
+import findLastIndex from 'lodash/findLastIndex';
+import ora from 'ora';
+import path from 'path';
+import ProgressBar from 'progress';
+import url from 'url';
 
 import { loginOrRegisterAsync } from './accounts';
+import { registerCommands } from './commands';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
-import { registerCommands } from './commands';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build
@@ -72,7 +71,7 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
     }
 
     try {
-      let options = args[args.length - 1];
+      const options = args[args.length - 1];
       if (options.offline) {
         Config.offline = true;
       }
@@ -133,7 +132,7 @@ Command.prototype.asyncActionProjectDir = function (
 
     const logLines = (msg: any, logFn: (...args: any[]) => void) => {
       if (typeof msg === 'string') {
-        for (let line of msg.split('\n')) {
+        for (const line of msg.split('\n')) {
           logFn(line);
         }
       } else {
@@ -153,7 +152,7 @@ Command.prototype.asyncActionProjectDir = function (
         return logFn(chunk.msg);
       }
 
-      let { message, stack } = traceInfo;
+      const { message, stack } = traceInfo;
       log.addNewLineIfNone();
       logFn(chalk.bold(message));
 
@@ -162,7 +161,7 @@ Command.prototype.asyncActionProjectDir = function (
       };
 
       const stackFrames: string[] = stack.split('\n').filter((line: string) => line);
-      let lastAppCodeFrameIndex = findLastIndex(stackFrames, (line: string) => {
+      const lastAppCodeFrameIndex = findLastIndex(stackFrames, (line: string) => {
         return !isLibraryFrame(line);
       });
       let lastFrameIndexToLog = Math.min(
@@ -178,7 +177,7 @@ Command.prototype.asyncActionProjectDir = function (
       }
 
       for (let i = 0; i <= lastFrameIndexToLog; i++) {
-        let line = stackFrames[i];
+        const line = stackFrames[i];
         if (!line) {
           continue;
         } else if (line.match(/react-native\/.*YellowBox.js/)) {
@@ -240,7 +239,7 @@ Command.prototype.asyncActionProjectDir = function (
       },
       onProgressBuildBundle: (percent: number) => {
         if (!bar || bar.complete) return;
-        let ticks = percent - bar.curr;
+        const ticks = percent - bar.curr;
         ticks > 0 && bar.tick(ticks);
       },
       onFinishBuildBundle: (err, startTime, endTime) => {
@@ -267,7 +266,7 @@ Command.prototype.asyncActionProjectDir = function (
         }
       },
       updateLogs: (updater: LogUpdater) => {
-        let newLogChunks = updater([]);
+        const newLogChunks = updater([]);
         newLogChunks.forEach((newLogChunk: LogRecord) => {
           if (newLogChunk.issueId && newLogChunk.issueCleared) {
             return;
@@ -297,11 +296,11 @@ Command.prototype.asyncActionProjectDir = function (
     // to rerun Doctor because the directory was already checked previously
     // This is relevant for command such as `send`
     if (options.checkConfig && (await Project.currentStatus(projectDir)) !== 'running') {
-      let spinner = ora('Making sure project is set up correctly...').start();
+      const spinner = ora('Making sure project is set up correctly...').start();
       log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
 
-      let status = await Doctor.validateWithoutNetworkAsync(projectDir);
+      const status = await Doctor.validateWithoutNetworkAsync(projectDir);
       if (status === Doctor.FATAL) {
         throw new Error(`There is an error with your project. See above logs for information.`);
       }
@@ -330,7 +329,7 @@ function runAsync(programName: string) {
       if (!serverUrl.startsWith('http')) {
         serverUrl = `http://${serverUrl}`;
       }
-      let parsedUrl = url.parse(serverUrl);
+      const parsedUrl = url.parse(serverUrl);
       const port = parseInt(parsedUrl.port || '', 10);
       if (parsedUrl.hostname && port) {
         Config.api.host = parsedUrl.hostname;
@@ -390,7 +389,7 @@ function runAsync(programName: string) {
 }
 
 async function checkCliVersionAsync() {
-  let { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
+  const { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
   if (updateIsAvailable) {
     log.nestedWarn(
       boxen(
@@ -420,7 +419,7 @@ any interaction with Expo servers may result in unexpected behaviour.`
 }
 
 function _registerLogs() {
-  let stream = {
+  const stream = {
     stream: {
       write: (chunk: any) => {
         if (chunk.code) {
@@ -453,7 +452,7 @@ function _registerLogs() {
 }
 
 async function writePathAsync() {
-  let subCommand = process.argv[2];
+  const subCommand = process.argv[2];
   if (subCommand === 'prepare-detached-build') {
     // This is being run from Android Studio or Xcode. Don't want to write PATH in this case.
     return;
@@ -548,7 +547,7 @@ function formatCommandsAsMarkdown(commands: CommandData[]) {
 export function run(programName: string) {
   (async function () {
     if (process.argv[2] === 'introspect') {
-      let commands = generateCommandJSON();
+      const commands = generateCommandJSON();
       if (process.argv[3] && process.argv[3].includes('markdown')) {
         log(formatCommandsAsMarkdown(commands));
       } else {

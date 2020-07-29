@@ -4,11 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import boxen from 'boxen';
 import chalk from 'chalk';
+import { Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import clearConsole from 'react-dev-utils/clearConsole';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
-import boxen from 'boxen';
-import { Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 
 import * as ProjectUtils from '../project/ProjectUtils';

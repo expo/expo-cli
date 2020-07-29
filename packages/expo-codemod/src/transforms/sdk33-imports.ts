@@ -10,7 +10,6 @@ import {
   JSXIdentifier,
   TSTypeParameter,
 } from 'jscodeshift';
-import camelCase from 'camelcase';
 
 const namedImports = new Map([
   ['Accelerometer', 'expo-sensors'],
@@ -180,10 +179,6 @@ export default function transform(fileInfo: FileInfo, api: API, options: object)
   }
 
   return root.toSource({ quote: 'single' });
-}
-
-function makeNamespaceObjectName(packageName: string) {
-  return camelCase(packageName, { pascalCase: true });
 }
 
 function findNonNamespaceImports(j: JSCodeshift, root: any, sourceName: string) {

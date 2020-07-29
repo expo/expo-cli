@@ -1,8 +1,9 @@
 import chalk from 'chalk';
-import { Compiler, compilation } from 'webpack';
 import { IconOptions, ProjectOptions, generateChromeIconAsync } from 'expo-pwa';
-import ModifyJsonWebpackPlugin from './ModifyJsonWebpackPlugin';
+import { Compiler, compilation as compilationNS } from 'webpack';
+
 import { BeforeEmitOptions } from './JsonWebpackPlugin';
+import ModifyJsonWebpackPlugin from './ModifyJsonWebpackPlugin';
 
 export type Options = {
   source: string;
@@ -27,7 +28,7 @@ export default class ChromeIconsWebpackPlugin extends ModifyJsonWebpackPlugin {
 
   async modifyAsync(
     compiler: Compiler,
-    compilation: compilation.Compilation,
+    compilation: compilationNS.Compilation,
     data: BeforeEmitOptions
   ): Promise<BeforeEmitOptions> {
     // If the icons array is already defined, then skip icon generation.

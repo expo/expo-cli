@@ -1,6 +1,6 @@
 import { $$asyncIterator } from 'iterall';
 
-export default function mergeAsyncIterators(...iterators: Array<any>) {
+export default function mergeAsyncIterators(...iterators: any[]) {
   const promises = iterators.map(() => null);
 
   return {
