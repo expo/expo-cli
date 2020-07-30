@@ -61,16 +61,17 @@ export function getPbxproj(projectRoot: string): Pbxproj {
   return project;
 }
 
-export type ProjectSection = { [key: string]: ProjectSectionItem };
+export type ProjectSection = Record<string, ProjectSectionItem>;
 export type ProjectSectionItem = {
   isa: string;
   attributes: {
-    TargetAttributes: {
-      [key: string]: {
+    TargetAttributes: Record<
+      string,
+      {
         DevelopmentTeam?: string;
         ProvisioningStyle?: string;
-      };
-    };
+      }
+    >;
   };
   targets: {
     value: string;
@@ -82,7 +83,7 @@ export function getProjectSection(project: Pbxproj): ProjectSection {
   return project.pbxProjectSection();
 }
 
-export type ConfigurationLists = { [key: string]: ConfigurationList };
+export type ConfigurationLists = Record<string, ConfigurationList>;
 export type ConfigurationList = {
   isa: string;
   buildConfigurations: {
@@ -98,7 +99,7 @@ export function getXCConfigurationLists(project: Pbxproj): ConfigurationList[] {
     .map(([, value]) => value);
 }
 
-export type ConfigurationSection = { [key: string]: ConfigurationSectionItem };
+export type ConfigurationSection = Record<string, ConfigurationSectionItem>;
 export type ConfigurationSectionItem = {
   isa: string;
   buildSettings: {
