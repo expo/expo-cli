@@ -51,7 +51,7 @@ async function run() {
 
   const lines = [`\n<!-- Begin auto-generation -->\n`];
   const entries = [
-    ['Package', 'Coverage'],
+    ['Package', 'Version'],
     ['---', '---'],
   ];
   for (const pkg of contents) {

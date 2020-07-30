@@ -60,7 +60,7 @@ Expo CLI
 
 <!-- Begin auto-generation -->
 
-| Package                                                                   | Coverage                                                                                                                                                                                                                 |
+| Package                                                                   | Version                                                                                                                                                                                                                  |
 | ---                                                                       | ---                                                                                                                                                                                                                      |
 | [**`@expo/babel-preset-cli`**](./packages/babel-preset-cli)               | [![badges](https://img.shields.io/npm/v/@expo/babel-preset-cli.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/babel-preset-cli)               |
 | [**`@expo/config`**](./packages/config)                                   | [![badges](https://img.shields.io/npm/v/@expo/config.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/config)                                   |
