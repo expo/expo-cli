@@ -1,6 +1,6 @@
 {
   "name": "@expo/configure-splash-screen",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Supplementary module for 'expo-splash-screen' providing cli configuration command",
   "bin": {
     "configure-splash-screen": "./build/configure.js",
@@ -52,7 +52,7 @@
     "expo-splash-screen": "*"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.16",
+    "@expo/babel-preset-cli": "0.2.17",
     "@react-native-community/cli-types": "^4.10.0",
     "@types/color-string": "^1.5.0",
     "@types/deep-equal": "^1.0.1",
