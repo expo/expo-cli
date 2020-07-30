@@ -56,14 +56,11 @@ class iOSBuilder implements Builder {
     if (!this.shouldLoadCredentials()) {
       return;
     }
-    this.bundleIdentifier = this.ctx.exp?.ios?.bundleIdentifier;
-    if (!this.bundleIdentifier) {
-      throw new Error('"expo.ios.bundleIdentifier" field is required in your app.json');
-    }
+    const bundleIdentifier = getBundleIdentifier(this.ctx);
     const provider = new iOSCredentialsProvider(this.ctx.projectDir, {
       projectName: this.ctx.projectName,
       accountName: this.ctx.accountName,
-      bundleIdentifier: this.bundleIdentifier,
+      bundleIdentifier,
     });
     await provider.initAsync();
     const credentialsSource = await ensureCredentialsAsync(
@@ -75,11 +72,12 @@ class iOSBuilder implements Builder {
   }
 
   public async configureProjectAsync(): Promise<void> {
-    if (!this.credentials || !this.bundleIdentifier) {
-      throw new Error('Call ensureCredentialsAsync first!');
-    }
     // TODO: add simulator flow
     // assuming we're building for app store
+    if (!this.credentials) {
+      throw new Error('Call ensureCredentialsAsync first!');
+    }
+    const bundleIdentifier = getBundleIdentifier(this.ctx);
 
     const spinner = ora('Making sure your iOS project is set up properly');
 
@@ -89,11 +87,7 @@ class iOSBuilder implements Builder {
     const appleTeam = ProvisioningProfileUtils.readAppleTeam(this.credentials.provisioningProfile);
 
     const { projectDir } = this.ctx;
-    IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(
-      projectDir,
-      this.bundleIdentifier,
-      false
-    );
+    IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectDir, bundleIdentifier, false);
     IOSConfig.ProvisioningProfile.setProvisioningProfileForPbxproj(projectDir, {
       profileName,
       appleTeamId: appleTeam.teamId,
@@ -180,6 +174,14 @@ class iOSBuilder implements Builder {
       this.buildProfile.workflow === Workflow.Generic
     );
   }
+}
+
+function getBundleIdentifier(ctx: BuilderContext) {
+  const bundleIdentifier = ctx.exp?.ios?.bundleIdentifier;
+  if (!bundleIdentifier) {
+    throw new Error('"expo.ios.bundleIdentifier" field is required in your app.json');
+  }
+  return bundleIdentifier;
 }
 
 export default iOSBuilder;
