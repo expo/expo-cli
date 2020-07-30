@@ -8,18 +8,72 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+### 📦 Packages updated
+
+## [Thu, 30 Jul 2020 13:42:33 -0700](https://github.com/expo/expo-cli/commit/5adda7a1af91bd05b299db8a342ef43e9035dd61)
+
+### 🛠 Breaking changes
+
+- Delete the deprecated `expo android` command ([#2215](https://github.com/expo/expo-cli/issues/2215))
+- Delete deprecated `expo ios` command ([#2216](https://github.com/expo/expo-cli/issues/2216))
+
+### 🎉 New features
+
 - [xdl] Log output from Gradle Wrapper is a lot cleaner now. It doesn't print dots when the appropriate Gradle version is being downloaded ([#2355](https://github.com/expo/expo-cli/pull/2355)).
 - [expo-cli] expo upload:android - Add better error messages when downloading archive file failed [#2384](https://github.com/expo/expo-cli/pull/2384).
 - [expo-cli] perfomance improvment for operations on credentials (more efficient internal caching) [#2380](https://github.com/expo/expo-cli/pull/2380).
+- [expo-cli] Add a command to get build status for turtle v2 builds
 
 ### 🐛 Bug fixes
 
-- [xdl] Fix incorrect check of the packager port in the "setOptionsAsync" function [#2270](https://github.com/expo/expo-cli/issues/2270)
-- [expo-cli] expo upload:android - Fix passing archive type from command line [#2383](https://github.com/expo/expo-cli/pull/2383)
-- [expo-cli] check `when` field when inquirer is used in noninteractive mode [#2393](https://github.com/expo/expo-cli/pull/2393)
-- [expo-cli] do not base64 encode push notification [#2406](https://github.com/expo/expo-cli/pull/2406)
+- [configure-splash-screen] Bump cli-platform-[ios/android] versions for logkitty security fix
+- [nextjs] Fix next.js adapter bug ([#2412](https://github.com/expo/expo-cli/issues/2412))
+- [expo-cli] cleanup apple id credentials logic ([#2409](https://github.com/expo/expo-cli/issues/2409))
+- [expo-cli] don't print function string in error message ([#2407](https://github.com/expo/expo-cli/issues/2407))
+- [expo-cli] fix lint error
+- [expo-cli]: IosApi handle properly missing credentials
+- [expo-cli] base64 decode when saving p8 file ([#2404](https://github.com/expo/expo-cli/issues/2404))
+- [expo-cli] revert PR #2404 and remove encoding from IosPushCredentials ([#2406](https://github.com/expo/expo-cli/issues/2406))
+- [expo-cli] check `when` field when prompting in noninteractive mode ([#2393](https://github.com/expo/expo-cli/issues/2393))
+- [xdl] Remove UpdateVersions from xdl ([#2387](https://github.com/expo/expo-cli/issues/2387))
+- [xdl] Stop ADB daemon only when it was launched by xdl ([#2064](https://github.com/expo/expo-cli/issues/2064))
+- [config] Implement "useNextNotificationsApi" configuration SDK 38 ([#2318](https://github.com/expo/expo-cli/issues/2318))
+- [configure-splash-screen] fix a command instructions ([#2370](https://github.com/expo/expo-cli/issues/2370))
+- [expo-cli] upload:android - add better error messages for issues with downloading archive file ([#2384](https://github.com/expo/expo-cli/issues/2384))
+- [expo-cli] submission service: fix passing archive type from command line ([#2383](https://github.com/expo/expo-cli/issues/2383))
+- [expo-cli] expo upload:android - fix help output - --latest is not default
+- [xdl] Fix incorrect check of the packager port in the "setOptionsAsync" function. Fixes #2270
+- [expo-cli] consolidate env variables. ([#2358](https://github.com/expo/expo-cli/issues/2358))
 
 ### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.17
+- @expo/config@3.2.16
+- @expo/configure-splash-screen@0.1.13
+- @expo/dev-server@0.1.17
+- @expo/dev-tools@0.13.28
+- @expo/electron-adapter@0.0.8
+- expo-cli@3.23.0
+- expo-codemod@1.0.28
+- expo-optimize@0.1.40
+- @expo/image-utils@0.3.1
+- @expo/json-file@8.2.22
+- @expo/metro-config@0.1.17
+- @expo/next-adapter@2.1.21
+- @expo/osascript@2.0.23
+- @expo/package-manager@0.0.30
+- @expo/plist@0.0.9
+- pod-install@0.1.9
+- expo-pwa@0.0.28
+- @expo/schemer@1.3.20
+- uri-scheme@1.0.24
+- @expo/webpack-config@0.12.21
+- @expo/xdl@57.9.25
+
+
+
 
 ## [Wed Jul 15 2020 05:42:45 GMT-0700](https://github.com/expo/expo-cli/commit/05a88e6a69a1c0ab78dcb9a523a35b4bba26c694)
 
