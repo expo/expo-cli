@@ -355,7 +355,7 @@ export class UserManagerInstance {
       accessToken,
     });
 
-    user = await api.getAsync('auth/userInfo');
+    user = await api.postAsync('auth/userProfileAsync');
 
     if (!user) {
       throw new Error('Unable to fetch user.');
