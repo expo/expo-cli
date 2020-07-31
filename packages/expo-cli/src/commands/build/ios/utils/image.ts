@@ -60,7 +60,7 @@ function validateAlphaChannelIsEmpty(
       if (data[idx + 3] !== 255) {
         throw new XDLError(
           'INVALID_ASSETS',
-          `Your app icon can't have transparency if you wish to upload your app Apple's App Store. Read more here: https://github.com/expo/fyi/blob/master/remove-alpha-channel.md`
+          `Your app icon can't have transparency if you wish to upload your app Apple's App Store. Read more here: https://expo.fyi/remove-alpha-channel`
         );
       }
     }
