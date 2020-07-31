@@ -4,6 +4,7 @@ import path from 'path';
 import { ExpoConfig } from '../../Config.types';
 import {
   getBundleIdentifier,
+  getBundleIdentifierFromPbxproj,
   setBundleIdentifier,
   setBundleIdentifierForPbxproj,
 } from '../BundleIdentifier';
@@ -29,6 +30,30 @@ describe('BundleIdentifier module', () => {
       expect(
         getBundleIdentifier({ ...baseExpoConfig, ios: { bundleIdentifier: 'com.example.xyz' } })
       ).toBe('com.example.xyz');
+    });
+  });
+
+  describe(getBundleIdentifierFromPbxproj, () => {
+    const projectRoot = '/testproject';
+
+    afterEach(() => vol.reset());
+
+    it('returns null if no project.pbxproj exists', () => {
+      vol.mkdirpSync(projectRoot);
+      expect(getBundleIdentifierFromPbxproj(projectRoot)).toBeNull();
+    });
+
+    it('returns the bundle identifier defined in project.pbxproj', () => {
+      vol.fromJSON(
+        {
+          'ios/testproject.xcodeproj/project.pbxproj': originalFs.readFileSync(
+            path.join(__dirname, 'fixtures/project.pbxproj'),
+            'utf-8'
+          ),
+        },
+        projectRoot
+      );
+      expect(getBundleIdentifierFromPbxproj(projectRoot)).toBe('org.name.testproject');
     });
   });
 

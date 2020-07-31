@@ -8,6 +8,7 @@ import { ExpoConfig } from '../Config.types';
 import { InfoPlist } from './IosConfig.types';
 import {
   ConfigurationSectionEntry,
+  Pbxproj,
   getXCBuildConfigurationSection,
   getXCConfigurationLists,
   isBuildConfig,
@@ -16,7 +17,7 @@ import {
 } from './utils/Xcodeproj';
 
 function getBundleIdentifier(config: ExpoConfig): string | null {
-  return config.ios && config.ios.bundleIdentifier ? config.ios.bundleIdentifier : null;
+  return config.ios?.bundleIdentifier ?? null;
 }
 
 /**
@@ -37,13 +38,40 @@ function setBundleIdentifier(config: ExpoConfig, infoPlist: InfoPlist): InfoPlis
 }
 
 /**
+ * Gets the bundle identifier of the Xcode project found in the project directory.
+ * If either the Xcode project doesn't exist or the project is not configured
+ * this function returns null.
+ *
+ * @param {string} projectRoot Path to project root containing the ios directory
+ * @returns {string | null} bundle identifier of the Xcode project or null if the project is not configured
+ */
+function getBundleIdentifierFromPbxproj(projectRoot: string): string | null {
+  // TODO(dsokal):
+  // I'm not sure if it's either possible or common that an iOS project has multiple project.pbxproj files.
+  // For now, I'm assuming that the glob returns at last one file.
+  const pbxprojPaths = globSync('ios/*/project.pbxproj', { absolute: true, cwd: projectRoot });
+  const pbxprojPath = pbxprojPaths.length > 0 ? pbxprojPaths[0] : undefined;
+  if (!pbxprojPath) {
+    return null;
+  }
+  const project = Project(pbxprojPath);
+  project.parseSync();
+  for (const [, item] of getBuildConfigurationSectionEntires(project)) {
+    const bundleIdentifier = item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER;
+    if (bundleIdentifier) {
+      return bundleIdentifier[0] === '"' ? bundleIdentifier.slice(1, -1) : bundleIdentifier;
+    }
+  }
+  return null;
+}
+
+/**
  * Updates the bundle identifier for a given pbxproj
  *
  * @param {string} pbxprojPath Path to pbxproj file
  * @param {string} bundleIdentifier Bundle identifier to set in the pbxproj
  * @param {boolean} [updateProductName=true]  Whether to update PRODUCT_NAME
  */
-
 function updateBundleIdentifierForPbxproj(
   pbxprojPath: string,
   bundleIdentifier: string,
@@ -51,30 +79,32 @@ function updateBundleIdentifierForPbxproj(
 ): void {
   const project = Project(pbxprojPath);
   project.parseSync();
+  getBuildConfigurationSectionEntires(project).forEach(([, item]: ConfigurationSectionEntry) => {
+    if (item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER === bundleIdentifier) {
+      return;
+    }
 
+    item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER = `"${bundleIdentifier}"`;
+
+    if (updateProductName) {
+      const productName = bundleIdentifier.split('.').pop();
+      if (!productName?.includes('$')) {
+        item.buildSettings.PRODUCT_NAME = productName;
+      }
+    }
+  });
+  fs.writeFileSync(pbxprojPath, project.writeSync());
+}
+
+function getBuildConfigurationSectionEntires(project: Pbxproj): ConfigurationSectionEntry[] {
   const configurationLists = getXCConfigurationLists(project);
   const buildConfigurations = configurationLists[0].buildConfigurations.map(i => i.value);
 
-  Object.entries(getXCBuildConfigurationSection(project))
+  return Object.entries(getXCBuildConfigurationSection(project))
     .filter(isNotComment)
     .filter(isBuildConfig)
     .filter(isNotTestHost)
-    .filter(([key]: ConfigurationSectionEntry) => buildConfigurations.includes(key))
-    .forEach(([, item]: ConfigurationSectionEntry) => {
-      if (item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER === bundleIdentifier) {
-        return;
-      }
-
-      item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER = `"${bundleIdentifier}"`;
-
-      if (updateProductName) {
-        const productName = bundleIdentifier.split('.').pop();
-        if (!productName?.includes('$')) {
-          item.buildSettings.PRODUCT_NAME = productName;
-        }
-      }
-    });
-  fs.writeFileSync(pbxprojPath, project.writeSync());
+    .filter(([key]: ConfigurationSectionEntry) => buildConfigurations.includes(key));
 }
 
 /**
@@ -138,6 +168,7 @@ function resetPlistBundleIdentifier(plistPath: string): void {
 export {
   getBundleIdentifier,
   setBundleIdentifier,
+  getBundleIdentifierFromPbxproj,
   updateBundleIdentifierForPbxproj,
   setBundleIdentifierForPbxproj,
   resetAllPlistBundleIdentifiers,
