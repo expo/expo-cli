@@ -27,7 +27,9 @@ export type User = {
     legacy?: boolean;
   };
   currentConnection: ConnectionType;
-  sessionSecret: string;
+  // auth methods
+  sessionSecret?: string;
+  authorizationToken?: string;
 };
 
 export type LegacyUser = {
@@ -55,6 +57,7 @@ export type RegistrationData = {
   familyName?: string;
 };
 
+// note: user-token isn't listed here because it's a non-persistent pre-authenticated method
 export type LoginType = 'user-pass' | 'facebook' | 'google' | 'github';
 
 export const ANONYMOUS_USERNAME = 'anonymous';
@@ -195,9 +198,11 @@ export class UserManagerInstance {
     await this._getSessionLock.acquire();
 
     try {
-      // If user is cached and there is a sessionSecret, return the user
-      if (this._currentUser && this._currentUser.sessionSecret) {
-        return this._currentUser;
+      const currentUser = this._currentUser;
+
+      // If user is cached and there is an authorizationToken or sessionSecret, return the user
+      if (currentUser && (currentUser.authorizationToken || currentUser.sessionSecret)) {
+        return currentUser;
       }
 
       if (Config.offline) {
@@ -205,17 +210,22 @@ export class UserManagerInstance {
       }
 
       const data = await this._readUserData();
+      const token = UserSettings.userToken();
 
-      // No session, no current user. Need to login
-      if (!data || !data.sessionSecret) {
+      // No token, no session, no current user. Need to login
+      if (!token && (!data || !data.sessionSecret)) {
         return null;
       }
 
       try {
-        return await this._getProfileAsync({
-          currentConnection: data.currentConnection,
-          sessionSecret: data.sessionSecret,
-        });
+        const profileOptions = token
+          ? { authorizationToken: token }
+          : {
+              currentConnection: data?.currentConnection,
+              sessionSecret: data?.sessionSecret,
+            };
+
+        return await this._getProfileAsync(profileOptions);
       } catch (e) {
         if (!(options && options.silent)) {
           Logger.global.warn('Fetching the user profile failed');
@@ -314,16 +324,19 @@ export class UserManagerInstance {
   async _getProfileAsync({
     currentConnection,
     sessionSecret,
+    authorizationToken,
   }: {
     currentConnection?: ConnectionType;
-    sessionSecret: string;
+    sessionSecret?: string;
+    authorizationToken?: string;
   }): Promise<User> {
     let user;
     const api = ApiV2Client.clientForUser({
       sessionSecret,
+      authorizationToken,
     });
 
-    user = await api.postAsync('auth/userProfileAsync');
+    user = await api.getAsync('auth/userInfo');
 
     if (!user) {
       throw new Error('Unable to fetch user.');
@@ -334,14 +347,18 @@ export class UserManagerInstance {
       kind: 'user',
       currentConnection,
       sessionSecret,
+      authorizationToken,
     };
 
-    await UserSettings.setAsync('auth', {
-      userId: user.userId,
-      username: user.username,
-      currentConnection,
-      sessionSecret,
-    });
+    // note: do not persist the authorization token, must be env-var only
+    if (!authorizationToken) {
+      await UserSettings.setAsync('auth', {
+        userId: user.userId,
+        username: user.username,
+        currentConnection,
+        sessionSecret,
+      });
+    }
 
     // If no currentUser, or currentUser.id differs from profiles
     // user id, that means we have a new login
