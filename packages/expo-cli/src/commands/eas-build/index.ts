@@ -1,9 +1,17 @@
 import { Command } from 'commander';
+import fs from 'fs-extra';
+import path from 'path';
 
 import buildAction from './build/action';
 import statusAction from './status/action';
 
 export default function (program: Command) {
+  // don't register `expo eas:build:*` commands if eas.json doesn't exist
+  const easJsonPath = path.join(process.cwd(), 'eas.json');
+  if (!fs.pathExistsSync(easJsonPath)) {
+    return;
+  }
+
   program
     .command('eas:build [project-dir]')
     .description(

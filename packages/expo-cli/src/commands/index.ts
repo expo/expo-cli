@@ -1,16 +1,14 @@
 import { Command } from 'commander';
 
 const COMMANDS = [
-  // old command build:status is the same as new build:status so we disable it when the new one is available
-  // new command only for testing, shouldn't be visible for users
-  // eslint-disable-next-line import/order
-  process.env.EXPO_ENABLE_NEW_TURTLE ? require('./eas-build') : require('./build'),
+  require('./build'),
   require('./bundle-assets'),
   require('./client'),
   require('./credentials'),
   require('./customize'),
   require('./diagnostics'),
   require('./doctor'),
+  require('./eas-build'),
   require('./eject'),
   require('./export'),
   require('./fetch'),
