@@ -13,7 +13,7 @@ export enum BuildStatus {
   FINISHED = 'finished',
 }
 
-export interface BuildInfo {
+export interface Build {
   id: string;
   status: BuildStatus;
   platform: Platform;

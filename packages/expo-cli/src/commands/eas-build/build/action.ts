@@ -13,7 +13,7 @@ import log from '../../../log';
 import { ensureProjectExistsAsync } from '../../../projects';
 import { UploadType, uploadAsync } from '../../../uploads';
 import { createProgressTracker } from '../../utils/progress';
-import { BuildCommandPlatform, BuildInfo, BuildStatus } from '../types';
+import { Build, BuildCommandPlatform, BuildStatus } from '../types';
 import AndroidBuilder from './builders/AndroidBuilder';
 import iOSBuilder from './builders/iOSBuilder';
 import { Builder, BuilderContext } from './types';
@@ -51,12 +51,12 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
   printLogsUrls(ctx.accountName, scheduledBuilds);
 
   if (options.wait) {
-    const buildInfo = await waitForBuildEndAsync(
+    const builds = await waitForBuildEndAsync(
       ctx,
       projectId,
       scheduledBuilds.map(i => i.buildId)
     );
-    printBuildResults(buildInfo);
+    printBuildResults(builds);
   }
 }
 
@@ -139,14 +139,14 @@ async function waitForBuildEndAsync(
   projectId: string,
   buildIds: string[],
   { timeoutSec = 1800, intervalSec = 30 } = {}
-): Promise<(BuildInfo | null)[]> {
+): Promise<(Build | null)[]> {
   const client = ApiV2.clientForUser(ctx.user);
   log('Waiting for build to complete. You can press Ctrl+C to exit.');
   const spinner = ora().start();
   let time = new Date().getTime();
   const endTime = time + timeoutSec * 1000;
   while (time <= endTime) {
-    const buildInfo: (BuildInfo | null)[] = await Promise.all(
+    const builds: (Build | null)[] = await Promise.all(
       buildIds.map(buildId => {
         try {
           return client.getAsync(`projects/${projectId}/builds/${buildId}`);
@@ -155,11 +155,11 @@ async function waitForBuildEndAsync(
         }
       })
     );
-    if (buildInfo.length === 1) {
-      switch (buildInfo[0]?.status) {
+    if (builds.length === 1) {
+      switch (builds[0]?.status) {
         case BuildStatus.FINISHED:
           spinner.succeed('Build finished.');
-          return buildInfo;
+          return builds;
         case BuildStatus.IN_QUEUE:
           spinner.text = 'Build queued...';
           break;
@@ -171,29 +171,25 @@ async function waitForBuildEndAsync(
           throw new Error(`Standalone build failed!`);
         default:
           spinner.warn('Unknown status.');
-          throw new Error(`Unknown status: ${buildInfo} - aborting!`);
+          throw new Error(`Unknown status: ${builds} - aborting!`);
       }
     } else {
-      if (
-        buildInfo.filter(build => build?.status === BuildStatus.FINISHED).length ===
-        buildInfo.length
-      ) {
+      if (builds.filter(build => build?.status === BuildStatus.FINISHED).length === builds.length) {
         spinner.succeed('All build have finished.');
-        return buildInfo;
+        return builds;
       } else if (
-        buildInfo.filter(build =>
+        builds.filter(build =>
           build?.status ? [BuildStatus.FINISHED, BuildStatus.ERRORED].includes(build.status) : false
-        ).length === buildInfo.length
+        ).length === builds.length
       ) {
         spinner.fail('Some of the builds failed.');
-        return buildInfo;
+        return builds;
       } else {
-        const inQueue = buildInfo.filter(build => build?.status === BuildStatus.IN_QUEUE).length;
-        const inProgress = buildInfo.filter(build => build?.status === BuildStatus.IN_PROGRESS)
-          .length;
-        const errored = buildInfo.filter(build => build?.status === BuildStatus.ERRORED).length;
-        const finished = buildInfo.filter(build => build?.status === BuildStatus.FINISHED).length;
-        const unknownState = buildInfo.length - inQueue - inProgress - errored - finished;
+        const inQueue = builds.filter(build => build?.status === BuildStatus.IN_QUEUE).length;
+        const inProgress = builds.filter(build => build?.status === BuildStatus.IN_PROGRESS).length;
+        const errored = builds.filter(build => build?.status === BuildStatus.ERRORED).length;
+        const finished = builds.filter(build => build?.status === BuildStatus.FINISHED).length;
+        const unknownState = builds.length - inQueue - inProgress - errored - finished;
         spinner.text = [
           inQueue && `Builds in queue: ${inQueue}`,
           inProgress && `Builds in progress: ${inProgress}`,

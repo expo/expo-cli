@@ -2,7 +2,7 @@ import { UserManager } from '@expo/xdl';
 
 import log from '../../../../log';
 import * as UrlUtils from '../../../utils/url';
-import { BuildInfo } from '../../types';
+import { Build } from '../../types';
 
 async function printLogsUrls(
   accountName: string,
@@ -29,12 +29,12 @@ async function printLogsUrls(
   }
 }
 
-async function printBuildResults(buildInfo: (BuildInfo | null)[]): Promise<void> {
-  if (buildInfo.length === 1) {
-    log(`Artifact url: ${buildInfo[0]?.artifacts?.buildUrl ?? ''}`);
+async function printBuildResults(builds: (Build | null)[]): Promise<void> {
+  if (builds.length === 1) {
+    log(`Artifact url: ${builds[0]?.artifacts?.buildUrl ?? ''}`);
   } else {
-    buildInfo
-      .filter(i => i?.status === 'finished')
+    builds
+      .filter(build => build?.status === 'finished')
       .forEach(build => {
         log(`Platform: ${build?.platform}, Artifact url: ${build?.artifacts?.buildUrl ?? ''}`);
       });

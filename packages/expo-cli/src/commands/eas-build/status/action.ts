@@ -5,7 +5,7 @@ import ora from 'ora';
 import log from '../../../log';
 import { ensureProjectExistsAsync } from '../../../projects';
 import { printTableJsonArray } from '../../utils/cli-table';
-import { BuildCommandPlatform, BuildInfo, BuildStatus } from '../types';
+import { Build, BuildCommandPlatform, BuildStatus } from '../types';
 
 interface BuildStatusOptions {
   platform: BuildCommandPlatform;
@@ -57,7 +57,7 @@ async function statusAction(
 
   const spinner = ora().start('Fetching build history...');
 
-  let builds: BuildInfo[] | undefined;
+  let builds: Build[] | undefined;
 
   try {
     if (buildId) {
@@ -87,7 +87,7 @@ async function statusAction(
   }
 }
 
-function printBuildTable(builds: BuildInfo[]) {
+function printBuildTable(builds: Build[]) {
   const headers = ['started', 'platform', 'status', 'artifact'];
   const colWidths = [24, 10, 13, 41];
 
