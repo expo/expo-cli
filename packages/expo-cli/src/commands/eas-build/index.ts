@@ -14,11 +14,12 @@ export default function (program: Command) {
 
   program
     .command('eas:build [project-dir]')
-    .description(
-      'Build an app binary for your project, signed and ready for submission to the Google Play Store.'
+    .description('Build an app binary for your project.')
+    .option(
+      '-p --platform <platform>',
+      'Build for specified platform: ios, android, all',
+      /^(all|android|ios)$/i
     )
-    .allowUnknownOption()
-    .option('-p --platform <platform>')
     .option('--skip-credentials-check', 'Skip checking credentials', false)
     .option('--no-wait', 'Exit immediately after scheduling build', false)
     .option('--profile <profile>', 'Build profile', 'release')
@@ -26,6 +27,7 @@ export default function (program: Command) {
 
   program
     .command('eas:build:status [project-dir]')
+    .description('Get the status of the latest builds for your project.')
     .option(
       '-p --platform <platform>',
       'Get builds for specified platform: ios, android, all',
@@ -37,6 +39,5 @@ export default function (program: Command) {
       /^(in-queue|in-progress|errored|finished)$/
     )
     .option('-b --build-id <build-id>', 'Get the build with a specific build id')
-    .description(`Get the status of the latest builds for your project.`)
     .asyncActionProjectDir(statusAction, { checkConfig: true });
 }
