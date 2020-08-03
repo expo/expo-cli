@@ -59,18 +59,18 @@ type QueryParameters = { [key: string]: string | number | boolean | null | undef
 
 type APIV2ClientOptions = {
   sessionSecret?: string;
-  authorizationToken?: string;
+  accessToken?: string;
 };
 
 export default class ApiV2Client {
   static exponentClient: string = 'xdl';
   sessionSecret: string | null = null;
-  authorizationToken: string | null = null;
+  accessToken: string | null = null;
 
   static clientForUser(user?: APIV2ClientOptions | null): ApiV2Client {
-    if (user && (user.authorizationToken || user.sessionSecret)) {
+    if (user && (user.accessToken || user.sessionSecret)) {
       return new ApiV2Client({
-        authorizationToken: user.authorizationToken,
+        accessToken: user.accessToken,
         sessionSecret: user.sessionSecret,
       });
     }
@@ -83,8 +83,8 @@ export default class ApiV2Client {
   }
 
   constructor(options: APIV2ClientOptions = {}) {
-    if (options.authorizationToken) {
-      this.authorizationToken = options.authorizationToken;
+    if (options.accessToken) {
+      this.accessToken = options.accessToken;
     }
     if (options.sessionSecret) {
       this.sessionSecret = options.sessionSecret;
@@ -203,8 +203,8 @@ export default class ApiV2Client {
     };
 
     // Handle auth method, prioritizing authorization tokens before session secrets
-    if (this.authorizationToken) {
-      reqOptions.headers['Authorization'] = `Bearer ${this.authorizationToken}`;
+    if (this.accessToken) {
+      reqOptions.headers['Authorization'] = `Bearer ${this.accessToken}`;
     } else if (this.sessionSecret) {
       reqOptions.headers['Expo-Session'] = this.sessionSecret;
     }

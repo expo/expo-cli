@@ -107,7 +107,7 @@ async function anonymousIdentifier(): Promise<string> {
   return id;
 }
 
-function userToken(): string | null {
+function accessToken(): string | null {
   return process.env.EXPO_TOKEN || null;
 }
 
@@ -116,7 +116,7 @@ const UserSettings = Object.assign(userSettingsJsonFile(), {
   recentExpsJsonFile,
   userSettingsFile,
   userSettingsJsonFile,
-  userToken,
+  accessToken,
   anonymousIdentifier,
   SETTINGS_FILE_NAME,
 });

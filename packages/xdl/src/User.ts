@@ -29,7 +29,7 @@ export type User = {
   currentConnection: ConnectionType;
   // auth methods
   sessionSecret?: string;
-  authorizationToken?: string;
+  accessToken?: string;
 };
 
 export type LegacyUser = {
@@ -200,8 +200,8 @@ export class UserManagerInstance {
     try {
       const currentUser = this._currentUser;
 
-      // If user is cached and there is an authorizationToken or sessionSecret, return the user
-      if (currentUser && (currentUser.authorizationToken || currentUser.sessionSecret)) {
+      // If user is cached and there is an accessToken or sessionSecret, return the user
+      if (currentUser && (currentUser.accessToken || currentUser.sessionSecret)) {
         return currentUser;
       }
 
@@ -210,16 +210,16 @@ export class UserManagerInstance {
       }
 
       const data = await this._readUserData();
-      const token = UserSettings.userToken();
+      const accessToken = UserSettings.accessToken();
 
       // No token, no session, no current user. Need to login
-      if (!token && (!data || !data.sessionSecret)) {
+      if (!accessToken && !data?.sessionSecret) {
         return null;
       }
 
       try {
-        const profileOptions = token
-          ? { authorizationToken: token }
+        const profileOptions = accessToken
+          ? { accessToken }
           : {
               currentConnection: data?.currentConnection,
               sessionSecret: data?.sessionSecret,
@@ -324,16 +324,16 @@ export class UserManagerInstance {
   async _getProfileAsync({
     currentConnection,
     sessionSecret,
-    authorizationToken,
+    accessToken,
   }: {
     currentConnection?: ConnectionType;
     sessionSecret?: string;
-    authorizationToken?: string;
+    accessToken?: string;
   }): Promise<User> {
     let user;
     const api = ApiV2Client.clientForUser({
       sessionSecret,
-      authorizationToken,
+      accessToken,
     });
 
     user = await api.postAsync('auth/userProfileAsync');
@@ -347,11 +347,11 @@ export class UserManagerInstance {
       kind: 'user',
       currentConnection,
       sessionSecret,
-      authorizationToken,
+      accessToken,
     };
 
     // note: do not persist the authorization token, must be env-var only
-    if (!authorizationToken) {
+    if (!accessToken) {
       await UserSettings.setAsync('auth', {
         userId: user.userId,
         username: user.username,
