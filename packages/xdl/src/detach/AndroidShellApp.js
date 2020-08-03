@@ -804,7 +804,6 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       'com.sec.android.provider.badge.permission.WRITE',
       'com.sonyericsson.home.permission.BROADCAST_BADGE',
       'android.permission.REQUEST_INSTALL_PACKAGES',
-      'android.permission.STORAGE',
       'android.permission.USE_BIOMETRIC',
       'android.permission.SYSTEM_ALERT_WINDOW'
     ].filter(p => !whitelist.includes(p));
