@@ -97,7 +97,7 @@ class iOSBuilder implements Builder {
       await gitUtils.ensureGitStatusIsCleanAsync();
       spinner.succeed();
     } catch (err) {
-      if (/Please commit all changes/.exec(err.message)) {
+      if (err instanceof gitUtils.DirtyGitTreeError) {
         spinner.succeed('We configured your iOS project to build it on the Expo servers');
         log.newLine();
         log('Please review the following changes and pass the message to make the commit.');
@@ -199,7 +199,7 @@ Otherwise, you'll see this prompt again in the future.`
       log.newLine();
       const { bundleIdentifier } = await prompts({
         type: 'select',
-        name: 'source',
+        name: 'bundleIdentifier',
         message: 'Which bundle identifier should we use?',
         choices: [
           {

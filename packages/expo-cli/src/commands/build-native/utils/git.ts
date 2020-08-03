@@ -7,9 +7,13 @@ import prompts from '../../../prompts';
 async function ensureGitStatusIsCleanAsync(): Promise<void> {
   const changes = (await spawnAsync('git', ['status', '-s', '-uno'])).stdout;
   if (changes.length > 0) {
-    throw new Error('Please commit all changes before building your project. Aborting...');
+    throw new DirtyGitTreeError(
+      'Please commit all changes before building your project. Aborting...'
+    );
   }
 }
+
+class DirtyGitTreeError extends Error {}
 
 async function makeProjectTarballAsync(tarPath: string): Promise<number> {
   const spinner = ora('Making project tarball').start();
@@ -49,4 +53,10 @@ async function commitChangesAsync(commitMessage?: string): Promise<void> {
   await spawnAsync('git', ['commit', '-m', commitMessage]);
 }
 
-export { ensureGitStatusIsCleanAsync, makeProjectTarballAsync, commitChangesAsync, showDiff };
+export {
+  DirtyGitTreeError,
+  ensureGitStatusIsCleanAsync,
+  makeProjectTarballAsync,
+  commitChangesAsync,
+  showDiff,
+};
