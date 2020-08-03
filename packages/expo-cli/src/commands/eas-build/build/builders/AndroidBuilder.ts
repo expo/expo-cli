@@ -2,15 +2,15 @@ import { Android, BuildType, Job, Platform, sanitizeJob } from '@expo/build-tool
 
 import AndroidCredentialsProvider, {
   AndroidCredentials,
-} from '../../credentials/provider/AndroidCredentialsProvider';
+} from '../../../../credentials/provider/AndroidCredentialsProvider';
 import {
   AndroidBuildProfile,
   AndroidGenericBuildProfile,
   AndroidManagedBuildProfile,
   Workflow,
-} from '../../easJson';
-import { Builder, BuilderContext } from './build';
-import { ensureCredentialsAsync } from './credentials';
+} from '../../../../easJson';
+import { ensureCredentialsAsync } from '../credentials';
+import { Builder, BuilderContext } from '../types';
 
 interface CommonJobProperties {
   platform: Platform.Android;

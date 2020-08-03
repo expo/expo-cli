@@ -2,7 +2,7 @@ import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import ora from 'ora';
 
-import prompts from '../../../prompts';
+import prompts from '../../../../prompts';
 
 async function ensureGitStatusIsCleanAsync(): Promise<void> {
   const changes = (await spawnAsync('git', ['status', '-s', '-uno'])).stdout;

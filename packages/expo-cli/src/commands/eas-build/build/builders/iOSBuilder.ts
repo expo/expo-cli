@@ -5,19 +5,19 @@ import ora from 'ora';
 
 import iOSCredentialsProvider, {
   iOSCredentials,
-} from '../../credentials/provider/iOSCredentialsProvider';
-import * as ProvisioningProfileUtils from '../../credentials/utils/provisioningProfile';
+} from '../../../../credentials/provider/iOSCredentialsProvider';
+import * as ProvisioningProfileUtils from '../../../../credentials/utils/provisioningProfile';
 import {
   Workflow,
   iOSBuildProfile,
   iOSGenericBuildProfile,
   iOSManagedBuildProfile,
-} from '../../easJson';
-import log from '../../log';
-import prompts from '../../prompts';
-import { Builder, BuilderContext } from './build';
-import { ensureCredentialsAsync } from './credentials';
-import * as gitUtils from './utils/git';
+} from '../../../../easJson';
+import log from '../../../../log';
+import prompts from '../../../../prompts';
+import { ensureCredentialsAsync } from '../credentials';
+import { Builder, BuilderContext } from '../types';
+import * as gitUtils from '../utils/git';
 
 interface CommonJobProperties {
   platform: Platform.iOS;

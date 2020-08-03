@@ -1,7 +1,7 @@
-import { CredentialsProvider } from '../../credentials/provider';
-import { CredentialsSource, Workflow } from '../../easJson';
-import log from '../../log';
-import prompts from '../../prompts';
+import { CredentialsProvider } from '../../../credentials/provider';
+import { CredentialsSource, Workflow } from '../../../easJson';
+import log from '../../../log';
+import prompts from '../../../prompts';
 
 const platformMapName = {
   ios: 'iOS',
