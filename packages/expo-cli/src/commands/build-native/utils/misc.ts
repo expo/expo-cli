@@ -1,34 +1,9 @@
-import spawnAsync from '@expo/spawn-async';
 import { UserManager } from '@expo/xdl';
-import fs from 'fs-extra';
-import ora from 'ora';
 
-import log from '../../log';
-import { printTableJsonArray } from '../utils/cli-table';
-import * as UrlUtils from '../utils/url';
-import { BuildInfo } from './build';
-
-async function makeProjectTarballAsync(tarPath: string) {
-  const spinner = ora('Making project tarball').start();
-  const changes = (await spawnAsync('git', ['status', '-s'])).stdout;
-  if (changes.length > 0) {
-    spinner.fail('Could not make project tarball');
-    throw new Error('Please commit all files before trying to build your project. Aborting...');
-  }
-  await spawnAsync('git', [
-    'archive',
-    '--format=tar.gz',
-    '--prefix',
-    'project/',
-    '-o',
-    tarPath,
-    'HEAD',
-  ]);
-  spinner.succeed('Project tarball created.');
-
-  const { size } = await fs.stat(tarPath);
-  return size;
-}
+import log from '../../../log';
+import { printTableJsonArray } from '../../utils/cli-table';
+import * as UrlUtils from '../../utils/url';
+import { BuildInfo } from '../build';
 
 function printBuildTable(builds: BuildInfo[]) {
   const headers = ['started', 'platform', 'status', 'artifact'];
@@ -97,4 +72,4 @@ async function printBuildResults(buildInfo: (BuildInfo | null)[]): Promise<void>
   }
 }
 
-export { makeProjectTarballAsync, printBuildTable, printLogsUrls, printBuildResults };
+export { printBuildTable, printLogsUrls, printBuildResults };

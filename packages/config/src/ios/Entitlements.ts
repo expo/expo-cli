@@ -7,9 +7,10 @@ import { addWarningIOS } from '../WarningAggregator';
 import {
   getPbxproj,
   getProjectName,
+  getXCBuildConfigurationSection,
   isBuildConfig,
-  removeComments,
-  removeTestHosts,
+  isNotComment,
+  isNotTestHost,
 } from './utils/Xcodeproj';
 
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
@@ -83,10 +84,10 @@ function createEntitlementsFile(projectRoot: string) {
    * Add file to pbxproj under CODE_SIGN_ENTITLEMENTS
    */
   const project = getPbxproj(projectRoot);
-  Object.entries(project.pbxXCBuildConfigurationSection())
-    .filter(removeComments)
+  Object.entries(getXCBuildConfigurationSection(project))
+    .filter(isNotComment)
     .filter(isBuildConfig)
-    .filter(removeTestHosts)
+    .filter(isNotTestHost)
     .forEach(({ 1: { buildSettings } }: any) => {
       buildSettings.CODE_SIGN_ENTITLEMENTS = entitlementsRelativePath;
     });

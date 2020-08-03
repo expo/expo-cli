@@ -50,6 +50,10 @@ class AndroidBuilder implements Builder {
     this.credentials = await provider.getCredentialsAsync(credentialsSource);
   }
 
+  public async configureProjectAsync(): Promise<void> {
+    // TODO: implement me
+  }
+
   public async prepareJobAsync(archiveUrl: string): Promise<Job> {
     if (!this.credentialsPrepared) {
       throw new Error('ensureCredentialsAsync should be called before prepareJobAsync');

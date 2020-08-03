@@ -24,7 +24,7 @@ import {
   IosDistCredentials,
   provisioningProfileSchema,
 } from '../credentials';
-import provisioningProfileUtils from '../utils/provisioningProfile';
+import * as provisioningProfileUtils from '../utils/provisioningProfile';
 
 export class RemoveProvisioningProfile implements IView {
   constructor(

@@ -16,9 +16,10 @@ import {
   waitForBuildEndAsync,
 } from './build';
 import iOSBuilder from './iOSBuilder';
-import { printBuildResults, printBuildTable, printLogsUrls } from './utils';
+import { ensureGitStatusIsCleanAsync } from './utils/git';
+import { printBuildResults, printBuildTable, printLogsUrls } from './utils/misc';
 
-enum BuildPlatform {
+export enum BuildPlatform {
   ANDROID = 'android',
   IOS = 'ios',
   ALL = 'all',
@@ -71,6 +72,9 @@ export async function buildAction(projectDir: string, options: BuildOptions): Pr
         .join(', ')}`
     );
   }
+
+  await ensureGitStatusIsCleanAsync();
+
   const easConfig: EasConfig = await new EasJsonReader(projectDir, platform).readAsync(profile);
   const ctx = await createBuilderContextAsync(projectDir, easConfig);
   const projectId = await ensureProjectExistsAsync(ctx.user, {

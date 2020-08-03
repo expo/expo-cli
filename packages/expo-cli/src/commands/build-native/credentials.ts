@@ -52,7 +52,7 @@ async function ensureCredentialsAutoAsync(
         const { confirm } = await prompts({
           type: 'confirm',
           name: 'confirm',
-          message: 'Do you want to generete new credentials?',
+          message: 'Do you want to generate new credentials?',
         });
         if (confirm) {
           return CredentialsSource.REMOTE;

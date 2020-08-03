@@ -64,7 +64,7 @@ async function readAndroidAsync(projectDir: string): Promise<AndroidCredentials>
   const keystoreInfo = credentialsJson.android.keystore;
   return {
     keystore: {
-      keystore: await fs.readFile(keystoreInfo.keystorePath, 'base64'),
+      keystore: await fs.readFile(getAbsolutePath(projectDir, keystoreInfo.keystorePath), 'base64'),
       keystorePassword: keystoreInfo.keystorePassword,
       keyAlias: keystoreInfo.keyAlias,
       keyPassword: keystoreInfo.keyPassword,
@@ -78,9 +78,15 @@ async function readIosAsync(projectDir: string): Promise<iOSCredentials> {
     throw new Error('iOS credentials are missing from credentials.json'); // TODO: add fyi
   }
   return {
-    provisioningProfile: await fs.readFile(credentialsJson.ios.provisioningProfilePath, 'base64'),
+    provisioningProfile: await fs.readFile(
+      getAbsolutePath(projectDir, credentialsJson.ios.provisioningProfilePath),
+      'base64'
+    ),
     distributionCertificate: {
-      certP12: await fs.readFile(credentialsJson.ios.distributionCertificate.path, 'base64'),
+      certP12: await fs.readFile(
+        getAbsolutePath(projectDir, credentialsJson.ios.distributionCertificate.path),
+        'base64'
+      ),
       certPassword: credentialsJson.ios.distributionCertificate.password,
     },
   };
@@ -109,5 +115,8 @@ async function readAsync(projectDir: string): Promise<CredentialsJson> {
 
   return credentialsJson;
 }
+
+const getAbsolutePath = (projectDir: string, filePath: string): string =>
+  path.isAbsolute(filePath) ? filePath : path.join(projectDir, filePath);
 
 export default { readAndroidAsync, readIosAsync, fileExistsAsync };

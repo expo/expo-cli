@@ -19,10 +19,13 @@ export function getSourceRoot(projectRoot: string) {
   return path.dirname(paths[0]);
 }
 
+// TODO: define this type later
+export type Pbxproj = any;
+
 // TODO(brentvatne): I couldn't figure out how to do this with an existing
 // higher level function exposed by the xcode library, but we should find out how to do
 // that and replace this with it
-export function addFileToGroup(filepath: string, groupName: string, project: Project) {
+export function addFileToGroup(filepath: string, groupName: string, project: Project): Pbxproj {
   const file = new pbxFile(filepath);
   file.uuid = project.generateUuid();
   file.fileRef = project.generateUuid();
@@ -41,7 +44,7 @@ export function addFileToGroup(filepath: string, groupName: string, project: Pro
 /**
  * Get the pbxproj for the given path
  */
-export function getPbxproj(projectRoot: string) {
+export function getPbxproj(projectRoot: string): Pbxproj {
   const pbxprojPaths = globSync('ios/*/project.pbxproj', { absolute: true, cwd: projectRoot });
   const [pbxprojPath, ...otherPbxprojPaths] = pbxprojPaths;
 
@@ -58,21 +61,74 @@ export function getPbxproj(projectRoot: string) {
   return project;
 }
 
-export function removeComments([item]: any[]): boolean {
-  return !item.endsWith(`_comment`);
+export type ProjectSection = Record<string, ProjectSectionItem>;
+export type ProjectSectionItem = {
+  isa: string;
+  attributes: {
+    TargetAttributes: Record<
+      string,
+      {
+        DevelopmentTeam?: string;
+        ProvisioningStyle?: string;
+      }
+    >;
+  };
+  targets: {
+    value: string;
+  }[];
+};
+export type ProjectSectionEntry = [string, ProjectSectionItem];
+
+export function getProjectSection(project: Pbxproj): ProjectSection {
+  return project.pbxProjectSection();
 }
 
-export function isBuildConfig(input: any[]): boolean {
-  const {
-    1: { isa },
-  } = input;
-  return isa === 'XCBuildConfiguration';
+export type ConfigurationLists = Record<string, ConfigurationList>;
+export type ConfigurationList = {
+  isa: string;
+  buildConfigurations: {
+    value: string;
+  }[];
+};
+export type ConfigurationListsEntry = [string, ConfigurationList];
+
+export function getXCConfigurationLists(project: Pbxproj): ConfigurationList[] {
+  const lists = project.pbxXCConfigurationList() as ConfigurationLists;
+  return Object.entries(lists)
+    .filter(isNotComment)
+    .map(([, value]) => value);
 }
 
-export function removeTestHosts(input: any[]): boolean {
-  const {
-    1: { buildSettings },
-  } = input;
+export type ConfigurationSection = Record<string, ConfigurationSectionItem>;
+export type ConfigurationSectionItem = {
+  isa: string;
+  buildSettings: {
+    PRODUCT_NAME?: string;
+    PRODUCT_BUNDLE_IDENTIFIER?: string;
+    PROVISIONING_PROFILE_SPECIFIER?: string;
+    TEST_HOST?: any;
+    DEVELOPMENT_TEAM?: string;
+    CODE_SIGN_IDENTITY?: string;
+    CODE_SIGN_STYLE?: string;
+  };
+};
+export type ConfigurationSectionEntry = [string, ConfigurationSectionItem];
 
-  return !buildSettings.TEST_HOST;
+export function getXCBuildConfigurationSection(project: Pbxproj): ConfigurationSection {
+  return project.pbxXCBuildConfigurationSection();
+}
+
+export function isBuildConfig([, sectionItem]: ConfigurationSectionEntry): boolean {
+  return sectionItem.isa === 'XCBuildConfiguration';
+}
+
+export function isNotTestHost([, sectionItem]: ConfigurationSectionEntry): boolean {
+  return !sectionItem.buildSettings.TEST_HOST;
+}
+
+export function isNotComment([key]:
+  | ConfigurationSectionEntry
+  | ProjectSectionEntry
+  | ConfigurationListsEntry): boolean {
+  return !key.endsWith(`_comment`);
 }
