@@ -45,7 +45,11 @@ jest.mock('axios', () => ({
 
     const { hostname, pathname } = new URL(options.url);
 
-    if (hostname === '127.0.0.1') {
+    if (
+      hostname === '127.0.0.1' ||
+      // Allow downloading the configuration schema during test
+      pathname.startsWith('/--/api/v2/project/configuration/schema/')
+    ) {
       return axios.request(options);
     } else if (hostname !== 'exp.host') {
       throw new Error(`Test tried to make a request to unknown host ${hostname}`);
