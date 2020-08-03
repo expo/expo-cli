@@ -68,11 +68,8 @@ export default class ApiV2Client {
   accessToken: string | null = null;
 
   static clientForUser(user?: APIV2ClientOptions | null): ApiV2Client {
-    if (user && (user.accessToken || user.sessionSecret)) {
-      return new ApiV2Client({
-        accessToken: user.accessToken,
-        sessionSecret: user.sessionSecret,
-      });
+    if (user) {
+      return new ApiV2Client(user);
     }
 
     return new ApiV2Client();
