@@ -1,12 +1,13 @@
-import path from 'path';
+import spawnAsync from '@expo/spawn-async';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { copyFileSync, ensureDirSync } from 'fs-extra';
+import path from 'path';
 import temporary from 'tempy';
 
-import { copyFileSync, ensureDirSync } from 'fs-extra';
-import spawnAsync from '@expo/spawn-async';
-import { attachLoggerStream } from '../project/ProjectUtils';
-import UserManager from '../User';
 import { publishAsync } from '../Project';
+import UserManager from '../User';
+import { LogRecord } from '../logs/PackagerLogsStream';
+import { attachLoggerStream } from '../project/ProjectUtils';
 
 jest.dontMock('fs');
 jest.dontMock('resolve-from');
@@ -102,9 +103,14 @@ describe('publishAsync', () => {
     }
     await spawnAsync('yarnpkg', [], { cwd: projectRoot });
     attachLoggerStream(projectRoot, {
-      name: 'test-log-output',
-      stream: process.stderr,
-      level: 'info',
+      stream: {
+        write: (chunk: LogRecord) => {
+          if (!/bundle_transform_progressed/.test(chunk.msg)) {
+            console.log(chunk.msg);
+          }
+        },
+      },
+      type: 'raw',
     });
   });
 
