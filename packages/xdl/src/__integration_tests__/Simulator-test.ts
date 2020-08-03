@@ -1,14 +1,15 @@
 import delayAsync from 'delay-async';
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 40000;
+import * as Simulator from '../Simulator';
 
-const xdl = require('../xdl');
+describe.skip('simulator', () => {
+  it('opens and loads url in expo', async () => {
+    // This tests depends on the simulator, and could take some time to boot
+    jest.setTimeout(60000);
 
-describe('simulator', () => {
-  xit('opens and loads url in expo', async () => {
-    const Simulator = xdl.Simulator;
+    // Determine if we can run this test or not, if simulator isn't available warn and stop
     if (!(await Simulator._isSimulatorInstalledAsync())) {
-      throw new Error("Simulator isn't installed on this computer; can't run this test.");
+      return console.warn("Simulator isn't installed on this computer; can't run this test.");
     }
 
     // Quit the simulator to start the test
@@ -16,19 +17,21 @@ describe('simulator', () => {
       await Simulator._quitSimulatorAsync();
     }
 
-    await delayAsync(1000); // 3 seconds
+    await delayAsync(1000); // 1s
 
     // Open the simulator
     await Simulator._openAndBootSimulatorAsync();
 
-    await delayAsync(9000); // 3 seconds
+    await delayAsync(9000); // 9s
 
+    // If its not running now, we can't test
     if (!(await Simulator._isSimulatorRunningAsync())) {
       throw new Error(
         "Simulator should be running after being opened, but we're detecting that it isn't."
       );
     }
 
+    // Use a fresh Expo install for this test
     if (await Simulator._isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
       await Simulator._uninstallExpoAppFromSimulatorAsync();
     }
@@ -40,9 +43,10 @@ describe('simulator', () => {
       throw new Error("Expo app should be installed on this simulator but it isn't");
     }
 
+    // Try opening an Expo project, even when it doesn't exists Expo should be open
     await Simulator._openUrlInSimulatorAsync('exp://exp.host/@exponent/fluxpybird');
 
-    await delayAsync(6000);
+    await delayAsync(6000); // 6s
 
     await Simulator._uninstallExpoAppFromSimulatorAsync();
     if (await Simulator._isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {

@@ -17,7 +17,7 @@
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "watch": "concurrently \"tsc --emitDeclarationOnly --watch\" \"gulp watch\"",
     "test": "jest --config jest/unit-test-config.js",
-    "integration-tests": "jest --config jest/integration-test-config.json --rootDir ."
+    "integration-tests": "jest --config jest/integration-test-config.js"
   },
   "repository": {
     "type": "git",

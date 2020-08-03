@@ -4,17 +4,19 @@ import path from 'path';
 import uuid from 'uuid';
 
 import ApiV2Client from '../ApiV2';
-import { UserManagerInstance } from '../User';
+import { User, UserManagerInstance } from '../User';
 import UserSettings from '../UserSettings';
 
-const _makeShortId = (salt, minLength = 10) => {
+const _makeShortId = (salt: string, minLength = 10) => {
   const hashIds = new HashIds(salt, minLength);
   return hashIds.encode(Date.now());
 };
 
-describe('User Sessions', () => {
-  let userForTest;
-  let userForTestPassword;
+// Note: these tests are actually calling the API,
+// in the unit test "User-test.ts" the API is mocked and the same tests are executed.
+describe.skip('User Sessions', () => {
+  let userForTest: User;
+  let userForTestPassword: string;
 
   beforeAll(async () => {
     process.env.__UNSAFE_EXPO_HOME_DIRECTORY = path.join(
@@ -61,7 +63,7 @@ describe('User Sessions', () => {
     await UserManager.loginAsync('user-pass', {
       username: userForTest.username,
       password: userForTestPassword,
-      testSession: true,
+      // testSession: true,
     });
 
     const user = await UserManager.getCurrentUserAsync();
@@ -74,9 +76,10 @@ describe('User Sessions', () => {
     expect(user.sessionSecret).not.toBe(undefined);
 
     // expect session to be in state.json
-    const { sessionSecret } = await UserSettings.getAsync('auth', {});
-    expect(sessionSecret).not.toBe(undefined);
+    const auth = await UserSettings.getAsync('auth', null);
+    expect(auth?.sessionSecret).not.toBe(undefined);
   });
+
   it('should remove a session token upon logout', async () => {
     const UserManager = _newTestUserManager();
     await UserManager.loginAsync('user-pass', {
@@ -87,8 +90,8 @@ describe('User Sessions', () => {
     await UserManager.logoutAsync();
 
     // expect session to be removed
-    const { sessionSecret } = await UserSettings.getAsync('auth', {});
-    expect(sessionSecret).toBe(undefined);
+    const auth = await UserSettings.getAsync('auth', null);
+    expect(auth?.sessionSecret).toBe(undefined);
   });
 
   it('should use the token in apiv2', async () => {

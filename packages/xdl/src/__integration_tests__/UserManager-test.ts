@@ -4,16 +4,18 @@ import path from 'path';
 import uuid from 'uuid';
 
 import ApiV2Client from '../ApiV2';
-import { UserManagerInstance } from '../User';
+import { User, UserManagerInstance } from '../User';
 
-const _makeShortId = (salt, minLength = 10) => {
+const _makeShortId = (salt: string, minLength = 10) => {
   const hashIds = new HashIds(salt, minLength);
   return hashIds.encode(Date.now());
 };
 
-describe('UserManager', () => {
-  let userForTest;
-  let userForTestPassword;
+// Note: these tests are actually calling the API,
+// in the unit test "User-test.ts" the API is mocked and the same tests are executed.
+describe.skip('UserManager', () => {
+  let userForTest: User;
+  let userForTestPassword: string;
 
   beforeAll(async () => {
     process.env.__UNSAFE_EXPO_HOME_DIRECTORY = path.join(
@@ -115,7 +117,7 @@ describe('UserManager', () => {
     const _getProfileSpy = jest.fn(UserManager._getProfileAsync);
     UserManager._getProfileAsync = _getProfileSpy;
 
-    const users = await Promise.all([
+    const [first, second] = await Promise.all([
       UserManager.getCurrentUserAsync(),
       UserManager.getCurrentUserAsync(),
     ]);
@@ -123,7 +125,7 @@ describe('UserManager', () => {
     expect(_getProfileSpy).toHaveBeenCalledTimes(1);
 
     // This shouldn't have changed, but just double check it
-    expect(users[0].sessionSecret).toEqual(users[1].sessionSecret);
+    expect(first?.sessionSecret).toEqual(second?.sessionSecret);
   });
 });
 
