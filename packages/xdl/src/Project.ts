@@ -13,7 +13,13 @@ import {
   resolveModule,
 } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
-import { MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
+import {
+  BundleAssetWithFileHashes,
+  BundleOutput,
+  MetroDevServerOptions,
+  bundleAsync,
+  runMetroDevServerAsync,
+} from '@expo/dev-server';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import joi from '@hapi/joi';
@@ -51,6 +57,7 @@ import * as Analytics from './Analytics';
 import * as Android from './Android';
 import ApiV2 from './ApiV2';
 import Config from './Config';
+import * as ConnectionStatus from './ConnectionStatus';
 import * as DevSession from './DevSession';
 import * as EmbeddedAssets from './EmbeddedAssets';
 import { maySkipManifestValidation } from './Env';
@@ -68,13 +75,11 @@ import * as Watchman from './Watchman';
 import * as Webpack from './Webpack';
 import XDLError from './XDLError';
 import * as ExponentTools from './detach/ExponentTools';
-// @ts-ignore IosWorkspace not yet converted to TypeScript
 import * as Doctor from './project/Doctor';
 import * as ExpSchema from './project/ExpSchema';
 import * as ProjectUtils from './project/ProjectUtils';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 import FormData from './tools/FormData';
-import { ConnectionStatus } from './xdl';
 
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
@@ -99,19 +104,8 @@ const _cachedSignedManifest: CachedSignedManifest = {
   signedManifest: null,
 };
 
-type Asset =
-  | { fileHashes: string[]; files: string[]; hash: string }
-  | {
-      __packager_asset: true;
-      fileHashes: string[];
-      files: string[];
-      fileSystemLocation: string;
-      hash: string;
-      httpServerLocation: string;
-      name: string;
-      scales: number[];
-      type: string;
-    };
+type ManifestAsset = { fileHashes: string[]; files: string[]; hash: string };
+type Asset = ManifestAsset | BundleAssetWithFileHashes;
 
 type ManifestResolutionError = Error & {
   localAssetPath?: string;
@@ -142,6 +136,9 @@ export type StartOptions = {
 type PublishOptions = {
   releaseChannel?: string;
   target?: ProjectTarget;
+  resetCache?: boolean;
+  maxWorkers?: number;
+  quiet?: boolean;
 };
 
 type PackagerOptions = {
@@ -161,6 +158,8 @@ type Release = {
 };
 
 export type ProjectStatus = 'running' | 'ill' | 'exited';
+
+type BundlesByPlatform = { android: BundleOutput; ios: BundleOutput };
 
 export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
   const { packagerPort, expoServerPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
@@ -196,63 +195,6 @@ async function _getFreePortAsync(rangeStart: number) {
   }
 
   return port;
-}
-
-async function _getForPlatformAsync(
-  projectRoot: string,
-  url: string,
-  platform: Platform,
-  { errorCode, minLength }: { errorCode: ErrorCode; minLength?: number }
-): Promise<string> {
-  const fullUrl = `${url}&platform=${platform}`;
-  let response;
-
-  try {
-    response = await axios.get(fullUrl, {
-      responseType: 'text',
-      // Workaround for https://github.com/axios/axios/issues/907.
-      // Without transformResponse, axios will parse the body as JSON regardless of the responseType/
-      transformResponse: [data => data],
-      proxy: false,
-      validateStatus: status => status === 200,
-      headers: {
-        'Exponent-Platform': platform,
-      },
-    });
-  } catch (error) {
-    if (error.response) {
-      if (error.response.data) {
-        let body;
-        try {
-          body = JSON.parse(error.response.data);
-        } catch (e) {
-          ProjectUtils.logError(projectRoot, 'expo', error.response.data);
-        }
-
-        if (body) {
-          if (body.message) {
-            ProjectUtils.logError(projectRoot, 'expo', body.message);
-          } else {
-            ProjectUtils.logError(projectRoot, 'expo', error.response.data);
-          }
-        }
-      }
-      throw new XDLError(
-        errorCode,
-        `Packager URL ${fullUrl} returned unexpected code ${error.response.status}. ` +
-          'Please open your project in the Expo app and see if there are any errors. ' +
-          'Also scroll up and make sure there were no errors or warnings when opening your project.'
-      );
-    } else {
-      throw error;
-    }
-  }
-
-  if (!response.data || (minLength && response.data.length < minLength)) {
-    throw new XDLError(errorCode, `Body is: ${response.data}`);
-  }
-
-  return response.data;
 }
 
 async function _resolveGoogleServicesFile(projectRoot: string, manifest: ExpoConfig) {
@@ -545,24 +487,22 @@ export async function exportForAppHosting(
     publishOptions?: PublishOptions;
   } = {}
 ): Promise<void> {
-  await _validatePackagerReadyAsync(projectRoot);
-
   const defaultTarget = getDefaultTarget(projectRoot);
   const target = options.publishOptions?.target ?? defaultTarget;
 
   // build the bundles
-  const packagerOpts = {
-    dev: !!options.isDev,
-    minify: true,
-  };
-
   // make output dirs if not exists
   const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
   await fs.ensureDir(assetPathToWrite);
   const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
   await fs.ensureDir(bundlesPathToWrite);
 
-  const { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
+  const bundles = await buildPublishBundlesAsync(projectRoot, options.publishOptions, {
+    dev: options.isDev,
+  });
+  const iosBundle = bundles.ios.code;
+  const androidBundle = bundles.android.code;
+
   const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
@@ -580,7 +520,7 @@ export async function exportForAppHosting(
   // Get project config
   const publishOptions = options.publishOptions || {};
   const { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
-  const { assets } = await _fetchAndSaveAssetsAsync(projectRoot, exp, publicUrl, outputDir);
+  const { assets } = await exportAssetsAsync(projectRoot, exp, publicUrl, outputDir, bundles);
 
   if (options.dumpAssetmap) {
     logger.global.info('Dumping asset map.');
@@ -663,13 +603,12 @@ export async function exportForAppHosting(
     JSON.stringify(iosManifest)
   );
 
-  let iosSourceMap = null;
-  let androidSourceMap = null;
+  const iosSourceMap = bundles.ios.map;
+  const androidSourceMap = bundles.android.map;
 
-  // Build sourcemaps when `postExport` hook is set up or when `dumpSourcemap` argument is passed
-  if (options.dumpSourcemap || (hooks?.postExport && hooks.postExport?.length > 0)) {
-    ({ iosSourceMap, androidSourceMap } = await _buildSourceMapsAsync(projectRoot));
-    // Write the sourcemap files
+  // build source maps
+  if (options.dumpSourcemap) {
+    // write the sourcemap files
     const iosMapName = `ios-${iosBundleHash}.map`;
     const iosMapPath = path.join(outputDir, 'bundles', iosMapName);
     await writeArtifactSafelyAsync(projectRoot, null, iosMapPath, iosSourceMap);
@@ -754,7 +693,7 @@ async function truncateLastNLines(filePath: string, n: number) {
   await fs.truncate(filePath, size - to_vanquish);
 }
 
-async function _saveAssetAsync(projectRoot: string, assets: Asset[], outputDir: string) {
+async function _saveAssetsAsync(projectRoot: string, assets: Asset[], outputDir: string) {
   // Collect paths by key, also effectively handles duplicates in the array
   const paths: { [fileHash: string]: string } = {};
   assets.forEach(asset => {
@@ -807,7 +746,6 @@ export async function publishAsync(
 ): Promise<{ url: string; ids: string[]; err?: string }> {
   const user = await UserManager.ensureLoggedInAsync();
   const target = options.target ?? getDefaultTarget(projectRoot);
-  await _validatePackagerReadyAsync(projectRoot);
   Analytics.logEvent('Publish', {
     projectRoot,
     developerTool: Config.developerTool,
@@ -829,19 +767,18 @@ export async function publishAsync(
   delete exp.hooks;
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
 
-  const { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot);
+  const bundles = await buildPublishBundlesAsync(projectRoot, options);
+  const androidBundle = bundles.android.code;
+  const iosBundle = bundles.ios.code;
 
-  await _fetchAndUploadAssetsAsync(projectRoot, exp);
+  await publishAssetsAsync(projectRoot, exp, bundles);
 
   const hasHooks = validPostPublishHooks.length > 0;
 
   const shouldPublishAndroidMaps = !!exp.android && !!exp.android.publishSourceMapPath;
-
   const shouldPublishIosMaps = !!exp.ios && !!exp.ios.publishSourceMapPath;
-
-  const { iosSourceMap, androidSourceMap } = await _maybeBuildSourceMapsAsync(projectRoot, exp, {
-    force: hasHooks || shouldPublishAndroidMaps || shouldPublishIosMaps,
-  });
+  const androidSourceMap = hasHooks || shouldPublishAndroidMaps ? bundles.android.map : null;
+  const iosSourceMap = hasHooks || shouldPublishIosMaps ? bundles.ios.map : null;
 
   let response;
   try {
@@ -974,21 +911,6 @@ async function _uploadArtifactsAsync({
   return await api.uploadFormDataAsync('publish/new', formData);
 }
 
-async function _validatePackagerReadyAsync(projectRoot: string) {
-  _assertValidProjectRoot(projectRoot);
-
-  // Ensure the packager is started
-  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  if (!packagerInfo.packagerPort) {
-    ProjectUtils.logWarning(
-      projectRoot,
-      'expo',
-      'Metro Bundler is not running. Trying to restart it...'
-    );
-    await startReactNativeServerAsync(projectRoot, { reset: true });
-  }
-}
-
 async function _getPublishExpConfigAsync(
   projectRoot: string,
   options: PublishOptions
@@ -999,7 +921,7 @@ async function _getPublishExpConfigAsync(
   if (options.releaseChannel != null && typeof options.releaseChannel !== 'string') {
     throw new XDLError('INVALID_OPTIONS', 'releaseChannel must be a string');
   }
-  options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
+  options.releaseChannel = options.releaseChannel || 'default';
 
   // Verify that exp/app.json and package.json exist
   const { exp, pkg } = getConfig(projectRoot);
@@ -1022,8 +944,52 @@ async function _getPublishExpConfigAsync(
   return { exp: { ...exp, sdkVersion: sdkVersion! }, pkg };
 }
 
+async function buildPublishBundlesAsync(
+  projectRoot: string,
+  publishOptions: PublishOptions = {},
+  bundleOptions: { dev?: boolean } = {}
+) {
+  if (!getenv.boolish('EXPO_USE_DEV_SERVER', false)) {
+    try {
+      await startReactNativeServerAsync(
+        projectRoot,
+        {
+          nonPersistent: true,
+          maxWorkers: publishOptions.maxWorkers,
+          target: publishOptions.target,
+          reset: publishOptions.resetCache,
+        },
+        !publishOptions.quiet
+      );
+      return await fetchPublishBundlesAsync(projectRoot);
+    } finally {
+      await stopReactNativeServerAsync(projectRoot);
+    }
+  }
+  const platforms: Platform[] = ['android', 'ios'];
+  const [android, ios] = await bundleAsync(
+    projectRoot,
+    {
+      target: publishOptions.target,
+      resetCache: publishOptions.resetCache,
+      logger: ProjectUtils.getLogger(projectRoot),
+      quiet: publishOptions.quiet,
+    },
+    platforms.map((platform: Platform) => ({
+      platform,
+      entryPoint: Exp.determineEntryPoint(projectRoot, platform),
+      dev: bundleOptions.dev,
+    }))
+  );
+
+  return {
+    android,
+    ios,
+  };
+}
+
 // Fetch iOS and Android bundles for publishing
-async function _buildPublishBundlesAsync(projectRoot: string, opts?: PackagerOptions) {
+async function fetchPublishBundlesAsync(projectRoot: string, opts?: PackagerOptions) {
   const entryPoint = Exp.determineEntryPoint(projectRoot);
   const publishUrl = await UrlUtils.constructPublishUrlAsync(
     projectRoot,
@@ -1031,6 +997,8 @@ async function _buildPublishBundlesAsync(projectRoot: string, opts?: PackagerOpt
     undefined,
     opts
   );
+  const sourceMapUrl = await UrlUtils.constructSourceMapUrlAsync(projectRoot, entryPoint);
+  const assetsUrl = await UrlUtils.constructAssetsUrlAsync(projectRoot, entryPoint);
 
   logger.global.info('Building iOS bundle');
   const iosBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'ios', {
@@ -1044,42 +1012,86 @@ async function _buildPublishBundlesAsync(projectRoot: string, opts?: PackagerOpt
     minLength: MINIMUM_BUNDLE_SIZE,
   });
 
-  return { iosBundle, androidBundle };
-}
-
-async function _maybeBuildSourceMapsAsync(
-  projectRoot: string,
-  exp: ExpoConfig,
-  options = { force: false }
-) {
-  if (options.force) {
-    return _buildSourceMapsAsync(projectRoot);
-  } else {
-    return { iosSourceMap: null, androidSourceMap: null };
-  }
-}
-
-// note(brentvatne): currently we build source map anytime there is a
-// postPublish hook -- we may have an option in the future to manually
-// enable sourcemap building, but for now it's very fast, most apps in
-// production should use sourcemaps for error reporting, and in the worst
-// case, adding a few seconds to a postPublish hook isn't too annoying
-async function _buildSourceMapsAsync(projectRoot: string) {
-  const entryPoint = Exp.determineEntryPoint(projectRoot);
-  const sourceMapUrl = await UrlUtils.constructSourceMapUrlAsync(projectRoot, entryPoint);
-
-  logger.global.info('Building sourcemaps');
+  logger.global.info('Building source maps');
   const iosSourceMap = await _getForPlatformAsync(projectRoot, sourceMapUrl, 'ios', {
     errorCode: 'INVALID_BUNDLE',
     minLength: MINIMUM_BUNDLE_SIZE,
   });
-
   const androidSourceMap = await _getForPlatformAsync(projectRoot, sourceMapUrl, 'android', {
     errorCode: 'INVALID_BUNDLE',
     minLength: MINIMUM_BUNDLE_SIZE,
   });
 
-  return { iosSourceMap, androidSourceMap };
+  logger.global.info('Building asset maps');
+  const iosAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'ios', {
+    errorCode: 'INVALID_ASSETS',
+  });
+  const androidAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'android', {
+    errorCode: 'INVALID_ASSETS',
+  });
+
+  return {
+    android: { code: androidBundle, map: androidSourceMap, assets: JSON.parse(androidAssetsJson) },
+    ios: { code: iosBundle, map: iosSourceMap, assets: JSON.parse(iosAssetsJson) },
+  };
+}
+
+async function _getForPlatformAsync(
+  projectRoot: string,
+  url: string,
+  platform: Platform,
+  { errorCode, minLength }: { errorCode: ErrorCode; minLength?: number }
+): Promise<string> {
+  let fullUrl = `${url}&platform=${platform}`;
+  let response;
+
+  try {
+    response = await axios.request({
+      url: fullUrl,
+      responseType: 'text',
+      // Workaround for https://github.com/axios/axios/issues/907.
+      // Without transformResponse, axios will parse the body as JSON regardless of the responseType/
+      transformResponse: [data => data],
+      proxy: false,
+      validateStatus: status => status === 200,
+      headers: {
+        'Exponent-Platform': platform,
+      },
+    });
+  } catch (error) {
+    if (error.response) {
+      if (error.response.data) {
+        let body;
+        try {
+          body = JSON.parse(error.response.data);
+        } catch (e) {
+          ProjectUtils.logError(projectRoot, 'expo', error.response.data);
+        }
+
+        if (body) {
+          if (body.message) {
+            ProjectUtils.logError(projectRoot, 'expo', body.message);
+          } else {
+            ProjectUtils.logError(projectRoot, 'expo', error.response.data);
+          }
+        }
+      }
+      throw new XDLError(
+        errorCode,
+        `Packager URL ${fullUrl} returned unexpected code ${error.response.status}. ` +
+          'Please open your project in the Expo app and see if there are any errors. ' +
+          'Also scroll up and make sure there were no errors or warnings when opening your project.'
+      );
+    } else {
+      throw error;
+    }
+  }
+
+  if (!response.data || (minLength && response.data.length < minLength)) {
+    throw new XDLError(errorCode, `Body is: ${response.data}`);
+  }
+
+  return response.data;
 }
 
 /**
@@ -1094,19 +1106,9 @@ async function _buildSourceMapsAsync(projectRoot: string) {
 async function _collectAssets(
   projectRoot: string,
   exp: PublicConfig,
-  hostedAssetPrefix: string
+  hostedAssetPrefix: string,
+  bundles: BundlesByPlatform
 ): Promise<Asset[]> {
-  const entryPoint = Exp.determineEntryPoint(projectRoot);
-  const assetsUrl = await UrlUtils.constructAssetsUrlAsync(projectRoot, entryPoint);
-
-  const iosAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'ios', {
-    errorCode: 'INVALID_ASSETS',
-  });
-
-  const androidAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'android', {
-    errorCode: 'INVALID_ASSETS',
-  });
-
   // Resolve manifest assets to their hosted URL and add them to the list of assets to
   // be uploaded. Modifies exp.
   const manifestAssets: Asset[] = [];
@@ -1123,10 +1125,7 @@ async function _collectAssets(
     true
   );
 
-  // Upload asset files
-  const iosAssets = JSON.parse(iosAssetsJson);
-  const androidAssets = JSON.parse(androidAssetsJson);
-  return iosAssets.concat(androidAssets).concat(manifestAssets);
+  return [...bundles.ios.assets, ...bundles.android.assets, ...manifestAssets];
 }
 
 /**
@@ -1179,11 +1178,15 @@ async function _configureExpForAssets(projectRoot: string, exp: ExpoConfig, asse
   return exp;
 }
 
-async function _fetchAndUploadAssetsAsync(projectRoot: string, exp: PublicConfig) {
+async function publishAssetsAsync(
+  projectRoot: string,
+  exp: PublicConfig,
+  bundles: BundlesByPlatform
+) {
   logger.global.info('Analyzing assets');
 
   const assetCdnPath = urljoin(EXPO_CDN, '~assets');
-  const assets = await _collectAssets(projectRoot, exp, assetCdnPath);
+  const assets = await _collectAssets(projectRoot, exp, assetCdnPath, bundles);
 
   logger.global.info('Uploading assets');
 
@@ -1199,21 +1202,22 @@ async function _fetchAndUploadAssetsAsync(projectRoot: string, exp: PublicConfig
   return exp;
 }
 
-async function _fetchAndSaveAssetsAsync(
+async function exportAssetsAsync(
   projectRoot: string,
   exp: PublicConfig,
   hostedUrl: string,
-  outputDir: string
+  outputDir: string,
+  bundles: BundlesByPlatform
 ) {
   logger.global.info('Analyzing assets');
 
   const assetCdnPath = urljoin(hostedUrl, 'assets');
-  const assets = await _collectAssets(projectRoot, exp, assetCdnPath);
+  const assets = await _collectAssets(projectRoot, exp, assetCdnPath, bundles);
 
   logger.global.info('Saving assets');
 
   if (assets.length > 0 && assets[0].fileHashes) {
-    await _saveAssetAsync(projectRoot, assets, outputDir);
+    await _saveAssetsAsync(projectRoot, assets, outputDir);
   } else {
     logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
   }
@@ -1514,7 +1518,8 @@ async function _waitForRunningAsync(
   retries: number = 300
 ): Promise<true> {
   try {
-    const response = await axios.get(url, {
+    const response = await axios.request({
+      url,
       responseType: 'text',
       proxy: false,
     });
@@ -1714,7 +1719,7 @@ export async function startReactNativeServerAsync(
 
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
 
-  const customLogReporterPath: string = require.resolve(path.join(__dirname, 'reporter'));
+  const customLogReporterPath: string = require.resolve(path.join(__dirname, '../build/reporter'));
 
   // TODO: Bacon: Support .mjs (short-lived JS modules extension that some packages use)
   const sourceExtsConfig = { isTS: true, isReact: true, isModern: false };
@@ -2119,7 +2124,10 @@ export async function stopExpoServerAsync(projectRoot: string): Promise<void> {
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (packagerInfo && packagerInfo.expoServerPort) {
     try {
-      await axios.post(`http://127.0.0.1:${packagerInfo.expoServerPort}/shutdown`);
+      await axios.request({
+        method: 'post',
+        url: `http://127.0.0.1:${packagerInfo.expoServerPort}/shutdown`,
+      });
     } catch (e) {}
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
