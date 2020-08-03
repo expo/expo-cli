@@ -18,6 +18,8 @@ jest.mock('@expo/config', () => {
     IOSConfig: {
       BundleIdenitifer: {
         setBundleIdentifierForPbxproj: jest.fn(),
+        getBundleIdentifierFromPbxproj: jest.fn(),
+        getBundleIdentifier: jest.fn(),
       },
       ProvisioningProfile: {
         setProvisioningProfileForPbxproj: jest.fn(),
