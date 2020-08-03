@@ -1,9 +1,10 @@
 import merge from 'lodash/merge';
 import { vol } from 'memfs';
 
-import { mockExpoXDL } from '../../../__tests__/mock-utils';
-import { provisioningProfileBase64 } from '../../../credentials/utils/__tests__/tests-fixtures';
-import { BuildPlatform, buildAction } from '../index';
+import { mockExpoXDL } from '../../../../__tests__/mock-utils';
+import { provisioningProfileBase64 } from '../../../../credentials/utils/__tests__/tests-fixtures';
+import { BuildCommandPlatform } from '../../types';
+import buildAction from '../action';
 
 const mockedUser = {
   username: 'jester',
@@ -29,13 +30,13 @@ jest.mock('@expo/config', () => {
 });
 jest.mock('fs');
 jest.mock('prompts');
-jest.mock('../../../projects', () => {
+jest.mock('../../../../projects', () => {
   return {
     ensureProjectExistsAsync: () => 'fakeProjectId',
   };
 });
 jest.mock('../utils/git');
-jest.mock('../../../uploads', () => ({
+jest.mock('../../../../uploads', () => ({
   UploadType: {},
   uploadAsync: () => mockProjectUrl,
 }));
@@ -165,7 +166,7 @@ describe('build command', () => {
       });
       setupProjectConfig({});
       await buildAction('/projectdir', {
-        platform: BuildPlatform.ANDROID,
+        platform: BuildCommandPlatform.ANDROID,
         wait: false,
         profile: 'release',
       });
@@ -198,7 +199,7 @@ describe('build command', () => {
       });
       setupProjectConfig({});
       await buildAction('/projectdir', {
-        platform: BuildPlatform.IOS,
+        platform: BuildCommandPlatform.IOS,
         wait: false,
         profile: 'release',
       });
@@ -232,7 +233,7 @@ describe('build command', () => {
       });
       setupProjectConfig({});
       await buildAction('/projectdir', {
-        platform: BuildPlatform.ALL,
+        platform: BuildCommandPlatform.ALL,
         wait: false,
         profile: 'release',
       });

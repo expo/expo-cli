@@ -1,5 +1,4 @@
-import { Job, Platform } from '@expo/build-tools';
-import { ExpoConfig, getConfig } from '@expo/config';
+import { getConfig } from '@expo/config';
 import { ApiV2, User, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
@@ -9,49 +8,59 @@ import os from 'os';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import { EasConfig } from '../../easJson';
-import log from '../../log';
-import { UploadType, uploadAsync } from '../../uploads';
-import { createProgressTracker } from '../utils/progress';
-import { makeProjectTarballAsync } from './utils/git';
+import { EasConfig, EasJsonReader } from '../../../easJson';
+import log from '../../../log';
+import { ensureProjectExistsAsync } from '../../../projects';
+import { UploadType, uploadAsync } from '../../../uploads';
+import { createProgressTracker } from '../../utils/progress';
+import { BuildCommandPlatform, BuildInfo, BuildStatus } from '../types';
+import AndroidBuilder from './builders/AndroidBuilder';
+import iOSBuilder from './builders/iOSBuilder';
+import { Builder, BuilderContext } from './types';
+import { ensureGitStatusIsCleanAsync, makeProjectTarballAsync } from './utils/git';
+import { printBuildResults, printLogsUrls } from './utils/misc';
 
-export enum BuildStatus {
-  IN_QUEUE = 'in-queue',
-  IN_PROGRESS = 'in-progress',
-  ERRORED = 'errored',
-  FINISHED = 'finished',
+interface BuildOptions {
+  platform: BuildCommandPlatform;
+  skipCredentialsCheck?: boolean; // TODO: noop for now
+  wait?: boolean;
+  profile: string;
 }
 
-export interface BuildInfo {
-  id: string;
-  status: BuildStatus;
-  platform: Platform;
-  createdAt: string;
-  artifacts?: BuildArtifacts;
+async function buildAction(projectDir: string, options: BuildOptions): Promise<void> {
+  const platforms = Object.values(BuildCommandPlatform);
+
+  const { platform, profile } = options;
+  if (!platform || !platforms.includes(platform)) {
+    throw new Error(
+      `-p/--platform is required, valid platforms: ${platforms
+        .map(p => log.chalk.bold(p))
+        .join(', ')}`
+    );
+  }
+
+  await ensureGitStatusIsCleanAsync();
+
+  const easConfig: EasConfig = await new EasJsonReader(projectDir, platform).readAsync(profile);
+  const ctx = await createBuilderContextAsync(projectDir, easConfig);
+  const projectId = await ensureProjectExistsAsync(ctx.user, {
+    accountName: ctx.accountName,
+    projectName: ctx.projectName,
+  });
+  const scheduledBuilds = await startBuildsAsync(ctx, projectId, options.platform);
+  printLogsUrls(ctx.accountName, scheduledBuilds);
+
+  if (options.wait) {
+    const buildInfo = await waitForBuildEndAsync(
+      ctx,
+      projectId,
+      scheduledBuilds.map(i => i.buildId)
+    );
+    printBuildResults(buildInfo);
+  }
 }
 
-interface BuildArtifacts {
-  buildUrl?: string;
-  logsUrl: string;
-}
-
-export interface BuilderContext {
-  projectDir: string;
-  eas: EasConfig;
-  user: User;
-  accountName: string;
-  projectName: string;
-  exp: ExpoConfig;
-}
-
-export interface Builder {
-  ctx: BuilderContext;
-  ensureCredentialsAsync(): Promise<void>;
-  configureProjectAsync(): Promise<void>;
-  prepareJobAsync(archiveUrl: string): Promise<Job>;
-}
-
-export async function createBuilderContextAsync(
+async function createBuilderContextAsync(
   projectDir: string,
   eas: EasConfig
 ): Promise<BuilderContext> {
@@ -70,7 +79,32 @@ export async function createBuilderContextAsync(
   };
 }
 
-export async function startBuildAsync(
+async function startBuildsAsync(
+  ctx: BuilderContext,
+  projectId: string,
+  platform: BuildOptions['platform']
+): Promise<
+  { platform: BuildCommandPlatform.ANDROID | BuildCommandPlatform.IOS; buildId: string }[]
+> {
+  const client = ApiV2.clientForUser(ctx.user);
+  const scheduledBuilds: {
+    platform: BuildCommandPlatform.ANDROID | BuildCommandPlatform.IOS;
+    buildId: string;
+  }[] = [];
+  if ([BuildCommandPlatform.ANDROID, BuildCommandPlatform.ALL].includes(platform)) {
+    const builder = new AndroidBuilder(ctx);
+    const buildId = await startBuildAsync(client, builder, projectId);
+    scheduledBuilds.push({ platform: BuildCommandPlatform.ANDROID, buildId });
+  }
+  if ([BuildCommandPlatform.IOS, BuildCommandPlatform.ALL].includes(platform)) {
+    const builder = new iOSBuilder(ctx);
+    const buildId = await startBuildAsync(client, builder, projectId);
+    scheduledBuilds.push({ platform: BuildCommandPlatform.IOS, buildId });
+  }
+  return scheduledBuilds;
+}
+
+async function startBuildAsync(
   client: ApiV2,
   builder: Builder,
   projectId: string
@@ -100,7 +134,7 @@ export async function startBuildAsync(
   }
 }
 
-export async function waitForBuildEndAsync(
+async function waitForBuildEndAsync(
   ctx: BuilderContext,
   projectId: string,
   buildIds: string[],
@@ -179,3 +213,5 @@ export async function waitForBuildEndAsync(
     'Timeout reached! It is taking longer than expected to finish the build, aborting...'
   );
 }
+
+export default buildAction;

@@ -3,7 +3,7 @@ import { vol } from 'memfs';
 import AndroidBuilder from '../AndroidBuilder';
 
 jest.mock('fs');
-jest.mock('../../../credentials/context', () => {
+jest.mock('../../../../../credentials/context', () => {
   return {
     Context: jest.fn().mockImplementation(() => ({
       init: jest.fn(),
