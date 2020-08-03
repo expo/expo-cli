@@ -110,7 +110,7 @@ describe('publishAsync', () => {
       stream: {
         write: (chunk: LogRecord) => {
           if (!/bundle_transform_progressed/.test(chunk.msg)) {
-            console.log(chunk.msg);
+            process.stderr.write(chunk.msg);
           }
         },
       },
