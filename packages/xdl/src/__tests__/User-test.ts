@@ -176,7 +176,7 @@ function _newTestUserManager() {
 function _newTestApiV2() {
   const api = {
     sessionSecret: null,
-    authorizationToken: null,
+    accessToken: null,
     getAsync: jest.fn(),
     postAsync: jest.fn(),
     putAsync: jest.fn(),
@@ -186,7 +186,7 @@ function _newTestApiV2() {
     _requestAsync: jest.fn(),
   };
 
-  (ApiV2.clientForUser as jest.Mock).mockReturnValue(api);
+  (ApiV2.clientForUser as jest.MockedFunction<typeof ApiV2.clientForUser>).mockReturnValue(api);
 
   return api;
 }
