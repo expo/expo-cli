@@ -93,11 +93,14 @@ export class Context {
   }
 
   async init(projectDir: string, options: CtxOptions = {}) {
-    if (options.allowAnonymous) {
-      this._user = (await UserManager.getCurrentUserAsync()) || undefined;
-    } else {
-      this._user = await UserManager.ensureLoggedInAsync();
+    this._user = (await UserManager.getCurrentUserOnlyAsync()) || undefined;
+
+    // User isn't signed it, but needs to
+    // It will always be a normal user, robot users can't login
+    if (!this._user && !options.allowAnonymous) {
+      this._user = (await UserManager.ensureLoggedInAsync()) as User;
     }
+
     this._projectDir = projectDir;
     this._apiClient = ApiV2.clientForUser(this.user);
     this._iosApiClient = new IosApi(this.api);

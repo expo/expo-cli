@@ -74,7 +74,7 @@ export async function loginOrRegisterAsync(): Promise<User> {
 }
 
 export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
-  const user = await UserManager.getCurrentUserAsync();
+  const user = await UserManager.getCurrentUserOnlyAsync();
   if (user) {
     return user;
   }
@@ -82,7 +82,7 @@ export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
 }
 
 export async function login(options: CommandOptions): Promise<User> {
-  const user = await UserManager.getCurrentUserAsync();
+  const user = await UserManager.getCurrentUserOnlyAsync();
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!nonInteractive) {
     if (user) {

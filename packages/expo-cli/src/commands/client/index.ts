@@ -206,7 +206,7 @@ export default function (program: Command) {
         }
 
         let email;
-        if (user) {
+        if (user && user.kind === 'user') {
           email = user.email;
         } else {
           email = await promptEmailAsync({

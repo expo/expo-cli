@@ -1,7 +1,8 @@
-import { ProjectPrivacy } from '@expo/config';
-import { ApiV2, User } from '@expo/xdl';
+import { ExpoConfig, ProjectPrivacy } from '@expo/config';
+import { ApiV2, RobotUser, User } from '@expo/xdl';
 import ora from 'ora';
 
+import CommandError from './CommandError';
 import log from './log';
 
 interface ProjectData {
@@ -11,7 +12,7 @@ interface ProjectData {
 }
 
 async function ensureProjectExistsAsync(
-  user: User,
+  user: User | RobotUser,
   { accountName, projectName, privacy }: ProjectData
 ): Promise<string> {
   const projectFullName = `@${accountName}/${projectName}`;
@@ -50,4 +51,25 @@ async function ensureProjectExistsAsync(
   }
 }
 
-export { ensureProjectExistsAsync };
+/**
+ * Get the account and project name using a user and Expo config.
+ * This will validate if the owner field is set when using a robot account.
+ */
+function getProjectData(
+  user: User | RobotUser,
+  exp: ExpoConfig
+): Pick<ProjectData, 'accountName' | 'projectName'> {
+  if (user.kind === 'robot' && !exp.owner) {
+    throw new CommandError(
+      'ROBOT_OWNER_ERROR',
+      'The "owner" manifest property is required when using robot users.'
+    );
+  }
+
+  return {
+    accountName: exp.owner || user.username,
+    projectName: exp.slug,
+  };
+}
+
+export { ensureProjectExistsAsync, getProjectData };

@@ -624,6 +624,11 @@ export async function publishAsync(
   // Get project config
   const { exp, pkg, hooks } = await _getPublishExpConfigAsync(projectRoot, options);
 
+  // Exit early if kernel builds are created with robot users
+  if (exp.isKernel && user.kind === 'robot') {
+    throw new XDLError('ROBOT_ACCOUNT_ERROR', 'Kernel builds are not available for robot users');
+  }
+
   // TODO: refactor this out to a function, throw error if length doesn't match
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
   const bundles = await buildPublishBundlesAsync(projectRoot, options, {
@@ -749,7 +754,8 @@ export async function publishAsync(
   });
 
   // TODO: move to postPublish hook
-  if (exp.isKernel) {
+  // This method throws early when a robot account is used for a kernel build
+  if (exp.isKernel && user.kind !== 'robot') {
     await _handleKernelPublishedAsync({
       user,
       exp,

@@ -1,5 +1,5 @@
 import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
-import { Project, User, UserManager, Versions } from '@expo/xdl';
+import { Project, RobotUser, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import ora from 'ora';
@@ -18,7 +18,7 @@ export default class BaseBuilder {
   protected projectConfig: ProjectConfig;
   manifest: ExpoConfig;
 
-  async getUserAsync(): Promise<User> {
+  async getUserAsync(): Promise<User | RobotUser> {
     return await UserManager.ensureLoggedInAsync();
   }
 

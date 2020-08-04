@@ -32,6 +32,19 @@ export type User = {
   accessToken?: string;
 };
 
+export type RobotUser = {
+  kind: 'robot';
+  // required
+  userId: string;
+  username: string; // backwards compatible to show in current UI -- based on given name or placeholder
+  // optional
+  givenName?: string;
+  // auth methods
+  currentConnection: ConnectionType;
+  sessionSecret?: never; // robot users only use accessToken -- this prevents some extraneous typecasting
+  accessToken?: string;
+};
+
 export type LegacyUser = {
   kind: 'legacyUser';
   username: string;
@@ -64,7 +77,7 @@ export type LoginType = 'user-pass' | 'facebook' | 'google' | 'github';
 export const ANONYMOUS_USERNAME = 'anonymous';
 
 export class UserManagerInstance {
-  _currentUser: User | null = null;
+  _currentUser: User | RobotUser | null = null;
   _getSessionLock = new Semaphore();
   _interactiveAuthenticationCallbackAsync?: () => Promise<User>;
 
@@ -106,10 +119,11 @@ export class UserManagerInstance {
       if (loginResp.error) {
         throw new XDLError('INVALID_USERNAME_PASSWORD', loginResp['error_description']);
       }
-      return this._getProfileAsync({
+      const user = await this._getProfileAsync({
         currentConnection: 'Username-Password-Authentication',
         sessionSecret: loginResp.sessionSecret,
       });
+      return user as User;
     } else {
       throw new Error(`Invalid login type provided. Must be 'user-pass'.`);
     }
@@ -119,13 +133,15 @@ export class UserManagerInstance {
     userData: RegistrationData,
     user: UserOrLegacyUser | null = null
   ): Promise<User> {
-    if (!user) {
-      user = await this.getCurrentUserAsync();
+    let actor: UserOrLegacyUser | RobotUser | null = user;
+
+    if (!actor) {
+      actor = await this.getCurrentUserAsync();
     }
 
-    if (user) {
+    if (actor) {
       await this.logoutAsync();
-      user = null;
+      actor = null;
     }
 
     try {
@@ -156,7 +172,7 @@ export class UserManagerInstance {
    *
    * If there are any issues with the login, this method throws.
    */
-  async ensureLoggedInAsync(): Promise<User> {
+  async ensureLoggedInAsync(): Promise<User | RobotUser> {
     if (Config.offline) {
       throw new XDLError('NETWORK_REQUIRED', "Can't verify user without network access");
     }
@@ -196,7 +212,7 @@ export class UserManagerInstance {
    * Get the current user based on the available token.
    * If there is no current token, returns null.
    */
-  async getCurrentUserAsync(options?: { silent?: boolean }): Promise<User | null> {
+  async getCurrentUserAsync(options?: { silent?: boolean }): Promise<User | RobotUser | null> {
     await this._getSessionLock.acquire();
 
     try {
@@ -246,6 +262,30 @@ export class UserManagerInstance {
     }
   }
 
+  /**
+   * Get the current user and check if it's a robot.
+   * If the user is not a robot, it will throw an error.
+   */
+  async getCurrentUserOnlyAsync(): Promise<User | null> {
+    const user = await this.getCurrentUserAsync();
+    if (user && user.kind !== 'user') {
+      throw new XDLError('ROBOT_ACCOUNT_ERROR', 'This action is not supported for robot users.');
+    }
+    return user;
+  }
+
+  /**
+   * Get the current user and check if it's a robot.
+   * If the user is not a robot, it will throw an error.
+   */
+  async getCurrentRobotUserOnlyAsync(): Promise<RobotUser | null> {
+    const user = await this.getCurrentUserAsync();
+    if (user && user.kind !== 'robot') {
+      throw new XDLError('USER_ACCOUNT_ERROR', 'This action is not supported for normal users.');
+    }
+    return user;
+  }
+
   async getCurrentUsernameAsync(): Promise<string | null> {
     const token = UserSettings.accessToken();
     if (token) {
@@ -283,6 +323,10 @@ export class UserManagerInstance {
       currentUser = await this.getCurrentUserAsync();
     }
 
+    if (currentUser?.kind === 'robot') {
+      throw new XDLError('ROBOT_ACCOUNT_ERROR', 'This action is not available for robot users');
+    }
+
     const api = ApiV2Client.clientForUser(currentUser);
 
     const { user: updatedUser } = await api.postAsync('auth/createOrUpdateUser', {
@@ -293,7 +337,8 @@ export class UserManagerInstance {
       ...this._currentUser,
       ..._parseAuth0Profile(updatedUser),
       kind: 'user',
-    };
+    } as User;
+
     return this._currentUser;
   }
 
@@ -301,6 +346,10 @@ export class UserManagerInstance {
    * Logout
    */
   async logoutAsync(): Promise<void> {
+    if (this._currentUser?.kind === 'robot') {
+      throw new XDLError('ROBOT_ACCOUNT_ERROR', 'This action is not available for robot users');
+    }
+
     // Only send logout events events for users without access tokens
     if (this._currentUser && !this._currentUser?.accessToken) {
       Analytics.logEvent('Logout', {
@@ -348,14 +397,14 @@ export class UserManagerInstance {
     currentConnection?: ConnectionType;
     sessionSecret?: string;
     accessToken?: string;
-  }): Promise<User> {
+  }): Promise<User | RobotUser> {
     let user;
     const api = ApiV2Client.clientForUser({
       sessionSecret,
       accessToken,
     });
 
-    user = await api.postAsync('auth/userProfileAsync');
+    user = await api.getAsync('auth/userInfo');
 
     if (!user) {
       throw new Error('Unable to fetch user.');
@@ -363,11 +412,16 @@ export class UserManagerInstance {
 
     user = {
       ..._parseAuth0Profile(user),
-      kind: 'user',
+      kind: user.user_type,
       currentConnection,
       sessionSecret,
       accessToken,
     };
+
+    // Create a "username" to use in current terminal UI (e.g. expo whoami)
+    if (user.kind === 'robot') {
+      user.username = user.givenName ? `${user.givenName} (robot)` : 'robot';
+    }
 
     // note: do not persist the authorization token, must be env-var only
     if (!accessToken) {
