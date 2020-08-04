@@ -6,6 +6,16 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+### 📦 Packages updated
+
+## [Tue Aug 4 11:44:18 2020 +0200](https://github.com/expo/expo-cli/commit/1110d7a2526d5c586c057aa1db7191011b6bb508#diff-79fa8f30624180fc139625016ccfa417)
+
+### 🛠 Breaking changes
+
 - Renamed commands for EAS Builds ([#2419](https://github.com/expo/expo-cli/pull/2419) by [@dsokal](https://github.com/dsokal)):
   - `expo build` -> `expo eas:build`
   - `expo build-status` -> `expo eas:build:status`
@@ -15,9 +25,21 @@ This is the log of notable changes to Expo CLI and related packages.
 - Reimplement bundling with Metro JS APIs (no file watching or HTTP servers), enabled in `expo publish` and `expo export` when `EXPO_USE_DEV_SERVER` is set to `true`. ([#2149](https://github.com/expo/expo-cli/pull/2149) by [@fson](https://github.com/fson)).
 - Implement autoconfiguring bare iOS projects so they are buildable with EAS Builds. ([#2395](https://github.com/expo/expo-cli/pull/2395) by [@dsokal](https://github.com/dsokal)).
 
-### 🐛 Bug fixes
-
 ### 📦 Packages updated
+
+- @expo/config@3.2.17
+- @expo/configure-splash-screen@0.1.14
+- @expo/dev-server@0.1.19
+- @expo/dev-tools@0.13.30
+- @expo/electron-adapter@0.0.9
+- expo-cli@3.23.2
+- expo-optimize@0.1.41
+- @expo/metro-config@0.1.19
+- @expo/next-adapter@2.1.22
+- expo-pwa@0.0.29
+- uri-scheme@1.0.25
+- @expo/webpack-config@0.12.22
+- @expo/xdl@57.9.27
 
 ## [Thu, 30 Jul 2020 13:42:33 -0700](https://github.com/expo/expo-cli/commit/5adda7a1af91bd05b299db8a342ef43e9035dd61)
 
