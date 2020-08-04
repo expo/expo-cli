@@ -14,7 +14,7 @@ jest.dontMock('resolve-from');
 
 jest.mock('../project/Doctor', () => ({
   async validateWithNetworkAsync() {
-    const Doctor = require.requireActual('../project/Doctor');
+    const Doctor = jest.requireActual('../project/Doctor');
     return Doctor.NO_ISSUES;
   },
 }));
