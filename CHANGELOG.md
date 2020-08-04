@@ -6,9 +6,14 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- Renamed commands for EAS Builds ([#2419](https://github.com/expo/expo-cli/pull/2419) by [@dsokal](https://github.com/dsokal)):
+  - `expo build` -> `expo eas:build`
+  - `expo build-status` -> `expo eas:build:status`
+
 ### 🎉 New features
 
 - Reimplement bundling with Metro JS APIs (no file watching or HTTP servers), enabled in `expo publish` and `expo export` when `EXPO_USE_DEV_SERVER` is set to `true`. ([#2149](https://github.com/expo/expo-cli/pull/2149) by [@fson](https://github.com/fson)).
+- Implement autoconfiguring bare iOS projects so they are buildable with EAS Builds. ([#2395](https://github.com/expo/expo-cli/pull/2395) by [@dsokal](https://github.com/dsokal)).
 
 ### 🐛 Bug fixes
 
@@ -73,9 +78,6 @@ This is the log of notable changes to Expo CLI and related packages.
 - uri-scheme@1.0.24
 - @expo/webpack-config@0.12.21
 - @expo/xdl@57.9.25
-
-
-
 
 ## [Wed Jul 15 2020 05:42:45 GMT-0700](https://github.com/expo/expo-cli/commit/05a88e6a69a1c0ab78dcb9a523a35b4bba26c694)
 
