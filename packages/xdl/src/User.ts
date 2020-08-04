@@ -242,19 +242,30 @@ export class UserManagerInstance {
   }
 
   async getCurrentUsernameAsync(): Promise<string | null> {
-    const data = await this._readUserData();
-    if (!data || !data.username) {
-      return null;
+    const token = UserSettings.accessToken();
+    if (token) {
+      const user = await this.getCurrentUserAsync();
+      if (user?.username) {
+        return user.username;
+      }
     }
-    return data.username;
+    const data = await this._readUserData();
+    if (data?.username) {
+      return data.username;
+    }
+    return null;
   }
 
-  async getSessionAsync(): Promise<{ sessionSecret: string } | null> {
-    const data = await this._readUserData();
-    if (!data || !data.sessionSecret) {
-      return null;
+  async getSessionAsync(): Promise<{ sessionSecret?: string; accessToken?: string } | null> {
+    const token = UserSettings.accessToken();
+    if (token) {
+      return { accessToken: token };
     }
-    return { sessionSecret: data.sessionSecret };
+    const data = await this._readUserData();
+    if (data?.sessionSecret) {
+      return { sessionSecret: data.sessionSecret };
+    }
+    return null;
   }
 
   /**

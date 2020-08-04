@@ -310,7 +310,9 @@ Please reload the project in the Expo app for the change to take effect.`
       }
       case 's': {
         const authSession = await UserManager.getSessionAsync();
-        if (authSession) {
+        if (authSession?.accessToken) {
+          log(chalk.yellow('Please remove the EXPO_TOKEN environment var to sign out.'));
+        } else if (authSession?.sessionSecret) {
           await UserManager.logoutAsync();
           log('Signed out.');
         } else {

@@ -35,6 +35,11 @@ describe('User', () => {
     await expect(manager.ensureLoggedInAsync()).rejects.toThrowError('Not logged in');
   });
 
+  it('returns no session when logged out', async () => {
+    const manager = _newTestUserManager();
+    expect(await manager.getSessionAsync()).toBeNull();
+  });
+
   describe('credentials', () => {
     it('authenticates with credentials', async () => {
       const api = _newTestApiV2();
@@ -107,6 +112,30 @@ describe('User', () => {
       await manager.logoutAsync();
       expect(await UserSettings.getAsync('auth', null)).toBeNull();
     });
+
+    it('returns session secret when logged in', async () => {
+      const api = _newTestApiV2();
+      const manager = _newTestUserManager();
+
+      // Mock login response and authenticate
+      api.postAsync.mockResolvedValue({ sessionSecret: 'session-secret' });
+      await manager.loginAsync('user-pass', { username: 'expouser', password: 'expopass' });
+
+      // Retrieve session and validate
+      const session = await manager.getSessionAsync();
+      expect(session).toHaveProperty('sessionSecret', 'session-secret');
+      expect(session).not.toHaveProperty('accessToken');
+    });
+
+    it('returns username from session', async () => {
+      const api = _newTestApiV2();
+      const manager = _newTestUserManager();
+
+      // Mock login response and authenticate
+      api.postAsync.mockResolvedValue({ sessionSecret: 'session-secret', username: 'expouser' });
+      await manager.loginAsync('user-pass', { username: 'expouser', password: 'expopass' });
+      expect(await manager.getCurrentUsernameAsync()).toBe('expouser');
+    });
   });
 
   describe('token', () => {
@@ -163,6 +192,28 @@ describe('User', () => {
       const user = await manager.getCurrentUserAsync();
       expect(user).toHaveProperty('authorizationToken', 'auth-token');
       expect(user).not.toHaveProperty('sessionSecret', 'session-secret');
+    });
+
+    it('returns access token with token', async () => {
+      const manager = _newTestUserManager();
+
+      // Mock token, without logging in
+      process.env.EXPO_TOKEN = 'auth-token';
+
+      // Retrieve session and validate
+      const session = await manager.getSessionAsync();
+      expect(session).toHaveProperty('accessToken', 'auth-token');
+      expect(session).not.toHaveProperty('sessionSecret');
+    });
+
+    it('returns username from token account', async () => {
+      const api = _newTestApiV2();
+      const manager = _newTestUserManager();
+
+      // Mock authorization token response and fetch the username
+      process.env.EXPO_TOKEN = 'auth-token';
+      api.postAsync.mockResolvedValue({ authorizationToken: 'auth-token', username: 'expouser' });
+      expect(await manager.getCurrentUsernameAsync()).toBe('expouser');
     });
   });
 });

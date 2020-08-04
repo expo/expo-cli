@@ -54,7 +54,6 @@ async function _callMethodAsync(
   returnEntireResponse = false
 ) {
   const clientId = await Session.clientIdAsync();
-  const accessToken = UserSettings.accessToken();
   const session = await UserManager.getSessionAsync();
   const skipValidationToken = process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN'];
 
@@ -68,9 +67,9 @@ async function _callMethodAsync(
   }
 
   // Handle auth method, prioritizing authorization tokens before session secrets
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
-  } else if (session) {
+  if (session?.accessToken) {
+    headers['Authorization'] = `Bearer ${session.accessToken}`;
+  } else if (session?.sessionSecret) {
     headers['Expo-Session'] = session.sessionSecret;
   }
 
