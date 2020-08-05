@@ -1,11 +1,12 @@
 import { ExpoConfig } from '@expo/config';
-import { Credentials, UrlUtils } from '@expo/xdl';
+import { UrlUtils } from '@expo/xdl';
 import chalk from 'chalk';
 import intersection from 'lodash/intersection';
 import pick from 'lodash/pick';
 
 import CommandError from '../../CommandError';
 import { authenticate } from '../../appleApi';
+import { Context } from '../../credentials/context';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
 import { nonEmptyInput } from '../../validators';
@@ -128,14 +129,24 @@ export default class IOSUploader extends BaseUploader {
     };
   }
 
-  async _getAppleTeamId(appleIdCrentials: AppleIdCredentials): Promise<string | undefined> {
-    const credentialMetadata = await Credentials.getCredentialMetadataAsync(this.projectDir, 'ios');
-    const credential = await Credentials.getCredentialsForPlatform(credentialMetadata);
-    const teamId = credential?.teamId;
+  async _getAppleTeamId(appleIdCredentials: AppleIdCredentials): Promise<string | undefined> {
+    const ctx = new Context();
+    await ctx.init(this.projectDir);
+    let teamId;
+    if (ctx.hasProjectContext && ctx.manifest?.ios?.bundleIdentifier) {
+      const app = {
+        accountName: ctx.manifest.owner ?? ctx.user.username,
+        projectName: ctx.manifest.slug,
+        bundleIdentifier: ctx.manifest?.ios?.bundleIdentifier,
+      };
+      const credentials = await ctx.ios.getAppCredentials(app);
+      teamId = credentials?.credentials?.teamId;
+    }
+
     if (teamId) {
       return teamId;
     } else {
-      const { team } = await authenticate(appleIdCrentials);
+      const { team } = await authenticate(appleIdCredentials);
       return team.id;
     }
   }

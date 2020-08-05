@@ -28,7 +28,6 @@ import * as Web from './Web';
 import * as Webpack from './Webpack';
 import XDLError from './XDLError';
 import * as AndroidCredentials from './credentials/AndroidCredentials';
-import * as Credentials from './credentials/Credentials';
 import * as ExponentTools from './detach/ExponentTools';
 import * as IosIcons from './detach/IosIcons';
 import * as IosKeychain from './detach/IosKeychain';
@@ -64,7 +63,6 @@ export { Api };
 export { ApiV2 };
 export { Binaries };
 export { Config };
-export { Credentials };
 export { AndroidCredentials };
 export { ConnectionStatus };
 
