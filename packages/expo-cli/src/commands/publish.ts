@@ -56,16 +56,46 @@ export async function action(projectDir: string, options: Options = {}) {
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!hasOptimized && !nonInteractive) {
     log.warn(
-      'Warning: Your project may contain unoptimized image assets. Smaller image sizes can improve app performance.'
+      'Warning: your project may contain unoptimized image assets. Smaller image sizes can improve app performance.'
     );
     log.warn(
       `To compress the images in your project, abort publishing and run ${chalk.bold(
         'npx expo-optimize'
       )}.`
     );
+    log.newLine();
   }
 
   const target = options.target ?? getDefaultTarget(projectDir);
+
+  // Warn users if they attempt to publish in a bare project that may also be
+  // using Expo client and does not If the developer does not have the Expo
+  // package installed then we do not need to warn them as there is no way that
+  // it will run in Expo client in development even. We should revisit this with
+  // dev client, and possibly also by excluding SDK version for bare
+  // expo-updates usage in the future (and then surfacing this as an error in
+  // the Expo client app instead)
+  // Related: https://github.com/expo/expo/issues/9517
+  if (pkg.dependencies['expo'] && !options.target && target === 'bare') {
+    log.warn(
+      `Warning: this is a ${chalk.bold(
+        'bare workflow'
+      )} project. The resulting publish will only run properly inside of a native build of your project.`
+    );
+
+    log.warn(
+      `If you want to publish a version of your app that will run in Expo client, please use ${chalk.bold(
+        'expo publish --target managed'
+      )}.`
+    );
+
+    log.warn(
+      `You can skip this warning by explicitly running ${chalk.bold(
+        'expo publish --target bare'
+      )} in the future.`
+    );
+    log.newLine();
+  }
 
   const recipient = await sendTo.getRecipient(options.sendTo);
   log(`Publishing to channel '${options.releaseChannel}'...`);
