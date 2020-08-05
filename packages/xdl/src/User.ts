@@ -412,7 +412,8 @@ export class UserManagerInstance {
 
     user = {
       ..._parseAuth0Profile(user),
-      kind: user.user_type,
+      // We need to inherit the "robot" type only, the rest is considered "user" but returned as "person".
+      kind: user.user_type === 'robot' ? 'robot' : 'user',
       currentConnection,
       sessionSecret,
       accessToken,
