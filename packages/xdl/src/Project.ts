@@ -744,8 +744,10 @@ export async function publishAsync(
   projectRoot: string,
   options: PublishOptions = {}
 ): Promise<{ url: string; ids: string[]; err?: string }> {
+  options.target = options.target ?? getDefaultTarget(projectRoot);
+  const target = options.target;
   const user = await UserManager.ensureLoggedInAsync();
-  const target = options.target ?? getDefaultTarget(projectRoot);
+
   Analytics.logEvent('Publish', {
     projectRoot,
     developerTool: Config.developerTool,
@@ -1042,7 +1044,7 @@ async function _getForPlatformAsync(
   platform: Platform,
   { errorCode, minLength }: { errorCode: ErrorCode; minLength?: number }
 ): Promise<string> {
-  let fullUrl = `${url}&platform=${platform}`;
+  const fullUrl = `${url}&platform=${platform}`;
   let response;
 
   try {
