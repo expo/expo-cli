@@ -5,7 +5,7 @@ import path from 'path';
 
 // TODO(wkozyra95): move it to @expo/config or to separate package
 
-// Workflow is representing different value than BuildType from @expo/build-toold
+// Workflow is representing different value than BuildType from @expo/build-tools
 // Each workflow has a set of BuildTypes available
 // - Generic workflow allows to build 'generic' and 'generic-client'
 // - Managed workflow allows to build 'managed' and 'managed-client'
