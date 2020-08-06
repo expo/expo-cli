@@ -106,7 +106,7 @@ describe('eas.json', () => {
             release: { workflow: 'generic' },
             debug: {
               workflow: 'generic',
-              buildCommand: ':app:assembleDebug',
+              gradleCommand: ':app:assembleDebug',
               withoutCredentials: true,
             },
           },
@@ -121,7 +121,7 @@ describe('eas.json', () => {
         android: {
           credentialsSource: 'auto',
           workflow: 'generic',
-          buildCommand: ':app:assembleDebug',
+          gradleCommand: ':app:assembleDebug',
           withoutCredentials: true,
         },
         ios: {
