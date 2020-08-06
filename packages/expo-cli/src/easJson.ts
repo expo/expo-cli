@@ -29,7 +29,7 @@ export interface AndroidManagedBuildProfile {
 export interface AndroidGenericBuildProfile {
   workflow: Workflow.Generic;
   credentialsSource: CredentialsSource;
-  buildCommand?: string;
+  gradleCommand?: string;
   artifactPath?: string;
   withoutCredentials?: boolean;
 }
@@ -83,7 +83,7 @@ const EasJsonSchema = Joi.object({
 const AndroidGenericSchema = Joi.object({
   workflow: Joi.string().valid('generic').required(),
   credentialsSource: Joi.string().valid('local', 'remote', 'auto').default('auto'),
-  buildCommand: Joi.string(),
+  gradleCommand: Joi.string(),
   artifactPath: Joi.string(),
   withoutCredentials: Joi.boolean(),
 });
