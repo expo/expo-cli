@@ -7,7 +7,7 @@ export function getOrientation(config: ExpoConfig) {
   return typeof config.orientation === 'string' ? config.orientation : null;
 }
 
-function prepareOrientation(orientation: string) {
+export function prepareOrientation(orientation: string) {
   if (orientation === 'default') {
     return 'unspecified';
   }
