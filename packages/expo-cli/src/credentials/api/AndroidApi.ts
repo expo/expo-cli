@@ -1,7 +1,7 @@
 import { ApiV2 } from '@expo/xdl';
 import keyBy from 'lodash/keyBy';
 
-import { AndroidCredentials, Keystore } from '../credentials';
+import { AndroidCredentials, FcmCredentials, Keystore } from '../credentials';
 
 export default class AndroidApi {
   private shouldRefetchAll: boolean = true;
@@ -40,6 +40,11 @@ export default class AndroidApi {
     };
   }
 
+  public async fetchFcmKey(experienceName: string): Promise<FcmCredentials | null> {
+    await this._ensureCredentialsFetched(experienceName);
+    return this.credentials?.[experienceName]?.pushCredentials;
+  }
+
   public async updateFcmKey(experienceName: string, fcmApiKey: string): Promise<void> {
     await this._ensureCredentialsFetched(experienceName);
     await this.api.putAsync(`credentials/android/push/${experienceName}`, { fcmApiKey });
@@ -47,6 +52,16 @@ export default class AndroidApi {
       experienceName,
       keystore: this.credentials[experienceName]?.keystore,
       pushCredentials: { fcmApiKey },
+    };
+  }
+
+  public async removeFcmKey(experienceName: string): Promise<void> {
+    await this._ensureCredentialsFetched(experienceName);
+    await this.api.deleteAsync(`credentials/android/push/${experienceName}`);
+    this.credentials[experienceName] = {
+      experienceName,
+      keystore: this.credentials[experienceName]?.keystore,
+      pushCredentials: null,
     };
   }
 
