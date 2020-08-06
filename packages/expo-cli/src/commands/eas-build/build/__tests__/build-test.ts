@@ -131,6 +131,7 @@ function setupProjectConfig(overrideConfig: any) {
       'package.json': JSON.stringify(packageJson),
       'node_modules/expo/package.json': '{ "version": "38.0.0" }',
       'cert.p12': cert.content,
+      'android/app/build.gradle': '',
     },
     '/projectdir'
   );
@@ -187,6 +188,10 @@ describe('build command', () => {
           },
         },
       });
+      expect(vol.existsSync('/projectdir/android/app/eas-build.gradle')).toBe(true);
+      expect(vol.readFileSync('/projectdir/android/app/build.gradle', 'utf-8')).toContain(
+        'apply from: "./eas-build.gradle"'
+      );
     });
   });
   describe('ios generic job', () => {
