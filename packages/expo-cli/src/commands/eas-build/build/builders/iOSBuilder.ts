@@ -106,7 +106,7 @@ class iOSBuilder implements Builder {
         log.newLine();
         log('Please review the following changes and pass the message to make the commit.');
         log.newLine();
-        await gitUtils.showDiff();
+        await gitUtils.showDiffAsync();
         log.newLine();
         const { confirm } = await prompts({
           type: 'confirm',

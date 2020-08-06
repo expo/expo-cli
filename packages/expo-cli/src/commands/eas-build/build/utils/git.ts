@@ -32,7 +32,7 @@ async function makeProjectTarballAsync(tarPath: string): Promise<number> {
   return size;
 }
 
-async function showDiff(): Promise<void> {
+async function showDiffAsync(): Promise<void> {
   await spawnAsync('git', ['--no-pager', 'diff'], { stdio: ['ignore', 'inherit', 'inherit'] });
 }
 
@@ -58,5 +58,5 @@ export {
   ensureGitStatusIsCleanAsync,
   makeProjectTarballAsync,
   commitChangesAsync,
-  showDiff,
+  showDiffAsync,
 };
