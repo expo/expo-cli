@@ -23,6 +23,7 @@ import { printBuildResults, printLogsUrls } from './utils/misc';
 interface BuildOptions {
   platform: BuildCommandPlatform;
   skipCredentialsCheck?: boolean; // TODO: noop for now
+  skipProjectConfiguration?: boolean;
   wait?: boolean;
   profile: string;
   parent?: {
@@ -45,16 +46,17 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
   await ensureGitStatusIsCleanAsync();
 
   const easConfig: EasConfig = await new EasJsonReader(projectDir, platform).readAsync(profile);
-  const ctx = await createBuilderContextAsync(
-    projectDir,
-    easConfig,
-    options.parent?.nonInteractive
-  );
+  const ctx = await createBuilderContextAsync(projectDir, easConfig, {
+    platform,
+    nonInteractive: options.parent?.nonInteractive,
+    skipCredentialsCheck: options?.skipCredentialsCheck,
+    skipProjectConfiguration: options?.skipProjectConfiguration,
+  });
   const projectId = await ensureProjectExistsAsync(ctx.user, {
     accountName: ctx.accountName,
     projectName: ctx.projectName,
   });
-  const scheduledBuilds = await startBuildsAsync(ctx, projectId, options.platform);
+  const scheduledBuilds = await startBuildsAsync(ctx, projectId);
   printLogsUrls(ctx.accountName, scheduledBuilds);
 
   if (options.wait) {
@@ -70,7 +72,17 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
 async function createBuilderContextAsync(
   projectDir: string,
   eas: EasConfig,
-  nonInteractive: boolean = false
+  {
+    platform = BuildCommandPlatform.ALL,
+    nonInteractive = false,
+    skipCredentialsCheck = false,
+    skipProjectConfiguration = false,
+  }: {
+    platform?: BuildCommandPlatform;
+    nonInteractive?: boolean;
+    skipCredentialsCheck?: boolean;
+    skipProjectConfiguration?: boolean;
+  }
 ): Promise<BuilderContext> {
   const user: User = await UserManager.ensureLoggedInAsync();
   const { exp } = getConfig(projectDir);
@@ -84,14 +96,16 @@ async function createBuilderContextAsync(
     accountName,
     projectName,
     exp,
+    platform,
     nonInteractive,
+    skipCredentialsCheck,
+    skipProjectConfiguration,
   };
 }
 
 async function startBuildsAsync(
   ctx: BuilderContext,
-  projectId: string,
-  platform: BuildOptions['platform']
+  projectId: string
 ): Promise<
   { platform: BuildCommandPlatform.ANDROID | BuildCommandPlatform.IOS; buildId: string }[]
 > {
@@ -100,12 +114,12 @@ async function startBuildsAsync(
     platform: BuildCommandPlatform.ANDROID | BuildCommandPlatform.IOS;
     buildId: string;
   }[] = [];
-  if ([BuildCommandPlatform.ANDROID, BuildCommandPlatform.ALL].includes(platform)) {
+  if ([BuildCommandPlatform.ANDROID, BuildCommandPlatform.ALL].includes(ctx.platform)) {
     const builder = new AndroidBuilder(ctx);
     const buildId = await startBuildAsync(client, builder, projectId);
     scheduledBuilds.push({ platform: BuildCommandPlatform.ANDROID, buildId });
   }
-  if ([BuildCommandPlatform.IOS, BuildCommandPlatform.ALL].includes(platform)) {
+  if ([BuildCommandPlatform.IOS, BuildCommandPlatform.ALL].includes(ctx.platform)) {
     const builder = new iOSBuilder(ctx);
     const buildId = await startBuildAsync(client, builder, projectId);
     scheduledBuilds.push({ platform: BuildCommandPlatform.IOS, buildId });
@@ -121,7 +135,10 @@ async function startBuildAsync(
   const tarPath = path.join(os.tmpdir(), `${uuidv4()}.tar.gz`);
   try {
     await builder.ensureCredentialsAsync();
-    await builder.configureProjectAsync();
+
+    if (!builder.ctx.skipProjectConfiguration) {
+      await builder.configureProjectAsync();
+    }
 
     const fileSize = await makeProjectTarballAsync(tarPath);
 

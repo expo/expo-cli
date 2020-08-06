@@ -1,5 +1,7 @@
 import { BuildType, Job, Platform, iOS, sanitizeJob } from '@expo/build-tools';
 import { IOSConfig } from '@expo/config';
+import chalk from 'chalk';
+import figures from 'figures';
 import once from 'lodash/once';
 import ora from 'ora';
 
@@ -104,20 +106,14 @@ class iOSBuilder implements Builder {
       if (err instanceof gitUtils.DirtyGitTreeError) {
         spinner.succeed('We configured your iOS project to build it on the Expo servers');
         log.newLine();
-        log('Please review the following changes and pass the message to make the commit.');
-        log.newLine();
-        await gitUtils.showDiffAsync();
-        log.newLine();
-        const { confirm } = await prompts({
-          type: 'confirm',
-          name: 'confirm',
-          message: 'Can we commit these changes for you?',
-        });
-        if (confirm) {
-          await gitUtils.commitChangesAsync();
-          log.newLine();
-          log('✅ Successfully commited the configuration changes.');
-        } else {
+
+        try {
+          await gitUtils.reviewAndCommitChangesAsync('Configure Xcode project', {
+            nonInteractive: this.ctx.nonInteractive,
+          });
+
+          log(`${chalk.green(figures.tick)} Successfully committed the configuration changes.`);
+        } catch (e) {
           throw new Error(
             "Aborting, run the build command once you're ready. Make sure to commit any changes you've made."
           );

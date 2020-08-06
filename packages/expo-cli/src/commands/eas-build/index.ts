@@ -21,6 +21,7 @@ export default function (program: Command) {
       /^(all|android|ios)$/i
     )
     .option('--skip-credentials-check', 'Skip checking credentials', false)
+    .option('--skip-project-configuration', 'Skip configuring the project', false)
     .option('--no-wait', 'Exit immediately after scheduling build', false)
     .option('--profile <profile>', 'Build profile', 'release')
     .asyncActionProjectDir(buildAction, { checkConfig: true });

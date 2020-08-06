@@ -88,6 +88,7 @@
     "env-editor": "^0.4.1",
     "envinfo": "7.5.0",
     "es6-error": "3.2.0",
+    "figures": "3.2.0",
     "fs-extra": "9.0.0",
     "getenv": "0.7.0",
     "glob": "7.1.6",

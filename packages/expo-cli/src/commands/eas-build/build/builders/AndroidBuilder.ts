@@ -1,4 +1,9 @@
 import { Android, BuildType, Job, Platform, sanitizeJob } from '@expo/build-tools';
+import chalk from 'chalk';
+import figures from 'figures';
+import fs from 'fs-extra';
+import ora from 'ora';
+import path from 'path';
 
 import AndroidCredentialsProvider, {
   AndroidCredentials,
@@ -9,8 +14,12 @@ import {
   AndroidManagedBuildProfile,
   Workflow,
 } from '../../../../easJson';
+import log from '../../../../log';
+import prompts from '../../../../prompts';
 import { ensureCredentialsAsync } from '../credentials';
+import gradleContent from '../templates/gradleContent';
 import { Builder, BuilderContext } from '../types';
+import * as gitUtils from '../utils/git';
 
 interface CommonJobProperties {
   platform: Platform.Android;
@@ -52,7 +61,53 @@ class AndroidBuilder implements Builder {
   }
 
   public async configureProjectAsync(): Promise<void> {
-    // TODO: implement me
+    const spinner = ora('Making sure your Android project is set up properly');
+
+    const { projectDir } = this.ctx;
+
+    const androidAppDir = path.join(projectDir, 'android', 'app');
+    const buildGradlePath = path.join(androidAppDir, 'build.gradle');
+    const easGradlePath = path.join(androidAppDir, 'eas-build.gradle');
+
+    await fs.writeFile(easGradlePath, gradleContent);
+    await gitUtils.addFileAsync(easGradlePath, { intentToAdd: true });
+
+    const buildGradleContent = await fs.readFile(path.join(buildGradlePath), 'utf-8');
+    const applyEasGradle = 'apply from: "./eas-build.gradle"';
+
+    const isAlreadyConfigured = await buildGradleContent
+      .split('\n')
+      // Check for both single and double quotes
+      .some(line => line === applyEasGradle || line === applyEasGradle.replace(/"/g, "'"));
+
+    if (!isAlreadyConfigured) {
+      await fs.writeFile(buildGradlePath, `${buildGradleContent.trim()}\n${applyEasGradle}\n`);
+    }
+
+    try {
+      await gitUtils.ensureGitStatusIsCleanAsync();
+      spinner.succeed();
+    } catch (err) {
+      if (err instanceof gitUtils.DirtyGitTreeError) {
+        spinner.succeed('We configured your Android project to build it on the Expo servers');
+        log.newLine();
+
+        try {
+          await gitUtils.reviewAndCommitChangesAsync('Configure Android project', {
+            nonInteractive: this.ctx.nonInteractive,
+          });
+
+          log(`${chalk.green(figures.tick)} Successfully committed the configuration changes.`);
+        } catch (e) {
+          throw new Error(
+            "Aborting, run the build command once you're ready. Make sure to commit any changes you've made."
+          );
+        }
+      } else {
+        spinner.fail();
+        throw err;
+      }
+    }
   }
 
   public async prepareJobAsync(archiveUrl: string): Promise<Job> {

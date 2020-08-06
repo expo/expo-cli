@@ -3,6 +3,7 @@ import { ExpoConfig } from '@expo/config';
 import { User } from '@expo/xdl';
 
 import { EasConfig } from '../../../easJson';
+import { BuildCommandPlatform } from '../types';
 
 export interface BuilderContext {
   projectDir: string;
@@ -11,7 +12,10 @@ export interface BuilderContext {
   accountName: string;
   projectName: string;
   exp: ExpoConfig;
+  platform: BuildCommandPlatform;
   nonInteractive: boolean;
+  skipCredentialsCheck: boolean;
+  skipProjectConfiguration: boolean;
 }
 
 export interface Builder {
