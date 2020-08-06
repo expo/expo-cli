@@ -2,6 +2,7 @@ import { UserManager } from '@expo/xdl';
 
 import log from '../../../../log';
 import * as UrlUtils from '../../../utils/url';
+import { platformDisplayNames } from '../../constants';
 import { Build } from '../../types';
 
 async function printLogsUrls(
@@ -24,7 +25,7 @@ async function printLogsUrls(
         username: user.username,
         v2: true,
       });
-      log(`Platform: ${platform}, Logs url: ${logsUrl}`);
+      log(`Platform: ${platformDisplayNames[platform]}, Logs url: ${logsUrl}`);
     });
   }
 }
@@ -33,10 +34,14 @@ async function printBuildResults(builds: (Build | null)[]): Promise<void> {
   if (builds.length === 1) {
     log(`Artifact url: ${builds[0]?.artifacts?.buildUrl ?? ''}`);
   } else {
-    builds
-      .filter(build => build?.status === 'finished')
+    (builds.filter(i => i) as Build[])
+      .filter(build => build.status === 'finished')
       .forEach(build => {
-        log(`Platform: ${build?.platform}, Artifact url: ${build?.artifacts?.buildUrl ?? ''}`);
+        log(
+          `Platform: ${platformDisplayNames[build.platform]}, Artifact url: ${
+            build.artifacts?.buildUrl ?? ''
+          }`
+        );
       });
   }
 }

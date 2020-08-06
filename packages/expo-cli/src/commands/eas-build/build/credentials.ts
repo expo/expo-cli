@@ -3,18 +3,14 @@ import { CredentialsProvider } from '../../../credentials/provider';
 import { CredentialsSource, Workflow } from '../../../easJson';
 import log from '../../../log';
 import prompts from '../../../prompts';
-
-const platformMapName = {
-  ios: 'iOS',
-  android: 'Android',
-};
+import { platformDisplayNames } from '../constants';
 
 async function ensureCredentialsAutoAsync(
   provider: CredentialsProvider,
   workflow: Workflow,
   nonInteractive: boolean
 ): Promise<CredentialsSource.LOCAL | CredentialsSource.REMOTE> {
-  const platform = platformMapName[provider.platform];
+  const platform = platformDisplayNames[provider.platform];
   switch (workflow) {
     case Workflow.Managed:
       if (await provider.hasLocalAsync()) {

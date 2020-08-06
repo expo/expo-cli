@@ -13,6 +13,7 @@ function createProgressTracker(_total?: number): ProgressTracker {
         complete: '=',
         incomplete: ' ',
         total,
+        width: 64,
       });
     }
     if (bar) {
