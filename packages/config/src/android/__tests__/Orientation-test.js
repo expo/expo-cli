@@ -42,5 +42,18 @@ describe('Android orientation', () => {
       );
       expect(mainActivity[0]['$']['android:screenOrientation']).toMatch('portrait');
     });
+
+    it('replaces orientation with unspecified if provided default', async () => {
+      androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
+      androidManifestJson = await setAndroidOrientation(
+        { orientation: 'default' },
+        androidManifestJson
+      );
+
+      const mainActivity = androidManifestJson.manifest.application[0].activity.filter(
+        e => e['$']['android:name'] === '.MainActivity'
+      );
+      expect(mainActivity[0]['$']['android:screenOrientation']).toMatch('unspecified');
+    });
   });
 });
