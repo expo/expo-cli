@@ -1,7 +1,7 @@
 import { resolve } from 'path';
 
 import { readAndroidManifestAsync } from '../Manifest';
-import { getOrientation, prepareOrientation, setAndroidOrientation } from '../Orientation';
+import { getOrientation, setAndroidOrientation } from '../Orientation';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
@@ -13,10 +13,6 @@ describe('Android orientation', () => {
 
   it(`returns orientation if provided`, () => {
     expect(getOrientation({ orientation: 'landscape' })).toMatch('landscape');
-  });
-
-  it(`returns unspecified orientation if provided default`, () => {
-    expect(prepareOrientation('default')).toMatch('unspecified');
   });
 
   describe('File changes', () => {
