@@ -1,9 +1,10 @@
 import { ExpoConfig, getConfig } from '@expo/config';
-import { ApiV2, User, UserManager } from '@expo/xdl';
+import { ApiV2, User, UserManager, RobotUser } from '@expo/xdl';
 import pick from 'lodash/pick';
 
 import { AppleCtx, authenticate } from '../appleApi';
 import log from '../log';
+import { getProjectData } from '../projects';
 import AndroidApi from './api/AndroidApi';
 import IosApi from './api/IosApi';
 
@@ -25,7 +26,7 @@ interface CtxOptions extends AppleCtxOptions {
 export class Context {
   _hasProjectContext: boolean = false;
   _projectDir?: string;
-  _user?: User;
+  _user?: User | RobotUser;
   _manifest?: ExpoConfig;
   _apiClient?: ApiV2;
   _iosApiClient?: IosApi;
@@ -38,14 +39,17 @@ export class Context {
     return this._nonInteractive === true;
   }
 
-  get user(): User {
-    return this._user as User;
+  get user(): User | RobotUser {
+    return this._user as User | RobotUser;
   }
   get hasProjectContext(): boolean {
     return this._hasProjectContext;
   }
   get projectDir(): string {
     return this._projectDir as string;
+  }
+  get projectOwner(): string {
+    return getProjectData(this.user, this.manifest).accountName;
   }
   get manifest(): ExpoConfig {
     if (!this._manifest) {
@@ -87,16 +91,15 @@ export class Context {
     const isProxyUser = this.manifest.owner && this.manifest.owner !== this.user.username;
     log(
       `Accessing credentials ${isProxyUser ? 'on behalf of' : 'for'} ${
-        this.manifest.owner ?? this.user.username
+        this.projectOwner
       } in project ${this.manifest.slug}`
     );
   }
 
   async init(projectDir: string, options: CtxOptions = {}) {
-    this._user = (await UserManager.getCurrentUserOnlyAsync()) || undefined;
+    this._user = (await UserManager.getCurrentUserAsync()) || undefined;
 
-    // User isn't signed it, but needs to
-    // It will always be a normal user, robot users can't login
+    // User isn't signed it, but needs to be signed in
     if (!this._user && !options.allowAnonymous) {
       this._user = (await UserManager.ensureLoggedInAsync()) as User;
     }

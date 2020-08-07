@@ -66,7 +66,7 @@ export default class AndroidBuilder extends BaseBuilder {
     const ctx = new Context();
     await ctx.init(this.projectDir, { nonInteractive });
 
-    const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+    const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
     if (this.options.clearCredentials) {
       if (nonInteractive) {

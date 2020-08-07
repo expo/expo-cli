@@ -104,7 +104,7 @@ export default function (program: Command) {
         await context.ensureAppleCtx();
         const appleContext = context.appleCtx;
         if (user) {
-          await context.ios.getAllCredentials(user.username); // initialize credentials
+          await context.ios.getAllCredentials(context.projectOwner); // initialize credentials
         }
 
         // check if any builds are in flight
