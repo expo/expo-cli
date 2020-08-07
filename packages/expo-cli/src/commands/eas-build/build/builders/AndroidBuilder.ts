@@ -15,7 +15,6 @@ import {
   Workflow,
 } from '../../../../easJson';
 import log from '../../../../log';
-import prompts from '../../../../prompts';
 import { ensureCredentialsAsync } from '../credentials';
 import gradleContent from '../templates/gradleContent';
 import { Builder, BuilderContext } from '../types';
@@ -151,7 +150,7 @@ class AndroidBuilder implements Builder {
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
       type: BuildType.Generic,
-      gradleCommand: buildProfile.buildCommand,
+      gradleCommand: buildProfile.gradleCommand,
       artifactPath: buildProfile.artifactPath,
     };
   }
