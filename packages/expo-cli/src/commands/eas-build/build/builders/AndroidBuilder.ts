@@ -157,7 +157,7 @@ class AndroidBuilder implements Builder {
 
   private async prepareManagedJobAsync(
     archiveUrl: string,
-    buildProfile: AndroidManagedBuildProfile
+    _buildProfile: AndroidManagedBuildProfile
   ): Promise<Partial<Android.ManagedJob>> {
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
