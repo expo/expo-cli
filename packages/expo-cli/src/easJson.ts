@@ -23,7 +23,7 @@ export enum CredentialsSource {
 export interface AndroidManagedBuildProfile {
   workflow: Workflow.Managed;
   credentialsSource: CredentialsSource;
-  buildType?: 'app-bundle' | 'apk';
+  buildType?: 'apk' | 'app-bundle';
 }
 
 export interface AndroidGenericBuildProfile {
@@ -43,6 +43,7 @@ export interface iOSManagedBuildProfile {
 export interface iOSGenericBuildProfile {
   workflow: Workflow.Generic;
   credentialsSource: CredentialsSource;
+  artifactPath?: string;
 }
 
 export type AndroidBuildProfile = AndroidManagedBuildProfile | AndroidGenericBuildProfile;
@@ -91,13 +92,15 @@ const AndroidGenericSchema = Joi.object({
 const AndroidManagedSchema = Joi.object({
   workflow: Joi.string().valid('managed').required(),
   credentialsSource: Joi.string().valid('local', 'remote', 'auto').default('auto'),
-  buildType: Joi.string().valid('apk', 'app-bundle'),
+  buildType: Joi.string().valid('apk', 'app-bundle').default('app-bundle'),
 });
 
 const iOSGenericSchema = Joi.object({
   workflow: Joi.string().valid('generic').required(),
   credentialsSource: Joi.string().valid('local', 'remote', 'auto').default('auto'),
+  artifactPath: Joi.string(),
 });
+
 const iOSManagedSchema = Joi.object({
   workflow: Joi.string().valid('managed').required(),
   credentialsSource: Joi.string().valid('local', 'remote', 'auto').default('auto'),

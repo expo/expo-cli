@@ -152,12 +152,13 @@ class iOSBuilder implements Builder {
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
       type: BuildType.Generic,
+      artifactPath: buildProfile.artifactPath,
     };
   }
 
   private async prepareManagedJobAsync(
     archiveUrl: string,
-    buildProfile: iOSManagedBuildProfile
+    _buildProfile: iOSManagedBuildProfile
   ): Promise<Partial<iOS.ManagedJob>> {
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
