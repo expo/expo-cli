@@ -17,6 +17,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+- [config] Fix generated orientation in AndroidManifest.xml ([#2431](https://github.com/expo/expo-cli/pull/2431) by [@barthap](https://github.com/barthap)).
+
 ### 📦 Packages updated
 
 ## [Tue Aug 4 11:44:18 2020 +0200](https://github.com/expo/expo-cli/commit/1110d7a2526d5c586c057aa1db7191011b6bb508#diff-79fa8f30624180fc139625016ccfa417)
