@@ -89,10 +89,10 @@ async function statusAction(
 
 function printBuildTable(builds: Build[]) {
   const headers = ['started', 'platform', 'status', 'artifact'];
-  const colWidths = [24, 10, 13, 41];
+  const colWidths = [24, 10, 13];
 
   const refactoredBuilds = builds.map(build => {
-    const buildUrl = build.artifacts?.buildUrl;
+    const buildUrl = build.status === BuildStatus.FINISHED ? build.artifacts?.buildUrl : undefined;
 
     return {
       started: new Intl.DateTimeFormat('en', {
@@ -104,11 +104,7 @@ function printBuildTable(builds: Build[]) {
       }).format(new Date(build.createdAt)),
       platform: build.platform,
       status: build.status.replace(/-/g, ' '),
-      artifact: buildUrl
-        ? // Trim the URL here, otherwise if printTableJsonArray trims it, it incorrectly removes the escape to end the link
-          // Which makes everything in the terminal a link after printing the table
-          log.terminalLink(buildUrl.length > 38 ? `${buildUrl.slice(0, 38)}…` : buildUrl, buildUrl)
-        : 'not available',
+      artifact: buildUrl ? log.terminalLink(buildUrl, buildUrl) : '-------',
     };
   });
 

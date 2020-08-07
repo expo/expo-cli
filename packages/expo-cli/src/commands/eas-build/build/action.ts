@@ -13,6 +13,7 @@ import log from '../../../log';
 import { ensureProjectExistsAsync } from '../../../projects';
 import { UploadType, uploadAsync } from '../../../uploads';
 import { createProgressTracker } from '../../utils/progress';
+import { platformDisplayNames } from '../constants';
 import { Build, BuildCommandPlatform, BuildStatus } from '../types';
 import AndroidBuilder from './builders/AndroidBuilder';
 import iOSBuilder from './builders/iOSBuilder';
@@ -57,7 +58,9 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
     projectName: ctx.projectName,
   });
   const scheduledBuilds = await startBuildsAsync(ctx, projectId);
-  printLogsUrls(ctx.accountName, scheduledBuilds);
+  log.newLine();
+  await printLogsUrls(ctx.accountName, scheduledBuilds);
+  log.newLine();
 
   if (options.wait) {
     const builds = await waitForBuildEndAsync(
@@ -150,7 +153,7 @@ async function startBuildAsync(
     );
 
     const job = await builder.prepareJobAsync(archiveUrl);
-    log('Starting build');
+    log(`Starting ${platformDisplayNames[job.platform]} build`);
     const { buildId } = await client.postAsync(`projects/${projectId}/builds`, {
       job: job as any,
     });
