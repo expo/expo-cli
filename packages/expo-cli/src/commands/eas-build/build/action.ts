@@ -1,6 +1,5 @@
 import { Platform } from '@expo/build-tools';
-import { getConfig } from '@expo/config';
-import { ApiV2, User, UserManager } from '@expo/xdl';
+import { ApiV2 } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
@@ -9,23 +8,24 @@ import os from 'os';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import { EasConfig, EasJsonReader } from '../../../easJson';
+import { EasJsonReader } from '../../../easJson';
 import log from '../../../log';
 import { ensureProjectExistsAsync } from '../../../projects';
 import { UploadType, uploadAsync } from '../../../uploads';
 import { createProgressTracker } from '../../utils/progress';
 import { platformDisplayNames } from '../constants';
-import { Build, BuildCommandPlatform, BuildStatus } from '../types';
-import AndroidBuilder from './builders/AndroidBuilder';
-import iOSBuilder from './builders/iOSBuilder';
-import { BuildMetadata, collectMetadata } from './metadata';
-import { Builder, BuilderContext, CommandContext, PlatformBuildProfile } from './types';
+import { Build, BuildCommandPlatform, BuildStatus, Builder, CommandContext } from '../types';
+import createBuilderContext from '../utils/createBuilderContext';
+import createCommandContextAsync from '../utils/createCommandContextAsync';
 import {
   ensureGitRepoExistsAsync,
   ensureGitStatusIsCleanAsync,
   makeProjectTarballAsync,
-} from './utils/git';
-import { printBuildResults, printLogsUrls } from './utils/misc';
+} from '../utils/git';
+import { printBuildResults, printLogsUrls } from '../utils/misc';
+import AndroidBuilder from './builders/AndroidBuilder';
+import iOSBuilder from './builders/iOSBuilder';
+import { collectMetadata } from './metadata';
 
 interface BuildOptions {
   platform: BuildCommandPlatform;
@@ -81,40 +81,6 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
   }
 }
 
-async function createCommandContextAsync({
-  requestedPlatform,
-  profile,
-  projectDir,
-  nonInteractive = false,
-  skipCredentialsCheck = false,
-  skipProjectConfiguration = false,
-}: {
-  requestedPlatform: BuildCommandPlatform;
-  profile: string;
-  projectDir: string;
-  nonInteractive?: boolean;
-  skipCredentialsCheck?: boolean;
-  skipProjectConfiguration?: boolean;
-}): Promise<CommandContext> {
-  const user: User = await UserManager.ensureLoggedInAsync();
-  const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
-  const accountName = exp.owner || user.username;
-  const projectName = exp.slug;
-
-  return {
-    requestedPlatform,
-    profile,
-    projectDir,
-    user,
-    accountName,
-    projectName,
-    exp,
-    nonInteractive,
-    skipCredentialsCheck,
-    skipProjectConfiguration,
-  };
-}
-
 async function startBuildsAsync(
   commandCtx: CommandContext,
   projectId: string
@@ -155,27 +121,6 @@ async function startBuildsAsync(
   return scheduledBuilds;
 }
 
-function createBuilderContext<T extends Platform>({
-  platform,
-  easConfig,
-  commandCtx,
-}: {
-  platform: T;
-  easConfig: EasConfig;
-  commandCtx: CommandContext;
-}): BuilderContext<T> {
-  const buildProfile = easConfig.builds[platform] as PlatformBuildProfile<T> | undefined;
-  if (!buildProfile) {
-    throw new Error(`${platform} build profile does not exist`);
-  }
-
-  return {
-    commandCtx,
-    platform,
-    buildProfile,
-  };
-}
-
 async function startBuildAsync<T extends Platform>(
   client: ApiV2,
   {
@@ -191,7 +136,8 @@ async function startBuildAsync<T extends Platform>(
     await builder.setupAsync();
     const credentialsSource = await builder.ensureCredentialsAsync();
     if (!builder.ctx.commandCtx.skipProjectConfiguration) {
-      await builder.configureProjectAsync();
+      await builder.ensureCredentialsAsync();
+      await builder.ensureProjectConfiguredAsync();
     }
 
     const fileSize = await makeProjectTarballAsync(tarPath);
