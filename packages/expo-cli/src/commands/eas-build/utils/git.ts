@@ -3,10 +3,10 @@ import commandExists from 'command-exists';
 import fs from 'fs-extra';
 import ora from 'ora';
 
-import CommandError from '../../../../CommandError';
-import { gitDiffAsync, gitDoesRepoExistAsync, gitStatusAsync } from '../../../../git';
-import log from '../../../../log';
-import prompts from '../../../../prompts';
+import CommandError from '../../../CommandError';
+import { gitDiffAsync, gitDoesRepoExistAsync, gitStatusAsync } from '../../../git';
+import log from '../../../log';
+import prompts from '../../../prompts';
 
 async function ensureGitRepoExistsAsync(): Promise<void> {
   try {

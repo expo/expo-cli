@@ -4,12 +4,24 @@ import path from 'path';
 
 import buildAction from './build/action';
 import credentialsSyncAction from './credentialsSync/action';
+import initAction from './init/action';
 import statusAction from './status/action';
 
 export default function (program: Command) {
   // don't register `expo eas:build:*` commands if eas.json doesn't exist
   const easJsonPath = path.join(process.cwd(), 'eas.json');
-  if (!fs.pathExistsSync(easJsonPath)) {
+  const hasEasJson = fs.pathExistsSync(easJsonPath);
+
+  if (hasEasJson || process.argv[2] !== '--help') {
+    // We don't want to show this in the help output for now
+    program
+      .command('eas:build:init [project-dir]')
+      .description('Initialize build configuration for your project.')
+      .option('--skip-credentials-check', 'Skip checking credentials', false)
+      .asyncActionProjectDir(initAction, { checkConfig: true });
+  }
+
+  if (!hasEasJson) {
     return;
   }
 
@@ -26,7 +38,7 @@ export default function (program: Command) {
     .description('Build an app binary for your project.')
     .option(
       '-p --platform <platform>',
-      'Build for specified platform: ios, android, all',
+      'Build for the specified platform: ios, android, all',
       /^(all|android|ios)$/i
     )
     .option('--skip-credentials-check', 'Skip checking credentials', false)
