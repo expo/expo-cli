@@ -26,8 +26,8 @@ export type User = {
     onboarded: boolean;
     legacy?: boolean;
   };
-  currentConnection: ConnectionType;
   // auth methods
+  currentConnection: ConnectionType;
   sessionSecret?: string;
   accessToken?: string;
 };
@@ -44,6 +44,7 @@ export type LegacyUser = {
 export type UserOrLegacyUser = User | LegacyUser;
 
 export type ConnectionType =
+  | 'Access-Token-Authentication'
   | 'Username-Password-Authentication'
   | 'facebook'
   | 'google-oauth2'
@@ -218,14 +219,17 @@ export class UserManagerInstance {
       }
 
       try {
-        const profileOptions = accessToken
-          ? { accessToken }
-          : {
-              currentConnection: data?.currentConnection,
-              sessionSecret: data?.sessionSecret,
-            };
+        if (accessToken) {
+          return await this._getProfileAsync({
+            accessToken,
+            currentConnection: 'Access-Token-Authentication',
+          });
+        }
 
-        return await this._getProfileAsync(profileOptions);
+        return await this._getProfileAsync({
+          currentConnection: data?.currentConnection,
+          sessionSecret: data?.sessionSecret,
+        });
       } catch (e) {
         if (!(options && options.silent)) {
           Logger.global.warn('Fetching the user profile failed');
@@ -296,9 +300,12 @@ export class UserManagerInstance {
    * Logout
    */
   async logoutAsync(): Promise<void> {
-    if (this._currentUser) {
+    // Only send logout events events for users without access tokens
+    if (this._currentUser && !this._currentUser?.accessToken) {
       Analytics.logEvent('Logout', {
+        userId: this._currentUser.userId,
         username: this._currentUser.username,
+        currentConnection: this._currentUser.currentConnection,
       });
     }
 
@@ -378,16 +385,20 @@ export class UserManagerInstance {
       user.username &&
       user.username !== ''
     ) {
-      Analytics.logEvent('Login', {
-        userId: user.userId,
-        currentConnection: user.currentConnection,
-        username: user.username,
-      });
+      if (!accessToken) {
+        // Only send login events for users without access tokens
+        Analytics.logEvent('Login', {
+          userId: user.userId,
+          currentConnection: user.currentConnection,
+          username: user.username,
+        });
+      }
 
       Analytics.setUserProperties(user.username, {
         userId: user.userId,
         currentConnection: user.currentConnection,
         username: user.username,
+        userType: user.kind,
       });
     }
 
