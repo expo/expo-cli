@@ -15,16 +15,21 @@ export interface iOSCredentials {
   };
 }
 
+interface Options {
+  nonInteractive: boolean;
+  skipCredentialsCheck: boolean;
+}
+
 export default class iOSCredentialsProvider implements CredentialsProvider {
   public readonly platform = 'ios';
   private readonly ctx = new Context();
   private credentials?: iOSCredentials;
 
-  constructor(private projectDir: string, private app: AppLookupParams) {}
+  constructor(private projectDir: string, private app: AppLookupParams, private options: Options) {}
 
   public async initAsync() {
     await this.ctx.init(this.projectDir, {
-      nonInteractive: this.ctx.nonInteractive,
+      nonInteractive: this.options.nonInteractive,
     });
   }
 
@@ -77,14 +82,30 @@ export default class iOSCredentialsProvider implements CredentialsProvider {
     return await credentialsJsonReader.readIosCredentialsAsync(this.projectDir);
   }
   private async getRemoteAsync(): Promise<iOSCredentials> {
-    await runCredentialsManager(this.ctx, new SetupIosBuildCredentials(this.app));
+    if (this.options.skipCredentialsCheck) {
+      log('Skipping credentials check');
+    } else {
+      await runCredentialsManager(this.ctx, new SetupIosBuildCredentials(this.app));
+    }
     const distCert = await this.ctx.ios.getDistCert(this.app);
-    if (!distCert) {
-      throw new Error('Missing distribution certificate'); // shouldn't happen
+    if (!distCert?.certP12 || !distCert?.certPassword) {
+      if (this.options.skipCredentialsCheck) {
+        throw new Error(
+          'Distribution certificate is missing and credentials check was skipped. Run without --skip-credentials-check to set it up.'
+        );
+      } else {
+        throw new Error('Distribution certificate is missing');
+      }
     }
     const provisioningProfile = await this.ctx.ios.getProvisioningProfile(this.app);
-    if (!provisioningProfile) {
-      throw new Error('Missing provisioning profile'); // shouldn't happen
+    if (!provisioningProfile?.provisioningProfile) {
+      if (this.options.skipCredentialsCheck) {
+        throw new Error(
+          'Provisioning profile is missing and credentials check was skipped. Run without --skip-credentials-check to set it up.'
+        );
+      } else {
+        throw new Error('Provisioning profile is missing');
+      }
     }
     return {
       provisioningProfile: provisioningProfile.provisioningProfile,

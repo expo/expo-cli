@@ -11,25 +11,29 @@ export interface AndroidCredentials {
   keystore: Keystore;
 }
 
-interface Options {
+interface AppLookupParams {
   projectName: string;
   accountName: string;
+}
+
+interface Options {
+  nonInteractive: boolean;
 }
 
 export default class AndroidCredentialsProvider implements CredentialsProvider {
   public readonly platform = 'android';
   private readonly ctx = new Context();
 
-  constructor(private projectDir: string, private options: Options) {}
+  constructor(private projectDir: string, private app: AppLookupParams, private options: Options) {}
 
   private get projectFullName(): string {
-    const { projectName, accountName } = this.options;
+    const { projectName, accountName } = this.app;
     return `@${accountName}/${projectName}`;
   }
 
   public async initAsync() {
     await this.ctx.init(this.projectDir, {
-      nonInteractive: this.ctx.nonInteractive,
+      nonInteractive: this.options.nonInteractive,
     });
   }
 

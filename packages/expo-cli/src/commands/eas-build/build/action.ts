@@ -29,7 +29,7 @@ import { printBuildResults, printLogsUrls } from './utils/misc';
 
 interface BuildOptions {
   platform: BuildCommandPlatform;
-  skipCredentialsCheck?: boolean; // TODO: noop for now
+  skipCredentialsCheck?: boolean;
   skipProjectConfiguration?: boolean;
   wait?: boolean;
   profile: string;

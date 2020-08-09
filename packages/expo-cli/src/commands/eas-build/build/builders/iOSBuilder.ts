@@ -60,11 +60,18 @@ class iOSBuilder implements Builder<Platform.iOS> {
       this.ctx.commandCtx.projectDir,
       this.ctx.commandCtx.exp
     );
-    const provider = new iOSCredentialsProvider(this.ctx.commandCtx.projectDir, {
-      projectName: this.ctx.commandCtx.projectName,
-      accountName: this.ctx.commandCtx.accountName,
-      bundleIdentifier,
-    });
+    const provider = new iOSCredentialsProvider(
+      this.ctx.commandCtx.projectDir,
+      {
+        projectName: this.ctx.commandCtx.projectName,
+        accountName: this.ctx.commandCtx.accountName,
+        bundleIdentifier,
+      },
+      {
+        nonInteractive: this.ctx.commandCtx.nonInteractive,
+        skipCredentialsCheck: this.ctx.commandCtx.skipCredentialsCheck,
+      }
+    );
     await provider.initAsync();
     const credentialsSource = await ensureCredentialsAsync(
       provider,
