@@ -118,7 +118,7 @@ export default class IOSUploader extends BaseUploader {
     let teamId;
     if (ctx.hasProjectContext && ctx.manifest?.ios?.bundleIdentifier) {
       const app = {
-        accountName: ctx.manifest.owner ?? ctx.user.username,
+        accountName: ctx.projectOwner,
         projectName: ctx.manifest.slug,
         bundleIdentifier: ctx.manifest?.ios?.bundleIdentifier,
       };

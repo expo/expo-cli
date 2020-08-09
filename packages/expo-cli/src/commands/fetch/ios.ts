@@ -17,7 +17,7 @@ async function fetchIosCertsAsync(projectRoot: string): Promise<void> {
     await ctx.init(projectRoot);
 
     const app = {
-      accountName: ctx.manifest.owner ?? ctx.user.username,
+      accountName: ctx.projectOwner,
       projectName: ctx.manifest.slug,
       bundleIdentifier,
     };
