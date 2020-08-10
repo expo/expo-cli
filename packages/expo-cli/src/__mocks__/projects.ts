@@ -1,6 +1,8 @@
 import { ProjectPrivacy } from '@expo/config';
-import { User } from '@expo/xdl';
+import { RobotUser, User } from '@expo/xdl';
 import { v4 as uuidv4 } from 'uuid';
+
+const { getProjectData: actualGetProjectData } = jest.requireActual('../projects');
 
 interface ProjectData {
   accountName: string;
@@ -8,10 +10,14 @@ interface ProjectData {
   privacy?: ProjectPrivacy;
 }
 
-async function _ensureProjectExistsAsync(_user: User, _data: ProjectData): Promise<string> {
+async function _ensureProjectExistsAsync(
+  _user: User | RobotUser,
+  _data: ProjectData
+): Promise<string> {
   return uuidv4();
 }
 
 const ensureProjectExistsAsync = jest.fn(_ensureProjectExistsAsync);
+const getProjectData = jest.fn(actualGetProjectData);
 
-export { ensureProjectExistsAsync };
+export { ensureProjectExistsAsync, getProjectData };
