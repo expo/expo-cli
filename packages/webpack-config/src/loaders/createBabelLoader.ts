@@ -23,6 +23,7 @@ const includeModulesThatContainPaths = [
   getModule('unimodules'),
   getModule('@react'),
   getModule('@expo'),
+  getModule('@use-expo'),
   getModule('@unimodules'),
   getModule('native-base'),
   getModule('styled-components'),
