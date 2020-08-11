@@ -62,8 +62,8 @@ describe('AndroidBuilder', () => {
         platform: 'android',
         type: 'generic',
         projectUrl,
-        artifactPath: 'android/app/build/outputs/apk/release/app-release.apk',
-        gradleCommand: ':app:assembleRelease',
+        artifactPath: 'android/app/build/outputs/bundle/release/app-release.aab',
+        gradleCommand: ':app:bundleRelease',
         secrets: {
           keystore: {
             dataBase64: keystore.base64,

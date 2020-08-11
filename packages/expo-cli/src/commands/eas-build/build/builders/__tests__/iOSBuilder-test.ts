@@ -68,6 +68,7 @@ describe('iOSBuilder', () => {
         platform: 'ios',
         type: 'generic',
         projectUrl,
+        artifactPath: 'ios/build/App.ipa',
         secrets: {
           distributionCertificate: {
             dataBase64: cert.base64,
