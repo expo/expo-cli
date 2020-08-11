@@ -6,6 +6,16 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+### 📦 Packages updated
+
+## [Tue Aug 11 10:28:08 2020 +0200](https://github.com/expo/expo-cli/commit/199f5ef051a5829feb7e27a48031bed4e2f5f40f)
+
+### 🛠 Breaking changes
+
 - [expo-cli][xdl] Stop using api v1 endpoints for credentials ([#2422](https://github.com/expo/expo-cli/pull/2422) by [@wkozyra95](https://github.com/wkozyra95)).
 - [expo-cli] Rename eas.json field: `buildCommand` -> `gradleCommand` ([#2432](https://github.com/expo/expo-cli/pull/2432) by [@dsokal](https://github.com/dsokal)).
 - [expo-cli] Upgrade `@expo/build-tools` to `0.1.13` to change the default Gradle task (`:app:assembleRelease` -> `:app:bundleRelease`) for generic Android build.
@@ -22,7 +32,20 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 📦 Packages updated
 
-## [Tue Aug 4 11:44:18 2020 +0200](https://github.com/expo/expo-cli/commit/1110d7a2526d5c586c057aa1db7191011b6bb508#diff-79fa8f30624180fc139625016ccfa417)
+- @expo/config@3.2.18
+- @expo/dev-server@0.1.20
+- @expo/dev-tools@0.13.32
+- @expo/electron-adapter@0.0.10
+- expo-cli@3.24.0
+- expo-optimize@0.1.42
+- @expo/metro-config@0.1.20
+- @expo/next-adapter@2.1.23
+- expo-pwa@0.0.30
+- uri-scheme@1.0.26
+- @expo/webpack-config@0.12.23
+- @expo/xdl@57.9.29
+
+## [Tue Aug 4 11:44:18 2020 +0200](https://github.com/expo/expo-cli/commit/1110d7a2526d5c586c057aa1db7191011b6bb508)
 
 ### 🛠 Breaking changes
 
