@@ -5,6 +5,9 @@ import log from '../../../log';
 import prompts from '../../../prompts';
 import { platformDisplayNames } from '../constants';
 
+const USING_CREDENTIALS_JSON_MSG = 'Using credentials from the local credentials.json file';
+const USING_REMOTE_CREDENTIALS_MSG = 'Using credentials stored on the Expo servers';
+
 async function ensureCredentialsAutoAsync(
   provider: CredentialsProvider,
   workflow: Workflow,
@@ -48,8 +51,10 @@ async function ensureCredentialsAutoAsync(
           return CredentialsSource.LOCAL;
         }
       } else if (hasLocal) {
+        log(log.chalk.bold(USING_CREDENTIALS_JSON_MSG));
         return CredentialsSource.LOCAL;
       } else if (hasRemote) {
+        log(log.chalk.bold(USING_REMOTE_CREDENTIALS_MSG));
         return CredentialsSource.REMOTE;
       } else {
         if (nonInteractive) {
@@ -86,10 +91,14 @@ export async function ensureCredentialsAsync(
 ): Promise<CredentialsSource.LOCAL | CredentialsSource.REMOTE> {
   switch (src) {
     case CredentialsSource.LOCAL:
+      log(log.chalk.bold(USING_CREDENTIALS_JSON_MSG));
       return CredentialsSource.LOCAL;
     case CredentialsSource.REMOTE:
+      log(log.chalk.bold(USING_REMOTE_CREDENTIALS_MSG));
       return CredentialsSource.REMOTE;
-    case CredentialsSource.AUTO:
+    case CredentialsSource.AUTO: {
+      log('Resolving credentials source (auto mode)');
       return await ensureCredentialsAutoAsync(provider, workflow, nonInteractive);
+    }
   }
 }
