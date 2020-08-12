@@ -86,10 +86,15 @@ export async function ensureCredentialsAsync(
 ): Promise<CredentialsSource.LOCAL | CredentialsSource.REMOTE> {
   switch (src) {
     case CredentialsSource.LOCAL:
+      log(log.chalk.bold('Using credentials from the local credentials.json file'));
       return CredentialsSource.LOCAL;
     case CredentialsSource.REMOTE:
+      log(log.chalk.bold('Using credentials stored on the Expo servers'));
       return CredentialsSource.REMOTE;
-    case CredentialsSource.AUTO:
-      return await ensureCredentialsAutoAsync(provider, workflow, nonInteractive);
+    case CredentialsSource.AUTO: {
+      log('Resolving credentials source (auto mode)');
+      const autoSource = await ensureCredentialsAutoAsync(provider, workflow, nonInteractive);
+      return ensureCredentialsAsync(provider, workflow, autoSource, nonInteractive);
+    }
   }
 }
