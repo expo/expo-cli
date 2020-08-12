@@ -58,7 +58,7 @@ describe('iOSCredentialsProvider', () => {
       const hasRemote = await provider.hasRemoteAsync();
       expect(hasRemote).toBe(true);
     });
-    it('should return false if dist cert is missing', async () => {
+    it('should return true if dist cert is missing', async () => {
       mockGetProvisioningProfile.mockImplementation(() => ({
         provisioningProfile: 'profileBase64',
         provisioningProfileId: 'id',
@@ -66,10 +66,10 @@ describe('iOSCredentialsProvider', () => {
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
       const hasRemote = await provider.hasRemoteAsync();
-      expect(hasRemote).toBe(false);
+      expect(hasRemote).toBe(true);
     });
 
-    it('should return false if provisioning profile is missing', async () => {
+    it('should return true if provisioning profile is missing', async () => {
       mockGetDistCert.mockImplementation(() => ({
         certP12: 'certbase64',
         certPassword: 'fakePassword',
@@ -77,7 +77,7 @@ describe('iOSCredentialsProvider', () => {
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
       const hasRemote = await provider.hasRemoteAsync();
-      expect(hasRemote).toBe(false);
+      expect(hasRemote).toBe(true);
     });
     it('should return false if there are no credentials', async () => {
       const provider = new iOSCredentialsProvider('.', providerOptions);
@@ -107,7 +107,7 @@ describe('iOSCredentialsProvider', () => {
       const hasLocal = await provider.hasLocalAsync();
       expect(hasLocal).toBe(true);
     });
-    it('should return false if there are missing fields', async () => {
+    it('should return true if there are missing fields', async () => {
       vol.fromJSON({
         './credentials.json': JSON.stringify({
           ios: {
@@ -124,9 +124,9 @@ describe('iOSCredentialsProvider', () => {
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
       const hasLocal = await provider.hasLocalAsync();
-      expect(hasLocal).toBe(false);
+      expect(hasLocal).toBe(true);
     });
-    it('should return false if file is missing', async () => {
+    it('should return true if file is missing', async () => {
       vol.fromJSON({
         './credentials.json': JSON.stringify({
           ios: {
@@ -142,7 +142,7 @@ describe('iOSCredentialsProvider', () => {
       const provider = new iOSCredentialsProvider('.', providerOptions);
       await provider.initAsync();
       const hasLocal = await provider.hasLocalAsync();
-      expect(hasLocal).toBe(false);
+      expect(hasLocal).toBe(true);
     });
     it('should return false if there are no credentials.json file', async () => {
       const provider = new iOSCredentialsProvider('.', providerOptions);

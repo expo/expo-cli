@@ -1,4 +1,5 @@
 import { CredentialsSource } from '../../easJson';
+import log from '../../log';
 import { Context } from '../context';
 import { Keystore } from '../credentials';
 import { credentialsJson } from '../local';
@@ -42,9 +43,10 @@ export default class AndroidCredentialsProvider implements CredentialsProvider {
       return false;
     }
     try {
-      const credentials = await credentialsJson.readAndroidAsync(this.projectDir);
-      return this.isValidKeystore(credentials.keystore);
+      const rawCredentialsJson = await credentialsJson.readRawAsync(this.projectDir);
+      return !!rawCredentialsJson?.android;
     } catch (err) {
+      log.error(err); // malformed json
       return false;
     }
   }

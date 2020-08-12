@@ -1,4 +1,5 @@
 import { CredentialsSource } from '../../easJson';
+import log from '../../log';
 import { AppLookupParams } from '../api/IosApi';
 import { Context } from '../context';
 import { credentialsJson } from '../local';
@@ -30,7 +31,7 @@ export default class iOSCredentialsProvider implements CredentialsProvider {
   public async hasRemoteAsync(): Promise<boolean> {
     const distCert = await this.ctx.ios.getDistCert(this.app);
     const provisioningProfile = await this.ctx.ios.getProvisioningProfile(this.app);
-    return !!(distCert && provisioningProfile);
+    return !!(distCert || provisioningProfile);
   }
 
   public async hasLocalAsync(): Promise<boolean> {
@@ -38,9 +39,10 @@ export default class iOSCredentialsProvider implements CredentialsProvider {
       return false;
     }
     try {
-      await credentialsJson.readIosAsync(this.projectDir);
-      return true;
-    } catch (_) {
+      const rawCredentialsJson = await credentialsJson.readRawAsync(this.projectDir);
+      return !!rawCredentialsJson?.ios;
+    } catch (err) {
+      log.error(err); // malformed json
       return false;
     }
   }
