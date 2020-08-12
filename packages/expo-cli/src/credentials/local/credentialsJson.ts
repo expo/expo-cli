@@ -93,16 +93,7 @@ async function readIosAsync(projectDir: string): Promise<iOSCredentials> {
 }
 
 async function readAsync(projectDir: string): Promise<CredentialsJson> {
-  const credentialsJsonFilePath = path.join(projectDir, 'credentials.json');
-  let credentialsJSONRaw;
-  try {
-    const credentialsJSONContents = await fs.readFile(credentialsJsonFilePath, 'utf8');
-    credentialsJSONRaw = JSON.parse(credentialsJSONContents);
-  } catch (err) {
-    throw new Error(
-      `credentials.json must exist in the project root directory and consist a valid JSON`
-    );
-  }
+  const credentialsJSONRaw = await readRawAsync(projectDir);
 
   const { value: credentialsJson, error } = CredentialsJsonSchema.validate(credentialsJSONRaw, {
     stripUnknown: true,
@@ -116,7 +107,19 @@ async function readAsync(projectDir: string): Promise<CredentialsJson> {
   return credentialsJson;
 }
 
+async function readRawAsync(projectDir: string): Promise<any> {
+  const credentialsJsonFilePath = path.join(projectDir, 'credentials.json');
+  try {
+    const credentialsJSONContents = await fs.readFile(credentialsJsonFilePath, 'utf8');
+    return JSON.parse(credentialsJSONContents);
+  } catch (err) {
+    throw new Error(
+      `credentials.json must exist in the project root directory and contain a valid JSON`
+    );
+  }
+}
+
 const getAbsolutePath = (projectDir: string, filePath: string): string =>
   path.isAbsolute(filePath) ? filePath : path.join(projectDir, filePath);
 
-export default { readAndroidAsync, readIosAsync, fileExistsAsync };
+export default { readAndroidAsync, readIosAsync, readRawAsync, fileExistsAsync };

@@ -91,7 +91,7 @@ describe('AndroidCredentialsProvider', () => {
       const hasLocal = await provider.hasLocalAsync();
       expect(hasLocal).toBe(true);
     });
-    it('should return false if there are missing fields', async () => {
+    it('should return true if there are missing fields', async () => {
       vol.fromJSON({
         './credentials.json': JSON.stringify({
           android: {
@@ -107,9 +107,9 @@ describe('AndroidCredentialsProvider', () => {
       const provider = new AndroidCredentialsProvider('.', providerOptions);
       await provider.initAsync();
       const hasLocal = await provider.hasLocalAsync();
-      expect(hasLocal).toBe(false);
+      expect(hasLocal).toBe(true);
     });
-    it('should return false if file is missing', async () => {
+    it('should return true if file is missing', async () => {
       vol.fromJSON({
         './credentials.json': JSON.stringify({
           android: {
@@ -125,7 +125,7 @@ describe('AndroidCredentialsProvider', () => {
       const provider = new AndroidCredentialsProvider('.', providerOptions);
       await provider.initAsync();
       const hasLocal = await provider.hasLocalAsync();
-      expect(hasLocal).toBe(false);
+      expect(hasLocal).toBe(true);
     });
     it('should return false if there are no credentials.json file', async () => {
       const provider = new AndroidCredentialsProvider('.', providerOptions);
