@@ -799,7 +799,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       'android.permission.SYSTEM_ALERT_WINDOW',
 
       // signature permissions - not available for 3rd party
-      'android.permission.MANAGE_DOCUMENTS',
+      'android.permission.MANAGE_DOCUMENTS', // https://github.com/expo/expo/pull/9727
       'android.permission.READ_SMS', // https://github.com/expo/expo/pull/2982
       'android.permission.REQUEST_INSTALL_PACKAGES', // https://github.com/expo/expo/pull/8969
 
