@@ -97,6 +97,7 @@ class RemoveKeystore implements IView {
         type: 'confirm',
         name: 'confirm',
         message: 'Permanently delete the Android build credentials from our servers?',
+        default: false,
       },
     ];
     const answers = await prompt(questions);
