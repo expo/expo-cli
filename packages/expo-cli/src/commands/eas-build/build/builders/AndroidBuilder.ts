@@ -74,7 +74,7 @@ class AndroidBuilder implements Builder {
     const buildGradleContent = await fs.readFile(path.join(buildGradlePath), 'utf-8');
     const applyEasGradle = 'apply from: "./eas-build.gradle"';
 
-    const isAlreadyConfigured = await buildGradleContent
+    const isAlreadyConfigured = buildGradleContent
       .split('\n')
       // Check for both single and double quotes
       .some(line => line === applyEasGradle || line === applyEasGradle.replace(/"/g, "'"));

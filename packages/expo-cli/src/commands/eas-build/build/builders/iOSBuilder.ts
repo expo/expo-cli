@@ -58,10 +58,7 @@ class iOSBuilder implements Builder {
     if (!this.shouldLoadCredentials()) {
       return;
     }
-    const bundleIdentifier = this.ctx.exp?.ios?.bundleIdentifier;
-    if (!bundleIdentifier) {
-      throw new Error('"expo.ios.bundleIdentifier" field is required in your app.json');
-    }
+    const bundleIdentifier = await getBundleIdentifier(this.ctx);
     const provider = new iOSCredentialsProvider(this.ctx.projectDir, {
       projectName: this.ctx.projectName,
       accountName: this.ctx.accountName,
