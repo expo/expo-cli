@@ -1,6 +1,6 @@
+import { ColorDescriptor } from 'color-string';
 import fs from 'fs-extra';
 import path from 'path';
-import { ColorDescriptor } from 'color-string';
 import { PNG } from 'pngjs';
 
 import { writeContentsJsonFile } from './Contents.json';

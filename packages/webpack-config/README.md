@@ -32,7 +32,7 @@ Running `expo customize:web` will generate this default config in your project.
 ```js
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 
-module.exports = async function(env, argv) {
+module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
   // Customize the config before returning it.
   return config;
@@ -242,7 +242,7 @@ You may find that you want to include universal modules that aren't part of the 
 ```ts
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 
-module.exports = async function(env, argv) {
+module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(
     {
       ...env,
@@ -266,7 +266,7 @@ If you're adding support to some other Webpack config like in Storybook or Gatsb
 ```ts
 const { withUnimodules } = require('@expo/webpack-config/addons');
 
-module.exports = function() {
+module.exports = function () {
   const someWebpackConfig = {
     /* Your custom Webpack config */
   };
@@ -296,7 +296,7 @@ If you want to modify the babel loader further, you can retrieve it using the he
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 const { getExpoBabelLoader } = require('@expo/webpack-config/utils');
 
-module.exports = async function(env, argv) {
+module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
   const loader = getExpoBabelLoader(config);
   if (loader) {
@@ -335,7 +335,7 @@ This can have some unfortunate side-effects as application libraries like expo-n
 ```js
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 
-module.exports = async function(env, argv) {
+module.exports = async function (env, argv) {
   // Set offline to `false`
   const config = await createExpoWebpackConfigAsync({ ...env, offline: false }, argv);
   return config;

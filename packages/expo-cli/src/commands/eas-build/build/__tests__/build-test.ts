@@ -1,9 +1,10 @@
-import { vol } from 'memfs';
 import merge from 'lodash/merge';
-import { User } from '@expo/xdl';
+import { vol } from 'memfs';
 
-import { buildAction } from '../index';
-import { mockExpoXDL } from '../../../__tests__/mock-utils';
+import { mockExpoXDL } from '../../../../__tests__/mock-utils';
+import { provisioningProfileBase64 } from '../../../../credentials/utils/__tests__/tests-fixtures';
+import { BuildCommandPlatform } from '../../types';
+import buildAction from '../action';
 
 const mockedUser = {
   username: 'jester',
@@ -11,15 +12,31 @@ const mockedUser = {
 
 const mockProjectUrl = 'http://fakeurl.com';
 const mockPostAsync = jest.fn();
+jest.mock('@expo/config', () => {
+  const pkg = jest.requireActual('@expo/config');
+  return {
+    ...pkg,
+    IOSConfig: {
+      BundleIdenitifer: {
+        setBundleIdentifierForPbxproj: jest.fn(),
+        getBundleIdentifierFromPbxproj: jest.fn(),
+        getBundleIdentifier: jest.fn(),
+      },
+      ProvisioningProfile: {
+        setProvisioningProfileForPbxproj: jest.fn(),
+      },
+    },
+  };
+});
 jest.mock('fs');
 jest.mock('prompts');
-jest.mock('../../../projects', () => {
+jest.mock('../../../../projects', () => {
   return {
     ensureProjectExistsAsync: () => 'fakeProjectId',
   };
 });
-jest.mock('../utils');
-jest.mock('../../../uploads', () => ({
+jest.mock('../utils/git');
+jest.mock('../../../../uploads', () => ({
   UploadType: {},
   uploadAsync: () => mockProjectUrl,
 }));
@@ -52,7 +69,7 @@ const credentialsJson = {
     },
   },
   ios: {
-    provisioningProfilePath: './pprofile',
+    provisioningProfilePath: 'pprofile',
     distributionCertificate: {
       path: 'cert.p12',
       password: 'certPass',
@@ -66,8 +83,8 @@ const keystore = {
 };
 
 const pprofile = {
-  content: 'pprofilecontent',
-  base64: 'cHByb2ZpbGVjb250ZW50',
+  content: Buffer.from(provisioningProfileBase64, 'base64'),
+  base64: provisioningProfileBase64,
 };
 
 const cert = {
@@ -105,16 +122,20 @@ const packageJson = {
 };
 
 function setupProjectConfig(overrideConfig: any) {
-  vol.fromJSON({
-    './credentials.json': JSON.stringify(merge(credentialsJson, overrideConfig.credentialsJson)),
-    './keystore.jks': overrideConfig.keystore ?? keystore.content,
-    './eas.json': JSON.stringify(merge(easJson, overrideConfig.easJson)),
-    './app.json': JSON.stringify(appJson),
-    './package.json': JSON.stringify(packageJson),
-    './node_modules/expo/package.json': '{ "version": "38.0.0" }',
-    './pprofile': pprofile.content,
-    './cert.p12': cert.content,
-  });
+  vol.fromJSON(
+    {
+      'credentials.json': JSON.stringify(merge(credentialsJson, overrideConfig.credentialsJson)),
+      'keystore.jks': overrideConfig.keystore ?? keystore.content,
+      'eas.json': JSON.stringify(merge(easJson, overrideConfig.easJson)),
+      'app.json': JSON.stringify(appJson),
+      'package.json': JSON.stringify(packageJson),
+      'node_modules/expo/package.json': '{ "version": "38.0.0" }',
+      'cert.p12': cert.content,
+      'android/app/build.gradle': '',
+    },
+    '/projectdir'
+  );
+  vol.writeFileSync('/projectdir/pprofile', pprofile.content);
 }
 
 const originalWarn = console.warn;
@@ -145,8 +166,8 @@ describe('build command', () => {
         return { buildId: 'fakeBuildId' };
       });
       setupProjectConfig({});
-      await buildAction('.', {
-        platform: 'android',
+      await buildAction('/projectdir', {
+        platform: BuildCommandPlatform.ANDROID,
         wait: false,
         profile: 'release',
       });
@@ -156,8 +177,8 @@ describe('build command', () => {
         platform: 'android',
         type: 'generic',
         projectUrl: mockProjectUrl,
-        artifactPath: 'android/app/build/outputs/apk/release/app-release.apk',
-        gradleCommand: ':app:assembleRelease',
+        artifactPath: 'android/app/build/outputs/bundle/release/app-release.aab',
+        gradleCommand: ':app:bundleRelease',
         secrets: {
           keystore: {
             dataBase64: keystore.base64,
@@ -167,6 +188,10 @@ describe('build command', () => {
           },
         },
       });
+      expect(vol.existsSync('/projectdir/android/app/eas-build.gradle')).toBe(true);
+      expect(vol.readFileSync('/projectdir/android/app/build.gradle', 'utf-8')).toContain(
+        'apply from: "./eas-build.gradle"'
+      );
     });
   });
   describe('ios generic job', () => {
@@ -178,8 +203,8 @@ describe('build command', () => {
         return { buildId: 'fakeBuildId' };
       });
       setupProjectConfig({});
-      await buildAction('.', {
-        platform: 'ios',
+      await buildAction('/projectdir', {
+        platform: BuildCommandPlatform.IOS,
         wait: false,
         profile: 'release',
       });
@@ -189,6 +214,7 @@ describe('build command', () => {
         platform: 'ios',
         type: 'generic',
         projectUrl: mockProjectUrl,
+        artifactPath: 'ios/build/App.ipa',
         secrets: {
           distributionCertificate: {
             dataBase64: cert.base64,
@@ -212,8 +238,8 @@ describe('build command', () => {
         return { buildId: 'fakeIosBuildId' };
       });
       setupProjectConfig({});
-      await buildAction('.', {
-        platform: 'all',
+      await buildAction('/projectdir', {
+        platform: BuildCommandPlatform.ALL,
         wait: false,
         profile: 'release',
       });
@@ -228,8 +254,8 @@ describe('build command', () => {
                 platform: 'android',
                 type: 'generic',
                 projectUrl: mockProjectUrl,
-                artifactPath: 'android/app/build/outputs/apk/release/app-release.apk',
-                gradleCommand: ':app:assembleRelease',
+                artifactPath: 'android/app/build/outputs/bundle/release/app-release.aab',
+                gradleCommand: ':app:bundleRelease',
                 secrets: {
                   keystore: {
                     dataBase64: keystore.base64,
@@ -248,6 +274,7 @@ describe('build command', () => {
                 platform: 'ios',
                 type: 'generic',
                 projectUrl: mockProjectUrl,
+                artifactPath: 'ios/build/App.ipa',
                 secrets: {
                   distributionCertificate: {
                     dataBase64: cert.base64,

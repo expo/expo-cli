@@ -1,17 +1,15 @@
 import { UrlUtils, Webpack } from '@expo/xdl';
-import { setCustomConfigPath } from '@expo/config';
-import { Command } from 'commander';
 import chalk from 'chalk';
-import BaseBuilder from './BaseBuilder';
-import IOSBuilder from './ios/IOSBuilder';
-import AndroidBuilder from './AndroidBuilder';
-import log from '../../log';
-import CommandError from '../../CommandError';
-import * as ProjectUtils from '../utils/ProjectUtils';
-import { askBuildType } from './utils';
-import prompt from '../../prompt';
+import { Command } from 'commander';
 
+import CommandError from '../../CommandError';
+import log from '../../log';
+import prompt from '../../prompt';
+import * as ProjectUtils from '../utils/ProjectUtils';
+import AndroidBuilder from './AndroidBuilder';
+import BaseBuilder from './BaseBuilder';
 import { AndroidOptions, IosOptions } from './BaseBuilder.types';
+import IOSBuilder from './ios/IOSBuilder';
 
 async function maybeBailOnWorkflowWarning({
   projectDir,
@@ -106,11 +104,15 @@ export default function (program: Command) {
             return;
           }
         }
-
+        if (options.skipCredentialsCheck && options.clearCredentials) {
+          throw new CommandError(
+            "--skip-credentials-check and --clear-credentials can't be used together"
+          );
+        }
         if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
           throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
         }
-        let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+        const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
         if (!channelRe.test(options.releaseChannel)) {
           log.error(
             'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
@@ -161,7 +163,7 @@ export default function (program: Command) {
         if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
           throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
         }
-        let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+        const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
         if (!channelRe.test(options.releaseChannel)) {
           log.error(
             'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'

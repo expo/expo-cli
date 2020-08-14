@@ -1,8 +1,8 @@
 import program from 'commander';
 
-import { validateGitStatusAsync } from './ProjectUtils';
 import log from '../../log';
 import prompt from '../../prompt';
+import { validateGitStatusAsync } from './ProjectUtils';
 
 export default async function maybeBailOnGitStatusAsync(): Promise<boolean> {
   const isGitStatusClean = await validateGitStatusAsync();

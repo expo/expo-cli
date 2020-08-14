@@ -1,7 +1,7 @@
 import { ExpoConfig, getConfig } from '@expo/config';
 
-import { setupAsync, updateAsync } from '../webhooks';
 import { mockExpoXDL } from '../../__tests__/mock-utils';
+import { setupAsync, updateAsync } from '../webhooks';
 
 jest.mock('@expo/config');
 

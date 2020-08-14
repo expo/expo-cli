@@ -1,4 +1,4 @@
-import { Compiler, Plugin, compilation } from 'webpack';
+import { Compiler, Plugin, compilation as compilationNS } from 'webpack';
 
 function maybeFetchPlugin(compiler: Compiler, name: string): Plugin | undefined {
   return compiler.options?.plugins
@@ -27,7 +27,7 @@ export default class ModifyHtmlWebpackPlugin {
 
   async modifyAsync(
     compiler: Compiler,
-    compilation: compilation.Compilation,
+    compilation: compilationNS.Compilation,
     data: HTMLPluginData
   ): Promise<HTMLPluginData> {
     return data;
@@ -36,7 +36,7 @@ export default class ModifyHtmlWebpackPlugin {
   apply(compiler: Compiler) {
     compiler.hooks.make.tapPromise(
       this.constructor.name,
-      async (compilation: compilation.Compilation) => {
+      async (compilation: compilationNS.Compilation) => {
         // Hook into the html-webpack-plugin processing and add the html
         const HtmlWebpackPlugin = maybeFetchPlugin(compiler, 'HtmlWebpackPlugin') as any;
         if (HtmlWebpackPlugin) {

@@ -13,7 +13,7 @@ export function ncpAsync(source: string, dest: string, options: any = {}) {
 }
 
 export class Semaphore {
-  queue: Array<(v: boolean) => void> = [];
+  queue: ((v: boolean) => void)[] = [];
   available = 1;
 
   async acquire(): Promise<boolean> {

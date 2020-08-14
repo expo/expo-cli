@@ -1,6 +1,5 @@
-import path from 'path';
-
 import JsonFile from '@expo/json-file';
+import path from 'path';
 import temporary from 'tempy';
 
 import { runAsync, tryRunAsync } from '../TestUtils';

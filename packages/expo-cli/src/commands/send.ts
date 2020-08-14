@@ -1,6 +1,6 @@
+import { UrlUtils, UserSettings } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { UrlUtils, UserSettings } from '@expo/xdl';
 
 import askUser from '../askUser';
 import log from '../log';
@@ -38,7 +38,7 @@ async function action(projectDir: string, options: Options) {
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('send [project-dir]')
     .description(`Send the project's url to an email address`)

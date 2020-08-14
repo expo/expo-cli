@@ -1,8 +1,8 @@
 import commandExists from 'command-exists';
 
 import { getCtxMock, testExperienceName } from '../../test-fixtures/mocks-android';
-import { SetupAndroidKeystore } from '../SetupAndroidKeystore';
 import { UpdateKeystore } from '../AndroidKeystore';
+import { SetupAndroidKeystore } from '../SetupAndroidKeystore';
 
 jest.mock('../../actions/list');
 jest.mock('command-exists');

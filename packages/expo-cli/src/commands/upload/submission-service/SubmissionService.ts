@@ -1,5 +1,5 @@
-import { ApiV2, UserManager } from '@expo/xdl';
 import { JSONObject } from '@expo/json-file';
+import { ApiV2, UserManager } from '@expo/xdl';
 
 import {
   Platform,

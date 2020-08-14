@@ -1,49 +1,32 @@
 import chalk from 'chalk';
 
-import prompt from '../../prompts';
-import log from '../../log';
-import CommandError, { ErrorCodes } from '../../CommandError';
+import CommandError from '../../CommandError';
 import * as appleApi from '../../appleApi';
+import log from '../../log';
+import prompt from '../../prompts';
+import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
 import { runCredentialsManager } from '../route';
 import { SetupIosDist } from './SetupIosDist';
 import { SetupIosProvisioningProfile } from './SetupIosProvisioningProfile';
 
-interface CliOptions {
-  nonInteractive?: boolean;
-  appleId?: string;
-}
-
-interface SetupIosBuildCredentialsOptions extends CliOptions {
-  experienceName: string;
-  bundleIdentifier: string;
-}
-
 export class SetupIosBuildCredentials implements IView {
-  constructor(private options: SetupIosBuildCredentialsOptions) {}
+  constructor(private app: AppLookupParams) {}
 
   async open(ctx: Context): Promise<IView | null> {
-    const { experienceName, bundleIdentifier, nonInteractive } = this.options;
     await this.bestEffortAppleCtx(ctx);
 
     if (ctx.hasAppleCtx()) {
-      await appleApi.ensureAppExists(
-        ctx.appleCtx,
-        { experienceName, bundleIdentifier },
-        { enablePushNotifications: true }
-      );
+      await appleApi.ensureAppExists(ctx.appleCtx, this.app, { enablePushNotifications: true });
     }
     try {
-      await runCredentialsManager(
-        ctx,
-        new SetupIosDist({ experienceName, bundleIdentifier, nonInteractive })
-      );
+      await runCredentialsManager(ctx, new SetupIosDist(this.app));
     } catch (error) {
       log.error('Failed to set up Distribution Certificate');
       throw error;
     }
 
-    const distCert = await ctx.ios.getDistCert(experienceName, bundleIdentifier);
+    const distCert = await ctx.ios.getDistCert(this.app);
     if (!distCert) {
       throw new CommandError(
         'INSUFFICIENT_CREDENTIALS',
@@ -52,15 +35,7 @@ export class SetupIosBuildCredentials implements IView {
     }
 
     try {
-      await runCredentialsManager(
-        ctx,
-        new SetupIosProvisioningProfile({
-          experienceName,
-          bundleIdentifier,
-          nonInteractive,
-          distCert,
-        })
-      );
+      await runCredentialsManager(ctx, new SetupIosProvisioningProfile(this.app));
     } catch (error) {
       log.error('Failed to set up Provisioning Profile');
       throw error;
@@ -76,13 +51,8 @@ export class SetupIosBuildCredentials implements IView {
       // skip prompts if already have apple ctx
       return;
     }
-    if (this.options.appleId) {
-      // skip prompts and auto authenticate if flags are passed
-      return await ctx.ensureAppleCtx(this.options);
-    }
 
-    const nonInteractive = this.options.nonInteractive;
-    if (nonInteractive) {
+    if (ctx.nonInteractive) {
       return;
     }
 
@@ -94,7 +64,7 @@ export class SetupIosBuildCredentials implements IView {
       },
     ]);
     if (confirm) {
-      return await ctx.ensureAppleCtx(this.options);
+      return await ctx.ensureAppleCtx();
     } else {
       log(
         chalk.green(

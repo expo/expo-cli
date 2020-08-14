@@ -1,6 +1,6 @@
 'use strict';
 
-const os = require.requireActual('os');
+const os = jest.requireActual('os');
 
 os.homedir = jest.fn(() => '/home');
 

@@ -1,10 +1,9 @@
 import { User } from '@expo/xdl';
 import merge from 'lodash/merge';
+
 import { AndroidCredentials } from '../credentials';
 import { testKeystore2Base64, testKeystoreBase64 } from './mock-keystore';
 
-const today = new Date();
-const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
 export const testSlug = 'testApp';
 export const testSlug2 = 'testApp2';
 export const testExperienceName = `@jester/${testSlug}`;

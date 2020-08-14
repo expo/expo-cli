@@ -1,5 +1,5 @@
-import { ExpoPlist } from './IosConfig.types';
 import { ExpoConfig } from '../Config.types';
+import { ExpoPlist } from './IosConfig.types';
 
 export function getUpdateUrl(config: ExpoConfig, username: string | null) {
   const user = typeof config.owner === 'string' ? config.owner : username;

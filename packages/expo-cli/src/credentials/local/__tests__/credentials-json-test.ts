@@ -1,4 +1,5 @@
 import { vol } from 'memfs';
+
 import credentialsJson from '../credentialsJson';
 
 jest.mock('fs');
@@ -36,7 +37,7 @@ describe('credentialsJson', () => {
     it('should throw error when credentials.json is missing', async () => {
       const promise = credentialsJson.readAndroidAsync('.');
       await expect(promise).rejects.toThrow(
-        'credentials.json must exist in the project root directory and consist a valid JSON'
+        'credentials.json must exist in the project root directory and contain a valid JSON'
       );
     });
 
@@ -115,7 +116,7 @@ describe('credentialsJson', () => {
     it('should throw error when credentials.json is missing', async () => {
       const promise = credentialsJson.readIosAsync('.');
       await expect(promise).rejects.toThrow(
-        'credentials.json must exist in the project root directory and consist a valid JSON'
+        'credentials.json must exist in the project root directory and contain a valid JSON'
       );
     });
     it('should throw error if ios field is missing', async () => {

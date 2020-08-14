@@ -7,11 +7,7 @@ import {
   getFacebookScheme,
   setFacebookAdvertiserIDCollectionEnabled,
   setFacebookAppId,
-  setFacebookApplicationQuerySchemes,
   setFacebookAutoInitEnabled,
-  setFacebookAutoLogAppEventsEnabled,
-  setFacebookConfig,
-  setFacebookDisplayName,
 } from '../Facebook';
 
 describe('ios facebook config', () => {

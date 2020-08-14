@@ -1,6 +1,6 @@
-import http from 'http';
-import { HandleFunction } from 'connect';
 import Log from '@expo/bunyan';
+import { HandleFunction } from 'connect';
+import http from 'http';
 
 type ConsoleLogLevel = 'info' | 'warn' | 'error' | 'debug';
 

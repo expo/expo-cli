@@ -8,13 +8,131 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
-- [xdl] Log output from Gradle Wrapper is a lot cleaner now. It doesn't print dots when the appropriate Gradle version is being downloaded ([#2355](https://github.com/expo/expo-cli/pull/2355)).
+### 🐛 Bug fixes
+
+### 📦 Packages updated
+
+## [Tue Aug 11 10:28:08 2020 +0200](https://github.com/expo/expo-cli/commit/199f5ef051a5829feb7e27a48031bed4e2f5f40f)
+
+### 🛠 Breaking changes
+
+- [expo-cli][xdl] Stop using api v1 endpoints for credentials ([#2422](https://github.com/expo/expo-cli/pull/2422) by [@wkozyra95](https://github.com/wkozyra95)).
+- [expo-cli] Rename eas.json field: `buildCommand` -> `gradleCommand` ([#2432](https://github.com/expo/expo-cli/pull/2432) by [@dsokal](https://github.com/dsokal)).
+- [expo-cli] Upgrade `@expo/build-tools` to `0.1.13` to change the default Gradle task (`:app:assembleRelease` -> `:app:bundleRelease`) for generic Android build.
+
+### 🎉 New features
+
+- [expo-cli] Implement auto-configuration for Android projects ([#2427](https://github.com/expo/expo-cli/pull/2427) by [@satya164](https://github.com/satya164)).
+- [expo-cli] Make output of the `expo eas:build` command more readable ([#2428](https://github.com/expo/expo-cli/pull/2428) by [@wkozyra95](https://github.com/wkozyra95)).
+- [expo-cli] Add `artifactPath` for generic iOS build profiles & set `app-bundle` as the default build type for managed Android builds ([#2435](https://github.com/expo/expo-cli/pull/2435) by [@dsokal](https://github.com/dsokal)).
 
 ### 🐛 Bug fixes
 
-- [xdl] Fix incorrect check of the packager port in the "setOptionsAsync" function [#2270](https://github.com/expo/expo-cli/issues/2270)
+- [config] Fix generated orientation in AndroidManifest.xml ([#2431](https://github.com/expo/expo-cli/pull/2431) by [@barthap](https://github.com/barthap)).
 
 ### 📦 Packages updated
+
+- @expo/config@3.2.18
+- @expo/dev-server@0.1.20
+- @expo/dev-tools@0.13.32
+- @expo/electron-adapter@0.0.10
+- expo-cli@3.24.0
+- expo-optimize@0.1.42
+- @expo/metro-config@0.1.20
+- @expo/next-adapter@2.1.23
+- expo-pwa@0.0.30
+- uri-scheme@1.0.26
+- @expo/webpack-config@0.12.23
+- @expo/xdl@57.9.29
+
+## [Tue Aug 4 11:44:18 2020 +0200](https://github.com/expo/expo-cli/commit/1110d7a2526d5c586c057aa1db7191011b6bb508)
+
+### 🛠 Breaking changes
+
+- Renamed commands for EAS Builds ([#2419](https://github.com/expo/expo-cli/pull/2419) by [@dsokal](https://github.com/dsokal)):
+  - `expo build` -> `expo eas:build`
+  - `expo build-status` -> `expo eas:build:status`
+
+### 🎉 New features
+
+- Reimplement bundling with Metro JS APIs (no file watching or HTTP servers), enabled in `expo publish` and `expo export` when `EXPO_USE_DEV_SERVER` is set to `true`. ([#2149](https://github.com/expo/expo-cli/pull/2149) by [@fson](https://github.com/fson)).
+- Implement autoconfiguring bare iOS projects so they are buildable with EAS Builds. ([#2395](https://github.com/expo/expo-cli/pull/2395) by [@dsokal](https://github.com/dsokal)).
+
+### 📦 Packages updated
+
+- @expo/config@3.2.17
+- @expo/configure-splash-screen@0.1.14
+- @expo/dev-server@0.1.19
+- @expo/dev-tools@0.13.30
+- @expo/electron-adapter@0.0.9
+- expo-cli@3.23.2
+- expo-optimize@0.1.41
+- @expo/metro-config@0.1.19
+- @expo/next-adapter@2.1.22
+- expo-pwa@0.0.29
+- uri-scheme@1.0.25
+- @expo/webpack-config@0.12.22
+- @expo/xdl@57.9.27
+
+## [Thu, 30 Jul 2020 13:42:33 -0700](https://github.com/expo/expo-cli/commit/5adda7a1af91bd05b299db8a342ef43e9035dd61)
+
+### 🛠 Breaking changes
+
+- Delete the deprecated `expo android` command ([#2215](https://github.com/expo/expo-cli/issues/2215))
+- Delete deprecated `expo ios` command ([#2216](https://github.com/expo/expo-cli/issues/2216))
+
+### 🎉 New features
+
+- [xdl] Log output from Gradle Wrapper is a lot cleaner now. It doesn't print dots when the appropriate Gradle version is being downloaded ([#2355](https://github.com/expo/expo-cli/pull/2355)).
+- [expo-cli] expo upload:android - Add better error messages when downloading archive file failed [#2384](https://github.com/expo/expo-cli/pull/2384).
+- [expo-cli] perfomance improvment for operations on credentials (more efficient internal caching) [#2380](https://github.com/expo/expo-cli/pull/2380).
+- [expo-cli] Add a command to get build status for turtle v2 builds
+
+### 🐛 Bug fixes
+
+- [configure-splash-screen] Bump cli-platform-[ios/android] versions for logkitty security fix
+- [nextjs] Fix next.js adapter bug ([#2412](https://github.com/expo/expo-cli/issues/2412))
+- [expo-cli] cleanup apple id credentials logic ([#2409](https://github.com/expo/expo-cli/issues/2409))
+- [expo-cli] don't print function string in error message ([#2407](https://github.com/expo/expo-cli/issues/2407))
+- [expo-cli] fix lint error
+- [expo-cli]: IosApi handle properly missing credentials
+- [expo-cli] base64 decode when saving p8 file ([#2404](https://github.com/expo/expo-cli/issues/2404))
+- [expo-cli] revert PR #2404 and remove encoding from IosPushCredentials ([#2406](https://github.com/expo/expo-cli/issues/2406))
+- [expo-cli] check `when` field when prompting in noninteractive mode ([#2393](https://github.com/expo/expo-cli/issues/2393))
+- [xdl] Remove UpdateVersions from xdl ([#2387](https://github.com/expo/expo-cli/issues/2387))
+- [xdl] Stop ADB daemon only when it was launched by xdl ([#2064](https://github.com/expo/expo-cli/issues/2064))
+- [config] Implement "useNextNotificationsApi" configuration SDK 38 ([#2318](https://github.com/expo/expo-cli/issues/2318))
+- [configure-splash-screen] fix a command instructions ([#2370](https://github.com/expo/expo-cli/issues/2370))
+- [expo-cli] upload:android - add better error messages for issues with downloading archive file ([#2384](https://github.com/expo/expo-cli/issues/2384))
+- [expo-cli] submission service: fix passing archive type from command line ([#2383](https://github.com/expo/expo-cli/issues/2383))
+- [expo-cli] expo upload:android - fix help output - --latest is not default
+- [xdl] Fix incorrect check of the packager port in the "setOptionsAsync" function. Fixes #2270
+- [expo-cli] consolidate env variables. ([#2358](https://github.com/expo/expo-cli/issues/2358))
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.17
+- @expo/config@3.2.16
+- @expo/configure-splash-screen@0.1.13
+- @expo/dev-server@0.1.17
+- @expo/dev-tools@0.13.28
+- @expo/electron-adapter@0.0.8
+- expo-cli@3.23.0
+- expo-codemod@1.0.28
+- expo-optimize@0.1.40
+- @expo/image-utils@0.3.1
+- @expo/json-file@8.2.22
+- @expo/metro-config@0.1.17
+- @expo/next-adapter@2.1.21
+- @expo/osascript@2.0.23
+- @expo/package-manager@0.0.30
+- @expo/plist@0.0.9
+- pod-install@0.1.9
+- expo-pwa@0.0.28
+- @expo/schemer@1.3.20
+- uri-scheme@1.0.24
+- @expo/webpack-config@0.12.21
+- @expo/xdl@57.9.25
 
 ## [Wed Jul 15 2020 05:42:45 GMT-0700](https://github.com/expo/expo-cli/commit/05a88e6a69a1c0ab78dcb9a523a35b4bba26c694)
 

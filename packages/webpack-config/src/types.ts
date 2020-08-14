@@ -1,10 +1,10 @@
+import { PWAConfig } from 'expo-pwa';
 import { Configuration as WebpackConfiguration } from 'webpack';
 import {
   ProxyConfigArray,
   ProxyConfigMap,
   Configuration as WebpackDevServerConfiguration,
 } from 'webpack-dev-server';
-import { PWAConfig } from 'expo-pwa';
 
 export interface DevConfiguration extends WebpackConfiguration {
   devServer?: WebpackDevServerConfiguration;

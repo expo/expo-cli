@@ -1,12 +1,11 @@
-import path from 'path';
-
-import Joi from '@hapi/joi';
 import { Platform } from '@expo/build-tools';
+import Joi from '@hapi/joi';
 import fs from 'fs-extra';
+import path from 'path';
 
 // TODO(wkozyra95): move it to @expo/config or to separate package
 
-// Workflow is representing different value than BuildType from @expo/build-toold
+// Workflow is representing different value than BuildType from @expo/build-tools
 // Each workflow has a set of BuildTypes available
 // - Generic workflow allows to build 'generic' and 'generic-client'
 // - Managed workflow allows to build 'managed' and 'managed-client'
@@ -24,13 +23,13 @@ export enum CredentialsSource {
 export interface AndroidManagedBuildProfile {
   workflow: Workflow.Managed;
   credentialsSource: CredentialsSource;
-  buildType?: 'app-bundle' | 'apk';
+  buildType?: 'apk' | 'app-bundle';
 }
 
 export interface AndroidGenericBuildProfile {
   workflow: Workflow.Generic;
   credentialsSource: CredentialsSource;
-  buildCommand?: string;
+  gradleCommand?: string;
   artifactPath?: string;
   withoutCredentials?: boolean;
 }
@@ -44,6 +43,7 @@ export interface iOSManagedBuildProfile {
 export interface iOSGenericBuildProfile {
   workflow: Workflow.Generic;
   credentialsSource: CredentialsSource;
+  artifactPath?: string;
 }
 
 export type AndroidBuildProfile = AndroidManagedBuildProfile | AndroidGenericBuildProfile;
@@ -84,7 +84,7 @@ const EasJsonSchema = Joi.object({
 const AndroidGenericSchema = Joi.object({
   workflow: Joi.string().valid('generic').required(),
   credentialsSource: Joi.string().valid('local', 'remote', 'auto').default('auto'),
-  buildCommand: Joi.string(),
+  gradleCommand: Joi.string(),
   artifactPath: Joi.string(),
   withoutCredentials: Joi.boolean(),
 });
@@ -92,13 +92,15 @@ const AndroidGenericSchema = Joi.object({
 const AndroidManagedSchema = Joi.object({
   workflow: Joi.string().valid('managed').required(),
   credentialsSource: Joi.string().valid('local', 'remote', 'auto').default('auto'),
-  buildType: Joi.string().valid('apk', 'app-bundle'),
+  buildType: Joi.string().valid('apk', 'app-bundle').default('app-bundle'),
 });
 
 const iOSGenericSchema = Joi.object({
   workflow: Joi.string().valid('generic').required(),
   credentialsSource: Joi.string().valid('local', 'remote', 'auto').default('auto'),
+  artifactPath: Joi.string(),
 });
+
 const iOSManagedSchema = Joi.object({
   workflow: Joi.string().valid('managed').required(),
   credentialsSource: Joi.string().valid('local', 'remote', 'auto').default('auto'),

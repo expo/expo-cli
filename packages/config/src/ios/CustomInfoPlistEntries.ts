@@ -6,7 +6,7 @@ export function getCustomInfoPlistEntries(config: ExpoConfig) {
 }
 
 export function setCustomInfoPlistEntries(config: ExpoConfig, infoPlist: InfoPlist) {
-  let entries = getCustomInfoPlistEntries(config);
+  const entries = getCustomInfoPlistEntries(config);
 
   return {
     ...infoPlist,

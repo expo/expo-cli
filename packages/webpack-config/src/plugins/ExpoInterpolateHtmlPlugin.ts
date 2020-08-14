@@ -1,8 +1,8 @@
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 import OriginalInterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
 
-import HtmlWebpackPlugin from 'html-webpack-plugin';
-import { Environment } from '../types';
 import { getConfig, getPublicPaths } from '../env';
+import { Environment } from '../types';
 
 /**
  * Add variables to the `index.html`.
@@ -12,13 +12,13 @@ import { getConfig, getPublicPaths } from '../env';
 export default class InterpolateHtmlPlugin extends OriginalInterpolateHtmlPlugin {
   static fromEnv = (
     env: Pick<Environment, 'mode' | 'config' | 'locations' | 'projectRoot'>,
-    HtmlWebpackPlugin: HtmlWebpackPlugin
+    htmlWebpackPlugin: HtmlWebpackPlugin
   ): InterpolateHtmlPlugin => {
     const config = env.config || getConfig(env);
     const { publicPath } = getPublicPaths(env);
 
     // @ts-ignore
-    return new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
+    return new InterpolateHtmlPlugin(htmlWebpackPlugin, {
       WEB_PUBLIC_URL: publicPath,
       // @ts-ignore Type 'string | undefined' is not assignable to type 'string'.
       WEB_TITLE: config.web?.name,

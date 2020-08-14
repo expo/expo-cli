@@ -1,7 +1,8 @@
-import semver from 'semver';
 import spawnAsync from '@expo/spawn-async';
-import resolveFrom from 'resolve-from';
 import { boolish } from 'getenv';
+import resolveFrom from 'resolve-from';
+import semver from 'semver';
+
 import { Options, SharpCommandOptions, SharpGlobalOptions } from './sharp.types';
 
 const SHARP_HELP_PATTERN = /\n\nSpecify --help for available options/g;

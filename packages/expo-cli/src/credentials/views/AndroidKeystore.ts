@@ -1,18 +1,17 @@
-import os from 'os';
-import path from 'path';
-
 import { AndroidCredentials } from '@expo/xdl';
 import chalk from 'chalk';
-import omit from 'lodash/omit';
 import fs from 'fs-extra';
-import ora from 'ora';
+import omit from 'lodash/omit';
+import os from 'os';
+import path from 'path';
 import { v4 as uuid } from 'uuid';
 
-import { askForUserProvided, getCredentialsFromUser } from '../actions/promptForCredentials';
+import CommandError from '../../CommandError';
+import log from '../../log';
+import prompt, { Question } from '../../prompt';
+import { askForUserProvided } from '../actions/promptForCredentials';
 import { Context, IView } from '../context';
 import { Keystore, keystoreSchema } from '../credentials';
-import prompt, { Question } from '../../prompt';
-import log from '../../log';
 
 class UpdateKeystore implements IView {
   constructor(private experienceName: string) {}
@@ -83,12 +82,22 @@ class RemoveKeystore implements IView {
       log.warn('There is no valid Keystore defined for this app');
       return null;
     }
+
     this.displayWarning();
-    let questions: Question[] = [
+
+    if (ctx.nonInteractive) {
+      throw new CommandError(
+        'NON_INTERACTIVE',
+        "Deleting build credentials is a destructive operation. Start the CLI without the '--non-interactive' flag to delete the credentials."
+      );
+    }
+
+    const questions: Question[] = [
       {
         type: 'confirm',
         name: 'confirm',
         message: 'Permanently delete the Android build credentials from our servers?',
+        default: false,
       },
     ];
     const answers = await prompt(questions);
@@ -138,12 +147,23 @@ class DownloadKeystore implements IView {
   constructor(private experienceName: string, private options?: DownloadKeystoreOptions) {}
 
   async open(ctx: Context): Promise<IView | null> {
-    const { confirm } = await prompt({
-      type: 'confirm',
-      name: 'confirm',
-      message: 'Do you want to display the Android Keystore credentials?',
-      when: () => this.options?.displayCredentials === undefined && !this.options?.quiet,
-    });
+    let displayCredentials;
+
+    if (this.options?.displayCredentials !== undefined) {
+      displayCredentials = this.options?.displayCredentials;
+    } else if (this.options?.quiet) {
+      displayCredentials = false;
+    } else if (ctx.nonInteractive) {
+      displayCredentials = true;
+    } else {
+      const { confirm } = await prompt({
+        type: 'confirm',
+        name: 'confirm',
+        message: 'Do you want to display the Android Keystore credentials?',
+      });
+
+      displayCredentials = confirm;
+    }
 
     const keystoreObj = await ctx.android.fetchKeystore(this.experienceName);
 
@@ -165,7 +185,7 @@ class DownloadKeystore implements IView {
     const storeBuf = Buffer.from(keystore, 'base64');
     await fs.writeFile(keystorePath, storeBuf);
 
-    if (this.options?.displayCredentials ?? confirm) {
+    if (this.options?.displayCredentials ?? displayCredentials) {
       log(`Keystore credentials
   Keystore password: ${chalk.bold(keystorePassword)}
   Key alias:         ${chalk.bold(keyAlias)}
@@ -215,7 +235,7 @@ async function useKeystore(ctx: Context, experienceName: string, keystore: Keyst
 }
 
 async function maybeRenameExistingFile(projectDir: string, filename: string) {
-  let desiredFilePath = path.resolve(projectDir, filename);
+  const desiredFilePath = path.resolve(projectDir, filename);
 
   if (await fs.pathExists(desiredFilePath)) {
     let num = 1;

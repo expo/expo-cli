@@ -38,7 +38,7 @@ You can use it to configure your native iOS and Android project according to you
 Command syntax:
 
 ```
-yarn run @expo/configure-splash-screen [options] <backgroundColor> [imagePathOrDarkModeBackgroundColor] [imagePath] [darkModeImagePath]
+yarn run configure-splash-screen [options] <backgroundColor> [imagePathOrDarkModeBackgroundColor] [imagePath] [darkModeImagePath]
 ```
 
 ### Arguments
@@ -49,6 +49,7 @@ yarn run @expo/configure-splash-screen [options] <backgroundColor> [imagePathOrD
 - `darkModeImagePath` - (optional) Path to valid .png image that will be displayed in native splash screen in dark mode only. If this argument is not specified then image from imagePath will be used in dark mode as well. This argument is available only if dark mode support is detected.
 
 ### Options:
+
 - `-r, --resize-mode [resizeMode]` - ResizeMode to be used for native splash screen image. Available values: "contain" | "cover" | "native" (only available for android platform)) (default: "contain"). See [resize modes](https://github.com/expo/expo/tree/master/packages/expo-splash-screen#built-in-splash-screen-image-resize-modes) for more information.
 - `-p, --platform [platform]` - Selected platform to configure. Available values: "android" | "ios" | "all". (default: "all")
 - `--statusbar-style [statusBarStyle]` - Customizes the color of the StatusBar icons. Available values: "default" | "light-content" | "dark-content". (default: "default")

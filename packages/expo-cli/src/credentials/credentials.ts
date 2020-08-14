@@ -1,6 +1,7 @@
 import { AndroidCredentials as Android } from '@expo/xdl';
-import { CredentialSchema } from './actions/promptForCredentials';
+
 import * as appleApi from '../appleApi';
+import { CredentialSchema } from './actions/promptForCredentials';
 
 //
 // iOS
@@ -28,10 +29,6 @@ export type IosAppCredentials = {
     pushP12?: string;
     pushPassword?: string;
   };
-};
-
-export type IosAllAppCredentials = IosAppCredentials & {
-  pushCredentials?: appleApi.PushKey;
 };
 
 export type IosPushCredentials = {

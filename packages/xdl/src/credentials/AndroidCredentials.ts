@@ -1,18 +1,12 @@
 import spawnAsync, { SpawnResult } from '@expo/spawn-async';
-import axios from 'axios';
 import chalk from 'chalk';
 import crypto from 'crypto';
 import fs from 'fs-extra';
-import path from 'path';
-import ProgressBar from 'progress';
 import uuidv4 from 'uuid/v4';
 
 import logger from '../Logger';
-import UserSettings from '../UserSettings';
 
 const log = logger.global;
-const NEWLINE = process.platform === 'win32' ? '\r\n' : '\n';
-const javaExecutable = process.platform === 'win32' ? 'java.exe' : 'java';
 
 export type Keystore = {
   keystore: string;

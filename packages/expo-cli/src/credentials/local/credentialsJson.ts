@@ -1,7 +1,6 @@
-import path from 'path';
-
 import Joi from '@hapi/joi';
 import fs from 'fs-extra';
+import path from 'path';
 
 import { Keystore } from '../credentials';
 
@@ -65,7 +64,7 @@ async function readAndroidAsync(projectDir: string): Promise<AndroidCredentials>
   const keystoreInfo = credentialsJson.android.keystore;
   return {
     keystore: {
-      keystore: await fs.readFile(keystoreInfo.keystorePath, 'base64'),
+      keystore: await fs.readFile(getAbsolutePath(projectDir, keystoreInfo.keystorePath), 'base64'),
       keystorePassword: keystoreInfo.keystorePassword,
       keyAlias: keystoreInfo.keyAlias,
       keyPassword: keystoreInfo.keyPassword,
@@ -79,25 +78,22 @@ async function readIosAsync(projectDir: string): Promise<iOSCredentials> {
     throw new Error('iOS credentials are missing from credentials.json'); // TODO: add fyi
   }
   return {
-    provisioningProfile: await fs.readFile(credentialsJson.ios.provisioningProfilePath, 'base64'),
+    provisioningProfile: await fs.readFile(
+      getAbsolutePath(projectDir, credentialsJson.ios.provisioningProfilePath),
+      'base64'
+    ),
     distributionCertificate: {
-      certP12: await fs.readFile(credentialsJson.ios.distributionCertificate.path, 'base64'),
+      certP12: await fs.readFile(
+        getAbsolutePath(projectDir, credentialsJson.ios.distributionCertificate.path),
+        'base64'
+      ),
       certPassword: credentialsJson.ios.distributionCertificate.password,
     },
   };
 }
 
 async function readAsync(projectDir: string): Promise<CredentialsJson> {
-  const credentialsJsonFilePath = path.join(projectDir, 'credentials.json');
-  let credentialsJSONRaw;
-  try {
-    const credentialsJSONContents = await fs.readFile(credentialsJsonFilePath, 'utf8');
-    credentialsJSONRaw = JSON.parse(credentialsJSONContents);
-  } catch (err) {
-    throw new Error(
-      `credentials.json must exist in the project root directory and consist a valid JSON`
-    );
-  }
+  const credentialsJSONRaw = await readRawAsync(projectDir);
 
   const { value: credentialsJson, error } = CredentialsJsonSchema.validate(credentialsJSONRaw, {
     stripUnknown: true,
@@ -111,4 +107,19 @@ async function readAsync(projectDir: string): Promise<CredentialsJson> {
   return credentialsJson;
 }
 
-export default { readAndroidAsync, readIosAsync, fileExistsAsync };
+async function readRawAsync(projectDir: string): Promise<any> {
+  const credentialsJsonFilePath = path.join(projectDir, 'credentials.json');
+  try {
+    const credentialsJSONContents = await fs.readFile(credentialsJsonFilePath, 'utf8');
+    return JSON.parse(credentialsJSONContents);
+  } catch (err) {
+    throw new Error(
+      `credentials.json must exist in the project root directory and contain a valid JSON`
+    );
+  }
+}
+
+const getAbsolutePath = (projectDir: string, filePath: string): string =>
+  path.isAbsolute(filePath) ? filePath : path.join(projectDir, filePath);
+
+export default { readAndroidAsync, readIosAsync, readRawAsync, fileExistsAsync };

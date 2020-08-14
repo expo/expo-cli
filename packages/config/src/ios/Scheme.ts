@@ -1,5 +1,5 @@
-import { InfoPlist, URLScheme } from './IosConfig.types';
 import { ExpoConfig } from '../Config.types';
+import { InfoPlist, URLScheme } from './IosConfig.types';
 
 export function getScheme(config: { scheme?: string | string[] }): string[] {
   if (Array.isArray(config.scheme)) {
@@ -17,7 +17,7 @@ export function setScheme(
   config: Pick<ExpoConfig, 'scheme' | 'ios'>,
   infoPlist: InfoPlist
 ): InfoPlist {
-  let scheme = [...getScheme(config), ...getScheme(config.ios ?? {})];
+  const scheme = [...getScheme(config), ...getScheme(config.ios ?? {})];
   if (scheme.length === 0) {
     return infoPlist;
   }
@@ -34,7 +34,7 @@ export function appendScheme(scheme: string | null, infoPlist: InfoPlist): InfoP
     return infoPlist;
   }
 
-  let existingSchemes = infoPlist.CFBundleURLTypes;
+  const existingSchemes = infoPlist.CFBundleURLTypes;
 
   // No need to append if we don't have any
   if (!existingSchemes) {

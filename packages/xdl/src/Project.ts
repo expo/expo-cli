@@ -12,12 +12,17 @@ import {
   readExpRcAsync,
   resolveModule,
 } from '@expo/config';
-
-import slug from 'slugify';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
-import { MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
+import {
+  BundleAssetWithFileHashes,
+  BundleOutput,
+  MetroDevServerOptions,
+  bundleAsync,
+  runMetroDevServerAsync,
+} from '@expo/dev-server';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
+import joi from '@hapi/joi';
 import axios from 'axios';
 import child_process from 'child_process';
 import crypto from 'crypto';
@@ -28,7 +33,7 @@ import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import HashIds from 'hashids';
-import joi from '@hapi/joi';
+import http from 'http';
 import chunk from 'lodash/chunk';
 import escapeRegExp from 'lodash/escapeRegExp';
 import get from 'lodash/get';
@@ -38,35 +43,30 @@ import minimatch from 'minimatch';
 import { AddressInfo } from 'net';
 import os from 'os';
 import path from 'path';
-import http from 'http';
-import { URL } from 'url';
 import readLastLines from 'read-last-lines';
 import semver from 'semver';
+import slug from 'slugify';
 import split from 'split';
 import treekill from 'tree-kill';
+import { URL } from 'url';
 import urljoin from 'url-join';
 import { promisify } from 'util';
 import uuid from 'uuid';
 
 import * as Analytics from './Analytics';
 import * as Android from './Android';
-import Api from './Api';
 import ApiV2 from './ApiV2';
-import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 import Config from './Config';
-import * as ExponentTools from './detach/ExponentTools';
+import * as ConnectionStatus from './ConnectionStatus';
 import * as DevSession from './DevSession';
 import * as EmbeddedAssets from './EmbeddedAssets';
 import { maySkipManifestValidation } from './Env';
 import { ErrorCode } from './ErrorCode';
 import * as Exp from './Exp';
 import logger from './Logger';
-import * as ExpSchema from './project/ExpSchema';
-import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Sentry from './Sentry';
 import * as ThirdParty from './ThirdParty';
-import FormData from './tools/FormData';
 import * as UrlUtils from './UrlUtils';
 import UserManager, { ANONYMOUS_USERNAME, User } from './User';
 import UserSettings from './UserSettings';
@@ -74,12 +74,12 @@ import * as Versions from './Versions';
 import * as Watchman from './Watchman';
 import * as Webpack from './Webpack';
 import XDLError from './XDLError';
-
+import * as ExponentTools from './detach/ExponentTools';
 import * as Doctor from './project/Doctor';
-import * as IosPlist from './detach/IosPlist';
-// @ts-ignore IosWorkspace not yet converted to TypeScript
-import * as IosWorkspace from './detach/IosWorkspace';
-import { ConnectionStatus } from './xdl';
+import * as ExpSchema from './project/ExpSchema';
+import * as ProjectUtils from './project/ProjectUtils';
+import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
+import FormData from './tools/FormData';
 
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
@@ -99,24 +99,13 @@ type CachedSignedManifest =
       signedManifest: string;
     };
 
-let _cachedSignedManifest: CachedSignedManifest = {
+const _cachedSignedManifest: CachedSignedManifest = {
   manifestString: null,
   signedManifest: null,
 };
 
-type Asset =
-  | { fileHashes: string[]; files: string[]; hash: string }
-  | {
-      __packager_asset: true;
-      fileHashes: string[];
-      files: string[];
-      fileSystemLocation: string;
-      hash: string;
-      httpServerLocation: string;
-      name: string;
-      scales: number[];
-      type: string;
-    };
+type ManifestAsset = { fileHashes: string[]; files: string[]; hash: string };
+type Asset = ManifestAsset | BundleAssetWithFileHashes;
 
 type ManifestResolutionError = Error & {
   localAssetPath?: string;
@@ -147,6 +136,9 @@ export type StartOptions = {
 type PublishOptions = {
   releaseChannel?: string;
   target?: ProjectTarget;
+  resetCache?: boolean;
+  maxWorkers?: number;
+  quiet?: boolean;
 };
 
 type PackagerOptions = {
@@ -166,6 +158,8 @@ type Release = {
 };
 
 export type ProjectStatus = 'running' | 'ill' | 'exited';
+
+type BundlesByPlatform = { android: BundleOutput; ios: BundleOutput };
 
 export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
   const { packagerPort, expoServerPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
@@ -195,69 +189,12 @@ async function _assertValidProjectRoot(projectRoot: string) {
 }
 
 async function _getFreePortAsync(rangeStart: number) {
-  let port = await freeportAsync(rangeStart, { hostnames: [null, 'localhost'] });
+  const port = await freeportAsync(rangeStart, { hostnames: [null, 'localhost'] });
   if (!port) {
     throw new XDLError('NO_PORT_FOUND', 'No available port found');
   }
 
   return port;
-}
-
-async function _getForPlatformAsync(
-  projectRoot: string,
-  url: string,
-  platform: Platform,
-  { errorCode, minLength }: { errorCode: ErrorCode; minLength?: number }
-): Promise<string> {
-  let fullUrl = `${url}&platform=${platform}`;
-  let response;
-
-  try {
-    response = await axios.get(fullUrl, {
-      responseType: 'text',
-      // Workaround for https://github.com/axios/axios/issues/907.
-      // Without transformResponse, axios will parse the body as JSON regardless of the responseType/
-      transformResponse: [data => data],
-      proxy: false,
-      validateStatus: status => status === 200,
-      headers: {
-        'Exponent-Platform': platform,
-      },
-    });
-  } catch (error) {
-    if (error.response) {
-      if (error.response.data) {
-        let body;
-        try {
-          body = JSON.parse(error.response.data);
-        } catch (e) {
-          ProjectUtils.logError(projectRoot, 'expo', error.response.data);
-        }
-
-        if (body) {
-          if (body.message) {
-            ProjectUtils.logError(projectRoot, 'expo', body.message);
-          } else {
-            ProjectUtils.logError(projectRoot, 'expo', error.response.data);
-          }
-        }
-      }
-      throw new XDLError(
-        errorCode,
-        `Packager URL ${fullUrl} returned unexpected code ${error.response.status}. ` +
-          'Please open your project in the Expo app and see if there are any errors. ' +
-          'Also scroll up and make sure there were no errors or warnings when opening your project.'
-      );
-    } else {
-      throw error;
-    }
-  }
-
-  if (!response.data || (minLength && response.data.length < minLength)) {
-    throw new XDLError(errorCode, `Body is: ${response.data}`);
-  }
-
-  return response.data;
 }
 
 async function _resolveGoogleServicesFile(projectRoot: string, manifest: ExpoConfig) {
@@ -338,7 +275,7 @@ async function _resolveManifestAssets(
 
 function _requireFromProject(modulePath: string, projectRoot: string, exp: ExpoConfig) {
   try {
-    let fullPath = resolveModule(modulePath, projectRoot, exp);
+    const fullPath = resolveModule(modulePath, projectRoot, exp);
     // Clear the require cache for this module so get a fresh version of it
     // without requiring the user to restart Expo CLI
     decache(fullPath);
@@ -389,7 +326,7 @@ export async function getLatestReleaseAsync(
 // Takes multiple exported apps in sourceDirs and coalesces them to one app in outputDir
 export async function mergeAppDistributions(
   projectRoot: string,
-  sourceDirs: Array<string>,
+  sourceDirs: string[],
   outputDir: string
 ): Promise<void> {
   const assetPathToWrite = path.resolve(projectRoot, outputDir, 'assets');
@@ -401,7 +338,7 @@ export async function mergeAppDistributions(
   const androidIndexes: SelfHostedIndex[] = [];
   const iosIndexes: SelfHostedIndex[] = [];
 
-  for (let sourceDir of sourceDirs) {
+  for (const sourceDir of sourceDirs) {
     const promises = [];
 
     // copy over assets/bundles from other src dirs to the output dir
@@ -485,18 +422,20 @@ function prepareHooks(
   const validHooks: LoadedHook[] = [];
 
   if (hooks) {
-    hooks[hookType]?.forEach((hook: any) => {
-      let { file } = hook;
-      let fn = _requireFromProject(file, projectRoot, exp);
-      if (typeof fn !== 'function') {
-        logger.global.error(
-          `Unable to load ${hookType} hook: '${file}'. The module does not export a function.`
-        );
-      } else {
-        hook._fn = fn;
-        validHooks.push(hook);
-      }
-    });
+    if (hooks[hookType]) {
+      hooks[hookType]!.forEach((hook: any) => {
+        const { file } = hook;
+        const fn = _requireFromProject(file, projectRoot, exp);
+        if (typeof fn !== 'function') {
+          logger.global.error(
+            `Unable to load ${hookType} hook: '${file}'. The module does not export a function.`
+          );
+        } else {
+          hook._fn = fn;
+          validHooks.push(hook);
+        }
+      });
+    }
 
     if (hooks[hookType] !== undefined && validHooks.length !== hooks[hookType]?.length) {
       throw new XDLError(
@@ -548,24 +487,22 @@ export async function exportForAppHosting(
     publishOptions?: PublishOptions;
   } = {}
 ): Promise<void> {
-  await _validatePackagerReadyAsync(projectRoot);
-
   const defaultTarget = getDefaultTarget(projectRoot);
   const target = options.publishOptions?.target ?? defaultTarget;
 
   // build the bundles
-  let packagerOpts = {
-    dev: !!options.isDev,
-    minify: true,
-  };
-
   // make output dirs if not exists
   const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
   await fs.ensureDir(assetPathToWrite);
   const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
   await fs.ensureDir(bundlesPathToWrite);
 
-  const { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
+  const bundles = await buildPublishBundlesAsync(projectRoot, options.publishOptions, {
+    dev: options.isDev,
+  });
+  const iosBundle = bundles.ios.code;
+  const androidBundle = bundles.android.code;
+
   const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
@@ -583,7 +520,7 @@ export async function exportForAppHosting(
   // Get project config
   const publishOptions = options.publishOptions || {};
   const { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
-  const { assets } = await _fetchAndSaveAssetsAsync(projectRoot, exp, publicUrl, outputDir);
+  const { assets } = await exportAssetsAsync(projectRoot, exp, publicUrl, outputDir, bundles);
 
   if (options.dumpAssetmap) {
     logger.global.info('Dumping asset map.');
@@ -603,9 +540,9 @@ export async function exportForAppHosting(
   }
 
   // Delete keys that are normally deleted in the publish process
-  let { hooks } = exp;
+  const { hooks } = exp;
   delete exp.hooks;
-  let validPostExportHooks: LoadedHook[] = prepareHooks(hooks, 'postExport', projectRoot, exp);
+  const validPostExportHooks: LoadedHook[] = prepareHooks(hooks, 'postExport', projectRoot, exp);
 
   // Add assetUrl to manifest
   exp.assetUrlOverride = assetUrl;
@@ -666,13 +603,12 @@ export async function exportForAppHosting(
     JSON.stringify(iosManifest)
   );
 
-  let iosSourceMap = null;
-  let androidSourceMap = null;
+  const iosSourceMap = bundles.ios.map;
+  const androidSourceMap = bundles.android.map;
 
-  // Build sourcemaps when `postExport` hook is set up or when `dumpSourcemap` argument is passed
-  if (options.dumpSourcemap || (hooks?.postExport && hooks.postExport?.length > 0)) {
-    ({ iosSourceMap, androidSourceMap } = await _buildSourceMapsAsync(projectRoot));
-    // Write the sourcemap files
+  // build source maps
+  if (options.dumpSourcemap) {
+    // write the sourcemap files
     const iosMapName = `ios-${iosBundleHash}.map`;
     const iosMapPath = path.join(outputDir, 'bundles', iosMapName);
     await writeArtifactSafelyAsync(projectRoot, null, iosMapPath, iosSourceMap);
@@ -722,7 +658,7 @@ export async function exportForAppHosting(
     },
   };
 
-  for (let hook of validPostExportHooks) {
+  for (const hook of validPostExportHooks) {
     logger.global.info(`Running postExport hook: ${hook.file}`);
 
     try {
@@ -757,7 +693,7 @@ async function truncateLastNLines(filePath: string, n: number) {
   await fs.truncate(filePath, size - to_vanquish);
 }
 
-async function _saveAssetAsync(projectRoot: string, assets: Asset[], outputDir: string) {
+async function _saveAssetsAsync(projectRoot: string, assets: Asset[], outputDir: string) {
   // Collect paths by key, also effectively handles duplicates in the array
   const paths: { [fileHash: string]: string } = {};
   assets.forEach(asset => {
@@ -775,7 +711,7 @@ async function _saveAssetAsync(projectRoot: string, assets: Asset[], outputDir: 
 
       logger.global.info({ quiet: true }, `Saving ${paths[key]}`);
 
-      let assetPath = path.resolve(outputDir, 'assets', key);
+      const assetPath = path.resolve(outputDir, 'assets', key);
 
       // copy file over to assetPath
       const p = fs.copy(paths[key], assetPath);
@@ -808,9 +744,10 @@ export async function publishAsync(
   projectRoot: string,
   options: PublishOptions = {}
 ): Promise<{ url: string; ids: string[]; err?: string }> {
+  options.target = options.target ?? getDefaultTarget(projectRoot);
+  const target = options.target;
   const user = await UserManager.ensureLoggedInAsync();
-  const target = options.target ?? getDefaultTarget(projectRoot);
-  await _validatePackagerReadyAsync(projectRoot);
+
   Analytics.logEvent('Publish', {
     projectRoot,
     developerTool: Config.developerTool,
@@ -825,26 +762,25 @@ export async function publishAsync(
   }
 
   // Get project config
-  let { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, options);
+  const { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, options);
 
   // TODO: refactor this out to a function, throw error if length doesn't match
-  let { hooks } = exp;
+  const { hooks } = exp;
   delete exp.hooks;
-  let validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
+  const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
 
-  let { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot);
+  const bundles = await buildPublishBundlesAsync(projectRoot, options);
+  const androidBundle = bundles.android.code;
+  const iosBundle = bundles.ios.code;
 
-  await _fetchAndUploadAssetsAsync(projectRoot, exp);
+  await publishAssetsAsync(projectRoot, exp, bundles);
 
   const hasHooks = validPostPublishHooks.length > 0;
 
   const shouldPublishAndroidMaps = !!exp.android && !!exp.android.publishSourceMapPath;
-
   const shouldPublishIosMaps = !!exp.ios && !!exp.ios.publishSourceMapPath;
-
-  let { iosSourceMap, androidSourceMap } = await _maybeBuildSourceMapsAsync(projectRoot, exp, {
-    force: hasHooks || shouldPublishAndroidMaps || shouldPublishIosMaps,
-  });
+  const androidSourceMap = hasHooks || shouldPublishAndroidMaps ? bundles.android.map : null;
+  const iosSourceMap = hasHooks || shouldPublishIosMaps ? bundles.ios.map : null;
 
   let response;
   try {
@@ -904,7 +840,7 @@ export async function publishAsync(
       },
     };
 
-    for (let hook of validPostPublishHooks) {
+    for (const hook of validPostPublishHooks) {
       logger.global.info(`Running postPublish hook: ${hook.file}`);
       try {
         runHook(hook, hookOptions);
@@ -964,7 +900,7 @@ async function _uploadArtifactsAsync({
   pkg: PackageJSONConfig;
 }) {
   logger.global.info('Uploading JavaScript bundles');
-  let formData = new FormData();
+  const formData = new FormData();
 
   formData.append('expJson', JSON.stringify(exp));
   formData.append('packageJson', JSON.stringify(pkg));
@@ -977,21 +913,6 @@ async function _uploadArtifactsAsync({
   return await api.uploadFormDataAsync('publish/new', formData);
 }
 
-async function _validatePackagerReadyAsync(projectRoot: string) {
-  _assertValidProjectRoot(projectRoot);
-
-  // Ensure the packager is started
-  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  if (!packagerInfo.packagerPort) {
-    ProjectUtils.logWarning(
-      projectRoot,
-      'expo',
-      'Metro Bundler is not running. Trying to restart it...'
-    );
-    await startReactNativeServerAsync(projectRoot, { reset: true });
-  }
-}
-
 async function _getPublishExpConfigAsync(
   projectRoot: string,
   options: PublishOptions
@@ -1002,7 +923,7 @@ async function _getPublishExpConfigAsync(
   if (options.releaseChannel != null && typeof options.releaseChannel !== 'string') {
     throw new XDLError('INVALID_OPTIONS', 'releaseChannel must be a string');
   }
-  options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
+  options.releaseChannel = options.releaseChannel || 'default';
 
   // Verify that exp/app.json and package.json exist
   const { exp, pkg } = getConfig(projectRoot);
@@ -1025,8 +946,52 @@ async function _getPublishExpConfigAsync(
   return { exp: { ...exp, sdkVersion: sdkVersion! }, pkg };
 }
 
+async function buildPublishBundlesAsync(
+  projectRoot: string,
+  publishOptions: PublishOptions = {},
+  bundleOptions: { dev?: boolean } = {}
+) {
+  if (!getenv.boolish('EXPO_USE_DEV_SERVER', false)) {
+    try {
+      await startReactNativeServerAsync(
+        projectRoot,
+        {
+          nonPersistent: true,
+          maxWorkers: publishOptions.maxWorkers,
+          target: publishOptions.target,
+          reset: publishOptions.resetCache,
+        },
+        !publishOptions.quiet
+      );
+      return await fetchPublishBundlesAsync(projectRoot);
+    } finally {
+      await stopReactNativeServerAsync(projectRoot);
+    }
+  }
+  const platforms: Platform[] = ['android', 'ios'];
+  const [android, ios] = await bundleAsync(
+    projectRoot,
+    {
+      target: publishOptions.target,
+      resetCache: publishOptions.resetCache,
+      logger: ProjectUtils.getLogger(projectRoot),
+      quiet: publishOptions.quiet,
+    },
+    platforms.map((platform: Platform) => ({
+      platform,
+      entryPoint: Exp.determineEntryPoint(projectRoot, platform),
+      dev: bundleOptions.dev,
+    }))
+  );
+
+  return {
+    android,
+    ios,
+  };
+}
+
 // Fetch iOS and Android bundles for publishing
-async function _buildPublishBundlesAsync(projectRoot: string, opts?: PackagerOptions) {
+async function fetchPublishBundlesAsync(projectRoot: string, opts?: PackagerOptions) {
   const entryPoint = Exp.determineEntryPoint(projectRoot);
   const publishUrl = await UrlUtils.constructPublishUrlAsync(
     projectRoot,
@@ -1034,6 +999,8 @@ async function _buildPublishBundlesAsync(projectRoot: string, opts?: PackagerOpt
     undefined,
     opts
   );
+  const sourceMapUrl = await UrlUtils.constructSourceMapUrlAsync(projectRoot, entryPoint);
+  const assetsUrl = await UrlUtils.constructAssetsUrlAsync(projectRoot, entryPoint);
 
   logger.global.info('Building iOS bundle');
   const iosBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'ios', {
@@ -1047,42 +1014,86 @@ async function _buildPublishBundlesAsync(projectRoot: string, opts?: PackagerOpt
     minLength: MINIMUM_BUNDLE_SIZE,
   });
 
-  return { iosBundle, androidBundle };
+  logger.global.info('Building source maps');
+  const iosSourceMap = await _getForPlatformAsync(projectRoot, sourceMapUrl, 'ios', {
+    errorCode: 'INVALID_BUNDLE',
+    minLength: MINIMUM_BUNDLE_SIZE,
+  });
+  const androidSourceMap = await _getForPlatformAsync(projectRoot, sourceMapUrl, 'android', {
+    errorCode: 'INVALID_BUNDLE',
+    minLength: MINIMUM_BUNDLE_SIZE,
+  });
+
+  logger.global.info('Building asset maps');
+  const iosAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'ios', {
+    errorCode: 'INVALID_ASSETS',
+  });
+  const androidAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'android', {
+    errorCode: 'INVALID_ASSETS',
+  });
+
+  return {
+    android: { code: androidBundle, map: androidSourceMap, assets: JSON.parse(androidAssetsJson) },
+    ios: { code: iosBundle, map: iosSourceMap, assets: JSON.parse(iosAssetsJson) },
+  };
 }
 
-async function _maybeBuildSourceMapsAsync(
+async function _getForPlatformAsync(
   projectRoot: string,
-  exp: ExpoConfig,
-  options = { force: false }
-) {
-  if (options.force) {
-    return _buildSourceMapsAsync(projectRoot);
-  } else {
-    return { iosSourceMap: null, androidSourceMap: null };
+  url: string,
+  platform: Platform,
+  { errorCode, minLength }: { errorCode: ErrorCode; minLength?: number }
+): Promise<string> {
+  const fullUrl = `${url}&platform=${platform}`;
+  let response;
+
+  try {
+    response = await axios.request({
+      url: fullUrl,
+      responseType: 'text',
+      // Workaround for https://github.com/axios/axios/issues/907.
+      // Without transformResponse, axios will parse the body as JSON regardless of the responseType/
+      transformResponse: [data => data],
+      proxy: false,
+      validateStatus: status => status === 200,
+      headers: {
+        'Exponent-Platform': platform,
+      },
+    });
+  } catch (error) {
+    if (error.response) {
+      if (error.response.data) {
+        let body;
+        try {
+          body = JSON.parse(error.response.data);
+        } catch (e) {
+          ProjectUtils.logError(projectRoot, 'expo', error.response.data);
+        }
+
+        if (body) {
+          if (body.message) {
+            ProjectUtils.logError(projectRoot, 'expo', body.message);
+          } else {
+            ProjectUtils.logError(projectRoot, 'expo', error.response.data);
+          }
+        }
+      }
+      throw new XDLError(
+        errorCode,
+        `Packager URL ${fullUrl} returned unexpected code ${error.response.status}. ` +
+          'Please open your project in the Expo app and see if there are any errors. ' +
+          'Also scroll up and make sure there were no errors or warnings when opening your project.'
+      );
+    } else {
+      throw error;
+    }
   }
-}
 
-// note(brentvatne): currently we build source map anytime there is a
-// postPublish hook -- we may have an option in the future to manually
-// enable sourcemap building, but for now it's very fast, most apps in
-// production should use sourcemaps for error reporting, and in the worst
-// case, adding a few seconds to a postPublish hook isn't too annoying
-async function _buildSourceMapsAsync(projectRoot: string) {
-  let entryPoint = Exp.determineEntryPoint(projectRoot);
-  let sourceMapUrl = await UrlUtils.constructSourceMapUrlAsync(projectRoot, entryPoint);
+  if (!response.data || (minLength && response.data.length < minLength)) {
+    throw new XDLError(errorCode, `Body is: ${response.data}`);
+  }
 
-  logger.global.info('Building sourcemaps');
-  let iosSourceMap = await _getForPlatformAsync(projectRoot, sourceMapUrl, 'ios', {
-    errorCode: 'INVALID_BUNDLE',
-    minLength: MINIMUM_BUNDLE_SIZE,
-  });
-
-  let androidSourceMap = await _getForPlatformAsync(projectRoot, sourceMapUrl, 'android', {
-    errorCode: 'INVALID_BUNDLE',
-    minLength: MINIMUM_BUNDLE_SIZE,
-  });
-
-  return { iosSourceMap, androidSourceMap };
+  return response.data;
 }
 
 /**
@@ -1097,19 +1108,9 @@ async function _buildSourceMapsAsync(projectRoot: string) {
 async function _collectAssets(
   projectRoot: string,
   exp: PublicConfig,
-  hostedAssetPrefix: string
+  hostedAssetPrefix: string,
+  bundles: BundlesByPlatform
 ): Promise<Asset[]> {
-  let entryPoint = Exp.determineEntryPoint(projectRoot);
-  let assetsUrl = await UrlUtils.constructAssetsUrlAsync(projectRoot, entryPoint);
-
-  let iosAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'ios', {
-    errorCode: 'INVALID_ASSETS',
-  });
-
-  let androidAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'android', {
-    errorCode: 'INVALID_ASSETS',
-  });
-
   // Resolve manifest assets to their hosted URL and add them to the list of assets to
   // be uploaded. Modifies exp.
   const manifestAssets: Asset[] = [];
@@ -1126,10 +1127,7 @@ async function _collectAssets(
     true
   );
 
-  // Upload asset files
-  const iosAssets = JSON.parse(iosAssetsJson);
-  const androidAssets = JSON.parse(androidAssetsJson);
-  return iosAssets.concat(androidAssets).concat(manifestAssets);
+  return [...bundles.ios.assets, ...bundles.android.assets, ...manifestAssets];
 }
 
 /**
@@ -1182,11 +1180,15 @@ async function _configureExpForAssets(projectRoot: string, exp: ExpoConfig, asse
   return exp;
 }
 
-async function _fetchAndUploadAssetsAsync(projectRoot: string, exp: PublicConfig) {
+async function publishAssetsAsync(
+  projectRoot: string,
+  exp: PublicConfig,
+  bundles: BundlesByPlatform
+) {
   logger.global.info('Analyzing assets');
 
   const assetCdnPath = urljoin(EXPO_CDN, '~assets');
-  const assets = await _collectAssets(projectRoot, exp, assetCdnPath);
+  const assets = await _collectAssets(projectRoot, exp, assetCdnPath, bundles);
 
   logger.global.info('Uploading assets');
 
@@ -1202,21 +1204,22 @@ async function _fetchAndUploadAssetsAsync(projectRoot: string, exp: PublicConfig
   return exp;
 }
 
-async function _fetchAndSaveAssetsAsync(
+async function exportAssetsAsync(
   projectRoot: string,
   exp: PublicConfig,
   hostedUrl: string,
-  outputDir: string
+  outputDir: string,
+  bundles: BundlesByPlatform
 ) {
   logger.global.info('Analyzing assets');
 
   const assetCdnPath = urljoin(hostedUrl, 'assets');
-  const assets = await _collectAssets(projectRoot, exp, assetCdnPath);
+  const assets = await _collectAssets(projectRoot, exp, assetCdnPath, bundles);
 
   logger.global.info('Saving assets');
 
   if (assets.length > 0 && assets[0].fileHashes) {
-    await _saveAssetAsync(projectRoot, assets, outputDir);
+    await _saveAssetsAsync(projectRoot, assets, outputDir);
   } else {
     logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
   }
@@ -1245,7 +1248,7 @@ async function _handleKernelPublishedAsync({
   kernelBundleUrl = `${kernelBundleUrl}/@${user.username}/${exp.slug}/bundle`;
 
   if (exp.kernel.androidManifestPath) {
-    let manifest = await ExponentTools.getManifestAsync(url, {
+    const manifest = await ExponentTools.getManifestAsync(url, {
       'Exponent-SDK-Version': exp.sdkVersion,
       'Exponent-Platform': 'android',
       Accept: 'application/expo+json,application/json',
@@ -1259,7 +1262,7 @@ async function _handleKernelPublishedAsync({
   }
 
   if (exp.kernel.iosManifestPath) {
-    let manifest = await ExponentTools.getManifestAsync(url, {
+    const manifest = await ExponentTools.getManifestAsync(url, {
       'Exponent-SDK-Version': exp.sdkVersion,
       'Exponent-Platform': 'ios',
       Accept: 'application/expo+json,application/json',
@@ -1298,11 +1301,11 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
   // Upload them!
   await Promise.all(
     chunk(missing, 5).map(async keys => {
-      let formData = new FormData();
+      const formData = new FormData();
       for (const key of keys) {
         ProjectUtils.logDebug(projectRoot, 'expo', `uploading ${paths[key]}`);
 
-        let relativePath = paths[key].replace(projectRoot, '');
+        const relativePath = paths[key].replace(projectRoot, '');
         logger.global.info({ quiet: true }, `Uploading ${relativePath}`);
 
         formData.append(key, fs.createReadStream(paths[key]), paths[key]);
@@ -1517,7 +1520,8 @@ async function _waitForRunningAsync(
   retries: number = 300
 ): Promise<true> {
   try {
-    let response = await axios.get(url, {
+    const response = await axios.request({
+      url,
       responseType: 'text',
       proxy: false,
     });
@@ -1553,7 +1557,7 @@ const METRO_VERBOSE_WARNING = 'Run CLI with --verbose flag for more details.';
 
 // Remove these constants and related code when SDK35 isn't supported anymore
 // Context: https://github.com/expo/expo-cli/issues/1074
-const NODE_12_WINDOWS_METRO_ERROR = `Invalid regular expression: /(.*\\__fixtures__\\.*|node_modules[\\\]react[\\\]dist[\\\].*|website\\node_modules\\.*|heapCapture\\bundle\.js|.*\\__tests__\\.*)$/: Unterminated character class`;
+const NODE_12_WINDOWS_METRO_ERROR = `Invalid regular expression: /(.*\\__fixtures__\\.*|node_modules[\\]react[\\]dist[\\].*|website\\node_modules\\.*|heapCapture\\bundle.js|.*\\__tests__\\.*)$/: Unterminated character class`;
 const NODE_12_WINDOWS_METRO_SUGGESTION = `\nUnable to start the project due to a documented incompatibility between Node 12 LTS and Expo SDK 35 on Windows.
 Please refer to this GitHub comment for a solution:
 https://github.com/expo/expo-cli/issues/1074#issuecomment-559220752\n`;
@@ -1630,14 +1634,14 @@ function _isIgnorableDuplicateModuleWarning(
     return false;
   }
 
-  let reactNativeNodeModulesPath = path.join(
+  const reactNativeNodeModulesPath = path.join(
     projectRoot,
     'node_modules',
     'react-native',
     'node_modules'
   );
-  let reactNativeNodeModulesPattern = escapeRegExp(reactNativeNodeModulesPath);
-  let reactNativeNodeModulesCollisionRegex = new RegExp(
+  const reactNativeNodeModulesPattern = escapeRegExp(reactNativeNodeModulesPath);
+  const reactNativeNodeModulesCollisionRegex = new RegExp(
     `Paths: ${reactNativeNodeModulesPattern}.+ collides with ${reactNativeNodeModulesPattern}.+`
   );
   return reactNativeNodeModulesCollisionRegex.test(output);
@@ -1713,11 +1717,11 @@ export async function startReactNativeServerAsync(
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
   await Watchman.unblockAndGetVersionAsync(projectRoot);
 
-  let { exp } = getConfig(projectRoot);
+  const { exp } = getConfig(projectRoot);
 
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
 
-  const customLogReporterPath: string = require.resolve(path.join(__dirname, 'reporter'));
+  const customLogReporterPath: string = require.resolve(path.join(__dirname, '../build/reporter'));
 
   // TODO: Bacon: Support .mjs (short-lived JS modules extension that some packages use)
   const sourceExtsConfig = { isTS: true, isReact: true, isModern: false };
@@ -1800,7 +1804,7 @@ export async function startReactNativeServerAsync(
   if (options.reset) {
     cliOpts.push('--reset-cache');
   } // Get custom CLI path from project package.json, but fall back to node_module path
-  let defaultCliPath = resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
+  const defaultCliPath = resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
   const cliPath = exp.rnCliPath || defaultCliPath;
   let nodePath;
   // When using a custom path for the RN CLI, we want it to use the project
@@ -1815,7 +1819,7 @@ export async function startReactNativeServerAsync(
   // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the
   // child process
   const nodePathEnv = nodePath ? { NODE_PATH: nodePath } : {};
-  let packagerProcess = child_process.fork(cliPath, cliOpts, {
+  const packagerProcess = child_process.fork(cliPath, cliOpts, {
     cwd: projectRoot,
     env: {
       ...process.env,
@@ -1850,7 +1854,7 @@ export async function startReactNativeServerAsync(
       _logPackagerOutput(projectRoot, 'error', data);
     }
   });
-  let exitPromise = new Promise((resolve, reject) => {
+  const exitPromise = new Promise((resolve, reject) => {
     packagerProcess.once('exit', async code => {
       ProjectUtils.logDebug(projectRoot, 'expo', `Metro Bundler process exited with code ${code}`);
       if (code) {
@@ -1866,7 +1870,7 @@ export async function startReactNativeServerAsync(
       } catch (e) {}
     });
   });
-  let packagerUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, {
+  const packagerUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, {
     urlType: 'http',
     hostType: 'localhost',
   });
@@ -1877,11 +1881,11 @@ export async function startReactNativeServerAsync(
 // If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns
 // "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
 function _nodePathForProjectRoot(projectRoot: string): string {
-  let paths = [];
+  const paths = [];
   let directory = path.resolve(projectRoot);
   while (true) {
     paths.push(path.join(directory, 'node_modules'));
-    let parentDirectory = path.dirname(directory);
+    const parentDirectory = path.dirname(directory);
     if (directory === parentDirectory) {
       break;
     }
@@ -1891,7 +1895,7 @@ function _nodePathForProjectRoot(projectRoot: string): string {
 }
 export async function stopReactNativeServerAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
-  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort || !packagerInfo.packagerPid) {
     ProjectUtils.logDebug(projectRoot, 'expo', `No packager found for project at ${projectRoot}.`);
     return;
@@ -1912,7 +1916,7 @@ export async function stopReactNativeServerAsync(projectRoot: string): Promise<v
   });
 }
 
-let blacklistedEnvironmentVariables = new Set([
+const blacklistedEnvironmentVariables = new Set([
   'EXPO_APPLE_PASSWORD',
   'EXPO_ANDROID_KEY_PASSWORD',
   'EXPO_ANDROID_KEYSTORE_PASSWORD',
@@ -1946,9 +1950,9 @@ function getManifestHandler(projectRoot: string) {
       // down the request
       Doctor.validateWithNetworkAsync(projectRoot);
       // Get packager opts and then copy into bundleUrlPackagerOpts
-      let packagerOpts = await ProjectSettings.readAsync(projectRoot);
-      let { exp: manifest } = getConfig(projectRoot);
-      let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
+      const packagerOpts = await ProjectSettings.readAsync(projectRoot);
+      const { exp: manifest } = getConfig(projectRoot);
+      const bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
       bundleUrlPackagerOpts.urlType = 'http';
       if (bundleUrlPackagerOpts.hostType === 'redirect') {
         bundleUrlPackagerOpts.hostType = 'tunnel';
@@ -1960,16 +1964,16 @@ function getManifestHandler(projectRoot: string) {
       };
       manifest.packagerOpts = packagerOpts;
       manifest.env = {};
-      for (let key of Object.keys(process.env)) {
+      for (const key of Object.keys(process.env)) {
         if (shouldExposeEnvironmentVariableInManifest(key)) {
           manifest.env[key] = process.env[key];
         }
       }
-      let platform = (req.headers['exponent-platform'] || 'ios').toString();
-      let entryPoint = Exp.determineEntryPoint(projectRoot, platform);
-      let mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
-      let queryParams = await UrlUtils.constructBundleQueryParamsAsync(projectRoot, packagerOpts);
-      let path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(
+      const platform = (req.headers['exponent-platform'] || 'ios').toString();
+      const entryPoint = Exp.determineEntryPoint(projectRoot, platform);
+      const mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
+      const queryParams = await UrlUtils.constructBundleQueryParamsAsync(projectRoot, packagerOpts);
+      const path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(
         platform
       )}&${queryParams}`;
       const hostname = stripPort(req.headers.host);
@@ -1987,7 +1991,7 @@ function getManifestHandler(projectRoot: string) {
       ); // the server normally inserts this but if we're offline we'll do it here
       await _resolveGoogleServicesFile(projectRoot, manifest);
       const hostUUID = await UserSettings.anonymousIdentifier();
-      let currentSession = await UserManager.getSessionAsync();
+      const currentSession = await UserManager.getSessionAsync();
       if (!currentSession || Config.offline) {
         manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
       }
@@ -2063,7 +2067,7 @@ export function getUnsignedManifestString(manifest: ExpoConfig) {
 export async function startExpoServerAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
-  let app = express();
+  const app = express();
   app.use(
     express.json({
       limit: '10mb',
@@ -2089,8 +2093,8 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
   app.get('/index.exp', manifestHandler);
   app.post('/logs', async (req, res) => {
     try {
-      let deviceId = req.get('Device-Id');
-      let deviceName = req.get('Device-Name');
+      const deviceId = req.get('Device-Id');
+      const deviceName = req.get('Device-Name');
       if (deviceId && deviceName && req.body) {
         _handleDeviceLogs(projectRoot, deviceId, deviceName, req.body);
       }
@@ -2103,8 +2107,8 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
     server.close();
     res.send('Success');
   });
-  let expRc = await readExpRcAsync(projectRoot);
-  let expoServerPort = expRc.manifestPort ? expRc.manifestPort : await _getFreePortAsync(19000);
+  const expRc = await readExpRcAsync(projectRoot);
+  const expoServerPort = expRc.manifestPort ? expRc.manifestPort : await _getFreePortAsync(19000);
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort,
   });
@@ -2119,10 +2123,13 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
 
 export async function stopExpoServerAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
-  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (packagerInfo && packagerInfo.expoServerPort) {
     try {
-      await axios.post(`http://127.0.0.1:${packagerInfo.expoServerPort}/shutdown`);
+      await axios.request({
+        method: 'post',
+        url: `http://127.0.0.1:${packagerInfo.expoServerPort}/shutdown`,
+      });
     } catch (e) {}
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -2231,8 +2238,8 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
       'Successfully ran `adb reverse`. Localhost URLs should work on the connected Android device.'
     );
   }
-  let packageShortName = path.parse(projectRoot).base;
-  let expRc = await readExpRcAsync(projectRoot);
+  const packageShortName = path.parse(projectRoot).base;
+  const expRc = await readExpRcAsync(projectRoot);
 
   let startedTunnelsSuccessfully = false;
 
@@ -2246,7 +2253,7 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
       }
     })(),
     (async () => {
-      let expoServerNgrokUrl = await _connectToNgrokAsync(
+      const expoServerNgrokUrl = await _connectToNgrokAsync(
         projectRoot,
         {
           authtoken: Config.ngrok.authToken,
@@ -2254,7 +2261,7 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
           proto: 'http',
         },
         async () => {
-          let randomness = expRc.manifestTunnelRandomness
+          const randomness = expRc.manifestTunnelRandomness
             ? expRc.manifestTunnelRandomness
             : await Exp.getProjectRandomnessAsync(projectRoot);
           return [
@@ -2266,7 +2273,7 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
         },
         packagerInfo.ngrokPid
       );
-      let packagerNgrokUrl = await _connectToNgrokAsync(
+      const packagerNgrokUrl = await _connectToNgrokAsync(
         projectRoot,
         {
           authtoken: Config.ngrok.authToken,
@@ -2274,7 +2281,7 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
           proto: 'http',
         },
         async () => {
-          let randomness = expRc.manifestTunnelRandomness
+          const randomness = expRc.manifestTunnelRandomness
             ? expRc.manifestTunnelRandomness
             : await Exp.getProjectRandomnessAsync(projectRoot);
           return [
@@ -2328,9 +2335,9 @@ export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
   // This will kill all ngrok tunnels in the process.
   // We'll need to change this if we ever support more than one project
   // open at a time in XDE.
-  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  let ngrokProcess = ngrok.process();
-  let ngrokProcessPid = ngrokProcess ? ngrokProcess.pid : null;
+  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  const ngrokProcess = ngrok.process();
+  const ngrokProcessPid = ngrokProcess ? ngrokProcess.pid : null;
   ngrok.removeAllListeners('statuschange');
   if (packagerInfo.ngrokPid && packagerInfo.ngrokPid !== ngrokProcessPid) {
     // Ngrok is running in some other process. Kill at the os level.
@@ -2380,7 +2387,7 @@ export async function startAsync(
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   _assertValidProjectRoot(projectRoot);
-  let { exp } = getConfig(projectRoot);
+  const { exp } = getConfig(projectRoot);
   Analytics.logEvent('Start Project', {
     projectRoot,
     developerTool: Config.developerTool,
@@ -2419,7 +2426,6 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
   await stopExpoServerAsync(projectRoot);
   ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Stopping Metro bundler');
   await stopReactNativeServerAsync(projectRoot);
-  await Android.maybeStopAdbDaemonAsync();
   if (!Config.offline) {
     try {
       await stopTunnelsAsync(projectRoot);
@@ -2427,6 +2433,8 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
       ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping ngrok ${e.message}`);
     }
   }
+
+  await Android.maybeStopAdbDaemonAsync();
 }
 
 export async function stopWebOnlyAsync(projectDir: string): Promise<void> {

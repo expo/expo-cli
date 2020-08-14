@@ -1,13 +1,14 @@
 import * as ConfigUtils from '@expo/config';
-import fs from 'fs';
 import JsonFile from '@expo/json-file';
-import npmPackageArg from 'npm-package-arg';
-import path from 'path';
+import * as PackageManager from '@expo/package-manager';
 import { Versions } from '@expo/xdl';
 import { Command } from 'commander';
-import * as PackageManager from '@expo/package-manager';
-import { findProjectRootAsync } from './utils/ProjectUtils';
+import fs from 'fs';
+import npmPackageArg from 'npm-package-arg';
+import path from 'path';
+
 import log from '../log';
+import { findProjectRootAsync } from './utils/ProjectUtils';
 
 async function installAsync(packages: string[], options: PackageManager.CreateForProjectOptions) {
   let projectRoot: string;

@@ -33,19 +33,22 @@ export async function addToPathAsync(name: string): Promise<void> {
   }
 
   // Users can set {ignoreBundledBinaries: ["watchman"]} to tell us to never use our version
-  let ignoreBundledBinaries = await UserSettings.getAsync('ignoreBundledBinaries', [] as string[]);
+  const ignoreBundledBinaries = await UserSettings.getAsync(
+    'ignoreBundledBinaries',
+    [] as string[]
+  );
   if (ignoreBundledBinaries.includes(name)) {
     return;
   }
 
-  let binariesPath = path.join(getBinariesPath(), name);
+  const binariesPath = path.join(getBinariesPath(), name);
   _prependToPath(binariesPath);
 }
 
 function _prependToPath(newPath: string) {
   let currentPath = process.env.PATH ? process.env.PATH : '';
   if (currentPath.length > 0) {
-    let delimiter = process.platform === 'win32' ? ';' : ':';
+    const delimiter = process.platform === 'win32' ? ';' : ':';
     currentPath = `${delimiter}${currentPath}`;
   }
 
@@ -56,7 +59,7 @@ export async function writePathToUserSettingsAsync(): Promise<void> {
   await UserSettings.setAsync('PATH', process.env.PATH);
 
   // Used in detach app
-  let pathFile = path.join(UserSettings.dotExpoHomeDirectory(), 'PATH');
+  const pathFile = path.join(UserSettings.dotExpoHomeDirectory(), 'PATH');
   await fs.writeFile(pathFile, process.env.PATH);
 }
 

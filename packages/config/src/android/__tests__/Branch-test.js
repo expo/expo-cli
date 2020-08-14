@@ -1,4 +1,5 @@
 import { resolve } from 'path';
+
 import { getBranchApiKey, setBranchApiKey } from '../Branch';
 import { readAndroidManifestAsync } from '../Manifest';
 
@@ -22,11 +23,11 @@ describe('Android branch test', () => {
       { android: { config: { branch: { apiKey: 'MY-API-KEY' } } } },
       androidManifestJson
     );
-    let mainApplication = androidManifestJson.manifest.application.filter(
+    const mainApplication = androidManifestJson.manifest.application.filter(
       e => e['$']['android:name'] === '.MainApplication'
     )[0];
 
-    let apiKeyItem = mainApplication['meta-data'].filter(
+    const apiKeyItem = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'io.branch.sdk.BranchKey'
     );
     expect(apiKeyItem).toHaveLength(1);

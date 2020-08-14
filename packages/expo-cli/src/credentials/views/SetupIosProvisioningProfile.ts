@@ -1,67 +1,48 @@
 import chalk from 'chalk';
-import log from '../../log';
-import * as iosProfileView from './IosProvisioningProfile';
 
+import log from '../../log';
+import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
 import { IosDistCredentials } from '../credentials';
+import * as iosProfileView from './IosProvisioningProfile';
 
-type CliOptions = {
+interface ProvisioningProfileOptions {
   nonInteractive?: boolean;
-};
-
-type ProvisioningProfileOptions = {
-  experienceName: string;
-  bundleIdentifier: string;
   distCert: IosDistCredentials;
-} & CliOptions;
+}
 
 export class SetupIosProvisioningProfile implements IView {
-  _experienceName: string;
-  _bundleIdentifier: string;
-  _distCert: IosDistCredentials;
-  _nonInteractive: boolean;
-
-  constructor(options: ProvisioningProfileOptions) {
-    const { experienceName, bundleIdentifier, distCert } = options;
-    this._experienceName = experienceName;
-    this._bundleIdentifier = bundleIdentifier;
-    this._distCert = distCert;
-    this._nonInteractive = options.nonInteractive ?? false;
-  }
+  constructor(private app: AppLookupParams) {}
 
   async open(ctx: Context): Promise<IView | null> {
     if (!ctx.user) {
       throw new Error(`This workflow requires you to be logged in.`);
     }
 
-    const appCredentials = await ctx.ios.getAppCredentials(
-      this._experienceName,
-      this._bundleIdentifier
-    );
+    const distCert = await ctx.ios.getDistCert(this.app);
+    if (!distCert) {
+      // dist cert should aready be created
+      // TODO: trigger dist cert creation here
+      throw new Error('There is no disttribution certificate assgined for this app');
+    }
+
+    const appCredentials = await ctx.ios.getAppCredentials(this.app);
 
     // Try to use the profile we have on file first
-    const configuredProfile = await ctx.ios.getProvisioningProfile(
-      this._experienceName,
-      this._bundleIdentifier
-    );
+    const configuredProfile = await ctx.ios.getProvisioningProfile(this.app);
 
     // We dont have a profile on expo servers or
     // The configured profile is associated with some other dist cert
-    const configuredWithSameDistCert = appCredentials.distCredentialsId === this._distCert.id;
+    const configuredWithSameDistCert = appCredentials.distCredentialsId === distCert.id;
     if (!configuredProfile || !configuredWithSameDistCert) {
-      return new iosProfileView.CreateOrReuseProvisioningProfile({
-        experienceName: this._experienceName,
-        bundleIdentifier: this._bundleIdentifier,
-        distCert: this._distCert,
-        nonInteractive: this._nonInteractive,
-      });
+      return new iosProfileView.CreateOrReuseProvisioningProfile(this.app);
     }
 
     if (!ctx.hasAppleCtx()) {
       const isValid = await iosProfileView.validateProfileWithoutApple(
         configuredProfile,
-        this._distCert,
-        this._bundleIdentifier
+        distCert,
+        this.app.bundleIdentifier
       );
       if (!isValid) {
         throw new Error(`The provisioning profile we have on file is no longer valid.`);
@@ -78,41 +59,30 @@ export class SetupIosProvisioningProfile implements IView {
       );
       const isValid = await iosProfileView.validateProfileWithoutApple(
         configuredProfile,
-        this._distCert,
-        this._bundleIdentifier
+        distCert,
+        this.app.bundleIdentifier
       );
       if (!isValid) {
-        return new iosProfileView.CreateOrReuseProvisioningProfile({
-          experienceName: this._experienceName,
-          bundleIdentifier: this._bundleIdentifier,
-          distCert: this._distCert,
-          nonInteractive: this._nonInteractive,
-        });
+        return new iosProfileView.CreateOrReuseProvisioningProfile(this.app);
       }
       return null;
     }
 
     const profileFromApple = await iosProfileView.getAppleInfo(
       ctx.appleCtx,
-      this._bundleIdentifier,
+      this.app.bundleIdentifier,
       configuredProfile
     );
 
     // Profile can't be found on Apple servers
     if (!profileFromApple) {
-      return new iosProfileView.CreateOrReuseProvisioningProfile({
-        experienceName: this._experienceName,
-        bundleIdentifier: this._bundleIdentifier,
-        distCert: this._distCert,
-        nonInteractive: this._nonInteractive,
-      });
+      return new iosProfileView.CreateOrReuseProvisioningProfile(this.app);
     }
 
     await iosProfileView.configureAndUpdateProvisioningProfile(
       ctx,
-      this._experienceName,
-      this._bundleIdentifier,
-      this._distCert,
+      this.app,
+      distCert,
       profileFromApple
     );
     return null;

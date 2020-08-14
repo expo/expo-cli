@@ -1,13 +1,10 @@
 import isEmpty from 'lodash/isEmpty';
-import chalk from 'chalk';
-import fs from 'fs-extra';
-import prompt from '../../prompt';
-import log from '../../log';
 
-import { Context, IView } from '../context';
-import { AndroidCredentials, FcmCredentials, keystoreSchema } from '../credentials';
+import CommandError from '../../CommandError';
+import log from '../../log';
+import prompt from '../../prompt';
 import { displayAndroidAppCredentials } from '../actions/list';
-import { askForUserProvided } from '../actions/promptForCredentials';
+import { Context, IView } from '../context';
 import { DownloadKeystore, RemoveKeystore, UpdateKeystore } from './AndroidKeystore';
 import { UpdateFcmKey } from './AndroidPushCredentials';
 

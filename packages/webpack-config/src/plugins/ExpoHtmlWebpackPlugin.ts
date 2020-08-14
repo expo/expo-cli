@@ -1,8 +1,8 @@
-import OriginalHtmlWebpackPlugin from 'html-webpack-plugin';
 import chalk from 'chalk';
+import OriginalHtmlWebpackPlugin from 'html-webpack-plugin';
 
-import { Environment } from '../types';
 import { getConfig, getMode, getPaths } from '../env';
+import { Environment } from '../types';
 import { overrideWithPropertyOrConfig } from '../utils';
 
 const DEFAULT_MINIFY = {
@@ -40,7 +40,7 @@ export default class HtmlWebpackPlugin extends OriginalHtmlWebpackPlugin {
       DEFAULT_MINIFY
     );
 
-    let meta: Record<string, any> = {};
+    const meta: Record<string, any> = {};
 
     if (templateHtmlData && templateHtmlData.querySelectorAll) {
       // @ts-ignore

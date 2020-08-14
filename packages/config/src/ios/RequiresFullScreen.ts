@@ -1,5 +1,5 @@
-import { InfoPlist } from './IosConfig.types';
 import { ExpoConfig } from '../Config.types';
+import { InfoPlist } from './IosConfig.types';
 
 // NOTES: This is defaulted to `true` for now to match the behavior prior to SDK
 // 34, but will change to `false` in a future SDK version. This note was copied

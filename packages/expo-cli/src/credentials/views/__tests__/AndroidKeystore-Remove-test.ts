@@ -1,8 +1,9 @@
 import fs from 'fs-extra';
+
+import { mockExpoXDL } from '../../../__tests__/mock-utils';
+import prompt from '../../../prompt';
 import { getCtxMock, testExperienceName } from '../../test-fixtures/mocks-android';
 import { RemoveKeystore } from '../AndroidKeystore';
-import prompt from '../../../prompt';
-import { mockExpoXDL } from '../../../__tests__/mock-utils';
 
 jest.mock('../../actions/list');
 jest.mock('../../../prompt');
@@ -76,9 +77,39 @@ describe('RemoveKeystore', () => {
       const lastView = await view.open(ctx);
 
       expect(lastView).toBe(null);
-      expect((prompt as any).mock.calls.length).toBe(2);
+      expect((prompt as any).mock.calls.length).toBe(1);
       expect(ctx.android.fetchKeystore.mock.calls.length).toBe(2);
       expect(ctx.android.removeKeystore.mock.calls.length).toBe(1);
+    });
+
+    it('should not display a prompt in non-interactive mode', async () => {
+      const ctx = getCtxMock({ nonInteractive: true });
+
+      // first: prompt with warning message, true means continue
+      // second: ask if cli should display credentials, user won't see that because when() should return false
+      (prompt as any)
+        .mockImplementationOnce(() => ({ confirm: true }))
+        .mockImplementationOnce(question => {
+          if (question.when()) {
+            throw new Error("shouldn't happen");
+          }
+          return { confirm: undefined };
+        })
+        .mockImplementation(() => {
+          throw new Error("shouldn't happen");
+        });
+
+      const view = new RemoveKeystore(testExperienceName);
+
+      expect.assertions(2);
+
+      try {
+        await view.open(ctx);
+      } catch (e) {
+        expect(e.message).toMatch('Deleting build credentials is a destructive operation');
+      }
+
+      expect(prompt).not.toHaveBeenCalled();
     });
   });
 

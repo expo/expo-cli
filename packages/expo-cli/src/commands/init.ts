@@ -1,21 +1,22 @@
-import chalk from 'chalk';
-import fs from 'fs';
-import program, { Command } from 'commander';
 import { AndroidConfig, BareAppConfig, ExpoConfig, IOSConfig, getConfig } from '@expo/config';
-import { Exp, IosPlist, UserManager } from '@expo/xdl';
-import padEnd from 'lodash/padEnd';
-import npmPackageArg from 'npm-package-arg';
-import pacote from 'pacote';
-import ora from 'ora';
-import trimStart from 'lodash/trimStart';
-import wordwrap from 'wordwrap';
 import * as PackageManager from '@expo/package-manager';
-import path from 'path';
+import { Exp, IosPlist, UserManager } from '@expo/xdl';
+import chalk from 'chalk';
+import program, { Command } from 'commander';
+import fs from 'fs';
 import getenv from 'getenv';
+import padEnd from 'lodash/padEnd';
+import trimStart from 'lodash/trimStart';
+import npmPackageArg from 'npm-package-arg';
+import ora from 'ora';
+import pacote from 'pacote';
+import path from 'path';
 import terminalLink from 'terminal-link';
-import prompt from '../prompt';
-import log from '../log';
+import wordwrap from 'wordwrap';
+
 import CommandError from '../CommandError';
+import log from '../log';
+import prompt from '../prompt';
 import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 
 type Options = {
@@ -80,10 +81,10 @@ async function action(projectDir: string, command: Command) {
   let dirName;
 
   if (projectDir) {
-    let root = path.resolve(projectDir);
+    const root = path.resolve(projectDir);
     parentDir = path.dirname(root);
     dirName = path.basename(root);
-    let validationResult = validateName(parentDir, dirName);
+    const validationResult = validateName(parentDir, dirName);
     if (validationResult !== true) {
       throw new CommandError('INVALID_PROJECT_DIR', validationResult);
     }
@@ -150,8 +151,8 @@ async function action(projectDir: string, command: Command) {
   }
 
   let initialConfig;
-  let templateManifest = await pacote.manifest(templateSpec);
-  let isBare = BARE_WORKFLOW_TEMPLATES.includes(templateManifest.name);
+  const templateManifest = await pacote.manifest(templateSpec);
+  const isBare = BARE_WORKFLOW_TEMPLATES.includes(templateManifest.name);
   if (isBare) {
     initialConfig = await promptForBareConfig(parentDir, dirName, options);
   } else {
@@ -175,7 +176,7 @@ async function action(projectDir: string, command: Command) {
     log.newLine();
   }
 
-  let extractTemplateStep = logNewSection('Downloading and extracting project files.');
+  const extractTemplateStep = logNewSection('Downloading and extracting project files.');
   let projectPath;
   try {
     projectPath = await Exp.extractAndPrepareTemplateAppAsync(
@@ -206,7 +207,7 @@ async function action(projectDir: string, command: Command) {
     // todo: check if git is installed, bail out
   }
 
-  let installJsDepsStep = logNewSection('Installing JavaScript dependencies.');
+  const installJsDepsStep = logNewSection('Installing JavaScript dependencies.');
   try {
     await Exp.installDependenciesAsync(projectPath, packageManager, { silent: true });
     installJsDepsStep.succeed('Installed JavaScript dependencies.');
@@ -240,7 +241,7 @@ async function action(projectDir: string, command: Command) {
     }
 
     log.newLine();
-    let showPublishBeforeBuildWarning = await usesOldExpoUpdatesAsync(projectPath);
+    const showPublishBeforeBuildWarning = await usesOldExpoUpdatesAsync(projectPath);
     await logProjectReadyAsync({
       cdPath,
       packageManager,
@@ -445,7 +446,7 @@ async function installPodsAsync(projectRoot: string) {
 }
 
 function logNewSection(title: string) {
-  let spinner = ora(chalk.bold(title));
+  const spinner = ora(chalk.bold(title));
   spinner.start();
   return spinner;
 }
@@ -457,7 +458,7 @@ function validateName(parentDir: string, name: string | undefined) {
   if (!/^[a-z0-9@.\-_]+$/i.test(name)) {
     return 'The project name can only contain URL-friendly characters.';
   }
-  let dir = path.join(parentDir, name);
+  const dir = path.join(parentDir, name);
   if (!isNonExistentOrEmptyDir(dir)) {
     return `The path "${dir}" already exists. Please choose a different parent directory or project name.`;
   }
@@ -488,7 +489,7 @@ async function promptForBareConfig(
 ): Promise<BareAppConfig> {
   let projectName: string;
   if (dirName) {
-    let validationResult = validateProjectName(dirName);
+    const validationResult = validateProjectName(dirName);
     if (validationResult !== true) {
       throw new CommandError('INVALID_PROJECT_NAME', validationResult);
     }

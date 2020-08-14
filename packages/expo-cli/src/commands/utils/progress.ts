@@ -1,5 +1,5 @@
-import ProgressBar from 'progress';
 import { Progress } from 'got';
+import ProgressBar from 'progress';
 
 type ProgressTracker = (progress: Progress) => void;
 
@@ -13,6 +13,7 @@ function createProgressTracker(_total?: number): ProgressTracker {
         complete: '=',
         incomplete: ' ',
         total,
+        width: 64,
       });
     }
     if (bar) {

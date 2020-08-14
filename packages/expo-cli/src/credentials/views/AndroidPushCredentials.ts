@@ -1,13 +1,21 @@
 import chalk from 'chalk';
 
-import prompt from '../../prompt';
+import CommandError from '../../CommandError';
 import log from '../../log';
+import prompt from '../../prompt';
 import { Context, IView } from '../context';
 
 export class UpdateFcmKey implements IView {
   constructor(private experienceName: string) {}
 
   async open(ctx: Context): Promise<IView | null> {
+    if (ctx.nonInteractive) {
+      throw new CommandError(
+        'NON_INTERACTIVE',
+        "Start the CLI without the '--non-interactive' flag to update the FCM Api key."
+      );
+    }
+
     const { fcmApiKey } = await prompt([
       {
         type: 'input',

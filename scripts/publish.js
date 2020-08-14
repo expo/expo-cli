@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-let path = require('path');
-let spawnAsync = require('@expo/spawn-async');
+const spawnAsync = require('@expo/spawn-async');
+const path = require('path');
 
-let lerna = path.join(__dirname, '../node_modules/.bin/lerna');
+const lerna = path.join(__dirname, '../node_modules/.bin/lerna');
 const shouldPrerelease = isPrerelease();
 
 function isPrerelease() {
@@ -16,7 +16,7 @@ function isPrerelease() {
 async function run() {
   await spawnAsync(lerna, ['version', '--exact', ...process.argv.slice(2)], { stdio: 'inherit' });
 
-  let packages = JSON.parse(
+  const packages = JSON.parse(
     (
       await spawnAsync(lerna, ['ls', '--toposort', '--json'], {
         stdio: ['inherit', 'pipe', 'inherit'],
@@ -25,7 +25,7 @@ async function run() {
   );
 
   console.log('🔎 Looking for packages to publish');
-  let toPublish = [];
+  const toPublish = [];
   for (const { name, version, location } of packages) {
     let packageViewStdout;
     try {

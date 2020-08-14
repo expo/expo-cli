@@ -1,10 +1,11 @@
+import { ExpoConfig, getConfig } from '@expo/config';
+import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { Versions } from '@expo/xdl';
-import { ExpoConfig, getConfig } from '@expo/config';
+
+import prompt from '../prompt';
 import * as Eject from './eject/Eject';
 import * as LegacyEject from './eject/LegacyEject';
-import prompt from '../prompt';
 
 async function userWantsToEjectWithoutUpgradingAsync() {
   const answer = await prompt({
@@ -33,7 +34,7 @@ async function action(
   // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3 for ExpoKit
   if (Versions.lteSdkVersion(exp, '36.0.0')) {
     // Don't show a warning if we haven't released SDK 37 yet
-    let latestReleasedVersion = await Versions.newestReleasedSdkVersionAsync();
+    const latestReleasedVersion = await Versions.newestReleasedSdkVersionAsync();
     if (Versions.lteSdkVersion({ sdkVersion: latestReleasedVersion.version }, '36.0.0')) {
       await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
     } else {
@@ -46,7 +47,7 @@ async function action(
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('eject [project-dir]')
     .description(

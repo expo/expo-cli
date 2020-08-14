@@ -1,13 +1,12 @@
 import { ProjectTarget, getConfig, getDefaultTarget } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
-import { Exp, Project, ProjectSettings } from '@expo/xdl';
+import { Exp, Project } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
 import terminalLink from 'terminal-link';
 
-import { installExitHooks } from '../exit';
 import log from '../log';
 import sendTo from '../sendTo';
 
@@ -23,7 +22,7 @@ type Options = {
 };
 
 export async function action(projectDir: string, options: Options = {}) {
-  let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+  const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
   if (options.releaseChannel && !channelRe.test(options.releaseChannel)) {
     log.error(
       'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
@@ -57,54 +56,48 @@ export async function action(projectDir: string, options: Options = {}) {
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!hasOptimized && !nonInteractive) {
     log.warn(
-      'Warning: Your project may contain unoptimized image assets. Smaller image sizes can improve app performance.'
+      'Warning: your project may contain unoptimized image assets. Smaller image sizes can improve app performance.'
     );
     log.warn(
       `To compress the images in your project, abort publishing and run ${chalk.bold(
         'npx expo-optimize'
       )}.`
     );
+    log.newLine();
   }
 
   const target = options.target ?? getDefaultTarget(projectDir);
 
-  const status = await Project.currentStatus(projectDir);
-  let shouldStartOurOwn = false;
+  // Warn users if they attempt to publish in a bare project that may also be
+  // using Expo client and does not If the developer does not have the Expo
+  // package installed then we do not need to warn them as there is no way that
+  // it will run in Expo client in development even. We should revisit this with
+  // dev client, and possibly also by excluding SDK version for bare
+  // expo-updates usage in the future (and then surfacing this as an error in
+  // the Expo client app instead)
+  // Related: https://github.com/expo/expo/issues/9517
+  if (pkg.dependencies['expo'] && !options.target && target === 'bare') {
+    log.warn(
+      `Warning: this is a ${chalk.bold(
+        'bare workflow'
+      )} project. The resulting publish will only run properly inside of a native build of your project.`
+    );
 
-  if (status === 'running') {
-    const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectDir);
-    const runningPackagerTarget = packagerInfo.target ?? 'managed';
-    if (target !== runningPackagerTarget) {
-      log(
-        'Found an existing Expo CLI instance running for this project but the target did not match.'
-      );
-      await Project.stopAsync(projectDir);
-      log('Starting a new Expo CLI instance...');
-      shouldStartOurOwn = true;
-    }
-  } else {
-    log('Unable to find an existing Expo CLI instance for this directory; starting a new one...');
-    shouldStartOurOwn = true;
+    log.warn(
+      `If you want to publish a version of your app that will run in Expo client, please use ${chalk.bold(
+        'expo publish --target managed'
+      )}.`
+    );
+
+    log.warn(
+      `You can skip this warning by explicitly running ${chalk.bold(
+        'expo publish --target bare'
+      )} in the future.`
+    );
+    log.newLine();
   }
 
-  let startedOurOwn = false;
-  if (shouldStartOurOwn) {
-    installExitHooks(projectDir);
-
-    const startOpts: Project.StartOptions = {
-      reset: options.clear,
-      nonPersistent: true,
-      target,
-    };
-    if (options.maxWorkers) {
-      startOpts.maxWorkers = options.maxWorkers;
-    }
-
-    await Project.startAsync(projectDir, startOpts, !options.quiet);
-    startedOurOwn = true;
-  }
-
-  let recipient = await sendTo.getRecipient(options.sendTo);
+  const recipient = await sendTo.getRecipient(options.sendTo);
   log(`Publishing to channel '${options.releaseChannel}'...`);
 
   const {
@@ -136,61 +129,56 @@ export async function action(projectDir: string, options: Options = {}) {
     simpleSpinner.start();
   }
 
-  let result;
-  try {
-    result = await Project.publishAsync(projectDir, {
-      releaseChannel: options.releaseChannel,
-    });
+  const result = await Project.publishAsync(projectDir, {
+    releaseChannel: options.releaseChannel,
+    quiet: options.quiet,
+    target,
+  });
 
-    let url = result.url;
+  const url = result.url;
 
-    if (options.quiet) {
-      simpleSpinner.stop();
+  if (options.quiet) {
+    simpleSpinner.stop();
+  }
+
+  log('Publish complete');
+  log.newLine();
+
+  const exampleManifestUrl = getExampleManifestUrl(url, exp.sdkVersion);
+  if (exampleManifestUrl) {
+    log(
+      `The manifest URL is: ${terminalLink(url, exampleManifestUrl)}. ${terminalLink(
+        'Learn more.',
+        'https://expo.fyi/manifest-url'
+      )}`
+    );
+  } else {
+    log(
+      `The manifest URL is: ${terminalLink(url, url)}. ${terminalLink(
+        'Learn more.',
+        'https://expo.fyi/manifest-url'
+      )}`
+    );
+  }
+
+  if (target === 'managed') {
+    // TODO: replace with websiteUrl from server when it is available, if that makes sense.
+    const websiteUrl = url.replace('exp.host', 'expo.io');
+    log(
+      `The project page is: ${terminalLink(websiteUrl, websiteUrl)}. ${terminalLink(
+        'Learn more.',
+        'https://expo.fyi/project-page'
+      )}`
+    );
+
+    if (recipient) {
+      await sendTo.sendUrlAsync(websiteUrl, recipient);
     }
-
-    log('Publish complete');
-    log.newLine();
-
-    let exampleManifestUrl = getExampleManifestUrl(url, exp.sdkVersion);
-    if (exampleManifestUrl) {
-      log(
-        `The manifest URL is: ${terminalLink(url, exampleManifestUrl)}. ${terminalLink(
-          'Learn more.',
-          'https://expo.fyi/manifest-url'
-        )}`
-      );
-    } else {
-      log(
-        `The manifest URL is: ${terminalLink(url, url)}. ${terminalLink(
-          'Learn more.',
-          'https://expo.fyi/manifest-url'
-        )}`
-      );
-    }
-
-    if (target === 'managed') {
-      // TODO: replace with websiteUrl from server when it is available, if that makes sense.
-      let websiteUrl = url.replace('exp.host', 'expo.io');
-      log(
-        `The project page is: ${terminalLink(websiteUrl, websiteUrl)}. ${terminalLink(
-          'Learn more.',
-          'https://expo.fyi/project-page'
-        )}`
-      );
-
-      if (recipient) {
-        await sendTo.sendUrlAsync(websiteUrl, recipient);
-      }
-    } else {
-      // This seems pointless in bare?? Leaving it out
-      // if (recipient) {
-      //   await sendTo.sendUrlAsync(url, recipient);
-      // }
-    }
-  } finally {
-    if (startedOurOwn) {
-      await Project.stopAsync(projectDir);
-    }
+  } else {
+    // This seems pointless in bare?? Leaving it out
+    // if (recipient) {
+    //   await sendTo.sendUrlAsync(url, recipient);
+    // }
   }
   return result;
 }

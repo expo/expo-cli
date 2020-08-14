@@ -1,11 +1,11 @@
 import { vol } from 'memfs';
 
+import prompt from '../../../../../prompt';
 import {
   ServiceAccountSource,
   ServiceAccountSourceType,
   getServiceAccountAsync,
 } from '../ServiceAccountSource';
-import prompt from '../../../../../prompt';
 
 jest.mock('fs');
 jest.mock('../../../../../prompt');

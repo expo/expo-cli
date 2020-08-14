@@ -1,6 +1,7 @@
-import path from 'path';
 import fs from 'fs-extra';
+import path from 'path';
 import { Builder, Parser } from 'xml2js';
+
 import { Document } from './Manifest';
 
 export type XMLItem = {
@@ -37,11 +38,11 @@ export async function writeStylesXMLAsync(stylesPath: string, stylesContent: any
 }
 
 export function setStylesItem(itemToAdd: XMLItem[], styleFileContentsJSON: Document) {
-  let appTheme = styleFileContentsJSON.resources.style.filter(
+  const appTheme = styleFileContentsJSON.resources.style.filter(
     (e: any) => e['$']['name'] === 'AppTheme'
   )[0];
   if (appTheme.item) {
-    let existingItem = appTheme.item.filter(
+    const existingItem = appTheme.item.filter(
       (item: XMLItem) => item['$'].name === itemToAdd[0].$.name
     )[0];
 

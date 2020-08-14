@@ -1,5 +1,5 @@
-import * as osascript from '@expo/osascript';
 import { getConfig } from '@expo/config';
+import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
@@ -36,7 +36,7 @@ function _isLicenseOutOfDate(text: string) {
     return false;
   }
 
-  let lower = text.toLowerCase();
+  const lower = text.toLowerCase();
   return lower.includes('xcode') && lower.includes('license');
 }
 
@@ -85,7 +85,7 @@ export async function _isSimulatorInstalledAsync() {
     const { stdout } = await spawnAsync('xcodebuild', ['-version']);
 
     // find something that looks like a dot separated version number
-    let matches = stdout.match(/[\d]{1,2}\.[\d]{1,3}/);
+    const matches = stdout.match(/[\d]{1,2}\.[\d]{1,3}/);
     if (!matches) {
       // very unlikely
       console.error('No version number found from `xcodebuild -version`.');
@@ -140,7 +140,7 @@ export async function _openAndBootSimulatorAsync() {
     await spawnAsync('open', ['-a', 'Simulator']);
     await _waitForDeviceToBoot();
   } else {
-    let bootedDevice = await _bootedSimulatorDeviceAsync();
+    const bootedDevice = await _bootedSimulatorDeviceAsync();
     if (!bootedDevice) {
       await _bootDefaultSimulatorDeviceAsync();
     }
@@ -148,7 +148,7 @@ export async function _openAndBootSimulatorAsync() {
 }
 
 export async function _isSimulatorRunningAsync() {
-  let zeroMeansNo = (
+  const zeroMeansNo = (
     await osascript.execAsync(
       'tell app "System Events" to count processes whose name is "Simulator"'
     )
@@ -191,7 +191,7 @@ async function _getDefaultSimulatorDeviceUDIDAsync() {
 
 async function _getFirstAvailableDeviceAsync() {
   const simulatorDeviceInfo = (await _listSimulatorDevicesAsync()).devices;
-  let iOSRuntimesNewestToOldest = Object.keys(simulatorDeviceInfo)
+  const iOSRuntimesNewestToOldest = Object.keys(simulatorDeviceInfo)
     .filter(runtime => runtime.includes('iOS'))
     .reverse();
 
@@ -244,11 +244,11 @@ async function _waitForDeviceToBoot() {
 }
 
 async function _bootedSimulatorDeviceAsync() {
-  let simulatorDeviceInfo = await _listSimulatorDevicesAsync();
-  for (let runtime in simulatorDeviceInfo.devices) {
-    let devices = simulatorDeviceInfo.devices[runtime];
+  const simulatorDeviceInfo = await _listSimulatorDevicesAsync();
+  for (const runtime in simulatorDeviceInfo.devices) {
+    const devices = simulatorDeviceInfo.devices[runtime];
     for (let i = 0; i < devices.length; i++) {
-      let device = devices[i];
+      const device = devices[i];
       if (device.state === 'Booted') {
         return device;
       }
@@ -267,12 +267,12 @@ export async function _quitSimulatorAsync() {
 
 // Expo installed
 export async function _isExpoAppInstalledOnCurrentBootedSimulatorAsync() {
-  let device = await _bootedSimulatorDeviceAsync();
+  const device = await _bootedSimulatorDeviceAsync();
   if (!device) {
     return false;
   }
-  let simDir = await _dirForSimulatorDevice(device.udid);
-  let matches = globSync('data/Containers/Data/Application/**/Snapshots/host.exp.Exponent{,**}', {
+  const simDir = await _dirForSimulatorDevice(device.udid);
+  const matches = globSync('data/Containers/Data/Application/**/Snapshots/host.exp.Exponent{,**}', {
     cwd: simDir,
   });
 
@@ -289,12 +289,12 @@ export async function _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync(): P
 }
 
 export async function _expoVersionOnCurrentBootedSimulatorAsync() {
-  let device = await _bootedSimulatorDeviceAsync();
+  const device = await _bootedSimulatorDeviceAsync();
   if (!device) {
     return null;
   }
-  let simDir = await _dirForSimulatorDevice(device.udid);
-  let matches = globSync('data/Containers/Bundle/Application/*/Exponent-*.app', {
+  const simDir = await _dirForSimulatorDevice(device.udid);
+  const matches = globSync('data/Containers/Bundle/Application/*/Exponent-*.app', {
     cwd: simDir,
   });
 
@@ -302,8 +302,8 @@ export async function _expoVersionOnCurrentBootedSimulatorAsync() {
     return null;
   }
 
-  let regex = /Exponent-([0-9.]+)\.app/;
-  let regexMatch = regex.exec(matches[0]);
+  const regex = /Exponent-([0-9.]+)\.app/;
+  const regexMatch = regex.exec(matches[0]);
   if (!regexMatch) {
     return null;
   }
@@ -330,15 +330,15 @@ export async function _downloadSimulatorAppAsync(
   downloadProgressCallback?: (roundedProgress: number) => void
 ) {
   if (!url) {
-    let versions = await Versions.versionsAsync();
+    const versions = await Versions.versionsAsync();
     url = versions.iosUrl;
   }
 
-  let filename = path.parse(url).name;
-  let dir = path.join(_simulatorCacheDirectory(), `${filename}.app`);
+  const filename = path.parse(url).name;
+  const dir = path.join(_simulatorCacheDirectory(), `${filename}.app`);
 
   if (await fs.pathExists(dir)) {
-    let filesInDir = await fs.readdir(dir);
+    const filesInDir = await fs.readdir(dir);
     if (filesInDir.length > 0) {
       return dir;
     } else {
@@ -379,13 +379,13 @@ export async function _installExpoOnSimulatorAsync(url?: string) {
 
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   warningTimer = setWarningTimer();
-  let dir = await _downloadSimulatorAppAsync(url, progress => bar.tick(1, progress));
+  const dir = await _downloadSimulatorAppAsync(url, progress => bar.tick(1, progress));
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
   Logger.global.info('Installing Expo client on iOS simulator');
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   warningTimer = setWarningTimer();
-  let result = await _xcrunAsync(['simctl', 'install', 'booted', dir]);
+  const result = await _xcrunAsync(['simctl', 'install', 'booted', dir]);
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
   clearTimeout(warningTimer);
@@ -406,8 +406,8 @@ export async function _uninstallExpoAppFromSimulatorAsync() {
 }
 
 export function _simulatorCacheDirectory() {
-  let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  let dir = path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache');
+  const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+  const dir = path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache');
   fs.mkdirpSync(dir);
   return dir;
 }
@@ -419,7 +419,7 @@ export async function upgradeExpoAsync(url?: string): Promise<boolean> {
 
   await _openAndBootSimulatorAsync();
   await _uninstallExpoAppFromSimulatorAsync();
-  let installResult = await _installExpoOnSimulatorAsync(url);
+  const installResult = await _installExpoOnSimulatorAsync(url);
   if (installResult.status !== 0) {
     return false;
   }
@@ -501,14 +501,14 @@ export async function openUrlInSimulatorSafeAsync(
 export async function openProjectAsync(
   projectRoot: string
 ): Promise<{ success: true; url: string } | { success: false; error: string }> {
-  let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
+  const projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
     hostType: 'localhost',
   });
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
-  let result = await openUrlInSimulatorSafeAsync(projectUrl, !!exp.isDetached);
+  const result = await openUrlInSimulatorSafeAsync(projectUrl, !!exp.isDetached);
   if (result.success) {
     return { success: true, url: projectUrl };
   } else {

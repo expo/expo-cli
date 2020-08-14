@@ -1,10 +1,9 @@
 import { vol } from 'memfs';
-import { User } from '@expo/xdl';
 
-import AndroidBuilder from '../AndroidBuilder';
+import iOSBuilder from '../iOSBuilder';
 
 jest.mock('fs');
-jest.mock('../../../credentials/context', () => {
+jest.mock('../../../../../credentials/context', () => {
   return {
     Context: jest.fn().mockImplementation(() => ({
       init: jest.fn(),
@@ -13,26 +12,31 @@ jest.mock('../../../credentials/context', () => {
 });
 
 const credentialsJson = {
-  android: {
-    keystore: {
-      keystorePath: 'keystore.jks',
-      keystorePassword: 'keystorePassword',
-      keyAlias: 'keyAlias',
-      keyPassword: 'keyPassword',
+  ios: {
+    provisioningProfilePath: './pprofile',
+    distributionCertificate: {
+      path: 'cert.p12',
+      password: 'certPass',
     },
   },
 };
 const projectUrl = 'http://fakeurl.com';
 
-const keystore = {
-  content: 'somebinarycontent',
-  base64: 'c29tZWJpbmFyeWNvbnRlbnQ=',
+const pprofile = {
+  content: 'pprofilecontent',
+  base64: 'cHByb2ZpbGVjb250ZW50',
+};
+
+const cert = {
+  content: 'certp12content',
+  base64: 'Y2VydHAxMmNvbnRlbnQ=',
 };
 
 function setupCredentialsConfig() {
   vol.fromJSON({
     './credentials.json': JSON.stringify(credentialsJson),
-    './keystore.jks': keystore.content,
+    './pprofile': pprofile.content,
+    './cert.p12': cert.content,
   });
 }
 
@@ -40,14 +44,14 @@ beforeEach(() => {
   vol.reset();
 });
 
-describe('AndroidBuilder', () => {
+describe('iOSBuilder', () => {
   describe('preparing generic job', () => {
     it('should prepare valid job', async () => {
       setupCredentialsConfig();
       const ctx: any = {
         eas: {
           builds: {
-            android: {
+            ios: {
               credentialsSource: 'local',
               workflow: 'generic',
             },
@@ -55,23 +59,22 @@ describe('AndroidBuilder', () => {
         },
         projectDir: '.',
         user: jest.fn(),
+        exp: { ios: { bundleIdentifier: 'example.bundle.identifier' } },
       };
-      const builder = new AndroidBuilder(ctx);
+      const builder = new iOSBuilder(ctx);
       await builder.ensureCredentialsAsync();
       const job = await builder.prepareJobAsync(projectUrl);
       expect(job).toEqual({
-        platform: 'android',
+        platform: 'ios',
         type: 'generic',
         projectUrl,
-        artifactPath: 'android/app/build/outputs/apk/release/app-release.apk',
-        gradleCommand: ':app:assembleRelease',
+        artifactPath: 'ios/build/App.ipa',
         secrets: {
-          keystore: {
-            dataBase64: keystore.base64,
-            keystorePassword: 'keystorePassword',
-            keyAlias: 'keyAlias',
-            keyPassword: 'keyPassword',
+          distributionCertificate: {
+            dataBase64: cert.base64,
+            password: 'certPass',
           },
+          provisioningProfileBase64: pprofile.base64,
         },
       });
     });
@@ -83,7 +86,7 @@ describe('AndroidBuilder', () => {
       const ctx: any = {
         eas: {
           builds: {
-            android: {
+            ios: {
               credentialsSource: 'local',
               workflow: 'managed',
             },
@@ -91,23 +94,23 @@ describe('AndroidBuilder', () => {
         },
         projectDir: '.',
         user: jest.fn(),
+        exp: { ios: { bundleIdentifier: 'example.bundle.identifier' } },
       };
-      const builder = new AndroidBuilder(ctx);
+      const builder = new iOSBuilder(ctx);
       await builder.ensureCredentialsAsync();
       const job = await builder.prepareJobAsync(projectUrl);
       expect(job).toEqual({
-        platform: 'android',
+        platform: 'ios',
         type: 'managed',
         projectUrl,
         packageJson: { example: 'packageJson' },
         manifest: { example: 'manifest' },
         secrets: {
-          keystore: {
-            dataBase64: keystore.base64,
-            keystorePassword: 'keystorePassword',
-            keyAlias: 'keyAlias',
-            keyPassword: 'keyPassword',
+          distributionCertificate: {
+            dataBase64: cert.base64,
+            password: 'certPass',
           },
+          provisioningProfileBase64: pprofile.base64,
         },
       });
     });

@@ -1,5 +1,6 @@
-import { vol } from 'memfs';
 import { setCustomConfigPath } from '@expo/config';
+import { vol } from 'memfs';
+
 import { findProjectRootAsync } from '../ProjectUtils';
 
 jest.mock('fs');

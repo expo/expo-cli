@@ -26,7 +26,7 @@ describe('Android permissions', () => {
   });
 
   it('adds permissions if not present, does not duplicate permissions', async () => {
-    let givenPermissions = [
+    const givenPermissions = [
       'android.permission.READ_CONTACTS',
       'com.android.launcher.permission.INSTALL_SHORTCUT',
       'com.android.launcher.permission.INSTALL_SHORTCUT',
@@ -37,8 +37,8 @@ describe('Android permissions', () => {
       androidManifestJson
     );
 
-    let manifestPermissionsJSON = androidManifestJson.manifest['uses-permission'];
-    let manifestPermissions = manifestPermissionsJSON.map(e => e['$']['android:name']);
+    const manifestPermissionsJSON = androidManifestJson.manifest['uses-permission'];
+    const manifestPermissions = manifestPermissionsJSON.map(e => e['$']['android:name']);
 
     expect(
       manifestPermissions.every(permission =>

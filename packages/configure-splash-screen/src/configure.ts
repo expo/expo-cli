@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import program from 'commander';
 import colorString from 'color-string';
+import program from 'commander';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -261,7 +261,10 @@ async function validateConfiguration(
   return result;
 }
 
-function generateEnumOptionValidatingFunction(optionName: string, availableOptionsEnum: {}) {
+function generateEnumOptionValidatingFunction(
+  optionName: string,
+  availableOptionsEnum: { [s: string]: string }
+) {
   return (userInput: string) => {
     if (!Object.values<string>(availableOptionsEnum).includes(userInput)) {
       logErrorAndExit(`error: Unknown value '${userInput}' for option '${optionName}'.`);

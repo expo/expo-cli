@@ -1,9 +1,8 @@
-import path from 'path';
-
-import klawSync from 'klaw-sync';
 import JsonFile from '@expo/json-file';
-import temporary from 'tempy';
+import klawSync from 'klaw-sync';
+import path from 'path';
 import prettyBytes from 'pretty-bytes';
+import temporary from 'tempy';
 
 import { createMinimalProjectAsync, runAsync } from '../TestUtils';
 

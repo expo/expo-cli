@@ -1,14 +1,13 @@
+import plist from '@expo/plist';
 import crypto from 'crypto';
-import path from 'path';
-
-import omit from 'lodash/omit';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
+import omit from 'lodash/omit';
 import minimatch from 'minimatch';
-import plist from '@expo/plist';
+import path from 'path';
 
-import { findP12CertSerialNumber, getP12CertFingerprint } from './PKCS12Utils';
 import { spawnAsyncThrowError } from './ExponentTools';
+import { findP12CertSerialNumber, getP12CertFingerprint } from './PKCS12Utils';
 
 async function ensureCertificateValid({ certPath, certPassword, teamID }) {
   const certData = await fs.readFile(certPath);

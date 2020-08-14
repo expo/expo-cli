@@ -14,6 +14,8 @@ export class CocoaPodsPackageManager implements PackageManager {
     if (CocoaPodsPackageManager.isUsingPods(projectRoot)) return projectRoot;
     const iosProject = path.join(projectRoot, 'ios');
     if (CocoaPodsPackageManager.isUsingPods(iosProject)) return iosProject;
+    const macOsProject = path.join(projectRoot, 'macos');
+    if (CocoaPodsPackageManager.isUsingPods(macOsProject)) return macOsProject;
     return null;
   }
 
@@ -59,7 +61,7 @@ export class CocoaPodsPackageManager implements PackageManager {
     if (!spawnOptions) {
       spawnOptions = { stdio: 'inherit' };
     }
-    let silent = !!spawnOptions.ignoreStdio;
+    const silent = !!spawnOptions.ignoreStdio;
 
     try {
       !silent && console.log(chalk.magenta(`\u203A Attempting to install CocoaPods with Gem`));

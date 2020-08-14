@@ -18,7 +18,7 @@ const DEFAULT_PREFER_RELATED_APPLICATIONS = true;
 // Convert expo value to PWA value
 function ensurePWAorientation(orientation: string): string | undefined {
   if (orientation && typeof orientation === 'string') {
-    let webOrientation = orientation.toLowerCase();
+    const webOrientation = orientation.toLowerCase();
     if (webOrientation !== 'default') {
       return webOrientation;
     }
@@ -155,7 +155,7 @@ function inferWebRelatedApplicationsFromConfig({ web = {}, ios = {}, android = {
   const { bundleIdentifier, appStoreUrl } = ios;
   if (bundleIdentifier) {
     const PLATFORM_ITUNES = 'itunes';
-    let iosApp = relatedApplications.some(
+    const iosApp = relatedApplications.some(
       ({ platform }: { platform: string }) => platform === PLATFORM_ITUNES
     );
     if (!iosApp) {

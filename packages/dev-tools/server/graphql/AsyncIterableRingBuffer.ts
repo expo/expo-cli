@@ -72,7 +72,7 @@ export default class AsyncIterableRingBuffer {
   }
 
   getIterator(cursor?: number): Record<string, any> {
-    let buffer = this;
+    const buffer = this;
     let iterableCursor = cursor;
     return {
       async next() {

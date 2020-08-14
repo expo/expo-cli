@@ -1,11 +1,11 @@
 import { vol } from 'memfs';
 
+import { mockExpoXDL } from '../../__tests__/mock-utils';
 import {
   getDependenciesFromBundledNativeModules,
   maybeFormatSdkVersion,
   upgradeAsync,
 } from '../upgrade';
-import { mockExpoXDL } from '../../__tests__/mock-utils';
 
 jest.mock('fs');
 jest.mock('resolve-from');

@@ -1,23 +1,26 @@
 import { ExpoConfig, getConfig } from '@expo/config';
 import { ApiV2, Doctor, User, UserManager } from '@expo/xdl';
+import pick from 'lodash/pick';
 
 import { AppleCtx, authenticate } from '../appleApi';
-import { AndroidApi } from './api/android';
-import { IosApi } from './api/ios';
 import log from '../log';
+import AndroidApi from './api/AndroidApi';
+import IosApi from './api/IosApi';
 
 export interface IView {
   open(ctx: Context): Promise<IView | null>;
 }
 
-type AppleCtxOptions = {
+interface AppleCtxOptions {
   appleId?: string;
   appleIdPassword?: string;
-};
+  teamId?: string;
+}
 
-type CtxOptions = {
+interface CtxOptions extends AppleCtxOptions {
   allowAnonymous?: boolean;
-};
+  nonInteractive?: boolean;
+}
 
 export class Context {
   _hasProjectContext: boolean = false;
@@ -27,7 +30,13 @@ export class Context {
   _apiClient?: ApiV2;
   _iosApiClient?: IosApi;
   _androidApiClient?: AndroidApi;
+  _appleCtxOptions?: AppleCtxOptions;
   _appleCtx?: AppleCtx;
+  _nonInteractive?: boolean;
+
+  get nonInteractive(): boolean {
+    return this._nonInteractive === true;
+  }
 
   get user(): User {
     return this._user as User;
@@ -67,9 +76,9 @@ export class Context {
     return !!this._appleCtx;
   }
 
-  async ensureAppleCtx(options: AppleCtxOptions = {}) {
+  async ensureAppleCtx() {
     if (!this._appleCtx) {
-      this._appleCtx = await authenticate(options);
+      this._appleCtx = await authenticate(this._appleCtxOptions);
     }
   }
 
@@ -77,7 +86,7 @@ export class Context {
     // Figure out if User A is configuring credentials as admin for User B's project
     const isProxyUser = this.manifest.owner && this.manifest.owner !== this.user.username;
     log(
-      `Configuring credentials ${isProxyUser ? 'on behalf of' : 'for'} ${
+      `Accessing credentials ${isProxyUser ? 'on behalf of' : 'for'} ${
         this.manifest.owner ?? this.user.username
       } in project ${this.manifest.slug}`
     );
@@ -90,6 +99,11 @@ export class Context {
       this._user = await UserManager.ensureLoggedInAsync();
     }
     this._projectDir = projectDir;
+    this._apiClient = ApiV2.clientForUser(this.user);
+    this._iosApiClient = new IosApi(this.api);
+    this._androidApiClient = new AndroidApi(this.api);
+    this._appleCtxOptions = pick(options, ['appleId', 'appleIdPassword', 'teamId']);
+    this._nonInteractive = options.nonInteractive;
 
     // Check if we are in project context by looking for a manifest
     const status = await Doctor.validateWithoutNetworkAsync(projectDir);
@@ -97,15 +111,7 @@ export class Context {
       const { exp } = getConfig(projectDir);
       this._manifest = exp;
       this._hasProjectContext = true;
-      this._iosApiClient = new IosApi(this.user).withProjectContext(this);
-      this._androidApiClient = new AndroidApi(this.user);
       this.logOwnerAndProject();
-    } else {
-      /* This manager does not need to work in project context */
-      this._iosApiClient = new IosApi(this.user);
-      this._androidApiClient = new AndroidApi(this.user);
     }
-
-    this._apiClient = ApiV2.clientForUser(this.user);
   }
 }

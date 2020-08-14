@@ -1,11 +1,11 @@
-import { Command } from 'commander';
-import chalk from 'chalk';
 import { Project, UrlUtils } from '@expo/xdl';
+import chalk from 'chalk';
+import { Command } from 'commander';
 
 import CommandError from '../CommandError';
 import log from '../log';
-import urlOpts, { URLOptions } from '../urlOpts';
 import printRunInstructionsAsync from '../printRunInstructionsAsync';
+import urlOpts, { URLOptions } from '../urlOpts';
 
 type ProjectUrlOptions = Command & {
   web?: boolean;

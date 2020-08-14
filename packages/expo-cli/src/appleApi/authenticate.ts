@@ -2,10 +2,10 @@ import chalk from 'chalk';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
-import { runAction, travelingFastlane } from './fastlane';
-import { nonEmptyInput } from '../validators';
 import log from '../log';
 import prompt from '../prompt';
+import { nonEmptyInput } from '../validators';
+import { runAction, travelingFastlane } from './fastlane';
 
 const APPLE_IN_HOUSE_TEAM_TYPE = 'in-house';
 
@@ -73,10 +73,12 @@ async function _requestAppleIdCreds(options: Options): Promise<AppleCredentials>
 }
 
 function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCredentials | null {
-  const passedAppleIdPassword = appleIdPassword || process.env.EXPO_APPLE_PASSWORD;
+  const passedAppleIdPassword = appleId
+    ? appleIdPassword || process.env.EXPO_APPLE_PASSWORD
+    : undefined;
 
   // none of the apple id params were set, assume user has no intention of passing it in
-  if (!appleId && !passedAppleIdPassword) {
+  if (!appleId) {
     return null;
   }
 

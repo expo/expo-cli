@@ -1,5 +1,5 @@
-import chalk from 'chalk';
 import { Project } from '@expo/xdl';
+import chalk from 'chalk';
 
 export function installExitHooks(
   projectDir: string,

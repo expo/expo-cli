@@ -1,40 +1,31 @@
 import chalk from 'chalk';
-import { Context, IView } from '../context';
+
 import { ProvisioningProfile } from '../../appleApi';
 import { ProvisioningProfileAdhocManager } from '../../appleApi/provisioningProfileAdhoc';
 import log from '../../log';
+import { AppLookupParams } from '../api/IosApi';
+import { Context, IView } from '../context';
 
 export type ProvisioningProfileAdhocOptions = {
-  experienceName: string;
-  bundleIdentifier: string;
   distCertSerialNumber: string;
   udids: string[];
 };
 
 export class CreateOrReuseProvisioningProfileAdhoc implements IView {
-  _experienceName: string;
-  _bundleIdentifier: string;
-  _distCertSerialNumber: string;
-  _udids: string[];
+  private distCertSerialNumber: string;
+  private udids: string[];
 
-  constructor(options: ProvisioningProfileAdhocOptions) {
-    const { experienceName, bundleIdentifier, distCertSerialNumber, udids } = options;
-    this._experienceName = experienceName;
-    this._bundleIdentifier = bundleIdentifier;
-    this._distCertSerialNumber = distCertSerialNumber;
-    this._udids = udids;
+  constructor(private app: AppLookupParams, options: ProvisioningProfileAdhocOptions) {
+    const { distCertSerialNumber, udids } = options;
+    this.distCertSerialNumber = distCertSerialNumber;
+    this.udids = udids;
   }
 
   async assignProvisioningProfile(ctx: Context, provisioningProfile: ProvisioningProfile) {
-    await ctx.ios.updateProvisioningProfile(
-      this._experienceName,
-      this._bundleIdentifier,
-      provisioningProfile,
-      ctx.appleCtx.team
-    );
+    await ctx.ios.updateProvisioningProfile(this.app, provisioningProfile);
     log(
       chalk.green(
-        `Successfully assigned Provisioning Profile id: ${provisioningProfile.provisioningProfileId} to ${this._experienceName} (${this._bundleIdentifier})`
+        `Successfully assigned Provisioning Profile id: ${provisioningProfile.provisioningProfileId} to @${this.app.accountName}/${this.app.projectName} (${this.app.bundleIdentifier})`
       )
     );
   }
@@ -43,9 +34,9 @@ export class CreateOrReuseProvisioningProfileAdhoc implements IView {
     await ctx.ensureAppleCtx();
     const ppManager = new ProvisioningProfileAdhocManager(ctx.appleCtx);
     return await ppManager.createOrReuse(
-      this._udids,
-      this._bundleIdentifier,
-      this._distCertSerialNumber
+      this.udids,
+      this.app.bundleIdentifier,
+      this.distCertSerialNumber
     );
   }
 

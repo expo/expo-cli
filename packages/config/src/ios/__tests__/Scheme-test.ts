@@ -43,7 +43,7 @@ describe('scheme', () => {
   });
 
   it(`removes a scheme`, () => {
-    let infoPlist = {
+    const infoPlist = {
       CFBundleURLTypes: [
         { CFBundleURLSchemes: ['myapp1', 'myapp2'] },
         { CFBundleURLSchemes: ['myapp3'] },

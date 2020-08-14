@@ -10,7 +10,7 @@ export function getSplashScreen(config: ExpoConfig) {
 }
 
 export function setSplashScreenAsync(config: ExpoConfig, projectRoot: string) {
-  let splash = getSplashScreen(config);
+  const splash = getSplashScreen(config);
   if (!splash) {
     return;
   }

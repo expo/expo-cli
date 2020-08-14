@@ -9,7 +9,11 @@ type Options = {
 
 export async function ensureAppExists(
   appleCtx: AppleCtx,
-  { experienceName, bundleIdentifier }: { experienceName: string; bundleIdentifier: string },
+  {
+    accountName,
+    projectName,
+    bundleIdentifier,
+  }: { accountName: string; projectName: string; bundleIdentifier: string },
   options: Options = {}
 ) {
   const { appleId, appleIdPassword, team } = appleCtx;
@@ -21,7 +25,7 @@ export async function ensureAppExists(
       appleIdPassword,
       team.id,
       bundleIdentifier,
-      experienceName,
+      `@${accountName}/${projectName}`,
     ]);
     if (created) {
       spinner.succeed(`App ID created with bundle identifier ${bundleIdentifier}.`);

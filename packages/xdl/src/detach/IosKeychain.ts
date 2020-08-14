@@ -1,9 +1,9 @@
-import uuidv1 from 'uuid/v1';
-import difference from 'lodash/difference';
 import fs from 'fs-extra';
+import difference from 'lodash/difference';
+import uuidv1 from 'uuid/v1';
 
-import _logger from './Logger';
 import { createSpawner, spawnAsyncThrowError } from './ExponentTools';
+import _logger from './Logger';
 
 export async function createKeychain(appUUID: string, saveResultToFile = true) {
   const BUILD_PHASE = 'creating keychain';

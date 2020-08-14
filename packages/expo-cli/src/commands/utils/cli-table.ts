@@ -1,5 +1,5 @@
-import CliTable, { CellValue } from 'cli-table3';
 import { JSONObject } from '@expo/json-file';
+import CliTable, { CellValue } from 'cli-table3';
 
 export function printTableJsonArray(
   headers: string[],
@@ -20,7 +20,7 @@ export function printTableJsonArray(
 
 const VERTICAL_CELL_WIDTH = 80;
 export function printTableJson(json: JSONObject, header1?: string, header2?: string): string {
-  let table = new CliTable();
+  const table = new CliTable();
   if (header1 || header2) {
     header1 = header1 ? header1 : '';
     header2 = header2 ? header2 : '';

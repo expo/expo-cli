@@ -1,16 +1,21 @@
-import path from 'path';
-import fs from 'fs-extra';
-
 import { AndroidCredentials } from '@expo/xdl';
+import fs from 'fs-extra';
 import invariant from 'invariant';
+import path from 'path';
+
+import { Context } from '../../credentials';
 import { runCredentialsManager } from '../../credentials/route';
 import { DownloadKeystore } from '../../credentials/views/AndroidKeystore';
-import { Context } from '../../credentials';
-
 import log from '../../log';
 
+type Options = {
+  parent?: {
+    nonInteractive: boolean;
+  };
+};
+
 async function maybeRenameExistingFile(projectDir: string, filename: string) {
-  let desiredFilePath = path.resolve(projectDir, filename);
+  const desiredFilePath = path.resolve(projectDir, filename);
 
   if (await fs.pathExists(desiredFilePath)) {
     let num = 1;
@@ -24,9 +29,14 @@ async function maybeRenameExistingFile(projectDir: string, filename: string) {
   }
 }
 
-export async function fetchAndroidKeystoreAsync(projectDir: string): Promise<void> {
+export async function fetchAndroidKeystoreAsync(
+  projectDir: string,
+  options: Options
+): Promise<void> {
   const ctx = new Context();
-  await ctx.init(projectDir);
+  await ctx.init(projectDir, {
+    nonInteractive: options.parent?.nonInteractive,
+  });
 
   const keystoreFilename = `${ctx.manifest.slug}.jks`;
   await maybeRenameExistingFile(projectDir, keystoreFilename);
@@ -43,9 +53,11 @@ export async function fetchAndroidKeystoreAsync(projectDir: string): Promise<voi
   );
 }
 
-export async function fetchAndroidHashesAsync(projectDir: string): Promise<void> {
+export async function fetchAndroidHashesAsync(projectDir: string, options: Options): Promise<void> {
   const ctx = new Context();
-  await ctx.init(projectDir);
+  await ctx.init(projectDir, {
+    nonInteractive: options.parent?.nonInteractive,
+  });
   const outputPath = path.resolve(projectDir, `${ctx.manifest.slug}.tmp.jks`);
   try {
     invariant(ctx.manifest.slug, 'app.json slug field must be set');
@@ -75,9 +87,14 @@ export async function fetchAndroidHashesAsync(projectDir: string): Promise<void>
   }
 }
 
-export async function fetchAndroidUploadCertAsync(projectDir: string): Promise<void> {
+export async function fetchAndroidUploadCertAsync(
+  projectDir: string,
+  options: Options
+): Promise<void> {
   const ctx = new Context();
-  await ctx.init(projectDir);
+  await ctx.init(projectDir, {
+    nonInteractive: options.parent?.nonInteractive,
+  });
 
   const keystorePath = path.resolve(projectDir, `${ctx.manifest.slug}.tmp.jks`);
 

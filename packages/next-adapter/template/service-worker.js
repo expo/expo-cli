@@ -5,7 +5,7 @@
  * Ref: https://stackoverflow.com/a/35729334/2603230
  */
 self.addEventListener('message', event => {
-  let data = JSON.parse(event.data);
+  const data = JSON.parse(event.data);
 
   if (data.fromExpoWebClient) {
     self.notificationIcon = data.fromExpoWebClient.notificationIcon;
@@ -26,7 +26,7 @@ self.addEventListener('push', event => {
   }
 
   const title = payload.title;
-  let options = {
+  const options = {
     body: payload.body,
     data: payload.data || {},
   };
@@ -53,7 +53,7 @@ self.addEventListener('notificationclick', event => {
 
       let appClient;
 
-      let path = event.notification.data._webPath || '/';
+      const path = event.notification.data._webPath || '/';
 
       // If we already have a window open, use it.
       for (const client of allClients) {

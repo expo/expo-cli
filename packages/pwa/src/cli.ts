@@ -5,9 +5,9 @@ import { Command } from 'commander';
 import fs from 'fs-extra';
 import { dirname, join, relative, resolve } from 'path';
 
-import { HTMLOutput } from './Manifest.types';
 import { generateAsync, generateManifestAsync } from '.';
 import { htmlTagObjectToString } from './HTML';
+import { HTMLOutput } from './Manifest.types';
 import shouldUpdate from './update';
 
 const packageJson = () => require('../package.json');
@@ -189,8 +189,8 @@ async function generateAssets(
 async function resolveOutputAsync(publicPath: string, outputPath: string, items: HTMLOutput[]) {
   fs.ensureDirSync(outputPath);
 
-  let meta: string[] = [];
-  let manifest: Record<string, any> = {};
+  const meta: string[] = [];
+  const manifest: Record<string, any> = {};
 
   for (const item of items) {
     if (item.tag) {

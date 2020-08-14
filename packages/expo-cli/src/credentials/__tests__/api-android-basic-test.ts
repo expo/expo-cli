@@ -1,9 +1,6 @@
-import { AndroidApi } from '../api/android';
+import AndroidApi from '../api/AndroidApi';
 import {
   getApiV2MockCredentials,
-  getCtxMock,
-  jester,
-  testAllCredentials,
   testExperienceName,
   testJester2ExperienceName,
   testKeystore,
@@ -29,7 +26,7 @@ describe('AndroidApi - Basic Tests', () => {
 
   beforeEach(() => {
     apiV2Mock = getApiV2MockCredentials();
-    androidApi = new AndroidApi(jester).withApiClient(apiV2Mock);
+    androidApi = new AndroidApi(apiV2Mock);
   });
   it('fetchAll', async () => {
     const credsFromServer = await androidApi.fetchAll();
@@ -51,7 +48,6 @@ describe('AndroidApi - Basic Tests', () => {
   it('fetchKeystore when cached', async () => {
     await androidApi.fetchAll();
     const keystore = await androidApi.fetchKeystore(testExperienceName);
-    const credsFromMemory = (androidApi as any).credentials;
 
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
@@ -61,7 +57,6 @@ describe('AndroidApi - Basic Tests', () => {
   it('fetchKeystore when cached for different team', async () => {
     await androidApi.fetchAll();
     const keystore = await androidApi.fetchKeystore(testJester2ExperienceName);
-    const credsFromMemory = (androidApi as any).credentials;
 
     // expect to fetch from memory after 1st call
     expect(apiV2Mock.getAsync.mock.calls.length).toBe(2);
@@ -69,7 +64,6 @@ describe('AndroidApi - Basic Tests', () => {
     expect(apiV2Mock.getAsync).toBeCalledWith(`credentials/android/${testJester2ExperienceName}`);
   });
   it('updateKeystore when cached', async () => {
-    const credsFromServer = await androidApi.fetchAll();
     await androidApi.updateKeystore(testExperienceName, testKeystore2);
     const credsFromMemory = (androidApi as any).credentials;
 

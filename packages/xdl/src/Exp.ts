@@ -1,26 +1,25 @@
 import { BareAppConfig, ExpoConfig, getConfig } from '@expo/config';
-
 import { getEntryPoint } from '@expo/config/paths';
-import fs from 'fs-extra';
-import merge from 'lodash/merge';
-import path from 'path';
-import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
+import { NpmPackageManager, YarnPackageManager } from '@expo/package-manager';
+import spawnAsync from '@expo/spawn-async';
+import fs from 'fs-extra';
+import yaml from 'js-yaml';
+import merge from 'lodash/merge';
 import Minipass from 'minipass';
 import pacote, { PackageSpec } from 'pacote';
+import path from 'path';
+import semver from 'semver';
 import { Readable } from 'stream';
 import tar, { ReadEntry } from 'tar';
-import yaml from 'js-yaml';
 
-import { NpmPackageManager, YarnPackageManager } from '@expo/package-manager';
-import semver from 'semver';
 import ApiV2 from './ApiV2';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
-import UserManager from './User';
-import * as UrlUtils from './UrlUtils';
-import UserSettings from './UserSettings';
 import * as ProjectSettings from './ProjectSettings';
+import * as UrlUtils from './UrlUtils';
+import UserManager from './User';
+import UserSettings from './UserSettings';
 
 type AppJsonInput = { expo: Partial<ExpoConfig> & { name: string } };
 type TemplateConfig = { name: string };
@@ -68,7 +67,7 @@ class Transformer extends Minipass {
     return true;
   }
   end() {
-    let replaced = this.data
+    const replaced = this.data
       .replace(/Hello App Display Name/g, this.config.name)
       .replace(/HelloWorld/g, sanitizedName(this.config.name))
       .replace(/helloworld/g, sanitizedName(this.config.name.toLowerCase()));
@@ -132,11 +131,11 @@ export async function extractAndPrepareTemplateAppAsync(
     name: 'name' in config ? config.name : config.expo.name,
   });
 
-  let appFile = new JsonFile(path.join(projectRoot, 'app.json'));
-  let appJson = merge(await appFile.readAsync(), config);
+  const appFile = new JsonFile(path.join(projectRoot, 'app.json'));
+  const appJson = merge(await appFile.readAsync(), config);
   await appFile.writeAsync(appJson);
 
-  let packageFile = new JsonFile(path.join(projectRoot, 'package.json'));
+  const packageFile = new JsonFile(path.join(projectRoot, 'package.json'));
   let packageJson = await packageFile.readAsync();
   // Adding `private` stops npm from complaining about missing `name` and `version` fields.
   // We don't add a `name` field because it also exists in `app.json`.
@@ -321,7 +320,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
     throw new Error('Attempted to login in offline mode. This is a bug.');
   }
 
-  let { username } = user;
+  const { username } = user;
 
   // Evaluate the project config and throw an error if the `sdkVersion` cannot be found.
   const { exp } = getConfig(root);
@@ -373,8 +372,8 @@ export async function sendAsync(recipient: string, url_: string, allowUnauthed: 
 
 // TODO: figure out where these functions should live
 export async function getProjectRandomnessAsync(projectRoot: string) {
-  let ps = await ProjectSettings.readAsync(projectRoot);
-  let randomness = ps.urlRandomness;
+  const ps = await ProjectSettings.readAsync(projectRoot);
+  const randomness = ps.urlRandomness;
   if (randomness) {
     return randomness;
   } else {
@@ -383,7 +382,7 @@ export async function getProjectRandomnessAsync(projectRoot: string) {
 }
 
 export async function resetProjectRandomnessAsync(projectRoot: string) {
-  let randomness = UrlUtils.someRandomness();
+  const randomness = UrlUtils.someRandomness();
   ProjectSettings.setAsync(projectRoot, { urlRandomness: randomness });
   return randomness;
 }

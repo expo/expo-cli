@@ -1,5 +1,5 @@
-import path from 'path';
 import fs from 'fs-extra';
+import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
 import { InfoPlist } from './IosConfig.types';
@@ -30,7 +30,7 @@ export function getGoogleServicesFile(config: ExpoConfig) {
 }
 
 export function setGoogleMapsApiKey(config: ExpoConfig, infoPlist: InfoPlist) {
-  let apiKey = getGoogleMapsApiKey(config);
+  const apiKey = getGoogleMapsApiKey(config);
 
   if (apiKey === null) {
     return infoPlist;
@@ -43,7 +43,7 @@ export function setGoogleMapsApiKey(config: ExpoConfig, infoPlist: InfoPlist) {
 }
 
 export function setGoogleMobileAdsAppId(config: ExpoConfig, infoPlist: InfoPlist) {
-  let appId = getGoogleMobileAdsAppId(config);
+  const appId = getGoogleMobileAdsAppId(config);
 
   if (appId === null) {
     return infoPlist;
@@ -56,7 +56,7 @@ export function setGoogleMobileAdsAppId(config: ExpoConfig, infoPlist: InfoPlist
 }
 
 export function setGoogleSignInReservedClientId(config: ExpoConfig, infoPlist: InfoPlist) {
-  let reservedClientId = getGoogleSignInReservedClientId(config);
+  const reservedClientId = getGoogleSignInReservedClientId(config);
 
   if (reservedClientId === null) {
     return infoPlist;
@@ -73,19 +73,19 @@ export function setGoogleConfig(config: ExpoConfig, infoPlist: InfoPlist) {
 }
 
 export function setGoogleServicesFile(config: ExpoConfig, projectRoot: string) {
-  let googleServicesFileRelativePath = getGoogleServicesFile(config);
+  const googleServicesFileRelativePath = getGoogleServicesFile(config);
   if (googleServicesFileRelativePath === null) {
     return;
   }
 
-  let googleServiceFilePath = path.resolve(projectRoot, googleServicesFileRelativePath);
+  const googleServiceFilePath = path.resolve(projectRoot, googleServicesFileRelativePath);
   fs.copyFileSync(
     googleServiceFilePath,
     path.join(getSourceRoot(projectRoot), 'GoogleService-Info.plist')
   );
 
   let project = getPbxproj(projectRoot);
-  let projectName = getProjectName(projectRoot);
+  const projectName = getProjectName(projectRoot);
   project = addFileToGroup(`${projectName}/GoogleService-Info.plist`, projectName, project);
   fs.writeFileSync(project.filepath, project.writeSync());
 }

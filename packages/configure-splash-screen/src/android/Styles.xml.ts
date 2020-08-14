@@ -1,6 +1,7 @@
 import path from 'path';
 import { Element } from 'xml-js';
 
+import { StatusBarStyle } from '../constants';
 import {
   readXmlFile,
   writeXmlFile,
@@ -8,7 +9,6 @@ import {
   xmlElementsEqual,
   writeXmlFileOrRemoveFileUponNoResources,
 } from '../xml-manipulation';
-import { StatusBarStyle } from '../constants';
 
 const STYLES_XML_FILE_PATH = './res/values/styles.xml';
 const STYLES_V23_XML_FILE_PATH = './res/values-v23/styles.xml';

@@ -1,9 +1,10 @@
-import fse from 'fs-extra';
+import * as ConfigUtils from '@expo/config';
+import { ApiV2, Exp, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { ApiV2, Exp, UserManager } from '@expo/xdl';
-import * as ConfigUtils from '@expo/config';
+import fse from 'fs-extra';
 
+import { Context } from '../credentials/context';
 import log from '../log';
 
 type VapidData = {
@@ -21,32 +22,12 @@ export default function (program: Command) {
       if (!options.apiKey || options.apiKey.length === 0) {
         throw new Error('Must specify an API key to upload with --api-key.');
       }
-      log('Logging in...');
 
-      let user = await UserManager.getCurrentUserAsync();
-      if (!user) {
-        throw new Error('You must be logged in to proceed.');
-      }
-      let apiClient = ApiV2.clientForUser(user);
+      const ctx = new Context();
+      await ctx.init(projectDir);
+      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
 
-      log('Reading project configuration...');
-      const { exp } = ConfigUtils.getConfig(projectDir, { skipSDKVersionRequirement: true });
-      let { username } = user;
-      if (exp.owner) {
-        username = exp.owner;
-      }
-
-      const isProxyUser = username !== user.username;
-      log(
-        `Setting API key on Expo's servers for project ${exp.slug}${
-          isProxyUser ? ` on behalf of ${username}` : ''
-        }...`
-      );
-
-      await apiClient.putAsync(`credentials/android/push/@${username}/${exp.slug}`, {
-        fcmApiKey: options.apiKey,
-      });
-
+      await ctx.android.updateFcmKey(experienceName, options.apiKey);
       log('All done!');
     });
 
@@ -54,32 +35,13 @@ export default function (program: Command) {
     .command('push:android:show [project-dir]')
     .description('Print the value currently in use for FCM notifications for this project.')
     .asyncActionProjectDir(async (projectDir: string) => {
-      log('Logging in...');
+      const ctx = new Context();
+      await ctx.init(projectDir);
+      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
 
-      let user = await UserManager.getCurrentUserAsync();
-      if (!user) {
-        throw new Error('You must be logged in to proceed.');
-      }
-
-      log('Reading project configuration...');
-      const { exp } = ConfigUtils.getConfig(projectDir, { skipSDKVersionRequirement: true });
-      let { username } = user;
-      if (exp.owner) {
-        username = exp.owner;
-      }
-
-      const isProxyUser = username !== user.username;
-      log(
-        `Getting API key on Expo's servers for project ${exp.slug}${
-          isProxyUser ? ` on behalf of ${username}` : ''
-        }...`
-      );
-      let apiClient = ApiV2.clientForUser(user);
-      const { fcmApiKey } = await apiClient.getAsync(
-        `credentials/android/push/@${username}/${exp.slug}`
-      );
-      if (fcmApiKey) {
-        log(`FCM Api Key: ${fcmApiKey}`);
+      const fcmCredentials = await ctx.android.fetchFcmKey(experienceName);
+      if (fcmCredentials?.fcmApiKey) {
+        log(`FCM Api Key: ${fcmCredentials?.fcmApiKey}`);
       } else {
         log(`There is no FCM Api Key configured for this project`);
         process.exit(1);
@@ -90,29 +52,11 @@ export default function (program: Command) {
     .command('push:android:clear [project-dir]')
     .description('Deletes a previously uploaded FCM credential.')
     .asyncActionProjectDir(async (projectDir: string) => {
-      log('Logging in...');
-      let user = await UserManager.getCurrentUserAsync();
-      if (!user) {
-        throw new Error('You must be logged in to proceed.');
-      }
+      const ctx = new Context();
+      await ctx.init(projectDir);
+      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
 
-      log('Reading project configuration...');
-      const { exp } = ConfigUtils.getConfig(projectDir, { skipSDKVersionRequirement: true });
-      let { username } = user;
-      if (exp.owner) {
-        username = exp.owner;
-      }
-      let apiClient = ApiV2.clientForUser(user);
-
-      const isProxyUser = username !== user.username;
-      log(
-        `Deleting API key on Expo's servers for project ${exp.slug}${
-          isProxyUser ? ` on behalf of ${username}` : ''
-        }...`
-      );
-
-      await apiClient.deleteAsync(`credentials/android/push/@${username}/${exp.slug}`);
-
+      await ctx.android.removeFcmKey(experienceName);
       log('All done!');
     });
 
@@ -253,7 +197,7 @@ async function _uploadWebPushCredientials(projectDir: string, options: VapidData
   log(`Reading app.json...`);
   const { configPath } = ConfigUtils.findConfigFile(projectDir);
   const appJson = JSON.parse(await fse.readFile(configPath).then(value => value.toString()));
-  let changedProperties = [];
+  const changedProperties = [];
 
   if (user) {
     if (appJson.expo.owner && appJson.expo.owner !== user.username) {

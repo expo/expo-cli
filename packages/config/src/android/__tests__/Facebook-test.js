@@ -1,4 +1,5 @@
 import { resolve } from 'path';
+
 import {
   getFacebookAdvertiserIDCollection,
   getFacebookAppId,
@@ -47,26 +48,26 @@ describe('Android facebook config', () => {
       facebookAdvertiserIDCollectionEnabled: false,
     };
     androidManifestJson = await setFacebookConfig(facebookConfig, androidManifestJson);
-    let mainApplication = androidManifestJson.manifest.application.filter(
+    const mainApplication = androidManifestJson.manifest.application.filter(
       e => e['$']['android:name'] === '.MainApplication'
     )[0];
-    let facebookActivity = mainApplication['activity'].filter(
+    const facebookActivity = mainApplication['activity'].filter(
       e => e['$']['android:name'] === 'com.facebook.CustomTabActivity'
     );
     expect(facebookActivity).toHaveLength(1);
-    let applicationId = mainApplication['meta-data'].filter(
+    const applicationId = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'com.facebook.sdk.ApplicationId'
     );
     expect(applicationId).toHaveLength(1);
     expect(applicationId[0]['$']['android:value']).toMatch('@string/facebook_app_id');
 
-    let displayName = mainApplication['meta-data'].filter(
+    const displayName = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'com.facebook.sdk.ApplicationName'
     );
     expect(displayName).toHaveLength(1);
     expect(displayName[0]['$']['android:value']).toMatch(facebookConfig.facebookDisplayName);
 
-    let autoLogAppEventsEnabled = mainApplication['meta-data'].filter(
+    const autoLogAppEventsEnabled = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'com.facebook.sdk.AutoLogAppEventsEnabled'
     );
     expect(autoLogAppEventsEnabled).toHaveLength(1);
@@ -74,7 +75,7 @@ describe('Android facebook config', () => {
       facebookConfig.facebookAutoLogAppEventsEnabled.toString()
     );
 
-    let advertiserIDCollectionEnabled = mainApplication['meta-data'].filter(
+    const advertiserIDCollectionEnabled = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'com.facebook.sdk.AdvertiserIDCollectionEnabled'
     );
     expect(advertiserIDCollectionEnabled).toHaveLength(1);
@@ -82,7 +83,7 @@ describe('Android facebook config', () => {
       facebookConfig.facebookAdvertiserIDCollectionEnabled.toString()
     );
 
-    let autoInitEnabled = mainApplication['meta-data'].filter(
+    const autoInitEnabled = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'com.facebook.sdk.AutoInitEnabled'
     );
     expect(autoInitEnabled).toHaveLength(1);

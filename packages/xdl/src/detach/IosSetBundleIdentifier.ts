@@ -1,8 +1,8 @@
+import plist, { PlistObject } from '@expo/plist';
 import fs from 'fs';
 import { sync as globSync } from 'glob';
 // @ts-ignore
 import { project as Project } from 'xcode';
-import plist, { PlistObject } from '@expo/plist';
 
 const defaultBundleId = '$(PRODUCT_BUNDLE_IDENTIFIER)';
 

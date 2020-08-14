@@ -1,13 +1,12 @@
 import fs from 'fs-extra';
-import path from 'path';
-import url from 'url';
-
 import pMap from 'p-map';
 import pRetry from 'p-retry';
+import path from 'path';
+import url from 'url';
 import urlJoin from 'url-join';
 
-import { AnyStandaloneContext } from './StandaloneContext';
 import { saveUrlToPathAsync } from './ExponentTools';
+import { AnyStandaloneContext } from './StandaloneContext';
 
 const EXPO_DOMAINS = ['expo.io', 'exp.host', 'expo.test', 'localhost'];
 export const DEFAULT_CDN_HOST = 'https://d1wp6m56sqw74a.cloudfront.net';
