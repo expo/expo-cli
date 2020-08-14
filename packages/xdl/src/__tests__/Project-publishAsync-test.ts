@@ -130,5 +130,5 @@ describe('publishAsync', () => {
     process.env.EXPO_USE_DEV_SERVER = 'false';
     const resultOld = await publishAsync(projectRoot, { resetCache: true });
     expect(resultOld.url).toBe('https://test.exp.host/@testing/publish-test-app');
-  });
+  }, 60000 /* this takes longer to run sometimes, give it a long timeout */);
 });
