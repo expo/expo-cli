@@ -39,7 +39,11 @@ describe('scheme', () => {
   it('adds scheme to android manifest', async () => {
     let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
     androidManifestJson = await setScheme(
-      { scheme: 'myapp', android: { scheme: ['android-only'] }, ios: { scheme: 'ios-only' } },
+      {
+        scheme: 'myapp',
+        android: { scheme: ['android-only'], package: 'com.demo.value' },
+        ios: { scheme: 'ios-only' },
+      },
       androidManifestJson
     );
 
@@ -60,7 +64,7 @@ describe('scheme', () => {
       }
     }
 
-    expect(schemeIntent).toStrictEqual(['myapp', 'android-only']);
+    expect(schemeIntent).toStrictEqual(['myapp', 'android-only', 'com.demo.value']);
   });
 });
 

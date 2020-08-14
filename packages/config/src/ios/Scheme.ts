@@ -18,6 +18,10 @@ export function setScheme(
   infoPlist: InfoPlist
 ): InfoPlist {
   const scheme = [...getScheme(config), ...getScheme(config.ios ?? {})];
+  // Add the bundle identifier to the list of schemes for easier Google auth and parity with Turtle v1.
+  if (config.ios?.bundleIdentifier) {
+    scheme.push(config.ios.bundleIdentifier);
+  }
   if (scheme.length === 0) {
     return infoPlist;
   }

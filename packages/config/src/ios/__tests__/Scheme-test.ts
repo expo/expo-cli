@@ -15,8 +15,16 @@ describe('scheme', () => {
   });
 
   it(`sets the CFBundleUrlTypes if scheme is given`, () => {
-    expect(setScheme({ scheme: ['myapp', 'more'] }, {})).toMatchObject({
-      CFBundleURLTypes: [{ CFBundleURLSchemes: ['myapp', 'more'] }],
+    expect(
+      setScheme(
+        {
+          scheme: ['myapp', 'more'],
+          ios: { scheme: ['ios-only'], bundleIdentifier: 'com.demo.value' },
+        },
+        {}
+      )
+    ).toMatchObject({
+      CFBundleURLTypes: [{ CFBundleURLSchemes: ['myapp', 'more', 'ios-only', 'com.demo.value'] }],
     });
   });
 
