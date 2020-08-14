@@ -118,7 +118,7 @@ describe('publishAsync', () => {
     });
   });
 
-  it('publishes the project to exp.host', async () => {
+  xit('publishes the project to exp.host', async () => {
     await UserManager.loginAsync('user-pass', {
       username: 'testing',
       password: 'fake-password',
