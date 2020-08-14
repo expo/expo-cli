@@ -2,6 +2,7 @@ import commandExists from 'command-exists';
 
 import log from '../../log';
 import { Context, IView } from '../context';
+import { credentialsJson } from '../local';
 import { UpdateKeystore } from './AndroidKeystore';
 
 interface Options {
@@ -37,6 +38,24 @@ export class SetupAndroidKeystore implements IView {
       );
       return null;
     }
+  }
+}
+
+export class SetupAndroidBuildCredentialsFromLocal implements IView {
+  constructor(private experienceName: string) {}
+
+  async open(ctx: Context): Promise<IView | null> {
+    let localCredentials;
+    try {
+      localCredentials = await credentialsJson.readAndroidAsync(ctx.projectDir);
+    } catch (error) {
+      log.error(
+        'Reading credentials from credentials.json failed. Make sure that file is correct and all credentials are present.'
+      );
+      throw error;
+    }
+    await ctx.android.updateKeystore(this.experienceName, localCredentials.keystore);
+    return null;
   }
 }
 

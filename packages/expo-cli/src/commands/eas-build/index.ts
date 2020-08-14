@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import buildAction from './build/action';
+import credentialsSyncAction from './credentialsSync/action';
 import statusAction from './status/action';
 
 export default function (program: Command) {
@@ -11,6 +12,11 @@ export default function (program: Command) {
   if (!fs.pathExistsSync(easJsonPath)) {
     return;
   }
+
+  program
+    .command('eas:credentials:sync [project-dir]')
+    .description('Update credentials.json with credentials stored on Expo servers')
+    .asyncActionProjectDir(credentialsSyncAction, { checkConfig: true });
 
   program
     .command('eas:build [project-dir]')
