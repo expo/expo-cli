@@ -2,9 +2,7 @@ import {
   WarningAggregator as ConfigWarningAggregator,
   ExpoConfig,
   PackageJSONConfig,
-  findConfigFile,
   getConfig,
-  readConfigJsonAsync,
   resolveModule,
 } from '@expo/config';
 import JsonFile from '@expo/json-file';
@@ -239,6 +237,18 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     const config = getConfig(projectRoot);
     exp = config.exp;
     pkg = config.pkg;
+
+    // If no config exists in the file system then we should generate one so the process doesn't fail.
+    if (!config.dynamicConfigPath && !config.staticConfigPath) {
+      // Don't check for a custom config path because the process should fail if a custom file doesn't exist.
+      // Write the generated config.
+      // writeConfigJsonAsync(projectRoot, config.exp);
+      await JsonFile.writeAsync(
+        path.join(projectRoot, 'app.json'),
+        { expo: config.exp },
+        { json5: false }
+      );
+    }
   } catch (error) {
     // TODO(Bacon): Currently this is already handled in the command
     console.log();
@@ -265,41 +275,30 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   /**
    * Set names to be used for the native projects and configure appEntry so users can continue
    * to use Expo client on ejected projects, even though we change the "main" to index.js for bare.
-   *
-   * TODO: app.config.js will become more prominent and we can't depend on
-   * being able to write to the config
    */
-  const { configPath, configName } = findConfigFile(projectRoot);
-  const configBuffer = await fse.readFile(configPath);
-  const appJson = ['app.json', 'app.config.json'].includes(configName)
-    ? JSON.parse(configBuffer.toString())
-    : {};
-
-  // Just to be sure
-  appJson.expo = appJson.expo ?? {};
-
-  const name = await promptForNativeAppNameAsync(projectRoot);
-  appJson.expo.name = name;
+  if (!exp.name) {
+    exp.name = await promptForNativeAppNameAsync(exp);
+  }
 
   // Prompt for the Android package first because it's more strict than the bundle identifier
   // this means you'll have a better chance at matching the bundle identifier with the package name.
   const packageName = await getOrPromptForPackage(projectRoot);
-  appJson.expo.android = appJson.expo.android ?? {};
-  appJson.expo.android.package = packageName;
+  exp.android = exp.android ?? {};
+  exp.android.package = packageName;
 
   const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
-  appJson.expo.ios = appJson.expo.ios ?? {};
-  appJson.expo.ios.bundleIdentifier = bundleIdentifier;
+  exp.ios = exp.ios ?? {};
+  exp.ios.bundleIdentifier = bundleIdentifier;
 
   // TODO: remove entryPoint and log about it for sdk 37 changes
-  if (appJson.expo.entryPoint && appJson.expo.entryPoint !== EXPO_APP_ENTRY) {
+  if (exp.entryPoint && exp.entryPoint !== EXPO_APP_ENTRY) {
     log(`- expo.entryPoint is already configured, we recommend using "${EXPO_APP_ENTRY}`);
   } else {
-    appJson.expo.entryPoint = EXPO_APP_ENTRY;
+    exp.entryPoint = EXPO_APP_ENTRY;
   }
 
   const updatingAppConfigStep = logNewSection('Updating app configuration (app.json)');
-  await fse.writeFile(path.resolve('app.json'), JSON.stringify(appJson, null, 2));
+  await fse.writeFile(path.resolve('app.json'), JSON.stringify({ expo: exp }, null, 2));
   // TODO: if app.config.js, need to provide some other info here
   updatingAppConfigStep.succeed('App configuration (app.json) updated.');
 
@@ -317,7 +316,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   let tempDir;
   try {
     tempDir = temporary.directory();
-    await Exp.extractTemplateAppAsync(templateSpec, tempDir, appJson.expo);
+    await Exp.extractTemplateAppAsync(templateSpec, tempDir, exp);
     fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
     fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
     fse.copySync(path.join(tempDir, 'index.js'), path.join(projectRoot, 'index.js'));
@@ -486,32 +485,27 @@ function createDependenciesMap(dependencies: any): DependenciesMap {
   return outputMap;
 }
 
-async function promptForNativeAppNameAsync(projectRoot: string): Promise<string> {
-  const { exp } = await readConfigJsonAsync(projectRoot);
-
-  let { name } = exp;
-  if (!name) {
-    log('First, we want to clarify what names we should use for your app:');
-    ({ name } = await prompt(
-      [
-        {
-          name: 'name',
-          message: "What should your app appear as on a user's home screen?",
-          default: exp.name,
-          validate({ length }: string): true | ValidationErrorMessage {
-            return length ? true : 'App display name cannot be empty.';
-          },
-        },
-      ],
+async function promptForNativeAppNameAsync({ name }: Pick<ExpoConfig, 'name'>): Promise<string> {
+  log('First, we want to clarify what names we should use for your app:');
+  const result = await prompt(
+    [
       {
-        nonInteractiveHelp: 'Please specify "expo.name" in app.json / app.config.js.',
-      }
-    ));
+        name: 'name',
+        message: "What should your app appear as on a user's home screen?",
+        default: name,
+        validate({ length }: string): true | ValidationErrorMessage {
+          return length ? true : 'App display name cannot be empty.';
+        },
+      },
+    ],
+    {
+      nonInteractiveHelp: 'Please specify "expo.name" in app.json / app.config.js.',
+    }
+  );
 
-    log.newLine();
-  }
+  log.newLine();
 
-  return name!;
+  return result.name;
 }
 
 /**
