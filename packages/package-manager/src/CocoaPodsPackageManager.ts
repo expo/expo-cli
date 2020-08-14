@@ -14,6 +14,8 @@ export class CocoaPodsPackageManager implements PackageManager {
     if (CocoaPodsPackageManager.isUsingPods(projectRoot)) return projectRoot;
     const iosProject = path.join(projectRoot, 'ios');
     if (CocoaPodsPackageManager.isUsingPods(iosProject)) return iosProject;
+    const macOsProject = path.join(projectRoot, 'macos');
+    if (CocoaPodsPackageManager.isUsingPods(macOsProject)) return macOsProject;
     return null;
   }
 
