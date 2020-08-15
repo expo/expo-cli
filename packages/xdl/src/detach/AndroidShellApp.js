@@ -778,22 +778,33 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
 
     // Permissions we need to remove from the generated manifest
     const blacklist = [
-      'android.permission.ACCESS_COARSE_LOCATION',
-      'android.permission.ACCESS_FINE_LOCATION',
-      'android.permission.CAMERA',
-      'android.permission.MANAGE_DOCUMENTS',
-      'android.permission.READ_CONTACTS',
-      'android.permission.WRITE_CONTACTS',
-      'android.permission.READ_CALENDAR',
-      'android.permission.WRITE_CALENDAR',
-      'android.permission.READ_EXTERNAL_STORAGE',
-      'android.permission.READ_INTERNAL_STORAGE',
+      // module permissions - included by default / requires user to add to `android.permissions` list
+      'android.permission.ACCESS_COARSE_LOCATION', // expo-bluetooth, expo-location
+      'android.permission.ACCESS_FINE_LOCATION', // expo-location
+      'android.permission.ACCESS_BACKGROUND_LOCATION', // expo-location
+      'android.permission.CAMERA', // expo-barcode-scanner, expo-camera, expo-image-picker
+      'android.permission.RECORD_AUDIO', // expo-camera
+      'android.permission.READ_CONTACTS', // expo-contacts
+      'android.permission.WRITE_CONTACTS', // expo-contacts
+      'android.permission.READ_CALENDAR', // expo-calendar
+      'android.permission.WRITE_CALENDAR', // expo-calendar
+      'android.permission.READ_EXTERNAL_STORAGE', // expo-file-system, expo-image, expo-media-library, expo-video-thumbnails
+      'android.permission.WRITE_EXTERNAL_STORAGE', // expo-file-system, expo-media-library
+      'android.permission.USE_FINGERPRINT', // expo-local-authentication
+      'android.permission.USE_BIOMETRIC', // expo-local-authentication
+      'android.permission.VIBRATE', // expo-haptics
+
+      // react native debugging permissions - not required for standalone apps
       'android.permission.READ_PHONE_STATE',
-      'android.permission.RECORD_AUDIO',
-      'android.permission.USE_FINGERPRINT',
-      'android.permission.VIBRATE',
-      'android.permission.WRITE_EXTERNAL_STORAGE',
-      'android.permission.READ_SMS',
+      'android.permission.SYSTEM_ALERT_WINDOW',
+
+      // signature permissions - not available for 3rd party
+      'android.permission.MANAGE_DOCUMENTS', // https://github.com/expo/expo/pull/9727
+      'android.permission.READ_SMS', // https://github.com/expo/expo/pull/2982
+      'android.permission.REQUEST_INSTALL_PACKAGES', // https://github.com/expo/expo/pull/8969
+
+      // other permissions
+      'android.permission.READ_INTERNAL_STORAGE',
       'com.anddoes.launcher.permission.UPDATE_COUNT',
       'com.android.launcher.permission.INSTALL_SHORTCUT',
       'com.google.android.gms.permission.ACTIVITY_RECOGNITION',
