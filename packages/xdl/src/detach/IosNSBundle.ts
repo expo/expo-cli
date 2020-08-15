@@ -245,6 +245,14 @@ function _isAppleUsageDescriptionKey(key: string): boolean {
   return key.includes('UsageDescription');
 }
 
+function ensureStringArray(input: any): string[] {
+  // Normalize schemes and filter invalid schemes.
+  const stringArray = (Array.isArray(input) ? input : [input]).filter(
+    scheme => typeof scheme === 'string' && !!scheme
+  );
+  return stringArray;
+}
+
 /**
  * Configure an iOS Info.plist for a standalone app.
  */
@@ -280,8 +288,7 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     }
 
     // bundle id
-    infoPlist.CFBundleIdentifier =
-      config.ios && config.ios.bundleIdentifier ? config.ios.bundleIdentifier : null;
+    infoPlist.CFBundleIdentifier = config?.ios?.bundleIdentifier ?? null;
     if (!infoPlist.CFBundleIdentifier) {
       throw new Error(`Cannot configure an iOS app with no bundle identifier.`);
     }
@@ -293,7 +300,9 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       : config.name;
 
     // determine app linking schemes
-    const linkingSchemes = config.scheme ? [config.scheme] : [];
+    const multiPlatformSchemes = ensureStringArray(config.scheme);
+    const iosSchemes = ensureStringArray(config.ios?.scheme);
+    const linkingSchemes = [...multiPlatformSchemes, ...iosSchemes];
     if (config.facebookScheme && config.facebookScheme.startsWith('fb')) {
       linkingSchemes.push(config.facebookScheme);
     }
