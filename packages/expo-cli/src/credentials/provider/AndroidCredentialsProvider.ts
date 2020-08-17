@@ -2,7 +2,7 @@ import { CredentialsSource } from '../../easJson';
 import log from '../../log';
 import { Context } from '../context';
 import { Keystore } from '../credentials';
-import { credentialsJson } from '../local';
+import * as credentialsJsonReader from '../credentialsJson/read';
 import { runCredentialsManager } from '../route';
 import { SetupAndroidKeystore } from '../views/SetupAndroidKeystore';
 import { CredentialsProvider } from './provider';
@@ -39,11 +39,11 @@ export default class AndroidCredentialsProvider implements CredentialsProvider {
   }
 
   public async hasLocalAsync(): Promise<boolean> {
-    if (!(await credentialsJson.fileExistsAsync(this.projectDir))) {
+    if (!(await credentialsJsonReader.fileExistsAsync(this.projectDir))) {
       return false;
     }
     try {
-      const rawCredentialsJson = await credentialsJson.readRawAsync(this.projectDir);
+      const rawCredentialsJson = await credentialsJsonReader.readRawAsync(this.projectDir);
       return !!rawCredentialsJson?.android;
     } catch (err) {
       log.error(err); // malformed json
@@ -55,7 +55,7 @@ export default class AndroidCredentialsProvider implements CredentialsProvider {
     try {
       const [remote, local] = await Promise.all([
         this.ctx.android.fetchKeystore(this.projectFullName),
-        await credentialsJson.readAndroidAsync(this.projectDir),
+        await credentialsJsonReader.readAndroidCredentialsAsync(this.projectDir),
       ]);
       const r = remote!;
       const l = local?.keystore!;
@@ -97,7 +97,7 @@ export default class AndroidCredentialsProvider implements CredentialsProvider {
   }
 
   private async getLocalAsync(): Promise<AndroidCredentials> {
-    const credentials = await credentialsJson.readAndroidAsync(this.projectDir);
+    const credentials = await credentialsJsonReader.readAndroidCredentialsAsync(this.projectDir);
     if (!this.isValidKeystore(credentials.keystore)) {
       throw new Error('Invalid keystore in credentials.json');
     }

@@ -5,31 +5,13 @@ import prompts from 'prompts';
 import log from '../../log';
 import { Context } from '../context';
 
-type Platform = 'android' | 'ios' | 'all';
-
-export async function updateLocalCredentialsJsonAsync(projectDir: string, platform: Platform) {
-  const ctx = new Context();
-  await ctx.init(projectDir);
-  if (!ctx.hasProjectContext) {
-    throw new Error('project context is required'); // should be checked earlier
-  }
-  if (['all', 'android'].includes(platform)) {
-    log('Updating Android credentials in credentials.json');
-    await updateAndroidAsync(ctx);
-  }
-  if (['all', 'ios'].includes(platform)) {
-    log('Updating iOS credentials in credentials.json');
-    await updateIosAsync(ctx);
-  }
-}
-
-async function updateAndroidAsync(ctx: Context) {
+export async function updateAndroidCredentialsAsync(ctx: Context) {
   const credentialsJsonFilePath = path.join(ctx.projectDir, 'credentials.json');
   let rawCredentialsJsonObject: any = {};
   if (await fs.pathExists(credentialsJsonFilePath)) {
     try {
-      const rawFile = await fs.readFile(credentialsJsonFilePath);
-      rawCredentialsJsonObject = JSON.parse(rawFile.toString());
+      const rawFile = await fs.readFile(credentialsJsonFilePath, 'utf-8');
+      rawCredentialsJsonObject = JSON.parse(rawFile);
     } catch (error) {
       log.error(`There was an error while reading credentials.json [${error}]`);
       log.error('Make sure that file is correct (or remove it) and rerun this command.');
@@ -39,7 +21,8 @@ async function updateAndroidAsync(ctx: Context) {
   const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
   const keystore = await ctx.android.fetchKeystore(experienceName);
   if (!keystore) {
-    throw new Error('There are no credentials configured for this project on Expo servers');
+    log.error('There are no credentials configured for this project on Expo servers');
+    return;
   }
 
   const isKeystoreComplete =
@@ -60,7 +43,8 @@ async function updateAndroidAsync(ctx: Context) {
 
   const keystorePath =
     rawCredentialsJsonObject?.android?.keystorePath ?? './android/keystores/keystore.jks';
-  await _updateFileAsync(ctx.projectDir, keystorePath, keystore.keystore);
+  log(`Writing Keystore to ${keystorePath}`);
+  await updateFileAsync(ctx.projectDir, keystorePath, keystore.keystore);
 
   rawCredentialsJsonObject.android = {
     keystore: {
@@ -75,13 +59,13 @@ async function updateAndroidAsync(ctx: Context) {
   });
 }
 
-async function updateIosAsync(ctx: Context) {
+export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: string) {
   const credentialsJsonFilePath = path.join(ctx.projectDir, 'credentials.json');
   let rawCredentialsJsonObject: any = {};
   if (await fs.pathExists(credentialsJsonFilePath)) {
     try {
-      const rawFile = await fs.readFile(credentialsJsonFilePath);
-      rawCredentialsJsonObject = JSON.parse(rawFile.toString());
+      const rawFile = await fs.readFile(credentialsJsonFilePath, 'utf-8');
+      rawCredentialsJsonObject = JSON.parse(rawFile);
     } catch (error) {
       log.error(`There was an error while reading credentials.json [${error}]`);
       log.error('Make sure that file is correct (or remove it) and rerun this command.');
@@ -89,10 +73,6 @@ async function updateIosAsync(ctx: Context) {
     }
   }
 
-  const bundleIdentifier = ctx.manifest.ios?.bundleIdentifier;
-  if (!bundleIdentifier) {
-    throw new Error('"expo.ios.bundleIdentifier" field is required in your app.json');
-  }
   const appLookupParams = {
     accountName: ctx.manifest.owner ?? ctx.user.username,
     projectName: ctx.manifest.slug,
@@ -105,7 +85,8 @@ async function updateIosAsync(ctx: Context) {
   const appCredentials = await ctx.ios.getAppCredentials(appLookupParams);
   const distCredentials = await ctx.ios.getDistCert(appLookupParams);
   if (!appCredentials && !distCredentials) {
-    throw new Error('There are no credentials configured for this project on Expo servers');
+    log.error('There are no credentials configured for this project on Expo servers');
+    return;
   }
 
   const areCredentialsComplete =
@@ -126,12 +107,14 @@ async function updateIosAsync(ctx: Context) {
     }
   }
 
-  await _updateFileAsync(
+  log(`Writing Provisioning Profile to ${pprofilePath}`);
+  await updateFileAsync(
     ctx.projectDir,
     pprofilePath,
     appCredentials?.credentials?.provisioningProfile
   );
-  await _updateFileAsync(ctx.projectDir, distCertPath, distCredentials?.certP12);
+  log(`Writing Distribution Certificate to ${distCertPath}`);
+  await updateFileAsync(ctx.projectDir, distCertPath, distCredentials?.certP12);
 
   rawCredentialsJsonObject.ios = {
     provisioningProfilePath: pprofilePath,
@@ -145,7 +128,7 @@ async function updateIosAsync(ctx: Context) {
   });
 }
 
-async function _updateFileAsync(projectDir: string, filePath: string, base64Data?: string) {
+async function updateFileAsync(projectDir: string, filePath: string, base64Data?: string) {
   const absolutePath = path.isAbsolute(filePath) ? filePath : path.join(projectDir, filePath);
   if (await fs.pathExists(absolutePath)) {
     await fs.remove(absolutePath);

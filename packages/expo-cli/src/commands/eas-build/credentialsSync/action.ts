@@ -1,10 +1,12 @@
 import CommandError from '../../../CommandError';
 import { Context } from '../../../credentials/context';
-import { updateLocalCredentialsJsonAsync } from '../../../credentials/local';
+import * as credentialsJsonUpdateUtils from '../../../credentials/credentialsJson/update';
 import { runCredentialsManager } from '../../../credentials/route';
 import { SetupAndroidBuildCredentialsFromLocal } from '../../../credentials/views/SetupAndroidKeystore';
 import { SetupIosBuildCredentialsFromLocal } from '../../../credentials/views/SetupIosBuildCredentials';
+import log from '../../../log';
 import prompts from '../../../prompts';
+import { getBundleIdentifier } from '../build/utils/ios';
 import { BuildCommandPlatform } from '../types';
 
 interface Options {
@@ -24,50 +26,73 @@ export default async function credentialsSyncAction(projectDir: string, options:
       message: 'What do you want to do?',
       choices: [
         {
-          title: 'Update credentials on Expo servers with local credentials.json content',
+          title: 'Update credentials on the Expo servers with the local credentials.json contents',
           value: 'remote',
         },
-        { title: 'Update local credentials.json with values from Expo servers', value: 'local' },
+        {
+          title: 'Update or create local credentials.json with credentials from the Expo servers',
+          value: 'local',
+        },
       ],
     },
     {
       type: 'select',
       name: 'platform',
-      message: 'Do you want to update credentials for both platforms?',
+      message: 'Which platform would you like to update?',
       choices: [
-        { title: 'Android & iOS', value: BuildCommandPlatform.ALL },
-        { title: 'only Android', value: BuildCommandPlatform.ANDROID },
-        { title: 'only iOS', value: BuildCommandPlatform.IOS },
+        { title: 'Android', value: BuildCommandPlatform.ANDROID },
+        { title: 'iOS', value: BuildCommandPlatform.IOS },
+        { title: 'both', value: BuildCommandPlatform.ALL },
       ],
     },
   ]);
   if (update === 'local') {
-    await updateLocalCredentialsJsonAsync(projectDir, platform);
+    await updateLocalCredentialsAsync(projectDir, platform);
   } else {
     await updateRemoteCredentialsAsync(projectDir, platform);
   }
 }
 
-async function updateRemoteCredentialsAsync(projectDir: string, platform: BuildCommandPlatform) {
+async function updateRemoteCredentialsAsync(
+  projectDir: string,
+  platform: BuildCommandPlatform
+): Promise<void> {
   const ctx = new Context();
   await ctx.init(projectDir);
   if (!ctx.hasProjectContext) {
-    throw new Error('project context is required'); // should bb checked earlier
+    throw new Error('project context is required'); // should be checked earlier
   }
-  if (['all', 'android'].includes(platform)) {
+  if ([BuildCommandPlatform.ALL, BuildCommandPlatform.ANDROID].includes(platform)) {
     const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
     await runCredentialsManager(ctx, new SetupAndroidBuildCredentialsFromLocal(experienceName));
   }
-  if (['all', 'ios'].includes(platform)) {
-    const bundleIdentifier = ctx.manifest.ios?.bundleIdentifier;
-    if (!bundleIdentifier) {
-      throw new Error('"expo.ios.bundleIdentifier" field is required in your app.json');
-    }
+  if ([BuildCommandPlatform.ALL, BuildCommandPlatform.IOS].includes(platform)) {
+    const bundleIdentifier = await getBundleIdentifier(projectDir, ctx.manifest);
     const appLookupParams = {
       accountName: ctx.manifest.owner ?? ctx.user.username,
       projectName: ctx.manifest.slug,
       bundleIdentifier,
     };
     await runCredentialsManager(ctx, new SetupIosBuildCredentialsFromLocal(appLookupParams));
+  }
+}
+
+export async function updateLocalCredentialsAsync(
+  projectDir: string,
+  platform: BuildCommandPlatform
+): Promise<void> {
+  const ctx = new Context();
+  await ctx.init(projectDir);
+  if (!ctx.hasProjectContext) {
+    throw new Error('project context is required'); // should be checked earlier
+  }
+  if ([BuildCommandPlatform.ALL, BuildCommandPlatform.ANDROID].includes(platform)) {
+    log('Updating Android credentials in credentials.json');
+    await credentialsJsonUpdateUtils.updateAndroidCredentialsAsync(ctx);
+  }
+  if ([BuildCommandPlatform.ALL, BuildCommandPlatform.IOS].includes(platform)) {
+    const bundleIdentifier = await getBundleIdentifier(projectDir, ctx.manifest);
+    log('Updating iOS credentials in credentials.json');
+    await credentialsJsonUpdateUtils.updateIosCredentialsAsync(ctx, bundleIdentifier);
   }
 }

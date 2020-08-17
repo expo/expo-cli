@@ -52,11 +52,11 @@ interface iOSCredentials {
   };
 }
 
-async function fileExistsAsync(projectDir: string): Promise<boolean> {
+export async function fileExistsAsync(projectDir: string): Promise<boolean> {
   return await fs.pathExists(path.join(projectDir, 'credentials.json'));
 }
 
-async function readAndroidAsync(projectDir: string): Promise<AndroidCredentials> {
+export async function readAndroidCredentialsAsync(projectDir: string): Promise<AndroidCredentials> {
   const credentialsJson = await readAsync(projectDir);
   if (!credentialsJson.android) {
     throw new Error('Android credentials are missing from credentials.json'); // TODO: add fyi
@@ -72,7 +72,7 @@ async function readAndroidAsync(projectDir: string): Promise<AndroidCredentials>
   };
 }
 
-async function readIosAsync(projectDir: string): Promise<iOSCredentials> {
+export async function readIosCredentialsAsync(projectDir: string): Promise<iOSCredentials> {
   const credentialsJson = await readAsync(projectDir);
   if (!credentialsJson.ios) {
     throw new Error('iOS credentials are missing from credentials.json'); // TODO: add fyi
@@ -107,7 +107,7 @@ async function readAsync(projectDir: string): Promise<CredentialsJson> {
   return credentialsJson;
 }
 
-async function readRawAsync(projectDir: string): Promise<any> {
+export async function readRawAsync(projectDir: string): Promise<any> {
   const credentialsJsonFilePath = path.join(projectDir, 'credentials.json');
   try {
     const credentialsJSONContents = await fs.readFile(credentialsJsonFilePath, 'utf8');
@@ -121,5 +121,3 @@ async function readRawAsync(projectDir: string): Promise<any> {
 
 const getAbsolutePath = (projectDir: string, filePath: string): string =>
   path.isAbsolute(filePath) ? filePath : path.join(projectDir, filePath);
-
-export default { readAndroidAsync, readIosAsync, readRawAsync, fileExistsAsync };

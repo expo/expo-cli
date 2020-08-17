@@ -2,7 +2,7 @@ import { CredentialsSource } from '../../easJson';
 import log from '../../log';
 import { AppLookupParams } from '../api/IosApi';
 import { Context } from '../context';
-import { credentialsJson } from '../local';
+import * as credentialsJsonReader from '../credentialsJson/read';
 import { runCredentialsManager } from '../route';
 import { SetupIosBuildCredentials } from '../views/SetupIosBuildCredentials';
 import { CredentialsProvider } from './provider';
@@ -35,11 +35,11 @@ export default class iOSCredentialsProvider implements CredentialsProvider {
   }
 
   public async hasLocalAsync(): Promise<boolean> {
-    if (!(await credentialsJson.fileExistsAsync(this.projectDir))) {
+    if (!(await credentialsJsonReader.fileExistsAsync(this.projectDir))) {
       return false;
     }
     try {
-      const rawCredentialsJson = await credentialsJson.readRawAsync(this.projectDir);
+      const rawCredentialsJson = await credentialsJsonReader.readRawAsync(this.projectDir);
       return !!rawCredentialsJson?.ios;
     } catch (err) {
       log.error(err); // malformed json
@@ -74,7 +74,7 @@ export default class iOSCredentialsProvider implements CredentialsProvider {
   }
 
   private async getLocalAsync(): Promise<iOSCredentials> {
-    return await credentialsJson.readIosAsync(this.projectDir);
+    return await credentialsJsonReader.readIosCredentialsAsync(this.projectDir);
   }
   private async getRemoteAsync(): Promise<iOSCredentials> {
     await runCredentialsManager(this.ctx, new SetupIosBuildCredentials(this.app));

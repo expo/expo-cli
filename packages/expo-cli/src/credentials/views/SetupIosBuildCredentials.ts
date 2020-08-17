@@ -6,7 +6,7 @@ import log from '../../log';
 import prompts from '../../prompts';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
-import { credentialsJson } from '../local';
+import * as credentialsJsonReader from '../credentialsJson/read';
 import { runCredentialsManager } from '../route';
 import { readAppleTeam } from '../utils/provisioningProfile';
 import { SetupIosDist } from './SetupIosDist';
@@ -83,10 +83,10 @@ export class SetupIosBuildCredentialsFromLocal implements IView {
   async open(ctx: Context): Promise<IView | null> {
     let localCredentials;
     try {
-      localCredentials = await credentialsJson.readIosAsync(ctx.projectDir);
+      localCredentials = await credentialsJsonReader.readIosCredentialsAsync(ctx.projectDir);
     } catch (error) {
       log.error(
-        'Reading credentials from credentials.json failed. Make sure that file is correct and all credentials are present.'
+        'Reading credentials from credentials.json failed. Make sure this file is correct and all credentials are present there.'
       );
       throw error;
     }

@@ -2,7 +2,7 @@ import commandExists from 'command-exists';
 
 import log from '../../log';
 import { Context, IView } from '../context';
-import { credentialsJson } from '../local';
+import * as credentialsJsonReader from '../credentialsJson/read';
 import { UpdateKeystore } from './AndroidKeystore';
 
 interface Options {
@@ -47,10 +47,10 @@ export class SetupAndroidBuildCredentialsFromLocal implements IView {
   async open(ctx: Context): Promise<IView | null> {
     let localCredentials;
     try {
-      localCredentials = await credentialsJson.readAndroidAsync(ctx.projectDir);
+      localCredentials = await credentialsJsonReader.readAndroidCredentialsAsync(ctx.projectDir);
     } catch (error) {
       log.error(
-        'Reading credentials from credentials.json failed. Make sure that file is correct and all credentials are present.'
+        'Reading credentials from credentials.json failed. Make sure this file is correct and all credentials are present there.'
       );
       throw error;
     }
