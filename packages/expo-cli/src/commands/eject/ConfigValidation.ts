@@ -108,7 +108,8 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
     recommendedPackage = exp.ios.bundleIdentifier;
   } else {
     const username = exp.owner ?? (await UserManager.getCurrentUsernameAsync());
-    const possibleId = `com.${username}.${exp.slug}`;
+    // It's common to use dashes in your node project name, strip them from the suggested package name.
+    const possibleId = `com.${username}.${exp.slug}`.split('-').join('');
     if (username && validatePackage(possibleId)) {
       recommendedPackage = possibleId;
     }
