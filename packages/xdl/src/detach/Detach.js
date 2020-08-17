@@ -143,11 +143,13 @@ async function _detachAsync(projectRoot, options) {
     exp.detach.scheme = generatedScheme;
   }
 
+  const linkingWarning = `You have not specified a custom scheme for deep linking. A default value of ${generatedScheme} will be used. You can change this later by following the instructions in this guide: https://docs.expo.io/workflow/linking/`;
   if (!exp.scheme) {
-    logger.info(
-      `You have not specified a custom scheme for deep linking. A default value of ${generatedScheme} will be used. You can change this later by following the instructions in this guide: https://docs.expo.io/workflow/linking/`
-    );
+    logger.info(linkingWarning);
     exp.scheme = generatedScheme;
+  } else if (Array.isArray(exp.scheme) && exp.scheme.length === 0) {
+    logger.info(linkingWarning);
+    exp.scheme.push(generatedScheme);
   }
 
   const expoDirectory = path.join(projectRoot, '.expo-source');

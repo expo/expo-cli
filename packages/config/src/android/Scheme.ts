@@ -9,13 +9,28 @@ export type IntentFilterProps = {
   schemes: string[];
 };
 
-export function getScheme(config: ExpoConfig) {
-  return typeof config.scheme === 'string' ? config.scheme : null;
+export function getScheme(config: { scheme?: string | string[] }): string[] {
+  if (Array.isArray(config.scheme)) {
+    function validate(value: any): value is string {
+      return typeof value === 'string';
+    }
+    return config.scheme.filter<string>(validate);
+  } else if (typeof config.scheme === 'string') {
+    return [config.scheme];
+  }
+  return [];
 }
 
-export async function setScheme(config: ExpoConfig, manifestDocument: Document) {
-  const scheme = getScheme(config);
-  if (!scheme) {
+export async function setScheme(
+  config: Pick<ExpoConfig, 'scheme' | 'android'>,
+  manifestDocument: Document
+) {
+  const scheme = [...getScheme(config), ...getScheme(config.android ?? {})];
+  // Add the package name to the list of schemes for easier Google auth and parity with Turtle v1.
+  if (config.android?.['package']) {
+    scheme.push(config.android['package']);
+  }
+  if (scheme.length === 0) {
     return manifestDocument;
   }
 
@@ -23,13 +38,12 @@ export async function setScheme(config: ExpoConfig, manifestDocument: Document) 
     (e: any) => e['$']['android:name'] === '.MainActivity'
   );
 
-  const schemeTag = `<data android:scheme="${scheme}"/>`;
   const intentFiltersXML = `
   <intent-filter>
     <action android:name="android.intent.action.VIEW"/>
     <category android:name="android.intent.category.DEFAULT"/>
     <category android:name="android.intent.category.BROWSABLE"/>
-    ${schemeTag}
+    ${scheme.map(scheme => `<data android:scheme="${scheme}"/>`).join('\n')}
   </intent-filter>`;
   const parser = new Parser();
   const intentFiltersJSON = await parser.parseStringPromise(intentFiltersXML);

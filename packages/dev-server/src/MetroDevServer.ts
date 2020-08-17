@@ -1,9 +1,9 @@
-import http from 'http';
-import { Platform, getConfig, projectHasModule } from '@expo/config';
-import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
 import Log from '@expo/bunyan';
+import { Platform, getConfig, projectHasModule } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
+import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
 import bodyParser from 'body-parser';
+import http from 'http';
 import type Metro from 'metro';
 
 import LogReporter from './LogReporter';
@@ -26,7 +26,7 @@ export type BundleAssetWithFileHashes = Metro.AssetData & {
 export type BundleOutput = {
   code: string;
   map: string;
-  assets: ReadonlyArray<BundleAssetWithFileHashes>;
+  assets: readonly BundleAssetWithFileHashes[];
 };
 
 export async function runMetroDevServerAsync(
@@ -118,9 +118,9 @@ export async function bundleAsync(
       },
     });
     const { code, map } = await metroServer.build(bundleOptions);
-    const assets = (await metroServer.getAssets(bundleOptions)) as ReadonlyArray<
-      BundleAssetWithFileHashes
-    >;
+    const assets = (await metroServer.getAssets(
+      bundleOptions
+    )) as readonly BundleAssetWithFileHashes[];
     reporter.update({
       buildID,
       type: 'bundle_build_done',

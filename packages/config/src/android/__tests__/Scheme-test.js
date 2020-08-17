@@ -15,12 +15,18 @@ const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
 
 describe('scheme', () => {
-  it(`returns null if no scheme is provided`, () => {
-    expect(getScheme({})).toBe(null);
+  it(`returns empty array if no scheme is provided`, () => {
+    expect(getScheme({})).toStrictEqual([]);
   });
 
   it(`returns the scheme if provided`, () => {
-    expect(getScheme({ scheme: 'myapp' })).toBe('myapp');
+    expect(getScheme({ scheme: 'myapp' })).toStrictEqual(['myapp']);
+    expect(getScheme({ scheme: ['other', 'myapp'] })).toStrictEqual(['other', 'myapp']);
+    expect(
+      getScheme({
+        scheme: ['other', 'myapp', null],
+      })
+    ).toStrictEqual(['other', 'myapp']);
   });
 
   it('does not add scheme if none provided', async () => {
@@ -32,18 +38,33 @@ describe('scheme', () => {
 
   it('adds scheme to android manifest', async () => {
     let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
-    androidManifestJson = await setScheme({ scheme: 'myapp' }, androidManifestJson);
+    androidManifestJson = await setScheme(
+      {
+        scheme: 'myapp',
+        android: { scheme: ['android-only'], package: 'com.demo.value' },
+        ios: { scheme: 'ios-only' },
+      },
+      androidManifestJson
+    );
 
     const intentFilters = androidManifestJson.manifest.application[0].activity.filter(
       e => e['$']['android:name'] === '.MainActivity'
     )[0]['intent-filter'];
-    const schemeIntent = intentFilters.filter(e => {
-      if (e.hasOwnProperty('data')) {
-        return e['data'][0]['$']['android:scheme'] === 'myapp';
+
+    const schemeIntent = [];
+
+    for (const intent of intentFilters) {
+      if ('data' in intent) {
+        for (const dataFilter of intent['data']) {
+          const possibleScheme = dataFilter['$']['android:scheme'];
+          if (possibleScheme) {
+            schemeIntent.push(possibleScheme);
+          }
+        }
       }
-      return false;
-    });
-    expect(schemeIntent).toHaveLength(1);
+    }
+
+    expect(schemeIntent).toStrictEqual(['myapp', 'android-only', 'com.demo.value']);
   });
 });
 

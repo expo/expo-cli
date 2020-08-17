@@ -209,8 +209,14 @@ export async function constructUrlAsync(
 
     const { exp } = getConfig(projectRoot);
     if (exp.detach) {
-      if (exp.scheme && Versions.gteSdkVersion(exp, '27.0.0')) {
-        protocol = exp.scheme;
+      // Normalize schemes and filter invalid schemes.
+      const schemes = (Array.isArray(exp.scheme) ? exp.scheme : [exp.scheme]).filter(
+        scheme => typeof scheme === 'string' && !!scheme
+      );
+      // Get the first valid scheme.
+      const firstScheme = schemes[0];
+      if (firstScheme && Versions.gteSdkVersion(exp, '27.0.0')) {
+        protocol = firstScheme;
       } else if (exp.detach.scheme) {
         // must keep this fallback in place for older projects
         // and those detached with an older version of xdl

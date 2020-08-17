@@ -364,6 +364,14 @@ function getPrivateConfig(context) {
   }
 }
 
+function ensureStringArray(input) {
+  // Normalize schemes and filter invalid schemes.
+  const stringArray = (Array.isArray(input) ? input : [input]).filter(
+    scheme => typeof scheme === 'string' && !!scheme
+  );
+  return stringArray;
+}
+
 export async function runShellAppModificationsAsync(context, sdkVersion, buildMode) {
   const fnLogger = logger.withFields({ buildPhase: 'running shell app modifications' });
 
@@ -396,7 +404,10 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   }
 
   const name = manifest.name;
-  const scheme = manifest.scheme || (manifest.detach && manifest.detach.scheme);
+  const multiPlatformSchemes = ensureStringArray(manifest.scheme || manifest.detach?.scheme);
+  const androidSchemes = ensureStringArray(manifest.android?.scheme);
+  const schemes = [...multiPlatformSchemes, ...androidSchemes];
+  const scheme = schemes[0];
   const bundleUrl = manifest.bundleUrl;
   const isFullManifest = !!bundleUrl;
   const version = manifest.version ? manifest.version : '0.0.0';
@@ -726,7 +737,6 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   }
 
   // Add shell app scheme
-  const schemes = [scheme].filter(e => e);
   if (schemes.length > 0) {
     const searchLine = isDetached
       ? '<!-- ADD DETACH SCHEME HERE -->'
