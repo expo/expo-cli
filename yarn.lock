@@ -1385,10 +1385,10 @@
     unique-filename "^1.1.1"
     which "^1.3.1"
 
-"@expo/build-tools@^0.1.13":
-  version "0.1.13"
-  resolved "https://registry.yarnpkg.com/@expo/build-tools/-/build-tools-0.1.13.tgz#7c7dad77e9803a45ce358a69bc01102eb58b01d0"
-  integrity sha512-0LUzh6WqCWgr/Y3AFA1zx1Uetg/mDUJo1GTt4pF3KigaJkLDyRAaepNvMTKkQwLg+7bgsD+haGhUrwbM5fAaOw==
+"@expo/build-tools@^0.1.14":
+  version "0.1.14"
+  resolved "https://registry.yarnpkg.com/@expo/build-tools/-/build-tools-0.1.14.tgz#173054ec8b28686403c4087e2cda16b1df57cbe0"
+  integrity sha512-MISsTvCl5i1S4iOBax3nS6ULCh757TPisZ6s0RCUtIle6UkXKVnsUhY6oP547Xr89CYANqEPx4MeT0uS3+P6Lw==
   dependencies:
     "@expo/downloader" "0.0.8"
     "@expo/fastlane" "0.0.13"
