@@ -6,9 +6,21 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [expo-cli] EAS Build: Upgrade `@expo/build-tools` to `0.1.14` to add support for glob patterns for `artifactPath`.
+
 ### 🎉 New features
 
+- [expo-cli] Force users to confirm deleting android credentials ([#2457](https://github.com/expo/expo-cli/pull/2457) by [@byCedric](https://github.com/byCedric))
+- [expo-cli] EAS Build: print credentials source before running build ([#2453](https://github.com/expo/expo-cli/pull/2453) by [@dsokal](https://github.com/dsokal))
+- [expo-cli][xdl] expo doctor - add network check ([#2424](https://github.com/expo/expo-cli/pull/2424) by [@byCedric](https://github.com/byCedric))
+- [expo-cli] expo eject - support projects with dynamic or missing configs ([#2464](https://github.com/expo/expo-cli/pull/2464) by [@EvanBacon](https://github.com/EvanBacon))
+- [config] Allow scheme arrays ([#2462](https://github.com/expo/expo-cli/pull/2462) by [@EvanBacon](https://github.com/EvanBacon))
+
 ### 🐛 Bug fixes
+
+- [expo-cli] EAS Build: better error handling when using local credentials.json ([#2452](https://github.com/expo/expo-cli/pull/2452) by [@wkozyra95](https://github.com/wkozyra95))
+- [package-manager] fix pod-install for macOS projects ([#2461](https://github.com/expo/expo-cli/pull/2461) by [@Simek](https://github.com/Simek))
+- [xdl] Expand Android permissions blacklist and add annotations ([#2458](https://github.com/expo/expo-cli/pull/2458) by [@byCedric](https://github.com/byCedric))
 
 ### 📦 Packages updated
 
