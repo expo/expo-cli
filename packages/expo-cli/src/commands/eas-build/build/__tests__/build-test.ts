@@ -177,7 +177,7 @@ describe('build command', () => {
         platform: 'android',
         type: 'generic',
         projectUrl: mockProjectUrl,
-        artifactPath: 'android/app/build/outputs/bundle/release/app-release.aab',
+        artifactPath: 'android/app/build/outputs/**/*.{apk,aab}',
         gradleCommand: ':app:bundleRelease',
         secrets: {
           keystore: {
@@ -254,7 +254,7 @@ describe('build command', () => {
                 platform: 'android',
                 type: 'generic',
                 projectUrl: mockProjectUrl,
-                artifactPath: 'android/app/build/outputs/bundle/release/app-release.aab',
+                artifactPath: 'android/app/build/outputs/**/*.{apk,aab}',
                 gradleCommand: ':app:bundleRelease',
                 secrets: {
                   keystore: {
