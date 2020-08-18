@@ -6,6 +6,16 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+### 📦 Packages updated
+
+## [Tue Aug 18 14:03:16 2020 +0200](https://github.com/expo/expo-cli/commit/2329769df21245f3cb625fd9b2aeac10baa06969)
+
+### 🛠 Breaking changes
+
 - [expo-cli] EAS Build: Upgrade `@expo/build-tools` to `0.1.14` to add support for glob patterns for `artifactPath`.
 
 ### 🎉 New features
@@ -23,6 +33,21 @@ This is the log of notable changes to Expo CLI and related packages.
 - [xdl] Expand Android permissions blacklist and add annotations ([#2458](https://github.com/expo/expo-cli/pull/2458) by [@byCedric](https://github.com/byCedric))
 
 ### 📦 Packages updated
+
+- @expo/config@3.2.19
+- @expo/dev-server@0.1.21
+- @expo/dev-tools@0.13.33
+- @expo/electron-adapter@0.0.11
+- expo-cli@3.24.1
+- expo-optimize@0.1.43
+- @expo/metro-config@0.1.21
+- @expo/next-adapter@2.1.24
+- @expo/package-manager@0.0.31
+- pod-install@0.1.10
+- expo-pwa@0.0.31
+- uri-scheme@1.0.27
+- @expo/webpack-config@0.12.24
+- @expo/xdl@57.9.30
 
 ## [Tue Aug 11 10:28:08 2020 +0200](https://github.com/expo/expo-cli/commit/199f5ef051a5829feb7e27a48031bed4e2f5f40f)
 
