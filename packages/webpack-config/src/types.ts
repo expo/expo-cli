@@ -54,9 +54,9 @@ export type Environment = {
    */
   projectRoot: string;
   /**
-   * Passing `true` will disable offline support and skip adding a service worker.
+   * Passing `true` will enable offline support and add a service worker.
    *
-   * @default true
+   * @default false
    */
   offline?: boolean;
   /**

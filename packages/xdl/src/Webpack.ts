@@ -68,6 +68,7 @@ export type WebEnvironment = {
   pwa: boolean;
   mode: 'development' | 'production' | 'test' | 'none';
   https: boolean;
+  offline?: boolean;
 };
 
 export async function restartAsync(
@@ -346,6 +347,18 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
   const config = await createWebpackConfigAsync(env, fullOptions);
 
   await bundleWebAppAsync(projectRoot, config);
+
+  if (!env.offline) {
+    ProjectUtils.logInfo(
+      projectRoot,
+      WEBPACK_LOG_TAG,
+      withTag(
+        chalk.green(
+          'Note that offline (PWA) support is not enabled in this build. Learn more https://expo.fyi/enabling-web-service-workers\n'
+        )
+      )
+    );
+  }
 }
 
 export async function getProjectNameAsync(projectRoot: string): Promise<string> {
