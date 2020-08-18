@@ -1,5 +1,5 @@
+import { getCtxMock } from '../../test-fixtures/mocks-context';
 import {
-  getCtxMock,
   testAppLookupParams,
   testDistCertsFromApple,
   testIosDistCredential,

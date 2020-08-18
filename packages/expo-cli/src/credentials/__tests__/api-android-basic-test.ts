@@ -1,12 +1,14 @@
 import AndroidApi from '../api/AndroidApi';
 import {
-  getApiV2MockCredentials,
-  testExperienceName,
-  testJester2ExperienceName,
+  getApiV2WrapperMock,
+  testAllCredentials,
+  testAppCredentials,
+  testJester2AppCredentials,
   testKeystore,
   testKeystore2,
   testPushCredentials,
 } from '../test-fixtures/mocks-android';
+import { testExperienceName, testJester2ExperienceName } from '../test-fixtures/mocks-constants';
 
 const originalWarn = console.warn;
 const originalLog = console.log;
@@ -22,87 +24,86 @@ beforeEach(() => {});
 
 describe('AndroidApi - Basic Tests', () => {
   let androidApi;
-  let apiV2Mock;
+  let apiMock;
 
   beforeEach(() => {
-    apiV2Mock = getApiV2MockCredentials();
-    androidApi = new AndroidApi(apiV2Mock);
+    apiMock = getApiV2WrapperMock();
+    androidApi = new AndroidApi(jest.fn() as any);
+    (androidApi as any).client = apiMock;
   });
   it('fetchAll', async () => {
+    apiMock.getAllCredentialsApi.mockImplementation(() => testAllCredentials);
     const credsFromServer = await androidApi.fetchAll();
     const credsFromMemory = await androidApi.fetchAll();
 
     // expect to fetch from memory after 1st call
-    expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
+    expect(apiMock.getAllCredentialsApi.mock.calls.length).toBe(1);
     expect(credsFromMemory).toMatchObject(credsFromServer);
-    expect(apiV2Mock.getAsync).toBeCalledWith('credentials/android');
   });
   it('fetchKeystore', async () => {
+    apiMock.getAllCredentialsForAppApi.mockImplementation(() => testAppCredentials);
     const creds = await androidApi.fetchKeystore(testExperienceName);
 
     // expect to fetch from memory after 1st call
-    expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
+    expect(apiMock.getAllCredentialsForAppApi.mock.calls.length).toBe(1);
     expect(creds).toMatchObject(testKeystore);
-    expect(apiV2Mock.getAsync).toBeCalledWith(`credentials/android/${testExperienceName}`);
+    expect(apiMock.getAllCredentialsForAppApi).toBeCalledWith(testExperienceName);
   });
   it('fetchKeystore when cached', async () => {
+    apiMock.getAllCredentialsApi.mockImplementation(() => testAllCredentials);
     await androidApi.fetchAll();
     const keystore = await androidApi.fetchKeystore(testExperienceName);
 
     // expect to fetch from memory after 1st call
-    expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
+    expect(apiMock.getAllCredentialsApi.mock.calls.length).toBe(1);
     expect(keystore).toMatchObject(testKeystore);
-    expect(apiV2Mock.getAsync).toBeCalledWith(`credentials/android`);
   });
   it('fetchKeystore when cached for different team', async () => {
+    apiMock.getAllCredentialsApi.mockImplementation(() => testAllCredentials);
+    apiMock.getAllCredentialsForAppApi.mockImplementation(() => testJester2AppCredentials);
     await androidApi.fetchAll();
     const keystore = await androidApi.fetchKeystore(testJester2ExperienceName);
 
     // expect to fetch from memory after 1st call
-    expect(apiV2Mock.getAsync.mock.calls.length).toBe(2);
+    expect(apiMock.getAllCredentialsApi.mock.calls.length).toBe(1);
+    expect(apiMock.getAllCredentialsForAppApi.mock.calls.length).toBe(1);
     expect(keystore).toMatchObject(testKeystore2);
-    expect(apiV2Mock.getAsync).toBeCalledWith(`credentials/android/${testJester2ExperienceName}`);
   });
   it('updateKeystore when cached', async () => {
+    apiMock.updateKeystoreApi.mockImplementation(jest.fn());
+    apiMock.getAllCredentialsForAppApi.mockImplementation(() => testAppCredentials);
+    await androidApi.fetchKeystore(testExperienceName);
     await androidApi.updateKeystore(testExperienceName, testKeystore2);
     const credsFromMemory = (androidApi as any).credentials;
 
-    expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
-    expect(apiV2Mock.putAsync.mock.calls.length).toBe(1);
+    expect(apiMock.updateKeystoreApi.mock.calls.length).toBe(1);
+    expect(apiMock.getAllCredentialsForAppApi.mock.calls.length).toBe(1);
     expect(credsFromMemory[testExperienceName].keystore).toMatchObject(testKeystore2);
     expect(credsFromMemory[testExperienceName].pushCredentials).toMatchObject(testPushCredentials);
-    expect(apiV2Mock.putAsync).toBeCalledWith(
-      `credentials/android/keystore/${testExperienceName}`,
-      {
-        keystore: testKeystore2,
-      }
-    );
+    expect(apiMock.updateKeystoreApi).toBeCalledWith(testExperienceName, testKeystore2);
   });
   it('updateKeystore when not cached', async () => {
+    apiMock.updateKeystoreApi.mockImplementation(jest.fn());
+    apiMock.getAllCredentialsForAppApi.mockImplementation(() => testAppCredentials);
     await androidApi.updateKeystore(testExperienceName, testKeystore2);
     const credsFromMemory = (androidApi as any).credentials;
 
-    expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
-    expect(apiV2Mock.putAsync.mock.calls.length).toBe(1);
+    expect(apiMock.updateKeystoreApi.mock.calls.length).toBe(1);
+    expect(apiMock.getAllCredentialsForAppApi.mock.calls.length).toBe(1);
     expect(credsFromMemory[testExperienceName].keystore).toMatchObject(testKeystore2);
     expect(credsFromMemory[testExperienceName].pushCredentials).toMatchObject(testPushCredentials);
-    expect(apiV2Mock.putAsync).toBeCalledWith(
-      `credentials/android/keystore/${testExperienceName}`,
-      {
-        keystore: testKeystore2,
-      }
-    );
+    expect(apiMock.updateKeystoreApi).toBeCalledWith(testExperienceName, testKeystore2);
   });
   it('removeKeystore when not cached', async () => {
+    apiMock.removeKeystoreApi.mockImplementation(jest.fn());
+    apiMock.getAllCredentialsForAppApi.mockImplementation(() => testAppCredentials);
     await androidApi.removeKeystore(testExperienceName, testKeystore2);
     const credsFromMemory = (androidApi as any).credentials;
 
-    expect(apiV2Mock.getAsync.mock.calls.length).toBe(1);
-    expect(apiV2Mock.deleteAsync.mock.calls.length).toBe(1);
+    expect(apiMock.removeKeystoreApi.mock.calls.length).toBe(1);
+    expect(apiMock.getAllCredentialsForAppApi.mock.calls.length).toBe(1);
     expect(credsFromMemory[testExperienceName].keystore).toBe(null);
     expect(credsFromMemory[testExperienceName].pushCredentials).toMatchObject(testPushCredentials);
-    expect(apiV2Mock.deleteAsync).toBeCalledWith(
-      `credentials/android/keystore/${testExperienceName}`
-    );
+    expect(apiMock.removeKeystoreApi).toBeCalledWith(testExperienceName);
   });
 });
