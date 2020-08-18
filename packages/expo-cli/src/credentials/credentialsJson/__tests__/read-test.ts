@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import credentialsJson from '../credentialsJson';
+import * as credentialsJsonReader from '../read';
 
 jest.mock('fs');
 
@@ -24,7 +24,7 @@ describe('credentialsJson', () => {
         }),
         'keystore.jks': 'somebinarydata',
       });
-      const result = await credentialsJson.readAndroidAsync('.');
+      const result = await credentialsJsonReader.readAndroidCredentialsAsync('.');
       expect(result).toEqual({
         keystore: {
           keystore: 'c29tZWJpbmFyeWRhdGE=',
@@ -35,7 +35,7 @@ describe('credentialsJson', () => {
       });
     });
     it('should throw error when credentials.json is missing', async () => {
-      const promise = credentialsJson.readAndroidAsync('.');
+      const promise = credentialsJsonReader.readAndroidCredentialsAsync('.');
       await expect(promise).rejects.toThrow(
         'credentials.json must exist in the project root directory and contain a valid JSON'
       );
@@ -46,7 +46,7 @@ describe('credentialsJson', () => {
         './credentials.json': JSON.stringify({}),
         'keystore.jks': 'somebinarydata',
       });
-      const promise = credentialsJson.readAndroidAsync('.');
+      const promise = credentialsJsonReader.readAndroidCredentialsAsync('.');
       await expect(promise).rejects.toThrow(
         'Android credentials are missing from credentials.json'
       );
@@ -64,7 +64,7 @@ describe('credentialsJson', () => {
         }),
         'keystore.jks': 'somebinarydata',
       });
-      const promise = credentialsJson.readAndroidAsync('.');
+      const promise = credentialsJsonReader.readAndroidCredentialsAsync('.');
       await expect(promise).rejects.toThrow(
         'credentials.json is not valid [ValidationError: "android.keystore.keystorePath" is required]'
       );
@@ -82,7 +82,7 @@ describe('credentialsJson', () => {
           },
         }),
       });
-      const promise = credentialsJson.readAndroidAsync('.');
+      const promise = credentialsJsonReader.readAndroidCredentialsAsync('.');
       await expect(promise).rejects.toThrow(
         "ENOENT: no such file or directory, open 'keystore.jks'"
       );
@@ -104,7 +104,7 @@ describe('credentialsJson', () => {
         './pprofile': 'somebinarycontent',
         './cert.p12': 'somebinarycontent2',
       });
-      const result = await credentialsJson.readIosAsync('.');
+      const result = await credentialsJsonReader.readIosCredentialsAsync('.');
       expect(result).toEqual({
         provisioningProfile: 'c29tZWJpbmFyeWNvbnRlbnQ=',
         distributionCertificate: {
@@ -114,7 +114,7 @@ describe('credentialsJson', () => {
       });
     });
     it('should throw error when credentials.json is missing', async () => {
-      const promise = credentialsJson.readIosAsync('.');
+      const promise = credentialsJsonReader.readIosCredentialsAsync('.');
       await expect(promise).rejects.toThrow(
         'credentials.json must exist in the project root directory and contain a valid JSON'
       );
@@ -125,7 +125,7 @@ describe('credentialsJson', () => {
         './pprofile': 'somebinarycontent',
         './cert.p12': 'somebinarycontent2',
       });
-      const promise = credentialsJson.readIosAsync('.');
+      const promise = credentialsJsonReader.readIosCredentialsAsync('.');
       await expect(promise).rejects.toThrow('iOS credentials are missing from credentials.json');
     });
     it('should throw error if some field is missing', async () => {
@@ -141,7 +141,7 @@ describe('credentialsJson', () => {
         './pprofile': 'somebinarycontent',
         './cert.p12': 'somebinarycontent2',
       });
-      const promise = credentialsJson.readIosAsync('.');
+      const promise = credentialsJsonReader.readIosCredentialsAsync('.');
       await expect(promise).rejects.toThrow(
         'credentials.json is not valid [ValidationError: "ios.provisioningProfilePath" is required]'
       );
@@ -159,7 +159,7 @@ describe('credentialsJson', () => {
         }),
         './pprofile': 'somebinarycontent',
       });
-      const promise = credentialsJson.readIosAsync('.');
+      const promise = credentialsJsonReader.readIosCredentialsAsync('.');
       await expect(promise).rejects.toThrow("ENOENT: no such file or directory, open 'cert.p12'");
     });
     it('should throw error if provisioningProfile file is missing', async () => {
@@ -175,7 +175,7 @@ describe('credentialsJson', () => {
         }),
         './cert.p12': 'somebinarycontent2',
       });
-      const promise = credentialsJson.readIosAsync('.');
+      const promise = credentialsJsonReader.readIosCredentialsAsync('.');
       await expect(promise).rejects.toThrow("ENOENT: no such file or directory, open 'pprofile'");
     });
   });
