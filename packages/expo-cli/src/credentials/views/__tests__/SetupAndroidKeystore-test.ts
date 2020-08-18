@@ -1,6 +1,7 @@
 import commandExists from 'command-exists';
 
-import { getCtxMock, testExperienceName } from '../../test-fixtures/mocks-android';
+import { testExperienceName } from '../../test-fixtures/mocks-constants';
+import { getCtxMock } from '../../test-fixtures/mocks-context';
 import { UpdateKeystore } from '../AndroidKeystore';
 import { SetupAndroidKeystore } from '../SetupAndroidKeystore';
 

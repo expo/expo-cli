@@ -1,6 +1,6 @@
+import { jester } from '../../test-fixtures/mocks-constants';
+import { getCtxMock } from '../../test-fixtures/mocks-context';
 import {
-  getCtxMock,
-  jester,
   testAppLookupParams,
   testDistCertsFromApple,
   testIosDistCredential,

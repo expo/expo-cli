@@ -1,9 +1,7 @@
 import IosApi from '../api/IosApi';
+import { jester, jester2 } from '../test-fixtures/mocks-constants';
 import {
-  getApiClientMock,
-  getApiV2Mock,
-  jester,
-  jester2,
+  getApiV2WrapperMock,
   testAllCredentials,
   testAllCredentialsForApp,
   testAppCredential,
@@ -26,15 +24,14 @@ afterAll(() => {
   console.warn = originalWarn;
   console.log = originalLog;
 });
-beforeEach(() => {});
 
 describe('IosApi - Basic Tests', () => {
   let iosApi;
   let apiMock;
 
   beforeEach(() => {
-    iosApi = new IosApi(getApiV2Mock());
-    apiMock = getApiClientMock();
+    apiMock = getApiV2WrapperMock();
+    iosApi = new IosApi(jest.fn() as any);
     (iosApi as any).client = apiMock;
   });
   it('getAllCredentials', async () => {

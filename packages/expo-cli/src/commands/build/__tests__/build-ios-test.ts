@@ -2,13 +2,14 @@ import { vol } from 'memfs';
 
 import { mockExpoXDL } from '../../../__tests__/mock-utils';
 import {
-  getApiClientMock,
-  getApiV2MockCredentials,
   jester,
-  testAllCredentialsForApp,
   testAppJson,
   testBundleIdentifier,
   testExperienceName,
+} from '../../../credentials/test-fixtures/mocks-constants';
+import {
+  getApiV2WrapperMock,
+  testAllCredentialsForApp,
 } from '../../../credentials/test-fixtures/mocks-ios';
 import { BuilderOptions } from '../BaseBuilder.types';
 import IOSBuilder from '../ios/IOSBuilder';
@@ -44,7 +45,6 @@ jest.mock('../../../credentials/api/IosApiV2Wrapper', () => {
   return jest.fn(() => mockIosCredentialsApi);
 });
 
-const mockApiV2 = getApiV2MockCredentials();
 const mockedXDLModules = {
   UserManager: {
     ensureLoggedInAsync: jest.fn(() => jester),
@@ -52,7 +52,7 @@ const mockedXDLModules = {
     getCurrentUsernameAsync: jest.fn(() => jester.username),
   },
   ApiV2: {
-    clientForUser: jest.fn(() => mockApiV2),
+    clientForUser: jest.fn(),
   },
   Project: {
     getBuildStatusAsync: jest.fn(() => ({ jobs: [] })),
@@ -68,7 +68,7 @@ const mockedXDLModules = {
 mockExpoXDL(mockedXDLModules);
 
 beforeEach(() => {
-  mockIosCredentialsApi = getApiClientMock({});
+  mockIosCredentialsApi = getApiV2WrapperMock();
 });
 
 describe('build ios', () => {

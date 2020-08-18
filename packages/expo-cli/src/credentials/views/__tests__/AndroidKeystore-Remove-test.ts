@@ -2,7 +2,8 @@ import fs from 'fs-extra';
 
 import { mockExpoXDL } from '../../../__tests__/mock-utils';
 import prompt from '../../../prompt';
-import { getCtxMock, testExperienceName } from '../../test-fixtures/mocks-android';
+import { testExperienceName } from '../../test-fixtures/mocks-constants';
+import { getCtxMock } from '../../test-fixtures/mocks-context';
 import { RemoveKeystore } from '../AndroidKeystore';
 
 jest.mock('../../actions/list');

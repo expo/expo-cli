@@ -2,7 +2,7 @@ import { ApiV2 } from '@expo/xdl';
 import { vol } from 'memfs';
 
 import { mockExpoXDL } from '../../__tests__/mock-utils';
-import { jester } from '../../credentials/test-fixtures/mocks-ios';
+import { jester } from '../../credentials/test-fixtures/mocks-constants';
 import { getPublicationDetailAsync, getPublishHistoryAsync } from '../utils/PublishUtils';
 
 jest.mock('fs');
