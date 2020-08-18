@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [expo-cli]: EAS Build: add command `eas:credentials:sync` ([#2460](https://github.com/expo/expo-cli/pull/2460)) by [@wkozyra95](https://github.com/wkozyra95)
+
 ### 🐛 Bug fixes
 
 ### 📦 Packages updated
