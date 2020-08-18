@@ -409,38 +409,6 @@ async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
   return NO_ISSUES;
 }
 
-async function _validateExpoServersAsync(projectRoot: string): Promise<number> {
-  const domains = ['expo.io', 'expo.fyi', 'expo.dev', 'static.expo.dev', 'exp.host'];
-  const attempts = await Promise.all(
-    domains.map(async domain => ({
-      domain,
-      reachable: await isReachable(domain),
-    }))
-  );
-  const failures = attempts.filter(attempt => !attempt.reachable);
-
-  if (failures.length) {
-    failures.forEach(failure => {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        `Warning: could not reach \`${failure.domain}\`.`,
-        `doctor-server-dashboard-not-reachable-${failure.domain}`
-      );
-    });
-    console.log();
-    ProjectUtils.logWarning(
-      projectRoot,
-      'expo',
-      `We couldn't reach some of our domains, this might cause issues on our website or services.\nPlease check your network configuration and try to access these domains in your browser.`,
-      'doctor-server-dashboard-not-reachable'
-    );
-    console.log();
-    return WARNING;
-  }
-  return NO_ISSUES;
-}
-
 export async function validateWithoutNetworkAsync(projectRoot: string): Promise<number> {
   return validateAsync(projectRoot, false);
 }
@@ -452,13 +420,6 @@ export async function validateWithNetworkAsync(projectRoot: string): Promise<num
 async function validateAsync(projectRoot: string, allowNetwork: boolean): Promise<number> {
   if (getenv.boolish('EXPO_NO_DOCTOR', false)) {
     return NO_ISSUES;
-  }
-
-  if (allowNetwork) {
-    const serverStatus = await _validateExpoServersAsync(projectRoot);
-    if (serverStatus === FATAL) {
-      return serverStatus;
-    }
   }
 
   let exp, pkg;
@@ -533,4 +494,42 @@ export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStat
   } catch (e) {
     return EXPO_SDK_NOT_IMPORTED;
   }
+}
+
+export async function validateExpoServersAsync(projectRoot: string): Promise<number> {
+  const domains = [
+    'expo.io',
+    'expo.fyi',
+    'expo.dev',
+    'static.expo.dev',
+    // 'exp.host', - This is causing some intermittent false errors
+  ];
+  const attempts = await Promise.all(
+    domains.map(async domain => ({
+      domain,
+      reachable: await isReachable(domain),
+    }))
+  );
+  const failures = attempts.filter(attempt => !attempt.reachable);
+
+  if (failures.length) {
+    failures.forEach(failure => {
+      ProjectUtils.logWarning(
+        projectRoot,
+        'expo',
+        `Warning: could not reach \`${failure.domain}\`.`,
+        `doctor-server-dashboard-not-reachable-${failure.domain}`
+      );
+    });
+    console.log();
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expo',
+      `We couldn't reach some of our domains, this might cause issues on our website or services.\nPlease check your network configuration and try to access these domains in your browser.`,
+      'doctor-server-dashboard-not-reachable'
+    );
+    console.log();
+    return WARNING;
+  }
+  return NO_ISSUES;
 }
