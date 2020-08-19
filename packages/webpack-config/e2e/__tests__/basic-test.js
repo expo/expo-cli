@@ -29,8 +29,8 @@ describe('Basic', () => {
   });
 
   if (isProduction) {
-    it(`should register expo service worker`, async () => {
-      const elementId = getTestIdQuery('has-sw-text');
+    xit(`should register expo service worker`, async () => {
+      const elementId = getTestIdQuery('has-sw-text-false');
 
       await expect(page).toMatchElement(elementId, {
         text: 'Has SW installed',

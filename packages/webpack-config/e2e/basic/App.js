@@ -51,7 +51,7 @@ export default function App() {
       <Text testID="asset-raw-font">{fontAsset}</Text>
       <Text testID="asset-raw-wildcard">{typeof randomAsset}</Text>
       {boolish('CI', false) && <Text testID="has-ci-text">Has CI env</Text>}
-      {isSWRegistered && <Text testID="has-sw-text">Has SW installed</Text>}
+      {isSWRegistered != null && <Text testID="has-sw-text">Has SW installed</Text>}
       {global.ResizeObserver && (
         <Text testID="has-resize-observer">Has ResizeObserver polyfill</Text>
       )}
