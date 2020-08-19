@@ -10,21 +10,18 @@ import {
   Team,
 } from '../../appleApi';
 import { IosDistCredentials, IosPushCredentials } from '../credentials';
-import { testBundleIdentifier, testExperienceName, testSlug } from './mocks-constants';
+import { testProvisioningProfileBase64 } from './mock-base64-data';
+import { testBundleIdentifier, testExperienceName } from './mocks-constants';
 
 const today = new Date();
 const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-export const testAppLookupParams = {
-  accountName: 'jester',
-  projectName: testSlug,
-  bundleIdentifier: testBundleIdentifier,
-};
+
 export const testAppleTeam: Team = {
   id: 'test-team-id',
 };
 export const testProvisioningProfile: ProvisioningProfile = {
   provisioningProfileId: 'test-id',
-  provisioningProfile: 'test',
+  provisioningProfile: testProvisioningProfileBase64,
   teamId: 'id',
 };
 export const testProvisioningProfiles = [testProvisioningProfile];
@@ -41,7 +38,7 @@ export const testProvisioningProfileFromApple: ProvisioningProfileInfo = {
 export const testProvisioningProfilesFromApple = [testProvisioningProfileFromApple];
 
 export const testDistCert: DistCert = {
-  certP12: 'test-p12',
+  certP12: 'Y2VydHAxMg==',
   certPassword: 'test-password',
   distCertSerialNumber: 'test-serial',
   teamId: 'test-team-id',
@@ -144,7 +141,7 @@ export function getIosApiMock(override: object = {}) {
       createPushKey: jest.fn(() => testIosPushCredential),
       usePushKey: jest.fn(),
       updateProvisioningProfile: jest.fn(),
-      getAppCredentials: jest.fn(() => testAppCredentials),
+      getAppCredentials: jest.fn(() => testAppCredential),
       getProvisioningProfile: jest.fn(() => testProvisioningProfile),
       getAllCredentials: jest.fn(() => testAllCredentials),
     },

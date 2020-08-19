@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 import path from 'path';
-import prompts from 'prompts';
 
 import log from '../../log';
+import prompts from '../../prompts';
 import { Context } from '../context';
 
 export async function updateAndroidCredentialsAsync(ctx: Context) {
@@ -42,7 +42,7 @@ export async function updateAndroidCredentialsAsync(ctx: Context) {
   }
 
   const keystorePath =
-    rawCredentialsJsonObject?.android?.keystorePath ?? './android/keystores/keystore.jks';
+    rawCredentialsJsonObject?.android?.keystore?.keystorePath ?? './android/keystores/keystore.jks';
   log(`Writing Keystore to ${keystorePath}`);
   await updateFileAsync(ctx.projectDir, keystorePath, keystore.keystore);
 
@@ -81,10 +81,10 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
   const pprofilePath =
     rawCredentialsJsonObject?.ios?.provisioningProfilePath ?? './ios/certs/profile.mobileprovision';
   const distCertPath =
-    rawCredentialsJsonObject?.ios?.distributionCertificate.path ?? './ios/certs/dist-cert.p12';
+    rawCredentialsJsonObject?.ios?.distributionCertificate?.path ?? './ios/certs/dist-cert.p12';
   const appCredentials = await ctx.ios.getAppCredentials(appLookupParams);
   const distCredentials = await ctx.ios.getDistCert(appLookupParams);
-  if (!appCredentials && !distCredentials) {
+  if (!appCredentials?.credentials?.provisioningProfile && !distCredentials) {
     log.error('There are no credentials configured for this project on Expo servers');
     return;
   }
@@ -117,11 +117,17 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
   await updateFileAsync(ctx.projectDir, distCertPath, distCredentials?.certP12);
 
   rawCredentialsJsonObject.ios = {
-    provisioningProfilePath: pprofilePath,
-    distributionCertificate: {
-      path: distCertPath,
-      password: distCredentials?.certPassword,
-    },
+    ...(appCredentials?.credentials?.provisioningProfile
+      ? { provisioningProfilePath: pprofilePath }
+      : {}),
+    ...(distCredentials?.certP12 && distCredentials?.certPassword
+      ? {
+          distributionCertificate: {
+            path: distCertPath,
+            password: distCredentials?.certPassword,
+          },
+        }
+      : {}),
   };
   await fs.writeJson(credentialsJsonFilePath, rawCredentialsJsonObject, {
     spaces: 2,

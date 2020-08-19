@@ -28,6 +28,11 @@ export const testBundleIdentifier = 'test.com.app';
 export const testPackageName = 'test.com.app';
 export const testExperienceName = `@${testUsername}/${testSlug}`;
 export const testJester2ExperienceName = `@${jester2.username}/${testSlug}`;
+export const testAppLookupParams = {
+  accountName: testUsername,
+  projectName: testSlug,
+  bundleIdentifier: testBundleIdentifier,
+};
 
 export const testAppJson = {
   name: 'testing 123',
