@@ -308,7 +308,7 @@ module.exports = async function(env, argv) {
 
 ### Service workers
 
-Service workers are great for emulating native functionality, but they can also lead to a lot of confusion so they are opt-in only in this Webpack config. To enable the default workbox plugin pass the options `{ offline: true }` to the creator method.
+Service workers are great for emulating native functionality, but they can also lead to a lot of confusion so they are opt-in only (starting in Expo SDK 39 and greater) in this Webpack config. To enable the default workbox plugin pass the options `{ offline: true }` to the creator method.
 
 #### How Expo service workers ... work
 
