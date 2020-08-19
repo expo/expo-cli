@@ -503,7 +503,12 @@ Object {
     "watchContentBase": true,
   },
   "devtool": "cheap-module-source-map",
-  "entry": [Function],
+  "entry": Object {
+    "app": Array [
+      "node_modules/react-dev-utils/webpackHotDevClient.js",
+      "packages/webpack-config/e2e/basic/index.js",
+    ],
+  },
   "mode": "development",
   "module": Object {
     "rules": Array [
@@ -633,7 +638,6 @@ Object {
     "HotModuleReplacementPlugin",
     "WatchMissingNodeModulesPlugin",
     "ManifestPlugin",
-    "CopyPlugin",
   ],
   "resolve": Object {
     "alias": Object {
@@ -691,7 +695,11 @@ Object {
   "bail": true,
   "context": "packages/webpack-config/src",
   "devtool": "source-map",
-  "entry": [Function],
+  "entry": Object {
+    "app": Array [
+      "packages/webpack-config/e2e/basic/index.js",
+    ],
+  },
   "mode": "production",
   "module": Object {
     "rules": Array [
@@ -904,8 +912,6 @@ Object {
     "DefinePlugin",
     "MiniCssExtractPlugin",
     "ManifestPlugin",
-    "CopyPlugin",
-    "GenerateSW",
   ],
   "resolve": Object {
     "alias": Object {

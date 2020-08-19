@@ -29,7 +29,7 @@ describe('Basic', () => {
   });
 
   if (isProduction) {
-    it(`should register expo service worker`, async () => {
+    xit(`should register expo service worker`, async () => {
       const elementId = getTestIdQuery('has-sw-text-false');
 
       await expect(page).toMatchElement(elementId, {

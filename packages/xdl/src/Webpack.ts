@@ -15,6 +15,7 @@ import WebpackDevServer from 'webpack-dev-server';
 import Logger from './Logger';
 import * as ProjectSettings from './ProjectSettings';
 import * as UrlUtils from './UrlUtils';
+import * as Versions from './Versions';
 import XDLError from './XDLError';
 import ip from './ip';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -340,6 +341,19 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
     mode: 'production',
   });
 
+  if (typeof env.offline === 'undefined') {
+    try {
+      const expoConfig = ConfigUtils.getConfig(projectRoot, { skipSDKVersionRequirement: true });
+      // If offline isn't defined, check the version and keep offline enabled for SDK 38 and prior
+      if (expoConfig.exp.sdkVersion)
+        if (Versions.lteSdkVersion(expoConfig.exp, '38.0.0')) {
+          env.offline = true;
+        }
+    } catch {
+      // Ignore the error thrown by projects without an Expo config.
+    }
+  }
+
   if (fullOptions.clear) {
     await clearWebCacheAsync(projectRoot, env.mode);
   }
@@ -354,7 +368,7 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
       WEBPACK_LOG_TAG,
       withTag(
         chalk.green(
-          'Note that offline (PWA) support is not enabled in this build. Learn more https://expo.fyi/enabling-web-service-workers\n'
+          'Offline (PWA) support is not enabled in this build. Learn more https://expo.fyi/enabling-web-service-workers\n'
         )
       )
     );
