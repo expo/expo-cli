@@ -110,7 +110,7 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
 // - Runs AsyncAction with the projectDir as an argument
 Command.prototype.asyncActionProjectDir = function (
   asyncFn: Action,
-  options: { checkConfig?: boolean } = {}
+  options: { checkConfig?: boolean; skipSDKVersionRequirement?: boolean } = {}
 ) {
   this.option('--config [file]', 'Specify a path to app.json or app.config.js');
   return this.asyncAction(async (projectDir: string, ...args: any[]) => {
@@ -300,7 +300,9 @@ Command.prototype.asyncActionProjectDir = function (
       log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
 
-      const status = await Doctor.validateWithoutNetworkAsync(projectDir);
+      const status = await Doctor.validateWithoutNetworkAsync(projectDir, {
+        skipSDKVersionRequirement: options.skipSDKVersionRequirement,
+      });
       if (status === Doctor.FATAL) {
         throw new Error(`There is an error with your project. See above logs for information.`);
       }

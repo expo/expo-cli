@@ -16,7 +16,10 @@ export default function (program: Command) {
   program
     .command('eas:credentials:sync [project-dir]')
     .description('Update credentials.json with credentials stored on Expo servers')
-    .asyncActionProjectDir(credentialsSyncAction, { checkConfig: true });
+    .asyncActionProjectDir(credentialsSyncAction, {
+      checkConfig: true,
+      skipSDKVersionRequirement: true,
+    });
 
   program
     .command('eas:build [project-dir]')
@@ -30,7 +33,7 @@ export default function (program: Command) {
     .option('--skip-project-configuration', 'Skip configuring the project', false)
     .option('--no-wait', 'Exit immediately after scheduling build', false)
     .option('--profile <profile>', 'Build profile', 'release')
-    .asyncActionProjectDir(buildAction, { checkConfig: true });
+    .asyncActionProjectDir(buildAction, { checkConfig: true, skipSDKVersionRequirement: true });
 
   program
     .command('eas:build:status [project-dir]')
@@ -46,5 +49,5 @@ export default function (program: Command) {
       /^(in-queue|in-progress|errored|finished)$/
     )
     .option('-b --build-id <build-id>', 'Get the build with a specific build id')
-    .asyncActionProjectDir(statusAction, { checkConfig: true });
+    .asyncActionProjectDir(statusAction, { checkConfig: true, skipSDKVersionRequirement: true });
 }

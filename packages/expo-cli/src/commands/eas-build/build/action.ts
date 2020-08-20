@@ -88,7 +88,7 @@ async function createBuilderContextAsync(
   }
 ): Promise<BuilderContext> {
   const user: User = await UserManager.ensureLoggedInAsync();
-  const { exp } = getConfig(projectDir);
+  const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
   const accountName = exp.owner || user.username;
   const projectName = exp.slug;
 
