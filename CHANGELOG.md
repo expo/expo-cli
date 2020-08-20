@@ -8,11 +8,33 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
-- [expo-cli]: EAS Build: add command `eas:credentials:sync` ([#2460](https://github.com/expo/expo-cli/pull/2460)) by [@wkozyra95](https://github.com/wkozyra95)
-
 ### 🐛 Bug fixes
 
 ### 📦 Packages updated
+
+## [Tue, 18 Aug 2020 21:14:50 -0700](https://github.com/expo/expo-cli/commit/e98f6916378a5db2a670f0a86ad1f5eaccd7a053)
+
+### 🛠 Breaking changes
+
+- [webpack-config] Disable offline support by default in SDK 39 ([#2475](https://github.com/expo/expo-cli/issues/2475)) by [@EvanBacon](https://github.com/EvanBacon))
+
+### 🎉 New features
+
+- [expo-cli]: EAS Build: add command `eas:credentials:sync` ([#2460](https://github.com/expo/expo-cli/pull/2460)) by [@wkozyra95](https://github.com/wkozyra95)
+- [xdl] update ios Podfile excluded unimodules for SDK 39 ([#2471](https://github.com/expo/expo-cli/issues/2471)) by [esamelson](https://github.com/esamelson)).
+
+### 🐛 Bug fixes
+
+- [expo-cli] Only run expo service checks from the doctor command ([#2474](https://github.com/expo/expo-cli/issues/2474)) by [@byCedric](https://github.com/byCedric))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.34
+- @expo/electron-adapter@0.0.12
+- expo-cli@3.24.2
+- @expo/next-adapter@2.1.25
+- @expo/webpack-config@0.12.25
+- @expo/xdl@57.9.31
 
 ## [Tue Aug 18 14:03:16 2020 +0200](https://github.com/expo/expo-cli/commit/2329769df21245f3cb625fd9b2aeac10baa06969)
 
