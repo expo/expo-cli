@@ -3,7 +3,6 @@ import {
   PackageJSONConfig,
   configFilename,
   getConfig,
-  getDefaultTarget,
   getPackageJson,
   resolveModule,
 } from '@expo/config';
