@@ -34,7 +34,7 @@ beforeEach(() => {
 });
 
 describe('SetupAndroidBuildCredentialsFromLocal', () => {
-  it('should check credentials and exit for valid credentials.json', async () => {
+  it('should update keystore on www if credentials.json is valid', async () => {
     vol.fromJSON({
       'credentials.json': JSON.stringify({
         android: {
@@ -57,7 +57,7 @@ describe('SetupAndroidBuildCredentialsFromLocal', () => {
     expect(ctx.android.updateKeystore.mock.calls.length).toBe(1);
     expect(ctx.android.updateKeystore).toBeCalledWith(testExperienceName, testKeystore);
   });
-  it('should fail if there are missing fields', async () => {
+  it('should fail if there are missing fields in credentials.json', async () => {
     vol.fromJSON({
       'credentials.json': JSON.stringify({
         android: {
@@ -75,7 +75,7 @@ describe('SetupAndroidBuildCredentialsFromLocal', () => {
     const view = new SetupAndroidBuildCredentialsFromLocal(testExperienceName);
     await expect(view.open(ctx)).rejects.toThrowError();
   });
-  it('should fail if there is missing file', async () => {
+  it('should fail if keystore file (specified in credentials.json) does not exist', async () => {
     vol.fromJSON({
       'credentials.json': JSON.stringify({
         android: {
@@ -93,12 +93,12 @@ describe('SetupAndroidBuildCredentialsFromLocal', () => {
     const view = new SetupAndroidBuildCredentialsFromLocal(testExperienceName);
     await expect(view.open(ctx)).rejects.toThrowError();
   });
-  it('should fail if there is missing field in ios config', async () => {
+  it('should fail if there are missing fields in ios config in credentials.json', async () => {
     vol.fromJSON({
       'credentials.json': JSON.stringify({
         android: {
           keystore: {
-            keystorePath: 'keystore.jks',
+            keystorePath: 'keysstore.jks',
             keystorePassword: testKeystore.keystorePassword,
             keyAlias: testKeystore.keyAlias,
             keyPassword: testKeystore.keyPassword,
@@ -115,7 +115,7 @@ describe('SetupAndroidBuildCredentialsFromLocal', () => {
     const view = new SetupAndroidBuildCredentialsFromLocal(testExperienceName);
     await expect(view.open(ctx)).rejects.toThrowError();
   });
-  it('should work if there is missing file in ios config', async () => {
+  it('should update keystore on www if provisioningProfile and distribuiton certificate are missing', async () => {
     vol.fromJSON({
       'credentials.json': JSON.stringify({
         android: {

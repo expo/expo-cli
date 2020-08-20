@@ -33,9 +33,9 @@ beforeEach(() => {
   });
 });
 
-describe('update credentialsJson', () => {
+describe('update credentials.json', () => {
   describe('updateAndroidCredentialsAsync', () => {
-    it('should update keystore if everything is correct', async () => {
+    it('should update keystore and credentials.json if www returns valid credentials', async () => {
       const ctx = getCtxMock();
       vol.fromJSON({
         './credentials.json': JSON.stringify({
@@ -65,7 +65,7 @@ describe('update credentialsJson', () => {
         },
       });
     });
-    it('should update keystore if credentials.json does not exists', async () => {
+    it('should create credentials.json and keystore if credentials.json does not exist', async () => {
       const ctx = getCtxMock();
       await credentialsJsonUpdateUtils.updateAndroidCredentialsAsync(ctx);
       const keystore = await fs.readFile('./android/keystores/keystore.jks', 'base64');
@@ -105,10 +105,10 @@ describe('update credentialsJson', () => {
       await credentialsJsonUpdateUtils.updateAndroidCredentialsAsync(ctx);
       const keystore = await fs.readFile('./keystore.jks', 'base64');
       const newCredJson = await fs.readJson('./credentials.json');
-      expect(keystore).toEqual('c29tZWJpbmFyeWRhdGE=');
+      expect(keystore).toEqual('c29tZWJpbmFyeWRhdGE='); // base64 "somebinarydata"
       expect(newCredJson).toEqual(credJson);
     });
-    it('should not fail if android part is not valid', async () => {
+    it('should update keystore and credentials.json if android part of credentials.json is not valid', async () => {
       const ctx = getCtxMock();
       vol.fromJSON({
         './credentials.json': JSON.stringify({ android: { test: '123' } }),
@@ -128,7 +128,7 @@ describe('update credentialsJson', () => {
         },
       });
     });
-    it('should not fail if ios part is not valid', async () => {
+    it('should update keystore and credentials.json if ios part of credentials.json is not valid', async () => {
       const ctx = getCtxMock();
       const credJson = {
         android: {
@@ -167,7 +167,7 @@ describe('update credentialsJson', () => {
     });
   });
   describe('updateIosCredentialsAsync', () => {
-    it('should update ios credentials if everything is correct', async () => {
+    it('should update ios credentials in credentials.json if www returns valid credentials', async () => {
       const ctx = getCtxMock();
       vol.fromJSON({
         './credentials.json': JSON.stringify({
@@ -198,7 +198,7 @@ describe('update credentialsJson', () => {
         },
       });
     });
-    it('should update ios credentials if credentials.json does not exists', async () => {
+    it('should create credentials.json provisioning profile and distribution certificate if credentials.json does not exist', async () => {
       const ctx = getCtxMock();
       await credentialsJsonUpdateUtils.updateIosCredentialsAsync(ctx, 'bundleIdentifier');
       const certP12 = await fs.readFile('./ios/certs/dist-cert.p12', 'base64');
@@ -216,7 +216,7 @@ describe('update credentialsJson', () => {
         },
       });
     });
-    it('should not do anything if no credentials are present', async () => {
+    it('should not do anything if no credentials are returned from www', async () => {
       const ctx = getCtxMock({
         ios: {
           getAppCredentials: () => ({
@@ -247,11 +247,11 @@ describe('update credentialsJson', () => {
       const certP12 = await fs.readFile('./cert.p12', 'base64');
       const pprofile = await fs.readFile('./pprofile', 'base64');
       const newCredJson = await fs.readJson('./credentials.json');
-      expect(certP12).toEqual('c29tZWJpbmFyeWNvbnRlbnQy'); // somebinarycontent2
-      expect(pprofile).toEqual('c29tZWJpbmFyeWNvbnRlbnQ='); // somebinarycontent
+      expect(certP12).toEqual('c29tZWJpbmFyeWNvbnRlbnQy'); // base64 "somebinarycontent2"
+      expect(pprofile).toEqual('c29tZWJpbmFyeWNvbnRlbnQ='); // base64 "somebinarycontent"
       expect(newCredJson).toEqual(credJson);
     });
-    it('should ask if some credentials are missing (confirm: true)', async () => {
+    it('should display confirm prompt if some credentials are missing in www (confirm: true)', async () => {
       const ctx = getCtxMock({
         ios: {
           getDistCert: () => null,
