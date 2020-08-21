@@ -3,11 +3,12 @@ import fs from 'fs-extra';
 import ora from 'ora';
 
 import CommandError from '../../../../CommandError';
+import { gitDiffAsync, gitStatusAsync } from '../../../../git';
 import log from '../../../../log';
 import prompts from '../../../../prompts';
 
 async function ensureGitStatusIsCleanAsync(): Promise<void> {
-  const changes = (await spawnAsync('git', ['status', '-s', '-uno'])).stdout;
+  const changes = await gitStatusAsync();
   if (changes.length > 0) {
     throw new DirtyGitTreeError(
       'Please commit all changes before building your project. Aborting...'
@@ -34,18 +35,6 @@ async function makeProjectTarballAsync(tarPath: string): Promise<number> {
   return size;
 }
 
-async function showDiffAsync(): Promise<void> {
-  await spawnAsync('git', ['--no-pager', 'diff'], { stdio: ['ignore', 'inherit', 'inherit'] });
-}
-
-async function addFileAsync(file: string, options?: { intentToAdd?: boolean }): Promise<void> {
-  if (options?.intentToAdd) {
-    await spawnAsync('git', ['add', '--intent-to-add', file]);
-  } else {
-    await spawnAsync('git', ['add', file]);
-  }
-}
-
 async function reviewAndCommitChangesAsync(
   commitMessage: string,
   { nonInteractive }: { nonInteractive: boolean }
@@ -58,7 +47,7 @@ async function reviewAndCommitChangesAsync(
 
   log('Please review the following changes and pass the message to make the commit.');
   log.newLine();
-  await showDiffAsync();
+  await gitDiffAsync();
   log.newLine();
 
   const { confirm } = await prompts({
@@ -89,6 +78,4 @@ export {
   ensureGitStatusIsCleanAsync,
   makeProjectTarballAsync,
   reviewAndCommitChangesAsync,
-  showDiffAsync,
-  addFileAsync,
 };

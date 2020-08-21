@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 
+import { gitStatusAsync } from '../../git';
 import log from '../../log';
 import prompts from '../../prompts';
 import { Context } from '../context';
@@ -42,9 +43,10 @@ export async function updateAndroidCredentialsAsync(ctx: Context) {
   }
 
   const keystorePath =
-    rawCredentialsJsonObject?.android?.keystore?.keystorePath ?? './android/keystores/keystore.jks';
+    rawCredentialsJsonObject?.android?.keystore?.keystorePath ?? 'android/keystores/keystore.jks';
   log(`Writing Keystore to ${keystorePath}`);
   await updateFileAsync(ctx.projectDir, keystorePath, keystore.keystore);
+  const shouldWarnKeystore = await isFileUntrackedAsync(keystorePath);
 
   rawCredentialsJsonObject.android = {
     keystore: {
@@ -57,6 +59,16 @@ export async function updateAndroidCredentialsAsync(ctx: Context) {
   await fs.writeJson(credentialsJsonFilePath, rawCredentialsJsonObject, {
     spaces: 2,
   });
+  const shouldWarnCredentialsJson = await isFileUntrackedAsync('credentials.json');
+
+  const newFilePaths = [];
+  if (shouldWarnKeystore) {
+    newFilePaths.push(keystorePath);
+  }
+  if (shouldWarnCredentialsJson) {
+    newFilePaths.push('credentials.json');
+  }
+  displayUntrackedFilesWarning(newFilePaths);
 }
 
 export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: string) {
@@ -79,9 +91,9 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
     bundleIdentifier,
   };
   const pprofilePath =
-    rawCredentialsJsonObject?.ios?.provisioningProfilePath ?? './ios/certs/profile.mobileprovision';
+    rawCredentialsJsonObject?.ios?.provisioningProfilePath ?? 'ios/certs/profile.mobileprovision';
   const distCertPath =
-    rawCredentialsJsonObject?.ios?.distributionCertificate?.path ?? './ios/certs/dist-cert.p12';
+    rawCredentialsJsonObject?.ios?.distributionCertificate?.path ?? 'ios/certs/dist-cert.p12';
   const appCredentials = await ctx.ios.getAppCredentials(appLookupParams);
   const distCredentials = await ctx.ios.getDistCert(appLookupParams);
   if (!appCredentials?.credentials?.provisioningProfile && !distCredentials) {
@@ -113,8 +125,11 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
     pprofilePath,
     appCredentials?.credentials?.provisioningProfile
   );
+  const shouldWarnPProfile = await isFileUntrackedAsync(pprofilePath);
+
   log(`Writing Distribution Certificate to ${distCertPath}`);
   await updateFileAsync(ctx.projectDir, distCertPath, distCredentials?.certP12);
+  const shouldWarnDistCert = await isFileUntrackedAsync(distCertPath);
 
   rawCredentialsJsonObject.ios = {
     ...(appCredentials?.credentials?.provisioningProfile
@@ -132,6 +147,19 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
   await fs.writeJson(credentialsJsonFilePath, rawCredentialsJsonObject, {
     spaces: 2,
   });
+  const shouldWarnCredentialsJson = await isFileUntrackedAsync('credentials.json');
+
+  const newFilePaths = [];
+  if (shouldWarnPProfile) {
+    newFilePaths.push(pprofilePath);
+  }
+  if (shouldWarnDistCert) {
+    newFilePaths.push(distCertPath);
+  }
+  if (shouldWarnCredentialsJson) {
+    newFilePaths.push('credentials.json');
+  }
+  displayUntrackedFilesWarning(newFilePaths);
 }
 
 async function updateFileAsync(projectDir: string, filePath: string, base64Data?: string) {
@@ -142,5 +170,29 @@ async function updateFileAsync(projectDir: string, filePath: string, base64Data?
   if (base64Data) {
     await fs.mkdirp(path.dirname(filePath));
     await fs.writeFile(filePath, Buffer.from(base64Data, 'base64'));
+  }
+}
+
+async function isFileUntrackedAsync(path: string): Promise<boolean> {
+  const withUntrackedFiles = await gitStatusAsync({ showUntracked: true });
+  const trackedFiles = await gitStatusAsync({ showUntracked: false });
+  const pathWithoutLeadingDot = path.replace(/^\.\//, ''); // remove leading './' from path
+  return (
+    withUntrackedFiles.includes(pathWithoutLeadingDot) &&
+    !trackedFiles.includes(pathWithoutLeadingDot)
+  );
+}
+
+function displayUntrackedFilesWarning(newFilePaths: string[]) {
+  if (newFilePaths.length === 1) {
+    log.warn(
+      `File ${newFilePaths[0]} is currently untracked, remember to add it to .gitignore or to encrypt it. (e.g. with git-crypt)`
+    );
+  } else if (newFilePaths.length > 1) {
+    log.warn(
+      `Files ${newFilePaths.join(
+        ', '
+      )} are currently untracked, remember to add them to .gitignore or to encrypt them. (e.g. with git-crypt)`
+    );
   }
 }

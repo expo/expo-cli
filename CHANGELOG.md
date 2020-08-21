@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [expo-cli]: EAS Build: warn user when credentials are not git ignored ([#2482](https://github.com/expo/expo-cli/pull/2482)) by [@wkozyra95](https://github.com/wkozyra95)
+
 ### 🐛 Bug fixes
 
 ### 📦 Packages updated
