@@ -300,9 +300,8 @@ export default function (program: Command) {
       const sdkVersions = await Versions.sdkVersionsAsync();
       const latestSdk = await Versions.newestReleasedSdkVersionAsync();
       const currentSdk = sdkVersions[currentSdkVersion!];
-      const recommendedClient = currentSdk
-        ? ClientUpgradeUtils.getClient(currentSdk, 'ios')
-        : undefined;
+      const recommendedClient = ClientUpgradeUtils.getClient('ios', currentSdk);
+      const latestClient = ClientUpgradeUtils.getClient('ios', latestSdk.data);
 
       if (currentSdk && !recommendedClient) {
         log(
@@ -326,10 +325,12 @@ export default function (program: Command) {
         const answer = await prompt({
           type: 'confirm',
           name: 'upgradeToLatest',
-          message: 'Do you want to install the latest client?',
+          message: latestClient?.version
+            ? chalk`Do you want to install the latest client? {dim (${latestClient.version})}`
+            : 'Do you want to install the latest client?',
         });
         if (answer.upgradeToLatest) {
-          await Simulator.upgradeExpoAsync();
+          await Simulator.upgradeExpoAsync(latestClient?.url);
           log('Done!');
           return;
         }
@@ -350,7 +351,7 @@ export default function (program: Command) {
             : "It looks like we don't have a compatible client. Do you want to try the latest client?",
         });
         if (answer.updateToAClient) {
-          await Simulator.upgradeExpoAsync();
+          await Simulator.upgradeExpoAsync(latestClient?.url);
           log('Done!');
         } else {
           log('No client to install');
@@ -385,9 +386,8 @@ export default function (program: Command) {
       const sdkVersions = await Versions.sdkVersionsAsync();
       const latestSdk = await Versions.newestReleasedSdkVersionAsync();
       const currentSdk = sdkVersions[currentSdkVersion!];
-      const recommendedClient = currentSdk
-        ? ClientUpgradeUtils.getClient(currentSdk, 'android')
-        : undefined;
+      const recommendedClient = ClientUpgradeUtils.getClient('android', currentSdk);
+      const latestClient = ClientUpgradeUtils.getClient('android', latestSdk.data);
 
       if (currentSdk && !recommendedClient) {
         log(
@@ -411,10 +411,12 @@ export default function (program: Command) {
         const answer = await prompt({
           type: 'confirm',
           name: 'upgradeToLatest',
-          message: 'Do you want to install the latest client?',
+          message: latestClient?.version
+            ? chalk`Do you want to install the latest client? {dim (${latestClient.version})}`
+            : 'Do you want to install the latest client?',
         });
         if (answer.upgradeToLatest) {
-          await Android.upgradeExpoAsync();
+          await Android.upgradeExpoAsync(latestClient?.url);
           log('Done!');
           return;
         }
@@ -435,7 +437,7 @@ export default function (program: Command) {
             : "It looks like we don't have a compatible client. Do you want to try the latest client?",
         });
         if (answer.updateToAClient) {
-          await Android.upgradeExpoAsync();
+          await Android.upgradeExpoAsync(latestClient?.url);
           log('Done!');
         } else {
           log('No client to install');
