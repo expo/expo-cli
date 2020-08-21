@@ -2,7 +2,7 @@ import merge from 'lodash/merge';
 import { vol } from 'memfs';
 
 import { mockExpoXDL } from '../../../../__tests__/mock-utils';
-import { provisioningProfileBase64 } from '../../../../credentials/utils/__tests__/tests-fixtures';
+import { testProvisioningProfileBase64 } from '../../../../credentials/test-fixtures/mock-base64-data';
 import { BuildCommandPlatform } from '../../types';
 import buildAction from '../action';
 
@@ -83,8 +83,8 @@ const keystore = {
 };
 
 const pprofile = {
-  content: Buffer.from(provisioningProfileBase64, 'base64'),
-  base64: provisioningProfileBase64,
+  content: Buffer.from(testProvisioningProfileBase64, 'base64'),
+  base64: testProvisioningProfileBase64,
 };
 
 const cert = {

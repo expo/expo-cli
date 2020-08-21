@@ -1,11 +1,10 @@
 import IosApi from '../api/IosApi';
-import { jester, jester2 } from '../test-fixtures/mocks-constants';
+import { jester, jester2, testAppLookupParams } from '../test-fixtures/mocks-constants';
 import {
   getApiV2WrapperMock,
   testAllCredentials,
   testAllCredentialsForApp,
   testAppCredential,
-  testAppLookupParams,
   testDistCert,
   testIosDistCredential,
   testIosPushCredential,

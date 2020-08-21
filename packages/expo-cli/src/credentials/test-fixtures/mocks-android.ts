@@ -1,7 +1,7 @@
 import merge from 'lodash/merge';
 
 import { AndroidCredentials } from '../credentials';
-import { testKeystore2Base64, testKeystoreBase64 } from './mock-keystore';
+import { testKeystore2Base64, testKeystoreBase64 } from './mock-base64-data';
 import { testExperienceName, testJester2ExperienceName } from './mocks-constants';
 
 export const testKeystore = {

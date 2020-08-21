@@ -1,6 +1,6 @@
+import { testAppLookupParams } from '../../test-fixtures/mocks-constants';
 import { getCtxMock } from '../../test-fixtures/mocks-context';
 import {
-  testAppLookupParams,
   testProvisioningProfiles,
   testProvisioningProfilesFromApple,
 } from '../../test-fixtures/mocks-ios';
