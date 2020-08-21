@@ -18,7 +18,11 @@ import { Build, BuildCommandPlatform, BuildStatus } from '../types';
 import AndroidBuilder from './builders/AndroidBuilder';
 import iOSBuilder from './builders/iOSBuilder';
 import { Builder, BuilderContext } from './types';
-import { ensureGitStatusIsCleanAsync, makeProjectTarballAsync } from './utils/git';
+import {
+  ensureGitRepoExists,
+  ensureGitStatusIsCleanAsync,
+  makeProjectTarballAsync,
+} from './utils/git';
 import { printBuildResults, printLogsUrls } from './utils/misc';
 
 interface BuildOptions {
@@ -44,6 +48,7 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
     );
   }
 
+  await ensureGitRepoExists();
   await ensureGitStatusIsCleanAsync();
 
   const easConfig: EasConfig = await new EasJsonReader(projectDir, platform).readAsync(profile);

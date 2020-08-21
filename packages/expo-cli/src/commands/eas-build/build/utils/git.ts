@@ -1,11 +1,59 @@
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import ora from 'ora';
+import which from 'which';
 
 import CommandError from '../../../../CommandError';
 import { gitDiffAsync, gitStatusAsync } from '../../../../git';
 import log from '../../../../log';
 import prompts from '../../../../prompts';
+
+async function ensureGitRepoExists(): Promise<void> {
+  const gitFound = which.sync('git', { nothrow: true });
+  if (!gitFound) {
+    throw new Error('git command has not been found, install it before proceeding');
+  }
+
+  if (await doesGitRepoExist()) {
+    return;
+  }
+
+  log(log.chalk.yellow("It looks like you haven't initialized the git repository yet."));
+  log(log.chalk.yellow('EAS Build require you to use a git repository for your project.'));
+
+  const { confirmInit } = await prompts({
+    type: 'confirm',
+    name: 'confirmInit',
+    message: `Would you like to run 'git init' in the current directory?`,
+  });
+  if (!confirmInit) {
+    throw new Error(
+      'A git repository is required for building your project. Initialize it and run this command again.'
+    );
+  }
+  await spawnAsync('git', ['init']);
+
+  log("We're going to make an initial commit for you repository.");
+
+  const { message } = await prompts({
+    type: 'text',
+    name: 'message',
+    message: 'Commit message:',
+    initial: 'Initial commit',
+    validate: input => input !== '',
+  });
+  await spawnAsync('git', ['add', '-A']);
+  await spawnAsync('git', ['commit', '-m', message]);
+}
+
+async function doesGitRepoExist(): Promise<boolean> {
+  try {
+    await spawnAsync('git', ['rev-parse', '--git-dir']);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
 
 async function ensureGitStatusIsCleanAsync(): Promise<void> {
   const changes = await gitStatusAsync();
@@ -75,6 +123,7 @@ async function reviewAndCommitChangesAsync(
 
 export {
   DirtyGitTreeError,
+  ensureGitRepoExists,
   ensureGitStatusIsCleanAsync,
   makeProjectTarballAsync,
   reviewAndCommitChangesAsync,
