@@ -106,9 +106,11 @@ export class Context {
     this._nonInteractive = options.nonInteractive;
 
     // Check if we are in project context by looking for a manifest
-    const status = await Doctor.validateWithoutNetworkAsync(projectDir);
+    const status = await Doctor.validateWithoutNetworkAsync(projectDir, {
+      skipSDKVersionRequirement: true,
+    });
     if (status !== Doctor.FATAL) {
-      const { exp } = getConfig(projectDir);
+      const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
       this._manifest = exp;
       this._hasProjectContext = true;
       this.logOwnerAndProject();

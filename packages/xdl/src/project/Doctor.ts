@@ -158,7 +158,8 @@ async function _validateExpJsonAsync(
   exp: ExpoConfig,
   pkg: PackageJSONConfig,
   projectRoot: string,
-  allowNetwork: boolean
+  allowNetwork: boolean,
+  skipSDKVersionRequirement: boolean | undefined
 ): Promise<number> {
   if (!exp || !pkg) {
     // getConfig already logged an error
@@ -203,7 +204,7 @@ async function _validateExpJsonAsync(
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-versions-endpoint-failed');
 
-  if (!sdkVersion || !sdkVersions[sdkVersion]) {
+  if (!skipSDKVersionRequirement && (!sdkVersion || !sdkVersions[sdkVersion])) {
     ProjectUtils.logError(
       projectRoot,
       'expo',
@@ -215,7 +216,7 @@ async function _validateExpJsonAsync(
   ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-sdk-version');
 
   // Skip validation if the correct token is set in env
-  if (sdkVersion !== 'UNVERSIONED') {
+  if (sdkVersion && sdkVersion !== 'UNVERSIONED') {
     try {
       const schema = await ExpSchema.getSchemaAsync(sdkVersion);
       const { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
@@ -253,16 +254,18 @@ async function _validateExpJsonAsync(
     }
   }
 
-  const reactNativeIssue = await _validateReactNativeVersionAsync(
-    exp,
-    pkg,
-    projectRoot,
-    sdkVersions,
-    sdkVersion
-  );
+  if (sdkVersion) {
+    const reactNativeIssue = await _validateReactNativeVersionAsync(
+      exp,
+      pkg,
+      projectRoot,
+      sdkVersions,
+      sdkVersion
+    );
 
-  if (reactNativeIssue !== NO_ISSUES) {
-    return reactNativeIssue;
+    if (reactNativeIssue !== NO_ISSUES) {
+      return reactNativeIssue;
+    }
   }
 
   // TODO: Check any native module versions here
@@ -409,15 +412,25 @@ async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
   return NO_ISSUES;
 }
 
-export async function validateWithoutNetworkAsync(projectRoot: string): Promise<number> {
-  return validateAsync(projectRoot, false);
+export async function validateWithoutNetworkAsync(
+  projectRoot: string,
+  options: { skipSDKVersionRequirement?: boolean } = {}
+): Promise<number> {
+  return validateAsync(projectRoot, false, options.skipSDKVersionRequirement);
 }
 
-export async function validateWithNetworkAsync(projectRoot: string): Promise<number> {
-  return validateAsync(projectRoot, true);
+export async function validateWithNetworkAsync(
+  projectRoot: string,
+  options: { skipSDKVersionRequirement?: boolean } = {}
+): Promise<number> {
+  return validateAsync(projectRoot, true, options.skipSDKVersionRequirement);
 }
 
-async function validateAsync(projectRoot: string, allowNetwork: boolean): Promise<number> {
+async function validateAsync(
+  projectRoot: string,
+  allowNetwork: boolean,
+  skipSDKVersionRequirement: boolean | undefined
+): Promise<number> {
   if (getenv.boolish('EXPO_NO_DOCTOR', false)) {
     return NO_ISSUES;
   }
@@ -426,6 +439,7 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
   try {
     const config = getConfig(projectRoot, {
       strict: true,
+      skipSDKVersionRequirement,
     });
     exp = config.exp;
     pkg = config.pkg;
@@ -445,7 +459,13 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
     return status;
   }
 
-  const expStatus = await _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork);
+  const expStatus = await _validateExpJsonAsync(
+    exp,
+    pkg,
+    projectRoot,
+    allowNetwork,
+    skipSDKVersionRequirement
+  );
   if (expStatus === FATAL) {
     return expStatus;
   }
