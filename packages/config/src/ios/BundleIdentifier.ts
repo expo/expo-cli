@@ -8,12 +8,8 @@ import { ExpoConfig } from '../Config.types';
 import { InfoPlist } from './IosConfig.types';
 import {
   ConfigurationSectionEntry,
-  Pbxproj,
-  getXCBuildConfigurationSection,
-  getXCConfigurationLists,
-  isBuildConfig,
-  isNotComment,
-  isNotTestHost,
+  findFirstNativeTarget,
+  getBuildConfigurationForId,
 } from './utils/Xcodeproj';
 
 function getBundleIdentifier(config: ExpoConfig): string | null {
@@ -56,10 +52,25 @@ function getBundleIdentifierFromPbxproj(projectRoot: string): string | null {
   }
   const project = Project(pbxprojPath);
   project.parseSync();
-  for (const [, item] of getBuildConfigurationSectionEntires(project)) {
-    const bundleIdentifier = item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER;
-    if (bundleIdentifier) {
-      return bundleIdentifier[0] === '"' ? bundleIdentifier.slice(1, -1) : bundleIdentifier;
+
+  const nativeTarget = findFirstNativeTarget(project);
+
+  for (const [, item] of getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)) {
+    const bundleIdentifierRaw = item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER;
+    if (bundleIdentifierRaw) {
+      const bundleIdentifier =
+        bundleIdentifierRaw[0] === '"' ? bundleIdentifierRaw.slice(1, -1) : bundleIdentifierRaw;
+      const bundleIdentifierParts = bundleIdentifier.split('.');
+      if (
+        bundleIdentifierParts[bundleIdentifierParts.length - 1] ===
+          '$(PRODUCT_NAME:rfc1034identifier)' &&
+        item.buildSettings.PRODUCT_NAME
+      ) {
+        bundleIdentifierParts[
+          bundleIdentifierParts.length - 1
+        ] = item.buildSettings.PRODUCT_NAME.replace(/[^a-zA-Z0-9]/g, '-');
+      }
+      return bundleIdentifierParts.join('.');
     }
   }
   return null;
@@ -79,32 +90,26 @@ function updateBundleIdentifierForPbxproj(
 ): void {
   const project = Project(pbxprojPath);
   project.parseSync();
-  getBuildConfigurationSectionEntires(project).forEach(([, item]: ConfigurationSectionEntry) => {
-    if (item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER === bundleIdentifier) {
-      return;
-    }
 
-    item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER = `"${bundleIdentifier}"`;
+  const nativeTarget = findFirstNativeTarget(project);
 
-    if (updateProductName) {
-      const productName = bundleIdentifier.split('.').pop();
-      if (!productName?.includes('$')) {
-        item.buildSettings.PRODUCT_NAME = productName;
+  getBuildConfigurationForId(project, nativeTarget.buildConfigurationList).forEach(
+    ([, item]: ConfigurationSectionEntry) => {
+      if (item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER === bundleIdentifier) {
+        return;
+      }
+
+      item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER = `"${bundleIdentifier}"`;
+
+      if (updateProductName) {
+        const productName = bundleIdentifier.split('.').pop();
+        if (!productName?.includes('$')) {
+          item.buildSettings.PRODUCT_NAME = productName;
+        }
       }
     }
-  });
+  );
   fs.writeFileSync(pbxprojPath, project.writeSync());
-}
-
-function getBuildConfigurationSectionEntires(project: Pbxproj): ConfigurationSectionEntry[] {
-  const configurationLists = getXCConfigurationLists(project);
-  const buildConfigurations = configurationLists[0].buildConfigurations.map(i => i.value);
-
-  return Object.entries(getXCBuildConfigurationSection(project))
-    .filter(isNotComment)
-    .filter(isBuildConfig)
-    .filter(isNotTestHost)
-    .filter(([key]: ConfigurationSectionEntry) => buildConfigurations.includes(key));
 }
 
 /**
