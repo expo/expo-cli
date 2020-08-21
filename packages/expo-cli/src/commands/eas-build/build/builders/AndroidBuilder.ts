@@ -14,6 +14,7 @@ import {
   AndroidManagedBuildProfile,
   Workflow,
 } from '../../../../easJson';
+import { gitAddAsync } from '../../../../git';
 import log from '../../../../log';
 import { ensureCredentialsAsync } from '../credentials';
 import gradleContent from '../templates/gradleContent';
@@ -69,7 +70,7 @@ class AndroidBuilder implements Builder {
     const easGradlePath = path.join(androidAppDir, 'eas-build.gradle');
 
     await fs.writeFile(easGradlePath, gradleContent);
-    await gitUtils.addFileAsync(easGradlePath, { intentToAdd: true });
+    await gitAddAsync(easGradlePath, { intentToAdd: true });
 
     const buildGradleContent = await fs.readFile(path.join(buildGradlePath), 'utf-8');
     const applyEasGradle = 'apply from: "./eas-build.gradle"';

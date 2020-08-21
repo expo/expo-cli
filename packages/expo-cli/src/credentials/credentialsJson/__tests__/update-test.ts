@@ -74,7 +74,7 @@ describe('update credentials.json', () => {
       expect(credJson).toEqual({
         android: {
           keystore: {
-            keystorePath: './android/keystores/keystore.jks',
+            keystorePath: 'android/keystores/keystore.jks',
             keystorePassword: testKeystore.keystorePassword,
             keyAlias: testKeystore.keyAlias,
             keyPassword: testKeystore.keyPassword,
@@ -120,7 +120,7 @@ describe('update credentials.json', () => {
       expect(credJson).toEqual({
         android: {
           keystore: {
-            keystorePath: './android/keystores/keystore.jks',
+            keystorePath: 'android/keystores/keystore.jks',
             keystorePassword: testKeystore.keystorePassword,
             keyAlias: testKeystore.keyAlias,
             keyPassword: testKeystore.keyPassword,
@@ -208,9 +208,9 @@ describe('update credentials.json', () => {
       expect(pprofile).toEqual(testAllCredentialsForApp.credentials.provisioningProfile);
       expect(credJson).toEqual({
         ios: {
-          provisioningProfilePath: './ios/certs/profile.mobileprovision',
+          provisioningProfilePath: 'ios/certs/profile.mobileprovision',
           distributionCertificate: {
-            path: './ios/certs/dist-cert.p12',
+            path: 'ios/certs/dist-cert.p12',
             password: testAllCredentialsForApp.distCredentials.certPassword,
           },
         },

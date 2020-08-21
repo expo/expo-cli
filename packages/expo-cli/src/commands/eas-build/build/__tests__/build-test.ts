@@ -36,6 +36,7 @@ jest.mock('../../../../projects', () => {
   };
 });
 jest.mock('../utils/git');
+jest.mock('../../../../git');
 jest.mock('../../../../uploads', () => ({
   UploadType: {},
   uploadAsync: () => mockProjectUrl,
