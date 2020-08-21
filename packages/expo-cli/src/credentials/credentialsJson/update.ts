@@ -60,10 +60,14 @@ export async function updateAndroidCredentialsAsync(ctx: Context) {
     spaces: 2,
   });
   const shouldWarnCredentialsJson = await isFileUntrackedAsync('credentials.json');
-  const newFilePaths = [
-    shouldWarnKeystore && keystorePath,
-    shouldWarnCredentialsJson && 'credentials.json',
-  ].filter(i => i);
+
+  const newFilePaths = [];
+  if (shouldWarnKeystore) {
+    newFilePaths.push(keystorePath);
+  }
+  if (shouldWarnCredentialsJson) {
+    newFilePaths.push('credentials.json');
+  }
   displayUntrackedFilesWarning(newFilePaths);
 }
 
@@ -145,11 +149,16 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
   });
   const shouldWarnCredentialsJson = await isFileUntrackedAsync('credentials.json');
 
-  const newFilePaths = [
-    shouldWarnPProfile && pprofilePath,
-    shouldWarnDistCert && distCertPath,
-    shouldWarnCredentialsJson && 'credentials.json',
-  ].filter(i => i);
+  const newFilePaths = [];
+  if (shouldWarnPProfile) {
+    newFilePaths.push(pprofilePath);
+  }
+  if (shouldWarnDistCert) {
+    newFilePaths.push(distCertPath);
+  }
+  if (shouldWarnCredentialsJson) {
+    newFilePaths.push('credentials.json');
+  }
   displayUntrackedFilesWarning(newFilePaths);
 }
 
@@ -167,23 +176,23 @@ async function updateFileAsync(projectDir: string, filePath: string, base64Data?
 async function isFileUntrackedAsync(path: string): Promise<boolean> {
   const withUntrackedFiles = await gitStatusAsync({ showUntracked: true });
   const trackedFiles = await gitStatusAsync({ showUntracked: false });
-  const pathWithouLeadingDot = path.replace(/^\.\//, ''); // remove leading './' from path
+  const pathWithoutLeadingDot = path.replace(/^\.\//, ''); // remove leading './' from path
   return (
-    withUntrackedFiles.includes(pathWithouLeadingDot) &&
-    !trackedFiles.includes(pathWithouLeadingDot)
+    withUntrackedFiles.includes(pathWithoutLeadingDot) &&
+    !trackedFiles.includes(pathWithoutLeadingDot)
   );
 }
 
 function displayUntrackedFilesWarning(newFilePaths: string[]) {
   if (newFilePaths.length === 1) {
     log.warn(
-      `File ${newFilePaths[0]} is currently untracked, remember to add it to .gitignore or to encrypt it.`
+      `File ${newFilePaths[0]} is currently untracked, remember to add it to .gitignore or to encrypt it. (e.g. with git-crypt)`
     );
   } else if (newFilePaths.length > 1) {
     log.warn(
       `Files ${newFilePaths.join(
         ', '
-      )} are currently untracked, remember to add them to .gitignore or to encrypt them.`
+      )} are currently untracked, remember to add them to .gitignore or to encrypt them. (e.g. with git-crypt)`
     );
   }
 }
