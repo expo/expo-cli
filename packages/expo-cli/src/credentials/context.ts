@@ -110,7 +110,7 @@ export class Context {
       skipSDKVersionRequirement: true,
     });
     if (status !== Doctor.FATAL) {
-      const { exp } = getConfig(projectDir);
+      const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
       this._manifest = exp;
       this._hasProjectContext = true;
       this.logOwnerAndProject();
