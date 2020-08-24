@@ -139,11 +139,12 @@ export async function setIconsAsync(config: ExpoConfig, projectRoot: string) {
               name: filename,
               width: iconSizePx,
               height: iconSizePx,
+              removeTransparency: true,
               // The icon should be square, but if it's not then it will be cropped.
               resizeMode: 'cover',
               // Force the background color to solid white to prevent any transparency.
               // TODO: Maybe use a more adaptive option based on the icon color?
-              backgroundColor: '#FFFFFF',
+              backgroundColor: '#ffffff',
             }
           );
           // Write image buffer to the file system.

@@ -7,6 +7,7 @@ export type ImageOptions = {
   name?: string;
   resizeMode: ResizeMode;
   backgroundColor: string;
+  removeTransparency?: boolean;
   width: number;
   height: number;
   padding?: number;
