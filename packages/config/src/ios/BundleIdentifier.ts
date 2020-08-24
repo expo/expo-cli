@@ -60,6 +60,10 @@ function getBundleIdentifierFromPbxproj(projectRoot: string): string | null {
     if (bundleIdentifierRaw) {
       const bundleIdentifier =
         bundleIdentifierRaw[0] === '"' ? bundleIdentifierRaw.slice(1, -1) : bundleIdentifierRaw;
+      // it's possible to use interpolation for the bundle identifier
+      // the most common case is when the last part of the id is set to `$(PRODUCT_NAME:rfc1034identifier)`
+      // in this case, PRODUCT_NAME should be replaced with its value
+      // the `rfc1034identifier` modifier replaces all non-alphanumeric characters with dashes
       const bundleIdentifierParts = bundleIdentifier.split('.');
       if (
         bundleIdentifierParts[bundleIdentifierParts.length - 1] ===

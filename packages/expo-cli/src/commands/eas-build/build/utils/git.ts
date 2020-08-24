@@ -4,22 +4,22 @@ import ora from 'ora';
 import which from 'which';
 
 import CommandError from '../../../../CommandError';
-import { gitDiffAsync, gitStatusAsync } from '../../../../git';
+import { gitDiffAsync, gitDoesRepoExistAsync, gitStatusAsync } from '../../../../git';
 import log from '../../../../log';
 import prompts from '../../../../prompts';
 
-async function ensureGitRepoExists(): Promise<void> {
+async function ensureGitRepoExistsAsync(): Promise<void> {
   const gitFound = which.sync('git', { nothrow: true });
   if (!gitFound) {
     throw new Error('git command has not been found, install it before proceeding');
   }
 
-  if (await doesGitRepoExist()) {
+  if (await gitDoesRepoExistAsync()) {
     return;
   }
 
   log(log.chalk.yellow("It looks like you haven't initialized the git repository yet."));
-  log(log.chalk.yellow('EAS Build require you to use a git repository for your project.'));
+  log(log.chalk.yellow('EAS Build requires you to use a git repository for your project.'));
 
   const { confirmInit } = await prompts({
     type: 'confirm',
@@ -44,15 +44,6 @@ async function ensureGitRepoExists(): Promise<void> {
   });
   await spawnAsync('git', ['add', '-A']);
   await spawnAsync('git', ['commit', '-m', message]);
-}
-
-async function doesGitRepoExist(): Promise<boolean> {
-  try {
-    await spawnAsync('git', ['rev-parse', '--git-dir']);
-    return true;
-  } catch (err) {
-    return false;
-  }
 }
 
 async function ensureGitStatusIsCleanAsync(): Promise<void> {
@@ -123,7 +114,7 @@ async function reviewAndCommitChangesAsync(
 
 export {
   DirtyGitTreeError,
-  ensureGitRepoExists,
+  ensureGitRepoExistsAsync,
   ensureGitStatusIsCleanAsync,
   makeProjectTarballAsync,
   reviewAndCommitChangesAsync,
