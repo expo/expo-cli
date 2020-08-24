@@ -58,7 +58,7 @@ async function maybeStartEmulatorAsync(name: string): Promise<void> {
   Logger.global.info(`\u203A Attempting to open emulator named: ${name}`);
 
   // Start a process to open an emulator
-  const emulatorProcess = child_process.spawn(whichEmulator(), [`@${name}`], {
+  const emulatorProcess = child_process.spawn(whichEmulator(), [`"@${name}"`], {
     stdio: 'ignore',
     detached: true,
   });
