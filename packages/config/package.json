@@ -34,6 +34,7 @@
   "dependencies": {
     "@babel/register": "^7.8.3",
     "@expo/babel-preset-cli": "0.2.17",
+    "@expo/image-utils": "0.3.1",
     "@expo/json-file": "8.2.22",
     "@expo/plist": "0.0.9",
     "fs-extra": "9.0.0",
