@@ -10,6 +10,12 @@ jest.mock('../../../../../credentials/context', () => {
     })),
   };
 });
+jest.mock('@expo/image-utils', () => ({
+  generateImageAsync(input, { src }) {
+    const fs = require('fs');
+    return { source: fs.readFileSync(src) };
+  },
+}));
 
 const credentialsJson = {
   ios: {

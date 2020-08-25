@@ -4,6 +4,12 @@ import { vol } from 'memfs';
 import { findProjectRootAsync } from '../ProjectUtils';
 
 jest.mock('fs');
+jest.mock('@expo/image-utils', () => ({
+  generateImageAsync(input, { src }) {
+    const fs = require('fs');
+    return { source: fs.readFileSync(src) };
+  },
+}));
 
 const basicPackageJson = {
   name: 'testing123',
