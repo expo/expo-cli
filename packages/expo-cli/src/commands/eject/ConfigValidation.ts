@@ -17,7 +17,7 @@ function validatePackage(value: string): boolean {
 }
 
 export async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<string> {
-  const { exp } = getConfig(projectRoot);
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   const currentBundleId = exp.ios?.bundleIdentifier;
   if (currentBundleId) {
@@ -90,7 +90,7 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
 }
 
 export async function getOrPromptForPackage(projectRoot: string): Promise<string> {
-  const { exp } = getConfig(projectRoot);
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   const currentPackage = exp.android?.package;
   if (currentPackage) {
