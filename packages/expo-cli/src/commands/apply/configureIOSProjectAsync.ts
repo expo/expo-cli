@@ -1,4 +1,5 @@
 import { IOSConfig, WarningAggregator, getConfig } from '@expo/config';
+import { getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
 import { IosPlist, UserManager } from '@expo/xdl';
 import path from 'path';
 
@@ -106,14 +107,23 @@ function sanitizedName(name: string) {
 // placeholder for now! Make this more robust when we support applying config
 // at any time (currently it's only applied on eject).
 function getIOSPaths(projectRoot: string) {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  let projectName: string | null = null;
 
-  const projectName = exp.name;
-  if (!projectName) {
-    throw new Error('Your project needs a name in app.json/app.config.js.');
+  // Attempt to get the current ios folder name (apply).
+  try {
+    projectName = getProjectName(projectRoot);
+  } catch {
+    // If no iOS project exists then create a new one (eject).
+    const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+
+    projectName = exp.name;
+    if (!projectName) {
+      throw new Error('Your project needs a name in app.json/app.config.js.');
+    }
+    projectName = sanitizedName(projectName);
   }
 
-  const iosProjectDirectory = path.join(projectRoot, 'ios', sanitizedName(projectName));
+  const iosProjectDirectory = path.join(projectRoot, 'ios', projectName);
   const iconPath = path.join(iosProjectDirectory, 'Assets.xcassets', 'AppIcon.appiconset');
 
   return {
