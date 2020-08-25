@@ -77,9 +77,14 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
     }
   );
 
-  await attemptModification(projectRoot, `Your iOS bundle identifier is now: ${bundleIdentifier}`, {
-    ios: { bundleIdentifier },
-  });
+  await attemptModification(
+    projectRoot,
+    `Your iOS bundle identifier is now: ${bundleIdentifier}`,
+    {
+      ios: { ...(exp.ios || {}), bundleIdentifier },
+    },
+    { ios: { bundleIdentifier } }
+  );
 
   return bundleIdentifier;
 }
@@ -142,9 +147,16 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
     }
   );
 
-  await attemptModification(projectRoot, `Your Android package is now: ${packageName}`, {
-    android: { package: packageName },
-  });
+  await attemptModification(
+    projectRoot,
+    `Your Android package is now: ${packageName}`,
+    {
+      android: { ...(exp.android || {}), package: packageName },
+    },
+    {
+      android: { package: packageName },
+    }
+  );
 
   return packageName;
 }
@@ -152,7 +164,8 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
 async function attemptModification(
   projectRoot: string,
   modificationSuccessMessage: string,
-  edits: Partial<ExpoConfig>
+  edits: Partial<ExpoConfig>,
+  exactEdits: Partial<ExpoConfig>
 ): Promise<void> {
   const modification = await modifyConfigAsync(projectRoot, edits, {
     skipSDKVersionRequirement: true,
@@ -162,7 +175,7 @@ async function attemptModification(
     log(modificationSuccessMessage);
     log.newLine();
   } else {
-    warnAboutConfigAndExit(modification.type, modification.message!, edits);
+    warnAboutConfigAndExit(modification.type, modification.message!, exactEdits);
   }
 }
 

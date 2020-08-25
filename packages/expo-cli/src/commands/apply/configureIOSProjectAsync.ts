@@ -2,11 +2,16 @@ import { IOSConfig, WarningAggregator, getConfig } from '@expo/config';
 import { IosPlist, UserManager } from '@expo/xdl';
 import path from 'path';
 
+import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
+
 export default async function configureIOSProjectAsync(projectRoot: string) {
+  // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
+  const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
+  IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, bundleIdentifier);
+
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const username = await UserManager.getCurrentUsernameAsync();
 
-  IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, exp.ios!.bundleIdentifier!);
   IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
   IOSConfig.DeviceFamily.setDeviceFamily(exp, projectRoot);
 
