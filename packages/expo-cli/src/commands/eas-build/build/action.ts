@@ -1,5 +1,6 @@
 import { getConfig } from '@expo/config';
 import { ApiV2, User, UserManager } from '@expo/xdl';
+import { build } from '@hapi/joi';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';

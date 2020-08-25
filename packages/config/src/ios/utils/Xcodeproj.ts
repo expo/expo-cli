@@ -41,6 +41,14 @@ export function addFileToGroup(filepath: string, groupName: string, project: Pro
   return project;
 }
 
+export function findSchemeNames(projectRoot: string): string[] {
+  const schemePaths = globSync('ios/*.xcodeproj/xcshareddata/xcschemes/*.xcscheme', {
+    absolute: true,
+    cwd: projectRoot,
+  });
+  return schemePaths.map(schemePath => path.basename(schemePath).split('.')[0]);
+}
+
 /**
  * Get the pbxproj for the given path
  */
