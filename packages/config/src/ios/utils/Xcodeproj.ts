@@ -11,11 +11,15 @@ export function getProjectName(projectRoot: string) {
   return path.basename(sourceRoot);
 }
 
-export function getSourceRoot(projectRoot: string) {
-  const paths = globSync('ios/*/AppDelegate.m', {
+export function getSourceRoot(projectRoot: string): string {
+  // Account for Swift or Objective-C
+  const paths = globSync('ios/*/AppDelegate.*', {
     absolute: true,
     cwd: projectRoot,
   });
+  if (!paths.length) {
+    throw new Error(`Could not locate a valid iOS project at root: ${projectRoot}`);
+  }
   return path.dirname(paths[0]);
 }
 

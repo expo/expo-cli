@@ -44,6 +44,12 @@ jest.mock('commander', () => {
 jest.mock('../../../credentials/api/IosApiV2Wrapper', () => {
   return jest.fn(() => mockIosCredentialsApi);
 });
+jest.mock('@expo/image-utils', () => ({
+  generateImageAsync(input, { src }) {
+    const fs = require('fs');
+    return { source: fs.readFileSync(src) };
+  },
+}));
 
 const mockedXDLModules = {
   UserManager: {

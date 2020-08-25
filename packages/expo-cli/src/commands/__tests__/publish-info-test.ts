@@ -7,6 +7,12 @@ import { getPublicationDetailAsync, getPublishHistoryAsync } from '../utils/Publ
 
 jest.mock('fs');
 jest.mock('resolve-from');
+jest.mock('@expo/image-utils', () => ({
+  generateImageAsync(input, { src }) {
+    const fs = require('fs');
+    return { source: fs.readFileSync(src) };
+  },
+}));
 
 mockExpoXDL({
   UserManager: {
