@@ -1,7 +1,7 @@
 import spawnAsync from '@expo/spawn-async';
+import commandExists from 'command-exists';
 import fs from 'fs-extra';
 import ora from 'ora';
-import which from 'which';
 
 import CommandError from '../../../../CommandError';
 import { gitDiffAsync, gitDoesRepoExistAsync, gitStatusAsync } from '../../../../git';
@@ -9,8 +9,9 @@ import log from '../../../../log';
 import prompts from '../../../../prompts';
 
 async function ensureGitRepoExistsAsync(): Promise<void> {
-  const gitFound = which.sync('git', { nothrow: true });
-  if (!gitFound) {
+  try {
+    await commandExists('git');
+  } catch (err) {
     throw new Error('git command has not been found, install it before proceeding');
   }
 
