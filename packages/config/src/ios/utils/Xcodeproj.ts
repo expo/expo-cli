@@ -11,11 +11,15 @@ export function getProjectName(projectRoot: string) {
   return path.basename(sourceRoot);
 }
 
-export function getSourceRoot(projectRoot: string) {
-  const paths = globSync('ios/*/AppDelegate.m', {
+export function getSourceRoot(projectRoot: string): string {
+  // Account for Swift or Objective-C
+  const paths = globSync('ios/*/AppDelegate.*', {
     absolute: true,
     cwd: projectRoot,
   });
+  if (!paths.length) {
+    throw new Error(`Could not locate a valid iOS project at root: ${projectRoot}`);
+  }
   return path.dirname(paths[0]);
 }
 
@@ -133,11 +137,35 @@ export type ProjectSectionItem = {
   targets: {
     value: string;
   }[];
+  buildConfigurationList: string;
 };
 export type ProjectSectionEntry = [string, ProjectSectionItem];
 
 export function getProjectSection(project: Pbxproj): ProjectSection {
   return project.pbxProjectSection();
+}
+
+export type NativeTargetSection = Record<string, NativeTargetSectionItem>;
+export type NativeTargetSectionItem = {
+  isa: 'PBXNativeTarget';
+  buildConfigurationList: string;
+};
+export type NativeTargetSectionEntry = [string, NativeTargetSectionItem];
+
+export function getNativeTargets(project: Pbxproj): NativeTargetSectionEntry[] {
+  const section = project.pbxNativeTargetSection() as NativeTargetSection;
+  return Object.entries(section).filter(isNotComment);
+}
+
+export function findFirstNativeTarget(project: Pbxproj): NativeTargetSectionItem {
+  const { targets } = Object.values(getProjectSection(project))[0];
+  const target = targets[0].value;
+
+  const nativeTargets = getNativeTargets(project);
+  const nativeTarget = (nativeTargets.find(
+    ([key]) => key === target
+  ) as NativeTargetSectionEntry)[1];
+  return nativeTarget;
 }
 
 export type ConfigurationLists = Record<string, ConfigurationList>;
@@ -147,13 +175,11 @@ export type ConfigurationList = {
     value: string;
   }[];
 };
-export type ConfigurationListsEntry = [string, ConfigurationList];
+export type ConfigurationListEntry = [string, ConfigurationList];
 
-export function getXCConfigurationLists(project: Pbxproj): ConfigurationList[] {
+export function getXCConfigurationListEntries(project: Pbxproj): ConfigurationListEntry[] {
   const lists = project.pbxXCConfigurationList() as ConfigurationLists;
-  return Object.entries(lists)
-    .filter(isNotComment)
-    .map(([, value]) => value);
+  return Object.entries(lists).filter(isNotComment);
 }
 
 export type ConfigurationSection = Record<string, ConfigurationSectionItem>;
@@ -175,6 +201,24 @@ export function getXCBuildConfigurationSection(project: Pbxproj): ConfigurationS
   return project.pbxXCBuildConfigurationSection();
 }
 
+export function getBuildConfigurationForId(
+  project: Pbxproj,
+  configurationListId: string
+): ConfigurationSectionEntry[] {
+  const configurationListEntries = getXCConfigurationListEntries(project);
+  const [, configurationList] = configurationListEntries.find(
+    ([key]) => key === configurationListId
+  ) as ConfigurationListEntry;
+
+  const buildConfigurations = configurationList.buildConfigurations.map(i => i.value);
+
+  return Object.entries(getXCBuildConfigurationSection(project))
+    .filter(isNotComment)
+    .filter(isBuildConfig)
+    .filter(isNotTestHost)
+    .filter(([key]: ConfigurationSectionEntry) => buildConfigurations.includes(key));
+}
+
 export function isBuildConfig([, sectionItem]: ConfigurationSectionEntry): boolean {
   return sectionItem.isa === 'XCBuildConfiguration';
 }
@@ -186,6 +230,7 @@ export function isNotTestHost([, sectionItem]: ConfigurationSectionEntry): boole
 export function isNotComment([key]:
   | ConfigurationSectionEntry
   | ProjectSectionEntry
-  | ConfigurationListsEntry): boolean {
+  | ConfigurationListEntry
+  | NativeTargetSectionEntry): boolean {
   return !key.endsWith(`_comment`);
 }

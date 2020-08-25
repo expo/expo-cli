@@ -66,7 +66,10 @@ async function _callMethodAsync(
     headers['Exp-Skip-Manifest-Validation-Token'] = skipValidationToken;
   }
 
-  if (session) {
+  // Handle auth method, prioritizing authorization tokens before session secrets
+  if (session?.accessToken) {
+    headers['Authorization'] = `Bearer ${session.accessToken}`;
+  } else if (session?.sessionSecret) {
     headers['Expo-Session'] = session.sessionSecret;
   }
 

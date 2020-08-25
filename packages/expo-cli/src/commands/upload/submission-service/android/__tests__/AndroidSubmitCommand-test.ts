@@ -18,6 +18,12 @@ jest.mock('fs');
 jest.mock('../../SubmissionService');
 jest.mock('../../utils/travelingFastlane');
 jest.mock('../../../../../projects');
+jest.mock('@expo/image-utils', () => ({
+  generateImageAsync(input, { src }) {
+    const fs = require('fs');
+    return { source: fs.readFileSync(src) };
+  },
+}));
 
 mockExpoXDL({
   UserManager: {

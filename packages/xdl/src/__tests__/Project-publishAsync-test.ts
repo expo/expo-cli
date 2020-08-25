@@ -97,7 +97,7 @@ describe('publishAsync', () => {
   const projectRoot = path.join(temporary.directory(), 'publish-test-app');
 
   beforeAll(async () => {
-    jest.setTimeout(180e3);
+    jest.setTimeout(240e3);
     ensureDirSync(projectRoot);
     for (const filename of ['App.js', 'app.json', 'package.json']) {
       copyFileSync(

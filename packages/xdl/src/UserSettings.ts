@@ -107,11 +107,16 @@ async function anonymousIdentifier(): Promise<string> {
   return id;
 }
 
+function accessToken(): string | null {
+  return process.env.EXPO_TOKEN || null;
+}
+
 const UserSettings = Object.assign(userSettingsJsonFile(), {
   dotExpoHomeDirectory,
   recentExpsJsonFile,
   userSettingsFile,
   userSettingsJsonFile,
+  accessToken,
   anonymousIdentifier,
   SETTINGS_FILE_NAME,
 });
