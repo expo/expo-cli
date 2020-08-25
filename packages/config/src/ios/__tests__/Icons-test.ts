@@ -13,6 +13,11 @@ jest.mock('@expo/image-utils', () => ({
   },
 }));
 
+afterAll(() => {
+  jest.unmock('@expo/image-utils');
+  jest.unmock('fs');
+});
+
 function getDirFromFS(fsJSON: Record<string, string | null>, rootDir: string) {
   return Object.entries(fsJSON)
     .filter(([path, value]) => value !== null && path.startsWith(rootDir))
