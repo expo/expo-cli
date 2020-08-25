@@ -21,6 +21,9 @@ export function getSourceRoot(projectRoot: string) {
 
 // TODO: define this type later
 export type Pbxproj = any;
+export type Pbxgroup = {
+  children: { comment?: string }[];
+};
 
 // TODO(brentvatne): I couldn't figure out how to do this with an existing
 // higher level function exposed by the xcode library, but we should find out how to do
@@ -32,13 +35,57 @@ export function addFileToGroup(filepath: string, groupName: string, project: Pro
   project.addToPbxFileReferenceSection(file);
   project.addToPbxBuildFileSection(file);
   project.addToPbxSourcesBuildPhase(file);
-  const group = project.pbxGroupByName(groupName);
+  const group = pbxGroupByPath(project, groupName);
   if (!group) {
     throw Error(`Group by name ${groupName} not found!`);
   }
 
   group.children.push({ value: file.fileRef, comment: file.basename });
   return project;
+}
+
+function splitPath(path: string): string[] {
+  // TODO: Should we account for other platforms that may not use `/`
+  return path.split('/');
+}
+
+const findGroup = (group: Pbxgroup, name: string): any =>
+  group.children.find(group => group.comment === name);
+
+function pbxGroupByPath(project: Pbxproj, path: string): null | Pbxgroup {
+  const { firstProject } = project.getFirstProject();
+
+  const group = project.getPBXGroupByKey(firstProject.mainGroup);
+
+  const components = splitPath(path);
+  for (const name of components) {
+    const foundGroup = findGroup(group, name);
+    if (foundGroup) {
+      return project.getPBXGroupByKey(foundGroup.value);
+    }
+  }
+
+  return group;
+}
+
+export function ensureGroupRecursively(project: Pbxproj, filepath: string): Pbxgroup | null {
+  const components = splitPath(filepath);
+  const hasChild = (group: Pbxgroup, name: string) =>
+    group.children.find(({ comment }) => comment === name);
+  const { firstProject } = project.getFirstProject();
+
+  let topMostGroup = project.getPBXGroupByKey(firstProject.mainGroup);
+
+  for (const pathComponent of components) {
+    if (topMostGroup && !hasChild(topMostGroup, pathComponent)) {
+      topMostGroup.children.push({
+        comment: pathComponent,
+        value: project.pbxCreateGroup(pathComponent, '""'),
+      });
+    }
+    topMostGroup = project.pbxGroupByName(pathComponent);
+  }
+  return topMostGroup;
 }
 
 /**
