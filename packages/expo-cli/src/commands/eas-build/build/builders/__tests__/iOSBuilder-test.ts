@@ -64,6 +64,7 @@ describe('iOSBuilder', () => {
             ios: {
               credentialsSource: 'local',
               workflow: 'generic',
+              scheme: 'testapp',
             },
           },
         },
@@ -72,12 +73,14 @@ describe('iOSBuilder', () => {
         exp: { ios: { bundleIdentifier: 'example.bundle.identifier' } },
       };
       const builder = new iOSBuilder(ctx);
+      await builder.setupAsync();
       await builder.ensureCredentialsAsync();
       const job = await builder.prepareJobAsync(projectUrl);
       expect(job).toEqual({
         platform: 'ios',
         type: 'generic',
         projectUrl,
+        scheme: 'testapp',
         artifactPath: 'ios/build/App.ipa',
         secrets: {
           distributionCertificate: {

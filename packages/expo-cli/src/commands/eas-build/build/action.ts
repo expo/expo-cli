@@ -143,8 +143,8 @@ async function startBuildAsync(
 ): Promise<string> {
   const tarPath = path.join(os.tmpdir(), `${uuidv4()}.tar.gz`);
   try {
+    await builder.setupAsync();
     await builder.ensureCredentialsAsync();
-
     if (!builder.ctx.skipProjectConfiguration) {
       await builder.configureProjectAsync();
     }

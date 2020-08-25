@@ -20,6 +20,7 @@ export interface BuilderContext {
 
 export interface Builder {
   ctx: BuilderContext;
+  setupAsync(): Promise<void>;
   ensureCredentialsAsync(): Promise<void>;
   configureProjectAsync(): Promise<void>;
   prepareJobAsync(archiveUrl: string): Promise<Job>;

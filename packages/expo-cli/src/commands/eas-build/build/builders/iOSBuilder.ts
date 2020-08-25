@@ -76,6 +76,12 @@ class iOSBuilder implements Builder {
     this.credentials = await provider.getCredentialsAsync(credentialsSource);
   }
 
+  public async setupAsync(): Promise<void> {
+    if (this.buildProfile.workflow === Workflow.Generic) {
+      this.scheme = this.buildProfile.scheme ?? (await this.resolveScheme());
+    }
+  }
+
   public async configureProjectAsync(): Promise<void> {
     if (this.buildProfile.workflow !== Workflow.Generic) {
       return;
@@ -89,10 +95,7 @@ class iOSBuilder implements Builder {
 
     const bundleIdentifier = await getBundleIdentifier(this.ctx.projectDir, this.ctx.exp);
 
-    const spinner = ora('Making sure your iOS project is set up properly');
-
-    this.scheme =
-      (this.buildProfile as iOSGenericBuildProfile).scheme ?? (await this.resolveScheme());
+    const spinner = ora('Configuring the Xcode project');
 
     const profileName = ProvisioningProfileUtils.readProfileName(
       this.credentials.provisioningProfile
@@ -111,7 +114,7 @@ class iOSBuilder implements Builder {
       spinner.succeed();
     } catch (err) {
       if (err instanceof gitUtils.DirtyGitTreeError) {
-        spinner.succeed('We configured your iOS project to build it on the Expo servers');
+        spinner.succeed('We configured the Xcode project to build it on the Expo servers');
         log.newLine();
 
         try {
