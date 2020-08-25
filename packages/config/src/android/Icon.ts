@@ -35,7 +35,7 @@ export function getAdaptiveIcon(config: ExpoConfig) {
 
 export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
   const { foregroundImage, backgroundColor, backgroundImage } = getAdaptiveIcon(config);
-  let icon = foregroundImage || getIcon(config);
+  const icon = foregroundImage ?? getIcon(config);
 
   if (!icon) {
     return null;
@@ -45,9 +45,9 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
   let length: number;
 
   // Legacy Icon for Android 7 and earlier
-  for (let dpi in dpiValues) {
+  for (const dpi in dpiValues) {
     const { folderName, scale } = dpiValues[dpi];
-    let dpiFolderPath = resolve(projectRoot, ANDROID_RES_PATH, folderName);
+    let dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
     length = 48 * scale;
 
     try {
@@ -61,8 +61,8 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
         let resizedBackgroundImage = new Jimp(length, backgroundColor);
         iconImage = resizedBackgroundImage.composite(iconImage, 0, 0);
       }
-      iconImage.write(resolve(dpiFolderPath, IC_LAUNCHER_PNG));
-      iconImage.circle().write(resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG));
+      await iconImage.write(resolve(dpiFolderPath, IC_LAUNCHER_PNG));
+      await iconImage.circle().write(resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG));
     } catch (e) {
       throw new Error('Encountered an issue resizing app icon: ' + e);
     }
@@ -74,20 +74,19 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
   }
 
   // set background color in colors.xml
-  setBackgroundColor(projectRoot, backgroundColor);
+  await setBackgroundColor(projectRoot, backgroundColor);
 
-  for (let dpi in dpiValues) {
-    const { folderName, scale } = dpiValues[dpi];
+  for (const [dpi, { folderName, scale }] in Object.entries(dpiValues)) {
     length = 48 * scale;
     let dpiFolderPath = resolve(projectRoot, ANDROID_RES_PATH, folderName);
 
     try {
       let finalAdpativeIconForeground = await resizeImageAsync(foregroundImage, length);
-      finalAdpativeIconForeground.write(resolve(dpiFolderPath, IC_LAUNCHER_FOREGROUND_PNG));
+      await finalAdpativeIconForeground.write(resolve(dpiFolderPath, IC_LAUNCHER_FOREGROUND_PNG));
 
       if (backgroundImage) {
         let finalAdpativeIconBackground = await resizeImageAsync(backgroundImage, length);
-        finalAdpativeIconBackground.write(resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG));
+        await finalAdpativeIconBackground.write(resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG));
       }
     } catch (e) {
       throw new Error('Encountered an issue resizing adaptive app icon: ' + e);
@@ -95,7 +94,7 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
   }
 
   // create ic_launcher.xml and ic_launcher_round.xml
-  let icLauncherXmlString = createAdaptiveIconXmlString(
+  const icLauncherXmlString = createAdaptiveIconXmlString(
     backgroundImage ? '' : backgroundColor,
     backgroundImage
   );
@@ -104,13 +103,11 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
 }
 
 async function resizeImageAsync(imagePath: string, length: number) {
-  let imageBuffer = (await Jimp.read(imagePath)).resize(length, length).quality(100);
-
-  return imageBuffer;
+  return (await Jimp.read(imagePath)).resize(length, length).quality(100);
 }
 
 export async function setBackgroundColor(projectDir: string, backgroundColor: string) {
-  let colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectDir);
+  const colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectDir);
   if (!colorsXmlPath) {
     console.warn(
       'Unable to find a colors.xml file in your android project. Background color is not being set.'
@@ -118,14 +115,14 @@ export async function setBackgroundColor(projectDir: string, backgroundColor: st
     return;
   }
   let colorsJson = await Colors.readColorsXMLAsync(colorsXmlPath);
-  let colorItemToAdd = [
+  const colorItemToAdd = [
     {
       _: backgroundColor,
       $: { name: ICON_BACKGROUND },
     },
   ];
   colorsJson = Colors.setColorItem(colorItemToAdd, colorsJson);
-  Colors.writeColorsXMLAsync(colorsXmlPath, colorsJson);
+  await Colors.writeColorsXMLAsync(colorsXmlPath, colorsJson);
 }
 
 export const createAdaptiveIconXmlString = (
@@ -144,7 +141,7 @@ export const createAdaptiveIconXmlString = (
 </adaptive-icon>`;
 
 async function createAdaptiveIconXmlFiles(projectRoot: string, icLauncherXmlString: string) {
-  let anyDpiV26Directory = resolve(projectRoot, ANDROID_RES_PATH, 'mipmap-anydpi-v26');
+  const anyDpiV26Directory = pathresolve(projectRoot, ANDROID_RES_PATH, 'mipmap-anydpi-v26');
   await fs.mkdirp(anyDpiV26Directory);
 
   await fs.writeFile(resolve(anyDpiV26Directory, 'ic_launcher.xml'), icLauncherXmlString);
