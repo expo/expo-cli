@@ -3,13 +3,11 @@ import fs from 'fs-extra';
 import {
   ConfigurationSectionEntry,
   ProjectSectionEntry,
+  findFirstNativeTarget,
+  getBuildConfigurationForId,
   getPbxproj,
   getProjectSection,
-  getXCBuildConfigurationSection,
-  getXCConfigurationLists,
-  isBuildConfig,
   isNotComment,
-  isNotTestHost,
 } from './utils/Xcodeproj';
 
 type ProvisioningProfileSettings = {
@@ -22,17 +20,10 @@ function setProvisioningProfileForPbxproj(
   { profileName, appleTeamId }: ProvisioningProfileSettings
 ): void {
   const project = getPbxproj(projectRoot);
+  const nativeTarget = findFirstNativeTarget(project);
 
-  const configurationLists = getXCConfigurationLists(project);
-  // TODO(dsokal): figure out if configuring only the entries from the first configuration list is fine
-  const buildConfigurations = configurationLists[0].buildConfigurations.map(i => i.value);
-
-  Object.entries(getXCBuildConfigurationSection(project))
-    .filter(isNotComment)
-    .filter(isBuildConfig)
-    .filter(isNotTestHost)
+  getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
     .filter(([, item]: ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME)
-    .filter(([key]: ConfigurationSectionEntry) => buildConfigurations.includes(key))
     .forEach(([, item]: ConfigurationSectionEntry) => {
       item.buildSettings.PROVISIONING_PROFILE_SPECIFIER = `"${profileName}"`;
       item.buildSettings.DEVELOPMENT_TEAM = appleTeamId;

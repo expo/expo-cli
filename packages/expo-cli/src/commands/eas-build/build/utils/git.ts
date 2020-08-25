@@ -1,11 +1,51 @@
 import spawnAsync from '@expo/spawn-async';
+import commandExists from 'command-exists';
 import fs from 'fs-extra';
 import ora from 'ora';
 
 import CommandError from '../../../../CommandError';
-import { gitDiffAsync, gitStatusAsync } from '../../../../git';
+import { gitDiffAsync, gitDoesRepoExistAsync, gitStatusAsync } from '../../../../git';
 import log from '../../../../log';
 import prompts from '../../../../prompts';
+
+async function ensureGitRepoExistsAsync(): Promise<void> {
+  try {
+    await commandExists('git');
+  } catch (err) {
+    throw new Error('git command has not been found, install it before proceeding');
+  }
+
+  if (await gitDoesRepoExistAsync()) {
+    return;
+  }
+
+  log(log.chalk.yellow("It looks like you haven't initialized the git repository yet."));
+  log(log.chalk.yellow('EAS Build requires you to use a git repository for your project.'));
+
+  const { confirmInit } = await prompts({
+    type: 'confirm',
+    name: 'confirmInit',
+    message: `Would you like to run 'git init' in the current directory?`,
+  });
+  if (!confirmInit) {
+    throw new Error(
+      'A git repository is required for building your project. Initialize it and run this command again.'
+    );
+  }
+  await spawnAsync('git', ['init']);
+
+  log("We're going to make an initial commit for you repository.");
+
+  const { message } = await prompts({
+    type: 'text',
+    name: 'message',
+    message: 'Commit message:',
+    initial: 'Initial commit',
+    validate: input => input !== '',
+  });
+  await spawnAsync('git', ['add', '-A']);
+  await spawnAsync('git', ['commit', '-m', message]);
+}
 
 async function ensureGitStatusIsCleanAsync(): Promise<void> {
   const changes = await gitStatusAsync();
@@ -75,6 +115,7 @@ async function reviewAndCommitChangesAsync(
 
 export {
   DirtyGitTreeError,
+  ensureGitRepoExistsAsync,
   ensureGitStatusIsCleanAsync,
   makeProjectTarballAsync,
   reviewAndCommitChangesAsync,

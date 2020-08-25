@@ -55,6 +55,19 @@ describe('BundleIdentifier module', () => {
       );
       expect(getBundleIdentifierFromPbxproj(projectRoot)).toBe('org.name.testproject');
     });
+
+    it('returns the bundle identifier for the first native target in project.pbxproj (project initialized with react-native init)', () => {
+      vol.fromJSON(
+        {
+          'ios/testproject.xcodeproj/project.pbxproj': originalFs.readFileSync(
+            path.join(__dirname, 'fixtures/project-rni.pbxproj'),
+            'utf-8'
+          ),
+        },
+        projectRoot
+      );
+      expect(getBundleIdentifierFromPbxproj(projectRoot)).toBe('org.reactjs.native.example.rni');
+    });
   });
 
   describe(setBundleIdentifier, () => {
