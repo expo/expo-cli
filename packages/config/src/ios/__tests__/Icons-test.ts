@@ -97,7 +97,6 @@ describe('e2e: iOS icons', () => {
     );
 
     vol.mkdirpSync('/app/assets');
-    vol.mkdirpSync('/var/folders/');
     vol.writeFileSync('/app/assets/icon.png', icon);
   });
 
