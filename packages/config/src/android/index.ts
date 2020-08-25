@@ -1,5 +1,3 @@
-import * as Manifest from './Manifest';
-
 import * as Branch from './Branch';
 import * as Colors from './Colors';
 import * as Facebook from './Facebook';
