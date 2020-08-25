@@ -64,17 +64,16 @@ async function getResolvedLocalesAsync(
 ): Promise<LocaleMap> {
   const locales: LocaleMap = {};
   for (const [lang, path] of Object.entries(input)) {
-    // try {
-
-    locales[lang] = await JsonFile.readAsync(join(projectRoot, path));
-    // } catch (e) {
-    //   // Add a warning when a json file cannot be parsed.
-    //   addWarningIOS(
-    //     `locales-${lang}`,
-    //     `Failed to parse JSON of locale file for language: ${lang}`,
-    //     'https://docs.expo.io/distribution/app-stores/#localizing-your-ios-app'
-    //   );
-    // }
+    try {
+      locales[lang] = await JsonFile.readAsync(join(projectRoot, path));
+    } catch (e) {
+      // Add a warning when a json file cannot be parsed.
+      addWarningIOS(
+        `locales-${lang}`,
+        `Failed to parse JSON of locale file for language: ${lang}`,
+        'https://docs.expo.io/distribution/app-stores/#localizing-your-ios-app'
+      );
+    }
   }
 
   return locales;
