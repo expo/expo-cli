@@ -21,10 +21,17 @@ export function getSourceRoot(projectRoot: string) {
 
 // TODO: define this type later
 export type Pbxproj = any;
-export type Pbxgroup = {
-  children: { comment?: string }[];
-};
 
+interface PBXGroup {
+  isa: 'PBXGroup';
+  children: {
+    value: string;
+    comment?: string;
+  }[];
+  name: string;
+  path?: string;
+  sourceTree: '"<group>"' | unknown;
+}
 // TODO(brentvatne): I couldn't figure out how to do this with an existing
 // higher level function exposed by the xcode library, but we should find out how to do
 // that and replace this with it
@@ -40,7 +47,10 @@ export function addFileToGroup(filepath: string, groupName: string, project: Pro
     throw Error(`Group by name ${groupName} not found!`);
   }
 
-  group.children.push({ value: file.fileRef, comment: file.basename });
+  group.children.push({
+    value: file.fileRef,
+    comment: file.basename,
+  });
   return project;
 }
 
@@ -49,10 +59,10 @@ function splitPath(path: string): string[] {
   return path.split('/');
 }
 
-const findGroup = (group: Pbxgroup, name: string): any =>
+const findGroup = (group: PBXGroup, name: string): any =>
   group.children.find(group => group.comment === name);
 
-function pbxGroupByPath(project: Pbxproj, path: string): null | Pbxgroup {
+function pbxGroupByPath(project: Pbxproj, path: string): null | PBXGroup {
   const { firstProject } = project.getFirstProject();
 
   const group = project.getPBXGroupByKey(firstProject.mainGroup);
@@ -68,9 +78,9 @@ function pbxGroupByPath(project: Pbxproj, path: string): null | Pbxgroup {
   return group;
 }
 
-export function ensureGroupRecursively(project: Pbxproj, filepath: string): Pbxgroup | null {
+export function ensureGroupRecursively(project: Pbxproj, filepath: string): PBXGroup | null {
   const components = splitPath(filepath);
-  const hasChild = (group: Pbxgroup, name: string) =>
+  const hasChild = (group: PBXGroup, name: string) =>
     group.children.find(({ comment }) => comment === name);
   const { firstProject } = project.getFirstProject();
 
