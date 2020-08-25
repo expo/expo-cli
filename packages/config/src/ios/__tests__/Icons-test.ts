@@ -94,16 +94,6 @@ describe('e2e: iOS icons', () => {
     vol.mkdirpSync('/app/assets');
     vol.mkdirpSync('/var/folders/');
     vol.writeFileSync('/app/assets/icon.png', icon);
-    await setIconsAsync(
-      {
-        slug: 'testproject',
-        version: '1',
-        name: 'testproject',
-        platforms: ['ios', 'android'],
-        icon: 'assets/icon.png',
-      },
-      projectRoot
-    );
   });
 
   afterAll(() => {
@@ -111,6 +101,18 @@ describe('e2e: iOS icons', () => {
   });
 
   it('writes all the image files expected', async () => {
+    await setIconsAsync(
+      {
+        slug: 'testproject',
+        version: '1',
+        name: 'testproject',
+        platforms: ['ios', 'android'],
+        // must use full path for mock fs
+        icon: '/app/assets/icon.png',
+      },
+      projectRoot
+    );
+
     const after = getDirFromFS(vol.toJSON(), projectRoot);
     const icons = Object.keys(after).filter(value =>
       value.startsWith('ios/testproject/Images.xcassets/AppIcon.appiconset/App-Icon')
@@ -120,10 +122,8 @@ describe('e2e: iOS icons', () => {
     // Ensure we generate less icons than the possible combos,
     // this is because the Contents.json lets us reuse icons across platforms.
     expect(icons.length).toBeLessThan(totalPossibleIcons);
-  });
 
-  it('writes to Contents.json correctly', () => {
-    const after = getDirFromFS(vol.toJSON(), projectRoot);
+    // Test the Contents.json file
     const contents = JSON.parse(
       after['ios/testproject/Images.xcassets/AppIcon.appiconset/Contents.json']
     );

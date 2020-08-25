@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`e2e: iOS icons writes to Contents.json correctly 1`] = `
+exports[`e2e: iOS icons writes all the image files expected 1`] = `
 Array [
   Object {
     "filename": "App-Icon-20x20@2x.png",
