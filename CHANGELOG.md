@@ -13,6 +13,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🐛 Bug fixes
 
 - [expo-cli] expo upload:android - fix `--use-submission-service` not resulting in non-zero exit code when upload fails ([#2530](https://github.com/expo/expo-cli/pull/2530) by [@mymattcarroll](https://github.com/mymattcarroll))
+- [expo-cli] Fix `generate-module` to support latest `expo-module-template` ([#2510](https://github.com/expo/expo-cli/pull/2510) by [@barthap](https://github.com/barthap))
 
 ### 📦 Packages updated
 
