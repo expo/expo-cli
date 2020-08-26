@@ -1,4 +1,5 @@
 import * as AdaptiveIcon from './AdaptiveIcon';
+import * as AllowBackup from './AllowBackup';
 import * as Branch from './Branch';
 import * as Colors from './Colors';
 import * as Facebook from './Facebook';
@@ -24,6 +25,7 @@ import * as Version from './Version';
 
 export {
   AdaptiveIcon,
+  AllowBackup,
   Manifest,
   Branch,
   Colors,

@@ -77,6 +77,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
 
   await modifyAndroidManifestAsync(projectRoot, async androidManifest => {
     androidManifest = await AndroidConfig.Package.setPackageInAndroidManifest(exp, androidManifest);
+    androidManifest = await AndroidConfig.AllowBackup.setAllowBackup(exp, androidManifest);
     androidManifest = await AndroidConfig.Scheme.setScheme(exp, androidManifest);
     androidManifest = await AndroidConfig.Orientation.setAndroidOrientation(exp, androidManifest);
     androidManifest = await AndroidConfig.Permissions.setAndroidPermissions(exp, androidManifest);
