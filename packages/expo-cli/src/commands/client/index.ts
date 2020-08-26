@@ -1,30 +1,30 @@
+import { getConfig, setCustomConfigPath } from '@expo/config';
 import { Android, Simulator, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
-import CliTable from 'cli-table';
+import CliTable from 'cli-table3';
+import { Command } from 'commander';
 import fs from 'fs-extra';
-import _ from 'lodash';
 import ora from 'ora';
 import path from 'path';
-import { Command } from 'commander';
 
-import { getConfig, setCustomConfigPath } from '@expo/config';
 import CommandError from '../../CommandError';
+import * as appleApi from '../../appleApi';
+import { runAction, travelingFastlane } from '../../appleApi/fastlane';
+import { getAppLookupParams } from '../../credentials/api/IosApi';
+import { Context } from '../../credentials/context';
+import { runCredentialsManager } from '../../credentials/route';
+import { CreateIosDist } from '../../credentials/views/IosDistCert';
+import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/IosProvisioningProfileAdhoc';
+import { SetupIosDist } from '../../credentials/views/SetupIosDist';
+import { SetupIosPush } from '../../credentials/views/SetupIosPush';
 import log from '../../log';
 import prompt from '../../prompt';
 import urlOpts from '../../urlOpts';
-import * as appleApi from '../../appleApi';
-import { runAction, travelingFastlane } from '../../appleApi/fastlane';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
-import { SetupIosDist } from '../../credentials/views/SetupIosDist';
-import { SetupIosPush } from '../../credentials/views/SetupIosPush';
-import { Context } from '../../credentials/context';
-import { CreateIosDist } from '../../credentials/views/IosDistCert';
-import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/IosProvisioningProfileAdhoc';
-import { runCredentialsManager } from '../../credentials/route';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('client:ios [project-dir]')
     .option(
@@ -35,7 +35,16 @@ export default function(program: Command) {
       'Build a custom version of the Expo client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
     )
     .asyncActionProjectDir(
-      async (projectDir: string, options: { appleId?: string; config?: string }) => {
+      async (
+        projectDir: string,
+        options: {
+          appleId?: string;
+          config?: string;
+          parent?: {
+            nonInteractive: boolean;
+          };
+        }
+      ) => {
         const disabledServices: { [key: string]: { name: string; reason: string } } = {
           pushNotifications: {
             name: 'Push Notifications',
@@ -61,13 +70,19 @@ export default function(program: Command) {
         }
         if (!exp.ios) exp.ios = {};
 
-        if (!_.has(exp, 'ios.config.googleMapsApiKey')) {
+        if (!exp.facebookAppId || !exp.facebookScheme) {
+          const disabledReason = exp
+            ? `facebookAppId or facebookScheme are missing from app configuration. `
+            : 'No custom configuration file could be found. You will need to provide a json file with valid facebookAppId and facebookScheme fields.';
+          disabledServices.facebookLogin = { name: 'Facebook Login', reason: disabledReason };
+        }
+        if (!exp.ios.config?.googleMapsApiKey) {
           const disabledReason = exp
             ? `ios.config.googleMapsApiKey does not exist in the app configuration.`
             : 'No custom configuration file could be found. You will need to provide a json file with a valid ios.config.googleMapsApiKey field.';
           disabledServices.googleMaps = { name: 'Google Maps', reason: disabledReason };
         }
-        if (_.has(exp, 'ios.googleServicesFile')) {
+        if (exp.ios.googleServicesFile) {
           const contents = await fs.readFile(
             path.resolve(projectDir, exp.ios.googleServicesFile!),
             'base64'
@@ -77,11 +92,15 @@ export default function(program: Command) {
 
         const user = await UserManager.getCurrentUserAsync();
         const context = new Context();
-        await context.init(projectDir, { allowAnonymous: true });
-        await context.ensureAppleCtx(options);
+        await context.init(projectDir, {
+          ...options,
+          allowAnonymous: true,
+          nonInteractive: options.parent?.nonInteractive,
+        });
+        await context.ensureAppleCtx();
         const appleContext = context.appleCtx;
         if (user) {
-          await context.ios.getAllCredentials(); // initialize credentials
+          await context.ios.getAllCredentials(user.username); // initialize credentials
         }
 
         // check if any builds are in flight
@@ -99,12 +118,11 @@ export default function(program: Command) {
 
         const bundleIdentifier = generateBundleIdentifier(appleContext.team.id);
         const experienceName = await getExperienceName({ user, appleTeamId: appleContext.team.id });
+        const appLookupParams = getAppLookupParams(experienceName, bundleIdentifier);
 
-        await appleApi.ensureAppExists(
-          appleContext,
-          { bundleIdentifier, experienceName },
-          { enablePushNotifications: true }
-        );
+        await appleApi.ensureAppExists(appleContext, appLookupParams, {
+          enablePushNotifications: true,
+        });
 
         const { devices } = await runAction(travelingFastlane.listDevices, [
           '--all-ios-profile-devices',
@@ -116,13 +134,12 @@ export default function(program: Command) {
 
         let distributionCert;
         if (user) {
-          await runCredentialsManager(
-            context,
-            new SetupIosDist({ experienceName, bundleIdentifier })
-          );
-          distributionCert = await context.ios.getDistCert(experienceName, bundleIdentifier);
+          await runCredentialsManager(context, new SetupIosDist(appLookupParams));
+          distributionCert = await context.ios.getDistCert(appLookupParams);
         } else {
-          distributionCert = await new CreateIosDist().provideOrGenerate(context);
+          distributionCert = await new CreateIosDist(appLookupParams.accountName).provideOrGenerate(
+            context
+          );
         }
         if (!distributionCert) {
           throw new CommandError(
@@ -133,26 +150,18 @@ export default function(program: Command) {
 
         let pushKey;
         if (user) {
-          await runCredentialsManager(
-            context,
-            new SetupIosPush({ experienceName, bundleIdentifier })
-          );
-          pushKey = await context.ios.getPushKey(experienceName, bundleIdentifier);
+          await runCredentialsManager(context, new SetupIosPush(appLookupParams));
+          pushKey = await context.ios.getPushKey(appLookupParams);
         }
 
         let provisioningProfile;
-        const createOrReuseProfile = new CreateOrReuseProvisioningProfileAdhoc({
-          experienceName,
-          bundleIdentifier,
+        const createOrReuseProfile = new CreateOrReuseProvisioningProfileAdhoc(appLookupParams, {
           distCertSerialNumber: distributionCert.distCertSerialNumber!,
           udids,
         });
         if (user) {
           await runCredentialsManager(context, createOrReuseProfile);
-          provisioningProfile = await context.ios.getProvisioningProfile(
-            experienceName,
-            bundleIdentifier
-          );
+          provisioningProfile = await context.ios.getProvisioningProfile(appLookupParams);
         } else {
           provisioningProfile = await createOrReuseProfile.createOrReuse(context);
         }
@@ -188,7 +197,7 @@ export default function(program: Command) {
           );
           log(table.toString());
           log(
-            'See https://docs.expo.io/versions/latest/guides/adhoc-builds/#optional-additional-configuration-steps for more details.'
+            'See https://docs.expo.io/guides/adhoc-builds/#optional-additional-configuration-steps for more details.'
           );
         }
 
@@ -199,6 +208,7 @@ export default function(program: Command) {
           ({ email } = await prompt({
             name: 'email',
             message: 'Please enter an email address to notify, when the build is completed:',
+            default: context.user.email,
             filter: value => value.trim(),
             validate: (value: string) =>
               /.+@.+/.test(value) ? true : "That doesn't look like a valid email.",
@@ -271,8 +281,7 @@ export default function(program: Command) {
           log(chalk.green(`${result.statusUrl}`));
         }
         log.newLine();
-      },
-      true
+      }
     );
 
   program
@@ -289,7 +298,7 @@ export default function(program: Command) {
       }
 
       const sdkVersions = await Versions.sdkVersionsAsync();
-      const latestSdk = await Versions.newestSdkVersionAsync();
+      const latestSdk = await Versions.newestReleasedSdkVersionAsync();
       const currentSdk = sdkVersions[currentSdkVersion!];
       const recommendedClient = currentSdk
         ? ClientUpgradeUtils.getClient(currentSdk, 'ios')
@@ -358,7 +367,7 @@ export default function(program: Command) {
       if (await Simulator.upgradeExpoAsync(targetClient.clientUrl)) {
         log('Done!');
       }
-    }, true);
+    });
 
   program
     .command('client:install:android')
@@ -374,7 +383,7 @@ export default function(program: Command) {
       }
 
       const sdkVersions = await Versions.sdkVersionsAsync();
-      const latestSdk = await Versions.newestSdkVersionAsync();
+      const latestSdk = await Versions.newestReleasedSdkVersionAsync();
       const currentSdk = sdkVersions[currentSdkVersion!];
       const recommendedClient = currentSdk
         ? ClientUpgradeUtils.getClient(currentSdk, 'android')
@@ -443,5 +452,5 @@ export default function(program: Command) {
       if (await Android.upgradeExpoAsync(targetClient.clientUrl)) {
         log('Done!');
       }
-    }, true);
+    });
 }

@@ -1,9 +1,41 @@
 import { vol } from 'memfs';
 
-import { getConfig, readConfigJson } from '../Config';
+import { getConfig, getProjectConfigDescription, readConfigJson } from '../Config';
 
 jest.mock('fs');
 jest.mock('resolve-from');
+
+describe(`getProjectConfigDescription`, () => {
+  it(`describes a project using both a static and dynamic config`, () => {
+    const message = getProjectConfigDescription('/', {
+      dynamicConfigPath: '/app.config.js',
+      staticConfigPath: '/app.config.json',
+    });
+    expect(message).toMatch(`\`app.config.js\``);
+    expect(message).toMatch(`\`app.config.json\``);
+  });
+  it(`describes a project using only a static config`, () => {
+    const message = getProjectConfigDescription('/', {
+      dynamicConfigPath: null,
+      staticConfigPath: '/app.json',
+    });
+    expect(message).toMatch(`\`app.json\``);
+  });
+  it(`describes a project using only a dynamic config`, () => {
+    const message = getProjectConfigDescription('/', {
+      dynamicConfigPath: '/app.config.ts',
+      staticConfigPath: null,
+    });
+    expect(message).toMatch(`\`app.config.ts\``);
+  });
+  it(`describes a project with no configs`, () => {
+    const message = getProjectConfigDescription('/', {
+      dynamicConfigPath: null,
+      staticConfigPath: null,
+    });
+    expect(message).toBe(null);
+  });
+});
 
 describe('readConfigJson', () => {
   describe('sdkVersion', () => {
@@ -97,7 +129,9 @@ describe('readConfigJson', () => {
     });
 
     it(`will throw if the app.json is missing`, () => {
-      expect(() => readConfigJson('/no-config')).toThrow(/does not contain a valid app\.json/);
+      expect(() => readConfigJson('/no-config')).toThrow(
+        /Project at path \/no-config does not contain a valid Expo config/
+      );
       // No config is required for new method
       expect(() => getConfig('/no-config')).not.toThrow();
     });

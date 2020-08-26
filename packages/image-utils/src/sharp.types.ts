@@ -58,7 +58,7 @@ export type ResizeOptions = {
 };
 
 export type Options =
-  | {}
+  | object
   | {
       [key: string]: boolean | number | string | undefined;
     };

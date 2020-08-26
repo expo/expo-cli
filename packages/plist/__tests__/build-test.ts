@@ -1,9 +1,10 @@
 import assert from 'assert';
+
 import plist from '../src';
 
-describe('plist', function() {
-  describe('build()', function() {
-    it('should create a plist XML string from a String', function() {
+describe('plist', function () {
+  describe('build()', function () {
+    it('should create a plist XML string from a String', function () {
       const xml = plist.build('test');
       assert.strictEqual(
         xml,
@@ -15,7 +16,7 @@ describe('plist', function() {
       );
     });
 
-    it('should create a plist XML integer from a whole Number', function() {
+    it('should create a plist XML integer from a whole Number', function () {
       const xml = plist.build(3);
       assert.strictEqual(
         xml,
@@ -27,7 +28,7 @@ describe('plist', function() {
       );
     });
 
-    it('should create a plist XML real from a fractional Number', function() {
+    it('should create a plist XML real from a fractional Number', function () {
       const xml = plist.build(Math.PI);
       assert.strictEqual(
         xml,
@@ -39,7 +40,7 @@ describe('plist', function() {
       );
     });
 
-    it('should create a plist XML date from a Date', function() {
+    it('should create a plist XML date from a Date', function () {
       const xml = plist.build(new Date('2010-02-08T21:41:23Z'));
       assert.strictEqual(
         xml,
@@ -51,7 +52,7 @@ describe('plist', function() {
       );
     });
 
-    it('should create a plist XML date from a Buffer', function() {
+    it('should create a plist XML date from a Buffer', function () {
       const xml = plist.build(Buffer.from('☃'));
       assert.strictEqual(
         xml,
@@ -63,7 +64,7 @@ describe('plist', function() {
       );
     });
 
-    it('should create a plist XML true from a `true` Boolean', function() {
+    it('should create a plist XML true from a `true` Boolean', function () {
       const xml = plist.build(true);
       assert.strictEqual(
         xml,
@@ -75,7 +76,7 @@ describe('plist', function() {
       );
     });
 
-    it('should create a plist XML false from a `false` Boolean', function() {
+    it('should create a plist XML false from a `false` Boolean', function () {
       const xml = plist.build(false);
       assert.strictEqual(
         xml,
@@ -87,7 +88,7 @@ describe('plist', function() {
       );
     });
 
-    it('should create a plist XML dict from an Object', function() {
+    it('should create a plist XML dict from an Object', function () {
       const xml = plist.build({ foo: 'bar' });
       assert.strictEqual(
         xml,
@@ -102,7 +103,7 @@ describe('plist', function() {
       );
     });
 
-    it('should create a plist XML array from an Array', function() {
+    it('should create a plist XML array from an Array', function () {
       const xml = plist.build([1, 'foo', false, new Date(1234)]);
       assert.strictEqual(
         xml,
@@ -119,7 +120,7 @@ describe('plist', function() {
       );
     });
 
-    it('should properly encode an empty string', function() {
+    it('should properly encode an empty string', function () {
       const xml = plist.build({ a: '' });
       assert.strictEqual(
         xml,
@@ -134,7 +135,7 @@ describe('plist', function() {
       );
     });
 
-    it('should omit undefined values', function() {
+    it('should omit undefined values', function () {
       const xml = plist.build({ a: undefined });
       assert.strictEqual(
         xml,

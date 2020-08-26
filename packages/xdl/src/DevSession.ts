@@ -23,7 +23,7 @@ export async function startSession(
 
   if (!Config.offline && keepUpdating) {
     // TODO(anp) if the user has configured device ids, then notify for those too
-    let authSession = await UserManager.getSessionAsync();
+    const authSession = await UserManager.getSessionAsync();
 
     if (!authSession) {
       // NOTE(brentvatne) let's just bail out in this case for now
@@ -41,7 +41,7 @@ export async function startSession(
         throw new Error(`Unsupported platform: ${platform}`);
       }
 
-      let apiClient = ApiV2Client.clientForUser(authSession);
+      const apiClient = ApiV2Client.clientForUser(authSession);
       await apiClient.postAsync('development-sessions/notify-alive', {
         data: {
           session: {

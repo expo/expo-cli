@@ -1,8 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
-
 import resolveFrom from 'resolve-from';
+
 import { getConfig } from '../Config';
 import { resolveModule } from '../Modules';
 import { getManagedExtensions } from './extensions';
@@ -17,15 +16,6 @@ export function ensureSlash(inputPath: string, needsSlash: boolean): string {
   } else {
     return inputPath;
   }
-}
-
-export function getModulesPath(projectRoot: string): string {
-  const workspaceRoot = findWorkspaceRoot(path.resolve(projectRoot)); // Absolute path or null
-  if (workspaceRoot) {
-    return path.resolve(workspaceRoot, 'node_modules');
-  }
-
-  return path.resolve(projectRoot, 'node_modules');
 }
 
 export function getPossibleProjectRoot(): string {
@@ -70,10 +60,14 @@ export function getEntryPointWithExtensions(
     if (!entry) {
       // Allow for paths like: `{ "main": "expo/AppEntry" }`
       entry = resolveFromSilentWithExtensions(projectRoot, exp.entryPoint, extensions);
-      if (!entry)
-        throw new Error(
-          `Cannot resolve entry file: The \`expo.entryPoint\` field defined in your \`app.json\` points to a non-existent path.`
-        );
+
+      // If it doesn't resolve then just return the entryPoint as-is. This makes
+      // it possible for people who have an unconventional setup (eg: multiple
+      // apps in monorepo with metro at root) to customize entry point without
+      // us imposing our assumptions.
+      if (!entry) {
+        return exp.entryPoint;
+      }
     }
     return entry;
   } else if (pkg) {

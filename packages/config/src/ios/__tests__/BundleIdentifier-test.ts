@@ -1,28 +1,113 @@
-import { getBundleIdentifier, setBundleIdentifier } from '../BundleIdentifier';
+import { fs as memfs, vol } from 'memfs';
+import path from 'path';
 
-describe('bundle identifier', () => {
-  it(`returns null if no bundleIdentifier is provided`, () => {
-    expect(getBundleIdentifier({})).toBe(null);
-  });
+import { ExpoConfig } from '../../Config.types';
+import {
+  getBundleIdentifier,
+  getBundleIdentifierFromPbxproj,
+  setBundleIdentifier,
+  setBundleIdentifierForPbxproj,
+} from '../BundleIdentifier';
 
-  it(`returns the bundleIdentifier if provided`, () => {
-    expect(getBundleIdentifier({ ios: { bundleIdentifier: 'com.example.xyz' } })).toBe(
-      'com.example.xyz'
-    );
-  });
+const baseExpoConfig: ExpoConfig = {
+  name: 'testproject',
+  slug: 'testproject',
+  platforms: ['ios'],
+  version: '1.0.0',
+};
 
-  it(`sets the CFBundleShortVersionString if bundleIdentifier is given`, () => {
-    expect(
-      setBundleIdentifier({ ios: { bundleIdentifier: 'host.exp.exponent' } }, {})
-    ).toMatchObject({
-      CFBundleIdentifier: 'host.exp.exponent',
+jest.mock('fs');
+
+const originalFs = jest.requireActual('fs');
+
+describe('BundleIdentifier module', () => {
+  describe(getBundleIdentifier, () => {
+    it('returns null if no bundleIdentifier is provided', () => {
+      expect(getBundleIdentifier(baseExpoConfig)).toBe(null);
+    });
+
+    it('returns the bundleIdentifier if provided', () => {
+      expect(
+        getBundleIdentifier({ ...baseExpoConfig, ios: { bundleIdentifier: 'com.example.xyz' } })
+      ).toBe('com.example.xyz');
     });
   });
 
-  it(`makes no changes to the infoPlist no bundleIdentifier is provided`, () => {
-    expect(setBundleIdentifier({}, {})).toMatchObject({});
+  describe(getBundleIdentifierFromPbxproj, () => {
+    const projectRoot = '/testproject';
+
+    afterEach(() => vol.reset());
+
+    it('returns null if no project.pbxproj exists', () => {
+      vol.mkdirpSync(projectRoot);
+      expect(getBundleIdentifierFromPbxproj(projectRoot)).toBeNull();
+    });
+
+    it('returns the bundle identifier defined in project.pbxproj', () => {
+      vol.fromJSON(
+        {
+          'ios/testproject.xcodeproj/project.pbxproj': originalFs.readFileSync(
+            path.join(__dirname, 'fixtures/project.pbxproj'),
+            'utf-8'
+          ),
+        },
+        projectRoot
+      );
+      expect(getBundleIdentifierFromPbxproj(projectRoot)).toBe('org.name.testproject');
+    });
+
+    it('returns the bundle identifier for the first native target in project.pbxproj (project initialized with react-native init)', () => {
+      vol.fromJSON(
+        {
+          'ios/testproject.xcodeproj/project.pbxproj': originalFs.readFileSync(
+            path.join(__dirname, 'fixtures/project-rni.pbxproj'),
+            'utf-8'
+          ),
+        },
+        projectRoot
+      );
+      expect(getBundleIdentifierFromPbxproj(projectRoot)).toBe('org.reactjs.native.example.rni');
+    });
+  });
+
+  describe(setBundleIdentifier, () => {
+    it('sets the CFBundleShortVersionString if bundleIdentifier is given', () => {
+      expect(
+        setBundleIdentifier(
+          { ...baseExpoConfig, ios: { bundleIdentifier: 'host.exp.exponent' } },
+          {}
+        )
+      ).toMatchObject({
+        CFBundleIdentifier: 'host.exp.exponent',
+      });
+    });
+
+    it('makes no changes to the infoPlist no bundleIdentifier is provided', () => {
+      expect(setBundleIdentifier(baseExpoConfig, {})).toMatchObject({});
+    });
+  });
+
+  describe(setBundleIdentifierForPbxproj, () => {
+    const projectRoot = '/testproject';
+    const pbxProjPath = 'ios/testproject.xcodeproj/project.pbxproj';
+
+    beforeEach(() => {
+      vol.fromJSON(
+        {
+          [pbxProjPath]: originalFs.readFileSync(
+            path.join(__dirname, 'fixtures/project.pbxproj'),
+            'utf-8'
+          ),
+        },
+        projectRoot
+      );
+    });
+    afterEach(() => vol.reset());
+
+    it('sets the bundle identifier in the pbxproj file', () => {
+      setBundleIdentifierForPbxproj(projectRoot, 'com.swmansion.dominik.abcd.v2');
+      const pbxprojContents = memfs.readFileSync(path.join(projectRoot, pbxProjPath), 'utf-8');
+      expect(pbxprojContents).toMatchSnapshot();
+    });
   });
 });
-
-// TODO
-xdescribe('updating pbxproject', () => {});

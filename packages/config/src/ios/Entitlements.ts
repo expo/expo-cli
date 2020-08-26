@@ -1,15 +1,16 @@
-import path from 'path';
-import { sync as globSync } from 'glob';
 import fs from 'fs-extra';
+import { sync as globSync } from 'glob';
+import path from 'path';
+
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
 import {
   getPbxproj,
   getProjectName,
-  getSourceRoot,
+  getXCBuildConfigurationSection,
   isBuildConfig,
-  removeComments,
-  removeTestHosts,
+  isNotComment,
+  isNotTestHost,
 } from './utils/Xcodeproj';
 
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
@@ -83,10 +84,10 @@ function createEntitlementsFile(projectRoot: string) {
    * Add file to pbxproj under CODE_SIGN_ENTITLEMENTS
    */
   const project = getPbxproj(projectRoot);
-  Object.entries(project.pbxXCBuildConfigurationSection())
-    .filter(removeComments)
+  Object.entries(getXCBuildConfigurationSection(project))
+    .filter(isNotComment)
     .filter(isBuildConfig)
-    .filter(removeTestHosts)
+    .filter(isNotTestHost)
     .forEach(({ 1: { buildSettings } }: any) => {
       buildSettings.CODE_SIGN_ENTITLEMENTS = entitlementsRelativePath;
     });
@@ -115,11 +116,11 @@ const ENTITLEMENTS_TEMPLATE = `
  * Get the path to an existing entitlements file or use the default
  */
 function getExistingEntitlementsPath(projectRoot: string): string | null {
-  const entitlementsPaths = globSync(path.join(projectRoot, 'ios', '*', '.entitlements'));
+  const entitlementsPaths = globSync('ios/*/.entitlements', { absolute: true, cwd: projectRoot });
   if (entitlementsPaths.length === 0) {
     return null;
   }
-  let [entitlementsPath, ...otherEntitlementsPaths] = entitlementsPaths[0];
+  const [entitlementsPath, ...otherEntitlementsPaths] = entitlementsPaths[0];
 
   if (entitlementsPaths.length > 1) {
     console.warn(

@@ -1,18 +1,29 @@
-import fs from 'fs-extra';
-import { PNG } from 'pngjs';
-import pick from 'lodash/pick';
 import { XDLError } from '@expo/xdl';
-import request from 'request';
+import axios from 'axios';
+import fs from 'fs-extra';
+import pick from 'lodash/pick';
+import { PNG } from 'pngjs';
+import { Readable } from 'stream';
 import validator from 'validator';
+
+async function getImageStreamAsync(imagePathOrURL: string) {
+  const isUrl = validator.isURL(imagePathOrURL, {
+    protocols: ['http', 'https'],
+    require_protocol: true,
+  });
+
+  if (isUrl) {
+    const response = await axios.get<Readable>(imagePathOrURL, { responseType: 'stream' });
+    return response.data;
+  } else {
+    return fs.createReadStream(imagePathOrURL);
+  }
+}
 
 export async function ensurePNGIsNotTransparent(imagePathOrURL: string): Promise<void> {
   let hasAlreadyResolved = false;
-  const stream = validator.isURL(imagePathOrURL, {
-    protocols: ['http', 'https'],
-    require_protocol: true,
-  })
-    ? request(imagePathOrURL)
-    : fs.createReadStream(imagePathOrURL);
+  const stream = await getImageStreamAsync(imagePathOrURL);
+
   return new Promise((res, rej) => {
     stream
       .pipe(new PNG({ filterType: 4 }))
@@ -23,7 +34,7 @@ export async function ensurePNGIsNotTransparent(imagePathOrURL: string): Promise
           res();
         }
       })
-      .on('parsed', function() {
+      .on('parsed', function () {
         if (hasAlreadyResolved) {
           return;
         }
@@ -45,11 +56,11 @@ function validateAlphaChannelIsEmpty(
 ): void {
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      let idx = (width * y + x) * 4;
+      const idx = (width * y + x) * 4;
       if (data[idx + 3] !== 255) {
         throw new XDLError(
           'INVALID_ASSETS',
-          `Your application icon can't have transparency if you wish to upload your app to Apple Store.`
+          `Your app icon can't have transparency if you wish to upload your app Apple's App Store. Read more here: https://expo.fyi/remove-alpha-channel`
         );
       }
     }

@@ -1,6 +1,7 @@
 import fse from 'fs-extra';
-import path from 'path';
 import walkSync from 'klaw-sync';
+import path from 'path';
+
 import { ModuleConfiguration } from './ModuleConfiguration';
 
 const asyncForEach = async <T>(
@@ -56,7 +57,7 @@ const replaceContents = async (
   directoryPath: string,
   replaceFunction: (contentOfSingleFile: string) => string
 ) => {
-  for (let file of walkSync(directoryPath, { nodir: true })) {
+  for (const file of walkSync(directoryPath, { nodir: true })) {
     replaceContent(file.path, replaceFunction);
   }
 };

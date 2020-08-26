@@ -1,8 +1,9 @@
 import { graphql, parse, subscribe } from 'graphql';
-import schema from '../GraphQLSchema';
-import createContext from '../createContext';
+
 import AsyncIterableRingBuffer from '../AsyncIterableRingBuffer';
+import schema from '../GraphQLSchema';
 import Issues from '../Issues';
+import createContext from '../createContext';
 
 jest.mock('@expo/xdl');
 
@@ -263,7 +264,7 @@ test('full query', async () => {
     logBuffer.push(log);
   }
   issues.addIssue(MOCK_ISSUE.id, MOCK_ISSUE);
-  let result = await graphql({ schema, source: fullQuery, contextValue: context() });
+  const result = await graphql({ schema, source: fullQuery, contextValue: context() });
   expect(result).toMatchSnapshot();
 });
 

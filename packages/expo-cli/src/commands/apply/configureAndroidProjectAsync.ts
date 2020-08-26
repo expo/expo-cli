@@ -1,15 +1,18 @@
 import { AndroidConfig, getConfig } from '@expo/config';
-import { sync as globSync } from 'glob';
+import { UserManager } from '@expo/xdl';
 import fs from 'fs-extra';
+import { sync as globSync } from 'glob';
 import path from 'path';
+
+import { getOrPromptForPackage } from '../eject/ConfigValidation';
 
 async function modifyBuildGradleAsync(
   projectRoot: string,
   callback: (buildGradle: string) => string
 ) {
-  let buildGradlePath = path.join(projectRoot, 'android', 'build.gradle');
-  let buildGradleString = fs.readFileSync(buildGradlePath).toString();
-  let result = callback(buildGradleString);
+  const buildGradlePath = path.join(projectRoot, 'android', 'build.gradle');
+  const buildGradleString = fs.readFileSync(buildGradlePath).toString();
+  const result = callback(buildGradleString);
   fs.writeFileSync(buildGradlePath, result);
 }
 
@@ -17,9 +20,9 @@ async function modifyAppBuildGradleAsync(
   projectRoot: string,
   callback: (buildGradle: string) => string
 ) {
-  let buildGradlePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
-  let buildGradleString = fs.readFileSync(buildGradlePath).toString();
-  let result = callback(buildGradleString);
+  const buildGradlePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
+  const buildGradleString = fs.readFileSync(buildGradlePath).toString();
+  const result = callback(buildGradleString);
   fs.writeFileSync(buildGradlePath, result);
 }
 
@@ -27,16 +30,16 @@ async function modifyAndroidManifestAsync(
   projectRoot: string,
   callback: (androidManifest: AndroidConfig.Manifest.Document) => AndroidConfig.Manifest.Document
 ) {
-  let androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
+  const androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
     projectRoot
   );
   if (!androidManifestPath) {
     throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectRoot}"`);
   }
-  let androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
+  const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
     androidManifestPath
   );
-  let result = await callback(androidManifestJSON);
+  const result = await callback(androidManifestJSON);
   await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
 }
 
@@ -44,16 +47,20 @@ async function modifyMainActivityJavaAsync(
   projectRoot: string,
   callback: (mainActivityJava: string) => string
 ) {
-  let mainActivityJavaPath = globSync(
+  const mainActivityJavaPath = globSync(
     path.join(projectRoot, 'android/app/src/main/java/**/MainActivity.java')
   )[0];
-  let mainActivityString = fs.readFileSync(mainActivityJavaPath).toString();
-  let result = callback(mainActivityString);
+  const mainActivityString = fs.readFileSync(mainActivityJavaPath).toString();
+  const result = callback(mainActivityString);
   fs.writeFileSync(mainActivityJavaPath, result);
 }
 
 export default async function configureAndroidProjectAsync(projectRoot: string) {
+  // Check package before reading the config because it may mutate the config if the user is prompted to define it.
+  await getOrPromptForPackage(projectRoot);
+
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const username = await UserManager.getCurrentUsernameAsync();
 
   await modifyBuildGradleAsync(projectRoot, (buildGradle: string) => {
     buildGradle = AndroidConfig.GoogleServices.setClassPath(exp, buildGradle);
@@ -70,6 +77,8 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
 
   await modifyAndroidManifestAsync(projectRoot, async androidManifest => {
     androidManifest = await AndroidConfig.Package.setPackageInAndroidManifest(exp, androidManifest);
+    androidManifest = await AndroidConfig.AllowBackup.setAllowBackup(exp, androidManifest);
+    androidManifest = await AndroidConfig.Scheme.setScheme(exp, androidManifest);
     androidManifest = await AndroidConfig.Orientation.setAndroidOrientation(exp, androidManifest);
     androidManifest = await AndroidConfig.Permissions.setAndroidPermissions(exp, androidManifest);
     androidManifest = await AndroidConfig.Branch.setBranchApiKey(exp, androidManifest);
@@ -92,6 +101,8 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
       exp,
       androidManifest
     );
+
+    androidManifest = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifest, username);
 
     return androidManifest;
   });

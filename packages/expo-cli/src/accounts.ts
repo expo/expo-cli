@@ -1,10 +1,10 @@
+import { RegistrationData, User, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import program from 'commander';
 
-import { RegistrationData, User, UserManager } from '@expo/xdl';
 import CommandError from './CommandError';
-import prompt, { Question } from './prompt';
 import log from './log';
+import prompt, { Question } from './prompt';
 
 UserManager.initialize();
 
@@ -16,18 +16,13 @@ type CommandOptions = {
   };
 };
 
-export async function loginOrRegisterIfLoggedOut(): Promise<User> {
-  let user = await UserManager.getCurrentUserAsync();
-  if (user) {
-    return user;
-  }
-
+export async function loginOrRegisterAsync(): Promise<User> {
   log.warn('An Expo user account is required to proceed.');
 
   if (program.nonInteractive) {
     throw new CommandError(
       'NOT_LOGGED_IN',
-      `Not logged in. Use \`${program.name} login -u username -p password\` to log in.`
+      `Not logged in. Use \`${program.name()} login -u username -p password\` to log in.`
     );
   }
 
@@ -60,6 +55,14 @@ export async function loginOrRegisterIfLoggedOut(): Promise<User> {
   } else {
     throw new CommandError('BAD_CHOICE', 'Not logged in.');
   }
+}
+
+export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
+  const user = await UserManager.getCurrentUserAsync();
+  if (user) {
+    return user;
+  }
+  return await loginOrRegisterAsync();
 }
 
 export async function login(options: CommandOptions): Promise<User> {
@@ -129,7 +132,7 @@ async function _usernamePasswordAuth(username?: string, password?: string): Prom
     password: password || answers.password,
   };
 
-  let user = await UserManager.loginAsync('user-pass', data);
+  const user = await UserManager.loginAsync('user-pass', data);
 
   if (user) {
     console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);

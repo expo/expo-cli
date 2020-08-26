@@ -1,7 +1,7 @@
-/webpack/
+webpack
 node_modules
-/web-default/
-/jest/
+web-default
+jest
 
 .expo
 .next

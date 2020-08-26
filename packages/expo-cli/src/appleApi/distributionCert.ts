@@ -1,9 +1,9 @@
-import ora from 'ora';
-import dateformat from 'dateformat';
-import get from 'lodash/get';
 import chalk from 'chalk';
+import dateformat from 'dateformat';
+import ora from 'ora';
 
 import CommandError, { ErrorCodes } from '../CommandError';
+import log from '../log';
 import { AppleCtx } from './authenticate';
 import { runAction, travelingFastlane } from './fastlane';
 
@@ -86,7 +86,7 @@ export class DistCertManager {
       return result;
     } catch (err) {
       spinner.stop();
-      const resultString = get(err, 'rawDump.resultString');
+      const resultString = err.rawDump?.resultString;
       if (resultString && resultString.match(/Maximum number of certificates generated/)) {
         throw new CommandError(
           ErrorCodes.APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR,
@@ -98,16 +98,22 @@ export class DistCertManager {
   }
   async revoke(ids: string[]) {
     const spinner = ora(`Revoking Distribution Certificate on Apple Servers...`).start();
-    const args = [
-      'revoke',
-      this.ctx.appleId,
-      this.ctx.appleIdPassword,
-      this.ctx.team.id,
-      String(this.ctx.team.inHouse),
-      ids.join(','),
-    ];
-    await runAction(travelingFastlane.manageDistCerts, args);
-    spinner.succeed();
+    try {
+      const args = [
+        'revoke',
+        this.ctx.appleId,
+        this.ctx.appleIdPassword,
+        this.ctx.team.id,
+        String(this.ctx.team.inHouse),
+        ids.join(','),
+      ];
+      await runAction(travelingFastlane.manageDistCerts, args);
+      spinner.succeed();
+    } catch (error) {
+      log.error(error);
+      spinner.fail('Failed to revoke Distribution Certificate on Apple Servers');
+      throw error;
+    }
   }
 
   format({ name, id, status, expires, created, ownerName }: DistCertInfo): string {

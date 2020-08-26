@@ -2,7 +2,7 @@
 require 'bundler/setup'
 
 PACKAGE_NAME = "traveling-fastlane"
-VERSION = "1.13.1"
+VERSION = "1.15.1"
 TRAVELING_RUBY_VERSION = "20150715-2.2.2"
 JSON_VERSION = '1.8.2'
 UNF_VERSION = '0.0.6'
@@ -26,10 +26,12 @@ SCRIPTS = [
 ]
 
 desc "Package your app"
-task :package => ['package:linux:x86_64', 'package:osx']
+task :package => ['clean', 'package:linux:x86_64', 'package:osx']
 
 task :clean do
-  sh "rm -rf #{PACKAGE_NAME}-#{VERSION}-osx #{PACKAGE_NAME}-#{VERSION}-linux-x86_64 *.gz"
+  sh "rm -rf #{PACKAGE_NAME}-*-osx #{PACKAGE_NAME}-*-linux-x86_64 *.gz"
+  sh "rm -rf publishing/darwin/dist"
+  sh "rm -rf publishing/linux/dist"
 end
 
 namespace :package do
@@ -147,14 +149,14 @@ def create_package target
   end
 
   if target == "osx"
-    sh "cp -R #{PACKAGE_NAME}-#{VERSION}-osx publishing/darwin"
+    sh "mv #{PACKAGE_NAME}-#{VERSION}-osx publishing/darwin/dist"
     if !ENV['NO_PUBLISH']
-      sh "cd publishing/darwin; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-osx"
+      sh "cd publishing/darwin; npm publish --access=public -timeout=9999999"
     end
   else
-    sh "cp -R #{PACKAGE_NAME}-#{VERSION}-linux-x86_64 publishing/linux"
+    sh "mv #{PACKAGE_NAME}-#{VERSION}-linux-x86_64 publishing/linux/dist"
     if !ENV['NO_PUBLISH']
-      sh "cd publishing/linux; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-linux-x86_64"
+      sh "cd publishing/linux; npm publish --access=public -timeout=9999999"
     end
   end
 end

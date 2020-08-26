@@ -1,4 +1,5 @@
 import { resolve } from 'path';
+
 import {
   getGoogleMobileAdsAppId,
   getGoogleMobileAdsAutoInit,
@@ -35,17 +36,17 @@ describe('Android permissions', () => {
       androidManifestJson
     );
 
-    let mainApplication = androidManifestJson.manifest.application.filter(
+    const mainApplication = androidManifestJson.manifest.application.filter(
       e => e['$']['android:name'] === '.MainApplication'
     )[0];
 
-    let apiKeyItem = mainApplication['meta-data'].filter(
+    const apiKeyItem = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'com.google.android.gms.ads.APPLICATION_ID'
     );
     expect(apiKeyItem).toHaveLength(1);
     expect(apiKeyItem[0]['$']['android:value']).toMatch('MY-API-KEY');
 
-    let usesLibraryItem = mainApplication['meta-data'].filter(
+    const usesLibraryItem = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT'
     );
     expect(usesLibraryItem).toHaveLength(1);

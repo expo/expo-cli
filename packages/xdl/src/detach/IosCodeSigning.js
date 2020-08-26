@@ -1,14 +1,13 @@
+import plist from '@expo/plist';
 import crypto from 'crypto';
+import fs from 'fs-extra';
+import { sync as globSync } from 'glob';
+import omit from 'lodash/omit';
+import minimatch from 'minimatch';
 import path from 'path';
 
-import _ from 'lodash';
-import fs from 'fs-extra';
-import glob from 'glob-promise';
-import minimatch from 'minimatch';
-import plist from '@expo/plist';
-
-import { findP12CertSerialNumber, getP12CertFingerprint } from './PKCS12Utils';
 import { spawnAsyncThrowError } from './ExponentTools';
+import { findP12CertSerialNumber, getP12CertFingerprint } from './PKCS12Utils';
 
 async function ensureCertificateValid({ certPath, certPassword, teamID }) {
   const certData = await fs.readFile(certPath);
@@ -49,11 +48,7 @@ function _ensureDeveloperCertificateIsValid(plistData, distCertFingerprint) {
 
 function _genDerCertFingerprint(certBase64) {
   const certBuffer = Buffer.from(certBase64, 'base64');
-  return crypto
-    .createHash('sha1')
-    .update(certBuffer)
-    .digest('hex')
-    .toUpperCase();
+  return crypto.createHash('sha1').update(certBuffer).digest('hex').toUpperCase();
 }
 
 function _ensureBundleIdentifierIsValid(plistData, expectedBundleIdentifier) {
@@ -218,18 +213,22 @@ async function createEntitlementsFile({
 }) {
   const decodedProvisioningProfileEntitlements = plistData.Entitlements;
 
-  const entitlementsPattern = path.join(archivePath, 'Products/Applications/*.app/*.entitlements');
-  const entitlementsPaths = await glob(entitlementsPattern);
+  const entitlementsPaths = globSync('Products/Applications/*.app/*.entitlements', {
+    absolute: true,
+    cwd: archivePath,
+  });
   if (entitlementsPaths.length === 0) {
     throw new Error("Didn't find any generated entitlements file in archive.");
   } else if (entitlementsPaths.length !== 1) {
     throw new Error('Found more than one entitlements file.');
   }
   const archiveEntitlementsPath = entitlementsPaths[0];
-  const archiveEntitlementsRaw = await fs.readFile(archiveEntitlementsPath);
-  const archiveEntitlementsData = _.attempt(plist.parse, String(archiveEntitlementsRaw));
-  if (_.isError(archiveEntitlementsData)) {
-    throw new Error(`Error when parsing plist: ${archiveEntitlementsData.message}`);
+  const archiveEntitlementsRaw = await fs.readFile(archiveEntitlementsPath, 'utf8');
+  let archiveEntitlementsData;
+  try {
+    archiveEntitlementsData = plist.parse(archiveEntitlementsRaw);
+  } catch (error) {
+    throw new Error(`Error when parsing plist: ${error.message}`);
   }
 
   const entitlements = { ...decodedProvisioningProfileEntitlements };
@@ -240,10 +239,10 @@ async function createEntitlementsFile({
     }
   });
 
-  let generatedEntitlements = _.omit(entitlements, blacklistedEntitlementKeys);
+  let generatedEntitlements = omit(entitlements, blacklistedEntitlementKeys);
 
   if (!manifest.ios.usesIcloudStorage) {
-    generatedEntitlements = _.omit(generatedEntitlements, blacklistedEntitlementKeysWithoutICloud);
+    generatedEntitlements = omit(generatedEntitlements, blacklistedEntitlementKeysWithoutICloud);
   } else {
     const ubiquityKvKey = 'com.apple.developer.ubiquity-kvstore-identifier';
     if (generatedEntitlements[ubiquityKvKey]) {
@@ -253,17 +252,17 @@ async function createEntitlementsFile({
     generatedEntitlements['com.apple.developer.icloud-services'] = ['CloudDocuments'];
   }
   if (!manifest.ios.associatedDomains) {
-    generatedEntitlements = _.omit(generatedEntitlements, 'com.apple.developer.associated-domains');
+    generatedEntitlements = omit(generatedEntitlements, 'com.apple.developer.associated-domains');
   }
   if (!manifest.ios.usesAppleSignIn) {
-    generatedEntitlements = _.omit(generatedEntitlements, 'com.apple.developer.applesignin');
+    generatedEntitlements = omit(generatedEntitlements, 'com.apple.developer.applesignin');
   }
   if (generatedEntitlements[icloudContainerEnvKey]) {
     const envs = generatedEntitlements[icloudContainerEnvKey].filter(i => i === 'Production');
     generatedEntitlements[icloudContainerEnvKey] = envs;
   }
 
-  const generatedEntitlementsPlistData = _.attempt(plist.build, generatedEntitlements);
+  const generatedEntitlementsPlistData = plist.build(generatedEntitlements);
   await fs.writeFile(generatedEntitlementsPath, generatedEntitlementsPlistData, {
     mode: 0o755,
   });

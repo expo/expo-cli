@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import { resolve } from 'path';
+
 import { ExpoConfig } from '../Config.types';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';
@@ -13,7 +14,7 @@ export async function setGoogleServicesFile(
   projectDirectory: string,
   targetPath: string = DEFAULT_TARGET_PATH
 ) {
-  let partialSourcePath = getGoogleServicesFilePath(config);
+  const partialSourcePath = getGoogleServicesFilePath(config);
   if (!partialSourcePath) {
     return false;
   }
@@ -43,7 +44,7 @@ const googleServicesVersion = '4.3.3';
  * better solution than this.
  */
 export function setClassPath(config: ExpoConfig, buildGradle: string) {
-  let googleServicesFile = getGoogleServicesFilePath(config);
+  const googleServicesFile = getGoogleServicesFilePath(config);
   if (!googleServicesFile) {
     return buildGradle;
   }
@@ -61,13 +62,13 @@ export function setClassPath(config: ExpoConfig, buildGradle: string) {
 }
 
 export function applyPlugin(config: ExpoConfig, appBuildGradle: string) {
-  let googleServicesFile = getGoogleServicesFilePath(config);
+  const googleServicesFile = getGoogleServicesFilePath(config);
   if (!googleServicesFile) {
     return appBuildGradle;
   }
 
   // Make sure the project does not have the plugin already
-  let pattern = new RegExp(`apply\\s+plugin:\\s+['"]${googleServicesPlugin}['"]`);
+  const pattern = new RegExp(`apply\\s+plugin:\\s+['"]${googleServicesPlugin}['"]`);
   if (appBuildGradle.match(pattern)) {
     return appBuildGradle;
   }

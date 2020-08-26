@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
+import Jimp from 'jimp';
 import fetch from 'node-fetch';
 import path from 'path';
 import stream from 'stream';
 import temporary from 'tempy';
 import util from 'util';
-import Jimp from 'jimp';
 
 // cache downloaded images into memory
 const cacheDownloadedKeys: Record<string, string> = {};
@@ -40,10 +40,7 @@ export async function downloadImage(url: string): Promise<string> {
 
   // If an image URL doesn't have a name, get the mime type and move the file.
   const img = await Jimp.read(localPath);
-  const mime = img
-    .getMIME()
-    .split('/')
-    .pop()!;
+  const mime = img.getMIME().split('/').pop()!;
   if (!localPath.endsWith(mime)) {
     const newPath = path.join(outputPath, `image.${mime}`);
     await fs.move(localPath, newPath);

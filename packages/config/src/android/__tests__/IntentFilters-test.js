@@ -1,6 +1,7 @@
 import { resolve } from 'path';
-import { readAndroidManifestAsync } from '../Manifest';
+
 import { getIntentFilters, setAndroidIntentFilters } from '../IntentFilters';
+import { readAndroidManifestAsync } from '../Manifest';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');

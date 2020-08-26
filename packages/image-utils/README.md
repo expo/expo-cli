@@ -1,22 +1,13 @@
 # `@expo/image-utils`
 
-A library for image processing functionality in Expo CLI.
+A library for image processing functionality in Expo CLI. It uses `sharp` for image processing if it's available through a global `sharp-cli` installation. Otherwise it uses `jimp`, a Node library with no native dependencies, and warns the user that they may want to install `sharp-cli` for faster image processing.
 
-## Installation
+## Advanced Configuration
 
-This library depends on `sharp-cli`. If the automatic installation of `sharp-cli` fails, you may see the following error in Expo CLI:
+This package can be configured using the following environment variables.
 
-```
-This command requires version <version> of `sharp-cli`.
-You can install it using `npm install -g sharp-cli@$<version>`
+### EXPO_IMAGE_UTILS_NO_SHARP
 
-For prerequisites, see: https://sharp.dimens.io/en/stable/install/#prerequisites
-```
+When truthy, this will force global `sharp-cli` resolution methods like `isAvailableAsync()` and `findSharpInstanceAsync()` to fail. Other processes can use this to fallback on Jimp for image modifications. By default this is falsy (undefined).
 
-To fix this error, you can install `sharp-cli` yourself. First check that you have all the platform specific [prerequisites for the `sharp` library](https://sharp.dimens.io/en/stable/install/#prerequisites). Then install `sharp-cli` **globally**:
-
-```
-npm install -g sharp-cli
-```
-
-`@expo/image-utils` will automatically find the global `sharp` command and use that.
+`findSharpInstanceAsync()` will throw an error if disabled because it shouldn't be invoked if `isAvailableAsync()` returns `false`.

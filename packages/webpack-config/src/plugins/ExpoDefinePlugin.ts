@@ -1,8 +1,9 @@
 import { ExpoConfig } from '@expo/config';
+import { boolish } from 'getenv';
 import { DefinePlugin as OriginalDefinePlugin } from 'webpack';
 
-import { Environment, Mode } from '../types';
 import { getConfig, getMode, getPublicPaths } from '../env';
+import { Environment, Mode } from '../types';
 
 function createEnvironmentConstants(appManifest: ExpoConfig) {
   return {
@@ -37,8 +38,7 @@ function createEnvironmentConstants(appManifest: ExpoConfig) {
  * @internal
  */
 export interface ClientEnv {
-  __DEV__: boolean;
-  'process.env': { [key: string]: string };
+  [key: string]: OriginalDefinePlugin.CodeValueObject;
 }
 
 /**
@@ -49,7 +49,7 @@ export interface ClientEnv {
  * @param nativeAppManifest public values to be used in `expo-constants`.
  * @internal
  */
-function createClientEnvironment(
+export function createClientEnvironment(
   mode: Mode,
   publicPath: string,
   nativeAppManifest: ExpoConfig
@@ -60,11 +60,15 @@ function createClientEnvironment(
   const ENV_VAR_REGEX = /^(EXPO_|REACT_NATIVE_|CI$)/i;
   const SECRET_REGEX = /(PASSWORD|SECRET|TOKEN)/i;
 
+  const shouldDefineKeys = boolish('EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS', false);
+
+  const prefix = shouldDefineKeys ? 'process.env.' : '';
+
   const processEnv = Object.keys(process.env)
     .filter(key => ENV_VAR_REGEX.test(key) && !SECRET_REGEX.test(key))
     .reduce(
       (env, key) => {
-        env[key] = JSON.stringify(process.env[key]);
+        env[`${prefix}${key}`] = JSON.stringify(process.env[key]);
         return env;
       },
       {
@@ -72,7 +76,7 @@ function createClientEnvironment(
          * Useful for determining whether we’re running in production mode.
          * Most importantly, it switches React into the correct mode.
          */
-        NODE_ENV: JSON.stringify(environment),
+        [`${prefix}NODE_ENV`]: JSON.stringify(environment),
 
         /**
          * Useful for resolving the correct path to static assets in `public`.
@@ -80,15 +84,23 @@ function createClientEnvironment(
          * This should only be used as an escape hatch. Normally you would put
          * images into the root folder and `import` them in code to get their paths.
          */
-        PUBLIC_URL: JSON.stringify(publicPath),
+        [`${prefix}PUBLIC_URL`]: JSON.stringify(publicPath),
 
         /**
          * Surfaces the `app.json` (config) as an environment variable which is then parsed by
          * `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/
          */
-        APP_MANIFEST: JSON.stringify(nativeAppManifest),
-      } as { [key: string]: string }
+        [`${prefix}APP_MANIFEST`]: JSON.stringify(nativeAppManifest),
+      } as Record<string, string>
     );
+
+  if (shouldDefineKeys) {
+    return {
+      ...processEnv,
+      __DEV__,
+    };
+  }
+
   return {
     'process.env': processEnv,
     __DEV__,

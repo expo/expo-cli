@@ -1,28 +1,27 @@
-import fs from 'fs-extra';
+import * as fs from 'fs-extra';
 
 import { ExpoConfig } from '../Config.types';
-import { getPbxproj, isBuildConfig, removeComments, removeTestHosts } from './utils/Xcodeproj';
-import { addWarningIOS } from '../WarningAggregator';
+import { getPbxproj } from './utils/Xcodeproj';
 
-export function getSupportsTablet(config: ExpoConfig) {
+export function getSupportsTablet(config: ExpoConfig): boolean {
   if (config.ios?.supportsTablet) {
-    return config.ios?.supportsTablet;
+    return !!config.ios?.supportsTablet;
   }
 
   return false;
 }
 
-export function getIsTabletOnly(config: ExpoConfig) {
+export function getIsTabletOnly(config: ExpoConfig): boolean {
   if (config.ios?.isTabletOnly) {
-    return config.ios.isTabletOnly;
+    return !!config.ios.isTabletOnly;
   }
 
   return false;
 }
 
-export function getDeviceFamilies(config: ExpoConfig) {
-  let supportsTablet = getSupportsTablet(config);
-  let isTabletOnly = getIsTabletOnly(config);
+export function getDeviceFamilies(config: ExpoConfig): number[] {
+  const supportsTablet = getSupportsTablet(config);
+  const isTabletOnly = getIsTabletOnly(config);
 
   // 1 is iPhone, 2 is iPad
   if (isTabletOnly) {
@@ -35,36 +34,31 @@ export function getDeviceFamilies(config: ExpoConfig) {
 }
 
 /**
+ * Wrapping the families in double quotes is the only way to set a value with a comma in it.
+ * Use a number when only value is returned, this better emulates Xcode.
+ *
+ * @param deviceFamilies
+ */
+export function formatDeviceFamilies(deviceFamilies: number[]): string | number {
+  return deviceFamilies.length === 1 ? deviceFamilies[0] : `"${deviceFamilies.join(',')}"`;
+}
+
+/**
  * Add to pbxproj under TARGETED_DEVICE_FAMILY
  */
 export function setDeviceFamily(config: ExpoConfig, projectRoot: string) {
-  const deviceFamilies = getDeviceFamilies(config);
+  const deviceFamilies = formatDeviceFamilies(getDeviceFamilies(config));
 
-  let supportsTablet = getSupportsTablet(config);
-  let isTabletOnly = getIsTabletOnly(config);
-
-  if (isTabletOnly) {
-    addWarningIOS(
-      'isTabletOnly',
-      'You will need to configure this in the "General" tab for your project target in Xcode.'
-    );
-  } else if (supportsTablet) {
-    addWarningIOS(
-      'supportsTablet',
-      'You will need to configure this in the "General" tab for your project target in Xcode.'
-    );
+  const project = getPbxproj(projectRoot);
+  const configurations = project.pbxXCBuildConfigurationSection();
+  // @ts-ignore
+  for (const { buildSettings } of Object.values(configurations || {})) {
+    // Guessing that this is the best way to emulate Xcode.
+    // Using `project.addToBuildSettings` modifies too many targets.
+    if (typeof buildSettings?.PRODUCT_NAME !== 'undefined') {
+      buildSettings.TARGETED_DEVICE_FAMILY = deviceFamilies;
+    }
   }
 
-  // TODO: we might need to actually fork the "xcode" package to make this work
-  // See: https://github.com/apache/cordova-node-xcode/issues/86
-  //
-  // const project = getPbxproj(projectRoot);
-  // Object.entries(project.pbxXCBuildConfigurationSection())
-  //   .filter(removeComments)
-  //   .filter(isBuildConfig)
-  //   .filter(removeTestHosts)
-  //   .forEach(({ 1: { buildSettings } }: any) => {
-  //     buildSettings.TARGETED_DEVICE_FAMILY = '1';
-  //   });
-  // fs.writeFileSync(project.filepath, project.writeSync());
+  fs.writeFileSync(project.filepath, project.writeSync());
 }

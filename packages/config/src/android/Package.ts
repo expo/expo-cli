@@ -1,6 +1,7 @@
-import path from 'path';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
+import path from 'path';
+
 import { ExpoConfig } from '../Config.types';
 import { Document } from './Manifest';
 
@@ -17,13 +18,13 @@ function getPackageRoot(projectRoot: string) {
 }
 
 function getCurrentPackageName(projectRoot: string) {
-  let packageRoot = getPackageRoot(projectRoot);
-  let mainApplicationPath = globSync(path.join(packageRoot, '**', 'MainApplication.java'))[0];
-  let packagePath = path.dirname(mainApplicationPath);
-  let packagePathParts = packagePath
-    .replace(packageRoot, '')
-    .split(path.sep)
-    .filter(Boolean);
+  const packageRoot = getPackageRoot(projectRoot);
+  const mainApplicationPath = globSync('**/MainApplication.java', {
+    absolute: true,
+    cwd: packageRoot,
+  })[0];
+  const packagePath = path.dirname(mainApplicationPath);
+  const packagePathParts = packagePath.replace(packageRoot, '').split(path.sep).filter(Boolean);
 
   return packagePathParts.join('.');
 }
@@ -43,16 +44,16 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
   }
 
   // Set up our paths
-  let packageRoot = getPackageRoot(projectRoot);
-  let currentPackagePath = path.join(packageRoot, ...currentPackageName.split('.'));
-  let newPackagePath = path.join(packageRoot, ...newPackageName.split('.'));
+  const packageRoot = getPackageRoot(projectRoot);
+  const currentPackagePath = path.join(packageRoot, ...currentPackageName.split('.'));
+  const newPackagePath = path.join(packageRoot, ...newPackageName.split('.'));
 
   // Create the new directory
   fs.mkdirpSync(newPackagePath);
 
   // Move everything from the old directory over
-  globSync(path.join(currentPackagePath, '**', '*')).forEach(filepath => {
-    let relativePath = filepath.replace(currentPackagePath, '');
+  globSync('**/*', { cwd: currentPackagePath }).forEach(relativePath => {
+    const filepath = path.join(currentPackagePath, relativePath);
     if (fs.lstatSync(filepath).isFile()) {
       fs.moveSync(filepath, path.join(newPackagePath, relativePath));
     } else {
@@ -62,11 +63,11 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
 
   // Remove the old directory recursively from com/old/package to com/old and com,
   // as long as the directories are empty
-  let oldPathParts = currentPackageName.split('.');
+  const oldPathParts = currentPackageName.split('.');
   while (oldPathParts.length) {
-    let pathToCheck = path.join(packageRoot, ...oldPathParts);
+    const pathToCheck = path.join(packageRoot, ...oldPathParts);
     try {
-      let files = fs.readdirSync(pathToCheck);
+      const files = fs.readdirSync(pathToCheck);
       if (files.length === 0) {
         fs.rmdirSync(pathToCheck);
       }
@@ -77,7 +78,7 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
   }
 
   const filesToUpdate = [
-    ...globSync(path.join(newPackagePath, '**', '*')),
+    ...globSync('**/*', { cwd: newPackagePath, absolute: true }),
     path.join(projectRoot, 'android', 'app', 'BUCK'),
   ];
   // Replace all occurrences of the path in the project
@@ -93,17 +94,17 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
 }
 
 export function setPackageInBuildGradle(config: ExpoConfig, buildGradle: string) {
-  let packageName = getPackage(config);
+  const packageName = getPackage(config);
   if (packageName === null) {
     return buildGradle;
   }
 
-  let pattern = new RegExp(`applicationId ['"].*['"]`);
+  const pattern = new RegExp(`applicationId ['"].*['"]`);
   return buildGradle.replace(pattern, `applicationId '${packageName}'`);
 }
 
 export async function setPackageInAndroidManifest(config: ExpoConfig, manifestDocument: Document) {
-  let packageName = getPackage(config);
+  const packageName = getPackage(config);
 
   manifestDocument['manifest']['$']['package'] = packageName;
 

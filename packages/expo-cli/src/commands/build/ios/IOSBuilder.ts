@@ -1,46 +1,62 @@
-import chalk from 'chalk';
-import isEmpty from 'lodash/isEmpty';
-import pickBy from 'lodash/pickBy';
-import get from 'lodash/get';
 import { XDLError } from '@expo/xdl';
+import chalk from 'chalk';
+import pickBy from 'lodash/pickBy';
+import os from 'os';
+import semver from 'semver';
+import terminalLink from 'terminal-link';
 
-import { Dictionary } from 'lodash';
-import BaseBuilder from '../BaseBuilder';
-import { PLATFORMS } from '../constants';
-import * as utils from '../utils';
+import CommandError, { ErrorCodes } from '../../../CommandError';
 import * as apple from '../../../appleApi';
-import prompt from '../../../prompt';
-import { ensurePNGIsNotTransparent } from './utils/image';
-import { runCredentialsManager } from '../../../credentials/route';
-import { Context } from '../../../credentials/context';
 import { displayProjectCredentials } from '../../../credentials/actions/list';
-import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
-import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
-import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
-import CommandError from '../../../CommandError';
-import log from '../../../log';
-
+import { Context } from '../../../credentials/context';
+import { runCredentialsManager } from '../../../credentials/route';
 import {
   RemoveIosDist,
   getDistCertFromParams,
   useDistCertFromParams,
 } from '../../../credentials/views/IosDistCert';
 import {
-  RemoveIosPush,
-  getPushKeyFromParams,
-  usePushKeyFromParams,
-} from '../../../credentials/views/IosPushCredentials';
-import {
   RemoveProvisioningProfile,
   getProvisioningProfileFromParams,
   useProvisioningProfileFromParams,
 } from '../../../credentials/views/IosProvisioningProfile';
+import {
+  RemoveIosPush,
+  getPushKeyFromParams,
+  usePushKeyFromParams,
+} from '../../../credentials/views/IosPushCredentials';
+import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
+import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
+import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
+import log from '../../../log';
+import prompt from '../../../prompt';
+import { getOrPromptForBundleIdentifier } from '../../eject/ConfigValidation';
+import BaseBuilder from '../BaseBuilder';
+import { PLATFORMS } from '../constants';
+import * as utils from '../utils';
+import { ensurePNGIsNotTransparent } from './utils/image';
+
+const noBundleIdMessage = `Your project must have a \`bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
+
+function missingBundleIdentifierError() {
+  return new XDLError('INVALID_OPTIONS', noBundleIdMessage);
+}
+
+interface AppLookupParams {
+  accountName: string;
+  projectName: string;
+  bundleIdentifier: string;
+}
 
 class IOSBuilder extends BaseBuilder {
-  appleCtx?: apple.AppleCtx;
-
   async run(): Promise<void> {
-    await this.validateProject();
+    // This gets run after all other validation to prevent users from having to answer this question multiple times.
+    this.options.type = await utils.askBuildType(this.options.type!, {
+      archive: 'Deploy the build to the store',
+      simulator: 'Run the build on a simulator',
+    });
+    this.maybeWarnDamagedSimulator();
+    log.addNewLineIfNone();
     await this.checkForBuildInProgress();
     if (this.options.type === 'archive') {
       await this.prepareCredentials();
@@ -50,42 +66,24 @@ class IOSBuilder extends BaseBuilder {
       await this.checkStatusBeforeBuild();
     }
     await this.build(publishedExpIds);
-  }
-
-  async validateProject() {
-    const bundleIdentifier = get(this.manifest, 'ios.bundleIdentifier');
-    const sdkVersion = this.manifest.sdkVersion;
-
-    await this.validateIcon();
-
-    if (!bundleIdentifier) {
-      throw new XDLError(
-        'INVALID_OPTIONS',
-        `Your project must have a bundleIdentifier set in app.json.
-See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#2-configure-appjson`
-      );
-    }
-    await utils.checkIfSdkIsSupported(sdkVersion!, PLATFORMS.IOS);
-  }
-
-  async getAppleCtx(): Promise<apple.AppleCtx> {
-    if (!this.appleCtx) {
-      await apple.setup();
-      this.appleCtx = await apple.authenticate(this.options);
-    }
-    return this.appleCtx;
+    this.maybeWarnDamagedSimulator();
   }
 
   // Try to get the user to provide Apple credentials upfront
   // We will be able to do full validation of their iOS creds this way
-  async bestEffortAppleCtx(ctx: Context, bundleIdentifier: string) {
+  async bestEffortAppleCtx(ctx: Context): Promise<void> {
+    if (ctx.hasAppleCtx()) {
+      // skip prompts if already have apple ctx
+      return;
+    }
     if (this.options.appleId) {
-      return await ctx.ensureAppleCtx(this.options);
+      // skip prompts and auto authenticate if flags are passed
+      return await ctx.ensureAppleCtx();
     }
 
     const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
     if (nonInteractive) {
-      return null;
+      return;
     }
 
     const { confirm } = await prompt([
@@ -96,7 +94,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       },
     ]);
     if (confirm) {
-      return await ctx.ensureAppleCtx(this.options);
+      return await ctx.ensureAppleCtx();
     } else {
       log(
         chalk.green(
@@ -106,23 +104,81 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     }
   }
 
-  async prepareCredentials() {
-    // TODO: Fix forcing the username to be valid
-    const username = this.manifest.owner ?? this.user?.username!;
-    const experienceName = `@${username}/${this.manifest.slug}`;
-    const bundleIdentifier = get(this.manifest, 'ios.bundleIdentifier');
+  // All config validation should happen here before any build logic takes place.
+  // It's important that the errors are revealed in a thoughtful manner.
+  async checkProjectConfig(): Promise<void> {
+    // Run this first because the error messages are related
+    // to ExpoKit which is harder to change than the bundle ID.
+    await super.checkProjectConfig();
+
+    // Check the SDK version next as it's the second hardest thing to change.
+    const sdkVersion = this.manifest.sdkVersion;
+
+    await utils.checkIfSdkIsSupported(sdkVersion!, PLATFORMS.IOS);
+
+    // Validate the icon third since it's fairly easy to modify.
+    await this.validateIcon();
+
+    // Check the bundle ID and possibly prompt the user to add a new one.
+    await getOrPromptForBundleIdentifier(this.projectDir);
+    // Update with the latest bundle ID
+    this.updateProjectConfig();
+  }
+
+  private async getAccountNameAsync(): Promise<string> {
+    if (this.manifest.owner) return this.manifest.owner;
+    return (await this.getUserAsync())?.username;
+  }
+
+  private async prepareCredentials() {
+    const accountName = await this.getAccountNameAsync();
+    const projectName = this.manifest.slug;
+    const bundleIdentifier = this.manifest.ios?.bundleIdentifier;
+    if (!bundleIdentifier) throw missingBundleIdentifierError();
+    const appLookupParams = {
+      accountName,
+      projectName,
+      bundleIdentifier,
+    };
     const context = new Context();
-    await context.init(this.projectDir);
-    await this.bestEffortAppleCtx(context, bundleIdentifier);
-    await this.clearAndRevokeCredentialsIfRequested(context, { experienceName, bundleIdentifier });
+    await context.init(this.projectDir, {
+      ...this.options,
+      nonInteractive: this.options.parent?.nonInteractive,
+    });
+
+    if (this.options.skipCredentialsCheck) {
+      log('Skipping credentials check...');
+      return;
+    }
+    await this.bestEffortAppleCtx(context);
+    await this.clearAndRevokeCredentialsIfRequested(context, appLookupParams);
 
     try {
-      if (this.options.skipCredentialsCheck) {
-        log('Skipping credentials check...');
-        return;
-      }
-      await this.produceCredentials(context, experienceName, bundleIdentifier);
+      await this.produceCredentials(context, appLookupParams);
     } catch (e) {
+      if (e.code === ErrorCodes.NON_INTERACTIVE) {
+        log.newLine();
+        const link = terminalLink(
+          'expo.fyi/credentials-non-interactive',
+          'https://expo.fyi/credentials-non-interactive'
+        );
+        log(
+          chalk.bold.red(
+            `Additional information needed to setup credentials in non-interactive mode.`
+          )
+        );
+        log(chalk.bold.red(`Learn more about how to resolve this: ${link}.`));
+        log.newLine();
+
+        // We don't want to display project credentials when we bail out due to
+        // non-interactive mode error, because we are unable to recover without
+        // user input.
+        throw new CommandError(
+          ErrorCodes.NON_INTERACTIVE,
+          'Unable to proceed, see the above error message.'
+        );
+      }
+
       log(
         chalk.bold.red(
           'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
@@ -130,66 +186,73 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       );
       throw e;
     } finally {
-      const credentials = await context.ios.getAllCredentials();
-      displayProjectCredentials(experienceName, bundleIdentifier, credentials);
+      const appCredentials = await context.ios.getAppCredentials(appLookupParams);
+      const pushCredentials = await context.ios.getPushKey(appLookupParams);
+      const distCredentials = await context.ios.getDistCert(appLookupParams);
+      displayProjectCredentials(appLookupParams, appCredentials, pushCredentials, distCredentials);
     }
   }
 
-  async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {
-    const appCredentials = await ctx.ios.getAppCredentials(experienceName, bundleIdentifier);
+  async _setupDistCert(ctx: Context, appLookupParams: AppLookupParams): Promise<void> {
+    try {
+      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
+      const distCertFromParams = await getDistCertFromParams(this.options);
+      if (distCertFromParams) {
+        await useDistCertFromParams(ctx, appLookupParams, distCertFromParams);
+      } else {
+        await runCredentialsManager(ctx, new SetupIosDist(appLookupParams));
+      }
+    } catch (e) {
+      log.error('Failed to set up Distribution Certificate');
+      throw e;
+    }
+  }
 
+  async _setupPushCert(ctx: Context, appLookupParams: AppLookupParams): Promise<void> {
+    try {
+      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
+      const pushKeyFromParams = await getPushKeyFromParams(this.options);
+      if (pushKeyFromParams) {
+        await usePushKeyFromParams(ctx, appLookupParams, pushKeyFromParams);
+      } else {
+        await runCredentialsManager(ctx, new SetupIosPush(appLookupParams));
+      }
+    } catch (e) {
+      log.error('Failed to set up Push Key');
+      throw e;
+    }
+  }
+
+  async _setupProvisioningProfile(ctx: Context, appLookupParams: AppLookupParams) {
+    try {
+      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
+      const provisioningProfileFromParams = await getProvisioningProfileFromParams(
+        this.options.provisioningProfilePath
+      );
+      if (provisioningProfileFromParams) {
+        await useProvisioningProfileFromParams(ctx, appLookupParams, provisioningProfileFromParams);
+      } else {
+        await runCredentialsManager(ctx, new SetupIosProvisioningProfile(appLookupParams));
+      }
+    } catch (e) {
+      log.error('Failed to set up Provisioning Profile');
+      throw e;
+    }
+  }
+
+  async produceCredentials(ctx: Context, appLookupParams: AppLookupParams) {
     if (ctx.hasAppleCtx()) {
-      await apple.ensureAppExists(
-        ctx.appleCtx,
-        { experienceName, bundleIdentifier },
-        { enablePushNotifications: true }
-      );
+      await apple.ensureAppExists(ctx.appleCtx, appLookupParams, { enablePushNotifications: true });
     }
-
-    const distCertFromParams = await getDistCertFromParams(this.options);
-    if (distCertFromParams) {
-      await useDistCertFromParams(ctx, appCredentials, distCertFromParams);
-    } else {
-      await runCredentialsManager(ctx, new SetupIosDist({ experienceName, bundleIdentifier }));
-    }
-
-    const distributionCert = await ctx.ios.getDistCert(experienceName, bundleIdentifier);
-    if (!distributionCert) {
-      throw new CommandError(
-        'INSUFFICIENT_CREDENTIALS',
-        `This build request requires a valid distribution certificate.`
-      );
-    }
-
-    const pushKeyFromParams = await getPushKeyFromParams(this.options);
-    if (pushKeyFromParams) {
-      await usePushKeyFromParams(ctx, appCredentials, pushKeyFromParams);
-    } else {
-      await runCredentialsManager(ctx, new SetupIosPush({ experienceName, bundleIdentifier }));
-    }
-
-    const provisioningProfileFromParams = await getProvisioningProfileFromParams(this.options);
-    if (provisioningProfileFromParams) {
-      await useProvisioningProfileFromParams(
-        ctx,
-        appCredentials,
-        this.options.teamId!,
-        provisioningProfileFromParams,
-        distributionCert
-      );
-    } else {
-      await runCredentialsManager(
-        ctx,
-        new SetupIosProvisioningProfile({
-          experienceName,
-          bundleIdentifier,
-          distCert: distributionCert,
-        })
-      );
-    }
+    await this._setupDistCert(ctx, appLookupParams);
+    await this._setupPushCert(ctx, appLookupParams);
+    await this._setupProvisioningProfile(ctx, appLookupParams);
   }
 
-  async clearAndRevokeCredentialsIfRequested(ctx: Context, projectMetadata: any): Promise<void> {
+  async clearAndRevokeCredentialsIfRequested(
+    ctx: Context,
+    appLookupParams: AppLookupParams
+  ): Promise<void> {
     const {
       clearCredentials,
       clearDistCert,
@@ -204,52 +267,43 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       clearPushCert ||
       clearProvisioningProfile;
     if (shouldClearAnything) {
-      const { experienceName, bundleIdentifier } = projectMetadata;
       const credsToClear = this.determineCredentialsToClear();
-      await this.clearCredentials(ctx, experienceName, bundleIdentifier, credsToClear);
+      await this.clearCredentials(ctx, appLookupParams, credsToClear);
     }
   }
 
   async clearCredentials(
     ctx: Context,
-    experienceName: string,
-    bundleIdentifier: string,
-    credsToClear: Dictionary<boolean>
+    appLookupParams: AppLookupParams,
+    credsToClear: Record<string, boolean>
   ): Promise<void> {
     const shouldRevokeOnApple = this.options.revokeCredentials;
-    const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
-    const distributionCert = await ctx.ios.getDistCert(experienceName, bundleIdentifier);
-    if (credsToClear.distributionCert && distributionCert) {
-      await new RemoveIosDist(shouldRevokeOnApple, nonInteractive).removeSpecific(
-        ctx,
-        distributionCert
-      );
-    }
 
-    const pushKey = await ctx.ios.getPushKey(experienceName, bundleIdentifier);
-    if (credsToClear.pushKey && pushKey) {
-      await new RemoveIosPush(shouldRevokeOnApple, nonInteractive).removeSpecific(ctx, pushKey);
-    }
-
-    const appCredentials = await ctx.ios.getAppCredentials(experienceName, bundleIdentifier);
-    const provisioningProfile = await ctx.ios.getProvisioningProfile(
-      experienceName,
-      bundleIdentifier
-    );
+    const provisioningProfile = await ctx.ios.getProvisioningProfile(appLookupParams);
     if (credsToClear.provisioningProfile && provisioningProfile) {
-      await new RemoveProvisioningProfile(shouldRevokeOnApple, nonInteractive).removeSpecific(
-        ctx,
-        appCredentials
-      );
+      const view = new RemoveProvisioningProfile(appLookupParams.accountName, shouldRevokeOnApple);
+      await view.removeSpecific(ctx, appLookupParams);
     }
 
-    const pushCert = await ctx.ios.getPushCert(experienceName, bundleIdentifier);
+    const distributionCert = await ctx.ios.getDistCert(appLookupParams);
+    if (credsToClear.distributionCert && distributionCert) {
+      const view = new RemoveIosDist(appLookupParams.accountName, shouldRevokeOnApple);
+      await view.removeSpecific(ctx, distributionCert);
+    }
+
+    const pushKey = await ctx.ios.getPushKey(appLookupParams);
+    if (credsToClear.pushKey && pushKey) {
+      const view = new RemoveIosPush(appLookupParams.accountName, shouldRevokeOnApple);
+      await view.removeSpecific(ctx, pushKey);
+    }
+
+    const pushCert = await ctx.ios.getPushCert(appLookupParams);
     if (credsToClear.pushCert && pushCert) {
-      await ctx.ios.deletePushCert(experienceName, bundleIdentifier);
+      await ctx.ios.deletePushCert(appLookupParams);
     }
   }
 
-  determineCredentialsToClear(): Dictionary<boolean> {
+  determineCredentialsToClear(): Record<string, boolean> {
     const {
       clearCredentials,
       clearDistCert,
@@ -281,8 +335,13 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
 
   // validates whether the icon doesn't have transparency
   async validateIcon() {
+    // TODO: maybe recommend the icon builder website.
     try {
-      const icon = get(this.manifest, 'ios.icon', this.manifest.icon);
+      const icon = this.manifest.ios?.icon ?? this.manifest.icon;
+      if (!icon) {
+        // icon is optional
+        return;
+      }
       await ensurePNGIsNotTransparent(icon);
     } catch (err) {
       if (err instanceof XDLError) {
@@ -290,6 +349,26 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       } else {
         // something weird happened, let's assume the icon is correct
       }
+    }
+  }
+
+  // warns for "damaged" builds when targeting simulator
+  // see: https://github.com/expo/expo-cli/issues/1197
+  maybeWarnDamagedSimulator() {
+    // see: https://en.wikipedia.org/wiki/Darwin_%28operating_system%29#Release_history
+    const isMacOsCatalinaOrLater =
+      os.platform() === 'darwin' && semver.satisfies(os.release(), '>=19.0.0');
+
+    if (isMacOsCatalinaOrLater && this.options.type === 'simulator') {
+      log.newLine();
+      log(
+        chalk.bold(
+          `🚨 If the build is not installable on your simulator because of "${chalk.underline(
+            `... is damaged and can't be opened.`
+          )}", please run:`
+        )
+      );
+      log(chalk.grey.bold('xattr -rd com.apple.quarantine /path/to/your.app'));
     }
   }
 }

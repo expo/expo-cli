@@ -1,6 +1,6 @@
 import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import chalk from 'chalk';
-import fs from 'fs-extra';
+import { existsSync } from 'fs';
 import path from 'path';
 
 import { Logger, PackageManager, spawnSudoAsync } from './PackageManager';
@@ -14,11 +14,13 @@ export class CocoaPodsPackageManager implements PackageManager {
     if (CocoaPodsPackageManager.isUsingPods(projectRoot)) return projectRoot;
     const iosProject = path.join(projectRoot, 'ios');
     if (CocoaPodsPackageManager.isUsingPods(iosProject)) return iosProject;
+    const macOsProject = path.join(projectRoot, 'macos');
+    if (CocoaPodsPackageManager.isUsingPods(macOsProject)) return macOsProject;
     return null;
   }
 
   static isUsingPods(projectRoot: string): boolean {
-    return fs.existsSync(path.join(projectRoot, 'Podfile'));
+    return existsSync(path.join(projectRoot, 'Podfile'));
   }
 
   static async gemInstallCLIAsync(
@@ -28,19 +30,21 @@ export class CocoaPodsPackageManager implements PackageManager {
     const options = ['install', 'cocoapods', '--no-document'];
 
     try {
-      // Try the recommended way to install cocoapods first.
+      // In case the user has run sudo before running the command we can properly install CocoaPods without prompting for an interaction.
       await spawnAsync('gem', options, spawnOptions);
     } catch (error) {
       if (nonInteractive) {
         throw error;
       }
-      // If the default fails, it might be because sudo is required.
-      await spawnSudoAsync(`gem ${options.join(' ')}`);
+      // If the user doesn't have permission then we can prompt them to use sudo.
+      await spawnSudoAsync(['gem', ...options], spawnOptions);
     }
   }
+
   static async brewLinkCLIAsync(spawnOptions: SpawnOptions = { stdio: 'inherit' }): Promise<void> {
     await spawnAsync('brew', ['link', 'cocoapods'], spawnOptions);
   }
+
   static async brewInstallCLIAsync(
     spawnOptions: SpawnOptions = { stdio: 'inherit' }
   ): Promise<void> {
@@ -57,7 +61,7 @@ export class CocoaPodsPackageManager implements PackageManager {
     if (!spawnOptions) {
       spawnOptions = { stdio: 'inherit' };
     }
-    let silent = !!spawnOptions.ignoreStdio;
+    const silent = !!spawnOptions.ignoreStdio;
 
     try {
       !silent && console.log(chalk.magenta(`\u203A Attempting to install CocoaPods with Gem`));
@@ -65,11 +69,12 @@ export class CocoaPodsPackageManager implements PackageManager {
       !silent && console.log(chalk.magenta(`\u203A Successfully installed CocoaPods with Gem`));
       return true;
     } catch (error) {
-      !silent && console.log(chalk.yellow(`\u203A Failed to install CocoaPods with Gem`));
-      !silent && console.log(chalk.black.bgRed(error.stderr));
+      if (!silent) {
+        console.log(chalk.yellow(`\u203A Failed to install CocoaPods with Gem`));
+        console.log(chalk.red(error.stderr ?? error.message));
+        console.log(chalk.magenta(`\u203A Attempting to install CocoaPods with Homebrew`));
+      }
       try {
-        !silent &&
-          console.log(chalk.magenta(`\u203A Attempting to install CocoaPods with Homebrew`));
         await CocoaPodsPackageManager.brewInstallCLIAsync(spawnOptions);
         if (!(await CocoaPodsPackageManager.isCLIInstalledAsync(spawnOptions))) {
           try {
@@ -199,6 +204,7 @@ export class CocoaPodsPackageManager implements PackageManager {
   async removeLockfileAsync() {
     throw new Error('Unimplemented');
   }
+
   async cleanAsync() {
     throw new Error('Unimplemented');
   }

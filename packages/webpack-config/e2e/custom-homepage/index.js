@@ -1,4 +1,3 @@
-/* global document */
 import * as React from 'react';
 import { AppRegistry, View } from 'react-native';
 

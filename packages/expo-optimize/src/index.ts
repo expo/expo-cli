@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import chalk from 'chalk';
 import { Command } from 'commander';
+import packageJSON from 'expo-optimize/package.json';
 import { resolve } from 'path';
 // @ts-ignore: expo-optimize is not listed in its own dependencies
-import packageJSON from 'expo-optimize/package.json';
 
 import { isProjectOptimized as isProjectOptimizedAsync, optimizeAsync } from './assets';
 import shouldUpdate from './update';

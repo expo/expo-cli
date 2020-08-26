@@ -1,14 +1,56 @@
 import { UrlUtils, Webpack } from '@expo/xdl';
+import chalk from 'chalk';
 import { Command } from 'commander';
-import BaseBuilder from './BaseBuilder';
-import IOSBuilder from './ios/IOSBuilder';
-import AndroidBuilder from './AndroidBuilder';
-import log from '../../log';
+
 import CommandError from '../../CommandError';
-
+import log from '../../log';
+import prompt from '../../prompt';
+import * as ProjectUtils from '../utils/ProjectUtils';
+import AndroidBuilder from './AndroidBuilder';
+import BaseBuilder from './BaseBuilder';
 import { AndroidOptions, IosOptions } from './BaseBuilder.types';
+import IOSBuilder from './ios/IOSBuilder';
 
-export default function(program: Command) {
+async function maybeBailOnWorkflowWarning({
+  projectDir,
+  platform,
+  nonInteractive,
+}: {
+  projectDir: string;
+  platform: 'ios' | 'android';
+  nonInteractive: boolean;
+}) {
+  const { workflow } = await ProjectUtils.findProjectRootAsync(projectDir);
+  if (workflow === 'managed') {
+    return false;
+  }
+
+  const command = `expo build:${platform}`;
+  log.warn(chalk.bold(`⚠️  ${command} currently only supports managed workflow apps.`));
+  log.warn(
+    `If you proceed with this command, we can run the build for you but it will not include any custom native modules or changes that you have made to your local native projects.`
+  );
+  log.warn(
+    `Unless you are sure that you know what you are doing, we recommend aborting the build and doing a native release build through ${
+      platform === 'ios' ? 'Xcode' : 'Android Studio'
+    }.`
+  );
+
+  if (nonInteractive) {
+    log.warn(`Skipping confirmation prompt because non-interactive mode is enabled.`);
+    return false;
+  }
+
+  const answer = await prompt({
+    type: 'confirm',
+    name: 'ignoreWorkflowWarning',
+    message: `Would you like to proceed?`,
+  });
+
+  return !answer.ignoreWorkflowWarning;
+}
+
+export default function (program: Command) {
   program
     .command('build:ios [project-dir]')
     .alias('bi')
@@ -28,12 +70,7 @@ export default function(program: Command) {
       '--apple-id <login>',
       'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
     )
-    .option(
-      '-t --type <build>',
-      'Type of build: [archive|simulator].',
-      /^(archive|simulator)$/i,
-      'archive'
-    )
+    .option('-t --type <build>', 'Type of build: [archive|simulator].')
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
     .option('--no-publish', 'Disable automatic publishing before building.')
     .option('--no-wait', 'Exit immediately after scheduling build.')
@@ -50,31 +87,43 @@ export default function(program: Command) {
       'The URL of an externally hosted manifest (for self-hosted apps).'
     )
     .option('--skip-credentials-check', 'Skip checking credentials.')
+    .option('--skip-workflow-check', 'Skip warning about build service bare workflow limitations.')
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
-    .asyncActionProjectDir((projectDir: string, options: IosOptions) => {
-      if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
-        throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-      }
-      let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
-      if (!channelRe.test(options.releaseChannel)) {
-        log.error(
-          'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
-        );
-        process.exit(1);
-      }
-      if (
-        options.type !== undefined &&
-        options.type !== 'archive' &&
-        options.type !== 'simulator'
-      ) {
-        log.error('Build type must be one of {archive, simulator}');
-        process.exit(1);
-      }
-      const iosBuilder = new IOSBuilder(projectDir, options);
-      return iosBuilder.command();
-    });
+    .asyncActionProjectDir(
+      async (projectDir: string, options: IosOptions) => {
+        if (!options.skipWorkflowCheck) {
+          if (
+            await maybeBailOnWorkflowWarning({
+              projectDir,
+              platform: 'ios',
+              nonInteractive: program.nonInteractive,
+            })
+          ) {
+            return;
+          }
+        }
+        if (options.skipCredentialsCheck && options.clearCredentials) {
+          throw new CommandError(
+            "--skip-credentials-check and --clear-credentials can't be used together"
+          );
+        }
+        if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
+          throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
+        }
+        const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+        if (!channelRe.test(options.releaseChannel)) {
+          log.error(
+            'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
+          );
+          process.exit(1);
+        }
+        const iosBuilder = new IOSBuilder(projectDir, options);
+        return iosBuilder.command();
+      },
+      { checkConfig: true }
+    );
 
   program
     .command('build:android [project-dir]')
@@ -85,26 +134,48 @@ export default function(program: Command) {
     .option('--no-wait', 'Exit immediately after triggering build.')
     .option('--keystore-path <app.jks>', 'Path to your Keystore.')
     .option('--keystore-alias <alias>', 'Keystore Alias')
-    .option('--generate-keystore', 'Generate Keystore if one does not exist')
+    .option('--generate-keystore', '[deprecated] Generate Keystore if one does not exist')
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
-    .option('-t --type <build>', 'Type of build: [app-bundle|apk].', /^(app-bundle|apk)$/i, 'apk')
+    .option('--skip-workflow-check', 'Skip warning about build service bare workflow limitations.')
+    .option('-t --type <build>', 'Type of build: [app-bundle|apk].')
     .description(
       'Build a standalone APK or App Bundle for your project, signed and ready for submission to the Google Play Store.'
     )
-    .asyncActionProjectDir((projectDir: string, options: AndroidOptions) => {
-      if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
-        throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-      }
-      let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
-      if (!channelRe.test(options.releaseChannel)) {
-        log.error(
-          'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
-        );
-        process.exit(1);
-      }
-      const androidBuilder = new AndroidBuilder(projectDir, options);
-      return androidBuilder.command();
-    });
+    .asyncActionProjectDir(
+      async (projectDir: string, options: AndroidOptions) => {
+        if (options.generateKeystore) {
+          log.warn(
+            `The --generate-keystore flag is deprecated and does not do anything. A Keystore will always be generated on the Expo servers if it's missing.`
+          );
+        }
+        if (!options.skipWorkflowCheck) {
+          if (
+            await maybeBailOnWorkflowWarning({
+              projectDir,
+              platform: 'android',
+              nonInteractive: program.nonInteractive,
+            })
+          ) {
+            return;
+          }
+        }
+
+        if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
+          throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
+        }
+        const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+        if (!channelRe.test(options.releaseChannel)) {
+          log.error(
+            'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
+          );
+          process.exit(1);
+        }
+
+        const androidBuilder = new AndroidBuilder(projectDir, options);
+        return androidBuilder.command();
+      },
+      { checkConfig: true }
+    );
 
   program
     .command('build:web [project-dir]')
@@ -121,9 +192,7 @@ export default function(program: Command) {
           ...options,
           dev: typeof options.dev === 'undefined' ? false : options.dev,
         });
-      },
-      /* skipProjectValidation: */ false,
-      /* skipAuthCheck: */ true
+      }
     );
 
   program
@@ -140,5 +209,5 @@ export default function(program: Command) {
       }
       const builder = new BaseBuilder(projectDir, options);
       return builder.commandCheckStatus();
-    }, /* skipProjectValidation: */ true);
+    });
 }

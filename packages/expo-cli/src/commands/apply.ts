@@ -1,6 +1,11 @@
+import { getConfig } from '@expo/config';
+import JsonFile from '@expo/json-file';
+import chalk from 'chalk';
 import { Command } from 'commander';
-import configureIOSProjectAsync from './apply/configureIOSProjectAsync';
+import path from 'path';
+
 import configureAndroidProjectAsync from './apply/configureAndroidProjectAsync';
+import configureIOSProjectAsync from './apply/configureIOSProjectAsync';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from './utils/logConfigWarnings';
 
 type Options = {
@@ -8,27 +13,52 @@ type Options = {
   // todo: probably let people pass an ios or android directory in case they don't follow the convention
 };
 
-export default function(program: Command) {
+async function ensureConfigExistsAsync(projectRoot: string): Promise<void> {
+  try {
+    const config = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+    // If no config exists in the file system then we should generate one so the process doesn't fail.
+    if (!config.dynamicConfigPath && !config.staticConfigPath) {
+      // Don't check for a custom config path because the process should fail if a custom file doesn't exist.
+      // Write the generated config.
+      // writeConfigJsonAsync(projectRoot, config.exp);
+      await JsonFile.writeAsync(
+        path.join(projectRoot, 'app.json'),
+        { expo: config.exp },
+        { json5: false }
+      );
+    }
+  } catch (error) {
+    // TODO(Bacon): Currently this is already handled in the command
+    console.log();
+    console.log(chalk.red(error.message));
+    console.log();
+    process.exit(1);
+  }
+}
+
+export default function (program: Command) {
   program
     .command('apply [project-dir]')
-    .option('--platform [platform]', 'Configure only the given platform ("ios" or "android")')
+    .option(
+      '-p, --platform [platform]',
+      'Configure only the given platform ("ios" or "android")',
+      /^(android|ios)$/i
+    )
     // .option('--interactive', 'TODO: provide a flag where people can see a diff for each option to be applied and approve or reject it')
     .description(
       'Take the configuration from app.json or app.config.js and apply it to a native project.'
     )
-    .asyncActionProjectDir(
-      async (projectDir: string, options: Options) => {
-        if (!options.platform || options.platform === 'ios') {
-          await configureIOSProjectAsync(projectDir);
-          logConfigWarningsIOS();
-        }
+    .asyncActionProjectDir(async (projectDir: string, options: Options) => {
+      await ensureConfigExistsAsync(projectDir);
 
-        if (!options.platform || options.platform === 'android') {
-          await configureAndroidProjectAsync(projectDir);
-          logConfigWarningsAndroid();
-        }
-      },
-      /* skipProjectValidation: */ true,
-      /* skipAuthCheck: */ true
-    );
+      if (!options.platform || options.platform === 'android') {
+        await configureAndroidProjectAsync(projectDir);
+        logConfigWarningsAndroid();
+      }
+
+      if (!options.platform || options.platform === 'ios') {
+        await configureIOSProjectAsync(projectDir);
+        logConfigWarningsIOS();
+      }
+    });
 }

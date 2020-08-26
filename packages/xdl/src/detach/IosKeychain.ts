@@ -1,9 +1,9 @@
-import uuidv1 from 'uuid/v1';
-import _ from 'lodash';
 import fs from 'fs-extra';
+import difference from 'lodash/difference';
+import uuidv1 from 'uuid/v1';
 
-import _logger from './Logger';
 import { createSpawner, spawnAsyncThrowError } from './ExponentTools';
+import _logger from './Logger';
 
 export async function createKeychain(appUUID: string, saveResultToFile = true) {
   const BUILD_PHASE = 'creating keychain';
@@ -103,7 +103,7 @@ export async function cleanUpKeychains() {
       }
 
       if (shouldCleanSearchList) {
-        const newSearchList = _.difference(allKeychainsList, turtleKeychainsList);
+        const newSearchList = difference(allKeychainsList, turtleKeychainsList);
         await spawnAsyncThrowError('security', ['list-keychains', '-s', ...newSearchList], {
           stdio: 'pipe',
         });

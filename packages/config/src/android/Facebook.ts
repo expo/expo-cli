@@ -1,4 +1,5 @@
 import { Parser } from 'xml2js';
+
 import { ExpoConfig } from '../Config.types';
 import { Document } from './Manifest';
 import {
@@ -61,15 +62,13 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
   }
 
   let stringsJSON = await readStringsXMLAsync(stringsPath);
-  let stringItemToAdd: XMLItem[] = [{ _: appId, $: { name: 'facebook_app_id' } }];
+  const stringItemToAdd: XMLItem[] = [{ _: appId, $: { name: 'facebook_app_id' } }];
   stringsJSON = setStringItem(stringItemToAdd, stringsJSON);
 
   try {
     await writeStringsXMLAsync(stringsPath, stringsJSON);
   } catch (e) {
-    throw new Error(
-      `Error setting facebookAppId. Cannot write strings.xml to ${stringsPath}.`
-    );
+    throw new Error(`Error setting facebookAppId. Cannot write strings.xml to ${stringsPath}.`);
   }
   return true;
 }

@@ -1,29 +1,42 @@
-import { getConfig } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import { ApiV2, Doctor, User, UserManager } from '@expo/xdl';
+import pick from 'lodash/pick';
 
 import { AppleCtx, authenticate } from '../appleApi';
-import { IosApi } from './api';
+import log from '../log';
+import AndroidApi from './api/AndroidApi';
+import IosApi from './api/IosApi';
 
 export interface IView {
   open(ctx: Context): Promise<IView | null>;
 }
 
-type AppleCtxOptions = {
+interface AppleCtxOptions {
   appleId?: string;
   appleIdPassword?: string;
-};
+  teamId?: string;
+}
 
-type CtxOptions = {
+interface CtxOptions extends AppleCtxOptions {
   allowAnonymous?: boolean;
-};
+  nonInteractive?: boolean;
+}
 
 export class Context {
   _hasProjectContext: boolean = false;
+  _projectDir?: string;
   _user?: User;
-  _manifest: any;
+  _manifest?: ExpoConfig;
   _apiClient?: ApiV2;
   _iosApiClient?: IosApi;
+  _androidApiClient?: AndroidApi;
+  _appleCtxOptions?: AppleCtxOptions;
   _appleCtx?: AppleCtx;
+  _nonInteractive?: boolean;
+
+  get nonInteractive(): boolean {
+    return this._nonInteractive === true;
+  }
 
   get user(): User {
     return this._user as User;
@@ -31,11 +44,20 @@ export class Context {
   get hasProjectContext(): boolean {
     return this._hasProjectContext;
   }
-  get manifest(): any {
+  get projectDir(): string {
+    return this._projectDir as string;
+  }
+  get manifest(): ExpoConfig {
+    if (!this._manifest) {
+      throw new Error('Manifest (app.json) not initialized.');
+    }
     return this._manifest;
   }
   get api(): ApiV2 {
     return this._apiClient as ApiV2;
+  }
+  get android(): AndroidApi {
+    return this._androidApiClient as AndroidApi;
   }
   get ios(): IosApi {
     return this._iosApiClient as IosApi;
@@ -46,32 +68,52 @@ export class Context {
     }
     return this._appleCtx;
   }
+  set manifest(value: ExpoConfig) {
+    this._manifest = value;
+  }
 
   hasAppleCtx(): boolean {
     return !!this._appleCtx;
   }
 
-  async ensureAppleCtx(options: AppleCtxOptions = {}) {
+  async ensureAppleCtx() {
     if (!this._appleCtx) {
-      this._appleCtx = await authenticate(options);
+      this._appleCtx = await authenticate(this._appleCtxOptions);
     }
   }
 
-  async init(projectDir: string, options: CtxOptions = {}) {
-    const status = await Doctor.validateWithoutNetworkAsync(projectDir);
-    if (status !== Doctor.FATAL) {
-      /* This manager does not need to work in project context */
-      const { exp } = getConfig(projectDir);
-      this._manifest = exp;
-      this._hasProjectContext = true;
-    }
+  logOwnerAndProject() {
+    // Figure out if User A is configuring credentials as admin for User B's project
+    const isProxyUser = this.manifest.owner && this.manifest.owner !== this.user.username;
+    log(
+      `Accessing credentials ${isProxyUser ? 'on behalf of' : 'for'} ${
+        this.manifest.owner ?? this.user.username
+      } in project ${this.manifest.slug}`
+    );
+  }
 
+  async init(projectDir: string, options: CtxOptions = {}) {
     if (options.allowAnonymous) {
       this._user = (await UserManager.getCurrentUserAsync()) || undefined;
     } else {
       this._user = await UserManager.ensureLoggedInAsync();
     }
+    this._projectDir = projectDir;
     this._apiClient = ApiV2.clientForUser(this.user);
-    this._iosApiClient = new IosApi(this.user);
+    this._iosApiClient = new IosApi(this.api);
+    this._androidApiClient = new AndroidApi(this.api);
+    this._appleCtxOptions = pick(options, ['appleId', 'appleIdPassword', 'teamId']);
+    this._nonInteractive = options.nonInteractive;
+
+    // Check if we are in project context by looking for a manifest
+    const status = await Doctor.validateWithoutNetworkAsync(projectDir, {
+      skipSDKVersionRequirement: true,
+    });
+    if (status !== Doctor.FATAL) {
+      const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
+      this._manifest = exp;
+      this._hasProjectContext = true;
+      this.logOwnerAndProject();
+    }
   }
 }

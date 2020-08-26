@@ -5,20 +5,21 @@ import { getDefaultConfig, loadAsync } from '../ExpoMetroConfig';
 const projectRoot = path.join(__dirname, '__fixtures__', 'hello-world');
 
 describe('getDefaultConfig', () => {
-  const propertyMatchers = {
-    transformer: {
-      assetPlugins: expect.arrayContaining([expect.stringContaining('hashAssetFiles')]),
-      assetRegistryPath: expect.stringContaining('AssetRegistry'),
-      babelTransformerPath: expect.stringContaining('transformer.js'),
-    },
-  };
-
   it('loads default configuration', () => {
-    expect(getDefaultConfig(projectRoot)).toMatchSnapshot(propertyMatchers);
+    expect(getDefaultConfig(projectRoot)).toEqual(
+      expect.objectContaining({
+        projectRoot,
+        resolver: expect.objectContaining({
+          sourceExts: expect.arrayContaining(['expo.ts', 'expo.tsx', 'expo.js', 'expo.jsx']),
+        }),
+      })
+    );
   });
 
   it('loads default configuration for bare apps', () => {
-    expect(getDefaultConfig(projectRoot, { target: 'bare' })).toMatchSnapshot(propertyMatchers);
+    expect(getDefaultConfig(projectRoot, { target: 'bare' }).resolver.sourceExts).toEqual(
+      expect.not.arrayContaining(['expo.js'])
+    );
   });
 
   it('complains about an invalid target setting', () => {

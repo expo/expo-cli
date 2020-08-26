@@ -1,26 +1,13 @@
 import { ExpoConfig, Platform } from '@expo/config';
 import spawnAsyncQuiet, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
+import axios from 'axios';
 import fs from 'fs-extra';
-import _ from 'lodash';
+import isObject from 'lodash/isObject';
 import path from 'path';
-import pipeRequest from 'request';
-import Request from 'request-promise-native';
 import { Readable } from 'stream';
 
 import XDLError from '../XDLError';
 import LoggerDetach, { Logger, pipeOutputToLogger } from './Logger';
-
-// `request-promise-native` discourages using pipe. Noticed some issues with
-// error handling so when using pipe use the original request lib instead.
-const request = Request.defaults({
-  resolveWithFullResponse: true,
-});
-
-function _getFilesizeInBytes(path: string) {
-  let stats = fs.statSync(path);
-  let fileSizeInBytes = stats['size'];
-  return fileSizeInBytes;
-}
 
 function parseSdkMajorVersion(expSdkVersion: string) {
   // We assume that the unversioned SDK is the latest
@@ -30,67 +17,47 @@ function parseSdkMajorVersion(expSdkVersion: string) {
 
   let sdkMajorVersion = 0;
   try {
-    let versionComponents = expSdkVersion.split('.').map(number => parseInt(number, 10));
+    const versionComponents = expSdkVersion.split('.').map(number => parseInt(number, 10));
     sdkMajorVersion = versionComponents[0];
   } catch (_) {}
   return sdkMajorVersion;
 }
 
-function saveUrlToPathAsync(url: string, path: string) {
-  return new Promise(function(resolve, reject) {
-    let stream = fs.createWriteStream(path);
+async function saveUrlToPathAsync(url: string, path: string, timeout = 20000) {
+  const response = await axios.get(url, { responseType: 'stream', timeout });
+
+  return new Promise(function (resolve, reject) {
+    const stream = fs.createWriteStream(path);
     stream.on('close', resolve);
     stream.on('error', reject);
-    pipeRequest({ url, timeout: 20000 })
-      .on('error', reject)
-      .pipe(stream);
+    response.data.on('error', reject).pipe(stream);
   });
 }
 
-function saveImageToPathAsync(projectRoot: string, pathOrURL: string, outPath: string) {
+async function saveImageToPathAsync(projectRoot: string, pathOrURL: string, outPath: string) {
   const localPath = path.resolve(projectRoot, pathOrURL);
-  return new Promise(function(resolve, reject) {
-    let stream = fs.createWriteStream(outPath);
-    stream.on('close', () => {
-      if (_getFilesizeInBytes(outPath) < 10) {
-        throw new Error(`{filename} is too small`);
-      }
-      resolve();
-    });
-    stream.on('error', reject);
-    if (fs.existsSync(localPath)) {
-      fs.createReadStream(localPath).pipe(stream);
-    } else {
-      pipeRequest(pathOrURL).pipe(stream);
-    }
-  });
+
+  if (fs.existsSync(localPath)) {
+    await fs.copy(localPath, outPath);
+  } else {
+    await saveUrlToPathAsync(pathOrURL, outPath, 0);
+  }
 }
 
 async function getManifestAsync(url: string, headers: any, options: any = {}) {
   const buildPhaseLogger =
     options.logger || LoggerDetach.withFields({ buildPhase: 'reading manifest' });
-  const requestOptions = {
-    url: url.replace('exp://', 'http://'),
-    headers,
-  };
 
   let response;
   try {
-    response = await _retryPromise(() => request(requestOptions));
+    response = await _retryPromise(() => axios.get(url.replace('exp://', 'http://'), { headers }));
   } catch (err) {
     buildPhaseLogger.error(err);
     throw new Error('Failed to fetch manifest from www');
   }
-  const responseBody = response.body;
-  buildPhaseLogger.info('Using manifest:', responseBody);
-  let manifest;
-  try {
-    manifest = JSON.parse(responseBody);
-  } catch (e) {
-    throw new Error(`Unable to parse manifest: ${e}`);
-  }
 
-  return manifest;
+  buildPhaseLogger.info('Using manifest:', JSON.stringify(response.data, null, 2));
+  return response.data;
 }
 
 async function _retryPromise<T>(fn: (...args: any[]) => T, retries = 5): Promise<T> {
@@ -109,6 +76,7 @@ export type AsyncSpawnOptions = SpawnOptions & {
   loggerFields?: any;
   pipeToLogger?: boolean | { stdout?: boolean; stderr?: boolean };
   stdoutOnly?: boolean;
+  loggerLineTransformer?: (line: any) => any;
 };
 
 async function spawnAsyncThrowError(
@@ -126,7 +94,7 @@ async function spawnAsyncThrowError(
   }
   const promise = spawnAsyncQuiet(command, args, options);
   if (pipeToLogger && promise.child) {
-    let streams: { stdout?: Readable | null; stderr?: Readable | null } = {};
+    const streams: { stdout?: Readable | null; stderr?: Readable | null } = {};
     if (pipeToLogger === true || pipeToLogger.stdout) {
       streams.stdout = promise.child.stdout;
     }
@@ -152,8 +120,8 @@ async function spawnAsync(
 
 function createSpawner(buildPhase: string, logger?: Logger) {
   return (command: string, ...args: any[]) => {
-    const lastArg = _.last(args);
-    const optionsFromArg = _.isObject(lastArg) ? args.pop() : {};
+    const lastArg = args[args.length - 1];
+    const optionsFromArg = isObject(lastArg) ? args.pop() : {};
 
     const options = { ...optionsFromArg, pipeToLogger: true };
     if (buildPhase) {
@@ -172,8 +140,8 @@ async function transformFileContentsAsync(
   filename: string,
   transform: (input: string) => string | null
 ) {
-  let fileString = await fs.readFile(filename, 'utf8');
-  let newFileString = transform(fileString);
+  const fileString = await fs.readFile(filename, 'utf8');
+  const newFileString = transform(fileString);
   if (newFileString !== null) {
     await fs.writeFile(filename, newFileString);
   }
@@ -231,8 +199,8 @@ async function regexFileAsync(
   replace: string,
   filename: string
 ): Promise<void> {
-  let file = await fs.readFile(filename);
-  let fileString = file.toString();
+  const file = await fs.readFile(filename);
+  const fileString = file.toString();
   await fs.writeFile(filename, fileString.replace(regex, replace));
 }
 
@@ -242,10 +210,10 @@ async function deleteLinesInFileAsync(
   endRegex: RegExp | string,
   filename: string
 ): Promise<void> {
-  let file = await fs.readFile(filename);
-  let fileString = file.toString();
-  let lines = fileString.split(/\r?\n/);
-  let filteredLines = [];
+  const file = await fs.readFile(filename);
+  const fileString = file.toString();
+  const lines = fileString.split(/\r?\n/);
+  const filteredLines = [];
   let inDeleteRange = false;
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].match(startRegex)) {

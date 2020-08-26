@@ -1,12 +1,11 @@
-import path from 'path';
-import fse from 'fs-extra';
 import { CommandOptions } from 'commander';
+import fse from 'fs-extra';
+import path from 'path';
 
 import CommandError from '../../CommandError';
-
-import promptQuestionsAsync from './promptQuestionsAsync';
 import configureModule from './configureModule';
 import fetchTemplate from './fetchTemplate';
+import promptQuestionsAsync from './promptQuestionsAsync';
 
 export default async function generateModuleAsync(
   newModuleProjectDir: string,

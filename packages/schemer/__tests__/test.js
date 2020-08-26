@@ -1,5 +1,7 @@
-import Schemer from '../src/index';
+/* eslint-disable import/order */
+
 import { ErrorCodes } from '../src/Error';
+import Schemer from '../src/index';
 
 describe('Sanity Tests', () => {
   it('is a class', () => {
@@ -73,7 +75,7 @@ describe('Manual Validation Individual Unit Tests', () => {
 
 describe('Individual Unit Tests', () => {
   it('Error when missing Required Property', async () => {
-    let S = new Schemer({
+    const S = new Schemer({
       properties: {
         name: {},
       },
@@ -88,7 +90,7 @@ describe('Individual Unit Tests', () => {
   });
 
   it('Error when data has an additional property', async () => {
-    let S = new Schemer({ additionalProperties: false });
+    const S = new Schemer({ additionalProperties: false });
     try {
       await S.validateAll({ extraProperty: 'extra' });
     } catch (e) {

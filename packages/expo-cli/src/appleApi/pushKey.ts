@@ -1,9 +1,9 @@
-import ora from 'ora';
-import get from 'lodash/get';
-import dateformat from 'dateformat';
 import chalk from 'chalk';
-import CommandError, { ErrorCodes } from '../CommandError';
+import dateformat from 'dateformat';
+import ora from 'ora';
 
+import CommandError, { ErrorCodes } from '../CommandError';
+import log from '../log';
 import { AppleCtx } from './authenticate';
 import { runAction, travelingFastlane } from './fastlane';
 
@@ -66,7 +66,7 @@ export class PushKeyManager {
       };
     } catch (err) {
       spinner.stop();
-      const resultString = get(err, 'rawDump.resultString');
+      const resultString = err.rawDump?.resultString;
       if (resultString && resultString.match(/maximum allowed number of Keys/)) {
         throw new CommandError(
           ErrorCodes.APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR,
@@ -79,15 +79,21 @@ export class PushKeyManager {
 
   async revoke(ids: string[]) {
     const spinner = ora(`Revoking Push Key on Apple Servers...`).start();
-    const args = [
-      'revoke',
-      this.ctx.appleId,
-      this.ctx.appleIdPassword,
-      this.ctx.team.id,
-      ids.join(','),
-    ];
-    await runAction(travelingFastlane.managePushKeys, args);
-    spinner.succeed();
+    try {
+      const args = [
+        'revoke',
+        this.ctx.appleId,
+        this.ctx.appleIdPassword,
+        this.ctx.team.id,
+        ids.join(','),
+      ];
+      await runAction(travelingFastlane.managePushKeys, args);
+      spinner.succeed();
+    } catch (error) {
+      log.error(error);
+      spinner.fail('Failed to revoke Push Key on Apple Servers');
+      throw error;
+    }
   }
 
   format({ id, name }: PushKeyInfo): string {

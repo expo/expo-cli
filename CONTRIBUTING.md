@@ -19,7 +19,7 @@ The [Expo CLI GitHub repository](https://github.com/expo/expo-cli) contains the 
 - `expo-cli`: Expo CLI is the command line interface for developing, building and sharing Expo apps.
 - `@expo/dev-tools`: the web-based graphical user interface included in Expo CLI for quickly viewing logs, connecting testing devices, deploying updates and more.
 - `xdl`: the Expo development library is a dependency of both the CLI and Dev Tools user interfaces, doing all the heavy lifting behind the scenes.
-- `@expo/schemer`: a library for validating [Expo configuration files](https://docs.expo.io/versions/latest/workflow/configuration).
+- `@expo/schemer`: a library for validating [Expo configuration files](https://docs.expo.io/workflow/configuration/).
 - `@expo/json-file`: a library for reading and writing JSON files.
 - `@expo/osascript`: a library for working with `osascript` which runs AppleScript code on macOS.
 - `@expo/traveling-fastlane-darwin`/`@expo/traveling-fastlane-linux`: JavaScript wrappers for managing iOS certs, based on [Fastlane](https://fastlane.tools), which is a Ruby based app automation tool.
@@ -37,10 +37,9 @@ Keeping the `master` releasable means that changes merged to it need to be:
 ## Setting up the repository for development
 
 1. Clone the repository.
-2. Run `yarn run bootstrap`. (Installs dependencies, links and builds packages.)
+2. Run `yarn`. (Installs dependencies and links packages in the workspace.)
 3. Run `git config commit.template .github/.COMMIT_TEMPLATE` (Sets you up with our commit message template)
-
-You can then run `yarn start` in the root folder to start watching and automatically re-building packages when there are new changes.
+4. Run `yarn start` in the root folder. (Start watching and automatically re-building packages when there are new changes.)
 
 ## Submitting a pull request
 
@@ -56,7 +55,7 @@ To submit a pull request:
 To publish a new release, run this command (you must have two-factor authentication enabled for npm):
 
 ```
-node ./scripts/publish.js
+./scripts/publish.js
 ```
 
 The command will bump the versions of all packages with changes since the previous release and publish them in the correct order. For each changed package, it will ask, if the changes require a new _major_ version (breaking changes), _minor_ version (new backwards compatible functionality) or just a _patch_ version (backwards compatible bug fixes).
@@ -66,5 +65,5 @@ The command will bump the versions of all packages with changes since the previo
 If you wish to publish a canary version, please run:
 
 ```
-yarn run publish --canary
+./scripts/publish.js --bump prerelease
 ```

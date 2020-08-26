@@ -1,20 +1,14 @@
-import get from 'lodash/get';
 import { prompt } from 'inquirer';
+
+import CommandError from '../../CommandError';
+import log from '../../log';
+import { Question } from '../../prompt';
+import { AppLookupParams } from '../api/IosApi';
+import { Context, IView } from '../context';
 import * as iosPushView from './IosPushCredentials';
 
-import { Context, IView } from '../context';
-import { Question } from '../../prompt';
-import log from '../../log';
-
 export class SetupIosPush implements IView {
-  _experienceName: string;
-  _bundleIdentifier: string;
-
-  constructor(options: iosPushView.PushKeyOptions) {
-    const { experienceName, bundleIdentifier } = options;
-    this._experienceName = experienceName;
-    this._bundleIdentifier = bundleIdentifier;
-  }
+  constructor(private app: AppLookupParams) {}
 
   async open(ctx: Context): Promise<IView | null> {
     if (!ctx.user) {
@@ -22,14 +16,18 @@ export class SetupIosPush implements IView {
     }
 
     // TODO: Remove this on Nov 2020 when Apple no longer accepts deprecated push certs
-    const appCredentials = await ctx.ios.getAppCredentials(
-      this._experienceName,
-      this._bundleIdentifier
-    );
-    const deprecatedPushId = get(appCredentials, 'credentials.pushId');
-    const deprecatedPushP12 = get(appCredentials, 'credentials.pushP12');
-    const deprecatedPushPassword = get(appCredentials, 'credentials.pushPassword');
+    const appCredentials = await ctx.ios.getAppCredentials(this.app);
+    const deprecatedPushId = appCredentials?.credentials?.pushId;
+    const deprecatedPushP12 = appCredentials?.credentials?.pushP12;
+    const deprecatedPushPassword = appCredentials?.credentials?.pushPassword;
     if (deprecatedPushId && deprecatedPushP12 && deprecatedPushPassword) {
+      if (ctx.nonInteractive) {
+        throw new CommandError(
+          'NON_INTERACTIVE',
+          "We've detected legacy Push Certificates on file. Start the CLI without the '--non-interactive' flag to upgrade to the newer standard."
+        );
+      }
+
       const confirmQuestion: Question = {
         type: 'confirm',
         name: 'confirm',
@@ -44,32 +42,16 @@ export class SetupIosPush implements IView {
       }
     }
 
-    const configuredPushKey = await ctx.ios.getPushKey(
-      this._experienceName,
-      this._bundleIdentifier
-    );
+    const configuredPushKey = await ctx.ios.getPushKey(this.app);
 
-    if (!configuredPushKey) {
-      return new iosPushView.CreateOrReusePushKey({
-        experienceName: this._experienceName,
-        bundleIdentifier: this._bundleIdentifier,
-      });
+    if (configuredPushKey) {
+      // we dont need to setup if we have a valid push key on file
+      const isValid = await iosPushView.validatePushKey(ctx, configuredPushKey);
+      if (isValid) {
+        return null;
+      }
     }
 
-    if (!ctx.hasAppleCtx) {
-      throw new Error(`This workflow requires you to provide your Apple Credentials.`);
-    }
-
-    // check if valid
-    const isValid = await iosPushView.validatePushKey(ctx, configuredPushKey);
-
-    if (isValid) {
-      return null;
-    }
-
-    return new iosPushView.CreateOrReusePushKey({
-      experienceName: this._experienceName,
-      bundleIdentifier: this._bundleIdentifier,
-    });
+    return new iosPushView.CreateOrReusePushKey(this.app);
   }
 }

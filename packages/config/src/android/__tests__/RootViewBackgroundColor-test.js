@@ -1,7 +1,8 @@
-import { fs, vol } from 'memfs';
+import { vol } from 'memfs';
+
+import { readColorsXMLAsync } from '../Colors';
 import { getRootViewBackgroundColor, setRootViewBackgroundColor } from '../RootViewBackgroundColor';
 import { readStylesXMLAsync } from '../Styles';
-import { readColorsXMLAsync } from '../Colors';
 import { sampleStylesXML } from './StatusBar-test';
 jest.mock('fs');
 
@@ -38,8 +39,12 @@ describe('Root view background color', () => {
     it(`sets the android:windowBackground in Styles.xml if backgroundColor is given`, async () => {
       expect(await setRootViewBackgroundColor({ backgroundColor: '#654321' }, '/app')).toBe(true);
 
-      let stylesJSON = await readStylesXMLAsync('/app/android/app/src/main/res/values/styles.xml');
-      let colorsJSON = await readColorsXMLAsync('/app/android/app/src/main/res/values/colors.xml');
+      const stylesJSON = await readStylesXMLAsync(
+        '/app/android/app/src/main/res/values/styles.xml'
+      );
+      const colorsJSON = await readColorsXMLAsync(
+        '/app/android/app/src/main/res/values/colors.xml'
+      );
 
       expect(
         stylesJSON.resources.style

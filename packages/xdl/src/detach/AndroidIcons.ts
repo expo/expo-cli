@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import globby from 'globby';
+import { sync as globSync } from 'glob';
 import path from 'path';
 
 import { getImageDimensionsAsync, resizeImageAsync } from '../tools/ImageUtils';
@@ -49,7 +49,7 @@ async function _resizeIconsAsync(
   url: string,
   isDetached: boolean
 ) {
-  let baseImagePath = path.join(resPath, filename);
+  const baseImagePath = path.join(resPath, filename);
 
   try {
     if (isDetached) {
@@ -65,8 +65,8 @@ async function _resizeIconsAsync(
   await Promise.all(
     Object.entries(iconScales).map(async ([folderSuffix, iconScale]) => {
       // adaptive icons (mdpiSize 108) must be placed in a -v26 folder
-      let subdirectoryName = `${prefix}${folderSuffix}${mdpiSize === 108 ? '-v26' : ''}`;
-      let destinationPath = path.join(resPath, subdirectoryName);
+      const subdirectoryName = `${prefix}${folderSuffix}${mdpiSize === 108 ? '-v26' : ''}`;
+      const destinationPath = path.join(resPath, subdirectoryName);
       await spawnAsyncThrowError('/bin/cp', [baseImagePath, filename], {
         stdio: 'inherit',
         cwd: destinationPath,
@@ -112,7 +112,7 @@ async function createAndWriteIconsToPathAsync(
   resPath: string,
   isDetached: boolean
 ) {
-  let manifest = context.config; // manifest or app.json
+  const manifest = context.config; // manifest or app.json
   let iconUrl =
     manifest.android && manifest.android.iconUrl ? manifest.android.iconUrl : manifest.iconUrl;
   let notificationIconUrl = manifest.notification ? manifest.notification.iconUrl : null;
@@ -140,12 +140,10 @@ async function createAndWriteIconsToPathAsync(
   if (iconUrl || iconForegroundUrl) {
     // Android 7 and below icon
     if (iconUrl) {
-      (
-        await globby(['**/ic_launcher.png'], {
-          cwd: resPath,
-          absolute: true,
-        })
-      ).forEach(filePath => {
+      globSync('**/ic_launcher.png', {
+        cwd: resPath,
+        absolute: true,
+      }).forEach(filePath => {
         fs.removeSync(filePath);
       });
 
@@ -162,12 +160,10 @@ async function createAndWriteIconsToPathAsync(
 
     // Adaptive icon foreground image
     if (iconForegroundUrl) {
-      (
-        await globby(['**/ic_foreground.png'], {
-          cwd: resPath,
-          absolute: true,
-        })
-      ).forEach(filePath => {
+      globSync('**/ic_foreground.png', {
+        cwd: resPath,
+        absolute: true,
+      }).forEach(filePath => {
         fs.removeSync(filePath);
       });
 
@@ -184,23 +180,19 @@ async function createAndWriteIconsToPathAsync(
       // the OS's default method of coercing normal app icons to adaptive
       // makes them look quite different from using an actual adaptive icon (with xml)
       // so we need to support falling back to the old version on Android 8
-      (
-        await globby(['**/mipmap-*-v26/*'], {
-          cwd: resPath,
-          absolute: true,
-          dot: true,
-        })
-      ).forEach(filePath => {
+      globSync('**/mipmap-*-v26/*', {
+        cwd: resPath,
+        absolute: true,
+        dot: true,
+      }).forEach(filePath => {
         fs.removeSync(filePath);
       });
 
       try {
-        (
-          await globby(['**/mipmap-*-v26'], {
-            cwd: resPath,
-            absolute: true,
-          })
-        ).forEach(filePath => {
+        globSync('**/mipmap-*-v26', {
+          cwd: resPath,
+          absolute: true,
+        }).forEach(filePath => {
           fs.rmdirSync(filePath);
         });
       } catch (e) {
@@ -242,12 +234,10 @@ async function createAndWriteIconsToPathAsync(
 
   // Notification icon
   if (notificationIconUrl) {
-    (
-      await globby(['**/shell_notification_icon.png'], {
-        cwd: resPath,
-        absolute: true,
-      })
-    ).forEach(filePath => {
+    globSync('**/shell_notification_icon.png', {
+      cwd: resPath,
+      absolute: true,
+    }).forEach(filePath => {
       fs.removeSync(filePath);
     });
 

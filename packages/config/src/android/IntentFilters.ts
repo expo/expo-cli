@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
@@ -16,11 +15,11 @@ export async function setAndroidIntentFilters(config: ExpoConfig, manifestDocume
     return manifestDocument;
   }
 
-  let intentFiltersXML = renderIntentFilters(intentFilters).join('');
+  const intentFiltersXML = renderIntentFilters(intentFilters).join('');
   const parser = new Parser();
   const intentFiltersJSON = await parser.parseStringPromise(intentFiltersXML);
 
-  let mainActivity = manifestDocument.manifest.application[0].activity.filter(
+  const mainActivity = manifestDocument.manifest.application[0].activity.filter(
     (e: any) => e['$']['android:name'] === '.MainActivity'
   );
 
@@ -57,8 +56,8 @@ export default function renderIntentFilters(intentFilters: any) {
 }
 
 function renderIntentFilterDatumEntries(datum: any) {
-  return _.toPairs(datum)
-    .map(entry => `android:${entry[0]}="${entry[1]}"`)
+  return Object.keys(datum)
+    .map(key => `android:${key}="${datum[key]}"`)
     .join(' ');
 }
 

@@ -1,3 +1,4 @@
+/* eslint-disable */
 /* (The MIT License)
 
 Copyright (c) 2010-2017 Nathan Rajlich <nathan@tootallnate.net>
@@ -34,7 +35,7 @@ import xmlbuilder from 'xmlbuilder';
  * @api private
  */
 
-function ISODateString(d: Date): String {
+function ISODateString(d: Date): string {
   function pad(n: number) {
     return n < 10 ? '0' + n : n;
   }
@@ -64,7 +65,7 @@ function ISODateString(d: Date): String {
  */
 
 const toString = Object.prototype.toString;
-function type(obj: Object): string | null {
+function type(obj: object): string | null {
   const m = toString.call(obj).match(/\[object (.*)\]/);
   return m ? m[1] : m;
 }

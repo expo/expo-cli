@@ -1,9 +1,10 @@
+import { getPossibleProjectRoot } from '@expo/config/paths';
 import { Configuration } from 'webpack';
 
-import { Arguments, DevConfiguration, Environment, InputEnvironment } from './types';
-import { getPublicPaths, validateEnvironment } from './env';
-import webpackConfig from './webpack.config';
 import { withWorkbox } from './addons';
+import { getPublicPaths, validateEnvironment } from './env';
+import { Arguments, DevConfiguration, Environment, InputEnvironment } from './types';
+import webpackConfig from './webpack.config';
 
 /**
  * Create the official Webpack config for loading Expo web apps.
@@ -13,9 +14,17 @@ import { withWorkbox } from './addons';
  * @category default
  */
 export default async function createWebpackConfigAsync(
-  env: InputEnvironment,
+  env: InputEnvironment = {},
   argv: Arguments = {}
 ): Promise<Configuration | DevConfiguration> {
+  if (!env.projectRoot) {
+    env.projectRoot = getPossibleProjectRoot();
+  }
+  if (!env.platform) {
+    // @ts-ignore
+    env.platform = process.env.EXPO_WEBPACK_PLATFORM;
+  }
+
   const environment: Environment = validateEnvironment(env);
 
   const config: Configuration | DevConfiguration = await webpackConfig(environment, argv);
@@ -25,10 +34,21 @@ export default async function createWebpackConfigAsync(
     console.warn('environment.info is deprecated');
   }
 
-  if (environment.offline === false) {
-    return config;
+  if (environment.offline === true) {
+    const { workbox = {} } = argv;
+    const publicUrl = workbox.publicUrl || getPublicPaths(environment).publicUrl;
+
+    // No SW for native
+    if (['ios', 'android'].includes(env.platform || '')) {
+      return config;
+    }
+
+    return withWorkbox(config, {
+      projectRoot: environment.projectRoot,
+      ...workbox,
+      publicUrl,
+      platform: env.platform,
+    });
   }
-  const { workbox = {} } = argv;
-  const publicUrl = workbox.publicUrl || getPublicPaths(environment).publicUrl;
-  return withWorkbox(config, { projectRoot: environment.projectRoot, ...workbox, publicUrl });
+  return config;
 }

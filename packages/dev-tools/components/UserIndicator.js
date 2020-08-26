@@ -1,7 +1,6 @@
+import * as Constants from 'app/common/constants';
 import React from 'react';
 import { css } from 'react-emotion';
-
-import * as Constants from 'app/common/constants';
 
 const STYLES_INDICATOR = css`
   font-family: ${Constants.fontFamilies.mono};

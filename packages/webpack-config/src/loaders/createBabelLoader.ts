@@ -3,9 +3,9 @@ import { projectHasModule } from '@expo/config';
 import { getPossibleProjectRoot } from '@expo/config/paths';
 import chalk from 'chalk';
 import fs from 'fs-extra';
+import { boolish } from 'getenv';
 import path from 'path';
 import { Rule } from 'webpack';
-import { boolish } from 'getenv';
 
 import { getConfig, getMode, getPaths } from '../env';
 import { Environment, Mode } from '../types';
@@ -23,6 +23,7 @@ const includeModulesThatContainPaths = [
   getModule('unimodules'),
   getModule('@react'),
   getModule('@expo'),
+  getModule('@use-expo'),
   getModule('@unimodules'),
   getModule('native-base'),
   getModule('styled-components'),
@@ -90,7 +91,7 @@ export function createBabelLoaderFromEnvironment(
   env: Pick<Environment, 'babel' | 'locations' | 'projectRoot' | 'config' | 'mode' | 'platform'>
 ): Rule {
   const mode = getMode(env);
-  const locations = env.locations || getPaths(env.projectRoot);
+  const locations = env.locations || getPaths(env.projectRoot, env);
   const appConfig = env.config || getConfig(env);
 
   const { build = {} } = appConfig.web;
@@ -151,11 +152,14 @@ export default function createBabelLoader({
     !fs.existsSync(path.join(projectRoot, 'babel.config.js')) &&
     !fs.existsSync(path.join(projectRoot, '.babelrc'))
   ) {
-    if (projectHasModule('babel-preset-expo', projectRoot, {})) {
+    // If no babel config exists then fallback on the default `babel-preset-expo`
+    // which is installed with `expo`.
+    const modulePath = projectHasModule('babel-preset-expo', projectRoot, {});
+    if (modulePath) {
       presetOptions = {
         babelrc: false,
         configFile: false,
-        presets: [require.resolve('babel-preset-expo')],
+        presets: [modulePath],
       };
     } else {
       console.log(chalk.yellow('\u203A Webpack failed to locate a valid Babel config'));

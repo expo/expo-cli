@@ -1,14 +1,17 @@
 import { getConfig } from '@expo/config';
+import { JSONObject } from '@expo/json-file';
 import Schemer from '@expo/schemer';
 import fs from 'fs';
 import path from 'path';
 
-import Api from '../Api';
+import ApiV2 from '../ApiV2';
+import { Cacher } from '../tools/FsCache';
 
 export type Schema = any;
 export type AssetSchema = { schema: Schema; fieldPath: string };
 
-let _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
+const _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
+const _schemaCaches: { [version: string]: Cacher<JSONObject> } = {};
 
 export async function validatorFromProjectRoot(projectRoot: string): Promise<Schemer> {
   const { exp } = getConfig(projectRoot);
@@ -19,7 +22,7 @@ export async function validatorFromProjectRoot(projectRoot: string): Promise<Sch
 }
 
 export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
-  let json = await _getSchemaJSONAsync(sdkVersion);
+  const json = await _getSchemaJSONAsync(sdkVersion);
   return json.schema;
 }
 
@@ -66,7 +69,7 @@ async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema
 
   if (!_xdlSchemaJson[sdkVersion]) {
     try {
-      _xdlSchemaJson[sdkVersion] = await Api.xdlSchemaAsync(sdkVersion);
+      _xdlSchemaJson[sdkVersion] = await getConfigurationSchemaAsync(sdkVersion);
     } catch (e) {
       if (e.code && e.code === 'INVALID_JSON') {
         throw new Error(`Couldn't read schema from server`);
@@ -77,4 +80,19 @@ async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema
   }
 
   return _xdlSchemaJson[sdkVersion];
+}
+
+async function getConfigurationSchemaAsync(sdkVersion: string): Promise<JSONObject> {
+  if (!_schemaCaches.hasOwnProperty(sdkVersion)) {
+    _schemaCaches[sdkVersion] = new Cacher(
+      async () => {
+        return await new ApiV2().getAsync(`project/configuration/schema/${sdkVersion}`);
+      },
+      `schema-${sdkVersion}.json`,
+      0,
+      path.join(__dirname, `../caches/schema-${sdkVersion}.json`)
+    );
+  }
+
+  return await _schemaCaches[sdkVersion].getAsync();
 }

@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import program from 'commander';
+import terminalLink from 'terminal-link';
 
 type Color = (...text: string[]) => string;
 
@@ -12,7 +13,7 @@ function _updateIsLastLineNewLine(args: any[]) {
   if (args.length === 0) {
     _isLastLineNewLine = true;
   } else {
-    let lastArg = args[args.length - 1];
+    const lastArg = args[args.length - 1];
     if (typeof lastArg === 'string' && (lastArg === '' || lastArg.match(/[\r\n]$/))) {
       _isLastLineNewLine = true;
     } else {
@@ -88,16 +89,12 @@ function withPrefix(args: any[], chalkColor = chalk.gray) {
 }
 
 function log(...args: any[]) {
-  if (log.config.raw) {
-    return;
-  }
-
   respectProgressBars(() => {
     consoleLog(...withPrefix(args));
   });
 }
 
-log.nested = function(message: any) {
+log.nested = function (message: any) {
   respectProgressBars(() => {
     consoleLog(message);
   });
@@ -128,61 +125,36 @@ log.setSpinner = function setSpinner(oraSpinner: any) {
 };
 
 log.error = function error(...args: any[]) {
-  if (log.config.raw) {
-    return;
-  }
-
   respectProgressBars(() => {
     consoleError(...withPrefixAndTextColor(args, chalk.red));
   });
 };
 
-log.nestedError = function(message: string) {
+log.nestedError = function (message: string) {
   respectProgressBars(() => {
     consoleError(chalk.red(message));
   });
 };
 
 log.warn = function warn(...args: any[]) {
-  if (log.config.raw) {
-    return;
-  }
-
   respectProgressBars(() => {
     consoleWarn(...withPrefixAndTextColor(args, chalk.yellow));
   });
 };
 
-log.nestedWarn = function(message: string) {
+log.nestedWarn = function (message: string) {
   respectProgressBars(() => {
     consoleWarn(chalk.yellow(message));
   });
 };
 
-log.gray = function(...args: any[]) {
-  if (log.config.raw) {
-    return;
-  }
-
+log.gray = function (...args: any[]) {
   respectProgressBars(() => {
     consoleLog(...withPrefixAndTextColor(args));
   });
 };
 
-log.raw = function(...args: any[]) {
-  if (!log.config.raw) {
-    return;
-  }
-
-  respectProgressBars(() => {
-    consoleLog(...args);
-  });
-};
-
 log.chalk = chalk;
-
-log.config = {
-  raw: false,
-};
+log.terminalLink = terminalLink;
 
 export default log;

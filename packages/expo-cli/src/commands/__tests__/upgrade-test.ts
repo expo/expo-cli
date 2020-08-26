@@ -1,5 +1,6 @@
 import { vol } from 'memfs';
 
+import { mockExpoXDL } from '../../__tests__/mock-utils';
 import {
   getDependenciesFromBundledNativeModules,
   maybeFormatSdkVersion,
@@ -149,7 +150,7 @@ describe('getDependenciesFromBundledNativeModules', () => {
   });
 });
 
-describe('upgradeAsync', () => {
+xdescribe('upgradeAsync', () => {
   const originalWarn = console.warn;
   const originalLog = console.log;
   beforeEach(() => {
@@ -179,16 +180,11 @@ describe('upgradeAsync', () => {
         },
       };
     });
-    jest.mock('@expo/xdl', () => {
-      const pkg = jest.requireActual('@expo/xdl');
-      return {
-        ...pkg,
-        Project: {
-          ...pkg.Project,
-          startReactNativeServerAsync: jest.fn(),
-          stopReactNativeServerAsync: jest.fn(),
-        },
-      };
+    mockExpoXDL({
+      Project: {
+        startReactNativeServerAsync: jest.fn(),
+        stopReactNativeServerAsync: jest.fn(),
+      },
     });
     jest.mock('@expo/config', () => {
       const config = jest.requireActual('@expo/config');
@@ -256,10 +252,10 @@ describe('upgradeAsync', () => {
       '/from-app-config-js/app.json': JSON.stringify({
         expo: { ...appJson, sdkVersion: undefined },
       }),
-      '/from-app-config-js/app.config.js': `module.exports=({config}) => ({ 
-          ...config, 
-          androidNavigationBar: {visible: false}, 
-          sdkVersion: '34.0.0' 
+      '/from-app-config-js/app.config.js': `module.exports=({config}) => ({
+          ...config,
+          androidNavigationBar: {visible: false},
+          sdkVersion: '34.0.0'
         })`,
       '/from-app-config-js/node_modules/expo/package.json': expoPackageJson,
       '/from-app-config-js/node_modules/expo/bundledNativeModules.json': JSON.stringify({}),

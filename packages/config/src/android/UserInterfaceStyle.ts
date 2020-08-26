@@ -17,17 +17,17 @@ public class MainActivity extends ReactActivity {
 `;
 
 export function getUserInterfaceStyle(config: ExpoConfig): string {
-  let result = config.android?.userInterfaceStyle ?? config.userInterfaceStyle;
+  const result = config.android?.userInterfaceStyle ?? config.userInterfaceStyle;
   return result ?? null;
 }
 
 export async function setUiModeAndroidManifest(config: ExpoConfig, manifestDocument: Document) {
-  let userInterfaceStyle = getUserInterfaceStyle(config);
+  const userInterfaceStyle = getUserInterfaceStyle(config);
   if (!userInterfaceStyle) {
     return manifestDocument;
   }
 
-  let mainActivity = manifestDocument.manifest.application[0].activity.filter(
+  const mainActivity = manifestDocument.manifest.application[0].activity.filter(
     (e: any) => e['$']['android:name'] === '.MainActivity'
   );
   mainActivity[0]['$'][CONFIG_CHANGES_ATTRIBUTE] =
@@ -40,7 +40,7 @@ export function addOnConfigurationChangedMainActivity(
   config: ExpoConfig,
   MainActivity: string
 ): string {
-  let userInterfaceStyle = getUserInterfaceStyle(config);
+  const userInterfaceStyle = getUserInterfaceStyle(config);
   if (!userInterfaceStyle) {
     return MainActivity;
   }
@@ -49,6 +49,25 @@ export function addOnConfigurationChangedMainActivity(
   if (MainActivity.match(`onConfigurationChanged`)?.length) {
     return MainActivity;
   }
-  let pattern = new RegExp(`public class MainActivity extends ReactActivity {`);
-  return MainActivity.replace(pattern, ON_CONFIGURATION_CHANGED);
+
+  const MainActivityWithImports = addJavaImports(MainActivity, [
+    'android.content.Intent',
+    'android.content.res.Configuration',
+  ]);
+
+  const pattern = new RegExp(`public class MainActivity extends ReactActivity {`);
+  return MainActivityWithImports.replace(pattern, ON_CONFIGURATION_CHANGED);
+}
+
+// TODO: we should have a generic utility for doing this
+function addJavaImports(javaSource: string, javaImports: string[]): string {
+  const lines = javaSource.split('\n');
+  const lineIndexWithPackageDeclaration = lines.findIndex(line => line.match(/^package .*;$/));
+  for (const javaImport of javaImports) {
+    if (!javaSource.includes(javaImport)) {
+      const importStatement = `import ${javaImport};`;
+      lines.splice(lineIndexWithPackageDeclaration + 1, 0, importStatement);
+    }
+  }
+  return lines.join('\n');
 }

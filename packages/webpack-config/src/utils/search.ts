@@ -78,8 +78,8 @@ export function getRulesAsItems(rules: RuleSetRule[]): RuleItem[] {
  * @category utils
  */
 export function getRules(config: AnyConfiguration): RuleItem[] {
-  const { preLoaders = [], postLoaders = [], rules = [] } = config.module || {};
-  return getRulesAsItems(getRulesFromRules([...preLoaders, ...postLoaders, ...rules]));
+  const { rules = [] } = config.module || {};
+  return getRulesAsItems(getRulesFromRules(rules));
 }
 
 /**
@@ -89,10 +89,8 @@ export function getRules(config: AnyConfiguration): RuleItem[] {
  * @category utils
  */
 export function getExpoBabelLoader(config: AnyConfiguration): Rule | null {
-  const { preLoaders = [], postLoaders = [], rules = [] } = config.module || {};
-  const currentRules = getRulesAsItems(
-    getRulesFromRules([...preLoaders, ...postLoaders, ...rules])
-  );
+  const { rules = [] } = config.module || {};
+  const currentRules = getRulesAsItems(getRulesFromRules(rules));
   for (const ruleItem of currentRules) {
     const rule: any = ruleItem.rule;
     if (
@@ -112,7 +110,7 @@ export function getExpoBabelLoader(config: AnyConfiguration): Rule | null {
  * @category utils
  */
 export function getRulesFromRules(rules: RuleSetRule[]): RuleSetRule[] {
-  let output: RuleSetRule[] = [];
+  const output: RuleSetRule[] = [];
 
   for (const rule of rules) {
     if (rule.oneOf) {
@@ -154,7 +152,7 @@ export function getLoaders(config: AnyConfiguration): LoaderItem[] {
   return getLoadersFromRules(rules);
 }
 
-function loaderToLoaderItemLoaderPart(loader: RuleSetUse | undefined): Array<LoaderItemLoaderPart> {
+function loaderToLoaderItemLoaderPart(loader: RuleSetUse | undefined): LoaderItemLoaderPart[] {
   if (!loader) return [];
   const loaders: LoaderItemLoaderPart[] = [];
   if (typeof loader === 'function') {
@@ -178,7 +176,7 @@ export function getRulesByMatchingFiles(
   files: string[]
 ): { [key: string]: RuleItem[] } {
   const rules = getRules(config);
-  let selectedRules: { [key: string]: RuleItem[] } = {};
+  const selectedRules: { [key: string]: RuleItem[] } = {};
   for (const file of files) {
     selectedRules[file] = rules.filter(({ rule }) => conditionMatchesFile(rule.test, file));
   }
@@ -204,7 +202,7 @@ export function rulesMatchAnyFiles(config: AnyConfiguration, files: string[]): b
 export function resolveRuleSetUse(rule?: RuleSetUse | RuleSetUse[]): ResolvedRuleSet[] {
   if (!rule) return [];
   if (Array.isArray(rule)) {
-    const rules = rule as Array<RuleSetUse>;
+    const rules = rule as RuleSetUse[];
     let resolved: ResolvedRuleSet[] = [];
     for (const rule of rules) {
       resolved = [...resolved, ...resolveRuleSetUse(rule)];

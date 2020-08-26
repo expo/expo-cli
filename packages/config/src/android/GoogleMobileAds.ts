@@ -17,7 +17,7 @@ export async function setGoogleMobileAdsConfig(config: ExpoConfig, manifestDocum
     return manifestDocument;
   }
 
-  let mainApplication = manifestDocument.manifest.application.filter(
+  const mainApplication = manifestDocument.manifest.application.filter(
     (e: any) => e['$']['android:name'] === '.MainApplication'
   )[0];
 

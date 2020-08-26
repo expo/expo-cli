@@ -1,4 +1,5 @@
 import { fs, vol } from 'memfs';
+
 import { renamePackageOnDisk } from '../Package';
 
 jest.mock('fs');
@@ -41,23 +42,24 @@ public class SomeClass {
 
     it('re-creates the directory structure and replaces occurrences of old package in files', () => {
       renamePackageOnDisk({ android: { package: 'xyz.bront.app' } }, '/myapp');
-      let mainActivityPath = '/myapp/android/app/src/main/java/xyz/bront/app/MainActivity.java';
+      const mainActivityPath = '/myapp/android/app/src/main/java/xyz/bront/app/MainActivity.java';
       expect(fs.existsSync(mainActivityPath)).toBeTruthy();
       expect(fs.readFileSync(mainActivityPath).toString()).toMatch('package xyz.bront.app');
 
-      let nestedClassPath = '/myapp/android/app/src/main/java/xyz/bront/app/example/SomeClass.java';
+      const nestedClassPath =
+        '/myapp/android/app/src/main/java/xyz/bront/app/example/SomeClass.java';
       expect(fs.existsSync(nestedClassPath)).toBeTruthy();
       expect(fs.readFileSync(nestedClassPath).toString()).toMatch('package xyz.bront.app');
       expect(fs.readFileSync(nestedClassPath).toString()).not.toMatch('com.lololol');
 
-      let buckPath = '/myapp/android/app/BUCK';
+      const buckPath = '/myapp/android/app/BUCK';
       expect(fs.readFileSync(buckPath).toString()).toMatch('package = "xyz.bront.app"');
       expect(fs.readFileSync(buckPath).toString()).not.toMatch('com.lololol');
     });
 
     it('does not clobber itself if package has similar parts', () => {
       renamePackageOnDisk({ android: { package: 'com.bront' } }, '/myapp');
-      let mainActivityPath = '/myapp/android/app/src/main/java/com/bront/MainActivity.java';
+      const mainActivityPath = '/myapp/android/app/src/main/java/com/bront/MainActivity.java';
       expect(fs.existsSync(mainActivityPath)).toBeTruthy();
       expect(fs.readFileSync(mainActivityPath).toString()).toMatch('package com.bront');
     });

@@ -1,8 +1,8 @@
 import {
+  formatDeviceFamilies,
   getDeviceFamilies,
   getIsTabletOnly,
   getSupportsTablet,
-  setDeviceFamily,
 } from '../DeviceFamily';
 
 const TABLET_AND_PHONE_SUPPORTED = [1, 2];
@@ -41,6 +41,13 @@ describe('device family', () => {
 
   it(`supports only tablet if isTabletOnly is true`, () => {
     expect(getDeviceFamilies({ ios: { isTabletOnly: true } })).toEqual(ONLY_TABLET_SUPPORTED);
+  });
+
+  // It's important that this format is always correct.
+  // Otherwise the xcode parser will throw `Expected ".", "/*", ";", or [0-9] but "," found.` when we attempt to write to it.
+  it(`formats the families correctly`, () => {
+    expect(formatDeviceFamilies([1])).toEqual(1);
+    expect(formatDeviceFamilies([1, 2, 3])).toEqual(`"1,2,3"`);
   });
 
   // TODO: update tests to run against pbxproj

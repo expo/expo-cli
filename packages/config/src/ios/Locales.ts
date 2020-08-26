@@ -10,7 +10,7 @@ export function getLocales(config: ExpoConfig) {
 }
 
 export function setLocalesAsync(config: ExpoConfig, projectRoot: string) {
-  let locales = getLocales(config);
+  const locales = getLocales(config);
   if (!locales) {
     return;
   }

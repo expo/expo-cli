@@ -1,12 +1,10 @@
-import { ExpoConfig, PackageJSONConfig, getConfig, resolveModule } from '@expo/config';
+import { ExpoConfig, PackageJSONConfig, getConfig, projectHasModule } from '@expo/config';
 // @ts-ignore: not typed
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
-import { Project, ProjectSettings, UrlUtils, UserSettings, Versions, Web } from '@expo/xdl';
+import { Project, ProjectSettings, UrlUtils, UserSettings, Versions } from '@expo/xdl';
 import chalk from 'chalk';
-import attempt from 'lodash/attempt';
 import intersection from 'lodash/intersection';
-import isError from 'lodash/isError';
 import path from 'path';
 import openBrowser from 'react-dev-utils/openBrowser';
 import semver from 'semver';
@@ -54,12 +52,35 @@ function getBooleanArg(rawArgs: string[], argName: string): boolean {
   }
 }
 
+/**
+ * If the project config `platforms` only contains the "web" field.
+ * If no `platforms` array is defined this could still resolve true because platforms
+ * will be inferred from the existence of `react-native-web` and `react-native`.
+ *
+ * @param projectRoot
+ */
+function isWebOnly(projectRoot: string): boolean {
+  // TODO(Bacon): Limit the amount of times that the config is evaluated
+  // currently we read it the first time without the SDK version then later read it with the SDK version if react-native is installed.
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
+  if (Array.isArray(exp.platforms) && exp.platforms.length === 1) {
+    return exp.platforms[0] === 'web';
+  }
+  return false;
+}
+
+// The main purpose of this function is to take existing options object and
+// support boolean args with as defined in the hasBooleanArg and getBooleanArg
+// functions.
 async function normalizeOptionsAsync(
   projectDir: string,
   options: Options
 ): Promise<NormalizedOptions> {
   const opts: NormalizedOptions = {
-    webOnly: options.webOnly ?? (await Web.onlySupportsWebAsync(projectDir)),
+    ...options, // This is necessary to ensure we don't drop any options
+    webOnly: options.webOnly ?? isWebOnly(projectDir),
     nonInteractive: options.parent?.nonInteractive,
   };
 
@@ -77,31 +98,35 @@ async function normalizeOptionsAsync(
   }
   if (hasBooleanArg(rawArgs, 'https')) {
     opts.https = getBooleanArg(rawArgs, 'https');
+  } else {
+    opts.https = false;
   }
+
   if (hasBooleanArg(rawArgs, 'android')) {
     opts.android = getBooleanArg(rawArgs, 'android');
   }
+
   if (hasBooleanArg(rawArgs, 'ios')) {
     opts.ios = getBooleanArg(rawArgs, 'ios');
   }
+
   if (hasBooleanArg(rawArgs, 'web')) {
     opts.web = getBooleanArg(rawArgs, 'web');
   }
+
   if (hasBooleanArg(rawArgs, 'localhost')) {
     opts.localhost = getBooleanArg(rawArgs, 'localhost');
   }
+
   if (hasBooleanArg(rawArgs, 'lan')) {
     opts.lan = getBooleanArg(rawArgs, 'lan');
   }
+
   if (hasBooleanArg(rawArgs, 'tunnel')) {
     opts.tunnel = getBooleanArg(rawArgs, 'tunnel');
   }
-  if (options.host) {
-    opts.host = options.host;
-  }
 
   await cacheOptionsAsync(projectDir, opts);
-
   return opts;
 }
 
@@ -185,10 +210,12 @@ async function validateDependenciesVersions(
     return;
   }
 
-  const bundleNativeModulesPath = attempt(() =>
-    resolveModule('expo/bundledNativeModules.json', projectDir, exp)
+  const bundleNativeModulesPath = projectHasModule(
+    'expo/bundledNativeModules.json',
+    projectDir,
+    exp
   );
-  if (isError(bundleNativeModulesPath)) {
+  if (!bundleNativeModulesPath) {
     log.warn(
       `Your project is in SDK version >= 33.0.0, but the ${chalk.underline(
         'expo'
@@ -199,7 +226,7 @@ async function validateDependenciesVersions(
 
   const bundledNativeModules = await JsonFile.readAsync(bundleNativeModulesPath);
   const bundledNativeModulesNames = Object.keys(bundledNativeModules);
-  const projectDependencies = Object.keys(pkg.dependencies);
+  const projectDependencies = Object.keys(pkg.dependencies || []);
 
   const modulesToCheck = intersection(bundledNativeModulesNames, projectDependencies);
   const incorrectDeps = [];
@@ -271,9 +298,16 @@ async function configureProjectAsync(
 
   log(chalk.gray(`Starting project at ${projectDir}`));
 
-  const { exp, pkg } = getConfig(projectDir, {
+  const projectConfig = getConfig(projectDir, {
     skipSDKVersionRequirement: options.webOnly,
   });
+  const { exp, pkg } = projectConfig;
+
+  // TODO: move this function over to CLI
+  // const message = getProjectConfigDescription(projectDir, projectConfig);
+  // if (message) {
+  //   log(chalk.magenta(`\u203A ${message}`));
+  // }
 
   const rootPath = path.resolve(projectDir);
 
@@ -296,7 +330,7 @@ export default (program: any) => {
     .alias('r')
     .description('Starts or restarts a local server for your app and gives you a URL to it')
     .option('-s, --send-to [dest]', 'An email address to send a link to')
-    .option('-c, --clear', 'Clear the React Native packager cache')
+    .option('-c, --clear', 'Clear the Metro bundler cache')
     .option(
       '--web-only',
       'Only start the Webpack dev server for web. [Deprecated]: use `expo start:web`'
@@ -318,9 +352,7 @@ export default (program: any) => {
           return await startWebAction(projectDir, normalizedOptions);
         }
         return await action(projectDir, normalizedOptions);
-      },
-      /* skipProjectValidation: */ true,
-      /* skipAuthCheck: */ true
+      }
     );
 
   program
@@ -341,8 +373,6 @@ export default (program: any) => {
           projectDir,
           await normalizeOptionsAsync(projectDir, { ...options, webOnly: true })
         );
-      },
-      /* skipProjectValidation: */ true,
-      /* skipAuthCheck: */ true
+      }
     );
 };

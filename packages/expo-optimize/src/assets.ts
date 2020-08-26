@@ -4,7 +4,7 @@ import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
 import crypto from 'crypto';
 import { ensureDirSync, move, readFileSync, statSync, unlinkSync } from 'fs-extra';
-import glob from 'glob';
+import { sync as globSync } from 'glob';
 import { basename, join, parse, relative } from 'path';
 import prettyBytes from 'pretty-bytes';
 import temporary from 'tempy';
@@ -86,14 +86,14 @@ async function getAssetFilesAsync(
   const allFiles: string[] = [];
   const patterns = assetBundlePatterns || ['**/*'];
   patterns.forEach((pattern: string) => {
-    allFiles.push(...glob.sync(pattern, globOptions));
+    allFiles.push(...globSync(pattern, globOptions));
   });
   // If --include is passed in, only return files matching that pattern
   const included =
-    options && options.include ? [...glob.sync(options.include, globOptions)] : allFiles;
+    options && options.include ? [...globSync(options.include, globOptions)] : allFiles;
   const toExclude = new Set();
   if (options && options.exclude) {
-    glob.sync(options.exclude, globOptions).forEach(file => toExclude.add(file));
+    globSync(options.exclude, globOptions).forEach(file => toExclude.add(file));
   }
   // If --exclude is passed in, filter out files matching that pattern
   const excluded = included.filter(file => !toExclude.has(file));
@@ -115,10 +115,7 @@ function filterImages(files: string[], projectDir: string) {
 // Calculate SHA256 Checksum value of a file based on its contents
 function calculateHash(filePath: string): string {
   const contents = readFileSync(filePath);
-  return crypto
-    .createHash('sha256')
-    .update(contents)
-    .digest('hex');
+  return crypto.createHash('sha256').update(contents).digest('hex');
 }
 
 export type OptimizationOptions = {

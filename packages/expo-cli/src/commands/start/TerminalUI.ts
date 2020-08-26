@@ -11,13 +11,14 @@ import {
   Webpack,
 } from '@expo/xdl';
 import chalk from 'chalk';
-import trimStart from 'lodash/trimStart';
 import openBrowser from 'react-dev-utils/openBrowser';
 import readline from 'readline';
 import wordwrap from 'wordwrap';
-import { loginOrRegisterIfLoggedOut } from '../../accounts';
+
+import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import log from '../../log';
 import urlOpts from '../../urlOpts';
+import { startProjectInEditorAsync } from '../utils/EditorUtils';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
@@ -63,6 +64,7 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
   }
  \u203A Press ${b`p`} to toggle ${u`p`}roduction mode. (current mode: ${i(devMode)})
  \u203A Press ${b`r`} to ${u`r`}estart bundler, or ${b`shift-r`} to restart and clear cache.
+ \u203A Press ${b`o`} to ${u`o`}pen the project in your editor.
  \u203A Press ${b`s`} to ${u`s`}ign ${
     username ? `out. (Signed in as ${i('@' + username)}.)` : 'in.'
   }
@@ -86,7 +88,7 @@ export const printServerInfo = async (
   urlOpts.printQRCode(url);
   const wrap = wordwrap(2, process.stdout.columns || 80);
   const wrapItem = wordwrap(4, process.stdout.columns || 80);
-  const item = (text: string): string => '  \u2022 ' + trimStart(wrapItem(text));
+  const item = (text: string): string => '  \u2022 ' + wrapItem(text).trimStart();
   const iosInfo = process.platform === 'darwin' ? `, or ${b('i')} for iOS simulator` : '';
   const webInfo = `${b`w`} to run on ${u`w`}eb`;
   log.nested(wrap(u('To run the app with live reloading, choose one of:')));
@@ -130,7 +132,7 @@ export const startAsync = async (projectDir: string, options: StartOptions) => {
   UserManager.setInteractiveAuthenticationCallback(async () => {
     stopWaitingForCommand();
     try {
-      return await loginOrRegisterIfLoggedOut();
+      return await loginOrRegisterIfLoggedOutAsync();
     } finally {
       startWaitingForCommand();
     }
@@ -308,13 +310,15 @@ Please reload the project in the Expo app for the change to take effect.`
       }
       case 's': {
         const authSession = await UserManager.getSessionAsync();
-        if (authSession) {
+        if (authSession?.accessToken) {
+          log(chalk.yellow('Please remove the EXPO_TOKEN environment var to sign out.'));
+        } else if (authSession?.sessionSecret) {
           await UserManager.logoutAsync();
           log('Signed out.');
         } else {
           stopWaitingForCommand();
           try {
-            await loginOrRegisterIfLoggedOut();
+            await loginOrRegisterIfLoggedOutAsync();
           } catch (e) {
             log.error(e);
           } finally {
@@ -324,6 +328,9 @@ Please reload the project in the Expo app for the change to take effect.`
         printHelp();
         break;
       }
+      case 'o':
+        log('Trying to open the project in your editor...');
+        await startProjectInEditorAsync(projectDir);
     }
   }
 };

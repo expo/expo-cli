@@ -26,11 +26,11 @@ export type UserData = {
 const SETTINGS_FILE_NAME = 'state.json';
 
 function userSettingsFile(): string {
-  let dir = dotExpoHomeDirectory();
-  let file = path.join(dir, SETTINGS_FILE_NAME);
+  const dir = dotExpoHomeDirectory();
+  const file = path.join(dir, SETTINGS_FILE_NAME);
   try {
     // move exponent.json to state.json
-    let oldFile = path.join(dir, 'exponent.json');
+    const oldFile = path.join(dir, 'exponent.json');
     if (fs.statSync(oldFile).isFile()) {
       fs.renameSync(oldFile, file);
     }
@@ -79,7 +79,7 @@ function dotExpoHomeDirectory() {
 
     try {
       // move .exponent to .expo
-      let oldDirPath = path.join(home, '.exponent');
+      const oldDirPath = path.join(home, '.exponent');
       if (fs.statSync(oldDirPath).isDirectory()) {
         fs.renameSync(oldDirPath, dirPath);
       }
@@ -107,11 +107,16 @@ async function anonymousIdentifier(): Promise<string> {
   return id;
 }
 
+function accessToken(): string | null {
+  return process.env.EXPO_TOKEN || null;
+}
+
 const UserSettings = Object.assign(userSettingsJsonFile(), {
   dotExpoHomeDirectory,
   recentExpsJsonFile,
   userSettingsFile,
   userSettingsJsonFile,
+  accessToken,
   anonymousIdentifier,
   SETTINGS_FILE_NAME,
 });

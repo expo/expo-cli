@@ -1,32 +1,121 @@
 import { resolve } from 'path';
-import { getScheme, setScheme } from '../Scheme';
+
 import { readAndroidManifestAsync } from '../Manifest';
+import {
+  appendScheme,
+  ensureManifestHasValidIntentFilter,
+  getScheme,
+  getSchemesFromManifest,
+  hasScheme,
+  removeScheme,
+  setScheme,
+} from '../Scheme';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
 
 describe('scheme', () => {
-  it(`returns null if no scheme is provided`, () => {
-    expect(getScheme({})).toBe(null);
+  it(`returns empty array if no scheme is provided`, () => {
+    expect(getScheme({})).toStrictEqual([]);
   });
 
   it(`returns the scheme if provided`, () => {
-    expect(getScheme({ scheme: 'myapp' })).toBe('myapp');
+    expect(getScheme({ scheme: 'myapp' })).toStrictEqual(['myapp']);
+    expect(getScheme({ scheme: ['other', 'myapp'] })).toStrictEqual(['other', 'myapp']);
+    expect(
+      getScheme({
+        scheme: ['other', 'myapp', null],
+      })
+    ).toStrictEqual(['other', 'myapp']);
+  });
+
+  it('does not add scheme if none provided', async () => {
+    let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
+    androidManifestJson = await setScheme({}, androidManifestJson);
+
+    expect(androidManifestJson).toEqual(androidManifestJson);
   });
 
   it('adds scheme to android manifest', async () => {
     let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
-    androidManifestJson = await setScheme({ scheme: 'myapp' }, androidManifestJson);
+    androidManifestJson = await setScheme(
+      {
+        scheme: 'myapp',
+        android: { scheme: ['android-only'], package: 'com.demo.value' },
+        ios: { scheme: 'ios-only' },
+      },
+      androidManifestJson
+    );
 
-    let intentFilters = androidManifestJson.manifest.application[0].activity.filter(
+    const intentFilters = androidManifestJson.manifest.application[0].activity.filter(
       e => e['$']['android:name'] === '.MainActivity'
     )[0]['intent-filter'];
-    let schemeIntent = intentFilters.filter(e => {
-      if (e.hasOwnProperty('data')) {
-        return e['data'][0]['$']['android:scheme'] === 'myapp';
+
+    const schemeIntent = [];
+
+    for (const intent of intentFilters) {
+      if ('data' in intent) {
+        for (const dataFilter of intent['data']) {
+          const possibleScheme = dataFilter['$']['android:scheme'];
+          if (possibleScheme) {
+            schemeIntent.push(possibleScheme);
+          }
+        }
       }
-      return false;
-    });
-    expect(schemeIntent).toHaveLength(1);
+    }
+
+    expect(schemeIntent).toStrictEqual(['myapp', 'android-only', 'com.demo.value']);
+  });
+});
+
+function removeSingleTaskFromActivities(manifest) {
+  for (const application of manifest.manifest['application']) {
+    for (const activity of application.activity) {
+      if (activity['$']['android:launchMode'] === 'singleTask') {
+        delete activity['$']['android:launchMode'];
+      }
+    }
+  }
+
+  return manifest;
+}
+
+describe('Schemes', () => {
+  it(`ensure manifest has valid intent filter added`, async () => {
+    const manifest = await readAndroidManifestAsync(sampleManifestPath);
+    const manifestHasValidIntentFilter = ensureManifestHasValidIntentFilter(manifest);
+    expect(manifestHasValidIntentFilter).toBe(true);
+  });
+
+  it(`detect if no singleTask Activity exists`, async () => {
+    const manifest = await readAndroidManifestAsync(sampleManifestPath);
+    removeSingleTaskFromActivities(manifest);
+
+    expect(ensureManifestHasValidIntentFilter(manifest)).toBe(false);
+  });
+
+  it(`adds and removes a new scheme`, async () => {
+    const manifest = await readAndroidManifestAsync(sampleManifestPath);
+    ensureManifestHasValidIntentFilter(manifest);
+
+    const modifiedManifest = appendScheme('myapp.test', manifest);
+    const schemes = getSchemesFromManifest(modifiedManifest);
+    expect(schemes).toContain('myapp.test');
+    const removedManifest = removeScheme('myapp.test', manifest);
+    expect(getSchemesFromManifest(removedManifest)).not.toContain('myapp.test');
+  });
+
+  it(`detect when a duplicate might be added`, async () => {
+    const manifest = await readAndroidManifestAsync(sampleManifestPath);
+    ensureManifestHasValidIntentFilter(manifest);
+
+    const modifiedManifest = appendScheme('myapp.test', manifest);
+    expect(hasScheme('myapp.test', modifiedManifest)).toBe(true);
+  });
+
+  it(`detect a non-existent scheme`, async () => {
+    const manifest = await readAndroidManifestAsync(sampleManifestPath);
+
+    expect(hasScheme('myapp.test', manifest)).toBe(false);
   });
 });

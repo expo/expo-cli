@@ -6,7 +6,7 @@
 <!-- Header -->
 
 <p align="center">
-    <b>Webpack config that's optimized for running React Native web projects</b>
+    <b>Webpack config that's optimized for running universal React and react-native-web projects</b>
     <br/>
     <br/>
     <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/master">
@@ -45,16 +45,16 @@ module.exports = async function(env, argv) {
 
 The main options used to configure how `@expo/webpack-config` works.
 
-| name                        | type                                    | default     | description                                                                    |
-| --------------------------- | --------------------------------------- | ----------- | ------------------------------------------------------------------------------ |
-| `projectRoot`               | `string`                                | required    | Root of the Expo project.                                                      |
-| `https`                     | `boolean`                               | `false`     | Should the dev server use https protocol.                                      |
-| `offline`                   | `boolean`                               | `true`      | Passing `false` will disable offline support and skip adding a service worker. |
-| `mode`                      | `Mode`                                  | required    | The Webpack mode to bundle the project in.                                     |
-| `platform`                  | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for. Only `web` and `electron` are supported.    |
-| `removeUnusedImportExports` | `boolean`                               | `false`     | Enables advanced tree-shaking with deep scope analysis.                        |
-| `pwa`                       | `boolean`                               | `true`      | Generate the PWA image assets in production mode.                              |
-| `babel`                     | [`ExpoBabelOptions`](#ExpoBabelOptions) | `undefined` | Control how the default Babel loader is configured.                            |
+| name                        | type                                    | default     | description                                                          |
+| --------------------------- | --------------------------------------- | ----------- | -------------------------------------------------------------------- |
+| `projectRoot`               | `string`                                | required    | Root of the Expo project.                                            |
+| `https`                     | `boolean`                               | `false`     | Should the dev server use https protocol.                            |
+| `offline`                   | `boolean`                               | `false`     | Passing `true` will enable offline support and add a service worker. |
+| `mode`                      | `Mode`                                  | required    | The Webpack mode to bundle the project in.                           |
+| `platform`                  | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for.                                   |
+| `pwa`                       | `boolean`                               | `true`      | Generate the PWA image assets in production mode.                    |
+| `babel`                     | [`ExpoBabelOptions`](#ExpoBabelOptions) | `undefined` | Control how the default Babel loader is configured.                  |
+| `removeUnusedImportExports` | `boolean`                               | `false`     | Enables advanced tree-shaking with deep scope analysis.              |
 
 ### `Environment` internal
 
@@ -65,9 +65,9 @@ The main options used to configure how `@expo/webpack-config` works.
 
 ### `ExpoPlatform`
 
-| type                                     | description                                                                 |
-| ---------------------------------------- | --------------------------------------------------------------------------- |
-| `'ios' | 'android' | 'web' | 'electron'` | The target platform to bundle for. Only `web` and `electron` are supported. |
+| type                                     | description                                                                                                |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `'ios' | 'android' | 'web' | 'electron'` | The target platform to bundle for. Native platforms are experimental and require a special native runtime. |
 
 ### `ExpoBabelOptions`
 
@@ -308,7 +308,7 @@ module.exports = async function(env, argv) {
 
 ### Service workers
 
-Service workers are great for emulating native functionality, so Expo web takes full advantage of them. But sometimes you'll need to drop down and modify them yourself.
+Service workers are great for emulating native functionality, but they can also lead to a lot of confusion so they are opt-in only (starting in Expo SDK 39 and greater) in this Webpack config. To enable the default workbox plugin pass the options `{ offline: true }` to the creator method.
 
 #### How Expo service workers ... work
 
@@ -349,6 +349,12 @@ module.exports = async function(env, argv) {
 
 [workbox]: https://developers.google.com/web/tools/workbox
 
+## Environment Variables
+
+- `EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS`: Should the define plugin explicitly set environment variables like `process.env.FOO` instead of creating an object like `proces.env: { FOO }`. Defaults to `false`. Next.js uses this to prevent overwriting injected environment variables.
+- `IMAGE_INLINE_SIZE_LIMIT`: By default, images smaller than 10,000 bytes are encoded as a data URI in base64 and inlined in the CSS or JS build artifact. Set this to control the size limit in bytes. Setting it to 0 will disable the inlining of images. This is only used in production.
+- `EXPO_WEBPACK_FAST_REFRESH`: Enable experimental fast refresh in development mode.
+
 ## Exports
 
 ### addons
@@ -385,7 +391,7 @@ import { withOptimizations } from '@expo/webpack-config/addons';
 
 #### `withAlias`
 
-Add aliases for React Native web.
+Apply aliases to a Webpack config.
 
 ```js
 import { withAlias } from '@expo/webpack-config/addons';
@@ -525,7 +531,7 @@ Default CSS loader.
 import /* */ '@expo/webpack-config/plugins';
 ```
 
-Custom versions of Webpack Plugins that are optimized for use with React Native.
+Custom versions of Webpack Plugins that are optimized for use with native React runtimes.
 
 #### `ExpoDefinePlugin`
 
@@ -583,5 +589,5 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
     </a>
 </p>
 
-[docs]: https://docs.expo.io/versions/latest/guides/customizing-webpack/
+[docs]: https://docs.expo.io/guides/customizing-webpack/
 [docs-latest]: https://github.com/expo/expo/blob/master/docs/pages/versions/unversioned/guides/customizing-webpack.md

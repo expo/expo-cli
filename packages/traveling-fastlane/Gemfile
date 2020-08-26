@@ -8,7 +8,8 @@ source 'https://rubygems.org'
 gem 'unf_ext', '0.0.6'
 gem 'json', '1.8.2'
 # Plain, non-native dependencies
-gem 'fastlane', '2.141.0'
+# !!! IMPORTANT: TODO !!! fastlane dropped ruby 2.2 support in 2.147.0
+gem 'fastlane', '2.146.1' # DO NOT update unless we upgrade from ruby 2.2
 
 group :development do
   gem 'rake'

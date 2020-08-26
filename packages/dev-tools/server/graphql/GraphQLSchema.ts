@@ -576,7 +576,22 @@ const resolvers = {
     },
     async setProjectSettings(parent, { settings }, context) {
       const currentProject = context.getCurrentProject();
-      let updatedSettings = await ProjectSettings.setAsync(currentProject.projectDir, settings);
+      const previousSettings = await ProjectSettings.readAsync(currentProject.projectDir);
+      const updatedSettings = await ProjectSettings.setAsync(currentProject.projectDir, settings);
+
+      // If 'tunnel' wasn't previously configured and it will be as a result of this request, start tunnels.
+      if (previousSettings.hostType !== 'tunnel' && updatedSettings.hostType === 'tunnel') {
+        try {
+          await Project.startTunnelsAsync(currentProject.projectDir);
+        } catch (e) {
+          ProjectUtils.logWarning(
+            currentProject.projectDir,
+            'expo',
+            `Error starting tunnel ${e.message}`
+          );
+        }
+      }
+
       return {
         ...currentProject,
         settings: updatedSettings,
@@ -606,8 +621,8 @@ const resolvers = {
     },
     async sendProjectUrl(parent, { recipient }, context) {
       const currentProject = context.getCurrentProject();
-      let url = await UrlUtils.constructManifestUrlAsync(currentProject.projectDir);
-      let result = await Exp.sendAsync(recipient, url);
+      const url = await UrlUtils.constructManifestUrlAsync(currentProject.projectDir);
+      const result = await Exp.sendAsync(recipient, url);
       await UserSettings.setAsync('sendTo', recipient);
       return { medium: result.medium, url }; // medium can be a phone number or email
     },

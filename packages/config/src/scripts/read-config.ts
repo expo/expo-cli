@@ -1,11 +1,11 @@
 #!/usr/bin/env node
+'use strict';
+
 import path from 'path';
 
+import { ConfigContext } from '../Config.types';
 import { ConfigError, errorToJSON } from '../Errors';
 import { serializeAndEvaluate } from '../Serialize';
-import { ConfigContext } from '../Config.types';
-
-'use strict';
 
 // Makes the script crash on unhandled rejections instead of silently
 // ignoring them. In the future, promise rejections that are not handled will
@@ -37,6 +37,7 @@ try {
   if (result.default != null) {
     result = result.default;
   }
+  const exportedObjectType = typeof result;
   if (typeof result === 'function') {
     result = result(request);
   }
@@ -45,7 +46,7 @@ try {
     throw new ConfigError(`Config file ${configFile} cannot return a Promise.`, 'INVALID_CONFIG');
   }
 
-  console.log(JSON.stringify(serializeAndEvaluate(result)));
+  console.log(JSON.stringify({ config: serializeAndEvaluate(result), exportedObjectType }));
   process.exit(0);
 } catch (error) {
   console.error(JSON.stringify(errorToJSON(error)));

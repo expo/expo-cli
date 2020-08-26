@@ -1,18 +1,16 @@
 {
   "main": "./index",
   "dependencies": {
-    "expo": "~36.0.0",
-    "expo-constants": "8.0.0",
+    "expo": "37.0.11",
+    "expo-constants": "9.0.0",
     "react": "~16.9.0",
     "react-dom": "~16.9.0",
-    "react-native": "https://github.com/expo/react-native/archive/sdk-36.0.0.tar.gz",
     "react-native-svg": "^11.0.1",
     "react-native-web": "~0.11.7",
     "resize-observer-polyfill": "^1.5.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.0.0",
-    "babel-preset-expo": "~8.0.0"
+    "@babel/core": "^7.9.0"
   },
   "private": true
 }

@@ -21,7 +21,7 @@ async function resizeImagesAsync(buffer: Buffer, sizes: number[]): Promise<Buffe
 }
 
 async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
-  let sharp: any = await getSharpAsync();
+  const sharp: any = await getSharpAsync();
   const { width, height, backgroundColor, resizeMode } = imageOptions;
   if (!sharp) {
     const inputOptions: any = { input: imageOptions.src, quality: 100 };
@@ -31,6 +31,11 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
       fit: resizeMode,
       background: backgroundColor,
     });
+
+    if (imageOptions.removeTransparency) {
+      jimp.colorType(2);
+    }
+
     const imgBuffer = await jimp.getBufferAsync(jimp.getMIME());
     return imgBuffer;
   }
@@ -50,7 +55,7 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
               width,
               height,
               // allow alpha colors
-              channels: 4,
+              channels: imageOptions.removeTransparency ? 3 : 4,
               background: backgroundColor,
             },
           },
@@ -58,6 +63,8 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
           blend: 'dest-over',
         },
       ]);
+    } else if (imageOptions.removeTransparency) {
+      sharpBuffer.flatten();
     }
 
     return await sharpBuffer.png().toBuffer();
@@ -92,7 +99,7 @@ async function maybeWarnAboutInstallingSharpAsync() {
     );
     console.log(
       chalk.yellow(
-        `\u203A Optionally you can stop the process and try again after successfully running \`npm install -g sharp-cli\`.\n\u203A If you are using \`expo-cli\` to build your project then you could use the \`--no-pwa\` flag to skip the PWA asset generation step entirely.`
+        `\u203A Optionally you can stop the process and try again after successfully running \`npm install -g sharp-cli\`.\n`
       )
     );
   }

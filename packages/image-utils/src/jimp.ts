@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import Jimp from 'jimp';
 import * as path from 'path';
+
 import {
   FlattenOptions,
   Position,

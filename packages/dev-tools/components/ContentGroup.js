@@ -1,8 +1,7 @@
+import * as Constants from 'app/common/constants';
 import React from 'react';
 import { css } from 'react-emotion';
 import { VelocityTransitionGroup } from 'velocity-react';
-
-import * as Constants from 'app/common/constants';
 
 if (process.browser) {
   require('velocity-animate');
@@ -30,9 +29,7 @@ export default class ContentGroup extends React.Component {
           leave={{ animation: 'slideUp', duration: 300 }}>
           {this.props.isActive ? (
             <div className={STYLES_CHILDREN}>{this.props.children}</div>
-          ) : (
-            undefined
-          )}
+          ) : undefined}
         </VelocityTransitionGroup>
       </div>
     );

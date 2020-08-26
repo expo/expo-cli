@@ -13,6 +13,10 @@ describe('getConfig', () => {
   // - ensure `app.config` has higher priority to `app`
   // - generated `.expo` object is created and the language hint is added
   describe('language support', () => {
+    beforeEach(() => {
+      const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
+      setCustomConfigPath(projectRoot, undefined);
+    });
     it('parses a ts config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/ts');
       const { exp } = getConfig(projectRoot, {
@@ -24,9 +28,12 @@ describe('getConfig', () => {
     it('parses a js config', () => {
       // ensure config is composed (package.json values still exist)
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
-      const { exp } = getConfig(projectRoot, {
+      const { exp, dynamicConfigPath, staticConfigPath } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
+      expect(dynamicConfigPath).toBe(path.join(projectRoot, 'app.config.js'));
+      expect(staticConfigPath).toBe(path.join(projectRoot, 'app.json'));
+
       expect(exp.foo).toBe('bar');
       // Ensure the config is passed the package.json values
       expect(exp.name).toBe('js-config-test+config');
@@ -36,19 +43,21 @@ describe('getConfig', () => {
     it('parses a js config with export default', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
       const configPath = path.resolve(projectRoot, 'with-default_app.config.js');
-      const { exp } = getConfig(projectRoot, {
+      setCustomConfigPath(projectRoot, configPath);
+      const { exp, staticConfigPath } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
-        configPath,
       });
       expect(exp.foo).toBe('bar');
       expect(exp.name).toBe('js-config-test+config-default');
+      // Static is undefined when a custom path is a dynamic config.
+      expect(staticConfigPath).toBe(null);
     });
     it('parses a js config that exports json', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
       const configPath = path.resolve(projectRoot, 'export-json_app.config.js');
+      setCustomConfigPath(projectRoot, configPath);
       const { exp } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
-        configPath,
       });
       expect(exp.foo).toBe('bar');
       expect(exp.name).toBe('cool+export-json_app.config');
@@ -87,9 +96,13 @@ describe('getConfig', () => {
       const customConfigPath = path.resolve(projectRoot, 'src/app.staging.json');
       setCustomConfigPath(projectRoot, customConfigPath);
 
-      const { exp } = getConfig(projectRoot, {
+      const { exp, staticConfigPath, dynamicConfigPath } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
+
+      expect(staticConfigPath).toBe(customConfigPath);
+      expect(dynamicConfigPath).toBe(null);
+
       // Ensure the expo object is reduced out. See #1542.
       // Also test that a nested expo object isn't recursively reduced.
       expect(exp.expo).toStrictEqual({ name: 'app-staging-expo-expo-name' });
