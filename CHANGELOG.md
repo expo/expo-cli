@@ -4,9 +4,19 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ## master
 
+### 🛠 Breaking changes
+
 ### 🎉 New features
 
-- [expo-cli] EAS Build: warn user when credentials are not git ignored ([#2482](https://github.com/expo/expo-cli/pull/2482)) by [@wkozyra95](https://github.com/wkozyra95)
+### 🐛 Bug fixes
+
+### 📦 Packages updated
+
+## [Wed Aug 26 12:13:11 2020 +0200](https://github.com/expo/expo-cli/commit/7d5820b3d6a32862205355a01684c66f3787354e)
+
+### 🎉 New features
+
+- [expo-cli] EAS Build: warn user when credentials are not git ignored ([#2482](https://github.com/expo/expo-cli/pull/2482) by [@wkozyra95](https://github.com/wkozyra95))
 - [expo-cli] EAS Build: tweaks ([#2485](https://github.com/expo/expo-cli/pull/2485) by [@dsokal](https://github.com/dsokal)):
   - initialize a git repository if it does not exist yet
   - improve reading the bundle identifier from the Xcode project (handle the string interpolation case)
@@ -26,20 +36,34 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 📦 Packages updated
 
+- @expo/config@3.2.20
+- @expo/dev-server@0.1.22
+- @expo/dev-tools@0.13.35
+- @expo/electron-adapter@0.0.13
+- expo-cli@3.25.0
+- expo-optimize@0.1.44
+- @expo/image-utils@0.3.2
+- @expo/metro-config@0.1.22
+- @expo/next-adapter@2.1.26
+- expo-pwa@0.0.32
+- uri-scheme@1.0.28
+- @expo/webpack-config@0.12.26
+- @expo/xdl@57.9.32
+
 ## [Tue, 18 Aug 2020 21:14:50 -0700](https://github.com/expo/expo-cli/commit/e98f6916378a5db2a670f0a86ad1f5eaccd7a053)
 
 ### 🛠 Breaking changes
 
-- [webpack-config] Disable offline support by default in SDK 39 ([#2475](https://github.com/expo/expo-cli/issues/2475)) by [@EvanBacon](https://github.com/EvanBacon))
+- [webpack-config] Disable offline support by default in SDK 39 ([#2475](https://github.com/expo/expo-cli/issues/2475) by [@EvanBacon](https://github.com/EvanBacon))
 
 ### 🎉 New features
 
-- [expo-cli]: EAS Build: add command `eas:credentials:sync` ([#2460](https://github.com/expo/expo-cli/pull/2460)) by [@wkozyra95](https://github.com/wkozyra95)
-- [xdl] update ios Podfile excluded unimodules for SDK 39 ([#2471](https://github.com/expo/expo-cli/issues/2471)) by [esamelson](https://github.com/esamelson)).
+- [expo-cli]: EAS Build: add command `eas:credentials:sync` ([#2460](https://github.com/expo/expo-cli/pull/2460) by [@wkozyra95](https://github.com/wkozyra95))
+- [xdl] update ios Podfile excluded unimodules for SDK 39 ([#2471](https://github.com/expo/expo-cli/issues/2471) by [esamelson](https://github.com/esamelson))
 
 ### 🐛 Bug fixes
 
-- [expo-cli] Only run expo service checks from the doctor command ([#2474](https://github.com/expo/expo-cli/issues/2474)) by [@byCedric](https://github.com/byCedric))
+- [expo-cli] Only run expo service checks from the doctor command ([#2474](https://github.com/expo/expo-cli/issues/2474) by [@byCedric](https://github.com/byCedric))
 
 ### 📦 Packages updated
 
