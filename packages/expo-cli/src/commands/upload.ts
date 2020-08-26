@@ -146,7 +146,7 @@ async function uploadIosAsync(
     const uploader = new IOSUploader(projectDir, { ...options, useEAS });
     await uploader.upload();
   } catch (err) {
-    log.error('Failed to upload the standalone app to the app store.');
+    log.error('Failed to upload the standalone app to the App Store.');
     throw err;
   }
 }
