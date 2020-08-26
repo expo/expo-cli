@@ -4,14 +4,25 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ## master
 
-### 🛠 Breaking changes
-
 ### 🎉 New features
 
-- [expo-cli]: EAS Build: warn user when credentials are not git ignored ([#2482](https://github.com/expo/expo-cli/pull/2482)) by [@wkozyra95](https://github.com/wkozyra95)
-- [expo-cli]: Fix default bare project name to match regex in `expo-init`. ([#2509](https://github.com/expo/expo-cli/pull/2509) by [@barthap](https://github.com/barthap))
+- [expo-cli] EAS Build: warn user when credentials are not git ignored ([#2482](https://github.com/expo/expo-cli/pull/2482)) by [@wkozyra95](https://github.com/wkozyra95)
+- [expo-cli] EAS Build: tweaks ([#2485](https://github.com/expo/expo-cli/pull/2485) by [@dsokal](https://github.com/dsokal)):
+  - initialize a git repository if it does not exist yet
+  - improve reading the bundle identifier from the Xcode project (handle the string interpolation case)
+- [xdl] Add EXPO_TOKEN authentication method ([#2415](https://github.com/expo/expo-cli/pull/2415) by [@byCedric](https://github.com/byCedric))
+- [expo-cli] Generate iOS icons on eject and apply ([#2495](https://github.com/expo/expo-cli/pull/2495) by [@EvanBacon](https://github.com/EvanBacon))
+- [expo-cli] expo apply - prompt for bundle ID and package name ([#2498](https://github.com/expo/expo-cli/pull/2498) by [@EvanBacon](https://github.com/EvanBacon))
+- [expo-cli] expo eject - added support for device families ([#2505](https://github.com/expo/expo-cli/pull/2505) by [@EvanBacon](https://github.com/EvanBacon))
+- [expo-cli] EAS build: allow choosing scheme for ios project build ([#2501](https://github.com/expo/expo-cli/pull/2501) by [@dsokal](https://github.com/dsokal))
 
 ### 🐛 Bug fixes
+
+- [expo-cli][xdl] EAS Build: Skip SDK version validation ([#2481](https://github.com/expo/expo-cli/pull/2481) by [@brentvatne](https://github.com/brentvatne))
+- [expo-cli] expo apply - fix iOS name changing ([#2497](https://github.com/expo/expo-cli/pull/2497) by [@EvanBacon](https://github.com/EvanBacon))
+- [expo-cli] expo apply - fix android schemes being added incorrectly ([#2507](https://github.com/expo/expo-cli/pull/2507) by [@EvanBacon](https://github.com/EvanBacon))
+- [expo-cli] Fix progress bar when uploading iOS ([#2502](https://github.com/expo/expo-cli/pull/2502) by [@byCedric](https://github.com/byCedric))
+- [expo-cli] Fix default bare project name to match regex in `expo-init` ([#2509](https://github.com/expo/expo-cli/pull/2509) by [@barthap](https://github.com/barthap))
 
 ### 📦 Packages updated
 
