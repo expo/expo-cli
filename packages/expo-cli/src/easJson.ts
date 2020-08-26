@@ -43,6 +43,7 @@ export interface iOSManagedBuildProfile {
 export interface iOSGenericBuildProfile {
   workflow: Workflow.Generic;
   credentialsSource: CredentialsSource;
+  scheme?: string;
   artifactPath?: string;
 }
 
@@ -98,6 +99,7 @@ const AndroidManagedSchema = Joi.object({
 const iOSGenericSchema = Joi.object({
   workflow: Joi.string().valid('generic').required(),
   credentialsSource: Joi.string().valid('local', 'remote', 'auto').default('auto'),
+  scheme: Joi.string(),
   artifactPath: Joi.string(),
 });
 
