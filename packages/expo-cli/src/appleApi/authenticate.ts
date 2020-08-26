@@ -20,6 +20,10 @@ function getKeychainServiceName(appleId: string): string {
 async function deletePasswordAsync({
   appleId,
 }: Pick<AppleCredentials, 'appleId'>): Promise<boolean> {
+  // Mac only right now.
+  if (process.platform !== 'darwin') {
+    return false;
+  }
   const keychainService = getKeychainServiceName(appleId);
   return new Promise((resolve, reject) => {
     keychain.deletePassword(
@@ -42,6 +46,11 @@ async function deletePasswordAsync({
 async function getPasswordAsync({
   appleId,
 }: Pick<AppleCredentials, 'appleId'>): Promise<string | null> {
+  // Mac only right now.
+  if (process.platform !== 'darwin') {
+    return null;
+  }
+  // If the user opts out, delete the password.
   if (NO_STORE_PASSWORD) {
     await deletePasswordAsync({ appleId });
     return null;
@@ -69,6 +78,10 @@ async function storePasswordAsync({
   appleId,
   appleIdPassword,
 }: AppleCredentials): Promise<boolean> {
+  // Mac only right now.
+  if (process.platform !== 'darwin') {
+    return false;
+  }
   if (NO_STORE_PASSWORD) {
     log('Skip storing Apple ID password in the native key chain.');
     return false;
@@ -215,7 +228,13 @@ async function _promptForAppleId({
 
     // https://docs.expo.io/distribution/security/#apple-developer-account-credentials
     const here = terminalLink('here', 'https://bit.ly/2VtGWhU');
-    log(wrap(chalk.bold(`The password is only used to authenticate with Apple and never stored on Expo servers`)));
+    log(
+      wrap(
+        chalk.bold(
+          `The password is only used to authenticate with Apple and never stored on Expo servers`
+        )
+      )
+    );
     log(wrap(chalk.grey(`Learn more ${here}`)));
   }
 
