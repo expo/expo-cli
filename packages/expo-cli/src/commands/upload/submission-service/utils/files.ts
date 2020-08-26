@@ -131,8 +131,9 @@ async function downloadAndDecompressAsync(url: string, destination: string): Pro
 
 export {
   createDownloadStream,
-  downloadAppArchiveAsync,
-  uploadAppArchiveAsync,
-  extractLocalArchiveAsync,
   downloadAndDecompressAsync,
+  downloadAppArchiveAsync,
+  extractLocalArchiveAsync,
+  pathIsTar,
+  uploadAppArchiveAsync,
 };

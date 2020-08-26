@@ -10,6 +10,7 @@ import { getAppConfig } from '../utils/config';
 import {
   downloadAppArchiveAsync,
   extractLocalArchiveAsync,
+  pathIsTar,
   uploadAppArchiveAsync,
 } from '../utils/files';
 
@@ -85,8 +86,9 @@ async function getArchiveFileLocationAsync(
 }
 
 async function getArchiveLocationForUrlAsync(mode: SubmissionMode, url: string): Promise<string> {
-  if (mode === SubmissionMode.online) {
-    // TODO: Should we download the file and extract it or send a tar.gz to the server?
+  // When a URL points to a tar file, download it and extract using unified logic.
+  // Otherwise send it directly to the server in online mode.
+  if (mode === SubmissionMode.online && !pathIsTar(url)) {
     return url;
   } else {
     log('Downloading your app archive');
