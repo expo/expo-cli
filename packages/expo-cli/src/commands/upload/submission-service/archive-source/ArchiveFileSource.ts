@@ -95,7 +95,6 @@ async function getArchiveLocationForUrlAsync(mode: SubmissionMode, url: string):
 }
 
 async function getArchiveLocationForPathAsync(mode: SubmissionMode, path: string): Promise<string> {
-  // TODO: Bail out if file has .ipa extension after extracting.
   const resolvedPath = await extractLocalArchiveAsync(path);
 
   if (mode === SubmissionMode.online) {
