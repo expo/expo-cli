@@ -4,6 +4,8 @@ import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import path from 'path';
 
+import { getOrPromptForPackage } from '../eject/ConfigValidation';
+
 async function modifyBuildGradleAsync(
   projectRoot: string,
   callback: (buildGradle: string) => string
@@ -54,6 +56,9 @@ async function modifyMainActivityJavaAsync(
 }
 
 export default async function configureAndroidProjectAsync(projectRoot: string) {
+  // Check package before reading the config because it may mutate the config if the user is prompted to define it.
+  await getOrPromptForPackage(projectRoot);
+
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const username = await UserManager.getCurrentUsernameAsync();
 
