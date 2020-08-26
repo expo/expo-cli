@@ -9,7 +9,7 @@ import validator from 'validator';
 import CommandError from '../CommandError';
 import log from '../log';
 import prompt, { Question } from '../prompt';
-import { downloadAndDecompressAsync } from './upload/utils';
+import { downloadAndDecompressAsync } from './upload/submission-service/utils/files';
 
 type Options = {
   outputDir: string;

@@ -2,11 +2,13 @@ import { ExpoConfig, Platform, getConfig } from '@expo/config';
 import { StandaloneBuild } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import os from 'os';
 import path from 'path';
 
 import log from '../../log';
-import { downloadEASArtifact, extractLocalEASArtifactAsync } from './utils';
+import {
+  downloadAppArchiveAsync,
+  extractLocalArchiveAsync,
+} from './submission-service/utils/files';
 
 export type PlatformOptions = {
   id?: string;
@@ -108,24 +110,13 @@ export default class BaseUploader {
   }
 
   async _downloadBuild(urlOrPath: string): Promise<string> {
-    const filename = path.basename(urlOrPath);
-    // Since we may need to rename the destination path,
-    // add everything to a folder which can be nuked to ensure we don't accidentally use an old build with the same name.
-    const destinationFolder = path.join(os.tmpdir(), 'expo-upload');
-    const destinationPath = path.join(destinationFolder, filename);
-
-    if (await fs.pathExists(destinationFolder)) {
-      await fs.remove(destinationFolder);
-    }
-    await fs.ensureDir(destinationFolder);
-
     if (path.isAbsolute(urlOrPath)) {
       // Local file paths that don't need to be extracted will simply return the `urlOrPath` as the final destination.
-      return await extractLocalEASArtifactAsync(urlOrPath, destinationPath);
+      return await extractLocalArchiveAsync(urlOrPath);
     } else {
       // Remote files
       log(`Downloading build from ${urlOrPath}`);
-      return await downloadEASArtifact(urlOrPath, destinationPath);
+      return await downloadAppArchiveAsync(urlOrPath);
     }
   }
 

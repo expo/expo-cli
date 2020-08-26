@@ -1,7 +1,5 @@
 import { Platform } from '@expo/config';
 import { StandaloneBuild } from '@expo/xdl';
-import os from 'os';
-import { basename as pathBasename, join as pathJoin } from 'path';
 import validator from 'validator';
 
 import log from '../../../../log';
@@ -9,7 +7,11 @@ import prompt from '../../../../prompt';
 import { existingFile } from '../../../../validators';
 import { SubmissionMode } from '../types';
 import { getAppConfig } from '../utils/config';
-import { downloadAppArchiveAsync, uploadAppArchiveAsync } from '../utils/files';
+import {
+  downloadAppArchiveAsync,
+  extractLocalArchiveAsync,
+  uploadAppArchiveAsync,
+} from '../utils/files';
 
 enum ArchiveFileSourceType {
   url,
@@ -84,20 +86,23 @@ async function getArchiveFileLocationAsync(
 
 async function getArchiveLocationForUrlAsync(mode: SubmissionMode, url: string): Promise<string> {
   if (mode === SubmissionMode.online) {
+    // TODO: Should we download the file and extract it or send a tar.gz to the server?
     return url;
   } else {
-    const tmpPath = pathJoin(os.tmpdir(), pathBasename(url));
     log('Downloading your app archive');
-    return downloadAppArchiveAsync(url, tmpPath);
+    return downloadAppArchiveAsync(url);
   }
 }
 
 async function getArchiveLocationForPathAsync(mode: SubmissionMode, path: string): Promise<string> {
+  // TODO: Bail out if file has .ipa extension after extracting.
+  const resolvedPath = await extractLocalArchiveAsync(path);
+
   if (mode === SubmissionMode.online) {
     log('Uploading your app archive to the Expo Submission Service');
-    return await uploadAppArchiveAsync(path);
+    return await uploadAppArchiveAsync(resolvedPath);
   } else {
-    return path;
+    return resolvedPath;
   }
 }
 
