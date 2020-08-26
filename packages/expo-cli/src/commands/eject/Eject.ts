@@ -25,9 +25,9 @@ import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync'
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import {
-  logWarningArray,
   logConfigWarningsAndroid,
   logConfigWarningsIOS,
+  logWarningArray,
 } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
