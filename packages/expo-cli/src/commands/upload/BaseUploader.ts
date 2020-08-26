@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import log from '../../log';
-import { downloadFile } from './utils';
+import { downloadEASArtifact, extractLocalEASArtifactAsync } from './utils';
 
 export type PlatformOptions = {
   id?: string;
@@ -50,7 +50,7 @@ export default class BaseUploader {
   async _getBinaryFilePath(): Promise<string> {
     const { path, id, url } = this.options;
     if (path) {
-      return path;
+      return this._downloadBuild(path);
     } else if (id) {
       return this._downloadBuildById(id);
     } else if (url) {
@@ -108,16 +108,23 @@ export default class BaseUploader {
 
   async _downloadBuild(urlOrPath: string): Promise<string> {
     const filename = path.basename(urlOrPath);
-    const destinationPath = `/tmp/${filename}`;
-    if (await fs.pathExists(destinationPath)) {
-      await fs.remove(destinationPath);
+    // Since we may need to rename the destination path,
+    // add everything to a folder which can be nuked to ensure we don't accidentally use an old build with the same name.
+    const destinationFolder = '/tmp/expo-upload/';
+    const destinationPath = path.join(destinationFolder, filename);
+
+    if (await fs.pathExists(destinationFolder)) {
+      await fs.remove(destinationFolder);
     }
+    await fs.ensureDir(destinationFolder);
+
     if (urlOrPath.startsWith('/')) {
-      await fs.copy(urlOrPath, destinationPath);
-      return destinationPath;
+      // Local file paths that don't need to be extracted will simply return the `urlOrPath` as the final destination.
+      return await extractLocalEASArtifactAsync(urlOrPath, destinationPath);
     } else {
+      // Remote files
       log(`Downloading build from ${urlOrPath}`);
-      return await downloadFile(urlOrPath, destinationPath);
+      return await downloadEASArtifact(urlOrPath, destinationPath);
     }
   }
 

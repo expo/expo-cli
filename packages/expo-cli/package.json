@@ -110,6 +110,7 @@
     "react-dev-utils": "~10.2.1",
     "semver": "5.5.0",
     "slash": "1.0.0",
+    "tar": "^6.0.5",
     "targz": "^1.0.1",
     "tempy": "^0.3.0",
     "terminal-link": "^2.1.1",
