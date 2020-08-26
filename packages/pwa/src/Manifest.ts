@@ -233,8 +233,12 @@ export function getFaviconIconConfig(config: ExpoConfig): IconOptions | null {
     backgroundColor: 'transparent',
   });
 
-  // Allow empty objects
+  // If the favicon is set but empty, we assume that the user does not want us to generate a favicon
   if (typeof config.web?.favicon === 'string') {
+    if (!config.web?.favicon) {
+      return null;
+    }
+
     return validate(config.web.favicon);
   }
   if (typeof config.icon === 'string') {
