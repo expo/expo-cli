@@ -1,4 +1,8 @@
+import { UserSettings } from '@expo/xdl';
 import chalk from 'chalk';
+import getenv from 'getenv';
+// @ts-ignore
+import keychain from 'keychain';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
@@ -6,6 +10,86 @@ import log from '../log';
 import prompt from '../prompt';
 import { nonEmptyInput } from '../validators';
 import { runAction, travelingFastlane } from './fastlane';
+
+const NO_STORE_PASSWORD = getenv.boolish('EXPO_NO_STORE_PASSWORD', false);
+
+function getKeychainServiceName(appleId: string): string {
+  return `deliver.${appleId}`;
+}
+
+async function deletePasswordAsync({
+  appleId,
+}: Pick<AppleCredentials, 'appleId'>): Promise<boolean> {
+  const keychainService = getKeychainServiceName(appleId);
+  return new Promise((resolve, reject) => {
+    keychain.deletePassword(
+      { account: appleId, service: keychainService, type: 'internet' },
+      (error: Error) => {
+        if (error) {
+          if (error.message.match(/Could not find password/)) {
+            return resolve(false);
+          }
+          reject(error);
+        } else {
+          log('Removed Apple ID password from the native key chain.');
+          resolve(true);
+        }
+      }
+    );
+  });
+}
+
+async function getPasswordAsync({
+  appleId,
+}: Pick<AppleCredentials, 'appleId'>): Promise<string | null> {
+  if (NO_STORE_PASSWORD) {
+    await deletePasswordAsync({ appleId });
+    return null;
+  }
+
+  const keychainService = getKeychainServiceName(appleId);
+  return new Promise((resolve, reject) => {
+    keychain.getPassword(
+      { account: appleId, service: keychainService, type: 'internet' },
+      (error: Error, password: string) => {
+        if (error) {
+          if (error.message.match(/Could not find password/)) {
+            return resolve(null);
+          }
+          reject(error);
+        } else {
+          resolve(password);
+        }
+      }
+    );
+  });
+}
+
+async function storePasswordAsync({
+  appleId,
+  appleIdPassword,
+}: AppleCredentials): Promise<boolean> {
+  if (NO_STORE_PASSWORD) {
+    log('Skip storing Apple ID password in the native key chain.');
+    return false;
+  }
+  log(
+    'Saving Apple ID password to the local native key chain. You can disable this with `EXPO_NO_STORE_PASSWORD=true`'
+  );
+  const keychainService = getKeychainServiceName(appleId);
+  return new Promise((resolve, reject) => {
+    keychain.setPassword(
+      { account: appleId, service: keychainService, type: 'internet', password: appleIdPassword },
+      (error: Error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(true);
+        }
+      }
+    );
+  });
+}
 
 const APPLE_IN_HOUSE_TEAM_TYPE = 'in-house';
 
@@ -41,7 +125,7 @@ export type AppleCtx = {
 };
 
 export async function authenticate(options: Options = {}): Promise<AppleCtx> {
-  const { appleId, appleIdPassword } = await _requestAppleIdCreds(options);
+  const { appleId, appleIdPassword } = await requestAppleIdCreds(options);
   log(`Authenticating to Apple Developer Portal...`); // use log instead of spinner in case we need to prompt user for 2fa
   try {
     const { teams, fastlaneSession } = await runAction(
@@ -68,14 +152,18 @@ export async function authenticate(options: Options = {}): Promise<AppleCtx> {
   }
 }
 
-async function _requestAppleIdCreds(options: Options): Promise<AppleCredentials> {
+export async function requestAppleIdCreds(options: Options): Promise<AppleCredentials> {
   return _getAppleIdFromParams(options) || (await _promptForAppleId());
 }
 
 function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCredentials | null {
   const passedAppleIdPassword = appleId
-    ? appleIdPassword || process.env.EXPO_APPLE_PASSWORD
+    ? appleIdPassword || process.env.EXPO_APPLE_PASSWORD || process.env.EXPO_APPLE_ID_PASSWORD
     : undefined;
+
+  if (process.env.EXPO_APPLE_ID_PASSWORD) {
+    log.error('EXPO_APPLE_ID_PASSWORD is deprecated, please use EXPO_APPLE_PASSWORD instead!');
+  }
 
   // none of the apple id params were set, assume user has no intention of passing it in
   if (!appleId) {
@@ -95,6 +183,22 @@ function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCred
   };
 }
 
+async function getLastUsedAppleIdAsync(): Promise<string | undefined> {
+  if (NO_STORE_PASSWORD) {
+    // Clear last used apple ID.
+    await UserSettings.deleteKeyAsync('appleId');
+    return undefined;
+  }
+
+  let lastAppleId: string | undefined = undefined;
+  try {
+    // @ts-ignore
+    lastAppleId = (await UserSettings.getAsync('appleId')) ?? '';
+  } catch {}
+
+  return lastAppleId;
+}
+
 async function _promptForAppleId({
   firstAttempt = true,
   previousAppleId,
@@ -111,9 +215,11 @@ async function _promptForAppleId({
 
     // https://docs.expo.io/distribution/security/#apple-developer-account-credentials
     const here = terminalLink('here', 'https://bit.ly/2VtGWhU');
-    log(wrap(chalk.bold(`The password is only used to authenticate with Apple and never stored`)));
+    log(wrap(chalk.bold(`The password is only used to authenticate with Apple`)));
     log(wrap(chalk.grey(`Learn more ${here}`)));
   }
+
+  const lastAppleId = await getLastUsedAppleIdAsync();
 
   const { appleId: promptAppleId } = await prompt(
     {
@@ -121,12 +227,26 @@ async function _promptForAppleId({
       name: 'appleId',
       message: `Apple ID:`,
       validate: nonEmptyInput,
+      default: lastAppleId as string,
       ...(previousAppleId && { default: previousAppleId }),
     },
     {
       nonInteractiveHelp: 'Pass your Apple ID using the --apple-id flag.',
     }
   );
+
+  if (!NO_STORE_PASSWORD && lastAppleId !== promptAppleId) {
+    await UserSettings.setAsync('appleId', promptAppleId);
+  }
+
+  // Only check on the first attempt in case the user changed their password.
+  if (firstAttempt) {
+    const password = await getPasswordAsync({ appleId: promptAppleId });
+
+    if (password) {
+      return { appleId: promptAppleId, appleIdPassword: password };
+    }
+  }
   const { appleIdPassword } = await prompt(
     {
       type: 'password',
@@ -139,6 +259,9 @@ async function _promptForAppleId({
         'Pass your Apple ID password using the EXPO_APPLE_PASSWORD environment variable',
     }
   );
+
+  await storePasswordAsync({ appleId: promptAppleId, appleIdPassword });
+
   return { appleId: promptAppleId, appleIdPassword };
 }
 
