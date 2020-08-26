@@ -1,8 +1,5 @@
 import { UserSettings } from '@expo/xdl';
 import chalk from 'chalk';
-import getenv from 'getenv';
-// @ts-ignore
-import keychain from 'keychain';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
@@ -10,99 +7,7 @@ import log from '../log';
 import prompt from '../prompt';
 import { nonEmptyInput } from '../validators';
 import { runAction, travelingFastlane } from './fastlane';
-
-const NO_STORE_PASSWORD = getenv.boolish('EXPO_NO_STORE_PASSWORD', false);
-
-function getKeychainServiceName(appleId: string): string {
-  return `deliver.${appleId}`;
-}
-
-async function deletePasswordAsync({
-  appleId,
-}: Pick<AppleCredentials, 'appleId'>): Promise<boolean> {
-  // Mac only right now.
-  if (process.platform !== 'darwin') {
-    return false;
-  }
-  const keychainService = getKeychainServiceName(appleId);
-  return new Promise((resolve, reject) => {
-    keychain.deletePassword(
-      { account: appleId, service: keychainService, type: 'internet' },
-      (error: Error) => {
-        if (error) {
-          if (error.message.match(/Could not find password/)) {
-            return resolve(false);
-          }
-          reject(error);
-        } else {
-          log('Removed Apple ID password from the native key chain.');
-          resolve(true);
-        }
-      }
-    );
-  });
-}
-
-async function getPasswordAsync({
-  appleId,
-}: Pick<AppleCredentials, 'appleId'>): Promise<string | null> {
-  // Mac only right now.
-  if (process.platform !== 'darwin') {
-    return null;
-  }
-  // If the user opts out, delete the password.
-  if (NO_STORE_PASSWORD) {
-    await deletePasswordAsync({ appleId });
-    return null;
-  }
-
-  const keychainService = getKeychainServiceName(appleId);
-  return new Promise((resolve, reject) => {
-    keychain.getPassword(
-      { account: appleId, service: keychainService, type: 'internet' },
-      (error: Error, password: string) => {
-        if (error) {
-          if (error.message.match(/Could not find password/)) {
-            return resolve(null);
-          }
-          reject(error);
-        } else {
-          resolve(password);
-        }
-      }
-    );
-  });
-}
-
-async function storePasswordAsync({
-  appleId,
-  appleIdPassword,
-}: AppleCredentials): Promise<boolean> {
-  // Mac only right now.
-  if (process.platform !== 'darwin') {
-    return false;
-  }
-  if (NO_STORE_PASSWORD) {
-    log('Skip storing Apple ID password in the native key chain.');
-    return false;
-  }
-  log(
-    'Saving Apple ID password to the local native key chain. You can disable this with `EXPO_NO_STORE_PASSWORD=true`'
-  );
-  const keychainService = getKeychainServiceName(appleId);
-  return new Promise((resolve, reject) => {
-    keychain.setPassword(
-      { account: appleId, service: keychainService, type: 'internet', password: appleIdPassword },
-      (error: Error) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(true);
-        }
-      }
-    );
-  });
-}
+import * as Keychain from './keychain';
 
 const APPLE_IN_HOUSE_TEAM_TYPE = 'in-house';
 
@@ -196,22 +101,6 @@ function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCred
   };
 }
 
-async function getLastUsedAppleIdAsync(): Promise<string | undefined> {
-  if (NO_STORE_PASSWORD) {
-    // Clear last used apple ID.
-    await UserSettings.deleteKeyAsync('appleId');
-    return undefined;
-  }
-
-  let lastAppleId: string | undefined = undefined;
-  try {
-    // @ts-ignore
-    lastAppleId = (await UserSettings.getAsync('appleId')) ?? '';
-  } catch {}
-
-  return lastAppleId;
-}
-
 async function _promptForAppleId({
   firstAttempt = true,
   previousAppleId,
@@ -238,6 +127,8 @@ async function _promptForAppleId({
     log(wrap(chalk.grey(`Learn more ${here}`)));
   }
 
+  // Get the email address that was last used and set it as
+  // the default value for quicker authentication.
   const lastAppleId = await getLastUsedAppleIdAsync();
 
   const { appleId: promptAppleId } = await prompt(
@@ -254,7 +145,9 @@ async function _promptForAppleId({
     }
   );
 
-  if (!NO_STORE_PASSWORD && lastAppleId !== promptAppleId) {
+  // If a new email was used then store it as a suggestion for next time.
+  // This functionality is disabled using the keychain mechanism.
+  if (!Keychain.EXPO_NO_KEYCHAIN && lastAppleId !== promptAppleId) {
     await UserSettings.setAsync('appleId', promptAppleId);
   }
 
@@ -279,7 +172,7 @@ async function _promptForAppleId({
     }
   );
 
-  await storePasswordAsync({ appleId: promptAppleId, appleIdPassword });
+  await setPasswordAsync({ appleId: promptAppleId, appleIdPassword });
 
   return { appleId: promptAppleId, appleIdPassword };
 }
@@ -331,4 +224,67 @@ function _formatTeam({ teamId, name, type }: FastlaneTeam): Team {
     name: `${name} (${type})`,
     inHouse: type.toLowerCase() === APPLE_IN_HOUSE_TEAM_TYPE,
   };
+}
+
+async function getLastUsedAppleIdAsync(): Promise<string | undefined> {
+  if (Keychain.EXPO_NO_KEYCHAIN) {
+    // Clear last used apple ID.
+    await UserSettings.deleteKeyAsync('appleId');
+    return undefined;
+  }
+
+  let lastAppleId: string | undefined = undefined;
+  try {
+    // @ts-ignore
+    lastAppleId = (await UserSettings.getAsync('appleId')) ?? '';
+  } catch {}
+
+  return lastAppleId;
+}
+
+/**
+ * Returns the same prefix used by Fastlane in order to potentially share access between services.
+ * [Cite. Fastlane](https://github.com/fastlane/fastlane/blob/f831062fa6f4b216b8ee38949adfe28fc11a0a8e/credentials_manager/lib/credentials_manager/account_manager.rb#L8).
+ *
+ * @param appleId email address
+ */
+function getKeychainServiceName(appleId: string): string {
+  return `deliver.${appleId}`;
+}
+
+async function deletePasswordAsync({
+  appleId,
+}: Pick<AppleCredentials, 'appleId'>): Promise<boolean> {
+  const serviceName = getKeychainServiceName(appleId);
+  const success = await Keychain.deletePasswordAsync({ username: appleId, serviceName });
+  if (success) {
+    log('Removed Apple ID password from the native key chain.');
+  }
+  return success;
+}
+
+async function getPasswordAsync({
+  appleId,
+}: Pick<AppleCredentials, 'appleId'>): Promise<string | null> {
+  // If the user opts out, delete the password.
+  if (Keychain.EXPO_NO_KEYCHAIN) {
+    await deletePasswordAsync({ appleId });
+    return null;
+  }
+
+  const serviceName = getKeychainServiceName(appleId);
+  return Keychain.getPasswordAsync({ username: appleId, serviceName });
+}
+
+async function setPasswordAsync({ appleId, appleIdPassword }: AppleCredentials): Promise<boolean> {
+  if (Keychain.EXPO_NO_KEYCHAIN) {
+    log('Skip storing Apple ID password in the native key chain.');
+    return false;
+  }
+
+  log(
+    `Saving Apple ID password to the local native key chain. You can disable this with ${chalk.bold`EXPO_NO_KEYCHAIN=true`}`
+  );
+  const serviceName = getKeychainServiceName(appleId);
+  return Keychain.setPasswordAsync({ username: appleId, password: appleIdPassword, serviceName });
 }
