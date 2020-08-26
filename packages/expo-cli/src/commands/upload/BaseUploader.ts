@@ -5,12 +5,15 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import log from '../../log';
-import { downloadFile } from './utils';
+import { BuildStatusOptions, fetchBuildsAsync } from '../eas-build/status/action';
+import { BuildCommandPlatform, BuildStatus } from '../eas-build/types';
+import { downloadEASArtifact } from './utils';
 
 export type PlatformOptions = {
   id?: string;
   path?: string;
   url?: string;
+  useEAS?: boolean;
 };
 
 export default class BaseUploader {
@@ -52,10 +55,16 @@ export default class BaseUploader {
     if (path) {
       return path;
     } else if (id) {
+      if (this.options.useEAS) {
+        return this._downloadEASBuild();
+      }
       return this._downloadBuildById(id);
     } else if (url) {
       return this._downloadBuild(url);
     } else {
+      if (this.options.useEAS) {
+        return this._downloadEASBuild();
+      }
       return this._downloadLastestBuild();
     }
   }
@@ -85,11 +94,133 @@ export default class BaseUploader {
     return this._exp.owner;
   }
 
+  async _downloadEASBuild(): Promise<string> {
+    const { platform } = this;
+
+    const params: Partial<BuildStatusOptions> = {};
+    if (this.options.id) {
+      params.buildId = this.options.id;
+    } else {
+      params.platform = platform as BuildCommandPlatform;
+    }
+
+    // Fetch the builds from EAS servers
+    const builds = await fetchBuildsAsync(this.projectDir, {
+      ...params,
+      // limit to the last build.
+      limit: 1,
+    });
+
+    if (!builds?.length) {
+      // TODO: Is there another state where the server fails to return builds?
+      if (this.options.id) {
+        // TODO: This may already be handled in src/projects.ts
+        console.log();
+        console.log(
+          chalk.yellow(
+            `Couldn't find any builds on expo.io matching the ID ${chalk.bold(this.options.id)}`
+          )
+        );
+        console.log();
+        console.log(chalk.cyan(`Be sure your account has access to the build.`));
+        console.log();
+        process.exit(1);
+      }
+      console.log();
+      console.log(chalk.yellow(`Couldn't find any builds for this project on expo.io.`));
+      console.log();
+      console.log(
+        chalk.cyan(
+          `You can create one with: ${chalk.bold(`expo eas:build --platform ${platform}`)}`
+        )
+      );
+      console.log();
+      process.exit(1);
+    }
+
+    const [build] = builds;
+    const dashboardUrl = `https://expo.io/dashboard/bacon/builds/v2/${build.id}`;
+
+    const logInProgress = () => {
+      console.log();
+
+      console.log(
+        // Go directly to the logs.
+        chalk.cyan(
+          `Follow the progress from the dashboard: ${chalk.underline(dashboardUrl + '/logs')}`
+        )
+      );
+
+      const statusCmd = `expo eas:build:status ${
+        this.options.id ? `-b ${this.options.id}` : `--platform ${platform}`
+      }`;
+      console.log();
+      console.log(chalk.cyan(`Check the status by running ${chalk.bold(statusCmd)}`));
+      console.log();
+
+      process.exit(1);
+    };
+
+    const buildQualifier = this.options.id ? 'specified' : 'latest';
+    if (build.status === BuildStatus.IN_PROGRESS) {
+      // Using yellow for known errors, cyan for actionable advice, and red for unknown errors.
+      console.log(chalk.yellow(`⏱  The ${buildQualifier} build is still compiling.`));
+      logInProgress();
+      process.exit(1);
+    } else if (build.status === BuildStatus.IN_QUEUE) {
+      console.log(chalk.yellow(`⏱  The ${buildQualifier} build is waiting to be compiled.`));
+      logInProgress();
+      process.exit(1);
+    } else if (build.status === BuildStatus.ERRORED) {
+      // It's important that this feels as helpful as possible.
+      console.log();
+      console.log(
+        chalk.yellow(`The ${buildQualifier} build did not finish building because it had an error.`)
+      );
+      console.log();
+      console.log(
+        // Go directly to the logs for quicker debugging.
+        chalk.cyan(`Visit the console to see the error: ${chalk.underline(dashboardUrl + '/logs')}`)
+      );
+      console.log();
+      console.log(
+        chalk.cyan(
+          `After fixing the error, you can try building the project again with ${chalk.bold(
+            `expo eas:build --platform ${platform}`
+          )}`
+        )
+      );
+      console.log();
+      process.exit(1);
+    } else if (build.status === BuildStatus.FINISHED) {
+      const url = build.artifacts?.buildUrl;
+      if (!url) {
+        // Should never happen.
+        console.log(
+          chalk.red(
+            `Failed to retrieve the build URL for project: ${build.id}. Please report this as a bug.`
+          )
+        );
+        process.exit(1);
+      }
+      return this._downloadBuild(url);
+    } else {
+      // Unknown
+      console.log(
+        chalk.yellow(
+          `The requested build returned with an unknown status. Please report this as a bug. Build ID: ${build.id}`
+        )
+      );
+      process.exit(1);
+    }
+  }
+
   async _downloadLastestBuild() {
     const { platform } = this;
 
     const slug = this._getSlug();
     const owner = this._getOwner();
+
     const builds = await StandaloneBuild.getStandaloneBuilds(
       {
         slug,
@@ -117,7 +248,7 @@ export default class BaseUploader {
       return destinationPath;
     } else {
       log(`Downloading build from ${urlOrPath}`);
-      return await downloadFile(urlOrPath, destinationPath);
+      return await downloadEASArtifact(urlOrPath, destinationPath);
     }
   }
 

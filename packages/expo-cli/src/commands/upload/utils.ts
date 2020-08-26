@@ -1,17 +1,42 @@
 import { ExponentTools } from '@expo/xdl';
 import fs from 'fs-extra';
+import { sync as globSync } from 'glob';
 import got from 'got';
+import Request from 'got/dist/source/core';
+import { dirname } from 'path';
 import ProgressBar from 'progress';
 import stream from 'stream';
+import tar from 'tar';
 import { promisify } from 'util';
 
 const { spawnAsyncThrowError } = ExponentTools;
 const pipeline = promisify(stream.pipeline);
 
-export async function downloadFile(url: string, dest: string): Promise<string> {
+export async function moveFileOfTypeAsync(
+  directory: string,
+  extension: string,
+  dest: string
+): Promise<string> {
+  const [matching] = globSync(`*.${extension}`, {
+    absolute: true,
+    cwd: directory,
+  });
+
+  if (!matching) {
+    throw new Error(`No .${extension} files found in directory: ${directory}`);
+  }
+
+  if (matching !== dest) {
+    await fs.move(matching, dest);
+  }
+
+  return dest;
+}
+
+function createDownloadStream(url: string): Request {
   let bar: ProgressBar | null;
   let transferredSoFar = 0;
-  const downloadStream = got.stream(url).on('downloadProgress', progress => {
+  return got.stream(url).on('downloadProgress', progress => {
     if (!bar) {
       bar = new ProgressBar('Downloading [:bar] :percent :etas', {
         complete: '=',
@@ -22,6 +47,24 @@ export async function downloadFile(url: string, dest: string): Promise<string> {
     bar.tick(progress.transferred - transferredSoFar);
     transferredSoFar = progress.transferred;
   });
+}
+
+export async function downloadEASArtifact(url: string, dest: string): Promise<string> {
+  const downloadStream = createDownloadStream(url);
+  // Special use-case for downloading an EAS tar.gz file and unpackaging it.
+  if (url.endsWith('tar.gz')) {
+    const dir = dirname(dest);
+    await pipeline(downloadStream, tar.extract({ cwd: dir }, []));
+
+    await moveFileOfTypeAsync(dir, '{ipa,apk}', dest);
+  } else {
+    await pipeline(downloadStream, fs.createWriteStream(dest));
+  }
+  return dest;
+}
+
+export async function downloadFile(url: string, dest: string): Promise<string> {
+  const downloadStream = createDownloadStream(url);
   await pipeline(downloadStream, fs.createWriteStream(dest));
   return dest;
 }

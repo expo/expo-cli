@@ -7,16 +7,14 @@ import { ensureProjectExistsAsync } from '../../../projects';
 import { printTableJsonArray } from '../../utils/cli-table';
 import { Build, BuildCommandPlatform, BuildStatus } from '../types';
 
-interface BuildStatusOptions {
-  platform: BuildCommandPlatform;
+export interface BuildStatusOptions {
+  platform?: BuildCommandPlatform;
   buildId?: string;
   status?: BuildStatus;
+  limit?: number;
 }
 
-async function statusAction(
-  projectDir: string,
-  { platform, status, buildId }: BuildStatusOptions
-): Promise<void> {
+function validateBuildStatusOptions({ platform, status, buildId }: BuildStatusOptions): void {
   if (buildId) {
     if (platform) {
       throw new Error('-p/--platform cannot be specified if --build-id is specified.');
@@ -41,7 +39,9 @@ async function statusAction(
       );
     }
   }
+}
 
+async function createBuildsFetchRequestAsync(projectDir: string): Promise<[ApiV2, string]> {
   const user: User = await UserManager.ensureLoggedInAsync();
   const { exp }: ProjectConfig = getConfig(projectDir);
 
@@ -55,6 +55,17 @@ async function statusAction(
 
   const client = ApiV2.clientForUser(user);
 
+  return [client, projectId];
+}
+
+export async function fetchBuildsAsync(
+  projectDir: string,
+  { platform, status, limit, buildId }: BuildStatusOptions
+): Promise<Build[] | undefined> {
+  validateBuildStatusOptions({ platform, status, limit, buildId });
+
+  const [client, projectId] = await createBuildsFetchRequestAsync(projectDir);
+
   const spinner = ora().start('Fetching build history...');
 
   let builds: Build[] | undefined;
@@ -64,12 +75,15 @@ async function statusAction(
       const buildStatus = await client.getAsync(`projects/${projectId}/builds/${buildId}`);
       builds = buildStatus ? [buildStatus] : undefined;
     } else {
-      const params = {
-        ...([BuildCommandPlatform.ANDROID, BuildCommandPlatform.IOS].includes(platform)
+      const params: Record<string, string | number> = {
+        ...(platform && [BuildCommandPlatform.ANDROID, BuildCommandPlatform.IOS].includes(platform)
           ? { platform }
           : null),
         ...(status ? { status } : null),
       };
+      if (typeof limit === 'number') {
+        params.limit = limit;
+      }
 
       const buildStatus = await client.getAsync(`projects/${projectId}/builds`, params);
       builds = buildStatus?.builds;
@@ -83,6 +97,17 @@ async function statusAction(
     spinner.succeed('No currently active or previous builds for this project.');
   } else {
     spinner.succeed(`Found ${builds.length} builds for this project.`);
+  }
+  return builds;
+}
+
+async function statusAction(
+  projectDir: string,
+  { platform, status, buildId }: BuildStatusOptions
+): Promise<void> {
+  const builds = await fetchBuildsAsync(projectDir, { platform, status, buildId });
+
+  if (builds?.length) {
     printBuildTable(builds);
   }
 }
