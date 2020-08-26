@@ -215,7 +215,7 @@ async function _promptForAppleId({
 
     // https://docs.expo.io/distribution/security/#apple-developer-account-credentials
     const here = terminalLink('here', 'https://bit.ly/2VtGWhU');
-    log(wrap(chalk.bold(`The password is only used to authenticate with Apple`)));
+    log(wrap(chalk.bold(`The password is only used to authenticate with Apple and never stored on Expo servers`)));
     log(wrap(chalk.grey(`Learn more ${here}`)));
   }
 
