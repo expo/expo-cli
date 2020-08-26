@@ -66,16 +66,26 @@ function splitPath(path: string): string[] {
 const findGroup = (group: PBXGroup, name: string): any =>
   group.children.find(group => group.comment === name);
 
+function findGroupInsideGroup(project: Pbxproj, group: PBXGroup, name: string): null | PBXGroup {
+  const foundGroup = findGroup(group, name);
+  if (foundGroup) {
+    return project.getPBXGroupByKey(foundGroup.value) ?? null;
+  }
+  return null;
+}
+
 function pbxGroupByPath(project: Pbxproj, path: string): null | PBXGroup {
   const { firstProject } = project.getFirstProject();
 
-  const group = project.getPBXGroupByKey(firstProject.mainGroup);
+  let group = project.getPBXGroupByKey(firstProject.mainGroup);
 
   const components = splitPath(path);
   for (const name of components) {
-    const foundGroup = findGroup(group, name);
-    if (foundGroup) {
-      return project.getPBXGroupByKey(foundGroup.value);
+    const nextGroup = findGroupInsideGroup(project, group, name);
+    if (nextGroup) {
+      group = nextGroup;
+    } else {
+      return null;
     }
   }
 

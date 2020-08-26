@@ -27,7 +27,7 @@ export async function setLocalesAsync(config: ExpoConfig, projectRoot: string): 
   const projectName = getProjectName(projectRoot);
   const supportingDirectory = join(projectRoot, 'ios', projectName, 'Supporting');
 
-  // TODO: Should we delete all before running?
+  // TODO: Should we delete all before running? Revisit after we land on a lock file.
   const stringName = 'InfoPlist.strings';
 
   for (const [lang, localizationObj] of Object.entries(localesMap)) {
@@ -45,7 +45,6 @@ export async function setLocalesAsync(config: ExpoConfig, projectRoot: string): 
     const group = ensureGroupRecursively(project, `${projectName}/Supporting/${lang}.lproj`);
 
     // Ensure the file doesn't already exist
-    // TODO: Can this be pointing to another file tho?
     if (!group?.children.some(({ comment }) => comment === stringName)) {
       // Only write the file if it doesn't already exist.
       project = addFileToGroup(strings, `${projectName}/Supporting/${lang}.lproj`, project);
