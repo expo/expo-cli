@@ -4,7 +4,7 @@ import pick from 'lodash/pick';
 
 import { AppleCtx, authenticate } from '../appleApi';
 import log from '../log';
-import { getProjectData } from '../projects';
+import { getProjectOwner } from '../projects';
 import AndroidApi from './api/AndroidApi';
 import IosApi from './api/IosApi';
 
@@ -49,7 +49,7 @@ export class Context {
     return this._projectDir as string;
   }
   get projectOwner(): string {
-    return getProjectData(this.user, this.manifest).accountName;
+    return getProjectOwner(this.user, this.manifest);
   }
   get manifest(): ExpoConfig {
     if (!this._manifest) {

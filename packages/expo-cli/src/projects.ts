@@ -55,21 +55,15 @@ async function ensureProjectExistsAsync(
  * Get the account and project name using a user and Expo config.
  * This will validate if the owner field is set when using a robot account.
  */
-function getProjectData(
-  user: User | RobotUser,
-  exp: ExpoConfig
-): Pick<ProjectData, 'accountName' | 'projectName'> {
+function getProjectOwner(user: User | RobotUser, exp: ExpoConfig): string {
   if (user.kind === 'robot' && !exp.owner) {
     throw new CommandError(
       'ROBOT_OWNER_ERROR',
-      'The "owner" manifest property is required when using robot users.'
+      'The "owner" manifest property is required when using robot users. See: https://docs.expo.io/versions/latest/config/app/#owner'
     );
   }
 
-  return {
-    accountName: exp.owner || user.username,
-    projectName: exp.slug,
-  };
+  return exp.owner || user.username;
 }
 
-export { ensureProjectExistsAsync, getProjectData };
+export { ensureProjectExistsAsync, getProjectOwner };
