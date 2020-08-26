@@ -115,6 +115,7 @@ export async function action(projectDir: string, options: Options) {
         const uniqFilename = `${path.basename(url, '.tar.gz')}_${crypto
           .randomBytes(16)
           .toString('hex')}`;
+
         const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
         await fs.ensureDir(tmpFolderUncompressed);
         await downloadAndDecompressAsync(url, tmpFolderUncompressed);
