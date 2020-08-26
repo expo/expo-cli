@@ -24,11 +24,7 @@ import prompt from '../../prompt';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
-import {
-  logConfigWarningsAndroid,
-  logConfigWarningsIOS,
-  logWarningArray,
-} from '../utils/logConfigWarnings';
+import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
 
@@ -41,8 +37,6 @@ export type EjectAsyncOptions = {
   force?: boolean;
   packageManager?: 'npm' | 'yarn';
 };
-
-const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 /**
  * Entry point into the eject process, delegates to other helpers to perform various steps.
@@ -294,11 +288,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   exp.ios = exp.ios ?? {};
   exp.ios.bundleIdentifier = bundleIdentifier;
 
-  // TODO: remove entryPoint and log about it for sdk 37 changes
-  if (exp.entryPoint && exp.entryPoint !== EXPO_APP_ENTRY) {
-    log(`- expo.entryPoint is already configured, we recommend using "${EXPO_APP_ENTRY}`);
-  } else {
-    exp.entryPoint = EXPO_APP_ENTRY;
+  if (exp.entryPoint) {
+    delete exp.entryPoint;
+    log(`- expo.entryPoint is not needed and has been removed.`);
   }
 
   const updatingAppConfigStep = logNewSection('Updating app configuration (app.json)');
