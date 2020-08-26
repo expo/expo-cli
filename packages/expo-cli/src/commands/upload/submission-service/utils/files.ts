@@ -84,7 +84,7 @@ async function uploadAppArchiveAsync(path: string): Promise<string> {
 async function createTemporaryDirectoryForExtractionAsync(): Promise<string> {
   // Since we may need to rename the destination path,
   // add everything to a folder which can be nuked to ensure we don't accidentally use an old build with the same name.
-  const destinationFolder = join(os.tmpdir(), 'expo-upload');
+  const destinationFolder = join(os.tmpdir(), 'expo-submission-service');
 
   if (await fs.pathExists(destinationFolder)) {
     await fs.remove(destinationFolder);
@@ -130,6 +130,7 @@ async function downloadAndDecompressAsync(url: string, destination: string): Pro
 }
 
 export {
+  createDownloadStream,
   downloadAppArchiveAsync,
   uploadAppArchiveAsync,
   extractLocalArchiveAsync,
