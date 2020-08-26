@@ -76,8 +76,8 @@ export async function extractLocalEASArtifactAsync(
   // Special use-case for downloading an EAS tar.gz file and unpackaging it.
   const dir = dirname(extractedDest);
   await decompressTarAsync(filePath, dir);
-  // Move the folder contents matching ipa or apk.
-  return await moveFileOfTypeAsync(dir, '{ipa,apk}', extractedDest);
+  // Move the folder contents matching .ipa
+  return await moveFileOfTypeAsync(dir, 'ipa', extractedDest);
 }
 
 export async function downloadEASArtifact(url: string, dest: string): Promise<string> {

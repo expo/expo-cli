@@ -2,6 +2,7 @@ import { ExpoConfig, Platform, getConfig } from '@expo/config';
 import { StandaloneBuild } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
+import os from 'os';
 import path from 'path';
 
 import log from '../../log';
@@ -110,7 +111,7 @@ export default class BaseUploader {
     const filename = path.basename(urlOrPath);
     // Since we may need to rename the destination path,
     // add everything to a folder which can be nuked to ensure we don't accidentally use an old build with the same name.
-    const destinationFolder = '/tmp/expo-upload/';
+    const destinationFolder = path.join(os.tmpdir(), 'expo-upload');
     const destinationPath = path.join(destinationFolder, filename);
 
     if (await fs.pathExists(destinationFolder)) {
@@ -118,7 +119,7 @@ export default class BaseUploader {
     }
     await fs.ensureDir(destinationFolder);
 
-    if (urlOrPath.startsWith('/')) {
+    if (path.isAbsolute(urlOrPath)) {
       // Local file paths that don't need to be extracted will simply return the `urlOrPath` as the final destination.
       return await extractLocalEASArtifactAsync(urlOrPath, destinationPath);
     } else {
