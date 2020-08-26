@@ -24,7 +24,7 @@ type ClientPlatform = 'android' | 'ios';
 
 export function getClient(platform: ClientPlatform, sdk?: Versions.SDKVersion | null) {
   if (!sdk) {
-    return undefined;
+    return null;
   }
 
   if (platform === 'android' && sdk.androidClientUrl) {
@@ -41,7 +41,7 @@ export function getClient(platform: ClientPlatform, sdk?: Versions.SDKVersion | 
     };
   }
 
-  return undefined;
+  return null;
 }
 
 interface AvailableClientOptions {
