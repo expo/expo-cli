@@ -498,7 +498,7 @@ async function promptForBareConfig(
     ({ projectName } = await prompt({
       name: 'projectName',
       message: 'What would you like to name your app?',
-      default: 'my-app',
+      default: 'MyApp',
       filter: (name: string) => name.trim(),
       validate: (name: string) => validateProjectName(name),
     }));
