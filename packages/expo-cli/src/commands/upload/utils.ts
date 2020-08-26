@@ -60,6 +60,10 @@ function createDownloadStream(url: string): Request {
   });
 }
 
+export const decompressTarAsync = async (src: string, dest: string): Promise<void> => {
+  await pipeline(fs.createReadStream(src), tar.extract({ cwd: dest }, []));
+};
+
 export async function extractLocalEASArtifactAsync(
   filePath: string,
   extractedDest: string
@@ -71,7 +75,7 @@ export async function extractLocalEASArtifactAsync(
   }
   // Special use-case for downloading an EAS tar.gz file and unpackaging it.
   const dir = dirname(extractedDest);
-  await pipeline(fs.createReadStream(filePath), tar.extract({ cwd: dir }, []));
+  await decompressTarAsync(filePath, dir);
   // Move the folder contents matching ipa or apk.
   return await moveFileOfTypeAsync(dir, '{ipa,apk}', extractedDest);
 }
@@ -93,6 +97,18 @@ export async function downloadEASArtifact(url: string, dest: string): Promise<st
 export async function downloadFile(url: string, dest: string): Promise<string> {
   const downloadStream = createDownloadStream(url);
   await pipeline(downloadStream, fs.createWriteStream(dest));
+  return dest;
+}
+
+/**
+ * Download a tar.gz file and extract it to a folder.
+ *
+ * @param url remote URL to download.
+ * @param dest destination folder to extract the tar to.
+ */
+export async function downloadAndDecompressAsync(url: string, dest: string): Promise<string> {
+  const downloadStream = createDownloadStream(url);
+  await pipeline(downloadStream, tar.extract({ cwd: dest }));
   return dest;
 }
 
