@@ -1,5 +1,6 @@
 import { ExpoConfig } from '../Config.types';
 import { InfoPlist, URLScheme } from './IosConfig.types';
+import { findSchemeNames } from './utils/Xcodeproj';
 
 export function getScheme(config: { scheme?: string | string[] }): string[] {
   if (Array.isArray(config.scheme)) {
@@ -98,4 +99,8 @@ export function getSchemesFromPlist(infoPlist: InfoPlist): string[] {
     }, []);
   }
   return [];
+}
+
+export function getSchemesFromXcodeproj(projectRoot: string): string[] {
+  return findSchemeNames(projectRoot);
 }
