@@ -1,6 +1,6 @@
 import { PackageJSONConfig, ProjectTarget, getConfig, getDefaultTarget } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
-import { Exp, Project } from '@expo/xdl';
+import { Project } from '@expo/xdl';
 import chalk from 'chalk';
 import clipboard from 'clipboardy';
 import { Command } from 'commander';
@@ -10,6 +10,7 @@ import path from 'path';
 import log from '../log';
 import sendTo from '../sendTo';
 import * as TerminalLink from './utils/TerminalLink';
+import { formatNamedWarning } from './utils/logConfigWarnings';
 
 type Options = {
   clear?: boolean;
@@ -22,21 +23,6 @@ type Options = {
   parent?: { nonInteractive: boolean };
 };
 
-export function isInvalidReleaseChannel(releaseChannel?: string): boolean {
-  const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
-  return !!releaseChannel && !channelRe.test(releaseChannel);
-}
-
-// TODO(Bacon): should we prompt with a normalized value?
-function assertValidReleaseChannel(releaseChannel?: string): void {
-  if (isInvalidReleaseChannel(releaseChannel)) {
-    log.error(
-      'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
-    );
-    process.exit(1);
-  }
-}
-
 export async function action(
   projectDir: string,
   options: Options = {}
@@ -46,36 +32,50 @@ export async function action(
   const { exp, pkg } = getConfig(projectDir, {
     skipSDKVersionRequirement: true,
   });
+  const { sdkVersion, isDetached } = exp;
+
+  const target = options.target ?? getDefaultTarget(projectDir);
+
+  // Log building info before building.
+  // This gives the user sometime to bail out if the info is unexpected.
+  log.newLine();
+
+  log(`Project info`);
+
+  log(`- Workflow: ${log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
+
+  log(`- Release channel: ${log.chalk.bold(options.releaseChannel)}`);
+
+  if (sdkVersion && target === 'managed') {
+    log(`- Expo SDK: ${log.chalk.bold(exp.sdkVersion)}`);
+  }
+
+  log.newLine();
+
+  // Log warnings.
+
+  if (!isDetached && !options.duringBuild) {
+    // Check for SDK version and release channel mismatches only after displaying the values.
+    await logSDKMismatchWarningsAsync({
+      projectRoot: projectDir,
+      releaseChannel: options.releaseChannel,
+      sdkVersion,
+    });
+  }
 
   logExpoUpdatesWarnings(pkg);
 
   logOptimizeWarnings({ projectRoot: projectDir });
 
-  const target = options.target ?? getDefaultTarget(projectDir);
-
   if (!options.target && target === 'bare') {
     logBareWorkflowWarnings(pkg);
   }
 
-  if (!exp.isDetached && !options.duringBuild) {
-    await logSDKMismatchWarningsAsync({
-      projectRoot: projectDir,
-      releaseChannel: options.releaseChannel,
-    });
-  }
+  log.newLine();
 
-  // Log building info before building.
-  // This gives the user sometime to bail out if the info is unexpected.
-  log.addNewLineIfNone();
+  // Build and publish the project.
 
   log(`Building optimized bundle`);
-  log(log.chalk.dim(`- Release channel: ${log.chalk.bold(options.releaseChannel)}`));
-  log(
-    log.chalk.dim(`- Workflow: ${log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`)
-  );
-  if (target === 'managed' && exp.sdkVersion) {
-    log(log.chalk.dim(`- Expo SDK: ${log.chalk.bold(exp.sdkVersion)}`));
-  }
 
   if (options.quiet) {
     simpleSpinner.start();
@@ -119,6 +119,21 @@ export async function action(
   log.newLine();
 
   return result;
+}
+
+export function isInvalidReleaseChannel(releaseChannel?: string): boolean {
+  const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+  return !!releaseChannel && !channelRe.test(releaseChannel);
+}
+
+// TODO(Bacon): should we prompt with a normalized value?
+function assertValidReleaseChannel(releaseChannel?: string): void {
+  if (isInvalidReleaseChannel(releaseChannel)) {
+    log.error(
+      'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
+    );
+    process.exit(1);
+  }
 }
 
 /**
@@ -193,14 +208,15 @@ function getExampleManifestUrl(url: string, sdkVersion: string | undefined): str
 async function logSDKMismatchWarningsAsync({
   projectRoot,
   releaseChannel,
+  sdkVersion,
 }: {
   projectRoot: string;
   releaseChannel?: string;
+  sdkVersion?: string;
 }) {
-  // Get the published SDK version.
-  const {
-    args: { sdkVersion },
-  } = await Exp.getPublishInfoAsync(projectRoot);
+  if (!sdkVersion) {
+    return;
+  }
 
   const buildStatus = await Project.getBuildStatusAsync(projectRoot, {
     platform: 'all',
@@ -208,48 +224,58 @@ async function logSDKMismatchWarningsAsync({
     releaseChannel,
     sdkVersion,
   });
-  if (buildStatus.userHasBuiltExperienceBefore && !buildStatus.userHasBuiltAppBefore) {
-    log.warn(
-      'We noticed that you have not built a standalone app with this SDK version and release channel before. ' +
-        'Remember that OTA updates will only work for builds with matching SDK versions and release channels. ' +
-        'Read more here: https://docs.expo.io/workflow/publishing/#limitations'
-    );
+  const hasMismatch =
+    buildStatus.userHasBuiltExperienceBefore && !buildStatus.userHasBuiltAppBefore;
+  if (!hasMismatch) {
+    return;
   }
+
+  // A convenient warning reminding people that they're publishing with an SDK that their published app does not support.
+  log.nestedWarn(
+    formatNamedWarning(
+      'URL mismatch',
+      `No standalone app has been built with SDK ${sdkVersion} and release channel "${releaseChannel}" for this project before. OTA updates only work for native projects that have the same SDK version and release channel.`,
+      'https://docs.expo.io/workflow/publishing/#limitations'
+    )
+  );
 }
 
 export function logExpoUpdatesWarnings(pkg: PackageJSONConfig): void {
-  if (pkg.dependencies?.['expo-updates'] && pkg.dependencies?.['expokit']) {
-    log.warn(
-      `Warning: You have both the ${chalk.bold('expokit')} and ${chalk.bold(
+  const hasConflictingUpdatesPackages =
+    pkg.dependencies?.['expo-updates'] && pkg.dependencies?.['expokit'];
+
+  if (!hasConflictingUpdatesPackages) {
+    return;
+  }
+
+  log.nestedWarn(
+    formatNamedWarning(
+      'expo-updates',
+      `You have both the ${chalk.bold('expokit')} and ${chalk.bold(
         'expo-updates'
-      )} packages installed in package.json.`
-    );
-    log.warn(
-      `These two packages are incompatible and ${chalk.bold(
+      )} packages installed in package.json. These two packages are incompatible and ${chalk.bold(
         'publishing updates with expo-updates will not work if expokit is installed.'
-      )}`
-    );
-    log.warn(
-      `If you intend to use ${chalk.bold('expo-updates')}, please remove ${chalk.bold(
+      )}. If you intend to use ${chalk.bold('expo-updates')}, please remove ${chalk.bold(
         'expokit'
       )} from your dependencies.`
-    );
-  }
+    )
+  );
 }
 
 export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): void {
   const hasOptimized = fs.existsSync(path.join(projectRoot, '/.expo-shared/assets.json'));
-  if (!hasOptimized) {
-    log.warn(
-      'Warning: your project may contain unoptimized image assets. Smaller image sizes can improve app performance.'
-    );
-    log.warn(
-      `To compress the images in your project, abort publishing and run ${chalk.bold(
-        'npx expo-optimize'
-      )}.`
-    );
-    log.newLine();
+  if (hasOptimized) {
+    return;
   }
+  log.nestedWarn(
+    formatNamedWarning(
+      'Optimization',
+      `Project may contain suboptimal images. Optimized images can improve app performance and startup time. To fix this, run ${chalk.bold(
+        `npx expo-optimize`
+      )}`,
+      'https://docs.expo.io/distribution/optimizing-updates/#optimize-images'
+    )
+  );
 }
 
 /**
@@ -270,24 +296,19 @@ export function logBareWorkflowWarnings(pkg: PackageJSONConfig) {
   if (!hasExpoInstalled) {
     return;
   }
-  log.warn(
-    `Warning: this is a ${chalk.bold(
-      'bare workflow'
-    )} project. The resulting publish will only run properly inside of a native build of your project.`
-  );
 
-  log.warn(
-    `If you want to publish a version of your app that will run in Expo client, please use ${chalk.bold(
-      'expo publish --target managed'
-    )}.`
+  log.nestedWarn(
+    formatNamedWarning(
+      'Workflow target',
+      `This is a ${chalk.bold(
+        'bare workflow'
+      )} project. The resulting publish will only run properly inside of a native build of your project. If you want to publish a version of your app that will run in Expo client, please use ${chalk.bold(
+        'expo publish --target managed'
+      )}. You can skip this warning by explicitly running ${chalk.bold(
+        'expo publish --target bare'
+      )} in the future.`
+    )
   );
-
-  log.warn(
-    `You can skip this warning by explicitly running ${chalk.bold(
-      'expo publish --target bare'
-    )} in the future.`
-  );
-  log.newLine();
 }
 
 export default function(program: Command) {
