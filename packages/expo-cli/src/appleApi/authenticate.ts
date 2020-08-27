@@ -147,7 +147,7 @@ async function _promptForAppleId({
 
   // If a new email was used then store it as a suggestion for next time.
   // This functionality is disabled using the keychain mechanism.
-  if (!Keychain.EXPO_NO_KEYCHAIN && lastAppleId !== promptAppleId) {
+  if (!Keychain.EXPO_NO_KEYCHAIN && lastAppleId && lastAppleId !== promptAppleId) {
     await UserSettings.setAsync('appleId', promptAppleId);
   }
 
