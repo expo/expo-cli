@@ -1,0 +1,334 @@
+import { ExpoConfig } from '@expo/config';
+import { BundleAssetWithFileHashes, BundleOutput } from '@expo/dev-server';
+import fs from 'fs-extra';
+import chunk from 'lodash/chunk';
+import get from 'lodash/get';
+import set from 'lodash/set';
+import md5hex from 'md5hex';
+import minimatch from 'minimatch';
+import path from 'path';
+import urljoin from 'url-join';
+
+import ApiV2 from './ApiV2';
+import logger from './Logger';
+import UserManager from './User';
+import * as ExpSchema from './project/ExpSchema';
+import * as ProjectUtils from './project/ProjectUtils';
+import FormData from './tools/FormData';
+
+const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
+
+type ManifestAsset = { fileHashes: string[]; files: string[]; hash: string };
+
+export type Asset = ManifestAsset | BundleAssetWithFileHashes;
+
+type ManifestResolutionError = Error & {
+  localAssetPath?: string;
+  manifestField?: string;
+};
+
+type PublicConfig = ExpoConfig & {
+  sdkVersion: string;
+};
+
+type BundlesByPlatform = { android: BundleOutput; ios: BundleOutput };
+
+export async function resolveGoogleServicesFile(projectRoot: string, manifest: ExpoConfig) {
+  if (manifest.android?.googleServicesFile) {
+    const contents = await fs.readFile(
+      path.resolve(projectRoot, manifest.android.googleServicesFile),
+      'utf8'
+    );
+    manifest.android.googleServicesFile = contents;
+  }
+  if (manifest.ios?.googleServicesFile) {
+    const contents = await fs.readFile(
+      path.resolve(projectRoot, manifest.ios.googleServicesFile),
+      'base64'
+    );
+    manifest.ios.googleServicesFile = contents;
+  }
+}
+
+export async function resolveManifestAssets(
+  projectRoot: string,
+  manifest: PublicConfig,
+  resolver: (assetPath: string) => Promise<string>,
+  strict = false
+) {
+  try {
+    // Asset fields that the user has set
+    const assetSchemas = (
+      await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)
+    ).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
+
+    // Get the URLs
+    const urls = await Promise.all(
+      assetSchemas.map(async (assetSchema: ExpSchema.AssetSchema) => {
+        const pathOrURL = get(manifest, assetSchema.fieldPath);
+        if (pathOrURL.match(/^https?:\/\/(.*)$/)) {
+          // It's a remote URL
+          return pathOrURL;
+        } else if (fs.existsSync(path.resolve(projectRoot, pathOrURL))) {
+          return await resolver(pathOrURL);
+        } else {
+          const err: ManifestResolutionError = new Error('Could not resolve local asset.');
+          err.localAssetPath = pathOrURL;
+          err.manifestField = assetSchema.fieldPath;
+          throw err;
+        }
+      })
+    );
+
+    // Set the corresponding URL fields
+    assetSchemas.forEach((assetSchema: ExpSchema.AssetSchema, index: number) =>
+      set(manifest, assetSchema.fieldPath + 'Url', urls[index])
+    );
+  } catch (e) {
+    let logMethod = ProjectUtils.logWarning;
+    if (strict) {
+      logMethod = ProjectUtils.logError;
+    }
+    if (e.localAssetPath) {
+      logMethod(
+        projectRoot,
+        'expo',
+        `Unable to resolve asset "${e.localAssetPath}" from "${e.manifestField}" in your app.json or app.config.js`
+      );
+    } else {
+      logMethod(
+        projectRoot,
+        'expo',
+        `Warning: Unable to resolve manifest assets. Icons might not work. ${e.message}.`
+      );
+    }
+
+    if (strict) {
+      throw new Error('Resolving assets failed.');
+    }
+  }
+}
+
+/**
+ * Configures exp, preparing it for asset export
+ *
+ * @modifies {exp}
+ *
+ */
+async function _configureExpForAssets(projectRoot: string, exp: ExpoConfig, assets: Asset[]) {
+  // Add google services file if it exists
+  await resolveGoogleServicesFile(projectRoot, exp);
+
+  // Convert asset patterns to a list of asset strings that match them.
+  // Assets strings are formatted as `asset_<hash>.<type>` and represent
+  // the name that the file will have in the app bundle. The `asset_` prefix is
+  // needed because android doesn't support assets that start with numbers.
+  if (exp.assetBundlePatterns) {
+    const fullPatterns: string[] = exp.assetBundlePatterns.map((p: string) =>
+      path.join(projectRoot, p)
+    );
+    // Only log the patterns in debug mode, if they aren't already defined in the app.json, then all files will be targeted.
+    logger.global.info('\nProcessing asset bundle patterns:');
+    fullPatterns.forEach(p => logger.global.info('- ' + p));
+
+    // The assets returned by the RN packager has duplicates so make sure we
+    // only bundle each once.
+    const bundledAssets = new Set();
+    for (const asset of assets) {
+      const file = asset.files && asset.files[0];
+      const shouldBundle =
+        '__packager_asset' in asset &&
+        asset.__packager_asset &&
+        file &&
+        fullPatterns.some((p: string) => minimatch(file, p));
+      ProjectUtils.logDebug(
+        projectRoot,
+        'expo',
+        `${shouldBundle ? 'Include' : 'Exclude'} asset ${file}`
+      );
+      if (shouldBundle) {
+        asset.fileHashes.forEach(hash =>
+          bundledAssets.add(
+            'asset_' + hash + ('type' in asset && asset.type ? '.' + asset.type : '')
+          )
+        );
+      }
+    }
+    exp.bundledAssets = [...bundledAssets];
+    delete exp.assetBundlePatterns;
+  }
+
+  return exp;
+}
+
+type ExportAssetsOptions = {
+  projectRoot: string;
+  exp: PublicConfig;
+  hostedUrl: string;
+  bundles: BundlesByPlatform;
+  outputDir?: string;
+};
+
+export async function publishAssetsAsync(
+  options: Pick<ExportAssetsOptions, 'projectRoot' | 'exp' | 'bundles'>
+) {
+  return exportAssetsAsync({
+    ...options,
+    hostedUrl: EXPO_CDN,
+  });
+}
+
+export async function exportAssetsAsync({
+  projectRoot,
+  exp,
+  hostedUrl,
+  outputDir,
+  bundles,
+}: ExportAssetsOptions) {
+  logger.global.info('Analyzing assets');
+
+  const assetCdnPath = urljoin(hostedUrl, 'assets');
+  const assets = await collectAssets(projectRoot, exp, assetCdnPath, bundles);
+
+  logger.global.info('Saving assets');
+
+  if (assets.length > 0 && assets[0].fileHashes) {
+    if (outputDir) {
+      await saveAssetsAsync(projectRoot, assets, outputDir);
+    } else {
+      // No output directory defined, use remote url.
+      await uploadAssetsAsync(projectRoot, assets);
+    }
+  } else {
+    logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
+  }
+
+  // Updates the manifest to reflect additional asset bundling + configs
+  await _configureExpForAssets(projectRoot, exp, assets);
+
+  return { exp, assets };
+}
+
+/**
+ * Collect list of assets missing on host
+ *
+ * @param paths asset paths found locally that need to be uploaded.
+ */
+async function fetchMissingAssetsAsync(paths: string[]): Promise<string[]> {
+  const user = await UserManager.ensureLoggedInAsync();
+  const api = ApiV2.clientForUser(user);
+  const result = await api.postAsync('assets/metadata', { keys: paths });
+
+  const metas = result.metadata;
+  const missing = paths.filter(key => !metas[key].exists);
+  return missing;
+}
+
+function logAssetTask(projectRoot: string, action: 'uploading' | 'saving', pathName: string) {
+  ProjectUtils.logDebug(projectRoot, 'expo', `${action} ${pathName}`);
+
+  const relativePath = pathName.replace(projectRoot, '');
+  logger.global.info({ quiet: true }, `${action} ${relativePath}`);
+}
+
+// TODO(jesse): Add analytics for upload
+async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
+  // Collect paths by key, also effectively handles duplicates in the array
+  const paths = collectAssetPaths(assets);
+
+  const missing = await fetchMissingAssetsAsync(Object.keys(paths));
+
+  if (missing.length === 0) {
+    logger.global.info({ quiet: true }, `No assets changed, skipped.`);
+    return;
+  }
+
+  const keyChunks = chunk(missing, 5);
+
+  // Upload them!
+  await Promise.all(
+    keyChunks.map(async keys => {
+      const formData = new FormData();
+      for (const key of keys) {
+        const pathName = paths[key];
+
+        logAssetTask(projectRoot, 'uploading', pathName);
+
+        formData.append(key, fs.createReadStream(pathName), pathName);
+      }
+
+      // TODO: Document what's going on
+      const user = await UserManager.ensureLoggedInAsync();
+      const api = ApiV2.clientForUser(user);
+      await api.uploadFormDataAsync('assets/upload', formData);
+    })
+  );
+}
+
+function collectAssetPaths(assets: Asset[]): Record<string, string> {
+  // Collect paths by key, also effectively handles duplicates in the array
+  const paths: { [fileHash: string]: string } = {};
+  assets.forEach(asset => {
+    asset.files.forEach((path: string, index: number) => {
+      paths[asset.fileHashes[index]] = path;
+    });
+  });
+  return paths;
+}
+
+async function saveAssetsAsync(projectRoot: string, assets: Asset[], outputDir: string) {
+  // Collect paths by key, also effectively handles duplicates in the array
+  const paths = collectAssetPaths(assets);
+
+  // save files one chunk at a time
+  const keyChunks = chunk(Object.keys(paths), 5);
+  for (const keys of keyChunks) {
+    const promises = [];
+    for (const key of keys) {
+      const pathName = paths[key];
+
+      logAssetTask(projectRoot, 'saving', pathName);
+
+      const assetPath = path.resolve(outputDir, 'assets', key);
+
+      // copy file over to assetPath
+      promises.push(fs.copy(pathName, assetPath));
+    }
+    await Promise.all(promises);
+  }
+  logger.global.info('Files successfully saved.');
+}
+
+/**
+ * Collects all the assets declared in the android app, ios app and manifest
+ *
+ * @param {string} hostedAssetPrefix
+ *    The path where assets are hosted (ie) http://xxx.cloudfront.com/assets/
+ *
+ * @modifies {exp} Replaces relative asset paths in the manifest with hosted URLS
+ *
+ */
+async function collectAssets(
+  projectRoot: string,
+  exp: PublicConfig,
+  hostedAssetPrefix: string,
+  bundles: BundlesByPlatform
+): Promise<Asset[]> {
+  // Resolve manifest assets to their hosted URL and add them to the list of assets to
+  // be uploaded. Modifies exp.
+  const manifestAssets: Asset[] = [];
+  await resolveManifestAssets(
+    projectRoot,
+    exp,
+    async (assetPath: string) => {
+      const absolutePath = path.resolve(projectRoot, assetPath);
+      const contents = await fs.readFile(absolutePath);
+      const hash = md5hex(contents);
+      manifestAssets.push({ files: [absolutePath], fileHashes: [hash], hash });
+      return urljoin(hostedAssetPrefix, hash);
+    },
+    true
+  );
+
+  return [...bundles.ios.assets, ...bundles.android.assets, ...manifestAssets];
+}

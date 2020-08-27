@@ -13,13 +13,7 @@ import {
   resolveModule,
 } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
-import {
-  BundleAssetWithFileHashes,
-  BundleOutput,
-  MetroDevServerOptions,
-  bundleAsync,
-  runMetroDevServerAsync,
-} from '@expo/dev-server';
+import { MetroDevServerOptions, bundleAsync, runMetroDevServerAsync } from '@expo/dev-server';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import joi from '@hapi/joi';
@@ -34,12 +28,7 @@ import fs from 'fs-extra';
 import getenv from 'getenv';
 import HashIds from 'hashids';
 import http from 'http';
-import chunk from 'lodash/chunk';
 import escapeRegExp from 'lodash/escapeRegExp';
-import get from 'lodash/get';
-import set from 'lodash/set';
-import md5hex from 'md5hex';
-import minimatch from 'minimatch';
 import { AddressInfo } from 'net';
 import os from 'os';
 import path from 'path';
@@ -64,6 +53,13 @@ import { maySkipManifestValidation } from './Env';
 import { ErrorCode } from './ErrorCode';
 import * as Exp from './Exp';
 import logger from './Logger';
+import {
+  Asset,
+  exportAssetsAsync,
+  publishAssetsAsync,
+  resolveGoogleServicesFile,
+  resolveManifestAssets,
+} from './ProjectAssets';
 import * as ProjectSettings from './ProjectSettings';
 import * as Sentry from './Sentry';
 import * as ThirdParty from './ThirdParty';
@@ -76,12 +72,10 @@ import * as Webpack from './Webpack';
 import XDLError from './XDLError';
 import * as ExponentTools from './detach/ExponentTools';
 import * as Doctor from './project/Doctor';
-import * as ExpSchema from './project/ExpSchema';
 import * as ProjectUtils from './project/ProjectUtils';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 import FormData from './tools/FormData';
 
-const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
 const TUNNEL_TIMEOUT = 10 * 1000;
 
@@ -102,14 +96,6 @@ type CachedSignedManifest =
 const _cachedSignedManifest: CachedSignedManifest = {
   manifestString: null,
   signedManifest: null,
-};
-
-type ManifestAsset = { fileHashes: string[]; files: string[]; hash: string };
-type Asset = ManifestAsset | BundleAssetWithFileHashes;
-
-type ManifestResolutionError = Error & {
-  localAssetPath?: string;
-  manifestField?: string;
 };
 
 type PublicConfig = ExpoConfig & {
@@ -159,8 +145,6 @@ type Release = {
 
 export type ProjectStatus = 'running' | 'ill' | 'exited';
 
-type BundlesByPlatform = { android: BundleOutput; ios: BundleOutput };
-
 export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
   const { packagerPort, expoServerPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
   if (packagerPort && expoServerPort) {
@@ -195,82 +179,6 @@ async function _getFreePortAsync(rangeStart: number) {
   }
 
   return port;
-}
-
-async function _resolveGoogleServicesFile(projectRoot: string, manifest: ExpoConfig) {
-  if (manifest.android && manifest.android.googleServicesFile) {
-    const contents = await fs.readFile(
-      path.resolve(projectRoot, manifest.android.googleServicesFile),
-      'utf8'
-    );
-    manifest.android.googleServicesFile = contents;
-  }
-  if (manifest.ios && manifest.ios.googleServicesFile) {
-    const contents = await fs.readFile(
-      path.resolve(projectRoot, manifest.ios.googleServicesFile),
-      'base64'
-    );
-    manifest.ios.googleServicesFile = contents;
-  }
-}
-
-async function _resolveManifestAssets(
-  projectRoot: string,
-  manifest: PublicConfig,
-  resolver: (assetPath: string) => Promise<string>,
-  strict = false
-) {
-  try {
-    // Asset fields that the user has set
-    const assetSchemas = (
-      await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)
-    ).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
-
-    // Get the URLs
-    const urls = await Promise.all(
-      assetSchemas.map(async (assetSchema: ExpSchema.AssetSchema) => {
-        const pathOrURL = get(manifest, assetSchema.fieldPath);
-        if (pathOrURL.match(/^https?:\/\/(.*)$/)) {
-          // It's a remote URL
-          return pathOrURL;
-        } else if (fs.existsSync(path.resolve(projectRoot, pathOrURL))) {
-          return await resolver(pathOrURL);
-        } else {
-          const err: ManifestResolutionError = new Error('Could not resolve local asset.');
-          err.localAssetPath = pathOrURL;
-          err.manifestField = assetSchema.fieldPath;
-          throw err;
-        }
-      })
-    );
-
-    // Set the corresponding URL fields
-    assetSchemas.forEach((assetSchema: ExpSchema.AssetSchema, index: number) =>
-      set(manifest, assetSchema.fieldPath + 'Url', urls[index])
-    );
-  } catch (e) {
-    let logMethod = ProjectUtils.logWarning;
-    if (strict) {
-      logMethod = ProjectUtils.logError;
-    }
-    if (e.localAssetPath) {
-      logMethod(
-        projectRoot,
-        'expo',
-        `Unable to resolve asset "${e.localAssetPath}" from "${e.manifestField}" in your app.json or app.config.js`
-      );
-    } else {
-      logMethod(
-        projectRoot,
-        'expo',
-        `Warning: Unable to resolve manifest assets. Icons might not work. ${e.message}.`
-      );
-    }
-
-    if (strict) {
-      throw new Error('Resolving assets failed.');
-    }
-  }
 }
 
 function _requireFromProject(modulePath: string, projectRoot: string, exp: ExpoConfig) {
@@ -520,7 +428,13 @@ export async function exportForAppHosting(
   // Get project config
   const publishOptions = options.publishOptions || {};
   const { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
-  const { assets } = await exportAssetsAsync(projectRoot, exp, publicUrl, outputDir, bundles);
+  const { assets } = await exportAssetsAsync({
+    projectRoot,
+    exp,
+    hostedUrl: publicUrl,
+    outputDir,
+    bundles,
+  });
 
   if (options.dumpAssetmap) {
     logger.global.info('Dumping asset map.');
@@ -693,35 +607,6 @@ async function truncateLastNLines(filePath: string, n: number) {
   await fs.truncate(filePath, size - to_vanquish);
 }
 
-async function _saveAssetsAsync(projectRoot: string, assets: Asset[], outputDir: string) {
-  // Collect paths by key, also effectively handles duplicates in the array
-  const paths: { [fileHash: string]: string } = {};
-  assets.forEach(asset => {
-    asset.files.forEach((path: string, index: number) => {
-      paths[asset.fileHashes[index]] = path;
-    });
-  });
-
-  // save files one chunk at a time
-  const keyChunks = chunk(Object.keys(paths), 5);
-  for (const keys of keyChunks) {
-    const promises = [];
-    for (const key of keys) {
-      ProjectUtils.logDebug(projectRoot, 'expo', `uploading ${paths[key]}`);
-
-      logger.global.info({ quiet: true }, `Saving ${paths[key]}`);
-
-      const assetPath = path.resolve(outputDir, 'assets', key);
-
-      // copy file over to assetPath
-      const p = fs.copy(paths[key], assetPath);
-      promises.push(p);
-    }
-    await Promise.all(promises);
-  }
-  logger.global.info('Files successfully saved.');
-}
-
 export async function findReusableBuildAsync(
   releaseChannel: string,
   platform: string,
@@ -773,7 +658,7 @@ export async function publishAsync(
   const androidBundle = bundles.android.code;
   const iosBundle = bundles.ios.code;
 
-  await publishAssetsAsync(projectRoot, exp, bundles);
+  await publishAssetsAsync({ projectRoot, exp, bundles });
 
   const hasHooks = validPostPublishHooks.length > 0;
 
@@ -1096,140 +981,6 @@ async function _getForPlatformAsync(
   return response.data;
 }
 
-/**
- * Collects all the assets declared in the android app, ios app and manifest
- *
- * @param {string} hostedAssetPrefix
- *    The path where assets are hosted (ie) http://xxx.cloudfront.com/assets/
- *
- * @modifies {exp} Replaces relative asset paths in the manifest with hosted URLS
- *
- */
-async function _collectAssets(
-  projectRoot: string,
-  exp: PublicConfig,
-  hostedAssetPrefix: string,
-  bundles: BundlesByPlatform
-): Promise<Asset[]> {
-  // Resolve manifest assets to their hosted URL and add them to the list of assets to
-  // be uploaded. Modifies exp.
-  const manifestAssets: Asset[] = [];
-  await _resolveManifestAssets(
-    projectRoot,
-    exp,
-    async (assetPath: string) => {
-      const absolutePath = path.resolve(projectRoot, assetPath);
-      const contents = await fs.readFile(absolutePath);
-      const hash = md5hex(contents);
-      manifestAssets.push({ files: [absolutePath], fileHashes: [hash], hash });
-      return urljoin(hostedAssetPrefix, hash);
-    },
-    true
-  );
-
-  return [...bundles.ios.assets, ...bundles.android.assets, ...manifestAssets];
-}
-
-/**
- * Configures exp, preparing it for asset export
- *
- * @modifies {exp}
- *
- */
-async function _configureExpForAssets(projectRoot: string, exp: ExpoConfig, assets: Asset[]) {
-  // Add google services file if it exists
-  await _resolveGoogleServicesFile(projectRoot, exp);
-
-  // Convert asset patterns to a list of asset strings that match them.
-  // Assets strings are formatted as `asset_<hash>.<type>` and represent
-  // the name that the file will have in the app bundle. The `asset_` prefix is
-  // needed because android doesn't support assets that start with numbers.
-  if (exp.assetBundlePatterns) {
-    const fullPatterns: string[] = exp.assetBundlePatterns.map((p: string) =>
-      path.join(projectRoot, p)
-    );
-    logger.global.info('Processing asset bundle patterns:');
-    fullPatterns.forEach(p => logger.global.info('- ' + p));
-    // The assets returned by the RN packager has duplicates so make sure we
-    // only bundle each once.
-    const bundledAssets = new Set();
-    for (const asset of assets) {
-      const file = asset.files && asset.files[0];
-      const shouldBundle =
-        '__packager_asset' in asset &&
-        asset.__packager_asset &&
-        file &&
-        fullPatterns.some((p: string) => minimatch(file, p));
-      ProjectUtils.logDebug(
-        projectRoot,
-        'expo',
-        `${shouldBundle ? 'Include' : 'Exclude'} asset ${file}`
-      );
-      if (shouldBundle) {
-        asset.fileHashes.forEach(hash =>
-          bundledAssets.add(
-            'asset_' + hash + ('type' in asset && asset.type ? '.' + asset.type : '')
-          )
-        );
-      }
-    }
-    exp.bundledAssets = [...bundledAssets];
-    delete exp.assetBundlePatterns;
-  }
-
-  return exp;
-}
-
-async function publishAssetsAsync(
-  projectRoot: string,
-  exp: PublicConfig,
-  bundles: BundlesByPlatform
-) {
-  logger.global.info('Analyzing assets');
-
-  const assetCdnPath = urljoin(EXPO_CDN, '~assets');
-  const assets = await _collectAssets(projectRoot, exp, assetCdnPath, bundles);
-
-  logger.global.info('Uploading assets');
-
-  if (assets.length > 0 && assets[0].fileHashes) {
-    await uploadAssetsAsync(projectRoot, assets);
-  } else {
-    logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
-  }
-
-  // Updates the manifest to reflect additional asset bundling + configs
-  await _configureExpForAssets(projectRoot, exp, assets);
-
-  return exp;
-}
-
-async function exportAssetsAsync(
-  projectRoot: string,
-  exp: PublicConfig,
-  hostedUrl: string,
-  outputDir: string,
-  bundles: BundlesByPlatform
-) {
-  logger.global.info('Analyzing assets');
-
-  const assetCdnPath = urljoin(hostedUrl, 'assets');
-  const assets = await _collectAssets(projectRoot, exp, assetCdnPath, bundles);
-
-  logger.global.info('Saving assets');
-
-  if (assets.length > 0 && assets[0].fileHashes) {
-    await _saveAssetsAsync(projectRoot, assets, outputDir);
-  } else {
-    logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
-  }
-
-  // Updates the manifest to reflect additional asset bundling + configs
-  await _configureExpForAssets(projectRoot, exp, assets);
-
-  return { exp, assets };
-}
-
 async function _handleKernelPublishedAsync({
   projectRoot,
   user,
@@ -1274,48 +1025,6 @@ async function _handleKernelPublishedAsync({
       JSON.stringify(manifest)
     );
   }
-}
-
-// TODO(jesse): Add analytics for upload
-async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
-  // Collect paths by key, also effectively handles duplicates in the array
-  const paths: { [fileHash: string]: string } = {};
-  assets.forEach(asset => {
-    asset.files.forEach((path: string, index: number) => {
-      paths[asset.fileHashes[index]] = path;
-    });
-  });
-
-  // Collect list of assets missing on host
-  const user = await UserManager.ensureLoggedInAsync();
-  const api = ApiV2.clientForUser(user);
-  const result = await api.postAsync('assets/metadata', { keys: Object.keys(paths) });
-
-  const metas = result.metadata;
-  const missing = Object.keys(paths).filter(key => !metas[key].exists);
-
-  if (missing.length === 0) {
-    logger.global.info({ quiet: true }, `No assets changed, skipped.`);
-  }
-
-  // Upload them!
-  await Promise.all(
-    chunk(missing, 5).map(async keys => {
-      const formData = new FormData();
-      for (const key of keys) {
-        ProjectUtils.logDebug(projectRoot, 'expo', `uploading ${paths[key]}`);
-
-        const relativePath = paths[key].replace(projectRoot, '');
-        logger.global.info({ quiet: true }, `Uploading ${relativePath}`);
-
-        formData.append(key, fs.createReadStream(paths[key]), paths[key]);
-      }
-
-      const user = await UserManager.ensureLoggedInAsync();
-      const api = ApiV2.clientForUser(user);
-      await api.uploadFormDataAsync('assets/upload', formData);
-    })
-  );
 }
 
 type GetExpConfigOptions = {
@@ -1984,12 +1693,12 @@ function getManifestHandler(projectRoot: string) {
       manifest.mainModuleName = mainModuleName;
       manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, hostname);
       manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
-      await _resolveManifestAssets(
+      await resolveManifestAssets(
         projectRoot,
         manifest as PublicConfig,
         async path => manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + 'assets/' + path
       ); // the server normally inserts this but if we're offline we'll do it here
-      await _resolveGoogleServicesFile(projectRoot, manifest);
+      await resolveGoogleServicesFile(projectRoot, manifest);
       const hostUUID = await UserSettings.anonymousIdentifier();
       const currentSession = await UserManager.getSessionAsync();
       if (!currentSession || Config.offline) {
