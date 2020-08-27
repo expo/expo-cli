@@ -35,6 +35,9 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
     if (imageOptions.removeTransparency) {
       jimp.colorType(2);
     }
+    if (imageOptions.circle) {
+      jimp.circle();
+    }
 
     const imgBuffer = await jimp.getBufferAsync(jimp.getMIME());
     return imgBuffer;
@@ -65,6 +68,17 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
       ]);
     } else if (imageOptions.removeTransparency) {
       sharpBuffer.flatten();
+    }
+
+    if (imageOptions.circle) {
+      const mask = Buffer.from(
+        `<svg><rect x="0" y="0" width="${width}" height="${height}" rx="${width / 2}" ry="${
+          height / 2
+        }" fill="${
+          backgroundColor && backgroundColor !== 'transparent' ? backgroundColor : 'none'
+        }" /></svg>`
+      );
+      sharpBuffer.composite([{ input: mask, blend: 'dest-over' }]);
     }
 
     return await sharpBuffer.png().toBuffer();
@@ -128,10 +142,15 @@ async function ensureImageOptionsAsync(imageOptions: ImageOptions): Promise<Imag
 }
 
 export async function generateImageAsync(
-  options: { projectRoot: string; cacheType: string },
+  options: { projectRoot: string; cacheType?: string },
   imageOptions: ImageOptions
 ): Promise<{ source: Buffer; name: string }> {
   const icon = await ensureImageOptionsAsync(imageOptions);
+
+  if (!options.cacheType) {
+    await maybeWarnAboutInstallingSharpAsync();
+    return { name: icon.name!, source: await resizeAsync(icon) };
+  }
 
   const cacheKey = await Cache.createCacheKeyWithDirectoryAsync(
     options.projectRoot,
@@ -157,4 +176,32 @@ export async function generateFaviconAsync(
 ): Promise<Buffer> {
   const buffers = await resizeImagesAsync(pngImageBuffer, sizes);
   return await Ico.generateAsync(buffers);
+}
+
+/**
+ * Layers the provided foreground image over the provided background image.
+ *
+ * @param foregroundImageBuffer
+ * @param foregroundImageBuffer
+ * @param x pixel offset from the left edge, defaults to 0.
+ * @param y pixel offset from the top edge, defaults to 0.
+ */
+export async function layerImageAsync(
+  foregroundImageBuffer: Buffer,
+  backgroundImageBuffer: Buffer,
+  x: number = 0,
+  y: number = 0
+): Promise<Buffer> {
+  const sharp: any = await getSharpAsync();
+  if (!sharp) {
+    const image = (await Jimp.getJimpImageAsync(backgroundImageBuffer)).composite(
+      await Jimp.getJimpImageAsync(foregroundImageBuffer),
+      x,
+      y
+    );
+    return await image.getBufferAsync(image.getMIME());
+  }
+  return await sharp(backgroundImageBuffer)
+    .composite([{ input: foregroundImageBuffer, left: x, top: y }])
+    .toBuffer();
 }
