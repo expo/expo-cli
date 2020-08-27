@@ -1,34 +1,17 @@
 import { ExpoConfig } from '@expo/config';
 import { UrlUtils } from '@expo/xdl';
 import chalk from 'chalk';
-import intersection from 'lodash/intersection';
 import pick from 'lodash/pick';
 
 import CommandError from '../../CommandError';
-import { authenticate } from '../../appleApi';
+import { authenticate, requestAppleIdCreds } from '../../appleApi';
 import { Context } from '../../credentials/context';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
-import { nonEmptyInput } from '../../validators';
 import BaseUploader, { PlatformOptions } from './BaseUploader';
 import { runFastlaneAsync } from './utils';
 
 const PLATFORM = 'ios';
-
-const APPLE_CREDS_QUESTIONS: Question[] = [
-  {
-    type: 'input',
-    name: 'appleId',
-    message: `What's your Apple ID?`,
-    validate: nonEmptyInput,
-  },
-  {
-    type: 'password',
-    name: 'appleIdPassword',
-    message: 'Password?',
-    validate: nonEmptyInput,
-  },
-];
 
 const APP_NAME_TOO_LONG_MSG = `An app name can't be longer than 30 characters.`;
 const APP_NAME_QUESTION: Question = {
@@ -152,45 +135,10 @@ export default class IOSUploader extends BaseUploader {
   }
 
   async _getAppleIdCredentials(): Promise<AppleIdCredentials> {
-    const appleCredsKeys = ['appleId', 'appleIdPassword'];
-    const result: AppleCreds = pick(this.options, appleCredsKeys);
-
-    if (result.appleId && process.env.EXPO_APPLE_ID) {
-      log.warn(
-        `You've provided contradictory Apple IDs. You should provide either the EXPO_APPLE_ID env or the --apple-id flag, not both. Falling back to --apple-id.`
-      );
-    }
-    if (result.appleIdPassword && process.env.EXPO_APPLE_PASSWORD) {
-      log.warn(
-        `You've provided contradictory Apple passwords. You should provide either the EXPO_APPLE_PASSWORD env or the --apple-id-password flag, not both. Falling back to --apple-id-password.`
-      );
-    }
-    const appleId = result.appleId ?? process.env.EXPO_APPLE_ID;
-    const appleIdPassword =
-      result.appleIdPassword ??
-      process.env.EXPO_APPLE_PASSWORD ??
-      process.env.EXPO_APPLE_ID_PASSWORD;
-
-    if (process.env.EXPO_APPLE_ID_PASSWORD) {
-      log.error('EXPO_APPLE_ID_PASSWORD is deprecated, please use EXPO_APPLE_PASSWORD instead!');
-    }
-
-    if (appleId && appleIdPassword) {
-      return {
-        appleId,
-        appleIdPassword,
-      };
-    }
-    const credsPresent = intersection(Object.keys(result), appleCredsKeys);
-
-    const questions = APPLE_CREDS_QUESTIONS.filter(({ name }) => {
-      return name && !credsPresent.includes(name);
+    return await requestAppleIdCreds({
+      appleId: this.options.appleId,
+      appleIdPassword: this.options.appleIdPassword,
     });
-    const answers = await prompt(questions);
-    return {
-      appleId: appleId || answers.appleId,
-      appleIdPassword: appleIdPassword || answers.appleIdPassword,
-    };
   }
 
   async _getAppName(): Promise<string> {
