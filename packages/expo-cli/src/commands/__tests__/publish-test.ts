@@ -48,7 +48,7 @@ describe('warnings', () => {
   });
   it(`warns about expo-updates not working in ExpoKit`, () => {
     logExpoUpdatesWarnings({ dependencies: { 'expo-updates': '1.0.0', expokit: '1.0.0' } });
-    expect(console.warn).toBeCalledTimes(3);
+    expect(console.warn).toBeCalledTimes(1);
   });
 
   it(`skips bare workflow warnings if expo is not installed in a bare project`, () => {
@@ -58,7 +58,7 @@ describe('warnings', () => {
 
   it(`warns about publishing in a bare workflow project when expo is installed`, () => {
     logBareWorkflowWarnings({ dependencies: { expo: '1.0.0' } });
-    expect(console.warn).toBeCalledTimes(3);
+    expect(console.warn).toBeCalledTimes(1);
   });
 
   it(`skips warning about assets if shared file exists`, () => {
@@ -68,6 +68,6 @@ describe('warnings', () => {
   });
   it(`warns about unoptimized assets when shared folder is missing`, () => {
     logOptimizeWarnings({ projectRoot: '/' });
-    expect(console.warn).toBeCalledTimes(2);
+    expect(console.warn).toBeCalledTimes(1);
   });
 });
