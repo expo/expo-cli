@@ -81,9 +81,9 @@ export async function isFolderAsync(path: string): Promise<boolean> {
   }
 }
 
-async function getJimpImageAsync(input: string | Buffer | Jimp): Promise<Jimp> {
+export async function getJimpImageAsync(input: string | Buffer | Jimp): Promise<Jimp> {
   // @ts-ignore: Jimp types are broken
-  if (typeof input === 'string' || input instanceof Buffer) return Jimp.read(input);
+  if (typeof input === 'string' || input instanceof Buffer) return await Jimp.read(input);
 
   return input;
 }
