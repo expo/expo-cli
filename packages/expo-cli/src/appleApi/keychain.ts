@@ -5,6 +5,9 @@ import keychain from 'keychain';
 const KEYCHAIN_TYPE = 'internet';
 const IS_MAC = process.platform === 'darwin';
 const NO_PASSWORD_REGEX = /Could not find password/;
+
+// When enabled, the password will not only be skipped but also deleted.
+// This makes it easier to completely opt-out of Keychain functionality.
 export const EXPO_NO_KEYCHAIN = getenv.boolish('EXPO_NO_KEYCHAIN', false);
 
 type Credentials = {
