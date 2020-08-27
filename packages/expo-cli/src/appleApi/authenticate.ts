@@ -156,6 +156,11 @@ async function _promptForAppleId({
     const password = await getPasswordAsync({ appleId: promptAppleId });
 
     if (password) {
+      log(
+        `Using password from keychain. ${chalk.dim(
+          `Learn more ${chalk.underline('https://docs.expo.io/distribution/security#keychain')}`
+        )}`
+      );
       return { appleId: promptAppleId, appleIdPassword: password };
     }
   }
@@ -258,7 +263,7 @@ async function deletePasswordAsync({
   const serviceName = getKeychainServiceName(appleId);
   const success = await Keychain.deletePasswordAsync({ username: appleId, serviceName });
   if (success) {
-    log('Removed Apple ID password from the native key chain.');
+    log('Removed Apple ID password from the native Keychain.');
   }
   return success;
 }
@@ -278,12 +283,14 @@ async function getPasswordAsync({
 
 async function setPasswordAsync({ appleId, appleIdPassword }: AppleCredentials): Promise<boolean> {
   if (Keychain.EXPO_NO_KEYCHAIN) {
-    log('Skip storing Apple ID password in the native key chain.');
+    log('Skip storing Apple ID password in the native Keychain.');
     return false;
   }
 
   log(
-    `Saving Apple ID password to the local native key chain. You can disable this with ${chalk.bold`EXPO_NO_KEYCHAIN=true`}`
+    `Saving Apple ID password to the local native Keychain. ${chalk.dim(
+      `Learn more ${chalk.underline('https://docs.expo.io/distribution/security#keychain')}`
+    )}`
   );
   const serviceName = getKeychainServiceName(appleId);
   return Keychain.setPasswordAsync({ username: appleId, password: appleIdPassword, serviceName });
