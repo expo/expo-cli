@@ -1,6 +1,7 @@
-import path from 'path';
-import Jimp from 'jimp';
+import { generateImageAsync, layerImageAsync } from '@expo/image-utils';
 import fs from 'fs-extra';
+import path from 'path';
+
 import { ExpoConfig } from '../Config.types';
 import * as Colors from './Colors';
 
@@ -37,7 +38,7 @@ export function getAdaptiveIcon(config: ExpoConfig) {
 /**
  * Resizes the user-provided icon to create a set of legacy icon files in
  * their respective "mipmap" directories for <= Android 7, and creates a set of adaptive
- * icon files for > Android 7 from the user-provided adaptive icon (if provided).
+ * icon files for > Android 7 from the adaptive icon files (if provided).
  */
 export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
   const { foregroundImage, backgroundColor, backgroundImage } = getAdaptiveIcon(config);
@@ -47,55 +48,165 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
     return null;
   }
 
-  const iconPath = path.resolve(projectRoot, icon);
+  await configureLegacyIconAsync(
+    projectRoot,
+    icon,
+    // must have defined foregroundImage for either background layer to have effect
+    foregroundImage ? backgroundImage : null,
+    foregroundImage ? backgroundColor : null
+  );
 
-  // Legacy Icon for Android 7 and earlier
+  if (foregroundImage) {
+    await configureAdaptiveIconAsync(
+      projectRoot,
+      foregroundImage,
+      backgroundImage,
+      backgroundColor
+    );
+  }
+
+  return true;
+}
+
+/**
+ * Configures legacy icon files to be used on Android 7 and earlier. If adaptive icon configuration
+ * was provided, we create a pseudo-adaptive icon by layering the provided files (or background
+ * color if no backgroundImage is provided. If no backgroundImage and no backgroundColor are provided,
+ * the background is set to transparent.)
+ */
+async function configureLegacyIconAsync(
+  projectRoot: string,
+  icon: string,
+  backgroundImage: string | null,
+  backgroundColor: string | null
+) {
   for (const dpi in dpiValues) {
     const { folderName, scale } = dpiValues[dpi as DPIString];
-    let dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
-    const length = BASELINE_PIXEL_SIZE * scale;
-
+    const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
+    const iconSizePx = BASELINE_PIXEL_SIZE * scale;
+    console.log(backgroundColor ?? 'transparent');
     try {
-      let iconImage = await resizeImageAsync(iconPath, length);
-      if (backgroundImage && foregroundImage) {
-        // if a background image is supplied, layer the foreground on top of that image.
-        let resizedBackgroundImage = await resizeImageAsync(backgroundImage, length);
-        iconImage = resizedBackgroundImage.composite(iconImage, 0, 0);
-      } else if (backgroundColor && foregroundImage) {
-        // if a background color is supplied, layer the foreground on top of that color.
-        let resizedBackgroundImage = new Jimp(length, backgroundColor);
-        iconImage = resizedBackgroundImage.composite(iconImage, 0, 0);
+      let squareIconImage: Buffer = (
+        await generateImageAsync(
+          { projectRoot },
+          {
+            src: icon,
+            width: iconSizePx,
+            height: iconSizePx,
+            resizeMode: 'cover',
+            backgroundColor: backgroundColor ?? 'transparent',
+          }
+        )
+      ).source;
+      let roundIconImage: Buffer = (
+        await generateImageAsync(
+          { projectRoot },
+          {
+            src: icon,
+            width: iconSizePx,
+            height: iconSizePx,
+            resizeMode: 'cover',
+            backgroundColor: backgroundColor ?? 'transparent',
+            circle: true,
+          }
+        )
+      ).source;
+
+      if (backgroundImage) {
+        // Layer the buffers we just created on top of the background image that's provided
+        const squareBackgroundLayer = (
+          await generateImageAsync(
+            { projectRoot },
+            {
+              src: backgroundImage,
+              width: iconSizePx,
+              height: iconSizePx,
+              resizeMode: 'cover',
+              backgroundColor: backgroundColor ?? 'transparent',
+            }
+          )
+        ).source;
+        const roundBackgroundLayer = (
+          await generateImageAsync(
+            { projectRoot },
+            {
+              src: backgroundImage,
+              width: iconSizePx,
+              height: iconSizePx,
+              resizeMode: 'cover',
+              backgroundColor: backgroundColor ?? 'transparent',
+              circle: true,
+            }
+          )
+        ).source;
+        squareIconImage = await layerImageAsync(squareIconImage, squareBackgroundLayer);
+        roundIconImage = await layerImageAsync(roundIconImage, roundBackgroundLayer);
       }
-      await iconImage.write(path.resolve(dpiFolderPath, IC_LAUNCHER_PNG));
-      await iconImage.circle().write(path.resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG));
+
+      await fs.mkdirp(dpiFolderPath);
+      await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_PNG), squareIconImage);
+      await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG), roundIconImage);
     } catch (e) {
       throw new Error('Encountered an issue resizing app icon: ' + e);
     }
   }
+}
 
-  if (!foregroundImage) {
-    // If no foreground image, we shouldn't configure the Android Adaptive Icon
-    return null;
+/**
+ * Configures adaptive icon files to be used on Android 8 and up. A foreground image must be provided,
+ * and will have a transparent background unless:
+ * - A backgroundImage is provided, or
+ * - A backgroundColor was specified
+ */
+async function configureAdaptiveIconAsync(
+  projectRoot: string,
+  foregroundImage: string,
+  backgroundImage: string | null,
+  backgroundColor: string | null
+) {
+  if (backgroundColor) {
+    await setBackgroundColor(projectRoot, backgroundColor);
   }
-
-  // set background color in colors.xml
-  await setBackgroundColor(projectRoot, backgroundColor);
 
   for (const dpi in dpiValues) {
     const { folderName, scale } = dpiValues[dpi as DPIString];
-    let dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
-    const length = BASELINE_PIXEL_SIZE * scale;
+    const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
+    const iconSizePx = BASELINE_PIXEL_SIZE * scale;
 
     try {
-      let finalAdpativeIconForeground = await resizeImageAsync(foregroundImage, length);
-      await finalAdpativeIconForeground.write(
-        path.resolve(dpiFolderPath, IC_LAUNCHER_FOREGROUND_PNG)
+      const adpativeIconForeground = (
+        await generateImageAsync(
+          { projectRoot },
+          {
+            src: foregroundImage,
+            width: iconSizePx,
+            height: iconSizePx,
+            resizeMode: 'cover',
+            backgroundColor: 'transparent',
+          }
+        )
+      ).source;
+      await fs.writeFile(
+        path.resolve(dpiFolderPath, IC_LAUNCHER_FOREGROUND_PNG),
+        adpativeIconForeground
       );
 
       if (backgroundImage) {
-        let finalAdpativeIconBackground = await resizeImageAsync(backgroundImage, length);
-        await finalAdpativeIconBackground.write(
-          path.resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG)
+        const adpativeIconBackground = (
+          await generateImageAsync(
+            { projectRoot },
+            {
+              src: backgroundImage,
+              width: iconSizePx,
+              height: iconSizePx,
+              resizeMode: 'cover',
+              backgroundColor: 'transparent',
+            }
+          )
+        ).source;
+        await fs.writeFile(
+          path.resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG),
+          adpativeIconBackground
         );
       }
     } catch (e) {
@@ -109,11 +220,6 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
     backgroundImage
   );
   await createAdaptiveIconXmlFiles(projectRoot, icLauncherXmlString);
-  return true;
-}
-
-async function resizeImageAsync(imagePath: string, length: number) {
-  return (await Jimp.read(imagePath)).resize(length, length).quality(100);
 }
 
 export async function setBackgroundColor(projectDir: string, backgroundColor: string) {
