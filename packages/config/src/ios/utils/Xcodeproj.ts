@@ -26,6 +26,16 @@ export function getSourceRoot(projectRoot: string): string {
 // TODO: define this type later
 export type Pbxproj = any;
 
+interface PBXGroup {
+  isa: 'PBXGroup';
+  children: {
+    value: string;
+    comment?: string;
+  }[];
+  name: string;
+  path?: string;
+  sourceTree: '"<group>"' | unknown;
+}
 // TODO(brentvatne): I couldn't figure out how to do this with an existing
 // higher level function exposed by the xcode library, but we should find out how to do
 // that and replace this with it
@@ -36,13 +46,70 @@ export function addFileToGroup(filepath: string, groupName: string, project: Pro
   project.addToPbxFileReferenceSection(file);
   project.addToPbxBuildFileSection(file);
   project.addToPbxSourcesBuildPhase(file);
-  const group = project.pbxGroupByName(groupName);
+  const group = pbxGroupByPath(project, groupName);
   if (!group) {
     throw Error(`Group by name ${groupName} not found!`);
   }
 
-  group.children.push({ value: file.fileRef, comment: file.basename });
+  group.children.push({
+    value: file.fileRef,
+    comment: file.basename,
+  });
   return project;
+}
+
+function splitPath(path: string): string[] {
+  // TODO: Should we account for other platforms that may not use `/`
+  return path.split('/');
+}
+
+const findGroup = (group: PBXGroup, name: string): any =>
+  group.children.find(group => group.comment === name);
+
+function findGroupInsideGroup(project: Pbxproj, group: PBXGroup, name: string): null | PBXGroup {
+  const foundGroup = findGroup(group, name);
+  if (foundGroup) {
+    return project.getPBXGroupByKey(foundGroup.value) ?? null;
+  }
+  return null;
+}
+
+function pbxGroupByPath(project: Pbxproj, path: string): null | PBXGroup {
+  const { firstProject } = project.getFirstProject();
+
+  let group = project.getPBXGroupByKey(firstProject.mainGroup);
+
+  const components = splitPath(path);
+  for (const name of components) {
+    const nextGroup = findGroupInsideGroup(project, group, name);
+    if (nextGroup) {
+      group = nextGroup;
+    } else {
+      return null;
+    }
+  }
+
+  return group;
+}
+
+export function ensureGroupRecursively(project: Pbxproj, filepath: string): PBXGroup | null {
+  const components = splitPath(filepath);
+  const hasChild = (group: PBXGroup, name: string) =>
+    group.children.find(({ comment }) => comment === name);
+  const { firstProject } = project.getFirstProject();
+
+  let topMostGroup = project.getPBXGroupByKey(firstProject.mainGroup);
+
+  for (const pathComponent of components) {
+    if (topMostGroup && !hasChild(topMostGroup, pathComponent)) {
+      topMostGroup.children.push({
+        comment: pathComponent,
+        value: project.pbxCreateGroup(pathComponent, '""'),
+      });
+    }
+    topMostGroup = project.pbxGroupByName(pathComponent);
+  }
+  return topMostGroup;
 }
 
 export function findSchemeNames(projectRoot: string): string[] {
