@@ -1,9 +1,10 @@
-import fse from 'fs-extra';
+import * as ConfigUtils from '@expo/config';
+import { ApiV2, Exp, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { ApiV2, Exp, UserManager } from '@expo/xdl';
-import * as ConfigUtils from '@expo/config';
+import fse from 'fs-extra';
 
+import { Context } from '../credentials/context';
 import log from '../log';
 
 type VapidData = {
@@ -12,7 +13,7 @@ type VapidData = {
   vapidPvtkey?: string;
 };
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('push:android:upload [project-dir]')
     .description('Uploads a Firebase Cloud Messaging key for Android push notifications.')
@@ -22,64 +23,42 @@ export default function(program: Command) {
         throw new Error('Must specify an API key to upload with --api-key.');
       }
 
-      log('Reading project configuration...');
+      const ctx = new Context();
+      await ctx.init(projectDir);
+      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
 
-      const {
-        args: { remotePackageName },
-      } = await Exp.getPublishInfoAsync(projectDir);
-
-      log('Logging in...');
-
-      let user = await UserManager.getCurrentUserAsync();
-      let apiClient = ApiV2.clientForUser(user);
-
-      log("Setting API key on Expo's servers...");
-
-      await apiClient.putAsync(`credentials/push/android/${remotePackageName}`, {
-        fcmApiKey: options.apiKey,
-      });
-
+      await ctx.android.updateFcmKey(experienceName, options.apiKey);
       log('All done!');
-    }, true);
+    });
 
   program
     .command('push:android:show [project-dir]')
     .description('Print the value currently in use for FCM notifications for this project.')
     .asyncActionProjectDir(async (projectDir: string) => {
-      const {
-        args: { remotePackageName },
-      } = await Exp.getPublishInfoAsync(projectDir);
-      let user = await UserManager.getCurrentUserAsync();
-      let apiClient = ApiV2.clientForUser(user);
+      const ctx = new Context();
+      await ctx.init(projectDir);
+      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
 
-      let result = await apiClient.getAsync(`credentials/push/android/${remotePackageName}`);
-
-      if (result.status === 'ok' && result.fcmApiKey) {
-        console.log(JSON.stringify(result));
+      const fcmCredentials = await ctx.android.fetchFcmKey(experienceName);
+      if (fcmCredentials?.fcmApiKey) {
+        log(`FCM Api Key: ${fcmCredentials?.fcmApiKey}`);
       } else {
-        throw new Error('Server returned an invalid result!');
+        log(`There is no FCM Api Key configured for this project`);
+        process.exit(1);
       }
-    }, true);
+    });
 
   program
     .command('push:android:clear [project-dir]')
     .description('Deletes a previously uploaded FCM credential.')
     .asyncActionProjectDir(async (projectDir: string) => {
-      log('Reading project configuration...');
-      const {
-        args: { remotePackageName },
-      } = await Exp.getPublishInfoAsync(projectDir);
+      const ctx = new Context();
+      await ctx.init(projectDir);
+      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
 
-      log('Logging in...');
-      let user = await UserManager.getCurrentUserAsync();
-      let apiClient = ApiV2.clientForUser(user);
-
-      log("Deleting API key from Expo's servers...");
-
-      await apiClient.deleteAsync(`credentials/push/android/${remotePackageName}`);
-
+      await ctx.android.removeFcmKey(experienceName);
       log('All done!');
-    }, true);
+    });
 
   const vapidSubjectDescription =
     'URL or `mailto:` URL which provides a point of contact in case the push service needs to contact the message sender.';
@@ -98,7 +77,7 @@ export default function(program: Command) {
       }
 
       await _uploadWebPushCredientials(projectDir, options);
-    }, true);
+    });
 
   program
     .command('push:web:generate [project-dir]')
@@ -112,7 +91,7 @@ export default function(program: Command) {
       const results = await _uploadWebPushCredientials(projectDir, options);
       log(chalk.green(`Your VAPID public key is: ${results.vapidPublicKey}`));
       log(chalk.green(`Your VAPID private key is: ${results.vapidPrivateKey}`));
-    }, true);
+    });
 
   program
     .command('push:web:show [project-dir]')
@@ -140,7 +119,7 @@ export default function(program: Command) {
       } else {
         throw new Error('Server returned an invalid result!');
       }
-    }, true);
+    });
 
   program
     .command('push:web:clear [project-dir]')
@@ -160,7 +139,7 @@ export default function(program: Command) {
       log("Deleting API key from Expo's servers...");
 
       await apiClient.deleteAsync(`credentials/push/web/${remotePackageName}`);
-    }, true);
+    });
 }
 
 async function _uploadWebPushCredientials(projectDir: string, options: VapidData) {
@@ -218,7 +197,7 @@ async function _uploadWebPushCredientials(projectDir: string, options: VapidData
   log(`Reading app.json...`);
   const { configPath } = ConfigUtils.findConfigFile(projectDir);
   const appJson = JSON.parse(await fse.readFile(configPath).then(value => value.toString()));
-  let changedProperties = [];
+  const changedProperties = [];
 
   if (user) {
     if (appJson.expo.owner && appJson.expo.owner !== user.username) {

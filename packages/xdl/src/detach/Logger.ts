@@ -1,5 +1,6 @@
 import bunyan from '@expo/bunyan';
-import _ from 'lodash';
+import isEmpty from 'lodash/isEmpty';
+import isPlainObject from 'lodash/isPlainObject';
 import { Readable } from 'stream';
 
 export enum LogLevel {
@@ -54,13 +55,13 @@ export class Logger {
 
   logLine(level: LogLevel, ...args: any[]) {
     const argsToLog = [...args];
-    const extraFieldsFromArgsExist = _.isPlainObject(_.first(args));
+    const extraFieldsFromArgsExist = isPlainObject(args[0]);
     const extraFieldsFromArgs = extraFieldsFromArgsExist ? args[0] : {};
     if (extraFieldsFromArgsExist) {
       argsToLog.shift();
     }
     const extraFields = { ...extraFieldsFromArgs, ...this.extraFields };
-    if (!_.isEmpty(extraFields)) {
+    if (!isEmpty(extraFields)) {
       argsToLog.unshift(extraFields);
     }
 
@@ -82,26 +83,34 @@ export function pipeOutputToLogger(
     stderr: null,
   },
   extraFields = {},
-  { stdoutOnly = false } = {}
+  {
+    stdoutOnly = false,
+    loggerLineTransformer,
+  }: { stdoutOnly?: boolean; loggerLineTransformer?: (line: any) => any } = {}
 ) {
   if (stdout) {
-    stdout.on('data', line => logMultiline(line, { ...extraFields, source: 'stdout' }));
+    stdout.on('data', chunk =>
+      logMultiline(chunk, { ...extraFields, source: 'stdout' }, loggerLineTransformer)
+    );
   }
   if (stderr) {
     const source = stdoutOnly ? 'stdout' : 'stderr';
-    stderr.on('data', line => logMultiline(line, { ...extraFields, source }));
+    stderr.on('data', chunk =>
+      logMultiline(chunk, { ...extraFields, source }, loggerLineTransformer)
+    );
   }
 }
 
-function logMultiline(data: any, extraFields: any) {
+function logMultiline(data: any, extraFields: any, loggerLineTransformer?: (line: any) => any) {
   if (!data) {
     return;
   }
   const lines = String(data).split('\n');
   lines.forEach(line => {
-    if (line) {
-      const args = [line];
-      if (!_.isEmpty(extraFields)) {
+    const lineToPrint = loggerLineTransformer ? loggerLineTransformer(line) : line;
+    if (lineToPrint) {
+      const args = [lineToPrint];
+      if (!isEmpty(extraFields)) {
         args.unshift(extraFields);
       }
       LoggerDetach.info(...args);

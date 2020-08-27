@@ -10,6 +10,8 @@ import QueryString from 'querystring';
 import Config from './Config';
 import * as ConnectionStatus from './ConnectionStatus';
 
+export const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
+
 // These aren't constants because some commands switch between staging and prod
 function _rootBaseUrl() {
   return `${Config.api.scheme}://${Config.api.host}`;
@@ -42,10 +44,10 @@ export class ApiV2Error extends ExtendableError {
 }
 
 type RequestOptions = {
-  httpMethod: 'get' | 'post' | 'put' | 'delete';
+  httpMethod: 'get' | 'post' | 'put' | 'patch' | 'delete';
   queryParameters?: QueryParameters;
   body?: JSONObject;
-  timeout?: Number;
+  timeout?: number;
 };
 
 type UploadOptions = {
@@ -57,15 +59,17 @@ type QueryParameters = { [key: string]: string | number | boolean | null | undef
 
 type APIV2ClientOptions = {
   sessionSecret?: string;
+  accessToken?: string;
 };
 
 export default class ApiV2Client {
   static exponentClient: string = 'xdl';
   sessionSecret: string | null = null;
+  accessToken: string | null = null;
 
   static clientForUser(user?: APIV2ClientOptions | null): ApiV2Client {
-    if (user && user.sessionSecret) {
-      return new ApiV2Client({ sessionSecret: user.sessionSecret });
+    if (user) {
+      return new ApiV2Client(user);
     }
 
     return new ApiV2Client();
@@ -76,6 +80,9 @@ export default class ApiV2Client {
   }
 
   constructor(options: APIV2ClientOptions = {}) {
+    if (options.accessToken) {
+      this.accessToken = options.accessToken;
+    }
     if (options.sessionSecret) {
       this.sessionSecret = options.sessionSecret;
     }
@@ -132,8 +139,26 @@ export default class ApiV2Client {
     );
   }
 
+  async patchAsync(
+    methodName: string,
+    data: JSONObject,
+    extraOptions?: Partial<RequestOptions>,
+    returnEntireResponse: boolean = false
+  ) {
+    return this._requestAsync(
+      methodName,
+      {
+        httpMethod: 'patch',
+        body: data,
+      },
+      extraOptions,
+      returnEntireResponse
+    );
+  }
+
   async deleteAsync(
     methodName: string,
+    args: QueryParameters = {},
     extraOptions?: Partial<RequestOptions>,
     returnEntireResponse: boolean = false
   ) {
@@ -141,6 +166,7 @@ export default class ApiV2Client {
       methodName,
       {
         httpMethod: 'delete',
+        queryParameters: args,
       },
       extraOptions,
       returnEntireResponse
@@ -173,7 +199,10 @@ export default class ApiV2Client {
       },
     };
 
-    if (this.sessionSecret) {
+    // Handle auth method, prioritizing authorization tokens before session secrets
+    if (this.accessToken) {
+      reqOptions.headers['Authorization'] = `Bearer ${this.accessToken}`;
+    } else if (this.sessionSecret) {
       reqOptions.headers['Expo-Session'] = this.sessionSecret;
     }
 
@@ -192,7 +221,9 @@ export default class ApiV2Client {
       reqOptions.timeout = 1;
     }
 
-    reqOptions = merge({}, reqOptions, extraRequestOptions, uploadOptions);
+    reqOptions = merge({}, reqOptions, extraRequestOptions, uploadOptions, {
+      maxContentLength: MAX_CONTENT_LENGTH,
+    });
 
     let response;
     let result;
@@ -209,8 +240,8 @@ export default class ApiV2Client {
     }
 
     if (result.errors && result.errors.length) {
-      let responseError = result.errors[0];
-      let error = new ApiV2Error(responseError.message, responseError.code);
+      const responseError = result.errors[0];
+      const error = new ApiV2Error(responseError.message, responseError.code);
       error.serverStack = responseError.stack;
       error.details = responseError.details;
       throw error;

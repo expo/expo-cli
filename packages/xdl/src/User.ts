@@ -26,8 +26,10 @@ export type User = {
     onboarded: boolean;
     legacy?: boolean;
   };
+  // auth methods
   currentConnection: ConnectionType;
-  sessionSecret: string;
+  sessionSecret?: string;
+  accessToken?: string;
 };
 
 export type LegacyUser = {
@@ -42,6 +44,7 @@ export type LegacyUser = {
 export type UserOrLegacyUser = User | LegacyUser;
 
 export type ConnectionType =
+  | 'Access-Token-Authentication'
   | 'Username-Password-Authentication'
   | 'facebook'
   | 'google-oauth2'
@@ -55,6 +58,7 @@ export type RegistrationData = {
   familyName?: string;
 };
 
+// note: user-token isn't listed here because it's a non-persistent pre-authenticated method
 export type LoginType = 'user-pass' | 'facebook' | 'google' | 'github';
 
 export const ANONYMOUS_USERNAME = 'anonymous';
@@ -156,7 +160,7 @@ export class UserManagerInstance {
       throw new XDLError('NETWORK_REQUIRED', "Can't verify user without network access");
     }
 
-    let user = await this.getCurrentUserAsync();
+    let user = await this.getCurrentUserAsync({ silent: true });
     if (!user && this._interactiveAuthenticationCallbackAsync) {
       user = await this._interactiveAuthenticationCallbackAsync();
     }
@@ -195,9 +199,11 @@ export class UserManagerInstance {
     await this._getSessionLock.acquire();
 
     try {
-      // If user is cached and there is a sessionSecret, return the user
-      if (this._currentUser && this._currentUser.sessionSecret) {
-        return this._currentUser;
+      const currentUser = this._currentUser;
+
+      // If user is cached and there is an accessToken or sessionSecret, return the user
+      if (currentUser && (currentUser.accessToken || currentUser.sessionSecret)) {
+        return currentUser;
       }
 
       if (Config.offline) {
@@ -205,23 +211,34 @@ export class UserManagerInstance {
       }
 
       const data = await this._readUserData();
+      const accessToken = UserSettings.accessToken();
 
-      // No session, no current user. Need to login
-      if (!data || !data.sessionSecret) {
+      // No token, no session, no current user. Need to login
+      if (!accessToken && !data?.sessionSecret) {
         return null;
       }
 
       try {
+        if (accessToken) {
+          return await this._getProfileAsync({
+            accessToken,
+            currentConnection: 'Access-Token-Authentication',
+          });
+        }
+
         return await this._getProfileAsync({
-          currentConnection: data.currentConnection,
-          sessionSecret: data.sessionSecret,
+          currentConnection: data?.currentConnection,
+          sessionSecret: data?.sessionSecret,
         });
       } catch (e) {
         if (!(options && options.silent)) {
           Logger.global.warn('Fetching the user profile failed');
           Logger.global.warn(e);
         }
-        return null;
+        if (e.code === 'UNAUTHORIZED_ERROR') {
+          return null;
+        }
+        throw e;
       }
     } finally {
       this._getSessionLock.release();
@@ -229,19 +246,30 @@ export class UserManagerInstance {
   }
 
   async getCurrentUsernameAsync(): Promise<string | null> {
-    const data = await this._readUserData();
-    if (!data || !data.username) {
-      return null;
+    const token = UserSettings.accessToken();
+    if (token) {
+      const user = await this.getCurrentUserAsync();
+      if (user?.username) {
+        return user.username;
+      }
     }
-    return data.username;
+    const data = await this._readUserData();
+    if (data?.username) {
+      return data.username;
+    }
+    return null;
   }
 
-  async getSessionAsync(): Promise<{ sessionSecret: string } | null> {
-    const data = await this._readUserData();
-    if (!data || !data.sessionSecret) {
-      return null;
+  async getSessionAsync(): Promise<{ sessionSecret?: string; accessToken?: string } | null> {
+    const token = UserSettings.accessToken();
+    if (token) {
+      return { accessToken: token };
     }
-    return { sessionSecret: data.sessionSecret };
+    const data = await this._readUserData();
+    if (data?.sessionSecret) {
+      return { sessionSecret: data.sessionSecret };
+    }
+    return null;
   }
 
   /**
@@ -272,9 +300,12 @@ export class UserManagerInstance {
    * Logout
    */
   async logoutAsync(): Promise<void> {
-    if (this._currentUser) {
+    // Only send logout events events for users without access tokens
+    if (this._currentUser && !this._currentUser?.accessToken) {
       Analytics.logEvent('Logout', {
+        userId: this._currentUser.userId,
         username: this._currentUser.username,
+        currentConnection: this._currentUser.currentConnection,
       });
     }
 
@@ -311,13 +342,16 @@ export class UserManagerInstance {
   async _getProfileAsync({
     currentConnection,
     sessionSecret,
+    accessToken,
   }: {
     currentConnection?: ConnectionType;
-    sessionSecret: string;
+    sessionSecret?: string;
+    accessToken?: string;
   }): Promise<User> {
     let user;
-    let api = ApiV2Client.clientForUser({
+    const api = ApiV2Client.clientForUser({
       sessionSecret,
+      accessToken,
     });
 
     user = await api.postAsync('auth/userProfileAsync');
@@ -331,14 +365,18 @@ export class UserManagerInstance {
       kind: 'user',
       currentConnection,
       sessionSecret,
+      accessToken,
     };
 
-    await UserSettings.setAsync('auth', {
-      userId: user.userId,
-      username: user.username,
-      currentConnection,
-      sessionSecret,
-    });
+    // note: do not persist the authorization token, must be env-var only
+    if (!accessToken) {
+      await UserSettings.setAsync('auth', {
+        userId: user.userId,
+        username: user.username,
+        currentConnection,
+        sessionSecret,
+      });
+    }
 
     // If no currentUser, or currentUser.id differs from profiles
     // user id, that means we have a new login
@@ -347,16 +385,20 @@ export class UserManagerInstance {
       user.username &&
       user.username !== ''
     ) {
-      Analytics.logEvent('Login', {
-        userId: user.userId,
-        currentConnection: user.currentConnection,
-        username: user.username,
-      });
+      if (!accessToken) {
+        // Only send login events for users without access tokens
+        Analytics.logEvent('Login', {
+          userId: user.userId,
+          currentConnection: user.currentConnection,
+          username: user.username,
+        });
+      }
 
       Analytics.setUserProperties(user.username, {
         userId: user.userId,
         currentConnection: user.currentConnection,
         username: user.username,
+        userType: user.kind,
       });
     }
 

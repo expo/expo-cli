@@ -3,9 +3,8 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import { resolve } from 'path';
 
-import shouldUpdate from './update';
-
 import { runAsync } from '../customize';
+import shouldUpdate from './update';
 
 let projectDirectory: string = '';
 
@@ -18,9 +17,9 @@ const program = new Command(packageJson().name)
   .description('Generate static Next.js files into your project.')
   .option('-c, --customize', 'Select template files you want to add to your project')
   .option('-f, --force', 'Allows replacing existing files')
-  .action(
-    (inputProjectDirectory: string, options: any) => (projectDirectory = inputProjectDirectory)
-  )
+  .action((inputProjectDirectory: string, options: any) => {
+    projectDirectory = inputProjectDirectory;
+  })
   .allowUnknownOption()
   .parse(process.argv);
 

@@ -1,25 +1,18 @@
 import { ExponentTools } from '@expo/xdl';
-import get from 'lodash/get';
 import fs from 'fs-extra';
-import ProgressBar from 'progress';
-import axios from 'axios';
+import got from 'got';
+import stream from 'stream';
+import { promisify } from 'util';
+
+import { createProgressTracker } from '../utils/progress';
 
 const { spawnAsyncThrowError } = ExponentTools;
+const pipeline = promisify(stream.pipeline);
 
 export async function downloadFile(url: string, dest: string): Promise<string> {
-  const response = await axios.get(url, { responseType: 'stream' });
-  const fileSize = Number(response.headers['content-length']);
-  const bar = new ProgressBar('Downloading [:bar] :percent :etas', {
-    complete: '=',
-    incomplete: ' ',
-    total: fileSize,
-  });
-  response.data.pipe(fs.createWriteStream(dest));
-  return new Promise((resolve, reject): void => {
-    response.data.on('data', (data: { length: number }) => bar.tick(data.length));
-    response.data.on('end', () => resolve(dest));
-    response.data.on('error', reject);
-  });
+  const downloadStream = got.stream(url).on('downloadProgress', createProgressTracker());
+  await pipeline(downloadStream, fs.createWriteStream(dest));
+  return dest;
 }
 
 export async function runFastlaneAsync(
@@ -72,10 +65,15 @@ export async function runFastlaneAsync(
   if (res.result !== 'failure') {
     return res;
   } else {
-    const message =
+    let message =
       res.reason !== 'Unknown reason'
         ? res.reason
-        : get(res, 'rawDump.message', 'Unknown error when running fastlane');
+        : res.rawDump?.message ?? 'Unknown error when running fastlane';
+    message = `${message}${
+      res?.rawDump?.backtrace
+        ? `\n${res.rawDump.backtrace.map((i: string) => `    ${i}`).join('\n')}`
+        : ''
+    }`;
     throw new Error(message);
   }
 }

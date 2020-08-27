@@ -1,12 +1,53 @@
+import { ExpoConfig, getConfig } from '@expo/config';
+import { Versions } from '@expo/xdl';
+import chalk from 'chalk';
 import { Command } from 'commander';
-import * as Eject from './eject/Eject';
 
-// Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3
-async function action(projectDir: string, options: Eject.EjectAsyncOptions) {
-  await Eject.ejectAsync(projectDir, options);
+import prompt from '../prompt';
+import * as Eject from './eject/Eject';
+import * as LegacyEject from './eject/LegacyEject';
+
+async function userWantsToEjectWithoutUpgradingAsync() {
+  const answer = await prompt({
+    type: 'confirm',
+    name: 'ejectWithoutUpgrading',
+    message: `We recommend upgrading to the latest SDK version before ejecting. SDK 37 introduces support for OTA updates and notifications in ejected projects, and includes many features that make ejecting your project easier. Would you like to continue ejecting anyways?`,
+  });
+
+  return answer.ejectWithoutUpgrading;
 }
 
-export default function(program: Command) {
+async function action(
+  projectDir: string,
+  options: LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions
+) {
+  let exp: ExpoConfig;
+  try {
+    exp = getConfig(projectDir).exp;
+  } catch (error) {
+    console.log();
+    console.log(chalk.red(error.message));
+    console.log();
+    process.exit(1);
+  }
+
+  // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3 for ExpoKit
+  if (Versions.lteSdkVersion(exp, '36.0.0')) {
+    // Don't show a warning if we haven't released SDK 37 yet
+    const latestReleasedVersion = await Versions.newestReleasedSdkVersionAsync();
+    if (Versions.lteSdkVersion({ sdkVersion: latestReleasedVersion.version }, '36.0.0')) {
+      await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
+    } else {
+      if (options.force || (await userWantsToEjectWithoutUpgradingAsync())) {
+        await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
+      }
+    }
+  } else {
+    await Eject.ejectAsync(projectDir, options as Eject.EjectAsyncOptions);
+  }
+}
+
+export default function (program: Command) {
   program
     .command('eject [project-dir]')
     .description(
@@ -14,12 +55,12 @@ export default function(program: Command) {
     )
     .option(
       '--eject-method [type]',
-      'Eject method to use. If not specified, the command will ask which one to use. Required when using the --non-interactive option. expokit, plain',
+      `Eject method to use. [Depreacted]: Ejecting to ExpoKit is not available on SDK >= 37 and not recommended for older SDK versions. We recommend updating to SDK >= 37 and ejecting to bare.`,
       value => value.toLowerCase()
     )
     .option(
       '-f --force',
       'Will attempt to generate an iOS project even when the system is not running macOS. Unsafe and may fail.'
     )
-    .asyncActionProjectDir(action, /* skipProjectValidation: */ false, /* skipAuthCheck: */ true);
+    .asyncActionProjectDir(action);
 }

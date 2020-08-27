@@ -1,15 +1,13 @@
-import { css } from 'react-emotion';
-import copyToClipboard from 'copy-to-clipboard';
-
-import * as React from 'react';
-import * as SVG from 'app/common/svg';
 import * as Constants from 'app/common/constants';
-
+import * as SVG from 'app/common/svg';
 import ContentGroup from 'app/components/ContentGroup';
-import NetworkGroupButton from 'app/components/NetworkGroupButton';
 import InputWithButton from 'app/components/InputWithButton';
-import SettingsControl from 'app/components/SettingsControl';
+import NetworkGroupButton from 'app/components/NetworkGroupButton';
 import QRCode from 'app/components/QRCode';
+import SettingsControl from 'app/components/SettingsControl';
+import copyToClipboard from 'copy-to-clipboard';
+import * as React from 'react';
+import { css } from 'react-emotion';
 
 const STYLES_CONNECTION_SECTION = css`
   display: flex;
@@ -137,19 +135,13 @@ export default class ProjectManagerSidebarOptions extends React.Component {
         <div className={STYLES_CONTENT_GROUP} onClick={this.props.onSimulatorClickAndroid}>
           <span className={STYLES_CONTENT_GROUP_LEFT}>Run on Android device/emulator</span>
         </div>
-
         <div className={STYLES_CONTENT_GROUP} onClick={this.props.onSimulatorClickIOS}>
           <span className={STYLES_CONTENT_GROUP_LEFT}>Run on iOS simulator</span>
         </div>
 
-        {this.props.processInfo.webAppUrl ? (
-          <a
-            className={STYLES_CONTENT_GROUP}
-            href={this.props.processInfo.webAppUrl}
-            target="_blank">
-            <span className={STYLES_CONTENT_GROUP_LEFT}>Run on web browser</span>
-          </a>
-        ) : null}
+        <a className={STYLES_CONTENT_GROUP} onClick={this.props.onStartWebClick}>
+          <span className={STYLES_CONTENT_GROUP_LEFT}>Run in web browser</span>
+        </a>
 
         <ContentGroup header={sendHeader} isActive={isSendFormVisible}>
           <InputWithButton
@@ -161,7 +153,6 @@ export default class ProjectManagerSidebarOptions extends React.Component {
             Send
           </InputWithButton>
         </ContentGroup>
-
         {this.props.user ? (
           <div className={STYLES_CONTENT_GROUP} onClick={this._handleShowPublishView}>
             <span className={STYLES_CONTENT_GROUP_LEFT}>Publish or republish project…</span>
@@ -170,7 +161,6 @@ export default class ProjectManagerSidebarOptions extends React.Component {
             </span>
           </div>
         ) : null}
-
         <div className={STYLES_URL_SECTION}>
           <SettingsControl
             onClick={this.props.onToggleProductionMode}

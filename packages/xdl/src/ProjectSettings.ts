@@ -1,6 +1,6 @@
+import { ProjectTarget } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
-import defaults from 'lodash/defaults';
 import path from 'path';
 
 export type ProjectSettings = {
@@ -32,6 +32,7 @@ type PackagerInfo = {
   ngrokPid?: number | null;
   devToolsPort?: number | null;
   webpackServerPort?: number | null;
+  target?: ProjectTarget;
 };
 const packagerInfoFile = 'packager-info.json';
 
@@ -58,8 +59,7 @@ export async function readAsync(projectRoot: string): Promise<ProjectSettings> {
   }
   migrateDeprecatedSettings(projectSettings);
   // Set defaults for any missing fields
-  defaults(projectSettings, projectSettingsDefaults);
-  return projectSettings;
+  return { ...projectSettingsDefaults, ...projectSettings };
 }
 
 function migrateDeprecatedSettings(projectSettings: any): void {
@@ -88,9 +88,10 @@ export async function setAsync(
       cantReadFileDefault: projectSettingsDefaults,
     });
   } catch (e) {
-    return await projectSettingsJsonFile(projectRoot).writeAsync(
-      defaults(json, projectSettingsDefaults)
-    );
+    return await projectSettingsJsonFile(projectRoot).writeAsync({
+      ...projectSettingsDefaults,
+      ...json,
+    });
   }
 }
 
@@ -118,10 +119,10 @@ export async function setPackagerInfoAsync(
 }
 
 export function dotExpoProjectDirectory(projectRoot: string): string {
-  let dirPath = path.join(projectRoot, '.expo');
+  const dirPath = path.join(projectRoot, '.expo');
   try {
     // move .exponent to .expo
-    let oldDirPath = path.join(projectRoot, '.exponent');
+    const oldDirPath = path.join(projectRoot, '.exponent');
     if (fs.statSync(oldDirPath).isDirectory()) {
       fs.renameSync(oldDirPath, dirPath);
     }
@@ -134,7 +135,7 @@ export function dotExpoProjectDirectory(projectRoot: string): string {
 }
 
 export function dotExpoProjectDirectoryExists(projectRoot: string): boolean {
-  let dirPath = path.join(projectRoot, '.expo');
+  const dirPath = path.join(projectRoot, '.expo');
   try {
     if (fs.statSync(dirPath).isDirectory()) {
       return true;
@@ -147,6 +148,6 @@ export function dotExpoProjectDirectoryExists(projectRoot: string): boolean {
 }
 
 export async function getPackagerOptsAsync(projectRoot: string): Promise<ProjectSettings> {
-  let projectSettings = await readAsync(projectRoot);
+  const projectSettings = await readAsync(projectRoot);
   return projectSettings;
 }

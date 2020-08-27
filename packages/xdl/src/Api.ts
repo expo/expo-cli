@@ -1,22 +1,18 @@
-import { JSONObject } from '@expo/json-file';
 import axios, { AxiosRequestConfig, Canceler } from 'axios';
 import concat from 'concat-stream';
 import ExtendableError from 'es6-error';
 import FormData from 'form-data';
 import fs from 'fs-extra';
-import isString from 'lodash/isString';
 import path from 'path';
 
+import { MAX_CONTENT_LENGTH } from './ApiV2';
 import Config from './Config';
 import * as ConnectionStatus from './ConnectionStatus';
 import * as Extract from './Extract';
 import * as Session from './Session';
-import { Cacher } from './tools/FsCache';
 import UserManager from './User';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
-
-const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
 
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;
@@ -61,7 +57,7 @@ async function _callMethodAsync(
   const session = await UserManager.getSessionAsync();
   const skipValidationToken = process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN'];
 
-  let headers: any = {
+  const headers: any = {
     'Exp-ClientId': clientId,
     'Exponent-Client': exponentClient,
   };
@@ -70,7 +66,10 @@ async function _callMethodAsync(
     headers['Exp-Skip-Manifest-Validation-Token'] = skipValidationToken;
   }
 
-  if (session) {
+  // Handle auth method, prioritizing authorization tokens before session secrets
+  if (session?.accessToken) {
+    headers['Authorization'] = `Bearer ${session.accessToken}`;
+  } else if (session?.sessionSecret) {
     headers['Expo-Session'] = session.sessionSecret;
   }
 
@@ -89,9 +88,9 @@ async function _callMethodAsync(
   }
 
   if (requestOptions.formData) {
-    let { formData, ...rest } = requestOptions;
-    let convertedFormData = await _convertFormDataToBuffer(formData);
-    let { data } = convertedFormData;
+    const { formData, ...rest } = requestOptions;
+    const convertedFormData = await _convertFormDataToBuffer(formData);
+    const { data } = convertedFormData;
     options.headers = {
       ...options.headers,
       ...formData.getHeaders(),
@@ -105,13 +104,13 @@ async function _callMethodAsync(
     options.timeout = 1;
   }
 
-  let response = await axios.request(options);
+  const response = await axios.request(options);
   if (!response) {
     throw new Error('Unexpected error: Request failed.');
   }
-  let responseBody = response.data;
+  const responseBody = response.data;
   var responseObj;
-  if (isString(responseBody)) {
+  if (typeof responseBody === 'string') {
     try {
       responseObj = JSON.parse(responseBody);
     } catch (e) {
@@ -124,7 +123,7 @@ async function _callMethodAsync(
     responseObj = responseBody;
   }
   if (responseObj.err) {
-    let err = new ApiError(
+    const err = new ApiError(
       responseObj.code || 'API_ERROR',
       'API Response Error: ' + responseObj.err
     );
@@ -153,7 +152,7 @@ async function _downloadAsync(
   let promptShown = false;
   let currentProgress = 0;
 
-  let { cancel, token } = axios.CancelToken.source();
+  const { cancel, token } = axios.CancelToken.source();
 
   let warningTimer = setTimeout(() => {
     if (retryFunction) {
@@ -168,9 +167,9 @@ async function _downloadAsync(
     responseType: 'stream',
     cancelToken: token,
   };
-  let response = await axios(url, config);
+  const response = await axios(url, config);
   await new Promise(resolve => {
-    let totalDownloadSize = response.data.headers['content-length'];
+    const totalDownloadSize = response.data.headers['content-length'];
     let downloadProgress = 0;
     response.data
       .on('data', (chunk: Buffer) => {
@@ -204,11 +203,10 @@ async function _downloadAsync(
   await fs.rename(tmpPath, outputPath);
 }
 
+/** @deprecated use ApiV2, got or GraphQL depending on use case. */
 export default class ApiClient {
   static host: string = Config.api.host;
   static port: number = Config.api.port || 80;
-
-  static _schemaCaches: { [version: string]: Cacher<JSONObject> } = {};
 
   static setClientName(name: string) {
     exponentClient = name;
@@ -222,7 +220,7 @@ export default class ApiClient {
     requestOptions: RequestOptions = {},
     returnEntireResponse: boolean = false
   ) {
-    let url =
+    const url =
       _apiBaseUrl() +
       '/' +
       encodeURIComponent(methodName) +
@@ -237,23 +235,8 @@ export default class ApiClient {
     requestBody?: any,
     requestOptions: RequestOptions = {}
   ) {
-    let url = _rootBaseUrl() + path;
+    const url = _rootBaseUrl() + path;
     return _callMethodAsync(url, method, requestBody, requestOptions);
-  }
-
-  static async xdlSchemaAsync(sdkVersion: string): Promise<JSONObject> {
-    if (!ApiClient._schemaCaches.hasOwnProperty(sdkVersion)) {
-      ApiClient._schemaCaches[sdkVersion] = new Cacher(
-        async () => {
-          return await ApiClient.callPathAsync(`/--/xdl-schema/${sdkVersion}`);
-        },
-        `schema-${sdkVersion}.json`,
-        0,
-        path.join(__dirname, `../caches/schema-${sdkVersion}.json`)
-      );
-    }
-
-    return await ApiClient._schemaCaches[sdkVersion].getAsync();
   }
 
   static async downloadAsync(
@@ -264,8 +247,8 @@ export default class ApiClient {
     retryFunction?: RetryCallback
   ): Promise<void> {
     if (extract) {
-      let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-      let tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');
+      const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+      const tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');
       await _downloadAsync(url, tmpPath, progressFunction);
       await Extract.extractAsync(tmpPath, outputPath);
       fs.removeSync(tmpPath);

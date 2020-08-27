@@ -1,5 +1,5 @@
-import { ApolloClient } from 'apollo-client';
 import { InMemoryCache, IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
+import { ApolloClient } from 'apollo-client';
 import { WebSocketLink } from 'apollo-link-ws';
 
 import introspectionQueryResultData from '../fragmentTypes.json';

@@ -1,7 +1,7 @@
 import { withAlias } from '@expo/webpack-config/addons';
+import { getAliases, getConfig, getModuleFileExtensions, getPaths } from '@expo/webpack-config/env';
 import { createBabelLoaderFromEnvironment } from '@expo/webpack-config/loaders';
 import { ExpoDefinePlugin, ExpoInterpolateHtmlPlugin } from '@expo/webpack-config/plugins';
-import { getConfig, getModuleFileExtensions, getPaths } from '@expo/webpack-config/env';
 import {
   getPluginsByName,
   getRulesByMatchingFiles,
@@ -16,16 +16,15 @@ export function withExpoWebpack(
   config: AnyConfiguration,
   options: { projectRoot?: string; skipEntry?: boolean } = {}
 ) {
-  // Support React Native aliases
-  // @ts-ignore: webpack version mismatch
-  config = withAlias(config);
-
   const projectRoot = options.projectRoot || process.cwd();
+
+  // Support react-native-web aliases
+  // @ts-ignore: webpack version mismatch
+  config = withAlias(config, getAliases(projectRoot));
 
   const env: any = {
     platform: 'electron',
     projectRoot,
-    mode: config.mode === 'production' ? config.mode : 'development',
     locations: getPaths(projectRoot),
   };
   if (!config.plugins) config.plugins = [];

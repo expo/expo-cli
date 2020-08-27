@@ -1,17 +1,19 @@
 import { Mode } from '../types';
 
 /**
+ * Resolve the `mode` in a way that accounts for legacy treatment and environment variables.
+ *
  * mode -> production -> development -> process.env.NODE_ENV -> 'development'
+ * @category env
  */
-
-function getMode({
+export default function getMode({
   production,
   development,
   mode,
 }: {
   production?: boolean;
   development?: boolean;
-  mode?: Mode;
+  mode?: string;
 }): Mode {
   if (mode === undefined) {
     if (process.env.NODE_ENV != null && isValidMode(process.env.NODE_ENV)) {
@@ -29,11 +31,9 @@ function getMode({
 }
 
 function isValidMode(inputMode?: string): boolean {
-  let mode;
+  let mode = inputMode || '';
   if (typeof inputMode === 'string') {
     mode = inputMode.toLowerCase();
   }
-  return mode === 'production' || mode === 'development';
+  return !!mode && ['none', 'production', 'development'].includes(mode);
 }
-
-export default getMode;

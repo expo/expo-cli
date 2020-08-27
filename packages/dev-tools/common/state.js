@@ -1,10 +1,9 @@
-import React from 'react';
-import gql from 'graphql-tag';
-import uniqBy from 'lodash/uniqBy';
-import set from 'lodash/fp/set';
 import { ApolloError } from 'apollo-client';
-
 import * as Sets from 'app/common/sets';
+import gql from 'graphql-tag';
+import set from 'lodash/fp/set';
+import uniqBy from 'lodash/uniqBy';
+import React from 'react';
 
 const delay = time => new Promise(resolve => window.setTimeout(resolve, time));
 
@@ -166,6 +165,62 @@ function updateLayout(client, id, input) {
   });
 }
 
+export const openBrowser = async props => {
+  const id = new Date().getTime();
+
+  // NOTE(jim): Breaks out of publishing modal.
+  props.dispatch({
+    type: 'UPDATE',
+    state: {
+      isPublishing: false,
+    },
+  });
+
+  props.dispatch({
+    type: 'ADD_TOAST',
+    toast: {
+      id,
+      name: 'info',
+      text: `Attempting to open the project in a web browser...`,
+    },
+  });
+
+  let hasError = false;
+  try {
+    const result = await props.client.mutate({
+      mutation: gql`
+        mutation OpenWeb {
+          openWeb {
+            error
+          }
+        }
+      `,
+      variables: {},
+    });
+    if (result.data.openWeb.error) {
+      hasError = true;
+    }
+  } catch (e) {
+    hasError = true;
+  }
+
+  if (!hasError) {
+    props.dispatch({
+      type: 'REMOVE_TOAST',
+      id,
+    });
+  } else {
+    props.dispatch({
+      type: 'ADD_TOAST',
+      toast: {
+        id,
+        name: 'error',
+        text: `Error opening for web. Check logs for details.`,
+      },
+    });
+  }
+};
+
 export const openSimulator = async (platform, props) => {
   const id = new Date().getTime();
   // NOTE(jim): Breaks out of publishing modal.
@@ -266,6 +321,16 @@ export const setBuildFlags = ({ dev, minify }, { client }) => {
 };
 
 export const sendProjectUrl = async (recipient, props) => {
+  if (!props.data.user.username) {
+    props.dispatch({
+      type: 'ADD_TOAST',
+      toast: {
+        id: 'authentication-required',
+        name: 'info',
+        text: 'Authentication is required. Please check the terminal to log in.',
+      },
+    });
+  }
   try {
     await props.client.mutate({
       mutation: gql`

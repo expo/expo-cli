@@ -1,3 +1,4 @@
+import { PWAConfig } from 'expo-pwa';
 import { Configuration as WebpackConfiguration } from 'webpack';
 import {
   ProxyConfigArray,
@@ -11,6 +12,8 @@ export interface DevConfiguration extends WebpackConfiguration {
 
 export type AnyConfiguration = DevConfiguration | WebpackConfiguration;
 
+type AnyObject = { [key: string]: any };
+
 export type InputEnvironment = {
   projectRoot?: string;
   platform?: 'ios' | 'android' | 'web' | 'electron';
@@ -18,39 +21,83 @@ export type InputEnvironment = {
   https?: boolean;
   production?: boolean;
   development?: boolean;
-  config?: { [key: string]: any };
+  config?: AnyObject;
   locations?: FilePaths;
-  polyfill?: boolean;
   mode?: Mode;
   removeUnusedImportExports?: boolean;
   pwa?: boolean;
-  report?: {
-    verbose: boolean;
-    path: string;
-    statsFilename: string;
-    reportFilename: string;
+  offline?: boolean;
+  babel?: {
+    dangerouslyAddModulePathsToTranspile: string[];
   };
 };
 
 export type Environment = {
-  info: boolean;
+  /**
+   * Should the dev server use https protocol.
+   *
+   * @default false
+   */
   https: boolean;
-  config: { [key: string]: any };
+  /**
+   * The Expo project config, this should be read using `@expo/config`.
+   *
+   * @default undefined
+   */
+  config: PWAConfig;
+  /**
+   * Paths used to locate where things are.
+   */
   locations: FilePaths;
+  /**
+   * Root of the Expo project.
+   */
   projectRoot: string;
-  polyfill?: boolean;
+  /**
+   * Passing `true` will enable offline support and add a service worker.
+   *
+   * @default false
+   */
+  offline?: boolean;
+  /**
+   * The Webpack mode to bundle the project in.
+   */
   mode: Mode;
-  platform: 'ios' | 'android' | 'web' | 'electron';
+  /**
+   * The target platform to bundle for. Currently only `web` and `electron` are supported.
+   */
+  platform: ExpoPlatform;
+  /**
+   * Enables advanced tree-shaking with deep scope analysis.
+   *
+   * @default false
+   */
   removeUnusedImportExports?: boolean;
+  /**
+   * Generate the PWA image assets in production mode.
+   *
+   * @default true
+   */
   pwa?: boolean;
-  report?: Report;
+  /**
+   * Control how the default Babel loader is configured.
+   */
+  babel?: ExpoBabelOptions;
 };
 
-export type Report = {
-  verbose: boolean;
-  path: string;
-  statsFilename: string;
-  reportFilename: string;
+/**
+ * The target platform to bundle for. Currently only `web` and `electron` are supported.
+ */
+export type ExpoPlatform = 'ios' | 'android' | 'web' | 'electron';
+
+/**
+ * Control how the default Babel loader is configured.
+ */
+export type ExpoBabelOptions = {
+  /**
+   * Add the names of node_modules that should be included transpilation step.
+   */
+  dangerouslyAddModulePathsToTranspile: string[];
 };
 
 type PathResolver = (...input: string[]) => string;

@@ -1,0 +1,9 @@
+{
+  "name": "app-staging-name",
+  "expo": {
+    "name": "app-staging-expo-name",
+    "expo": {
+      "name": "app-staging-expo-expo-name"
+    }
+  }
+}

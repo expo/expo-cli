@@ -1,9 +1,7 @@
+import * as Constants from 'app/common/constants';
+import GlobalToasts from 'app/components/GlobalToasts';
 import React from 'react';
 import { hydrate, injectGlobal } from 'react-emotion';
-
-import * as Constants from 'app/common/constants';
-
-import GlobalToasts from 'app/components/GlobalToasts';
 
 if (typeof window !== 'undefined') {
   hydrate(window.__NEXT_DATA__.ids);

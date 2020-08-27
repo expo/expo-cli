@@ -1,6 +1,5 @@
 import chalk from 'chalk';
-// @ts-ignore
-import { MultiSelect } from 'enquirer';
+import prompts from 'prompts';
 
 import { manifest } from './manifest';
 
@@ -17,16 +16,13 @@ function logReady() {
   console.log();
 }
 
-// @ts-ignore enquirer has no exported member 'MultiSelect'
 async function runNonInteractiveFlowAsync(projectRoot: string): Promise<void> {
   const customizations = manifest.filter(({ type }) => type === 'required');
-  const promises: Promise<void>[] = [];
   for (const customization of customizations) {
     if (customization.onEnabledAsync({ projectRoot, force: false })) {
-      promises.push(customization.onSelectAsync({ projectRoot, force: true }));
+      await customization.onSelectAsync({ projectRoot, force: true });
     }
   }
-  await Promise.all(promises);
   logReady();
 }
 
@@ -49,9 +45,11 @@ export async function runAsync({
   for (const customization of manifest) {
     const enabled = await customization.onEnabledAsync({ projectRoot, force });
     values.push({
-      name: customization.name,
-      disabled: !force && !enabled ? '✔︎' : false,
-      message: force && !enabled ? chalk.red(customization.name) : customization.name,
+      title: customization.name,
+      value: customization.name,
+      // @ts-ignore: broken types
+      disabled: !force && !enabled,
+      message: force && !enabled ? chalk.red('This will overwrite the existing file') : '',
     });
   }
 
@@ -64,17 +62,20 @@ export async function runAsync({
     return;
   }
 
-  const prompt = new MultiSelect({
-    hint: '(Use <space> to select, <return> to submit)\n',
-    message: `Which Next.js files would you like to generate?\n`,
+  const { answer } = await prompts({
+    type: 'multiselect',
+    name: 'answer',
+    message: 'Which Next.js files would you like to generate?\n',
+    hint: '- Space to select. Return to submit',
+    // @ts-ignore: broken types
+    warn: 'File exists, use --force to overwrite it.',
     limit: values.length,
+    instructions: '',
     choices: values,
   });
 
-  let answer;
-  try {
-    answer = await prompt.run();
-  } catch (error) {
+  if (!answer) {
+    console.log('\n\u203A Exiting...\n');
     return;
   }
 

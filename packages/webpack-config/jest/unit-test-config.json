@@ -1,6 +1,0 @@
-{
-  "testEnvironment": "node",
-  "roots": ["src"],
-  "moduleFileExtensions": ["ts", "js", "json", "node"],
-  "resetModules": false
-}

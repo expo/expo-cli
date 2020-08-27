@@ -1,6 +1,9 @@
+import { getPossibleProjectRoot } from '@expo/config/paths';
 import path from 'path';
+import { ExternalsFunctionElement } from 'webpack';
 
 import {
+  getAliases,
   getConfig,
   getMode,
   getModuleFileExtensions,
@@ -15,30 +18,36 @@ import { rulesMatchAnyFiles } from '../utils';
 import withAlias from './withAlias';
 import withEntry from './withEntry';
 
-// import ManifestPlugin from 'webpack-manifest-plugin';
-
-// Wrap your existing webpack config with support for Unimodules.
-// ex: Storybook `({ config }) => withUnimodules(config)`
+/**
+ * Wrap your existing webpack config with support for Unimodules.
+ * ex: Storybook `({ config }) => withUnimodules(config)`
+ *
+ * @param webpackConfig Optional existing Webpack config to modify.
+ * @param env Optional Environment options for configuring what features the Webpack config supports.
+ * @param argv
+ * @category addons
+ */
 export default function withUnimodules(
-  inputWebpackConfig: AnyConfiguration = {},
+  webpackConfig: AnyConfiguration = {},
   env: InputEnvironment = {},
   argv: Arguments = {}
 ): AnyConfiguration {
-  inputWebpackConfig = withAlias(inputWebpackConfig);
-
-  if (!inputWebpackConfig.module) inputWebpackConfig.module = { rules: [] };
-  else if (!inputWebpackConfig.module.rules)
-    inputWebpackConfig.module = { ...inputWebpackConfig.module, rules: [] };
-
-  if (!inputWebpackConfig.plugins) inputWebpackConfig.plugins = [];
-  if (!inputWebpackConfig.resolve) inputWebpackConfig.resolve = {};
-  if (!inputWebpackConfig.output) inputWebpackConfig.output = {};
-
   // @ts-ignore: We should attempt to use the project root that the other config is already using (used for Gatsby support).
-  env.projectRoot = env.projectRoot || inputWebpackConfig.context;
+  env.projectRoot = env.projectRoot || webpackConfig.context || getPossibleProjectRoot();
+
+  // Add native react aliases
+  webpackConfig = withAlias(webpackConfig, getAliases(env.projectRoot));
+
+  if (!webpackConfig.module) webpackConfig.module = { rules: [] };
+  else if (!webpackConfig.module.rules)
+    webpackConfig.module = { ...webpackConfig.module, rules: [] };
+
+  if (!webpackConfig.plugins) webpackConfig.plugins = [];
+  if (!webpackConfig.resolve) webpackConfig.resolve = {};
+  if (!webpackConfig.output) webpackConfig.output = {};
 
   // Attempt to use the input webpack config mode
-  env.mode = env.mode || inputWebpackConfig.mode;
+  env.mode = env.mode || webpackConfig.mode;
 
   const environment: Environment = validateEnvironment(env);
 
@@ -50,7 +59,7 @@ export default function withUnimodules(
     const testFontFileNames = supportedFonts.map(ext =>
       path.resolve(environment.projectRoot, `cool-font.${ext}`)
     );
-    if (rulesMatchAnyFiles(inputWebpackConfig, testFontFileNames)) {
+    if (rulesMatchAnyFiles(webpackConfig, testFontFileNames)) {
       supportsFontLoading = false;
     }
   }
@@ -59,8 +68,8 @@ export default function withUnimodules(
 
   const config = argv.expoConfig || getConfig(environment);
 
-  const locations = env.locations || getPaths(environment.projectRoot);
   const mode = getMode(env);
+  const locations = env.locations || getPaths(environment.projectRoot, environment);
 
   const { build: buildConfig = {} } = config.web || {};
   const { babel: babelAppConfig = {} } = buildConfig;
@@ -68,17 +77,21 @@ export default function withUnimodules(
   const babelProjectRoot = babelAppConfig.root || locations.root;
 
   const babelLoader = createBabelLoader({
+    projectRoot: locations.root,
     mode,
     platform,
     babelProjectRoot,
     verbose: babelAppConfig.verbose,
-    include: babelAppConfig.include,
+    include: [
+      ...(babelAppConfig.include || []),
+      ...(env.babel?.dangerouslyAddModulePathsToTranspile || []),
+    ],
     use: babelAppConfig.use,
   });
 
   function reuseOrCreatePublicPaths() {
-    if (inputWebpackConfig.output && inputWebpackConfig.output.publicPath) {
-      const publicPath = inputWebpackConfig.output.publicPath;
+    if (webpackConfig.output && webpackConfig.output.publicPath) {
+      const publicPath = webpackConfig.output.publicPath;
       return {
         publicPath,
         publicUrl: publicPath.endsWith('/') ? publicPath.slice(0, -1) : publicPath,
@@ -89,35 +102,26 @@ export default function withUnimodules(
 
   const { publicPath, publicUrl } = reuseOrCreatePublicPaths();
 
-  inputWebpackConfig.mode = mode;
+  webpackConfig.mode = mode;
 
-  inputWebpackConfig.output = {
+  webpackConfig.output = {
     // This is the URL that app is served from.
     // We use "/" in development.
-    ...inputWebpackConfig.output,
+    ...webpackConfig.output,
     publicPath,
   };
 
-  inputWebpackConfig.plugins.push(
-    // Generate a manifest file which contains a mapping of all asset filenames
-    // to their corresponding output file so that tools can pick it up without
-    // having to parse `index.html`.
-    // new ManifestPlugin({
-    //   fileName: 'asset-manifest.json',
-    //   publicPath,
-    // }),
-
+  webpackConfig.plugins.push(
     // Used for surfacing information related to constants
     new ExpoDefinePlugin({
       mode,
       publicUrl,
       config,
-      productionManifestPath: locations.production.manifest,
     })
   );
 
   const rules = [
-    ...inputWebpackConfig.module.rules,
+    ...webpackConfig.module.rules,
 
     // TODO: Bacon: Auto remove this loader
     {
@@ -131,39 +135,61 @@ export default function withUnimodules(
     supportsFontLoading && createFontLoader(locations.root, locations.includeModule),
   ].filter(Boolean);
 
-  inputWebpackConfig.module = {
-    ...inputWebpackConfig.module,
+  webpackConfig.module = {
+    ...webpackConfig.module,
     rules,
   };
 
-  inputWebpackConfig.resolve = {
-    ...inputWebpackConfig.resolve,
+  webpackConfig.resolve = {
+    ...webpackConfig.resolve,
     symlinks: false,
     // Support platform extensions like .web.js
     extensions: getModuleFileExtensions('web'),
   };
 
-  // We have to transpile these modules and make them not external too.
-  // We have to do this because next.js by default externals all `node_modules`'s js files.
-  // Reference:
-  // https://github.com/martpie/next-transpile-modules/blob/77450a0c0307e4b650d7acfbc18641ef9465f0da/index.js#L48-L62
-  // https://github.com/zeit/next.js/blob/0b496a45e85f3c9aa3cf2e77eef10888be5884fc/packages/next/build/webpack-config.ts#L185-L258
-  // `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
+  // Transpile and remove expo modules from Next.js externals.
   const includeFunc = babelLoader.include as (path: string) => boolean;
-  if (inputWebpackConfig.externals) {
-    inputWebpackConfig.externals = (inputWebpackConfig.externals as any).map((external: any) => {
-      if (typeof external !== 'function') return external;
-      return (ctx: any, req: any, cb: any) => {
-        const relPath = path.join('node_modules', req);
-        return includeFunc(relPath) ? cb() : external(ctx, req, cb);
-      };
-    });
-  }
+  webpackConfig = ignoreExternalModules(webpackConfig, includeFunc);
 
   // Add a loose requirement on the ResizeObserver polyfill if it's installed...
-  inputWebpackConfig = withEntry(inputWebpackConfig, env, {
+  webpackConfig = withEntry(webpackConfig, env, {
     entryPath: 'resize-observer-polyfill/dist/ResizeObserver.global',
   });
 
-  return inputWebpackConfig;
+  return webpackConfig;
+}
+
+/**
+ * We have to transpile these modules and make them not external too.
+ * We have to do this because next.js by default externals all `node_modules`'s js files.
+ *
+ * Reference:
+ * - https://github.com/martpie/next-transpile-modules/blob/77450a0c0307e4b650d7acfbc18641ef9465f0da/index.js#L48-L62
+ * - https://github.com/zeit/next.js/blob/0b496a45e85f3c9aa3cf2e77eef10888be5884fc/packages/next/build/webpack-config.ts#L185-L258
+ * - `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
+ *
+ * @param webpackConfig Config to be modified
+ * @param shouldIncludeModule A method that returns a boolean when the input module should be transpiled and externed.
+ */
+export function ignoreExternalModules(
+  webpackConfig: AnyConfiguration,
+  shouldIncludeModule: (path: string) => boolean
+): AnyConfiguration {
+  if (!webpackConfig.externals) {
+    return webpackConfig;
+  }
+  if (!Array.isArray(webpackConfig.externals)) {
+    webpackConfig.externals = [webpackConfig.externals];
+  }
+  webpackConfig.externals = webpackConfig.externals.map(external => {
+    if (typeof external !== 'function') {
+      return external;
+    }
+    return ((ctx, req, cb) => {
+      const relPath = path.join('node_modules', req);
+      return shouldIncludeModule(relPath) ? cb() : external(ctx, req, cb);
+    }) as ExternalsFunctionElement;
+  });
+
+  return webpackConfig;
 }

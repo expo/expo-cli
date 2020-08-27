@@ -1,10 +1,11 @@
 import chalk from 'chalk';
+import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
-import { runAction, travelingFastlane } from './fastlane';
-import { nonEmptyInput } from '../validators';
 import log from '../log';
 import prompt from '../prompt';
+import { nonEmptyInput } from '../validators';
+import { runAction, travelingFastlane } from './fastlane';
 
 const APPLE_IN_HOUSE_TEAM_TYPE = 'in-house';
 
@@ -21,7 +22,7 @@ type AppleCredentials = {
 
 export type Team = {
   id: string;
-  name: string;
+  name?: string;
   inHouse?: boolean;
 };
 
@@ -41,8 +42,8 @@ export type AppleCtx = {
 
 export async function authenticate(options: Options = {}): Promise<AppleCtx> {
   const { appleId, appleIdPassword } = await _requestAppleIdCreds(options);
+  log(`Authenticating to Apple Developer Portal...`); // use log instead of spinner in case we need to prompt user for 2fa
   try {
-    log('Trying to authenticate with Apple Developer Portal...');
     const { teams, fastlaneSession } = await runAction(
       travelingFastlane.authenticate,
       [appleId, appleIdPassword],
@@ -50,42 +51,69 @@ export async function authenticate(options: Options = {}): Promise<AppleCtx> {
         pipeStdout: true,
       }
     );
-    log('Authenticated with Apple Developer Portal successfully!');
+    log(chalk.green('Authenticated with Apple Developer Portal successfully!'));
     const team = await _chooseTeam(teams, options.teamId);
     return { appleId, appleIdPassword, team, fastlaneSession };
   } catch (err) {
-    log('Authentication with Apple Developer Portal failed!');
+    if (err.rawDump?.match(/Invalid username and password combination/)) {
+      log(chalk.red('Invalid username and password combination, try again.'));
+      const anotherPromptResult = await _promptForAppleId({
+        firstAttempt: false,
+        previousAppleId: appleId,
+      });
+      return authenticate({ ...options, ...anotherPromptResult });
+    }
+    log(chalk.red('Authentication with Apple Developer Portal failed!'));
     throw err;
   }
 }
 
 async function _requestAppleIdCreds(options: Options): Promise<AppleCredentials> {
-  return _getAppleIdFromParams(options) || (await _promptForAppleId(options));
+  return _getAppleIdFromParams(options) || (await _promptForAppleId());
 }
 
-function _getAppleIdFromParams({ appleId }: Options): AppleCredentials | null {
-  const appleIdPassword = process.env.EXPO_APPLE_PASSWORD;
-  if (appleId && appleIdPassword) {
-    return {
-      appleId,
-      appleIdPassword,
-    };
-  } else {
+function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCredentials | null {
+  const passedAppleIdPassword = appleId
+    ? appleIdPassword || process.env.EXPO_APPLE_PASSWORD
+    : undefined;
+
+  // none of the apple id params were set, assume user has no intention of passing it in
+  if (!appleId) {
     return null;
   }
+
+  // partial apple id params were set, assume user has intention of passing it in
+  if (!(appleId && passedAppleIdPassword)) {
+    throw new Error(
+      'In order to provide your Apple ID credentials, you must set the --apple-id flag and set the EXPO_APPLE_PASSWORD environment variable.'
+    );
+  }
+
+  return {
+    appleId: appleId as string,
+    appleIdPassword: passedAppleIdPassword as string,
+  };
 }
 
-async function _promptForAppleId({ appleId }: Options): Promise<AppleCredentials> {
-  const wrap = wordwrap(process.stdout.columns || 80);
-  log(
-    wrap(
-      'Please enter your Apple Developer Program account credentials. ' +
-        'These credentials are needed to manage certificates, keys and provisioning profiles ' +
-        'in your Apple Developer account.'
-    )
-  );
+async function _promptForAppleId({
+  firstAttempt = true,
+  previousAppleId,
+}: { firstAttempt?: boolean; previousAppleId?: string } = {}): Promise<AppleCredentials> {
+  if (firstAttempt) {
+    const wrap = wordwrap(process.stdout.columns || 80);
+    log(
+      wrap(
+        'Please enter your Apple Developer Program account credentials. ' +
+          'These credentials are needed to manage certificates, keys and provisioning profiles ' +
+          `in your Apple Developer account.`
+      )
+    );
 
-  log(wrap(chalk.bold('The password is only used to authenticate with Apple and never stored.')));
+    // https://docs.expo.io/distribution/security/#apple-developer-account-credentials
+    const here = terminalLink('here', 'https://bit.ly/2VtGWhU');
+    log(wrap(chalk.bold(`The password is only used to authenticate with Apple and never stored`)));
+    log(wrap(chalk.grey(`Learn more ${here}`)));
+  }
 
   const { appleId: promptAppleId } = await prompt(
     {
@@ -93,7 +121,7 @@ async function _promptForAppleId({ appleId }: Options): Promise<AppleCredentials
       name: 'appleId',
       message: `Apple ID:`,
       validate: nonEmptyInput,
-      when: !appleId,
+      ...(previousAppleId && { default: previousAppleId }),
     },
     {
       nonInteractiveHelp: 'Pass your Apple ID using the --apple-id flag.',
@@ -103,7 +131,7 @@ async function _promptForAppleId({ appleId }: Options): Promise<AppleCredentials
     {
       type: 'password',
       name: 'appleIdPassword',
-      message: answer => `Password (for ${appleId || promptAppleId}):`,
+      message: () => `Password (for ${promptAppleId}):`,
       validate: nonEmptyInput,
     },
     {
@@ -111,7 +139,7 @@ async function _promptForAppleId({ appleId }: Options): Promise<AppleCredentials
         'Pass your Apple ID password using the EXPO_APPLE_PASSWORD environment variable',
     }
   );
-  return { appleId: appleId || promptAppleId, appleIdPassword };
+  return { appleId: promptAppleId, appleIdPassword };
 }
 
 async function _chooseTeam(teams: FastlaneTeam[], userProvidedTeamId?: string): Promise<Team> {
@@ -140,12 +168,17 @@ async function _chooseTeam(teams: FastlaneTeam[], userProvidedTeamId?: string): 
       name: `${i + 1}) ${team.teamId} "${team.name}" (${team.type})`,
       value: team,
     }));
-    const { team } = await prompt({
-      type: 'list',
-      name: 'team',
-      message: 'Which team would you like to use?',
-      choices,
-    });
+    const { team } = await prompt(
+      {
+        type: 'list',
+        name: 'team',
+        message: 'Which team would you like to use?',
+        choices,
+      },
+      {
+        nonInteractiveHelp: 'Pass in your Apple Team ID using the --team-id flag.',
+      }
+    );
     return _formatTeam(team);
   }
 }

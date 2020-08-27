@@ -1,34 +1,35 @@
 // Set EXPO_VIEW_DIR to universe/exponent to test locally
 
-import fs from 'fs-extra';
+import { findConfigFile, getConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
+import spawnAsync from '@expo/spawn-async';
+import fs from 'fs-extra';
+import { sync as globSync } from 'glob';
+import inquirer from 'inquirer';
+import isPlainObject from 'lodash/isPlainObject';
 import path from 'path';
 import process from 'process';
 import rimraf from 'rimraf';
-import glob from 'glob-promise';
 import uuid from 'uuid';
-import inquirer from 'inquirer';
-import spawnAsync from '@expo/spawn-async';
-import { findConfigFile, readConfigJsonAsync } from '@expo/config';
-import isPlainObject from 'lodash/isPlainObject';
-
-import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
-
-import * as AssetBundle from './AssetBundle';
-import * as IosPlist from './IosPlist';
-import * as IosNSBundle from './IosNSBundle';
-import * as IosWorkspace from './IosWorkspace';
-import * as AndroidShellApp from './AndroidShellApp';
 
 import Api from '../Api';
+import * as EmbeddedAssets from '../EmbeddedAssets';
+import * as UrlUtils from '../UrlUtils';
 import UserManager from '../User';
+import * as Versions from '../Versions';
 import XDLError from '../XDLError';
+import * as AndroidShellApp from './AndroidShellApp';
+import * as AssetBundle from './AssetBundle';
+import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
+import * as IosNSBundle from './IosNSBundle';
+import * as IosPlist from './IosPlist';
+import * as IosWorkspace from './IosWorkspace';
+import logger from './Logger';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
-import * as UrlUtils from '../UrlUtils';
-import * as Versions from '../Versions';
 import installPackagesAsync from './installPackagesAsync';
-import logger from './Logger';
+
+const SERVICE_CONTEXT_PROJECT_NAME = 'exponent-view-template';
 
 async function yesnoAsync(message) {
   const { ok } = await inquirer.prompt([
@@ -42,7 +43,7 @@ async function yesnoAsync(message) {
 }
 
 export async function detachAsync(projectRoot, options = {}) {
-  let originalLogger = logger.loggerObj;
+  const originalLogger = logger.loggerObj;
   logger.configure({
     trace: options.verbose ? console.trace.bind(console) : () => {},
     debug: options.verbose ? console.debug.bind(console) : () => {},
@@ -59,21 +60,21 @@ export async function detachAsync(projectRoot, options = {}) {
 }
 
 async function _detachAsync(projectRoot, options) {
-  let user = await UserManager.ensureLoggedInAsync();
+  const user = await UserManager.ensureLoggedInAsync();
 
   if (!user) {
     throw new Error('Internal error -- somehow detach is being run in offline mode.');
   }
 
-  let username = user.username;
+  const username = user.username;
   const { configName, configPath, configNamespace } = findConfigFile(projectRoot);
-  let { exp } = await readConfigJsonAsync(projectRoot);
-  let experienceName = `@${username}/${exp.slug}`;
-  let experienceUrl = `exp://exp.host/${experienceName}`;
+  let { exp } = getConfig(projectRoot);
+  const experienceName = `@${username}/${exp.slug}`;
+  const experienceUrl = `exp://exp.host/${experienceName}`;
 
   // Check to make sure project isn't fully detached already
-  let hasIosDirectory = isDirectory(path.join(projectRoot, 'ios'));
-  let hasAndroidDirectory = isDirectory(path.join(projectRoot, 'android'));
+  const hasIosDirectory = isDirectory(path.join(projectRoot, 'ios'));
+  const hasAndroidDirectory = isDirectory(path.join(projectRoot, 'android'));
 
   if (hasIosDirectory && hasAndroidDirectory) {
     throw new XDLError(
@@ -84,7 +85,7 @@ async function _detachAsync(projectRoot, options) {
 
   // Project was already detached on Windows or Linux
   if (!hasIosDirectory && hasAndroidDirectory && process.platform === 'darwin') {
-    let response = await yesnoAsync(
+    const response = await yesnoAsync(
       `This will add an Xcode project and leave your existing Android project alone. Enter 'yes' to continue:`
     );
     if (!response) {
@@ -128,29 +129,30 @@ async function _detachAsync(projectRoot, options) {
     }
   }
 
-  // Modify exp.json
   exp.isDetached = true;
 
   if (!exp.detach) {
     exp.detach = {};
   }
 
-  let detachedUUID = uuid.v4().replace(/-/g, '');
-  let generatedScheme = `exp${detachedUUID}`;
+  const detachedUUID = uuid.v4().replace(/-/g, '');
+  const generatedScheme = `exp${detachedUUID}`;
 
   if (!exp.detach.scheme && !Versions.gteSdkVersion(exp, '27.0.0')) {
     // set this for legacy purposes
     exp.detach.scheme = generatedScheme;
   }
 
+  const linkingWarning = `You have not specified a custom scheme for deep linking. A default value of ${generatedScheme} will be used. You can change this later by following the instructions in this guide: https://docs.expo.io/workflow/linking/`;
   if (!exp.scheme) {
-    logger.info(
-      `You have not specified a custom scheme for deep linking. A default value of ${generatedScheme} will be used. You can change this later by following the instructions in this guide: https://docs.expo.io/versions/latest/workflow/linking/`
-    );
+    logger.info(linkingWarning);
     exp.scheme = generatedScheme;
+  } else if (Array.isArray(exp.scheme) && exp.scheme.length === 0) {
+    logger.info(linkingWarning);
+    exp.scheme.push(generatedScheme);
   }
 
-  let expoDirectory = path.join(projectRoot, '.expo-source');
+  const expoDirectory = path.join(projectRoot, '.expo-source');
   fs.mkdirpSync(expoDirectory);
   const context = StandaloneContext.createUserContext(projectRoot, exp, experienceUrl);
 
@@ -173,7 +175,7 @@ async function _detachAsync(projectRoot, options) {
     }
     if (!exp.ios.bundleIdentifier) {
       logger.info(
-        `You'll need to specify an iOS bundle identifier. See: https://docs.expo.io/versions/latest/workflow/configuration/#ios`
+        `You'll need to specify an iOS bundle identifier. See: https://docs.expo.io/versions/latest/config/app/#ios`
       );
       const { iosBundleIdentifier } = await inquirer.prompt([
         {
@@ -197,7 +199,7 @@ async function _detachAsync(projectRoot, options) {
     }
     if (!exp.android.package) {
       logger.info(
-        `You'll need to specify an Android package name. See: https://docs.expo.io/versions/latest/workflow/configuration/#android`
+        `You'll need to specify an Android package name. See: https://docs.expo.io/versions/latest/config/app/#android`
       );
       const { androidPackage } = await inquirer.prompt([
         {
@@ -212,7 +214,7 @@ async function _detachAsync(projectRoot, options) {
       exp.android.package = androidPackage;
     }
 
-    let androidDirectory = path.join(expoDirectory, 'android');
+    const androidDirectory = path.join(expoDirectory, 'android');
     rimraf.sync(androidDirectory);
     fs.mkdirpSync(androidDirectory);
     await detachAndroidAsync(context, sdkVersionConfig.androidExpoViewUrl);
@@ -221,7 +223,6 @@ async function _detachAsync(projectRoot, options) {
   }
 
   logger.info('Writing ExpoKit configuration...');
-  // Update exp.json/app.json
   // if we're writing to app.json, we need to place the configuration under the expo key
   const config = configNamespace ? { [configNamespace]: exp } : exp;
   await fs.writeFile(configPath, JSON.stringify(config, null, 2));
@@ -238,7 +239,7 @@ async function _detachAsync(projectRoot, options) {
   } else if (process.env.EXPO_VIEW_DIR) {
     // ignore, using test directory
   } else {
-    throw new Error(`Expo's React Native fork does not support this SDK version.`);
+    throw new Error(`Expo's fork of react-native does not support this SDK version.`);
   }
 
   // Add expokitNpmPackage if it is supported. Was added before SDK 29.
@@ -289,7 +290,7 @@ async function detachAndroidAsync(context, expoViewUrl) {
   }
 
   logger.info('Moving Android project files...');
-  let androidProjectDirectory = path.join(context.data.projectPath, 'android');
+  const androidProjectDirectory = path.join(context.data.projectPath, 'android');
   let tmpExpoDirectory;
   if (process.env.EXPO_VIEW_DIR) {
     // Only for testing
@@ -341,7 +342,7 @@ async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory) {
   try {
     const podfileLock = await fs.readFile(podfileLockPath, 'utf8');
     const expoKitVersionRegex = /ExpoKit\/Core\W?\(([0-9.]+)\)/gi;
-    let match = expoKitVersionRegex.exec(podfileLock);
+    const match = expoKitVersionRegex.exec(podfileLock);
     expoKitVersion = match[1];
   } catch (e) {
     throw new Error(
@@ -353,7 +354,7 @@ async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory) {
 
 async function readNullableConfigJsonAsync(projectDir) {
   try {
-    return await readConfigJsonAsync(projectDir);
+    return getConfig(projectDir);
   } catch (_) {
     return null;
   }
@@ -361,7 +362,7 @@ async function readNullableConfigJsonAsync(projectDir) {
 
 async function prepareDetachedBuildIosAsync(projectDir, args) {
   const config = await readNullableConfigJsonAsync(projectDir);
-  if (config) {
+  if (config && config.exp.name !== SERVICE_CONTEXT_PROJECT_NAME) {
     return prepareDetachedUserContextIosAsync(projectDir, config.exp, args);
   } else {
     return prepareDetachedServiceContextIosAsync(projectDir, args);
@@ -394,7 +395,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir, args) {
     path.join(context.data.expoSourcePath, '__internal__', 'keys.json')
   );
 
-  const { exp } = await readConfigJsonAsync(expoRootDir, true, true);
+  const { exp } = getConfig(expoRootDir, { skipSDKVersionRequirement: true });
 
   await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
     // verify that we are actually in a service context and not a misconfigured project
@@ -421,7 +422,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir, args) {
 
 async function _readDefaultApiKeysAsync(jsonFilePath) {
   if (fs.existsSync(jsonFilePath)) {
-    let keys = {};
+    const keys = {};
     const allKeys = await new JsonFile(jsonFilePath).readAsync();
     const validKeys = ['AMPLITUDE_KEY', 'GOOGLE_MAPS_IOS_API_KEY'];
     for (const key in allKeys) {
@@ -436,18 +437,21 @@ async function _readDefaultApiKeysAsync(jsonFilePath) {
 
 async function prepareDetachedUserContextIosAsync(projectDir, exp, args) {
   const context = StandaloneContext.createUserContext(projectDir, exp);
-  let { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(context);
+  const { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(context);
 
   logger.info(`Preparing iOS build at ${iosProjectDirectory}...`);
   // These files cause @providesModule naming collisions
   // but are not available until after `pod install` has run.
-  let podsDirectory = path.join(iosProjectDirectory, 'Pods');
+  const podsDirectory = path.join(iosProjectDirectory, 'Pods');
   if (!isDirectory(podsDirectory)) {
     throw new Error(`Can't find directory ${podsDirectory}, make sure you've run pod install.`);
   }
-  let rnPodDirectory = path.join(podsDirectory, 'React');
+  const rnPodDirectory = path.join(podsDirectory, 'React');
   if (isDirectory(rnPodDirectory)) {
-    let rnFilesToDelete = await glob(rnPodDirectory + '/**/*.@(js|json)');
+    const rnFilesToDelete = globSync('**/*.@(js|json)', {
+      absolute: true,
+      cwd: rnPodDirectory,
+    });
     if (rnFilesToDelete) {
       for (let i = 0; i < rnFilesToDelete.length; i++) {
         await fs.unlink(rnFilesToDelete[i]);
@@ -461,7 +465,7 @@ async function prepareDetachedUserContextIosAsync(projectDir, exp, args) {
     const expoKitVersion = await _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory);
 
     // populate development url
-    let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
+    const devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
 
     // populate default api keys
     const defaultApiKeys = await _readDefaultApiKeysAsync(
@@ -487,13 +491,13 @@ export async function prepareDetachedBuildAsync(projectDir, args) {
   if (args.platform === 'ios') {
     await prepareDetachedBuildIosAsync(projectDir, args);
   } else {
-    let androidProjectDirectory = path.join(projectDir, 'android');
-    let expoBuildConstantsMatches = await glob(
-      androidProjectDirectory + '/**/DetachBuildConstants.java'
-    );
+    const expoBuildConstantsMatches = globSync('android/**/DetachBuildConstants.java', {
+      absolute: true,
+      cwd: projectDir,
+    });
     if (expoBuildConstantsMatches && expoBuildConstantsMatches.length) {
-      let expoBuildConstants = expoBuildConstantsMatches[0];
-      let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
+      const expoBuildConstants = expoBuildConstantsMatches[0];
+      const devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
       await regexFileAsync(
         /DEVELOPMENT_URL = "[^"]*";/,
         `DEVELOPMENT_URL = "${devUrl}";`,
@@ -511,20 +515,23 @@ export async function prepareDetachedBuildAsync(projectDir, args) {
 // `android/app/expo.gradle` for an example).
 export async function bundleAssetsAsync(projectDir, args) {
   const options = await readNullableConfigJsonAsync(projectDir);
-  if (!options) {
+  if (!options || options.exp.name === SERVICE_CONTEXT_PROJECT_NAME) {
     // Don't run assets bundling for the service context.
     return;
   }
   const { exp } = options;
-  let publishManifestPath =
-    args.platform === 'ios' ? exp.ios.publishManifestPath : exp.android.publishManifestPath;
-  if (!publishManifestPath) {
+  const bundledManifestPath = EmbeddedAssets.getEmbeddedManifestPath(
+    args.platform,
+    projectDir,
+    exp
+  );
+  if (!bundledManifestPath) {
     logger.warn(
       `Skipped assets bundling because the '${args.platform}.publishManifestPath' key is not specified in the app manifest.`
     );
     return;
   }
-  let bundledManifestPath = path.join(projectDir, publishManifestPath);
+
   let manifest;
   try {
     manifest = JSON.parse(await fs.readFile(bundledManifestPath, 'utf8'));
@@ -533,5 +540,31 @@ export async function bundleAssetsAsync(projectDir, args) {
       `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${ex.message}`
     );
   }
-  await AssetBundle.bundleAsync(null, manifest.bundledAssets, args.dest);
+  if (!manifest || !Object.keys(manifest).length) {
+    throw new Error(`The manifest at '${bundledManifestPath}' was empty or invalid.`);
+  }
+
+  await AssetBundle.bundleAsync(null, manifest.bundledAssets, args.dest, getExportUrl(manifest));
+}
+
+/**
+ * This function extracts the exported public URL that is set in the manifest
+ * when the developer runs `expo export --public-url x`. We use this to ensure
+ * that we fetch the resources from the appropriate place when doing builds
+ * against self-hosted apps.
+ */
+function getExportUrl(manifest) {
+  const { bundleUrl } = manifest;
+  if (bundleUrl.includes(AssetBundle.DEFAULT_CDN_HOST)) {
+    return null;
+  }
+
+  try {
+    const bundleUrlParts = bundleUrl.split('/');
+    return bundleUrlParts.slice(0, bundleUrlParts.length - 2).join('/');
+  } catch (e) {
+    throw Error(
+      `Expected bundleUrl to be of the format https://domain/bundles/bundle-hash-id, ${bundleUrl} does not follow this format.`
+    );
+  }
 }

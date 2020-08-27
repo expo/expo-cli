@@ -1,52 +1,15 @@
 import chalk from 'chalk';
-import * as yup from 'yup';
 
-import { Environment, InputEnvironment, Report } from '../types';
-import { getPaths } from './paths';
+import { Environment, InputEnvironment } from '../types';
 import getConfig from './getConfig';
+import { getPaths } from './paths';
 
-import { enableWithPropertyOrConfig } from '../utils';
-
-const environmentSchema = yup.object({
-  config: yup.object().notRequired(),
-  locations: yup.object().notRequired(),
-  info: yup.boolean().default(false),
-  https: yup.boolean().default(false),
-  polyfill: yup.boolean().notRequired(),
-  removeUnusedImportExports: yup.boolean().default(false),
-  pwa: yup.boolean().notRequired(),
-  projectRoot: yup.string().required(),
-  mode: yup
-    .mixed<'production' | 'development' | 'none'>()
-    .oneOf(['production', 'development', 'none']),
-  platform: yup
-    .mixed<'ios' | 'android' | 'web' | 'electron'>()
-    .oneOf(['ios', 'android', 'web', 'electron'])
-    .default('web'),
-});
-
-const DEFAULT_REPORT = {
-  verbose: false,
-  path: 'web-report',
-  statsFilename: 'stats.json',
-  reportFilename: 'report.html',
-};
-
-const reportSchema = yup.object({
-  verbose: yup.boolean().default(DEFAULT_REPORT.verbose),
-  path: yup.string().default(DEFAULT_REPORT.path),
-  statsFilename: yup.string().default(DEFAULT_REPORT.statsFilename),
-  reportFilename: yup.string().default(DEFAULT_REPORT.reportFilename),
-});
-
-export function validateReport(report: boolean | Report): Report | null {
-  const reportConfig = enableWithPropertyOrConfig(report, DEFAULT_REPORT, true);
-  if (!reportConfig) return null;
-
-  const filledReport: Report = reportSchema.validateSync(reportConfig);
-  return filledReport;
-}
-
+/**
+ * Validate the environment options and apply default values.
+ *
+ * @param env
+ * @category env
+ */
 export function validateEnvironment(env: InputEnvironment): Environment {
   if (typeof env.projectRoot !== 'string') {
     throw new Error(
@@ -55,21 +18,39 @@ export function validateEnvironment(env: InputEnvironment): Environment {
   }
   warnEnvironmentDeprecation(env, true);
 
-  const filledEnv: any = environmentSchema.validateSync(env);
+  const validModes = ['development', 'production', 'none'];
+  if (!env.mode || !validModes.includes(env.mode)) {
+    throw new Error(
+      `@expo/webpack-config requires a valid \`mode\` string which should be one of: ${validModes.join(
+        ', '
+      )}`
+    );
+  }
 
+  // Default to web. Allow any arbitrary platform.
+  if (typeof env.platform === 'undefined') {
+    env.platform = 'web';
+  }
+  // No https by default since it doesn't work well across different browsers and devices.
+  if (typeof env.https === 'undefined') {
+    env.https = false;
+  }
+  // This is experimental and might be removed in the future.
+  if (typeof env.removeUnusedImportExports === 'undefined') {
+    env.removeUnusedImportExports = false;
+  }
+
+  // Ensure the locations are defined.
   if (!env.locations) {
-    filledEnv.locations = getPaths(env.projectRoot);
+    env.locations = getPaths(env.projectRoot, env);
   }
 
+  // Ensure the config is evaluated.
   if (!env.config) {
-    filledEnv.config = getConfig(filledEnv);
+    env.config = getConfig(env as Environment);
   }
 
-  if (typeof env.report !== 'undefined') {
-    filledEnv.report = validateReport(env.report);
-  }
-
-  return filledEnv;
+  return env as Environment;
 }
 
 let warned: { [key: string]: boolean } = {};
@@ -82,11 +63,18 @@ function shouldWarnDeprecated(
   return (!warnOnce || !(key in warned)) && typeof config[key] !== 'undefined';
 }
 
+/**
+ *
+ * @param env
+ * @param warnOnce
+ * @category env
+ * @internal
+ */
 export function warnEnvironmentDeprecation(env: InputEnvironment, warnOnce: boolean = false) {
   const warnings: { [key: string]: string } = {
     production: 'Please use `mode: "production"` instead.',
     development: 'Please use `mode: "development"` instead.',
-    polyfill: '',
+    polyfill: 'Please include polyfills manually in your project.',
   };
 
   for (const warning of Object.keys(warnings)) {
@@ -101,6 +89,11 @@ export function warnEnvironmentDeprecation(env: InputEnvironment, warnOnce: bool
   }
 }
 
+/**
+ * Used for testing
+ * @category env
+ * @internal
+ */
 export function _resetWarnings() {
   warned = {};
 }

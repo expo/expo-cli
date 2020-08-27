@@ -5,7 +5,7 @@ import * as Analytics from '../Analytics';
 import Logger, { Log, LogStream } from '../Logger';
 
 const MAX_MESSAGE_LENGTH = 200;
-let _projectRootToLogger: { [projectRoot: string]: Log } = {};
+const _projectRootToLogger: { [projectRoot: string]: Log } = {};
 
 function _getLogger(projectRoot: string): Log {
   let logger = _projectRootToLogger[projectRoot];
@@ -33,6 +33,10 @@ export type LogFields = {
   _expoEventType?: 'TUNNEL_READY';
 };
 
+export function getLogger(projectRoot: string): Log {
+  return _getLogger(projectRoot);
+}
+
 export function logWithLevel(
   projectRoot: string,
   level: string,
@@ -44,7 +48,7 @@ export function logWithLevel(
     fields.issueId = id;
   }
 
-  let logger = _getLogger(projectRoot);
+  const logger = _getLogger(projectRoot);
   switch (level) {
     case 'debug':
       logger.debug(fields, msg);

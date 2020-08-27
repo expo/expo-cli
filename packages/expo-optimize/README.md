@@ -35,7 +35,7 @@ npx expo-optimize <project-directory> [options]
 
 ## 🤔 Why?
 
-We created `optimize` to improve our docs and websites (Next, Gatsby, React), and our native apps (React Native & Expo). Optimizing images can noticeable improve your native app and website's **TTI** (or time-to-interaction) which means less time on splash screens and quicker delivery over poor network connections.
+We created `optimize` to improve our docs and websites (Next, Gatsby, React), and our native apps (React & Expo). Optimizing images can noticeable improve your native app and website's **TTI** (or time-to-interaction) which means less time on splash screens and quicker delivery over poor network connections.
 
 ## ⚙️ Options
 
@@ -57,7 +57,7 @@ Read more about how this package works here: [Image compression in Expo projects
 ## Related
 
 - [sharp](https://sharp.pixelplumbing.com/) - native image editing library for node
-- [expo-cli](https://docs.expo.io/versions/latest/workflow/expo-cli/) - the original location for this command
+- [expo-cli](https://docs.expo.io/workflow/expo-cli/) - the original location for this command
   <!-- - [react-native-cli optimize](https://github.com/react-native-community/cli/pull/419) - an alias for this command -->
 
 ## License
@@ -77,4 +77,4 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
     </a>
 </p>
 
-[abp]: https://docs.expo.io/versions/latest/workflow/configuration/#assetbundlepatterns
+[abp]: https://docs.expo.io/versions/latest/config/app/#assetbundlepatterns

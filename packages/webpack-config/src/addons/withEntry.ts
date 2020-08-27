@@ -5,9 +5,17 @@ import { getConfig } from '../env';
 import { AnyConfiguration, InputEnvironment } from '../types';
 import { resolveEntryAsync } from '../utils';
 
+/**
+ * Inject a new entry path into an existing Webpack config.
+ *
+ * @param webpackConfig Existing Webpack config to modify.
+ * @param env Environment props used to get the Expo config.
+ * @param options new entry path to inject.
+ * @category addons
+ */
 export default function withEntry(
   webpackConfig: AnyConfiguration,
-  env: InputEnvironment = {},
+  env: Pick<InputEnvironment, 'projectRoot' | 'config' | 'locations'> = {},
   options: { entryPath: string; strict?: boolean }
 ): AnyConfiguration {
   env.projectRoot = env.projectRoot || getPossibleProjectRoot();

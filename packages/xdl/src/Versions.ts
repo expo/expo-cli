@@ -1,15 +1,13 @@
 import { ExpoConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
-import forEach from 'lodash/forEach';
-import get from 'lodash/get';
 import pickBy from 'lodash/pickBy';
 import path from 'path';
 import semver from 'semver';
 
 import ApiV2Client from './ApiV2';
-import { Cacher } from './tools/FsCache';
 import UserManager from './User';
 import XDLError from './XDLError';
+import { Cacher } from './tools/FsCache';
 
 export type SDKVersion = {
   androidExpoViewUrl?: string;
@@ -81,11 +79,14 @@ export async function setVersionsAsync(value: any) {
 // the versions endpoint, but in some cases we only want to list out released
 // versions
 export async function releasedSdkVersionsAsync(): Promise<SDKVersions> {
-  let sdkVersions = await sdkVersionsAsync();
+  const sdkVersions = await sdkVersionsAsync();
   return pickBy(sdkVersions, (data, _sdkVersionString) => !!data.releaseNoteUrl);
 }
 
-export function gteSdkVersion(expJson: ExpoConfig, sdkVersion: string): boolean {
+export function gteSdkVersion(
+  expJson: Pick<ExpoConfig, 'sdkVersion'>,
+  sdkVersion: string
+): boolean {
   if (!expJson.sdkVersion) {
     return false;
   }
@@ -104,7 +105,10 @@ export function gteSdkVersion(expJson: ExpoConfig, sdkVersion: string): boolean 
   }
 }
 
-export function lteSdkVersion(expJson: ExpoConfig, sdkVersion: string): boolean {
+export function lteSdkVersion(
+  expJson: Pick<ExpoConfig, 'sdkVersion'>,
+  sdkVersion: string
+): boolean {
   if (!expJson.sdkVersion) {
     return false;
   }
@@ -138,17 +142,15 @@ export async function newestReleasedSdkVersionAsync(): Promise<{
   version: string;
   data: SDKVersion | null;
 }> {
-  let sdkVersions = await sdkVersionsAsync();
+  const sdkVersions = await sdkVersionsAsync();
   let result = null;
   let highestMajorVersion = '0.0.0';
-  forEach(sdkVersions, (value, key) => {
-    if (semver.major(key) > semver.major(highestMajorVersion)) {
-      if (value.releaseNoteUrl) {
-        highestMajorVersion = key;
-        result = value;
-      }
+  for (const [version, data] of Object.entries(sdkVersions)) {
+    if (semver.major(version) > semver.major(highestMajorVersion) && data.releaseNoteUrl) {
+      highestMajorVersion = version;
+      result = data;
     }
-  });
+  }
   return {
     version: highestMajorVersion,
     data: result,
@@ -159,15 +161,15 @@ export async function newestSdkVersionAsync(): Promise<{
   version: string;
   data: SDKVersion | null;
 }> {
-  let sdkVersions = await sdkVersionsAsync();
+  const sdkVersions = await sdkVersionsAsync();
   let result = null;
   let highestMajorVersion = '0.0.0';
-  forEach(sdkVersions, (value, key) => {
-    if (semver.major(key) > semver.major(highestMajorVersion)) {
-      highestMajorVersion = key;
-      result = value;
+  for (const [version, data] of Object.entries(sdkVersions)) {
+    if (semver.major(version) > semver.major(highestMajorVersion)) {
+      highestMajorVersion = version;
+      result = data;
     }
-  });
+  }
   return {
     version: highestMajorVersion,
     data: result,
@@ -177,48 +179,42 @@ export async function newestSdkVersionAsync(): Promise<{
 export async function oldestSupportedMajorVersionAsync(): Promise<number> {
   const sdkVersions = await sdkVersionsAsync();
   const supportedVersions = pickBy(sdkVersions, v => !v.isDeprecated);
-  let versionNumbers: number[] = [];
-  forEach(supportedVersions, (value, key) => {
-    versionNumbers.push(semver.major(key));
-  });
+  const versionNumbers = Object.keys(supportedVersions).map(version => semver.major(version));
   return Math.min(...versionNumbers);
 }
 
 export async function facebookReactNativeVersionsAsync(): Promise<string[]> {
-  let sdkVersions = await sdkVersionsAsync();
-  let facebookReactNativeVersions = new Set<string>();
-
-  forEach(sdkVersions, value => {
-    if (value.facebookReactNativeVersion) {
-      facebookReactNativeVersions.add(value.facebookReactNativeVersion);
-    }
-  });
-
+  const sdkVersions = await sdkVersionsAsync();
+  const facebookReactNativeVersions = new Set(
+    Object.values(sdkVersions)
+      .map(data => data.facebookReactNativeVersion)
+      .filter(version => version)
+  );
   return Array.from(facebookReactNativeVersions);
 }
 
 export async function facebookReactNativeVersionToExpoVersionAsync(
-  facebookReactNativeVersion: string
+  outerFacebookReactNativeVersion: string
 ): Promise<string | null> {
-  if (!semver.valid(facebookReactNativeVersion)) {
+  if (!semver.valid(outerFacebookReactNativeVersion)) {
     throw new XDLError(
       'INVALID_VERSION',
-      `${facebookReactNativeVersion} is not a valid version. Must be in the form of x.y.z`
+      `${outerFacebookReactNativeVersion} is not a valid version. Must be in the form of x.y.z`
     );
   }
 
-  let sdkVersions = await sdkVersionsAsync();
+  const sdkVersions = await sdkVersionsAsync();
   let currentSdkVersion: string | null = null;
 
-  forEach(sdkVersions, (value, key) => {
+  for (const [version, { facebookReactNativeVersion }] of Object.entries(sdkVersions)) {
     if (
-      semver.major(value.facebookReactNativeVersion) === semver.major(facebookReactNativeVersion) &&
-      semver.minor(value.facebookReactNativeVersion) === semver.minor(facebookReactNativeVersion) &&
-      (!currentSdkVersion || semver.gt(key, currentSdkVersion))
+      semver.major(outerFacebookReactNativeVersion) === semver.major(facebookReactNativeVersion) &&
+      semver.minor(outerFacebookReactNativeVersion) === semver.minor(facebookReactNativeVersion) &&
+      (!currentSdkVersion || semver.gt(version, currentSdkVersion))
     ) {
-      currentSdkVersion = key;
+      currentSdkVersion = version;
     }
-  });
+  }
 
   return currentSdkVersion;
 }
@@ -239,7 +235,7 @@ export async function canTurtleBuildSdkVersion(
   }
 
   const supportedVersions = await getSdkVersionsSupportedByTurtle();
-  const supportedVersionsForPlatform = get(supportedVersions, platform, [] as string[]);
+  const supportedVersionsForPlatform: string[] = supportedVersions[platform] ?? [];
   return supportedVersionsForPlatform.indexOf(sdkVersion) !== -1;
 }
 

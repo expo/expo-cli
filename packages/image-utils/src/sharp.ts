@@ -1,74 +1,42 @@
-import semver from 'semver';
 import spawnAsync from '@expo/spawn-async';
+import { boolish } from 'getenv';
+import resolveFrom from 'resolve-from';
+import semver from 'semver';
 
-export type SharpGlobalOptions = {
-  compressionLevel?: '';
-  format?: ImageFormat;
-  input: string;
-  limitInputPixels?: number;
-  output: string;
-  progressive?: boolean;
-  quality?: number;
-  withMetadata?: boolean;
-  [key: string]: string | number | boolean | undefined | null;
-};
-
-export type SharpCommandOptions = RemoveAlphaOptions | ResizeOptions | FlattenOptions;
-
-type FlattenOptions = {
-  operation: 'flatten';
-  background: string;
-};
-
-export type ResizeMode = 'contain' | 'cover' | 'fill' | 'inside' | 'outside';
-
-export type ImageFormat = 'input' | 'jpeg' | 'jpg' | 'png' | 'raw' | 'tiff' | 'webp';
-
-type RemoveAlphaOptions = {
-  operation: 'removeAlpha';
-};
-
-type ResizeOptions = {
-  operation: 'resize';
-  background?: string;
-  fastShrinkOnLoad?: boolean;
-  fit?: ResizeMode;
-  height?: number;
-  kernel?: 'nearest' | 'cubic' | 'mitchell' | 'lanczos2' | 'lanczos3';
-  position?:
-    | 'center'
-    | 'centre'
-    | 'north'
-    | 'east'
-    | 'south'
-    | 'west'
-    | 'northeast'
-    | 'southeast'
-    | 'southwest'
-    | 'northwest'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'right top'
-    | 'right bottom'
-    | 'left bottom'
-    | 'left top'
-    | 'entropy'
-    | 'attention';
-  width: number;
-  withoutEnlargement?: boolean;
-};
-
-type Options =
-  | {}
-  | {
-      [key: string]: boolean | number | string | undefined;
-    };
+import { Options, SharpCommandOptions, SharpGlobalOptions } from './sharp.types';
 
 const SHARP_HELP_PATTERN = /\n\nSpecify --help for available options/g;
+const SHARP_REQUIRED_VERSION = '^1.10.0';
 
+export async function resizeBufferAsync(buffer: Buffer, sizes: number[]): Promise<Buffer[]> {
+  const sharp = await findSharpInstanceAsync();
+
+  const metadata = await sharp(buffer).metadata();
+  // Create buffer for each size
+  const resizedBuffers = await Promise.all(
+    sizes.map(dimension => {
+      const density = (dimension / Math.max(metadata.width, metadata.height)) * metadata.density;
+      return sharp(buffer, {
+        density: isNaN(density) ? undefined : Math.ceil(density),
+      })
+        .resize(dimension, dimension, { fit: 'contain', background: 'transparent' })
+        .toBuffer();
+    })
+  );
+
+  return resizedBuffers;
+}
+
+const isSharpDisabled = boolish('EXPO_IMAGE_UTILS_NO_SHARP', false);
+
+/**
+ * Returns `true` if a global sharp instance can be found.
+ * This functionality can be overridden with `process.env.EXPO_IMAGE_UTILS_NO_SHARP=1`.
+ */
 export async function isAvailableAsync(): Promise<boolean> {
+  if (isSharpDisabled) {
+    return false;
+  }
   try {
     return !!(await findSharpBinAsync());
   } catch (_) {
@@ -134,18 +102,18 @@ function getCommandOptions(commands: SharpCommandOptions[]): string[] {
 }
 
 let _sharpBin: string | null = null;
+let _sharpInstance: any | null = null;
 
 async function findSharpBinAsync(): Promise<string> {
   if (_sharpBin) {
     return _sharpBin;
   }
-  const requiredCliVersion = require('../package.json').peerDependencies['sharp-cli'];
   try {
     const sharpCliPackage = require('sharp-cli/package.json');
     const libVipsVersion = require('sharp').versions.vips;
     if (
       sharpCliPackage &&
-      semver.satisfies(sharpCliPackage.version, requiredCliVersion) &&
+      semver.satisfies(sharpCliPackage.version, SHARP_REQUIRED_VERSION) &&
       typeof sharpCliPackage.bin.sharp === 'string' &&
       typeof libVipsVersion === 'string'
     ) {
@@ -160,14 +128,58 @@ async function findSharpBinAsync(): Promise<string> {
   try {
     installedCliVersion = (await spawnAsync('sharp', ['--version'])).stdout.toString().trim();
   } catch (e) {
-    throw notFoundError(requiredCliVersion);
+    throw notFoundError(SHARP_REQUIRED_VERSION);
   }
 
-  if (!semver.satisfies(installedCliVersion, requiredCliVersion)) {
-    showVersionMismatchWarning(requiredCliVersion, installedCliVersion);
+  if (!semver.satisfies(installedCliVersion, SHARP_REQUIRED_VERSION)) {
+    showVersionMismatchWarning(SHARP_REQUIRED_VERSION, installedCliVersion);
   }
   _sharpBin = 'sharp';
   return _sharpBin;
+}
+
+/**
+ * Returns the instance of `sharp` installed by the global `sharp-cli` package.
+ * This method will throw errors if the `sharp` instance cannot be found, these errors can be circumvented by ensuring `isAvailableAsync()` resolves to `true`.
+ */
+export async function findSharpInstanceAsync(): Promise<any | null> {
+  if (isSharpDisabled) {
+    throw new Error(
+      'Global instance of sharp-cli cannot be retrieved because sharp-cli has been disabled with the environment variable `EXPO_IMAGE_UTILS_NO_SHARP`'
+    );
+  }
+  if (_sharpInstance) {
+    return _sharpInstance;
+  }
+  // Ensure sharp-cli version is correct
+  await findSharpBinAsync();
+
+  // Attempt to use local sharp package
+  try {
+    const sharp = require('sharp');
+    _sharpInstance = sharp;
+    return sharp;
+  } catch (_) {}
+
+  // Attempt to resolve the sharp instance used by the global CLI
+  let sharpCliPath;
+  try {
+    sharpCliPath = (await spawnAsync('which', ['sharp'])).stdout.toString().trim();
+  } catch (e) {
+    throw new Error(`Failed to find the instance of sharp used by the global sharp-cli package.`);
+  }
+
+  // resolve sharp from the sharp-cli package
+  const sharpPath = resolveFrom.silent(sharpCliPath, 'sharp');
+
+  if (sharpPath) {
+    try {
+      // attempt to require the global sharp package
+      _sharpInstance = require(sharpPath);
+    } catch (_) {}
+  }
+
+  return _sharpInstance;
 }
 
 function notFoundError(requiredCliVersion: string): Error {

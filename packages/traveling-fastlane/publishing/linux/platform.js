@@ -6,7 +6,7 @@ if (!(process.platform === 'win32' || process.platform === 'linux')) {
 if (process.platform === 'win32') {
   var fs = require('fs');
   var WSL_BASH = 'C:\\Windows\\system32\\bash.exe';
-  fs.access(WSL_BASH, fs.constants.F_OK, function(err) {
+  fs.access(WSL_BASH, fs.constants.F_OK, function (err) {
     if (err) {
       var msg_1 = 'Does not seem like WSL enabled on this machine. Download a ';
       var msg_2 = 'Linux distro from the Windows Store, run it at least once';

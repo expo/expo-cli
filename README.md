@@ -3,10 +3,10 @@
 Expo CLI
 </h1>
 
-<p align="center">Tools for making Expo apps.</p>
+<p align="center">Tools for creating, running, and deploying Universal Expo and React Native apps</p>
 
 <p align="center">
-     
+
   <a aria-label="Join our forums" href="https://forums.expo.io" target="_blank">
     <img alt="" src="https://img.shields.io/badge/Ask%20Questions%20-blue.svg?style=flat-square&logo=discourse&logoWidth=15&labelColor=000000&color=4630EB">
   </a>
@@ -20,11 +20,11 @@ Expo CLI
     <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/master">
     <img alt="Circle CI" src="https://flat.badgen.net/circleci/github/expo/expo-cli?label=Circle%20CI&labelColor=555555&icon=circleci">
   </a>
-  
+
 </p>
 
 <p align="center">
-  <a aria-label="expo documentation" href="https://docs.expo.io/versions/latest/workflow/expo-cli">📚 Read the Documentation</a>
+  <a aria-label="expo documentation" href="https://docs.expo.io/workflow/expo-cli/">📚 Read the Documentation</a>
   |
   <a aria-label="contribute to expo cli" href="https://github.com/expo/expo-cli/blob/master/CONTRIBUTING.md"><b>Contributing to Expo CLI</b></a>
 </p>
@@ -52,29 +52,40 @@ Expo CLI
 
 <p>Learn about building and deploying universal apps <a aria-label="expo documentation" href="https://docs.expo.io">in our official docs!</a></p>
 
-- [Using the CLI](https://docs.expo.io/versions/latest/workflow/expo-cli/)
-- [App.json Configuration](https://docs.expo.io/versions/latest/workflow/configuration/)
-- [Building and Deploying apps](https://docs.expo.io/versions/latest/introduction/walkthrough/#building-and-deploying)
+- [Using the CLI](https://docs.expo.io/workflow/expo-cli/)
+- [App.json Configuration](https://docs.expo.io/workflow/configuration/)
+- [Building and Deploying apps](https://docs.expo.io/introduction/walkthrough/#building-and-deploying)
 
 ## 🗺 Project Layout
 
-- [`expo-cli`](./packages/expo-cli)
-- [`expo-optimize`](./packages/expo-optimize)
-- [`@expo/android-manifest`](./packages/android-manifest)
-- [`@expo/babel-preset-cli`](./packages/babel-preset-cli)
-- [`@expo/config`](./packages/config)
-- [`@expo/dev-tools`](./packages/dev-tools)
-- [`@expo/electron-adapter`](./packages/electron-adapter)
-- [`@expo/expo-codemod`](./packages/expo-codemod)
-- [`@expo/image-utils`](./packages/image-utils)
-- [`@expo/json-file`](./packages/json-file)
-- [`@expo/next-adapter`](./packages/next-adapter)
-- [`@expo/osascript`](./packages/osascript)
-- [`@expo/schemer`](./packages/schemer)
-- [`@expo/traveling-fastlane`](./packages/traveling-fastlane)
-- [`@expo/webpack-config`](./packages/webpack-config)
-- [`@expo/webpack-pwa-manifest-plugin`](./packages/webpack-pwa-manifest-plugin)
-- [`@expo/xdl`](./packages/xdl)
+<!-- Begin auto-generation -->
+
+| Package                                                                   | Version                                                                                                                                                                                                                  |
+| ---                                                                       | ---                                                                                                                                                                                                                      |
+| [**`@expo/babel-preset-cli`**](./packages/babel-preset-cli)               | [![badges](https://img.shields.io/npm/v/@expo/babel-preset-cli.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/babel-preset-cli)               |
+| [**`@expo/config`**](./packages/config)                                   | [![badges](https://img.shields.io/npm/v/@expo/config.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/config)                                   |
+| [**`@expo/configure-splash-screen`**](./packages/configure-splash-screen) | [![badges](https://img.shields.io/npm/v/@expo/configure-splash-screen.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/configure-splash-screen) |
+| [**`@expo/dev-server`**](./packages/dev-server)                           | [![badges](https://img.shields.io/npm/v/@expo/dev-server.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/dev-server)                           |
+| [**`@expo/dev-tools`**](./packages/dev-tools)                             | [![badges](https://img.shields.io/npm/v/@expo/dev-tools.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/dev-tools)                             |
+| [**`@expo/electron-adapter`**](./packages/electron-adapter)               | [![badges](https://img.shields.io/npm/v/@expo/electron-adapter.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/electron-adapter)               |
+| [**`expo-cli`**](./packages/expo-cli)                                     | [![badges](https://img.shields.io/npm/v/expo-cli.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/expo-cli)                                           |
+| [**`expo-codemod`**](./packages/expo-codemod)                             | [![badges](https://img.shields.io/npm/v/expo-codemod.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/expo-codemod)                                   |
+| [**`expo-optimize`**](./packages/expo-optimize)                           | [![badges](https://img.shields.io/npm/v/expo-optimize.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/expo-optimize)                                 |
+| [**`@expo/image-utils`**](./packages/image-utils)                         | [![badges](https://img.shields.io/npm/v/@expo/image-utils.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/image-utils)                         |
+| [**`@expo/json-file`**](./packages/json-file)                             | [![badges](https://img.shields.io/npm/v/@expo/json-file.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/json-file)                             |
+| [**`@expo/metro-config`**](./packages/metro-config)                       | [![badges](https://img.shields.io/npm/v/@expo/metro-config.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/metro-config)                       |
+| [**`@expo/next-adapter`**](./packages/next-adapter)                       | [![badges](https://img.shields.io/npm/v/@expo/next-adapter.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/next-adapter)                       |
+| [**`@expo/osascript`**](./packages/osascript)                             | [![badges](https://img.shields.io/npm/v/@expo/osascript.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/osascript)                             |
+| [**`@expo/package-manager`**](./packages/package-manager)                 | [![badges](https://img.shields.io/npm/v/@expo/package-manager.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/package-manager)                 |
+| [**`@expo/plist`**](./packages/plist)                                     | [![badges](https://img.shields.io/npm/v/@expo/plist.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/plist)                                     |
+| [**`pod-install`**](./packages/pod-install)                               | [![badges](https://img.shields.io/npm/v/pod-install.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/pod-install)                                     |
+| [**`expo-pwa`**](./packages/pwa)                                          | [![badges](https://img.shields.io/npm/v/expo-pwa.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/expo-pwa)                                           |
+| [**`@expo/schemer`**](./packages/schemer)                                 | [![badges](https://img.shields.io/npm/v/@expo/schemer.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/schemer)                                 |
+| [**`uri-scheme`**](./packages/uri-scheme)                                 | [![badges](https://img.shields.io/npm/v/uri-scheme.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/uri-scheme)                                       |
+| [**`@expo/webpack-config`**](./packages/webpack-config)                   | [![badges](https://img.shields.io/npm/v/@expo/webpack-config.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/webpack-config)                   |
+| [**`@expo/xdl`**](./packages/xdl)                                         | [![badges](https://img.shields.io/npm/v/@expo/xdl.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600)](https://www.npmjs.com/package/@expo/xdl)                                         |
+
+<!-- Generated with $ node scripts/build-packages-toc.js -->
 
 ## 🏅 Badges
 
@@ -97,7 +108,7 @@ If you like the Expo CLI and want to help make it better then check out our [con
 
 ## ❓ FAQ
 
-If you have questions about Expo and want answers, then check out our [Frequently Asked Questions](https://docs.expo.io/versions/latest/introduction/faq/)!
+If you have questions about Expo and want answers, then check out our [Frequently Asked Questions](https://docs.expo.io/introduction/faq/)!
 
 If you still have questions you can ask them on our [forums](https://forums.expo.io) or on Twitter [@Expo](https://twitter.com/expo).
 
@@ -108,16 +119,3 @@ Curious about who makes Expo? Here are our [team members](https://expo.io/about)
 ## License
 
 The Expo source code is made available under the [MIT license](LICENSE). Some of the dependencies are licensed differently, with the BSD license, for example.
-
-<!-- Footer -->
-
----
-
-<p>
-    <a aria-label="sponsored by expo" href="http://expo.io">
-        <img src="https://img.shields.io/badge/Sponsored_by-Expo-4630EB.svg?style=for-the-badge&logo=EXPO&labelColor=000&logoColor=fff" target="_blank" />
-    </a>
-    <a aria-label="expo next-adapter is free to use" href="/packages/expo-cli/LICENSE" target="_blank">
-        <img align="right" alt="License: MIT" src="https://img.shields.io/badge/License-MIT-success.svg?style=for-the-badge&color=33CC12" target="_blank" />
-    </a>
-</p>

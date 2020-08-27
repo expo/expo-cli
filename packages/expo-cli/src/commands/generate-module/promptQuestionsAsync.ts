@@ -25,11 +25,7 @@ const generateCocoaPodDefaultName = (moduleName: string) => {
  * @param moduleName - provided module name, expects format: `namepart1-namepart2-namepart3`
  */
 const generateJavaModuleDefaultName = (moduleName: string) => {
-  const wordsToJavaModule = (s: string) =>
-    s
-      .toLowerCase()
-      .split('-')
-      .join('');
+  const wordsToJavaModule = (s: string) => s.toLowerCase().split('-').join('');
 
   if (moduleName.toLowerCase().startsWith('expo')) {
     return `expo.modules.${wordsToJavaModule(moduleName.substring(4))}`;

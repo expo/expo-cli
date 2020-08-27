@@ -1,4 +1,4 @@
-import { ExpoConfig, Platform, readConfigJsonAsync } from '@expo/config';
+import { ExpoConfig, Platform, getConfig } from '@expo/config';
 import { StandaloneBuild } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -10,6 +10,7 @@ import { downloadFile } from './utils';
 export type PlatformOptions = {
   id?: string;
   path?: string;
+  url?: string;
 };
 
 export default class BaseUploader {
@@ -33,23 +34,27 @@ export default class BaseUploader {
     await this._removeBuildFileIfDownloaded(buildPath);
     log(
       `Please also see our docs (${chalk.underline(
-        'https://docs.expo.io/versions/latest/distribution/uploading-apps/'
+        'https://docs.expo.io/distribution/uploading-apps/'
       )}) to learn more about the upload process.`
     );
   }
 
   async _getProjectConfig(): Promise<void> {
-    const { exp } = await readConfigJsonAsync(this.projectDir);
+    const { exp } = getConfig(this.projectDir, {
+      skipSDKVersionRequirement: true,
+    });
     this._ensureExperienceIsValid(exp);
     this._exp = exp;
   }
 
   async _getBinaryFilePath(): Promise<string> {
-    const { path, id } = this.options;
+    const { path, id, url } = this.options;
     if (path) {
       return path;
     } else if (id) {
       return this._downloadBuildById(id);
+    } else if (url) {
+      return this._downloadBuild(url);
     } else {
       return this._downloadLastestBuild();
     }
@@ -59,8 +64,7 @@ export default class BaseUploader {
     const { platform } = this;
     const slug = this._getSlug();
     const owner = this._getOwner();
-    // @ts-ignore: TODO: Fix the limit param
-    const build = await StandaloneBuild.getStandaloneBuilds({ id, slug, platform, owner });
+    const build = await StandaloneBuild.getStandaloneBuildById({ id, slug, platform, owner });
     if (!build) {
       throw new Error(`We couldn't find build with id ${id}`);
     }
@@ -86,18 +90,20 @@ export default class BaseUploader {
 
     const slug = this._getSlug();
     const owner = this._getOwner();
-    const build = await StandaloneBuild.getStandaloneBuilds({
-      slug,
-      owner,
-      platform,
-      limit: 1,
-    });
-    if (!build) {
+    const builds = await StandaloneBuild.getStandaloneBuilds(
+      {
+        slug,
+        owner,
+        platform,
+      },
+      1
+    );
+    if (builds.length === 0) {
       throw new Error(
         `There are no builds on the Expo servers, please run 'expo build:${platform}' first`
       );
     }
-    return this._downloadBuild(build.artifacts.url);
+    return this._downloadBuild(builds[0].artifacts.url);
   }
 
   async _downloadBuild(urlOrPath: string): Promise<string> {

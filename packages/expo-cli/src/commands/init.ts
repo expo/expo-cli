@@ -1,34 +1,31 @@
+import { AndroidConfig, BareAppConfig, ExpoConfig, IOSConfig, getConfig } from '@expo/config';
+import * as PackageManager from '@expo/package-manager';
+import { Exp, IosPlist, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
+import program, { Command } from 'commander';
 import fs from 'fs';
-import { Command } from 'commander';
-import { AppJSONConfig, BareAppConfig } from '@expo/config';
-import { Exp } from '@expo/xdl';
-import isString from 'lodash/isString';
+import getenv from 'getenv';
 import padEnd from 'lodash/padEnd';
-// @ts-ignore enquirer has no exported member 'Snippet'
-import { Snippet } from 'enquirer';
-import semver from 'semver';
-import set from 'lodash/set';
-import spawnAsync from '@expo/spawn-async';
-import npmPackageArg from 'npm-package-arg';
-import pacote from 'pacote';
 import trimStart from 'lodash/trimStart';
+import npmPackageArg from 'npm-package-arg';
+import ora from 'ora';
+import pacote from 'pacote';
+import path from 'path';
+import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
-import path from 'path';
-import prompt from '../prompt';
-import log from '../log';
 import CommandError from '../CommandError';
+import log from '../log';
+import prompt from '../prompt';
+import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 
 type Options = {
   template?: string;
-  npm?: boolean;
-  yarn?: boolean;
-  workflow?: string;
+  install: boolean;
+  npm: boolean;
+  yarn: boolean;
+  yes: boolean;
   name?: string;
-  androidPackage?: string;
-  iosBundleIdentifier?: string;
-  parent?: Command;
 };
 
 const FEATURED_TEMPLATES = [
@@ -44,45 +41,56 @@ const FEATURED_TEMPLATES = [
     description: 'same as blank but with TypeScript configuration',
   },
   {
-    shortName: 'tabs',
+    shortName: 'tabs (TypeScript)',
     name: 'expo-template-tabs',
-    description: 'several example screens and tabs using react-navigation',
+    description: 'several example screens and tabs using react-navigation and TypeScript',
   },
   '----- Bare workflow -----',
   {
     shortName: 'minimal',
     name: 'expo-template-bare-minimum',
     description: 'bare and minimal, just the essentials to get you started',
-    bare: true,
   },
   {
     shortName: 'minimal (TypeScript)',
     name: 'expo-template-bare-typescript',
     description: 'same as minimal but with TypeScript configuration',
-    bare: true,
   },
-  // {
-  //   shortName: 'bare-foundation',
-  //   name: 'expo-template-bare-foundation',
-  //   description: 'all currently available foundation unimodules',
-  // },
 ];
 
 const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum', 'expo-template-bare-typescript'];
+const isMacOS = process.platform === 'darwin';
 
-async function action(projectDir: string, options: Options) {
+async function action(projectDir: string, command: Command) {
+  const options: Options = {
+    yes: !!command.yes,
+    yarn: !!command.yarn,
+    npm: !!command.npm,
+    install: !!command.install,
+    template: command.template,
+    /// XXX(ville): this is necessary because with Commander.js, when the --name
+    // option is not set, `command.name` will point to `Command.prototype.name`.
+    name: typeof command.name === 'string' ? ((command.name as unknown) as string) : undefined,
+  };
+  if (options.yes) {
+    projectDir = '.';
+    if (!options.template) {
+      options.template = 'blank';
+    }
+  }
+
   let parentDir;
   let dirName;
 
   if (projectDir) {
-    let root = path.resolve(projectDir);
+    const root = path.resolve(projectDir);
     parentDir = path.dirname(root);
     dirName = path.basename(root);
-    let validationResult = validateName(parentDir, dirName);
+    const validationResult = validateName(parentDir, dirName);
     if (validationResult !== true) {
       throw new CommandError('INVALID_PROJECT_DIR', validationResult);
     }
-  } else if (options.parent && options.parent.nonInteractive) {
+  } else if (command.parent && command.parent.nonInteractive) {
     throw new CommandError(
       'NON_INTERACTIVE',
       'The project dir argument is required in non-interactive mode.'
@@ -100,8 +108,7 @@ async function action(projectDir: string, options: Options) {
     if (
       (templateSpec.name === 'blank' ||
         templateSpec.name === 'tabs' ||
-        templateSpec.name === 'bare-minimum' ||
-        templateSpec.name === 'bare-foundation') &&
+        templateSpec.name === 'bare-minimum') &&
       templateSpec.registry
     ) {
       templateSpec.escapedName = `expo-template-${templateSpec.name}`;
@@ -109,10 +116,10 @@ async function action(projectDir: string, options: Options) {
       templateSpec.raw = templateSpec.escapedName;
     }
   } else {
-    let descriptionColumn =
+    const descriptionColumn =
       Math.max(...FEATURED_TEMPLATES.map(t => (typeof t === 'object' ? t.shortName.length : 0))) +
       2;
-    let { template } = await prompt(
+    const { template } = await prompt(
       {
         type: 'list',
         name: 'template',
@@ -139,82 +146,332 @@ async function action(projectDir: string, options: Options) {
       },
       {
         nonInteractiveHelp:
-          '--template: argument is required in non-interactive mode. Valid choices are: ' +
-          FEATURED_TEMPLATES.map(template =>
-            typeof template === 'object' && template.shortName ? `'${template.shortName}'` : ''
-          )
-            .filter(text => text)
-            .join(', ') +
-          ' or any custom template (name of npm package).',
+          '--template: argument is required in non-interactive mode. Valid choices are: "blank", "tabs", "bare-minimum" or any custom template (name of npm package).',
       }
     );
     templateSpec = npmPackageArg(template);
   }
 
-  if (options.workflow) {
-    log.warn(
-      `The --workflow flag is deprecated. Workflow is chosen automatically based on the chosen template.`
-    );
-  }
   let initialConfig;
-  let templateManifest = await pacote.manifest(templateSpec);
-  let isBare = BARE_WORKFLOW_TEMPLATES.includes(templateManifest.name);
+  const templateManifest = await pacote.manifest(templateSpec);
+  const isBare = BARE_WORKFLOW_TEMPLATES.includes(templateManifest.name);
   if (isBare) {
     initialConfig = await promptForBareConfig(parentDir, dirName, options);
   } else {
     initialConfig = await promptForManagedConfig(parentDir, dirName, options);
   }
 
-  let packageManager: 'npm' | 'yarn' | undefined;
-  if (options.yarn) {
-    packageManager = 'yarn';
-  } else if (options.npm) {
-    packageManager = 'npm';
-  } else {
-    packageManager = (await shouldUseYarnAsync()) ? 'yarn' : 'npm';
+  let packageManager: 'npm' | 'yarn' = 'npm';
+  if (options.install) {
+    if (options.yarn) {
+      packageManager = 'yarn';
+    } else if (options.npm) {
+      packageManager = 'npm';
+    } else if (PackageManager.shouldUseYarn()) {
+      packageManager = 'yarn';
+      log.newLine();
+      log('🧶 Using Yarn to install packages. You can pass --npm to use npm instead.');
+      log.newLine();
+    } else {
+      packageManager = 'npm';
+      log.newLine();
+      log('📦 Using npm to install packages. You can pass --yarn to use Yarn instead.');
+      log.newLine();
+    }
   }
 
-  let projectPath = await Exp.extractAndInitializeTemplateApp(
-    templateSpec,
-    path.join(
-      parentDir,
-      dirName || ('expo' in initialConfig ? initialConfig.expo.slug : initialConfig.name)
-    ),
-    packageManager,
-    initialConfig
-  );
+  const extractTemplateStep = logNewSection('Downloading and extracting project files.');
+  let projectPath;
+  try {
+    projectPath = await Exp.extractAndPrepareTemplateAppAsync(
+      templateSpec,
+      path.join(
+        parentDir,
+        dirName || ('expo' in initialConfig ? initialConfig.expo.slug : initialConfig.name)
+      ),
+      initialConfig
+    );
+    extractTemplateStep.succeed('Downloaded and extracted project files.');
+  } catch (e) {
+    extractTemplateStep.fail(
+      'Something went wrong in downloading and extracting the project files.'
+    );
+    throw e;
+  }
+
+  if (options.install) {
+    const installJsDepsStep = logNewSection('Installing JavaScript dependencies.');
+    try {
+      await Exp.installDependenciesAsync(projectPath, packageManager, { silent: true });
+      installJsDepsStep.succeed('Installed JavaScript dependencies.');
+    } catch {
+      installJsDepsStep.fail(
+        `Something when wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to initialize the app.`
+      );
+    }
+  }
 
   let cdPath = path.relative(process.cwd(), projectPath);
   if (cdPath.length > projectPath.length) {
     cdPath = projectPath;
   }
-  log.nested(`\nYour project is ready at ${projectPath}`);
-  log.nested('');
   if (isBare) {
-    log.nested(
-      `Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
-    );
-    log.nested('');
-    log.nested(`  cd ${cdPath || '.'}/ios`);
-    log.nested(`  pod install`);
-    log.nested('');
-    log.nested('Then you can run the project:');
-    log.nested('');
-    if (cdPath) {
-      // empty string if project was created in current directory
-      log.nested(`  cd ${cdPath}`);
+    let podsInstalled = false;
+    if (options.install) {
+      try {
+        podsInstalled = await installPodsAsync(projectPath);
+      } catch (_) {}
     }
-    log.nested(`  ${packageManager === 'npm' ? 'npm run android' : 'yarn android'}`);
-    log.nested(`  ${packageManager === 'npm' ? 'npm run ios' : 'yarn ios'}`);
+
+    let didConfigureUpdatesProjectFiles = false;
+    const username = await UserManager.getCurrentUsernameAsync();
+    if (username) {
+      try {
+        await configureUpdatesProjectFilesAsync(
+          projectPath,
+          initialConfig as BareAppConfig,
+          username
+        );
+        didConfigureUpdatesProjectFiles = true;
+      } catch {}
+    }
+
+    log.newLine();
+    const showPublishBeforeBuildWarning = await usesOldExpoUpdatesAsync(projectPath);
+    await logProjectReadyAsync({
+      cdPath,
+      packageManager,
+      workflow: 'bare',
+      showPublishBeforeBuildWarning,
+      didConfigureUpdatesProjectFiles,
+      username,
+    });
+    if (!podsInstalled && isMacOS) {
+      log.newLine();
+      log.nested(
+        `⚠️  Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
+      );
+      log.nested('');
+      log.nested(`  cd ${cdPath ?? '.'}/ios`);
+      log.nested(`  pod install`);
+      log.nested('');
+    }
   } else {
-    log.nested(`To get started, you can type:\n`);
-    if (cdPath) {
-      // empty string if project was created in current directory
-      log.nested(`  cd ${cdPath}`);
-    }
-    log.nested(`  ${packageManager} start`);
+    log.newLine();
+    await logProjectReadyAsync({ cdPath, packageManager, workflow: 'managed' });
   }
+
+  // Log a warning about needing to install node modules
+  if (!options.install) {
+    logNodeInstallWarning(cdPath, packageManager);
+  }
+
+  // Initialize Git at the end to ensure all lock files are committed.
+  // for now, we will just init a git repo if they have git installed and the
+  // project is not inside an existing git tree, and do it silently. we should
+  // at some point check if git is installed and actually bail out if not, because
+  // npm install will fail with a confusing error if so.
+  try {
+    // check if git is installed
+    // check if inside git repo
+    await Exp.initGitRepoAsync(projectPath, { silent: true, commit: true });
+  } catch {
+    // todo: check if git is installed, bail out
+  }
+}
+
+function logNodeInstallWarning(cdPath: string, packageManager: 'yarn' | 'npm'): void {
+  log.newLine();
+  log.nested(`⚠️  Before running your app, make sure you have node modules installed:`);
   log.nested('');
+  log.nested(`  cd ${cdPath ?? '.'}/`);
+  log.nested(`  ${packageManager === 'npm' ? 'npm install' : 'yarn'}`);
+  log.nested('');
+}
+
+function logProjectReadyAsync({
+  cdPath,
+  packageManager,
+  workflow,
+  showPublishBeforeBuildWarning,
+  didConfigureUpdatesProjectFiles,
+  username,
+}: {
+  cdPath: string;
+  packageManager: string;
+  workflow: 'managed' | 'bare';
+  showPublishBeforeBuildWarning?: boolean;
+  didConfigureUpdatesProjectFiles?: boolean;
+  username?: string | null;
+}) {
+  log.nested(chalk.bold(`✅ Your project is ready!`));
+  log.newLine();
+
+  // empty string if project was created in current directory
+  if (cdPath) {
+    log.nested(
+      `To run your project, navigate to the directory and run one of the following ${packageManager} commands.`
+    );
+    log.newLine();
+    log.nested(`- ${chalk.bold('cd ' + cdPath)}`);
+  } else {
+    log.nested(`To run your project, run one of the following ${packageManager} commands.`);
+    log.newLine();
+  }
+
+  if (workflow === 'managed') {
+    log.nested(
+      `- ${chalk.bold(
+        `${packageManager} start`
+      )} # you can open iOS, Android, or web from here, or run them directly with the commands below.`
+    );
+  }
+  log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
+
+  let macOSComment = '';
+  if (!isMacOS && workflow === 'bare') {
+    macOSComment =
+      ' # you need to use macOS to build the iOS project - use managed workflow if you need to do iOS development without a Mac';
+  } else if (!isMacOS && workflow === 'managed') {
+    macOSComment = ' # requires an iOS device or macOS for access to an iOS simulator';
+  }
+  log.nested(
+    `- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}${macOSComment}`
+  );
+
+  log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
+
+  if (workflow === 'bare') {
+    log.newLine();
+    log.nested(
+      `💡 You can also open up the projects in the ${chalk.bold('ios')} and ${chalk.bold(
+        'android'
+      )} directories with their respective IDEs.`
+    );
+
+    if (showPublishBeforeBuildWarning) {
+      log.nested(
+        `🚀 ${terminalLink(
+          'expo-updates',
+          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        )} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
+          'expo publish'
+        )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
+      );
+    } else if (didConfigureUpdatesProjectFiles) {
+      log.nested(
+        `🚀 ${terminalLink(
+          'expo-updates',
+          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        )} has been configured in your project. If you publish this project under a different user account than ${chalk.bold(
+          username
+        )}, you'll need to update the configuration in Expo.plist and AndroidManifest.xml before making a release build.`
+      );
+    } else {
+      log.nested(
+        `🚀 ${terminalLink(
+          'expo-updates',
+          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        )} has been installed in your project. Before you do a release build, you'll need to configure a few values in Expo.plist and AndroidManifest.xml in order for updates to work.`
+      );
+    }
+    // TODO: add equivalent of this or some command to wrap it:
+    // # ios
+    // $ open -a Xcode ./ios/{PROJECT_NAME}.xcworkspace
+    // # android
+    // $ open -a /Applications/Android\\ Studio.app ./android
+  }
+}
+
+async function configureUpdatesProjectFilesAsync(
+  projectRoot: string,
+  initialConfig: BareAppConfig,
+  username: string
+) {
+  const { exp } = await getConfig(projectRoot);
+
+  // apply Android config
+  const androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
+    projectRoot
+  );
+  if (!androidManifestPath) {
+    throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectRoot}"`);
+  }
+  const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
+    androidManifestPath
+  );
+  const result = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifestJSON, username);
+  await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
+
+  // apply iOS config
+  const supportingDirectory = path.join(projectRoot, 'ios', initialConfig.name, 'Supporting');
+  try {
+    await IosPlist.modifyAsync(supportingDirectory, 'Expo', expoPlist => {
+      return IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
+    });
+  } finally {
+    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
+  }
+}
+
+async function installPodsAsync(projectRoot: string) {
+  let step = logNewSection('Installing CocoaPods.');
+  if (!isMacOS) {
+    step.succeed('Skipped installing CocoaPods because operating system is not on macOS.');
+    return false;
+  }
+  const packageManager = new PackageManager.CocoaPodsPackageManager({
+    cwd: path.join(projectRoot, 'ios'),
+    log,
+    silent: getenv.boolish('EXPO_DEBUG', true),
+  });
+
+  if (!(await packageManager.isCLIInstalledAsync())) {
+    try {
+      step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
+      step.render();
+      await PackageManager.CocoaPodsPackageManager.installCLIAsync({
+        nonInteractive: program.nonInteractive,
+        spawnOptions: packageManager.options,
+      });
+      step.succeed('Installed CocoaPods CLI');
+      step = logNewSection('Running `pod install` in the `ios` directory.');
+    } catch (e) {
+      step.stopAndPersist({
+        symbol: '⚠️ ',
+        text: chalk.red(
+          'Unable to install the CocoaPods CLI. Continuing with initializing the project, you can install CocoaPods afterwards.'
+        ),
+      });
+      if (e.message) {
+        log(`- ${e.message}`);
+      }
+      return false;
+    }
+  }
+
+  try {
+    await packageManager.installAsync();
+    step.succeed('Installed pods and initialized Xcode workspace.');
+    return true;
+  } catch (e) {
+    step.stopAndPersist({
+      symbol: '⚠️ ',
+      text: chalk.red(
+        'Something when wrong running `pod install` in the `ios` directory. Continuing with initializing the project, you can debug this afterwards.'
+      ),
+    });
+    if (e.message) {
+      log(`- ${e.message}`);
+    }
+    return false;
+  }
+}
+
+function logNewSection(title: string) {
+  const spinner = ora(chalk.bold(title));
+  spinner.start();
+  return spinner;
 }
 
 function validateName(parentDir: string, name: string | undefined) {
@@ -224,7 +481,7 @@ function validateName(parentDir: string, name: string | undefined) {
   if (!/^[a-z0-9@.\-_]+$/i.test(name)) {
     return 'The project name can only contain URL-friendly characters.';
   }
-  let dir = path.join(parentDir, name);
+  const dir = path.join(parentDir, name);
   if (!isNonExistentOrEmptyDir(dir)) {
     return `The path "${dir}" already exists. Please choose a different parent directory or project name.`;
   }
@@ -248,173 +505,62 @@ function isNonExistentOrEmptyDir(dir: string) {
   }
 }
 
-async function shouldUseYarnAsync() {
-  try {
-    let version = (await spawnAsync('yarnpkg', ['--version'])).stdout.trim();
-    if (!semver.valid(version)) {
-      return false;
-    }
-    let answer = await prompt(
-      {
-        type: 'confirm',
-        name: 'useYarn',
-        message: `Yarn v${version} found. Use Yarn to install dependencies?`,
-      },
-      {
-        nonInteractiveHelp:
-          'Please specify either --npm or --yarn to choose the installation method.',
-      }
-    );
-    return answer.useYarn;
-  } catch (e) {
-    return false;
-  }
-}
-
 async function promptForBareConfig(
   parentDir: string,
   dirName: string | undefined,
   options: Options
 ): Promise<BareAppConfig> {
-  let projectName = undefined;
+  let projectName: string;
   if (dirName) {
-    let validationResult = validateProjectName(dirName);
-    if (validationResult === true) {
-      projectName = dirName;
-    } else {
+    const validationResult = validateProjectName(dirName);
+    if (validationResult !== true) {
       throw new CommandError('INVALID_PROJECT_NAME', validationResult);
     }
+    projectName = dirName;
+  } else {
+    ({ projectName } = await prompt({
+      name: 'projectName',
+      message: 'What would you like to name your app?',
+      default: 'MyApp',
+      filter: (name: string) => name.trim(),
+      validate: (name: string) => validateProjectName(name),
+    }));
   }
 
-  if (options.parent && options.parent.nonInteractive) {
-    if (!projectName) {
-      throw new CommandError(
-        'NON_INTERACTIVE',
-        'The project dir argument is required in non-interactive mode.'
-      );
-    }
-    if (typeof options.name !== 'string' || options.name === '') {
-      throw new CommandError(
-        'NON_INTERACTIVE',
-        '--name: argument is required in non-interactive mode.'
-      );
-    }
-    return {
-      name: projectName,
-      displayName: options.name,
-    };
-  }
-
-  let { values } = await new Snippet({
-    name: 'app',
-    message: 'Please enter names for your project.',
-    required: true,
-    fields: [
-      {
-        name: 'name',
-        message: 'The name of the Android Studio and Xcode projects to be created',
-        initial: projectName,
-        filter: (name: string) => name.trim(),
-        validate: (name: string) => validateProjectName(name),
-        required: true,
-      },
-      {
-        name: 'displayName',
-        message: 'The name of your app visible on the home screen',
-        initial: isString(options.name) ? options.name : undefined,
-        filter: (name: string) => name.trim(),
-        required: true,
-      },
-    ],
-    initial: 'name',
-    template: JSON.stringify(
-      {
-        name: '{{name}}',
-        displayName: '{{displayName}}',
-      },
-      null,
-      2
-    ),
-  }).run();
-  return values;
+  return {
+    name: projectName,
+    expo: {
+      name: options.name || projectName,
+      slug: projectName,
+    },
+  };
 }
 
 async function promptForManagedConfig(
   parentDir: string,
   dirName: string | undefined,
   options: Options
-): Promise<AppJSONConfig> {
-  if (options.parent && options.parent.nonInteractive) {
-    if (!isString(options.name) || options.name === '') {
-      throw new CommandError(
-        'NON_INTERACTIVE',
-        '--name: argument is required in non-interactive mode.'
-      );
-    } else {
-      return {
-        expo: {
-          slug: dirName,
-          name: options.name,
-        },
-      };
-    }
+): Promise<{ expo: Pick<ExpoConfig, 'name' | 'slug'> }> {
+  let slug;
+  if (dirName) {
+    slug = dirName;
+  } else {
+    ({ slug } = await prompt({
+      name: 'slug',
+      message: 'What would you like to name your app?',
+      default: 'my-app',
+      filter: (name: string) => name.trim(),
+      validate: (name: string) => validateName(parentDir, name),
+    }));
   }
-
-  // Skip prompt for invocations like: `expo init demo`
-  const initialName = (isString(options.name) ? options.name : dirName)?.trim();
-  if (dirName && validateName(parentDir, dirName)) {
-    return {
-      expo: {
-        name: initialName!,
-        slug: dirName.trim(),
-      },
-    };
+  const expo = { name: slug, slug };
+  if (options.name) {
+    expo.name = options.name;
   }
-
-  try {
-    let { values } = await new Snippet({
-      name: 'expo',
-      message:
-        'Please enter a few initial configuration values.\n  Read more: https://docs.expo.io/versions/latest/workflow/configuration/',
-      required: true,
-      fields: [
-        {
-          name: 'name',
-          message: 'The name of your app visible on the home screen',
-          initial: initialName,
-          filter: (name: string) => name.trim(),
-          required: true,
-        },
-        {
-          name: 'slug',
-          message: 'A URL friendly name for your app',
-          initial: dirName,
-          filter: (name: string) => name.trim(),
-          validate: (name: string) => validateName(parentDir, name),
-          required: true,
-        },
-      ],
-      initial: 'slug',
-      template: JSON.stringify(
-        {
-          expo: {
-            name: '{{name}}',
-            slug: '{{slug}}',
-          },
-        },
-        null,
-        2
-      ),
-    }).run();
-    return { expo: values };
-  } catch (error) {
-    // Skip `undefined` log when a user quits
-    if (error) throw error;
-  }
-  process.exit(0);
+  return { expo };
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('init [project-dir]')
     .alias('i')
@@ -423,13 +569,12 @@ export default function(program: Command) {
     )
     .option(
       '-t, --template [name]',
-      'Specify which template to use. Valid options are "blank", "tabs", "bare-minimum" or any npm package that includes an Expo project template.'
+      'Specify which template to use. Valid options are "blank", "tabs", "bare-minimum" or a package on npm (e.g. "expo-template-bare-typescript") that includes an Expo project template.'
     )
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
-    .option('--workflow [name]', '(Deprecated) The workflow to use. managed (default) or advanced')
+    .option('--no-install', 'Skip installing npm packages or CocoaPods.')
     .option('--name [name]', 'The name of your app visible on the home screen.')
-    .option('--android-package [name]', 'The package name for your Android app.')
-    .option('--ios-bundle-identifier [name]', 'The bundle identifier for your iOS app.')
+    .option('--yes', 'Use default options. Same as "expo init . --template blank')
     .asyncAction(action);
 }

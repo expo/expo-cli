@@ -1,14 +1,13 @@
-import path from 'path';
-import fs from 'fs';
-
-import _ from 'lodash';
 import Ajv from 'ajv';
+import fs from 'fs';
+import traverse from 'json-schema-traverse';
+import get from 'lodash/get';
+import path from 'path';
 import imageProbe from 'probe-image-size';
 import readChunk from 'read-chunk';
-import traverse from 'json-schema-traverse';
 
-import { fieldPathToSchema, schemaPointerToFieldPath } from './Util';
 import { SchemerError, ValidationError } from './Error';
+import { fieldPathToSchema, schemaPointerToFieldPath } from './Util';
 
 type Options = {
   allErrors?: boolean;
@@ -35,20 +34,18 @@ export { SchemerError, ValidationError, ErrorCodes, ErrorCode } from './Error';
 export default class Schemer {
   options: Options;
   ajv: Ajv.Ajv;
-  schema: Object;
+  schema: object;
   rootDir: string;
-  manualValidationErrors: Array<ValidationError>;
+  manualValidationErrors: ValidationError[];
   // Schema is a JSON Schema object
-  constructor(schema: Object, options: Options = {}) {
-    this.options = _.extend(
-      {
-        allErrors: true,
-        verbose: true,
-        format: 'full',
-        metaValidation: true,
-      },
-      options
-    );
+  constructor(schema: object, options: Options = {}) {
+    this.options = {
+      allErrors: true,
+      verbose: true,
+      format: 'full',
+      metaValidation: true,
+      ...options,
+    };
 
     this.ajv = new Ajv(this.options);
     this.schema = schema;
@@ -87,7 +84,7 @@ export default class Schemer {
         });
       case 'pattern': {
         //@TODO Parse the message in a less hacky way. Perhaps for regex validation errors, embed the error message under the meta tag?
-        const regexHuman = _.get(parentSchema, 'meta.regexHuman');
+        const regexHuman = meta?.regexHuman;
         const regexErrorMessage = regexHuman
           ? `'${dataPath}' should be a ${regexHuman[0].toLowerCase() + regexHuman.slice(1)}`
           : `'${dataPath}' ${message}`;
@@ -116,8 +113,7 @@ export default class Schemer {
     if (this.ajv.errors) {
       valErrors = this.ajv.errors.map(e => this._formatAjvErrorMessage(e));
     }
-    const bothErrors = _.concat(valErrors, this.manualValidationErrors);
-    return bothErrors;
+    return [...valErrors, ...this.manualValidationErrors];
   }
 
   _throwOnErrors() {
@@ -151,13 +147,13 @@ export default class Schemer {
   }
 
   async _validateAssetsAsync(data: any) {
-    let assets: AssetField[] = [];
+    const assets: AssetField[] = [];
     traverse(this.schema, { allKeys: true }, (subSchema, jsonPointer, a, b, c, d, property) => {
       if (property && subSchema.meta && subSchema.meta.asset) {
         const fieldPath = schemaPointerToFieldPath(jsonPointer);
         assets.push({
           fieldPath,
-          data: _.get(data, fieldPath),
+          data: get(data, fieldPath),
           meta: subSchema.meta,
         });
       }

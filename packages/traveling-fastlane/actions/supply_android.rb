@@ -5,7 +5,7 @@ require 'supply'
 require 'funcs'
 require 'json'
 
-$buildPath, $androidPackage, $key, $track = ARGV
+$buildPath, $androidPackage, $key, $track, $archiveType, $releaseStatus = ARGV
 $result = nil
 
 captured_stderr = with_captured_stderr{
@@ -15,10 +15,18 @@ captured_stderr = with_captured_stderr{
       json_key: $key,
       track: $track
     }
-    if File.extname($buildPath) == ".aab"
-        config[:aab] = $buildPath
+
+    if not $archiveType
+      $archiveType = File.extname($buildPath)[1..-1]
+    end
+    if $archiveType == "aab"
+      config[:aab] = $buildPath
     else
-        config[:apk] = $buildPath
+      config[:apk] = $buildPath
+    end
+
+    if $releaseStatus
+      config[:release_status] = $releaseStatus
     end
     Supply.config = FastlaneCore::Configuration.create(Supply::Options.available_options, config)
     Supply::Uploader.new.perform_upload

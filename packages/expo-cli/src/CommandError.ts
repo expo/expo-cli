@@ -12,18 +12,11 @@ export const ErrorCodes = {
   MISSING_PUBLIC_URL: 'MISSING_PUBLIC_URL',
   APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR: 'APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR',
   APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR: 'APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR',
+  MISSING_SLUG: 'MISSING_SLUG',
+  PROJECT_NOT_FOUND: 'PROJECT_NOT_FOUND',
 };
 
-export type ErrorCode =
-  | typeof ErrorCodes.INVALID_PROJECT_DIR
-  | typeof ErrorCodes.INVALID_PROJECT_NAME
-  | typeof ErrorCodes.INVALID_PUBLIC_URL
-  | typeof ErrorCodes.NOT_LOGGED_IN
-  | typeof ErrorCodes.NON_INTERACTIVE
-  | typeof ErrorCodes.BAD_CHOICE
-  | typeof ErrorCodes.MISSING_PUBLIC_URL
-  | typeof ErrorCodes.APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR
-  | typeof ErrorCodes.APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR;
+export type ErrorCode = keyof typeof ErrorCodes;
 
 export default class CommandError extends ExtendableError {
   code: string;

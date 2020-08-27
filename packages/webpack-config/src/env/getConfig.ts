@@ -1,17 +1,19 @@
-import { ExpoConfig, getConfigForPWA } from '@expo/config';
+import { PWAConfig, getConfigForPWA } from 'expo-pwa';
 
 import { Environment } from '../types';
-import { getPaths } from './paths';
 
-function getConfig(env: Pick<Environment, 'config' | 'locations' | 'projectRoot'>): ExpoConfig {
+/**
+ * Get the Expo project config in a way that's optimized for web.
+ *
+ * @param env Environment properties used for getting the Expo project config.
+ * @category env
+ */
+function getConfig(env: Pick<Environment, 'projectRoot' | 'config'>): PWAConfig {
   if (env.config) {
     return env.config;
   }
-  const locations = env.locations || getPaths(env.projectRoot);
   // Fill all config values with PWA defaults
-  return getConfigForPWA(env.projectRoot, locations.absolute, {
-    templateIcon: locations.template.get('icon.png'),
-  });
+  return getConfigForPWA(env.projectRoot);
 }
 
 export default getConfig;

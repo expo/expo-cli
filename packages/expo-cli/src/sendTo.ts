@@ -1,12 +1,11 @@
 import simpleSpinner from '@expo/simple-spinner';
-
 import { Exp, UserSettings } from '@expo/xdl';
 
 import askUser from './askUser';
 import log from './log';
 
-async function getRecipient(sendTo: string) {
-  let recipient;
+async function getRecipient(sendTo?: string | boolean): Promise<string> {
+  let recipient: string | null = '';
   if (sendTo) {
     if (typeof sendTo !== 'boolean') {
       recipient = sendTo;
@@ -15,7 +14,7 @@ async function getRecipient(sendTo: string) {
     }
 
     if (!recipient) {
-      recipient = await askUser.askForSendToAsync();
+      return await askUser.askForSendToAsync();
     }
   }
 

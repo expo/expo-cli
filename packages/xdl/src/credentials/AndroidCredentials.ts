@@ -1,18 +1,12 @@
 import spawnAsync, { SpawnResult } from '@expo/spawn-async';
-import axios from 'axios';
 import chalk from 'chalk';
 import crypto from 'crypto';
 import fs from 'fs-extra';
-import path from 'path';
-import ProgressBar from 'progress';
 import uuidv4 from 'uuid/v4';
 
 import logger from '../Logger';
-import UserSettings from '../UserSettings';
 
 const log = logger.global;
-const NEWLINE = process.platform === 'win32' ? '\r\n' : '\n';
-const javaExecutable = process.platform === 'win32' ? 'java.exe' : 'java';
 
 export type Keystore = {
   keystore: string;
@@ -21,7 +15,7 @@ export type Keystore = {
   keyAlias: string;
 };
 
-type KeystoreInfo = {
+export type KeystoreInfo = {
   keystorePath: string;
   keystorePassword: string;
   keyPassword: string;
@@ -29,7 +23,11 @@ type KeystoreInfo = {
 };
 
 export async function exportCertBinary(
-  { keystorePath, keystorePassword, keyAlias }: KeystoreInfo,
+  {
+    keystorePath,
+    keystorePassword,
+    keyAlias,
+  }: Pick<KeystoreInfo, 'keystorePath' | 'keystorePassword' | 'keyAlias'>,
   certFile: string
 ): Promise<SpawnResult> {
   try {
@@ -58,7 +56,11 @@ export async function exportCertBinary(
 }
 
 export async function exportCertBase64(
-  { keystorePath, keystorePassword, keyAlias }: KeystoreInfo,
+  {
+    keystorePath,
+    keystorePassword,
+    keyAlias,
+  }: Pick<KeystoreInfo, 'keystorePath' | 'keystorePassword' | 'keyAlias'>,
   certFile: string
 ): Promise<SpawnResult> {
   try {
@@ -87,119 +89,15 @@ export async function exportCertBase64(
   }
 }
 
-export async function exportPrivateKey(
-  { keystorePath, keystorePassword, keyAlias, keyPassword }: KeystoreInfo,
-  encryptionKey: string,
-  outputPath: string
-) {
-  let nodePty;
-  const ptyTmpDir = '/tmp/pty-tmp-install';
-  try {
-    // it's not very pretty solution, but we decided to use it because it's affecting only people using
-    // this command and if node-pty is supported on that system instalation process will be invisble for user.
-    nodePty = require('node-pty-prebuilt');
-  } catch (err) {
-    try {
-      log.info('Installing node-pty-prebuilt in a temporary directory');
-      await fs.mkdirp(ptyTmpDir);
-      await spawnAsync('npm', ['init', '--yes'], { cwd: ptyTmpDir });
-      await spawnAsync('npm', ['install', 'node-pty-prebuilt'], {
-        cwd: ptyTmpDir,
-        stdio: ['pipe', 1, 2],
-      });
-      nodePty = require(`${ptyTmpDir}/node_modules/node-pty-prebuilt`);
-    } catch (err) {
-      log.info(`Run ${chalk.cyan('npm -g install node-pty-prebuilt')} to install node pty`);
-      throw new Error('Package node-pty-prebuilt is required to use PEPK tool');
-    }
-  }
-  const ptySpawn = nodePty.spawn;
-  const encryptToolPath = path.join(UserSettings.dotExpoHomeDirectory(), 'android_tools_pepk.jar');
-  if (!fs.existsSync(encryptToolPath)) {
-    log.info(`Downloading PEPK tool from Google Play to ${encryptToolPath}`);
-    const downloadUrl =
-      'https://www.gstatic.com/play-apps-publisher-rapid/signing-tool/prod/pepk.jar';
-    const file = fs.createWriteStream(encryptToolPath);
-    const response = await axios({ url: downloadUrl, method: 'GET', responseType: 'stream' });
-    const bar = new ProgressBar('  downloading pepk tool [:bar] :rate/bps :percent :etas', {
-      complete: '=',
-      incomplete: ' ',
-      width: 40,
-      total: parseInt(response.headers['content-length'], 10),
-    });
-    response.data.pipe(file);
-    response.data.on('data', (chunk: any) => bar.tick(chunk.length));
-    await new Promise((resolve, reject) => {
-      file.on('finish', resolve);
-      file.on('error', reject);
-    });
-  }
-  try {
-    await new Promise((res, rej) => {
-      const child = ptySpawn(
-        javaExecutable,
-        [
-          '-jar',
-          encryptToolPath,
-          '--keystore',
-          keystorePath,
-          '--alias',
-          keyAlias,
-          '--output',
-          outputPath,
-          '--encryptionkey',
-          encryptionKey,
-        ],
-        {
-          name: 'pepk tool',
-          cols: 80,
-          rows: 30,
-          cwd: process.cwd(),
-          env: process.env,
-        }
-      );
-      child.on('error', (err: Error) => {
-        log.error('error', err);
-        rej(err);
-      });
-      child.on('exit', (exitCode: number) => {
-        if (exitCode !== 0) {
-          rej(exitCode);
-        } else {
-          res();
-        }
-      });
-      child.write(keystorePassword + NEWLINE);
-      child.write(keyPassword + NEWLINE);
-    });
-    log.info(`Exported and encrypted private App Signing Key to file ${outputPath}`);
-  } catch (error) {
-    throw new Error(`PEPK tool failed with return code ${error}`);
-  } finally {
-    fs.remove(ptyTmpDir);
-  }
-}
-
 export async function logKeystoreHashes(keystoreInfo: KeystoreInfo, linePrefix: string = '') {
-  const { keystorePath, keystorePassword, keyAlias } = keystoreInfo;
+  const { keystorePath } = keystoreInfo;
   const certFile = `${keystorePath}.cer`;
   try {
     await exportCertBinary(keystoreInfo, certFile);
     const data = await fs.readFile(certFile);
-    const googleHash = crypto
-      .createHash('sha1')
-      .update(data)
-      .digest('hex')
-      .toUpperCase();
-    const googleHash256 = crypto
-      .createHash('sha256')
-      .update(data)
-      .digest('hex')
-      .toUpperCase();
-    const fbHash = crypto
-      .createHash('sha1')
-      .update(data)
-      .digest('base64');
+    const googleHash = crypto.createHash('sha1').update(data).digest('hex').toUpperCase();
+    const googleHash256 = crypto.createHash('sha256').update(data).digest('hex').toUpperCase();
+    const fbHash = crypto.createHash('sha1').update(data).digest('base64');
     log.info(
       `${linePrefix}Google Certificate Fingerprint:     ${googleHash.replace(
         /(.{2}(?!$))/g,
@@ -234,7 +132,11 @@ export async function logKeystoreHashes(keystoreInfo: KeystoreInfo, linePrefix: 
 }
 
 export function logKeystoreCredentials(
-  { keystorePassword, keyAlias, keyPassword }: Keystore,
+  {
+    keystorePassword,
+    keyAlias,
+    keyPassword,
+  }: Pick<Keystore, 'keystorePassword' | 'keyAlias' | 'keyPassword'>,
   title: string = 'Keystore credentials',
   linePrefix: string = ''
 ) {

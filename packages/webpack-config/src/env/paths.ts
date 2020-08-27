@@ -1,21 +1,40 @@
 /* eslint-env node */
-
-import { ExpoConfig, getWebOutputPath, readConfigJson, readConfigJsonAsync } from '@expo/config';
-import fs from 'fs';
-import path from 'path';
-import url from 'url';
-
+import { ExpoConfig, getConfig, getWebOutputPath } from '@expo/config';
 import {
   ensureSlash,
   getAbsolutePathWithProjectRoot,
   getEntryPoint,
-  getModulesPath,
   getPossibleProjectRoot,
 } from '@expo/config/paths';
-import { Environment, FilePaths } from '../types';
+import findWorkspaceRoot from 'find-yarn-workspace-root';
+import fs from 'fs';
+import path from 'path';
+import url from 'url';
+
+import { Environment, FilePaths, InputEnvironment } from '../types';
 import getMode from './getMode';
 
-function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePaths {
+function getModulesPath(projectRoot: string): string {
+  const workspaceRoot = findWorkspaceRoot(path.resolve(projectRoot)); // Absolute path or null
+  if (workspaceRoot) {
+    return path.resolve(workspaceRoot, 'node_modules');
+  }
+
+  return path.resolve(projectRoot, 'node_modules');
+}
+
+function getPlatformExtensions(platform: string): string[] {
+  if (platform === 'ios' || platform === 'android') {
+    return [platform, 'native'];
+  }
+  return [platform];
+}
+
+function parsePaths(
+  projectRoot: string,
+  nativeAppManifest?: ExpoConfig,
+  env: Pick<InputEnvironment, 'platform'> = {}
+): FilePaths {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();
 
   function absolute(...pathComponents: string[]): string {
@@ -27,7 +46,7 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
   const productionPath = absolute(getWebOutputPath(nativeAppManifest));
 
   function templatePath(filename: string = ''): string {
-    const overridePath = absolute('web', filename);
+    const overridePath = absolute(env.platform ?? 'web', filename);
     if (fs.existsSync(overridePath)) {
       return overridePath;
     }
@@ -42,12 +61,23 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
     return path.resolve(modulesPath, ...props);
   }
 
+  let appMain: string | null = null;
+  try {
+    appMain = getEntryPoint(
+      inputProjectRoot,
+      ['./index', './src/index'],
+      getPlatformExtensions(env.platform ?? 'web')
+    );
+  } catch (_) {
+    // ignore the error
+  }
+
   return {
     absolute,
     includeModule: getIncludeModule,
     packageJson: packageJsonPath,
     root: path.resolve(inputProjectRoot),
-    appMain: getEntryPoint(inputProjectRoot, ['./index', './src/index'], ['web']),
+    appMain,
     modules: modulesPath,
     servedPath: getServedPath(inputProjectRoot),
     template: {
@@ -73,21 +103,50 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
   };
 }
 
-export function getPaths(projectRoot: string): FilePaths {
-  const { exp } = readConfigJson(projectRoot, true, true);
-  return parsePaths(projectRoot, exp);
+/**
+ * Sync method for getting default paths used throughout the Webpack config.
+ * This is useful for Next.js which doesn't support async Webpack configs.
+ *
+ * @param projectRoot
+ * @category env
+ */
+export function getPaths(
+  projectRoot: string,
+  env: Pick<InputEnvironment, 'platform'> = {}
+): FilePaths {
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
+  return parsePaths(projectRoot, exp, env);
 }
 
-export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
+/**
+ * Async method for getting default paths used throughout the Webpack config.
+ *
+ * @param projectRoot
+ * @category env
+ */
+export async function getPathsAsync(
+  projectRoot: string,
+  env: Pick<InputEnvironment, 'platform'> = {}
+): Promise<FilePaths> {
   let exp;
   try {
-    exp = (await readConfigJsonAsync(projectRoot, true, true)).exp;
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
   } catch (error) {}
-  return parsePaths(projectRoot, exp);
+  return parsePaths(projectRoot, exp, env);
 }
 
+/**
+ * Get paths dictating where the app is served regardless of the current Webpack mode.
+ *
+ * @param projectRoot
+ * @category env
+ */
 export function getServedPath(projectRoot: string): string {
-  const { pkg } = readConfigJson(projectRoot, true, true);
+  const { pkg } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
   const envPublicUrl = process.env.WEB_PUBLIC_URL;
 
   // We use `WEB_PUBLIC_URL` environment variable or "homepage" field to infer
@@ -101,10 +160,15 @@ export function getServedPath(projectRoot: string): string {
   return ensureSlash(servedUrl!, true);
 }
 
-export function getPublicPaths({
-  projectRoot,
-  ...env
-}: Pick<Environment, 'mode' | 'projectRoot'>): {
+/**
+ * Get paths dictating where the app is served. In development mode this returns default values.
+ *
+ * @param env
+ * @category env
+ */
+export function getPublicPaths(
+  env: Pick<Environment, 'mode' | 'projectRoot'>
+): {
   /**
    * Webpack uses `publicPath` to determine where the app is being served from.
    * It requires a trailing slash, or the file assets will get an incorrect path.
@@ -119,8 +183,9 @@ export function getPublicPaths({
    */
   publicUrl: string;
 } {
-  if (getMode(env) === 'production') {
-    const publicPath = getServedPath(projectRoot);
+  const parsedMode = getMode(env);
+  if (parsedMode === 'production') {
+    const publicPath = getServedPath(env.projectRoot);
     return {
       publicPath,
       publicUrl: publicPath.slice(0, -1),
@@ -130,13 +195,24 @@ export function getPublicPaths({
   return { publicUrl: '', publicPath: '/' };
 }
 
+/**
+ * Get the output folder path. Defaults to `web-build`.
+ *
+ * @param projectRoot
+ * @category env
+ */
 export function getProductionPath(projectRoot: string): string {
-  const { exp } = readConfigJson(projectRoot, true, true);
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
   return getAbsolutePathWithProjectRoot(projectRoot, getWebOutputPath(exp));
 }
 
 /**
- * get absolute path relative to project root while accounting for `https://` paths
+ * Get an absolute path relative to the project root while accounting for remote paths (`https://`).
+ *
+ * @param projectRoot
+ * @category env
  */
 export function getAbsolute(projectRoot: string, ...pathComponents: string[]): string {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();

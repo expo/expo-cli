@@ -1,18 +1,15 @@
-import React from 'react';
-import gql from 'graphql-tag';
-import { ApolloProvider, Query } from 'react-apollo';
-import { SubscriptionClient } from 'subscriptions-transport-ws';
-import pTimeout from 'p-timeout';
-
-import * as State from 'app/common/state';
 import createApolloClient from 'app/common/createApolloClient';
+import * as State from 'app/common/state';
 import { initStore } from 'app/common/store';
-
-import withRedux from 'app/higher-order/withRedux';
-
-import Root from 'app/components/Root';
 import IndexPageErrors from 'app/components/IndexPageErrors';
 import ProjectManager from 'app/components/ProjectManager';
+import Root from 'app/components/Root';
+import withRedux from 'app/higher-order/withRedux';
+import gql from 'graphql-tag';
+import pTimeout from 'p-timeout';
+import React from 'react';
+import { ApolloProvider, Query } from 'react-apollo';
+import { SubscriptionClient } from 'subscriptions-transport-ws';
 
 const MessageFragment = gql`
   fragment MessageFragment on Message {
@@ -181,6 +178,7 @@ class IndexPageContents extends React.Component {
   _handleChangeSectionCount = count => State.sectionCount({ count }, this.props);
   _handleUpdateState = options => State.update(options, this.props);
   _handleSimulatorClickIOS = () => State.openSimulator('IOS', this.props);
+  _handleStartWebClick = () => State.openBrowser(this.props);
   _handleSimulatorClickAndroid = () => State.openSimulator('ANDROID', this.props);
   _handleHostTypeClick = hostType => State.setHostType({ hostType }, this.props);
   _handlePublishProject = options => State.publishProject(options, this.props);
@@ -425,6 +423,7 @@ class IndexPageContents extends React.Component {
           onToggleProductionMode={this._handleToggleProductionMode}
           onHostTypeClick={this._handleHostTypeClick}
           onSimulatorClickIOS={this._handleSimulatorClickIOS}
+          onStartWebClick={this._handleStartWebClick}
           onSimulatorClickAndroid={this._handleSimulatorClickAndroid}
           onSectionDrag={this._handleSectionDrag}
           onSectionDismiss={this._handleSectionDismiss}
@@ -467,7 +466,7 @@ export default class IndexPage extends React.Component {
   }
 
   componentDidMount() {
-    this.connect().catch(error => this.setState({ disconnected: true }));
+    this.connect().catch(_ => this.setState({ disconnected: true }));
   }
 
   async connect() {

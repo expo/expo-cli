@@ -1,0 +1,9 @@
+{
+  "name": "app-name",
+  "expo": {
+    "name": "app-expo-name",
+    "expo": {
+      "name": "app-expo-expo-name"
+    }
+  }
+}

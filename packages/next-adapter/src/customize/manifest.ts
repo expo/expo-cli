@@ -1,4 +1,4 @@
-import { projectHasModule, readConfigJsonAsync } from '@expo/config';
+import { getPackageJson, projectHasModule } from '@expo/config';
 import { createForProject } from '@expo/package-manager';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -65,10 +65,10 @@ const packageRoot = path.join(__dirname, '../../');
 function getDependencies(
   projectRoot: string
 ): { dependencies: string[]; devDependencies: string[] } {
-  const dependencies = ['react-native-web', '@expo/next-adapter', 'next'].filter(
+  const dependencies = ['react-native-web', 'next'].filter(
     dependency => !projectHasModule(dependency, projectRoot, {})
   );
-  const devDependencies = ['babel-preset-expo'].filter(
+  const devDependencies = ['@expo/next-adapter', 'babel-preset-expo'].filter(
     dependency => !projectHasModule(dependency, projectRoot, {})
   );
 
@@ -298,7 +298,6 @@ export const manifest: CustomizeOption[] = [
         '/.expo/*',
         '# Expo Web',
         '/web-build/*',
-        '/web-report/*',
         '# Expo Native',
         '*.jks',
         '*.p8',
@@ -327,10 +326,9 @@ export const manifest: CustomizeOption[] = [
 async function readPackageJsonAsync(
   projectRoot: string
 ): Promise<{ scripts: { build?: string }; [key: string]: any }> {
-  const { pkg } = await readConfigJsonAsync(projectRoot, true, true);
+  const pkg = getPackageJson(projectRoot) as any;
 
-  return {
-    scripts: {},
-    ...pkg,
-  };
+  if (!pkg.scripts) pkg.scripts = {};
+
+  return pkg;
 }

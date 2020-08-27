@@ -1,4 +1,3 @@
-import get from 'lodash/get';
 import forge from 'node-forge';
 
 export function getP12CertFingerprint(
@@ -8,21 +7,27 @@ export function getP12CertFingerprint(
   const certData = _getCertData(p12Buffer, passwordRaw);
   const certAsn1 = forge.pki.certificateToAsn1(certData);
   const certDer = forge.asn1.toDer(certAsn1).getBytes();
-  return forge.md.sha1
-    .create()
-    .update(certDer)
-    .digest()
-    .toHex()
-    .toUpperCase();
+  return forge.md.sha1.create().update(certDer).digest().toHex().toUpperCase();
 }
 
 export function findP12CertSerialNumber(
   p12Buffer: Buffer | string,
   passwordRaw: string | null
 ): string | null {
+  const { serialNumber } = getCertData(p12Buffer, passwordRaw);
+  return serialNumber;
+}
+
+function _processSerialNumber(maybeSerialNumber: string | null | undefined) {
+  return maybeSerialNumber ? maybeSerialNumber.replace(/^0+/, '').toUpperCase() : null;
+}
+
+export function getCertData(p12Buffer: Buffer | string, passwordRaw: string | null) {
   const certData = _getCertData(p12Buffer, passwordRaw);
-  const { serialNumber } = certData;
-  return serialNumber ? certData.serialNumber.replace(/^0+/, '').toUpperCase() : null;
+  return {
+    ...certData,
+    serialNumber: _processSerialNumber(certData.serialNumber),
+  };
 }
 
 function _getCertData(p12Buffer: Buffer | string, passwordRaw: string | null) {
@@ -37,7 +42,7 @@ function _getCertData(p12Buffer: Buffer | string, passwordRaw: string | null) {
   const p12Asn1 = forge.asn1.fromDer(p12Der);
   const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
   const certBagType = forge.pki.oids.certBag;
-  const certData = get(p12.getBags({ bagType: certBagType }), [certBagType, 0, 'cert']);
+  const certData = p12.getBags({ bagType: certBagType })?.[certBagType]?.[0]?.cert;
   if (!certData) {
     throw new Error("_getCertData: couldn't find cert bag");
   }

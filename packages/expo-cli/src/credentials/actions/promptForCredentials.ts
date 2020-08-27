@@ -1,13 +1,11 @@
+import fs from 'fs-extra';
+import once from 'lodash/once';
 import path from 'path';
 import untildify from 'untildify';
-import fs from 'fs-extra';
-import get from 'lodash/get';
-import once from 'lodash/once';
 
-import prompt, { Question as PromptQuestion } from '../../prompt';
 import log from '../../log';
+import prompts, { Question as PromptQuestion } from '../../prompts';
 import * as validators from '../../validators';
-import { GoBackError } from '../route';
 
 export type Question = {
   question: string;
@@ -24,12 +22,17 @@ export type CredentialSchema<T> = {
   canReuse?: boolean;
   dependsOn?: string;
   name: string;
-  required: Array<string>;
-  questions?: {
+  required: string[];
+  questions: {
     [key: string]: Question;
   };
   deprecated?: boolean;
   migrationDocs?: string;
+  provideMethodQuestion?: {
+    question?: string;
+    expoGenerated?: string;
+    userProvided?: string;
+  };
 };
 
 const EXPERT_PROMPT = once(() =>
@@ -46,43 +49,45 @@ upload matches that Team ID and App ID.
 export async function askForUserProvided<T extends Results>(
   schema: CredentialSchema<T>
 ): Promise<T | null> {
-  if (await willUserProvideCredentialsType(schema.name)) {
+  if (await willUserProvideCredentialsType(schema)) {
     EXPERT_PROMPT();
     return await getCredentialsFromUser(schema);
   }
   return null;
 }
 
-async function getCredentialsFromUser<T extends Results>(
+export async function getCredentialsFromUser<T extends Results>(
   credentialType: CredentialSchema<T>
 ): Promise<T | null> {
   const results: Results = {};
   for (const field of credentialType.required) {
-    results[field] = await askQuestionAndProcessAnswer(get(credentialType, `questions.${field}`));
+    results[field] = await askQuestionAndProcessAnswer(credentialType?.questions?.[field]);
   }
   return results as T;
 }
 
-async function willUserProvideCredentialsType(name: string) {
-  const { answer } = await prompt({
-    type: 'list',
+async function willUserProvideCredentialsType<T>(schema: CredentialSchema<T>) {
+  const { answer } = await prompts({
+    type: 'select',
     name: 'answer',
-    message: `Will you provide your own ${name}?`,
+    message: schema?.provideMethodQuestion?.question ?? `Will you provide your own ${schema.name}?`,
     choices: [
-      { name: 'Let Expo handle the process', value: false },
-      { name: 'I want to upload my own file', value: true },
-      { name: 'Go back', value: 'GO BACK' },
+      {
+        title: schema?.provideMethodQuestion?.expoGenerated ?? 'Let Expo handle the process',
+        value: false,
+      },
+      {
+        title: schema?.provideMethodQuestion?.userProvided ?? 'I want to upload my own file',
+        value: true,
+      },
     ],
   });
-  if (answer === 'GO BACK') {
-    throw new GoBackError();
-  }
   return answer;
 }
 
 async function askQuestionAndProcessAnswer(definition: Question): Promise<string> {
   const questionObject = buildQuestionObject(definition);
-  const { input } = await prompt(questionObject);
+  const { input } = await prompts(questionObject);
   return await processAnswer(definition, input);
 }
 
@@ -90,24 +95,24 @@ function buildQuestionObject({ type, question }: Question): PromptQuestion {
   switch (type) {
     case 'string':
       return {
-        type: 'input',
+        type: 'text',
         name: 'input',
         message: question,
       };
     case 'file':
       return {
-        type: 'input',
+        type: 'text',
         name: 'input',
         message: question,
-        filter: produceAbsolutePath,
-        validate: validators.existingFile,
+        format: produceAbsolutePath,
+        validate: validators.promptsExistingFile,
       } as PromptQuestion;
     case 'password':
       return {
         type: 'password',
         name: 'input',
         message: question,
-        validate: validators.nonEmptyInput,
+        validate: validators.promptsNonEmptyInput,
       };
   }
 }

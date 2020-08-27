@@ -1,14 +1,13 @@
-const path = require('path');
+const packageJson = require('@expo/xdl/package.json');
+const axios = require('axios');
+const fse = require('fs-extra');
 const gulp = require('gulp');
 const babel = require('gulp-babel');
 const changed = require('gulp-changed');
-const fs = require('fs');
 const plumber = require('gulp-plumber');
-const request = require('request');
 const sourcemaps = require('gulp-sourcemaps');
+const path = require('path');
 const rimraf = require('rimraf');
-
-const packageJson = require('../package.json');
 
 const paths = {
   source: {
@@ -19,10 +18,14 @@ const paths = {
   caches: 'caches',
 };
 
+const tsconfig = require('../tsconfig.json');
+const excluded = tsconfig.exclude.map(exclude => '!' + exclude);
+const sourcePaths = Object.values(paths.source).concat(excluded);
+
 const tasks = {
   babel() {
     return gulp
-      .src([paths.source.js, paths.source.ts])
+      .src(sourcePaths)
       .pipe(changed(paths.build))
       .pipe(plumber())
       .pipe(
@@ -40,7 +43,7 @@ const tasks = {
   },
 
   watchBabel(done) {
-    gulp.watch([paths.source.js, paths.source.ts], tasks.babel);
+    gulp.watch(sourcePaths, tasks.babel);
     done();
   },
 
@@ -49,33 +52,21 @@ const tasks = {
   },
 
   caches(done) {
-    request('https://exp.host/--/versions', (error, result, body) => {
-      if (error) {
-        throw error;
-      }
+    axios
+      .get('https://exp.host/--/versions')
+      .then(async ({ data }) => {
+        fse.writeJsonSync(path.join(paths.caches, 'versions.json'), data);
 
-      // we don't need to do anything here, just let it throw if invalid json
-      const response = JSON.parse(body);
+        for (const version of Object.keys(data.sdkVersions)) {
+          const {
+            data: { data: schema },
+          } = await axios.get(`https://exp.host/--/api/v2/project/configuration/schema/${version}`);
 
-      fs.writeFileSync(path.join(paths.caches, 'versions.json'), body, {
-        encoding: 'utf8',
-      });
-
-      for (let version of Object.keys(response.sdkVersions)) {
-        request(`https://exp.host/--/xdl-schema/${version}`, (error, result, body) => {
-          if (error) {
-            throw error;
-          }
-
-          JSON.parse(body);
-          fs.writeFileSync(path.join(paths.caches, `schema-${version}.json`), body, {
-            encoding: 'utf8',
-          });
-        });
-      }
-
-      done();
-    });
+          fse.writeJsonSync(path.join(paths.caches, `schema-${version}.json`), schema);
+        }
+      })
+      .catch(error => done(error))
+      .then(() => done());
   },
 };
 

@@ -1,13 +1,14 @@
 {
   "name": "@expo/image-utils",
-  "version": "0.2.12",
+  "version": "0.3.2",
   "description": "A package used by Expo CLI for processing images",
   "main": "build/index.js",
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
+    "test": "jest",
     "prepare": "yarn run clean && yarn build",
-    "clean": "rm -rf build ./tsconfig.tsbuildinfo"
+    "clean": "rimraf build ./tsconfig.tsbuildinfo"
   },
   "repository": {
     "type": "git",
@@ -25,19 +26,25 @@
   "files": [
     "build"
   ],
-  "jest": {
-    "testEnvironment": "node"
-  },
   "dependencies": {
     "@expo/spawn-async": "1.5.0",
-    "semver": "6.1.1"
-  },
-  "peerDependencies": {
-    "sharp-cli": "^1.10.0"
+    "chalk": "^4.0.0",
+    "fs-extra": "9.0.0",
+    "getenv": "0.7.0",
+    "jimp": "^0.9.6",
+    "mime": "^2.4.4",
+    "node-fetch": "^2.6.0",
+    "parse-png": "^2.1.0",
+    "resolve-from": "^5.0.0",
+    "semver": "6.1.1",
+    "tempy": "0.3.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "^0.2.5",
-    "@types/semver": "^6.0.0"
+    "@expo/babel-preset-cli": "0.2.17",
+    "@types/fs-extra": "^9.0.1",
+    "@types/getenv": "^0.7.0",
+    "@types/semver": "^6.0.0",
+    "rimraf": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"

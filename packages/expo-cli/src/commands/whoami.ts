@@ -1,21 +1,24 @@
-import { Command } from 'commander';
-import chalk from 'chalk';
 import { UserManager } from '@expo/xdl';
+import chalk from 'chalk';
+import { Command } from 'commander';
 
 import log from '../log';
-import CommandError from '../CommandError';
 
-async function action() {
+async function action(command: Command) {
   const user = await UserManager.getCurrentUserAsync({ silent: true });
   if (user) {
-    log(`Logged in as ${chalk.green(user.username)}`);
-    log.raw(user.username);
+    if (command.parent?.nonInteractive) {
+      log.nested(user.username);
+    } else {
+      log(`Logged in as ${chalk.cyan(user.username)}`);
+    }
   } else {
-    throw new CommandError('NOT_LOGGED_IN', 'Not logged in');
+    log(`\u203A Not logged in, run ${chalk.cyan`expo login`} to authenticate`);
+    process.exit(1);
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('whoami')
     .alias('w')

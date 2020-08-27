@@ -1,10 +1,19 @@
+import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from '@expo/xdl';
+import { Command } from 'commander';
 import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
 
-import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from '@expo/xdl';
-import { Command } from 'commander';
-
 import CommandError from './CommandError';
+
+export type URLOptions = {
+  android?: boolean;
+  ios?: boolean;
+  web?: boolean;
+  host?: 'lan' | 'tunnel' | 'localhost';
+  tunnel?: boolean;
+  lan?: boolean;
+  localhost?: boolean;
+};
 
 function addOptions(program: Command) {
   program
@@ -36,6 +45,7 @@ async function optsAsync(projectDir: string, options: any) {
   opts.hostType = 'lan';
 
   if (options.offline) {
+    // TODO: maybe let people know that we will force localhost with offline?
     ConnectionStatus.setIsOffline(true);
     opts.hostType = 'localhost';
   }
@@ -59,26 +69,35 @@ function printQRCode(url: string) {
   qrcodeTerminal.generate(url, code => console.log(`${indentString(code, 2)}\n`));
 }
 
-async function handleMobileOptsAsync(projectDir: string, options: any) {
-  if (options.android) {
-    if (options.webOnly) {
-      await Android.openWebProjectAsync(projectDir);
-    } else {
-      await Android.openProjectAsync(projectDir);
-    }
-  }
-
-  if (options.ios) {
-    if (options.webOnly) {
-      await Simulator.openWebProjectAsync(projectDir);
-    } else {
-      await Simulator.openProjectAsync(projectDir);
-    }
-  }
-
-  if (options.web) {
-    await Webpack.openAsync(projectDir);
-  }
+async function handleMobileOptsAsync(
+  projectDir: string,
+  options: Pick<URLOptions, 'ios' | 'android' | 'web'> & { webOnly?: boolean }
+) {
+  await Promise.all([
+    (async () => {
+      if (options.android) {
+        if (options.webOnly) {
+          await Android.openWebProjectAsync(projectDir);
+        } else {
+          await Android.openProjectAsync(projectDir);
+        }
+      }
+    })(),
+    (async () => {
+      if (options.ios) {
+        if (options.webOnly) {
+          await Simulator.openWebProjectAsync(projectDir);
+        } else {
+          await Simulator.openProjectAsync(projectDir);
+        }
+      }
+    })(),
+    (async () => {
+      if (options.web) {
+        await Webpack.openAsync(projectDir);
+      }
+    })(),
+  ]);
 
   return !!options.android || !!options.ios;
 }

@@ -1,12 +1,17 @@
 import { loadPartialConfig } from '@babel/core';
+import { projectHasModule } from '@expo/config';
 import { getPossibleProjectRoot } from '@expo/config/paths';
 import chalk from 'chalk';
 import fs from 'fs-extra';
+import { boolish } from 'getenv';
 import path from 'path';
 import { Rule } from 'webpack';
 
-import { Environment, Mode } from '../types';
 import { getConfig, getMode, getPaths } from '../env';
+import { Environment, Mode } from '../types';
+
+// Source maps are resource heavy and can cause out of memory issue for large source files.
+const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
 
 const getModule = (name: string) => path.join('node_modules', name);
 
@@ -18,14 +23,16 @@ const includeModulesThatContainPaths = [
   getModule('unimodules'),
   getModule('@react'),
   getModule('@expo'),
+  getModule('@use-expo'),
   getModule('@unimodules'),
   getModule('native-base'),
+  getModule('styled-components'),
 ];
 
 const excludedRootPaths = [
-  'node_modules',
-  'bower_components',
-  '.expo',
+  '/node_modules',
+  '/bower_components',
+  '/.expo/',
   // Prevent transpiling webpack generated files.
   '(webpack)',
 ];
@@ -73,41 +80,52 @@ function generateCacheIdentifier(projectRoot: string, version: string = '1'): st
   return `${cacheKey}${JSON.stringify(partial!.options)}`;
 }
 
+/**
+ * Creates a Rule for loading Application code and packages from the Expo ecosystem.
+ * This method attempts to recreate how Metro loads ES modules in the `node_modules` folder.
+ *
+ * @param env
+ * @internal
+ */
 export function createBabelLoaderFromEnvironment(
-  env: Pick<Environment, 'locations' | 'projectRoot' | 'config' | 'mode' | 'platform'>
+  env: Pick<Environment, 'babel' | 'locations' | 'projectRoot' | 'config' | 'mode' | 'platform'>
 ): Rule {
-  const locations = env.locations || getPaths(env.projectRoot);
-  const appConfig = env.config || getConfig(env);
   const mode = getMode(env);
+  const locations = env.locations || getPaths(env.projectRoot, env);
+  const appConfig = env.config || getConfig(env);
 
   const { build = {} } = appConfig.web;
   const { babel = {} } = build;
 
   return createBabelLoader({
+    projectRoot: locations.root,
     mode,
     platform: env.platform,
     babelProjectRoot: babel.root || locations.root,
     verbose: babel.verbose,
-    include: babel.include,
+    include: [...(babel.include || []), ...(env.babel?.dangerouslyAddModulePathsToTranspile || [])],
     use: babel.use,
   });
 }
 /**
  * A complex babel loader which uses the project's `babel.config.js`
  * to resolve all of the Unimodules which are shipped as ES modules (early 2019).
+ * @category loaders
  */
 export default function createBabelLoader({
   /**
    * The webpack mode: `"production" | "development"`
    */
   mode,
+  projectRoot: inputProjectRoot,
   babelProjectRoot,
   include = [],
   verbose,
-  platform,
+  platform = 'web',
   useCustom,
   ...options
 }: {
+  projectRoot?: string;
   useCustom?: boolean;
   mode?: Mode;
   babelProjectRoot?: string;
@@ -122,25 +140,74 @@ export default function createBabelLoader({
 
   const isProduction = mode === 'production';
 
-  const projectRoot = getPossibleProjectRoot();
+  const projectRoot = inputProjectRoot || getPossibleProjectRoot();
   let presetOptions: any = {
     // Explicitly use babel.config.js instead of .babelrc
     babelrc: false,
     // Attempt to use local babel.config.js file for compiling project.
     configFile: true,
   };
+
   if (
     !fs.existsSync(path.join(projectRoot, 'babel.config.js')) &&
     !fs.existsSync(path.join(projectRoot, '.babelrc'))
   ) {
-    presetOptions = {
-      babelrc: false,
-      configFile: false,
-      presets: [require.resolve('babel-preset-expo')],
-    };
+    // If no babel config exists then fallback on the default `babel-preset-expo`
+    // which is installed with `expo`.
+    const modulePath = projectHasModule('babel-preset-expo', projectRoot, {});
+    if (modulePath) {
+      presetOptions = {
+        babelrc: false,
+        configFile: false,
+        presets: [modulePath],
+      };
+    } else {
+      console.log(chalk.yellow('\u203A Webpack failed to locate a valid Babel config'));
+    }
   }
 
-  const cacheIdentifier = generateCacheIdentifier(ensuredProjectRoot);
+  presetOptions = {
+    ...presetOptions,
+    ...(customUseOptions || {}),
+
+    sourceType: 'unambiguous',
+    root: ensuredProjectRoot,
+    compact: isProduction,
+    // Babel sourcemaps are needed for debugging into node_modules
+    // code.  Without the options below, debuggers like VSCode
+    // show incorrect code and set breakpoints on the wrong lines.
+    sourceMaps: shouldUseSourceMap,
+    inputSourceMap: shouldUseSourceMap,
+  };
+
+  let cacheIdentifier: string | undefined = customUseOptions.cacheIdentifier;
+  if (!cacheIdentifier) {
+    try {
+      cacheIdentifier = generateCacheIdentifier(ensuredProjectRoot);
+    } catch (error) {
+      console.log(chalk.black.bgRed(`The project's Babel config is invalid: ${error.message}`));
+
+      throw error;
+    }
+  }
+  presetOptions.cacheIdentifier = cacheIdentifier;
+  presetOptions.cacheCompression = false;
+  presetOptions.cacheDirectory =
+    customUseOptions.cacheDirectory ||
+    path.join(
+      ensuredProjectRoot,
+      '.expo',
+      platform,
+      'cache',
+      mode || 'development',
+      'babel-loader'
+    );
+  presetOptions.caller = {
+    __dangerous_rule_id: 'expo-babel-loader',
+    bundler: 'webpack',
+    platform,
+    mode,
+  };
   return {
     test: /\.(mjs|[jt]sx?)$/,
     // Can only clobber test
@@ -170,32 +237,7 @@ export default function createBabelLoader({
     use: {
       ...customUse,
       loader: require.resolve('babel-loader'),
-      options: {
-        ...presetOptions,
-
-        cacheCompression: !isProduction,
-        cacheDirectory: path.join(
-          ensuredProjectRoot,
-          '.expo',
-          'web',
-          'cache',
-          mode || 'development',
-          'babel-loader'
-        ),
-        cacheIdentifier,
-
-        // Only clobber hard coded values.
-        ...(customUseOptions || {}),
-
-        caller: {
-          bundler: 'webpack',
-          platform,
-          mode,
-        },
-        sourceType: 'unambiguous',
-        root: ensuredProjectRoot,
-        compact: isProduction,
-      },
+      options: presetOptions,
     },
   };
 }

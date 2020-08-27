@@ -1,6 +1,12 @@
 import { AnyConfiguration } from '../types';
-import { aliases } from '../env';
 
+/**
+ * Apply aliases to a Webpack config
+ *
+ * @param webpackConfig Existing Webpack config to modify.
+ * @param alias Extra aliases to inject
+ * @category addons
+ */
 export default function withAlias(
   webpackConfig: AnyConfiguration,
   alias: { [key: string]: string } = {}
@@ -8,7 +14,6 @@ export default function withAlias(
   // Mix in aliases
   if (!webpackConfig.resolve) webpackConfig.resolve = {};
   webpackConfig.resolve.alias = {
-    ...aliases,
     ...(webpackConfig.resolve.alias || {}),
     ...alias,
   };

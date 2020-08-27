@@ -1,0 +1,49 @@
+{
+  "name": "expo-pwa",
+  "version": "0.0.32",
+  "main": "build",
+  "preferGlobal": true,
+  "keywords": [
+    "expo",
+    "pwa",
+    "react-native",
+    "react-native-web"
+  ],
+  "description": "Create PWA resources for Expo projects",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/pwa"
+  },
+  "author": "Expo <support@expo.io>",
+  "license": "MIT",
+  "bin": {
+    "expo-pwa": "./build/cli.js"
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "prepare": "yarn run clean && yarn run build",
+    "test": "jest",
+    "lint": "eslint .",
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@expo/babel-preset-cli": "0.2.17",
+    "@types/fs-extra": "^9.0.1",
+    "@types/node": "^12.6.8",
+    "rimraf": "^3.0.2"
+  },
+  "dependencies": {
+    "@expo/config": "3.2.20",
+    "@expo/image-utils": "0.3.2",
+    "@expo/json-file": "8.2.22",
+    "chalk": "^4.0.0",
+    "commander": "2.20.0",
+    "fs-extra": "9.0.0",
+    "update-check": "1.5.3"
+  }
+}

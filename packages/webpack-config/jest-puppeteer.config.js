@@ -18,9 +18,9 @@ const config = {
     url: 'https://localhost:5000',
     launch,
     server: {
-      command: `../expo-cli/bin/expo.js start tests/basic/ --web-only --non-interactive --https`,
+      command: `../expo-cli/bin/expo.js start e2e/basic/ --web-only --non-interactive --https`,
       port: 5000,
-      launchTimeout: 30000,
+      launchTimeout: 60000,
       debug: true,
     },
   },
@@ -29,57 +29,13 @@ const config = {
     launch,
     server: {
       command: process.env.EXPO_E2E_SKIP_BUILD
-        ? `serve tests/basic/web-build`
-        : `node jest/build-project.js tests/basic/ && serve tests/basic/web-build`,
+        ? `serve e2e/basic/web-build`
+        : `node jest/build-project.js e2e/basic/ && serve e2e/basic/web-build`,
       // The default serve-cli port
       port: 5000,
-      launchTimeout: 30000,
+      launchTimeout: 60000,
       debug: true,
     },
-  },
-  startNextJsFromExpoCLI: {
-    url: 'http://localhost:8000',
-    launch,
-    server: {
-      command: `../expo-cli/bin/expo.js start tests/nextjs/ --web-only --dev --non-interactive --no-https`,
-      port: 8000,
-      launchTimeout: 30000,
-      debug: true,
-    },
-    hasServerSideRendering: true,
-  },
-  buildNextJsFromExpoCLI: {
-    url: 'http://localhost:8000',
-    launch,
-    server: {
-      command: `../expo-cli/bin/expo.js start tests/nextjs/ --web-only --no-dev --non-interactive --no-https`,
-      port: 8000,
-      launchTimeout: 30000,
-      debug: true,
-    },
-    hasServerSideRendering: true,
-  },
-  startNextJsFromNextCLI: {
-    url: 'http://localhost:8000',
-    launch,
-    server: {
-      command: `cd tests/nextjs && yarn next dev -p 8000`,
-      port: 8000,
-      launchTimeout: 30000,
-      debug: true,
-    },
-    hasServerSideRendering: true,
-  },
-  buildNextJsFromNextCLI: {
-    url: 'http://localhost:8000',
-    launch,
-    server: {
-      command: `cd tests/nextjs && yarn next build && yarn next start -p 8000`,
-      port: 8000,
-      launchTimeout: 30000,
-      debug: true,
-    },
-    hasServerSideRendering: true,
   },
 }[process.env.EXPO_E2E_COMMAND];
 

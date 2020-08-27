@@ -1,12 +1,13 @@
 /* eslint-env node */
 
 import path from 'path';
-import { getPaths, getPathsAsync, getPublicPaths, getServedPath } from '../paths';
-import { normalizePaths } from '../../utils';
 
-const projectRoot = path.resolve(__dirname, '../../../tests/basic');
-const projectRootCustomHomepage = path.resolve(__dirname, '../../../tests/custom-homepage');
-const projectRootMinimum = path.resolve(__dirname, '../../../tests/minimum');
+import { normalizePaths } from '../../utils';
+import { getPaths, getPathsAsync, getPublicPaths, getServedPath } from '../paths';
+
+const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
+const projectRootCustomHomepage = path.resolve(__dirname, '../../../e2e/custom-homepage');
+const projectRootMinimum = path.resolve(__dirname, '../../../e2e/minimum');
 
 function defaultNormalize(locations) {
   return normalizePaths(locations, value => value.split('packages/webpack-config/').pop());
@@ -35,7 +36,7 @@ it(`has consistent defaults`, async () => {
 });
 
 it(`matches sync and async results`, async () => {
-  const locations = getPaths(projectRoot);
+  const locations = getPaths(projectRoot, { platform: 'web' });
   const normalized = defaultNormalize(locations);
 
   const locationsAsync = await getPathsAsync(projectRoot);

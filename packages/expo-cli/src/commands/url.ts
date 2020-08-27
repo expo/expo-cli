@@ -1,12 +1,11 @@
-import { Command } from 'commander';
-import chalk from 'chalk';
-import fp from 'lodash/fp';
 import { Project, UrlUtils } from '@expo/xdl';
+import chalk from 'chalk';
+import { Command } from 'commander';
 
 import CommandError from '../CommandError';
 import log from '../log';
-import urlOpts from '../urlOpts';
 import printRunInstructionsAsync from '../printRunInstructionsAsync';
+import urlOpts, { URLOptions } from '../urlOpts';
 
 type ProjectUrlOptions = Command & {
   web?: boolean;
@@ -24,25 +23,13 @@ const logArtifactUrl = (platform: 'ios' | 'android') => async (
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
   }
 
-  let res;
-  if (process.env.EXPO_NEXT_API) {
-    res = await Project.getBuildStatusAsync(projectDir, {
-      current: false,
-      ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
-    });
-  } else {
-    res = await Project.buildAsync(projectDir, {
-      current: false,
-      mode: 'status',
-      ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
-    });
-  }
-  const url = fp.compose(
-    fp.get(['artifacts', 'url']),
-    fp.head,
-    fp.filter((job: any) => platform && job.platform === platform),
-    fp.getOr([], 'jobs')
-  )(res as any);
+  const result = await Project.getBuildStatusAsync(projectDir, {
+    current: false,
+    ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
+  });
+
+  const url = result.jobs?.filter((job: Project.BuildJobFields) => job.platform === platform)[0]
+    ?.artifacts?.url;
   if (url) {
     log.nested(url);
   } else {
@@ -63,7 +50,7 @@ async function getWebAppUrlAsync(projectDir: string): Promise<string> {
   return webAppUrl;
 }
 
-async function action(projectDir: string, options: ProjectUrlOptions) {
+async function action(projectDir: string, options: ProjectUrlOptions & URLOptions) {
   await urlOpts.optsAsync(projectDir, options);
 
   if ((await Project.currentStatus(projectDir)) !== 'running') {
@@ -80,7 +67,6 @@ async function action(projectDir: string, options: ProjectUrlOptions) {
   urlOpts.printQRCode(url);
 
   log('Your URL is\n\n' + chalk.underline(url) + '\n');
-  log.raw(url);
 
   if (!options.web) {
     await printRunInstructionsAsync();
@@ -88,7 +74,7 @@ async function action(projectDir: string, options: ProjectUrlOptions) {
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('url [project-dir]')
     .alias('u')
@@ -96,13 +82,13 @@ export default function(program: Command) {
     .description('Displays the URL you can use to view your project in Expo')
     .urlOpts()
     .allowOffline()
-    .asyncActionProjectDir(action, /* skipProjectValidation: */ true, /* skipAuthCheck: */ true);
+    .asyncActionProjectDir(action);
 
   program
     .command('url:ipa [project-dir]')
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .description('Displays the standalone iOS binary URL you can use to download your app binary')
-    .asyncActionProjectDir(logArtifactUrl('ios'), true);
+    .asyncActionProjectDir(logArtifactUrl('ios'));
 
   program
     .command('url:apk [project-dir]')
@@ -110,5 +96,5 @@ export default function(program: Command) {
     .description(
       'Displays the standalone Android binary URL you can use to download your app binary'
     )
-    .asyncActionProjectDir(logArtifactUrl('android'), true);
+    .asyncActionProjectDir(logArtifactUrl('android'));
 }

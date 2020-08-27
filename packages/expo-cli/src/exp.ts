@@ -1,18 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import url from 'url';
-
-import ProgressBar from 'progress';
-import last from 'lodash/last';
-import compact from 'lodash/compact';
-import findLastIndex from 'lodash/findLastIndex';
-import boxen from 'boxen';
 import bunyan from '@expo/bunyan';
-import chalk from 'chalk';
-import ora from 'ora';
+import * as ConfigUtils from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
-import getenv from 'getenv';
-import program, { Command, Option } from 'commander';
 import {
   Analytics,
   Api,
@@ -29,26 +17,39 @@ import {
   ProjectUtils,
   UserManager,
 } from '@expo/xdl';
-import * as ConfigUtils from '@expo/config';
+import boxen from 'boxen';
+import chalk from 'chalk';
+import program, { Command, Option } from 'commander';
+import fs from 'fs';
+import leven from 'leven';
+import findLastIndex from 'lodash/findLastIndex';
+import ora from 'ora';
+import path from 'path';
+import ProgressBar from 'progress';
+import url from 'url';
 
-import { loginOrRegisterIfLoggedOut } from './accounts';
+import { loginOrRegisterAsync } from './accounts';
+import { registerCommands } from './commands';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
-import packageJSON from '../package.json';
-import { registerCommands } from './commands';
+
+// We use require() to exclude package.json from TypeScript's analysis since it lives outside the
+// src directory and would change the directory structure of the emitted files under the build
+// directory
+const packageJSON = require('../package.json');
 
 Api.setClientName(packageJSON.version);
 ApiV2.setClientName(packageJSON.version);
 
 // The following prototyped functions are not used here, but within in each file found in `./commands`
 // Extending commander to easily add more options to certain command line arguments
-Command.prototype.urlOpts = function() {
+Command.prototype.urlOpts = function () {
   urlOpts.addOptions(this);
   return this;
 };
 
-Command.prototype.allowOffline = function() {
+Command.prototype.allowOffline = function () {
   this.option('--offline', 'Allows this command to run while offline');
   return this;
 };
@@ -61,7 +62,7 @@ export type Action = (...args: any[]) => void;
 
 // asyncAction is a wrapper for all commands/actions to be executed after commander is done
 // parsing the command input
-Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boolean) {
+Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: boolean) {
   return this.action(async (...args: any[]) => {
     if (!skipUpdateCheck) {
       try {
@@ -70,10 +71,7 @@ Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boole
     }
 
     try {
-      let options = last(args);
-      if (options.output === 'raw') {
-        log.config.raw = true;
-      }
+      const options = args[args.length - 1];
       if (options.offline) {
         Config.offline = true;
       }
@@ -92,12 +90,7 @@ Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boole
         log.error(err.message);
       } else {
         log.error(err.message);
-        // TODO: Is there a better way to do this? EXPO_DEBUG needs to be set to view the stack trace
-        if (getenv.boolish('EXPO_DEBUG', false)) {
-          log.error(chalk.gray(err.stack));
-        } else {
-          log.error(chalk.grey('Set EXPO_DEBUG=true in your env to view the stack trace.'));
-        }
+        log.error(chalk.gray(err.stack));
       }
 
       process.exit(1);
@@ -115,12 +108,11 @@ Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boole
 // - Attaches the bundling logger
 // - Checks if the project directory is valid or not
 // - Runs AsyncAction with the projectDir as an argument
-Command.prototype.asyncActionProjectDir = function(
+Command.prototype.asyncActionProjectDir = function (
   asyncFn: Action,
-  skipProjectValidation: boolean,
-  skipAuthCheck: boolean
+  options: { checkConfig?: boolean; skipSDKVersionRequirement?: boolean } = {}
 ) {
-  this.option('--config [file]', 'Specify a path to app.json');
+  this.option('--config [file]', 'Specify a path to app.json or app.config.js');
   return this.asyncAction(async (projectDir: string, ...args: any[]) => {
     const opts = args[0];
 
@@ -133,14 +125,14 @@ Command.prototype.asyncActionProjectDir = function(
     if (opts.config) {
       const pathToConfig = path.resolve(process.cwd(), opts.config);
       if (!fs.existsSync(pathToConfig)) {
-        throw new Error(`File at provide config path does not exist: ${pathToConfig}`);
+        throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
       }
       ConfigUtils.setCustomConfigPath(projectDir, pathToConfig);
     }
 
     const logLines = (msg: any, logFn: (...args: any[]) => void) => {
       if (typeof msg === 'string') {
-        for (let line of msg.split('\n')) {
+        for (const line of msg.split('\n')) {
           logFn(line);
         }
       } else {
@@ -160,7 +152,7 @@ Command.prototype.asyncActionProjectDir = function(
         return logFn(chunk.msg);
       }
 
-      let { message, stack } = traceInfo;
+      const { message, stack } = traceInfo;
       log.addNewLineIfNone();
       logFn(chalk.bold(message));
 
@@ -168,8 +160,8 @@ Command.prototype.asyncActionProjectDir = function(
         return line.startsWith('node_modules');
       };
 
-      const stackFrames: string[] = compact(stack.split('\n'));
-      let lastAppCodeFrameIndex = findLastIndex(stackFrames, (line: string) => {
+      const stackFrames: string[] = stack.split('\n').filter((line: string) => line);
+      const lastAppCodeFrameIndex = findLastIndex(stackFrames, (line: string) => {
         return !isLibraryFrame(line);
       });
       let lastFrameIndexToLog = Math.min(
@@ -185,7 +177,7 @@ Command.prototype.asyncActionProjectDir = function(
       }
 
       for (let i = 0; i <= lastFrameIndexToLog; i++) {
-        let line = stackFrames[i];
+        const line = stackFrames[i];
         if (!line) {
           continue;
         } else if (line.match(/react-native\/.*YellowBox.js/)) {
@@ -247,7 +239,7 @@ Command.prototype.asyncActionProjectDir = function(
       },
       onProgressBuildBundle: (percent: number) => {
         if (!bar || bar.complete) return;
-        let ticks = percent - bar.curr;
+        const ticks = percent - bar.curr;
         ticks > 0 && bar.tick(ticks);
       },
       onFinishBuildBundle: (err, startTime, endTime) => {
@@ -257,6 +249,7 @@ Command.prototype.asyncActionProjectDir = function(
 
         if (bar) {
           log.setBundleProgressBar(null);
+          bar.terminate();
           bar = null;
 
           if (err) {
@@ -264,15 +257,16 @@ Command.prototype.asyncActionProjectDir = function(
           } else {
             log(
               chalk.green(
-                `Finished building JavaScript bundle in ${endTime.getTime() -
-                  startTime.getTime()}ms.`
+                `Finished building JavaScript bundle in ${
+                  endTime.getTime() - startTime.getTime()
+                }ms.`
               )
             );
           }
         }
       },
       updateLogs: (updater: LogUpdater) => {
-        let newLogChunks = updater([]);
+        const newLogChunks = updater([]);
         newLogChunks.forEach((newLogChunk: LogRecord) => {
           if (newLogChunk.issueId && newLogChunk.issueCleared) {
             return;
@@ -301,12 +295,14 @@ Command.prototype.asyncActionProjectDir = function(
     // If the packager/manifest server is running and healthy, there is no need
     // to rerun Doctor because the directory was already checked previously
     // This is relevant for command such as `send`
-    if (!skipProjectValidation && (await Project.currentStatus(projectDir)) !== 'running') {
-      let spinner = ora('Making sure project is set up correctly...').start();
+    if (options.checkConfig && (await Project.currentStatus(projectDir)) !== 'running') {
+      const spinner = ora('Making sure project is set up correctly...').start();
       log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
 
-      let status = await Doctor.validateWithoutNetworkAsync(projectDir);
+      const status = await Doctor.validateWithoutNetworkAsync(projectDir, {
+        skipSDKVersionRequirement: options.skipSDKVersionRequirement,
+      });
       if (status === Doctor.FATAL) {
         throw new Error(`There is an error with your project. See above logs for information.`);
       }
@@ -328,15 +324,15 @@ function runAsync(programName: string) {
     Analytics.setVersionName(packageJSON.version);
     _registerLogs();
 
-    UserManager.setInteractiveAuthenticationCallback(loginOrRegisterIfLoggedOut);
+    UserManager.setInteractiveAuthenticationCallback(loginOrRegisterAsync);
 
     if (process.env.SERVER_URL) {
       let serverUrl = process.env.SERVER_URL;
       if (!serverUrl.startsWith('http')) {
         serverUrl = `http://${serverUrl}`;
       }
-      let parsedUrl = url.parse(serverUrl);
-      const port = parseInt(parsedUrl.port || '');
+      const parsedUrl = url.parse(serverUrl);
+      const port = parseInt(parsedUrl.port || '', 10);
       if (parsedUrl.hostname && port) {
         Config.api.host = parsedUrl.hostname;
         Config.api.port = port;
@@ -351,7 +347,6 @@ function runAsync(programName: string) {
     program.name(programName);
     program
       .version(packageJSON.version)
-      .option('-o, --output [format]', 'Output format. pretty (default), raw')
       .option(
         '--non-interactive',
         'Fail, if an interactive prompt would be required to continue. Enabled by default if stdin is not a TTY.'
@@ -366,9 +361,16 @@ function runAsync(programName: string) {
     });
 
     program.on('command:*', subCommand => {
-      log.warn(
-        `"${subCommand}" is not an ${programName} command. See "${programName} --help" for the full list of commands.`
+      let msg = `"${subCommand}" is not an expo command. See "expo --help" for the full list of commands.`;
+      const availableCommands = program.commands.map((cmd: Command) => cmd._name);
+      // finding the best match whose edit distance is less than 40% of their length.
+      const suggestion = availableCommands.find(
+        (commandName: string) => leven(commandName, subCommand[0]) < commandName.length * 0.4
       );
+      if (suggestion) {
+        msg = `"${subCommand}" is not an expo command -- did you mean ${suggestion}?\n See "expo --help" for the full list of commands.`;
+      }
+      log.warn(msg);
     });
 
     if (typeof program.nonInteractive === 'undefined') {
@@ -389,13 +391,14 @@ function runAsync(programName: string) {
 }
 
 async function checkCliVersionAsync() {
-  let { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
+  const { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
   if (updateIsAvailable) {
     log.nestedWarn(
       boxen(
         chalk.green(`There is a new version of ${packageJSON.name} available (${latest}).
 You are currently using ${packageJSON.name} ${current}
-Install expo-cli globally using the package manager of your choice; for example: \`npm install -g ${packageJSON.name}\` to get the latest version`),
+Install expo-cli globally using the package manager of your choice;
+for example: \`npm install -g ${packageJSON.name}\` to get the latest version`),
         { borderColor: 'green', padding: 1 }
       )
     );
@@ -405,7 +408,7 @@ Install expo-cli globally using the package manager of your choice; for example:
     log.nestedWarn(
       boxen(
         chalk.red(
-          `This version of expo-cli is not supported anymore. 
+          `This version of expo-cli is not supported anymore.
 It's highly recommended to update to the newest version.
 
 The API endpoints used in this version of expo-cli might not exist,
@@ -418,7 +421,7 @@ any interaction with Expo servers may result in unexpected behaviour.`
 }
 
 function _registerLogs() {
-  let stream = {
+  const stream = {
     stream: {
       write: (chunk: any) => {
         if (chunk.code) {
@@ -451,7 +454,7 @@ function _registerLogs() {
 }
 
 async function writePathAsync() {
-  let subCommand = process.argv[2];
+  const subCommand = process.argv[2];
   if (subCommand === 'prepare-detached-build') {
     // This is being run from Android Studio or Xcode. Don't want to write PATH in this case.
     return;
@@ -544,9 +547,9 @@ function formatCommandsAsMarkdown(commands: CommandData[]) {
 
 // This is the entry point of the CLI
 export function run(programName: string) {
-  (async function() {
-    if (process.argv[2] == 'introspect') {
-      let commands = generateCommandJSON();
+  (async function () {
+    if (process.argv[2] === 'introspect') {
+      const commands = generateCommandJSON();
       if (process.argv[3] && process.argv[3].includes('markdown')) {
         log(formatCommandsAsMarkdown(commands));
       } else {
