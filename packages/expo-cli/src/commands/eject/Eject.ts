@@ -38,8 +38,6 @@ export type EjectAsyncOptions = {
   packageManager?: 'npm' | 'yarn';
 };
 
-const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
-
 /**
  * Entry point into the eject process, delegates to other helpers to perform various steps.
  *
@@ -290,11 +288,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   exp.ios = exp.ios ?? {};
   exp.ios.bundleIdentifier = bundleIdentifier;
 
-  // TODO: remove entryPoint and log about it for sdk 37 changes
-  if (exp.entryPoint && exp.entryPoint !== EXPO_APP_ENTRY) {
-    log(`- expo.entryPoint is already configured, we recommend using "${EXPO_APP_ENTRY}`);
-  } else {
-    exp.entryPoint = EXPO_APP_ENTRY;
+  if (exp.entryPoint) {
+    delete exp.entryPoint;
+    log(`- expo.entryPoint is not needed and has been removed.`);
   }
 
   const updatingAppConfigStep = logNewSection('Updating app configuration (app.json)');
@@ -308,7 +304,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   let defaultDependencies: any = {};
   let defaultDevDependencies: any = {};
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
-  // there is some additioanl context for steps
+  // there is some additional context for steps
   // log.newLine();
   const creatingNativeProjectStep = logNewSection(
     'Creating native project directories (./ios and ./android) and updating .gitignore'
@@ -380,7 +376,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    * start` rather than `expo start` after ejecting, for example.
    */
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
-  // there is some additioanl context for steps
+  // there is some additional context for steps
   // log.newLine();
   const updatingPackageJsonStep = logNewSection(
     'Updating your package.json scripts, dependencies, and main file'

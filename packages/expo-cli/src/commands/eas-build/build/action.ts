@@ -1,5 +1,6 @@
 import { getConfig } from '@expo/config';
 import { ApiV2, User, UserManager } from '@expo/xdl';
+import { build } from '@hapi/joi';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
@@ -142,8 +143,8 @@ async function startBuildAsync(
 ): Promise<string> {
   const tarPath = path.join(os.tmpdir(), `${uuidv4()}.tar.gz`);
   try {
+    await builder.setupAsync();
     await builder.ensureCredentialsAsync();
-
     if (!builder.ctx.skipProjectConfiguration) {
       await builder.configureProjectAsync();
     }

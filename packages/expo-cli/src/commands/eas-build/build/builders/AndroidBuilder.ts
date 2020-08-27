@@ -41,6 +41,8 @@ class AndroidBuilder implements Builder {
     this.buildProfile = ctx.eas.builds.android;
   }
 
+  public async setupAsync(): Promise<void> {}
+
   public async ensureCredentialsAsync(): Promise<void> {
     this.credentialsPrepared = true;
     if (!this.shouldLoadCredentials()) {
