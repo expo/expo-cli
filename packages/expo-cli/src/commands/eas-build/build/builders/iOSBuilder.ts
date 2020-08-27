@@ -2,6 +2,7 @@ import { BuildType, Job, Platform, iOS, sanitizeJob } from '@expo/build-tools';
 import { IOSConfig } from '@expo/config';
 import chalk from 'chalk';
 import figures from 'figures';
+import sortBy from 'lodash/sortBy';
 import ora from 'ora';
 
 import iOSCredentialsProvider, {
@@ -15,6 +16,7 @@ import {
   iOSManagedBuildProfile,
 } from '../../../../easJson';
 import log from '../../../../log';
+import prompts from '../../../../prompts';
 import { ensureCredentialsAsync } from '../credentials';
 import { Builder, BuilderContext } from '../types';
 import * as gitUtils from '../utils/git';
@@ -35,6 +37,7 @@ interface CommonJobProperties {
 class iOSBuilder implements Builder {
   private credentials?: iOSCredentials;
   private buildProfile: iOSBuildProfile;
+  private scheme?: string;
 
   constructor(public readonly ctx: BuilderContext) {
     if (!ctx.eas.builds.ios) {
@@ -73,15 +76,26 @@ class iOSBuilder implements Builder {
     this.credentials = await provider.getCredentialsAsync(credentialsSource);
   }
 
+  public async setupAsync(): Promise<void> {
+    if (this.buildProfile.workflow === Workflow.Generic) {
+      this.scheme = this.buildProfile.scheme ?? (await this.resolveScheme());
+    }
+  }
+
   public async configureProjectAsync(): Promise<void> {
+    if (this.buildProfile.workflow !== Workflow.Generic) {
+      return;
+    }
+
     // TODO: add simulator flow
     // assuming we're building for app store
     if (!this.credentials) {
       throw new Error('Call ensureCredentialsAsync first!');
     }
+
     const bundleIdentifier = await getBundleIdentifier(this.ctx.projectDir, this.ctx.exp);
 
-    const spinner = ora('Making sure your iOS project is set up properly');
+    const spinner = ora('Configuring the Xcode project');
 
     const profileName = ProvisioningProfileUtils.readProfileName(
       this.credentials.provisioningProfile
@@ -100,7 +114,7 @@ class iOSBuilder implements Builder {
       spinner.succeed();
     } catch (err) {
       if (err instanceof gitUtils.DirtyGitTreeError) {
-        spinner.succeed('We configured your iOS project to build it on the Expo servers');
+        spinner.succeed('We configured the Xcode project to build it on the Expo servers');
         log.newLine();
 
         try {
@@ -148,6 +162,7 @@ class iOSBuilder implements Builder {
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
       type: BuildType.Generic,
+      scheme: this.scheme,
       artifactPath: buildProfile.artifactPath,
     };
   }
@@ -170,6 +185,46 @@ class iOSBuilder implements Builder {
         this.buildProfile.buildType !== 'simulator') ||
       this.buildProfile.workflow === Workflow.Generic
     );
+  }
+
+  private async resolveScheme(): Promise<string> {
+    const schemes = IOSConfig.Scheme.getSchemesFromXcodeproj(this.ctx.projectDir);
+    if (schemes.length === 1) {
+      return schemes[0];
+    }
+
+    const sortedSchemes = sortBy(schemes);
+    log.newLine();
+    log(
+      `We've found multiple schemes in your Xcode project: ${log.chalk.bold(
+        sortedSchemes.join(', ')
+      )}`
+    );
+    log(
+      `You can specify the scheme you want to build at ${log.chalk.bold(
+        'builds.ios.PROFILE_NAME.scheme'
+      )} in eas.json.`
+    );
+    if (this.ctx.nonInteractive) {
+      const withoutTvOS = sortedSchemes.filter(i => !i.includes('tvOS'));
+      const scheme = withoutTvOS.length > 0 ? withoutTvOS[0] : sortedSchemes[0];
+      log(
+        `You've run Expo CLI in non-interactive mode, choosing the ${log.chalk.bold(
+          scheme
+        )} scheme.`
+      );
+      log.newLine();
+      return scheme;
+    } else {
+      const { selectedScheme } = await prompts({
+        type: 'select',
+        name: 'selectedScheme',
+        message: 'Which scheme would you like to build now?',
+        choices: sortedSchemes.map(scheme => ({ title: scheme, value: scheme })),
+      });
+      log.newLine();
+      return selectedScheme as string;
+    }
   }
 }
 

@@ -1,6 +1,5 @@
-import { Parser } from 'xml2js';
-
 import { ExpoConfig } from '../Config.types';
+import { addWarningAndroid } from '../WarningAggregator';
 import { Document } from './Manifest';
 
 export type IntentFilterProps = {
@@ -11,9 +10,8 @@ export type IntentFilterProps = {
 
 export function getScheme(config: { scheme?: string | string[] }): string[] {
   if (Array.isArray(config.scheme)) {
-    function validate(value: any): value is string {
-      return typeof value === 'string';
-    }
+    const validate = (value: any): value is string => typeof value === 'string';
+
     return config.scheme.filter<string>(validate);
   } else if (typeof config.scheme === 'string') {
     return [config.scheme];
@@ -34,26 +32,23 @@ export async function setScheme(
     return manifestDocument;
   }
 
-  const mainActivity = manifestDocument.manifest.application[0].activity.filter(
-    (e: any) => e['$']['android:name'] === '.MainActivity'
-  );
-
-  const intentFiltersXML = `
-  <intent-filter>
-    <action android:name="android.intent.action.VIEW"/>
-    <category android:name="android.intent.category.DEFAULT"/>
-    <category android:name="android.intent.category.BROWSABLE"/>
-    ${scheme.map(scheme => `<data android:scheme="${scheme}"/>`).join('\n')}
-  </intent-filter>`;
-  const parser = new Parser();
-  const intentFiltersJSON = await parser.parseStringPromise(intentFiltersXML);
-
-  if ('intent-filter' in mainActivity[0]) {
-    mainActivity[0]['intent-filter'] = mainActivity[0]['intent-filter'].concat(
-      intentFiltersJSON['intent-filter']
+  if (!ensureManifestHasValidIntentFilter(manifestDocument)) {
+    addWarningAndroid(
+      'scheme',
+      `Cannot add schemes because the provided manifest does not have a valid Activity with \`android:launchMode="singleTask"\`.\nThis guide can help you get setup properly https://expo.fyi/setup-android-uri-scheme`
     );
-  } else {
-    mainActivity[0]['intent-filter'] = intentFiltersJSON['intent-filter'];
+    return manifestDocument;
+  }
+
+  // Get the current schemes and remove them.
+  const currentSchemes = getSchemesFromManifest(manifestDocument);
+  for (const uri of currentSchemes) {
+    manifestDocument = removeScheme(uri, manifestDocument);
+  }
+
+  // Now add all the new schemes.
+  for (const uri of scheme) {
+    manifestDocument = appendScheme(uri, manifestDocument);
   }
 
   return manifestDocument;

@@ -25,6 +25,9 @@ jest.mock('@expo/config', () => {
       ProvisioningProfile: {
         setProvisioningProfileForPbxproj: jest.fn(),
       },
+      Scheme: {
+        getSchemesFromXcodeproj: jest.fn(),
+      },
     },
   };
 });
@@ -110,6 +113,7 @@ const easJson = {
     ios: {
       release: {
         workflow: 'generic',
+        scheme: 'testapp',
         credentialsSource: 'local',
       },
     },
@@ -222,6 +226,7 @@ describe('build command', () => {
         type: 'generic',
         projectUrl: mockProjectUrl,
         artifactPath: 'ios/build/App.ipa',
+        scheme: 'testapp',
         secrets: {
           distributionCertificate: {
             dataBase64: cert.base64,
@@ -282,6 +287,7 @@ describe('build command', () => {
                 type: 'generic',
                 projectUrl: mockProjectUrl,
                 artifactPath: 'ios/build/App.ipa',
+                scheme: 'testapp',
                 secrets: {
                   distributionCertificate: {
                     dataBase64: cert.base64,

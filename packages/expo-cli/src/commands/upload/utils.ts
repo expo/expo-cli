@@ -1,27 +1,16 @@
 import { ExponentTools } from '@expo/xdl';
 import fs from 'fs-extra';
 import got from 'got';
-import ProgressBar from 'progress';
 import stream from 'stream';
 import { promisify } from 'util';
+
+import { createProgressTracker } from '../utils/progress';
 
 const { spawnAsyncThrowError } = ExponentTools;
 const pipeline = promisify(stream.pipeline);
 
 export async function downloadFile(url: string, dest: string): Promise<string> {
-  let bar: ProgressBar | null;
-  let transferredSoFar = 0;
-  const downloadStream = got.stream(url).on('downloadProgress', progress => {
-    if (!bar) {
-      bar = new ProgressBar('Downloading [:bar] :percent :etas', {
-        complete: '=',
-        incomplete: ' ',
-        total: progress.total,
-      });
-    }
-    bar.tick(progress.transferred - transferredSoFar);
-    transferredSoFar = progress.transferred;
-  });
+  const downloadStream = got.stream(url).on('downloadProgress', createProgressTracker());
   await pipeline(downloadStream, fs.createWriteStream(dest));
   return dest;
 }

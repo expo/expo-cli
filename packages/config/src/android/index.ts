@@ -1,3 +1,4 @@
+import * as AllowBackup from './AllowBackup';
 import * as Branch from './Branch';
 import * as Colors from './Colors';
 import * as Facebook from './Facebook';
@@ -22,6 +23,7 @@ import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as Version from './Version';
 
 export {
+  AllowBackup,
   Manifest,
   Branch,
   Colors,

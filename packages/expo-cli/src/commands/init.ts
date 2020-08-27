@@ -21,6 +21,7 @@ import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 
 type Options = {
   template?: string;
+  install: boolean;
   npm: boolean;
   yarn: boolean;
   yes: boolean;
@@ -65,6 +66,7 @@ async function action(projectDir: string, command: Command) {
     yes: !!command.yes,
     yarn: !!command.yarn,
     npm: !!command.npm,
+    install: !!command.install,
     template: command.template,
     /// XXX(ville): this is necessary because with Commander.js, when the --name
     // option is not set, `command.name` will point to `Command.prototype.name`.
@@ -160,20 +162,22 @@ async function action(projectDir: string, command: Command) {
   }
 
   let packageManager: 'npm' | 'yarn' = 'npm';
-  if (options.yarn) {
-    packageManager = 'yarn';
-  } else if (options.npm) {
-    packageManager = 'npm';
-  } else if (PackageManager.shouldUseYarn()) {
-    packageManager = 'yarn';
-    log.newLine();
-    log('🧶 Using Yarn to install packages. You can pass --npm to use npm instead.');
-    log.newLine();
-  } else {
-    packageManager = 'npm';
-    log.newLine();
-    log('📦 Using npm to install packages. You can pass --yarn to use Yarn instead.');
-    log.newLine();
+  if (options.install) {
+    if (options.yarn) {
+      packageManager = 'yarn';
+    } else if (options.npm) {
+      packageManager = 'npm';
+    } else if (PackageManager.shouldUseYarn()) {
+      packageManager = 'yarn';
+      log.newLine();
+      log('🧶 Using Yarn to install packages. You can pass --npm to use npm instead.');
+      log.newLine();
+    } else {
+      packageManager = 'npm';
+      log.newLine();
+      log('📦 Using npm to install packages. You can pass --yarn to use Yarn instead.');
+      log.newLine();
+    }
   }
 
   const extractTemplateStep = logNewSection('Downloading and extracting project files.');
@@ -195,26 +199,16 @@ async function action(projectDir: string, command: Command) {
     throw e;
   }
 
-  // for now, we will just init a git repo if they have git installed and the
-  // project is not inside an existing git tree, and do it silently. we should
-  // at some point check if git is installed and actually bail out if not, because
-  // npm install will fail with a confusing error if so.
-  try {
-    // check if git is installed
-    // check if inside git repo
-    await Exp.initGitRepoAsync(projectPath, { silent: true, commit: true });
-  } catch {
-    // todo: check if git is installed, bail out
-  }
-
-  const installJsDepsStep = logNewSection('Installing JavaScript dependencies.');
-  try {
-    await Exp.installDependenciesAsync(projectPath, packageManager, { silent: true });
-    installJsDepsStep.succeed('Installed JavaScript dependencies.');
-  } catch {
-    installJsDepsStep.fail(
-      `Something when wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to initialize the app.`
-    );
+  if (options.install) {
+    const installJsDepsStep = logNewSection('Installing JavaScript dependencies.');
+    try {
+      await Exp.installDependenciesAsync(projectPath, packageManager, { silent: true });
+      installJsDepsStep.succeed('Installed JavaScript dependencies.');
+    } catch {
+      installJsDepsStep.fail(
+        `Something when wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to initialize the app.`
+      );
+    }
   }
 
   let cdPath = path.relative(process.cwd(), projectPath);
@@ -223,9 +217,11 @@ async function action(projectDir: string, command: Command) {
   }
   if (isBare) {
     let podsInstalled = false;
-    try {
-      podsInstalled = await installPodsAsync(projectPath);
-    } catch (_) {}
+    if (options.install) {
+      try {
+        podsInstalled = await installPodsAsync(projectPath);
+      } catch (_) {}
+    }
 
     let didConfigureUpdatesProjectFiles = false;
     const username = await UserManager.getCurrentUsernameAsync();
@@ -264,6 +260,33 @@ async function action(projectDir: string, command: Command) {
     log.newLine();
     await logProjectReadyAsync({ cdPath, packageManager, workflow: 'managed' });
   }
+
+  // Log a warning about needing to install node modules
+  if (!options.install) {
+    logNodeInstallWarning(cdPath, packageManager);
+  }
+
+  // Initialize Git at the end to ensure all lock files are committed.
+  // for now, we will just init a git repo if they have git installed and the
+  // project is not inside an existing git tree, and do it silently. we should
+  // at some point check if git is installed and actually bail out if not, because
+  // npm install will fail with a confusing error if so.
+  try {
+    // check if git is installed
+    // check if inside git repo
+    await Exp.initGitRepoAsync(projectPath, { silent: true, commit: true });
+  } catch {
+    // todo: check if git is installed, bail out
+  }
+}
+
+function logNodeInstallWarning(cdPath: string, packageManager: 'yarn' | 'npm'): void {
+  log.newLine();
+  log.nested(`⚠️  Before running your app, make sure you have node modules installed:`);
+  log.nested('');
+  log.nested(`  cd ${cdPath ?? '.'}/`);
+  log.nested(`  ${packageManager === 'npm' ? 'npm install' : 'yarn'}`);
+  log.nested('');
 }
 
 function logProjectReadyAsync({
@@ -498,7 +521,7 @@ async function promptForBareConfig(
     ({ projectName } = await prompt({
       name: 'projectName',
       message: 'What would you like to name your app?',
-      default: 'my-app',
+      default: 'MyApp',
       filter: (name: string) => name.trim(),
       validate: (name: string) => validateProjectName(name),
     }));
@@ -550,6 +573,7 @@ export default function (program: Command) {
     )
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
+    .option('--no-install', 'Skip installing npm packages or CocoaPods.')
     .option('--name [name]', 'The name of your app visible on the home screen.')
     .option('--yes', 'Use default options. Same as "expo init . --template blank')
     .asyncAction(action);
