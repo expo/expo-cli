@@ -156,7 +156,7 @@ export async function action(projectDir: string, options: Options = {}) {
     // TODO: replace with websiteUrl from server when it is available, if that makes sense.
     const websiteUrl = url.replace('exp.host', 'expo.io');
 
-    let productionMessage = `🚀  Production: ${log.chalk.bold(
+    let productionMessage = `⚙️   Project page: ${log.chalk.bold(
       urlTerminalLink(websiteUrl, websiteUrl)
     )}`;
     try {
