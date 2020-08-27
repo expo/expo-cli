@@ -1,7 +1,5 @@
 import { Platform } from '@expo/config';
 import { StandaloneBuild } from '@expo/xdl';
-import os from 'os';
-import { basename as pathBasename, join as pathJoin } from 'path';
 import validator from 'validator';
 
 import log from '../../../../log';
@@ -9,7 +7,12 @@ import prompt from '../../../../prompt';
 import { existingFile } from '../../../../validators';
 import { SubmissionMode } from '../types';
 import { getAppConfig } from '../utils/config';
-import { downloadAppArchiveAsync, uploadAppArchiveAsync } from '../utils/files';
+import {
+  downloadAppArchiveAsync,
+  extractLocalArchiveAsync,
+  pathIsTar,
+  uploadAppArchiveAsync,
+} from '../utils/files';
 
 enum ArchiveFileSourceType {
   url,
@@ -83,21 +86,24 @@ async function getArchiveFileLocationAsync(
 }
 
 async function getArchiveLocationForUrlAsync(mode: SubmissionMode, url: string): Promise<string> {
-  if (mode === SubmissionMode.online) {
+  // When a URL points to a tar file, download it and extract using unified logic.
+  // Otherwise send it directly to the server in online mode.
+  if (mode === SubmissionMode.online && !pathIsTar(url)) {
     return url;
   } else {
-    const tmpPath = pathJoin(os.tmpdir(), pathBasename(url));
     log('Downloading your app archive');
-    return downloadAppArchiveAsync(url, tmpPath);
+    return downloadAppArchiveAsync(url);
   }
 }
 
 async function getArchiveLocationForPathAsync(mode: SubmissionMode, path: string): Promise<string> {
+  const resolvedPath = await extractLocalArchiveAsync(path);
+
   if (mode === SubmissionMode.online) {
     log('Uploading your app archive to the Expo Submission Service');
-    return await uploadAppArchiveAsync(path);
+    return await uploadAppArchiveAsync(resolvedPath);
   } else {
-    return path;
+    return resolvedPath;
   }
 }
 

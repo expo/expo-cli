@@ -1,17 +1,34 @@
 import { ProjectTarget, getDefaultTarget } from '@expo/config';
-import { Project, ProjectSettings, UrlUtils } from '@expo/xdl';
-import axios from 'axios';
+import { Project, UrlUtils } from '@expo/xdl';
 import { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
+import got from 'got';
 import path from 'path';
-import targz from 'targz';
+import stream from 'stream';
+import tar from 'tar';
+import { promisify } from 'util';
 import validator from 'validator';
 
 import CommandError from '../CommandError';
-import { installExitHooks } from '../exit';
 import log from '../log';
 import prompt, { Question } from '../prompt';
+import { createProgressTracker } from './utils/progress';
+
+const pipeline = promisify(stream.pipeline);
+
+/**
+ * Download a tar.gz file and extract it to a folder.
+ *
+ * @param url remote URL to download.
+ * @param destination destination folder to extract the tar to.
+ */
+async function downloadAndDecompressAsync(url: string, destination: string): Promise<string> {
+  const downloadStream = got.stream(url).on('downloadProgress', createProgressTracker());
+
+  await pipeline(downloadStream, tar.extract({ cwd: destination }));
+  return destination;
+}
 
 type Options = {
   outputDir: string;
@@ -30,6 +47,9 @@ type Options = {
 };
 
 export async function action(projectDir: string, options: Options) {
+  if (!options.publicUrl) {
+    throw new CommandError('MISSING_PUBLIC_URL', 'Missing required option: --public-url');
+  }
   const outputPath = path.resolve(projectDir, options.outputDir);
   let overwrite = options.force;
   if (fs.existsSync(outputPath)) {
@@ -70,9 +90,7 @@ export async function action(projectDir: string, options: Options) {
       }
     }
   }
-  if (!options.publicUrl) {
-    throw new CommandError('MISSING_PUBLIC_URL', 'Missing required option: --public-url');
-  }
+
   // If we are not in dev mode, ensure that url is https
   if (!options.dev && !UrlUtils.isHttps(options.publicUrl)) {
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
@@ -100,7 +118,7 @@ export async function action(projectDir: string, options: Options) {
   );
 
   // Merge src dirs/urls into a multimanifest if specified
-  const mergeSrcDirs = [];
+  const mergeSrcDirs: string[] = [];
 
   // src urls were specified to merge in, so download and decompress them
   if (options.mergeSrcUrl.length > 0) {
@@ -116,11 +134,10 @@ export async function action(projectDir: string, options: Options) {
         const uniqFilename = `${path.basename(url, '.tar.gz')}_${crypto
           .randomBytes(16)
           .toString('hex')}`;
-        const tmpFileCompressed = path.resolve(tmpFolder, uniqFilename + '_compressed');
-        const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
-        await download(url, tmpFileCompressed);
-        await decompress(tmpFileCompressed, tmpFolderUncompressed);
 
+        const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
+        await fs.ensureDir(tmpFolderUncompressed);
+        await downloadAndDecompressAsync(url, tmpFolderUncompressed);
         // add the decompressed folder to be merged
         mergeSrcDirs.push(tmpFolderUncompressed);
       }
@@ -146,41 +163,6 @@ export async function action(projectDir: string, options: Options) {
   }
   log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }
-
-const download = async (uri: string, filename: string): Promise<null> => {
-  const response = await axios({
-    method: 'get',
-    url: uri,
-    responseType: 'stream',
-  });
-
-  response.data.pipe(fs.createWriteStream(filename));
-
-  return new Promise((resolve, reject) => {
-    response.data.on('close', () => resolve(null));
-    response.data.on('error', (err?: Error) => {
-      reject(err);
-    });
-  });
-};
-
-const decompress = async (src: string, dest: string): Promise<null> => {
-  return new Promise((resolve, reject) => {
-    targz.decompress(
-      {
-        src,
-        dest,
-      },
-      (error: string | Error | null) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(null);
-        }
-      }
-    );
-  });
-};
 
 function collect<T>(val: T, memo: T[]): T[] {
   memo.push(val);
