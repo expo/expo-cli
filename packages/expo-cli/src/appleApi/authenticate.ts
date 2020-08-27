@@ -137,7 +137,7 @@ async function _promptForAppleId({
       name: 'appleId',
       message: `Apple ID:`,
       validate: nonEmptyInput,
-      default: lastAppleId as string,
+      default: lastAppleId ?? undefined,
       ...(previousAppleId && { default: previousAppleId }),
     },
     {
@@ -157,7 +157,7 @@ async function _promptForAppleId({
 
     if (password) {
       log(
-        `Using password from keychain. ${chalk.dim(
+        `Using password from your local Keychain. ${chalk.dim(
           `Learn more ${chalk.underline('https://docs.expo.io/distribution/security#keychain')}`
         )}`
       );
@@ -231,20 +231,20 @@ function _formatTeam({ teamId, name, type }: FastlaneTeam): Team {
   };
 }
 
-async function getLastUsedAppleIdAsync(): Promise<string | undefined> {
+async function getLastUsedAppleIdAsync(): Promise<string | null> {
   if (Keychain.EXPO_NO_KEYCHAIN) {
     // Clear last used apple ID.
     await UserSettings.deleteKeyAsync('appleId');
-    return undefined;
+    return null;
   }
-
-  let lastAppleId: string | undefined = undefined;
   try {
-    // @ts-ignore
-    lastAppleId = (await UserSettings.getAsync('appleId')) ?? '';
+    // @ts-ignore: appleId syncing issue
+    const lastAppleId = (await UserSettings.getAsync('appleId')) ?? null;
+    if (typeof lastAppleId === 'string') {
+      return lastAppleId;
+    }
   } catch {}
-
-  return lastAppleId;
+  return null;
 }
 
 /**
@@ -283,12 +283,12 @@ async function getPasswordAsync({
 
 async function setPasswordAsync({ appleId, appleIdPassword }: AppleCredentials): Promise<boolean> {
   if (Keychain.EXPO_NO_KEYCHAIN) {
-    log('Skip storing Apple ID password in the native Keychain.');
+    log('Skip storing Apple ID password in the local Keychain.');
     return false;
   }
 
   log(
-    `Saving Apple ID password to the local native Keychain. ${chalk.dim(
+    `Saving Apple ID password to the local Keychain. ${chalk.dim(
       `Learn more ${chalk.underline('https://docs.expo.io/distribution/security#keychain')}`
     )}`
   );
