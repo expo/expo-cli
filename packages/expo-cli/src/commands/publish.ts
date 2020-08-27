@@ -2,6 +2,7 @@ import { ProjectTarget, getConfig, getDefaultTarget } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
 import { Exp, Project } from '@expo/xdl';
 import chalk from 'chalk';
+import clipboard from 'clipboardy';
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
@@ -144,32 +145,29 @@ export async function action(projectDir: string, options: Options = {}) {
   log('Publish complete');
   log.newLine();
 
-  const exampleManifestUrl = getExampleManifestUrl(url, exp.sdkVersion);
-  if (exampleManifestUrl) {
-    log(
-      `The manifest URL is: ${terminalLink(url, exampleManifestUrl)}. ${terminalLink(
-        'Learn more.',
-        'https://expo.fyi/manifest-url'
-      )}`
-    );
-  } else {
-    log(
-      `The manifest URL is: ${terminalLink(url, url)}. ${terminalLink(
-        'Learn more.',
-        'https://expo.fyi/manifest-url'
-      )}`
-    );
-  }
+  const manifestUrl = getExampleManifestUrl(url, exp.sdkVersion) ?? url;
+  log(
+    `📝  Manifest: ${log.chalk.bold(urlTerminalLink(url, manifestUrl))} ${log.chalk.dim(
+      learnMoreTerminalLink('https://expo.fyi/manifest-url')
+    )}`
+  );
 
   if (target === 'managed') {
     // TODO: replace with websiteUrl from server when it is available, if that makes sense.
     const websiteUrl = url.replace('exp.host', 'expo.io');
-    log(
-      `The project page is: ${terminalLink(websiteUrl, websiteUrl)}. ${terminalLink(
-        'Learn more.',
-        'https://expo.fyi/project-page'
-      )}`
-    );
+
+    let productionMessage = `🚀  Production: ${log.chalk.bold(
+      urlTerminalLink(websiteUrl, websiteUrl)
+    )}`;
+    try {
+      clipboard.writeSync(websiteUrl);
+      productionMessage += ` ${log.chalk.gray(`[copied to clipboard]`)}`;
+    } catch {}
+    productionMessage += ` ${log.chalk.dim(
+      learnMoreTerminalLink('https://expo.fyi/project-page')
+    )}`;
+
+    log(productionMessage);
 
     if (recipient) {
       await sendTo.sendUrlAsync(websiteUrl, recipient);
@@ -180,7 +178,24 @@ export async function action(projectDir: string, options: Options = {}) {
     //   await sendTo.sendUrlAsync(url, recipient);
     // }
   }
+
+  log.newLine();
+
   return result;
+}
+
+function urlTerminalLink(shortUrl: string, url: string): string {
+  // when terminal link isn't available, fallback to showing the longer link.
+  return terminalLink(shortUrl, url, {
+    fallback: (text, url) => url,
+  });
+}
+
+function learnMoreTerminalLink(url: string): string {
+  // when terminal link isn't available, format the learn more link better.
+  return terminalLink(log.chalk.underline('Learn more.'), url, {
+    fallback: (text, url) => `Learn more: ${log.chalk.underline(url)}`,
+  });
 }
 
 function getExampleManifestUrl(url: string, sdkVersion: string | undefined): string | null {
