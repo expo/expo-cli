@@ -36,19 +36,16 @@ export async function action(
 
   const target = options.target ?? getDefaultTarget(projectDir);
 
-  // Log building info before building.
-  // This gives the user sometime to bail out if the info is unexpected.
   log.newLine();
 
-  log(`Project info`);
-
-  log(`- Workflow: ${log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
-
-  log(`- Release channel: ${log.chalk.bold(options.releaseChannel)}`);
+  // Log building info before building.
+  // This gives the user sometime to bail out if the info is unexpected.
 
   if (sdkVersion && target === 'managed') {
     log(`- Expo SDK: ${log.chalk.bold(exp.sdkVersion)}`);
   }
+  log(`- Release channel: ${log.chalk.bold(options.releaseChannel)}`);
+  log(`- Workflow: ${log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
 
   log.newLine();
 
@@ -71,7 +68,7 @@ export async function action(
     logBareWorkflowWarnings(pkg);
   }
 
-  log.newLine();
+  log.addNewLineIfNone();
 
   // Build and publish the project.
 
@@ -234,7 +231,7 @@ async function logSDKMismatchWarningsAsync({
   log.nestedWarn(
     formatNamedWarning(
       'URL mismatch',
-      `No standalone app has been built with SDK ${sdkVersion} and release channel "${releaseChannel}" for this project before. OTA updates only work for native projects that have the same SDK version and release channel.`,
+      `No standalone app has been built with SDK ${sdkVersion} and release channel "${releaseChannel}" for this project before.\n  OTA updates only work for native projects that have the same SDK version and release channel.`,
       'https://docs.expo.io/workflow/publishing/#limitations'
     )
   );
@@ -250,12 +247,12 @@ export function logExpoUpdatesWarnings(pkg: PackageJSONConfig): void {
 
   log.nestedWarn(
     formatNamedWarning(
-      'expo-updates',
+      'Conflicting Updates',
       `You have both the ${chalk.bold('expokit')} and ${chalk.bold(
         'expo-updates'
-      )} packages installed in package.json. These two packages are incompatible and ${chalk.bold(
-        'publishing updates with expo-updates will not work if expokit is installed.'
-      )}. If you intend to use ${chalk.bold('expo-updates')}, please remove ${chalk.bold(
+      )} packages installed in package.json.\n  These two packages are incompatible and ${chalk.bold(
+        'publishing updates with expo-updates will not work if expokit is installed'
+      )}.\n  If you intend to use ${chalk.bold('expo-updates')}, please remove ${chalk.bold(
         'expokit'
       )} from your dependencies.`
     )
@@ -270,7 +267,7 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
   log.nestedWarn(
     formatNamedWarning(
       'Optimization',
-      `Project may contain suboptimal images. Optimized images can improve app performance and startup time. To fix this, run ${chalk.bold(
+      `Project may contain suboptimal images. Optimized images can improve app performance and startup time.\n  To fix this, run ${chalk.bold(
         `npx expo-optimize`
       )}`,
       'https://docs.expo.io/distribution/optimizing-updates/#optimize-images'
