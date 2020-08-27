@@ -117,21 +117,8 @@ async function extractLocalArchiveAsync(filePath: string): Promise<string> {
   return await moveFileOfTypeAsync(destinationFolder, '{ipa,apk,aab}', destinationPath);
 }
 
-/**
- * Download a tar.gz file and extract it to a folder.
- *
- * @param url remote URL to download.
- * @param destination destination folder to extract the tar to.
- */
-async function downloadAndDecompressAsync(url: string, destination: string): Promise<string> {
-  const downloadStream = createDownloadStream(url);
-  await pipeline(downloadStream, tar.extract({ cwd: destination }));
-  return destination;
-}
-
 export {
   createDownloadStream,
-  downloadAndDecompressAsync,
   downloadAppArchiveAsync,
   extractLocalArchiveAsync,
   pathIsTar,

@@ -3,13 +3,32 @@ import { Project, UrlUtils } from '@expo/xdl';
 import { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
+import got from 'got';
 import path from 'path';
+import stream from 'stream';
+import tar from 'tar';
+import { promisify } from 'util';
 import validator from 'validator';
 
 import CommandError from '../CommandError';
 import log from '../log';
 import prompt, { Question } from '../prompt';
-import { downloadAndDecompressAsync } from './upload/submission-service/utils/files';
+import { createProgressTracker } from './utils/progress';
+
+const pipeline = promisify(stream.pipeline);
+
+/**
+ * Download a tar.gz file and extract it to a folder.
+ *
+ * @param url remote URL to download.
+ * @param destination destination folder to extract the tar to.
+ */
+async function downloadAndDecompressAsync(url: string, destination: string): Promise<string> {
+  const downloadStream = got.stream(url).on('downloadProgress', createProgressTracker());
+
+  await pipeline(downloadStream, tar.extract({ cwd: destination }));
+  return destination;
+}
 
 type Options = {
   outputDir: string;
