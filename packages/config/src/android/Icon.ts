@@ -84,7 +84,7 @@ async function configureLegacyIconAsync(
     const { folderName, scale } = dpiValues[dpi as DPIString];
     const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
     const iconSizePx = BASELINE_PIXEL_SIZE * scale;
-    console.log(backgroundColor ?? 'transparent');
+
     try {
       let squareIconImage: Buffer = (
         await generateImageAsync(
