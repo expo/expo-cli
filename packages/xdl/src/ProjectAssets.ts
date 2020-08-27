@@ -33,6 +33,14 @@ type PublicConfig = ExpoConfig & {
 
 type BundlesByPlatform = { android: BundleOutput; ios: BundleOutput };
 
+type ExportAssetsOptions = {
+  projectRoot: string;
+  exp: PublicConfig;
+  hostedUrl: string;
+  bundles: BundlesByPlatform;
+  outputDir?: string;
+};
+
 export async function resolveGoogleServicesFile(projectRoot: string, manifest: ExpoConfig) {
   if (manifest.android?.googleServicesFile) {
     const contents = await fs.readFile(
@@ -160,14 +168,6 @@ async function _configureExpForAssets(projectRoot: string, exp: ExpoConfig, asse
 
   return exp;
 }
-
-type ExportAssetsOptions = {
-  projectRoot: string;
-  exp: PublicConfig;
-  hostedUrl: string;
-  bundles: BundlesByPlatform;
-  outputDir?: string;
-};
 
 export async function publishAssetsAsync(
   options: Pick<ExportAssetsOptions, 'projectRoot' | 'exp' | 'bundles'>
