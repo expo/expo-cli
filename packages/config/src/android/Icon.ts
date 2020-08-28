@@ -88,7 +88,7 @@ async function configureLegacyIconAsync(
     try {
       let squareIconImage: Buffer = (
         await generateImageAsync(
-          { projectRoot },
+          { projectRoot, cacheType: 'android-standard-square' },
           {
             src: icon,
             width: iconSizePx,
@@ -100,7 +100,7 @@ async function configureLegacyIconAsync(
       ).source;
       let roundIconImage: Buffer = (
         await generateImageAsync(
-          { projectRoot },
+          { projectRoot, cacheType: 'android-standard-circle' },
           {
             src: icon,
             width: iconSizePx,
@@ -116,7 +116,7 @@ async function configureLegacyIconAsync(
         // Layer the buffers we just created on top of the background image that's provided
         const squareBackgroundLayer = (
           await generateImageAsync(
-            { projectRoot },
+            { projectRoot, cacheType: 'android-standard-square-background' },
             {
               src: backgroundImage,
               width: iconSizePx,
@@ -128,7 +128,7 @@ async function configureLegacyIconAsync(
         ).source;
         const roundBackgroundLayer = (
           await generateImageAsync(
-            { projectRoot },
+            { projectRoot, cacheType: 'android-standard-round-background' },
             {
               src: backgroundImage,
               width: iconSizePx,
@@ -176,7 +176,7 @@ async function configureAdaptiveIconAsync(
     try {
       const adpativeIconForeground = (
         await generateImageAsync(
-          { projectRoot },
+          { projectRoot, cacheType: 'android-adaptive-foreground' },
           {
             src: foregroundImage,
             width: iconSizePx,
@@ -194,7 +194,7 @@ async function configureAdaptiveIconAsync(
       if (backgroundImage) {
         const adpativeIconBackground = (
           await generateImageAsync(
-            { projectRoot },
+            { projectRoot, cacheType: 'android-adaptive-background' },
             {
               src: backgroundImage,
               width: iconSizePx,
