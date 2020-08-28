@@ -1,27 +1,37 @@
-import { Job } from '@expo/build-tools';
+import { Job, Platform } from '@expo/build-tools';
 import { ExpoConfig } from '@expo/config';
 import { User } from '@expo/xdl';
 
-import { EasConfig } from '../../../easJson';
+import { AndroidBuildProfile, iOSBuildProfile } from '../../../easJson';
 import { BuildCommandPlatform } from '../types';
 
-export interface BuilderContext {
+export interface CommandContext {
+  commandPlatform: BuildCommandPlatform;
+  profile: string;
   projectDir: string;
-  eas: EasConfig;
   user: User;
   accountName: string;
   projectName: string;
   exp: ExpoConfig;
-  platform: BuildCommandPlatform;
   nonInteractive: boolean;
   skipCredentialsCheck: boolean;
   skipProjectConfiguration: boolean;
 }
 
-export interface Builder {
-  ctx: BuilderContext;
+export interface Builder<T extends Platform> {
+  ctx: BuilderContext<T>;
   setupAsync(): Promise<void>;
   ensureCredentialsAsync(): Promise<void>;
   configureProjectAsync(): Promise<void>;
   prepareJobAsync(archiveUrl: string): Promise<Job>;
 }
+
+export interface BuilderContext<T extends Platform> {
+  commandCtx: CommandContext;
+  platform: T;
+  buildProfile: T extends Platform.Android ? AndroidBuildProfile : iOSBuildProfile;
+}
+
+export type PlatformBuildProfile<T extends Platform> = T extends Platform.Android
+  ? AndroidBuildProfile
+  : iOSBuildProfile;

@@ -9,12 +9,7 @@ import iOSCredentialsProvider, {
   iOSCredentials,
 } from '../../../../credentials/provider/iOSCredentialsProvider';
 import * as ProvisioningProfileUtils from '../../../../credentials/utils/provisioningProfile';
-import {
-  Workflow,
-  iOSBuildProfile,
-  iOSGenericBuildProfile,
-  iOSManagedBuildProfile,
-} from '../../../../easJson';
+import { Workflow, iOSGenericBuildProfile, iOSManagedBuildProfile } from '../../../../easJson';
 import log from '../../../../log';
 import prompts from '../../../../prompts';
 import { ensureCredentialsAsync } from '../credentials';
@@ -34,23 +29,17 @@ interface CommonJobProperties {
   };
 }
 
-class iOSBuilder implements Builder {
+class iOSBuilder implements Builder<Platform.iOS> {
   private credentials?: iOSCredentials;
-  private buildProfile: iOSBuildProfile;
   private scheme?: string;
 
-  constructor(public readonly ctx: BuilderContext) {
-    if (!ctx.eas.builds.ios) {
-      throw new Error("missing ios configuration, shouldn't happen");
-    }
-    this.buildProfile = ctx.eas.builds.ios;
-  }
+  constructor(public readonly ctx: BuilderContext<Platform.iOS>) {}
 
   public async prepareJobAsync(archiveUrl: string): Promise<Job> {
-    if (this.buildProfile.workflow === Workflow.Generic) {
-      return sanitizeJob(await this.prepareGenericJobAsync(archiveUrl, this.buildProfile));
-    } else if (this.buildProfile.workflow === Workflow.Managed) {
-      return sanitizeJob(await this.prepareManagedJobAsync(archiveUrl, this.buildProfile));
+    if (this.ctx.buildProfile.workflow === Workflow.Generic) {
+      return sanitizeJob(await this.prepareGenericJobAsync(archiveUrl, this.ctx.buildProfile));
+    } else if (this.ctx.buildProfile.workflow === Workflow.Managed) {
+      return sanitizeJob(await this.prepareManagedJobAsync(archiveUrl, this.ctx.buildProfile));
     } else {
       throw new Error("Unknown workflow. Shouldn't happen");
     }
@@ -60,30 +49,33 @@ class iOSBuilder implements Builder {
     if (!this.shouldLoadCredentials()) {
       return;
     }
-    const bundleIdentifier = await getBundleIdentifier(this.ctx.projectDir, this.ctx.exp);
-    const provider = new iOSCredentialsProvider(this.ctx.projectDir, {
-      projectName: this.ctx.projectName,
-      accountName: this.ctx.accountName,
+    const bundleIdentifier = await getBundleIdentifier(
+      this.ctx.commandCtx.projectDir,
+      this.ctx.commandCtx.exp
+    );
+    const provider = new iOSCredentialsProvider(this.ctx.commandCtx.projectDir, {
+      projectName: this.ctx.commandCtx.projectName,
+      accountName: this.ctx.commandCtx.accountName,
       bundleIdentifier,
     });
     await provider.initAsync();
     const credentialsSource = await ensureCredentialsAsync(
       provider,
-      this.buildProfile.workflow,
-      this.buildProfile.credentialsSource,
-      this.ctx.nonInteractive
+      this.ctx.buildProfile.workflow,
+      this.ctx.buildProfile.credentialsSource,
+      this.ctx.commandCtx.nonInteractive
     );
     this.credentials = await provider.getCredentialsAsync(credentialsSource);
   }
 
   public async setupAsync(): Promise<void> {
-    if (this.buildProfile.workflow === Workflow.Generic) {
-      this.scheme = this.buildProfile.scheme ?? (await this.resolveScheme());
+    if (this.ctx.buildProfile.workflow === Workflow.Generic) {
+      this.scheme = this.ctx.buildProfile.scheme ?? (await this.resolveScheme());
     }
   }
 
   public async configureProjectAsync(): Promise<void> {
-    if (this.buildProfile.workflow !== Workflow.Generic) {
+    if (this.ctx.buildProfile.workflow !== Workflow.Generic) {
       return;
     }
 
@@ -93,7 +85,10 @@ class iOSBuilder implements Builder {
       throw new Error('Call ensureCredentialsAsync first!');
     }
 
-    const bundleIdentifier = await getBundleIdentifier(this.ctx.projectDir, this.ctx.exp);
+    const bundleIdentifier = await getBundleIdentifier(
+      this.ctx.commandCtx.projectDir,
+      this.ctx.commandCtx.exp
+    );
 
     const spinner = ora('Configuring the Xcode project');
 
@@ -102,7 +97,7 @@ class iOSBuilder implements Builder {
     );
     const appleTeam = ProvisioningProfileUtils.readAppleTeam(this.credentials.provisioningProfile);
 
-    const { projectDir } = this.ctx;
+    const { projectDir } = this.ctx.commandCtx;
     IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectDir, bundleIdentifier, false);
     IOSConfig.ProvisioningProfile.setProvisioningProfileForPbxproj(projectDir, {
       profileName,
@@ -119,7 +114,7 @@ class iOSBuilder implements Builder {
 
         try {
           await gitUtils.reviewAndCommitChangesAsync('Configure Xcode project', {
-            nonInteractive: this.ctx.nonInteractive,
+            nonInteractive: this.ctx.commandCtx.nonInteractive,
           });
 
           log(`${chalk.green(figures.tick)} Successfully committed the configuration changes.`);
@@ -181,14 +176,14 @@ class iOSBuilder implements Builder {
 
   private shouldLoadCredentials(): boolean {
     return (
-      (this.buildProfile.workflow === Workflow.Managed &&
-        this.buildProfile.buildType !== 'simulator') ||
-      this.buildProfile.workflow === Workflow.Generic
+      (this.ctx.buildProfile.workflow === Workflow.Managed &&
+        this.ctx.buildProfile.buildType !== 'simulator') ||
+      this.ctx.buildProfile.workflow === Workflow.Generic
     );
   }
 
   private async resolveScheme(): Promise<string> {
-    const schemes = IOSConfig.Scheme.getSchemesFromXcodeproj(this.ctx.projectDir);
+    const schemes = IOSConfig.Scheme.getSchemesFromXcodeproj(this.ctx.commandCtx.projectDir);
     if (schemes.length === 1) {
       return schemes[0];
     }
@@ -205,7 +200,7 @@ class iOSBuilder implements Builder {
         'builds.ios.PROFILE_NAME.scheme'
       )} in eas.json.`
     );
-    if (this.ctx.nonInteractive) {
+    if (this.ctx.commandCtx.nonInteractive) {
       const withoutTvOS = sortedSchemes.filter(i => !i.includes('tvOS'));
       const scheme = withoutTvOS.length > 0 ? withoutTvOS[0] : sortedSchemes[0];
       log(

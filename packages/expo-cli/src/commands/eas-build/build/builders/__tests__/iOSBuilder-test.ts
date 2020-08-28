@@ -65,18 +65,17 @@ describe('iOSBuilder', () => {
     it('should prepare valid job', async () => {
       setupCredentialsConfig();
       const ctx: any = {
-        eas: {
-          builds: {
-            ios: {
-              credentialsSource: 'local',
-              workflow: 'generic',
-              scheme: 'testapp',
-            },
-          },
+        platform: 'ios',
+        buildProfile: {
+          credentialsSource: 'local',
+          workflow: 'generic',
+          scheme: 'testapp',
         },
-        projectDir: '.',
-        user: jest.fn(),
-        exp: { ios: { bundleIdentifier: 'example.bundle.identifier' } },
+        commandCtx: {
+          projectDir: '.',
+          user: jest.fn(),
+          exp: { ios: { bundleIdentifier: 'example.bundle.identifier' } },
+        },
       };
       const builder = new iOSBuilder(ctx);
       await builder.setupAsync();
@@ -103,17 +102,16 @@ describe('iOSBuilder', () => {
     it('should prepare valid job', async () => {
       setupCredentialsConfig();
       const ctx: any = {
-        eas: {
-          builds: {
-            ios: {
-              credentialsSource: 'local',
-              workflow: 'managed',
-            },
-          },
+        platform: 'ios',
+        buildProfile: {
+          credentialsSource: 'local',
+          workflow: 'managed',
         },
-        projectDir: '.',
-        user: jest.fn(),
-        exp: { ios: { bundleIdentifier: 'example.bundle.identifier' } },
+        commandCtx: {
+          projectDir: '.',
+          user: jest.fn(),
+          exp: { ios: { bundleIdentifier: 'example.bundle.identifier' } },
+        },
       };
       const builder = new iOSBuilder(ctx);
       await builder.ensureCredentialsAsync();

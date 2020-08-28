@@ -9,7 +9,6 @@ import AndroidCredentialsProvider, {
   AndroidCredentials,
 } from '../../../../credentials/provider/AndroidCredentialsProvider';
 import {
-  AndroidBuildProfile,
   AndroidGenericBuildProfile,
   AndroidManagedBuildProfile,
   Workflow,
@@ -29,17 +28,11 @@ interface CommonJobProperties {
   };
 }
 
-class AndroidBuilder implements Builder {
+class AndroidBuilder implements Builder<Platform.Android> {
   private credentials?: AndroidCredentials;
-  private buildProfile: AndroidBuildProfile;
   private credentialsPrepared: boolean = false;
 
-  constructor(public readonly ctx: BuilderContext) {
-    if (!ctx.eas.builds.android) {
-      throw new Error("missing android configuration, shouldn't happen");
-    }
-    this.buildProfile = ctx.eas.builds.android;
-  }
+  constructor(public readonly ctx: BuilderContext<Platform.Android>) {}
 
   public async setupAsync(): Promise<void> {}
 
@@ -48,16 +41,16 @@ class AndroidBuilder implements Builder {
     if (!this.shouldLoadCredentials()) {
       return;
     }
-    const provider = new AndroidCredentialsProvider(this.ctx.projectDir, {
-      projectName: this.ctx.projectName,
-      accountName: this.ctx.accountName,
+    const provider = new AndroidCredentialsProvider(this.ctx.commandCtx.projectDir, {
+      projectName: this.ctx.commandCtx.projectName,
+      accountName: this.ctx.commandCtx.accountName,
     });
     await provider.initAsync();
     const credentialsSource = await ensureCredentialsAsync(
       provider,
-      this.buildProfile.workflow,
-      this.buildProfile.credentialsSource,
-      this.ctx.nonInteractive
+      this.ctx.buildProfile.workflow,
+      this.ctx.buildProfile.credentialsSource,
+      this.ctx.commandCtx.nonInteractive
     );
     this.credentials = await provider.getCredentialsAsync(credentialsSource);
   }
@@ -65,7 +58,7 @@ class AndroidBuilder implements Builder {
   public async configureProjectAsync(): Promise<void> {
     const spinner = ora('Making sure your Android project is set up properly');
 
-    const { projectDir } = this.ctx;
+    const { projectDir } = this.ctx.commandCtx;
 
     const androidAppDir = path.join(projectDir, 'android', 'app');
     const buildGradlePath = path.join(androidAppDir, 'build.gradle');
@@ -96,7 +89,7 @@ class AndroidBuilder implements Builder {
 
         try {
           await gitUtils.reviewAndCommitChangesAsync('Configure Android project', {
-            nonInteractive: this.ctx.nonInteractive,
+            nonInteractive: this.ctx.commandCtx.nonInteractive,
           });
 
           log(`${chalk.green(figures.tick)} Successfully committed the configuration changes.`);
@@ -116,10 +109,10 @@ class AndroidBuilder implements Builder {
     if (!this.credentialsPrepared) {
       throw new Error('ensureCredentialsAsync should be called before prepareJobAsync');
     }
-    if (this.buildProfile.workflow === Workflow.Generic) {
-      return sanitizeJob(await this.prepareGenericJobAsync(archiveUrl, this.buildProfile));
-    } else if (this.buildProfile.workflow === Workflow.Managed) {
-      return sanitizeJob(await this.prepareManagedJobAsync(archiveUrl, this.buildProfile));
+    if (this.ctx.buildProfile.workflow === Workflow.Generic) {
+      return sanitizeJob(await this.prepareGenericJobAsync(archiveUrl, this.ctx.buildProfile));
+    } else if (this.ctx.buildProfile.workflow === Workflow.Managed) {
+      return sanitizeJob(await this.prepareManagedJobAsync(archiveUrl, this.ctx.buildProfile));
     } else {
       throw new Error("Unknown workflow. Shouldn't happen");
     }
@@ -172,8 +165,9 @@ class AndroidBuilder implements Builder {
 
   private shouldLoadCredentials(): boolean {
     return (
-      this.buildProfile.workflow === Workflow.Managed ||
-      (this.buildProfile.workflow === Workflow.Generic && !this.buildProfile.withoutCredentials)
+      this.ctx.buildProfile.workflow === Workflow.Managed ||
+      (this.ctx.buildProfile.workflow === Workflow.Generic &&
+        !this.ctx.buildProfile.withoutCredentials)
     );
   }
 }

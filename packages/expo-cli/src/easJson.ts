@@ -49,6 +49,7 @@ export interface iOSGenericBuildProfile {
 
 export type AndroidBuildProfile = AndroidManagedBuildProfile | AndroidGenericBuildProfile;
 export type iOSBuildProfile = iOSManagedBuildProfile | iOSGenericBuildProfile;
+export type BuildProfile = AndroidBuildProfile | iOSBuildProfile;
 
 interface EasJson {
   builds: {
@@ -150,7 +151,7 @@ export class EasJsonReader {
     };
   }
 
-  private validateBuildProfile<T>(
+  private validateBuildProfile<T extends BuildProfile>(
     platform: 'android' | 'ios' | 'all',
     buildProfileName: string,
     buildProfile?: { workflow: Workflow } & object

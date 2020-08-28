@@ -54,16 +54,15 @@ describe('AndroidBuilder', () => {
     it('should prepare valid job', async () => {
       setupCredentialsConfig();
       const ctx: any = {
-        eas: {
-          builds: {
-            android: {
-              credentialsSource: 'local',
-              workflow: 'generic',
-            },
-          },
+        platform: 'android',
+        buildProfile: {
+          credentialsSource: 'local',
+          workflow: 'generic',
         },
-        projectDir: '.',
-        user: jest.fn(),
+        commandCtx: {
+          projectDir: '.',
+          user: jest.fn(),
+        },
       };
       const builder = new AndroidBuilder(ctx);
       await builder.ensureCredentialsAsync();
@@ -90,16 +89,15 @@ describe('AndroidBuilder', () => {
     it('should prepare valid job', async () => {
       setupCredentialsConfig();
       const ctx: any = {
-        eas: {
-          builds: {
-            android: {
-              credentialsSource: 'local',
-              workflow: 'managed',
-            },
-          },
+        platform: 'android',
+        buildProfile: {
+          credentialsSource: 'local',
+          workflow: 'managed',
         },
-        projectDir: '.',
-        user: jest.fn(),
+        commandCtx: {
+          projectDir: '.',
+          user: jest.fn(),
+        },
       };
       const builder = new AndroidBuilder(ctx);
       await builder.ensureCredentialsAsync();

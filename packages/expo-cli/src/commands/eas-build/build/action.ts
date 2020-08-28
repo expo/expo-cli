@@ -1,6 +1,6 @@
+import { Platform } from '@expo/build-tools';
 import { getConfig } from '@expo/config';
 import { ApiV2, User, UserManager } from '@expo/xdl';
-import { build } from '@hapi/joi';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
@@ -18,7 +18,8 @@ import { platformDisplayNames } from '../constants';
 import { Build, BuildCommandPlatform, BuildStatus } from '../types';
 import AndroidBuilder from './builders/AndroidBuilder';
 import iOSBuilder from './builders/iOSBuilder';
-import { Builder, BuilderContext } from './types';
+import { BuildMetadata, collectMetadata } from './metadata';
+import { Builder, BuilderContext, CommandContext, PlatformBuildProfile } from './types';
 import {
   ensureGitRepoExistsAsync,
   ensureGitStatusIsCleanAsync,
@@ -38,12 +39,12 @@ interface BuildOptions {
 }
 
 async function buildAction(projectDir: string, options: BuildOptions): Promise<void> {
-  const platforms = Object.values(BuildCommandPlatform);
+  const commandPlatforms = Object.values(BuildCommandPlatform);
 
-  const { platform, profile } = options;
-  if (!platform || !platforms.includes(platform)) {
+  const { platform: commandPlatform, profile } = options;
+  if (!commandPlatform || !commandPlatforms.includes(commandPlatform)) {
     throw new Error(
-      `-p/--platform is required, valid platforms: ${platforms
+      `-p/--platform is required, valid platforms: ${commandPlatforms
         .map(p => log.chalk.bold(p))
         .join(', ')}`
     );
@@ -52,25 +53,27 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
   await ensureGitRepoExistsAsync();
   await ensureGitStatusIsCleanAsync();
 
-  const easConfig: EasConfig = await new EasJsonReader(projectDir, platform).readAsync(profile);
-  const ctx = await createBuilderContextAsync(projectDir, easConfig, {
-    platform,
+  const commandCtx = await createCommandContextAsync({
+    commandPlatform,
+    profile,
+    projectDir,
     nonInteractive: options.parent?.nonInteractive,
     skipCredentialsCheck: options?.skipCredentialsCheck,
     skipProjectConfiguration: options?.skipProjectConfiguration,
   });
-  const projectId = await ensureProjectExistsAsync(ctx.user, {
-    accountName: ctx.accountName,
-    projectName: ctx.projectName,
+
+  const projectId = await ensureProjectExistsAsync(commandCtx.user, {
+    accountName: commandCtx.accountName,
+    projectName: commandCtx.projectName,
   });
-  const scheduledBuilds = await startBuildsAsync(ctx, projectId);
+  const scheduledBuilds = await startBuildsAsync(commandCtx, projectId);
   log.newLine();
-  await printLogsUrls(ctx.accountName, scheduledBuilds);
+  await printLogsUrls(commandCtx.accountName, scheduledBuilds);
   log.newLine();
 
   if (options.wait) {
     const builds = await waitForBuildEndAsync(
-      ctx,
+      commandCtx,
       projectId,
       scheduledBuilds.map(i => i.buildId)
     );
@@ -78,34 +81,34 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
   }
 }
 
-async function createBuilderContextAsync(
-  projectDir: string,
-  eas: EasConfig,
-  {
-    platform = BuildCommandPlatform.ALL,
-    nonInteractive = false,
-    skipCredentialsCheck = false,
-    skipProjectConfiguration = false,
-  }: {
-    platform?: BuildCommandPlatform;
-    nonInteractive?: boolean;
-    skipCredentialsCheck?: boolean;
-    skipProjectConfiguration?: boolean;
-  }
-): Promise<BuilderContext> {
+async function createCommandContextAsync({
+  commandPlatform,
+  profile,
+  projectDir,
+  nonInteractive = false,
+  skipCredentialsCheck = false,
+  skipProjectConfiguration = false,
+}: {
+  commandPlatform: BuildCommandPlatform;
+  profile: string;
+  projectDir: string;
+  nonInteractive?: boolean;
+  skipCredentialsCheck?: boolean;
+  skipProjectConfiguration?: boolean;
+}): Promise<CommandContext> {
   const user: User = await UserManager.ensureLoggedInAsync();
   const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
   const accountName = exp.owner || user.username;
   const projectName = exp.slug;
 
   return {
-    eas,
+    commandPlatform,
+    profile,
     projectDir,
     user,
     accountName,
     projectName,
     exp,
-    platform,
     nonInteractive,
     skipCredentialsCheck,
     skipProjectConfiguration,
@@ -113,39 +116,85 @@ async function createBuilderContextAsync(
 }
 
 async function startBuildsAsync(
-  ctx: BuilderContext,
+  commandCtx: CommandContext,
   projectId: string
 ): Promise<
   { platform: BuildCommandPlatform.ANDROID | BuildCommandPlatform.IOS; buildId: string }[]
 > {
-  const client = ApiV2.clientForUser(ctx.user);
+  const client = ApiV2.clientForUser(commandCtx.user);
   const scheduledBuilds: {
     platform: BuildCommandPlatform.ANDROID | BuildCommandPlatform.IOS;
     buildId: string;
   }[] = [];
-  if ([BuildCommandPlatform.ANDROID, BuildCommandPlatform.ALL].includes(ctx.platform)) {
-    const builder = new AndroidBuilder(ctx);
-    const buildId = await startBuildAsync(client, builder, projectId);
+  const easConfig = await new EasJsonReader(
+    commandCtx.projectDir,
+    commandCtx.commandPlatform
+  ).readAsync(commandCtx.profile);
+  if (
+    [BuildCommandPlatform.ANDROID, BuildCommandPlatform.ALL].includes(commandCtx.commandPlatform)
+  ) {
+    const builderContext = createBuilderContext<Platform.Android>({
+      commandCtx,
+      platform: Platform.Android,
+      easConfig,
+    });
+    const builder = new AndroidBuilder(builderContext);
+    const metadata = await collectMetadata(commandCtx, builderContext.buildProfile);
+    const buildId = await startBuildAsync(client, { builder, projectId, metadata });
     scheduledBuilds.push({ platform: BuildCommandPlatform.ANDROID, buildId });
   }
-  if ([BuildCommandPlatform.IOS, BuildCommandPlatform.ALL].includes(ctx.platform)) {
-    const builder = new iOSBuilder(ctx);
-    const buildId = await startBuildAsync(client, builder, projectId);
+  if ([BuildCommandPlatform.IOS, BuildCommandPlatform.ALL].includes(commandCtx.commandPlatform)) {
+    const builderContext = createBuilderContext<Platform.iOS>({
+      commandCtx,
+      platform: Platform.iOS,
+      easConfig,
+    });
+    const builder = new iOSBuilder(builderContext);
+    const metadata = await collectMetadata(commandCtx, builderContext.buildProfile);
+    const buildId = await startBuildAsync(client, { builder, projectId, metadata });
     scheduledBuilds.push({ platform: BuildCommandPlatform.IOS, buildId });
   }
   return scheduledBuilds;
 }
 
-async function startBuildAsync(
+function createBuilderContext<T extends Platform>({
+  platform,
+  easConfig,
+  commandCtx,
+}: {
+  platform: T;
+  easConfig: EasConfig;
+  commandCtx: CommandContext;
+}): BuilderContext<T> {
+  const buildProfile = easConfig.builds[platform] as PlatformBuildProfile<T> | undefined;
+  if (!buildProfile) {
+    throw new Error(`${platform} build profile does not exist`);
+  }
+
+  return {
+    commandCtx,
+    platform,
+    buildProfile,
+  };
+}
+
+async function startBuildAsync<T extends Platform>(
   client: ApiV2,
-  builder: Builder,
-  projectId: string
+  {
+    projectId,
+    builder,
+    metadata,
+  }: {
+    projectId: string;
+    builder: Builder<T>;
+    metadata: BuildMetadata;
+  }
 ): Promise<string> {
   const tarPath = path.join(os.tmpdir(), `${uuidv4()}.tar.gz`);
   try {
     await builder.setupAsync();
     await builder.ensureCredentialsAsync();
-    if (!builder.ctx.skipProjectConfiguration) {
+    if (!builder.ctx.commandCtx.skipProjectConfiguration) {
       await builder.configureProjectAsync();
     }
 
@@ -162,6 +211,7 @@ async function startBuildAsync(
     log(`Starting ${platformDisplayNames[job.platform]} build`);
     const { buildId } = await client.postAsync(`projects/${projectId}/builds`, {
       job: job as any,
+      metadata,
     });
     return buildId;
   } finally {
@@ -170,12 +220,12 @@ async function startBuildAsync(
 }
 
 async function waitForBuildEndAsync(
-  ctx: BuilderContext,
+  commandCtx: CommandContext,
   projectId: string,
   buildIds: string[],
   { timeoutSec = 1800, intervalSec = 30 } = {}
 ): Promise<(Build | null)[]> {
-  const client = ApiV2.clientForUser(ctx.user);
+  const client = ApiV2.clientForUser(commandCtx.user);
   log('Waiting for build to complete. You can press Ctrl+C to exit.');
   const spinner = ora().start();
   let time = new Date().getTime();
