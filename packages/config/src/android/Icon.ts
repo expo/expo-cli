@@ -51,27 +51,9 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
     return null;
   }
 
-  await configureLegacyIconAsync(
-    projectRoot,
-    icon,
-    // must have defined foregroundImage for either background layer to have effect
-    foregroundImage ? backgroundImage : null,
-    foregroundImage ? backgroundColor : null
-  );
+  await configureLegacyIconAsync(projectRoot, icon, backgroundImage, backgroundColor);
 
-  if (foregroundImage) {
-    await configureAdaptiveIconAsync(
-      projectRoot,
-      foregroundImage,
-      backgroundImage,
-      backgroundColor
-    );
-  } else {
-    // Delete any adaptive icon files from the Android project, or else they will be
-    // used instead of the legacy icons we just created
-    await unsetBackgroundColorAsync(projectRoot);
-    await removeAllAdaptiveIconFilesAsync(projectRoot);
-  }
+  await configureAdaptiveIconAsync(projectRoot, icon, backgroundImage, backgroundColor);
 
   return true;
 }
@@ -274,38 +256,6 @@ async function createAdaptiveIconXmlFiles(projectRoot: string, icLauncherXmlStri
   await fs.mkdirp(anyDpiV26Directory);
   await fs.writeFile(path.resolve(anyDpiV26Directory, IC_LAUNCHER_XML), icLauncherXmlString);
   await fs.writeFile(path.resolve(anyDpiV26Directory, IC_LAUNCHER_ROUND_XML), icLauncherXmlString);
-}
-
-async function unsetBackgroundColorAsync(projectRoot: string) {
-  const colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectRoot);
-  if (!colorsXmlPath) {
-    return;
-  }
-  let colorsJson = await Colors.readColorsXMLAsync(colorsXmlPath);
-  colorsJson = Colors.removeColorItem(ICON_BACKGROUND, colorsJson);
-  await Colors.writeColorsXMLAsync(colorsXmlPath, colorsJson);
-}
-
-async function removeAllAdaptiveIconFilesAsync(projectRoot: string) {
-  Promise.all(
-    Object.values(dpiValues).map(async ({ folderName, scale }) => {
-      const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
-      await fs.remove(path.resolve(dpiFolderPath, IC_LAUNCHER_FOREGROUND_PNG));
-      await fs.remove(path.resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG));
-      const anyDpiV26Directory = path.resolve(projectRoot, ANDROID_RES_PATH, MIPMAP_ANYDPI_V26);
-      if (await fs.pathExists(anyDpiV26Directory)) {
-        const contents = await fs.readdir(anyDpiV26Directory);
-        if (
-          contents.every(fileName => [IC_LAUNCHER_XML, IC_LAUNCHER_ROUND_XML].includes(fileName))
-        ) {
-          await fs.remove(anyDpiV26Directory);
-        } else {
-          await fs.remove(path.resolve(anyDpiV26Directory, IC_LAUNCHER_XML));
-          await fs.remove(path.resolve(anyDpiV26Directory, IC_LAUNCHER_ROUND_XML));
-        }
-      }
-    })
-  );
 }
 
 async function removeBackgroundImageFilesAsync(projectRoot: string) {
