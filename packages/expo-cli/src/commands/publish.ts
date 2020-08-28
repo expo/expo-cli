@@ -312,7 +312,7 @@ export default function(program: Command) {
   program
     .command('publish <path>')
     .alias('p')
-    .description('Deploy your project to Expo hosting')
+    .description('Deploy a project to Expo hosting')
     .helpGroup('core')
     .option('-q, --quiet', 'Suppress verbose output from the Metro bundler.')
     .option('-s, --send-to [dest]', 'A phone number or email address to send a link to')

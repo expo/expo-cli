@@ -328,7 +328,7 @@ export default (program: any) => {
   program
     .command('start <path>')
     .alias('r')
-    .description('Start a local dev server for your app')
+    .description('Start a local dev server for the app')
     .helpGroup('core')
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .option('-c, --clear', 'Clear the Metro bundler cache')

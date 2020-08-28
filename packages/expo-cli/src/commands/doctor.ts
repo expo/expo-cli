@@ -8,7 +8,7 @@ async function action(projectDir: string) {
   await Doctor.validateExpoServersAsync(projectDir);
 
   if ((await Doctor.validateWithNetworkAsync(projectDir)) === Doctor.NO_ISSUES) {
-    log(`Didn't find any issues with your project!`);
+    log(`Didn't find any issues with the project!`);
   }
   process.exit();
 }
@@ -16,7 +16,7 @@ async function action(projectDir: string) {
 export default function(program: Command) {
   program
     .command('doctor <path>')
-    .description('Diagnose issues with your project')
+    .description('Diagnose issues with the project')
     .helpGroup('info')
     .asyncActionProjectDir(action);
 }
