@@ -47,7 +47,7 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
     }
   }
 
-  log.newLine();
+  log.addNewLineIfNone();
   log(
     log.chalk.cyan(
       `Now we need to know your ${terminalLink(
@@ -120,7 +120,7 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
     }
   }
 
-  log.newLine();
+  log.addNewLineIfNone();
   log(
     `Now we need to know your ${terminalLink(
       'Android package',
@@ -171,7 +171,7 @@ async function attemptModification(
     skipSDKVersionRequirement: true,
   });
   if (modification.type === 'success') {
-    log.newLine();
+    log.addNewLineIfNone();
     log(modificationSuccessMessage);
     log.newLine();
   } else {
@@ -188,7 +188,7 @@ function logNoConfig() {
 }
 
 function warnAboutConfigAndExit(type: string, message: string, edits: Partial<ExpoConfig>) {
-  log.newLine();
+  log.addNewLineIfNone();
   if (type === 'warn') {
     // The project is using a dynamic config, give the user a helpful log and bail out.
     log(log.chalk.yellow(message));
