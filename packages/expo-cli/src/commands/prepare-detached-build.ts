@@ -10,11 +10,13 @@ async function action(projectDir: string, options: Options) {
   await Detach.prepareDetachedBuildAsync(projectDir, options);
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
-    .command('prepare-detached-build [project-dir]')
+    .command('prepare-detached-build <path>', 'Prepares a detached project for building', {
+      noHelp: true,
+    })
+    .helpGroup('internal')
     .option('--platform [platform]', 'detached project platform')
     .option('--skipXcodeConfig [bool]', '[iOS only] if true, do not configure Xcode project')
-    .description('Prepares a detached project for building')
     .asyncActionProjectDir(action);
 }

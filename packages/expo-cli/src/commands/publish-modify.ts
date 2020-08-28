@@ -12,11 +12,12 @@ import {
   setPublishToChannelAsync,
 } from './utils/PublishUtils';
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
-    .command('publish:set [project-dir]')
+    .command('publish:set <path>')
     .alias('ps')
-    .description('Set a published release to be served from a specified channel.')
+    .description('Specify the channel to serve a published release')
+    .helpGroup('publish')
     .option(
       '-c, --release-channel <channel-name>',
       'The channel to set the published release. (Required)'
@@ -54,9 +55,10 @@ export default function (program: Command) {
       { checkConfig: true }
     );
   program
-    .command('publish:rollback [project-dir]')
+    .command('publish:rollback <path>')
     .alias('pr')
-    .description('Rollback an update to a channel.')
+    .description('Undo an update to a channel')
+    .helpGroup('publish')
     .option('--channel-id <channel-id>', 'This flag is deprecated.')
     .option('-c, --release-channel <channel-name>', 'The channel to rollback from. (Required)')
     .option('-s, --sdk-version <version>', 'The sdk version to rollback. (Required)')

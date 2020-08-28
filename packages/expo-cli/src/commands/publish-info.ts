@@ -15,9 +15,10 @@ const HORIZ_CELL_WIDTH_BIG = 40;
 
 export default (program: any) => {
   program
-    .command('publish:history [project-dir]')
+    .command('publish:history <path>')
     .alias('ph')
-    .description('View a log of your published releases.')
+    .description("Log the project's releases")
+    .helpGroup('publish')
     .option(
       '-c, --release-channel <channel-name>',
       'Filter by release channel. If this flag is not included, the most recent publications will be shown.'
@@ -86,9 +87,10 @@ export default (program: any) => {
       { checkConfig: true }
     );
   program
-    .command('publish:details [project-dir]')
+    .command('publish:details <path>')
     .alias('pd')
-    .description('View the details of a published release.')
+    .description('Log details of a published release')
+    .helpGroup('publish')
     .option('--publish-id <publish-id>', 'Publication id. (Required)')
     .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(

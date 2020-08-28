@@ -10,10 +10,12 @@ import { SubmissionMode } from './upload/submission-service/types';
 
 const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
-    .command('upload:android [projectDir]')
+    .command('upload:android <path>')
     .alias('ua')
+    .description('Uploads an Android binary to the Google Play Store')
+    .helpGroup('upload')
     .option('--latest', 'uploads the latest build')
     .option('--id <id>', 'id of the build to upload')
     .option('--path <path>', 'path to the .apk/.aab file')
@@ -41,7 +43,6 @@ export default function (program: Command) {
       'Experimental: Use Submission Service for uploading your app. The upload process will happen on Expo servers.'
     )
     .option('--verbose', 'Always print logs from Submission Service')
-    .description('Uploads an Android standalone app to Google Play Store.')
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: AndroidSubmitCommandOptions) => {
       // TODO: remove this once we verify `fastlane supply` works on linux / windows
@@ -58,8 +59,13 @@ export default function (program: Command) {
     });
 
   program
-    .command('upload:ios [projectDir]')
+    .command('upload:ios <path>')
     .alias('ui')
+    .description('macOS only: Upload an iOS binary to Apple. An alternative to Transporter.app')
+    .longDescription(
+      'Uploads an iOS binary to Apple TestFlight (MacOS only). Uses the latest build by default'
+    )
+    .helpGroup('upload')
     .option('--latest', 'uploads the latest build (default)')
     .option('--id <id>', 'id of the build to upload')
     .option('--path <path>', 'path to the .ipa file')
@@ -97,10 +103,8 @@ export default function (program: Command) {
       'English'
     )
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
-    .description(
-      'Uploads a standalone app to Apple TestFlight (works on macOS only). Uploads the latest build by default.'
-    )
-    .on('--help', function () {
+
+    .on('--help', function() {
       console.log('Available languages:');
       console.log(`  ${LANGUAGES.join(', ')}`);
       console.log();

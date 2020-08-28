@@ -74,27 +74,29 @@ async function action(projectDir: string, options: ProjectUrlOptions & URLOption
   }
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
-    .command('url [project-dir]')
+    .command('url <path>')
     .alias('u')
+    .helpGroup('url')
+
     .option('-w, --web', 'Return the URL of the web app')
-    .description('Displays the URL you can use to view your project in Expo')
+    .description('Log a URL for opening the project in the Expo client')
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(action);
 
   program
-    .command('url:ipa [project-dir]')
+    .command('url:ipa <path>')
+    .helpGroup('url')
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
-    .description('Displays the standalone iOS binary URL you can use to download your app binary')
+    .description('Log the download URL for the standalone iOS binary')
     .asyncActionProjectDir(logArtifactUrl('ios'));
 
   program
-    .command('url:apk [project-dir]')
+    .command('url:apk <path>')
+    .helpGroup('url')
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
-    .description(
-      'Displays the standalone Android binary URL you can use to download your app binary'
-    )
+    .description('Log the download URL for the standalone Android binary')
     .asyncActionProjectDir(logArtifactUrl('android'));
 }

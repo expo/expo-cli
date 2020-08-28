@@ -121,8 +121,9 @@ export default function install(program: Command) {
   program
     .command('install [packages...]')
     .alias('add')
+    .helpGroup('core')
     .option('--npm', 'Use npm to install dependencies. (default when package-lock.json exists)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when yarn.lock exists)')
-    .description('Installs a unimodule or other package to a project.')
+    .description('Installs a unimodule or other package to a project')
     .asyncAction(installAsync);
 }

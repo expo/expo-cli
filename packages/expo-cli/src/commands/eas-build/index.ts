@@ -6,7 +6,7 @@ import buildAction from './build/action';
 import credentialsSyncAction from './credentialsSync/action';
 import statusAction from './status/action';
 
-export default function (program: Command) {
+export default function(program: Command) {
   // don't register `expo eas:build:*` commands if eas.json doesn't exist
   const easJsonPath = path.join(process.cwd(), 'eas.json');
   if (!fs.pathExistsSync(easJsonPath)) {
@@ -14,7 +14,7 @@ export default function (program: Command) {
   }
 
   program
-    .command('eas:credentials:sync [project-dir]')
+    .command('eas:credentials:sync <path>')
     .description('Update credentials.json with credentials stored on Expo servers')
     .asyncActionProjectDir(credentialsSyncAction, {
       checkConfig: true,
@@ -22,7 +22,7 @@ export default function (program: Command) {
     });
 
   program
-    .command('eas:build [project-dir]')
+    .command('eas:build <path>')
     .description('Build an app binary for your project.')
     .option(
       '-p --platform <platform>',
@@ -36,7 +36,7 @@ export default function (program: Command) {
     .asyncActionProjectDir(buildAction, { checkConfig: true, skipSDKVersionRequirement: true });
 
   program
-    .command('eas:build:status [project-dir]')
+    .command('eas:build:status <path>')
     .description('Get the status of the latest builds for your project.')
     .option(
       '-p --platform <platform>',

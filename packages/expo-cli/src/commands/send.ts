@@ -38,11 +38,12 @@ async function action(projectDir: string, options: Options) {
   }
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
-    .command('send [project-dir]')
-    .description(`Send the project's url to an email address`)
-    .option('-s, --send-to  [dest]', 'Email address to send the URL to')
+    .command('send <path>')
+    .description(`Send the project's URL to an email address`)
+    .helpGroup('core')
+    .option('-s, --send-to [dest]', 'Email address to send the URL to')
     .urlOpts()
     .asyncActionProjectDir(action);
 }

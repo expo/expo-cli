@@ -560,13 +560,12 @@ async function promptForManagedConfig(
   return { expo };
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
-    .command('init [project-dir]')
+    .command('init <path>')
     .alias('i')
-    .description(
-      'Initializes a directory with an example project. Run it without any options and you will be prompted for the name and type.'
-    )
+    .helpGroup('core')
+    .description('Create a new Expo project')
     .option(
       '-t, --template [name]',
       'Specify which template to use. Valid options are "blank", "tabs", "bare-minimum" or a package on npm (e.g. "expo-template-bare-typescript") that includes an Expo project template.'

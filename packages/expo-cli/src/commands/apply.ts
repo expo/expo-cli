@@ -36,17 +36,18 @@ async function ensureConfigExistsAsync(projectRoot: string): Promise<void> {
   }
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
-    .command('apply [project-dir]')
+    .command('apply <path>')
     .option(
       '-p, --platform [platform]',
       'Configure only the given platform ("ios" or "android")',
       /^(android|ios)$/i
     )
+    .helpGroup('experimental')
     // .option('--interactive', 'TODO: provide a flag where people can see a diff for each option to be applied and approve or reject it')
     .description(
-      'Take the configuration from app.json or app.config.js and apply it to a native project.'
+      'Take the configuration from app.json or app.config.js and apply it to a native project'
     )
     .asyncActionProjectDir(async (projectDir: string, options: Options) => {
       await ensureConfigExistsAsync(projectDir);

@@ -169,10 +169,11 @@ function collect<T>(val: T, memo: T[]): T[] {
   return memo;
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
-    .command('export [project-dir]')
-    .description('Exports the static files of the app for hosting it on a web server.')
+    .command('export <path>')
+    .description('Exports the static files of the app for hosting it on a web server')
+    .helpGroup('core')
     .option('-p, --public-url <url>', 'The public url that will host the static files. (Required)')
     .option(
       '--output-dir <dir>',

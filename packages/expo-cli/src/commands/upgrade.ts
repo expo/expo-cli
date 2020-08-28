@@ -687,13 +687,14 @@ async function maybeCleanNpmStateAsync(packageManager: any) {
   }
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
-    .command('upgrade [targetSdkVersion]')
+    .command('upgrade')
     .alias('update')
+    .description('Upgrade the project packages and config for the given SDK version')
+    .helpGroup('info')
     .option('--npm', 'Use npm to install dependencies. (default when package-lock.json exists)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when yarn.lock exists)')
-    .description('Upgrades your project dependencies and app.json and to the given SDK version')
     .asyncAction(async (requestedSdkVersion: string | null, options: Options) => {
       const { projectRoot, workflow } = await findProjectRootAsync(process.cwd());
 

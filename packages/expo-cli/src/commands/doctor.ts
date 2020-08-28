@@ -13,9 +13,10 @@ async function action(projectDir: string) {
   process.exit();
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
-    .command('doctor [project-dir]')
-    .description('Diagnoses issues with your Expo project.')
+    .command('doctor <path>')
+    .description('Diagnoses issues with your Expo project')
+    .helpGroup('info')
     .asyncActionProjectDir(action);
 }
