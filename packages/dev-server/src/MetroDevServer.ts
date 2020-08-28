@@ -91,7 +91,7 @@ export async function bundleAsync(
       platform: bundle.platform,
       entryFile: bundle.entryPoint,
       dev: bundle.dev ?? false,
-      minify: bundle.minify ?? false,
+      minify: bundle.minify ?? !bundle.dev,
       inlineSourceMap: false,
       sourceMapUrl: bundle.sourceMapUrl,
       createModuleIdFactory: config.serializer.createModuleIdFactory,

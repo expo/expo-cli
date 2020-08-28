@@ -18,6 +18,7 @@ import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import joi from '@hapi/joi';
 import axios from 'axios';
+import chalk from 'chalk';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import decache from 'decache';
@@ -71,6 +72,7 @@ import * as Watchman from './Watchman';
 import * as Webpack from './Webpack';
 import XDLError from './XDLError';
 import * as ExponentTools from './detach/ExponentTools';
+import * as TableText from './logs/TableText';
 import * as Doctor from './project/Doctor';
 import * as ProjectUtils from './project/ProjectUtils';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
@@ -411,11 +413,17 @@ export async function exportForAppHosting(
   const iosBundle = bundles.ios.code;
   const androidBundle = bundles.android.code;
 
-  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
+  const iosBundleHash = crypto
+    .createHash('md5')
+    .update(iosBundle)
+    .digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
+  const androidBundleHash = crypto
+    .createHash('md5')
+    .update(androidBundle)
+    .digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 
@@ -625,10 +633,25 @@ export async function findReusableBuildAsync(
   return buildReuseStatus;
 }
 
+export interface PublishedProjectResult {
+  /**
+   * Project manifest URL
+   */
+  url: string;
+  /**
+   * TODO: What is this?
+   */
+  ids: string[];
+  /**
+   * TODO: What is this? Where does it come from?
+   */
+  err?: string;
+}
+
 export async function publishAsync(
   projectRoot: string,
   options: PublishOptions = {}
-): Promise<{ url: string; ids: string[]; err?: string }> {
+): Promise<PublishedProjectResult> {
   options.target = options.target ?? getDefaultTarget(projectRoot);
   const target = options.target;
   const user = await UserManager.ensureLoggedInAsync();
@@ -653,10 +676,25 @@ export async function publishAsync(
   const { hooks } = exp;
   delete exp.hooks;
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
-
   const bundles = await buildPublishBundlesAsync(projectRoot, options);
   const androidBundle = bundles.android.code;
   const iosBundle = bundles.ios.code;
+
+  const files = [
+    ['index.ios.js', bundles.ios.code],
+    ['index.android.js', bundles.android.code],
+  ];
+  // Account for inline source maps
+  if (bundles.ios.map) {
+    files.push([chalk.dim('index.ios.js.map'), bundles.ios.map]);
+  }
+  if (bundles.android.map) {
+    files.push([chalk.dim('index.android.js.map'), bundles.android.map]);
+  }
+
+  logger.global.info('');
+  logger.global.info(TableText.createFilesTable(files));
+  logger.global.info('');
 
   await publishAssetsAsync({ projectRoot, exp, bundles });
 
@@ -784,6 +822,7 @@ async function _uploadArtifactsAsync({
   options: PublishOptions;
   pkg: PackageJSONConfig;
 }) {
+  logger.global.info('');
   logger.global.info('Uploading JavaScript bundles');
   const formData = new FormData();
 
@@ -795,6 +834,7 @@ async function _uploadArtifactsAsync({
 
   const user = await UserManager.ensureLoggedInAsync();
   const api = ApiV2.clientForUser(user);
+
   return await api.uploadFormDataAsync('publish/new', formData);
 }
 
@@ -853,6 +893,7 @@ async function buildPublishBundlesAsync(
       await stopReactNativeServerAsync(projectRoot);
     }
   }
+
   const platforms: Platform[] = ['android', 'ios'];
   const [android, ios] = await bundleAsync(
     projectRoot,

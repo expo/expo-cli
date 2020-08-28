@@ -7,6 +7,7 @@ import * as Env from './Env';
 import { ConnectionType } from './User';
 
 export type UserSettingsData = {
+  appleId?: string;
   accessToken?: string;
   auth?: UserData | null;
   ignoreBundledBinaries?: string[];
@@ -17,6 +18,7 @@ export type UserSettingsData = {
 };
 
 export type UserData = {
+  appleId?: string;
   userId?: string;
   username?: string;
   currentConnection?: ConnectionType;

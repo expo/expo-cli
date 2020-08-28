@@ -5,7 +5,10 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import log from '../../log';
-import { downloadFile } from './utils';
+import {
+  downloadAppArchiveAsync,
+  extractLocalArchiveAsync,
+} from './submission-service/utils/files';
 
 export type PlatformOptions = {
   id?: string;
@@ -50,7 +53,7 @@ export default class BaseUploader {
   async _getBinaryFilePath(): Promise<string> {
     const { path, id, url } = this.options;
     if (path) {
-      return path;
+      return this._downloadBuild(path);
     } else if (id) {
       return this._downloadBuildById(id);
     } else if (url) {
@@ -107,17 +110,13 @@ export default class BaseUploader {
   }
 
   async _downloadBuild(urlOrPath: string): Promise<string> {
-    const filename = path.basename(urlOrPath);
-    const destinationPath = `/tmp/${filename}`;
-    if (await fs.pathExists(destinationPath)) {
-      await fs.remove(destinationPath);
-    }
-    if (urlOrPath.startsWith('/')) {
-      await fs.copy(urlOrPath, destinationPath);
-      return destinationPath;
+    if (path.isAbsolute(urlOrPath)) {
+      // Local file paths that don't need to be extracted will simply return the `urlOrPath` as the final destination.
+      return await extractLocalArchiveAsync(urlOrPath);
     } else {
+      // Remote files
       log(`Downloading build from ${urlOrPath}`);
-      return await downloadFile(urlOrPath, destinationPath);
+      return await downloadAppArchiveAsync(urlOrPath);
     }
   }
 
