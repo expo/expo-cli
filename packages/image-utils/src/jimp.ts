@@ -105,7 +105,11 @@ export async function resize(
     );
   }
   if (background) {
-    initialImage = initialImage.background(Jimp.cssColorToHex(background));
+    initialImage = initialImage.composite(new Jimp(width, height, background), 0, 0, {
+      mode: Jimp.BLEND_DESTINATION_OVER,
+      opacitySource: 1,
+      opacityDest: 1,
+    });
   }
 
   return await initialImage.quality(jimpQuality);
