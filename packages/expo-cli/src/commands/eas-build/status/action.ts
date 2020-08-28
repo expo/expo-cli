@@ -1,11 +1,11 @@
-import { ProjectConfig, getConfig } from '@expo/config';
-import { ApiV2, User, UserManager } from '@expo/xdl';
+import { getConfig } from '@expo/config';
+import { Analytics, ApiV2, UserManager } from '@expo/xdl';
 import ora from 'ora';
 
 import log from '../../../log';
 import { ensureProjectExistsAsync } from '../../../projects';
 import { printTableJsonArray } from '../../utils/cli-table';
-import { Build, BuildCommandPlatform, BuildStatus } from '../types';
+import { AnalyticsEvent, Build, BuildCommandPlatform, BuildStatus } from '../types';
 
 interface BuildStatusOptions {
   platform: BuildCommandPlatform;
@@ -42,8 +42,8 @@ async function statusAction(
     }
   }
 
-  const user: User = await UserManager.ensureLoggedInAsync();
-  const { exp }: ProjectConfig = getConfig(projectDir);
+  const user = await UserManager.ensureLoggedInAsync();
+  const { exp } = getConfig(projectDir);
 
   const accountName = exp.owner || user.username;
   const projectName = exp.slug;
@@ -51,6 +51,13 @@ async function statusAction(
   const projectId = await ensureProjectExistsAsync(user, {
     accountName,
     projectName,
+  });
+
+  Analytics.logEvent(AnalyticsEvent.BUILD_STATUS_COMMAND, {
+    project_id: projectId,
+    account_name: accountName,
+    project_name: projectName,
+    requested_platform: platform,
   });
 
   const client = ApiV2.clientForUser(user);

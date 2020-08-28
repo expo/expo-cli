@@ -16,9 +16,13 @@ export default function createBuilderContext<T extends Platform>({
   if (!buildProfile) {
     throw new Error(`${platform} build profile does not exist`);
   }
-
+  const builderTrackingCtx = {
+    ...commandCtx.trackingCtx,
+    platform,
+  };
   return {
     commandCtx,
+    trackingCtx: builderTrackingCtx,
     platform,
     buildProfile,
   };

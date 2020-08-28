@@ -18,7 +18,7 @@ async function action(command: Command) {
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('whoami')
     .helpGroup('auth')
