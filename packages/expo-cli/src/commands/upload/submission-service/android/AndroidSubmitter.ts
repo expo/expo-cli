@@ -217,6 +217,7 @@ class AndroidOnlineSubmitter {
         submissionStatus = submission.status;
         if (submissionStatus === SubmissionStatus.ERRORED) {
           submissionCompleted = true;
+          process.exitCode = 1;
           submissionSpinner.fail();
         } else if (submissionStatus === SubmissionStatus.FINISHED) {
           submissionCompleted = true;
