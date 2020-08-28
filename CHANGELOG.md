@@ -9,6 +9,10 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🎉 New features
 
 - [expo-cli] expo upload - support tar.gz files from builds v2 ([#2504](https://github.com/expo/expo-cli/pull/2504) by [@EvanBacon](https://github.com/EvanBacon))
+- [expo-cli] Implemented keychain storage for Apple ID ([#2508](https://github.com/expo/expo-cli/pull/2508) by [@EvanBacon](https://github.com/EvanBacon))
+- [expo-cli] expo publish - Clean up upload results logs ([#2516](https://github.com/expo/expo-cli/pull/2516) by [@EvanBacon](https://github.com/EvanBacon))
+- [expo-cli] expo eject - Added support for locales in eject and apply ([#2496](https://github.com/expo/expo-cli/pull/2496) by [@EvanBacon](https://github.com/EvanBacon))
+- [expo-cli] expo publish - Log bundles after building ([#2527](https://github.com/expo/expo-cli/pull/2527) by [@EvanBacon](https://github.com/EvanBacon))
 
 ### 🐛 Bug fixes
 
@@ -16,6 +20,37 @@ This is the log of notable changes to Expo CLI and related packages.
 - [expo-cli] Fix `generate-module` to support latest `expo-module-template` ([#2510](https://github.com/expo/expo-cli/pull/2510) by [@barthap](https://github.com/barthap))
 
 ### 📦 Packages updated
+
+## [Thu Aug 27 10:25:29 2020 -0700](https://github.com/expo/expo-cli/commit/5f41c9306d9da10ab8a85e99659d9a039cf9e90b)
+
+### 🎉 New features
+
+- [eject] Added support for allowBackup ([#2506](https://github.com/expo/expo-cli/pull/2506) by [@EvanBacon](https://github.com/EvanBacon))
+- [eject] Warn before ejecting that some config needs to be set on dynamic config ([#1761](https://github.com/expo/expo-cli/pull/1761) by [@brentvatne](https://github.com/brentvatne))
+- [expo-cli] Added no-install option to expo init ([#2515](https://github.com/expo/expo-cli/pull/2515) by [@EvanBacon](https://github.com/EvanBacon))
+
+### 🐛 Bug fixes
+
+- [image-utils] Add missing dependencies ([#2512](https://github.com/expo/expo-cli/pull/2512) by [@byCedric](https://github.com/byCedric))
+- [webpack-config] fix: handle empty favicons ([#2423](https://github.com/expo/expo-cli/pull/2423) by [@jaulz](https://github.com/jaulz))
+- [config] Update "googleMobileAdsAutoInit" to be optional ([#2317](https://github.com/expo/expo-cli/pull/2317) by [@JamieS1211](https://github.com/JamieS1211))
+- [webpack-config] add compatibility for node-pushnotifications in service worker ([#1440](https://github.com/expo/expo-cli/pull/1440) by [@jaulz](https://github.com/jaulz))
+
+### 📦 Packages updated
+
+- @expo/config@3.2.21
+- @expo/dev-server@0.1.23
+- @expo/dev-tools@0.13.36
+- @expo/electron-adapter@0.0.14
+- expo-cli@3.25.1
+- expo-optimize@0.1.45
+- @expo/image-utils@0.3.3
+- @expo/metro-config@0.1.23
+- @expo/next-adapter@2.1.27
+- expo-pwa@0.0.33
+- uri-scheme@1.0.29
+- @expo/webpack-config@0.12.27
+- @expo/xdl@57.9.33
 
 ## [Wed Aug 26 12:13:11 2020 +0200](https://github.com/expo/expo-cli/commit/7d5820b3d6a32862205355a01684c66f3787354e)
 
