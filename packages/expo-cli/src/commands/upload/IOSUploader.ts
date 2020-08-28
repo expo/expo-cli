@@ -165,10 +165,8 @@ export default class IOSUploader extends BaseUploader {
     const appleCreds = { appleId, appleIdPassword, appleTeamId, companyName };
 
     log('Resolving the ITC team ID...');
-    const { itc_team_id: itcTeamId } = await runFastlaneAsync(
-      fastlane.resolveItcTeamId,
-      [],
-      appleCreds
+    const { itc_team_id: itcTeamId } = JSON.parse(
+      await runFastlaneAsync(fastlane.resolveItcTeamId, [], appleCreds)
     );
     log(`ITC team ID is ${itcTeamId}`);
     const updatedAppleCreds = {

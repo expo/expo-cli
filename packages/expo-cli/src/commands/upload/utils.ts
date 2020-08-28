@@ -19,7 +19,7 @@ export async function runFastlaneAsync(
     companyName?: string;
   },
   pipeToLogger = false
-): Promise<{ [key: string]: any }> {
+): Promise<string> {
   const pipeToLoggerOptions: any = pipeToLogger
     ? { pipeToLogger: { stdout: true } }
     : { stdio: [0, 1, 'pipe'] };
@@ -46,21 +46,11 @@ export async function runFastlaneAsync(
     env,
   };
 
-  const { stderr } = await spawnAsyncThrowError(program, args, spawnOptions);
+  const { stderr, status } = await spawnAsyncThrowError(program, args, spawnOptions);
 
-  const res = JSON.parse(stderr);
-  if (res.result !== 'failure') {
-    return res;
-  } else {
-    let message =
-      res.reason !== 'Unknown reason'
-        ? res.reason
-        : res.rawDump?.message ?? 'Unknown error when running fastlane';
-    message = `${message}${
-      res?.rawDump?.backtrace
-        ? `\n${res.rawDump.backtrace.map((i: string) => `    ${i}`).join('\n')}`
-        : ''
-    }`;
-    throw new Error(message);
+  if (status !== 0) {
+    throw new Error(stderr);
   }
+
+  return stderr;
 }
