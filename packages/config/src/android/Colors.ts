@@ -36,7 +36,7 @@ export async function writeColorsXMLAsync(colorsPath: string, colorsContent: any
 }
 
 export function setColorItem(itemToAdd: XMLItem[], colorFileContentsJSON: Document) {
-  if (colorFileContentsJSON.resources.color) {
+  if (colorFileContentsJSON.resources?.color) {
     const colorNameExists = colorFileContentsJSON.resources.color.filter(
       (e: XMLItem) => e['$'].name === itemToAdd[0]['$'].name
     )[0];
@@ -53,6 +53,17 @@ export function setColorItem(itemToAdd: XMLItem[], colorFileContentsJSON: Docume
       colorFileContentsJSON.resources = {};
     }
     colorFileContentsJSON.resources.color = itemToAdd;
+  }
+  return colorFileContentsJSON;
+}
+
+export function removeColorItem(keyToRemove: string, colorFileContentsJSON: Document) {
+  if (colorFileContentsJSON.resources?.color) {
+    colorFileContentsJSON.resources.color.forEach((e: XMLItem, index: number) => {
+      if (e['$'].name === keyToRemove) {
+        colorFileContentsJSON.resources.color.splice(index, 1);
+      }
+    });
   }
   return colorFileContentsJSON;
 }
