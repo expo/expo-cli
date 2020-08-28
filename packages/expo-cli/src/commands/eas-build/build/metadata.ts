@@ -33,9 +33,8 @@ export type BuildMetadata = {
   /**
    * Credentials source
    * Credentials could be obtained either from credential.json or Expo servers.
-   * Auto mode means that both sources will be checked.
    */
-  credentialsSource: CredentialsSource;
+  credentialsSource?: CredentialsSource.LOCAL | CredentialsSource.REMOTE;
 
   /**
    * Expo SDK version
@@ -53,13 +52,19 @@ export type BuildMetadata = {
 
 async function collectMetadata<T extends AndroidBuildProfile | iOSBuildProfile>(
   commandCtx: CommandContext,
-  buildProfile: T
+  {
+    credentialsSource,
+    buildProfile,
+  }: {
+    credentialsSource?: CredentialsSource.LOCAL | CredentialsSource.REMOTE;
+    buildProfile: T;
+  }
 ): Promise<BuildMetadata> {
   return {
     appVersion: commandCtx.exp.version,
     cliVersion: packageJSON.version,
     workflow: buildProfile.workflow,
-    credentialsSource: buildProfile.credentialsSource,
+    credentialsSource,
     sdkVersion: commandCtx.exp.sdkVersion,
   };
 }

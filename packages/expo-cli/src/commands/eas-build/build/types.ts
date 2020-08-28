@@ -2,11 +2,11 @@ import { Job, Platform } from '@expo/build-tools';
 import { ExpoConfig } from '@expo/config';
 import { User } from '@expo/xdl';
 
-import { AndroidBuildProfile, iOSBuildProfile } from '../../../easJson';
+import { AndroidBuildProfile, CredentialsSource, iOSBuildProfile } from '../../../easJson';
 import { BuildCommandPlatform } from '../types';
 
 export interface CommandContext {
-  commandPlatform: BuildCommandPlatform;
+  requestedPlatform: BuildCommandPlatform;
   profile: string;
   projectDir: string;
   user: User;
@@ -21,7 +21,7 @@ export interface CommandContext {
 export interface Builder<T extends Platform> {
   ctx: BuilderContext<T>;
   setupAsync(): Promise<void>;
-  ensureCredentialsAsync(): Promise<void>;
+  ensureCredentialsAsync(): Promise<CredentialsSource.LOCAL | CredentialsSource.REMOTE | undefined>;
   configureProjectAsync(): Promise<void>;
   prepareJobAsync(archiveUrl: string): Promise<Job>;
 }

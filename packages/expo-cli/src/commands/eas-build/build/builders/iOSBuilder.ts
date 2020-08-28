@@ -9,7 +9,12 @@ import iOSCredentialsProvider, {
   iOSCredentials,
 } from '../../../../credentials/provider/iOSCredentialsProvider';
 import * as ProvisioningProfileUtils from '../../../../credentials/utils/provisioningProfile';
-import { Workflow, iOSGenericBuildProfile, iOSManagedBuildProfile } from '../../../../easJson';
+import {
+  CredentialsSource,
+  Workflow,
+  iOSGenericBuildProfile,
+  iOSManagedBuildProfile,
+} from '../../../../easJson';
 import log from '../../../../log';
 import prompts from '../../../../prompts';
 import { ensureCredentialsAsync } from '../credentials';
@@ -45,7 +50,9 @@ class iOSBuilder implements Builder<Platform.iOS> {
     }
   }
 
-  public async ensureCredentialsAsync(): Promise<void> {
+  public async ensureCredentialsAsync(): Promise<
+    CredentialsSource.LOCAL | CredentialsSource.REMOTE | undefined
+  > {
     if (!this.shouldLoadCredentials()) {
       return;
     }
@@ -66,6 +73,7 @@ class iOSBuilder implements Builder<Platform.iOS> {
       this.ctx.commandCtx.nonInteractive
     );
     this.credentials = await provider.getCredentialsAsync(credentialsSource);
+    return credentialsSource;
   }
 
   public async setupAsync(): Promise<void> {

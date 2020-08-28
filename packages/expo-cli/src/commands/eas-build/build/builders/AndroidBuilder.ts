@@ -11,6 +11,7 @@ import AndroidCredentialsProvider, {
 import {
   AndroidGenericBuildProfile,
   AndroidManagedBuildProfile,
+  CredentialsSource,
   Workflow,
 } from '../../../../easJson';
 import { gitAddAsync } from '../../../../git';
@@ -36,7 +37,9 @@ class AndroidBuilder implements Builder<Platform.Android> {
 
   public async setupAsync(): Promise<void> {}
 
-  public async ensureCredentialsAsync(): Promise<void> {
+  public async ensureCredentialsAsync(): Promise<
+    CredentialsSource.LOCAL | CredentialsSource.REMOTE | undefined
+  > {
     this.credentialsPrepared = true;
     if (!this.shouldLoadCredentials()) {
       return;
@@ -53,6 +56,7 @@ class AndroidBuilder implements Builder<Platform.Android> {
       this.ctx.commandCtx.nonInteractive
     );
     this.credentials = await provider.getCredentialsAsync(credentialsSource);
+    return credentialsSource;
   }
 
   public async configureProjectAsync(): Promise<void> {

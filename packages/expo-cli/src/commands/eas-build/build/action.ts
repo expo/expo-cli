@@ -39,12 +39,12 @@ interface BuildOptions {
 }
 
 async function buildAction(projectDir: string, options: BuildOptions): Promise<void> {
-  const commandPlatforms = Object.values(BuildCommandPlatform);
+  const buildCommandPlatforms = Object.values(BuildCommandPlatform);
 
-  const { platform: commandPlatform, profile } = options;
-  if (!commandPlatform || !commandPlatforms.includes(commandPlatform)) {
+  const { platform: requestedPlatform, profile } = options;
+  if (!requestedPlatform || !buildCommandPlatforms.includes(requestedPlatform)) {
     throw new Error(
-      `-p/--platform is required, valid platforms: ${commandPlatforms
+      `-p/--platform is required, valid platforms: ${buildCommandPlatforms
         .map(p => log.chalk.bold(p))
         .join(', ')}`
     );
@@ -54,7 +54,7 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
   await ensureGitStatusIsCleanAsync();
 
   const commandCtx = await createCommandContextAsync({
-    commandPlatform,
+    requestedPlatform,
     profile,
     projectDir,
     nonInteractive: options.parent?.nonInteractive,
@@ -82,14 +82,14 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
 }
 
 async function createCommandContextAsync({
-  commandPlatform,
+  requestedPlatform,
   profile,
   projectDir,
   nonInteractive = false,
   skipCredentialsCheck = false,
   skipProjectConfiguration = false,
 }: {
-  commandPlatform: BuildCommandPlatform;
+  requestedPlatform: BuildCommandPlatform;
   profile: string;
   projectDir: string;
   nonInteractive?: boolean;
@@ -102,7 +102,7 @@ async function createCommandContextAsync({
   const projectName = exp.slug;
 
   return {
-    commandPlatform,
+    requestedPlatform,
     profile,
     projectDir,
     user,
@@ -128,10 +128,10 @@ async function startBuildsAsync(
   }[] = [];
   const easConfig = await new EasJsonReader(
     commandCtx.projectDir,
-    commandCtx.commandPlatform
+    commandCtx.requestedPlatform
   ).readAsync(commandCtx.profile);
   if (
-    [BuildCommandPlatform.ANDROID, BuildCommandPlatform.ALL].includes(commandCtx.commandPlatform)
+    [BuildCommandPlatform.ANDROID, BuildCommandPlatform.ALL].includes(commandCtx.requestedPlatform)
   ) {
     const builderContext = createBuilderContext<Platform.Android>({
       commandCtx,
@@ -139,19 +139,17 @@ async function startBuildsAsync(
       easConfig,
     });
     const builder = new AndroidBuilder(builderContext);
-    const metadata = await collectMetadata(commandCtx, builderContext.buildProfile);
-    const buildId = await startBuildAsync(client, { builder, projectId, metadata });
+    const buildId = await startBuildAsync(client, { builder, projectId });
     scheduledBuilds.push({ platform: BuildCommandPlatform.ANDROID, buildId });
   }
-  if ([BuildCommandPlatform.IOS, BuildCommandPlatform.ALL].includes(commandCtx.commandPlatform)) {
+  if ([BuildCommandPlatform.IOS, BuildCommandPlatform.ALL].includes(commandCtx.requestedPlatform)) {
     const builderContext = createBuilderContext<Platform.iOS>({
       commandCtx,
       platform: Platform.iOS,
       easConfig,
     });
     const builder = new iOSBuilder(builderContext);
-    const metadata = await collectMetadata(commandCtx, builderContext.buildProfile);
-    const buildId = await startBuildAsync(client, { builder, projectId, metadata });
+    const buildId = await startBuildAsync(client, { builder, projectId });
     scheduledBuilds.push({ platform: BuildCommandPlatform.IOS, buildId });
   }
   return scheduledBuilds;
@@ -183,17 +181,15 @@ async function startBuildAsync<T extends Platform>(
   {
     projectId,
     builder,
-    metadata,
   }: {
     projectId: string;
     builder: Builder<T>;
-    metadata: BuildMetadata;
   }
 ): Promise<string> {
   const tarPath = path.join(os.tmpdir(), `${uuidv4()}.tar.gz`);
   try {
     await builder.setupAsync();
-    await builder.ensureCredentialsAsync();
+    const credentialsSource = await builder.ensureCredentialsAsync();
     if (!builder.ctx.commandCtx.skipProjectConfiguration) {
       await builder.configureProjectAsync();
     }
@@ -207,6 +203,10 @@ async function startBuildAsync<T extends Platform>(
       createProgressTracker(fileSize)
     );
 
+    const metadata = await collectMetadata(builder.ctx.commandCtx, {
+      buildProfile: builder.ctx.buildProfile,
+      credentialsSource,
+    });
     const job = await builder.prepareJobAsync(archiveUrl);
     log(`Starting ${platformDisplayNames[job.platform]} build`);
     const { buildId } = await client.postAsync(`projects/${projectId}/builds`, {
