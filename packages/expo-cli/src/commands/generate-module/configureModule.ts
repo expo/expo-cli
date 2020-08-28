@@ -2,6 +2,7 @@ import fse from 'fs-extra';
 import walkSync from 'klaw-sync';
 import path from 'path';
 
+import CommandError from '../../CommandError';
 import { ModuleConfiguration } from './ModuleConfiguration';
 
 const asyncForEach = async <T>(
@@ -150,6 +151,28 @@ async function configureIOS(
 }
 
 /**
+ * Gets path to Android source base dir: android/src/main/[java|kotlin]
+ * Defaults to Java path if both exist
+ * @param androidPath path do module android/ directory
+ * @throws INVALID_TEMPLATE if none exist
+ */
+function findAndroidSourceDir(androidPath: string) {
+  const androidSrcPathBase = path.join(androidPath, 'src', 'main');
+
+  const javaExists = fse.pathExistsSync(path.join(androidSrcPathBase, 'java'));
+  const kotlinExists = fse.pathExistsSync(path.join(androidSrcPathBase, 'kotlin'));
+
+  if (!javaExists && !kotlinExists) {
+    throw new CommandError(
+      'INVALID_TEMPLATE',
+      `Invalid template. Android source directory not found: ${androidSrcPathBase}/[java|kotlin]`
+    );
+  }
+
+  return path.join(androidSrcPathBase, javaExists ? 'java' : 'kotlin');
+}
+
+/**
  * Prepares Android part, mainly by renaming all files and template words in files
  * Sets all versions in Gradle to 1.0.0
  * @param modulePath - module directory
@@ -160,22 +183,10 @@ async function configureAndroid(
   { javaPackage, jsPackageName, viewManager }: ModuleConfiguration
 ) {
   const androidPath = path.join(modulePath, 'android');
-  const sourceFilesPath = path.join(
-    androidPath,
-    'src',
-    'main',
-    'kotlin',
-    'expo',
-    'modules',
-    'template'
-  );
-  const destinationFilesPath = path.join(
-    androidPath,
-    'src',
-    'main',
-    'kotlin',
-    ...javaPackage.split('.')
-  );
+  const androidSrcPath = findAndroidSourceDir(androidPath);
+
+  const sourceFilesPath = path.join(androidSrcPath, 'expo', 'modules', 'template');
+  const destinationFilesPath = path.join(androidSrcPath, ...javaPackage.split('.'));
 
   // remove ViewManager from template
   if (!viewManager) {
@@ -194,7 +205,7 @@ async function configureAndroid(
   // Remove leaf directory content
   await fse.remove(sourceFilesPath);
   // Cleanup all empty subdirs up to provided rootDir
-  await removeUponEmptyOrOnlyEmptySubdirs(path.join(androidPath, 'src', 'main', 'kotlin', 'expo'));
+  await removeUponEmptyOrOnlyEmptySubdirs(path.join(androidSrcPath, 'expo'));
 
   const moduleName = jsPackageName.startsWith('Expo') ? jsPackageName.substring(4) : jsPackageName;
   await replaceContents(androidPath, singleFileContent =>
