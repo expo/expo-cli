@@ -30,4 +30,5 @@ jobs:
           message: "**Please add an entry to CHANGELOG.md if this PR introduces a notable change!**"
           repo-token: ${{ secrets.DANGER_GITHUB_API_TOKEN }}
           repo-token-user-login: 'github-actions[bot]'
+          allow-repeats: false
         if: steps.changelog_check.outputs.send_message == 1
