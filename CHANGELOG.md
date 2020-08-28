@@ -6,6 +6,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [expo-cli] remove `push:web:upload`, `push:web:generate`, `push:web:show`, `push:web:clear` ([#2531](https://github.com/expo/expo-cli/pull/2531) by [@EvanBacon](https://github.com/EvanBacon))
+
 ### 🎉 New features
 
 - [expo-cli] expo upload - support tar.gz files from builds v2 ([#2504](https://github.com/expo/expo-cli/pull/2504) by [@EvanBacon](https://github.com/EvanBacon))
