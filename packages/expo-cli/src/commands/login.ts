@@ -4,7 +4,7 @@ import { login } from '../accounts';
 
 export default function(program: Command) {
   program
-    .command('login', 'Login to your Expo account')
+    .command('login', 'Login to an Expo account')
     .alias('signin')
     .helpGroup('auth')
     .option('-u, --username [string]', 'Username')

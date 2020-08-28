@@ -12,7 +12,7 @@ async function action(projectDir: string, options: Options) {
 
 export default function(program: Command) {
   program
-    .command('prepare-detached-build <path>', 'Prepares a detached project for building', {
+    .command('prepare-detached-build <path>', 'Prepare a detached project for building', {
       noHelp: true,
     })
     .helpGroup('internal')

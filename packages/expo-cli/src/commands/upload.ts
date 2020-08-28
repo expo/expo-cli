@@ -14,9 +14,9 @@ export default function(program: Command) {
   program
     .command('upload:android <path>')
     .alias('ua')
-    .description('Uploads an Android binary to the Google Play Store')
+    .description('Upload an Android binary to the Google Play Store')
     .helpGroup('upload')
-    .option('--latest', 'uploads the latest build')
+    .option('--latest', 'upload the latest build')
     .option('--id <id>', 'id of the build to upload')
     .option('--path <path>', 'path to the .apk/.aab file')
     .option('--url <url>', 'app archive url')
@@ -63,10 +63,10 @@ export default function(program: Command) {
     .alias('ui')
     .description('macOS only: Upload an iOS binary to Apple. An alternative to Transporter.app')
     .longDescription(
-      'Uploads an iOS binary to Apple TestFlight (MacOS only). Uses the latest build by default'
+      'Upload an iOS binary to Apple TestFlight (MacOS only). Uses the latest build by default'
     )
     .helpGroup('upload')
-    .option('--latest', 'uploads the latest build (default)')
+    .option('--latest', 'upload the latest build (default)')
     .option('--id <id>', 'id of the build to upload')
     .option('--path <path>', 'path to the .ipa file')
     .option('--url <url>', 'app archive url')

@@ -16,7 +16,7 @@ async function action(projectDir: string) {
 export default function(program: Command) {
   program
     .command('doctor <path>')
-    .description('Diagnoses issues with your Expo project')
+    .description('Diagnose issues with your project')
     .helpGroup('info')
     .asyncActionProjectDir(action);
 }

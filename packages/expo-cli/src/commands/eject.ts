@@ -55,7 +55,7 @@ export default function(program: Command) {
       `Create native iOS and Android project files. Read more: https://expo.fyi/eject`
     )
     .longDescription(
-      'Creates Xcode and Android Studio projects for your app. Use this if you need to add custom native functionality.'
+      'Create Xcode and Android Studio projects for your app. Use this if you need to add custom native functionality.'
     )
     .helpGroup('eject')
     .option(

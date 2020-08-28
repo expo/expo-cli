@@ -31,7 +31,7 @@ async function action(): Promise<void> {
 export default function(program: Command) {
   program
     .command('diagnostics <path>')
-    .description('Prints environment info to console')
+    .description('Log environment info to the console')
     .helpGroup('info')
     .asyncAction(action);
 }

@@ -172,7 +172,7 @@ function collect<T>(val: T, memo: T[]): T[] {
 export default function(program: Command) {
   program
     .command('export <path>')
-    .description('Exports the static files of the app for hosting it on a web server')
+    .description('Export the static files of the app for hosting it on a web server')
     .helpGroup('core')
     .option('-p, --public-url <url>', 'The public url that will host the static files. (Required)')
     .option(
@@ -186,7 +186,7 @@ export default function(program: Command) {
       './assets'
     )
     .option('-d, --dump-assetmap', 'Dump the asset map for further processing.')
-    .option('--dev', 'Configures static files for developing locally using a non-https server')
+    .option('--dev', 'Configure static files for developing locally using a non-https server')
     .option('-f, --force', 'Overwrite files in output directory without prompting for confirmation')
     .option('-s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
     .option('-q, --quiet', 'Suppress verbose output.')

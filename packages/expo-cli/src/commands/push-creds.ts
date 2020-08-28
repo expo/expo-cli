@@ -6,7 +6,7 @@ import log from '../log';
 export default function(program: Command) {
   program
     .command('push:android:upload <path>')
-    .description('Uploads a Firebase Cloud Messaging key for Android push notifications')
+    .description('Upload an FCM key for Android push notifications')
     .helpGroup('notifications')
     .option('--api-key [api-key]', 'Server API key for FCM.')
     .asyncActionProjectDir(async (projectDir: string, options: { apiKey?: string }) => {
@@ -24,7 +24,7 @@ export default function(program: Command) {
 
   program
     .command('push:android:show <path>')
-    .description('Print the value currently in use for FCM notifications for this project')
+    .description('Log the value currently in use for FCM notifications for this project')
     .helpGroup('notifications')
     .asyncActionProjectDir(async (projectDir: string) => {
       const ctx = new Context();
@@ -42,7 +42,7 @@ export default function(program: Command) {
 
   program
     .command('push:android:clear <path>')
-    .description('Deletes a previously uploaded FCM credential')
+    .description('Delete a previously uploaded FCM credential')
     .helpGroup('notifications')
     .asyncActionProjectDir(async (projectDir: string) => {
       const ctx = new Context();

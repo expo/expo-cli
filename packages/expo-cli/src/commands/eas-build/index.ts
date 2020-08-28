@@ -37,7 +37,7 @@ export default function(program: Command) {
 
   program
     .command('eas:build:status <path>')
-    .description('Get the status of the latest builds for your project.')
+    .description('Log the status of the latest builds for your project.')
     .option(
       '-p --platform <platform>',
       'Get builds for specified platform: ios, android, all',

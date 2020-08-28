@@ -20,7 +20,7 @@ async function action(command: Command) {
 
 export default function(program: Command) {
   program
-    .command('whoami', "Who you're logged in as")
+    .command('whoami', "Display who you're signed in as")
     .helpGroup('auth')
     .alias('w')
     .asyncAction(action);

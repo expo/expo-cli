@@ -41,7 +41,7 @@ async function action(projectDir: string, options: Options) {
 export default function(program: Command) {
   program
     .command('send <path>')
-    .description(`Send the project's URL to an email address`)
+    .description(`Share the project's URL to an email address`)
     .helpGroup('core')
     .option('-s, --send-to [dest]', 'Email address to send the URL to')
     .urlOpts()

@@ -14,7 +14,7 @@ async function action() {
 
 export default function(program: Command) {
   program
-    .command('logout', 'Logout of your Expo account')
+    .command('logout', 'Logout of an Expo account')
     .helpGroup('auth')
     .asyncAction(action);
 }

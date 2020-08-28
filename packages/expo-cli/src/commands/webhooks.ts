@@ -30,7 +30,7 @@ export default function(program: Command) {
   program
     .command('webhooks:add <path>')
     .helpGroup('webhooks')
-    .description('Add webhook to a project')
+    .description('Add a webhook to a project')
     .option('--url <url>', 'URL to request. (Required)')
     .option('--event <event-type>', 'Event type that triggers the webhook. [build] (Required)')
     .option(

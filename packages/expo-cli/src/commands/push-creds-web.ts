@@ -18,7 +18,7 @@ const vapidSubjectDescription =
 export default function(program: Command) {
   program
     .command('push:web:upload <path>')
-    .description('Uploads VAPID key pair and VAPID subject for web push notifications.')
+    .description('Upload VAPID key pair and VAPID subject for web push notifications.')
     .helpGroup('notifications')
     .option('--vapid-pubkey [vapid-public-key]', 'URL-safe base64-encoded VAPID public key.')
     .option('--vapid-pvtkey [vapid-private-key]', 'URL-safe base64-encoded VAPID private key.')
@@ -35,7 +35,7 @@ export default function(program: Command) {
 
   program
     .command('push:web:generate <path>')
-    .description('Generates VAPID key pair for web push notifications.')
+    .description('Generate VAPID key pair for web push notifications.')
     .helpGroup('notifications')
     .option('--vapid-subject [vapid-subject]', vapidSubjectDescription)
     .asyncActionProjectDir(async (projectDir: string, options: VapidData) => {
@@ -51,7 +51,7 @@ export default function(program: Command) {
   program
     .command('push:web:show <path>')
     .description(
-      'Prints the VAPID public key, the VAPID private key, and the VAPID subject currently in use for web notifications for this project.'
+      'Log the VAPID public key, the VAPID private key, and the VAPID subject currently in use for web notifications for this project.'
     )
     .helpGroup('notifications')
     .asyncActionProjectDir(async (projectDir: string) => {
@@ -80,7 +80,7 @@ export default function(program: Command) {
   program
     .command('push:web:clear <path>')
     .description(
-      'Deletes previously uploaded VAPID public key, VAPID private key, and VAPID subject.'
+      'Delete previously uploaded VAPID public key, VAPID private key, and VAPID subject.'
     )
     .helpGroup('notifications')
     .asyncActionProjectDir(async (projectDir: string) => {

@@ -31,7 +31,7 @@ export default function(program: Command) {
   program
     .command(
       'bundle-assets <path>',
-      'Bundles assets for a detached app. This command should be executed from xcode or gradle',
+      'Bundle assets for a detached app. This command should be executed from xcode or gradle',
       { noHelp: true }
     )
     .helpGroup('internal')
