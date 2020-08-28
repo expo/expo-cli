@@ -1,0 +1,33 @@
+name: Changelog
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    branches: [master]
+
+jobs:
+  run:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - id: files
+        uses: jitterbit/get-changed-files@v1
+
+      - name: Check if CHANGELOG.md has been updated
+        id: changelog_check
+        run: |
+          SEND_MESSAGE=1
+          for changed_file in ${{ steps.files.outputs.all }}; do
+            if [[ $changed_file = "CHANGELOG.md" ]]; then
+              SEND_MESSAGE=0
+            fi
+          done
+          echo ::set-output name=send_message::$SEND_MESSAGE
+
+      - uses: mshick/add-pr-comment@v1
+        with:
+          message: "**Please add an entry to CHANGELOG.md if this PR introduces a notable change!**"
+          repo-token: ${{ secrets.DANGER_GITHUB_API_TOKEN }}
+          repo-token-user-login: 'github-actions[bot]'
+        if: steps.changelog_check.outputs.send_message == 1
