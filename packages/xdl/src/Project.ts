@@ -748,10 +748,25 @@ export async function findReusableBuildAsync(
   return buildReuseStatus;
 }
 
+export interface PublishedProjectResult {
+  /**
+   * Project manifest URL
+   */
+  url: string;
+  /**
+   * TODO: What is this?
+   */
+  ids: string[];
+  /**
+   * TODO: What is this? Where does it come from?
+   */
+  err?: string;
+}
+
 export async function publishAsync(
   projectRoot: string,
   options: PublishOptions = {}
-): Promise<{ url: string; ids: string[]; err?: string }> {
+): Promise<PublishedProjectResult> {
   options.target = options.target ?? getDefaultTarget(projectRoot);
   const target = options.target;
   const user = await UserManager.ensureLoggedInAsync();
