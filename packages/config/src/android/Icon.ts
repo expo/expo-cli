@@ -80,45 +80,17 @@ async function configureLegacyIconAsync(
   backgroundImage: string | null,
   backgroundColor: string | null
 ) {
-  for (const dpi in dpiValues) {
-    const { folderName, scale } = dpiValues[dpi as DPIString];
-    const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
-    const iconSizePx = BASELINE_PIXEL_SIZE * scale;
+  Promise.all(
+    Object.values(dpiValues).map(async ({ folderName, scale }) => {
+      const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
+      const iconSizePx = BASELINE_PIXEL_SIZE * scale;
 
-    try {
-      let squareIconImage: Buffer = (
-        await generateImageAsync(
-          { projectRoot, cacheType: 'android-standard-square' },
-          {
-            src: icon,
-            width: iconSizePx,
-            height: iconSizePx,
-            resizeMode: 'cover',
-            backgroundColor: backgroundColor ?? 'transparent',
-          }
-        )
-      ).source;
-      let roundIconImage: Buffer = (
-        await generateImageAsync(
-          { projectRoot, cacheType: 'android-standard-circle' },
-          {
-            src: icon,
-            width: iconSizePx,
-            height: iconSizePx,
-            resizeMode: 'cover',
-            backgroundColor: backgroundColor ?? 'transparent',
-            circle: true,
-          }
-        )
-      ).source;
-
-      if (backgroundImage) {
-        // Layer the buffers we just created on top of the background image that's provided
-        const squareBackgroundLayer = (
+      try {
+        let squareIconImage: Buffer = (
           await generateImageAsync(
-            { projectRoot, cacheType: 'android-standard-square-background' },
+            { projectRoot, cacheType: 'android-standard-square' },
             {
-              src: backgroundImage,
+              src: icon,
               width: iconSizePx,
               height: iconSizePx,
               resizeMode: 'cover',
@@ -126,11 +98,11 @@ async function configureLegacyIconAsync(
             }
           )
         ).source;
-        const roundBackgroundLayer = (
+        let roundIconImage: Buffer = (
           await generateImageAsync(
-            { projectRoot, cacheType: 'android-standard-round-background' },
+            { projectRoot, cacheType: 'android-standard-circle' },
             {
-              src: backgroundImage,
+              src: icon,
               width: iconSizePx,
               height: iconSizePx,
               resizeMode: 'cover',
@@ -139,17 +111,46 @@ async function configureLegacyIconAsync(
             }
           )
         ).source;
-        squareIconImage = await layerImageAsync(squareIconImage, squareBackgroundLayer);
-        roundIconImage = await layerImageAsync(roundIconImage, roundBackgroundLayer);
-      }
 
-      await fs.mkdirp(dpiFolderPath);
-      await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_PNG), squareIconImage);
-      await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG), roundIconImage);
-    } catch (e) {
-      throw new Error('Encountered an issue resizing app icon: ' + e);
-    }
-  }
+        if (backgroundImage) {
+          // Layer the buffers we just created on top of the background image that's provided
+          const squareBackgroundLayer = (
+            await generateImageAsync(
+              { projectRoot, cacheType: 'android-standard-square-background' },
+              {
+                src: backgroundImage,
+                width: iconSizePx,
+                height: iconSizePx,
+                resizeMode: 'cover',
+                backgroundColor: backgroundColor ?? 'transparent',
+              }
+            )
+          ).source;
+          const roundBackgroundLayer = (
+            await generateImageAsync(
+              { projectRoot, cacheType: 'android-standard-round-background' },
+              {
+                src: backgroundImage,
+                width: iconSizePx,
+                height: iconSizePx,
+                resizeMode: 'cover',
+                backgroundColor: backgroundColor ?? 'transparent',
+                circle: true,
+              }
+            )
+          ).source;
+          squareIconImage = await layerImageAsync(squareIconImage, squareBackgroundLayer);
+          roundIconImage = await layerImageAsync(roundIconImage, roundBackgroundLayer);
+        }
+
+        await fs.mkdirp(dpiFolderPath);
+        await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_PNG), squareIconImage);
+        await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG), roundIconImage);
+      } catch (e) {
+        throw new Error('Encountered an issue resizing app icon: ' + e);
+      }
+    })
+  );
 }
 
 /**
@@ -158,7 +159,7 @@ async function configureLegacyIconAsync(
  * - A backgroundImage is provided, or
  * - A backgroundColor was specified
  */
-async function configureAdaptiveIconAsync(
+export async function configureAdaptiveIconAsync(
   projectRoot: string,
   foregroundImage: string,
   backgroundImage: string | null,
@@ -168,35 +169,17 @@ async function configureAdaptiveIconAsync(
     await setBackgroundColor(projectRoot, backgroundColor);
   }
 
-  for (const dpi in dpiValues) {
-    const { folderName, scale } = dpiValues[dpi as DPIString];
-    const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
-    const iconSizePx = BASELINE_PIXEL_SIZE * scale;
+  Promise.all(
+    Object.values(dpiValues).map(async ({ folderName, scale }) => {
+      const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
+      const iconSizePx = BASELINE_PIXEL_SIZE * scale;
 
-    try {
-      const adpativeIconForeground = (
-        await generateImageAsync(
-          { projectRoot, cacheType: 'android-adaptive-foreground' },
-          {
-            src: foregroundImage,
-            width: iconSizePx,
-            height: iconSizePx,
-            resizeMode: 'cover',
-            backgroundColor: 'transparent',
-          }
-        )
-      ).source;
-      await fs.writeFile(
-        path.resolve(dpiFolderPath, IC_LAUNCHER_FOREGROUND_PNG),
-        adpativeIconForeground
-      );
-
-      if (backgroundImage) {
-        const adpativeIconBackground = (
+      try {
+        const adpativeIconForeground = (
           await generateImageAsync(
-            { projectRoot, cacheType: 'android-adaptive-background' },
+            { projectRoot, cacheType: 'android-adaptive-foreground' },
             {
-              src: backgroundImage,
+              src: foregroundImage,
               width: iconSizePx,
               height: iconSizePx,
               resizeMode: 'cover',
@@ -205,14 +188,33 @@ async function configureAdaptiveIconAsync(
           )
         ).source;
         await fs.writeFile(
-          path.resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG),
-          adpativeIconBackground
+          path.resolve(dpiFolderPath, IC_LAUNCHER_FOREGROUND_PNG),
+          adpativeIconForeground
         );
+
+        if (backgroundImage) {
+          const adpativeIconBackground = (
+            await generateImageAsync(
+              { projectRoot, cacheType: 'android-adaptive-background' },
+              {
+                src: backgroundImage,
+                width: iconSizePx,
+                height: iconSizePx,
+                resizeMode: 'cover',
+                backgroundColor: 'transparent',
+              }
+            )
+          ).source;
+          await fs.writeFile(
+            path.resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG),
+            adpativeIconBackground
+          );
+        }
+      } catch (e) {
+        throw new Error('Encountered an issue resizing adaptive app icon: ' + e);
       }
-    } catch (e) {
-      throw new Error('Encountered an issue resizing adaptive app icon: ' + e);
-    }
-  }
+    })
+  );
 
   // create ic_launcher.xml and ic_launcher_round.xml
   const icLauncherXmlString = createAdaptiveIconXmlString(
@@ -222,7 +224,7 @@ async function configureAdaptiveIconAsync(
   await createAdaptiveIconXmlFiles(projectRoot, icLauncherXmlString);
 }
 
-export async function setBackgroundColor(projectDir: string, backgroundColor: string) {
+async function setBackgroundColor(projectDir: string, backgroundColor: string) {
   const colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectDir);
   if (!colorsXmlPath) {
     console.warn(
