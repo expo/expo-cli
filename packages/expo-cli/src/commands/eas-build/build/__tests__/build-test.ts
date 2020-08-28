@@ -184,6 +184,10 @@ describe('build command', () => {
       });
       expect(mockPostAsync).toBeCalledTimes(1);
       expect(postArguments?.url).toEqual('projects/fakeProjectId/builds');
+      expect(postArguments?.body?.metadata).toMatchObject({
+        workflow: 'generic',
+        credentialsSource: 'local',
+      });
       expect(postArguments?.body?.job).toEqual({
         platform: 'android',
         type: 'generic',
@@ -221,6 +225,10 @@ describe('build command', () => {
       });
       expect(mockPostAsync).toBeCalledTimes(1);
       expect(postArguments?.url).toEqual('projects/fakeProjectId/builds');
+      expect(postArguments?.body?.metadata).toMatchObject({
+        workflow: 'generic',
+        credentialsSource: 'local',
+      });
       expect(postArguments?.body?.job).toEqual({
         platform: 'ios',
         type: 'generic',
@@ -257,49 +265,47 @@ describe('build command', () => {
       });
 
       expect(mockPostAsync).toBeCalledTimes(2);
-      expect(postArguments).toEqual(
-        expect.arrayContaining([
-          {
-            url: 'projects/fakeProjectId/builds',
-            body: {
-              job: {
-                platform: 'android',
-                type: 'generic',
-                projectUrl: mockProjectUrl,
-                artifactPath: 'android/app/build/outputs/**/*.{apk,aab}',
-                gradleCommand: ':app:bundleRelease',
-                secrets: {
-                  keystore: {
-                    dataBase64: keystore.base64,
-                    keystorePassword: 'keystorePassword',
-                    keyAlias: 'keyAlias',
-                    keyPassword: 'keyPassword',
-                  },
-                },
-              },
-            },
+
+      expect(postArguments[0]?.url).toEqual('projects/fakeProjectId/builds');
+      expect(postArguments[0]?.body?.metadata).toMatchObject({
+        workflow: 'generic',
+        credentialsSource: 'local',
+      });
+      expect(postArguments[0]?.body?.job).toMatchObject({
+        platform: 'android',
+        type: 'generic',
+        projectUrl: mockProjectUrl,
+        artifactPath: 'android/app/build/outputs/**/*.{apk,aab}',
+        gradleCommand: ':app:bundleRelease',
+        secrets: {
+          keystore: {
+            dataBase64: keystore.base64,
+            keystorePassword: 'keystorePassword',
+            keyAlias: 'keyAlias',
+            keyPassword: 'keyPassword',
           },
-          {
-            url: 'projects/fakeProjectId/builds',
-            body: {
-              job: {
-                platform: 'ios',
-                type: 'generic',
-                projectUrl: mockProjectUrl,
-                artifactPath: 'ios/build/App.ipa',
-                scheme: 'testapp',
-                secrets: {
-                  distributionCertificate: {
-                    dataBase64: cert.base64,
-                    password: 'certPass',
-                  },
-                  provisioningProfileBase64: pprofile.base64,
-                },
-              },
-            },
+        },
+      });
+
+      expect(postArguments[1]?.url).toEqual('projects/fakeProjectId/builds');
+      expect(postArguments[1]?.body?.metadata).toMatchObject({
+        workflow: 'generic',
+        credentialsSource: 'local',
+      });
+      expect(postArguments[1]?.body?.job).toMatchObject({
+        platform: 'ios',
+        type: 'generic',
+        projectUrl: mockProjectUrl,
+        artifactPath: 'ios/build/App.ipa',
+        scheme: 'testapp',
+        secrets: {
+          distributionCertificate: {
+            dataBase64: cert.base64,
+            password: 'certPass',
           },
-        ])
-      );
+          provisioningProfileBase64: pprofile.base64,
+        },
+      });
     });
   });
 });
