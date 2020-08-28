@@ -32,6 +32,22 @@ const DEFAULT_FABRIC_KEY = '81130e95ea13cd7ed9a4f455e96214902c721c99';
 const DEFAULT_GAD_APPLICATION_ID = 'ca-app-pub-3940256099942544~1458002511';
 const KERNEL_URL = 'https://expo.io/@exponent/home';
 
+export function getManifestFileNameForSdkVersion(sdkVersion: string) {
+  if (parseSdkMajorVersion(sdkVersion) < 39) {
+    return 'shell-app-manifest.json';
+  } else {
+    return 'app.manifest';
+  }
+}
+
+export function getBundleFileNameForSdkVersion(sdkVersion: string) {
+  if (parseSdkMajorVersion(sdkVersion) < 39) {
+    return 'shell-app.bundle';
+  } else {
+    return 'app.bundle';
+  }
+}
+
 function _configureInfoPlistForLocalDevelopment(config: any, exp: ExpoConfig): ExpoConfig {
   // add detached scheme
   if (exp.isDetached && exp.detach?.scheme) {
@@ -490,6 +506,13 @@ async function _configureShellPlistAsync(context: AnyStandaloneContext): Promise
       // enable/disable code push if the developer provided specific behavior
       shellPlist.areRemoteUpdatesEnabled = config.updates.enabled;
     }
+    if (config.updates && config.updates.hasOwnProperty('checkAutomatically')) {
+      shellPlist.updatesCheckAutomatically =
+        config.updates.checkAutomatically !== 'ON_ERROR_RECOVERY';
+    }
+    if (config.updates && config.updates.hasOwnProperty('fallbackToCacheTimeout')) {
+      shellPlist.updatesFallbackToCacheTimeout = config.updates.fallbackToCacheTimeout;
+    }
     if (!manifestUsesSplashApi(config, 'ios') && parseSdkMajorVersion(config.sdkVersion) < 28) {
       // for people still using the old loading api, hide the native splash screen.
       // we can remove this code eventually.
@@ -600,8 +623,8 @@ export async function configureAsync(context: AnyStandaloneContext): Promise<voi
       await _preloadManifestAndBundleAsync(
         context.data.manifest,
         supportingDirectory,
-        'shell-app-manifest.json',
-        'shell-app.bundle'
+        getManifestFileNameForSdkVersion(context.data.manifest.sdkVersion),
+        getBundleFileNameForSdkVersion(context.data.manifest.sdkVersion)
       );
     }
 
