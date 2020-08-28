@@ -1,4 +1,4 @@
-import { generateImageAsync, layerImageAsync } from '@expo/image-utils';
+import { compositeImagesAsync, generateImageAsync } from '@expo/image-utils';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -97,7 +97,7 @@ async function configureLegacyIconAsync(
               height: iconSizePx,
               resizeMode: 'cover',
               backgroundColor: backgroundColor ?? 'transparent',
-              circle: true,
+              borderRadius: iconSizePx / 2,
             }
           )
         ).source;
@@ -125,12 +125,12 @@ async function configureLegacyIconAsync(
                 height: iconSizePx,
                 resizeMode: 'cover',
                 backgroundColor: backgroundColor ?? 'transparent',
-                circle: true,
+                borderRadius: iconSizePx / 2,
               }
             )
           ).source;
-          squareIconImage = await layerImageAsync(squareIconImage, squareBackgroundLayer);
-          roundIconImage = await layerImageAsync(roundIconImage, roundBackgroundLayer);
+          squareIconImage = await compositeImagesAsync(squareIconImage, squareBackgroundLayer);
+          roundIconImage = await compositeImagesAsync(roundIconImage, roundBackgroundLayer);
         }
 
         await fs.mkdirp(dpiFolderPath);

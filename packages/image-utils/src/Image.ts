@@ -35,7 +35,8 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
     if (imageOptions.removeTransparency) {
       jimp.colorType(2);
     }
-    if (imageOptions.circle) {
+    if (imageOptions.borderRadius) {
+      // TODO: support setting border radius with Jimp. Currently only support making the image a circle
       jimp.circle();
     }
 
@@ -70,11 +71,11 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
       sharpBuffer.flatten();
     }
 
-    if (imageOptions.circle) {
+    if (imageOptions.borderRadius) {
       const mask = Buffer.from(
-        `<svg><rect x="0" y="0" width="${width}" height="${height}" rx="${width / 2}" ry="${
-          height / 2
-        }" fill="${
+        `<svg><rect x="0" y="0" width="${width}" height="${height}" 
+        rx="${imageOptions.borderRadius}" ry="${imageOptions.borderRadius}" 
+        fill="${
           backgroundColor && backgroundColor !== 'transparent' ? backgroundColor : 'none'
         }" /></svg>`
       );
@@ -186,7 +187,7 @@ export async function generateFaviconAsync(
  * @param x pixel offset from the left edge, defaults to 0.
  * @param y pixel offset from the top edge, defaults to 0.
  */
-export async function layerImageAsync(
+export async function compositeImagesAsync(
   foregroundImageBuffer: Buffer,
   backgroundImageBuffer: Buffer,
   x: number = 0,

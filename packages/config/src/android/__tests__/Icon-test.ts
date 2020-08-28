@@ -18,7 +18,7 @@ jest.mock('@expo/image-utils', () => ({
     const fs = require('fs');
     return { source: fs.readFileSync(src) };
   },
-  layerImageAsync(foreground, background) {
+  compositeImagesAsync(foreground, background) {
     return foreground;
   },
 }));
@@ -100,7 +100,7 @@ describe('e2e: ONLY android legacy icon', () => {
   const legacyIconPath = path.resolve(__dirname, './fixtures/adaptiveIconForeground.png');
   const projectRoot = '/app';
   const icon = require('../Icon');
-  const spyOnSetBackgroundColor = jest.spyOn(icon, 'setBackgroundColor');
+  const spyOnConfigureAdaptiveIconAsync = jest.spyOn(icon, 'configureAdaptiveIconAsync');
   beforeAll(async () => {
     const icon = actualFs.readFileSync(legacyIconPath);
     vol.fromJSON(
@@ -137,7 +137,7 @@ describe('e2e: ONLY android legacy icon', () => {
   });
 
   it('Does not set adaptive icon config', () => {
-    expect(spyOnSetBackgroundColor).toHaveBeenCalledTimes(0);
+    expect(spyOnConfigureAdaptiveIconAsync).toHaveBeenCalledTimes(0);
   });
 });
 
