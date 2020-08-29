@@ -12,9 +12,8 @@ async function action(projectDir: string, options: Options) {
 
 export default function(program: Command) {
   program
-    .command('prepare-detached-build <path>', 'Prepare a detached project for building', {
-      noHelp: true,
-    })
+    .command('prepare-detached-build <path>')
+    .description('Prepare a detached project for building')
     .helpGroup('internal')
     .option('--platform [platform]', 'detached project platform')
     .option('--skipXcodeConfig [bool]', '[iOS only] if true, do not configure Xcode project')
