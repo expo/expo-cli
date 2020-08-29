@@ -12,9 +12,9 @@ import {
   setPublishToChannelAsync,
 } from './utils/PublishUtils';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('publish:set <path>')
+    .command('publish:set [path]')
     .alias('ps')
     .description('Specify the channel to serve a published release')
     .helpGroup('publish')
@@ -55,7 +55,7 @@ export default function(program: Command) {
       { checkConfig: true }
     );
   program
-    .command('publish:rollback <path>')
+    .command('publish:rollback [path]')
     .alias('pr')
     .description('Undo an update to a channel')
     .helpGroup('publish')

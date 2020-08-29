@@ -10,15 +10,15 @@ import { SubmissionMode } from './upload/submission-service/types';
 
 const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('upload:android <path>')
+    .command('upload:android [path]')
     .alias('ua')
     .description('Upload an Android binary to the Google Play Store')
     .helpGroup('upload')
     .option('--latest', 'upload the latest build')
     .option('--id <id>', 'id of the build to upload')
-    .option('--path <path>', 'path to the .apk/.aab file')
+    .option('--path [path]', 'path to the .apk/.aab file')
     .option('--url <url>', 'app archive url')
     .option('--key <key>', 'path to the JSON key used to authenticate with Google Play')
     .option(
@@ -59,7 +59,7 @@ export default function(program: Command) {
     });
 
   program
-    .command('upload:ios <path>')
+    .command('upload:ios [path]')
     .alias('ui')
     .description('macOS only: Upload an iOS binary to Apple. An alternative to Transporter.app')
     .longDescription(
@@ -68,7 +68,7 @@ export default function(program: Command) {
     .helpGroup('upload')
     .option('--latest', 'upload the latest build (default)')
     .option('--id <id>', 'id of the build to upload')
-    .option('--path <path>', 'path to the .ipa file')
+    .option('--path [path]', 'path to the .ipa file')
     .option('--url <url>', 'app archive url')
     .option(
       '--apple-id <apple-id>',
@@ -104,7 +104,7 @@ export default function(program: Command) {
     )
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
 
-    .on('--help', function() {
+    .on('--help', function () {
       console.log('Available languages:');
       console.log(`  ${LANGUAGES.join(', ')}`);
       console.log();

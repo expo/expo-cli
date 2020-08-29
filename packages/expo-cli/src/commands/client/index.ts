@@ -24,9 +24,9 @@ import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('client:ios <path>')
+    .command('client:ios [path]')
     .helpGroup('experimental')
     .description(
       'Experimental: build a custom version of the Expo client for iOS using your own Apple credentials'

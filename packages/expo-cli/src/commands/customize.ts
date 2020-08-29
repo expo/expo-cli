@@ -145,9 +145,9 @@ export async function action(projectDir: string = './', options: Options = { for
   await generateFilesAsync({ projectDir, staticPath, options, answer, templateFolder });
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('customize:web <path>')
+    .command('customize:web [path]')
     .description('Eject the default web files for customization')
     .helpGroup('eject')
     .option('-f, --force', 'Allows replacing existing files')

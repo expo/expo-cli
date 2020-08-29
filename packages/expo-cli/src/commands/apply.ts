@@ -36,9 +36,9 @@ async function ensureConfigExistsAsync(projectRoot: string): Promise<void> {
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('apply <path>')
+    .command('apply [path]')
     .option(
       '-p, --platform [platform]',
       'Configure only the given platform ("ios" or "android")',

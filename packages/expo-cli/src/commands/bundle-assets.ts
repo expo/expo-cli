@@ -27,9 +27,9 @@ async function action(projectDir: string, options: Options) {
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('bundle-assets <path>')
+    .command('bundle-assets [path]')
     .description(
       'Bundle assets for a detached app. This command should be executed from xcode or gradle'
     )

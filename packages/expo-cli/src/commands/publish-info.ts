@@ -15,7 +15,7 @@ const HORIZ_CELL_WIDTH_BIG = 40;
 
 export default (program: any) => {
   program
-    .command('publish:history <path>')
+    .command('publish:history [path]')
     .alias('ph')
     .description("Log the project's releases")
     .helpGroup('publish')
@@ -87,7 +87,7 @@ export default (program: any) => {
       { checkConfig: true }
     );
   program
-    .command('publish:details <path>')
+    .command('publish:details [path]')
     .alias('pd')
     .description('Log details of a published release')
     .helpGroup('publish')

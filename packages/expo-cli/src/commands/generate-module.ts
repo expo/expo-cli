@@ -2,9 +2,9 @@ import { Command } from 'commander';
 
 import generateModuleAsync from './generate-module/generateModuleAsync';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('generate-module <path>')
+    .command('generate-module [path]')
     .description('Generate a universal module for Expo from a template in the specified directory')
     .helpGroup('internal')
     .option(

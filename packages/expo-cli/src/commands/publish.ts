@@ -308,9 +308,9 @@ export function logBareWorkflowWarnings(pkg: PackageJSONConfig) {
   );
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('publish <path>')
+    .command('publish [path]')
     .alias('p')
     .description('Deploy a project to Expo hosting')
     .helpGroup('core')

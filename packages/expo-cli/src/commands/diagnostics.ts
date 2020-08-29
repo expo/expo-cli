@@ -28,9 +28,9 @@ async function action(): Promise<void> {
   console.log(info);
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('diagnostics <path>')
+    .command('diagnostics [path]')
     .description('Log environment info to the console')
     .helpGroup('info')
     .asyncAction(action);

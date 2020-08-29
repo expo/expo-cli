@@ -13,9 +13,9 @@ async function action(projectDir: string) {
   process.exit();
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('doctor <path>')
+    .command('doctor [path]')
     .description('Diagnose issues with the project')
     .helpGroup('info')
     .asyncActionProjectDir(action);

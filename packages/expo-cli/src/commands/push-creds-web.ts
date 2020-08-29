@@ -15,9 +15,9 @@ type VapidData = {
 const vapidSubjectDescription =
   'URL or `mailto:` URL which provides a point of contact in case the push service needs to contact the message sender.';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('push:web:upload <path>')
+    .command('push:web:upload [path]')
     .description('Upload VAPID key pair and VAPID subject for web push notifications.')
     .helpGroup('notifications')
     .option('--vapid-pubkey [vapid-public-key]', 'URL-safe base64-encoded VAPID public key.')
@@ -34,7 +34,7 @@ export default function(program: Command) {
     });
 
   program
-    .command('push:web:generate <path>')
+    .command('push:web:generate [path]')
     .description('Generate VAPID key pair for web push notifications.')
     .helpGroup('notifications')
     .option('--vapid-subject [vapid-subject]', vapidSubjectDescription)
@@ -49,7 +49,7 @@ export default function(program: Command) {
     });
 
   program
-    .command('push:web:show <path>')
+    .command('push:web:show [path]')
     .description(
       'Log the VAPID public key, the VAPID private key, and the VAPID subject currently in use for web notifications for this project.'
     )
@@ -78,7 +78,7 @@ export default function(program: Command) {
     });
 
   program
-    .command('push:web:clear <path>')
+    .command('push:web:clear [path]')
     .description(
       'Delete previously uploaded VAPID public key, VAPID private key, and VAPID subject.'
     )

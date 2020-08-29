@@ -21,14 +21,14 @@ type Webhook = {
   secret?: string;
 };
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('webhooks <path>')
+    .command('webhooks [path]')
     .helpGroup('webhooks')
     .description('List all webhooks for a project')
     .asyncActionProjectDir(listAsync);
   program
-    .command('webhooks:add <path>')
+    .command('webhooks:add [path]')
     .helpGroup('webhooks')
     .description('Add a webhook to a project')
     .option('--url <url>', 'URL to request. (Required)')
@@ -39,13 +39,13 @@ export default function(program: Command) {
     )
     .asyncActionProjectDir(addAsync);
   program
-    .command('webhooks:remove <path>')
+    .command('webhooks:remove [path]')
     .helpGroup('webhooks')
     .option('--id <id>', 'ID of the webhook to remove.')
     .description('Delete a webhook')
     .asyncActionProjectDir(removeAsync);
   program
-    .command('webhooks:update <path>')
+    .command('webhooks:update [path]')
     .helpGroup('webhooks')
     .description('Update an existing webhook')
     .option('--id <id>', 'ID of the webhook to update.')

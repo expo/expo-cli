@@ -81,7 +81,6 @@ async function action(projectDir: string, command: Command) {
 
   let parentDir;
   let dirName;
-
   if (projectDir) {
     const root = path.resolve(projectDir);
     parentDir = path.dirname(root);
@@ -90,7 +89,7 @@ async function action(projectDir: string, command: Command) {
     if (validationResult !== true) {
       throw new CommandError('INVALID_PROJECT_DIR', validationResult);
     }
-  } else if (command.parent && command.parent.nonInteractive) {
+  } else if (command.parent?.nonInteractive) {
     throw new CommandError(
       'NON_INTERACTIVE',
       'The project dir argument is required in non-interactive mode.'
@@ -560,9 +559,9 @@ async function promptForManagedConfig(
   return { expo };
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('init <path>')
+    .command('init [path]')
     .alias('i')
     .helpGroup('core')
     .description('Create a new Expo project')

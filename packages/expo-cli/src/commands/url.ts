@@ -74,9 +74,9 @@ async function action(projectDir: string, options: ProjectUrlOptions & URLOption
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('url <path>')
+    .command('url [path]')
     .alias('u')
     .helpGroup('url')
 
@@ -87,14 +87,14 @@ export default function(program: Command) {
     .asyncActionProjectDir(action);
 
   program
-    .command('url:ipa <path>')
+    .command('url:ipa [path]')
     .helpGroup('url')
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .description('Log the download URL for the standalone iOS binary')
     .asyncActionProjectDir(logArtifactUrl('ios'));
 
   program
-    .command('url:apk <path>')
+    .command('url:apk [path]')
     .helpGroup('url')
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .description('Log the download URL for the standalone Android binary')

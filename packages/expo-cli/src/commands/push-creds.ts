@@ -3,9 +3,9 @@ import { Command } from 'commander';
 import { Context } from '../credentials/context';
 import log from '../log';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('push:android:upload <path>')
+    .command('push:android:upload [path]')
     .description('Upload an FCM key for Android push notifications')
     .helpGroup('notifications')
     .option('--api-key [api-key]', 'Server API key for FCM.')
@@ -23,7 +23,7 @@ export default function(program: Command) {
     });
 
   program
-    .command('push:android:show <path>')
+    .command('push:android:show [path]')
     .description('Log the value currently in use for FCM notifications for this project')
     .helpGroup('notifications')
     .asyncActionProjectDir(async (projectDir: string) => {
@@ -41,7 +41,7 @@ export default function(program: Command) {
     });
 
   program
-    .command('push:android:clear <path>')
+    .command('push:android:clear [path]')
     .description('Delete a previously uploaded FCM credential')
     .helpGroup('notifications')
     .asyncActionProjectDir(async (projectDir: string) => {

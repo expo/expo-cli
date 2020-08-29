@@ -326,7 +326,7 @@ async function configureProjectAsync(
 
 export default (program: any) => {
   program
-    .command('start <path>')
+    .command('start [path]')
     .alias('r')
     .description('Start a local dev server for the app')
     .helpGroup('core')
@@ -357,7 +357,7 @@ export default (program: any) => {
     );
 
   program
-    .command('start:web <path>')
+    .command('start:web [path]')
     .alias('web')
     .description('Start a Webpack dev server for the web app')
     .helpGroup('core')

@@ -47,9 +47,9 @@ async function action(
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('eject <path>')
+    .command('eject [path]')
     .description(
       // TODO: Use Learn more link when it lands
       `Create native iOS and Android project files. Read more: https://expo.fyi/eject`
