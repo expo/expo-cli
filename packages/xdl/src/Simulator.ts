@@ -437,7 +437,7 @@ export async function uninstallExpoAppFromSimulatorAsync({ udid }: { udid?: stri
   }
 }
 
-export function simulatorCacheDirectory() {
+function simulatorCacheDirectory() {
   const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
   const dir = path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache');
   fs.mkdirpSync(dir);

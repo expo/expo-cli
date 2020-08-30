@@ -1,10 +1,8 @@
 import * as osascript from '@expo/osascript';
 import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
-import fs from 'fs-extra';
 import path from 'path';
 
 import Logger from './Logger';
-import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 
 type DeviceState = 'Shutdown' | 'Booted';
@@ -96,13 +94,6 @@ export async function getDefaultSimulatorDeviceUDIDAsync() {
   } catch (e) {
     return null;
   }
-}
-
-export function simulatorCacheDirectory() {
-  const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  const dir = path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache');
-  fs.mkdirpSync(dir);
-  return dir;
 }
 
 /**
