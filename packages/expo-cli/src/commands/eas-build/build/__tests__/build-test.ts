@@ -38,7 +38,7 @@ jest.mock('../../../../projects', () => {
     ensureProjectExistsAsync: () => 'fakeProjectId',
   };
 });
-jest.mock('../utils/git');
+jest.mock('../../utils/git');
 jest.mock('../../../../git');
 jest.mock('../../../../uploads', () => ({
   UploadType: {},
@@ -142,7 +142,8 @@ function setupProjectConfig(overrideConfig: any) {
       'package.json': JSON.stringify(packageJson),
       'node_modules/expo/package.json': '{ "version": "38.0.0" }',
       'cert.p12': cert.content,
-      'android/app/build.gradle': '',
+      'android/app/build.gradle': 'apply from: "./eas-build.gradle"',
+      'android/app/eas-build.gradle': '',
     },
     '/projectdir'
   );
@@ -169,6 +170,24 @@ jest.setTimeout(30000);
 
 describe('build command', () => {
   describe('android generic job', () => {
+    it('should throw if project is not configured', async () => {
+      expect.assertions(1);
+
+      setupProjectConfig({});
+      vol.unlinkSync('/projectdir/android/app/eas-build.gradle');
+
+      try {
+        await buildAction('/projectdir', {
+          platform: BuildCommandPlatform.ANDROID,
+          wait: false,
+          profile: 'release',
+        });
+      } catch (e) {
+        expect(e.message).toMatch(
+          'Project is not configured. Please run "expo eas:build:init" first to configure the project'
+        );
+      }
+    });
     it('should go through build process', async () => {
       const postArguments: any = {};
       mockPostAsync.mockImplementationOnce((url, body) => {
@@ -203,10 +222,6 @@ describe('build command', () => {
           },
         },
       });
-      expect(vol.existsSync('/projectdir/android/app/eas-build.gradle')).toBe(true);
-      expect(vol.readFileSync('/projectdir/android/app/build.gradle', 'utf-8')).toContain(
-        'apply from: "./eas-build.gradle"'
-      );
     });
   });
   describe('ios generic job', () => {

@@ -1,12 +1,18 @@
 import { vol } from 'memfs';
 
 import { CredentialsSource } from '../../../easJson';
+import * as route from '../../route';
 import iOSCredentialsProvider from '../iOSCredentialsProvider';
 
-const providerOptions = {
+const appLookupParams = {
   projectName: 'slug123',
   accountName: 'owner123',
   bundleIdentifier: 'example.bundle.identifier',
+};
+
+const providerOptions = {
+  nonInteractive: false,
+  skipCredentialsCheck: false,
 };
 
 const mockGetDistCert = jest.fn();
@@ -53,7 +59,7 @@ describe('iOSCredentialsProvider', () => {
         certP12: 'certbase64',
         certPassword: 'fakePassword',
       }));
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       const hasRemote = await provider.hasRemoteAsync();
       expect(hasRemote).toBe(true);
@@ -63,7 +69,7 @@ describe('iOSCredentialsProvider', () => {
         provisioningProfile: 'profileBase64',
         provisioningProfileId: 'id',
       }));
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       const hasRemote = await provider.hasRemoteAsync();
       expect(hasRemote).toBe(true);
@@ -74,13 +80,13 @@ describe('iOSCredentialsProvider', () => {
         certP12: 'certbase64',
         certPassword: 'fakePassword',
       }));
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       const hasRemote = await provider.hasRemoteAsync();
       expect(hasRemote).toBe(true);
     });
     it('should return false if there are no credentials', async () => {
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       const hasRemote = await provider.hasRemoteAsync();
       expect(hasRemote).toBe(false);
@@ -102,7 +108,7 @@ describe('iOSCredentialsProvider', () => {
         './cert.p12': 'somebinarycontent2',
       });
 
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       const hasLocal = await provider.hasLocalAsync();
       expect(hasLocal).toBe(true);
@@ -121,7 +127,7 @@ describe('iOSCredentialsProvider', () => {
         './cert.p12': 'somebinarycontent2',
       });
 
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       const hasLocal = await provider.hasLocalAsync();
       expect(hasLocal).toBe(true);
@@ -139,13 +145,13 @@ describe('iOSCredentialsProvider', () => {
         './cert.p12': 'somebinarycontent2',
       });
 
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       const hasLocal = await provider.hasLocalAsync();
       expect(hasLocal).toBe(true);
     });
     it('should return false if there are no credentials.json file', async () => {
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       const hasLocal = await provider.hasLocalAsync();
       expect(hasLocal).toBe(false);
@@ -161,7 +167,7 @@ describe('iOSCredentialsProvider', () => {
         certP12: 'certbase64',
         certPassword: 'fakePassword',
       }));
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       await expect(
         provider.getCredentialsAsync(CredentialsSource.REMOTE)
@@ -172,23 +178,45 @@ describe('iOSCredentialsProvider', () => {
         certP12: 'certbase64',
         certPassword: 'fakePassword',
       }));
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
-      await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError(
+        'Provisioning profile is missing'
+      );
     });
     it('should return false if dist cert is missging', async () => {
       mockGetProvisioningProfile.mockImplementation(() => ({
         provisioningProfile: 'profileBase64',
         provisioningProfileId: 'id',
       }));
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
-      await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError(
+        'Distribution certificate is missing'
+      );
     });
     it('should return false if there are no credentials', async () => {
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
-      await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError();
+      await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError(
+        'Distribution certificate is missing'
+      );
+    });
+    it('should not run credentials manager if credentials check is skipped', async () => {
+      const spy = jest.spyOn(route, 'runCredentialsManager').mockImplementation(() => {
+        throw new Error("Shouldn't be called");
+      });
+
+      const provider = new iOSCredentialsProvider('.', appLookupParams, {
+        ...providerOptions,
+        skipCredentialsCheck: true,
+      });
+      await provider.initAsync();
+      await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError(
+        'Distribution certificate is missing and credentials check was skipped. Run without --skip-credentials-check to set it up.'
+      );
+
+      spy.mockRestore();
     });
   });
   describe('when calling useLocalAsync', () => {
@@ -207,7 +235,7 @@ describe('iOSCredentialsProvider', () => {
         './cert.p12': 'somebinarycontent2',
       });
 
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       await expect(
         provider.getCredentialsAsync(CredentialsSource.LOCAL)
@@ -226,7 +254,7 @@ describe('iOSCredentialsProvider', () => {
         './pprofile': 'somebinarycontent',
         './cert.p12': 'somebinarycontent2',
       });
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       await expect(provider.getCredentialsAsync(CredentialsSource.LOCAL)).rejects.toThrowError();
     });
@@ -243,12 +271,12 @@ describe('iOSCredentialsProvider', () => {
         }),
         './pprofile': 'somebinarycontent',
       });
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       await expect(provider.getCredentialsAsync(CredentialsSource.LOCAL)).rejects.toThrowError();
     });
     it('should return false if there are no credentials.json file', async () => {
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       await expect(provider.getCredentialsAsync(CredentialsSource.LOCAL)).rejects.toThrowError();
     });
@@ -276,7 +304,7 @@ describe('iOSCredentialsProvider', () => {
         certP12: 'c29tZWJpbmFyeWNvbnRlbnQy',
         certPassword: 'fakePassword',
       }));
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       const isLocalSynced = await provider.isLocalSyncedAsync();
       expect(isLocalSynced).toBe(true);
@@ -303,7 +331,7 @@ describe('iOSCredentialsProvider', () => {
         certP12: 'different cert',
         certPassword: 'fakePassword',
       }));
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       const isLocalSynced = await provider.isLocalSyncedAsync();
       expect(isLocalSynced).toBe(false);
@@ -332,7 +360,7 @@ describe('iOSCredentialsProvider', () => {
         certP12: 'different cert',
         certPassword: 'fakePassword',
       }));
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       expect(await provider.getCredentialsAsync(CredentialsSource.LOCAL)).toEqual({
         provisioningProfile: 'c29tZWJpbmFyeWNvbnRlbnQ=',
@@ -364,7 +392,7 @@ describe('iOSCredentialsProvider', () => {
         certP12: 'remoteCert',
         certPassword: 'certPassword',
       }));
-      const provider = new iOSCredentialsProvider('.', providerOptions);
+      const provider = new iOSCredentialsProvider('.', appLookupParams, providerOptions);
       await provider.initAsync();
       expect(await provider.getCredentialsAsync(CredentialsSource.REMOTE)).toEqual({
         provisioningProfile: 'remoteProvProfile',

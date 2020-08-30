@@ -4,7 +4,7 @@ import {
   Workflow,
   iOSBuildProfile,
 } from '../../../easJson';
-import { CommandContext } from './types';
+import { CommandContext } from '../types';
 
 /**
  * We use require() to exclude package.json from TypeScript's analysis since it lives outside

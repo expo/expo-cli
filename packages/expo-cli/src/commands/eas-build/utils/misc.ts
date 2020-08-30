@@ -1,9 +1,9 @@
 import { UserManager } from '@expo/xdl';
 
-import log from '../../../../log';
-import * as UrlUtils from '../../../utils/url';
-import { platformDisplayNames } from '../../constants';
-import { Build } from '../../types';
+import log from '../../../log';
+import * as UrlUtils from '../../utils/url';
+import { platformDisplayNames } from '../constants';
+import { Build } from '../types';
 
 async function printLogsUrls(
   accountName: string,
