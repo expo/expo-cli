@@ -18,13 +18,12 @@ import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
+import * as Xcode from './Xcode';
 
 let _lastUrl: string | null = null;
 let _lastUdid: string | null = null;
 
-const SUGGESTED_XCODE_VERSION = `8.2.0`;
-const XCODE_NOT_INSTALLED_ERROR =
-  'Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulators. If you already have the latest version of Xcode installed, you may have to run the command `sudo xcode-select -s /Applications/Xcode.app`.';
+const SUGGESTED_XCODE_VERSION = `${Xcode.minimumVersion}.0`;
 
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
@@ -32,62 +31,132 @@ export function isPlatformSupported() {
   return process.platform === 'darwin';
 }
 
+async function confirmAsync(options: { default?: boolean; message: string }): Promise<boolean> {
+  _interactiveCallback?.(true);
+  const { confirm } = await prompt({
+    type: 'confirm',
+    name: 'confirm',
+    ...options,
+  });
+  _interactiveCallback?.(false);
+  return confirm;
+}
+
+/**
+ * Ensure Xcode is installed an recent enough to be used with Expo.
+ *
+ * @return true when Xcode is installed, false when the process should end.
+ */
+export async function ensureXcodeInstalledAsync(): Promise<boolean> {
+  const promptToOpenAppStoreAsync = async (message: string) => {
+    // This prompt serves no purpose accept informing the user what to do next, we could just open the App Store but it could be confusing if they don't know what's going on.
+    const confirm = await confirmAsync({ default: true, message });
+    if (confirm) {
+      Logger.global.info(`Going to the App Store, re-run Expo when Xcode is finished installing.`);
+      await Xcode.openAppStoreAsync(Xcode.appStoreId);
+    }
+  };
+
+  const version = await Xcode.getXcodeVersionAsync();
+  if (!version) {
+    // Almost certainly Xcode isn't installed.
+    await promptToOpenAppStoreAsync(
+      `Xcode needs to be installed (don't worry, you won't have to use it), would you like to continue to the App Store?`
+    );
+    return false;
+  }
+
+  if (!semver.valid(version)) {
+    // Not sure why this would happen, if it does we should add a more confident error message.
+    // TODO: Add analytics to detect
+    console.error(`Xcode version is in an unknown format: ${version}`);
+    return false;
+  }
+
+  if (semver.lt(version, SUGGESTED_XCODE_VERSION)) {
+    // Xcode version is too old.
+    await promptToOpenAppStoreAsync(
+      `Xcode (${version}) needs to be updated to at least version ${Xcode.minimumVersion}, would you like to continue to the App Store?`
+    );
+    return false;
+  }
+
+  return true;
+}
+
+async function ensureXcodeCommandLineToolsInstalledAsync(): Promise<boolean> {
+  if (!(await ensureXcodeInstalledAsync())) {
+    // Need Xcode to install the CLI afaict
+    return false;
+  } else if (await SimControl.isXcrunInstalledAsync()) {
+    // Run this second to ensure the Xcode version check is run.
+    return true;
+  }
+
+  async function pendingAsync(): Promise<boolean> {
+    if (await SimControl.isXcrunInstalledAsync()) {
+      return true;
+    } else {
+      await delayAsync(100);
+      return await pendingAsync();
+    }
+  }
+
+  // This prompt serves no purpose accept informing the user what to do next, we could just open the App Store but it could be confusing if they don't know what's going on.
+  const confirm = await confirmAsync({
+    default: true,
+    message: `Xcode ${chalk.bold`Command Line Tools`} needs to be installed (requires ${chalk.bold`sudo`}), continue?`,
+  });
+
+  if (!confirm) {
+    return false;
+  }
+
+  try {
+    await spawnAsync('sudo', [
+      'xcode-select',
+      '--install',
+      // TODO: Is there any harm in skipping this?
+      // '--switch', '/Applications/Xcode.app'
+    ]);
+    await pendingAsync();
+    return true;
+  } catch (error) {
+    // TODO: Figure out why this might get called (cancel early, network issues, server problems)
+    // TODO: Handle me
+  }
+  return false;
+}
+
+class TimeoutError extends Error {}
+
 // Simulator installed
 export async function isSimulatorInstalledAsync() {
+  // Check to ensure Xcode and its CLI are installed and up to date.
+  if (!(await ensureXcodeCommandLineToolsInstalledAsync())) {
+    return false;
+  }
+  // TODO: extract into ensureSimulatorInstalled method
+
   let result;
   try {
     result = (await osascript.execAsync('id of app "Simulator"')).trim();
   } catch (e) {
+    // TODO: ensureSimulatorInstalled
     console.error(
-      "Can't determine id of Simulator app; the Simulator is most likely not installed on this machine",
+      "Can't determine id of Simulator app; the Simulator is most likely not installed on this machine. Run `sudo xcode-select -s /Applications/Xcode.app`",
       e
     );
-    Logger.global.error(XCODE_NOT_INSTALLED_ERROR);
     return false;
   }
   if (
     result !== 'com.apple.iphonesimulator' &&
     result !== 'com.apple.CoreSimulator.SimulatorTrampoline'
   ) {
+    // TODO: FYI
     console.warn(
       "Simulator is installed but is identified as '" + result + "'; don't know what that is."
     );
-    Logger.global.error(XCODE_NOT_INSTALLED_ERROR);
-    return false;
-  }
-
-  // check xcode version
-  try {
-    const { stdout } = await spawnAsync('xcodebuild', ['-version']);
-
-    // find something that looks like a dot separated version number
-    const matches = stdout.match(/[\d]{1,2}\.[\d]{1,3}/);
-    if (!matches) {
-      // very unlikely
-      console.error('No version number found from `xcodebuild -version`.');
-      Logger.global.error(
-        'Unable to check Xcode version. Command ran successfully but no version number was found.'
-      );
-      return false;
-    }
-
-    // we're cheating to use the semver lib, but it expects a proper patch version which xcode doesn't have
-    const version = matches[0] + '.0';
-
-    if (!semver.valid(version)) {
-      console.error('Invalid version number found: ' + matches[0]);
-      return false;
-    }
-
-    if (semver.lt(version, SUGGESTED_XCODE_VERSION)) {
-      console.warn(
-        `Found Xcode ${version}, which is older than the recommended Xcode ${SUGGESTED_XCODE_VERSION}.`
-      );
-    }
-  } catch (e) {
-    // how would this happen? presumably if Simulator id is found then xcodebuild is installed
-    console.error(`Unable to check Xcode version: ${e}`);
-    Logger.global.error(XCODE_NOT_INSTALLED_ERROR);
     return false;
   }
 
@@ -108,8 +177,6 @@ export async function isSimulatorInstalledAsync() {
 
   return true;
 }
-
-class TimeoutError extends Error {}
 
 /**
  * Ensure a simulator is booted and the Simulator app is opened.
@@ -544,13 +611,9 @@ async function ensureExpoClientInstalledAsync(simulator: Pick<SimControl.Device,
 
   if (isInstalled) {
     if (await doesExpoClientNeedUpdatedAsync(simulator)) {
-      _interactiveCallback?.(true);
-      const { confirm } = await prompt({
-        type: 'confirm',
-        name: 'confirm',
+      const confirm = await confirmAsync({
         message: `Expo client on ${simulator.name} is outdated, would you like to upgrade?`,
       });
-      _interactiveCallback?.(false);
       if (confirm) {
         // TODO: Is there any downside to skipping the uninstall step?
         // await uninstallExpoAppFromSimulatorAsync(simulator);

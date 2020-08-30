@@ -304,6 +304,16 @@ export function isLicenseOutOfDate(text: string) {
   return lower.includes('xcode') && lower.includes('license');
 }
 
+export async function isXcrunInstalledAsync() {
+  try {
+    await spawnAsync('xcrun', ['--version']);
+    return true;
+  } catch (error) {
+    console.log('ERR: ', error);
+    return false;
+  }
+}
+
 export async function xcrunAsync(args: string[], options?: SpawnOptions) {
   try {
     return await spawnAsync('xcrun', args, options);
