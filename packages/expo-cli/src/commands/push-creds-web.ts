@@ -15,7 +15,7 @@ type VapidData = {
 const vapidSubjectDescription =
   'URL or `mailto:` URL which provides a point of contact in case the push service needs to contact the message sender.';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('push:web:upload [project-dir]')
     .description('Uploads VAPID key pair and VAPID subject for web push notifications.')

@@ -3,7 +3,7 @@ import { Command } from 'commander';
 import { Context } from '../credentials/context';
 import log from '../log';
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('push:android:upload [project-dir]')
     .description('Uploads a Firebase Cloud Messaging key for Android push notifications.')
