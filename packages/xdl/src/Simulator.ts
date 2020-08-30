@@ -25,7 +25,7 @@ let _lastUdid: string | null = null;
 
 const SUGGESTED_XCODE_VERSION = `8.2.0`;
 const XCODE_NOT_INSTALLED_ERROR =
-  'Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator. If you already have the latest version of Xcode installed, you may have to run the command `sudo xcode-select -s /Applications/Xcode.app`.';
+  'Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulators. If you already have the latest version of Xcode installed, you may have to run the command `sudo xcode-select -s /Applications/Xcode.app`.';
 
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
@@ -119,7 +119,7 @@ class TimeoutError extends Error {}
 export async function ensureSimulatorOpenAsync(
   { udid }: { udid?: string } = {},
   tryAgain: boolean = true
-): Promise<SimControl.ListedDevice> {
+): Promise<SimControl.Device> {
   // Yes, simulators can be booted even if the app isn't running, obviously we'd never want this.
   if (!(await SimControl.isSimulatorAppRunningAsync())) {
     Logger.global.info(`Opening the iOS simulator, this might take a moment.`);
@@ -144,21 +144,21 @@ export async function ensureSimulatorOpenAsync(
     } else {
       udid =
         (await _getDefaultSimulatorDeviceUDIDAsync()) ??
-        (await _getFirstAvailableDeviceAsync()).udid;
+        (await getFirstAvailableDeviceAsync()).udid;
     }
   }
 
   const bootedDevice = await waitForDeviceToBootAsync({ udid });
 
   if (!bootedDevice) {
+    // TODO: Maybe we can just `isSimulatorBootedAsync`.
+    if (tryAgain) {
+      return await ensureSimulatorOpenAsync({ udid }, false);
+    }
     // TODO: We should eliminate all needs for a timeout error, it's bad UX to get an error about the simulator not starting while the user can clearly see it starting on their slow computer.
     throw new TimeoutError(
       `Simulator didn't boot fast enough. Try opening Simulator first, then running your app.`
     );
-  }
-  // TODO: Maybe we can just `isSimulatorBootedAsync`.
-  if (tryAgain) {
-    return await ensureSimulatorOpenAsync({ udid }, false);
   }
   return bootedDevice;
 }
@@ -166,19 +166,19 @@ export async function ensureSimulatorOpenAsync(
 /**
  * Get all simulators supported by Expo (iOS only).
  */
-async function getSelectableSimulatorsAsync(): Promise<SimControl.ListedDevice[]> {
+async function getSelectableSimulatorsAsync(): Promise<SimControl.Device[]> {
   const simulators = await getSimulatorsAsync();
   return simulators.filter(device => device.isAvailable && device.osType === 'iOS');
 }
 
-async function getSimulatorsAsync(): Promise<SimControl.ListedDevice[]> {
+async function getSimulatorsAsync(): Promise<SimControl.Device[]> {
   const simulatorDeviceInfo = await SimControl.listAsync('devices');
   return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
     return prev.concat(runtime);
   }, []);
 }
 
-async function getBootedSimulatorsAsync(): Promise<SimControl.ListedDevice[]> {
+async function getBootedSimulatorsAsync(): Promise<SimControl.Device[]> {
   const simulators = await getSimulatorsAsync();
   return simulators.filter(device => device.state === 'Booted');
 }
@@ -187,7 +187,7 @@ export async function isSimulatorBootedAsync({
   udid,
 }: {
   udid?: string;
-} = {}): Promise<SimControl.ListedDevice | null> {
+} = {}): Promise<SimControl.Device | null> {
   // Simulators can be booted even if the app isn't running :(
   const devices = await getBootedSimulatorsAsync();
   if (udid) {
@@ -210,7 +210,7 @@ async function _getDefaultSimulatorDeviceUDIDAsync() {
   }
 }
 
-async function _getFirstAvailableDeviceAsync() {
+async function getFirstAvailableDeviceAsync() {
   const simulators = await getSelectableSimulatorsAsync();
   if (!simulators.length) {
     // TODO: Prompt to install the simulators
@@ -248,8 +248,8 @@ async function waitForSimulatorAppToStart(): Promise<boolean> {
 
 async function waitForDeviceToBootAsync({
   udid,
-}: Pick<SimControl.ListedDevice, 'udid'>): Promise<SimControl.ListedDevice | null> {
-  return waitForActionAsync<SimControl.ListedDevice | null>({
+}: Pick<SimControl.Device, 'udid'>): Promise<SimControl.Device | null> {
+  return waitForActionAsync<SimControl.Device | null>({
     action: () => {
       return SimControl.bootAsync({ udid });
     },
@@ -261,7 +261,7 @@ export async function activateSimulatorWindowAsync() {
   return await osascript.execAsync(`tell application "Simulator" to activate`);
 }
 
-export async function _quitSimulatorAsync() {
+export async function closeSimulatorAppAsync() {
   return await osascript.execAsync('tell application "Simulator" to quit');
 }
 
@@ -325,9 +325,21 @@ export async function expoVersionOnSimulatorAsync({
   return regexMatch[1];
 }
 
+let _interactiveCallback: ((pause: boolean) => void) | null = null;
+
+/**
+ * Used to pause/resume interaction observers while prompting (made for TerminalUI).
+ *
+ * @param callback
+ */
+export function setInteractiveCallback(callback: (pause: boolean) => void) {
+  _interactiveCallback = callback;
+}
 export async function doesExpoClientNeedUpdatedAsync(
-  simulator: Pick<SimControl.ListedDevice, 'udid'>
+  simulator: Pick<SimControl.Device, 'udid'>
 ): Promise<boolean> {
+  // Test that upgrading works by returning true
+  // return true;
   const versions = await Versions.versionsAsync();
 
   const installedVersion = await expoVersionOnSimulatorAsync(simulator);
@@ -375,7 +387,7 @@ export async function installExpoOnSimulatorAsync({
   url,
   simulator,
 }: {
-  simulator: Pick<SimControl.ListedDevice, 'name' | 'udid'>;
+  simulator: Pick<SimControl.Device, 'name' | 'udid'>;
   url?: string;
 }) {
   const bar = new ProgressBar(
@@ -421,19 +433,6 @@ export async function uninstallExpoAppFromSimulatorAsync({ udid }: { udid?: stri
   try {
     Logger.global.info('Uninstalling Expo client from iOS simulator.');
     await SimControl.uninstallAsync({ udid, bundleIdentifier: 'host.exp.Exponent' });
-    // await simctlAsync(['uninstall', deviceUDIDOrBooted(udid), 'host.exp.Exponent']);
-  } catch (e) {
-    if (!e.message?.includes('No devices are booted.')) {
-      console.error(e);
-      throw e;
-    }
-  }
-}
-
-export async function shutdownAsync({ udid }: { udid?: string } = {}) {
-  try {
-    Logger.global.info('Uninstalling Expo client from iOS simulator.');
-    await SimControl.shutdownAsync(udid);
   } catch (e) {
     if (!e.message?.includes('No devices are booted.')) {
       console.error(e);
@@ -492,7 +491,7 @@ export async function openUrlInSimulatorSafeAsync({
     };
   }
 
-  let simulator: SimControl.ListedDevice | null = null;
+  let simulator: SimControl.Device | null = null;
   try {
     simulator = await ensureSimulatorOpenAsync({ udid });
   } catch (error) {
@@ -544,25 +543,27 @@ export async function openUrlInSimulatorSafeAsync({
   };
 }
 
-async function ensureExpoClientInstalledAsync(
-  simulator: Pick<SimControl.ListedDevice, 'udid' | 'name'>
-) {
+async function ensureExpoClientInstalledAsync(simulator: Pick<SimControl.Device, 'udid' | 'name'>) {
   let isInstalled = await isExpoClientInstalledOnSimulatorAsync(simulator);
 
   if (isInstalled) {
     if (await doesExpoClientNeedUpdatedAsync(simulator)) {
+      _interactiveCallback?.(true);
       const { confirm } = await prompt({
         type: 'confirm',
         name: 'confirm',
         message: `Expo client on ${simulator.name} is outdated, would you like to upgrade?`,
       });
+      _interactiveCallback?.(false);
       if (confirm) {
-        await uninstallExpoAppFromSimulatorAsync(simulator);
-        await waitForExpoClientUninstalledOnSimulatorAsync(simulator);
+        // TODO: Is there any downside to skipping the uninstall step?
+        // await uninstallExpoAppFromSimulatorAsync(simulator);
+        // await waitForExpoClientUninstalledOnSimulatorAsync(simulator);
         isInstalled = false;
       }
     }
   }
+  // If it's still "not installed" then install it (again).
   if (!isInstalled) {
     await installExpoOnSimulatorAsync({ simulator });
     await waitForExpoClientInstalledOnSimulatorAsync(simulator);
@@ -583,7 +584,7 @@ export async function openProjectAsync({
     skipSDKVersionRequirement: true,
   });
 
-  let device: SimControl.ListedDevice | null = null;
+  let device: SimControl.Device | null = null;
   if (shouldPrompt) {
     const devices = await getSelectableSimulatorsAsync();
     device = await promptForSimulatorAsync(devices);
@@ -620,7 +621,7 @@ export async function openWebProjectAsync({
     };
   }
 
-  let device: SimControl.ListedDevice | null = null;
+  let device: SimControl.Device | null = null;
   if (shouldPrompt) {
     const devices = await getSelectableSimulatorsAsync();
     device = await promptForSimulatorAsync(devices);
@@ -640,9 +641,7 @@ export async function openWebProjectAsync({
   return { success: result.success, error: result.msg };
 }
 
-async function promptForSimulatorAsync(
-  devices: SimControl.ListedDevice[]
-): Promise<SimControl.ListedDevice> {
+async function promptForSimulatorAsync(devices: SimControl.Device[]): Promise<SimControl.Device> {
   // TODO: cache the last used device so the user can spam click and get the expected results.
   // Resort the devices so the first one is iPhone 11
   let iterations = 0;
@@ -656,17 +655,20 @@ async function promptForSimulatorAsync(
   return devices.find(({ name }) => results === name)!;
 }
 
-async function promptForDeviceAsync(devices: SimControl.ListedDevice[]): Promise<string> {
+async function promptForDeviceAsync(devices: SimControl.Device[]): Promise<string> {
   // TODO: Sort by most likely to open
   // TODO: indicate which sims are booted already
   // TODO: provide an option to add or download more simulators
   // TODO: Add support for physical devices too.
 
+  // Pause interactions on the TerminalUI
+  _interactiveCallback?.(true);
+
   const { answer } = await prompt([
     {
       type: 'list',
       name: 'answer',
-      message: 'Select a simulator to run on',
+      message: 'Select a simulator',
       // @ts-ignore
       choices: devices
         // .reduce<SimControl.ListedDevice[]>((prev, current) => {
@@ -679,12 +681,19 @@ async function promptForDeviceAsync(devices: SimControl.ListedDevice[]): Promise
           if (item instanceof Separator) {
             return item;
           } else {
-            return { name: item.windowName, value: item.name };
+            const isActive = item.state === 'Booted';
+            const format = isActive ? chalk.bold : (text: string) => text;
+            return {
+              name: `${format(item.name)} ${chalk.dim(`(${item.osVersion})`)}`,
+              value: item.name,
+            };
           }
         }),
       // @ts-ignore
       loop: false,
     },
   ]);
+  // Resume interactions on the TerminalUI
+  _interactiveCallback?.(false);
   return answer;
 }

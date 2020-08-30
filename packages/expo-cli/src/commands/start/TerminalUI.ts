@@ -129,6 +129,13 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
 
   startWaitingForCommand();
 
+  Simulator.setInteractiveCallback(async (pause: boolean) => {
+    if (pause) {
+      stopWaitingForCommand();
+    } else {
+      startWaitingForCommand();
+    }
+  });
   UserManager.setInteractiveAuthenticationCallback(async () => {
     stopWaitingForCommand();
     try {
@@ -178,13 +185,15 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         case 'I':
         case 'i': {
           clearConsole();
-          log('Trying to open the project in iOS simulator...');
+
+          // If no simulator is booted, then prompt for which simulator to use.
+          const shouldPrompt =
+            !options.nonInteractive && (key === 'I' || !(await Simulator.isSimulatorBootedAsync()));
+
+          log('Opening in iOS simulator...');
           await Simulator.openProjectAsync({
             projectRoot,
-            // If no simulator is booted, then prompt which simulator to use.
-            shouldPrompt:
-              !options.nonInteractive &&
-              (key === 'I' || !(await Simulator.isSimulatorBootedAsync())),
+            shouldPrompt,
           });
           printHelp();
           break;

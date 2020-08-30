@@ -8,146 +8,16 @@ import Logger from './Logger';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 
-export async function isSimulatorRunningAsync() {
-  const zeroMeansNo = (
-    await osascript.execAsync(
-      'tell app "System Events" to count processes whose name is "Simulator"'
-    )
-  ).trim();
-  if (zeroMeansNo === '0') {
-    return false;
-  }
-
-  return true;
-}
-
-export async function getDefaultSimulatorDeviceUDIDAsync() {
-  try {
-    const { stdout: defaultDeviceUDID } = await spawnAsync('defaults', [
-      'read',
-      'com.apple.iphonesimulator',
-      'CurrentDeviceUDID',
-    ]);
-    return defaultDeviceUDID.trim();
-  } catch (e) {
-    return null;
-  }
-}
-
-type SimulatorDeviceList = {
-  devices: {
-    [runtime: string]: ListedDevice[];
-  };
-};
-
-export function dirForSimulatorDevice(udid: string) {
-  return path.resolve(os.homedir(), 'Library/Developer/CoreSimulator/Devices', udid);
-}
-
-export async function quitSimulatorAsync() {
-  return await osascript.execAsync('tell application "Simulator" to quit');
-}
-
-export function simulatorCacheDirectory() {
-  const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  const dir = path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache');
-  fs.mkdirpSync(dir);
-  return dir;
-}
-
-export async function existsAsync(udid: string, bundleIdentifier: string): Promise<boolean> {
-  try {
-    await simctlAsync(['get_app_container', deviceUDIDOrBooted(udid), bundleIdentifier]);
-    return true;
-  } catch {
-    return false;
-  }
-}
-// Open Url
-export async function openURLAsync(options: { udid?: string; url: string }) {
-  return simctlAsync(['openurl', deviceUDIDOrBooted(options.udid), options.url]);
-}
-
-/**
- * I think the app can be open while no simulators are booted.
- */
-export async function isSimulatorAppRunningAsync(): Promise<boolean> {
-  const zeroMeansNo = (
-    await osascript.execAsync(
-      'tell app "System Events" to count processes whose name is "Simulator"'
-    )
-  ).trim();
-  if (zeroMeansNo === '0') {
-    return false;
-  }
-
-  return true;
-}
-
-export async function openSimulatorAppAsync({ udid }: { udid?: string }) {
-  const args = ['-a', 'Simulator'];
-  if (udid) {
-    // This has no effect if the app is already running.
-    args.push('--args', '-CurrentDeviceUDID', udid);
-  }
-  return await spawnAsync('open', args);
-}
-
-// This will only boot in headless mode if the Simulator app is not running.
-export async function bootAsync({ udid }: { udid: string }): Promise<ListedDevice | null> {
-  try {
-    // Skip logging since this is likely to fail.
-    await xcrunAsync(['simctl', 'boot', udid]);
-  } catch (error) {
-    // Silly errors
-    if (!error.stderr?.match(/Unable to boot device in current state: Booted/)) {
-      throw error;
-    }
-  }
-  return await isSimulatorBootedAsync({ udid });
-}
-
-export async function getBootedSimulatorsAsync(): Promise<ListedDevice[]> {
-  const simulatorDeviceInfo = await listAsync('devices');
-  return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
-    return prev.concat(runtime.filter(device => device.state === 'Booted'));
-  }, []);
-}
-
-export async function isSimulatorBootedAsync({
-  udid,
-}: {
-  udid?: string;
-}): Promise<ListedDevice | null> {
-  // Simulators can be booted even if the app isn't running :(
-  const devices = await getBootedSimulatorsAsync();
-  if (udid) {
-    return devices.find(bootedDevice => bootedDevice.udid === udid) ?? null;
-  } else {
-    return devices[0] ?? null;
-  }
-}
-
-export async function installAsync(options: { udid: string; dir: string }): Promise<any> {
-  return simctlAsync(['install', deviceUDIDOrBooted(options.udid), options.dir]);
-}
-export async function uninstallAsync(options: {
-  udid?: string;
-  bundleIdentifier: string;
-}): Promise<any> {
-  return simctlAsync(['uninstall', deviceUDIDOrBooted(options.udid), options.bundleIdentifier]);
-}
-
 type DeviceState = 'Shutdown' | 'Booted';
 
-export type ListedDevice = {
+export type Device = {
   availabilityError: 'runtime profile not found';
   /**
-   * '/Users/evanbacon/Library/Developer/CoreSimulator/Devices/00E55DC0-0364-49DF-9EC6-77BE587137D4/data'
+   * '/Users/name/Library/Developer/CoreSimulator/Devices/00E55DC0-0364-49DF-9EC6-77BE587137D4/data'
    */
   dataPath: string;
   /**
-   * '/Users/evanbacon/Library/Logs/CoreSimulator/00E55DC0-0364-49DF-9EC6-77BE587137D4'
+   * '/Users/name/Library/Logs/CoreSimulator/00E55DC0-0364-49DF-9EC6-77BE587137D4'
    */
   logPath: string;
   /**
@@ -181,6 +51,122 @@ export type ListedDevice = {
 };
 
 type OSType = 'iOS' | 'tvOS' | 'watchOS';
+
+type PermissionName =
+  | 'all'
+  | 'calendar'
+  | 'contacts-limited'
+  | 'contacts'
+  | 'location'
+  | 'location-always'
+  | 'photos-add'
+  | 'photos'
+  | 'media-library'
+  | 'microphone'
+  | 'motion'
+  | 'reminders'
+  | 'siri';
+
+type SimulatorDeviceList = {
+  devices: {
+    [runtime: string]: Device[];
+  };
+};
+
+export async function isSimulatorRunningAsync() {
+  const zeroMeansNo = (
+    await osascript.execAsync(
+      'tell app "System Events" to count processes whose name is "Simulator"'
+    )
+  ).trim();
+  if (zeroMeansNo === '0') {
+    return false;
+  }
+
+  return true;
+}
+
+export async function getDefaultSimulatorDeviceUDIDAsync() {
+  try {
+    const { stdout: defaultDeviceUDID } = await spawnAsync('defaults', [
+      'read',
+      'com.apple.iphonesimulator',
+      'CurrentDeviceUDID',
+    ]);
+    return defaultDeviceUDID.trim();
+  } catch (e) {
+    return null;
+  }
+}
+
+export function dirForSimulatorDevice(udid: string) {
+  return path.resolve(os.homedir(), 'Library/Developer/CoreSimulator/Devices', udid);
+}
+
+export async function quitSimulatorAsync() {
+  return await osascript.execAsync('tell application "Simulator" to quit');
+}
+
+export function simulatorCacheDirectory() {
+  const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+  const dir = path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache');
+  fs.mkdirpSync(dir);
+  return dir;
+}
+
+export async function existsAsync(udid: string, bundleIdentifier: string): Promise<boolean> {
+  try {
+    await simctlAsync(['get_app_container', deviceUDIDOrBooted(udid), bundleIdentifier]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function openURLAsync(options: { udid?: string; url: string }) {
+  return simctlAsync(['openurl', deviceUDIDOrBooted(options.udid), options.url]);
+}
+
+// This will only boot in headless mode if the Simulator app is not running.
+export async function bootAsync({ udid }: { udid: string }): Promise<Device | null> {
+  try {
+    // Skip logging since this is likely to fail.
+    await xcrunAsync(['simctl', 'boot', udid]);
+  } catch (error) {
+    // Silly errors
+    if (!error.stderr?.match(/Unable to boot device in current state: Booted/)) {
+      throw error;
+    }
+  }
+  return await isSimulatorBootedAsync({ udid });
+}
+
+export async function getBootedSimulatorsAsync(): Promise<Device[]> {
+  const simulatorDeviceInfo = await listAsync('devices');
+  return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
+    return prev.concat(runtime.filter(device => device.state === 'Booted'));
+  }, []);
+}
+
+export async function isSimulatorBootedAsync({ udid }: { udid?: string }): Promise<Device | null> {
+  // Simulators can be booted even if the app isn't running :(
+  const devices = await getBootedSimulatorsAsync();
+  if (udid) {
+    return devices.find(bootedDevice => bootedDevice.udid === udid) ?? null;
+  } else {
+    return devices[0] ?? null;
+  }
+}
+
+export async function installAsync(options: { udid: string; dir: string }): Promise<any> {
+  return simctlAsync(['install', deviceUDIDOrBooted(options.udid), options.dir]);
+}
+export async function uninstallAsync(options: {
+  udid?: string;
+  bundleIdentifier: string;
+}): Promise<any> {
+  return simctlAsync(['uninstall', deviceUDIDOrBooted(options.udid), options.bundleIdentifier]);
+}
 
 // TODO: Compare with
 // const results = await SimControl.xcrunAsync(['instruments', '-s']);
@@ -218,21 +204,6 @@ export async function shutdownAsync(udid?: string) {
     }
   }
 }
-
-type PermissionName =
-  | 'all'
-  | 'calendar'
-  | 'contacts-limited'
-  | 'contacts'
-  | 'location'
-  | 'location-always'
-  | 'photos-add'
-  | 'photos'
-  | 'media-library'
-  | 'microphone'
-  | 'motion'
-  | 'reminders'
-  | 'siri';
 
 // Some permission changes will terminate the application if running
 export async function updatePermissionsAsync(
@@ -298,6 +269,31 @@ export async function simctlAsync(
 
 function deviceUDIDOrBooted(udid?: string): string {
   return udid ? udid : 'booted';
+}
+
+/**
+ * I think the app can be open while no simulators are booted.
+ */
+export async function isSimulatorAppRunningAsync(): Promise<boolean> {
+  const zeroMeansNo = (
+    await osascript.execAsync(
+      'tell app "System Events" to count processes whose name is "Simulator"'
+    )
+  ).trim();
+  if (zeroMeansNo === '0') {
+    return false;
+  }
+
+  return true;
+}
+
+export async function openSimulatorAppAsync({ udid }: { udid?: string }) {
+  const args = ['-a', 'Simulator'];
+  if (udid) {
+    // This has no effect if the app is already running.
+    args.push('--args', '-CurrentDeviceUDID', udid);
+  }
+  return await spawnAsync('open', args);
 }
 
 export async function killAllAsync() {
