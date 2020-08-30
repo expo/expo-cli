@@ -1,7 +1,6 @@
 import * as osascript from '@expo/osascript';
 import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
 import fs from 'fs-extra';
-import os from 'os';
 import path from 'path';
 
 import Logger from './Logger';
@@ -99,14 +98,6 @@ export async function getDefaultSimulatorDeviceUDIDAsync() {
   }
 }
 
-export function dirForSimulatorDevice(udid: string) {
-  return path.resolve(os.homedir(), 'Library/Developer/CoreSimulator/Devices', udid);
-}
-
-export async function quitSimulatorAsync() {
-  return await osascript.execAsync('tell application "Simulator" to quit');
-}
-
 export function simulatorCacheDirectory() {
   const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
   const dir = path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache');
@@ -114,12 +105,29 @@ export function simulatorCacheDirectory() {
   return dir;
 }
 
-export async function existsAsync(udid: string, bundleIdentifier: string): Promise<boolean> {
+/**
+ * Returns the local path for the installed tar.app. Returns null when the app isn't installed.
+ *
+ * @param udid
+ * @param bundleIdentifier
+ */
+export async function getContainerPathAsync(
+  udid: string,
+  bundleIdentifier: string
+): Promise<string | null> {
   try {
-    await simctlAsync(['get_app_container', deviceUDIDOrBooted(udid), bundleIdentifier]);
-    return true;
-  } catch {
-    return false;
+    const { stdout } = await xcrunAsync([
+      'simctl',
+      'get_app_container',
+      deviceUDIDOrBooted(udid),
+      bundleIdentifier,
+    ]);
+    return stdout.trim();
+  } catch (error) {
+    if (error.stderr?.match(/No such file or directory/)) {
+      return null;
+    }
+    throw error;
   }
 }
 
@@ -226,10 +234,6 @@ export async function eraseAsync(udid: string) {
 
 export async function eraseAllAsync() {
   return simctlAsync(['erase', 'all']);
-}
-
-export function directoryForDevice(udid: string): string {
-  return path.resolve(os.homedir(), 'Library/Developer/CoreSimulator/Devices', udid);
 }
 
 // Add photos and videos to the simulator's gallery

@@ -4,7 +4,6 @@ import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
-import { sync as globSync } from 'glob';
 import { Separator, prompt } from 'inquirer';
 import path from 'path';
 import ProgressBar from 'progress';
@@ -270,11 +269,7 @@ export async function isExpoClientInstalledOnSimulatorAsync({
 }: {
   udid: string;
 }): Promise<boolean> {
-  const simDir = await SimControl.directoryForDevice(udid);
-  const matches = globSync('data/Containers/Data/Application/**/Snapshots/host.exp.Exponent{,**}', {
-    cwd: simDir,
-  });
-  return matches.length > 0;
+  return !!(await SimControl.getContainerPathAsync(udid, 'host.exp.Exponent'));
 }
 
 export async function waitForExpoClientInstalledOnSimulatorAsync({
@@ -307,22 +302,23 @@ export async function expoVersionOnSimulatorAsync({
 }: {
   udid: string;
 }): Promise<string | null> {
-  const simDir = await SimControl.directoryForDevice(udid);
-  const matches = globSync('data/Containers/Bundle/Application/*/Exponent-*.app', {
-    cwd: simDir,
-  });
-
-  if (matches.length === 0) {
+  const localPath = await SimControl.getContainerPathAsync(udid, 'host.exp.Exponent');
+  if (!localPath) {
     return null;
   }
 
-  const regex = /Exponent-([0-9.]+)\.app/;
-  const regexMatch = regex.exec(matches[0]);
+  const regex = /Exponent-([0-9.]+).*\.app$/;
+  const regexMatch = regex.exec(localPath);
   if (!regexMatch) {
     return null;
   }
 
-  return regexMatch[1];
+  let matched = regexMatch[1];
+  // If the value is matched like 1.0.0. then remove the trailing dot.
+  if (matched.endsWith('.')) {
+    matched = matched.substr(0, matched.length - 1);
+  }
+  return matched;
 }
 
 let _interactiveCallback: ((pause: boolean) => void) | null = null;
