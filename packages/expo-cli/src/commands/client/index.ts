@@ -318,7 +318,7 @@ export default function (program: Command) {
           message: `You are currently using SDK ${currentSdkVersion}. Would you like to install client ${recommendedClientVersion} released for this SDK?`,
         });
         if (answer.upgradeToRecommended) {
-          await Simulator.upgradeExpoAsync(recommendedClient.url);
+          await Simulator.upgradeExpoAsync({ url: recommendedClient.url });
           log('Done!');
           return;
         }
@@ -364,7 +364,7 @@ export default function (program: Command) {
         clients: availableClients,
       });
 
-      if (await Simulator.upgradeExpoAsync(targetClient.clientUrl)) {
+      if (await Simulator.upgradeExpoAsync({ url: targetClient.clientUrl })) {
         log('Done!');
       }
     });

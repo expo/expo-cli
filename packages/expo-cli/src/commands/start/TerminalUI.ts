@@ -112,7 +112,7 @@ export const printServerInfo = async (
   printHelp();
 };
 
-export const startAsync = async (projectDir: string, options: StartOptions) => {
+export const startAsync = async (projectRoot: string, options: StartOptions) => {
   const { stdin } = process;
   const startWaitingForCommand = () => {
     stdin.setRawMode(true);
@@ -138,7 +138,7 @@ export const startAsync = async (projectDir: string, options: StartOptions) => {
     }
   });
 
-  await printServerInfo(projectDir, options);
+  await printServerInfo(projectRoot, options);
 
   async function handleKeypress(key: string) {
     if (options.webOnly) {
@@ -146,13 +146,20 @@ export const startAsync = async (projectDir: string, options: StartOptions) => {
         case 'a':
           clearConsole();
           log('Trying to open the web project in Chrome on Android...');
-          await Android.openWebProjectAsync(projectDir);
+          await Android.openWebProjectAsync(projectRoot);
           printHelp();
           break;
         case 'i':
+        case 'I':
           clearConsole();
           log('Trying to open the web project in Safari on the iOS simulator...');
-          await Simulator.openWebProjectAsync(projectDir);
+          await Simulator.openWebProjectAsync({
+            projectRoot,
+            // If no simulator is booted, then prompt which simulator to use.
+            shouldPrompt:
+              !options.nonInteractive &&
+              (key === 'I' || !(await Simulator.isSimulatorBootedAsync())),
+          });
           printHelp();
           break;
         case 'e':
@@ -164,20 +171,27 @@ export const startAsync = async (projectDir: string, options: StartOptions) => {
         case 'a': {
           clearConsole();
           log('Trying to open the project on Android...');
-          await Android.openProjectAsync(projectDir);
+          await Android.openProjectAsync(projectRoot);
           printHelp();
           break;
         }
+        case 'I':
         case 'i': {
           clearConsole();
           log('Trying to open the project in iOS simulator...');
-          await Simulator.openProjectAsync(projectDir);
+          await Simulator.openProjectAsync({
+            projectRoot,
+            // If no simulator is booted, then prompt which simulator to use.
+            shouldPrompt:
+              !options.nonInteractive &&
+              (key === 'I' || !(await Simulator.isSimulatorBootedAsync())),
+          });
           printHelp();
           break;
         }
         case 'e': {
           stopWaitingForCommand();
-          const lanAddress = await UrlUtils.constructManifestUrlAsync(projectDir, {
+          const lanAddress = await UrlUtils.constructManifestUrlAsync(projectRoot, {
             hostType: 'lan',
           });
           const defaultRecipient = await UserSettings.getAsync('sendTo', null);
@@ -248,23 +262,23 @@ export const startAsync = async (projectDir: string, options: StartOptions) => {
         break;
       }
       case '?': {
-        await printUsage(projectDir, options);
+        await printUsage(projectRoot, options);
         break;
       }
       case 'w': {
         clearConsole();
         log('Attempting to open the project in a web browser...');
-        await Webpack.openAsync(projectDir);
-        await printServerInfo(projectDir, options);
+        await Webpack.openAsync(projectRoot);
+        await printServerInfo(projectRoot, options);
         break;
       }
       case 'c': {
         clearConsole();
-        await printServerInfo(projectDir, options);
+        await printServerInfo(projectRoot, options);
         break;
       }
       case 'd': {
-        const { devToolsPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
+        const { devToolsPort } = await ProjectSettings.readPackagerInfoAsync(projectRoot);
         log('Opening DevTools in the browser...');
         openBrowser(`http://localhost:${devToolsPort}`);
         printHelp();
@@ -284,9 +298,9 @@ export const startAsync = async (projectDir: string, options: StartOptions) => {
       }
       case 'p': {
         clearConsole();
-        const projectSettings = await ProjectSettings.readAsync(projectDir);
+        const projectSettings = await ProjectSettings.readAsync(projectRoot);
         const dev = !projectSettings.dev;
-        await ProjectSettings.setAsync(projectDir, { dev, minify: !dev });
+        await ProjectSettings.setAsync(projectRoot, { dev, minify: !dev });
         log(
           `Metro Bundler is now running in ${chalk.bold(
             dev ? 'development' : 'production'
@@ -305,7 +319,7 @@ Please reload the project in the Expo app for the change to take effect.`
         } else {
           log('Restarting Metro Bundler...');
         }
-        Project.startAsync(projectDir, { ...options, reset });
+        Project.startAsync(projectRoot, { ...options, reset });
         break;
       }
       case 's': {
@@ -330,7 +344,7 @@ Please reload the project in the Expo app for the change to take effect.`
       }
       case 'o':
         log('Trying to open the project in your editor...');
-        await startProjectInEditorAsync(projectDir);
+        await startProjectInEditorAsync(projectRoot);
     }
   }
 };

@@ -1,10 +1,11 @@
 import { getConfig } from '@expo/config';
 import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
+import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
-import os from 'os';
+import { Separator, prompt } from 'inquirer';
 import path from 'path';
 import ProgressBar from 'progress';
 import semver from 'semver';
@@ -13,13 +14,14 @@ import * as Analytics from './Analytics';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
+import * as SimControl from './SimControl';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
-import XDLError from './XDLError';
 
 let _lastUrl: string | null = null;
+let _lastUdid: string | null = null;
 
 const SUGGESTED_XCODE_VERSION = `8.2.0`;
 const XCODE_NOT_INSTALLED_ERROR =
@@ -31,33 +33,8 @@ export function isPlatformSupported() {
   return process.platform === 'darwin';
 }
 
-function _isLicenseOutOfDate(text: string) {
-  if (!text) {
-    return false;
-  }
-
-  const lower = text.toLowerCase();
-  return lower.includes('xcode') && lower.includes('license');
-}
-
-async function _xcrunAsync(args: string[]) {
-  try {
-    return await spawnAsync('xcrun', args);
-  } catch (e) {
-    if (_isLicenseOutOfDate(e.stdout) || _isLicenseOutOfDate(e.stderr)) {
-      throw new XDLError(
-        'XCODE_LICENSE_NOT_ACCEPTED',
-        'Xcode license is not accepted. Please run `sudo xcodebuild -license`.'
-      );
-    } else {
-      Logger.global.error(`Error running \`xcrun ${args.join(' ')}\`: ${e.stderr}`);
-      throw e;
-    }
-  }
-}
-
 // Simulator installed
-export async function _isSimulatorInstalledAsync() {
+export async function isSimulatorInstalledAsync() {
   let result;
   try {
     result = (await osascript.execAsync('id of app "Simulator"')).trim();
@@ -117,7 +94,7 @@ export async function _isSimulatorInstalledAsync() {
 
   // make sure we can run simctl
   try {
-    await _xcrunAsync(['simctl', 'help']);
+    await SimControl.simctlAsync(['help']);
   } catch (e) {
     if (e.isXDLError) {
       Logger.global.error(e.toString());
@@ -133,46 +110,90 @@ export async function _isSimulatorInstalledAsync() {
   return true;
 }
 
-// Simulator opened
-export async function _openAndBootSimulatorAsync() {
-  if (!(await _isSimulatorRunningAsync())) {
-    Logger.global.info('Opening iOS simulator');
-    await spawnAsync('open', ['-a', 'Simulator']);
-    await _waitForDeviceToBoot();
-  } else {
-    const bootedDevice = await _bootedSimulatorDeviceAsync();
-    if (!bootedDevice) {
-      await _bootDefaultSimulatorDeviceAsync();
+class TimeoutError extends Error {}
+
+/**
+ * Ensure a simulator is booted and the Simulator app is opened.
+ * This is where any timeout related error handling should live.
+ */
+export async function ensureSimulatorOpenAsync(
+  { udid }: { udid?: string } = {},
+  tryAgain: boolean = true
+): Promise<SimControl.ListedDevice> {
+  // Yes, simulators can be booted even if the app isn't running, obviously we'd never want this.
+  if (!(await SimControl.isSimulatorAppRunningAsync())) {
+    Logger.global.info(`Opening the iOS simulator, this might take a moment.`);
+
+    // In theory this would ensure the correct simulator is booted as well.
+    // This isn't theory though, this is Xcode.
+    await SimControl.openSimulatorAppAsync({ udid });
+    if (!(await waitForSimulatorAppToStart())) {
+      throw new TimeoutError(
+        `Simulator app did not open fast enough. Try opening Simulator first, then running your app.`
+      );
     }
   }
-}
 
-export async function _isSimulatorRunningAsync() {
-  const zeroMeansNo = (
-    await osascript.execAsync(
-      'tell app "System Events" to count processes whose name is "Simulator"'
-    )
-  ).trim();
-  if (zeroMeansNo === '0') {
-    return false;
+  // Use a default simulator if none was specified
+  if (!udid) {
+    const simulatorOpenedByApp = await isSimulatorBootedAsync({ udid });
+    // This should prevent opening a second simulator in the chance that default
+    // simulator doesn't match what the Simulator app would open by default.
+    if (simulatorOpenedByApp?.udid) {
+      udid = simulatorOpenedByApp.udid;
+    } else {
+      udid =
+        (await _getDefaultSimulatorDeviceUDIDAsync()) ??
+        (await _getFirstAvailableDeviceAsync()).udid;
+    }
   }
 
-  return true;
-}
+  const bootedDevice = await waitForDeviceToBootAsync({ udid });
 
-async function _bootDefaultSimulatorDeviceAsync() {
-  Logger.global.info(`Booting device in iOS simulator...`);
-  try {
-    let deviceUDID = await _getDefaultSimulatorDeviceUDIDAsync();
-    if (!deviceUDID) {
-      deviceUDID = (await _getFirstAvailableDeviceAsync()).udid;
-    }
-    return await _xcrunAsync(['simctl', 'boot', deviceUDID]);
-  } catch (e) {
-    Logger.global.error(
-      `There was a problem booting a device in iOS Simulator. Quit Simulator, and try again.`
+  if (!bootedDevice) {
+    // TODO: We should eliminate all needs for a timeout error, it's bad UX to get an error about the simulator not starting while the user can clearly see it starting on their slow computer.
+    throw new TimeoutError(
+      `Simulator didn't boot fast enough. Try opening Simulator first, then running your app.`
     );
-    throw e;
+  }
+  // TODO: Maybe we can just `isSimulatorBootedAsync`.
+  if (tryAgain) {
+    return await ensureSimulatorOpenAsync({ udid }, false);
+  }
+  return bootedDevice;
+}
+
+/**
+ * Get all simulators supported by Expo (iOS only).
+ */
+async function getSelectableSimulatorsAsync(): Promise<SimControl.ListedDevice[]> {
+  const simulators = await getSimulatorsAsync();
+  return simulators.filter(device => device.isAvailable && device.osType === 'iOS');
+}
+
+async function getSimulatorsAsync(): Promise<SimControl.ListedDevice[]> {
+  const simulatorDeviceInfo = await SimControl.listAsync('devices');
+  return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
+    return prev.concat(runtime);
+  }, []);
+}
+
+async function getBootedSimulatorsAsync(): Promise<SimControl.ListedDevice[]> {
+  const simulators = await getSimulatorsAsync();
+  return simulators.filter(device => device.state === 'Booted');
+}
+
+export async function isSimulatorBootedAsync({
+  udid,
+}: {
+  udid?: string;
+} = {}): Promise<SimControl.ListedDevice | null> {
+  // Simulators can be booted even if the app isn't running :(
+  const devices = await getBootedSimulatorsAsync();
+  if (udid) {
+    return devices.find(bootedDevice => bootedDevice.udid === udid) ?? null;
+  } else {
+    return devices[0] ?? null;
   }
 }
 
@@ -190,110 +211,103 @@ async function _getDefaultSimulatorDeviceUDIDAsync() {
 }
 
 async function _getFirstAvailableDeviceAsync() {
-  const simulatorDeviceInfo = (await _listSimulatorDevicesAsync()).devices;
-  const iOSRuntimesNewestToOldest = Object.keys(simulatorDeviceInfo)
-    .filter(runtime => runtime.includes('iOS'))
-    .reverse();
-
-  const devices = simulatorDeviceInfo[iOSRuntimesNewestToOldest[0]];
-  for (let i = 0; i < devices.length; i++) {
-    const device = devices[i];
-    if (
-      (device.isAvailable || device.availability === '(available)') &&
-      device.name.includes('iPhone')
-    ) {
-      return device;
-    }
+  const simulators = await getSelectableSimulatorsAsync();
+  if (!simulators.length) {
+    // TODO: Prompt to install the simulators
+    throw new Error('No iPhone devices available in Simulator.');
   }
-  throw new Error('No iPhone devices available in Simulator.');
+  return simulators[0];
 }
 
-type SimulatorDevice = {
-  availability: string;
-  state: string;
-  isAvailable: boolean;
-  name: string;
-  udid: string;
-  availabilityError: string;
-};
-type SimulatorDeviceList = {
-  devices: {
-    [runtime: string]: SimulatorDevice[];
-  };
-};
-
-async function _listSimulatorDevicesAsync() {
-  const result = await _xcrunAsync(['simctl', 'list', 'devices', '--json']);
-  const info = JSON.parse(result.stdout) as SimulatorDeviceList;
-  return info;
-}
-
-async function _waitForDeviceToBoot() {
-  let bootedDevice;
+async function waitForActionAsync<T>({
+  action,
+  interval = 100,
+  maxWaitTime = 20000,
+}: {
+  action: () => T | Promise<T>;
+  interval?: number;
+  maxWaitTime?: number;
+}): Promise<T> {
+  let complete: T;
   const start = Date.now();
   do {
-    await delayAsync(100);
-    bootedDevice = await _bootedSimulatorDeviceAsync();
-    if (Date.now() - start > 10000) {
-      Logger.global.error(
-        `iOS Simulator device failed to boot. Try opening Simulator first, then running your app.`
-      );
-      throw new Error('Timed out waiting for iOS Simulator device to boot.');
+    await delayAsync(interval);
+
+    complete = await action();
+    if (Date.now() - start > maxWaitTime) {
+      break;
     }
-  } while (!bootedDevice);
+  } while (!complete);
+
+  return complete;
 }
 
-async function _bootedSimulatorDeviceAsync() {
-  const simulatorDeviceInfo = await _listSimulatorDevicesAsync();
-  for (const runtime in simulatorDeviceInfo.devices) {
-    const devices = simulatorDeviceInfo.devices[runtime];
-    for (let i = 0; i < devices.length; i++) {
-      const device = devices[i];
-      if (device.state === 'Booted') {
-        return device;
-      }
-    }
-  }
-  return null;
+async function waitForSimulatorAppToStart(): Promise<boolean> {
+  return waitForActionAsync<boolean>({ action: SimControl.isSimulatorAppRunningAsync });
 }
 
-export function _dirForSimulatorDevice(udid: string) {
-  return path.resolve(os.homedir(), 'Library/Developer/CoreSimulator/Devices', udid);
+async function waitForDeviceToBootAsync({
+  udid,
+}: Pick<SimControl.ListedDevice, 'udid'>): Promise<SimControl.ListedDevice | null> {
+  return waitForActionAsync<SimControl.ListedDevice | null>({
+    action: () => {
+      return SimControl.bootAsync({ udid });
+    },
+  });
+}
+
+export async function activateSimulatorWindowAsync() {
+  // TODO: Focus the individual window
+  return await osascript.execAsync(`tell application "Simulator" to activate`);
 }
 
 export async function _quitSimulatorAsync() {
   return await osascript.execAsync('tell application "Simulator" to quit');
 }
 
-// Expo installed
-export async function _isExpoAppInstalledOnCurrentBootedSimulatorAsync() {
-  const device = await _bootedSimulatorDeviceAsync();
-  if (!device) {
-    return false;
-  }
-  const simDir = await _dirForSimulatorDevice(device.udid);
+export async function isExpoClientInstalledOnSimulatorAsync({
+  udid,
+}: {
+  udid: string;
+}): Promise<boolean> {
+  const simDir = await SimControl.directoryForDevice(udid);
   const matches = globSync('data/Containers/Data/Application/**/Snapshots/host.exp.Exponent{,**}', {
     cwd: simDir,
   });
-
   return matches.length > 0;
 }
 
-export async function _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync(): Promise<boolean> {
-  if (await _isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
+export async function waitForExpoClientInstalledOnSimulatorAsync({
+  udid,
+}: {
+  udid: string;
+}): Promise<boolean> {
+  if (await isExpoClientInstalledOnSimulatorAsync({ udid })) {
     return true;
   } else {
     await delayAsync(100);
-    return await _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync();
+    return await waitForExpoClientInstalledOnSimulatorAsync({ udid });
+  }
+}
+export async function waitForExpoClientUninstalledOnSimulatorAsync({
+  udid,
+}: {
+  udid: string;
+}): Promise<boolean> {
+  if (!(await isExpoClientInstalledOnSimulatorAsync({ udid }))) {
+    return true;
+  } else {
+    await delayAsync(100);
+    return await waitForExpoClientInstalledOnSimulatorAsync({ udid });
   }
 }
 
-export async function _expoVersionOnCurrentBootedSimulatorAsync() {
-  const device = await _bootedSimulatorDeviceAsync();
-  if (!device) {
-    return null;
-  }
-  const simDir = await _dirForSimulatorDevice(device.udid);
+export async function expoVersionOnSimulatorAsync({
+  udid,
+}: {
+  udid: string;
+}): Promise<string | null> {
+  const simDir = await SimControl.directoryForDevice(udid);
   const matches = globSync('data/Containers/Bundle/Application/*/Exponent-*.app', {
     cwd: simDir,
   });
@@ -311,17 +325,16 @@ export async function _expoVersionOnCurrentBootedSimulatorAsync() {
   return regexMatch[1];
 }
 
-// NOTE(brentvatne): Temporarily remove this. We should take care of installing
-// automatically, not just warn.
-export async function _checkExpoUpToDateAsync() {
-  // let versions = await Versions.versionsAsync();
-  // let installedVersion = await _expoVersionOnCurrentBootedSimulatorAsync();
-  // if (!installedVersion || semver.lt(installedVersion, versions.iosVersion)) {
-  //   Logger.notifications.warn(
-  //     { code: NotificationCode.OLD_IOS_APP_VERSION },
-  //     'This version of the Expo app is out of date. Uninstall the app and run again to upgrade.'
-  //   );
-  // }
+export async function doesExpoClientNeedUpdatedAsync(
+  simulator: Pick<SimControl.ListedDevice, 'udid'>
+): Promise<boolean> {
+  const versions = await Versions.versionsAsync();
+
+  const installedVersion = await expoVersionOnSimulatorAsync(simulator);
+  if (installedVersion && semver.lt(installedVersion, versions.iosVersion)) {
+    return true;
+  }
+  return false;
 }
 
 // If specific URL given just always download it and don't use cache
@@ -335,7 +348,7 @@ export async function _downloadSimulatorAppAsync(
   }
 
   const filename = path.parse(url).name;
-  const dir = path.join(_simulatorCacheDirectory(), `${filename}.app`);
+  const dir = path.join(simulatorCacheDirectory(), `${filename}.app`);
 
   if (await fs.pathExists(dir)) {
     const filesInDir = await fs.readdir(dir);
@@ -358,11 +371,22 @@ export async function _downloadSimulatorAppAsync(
 }
 
 // url: Optional URL of Exponent.app tarball to download
-export async function _installExpoOnSimulatorAsync(url?: string) {
-  const bar = new ProgressBar('Downloading the Expo client app [:bar] :percent :etas', {
-    total: 100,
-    width: 40,
-  });
+export async function installExpoOnSimulatorAsync({
+  url,
+  simulator,
+}: {
+  simulator: Pick<SimControl.ListedDevice, 'name' | 'udid'>;
+  url?: string;
+}) {
+  const bar = new ProgressBar(
+    `Installing the Expo client app on ${simulator.name} [:bar] :percent :etas`,
+    {
+      total: 100,
+      width: 64,
+      complete: '=',
+      incomplete: ' ',
+    }
+  );
 
   let warningTimer: NodeJS.Timeout;
   const setWarningTimer = () => {
@@ -382,88 +406,110 @@ export async function _installExpoOnSimulatorAsync(url?: string) {
   const dir = await _downloadSimulatorAppAsync(url, progress => bar.tick(1, progress));
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
-  Logger.global.info('Installing Expo client on iOS simulator');
+  Logger.global.info(`Installing Expo client on ${simulator.name}`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   warningTimer = setWarningTimer();
-  const result = await _xcrunAsync(['simctl', 'install', 'booted', dir]);
+
+  const result = await SimControl.installAsync({ udid: simulator.udid, dir });
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
   clearTimeout(warningTimer);
   return result;
 }
 
-export async function _uninstallExpoAppFromSimulatorAsync() {
+export async function uninstallExpoAppFromSimulatorAsync({ udid }: { udid?: string } = {}) {
   try {
     Logger.global.info('Uninstalling Expo client from iOS simulator.');
-    await _xcrunAsync(['simctl', 'uninstall', 'booted', 'host.exp.Exponent']);
+    await SimControl.uninstallAsync({ udid, bundleIdentifier: 'host.exp.Exponent' });
+    // await simctlAsync(['uninstall', deviceUDIDOrBooted(udid), 'host.exp.Exponent']);
   } catch (e) {
-    if (e.message && e.message.includes('No devices are booted.')) {
-    } else {
+    if (!e.message?.includes('No devices are booted.')) {
       console.error(e);
       throw e;
     }
   }
 }
 
-export function _simulatorCacheDirectory() {
+export async function shutdownAsync({ udid }: { udid?: string } = {}) {
+  try {
+    Logger.global.info('Uninstalling Expo client from iOS simulator.');
+    await SimControl.shutdownAsync(udid);
+  } catch (e) {
+    if (!e.message?.includes('No devices are booted.')) {
+      console.error(e);
+      throw e;
+    }
+  }
+}
+
+export function simulatorCacheDirectory() {
   const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
   const dir = path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache');
   fs.mkdirpSync(dir);
   return dir;
 }
 
-export async function upgradeExpoAsync(url?: string): Promise<boolean> {
-  if (!(await _isSimulatorInstalledAsync())) {
+export async function upgradeExpoAsync(
+  options: {
+    udid?: string;
+    url?: string;
+  } = {}
+): Promise<boolean> {
+  if (!(await isSimulatorInstalledAsync())) {
     return false;
   }
 
-  await _openAndBootSimulatorAsync();
-  await _uninstallExpoAppFromSimulatorAsync();
-  const installResult = await _installExpoOnSimulatorAsync(url);
+  const simulator = await ensureSimulatorOpenAsync(options);
+
+  await uninstallExpoAppFromSimulatorAsync(simulator);
+  const installResult = await installExpoOnSimulatorAsync({ url: options.url, simulator });
   if (installResult.status !== 0) {
     return false;
   }
 
   if (_lastUrl) {
-    Logger.global.info(`Opening ${_lastUrl} in Expo.`);
-    await _xcrunAsync(['simctl', 'openurl', 'booted', _lastUrl]);
+    Logger.global.info(`Opening ${chalk.underline(_lastUrl)} in Expo`);
+    await SimControl.openURLAsync({ udid: simulator.udid, url: _lastUrl });
     _lastUrl = null;
   }
 
   return true;
 }
 
-// Open Url
-export async function _openUrlInSimulatorAsync(url: string) {
-  return await _xcrunAsync(['simctl', 'openurl', 'booted', url]);
-}
-
-export async function openUrlInSimulatorSafeAsync(
-  url: string,
-  isDetached: boolean = false
-): Promise<{ success: true } | { success: false; msg: string }> {
-  if (!(await _isSimulatorInstalledAsync())) {
+export async function openUrlInSimulatorSafeAsync({
+  url,
+  udid,
+  isDetached = false,
+}: {
+  url: string;
+  udid?: string;
+  isDetached: boolean;
+}): Promise<{ success: true } | { success: false; msg: string }> {
+  if (!(await isSimulatorInstalledAsync())) {
     return {
       success: false,
       msg: 'Unable to verify Xcode and Simulator installation.',
     };
   }
 
+  let simulator: SimControl.ListedDevice | null = null;
   try {
-    await _openAndBootSimulatorAsync();
+    simulator = await ensureSimulatorOpenAsync({ udid });
+  } catch (error) {
+    return {
+      success: false,
+      msg: error.message,
+    };
+  }
 
-    if (!isDetached && !(await _isExpoAppInstalledOnCurrentBootedSimulatorAsync())) {
-      await _installExpoOnSimulatorAsync();
-      await _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync();
-    }
-
+  try {
     if (!isDetached) {
+      await ensureExpoClientInstalledAsync(simulator);
       _lastUrl = url;
-      _checkExpoUpToDateAsync(); // let this run in background
     }
 
-    Logger.global.info(`Opening ${url} in iOS simulator`);
-    await _openUrlInSimulatorAsync(url);
+    Logger.global.info(`Opening ${chalk.underline(url)} on ${chalk.bold(simulator.name)}`);
+    await SimControl.openURLAsync({ url, udid: simulator.udid });
   } catch (e) {
     if (e.isXDLError) {
       // Hit some internal error, don't try again.
@@ -498,9 +544,38 @@ export async function openUrlInSimulatorSafeAsync(
   };
 }
 
-export async function openProjectAsync(
-  projectRoot: string
-): Promise<{ success: true; url: string } | { success: false; error: string }> {
+async function ensureExpoClientInstalledAsync(
+  simulator: Pick<SimControl.ListedDevice, 'udid' | 'name'>
+) {
+  let isInstalled = await isExpoClientInstalledOnSimulatorAsync(simulator);
+
+  if (isInstalled) {
+    if (await doesExpoClientNeedUpdatedAsync(simulator)) {
+      const { confirm } = await prompt({
+        type: 'confirm',
+        name: 'confirm',
+        message: `Expo client on ${simulator.name} is outdated, would you like to upgrade?`,
+      });
+      if (confirm) {
+        await uninstallExpoAppFromSimulatorAsync(simulator);
+        await waitForExpoClientUninstalledOnSimulatorAsync(simulator);
+        isInstalled = false;
+      }
+    }
+  }
+  if (!isInstalled) {
+    await installExpoOnSimulatorAsync({ simulator });
+    await waitForExpoClientInstalledOnSimulatorAsync(simulator);
+  }
+}
+
+export async function openProjectAsync({
+  projectRoot,
+  shouldPrompt,
+}: {
+  shouldPrompt: boolean;
+  projectRoot: string;
+}): Promise<{ success: true; url: string } | { success: false; error: string }> {
   const projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
     hostType: 'localhost',
   });
@@ -508,17 +583,35 @@ export async function openProjectAsync(
     skipSDKVersionRequirement: true,
   });
 
-  const result = await openUrlInSimulatorSafeAsync(projectUrl, !!exp.isDetached);
-  if (result.success) {
-    return { success: true, url: projectUrl };
+  let device: SimControl.ListedDevice | null = null;
+  if (shouldPrompt) {
+    const devices = await getSelectableSimulatorsAsync();
+    device = await promptForSimulatorAsync(devices);
   } else {
-    return { success: result.success, error: result.msg };
+    device = await ensureSimulatorOpenAsync({ udid: _lastUdid ?? undefined });
   }
+  _lastUdid = device.udid;
+
+  const result = await openUrlInSimulatorSafeAsync({
+    udid: device.udid,
+    url: projectUrl,
+    isDetached: !!exp.isDetached,
+  });
+
+  if (result.success) {
+    await activateSimulatorWindowAsync();
+    return { success: true, url: projectUrl };
+  }
+  return { success: result.success, error: result.msg };
 }
 
-export async function openWebProjectAsync(
-  projectRoot: string
-): Promise<{ success: true; url: string } | { success: false; error: string }> {
+export async function openWebProjectAsync({
+  projectRoot,
+  shouldPrompt,
+}: {
+  shouldPrompt: boolean;
+  projectRoot: string;
+}): Promise<{ success: true; url: string } | { success: false; error: string }> {
   const projectUrl = await getWebpackUrlAsync(projectRoot);
   if (projectUrl === null) {
     return {
@@ -526,10 +619,72 @@ export async function openWebProjectAsync(
       error: `The web project has not been started yet`,
     };
   }
-  const result = await openUrlInSimulatorSafeAsync(projectUrl, true);
-  if (result.success) {
-    return { success: true, url: projectUrl };
+
+  let device: SimControl.ListedDevice | null = null;
+  if (shouldPrompt) {
+    const devices = await getSelectableSimulatorsAsync();
+    device = await promptForSimulatorAsync(devices);
   } else {
-    return { success: result.success, error: result.msg };
+    device = await ensureSimulatorOpenAsync({ udid: _lastUdid ?? undefined });
   }
+  _lastUdid = device.udid;
+  const result = await openUrlInSimulatorSafeAsync({
+    url: projectUrl,
+    udid: device.udid,
+    isDetached: true,
+  });
+  if (result.success) {
+    await activateSimulatorWindowAsync();
+    return { success: true, url: projectUrl };
+  }
+  return { success: result.success, error: result.msg };
+}
+
+async function promptForSimulatorAsync(
+  devices: SimControl.ListedDevice[]
+): Promise<SimControl.ListedDevice> {
+  // TODO: cache the last used device so the user can spam click and get the expected results.
+  // Resort the devices so the first one is iPhone 11
+  let iterations = 0;
+  while (devices[0].name !== 'iPhone 11' && iterations < devices.length) {
+    devices.push(devices.shift()!);
+    iterations++;
+  }
+  // TODO: Bail on non-interactive
+  const results = await promptForDeviceAsync(devices);
+
+  return devices.find(({ name }) => results === name)!;
+}
+
+async function promptForDeviceAsync(devices: SimControl.ListedDevice[]): Promise<string> {
+  // TODO: Sort by most likely to open
+  // TODO: indicate which sims are booted already
+  // TODO: provide an option to add or download more simulators
+  // TODO: Add support for physical devices too.
+
+  const { answer } = await prompt([
+    {
+      type: 'list',
+      name: 'answer',
+      message: 'Select a simulator to run on',
+      // @ts-ignore
+      choices: devices
+        // .reduce<SimControl.ListedDevice[]>((prev, current) => {
+        //   if (prev.length && prev[prev.length - 1].osType !== current.osType) {
+        //     prev.push(new Separator());
+        //   }
+        //   return [...prev, current];
+        // }, [])
+        .map(item => {
+          if (item instanceof Separator) {
+            return item;
+          } else {
+            return { name: item.windowName, value: item.name };
+          }
+        }),
+      // @ts-ignore
+      loop: false,
+    },
+  ]);
+  return answer;
 }
