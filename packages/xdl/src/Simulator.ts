@@ -726,6 +726,7 @@ async function promptForDeviceAsync(devices: SimControl.Device[]): Promise<strin
 
   const { answer } = await prompt([
     {
+      // @ts-ignore: broken types -- TODO: remove when migrating to `prompts`
       type: 'list',
       name: 'answer',
       message: 'Select a simulator',
