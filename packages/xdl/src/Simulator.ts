@@ -119,6 +119,7 @@ async function ensureXcodeCommandLineToolsInstalledAsync(): Promise<boolean> {
       // TODO: Is there any harm in skipping this?
       // '--switch', '/Applications/Xcode.app'
     ]);
+    // Most likely the user will cancel the process, but if they don't this will continue checking until the CLI is available.
     await pendingAsync();
     return true;
   } catch (error) {
@@ -142,7 +143,7 @@ export async function isSimulatorInstalledAsync() {
   try {
     result = (await osascript.execAsync('id of app "Simulator"')).trim();
   } catch (e) {
-    // TODO: ensureSimulatorInstalled
+    // This error may occur in CI where the users intends to install just the simulators but no Xcode.
     console.error(
       "Can't determine id of Simulator app; the Simulator is most likely not installed on this machine. Run `sudo xcode-select -s /Applications/Xcode.app`",
       e
