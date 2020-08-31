@@ -1,8 +1,6 @@
-import { prompt } from 'inquirer';
-
 import CommandError from '../../CommandError';
 import log from '../../log';
-import { Question } from '../../prompt';
+import prompt, { Question } from '../../prompts';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
 import * as iosPushView from './IosPushCredentials';
@@ -32,7 +30,6 @@ export class SetupIosPush implements IView {
         type: 'confirm',
         name: 'confirm',
         message: `We've detected legacy Push Certificates on file. Would you like to upgrade to the newer standard?`,
-        pageSize: Infinity,
       };
 
       const { confirm } = await prompt(confirmQuestion);
