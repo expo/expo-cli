@@ -50,9 +50,9 @@ async function maybeBailOnWorkflowWarning({
   return !answer.ignoreWorkflowWarning;
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('build:ios <path>')
+    .command('build:ios [path]')
     .alias('bi')
     .helpGroup('build')
     .option('-c, --clear-credentials', 'Clear all credentials stored on Expo servers.')
@@ -125,7 +125,7 @@ export default function(program: Command) {
     );
 
   program
-    .command('build:android <path>')
+    .command('build:android [path]')
     .alias('ba')
     .helpGroup('build')
     .option('-c, --clear-credentials', 'Clear stored credentials.')
@@ -176,7 +176,7 @@ export default function(program: Command) {
     );
 
   program
-    .command('build:web <path>')
+    .command('build:web [path]')
     .helpGroup('build')
     .option('-c, --clear', 'Clear all cached build files and assets.')
     .option(
@@ -195,7 +195,7 @@ export default function(program: Command) {
     );
 
   program
-    .command('build:status <path>')
+    .command('build:status [path]')
     .alias('bs')
     .helpGroup('build')
     .option(
