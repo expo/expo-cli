@@ -73,13 +73,13 @@ const replaceContents = async (
   directoryPath: string,
   replaceFunction: (contentOfSingleFile: string) => string
 ) => {
-  for (const file of walkSync(directoryPath, { nodir: true })) {
-    replaceContent(file.path, replaceFunction);
-  }
+  await Promise.all(
+    walkSync(directoryPath, { nodir: true }).map(file => replaceContent(file.path, replaceFunction))
+  );
 };
 
 /**
- * Replaces content in file
+ * Replaces content in file. Does nothing if the file doesn't exist
  * @param filePath - provided file
  * @param replaceFunction - function that converts current content into something different
  */
@@ -87,6 +87,10 @@ const replaceContent = async (
   filePath: string,
   replaceFunction: (contentOfSingleFile: string) => string
 ) => {
+  if (!fse.existsSync(filePath)) {
+    return;
+  }
+
   const content = await fse.readFile(filePath, 'utf8');
   const newContent = replaceFunction(content);
   if (newContent !== content) {
@@ -169,10 +173,12 @@ async function configureIOS(
  * Gets path to Android source base dir: android/src/main/[java|kotlin]
  * Defaults to Java path if both exist
  * @param androidPath path do module android/ directory
+ * @param flavor package flavor e.g main, test. Defaults to main
  * @throws INVALID_TEMPLATE if none exist
+ * @returns path to flavor source base directory
  */
-function findAndroidSourceDir(androidPath: string) {
-  const androidSrcPathBase = path.join(androidPath, 'src', 'main');
+function findAndroidSourceDir(androidPath: string, flavor: string = 'main'): string {
+  const androidSrcPathBase = path.join(androidPath, 'src', flavor);
 
   const javaExists = fse.pathExistsSync(path.join(androidSrcPathBase, 'java'));
   const kotlinExists = fse.pathExistsSync(path.join(androidSrcPathBase, 'kotlin'));
@@ -185,6 +191,35 @@ function findAndroidSourceDir(androidPath: string) {
   }
 
   return path.join(androidSrcPathBase, javaExists ? 'java' : 'kotlin');
+}
+
+/**
+ * Finds java package name based on directory structure
+ * @param flavorSrcPath Path to source base directory: e.g. android/src/main/java
+ * @returns java package name
+ */
+function findTemplateAndroidPackage(flavorSrcPath: string) {
+  const srcFiles = walkSync(flavorSrcPath, {
+    filter: item => item.path.endsWith('.kt') || item.path.endsWith('.java'),
+    nodir: true,
+    traverseAll: true,
+  });
+
+  if (srcFiles.length === 0) {
+    throw new CommandError('INVALID TEMPLATE', 'No Android source files found in the template');
+  }
+
+  // srcFiles[0] will always be at the most top-level of the package structure
+  const packageDirNames = path.relative(flavorSrcPath, srcFiles[0].path).split('/').slice(0, -1);
+
+  if (packageDirNames.length === 0) {
+    throw new CommandError(
+      'INVALID TEMPLATE',
+      'Template Android sources must be within a package.'
+    );
+  }
+
+  return packageDirNames.join('.');
 }
 
 /**
@@ -201,8 +236,9 @@ async function configureAndroid(
   const [, moduleName] = preparePrefixes(jsPackageName, 'Expo');
 
   const androidSrcPath = findAndroidSourceDir(androidPath);
+  const templateJavaPackage = findTemplateAndroidPackage(androidSrcPath);
 
-  const sourceFilesPath = path.join(androidSrcPath, 'expo', 'modules', 'template');
+  const sourceFilesPath = path.join(androidSrcPath, ...templateJavaPackage.split('.'));
   const destinationFilesPath = path.join(androidSrcPath, ...javaPackage.split('.'));
 
   // remove ViewManager from template
@@ -221,13 +257,40 @@ async function configureAndroid(
 
   // Remove leaf directory content
   await fse.remove(sourceFilesPath);
-  // Cleanup all empty subdirs up to provided rootDir
-  await removeUponEmptyOrOnlyEmptySubdirs(path.join(androidSrcPath, 'expo'));
+  // Cleanup all empty subdirs up to template package root dir
+  await removeUponEmptyOrOnlyEmptySubdirs(
+    path.join(androidSrcPath, templateJavaPackage.split('.')[0])
+  );
 
-  const moduleName = jsPackageName.startsWith('Expo') ? jsPackageName.substring(4) : jsPackageName;
+  // prepare tests
+  if (fse.existsSync(path.resolve(androidPath, 'src', 'test'))) {
+    const androidTestPath = findAndroidSourceDir(androidPath, 'test');
+    const templateTestPackage = findTemplateAndroidPackage(androidTestPath);
+    const testSourcePath = path.join(androidTestPath, ...templateTestPackage.split('.'));
+    const testDestinationPath = path.join(androidTestPath, ...javaPackage.split('.'));
+
+    await fse.mkdirp(testDestinationPath);
+    await fse.copy(testSourcePath, testDestinationPath);
+    await fse.remove(testSourcePath);
+    await removeUponEmptyOrOnlyEmptySubdirs(
+      path.join(androidTestPath, templateTestPackage.split('.')[0])
+    );
+
+    await replaceContents(testDestinationPath, singleFileContent =>
+      singleFileContent.replace(new RegExp(templateTestPackage, 'g'), javaPackage)
+    );
+
+    await renameFilesWithExtensions(
+      testDestinationPath,
+      ['.kt', '.java'],
+      [{ from: 'ModuleTemplateModuleTest', to: `${moduleName}ModuleTest` }]
+    );
+  }
+
+  // Replace contents of destination files
   await replaceContents(androidPath, singleFileContent =>
     singleFileContent
-      .replace(/expo\.modules\.template/g, javaPackage)
+      .replace(new RegExp(templateJavaPackage, 'g'), javaPackage)
       .replace(/ModuleTemplate/g, moduleName)
       .replace(/ExpoModuleTemplate/g, jsPackageName)
   );
@@ -239,7 +302,7 @@ async function configureAndroid(
   );
   await renameFilesWithExtensions(
     destinationFilesPath,
-    ['.kt'],
+    ['.kt', '.java'],
     [
       { from: 'ModuleTemplateModule', to: `${moduleName}Module` },
       { from: 'ModuleTemplatePackage', to: `${moduleName}Package` },
