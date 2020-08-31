@@ -5,6 +5,19 @@ import path from 'path';
 import CommandError from '../../CommandError';
 import { ModuleConfiguration } from './ModuleConfiguration';
 
+// TODO (barthap): If ever updated to TS 4.0, change this to:
+// type PreparedPrefixes = [nameWithExpoPrefix: string, nameWithoutExpoPrefix: string];
+type PreparedPrefixes = [string, string];
+
+/**
+ * prepares _Expo_ prefixes for specified name
+ * @param name module name, e.g. JS package name
+ * @param prefix prefix to prepare with, defaults to _Expo_
+ * @returns tuple `[nameWithPrefix: string, nameWithoutPrefix: string]`
+ */
+const preparePrefixes = (name: string, prefix: string = 'Expo'): PreparedPrefixes =>
+  name.startsWith(prefix) ? [name, name.substr(prefix.length)] : [`${prefix}${name}`, name];
+
 const asyncForEach = async <T>(
   array: T[],
   callback: (value: T, index: number, array: T[]) => Promise<void>
@@ -14,11 +27,13 @@ const asyncForEach = async <T>(
   }
 };
 
+/**
+ * Removes specified files. If one file doesn't exist already, skips it
+ * @param directoryPath directory containing files to remove
+ * @param filenames array of filenames to remove
+ */
 async function removeFiles(directoryPath: string, filenames: string[]) {
-  await asyncForEach(
-    filenames,
-    async filename => await fse.remove(path.resolve(directoryPath, filename))
-  );
+  await Promise.all(filenames.map(filename => fse.remove(path.resolve(directoryPath, filename))));
 }
 
 /**
@@ -183,6 +198,8 @@ async function configureAndroid(
   { javaPackage, jsPackageName, viewManager }: ModuleConfiguration
 ) {
   const androidPath = path.join(modulePath, 'android');
+  const [, moduleName] = preparePrefixes(jsPackageName, 'Expo');
+
   const androidSrcPath = findAndroidSourceDir(androidPath);
 
   const sourceFilesPath = path.join(androidSrcPath, 'expo', 'modules', 'template');
@@ -241,9 +258,8 @@ async function configureTS(
   modulePath: string,
   { jsPackageName, viewManager }: ModuleConfiguration
 ) {
-  const moduleNameWithoutExpoPrefix = jsPackageName.startsWith('Expo')
-    ? jsPackageName.substr(4)
-    : 'Unimodule';
+  const [moduleNameWithExpoPrefix, moduleName] = preparePrefixes(jsPackageName);
+
   const tsPath = path.join(modulePath, 'src');
 
   // remove View Manager from template
@@ -261,26 +277,26 @@ async function configureTS(
   await renameFilesWithExtensions(
     path.join(tsPath, '__tests__'),
     ['.ts'],
-    [{ from: 'ModuleTemplate-test', to: `${moduleNameWithoutExpoPrefix}-test` }]
+    [{ from: 'ModuleTemplate-test', to: `${moduleName}-test` }]
   );
   await renameFilesWithExtensions(
     tsPath,
     ['.tsx', '.ts'],
     [
-      { from: 'ExpoModuleTemplateView', to: `${jsPackageName}View` },
-      { from: 'ExpoModuleTemplateNativeView', to: `${jsPackageName}NativeView` },
-      { from: 'ExpoModuleTemplateNativeView.web', to: `${jsPackageName}NativeView.web` },
-      { from: 'ExpoModuleTemplate', to: jsPackageName },
-      { from: 'ExpoModuleTemplate.web', to: `${jsPackageName}.web` },
-      { from: 'ModuleTemplate', to: moduleNameWithoutExpoPrefix },
-      { from: 'ModuleTemplate.types', to: `${moduleNameWithoutExpoPrefix}.types` },
+      { from: 'ExpoModuleTemplateView', to: `${moduleNameWithExpoPrefix}View` },
+      { from: 'ExpoModuleTemplateNativeView', to: `${moduleNameWithExpoPrefix}NativeView` },
+      { from: 'ExpoModuleTemplateNativeView.web', to: `${moduleNameWithExpoPrefix}NativeView.web` },
+      { from: 'ExpoModuleTemplate', to: moduleNameWithExpoPrefix },
+      { from: 'ExpoModuleTemplate.web', to: `${moduleNameWithExpoPrefix}.web` },
+      { from: 'ModuleTemplate', to: moduleName },
+      { from: 'ModuleTemplate.types', to: `${moduleName}.types` },
     ]
   );
 
   await replaceContents(tsPath, singleFileContent =>
     singleFileContent
-      .replace(/ExpoModuleTemplate/g, jsPackageName)
-      .replace(/ModuleTemplate/g, moduleNameWithoutExpoPrefix)
+      .replace(/ExpoModuleTemplate/g, moduleNameWithExpoPrefix)
+      .replace(/ModuleTemplate/g, moduleName)
   );
 }
 
@@ -293,15 +309,14 @@ async function configureNPM(
   modulePath: string,
   { npmModuleName, podName, jsPackageName }: ModuleConfiguration
 ) {
-  const moduleNameWithoutExpoPrefix = jsPackageName.startsWith('Expo')
-    ? jsPackageName.substr(4)
-    : 'Unimodule';
+  const [, moduleName] = preparePrefixes(jsPackageName);
+
   await replaceContent(path.join(modulePath, 'package.json'), singleFileContent =>
     singleFileContent
       .replace(/expo-module-template/g, npmModuleName)
       .replace(/"version": "[\w.-]+"/, '"version": "1.0.0"')
       .replace(/ExpoModuleTemplate/g, jsPackageName)
-      .replace(/ModuleTemplate/g, moduleNameWithoutExpoPrefix)
+      .replace(/ModuleTemplate/g, moduleName)
   );
   await replaceContent(path.join(modulePath, 'README.md'), readmeContent =>
     readmeContent
