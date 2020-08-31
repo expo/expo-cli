@@ -50,10 +50,11 @@ async function maybeBailOnWorkflowWarning({
   return !answer.ignoreWorkflowWarning;
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
-    .command('build:ios [project-dir]')
+    .command('build:ios <path>')
     .alias('bi')
+    .helpGroup('build')
     .option('-c, --clear-credentials', 'Clear all credentials stored on Expo servers.')
     .option('--clear-dist-cert', 'Remove Distribution Certificate stored on Expo servers.')
     .option('--clear-push-key', 'Remove Push Notifications Key stored on Expo servers.')
@@ -88,9 +89,7 @@ export default function (program: Command) {
     )
     .option('--skip-credentials-check', 'Skip checking credentials.')
     .option('--skip-workflow-check', 'Skip warning about build service bare workflow limitations.')
-    .description(
-      'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
-    )
+    .description('Build and sign a standalone IPA for the Apple App Store')
     .asyncActionProjectDir(
       async (projectDir: string, options: IosOptions) => {
         if (!options.skipWorkflowCheck) {
@@ -126,8 +125,9 @@ export default function (program: Command) {
     );
 
   program
-    .command('build:android [project-dir]')
+    .command('build:android <path>')
     .alias('ba')
+    .helpGroup('build')
     .option('-c, --clear-credentials', 'Clear stored credentials.')
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
     .option('--no-publish', 'Disable automatic publishing before building.')
@@ -138,9 +138,7 @@ export default function (program: Command) {
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .option('--skip-workflow-check', 'Skip warning about build service bare workflow limitations.')
     .option('-t --type <build>', 'Type of build: [app-bundle|apk].')
-    .description(
-      'Build a standalone APK or App Bundle for your project, signed and ready for submission to the Google Play Store.'
-    )
+    .description('Build and sign a standalone APK or App Bundle for the Google Play Store')
     .asyncActionProjectDir(
       async (projectDir: string, options: AndroidOptions) => {
         if (options.generateKeystore) {
@@ -178,14 +176,15 @@ export default function (program: Command) {
     );
 
   program
-    .command('build:web [project-dir]')
+    .command('build:web <path>')
+    .helpGroup('build')
     .option('-c, --clear', 'Clear all cached build files and assets.')
     .option(
       '--no-pwa',
       'Prevent webpack from generating the manifest.json and injecting meta into the index.html head.'
     )
     .option('-d, --dev', 'Turns dev flag on before bundling')
-    .description('Build a production bundle for your project, compressed and ready for deployment.')
+    .description('Build the web app for production')
     .asyncActionProjectDir(
       (projectDir: string, options: { pwa: boolean; clear: boolean; dev: boolean }) => {
         return Webpack.bundleAsync(projectDir, {
@@ -196,13 +195,14 @@ export default function (program: Command) {
     );
 
   program
-    .command('build:status [project-dir]')
+    .command('build:status <path>')
     .alias('bs')
+    .helpGroup('build')
     .option(
       '--public-url <url>',
       'The URL of an externally hosted manifest (for self-hosted apps).'
     )
-    .description(`Gets the status of a current (or most recently finished) build for your project.`)
+    .description(`Get the status of the latest build for the project`)
     .asyncActionProjectDir(async (projectDir: string, options: { publicUrl?: string }) => {
       if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
         throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');

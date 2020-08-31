@@ -4,13 +4,12 @@ import generateModuleAsync from './generate-module/generateModuleAsync';
 
 export default function (program: Command) {
   program
-    .command('generate-module [new-module-project]')
+    .command('generate-module [path]')
+    .description('Generate a universal module for Expo from a template in the specified directory')
+    .helpGroup('internal')
     .option(
-      '--template [localTemplateDirectory]',
+      '--template <TemplatePath>',
       'Local directory or npm package containing template for universal Expo module'
-    )
-    .description(
-      'Generate a universal module for Expo from a template in [new-module-project] directory.'
     )
     .asyncAction(generateModuleAsync);
 }

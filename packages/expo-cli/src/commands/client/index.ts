@@ -26,13 +26,17 @@ import generateBundleIdentifier from './generateBundleIdentifier';
 
 export default function (program: Command) {
   program
-    .command('client:ios [project-dir]')
+    .command('client:ios [path]')
+    .helpGroup('experimental')
+    .description(
+      'Experimental: build a custom version of the Expo client for iOS using your own Apple credentials'
+    )
+    .longDescription(
+      'Build a custom version of the Expo client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
+    )
     .option(
       '--apple-id <login>',
       'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
-    )
-    .description(
-      'Build a custom version of the Expo client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
     )
     .asyncActionProjectDir(
       async (
@@ -287,6 +291,7 @@ export default function (program: Command) {
   program
     .command('client:install:ios')
     .description('Install the Expo client for iOS on the simulator')
+    .helpGroup('client')
     .asyncAction(async () => {
       const currentSdkConfig = await ClientUpgradeUtils.getExpoSdkConfig(process.cwd());
       const currentSdkVersion = currentSdkConfig ? currentSdkConfig.sdkVersion : undefined;
@@ -372,6 +377,7 @@ export default function (program: Command) {
   program
     .command('client:install:android')
     .description('Install the Expo client for Android on a connected device or emulator')
+    .helpGroup('client')
     .asyncAction(async () => {
       const currentSdkConfig = await ClientUpgradeUtils.getExpoSdkConfig(process.cwd());
       const currentSdkVersion = currentSdkConfig ? currentSdkConfig.sdkVersion : undefined;

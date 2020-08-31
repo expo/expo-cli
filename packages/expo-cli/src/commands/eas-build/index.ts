@@ -26,7 +26,7 @@ export default function (program: Command) {
   }
 
   program
-    .command('eas:credentials:sync [project-dir]')
+    .command('eas:credentials:sync [path]')
     .description('Update credentials.json with credentials stored on Expo servers')
     .asyncActionProjectDir(credentialsSyncAction, {
       checkConfig: true,
@@ -34,7 +34,7 @@ export default function (program: Command) {
     });
 
   program
-    .command('eas:build [project-dir]')
+    .command('eas:build [path]')
     .description('Build an app binary for your project.')
     .option(
       '-p --platform <platform>',
@@ -48,8 +48,8 @@ export default function (program: Command) {
     .asyncActionProjectDir(buildAction, { checkConfig: true, skipSDKVersionRequirement: true });
 
   program
-    .command('eas:build:status [project-dir]')
-    .description('Get the status of the latest builds for your project.')
+    .command('eas:build:status [path]')
+    .description('Log the status of the latest builds for your project.')
     .option(
       '-p --platform <platform>',
       'Get builds for specified platform: ios, android, all',

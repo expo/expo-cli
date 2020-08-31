@@ -10,6 +10,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [expo-cli] expo --help redesigned ([#2538](https://github.com/expo/expo-cli/pull/2538) by [@EvanBacon](https://github.com/EvanBacon))
 - [expo-cli] expo upload - support tar.gz files from builds v2 ([#2504](https://github.com/expo/expo-cli/pull/2504) by [@EvanBacon](https://github.com/EvanBacon))
 - [expo-cli] Implemented keychain storage for Apple ID ([#2508](https://github.com/expo/expo-cli/pull/2508) by [@EvanBacon](https://github.com/EvanBacon))
 - [expo-cli] expo publish - Clean up upload results logs ([#2516](https://github.com/expo/expo-cli/pull/2516) by [@EvanBacon](https://github.com/EvanBacon))

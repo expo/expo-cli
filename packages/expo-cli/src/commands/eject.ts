@@ -49,14 +49,19 @@ async function action(
 
 export default function (program: Command) {
   program
-    .command('eject [project-dir]')
+    .command('eject [path]')
     .description(
-      'Creates Xcode and Android Studio projects for your app. Use this if you need to add custom native functionality.'
+      // TODO: Use Learn more link when it lands
+      `Create native iOS and Android project files. Read more: https://expo.fyi/eject`
     )
+    .longDescription(
+      'Create Xcode and Android Studio projects for your app. Use this if you need to add custom native functionality.'
+    )
+    .helpGroup('eject')
     .option(
       '--eject-method [type]',
       `Eject method to use. [Depreacted]: Ejecting to ExpoKit is not available on SDK >= 37 and not recommended for older SDK versions. We recommend updating to SDK >= 37 and ejecting to bare.`,
-      value => value.toLowerCase()
+      (value: string) => value.toLowerCase()
     )
     .option(
       '-f --force',
