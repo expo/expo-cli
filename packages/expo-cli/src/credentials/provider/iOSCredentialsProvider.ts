@@ -15,6 +15,14 @@ export interface iOSCredentials {
   };
 }
 
+interface PartialiOSCredentials {
+  provisioningProfile?: string;
+  distributionCertificate?: {
+    certP12?: string;
+    certPassword?: string;
+  };
+}
+
 interface Options {
   nonInteractive: boolean;
   skipCredentialsCheck: boolean;
@@ -54,13 +62,13 @@ export default class iOSCredentialsProvider implements CredentialsProvider {
 
   public async isLocalSyncedAsync(): Promise<boolean> {
     try {
-      const [remote, local] = await Promise.all([this.getRemoteAsync(), this.getLocalAsync()]);
+      const [remote, local] = await Promise.all([this.fetchRemoteAsync(), this.getLocalAsync()]);
       const r = remote;
-      const l = local;
+      const l = local as iOSCredentials; // ts definion can't resolve return type correctly
       return !!(
         r.provisioningProfile === l.provisioningProfile &&
-        r.distributionCertificate.certP12 === l.distributionCertificate.certP12 &&
-        r.distributionCertificate.certPassword === l.distributionCertificate.certPassword
+        r.distributionCertificate?.certP12 === l.distributionCertificate.certP12 &&
+        r.distributionCertificate?.certPassword === l.distributionCertificate.certPassword
       );
     } catch (_) {
       return false;
@@ -112,6 +120,18 @@ export default class iOSCredentialsProvider implements CredentialsProvider {
       distributionCertificate: {
         certP12: distCert.certP12,
         certPassword: distCert.certPassword,
+      },
+    };
+  }
+
+  private async fetchRemoteAsync(): Promise<PartialiOSCredentials> {
+    const distCert = await this.ctx.ios.getDistCert(this.app);
+    const provisioningProfile = await this.ctx.ios.getProvisioningProfile(this.app);
+    return {
+      provisioningProfile: provisioningProfile?.provisioningProfile,
+      distributionCertificate: {
+        certP12: distCert?.certP12,
+        certPassword: distCert?.certPassword,
       },
     };
   }
