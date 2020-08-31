@@ -68,7 +68,6 @@ export async function ensureXcodeInstalledAsync(): Promise<boolean> {
 
   if (!semver.valid(version)) {
     // Not sure why this would happen, if it does we should add a more confident error message.
-    // TODO: Add analytics to detect
     console.error(`Xcode version is in an unknown format: ${version}`);
     return false;
   }
@@ -218,7 +217,7 @@ export async function ensureSimulatorOpenAsync(
   const bootedDevice = await waitForDeviceToBootAsync({ udid });
 
   if (!bootedDevice) {
-    // TODO: Maybe we can just `isSimulatorBootedAsync`.
+    // Give it a second chance, this might not be needed but it could potentially lead to a better UX on slower devices.
     if (tryAgain) {
       return await ensureSimulatorOpenAsync({ udid }, false);
     }
@@ -701,14 +700,28 @@ export async function openWebProjectAsync({
   return { success: result.success, error: result.msg };
 }
 
-async function promptForSimulatorAsync(devices: SimControl.Device[]): Promise<SimControl.Device> {
-  // TODO: cache the last used device so the user can spam click and get the expected results.
-  // Resort the devices so the first one is iPhone 11
-  let iterations = 0;
-  while (devices[0].name !== 'iPhone 11' && iterations < devices.length) {
-    devices.push(devices.shift()!);
-    iterations++;
+/**
+ * Sort the devices so the last simulator that was opened (user's default) is the first suggested.
+ *
+ * @param devices
+ */
+async function sortDefaultDeviceToBeginningAsync(
+  devices: SimControl.Device[]
+): Promise<SimControl.Device[]> {
+  const defaultUdid =
+    (await _getDefaultSimulatorDeviceUDIDAsync()) ?? (await getFirstAvailableDeviceAsync()).udid;
+  if (defaultUdid) {
+    let iterations = 0;
+    while (devices[0].udid !== defaultUdid && iterations < devices.length) {
+      devices.push(devices.shift()!);
+      iterations++;
+    }
   }
+  return devices;
+}
+
+async function promptForSimulatorAsync(devices: SimControl.Device[]): Promise<SimControl.Device> {
+  devices = await sortDefaultDeviceToBeginningAsync(devices);
   // TODO: Bail on non-interactive
   const results = await promptForDeviceAsync(devices);
 
@@ -716,8 +729,6 @@ async function promptForSimulatorAsync(devices: SimControl.Device[]): Promise<Si
 }
 
 async function promptForDeviceAsync(devices: SimControl.Device[]): Promise<string> {
-  // TODO: Sort by most likely to open
-  // TODO: indicate which sims are booted already
   // TODO: provide an option to add or download more simulators
   // TODO: Add support for physical devices too.
 
@@ -731,25 +742,18 @@ async function promptForDeviceAsync(devices: SimControl.Device[]): Promise<strin
       name: 'answer',
       message: 'Select a simulator',
       // @ts-ignore
-      choices: devices
-        // .reduce<SimControl.ListedDevice[]>((prev, current) => {
-        //   if (prev.length && prev[prev.length - 1].osType !== current.osType) {
-        //     prev.push(new Separator());
-        //   }
-        //   return [...prev, current];
-        // }, [])
-        .map(item => {
-          if (item instanceof Separator) {
-            return item;
-          } else {
-            const isActive = item.state === 'Booted';
-            const format = isActive ? chalk.bold : (text: string) => text;
-            return {
-              name: `${format(item.name)} ${chalk.dim(`(${item.osVersion})`)}`,
-              value: item.name,
-            };
-          }
-        }),
+      choices: devices.map(item => {
+        if (item instanceof Separator) {
+          return item;
+        } else {
+          const isActive = item.state === 'Booted';
+          const format = isActive ? chalk.bold : (text: string) => text;
+          return {
+            name: `${format(item.name)} ${chalk.dim(`(${item.osVersion})`)}`,
+            value: item.name,
+          };
+        }
+      }),
       // @ts-ignore
       loop: false,
     },
