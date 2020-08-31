@@ -136,7 +136,6 @@ async function startBuildAsync<T extends Platform>(
     await builder.setupAsync();
     const credentialsSource = await builder.ensureCredentialsAsync();
     if (!builder.ctx.commandCtx.skipProjectConfiguration) {
-      await builder.ensureCredentialsAsync();
       await builder.ensureProjectConfiguredAsync();
     }
 
