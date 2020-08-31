@@ -59,15 +59,47 @@ exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(a
 
   const shellPath = path.join(exponentDirectory(workingDir), 'android-shell-app');
 
-  await fs.remove(path.join(shellPath, 'app', 'src', 'main', 'assets', 'shell-app-manifest.json'));
+  await fs.remove(
+    path.join(
+      shellPath,
+      'app',
+      'src',
+      'main',
+      'assets',
+      ExponentTools.getManifestFileNameForSdkVersion(sdkVersion)
+    )
+  );
   await fs.writeFileSync(
-    path.join(shellPath, 'app', 'src', 'main', 'assets', 'shell-app-manifest.json'),
+    path.join(
+      shellPath,
+      'app',
+      'src',
+      'main',
+      'assets',
+      ExponentTools.getManifestFileNameForSdkVersion(sdkVersion)
+    ),
     JSON.stringify(manifest)
   );
-  await fs.remove(path.join(shellPath, 'app', 'src', 'main', 'assets', 'shell-app.bundle'));
+  await fs.remove(
+    path.join(
+      shellPath,
+      'app',
+      'src',
+      'main',
+      'assets',
+      ExponentTools.getBundleFileNameForSdkVersion(sdkVersion)
+    )
+  );
   await saveUrlToPathAsync(
     bundleUrl,
-    path.join(shellPath, 'app', 'src', 'main', 'assets', 'shell-app.bundle')
+    path.join(
+      shellPath,
+      'app',
+      'src',
+      'main',
+      'assets',
+      ExponentTools.getBundleFileNameForSdkVersion(sdkVersion)
+    )
   );
 
   await deleteLinesInFileAsync(
@@ -92,8 +124,12 @@ exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(a
     `
     // ADD EMBEDDED RESPONSES HERE
     // START EMBEDDED RESPONSES
-    embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-    embeddedResponses.add(new Constants.EmbeddedResponse("${bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
+    embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://${ExponentTools.getManifestFileNameForSdkVersion(
+      sdkVersion
+    )}", "application/json"));
+    embeddedResponses.add(new Constants.EmbeddedResponse("${bundleUrl}", "assets://${ExponentTools.getBundleFileNameForSdkVersion(
+      sdkVersion
+    )}", "application/javascript"));
     // END EMBEDDED RESPONSES`,
     path.join(
       shellPath,
@@ -414,6 +450,10 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   const backgroundImages = backgroundImagesForApp(shellPath, manifest, isRunningInUserContext);
   const splashBackgroundColor = getSplashScreenBackgroundColor(manifest);
   const updatesDisabled = manifest.updates && manifest.updates.enabled === false;
+  const updatesCheckAutomaticallyDisabled =
+    manifest.updates && manifest.checkAutomatically === 'ON_ERROR_RECOVERY';
+  const fallbackToCacheTimeout = manifest.updates && manifest.updates.fallbackToCacheTimeout;
+  const majorSdkVersion = parseSdkMajorVersion(sdkVersion);
 
   // Clean build directories
   await fs.remove(path.join(shellPath, 'app', 'build'));
@@ -441,7 +481,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       appBuildGradle
     );
 
-    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
+    if (majorSdkVersion >= 33) {
       const settingsGradle = path.join(shellPath, 'settings.gradle');
       await deleteLinesInFileAsync(
         'WHEN_DISTRIBUTING_REMOVE_FROM_HERE',
@@ -519,7 +559,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   );
 
   // Remove Exponent build script, since SDK32 expoview comes precompiled
-  if (parseSdkMajorVersion(sdkVersion) < 32 && !isRunningInUserContext) {
+  if (majorSdkVersion < 32 && !isRunningInUserContext) {
     await regexFileAsync(
       `preBuild.dependsOn generateDynamicMacros`,
       ``,
@@ -541,7 +581,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
   );
   // Since SDK32 expoview comes precompiled
-  if (parseSdkMajorVersion(sdkVersion) < 32 && !isRunningInUserContext) {
+  if (majorSdkVersion < 32 && !isRunningInUserContext) {
     await regexFileAsync(
       /host\.exp\.exponent\.permission\.C2D_MESSAGE/g,
       `${javaPackage}.permission.C2D_MESSAGE`,
@@ -613,7 +653,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   }
 
   // In SDK32 this field got removed from AppConstants
-  if (parseSdkMajorVersion(sdkVersion) < 32 && isRunningInUserContext) {
+  if (majorSdkVersion < 32 && isRunningInUserContext) {
     await regexFileAsync(
       'IS_DETACHED = false',
       `IS_DETACHED = true`,
@@ -635,6 +675,42 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     await regexFileAsync(
       'ARE_REMOTE_UPDATES_ENABLED = true',
       'ARE_REMOTE_UPDATES_ENABLED = false',
+      path.join(
+        shellPath,
+        'app',
+        'src',
+        'main',
+        'java',
+        'host',
+        'exp',
+        'exponent',
+        'generated',
+        'AppConstants.java'
+      )
+    );
+  }
+  if (majorSdkVersion >= 39 && updatesCheckAutomaticallyDisabled) {
+    await regexFileAsync(
+      'UPDATES_CHECK_AUTOMATICALLY = true',
+      'UPDATES_CHECK_AUTOMATICALLY = false',
+      path.join(
+        shellPath,
+        'app',
+        'src',
+        'main',
+        'java',
+        'host',
+        'exp',
+        'exponent',
+        'generated',
+        'AppConstants.java'
+      )
+    );
+  }
+  if (majorSdkVersion >= 39 && fallbackToCacheTimeout) {
+    await regexFileAsync(
+      'UPDATES_FALLBACK_TO_CACHE_TIMEOUT = 0',
+      `UPDATES_FALLBACK_TO_CACHE_TIMEOUT = ${fallbackToCacheTimeout}`,
       path.join(
         shellPath,
         'app',
@@ -855,20 +931,38 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   // Embed manifest and bundle
   if (isFullManifest) {
     await fs.writeFileSync(
-      path.join(shellPath, 'app', 'src', 'main', 'assets', 'shell-app-manifest.json'),
+      path.join(
+        shellPath,
+        'app',
+        'src',
+        'main',
+        'assets',
+        ExponentTools.getManifestFileNameForSdkVersion(sdkVersion)
+      ),
       JSON.stringify(manifest)
     );
     await saveUrlToPathAsync(
       bundleUrl,
-      path.join(shellPath, 'app', 'src', 'main', 'assets', 'shell-app.bundle')
+      path.join(
+        shellPath,
+        'app',
+        'src',
+        'main',
+        'assets',
+        ExponentTools.getBundleFileNameForSdkVersion(sdkVersion)
+      )
     );
 
     await regexFileAsync(
       '// START EMBEDDED RESPONSES',
       `
       // START EMBEDDED RESPONSES
-      embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-      embeddedResponses.add(new Constants.EmbeddedResponse("${bundleUrl}", "assets://shell-app.bundle", "application/javascript"));`,
+      embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://${ExponentTools.getManifestFileNameForSdkVersion(
+        sdkVersion
+      )}", "application/json"));
+      embeddedResponses.add(new Constants.EmbeddedResponse("${bundleUrl}", "assets://${ExponentTools.getBundleFileNameForSdkVersion(
+        sdkVersion
+      )}", "application/javascript"));`,
       path.join(
         shellPath,
         'app',
