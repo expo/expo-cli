@@ -17,7 +17,7 @@ const generateCocoaPodDefaultName = (moduleName: string) => {
   if (moduleName.toLowerCase().startsWith('expo')) {
     return `EX${wordsToUpperCase(moduleName.substring(4))}`;
   }
-  return wordsToUpperCase(moduleName);
+  return `EX${wordsToUpperCase(moduleName)}`;
 };
 
 /**
