@@ -352,7 +352,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         const dev = !projectSettings.dev;
         await ProjectSettings.setAsync(projectRoot, { dev, minify: !dev });
         log(
-          `Metro Bundler is now running in ${chalk.bold(
+          `Metro bundler is now running in ${chalk.bold(
             dev ? 'development' : 'production'
           )}${chalk.reset(` mode.`)}
 Please reload the project in the Expo app for the change to take effect.`
@@ -365,9 +365,9 @@ Please reload the project in the Expo app for the change to take effect.`
         clearConsole();
         const reset = key === 'R';
         if (reset) {
-          log('Restarting Metro Bundler and clearing cache...');
+          log('Restarting Metro bundler and clearing cache...');
         } else {
-          log('Restarting Metro Bundler...');
+          log('Restarting Metro bundler...');
         }
         Project.startAsync(projectRoot, { ...options, reset });
         break;

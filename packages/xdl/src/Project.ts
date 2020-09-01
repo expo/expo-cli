@@ -48,6 +48,7 @@ import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import slug from 'slugify';
 import split from 'split';
+import terminalLink from 'terminal-link';
 import treekill from 'tree-kill';
 import { URL } from 'url';
 import urljoin from 'url-join';
@@ -810,6 +811,14 @@ export async function publishAsync(
   logger.global.info('');
   logger.global.info(TableText.createFilesTable(files));
   logger.global.info('');
+  logger.global.info(
+    terminalLink(
+      'Learn more about JavaScript bundle sizes.',
+      `https://expo.fyi/javascript-bundle-sizes`,
+      { fallback: (text, url) => `${text}: ${url}` }
+    )
+  );
+  logger.global.info('');
 
   await publishAssetsAsync(projectRoot, exp, bundles);
 
@@ -1236,7 +1245,7 @@ async function publishAssetsAsync(
   if (assets.length > 0 && assets[0].fileHashes) {
     await uploadAssetsAsync(projectRoot, assets);
   } else {
-    logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
+    logger.global.info({ quiet: true }, 'No assets to upload, skipped');
   }
 
   // Updates the manifest to reflect additional asset bundling + configs
@@ -1791,7 +1800,13 @@ export async function startReactNativeServerAsync(
         exp
       );
     } catch (e) {
-      packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+      try {
+        packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+      } catch (e) {
+        throw new Error(
+          'Unable to find the expo-asset package in the current project. Install it and try again.'
+        );
+      }
     }
   }
 

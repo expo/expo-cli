@@ -72,13 +72,11 @@ export async function action(
 
   // Build and publish the project.
 
-  log(`Building optimized bundle`);
+  log(`Building optimized bundles and generating sourcemaps...`);
 
   if (options.quiet) {
     simpleSpinner.start();
   }
-
-  log.newLine();
 
   const result = await Project.publishAsync(projectDir, {
     releaseChannel: options.releaseChannel,

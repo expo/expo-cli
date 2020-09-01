@@ -174,6 +174,7 @@ async function startWebAction(projectDir: string, options: NormalizedOptions): P
 async function action(projectDir: string, options: NormalizedOptions): Promise<void> {
   const { exp, pkg, rootPath } = await configureProjectAsync(projectDir, options);
 
+  // TODO: only validate dependencies if starting in managed workflow
   await validateDependenciesVersions(projectDir, exp, pkg);
 
   const startOpts = parseStartOptions(options);
