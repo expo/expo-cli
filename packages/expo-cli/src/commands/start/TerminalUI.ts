@@ -50,11 +50,17 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
   const username = await UserManager.getCurrentUsernameAsync();
   const devMode = dev ? 'development' : 'production';
   const androidInfo = `${b`a`} to run on ${u`A`}ndroid device/emulator`;
-  const iosInfo = process.platform === 'darwin' ? `${b`i`} to run on ${u`i`}OS simulator` : '';
+  const iosInfo =
+    process.platform === 'darwin'
+      ? `${b`i`} to run on ${u`i`}OS simulator (${b`shift+i`} to select the simulator model)`
+      : '';
   const webInfo = `${b`w`} to run on ${u`w`}eb`;
-  const platformInfo = [androidInfo, iosInfo, webInfo].filter(Boolean).join(', or ');
+  const platformInstructions = [androidInfo, iosInfo, webInfo]
+    .filter(Boolean)
+    .map(instructions => ` \u203A Press ${instructions}.`)
+    .join('\n');
   log.nested(`
- \u203A Press ${platformInfo}.
+${platformInstructions}
  \u203A Press ${b`c`} to show info on ${u`c`}onnecting new devices.
  \u203A Press ${b`d`} to open DevTools in the default web browser.
  \u203A Press ${b`shift-d`} to ${
