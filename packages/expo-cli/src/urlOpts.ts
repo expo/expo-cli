@@ -70,31 +70,31 @@ function printQRCode(url: string) {
 }
 
 async function handleMobileOptsAsync(
-  projectDir: string,
+  projectRoot: string,
   options: Pick<URLOptions, 'ios' | 'android' | 'web'> & { webOnly?: boolean }
 ) {
   await Promise.all([
     (async () => {
       if (options.android) {
         if (options.webOnly) {
-          await Android.openWebProjectAsync(projectDir);
+          await Android.openWebProjectAsync(projectRoot);
         } else {
-          await Android.openProjectAsync(projectDir);
+          await Android.openProjectAsync(projectRoot);
         }
       }
     })(),
     (async () => {
       if (options.ios) {
         if (options.webOnly) {
-          await Simulator.openWebProjectAsync(projectDir);
+          await Simulator.openWebProjectAsync({ projectRoot, shouldPrompt: false });
         } else {
-          await Simulator.openProjectAsync(projectDir);
+          await Simulator.openProjectAsync({ projectRoot, shouldPrompt: false });
         }
       }
     })(),
     (async () => {
       if (options.web) {
-        await Webpack.openAsync(projectDir);
+        await Webpack.openAsync(projectRoot);
       }
     })(),
   ]);

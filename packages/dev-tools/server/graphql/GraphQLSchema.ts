@@ -553,7 +553,10 @@ const resolvers = {
       if (platform === 'ANDROID') {
         result = await Android.openProjectAsync(currentProject.projectDir);
       } else {
-        result = await Simulator.openProjectAsync(currentProject.projectDir);
+        result = await Simulator.openProjectAsync({
+          projectRoot: currentProject.projectDir,
+          shouldPrompt: false,
+        });
       }
       if (result.success) {
         return result;
