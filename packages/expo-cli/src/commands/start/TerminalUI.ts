@@ -49,7 +49,7 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
   const username = await UserManager.getCurrentUsernameAsync();
   const devMode = dev ? 'development' : 'production';
-  const androidInfo = `${b`a`} to run on ${u`A`}ndroid device/emulator`;
+  const androidInfo = `${b`a`} to run on ${u`A`}ndroid (${b`shift+a`} to select the device/emulator)`;
   const iosInfo =
     process.platform === 'darwin'
       ? `${b`i`} to run on ${u`i`}OS simulator (${b`shift+i`} to select the simulator model)`
@@ -142,6 +142,15 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
       startWaitingForCommand();
     }
   });
+
+  Android.setInteractiveCallback(async (pause: boolean) => {
+    if (pause) {
+      stopWaitingForCommand();
+    } else {
+      startWaitingForCommand();
+    }
+  });
+
   UserManager.setInteractiveAuthenticationCallback(async () => {
     stopWaitingForCommand();
     try {
@@ -156,10 +165,11 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
   async function handleKeypress(key: string) {
     if (options.webOnly) {
       switch (key) {
+        case 'A':
         case 'a':
           clearConsole();
           log('Trying to open the web project in Chrome on Android...');
-          await Android.openWebProjectAsync(projectRoot);
+          await Android.openWebProjectAsync({ projectRoot });
           printHelp();
           break;
         case 'i':
@@ -181,10 +191,16 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
       }
     } else {
       switch (key) {
+        case 'A':
+          clearConsole();
+          log('Trying to open the project on Android...');
+          await Android.openProjectAsync({ projectRoot, shouldPrompt: true });
+          printHelp();
+          break;
         case 'a': {
           clearConsole();
           log('Trying to open the project on Android...');
-          await Android.openProjectAsync(projectRoot);
+          await Android.openProjectAsync({ projectRoot });
           printHelp();
           break;
         }

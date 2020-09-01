@@ -77,9 +77,9 @@ async function handleMobileOptsAsync(
     (async () => {
       if (options.android) {
         if (options.webOnly) {
-          await Android.openWebProjectAsync(projectRoot);
+          await Android.openWebProjectAsync({ projectRoot });
         } else {
-          await Android.openProjectAsync(projectRoot);
+          await Android.openProjectAsync({ projectRoot });
         }
       }
     })(),
