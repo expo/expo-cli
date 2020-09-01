@@ -136,7 +136,7 @@ async function isBootAnimationCompleteAsync(pid?: string): Promise<boolean> {
 }
 
 async function startEmulatorAsync(device: Device): Promise<Device> {
-  Logger.global.info(`\u203A Attempting to open emulator named: ${device.name}`);
+  Logger.global.info(`\u203A Attempting to open emulator: ${device.name}`);
 
   // Start a process to open an emulator
   const emulatorProcess = child_process.spawn(
@@ -554,7 +554,7 @@ async function openUrlAsync({
       // _checkExpoUpToDateAsync(); // let this run in background
     }
 
-    Logger.global.info(`Opening on Android ${device.type}`);
+    Logger.global.info(`Opening with Android ${device.type}: ${device.name}`);
     try {
       await _openUrlAsync({ pid: device.pid!, url });
     } catch (e) {
@@ -881,7 +881,7 @@ async function promptForDeviceAsync(devices: Device[]): Promise<Device> {
       // @ts-ignore: broken types -- TODO: remove when migrating to `prompts`
       type: 'list',
       name: 'answer',
-      message: 'Select a simulator',
+      message: 'Select a device/emulator',
       // @ts-ignore
       choices: devices.map(item => {
         const isActive = item.isBooted;
