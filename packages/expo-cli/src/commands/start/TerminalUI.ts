@@ -169,7 +169,10 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         case 'a':
           clearConsole();
           log('Trying to open the web project in Chrome on Android...');
-          await Android.openWebProjectAsync({ projectRoot });
+          await Android.openWebProjectAsync({
+            projectRoot,
+            shouldPrompt: !options.nonInteractive && key === 'A',
+          });
           printHelp();
           break;
         case 'i':
@@ -178,10 +181,14 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           log('Trying to open the web project in Safari on the iOS simulator...');
           await Simulator.openWebProjectAsync({
             projectRoot,
+            shouldPrompt: !options.nonInteractive && key === 'I',
+            // note(brentvatne): temporarily remove logic for picking the
+            // simulator until we have parity for Android. this also ensures that we
+            // don't interfere with the default user flow until more users have tested
+            // this out.
+            //
             // If no simulator is booted, then prompt which simulator to use.
-            shouldPrompt:
-              !options.nonInteractive &&
-              (key === 'I' || !(await Simulator.isSimulatorBootedAsync())),
+            // (key === 'I' || !(await Simulator.isSimulatorBootedAsync())),
           });
           printHelp();
           break;
