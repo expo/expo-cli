@@ -101,10 +101,13 @@ export async function action(
     // TODO: replace with websiteUrl from server when it is available, if that makes sense.
     const websiteUrl = url.replace('exp.host', 'expo.io');
 
+    // note(brentvatne): disable copy to clipboard functionality for now, need to think more about
+    // whether this is desirable.
+    //
     // Attempt to copy the URL to the clipboard, if it succeeds then append a notice to the log.
-    const copiedToClipboard = copyToClipboard(url);
+    // const copiedToClipboard = copyToClipboard(websiteUrl);
 
-    logProjectPageUrl({ url: websiteUrl, copiedToClipboard });
+    logProjectPageUrl({ url: websiteUrl, copiedToClipboard: false });
 
     // Only send the link for managed projects.
     const recipient = await sendTo.getRecipient(options.sendTo);
@@ -308,7 +311,7 @@ export function logBareWorkflowWarnings(pkg: PackageJSONConfig) {
   );
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
     .command('publish [path]')
     .alias('p')
