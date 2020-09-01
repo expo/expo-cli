@@ -166,6 +166,7 @@ async function startBuildAsync<T extends Platform>(
     if (!builder.ctx.commandCtx.skipProjectConfiguration) {
       try {
         await builder.ensureProjectConfiguredAsync();
+
         Analytics.logEvent(
           AnalyticsEvent.CONFIGURE_PROJECT_SUCCESS,
           builder.ctx.trackingCtx.properties

@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [expo-cli] EAS Build: Configure `expo-updates` automatically if it's installed when running `eas:build:init` [#2587](https://github.com/expo/expo-cli/pull/2587)
+
 ### 🐛 Bug fixes
 
 ## [Thu, 24 Sep 2020 16:18:06 -0700](https://github.com/expo/expo-cli/commit/8443580c8093f28550c7ebbb8d1b66bacc83a201)

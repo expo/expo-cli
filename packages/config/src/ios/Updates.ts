@@ -1,12 +1,25 @@
 import { ExpoConfig } from '../Config.types';
 import { ExpoPlist } from './IosConfig.types';
 
+export enum Config {
+  ENABLED = 'EXUpdatesEnabled',
+  CHECK_ON_LAUNCH = 'EXUpdatesCheckOnLaunch',
+  LAUNCH_WAIT_MS = 'EXUpdatesLaunchWaitMs',
+  RUNTIME_VERSION = 'EXUpdatesRuntimeVersion',
+  SDK_VERSION = 'EXUpdatesSDKVersion',
+  UPDATE_URL = 'EXUpdatesURL',
+}
+
 export function getUpdateUrl(config: ExpoConfig, username: string | null) {
   const user = typeof config.owner === 'string' ? config.owner : username;
   if (!user) {
     return undefined;
   }
   return `https://exp.host/@${user}/${config.slug}`;
+}
+
+export function getRuntimeVersion(config: ExpoConfig) {
+  return typeof config.runtimeVersion === 'string' ? config.runtimeVersion : null;
 }
 
 export function getSDKVersion(config: ExpoConfig) {
@@ -35,28 +48,37 @@ export function setUpdatesConfig(
   expoPlist: ExpoPlist,
   username: string | null
 ): ExpoPlist {
-  let newExpoPlist = {
+  const newExpoPlist = {
     ...expoPlist,
-    EXUpdatesEnabled: getUpdatesEnabled(config),
-    EXUpdatesURL: getUpdateUrl(config, username),
-    EXUpdatesCheckOnLaunch: getUpdatesCheckOnLaunch(config),
-    EXUpdatesLaunchWaitMs: getUpdatesTimeout(config),
+    [Config.ENABLED]: getUpdatesEnabled(config),
+    [Config.CHECK_ON_LAUNCH]: getUpdatesCheckOnLaunch(config),
+    [Config.LAUNCH_WAIT_MS]: getUpdatesTimeout(config),
   };
 
   const updateUrl = getUpdateUrl(config, username);
   if (updateUrl) {
-    newExpoPlist = {
-      ...newExpoPlist,
-      EXUpdatesURL: updateUrl,
-    };
+    newExpoPlist[Config.UPDATE_URL] = updateUrl;
+  } else {
+    delete newExpoPlist[Config.UPDATE_URL];
   }
 
+  return setVersionsConfig(config, newExpoPlist);
+}
+
+export function setVersionsConfig(config: ExpoConfig, expoPlist: ExpoPlist) {
+  const newExpoPlist = { ...expoPlist };
+
+  const runtimeVersion = getRuntimeVersion(config);
   const sdkVersion = getSDKVersion(config);
-  if (sdkVersion) {
-    newExpoPlist = {
-      ...newExpoPlist,
-      EXUpdatesSDKVersion: sdkVersion,
-    };
+  if (runtimeVersion) {
+    delete newExpoPlist[Config.SDK_VERSION];
+    newExpoPlist[Config.RUNTIME_VERSION] = runtimeVersion;
+  } else if (sdkVersion) {
+    delete newExpoPlist[Config.RUNTIME_VERSION];
+    newExpoPlist[Config.SDK_VERSION] = sdkVersion;
+  } else {
+    delete newExpoPlist[Config.SDK_VERSION];
+    delete newExpoPlist[Config.RUNTIME_VERSION];
   }
 
   return newExpoPlist;

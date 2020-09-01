@@ -121,7 +121,8 @@
     "untildify": "3.0.3",
     "uuid": "^8.0.0",
     "validator": "10.5.0",
-    "wordwrap": "1.0.0"
+    "wordwrap": "1.0.0",
+    "xcode": "^3.0.1"
   },
   "optionalDependencies": {
     "@expo/traveling-fastlane-darwin": "1.15.1",

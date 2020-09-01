@@ -15,7 +15,13 @@ jest.mock('../../../../projects', () => {
     ensureProjectExistsAsync: () => 'fakeProjectId',
   };
 });
-jest.mock('../../utils/git');
+jest.mock('../../utils/git', () => {
+  return {
+    ensureGitRepoExistsAsync: jest.fn(),
+    ensureGitStatusIsCleanAsync: jest.fn(),
+    modifyAndCommitAsync: cb => cb(),
+  };
+});
 jest.mock('../../build/builders/iOSBuilder');
 jest.mock('../../../../git');
 jest.mock('@expo/image-utils', () => ({

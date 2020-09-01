@@ -1,5 +1,19 @@
 import { ExpoConfig } from '../Config.types';
-import { addMetaDataItemToMainApplication, Document, getMainApplication } from './Manifest';
+import {
+  addMetaDataItemToMainApplication,
+  Document,
+  getMainApplication,
+  removeMetaDataItemFromMainApplication,
+} from './Manifest';
+
+export enum Config {
+  ENABLED = 'expo.modules.updates.ENABLED',
+  CHECK_ON_LAUNCH = 'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH',
+  LAUNCH_WAIT_MS = 'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS',
+  SDK_VERSION = 'expo.modules.updates.EXPO_SDK_VERSION',
+  RUNTIME_VERSION = 'expo.modules.updates.EXPO_RUNTIME_VERSION',
+  UPDATE_URL = 'expo.modules.updates.EXPO_UPDATE_URL',
+}
 
 export function getUpdateUrl(config: ExpoConfig, username: string | null) {
   const user = typeof config.owner === 'string' ? config.owner : username;
@@ -7,6 +21,10 @@ export function getUpdateUrl(config: ExpoConfig, username: string | null) {
     return null;
   }
   return `https://exp.host/@${user}/${config.slug}`;
+}
+
+export function getRuntimeVersion(config: ExpoConfig) {
+  return typeof config.runtimeVersion === 'string' ? config.runtimeVersion : null;
 }
 
 export function getSDKVersion(config: ExpoConfig) {
@@ -39,35 +57,44 @@ export async function setUpdatesConfig(
 
   addMetaDataItemToMainApplication(
     mainApplication,
-    'expo.modules.updates.ENABLED',
-    `${getUpdatesEnabled(config)}`
+    Config.ENABLED,
+    String(getUpdatesEnabled(config))
   );
   addMetaDataItemToMainApplication(
     mainApplication,
-    'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH',
+    Config.CHECK_ON_LAUNCH,
     getUpdatesCheckOnLaunch(config)
   );
   addMetaDataItemToMainApplication(
     mainApplication,
-    'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS',
-    `${getUpdatesTimeout(config)}`
+    Config.LAUNCH_WAIT_MS,
+    String(getUpdatesTimeout(config))
   );
 
   const updateUrl = getUpdateUrl(config, username);
   if (updateUrl) {
-    addMetaDataItemToMainApplication(
-      mainApplication,
-      'expo.modules.updates.EXPO_UPDATE_URL',
-      updateUrl
-    );
+    addMetaDataItemToMainApplication(mainApplication, Config.UPDATE_URL, updateUrl);
+  } else {
+    removeMetaDataItemFromMainApplication(mainApplication, Config.UPDATE_URL);
   }
+
+  return setVersionsConfig(config, manifestDocument);
+}
+
+export function setVersionsConfig(config: ExpoConfig, manifestDocument: Document) {
+  const mainApplication = getMainApplication(manifestDocument);
+
+  const runtimeVersion = getRuntimeVersion(config);
   const sdkVersion = getSDKVersion(config);
-  if (sdkVersion) {
-    addMetaDataItemToMainApplication(
-      mainApplication,
-      'expo.modules.updates.EXPO_SDK_VERSION',
-      sdkVersion
-    );
+  if (runtimeVersion) {
+    removeMetaDataItemFromMainApplication(mainApplication, Config.SDK_VERSION);
+    addMetaDataItemToMainApplication(mainApplication, Config.RUNTIME_VERSION, runtimeVersion);
+  } else if (sdkVersion) {
+    removeMetaDataItemFromMainApplication(mainApplication, Config.RUNTIME_VERSION);
+    addMetaDataItemToMainApplication(mainApplication, Config.SDK_VERSION, sdkVersion);
+  } else {
+    removeMetaDataItemFromMainApplication(mainApplication, Config.RUNTIME_VERSION);
+    removeMetaDataItemFromMainApplication(mainApplication, Config.SDK_VERSION);
   }
 
   return manifestDocument;
