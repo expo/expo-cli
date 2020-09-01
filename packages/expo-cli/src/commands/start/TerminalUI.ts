@@ -142,6 +142,15 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
       startWaitingForCommand();
     }
   });
+
+  Android.setInteractiveCallback(async (pause: boolean) => {
+    if (pause) {
+      stopWaitingForCommand();
+    } else {
+      startWaitingForCommand();
+    }
+  });
+
   UserManager.setInteractiveAuthenticationCallback(async () => {
     stopWaitingForCommand();
     try {
@@ -156,10 +165,11 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
   async function handleKeypress(key: string) {
     if (options.webOnly) {
       switch (key) {
+        case 'A':
         case 'a':
           clearConsole();
           log('Trying to open the web project in Chrome on Android...');
-          await Android.openWebProjectAsync(projectRoot);
+          await Android.openWebProjectAsync({ projectRoot });
           printHelp();
           break;
         case 'i':
@@ -181,10 +191,11 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
       }
     } else {
       switch (key) {
+        case 'A':
         case 'a': {
           clearConsole();
           log('Trying to open the project on Android...');
-          await Android.openProjectAsync(projectRoot);
+          await Android.openProjectAsync({ projectRoot });
           printHelp();
           break;
         }
