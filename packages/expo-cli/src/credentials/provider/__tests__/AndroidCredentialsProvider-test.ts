@@ -7,6 +7,9 @@ const providerOptions = {
   projectName: 'slug123',
   accountName: 'owner123',
 };
+const cliOptions = {
+  nonInteractive: false,
+};
 
 const mockFetchKeystore = jest.fn();
 
@@ -47,7 +50,7 @@ describe('AndroidCredentialsProvider', () => {
         keyAlias: 'alias1',
         keyPassword: 'keypass',
       }));
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       const hasRemote = await provider.hasRemoteAsync();
       expect(hasRemote).toBe(true);
@@ -58,13 +61,13 @@ describe('AndroidCredentialsProvider', () => {
         keystorePassword: 'pass1',
         keyPassword: 'keypass',
       }));
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       const hasRemote = await provider.hasRemoteAsync();
       expect(hasRemote).toBe(false);
     });
     it('should return false if there are no credentials', async () => {
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       const hasRemote = await provider.hasRemoteAsync();
       expect(hasRemote).toBe(false);
@@ -86,7 +89,7 @@ describe('AndroidCredentialsProvider', () => {
         './test.jks': 'somebinarycontent',
       });
 
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       const hasLocal = await provider.hasLocalAsync();
       expect(hasLocal).toBe(true);
@@ -104,7 +107,7 @@ describe('AndroidCredentialsProvider', () => {
         }),
         './test.jks': 'somebinarycontent',
       });
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       const hasLocal = await provider.hasLocalAsync();
       expect(hasLocal).toBe(true);
@@ -122,13 +125,13 @@ describe('AndroidCredentialsProvider', () => {
           },
         }),
       });
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       const hasLocal = await provider.hasLocalAsync();
       expect(hasLocal).toBe(true);
     });
     it('should return false if there are no credentials.json file', async () => {
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       const hasLocal = await provider.hasLocalAsync();
       expect(hasLocal).toBe(false);
@@ -142,7 +145,7 @@ describe('AndroidCredentialsProvider', () => {
         keyAlias: 'alias1',
         keyPassword: 'keypass',
       }));
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       await expect(
         provider.getCredentialsAsync(CredentialsSource.REMOTE)
@@ -154,12 +157,12 @@ describe('AndroidCredentialsProvider', () => {
         keystorePassword: 'pass1',
         keyPassword: 'keypass',
       }));
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError();
     });
     it('should return false if there are no credentials', async () => {
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       await expect(provider.getCredentialsAsync(CredentialsSource.REMOTE)).rejects.toThrowError();
     });
@@ -180,7 +183,7 @@ describe('AndroidCredentialsProvider', () => {
         './test.jks': 'somebinarycontent',
       });
 
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       await expect(
         provider.getCredentialsAsync(CredentialsSource.LOCAL)
@@ -199,7 +202,7 @@ describe('AndroidCredentialsProvider', () => {
         }),
         './test.jks': 'somebinarycontent',
       });
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       await expect(provider.getCredentialsAsync(CredentialsSource.LOCAL)).rejects.toThrowError();
     });
@@ -216,12 +219,12 @@ describe('AndroidCredentialsProvider', () => {
           },
         }),
       });
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       await expect(provider.getCredentialsAsync(CredentialsSource.LOCAL)).rejects.toThrowError();
     });
     it('should return false if there are no credentials.json file', async () => {
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       await expect(provider.getCredentialsAsync(CredentialsSource.LOCAL)).rejects.toThrowError();
     });
@@ -247,7 +250,7 @@ describe('AndroidCredentialsProvider', () => {
         }),
         './test.jks': 'somebinarycontent',
       });
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       const isLocalSynced = await provider.isLocalSyncedAsync();
       expect(isLocalSynced).toBe(true);
@@ -272,7 +275,7 @@ describe('AndroidCredentialsProvider', () => {
         }),
         './test2.jks': 'somebinarycontent',
       });
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       const isLocalSynced = await provider.isLocalSyncedAsync();
       expect(isLocalSynced).toBe(false);
@@ -299,7 +302,7 @@ describe('AndroidCredentialsProvider', () => {
         }),
         './test2.jks': 'somebinarycontent',
       });
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       expect(await provider.getCredentialsAsync(CredentialsSource.LOCAL)).toEqual({
         keystore: {
@@ -330,7 +333,7 @@ describe('AndroidCredentialsProvider', () => {
         }),
         './test2.jks': 'somebinarycontent',
       });
-      const provider = new AndroidCredentialsProvider('.', providerOptions);
+      const provider = new AndroidCredentialsProvider('.', providerOptions, cliOptions);
       await provider.initAsync();
       expect(await provider.getCredentialsAsync(CredentialsSource.REMOTE)).toEqual({
         keystore: {

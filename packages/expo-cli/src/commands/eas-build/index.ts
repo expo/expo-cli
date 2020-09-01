@@ -4,29 +4,44 @@ import path from 'path';
 
 import buildAction from './build/action';
 import credentialsSyncAction from './credentialsSync/action';
+import initAction from './init/action';
 import statusAction from './status/action';
 
 export default function (program: Command) {
   // don't register `expo eas:build:*` commands if eas.json doesn't exist
   const easJsonPath = path.join(process.cwd(), 'eas.json');
-  if (!fs.pathExistsSync(easJsonPath)) {
+  const hasEasJson = fs.pathExistsSync(easJsonPath);
+
+  if (hasEasJson || process.argv[2] !== '--help') {
+    // We don't want to show this in the help output for now
+    program
+      .command('eas:build:init [path]')
+      .description('Initialize build configuration for the project')
+      .helpGroup('eas')
+      .option('--skip-credentials-check', 'Skip checking credentials', false)
+      .asyncActionProjectDir(initAction, { checkConfig: true });
+  }
+
+  if (!hasEasJson) {
     return;
   }
 
   program
-    .command('eas:credentials:sync [project-dir]')
+    .command('eas:credentials:sync [path]')
     .description('Update credentials.json with credentials stored on Expo servers')
+    .helpGroup('eas')
     .asyncActionProjectDir(credentialsSyncAction, {
       checkConfig: true,
       skipSDKVersionRequirement: true,
     });
 
   program
-    .command('eas:build [project-dir]')
-    .description('Build an app binary for your project.')
+    .command('eas:build [path]')
+    .description('Build an app binary for the project')
+    .helpGroup('eas')
     .option(
       '-p --platform <platform>',
-      'Build for specified platform: ios, android, all',
+      'Build for the specified platform: ios, android, all',
       /^(all|android|ios)$/i
     )
     .option('--skip-credentials-check', 'Skip checking credentials', false)
@@ -36,8 +51,9 @@ export default function (program: Command) {
     .asyncActionProjectDir(buildAction, { checkConfig: true, skipSDKVersionRequirement: true });
 
   program
-    .command('eas:build:status [project-dir]')
-    .description('Get the status of the latest builds for your project.')
+    .command('eas:build:status [path]')
+    .description('Log the status of the latest builds for the project')
+    .helpGroup('eas')
     .option(
       '-p --platform <platform>',
       'Get builds for specified platform: ios, android, all',

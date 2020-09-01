@@ -15,16 +15,29 @@ export interface iOSCredentials {
   };
 }
 
+interface PartialiOSCredentials {
+  provisioningProfile?: string;
+  distributionCertificate?: {
+    certP12?: string;
+    certPassword?: string;
+  };
+}
+
+interface Options {
+  nonInteractive: boolean;
+  skipCredentialsCheck: boolean;
+}
+
 export default class iOSCredentialsProvider implements CredentialsProvider {
   public readonly platform = 'ios';
   private readonly ctx = new Context();
   private credentials?: iOSCredentials;
 
-  constructor(private projectDir: string, private app: AppLookupParams) {}
+  constructor(private projectDir: string, private app: AppLookupParams, private options: Options) {}
 
   public async initAsync() {
     await this.ctx.init(this.projectDir, {
-      nonInteractive: this.ctx.nonInteractive,
+      nonInteractive: this.options.nonInteractive,
     });
   }
 
@@ -49,13 +62,13 @@ export default class iOSCredentialsProvider implements CredentialsProvider {
 
   public async isLocalSyncedAsync(): Promise<boolean> {
     try {
-      const [remote, local] = await Promise.all([this.getRemoteAsync(), this.getLocalAsync()]);
+      const [remote, local] = await Promise.all([this.fetchRemoteAsync(), this.getLocalAsync()]);
       const r = remote;
-      const l = local;
+      const l = local as iOSCredentials; // ts definion can't resolve return type correctly
       return !!(
         r.provisioningProfile === l.provisioningProfile &&
-        r.distributionCertificate.certP12 === l.distributionCertificate.certP12 &&
-        r.distributionCertificate.certPassword === l.distributionCertificate.certPassword
+        r.distributionCertificate?.certP12 === l.distributionCertificate.certP12 &&
+        r.distributionCertificate?.certPassword === l.distributionCertificate.certPassword
       );
     } catch (_) {
       return false;
@@ -77,20 +90,48 @@ export default class iOSCredentialsProvider implements CredentialsProvider {
     return await credentialsJsonReader.readIosCredentialsAsync(this.projectDir);
   }
   private async getRemoteAsync(): Promise<iOSCredentials> {
-    await runCredentialsManager(this.ctx, new SetupIosBuildCredentials(this.app));
+    if (this.options.skipCredentialsCheck) {
+      log('Skipping credentials check');
+    } else {
+      await runCredentialsManager(this.ctx, new SetupIosBuildCredentials(this.app));
+    }
     const distCert = await this.ctx.ios.getDistCert(this.app);
-    if (!distCert) {
-      throw new Error('Missing distribution certificate'); // shouldn't happen
+    if (!distCert?.certP12 || !distCert?.certPassword) {
+      if (this.options.skipCredentialsCheck) {
+        throw new Error(
+          'Distribution certificate is missing and credentials check was skipped. Run without --skip-credentials-check to set it up.'
+        );
+      } else {
+        throw new Error('Distribution certificate is missing');
+      }
     }
     const provisioningProfile = await this.ctx.ios.getProvisioningProfile(this.app);
-    if (!provisioningProfile) {
-      throw new Error('Missing provisioning profile'); // shouldn't happen
+    if (!provisioningProfile?.provisioningProfile) {
+      if (this.options.skipCredentialsCheck) {
+        throw new Error(
+          'Provisioning profile is missing and credentials check was skipped. Run without --skip-credentials-check to set it up.'
+        );
+      } else {
+        throw new Error('Provisioning profile is missing');
+      }
     }
     return {
       provisioningProfile: provisioningProfile.provisioningProfile,
       distributionCertificate: {
         certP12: distCert.certP12,
         certPassword: distCert.certPassword,
+      },
+    };
+  }
+
+  private async fetchRemoteAsync(): Promise<PartialiOSCredentials> {
+    const distCert = await this.ctx.ios.getDistCert(this.app);
+    const provisioningProfile = await this.ctx.ios.getProvisioningProfile(this.app);
+    return {
+      provisioningProfile: provisioningProfile?.provisioningProfile,
+      distributionCertificate: {
+        certP12: distCert?.certP12,
+        certPassword: distCert?.certPassword,
       },
     };
   }

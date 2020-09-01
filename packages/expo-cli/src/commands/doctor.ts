@@ -8,14 +8,15 @@ async function action(projectDir: string) {
   await Doctor.validateExpoServersAsync(projectDir);
 
   if ((await Doctor.validateWithNetworkAsync(projectDir)) === Doctor.NO_ISSUES) {
-    log(`Didn't find any issues with your project!`);
+    log(`Didn't find any issues with the project!`);
   }
   process.exit();
 }
 
 export default function (program: Command) {
   program
-    .command('doctor [project-dir]')
-    .description('Diagnoses issues with your Expo project.')
+    .command('doctor [path]')
+    .description('Diagnose issues with the project')
+    .helpGroup('info')
     .asyncActionProjectDir(action);
 }

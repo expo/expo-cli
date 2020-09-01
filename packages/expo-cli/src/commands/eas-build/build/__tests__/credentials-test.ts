@@ -170,7 +170,7 @@ describe('ensureCredentialsAsync', () => {
 
       expect(prompts).toHaveBeenCalledTimes(1);
     });
-    it('should should throw an error when local or remote are not present (non interactive)', async () => {
+    it('should throw an error when local or remote are not present (non interactive)', async () => {
       const provider = createMockCredentialsProvider({
         hasRemote: false,
         hasLocal: false,

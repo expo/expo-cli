@@ -96,9 +96,8 @@ export async function ensureCredentialsAsync(
     case CredentialsSource.REMOTE:
       log(log.chalk.bold(USING_REMOTE_CREDENTIALS_MSG));
       return CredentialsSource.REMOTE;
-    case CredentialsSource.AUTO: {
+    case CredentialsSource.AUTO:
       log('Resolving credentials source (auto mode)');
       return await ensureCredentialsAutoAsync(provider, workflow, nonInteractive);
-    }
   }
 }

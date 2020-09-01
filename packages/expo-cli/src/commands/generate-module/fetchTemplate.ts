@@ -40,6 +40,6 @@ function isNpmPackage(template: string) {
     !template.match(/^_/) && // don't start with _
     template.toLowerCase() === template && // only lowercase
     !/[~'!()*]/.test(template.split('/').slice(-1)[0]) && // don't contain any character from [~'!()*]
-    template.match(/^(@([^/]+?)\/)?([^/@]+)(@(\d\.\d\.\d)(-[^/@]+)?)?$/) // has shape (@scope/)?actual-package-name(@0.1.1(-tag.1)?)?
+    template.match(/^(@([^/]+?)\/)?([^/@]+)(@(((\d\.\d\.\d)(-[^/@]+)?)|latest|next))?$/) // has shape (@scope/)?actual-package-name(@0.1.1(-tag.1)?|tag-name)?
   );
 }

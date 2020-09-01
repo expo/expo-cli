@@ -18,10 +18,11 @@ async function action(command: Command) {
   }
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
     .command('whoami')
+    .helpGroup('auth')
     .alias('w')
-    .description('Checks with the server and then says who you are logged in as')
+    .description('Return the currently authenticated account')
     .asyncAction(action);
 }

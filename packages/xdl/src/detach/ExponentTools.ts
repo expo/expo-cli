@@ -9,6 +9,22 @@ import { Readable } from 'stream';
 import XDLError from '../XDLError';
 import LoggerDetach, { Logger, pipeOutputToLogger } from './Logger';
 
+function getManifestFileNameForSdkVersion(sdkVersion: string) {
+  if (parseSdkMajorVersion(sdkVersion) < 39) {
+    return 'shell-app-manifest.json';
+  } else {
+    return 'app.manifest';
+  }
+}
+
+function getBundleFileNameForSdkVersion(sdkVersion: string) {
+  if (parseSdkMajorVersion(sdkVersion) < 39) {
+    return 'shell-app.bundle';
+  } else {
+    return 'app.bundle';
+  }
+}
+
 function parseSdkMajorVersion(expSdkVersion: string) {
   // We assume that the unversioned SDK is the latest
   if (expSdkVersion === 'UNVERSIONED') {
@@ -247,4 +263,6 @@ export {
   regexFileAsync,
   deleteLinesInFileAsync,
   createSpawner,
+  getManifestFileNameForSdkVersion,
+  getBundleFileNameForSdkVersion,
 };

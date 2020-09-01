@@ -1,12 +1,13 @@
 import JsonFile from '@expo/json-file';
 import path from 'path';
+import stripAnsi from 'strip-ansi';
 import temporary from 'tempy';
 
 import { runAsync, tryRunAsync } from '../TestUtils';
 
 test('init --help', async () => {
   const { stdout } = await runAsync(['init', '--help']);
-  expect(stdout).toMatch('Usage: init');
+  expect(stripAnsi(stdout)).toMatch('Usage: init');
 });
 
 test('init (no dir name)', async () => {
