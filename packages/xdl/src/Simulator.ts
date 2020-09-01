@@ -633,8 +633,8 @@ export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
 }: {
-  shouldPrompt: boolean;
   projectRoot: string;
+  shouldPrompt?: boolean;
 }): Promise<{ success: true; url: string } | { success: false; error: string }> {
   const projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
     hostType: 'localhost',

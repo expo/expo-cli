@@ -284,7 +284,7 @@ const typeDefs = graphql`
 
   type Mutation {
     # Opens the app in an iOS simulator or and Android device/emulator.
-    openSimulator(platform: Platform!, prompt: Boolean!): OpenSimulatorResult
+    openSimulator(platform: Platform!): OpenSimulatorResult
     # Starts WebPack server
     openWeb: OpenWebResult
     # Publishes the current project to expo.io
@@ -547,7 +547,7 @@ const resolvers = {
         };
       }
     },
-    async openSimulator(parent, { platform, prompt }, context) {
+    async openSimulator(parent, { platform }, context) {
       const currentProject = context.getCurrentProject();
       let result;
       if (platform === 'ANDROID') {
@@ -555,7 +555,7 @@ const resolvers = {
       } else {
         result = await Simulator.openProjectAsync({
           projectRoot: currentProject.projectDir,
-          shouldPrompt: prompt,
+          shouldPrompt: false,
         });
       }
       if (result.success) {
