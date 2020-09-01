@@ -205,17 +205,29 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           break;
         }
         case 'I':
+          clearConsole();
+          await Simulator.openProjectAsync({
+            projectRoot,
+            shouldPrompt: true,
+          });
+          printHelp();
+          break;
         case 'i': {
           clearConsole();
 
+          // note(brentvatne): temporarily remove logic for picking the
+          // simulator until we have parity for Android. this also ensures that we
+          // don't interfere with the default user flow until more users have tested
+          // this out.
+          //
           // If no simulator is booted, then prompt for which simulator to use.
-          const shouldPrompt =
-            !options.nonInteractive && (key === 'I' || !(await Simulator.isSimulatorBootedAsync()));
+          // const shouldPrompt =
+          //   !options.nonInteractive && (key === 'I' || !(await Simulator.isSimulatorBootedAsync()));
 
           log('Opening in iOS simulator...');
           await Simulator.openProjectAsync({
             projectRoot,
-            shouldPrompt,
+            shouldPrompt: false,
           });
           printHelp();
           break;
