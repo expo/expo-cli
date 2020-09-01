@@ -157,7 +157,6 @@ async function startEmulatorAsync(device: Device): Promise<Device> {
 
   return new Promise<Device>((resolve, reject) => {
     const waitTimer = setInterval(async () => {
-      // if (await _isDeviceAttachedAsync()) {
       const bootedDevices = await getAttachedDevicesAsync();
       const connected = bootedDevices.find(({ name }) => name === device.name);
       if (connected) {
@@ -167,7 +166,6 @@ async function startEmulatorAsync(device: Device): Promise<Device> {
           resolve(connected);
         }
       }
-      // }
     }, 1000);
 
     // Reject command after timeout
@@ -509,7 +507,8 @@ async function _openUrlAsync({ pid, url }: { pid: string; url: string }) {
 
 async function attemptToStartEmulatorOrAssertAsync(device: Device): Promise<Device> {
   // TODO: Add a light-weight method for checking since a device could disconnect.
-  if (!device.isBooted) {
+
+  if (!(await isDeviceBootedAsync(device))) {
     device = await startEmulatorAsync(device);
   }
   // TODO: Validate specific device
