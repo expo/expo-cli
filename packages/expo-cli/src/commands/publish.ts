@@ -267,7 +267,7 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
   log.nestedWarn(
     formatNamedWarning(
       'Optimization',
-      `Project may contain suboptimal images. Optimized images can improve app performance and startup time.\n  To fix this, run ${chalk.bold(
+      `Project may contain uncompressed images. Optimizing image assets can improve app size and performance.\n  To fix this, run ${chalk.bold(
         `npx expo-optimize`
       )}`,
       'https://docs.expo.io/distribution/optimizing-updates/#optimize-images'
