@@ -463,6 +463,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   await fs.remove(path.join(shellPath, 'app', 'src', 'androidTest'));
 
   if (isDetached) {
+    const rootBuildGradle = path.join(shellPath, 'build.gradle');
     const appBuildGradle = path.join(shellPath, 'app', 'build.gradle');
     if (isRunningInUserContext) {
       await regexFileAsync(/\/\* UNCOMMENT WHEN DETACHING/g, '', appBuildGradle);
@@ -479,6 +480,11 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       'WHEN_DISTRIBUTING_REMOVE_FROM_HERE',
       'WHEN_DISTRIBUTING_REMOVE_TO_HERE',
       appBuildGradle
+    );
+    await deleteLinesInFileAsync(
+      'WHEN_DISTRIBUTING_REMOVE_FROM_HERE',
+      'WHEN_DISTRIBUTING_REMOVE_TO_HERE',
+      rootBuildGradle
     );
 
     if (majorSdkVersion >= 33) {
