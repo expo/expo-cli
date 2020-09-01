@@ -29,6 +29,7 @@ This is the log of notable changes to Expo CLI and related packages.
 - [expo-cli] Fix `generate-module` to support latest `expo-module-template` ([#2510](https://github.com/expo/expo-cli/pull/2510) by [@barthap](https://github.com/barthap))
 - [expo-cli] Fix `generate-module` filename generation for modules without `expo-` prefix ([#2548](https://github.com/expo/expo-cli/pull/2548) by [@barthap](https://github.com/barthap))
 - [image-utils] Fix setting background color when calling `Jimp.resize` ([#2535](https://github.com/expo/expo-cli/pull/2535) by [@cruzach](https://github.com/cruzach))
+- [dev-tools] Fix layout shifting when url becomes available by rendering a placeholder for QR codeby [@brentvatne](https://github.com/brentvatne))
 
 ### 📦 Packages updated
 
