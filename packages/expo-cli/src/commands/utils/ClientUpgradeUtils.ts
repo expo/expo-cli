@@ -22,7 +22,11 @@ export async function getExpoSdkConfig(path: string) {
 
 type ClientPlatform = 'android' | 'ios';
 
-export function getClient(sdk: Versions.SDKVersion, platform: ClientPlatform) {
+export function getClient(platform: ClientPlatform, sdk?: Versions.SDKVersion | null) {
+  if (!sdk) {
+    return null;
+  }
+
   if (platform === 'android' && sdk.androidClientUrl) {
     return {
       url: sdk.androidClientUrl,
@@ -37,7 +41,7 @@ export function getClient(sdk: Versions.SDKVersion, platform: ClientPlatform) {
     };
   }
 
-  return undefined;
+  return null;
 }
 
 interface AvailableClientOptions {
@@ -57,13 +61,13 @@ export function getAvailableClients(options: AvailableClientOptions): AvailableC
   return Object.keys(options.sdkVersions)
     .reverse()
     .map(version => {
-      const client = getClient(options.sdkVersions[version], options.platform);
+      const client = getClient(options.platform, options.sdkVersions[version]);
 
       return {
         sdkVersionString: version,
         sdkVersion: options.sdkVersions[version],
-        clientUrl: client ? client.url : undefined,
-        clientVersion: client ? client.version : undefined,
+        clientUrl: client?.url,
+        clientVersion: client?.version,
       };
     })
     .filter(client => {
