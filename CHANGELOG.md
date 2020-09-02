@@ -10,6 +10,22 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 2 Sep 2020 11:12:02 -0700](https://github.com/expo/expo-cli/commit/c97aba21376324b2131bb5058d193aab5ceb77f4)
+
+### 🎉 New features
+
+- [expo-cli] EAS Build - track build process with Segment ([#2555](https://github.com/expo/expo-cli/issues/2555))
+
+### 🐛 Bug fixes
+
+- [cli] Fix requested sdk in upgrade command ([#2557](https://github.com/expo/expo-cli/issues/2557))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.38
+- expo-cli@3.26.1
+- @expo/xdl@57.9.35
+
 ## [Tue, 1 Sep 2020 16:47:59 -0700](https://github.com/expo/expo-cli/commit/b4a945b6243f11555b5f1b37eba98289ca5f342b)
 
 ### 🛠 Breaking changes
