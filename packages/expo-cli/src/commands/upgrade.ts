@@ -683,9 +683,9 @@ async function maybeCleanNpmStateAsync(packageManager: any) {
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('upgrade')
+    .command('upgrade [sdk-version]')
     .alias('update')
     .description('Upgrade the project packages and config for the given SDK version')
     .helpGroup('info')
