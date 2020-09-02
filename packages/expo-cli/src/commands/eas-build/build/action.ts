@@ -1,5 +1,5 @@
 import { Platform } from '@expo/build-tools';
-import { ApiV2 } from '@expo/xdl';
+import { Analytics, ApiV2 } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
@@ -8,13 +8,20 @@ import os from 'os';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import { EasJsonReader } from '../../../easJson';
+import { CredentialsSource, EasJsonReader } from '../../../easJson';
 import log from '../../../log';
 import { ensureProjectExistsAsync } from '../../../projects';
 import { UploadType, uploadAsync } from '../../../uploads';
 import { createProgressTracker } from '../../utils/progress';
 import { platformDisplayNames } from '../constants';
-import { Build, BuildCommandPlatform, BuildStatus, Builder, CommandContext } from '../types';
+import {
+  AnalyticsEvent,
+  Build,
+  BuildCommandPlatform,
+  BuildStatus,
+  Builder,
+  CommandContext,
+} from '../types';
 import createBuilderContext from '../utils/createBuilderContext';
 import createCommandContextAsync from '../utils/createCommandContextAsync';
 import {
@@ -50,6 +57,12 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
     );
   }
 
+  const trackingCtx = {
+    tracking_id: uuidv4(),
+    requested_platform: options.platform,
+  };
+  Analytics.logEvent(AnalyticsEvent.BUILD_COMMAND, trackingCtx);
+
   await ensureGitRepoExistsAsync();
   await ensureGitStatusIsCleanAsync();
 
@@ -57,6 +70,7 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
     requestedPlatform,
     profile,
     projectDir,
+    trackingCtx,
     nonInteractive: options.parent?.nonInteractive,
     skipCredentialsCheck: options?.skipCredentialsCheck,
     skipProjectConfiguration: options?.skipProjectConfiguration,
@@ -134,31 +148,75 @@ async function startBuildAsync<T extends Platform>(
   const tarPath = path.join(os.tmpdir(), `${uuidv4()}.tar.gz`);
   try {
     await builder.setupAsync();
-    const credentialsSource = await builder.ensureCredentialsAsync();
+    let credentialsSource: CredentialsSource.LOCAL | CredentialsSource.REMOTE | undefined;
+    try {
+      credentialsSource = await builder.ensureCredentialsAsync();
+      Analytics.logEvent(
+        AnalyticsEvent.GATHER_CREDENTIALS_SUCCESS,
+        builder.ctx.trackingCtx.properties
+      );
+    } catch (error) {
+      Analytics.logEvent(AnalyticsEvent.GATHER_CREDENTIALS_FAIL, {
+        ...builder.ctx.trackingCtx,
+        reason: error.message,
+      });
+      throw error;
+    }
     if (!builder.ctx.commandCtx.skipProjectConfiguration) {
-      await builder.ensureProjectConfiguredAsync();
+      try {
+        await builder.ensureProjectConfiguredAsync();
+        Analytics.logEvent(
+          AnalyticsEvent.CONFIGURE_PROJECT_SUCCESS,
+          builder.ctx.trackingCtx.properties
+        );
+      } catch (error) {
+        Analytics.logEvent(AnalyticsEvent.CONFIGURE_PROJECT_FAIL, {
+          ...builder.ctx.trackingCtx,
+          reason: error.message,
+        });
+        throw error;
+      }
     }
 
-    const fileSize = await makeProjectTarballAsync(tarPath);
+    let archiveUrl;
+    try {
+      const fileSize = await makeProjectTarballAsync(tarPath);
 
-    log('Uploading project to AWS S3');
-    const archiveUrl = await uploadAsync(
-      UploadType.TURTLE_PROJECT_SOURCES,
-      tarPath,
-      createProgressTracker(fileSize)
-    );
+      log('Uploading project to AWS S3');
+      archiveUrl = await uploadAsync(
+        UploadType.TURTLE_PROJECT_SOURCES,
+        tarPath,
+        createProgressTracker(fileSize)
+      );
+      Analytics.logEvent(AnalyticsEvent.PROJECT_UPLOAD_SUCCESS, builder.ctx.trackingCtx.properties);
+    } catch (error) {
+      Analytics.logEvent(AnalyticsEvent.PROJECT_UPLOAD_FAIL, {
+        ...builder.ctx.trackingCtx,
+        reason: error.message,
+      });
+      throw error;
+    }
 
-    const metadata = await collectMetadata(builder.ctx.commandCtx, {
-      buildProfile: builder.ctx.buildProfile,
+    const metadata = await collectMetadata(builder.ctx, {
       credentialsSource,
     });
     const job = await builder.prepareJobAsync(archiveUrl);
     log(`Starting ${platformDisplayNames[job.platform]} build`);
-    const { buildId } = await client.postAsync(`projects/${projectId}/builds`, {
-      job: job as any,
-      metadata,
-    });
-    return buildId;
+
+    try {
+      const { buildId } = await client.postAsync(`projects/${projectId}/builds`, {
+        job,
+        metadata,
+      } as any);
+      Analytics.logEvent(AnalyticsEvent.BUILD_REQUEST_SUCCESS, builder.ctx.trackingCtx.properties);
+      return buildId;
+    } catch (error) {
+      Analytics.logEvent(AnalyticsEvent.BUILD_REQUEST_FAIL, {
+        ...builder.ctx.trackingCtx,
+        reason: error.message,
+      });
+      throw error;
+    }
   } finally {
     await fs.remove(tarPath);
   }

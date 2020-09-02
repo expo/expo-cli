@@ -1,10 +1,5 @@
-import {
-  AndroidBuildProfile,
-  CredentialsSource,
-  Workflow,
-  iOSBuildProfile,
-} from '../../../easJson';
-import { CommandContext } from '../types';
+import { CredentialsSource, Workflow } from '../../../easJson';
+import { BuilderContext, Platform, TrackingContext } from '../types';
 
 /**
  * We use require() to exclude package.json from TypeScript's analysis since it lives outside
@@ -48,24 +43,29 @@ export type BuildMetadata = {
    * It's undefined if the expo-updates package is not installed for the project.
    */
   releaseChannel?: string;
+
+  /**
+   * Tracking context
+   * It's used to track build process across different Expo services and tools.
+   */
+  trackingCtx: TrackingContext;
 };
 
-async function collectMetadata<T extends AndroidBuildProfile | iOSBuildProfile>(
-  commandCtx: CommandContext,
+async function collectMetadata<T extends Platform>(
+  ctx: BuilderContext<T>,
   {
     credentialsSource,
-    buildProfile,
   }: {
     credentialsSource?: CredentialsSource.LOCAL | CredentialsSource.REMOTE;
-    buildProfile: T;
   }
 ): Promise<BuildMetadata> {
   return {
-    appVersion: commandCtx.exp.version,
+    appVersion: ctx.commandCtx.exp.version,
     cliVersion: packageJSON.version,
-    workflow: buildProfile.workflow,
+    workflow: ctx.buildProfile.workflow,
     credentialsSource,
-    sdkVersion: commandCtx.exp.sdkVersion,
+    sdkVersion: ctx.commandCtx.exp.sdkVersion,
+    trackingCtx: ctx.trackingCtx,
   };
 }
 
