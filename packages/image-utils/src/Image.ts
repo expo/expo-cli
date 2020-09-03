@@ -187,22 +187,27 @@ export async function generateFaviconAsync(
  * @param x pixel offset from the left edge, defaults to 0.
  * @param y pixel offset from the top edge, defaults to 0.
  */
-export async function compositeImagesAsync(
-  foregroundImageBuffer: Buffer,
-  backgroundImageBuffer: Buffer,
-  x: number = 0,
-  y: number = 0
-): Promise<Buffer> {
+export async function compositeImagesAsync({
+  foreground,
+  background,
+  x = 0,
+  y = 0,
+}: {
+  foreground: Buffer;
+  background: Buffer;
+  x?: number;
+  y?: number;
+}): Promise<Buffer> {
   const sharp: any = await getSharpAsync();
   if (!sharp) {
-    const image = (await Jimp.getJimpImageAsync(backgroundImageBuffer)).composite(
-      await Jimp.getJimpImageAsync(foregroundImageBuffer),
+    const image = (await Jimp.getJimpImageAsync(background)).composite(
+      await Jimp.getJimpImageAsync(foreground),
       x,
       y
     );
     return await image.getBufferAsync(image.getMIME());
   }
-  return await sharp(backgroundImageBuffer)
-    .composite([{ input: foregroundImageBuffer, left: x, top: y }])
+  return await sharp(background)
+    .composite([{ input: foreground, left: x, top: y }])
     .toBuffer();
 }

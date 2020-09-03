@@ -18,7 +18,7 @@ jest.mock('@expo/image-utils', () => ({
     const fs = require('fs');
     return { source: fs.readFileSync(src) };
   },
-  compositeImagesAsync(foreground, background) {
+  compositeImagesAsync({ foreground }) {
     return foreground;
   },
 }));

@@ -129,8 +129,14 @@ async function configureLegacyIconAsync(
               }
             )
           ).source;
-          squareIconImage = await compositeImagesAsync(squareIconImage, squareBackgroundLayer);
-          roundIconImage = await compositeImagesAsync(roundIconImage, roundBackgroundLayer);
+          squareIconImage = await compositeImagesAsync({
+            foreground: squareIconImage,
+            background: squareBackgroundLayer,
+          });
+          roundIconImage = await compositeImagesAsync({
+            foreground: roundIconImage,
+            background: roundBackgroundLayer,
+          });
         }
 
         await fs.ensureDir(dpiFolderPath);
