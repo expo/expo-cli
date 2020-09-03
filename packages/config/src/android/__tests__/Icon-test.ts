@@ -55,7 +55,7 @@ describe('Android Icon', () => {
     expect(getIcon({} as ExpoConfig)).toBeNull();
     expect(getAdaptiveIcon({} as ExpoConfig)).toMatchObject({
       foregroundImage: null,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: null,
       backgroundImage: null,
     });
   });

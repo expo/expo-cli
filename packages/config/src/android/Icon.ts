@@ -33,7 +33,7 @@ export function getIcon(config: ExpoConfig) {
 export function getAdaptiveIcon(config: ExpoConfig) {
   return {
     foregroundImage: config.android?.adaptiveIcon?.foregroundImage ?? null,
-    backgroundColor: config.android?.adaptiveIcon?.backgroundColor ?? '#FFFFFF',
+    backgroundColor: config.android?.adaptiveIcon?.backgroundColor ?? null,
     backgroundImage: config.android?.adaptiveIcon?.backgroundImage ?? null,
   };
 }
@@ -75,6 +75,9 @@ async function configureLegacyIconAsync(
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
       const iconSizePx = BASELINE_PIXEL_SIZE * scale;
 
+      // backgroundImage overrides backgroundColor
+      backgroundColor = backgroundImage ? 'transparent' : backgroundColor ?? 'transparent';
+
       try {
         let squareIconImage: Buffer = (
           await generateImageAsync(
@@ -84,7 +87,7 @@ async function configureLegacyIconAsync(
               width: iconSizePx,
               height: iconSizePx,
               resizeMode: 'cover',
-              backgroundColor: backgroundColor ?? 'transparent',
+              backgroundColor,
             }
           )
         ).source;
@@ -96,7 +99,7 @@ async function configureLegacyIconAsync(
               width: iconSizePx,
               height: iconSizePx,
               resizeMode: 'cover',
-              backgroundColor: backgroundColor ?? 'transparent',
+              backgroundColor,
               borderRadius: iconSizePx / 2,
             }
           )
@@ -112,7 +115,7 @@ async function configureLegacyIconAsync(
                 width: iconSizePx,
                 height: iconSizePx,
                 resizeMode: 'cover',
-                backgroundColor: backgroundColor ?? 'transparent',
+                backgroundColor: 'transparent',
               }
             )
           ).source;
@@ -124,7 +127,7 @@ async function configureLegacyIconAsync(
                 width: iconSizePx,
                 height: iconSizePx,
                 resizeMode: 'cover',
-                backgroundColor: backgroundColor ?? 'transparent',
+                backgroundColor: 'transparent',
                 borderRadius: iconSizePx / 2,
               }
             )
@@ -161,9 +164,7 @@ export async function configureAdaptiveIconAsync(
   backgroundImage: string | null,
   backgroundColor: string | null
 ) {
-  if (backgroundColor) {
-    await setBackgroundColorAsync(projectRoot, backgroundColor);
-  }
+  await setBackgroundColorAsync(projectRoot, backgroundColor ?? '#FFFFFF');
 
   Promise.all(
     Object.values(dpiValues).map(async ({ folderName, scale }) => {
