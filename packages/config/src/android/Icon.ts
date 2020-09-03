@@ -53,7 +53,12 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
 
   await configureLegacyIconAsync(projectRoot, icon, backgroundImage, backgroundColor);
 
-  await configureAdaptiveIconAsync(projectRoot, icon, backgroundImage, backgroundColor);
+  await configureAdaptiveIconAsync(
+    projectRoot,
+    icon,
+    backgroundImage,
+    backgroundColor ?? '#FFFFFF'
+  );
 
   return true;
 }
@@ -162,9 +167,9 @@ export async function configureAdaptiveIconAsync(
   projectRoot: string,
   foregroundImage: string,
   backgroundImage: string | null,
-  backgroundColor: string | null
+  backgroundColor: string
 ) {
-  await setBackgroundColorAsync(projectRoot, backgroundColor ?? '#FFFFFF');
+  await setBackgroundColorAsync(projectRoot, backgroundColor);
 
   Promise.all(
     Object.values(dpiValues).map(async ({ folderName, scale }) => {
@@ -217,10 +222,7 @@ export async function configureAdaptiveIconAsync(
   );
 
   // create ic_launcher.xml and ic_launcher_round.xml
-  const icLauncherXmlString = createAdaptiveIconXmlString(
-    backgroundImage ? '' : backgroundColor,
-    backgroundImage
-  );
+  const icLauncherXmlString = createAdaptiveIconXmlString(backgroundImage);
   await createAdaptiveIconXmlFiles(projectRoot, icLauncherXmlString);
 }
 
@@ -243,21 +245,15 @@ async function setBackgroundColorAsync(projectRoot: string, backgroundColor: str
   await Colors.writeColorsXMLAsync(colorsXmlPath, colorsJson);
 }
 
-export const createAdaptiveIconXmlString = (
-  backgroundColor: string | null,
-  backgroundImage: string | null
-) => {
-  let icon: string | null = null;
-
+export const createAdaptiveIconXmlString = (backgroundImage: string | null) => {
+  let background = `<background android:drawable="@color/iconBackground"/>`;
   if (backgroundImage) {
-    icon = `<background android:drawable="@mipmap/ic_launcher_background"/>`;
-  } else if (backgroundColor) {
-    icon = `<background android:drawable="@color/iconBackground"/>`;
+    background = `<background android:drawable="@mipmap/ic_launcher_background"/>`;
   }
 
   return `<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    ${icon}
+    ${background}
     <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
 </adaptive-icon>`;
 };
