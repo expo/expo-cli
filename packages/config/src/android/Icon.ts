@@ -133,7 +133,7 @@ async function configureLegacyIconAsync(
           roundIconImage = await compositeImagesAsync(roundIconImage, roundBackgroundLayer);
         }
 
-        await fs.mkdirp(dpiFolderPath);
+        await fs.ensureDir(dpiFolderPath);
         await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_PNG), squareIconImage);
         await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG), roundIconImage);
       } catch (e) {
@@ -239,21 +239,25 @@ async function setBackgroundColorAsync(projectRoot: string, backgroundColor: str
 export const createAdaptiveIconXmlString = (
   backgroundColor: string | null,
   backgroundImage: string | null
-) => `<?xml version="1.0" encoding="utf-8"?>
+) => {
+  let icon: string | null = null;
+
+  if (backgroundImage) {
+    icon = `<background android:drawable="@mipmap/ic_launcher_background"/>`;
+  } else if (backgroundColor) {
+    icon = `<background android:drawable="@color/iconBackground"/>`;
+  }
+
+  return `<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    ${
-      backgroundImage
-        ? `<background android:drawable="@mipmap/ic_launcher_background"/>`
-        : backgroundColor
-        ? `<background android:drawable="@color/iconBackground"/>`
-        : null
-    }
+    ${icon}
     <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
 </adaptive-icon>`;
+};
 
 async function createAdaptiveIconXmlFiles(projectRoot: string, icLauncherXmlString: string) {
   const anyDpiV26Directory = path.resolve(projectRoot, ANDROID_RES_PATH, MIPMAP_ANYDPI_V26);
-  await fs.mkdirp(anyDpiV26Directory);
+  await fs.ensureDir(anyDpiV26Directory);
   await fs.writeFile(path.resolve(anyDpiV26Directory, IC_LAUNCHER_XML), icLauncherXmlString);
   await fs.writeFile(path.resolve(anyDpiV26Directory, IC_LAUNCHER_ROUND_XML), icLauncherXmlString);
 }
