@@ -60,3 +60,16 @@ export function setStringItem(itemToAdd: XMLItem[], stringFileContentsJSON: Docu
   }
   return stringFileContentsJSON;
 }
+
+export function removeStringItem(named: string, stringFileContentsJSON: Document) {
+  if (stringFileContentsJSON.resources.string) {
+    const stringNameExists = stringFileContentsJSON.resources.string.findIndex(
+      (e: XMLItem) => e['$'].name === named
+    );
+    if (stringNameExists > -1) {
+      // replace the previous value
+      stringFileContentsJSON.resources.string.splice(stringNameExists, 1);
+    }
+  }
+  return stringFileContentsJSON;
+}
