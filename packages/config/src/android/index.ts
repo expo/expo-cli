@@ -9,6 +9,7 @@ import * as GoogleServices from './GoogleServices';
 import * as Icon from './Icon';
 import * as IntentFilters from './IntentFilters';
 import * as Manifest from './Manifest';
+import * as Name from './Name';
 import * as NavigationBar from './NavigationBar';
 import * as Orientation from './Orientation';
 import * as Package from './Package';
@@ -35,6 +36,7 @@ export {
   GoogleServices,
   Icon,
   IntentFilters,
+  Name,
   NavigationBar,
   Orientation,
   Package,
