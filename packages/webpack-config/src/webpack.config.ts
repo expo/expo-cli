@@ -250,6 +250,7 @@ export default async function (
       from: locations.template.folder,
       to: locations.production.folder,
       toType: 'dir',
+      noErrorOnMissing: true,
       globOptions: {
         dot: true,
         // We generate new versions of these based on the templates
