@@ -13,7 +13,7 @@ async function run(): Promise<void> {
   try {
     const projectDir = process.argv[2];
     if (!projectDir) {
-      throw new Error('No project dir specified.\nUsage: yarn dev <project-dir>');
+      throw new Error('No project dir specified.\nUsage: yarn dev [path]');
     }
 
     const app: any = next({ dev: true });

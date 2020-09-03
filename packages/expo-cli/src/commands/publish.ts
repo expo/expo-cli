@@ -72,13 +72,11 @@ export async function action(
 
   // Build and publish the project.
 
-  log(`Building optimized bundle`);
+  log(`Building optimized bundles and generating sourcemaps...`);
 
   if (options.quiet) {
     simpleSpinner.start();
   }
-
-  log.newLine();
 
   const result = await Project.publishAsync(projectDir, {
     releaseChannel: options.releaseChannel,
@@ -101,10 +99,13 @@ export async function action(
     // TODO: replace with websiteUrl from server when it is available, if that makes sense.
     const websiteUrl = url.replace('exp.host', 'expo.io');
 
+    // note(brentvatne): disable copy to clipboard functionality for now, need to think more about
+    // whether this is desirable.
+    //
     // Attempt to copy the URL to the clipboard, if it succeeds then append a notice to the log.
-    const copiedToClipboard = copyToClipboard(url);
+    // const copiedToClipboard = copyToClipboard(websiteUrl);
 
-    logProjectPageUrl({ url: websiteUrl, copiedToClipboard });
+    logProjectPageUrl({ url: websiteUrl, copiedToClipboard: false });
 
     // Only send the link for managed projects.
     const recipient = await sendTo.getRecipient(options.sendTo);
@@ -267,7 +268,7 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
   log.nestedWarn(
     formatNamedWarning(
       'Optimization',
-      `Project may contain suboptimal images. Optimized images can improve app performance and startup time.\n  To fix this, run ${chalk.bold(
+      `Project may contain uncompressed images. Optimizing image assets can improve app size and performance.\n  To fix this, run ${chalk.bold(
         `npx expo-optimize`
       )}`,
       'https://docs.expo.io/distribution/optimizing-updates/#optimize-images'
@@ -308,11 +309,12 @@ export function logBareWorkflowWarnings(pkg: PackageJSONConfig) {
   );
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('publish [project-dir]')
+    .command('publish [path]')
     .alias('p')
-    .description('Publishes your project to exp.host')
+    .description('Deploy a project to Expo hosting')
+    .helpGroup('core')
     .option('-q, --quiet', 'Suppress verbose output from the Metro bundler.')
     .option('-s, --send-to [dest]', 'A phone number or email address to send a link to')
     .option('-c, --clear', 'Clear the Metro bundler cache')

@@ -15,8 +15,9 @@ export default function (program: Command) {
   if (hasEasJson || process.argv[2] !== '--help') {
     // We don't want to show this in the help output for now
     program
-      .command('eas:build:init [project-dir]')
-      .description('Initialize build configuration for your project.')
+      .command('eas:build:init [path]')
+      .description('Initialize build configuration for the project')
+      .helpGroup('eas')
       .option('--skip-credentials-check', 'Skip checking credentials', false)
       .asyncActionProjectDir(initAction, { checkConfig: true });
   }
@@ -26,16 +27,18 @@ export default function (program: Command) {
   }
 
   program
-    .command('eas:credentials:sync [project-dir]')
+    .command('eas:credentials:sync [path]')
     .description('Update credentials.json with credentials stored on Expo servers')
+    .helpGroup('eas')
     .asyncActionProjectDir(credentialsSyncAction, {
       checkConfig: true,
       skipSDKVersionRequirement: true,
     });
 
   program
-    .command('eas:build [project-dir]')
-    .description('Build an app binary for your project.')
+    .command('eas:build [path]')
+    .description('Build an app binary for the project')
+    .helpGroup('eas')
     .option(
       '-p --platform <platform>',
       'Build for the specified platform: ios, android, all',
@@ -48,8 +51,9 @@ export default function (program: Command) {
     .asyncActionProjectDir(buildAction, { checkConfig: true, skipSDKVersionRequirement: true });
 
   program
-    .command('eas:build:status [project-dir]')
-    .description('Get the status of the latest builds for your project.')
+    .command('eas:build:status [path]')
+    .description('Log the status of the latest builds for the project')
+    .helpGroup('eas')
     .option(
       '-p --platform <platform>',
       'Get builds for specified platform: ios, android, all',

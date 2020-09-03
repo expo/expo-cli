@@ -174,6 +174,7 @@ async function startWebAction(projectDir: string, options: NormalizedOptions): P
 async function action(projectDir: string, options: NormalizedOptions): Promise<void> {
   const { exp, pkg, rootPath } = await configureProjectAsync(projectDir, options);
 
+  // TODO: only validate dependencies if starting in managed workflow
   await validateDependenciesVersions(projectDir, exp, pkg);
 
   const startOpts = parseStartOptions(options);
@@ -326,9 +327,10 @@ async function configureProjectAsync(
 
 export default (program: any) => {
   program
-    .command('start [project-dir]')
+    .command('start [path]')
     .alias('r')
-    .description('Starts or restarts a local server for your app and gives you a URL to it')
+    .description('Start a local dev server for the app')
+    .helpGroup('core')
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .option('-c, --clear', 'Clear the Metro bundler cache')
     .option(
@@ -356,9 +358,10 @@ export default (program: any) => {
     );
 
   program
-    .command('start:web [project-dir]')
+    .command('start:web [path]')
     .alias('web')
-    .description('Starts the Webpack dev server for web projects')
+    .description('Start a Webpack dev server for the web app')
+    .helpGroup('core')
     .option('--dev', 'Turn development mode on')
     .option('--no-dev', 'Turn development mode off')
     .option('--minify', 'Minify code')

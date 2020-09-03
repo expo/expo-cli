@@ -37,6 +37,7 @@ import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import slug from 'slugify';
 import split from 'split';
+import terminalLink from 'terminal-link';
 import treekill from 'tree-kill';
 import { URL } from 'url';
 import urljoin from 'url-join';
@@ -413,17 +414,11 @@ export async function exportForAppHosting(
   const iosBundle = bundles.ios.code;
   const androidBundle = bundles.android.code;
 
-  const iosBundleHash = crypto
-    .createHash('md5')
-    .update(iosBundle)
-    .digest('hex');
+  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto
-    .createHash('md5')
-    .update(androidBundle)
-    .digest('hex');
+  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 
@@ -694,6 +689,14 @@ export async function publishAsync(
 
   logger.global.info('');
   logger.global.info(TableText.createFilesTable(files));
+  logger.global.info('');
+  logger.global.info(
+    terminalLink(
+      'Learn more about JavaScript bundle sizes.',
+      `https://expo.fyi/javascript-bundle-sizes`,
+      { fallback: (text, url) => `${text}: ${url}` }
+    )
+  );
   logger.global.info('');
 
   await publishAssetsAsync({ projectRoot, exp, bundles });
@@ -1500,7 +1503,13 @@ export async function startReactNativeServerAsync(
         exp
       );
     } catch (e) {
-      packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+      try {
+        packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+      } catch (e) {
+        throw new Error(
+          'Unable to find the expo-asset package in the current project. Install it and try again.'
+        );
+      }
     }
   }
 

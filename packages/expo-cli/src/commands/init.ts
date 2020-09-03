@@ -81,7 +81,6 @@ async function action(projectDir: string, command: Command) {
 
   let parentDir;
   let dirName;
-
   if (projectDir) {
     const root = path.resolve(projectDir);
     parentDir = path.dirname(root);
@@ -90,7 +89,7 @@ async function action(projectDir: string, command: Command) {
     if (validationResult !== true) {
       throw new CommandError('INVALID_PROJECT_DIR', validationResult);
     }
-  } else if (command.parent && command.parent.nonInteractive) {
+  } else if (command.parent?.nonInteractive) {
     throw new CommandError(
       'NON_INTERACTIVE',
       'The project dir argument is required in non-interactive mode.'
@@ -562,11 +561,10 @@ async function promptForManagedConfig(
 
 export default function (program: Command) {
   program
-    .command('init [project-dir]')
+    .command('init [path]')
     .alias('i')
-    .description(
-      'Initializes a directory with an example project. Run it without any options and you will be prompted for the name and type.'
-    )
+    .helpGroup('core')
+    .description('Create a new Expo project')
     .option(
       '-t, --template [name]',
       'Specify which template to use. Valid options are "blank", "tabs", "bare-minimum" or a package on npm (e.g. "expo-template-bare-typescript") that includes an Expo project template.'

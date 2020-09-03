@@ -21,11 +21,13 @@ import boxen from 'boxen';
 import chalk from 'chalk';
 import program, { Command, Option } from 'commander';
 import fs from 'fs';
+import getenv from 'getenv';
 import leven from 'leven';
 import findLastIndex from 'lodash/findLastIndex';
 import ora from 'ora';
 import path from 'path';
 import ProgressBar from 'progress';
+import stripAnsi from 'strip-ansi';
 import url from 'url';
 
 import { loginOrRegisterAsync } from './accounts';
@@ -44,25 +46,246 @@ ApiV2.setClientName(packageJSON.version);
 
 // The following prototyped functions are not used here, but within in each file found in `./commands`
 // Extending commander to easily add more options to certain command line arguments
-Command.prototype.urlOpts = function() {
+Command.prototype.urlOpts = function () {
   urlOpts.addOptions(this);
   return this;
 };
 
-Command.prototype.allowOffline = function() {
+Command.prototype.allowOffline = function () {
   this.option('--offline', 'Allows this command to run while offline');
   return this;
 };
 
+// Add support for logical command groupings
+Command.prototype.helpGroup = function (name: string) {
+  if (this.commands[this.commands.length - 1]) {
+    this.commands[this.commands.length - 1].__helpGroup = name;
+  } else {
+    this.parent.helpGroup(name);
+  }
+  return this;
+};
+
+// A longer description that will be displayed then the command is used with --help
+Command.prototype.longDescription = function (name: string) {
+  if (this.commands[this.commands.length - 1]) {
+    this.commands[this.commands.length - 1].__longDescription = name;
+  } else {
+    this.parent.longDescription(name);
+  }
+  return this;
+};
+
+function pad(str: string, width: number): string {
+  // Pulled from commander for overriding
+  const len = Math.max(0, width - stripAnsi(str).length);
+  return str + Array(len + 1).join(' ');
+}
+
+function humanReadableArgName(arg: any): string {
+  // Pulled from commander for overriding
+  const nameOutput = arg.name + (arg.variadic === true ? '...' : '');
+  return arg.required ? `<${nameOutput}>` : `[${nameOutput}]`;
+}
+
+function breakSentence(input: string): string {
+  // Break a sentence by the word after a max character count
+  return input.replace(/(.{1,72})(?:\n|$| )/g, '$1\n').trim();
+}
+
+Command.prototype.prepareCommands = function () {
+  return this.commands
+    .filter(function (cmd: Command) {
+      // Display all commands with EXPO_DEBUG, otherwise use the noHelp option.
+      if (getenv.boolish('EXPO_DEBUG', false)) {
+        return true;
+      }
+      return cmd.__helpGroup !== 'internal';
+    })
+    .map(function (cmd: Command, i: number) {
+      const args = cmd._args.map(humanReadableArgName).join(' ');
+
+      // Remove alias. We still show this with --help on the command.
+      const alias = null; //cmd._alias;
+
+      const description = cmd._description;
+      return [
+        cmd._name +
+          (alias ? '|' + alias : '') +
+          // Remove the redundant [options] string that's shown after every command.
+          // (cmd.options.length ? ' [options]' : '') +
+          (args ? ' ' + args : ''),
+        breakSentence(description),
+        cmd.__helpGroup ?? 'misc',
+      ];
+    });
+};
+
+Command.prototype.helpInformation = function () {
+  let desc: string[] = [];
+  // Use the long description if available, otherwise use the regular description.
+  const description = this.__longDescription ?? this._description;
+  if (description) {
+    desc = [replaceAll(breakSentence(description), '\n', pad('\n', 3)), ''];
+
+    const argsDescription = this._argsDescription;
+    if (argsDescription && this._args.length) {
+      const width = this.padWidth();
+      desc.push('Arguments:');
+      desc.push('');
+      this._args.forEach(({ name }: { name: string }) => {
+        desc.push('  ' + pad(name, width) + '  ' + argsDescription[name]);
+      });
+      desc.push('');
+    }
+  }
+
+  let cmdName = this._name;
+  if (this._alias) {
+    // Here is the only place we show the command alias
+    cmdName = `${cmdName}|${this._alias}`;
+  }
+
+  // Dim the options to keep things consistent.
+  const usage = `${chalk.bold`Usage:`} ${cmdName} ${chalk.dim(this.usage())}\n`;
+
+  const commandHelp = '' + this.commandHelp();
+
+  const options = [chalk.bold`Options:`, '\n' + this.optionHelp().replace(/^/gm, '    '), ''];
+
+  // return ['', usage, ...desc, ...options, commandHelp].join('\n') + '\n';
+  return ['', usage, ...desc, ...options, commandHelp].join(pad('\n', 3)) + '\n';
+};
+
+function replaceAll(string: string, search: string, replace: string): string {
+  return string.split(search).join(replace);
+}
+
+// Extended the help renderer to add a custom format and groupings.
+Command.prototype.commandHelp = function () {
+  if (!this.commands.length) {
+    return '';
+  }
+  const width: number = this.padWidth();
+  const commands: string[][] = this.prepareCommands();
+
+  const helpGroups: Record<string, string[][]> = {};
+
+  // Sort commands into helpGroups
+  for (const command of commands) {
+    const groupName = command[2];
+    if (!helpGroups[groupName]) {
+      helpGroups[groupName] = [];
+    }
+    helpGroups[groupName].push(command);
+  }
+
+  const groupOrder = [
+    ...new Set([
+      'auth',
+      'core',
+      'client',
+      'info',
+      'publish',
+      'build',
+      'credentials',
+      'eas',
+      'notifications',
+      'url',
+      'webhooks',
+      'upload',
+      'eject',
+      'experimental',
+      'internal',
+      // add any others and remove duplicates
+      ...Object.keys(helpGroups),
+    ]),
+  ];
+
+  const subGroupOrder: Record<string, string[]> = {
+    core: ['init', 'start', 'start:web', 'publish', 'export'],
+    eas: ['eas:credentials'],
+  };
+
+  const sortSubGroupWithOrder = (groupName: string, group: string[][]): string[][] => {
+    const order: string[] = subGroupOrder[groupName];
+    if (!order?.length) {
+      return group;
+    }
+
+    const sortedCommands: string[][] = [];
+
+    while (order.length) {
+      const key = order.shift()!;
+      const index = group.findIndex(item => item[0].startsWith(key));
+      if (index >= 0) {
+        const [item] = group.splice(index, 1);
+        sortedCommands.push(item);
+      }
+    }
+
+    return sortedCommands.concat(group);
+  };
+
+  // Reverse the groups
+  const sortedGroups: Record<string, string[][]> = {};
+  while (groupOrder.length) {
+    const group = groupOrder.shift()!;
+    if (group in helpGroups) {
+      sortedGroups[group] = helpGroups[group];
+    }
+  }
+
+  // Render everything.
+  return [
+    '' + chalk.bold('Commands:'),
+    '',
+    // Render all of the groups.
+    Object.keys(sortedGroups)
+      .map(groupName => {
+        // Sort subgroups that have a defined order
+        const group = sortSubGroupWithOrder(groupName, helpGroups[groupName]);
+        return (
+          group
+            // Render the command and description
+            .map(([cmd, description]: string[]) => {
+              // Dim the arguments that come after the command, this makes scanning a bit easier.
+              let [noArgsCmd, ...noArgsCmdArgs] = cmd.split(' ');
+              if (noArgsCmdArgs.length) {
+                noArgsCmd += ` ${chalk.dim(noArgsCmdArgs.join(' '))}`;
+              }
+
+              // Word wrap the description.
+              let wrappedDescription = description;
+              if (description) {
+                // Ensure the wrapped description appears on the same padded line.
+                wrappedDescription = '  ' + replaceAll(description, '\n', pad('\n', width + 3));
+              }
+
+              const paddedName = wrappedDescription ? pad(noArgsCmd, width) : noArgsCmd;
+              return paddedName + wrappedDescription;
+            })
+            .join('\n')
+            .replace(/^/gm, '    ')
+        );
+      })
+      // Double new line to add spacing between groups
+      .join('\n\n'),
+    '',
+  ].join('\n');
+};
+
 program.on('--help', () => {
-  log(`To learn more about a specific command and its options use 'expo [command] --help'\n`);
+  log(`  Run a command with --help for more info 💡`);
+  log(`    $ expo start --help`);
+  log();
 });
 
 export type Action = (...args: any[]) => void;
 
 // asyncAction is a wrapper for all commands/actions to be executed after commander is done
 // parsing the command input
-Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boolean) {
+Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: boolean) {
   return this.action(async (...args: any[]) => {
     if (!skipUpdateCheck) {
       try {
@@ -108,7 +331,7 @@ Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boole
 // - Attaches the bundling logger
 // - Checks if the project directory is valid or not
 // - Runs AsyncAction with the projectDir as an argument
-Command.prototype.asyncActionProjectDir = function(
+Command.prototype.asyncActionProjectDir = function (
   asyncFn: Action,
   options: { checkConfig?: boolean; skipSDKVersionRequirement?: boolean } = {}
 ) {
@@ -258,8 +481,9 @@ Command.prototype.asyncActionProjectDir = function(
           } else {
             log(
               chalk.green(
-                `Finished building JavaScript bundle in ${endTime.getTime() -
-                  startTime.getTime()}ms.`
+                `Finished building JavaScript bundle in ${
+                  endTime.getTime() - startTime.getTime()
+                }ms.`
               )
             );
           }
@@ -347,10 +571,7 @@ function runAsync(programName: string) {
     program.name(programName);
     program
       .version(packageJSON.version)
-      .option(
-        '--non-interactive',
-        'Fail, if an interactive prompt would be required to continue. Enabled by default if stdin is not a TTY.'
-      );
+      .option('--non-interactive', 'Fail, if an interactive prompt would be required to continue.');
 
     // Load each module found in ./commands by 'registering' it with our commander instance
     registerCommands(program);
@@ -547,7 +768,7 @@ function formatCommandsAsMarkdown(commands: CommandData[]) {
 
 // This is the entry point of the CLI
 export function run(programName: string) {
-  (async function() {
+  (async function () {
     if (process.argv[2] === 'introspect') {
       const commands = generateCommandJSON();
       if (process.argv[3] && process.argv[3].includes('markdown')) {

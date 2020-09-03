@@ -1,12 +1,13 @@
 import { getConfig } from '@expo/config';
 import { User, UserManager } from '@expo/xdl';
 
-import { BuildCommandPlatform, CommandContext } from '../types';
+import { BuildCommandPlatform, CommandContext, TrackingContext } from '../types';
 
 export default async function createCommandContextAsync({
   requestedPlatform,
   profile,
   projectDir,
+  trackingCtx,
   nonInteractive = false,
   skipCredentialsCheck = false,
   skipProjectConfiguration = false,
@@ -14,6 +15,7 @@ export default async function createCommandContextAsync({
   requestedPlatform: BuildCommandPlatform;
   profile: string;
   projectDir: string;
+  trackingCtx: TrackingContext;
   nonInteractive?: boolean;
   skipCredentialsCheck?: boolean;
   skipProjectConfiguration?: boolean;
@@ -31,6 +33,7 @@ export default async function createCommandContextAsync({
     accountName,
     projectName,
     exp,
+    trackingCtx,
     nonInteractive,
     skipCredentialsCheck,
     skipProjectConfiguration,

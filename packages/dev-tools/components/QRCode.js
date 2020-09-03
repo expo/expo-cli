@@ -6,7 +6,7 @@ import { css } from 'react-emotion';
 const PADDING = 8;
 
 const STYLES_CONTAINER = css`
-  background: ${Constants.colors.white};
+  background: #eee;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   display: inline-block;
   width: ${Constants.breakpoints.sidebar - 2 * 16}px;
@@ -34,7 +34,7 @@ export default class QRCode extends React.Component {
     return (
       <div className={STYLES_CONTAINER}>
         {/* TODO: size should be a number not a string */}
-        <QRCodeReact renderAs="svg" size="100%" value={this.props.url} />
+        {this.props.url ? <QRCodeReact renderAs="svg" size="100%" value={this.props.url} /> : null}
       </div>
     );
   }

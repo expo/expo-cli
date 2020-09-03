@@ -6,25 +6,77 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+## [Wed, 2 Sep 2020 11:12:02 -0700](https://github.com/expo/expo-cli/commit/c97aba21376324b2131bb5058d193aab5ceb77f4)
+
+### 🎉 New features
+
+- [expo-cli] EAS Build - track build process with Segment ([#2555](https://github.com/expo/expo-cli/issues/2555))
+
+### 🐛 Bug fixes
+
+- [cli] Fix requested sdk in upgrade command ([#2557](https://github.com/expo/expo-cli/issues/2557))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.38
+- expo-cli@3.26.1
+- @expo/xdl@57.9.35
+
+## [Tue, 1 Sep 2020 16:47:59 -0700](https://github.com/expo/expo-cli/commit/b4a945b6243f11555b5f1b37eba98289ca5f342b)
+
+### 🛠 Breaking changes
+
 - [expo-cli] remove `push:web:upload`, `push:web:generate`, `push:web:show`, `push:web:clear` ([#2531](https://github.com/expo/expo-cli/pull/2531) by [@EvanBacon](https://github.com/EvanBacon))
 
 ### 🎉 New features
 
+- [expo-cli] expo --help redesigned ([#2538](https://github.com/expo/expo-cli/pull/2538) by [@EvanBacon](https://github.com/EvanBacon))
 - [expo-cli] expo upload - support tar.gz files from builds v2 ([#2504](https://github.com/expo/expo-cli/pull/2504) by [@EvanBacon](https://github.com/EvanBacon))
 - [expo-cli] Implemented keychain storage for Apple ID ([#2508](https://github.com/expo/expo-cli/pull/2508) by [@EvanBacon](https://github.com/EvanBacon))
 - [expo-cli] expo publish - Clean up upload results logs ([#2516](https://github.com/expo/expo-cli/pull/2516) by [@EvanBacon](https://github.com/EvanBacon))
 - [expo-cli] expo eject - Added support for locales in eject and apply ([#2496](https://github.com/expo/expo-cli/pull/2496) by [@EvanBacon](https://github.com/EvanBacon))
 - [expo-cli] expo publish - Log bundles after building ([#2527](https://github.com/expo/expo-cli/pull/2527) by [@EvanBacon](https://github.com/EvanBacon))
+- [expo-cli] Improve warning logging on publish ([#2524](https://github.com/expo/expo-cli/issues/2524) by [@EvanBacon](https://github.com/EvanBacon))
+- [expo-cli] Add shift+i hotkey in interactive prompt to select iOS simulator to open ([#2541](https://github.com/expo/expo-cli/pull/2541) by [@EvanBacon](https://github.com/EvanBacon))
+- [expo-cli] Add shift+a hotkey in interactive prompt to select Android device/emulator to open ([#2550](https://github.com/expo/expo-cli/pull/2550) by [@EvanBacon](https://github.com/EvanBacon))
+- [expo-cli] Improve edge case handling when upgrading Expo client in iOS simulator ([#2541](https://github.com/expo/expo-cli/pull/2541) by [@EvanBacon](https://github.com/EvanBacon))
 - [expo-cli] expo eas:build - Add --skip-credentials-check option ([#2442](https://github.com/expo/expo-cli/pull/2442) by [@satya164](https://github.com/satya164))
 - [expo-cli] Add a `eas:build:init` command ([#2443](https://github.com/expo/expo-cli/pull/2443) by [@satya164](https://github.com/satya164))
+- [expo-cli] expo generate-module - Support for templates with Android native unit tests ([#2548](https://github.com/expo/expo-cli/pull/2548) by [@barthap](https://github.com/barthap))
+- [expo-cli] eas build: collect build metadata ([#2532](https://github.com/expo/expo-cli/issues/2532))
+- [xdl] Add support for passing app.json updates config to expo-updates in SDK 39 standalone apps ([#2539](https://github.com/expo/expo-cli/pull/2539) by [@esamelson](https://github.com/esamelson))
 
 ### 🐛 Bug fixes
 
+- [dev-server] Use minify in prod ([#2526](https://github.com/expo/expo-cli/issues/2526) by [@EvanBacon](https://github.com/EvanBacon))
+- [dev-tools] Fix layout shifting when url becomes available by rendering a placeholder for QR code ([c34397c41](https://github.com/expo/expo-cli/commit/c34397c41d2661a37235fa2a8b2dde027e1c5b87) by [@brentvatne](https://github.com/brentvatne))
+- [expo-cli] Eas build fix prompt for unsynced credentials ([#2546](https://github.com/expo/expo-cli/issues/2546) by [@wkozyra95](https://github.com/wkozyra95))
 - [expo-cli] expo upload:android - fix `--use-submission-service` not resulting in non-zero exit code when upload fails ([#2530](https://github.com/expo/expo-cli/pull/2530) by [@mymattcarroll](https://github.com/mymattcarroll))
 - [expo-cli] Fix `generate-module` to support latest `expo-module-template` ([#2510](https://github.com/expo/expo-cli/pull/2510) by [@barthap](https://github.com/barthap))
+- [expo-cli] Fix `generate-module` filename generation for modules without `expo-` prefix ([#2548](https://github.com/expo/expo-cli/pull/2548) by [@barthap](https://github.com/barthap))
 - [image-utils] Fix setting background color when calling `Jimp.resize` ([#2535](https://github.com/expo/expo-cli/pull/2535) by [@cruzach](https://github.com/cruzach))
+- [xdl] Remove undistributable code from root build.gradle ([#2547](https://github.com/expo/expo-cli/issues/2547) by [@sjchmiela](https://github.com/sjchmiela))
+- [xdl] Remove expo-image from SDK39 standalone apps ([#2533](https://github.com/expo/expo-cli/issues/2533) by [@sjchmiela](https://github.com/sjchmiela))
 
 ### 📦 Packages updated
+
+- @expo/config@3.2.22
+- @expo/dev-server@0.1.24
+- @expo/dev-tools@0.13.37
+- @expo/electron-adapter@0.0.15
+- expo-cli@3.26.0
+- expo-optimize@0.1.46
+- @expo/image-utils@0.3.4
+- @expo/metro-config@0.1.24
+- @expo/next-adapter@2.1.28
+- expo-pwa@0.0.34
+- uri-scheme@1.0.30
+- @expo/webpack-config@0.12.28
+- @expo/xdl@57.9.34
 
 ## [Thu Aug 27 10:25:29 2020 -0700](https://github.com/expo/expo-cli/commit/5f41c9306d9da10ab8a85e99659d9a039cf9e90b)
 

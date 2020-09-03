@@ -4,7 +4,9 @@ import path from 'path';
 
 import * as AssetBundle from './AssetBundle';
 import {
+  getBundleFileNameForSdkVersion,
   getManifestAsync,
+  getManifestFileNameForSdkVersion,
   manifestUsesSplashApi,
   parseSdkMajorVersion,
   saveUrlToPathAsync,
@@ -490,6 +492,13 @@ async function _configureShellPlistAsync(context: AnyStandaloneContext): Promise
       // enable/disable code push if the developer provided specific behavior
       shellPlist.areRemoteUpdatesEnabled = config.updates.enabled;
     }
+    if (config.updates?.hasOwnProperty('checkAutomatically')) {
+      shellPlist.updatesCheckAutomatically =
+        config.updates.checkAutomatically !== 'ON_ERROR_RECOVERY';
+    }
+    if (config.updates?.hasOwnProperty('fallbackToCacheTimeout')) {
+      shellPlist.updatesFallbackToCacheTimeout = config.updates.fallbackToCacheTimeout;
+    }
     if (!manifestUsesSplashApi(config, 'ios') && parseSdkMajorVersion(config.sdkVersion) < 28) {
       // for people still using the old loading api, hide the native splash screen.
       // we can remove this code eventually.
@@ -600,8 +609,8 @@ export async function configureAsync(context: AnyStandaloneContext): Promise<voi
       await _preloadManifestAndBundleAsync(
         context.data.manifest,
         supportingDirectory,
-        'shell-app-manifest.json',
-        'shell-app.bundle'
+        getManifestFileNameForSdkVersion(context.data.manifest.sdkVersion),
+        getBundleFileNameForSdkVersion(context.data.manifest.sdkVersion)
       );
     }
 
