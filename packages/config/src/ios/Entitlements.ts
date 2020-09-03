@@ -17,16 +17,36 @@ import {
 
 export function setICloudEntitlement(
   config: ExpoConfig,
-  _appleTeamId: string,
+  bundleIdentifier: string,
+  _appleTeamId: string | null,
   entitlementsPlist: any
 ) {
   if (config.ios?.usesIcloudStorage) {
-    // TODO: need access to the appleTeamId for this one!
-    addWarningIOS(
-      'ios.usesIcloudStorage',
-      'Enable the iCloud Storage Entitlement from the Capabilities tab in your Xcode project.'
-      // TODO: add a link to a docs page with more information on how to do this
-    );
+    if (!_appleTeamId) {
+      // TODO: need access to the appleTeamId for this one!
+      addWarningIOS(
+        'ios.usesIcloudStorage',
+        'Enable the iCloud Storage Entitlement from the Capabilities tab in your Xcode project.'
+        // TODO: add a link to a docs page with more information on how to do this
+      );
+      return entitlementsPlist;
+    }
+
+    return {
+      ...entitlementsPlist,
+      'com.apple.developer.icloud-services': ['CloudDocuments'],
+      'com.apple.developer.ubiquity-kvstore-identifier': `${_appleTeamId}.${bundleIdentifier}`,
+      'com.apple.developer.ubiquity-container-identifiers': [`iCloud.${bundleIdentifier}`],
+      'com.apple.developer.icloud-container-identifiers': [`iCloud.${bundleIdentifier}`],
+    };
+  } else if (config.ios?.usesIcloudStorage === false) {
+    // If the value if manually set to false then remove all of the keys.
+    delete entitlementsPlist['com.apple.developer.icloud-services'];
+    delete entitlementsPlist['com.apple.developer.ubiquity-kvstore-identifier'];
+    delete entitlementsPlist['com.apple.developer.ubiquity-container-identifiers'];
+    delete entitlementsPlist['com.apple.developer.icloud-container-identifiers'];
+
+    return entitlementsPlist;
   }
 
   return entitlementsPlist;

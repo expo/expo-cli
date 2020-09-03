@@ -47,7 +47,7 @@ async function modifyAsync(plistPath: string, plistName: string, transform: (con
   }
 
   // apply transformation
-  config = transform(config);
+  config = await transform(config);
 
   // back up old plist and swap in modified one
   fs.copyFileSync(configPlistName, `${configPlistName}.bak`);

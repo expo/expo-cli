@@ -3,6 +3,7 @@ import { getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
 import { IosPlist, UserManager } from '@expo/xdl';
 import path from 'path';
 
+import { authenticate } from '../../appleApi';
 import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
 
 export default async function configureIOSProjectAsync(projectRoot: string) {
@@ -43,11 +44,16 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   // TODO: fix this on Windows! We will ignore errors for now so people can just proceed
   try {
     // Configure entitlements/capabilities
-    await modifyEntitlementsPlistAsync(projectRoot, entitlementsPlist => {
+    await modifyEntitlementsPlistAsync(projectRoot, async entitlementsPlist => {
+      let appleTeamId: string | null = null;
+      if (exp.ios?.usesIcloudStorage) {
+        appleTeamId = (await authenticate()).team.id;
+      }
       // TODO: We don't have a mechanism for getting the apple team id here yet
       entitlementsPlist = IOSConfig.Entitlements.setICloudEntitlement(
         exp,
-        'TODO-GET-APPLE-TEAM-ID',
+        bundleIdentifier,
+        appleTeamId,
         entitlementsPlist
       );
 
