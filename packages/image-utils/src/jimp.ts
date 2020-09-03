@@ -81,6 +81,28 @@ export async function isFolderAsync(path: string): Promise<boolean> {
   }
 }
 
+export function circleAsync(jimp: Jimp): Promise<Jimp> {
+  const radius = Math.min(jimp.bitmap.width, jimp.bitmap.height) / 2;
+
+  const center = {
+    x: jimp.bitmap.width / 2,
+    y: jimp.bitmap.height / 2,
+  };
+
+  return new Promise(resolve => {
+    jimp.scanQuiet(0, 0, jimp.bitmap.width, jimp.bitmap.height, (x, y, idx) => {
+      const curR = Math.sqrt(Math.pow(x - center.x, 2) + Math.pow(y - center.y, 2));
+
+      if (radius - curR <= 0.0) {
+        jimp.bitmap.data[idx + 3] = 0;
+      } else if (radius - curR < 1.0) {
+        jimp.bitmap.data[idx + 3] = 255 * (radius - curR);
+      }
+      resolve(jimp);
+    });
+  });
+}
+
 export async function getJimpImageAsync(input: string | Buffer | Jimp): Promise<Jimp> {
   // @ts-ignore: Jimp types are broken
   if (typeof input === 'string' || input instanceof Buffer) return await Jimp.read(input);

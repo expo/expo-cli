@@ -37,7 +37,7 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
     }
     if (imageOptions.borderRadius) {
       // TODO: support setting border radius with Jimp. Currently only support making the image a circle
-      jimp.circle();
+      await Jimp.circleAsync(jimp);
     }
 
     const imgBuffer = await jimp.getBufferAsync(jimp.getMIME());
