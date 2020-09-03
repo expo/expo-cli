@@ -1,3 +1,4 @@
+import { UserSettings } from '@expo/xdl';
 import chalk from 'chalk';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
@@ -6,6 +7,7 @@ import log from '../log';
 import prompt from '../prompt';
 import { nonEmptyInput } from '../validators';
 import { runAction, travelingFastlane } from './fastlane';
+import * as Keychain from './keychain';
 
 const APPLE_IN_HOUSE_TEAM_TYPE = 'in-house';
 
@@ -41,7 +43,7 @@ export type AppleCtx = {
 };
 
 export async function authenticate(options: Options = {}): Promise<AppleCtx> {
-  const { appleId, appleIdPassword } = await _requestAppleIdCreds(options);
+  const { appleId, appleIdPassword } = await requestAppleIdCreds(options);
   log(`Authenticating to Apple Developer Portal...`); // use log instead of spinner in case we need to prompt user for 2fa
   try {
     const { teams, fastlaneSession } = await runAction(
@@ -68,14 +70,18 @@ export async function authenticate(options: Options = {}): Promise<AppleCtx> {
   }
 }
 
-async function _requestAppleIdCreds(options: Options): Promise<AppleCredentials> {
+export async function requestAppleIdCreds(options: Options): Promise<AppleCredentials> {
   return _getAppleIdFromParams(options) || (await _promptForAppleId());
 }
 
 function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCredentials | null {
   const passedAppleIdPassword = appleId
-    ? appleIdPassword || process.env.EXPO_APPLE_PASSWORD
+    ? appleIdPassword || process.env.EXPO_APPLE_PASSWORD || process.env.EXPO_APPLE_ID_PASSWORD
     : undefined;
+
+  if (process.env.EXPO_APPLE_ID_PASSWORD) {
+    log.error('EXPO_APPLE_ID_PASSWORD is deprecated, please use EXPO_APPLE_PASSWORD instead!');
+  }
 
   // none of the apple id params were set, assume user has no intention of passing it in
   if (!appleId) {
@@ -111,9 +117,19 @@ async function _promptForAppleId({
 
     // https://docs.expo.io/distribution/security/#apple-developer-account-credentials
     const here = terminalLink('here', 'https://bit.ly/2VtGWhU');
-    log(wrap(chalk.bold(`The password is only used to authenticate with Apple and never stored`)));
+    log(
+      wrap(
+        chalk.bold(
+          `The password is only used to authenticate with Apple and never stored on Expo servers`
+        )
+      )
+    );
     log(wrap(chalk.grey(`Learn more ${here}`)));
   }
+
+  // Get the email address that was last used and set it as
+  // the default value for quicker authentication.
+  const lastAppleId = await getLastUsedAppleIdAsync();
 
   const { appleId: promptAppleId } = await prompt(
     {
@@ -121,12 +137,33 @@ async function _promptForAppleId({
       name: 'appleId',
       message: `Apple ID:`,
       validate: nonEmptyInput,
+      default: lastAppleId ?? undefined,
       ...(previousAppleId && { default: previousAppleId }),
     },
     {
       nonInteractiveHelp: 'Pass your Apple ID using the --apple-id flag.',
     }
   );
+
+  // If a new email was used then store it as a suggestion for next time.
+  // This functionality is disabled using the keychain mechanism.
+  if (!Keychain.EXPO_NO_KEYCHAIN && lastAppleId && lastAppleId !== promptAppleId) {
+    await UserSettings.setAsync('appleId', promptAppleId);
+  }
+
+  // Only check on the first attempt in case the user changed their password.
+  if (firstAttempt) {
+    const password = await getPasswordAsync({ appleId: promptAppleId });
+
+    if (password) {
+      log(
+        `Using password from your local Keychain. ${chalk.dim(
+          `Learn more ${chalk.underline('https://docs.expo.io/distribution/security#keychain')}`
+        )}`
+      );
+      return { appleId: promptAppleId, appleIdPassword: password };
+    }
+  }
   const { appleIdPassword } = await prompt(
     {
       type: 'password',
@@ -139,6 +176,9 @@ async function _promptForAppleId({
         'Pass your Apple ID password using the EXPO_APPLE_PASSWORD environment variable',
     }
   );
+
+  await setPasswordAsync({ appleId: promptAppleId, appleIdPassword });
+
   return { appleId: promptAppleId, appleIdPassword };
 }
 
@@ -189,4 +229,69 @@ function _formatTeam({ teamId, name, type }: FastlaneTeam): Team {
     name: `${name} (${type})`,
     inHouse: type.toLowerCase() === APPLE_IN_HOUSE_TEAM_TYPE,
   };
+}
+
+async function getLastUsedAppleIdAsync(): Promise<string | null> {
+  if (Keychain.EXPO_NO_KEYCHAIN) {
+    // Clear last used apple ID.
+    await UserSettings.deleteKeyAsync('appleId');
+    return null;
+  }
+  try {
+    // @ts-ignore: appleId syncing issue
+    const lastAppleId = (await UserSettings.getAsync('appleId')) ?? null;
+    if (typeof lastAppleId === 'string') {
+      return lastAppleId;
+    }
+  } catch {}
+  return null;
+}
+
+/**
+ * Returns the same prefix used by Fastlane in order to potentially share access between services.
+ * [Cite. Fastlane](https://github.com/fastlane/fastlane/blob/f831062fa6f4b216b8ee38949adfe28fc11a0a8e/credentials_manager/lib/credentials_manager/account_manager.rb#L8).
+ *
+ * @param appleId email address
+ */
+function getKeychainServiceName(appleId: string): string {
+  return `deliver.${appleId}`;
+}
+
+async function deletePasswordAsync({
+  appleId,
+}: Pick<AppleCredentials, 'appleId'>): Promise<boolean> {
+  const serviceName = getKeychainServiceName(appleId);
+  const success = await Keychain.deletePasswordAsync({ username: appleId, serviceName });
+  if (success) {
+    log('Removed Apple ID password from the native Keychain.');
+  }
+  return success;
+}
+
+async function getPasswordAsync({
+  appleId,
+}: Pick<AppleCredentials, 'appleId'>): Promise<string | null> {
+  // If the user opts out, delete the password.
+  if (Keychain.EXPO_NO_KEYCHAIN) {
+    await deletePasswordAsync({ appleId });
+    return null;
+  }
+
+  const serviceName = getKeychainServiceName(appleId);
+  return Keychain.getPasswordAsync({ username: appleId, serviceName });
+}
+
+async function setPasswordAsync({ appleId, appleIdPassword }: AppleCredentials): Promise<boolean> {
+  if (Keychain.EXPO_NO_KEYCHAIN) {
+    log('Skip storing Apple ID password in the local Keychain.');
+    return false;
+  }
+
+  log(
+    `Saving Apple ID password to the local Keychain. ${chalk.dim(
+      `Learn more ${chalk.underline('https://docs.expo.io/distribution/security#keychain')}`
+    )}`
+  );
+  const serviceName = getKeychainServiceName(appleId);
+  return Keychain.setPasswordAsync({ username: appleId, password: appleIdPassword, serviceName });
 }

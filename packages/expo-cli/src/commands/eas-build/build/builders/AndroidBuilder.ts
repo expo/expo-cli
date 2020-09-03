@@ -5,21 +5,22 @@ import fs from 'fs-extra';
 import ora from 'ora';
 import path from 'path';
 
+import CommandError from '../../../../CommandError';
 import AndroidCredentialsProvider, {
   AndroidCredentials,
 } from '../../../../credentials/provider/AndroidCredentialsProvider';
 import {
-  AndroidBuildProfile,
   AndroidGenericBuildProfile,
   AndroidManagedBuildProfile,
+  CredentialsSource,
   Workflow,
 } from '../../../../easJson';
 import { gitAddAsync } from '../../../../git';
 import log from '../../../../log';
+import { Builder, BuilderContext } from '../../types';
+import * as gitUtils from '../../utils/git';
 import { ensureCredentialsAsync } from '../credentials';
 import gradleContent from '../templates/gradleContent';
-import { Builder, BuilderContext } from '../types';
-import * as gitUtils from '../utils/git';
 
 interface CommonJobProperties {
   platform: Platform.Android;
@@ -29,43 +30,75 @@ interface CommonJobProperties {
   };
 }
 
-class AndroidBuilder implements Builder {
+class AndroidBuilder implements Builder<Platform.Android> {
   private credentials?: AndroidCredentials;
-  private buildProfile: AndroidBuildProfile;
   private credentialsPrepared: boolean = false;
 
-  constructor(public readonly ctx: BuilderContext) {
-    if (!ctx.eas.builds.android) {
-      throw new Error("missing android configuration, shouldn't happen");
-    }
-    this.buildProfile = ctx.eas.builds.android;
-  }
+  constructor(public readonly ctx: BuilderContext<Platform.Android>) {}
 
   public async setupAsync(): Promise<void> {}
 
-  public async ensureCredentialsAsync(): Promise<void> {
+  public async ensureCredentialsAsync(): Promise<
+    CredentialsSource.LOCAL | CredentialsSource.REMOTE | undefined
+  > {
     this.credentialsPrepared = true;
     if (!this.shouldLoadCredentials()) {
       return;
     }
-    const provider = new AndroidCredentialsProvider(this.ctx.projectDir, {
-      projectName: this.ctx.projectName,
-      accountName: this.ctx.accountName,
-    });
+    const provider = new AndroidCredentialsProvider(
+      this.ctx.commandCtx.projectDir,
+      {
+        projectName: this.ctx.commandCtx.projectName,
+        accountName: this.ctx.commandCtx.accountName,
+      },
+      { nonInteractive: this.ctx.commandCtx.nonInteractive }
+    );
     await provider.initAsync();
     const credentialsSource = await ensureCredentialsAsync(
       provider,
-      this.buildProfile.workflow,
-      this.buildProfile.credentialsSource,
-      this.ctx.nonInteractive
+      this.ctx.buildProfile.workflow,
+      this.ctx.buildProfile.credentialsSource,
+      this.ctx.commandCtx.nonInteractive
     );
     this.credentials = await provider.getCredentialsAsync(credentialsSource);
+    return credentialsSource;
+  }
+
+  private async isProjectConfiguredAsync(): Promise<boolean> {
+    const androidAppDir = path.join(this.ctx.commandCtx.projectDir, 'android', 'app');
+    const buildGradlePath = path.join(androidAppDir, 'build.gradle');
+    const easGradlePath = path.join(androidAppDir, 'eas-build.gradle');
+
+    const hasEasGradleFile = await fs.pathExists(easGradlePath);
+
+    const buildGradleContent = await fs.readFile(path.join(buildGradlePath), 'utf-8');
+    const applyEasGradle = 'apply from: "./eas-build.gradle"';
+
+    const hasEasGradleApply = buildGradleContent
+      .split('\n')
+      // Check for both single and double quotes
+      .some(line => line === applyEasGradle || line === applyEasGradle.replace(/"/g, "'"));
+
+    return hasEasGradleApply && hasEasGradleFile;
+  }
+
+  public async ensureProjectConfiguredAsync(): Promise<void> {
+    if (!(await this.isProjectConfiguredAsync())) {
+      throw new CommandError(
+        'Project is not configured. Please run "expo eas:build:init" first to configure the project'
+      );
+    }
   }
 
   public async configureProjectAsync(): Promise<void> {
     const spinner = ora('Making sure your Android project is set up properly');
 
-    const { projectDir } = this.ctx;
+    if (await this.isProjectConfiguredAsync()) {
+      spinner.succeed('Android project is already configured');
+      return;
+    }
+
+    const { projectDir } = this.ctx.commandCtx;
 
     const androidAppDir = path.join(projectDir, 'android', 'app');
     const buildGradlePath = path.join(androidAppDir, 'build.gradle');
@@ -77,14 +110,7 @@ class AndroidBuilder implements Builder {
     const buildGradleContent = await fs.readFile(path.join(buildGradlePath), 'utf-8');
     const applyEasGradle = 'apply from: "./eas-build.gradle"';
 
-    const isAlreadyConfigured = buildGradleContent
-      .split('\n')
-      // Check for both single and double quotes
-      .some(line => line === applyEasGradle || line === applyEasGradle.replace(/"/g, "'"));
-
-    if (!isAlreadyConfigured) {
-      await fs.writeFile(buildGradlePath, `${buildGradleContent.trim()}\n${applyEasGradle}\n`);
-    }
+    await fs.writeFile(buildGradlePath, `${buildGradleContent.trim()}\n${applyEasGradle}\n`);
 
     try {
       await gitUtils.ensureGitStatusIsCleanAsync();
@@ -96,13 +122,13 @@ class AndroidBuilder implements Builder {
 
         try {
           await gitUtils.reviewAndCommitChangesAsync('Configure Android project', {
-            nonInteractive: this.ctx.nonInteractive,
+            nonInteractive: this.ctx.commandCtx.nonInteractive,
           });
 
           log(`${chalk.green(figures.tick)} Successfully committed the configuration changes.`);
         } catch (e) {
           throw new Error(
-            "Aborting, run the build command once you're ready. Make sure to commit any changes you've made."
+            "Aborting, run the command again once you're ready. Make sure to commit any changes you've made."
           );
         }
       } else {
@@ -116,10 +142,10 @@ class AndroidBuilder implements Builder {
     if (!this.credentialsPrepared) {
       throw new Error('ensureCredentialsAsync should be called before prepareJobAsync');
     }
-    if (this.buildProfile.workflow === Workflow.Generic) {
-      return sanitizeJob(await this.prepareGenericJobAsync(archiveUrl, this.buildProfile));
-    } else if (this.buildProfile.workflow === Workflow.Managed) {
-      return sanitizeJob(await this.prepareManagedJobAsync(archiveUrl, this.buildProfile));
+    if (this.ctx.buildProfile.workflow === Workflow.Generic) {
+      return sanitizeJob(await this.prepareGenericJobAsync(archiveUrl, this.ctx.buildProfile));
+    } else if (this.ctx.buildProfile.workflow === Workflow.Managed) {
+      return sanitizeJob(await this.prepareManagedJobAsync(archiveUrl, this.ctx.buildProfile));
     } else {
       throw new Error("Unknown workflow. Shouldn't happen");
     }
@@ -172,8 +198,9 @@ class AndroidBuilder implements Builder {
 
   private shouldLoadCredentials(): boolean {
     return (
-      this.buildProfile.workflow === Workflow.Managed ||
-      (this.buildProfile.workflow === Workflow.Generic && !this.buildProfile.withoutCredentials)
+      this.ctx.buildProfile.workflow === Workflow.Managed ||
+      (this.ctx.buildProfile.workflow === Workflow.Generic &&
+        !this.ctx.buildProfile.withoutCredentials)
     );
   }
 }

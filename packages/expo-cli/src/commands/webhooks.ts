@@ -23,12 +23,14 @@ type Webhook = {
 
 export default function (program: Command) {
   program
-    .command('webhooks [project-dir]')
-    .description('List all webhooks for a project.')
+    .command('webhooks [path]')
+    .helpGroup('webhooks')
+    .description('List all webhooks for a project')
     .asyncActionProjectDir(listAsync);
   program
-    .command('webhooks:add [project-dir]')
-    .description('Add webhook to a project.')
+    .command('webhooks:add [path]')
+    .helpGroup('webhooks')
+    .description('Add a webhook to a project')
     .option('--url <url>', 'URL to request. (Required)')
     .option('--event <event-type>', 'Event type that triggers the webhook. [build] (Required)')
     .option(
@@ -37,12 +39,15 @@ export default function (program: Command) {
     )
     .asyncActionProjectDir(addAsync);
   program
-    .command('webhooks:remove [project-dir]')
+    .command('webhooks:remove [path]')
+    .helpGroup('webhooks')
     .option('--id <id>', 'ID of the webhook to remove.')
-    .description('Delete a webhook.')
+    .description('Delete a webhook')
     .asyncActionProjectDir(removeAsync);
   program
-    .command('webhooks:update [project-dir]')
+    .command('webhooks:update [path]')
+    .helpGroup('webhooks')
+    .description('Update an existing webhook')
     .option('--id <id>', 'ID of the webhook to update.')
     .option('--url [url]', 'URL the webhook will request.')
     .option('--event [event-type]', 'Event type that triggers the webhook. [build]')
@@ -50,7 +55,6 @@ export default function (program: Command) {
       '--secret [secret]',
       "Secret used to create a hash signature of the request payload, provided in the 'Expo-Signature' header."
     )
-    .description('Update a webhook for a project.')
     .asyncActionProjectDir(updateAsync);
 }
 

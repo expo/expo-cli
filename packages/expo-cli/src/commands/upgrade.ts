@@ -283,60 +283,56 @@ async function shouldBailWhenUsingLatest(
 
 async function shouldUpgradeSimulatorAsync(): Promise<boolean> {
   // Check if we can, and probably should, upgrade the (ios) simulator
-  if (Simulator.isPlatformSupported()) {
-    if (program.nonInteractive) {
-      log.warn(`Skipping attempt to upgrade the client app on iOS simulator.`);
-      return false;
-    }
-
-    const answer = await prompt({
-      type: 'confirm',
-      name: 'upgradeSimulator',
-      message: 'Would you like to upgrade the Expo app in the iOS simulator?',
-      default: false,
-    });
-
-    log.newLine();
-    return answer.upgradeSimulator;
+  if (!Simulator.isPlatformSupported()) {
+    return false;
+  }
+  if (program.nonInteractive) {
+    log.warn(`Skipping attempt to upgrade the client app on iOS simulator.`);
+    return false;
   }
 
-  return false;
+  const answer = await prompt({
+    type: 'confirm',
+    name: 'upgradeSimulator',
+    message: 'Would you like to upgrade the Expo app in the iOS simulator?',
+    default: false,
+  });
+
+  log.newLine();
+  return answer.upgradeSimulator;
 }
 
 async function maybeUpgradeSimulatorAsync() {
   // Check if we can, and probably should, upgrade the (ios) simulator
-  if (Simulator.isPlatformSupported()) {
-    if (await shouldUpgradeSimulatorAsync()) {
-      const result = await Simulator.upgradeExpoAsync();
-      if (!result) {
-        log.error(
-          "The upgrade of your simulator didn't go as planned. You might have to reinstall it manually with expo client:install:ios."
-        );
-      }
+  if (await shouldUpgradeSimulatorAsync()) {
+    const result = await Simulator.upgradeExpoAsync();
+    if (!result) {
+      log.error(
+        "The upgrade of your simulator didn't go as planned. You might have to reinstall it manually with expo client:install:ios."
+      );
     }
   }
 }
 
 async function shouldUpgradeEmulatorAsync(): Promise<boolean> {
   // Check if we can, and probably should, upgrade the android client
-  if (Android.isPlatformSupported()) {
-    if (program.nonInteractive) {
-      log.warn(`Skipping attempt to upgrade the Expo app on the Android emulator.`);
-      return false;
-    }
-
-    const answer = await prompt({
-      type: 'confirm',
-      name: 'upgradeAndroid',
-      message: 'Would you like to upgrade the Expo app in the Android emulator?',
-      default: false,
-    });
-
-    log.newLine();
-    return answer.upgradeAndroid;
+  if (!Android.isPlatformSupported()) {
+    return false;
+  }
+  if (program.nonInteractive) {
+    log.warn(`Skipping attempt to upgrade the Expo app on the Android emulator.`);
+    return false;
   }
 
-  return false;
+  const answer = await prompt({
+    type: 'confirm',
+    name: 'upgradeAndroid',
+    message: 'Would you like to upgrade the Expo app in the Android emulator?',
+    default: false,
+  });
+
+  log.newLine();
+  return answer.upgradeAndroid;
 }
 
 async function maybeUpgradeEmulatorAsync() {
@@ -689,11 +685,12 @@ async function maybeCleanNpmStateAsync(packageManager: any) {
 
 export default function (program: Command) {
   program
-    .command('upgrade [targetSdkVersion]')
+    .command('upgrade [sdk-version]')
     .alias('update')
+    .description('Upgrade the project packages and config for the given SDK version')
+    .helpGroup('info')
     .option('--npm', 'Use npm to install dependencies. (default when package-lock.json exists)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when yarn.lock exists)')
-    .description('Upgrades your project dependencies and app.json and to the given SDK version')
     .asyncAction(async (requestedSdkVersion: string | null, options: Options) => {
       const { projectRoot, workflow } = await findProjectRootAsync(process.cwd());
 

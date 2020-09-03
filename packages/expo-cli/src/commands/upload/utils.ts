@@ -1,19 +1,6 @@
 import { ExponentTools } from '@expo/xdl';
-import fs from 'fs-extra';
-import got from 'got';
-import stream from 'stream';
-import { promisify } from 'util';
-
-import { createProgressTracker } from '../utils/progress';
 
 const { spawnAsyncThrowError } = ExponentTools;
-const pipeline = promisify(stream.pipeline);
-
-export async function downloadFile(url: string, dest: string): Promise<string> {
-  const downloadStream = got.stream(url).on('downloadProgress', createProgressTracker());
-  await pipeline(downloadStream, fs.createWriteStream(dest));
-  return dest;
-}
 
 export async function runFastlaneAsync(
   program: string,

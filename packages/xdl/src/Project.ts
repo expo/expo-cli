@@ -24,6 +24,7 @@ import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import joi from '@hapi/joi';
 import axios from 'axios';
+import chalk from 'chalk';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import decache from 'decache';
@@ -47,6 +48,7 @@ import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import slug from 'slugify';
 import split from 'split';
+import terminalLink from 'terminal-link';
 import treekill from 'tree-kill';
 import { URL } from 'url';
 import urljoin from 'url-join';
@@ -75,6 +77,7 @@ import * as Watchman from './Watchman';
 import * as Webpack from './Webpack';
 import XDLError from './XDLError';
 import * as ExponentTools from './detach/ExponentTools';
+import * as TableText from './logs/TableText';
 import * as Doctor from './project/Doctor';
 import * as ExpSchema from './project/ExpSchema';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -503,11 +506,17 @@ export async function exportForAppHosting(
   const iosBundle = bundles.ios.code;
   const androidBundle = bundles.android.code;
 
-  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
+  const iosBundleHash = crypto
+    .createHash('md5')
+    .update(iosBundle)
+    .digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
+  const androidBundleHash = crypto
+    .createHash('md5')
+    .update(androidBundle)
+    .digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 
@@ -740,10 +749,25 @@ export async function findReusableBuildAsync(
   return buildReuseStatus;
 }
 
+export interface PublishedProjectResult {
+  /**
+   * Project manifest URL
+   */
+  url: string;
+  /**
+   * TODO: What is this?
+   */
+  ids: string[];
+  /**
+   * TODO: What is this? Where does it come from?
+   */
+  err?: string;
+}
+
 export async function publishAsync(
   projectRoot: string,
   options: PublishOptions = {}
-): Promise<{ url: string; ids: string[]; err?: string }> {
+): Promise<PublishedProjectResult> {
   options.target = options.target ?? getDefaultTarget(projectRoot);
   const target = options.target;
   const user = await UserManager.ensureLoggedInAsync();
@@ -768,10 +792,33 @@ export async function publishAsync(
   const { hooks } = exp;
   delete exp.hooks;
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
-
   const bundles = await buildPublishBundlesAsync(projectRoot, options);
   const androidBundle = bundles.android.code;
   const iosBundle = bundles.ios.code;
+
+  const files = [
+    ['index.ios.js', bundles.ios.code],
+    ['index.android.js', bundles.android.code],
+  ];
+  // Account for inline source maps
+  if (bundles.ios.map) {
+    files.push([chalk.dim('index.ios.js.map'), bundles.ios.map]);
+  }
+  if (bundles.android.map) {
+    files.push([chalk.dim('index.android.js.map'), bundles.android.map]);
+  }
+
+  logger.global.info('');
+  logger.global.info(TableText.createFilesTable(files));
+  logger.global.info('');
+  logger.global.info(
+    terminalLink(
+      'Learn more about JavaScript bundle sizes.',
+      `https://expo.fyi/javascript-bundle-sizes`,
+      { fallback: (text, url) => `${text}: ${url}` }
+    )
+  );
+  logger.global.info('');
 
   await publishAssetsAsync(projectRoot, exp, bundles);
 
@@ -899,6 +946,7 @@ async function _uploadArtifactsAsync({
   options: PublishOptions;
   pkg: PackageJSONConfig;
 }) {
+  logger.global.info('');
   logger.global.info('Uploading JavaScript bundles');
   const formData = new FormData();
 
@@ -910,6 +958,7 @@ async function _uploadArtifactsAsync({
 
   const user = await UserManager.ensureLoggedInAsync();
   const api = ApiV2.clientForUser(user);
+
   return await api.uploadFormDataAsync('publish/new', formData);
 }
 
@@ -968,6 +1017,7 @@ async function buildPublishBundlesAsync(
       await stopReactNativeServerAsync(projectRoot);
     }
   }
+
   const platforms: Platform[] = ['android', 'ios'];
   const [android, ios] = await bundleAsync(
     projectRoot,
@@ -1195,7 +1245,7 @@ async function publishAssetsAsync(
   if (assets.length > 0 && assets[0].fileHashes) {
     await uploadAssetsAsync(projectRoot, assets);
   } else {
-    logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
+    logger.global.info({ quiet: true }, 'No assets to upload, skipped');
   }
 
   // Updates the manifest to reflect additional asset bundling + configs
@@ -1750,7 +1800,13 @@ export async function startReactNativeServerAsync(
         exp
       );
     } catch (e) {
-      packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+      try {
+        packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+      } catch (e) {
+        throw new Error(
+          'Unable to find the expo-asset package in the current project. Install it and try again.'
+        );
+      }
     }
   }
 

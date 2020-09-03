@@ -403,10 +403,10 @@ function _renderUnversionedUniversalModulesDependencies(
   const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
 
   if (sdkMajorVersion >= 33) {
-    const excludedUnimodules = ['expo-bluetooth', 'expo-in-app-purchases', 'expo-payments-stripe'];
+    const excludedUnimodules = ['expo-bluetooth', 'expo-in-app-purchases', 'expo-payments-stripe', 'expo-image'];
 
     if (sdkMajorVersion < 39) {
-      excludedUnimodules.push('expo-splash-screen', 'expo-image', 'expo-updates');
+      excludedUnimodules.push('expo-splash-screen', 'expo-updates');
     }
 
     return indentString(

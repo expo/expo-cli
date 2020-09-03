@@ -1,6 +1,5 @@
-import { getConfig } from '@expo/config';
-import { ApiV2, User, UserManager } from '@expo/xdl';
-import { build } from '@hapi/joi';
+import { Platform } from '@expo/build-tools';
+import { Analytics, ApiV2 } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
@@ -9,26 +8,35 @@ import os from 'os';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import { EasConfig, EasJsonReader } from '../../../easJson';
+import { CredentialsSource, EasJsonReader } from '../../../easJson';
 import log from '../../../log';
 import { ensureProjectExistsAsync } from '../../../projects';
 import { UploadType, uploadAsync } from '../../../uploads';
 import { createProgressTracker } from '../../utils/progress';
 import { platformDisplayNames } from '../constants';
-import { Build, BuildCommandPlatform, BuildStatus } from '../types';
-import AndroidBuilder from './builders/AndroidBuilder';
-import iOSBuilder from './builders/iOSBuilder';
-import { Builder, BuilderContext } from './types';
+import {
+  AnalyticsEvent,
+  Build,
+  BuildCommandPlatform,
+  BuildStatus,
+  Builder,
+  CommandContext,
+} from '../types';
+import createBuilderContext from '../utils/createBuilderContext';
+import createCommandContextAsync from '../utils/createCommandContextAsync';
 import {
   ensureGitRepoExistsAsync,
   ensureGitStatusIsCleanAsync,
   makeProjectTarballAsync,
-} from './utils/git';
-import { printBuildResults, printLogsUrls } from './utils/misc';
+} from '../utils/git';
+import { printBuildResults, printLogsUrls } from '../utils/misc';
+import AndroidBuilder from './builders/AndroidBuilder';
+import iOSBuilder from './builders/iOSBuilder';
+import { collectMetadata } from './metadata';
 
 interface BuildOptions {
   platform: BuildCommandPlatform;
-  skipCredentialsCheck?: boolean; // TODO: noop for now
+  skipCredentialsCheck?: boolean;
   skipProjectConfiguration?: boolean;
   wait?: boolean;
   profile: string;
@@ -38,39 +46,48 @@ interface BuildOptions {
 }
 
 async function buildAction(projectDir: string, options: BuildOptions): Promise<void> {
-  const platforms = Object.values(BuildCommandPlatform);
+  const buildCommandPlatforms = Object.values(BuildCommandPlatform);
 
-  const { platform, profile } = options;
-  if (!platform || !platforms.includes(platform)) {
+  const { platform: requestedPlatform, profile } = options;
+  if (!requestedPlatform || !buildCommandPlatforms.includes(requestedPlatform)) {
     throw new Error(
-      `-p/--platform is required, valid platforms: ${platforms
+      `-p/--platform is required, valid platforms: ${buildCommandPlatforms
         .map(p => log.chalk.bold(p))
         .join(', ')}`
     );
   }
 
+  const trackingCtx = {
+    tracking_id: uuidv4(),
+    requested_platform: options.platform,
+  };
+  Analytics.logEvent(AnalyticsEvent.BUILD_COMMAND, trackingCtx);
+
   await ensureGitRepoExistsAsync();
   await ensureGitStatusIsCleanAsync();
 
-  const easConfig: EasConfig = await new EasJsonReader(projectDir, platform).readAsync(profile);
-  const ctx = await createBuilderContextAsync(projectDir, easConfig, {
-    platform,
+  const commandCtx = await createCommandContextAsync({
+    requestedPlatform,
+    profile,
+    projectDir,
+    trackingCtx,
     nonInteractive: options.parent?.nonInteractive,
     skipCredentialsCheck: options?.skipCredentialsCheck,
     skipProjectConfiguration: options?.skipProjectConfiguration,
   });
-  const projectId = await ensureProjectExistsAsync(ctx.user, {
-    accountName: ctx.accountName,
-    projectName: ctx.projectName,
+
+  const projectId = await ensureProjectExistsAsync(commandCtx.user, {
+    accountName: commandCtx.accountName,
+    projectName: commandCtx.projectName,
   });
-  const scheduledBuilds = await startBuildsAsync(ctx, projectId);
+  const scheduledBuilds = await startBuildsAsync(commandCtx, projectId);
   log.newLine();
-  await printLogsUrls(ctx.accountName, scheduledBuilds);
+  await printLogsUrls(commandCtx.accountName, scheduledBuilds);
   log.newLine();
 
   if (options.wait) {
     const builds = await waitForBuildEndAsync(
-      ctx,
+      commandCtx,
       projectId,
       scheduledBuilds.map(i => i.buildId)
     );
@@ -78,104 +95,140 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
   }
 }
 
-async function createBuilderContextAsync(
-  projectDir: string,
-  eas: EasConfig,
-  {
-    platform = BuildCommandPlatform.ALL,
-    nonInteractive = false,
-    skipCredentialsCheck = false,
-    skipProjectConfiguration = false,
-  }: {
-    platform?: BuildCommandPlatform;
-    nonInteractive?: boolean;
-    skipCredentialsCheck?: boolean;
-    skipProjectConfiguration?: boolean;
-  }
-): Promise<BuilderContext> {
-  const user: User = await UserManager.ensureLoggedInAsync();
-  const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
-  const accountName = exp.owner || user.username;
-  const projectName = exp.slug;
-
-  return {
-    eas,
-    projectDir,
-    user,
-    accountName,
-    projectName,
-    exp,
-    platform,
-    nonInteractive,
-    skipCredentialsCheck,
-    skipProjectConfiguration,
-  };
-}
-
 async function startBuildsAsync(
-  ctx: BuilderContext,
+  commandCtx: CommandContext,
   projectId: string
 ): Promise<
   { platform: BuildCommandPlatform.ANDROID | BuildCommandPlatform.IOS; buildId: string }[]
 > {
-  const client = ApiV2.clientForUser(ctx.user);
+  const client = ApiV2.clientForUser(commandCtx.user);
   const scheduledBuilds: {
     platform: BuildCommandPlatform.ANDROID | BuildCommandPlatform.IOS;
     buildId: string;
   }[] = [];
-  if ([BuildCommandPlatform.ANDROID, BuildCommandPlatform.ALL].includes(ctx.platform)) {
-    const builder = new AndroidBuilder(ctx);
-    const buildId = await startBuildAsync(client, builder, projectId);
+  const easConfig = await new EasJsonReader(
+    commandCtx.projectDir,
+    commandCtx.requestedPlatform
+  ).readAsync(commandCtx.profile);
+  if (
+    [BuildCommandPlatform.ANDROID, BuildCommandPlatform.ALL].includes(commandCtx.requestedPlatform)
+  ) {
+    const builderContext = createBuilderContext<Platform.Android>({
+      commandCtx,
+      platform: Platform.Android,
+      easConfig,
+    });
+    const builder = new AndroidBuilder(builderContext);
+    const buildId = await startBuildAsync(client, { builder, projectId });
     scheduledBuilds.push({ platform: BuildCommandPlatform.ANDROID, buildId });
   }
-  if ([BuildCommandPlatform.IOS, BuildCommandPlatform.ALL].includes(ctx.platform)) {
-    const builder = new iOSBuilder(ctx);
-    const buildId = await startBuildAsync(client, builder, projectId);
+  if ([BuildCommandPlatform.IOS, BuildCommandPlatform.ALL].includes(commandCtx.requestedPlatform)) {
+    const builderContext = createBuilderContext<Platform.iOS>({
+      commandCtx,
+      platform: Platform.iOS,
+      easConfig,
+    });
+    const builder = new iOSBuilder(builderContext);
+    const buildId = await startBuildAsync(client, { builder, projectId });
     scheduledBuilds.push({ platform: BuildCommandPlatform.IOS, buildId });
   }
   return scheduledBuilds;
 }
 
-async function startBuildAsync(
+async function startBuildAsync<T extends Platform>(
   client: ApiV2,
-  builder: Builder,
-  projectId: string
+  {
+    projectId,
+    builder,
+  }: {
+    projectId: string;
+    builder: Builder<T>;
+  }
 ): Promise<string> {
   const tarPath = path.join(os.tmpdir(), `${uuidv4()}.tar.gz`);
   try {
     await builder.setupAsync();
-    await builder.ensureCredentialsAsync();
-    if (!builder.ctx.skipProjectConfiguration) {
-      await builder.configureProjectAsync();
+    let credentialsSource: CredentialsSource.LOCAL | CredentialsSource.REMOTE | undefined;
+    try {
+      credentialsSource = await builder.ensureCredentialsAsync();
+      Analytics.logEvent(
+        AnalyticsEvent.GATHER_CREDENTIALS_SUCCESS,
+        builder.ctx.trackingCtx.properties
+      );
+    } catch (error) {
+      Analytics.logEvent(AnalyticsEvent.GATHER_CREDENTIALS_FAIL, {
+        ...builder.ctx.trackingCtx,
+        reason: error.message,
+      });
+      throw error;
+    }
+    if (!builder.ctx.commandCtx.skipProjectConfiguration) {
+      try {
+        await builder.ensureProjectConfiguredAsync();
+        Analytics.logEvent(
+          AnalyticsEvent.CONFIGURE_PROJECT_SUCCESS,
+          builder.ctx.trackingCtx.properties
+        );
+      } catch (error) {
+        Analytics.logEvent(AnalyticsEvent.CONFIGURE_PROJECT_FAIL, {
+          ...builder.ctx.trackingCtx,
+          reason: error.message,
+        });
+        throw error;
+      }
     }
 
-    const fileSize = await makeProjectTarballAsync(tarPath);
+    let archiveUrl;
+    try {
+      const fileSize = await makeProjectTarballAsync(tarPath);
 
-    log('Uploading project to AWS S3');
-    const archiveUrl = await uploadAsync(
-      UploadType.TURTLE_PROJECT_SOURCES,
-      tarPath,
-      createProgressTracker(fileSize)
-    );
+      log('Uploading project to AWS S3');
+      archiveUrl = await uploadAsync(
+        UploadType.TURTLE_PROJECT_SOURCES,
+        tarPath,
+        createProgressTracker(fileSize)
+      );
+      Analytics.logEvent(AnalyticsEvent.PROJECT_UPLOAD_SUCCESS, builder.ctx.trackingCtx.properties);
+    } catch (error) {
+      Analytics.logEvent(AnalyticsEvent.PROJECT_UPLOAD_FAIL, {
+        ...builder.ctx.trackingCtx,
+        reason: error.message,
+      });
+      throw error;
+    }
 
+    const metadata = await collectMetadata(builder.ctx, {
+      credentialsSource,
+    });
     const job = await builder.prepareJobAsync(archiveUrl);
     log(`Starting ${platformDisplayNames[job.platform]} build`);
-    const { buildId } = await client.postAsync(`projects/${projectId}/builds`, {
-      job: job as any,
-    });
-    return buildId;
+
+    try {
+      const { buildId } = await client.postAsync(`projects/${projectId}/builds`, {
+        job,
+        metadata,
+      } as any);
+      Analytics.logEvent(AnalyticsEvent.BUILD_REQUEST_SUCCESS, builder.ctx.trackingCtx.properties);
+      return buildId;
+    } catch (error) {
+      Analytics.logEvent(AnalyticsEvent.BUILD_REQUEST_FAIL, {
+        ...builder.ctx.trackingCtx,
+        reason: error.message,
+      });
+      throw error;
+    }
   } finally {
     await fs.remove(tarPath);
   }
 }
 
 async function waitForBuildEndAsync(
-  ctx: BuilderContext,
+  commandCtx: CommandContext,
   projectId: string,
   buildIds: string[],
   { timeoutSec = 1800, intervalSec = 30 } = {}
 ): Promise<(Build | null)[]> {
-  const client = ApiV2.clientForUser(ctx.user);
+  const client = ApiV2.clientForUser(commandCtx.user);
   log('Waiting for build to complete. You can press Ctrl+C to exit.');
   const spinner = ora().start();
   let time = new Date().getTime();

@@ -551,9 +551,15 @@ const resolvers = {
       const currentProject = context.getCurrentProject();
       let result;
       if (platform === 'ANDROID') {
-        result = await Android.openProjectAsync(currentProject.projectDir);
+        result = await Android.openProjectAsync({
+          projectRoot: currentProject.projectDir,
+          shouldPrompt: false,
+        });
       } else {
-        result = await Simulator.openProjectAsync(currentProject.projectDir);
+        result = await Simulator.openProjectAsync({
+          projectRoot: currentProject.projectDir,
+          shouldPrompt: false,
+        });
       }
       if (result.success) {
         return result;

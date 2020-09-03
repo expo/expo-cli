@@ -18,6 +18,7 @@ export default function (program: CommanderStatic) {
   program
     .command('credentials:manager')
     .description('Manage your credentials')
+    .helpGroup('credentials')
     .option('-p --platform <platform>', 'Platform: [android|ios]', /^(android|ios)$/i)
     .asyncAction(async (options: Options) => {
       const projectDir = process.cwd();

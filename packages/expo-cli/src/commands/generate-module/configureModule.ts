@@ -2,7 +2,21 @@ import fse from 'fs-extra';
 import walkSync from 'klaw-sync';
 import path from 'path';
 
+import CommandError from '../../CommandError';
 import { ModuleConfiguration } from './ModuleConfiguration';
+
+// TODO (barthap): If ever updated to TS 4.0, change this to:
+// type PreparedPrefixes = [nameWithExpoPrefix: string, nameWithoutExpoPrefix: string];
+type PreparedPrefixes = [string, string];
+
+/**
+ * prepares _Expo_ prefixes for specified name
+ * @param name module name, e.g. JS package name
+ * @param prefix prefix to prepare with, defaults to _Expo_
+ * @returns tuple `[nameWithPrefix: string, nameWithoutPrefix: string]`
+ */
+const preparePrefixes = (name: string, prefix: string = 'Expo'): PreparedPrefixes =>
+  name.startsWith(prefix) ? [name, name.substr(prefix.length)] : [`${prefix}${name}`, name];
 
 const asyncForEach = async <T>(
   array: T[],
@@ -13,11 +27,13 @@ const asyncForEach = async <T>(
   }
 };
 
+/**
+ * Removes specified files. If one file doesn't exist already, skips it
+ * @param directoryPath directory containing files to remove
+ * @param filenames array of filenames to remove
+ */
 async function removeFiles(directoryPath: string, filenames: string[]) {
-  await asyncForEach(
-    filenames,
-    async filename => await fse.remove(path.resolve(directoryPath, filename))
-  );
+  await Promise.all(filenames.map(filename => fse.remove(path.resolve(directoryPath, filename))));
 }
 
 /**
@@ -57,13 +73,13 @@ const replaceContents = async (
   directoryPath: string,
   replaceFunction: (contentOfSingleFile: string) => string
 ) => {
-  for (const file of walkSync(directoryPath, { nodir: true })) {
-    replaceContent(file.path, replaceFunction);
-  }
+  await Promise.all(
+    walkSync(directoryPath, { nodir: true }).map(file => replaceContent(file.path, replaceFunction))
+  );
 };
 
 /**
- * Replaces content in file
+ * Replaces content in file. Does nothing if the file doesn't exist
  * @param filePath - provided file
  * @param replaceFunction - function that converts current content into something different
  */
@@ -71,6 +87,10 @@ const replaceContent = async (
   filePath: string,
   replaceFunction: (contentOfSingleFile: string) => string
 ) => {
+  if (!fse.existsSync(filePath)) {
+    return;
+  }
+
   const content = await fse.readFile(filePath, 'utf8');
   const newContent = replaceFunction(content);
   if (newContent !== content) {
@@ -150,6 +170,59 @@ async function configureIOS(
 }
 
 /**
+ * Gets path to Android source base dir: android/src/main/[java|kotlin]
+ * Defaults to Java path if both exist
+ * @param androidPath path do module android/ directory
+ * @param flavor package flavor e.g main, test. Defaults to main
+ * @throws INVALID_TEMPLATE if none exist
+ * @returns path to flavor source base directory
+ */
+function findAndroidSourceDir(androidPath: string, flavor: string = 'main'): string {
+  const androidSrcPathBase = path.join(androidPath, 'src', flavor);
+
+  const javaExists = fse.pathExistsSync(path.join(androidSrcPathBase, 'java'));
+  const kotlinExists = fse.pathExistsSync(path.join(androidSrcPathBase, 'kotlin'));
+
+  if (!javaExists && !kotlinExists) {
+    throw new CommandError(
+      'INVALID_TEMPLATE',
+      `Invalid template. Android source directory not found: ${androidSrcPathBase}/[java|kotlin]`
+    );
+  }
+
+  return path.join(androidSrcPathBase, javaExists ? 'java' : 'kotlin');
+}
+
+/**
+ * Finds java package name based on directory structure
+ * @param flavorSrcPath Path to source base directory: e.g. android/src/main/java
+ * @returns java package name
+ */
+function findTemplateAndroidPackage(flavorSrcPath: string) {
+  const srcFiles = walkSync(flavorSrcPath, {
+    filter: item => item.path.endsWith('.kt') || item.path.endsWith('.java'),
+    nodir: true,
+    traverseAll: true,
+  });
+
+  if (srcFiles.length === 0) {
+    throw new CommandError('INVALID TEMPLATE', 'No Android source files found in the template');
+  }
+
+  // srcFiles[0] will always be at the most top-level of the package structure
+  const packageDirNames = path.relative(flavorSrcPath, srcFiles[0].path).split('/').slice(0, -1);
+
+  if (packageDirNames.length === 0) {
+    throw new CommandError(
+      'INVALID TEMPLATE',
+      'Template Android sources must be within a package.'
+    );
+  }
+
+  return packageDirNames.join('.');
+}
+
+/**
  * Prepares Android part, mainly by renaming all files and template words in files
  * Sets all versions in Gradle to 1.0.0
  * @param modulePath - module directory
@@ -160,22 +233,13 @@ async function configureAndroid(
   { javaPackage, jsPackageName, viewManager }: ModuleConfiguration
 ) {
   const androidPath = path.join(modulePath, 'android');
-  const sourceFilesPath = path.join(
-    androidPath,
-    'src',
-    'main',
-    'kotlin',
-    'expo',
-    'modules',
-    'template'
-  );
-  const destinationFilesPath = path.join(
-    androidPath,
-    'src',
-    'main',
-    'kotlin',
-    ...javaPackage.split('.')
-  );
+  const [, moduleName] = preparePrefixes(jsPackageName, 'Expo');
+
+  const androidSrcPath = findAndroidSourceDir(androidPath);
+  const templateJavaPackage = findTemplateAndroidPackage(androidSrcPath);
+
+  const sourceFilesPath = path.join(androidSrcPath, ...templateJavaPackage.split('.'));
+  const destinationFilesPath = path.join(androidSrcPath, ...javaPackage.split('.'));
 
   // remove ViewManager from template
   if (!viewManager) {
@@ -193,13 +257,40 @@ async function configureAndroid(
 
   // Remove leaf directory content
   await fse.remove(sourceFilesPath);
-  // Cleanup all empty subdirs up to provided rootDir
-  await removeUponEmptyOrOnlyEmptySubdirs(path.join(androidPath, 'src', 'main', 'kotlin', 'expo'));
+  // Cleanup all empty subdirs up to template package root dir
+  await removeUponEmptyOrOnlyEmptySubdirs(
+    path.join(androidSrcPath, templateJavaPackage.split('.')[0])
+  );
 
-  const moduleName = jsPackageName.startsWith('Expo') ? jsPackageName.substring(4) : jsPackageName;
+  // prepare tests
+  if (fse.existsSync(path.resolve(androidPath, 'src', 'test'))) {
+    const androidTestPath = findAndroidSourceDir(androidPath, 'test');
+    const templateTestPackage = findTemplateAndroidPackage(androidTestPath);
+    const testSourcePath = path.join(androidTestPath, ...templateTestPackage.split('.'));
+    const testDestinationPath = path.join(androidTestPath, ...javaPackage.split('.'));
+
+    await fse.mkdirp(testDestinationPath);
+    await fse.copy(testSourcePath, testDestinationPath);
+    await fse.remove(testSourcePath);
+    await removeUponEmptyOrOnlyEmptySubdirs(
+      path.join(androidTestPath, templateTestPackage.split('.')[0])
+    );
+
+    await replaceContents(testDestinationPath, singleFileContent =>
+      singleFileContent.replace(new RegExp(templateTestPackage, 'g'), javaPackage)
+    );
+
+    await renameFilesWithExtensions(
+      testDestinationPath,
+      ['.kt', '.java'],
+      [{ from: 'ModuleTemplateModuleTest', to: `${moduleName}ModuleTest` }]
+    );
+  }
+
+  // Replace contents of destination files
   await replaceContents(androidPath, singleFileContent =>
     singleFileContent
-      .replace(/expo\.modules\.template/g, javaPackage)
+      .replace(new RegExp(templateJavaPackage, 'g'), javaPackage)
       .replace(/ModuleTemplate/g, moduleName)
       .replace(/ExpoModuleTemplate/g, jsPackageName)
   );
@@ -211,7 +302,7 @@ async function configureAndroid(
   );
   await renameFilesWithExtensions(
     destinationFilesPath,
-    ['.kt'],
+    ['.kt', '.java'],
     [
       { from: 'ModuleTemplateModule', to: `${moduleName}Module` },
       { from: 'ModuleTemplatePackage', to: `${moduleName}Package` },
@@ -230,9 +321,8 @@ async function configureTS(
   modulePath: string,
   { jsPackageName, viewManager }: ModuleConfiguration
 ) {
-  const moduleNameWithoutExpoPrefix = jsPackageName.startsWith('Expo')
-    ? jsPackageName.substr(4)
-    : 'Unimodule';
+  const [moduleNameWithExpoPrefix, moduleName] = preparePrefixes(jsPackageName);
+
   const tsPath = path.join(modulePath, 'src');
 
   // remove View Manager from template
@@ -250,26 +340,26 @@ async function configureTS(
   await renameFilesWithExtensions(
     path.join(tsPath, '__tests__'),
     ['.ts'],
-    [{ from: 'ModuleTemplate-test', to: `${moduleNameWithoutExpoPrefix}-test` }]
+    [{ from: 'ModuleTemplate-test', to: `${moduleName}-test` }]
   );
   await renameFilesWithExtensions(
     tsPath,
     ['.tsx', '.ts'],
     [
-      { from: 'ExpoModuleTemplateView', to: `${jsPackageName}View` },
-      { from: 'ExpoModuleTemplateNativeView', to: `${jsPackageName}NativeView` },
-      { from: 'ExpoModuleTemplateNativeView.web', to: `${jsPackageName}NativeView.web` },
-      { from: 'ExpoModuleTemplate', to: jsPackageName },
-      { from: 'ExpoModuleTemplate.web', to: `${jsPackageName}.web` },
-      { from: 'ModuleTemplate', to: moduleNameWithoutExpoPrefix },
-      { from: 'ModuleTemplate.types', to: `${moduleNameWithoutExpoPrefix}.types` },
+      { from: 'ExpoModuleTemplateView', to: `${moduleNameWithExpoPrefix}View` },
+      { from: 'ExpoModuleTemplateNativeView', to: `${moduleNameWithExpoPrefix}NativeView` },
+      { from: 'ExpoModuleTemplateNativeView.web', to: `${moduleNameWithExpoPrefix}NativeView.web` },
+      { from: 'ExpoModuleTemplate', to: moduleNameWithExpoPrefix },
+      { from: 'ExpoModuleTemplate.web', to: `${moduleNameWithExpoPrefix}.web` },
+      { from: 'ModuleTemplate', to: moduleName },
+      { from: 'ModuleTemplate.types', to: `${moduleName}.types` },
     ]
   );
 
   await replaceContents(tsPath, singleFileContent =>
     singleFileContent
-      .replace(/ExpoModuleTemplate/g, jsPackageName)
-      .replace(/ModuleTemplate/g, moduleNameWithoutExpoPrefix)
+      .replace(/ExpoModuleTemplate/g, moduleNameWithExpoPrefix)
+      .replace(/ModuleTemplate/g, moduleName)
   );
 }
 
@@ -282,15 +372,14 @@ async function configureNPM(
   modulePath: string,
   { npmModuleName, podName, jsPackageName }: ModuleConfiguration
 ) {
-  const moduleNameWithoutExpoPrefix = jsPackageName.startsWith('Expo')
-    ? jsPackageName.substr(4)
-    : 'Unimodule';
+  const [, moduleName] = preparePrefixes(jsPackageName);
+
   await replaceContent(path.join(modulePath, 'package.json'), singleFileContent =>
     singleFileContent
       .replace(/expo-module-template/g, npmModuleName)
       .replace(/"version": "[\w.-]+"/, '"version": "1.0.0"')
       .replace(/ExpoModuleTemplate/g, jsPackageName)
-      .replace(/ModuleTemplate/g, moduleNameWithoutExpoPrefix)
+      .replace(/ModuleTemplate/g, moduleName)
   );
   await replaceContent(path.join(modulePath, 'README.md'), readmeContent =>
     readmeContent
