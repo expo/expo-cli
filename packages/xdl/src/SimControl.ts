@@ -71,12 +71,16 @@ type SimulatorDeviceList = {
 };
 
 export async function isSimulatorRunningAsync() {
-  const zeroMeansNo = (
-    await osascript.execAsync(
-      'tell app "System Events" to count processes whose name is "Simulator"'
-    )
-  ).trim();
-  if (zeroMeansNo === '0') {
+  try {
+    const zeroMeansNo = (
+      await osascript.execAsync(
+        'tell app "System Events" to count processes whose name is "Simulator"'
+      )
+    ).trim();
+    if (zeroMeansNo === '0') {
+      return false;
+    }
+  } catch {
     return false;
   }
 
