@@ -13,6 +13,7 @@ import * as Analytics from './Analytics';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
+import * as Prompts from './Prompts';
 import * as SimControl from './SimControl';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
@@ -31,17 +32,6 @@ export function isPlatformSupported() {
   return process.platform === 'darwin';
 }
 
-async function confirmAsync(options: { default?: boolean; message: string }): Promise<boolean> {
-  _interactiveCallback?.(true);
-  const { confirm } = await prompt({
-    type: 'confirm',
-    name: 'confirm',
-    ...options,
-  });
-  _interactiveCallback?.(false);
-  return confirm;
-}
-
 /**
  * Ensure Xcode is installed an recent enough to be used with Expo.
  *
@@ -50,7 +40,7 @@ async function confirmAsync(options: { default?: boolean; message: string }): Pr
 export async function ensureXcodeInstalledAsync(): Promise<boolean> {
   const promptToOpenAppStoreAsync = async (message: string) => {
     // This prompt serves no purpose accept informing the user what to do next, we could just open the App Store but it could be confusing if they don't know what's going on.
-    const confirm = await confirmAsync({ default: true, message });
+    const confirm = await Prompts.confirmAsync({ default: true, message });
     if (confirm) {
       Logger.global.info(`Going to the App Store, re-run Expo when Xcode is finished installing.`);
       await Xcode.openAppStoreAsync(Xcode.appStoreId);
@@ -102,7 +92,7 @@ async function ensureXcodeCommandLineToolsInstalledAsync(): Promise<boolean> {
   }
 
   // This prompt serves no purpose accept informing the user what to do next, we could just open the App Store but it could be confusing if they don't know what's going on.
-  const confirm = await confirmAsync({
+  const confirm = await Prompts.confirmAsync({
     default: true,
     message: `Xcode ${chalk.bold`Command Line Tools`} needs to be installed (requires ${chalk.bold`sudo`}), continue?`,
   });
@@ -239,7 +229,7 @@ async function getSelectableSimulatorsAsync(): Promise<SimControl.Device[]> {
 
 async function getSimulatorsAsync(): Promise<SimControl.Device[]> {
   const simulatorDeviceInfo = await SimControl.listAsync('devices');
-  return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
+  return Object.values(simulatorDeviceInfo.devices as any[]).reduce((prev, runtime) => {
     return prev.concat(runtime);
   }, []);
 }
@@ -388,16 +378,6 @@ export async function expoVersionOnSimulatorAsync({
   return matched;
 }
 
-let _interactiveCallback: ((pause: boolean) => void) | null = null;
-
-/**
- * Used to pause/resume interaction observers while prompting (made for TerminalUI).
- *
- * @param callback
- */
-export function setInteractiveCallback(callback: (pause: boolean) => void) {
-  _interactiveCallback = callback;
-}
 export async function doesExpoClientNeedUpdatedAsync(
   simulator: Pick<SimControl.Device, 'udid'>
 ): Promise<boolean> {
@@ -611,7 +591,7 @@ async function ensureExpoClientInstalledAsync(simulator: Pick<SimControl.Device,
 
   if (isInstalled) {
     if (await doesExpoClientNeedUpdatedAsync(simulator)) {
-      const confirm = await confirmAsync({
+      const confirm = await Prompts.confirmAsync({
         message: `Expo client on ${simulator.name} is outdated, would you like to upgrade?`,
       });
       if (confirm) {
@@ -733,7 +713,7 @@ async function promptForDeviceAsync(devices: SimControl.Device[]): Promise<strin
   // TODO: Add support for physical devices too.
 
   // Pause interactions on the TerminalUI
-  _interactiveCallback?.(true);
+  Prompts.pauseInteractions();
 
   const { answer } = await prompt([
     {
@@ -759,6 +739,6 @@ async function promptForDeviceAsync(devices: SimControl.Device[]): Promise<strin
     },
   ]);
   // Resume interactions on the TerminalUI
-  _interactiveCallback?.(false);
+  Prompts.resumeInteractions();
   return answer;
 }

@@ -16,6 +16,7 @@ import * as Binaries from './Binaries';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import * as ProjectSettings from './ProjectSettings';
+import * as Prompts from './Prompts';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
@@ -533,7 +534,7 @@ async function openUrlAsync({
     if (!isDetached) {
       let shouldInstall = !(await _isExpoInstalledAsync(device));
       if (!shouldInstall && (await isClientOutdatedAsync(device))) {
-        const confirm = await confirmAsync({
+        const confirm = await Prompts.confirmAsync({
           message: `Expo client on ${device.name} (${device.type}) is outdated, would you like to upgrade?`,
         });
         if (confirm) {
@@ -859,22 +860,11 @@ export async function maybeStopAdbDaemonAsync() {
   }
 }
 
-let _interactiveCallback: ((pause: boolean) => void) | null = null;
-
-/**
- * Used to pause/resume interaction observers while prompting (made for TerminalUI).
- *
- * @param callback
- */
-export function setInteractiveCallback(callback: (pause: boolean) => void) {
-  _interactiveCallback = callback;
-}
-
 async function promptForDeviceAsync(devices: Device[]): Promise<Device> {
   // TODO: provide an option to add or download more simulators
 
   // Pause interactions on the TerminalUI
-  _interactiveCallback?.(true);
+  Prompts.pauseInteractions();
 
   const { answer } = await prompt([
     {
@@ -896,17 +886,6 @@ async function promptForDeviceAsync(devices: Device[]): Promise<Device> {
     },
   ]);
   // Resume interactions on the TerminalUI
-  _interactiveCallback?.(false);
+  Prompts.resumeInteractions();
   return devices.find(({ name }) => name === answer)!;
-}
-
-async function confirmAsync(options: { default?: boolean; message: string }): Promise<boolean> {
-  _interactiveCallback?.(true);
-  const { confirm } = await prompt({
-    type: 'confirm',
-    name: 'confirm',
-    ...options,
-  });
-  _interactiveCallback?.(false);
-  return confirm;
 }
