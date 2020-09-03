@@ -229,7 +229,7 @@ async function getSelectableSimulatorsAsync(): Promise<SimControl.Device[]> {
 
 async function getSimulatorsAsync(): Promise<SimControl.Device[]> {
   const simulatorDeviceInfo = await SimControl.listAsync('devices');
-  return Object.values(simulatorDeviceInfo.devices as any[]).reduce((prev, runtime) => {
+  return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
     return prev.concat(runtime);
   }, []);
 }
