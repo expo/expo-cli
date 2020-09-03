@@ -66,7 +66,7 @@ async function run() {
       // )}`;
 
       const npmLink = `https://www.npmjs.com/package/${pkgJson.name}`;
-      const npmIcon = `https://img.shields.io/npm/v/${pkgJson.name}.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600`;
+      const npmIcon = `https://img.shields.io/npm/v/${pkgJson.name}?color=32cd32&style=flat-square`;
       // const npmItem = `[\`v${pkgJson.version}\`](${npmLink})`;
       /// With Icon, this seems to time out
       // const npmItem = `[![badges](${npmIcon})](${npmLink})`;
