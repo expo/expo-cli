@@ -126,6 +126,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
 
   // Modify strings.xml
   await AndroidConfig.Facebook.setFacebookAppIdString(exp, projectRoot);
+  await AndroidConfig.Name.setName(exp, projectRoot);
 
   // add google-services.json to project
   await AndroidConfig.GoogleServices.setGoogleServicesFile(exp, projectRoot);
