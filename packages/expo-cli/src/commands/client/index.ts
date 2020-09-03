@@ -335,7 +335,7 @@ export default function (program: Command) {
             : 'Do you want to install the latest client?',
         });
         if (answer.upgradeToLatest) {
-          await Simulator.upgradeExpoAsync(latestClient?.url);
+          await Simulator.upgradeExpoAsync({ url: latestClient?.url });
           log('Done!');
           return;
         }
@@ -356,7 +356,7 @@ export default function (program: Command) {
             : "It looks like we don't have a compatible client. Do you want to try the latest client?",
         });
         if (answer.updateToAClient) {
-          await Simulator.upgradeExpoAsync(latestClient?.url);
+          await Simulator.upgradeExpoAsync({ url: latestClient?.url });
           log('Done!');
         } else {
           log('No client to install');
