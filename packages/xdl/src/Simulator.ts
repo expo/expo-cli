@@ -4,9 +4,9 @@ import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import fs from 'fs-extra';
-import { Separator, prompt } from 'inquirer';
 import path from 'path';
 import ProgressBar from 'progress';
+import prompts from 'prompts';
 import semver from 'semver';
 
 import * as Analytics from './Analytics';
@@ -40,7 +40,7 @@ export function isPlatformSupported() {
 export async function ensureXcodeInstalledAsync(): Promise<boolean> {
   const promptToOpenAppStoreAsync = async (message: string) => {
     // This prompt serves no purpose accept informing the user what to do next, we could just open the App Store but it could be confusing if they don't know what's going on.
-    const confirm = await Prompts.confirmAsync({ default: true, message });
+    const confirm = await Prompts.confirmAsync({ initial: true, message });
     if (confirm) {
       Logger.global.info(`Going to the App Store, re-run Expo when Xcode is finished installing.`);
       await Xcode.openAppStoreAsync(Xcode.appStoreId);
@@ -93,7 +93,7 @@ async function ensureXcodeCommandLineToolsInstalledAsync(): Promise<boolean> {
 
   // This prompt serves no purpose accept informing the user what to do next, we could just open the App Store but it could be confusing if they don't know what's going on.
   const confirm = await Prompts.confirmAsync({
-    default: true,
+    initial: true,
     message: `Xcode ${chalk.bold`Command Line Tools`} needs to be installed (requires ${chalk.bold`sudo`}), continue?`,
   });
 
@@ -592,6 +592,7 @@ async function ensureExpoClientInstalledAsync(simulator: Pick<SimControl.Device,
   if (isInstalled) {
     if (await doesExpoClientNeedUpdatedAsync(simulator)) {
       const confirm = await Prompts.confirmAsync({
+        initial: true,
         message: `Expo client on ${simulator.name} is outdated, would you like to upgrade?`,
       });
       if (confirm) {
@@ -630,6 +631,9 @@ export async function openProjectAsync({
   } else {
     device = await ensureSimulatorOpenAsync({ udid: _lastUdid ?? undefined });
   }
+  if (!device) {
+    return { success: false, error: 'escaped' };
+  }
   _lastUdid = device.udid;
 
   const result = await openUrlInSimulatorSafeAsync({
@@ -667,7 +671,11 @@ export async function openWebProjectAsync({
   } else {
     device = await ensureSimulatorOpenAsync({ udid: _lastUdid ?? undefined });
   }
+  if (!device) {
+    return { success: false, error: 'escaped' };
+  }
   _lastUdid = device.udid;
+
   const result = await openUrlInSimulatorSafeAsync({
     url: projectUrl,
     udid: device.udid,
@@ -700,45 +708,43 @@ async function sortDefaultDeviceToBeginningAsync(
   return devices;
 }
 
-async function promptForSimulatorAsync(devices: SimControl.Device[]): Promise<SimControl.Device> {
+async function promptForSimulatorAsync(
+  devices: SimControl.Device[]
+): Promise<SimControl.Device | null> {
   devices = await sortDefaultDeviceToBeginningAsync(devices);
   // TODO: Bail on non-interactive
   const results = await promptForDeviceAsync(devices);
 
-  return devices.find(({ name }) => results === name)!;
+  return results ? devices.find(({ name }) => results === name)! : null;
 }
 
-async function promptForDeviceAsync(devices: SimControl.Device[]): Promise<string> {
+async function promptForDeviceAsync(devices: SimControl.Device[]): Promise<string | undefined> {
   // TODO: provide an option to add or download more simulators
   // TODO: Add support for physical devices too.
 
   // Pause interactions on the TerminalUI
   Prompts.pauseInteractions();
 
-  const { answer } = await prompt([
-    {
-      // @ts-ignore: broken types -- TODO: remove when migrating to `prompts`
-      type: 'list',
-      name: 'answer',
-      message: 'Select a simulator',
-      // @ts-ignore
-      choices: devices.map(item => {
-        if (item instanceof Separator) {
-          return item;
-        } else {
-          const isActive = item.state === 'Booted';
-          const format = isActive ? chalk.bold : (text: string) => text;
-          return {
-            name: `${format(item.name)} ${chalk.dim(`(${item.osVersion})`)}`,
-            value: item.name,
-          };
-        }
-      }),
-      // @ts-ignore
-      loop: false,
+  const { value } = await prompts({
+    type: 'autocomplete',
+    name: 'value',
+    limit: 11,
+    message: 'Select a simulator',
+    choices: devices.map(item => {
+      const isActive = item.state === 'Booted';
+      const format = isActive ? chalk.bold : (text: string) => text;
+      return {
+        title: `${format(item.name)} ${chalk.dim(`(${item.osVersion})`)}`,
+        value: item.name,
+      };
+    }),
+    suggest: (input: any, choices: any) => {
+      const regex = new RegExp(input, 'i');
+      return choices.filter((choice: any) => regex.test(choice.title));
     },
-  ]);
+  });
+
   // Resume interactions on the TerminalUI
   Prompts.resumeInteractions();
-  return answer;
+  return value;
 }
