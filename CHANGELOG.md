@@ -11,7 +11,16 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🐛 Bug fixes
 
 - [webpack] Fix copy webpack plugin for web overrides ([#2558](https://github.com/expo/expo-cli/issues/2558))
+
+## [Thu, 3 Sep 2020 10:30:14 +0200](https://github.com/expo/expo-cli/commit/68920e489dd4508e30f0da14bbe91b36427380a7)
+
+### 🐛 Bug fixes
+
 - [expo-cli] fix Segment context format [#2560](https://github.com/expo/expo-cli/pull/2560))
+
+### 📦 Packages updated
+
+- expo-cli@3.26.2
 
 ## [Wed, 2 Sep 2020 11:12:02 -0700](https://github.com/expo/expo-cli/commit/c97aba21376324b2131bb5058d193aab5ceb77f4)
 
