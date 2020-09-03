@@ -48,7 +48,7 @@ export type BuildMetadata = {
    * Tracking context
    * It's used to track build process across different Expo services and tools.
    */
-  trackingCtx: TrackingContext;
+  trackingContext: TrackingContext;
 };
 
 async function collectMetadata<T extends Platform>(
@@ -65,7 +65,7 @@ async function collectMetadata<T extends Platform>(
     workflow: ctx.buildProfile.workflow,
     credentialsSource,
     sdkVersion: ctx.commandCtx.exp.sdkVersion,
-    trackingCtx: ctx.trackingCtx,
+    trackingContext: ctx.trackingCtx,
   };
 }
 
