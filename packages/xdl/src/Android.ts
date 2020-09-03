@@ -518,6 +518,10 @@ async function attemptToStartEmulatorOrAssertAsync(device: Device): Promise<Devi
   return device;
 }
 
+// Keep a list of simulator UDIDs so we can prevent asking multiple times if a user wants to upgrade.
+// This can prevent annoying interactions when they don't want to upgrade for whatever reason.
+const hasPromptedToUpgrade: Record<string, boolean> = {};
+
 async function openUrlAsync({
   url,
   device,
@@ -533,7 +537,14 @@ async function openUrlAsync({
     let installedExpo = false;
     if (!isDetached) {
       let shouldInstall = !(await _isExpoInstalledAsync(device));
-      if (!shouldInstall && (await isClientOutdatedAsync(device))) {
+      const promptKey = device.pid ?? 'unknown';
+      if (
+        !shouldInstall &&
+        !hasPromptedToUpgrade[promptKey] &&
+        (await isClientOutdatedAsync(device))
+      ) {
+        // Only prompt once per device, per run.
+        hasPromptedToUpgrade[promptKey] = true;
         const confirm = await Prompts.confirmAsync({
           message: `Expo client on ${device.name} (${device.type}) is outdated, would you like to upgrade?`,
         });

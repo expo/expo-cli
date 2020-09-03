@@ -586,11 +586,20 @@ export async function openUrlInSimulatorSafeAsync({
   };
 }
 
+// Keep a list of simulator UDIDs so we can prevent asking multiple times if a user wants to upgrade.
+// This can prevent annoying interactions when they don't want to upgrade for whatever reason.
+const hasPromptedToUpgrade: Record<string, boolean> = {};
+
 async function ensureExpoClientInstalledAsync(simulator: Pick<SimControl.Device, 'udid' | 'name'>) {
   let isInstalled = await isExpoClientInstalledOnSimulatorAsync(simulator);
 
   if (isInstalled) {
-    if (await doesExpoClientNeedUpdatedAsync(simulator)) {
+    if (
+      !hasPromptedToUpgrade[simulator.udid] &&
+      (await doesExpoClientNeedUpdatedAsync(simulator))
+    ) {
+      // Only prompt once per simulator in a single run.
+      hasPromptedToUpgrade[simulator.udid] = true;
       const confirm = await Prompts.confirmAsync({
         message: `Expo client on ${simulator.name} is outdated, would you like to upgrade?`,
       });
