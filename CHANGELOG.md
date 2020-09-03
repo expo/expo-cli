@@ -10,6 +10,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+- [webpack] Fix copy webpack plugin for web overrides ([#2558](https://github.com/expo/expo-cli/issues/2558))
+
 ## [Wed, 2 Sep 2020 11:12:02 -0700](https://github.com/expo/expo-cli/commit/c97aba21376324b2131bb5058d193aab5ceb77f4)
 
 ### 🎉 New features
