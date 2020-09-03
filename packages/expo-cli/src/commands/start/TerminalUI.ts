@@ -4,6 +4,7 @@ import {
   Project,
   ProjectSettings,
   ProjectUtils,
+  Prompts,
   Simulator,
   UrlUtils,
   UserManager,
@@ -135,15 +136,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
 
   startWaitingForCommand();
 
-  Simulator.setInteractiveCallback(async (pause: boolean) => {
-    if (pause) {
-      stopWaitingForCommand();
-    } else {
-      startWaitingForCommand();
-    }
-  });
-
-  Android.setInteractiveCallback(async (pause: boolean) => {
+  Prompts.addInteractionListener(({ pause }) => {
     if (pause) {
       stopWaitingForCommand();
     } else {
