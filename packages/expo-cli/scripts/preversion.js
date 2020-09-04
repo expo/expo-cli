@@ -1,6 +1,6 @@
 const boxen = require('boxen');
 const { bold } = require('chalk');
-const inquirer = require('inquirer');
+const prompts = require('prompts');
 
 console.log(
   boxen(bold("Please complete these checks before publishing the 'expo-cli' package:"), {
@@ -32,16 +32,14 @@ ${bold('3) Eject')}: Create an app and eject it immediately. Check that it build
     ./gradlew installDevKernelDebug`
 );
 
-inquirer
-  .prompt({
-    type: 'confirm',
-    name: 'completed',
-    message: 'Have you completed all the checks?',
-    default: false,
-  })
-  .then(answer => {
-    if (!answer.completed) {
-      console.error('Please complete all the checks before continuing.');
-      process.exit(1);
-    }
-  });
+prompts({
+  type: 'confirm',
+  name: 'completed',
+  message: 'Have you completed all the checks?',
+  initial: false,
+}).then(answer => {
+  if (!answer.completed) {
+    console.error('Please complete all the checks before continuing.');
+    process.exit(1);
+  }
+});
