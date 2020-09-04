@@ -21,9 +21,9 @@ describe('cli-command', () => {
         backgroundColor: 'rgba(10, 20, 30, 0.2)',
         darkMode: {
           backgroundColor: undefined,
-          imagePath: undefined,
+          image: undefined,
         },
-        imagePath: undefined,
+        image: undefined,
         imageResizeMode: undefined,
         statusBar: {
           hidden: undefined,
@@ -34,13 +34,13 @@ describe('cli-command', () => {
         backgroundColor: 'rgba(10, 20, 30, 0.2)',
         darkMode: {
           backgroundColor: undefined,
-          imagePath: undefined,
+          image: undefined,
           statusBar: {
             backgroundColor: undefined,
             style: undefined,
           },
         },
-        imagePath: undefined,
+        image: undefined,
         imageResizeMode: undefined,
         statusBar: {
           hidden: undefined,
@@ -81,11 +81,11 @@ describe('cli-command', () => {
       /* eslint-enable */
       expect(configureIos).toHaveBeenLastCalledWith(expect.anything(), {
         backgroundColor: 'rgba(10, 20, 30, 0.2)',
-        imagePath: './assets/background.png',
+        image: './assets/background.png',
         imageResizeMode: 'contain',
         darkMode: {
           backgroundColor: 'yellow',
-          imagePath: './assets/background-dark.png',
+          image: './assets/background-dark.png',
         },
         statusBar: {
           hidden: true,
@@ -94,11 +94,11 @@ describe('cli-command', () => {
       });
       expect(configureAndroid).toHaveBeenLastCalledWith(expect.anything(), {
         backgroundColor: 'rgba(10, 20, 30, 0.2)',
-        imagePath: './assets/background.png',
+        image: './assets/background.png',
         imageResizeMode: 'contain',
         darkMode: {
           backgroundColor: 'yellow',
-          imagePath: './assets/background-dark.png',
+          image: './assets/background-dark.png',
           statusBar: {
             backgroundColor: 'red',
             style: 'light-content',

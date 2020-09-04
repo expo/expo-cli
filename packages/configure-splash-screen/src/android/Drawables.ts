@@ -108,9 +108,9 @@ async function copyDrawableFile(srcPath: string | undefined, dstPath: string) {
 export default async function configureDrawables(
   androidMainPath: string,
   config: {
-    imagePath?: string;
+    image?: string;
     darkMode?: {
-      imagePath?: string;
+      image?: string;
     };
   } = {}
 ) {
@@ -128,11 +128,11 @@ export default async function configureDrawables(
 
   await Promise.all([
     copyDrawableFile(
-      config.imagePath,
+      config.image,
       path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.modes.light.path)
     ),
     copyDrawableFile(
-      config.darkMode?.imagePath,
+      config.darkMode?.image,
       path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.modes.dark.path)
     ),
   ]);

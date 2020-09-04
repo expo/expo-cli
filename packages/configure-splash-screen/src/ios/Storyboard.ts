@@ -35,12 +35,12 @@ export default async function configureStoryboard(
   iosProject: IosProject,
   config: {
     imageResizeMode?: SplashScreenImageResizeModeType;
-    imagePath?: string;
+    image?: string;
   } = {}
 ) {
   const resizeMode: SplashScreenImageResizeModeType =
     config.imageResizeMode ?? SplashScreenImageResizeMode.CONTAIN;
-  const splashScreenImagePresent = Boolean(config.imagePath);
+  const splashScreenImagePresent = Boolean(config.image);
 
   let contentMode: string;
   switch (resizeMode) {

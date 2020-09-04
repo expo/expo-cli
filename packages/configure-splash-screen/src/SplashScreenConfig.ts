@@ -8,7 +8,7 @@ import { SplashScreenImageResizeModeType, SplashScreenStatusBarStyleType } from 
 export type IosSplashScreenConfig = {
   backgroundColor: Color;
 
-  imagePath?: string;
+  image?: string;
   imageResizeMode?: SplashScreenImageResizeModeType;
 
   statusBar?: {
@@ -18,7 +18,7 @@ export type IosSplashScreenConfig = {
 
   darkMode?: {
     backgroundColor?: Color;
-    imagePath?: string;
+    image?: string;
   };
 };
 
@@ -28,7 +28,7 @@ export type IosSplashScreenConfig = {
 export type AndroidSplashScreenConfig = {
   backgroundColor: Color;
 
-  imagePath?: string;
+  image?: string;
   imageResizeMode?: SplashScreenImageResizeModeType;
 
   statusBar?: {
@@ -40,7 +40,7 @@ export type AndroidSplashScreenConfig = {
 
   darkMode?: {
     backgroundColor?: Color;
-    imagePath?: string;
+    image?: string;
     statusBar?: {
       style?: SplashScreenStatusBarStyleType;
       backgroundColor?: Color;
@@ -54,7 +54,7 @@ export type AndroidSplashScreenConfig = {
 export type IosSplashScreenConfigJSON = {
   backgroundColor: string;
 
-  imagePath?: string;
+  image?: string;
   imageResizeMode?: string;
 
   statusBar?: {
@@ -64,7 +64,7 @@ export type IosSplashScreenConfigJSON = {
 
   darkMode?: {
     backgroundColor?: string;
-    imagePath?: string;
+    image?: string;
   };
 };
 
@@ -74,7 +74,7 @@ export type IosSplashScreenConfigJSON = {
 export type AndroidSplashScreenConfigJSON = {
   backgroundColor: string;
 
-  imagePath?: string;
+  image?: string;
   imageResizeMode?: string;
 
   statusBar?: {
@@ -86,7 +86,7 @@ export type AndroidSplashScreenConfigJSON = {
 
   darkMode?: {
     backgroundColor?: string;
-    imagePath?: string;
+    image?: string;
     statusBar?: {
       style?: string;
       backgroundColor?: string;

@@ -31,7 +31,7 @@ describe('Drawables', () => {
 
     it('creates correct file', async () => {
       await configureDrawables(androidMainPath, {
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
       const expected = {
@@ -43,8 +43,8 @@ describe('Drawables', () => {
 
     it('creates correct file for dark mode', async () => {
       await configureDrawables(androidMainPath, {
-        imagePath: '/assets/background.png',
-        darkMode: { imagePath: '/assets/background.png' },
+        image: '/assets/background.png',
+        darkMode: { image: '/assets/background.png' },
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
       const expected = {
@@ -75,7 +75,7 @@ describe('Drawables', () => {
         vol.writeFileSync(filePath, backgroundImage);
       }
       await configureDrawables(androidMainPath, {
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
       const expected = {

@@ -183,7 +183,7 @@ describe('Storyboard', () => {
       const iosProject = await readPbxProject(iosProjectPath);
       await configureStoryboard(iosProject, {
         imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
-        imagePath: './',
+        image: './',
       });
       const actual = vol.readFileSync(filePath, 'utf-8');
       const expected = `<?xml version="1.0" encoding="UTF-8"?>

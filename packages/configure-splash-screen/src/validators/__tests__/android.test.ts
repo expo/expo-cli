@@ -34,7 +34,7 @@ describe('validateAndroidConfig', () => {
     it('validates full config successfully', async () => {
       const result = await validateAndroidConfig({
         backgroundColor: 'red',
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
         imageResizeMode: 'contain',
         statusBar: {
           hidden: false,
@@ -43,7 +43,7 @@ describe('validateAndroidConfig', () => {
           backgroundColor: 'yellow',
         },
         darkMode: {
-          imagePath: '/assets/background.png',
+          image: '/assets/background.png',
           backgroundColor: 'rgba(40, 80, 120, 0.5)',
           statusBar: {
             backgroundColor: 'hsl(64, 47%, 70%)',
@@ -55,13 +55,13 @@ describe('validateAndroidConfig', () => {
         backgroundColor: [255, 0, 0, 1],
         darkMode: {
           backgroundColor: [40, 80, 120, 0.5],
-          imagePath: '/assets/background.png',
+          image: '/assets/background.png',
           statusBar: {
             backgroundColor: [64, 47, 70, 1],
             style: 'light-content',
           },
         },
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
         imageResizeMode: 'contain',
         statusBar: {
           backgroundColor: [255, 255, 0, 1],
@@ -101,15 +101,15 @@ describe('validateAndroidConfig', () => {
       await expect(async () => {
         await validateAndroidConfig({
           backgroundColor: 'white',
-          imagePath: '/assets/bg.png',
+          image: '/assets/bg.png',
           darkMode: {
-            imagePath: '/assets/bg.png',
+            image: '/assets/bg.png',
           },
         });
       }).rejects.toThrow(
         new Error(`Validating error:
-  'imagePath': Invalid path '/assets/bg.png' - file does not exist. Provide a path to an existing file.
-  'darkMode.imagePath': Missing a required valid value for 'darkMode.backgroundColor'. Provide a valid value for it to enable this property.`)
+  'image': Invalid path '/assets/bg.png' - file does not exist. Provide a path to an existing file.
+  'darkMode.image': Missing a required valid value for 'darkMode.backgroundColor'. Provide a valid value for it to enable this property.`)
       );
     });
 
@@ -117,7 +117,7 @@ describe('validateAndroidConfig', () => {
       await expect(async () => {
         await validateAndroidConfig({
           backgroundColor: 'white',
-          imagePath: '/assets/background.png',
+          image: '/assets/background.png',
           imageResizeMode: 'unknown',
 
           statusBar: {

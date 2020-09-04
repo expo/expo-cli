@@ -50,7 +50,7 @@ describe('ios', () => {
       await configureIos('/app', {
         backgroundColor: 'yellow',
         imageResizeMode: SplashScreenImageResizeMode.COVER,
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
       // I don't compare `.pbxproj` as every time it is filled with new UUIDs

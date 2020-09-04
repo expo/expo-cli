@@ -34,14 +34,14 @@ describe('validateIosConfig', () => {
     it('validates full config successfully', async () => {
       const result = await validateIosConfig({
         backgroundColor: 'red',
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
         imageResizeMode: 'contain',
         statusBar: {
           hidden: false,
           style: 'dark-content',
         },
         darkMode: {
-          imagePath: '/assets/background.png',
+          image: '/assets/background.png',
           backgroundColor: 'rgba(40, 80, 120, 0.5)',
         },
       });
@@ -49,9 +49,9 @@ describe('validateIosConfig', () => {
         backgroundColor: [255, 0, 0, 1],
         darkMode: {
           backgroundColor: [40, 80, 120, 0.5],
-          imagePath: '/assets/background.png',
+          image: '/assets/background.png',
         },
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
         imageResizeMode: 'contain',
         statusBar: {
           hidden: false,
@@ -81,15 +81,15 @@ describe('validateIosConfig', () => {
       await expect(async () => {
         await validateIosConfig({
           backgroundColor: 'white',
-          imagePath: '/assets/bg.png',
+          image: '/assets/bg.png',
           darkMode: {
-            imagePath: '/assets/bg.png',
+            image: '/assets/bg.png',
           },
         });
       }).rejects.toThrow(
         new Error(`Validating error:
-  'imagePath': Invalid path '/assets/bg.png' - file does not exist. Provide a path to an existing file.
-  'darkMode.imagePath': Missing a required valid value for 'darkMode.backgroundColor'. Provide a valid value for it to enable this property.`)
+  'image': Invalid path '/assets/bg.png' - file does not exist. Provide a path to an existing file.
+  'darkMode.image': Missing a required valid value for 'darkMode.backgroundColor'. Provide a valid value for it to enable this property.`)
       );
     });
 
@@ -97,7 +97,7 @@ describe('validateIosConfig', () => {
       await expect(async () => {
         await validateIosConfig({
           backgroundColor: 'white',
-          imagePath: '/assets/background.png',
+          image: '/assets/background.png',
           imageResizeMode: 'unknown',
           statusBar: {
             style: 'unknown',

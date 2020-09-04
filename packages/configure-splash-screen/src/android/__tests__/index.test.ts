@@ -40,7 +40,7 @@ describe('android', () => {
       vol.fromJSON(reactNativeProjectWithSplashScreenConfigured, '/app');
       await configureAndroid('/app', {
         backgroundColor: 'rgba(35, 123, 217, 0.5)',
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
         imageResizeMode: SplashScreenImageResizeMode.NATIVE,
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
@@ -70,7 +70,7 @@ describe('android', () => {
       vol.writeFileSync('/assets/background.png', backgroundImage);
       await configureAndroid('/app', {
         backgroundColor: 'yellow',
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
         imageResizeMode: SplashScreenImageResizeMode.COVER,
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
@@ -111,7 +111,7 @@ describe('android', () => {
     it('configures project correctly with different colors and one image for both color modes', async () => {
       await configureAndroid('/app', {
         imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
         backgroundColor: '#E3F29238',
         darkMode: {
           backgroundColor: '#65E3A2',
@@ -140,10 +140,10 @@ describe('android', () => {
       await configureAndroid('/app', {
         imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
         backgroundColor: '#E3F29238',
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
         darkMode: {
           backgroundColor: '#65E3A2',
-          imagePath: '/assets/background_dark.png',
+          image: '/assets/background_dark.png',
         },
       });
 

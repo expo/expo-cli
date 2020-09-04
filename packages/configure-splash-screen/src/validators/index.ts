@@ -38,9 +38,9 @@ export async function validateIosConfig(
 ): Promise<IosSplashScreenConfig> {
   const validator = new FromJsonValidator<IosSplashScreenConfigJSON, IosSplashScreenConfig>()
     .addRule(['backgroundColor'], validateColor)
-    .addRule(['imagePath'], validateFileIsPng)
+    .addRule(['image'], validateFileIsPng)
     .addRule(['imageResizeMode'], (value, config) => {
-      ensurePropertyExists(config, ['imagePath']);
+      ensurePropertyExists(config, ['image']);
       const result = generateValidateEnumValue(SplashScreenImageResizeMode)(value);
       if (result === SplashScreenImageResizeMode.NATIVE) {
         const { NATIVE, ...availableValues } = SplashScreenImageResizeMode;
@@ -57,7 +57,7 @@ export async function validateIosConfig(
     .addRule(['statusBar', 'hidden'])
     .addRule(['statusBar', 'style'], generateValidateEnumValue(SplashScreenStatusBarStyle))
     .addRule(['darkMode', 'backgroundColor'], validateColor)
-    .addRule(['darkMode', 'imagePath'], (value, config) => {
+    .addRule(['darkMode', 'image'], (value, config) => {
       ensurePropertyExists(config, ['darkMode', 'backgroundColor']);
       return validateFileIsPng(value);
     });
@@ -102,9 +102,9 @@ export async function validateAndroidConfig(
     AndroidSplashScreenConfig
   >()
     .addRule(['backgroundColor'], validateColor)
-    .addRule(['imagePath'], validateFileIsPng)
+    .addRule(['image'], validateFileIsPng)
     .addRule(['imageResizeMode'], (value, config) => {
-      ensurePropertyExists(config, ['imagePath']);
+      ensurePropertyExists(config, ['image']);
       return generateValidateEnumValue(SplashScreenImageResizeMode)(value);
     })
     .addRule(['statusBar', 'hidden'])
@@ -112,7 +112,7 @@ export async function validateAndroidConfig(
     .addRule(['statusBar', 'translucent'])
     .addRule(['statusBar', 'backgroundColor'], validateColor)
     .addRule(['darkMode', 'backgroundColor'], validateColor)
-    .addRule(['darkMode', 'imagePath'], (value, config) => {
+    .addRule(['darkMode', 'image'], (value, config) => {
       ensurePropertyExists(config, ['darkMode', 'backgroundColor']);
       return validateFileIsPng(value);
     })

@@ -19,7 +19,7 @@ export function getSplashScreen(config: ExpoConfig): IosSplashScreenConfig | und
       SplashScreenImageResizeMode.CONTAIN,
     backgroundColor:
       config.ios?.splash?.backgroundColor ?? config.splash?.backgroundColor ?? '#FFFFFF', // white
-    imagePath: config.ios?.splash?.image ?? config.splash?.image,
+    image: config.ios?.splash?.image ?? config.splash?.image,
   };
 
   return result;

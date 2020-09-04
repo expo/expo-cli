@@ -89,7 +89,7 @@ function configurationFromOptions({
   const genericConfig = {
     imageResizeMode,
     backgroundColor,
-    imagePath,
+    image: imagePath,
   };
   const genericStatusBarConfig = {
     hidden: resolvedStatusBarHidden,
@@ -97,7 +97,7 @@ function configurationFromOptions({
   };
   const genericDarkModeConfig = {
     backgroundColor: darkModeBackgroundColor,
-    imagePath: darkModeImagePath,
+    image: darkModeImagePath,
   };
 
   const result: Configuration = {

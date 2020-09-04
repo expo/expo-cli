@@ -36,7 +36,7 @@ describe('ImageAsset', () => {
 
     it(`creates correct files when there's an image`, async () => {
       await configureImageAsset(iosProjectPath, {
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
       });
       const imageResult = vol.readFileSync(
         `${iosProjectPath}/Images.xcassets/SplashScreen.imageset/splashscreen.png`,
@@ -72,7 +72,7 @@ describe('ImageAsset', () => {
 
     it(`cleans files if there's no image`, async () => {
       await configureImageAsset(iosProjectPath, {
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
       });
       await configureImageAsset(iosProjectPath);
       const imageResult = vol.existsSync(
@@ -87,9 +87,9 @@ describe('ImageAsset', () => {
 
     it(`creates per-appearance files while dark mode is enabled`, async () => {
       await configureImageAsset(iosProjectPath, {
-        imagePath: '/assets/background.png',
+        image: '/assets/background.png',
         darkMode: {
-          imagePath: '/assets/background_dark.png',
+          image: '/assets/background_dark.png',
         },
       });
 

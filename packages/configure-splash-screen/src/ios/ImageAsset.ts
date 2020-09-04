@@ -48,14 +48,14 @@ async function copyImageFiles(
 export default async function configureImageAssets(
   iosProjectPath: string,
   config: {
-    imagePath?: string;
+    image?: string;
     darkMode?: {
-      imagePath?: string;
+      image?: string;
     };
   } = {}
 ) {
-  const imagePath = config.imagePath;
-  const darkModeImagePath = config.darkMode?.imagePath;
+  const imagePath = config.image;
+  const darkModeImagePath = config.darkMode?.image;
 
   const imageSetPath = path.resolve(iosProjectPath, IMAGESET_PATH);
 

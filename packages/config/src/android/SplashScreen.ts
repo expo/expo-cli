@@ -19,7 +19,7 @@ export function getSplashScreenConfig(config: ExpoConfig): AndroidSplashScreenCo
       SplashScreenImageResizeMode.CONTAIN,
     backgroundColor:
       config.android?.splash?.backgroundColor ?? config.splash?.backgroundColor ?? '#FFFFFF', // white
-    imagePath:
+    image:
       config.android?.splash?.xxxhdpi ??
       config.android?.splash?.xxhdpi ??
       config.android?.splash?.xhdpi ??
