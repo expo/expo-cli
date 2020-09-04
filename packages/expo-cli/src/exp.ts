@@ -100,7 +100,7 @@ Command.prototype.prepareCommands = function () {
       if (getenv.boolish('EXPO_DEBUG', false)) {
         return true;
       }
-      return cmd.__helpGroup !== 'internal';
+      return !['internal', 'eas'].includes(cmd.__helpGroup);
     })
     .map(function (cmd: Command, i: number) {
       const args = cmd._args.map(humanReadableArgName).join(' ');
