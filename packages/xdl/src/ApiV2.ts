@@ -35,6 +35,7 @@ export class ApiV2Error extends ExtendableError {
   code: string;
   details?: JSONValue;
   serverStack?: string;
+  metadata?: object;
   readonly _isApiError = true;
 
   constructor(message: string, code: string = 'UNKNOWN') {
@@ -244,6 +245,7 @@ export default class ApiV2Client {
       const error = new ApiV2Error(responseError.message, responseError.code);
       error.serverStack = responseError.stack;
       error.details = responseError.details;
+      error.metadata = responseError.metadata;
       throw error;
     }
 

@@ -1,6 +1,8 @@
-import { RegistrationData, User, UserManager } from '@expo/xdl';
+import { ApiV2, RegistrationData, User, UserManager } from '@expo/xdl';
+import { ApiV2Error } from '@expo/xdl/build/ApiV2';
 import chalk from 'chalk';
 import program from 'commander';
+import invariant from 'invariant';
 
 import CommandError from './CommandError';
 import log from './log';
@@ -12,9 +14,22 @@ UserManager.initialize();
 type CommandOptions = {
   username?: string;
   password?: string;
+  otp?: string;
   parent?: {
     nonInteractive: boolean;
   };
+};
+
+enum UserSecondFactorDeviceMethod {
+  AUTHENTICATOR = 'authenticator',
+  SMS = 'sms',
+}
+
+type SecondFactorDevice = {
+  id: string;
+  method: UserSecondFactorDeviceMethod;
+  sms_phone_number: string | null;
+  is_primary: boolean;
 };
 
 export async function loginOrRegisterAsync(): Promise<User> {
@@ -79,11 +94,11 @@ export async function login(options: CommandOptions): Promise<User> {
         return user;
       }
     }
-    return _usernamePasswordAuth(options.username, options.password);
+    return _usernamePasswordAuth(options.username, options.password, options.otp);
   } else if (options.username && options.password) {
-    return _usernamePasswordAuth(options.username, options.password);
+    return _usernamePasswordAuth(options.username, options.password, options.otp);
   } else if (options.username && process.env.EXPO_CLI_PASSWORD) {
-    return _usernamePasswordAuth(options.username, process.env.EXPO_CLI_PASSWORD);
+    return _usernamePasswordAuth(options.username, process.env.EXPO_CLI_PASSWORD, options.otp);
   } else {
     throw new CommandError(
       'NON_INTERACTIVE',
@@ -92,7 +107,171 @@ export async function login(options: CommandOptions): Promise<User> {
   }
 }
 
-async function _usernamePasswordAuth(username?: string, password?: string): Promise<User> {
+/**
+ * Prompt for an OTP with the option to cancel the question by answering empty (pressing return key).
+ */
+async function _promptForOTPAsync(cancelBehavior: 'cancel' | 'menu'): Promise<string | null> {
+  const enterMessage =
+    cancelBehavior === 'cancel' ? 'press enter to cancel' : 'press enter for other options';
+  const otpQuestion: Question = {
+    type: 'input',
+    name: 'otp',
+    message: `One-time Password or Backup Code (${enterMessage}):`,
+  };
+
+  const { otp } = await prompt(otpQuestion);
+  if (!otp || otp === '') {
+    return null;
+  }
+
+  return otp;
+}
+
+/**
+ * Prompt for user to choose a backup OTP method. If selected method is SMS, a request
+ * for a new  will be sent to that method. Then, prompt for the OTP, and retry the user login.
+ */
+async function _promptForBackupOTPAsync(
+  username: string,
+  password: string,
+  secondFactorDevices: SecondFactorDevice[]
+): Promise<string | null> {
+  const nonPrimarySecondFactorDevices = secondFactorDevices.filter(device => !device.is_primary);
+
+  if (nonPrimarySecondFactorDevices.length === 0) {
+    throw new Error('No other second factor devices set up for user');
+  }
+
+  const hasOtherAuthenticatorSecondFactorDevice = !!nonPrimarySecondFactorDevices.find(
+    device => device.method === UserSecondFactorDeviceMethod.AUTHENTICATOR
+  );
+
+  const smsNonPrimarySecondFactorDevices = nonPrimarySecondFactorDevices.filter(
+    device => device.method === UserSecondFactorDeviceMethod.SMS
+  );
+
+  const authenticatorChoiceSentinel = -1;
+  const cancelChoiceSentinel = -2;
+
+  const deviceChoices = smsNonPrimarySecondFactorDevices.map((device, idx) => ({
+    name: `Phone ending in ${device.sms_phone_number}`,
+    value: idx,
+  }));
+
+  if (hasOtherAuthenticatorSecondFactorDevice) {
+    deviceChoices.push({
+      name: 'Authenticator',
+      value: authenticatorChoiceSentinel,
+    });
+  }
+
+  deviceChoices.push({
+    name: 'Cancel',
+    value: cancelChoiceSentinel,
+  });
+
+  const question: Question = {
+    type: 'list',
+    name: 'choice',
+    message: 'Select a second factor device:',
+    choices: deviceChoices,
+    pageSize: Infinity,
+  };
+
+  const { choice } = await prompt(question);
+  if (choice === cancelChoiceSentinel) {
+    throw new Error('User cancelled login');
+  } else if (choice === authenticatorChoiceSentinel) {
+    return await _promptForOTPAsync('cancel');
+  }
+
+  const device = smsNonPrimarySecondFactorDevices[choice];
+
+  const apiAnonymous = ApiV2.clientForUser();
+  await apiAnonymous.postAsync('auth/send-sms-otp', {
+    username,
+    password,
+    secondFactorDeviceID: device.id,
+  });
+
+  return await _promptForOTPAsync('cancel');
+}
+
+/**
+ * Handle the special case error indicating that a second-factor is required for
+ * authentication.
+ *
+ * There are three cases we need to handle:
+ * 1. User's primary second-factor device was SMS, OTP was automatically sent by the server to that
+ *    device already. In this case we should just prompt for the SMS OTP (or backup code), which the
+ *    user should be receiving shortly. We should give the user a way to cancel and the prompt and move
+ *    to case 3 below.
+ * 2. User's primary second-factor device is authenticator. In this case we should prompt for authenticator
+ *    OTP (or backup code) and also give the user a way to cancel and move to case 3 below.
+ * 3. User doesn't have a primary device or doesn't have access to their primary device. In this case
+ *    we should show a picker of the SMS devices that they can have an OTP code sent to, and when
+ *    the user picks one we show a prompt for the sent OTP.
+ */
+async function _retryUsernamePasswordAuthWithOTPAsync(
+  username: string,
+  password: string,
+  metadata: {
+    secondFactorDevices?: SecondFactorDevice[];
+    smsAutomaticallySent?: boolean;
+  }
+): Promise<User> {
+  const {
+    secondFactorDevices,
+    smsAutomaticallySent,
+  }: {
+    secondFactorDevices?: SecondFactorDevice[];
+    smsAutomaticallySent?: boolean;
+  } = metadata as any;
+  invariant(
+    secondFactorDevices !== undefined && smsAutomaticallySent !== undefined,
+    'malformed OTP error metadata'
+  );
+
+  const primaryDevice = secondFactorDevices.find(device => device.is_primary);
+  let otp: string | null = null;
+
+  if (smsAutomaticallySent) {
+    invariant(
+      primaryDevice,
+      'OTP should only automatically be sent when there is a primary device'
+    );
+    console.log(
+      `One-time password was sent to the phone number ending in ${primaryDevice.sms_phone_number}.`
+    );
+    otp = await _promptForOTPAsync('menu');
+  }
+
+  if (primaryDevice?.method === UserSecondFactorDeviceMethod.AUTHENTICATOR) {
+    console.log(`One-time password from authenticator required.`);
+    otp = await _promptForOTPAsync('menu');
+  }
+
+  // user bailed on case 1 or 2, wants to move to case 3
+  if (!otp) {
+    otp = await _promptForBackupOTPAsync(username, password, secondFactorDevices);
+  }
+
+  if (!otp) {
+    throw new Error('User cancelled login');
+  }
+
+  return await UserManager.loginAsync('user-pass', {
+    username,
+    password,
+    otp,
+  });
+}
+
+async function _usernamePasswordAuth(
+  username?: string,
+  password?: string,
+  otp?: string
+): Promise<User> {
   const questions: Question[] = [];
   if (!username) {
     questions.push({
@@ -127,9 +306,23 @@ async function _usernamePasswordAuth(username?: string, password?: string): Prom
   const data = {
     username: username || answers.username,
     password: password || answers.password,
+    otp: otp || answers.otp,
   };
 
-  const user = await UserManager.loginAsync('user-pass', data);
+  let user: User;
+  try {
+    user = await UserManager.loginAsync('user-pass', data);
+  } catch (e) {
+    if (e instanceof ApiV2Error && e.code === 'ONE_TIME_PASSWORD_REQUIRED') {
+      user = await _retryUsernamePasswordAuthWithOTPAsync(
+        data.username,
+        data.password,
+        e.metadata as any
+      );
+    } else {
+      throw e;
+    }
+  }
 
   if (user) {
     console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);

@@ -91,7 +91,7 @@ export class UserManagerInstance {
    */
   async loginAsync(
     loginType: LoginType,
-    loginArgs?: { username: string; password: string }
+    loginArgs?: { username: string; password: string; otp?: string }
   ): Promise<User> {
     if (loginType === 'user-pass') {
       if (!loginArgs) {
@@ -101,6 +101,7 @@ export class UserManagerInstance {
       const loginResp = await apiAnonymous.postAsync('auth/loginAsync', {
         username: loginArgs.username,
         password: loginArgs.password,
+        otp: loginArgs.otp,
       });
       if (loginResp.error) {
         throw new XDLError('INVALID_USERNAME_PASSWORD', loginResp['error_description']);
