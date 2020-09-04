@@ -168,6 +168,20 @@ function loaderToLoaderItemLoaderPart(loader: RuleSetUse | undefined): LoaderIte
 /**
  *
  * @param config
+ * @param file
+ * @category utils
+ */
+export function getRulesByMatchingFile(
+  config: AnyConfiguration,
+  files: string
+): { [key: string]: RuleItem[] } {
+  const rules = getRules(config);
+  return rules.filter(({ rule }) => conditionMatchesFile(rule.test, file));
+}
+
+/**
+ *
+ * @param config
  * @param files
  * @category utils
  */
@@ -175,10 +189,9 @@ export function getRulesByMatchingFiles(
   config: AnyConfiguration,
   files: string[]
 ): { [key: string]: RuleItem[] } {
-  const rules = getRules(config);
   const selectedRules: { [key: string]: RuleItem[] } = {};
   for (const file of files) {
-    selectedRules[file] = rules.filter(({ rule }) => conditionMatchesFile(rule.test, file));
+    selectedRules[file] = getRulesByMatchingFile(config, file);
   }
   return selectedRules;
 }
