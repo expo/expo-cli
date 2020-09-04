@@ -11,4 +11,5 @@ export type ImageOptions = {
   width: number;
   height: number;
   padding?: number;
+  borderRadius?: number;
 };
