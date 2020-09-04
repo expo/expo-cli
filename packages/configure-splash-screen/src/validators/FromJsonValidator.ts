@@ -1,22 +1,23 @@
 import { get, set } from 'lodash';
-import { DeepRequired, IsNever, KeyofObject, OptionalPromise, JsonShape } from '../types';
+
+import type {
+  JsonShape,
+  OptionalPromise,
+  NonPrimitiveAndNonArrayKeys,
+  DeepRequired,
+  IsNever,
+} from './types';
 
 /**
  * This class is responsible for validating configuration object in a form of json and produce validated object based on validating `rules` added via `addRule` method.
  */
 export default class FromJsonValidator<From extends JsonShape<To>, To extends object> {
-  // Records:
-  // - keys are stringified array paths to the properties
-  // - values are functions accepting
-  private rules: Array<
-    [PropertyKey[], (value: unknown, config: To) => OptionalPromise<unknown>]
-  > = [];
-
-  constructor(otherValidator?: FromJsonValidator<From, To>) {
-    if (otherValidator) {
-      this.rules = otherValidator.rules;
-    }
-  }
+  /**
+   *  Records:
+   * - keys are stringified array paths to the properties
+   * - values are functions accepting
+   */
+  private rules: [PropertyKey[], (value: unknown, config: To) => OptionalPromise<unknown>][] = [];
 
   /**
    * Add rule that determined what property is copied from JSON object into actual validated object.
@@ -24,9 +25,9 @@ export default class FromJsonValidator<From extends JsonShape<To>, To extends ob
    * @param validatingFunction optional parameter that is responsible for actual type conversion and semantic checking (e.g. check is given string is actually a path or a valid color). Not providing it results in copying over value without any semantic checking.
    */
   addRule<
-    TK1 extends KeyofObject<DeepRequired<To>>,
-    TK2 extends KeyofObject<DeepRequired<To>[TK1]>,
-    TK3 extends KeyofObject<DeepRequired<To>[TK1][TK2]>
+    TK1 extends NonPrimitiveAndNonArrayKeys<DeepRequired<To>>,
+    TK2 extends NonPrimitiveAndNonArrayKeys<DeepRequired<To>[TK1]>,
+    TK3 extends NonPrimitiveAndNonArrayKeys<DeepRequired<To>[TK1][TK2]>
   >(
     name: [TK1] | [TK1, TK2] | [TK1, TK2, TK3],
     validatingFunction: (
@@ -61,7 +62,7 @@ export default class FromJsonValidator<From extends JsonShape<To>, To extends ob
   async validate(jsonConfig: From): Promise<To> {
     // @ts-ignore
     const config: To = {};
-    const errors: Array<[PropertyKey[], Error]> = [];
+    const errors: [PropertyKey[], Error][] = [];
     for (const [propertyPath, validatingFunc] of this.rules) {
       try {
         const rawValue = get(jsonConfig, propertyPath);
@@ -82,7 +83,7 @@ export default class FromJsonValidator<From extends JsonShape<To>, To extends ob
     return config;
   }
 
-  private formatErrors(errors: Array<[PropertyKey[], Error]>): string {
+  private formatErrors(errors: [PropertyKey[], Error][]): string {
     return errors
       .map(([propertyPath, error]) => {
         return `  '${propertyPath.map(el => String(el)).join('.')}': ${error.message}`;

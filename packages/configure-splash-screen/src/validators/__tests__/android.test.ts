@@ -1,7 +1,8 @@
 import { vol } from 'memfs';
 import path from 'path';
-import { validateAndroidConfig } from '../index';
+
 import { readFileFromActualFS } from '../../__tests__/helpers';
+import { validateAndroidConfig } from '../index';
 
 // in `__mocks__/fs.ts` memfs is being used as a mocking library
 jest.mock('fs');
@@ -90,8 +91,8 @@ describe('validateAndroidConfig', () => {
       }).rejects.toThrow(
         new Error(`Validating error:
   'backgroundColor': Invalid value 'nonexistingnamedcolor' - value is not a color string. Provide a valid color string.
-  'darkMode.backgroundColor': Invalid value 'rgb(300, -123, 500, 100, 10)' - value is not a color string. Provide a valid color string.
   'statusBar.backgroundColor': Invalid value '#GGHH123' - value is not a color string. Provide a valid color string.
+  'darkMode.backgroundColor': Invalid value 'rgb(300, -123, 500, 100, 10)' - value is not a color string. Provide a valid color string.
   'darkMode.statusBar.backgroundColor': Missing a required valid value for 'darkMode.backgroundColor'. Provide a valid value for it to enable this property.`)
       );
     });

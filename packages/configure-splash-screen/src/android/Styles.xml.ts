@@ -1,8 +1,8 @@
+import { Color } from 'color-string';
 import path from 'path';
 import { Element } from 'xml-js';
 
 import { SplashScreenStatusBarStyle, SplashScreenStatusBarStyleType } from '../constants';
-import { AndroidSplashScreenConfig } from '../types';
 import {
   readXmlFile,
   writeXmlFile,
@@ -168,7 +168,18 @@ function elementWithStyleElement(element: Element): Element | undefined {
  */
 export default async function configureStylesXml(
   androidMainPath: string,
-  config: AndroidSplashScreenConfig
+  config: {
+    statusBar?: {
+      style?: SplashScreenStatusBarStyleType;
+      hidden?: boolean;
+      backgroundColor?: Color;
+    };
+    darkMode?: {
+      statusBar?: {
+        style?: SplashScreenStatusBarStyleType;
+      };
+    };
+  } = {}
 ) {
   const statusBarStyle = config.statusBar?.style ?? SplashScreenStatusBarStyle.DEFAULT;
   const statusBarHidden = config.statusBar?.hidden;

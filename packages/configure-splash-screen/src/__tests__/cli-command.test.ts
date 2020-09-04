@@ -1,6 +1,6 @@
+import configureAndroid from '../android';
 import createCommand from '../cli-command';
 import configureIos from '../ios';
-import configureAndroid from '../android';
 
 jest.mock('../ios', () => ({
   __esModule: true,
@@ -12,7 +12,6 @@ jest.mock('../android', () => ({
 }));
 
 describe('cli-command', () => {
-  beforeEach(() => {});
   describe('successful scenarios', () => {
     it('basic scenario', async () => {
       await createCommand().parseAsync(['--background-color', 'rgba(10, 20, 30, 0.2)'], {

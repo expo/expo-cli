@@ -8,7 +8,6 @@ import {
   mergeXmlElements,
   writeXmlFileOrRemoveFileUponNoResources,
 } from '../xml-manipulation';
-import { AndroidSplashScreenConfig } from '../types';
 
 const COLORS_XML_FILE_PATH = './res/values/colors.xml';
 const COLORS_NIGHT_XML_FILE_PATH = './res/values-night/colors.xml';
@@ -84,7 +83,18 @@ function getAndroidStyleHex(color: Color): string {
  */
 export default async function configureColorsXml(
   androidMainPath: string,
-  config: AndroidSplashScreenConfig
+  config: {
+    backgroundColor: Color;
+    statusBar?: {
+      backgroundColor?: Color;
+    };
+    darkMode?: {
+      backgroundColor?: Color;
+      statusBar?: {
+        backgroundColor?: Color;
+      };
+    };
+  }
 ) {
   const backgroundColor = config.backgroundColor;
   const darkModeBackgroundColor = config.darkMode?.backgroundColor;

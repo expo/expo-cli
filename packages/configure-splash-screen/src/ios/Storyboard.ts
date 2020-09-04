@@ -4,7 +4,6 @@ import { SplashScreenImageResizeMode, SplashScreenImageResizeModeType } from '..
 import { createDirAndWriteFile } from '../utils/file-utils';
 import { addStoryboardFileToProject } from '../xcode';
 import { IosProject } from './pbxproj';
-import { IosSplashScreenConfig } from '../types';
 
 const STORYBOARD_FILE_PATH = './SplashScreen.storyboard';
 
@@ -34,7 +33,10 @@ function updatePbxProject({ projectName, pbxProject, applicationNativeTarget }: 
  */
 export default async function configureStoryboard(
   iosProject: IosProject,
-  config: IosSplashScreenConfig
+  config: {
+    imageResizeMode?: SplashScreenImageResizeModeType;
+    imagePath?: string;
+  } = {}
 ) {
   const resizeMode: SplashScreenImageResizeModeType =
     config.imageResizeMode ?? SplashScreenImageResizeMode.CONTAIN;

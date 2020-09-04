@@ -1,9 +1,9 @@
 import { vol } from 'memfs';
 import * as path from 'path';
 
+import { SplashScreenImageResizeMode } from '../../constants';
 import configureDrawableXml from '../Drawable.xml';
 import reactNativeProject from './fixtures/react-native-project-structure';
-import { SplashScreenImageResizeMode } from '../../constants';
 
 // in `__mocks__/fs.ts` memfs is being used as a mocking library
 jest.mock('fs');
@@ -41,7 +41,6 @@ describe('Drawable.xml', () => {
 
     it('creates correct file', async () => {
       await configureDrawableXml(androidMainPath, {
-        backgroundColor: [0, 0, 0, 0],
         imageResizeMode: SplashScreenImageResizeMode.NATIVE,
       });
       const actual = vol.readFileSync(filePath, 'utf-8');
@@ -53,7 +52,6 @@ describe('Drawable.xml', () => {
       vol.mkdirpSync(fileDirPath);
       vol.writeFileSync(filePath, `<?xml version="1.0" encoding="utf-8"?>`);
       await configureDrawableXml(androidMainPath, {
-        backgroundColor: [0, 0, 0, 0],
         imageResizeMode: SplashScreenImageResizeMode.COVER,
       });
       const actual = vol.readFileSync(filePath, 'utf-8');
@@ -65,7 +63,6 @@ describe('Drawable.xml', () => {
       vol.mkdirpSync(fileDirPath);
       vol.writeFileSync(filePath, generateDrawableFileContent({ addBitmapItem: true }));
       await configureDrawableXml(androidMainPath, {
-        backgroundColor: [0, 0, 0, 0],
         imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
       });
       const actual = vol.readFileSync(filePath, 'utf-8');

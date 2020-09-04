@@ -1,7 +1,8 @@
 import { vol } from 'memfs';
 import path from 'path';
-import { validateIosConfig } from '../index';
+
 import { readFileFromActualFS } from '../../__tests__/helpers';
+import { validateIosConfig } from '../index';
 
 // in `__mocks__/fs.ts` memfs is being used as a mocking library
 jest.mock('fs');

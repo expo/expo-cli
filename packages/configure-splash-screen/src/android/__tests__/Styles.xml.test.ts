@@ -77,18 +77,14 @@ describe('Styles.xml', () => {
 
     it('creates correct file', async () => {
       vol.unlinkSync(filePath);
-      await configureStylesXml(androidMainPath, {
-        backgroundColor: [0, 0, 0, 0],
-      });
+      await configureStylesXml(androidMainPath);
       const actual = vol.readFileSync(filePath, 'utf-8');
       const expected = generateStylesFileContent();
       expect(actual).toEqual(expected);
     });
 
     it('updates existing file', async () => {
-      await configureStylesXml(androidMainPath, {
-        backgroundColor: [0, 0, 0, 0],
-      });
+      await configureStylesXml(androidMainPath);
       const actual = vol.readFileSync(filePath, 'utf-8');
       const expected = generateStylesFileContent({ addOtherStyle: true });
       expect(actual).toEqual(expected);
@@ -97,7 +93,6 @@ describe('Styles.xml', () => {
     describe('handles statusBarHidden', () => {
       it('adds flag', async () => {
         await configureStylesXml(androidMainPath, {
-          backgroundColor: [0, 0, 0, 0],
           statusBar: {
             hidden: true,
           },
@@ -112,14 +107,11 @@ describe('Styles.xml', () => {
 
       it('removes flag', async () => {
         await configureStylesXml(androidMainPath, {
-          backgroundColor: [0, 0, 0, 0],
           statusBar: {
             hidden: true,
           },
         });
-        await configureStylesXml(androidMainPath, {
-          backgroundColor: [0, 0, 0, 0],
-        });
+        await configureStylesXml(androidMainPath);
         const actual = vol.readFileSync(filePath, 'utf-8');
         const expected = generateStylesFileContent({ addOtherStyle: true });
         expect(actual).toEqual(expected);
@@ -130,7 +122,6 @@ describe('Styles.xml', () => {
       it('creates correct regular and v23 files when given statusBarStyle', async () => {
         vol.unlinkSync(filePath);
         await configureStylesXml(androidMainPath, {
-          backgroundColor: [0, 0, 0, 0],
           statusBar: {
             style: SplashScreenStatusBarStyle.LIGHT_CONTENT,
           },
@@ -147,7 +138,6 @@ describe('Styles.xml', () => {
 
       it('creates correct v23 and v23-night files when given statusBarStyle and darkModeStatusBarStyle', async () => {
         await configureStylesXml(androidMainPath, {
-          backgroundColor: [0, 0, 0, 0],
           statusBar: {
             style: SplashScreenStatusBarStyle.LIGHT_CONTENT,
             hidden: true,
@@ -172,7 +162,6 @@ describe('Styles.xml', () => {
 
       it('updates every file according to new configuration', async () => {
         await configureStylesXml(androidMainPath, {
-          backgroundColor: [0, 0, 0, 0],
           statusBar: {
             hidden: false,
             style: SplashScreenStatusBarStyle.LIGHT_CONTENT,
@@ -182,7 +171,6 @@ describe('Styles.xml', () => {
           },
         });
         await configureStylesXml(androidMainPath, {
-          backgroundColor: [0, 0, 0, 0],
           statusBar: {
             style: SplashScreenStatusBarStyle.DARK_CONTENT,
           },
@@ -221,7 +209,6 @@ describe('Styles.xml', () => {
           })
         );
         await configureStylesXml(androidMainPath, {
-          backgroundColor: [0, 0, 0, 0],
           statusBar: {
             style: SplashScreenStatusBarStyle.DARK_CONTENT,
           },
@@ -248,7 +235,6 @@ describe('Styles.xml', () => {
           })
         );
         await configureStylesXml(androidMainPath, {
-          backgroundColor: [0, 0, 0, 0],
           statusBar: {
             hidden: true,
             style: SplashScreenStatusBarStyle.DEFAULT,
@@ -270,7 +256,6 @@ describe('Styles.xml', () => {
           })
         );
         await configureStylesXml(androidMainPath, {
-          backgroundColor: [0, 0, 0, 0],
           statusBar: {
             style: SplashScreenStatusBarStyle.DARK_CONTENT,
           },
@@ -327,7 +312,6 @@ describe('Styles.xml', () => {
         );
 
         await configureStylesXml(androidMainPath, {
-          backgroundColor: [0, 0, 0, 0],
           statusBar: {
             hidden: true,
             style: SplashScreenStatusBarStyle.DARK_CONTENT,
@@ -394,7 +378,6 @@ describe('Styles.xml', () => {
         );
 
         await configureStylesXml(androidMainPath, {
-          backgroundColor: [0, 0, 0, 0],
           statusBar: {
             hidden: true,
             style: SplashScreenStatusBarStyle.DARK_CONTENT,

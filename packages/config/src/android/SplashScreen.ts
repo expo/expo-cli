@@ -3,7 +3,9 @@ import {
   SplashScreenImageResizeMode,
   configureAndroidSplashScreen,
 } from '@expo/configure-splash-screen';
+
 import { ExpoConfig } from '../Config.types';
+import { addWarningAndroid } from '../WarningAggregator';
 
 export function getSplashScreenConfig(config: ExpoConfig): AndroidSplashScreenConfig | undefined {
   if (!config.splash && !config.android?.splash) {
@@ -16,13 +18,13 @@ export function getSplashScreenConfig(config: ExpoConfig): AndroidSplashScreenCo
       config.splash?.resizeMode ??
       SplashScreenImageResizeMode.CONTAIN,
     backgroundColor:
-      config.android?.splash?.backgroundColor || config.splash?.backgroundColor || '#FFFFFF', // white
+      config.android?.splash?.backgroundColor ?? config.splash?.backgroundColor ?? '#FFFFFF', // white
     imagePath:
-      config.android?.splash?.xxxhdpi ||
-      config.android?.splash?.xxhdpi ||
-      config.android?.splash?.xhdpi ||
-      config.android?.splash?.hdpi ||
-      config.android?.splash?.mdpi ||
+      config.android?.splash?.xxxhdpi ??
+      config.android?.splash?.xxhdpi ??
+      config.android?.splash?.xhdpi ??
+      config.android?.splash?.hdpi ??
+      config.android?.splash?.mdpi ??
       config.splash?.image,
   };
 
@@ -35,5 +37,9 @@ export async function setSplashScreenAsync(config: ExpoConfig, projectRoot: stri
     return;
   }
 
-  await configureAndroidSplashScreen(projectRoot, splashConfig);
+  try {
+    await configureAndroidSplashScreen(projectRoot, splashConfig);
+  } catch (e) {
+    addWarningAndroid('splash', e);
+  }
 }

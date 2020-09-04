@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 
-import { IosSplashScreenJsonConfig } from '../types';
+import { IosSplashScreenConfigJSON } from '../SplashScreenConfig';
 import { validateIosConfig } from '../validators';
 import configureBackgroundAsset from './BackgroundAsset';
 import configureImageAsset from './ImageAsset';
@@ -10,7 +10,7 @@ import readPbxProject from './pbxproj';
 
 export default async function configureIos(
   projectRootPath: string,
-  config: IosSplashScreenJsonConfig
+  config: IosSplashScreenConfigJSON
 ) {
   const validatedConfig = await validateIosConfig(config);
 

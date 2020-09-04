@@ -54,9 +54,9 @@ describe('Colors.xml', () => {
 
     it('creates correct file for dark mode', async () => {
       await configureColorsXml(androidMainPath, {
-        backgroundColor: colorString.get('red')!.value,
+        backgroundColor: colorString.get('red').value,
         darkMode: {
-          backgroundColor: colorString.get('green')!.value,
+          backgroundColor: colorString.get('green').value,
         },
       });
       const result = vol.readFileSync(darkFilePath, 'utf-8');
@@ -67,7 +67,7 @@ describe('Colors.xml', () => {
     it('updates existing file with correct color', async () => {
       vol.writeFileSync(filePath, generateColorsFileContent({ backgroundColor: '#FFCCAABB' }));
       await configureColorsXml(androidMainPath, {
-        backgroundColor: colorString.get('green')!.value,
+        backgroundColor: colorString.get('green').value,
       });
       const result = vol.readFileSync(filePath, 'utf-8');
       const expected = generateColorsFileContent({ backgroundColor: '#008000' });
@@ -77,7 +77,7 @@ describe('Colors.xml', () => {
     describe('handles statusBarBackgroundColor', () => {
       it('adds correct color entry', async () => {
         await configureColorsXml(androidMainPath, {
-          backgroundColor: colorString.get('rgba(100, 75, 125, 0.5)')!.value,
+          backgroundColor: colorString.get('rgba(100, 75, 125, 0.5)').value,
 
           statusBar: { backgroundColor: colorString.get('rgba(120, 85, 155, 0.4)').value },
         });

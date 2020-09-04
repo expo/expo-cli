@@ -1,9 +1,9 @@
 import { vol } from 'memfs';
 
+import { SplashScreenImageResizeMode } from '../../constants';
 import configureStoryboard from '../Storyboard';
 import readPbxProject from '../pbxproj';
 import reactNativeProject from './fixtures/react-native-project-structure';
-import { SplashScreenImageResizeMode } from '../../constants';
 
 // in `__mocks__/fs.ts` memfs is being used as a mocking library
 jest.mock('fs');
@@ -24,9 +24,7 @@ describe('Storyboard', () => {
 
     it('creates .storyboard file', async () => {
       const iosProject = await readPbxProject(iosProjectPath);
-      await configureStoryboard(iosProject, {
-        backgroundColor: [0, 0, 0, 0],
-      });
+      await configureStoryboard(iosProject);
       const actual = vol.readFileSync(filePath, 'utf-8');
       const expected = `<?xml version="1.0" encoding="UTF-8"?>
 <document
@@ -184,7 +182,6 @@ describe('Storyboard', () => {
       );
       const iosProject = await readPbxProject(iosProjectPath);
       await configureStoryboard(iosProject, {
-        backgroundColor: [0, 0, 0, 0],
         imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
         imagePath: './',
       });
@@ -288,7 +285,6 @@ describe('Storyboard', () => {
       const iosProject = await readPbxProject(iosProjectPath);
       await expect(async () => {
         await configureStoryboard(iosProject, {
-          backgroundColor: [0, 0, 0, 0],
           imageResizeMode: SplashScreenImageResizeMode.NATIVE,
         });
       }).rejects.toThrow();
@@ -298,7 +294,6 @@ describe('Storyboard', () => {
       const iosProject = await readPbxProject(iosProjectPath);
       const original = iosProject.pbxProject.writeSync();
       await configureStoryboard(iosProject, {
-        backgroundColor: [0, 0, 0, 0],
         imageResizeMode: SplashScreenImageResizeMode.COVER,
       });
 
@@ -319,12 +314,10 @@ describe('Storyboard', () => {
     it('consecutive calls does not modify .pbxproj', async () => {
       const iosProject = await readPbxProject(iosProjectPath);
       await configureStoryboard(iosProject, {
-        backgroundColor: [0, 0, 0, 0],
         imageResizeMode: SplashScreenImageResizeMode.COVER,
       });
       const afterFirstCall = iosProject.pbxProject.writeSync();
       await configureStoryboard(iosProject, {
-        backgroundColor: [0, 0, 0, 0],
         imageResizeMode: SplashScreenImageResizeMode.COVER,
       });
       const afterSecondCall = iosProject.pbxProject.writeSync();

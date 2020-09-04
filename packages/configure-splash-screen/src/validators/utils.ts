@@ -1,8 +1,9 @@
-import path from 'path';
-import * as fs from 'fs-extra';
 import colorString, { Color } from 'color-string';
+import * as fs from 'fs-extra';
 import { get } from 'lodash';
-import { KeyofObject, DeepRequired } from '../types';
+import path from 'path';
+
+import { NonPrimitiveAndNonArrayKeys, DeepRequired } from './types';
 
 /**
  * @param value Value to be checked.
@@ -71,9 +72,9 @@ export function generateValidateEnumValue<T extends Record<string, string>>(avai
 
 export function ensurePropertyExists<
   T extends object,
-  TK1 extends KeyofObject<DeepRequired<T>>,
-  TK2 extends KeyofObject<DeepRequired<T>[TK1]>,
-  TK3 extends KeyofObject<DeepRequired<T>[TK1][TK2]>
+  TK1 extends NonPrimitiveAndNonArrayKeys<DeepRequired<T>>,
+  TK2 extends NonPrimitiveAndNonArrayKeys<DeepRequired<T>[TK1]>,
+  TK3 extends NonPrimitiveAndNonArrayKeys<DeepRequired<T>[TK1][TK2]>
 >(object: T, propertyPath: [TK1] | [TK1, TK2] | [TK1, TK2, TK3]): void {
   const value = get(object, propertyPath, undefined);
   if (value === undefined) {

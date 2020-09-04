@@ -3,7 +3,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import { PNG } from 'pngjs';
 
-import { IosSplashScreenConfig } from '../types';
 import { writeContentsJsonFile } from './Contents.json';
 
 const PNG_FILENAME = 'background.png';
@@ -61,7 +60,12 @@ async function createFiles(iosProjectPath: string, color: Color, darkModeColor?:
  */
 export default async function configureAssets(
   iosProjectPath: string,
-  config: IosSplashScreenConfig
+  config: {
+    backgroundColor: Color;
+    darkMode?: {
+      backgroundColor?: Color;
+    };
+  }
 ) {
   const backgroundColor = config.backgroundColor;
   const darkModeBackgroundColor = config.darkMode?.backgroundColor;

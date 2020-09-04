@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { SplashScreenStatusBarStyleType } from '../constants';
-import { IosSplashScreenConfig } from '../types';
 import StateManager from '../utils/StateManager';
 import { replace, insert } from '../utils/string-utils';
 
@@ -19,7 +18,12 @@ function getUIStatusBarStyle(statusBarStyle: SplashScreenStatusBarStyleType) {
  */
 export default async function configureInfoPlist(
   iosProjectPath: string,
-  config: IosSplashScreenConfig
+  config: {
+    statusBar?: {
+      hidden?: boolean;
+      style?: SplashScreenStatusBarStyleType;
+    };
+  } = {}
 ) {
   const statusBarHidden: boolean | undefined = config.statusBar?.hidden;
   const statusBarStyle: SplashScreenStatusBarStyleType | undefined = config.statusBar?.style;

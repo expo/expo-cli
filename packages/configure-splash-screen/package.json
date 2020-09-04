@@ -62,6 +62,7 @@
     "@types/jest": "^25.2.2",
     "@types/lodash": "^4.14.155",
     "babel-jest": "^26.2.2",
+    "conditional-type-checks": "^1.0.5",
     "eslint": "^6.8.0",
     "jest": "^26.2.2",
     "memfs": "^3.1.2",

@@ -1,15 +1,14 @@
 import { Command } from 'commander';
-import path from 'path';
 
+import { AndroidSplashScreenConfigJSON, IosSplashScreenConfigJSON } from './SplashScreenConfig';
 import configureAndroid from './android';
-import configureIos from './ios';
 import {
   SplashScreenImageResizeMode,
   SplashScreenStatusBarStyle,
   Platform,
   PlatformType,
 } from './constants';
-import { AndroidSplashScreenJsonConfig, IosSplashScreenJsonConfig } from './types';
+import configureIos from './ios';
 import { validateEnumValue } from './validators';
 
 const AVAILABLE_OPTIONS_NAMES = [
@@ -33,13 +32,13 @@ type CLIOptions = Partial<Record<CLIOptionName, string>>;
 
 interface Configuration {
   platform: PlatformType;
-  android: AndroidSplashScreenJsonConfig;
-  ios: IosSplashScreenJsonConfig;
+  android: AndroidSplashScreenConfigJSON;
+  ios: IosSplashScreenConfigJSON;
 }
 
 async function action(configuration: Configuration) {
   const { platform, android, ios } = configuration;
-  const rootDir = path.resolve();
+  const rootDir = process.cwd();
   switch (platform) {
     case Platform.ANDROID:
       await configureAndroid(rootDir, android);

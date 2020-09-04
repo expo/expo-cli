@@ -3,7 +3,9 @@ import {
   SplashScreenImageResizeMode,
   configureIosSplashScreen,
 } from '@expo/configure-splash-screen';
+
 import { ExpoConfig } from '../Config.types';
+import { addWarningIOS } from '../WarningAggregator';
 
 export function getSplashScreen(config: ExpoConfig): IosSplashScreenConfig | undefined {
   if (!config.splash || !config.ios?.splash) {
@@ -16,8 +18,8 @@ export function getSplashScreen(config: ExpoConfig): IosSplashScreenConfig | und
       config.splash?.resizeMode ??
       SplashScreenImageResizeMode.CONTAIN,
     backgroundColor:
-      config.ios?.splash?.backgroundColor || config.splash?.backgroundColor || '#FFFFFF', // white
-    imagePath: config.ios?.splash?.image || config.splash?.image,
+      config.ios?.splash?.backgroundColor ?? config.splash?.backgroundColor ?? '#FFFFFF', // white
+    imagePath: config.ios?.splash?.image ?? config.splash?.image,
   };
 
   return result;
@@ -28,6 +30,9 @@ export async function setSplashScreenAsync(config: ExpoConfig, projectRoot: stri
   if (!splashConfig) {
     return;
   }
-
-  await configureIosSplashScreen(projectRoot, splashConfig);
+  try {
+    await configureIosSplashScreen(projectRoot, splashConfig);
+  } catch (e) {
+    addWarningIOS('splash', e);
+  }
 }

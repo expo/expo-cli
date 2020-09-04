@@ -1,17 +1,17 @@
 import path from 'path';
 
+import { AndroidSplashScreenConfigJSON } from '../SplashScreenConfig';
+import { validateAndroidConfig } from '../validators';
 import configureAndroidManifestXml from './AndroidManifest.xml';
 import configureColorsXml from './Colors.xml';
 import configureDrawableXml from './Drawable.xml';
 import configureDrawables from './Drawables';
 import configureMainActivity from './MainActivity';
 import configureStylesXml from './Styles.xml';
-import { validateAndroidConfig } from '../validators';
-import { AndroidSplashScreenJsonConfig } from '../types';
 
 export default async function configureAndroid(
   projectRootPath: string,
-  configJSON: AndroidSplashScreenJsonConfig
+  configJSON: AndroidSplashScreenConfigJSON
 ) {
   const validatedConfig = await validateAndroidConfig(configJSON);
 

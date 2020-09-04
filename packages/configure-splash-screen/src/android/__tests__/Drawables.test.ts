@@ -31,7 +31,6 @@ describe('Drawables', () => {
 
     it('creates correct file', async () => {
       await configureDrawables(androidMainPath, {
-        backgroundColor: [0, 0, 0, 0],
         imagePath: '/assets/background.png',
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
@@ -44,7 +43,6 @@ describe('Drawables', () => {
 
     it('creates correct file for dark mode', async () => {
       await configureDrawables(androidMainPath, {
-        backgroundColor: [0, 0, 0, 0],
         imagePath: '/assets/background.png',
         darkMode: { imagePath: '/assets/background.png' },
       });
@@ -77,7 +75,6 @@ describe('Drawables', () => {
         vol.writeFileSync(filePath, backgroundImage);
       }
       await configureDrawables(androidMainPath, {
-        backgroundColor: [0, 0, 0, 0],
         imagePath: '/assets/background.png',
       });
       const received = getDirFromFS(vol.toJSON(), '/app');

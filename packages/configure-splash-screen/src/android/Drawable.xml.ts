@@ -2,7 +2,6 @@ import path from 'path';
 import { Element } from 'xml-js';
 
 import { SplashScreenImageResizeMode, SplashScreenImageResizeModeType } from '../constants';
-import { AndroidSplashScreenConfig } from '../types';
 import {
   mergeXmlElements,
   readXmlFile,
@@ -64,7 +63,9 @@ function configureDrawable(xml: Element, resizeMode?: SplashScreenImageResizeMod
  */
 export default async function configureDrawableXml(
   androidMainPath: string,
-  config: AndroidSplashScreenConfig
+  config: {
+    imageResizeMode?: SplashScreenImageResizeModeType;
+  } = {}
 ) {
   const filePath = path.resolve(androidMainPath, DRAWABLE_XML_FILE_PATH);
   const xmlContent = await readXmlFile(filePath);

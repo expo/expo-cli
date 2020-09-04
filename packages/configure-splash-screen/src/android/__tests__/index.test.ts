@@ -2,10 +2,10 @@ import { vol } from 'memfs';
 import * as path from 'path';
 
 import { getDirFromFS, readFileFromActualFS } from '../../__tests__/helpers';
+import { SplashScreenImageResizeMode } from '../../constants';
 import configureAndroid from '../index';
 import reactNativeProject from './fixtures/react-native-project-structure';
 import reactNativeProjectWithSplashScreenConfigured from './fixtures/react-native-project-structure-with-splash-screen-configured';
-import { SplashScreenImageResizeMode } from '../../constants';
 
 // in `__mocks__/fs.ts` memfs is being used as a mocking library
 jest.mock('fs');

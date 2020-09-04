@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { writeContentsJsonFile } from './Contents.json';
-import { IosSplashScreenConfig } from '../types';
 
 const PNG_FILENAME = 'splashscreen.png';
 const DARK_PNG_FILENAME = 'dark_splashscreen.png';
@@ -48,7 +47,12 @@ async function copyImageFiles(
  */
 export default async function configureImageAssets(
   iosProjectPath: string,
-  config: IosSplashScreenConfig
+  config: {
+    imagePath?: string;
+    darkMode?: {
+      imagePath?: string;
+    };
+  } = {}
 ) {
   const imagePath = config.imagePath;
   const darkModeImagePath = config.darkMode?.imagePath;

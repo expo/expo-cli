@@ -1,6 +1,5 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { AndroidSplashScreenConfig } from '../types';
 
 const SPLASH_SCREEN_FILENAME = 'splashscreen_image.png';
 
@@ -105,12 +104,15 @@ async function copyDrawableFile(srcPath: string | undefined, dstPath: string) {
  * @see https://developer.android.com/training/multiscreen/screendensities
  *
  * @param androidMainPath Absolute path to the main directory containing code and resources in Android project. In general that would be `android/app/src/main`.
- * @param splashScreenImagePath Absolute path
- * @param darkModeSplashScreenImagePath Absolute path
  */
 export default async function configureDrawables(
   androidMainPath: string,
-  config: AndroidSplashScreenConfig
+  config: {
+    imagePath?: string;
+    darkMode?: {
+      imagePath?: string;
+    };
+  } = {}
 ) {
   await Promise.all(
     Object.values(DRAWABLES_CONFIGS).map(async ({ modes }) => {

@@ -1,8 +1,8 @@
 import { vol } from 'memfs';
 
+import { SplashScreenImageResizeMode } from '../../constants';
 import configureMainActivity from '../MainActivity';
 import reactNativeProject from './fixtures/react-native-project-structure';
-import { SplashScreenImageResizeMode } from '../../constants';
 
 jest.mock('fs');
 
@@ -91,7 +91,6 @@ ${
 
       it('inserts onCreate() with SplashScreen registration', async () => {
         await configureMainActivity(projectRootPath, {
-          backgroundColor: [0, 0, 0, 0],
           imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
         });
         const actual = vol.readFileSync(filePath, 'utf-8');
@@ -105,7 +104,6 @@ ${
       it('adds SplashScreen registration to onCreate()', async () => {
         vol.writeFileSync(filePath, generateMainActivityFileContent({ addOnCreateAt: 'BOTTOM' }));
         await configureMainActivity(projectRootPath, {
-          backgroundColor: [0, 0, 0, 0],
           imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
         });
         const actual = vol.readFileSync(filePath, 'utf-8');
@@ -126,7 +124,6 @@ ${
             })
           );
           await configureMainActivity(projectRootPath, {
-            backgroundColor: [0, 0, 0, 0],
             imageResizeMode: SplashScreenImageResizeMode.NATIVE,
           });
           const actual = vol.readFileSync(filePath, 'utf-8');
@@ -141,7 +138,6 @@ ${
       describe('handles statusBarTranslucent flag', () => {
         it('enable statusBar translucency', async () => {
           await configureMainActivity(projectRootPath, {
-            backgroundColor: [0, 0, 0, 0],
             imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
             statusBar: {
               translucent: true,
@@ -171,7 +167,6 @@ ${
 
       it('inserts onCreate() with SplashScreen registration', async () => {
         await configureMainActivity(projectRootPath, {
-          backgroundColor: [0, 0, 0, 0],
           imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
         });
         const actual = vol.readFileSync(filePath, 'utf-8');
@@ -192,7 +187,6 @@ ${
           })
         );
         await configureMainActivity(projectRootPath, {
-          backgroundColor: [0, 0, 0, 0],
           imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
         });
         const actual = vol.readFileSync(filePath, 'utf-8');
@@ -215,7 +209,6 @@ ${
             })
           );
           await configureMainActivity(projectRootPath, {
-            backgroundColor: [0, 0, 0, 0],
             imageResizeMode: SplashScreenImageResizeMode.NATIVE,
           });
           const actual = vol.readFileSync(filePath, 'utf-8');
