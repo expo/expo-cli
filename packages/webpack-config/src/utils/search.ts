@@ -173,7 +173,7 @@ function loaderToLoaderItemLoaderPart(loader: RuleSetUse | undefined): LoaderIte
  */
 export function getRulesByMatchingFile(
   config: AnyConfiguration,
-  files: string
+  file: string
 ): RuleItem[] {
   const rules = getRules(config);
   return rules.filter(({ rule }) => conditionMatchesFile(rule.test, file));
