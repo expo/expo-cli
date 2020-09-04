@@ -1,11 +1,11 @@
 import { ExpoConfig } from '@expo/config';
 import axios from 'axios';
 
-import { getSignedManifestStringAsync, getUnsignedManifestString } from '../Project';
+import { getSignedManifestStringAsync, getUnsignedManifestString } from '../ManifestHandler';
 
 jest.mock('axios');
 
-jest.mock('../User', () => ({
+jest.mock('../../User', () => ({
   ensureLoggedInAsync: () => ({
     sessionSecret: 'SECRET',
   }),

@@ -8,7 +8,10 @@ import ApiV2 from '../ApiV2';
 import { Cacher } from '../tools/FsCache';
 
 export type Schema = any;
-export type AssetSchema = { schema: Schema; fieldPath: string };
+export type AssetSchema = {
+  // schema: Schema;
+  fieldPath: string;
+};
 
 const _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
 const _schemaCaches: { [version: string]: Cacher<JSONObject> } = {};
@@ -26,14 +29,17 @@ export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
   return json.schema;
 }
 
-// Array of schema nodes that refer to assets along with their field
-// path (eg. 'notification.icon')
-export async function getAssetSchemasAsync(sdkVersion: string): Promise<AssetSchema[]> {
+/**
+ * Array of schema nodes that refer to assets along with their field path (eg. 'notification.icon')
+ *
+ * @param sdkVersion
+ */
+export async function getAssetSchemasAsync(sdkVersion: string): Promise<string[]> {
   const schema = await getSchemaAsync(sdkVersion);
-  const assetSchemas: AssetSchema[] = [];
+  const assetSchemas: string[] = [];
   const visit = (node: Schema, fieldPath: string) => {
     if (node.meta && node.meta.asset) {
-      assetSchemas.push({ schema: node, fieldPath });
+      assetSchemas.push(fieldPath);
     }
     const properties = node.properties;
     if (properties) {
