@@ -102,7 +102,6 @@ export default async function configureColorsXml(
   const darkModeStatusBarBackgroundColor = config.darkMode?.statusBar?.backgroundColor;
 
   if (darkModeStatusBarBackgroundColor && !statusBarBackgroundColor) {
-    // TODO (@bbarthec): validation
     throw new Error(
       `'darkModeStatusBarBackgroundColor' is available only if 'statusBarBackgroundColor' is provided as well.`
     );
