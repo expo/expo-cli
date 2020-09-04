@@ -1,6 +1,6 @@
 import { ProjectTarget, getDefaultTarget } from '@expo/config';
 import { Project, UrlUtils } from '@expo/xdl';
-import { Command } from 'commander';
+import program, { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import got from 'got';
@@ -12,7 +12,7 @@ import validator from 'validator';
 
 import CommandError from '../CommandError';
 import log from '../log';
-import prompt, { Question } from '../prompt';
+import prompt, { Question } from '../prompts';
 import { createProgressTracker } from './utils/progress';
 
 const pipeline = promisify(stream.pipeline);
@@ -48,7 +48,18 @@ type Options = {
 
 export async function action(projectDir: string, options: Options) {
   if (!options.publicUrl) {
-    throw new CommandError('MISSING_PUBLIC_URL', 'Missing required option: --public-url');
+    if (program.nonInteractive) {
+      throw new CommandError('MISSING_PUBLIC_URL', 'Missing required option: --public-url');
+    }
+
+    const { value } = await prompt({
+      type: 'text',
+      name: 'value',
+      validate: UrlUtils.isHttps,
+      message: `What is the public ${log.chalk.underline(`url`)} that will host the static files?`,
+    });
+
+    options.publicUrl = value;
   }
   const outputPath = path.resolve(projectDir, options.outputDir);
   let overwrite = options.force;
@@ -169,7 +180,7 @@ function collect<T>(val: T, memo: T[]): T[] {
   return memo;
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
     .command('export [path]')
     .description('Export the static files of the app for hosting it on a web server')
