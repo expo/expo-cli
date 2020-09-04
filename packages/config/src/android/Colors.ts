@@ -56,14 +56,3 @@ export function setColorItem(itemToAdd: XMLItem[], colorFileContentsJSON: Docume
   }
   return colorFileContentsJSON;
 }
-
-export function removeColorItem(keyToRemove: string, colorFileContentsJSON: Document) {
-  if (colorFileContentsJSON.resources?.color) {
-    colorFileContentsJSON.resources.color.forEach((e: XMLItem, index: number) => {
-      if (e['$'].name === keyToRemove) {
-        colorFileContentsJSON.resources.color.splice(index, 1);
-      }
-    });
-  }
-  return colorFileContentsJSON;
-}
