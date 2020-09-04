@@ -414,11 +414,17 @@ export async function exportForAppHosting(
   const iosBundle = bundles.ios.code;
   const androidBundle = bundles.android.code;
 
-  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
+  const iosBundleHash = crypto
+    .createHash('md5')
+    .update(iosBundle)
+    .digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
+  const androidBundleHash = crypto
+    .createHash('md5')
+    .update(androidBundle)
+    .digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 
@@ -692,7 +698,7 @@ export async function publishAsync(
   logger.global.info('');
   logger.global.info(
     terminalLink(
-      'Learn more about JavaScript bundle sizes.',
+      'Learn more about JavaScript bundle sizes',
       `https://expo.fyi/javascript-bundle-sizes`,
       { fallback: (text, url) => `${text}: ${url}` }
     )
