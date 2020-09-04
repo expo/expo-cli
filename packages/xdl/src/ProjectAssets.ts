@@ -84,7 +84,6 @@ export async function resolveManifestAssets({
   try {
     // Asset fields that the user has set like ["icon", "splash.image"]
     const assetSchemas = await getAssetFieldPathsForManifestAsync(manifest);
-
     // Get the URLs
     const urls = await Promise.all(
       assetSchemas.map(async manifestField => {

@@ -12,6 +12,7 @@ import {
   getUnsignedManifestString,
 } from '../ManifestHandler';
 
+const actualFs = jest.requireActual('fs') as typeof fs;
 jest.mock('fs');
 jest.mock('axios');
 
@@ -26,6 +27,14 @@ jest.mock('../../User', () => {
     ensureLoggedInAsync: () => ({
       sessionSecret: 'SECRET',
     }),
+  };
+});
+jest.mock('../ExpSchema', () => {
+  // const user = jest.requireActual('../../User');
+  return {
+    getAssetSchemasAsync() {
+      return ['icon', 'splash.image'];
+    },
   };
 });
 
@@ -120,6 +129,8 @@ describe('getManifestResponseAsync', () => {
       {
         expo: {
           name: 'testing 123',
+          icon: './icon.png',
+          splash: { image: './assets/splash.png' },
           version: '0.1.0',
           sdkVersion: '38.0.0',
           slug: 'testing-123',
@@ -135,6 +146,12 @@ describe('getManifestResponseAsync', () => {
       '/alpha/app.json': appJson,
       '/alpha/index.js': 'console.log("lol")',
     });
+
+    const iconPath = path.resolve(__dirname, './fixtures/icon.png');
+    const icon = actualFs.readFileSync(iconPath);
+    vol.mkdirpSync('/alpha/assets');
+    vol.writeFileSync('/alpha/icon.png', icon);
+    vol.writeFileSync('/alpha/assets/splash.png', icon);
   });
 
   afterEach(() => {
@@ -156,6 +173,8 @@ describe('getManifestResponseAsync', () => {
       acceptSignature: 'true',
     });
 
+    // console.log(res.exp);
+
     // Values starting with EXPO_ or REACT_NATIVE_ get added to the env and exposed to expo-constants
     expect(res.exp.env.EXPO_SOME_TEST_VALUE).toBe('true');
     expect(res.exp.env.REACT_NATIVE_TEST_VALUE).toBe('true');
@@ -176,5 +195,9 @@ describe('getManifestResponseAsync', () => {
     expect(res.exp.packagerOpts).toBeDefined();
     // Required for various tools
     expect(res.exp.developer.projectRoot).toBe('/alpha');
+
+    // ProjectAssets gathered URLs
+    expect(res.exp.iconUrl).toBe('http://127.0.0.1:80/assets/./icon.png');
+    expect(res.exp.splash.imageUrl).toBe('http://127.0.0.1:80/assets/./assets/splash.png');
   });
 });

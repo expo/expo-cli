@@ -49,6 +49,7 @@ export async function getAssetSchemasAsync(sdkVersion: string): Promise<string[]
     }
   };
   visit(schema, '');
+
   return assetSchemas;
 }
 
