@@ -49,9 +49,12 @@ function executeDefaultAsync(cwd: string, args: string[]) {
 
 // Test that the default case works (`expo eject`)
 it(`can eject a minimal project`, async () => {
-  const projectName = 'default-eject-minimal-&<world/>';
-
-  const projectRoot = await createMinimalProjectAsync(tempDir, projectName);
+  const projectName = 'default-eject-minimal-world';
+  const projectRoot = await createMinimalProjectAsync(tempDir, projectName, {
+    expo: {
+      name: 'h"&<world/>🚀',
+    },
+  });
 
   // Run a standard eject command
   const res = executeDefaultAsync(projectRoot, ['eject']);
@@ -61,7 +64,7 @@ it(`can eject a minimal project`, async () => {
 
   // Test that native folders were generated
   // TODO(Bacon): test that the native file names match
-  expect(fileExists(projectName, 'ios')).toBe(true);
+  expect(fileExists(projectName, 'ios/hworld.xcworkspace')).toBe(true);
   expect(fileExists(projectName, 'android')).toBe(true);
 
   // Test extra generated files were created
