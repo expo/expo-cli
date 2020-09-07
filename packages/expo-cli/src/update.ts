@@ -34,5 +34,4 @@ export default async function shouldUpdate(): Promise<void> {
   } catch {
     // ignore error
   }
-  process.exit(0);
 }
