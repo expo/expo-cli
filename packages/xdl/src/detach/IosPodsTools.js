@@ -102,6 +102,13 @@ ${indentString(_renderDependencyAttributes(attributes), 2)}`;
 function _renderUnversionedReactNativeDependency(options, sdkVersion) {
   const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
 
+  if (sdkMajorVersion >= 39) {
+    return indentString(`
+# Install React Native and its dependencies
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+use_react_native!`);
+  }
+
   if (sdkMajorVersion >= 36) {
     return indentString(
       `
@@ -369,9 +376,9 @@ async function _renderPodDependenciesAsync(dependenciesConfigPath, options) {
       builder += '\n';
     }
     const otherPodfileFlags = options.isPodfile && dependency.otherPodfileFlags;
-    builder += `  ${type} '${dependency.name}', '${dependency.version}'${noWarningsFlag}${
-      otherPodfileFlags || ''
-    }`;
+    builder += `  ${type} '${dependency.name}', '${
+      dependency.version
+    }'${noWarningsFlag}${otherPodfileFlags || ''}`;
     return builder;
   });
   return depsStrings.join('\n');
