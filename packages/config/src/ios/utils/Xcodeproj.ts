@@ -38,7 +38,11 @@ interface PBXGroup {
 // TODO(brentvatne): I couldn't figure out how to do this with an existing
 // higher level function exposed by the xcode library, but we should find out how to do
 // that and replace this with it
-export function addFileToGroup(filepath: string, groupName: string, project: Project): Pbxproj {
+export function addFileToGroup(
+  filepath: string,
+  groupName: string,
+  project: xcode.XcodeProject
+): Pbxproj {
   const file = new pbxFile(filepath);
   file.uuid = project.generateUuid();
   file.fileRef = project.generateUuid();
