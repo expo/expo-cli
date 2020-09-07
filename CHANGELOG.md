@@ -7,6 +7,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🛠 Breaking changes
 
 - [expo-cli][export] No longer prompts to automatically delete conflicting files, they must now be manually deleted, or the command must be rerun with `--force` [#2576](https://github.com/expo/expo-cli/pull/2576)
+- [xdl] Deleted deprecated `Web` module [#2588](https://github.com/expo/expo-cli/pull/2588)
 
 ### 🎉 New features
 
