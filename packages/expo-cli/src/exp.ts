@@ -17,7 +17,6 @@ import {
   ProjectUtils,
   UserManager,
 } from '@expo/xdl';
-import boxen from 'boxen';
 import chalk from 'chalk';
 import program, { Command, Option } from 'commander';
 import fs from 'fs';
@@ -33,7 +32,7 @@ import url from 'url';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
 import log from './log';
-import update from './update';
+import shouldUpdate from './update';
 import urlOpts from './urlOpts';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
@@ -289,7 +288,7 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
   return this.action(async (...args: any[]) => {
     if (!skipUpdateCheck) {
       try {
-        await checkCliVersionAsync();
+        await shouldUpdate();
       } catch (e) {}
     }
 
@@ -608,36 +607,6 @@ function runAsync(programName: string) {
   } catch (e) {
     console.error(e);
     throw e;
-  }
-}
-
-async function checkCliVersionAsync() {
-  const { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
-  if (updateIsAvailable) {
-    log.nestedWarn(
-      boxen(
-        chalk.green(`There is a new version of ${packageJSON.name} available (${latest}).
-You are currently using ${packageJSON.name} ${current}
-Install expo-cli globally using the package manager of your choice;
-for example: \`npm install -g ${packageJSON.name}\` to get the latest version`),
-        { borderColor: 'green', padding: 1 }
-      )
-    );
-  }
-
-  if (deprecated) {
-    log.nestedWarn(
-      boxen(
-        chalk.red(
-          `This version of expo-cli is not supported anymore.
-It's highly recommended to update to the newest version.
-
-The API endpoints used in this version of expo-cli might not exist,
-any interaction with Expo servers may result in unexpected behaviour.`
-        ),
-        { borderColor: 'red', padding: 1 }
-      )
-    );
   }
 }
 

@@ -116,6 +116,7 @@
     "tempy": "^0.3.0",
     "terminal-link": "^2.1.1",
     "untildify": "3.0.3",
+    "update-check": "^1.5.4",
     "uuid": "^8.0.0",
     "validator": "10.5.0",
     "wordwrap": "1.0.0"
