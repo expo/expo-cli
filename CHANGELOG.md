@@ -6,9 +6,12 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [expo-cli][export] No longer prompts to automatically delete conflicting files, they must now be manually deleted, or the command must be rerun with `--force` [#2576](https://github.com/expo/expo-cli/pull/2576)
+
 ### 🎉 New features
 
 - [expo-cli][config] Generate Android icons on eject and apply [#2087](https://github.com/expo/expo-cli/pull/2087)
+- [expo-cli][export] List all conflicting files, allow for tolerable file collisions, prompt for `public-url` when it's not provided in interactive mode [#2576](https://github.com/expo/expo-cli/pull/2576)
 
 ### 🐛 Bug fixes
 
