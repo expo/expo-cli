@@ -1,19 +1,15 @@
-import { BareAppConfig, ExpoConfig, getConfig } from '@expo/config';
+import { BareAppConfig, ExpoConfig } from '@expo/config';
 import { getEntryPoint } from '@expo/config/paths';
 import JsonFile from '@expo/json-file';
-import { NpmPackageManager, YarnPackageManager } from '@expo/package-manager';
 import fs from 'fs-extra';
-import yaml from 'js-yaml';
 import merge from 'lodash/merge';
 import Minipass from 'minipass';
 import pacote, { PackageSpec } from 'pacote';
 import path from 'path';
-import semver from 'semver';
 import { Readable } from 'stream';
 import tar, { ReadEntry } from 'tar';
 
 import ApiV2 from './ApiV2';
-import Logger from './Logger';
 import * as ProjectSettings from './ProjectSettings';
 import * as UrlUtils from './UrlUtils';
 import UserManager from './User';
@@ -181,41 +177,6 @@ async function extractTemplateAppAsyncImpl(
     extractStream.on('close', resolve);
     tarStream.pipe(extractStream);
   });
-}
-
-export async function installDependenciesAsync(
-  projectRoot: string,
-  packageManager: 'yarn' | 'npm',
-  flags: { silent: boolean } = { silent: false }
-) {
-  const options = { cwd: projectRoot, silent: flags.silent };
-  if (packageManager === 'yarn') {
-    const yarn = new YarnPackageManager(options);
-    const version = await yarn.versionAsync();
-    const nodeLinker = await yarn.getConfigAsync('nodeLinker');
-    if (semver.satisfies(version, '>=2.0.0-rc.24') && nodeLinker !== 'node-modules') {
-      const yarnRc = path.join(projectRoot, '.yarnrc.yml');
-      let yamlString = '';
-      try {
-        yamlString = fs.readFileSync(yarnRc, 'utf8');
-      } catch (error) {
-        if (error.code !== 'ENOENT') {
-          throw error;
-        }
-      }
-      const config = yamlString ? yaml.safeLoad(yamlString) : {};
-      config.nodeLinker = 'node-modules';
-      !flags.silent &&
-        Logger.global.warn(
-          `Yarn v${version} detected, enabling experimental Yarn v2 support using the node-modules plugin.`
-        );
-      !flags.silent && Logger.global.info(`Writing ${yarnRc}...`);
-      fs.writeFileSync(yarnRc, yaml.safeDump(config));
-    }
-    await yarn.installAsync();
-  } else {
-    await new NpmPackageManager(options).installAsync();
-  }
 }
 
 export async function saveRecentExpRootAsync(root: string) {
