@@ -7,6 +7,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🛠 Breaking changes
 
 - [xdl] Delete deprecated `Exp.extractAndInitializeTemplateApp`, `Exp.initGitRepoAsync`, `Exp.installDependenciesAsync`, `Exp.getPublishInfoAsync`, [#2590](https://github.com/expo/expo-cli/pull/2590)
+- [xdl] Deleted deprecated `Web` module [#2588](https://github.com/expo/expo-cli/pull/2588)
 
 ### 🎉 New features
 

@@ -1,4 +1,5 @@
 import * as ConfigUtils from '@expo/config';
+import { ExpoConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Android, Project, Simulator, Versions } from '@expo/xdl';
@@ -12,7 +13,7 @@ import semver from 'semver';
 import terminalLink from 'terminal-link';
 
 import log from '../log';
-import prompt from '../prompt';
+import { confirmAsync, selectAsync } from '../prompts';
 import { findProjectRootAsync } from './utils/ProjectUtils';
 import maybeBailOnGitStatusAsync from './utils/maybeBailOnGitStatusAsync';
 
@@ -221,13 +222,12 @@ async function maybeBailOnUnsafeFunctionalityAsync(
       return true;
     }
 
-    const answer = await prompt({
-      type: 'confirm',
-      name: 'attemptOldUpdate',
+    const answer = await confirmAsync({
       message: `This command works best on SDK 33 and higher. We can try updating for you, but you will likely need to follow up with the instructions from https://docs.expo.io/workflow/upgrading-expo-sdk-walkthrough/. Continue anyways?`,
+      initial: true,
     });
 
-    if (!answer.attemptOldUpdate) {
+    if (!answer) {
       return true;
     }
 
@@ -263,13 +263,12 @@ async function shouldBailWhenUsingLatest(
       log.newLine();
       return false;
     }
-    const answer = await prompt({
-      type: 'confirm',
-      name: 'attemptUpdateAgain',
+    const answer = await confirmAsync({
       message: `You are already using the latest SDK version. Do you want to run the update anyways? This may be useful to ensure that all of your packages are set to the correct version.`,
+      initial: true,
     });
 
-    if (!answer.attemptUpdateAgain) {
+    if (!answer) {
       log('Follow the Expo blog at https://blog.expo.io for new release information!');
       log.newLine();
       return true;
@@ -291,15 +290,15 @@ async function shouldUpgradeSimulatorAsync(): Promise<boolean> {
     return false;
   }
 
-  const answer = await prompt({
-    type: 'confirm',
-    name: 'upgradeSimulator',
-    message: 'Would you like to upgrade the Expo app in the iOS simulator?',
-    default: false,
-  });
-
+  let answer = false;
+  try {
+    answer = await confirmAsync({
+      message: 'Would you like to upgrade the Expo app in the iOS simulator?',
+      initial: false,
+    });
+  } catch {}
   log.newLine();
-  return answer.upgradeSimulator;
+  return answer;
 }
 
 async function maybeUpgradeSimulatorAsync() {
@@ -324,15 +323,16 @@ async function shouldUpgradeEmulatorAsync(): Promise<boolean> {
     return false;
   }
 
-  const answer = await prompt({
-    type: 'confirm',
-    name: 'upgradeAndroid',
-    message: 'Would you like to upgrade the Expo app in the Android emulator?',
-    default: false,
-  });
+  let answer = false;
+  try {
+    answer = await confirmAsync({
+      message: 'Would you like to upgrade the Expo app in the Android emulator?',
+      initial: false,
+    });
+  } catch {}
 
   log.newLine();
-  return answer.upgradeAndroid;
+  return answer;
 }
 
 async function maybeUpgradeEmulatorAsync() {
@@ -346,6 +346,24 @@ async function maybeUpgradeEmulatorAsync() {
     }
     log.newLine();
   }
+}
+
+async function promptSelectSDKVersionAsync(
+  sdkVersions: string[],
+  exp: Pick<ExpoConfig, 'sdkVersion'>
+): Promise<string> {
+  const sdkVersionStringOptions = sdkVersions.filter(
+    v => semver.lte('33.0.0', v) && !Versions.gteSdkVersion(exp, v)
+  );
+
+  return await selectAsync({
+    message: 'Choose a SDK version to upgrade to:',
+    limit: 20,
+    choices: sdkVersionStringOptions.map(sdkVersionString => ({
+      value: sdkVersionString,
+      title: chalk.bold(sdkVersionString),
+    })),
+  });
 }
 
 export async function upgradeAsync(
@@ -386,29 +404,17 @@ export async function upgradeAsync(
     currentSdkVersionString !== targetSdkVersionString &&
     !program.nonInteractive
   ) {
-    const answer = await prompt({
-      type: 'confirm',
-      name: 'updateToLatestSdkVersion',
+    const answer = await confirmAsync({
       message: `You are currently using SDK ${currentSdkVersionString}. Would you like to update to the latest version, ${latestSdkVersion.version}?`,
     });
 
     log.newLine();
 
-    if (!answer.updateToLatestSdkVersion) {
-      const sdkVersionStringOptions = Object.keys(sdkVersions).filter(
-        v => semver.lte('33.0.0', v) && !Versions.gteSdkVersion(exp, v)
+    if (!answer) {
+      const selectedSdkVersionString = await promptSelectSDKVersionAsync(
+        Object.keys(sdkVersions),
+        exp
       );
-
-      const { selectedSdkVersionString } = await prompt({
-        type: 'list',
-        name: 'selectedSdkVersionString',
-        message: 'Choose a SDK version to upgrade to:',
-        pageSize: 20,
-        choices: sdkVersionStringOptions.map(sdkVersionString => ({
-          value: sdkVersionString,
-          name: chalk.bold(sdkVersionString),
-        })),
-      });
 
       // This has to exist because it's based on keys already present in sdkVersions
       targetSdkVersion = sdkVersions[selectedSdkVersionString];
@@ -434,13 +440,11 @@ export async function upgradeAsync(
       // If they provide an apparently unsupported sdk version then let people try
       // anyways, maybe we want to use this for testing alpha versions or
       // something...
-      const answer = await prompt({
-        type: 'confirm',
-        name: 'attemptUnknownUpdate',
+      const answer = await confirmAsync({
         message: `You provided the target SDK version value of ${targetSdkVersionString} which does not seem to exist. But hey, I'm just a program, what do I know. Do you want to try to upgrade to it anyways?`,
       });
 
-      if (!answer.attemptUnknownUpdate) {
+      if (!answer) {
         return;
       }
     }
