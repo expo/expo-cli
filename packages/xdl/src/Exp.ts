@@ -2,7 +2,6 @@ import { BareAppConfig, ExpoConfig, getConfig } from '@expo/config';
 import { getEntryPoint } from '@expo/config/paths';
 import JsonFile from '@expo/json-file';
 import { NpmPackageManager, YarnPackageManager } from '@expo/package-manager';
-import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import merge from 'lodash/merge';
@@ -15,7 +14,6 @@ import tar, { ReadEntry } from 'tar';
 
 import ApiV2 from './ApiV2';
 import Logger from './Logger';
-import NotificationCode from './NotificationCode';
 import * as ProjectSettings from './ProjectSettings';
 import * as UrlUtils from './UrlUtils';
 import UserManager from './User';
@@ -86,36 +84,6 @@ function createFileTransform(config: TemplateConfig) {
     }
     return undefined;
   };
-}
-
-/**
- * Extract a template app to a given file path, initialize a git repo, install
- * npm dependencies, and log information about each of the steps.
- *
- * @deprecated - callers want to have more control over the logging around each
- * step, this is deprecated in favor of calling the methods that it is made up
- * of individually
- */
-export async function extractAndInitializeTemplateApp(
-  templateSpec: PackageSpec,
-  projectRoot: string,
-  packageManager: 'yarn' | 'npm' = 'npm',
-  config: AppJsonInput | BareAppConfig
-) {
-  Logger.notifications.warn(
-    'extractAndInitializeTemplateApp is deprecated. Use extractAndPrepareTemplateAppAsync instead.'
-  );
-  Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Extracting project files...');
-  await extractAndPrepareTemplateAppAsync(templateSpec, projectRoot, config);
-  Logger.notifications.info(
-    { code: NotificationCode.PROGRESS },
-    'Initializing a git repository...'
-  );
-  await initGitRepoAsync(projectRoot);
-  Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Installing dependencies...');
-  await installDependenciesAsync(projectRoot, packageManager);
-
-  return projectRoot;
 }
 
 /**
@@ -215,43 +183,6 @@ async function extractTemplateAppAsyncImpl(
   });
 }
 
-export async function initGitRepoAsync(
-  root: string,
-  flags: { silent: boolean; commit: boolean } = { silent: false, commit: true }
-) {
-  // let's see if we're in a git tree
-  try {
-    await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
-      cwd: root,
-    });
-    !flags.silent &&
-      Logger.global.debug('New project is already inside of a git repo, skipping git init.');
-  } catch (e) {
-    if (e.errno === 'ENOENT') {
-      !flags.silent && Logger.global.warn('Unable to initialize git repo. `git` not in PATH.');
-      return false;
-    }
-  }
-
-  // not in git tree, so let's init
-  try {
-    await spawnAsync('git', ['init'], { cwd: root });
-    !flags.silent && Logger.global.info('Initialized a git repository.');
-
-    if (flags.commit) {
-      await spawnAsync('git', ['add', '--all'], { cwd: root, stdio: 'ignore' });
-      await spawnAsync('git', ['commit', '-m', 'Created a new Expo app'], {
-        cwd: root,
-        stdio: 'ignore',
-      });
-    }
-    return true;
-  } catch (e) {
-    // no-op -- this is just a convenience and we don't care if it fails
-    return false;
-  }
-}
-
 export async function installDependenciesAsync(
   projectRoot: string,
   packageManager: 'yarn' | 'npm',
@@ -297,67 +228,6 @@ export async function saveRecentExpRootAsync(root: string) {
   recentExps = recentExps.filter((dir: string) => dir !== root);
   recentExps.unshift(root);
   return await recentExpsJsonFile.writeAsync(recentExps.slice(0, 100));
-}
-
-type PublishInfo = {
-  args: {
-    username: string;
-    remoteUsername: string;
-    remotePackageName: string;
-    remoteFullPackageName: string;
-    sdkVersion: string;
-    iosBundleIdentifier?: string | null;
-    androidPackage?: string | null;
-  };
-};
-
-// TODO: remove / change, no longer publishInfo, this is just used for signing
-/** @deprecated use getConfig from @expo/config */
-export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
-  const user = await UserManager.ensureLoggedInAsync();
-
-  if (!user) {
-    throw new Error('Attempted to login in offline mode. This is a bug.');
-  }
-
-  const { username } = user;
-
-  // Evaluate the project config and throw an error if the `sdkVersion` cannot be found.
-  const { exp } = getConfig(root);
-
-  const name = exp.slug;
-  const { version, sdkVersion } = exp;
-
-  if (!name) {
-    // slug is made programmatically for app.json
-    throw new Error(
-      `Cannot find the project's \`slug\`. Please add a \`name\` or \`slug\` field in the project's \`app.json\` or \`app.config.js\`). ex: \`"slug": "my-project"\``
-    );
-  }
-
-  if (!version) {
-    throw new Error(
-      `Cannot find the project's \`version\`. Please define it in one of the project's config files: \`package.json\`, \`app.json\`, or \`app.config.js\`. ex: \`"version": "1.0.0"\``
-    );
-  }
-
-  const remotePackageName = name;
-  const remoteUsername = username;
-  const remoteFullPackageName = `@${remoteUsername}/${remotePackageName}`;
-  const iosBundleIdentifier = exp.ios ? exp.ios.bundleIdentifier : null;
-  const androidPackage = exp.android ? exp.android.package : null;
-
-  return {
-    args: {
-      username,
-      remoteUsername,
-      remotePackageName,
-      remoteFullPackageName,
-      sdkVersion: sdkVersion!,
-      iosBundleIdentifier,
-      androidPackage,
-    },
-  };
 }
 
 export async function sendAsync(recipient: string, url_: string, allowUnauthed: boolean = true) {
