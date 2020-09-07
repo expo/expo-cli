@@ -84,6 +84,23 @@ declare module 'xcode' {
     sourceTree: '"<group>"' | unknown;
   }
 
+  interface PBXXCConfigurationList {
+    isa: 'XCConfigurationList';
+    buildConfigurations: Array<{ value: UUID; comment: 'Debug' | 'Release' }>;
+    defaultConfigurationIsVisible: number;
+    defaultConfigurationName: 'Release';
+  }
+
+  interface PBXXCBuildConfiguration {
+    isa: 'XCBuildConfiguration';
+    baseConfigurationReference: UUID;
+    baseConfigurationReference_comment: string;
+    buildSettings: Record<string, string>;
+    name: 'Debug' | 'Release';
+  }
+
+  type UUIDsCollection<T> = Record<UUID | UUIDComment, T | string>;
+
   export class project {
     constructor(pbxprojPath: string);
 
@@ -212,11 +229,11 @@ declare module 'xcode' {
      */
     pbxProjectSection(): { [key: UUID]: PBXProject };
     pbxBuildFileSection(): unknown;
-    pbxXCBuildConfigurationSection(): unknown;
-    pbxFileReferenceSection(): Record<UUID, PBXFile> & Record<UUIDComment, string>;
+    pbxXCBuildConfigurationSection(): UUIDsCollection<PBXXCBuildConfiguration>;
+    pbxFileReferenceSection(): UUIDsCollection<PBXFile>;
     pbxNativeTargetSection(): unknown;
     xcVersionGroupSection(): unknown;
-    pbxXCConfigurationList(): unknown;
+    pbxXCConfigurationList(): UUIDsCollection<PBXXCConfigurationList>;
     pbxGroupByName(name: unknown): unknown;
     /**
      * @param targetName in most cases it's the name of the application
