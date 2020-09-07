@@ -118,7 +118,7 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
       '@string/facebook_app_id' // The corresponding string is set in setFacebookAppIdString
     );
   } else {
-    mainApplication = removeMetaDataItemToMainApplication(
+    mainApplication = removeMetaDataItemFromMainApplication(
       mainApplication,
       'com.facebook.sdk.ApplicationId',
       '@string/facebook_app_id' // The corresponding string is set in setFacebookAppIdString
@@ -131,7 +131,7 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
       displayName
     );
   } else {
-    mainApplication = removeMetaDataItemToMainApplication(
+    mainApplication = removeMetaDataItemFromMainApplication(
       mainApplication,
       'com.facebook.sdk.ApplicationName'
     );
@@ -143,7 +143,7 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
       autoInitEnabled ? 'true' : 'false'
     );
   } else {
-    mainApplication = removeMetaDataItemToMainApplication(
+    mainApplication = removeMetaDataItemFromMainApplication(
       mainApplication,
       'com.facebook.sdk.AutoInitEnabled'
     );
@@ -155,7 +155,7 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
       autoLogAppEvents ? 'true' : 'false'
     );
   } else {
-    mainApplication = removeMetaDataItemToMainApplication(
+    mainApplication = removeMetaDataItemFromMainApplication(
       mainApplication,
       'com.facebook.sdk.AutoLogAppEventsEnabled'
     );
@@ -167,7 +167,7 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
       advertiserIdCollection ? 'true' : 'false'
     );
   } else {
-    mainApplication = removeMetaDataItemToMainApplication(
+    mainApplication = removeMetaDataItemFromMainApplication(
       mainApplication,
       'com.facebook.sdk.AdvertiserIDCollectionEnabled'
     );
@@ -203,7 +203,7 @@ function addMetaDataItemToMainApplication(
   return mainApplication;
 }
 
-function removeMetaDataItemToMainApplication(
+function removeMetaDataItemFromMainApplication(
   mainApplication: any,
   itemName: string,
   itemValue?: string
