@@ -3,11 +3,11 @@ import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import child_process from 'child_process';
 import fs from 'fs-extra';
-import { prompt } from 'inquirer';
 import trim from 'lodash/trim';
 import os from 'os';
 import path from 'path';
 import ProgressBar from 'progress';
+import prompts from 'prompts';
 import semver from 'semver';
 
 import * as Analytics from './Analytics';
@@ -203,7 +203,10 @@ async function startEmulatorAsync(device: Device): Promise<Device> {
 export async function getAttachedDevicesAsync(): Promise<Device[]> {
   const output = await getAdbOutputAsync(['devices', '-l']);
 
-  const splitItems = output.trim().replace(/\n$/, '').split(os.EOL);
+  const splitItems = output
+    .trim()
+    .replace(/\n$/, '')
+    .split(os.EOL);
   // First line is `"List of devices attached"`, remove it
   // @ts-ignore: todo
   const attachedDevices: {
@@ -518,6 +521,10 @@ async function attemptToStartEmulatorOrAssertAsync(device: Device): Promise<Devi
   return device;
 }
 
+// Keep a list of simulator UDIDs so we can prevent asking multiple times if a user wants to upgrade.
+// This can prevent annoying interactions when they don't want to upgrade for whatever reason.
+const hasPromptedToUpgrade: Record<string, boolean> = {};
+
 async function openUrlAsync({
   url,
   device,
@@ -533,8 +540,16 @@ async function openUrlAsync({
     let installedExpo = false;
     if (!isDetached) {
       let shouldInstall = !(await _isExpoInstalledAsync(device));
-      if (!shouldInstall && (await isClientOutdatedAsync(device))) {
+      const promptKey = device.pid ?? 'unknown';
+      if (
+        !shouldInstall &&
+        !hasPromptedToUpgrade[promptKey] &&
+        (await isClientOutdatedAsync(device))
+      ) {
+        // Only prompt once per device, per run.
+        hasPromptedToUpgrade[promptKey] = true;
         const confirm = await Prompts.confirmAsync({
+          initial: true,
           message: `Expo client on ${device.name} (${device.type}) is outdated, would you like to upgrade?`,
         });
         if (confirm) {
@@ -598,9 +613,12 @@ export async function openProjectAsync({
     });
 
     const devices = await getAllAvailableDevicesAsync();
-    let device: Device = devices[0];
+    let device: Device | null = devices[0];
     if (shouldPrompt) {
       device = await promptForDeviceAsync(devices);
+    }
+    if (!device) {
+      return { success: false, error: 'escaped' };
     }
 
     await openUrlAsync({ url: projectUrl, device, isDetached: !!exp.isDetached });
@@ -629,9 +647,12 @@ export async function openWebProjectAsync({
       };
     }
     const devices = await getAllAvailableDevicesAsync();
-    let device: Device = devices[0];
+    let device: Device | null = devices[0];
     if (shouldPrompt) {
       device = await promptForDeviceAsync(devices);
+    }
+    if (!device) {
+      return { success: false, error: 'escaped' };
     }
 
     await openUrlAsync({ url: projectUrl, device, isDetached: true });
@@ -860,32 +881,31 @@ export async function maybeStopAdbDaemonAsync() {
   }
 }
 
-async function promptForDeviceAsync(devices: Device[]): Promise<Device> {
+async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
   // TODO: provide an option to add or download more simulators
 
   // Pause interactions on the TerminalUI
   Prompts.pauseInteractions();
 
-  const { answer } = await prompt([
-    {
-      // @ts-ignore: broken types -- TODO: remove when migrating to `prompts`
-      type: 'list',
-      name: 'answer',
-      message: 'Select a device/emulator',
-      // @ts-ignore
-      choices: devices.map(item => {
-        const isActive = item.isBooted;
-        const format = isActive ? chalk.bold : (text: string) => text;
-        return {
-          name: `${format(item.name)} ${chalk.dim(`(${item.type})`)}`,
-          value: item.name,
-        };
-      }),
-      // @ts-ignore
-      loop: false,
+  const { value } = await prompts({
+    type: 'autocomplete',
+    name: 'value',
+    limit: 11,
+    message: 'Select a device/emulator',
+    choices: devices.map(item => {
+      const isActive = item.isBooted;
+      const format = isActive ? chalk.bold : (text: string) => text;
+      return {
+        title: `${format(item.name)} ${chalk.dim(`(${item.type})`)}`,
+        value: item.name,
+      };
+    }),
+    suggest: (input: any, choices: any) => {
+      const regex = new RegExp(input, 'i');
+      return choices.filter((choice: any) => regex.test(choice.title));
     },
-  ]);
+  });
   // Resume interactions on the TerminalUI
   Prompts.resumeInteractions();
-  return devices.find(({ name }) => name === answer)!;
+  return value ? devices.find(({ name }) => name === value)! : null;
 }

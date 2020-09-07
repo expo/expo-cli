@@ -7,7 +7,6 @@ import { addWarningIOS } from '../WarningAggregator';
 import {
   getPbxproj,
   getProjectName,
-  getXCBuildConfigurationSection,
   isBuildConfig,
   isNotComment,
   isNotTestHost,
@@ -32,7 +31,10 @@ export function setICloudEntitlement(
   return entitlementsPlist;
 }
 
-export function setAppleSignInEntitlement(config: ExpoConfig, entitlementsPlist: any) {
+export function setAppleSignInEntitlement(
+  config: ExpoConfig,
+  { 'com.apple.developer.applesignin': _, ...entitlementsPlist }: any
+) {
   if (config.ios?.usesAppleSignIn) {
     return {
       ...entitlementsPlist,
@@ -43,7 +45,10 @@ export function setAppleSignInEntitlement(config: ExpoConfig, entitlementsPlist:
   return entitlementsPlist;
 }
 
-export function setAccessesContactNotes(config: ExpoConfig, entitlementsPlist: any) {
+export function setAccessesContactNotes(
+  config: ExpoConfig,
+  { 'com.apple.developer.contacts.notes': _, ...entitlementsPlist }: any
+) {
   if (config.ios?.accessesContactNotes) {
     return {
       ...entitlementsPlist,
@@ -54,7 +59,10 @@ export function setAccessesContactNotes(config: ExpoConfig, entitlementsPlist: a
   return entitlementsPlist;
 }
 
-export function setAssociatedDomains(config: ExpoConfig, entitlementsPlist: any) {
+export function setAssociatedDomains(
+  config: ExpoConfig,
+  { 'com.apple.developer.associated-domains': _, ...entitlementsPlist }: any
+) {
   if (config.ios?.associatedDomains) {
     return {
       ...entitlementsPlist,
@@ -84,7 +92,7 @@ function createEntitlementsFile(projectRoot: string) {
    * Add file to pbxproj under CODE_SIGN_ENTITLEMENTS
    */
   const project = getPbxproj(projectRoot);
-  Object.entries(getXCBuildConfigurationSection(project))
+  Object.entries(project.pbxXCBuildConfigurationSection())
     .filter(isNotComment)
     .filter(isBuildConfig)
     .filter(isNotTestHost)

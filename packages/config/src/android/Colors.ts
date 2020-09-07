@@ -36,7 +36,7 @@ export async function writeColorsXMLAsync(colorsPath: string, colorsContent: any
 }
 
 export function setColorItem(itemToAdd: XMLItem[], colorFileContentsJSON: Document) {
-  if (colorFileContentsJSON.resources.color) {
+  if (colorFileContentsJSON.resources?.color) {
     const colorNameExists = colorFileContentsJSON.resources.color.filter(
       (e: XMLItem) => e['$'].name === itemToAdd[0]['$'].name
     )[0];
