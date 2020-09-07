@@ -1,8 +1,7 @@
 // @ts-ignore
 import { sync as globSync } from 'glob';
 import path from 'path';
-// @ts-ignore
-import { project as Project } from 'xcode';
+import xcode from 'xcode';
 // @ts-ignore
 import pbxFile from 'xcode/lib/pbxFile';
 
@@ -135,7 +134,7 @@ export function getPbxproj(projectRoot: string): Pbxproj {
     );
   }
 
-  const project = Project(pbxprojPath);
+  const project = xcode.project(pbxprojPath);
   project.parseSync();
   return project;
 }

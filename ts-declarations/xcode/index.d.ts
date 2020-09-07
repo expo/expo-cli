@@ -9,6 +9,20 @@ declare module 'xcode' {
    */
   type UUIDComment = string;
 
+  type XCObjectType =
+    | 'PBXBuildFile'
+    | 'PBXFileReference'
+    | 'PBXFrameworksBuildPhase'
+    | 'PBXGroup'
+    | 'PBXNativeTarget'
+    | 'PBXProject'
+    | 'PBXResourcesBuildPhase'
+    | 'PBXShellScriptBuildPhase'
+    | 'PBXSourcesBuildPhase'
+    | 'PBXVariantGroup'
+    | 'XCBuildConfiguration'
+    | 'XCConfigurationList';
+
   interface PBXFile {
     basename: string;
     lastKnownFileType?: string;
@@ -84,7 +98,7 @@ declare module 'xcode' {
     sourceTree: '"<group>"' | unknown;
   }
 
-  export class project {
+  export class XcodeProject {
     constructor(pbxprojPath: string);
 
     /**
@@ -94,7 +108,22 @@ declare module 'xcode' {
 
     hash: {
       headComment: string;
-      project: unknown;
+      project: {
+        archiveVersion: number;
+        objectVersion: number;
+        objects: {
+          [T in XCObjectType]: Record<
+            string,
+            {
+              isa: T;
+              name: string;
+              [key: string]: any;
+            }
+          >;
+        };
+        rootObject: string;
+        rootObject_comment: string;
+      };
     };
 
     // ------------------------------------------------------------------------
@@ -107,6 +136,8 @@ declare module 'xcode' {
      * First step to be executed while working with `.pbxproj` file.
      */
     parse(callback?: (err: Error | null, results?: string) => void): this;
+
+    parseSync(): void;
 
     /**
      * @returns Content of .pbxproj file.
@@ -148,7 +179,7 @@ declare module 'xcode' {
     removePbxGroup(groupName: unknown): void;
     addToPbxProjectSection(target: unknown): void;
     addToPbxNativeTargetSection(target: unknown): void;
-    addToPbxFileReferenceSection(file: unknown): void;
+    addToPbxFileReferenceSection(file: any): void;
     removeFromPbxFileReferenceSection(file: unknown): unknown;
     addToXcVersionGroupSection(file: unknown): void;
     addToPluginsPbxGroup(file: unknown): void;
@@ -212,7 +243,7 @@ declare module 'xcode' {
      */
     pbxProjectSection(): { [key: UUID]: PBXProject };
     pbxBuildFileSection(): unknown;
-    pbxXCBuildConfigurationSection(): unknown;
+    pbxXCBuildConfigurationSection(): any[];
     pbxFileReferenceSection(): Record<UUID, PBXFile> & Record<UUIDComment, string>;
     pbxNativeTargetSection(): unknown;
     xcVersionGroupSection(): unknown;
@@ -340,4 +371,6 @@ declare module 'xcode' {
     addTargetAttribute(prop: unknown, value: unknown, target: unknown): void;
     removeTargetAttribute(prop: unknown, target: unknown): void;
   }
+
+  export function project(projectPath: string): XcodeProject;
 }
