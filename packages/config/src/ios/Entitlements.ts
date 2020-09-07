@@ -7,7 +7,6 @@ import { addWarningIOS } from '../WarningAggregator';
 import {
   getPbxproj,
   getProjectName,
-  getXCBuildConfigurationSection,
   isBuildConfig,
   isNotComment,
   isNotTestHost,
@@ -93,7 +92,7 @@ function createEntitlementsFile(projectRoot: string) {
    * Add file to pbxproj under CODE_SIGN_ENTITLEMENTS
    */
   const project = getPbxproj(projectRoot);
-  Object.entries(getXCBuildConfigurationSection(project))
+  Object.entries(project.pbxXCBuildConfigurationSection())
     .filter(isNotComment)
     .filter(isBuildConfig)
     .filter(isNotTestHost)

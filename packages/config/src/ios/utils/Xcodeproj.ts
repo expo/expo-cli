@@ -1,10 +1,28 @@
 // @ts-ignore
 import { sync as globSync } from 'glob';
 import path from 'path';
-// @ts-ignore
-import { project as Project } from 'xcode';
-// @ts-ignore
+import xcode, {
+  PBXGroup,
+  PBXNativeTarget,
+  PBXProject,
+  UUID,
+  XCBuildConfiguration,
+  XCConfigurationList,
+  XcodeProject,
+} from 'xcode';
 import pbxFile from 'xcode/lib/pbxFile';
+
+export type ProjectSectionEntry = [string, PBXProject];
+
+export type NativeTargetSection = Record<string, PBXNativeTarget>;
+
+export type NativeTargetSectionEntry = [string, PBXNativeTarget];
+
+export type ConfigurationLists = Record<string, XCConfigurationList>;
+
+export type ConfigurationListEntry = [string, XCConfigurationList];
+
+export type ConfigurationSectionEntry = [string, XCBuildConfiguration];
 
 export function getProjectName(projectRoot: string) {
   const sourceRoot = getSourceRoot(projectRoot);
@@ -23,23 +41,14 @@ export function getSourceRoot(projectRoot: string): string {
   return path.dirname(paths[0]);
 }
 
-// TODO: define this type later
-export type Pbxproj = any;
-
-interface PBXGroup {
-  isa: 'PBXGroup';
-  children: {
-    value: string;
-    comment?: string;
-  }[];
-  name: string;
-  path?: string;
-  sourceTree: '"<group>"' | unknown;
-}
 // TODO(brentvatne): I couldn't figure out how to do this with an existing
 // higher level function exposed by the xcode library, but we should find out how to do
 // that and replace this with it
-export function addFileToGroup(filepath: string, groupName: string, project: Project): Pbxproj {
+export function addFileToGroup(
+  filepath: string,
+  groupName: string,
+  project: XcodeProject
+): XcodeProject {
   const file = new pbxFile(filepath);
   file.uuid = project.generateUuid();
   file.fileRef = project.generateUuid();
@@ -63,10 +72,27 @@ function splitPath(path: string): string[] {
   return path.split('/');
 }
 
-const findGroup = (group: PBXGroup, name: string): any =>
-  group.children.find(group => group.comment === name);
+const findGroup = (
+  group: PBXGroup | undefined,
+  name: string
+):
+  | {
+      value: UUID;
+      comment?: string;
+    }
+  | undefined => {
+  if (!group) {
+    return undefined;
+  }
 
-function findGroupInsideGroup(project: Pbxproj, group: PBXGroup, name: string): null | PBXGroup {
+  return group.children.find(group => group.comment === name);
+};
+
+function findGroupInsideGroup(
+  project: XcodeProject,
+  group: PBXGroup | undefined,
+  name: string
+): null | PBXGroup {
   const foundGroup = findGroup(group, name);
   if (foundGroup) {
     return project.getPBXGroupByKey(foundGroup.value) ?? null;
@@ -74,7 +100,7 @@ function findGroupInsideGroup(project: Pbxproj, group: PBXGroup, name: string): 
   return null;
 }
 
-function pbxGroupByPath(project: Pbxproj, path: string): null | PBXGroup {
+function pbxGroupByPath(project: XcodeProject, path: string): null | PBXGroup {
   const { firstProject } = project.getFirstProject();
 
   let group = project.getPBXGroupByKey(firstProject.mainGroup);
@@ -89,10 +115,10 @@ function pbxGroupByPath(project: Pbxproj, path: string): null | PBXGroup {
     }
   }
 
-  return group;
+  return group ?? null;
 }
 
-export function ensureGroupRecursively(project: Pbxproj, filepath: string): PBXGroup | null {
+export function ensureGroupRecursively(project: XcodeProject, filepath: string): PBXGroup | null {
   const components = splitPath(filepath);
   const hasChild = (group: PBXGroup, name: string) =>
     group.children.find(({ comment }) => comment === name);
@@ -109,7 +135,7 @@ export function ensureGroupRecursively(project: Pbxproj, filepath: string): PBXG
     }
     topMostGroup = project.pbxGroupByName(pathComponent);
   }
-  return topMostGroup;
+  return topMostGroup ?? null;
 }
 
 export function findSchemeNames(projectRoot: string): string[] {
@@ -123,7 +149,7 @@ export function findSchemeNames(projectRoot: string): string[] {
 /**
  * Get the pbxproj for the given path
  */
-export function getPbxproj(projectRoot: string): Pbxproj {
+export function getPbxproj(projectRoot: string): XcodeProject {
   const pbxprojPaths = globSync('ios/*/project.pbxproj', { absolute: true, cwd: projectRoot });
   const [pbxprojPath, ...otherPbxprojPaths] = pbxprojPaths;
 
@@ -135,47 +161,21 @@ export function getPbxproj(projectRoot: string): Pbxproj {
     );
   }
 
-  const project = Project(pbxprojPath);
+  const project = xcode.project(pbxprojPath);
   project.parseSync();
   return project;
 }
 
-export type ProjectSection = Record<string, ProjectSectionItem>;
-export type ProjectSectionItem = {
-  isa: string;
-  attributes: {
-    TargetAttributes: Record<
-      string,
-      {
-        DevelopmentTeam?: string;
-        ProvisioningStyle?: string;
-      }
-    >;
-  };
-  targets: {
-    value: string;
-  }[];
-  buildConfigurationList: string;
-};
-export type ProjectSectionEntry = [string, ProjectSectionItem];
-
-export function getProjectSection(project: Pbxproj): ProjectSection {
+export function getProjectSection(project: XcodeProject) {
   return project.pbxProjectSection();
 }
 
-export type NativeTargetSection = Record<string, NativeTargetSectionItem>;
-export type NativeTargetSectionItem = {
-  isa: 'PBXNativeTarget';
-  buildConfigurationList: string;
-};
-export type NativeTargetSectionEntry = [string, NativeTargetSectionItem];
-
-export function getNativeTargets(project: Pbxproj): NativeTargetSectionEntry[] {
-  const section = project.pbxNativeTargetSection() as NativeTargetSection;
+export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntry[] {
+  const section = project.pbxNativeTargetSection();
   return Object.entries(section).filter(isNotComment);
 }
 
-export function findFirstNativeTarget(project: Pbxproj): NativeTargetSectionItem {
+export function findFirstNativeTarget(project: XcodeProject): PBXNativeTarget {
   const { targets } = Object.values(getProjectSection(project))[0];
   const target = targets[0].value;
 
@@ -186,41 +186,13 @@ export function findFirstNativeTarget(project: Pbxproj): NativeTargetSectionItem
   return nativeTarget;
 }
 
-export type ConfigurationLists = Record<string, ConfigurationList>;
-export type ConfigurationList = {
-  isa: string;
-  buildConfigurations: {
-    value: string;
-  }[];
-};
-export type ConfigurationListEntry = [string, ConfigurationList];
-
-export function getXCConfigurationListEntries(project: Pbxproj): ConfigurationListEntry[] {
-  const lists = project.pbxXCConfigurationList() as ConfigurationLists;
+export function getXCConfigurationListEntries(project: XcodeProject): ConfigurationListEntry[] {
+  const lists = project.pbxXCConfigurationList();
   return Object.entries(lists).filter(isNotComment);
 }
 
-export type ConfigurationSection = Record<string, ConfigurationSectionItem>;
-export type ConfigurationSectionItem = {
-  isa: string;
-  buildSettings: {
-    PRODUCT_NAME?: string;
-    PRODUCT_BUNDLE_IDENTIFIER?: string;
-    PROVISIONING_PROFILE_SPECIFIER?: string;
-    TEST_HOST?: any;
-    DEVELOPMENT_TEAM?: string;
-    CODE_SIGN_IDENTITY?: string;
-    CODE_SIGN_STYLE?: string;
-  };
-};
-export type ConfigurationSectionEntry = [string, ConfigurationSectionItem];
-
-export function getXCBuildConfigurationSection(project: Pbxproj): ConfigurationSection {
-  return project.pbxXCBuildConfigurationSection();
-}
-
 export function getBuildConfigurationForId(
-  project: Pbxproj,
+  project: XcodeProject,
   configurationListId: string
 ): ConfigurationSectionEntry[] {
   const configurationListEntries = getXCConfigurationListEntries(project);
@@ -230,7 +202,7 @@ export function getBuildConfigurationForId(
 
   const buildConfigurations = configurationList.buildConfigurations.map(i => i.value);
 
-  return Object.entries(getXCBuildConfigurationSection(project))
+  return Object.entries(project.pbxXCBuildConfigurationSection())
     .filter(isNotComment)
     .filter(isBuildConfig)
     .filter(isNotTestHost)

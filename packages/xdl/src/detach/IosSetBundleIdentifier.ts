@@ -1,8 +1,7 @@
 import plist, { PlistObject } from '@expo/plist';
 import fs from 'fs';
 import { sync as globSync } from 'glob';
-// @ts-ignore
-import { project as Project } from 'xcode';
+import xcode from 'xcode';
 
 const defaultBundleId = '$(PRODUCT_BUNDLE_IDENTIFIER)';
 
@@ -58,7 +57,7 @@ function filterHosts(input: any[]): boolean {
 }
 
 export function updateBundleIdentifierForPbxproj(pbxprojPath: string, bundleIdentifier: string) {
-  const project = Project(pbxprojPath);
+  const project = xcode.project(pbxprojPath);
   project.parseSync();
 
   Object.entries(project.pbxXCBuildConfigurationSection())
