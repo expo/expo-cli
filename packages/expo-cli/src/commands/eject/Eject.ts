@@ -2,6 +2,7 @@ import {
   WarningAggregator as ConfigWarningAggregator,
   ExpoConfig,
   PackageJSONConfig,
+  WarningAggregator,
   getConfig,
   resolveModule,
 } from '@expo/config';
@@ -24,6 +25,7 @@ import prompt from '../../prompt';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
+import { learnMore } from '../utils/TerminalLink';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
@@ -64,9 +66,11 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
   log.newLine();
   log.nested(`➡️  ${chalk.bold('Next steps')}`);
 
-  log.nested(
-    `- 👆 Review the logs above and look for any warnings (⚠️ ) that might need follow-up.`
-  );
+  if (WarningAggregator.hasWarningsIOS() || WarningAggregator.hasWarningsAndroid()) {
+    log.nested(
+      `- 👆 Review the logs above and look for any warnings (⚠️ ) that might need follow-up.`
+    );
+  }
   log.nested(
     `- 💡 You may want to run ${chalk.bold(
       'npx @react-native-community/cli doctor'
@@ -75,7 +79,7 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
   if (!podsInstalled) {
     log.nested(
       `- 🍫 When CocoaPods is installed, initialize the project workspace: ${chalk.bold(
-        'cd ios && pod install'
+        'npx pod-install'
       )}`
     );
   }
@@ -87,12 +91,15 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
 
   if (await usesOldExpoUpdatesAsync(projectRoot)) {
     log.nested(
-      `- 🚀 ${terminalLink(
-        'expo-updates',
-        'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
-      )} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
+      `- 🚀 ${
+        (terminalLink(
+          'expo-updates',
+          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        ),
+        { fallback: (text: string) => text })
+      } has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
         'expo publish'
-      )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
+      )}. ${learnMore('https://expo.fyi/release-builds-with-expo-updates')}`
     );
   }
 
