@@ -95,7 +95,7 @@ describe('iOSBuilder', () => {
           provisioningProfileBase64: pprofile.base64,
         },
       });
-    });
+    }, 10000);
   });
 
   describe('preparing managed job', () => {
