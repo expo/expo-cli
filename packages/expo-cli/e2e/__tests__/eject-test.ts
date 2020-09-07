@@ -49,7 +49,7 @@ function executeDefaultAsync(cwd: string, args: string[]) {
 
 // Test that the default case works (`expo eject`)
 it(`can eject a minimal project`, async () => {
-  const projectName = 'default-eject-minimal';
+  const projectName = 'default-eject-minimal-&<world/>';
 
   const projectRoot = await createMinimalProjectAsync(tempDir, projectName);
 
