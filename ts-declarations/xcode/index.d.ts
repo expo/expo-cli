@@ -1,3 +1,19 @@
+interface pbxFile {
+  basename: string;
+  lastKnownFileType?: string;
+  group?: string;
+  path?: string;
+  fileEncoding?: number;
+  defaultEncoding?: number;
+  sourceTree: string;
+  includeInIndex?: number;
+  explicitFileType?: unknown;
+  settings?: object;
+  uuid?: string;
+  fileRef: string;
+  target?: string;
+}
+
 declare module 'xcode' {
   /**
    * UUID that is a key to each fragment of PBXProject.
@@ -23,37 +39,37 @@ declare module 'xcode' {
     | 'XCBuildConfiguration'
     | 'XCConfigurationList';
 
-  interface PBXFile {
-    basename: string;
-    lastKnownFileType?: string;
-    group?: string;
-    path?: string;
-    fileEncoding?: number;
-    defaultEncoding?: number;
-    sourceTree: string;
-    includeInIndex?: number;
-    explicitFileType?: unknown;
-    settings?: object;
-    uuid?: string;
-    fileRef: string;
-    target?: string;
-  }
+  type PBXFile = pbxFile;
 
   interface PBXProject {
     isa: 'PBXProject';
-    attributes: object;
+    attributes: {
+      LastUpgradeCheck: number;
+      TargetAttributes: Record<
+        UUID,
+        {
+          CreatedOnToolsVersion?: string;
+          TestTargetID?: UUID;
+          LastSwiftMigration?: number;
+          ProvisioningStyle?: string;
+        } & Record<string, undefined | number | string>
+      >;
+    };
     buildConfigurationList: UUID;
     buildConfigurationList_comment: string;
     compatibilityVersion: string;
     developmentRegion: string;
     hasScannedForEncodings: number;
-    knownRegions: unknown[];
+    knownRegions: string[];
     mainGroup: UUID;
     productRefGroup: UUID;
     productRefGroup_comment: string;
     projectDirPath: string;
     projectRoot: string;
-    targets: unknown[];
+    targets: {
+      value: UUID;
+      comment: string;
+    }[];
   }
 
   interface PBXNativeTarget {
@@ -71,6 +87,63 @@ declare module 'xcode' {
     productReference: UUID;
     productReference_comment: string;
     productType: string;
+  }
+
+  interface PBXBuildFile {
+    isa: 'PBXBuildFile';
+    fileRef: UUID;
+    // "AppDelegate.m"
+    fileRef_comment: string;
+  }
+
+  interface XCConfigurationList {
+    isa: 'XCConfigurationList';
+    buildConfigurations: {
+      value: UUID;
+      comment: string | 'Release' | 'Debug';
+    }[];
+    defaultConfigurationIsVisible: number;
+    defaultConfigurationName: string;
+  }
+
+  interface XCBuildConfiguration {
+    isa: 'XCBuildConfiguration';
+    baseConfigurationReference: UUID;
+    baseConfigurationReference_comment: string;
+    buildSettings: Record<string, string | undefined | number | unknown[]> & {
+      // '"$(TARGET_NAME)"',
+      PRODUCT_NAME?: string;
+      // '"io.expo.demo.$(PRODUCT_NAME:rfc1034identifier)"',
+      PRODUCT_BUNDLE_IDENTIFIER?: string;
+      PROVISIONING_PROFILE_SPECIFIER?: string;
+      // '"$(BUILT_PRODUCTS_DIR)/rni.app/rni"'
+      TEST_HOST?: any;
+      DEVELOPMENT_TEAM?: string;
+      CODE_SIGN_IDENTITY?: string;
+      CODE_SIGN_STYLE?: string;
+      // '"$(TEST_HOST)"'
+      BUNDLE_LOADER?: string;
+      GCC_PREPROCESSOR_DEFINITIONS?: unknown[];
+      INFOPLIST_FILE?: string;
+      IPHONEOS_DEPLOYMENT_TARGET?: string;
+      LD_RUNPATH_SEARCH_PATHS?: string;
+      OTHER_LDFLAGS?: unknown[];
+      ASSETCATALOG_COMPILER_APPICON_NAME?: string;
+      ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME?: string;
+      CLANG_ANALYZER_NONNULL?: string;
+      CLANG_WARN_DOCUMENTATION_COMMENTS?: string;
+      CLANG_WARN_INFINITE_RECURSION?: string;
+      CLANG_WARN_SUSPICIOUS_MOVE?: string;
+      DEBUG_INFORMATION_FORMAT?: string;
+      ENABLE_TESTABILITY?: string;
+      GCC_NO_COMMON_BLOCKS?: string;
+      // 'appletvos'
+      SDKROOT?: string;
+      TARGETED_DEVICE_FAMILY?: number | string;
+      // '10.0'
+      TVOS_DEPLOYMENT_TARGET?: string;
+    };
+    name: string;
   }
 
   type ProductType =
@@ -105,6 +178,9 @@ declare module 'xcode' {
      * `.pbxproj` file path.
      */
     filepath: string;
+
+    // Ex: '$(TARGET_NAME)'
+    productName: string;
 
     hash: {
       headComment: string;
@@ -241,30 +317,31 @@ declare module 'xcode' {
     /**
      * Retrieves main part describing PBXProjects that are available in `.pbxproj` file.
      */
-    pbxProjectSection(): { [key: UUID]: PBXProject };
-    pbxBuildFileSection(): unknown;
-    pbxXCBuildConfigurationSection(): any[];
+    pbxProjectSection(): Record<UUID, PBXProject> & Record<UUIDComment, string>;
+    pbxBuildFileSection(): Record<UUID, PBXBuildFile> & Record<UUIDComment, string>;
+    pbxXCBuildConfigurationSection(): Record<UUID, XCBuildConfiguration> &
+      Record<UUIDComment, string>;
     pbxFileReferenceSection(): Record<UUID, PBXFile> & Record<UUIDComment, string>;
-    pbxNativeTargetSection(): unknown;
+    pbxNativeTargetSection(): Record<UUID, PBXNativeTarget> & Record<UUIDComment, string>;
     xcVersionGroupSection(): unknown;
-    pbxXCConfigurationList(): unknown;
-    pbxGroupByName(name: unknown): unknown;
+    pbxXCConfigurationList(): Record<UUID, XCConfigurationList> & Record<UUIDComment, string>;
+    pbxGroupByName(name: string): PBXGroup | undefined;
     /**
      * @param targetName in most cases it's the name of the application
      */
     pbxTargetByName(targetName: string): PBXNativeTarget | undefined;
-    findTargetKey(name: unknown): string;
-    pbxItemByComment(name: unknown, pbxSectionName: unknown): unknown;
+    findTargetKey(name: string): string;
+    pbxItemByComment(name: string, pbxSectionName: unknown): unknown;
     pbxSourcesBuildPhaseObj(target: unknown): unknown;
     pbxResourcesBuildPhaseObj(target: unknown): unknown;
     pbxFrameworksBuildPhaseObj(target: unknown): unknown;
     pbxEmbedFrameworksBuildPhaseObj(target: unknown): unknown;
     buildPhase(group: unknown, target: unknown): string;
-    buildPhaseObject(name: unknown, group: unknown, target: unknown): unknown;
+    buildPhaseObject(name: string, group: unknown, target: unknown): unknown;
     addBuildProperty(prop: unknown, value: unknown, build_name: unknown): void;
     removeBuildProperty(prop: unknown, build_name: unknown): void;
     updateBuildProperty(prop: string, value: unknown, build: string): void;
-    updateProductName(name: unknown): void;
+    updateProductName(name: string): void;
     removeFromFrameworkSearchPaths(file: unknown): void;
     addToFrameworkSearchPaths(file: unknown): void;
     removeFromLibrarySearchPaths(file: unknown): void;
@@ -302,7 +379,7 @@ declare module 'xcode' {
      */
     getFirstProject(): { uuid: UUID; firstProject: PBXProject };
     getFirstTarget(): {
-      uuid: unknown;
+      uuid: UUID;
       firstTarget: unknown;
     };
     /**
@@ -314,7 +391,7 @@ declare module 'xcode' {
     addToPbxGroup(file: PBXFile, groupKey: UUID): void;
     pbxCreateGroupWithType(name: unknown, pathName: unknown, groupType: unknown): unknown;
     pbxCreateVariantGroup(name: unknown): unknown;
-    pbxCreateGroup(name: unknown, pathName: unknown): unknown;
+    pbxCreateGroup(name: string, pathName: string): UUID;
     removeFromPbxGroupAndType(file: unknown, groupKey: unknown, groupType: unknown): void;
     removeFromPbxGroup(file: unknown, groupKey: unknown): void;
     removeFromPbxVariantGroup(file: unknown, groupKey: unknown): void;
@@ -337,10 +414,10 @@ declare module 'xcode' {
       fileRef: unknown;
       basename: unknown;
     };
-    addKnownRegion(name: unknown): void;
-    removeKnownRegion(name: unknown): void;
-    hasKnownRegion(name: unknown): boolean;
-    getPBXObject(name: unknown): unknown;
+    addKnownRegion(name: string): void;
+    removeKnownRegion(name: string): void;
+    hasKnownRegion(name: string): boolean;
+    getPBXObject(name: string): unknown;
     /**
      * - creates `PBXFile`
      * - adds to `PBXFileReference` section
@@ -373,4 +450,23 @@ declare module 'xcode' {
   }
 
   export function project(projectPath: string): XcodeProject;
+}
+
+declare module 'xcode/lib/pbxFile' {
+  export default class PBXFile implements pbxFile {
+    constructor(file: string);
+    basename: string;
+    lastKnownFileType?: string;
+    group?: string;
+    path?: string;
+    fileEncoding?: number;
+    defaultEncoding?: number;
+    sourceTree: string;
+    includeInIndex?: number;
+    explicitFileType?: unknown;
+    settings?: object;
+    uuid?: string;
+    fileRef: string;
+    target?: string;
+  }
 }
