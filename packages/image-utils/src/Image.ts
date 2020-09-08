@@ -25,7 +25,7 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
   const { width, height, backgroundColor, resizeMode } = imageOptions;
   if (!sharp) {
     const inputOptions: any = { input: imageOptions.src, quality: 100 };
-    const jimp = await Jimp.resize(inputOptions, {
+    let jimp = await Jimp.resize(inputOptions, {
       width,
       height,
       fit: resizeMode,
@@ -35,12 +35,18 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
     if (imageOptions.removeTransparency) {
       jimp.colorType(2);
     }
+
+    let mime: string;
     if (imageOptions.borderRadius) {
+      await jimp.rgba(true);
+      mime = 'image/png';
       // TODO: support setting border radius with Jimp. Currently only support making the image a circle
-      await Jimp.circleAsync(jimp);
+      jimp = await Jimp.circleAsync(jimp);
+    } else {
+      mime = jimp.getMIME();
     }
 
-    const imgBuffer = await jimp.getBufferAsync(jimp.getMIME());
+    const imgBuffer = await jimp.getBufferAsync(mime);
     return imgBuffer;
   }
   try {
