@@ -75,7 +75,6 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
 
   await attemptModification(
     projectRoot,
-    `Your iOS bundle identifier is now: ${bundleIdentifier}`,
     {
       ios: { ...(exp.ios || {}), bundleIdentifier },
     },
@@ -144,7 +143,6 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
 
   await attemptModification(
     projectRoot,
-    `Your Android package is now: ${packageName}`,
     {
       android: { ...(exp.android || {}), package: packageName },
     },
@@ -158,7 +156,6 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
 
 async function attemptModification(
   projectRoot: string,
-  modificationSuccessMessage: string,
   edits: Partial<ExpoConfig>,
   exactEdits: Partial<ExpoConfig>
 ): Promise<void> {
@@ -166,8 +163,6 @@ async function attemptModification(
     skipSDKVersionRequirement: true,
   });
   if (modification.type === 'success') {
-    log.addNewLineIfNone();
-    log(modificationSuccessMessage);
     log.newLine();
   } else {
     warnAboutConfigAndExit(modification.type, modification.message!, exactEdits);
