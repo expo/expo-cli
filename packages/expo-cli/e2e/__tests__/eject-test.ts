@@ -63,8 +63,7 @@ it(`can eject a minimal project`, async () => {
   await res;
 
   // Test that native folders were generated
-  // TODO(Bacon): test that the native file names match
-  expect(fileExists(projectName, 'ios/hworld.xcworkspace')).toBe(true);
+  expect(fileExists(projectName, 'ios/hworld.xcodeproj')).toBe(true);
   expect(fileExists(projectName, 'android')).toBe(true);
 
   // Test extra generated files were created
