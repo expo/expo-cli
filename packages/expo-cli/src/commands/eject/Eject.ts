@@ -10,10 +10,8 @@ import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
-import program from 'commander';
 import fse from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
-import ora from 'ora';
 import pacote from 'pacote';
 import path from 'path';
 import semver from 'semver';
@@ -24,6 +22,7 @@ import log from '../../log';
 import prompt from '../../prompt';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
+import * as CreateApp from '../utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import { learnMore } from '../utils/TerminalLink';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
@@ -60,7 +59,7 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
   await configureIOSStepAsync(projectRoot);
   await configureAndroidStepAsync(projectRoot);
 
-  const podsInstalled = await installPodsAsync(projectRoot);
+  const podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
   await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
 
   log.newLine();
@@ -116,7 +115,7 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
 
 async function configureIOSStepAsync(projectRoot: string) {
   log.newLine();
-  const applyingIOSConfigStep = logNewSection('Applying iOS configuration');
+  const applyingIOSConfigStep = CreateApp.logNewSection('Applying iOS configuration');
   await configureIOSProjectAsync(projectRoot);
   if (ConfigWarningAggregator.hasWarningsIOS()) {
     applyingIOSConfigStep.stopAndPersist({
@@ -130,69 +129,13 @@ async function configureIOSStepAsync(projectRoot: string) {
   log.newLine();
 }
 
-async function installPodsAsync(projectRoot: string) {
-  log.newLine();
-  let step = logNewSection('Installing CocoaPods.');
-  if (process.platform !== 'darwin') {
-    step.succeed('Skipped installing CocoaPods because operating system is not on macOS.');
-    return false;
-  }
-  const packageManager = new PackageManager.CocoaPodsPackageManager({
-    cwd: path.join(projectRoot, 'ios'),
-    log,
-    silent: !process.env.EXPO_DEBUG,
-  });
-
-  if (!(await packageManager.isCLIInstalledAsync())) {
-    try {
-      // prompt user -- do you want to install cocoapods right now?
-      step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
-      step.render();
-      await PackageManager.CocoaPodsPackageManager.installCLIAsync({
-        nonInteractive: program.nonInteractive,
-        spawnOptions: packageManager.options,
-      });
-      step.succeed('Installed CocoaPods CLI');
-      step = logNewSection('Running `pod install` in the `ios` directory.');
-    } catch (e) {
-      step.stopAndPersist({
-        symbol: '⚠️ ',
-        text: chalk.red(
-          'Unable to install the CocoaPods CLI. Continuing with ejecting, you can install CocoaPods afterwards.'
-        ),
-      });
-      if (e.message) {
-        log(`- ${e.message}`);
-      }
-      return false;
-    }
-  }
-
-  try {
-    await packageManager.installAsync();
-    step.succeed('Installed pods and initialized Xcode workspace.');
-    return true;
-  } catch (e) {
-    step.stopAndPersist({
-      symbol: '⚠️ ',
-      text: chalk.red(
-        'Something when wrong running `pod install` in the `ios` directory. Continuing with ejecting, you can debug this afterwards.'
-      ),
-    });
-    if (e.message) {
-      log(`- ${e.message}`);
-    }
-    return false;
-  }
-}
-
 /**
  * Wraps PackageManager to install node modules and adds CLI logs.
  *
  * @param projectRoot
  */
 async function installNodeModulesAsync(projectRoot: string) {
-  const installingDependenciesStep = logNewSection('Installing JavaScript dependencies.');
+  const installingDependenciesStep = CreateApp.logNewSection('Installing JavaScript dependencies.');
   await fse.remove('node_modules');
   const packageManager = PackageManager.createForProject(projectRoot, { log, silent: true });
   try {
@@ -214,7 +157,7 @@ async function installNodeModulesAsync(projectRoot: string) {
 }
 
 async function configureAndroidStepAsync(projectRoot: string) {
-  const applyingAndroidConfigStep = logNewSection('Applying Android configuration');
+  const applyingAndroidConfigStep = CreateApp.logNewSection('Applying Android configuration');
   await configureAndroidProjectAsync(projectRoot);
   if (ConfigWarningAggregator.hasWarningsAndroid()) {
     applyingAndroidConfigStep.stopAndPersist({
@@ -225,12 +168,6 @@ async function configureAndroidStepAsync(projectRoot: string) {
   } else {
     applyingAndroidConfigStep.succeed('All project configuration applied to Android project');
   }
-}
-
-function logNewSection(title: string) {
-  const spinner = ora(chalk.bold(title));
-  spinner.start();
-  return spinner;
 }
 
 async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
@@ -300,7 +237,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     log(`- expo.entryPoint is not needed and has been removed.`);
   }
 
-  const updatingAppConfigStep = logNewSection('Updating app configuration (app.json)');
+  const updatingAppConfigStep = CreateApp.logNewSection('Updating app configuration (app.json)');
   await fse.writeFile(path.resolve('app.json'), JSON.stringify({ expo: exp }, null, 2));
   // TODO: if app.config.js, need to provide some other info here
   updatingAppConfigStep.succeed('App configuration (app.json) updated.');
@@ -313,7 +250,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
   // log.newLine();
-  const creatingNativeProjectStep = logNewSection(
+  const creatingNativeProjectStep = CreateApp.logNewSection(
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
   let tempDir;
@@ -348,7 +285,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
    * hashAssetFiles plugin manually.
    */
 
-  const updatingMetroConfigStep = logNewSection('Adding Metro bundler configuration');
+  const updatingMetroConfigStep = CreateApp.logNewSection('Adding Metro bundler configuration');
   try {
     if (
       fse.existsSync(path.join(projectRoot, 'metro.config.js')) ||
@@ -385,7 +322,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
   // log.newLine();
-  const updatingPackageJsonStep = logNewSection(
+  const updatingPackageJsonStep = CreateApp.logNewSection(
     'Updating your package.json scripts, dependencies, and main file'
   );
   if (!pkg.scripts) {
@@ -577,7 +514,7 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
   }
 
   log.newLine();
-  const warnAdditionalSetupStep = logNewSection(
+  const warnAdditionalSetupStep = CreateApp.logNewSection(
     'Checking if any additional setup steps are required for installed SDK packages.'
   );
 

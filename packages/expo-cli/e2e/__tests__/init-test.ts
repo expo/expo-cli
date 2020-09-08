@@ -13,7 +13,8 @@ test('init --help', async () => {
 test('init (no dir name)', async () => {
   const { status, stderr } = await tryRunAsync(['init']);
   expect(status).not.toBe(0);
-  expect(stderr).toMatch('The project dir argument is required in non-interactive mode.');
+
+  expect(stderr).toMatch(/Pass the project name using the first argument/);
 });
 
 xtest('init', async () => {

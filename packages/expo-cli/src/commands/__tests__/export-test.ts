@@ -3,13 +3,7 @@ import { vol } from 'memfs';
 
 import { mockExpoXDL } from '../../__tests__/mock-utils';
 import { jester } from '../../credentials/test-fixtures/mocks-constants';
-import {
-  assertFolderEmptyAsync,
-  collectMergeSourceUrlsAsync,
-  ensurePublicUrlAsync,
-  getConflictsForDirectory,
-  promptPublicUrlAsync,
-} from '../export';
+import { collectMergeSourceUrlsAsync, ensurePublicUrlAsync, promptPublicUrlAsync } from '../export';
 
 jest.mock('fs');
 jest.mock('resolve-from');
@@ -105,77 +99,5 @@ describe('collectMergeSourceUrlsAsync', () => {
 
     // Ensure the tmp directory was created and the file was added
     expect(vol.existsSync(directories[0])).toBe(true);
-  });
-});
-
-describe('getConflictsForDirectory', () => {
-  const projectRoot = '/alpha';
-
-  beforeAll(() => {
-    vol.fromJSON({
-      [projectRoot + '/LICENSE']: 'noop',
-      [projectRoot + '/app.js']: 'noop',
-    });
-  });
-
-  afterAll(() => {
-    vol.reset();
-  });
-
-  it(`skips tolerable files`, async () => {
-    expect(getConflictsForDirectory(projectRoot, ['LICENSE'])).toStrictEqual(['app.js']);
-    expect(getConflictsForDirectory(projectRoot, [])).toStrictEqual(['LICENSE', 'app.js']);
-  });
-});
-
-describe('assertFolderEmptyAsync', () => {
-  const projectRoot = '/alpha';
-  const projectRootEmpty = '/beta';
-
-  beforeEach(() => {
-    vol.fromJSON({
-      [projectRoot + '/LICENSE']: 'noop',
-      [projectRoot + '/bundles/app.js']: 'noop',
-      [projectRootEmpty + '/LICENSE']: 'noop',
-    });
-  });
-
-  afterEach(() => {
-    vol.reset();
-  });
-
-  const originalWarn = console.warn;
-  const originalLog = console.log;
-  beforeEach(() => {
-    console.warn = jest.fn();
-    console.log = jest.fn();
-  });
-  afterAll(() => {
-    console.warn = originalWarn;
-    console.log = originalLog;
-  });
-
-  it(`returns false when conflicts are found and they cannot be removed`, async () => {
-    // Should return false indicating that the CLI must exit.
-    expect(await assertFolderEmptyAsync({ projectRoot: '/alpha', overwrite: false })).toBe(false);
-    const after = getDirFromFS(vol.toJSON(), projectRoot);
-    // Ensure that no files were deleted.
-    expect(after).toStrictEqual({ LICENSE: 'noop', 'bundles/app.js': 'noop' });
-  });
-
-  it(`returns true when no conflicts are found`, async () => {
-    expect(await assertFolderEmptyAsync({ projectRoot: projectRootEmpty, overwrite: false })).toBe(
-      true
-    );
-    const after = getDirFromFS(vol.toJSON(), projectRootEmpty);
-    // Ensure that no files were deleted.
-    expect(after).toStrictEqual({ LICENSE: 'noop' });
-  });
-
-  it(`returns true when conflicts are found and deleted`, async () => {
-    expect(await assertFolderEmptyAsync({ projectRoot: '/alpha', overwrite: true })).toBe(true);
-    const after = getDirFromFS(vol.toJSON(), projectRoot);
-    // Ensure that the tolerable files were not deleted, and the others were
-    expect(after).toStrictEqual({ LICENSE: 'noop' });
   });
 });

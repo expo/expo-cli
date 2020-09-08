@@ -9,6 +9,7 @@ import validator from 'validator';
 import CommandError from '../CommandError';
 import log from '../log';
 import prompt from '../prompts';
+import * as CreateApp from './utils/CreateApp';
 import { downloadAndDecompressAsync } from './utils/Tar';
 
 type Options = {
@@ -26,69 +27,6 @@ type Options = {
   maxWorkers?: number;
   force: boolean;
 };
-
-// Any of these files are allowed to exist in the projectRoot
-const tolerableFiles = [
-  // System
-  '.DS_Store',
-  'Thumbs.db',
-  // Git
-  '.git',
-  '.gitattributes',
-  '.gitignore',
-  // Project
-  '.npmignore',
-  '.travis.yml',
-  'LICENSE',
-  'docs',
-  '.idea',
-  // Package manager
-  'npm-debug.log',
-  'yarn-debug.log',
-  'yarn-error.log',
-];
-
-export function getConflictsForDirectory(projectRoot: string, tolerableFiles: string[]): string[] {
-  return fs
-    .readdirSync(projectRoot)
-    .filter((file: string) => !(/\.iml$/.test(file) || tolerableFiles.includes(file)));
-}
-
-export async function assertFolderEmptyAsync({
-  projectRoot,
-  folderName = path.dirname(projectRoot),
-  overwrite,
-}: {
-  projectRoot: string;
-  folderName?: string;
-  overwrite: boolean;
-}): Promise<boolean> {
-  const conflicts = getConflictsForDirectory(projectRoot, tolerableFiles);
-  if (conflicts.length) {
-    log.addNewLineIfNone();
-    log.nested(`The directory ${log.chalk.green(folderName)} has files that might be overwritten:`);
-    log.newLine();
-    for (const file of conflicts) {
-      log.nested(`  ${file}`);
-    }
-    log.newLine();
-
-    if (overwrite) {
-      log.nested(`Removing existing files from ${log.chalk.green(folderName)}`);
-      await Promise.all(conflicts.map(conflict => fs.remove(path.join(projectRoot, conflict))));
-      return true;
-    }
-
-    log.nested(
-      `Try using a new directory name with ${log.chalk.bold(
-        '--output-dir'
-      )}, moving these files, or using ${log.chalk.bold('--force')} to overwrite them.`
-    );
-    log.newLine();
-    return false;
-  }
-  return true;
-}
 
 export async function promptPublicUrlAsync(): Promise<string> {
   try {
@@ -231,12 +169,19 @@ export async function action(projectDir: string, options: Options) {
 
   // Assert if the folder has contents
   if (
-    !(await assertFolderEmptyAsync({
+    !(await CreateApp.assertFolderEmptyAsync({
       projectRoot: outputPath,
       folderName: options.outputDir,
       overwrite: options.force,
     }))
   ) {
+    log.newLine();
+    log.nested(
+      `Try using a new directory name with ${log.chalk.bold(
+        '--output-dir'
+      )}, moving these files, or using ${log.chalk.bold('--force')} to overwrite them.`
+    );
+    log.newLine();
     process.exit(1);
   }
 
@@ -253,7 +198,7 @@ export async function action(projectDir: string, options: Options) {
   log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('export [path]')
     .description('Export the static files of the app for hosting it on a web server')
