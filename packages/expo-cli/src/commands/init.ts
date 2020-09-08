@@ -471,9 +471,9 @@ function logProjectReadyAsync({
 
   if (workflow === 'managed') {
     log.nested(
-      `- ${chalk.bold(
-        `${packageManager} start`
-      )} # you can open iOS, Android, or web from here, or run them directly with the commands below.`
+      `- ${chalk.bold(`${packageManager} start`)} ${chalk.dim(
+        `# you can open iOS, Android, or web from here, or run them directly with the commands below.`
+      )}`
     );
   }
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
