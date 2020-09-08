@@ -96,32 +96,39 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
   let name = input?.trim();
 
   if (!name) {
-    const { answer } = await prompts({
-      type: 'text',
-      name: 'answer',
-      message: 'What would you like to name your app?',
-      initial: 'my-app',
-      validate: name => {
-        const validation = CreateApp.validateName(path.basename(path.resolve(name)));
-        if (typeof validation === 'string') {
-          return 'Invalid project name: ' + validation;
-        }
-        return true;
-      },
-    });
+    try {
+      const { answer } = await prompts({
+        type: 'text',
+        name: 'answer',
+        message: 'What would you like to name your app?',
+        initial: 'my-app',
+        validate: name => {
+          const validation = CreateApp.validateName(path.basename(path.resolve(name)));
+          if (typeof validation === 'string') {
+            return 'Invalid project name: ' + validation;
+          }
+          return true;
+        },
+      });
 
-    if (typeof answer === 'string') {
-      name = answer.trim();
+      if (typeof answer === 'string') {
+        name = answer.trim();
+      }
+    } catch (error) {
+      // Handle the aborted message in a custom way.
+      if (error.code !== 'ABORTED') {
+        throw error;
+      }
     }
   }
 
   if (!name) {
     log.newLine();
     log.nested('Please choose your app name:');
-    // todo: ensure expo and not expo-cli
-    log.nested(`  ${log.chalk.green(program.name())} ${log.chalk.magenta('<app-name>')}`);
+    log.nested(`  ${log.chalk.green(`${program.name()} init`)} ${log.chalk.cyan('<app-name>')}`);
     log.newLine();
-    log.nested(`Run ${log.chalk.green(`${program.name()} --help`)} for more info.`);
+    log.nested(`Run ${log.chalk.green(`${program.name()} init --help`)} for more info.`);
+    log.newLine();
     process.exit(1);
   }
 
@@ -149,7 +156,6 @@ async function action(projectDir: string, command: Command) {
   const options = parseOptions(command);
 
   // Resolve the name, and projectRoot
-  // TODO: Account for --name
   let projectRoot: string;
   if (!projectDir && options.yes) {
     projectRoot = path.resolve(process.cwd());
@@ -169,7 +175,8 @@ async function action(projectDir: string, command: Command) {
     process.exit(1);
   }
 
-  // TODO: is this right?
+  // Download and sync templates
+  // TODO(Bacon): revisit
   if (options.yes && !resolvedTemplate) {
     resolvedTemplate = 'blank';
   }
