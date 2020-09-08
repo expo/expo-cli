@@ -132,7 +132,7 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
       {
         name: 'packageName',
         default: recommendedPackage,
-        message: `What would you like your Android package to be named?`,
+        message: `What would you like your Android package name to be?`,
         validate: validatePackage,
       },
     ],
