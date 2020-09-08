@@ -1,5 +1,11 @@
+import * as PackageManager from '@expo/package-manager';
+import program from 'commander';
 import fs from 'fs-extra';
+import getenv from 'getenv';
+import yaml from 'js-yaml';
+import ora from 'ora';
 import * as path from 'path';
+import semver from 'semver';
 
 import log from '../../log';
 
@@ -71,4 +77,101 @@ export async function assertFolderEmptyAsync({
     return false;
   }
   return true;
+}
+
+export async function installNodeDependenciesAsync(
+  projectRoot: string,
+  packageManager: 'yarn' | 'npm',
+  flags: { silent: boolean } = { silent: false }
+) {
+  const options = { cwd: projectRoot, silent: flags.silent };
+  if (packageManager === 'yarn') {
+    const yarn = new PackageManager.YarnPackageManager(options);
+    const version = await yarn.versionAsync();
+    const nodeLinker = await yarn.getConfigAsync('nodeLinker');
+    if (semver.satisfies(version, '>=2.0.0-rc.24') && nodeLinker !== 'node-modules') {
+      const yarnRc = path.join(projectRoot, '.yarnrc.yml');
+      let yamlString = '';
+      try {
+        yamlString = fs.readFileSync(yarnRc, 'utf8');
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          throw error;
+        }
+      }
+      const config = yamlString ? yaml.safeLoad(yamlString) : {};
+      config.nodeLinker = 'node-modules';
+      !flags.silent &&
+        log.warn(
+          `Yarn v${version} detected, enabling experimental Yarn v2 support using the node-modules plugin.`
+        );
+      !flags.silent && log(`Writing ${yarnRc}...`);
+      fs.writeFileSync(yarnRc, yaml.safeDump(config));
+    }
+    await yarn.installAsync();
+  } else {
+    await new PackageManager.NpmPackageManager(options).installAsync();
+  }
+}
+
+export function logNewSection(title: string) {
+  const spinner = ora(log.chalk.bold(title));
+  spinner.start();
+  return spinner;
+}
+
+export async function installCocoaPodsAsync(projectRoot: string) {
+  log.addNewLineIfNone();
+  let step = logNewSection('Installing CocoaPods.');
+  if (process.platform !== 'darwin') {
+    step.succeed('Skipped installing CocoaPods because operating system is not on macOS.');
+    return false;
+  }
+  const packageManager = new PackageManager.CocoaPodsPackageManager({
+    cwd: path.join(projectRoot, 'ios'),
+    log,
+    silent: getenv.boolish('EXPO_DEBUG', true),
+  });
+
+  if (!(await packageManager.isCLIInstalledAsync())) {
+    try {
+      // prompt user -- do you want to install cocoapods right now?
+      step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
+      step.render();
+      await PackageManager.CocoaPodsPackageManager.installCLIAsync({
+        nonInteractive: program.nonInteractive,
+        spawnOptions: packageManager.options,
+      });
+      step.succeed('Installed CocoaPods CLI');
+      step = logNewSection('Running `pod install` in the `ios` directory.');
+    } catch (e) {
+      step.stopAndPersist({
+        symbol: '⚠️ ',
+        text: log.chalk.red(
+          'Unable to install the CocoaPods CLI. Continuing with project sync, you can install CocoaPods afterwards.'
+        ),
+      });
+      if (e.message) {
+        log(`- ${e.message}`);
+      }
+      return false;
+    }
+  }
+
+  try {
+    await packageManager.installAsync();
+    step.succeed('Installed pods and initialized Xcode workspace.');
+    return true;
+  } catch (e) {
+    step.stopAndPersist({
+      symbol: '⚠️ ',
+      text: log.chalk.red(
+        'Something when wrong running `pod install` in the `ios` directory. Continuing with project sync, you can debug this afterwards.'
+      ),
+    });
+    if (e.message) {
+      log(`- ${e.message}`);
+    }
+    return false;
+  }
 }
