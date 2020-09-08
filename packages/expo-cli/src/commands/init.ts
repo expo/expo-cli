@@ -97,19 +97,24 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
 
   if (!name) {
     try {
-      const { answer } = await prompts({
-        type: 'text',
-        name: 'answer',
-        message: 'What would you like to name your app?',
-        initial: 'my-app',
-        validate: name => {
-          const validation = CreateApp.validateName(path.basename(path.resolve(name)));
-          if (typeof validation === 'string') {
-            return 'Invalid project name: ' + validation;
-          }
-          return true;
+      const { answer } = await prompts(
+        {
+          type: 'text',
+          name: 'answer',
+          message: 'What would you like to name your app?',
+          initial: 'my-app',
+          validate: name => {
+            const validation = CreateApp.validateName(path.basename(path.resolve(name)));
+            if (typeof validation === 'string') {
+              return 'Invalid project name: ' + validation;
+            }
+            return true;
+          },
         },
-      });
+        {
+          nonInteractiveHelp: 'Pass the project name using the first argument `expo init <name>`',
+        }
+      );
 
       if (typeof answer === 'string') {
         name = answer.trim();
