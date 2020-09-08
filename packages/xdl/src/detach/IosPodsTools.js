@@ -106,7 +106,7 @@ function _renderUnversionedReactNativeDependency(options, sdkVersion) {
     return indentString(`
 # Install React Native and its dependencies
 require_relative '../node_modules/react-native/scripts/react_native_pods'
-use_react_native!`);
+use_react_native!(production: true)`);
   }
 
   if (sdkMajorVersion >= 36) {
