@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import figures from 'figures';
 import sortBy from 'lodash/sortBy';
 import ora from 'ora';
+import path from 'path';
 
 import { readSecretEnvsAsync } from '../../../../credentials/credentialsJson/read';
 import iOSCredentialsProvider, {
@@ -16,6 +17,7 @@ import {
   iOSGenericBuildProfile,
   iOSManagedBuildProfile,
 } from '../../../../easJson';
+import { gitRootDirectory } from '../../../../git';
 import log from '../../../../log';
 import prompts from '../../../../prompts';
 import { Builder, BuilderContext } from '../../types';
@@ -182,11 +184,13 @@ class iOSBuilder implements Builder<Platform.iOS> {
     archiveUrl: string,
     buildProfile: iOSGenericBuildProfile
   ): Promise<Partial<iOS.GenericJob>> {
+    const projectRootDirectory = path.relative(await gitRootDirectory(), process.cwd()) || '.';
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
       type: BuildType.Generic,
       scheme: this.scheme,
       artifactPath: buildProfile.artifactPath,
+      projectRootDirectory,
     };
   }
 

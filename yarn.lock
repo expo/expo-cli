@@ -1385,13 +1385,13 @@
     unique-filename "^1.1.1"
     which "^1.3.1"
 
-"@expo/build-tools@^0.1.15":
-  version "0.1.15"
-  resolved "https://registry.yarnpkg.com/@expo/build-tools/-/build-tools-0.1.15.tgz#6374747ab6b1a8e3a4f84b16d89ddb7263fb9a5d"
-  integrity sha512-j0mu22hWLKBIwvZYmBNMWnAklZRq5cwC6ZyG3SJ5uC2vFK/IIhr3WSstz+dUwFZflCAUUsKRvIbZ2svgBImf4w==
+"@expo/build-tools@^0.1.16":
+  version "0.1.16"
+  resolved "https://registry.yarnpkg.com/@expo/build-tools/-/build-tools-0.1.16.tgz#387799d40279672f8b6fdcac681b709ac368192f"
+  integrity sha512-TibRPjYxovRPMwQKUnVAiSTEE6tkeI/syY5n7XtnKXEH9lsgHkHieXLoXuxNrrOSjhEwbSyuUXX+DiXXoop6sQ==
   dependencies:
     "@expo/downloader" "0.0.8"
-    "@expo/fastlane" "0.0.13"
+    "@expo/fastlane" "0.0.14"
     "@expo/logger" "0.0.13"
     "@expo/template-file" "0.1.7"
     "@expo/turtle-spawn" "0.0.13"
@@ -1433,10 +1433,10 @@
     fs-extra "^9.0.0"
     got "^11.1.4"
 
-"@expo/fastlane@0.0.13":
-  version "0.0.13"
-  resolved "https://registry.yarnpkg.com/@expo/fastlane/-/fastlane-0.0.13.tgz#57cf2549b8b46e3a10da6a7a76d42b078f5045e2"
-  integrity sha512-3380HL0KwJdJdmUBkD75jzX8ptOC8feGWrQcFu/xEg33zSurzNE0+BEwTEpZBZKVdKyCyEglRWEslU6MEVCPNw==
+"@expo/fastlane@0.0.14":
+  version "0.0.14"
+  resolved "https://registry.yarnpkg.com/@expo/fastlane/-/fastlane-0.0.14.tgz#762dead5565db9f7c250ee451bf9661d9b976214"
+  integrity sha512-hDPffN5WsVfJ6VBfOpmjm24IexHsr1llQrxYCuIoRCVO+6C+lkLF7nC7/Swb7pNpuLhQxAkQJl3UohDwNvJOtA==
   dependencies:
     "@expo/logger" "0.0.13"
     "@expo/turtle-spawn" "0.0.13"

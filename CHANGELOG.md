@@ -9,6 +9,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🎉 New features
 
 - [expo-cli] EAS Build: add `experimental.npmToken` to `credentials.json` [#2603](https://github.com/expo/expo-cli/pull/2603)
+- [expo-cli] EAS Build: monorepo support [#2601](https://github.com/expo/expo-cli/pull/2601)
 
 ### 🐛 Bug fixes
 
