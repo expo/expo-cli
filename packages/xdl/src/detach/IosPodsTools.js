@@ -376,9 +376,9 @@ async function _renderPodDependenciesAsync(dependenciesConfigPath, options) {
       builder += '\n';
     }
     const otherPodfileFlags = options.isPodfile && dependency.otherPodfileFlags;
-    builder += `  ${type} '${dependency.name}', '${
-      dependency.version
-    }'${noWarningsFlag}${otherPodfileFlags || ''}`;
+    builder += `  ${type} '${dependency.name}', '${dependency.version}'${noWarningsFlag}${
+      otherPodfileFlags || ''
+    }`;
     return builder;
   });
   return depsStrings.join('\n');
@@ -414,6 +414,7 @@ function _renderUnversionedUniversalModulesDependencies(
       'expo-bluetooth',
       'expo-in-app-purchases',
       'expo-payments-stripe',
+      'expo-module-template',
       'expo-image',
     ];
 
