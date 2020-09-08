@@ -47,24 +47,39 @@ function sanitizedName(name: string) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-class Transformer extends Minipass {
-  data: string;
-  config: TemplateConfig;
+function escapeXMLCharacters(original: string): string {
+  const noAmps = original.replace('&', '&amp;');
+  const noLt = noAmps.replace('<', '&lt;');
+  const noGt = noLt.replace('>', '&gt;');
+  const noApos = noGt.replace('"', '\\"');
+  return noApos.replace("'", "\\'");
+}
 
-  constructor(config: TemplateConfig) {
+class Transformer extends Minipass {
+  data = '';
+
+  constructor(public config: TemplateConfig, private settings: { extension: string }) {
     super();
-    this.data = '';
-    this.config = config;
   }
+
   write(data: string) {
     this.data += data;
     return true;
   }
+
+  getNormalizedName(): string {
+    if (['.xml', '.plist'].includes(this.settings.extension)) {
+      return escapeXMLCharacters(this.config.name);
+    }
+    return this.config.name;
+  }
+
   end() {
+    const name = this.getNormalizedName();
     const replaced = this.data
-      .replace(/Hello App Display Name/g, this.config.name)
-      .replace(/HelloWorld/g, sanitizedName(this.config.name))
-      .replace(/helloworld/g, sanitizedName(this.config.name.toLowerCase()));
+      .replace(/Hello App Display Name/g, name)
+      .replace(/HelloWorld/g, sanitizedName(name))
+      .replace(/helloworld/g, sanitizedName(name.toLowerCase()));
     super.write(replaced);
     return super.end();
   }
@@ -75,8 +90,9 @@ const binaryExtensions = ['.png', '.jar', '.keystore', '.otf', '.ttf'];
 
 function createFileTransform(config: TemplateConfig) {
   return function transformFile(entry: ReadEntry) {
-    if (!binaryExtensions.includes(path.extname(entry.path)) && config.name) {
-      return new Transformer(config);
+    const extension = path.extname(entry.path);
+    if (!binaryExtensions.includes(extension) && config.name) {
+      return new Transformer(config, { extension });
     }
     return undefined;
   };
