@@ -73,13 +73,9 @@ async function resizeAsync(imageOptions: ImageOptions): Promise<Buffer> {
 
     if (imageOptions.borderRadius) {
       const mask = Buffer.from(
-        `<svg><rect x="0" y="0" width="${width}" height="${height}" 
-        rx="${imageOptions.borderRadius}" ry="${imageOptions.borderRadius}" 
-        fill="${
-          backgroundColor && backgroundColor !== 'transparent' ? backgroundColor : 'none'
-        }" /></svg>`
+        `<svg><circle cx="${imageOptions.borderRadius}" cy="${imageOptions.borderRadius}" r="${imageOptions.borderRadius}" /></svg>`
       );
-      sharpBuffer.composite([{ input: mask, blend: 'dest-over' }]);
+      sharpBuffer.composite([{ input: mask, blend: 'dest-in' }]);
     }
 
     return await sharpBuffer.png().toBuffer();
