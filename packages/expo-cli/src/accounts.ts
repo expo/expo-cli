@@ -115,7 +115,7 @@ export async function login(options: CommandOptions): Promise<User> {
  */
 async function _promptForOTPAsync(cancelBehavior: 'cancel' | 'menu'): Promise<string | null> {
   const enterMessage =
-    cancelBehavior === 'cancel' ? 'press enter to cancel' : 'press enter for other options';
+    cancelBehavior === 'cancel' ? 'press Enter to cancel' : 'press Enter for other options';
   const otpQuestion: Question = {
     type: 'input',
     name: 'otp',
@@ -123,7 +123,7 @@ async function _promptForOTPAsync(cancelBehavior: 'cancel' | 'menu'): Promise<st
   };
 
   const { otp } = await prompt(otpQuestion);
-  if (!otp || otp === '') {
+  if (!otp) {
     return null;
   }
 
@@ -132,7 +132,7 @@ async function _promptForOTPAsync(cancelBehavior: 'cancel' | 'menu'): Promise<st
 
 /**
  * Prompt for user to choose a backup OTP method. If selected method is SMS, a request
- * for a new  will be sent to that method. Then, prompt for the OTP, and retry the user login.
+ * for a new OTP will be sent to that method. Then, prompt for the OTP, and retry the user login.
  */
 async function _promptForBackupOTPAsync(
   username: string,
@@ -142,11 +142,11 @@ async function _promptForBackupOTPAsync(
   const nonPrimarySecondFactorDevices = secondFactorDevices.filter(device => !device.is_primary);
 
   if (nonPrimarySecondFactorDevices.length === 0) {
-    throw new Error('No other second factor devices set up for user');
+    throw new Error('No other second-factor devices set up');
   }
 
-  const hasOtherAuthenticatorSecondFactorDevice = !!nonPrimarySecondFactorDevices.find(
-    device => device.method === UserSecondFactorDeviceMethod.AUTHENTICATOR
+  const hasNonAuthenticatorSecondFactorDevice = nonPrimarySecondFactorDevices.find(
+    device => device.method !== UserSecondFactorDeviceMethod.AUTHENTICATOR
   );
 
   const smsNonPrimarySecondFactorDevices = nonPrimarySecondFactorDevices.filter(
@@ -157,11 +157,11 @@ async function _promptForBackupOTPAsync(
   const cancelChoiceSentinel = -2;
 
   const deviceChoices = smsNonPrimarySecondFactorDevices.map((device, idx) => ({
-    name: `Phone ending in ${device.sms_phone_number}`,
+    name: device.sms_phone_number!,
     value: idx,
   }));
 
-  if (hasOtherAuthenticatorSecondFactorDevice) {
+  if (hasNonAuthenticatorSecondFactorDevice) {
     deviceChoices.push({
       name: 'Authenticator',
       value: authenticatorChoiceSentinel,
@@ -176,14 +176,14 @@ async function _promptForBackupOTPAsync(
   const question: Question = {
     type: 'list',
     name: 'choice',
-    message: 'Select a second factor device:',
+    message: 'Select a second-factor device:',
     choices: deviceChoices,
     pageSize: Infinity,
   };
 
   const { choice } = await prompt(question);
   if (choice === cancelChoiceSentinel) {
-    throw new Error('User cancelled login');
+    throw new Error('Cancelled login');
   } else if (choice === authenticatorChoiceSentinel) {
     return await _promptForOTPAsync('cancel');
   }
@@ -223,13 +223,7 @@ async function _retryUsernamePasswordAuthWithOTPAsync(
     smsAutomaticallySent?: boolean;
   }
 ): Promise<User> {
-  const {
-    secondFactorDevices,
-    smsAutomaticallySent,
-  }: {
-    secondFactorDevices?: SecondFactorDevice[];
-    smsAutomaticallySent?: boolean;
-  } = metadata as any;
+  const { secondFactorDevices, smsAutomaticallySent } = metadata;
   invariant(
     secondFactorDevices !== undefined && smsAutomaticallySent !== undefined,
     'malformed OTP error metadata'
@@ -260,7 +254,7 @@ async function _retryUsernamePasswordAuthWithOTPAsync(
   }
 
   if (!otp) {
-    throw new Error('User cancelled login');
+    throw new Error('Cancelled login');
   }
 
   return await UserManager.loginAsync('user-pass', {
