@@ -1,16 +1,19 @@
 import { AndroidConfig, BareAppConfig, ExpoConfig, IOSConfig, getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
+import spawnAsync from '@expo/spawn-async';
 import { Exp, IosPlist, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import fs from 'fs';
 import getenv from 'getenv';
+import yaml from 'js-yaml';
 import padEnd from 'lodash/padEnd';
 import trimStart from 'lodash/trimStart';
 import npmPackageArg from 'npm-package-arg';
 import ora from 'ora';
 import pacote from 'pacote';
 import path from 'path';
+import semver from 'semver';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
@@ -201,7 +204,7 @@ async function action(projectDir: string, command: Command) {
   if (options.install) {
     const installJsDepsStep = logNewSection('Installing JavaScript dependencies.');
     try {
-      await Exp.installDependenciesAsync(projectPath, packageManager, { silent: true });
+      await installDependenciesAsync(projectPath, packageManager, { silent: true });
       installJsDepsStep.succeed('Installed JavaScript dependencies.');
     } catch {
       installJsDepsStep.fail(
@@ -273,9 +276,80 @@ async function action(projectDir: string, command: Command) {
   try {
     // check if git is installed
     // check if inside git repo
-    await Exp.initGitRepoAsync(projectPath, { silent: true, commit: true });
+    await initGitRepoAsync(projectPath, { silent: true, commit: true });
   } catch {
     // todo: check if git is installed, bail out
+  }
+}
+
+export async function installDependenciesAsync(
+  projectRoot: string,
+  packageManager: 'yarn' | 'npm',
+  flags: { silent: boolean } = { silent: false }
+) {
+  const options = { cwd: projectRoot, silent: flags.silent };
+  if (packageManager === 'yarn') {
+    const yarn = new PackageManager.YarnPackageManager(options);
+    const version = await yarn.versionAsync();
+    const nodeLinker = await yarn.getConfigAsync('nodeLinker');
+    if (semver.satisfies(version, '>=2.0.0-rc.24') && nodeLinker !== 'node-modules') {
+      const yarnRc = path.join(projectRoot, '.yarnrc.yml');
+      let yamlString = '';
+      try {
+        yamlString = fs.readFileSync(yarnRc, 'utf8');
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          throw error;
+        }
+      }
+      const config = yamlString ? yaml.safeLoad(yamlString) : {};
+      config.nodeLinker = 'node-modules';
+      !flags.silent &&
+        log.warn(
+          `Yarn v${version} detected, enabling experimental Yarn v2 support using the node-modules plugin.`
+        );
+      !flags.silent && log(`Writing ${yarnRc}...`);
+      fs.writeFileSync(yarnRc, yaml.safeDump(config));
+    }
+    await yarn.installAsync();
+  } else {
+    await new PackageManager.NpmPackageManager(options).installAsync();
+  }
+}
+
+export async function initGitRepoAsync(
+  root: string,
+  flags: { silent: boolean; commit: boolean } = { silent: false, commit: true }
+) {
+  // let's see if we're in a git tree
+  try {
+    await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
+      cwd: root,
+    });
+    !flags.silent && log('New project is already inside of a git repo, skipping git init.');
+  } catch (e) {
+    if (e.errno === 'ENOENT') {
+      !flags.silent && log.warn('Unable to initialize git repo. `git` not in PATH.');
+      return false;
+    }
+  }
+
+  // not in git tree, so let's init
+  try {
+    await spawnAsync('git', ['init'], { cwd: root });
+    !flags.silent && log('Initialized a git repository.');
+
+    if (flags.commit) {
+      await spawnAsync('git', ['add', '--all'], { cwd: root, stdio: 'ignore' });
+      await spawnAsync('git', ['commit', '-m', 'Created a new Expo app'], {
+        cwd: root,
+        stdio: 'ignore',
+      });
+    }
+    return true;
+  } catch (e) {
+    // no-op -- this is just a convenience and we don't care if it fails
+    return false;
   }
 }
 
