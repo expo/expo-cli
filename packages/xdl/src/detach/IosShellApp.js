@@ -353,11 +353,11 @@ async function buildAndCopyArtifactAsync(args) {
     context.build.ios.workspaceSourcePath,
     context.build.configuration,
     type,
-    path.relative(context.build.ios.workspaceSourcePath, '../shellAppBase'),
+    path.relative(context.build.ios.workspaceSourcePath, './shellAppBase'),
     verbose,
     parseSdkMajorVersion(args.shellAppSdkVersion) > 33
   );
-  const artifactDestPath = path.join('../shellAppBase-builds', type, context.build.configuration);
+  const artifactDestPath = path.join('./shellAppBase-builds', type, context.build.configuration);
   logger.info(`\nFinished building, copying artifact to ${path.resolve(artifactDestPath)}...`);
   if (fs.existsSync(artifactDestPath)) {
     await spawnAsyncThrowError('/bin/rm', ['-rf', artifactDestPath]);
