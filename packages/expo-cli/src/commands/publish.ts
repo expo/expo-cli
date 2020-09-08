@@ -82,6 +82,7 @@ export async function action(
     releaseChannel: options.releaseChannel,
     quiet: options.quiet,
     target,
+    resetCache: options.clear,
   });
 
   const url = result.url;
