@@ -3,6 +3,7 @@ import { vol } from 'memfs';
 import iOSBuilder from '../iOSBuilder';
 
 jest.mock('fs');
+jest.mock('../../../../../git');
 jest.mock('../../../../../credentials/context', () => {
   return {
     Context: jest.fn().mockImplementation(() => ({
@@ -87,6 +88,7 @@ describe('iOSBuilder', () => {
         projectUrl,
         scheme: 'testapp',
         artifactPath: 'ios/build/App.ipa',
+        projectRootDirectory: '.',
         secrets: {
           distributionCertificate: {
             dataBase64: cert.base64,

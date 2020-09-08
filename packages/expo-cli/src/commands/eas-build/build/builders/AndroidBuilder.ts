@@ -15,7 +15,7 @@ import {
   CredentialsSource,
   Workflow,
 } from '../../../../easJson';
-import { gitAddAsync } from '../../../../git';
+import { gitAddAsync, gitRootDirectory } from '../../../../git';
 import log from '../../../../log';
 import { Builder, BuilderContext } from '../../types';
 import * as gitUtils from '../../utils/git';
@@ -176,11 +176,13 @@ class AndroidBuilder implements Builder<Platform.Android> {
     archiveUrl: string,
     buildProfile: AndroidGenericBuildProfile
   ): Promise<Partial<Android.GenericJob>> {
+    const projectRootDirectory = path.relative(await gitRootDirectory(), process.cwd()) || '.';
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
       type: BuildType.Generic,
       gradleCommand: buildProfile.gradleCommand,
       artifactPath: buildProfile.artifactPath,
+      projectRootDirectory,
     };
   }
 

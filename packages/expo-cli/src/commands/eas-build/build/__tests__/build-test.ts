@@ -213,6 +213,7 @@ describe('build command', () => {
         projectUrl: mockProjectUrl,
         artifactPath: 'android/app/build/outputs/**/*.{apk,aab}',
         gradleCommand: ':app:bundleRelease',
+        projectRootDirectory: '.',
         secrets: {
           keystore: {
             dataBase64: keystore.base64,
@@ -249,6 +250,7 @@ describe('build command', () => {
         type: 'generic',
         projectUrl: mockProjectUrl,
         artifactPath: 'ios/build/App.ipa',
+        projectRootDirectory: '.',
         scheme: 'testapp',
         secrets: {
           distributionCertificate: {
@@ -292,6 +294,7 @@ describe('build command', () => {
         projectUrl: mockProjectUrl,
         artifactPath: 'android/app/build/outputs/**/*.{apk,aab}',
         gradleCommand: ':app:bundleRelease',
+        projectRootDirectory: '.',
         secrets: {
           keystore: {
             dataBase64: keystore.base64,
@@ -313,6 +316,7 @@ describe('build command', () => {
         projectUrl: mockProjectUrl,
         artifactPath: 'ios/build/App.ipa',
         scheme: 'testapp',
+        projectRootDirectory: '.',
         secrets: {
           distributionCertificate: {
             dataBase64: cert.base64,
