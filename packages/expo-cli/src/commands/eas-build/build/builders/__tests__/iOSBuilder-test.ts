@@ -90,11 +90,13 @@ describe('iOSBuilder', () => {
         artifactPath: 'ios/build/App.ipa',
         projectRootDirectory: '.',
         secrets: {
-          distributionCertificate: {
-            dataBase64: cert.base64,
-            password: 'certPass',
+          buildCredentials: {
+            distributionCertificate: {
+              dataBase64: cert.base64,
+              password: 'certPass',
+            },
+            provisioningProfileBase64: pprofile.base64,
           },
-          provisioningProfileBase64: pprofile.base64,
         },
       });
     }, 10000);
@@ -125,11 +127,13 @@ describe('iOSBuilder', () => {
         packageJson: { example: 'packageJson' },
         manifest: { example: 'manifest' },
         secrets: {
-          distributionCertificate: {
-            dataBase64: cert.base64,
-            password: 'certPass',
+          buildCredentials: {
+            distributionCertificate: {
+              dataBase64: cert.base64,
+              password: 'certPass',
+            },
+            provisioningProfileBase64: pprofile.base64,
           },
-          provisioningProfileBase64: pprofile.base64,
         },
       });
     });

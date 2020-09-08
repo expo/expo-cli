@@ -215,11 +215,13 @@ describe('build command', () => {
         gradleCommand: ':app:bundleRelease',
         projectRootDirectory: '.',
         secrets: {
-          keystore: {
-            dataBase64: keystore.base64,
-            keystorePassword: 'keystorePassword',
-            keyAlias: 'keyAlias',
-            keyPassword: 'keyPassword',
+          buildCredentials: {
+            keystore: {
+              dataBase64: keystore.base64,
+              keystorePassword: 'keystorePassword',
+              keyAlias: 'keyAlias',
+              keyPassword: 'keyPassword',
+            },
           },
         },
       });
@@ -253,11 +255,13 @@ describe('build command', () => {
         projectRootDirectory: '.',
         scheme: 'testapp',
         secrets: {
-          distributionCertificate: {
-            dataBase64: cert.base64,
-            password: 'certPass',
+          buildCredentials: {
+            distributionCertificate: {
+              dataBase64: cert.base64,
+              password: 'certPass',
+            },
+            provisioningProfileBase64: pprofile.base64,
           },
-          provisioningProfileBase64: pprofile.base64,
         },
       });
     });
@@ -296,11 +300,13 @@ describe('build command', () => {
         gradleCommand: ':app:bundleRelease',
         projectRootDirectory: '.',
         secrets: {
-          keystore: {
-            dataBase64: keystore.base64,
-            keystorePassword: 'keystorePassword',
-            keyAlias: 'keyAlias',
-            keyPassword: 'keyPassword',
+          buildCredentials: {
+            keystore: {
+              dataBase64: keystore.base64,
+              keystorePassword: 'keystorePassword',
+              keyAlias: 'keyAlias',
+              keyPassword: 'keyPassword',
+            },
           },
         },
       });
@@ -318,11 +324,13 @@ describe('build command', () => {
         scheme: 'testapp',
         projectRootDirectory: '.',
         secrets: {
-          distributionCertificate: {
-            dataBase64: cert.base64,
-            password: 'certPass',
+          buildCredentials: {
+            distributionCertificate: {
+              dataBase64: cert.base64,
+              password: 'certPass',
+            },
+            provisioningProfileBase64: pprofile.base64,
           },
-          provisioningProfileBase64: pprofile.base64,
         },
       });
     });

@@ -6,6 +6,7 @@ import ora from 'ora';
 import path from 'path';
 
 import CommandError from '../../../../CommandError';
+import { readSecretEnvsAsync } from '../../../../credentials/credentialsJson/read';
 import AndroidCredentialsProvider, {
   AndroidCredentials,
 } from '../../../../credentials/provider/AndroidCredentialsProvider';
@@ -25,13 +26,17 @@ import gradleContent from '../templates/gradleContent';
 interface CommonJobProperties {
   platform: Platform.Android;
   projectUrl: string;
-  secrets?: {
-    keystore: Android.Keystore;
+  secrets: {
+    buildCredentials?: {
+      keystore: Android.Keystore;
+    };
+    secretEnvs?: Record<string, string>;
   };
 }
 
 class AndroidBuilder implements Builder<Platform.Android> {
   private credentials?: AndroidCredentials;
+  private secretEnvs?: Record<string, string>;
   private credentialsPrepared: boolean = false;
 
   constructor(public readonly ctx: BuilderContext<Platform.Android>) {}
@@ -42,6 +47,7 @@ class AndroidBuilder implements Builder<Platform.Android> {
     CredentialsSource.LOCAL | CredentialsSource.REMOTE | undefined
   > {
     this.credentialsPrepared = true;
+    this.secretEnvs = await readSecretEnvsAsync(this.ctx.commandCtx.projectDir);
     if (!this.shouldLoadCredentials()) {
       return;
     }
@@ -152,9 +158,9 @@ class AndroidBuilder implements Builder<Platform.Android> {
   }
 
   private async prepareJobCommonAsync(archiveUrl: string): Promise<Partial<CommonJobProperties>> {
-    const secrets = this.credentials
+    const buildCredentials = this.credentials
       ? {
-          secrets: {
+          buildCredentials: {
             keystore: {
               dataBase64: this.credentials.keystore.keystore,
               keystorePassword: this.credentials.keystore.keystorePassword,
@@ -168,7 +174,10 @@ class AndroidBuilder implements Builder<Platform.Android> {
     return {
       platform: Platform.Android,
       projectUrl: archiveUrl,
-      ...secrets,
+      secrets: {
+        ...(this.secretEnvs ? { secretEnvs: this.secretEnvs } : {}),
+        ...buildCredentials,
+      },
     };
   }
 
