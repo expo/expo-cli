@@ -1,4 +1,4 @@
-import { project as PBXProject, UUID } from 'xcode';
+import { XcodeProject, UUID } from 'xcode';
 
 /**
  * @param filePath
@@ -6,7 +6,7 @@ import { project as PBXProject, UUID } from 'xcode';
  * @param param1.group PBXGroup reference
  */
 export function addStoryboardFileToProject(
-  pbxProject: PBXProject,
+  pbxProject: XcodeProject,
   filePath: string,
   { target, group }: { target: UUID; group: UUID }
 ) {

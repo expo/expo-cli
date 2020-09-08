@@ -1,8 +1,7 @@
 import plist, { PlistObject } from '@expo/plist';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
-// @ts-ignore
-import { project as Project } from 'xcode';
+import xcode from 'xcode';
 
 import { ExpoConfig } from '../Config.types';
 import { InfoPlist } from './IosConfig.types';
@@ -50,7 +49,7 @@ function getBundleIdentifierFromPbxproj(projectRoot: string): string | null {
   if (!pbxprojPath) {
     return null;
   }
-  const project = Project(pbxprojPath);
+  const project = xcode.project(pbxprojPath);
   project.parseSync();
 
   const nativeTarget = findFirstNativeTarget(project);
@@ -92,7 +91,7 @@ function updateBundleIdentifierForPbxproj(
   bundleIdentifier: string,
   updateProductName: boolean = true
 ): void {
-  const project = Project(pbxprojPath);
+  const project = xcode.project(pbxprojPath);
   project.parseSync();
 
   const nativeTarget = findFirstNativeTarget(project);
