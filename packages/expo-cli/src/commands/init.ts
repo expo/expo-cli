@@ -144,14 +144,6 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
   return projectRoot;
 }
 
-function getChangeDirectoryPath(projectRoot: string): string {
-  const cdPath = path.relative(process.cwd(), projectRoot);
-  if (cdPath.length <= projectRoot.length) {
-    return cdPath;
-  }
-  return projectRoot;
-}
-
 async function action(projectDir: string, command: Command) {
   const options = parseOptions(command);
 
@@ -282,7 +274,7 @@ async function action(projectDir: string, command: Command) {
 
   // Configure updates (?)
 
-  const cdPath = getChangeDirectoryPath(projectRoot);
+  const cdPath = CreateApp.getChangeDirectoryPath(projectRoot);
 
   let showPublishBeforeBuildWarning: boolean | undefined;
   let didConfigureUpdatesProjectFiles: boolean = false;

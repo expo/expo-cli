@@ -120,6 +120,14 @@ export function logNewSection(title: string) {
   return spinner;
 }
 
+export function getChangeDirectoryPath(projectRoot: string): string {
+  const cdPath = path.relative(process.cwd(), projectRoot);
+  if (cdPath.length <= projectRoot.length) {
+    return cdPath;
+  }
+  return projectRoot;
+}
+
 export async function installCocoaPodsAsync(projectRoot: string) {
   log.addNewLineIfNone();
   let step = logNewSection('Installing CocoaPods.');
