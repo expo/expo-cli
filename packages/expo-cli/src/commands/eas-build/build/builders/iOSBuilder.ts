@@ -5,6 +5,7 @@ import figures from 'figures';
 import sortBy from 'lodash/sortBy';
 import ora from 'ora';
 
+import { readSecretEnvsAsync } from '../../../../credentials/credentialsJson/read';
 import iOSCredentialsProvider, {
   iOSCredentials,
 } from '../../../../credentials/provider/iOSCredentialsProvider';
@@ -25,17 +26,21 @@ import { getBundleIdentifier } from '../utils/ios';
 interface CommonJobProperties {
   platform: Platform.iOS;
   projectUrl: string;
-  secrets?: {
-    provisioningProfileBase64: string;
-    distributionCertificate: {
-      dataBase64: string;
-      password: string;
+  secrets: {
+    buildCredentials?: {
+      provisioningProfileBase64: string;
+      distributionCertificate: {
+        dataBase64: string;
+        password: string;
+      };
     };
+    secretEnvs?: Record<string, string>;
   };
 }
 
 class iOSBuilder implements Builder<Platform.iOS> {
   private credentials?: iOSCredentials;
+  private secretEnvs?: Record<string, string>;
   private scheme?: string;
 
   constructor(public readonly ctx: BuilderContext<Platform.iOS>) {}
@@ -53,6 +58,7 @@ class iOSBuilder implements Builder<Platform.iOS> {
   public async ensureCredentialsAsync(): Promise<
     CredentialsSource.LOCAL | CredentialsSource.REMOTE | undefined
   > {
+    this.secretEnvs = await readSecretEnvsAsync(this.ctx.commandCtx.projectDir);
     if (!this.shouldLoadCredentials()) {
       return;
     }
@@ -150,9 +156,9 @@ class iOSBuilder implements Builder<Platform.iOS> {
   }
 
   private async prepareJobCommonAsync(archiveUrl: string): Promise<Partial<CommonJobProperties>> {
-    const secrets = this.credentials
+    const buildCredentials = this.credentials
       ? {
-          secrets: {
+          buildCredentials: {
             provisioningProfileBase64: this.credentials.provisioningProfile,
             distributionCertificate: {
               dataBase64: this.credentials.distributionCertificate.certP12,
@@ -165,7 +171,10 @@ class iOSBuilder implements Builder<Platform.iOS> {
     return {
       platform: Platform.iOS,
       projectUrl: archiveUrl,
-      ...secrets,
+      secrets: {
+        ...(this.secretEnvs ? { secretEnvs: this.secretEnvs } : {}),
+        ...buildCredentials,
+      },
     };
   }
 
