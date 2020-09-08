@@ -1,9 +1,9 @@
 import { ExpoConfig, getConfig, modifyConfigAsync } from '@expo/config';
 import { UserManager } from '@expo/xdl';
-import terminalLink from 'terminal-link';
 
 import log from '../../log';
 import prompt from '../../prompt';
+import { learnMore } from '../utils/TerminalLink';
 
 const noBundleIdMessage = `Your project must have a \`bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
 const noPackageMessage = `Your project must have a \`package\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/android-package`;
@@ -49,15 +49,11 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
 
   log.addNewLineIfNone();
   log(
-    log.chalk.cyan(
-      `Now we need to know your ${terminalLink(
-        'iOS bundle identifier',
-        'https://expo.fyi/bundle-identifier'
-      )}.\nYou can change this in the future if you need to.`
-    )
+    `${log.chalk.bold(`📝 iOS Bundle Identifier`)} ${log.chalk.dim(
+      learnMore('https://expo.fyi/bundle-identifier')
+    )}`
   );
   log.newLine();
-
   // Prompt the user for the bundle ID.
   // Even if the project is using a dynamic config we can still
   // prompt a better error message, recommend a default value, and help the user
@@ -122,10 +118,9 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
 
   log.addNewLineIfNone();
   log(
-    `Now we need to know your ${terminalLink(
-      'Android package',
-      'https://expo.fyi/android-package'
-    )}. You can change this in the future if you need to.`
+    `${log.chalk.bold(`📝 Android package`)} ${log.chalk.dim(
+      learnMore('https://expo.fyi/android-package')
+    )}`
   );
   log.newLine();
 
