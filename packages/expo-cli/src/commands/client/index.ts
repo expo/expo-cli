@@ -19,6 +19,7 @@ import { SetupIosDist } from '../../credentials/views/SetupIosDist';
 import { SetupIosPush } from '../../credentials/views/SetupIosPush';
 import log from '../../log';
 import prompt from '../../prompt';
+import { confirmAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
@@ -240,13 +241,10 @@ export default function (program: Command) {
           );
           log(table.toString());
 
-          const udidPrompt = await prompt({
-            name: 'addUdid',
+          const udidPrompt = await confirmAsync({
             message: 'Would you like to register a new device to use the Expo client with?',
-            type: 'confirm',
-            default: true,
           });
-          addUdid = udidPrompt.addUdid;
+          addUdid = udidPrompt;
         }
 
         const result = await createClientBuildRequest({
@@ -316,25 +314,21 @@ export default function (program: Command) {
 
       if (currentSdk && recommendedClient) {
         const recommendedClientVersion = recommendedClient.version || 'version unknown';
-        const answer = await prompt({
-          type: 'confirm',
-          name: 'upgradeToRecommended',
+        const answer = await confirmAsync({
           message: `You are currently using SDK ${currentSdkVersion}. Would you like to install client ${recommendedClientVersion} released for this SDK?`,
         });
-        if (answer.upgradeToRecommended) {
+        if (answer) {
           await Simulator.upgradeExpoAsync({ url: recommendedClient.url });
           log('Done!');
           return;
         }
       } else {
-        const answer = await prompt({
-          type: 'confirm',
-          name: 'upgradeToLatest',
+        const answer = await confirmAsync({
           message: latestClient?.version
             ? chalk`Do you want to install the latest client? {dim (${latestClient.version})}`
             : 'Do you want to install the latest client?',
         });
-        if (answer.upgradeToLatest) {
+        if (answer) {
           await Simulator.upgradeExpoAsync({ url: latestClient?.url });
           log('Done!');
           return;
@@ -348,14 +342,12 @@ export default function (program: Command) {
       });
 
       if (availableClients.length === 0) {
-        const answer = await prompt({
-          type: 'confirm',
-          name: 'updateToAClient',
+        const answer = await confirmAsync({
           message: currentSdk
             ? `We don't have a compatible client for SDK ${currentSdkVersion}. Do you want to try the latest client?`
             : "It looks like we don't have a compatible client. Do you want to try the latest client?",
         });
-        if (answer.updateToAClient) {
+        if (answer) {
           await Simulator.upgradeExpoAsync({ url: latestClient?.url });
           log('Done!');
         } else {
@@ -403,25 +395,21 @@ export default function (program: Command) {
 
       if (currentSdk && recommendedClient) {
         const recommendedClientVersion = recommendedClient.version || 'version unknown';
-        const answer = await prompt({
-          type: 'confirm',
-          name: 'upgradeToRecommended',
+        const answer = await confirmAsync({
           message: `You are currently using SDK ${currentSdkVersion}. Would you like to install client ${recommendedClientVersion} released for this SDK?`,
         });
-        if (answer.upgradeToRecommended) {
+        if (answer) {
           await Android.upgradeExpoAsync(recommendedClient.url);
           log('Done!');
           return;
         }
       } else {
-        const answer = await prompt({
-          type: 'confirm',
-          name: 'upgradeToLatest',
+        const answer = await confirmAsync({
           message: latestClient?.version
             ? chalk`Do you want to install the latest client? {dim (${latestClient.version})}`
             : 'Do you want to install the latest client?',
         });
-        if (answer.upgradeToLatest) {
+        if (answer) {
           await Android.upgradeExpoAsync(latestClient?.url);
           log('Done!');
           return;
@@ -435,14 +423,12 @@ export default function (program: Command) {
       });
 
       if (availableClients.length === 0) {
-        const answer = await prompt({
-          type: 'confirm',
-          name: 'updateToAClient',
+        const answer = await confirmAsync({
           message: currentSdk
             ? `We don't have a compatible client for SDK ${currentSdkVersion}. Do you want to try the latest client?`
             : "It looks like we don't have a compatible client. Do you want to try the latest client?",
         });
-        if (answer.updateToAClient) {
+        if (answer) {
           await Android.upgradeExpoAsync(latestClient?.url);
           log('Done!');
         } else {

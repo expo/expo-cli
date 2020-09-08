@@ -3,7 +3,7 @@ import path from 'path';
 
 import { gitStatusAsync } from '../../git';
 import log from '../../log';
-import prompts from '../../prompts';
+import { confirmAsync } from '../../prompts';
 import { Context } from '../context';
 
 export async function updateAndroidCredentialsAsync(ctx: Context) {
@@ -30,9 +30,7 @@ export async function updateAndroidCredentialsAsync(ctx: Context) {
     keystore.keystore && keystore.keystorePassword && keystore.keyPassword && keystore.keyAlias;
 
   if (!isKeystoreComplete) {
-    const { confirm } = await prompts({
-      type: 'confirm',
-      name: 'confirm',
+    const confirm = await confirmAsync({
       message:
         'Credentials on Expo servers might be invalid or incomplete. Are you sure you want to continue?',
     });
@@ -107,9 +105,7 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
     distCredentials?.certPassword;
 
   if (!areCredentialsComplete) {
-    const { confirm } = await prompts({
-      type: 'confirm',
-      name: 'confirm',
+    const confirm = await confirmAsync({
       message:
         'Credentials on Expo servers might be invalid or incomplete. Are you sure you want to continue?',
     });

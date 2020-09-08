@@ -3,7 +3,7 @@ import { ApiV2, Project, UserManager } from '@expo/xdl';
 import ora from 'ora';
 
 import log from '../../log';
-import prompt from '../../prompt';
+import { confirmAsync } from '../../prompts';
 import * as table from './cli-table';
 
 export type HistoryOptions = {
@@ -202,13 +202,9 @@ async function _printAndConfirm(
   if (partialOptions.parent && partialOptions.parent.nonInteractive) {
     return;
   }
-  const { confirm } = await prompt([
-    {
-      type: 'confirm',
-      name: 'confirm',
-      message: `${platform}: Users on the '${channel}' channel will receive the above publication as a result of the rollback.`,
-    },
-  ]);
+  const confirm = await confirmAsync({
+    message: `${platform}: Users on the '${channel}' channel will receive the above publication as a result of the rollback.`,
+  });
 
   if (!confirm) {
     throw new Error(`You can run 'publish:set' to send the desired publication to users`);

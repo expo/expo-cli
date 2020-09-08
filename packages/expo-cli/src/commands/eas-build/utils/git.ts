@@ -6,7 +6,7 @@ import ora from 'ora';
 import CommandError from '../../../CommandError';
 import { gitDiffAsync, gitDoesRepoExistAsync, gitStatusAsync } from '../../../git';
 import log from '../../../log';
-import prompts from '../../../prompts';
+import prompts, { confirmAsync } from '../../../prompts';
 
 async function ensureGitRepoExistsAsync(): Promise<void> {
   try {
@@ -22,9 +22,7 @@ async function ensureGitRepoExistsAsync(): Promise<void> {
   log(log.chalk.yellow("It looks like you haven't initialized the git repository yet."));
   log(log.chalk.yellow('EAS Build requires you to use a git repository for your project.'));
 
-  const { confirmInit } = await prompts({
-    type: 'confirm',
-    name: 'confirmInit',
+  const confirmInit = await confirmAsync({
     message: `Would you like to run 'git init' in the current directory?`,
   });
   if (!confirmInit) {
@@ -90,9 +88,7 @@ async function reviewAndCommitChangesAsync(
   await gitDiffAsync();
   log.newLine();
 
-  const { confirm } = await prompts({
-    type: 'confirm',
-    name: 'confirm',
+  const confirm = await confirmAsync({
     message: 'Can we commit these changes for you?',
   });
 

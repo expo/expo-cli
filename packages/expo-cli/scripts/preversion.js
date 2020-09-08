@@ -36,7 +36,6 @@ prompts({
   type: 'confirm',
   name: 'completed',
   message: 'Have you completed all the checks?',
-  initial: false,
 }).then(answer => {
   if (!answer.completed) {
     console.error('Please complete all the checks before continuing.');

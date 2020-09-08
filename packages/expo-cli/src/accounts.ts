@@ -5,6 +5,7 @@ import program from 'commander';
 import CommandError from './CommandError';
 import log from './log';
 import prompt, { Question } from './prompt';
+import { confirmAsync } from './prompts';
 
 UserManager.initialize();
 
@@ -70,13 +71,9 @@ export async function login(options: CommandOptions): Promise<User> {
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!nonInteractive) {
     if (user) {
-      const question: Question = {
-        type: 'confirm',
-        name: 'action',
+      const action = await confirmAsync({
         message: `You are already logged in as ${chalk.green(user.username)}. Log in as new user?`,
-      };
-
-      const { action } = await prompt(question);
+      });
       if (!action) {
         // If user chooses to stay logged in, return
         return user;

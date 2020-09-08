@@ -8,7 +8,7 @@ import { v4 as uuid } from 'uuid';
 
 import CommandError from '../../CommandError';
 import log from '../../log';
-import prompt, { Question } from '../../prompt';
+import { confirmAsync } from '../../prompts';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { Context, IView } from '../context';
 import { Keystore, keystoreSchema } from '../credentials';
@@ -92,16 +92,11 @@ class RemoveKeystore implements IView {
       );
     }
 
-    const questions: Question[] = [
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: 'Permanently delete the Android build credentials from our servers?',
-        default: false,
-      },
-    ];
-    const answers = await prompt(questions);
-    if (answers.confirm) {
+    const answers = await confirmAsync({
+      message: 'Permanently delete the Android build credentials from our servers?',
+      initial: false,
+    });
+    if (answers) {
       log('Backing up your Android Keystore now...');
       await new DownloadKeystore(this.experienceName, {
         displayCredentials: true,
@@ -156,9 +151,7 @@ class DownloadKeystore implements IView {
     } else if (ctx.nonInteractive) {
       displayCredentials = true;
     } else {
-      const { confirm } = await prompt({
-        type: 'confirm',
-        name: 'confirm',
+      const confirm = await confirmAsync({
         message: 'Do you want to display the Android Keystore credentials?',
       });
 
