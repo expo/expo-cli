@@ -245,7 +245,7 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
 
   const keyChunks = chunk(missing, 5);
 
-  // Upload them!
+  // Upload them in chunks of 5 to prevent network and system issues.
   for (const keys of keyChunks) {
     const formData = new FormData();
     for (const key of keys) {
