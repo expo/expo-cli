@@ -45,37 +45,51 @@ const printHelp = (): void => {
   log.nested(`${PLATFORM_TAG} Press ${b('?')} to show a list of all available commands.`);
 };
 
+const div = chalk.dim(`|`);
+
 const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOnly'> = {}) => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
   const username = await UserManager.getCurrentUsernameAsync();
   const devMode = dev ? 'development' : 'production';
-  const androidInfo = `${b`a`} to run on ${u`A`}ndroid (${b`shift+a`} to select the device/emulator)`;
-  const iosInfo =
-    process.platform === 'darwin'
-      ? `${b`i`} to run on ${u`i`}OS simulator (${b`shift+i`} to select the simulator model)`
-      : '';
-  const webInfo = `${b`w`} to run on ${u`w`}eb`;
-  const platformInstructions = [androidInfo, iosInfo, webInfo]
-    .filter(Boolean)
-    .map(instructions => ` \u203A Press ${instructions}.`)
-    .join('\n');
-  log.nested(`
-${platformInstructions}
- \u203A Press ${b`c`} to show info on ${u`c`}onnecting new devices.
- \u203A Press ${b`d`} to open DevTools in the default web browser.
- \u203A Press ${b`shift-d`} to ${
-    openDevToolsAtStartup ? 'disable' : 'enable'
-  } automatically opening ${u`D`}evTools at startup.${
-    options.webOnly ? '' : `\n \u203A Press ${b`e`} to send an app link with ${u`e`}mail.`
-  }
- \u203A Press ${b`p`} to toggle ${u`p`}roduction mode. (current mode: ${i(devMode)})
- \u203A Press ${b`r`} to ${u`r`}estart bundler, or ${b`shift-r`} to restart and clear cache.
- \u203A Press ${b`o`} to ${u`o`}pen the project in your editor.
- \u203A Press ${b`s`} to ${u`s`}ign ${
-    username ? `out. (Signed in as ${i('@' + username)}.)` : 'in.'
-  }
-`);
+  const currentAuth = `@${username}`;
+  const currentToggle = openDevToolsAtStartup ? 'disabled' : 'enabled';
+
+  const isMac = process.platform === 'darwin';
+
+  const ui = [
+    [],
+    ['a', `open Android ${div} ${b`shift+A`} to select a device or emulator`],
+    isMac && ['i', `open iOS simulator ${div} ${b`shift+I`} to select a simulator`],
+    ['w', `open web`],
+    [],
+    ['c', `show project QR code`],
+    ['o', `open the code in your editor`],
+    ['p', `toggle build mode`, devMode],
+    ['r', `restart bundler ${div} ${b`shift+R`} to restart and clear cache`],
+    [],
+    [
+      'd',
+      `open Expo DevTools ${div} ${b`shift+D`} to toggle auto opening on startup`,
+      currentToggle,
+    ],
+    ['e', `share the app link by email`],
+    ['s', username ? `sign out` : `sign in`, currentAuth],
+  ];
+
+  log.nested(
+    ui
+      .filter(Boolean)
+      .map(([key, message, status]) => {
+        if (!key) return '';
+        let view = ` \u203A Press ${b(key)} ${div} ${message}`;
+        if (status) {
+          view += ` ${chalk.dim(`(${i(status)})`)}`;
+        }
+        return view;
+      })
+      .join('\n')
+  );
 };
 
 export const printServerInfo = async (
