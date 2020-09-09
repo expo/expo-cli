@@ -4,7 +4,12 @@ import fs from 'fs-extra';
 import ora from 'ora';
 
 import CommandError from '../../../CommandError';
-import { gitDiffAsync, gitDoesRepoExistAsync, gitStatusAsync } from '../../../git';
+import {
+  gitDiffAsync,
+  gitDoesRepoExistAsync,
+  gitRootDirectory,
+  gitStatusAsync,
+} from '../../../git';
 import log from '../../../log';
 import prompts from '../../../prompts';
 
@@ -60,15 +65,11 @@ class DirtyGitTreeError extends Error {}
 
 async function makeProjectTarballAsync(tarPath: string): Promise<number> {
   const spinner = ora('Making project tarball').start();
-  await spawnAsync('git', [
-    'archive',
-    '--format=tar.gz',
-    '--prefix',
-    'project/',
-    '-o',
-    tarPath,
-    'HEAD',
-  ]);
+  await spawnAsync(
+    'git',
+    ['archive', '--format=tar.gz', '--prefix', 'project/', '-o', tarPath, 'HEAD'],
+    { cwd: await gitRootDirectory() }
+  );
   spinner.succeed('Project tarball created.');
 
   const { size } = await fs.stat(tarPath);
