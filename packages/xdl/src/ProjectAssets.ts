@@ -246,23 +246,21 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
   const keyChunks = chunk(missing, 5);
 
   // Upload them!
-  await Promise.all(
-    keyChunks.map(async keys => {
-      const formData = new FormData();
-      for (const key of keys) {
-        const pathName = paths[key];
+  for (const keys of keyChunks) {
+    const formData = new FormData();
+    for (const key of keys) {
+      const pathName = paths[key];
 
-        logAssetTask(projectRoot, 'uploading', pathName);
+      logAssetTask(projectRoot, 'uploading', pathName);
 
-        formData.append(key, fs.createReadStream(pathName), pathName);
-      }
+      formData.append(key, fs.createReadStream(pathName), pathName);
+    }
 
-      // TODO: Document what's going on
-      const user = await UserManager.ensureLoggedInAsync();
-      const api = ApiV2.clientForUser(user);
-      await api.uploadFormDataAsync('assets/upload', formData);
-    })
-  );
+    // TODO: Document what's going on
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    await api.uploadFormDataAsync('assets/upload', formData);
+  }
 }
 
 function collectAssetPaths(assets: Asset[]): Record<string, string> {
