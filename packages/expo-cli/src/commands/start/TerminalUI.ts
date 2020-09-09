@@ -59,20 +59,20 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
 
   const ui = [
     [],
-    ['a', `open Android ${div} ${b`shift+A`} to select a device or emulator`],
-    isMac && ['i', `open iOS simulator ${div} ${b`shift+I`} to select a simulator`],
+    ['a', `open Android`],
+    ['shift+a', `select a device or emulator`],
+    isMac && ['i', `open iOS simulator`],
+    isMac && ['shift+i', `select a simulator`],
     ['w', `open web`],
     [],
-    ['c', `show project QR code`],
-    ['o', `open the code in your editor`],
+    ['o', `open project code in your editor`],
+    ['c', `show project QR`],
     ['p', `toggle build mode`, devMode],
-    ['r', `restart bundler ${div} ${b`shift+R`} to restart and clear cache`],
+    ['r', `restart bundler`],
+    ['shift+r', `restart and clear cache`],
     [],
-    [
-      'd',
-      `open Expo DevTools ${div} ${b`shift+D`} to toggle auto opening on startup`,
-      currentToggle,
-    ],
+    ['d', `open Expo DevTools`],
+    ['shift+d', `toggle auto opening DevTools on startup`, currentToggle],
     ['e', `share the app link by email`],
     ['s', username ? `sign out` : `sign in`, currentAuth],
   ];
@@ -82,7 +82,11 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
       .filter(Boolean)
       .map(([key, message, status]) => {
         if (!key) return '';
-        let view = ` \u203A Press ${b(key)} ${div} ${message}`;
+        let view = ` \u203A `;
+        if (key.length === 1) view += 'Press ';
+        view += `${b(key)} ${div} `;
+        view += message;
+        // let view = ` \u203A Press ${b(key)} ${div} ${message}`;
         if (status) {
           view += ` ${chalk.dim(`(${i(status)})`)}`;
         }
