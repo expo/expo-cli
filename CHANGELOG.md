@@ -8,10 +8,14 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+## [Thu, 9 Sep 2020 16:32:14 +0200](https://github.com/expo/expo-cli/commit/58ac4c43d0b3e7cb8db5b2c46d8602bf101e33db)
+
+### 🎉 New features
+
 - [expo-cli] EAS Build: add `experimental.npmToken` to `credentials.json` [#2603](https://github.com/expo/expo-cli/pull/2603)
 - [expo-cli] EAS Build: monorepo support [#2601](https://github.com/expo/expo-cli/pull/2601)
-
-### 🐛 Bug fixes
 
 ## [Thu, 8 Sep 2020 14:30:14 +0200](https://github.com/expo/expo-cli/commit/f0e24ee436806c109c19329c7e161fee0d2f0c81)
 
