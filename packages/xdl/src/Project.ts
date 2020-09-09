@@ -414,6 +414,7 @@ export async function exportForAppHosting(
     projectRoot,
     exp,
     hostedUrl: publicUrl,
+    assetPath: 'assets',
     outputDir,
     bundles,
   });

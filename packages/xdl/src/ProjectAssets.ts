@@ -37,6 +37,7 @@ type ExportAssetsOptions = {
   projectRoot: string;
   exp: PublicConfig;
   hostedUrl: string;
+  assetPath: string;
   bundles: BundlesByPlatform;
   outputDir?: string;
 };
@@ -189,6 +190,7 @@ export async function publishAssetsAsync(
   return exportAssetsAsync({
     ...options,
     hostedUrl: EXPO_CDN,
+    assetPath: '~assets',
   });
 }
 
@@ -196,12 +198,13 @@ export async function exportAssetsAsync({
   projectRoot,
   exp,
   hostedUrl,
+  assetPath,
   outputDir,
   bundles,
 }: ExportAssetsOptions) {
   logger.global.info('Analyzing assets');
 
-  const assetCdnPath = urljoin(hostedUrl, '~assets');
+  const assetCdnPath = urljoin(hostedUrl, assetPath);
   const assets = await collectAssets(projectRoot, exp, assetCdnPath, bundles);
 
   logger.global.info('Saving assets');
