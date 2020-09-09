@@ -161,7 +161,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         case 'A':
         case 'a':
           clearConsole();
-          log('Trying to open the web project in Chrome on Android...');
+          log('Opening the web project in Chrome on Android...');
           await Android.openWebProjectAsync({
             projectRoot,
             shouldPrompt: !options.nonInteractive && key === 'A',
@@ -171,7 +171,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         case 'i':
         case 'I':
           clearConsole();
-          log('Trying to open the web project in Safari on the iOS simulator...');
+          log('Opening the web project in Safari on iOS...');
           await Simulator.openWebProjectAsync({
             projectRoot,
             shouldPrompt: !options.nonInteractive && key === 'I',
@@ -193,13 +193,12 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
       switch (key) {
         case 'A':
           clearConsole();
-          log('Trying to open the project on Android...');
           await Android.openProjectAsync({ projectRoot, shouldPrompt: true });
           printHelp();
           break;
         case 'a': {
           clearConsole();
-          log('Trying to open the project on Android...');
+          log('Opening on Android...');
           await Android.openProjectAsync({ projectRoot });
           printHelp();
           break;
@@ -224,7 +223,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           // const shouldPrompt =
           //   !options.nonInteractive && (key === 'I' || !(await Simulator.isSimulatorBootedAsync()));
 
-          log('Opening in iOS simulator...');
+          log('Opening on iOS...');
           await Simulator.openProjectAsync({
             projectRoot,
             shouldPrompt: false,
