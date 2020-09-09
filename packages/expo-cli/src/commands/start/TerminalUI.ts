@@ -80,6 +80,7 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
   log.nested(
     ui
       .filter(Boolean)
+      // @ts-ignore: filter doesn't work
       .map(([key, message, status]) => {
         if (!key) return '';
         let view = ` \u203A `;
