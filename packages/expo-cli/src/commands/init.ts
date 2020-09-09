@@ -358,7 +358,7 @@ function resolvePackageManager(
 async function installNodeDependenciesAsync(
   projectRoot: string,
   packageManager: 'yarn' | 'npm',
-  flags: { silent: boolean } = { silent: false }
+  flags: { silent: boolean } = { silent: true }
 ) {
   const installJsDepsStep = CreateApp.logNewSection('Installing JavaScript dependencies.');
   try {
