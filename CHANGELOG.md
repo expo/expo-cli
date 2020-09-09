@@ -10,6 +10,20 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 9 Sep 2020 13:28:10 -0700](https://github.com/expo/expo-cli/commit/7b9b00b12095ce6ea5c02c03f793fcc6bf0f55a7)
+
+### 🎉 New features
+
+- [expo-cli] Clean up TerminalUI ([#2614](https://github.com/expo/expo-cli/issues/2614))
+
+### 🐛 Bug fixes
+
+- [expo-cli] Default to silent when installing node dependencies through init
+
+### 📦 Packages updated
+
+- expo-cli@3.27.4
+
 ## [Wed, 9 Sep 2020 10:03:41 -0700](https://github.com/expo/expo-cli/commit/2a2a120e30d64ea535fb251ff203c97b457ab8bf)
 
 ### 🐛 Bug fixes
