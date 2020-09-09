@@ -73,7 +73,7 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
     [],
     ['d', `open Expo DevTools`],
     ['shift+d', `toggle auto opening DevTools on startup`, currentToggle],
-    ['e', `share the app link by email`],
+    !options.webOnly && ['e', `share the app link by email`],
     ['s', username ? `sign out` : `sign in`, currentAuth],
   ];
 
