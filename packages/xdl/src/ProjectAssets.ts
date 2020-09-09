@@ -201,7 +201,7 @@ export async function exportAssetsAsync({
 }: ExportAssetsOptions) {
   logger.global.info('Analyzing assets');
 
-  const assetCdnPath = urljoin(hostedUrl, 'assets');
+  const assetCdnPath = urljoin(hostedUrl, '~assets');
   const assets = await collectAssets(projectRoot, exp, assetCdnPath, bundles);
 
   logger.global.info('Saving assets');
