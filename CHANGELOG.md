@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [expo-cli] EAS Build: add `experimental.npmToken` to `credentials.json` [#2603](https://github.com/expo/expo-cli/pull/2603)
+
 ### 🐛 Bug fixes
 
 ## [Thu, 8 Sep 2020 14:30:14 +0200](https://github.com/expo/expo-cli/commit/f0e24ee436806c109c19329c7e161fee0d2f0c81)
@@ -32,7 +34,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
-- [expo-cli] fix Segment context format [#2560](https://github.com/expo/expo-cli/pull/2560))
+- [expo-cli] fix Segment context format [#2560](https://github.com/expo/expo-cli/pull/2560)
 
 ### 📦 Packages updated
 

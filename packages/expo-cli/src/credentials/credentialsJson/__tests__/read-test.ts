@@ -179,4 +179,29 @@ describe('credentialsJson', () => {
       await expect(promise).rejects.toThrow("ENOENT: no such file or directory, open 'pprofile'");
     });
   });
+
+  describe('readSecretEnvsAsync', () => {
+    it('should read secretEnvs field correctly', async () => {
+      vol.fromJSON({
+        './credentials.json': JSON.stringify({
+          ios: {
+            provisioningProfilePath: 'pprofile',
+            distributionCertificate: {
+              path: 'cert.p12',
+              password: 'certPass',
+            },
+          },
+          experimental: {
+            npmToken: 'VALUE',
+          },
+        }),
+        './pprofile': 'somebinarycontent',
+        './cert.p12': 'somebinarycontent2',
+      });
+      const result = await credentialsJsonReader.readSecretEnvsAsync('.');
+      expect(result).toEqual({
+        NPM_TOKEN: 'VALUE',
+      });
+    });
+  });
 });
