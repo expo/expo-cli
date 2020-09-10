@@ -170,6 +170,21 @@ async function configureAndroidStepAsync(projectRoot: string) {
   }
 }
 
+function copyPathsFromTemplate(projectRoot: string, templatePath: string, paths: string[]) {
+  const skippedPaths = [];
+  for (const targetPath of paths) {
+    const projectPath = path.join(projectRoot, targetPath);
+    if (!fse.existsSync(projectPath)) {
+      fse.copySync(path.join(templatePath, targetPath), projectPath);
+    } else {
+      skippedPaths.push(targetPath);
+    }
+  }
+  if (skippedPaths.length) {
+    log.nestedWarn(`Skipped copying paths: ${skippedPaths.map(log.chalk.bold).join(', ')}`);
+  }
+}
+
 async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
   // We need the SDK version to proceed
 
@@ -257,9 +272,8 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   try {
     tempDir = temporary.directory();
     await Exp.extractTemplateAppAsync(templateSpec, tempDir, exp);
-    fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
-    fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
-    fse.copySync(path.join(tempDir, 'index.js'), path.join(projectRoot, 'index.js'));
+    const targetPaths = ['/ios', '/android', '/index.js'];
+    copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
     mergeGitIgnoreFiles(path.join(projectRoot, '.gitignore'), path.join(tempDir, '.gitignore'));
     const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
     defaultDependencies = createDependenciesMap(dependencies);
