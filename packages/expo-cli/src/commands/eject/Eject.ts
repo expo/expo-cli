@@ -9,6 +9,7 @@ import {
 import JsonFile from '@expo/json-file';
 import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
+import crypto from 'crypto';
 import fs from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
@@ -266,6 +267,11 @@ async function ensureConfigAsync(
   return { exp, pkg };
 }
 
+function createFileHash(gitIgnore: string): string {
+  // this doesn't need to be secure, the shorter the better.
+  return crypto.createHash('sha1').update(gitIgnore).digest('hex');
+}
+
 function writeMetroConfig(projectRoot: string, pkg: PackageJSONConfig, tempDir: string) {
   /**
    * Add metro config, or warn if metro config already exists. The developer will need to add the
@@ -274,8 +280,17 @@ function writeMetroConfig(projectRoot: string, pkg: PackageJSONConfig, tempDir: 
 
   const updatingMetroConfigStep = CreateApp.logNewSection('Adding Metro bundler configuration');
   try {
-    if (
-      fs.existsSync(path.join(projectRoot, 'metro.config.js')) ||
+    const sourceConfigPath = path.join(tempDir, 'metro.config.js');
+    const targetConfigPath = path.join(projectRoot, 'metro.config.js');
+    const targetConfigPathExists = fs.existsSync(targetConfigPath);
+    if (targetConfigPathExists) {
+      // Prevent re-runs from throwing an error if the metro config hasn't been modified.
+      const contents = createFileHash(fs.readFileSync(targetConfigPath, 'utf8'));
+      const targetContents = createFileHash(fs.readFileSync(sourceConfigPath, 'utf8'));
+      if (contents !== targetContents) {
+        throw new Error('Existing Metro configuration found; not overwriting.');
+      }
+    } else if (
       fs.existsSync(path.join(projectRoot, 'metro.config.json')) ||
       pkg.metro ||
       fs.existsSync(path.join(projectRoot, 'rn-cli.config.js'))
@@ -283,7 +298,7 @@ function writeMetroConfig(projectRoot: string, pkg: PackageJSONConfig, tempDir: 
       throw new Error('Existing Metro configuration found; not overwriting.');
     }
 
-    fs.copySync(path.join(tempDir, 'metro.config.js'), path.join(projectRoot, 'metro.config.js'));
+    fs.copySync(sourceConfigPath, targetConfigPath);
     updatingMetroConfigStep.succeed('Added Metro bundler configuration.');
   } catch (e) {
     updatingMetroConfigStep.stopAndPersist({
