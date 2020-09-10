@@ -11,7 +11,7 @@ import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
-import fse from 'fs-extra';
+import fs from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
 import path from 'path';
@@ -24,6 +24,7 @@ import prompt from '../../prompt';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
+import * as GitIgnore from '../utils/GitIgnore';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import { learnMore } from '../utils/TerminalLink';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
@@ -125,7 +126,7 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
         { fallback: (text: string) => text })
       } has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
         'expo publish'
-      )}. ${learnMore('https://expo.fyi/release-builds-with-expo-updates')}`
+      )}. ${log.chalk.dim(learnMore('https://expo.fyi/release-builds-with-expo-updates'))}`
     );
   }
 
@@ -172,7 +173,7 @@ async function installNodeDependenciesAsync(
     const cleanJsDepsStep = CreateApp.logNewSection('Cleaning JavaScript dependencies.');
     // nuke the node modules
     // TODO: this is substantially slower, we should find a better alternative to ensuring the modules are installed.
-    await fse.remove('node_modules');
+    await fs.remove('node_modules');
     cleanJsDepsStep.succeed('Cleaned JavaScript dependencies.');
   }
 
@@ -206,6 +207,23 @@ async function configureAndroidStepAsync(projectRoot: string) {
   } else {
     applyingAndroidConfigStep.succeed('All project configuration applied to Android project');
   }
+}
+
+function copyPathsFromTemplate(
+  projectRoot: string,
+  templatePath: string,
+  paths: string[]
+): string[] {
+  const skippedPaths = [];
+  for (const targetPath of paths) {
+    const projectPath = path.join(projectRoot, targetPath);
+    if (!fs.existsSync(projectPath)) {
+      fs.copySync(path.join(templatePath, targetPath), projectPath);
+    } else {
+      skippedPaths.push(targetPath);
+    }
+  }
+  return skippedPaths;
 }
 
 async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
@@ -276,7 +294,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   }
 
   const updatingAppConfigStep = CreateApp.logNewSection('Updating app configuration (app.json)');
-  await fse.writeFile(path.resolve('app.json'), JSON.stringify({ expo: exp }, null, 2));
+  await fs.writeFile(path.resolve('app.json'), JSON.stringify({ expo: exp }, null, 2));
   // TODO: if app.config.js, need to provide some other info here
   updatingAppConfigStep.succeed('App configuration (app.json) updated.');
 
@@ -295,16 +313,29 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   try {
     tempDir = temporary.directory();
     await Exp.extractTemplateAppAsync(templateSpec, tempDir, exp);
-    fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
-    fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
-    fse.copySync(path.join(tempDir, 'index.js'), path.join(projectRoot, 'index.js'));
-    mergeGitIgnoreFiles(path.join(projectRoot, '.gitignore'), path.join(tempDir, '.gitignore'));
+    const targetPaths = ['/ios', '/android', '/index.js'];
+    const skippedPaths = copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
+    const results = GitIgnore.mergeGitIgnorePaths(
+      path.join(projectRoot, '.gitignore'),
+      path.join(tempDir, '.gitignore')
+    );
     const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
     defaultDependencies = createDependenciesMap(dependencies);
     defaultDevDependencies = createDependenciesMap(devDependencies);
-    creatingNativeProjectStep.succeed(
-      'Created native project directories (./ios and ./android) and updated .gitignore.'
-    );
+
+    let message = `Created native projects`;
+
+    if (skippedPaths.length) {
+      message += log.chalk.dim(
+        ` | ${skippedPaths.map(path => log.chalk.bold(path)).join(', ')} already created`
+      );
+    }
+    if (!results?.didMerge) {
+      message += log.chalk.dim(` | gitignore already synced`);
+    } else if (results.didMerge && results.didClear) {
+      message += log.chalk.dim(` | synced gitignore`);
+    }
+    creatingNativeProjectStep.succeed(message);
   } catch (e) {
     log(chalk.red(e.message));
     creatingNativeProjectStep.fail(
@@ -326,15 +357,15 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   const updatingMetroConfigStep = CreateApp.logNewSection('Adding Metro bundler configuration');
   try {
     if (
-      fse.existsSync(path.join(projectRoot, 'metro.config.js')) ||
-      fse.existsSync(path.join(projectRoot, 'metro.config.json')) ||
+      fs.existsSync(path.join(projectRoot, 'metro.config.js')) ||
+      fs.existsSync(path.join(projectRoot, 'metro.config.json')) ||
       pkg.metro ||
-      fse.existsSync(path.join(projectRoot, 'rn-cli.config.js'))
+      fs.existsSync(path.join(projectRoot, 'rn-cli.config.js'))
     ) {
       throw new Error('Existing Metro configuration found; not overwriting.');
     }
 
-    fse.copySync(path.join(tempDir, 'metro.config.js'), path.join(projectRoot, 'metro.config.js'));
+    fs.copySync(path.join(tempDir, 'metro.config.js'), path.join(projectRoot, 'metro.config.js'));
     updatingMetroConfigStep.succeed('Added Metro bundler configuration.');
   } catch (e) {
     updatingMetroConfigStep.stopAndPersist({
@@ -345,9 +376,10 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     log.nested(
       `- You will need to add the ${chalk.bold(
         'hashAssetFiles'
-      )} plugin to your Metro configuration. ${terminalLink(
-        'Example.',
-        'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md#metroconfigjs'
+      )} plugin to your Metro configuration. ${log.chalk.dim(
+        learnMore(
+          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md#metroconfigjs'
+        )
       )}`
     );
     log.newLine();
@@ -420,7 +452,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     removedPkgMain = pkg.main;
   }
   delete pkg.main;
-  await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
+  await fs.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
 
   updatingPackageJsonStep.succeed(
     'Updated package.json and added index.js entry point for iOS and Android.'
@@ -484,50 +516,6 @@ async function promptForNativeAppNameAsync({ name }: Pick<ExpoConfig, 'name'>): 
   log.newLine();
 
   return result.name;
-}
-
-/**
- * Merge two gitignore files together and add a generated header.
- *
- * @param targetGitIgnorePath
- * @param sourceGitIgnorePath
- */
-export function mergeGitIgnoreFiles(
-  targetGitIgnorePath: string,
-  sourceGitIgnorePath: string
-): string | null {
-  if (!fse.existsSync(targetGitIgnorePath)) {
-    // No gitignore in the project already, no need to merge anything into anything. I guess they
-    // are not using git :O
-    return null;
-  }
-
-  if (!fse.existsSync(sourceGitIgnorePath)) {
-    // Maybe we don't have a gitignore in the template project
-    return null;
-  }
-
-  const targetGitIgnore = fse.readFileSync(targetGitIgnorePath).toString();
-  const sourceGitIgnore = fse.readFileSync(sourceGitIgnorePath).toString();
-  const merged = mergeGitIgnoreContents(targetGitIgnore, sourceGitIgnore);
-  fse.writeFileSync(targetGitIgnorePath, merged);
-
-  return merged;
-}
-
-/**
- * Merge the contents of two gitignores together and add a generated header.
- *
- * @param targetGitIgnore contents of the existing gitignore
- * @param sourceGitIgnore contents of the extra gitignore
- */
-function mergeGitIgnoreContents(targetGitIgnore: string, sourceGitIgnore: string): string {
-  // TODO(Bacon): Add version this section with a tag (expo-cli@x.x.x)
-  return `${targetGitIgnore}
-# The following contents were automatically generated by expo-cli during eject
-# ----------------------------------------------------------------------------
-
-${sourceGitIgnore}`;
 }
 
 /**
