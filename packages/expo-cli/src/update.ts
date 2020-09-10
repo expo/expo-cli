@@ -10,7 +10,7 @@ import log from './log';
 const packageJSON = require('../package.json');
 
 export default async function shouldUpdate(): Promise<void> {
-  const update = checkForUpdate(packageJSON, { interval: 1 }).catch(() => null);
+  const update = checkForUpdate(packageJSON).catch(() => null);
 
   try {
     const res = await update;
