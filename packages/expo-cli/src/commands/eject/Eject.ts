@@ -138,19 +138,17 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
 }
 
 async function configureIOSStepAsync(projectRoot: string) {
-  log.newLine();
-  const applyingIOSConfigStep = CreateApp.logNewSection('Applying iOS configuration');
+  const applyingIOSConfigStep = CreateApp.logNewSection('iOS config syncing');
   await configureIOSProjectAsync(projectRoot);
   if (ConfigWarningAggregator.hasWarningsIOS()) {
     applyingIOSConfigStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: chalk.red('iOS configuration applied with warnings that should be fixed:'),
+      text: chalk.red('iOS config synced with warnings that should be fixed:'),
     });
     logConfigWarningsIOS();
   } else {
-    applyingIOSConfigStep.succeed('All project configuration applied to iOS project');
+    applyingIOSConfigStep.succeed('iOS config synced');
   }
-  log.newLine();
 }
 
 /**
@@ -192,16 +190,16 @@ async function installNodeDependenciesAsync(
 }
 
 async function configureAndroidStepAsync(projectRoot: string) {
-  const applyingAndroidConfigStep = CreateApp.logNewSection('Applying Android configuration');
+  const applyingAndroidConfigStep = CreateApp.logNewSection('Android config syncing');
   await configureAndroidProjectAsync(projectRoot);
   if (ConfigWarningAggregator.hasWarningsAndroid()) {
     applyingAndroidConfigStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: chalk.red('Android configuration applied with warnings that should be fixed:'),
+      text: chalk.red('Android config synced with warnings that should be fixed:'),
     });
     logConfigWarningsAndroid();
   } else {
-    applyingAndroidConfigStep.succeed('All project configuration applied to Android project');
+    applyingAndroidConfigStep.succeed('Android config synced');
   }
 }
 
