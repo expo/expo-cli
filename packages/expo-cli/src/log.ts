@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import program from 'commander';
+import { Ora } from 'ora';
 import terminalLink from 'terminal-link';
 
 type Color = (...text: string[]) => string;
@@ -120,8 +121,23 @@ log.setBundleProgressBar = function setBundleProgressBar(bar: any) {
   _bundleProgressBar = bar;
 };
 
-log.setSpinner = function setSpinner(oraSpinner: any) {
+log.setSpinner = function setSpinner(oraSpinner: Ora | null) {
   _oraSpinner = oraSpinner;
+  if (_oraSpinner) {
+    const originalStart = _oraSpinner.start.bind(_oraSpinner);
+    _oraSpinner.start = (text: any) => {
+      // Reset the new line tracker
+      _isLastLineNewLine = false;
+      return originalStart(text);
+    };
+    // All other methods of stopping will invoke the stop method.
+    const originalStop = _oraSpinner.stop.bind(_oraSpinner);
+    _oraSpinner.stop = () => {
+      // Reset the target spinner
+      log.setSpinner(null);
+      return originalStop();
+    };
+  }
 };
 
 log.error = function error(...args: any[]) {
