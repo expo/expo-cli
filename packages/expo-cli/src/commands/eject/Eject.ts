@@ -279,6 +279,7 @@ function writeMetroConfig(projectRoot: string, pkg: PackageJSONConfig, tempDir: 
    */
 
   const updatingMetroConfigStep = CreateApp.logNewSection('Adding Metro bundler configuration');
+
   try {
     const sourceConfigPath = path.join(tempDir, 'metro.config.js');
     const targetConfigPath = path.join(projectRoot, 'metro.config.js');
@@ -289,6 +290,11 @@ function writeMetroConfig(projectRoot: string, pkg: PackageJSONConfig, tempDir: 
       const targetContents = createFileHash(fs.readFileSync(sourceConfigPath, 'utf8'));
       if (contents !== targetContents) {
         throw new Error('Existing Metro configuration found; not overwriting.');
+      } else {
+        // Nothing to change, hide the step and exit.
+        updatingMetroConfigStep.stop();
+        updatingMetroConfigStep.clear();
+        return;
       }
     } else if (
       fs.existsSync(path.join(projectRoot, 'metro.config.json')) ||
