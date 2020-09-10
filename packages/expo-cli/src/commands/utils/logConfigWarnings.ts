@@ -28,7 +28,7 @@ export function logConfigWarningsAndroid() {
 
 export function formatNamedWarning(property: string, warning: string, link?: string) {
   return `- ${chalk.bold(property)}: ${warning}${
-    link ? getSpacer(warning) + TerminalLink.learnMore(link) : ''
+    link ? getSpacer(warning) + log.chalk.dim(TerminalLink.learnMore(link)) : ''
   }`;
 }
 
