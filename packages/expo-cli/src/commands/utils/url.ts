@@ -1,3 +1,5 @@
+import dns from 'dns';
+
 export function getExpoDomainUrl(): string {
   if (process.env.EXPO_STAGING) {
     return `https://staging.expo.io`;
@@ -32,4 +34,12 @@ export function constructTurtleStatusUrl(): string {
 
 export function constructArtifactUrl(artifactId: string): string {
   return `${getExpoDomainUrl()}/artifacts/${artifactId}`;
+}
+
+export function isUrlAvailableAsync(url: string): Promise<boolean> {
+  return new Promise<boolean>(resolve => {
+    dns.lookup(url, err => {
+      resolve(!err);
+    });
+  });
 }
