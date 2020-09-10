@@ -3,11 +3,11 @@ import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import child_process from 'child_process';
 import fs from 'fs-extra';
-import { prompt } from 'inquirer';
 import trim from 'lodash/trim';
 import os from 'os';
 import path from 'path';
 import ProgressBar from 'progress';
+import prompts from 'prompts';
 import semver from 'semver';
 
 import * as Analytics from './Analytics';
@@ -546,6 +546,7 @@ async function openUrlAsync({
         // Only prompt once per device, per run.
         hasPromptedToUpgrade[promptKey] = true;
         const confirm = await Prompts.confirmAsync({
+          initial: true,
           message: `Expo client on ${device.name} (${device.type}) is outdated, would you like to upgrade?`,
         });
         if (confirm) {
@@ -566,7 +567,8 @@ async function openUrlAsync({
       // _checkExpoUpToDateAsync(); // let this run in background
     }
 
-    Logger.global.info(`Opening with Android ${device.type}: ${device.name}`);
+    Logger.global.info(`Opening ${chalk.underline(url)} on ${chalk.bold(device.name)}`);
+
     try {
       await _openUrlAsync({ pid: device.pid!, url });
     } catch (e) {
@@ -609,9 +611,12 @@ export async function openProjectAsync({
     });
 
     const devices = await getAllAvailableDevicesAsync();
-    let device: Device = devices[0];
+    let device: Device | null = devices[0];
     if (shouldPrompt) {
       device = await promptForDeviceAsync(devices);
+    }
+    if (!device) {
+      return { success: false, error: 'escaped' };
     }
 
     await openUrlAsync({ url: projectUrl, device, isDetached: !!exp.isDetached });
@@ -640,9 +645,12 @@ export async function openWebProjectAsync({
       };
     }
     const devices = await getAllAvailableDevicesAsync();
-    let device: Device = devices[0];
+    let device: Device | null = devices[0];
     if (shouldPrompt) {
       device = await promptForDeviceAsync(devices);
+    }
+    if (!device) {
+      return { success: false, error: 'escaped' };
     }
 
     await openUrlAsync({ url: projectUrl, device, isDetached: true });
@@ -871,32 +879,31 @@ export async function maybeStopAdbDaemonAsync() {
   }
 }
 
-async function promptForDeviceAsync(devices: Device[]): Promise<Device> {
+async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
   // TODO: provide an option to add or download more simulators
 
   // Pause interactions on the TerminalUI
   Prompts.pauseInteractions();
 
-  const { answer } = await prompt([
-    {
-      // @ts-ignore: broken types -- TODO: remove when migrating to `prompts`
-      type: 'list',
-      name: 'answer',
-      message: 'Select a device/emulator',
-      // @ts-ignore
-      choices: devices.map(item => {
-        const isActive = item.isBooted;
-        const format = isActive ? chalk.bold : (text: string) => text;
-        return {
-          name: `${format(item.name)} ${chalk.dim(`(${item.type})`)}`,
-          value: item.name,
-        };
-      }),
-      // @ts-ignore
-      loop: false,
+  const { value } = await prompts({
+    type: 'autocomplete',
+    name: 'value',
+    limit: 11,
+    message: 'Select a device/emulator',
+    choices: devices.map(item => {
+      const isActive = item.isBooted;
+      const format = isActive ? chalk.bold : (text: string) => text;
+      return {
+        title: `${format(item.name)} ${chalk.dim(`(${item.type})`)}`,
+        value: item.name,
+      };
+    }),
+    suggest: (input: any, choices: any) => {
+      const regex = new RegExp(input, 'i');
+      return choices.filter((choice: any) => regex.test(choice.title));
     },
-  ]);
+  });
   // Resume interactions on the TerminalUI
   Prompts.resumeInteractions();
-  return devices.find(({ name }) => name === answer)!;
+  return value ? devices.find(({ name }) => name === value)! : null;
 }

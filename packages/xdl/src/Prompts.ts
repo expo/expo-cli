@@ -1,4 +1,4 @@
-import { prompt } from 'inquirer';
+import prompts from 'prompts';
 
 type InteractionOptions = { pause: boolean; canEscape?: boolean };
 
@@ -38,15 +38,15 @@ export function resumeInteractions(options: Omit<InteractionOptions, 'pause'> = 
 }
 
 export async function confirmAsync(options: {
-  default?: boolean;
+  initial?: boolean;
   message: string;
 }): Promise<boolean> {
   pauseInteractions();
-  const { confirm } = await prompt({
+  const { value } = await prompts({
     type: 'confirm',
-    name: 'confirm',
+    name: 'value',
     ...options,
   });
   resumeInteractions();
-  return confirm;
+  return value;
 }

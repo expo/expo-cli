@@ -1,5 +1,5 @@
 import * as Cache from './Cache';
-import { generateFaviconAsync, generateImageAsync } from './Image';
+import { compositeImagesAsync, generateFaviconAsync, generateImageAsync } from './Image';
 import { ImageFormat, ImageOptions, ResizeMode } from './Image.types';
 import { convertFormat, jimpAsync } from './jimp';
 import { findSharpInstanceAsync, isAvailableAsync, sharpAsync } from './sharp';
@@ -26,6 +26,7 @@ export {
   generateImageAsync,
   generateFaviconAsync,
   Cache,
+  compositeImagesAsync,
 };
 
 export { SharpGlobalOptions, SharpCommandOptions, ResizeMode, ImageFormat, ImageOptions };

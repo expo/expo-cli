@@ -8,6 +8,7 @@ import {
   setFacebookAdvertiserIDCollectionEnabled,
   setFacebookAppId,
   setFacebookAutoInitEnabled,
+  setFacebookConfig,
 } from '../Facebook';
 
 describe('ios facebook config', () => {
@@ -34,13 +35,13 @@ describe('ios facebook config', () => {
   });
 
   it('sets the facebook app id config', () => {
-    expect(setFacebookAppId({ facebookAppId: 'abc' }, {})).toMatchObject({
+    expect(setFacebookAppId({ facebookAppId: 'abc' }, {})).toStrictEqual({
       FacebookAppID: 'abc',
     });
   });
 
   it('sets the facebook auto init config', () => {
-    expect(setFacebookAutoInitEnabled({ facebookAutoInitEnabled: true }, {})).toMatchObject({
+    expect(setFacebookAutoInitEnabled({ facebookAutoInitEnabled: true }, {})).toStrictEqual({
       FacebookAutoInitEnabled: true,
     });
   });
@@ -48,8 +49,42 @@ describe('ios facebook config', () => {
   it('sets the facebook advertising id enabled config', () => {
     expect(
       setFacebookAdvertiserIDCollectionEnabled({ facebookAdvertiserIDCollectionEnabled: true }, {})
-    ).toMatchObject({
+    ).toStrictEqual({
       FacebookAdvertiserIDCollectionEnabled: true,
+    });
+  });
+
+  it('removes the facebook config', () => {
+    expect(
+      setFacebookConfig(
+        {},
+        {
+          FacebookAdvertiserIDCollectionEnabled: true,
+          FacebookAppID: 'my-app-id',
+          FacebookAutoInitEnabled: true,
+          FacebookAutoLogAppEventsEnabled: true,
+          FacebookDisplayName: 'my-display-name',
+          LSApplicationQueriesSchemes: ['fbapi', 'fb-messenger-api', 'fbauth2', 'fbshareextension'],
+        }
+      )
+    ).toStrictEqual({});
+  });
+  it('preserves the existing LSApplicationQueriesSchemes after removing the facebook schemes', () => {
+    const plist = setFacebookConfig(
+      {},
+      {
+        LSApplicationQueriesSchemes: [
+          'expo',
+          'fbapi',
+          'fb-messenger-api',
+          'fbauth2',
+          'fbshareextension',
+        ],
+      }
+    );
+    // Test that running the command twice doesn't cause duplicates
+    expect(setFacebookConfig({}, plist)).toStrictEqual({
+      LSApplicationQueriesSchemes: ['expo'],
     });
   });
 });

@@ -1,15 +1,18 @@
+import { getDefaultTarget } from '@expo/config';
 import { Command } from 'commander';
 // @ts-ignore
 import envinfo from 'envinfo';
 
 const packageJSON = require('../../package.json');
 
-async function action(): Promise<void> {
+async function action(projectRoot: string): Promise<void> {
   const info = await envinfo.run(
     {
       System: ['OS', 'Shell'],
       Binaries: ['Node', 'Yarn', 'npm', 'Watchman'],
       IDEs: ['Xcode', 'Android Studio'],
+      Managers: ['CocoaPods'],
+      SDKs: ['iOS SDK', 'Android SDK'],
       npmPackages: [
         'expo',
         'react',
@@ -22,10 +25,16 @@ async function action(): Promise<void> {
       npmGlobalPackages: ['expo-cli'],
     },
     {
+      yaml: true,
       title: `Expo CLI ${packageJSON.version} environment info`,
     }
   );
-  console.log(info);
+
+  const workflow = getDefaultTarget(projectRoot ?? process.cwd());
+  const lines = info.split('\n');
+  lines.pop();
+  lines.push(`    Expo Workflow: ${workflow}`);
+  console.log(lines.join('\n') + '\n');
 }
 
 export default function (program: Command) {

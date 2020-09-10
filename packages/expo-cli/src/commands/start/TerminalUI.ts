@@ -45,37 +45,56 @@ const printHelp = (): void => {
   log.nested(`${PLATFORM_TAG} Press ${b('?')} to show a list of all available commands.`);
 };
 
+const div = chalk.dim(`|`);
+
 const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOnly'> = {}) => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
   const username = await UserManager.getCurrentUsernameAsync();
   const devMode = dev ? 'development' : 'production';
-  const androidInfo = `${b`a`} to run on ${u`A`}ndroid (${b`shift+a`} to select the device/emulator)`;
-  const iosInfo =
-    process.platform === 'darwin'
-      ? `${b`i`} to run on ${u`i`}OS simulator (${b`shift+i`} to select the simulator model)`
-      : '';
-  const webInfo = `${b`w`} to run on ${u`w`}eb`;
-  const platformInstructions = [androidInfo, iosInfo, webInfo]
-    .filter(Boolean)
-    .map(instructions => ` \u203A Press ${instructions}.`)
-    .join('\n');
-  log.nested(`
-${platformInstructions}
- \u203A Press ${b`c`} to show info on ${u`c`}onnecting new devices.
- \u203A Press ${b`d`} to open DevTools in the default web browser.
- \u203A Press ${b`shift-d`} to ${
-    openDevToolsAtStartup ? 'disable' : 'enable'
-  } automatically opening ${u`D`}evTools at startup.${
-    options.webOnly ? '' : `\n \u203A Press ${b`e`} to send an app link with ${u`e`}mail.`
-  }
- \u203A Press ${b`p`} to toggle ${u`p`}roduction mode. (current mode: ${i(devMode)})
- \u203A Press ${b`r`} to ${u`r`}estart bundler, or ${b`shift-r`} to restart and clear cache.
- \u203A Press ${b`o`} to ${u`o`}pen the project in your editor.
- \u203A Press ${b`s`} to ${u`s`}ign ${
-    username ? `out. (Signed in as ${i('@' + username)}.)` : 'in.'
-  }
-`);
+  const currentAuth = `@${username}`;
+  const currentToggle = openDevToolsAtStartup ? 'disabled' : 'enabled';
+
+  const isMac = process.platform === 'darwin';
+
+  const ui = [
+    [],
+    ['a', `open Android`],
+    ['shift+a', `select a device or emulator`],
+    isMac && ['i', `open iOS simulator`],
+    isMac && ['shift+i', `select a simulator`],
+    ['w', `open web`],
+    [],
+    ['o', `open project code in your editor`],
+    ['c', `show project QR`],
+    ['p', `toggle build mode`, devMode],
+    ['r', `restart bundler`],
+    ['shift+r', `restart and clear cache`],
+    [],
+    ['d', `open Expo DevTools`],
+    ['shift+d', `toggle auto opening DevTools on startup`, currentToggle],
+    !options.webOnly && ['e', `share the app link by email`],
+    ['s', username ? `sign out` : `sign in`, currentAuth],
+  ];
+
+  log.nested(
+    ui
+      .filter(Boolean)
+      // @ts-ignore: filter doesn't work
+      .map(([key, message, status]) => {
+        if (!key) return '';
+        let view = ` \u203A `;
+        if (key.length === 1) view += 'Press ';
+        view += `${b(key)} ${div} `;
+        view += message;
+        // let view = ` \u203A Press ${b(key)} ${div} ${message}`;
+        if (status) {
+          view += ` ${chalk.dim(`(${i(status)})`)}`;
+        }
+        return view;
+      })
+      .join('\n')
+  );
 };
 
 export const printServerInfo = async (
@@ -161,7 +180,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         case 'A':
         case 'a':
           clearConsole();
-          log('Trying to open the web project in Chrome on Android...');
+          log('Opening the web project in Chrome on Android...');
           await Android.openWebProjectAsync({
             projectRoot,
             shouldPrompt: !options.nonInteractive && key === 'A',
@@ -171,7 +190,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         case 'i':
         case 'I':
           clearConsole();
-          log('Trying to open the web project in Safari on the iOS simulator...');
+          log('Opening the web project in Safari on iOS...');
           await Simulator.openWebProjectAsync({
             projectRoot,
             shouldPrompt: !options.nonInteractive && key === 'I',
@@ -193,13 +212,12 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
       switch (key) {
         case 'A':
           clearConsole();
-          log('Trying to open the project on Android...');
           await Android.openProjectAsync({ projectRoot, shouldPrompt: true });
           printHelp();
           break;
         case 'a': {
           clearConsole();
-          log('Trying to open the project on Android...');
+          log('Opening on Android...');
           await Android.openProjectAsync({ projectRoot });
           printHelp();
           break;
@@ -224,7 +242,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           // const shouldPrompt =
           //   !options.nonInteractive && (key === 'I' || !(await Simulator.isSimulatorBootedAsync()));
 
-          log('Opening in iOS simulator...');
+          log('Opening on iOS...');
           await Simulator.openProjectAsync({
             projectRoot,
             shouldPrompt: false,

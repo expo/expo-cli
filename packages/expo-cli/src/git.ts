@@ -29,4 +29,8 @@ async function gitDoesRepoExistAsync(): Promise<boolean> {
   }
 }
 
-export { gitStatusAsync, gitDiffAsync, gitAddAsync, gitDoesRepoExistAsync };
+async function gitRootDirectory(): Promise<string> {
+  return (await spawnAsync('git', ['rev-parse', '--show-toplevel'])).stdout.trim();
+}
+
+export { gitStatusAsync, gitDiffAsync, gitAddAsync, gitDoesRepoExistAsync, gitRootDirectory };

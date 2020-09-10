@@ -10,13 +10,62 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 9 Sep 2020 13:28:10 -0700](https://github.com/expo/expo-cli/commit/7b9b00b12095ce6ea5c02c03f793fcc6bf0f55a7)
+
+### 🎉 New features
+
+- [expo-cli] Clean up TerminalUI ([#2614](https://github.com/expo/expo-cli/issues/2614))
+
+### 🐛 Bug fixes
+
+- [expo-cli] Default to silent when installing node dependencies through init
+
+### 📦 Packages updated
+
+- expo-cli@3.27.4
+
+## [Wed, 9 Sep 2020 10:03:41 -0700](https://github.com/expo/expo-cli/commit/2a2a120e30d64ea535fb251ff203c97b457ab8bf)
+
+### 🐛 Bug fixes
+
+- [xdl] Use ~assets for publish and assets for export
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.42
+- expo-cli@3.27.3
+- @expo/xdl@58.0.3
+
+## [Thu, 9 Sep 2020 16:32:14 +0200](https://github.com/expo/expo-cli/commit/58ac4c43d0b3e7cb8db5b2c46d8602bf101e33db)
+
+### 🎉 New features
+
+- [expo-cli] EAS Build: add `experimental.npmToken` to `credentials.json` [#2603](https://github.com/expo/expo-cli/pull/2603)
+- [expo-cli] EAS Build: monorepo support [#2601](https://github.com/expo/expo-cli/pull/2601)
+
+## [Thu, 8 Sep 2020 14:30:14 +0200](https://github.com/expo/expo-cli/commit/f0e24ee436806c109c19329c7e161fee0d2f0c81)
+
+### 🛠 Breaking changes
+
+- [xdl] Delete deprecated `Exp.extractAndInitializeTemplateApp`, `Exp.initGitRepoAsync`, `Exp.installDependenciesAsync`, `Exp.getPublishInfoAsync`, [#2590](https://github.com/expo/expo-cli/pull/2590)
+- [expo-cli][export] No longer prompts to automatically delete conflicting files, they must now be manually deleted, or the command must be rerun with `--force` [#2576](https://github.com/expo/expo-cli/pull/2576)
+- [xdl] Deleted deprecated `Web` module [#2588](https://github.com/expo/expo-cli/pull/2588)
+
+### 🎉 New features
+
+- [expo-cli][eject] support Facebook props being removed [#2566](https://github.com/expo/expo-cli/pull/2566))
+- [expo-cli][config] Generate Android icons on eject and apply [#2087](https://github.com/expo/expo-cli/pull/2087)
+- [expo-cli][export] List all conflicting files, allow for tolerable file collisions, prompt for `public-url` when it's not provided in interactive mode [#2576](https://github.com/expo/expo-cli/pull/2576)
+
+### 🐛 Bug fixes
+
 - [webpack] Fix copy webpack plugin for web overrides ([#2558](https://github.com/expo/expo-cli/issues/2558))
 
 ## [Thu, 3 Sep 2020 10:30:14 +0200](https://github.com/expo/expo-cli/commit/68920e489dd4508e30f0da14bbe91b36427380a7)
 
 ### 🐛 Bug fixes
 
-- [expo-cli] fix Segment context format [#2560](https://github.com/expo/expo-cli/pull/2560))
+- [expo-cli] fix Segment context format [#2560](https://github.com/expo/expo-cli/pull/2560)
 
 ### 📦 Packages updated
 

@@ -1,6 +1,6 @@
 import { projectConfig } from '@react-native-community/cli-platform-ios';
 import path from 'path';
-import { project as PbxProject, UUID, PBXNativeTarget } from 'xcode';
+import xcode, { XcodeProject, UUID, PBXNativeTarget } from 'xcode';
 
 export interface IosProject {
   projectName: string;
@@ -11,7 +11,7 @@ export interface IosProject {
   /**
    * pbxProject reference that allows to modify `.pbxproj` file.
    */
-  pbxProject: PbxProject;
+  pbxProject: XcodeProject;
   /**
    * main application PBXNativeTarget from `.pbxproj` file.
    */
@@ -37,7 +37,7 @@ export default async function readPbxProject(projectRootPath: string): Promise<I
   const projectPath = xcodeProjPath.substring(0, xcodeProjPath.length - '.xcodeproj'.length);
   const projectName = path.basename(projectPath);
 
-  const pbxProject = new PbxProject(pbxprojPath);
+  const pbxProject = xcode.project(pbxprojPath);
 
   await new Promise(resolve =>
     pbxProject.parse(err => {

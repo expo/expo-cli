@@ -20,6 +20,9 @@ interface CredentialsJson {
       password: string;
     };
   };
+  experimental?: {
+    npmToken?: string;
+  };
 }
 
 const CredentialsJsonSchema = Joi.object({
@@ -37,6 +40,9 @@ const CredentialsJsonSchema = Joi.object({
       path: Joi.string().required(),
       password: Joi.string().required(),
     }).required(),
+  }),
+  experimental: Joi.object({
+    npmToken: Joi.string(),
   }),
 });
 
@@ -90,6 +96,14 @@ export async function readIosCredentialsAsync(projectDir: string): Promise<iOSCr
       certPassword: credentialsJson.ios.distributionCertificate.password,
     },
   };
+}
+
+export async function readSecretEnvsAsync(
+  projectDir: string
+): Promise<Record<string, string> | undefined> {
+  const credentialsJson = await readAsync(projectDir);
+  const npmToken = credentialsJson?.experimental?.npmToken;
+  return npmToken ? { NPM_TOKEN: npmToken } : undefined;
 }
 
 async function readAsync(projectDir: string): Promise<CredentialsJson> {

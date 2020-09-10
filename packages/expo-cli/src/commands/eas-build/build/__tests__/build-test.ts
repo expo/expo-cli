@@ -213,12 +213,15 @@ describe('build command', () => {
         projectUrl: mockProjectUrl,
         artifactPath: 'android/app/build/outputs/**/*.{apk,aab}',
         gradleCommand: ':app:bundleRelease',
+        projectRootDirectory: '.',
         secrets: {
-          keystore: {
-            dataBase64: keystore.base64,
-            keystorePassword: 'keystorePassword',
-            keyAlias: 'keyAlias',
-            keyPassword: 'keyPassword',
+          buildCredentials: {
+            keystore: {
+              dataBase64: keystore.base64,
+              keystorePassword: 'keystorePassword',
+              keyAlias: 'keyAlias',
+              keyPassword: 'keyPassword',
+            },
           },
         },
       });
@@ -249,13 +252,16 @@ describe('build command', () => {
         type: 'generic',
         projectUrl: mockProjectUrl,
         artifactPath: 'ios/build/App.ipa',
+        projectRootDirectory: '.',
         scheme: 'testapp',
         secrets: {
-          distributionCertificate: {
-            dataBase64: cert.base64,
-            password: 'certPass',
+          buildCredentials: {
+            distributionCertificate: {
+              dataBase64: cert.base64,
+              password: 'certPass',
+            },
+            provisioningProfileBase64: pprofile.base64,
           },
-          provisioningProfileBase64: pprofile.base64,
         },
       });
     });
@@ -292,12 +298,15 @@ describe('build command', () => {
         projectUrl: mockProjectUrl,
         artifactPath: 'android/app/build/outputs/**/*.{apk,aab}',
         gradleCommand: ':app:bundleRelease',
+        projectRootDirectory: '.',
         secrets: {
-          keystore: {
-            dataBase64: keystore.base64,
-            keystorePassword: 'keystorePassword',
-            keyAlias: 'keyAlias',
-            keyPassword: 'keyPassword',
+          buildCredentials: {
+            keystore: {
+              dataBase64: keystore.base64,
+              keystorePassword: 'keystorePassword',
+              keyAlias: 'keyAlias',
+              keyPassword: 'keyPassword',
+            },
           },
         },
       });
@@ -313,12 +322,15 @@ describe('build command', () => {
         projectUrl: mockProjectUrl,
         artifactPath: 'ios/build/App.ipa',
         scheme: 'testapp',
+        projectRootDirectory: '.',
         secrets: {
-          distributionCertificate: {
-            dataBase64: cert.base64,
-            password: 'certPass',
+          buildCredentials: {
+            distributionCertificate: {
+              dataBase64: cert.base64,
+              password: 'certPass',
+            },
+            provisioningProfileBase64: pprofile.base64,
           },
-          provisioningProfileBase64: pprofile.base64,
         },
       });
     });

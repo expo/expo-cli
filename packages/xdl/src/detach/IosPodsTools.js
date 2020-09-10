@@ -102,6 +102,13 @@ ${indentString(_renderDependencyAttributes(attributes), 2)}`;
 function _renderUnversionedReactNativeDependency(options, sdkVersion) {
   const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
 
+  if (sdkMajorVersion >= 39) {
+    return indentString(`
+# Install React Native and its dependencies
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+use_react_native!(production: true)`);
+  }
+
   if (sdkMajorVersion >= 36) {
     return indentString(
       `
@@ -407,6 +414,7 @@ function _renderUnversionedUniversalModulesDependencies(
       'expo-bluetooth',
       'expo-in-app-purchases',
       'expo-payments-stripe',
+      'expo-module-template',
       'expo-image',
     ];
 
