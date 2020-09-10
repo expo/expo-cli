@@ -5,10 +5,8 @@ import {
   WarningAggregator,
   getConfig,
   projectHasModule,
-  resolveModule,
 } from '@expo/config';
 import JsonFile from '@expo/json-file';
-import * as PackageManager from '@expo/package-manager';
 import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -20,7 +18,6 @@ import temporary from 'tempy';
 import terminalLink from 'terminal-link';
 
 import log from '../../log';
-import prompt from '../../prompt';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
@@ -30,8 +27,6 @@ import { learnMore } from '../utils/TerminalLink';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
-
-type ValidationErrorMessage = string;
 
 type DependenciesMap = { [key: string]: string | number };
 
@@ -226,7 +221,9 @@ function copyPathsFromTemplate(
   return skippedPaths;
 }
 
-async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
+async function ensureConfigAsync(
+  projectRoot: string
+): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig }> {
   // We need the SDK version to proceed
 
   let exp: ExpoConfig;
@@ -242,6 +239,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
       // Write the generated config.
       // writeConfigJsonAsync(projectRoot, config.exp);
       await JsonFile.writeAsync(
+        // TODO: Write to app.config.json because it's easier to convert to a js config file.
         path.join(projectRoot, 'app.json'),
         { expo: config.exp },
         { json5: false }
@@ -254,6 +252,61 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     console.log();
     process.exit(1);
   }
+
+  // Prompt for the Android package first because it's more strict than the bundle identifier
+  // this means you'll have a better chance at matching the bundle identifier with the package name.
+  await getOrPromptForPackage(projectRoot);
+  await getOrPromptForBundleIdentifier(projectRoot);
+
+  if (exp.entryPoint) {
+    delete exp.entryPoint;
+    log(`- expo.entryPoint is not needed and has been removed.`);
+  }
+
+  return { exp, pkg };
+}
+
+function writeMetroConfig(projectRoot: string, pkg: PackageJSONConfig, tempDir: string) {
+  /**
+   * Add metro config, or warn if metro config already exists. The developer will need to add the
+   * hashAssetFiles plugin manually.
+   */
+
+  const updatingMetroConfigStep = CreateApp.logNewSection('Adding Metro bundler configuration');
+  try {
+    if (
+      fs.existsSync(path.join(projectRoot, 'metro.config.js')) ||
+      fs.existsSync(path.join(projectRoot, 'metro.config.json')) ||
+      pkg.metro ||
+      fs.existsSync(path.join(projectRoot, 'rn-cli.config.js'))
+    ) {
+      throw new Error('Existing Metro configuration found; not overwriting.');
+    }
+
+    fs.copySync(path.join(tempDir, 'metro.config.js'), path.join(projectRoot, 'metro.config.js'));
+    updatingMetroConfigStep.succeed('Added Metro bundler configuration.');
+  } catch (e) {
+    updatingMetroConfigStep.stopAndPersist({
+      symbol: '⚠️ ',
+      text: chalk.red('Metro bundler configuration not applied:'),
+    });
+    log.nested(`- ${e.message}`);
+    log.nested(
+      `- You will need to add the ${chalk.bold(
+        'hashAssetFiles'
+      )} plugin to your Metro configuration. ${log.chalk.dim(
+        learnMore(
+          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md#metroconfigjs'
+        )
+      )}`
+    );
+    log.newLine();
+  }
+}
+
+async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
+  // We need the SDK version to proceed
+  const { exp, pkg } = await ensureConfigAsync(projectRoot);
 
   // Validate that the template exists
   const sdkMajorVersionNumber = semver.major(exp.sdkVersion!);
@@ -269,34 +322,6 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
       throw e;
     }
   }
-
-  /**
-   * Set names to be used for the native projects and configure appEntry so users can continue
-   * to use Expo client on ejected projects, even though we change the "main" to index.js for bare.
-   */
-  if (!exp.name) {
-    exp.name = await promptForNativeAppNameAsync(exp);
-  }
-
-  // Prompt for the Android package first because it's more strict than the bundle identifier
-  // this means you'll have a better chance at matching the bundle identifier with the package name.
-  const packageName = await getOrPromptForPackage(projectRoot);
-  exp.android = exp.android ?? {};
-  exp.android.package = packageName;
-
-  const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
-  exp.ios = exp.ios ?? {};
-  exp.ios.bundleIdentifier = bundleIdentifier;
-
-  if (exp.entryPoint) {
-    delete exp.entryPoint;
-    log(`- expo.entryPoint is not needed and has been removed.`);
-  }
-
-  const updatingAppConfigStep = CreateApp.logNewSection('Updating app configuration (app.json)');
-  await fs.writeFile(path.resolve('app.json'), JSON.stringify({ expo: exp }, null, 2));
-  // TODO: if app.config.js, need to provide some other info here
-  updatingAppConfigStep.succeed('App configuration (app.json) updated.');
 
   /**
    * Extract the template and copy the ios and android directories over to the project directory
@@ -349,41 +374,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     process.exit(1);
   }
 
-  /**
-   * Add metro config, or warn if metro config already exists. The developer will need to add the
-   * hashAssetFiles plugin manually.
-   */
-
-  const updatingMetroConfigStep = CreateApp.logNewSection('Adding Metro bundler configuration');
-  try {
-    if (
-      fs.existsSync(path.join(projectRoot, 'metro.config.js')) ||
-      fs.existsSync(path.join(projectRoot, 'metro.config.json')) ||
-      pkg.metro ||
-      fs.existsSync(path.join(projectRoot, 'rn-cli.config.js'))
-    ) {
-      throw new Error('Existing Metro configuration found; not overwriting.');
-    }
-
-    fs.copySync(path.join(tempDir, 'metro.config.js'), path.join(projectRoot, 'metro.config.js'));
-    updatingMetroConfigStep.succeed('Added Metro bundler configuration.');
-  } catch (e) {
-    updatingMetroConfigStep.stopAndPersist({
-      symbol: '⚠️ ',
-      text: chalk.red('Metro bundler configuration not applied:'),
-    });
-    log.nested(`- ${e.message}`);
-    log.nested(
-      `- You will need to add the ${chalk.bold(
-        'hashAssetFiles'
-      )} plugin to your Metro configuration. ${log.chalk.dim(
-        learnMore(
-          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md#metroconfigjs'
-        )
-      )}`
-    );
-    log.newLine();
-  }
+  writeMetroConfig(projectRoot, pkg, tempDir);
 
   /**
    * Update package.json scripts - `npm start` should default to `react-native
@@ -493,29 +484,6 @@ function createDependenciesMap(dependencies: any): DependenciesMap {
     }
   }
   return outputMap;
-}
-
-async function promptForNativeAppNameAsync({ name }: Pick<ExpoConfig, 'name'>): Promise<string> {
-  log('First, we want to clarify what names we should use for your app:');
-  const result = await prompt(
-    [
-      {
-        name: 'name',
-        message: "What should your app appear as on a user's home screen?",
-        default: name,
-        validate({ length }: string): true | ValidationErrorMessage {
-          return length ? true : 'App display name cannot be empty.';
-        },
-      },
-    ],
-    {
-      nonInteractiveHelp: 'Please specify "expo.name" in app.json / app.config.js.',
-    }
-  );
-
-  log.newLine();
-
-  return result.name;
 }
 
 /**
