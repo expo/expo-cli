@@ -4,6 +4,7 @@ import {
   PackageJSONConfig,
   WarningAggregator,
   getConfig,
+  projectHasModule,
   resolveModule,
 } from '@expo/config';
 import JsonFile from '@expo/json-file';
@@ -36,6 +37,7 @@ type DependenciesMap = { [key: string]: string | number };
 export type EjectAsyncOptions = {
   verbose?: boolean;
   force?: boolean;
+  install?: boolean;
   packageManager?: 'npm' | 'yarn';
 };
 
@@ -53,14 +55,33 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
   if (await maybeBailOnGitStatusAsync()) return;
 
   await createNativeProjectsFromTemplateAsync(projectRoot);
-  await installNodeModulesAsync(projectRoot);
+  // TODO: Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
+  // This will be used to prevent the node modules from being nuked every time.
+  const isSyncing = false;
+
+  // Install node modules
+  const shouldInstall = options?.install !== false;
+
+  const packageManager = CreateApp.resolvePackageManager({
+    install: shouldInstall,
+    npm: options?.packageManager === 'npm',
+    yarn: options?.packageManager === 'yarn',
+  });
+
+  if (shouldInstall) {
+    await installNodeDependenciesAsync(projectRoot, packageManager, { clean: !isSyncing });
+  }
 
   // Apply Expo config to native projects
   await configureIOSStepAsync(projectRoot);
   await configureAndroidStepAsync(projectRoot);
 
-  const podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
-  await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
+  // Install CocoaPods
+  let podsInstalled: boolean = false;
+  if (shouldInstall) {
+    podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
+  }
+  await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot, options);
 
   log.newLine();
   log.nested(`➡️  ${chalk.bold('Next steps')}`);
@@ -70,11 +91,12 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
       `- 👆 Review the logs above and look for any warnings (⚠️ ) that might need follow-up.`
     );
   }
-  log.nested(
-    `- 💡 You may want to run ${chalk.bold(
-      'npx @react-native-community/cli doctor'
-    )} to help install any tools that your app may need to run your native projects.`
-  );
+
+  // Log a warning about needing to install node modules
+  if (options?.install === false) {
+    const installCmd = packageManager === 'npm' ? 'npm install' : 'yarn';
+    log.nested(`- ⚠️  Install node modules: ${log.chalk.bold(installCmd)}`);
+  }
   if (!podsInstalled) {
     log.nested(
       `- 🍫 When CocoaPods is installed, initialize the project workspace: ${chalk.bold(
@@ -82,6 +104,11 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
       )}`
     );
   }
+  log.nested(
+    `- 💡 You may want to run ${chalk.bold(
+      'npx @react-native-community/cli doctor'
+    )} to help install any tools that your app may need to run your native projects.`
+  );
   log.nested(
     `- 🔑 Download your Android keystore (if you're not sure if you need to, just run the command and see): ${chalk.bold(
       'expo fetch:android:keystore'
@@ -107,7 +134,7 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
   log.nested(
     'To compile and run your project in development, execute one of the following commands:'
   );
-  const packageManager = PackageManager.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
+
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
@@ -134,20 +161,27 @@ async function configureIOSStepAsync(projectRoot: string) {
  *
  * @param projectRoot
  */
-async function installNodeModulesAsync(projectRoot: string) {
-  const installingDependenciesStep = CreateApp.logNewSection('Installing JavaScript dependencies.');
-  await fse.remove('node_modules');
-  const packageManager = PackageManager.createForProject(projectRoot, { log, silent: true });
+async function installNodeDependenciesAsync(
+  projectRoot: string,
+  packageManager: 'yarn' | 'npm',
+  { clean = true }: { clean: boolean }
+) {
+  const installJsDepsStep = CreateApp.logNewSection('Installing JavaScript dependencies.');
+
+  if (clean) {
+    // nuke the node modules
+    // TODO: this is substantially slower, we should find a better alternative to ensuring the modules are installed.
+    await fse.remove('node_modules');
+  }
+
   try {
-    await packageManager.installAsync();
-    installingDependenciesStep.succeed('Installed JavaScript dependencies.');
-  } catch (e) {
-    installingDependenciesStep.fail(
+    await CreateApp.installNodeDependenciesAsync(projectRoot, packageManager);
+    installJsDepsStep.succeed('Installed JavaScript dependencies.');
+  } catch {
+    installJsDepsStep.fail(
       chalk.red(
-        `Something when wrong installing JavaScript dependencies, check your ${
-          packageManager.name
-        } logfile or run ${chalk.bold(
-          `${packageManager.name.toLowerCase()} install`
+        `Something when wrong installing JavaScript dependencies, check your ${packageManager} logfile or run ${chalk.bold(
+          `${packageManager} install`
         )} again manually.`
       )
     );
@@ -496,15 +530,32 @@ ${sourceGitIgnore}`;
  * Some packages are not configured automatically on eject and may require
  * users to add some code, eg: to their AppDelegate.
  */
-async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string): Promise<void> {
+async function warnIfDependenciesRequireAdditionalSetupAsync(
+  projectRoot: string,
+  options?: EjectAsyncOptions
+): Promise<void> {
   // We just need the custom `nodeModulesPath` from the config.
   const { exp, pkg } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
-  const pkgsWithExtraSetup = await JsonFile.readAsync(
-    resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
-  );
+  const extraSetupPath = projectHasModule('expo/requiresExtraSetup.json', projectRoot, exp);
+  if (!extraSetupPath) {
+    const expoPath = projectHasModule('expo', projectRoot, exp);
+    // Check if expo is installed just in case the user has some version of expo that doesn't include a `requiresExtraSetup.json`.
+    if (!expoPath) {
+      log.addNewLineIfNone();
+      // This can occur when --no-install is used.
+      log.nestedWarn(
+        `⚠️  Not sure if any modules require extra setup because the ${log.chalk.bold(
+          'expo'
+        )} package is not installed.`
+      );
+    }
+    return;
+  }
+
+  const pkgsWithExtraSetup = await JsonFile.readAsync(extraSetupPath);
   const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(
     pkgName => pkgName in pkgsWithExtraSetup
   );
