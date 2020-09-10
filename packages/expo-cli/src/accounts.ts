@@ -145,8 +145,8 @@ async function _promptForBackupOTPAsync(
     throw new Error('No other second-factor devices set up');
   }
 
-  const hasNonAuthenticatorSecondFactorDevice = nonPrimarySecondFactorDevices.find(
-    device => device.method !== UserSecondFactorDeviceMethod.AUTHENTICATOR
+  const hasAuthenticatorSecondFactorDevice = nonPrimarySecondFactorDevices.find(
+    device => device.method === UserSecondFactorDeviceMethod.AUTHENTICATOR
   );
 
   const smsNonPrimarySecondFactorDevices = nonPrimarySecondFactorDevices.filter(
@@ -161,7 +161,7 @@ async function _promptForBackupOTPAsync(
     value: idx,
   }));
 
-  if (hasNonAuthenticatorSecondFactorDevice) {
+  if (hasAuthenticatorSecondFactorDevice) {
     deviceChoices.push({
       name: 'Authenticator',
       value: authenticatorChoiceSentinel,
@@ -226,7 +226,7 @@ async function _retryUsernamePasswordAuthWithOTPAsync(
   const { secondFactorDevices, smsAutomaticallySent } = metadata;
   invariant(
     secondFactorDevices !== undefined && smsAutomaticallySent !== undefined,
-    'malformed OTP error metadata'
+    `Malformed OTP error metadata: ${metadata}`
   );
 
   const primaryDevice = secondFactorDevices.find(device => device.is_primary);
