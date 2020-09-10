@@ -2,7 +2,7 @@ import camelCase from 'lodash/camelCase';
 import isEmpty from 'lodash/isEmpty';
 import snakeCase from 'lodash/snakeCase';
 
-import * as Analytics from './Analytics';
+import Analytics from './Analytics';
 import ApiV2Client from './ApiV2';
 import Config from './Config';
 import Logger from './Logger';

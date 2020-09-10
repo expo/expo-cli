@@ -1,5 +1,5 @@
 import { getConfig } from '@expo/config';
-import { Analytics, UserManager } from '@expo/xdl';
+import { UserManager } from '@expo/xdl';
 import { v4 as uuidv4 } from 'uuid';
 
 import CommandError from '../../../CommandError';
@@ -13,6 +13,7 @@ import { ensureProjectExistsAsync } from '../../../projects';
 import prompts from '../../../prompts';
 import { getBundleIdentifier } from '../build/utils/ios';
 import { AnalyticsEvent, BuildCommandPlatform, TrackingContext } from '../types';
+import Analytics from '../utils/analytics';
 
 interface Options {
   parent: {
