@@ -105,12 +105,14 @@ export function resolvePackageManager(options: {
   return packageManager;
 }
 
+const EXPO_DEBUG = getenv.boolish('EXPO_DEBUG', false);
+
 export async function installNodeDependenciesAsync(
   projectRoot: string,
   packageManager: PackageManagerName,
   flags: { silent: boolean } = {
     // default to silent
-    silent: getenv.boolish('EXPO_DEBUG', true),
+    silent: !EXPO_DEBUG,
   }
 ) {
   const options = { cwd: projectRoot, silent: flags.silent };
@@ -169,7 +171,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
     log,
-    silent: getenv.boolish('EXPO_DEBUG', true),
+    silent: !EXPO_DEBUG,
   });
 
   if (!(await packageManager.isCLIInstalledAsync())) {
