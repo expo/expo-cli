@@ -53,10 +53,13 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
 
   const tempDir = temporary.directory();
 
-  await createNativeProjectsFromTemplateAsync(projectRoot, tempDir);
-  // TODO: Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
+  const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync(
+    projectRoot,
+    tempDir
+  );
+  // Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
   // This will be used to prevent the node modules from being nuked every time.
-  const isSyncing = false;
+  const isSyncing = !hasNewProjectFiles;
 
   // Install node modules
   const shouldInstall = options?.install !== false;
@@ -77,7 +80,8 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
 
   // Install CocoaPods
   let podsInstalled: boolean = false;
-  if (shouldInstall) {
+  // err towards running pod install less because it's slow and users can easily run npx pod-install afterwards.
+  if (shouldInstall && needsPodInstall) {
     podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
   }
   await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot, options);
@@ -128,7 +132,7 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
     );
   }
 
-  if (!isSyncing) {
+  if (hasNewProjectFiles) {
     log.newLine();
     log.nested(`☑️  ${chalk.bold('When you are ready to run your project')}`);
     log.nested(
@@ -211,17 +215,19 @@ function copyPathsFromTemplate(
   projectRoot: string,
   templatePath: string,
   paths: string[]
-): string[] {
+): [string[], string[]] {
+  const copiedPaths = [];
   const skippedPaths = [];
   for (const targetPath of paths) {
     const projectPath = path.join(projectRoot, targetPath);
     if (!fs.existsSync(projectPath)) {
+      copiedPaths.push(targetPath);
       fs.copySync(path.join(templatePath, targetPath), projectPath);
     } else {
       skippedPaths.push(targetPath);
     }
   }
-  return skippedPaths;
+  return [copiedPaths, skippedPaths];
 }
 
 async function ensureConfigAsync(
@@ -354,6 +360,11 @@ async function validateBareTemplateExistsAsync(sdkVersion: string): Promise<npmP
   return templateSpec;
 }
 
+type DependenciesModificationResults = {
+  hasNewDependencies: boolean;
+  hasNewDevDependencies: boolean;
+};
+
 async function updatePackageJSONAsync({
   projectRoot,
   tempDir,
@@ -362,7 +373,7 @@ async function updatePackageJSONAsync({
   projectRoot: string;
   tempDir: string;
   pkg: PackageJSONConfig;
-}) {
+}): Promise<DependenciesModificationResults> {
   let defaultDependencies: any = {};
   let defaultDevDependencies: any = {};
   const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
@@ -402,12 +413,9 @@ async function updatePackageJSONAsync({
     ...pkg.dependencies,
   });
 
-  for (const dependenciesKey of [
-    'react',
-    'react-native-unimodules',
-    'react-native',
-    'expo-updates',
-  ]) {
+  const requiredDependencies = ['react', 'react-native-unimodules', 'react-native', 'expo-updates'];
+
+  for (const dependenciesKey of requiredDependencies) {
     combinedDependencies[dependenciesKey] = defaultDependencies[dependenciesKey];
   }
   const combinedDevDependencies: DependenciesMap = createDependenciesMap({
@@ -415,9 +423,18 @@ async function updatePackageJSONAsync({
     ...pkg.devDependencies,
   });
 
+  // Only change the dependencies if the normalized hash changes, this helps to reduce meaningless changes.
+  const hasNewDependencies =
+    hashForDependencyMap(pkg.dependencies) !== hashForDependencyMap(combinedDependencies);
+  const hasNewDevDependencies =
+    hashForDependencyMap(pkg.devDependencies) !== hashForDependencyMap(combinedDevDependencies);
   // Save the dependencies
-  pkg.dependencies = combinedDependencies;
-  pkg.devDependencies = combinedDevDependencies;
+  if (hasNewDependencies) {
+    pkg.dependencies = combinedDependencies;
+  }
+  if (hasNewDevDependencies) {
+    pkg.devDependencies = combinedDevDependencies;
+  }
 
   /**
    * Add new app entry points
@@ -447,8 +464,30 @@ async function updatePackageJSONAsync({
     );
     log.newLine();
   }
+
+  return {
+    hasNewDependencies,
+    hasNewDevDependencies,
+  };
 }
 
+function normalizeDependencyMap(deps: DependenciesMap): string[] {
+  return Object.keys(deps)
+    .map(dependency => `${dependency}@${deps[dependency]}`)
+    .sort();
+}
+
+function hashForDependencyMap(deps: DependenciesMap): string {
+  const depsList = normalizeDependencyMap(deps);
+  const depsString = depsList.join('\n');
+  return createFileHash(depsString);
+}
+
+/**
+ * Extract the template and copy the ios and android directories over to the project directory.
+ *
+ * @return `true` if any project files were created.
+ */
 async function cloneNativeDirectoriesAsync({
   projectRoot,
   tempDir,
@@ -457,12 +496,8 @@ async function cloneNativeDirectoriesAsync({
   projectRoot: string;
   tempDir: string;
   exp: Pick<ExpoConfig, 'name' | 'sdkVersion'>;
-}): Promise<string> {
+}): Promise<string[]> {
   const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
-
-  /**
-   * Extract the template and copy the ios and android directories over to the project directory
-   */
 
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
@@ -470,10 +505,12 @@ async function cloneNativeDirectoriesAsync({
   const creatingNativeProjectStep = CreateApp.logNewSection(
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
+  const targetPaths = ['ios', 'android', 'index.js'];
+  let copiedPaths: string[] = [];
+  let skippedPaths: string[] = [];
   try {
     await Exp.extractTemplateAppAsync(templateSpec, tempDir, exp);
-    const targetPaths = ['/ios', '/android', '/index.js'];
-    const skippedPaths = copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
+    [copiedPaths, skippedPaths] = copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
     const results = GitIgnore.mergeGitIgnorePaths(
       path.join(projectRoot, '.gitignore'),
       path.join(tempDir, '.gitignore')
@@ -483,7 +520,7 @@ async function cloneNativeDirectoriesAsync({
 
     if (skippedPaths.length) {
       message += log.chalk.dim(
-        ` | ${skippedPaths.map(path => log.chalk.bold(path)).join(', ')} already created`
+        ` | ${skippedPaths.map(path => log.chalk.bold(`/${path}`)).join(', ')} already created`
       );
     }
     if (!results?.didMerge) {
@@ -504,21 +541,41 @@ async function cloneNativeDirectoriesAsync({
     );
     process.exit(1);
   }
-  return tempDir;
+
+  return copiedPaths;
 }
 
+/**
+ *
+ * @param projectRoot
+ * @param tempDir
+ *
+ * @return `true` if the project is ejecting, and `false` if it's syncing.
+ */
 async function createNativeProjectsFromTemplateAsync(
   projectRoot: string,
   tempDir: string
-): Promise<void> {
+): Promise<
+  { hasNewProjectFiles: boolean; needsPodInstall: boolean } & DependenciesModificationResults
+> {
   // We need the SDK version to proceed
   const { exp, pkg } = await ensureConfigAsync(projectRoot);
 
-  await cloneNativeDirectoriesAsync({ projectRoot, tempDir, exp });
+  const copiedPaths = await cloneNativeDirectoriesAsync({ projectRoot, tempDir, exp });
 
   writeMetroConfig({ projectRoot, pkg, tempDir });
 
-  await updatePackageJSONAsync({ projectRoot, tempDir, pkg });
+  const depsResults = await updatePackageJSONAsync({ projectRoot, tempDir, pkg });
+
+  return {
+    hasNewProjectFiles: !!copiedPaths.length,
+    // If the iOS folder changes or new packages are added, we should rerun pod install.
+    needsPodInstall:
+      copiedPaths.includes('ios') ||
+      depsResults.hasNewDependencies ||
+      depsResults.hasNewDevDependencies,
+    ...depsResults,
+  };
 }
 
 /**
