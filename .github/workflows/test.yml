@@ -27,6 +27,8 @@ jobs:
       matrix:
         package:
           [
+            electron-adapter,
+            dev-tools,
             babel-preset-cli,
             config,
             dev-server,
