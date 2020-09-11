@@ -1037,9 +1037,16 @@ export type ConfigContext = {
   staticConfigPath: string | null;
   packageJsonPath: string | null;
   config: Partial<ExpoConfig>;
+  /**
+   * true when the dynamic config should be read from a spawned process. Has no effect on static (JSON) configs.
+   * This ensures that the config results are fresh without having to restart the running process that requested the config.
+   *
+   * Spawning can have huge performance penalties on low-end computers.
+   */
+  useDynamicEval?: boolean;
 };
 
-export type GetConfigOptions = {
+export type GetConfigOptions = Pick<ConfigContext, 'useDynamicEval'> & {
   skipSDKVersionRequirement?: boolean;
   strict?: boolean;
 };

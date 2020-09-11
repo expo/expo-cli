@@ -4,8 +4,8 @@
 import path from 'path';
 
 import { ConfigContext } from '../Config.types';
-import { ConfigError, errorToJSON } from '../Errors';
-import { serializeAndEvaluate } from '../Serialize';
+import { errorToJSON } from '../Errors';
+import { evalConfig } from '../evalConfig';
 
 // Makes the script crash on unhandled rejections instead of silently
 // ignoring them. In the future, promise rejections that are not handled will
@@ -21,32 +21,17 @@ let request: ConfigContext | null = null;
 if (typeof requestArg === 'string') {
   try {
     request = JSON.parse(requestArg) as ConfigContext;
-  } catch (_) {}
+  } catch {
+    // do nothing if the request fails to parse.
+    // TODO: document a case for why we should do nothing, perhaps it would make sense to have an error classification for this in the future.
+  }
 }
 
 try {
+  // TODO: do we need to resolve here?
   const configFile = path.resolve(configFileArg);
-
-  require('@babel/register')({
-    only: [configFile],
-    extensions: ['.ts', '.js'],
-    presets: [require.resolve('@expo/babel-preset-cli')],
-  });
-
-  let result = require(configFile);
-  if (result.default != null) {
-    result = result.default;
-  }
-  const exportedObjectType = typeof result;
-  if (typeof result === 'function') {
-    result = result(request);
-  }
-
-  if (result instanceof Promise) {
-    throw new ConfigError(`Config file ${configFile} cannot return a Promise.`, 'INVALID_CONFIG');
-  }
-
-  console.log(JSON.stringify({ config: serializeAndEvaluate(result), exportedObjectType }));
+  const result = evalConfig(configFile, request);
+  console.log(JSON.stringify(result));
   process.exit(0);
 } catch (error) {
   console.error(JSON.stringify(errorToJSON(error)));
