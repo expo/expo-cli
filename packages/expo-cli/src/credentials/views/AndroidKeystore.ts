@@ -211,7 +211,7 @@ async function getKeystoreFromParams(options: {
   }
 
   if (!keystorePath || !keyAlias || !keystorePassword || !keyPassword) {
-    console.log(keystorePath, keyAlias, keystorePassword, keyPassword);
+    log(keystorePath, keyAlias, keystorePassword, keyPassword);
     throw new Error(
       'In order to provide a Keystore through the CLI parameters, you have to pass --keystore-alias, --keystore-path parameters and set EXPO_ANDROID_KEY_PASSWORD and EXPO_ANDROID_KEYSTORE_PASSWORD environment variables.'
     );

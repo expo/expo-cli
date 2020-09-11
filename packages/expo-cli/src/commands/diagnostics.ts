@@ -3,6 +3,8 @@ import { Command } from 'commander';
 // @ts-ignore
 import envinfo from 'envinfo';
 
+import log from '../log';
+
 const packageJSON = require('../../package.json');
 
 async function action(projectRoot: string): Promise<void> {
@@ -34,10 +36,10 @@ async function action(projectRoot: string): Promise<void> {
   const lines = info.split('\n');
   lines.pop();
   lines.push(`    Expo Workflow: ${workflow}`);
-  console.log(lines.join('\n') + '\n');
+  log(lines.join('\n') + '\n');
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('diagnostics [path]')
     .description('Log environment info to the console')

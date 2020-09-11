@@ -4,6 +4,7 @@ import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
 
 import CommandError from './CommandError';
+import log from './log';
 
 export type URLOptions = {
   android?: boolean;
@@ -66,7 +67,7 @@ async function optsAsync(projectDir: string, options: any) {
 }
 
 function printQRCode(url: string) {
-  qrcodeTerminal.generate(url, code => console.log(`${indentString(code, 2)}\n`));
+  qrcodeTerminal.generate(url, code => log(`${indentString(code, 2)}\n`));
 }
 
 async function handleMobileOptsAsync(

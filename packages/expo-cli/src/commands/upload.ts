@@ -105,9 +105,9 @@ export default function (program: Command) {
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
 
     .on('--help', function () {
-      console.log('Available languages:');
-      console.log(`  ${LANGUAGES.join(', ')}`);
-      console.log();
+      log('Available languages:');
+      log(`  ${LANGUAGES.join(', ')}`);
+      log();
     })
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: IosPlatformOptions) => {

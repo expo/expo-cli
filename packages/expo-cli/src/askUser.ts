@@ -1,10 +1,11 @@
 import { UserSettings } from '@expo/xdl';
 
+import log from './log';
 import prompt from './prompt';
 
 async function askForSendToAsync(): Promise<string> {
   const cachedValue = await UserSettings.getAsync('sendTo', null);
-  console.log("Enter an email address and we'll send a link to your phone.");
+  log("Enter an email address and we'll send a link to your phone.");
   const answers = await prompt(
     [
       {

@@ -25,7 +25,7 @@ function _updateIsLastLineNewLine(args: any[]) {
 function _maybePrintNewLine() {
   if (_printNewLineBeforeNextLog) {
     _printNewLineBeforeNextLog = false;
-    console.log();
+    console.log(); // eslint-disable-line no-console
   }
 }
 
@@ -33,21 +33,21 @@ function consoleLog(...args: any[]) {
   _maybePrintNewLine();
   _updateIsLastLineNewLine(args);
 
-  console.log(...args);
+  console.log(...args); // eslint-disable-line no-console
 }
 
 function consoleWarn(...args: any[]) {
   _maybePrintNewLine();
   _updateIsLastLineNewLine(args);
 
-  console.warn(...args);
+  console.warn(...args); // eslint-disable-line no-console
 }
 
 function consoleError(...args: any[]) {
   _maybePrintNewLine();
   _updateIsLastLineNewLine(args);
 
-  console.error(...args);
+  console.error(...args); // eslint-disable-line no-console
 }
 
 function respectProgressBars(commitLogs: () => void) {
