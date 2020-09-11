@@ -131,7 +131,7 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
     log.nested('Please choose your app name:');
     log.nested(`  ${log.chalk.green(`${program.name()} init`)} ${log.chalk.cyan('<app-name>')}`);
     log.newLine();
-    log.nested(`Run ${log.chalk.green(`${program.name()} init --help`)} for more info.`);
+    log.nested(`Run ${log.chalk.green(`${program.name()} init --help`)} for more info`);
     log.newLine();
     process.exit(1);
   }
