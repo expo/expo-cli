@@ -272,9 +272,9 @@ async function ensureConfigAsync(
     }
   } catch (error) {
     // TODO(Bacon): Currently this is already handled in the command
-    console.log();
-    console.log(chalk.red(error.message));
-    console.log();
+    log();
+    log(chalk.red(error.message));
+    log();
     process.exit(1);
   }
 

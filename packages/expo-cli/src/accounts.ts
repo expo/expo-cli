@@ -321,7 +321,7 @@ async function _usernamePasswordAuth(
   }
 
   if (user) {
-    console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
+    log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
     return user;
   } else {
     throw new Error('Unexpected Error: No user returned from the API');
@@ -329,7 +329,7 @@ async function _usernamePasswordAuth(
 }
 
 export async function register(): Promise<User> {
-  console.log(
+  log(
     `
 Thanks for signing up for Expo!
 Just a few questions:
@@ -390,6 +390,6 @@ Just a few questions:
   ];
   const answers = await prompt(questions);
   const registeredUser = await UserManager.registerAsync(answers as RegistrationData);
-  console.log('\nThanks for signing up!');
+  log('\nThanks for signing up!');
   return registeredUser;
 }

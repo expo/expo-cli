@@ -694,7 +694,7 @@ function runAsync(programName: string) {
       program.help();
     }
   } catch (e) {
-    console.error(e);
+    log.error(e);
     throw e;
   }
 }
@@ -777,7 +777,7 @@ export function run(programName: string) {
   (async function () {
     await Promise.all([writePathAsync(), runAsync(programName)]);
   })().catch(e => {
-    console.error('Uncaught Error', e);
+    log.error('Uncaught Error', e);
     process.exit(1);
   });
 }

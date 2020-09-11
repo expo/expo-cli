@@ -1,5 +1,7 @@
 import fs from 'fs-extra';
 
+import log from './log';
+
 function nonEmptyInput(val: string) {
   return val !== '';
 }
@@ -10,7 +12,7 @@ const existingFile = async (filePath: string, verbose = true) => {
     return stats.isFile();
   } catch (e) {
     if (verbose) {
-      console.log('\nFile does not exist.');
+      log('\nFile does not exist.');
     }
     return false;
   }
