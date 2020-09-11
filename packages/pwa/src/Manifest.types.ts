@@ -1,8 +1,11 @@
 import { ExpoConfig } from '@expo/config';
 import { ImageOptions } from '@expo/image-utils';
 
-export type WebPlatformConfigWithDefaults = ExpoConfig['web'] &
-  Required<Pick<ExpoConfig, 'build' | 'lang' | 'meta'>>;
+type ExpoWebConfig = Required<ExpoConfig>['web'];
+
+export type WebPlatformConfigWithDefaults = Omit<ExpoWebConfig, 'build' | 'lang' | 'meta'> &
+  Required<Pick<ExpoWebConfig, 'build' | 'lang' | 'meta'>>;
+
 export type PWAConfig = ExpoConfig & { web: WebPlatformConfigWithDefaults };
 
 export type Direction = 'ltr' | 'rtl' | 'auto';
