@@ -74,13 +74,3 @@ jobs:
       - attach_workspace:
           at: '~'
       - run: yarn test
-  test-electron-adapter:
-    parameters:
-      e:
-        type: executor
-    executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/electron-adapter
-    steps:
-      - attach_workspace:
-          at: '~'
-      - run: yarn test
