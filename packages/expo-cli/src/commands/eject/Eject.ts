@@ -51,7 +51,9 @@ export type EjectAsyncOptions = {
 export async function ejectAsync(projectRoot: string, options?: EjectAsyncOptions): Promise<void> {
   if (await maybeBailOnGitStatusAsync()) return;
 
-  await createNativeProjectsFromTemplateAsync(projectRoot);
+  const tempDir = temporary.directory();
+
+  await createNativeProjectsFromTemplateAsync(projectRoot, tempDir);
   // TODO: Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
   // This will be used to prevent the node modules from being nuked every time.
   const isSyncing = false;
@@ -272,7 +274,15 @@ function createFileHash(gitIgnore: string): string {
   return crypto.createHash('sha1').update(gitIgnore).digest('hex');
 }
 
-function writeMetroConfig(projectRoot: string, pkg: PackageJSONConfig, tempDir: string) {
+function writeMetroConfig({
+  projectRoot,
+  pkg,
+  tempDir,
+}: {
+  projectRoot: string;
+  pkg: PackageJSONConfig;
+  tempDir: string;
+}) {
   /**
    * Add metro config, or warn if metro config already exists. The developer will need to add the
    * hashAssetFiles plugin manually.
@@ -344,11 +354,15 @@ async function validateBareTemplateExistsAsync(sdkVersion: string): Promise<npmP
   return templateSpec;
 }
 
-async function updatePackageJSONAsync(
-  projectRoot: string,
-  tempDir: string,
-  pkg: PackageJSONConfig
-) {
+async function updatePackageJSONAsync({
+  projectRoot,
+  tempDir,
+  pkg,
+}: {
+  projectRoot: string;
+  tempDir: string;
+  pkg: PackageJSONConfig;
+}) {
   let defaultDependencies: any = {};
   let defaultDevDependencies: any = {};
   const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
@@ -420,7 +434,7 @@ async function updatePackageJSONAsync(
     removedPkgMain = pkg.main;
   }
   delete pkg.main;
-  await fs.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
+  await fs.writeFile(path.resolve(projectRoot, 'package.json'), JSON.stringify(pkg, null, 2));
 
   updatingPackageJsonStep.succeed(
     'Updated package.json and added index.js entry point for iOS and Android.'
@@ -435,10 +449,15 @@ async function updatePackageJSONAsync(
   }
 }
 
-async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
-  // We need the SDK version to proceed
-  const { exp, pkg } = await ensureConfigAsync(projectRoot);
-
+async function cloneNativeDirectoriesAsync({
+  projectRoot,
+  tempDir,
+  exp,
+}: {
+  projectRoot: string;
+  tempDir: string;
+  exp: Pick<ExpoConfig, 'name' | 'sdkVersion'>;
+}): Promise<string> {
   const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
 
   /**
@@ -451,9 +470,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   const creatingNativeProjectStep = CreateApp.logNewSection(
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
-  let tempDir;
   try {
-    tempDir = temporary.directory();
     await Exp.extractTemplateAppAsync(templateSpec, tempDir, exp);
     const targetPaths = ['/ios', '/android', '/index.js'];
     const skippedPaths = copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
@@ -487,9 +504,21 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     );
     process.exit(1);
   }
+  return tempDir;
+}
 
-  writeMetroConfig(projectRoot, pkg, tempDir);
-  await updatePackageJSONAsync(projectRoot, tempDir, pkg);
+async function createNativeProjectsFromTemplateAsync(
+  projectRoot: string,
+  tempDir: string
+): Promise<void> {
+  // We need the SDK version to proceed
+  const { exp, pkg } = await ensureConfigAsync(projectRoot);
+
+  await cloneNativeDirectoriesAsync({ projectRoot, tempDir, exp });
+
+  writeMetroConfig({ projectRoot, pkg, tempDir });
+
+  await updatePackageJSONAsync({ projectRoot, tempDir, pkg });
 }
 
 /**
