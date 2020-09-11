@@ -4,6 +4,7 @@ import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
+import { InfoPlist } from './IosConfig.types';
 import {
   getPbxproj,
   getProjectName,
@@ -13,6 +14,19 @@ import {
 } from './utils/Xcodeproj';
 
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
+
+export function getConfigEntitlements(config: ExpoConfig) {
+  return config.ios?.entitlements ?? {};
+}
+
+export function setCustomEntitlementsEntries(config: ExpoConfig, entitlements: InfoPlist) {
+  const entries = getConfigEntitlements(config);
+
+  return {
+    ...entitlements,
+    ...entries,
+  };
+}
 
 export function setICloudEntitlement(
   config: ExpoConfig,
