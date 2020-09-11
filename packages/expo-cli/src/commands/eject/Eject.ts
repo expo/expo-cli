@@ -344,72 +344,22 @@ async function validateBareTemplateExistsAsync(sdkVersion: string): Promise<npmP
   return templateSpec;
 }
 
-async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
-  // We need the SDK version to proceed
-  const { exp, pkg } = await ensureConfigAsync(projectRoot);
-
-  const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
-
-  /**
-   * Extract the template and copy the ios and android directories over to the project directory
-   */
+async function updatePackageJSONAsync(
+  projectRoot: string,
+  tempDir: string,
+  pkg: PackageJSONConfig
+) {
   let defaultDependencies: any = {};
   let defaultDevDependencies: any = {};
-  // NOTE(brentvatne): Removing spaces between steps for now, add back when
-  // there is some additional context for steps
-  // log.newLine();
-  const creatingNativeProjectStep = CreateApp.logNewSection(
-    'Creating native project directories (./ios and ./android) and updating .gitignore'
-  );
-  let tempDir;
-  try {
-    tempDir = temporary.directory();
-    await Exp.extractTemplateAppAsync(templateSpec, tempDir, exp);
-    const targetPaths = ['/ios', '/android', '/index.js'];
-    const skippedPaths = copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
-    const results = GitIgnore.mergeGitIgnorePaths(
-      path.join(projectRoot, '.gitignore'),
-      path.join(tempDir, '.gitignore')
-    );
-    const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
-    defaultDependencies = createDependenciesMap(dependencies);
-    defaultDevDependencies = createDependenciesMap(devDependencies);
-
-    let message = `Created native projects`;
-
-    if (skippedPaths.length) {
-      message += log.chalk.dim(
-        ` | ${skippedPaths.map(path => log.chalk.bold(path)).join(', ')} already created`
-      );
-    }
-    if (!results?.didMerge) {
-      message += log.chalk.dim(` | gitignore already synced`);
-    } else if (results.didMerge && results.didClear) {
-      message += log.chalk.dim(` | synced gitignore`);
-    }
-    creatingNativeProjectStep.succeed(message);
-  } catch (e) {
-    log(chalk.red(e.message));
-    creatingNativeProjectStep.fail(
-      'Failed to create the native project - see the output above for more information.'
-    );
-    log(
-      chalk.yellow(
-        'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
-      )
-    );
-    process.exit(1);
-  }
-
-  writeMetroConfig(projectRoot, pkg, tempDir);
-
+  const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
+  defaultDependencies = createDependenciesMap(dependencies);
+  defaultDevDependencies = createDependenciesMap(devDependencies);
   /**
    * Update package.json scripts - `npm start` should default to `react-native
    * start` rather than `expo start` after ejecting, for example.
    */
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
-  // log.newLine();
   const updatingPackageJsonStep = CreateApp.logNewSection(
     'Updating your package.json scripts, dependencies, and main file'
   );
@@ -483,6 +433,63 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     );
     log.newLine();
   }
+}
+
+async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
+  // We need the SDK version to proceed
+  const { exp, pkg } = await ensureConfigAsync(projectRoot);
+
+  const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
+
+  /**
+   * Extract the template and copy the ios and android directories over to the project directory
+   */
+
+  // NOTE(brentvatne): Removing spaces between steps for now, add back when
+  // there is some additional context for steps
+  // log.newLine();
+  const creatingNativeProjectStep = CreateApp.logNewSection(
+    'Creating native project directories (./ios and ./android) and updating .gitignore'
+  );
+  let tempDir;
+  try {
+    tempDir = temporary.directory();
+    await Exp.extractTemplateAppAsync(templateSpec, tempDir, exp);
+    const targetPaths = ['/ios', '/android', '/index.js'];
+    const skippedPaths = copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
+    const results = GitIgnore.mergeGitIgnorePaths(
+      path.join(projectRoot, '.gitignore'),
+      path.join(tempDir, '.gitignore')
+    );
+
+    let message = `Created native projects`;
+
+    if (skippedPaths.length) {
+      message += log.chalk.dim(
+        ` | ${skippedPaths.map(path => log.chalk.bold(path)).join(', ')} already created`
+      );
+    }
+    if (!results?.didMerge) {
+      message += log.chalk.dim(` | gitignore already synced`);
+    } else if (results.didMerge && results.didClear) {
+      message += log.chalk.dim(` | synced gitignore`);
+    }
+    creatingNativeProjectStep.succeed(message);
+  } catch (e) {
+    log(chalk.red(e.message));
+    creatingNativeProjectStep.fail(
+      'Failed to create the native project - see the output above for more information.'
+    );
+    log(
+      chalk.yellow(
+        'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
+      )
+    );
+    process.exit(1);
+  }
+
+  writeMetroConfig(projectRoot, pkg, tempDir);
+  await updatePackageJSONAsync(projectRoot, tempDir, pkg);
 }
 
 /**
