@@ -195,7 +195,6 @@ class IOSBuilder extends BaseBuilder {
 
   async _setupDistCert(ctx: Context, appLookupParams: AppLookupParams): Promise<void> {
     try {
-      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
       const distCertFromParams = await getDistCertFromParams(this.options);
       if (distCertFromParams) {
         await useDistCertFromParams(ctx, appLookupParams, distCertFromParams);
@@ -210,7 +209,6 @@ class IOSBuilder extends BaseBuilder {
 
   async _setupPushCert(ctx: Context, appLookupParams: AppLookupParams): Promise<void> {
     try {
-      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
       const pushKeyFromParams = await getPushKeyFromParams(this.options);
       if (pushKeyFromParams) {
         await usePushKeyFromParams(ctx, appLookupParams, pushKeyFromParams);
@@ -225,7 +223,6 @@ class IOSBuilder extends BaseBuilder {
 
   async _setupProvisioningProfile(ctx: Context, appLookupParams: AppLookupParams) {
     try {
-      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
       const provisioningProfileFromParams = await getProvisioningProfileFromParams(
         this.options.provisioningProfilePath
       );

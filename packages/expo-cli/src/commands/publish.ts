@@ -2,7 +2,6 @@ import { PackageJSONConfig, ProjectTarget, getConfig, getDefaultTarget } from '@
 import simpleSpinner from '@expo/simple-spinner';
 import { Project } from '@expo/xdl';
 import chalk from 'chalk';
-import clipboard from 'clipboardy';
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
@@ -145,14 +144,6 @@ function logManifestUrl({ url, sdkVersion }: { url: string; sdkVersion?: string 
       TerminalLink.learnMore('https://expo.fyi/manifest-url')
     )}`
   );
-}
-
-function copyToClipboard(value: string): boolean {
-  try {
-    clipboard.writeSync(value);
-    return true;
-  } catch {}
-  return false;
 }
 
 /**

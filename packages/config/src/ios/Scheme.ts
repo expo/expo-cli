@@ -2,11 +2,12 @@ import { ExpoConfig } from '../Config.types';
 import { InfoPlist, URLScheme } from './IosConfig.types';
 import { findSchemeNames } from './utils/Xcodeproj';
 
+function validate(value: any): value is string {
+  return typeof value === 'string';
+}
+
 export function getScheme(config: { scheme?: string | string[] }): string[] {
   if (Array.isArray(config.scheme)) {
-    function validate(value: any): value is string {
-      return typeof value === 'string';
-    }
     return config.scheme.filter<string>(validate);
   } else if (typeof config.scheme === 'string') {
     return [config.scheme];
