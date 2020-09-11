@@ -275,9 +275,9 @@ async function ensureConfigAsync(
   return { exp, pkg };
 }
 
-function createFileHash(gitIgnore: string): string {
+function createFileHash(contents: string): string {
   // this doesn't need to be secure, the shorter the better.
-  return crypto.createHash('sha1').update(gitIgnore).digest('hex');
+  return crypto.createHash('sha1').update(contents).digest('hex');
 }
 
 function writeMetroConfig({
@@ -391,7 +391,6 @@ async function updatePackageJSONAsync({
   if (!pkg.scripts) {
     pkg.scripts = {};
   }
-  delete pkg.scripts.eject;
   pkg.scripts.start = 'react-native start';
   pkg.scripts.ios = 'react-native run-ios';
   pkg.scripts.android = 'react-native run-android';
@@ -446,11 +445,11 @@ async function updatePackageJSONAsync({
   // - node_modules/expo/AppEntry.js
   // - expo/AppEntry.js
   // - expo/AppEntry
-  if (!isPkgMainExpoAppEntry(pkg.main) && pkg.main !== 'index.js' && pkg.main) {
+  if (shouldDeleteMainField(pkg.main)) {
     // Save the custom
     removedPkgMain = pkg.main;
+    delete pkg.main;
   }
-  delete pkg.main;
   await fs.writeFile(path.resolve(projectRoot, 'package.json'), JSON.stringify(pkg, null, 2));
 
   updatingPackageJsonStep.succeed(
@@ -471,13 +470,21 @@ async function updatePackageJSONAsync({
   };
 }
 
+export function shouldDeleteMainField(main?: any): boolean {
+  if (!main || !isPkgMainExpoAppEntry(main)) {
+    return false;
+  }
+
+  return !main?.startsWith('index.');
+}
+
 function normalizeDependencyMap(deps: DependenciesMap): string[] {
   return Object.keys(deps)
     .map(dependency => `${dependency}@${deps[dependency]}`)
     .sort();
 }
 
-function hashForDependencyMap(deps: DependenciesMap): string {
+export function hashForDependencyMap(deps: DependenciesMap): string {
   const depsList = normalizeDependencyMap(deps);
   const depsString = depsList.join('\n');
   return createFileHash(depsString);
@@ -501,7 +508,6 @@ async function cloneNativeDirectoriesAsync({
 
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
-  // log.newLine();
   const creatingNativeProjectStep = CreateApp.logNewSection(
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
