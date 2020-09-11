@@ -44,7 +44,7 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   try {
     // Configure entitlements/capabilities
     await modifyEntitlementsPlistAsync(projectRoot, entitlementsPlist => {
-      entitlementsPlist = IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(
+      entitlementsPlist = IOSConfig.Entitlements.setCustomEntitlementsEntries(
         exp,
         entitlementsPlist
       );
