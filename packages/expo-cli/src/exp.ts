@@ -346,9 +346,30 @@ Command.prototype.asyncActionProjectDir = function (
     }
 
     if (opts.config) {
+      // @ts-ignore: This guards against someone passing --config without a path.
+      if (opts.config === true) {
+        log.addNewLineIfNone();
+        log('Please specify your custom config path:');
+        log(log.chalk.green(`  expo ${this.name()} --config ${log.chalk.cyan(`<app-config>`)}`));
+        log.newLine();
+        process.exit(1);
+      }
+
       const pathToConfig = path.resolve(process.cwd(), opts.config);
+      // Warn the user when the custom config path they provided does not exist.
       if (!fs.existsSync(pathToConfig)) {
-        throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
+        const relativeInput = path.relative(process.cwd(), opts.config);
+        const formattedPath = log.chalk
+          .reset(pathToConfig)
+          .replace(relativeInput, log.chalk.bold(relativeInput));
+        log.addNewLineIfNone();
+        log.nestedWarn(`Custom config file does not exist:\n${formattedPath}`);
+        log.newLine();
+        const helpCommand = log.chalk.green(`expo ${this.name()} --help`);
+        log(`Run ${helpCommand} for more info`);
+        log.newLine();
+        process.exit(1);
+        // throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
       }
       ConfigUtils.setCustomConfigPath(projectDir, pathToConfig);
     }
