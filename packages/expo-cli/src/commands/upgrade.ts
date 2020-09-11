@@ -170,11 +170,13 @@ async function makeBreakingChangesToConfigAsync(
       // IMPORTANT: adding a new case here? be sure to update the dynamic config situation above
       case '37.0.0':
         if (rootConfig?.expo?.androidNavigationBar?.visible !== undefined) {
+          // @ts-ignore: boolean | enum not supported in JSON schemas
           if (rootConfig?.expo.androidNavigationBar?.visible === false) {
             step.succeed(
               `Updated "androidNavigationBar.visible" property in app.json to "leanback"...`
             );
             rootConfig.expo.androidNavigationBar.visible = 'leanback';
+            // @ts-ignore: boolean | enum not supported in JSON schemas
           } else if (rootConfig?.expo.androidNavigationBar?.visible === true) {
             step.succeed(
               `Removed extraneous "androidNavigationBar.visible" property in app.json...`

@@ -27,7 +27,9 @@ export default async function withTypeScriptAsync(
 
   let typeScriptPath: string | null = null;
   try {
-    typeScriptPath = resolveModule('typescript', env.projectRoot, env.config!);
+    typeScriptPath = resolveModule('typescript', env.projectRoot, {
+      nodeModulesPath: env.config?.nodeModulesPath,
+    });
   } catch (_) {}
 
   const tsConfigPath = getAbsolute(env.projectRoot, 'tsconfig.json');

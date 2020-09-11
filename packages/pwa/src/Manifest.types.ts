@@ -1,7 +1,7 @@
-import { ExpoConfig, WebPlatformConfig } from '@expo/config';
+import { ExpoConfig } from '@expo/config';
 import { ImageOptions } from '@expo/image-utils';
 
-export type WebPlatformConfigWithDefaults = WebPlatformConfig &
+export type WebPlatformConfigWithDefaults = ExpoConfig['web'] &
   Required<Pick<ExpoConfig, 'build' | 'lang' | 'meta'>>;
 export type PWAConfig = ExpoConfig & { web: WebPlatformConfigWithDefaults };
 

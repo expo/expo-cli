@@ -1,7 +1,7 @@
 import { ExpoConfig } from '../Config.types';
 import { InfoPlist } from './IosConfig.types';
 
-export function getUserInterfaceStyle(config: ExpoConfig) {
+export function getUserInterfaceStyle(config: ExpoConfig): string | null {
   const result = config.ios?.userInterfaceStyle ?? config.userInterfaceStyle;
   return result ?? null;
 }

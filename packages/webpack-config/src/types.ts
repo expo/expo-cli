@@ -12,7 +12,7 @@ export interface DevConfiguration extends WebpackConfiguration {
 
 export type AnyConfiguration = DevConfiguration | WebpackConfiguration;
 
-type AnyObject = { [key: string]: any };
+type AnyObject = Record<string, any>;
 
 export type InputEnvironment = {
   projectRoot?: string;

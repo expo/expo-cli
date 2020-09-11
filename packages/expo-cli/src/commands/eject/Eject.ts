@@ -187,7 +187,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
       // writeConfigJsonAsync(projectRoot, config.exp);
       await JsonFile.writeAsync(
         path.join(projectRoot, 'app.json'),
-        { expo: config.exp },
+        { expo: config.exp as Partial<ExpoConfig> },
         { json5: false }
       );
     }

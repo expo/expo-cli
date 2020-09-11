@@ -167,7 +167,7 @@ export function readConfigJson(
     return '';
   };
 
-  let outputRootConfig: JSONObject | null = rawStaticConfig;
+  let outputRootConfig = rawStaticConfig as JSONObject | null;
   if (outputRootConfig === null || typeof outputRootConfig !== 'object') {
     if (skipValidation) {
       outputRootConfig = { expo: {} };
@@ -180,7 +180,7 @@ export function readConfigJson(
       );
     }
   }
-  let exp = outputRootConfig.expo as ExpoConfig;
+  let exp = outputRootConfig.expo as Partial<ExpoConfig>;
   if (exp === null || typeof exp !== 'object') {
     throw new ConfigError(
       `Property 'expo' in${getConfigName()} for project at path ${path.resolve(
@@ -468,7 +468,7 @@ export function getWebOutputPath(config: { [key: string]: any } = {}): string {
 }
 
 export function getNameFromConfig(
-  exp: Partial<ExpoConfig> | AppJSONConfig = {}
+  exp: Record<string, any> = {}
 ): { appName?: string; webName?: string } {
   // For RN CLI support
   const appManifest = exp.expo || exp;

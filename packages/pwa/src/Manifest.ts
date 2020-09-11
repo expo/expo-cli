@@ -1,7 +1,6 @@
 import {
   AppJSONConfig,
   ExpoConfig,
-  WebPlatformConfig,
   getConfig,
   getNameFromConfig,
   getWebOutputPath,
@@ -273,7 +272,7 @@ function isObject(item: any): item is Record<any, any> {
   return typeof item === 'object' && !Array.isArray(item) && item !== null;
 }
 
-export function createPWAManifestFromWebConfig(config?: WebPlatformConfig): Manifest {
+export function createPWAManifestFromWebConfig(config?: ExpoConfig['web']): Manifest {
   if (!isObject(config)) {
     throw new Error('Web config must be a valid object');
   }
