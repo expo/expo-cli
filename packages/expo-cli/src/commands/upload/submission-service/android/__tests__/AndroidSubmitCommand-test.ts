@@ -43,16 +43,13 @@ describe(AndroidSubmitCommand, () => {
     '/google-service-account.json': JSON.stringify({ service: 'account' }),
   };
 
-  const originalConsoleInfo = console.info;
   beforeAll(() => {
-    console.info = jest.fn();
     vol.fromJSON({
       ...testProject.projectTree,
       ...fakeFiles,
     });
   });
   afterAll(() => {
-    console.info = originalConsoleInfo;
     vol.reset();
   });
 

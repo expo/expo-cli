@@ -5,4 +5,5 @@ module.exports = {
   rootDir: path.resolve(__dirname),
   displayName: require('./package').name,
   roots: ['__mocks__', 'src', 'e2e'],
+  setupFilesAfterEnv: ['<rootDir>/jest/setup.ts'],
 };

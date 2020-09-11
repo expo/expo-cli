@@ -2,6 +2,7 @@ const boxen = require('boxen');
 const { bold } = require('chalk');
 const prompts = require('prompts');
 
+// eslint-disable-next-line no-console
 console.log(
   boxen(bold("Please complete these checks before publishing the 'expo-cli' package:"), {
     padding: 1,
@@ -39,6 +40,7 @@ prompts({
   initial: false,
 }).then(answer => {
   if (!answer.completed) {
+    // eslint-disable-next-line no-console
     console.error('Please complete all the checks before continuing.');
     process.exit(1);
   }

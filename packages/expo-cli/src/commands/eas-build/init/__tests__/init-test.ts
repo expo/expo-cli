@@ -104,17 +104,6 @@ function setupProjectConfig(overrideConfig: any) {
   vol.writeFileSync('/projectdir/pprofile', pprofile.content);
 }
 
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
-
 beforeEach(() => {
   vol.reset();
 });

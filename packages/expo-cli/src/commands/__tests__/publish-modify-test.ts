@@ -39,17 +39,6 @@ describe('publish details', () => {
     vol.reset();
   });
 
-  const originalWarn = console.warn;
-  const originalLog = console.log;
-  beforeAll(() => {
-    console.warn = jest.fn();
-    console.log = jest.fn();
-  });
-  afterAll(() => {
-    console.warn = originalWarn;
-    console.log = originalLog;
-  });
-
   it('Set publication to channel', async () => {
     const setOptions = {
       releaseChannel: 'test-channel',

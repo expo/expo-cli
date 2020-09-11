@@ -171,7 +171,7 @@ async function handleBuildIdSourceAsync(
       slug,
     });
   } catch (err) {
-    console.error(err);
+    log.error(err);
     throw err;
   }
 

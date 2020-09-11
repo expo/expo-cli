@@ -95,7 +95,7 @@ export async function action(projectDir: string, options: Options) {
   if (!options.dev && !UrlUtils.isHttps(options.publicUrl)) {
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
   } else if (!validator.isURL(options.publicUrl, { protocols: ['http', 'https'] })) {
-    console.warn(`Dev Mode: publicUrl ${options.publicUrl} does not conform to HTTP format.`);
+    log.warn(`Dev Mode: publicUrl ${options.publicUrl} does not conform to HTTP format.`);
   }
 
   // Make outputDir an absolute path if it isnt already

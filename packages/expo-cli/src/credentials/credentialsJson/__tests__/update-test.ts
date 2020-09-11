@@ -11,20 +11,6 @@ import * as credentialsJsonUpdateUtils from '../update';
 jest.mock('fs');
 jest.mock('../../../prompts');
 
-const originalWarn = console.warn;
-const originalLog = console.log;
-const originalError = console.error;
-beforeAll(() => {
-  console.error = jest.fn();
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-  console.error = originalError;
-});
-
 beforeEach(() => {
   vol.reset();
   (prompts as any).mockReset();
