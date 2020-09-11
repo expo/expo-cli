@@ -1,4 +1,4 @@
-import { ProjectTarget, getDefaultTarget } from '@expo/config';
+import { getDefaultTarget, ProjectTarget } from '@expo/config';
 import { Project, UrlUtils } from '@expo/xdl';
 import program, { Command } from 'commander';
 import crypto from 'crypto';

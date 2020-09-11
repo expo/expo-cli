@@ -13,17 +13,6 @@ import {
   testPushKey,
 } from '../test-fixtures/mocks-ios';
 
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
-
 describe('IosApi - Basic Tests', () => {
   let iosApi;
   let apiMock;

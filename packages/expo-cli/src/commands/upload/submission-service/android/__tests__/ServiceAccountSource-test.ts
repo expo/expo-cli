@@ -11,18 +11,12 @@ jest.mock('fs');
 jest.mock('../../../../../prompt');
 
 describe(getServiceAccountAsync, () => {
-  const originalConsoleWarn = console.warn;
-  const originalConsoleLog = console.log;
   beforeAll(() => {
-    console.warn = jest.fn();
-    console.log = jest.fn();
     vol.fromJSON({
       '/google-service-account.json': JSON.stringify({ service: 'account' }),
     });
   });
   afterAll(() => {
-    console.warn = originalConsoleWarn;
-    console.log = originalConsoleLog;
     vol.reset();
   });
 
