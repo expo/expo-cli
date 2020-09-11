@@ -79,19 +79,23 @@ describe('getDynamicConfig', () => {
           process.chdir(originalCwd);
         });
 
-        it('process.cwd in read-config script is not equal to the project root', () => {
-          const { config } = getDynamicConfig(join(projectRoot, 'app.config.ts'), {
-            useDynamicEval,
+        if (useDynamicEval) {
+          // Test that dynamic evaluation is spawned in the expected location
+          // https://github.com/expo/expo-cli/pull/2220
+          it('process.cwd in read-config script is not equal to the project root', () => {
+            const { config } = getDynamicConfig(join(projectRoot, 'app.config.ts'), {
+              useDynamicEval,
+            });
+            expect(config.processCwd).toBe(__dirname);
           });
-          expect(config.processCwd).toBe(__dirname);
-        });
-        it('process.cwd in read-config script is equal to the project root', () => {
-          const { config } = getDynamicConfig(join(projectRoot, 'app.config.ts'), {
-            projectRoot,
-            useDynamicEval,
+          it('process.cwd in read-config script is equal to the project root', () => {
+            const { config } = getDynamicConfig(join(projectRoot, 'app.config.ts'), {
+              projectRoot,
+              useDynamicEval,
+            });
+            expect(config.processCwd).toBe(projectRoot);
           });
-          expect(config.processCwd).toBe(projectRoot);
-        });
+        }
       });
     });
   }
