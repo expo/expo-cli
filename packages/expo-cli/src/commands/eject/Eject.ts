@@ -325,12 +325,9 @@ function writeMetroConfig(projectRoot: string, pkg: PackageJSONConfig, tempDir: 
   }
 }
 
-async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
-  // We need the SDK version to proceed
-  const { exp, pkg } = await ensureConfigAsync(projectRoot);
-
+async function validateBareTemplateExistsAsync(sdkVersion: string): Promise<npmPackageArg.Result> {
   // Validate that the template exists
-  const sdkMajorVersionNumber = semver.major(exp.sdkVersion!);
+  const sdkMajorVersionNumber = semver.major(sdkVersion);
   const templateSpec = npmPackageArg(`expo-template-bare-minimum@sdk-${sdkMajorVersionNumber}`);
   try {
     await pacote.manifest(templateSpec);
@@ -343,6 +340,15 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
       throw e;
     }
   }
+
+  return templateSpec;
+}
+
+async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
+  // We need the SDK version to proceed
+  const { exp, pkg } = await ensureConfigAsync(projectRoot);
+
+  const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
 
   /**
    * Extract the template and copy the ios and android directories over to the project directory
