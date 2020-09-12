@@ -73,6 +73,12 @@ function spawnAndEvalConfig(configFile: string, request: ConfigContext): Dynamic
   } else {
     // Parse the error data and throw it as expected
     const errorData = JSON.parse(spawnResults.stderr.toString('utf8'));
-    throw errorFromJSON(errorData);
+    const error = errorFromJSON(errorData);
+
+    // @ts-ignore
+    error.isConfigError = true;
+    // @ts-ignore: Replace the babel stack with a more relevant stack.
+    error.stack = new Error().stack;
+    throw error;
   }
 }
