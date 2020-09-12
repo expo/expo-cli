@@ -37,13 +37,13 @@ describe('modifyConfigAsync', () => {
 });
 
 describe('getDynamicConfig', () => {
-  for (const useDynamicEval of [true, false]) {
-    describe(useDynamicEval ? 'dynamic eval' : 'standard eval', () => {
+  for (const useHotEval of [true, false]) {
+    describe(useHotEval ? 'hot eval' : 'standard eval', () => {
       // This tests error are thrown properly and ensures that a more specific
       // config is used instead of defaulting to a valid substitution.
       it(`throws a useful error for dynamic configs with a syntax error`, () => {
         const paths = getConfigFilePaths(join(__dirname, 'fixtures/behavior/syntax-error'));
-        expect(() => getDynamicConfig(paths.dynamicConfigPath, { useDynamicEval })).toThrowError(
+        expect(() => getDynamicConfig(paths.dynamicConfigPath, { useHotEval })).toThrowError(
           'Unexpected token (3:4)'
         );
       });
@@ -54,7 +54,7 @@ describe('getDynamicConfig', () => {
               __dirname,
               'fixtures/behavior/dynamic-export-types/exports-function.app.config.js'
             ),
-            { useDynamicEval }
+            { useHotEval }
           ).exportedObjectType
         ).toBe('function');
       });
@@ -62,7 +62,7 @@ describe('getDynamicConfig', () => {
         expect(
           getDynamicConfig(
             join(__dirname, 'fixtures/behavior/dynamic-export-types/exports-object.app.config.js'),
-            { useDynamicEval }
+            { useHotEval }
           ).exportedObjectType
         ).toBe('object');
       });
@@ -79,19 +79,19 @@ describe('getDynamicConfig', () => {
           process.chdir(originalCwd);
         });
 
-        if (useDynamicEval) {
-          // Test that dynamic evaluation is spawned in the expected location
+        if (useHotEval) {
+          // Test that hot evaluation is spawned in the expected location
           // https://github.com/expo/expo-cli/pull/2220
           it('process.cwd in read-config script is not equal to the project root', () => {
             const { config } = getDynamicConfig(join(projectRoot, 'app.config.ts'), {
-              useDynamicEval,
+              useHotEval,
             });
             expect(config.processCwd).toBe(__dirname);
           });
           it('process.cwd in read-config script is equal to the project root', () => {
             const { config } = getDynamicConfig(join(projectRoot, 'app.config.ts'), {
               projectRoot,
-              useDynamicEval,
+              useHotEval,
             });
             expect(config.processCwd).toBe(projectRoot);
           });

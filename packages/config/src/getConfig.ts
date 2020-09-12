@@ -14,7 +14,7 @@ function isMissingFileCode(code: string): boolean {
 // If they don't add support for async Webpack configs then we may need to pull support for Next.js.
 function readConfigFile(configFile: string, context: ConfigContext): null | DynamicConfigResults {
   try {
-    if (context.useDynamicEval) {
+    if (context.useHotEval) {
       return spawnAndEvalConfig(configFile, context);
     }
     return evalConfig(configFile, context);

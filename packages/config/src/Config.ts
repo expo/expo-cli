@@ -85,8 +85,8 @@ function getSupportedPlatforms(
  * @param options enforce criteria for a project config
  */
 export function getConfig(projectRoot: string, options: GetConfigOptions = {}): ProjectConfig {
-  if (typeof options.useDynamicEval === 'undefined' && isDynamicEvalEnabled) {
-    options.useDynamicEval = isDynamicEvalEnabled;
+  if (typeof options.useHotEval === 'undefined' && isDynamicEvalEnabled) {
+    options.useHotEval = isDynamicEvalEnabled;
   }
 
   const paths = getConfigFilePaths(projectRoot);
@@ -132,7 +132,7 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
         staticConfigPath: paths.staticConfigPath,
         packageJsonPath,
         config: getContextConfig(staticConfig),
-        useDynamicEval: options.useDynamicEval,
+        useHotEval: options.useHotEval,
       }
     );
     // Allow for the app.config.js to `export default null;`

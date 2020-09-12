@@ -1043,10 +1043,10 @@ export type ConfigContext = {
    *
    * Spawning can have huge performance penalties on low-end computers.
    */
-  useDynamicEval?: boolean;
+  useHotEval?: boolean;
 };
 
-export type GetConfigOptions = Pick<ConfigContext, 'useDynamicEval'> & {
+export type GetConfigOptions = Pick<ConfigContext, 'useHotEval'> & {
   skipSDKVersionRequirement?: boolean;
   strict?: boolean;
 };
