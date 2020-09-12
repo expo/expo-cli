@@ -19,6 +19,7 @@ export function evalConfig(
 ): DynamicConfigResults {
   require('@babel/register')({
     only: [configFile],
+    cache: false,
     extensions: ['.ts', '.js'],
     presets: [require.resolve('@expo/babel-preset-cli')],
   });
