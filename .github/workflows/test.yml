@@ -61,7 +61,7 @@ jobs:
         with:
           path: '.'
           key: ${{ github.sha }}-${{ matrix.node }}
-      - name: Setup node
+      - name: Set up Node
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
