@@ -4,10 +4,17 @@ import { spawnSync } from 'child_process';
 import { AppJSONConfig, ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError, errorFromJSON } from './Errors';
 import { serializeAndEvaluate } from './Serialize';
-import { DynamicConfigResults, evalConfig } from './evalConfig';
+import { DynamicConfigResults } from './evalConfig';
 
 function isMissingFileCode(code: string): boolean {
   return ['ENOENT', 'MODULE_NOT_FOUND', 'ENOTDIR'].includes(code);
+}
+
+let _cachedConfig: DynamicConfigResults | null = null;
+
+// Force re-evaluation of dynamic config
+export function clearDynamicConfigCache() {
+  _cachedConfig = null;
 }
 
 // We cannot use async config resolution right now because Next.js doesn't support async configs.
@@ -16,14 +23,18 @@ function readConfigFile(configFile: string, context: ConfigContext): null | Dyna
   try {
     if (context.useDynamicEval) {
       return spawnAndEvalConfig(configFile, context);
+    } else if (!context.useDynamicEval && _cachedConfig === null) {
+      _cachedConfig = spawnAndEvalConfig(configFile, context);
     }
-    return evalConfig(configFile, context);
+
+    return _cachedConfig;
   } catch (error) {
     // If the file doesn't exist then we should skip it and continue searching.
     if (!isMissingFileCode(error.code)) {
       throw error;
     }
   }
+
   return null;
 }
 

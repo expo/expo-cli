@@ -1,7 +1,7 @@
 import { join } from 'path';
 
 import { getConfigFilePaths, modifyConfigAsync } from '../Config';
-import { getDynamicConfig, getStaticConfig } from '../getConfig';
+import { clearDynamicConfigCache, getDynamicConfig, getStaticConfig } from '../getConfig';
 
 describe('modifyConfigAsync', () => {
   it(`can write to a static only config`, async () => {
@@ -39,6 +39,89 @@ describe('modifyConfigAsync', () => {
 describe('getDynamicConfig', () => {
   for (const useDynamicEval of [true, false]) {
     describe(useDynamicEval ? 'dynamic eval' : 'standard eval', () => {
+      if (!useDynamicEval) {
+        beforeEach(() => {
+          clearDynamicConfigCache();
+        });
+      }
+
+      // Verify that we always re-eval when enabled and never re-eval (unless
+      // cache explicitly cleared) when disabled
+      if (useDynamicEval) {
+        it(`fetches fresh values every time it's called`, () => {
+          expect(
+            getDynamicConfig(
+              join(__dirname, 'fixtures/behavior/dynamic-hot/before/app.config.js'),
+              { useDynamicEval }
+            )
+          ).toMatchInlineSnapshot(`
+            Object {
+              "config": Object {
+                "name": "before",
+              },
+              "exportedObjectType": "object",
+            }
+          `);
+
+          expect(
+            getDynamicConfig(join(__dirname, 'fixtures/behavior/dynamic-hot/after/app.config.js'), {
+              useDynamicEval,
+            })
+          ).toMatchInlineSnapshot(`
+            Object {
+              "config": Object {
+                "name": "after",
+              },
+              "exportedObjectType": "object",
+            }
+          `);
+        });
+      } else {
+        it(`uses cached config after first call unless clearDynamicConfigCache is called`, () => {
+          expect(
+            getDynamicConfig(
+              join(__dirname, 'fixtures/behavior/dynamic-hot/before/app.config.js'),
+              { useDynamicEval }
+            )
+          ).toMatchInlineSnapshot(`
+            Object {
+              "config": Object {
+                "name": "before",
+              },
+              "exportedObjectType": "object",
+            }
+          `);
+
+          expect(
+            getDynamicConfig(join(__dirname, 'fixtures/behavior/dynamic-hot/after/app.config.js'), {
+              useDynamicEval,
+            })
+          ).toMatchInlineSnapshot(`
+            Object {
+              "config": Object {
+                "name": "before",
+              },
+              "exportedObjectType": "object",
+            }
+          `);
+
+          clearDynamicConfigCache();
+
+          expect(
+            getDynamicConfig(join(__dirname, 'fixtures/behavior/dynamic-hot/after/app.config.js'), {
+              useDynamicEval,
+            })
+          ).toMatchInlineSnapshot(`
+            Object {
+              "config": Object {
+                "name": "after",
+              },
+              "exportedObjectType": "object",
+            }
+          `);
+        });
+      }
+
       // This tests error are thrown properly and ensures that a more specific
       // config is used instead of defaulting to a valid substitution.
       it(`throws a useful error for dynamic configs with a syntax error`, () => {

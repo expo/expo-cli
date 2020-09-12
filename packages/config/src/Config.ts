@@ -23,6 +23,8 @@ import { getRootPackageJsonPath, projectHasModule } from './Modules';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 
+export { clearDynamicConfigCache } from './getConfig';
+
 export const isDynamicEvalEnabled = boolish('EXPO_HOT_CONFIG', false);
 
 /**

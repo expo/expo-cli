@@ -1,6 +1,6 @@
 import * as path from 'path';
 
-import { getConfig, setCustomConfigPath } from '../Config';
+import { clearDynamicConfigCache, getConfig, setCustomConfigPath } from '../Config';
 
 const fixtures = {
   customLocationJson: path.resolve(__dirname, 'fixtures/behavior/custom-location-json'),
@@ -16,6 +16,7 @@ describe('getConfig', () => {
     beforeEach(() => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
       setCustomConfigPath(projectRoot, undefined);
+      clearDynamicConfigCache();
     });
     it('parses a ts config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/ts');
