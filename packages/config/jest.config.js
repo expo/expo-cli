@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   preset: '../../jest/unit-test-config',
-  transformIgnorePatterns: ['@babel/register'],
+  transformIgnorePatterns: ['node_modules/@babel/core'],
   verbose: true,
   rootDir: path.resolve(__dirname),
   displayName: require('./package').name,

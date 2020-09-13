@@ -24,7 +24,7 @@ function readConfigFile(configFile: string, context: ConfigContext): null | Dyna
       // @ts-ignore
       error.isConfigError = true;
       // @ts-ignore: Replace the babel stack with a more relevant stack.
-      error.stack = new Error().stack;
+      // error.stack = new Error().stack;
       throw error;
     }
   }
