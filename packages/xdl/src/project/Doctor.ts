@@ -435,24 +435,12 @@ async function validateAsync(
     return NO_ISSUES;
   }
 
-  let exp, pkg;
-  try {
-    const config = getConfig(projectRoot, {
-      strict: true,
-      skipSDKVersionRequirement,
-    });
-    exp = config.exp;
-    pkg = config.pkg;
-    ProjectUtils.clearNotification(projectRoot, 'doctor-config-json-not-read');
-  } catch (e) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      `Error: could not load config json at ${projectRoot}: ${e.toString()}`,
-      'doctor-config-json-not-read'
-    );
-    return ERROR;
-  }
+  const { exp, pkg } = getConfig(projectRoot, {
+    strict: true,
+    skipSDKVersionRequirement,
+  });
+
+  ProjectUtils.clearNotification(projectRoot, 'doctor-config-json-not-read');
 
   let status = await _checkNpmVersionAsync(projectRoot);
   if (status === FATAL) {

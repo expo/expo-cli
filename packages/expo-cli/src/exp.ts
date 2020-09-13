@@ -311,6 +311,16 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
         log.error(chalk.red(err.message));
       } else if (err.isXDLError) {
         log.error(err.message);
+      } else if (err.isJsonFileError) {
+        if (err.code === 'EJSONEMPTY') {
+          // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
+          log.error(err.message);
+        } else {
+          log.addNewLineIfNone();
+          log.error(err.message);
+          const stacktrace = formatStackTrace(err.stack, this.name());
+          log.error(chalk.gray(stacktrace));
+        }
       } else {
         log.error(err.message);
         log.error(chalk.gray(err.stack));
@@ -320,6 +330,58 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
     }
   });
 };
+
+function getStringBetweenParens(value: string): string {
+  const regExp = /\(([^)]+)\)/;
+  const matches = regExp.exec(value);
+  if (matches?.length > 1) {
+    return matches[1];
+  }
+  return value;
+}
+
+function focusLastPathComponent(value: string): string {
+  const parts = value.split('/');
+  if (parts.length > 1) {
+    const last = parts.pop();
+    const current = chalk.dim(parts.join('/') + '/');
+    return `${current}${last}`;
+  }
+  return chalk.dim(value);
+}
+
+function formatStackTrace(stacktrace: string, command: string): string {
+  const treeStackLines: string[][] = [];
+  for (const line of stacktrace.split('\n')) {
+    const [first, ...parts] = line.trim().split(' ');
+    // Remove at -- we'll use a branch instead.
+    if (first === 'at') {
+      treeStackLines.push(parts);
+    }
+  }
+
+  return treeStackLines
+    .map((parts, index) => {
+      let first = parts.shift();
+      // Replace anonymous with command name
+      if (first === 'Command.<anonymous>') {
+        first = chalk.bold(`expo ${command}`);
+      } else if (first?.startsWith('Object.')) {
+        // Remove extra JS types from function names
+        first = first.split('Object.').pop()!;
+      } else if (first?.startsWith('Function.')) {
+        // Remove extra JS types from function names
+        first = first.split('Function.').pop()!;
+      }
+      let last = parts.pop();
+      if (last) {
+        last = focusLastPathComponent(getStringBetweenParens(last));
+      }
+      const branch = (index === treeStackLines.length - 1 ? '└' : '├') + '─';
+      return ['   ', branch, first, ...parts, last].filter(Boolean).join(' ');
+    })
+    .join('\n');
+}
 
 // asyncActionProjectDir captures the projectDirectory from the command line,
 // setting it to cwd if it is not provided.
