@@ -855,16 +855,16 @@ async function buildPublishBundlesAsync(
 ) {
   if (!getenv.boolish('EXPO_USE_DEV_SERVER', false)) {
     try {
-      await startReactNativeServerAsync(
+      await startReactNativeServerAsync({
         projectRoot,
-        {
+        options: {
           nonPersistent: true,
           maxWorkers: publishOptions.maxWorkers,
           target: publishOptions.target,
           reset: publishOptions.resetCache,
         },
-        !publishOptions.quiet
-      );
+        verbose: !publishOptions.quiet,
+      });
       return await fetchPublishBundlesAsync(projectRoot);
     } finally {
       await stopReactNativeServerAsync(projectRoot);
@@ -1434,17 +1434,21 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
     );
   }
 }
-export async function startReactNativeServerAsync(
-  projectRoot: string,
-  options: StartOptions = {},
-  verbose: boolean = true
-): Promise<void> {
+export async function startReactNativeServerAsync({
+  projectRoot,
+  options = {},
+  exp = getConfig(projectRoot).exp,
+  verbose = true,
+}: {
+  projectRoot: string;
+  options: StartOptions;
+  exp?: ExpoConfig;
+  verbose?: boolean;
+}): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
   await Watchman.unblockAndGetVersionAsync(projectRoot);
-
-  const { exp } = getConfig(projectRoot);
 
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
 
@@ -1988,7 +1992,7 @@ export async function startAsync(
     DevSession.startSession(projectRoot, exp, 'native');
   } else {
     await startExpoServerAsync(projectRoot);
-    await startReactNativeServerAsync(projectRoot, options, verbose);
+    await startReactNativeServerAsync({ projectRoot, exp, options, verbose });
     DevSession.startSession(projectRoot, exp, 'native');
   }
 
