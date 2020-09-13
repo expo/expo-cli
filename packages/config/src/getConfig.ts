@@ -21,6 +21,10 @@ function readConfigFile(configFile: string, context: ConfigContext): null | Dyna
   } catch (error) {
     // If the file doesn't exist then we should skip it and continue searching.
     if (!isMissingFileCode(error.code)) {
+      // @ts-ignore
+      error.isConfigError = true;
+      // @ts-ignore: Replace the babel stack with a more relevant stack.
+      error.stack = new Error().stack;
       throw error;
     }
   }
@@ -74,11 +78,6 @@ function spawnAndEvalConfig(configFile: string, request: ConfigContext): Dynamic
     // Parse the error data and throw it as expected
     const errorData = JSON.parse(spawnResults.stderr.toString('utf8'));
     const error = errorFromJSON(errorData);
-
-    // @ts-ignore
-    error.isConfigError = true;
-    // @ts-ignore: Replace the babel stack with a more relevant stack.
-    error.stack = new Error().stack;
     throw error;
   }
 }

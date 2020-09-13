@@ -37,7 +37,7 @@ describe('modifyConfigAsync', () => {
 });
 
 describe('getDynamicConfig', () => {
-  for (const useHotEval of [false]) {
+  for (const useHotEval of [false, true]) {
     describe(useHotEval ? 'hot eval' : 'standard eval', () => {
       // This tests error are thrown properly and ensures that a more specific
       // config is used instead of defaulting to a valid substitution.
