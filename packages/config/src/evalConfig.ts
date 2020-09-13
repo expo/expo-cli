@@ -7,10 +7,10 @@ type RawDynamicConfig = AppJSONConfig | Partial<ExpoConfig> | null;
 export type DynamicConfigResults = { config: RawDynamicConfig; exportedObjectType: string };
 
 /**
- * transpile and evaluate the dynamic config object.
+ * Transpile and evaluate the dynamic config object.
  * This method is shared between the standard reading method in getConfig, and the headless script.
  *
- * @param options configPath path to the dynamic app.config.*, request to send to the dynamic config if it exports a function.
+ * @param options configFile path to the dynamic app.config.*, request to send to the dynamic config if it exports a function.
  * @returns the serialized and evaluated config along with the exported object type (object or function).
  */
 export function evalConfig(
