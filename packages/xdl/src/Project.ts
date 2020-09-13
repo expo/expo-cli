@@ -171,8 +171,13 @@ function _requireFromProject(modulePath: string, projectRoot: string, exp: ExpoC
 }
 
 // TODO: Move to @expo/config
-export async function getSlugAsync(projectRoot: string): Promise<string> {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+export async function getSlugAsync({
+  projectRoot,
+  exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp,
+}: {
+  projectRoot: string;
+  exp?: Pick<ExpoConfig, 'slug'>;
+}): Promise<string> {
   if (exp.slug) {
     return exp.slug;
   }
@@ -194,7 +199,7 @@ export async function getLatestReleaseAsync(
   const api = ApiV2.clientForUser(user);
   const result = await api.postAsync('publish/history', {
     owner: options.owner,
-    slug: await getSlugAsync(projectRoot),
+    slug: await getSlugAsync({ projectRoot }),
     releaseChannel: options.releaseChannel,
     count: 1,
     platform: options.platform,
