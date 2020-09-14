@@ -52,25 +52,6 @@ function getBooleanArg(rawArgs: string[], argName: string): boolean {
   }
 }
 
-/**
- * If the project config `platforms` only contains the "web" field.
- * If no `platforms` array is defined this could still resolve true because platforms
- * will be inferred from the existence of `react-native-web` and `react-native`.
- *
- * @param projectRoot
- */
-function isWebOnly(projectRoot: string): boolean {
-  // TODO(Bacon): Limit the amount of times that the config is evaluated
-  // currently we read it the first time without the SDK version then later read it with the SDK version if react-native is installed.
-  const { exp } = getConfig(projectRoot, {
-    skipSDKVersionRequirement: true,
-  });
-  if (Array.isArray(exp.platforms) && exp.platforms.length === 1) {
-    return exp.platforms[0] === 'web';
-  }
-  return false;
-}
-
 // The main purpose of this function is to take existing options object and
 // support boolean args with as defined in the hasBooleanArg and getBooleanArg
 // functions.
@@ -80,7 +61,7 @@ async function normalizeOptionsAsync(
 ): Promise<NormalizedOptions> {
   const opts: NormalizedOptions = {
     ...options, // This is necessary to ensure we don't drop any options
-    webOnly: options.webOnly ?? isWebOnly(projectDir),
+    webOnly: options.webOnly,
     nonInteractive: options.parent?.nonInteractive,
   };
 
@@ -163,7 +144,7 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
 async function startWebAction(projectDir: string, options: NormalizedOptions): Promise<void> {
   const { exp, rootPath } = await configureProjectAsync(projectDir, options);
   const startOpts = parseStartOptions(options);
-  await Project.startAsync(rootPath, startOpts);
+  await Project.startAsync(rootPath, { ...startOpts, exp });
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
   if (!options.nonInteractive && !exp.isDetached) {
@@ -179,7 +160,7 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
 
   const startOpts = parseStartOptions(options);
 
-  await Project.startAsync(rootPath, startOpts);
+  await Project.startAsync(rootPath, { ...startOpts, exp });
 
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
 

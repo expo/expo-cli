@@ -171,8 +171,13 @@ function _requireFromProject(modulePath: string, projectRoot: string, exp: ExpoC
 }
 
 // TODO: Move to @expo/config
-export async function getSlugAsync(projectRoot: string): Promise<string> {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+export async function getSlugAsync({
+  projectRoot,
+  exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp,
+}: {
+  projectRoot: string;
+  exp?: Pick<ExpoConfig, 'slug'>;
+}): Promise<string> {
   if (exp.slug) {
     return exp.slug;
   }
@@ -194,7 +199,7 @@ export async function getLatestReleaseAsync(
   const api = ApiV2.clientForUser(user);
   const result = await api.postAsync('publish/history', {
     owner: options.owner,
-    slug: await getSlugAsync(projectRoot),
+    slug: await getSlugAsync({ projectRoot }),
     releaseChannel: options.releaseChannel,
     count: 1,
     platform: options.platform,
@@ -855,16 +860,16 @@ async function buildPublishBundlesAsync(
 ) {
   if (!getenv.boolish('EXPO_USE_DEV_SERVER', false)) {
     try {
-      await startReactNativeServerAsync(
+      await startReactNativeServerAsync({
         projectRoot,
-        {
+        options: {
           nonPersistent: true,
           maxWorkers: publishOptions.maxWorkers,
           target: publishOptions.target,
           reset: publishOptions.resetCache,
         },
-        !publishOptions.quiet
-      );
+        verbose: !publishOptions.quiet,
+      });
       return await fetchPublishBundlesAsync(projectRoot);
     } finally {
       await stopReactNativeServerAsync(projectRoot);
@@ -1434,17 +1439,21 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
     );
   }
 }
-export async function startReactNativeServerAsync(
-  projectRoot: string,
-  options: StartOptions = {},
-  verbose: boolean = true
-): Promise<void> {
+export async function startReactNativeServerAsync({
+  projectRoot,
+  options = {},
+  exp = getConfig(projectRoot).exp,
+  verbose = true,
+}: {
+  projectRoot: string;
+  options: StartOptions;
+  exp?: ExpoConfig;
+  verbose?: boolean;
+}): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
   await Watchman.unblockAndGetVersionAsync(projectRoot);
-
-  const { exp } = getConfig(projectRoot);
 
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
 
@@ -1968,11 +1977,10 @@ export async function getUrlAsync(projectRoot: string, options: object = {}): Pr
 
 export async function startAsync(
   projectRoot: string,
-  options: StartOptions = {},
+  { exp = getConfig(projectRoot).exp, ...options }: StartOptions & { exp?: ExpoConfig } = {},
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   _assertValidProjectRoot(projectRoot);
-  const { exp } = getConfig(projectRoot);
   Analytics.logEvent('Start Project', {
     projectRoot,
     developerTool: Config.developerTool,
@@ -1988,7 +1996,7 @@ export async function startAsync(
     DevSession.startSession(projectRoot, exp, 'native');
   } else {
     await startExpoServerAsync(projectRoot);
-    await startReactNativeServerAsync(projectRoot, options, verbose);
+    await startReactNativeServerAsync({ projectRoot, exp, options, verbose });
     DevSession.startSession(projectRoot, exp, 'native');
   }
 
