@@ -334,7 +334,7 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
 function getStringBetweenParens(value: string): string {
   const regExp = /\(([^)]+)\)/;
   const matches = regExp.exec(value);
-  if (matches?.length > 1) {
+  if (matches && matches?.length > 1) {
     return matches[1];
   }
   return value;
