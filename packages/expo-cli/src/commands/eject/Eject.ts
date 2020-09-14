@@ -5,12 +5,11 @@ import {
   WarningAggregator,
   getConfig,
   projectHasModule,
-  resolveModule,
 } from '@expo/config';
 import JsonFile from '@expo/json-file';
-import * as PackageManager from '@expo/package-manager';
 import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
+import crypto from 'crypto';
 import fs from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
@@ -20,7 +19,6 @@ import temporary from 'tempy';
 import terminalLink from 'terminal-link';
 
 import log from '../../log';
-import prompt from '../../prompt';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
@@ -30,8 +28,6 @@ import { learnMore } from '../utils/TerminalLink';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
-
-type ValidationErrorMessage = string;
 
 type DependenciesMap = { [key: string]: string | number };
 
@@ -55,10 +51,15 @@ export type EjectAsyncOptions = {
 export async function ejectAsync(projectRoot: string, options?: EjectAsyncOptions): Promise<void> {
   if (await maybeBailOnGitStatusAsync()) return;
 
-  await createNativeProjectsFromTemplateAsync(projectRoot);
-  // TODO: Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
+  const tempDir = temporary.directory();
+
+  const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync(
+    projectRoot,
+    tempDir
+  );
+  // Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
   // This will be used to prevent the node modules from being nuked every time.
-  const isSyncing = false;
+  const isSyncing = !hasNewProjectFiles;
 
   // Install node modules
   const shouldInstall = options?.install !== false;
@@ -79,7 +80,8 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
 
   // Install CocoaPods
   let podsInstalled: boolean = false;
-  if (shouldInstall) {
+  // err towards running pod install less because it's slow and users can easily run npx pod-install afterwards.
+  if (shouldInstall && needsPodInstall) {
     podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
   }
   await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot, options);
@@ -118,43 +120,43 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
 
   if (await usesOldExpoUpdatesAsync(projectRoot)) {
     log.nested(
-      `- 🚀 ${
-        (terminalLink(
-          'expo-updates',
-          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
-        ),
-        { fallback: (text: string) => text })
-      } has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
+      `- 🚀 ${(terminalLink(
+        'expo-updates',
+        'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+      ),
+      {
+        fallback: (text: string) => text,
+      })} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
         'expo publish'
       )}. ${log.chalk.dim(learnMore('https://expo.fyi/release-builds-with-expo-updates'))}`
     );
   }
 
-  log.newLine();
-  log.nested(`☑️  ${chalk.bold('When you are ready to run your project')}`);
-  log.nested(
-    'To compile and run your project in development, execute one of the following commands:'
-  );
+  if (hasNewProjectFiles) {
+    log.newLine();
+    log.nested(`☑️  ${chalk.bold('When you are ready to run your project')}`);
+    log.nested(
+      'To compile and run your project in development, execute one of the following commands:'
+    );
 
-  log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
-  log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
-  log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
+    log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
+    log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
+    log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
+  }
 }
 
 async function configureIOSStepAsync(projectRoot: string) {
-  log.newLine();
-  const applyingIOSConfigStep = CreateApp.logNewSection('Applying iOS configuration');
+  const applyingIOSConfigStep = CreateApp.logNewSection('iOS config syncing');
   await configureIOSProjectAsync(projectRoot);
   if (ConfigWarningAggregator.hasWarningsIOS()) {
     applyingIOSConfigStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: chalk.red('iOS configuration applied with warnings that should be fixed:'),
+      text: chalk.red('iOS config synced with warnings that should be fixed:'),
     });
     logConfigWarningsIOS();
   } else {
-    applyingIOSConfigStep.succeed('All project configuration applied to iOS project');
+    applyingIOSConfigStep.succeed('iOS config synced');
   }
-  log.newLine();
 }
 
 /**
@@ -196,16 +198,16 @@ async function installNodeDependenciesAsync(
 }
 
 async function configureAndroidStepAsync(projectRoot: string) {
-  const applyingAndroidConfigStep = CreateApp.logNewSection('Applying Android configuration');
+  const applyingAndroidConfigStep = CreateApp.logNewSection('Android config syncing');
   await configureAndroidProjectAsync(projectRoot);
   if (ConfigWarningAggregator.hasWarningsAndroid()) {
     applyingAndroidConfigStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: chalk.red('Android configuration applied with warnings that should be fixed:'),
+      text: chalk.red('Android config synced with warnings that should be fixed:'),
     });
     logConfigWarningsAndroid();
   } else {
-    applyingAndroidConfigStep.succeed('All project configuration applied to Android project');
+    applyingAndroidConfigStep.succeed('Android config synced');
   }
 }
 
@@ -213,20 +215,24 @@ function copyPathsFromTemplate(
   projectRoot: string,
   templatePath: string,
   paths: string[]
-): string[] {
+): [string[], string[]] {
+  const copiedPaths = [];
   const skippedPaths = [];
   for (const targetPath of paths) {
     const projectPath = path.join(projectRoot, targetPath);
     if (!fs.existsSync(projectPath)) {
+      copiedPaths.push(targetPath);
       fs.copySync(path.join(templatePath, targetPath), projectPath);
     } else {
       skippedPaths.push(targetPath);
     }
   }
-  return skippedPaths;
+  return [copiedPaths, skippedPaths];
 }
 
-async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promise<void> {
+async function ensureConfigAsync(
+  projectRoot: string
+): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig }> {
   // We need the SDK version to proceed
 
   let exp: ExpoConfig;
@@ -242,6 +248,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
       // Write the generated config.
       // writeConfigJsonAsync(projectRoot, config.exp);
       await JsonFile.writeAsync(
+        // TODO: Write to app.config.json because it's easier to convert to a js config file.
         path.join(projectRoot, 'app.json'),
         { expo: config.exp },
         { json5: false }
@@ -255,109 +262,60 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     process.exit(1);
   }
 
-  // Validate that the template exists
-  const sdkMajorVersionNumber = semver.major(exp.sdkVersion!);
-  const templateSpec = npmPackageArg(`expo-template-bare-minimum@sdk-${sdkMajorVersionNumber}`);
-  try {
-    await pacote.manifest(templateSpec);
-  } catch (e) {
-    if (e.code === 'E404') {
-      throw new Error(
-        `Unable to eject because an eject template for SDK ${sdkMajorVersionNumber} was not found.`
-      );
-    } else {
-      throw e;
-    }
-  }
-
-  /**
-   * Set names to be used for the native projects and configure appEntry so users can continue
-   * to use Expo client on ejected projects, even though we change the "main" to index.js for bare.
-   */
-  if (!exp.name) {
-    exp.name = await promptForNativeAppNameAsync(exp);
-  }
-
   // Prompt for the Android package first because it's more strict than the bundle identifier
   // this means you'll have a better chance at matching the bundle identifier with the package name.
-  const packageName = await getOrPromptForPackage(projectRoot);
-  exp.android = exp.android ?? {};
-  exp.android.package = packageName;
-
-  const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
-  exp.ios = exp.ios ?? {};
-  exp.ios.bundleIdentifier = bundleIdentifier;
+  await getOrPromptForPackage(projectRoot);
+  await getOrPromptForBundleIdentifier(projectRoot);
 
   if (exp.entryPoint) {
     delete exp.entryPoint;
     log(`- expo.entryPoint is not needed and has been removed.`);
   }
 
-  const updatingAppConfigStep = CreateApp.logNewSection('Updating app configuration (app.json)');
-  await fs.writeFile(path.resolve('app.json'), JSON.stringify({ expo: exp }, null, 2));
-  // TODO: if app.config.js, need to provide some other info here
-  updatingAppConfigStep.succeed('App configuration (app.json) updated.');
+  return { exp, pkg };
+}
 
-  /**
-   * Extract the template and copy the ios and android directories over to the project directory
-   */
-  let defaultDependencies: any = {};
-  let defaultDevDependencies: any = {};
-  // NOTE(brentvatne): Removing spaces between steps for now, add back when
-  // there is some additional context for steps
-  // log.newLine();
-  const creatingNativeProjectStep = CreateApp.logNewSection(
-    'Creating native project directories (./ios and ./android) and updating .gitignore'
-  );
-  let tempDir;
-  try {
-    tempDir = temporary.directory();
-    await Exp.extractTemplateAppAsync(templateSpec, tempDir, exp);
-    const targetPaths = ['/ios', '/android', '/index.js'];
-    const skippedPaths = copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
-    const results = GitIgnore.mergeGitIgnorePaths(
-      path.join(projectRoot, '.gitignore'),
-      path.join(tempDir, '.gitignore')
-    );
-    const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
-    defaultDependencies = createDependenciesMap(dependencies);
-    defaultDevDependencies = createDependenciesMap(devDependencies);
+function createFileHash(contents: string): string {
+  // this doesn't need to be secure, the shorter the better.
+  return crypto
+    .createHash('sha1')
+    .update(contents)
+    .digest('hex');
+}
 
-    let message = `Created native projects`;
-
-    if (skippedPaths.length) {
-      message += log.chalk.dim(
-        ` | ${skippedPaths.map(path => log.chalk.bold(path)).join(', ')} already created`
-      );
-    }
-    if (!results?.didMerge) {
-      message += log.chalk.dim(` | gitignore already synced`);
-    } else if (results.didMerge && results.didClear) {
-      message += log.chalk.dim(` | synced gitignore`);
-    }
-    creatingNativeProjectStep.succeed(message);
-  } catch (e) {
-    log(chalk.red(e.message));
-    creatingNativeProjectStep.fail(
-      'Failed to create the native project - see the output above for more information.'
-    );
-    log(
-      chalk.yellow(
-        'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
-      )
-    );
-    process.exit(1);
-  }
-
+function writeMetroConfig({
+  projectRoot,
+  pkg,
+  tempDir,
+}: {
+  projectRoot: string;
+  pkg: PackageJSONConfig;
+  tempDir: string;
+}) {
   /**
    * Add metro config, or warn if metro config already exists. The developer will need to add the
    * hashAssetFiles plugin manually.
    */
 
   const updatingMetroConfigStep = CreateApp.logNewSection('Adding Metro bundler configuration');
+
   try {
-    if (
-      fs.existsSync(path.join(projectRoot, 'metro.config.js')) ||
+    const sourceConfigPath = path.join(tempDir, 'metro.config.js');
+    const targetConfigPath = path.join(projectRoot, 'metro.config.js');
+    const targetConfigPathExists = fs.existsSync(targetConfigPath);
+    if (targetConfigPathExists) {
+      // Prevent re-runs from throwing an error if the metro config hasn't been modified.
+      const contents = createFileHash(fs.readFileSync(targetConfigPath, 'utf8'));
+      const targetContents = createFileHash(fs.readFileSync(sourceConfigPath, 'utf8'));
+      if (contents !== targetContents) {
+        throw new Error('Existing Metro configuration found; not overwriting.');
+      } else {
+        // Nothing to change, hide the step and exit.
+        updatingMetroConfigStep.stop();
+        updatingMetroConfigStep.clear();
+        return;
+      }
+    } else if (
       fs.existsSync(path.join(projectRoot, 'metro.config.json')) ||
       pkg.metro ||
       fs.existsSync(path.join(projectRoot, 'rn-cli.config.js'))
@@ -365,7 +323,7 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
       throw new Error('Existing Metro configuration found; not overwriting.');
     }
 
-    fs.copySync(path.join(tempDir, 'metro.config.js'), path.join(projectRoot, 'metro.config.js'));
+    fs.copySync(sourceConfigPath, targetConfigPath);
     updatingMetroConfigStep.succeed('Added Metro bundler configuration.');
   } catch (e) {
     updatingMetroConfigStep.stopAndPersist({
@@ -384,21 +342,58 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     );
     log.newLine();
   }
+}
 
+async function validateBareTemplateExistsAsync(sdkVersion: string): Promise<npmPackageArg.Result> {
+  // Validate that the template exists
+  const sdkMajorVersionNumber = semver.major(sdkVersion);
+  const templateSpec = npmPackageArg(`expo-template-bare-minimum@sdk-${sdkMajorVersionNumber}`);
+  try {
+    await pacote.manifest(templateSpec);
+  } catch (e) {
+    if (e.code === 'E404') {
+      throw new Error(
+        `Unable to eject because an eject template for SDK ${sdkMajorVersionNumber} was not found.`
+      );
+    } else {
+      throw e;
+    }
+  }
+
+  return templateSpec;
+}
+
+type DependenciesModificationResults = {
+  hasNewDependencies: boolean;
+  hasNewDevDependencies: boolean;
+};
+
+async function updatePackageJSONAsync({
+  projectRoot,
+  tempDir,
+  pkg,
+}: {
+  projectRoot: string;
+  tempDir: string;
+  pkg: PackageJSONConfig;
+}): Promise<DependenciesModificationResults> {
+  let defaultDependencies: any = {};
+  let defaultDevDependencies: any = {};
+  const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
+  defaultDependencies = createDependenciesMap(dependencies);
+  defaultDevDependencies = createDependenciesMap(devDependencies);
   /**
    * Update package.json scripts - `npm start` should default to `react-native
    * start` rather than `expo start` after ejecting, for example.
    */
   // NOTE(brentvatne): Removing spaces between steps for now, add back when
   // there is some additional context for steps
-  // log.newLine();
   const updatingPackageJsonStep = CreateApp.logNewSection(
     'Updating your package.json scripts, dependencies, and main file'
   );
   if (!pkg.scripts) {
     pkg.scripts = {};
   }
-  delete pkg.scripts.eject;
   pkg.scripts.start = 'react-native start';
   pkg.scripts.ios = 'react-native run-ios';
   pkg.scripts.android = 'react-native run-android';
@@ -420,12 +415,9 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     ...pkg.dependencies,
   });
 
-  for (const dependenciesKey of [
-    'react',
-    'react-native-unimodules',
-    'react-native',
-    'expo-updates',
-  ]) {
+  const requiredDependencies = ['react', 'react-native-unimodules', 'react-native', 'expo-updates'];
+
+  for (const dependenciesKey of requiredDependencies) {
     combinedDependencies[dependenciesKey] = defaultDependencies[dependenciesKey];
   }
   const combinedDevDependencies: DependenciesMap = createDependenciesMap({
@@ -433,9 +425,18 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     ...pkg.devDependencies,
   });
 
+  // Only change the dependencies if the normalized hash changes, this helps to reduce meaningless changes.
+  const hasNewDependencies =
+    hashForDependencyMap(pkg.dependencies) !== hashForDependencyMap(combinedDependencies);
+  const hasNewDevDependencies =
+    hashForDependencyMap(pkg.devDependencies) !== hashForDependencyMap(combinedDevDependencies);
   // Save the dependencies
-  pkg.dependencies = combinedDependencies;
-  pkg.devDependencies = combinedDevDependencies;
+  if (hasNewDependencies) {
+    pkg.dependencies = combinedDependencies;
+  }
+  if (hasNewDevDependencies) {
+    pkg.devDependencies = combinedDevDependencies;
+  }
 
   /**
    * Add new app entry points
@@ -447,12 +448,12 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
   // - node_modules/expo/AppEntry.js
   // - expo/AppEntry.js
   // - expo/AppEntry
-  if (!isPkgMainExpoAppEntry(pkg.main) && pkg.main !== 'index.js' && pkg.main) {
+  if (shouldDeleteMainField(pkg.main)) {
     // Save the custom
     removedPkgMain = pkg.main;
+    delete pkg.main;
   }
-  delete pkg.main;
-  await fs.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
+  await fs.writeFile(path.resolve(projectRoot, 'package.json'), JSON.stringify(pkg, null, 2));
 
   updatingPackageJsonStep.succeed(
     'Updated package.json and added index.js entry point for iOS and Android.'
@@ -465,6 +466,125 @@ async function createNativeProjectsFromTemplateAsync(projectRoot: string): Promi
     );
     log.newLine();
   }
+
+  return {
+    hasNewDependencies,
+    hasNewDevDependencies,
+  };
+}
+
+export function shouldDeleteMainField(main?: any): boolean {
+  if (!main || !isPkgMainExpoAppEntry(main)) {
+    return false;
+  }
+
+  return !main?.startsWith('index.');
+}
+
+function normalizeDependencyMap(deps: DependenciesMap): string[] {
+  return Object.keys(deps)
+    .map(dependency => `${dependency}@${deps[dependency]}`)
+    .sort();
+}
+
+export function hashForDependencyMap(deps: DependenciesMap): string {
+  const depsList = normalizeDependencyMap(deps);
+  const depsString = depsList.join('\n');
+  return createFileHash(depsString);
+}
+
+/**
+ * Extract the template and copy the ios and android directories over to the project directory.
+ *
+ * @return `true` if any project files were created.
+ */
+async function cloneNativeDirectoriesAsync({
+  projectRoot,
+  tempDir,
+  exp,
+}: {
+  projectRoot: string;
+  tempDir: string;
+  exp: Pick<ExpoConfig, 'name' | 'sdkVersion'>;
+}): Promise<string[]> {
+  const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
+
+  // NOTE(brentvatne): Removing spaces between steps for now, add back when
+  // there is some additional context for steps
+  const creatingNativeProjectStep = CreateApp.logNewSection(
+    'Creating native project directories (./ios and ./android) and updating .gitignore'
+  );
+  const targetPaths = ['ios', 'android', 'index.js'];
+  let copiedPaths: string[] = [];
+  let skippedPaths: string[] = [];
+  try {
+    await Exp.extractTemplateAppAsync(templateSpec, tempDir, exp);
+    [copiedPaths, skippedPaths] = copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
+    const results = GitIgnore.mergeGitIgnorePaths(
+      path.join(projectRoot, '.gitignore'),
+      path.join(tempDir, '.gitignore')
+    );
+
+    let message = `Created native projects`;
+
+    if (skippedPaths.length) {
+      message += log.chalk.dim(
+        ` | ${skippedPaths.map(path => log.chalk.bold(`/${path}`)).join(', ')} already created`
+      );
+    }
+    if (!results?.didMerge) {
+      message += log.chalk.dim(` | gitignore already synced`);
+    } else if (results.didMerge && results.didClear) {
+      message += log.chalk.dim(` | synced gitignore`);
+    }
+    creatingNativeProjectStep.succeed(message);
+  } catch (e) {
+    log(chalk.red(e.message));
+    creatingNativeProjectStep.fail(
+      'Failed to create the native project - see the output above for more information.'
+    );
+    log(
+      chalk.yellow(
+        'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
+      )
+    );
+    process.exit(1);
+  }
+
+  return copiedPaths;
+}
+
+/**
+ *
+ * @param projectRoot
+ * @param tempDir
+ *
+ * @return `true` if the project is ejecting, and `false` if it's syncing.
+ */
+async function createNativeProjectsFromTemplateAsync(
+  projectRoot: string,
+  tempDir: string
+): Promise<
+  { hasNewProjectFiles: boolean; needsPodInstall: boolean } & DependenciesModificationResults
+> {
+  // We need the SDK version to proceed
+  const { exp, pkg } = await ensureConfigAsync(projectRoot);
+
+  const copiedPaths = await cloneNativeDirectoriesAsync({ projectRoot, tempDir, exp });
+
+  writeMetroConfig({ projectRoot, pkg, tempDir });
+
+  const depsResults = await updatePackageJSONAsync({ projectRoot, tempDir, pkg });
+
+  return {
+    hasNewProjectFiles: !!copiedPaths.length,
+    // If the iOS folder changes or new packages are added, we should rerun pod install.
+    needsPodInstall:
+      copiedPaths.includes('ios') ||
+      depsResults.hasNewDependencies ||
+      depsResults.hasNewDevDependencies,
+    ...depsResults,
+  };
 }
 
 /**
@@ -493,29 +613,6 @@ function createDependenciesMap(dependencies: any): DependenciesMap {
     }
   }
   return outputMap;
-}
-
-async function promptForNativeAppNameAsync({ name }: Pick<ExpoConfig, 'name'>): Promise<string> {
-  log('First, we want to clarify what names we should use for your app:');
-  const result = await prompt(
-    [
-      {
-        name: 'name',
-        message: "What should your app appear as on a user's home screen?",
-        default: name,
-        validate({ length }: string): true | ValidationErrorMessage {
-          return length ? true : 'App display name cannot be empty.';
-        },
-      },
-    ],
-    {
-      nonInteractiveHelp: 'Please specify "expo.name" in app.json / app.config.js.',
-    }
-  );
-
-  log.newLine();
-
-  return result.name;
 }
 
 /**

@@ -551,7 +551,10 @@ export async function upgradeAsync(
 
   const clearingCacheStep = logNewSection('Clearing the packager cache.');
   try {
-    await Project.startReactNativeServerAsync(projectRoot, { reset: true, nonPersistent: true });
+    await Project.startReactNativeServerAsync({
+      projectRoot,
+      options: { reset: true, nonPersistent: true },
+    });
   } catch (e) {
     clearingCacheStep.fail(`Failed to clear packager cache with error: ${e.message}`);
   } finally {
@@ -687,7 +690,7 @@ async function maybeCleanNpmStateAsync(packageManager: any) {
   }
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
     .command('upgrade [sdk-version]')
     .alias('update')

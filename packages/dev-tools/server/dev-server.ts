@@ -11,8 +11,8 @@ const PORT = 3333;
 
 async function run(): Promise<void> {
   try {
-    const projectDir = process.argv[2];
-    if (!projectDir) {
+    const projectRoot = process.argv[2];
+    if (!projectRoot) {
       throw new Error('No project dir specified.\nUsage: yarn dev [path]');
     }
 
@@ -39,9 +39,9 @@ async function run(): Promise<void> {
       httpServer.once('listening', resolve);
       httpServer.listen(PORT, 'localhost');
     });
-    startGraphQLServer(projectDir, httpServer, authenticationContext);
+    startGraphQLServer(projectRoot, httpServer, authenticationContext);
     console.log('Starting project...');
-    await Project.startAsync(projectDir);
+    await Project.startAsync(projectRoot);
     const url = `http://localhost:${PORT}`;
     console.log(`Development server running at ${url}`);
     openBrowser(url);

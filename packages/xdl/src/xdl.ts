@@ -1,6 +1,6 @@
 import { install as installSourceMapSupport } from 'source-map-support';
 
-import * as Analytics from './Analytics';
+import Analytics, { AnalyticsClient } from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
@@ -55,7 +55,7 @@ const IosWorkspace = require('./detach/IosWorkspace');
 if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
   installSourceMapSupport();
 }
-export { Analytics };
+export { Analytics, AnalyticsClient };
 export { Android };
 
 export { AndroidShellApp };

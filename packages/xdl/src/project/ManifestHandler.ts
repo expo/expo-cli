@@ -4,7 +4,7 @@ import http from 'http';
 import os from 'os';
 import { URL } from 'url';
 
-import * as Analytics from '../Analytics';
+import Analytics from '../Analytics';
 import ApiV2 from '../ApiV2';
 import Config from '../Config';
 import * as Exp from '../Exp';
