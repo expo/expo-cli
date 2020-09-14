@@ -259,7 +259,7 @@ describe('update credentials.json', () => {
       });
 
       (prompts as any)
-        .mockImplementationOnce(() => ({ confirm: true })) // Continue with partial credentials
+        .mockImplementationOnce(() => ({ value: true })) // Continue with partial credentials
         .mockImplementation(() => {
           throw new Error("shouldn't happen");
         });
