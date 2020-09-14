@@ -20,6 +20,7 @@ export function evalConfig(
   require('@babel/register')({
     only: [configFile],
     cache: false,
+    cwd: request?.projectRoot ?? process.cwd(),
     extensions: ['.ts', '.js'],
     presets: [require.resolve('@expo/babel-preset-cli')],
   });
