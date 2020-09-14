@@ -28,10 +28,8 @@ import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import HashIds from 'hashids';
-import http from 'http';
 import escapeRegExp from 'lodash/escapeRegExp';
 import { AddressInfo } from 'net';
-import os from 'os';
 import path from 'path';
 import readLastLines from 'read-last-lines';
 import semver from 'semver';
@@ -39,12 +37,11 @@ import slug from 'slugify';
 import split from 'split';
 import terminalLink from 'terminal-link';
 import treekill from 'tree-kill';
-import { URL } from 'url';
 import urljoin from 'url-join';
 import { promisify } from 'util';
 import uuid from 'uuid';
 
-import * as Analytics from './Analytics';
+import Analytics from './Analytics';
 import * as Android from './Android';
 import ApiV2 from './ApiV2';
 import Config from './Config';
@@ -55,13 +52,7 @@ import { maySkipManifestValidation } from './Env';
 import { ErrorCode } from './ErrorCode';
 import * as Exp from './Exp';
 import logger from './Logger';
-import {
-  Asset,
-  exportAssetsAsync,
-  publishAssetsAsync,
-  resolveGoogleServicesFile,
-  resolveManifestAssets,
-} from './ProjectAssets';
+import { Asset, PublicConfig, exportAssetsAsync, publishAssetsAsync } from './ProjectAssets';
 import * as ProjectSettings from './ProjectSettings';
 import * as Sentry from './Sentry';
 import * as ThirdParty from './ThirdParty';
@@ -75,6 +66,7 @@ import XDLError from './XDLError';
 import * as ExponentTools from './detach/ExponentTools';
 import * as TableText from './logs/TableText';
 import * as Doctor from './project/Doctor';
+import { getManifestHandler } from './project/ManifestHandler';
 import * as ProjectUtils from './project/ProjectUtils';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 import FormData from './tools/FormData';
@@ -85,25 +77,6 @@ const TUNNEL_TIMEOUT = 10 * 1000;
 const treekillAsync = promisify<number, string>(treekill);
 const ngrokConnectAsync = promisify(ngrok.connect);
 const ngrokKillAsync = promisify(ngrok.kill);
-
-type CachedSignedManifest =
-  | {
-      manifestString: null;
-      signedManifest: null;
-    }
-  | {
-      manifestString: string;
-      signedManifest: string;
-    };
-
-const _cachedSignedManifest: CachedSignedManifest = {
-  manifestString: null,
-  signedManifest: null,
-};
-
-type PublicConfig = ExpoConfig & {
-  sdkVersion: string;
-};
 
 type SelfHostedIndex = PublicConfig & {
   dependencies: string[];
@@ -414,17 +387,11 @@ export async function exportForAppHosting(
   const iosBundle = bundles.ios.code;
   const androidBundle = bundles.android.code;
 
-  const iosBundleHash = crypto
-    .createHash('md5')
-    .update(iosBundle)
-    .digest('hex');
+  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto
-    .createHash('md5')
-    .update(androidBundle)
-    .digest('hex');
+  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 
@@ -441,6 +408,7 @@ export async function exportForAppHosting(
     projectRoot,
     exp,
     hostedUrl: publicUrl,
+    assetPath: 'assets',
     outputDir,
     bundles,
   });
@@ -1679,154 +1647,6 @@ export async function stopReactNativeServerAsync(projectRoot: string): Promise<v
     packagerPort: null,
     packagerPid: null,
   });
-}
-
-const blacklistedEnvironmentVariables = new Set([
-  'EXPO_APPLE_PASSWORD',
-  'EXPO_ANDROID_KEY_PASSWORD',
-  'EXPO_ANDROID_KEYSTORE_PASSWORD',
-  'EXPO_IOS_DIST_P12_PASSWORD',
-  'EXPO_IOS_PUSH_P12_PASSWORD',
-  'EXPO_CLI_PASSWORD',
-]);
-
-function shouldExposeEnvironmentVariableInManifest(key: string) {
-  if (blacklistedEnvironmentVariables.has(key.toUpperCase())) {
-    return false;
-  }
-  return key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_');
-}
-
-function stripPort(host: string | undefined): string | undefined {
-  if (!host) {
-    return host;
-  }
-  return new URL('/', `http://${host}`).hostname;
-}
-
-function getManifestHandler(projectRoot: string) {
-  return async (
-    req: express.Request | http.IncomingMessage,
-    res: express.Response | http.ServerResponse
-  ) => {
-    try {
-      // We intentionally don't `await`. We want to continue trying even
-      // if there is a potential error in the package.json and don't want to slow
-      // down the request
-      Doctor.validateWithNetworkAsync(projectRoot);
-      // Get packager opts and then copy into bundleUrlPackagerOpts
-      const packagerOpts = await ProjectSettings.readAsync(projectRoot);
-      const { exp: manifest } = getConfig(projectRoot);
-      const bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
-      bundleUrlPackagerOpts.urlType = 'http';
-      if (bundleUrlPackagerOpts.hostType === 'redirect') {
-        bundleUrlPackagerOpts.hostType = 'tunnel';
-      }
-      manifest.xde = true; // deprecated
-      manifest.developer = {
-        tool: Config.developerTool,
-        projectRoot,
-      };
-      manifest.packagerOpts = packagerOpts;
-      manifest.env = {};
-      for (const key of Object.keys(process.env)) {
-        if (shouldExposeEnvironmentVariableInManifest(key)) {
-          manifest.env[key] = process.env[key];
-        }
-      }
-      const platform = (req.headers['exponent-platform'] || 'ios').toString();
-      const entryPoint = Exp.determineEntryPoint(projectRoot, platform);
-      const mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
-      const queryParams = await UrlUtils.constructBundleQueryParamsAsync(projectRoot, packagerOpts);
-      const path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(
-        platform
-      )}&${queryParams}`;
-      const hostname = stripPort(req.headers.host);
-      manifest.bundleUrl =
-        (await UrlUtils.constructBundleUrlAsync(projectRoot, bundleUrlPackagerOpts, hostname)) +
-        path;
-      manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot, hostname);
-      manifest.mainModuleName = mainModuleName;
-      manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, hostname);
-      manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
-      await resolveManifestAssets(
-        projectRoot,
-        manifest as PublicConfig,
-        async path => manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + 'assets/' + path
-      ); // the server normally inserts this but if we're offline we'll do it here
-      await resolveGoogleServicesFile(projectRoot, manifest);
-      const hostUUID = await UserSettings.anonymousIdentifier();
-      const currentSession = await UserManager.getSessionAsync();
-      if (!currentSession || Config.offline) {
-        manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
-      }
-      let manifestString;
-      if (req.headers['exponent-accept-signature']) {
-        manifestString =
-          !currentSession || Config.offline
-            ? getUnsignedManifestString(manifest)
-            : await getSignedManifestStringAsync(manifest, currentSession);
-      } else {
-        manifestString = JSON.stringify(manifest);
-      }
-      const hostInfo = {
-        host: hostUUID,
-        server: 'xdl',
-        serverVersion: require('@expo/xdl/package.json').version,
-        serverDriver: Config.developerTool,
-        serverOS: os.platform(),
-        serverOSVersion: os.release(),
-      };
-      res.setHeader('Exponent-Server', JSON.stringify(hostInfo));
-      res.end(manifestString);
-      Analytics.logEvent('Serve Manifest', {
-        projectRoot,
-        developerTool: Config.developerTool,
-        sdkVersion: manifest.sdkVersion ?? null,
-      });
-    } catch (e) {
-      ProjectUtils.logError(projectRoot, 'expo', e.stack);
-      // 5xx = Server Error HTTP code
-      res.statusCode = 520;
-      res.end(
-        JSON.stringify({
-          error: e.toString(),
-        })
-      );
-    }
-  };
-}
-
-export async function getSignedManifestStringAsync(
-  manifest: ExpoConfig,
-  // NOTE: we currently ignore the currentSession that is passed in, see the note below about analytics.
-  currentSession: { sessionSecret?: string; accessToken?: string }
-) {
-  const manifestString = JSON.stringify(manifest);
-  if (_cachedSignedManifest.manifestString === manifestString) {
-    return _cachedSignedManifest.signedManifest;
-  }
-  // WARNING: Removing the following line will regress analytics, see: https://github.com/expo/expo-cli/pull/2357
-  // TODO: make this more obvious from code
-  const user = await UserManager.ensureLoggedInAsync();
-  const { response } = await ApiV2.clientForUser(user).postAsync('manifest/sign', {
-    args: {
-      remoteUsername: manifest.owner ?? (await UserManager.getCurrentUsernameAsync()),
-      remotePackageName: manifest.slug,
-    },
-    manifest,
-  });
-  _cachedSignedManifest.manifestString = manifestString;
-  _cachedSignedManifest.signedManifest = response;
-  return response;
-}
-
-export function getUnsignedManifestString(manifest: ExpoConfig) {
-  const unsignedManifest = {
-    manifestString: JSON.stringify(manifest),
-    signature: 'UNSIGNED',
-  };
-  return JSON.stringify(unsignedManifest);
 }
 
 export async function startExpoServerAsync(projectRoot: string): Promise<void> {

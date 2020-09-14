@@ -17,7 +17,7 @@ async function userWantsToEjectWithoutUpgradingAsync() {
 
 async function action(
   projectDir: string,
-  options: LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions
+  options: (LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions) & { npm?: boolean }
 ) {
   let exp: ExpoConfig;
   try {
@@ -27,6 +27,10 @@ async function action(
     console.log(chalk.red(error.message));
     console.log();
     process.exit(1);
+  }
+
+  if (options.npm) {
+    options.packageManager = 'npm';
   }
 
   // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3 for ExpoKit
@@ -65,5 +69,7 @@ export default function (program: Command) {
       '-f --force',
       'Will attempt to generate an iOS project even when the system is not running macOS. Unsafe and may fail.'
     )
+    .option('--no-install', 'Skip installing npm packages and CocoaPods.')
+    .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .asyncActionProjectDir(action);
 }

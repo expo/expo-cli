@@ -3,6 +3,7 @@ import { vol } from 'memfs';
 import AndroidBuilder from '../AndroidBuilder';
 
 jest.mock('fs');
+jest.mock('../../../../../git');
 jest.mock('../../../../../credentials/context', () => {
   return {
     Context: jest.fn().mockImplementation(() => ({
@@ -73,12 +74,15 @@ describe('AndroidBuilder', () => {
         projectUrl,
         artifactPath: 'android/app/build/outputs/**/*.{apk,aab}',
         gradleCommand: ':app:bundleRelease',
+        projectRootDirectory: '.',
         secrets: {
-          keystore: {
-            dataBase64: keystore.base64,
-            keystorePassword: 'keystorePassword',
-            keyAlias: 'keyAlias',
-            keyPassword: 'keyPassword',
+          buildCredentials: {
+            keystore: {
+              dataBase64: keystore.base64,
+              keystorePassword: 'keystorePassword',
+              keyAlias: 'keyAlias',
+              keyPassword: 'keyPassword',
+            },
           },
         },
       });
@@ -109,11 +113,13 @@ describe('AndroidBuilder', () => {
         packageJson: { example: 'packageJson' },
         manifest: { example: 'manifest' },
         secrets: {
-          keystore: {
-            dataBase64: keystore.base64,
-            keystorePassword: 'keystorePassword',
-            keyAlias: 'keyAlias',
-            keyPassword: 'keyPassword',
+          buildCredentials: {
+            keystore: {
+              dataBase64: keystore.base64,
+              keystorePassword: 'keystorePassword',
+              keyAlias: 'keyAlias',
+              keyPassword: 'keyPassword',
+            },
           },
         },
       });

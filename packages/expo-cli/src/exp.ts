@@ -19,7 +19,7 @@ import {
 } from '@expo/xdl';
 import boxen from 'boxen';
 import chalk from 'chalk';
-import program, { Command, Option } from 'commander';
+import program, { Command } from 'commander';
 import fs from 'fs';
 import getenv from 'getenv';
 import leven from 'leven';
@@ -346,9 +346,30 @@ Command.prototype.asyncActionProjectDir = function (
     }
 
     if (opts.config) {
+      // @ts-ignore: This guards against someone passing --config without a path.
+      if (opts.config === true) {
+        log.addNewLineIfNone();
+        log('Please specify your custom config path:');
+        log(log.chalk.green(`  expo ${this.name()} --config ${log.chalk.cyan(`<app-config>`)}`));
+        log.newLine();
+        process.exit(1);
+      }
+
       const pathToConfig = path.resolve(process.cwd(), opts.config);
+      // Warn the user when the custom config path they provided does not exist.
       if (!fs.existsSync(pathToConfig)) {
-        throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
+        const relativeInput = path.relative(process.cwd(), opts.config);
+        const formattedPath = log.chalk
+          .reset(pathToConfig)
+          .replace(relativeInput, log.chalk.bold(relativeInput));
+        log.addNewLineIfNone();
+        log.nestedWarn(`Custom config file does not exist:\n${formattedPath}`);
+        log.newLine();
+        const helpCommand = log.chalk.green(`expo ${this.name()} --help`);
+        log(`Run ${helpCommand} for more info`);
+        log.newLine();
+        process.exit(1);
+        // throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
       }
       ConfigUtils.setCustomConfigPath(projectDir, pathToConfig);
     }
@@ -684,101 +705,10 @@ async function writePathAsync() {
   await Binaries.writePathToUserSettingsAsync();
 }
 
-type OptionData = {
-  flags: string;
-  required: boolean;
-  description: string;
-  default: any;
-};
-
-type CommandData = {
-  name: string;
-  description: string;
-  alias?: string;
-  options: OptionData[];
-};
-
-// Sets up commander with a minimal setup for inspecting commands and extracting
-// data from them.
-function generateCommandJSON() {
-  program.name('expo');
-  registerCommands(program);
-  return program.commands.map(commandAsJSON);
-}
-
-// The type definition for Option seems to be wrong - doesn't include defaultValue
-function optionAsJSON(option: Option & { defaultValue: any }): OptionData {
-  return {
-    flags: option.flags,
-    required: option.required,
-    description: option.description,
-    default: option.defaultValue,
-  };
-}
-
-function commandAsJSON(command: Command): CommandData {
-  return {
-    name: command.name(),
-    description: command.description(),
-    alias: command.alias(),
-    options: command.options.map(optionAsJSON),
-  };
-}
-
-function sanitizeFlags(flags: string) {
-  return flags.replace('<', '[').replace('>', ']');
-}
-
-function formatOptionAsMarkdown(option: OptionData) {
-  return `| \`${sanitizeFlags(option.flags)}\` | ${option.description} |`;
-}
-
-function formatOptionsAsMarkdown(options: OptionData[]) {
-  if (!options || !options.length) {
-    return 'This command does not take any options.';
-  }
-
-  return `| Option         | Description             |
-| ------------ | ----------------------- |
-${options.map(formatOptionAsMarkdown).join('\n')}
-`;
-}
-
-function formatCommandAsMarkdown(command: CommandData) {
-  return `
-<details><summary><h3>expo ${command.name}</h3><p>${command.description}</p></summary>
-<p>${
-    command.alias
-      ? `
-
-Alias: \`expo ${command.alias}\``
-      : ''
-  }
-
-${formatOptionsAsMarkdown(command.options)}
-
-</p>
-</details>
-  `;
-}
-
-function formatCommandsAsMarkdown(commands: CommandData[]) {
-  return commands.map(formatCommandAsMarkdown).join('\n');
-}
-
 // This is the entry point of the CLI
 export function run(programName: string) {
   (async function () {
-    if (process.argv[2] === 'introspect') {
-      const commands = generateCommandJSON();
-      if (process.argv[3] && process.argv[3].includes('markdown')) {
-        log(formatCommandsAsMarkdown(commands));
-      } else {
-        log(JSON.stringify(commands));
-      }
-    } else {
-      await Promise.all([writePathAsync(), runAsync(programName)]);
-    }
+    await Promise.all([writePathAsync(), runAsync(programName)]);
   })().catch(e => {
     console.error('Uncaught Error', e);
     process.exit(1);

@@ -1,25 +1,22 @@
 import { AndroidConfig, BareAppConfig, ExpoConfig, IOSConfig, getConfig } from '@expo/config';
-import * as PackageManager from '@expo/package-manager';
 import spawnAsync from '@expo/spawn-async';
 import { Exp, IosPlist, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
-import fs from 'fs';
-import getenv from 'getenv';
-import yaml from 'js-yaml';
+import fs from 'fs-extra';
 import padEnd from 'lodash/padEnd';
 import trimStart from 'lodash/trimStart';
 import npmPackageArg from 'npm-package-arg';
-import ora from 'ora';
 import pacote from 'pacote';
 import path from 'path';
-import semver from 'semver';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
 import CommandError from '../CommandError';
 import log from '../log';
 import prompt from '../prompt';
+import prompts from '../prompts';
+import * as CreateApp from './utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 
 type Options = {
@@ -64,8 +61,16 @@ const FEATURED_TEMPLATES = [
 const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum', 'expo-template-bare-typescript'];
 const isMacOS = process.platform === 'darwin';
 
-async function action(projectDir: string, command: Command) {
-  const options: Options = {
+function assertValidName(folderName: string) {
+  const validation = CreateApp.validateName(folderName);
+  if (typeof validation === 'string') {
+    log.error(`Cannot create an app named ${chalk.red(`"${folderName}"`)}. ${validation}`);
+    process.exit(1);
+  }
+}
+
+function parseOptions(command: Command): Options {
+  return {
     yes: !!command.yes,
     yarn: !!command.yarn,
     npm: !!command.npm,
@@ -75,35 +80,106 @@ async function action(projectDir: string, command: Command) {
     // option is not set, `command.name` will point to `Command.prototype.name`.
     name: typeof command.name === 'string' ? ((command.name as unknown) as string) : undefined,
   };
-  if (options.yes) {
-    projectDir = '.';
-    if (!options.template) {
-      options.template = 'blank';
+}
+
+async function assertFolderEmptyAsync(projectRoot: string, folderName?: string) {
+  if (!(await CreateApp.assertFolderEmptyAsync({ projectRoot, folderName, overwrite: false }))) {
+    log.newLine();
+    log.nested('Try using a new directory name, or moving these files.');
+    log.newLine();
+    process.exit(1);
+  }
+}
+
+async function resolveProjectRootAsync(input?: string): Promise<string> {
+  let name = input?.trim();
+
+  if (!name) {
+    try {
+      const { answer } = await prompts(
+        {
+          type: 'text',
+          name: 'answer',
+          message: 'What would you like to name your app?',
+          initial: 'my-app',
+          validate: name => {
+            const validation = CreateApp.validateName(path.basename(path.resolve(name)));
+            if (typeof validation === 'string') {
+              return 'Invalid project name: ' + validation;
+            }
+            return true;
+          },
+        },
+        {
+          nonInteractiveHelp: 'Pass the project name using the first argument `expo init <name>`',
+        }
+      );
+
+      if (typeof answer === 'string') {
+        name = answer.trim();
+      }
+    } catch (error) {
+      // Handle the aborted message in a custom way.
+      if (error.code !== 'ABORTED') {
+        throw error;
+      }
     }
   }
 
-  let parentDir;
-  let dirName;
-  if (projectDir) {
-    const root = path.resolve(projectDir);
-    parentDir = path.dirname(root);
-    dirName = path.basename(root);
-    const validationResult = validateName(parentDir, dirName);
-    if (validationResult !== true) {
-      throw new CommandError('INVALID_PROJECT_DIR', validationResult);
-    }
-  } else if (command.parent?.nonInteractive) {
-    throw new CommandError(
-      'NON_INTERACTIVE',
-      'The project dir argument is required in non-interactive mode.'
-    );
+  if (!name) {
+    log.newLine();
+    log.nested('Please choose your app name:');
+    log.nested(`  ${log.chalk.green(`${program.name()} init`)} ${log.chalk.cyan('<app-name>')}`);
+    log.newLine();
+    log.nested(`Run ${log.chalk.green(`${program.name()} init --help`)} for more info`);
+    log.newLine();
+    process.exit(1);
+  }
+
+  const projectRoot = path.resolve(name);
+  const folderName = path.basename(projectRoot);
+
+  assertValidName(folderName);
+
+  await fs.ensureDir(projectRoot);
+
+  await assertFolderEmptyAsync(projectRoot, folderName);
+
+  return projectRoot;
+}
+
+async function action(projectDir: string, command: Command) {
+  const options = parseOptions(command);
+
+  // Resolve the name, and projectRoot
+  let projectRoot: string;
+  if (!projectDir && options.yes) {
+    projectRoot = path.resolve(process.cwd());
+    const folderName = path.basename(projectRoot);
+    assertValidName(folderName);
+    await assertFolderEmptyAsync(projectRoot, folderName);
   } else {
-    parentDir = process.cwd();
+    projectRoot = await resolveProjectRootAsync(projectDir || options.name);
+  }
+
+  let resolvedTemplate: string | null = options.template ?? null;
+  // @ts-ignore: This guards against someone passing --template without a name after it.
+  if (resolvedTemplate === true) {
+    console.log();
+    console.log('Please specify the template');
+    console.log();
+    process.exit(1);
+  }
+
+  // Download and sync templates
+  // TODO(Bacon): revisit
+  if (options.yes && !resolvedTemplate) {
+    resolvedTemplate = 'blank';
   }
 
   let templateSpec;
-  if (options.template) {
-    templateSpec = npmPackageArg(options.template);
+  if (resolvedTemplate) {
+    templateSpec = npmPackageArg(resolvedTemplate);
 
     // For backwards compatibility, 'blank' and 'tabs' are aliases for
     // 'expo-template-blank' and 'expo-template-tabs', respectively.
@@ -154,43 +230,26 @@ async function action(projectDir: string, command: Command) {
     templateSpec = npmPackageArg(template);
   }
 
-  let initialConfig;
+  const projectName = path.basename(projectRoot);
+  const initialConfig: Record<string, any> & { expo: any } = {
+    expo: {
+      name: projectName,
+      slug: projectName,
+    },
+  };
   const templateManifest = await pacote.manifest(templateSpec);
+  // TODO: Use presence of ios/android folder instead.
   const isBare = BARE_WORKFLOW_TEMPLATES.includes(templateManifest.name);
   if (isBare) {
-    initialConfig = await promptForBareConfig(parentDir, dirName, options);
-  } else {
-    initialConfig = await promptForManagedConfig(parentDir, dirName, options);
+    initialConfig.name = projectName;
   }
 
-  let packageManager: 'npm' | 'yarn' = 'npm';
-  if (options.install) {
-    if (options.yarn) {
-      packageManager = 'yarn';
-    } else if (options.npm) {
-      packageManager = 'npm';
-    } else if (PackageManager.shouldUseYarn()) {
-      packageManager = 'yarn';
-      log.newLine();
-      log('🧶 Using Yarn to install packages. You can pass --npm to use npm instead.');
-      log.newLine();
-    } else {
-      packageManager = 'npm';
-      log.newLine();
-      log('📦 Using npm to install packages. You can pass --yarn to use Yarn instead.');
-      log.newLine();
-    }
-  }
-
-  const extractTemplateStep = logNewSection('Downloading and extracting project files.');
+  const extractTemplateStep = CreateApp.logNewSection('Downloading and extracting project files.');
   let projectPath;
   try {
     projectPath = await Exp.extractAndPrepareTemplateAppAsync(
       templateSpec,
-      path.join(
-        parentDir,
-        dirName || ('expo' in initialConfig ? initialConfig.expo.slug : initialConfig.name)
-      ),
+      projectRoot,
       initialConfig
     );
     extractTemplateStep.succeed('Downloaded and extracted project files.');
@@ -201,71 +260,59 @@ async function action(projectDir: string, command: Command) {
     throw e;
   }
 
+  // Install dependencies
+
+  const packageManager = CreateApp.resolvePackageManager(options);
+
+  // TODO: not this
+  const workflow = isBare ? 'bare' : 'managed';
+
+  let podsInstalled: boolean = false;
+  const needsPodsInstalled = await fs.existsSync(path.join(projectRoot, 'ios'));
   if (options.install) {
-    const installJsDepsStep = logNewSection('Installing JavaScript dependencies.');
-    try {
-      await installDependenciesAsync(projectPath, packageManager, { silent: true });
-      installJsDepsStep.succeed('Installed JavaScript dependencies.');
-    } catch {
-      installJsDepsStep.fail(
-        `Something when wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to initialize the app.`
-      );
+    await installNodeDependenciesAsync(projectRoot, packageManager);
+    if (needsPodsInstalled) {
+      podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
     }
   }
 
-  let cdPath = path.relative(process.cwd(), projectPath);
-  if (cdPath.length > projectPath.length) {
-    cdPath = projectPath;
-  }
+  // Configure updates (?)
+
+  const cdPath = CreateApp.getChangeDirectoryPath(projectRoot);
+
+  let showPublishBeforeBuildWarning: boolean | undefined;
+  let didConfigureUpdatesProjectFiles: boolean = false;
+  let username: string | null = null;
+
   if (isBare) {
-    let podsInstalled = false;
-    if (options.install) {
-      try {
-        podsInstalled = await installPodsAsync(projectPath);
-      } catch (_) {}
-    }
-
-    let didConfigureUpdatesProjectFiles = false;
-    const username = await UserManager.getCurrentUsernameAsync();
+    username = await UserManager.getCurrentUsernameAsync();
     if (username) {
       try {
-        await configureUpdatesProjectFilesAsync(
-          projectPath,
-          initialConfig as BareAppConfig,
-          username
-        );
+        await configureUpdatesProjectFilesAsync(projectPath, initialConfig as any, username);
         didConfigureUpdatesProjectFiles = true;
       } catch {}
     }
-
-    log.newLine();
-    const showPublishBeforeBuildWarning = await usesOldExpoUpdatesAsync(projectPath);
-    await logProjectReadyAsync({
-      cdPath,
-      packageManager,
-      workflow: 'bare',
-      showPublishBeforeBuildWarning,
-      didConfigureUpdatesProjectFiles,
-      username,
-    });
-    if (!podsInstalled && isMacOS) {
-      log.newLine();
-      log.nested(
-        `⚠️  Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
-      );
-      log.nested('');
-      log.nested(`  cd ${cdPath ?? '.'}/ios`);
-      log.nested(`  pod install`);
-      log.nested('');
-    }
-  } else {
-    log.newLine();
-    await logProjectReadyAsync({ cdPath, packageManager, workflow: 'managed' });
+    showPublishBeforeBuildWarning = await usesOldExpoUpdatesAsync(projectPath);
   }
+
+  // Log info
+
+  log.addNewLineIfNone();
+  await logProjectReadyAsync({
+    cdPath,
+    packageManager,
+    workflow,
+    showPublishBeforeBuildWarning,
+    didConfigureUpdatesProjectFiles,
+    username,
+  });
 
   // Log a warning about needing to install node modules
   if (!options.install) {
     logNodeInstallWarning(cdPath, packageManager);
+  }
+  if (needsPodsInstalled && !podsInstalled) {
+    logCocoaPodsWarning(cdPath);
   }
 
   // Initialize Git at the end to ensure all lock files are committed.
@@ -282,38 +329,15 @@ async function action(projectDir: string, command: Command) {
   }
 }
 
-export async function installDependenciesAsync(
-  projectRoot: string,
-  packageManager: 'yarn' | 'npm',
-  flags: { silent: boolean } = { silent: false }
-) {
-  const options = { cwd: projectRoot, silent: flags.silent };
-  if (packageManager === 'yarn') {
-    const yarn = new PackageManager.YarnPackageManager(options);
-    const version = await yarn.versionAsync();
-    const nodeLinker = await yarn.getConfigAsync('nodeLinker');
-    if (semver.satisfies(version, '>=2.0.0-rc.24') && nodeLinker !== 'node-modules') {
-      const yarnRc = path.join(projectRoot, '.yarnrc.yml');
-      let yamlString = '';
-      try {
-        yamlString = fs.readFileSync(yarnRc, 'utf8');
-      } catch (error) {
-        if (error.code !== 'ENOENT') {
-          throw error;
-        }
-      }
-      const config = yamlString ? yaml.safeLoad(yamlString) : {};
-      config.nodeLinker = 'node-modules';
-      !flags.silent &&
-        log.warn(
-          `Yarn v${version} detected, enabling experimental Yarn v2 support using the node-modules plugin.`
-        );
-      !flags.silent && log(`Writing ${yarnRc}...`);
-      fs.writeFileSync(yarnRc, yaml.safeDump(config));
-    }
-    await yarn.installAsync();
-  } else {
-    await new PackageManager.NpmPackageManager(options).installAsync();
+async function installNodeDependenciesAsync(projectRoot: string, packageManager: 'yarn' | 'npm') {
+  const installJsDepsStep = CreateApp.logNewSection('Installing JavaScript dependencies.');
+  try {
+    await CreateApp.installNodeDependenciesAsync(projectRoot, packageManager);
+    installJsDepsStep.succeed('Installed JavaScript dependencies.');
+  } catch {
+    installJsDepsStep.fail(
+      `Something when wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to initialize the app.`
+    );
   }
 }
 
@@ -353,15 +377,38 @@ export async function initGitRepoAsync(
   }
 }
 
+// TODO: Use in eject
 function logNodeInstallWarning(cdPath: string, packageManager: 'yarn' | 'npm'): void {
   log.newLine();
   log.nested(`⚠️  Before running your app, make sure you have node modules installed:`);
   log.nested('');
-  log.nested(`  cd ${cdPath ?? '.'}/`);
+  if (cdPath) {
+    // In the case of --yes the project can be created in place so there would be no need to change directories.
+    log.nested(`  cd ${cdPath}/`);
+  }
   log.nested(`  ${packageManager === 'npm' ? 'npm install' : 'yarn'}`);
   log.nested('');
 }
 
+// TODO: Use in eject
+function logCocoaPodsWarning(cdPath: string): void {
+  if (process.platform !== 'darwin') {
+    return;
+  }
+  log.newLine();
+  log.nested(
+    `⚠️  Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
+  );
+  log.nested('');
+  if (cdPath) {
+    // In the case of --yes the project can be created in place so there would be no need to change directories.
+    log.nested(`  cd ${cdPath}/`);
+  }
+  log.nested(`  npx pod-install`);
+  log.nested('');
+}
+
+// TODO: Use in eject
 function logProjectReadyAsync({
   cdPath,
   packageManager,
@@ -394,9 +441,9 @@ function logProjectReadyAsync({
 
   if (workflow === 'managed') {
     log.nested(
-      `- ${chalk.bold(
-        `${packageManager} start`
-      )} # you can open iOS, Android, or web from here, or run them directly with the commands below.`
+      `- ${chalk.bold(`${packageManager} start`)} ${chalk.dim(
+        `# you can open iOS, Android, or web from here, or run them directly with the commands below.`
+      )}`
     );
   }
   log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
@@ -485,66 +532,6 @@ async function configureUpdatesProjectFilesAsync(
   } finally {
     await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
   }
-}
-
-async function installPodsAsync(projectRoot: string) {
-  let step = logNewSection('Installing CocoaPods.');
-  if (!isMacOS) {
-    step.succeed('Skipped installing CocoaPods because operating system is not on macOS.');
-    return false;
-  }
-  const packageManager = new PackageManager.CocoaPodsPackageManager({
-    cwd: path.join(projectRoot, 'ios'),
-    log,
-    silent: getenv.boolish('EXPO_DEBUG', true),
-  });
-
-  if (!(await packageManager.isCLIInstalledAsync())) {
-    try {
-      step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
-      step.render();
-      await PackageManager.CocoaPodsPackageManager.installCLIAsync({
-        nonInteractive: program.nonInteractive,
-        spawnOptions: packageManager.options,
-      });
-      step.succeed('Installed CocoaPods CLI');
-      step = logNewSection('Running `pod install` in the `ios` directory.');
-    } catch (e) {
-      step.stopAndPersist({
-        symbol: '⚠️ ',
-        text: chalk.red(
-          'Unable to install the CocoaPods CLI. Continuing with initializing the project, you can install CocoaPods afterwards.'
-        ),
-      });
-      if (e.message) {
-        log(`- ${e.message}`);
-      }
-      return false;
-    }
-  }
-
-  try {
-    await packageManager.installAsync();
-    step.succeed('Installed pods and initialized Xcode workspace.');
-    return true;
-  } catch (e) {
-    step.stopAndPersist({
-      symbol: '⚠️ ',
-      text: chalk.red(
-        'Something when wrong running `pod install` in the `ios` directory. Continuing with initializing the project, you can debug this afterwards.'
-      ),
-    });
-    if (e.message) {
-      log(`- ${e.message}`);
-    }
-    return false;
-  }
-}
-
-function logNewSection(title: string) {
-  const spinner = ora(chalk.bold(title));
-  spinner.start();
-  return spinner;
 }
 
 function validateName(parentDir: string, name: string | undefined) {

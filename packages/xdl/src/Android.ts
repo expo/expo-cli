@@ -10,7 +10,7 @@ import ProgressBar from 'progress';
 import prompts from 'prompts';
 import semver from 'semver';
 
-import * as Analytics from './Analytics';
+import Analytics from './Analytics';
 import Api from './Api';
 import * as Binaries from './Binaries';
 import Logger from './Logger';
@@ -203,10 +203,7 @@ async function startEmulatorAsync(device: Device): Promise<Device> {
 export async function getAttachedDevicesAsync(): Promise<Device[]> {
   const output = await getAdbOutputAsync(['devices', '-l']);
 
-  const splitItems = output
-    .trim()
-    .replace(/\n$/, '')
-    .split(os.EOL);
+  const splitItems = output.trim().replace(/\n$/, '').split(os.EOL);
   // First line is `"List of devices attached"`, remove it
   // @ts-ignore: todo
   const attachedDevices: {
@@ -570,7 +567,8 @@ async function openUrlAsync({
       // _checkExpoUpToDateAsync(); // let this run in background
     }
 
-    Logger.global.info(`Opening with Android ${device.type}: ${device.name}`);
+    Logger.global.info(`Opening ${chalk.underline(url)} on ${chalk.bold(device.name)}`);
+
     try {
       await _openUrlAsync({ pid: device.pid!, url });
     } catch (e) {

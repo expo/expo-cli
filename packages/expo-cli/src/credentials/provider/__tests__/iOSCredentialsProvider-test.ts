@@ -112,7 +112,7 @@ describe('iOSCredentialsProvider', () => {
       await provider.initAsync();
       const hasLocal = await provider.hasLocalAsync();
       expect(hasLocal).toBe(true);
-    });
+    }, 10000);
     it('should return true if there are missing fields', async () => {
       vol.fromJSON({
         './credentials.json': JSON.stringify({

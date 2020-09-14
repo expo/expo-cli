@@ -10,6 +10,39 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 9 Sep 2020 13:28:10 -0700](https://github.com/expo/expo-cli/commit/7b9b00b12095ce6ea5c02c03f793fcc6bf0f55a7)
+
+### 🎉 New features
+
+- [expo-cli] Clean up TerminalUI ([#2614](https://github.com/expo/expo-cli/issues/2614))
+
+### 🐛 Bug fixes
+
+- [expo-cli] Default to silent when installing node dependencies through init
+
+### 📦 Packages updated
+
+- expo-cli@3.27.4
+
+## [Wed, 9 Sep 2020 10:03:41 -0700](https://github.com/expo/expo-cli/commit/2a2a120e30d64ea535fb251ff203c97b457ab8bf)
+
+### 🐛 Bug fixes
+
+- [xdl] Use ~assets for publish and assets for export
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.42
+- expo-cli@3.27.3
+- @expo/xdl@58.0.3
+
+## [Thu, 9 Sep 2020 16:32:14 +0200](https://github.com/expo/expo-cli/commit/58ac4c43d0b3e7cb8db5b2c46d8602bf101e33db)
+
+### 🎉 New features
+
+- [expo-cli] EAS Build: add `experimental.npmToken` to `credentials.json` [#2603](https://github.com/expo/expo-cli/pull/2603)
+- [expo-cli] EAS Build: monorepo support [#2601](https://github.com/expo/expo-cli/pull/2601)
+
 ## [Thu, 8 Sep 2020 14:30:14 +0200](https://github.com/expo/expo-cli/commit/f0e24ee436806c109c19329c7e161fee0d2f0c81)
 
 ### 🛠 Breaking changes
@@ -32,7 +65,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
-- [expo-cli] fix Segment context format [#2560](https://github.com/expo/expo-cli/pull/2560))
+- [expo-cli] fix Segment context format [#2560](https://github.com/expo/expo-cli/pull/2560)
 
 ### 📦 Packages updated
 
