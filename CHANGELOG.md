@@ -6,6 +6,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [expo-cli] Remove deprecated --web-only flag from start command
+
 ### 🎉 New features
 
 ### 🐛 Bug fixes

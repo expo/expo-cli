@@ -61,7 +61,7 @@ async function normalizeOptionsAsync(
 ): Promise<NormalizedOptions> {
   const opts: NormalizedOptions = {
     ...options, // This is necessary to ensure we don't drop any options
-    webOnly: options.webOnly,
+    webOnly: !!options.webOnly, // This is only ever true in the start:web command
     nonInteractive: options.parent?.nonInteractive,
   };
 
@@ -314,10 +314,6 @@ export default (program: any) => {
     .helpGroup('core')
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .option('-c, --clear', 'Clear the Metro bundler cache')
-    .option(
-      '--web-only',
-      'Only start the Webpack dev server for web. [Deprecated]: use `expo start:web`'
-    )
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .option('--dev', 'Turn development mode on')
@@ -331,9 +327,6 @@ export default (program: any) => {
     .asyncActionProjectDir(
       async (projectDir: string, options: Options): Promise<void> => {
         const normalizedOptions = await normalizeOptionsAsync(projectDir, options);
-        if (normalizedOptions.webOnly) {
-          return await startWebAction(projectDir, normalizedOptions);
-        }
         return await action(projectDir, normalizedOptions);
       }
     );
