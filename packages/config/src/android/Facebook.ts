@@ -1,7 +1,11 @@
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
-import { Document } from './Manifest';
+import {
+  Document,
+  addMetaDataItemToMainApplication,
+  removeMetaDataItemFromMainApplication,
+} from './Manifest';
 import {
   getProjectStringsXMLPathAsync,
   readStringsXMLAsync,
@@ -174,56 +178,4 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
   }
 
   return manifestDocument;
-}
-
-function addMetaDataItemToMainApplication(
-  mainApplication: any,
-  itemName: string,
-  itemValue: string
-) {
-  let existingMetaDataItem;
-  const newItem = {
-    $: {
-      'android:name': itemName,
-      'android:value': itemValue,
-    },
-  };
-  if (mainApplication.hasOwnProperty('meta-data')) {
-    existingMetaDataItem = mainApplication['meta-data'].filter(
-      (e: any) => e['$']['android:name'] === itemName
-    );
-    if (existingMetaDataItem.length) {
-      existingMetaDataItem[0]['$']['android:value'] = itemValue;
-    } else {
-      mainApplication['meta-data'].push(newItem);
-    }
-  } else {
-    mainApplication['meta-data'] = [newItem];
-  }
-  return mainApplication;
-}
-
-function removeMetaDataItemFromMainApplication(
-  mainApplication: any,
-  itemName: string,
-  itemValue?: string
-) {
-  if ('meta-data' in mainApplication) {
-    const index = mainApplication['meta-data'].findIndex((e: any) => {
-      if (e['$']['android:name'] === itemName) {
-        if (typeof itemValue !== 'undefined') {
-          if (e['$']['android:value'] === itemValue) {
-            return true;
-          }
-        } else {
-          return true;
-        }
-      }
-      return false;
-    });
-    if (index > -1) {
-      mainApplication['meta-data'].splice(index, 1);
-    }
-  }
-  return mainApplication;
 }
