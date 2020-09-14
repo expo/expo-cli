@@ -144,7 +144,7 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
 async function startWebAction(projectDir: string, options: NormalizedOptions): Promise<void> {
   const { exp, rootPath } = await configureProjectAsync(projectDir, options);
   const startOpts = parseStartOptions(options);
-  await Project.startAsync(rootPath, exp, startOpts);
+  await Project.startAsync(rootPath, { ...startOpts, exp });
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
   if (!options.nonInteractive && !exp.isDetached) {
@@ -160,7 +160,7 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
 
   const startOpts = parseStartOptions(options);
 
-  await Project.startAsync(rootPath, exp, startOpts);
+  await Project.startAsync(rootPath, { ...startOpts, exp });
 
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
 

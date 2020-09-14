@@ -380,7 +380,7 @@ Please reload the project in the Expo app for the change to take effect.`
         } else {
           log('Restarting Metro bundler...');
         }
-        Project.startAsync(projectRoot, undefined, { ...options, reset });
+        Project.startAsync(projectRoot, { ...options, reset });
         break;
       }
       case 's': {
