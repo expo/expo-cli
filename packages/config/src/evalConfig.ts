@@ -1,3 +1,6 @@
+import fs from 'fs-extra';
+import fromString from 'require-from-string';
+
 import { AppJSONConfig, ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
 import { serializeAndEvaluate } from './Serialize';
@@ -17,15 +20,16 @@ export function evalConfig(
   configFile: string,
   request: ConfigContext | null
 ): DynamicConfigResults {
-  require('@babel/register')({
+  const babel = require('@babel/core');
+  const { code } = babel.transformFileSync(require.resolve(configFile), {
     only: [configFile],
-    cache: false,
-    cwd: request?.projectRoot ?? process.cwd(),
-    extensions: ['.ts', '.js'],
+    babelrc: false,
+    ignore: [/node_modules/],
+    filename: 'unknown',
     presets: [require.resolve('@expo/babel-preset-cli')],
   });
 
-  let result = require(configFile);
+  let result = fromString(code);
   if (result.default != null) {
     result = result.default;
   }
