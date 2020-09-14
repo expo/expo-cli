@@ -5,6 +5,11 @@ import * as UrlUtils from '../../utils/url';
 import { platformDisplayNames } from '../constants';
 import { Build } from '../types';
 
+export interface DeprecationInfo {
+  type: 'user-facing' | 'internal';
+  message: string;
+}
+
 async function printLogsUrls(
   accountName: string,
   builds: { platform: 'android' | 'ios'; buildId: string }[]
@@ -46,4 +51,23 @@ async function printBuildResults(builds: (Build | null)[]): Promise<void> {
   }
 }
 
-export { printLogsUrls, printBuildResults };
+function printDeprecationWarnings(deprecationInfo?: DeprecationInfo): void {
+  if (!deprecationInfo) {
+    return;
+  }
+  if (deprecationInfo.type === 'internal') {
+    log.warn('This command is using API that soon will be deprecated, please update expo-cli.');
+    log.warn("Changes won't affect your project confiuration.");
+    log.warn(deprecationInfo.message);
+  } else if (deprecationInfo.type === 'user-facing') {
+    log.warn('This command is using API that soon will be deprecated, please update expo-cli.');
+    log.warn(
+      'There might be some changes necessary to your project configuration, latest expo-cli will provide more specific error messages.'
+    );
+    log.warn(deprecationInfo.message);
+  } else {
+    log(deprecationInfo); // should not happen
+  }
+}
+
+export { printLogsUrls, printBuildResults, printDeprecationWarnings };
