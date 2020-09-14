@@ -177,24 +177,12 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
 }
 
 // TODO: Use Manifest version after https://github.com/expo/expo-cli/pull/2587 lands
-function removeMetaDataItemFromMainApplication(
-  mainApplication: any,
-  itemName: string,
-  itemValue?: string
-) {
-  if ('meta-data' in mainApplication) {
-    const index = mainApplication['meta-data'].findIndex((e: any) => {
-      if (e['$']['android:name'] === itemName) {
-        if (typeof itemValue !== 'undefined') {
-          if (e['$']['android:value'] === itemValue) {
-            return true;
-          }
-        } else {
-          return true;
-        }
-      }
-      return false;
-    });
+function removeMetaDataItemFromMainApplication(mainApplication: any, itemName: string) {
+  if (mainApplication.hasOwnProperty('meta-data')) {
+    const index = mainApplication['meta-data'].findIndex(
+      (e: any) => e['$']['android:name'] === itemName
+    );
+
     if (index > -1) {
       mainApplication['meta-data'].splice(index, 1);
     }
