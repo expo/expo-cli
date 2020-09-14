@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [expo-cli] EAS Build: Improve errors and wanrings when deprecating API [#2639](https://github.com/expo/expo-cli/pull/2639)
+
 ### 🐛 Bug fixes
 
 ## [Thu, 9 Sep 2020 16:32:14 +0200](https://github.com/expo/expo-cli/commit/58ac4c43d0b3e7cb8db5b2c46d8602bf101e33db)
