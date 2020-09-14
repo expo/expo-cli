@@ -150,13 +150,7 @@ function getPackageJsonAndPath(
   config: Pick<ExpoConfig, 'nodeModulesPath'> = {}
 ): [PackageJSONConfig, string] {
   const packageJsonPath = getRootPackageJsonPath(projectRoot, config);
-
-  try {
-    return [JsonFile.read(packageJsonPath), packageJsonPath];
-  } catch (error) {
-    error.message = `Failed to parse package.json at ${packageJsonPath}\n${error.message}`;
-    throw error;
-  }
+  return [JsonFile.read(packageJsonPath), packageJsonPath];
 }
 
 export function readConfigJson(
