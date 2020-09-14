@@ -120,8 +120,7 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
   } else {
     mainApplication = removeMetaDataItemFromMainApplication(
       mainApplication,
-      'com.facebook.sdk.ApplicationId',
-      '@string/facebook_app_id' // The corresponding string is set in setFacebookAppIdString
+      'com.facebook.sdk.ApplicationId'
     );
   }
   if (displayName) {
