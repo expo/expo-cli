@@ -424,7 +424,9 @@ function _renderUnversionedUniversalModulesDependencies(
 
     const expoModulesThatAreNotUnimodules = [];
     if (sdkMajorVersion >= 39) {
-      expoModulesThatAreNotUnimodules.push(`pod 'EXRandom', path: '../packages/expo-random/ios'`);
+      expoModulesThatAreNotUnimodules.push(
+        `pod 'EXRandom', path: '${universalModulesPath}/expo-random/ios'`
+      );
     }
 
     return indentString(
