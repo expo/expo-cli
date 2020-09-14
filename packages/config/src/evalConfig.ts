@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+// @ts-ignore
 import fromString from 'require-from-string';
 
 import { AppJSONConfig, ConfigContext, ExpoConfig } from './Config.types';
