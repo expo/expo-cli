@@ -46,18 +46,18 @@ ApiV2.setClientName(packageJSON.version);
 
 // The following prototyped functions are not used here, but within in each file found in `./commands`
 // Extending commander to easily add more options to certain command line arguments
-Command.prototype.urlOpts = function () {
+Command.prototype.urlOpts = function() {
   urlOpts.addOptions(this);
   return this;
 };
 
-Command.prototype.allowOffline = function () {
+Command.prototype.allowOffline = function() {
   this.option('--offline', 'Allows this command to run while offline');
   return this;
 };
 
 // Add support for logical command groupings
-Command.prototype.helpGroup = function (name: string) {
+Command.prototype.helpGroup = function(name: string) {
   if (this.commands[this.commands.length - 1]) {
     this.commands[this.commands.length - 1].__helpGroup = name;
   } else {
@@ -67,7 +67,7 @@ Command.prototype.helpGroup = function (name: string) {
 };
 
 // A longer description that will be displayed then the command is used with --help
-Command.prototype.longDescription = function (name: string) {
+Command.prototype.longDescription = function(name: string) {
   if (this.commands[this.commands.length - 1]) {
     this.commands[this.commands.length - 1].__longDescription = name;
   } else {
@@ -93,16 +93,16 @@ function breakSentence(input: string): string {
   return input.replace(/(.{1,72})(?:\n|$| )/g, '$1\n').trim();
 }
 
-Command.prototype.prepareCommands = function () {
+Command.prototype.prepareCommands = function() {
   return this.commands
-    .filter(function (cmd: Command) {
+    .filter(function(cmd: Command) {
       // Display all commands with EXPO_DEBUG, otherwise use the noHelp option.
       if (getenv.boolish('EXPO_DEBUG', false)) {
         return true;
       }
       return !['internal', 'eas'].includes(cmd.__helpGroup);
     })
-    .map(function (cmd: Command, i: number) {
+    .map(function(cmd: Command, i: number) {
       const args = cmd._args.map(humanReadableArgName).join(' ');
 
       // Remove alias. We still show this with --help on the command.
@@ -121,7 +121,7 @@ Command.prototype.prepareCommands = function () {
     });
 };
 
-Command.prototype.helpInformation = function () {
+Command.prototype.helpInformation = function() {
   let desc: string[] = [];
   // Use the long description if available, otherwise use the regular description.
   const description = this.__longDescription ?? this._description;
@@ -162,7 +162,7 @@ function replaceAll(string: string, search: string, replace: string): string {
 }
 
 // Extended the help renderer to add a custom format and groupings.
-Command.prototype.commandHelp = function () {
+Command.prototype.commandHelp = function() {
   if (!this.commands.length) {
     return '';
   }
@@ -285,7 +285,7 @@ export type Action = (...args: any[]) => void;
 
 // asyncAction is a wrapper for all commands/actions to be executed after commander is done
 // parsing the command input
-Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: boolean) {
+Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boolean) {
   return this.action(async (...args: any[]) => {
     if (!skipUpdateCheck) {
       try {
@@ -311,6 +311,16 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
         log.error(chalk.red(err.message));
       } else if (err.isXDLError) {
         log.error(err.message);
+      } else if (err.isJsonFileError) {
+        if (err.code === 'EJSONEMPTY') {
+          // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
+          log.error(err.message);
+        } else {
+          log.addNewLineIfNone();
+          log.error(err.message);
+          const stacktrace = formatStackTrace(err.stack, this.name());
+          log.error(chalk.gray(stacktrace));
+        }
       } else {
         log.error(err.message);
         log.error(chalk.gray(err.stack));
@@ -320,6 +330,63 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
     }
   });
 };
+
+function getStringBetweenParens(value: string): string {
+  const regExp = /\(([^)]+)\)/;
+  const matches = regExp.exec(value);
+  if (matches && matches?.length > 1) {
+    return matches[1];
+  }
+  return value;
+}
+
+function focusLastPathComponent(value: string): string {
+  const parts = value.split('/');
+  if (parts.length > 1) {
+    const last = parts.pop();
+    const current = chalk.dim(parts.join('/') + '/');
+    return `${current}${last}`;
+  }
+  return chalk.dim(value);
+}
+
+function formatStackTrace(stacktrace: string, command: string): string {
+  const treeStackLines: string[][] = [];
+  for (const line of stacktrace.split('\n')) {
+    const [first, ...parts] = line.trim().split(' ');
+    // Remove at -- we'll use a branch instead.
+    if (first === 'at') {
+      treeStackLines.push(parts);
+    }
+  }
+
+  return treeStackLines
+    .map((parts, index) => {
+      let first = parts.shift();
+      let last = parts.pop();
+
+      // Replace anonymous with command name
+      if (first === 'Command.<anonymous>') {
+        first = chalk.bold(`expo ${command}`);
+      } else if (first?.startsWith('Object.')) {
+        // Remove extra JS types from function names
+        first = first.split('Object.').pop()!;
+      } else if (first?.startsWith('Function.')) {
+        // Remove extra JS types from function names
+        first = first.split('Function.').pop()!;
+      } else if (first?.startsWith('/')) {
+        // If the first element is a path
+        first = focusLastPathComponent(getStringBetweenParens(first));
+      }
+
+      if (last) {
+        last = focusLastPathComponent(getStringBetweenParens(last));
+      }
+      const branch = (index === treeStackLines.length - 1 ? '└' : '├') + '─';
+      return ['   ', branch, first, ...parts, last].filter(Boolean).join(' ');
+    })
+    .join('\n');
+}
 
 // asyncActionProjectDir captures the projectDirectory from the command line,
 // setting it to cwd if it is not provided.
@@ -331,7 +398,7 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
 // - Attaches the bundling logger
 // - Checks if the project directory is valid or not
 // - Runs AsyncAction with the projectDir as an argument
-Command.prototype.asyncActionProjectDir = function (
+Command.prototype.asyncActionProjectDir = function(
   asyncFn: Action,
   options: { checkConfig?: boolean; skipSDKVersionRequirement?: boolean } = {}
 ) {
@@ -502,9 +569,8 @@ Command.prototype.asyncActionProjectDir = function (
           } else {
             log(
               chalk.green(
-                `Finished building JavaScript bundle in ${
-                  endTime.getTime() - startTime.getTime()
-                }ms.`
+                `Finished building JavaScript bundle in ${endTime.getTime() -
+                  startTime.getTime()}ms.`
               )
             );
           }
@@ -707,7 +773,7 @@ async function writePathAsync() {
 
 // This is the entry point of the CLI
 export function run(programName: string) {
-  (async function () {
+  (async function() {
     await Promise.all([writePathAsync(), runAsync(programName)]);
   })().catch(e => {
     console.error('Uncaught Error', e);

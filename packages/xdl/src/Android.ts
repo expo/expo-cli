@@ -203,7 +203,10 @@ async function startEmulatorAsync(device: Device): Promise<Device> {
 export async function getAttachedDevicesAsync(): Promise<Device[]> {
   const output = await getAdbOutputAsync(['devices', '-l']);
 
-  const splitItems = output.trim().replace(/\n$/, '').split(os.EOL);
+  const splitItems = output
+    .trim()
+    .replace(/\n$/, '')
+    .split(os.EOL);
   // First line is `"List of devices attached"`, remove it
   // @ts-ignore: todo
   const attachedDevices: {
