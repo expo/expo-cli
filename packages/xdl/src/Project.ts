@@ -41,7 +41,7 @@ import urljoin from 'url-join';
 import { promisify } from 'util';
 import uuid from 'uuid';
 
-import * as Analytics from './Analytics';
+import Analytics from './Analytics';
 import * as Android from './Android';
 import ApiV2 from './ApiV2';
 import Config from './Config';
@@ -387,17 +387,11 @@ export async function exportForAppHosting(
   const iosBundle = bundles.ios.code;
   const androidBundle = bundles.android.code;
 
-  const iosBundleHash = crypto
-    .createHash('md5')
-    .update(iosBundle)
-    .digest('hex');
+  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto
-    .createHash('md5')
-    .update(androidBundle)
-    .digest('hex');
+  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 
