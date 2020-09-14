@@ -15,6 +15,7 @@ import {
 } from '../../appleApi';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
+import { confirmAsync } from '../../prompts';
 import { displayIosAppCredentials } from '../actions/list';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
@@ -51,14 +52,9 @@ export class RemoveProvisioningProfile implements IView {
 
     let shouldRevoke = this.shouldRevoke;
     if (!shouldRevoke && !ctx.nonInteractive) {
-      const { revoke } = await prompt([
-        {
-          type: 'confirm',
-          name: 'revoke',
-          message:
-            'Do you also want to revoke this Provisioning Profile on Apple Developer Portal?',
-        },
-      ]);
+      const revoke = await confirmAsync({
+        message: 'Do you also want to revoke this Provisioning Profile on Apple Developer Portal?',
+      });
       shouldRevoke = revoke;
     }
 
@@ -167,17 +163,14 @@ export class CreateOrReuseProvisioningProfile implements IView {
 
     const autoselectedProfile = this.choosePreferred(existingProfiles, distCert);
     // autoselect creds if we find valid certs
-    const confirmQuestion: Question = {
-      type: 'confirm',
-      name: 'confirm',
-      message: `${formatProvisioningProfileFromApple(
-        autoselectedProfile
-      )} \n Would you like to use this profile?`,
-      pageSize: Infinity,
-    };
 
     if (!ctx.nonInteractive) {
-      const { confirm } = await prompt(confirmQuestion);
+      const confirm = await confirmAsync({
+        message: `${formatProvisioningProfileFromApple(
+          autoselectedProfile
+        )} \n Would you like to use this profile?`,
+        limit: Infinity,
+      });
       if (!confirm) {
         return await this._createOrReuse(ctx);
       }

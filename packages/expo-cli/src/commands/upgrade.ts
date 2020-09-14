@@ -224,7 +224,6 @@ async function maybeBailOnUnsafeFunctionalityAsync(
 
     const answer = await confirmAsync({
       message: `This command works best on SDK 33 and higher. We can try updating for you, but you will likely need to follow up with the instructions from https://docs.expo.io/workflow/upgrading-expo-sdk-walkthrough/. Continue anyways?`,
-      initial: true,
     });
 
     if (!answer) {
@@ -265,7 +264,6 @@ async function shouldBailWhenUsingLatest(
     }
     const answer = await confirmAsync({
       message: `You are already using the latest SDK version. Do you want to run the update anyways? This may be useful to ensure that all of your packages are set to the correct version.`,
-      initial: true,
     });
 
     if (!answer) {

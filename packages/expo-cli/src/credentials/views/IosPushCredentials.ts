@@ -7,6 +7,7 @@ import CommandError from '../../CommandError';
 import { PushKey, PushKeyInfo, PushKeyManager, isPushKey } from '../../appleApi';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
+import { confirmAsync } from '../../prompts';
 import { displayIosUserCredentials } from '../actions/list';
 import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
@@ -111,13 +112,9 @@ export class RemoveIosPush implements IView {
 
     if (appsList && !ctx.nonInteractive) {
       log('Removing Push Key');
-      const { confirm } = await prompt([
-        {
-          type: 'confirm',
-          name: 'confirm',
-          message: `Removing this key/cert will disable notifications in ${appsList}. Do you want to continue?`,
-        },
-      ]);
+      const confirm = await confirmAsync({
+        message: `Removing this key/cert will disable notifications in ${appsList}. Do you want to continue?`,
+      });
       if (!confirm) {
         log('Aborting');
         return;
@@ -129,13 +126,9 @@ export class RemoveIosPush implements IView {
 
     let shouldRevoke = this.shouldRevoke;
     if (!shouldRevoke && !ctx.nonInteractive) {
-      const { revoke } = await prompt([
-        {
-          type: 'confirm',
-          name: 'revoke',
-          message: `Do you also want to revoke it on Apple Developer Portal?`,
-        },
-      ]);
+      const revoke = await confirmAsync({
+        message: `Do you also want to revoke it on Apple Developer Portal?`,
+      });
       shouldRevoke = revoke;
     }
 
@@ -187,12 +180,9 @@ export class UpdateIosPush implements IView {
         );
       }
 
-      const question: Question = {
-        type: 'confirm',
-        name: 'confirm',
+      const confirm = await confirmAsync({
         message: `Update will affect all applications that are using this key (${appsList}). Do you want to continue?`,
-      };
-      const { confirm } = await prompt(question);
+      });
       if (!confirm) {
         log.warn('Aborting update process');
         return;
@@ -269,19 +259,16 @@ export class CreateOrReusePushKey implements IView {
 
     // autoselect creds if we find valid keys
     const autoselectedPushKey = existingPushKeys[0];
-    const confirmQuestion: Question = {
-      type: 'confirm',
-      name: 'confirm',
-      message: `${formatPushKey(
-        autoselectedPushKey,
-        await ctx.ios.getAllCredentials(this.app.accountName),
-        'VALID'
-      )} \n Would you like to use this Push Key?`,
-      pageSize: Infinity,
-    };
 
     if (!ctx.nonInteractive) {
-      const { confirm } = await prompt(confirmQuestion);
+      const confirm = await confirmAsync({
+        message: `${formatPushKey(
+          autoselectedPushKey,
+          await ctx.ios.getAllCredentials(this.app.accountName),
+          'VALID'
+        )} \n Would you like to use this Push Key?`,
+        limit: Infinity,
+      });
       if (!confirm) {
         return await this._createOrReuse(ctx);
       }

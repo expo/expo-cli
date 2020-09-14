@@ -100,6 +100,7 @@ export async function confirmAsync(
 ): Promise<boolean> {
   const { value } = await prompt(
     {
+      initial: true,
       ...questions,
       name: 'value',
       type: 'confirm',
