@@ -1,9 +1,10 @@
 // @ts-ignore
-import fromString from 'require-from-string';
+import requireString from 'require-from-string';
 
 import { AppJSONConfig, ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
 import { serializeAndEvaluate } from './Serialize';
+// import babel from '@babel/core';
 
 type RawDynamicConfig = AppJSONConfig | Partial<ExpoConfig> | null;
 
@@ -23,13 +24,14 @@ export function evalConfig(
   const babel = require('@babel/core');
   const { code } = babel.transformFileSync(require.resolve(configFile), {
     only: [configFile],
+    cwd: request?.projectRoot || process.cwd(),
     babelrc: false,
     ignore: [/node_modules/],
     filename: 'unknown',
     presets: [require.resolve('@expo/babel-preset-cli')],
   });
 
-  let result = fromString(code);
+  let result = requireString(code);
   if (result.default != null) {
     result = result.default;
   }

@@ -1,6 +1,5 @@
 import JsonFile, { JSONObject } from '@expo/json-file';
 import fs from 'fs-extra';
-import { boolish } from 'getenv';
 import { sync as globSync } from 'glob';
 import path from 'path';
 import semver from 'semver';
@@ -22,8 +21,6 @@ import { ConfigError } from './Errors';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
-
-export const isDynamicEvalEnabled = boolish('EXPO_HOT_CONFIG', false);
 
 /**
  * If a config has an `expo` object then that will be used as the config.
@@ -85,10 +82,6 @@ function getSupportedPlatforms(
  * @param options enforce criteria for a project config
  */
 export function getConfig(projectRoot: string, options: GetConfigOptions = {}): ProjectConfig {
-  if (typeof options.useHotEval === 'undefined' && isDynamicEvalEnabled) {
-    options.useHotEval = isDynamicEvalEnabled;
-  }
-
   const paths = getConfigFilePaths(projectRoot);
 
   const rawStaticConfig = paths.staticConfigPath ? getStaticConfig(paths.staticConfigPath) : null;
@@ -132,7 +125,6 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
         staticConfigPath: paths.staticConfigPath,
         packageJsonPath,
         config: getContextConfig(staticConfig),
-        useHotEval: options.useHotEval,
       }
     );
     // Allow for the app.config.js to `export default null;`
