@@ -126,7 +126,6 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
     );
   }
 
-  //todo remove this
   if (await usesOldExpoUpdatesAsync(projectRoot)) {
     log.nested(
       `- 🚀 ${
