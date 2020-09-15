@@ -82,6 +82,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     androidManifest = await AndroidConfig.Orientation.setAndroidOrientation(exp, androidManifest);
     androidManifest = await AndroidConfig.Permissions.setAndroidPermissions(exp, androidManifest);
     androidManifest = await AndroidConfig.Branch.setBranchApiKey(exp, androidManifest);
+    androidManifest = await AndroidConfig.MetaData.setMetaData(exp, androidManifest);
     androidManifest = await AndroidConfig.Facebook.setFacebookConfig(exp, androidManifest);
     androidManifest = await AndroidConfig.UserInterfaceStyle.setUiModeAndroidManifest(
       exp,
