@@ -1,7 +1,8 @@
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
-import { Document, addMetaDataItemToMainApplication } from './Manifest';
+import { Document, MetaDataItem, addMetaDataItemToMainApplication } from './Manifest';
+import { addOrRemoveMetaDataItemInArray, removeMetaDataItem } from './MetaData';
 import {
   getProjectStringsXMLPathAsync,
   readStringsXMLAsync,
@@ -75,15 +76,48 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
   return true;
 }
 
-export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
-  const scheme = getFacebookScheme(config);
+export function syncFacebookConfigMetaData(config: ExpoConfig): MetaDataItem[] {
+  let metadata = config.android?.metadata ?? [];
+  metadata = metadata as MetaDataItem[];
+
   const appId = getFacebookAppId(config);
   const displayName = getFacebookDisplayName(config);
   const autoInitEnabled = getFacebookAutoInitEnabled(config);
   const autoLogAppEvents = getFacebookAutoLogAppEvents(config);
   const advertiserIdCollection = getFacebookAdvertiserIDCollection(config);
 
-  let mainApplication = manifestDocument?.manifest?.application?.filter(
+  if (appId != null) {
+    metadata.push({
+      name: 'com.facebook.sdk.ApplicationId',
+      value: '@string/facebook_app_id', // The corresponding string is set in setFacebookAppIdString
+    });
+  } else {
+    metadata = removeMetaDataItem(metadata, 'com.facebook.sdk.ApplicationId');
+  }
+  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+    name: 'com.facebook.sdk.ApplicationName',
+    value: displayName,
+  });
+  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+    name: 'com.facebook.sdk.AutoInitEnabled',
+    value: autoInitEnabled,
+  });
+  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+    name: 'com.facebook.sdk.AutoLogAppEventsEnabled',
+    value: autoLogAppEvents,
+  });
+  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+    name: 'com.facebook.sdk.AdvertiserIDCollectionEnabled',
+    value: advertiserIdCollection,
+  });
+
+  return metadata;
+}
+
+export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
+  const scheme = getFacebookScheme(config);
+
+  const mainApplication = manifestDocument?.manifest?.application?.filter(
     (e: any) => e['$']['android:name'] === '.MainApplication'
   )[0];
 
@@ -111,80 +145,5 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
     }
   }
 
-  if (appId) {
-    mainApplication = addMetaDataItemToMainApplication(
-      mainApplication,
-      'com.facebook.sdk.ApplicationId',
-      '@string/facebook_app_id' // The corresponding string is set in setFacebookAppIdString
-    );
-  } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      'com.facebook.sdk.ApplicationId'
-    );
-  }
-  if (displayName) {
-    mainApplication = addMetaDataItemToMainApplication(
-      mainApplication,
-      'com.facebook.sdk.ApplicationName',
-      displayName
-    );
-  } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      'com.facebook.sdk.ApplicationName'
-    );
-  }
-  if (autoInitEnabled !== null) {
-    mainApplication = addMetaDataItemToMainApplication(
-      mainApplication,
-      'com.facebook.sdk.AutoInitEnabled',
-      autoInitEnabled ? 'true' : 'false'
-    );
-  } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      'com.facebook.sdk.AutoInitEnabled'
-    );
-  }
-  if (autoLogAppEvents !== null) {
-    mainApplication = addMetaDataItemToMainApplication(
-      mainApplication,
-      'com.facebook.sdk.AutoLogAppEventsEnabled',
-      autoLogAppEvents ? 'true' : 'false'
-    );
-  } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      'com.facebook.sdk.AutoLogAppEventsEnabled'
-    );
-  }
-  if (advertiserIdCollection !== null) {
-    mainApplication = addMetaDataItemToMainApplication(
-      mainApplication,
-      'com.facebook.sdk.AdvertiserIDCollectionEnabled',
-      advertiserIdCollection ? 'true' : 'false'
-    );
-  } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      'com.facebook.sdk.AdvertiserIDCollectionEnabled'
-    );
-  }
-
   return manifestDocument;
-}
-
-// TODO: Use Manifest version after https://github.com/expo/expo-cli/pull/2587 lands
-function removeMetaDataItemFromMainApplication(mainApplication: any, itemName: string) {
-  if (mainApplication.hasOwnProperty('meta-data')) {
-    const index = mainApplication['meta-data'].findIndex(
-      (e: any) => e['$']['android:name'] === itemName
-    );
-
-    if (index > -1) {
-      mainApplication['meta-data'].splice(index, 1);
-    }
-  }
-  return mainApplication;
 }

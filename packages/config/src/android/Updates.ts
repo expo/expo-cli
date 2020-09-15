@@ -1,5 +1,6 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, addMetaDataItemToMainApplication } from './Manifest';
+import { MetaDataItem } from './Manifest';
+import { addOrRemoveMetaDataItemInArray } from './MetaData';
 
 export function getUpdateUrl(config: ExpoConfig, username: string | null) {
   const user = typeof config.owner === 'string' ? config.owner : username;
@@ -30,47 +31,39 @@ export function getUpdatesCheckOnLaunch(config: ExpoConfig) {
   return 'ALWAYS';
 }
 
-export async function setUpdatesConfig(
+export function syncUpdatesConfigMetaData(
   config: ExpoConfig,
-  manifestDocument: Document,
   username: string | null
-) {
-  const mainApplication = manifestDocument.manifest.application.filter(
-    (e: any) => e['$']['android:name'] === '.MainApplication'
-  )[0];
+): MetaDataItem[] {
+  let metadata = config.android?.metadata ?? [];
+  metadata = metadata as MetaDataItem[];
 
-  addMetaDataItemToMainApplication(
-    mainApplication,
-    'expo.modules.updates.ENABLED',
-    `${getUpdatesEnabled(config)}`
-  );
-  addMetaDataItemToMainApplication(
-    mainApplication,
-    'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH',
-    getUpdatesCheckOnLaunch(config)
-  );
-  addMetaDataItemToMainApplication(
-    mainApplication,
-    'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS',
-    `${getUpdatesTimeout(config)}`
-  );
-
+  const enabled = getUpdatesEnabled(config);
+  const checkAutomatically = getUpdatesCheckOnLaunch(config);
+  const fallbackToCacheTimeout = getUpdatesTimeout(config);
   const updateUrl = getUpdateUrl(config, username);
-  if (updateUrl) {
-    addMetaDataItemToMainApplication(
-      mainApplication,
-      'expo.modules.updates.EXPO_UPDATE_URL',
-      updateUrl
-    );
-  }
   const sdkVersion = getSDKVersion(config);
-  if (sdkVersion) {
-    addMetaDataItemToMainApplication(
-      mainApplication,
-      'expo.modules.updates.EXPO_SDK_VERSION',
-      sdkVersion
-    );
-  }
 
-  return manifestDocument;
+  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+    name: 'expo.modules.updates.EXPO_UPDATE_URL',
+    value: updateUrl,
+  });
+  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+    name: 'expo.modules.updates.EXPO_SDK_VERSION',
+    value: sdkVersion,
+  });
+  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+    name: 'expo.modules.updates.ENABLED',
+    value: enabled,
+  });
+  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+    name: 'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH',
+    value: checkAutomatically,
+  });
+  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+    name: 'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS',
+    value: fallbackToCacheTimeout,
+  });
+
+  return metadata;
 }

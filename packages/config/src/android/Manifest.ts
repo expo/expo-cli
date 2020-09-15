@@ -99,24 +99,35 @@ export async function getPackageAsync(manifest: Document): Promise<string | null
   return manifest.manifest?.['$']?.package ?? null;
 }
 
-export function addMetaDataItemToMainApplication(
-  mainApplication: any,
-  itemName: string,
-  itemValue: string
-) {
+export type MetaDataItem = {
+  name: string;
+  resource?: string;
+  value?: string;
+};
+
+export function removeAllMetaDataItemsFromMainApplication(mainApplication: any) {
+  if ('meta-data' in mainApplication) {
+    mainApplication['meta-data'] = [];
+  }
+  return mainApplication;
+}
+
+export function addMetaDataItemToMainApplication(mainApplication: any, item: MetaDataItem) {
   let existingMetaDataItem;
   const newItem = {
     $: {
-      'android:name': itemName,
-      'android:value': itemValue,
+      'android:name': item.name,
+      'android:value': item.value,
+      'android:resource': item.resource,
     },
   };
-  if (mainApplication.hasOwnProperty('meta-data')) {
+  if ('meta-data' in mainApplication) {
     existingMetaDataItem = mainApplication['meta-data'].filter(
-      (e: any) => e['$']['android:name'] === itemName
+      (e: any) => e['$']['android:name'] === item.name
     );
     if (existingMetaDataItem.length) {
-      existingMetaDataItem[0]['$']['android:value'] = itemValue;
+      existingMetaDataItem[0]['$']['android:value'] = item.value;
+      existingMetaDataItem[0]['$']['android:resource'] = item.resource;
     } else {
       mainApplication['meta-data'].push(newItem);
     }

@@ -76,20 +76,24 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   });
 
   await modifyAndroidManifestAsync(projectRoot, async androidManifest => {
+    if (!exp.android) exp.android = {};
+    // if (!exp.android.metadata) exp.android.metadata = [];
+    exp.android.metadata = AndroidConfig.Facebook.syncFacebookConfigMetaData(exp);
+    exp.android.metadata = AndroidConfig.Branch.syncBranchConfigMetaData(exp);
+    exp.android.metadata = AndroidConfig.GoogleMapsApiKey.syncGoogleMapsApiConfigMetaData(exp);
+    exp.android.metadata = AndroidConfig.GoogleMobileAds.syncGoogleMobileAdsConfigMetaData(exp);
+    exp.android.metadata = AndroidConfig.Updates.syncUpdatesConfigMetaData(exp, username);
+
+    androidManifest = await AndroidConfig.MetaData.setMetaData(exp, androidManifest);
+    androidManifest = await AndroidConfig.Facebook.setFacebookConfig(exp, androidManifest);
+
     androidManifest = await AndroidConfig.Package.setPackageInAndroidManifest(exp, androidManifest);
     androidManifest = await AndroidConfig.AllowBackup.setAllowBackup(exp, androidManifest);
     androidManifest = await AndroidConfig.Scheme.setScheme(exp, androidManifest);
     androidManifest = await AndroidConfig.Orientation.setAndroidOrientation(exp, androidManifest);
     androidManifest = await AndroidConfig.Permissions.setAndroidPermissions(exp, androidManifest);
-    androidManifest = await AndroidConfig.Branch.setBranchApiKey(exp, androidManifest);
-    androidManifest = await AndroidConfig.MetaData.setMetaData(exp, androidManifest);
-    androidManifest = await AndroidConfig.Facebook.setFacebookConfig(exp, androidManifest);
-    androidManifest = await AndroidConfig.UserInterfaceStyle.setUiModeAndroidManifest(
-      exp,
-      androidManifest
-    );
 
-    androidManifest = await AndroidConfig.GoogleMobileAds.setGoogleMobileAdsConfig(
+    androidManifest = await AndroidConfig.UserInterfaceStyle.setUiModeAndroidManifest(
       exp,
       androidManifest
     );
@@ -102,8 +106,6 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
       exp,
       androidManifest
     );
-
-    androidManifest = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifest, username);
 
     return androidManifest;
   });

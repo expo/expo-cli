@@ -520,8 +520,13 @@ async function configureUpdatesProjectFilesAsync(
   const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
     androidManifestPath
   );
-  const result = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifestJSON, username);
-  await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
+
+  if (!exp.android) exp.android = {};
+  exp.android.metadata = await AndroidConfig.Updates.syncUpdatesConfigMetaData(exp, username);
+
+  const androidManifest = await AndroidConfig.MetaData.setMetaData(exp, androidManifestJSON);
+
+  await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, androidManifest);
 
   // apply iOS config
   const supportingDirectory = path.join(projectRoot, 'ios', initialConfig.name, 'Supporting');
@@ -620,7 +625,7 @@ async function promptForManagedConfig(
   return { expo };
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
     .command('init [path]')
     .alias('i')

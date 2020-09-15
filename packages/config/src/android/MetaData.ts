@@ -1,17 +1,45 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, addMetaDataItemToMainApplication } from './Manifest';
+import {
+  Document,
+  MetaDataItem,
+  addMetaDataItemToMainApplication,
+  removeAllMetaDataItemsFromMainApplication,
+} from './Manifest';
 
-export async function setMetaData(config: ExpoConfig, manifestDocument: Document) {
+export function removeMetaDataItem(metadata: MetaDataItem[], name: string): MetaDataItem[] {
+  metadata = metadata.filter(item => name === item.name);
+  return metadata;
+}
+
+export function addOrRemoveMetaDataItemInArray(
+  metadata: MetaDataItem[],
+  item: { name: string; value: any }
+): MetaDataItem[] {
+  if (item.value != null) {
+    metadata.push({
+      name: item.name,
+      value: typeof item.value === 'boolean' ? String(item.value) : item.value,
+    });
+  } else {
+    metadata = removeMetaDataItem(metadata, item.name);
+  }
+
+  return metadata;
+}
+
+export function setMetaData(config: ExpoConfig, manifestDocument: Document): Document {
   let mainApplication = manifestDocument?.manifest?.application?.filter(
     (e: any) => e['$']['android:name'] === '.MainApplication'
   )[0];
 
   // @ts-ignore
-  const metaData = config.android?.metaData ?? {};
+  const metaData = config.android?.metadata ?? [];
+
+  removeAllMetaDataItemsFromMainApplication(mainApplication);
 
   // TODO: Clear all metadata first...
-  for (const key of Object.keys(metaData)) {
-    mainApplication = addMetaDataItemToMainApplication(mainApplication, key, metaData[key]);
+  for (const item of metaData as MetaDataItem[]) {
+    mainApplication = addMetaDataItemToMainApplication(mainApplication, item);
   }
 
   return manifestDocument;
