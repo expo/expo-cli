@@ -7,15 +7,16 @@ import {
 } from './Manifest';
 
 export function removeMetaDataItem(metadata: MetaDataItem[], name: string): MetaDataItem[] {
-  metadata = metadata.filter(item => name === item.name);
+  metadata = metadata.filter(item => name !== item.name);
   return metadata;
 }
 
 export function addOrRemoveMetaDataItemInArray(
   metadata: MetaDataItem[],
-  item: { name: string; value: any }
+  item: { name: string; value: any },
+  shouldAdd: boolean = item.value != null
 ): MetaDataItem[] {
-  if (item.value != null) {
+  if (shouldAdd) {
     metadata.push({
       name: item.name,
       value: typeof item.value === 'boolean' ? String(item.value) : item.value,

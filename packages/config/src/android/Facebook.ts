@@ -1,8 +1,8 @@
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
-import { Document, MetaDataItem, addMetaDataItemToMainApplication } from './Manifest';
-import { addOrRemoveMetaDataItemInArray, removeMetaDataItem } from './MetaData';
+import { Document, MetaDataItem } from './Manifest';
+import { addOrRemoveMetaDataItemInArray } from './MetaData';
 import {
   getProjectStringsXMLPathAsync,
   readStringsXMLAsync,
@@ -86,14 +86,14 @@ export function syncFacebookConfigMetaData(config: ExpoConfig): MetaDataItem[] {
   const autoLogAppEvents = getFacebookAutoLogAppEvents(config);
   const advertiserIdCollection = getFacebookAdvertiserIDCollection(config);
 
-  if (appId != null) {
-    metadata.push({
+  metadata = addOrRemoveMetaDataItemInArray(
+    metadata,
+    {
       name: 'com.facebook.sdk.ApplicationId',
       value: '@string/facebook_app_id', // The corresponding string is set in setFacebookAppIdString
-    });
-  } else {
-    metadata = removeMetaDataItem(metadata, 'com.facebook.sdk.ApplicationId');
-  }
+    },
+    appId != null
+  );
   metadata = addOrRemoveMetaDataItemInArray(metadata, {
     name: 'com.facebook.sdk.ApplicationName',
     value: displayName,

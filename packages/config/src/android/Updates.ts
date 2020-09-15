@@ -44,26 +44,43 @@ export function syncUpdatesConfigMetaData(
   const updateUrl = getUpdateUrl(config, username);
   const sdkVersion = getSDKVersion(config);
 
-  metadata = addOrRemoveMetaDataItemInArray(metadata, {
-    name: 'expo.modules.updates.EXPO_UPDATE_URL',
-    value: updateUrl,
-  });
-  metadata = addOrRemoveMetaDataItemInArray(metadata, {
-    name: 'expo.modules.updates.EXPO_SDK_VERSION',
-    value: sdkVersion,
-  });
+  metadata = addOrRemoveMetaDataItemInArray(
+    metadata,
+    {
+      name: 'expo.modules.updates.EXPO_UPDATE_URL',
+      value: updateUrl,
+    },
+    enabled && !!updateUrl
+  );
+  metadata = addOrRemoveMetaDataItemInArray(
+    metadata,
+    {
+      name: 'expo.modules.updates.EXPO_SDK_VERSION',
+      value: sdkVersion,
+    },
+    enabled && !!sdkVersion
+  );
+  // TODO(Bacon): Do we want to have `enabled: false` or will omitting the property work.
   metadata = addOrRemoveMetaDataItemInArray(metadata, {
     name: 'expo.modules.updates.ENABLED',
     value: enabled,
   });
-  metadata = addOrRemoveMetaDataItemInArray(metadata, {
-    name: 'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH',
-    value: checkAutomatically,
-  });
-  metadata = addOrRemoveMetaDataItemInArray(metadata, {
-    name: 'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS',
-    value: fallbackToCacheTimeout,
-  });
+  metadata = addOrRemoveMetaDataItemInArray(
+    metadata,
+    {
+      name: 'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH',
+      value: checkAutomatically,
+    },
+    enabled && !!checkAutomatically
+  );
+  metadata = addOrRemoveMetaDataItemInArray(
+    metadata,
+    {
+      name: 'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS',
+      value: fallbackToCacheTimeout,
+    },
+    enabled && !!fallbackToCacheTimeout
+  );
 
   return metadata;
 }

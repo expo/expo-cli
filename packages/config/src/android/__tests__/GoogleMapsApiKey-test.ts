@@ -1,6 +1,10 @@
 import { resolve } from 'path';
 
-import { getGoogleMapsApiKey, setGoogleMapsApiKey } from '../GoogleMapsApiKey';
+import {
+  getGoogleMapsApiKey,
+  setGoogleMapsApiKey,
+  syncGoogleMapsApiConfigMetaData,
+} from '../GoogleMapsApiKey';
 import { readAndroidManifestAsync } from '../Manifest';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
@@ -28,16 +32,41 @@ describe('Android google maps api key', () => {
       e => e['$']['android:name'] === '.MainApplication'
     )[0];
 
-    const apiKeyItem = mainApplication['meta-data'].filter(
-      e => e['$']['android:name'] === 'com.google.android.geo.API_KEY'
-    );
-    expect(apiKeyItem).toHaveLength(1);
-    expect(apiKeyItem[0]['$']['android:value']).toMatch('MY-API-KEY');
-
     const usesLibraryItem = mainApplication['uses-library'].filter(
       e => e['$']['android:name'] === 'org.apache.http.legacy'
     );
     expect(usesLibraryItem).toHaveLength(1);
     expect(usesLibraryItem[0]['$']['android:required']).toMatch('false');
+  });
+
+  describe('syncing', () => {
+    it('adds google maps key config to metadata', async () => {
+      const metadata = await syncGoogleMapsApiConfigMetaData({
+        android: { config: { googleMaps: { apiKey: 'MY-API-KEY' } } },
+      });
+
+      expect(metadata).toStrictEqual([
+        {
+          name: 'com.google.android.geo.API_KEY',
+          value: 'MY-API-KEY',
+        },
+      ]);
+    });
+
+    it('removes google API key from existing metadata when the expo specific value is missing', async () => {
+      const metadata = await syncGoogleMapsApiConfigMetaData({
+        android: {
+          config: {},
+          metadata: [
+            {
+              name: 'com.google.android.geo.API_KEY',
+              value: 'MY-API-KEY',
+            },
+          ],
+        },
+      });
+
+      expect(metadata).toStrictEqual([]);
+    });
   });
 });
