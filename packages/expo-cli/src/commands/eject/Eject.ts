@@ -118,6 +118,15 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
     )}`
   );
 
+  if (usesAssetBundlePatterns(projectRoot)) {
+    log.nested(
+      `- 📁 In the bare workflow, ${chalk.yellow(
+        `${'assetBundlePatterns'}`
+      )} no longer affects your builds. To learn about assets in the bare workflow, read here: https://docs.expo.io/bare/updating-your-app/#embedding-assets`
+    );
+  }
+
+  //todo remove this
   if (await usesOldExpoUpdatesAsync(projectRoot)) {
     log.nested(
       `- 🚀 ${
@@ -275,6 +284,11 @@ async function ensureConfigAsync(
   }
 
   return { exp, pkg };
+}
+
+function usesAssetBundlePatterns(projectRoot: string): boolean {
+  const { exp } = getConfig(projectRoot);
+  return exp.hasOwnProperty('assetBundlePatterns');
 }
 
 function createFileHash(contents: string): string {
@@ -627,23 +641,16 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
     skipSDKVersionRequirement: true,
   });
 
-  const extraSetupPath = projectHasModule('expo/requiresExtraSetup.json', projectRoot, exp);
-  if (!extraSetupPath) {
-    const expoPath = projectHasModule('expo', projectRoot, exp);
-    // Check if expo is installed just in case the user has some version of expo that doesn't include a `requiresExtraSetup.json`.
-    if (!expoPath) {
-      log.addNewLineIfNone();
-      // This can occur when --no-install is used.
-      log.nestedWarn(
-        `⚠️  Not sure if any modules require extra setup because the ${log.chalk.bold(
-          'expo'
-        )} package is not installed.`
-      );
-    }
-    return;
-  }
-
-  const pkgsWithExtraSetup = await JsonFile.readAsync(extraSetupPath);
+  const pkgsWithExtraSetup: Record<string, string> = {
+    'expo-camera': 'https://github.com/expo/expo/tree/master/packages/expo-camera',
+    'expo-image-picker': 'https://github.com/expo/expo/tree/master/packages/expo-image-picker',
+    'lottie-react-native': 'https://github.com/react-native-community/lottie-react-native',
+    'expo-constants': `${chalk.yellow(
+      'Constants.manifest'
+    )} is not available in the bare workflow. You should replace it with ${chalk.yellow(
+      'Updates.manifest'
+    )}: https://docs.expo.io/versions/latest/sdk/updates/#updatesmanifest`,
+  };
   const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(
     pkgName => pkgName in pkgsWithExtraSetup
   );
