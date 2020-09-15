@@ -37,7 +37,7 @@ async function action(projectRoot: string): Promise<void> {
   console.log(lines.join('\n') + '\n');
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('diagnostics [path]')
     .description('Log environment info to the console')

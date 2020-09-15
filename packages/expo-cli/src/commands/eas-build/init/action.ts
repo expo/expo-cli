@@ -4,7 +4,6 @@ import figures from 'figures';
 import fs from 'fs-extra';
 import ora from 'ora';
 import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 
 import { EasJsonReader } from '../../../easJson';
 import { gitAddAsync } from '../../../git';

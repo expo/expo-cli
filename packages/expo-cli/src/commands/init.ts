@@ -565,61 +565,6 @@ function isNonExistentOrEmptyDir(dir: string) {
   }
 }
 
-async function promptForBareConfig(
-  parentDir: string,
-  dirName: string | undefined,
-  options: Options
-): Promise<BareAppConfig> {
-  let projectName: string;
-  if (dirName) {
-    const validationResult = validateProjectName(dirName);
-    if (validationResult !== true) {
-      throw new CommandError('INVALID_PROJECT_NAME', validationResult);
-    }
-    projectName = dirName;
-  } else {
-    ({ projectName } = await prompt({
-      name: 'projectName',
-      message: 'What would you like to name your app?',
-      default: 'MyApp',
-      filter: (name: string) => name.trim(),
-      validate: (name: string) => validateProjectName(name),
-    }));
-  }
-
-  return {
-    name: projectName,
-    expo: {
-      name: options.name || projectName,
-      slug: projectName,
-    },
-  };
-}
-
-async function promptForManagedConfig(
-  parentDir: string,
-  dirName: string | undefined,
-  options: Options
-): Promise<{ expo: Pick<ExpoConfig, 'name' | 'slug'> }> {
-  let slug;
-  if (dirName) {
-    slug = dirName;
-  } else {
-    ({ slug } = await prompt({
-      name: 'slug',
-      message: 'What would you like to name your app?',
-      default: 'my-app',
-      filter: (name: string) => name.trim(),
-      validate: (name: string) => validateName(parentDir, name),
-    }));
-  }
-  const expo = { name: slug, slug };
-  if (options.name) {
-    expo.name = options.name;
-  }
-  return { expo };
-}
-
 export default function (program: Command) {
   program
     .command('init [path]')
