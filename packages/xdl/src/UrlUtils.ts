@@ -211,7 +211,7 @@ export async function constructUrlAsync(
     if (exp.detach) {
       // Normalize schemes and filter invalid schemes.
       const schemes = (Array.isArray(exp.scheme) ? exp.scheme : [exp.scheme]).filter(
-        scheme => typeof scheme === 'string' && !!scheme
+        (scheme: any) => typeof scheme === 'string' && !!scheme
       );
       // Get the first valid scheme.
       const firstScheme = schemes[0];

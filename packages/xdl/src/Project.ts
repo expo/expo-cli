@@ -855,7 +855,7 @@ async function _getPublishExpConfigAsync(
   if (sdkVersion === 'UNVERSIONED' && !maySkipManifestValidation()) {
     throw new XDLError('INVALID_OPTIONS', 'Cannot publish with sdkVersion UNVERSIONED.');
   }
-  exp.locales = await ExponentTools.getResolvedLocalesAsync(exp);
+  exp.locales = await ExponentTools.getResolvedLocalesAsync(projectRoot, exp);
   return {
     exp: {
       ...exp,
