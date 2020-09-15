@@ -16,7 +16,7 @@ public class MainActivity extends ReactActivity {
     }
 `;
 
-export function getUserInterfaceStyle(config: ExpoConfig): string {
+export function getUserInterfaceStyle(config: ExpoConfig): string | null {
   const result = config.android?.userInterfaceStyle ?? config.userInterfaceStyle;
   return result ?? null;
 }

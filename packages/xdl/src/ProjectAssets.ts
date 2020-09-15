@@ -1,4 +1,4 @@
-import { ExpoConfig } from '@expo/config';
+import { ExpoAppManifest, ExpoConfig } from '@expo/config';
 import { BundleAssetWithFileHashes, BundleOutput } from '@expo/dev-server';
 import fs from 'fs-extra';
 import chunk from 'lodash/chunk';
@@ -27,15 +27,11 @@ type ManifestResolutionError = Error & {
   manifestField?: string;
 };
 
-export type PublicConfig = ExpoConfig & {
-  sdkVersion: string;
-};
-
 type BundlesByPlatform = { android: BundleOutput; ios: BundleOutput };
 
 type ExportAssetsOptions = {
   projectRoot: string;
-  exp: PublicConfig;
+  exp: ExpoAppManifest;
   hostedUrl: string;
   assetPath: string;
   bundles: BundlesByPlatform;
@@ -65,7 +61,7 @@ export async function resolveGoogleServicesFile(projectRoot: string, manifest: E
  * @param manifest
  * @returns Asset fields that the user has set like ["icon", "splash.image", ...]
  */
-async function getAssetFieldPathsForManifestAsync(manifest: PublicConfig): Promise<string[]> {
+async function getAssetFieldPathsForManifestAsync(manifest: ExpoAppManifest): Promise<string[]> {
   // String array like ["icon", "notification.icon", "loading.icon", "loading.backgroundImage", "ios.icon", ...]
   const sdkAssetFieldPaths = await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion);
   return sdkAssetFieldPaths.filter(assetSchema => get(manifest, assetSchema));
@@ -78,7 +74,7 @@ export async function resolveManifestAssets({
   strict = false,
 }: {
   projectRoot: string;
-  manifest: PublicConfig;
+  manifest: ExpoAppManifest;
   resolver: (assetPath: string) => Promise<string>;
   strict?: boolean;
 }) {
@@ -138,7 +134,7 @@ export async function resolveManifestAssets({
  * @modifies {exp}
  *
  */
-async function _configureExpForAssets(projectRoot: string, exp: ExpoConfig, assets: Asset[]) {
+async function _configureExpForAssets(projectRoot: string, exp: ExpoAppManifest, assets: Asset[]) {
   // Add google services file if it exists
   await resolveGoogleServicesFile(projectRoot, exp);
 
@@ -156,7 +152,7 @@ async function _configureExpForAssets(projectRoot: string, exp: ExpoConfig, asse
 
     // The assets returned by the RN packager has duplicates so make sure we
     // only bundle each once.
-    const bundledAssets = new Set();
+    const bundledAssets = new Set<string>();
     for (const asset of assets) {
       const file = asset.files && asset.files[0];
       const shouldBundle =
@@ -325,7 +321,7 @@ async function saveAssetsAsync(projectRoot: string, assets: Asset[], outputDir: 
  */
 async function collectAssets(
   projectRoot: string,
-  exp: PublicConfig,
+  exp: ExpoAppManifest,
   hostedAssetPrefix: string,
   bundles: BundlesByPlatform
 ): Promise<Asset[]> {

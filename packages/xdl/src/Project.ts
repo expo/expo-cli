@@ -1,4 +1,5 @@
 import {
+  ExpoAppManifest,
   ExpoConfig,
   Hook,
   HookArguments,
@@ -52,7 +53,7 @@ import { maySkipManifestValidation } from './Env';
 import { ErrorCode } from './ErrorCode';
 import * as Exp from './Exp';
 import logger from './Logger';
-import { Asset, PublicConfig, exportAssetsAsync, publishAssetsAsync } from './ProjectAssets';
+import { Asset, exportAssetsAsync, publishAssetsAsync } from './ProjectAssets';
 import * as ProjectSettings from './ProjectSettings';
 import * as Sentry from './Sentry';
 import * as ThirdParty from './ThirdParty';
@@ -78,7 +79,7 @@ const treekillAsync = promisify<number, string>(treekill);
 const ngrokConnectAsync = promisify(ngrok.connect);
 const ngrokKillAsync = promisify(ngrok.kill);
 
-type SelfHostedIndex = PublicConfig & {
+type SelfHostedIndex = ExpoAppManifest & {
   dependencies: string[];
 };
 
@@ -212,6 +213,10 @@ export async function getLatestReleaseAsync(
   }
 }
 
+function isSelfHostedIndex(obj: any): obj is SelfHostedIndex {
+  return !!obj.sdkVersion;
+}
+
 // Takes multiple exported apps in sourceDirs and coalesces them to one app in outputDir
 export async function mergeAppDistributions(
   projectRoot: string,
@@ -249,8 +254,9 @@ export async function mergeAppDistributions(
 
     // put index.jsons into memory
     const putJsonInMemory = async (indexPath: string, accumulator: SelfHostedIndex[]) => {
-      const index = (await JsonFile.readAsync(indexPath)) as SelfHostedIndex;
-      if (!index.sdkVersion) {
+      const index = await JsonFile.readAsync(indexPath);
+
+      if (!isSelfHostedIndex(index)) {
         throw new XDLError(
           'INVALID_MANIFEST',
           `Invalid index.json, must specify an sdkVersion at ${indexPath}`
@@ -392,17 +398,11 @@ export async function exportForAppHosting(
   const iosBundle = bundles.ios.code;
   const androidBundle = bundles.android.code;
 
-  const iosBundleHash = crypto
-    .createHash('md5')
-    .update(iosBundle)
-    .digest('hex');
+  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto
-    .createHash('md5')
-    .update(androidBundle)
-    .digest('hex');
+  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
 
@@ -830,7 +830,7 @@ async function _getPublishExpConfigAsync(
   projectRoot: string,
   options: PublishOptions
 ): Promise<{
-  exp: PublicConfig;
+  exp: ExpoAppManifest;
   pkg: PackageJSONConfig;
 }> {
   if (options.releaseChannel != null && typeof options.releaseChannel !== 'string') {
@@ -841,11 +841,11 @@ async function _getPublishExpConfigAsync(
   // Verify that exp/app.json and package.json exist
   const { exp, pkg } = getConfig(projectRoot);
 
-  if (exp.android && exp.android.config) {
+  if (exp.android?.config) {
     delete exp.android.config;
   }
 
-  if (exp.ios && exp.ios.config) {
+  if (exp.ios?.config) {
     delete exp.ios.config;
   }
 
@@ -856,7 +856,13 @@ async function _getPublishExpConfigAsync(
     throw new XDLError('INVALID_OPTIONS', 'Cannot publish with sdkVersion UNVERSIONED.');
   }
   exp.locales = await ExponentTools.getResolvedLocalesAsync(exp);
-  return { exp: { ...exp, sdkVersion: sdkVersion! }, pkg };
+  return {
+    exp: {
+      ...exp,
+      sdkVersion: sdkVersion!,
+    },
+    pkg,
+  };
 }
 
 async function buildPublishBundlesAsync(
@@ -1018,7 +1024,7 @@ async function _handleKernelPublishedAsync({
 }: {
   projectRoot: string;
   user: User;
-  exp: ExpoConfig;
+  exp: ExpoAppManifest;
   url: string;
 }) {
   let kernelBundleUrl = `${Config.api.scheme}://${Config.api.host}`;
@@ -1027,7 +1033,7 @@ async function _handleKernelPublishedAsync({
   }
   kernelBundleUrl = `${kernelBundleUrl}/@${user.username}/${exp.slug}/bundle`;
 
-  if (exp.kernel.androidManifestPath) {
+  if (exp.kernel?.androidManifestPath) {
     const manifest = await ExponentTools.getManifestAsync(url, {
       'Exponent-SDK-Version': exp.sdkVersion,
       'Exponent-Platform': 'android',
@@ -1041,7 +1047,7 @@ async function _handleKernelPublishedAsync({
     );
   }
 
-  if (exp.kernel.iosManifestPath) {
+  if (exp.kernel?.iosManifestPath) {
     const manifest = await ExponentTools.getManifestAsync(url, {
       'Exponent-SDK-Version': exp.sdkVersion,
       'Exponent-Platform': 'ios',

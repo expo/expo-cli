@@ -120,13 +120,15 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
 
   if (await usesOldExpoUpdatesAsync(projectRoot)) {
     log.nested(
-      `- 🚀 ${(terminalLink(
-        'expo-updates',
-        'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
-      ),
-      {
-        fallback: (text: string) => text,
-      })} has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
+      `- 🚀 ${
+        (terminalLink(
+          'expo-updates',
+          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
+        ),
+        {
+          fallback: (text: string) => text,
+        })
+      } has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
         'expo publish'
       )}. ${log.chalk.dim(learnMore('https://expo.fyi/release-builds-with-expo-updates'))}`
     );
@@ -250,7 +252,7 @@ async function ensureConfigAsync(
       await JsonFile.writeAsync(
         // TODO: Write to app.config.json because it's easier to convert to a js config file.
         path.join(projectRoot, 'app.json'),
-        { expo: config.exp },
+        { expo: config.exp as Partial<ExpoConfig> },
         { json5: false }
       );
     }
@@ -277,10 +279,7 @@ async function ensureConfigAsync(
 
 function createFileHash(contents: string): string {
   // this doesn't need to be secure, the shorter the better.
-  return crypto
-    .createHash('sha1')
-    .update(contents)
-    .digest('hex');
+  return crypto.createHash('sha1').update(contents).digest('hex');
 }
 
 function writeMetroConfig({

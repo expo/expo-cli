@@ -23,7 +23,11 @@ export async function setScheme(
   config: Pick<ExpoConfig, 'scheme' | 'android'>,
   manifestDocument: Document
 ) {
-  const scheme = [...getScheme(config), ...getScheme(config.android ?? {})];
+  const scheme = [
+    ...getScheme(config),
+    // @ts-ignore: TODO: android.scheme is an unreleased -- harder to add to turtle v1.
+    ...getScheme(config.android ?? {}),
+  ];
   // Add the package name to the list of schemes for easier Google auth and parity with Turtle v1.
   if (config.android?.['package']) {
     scheme.push(config.android['package']);
