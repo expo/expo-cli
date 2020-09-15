@@ -138,9 +138,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   } else if (!supportsAssetPlugins) {
     // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
     // major version in the sdkVersion field, so check for 11.0.0 to be sure.
-    if (!supportsAssetPlugins) {
-      queryParams += '&includeAssetFileHashes=true';
-    }
+    queryParams += '&includeAssetFileHashes=true';
   }
 
   return queryParams;
