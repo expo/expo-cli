@@ -6,7 +6,11 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [expo-cli] Remove deprecated --web-only flag from start command
+
 ### 🎉 New features
+
+- [expo-cli] EAS Build: Improve errors and wanrings when deprecating API [#2639](https://github.com/expo/expo-cli/pull/2639)
 
 ### 🐛 Bug fixes
 

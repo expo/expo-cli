@@ -1,5 +1,4 @@
 import { AndroidConfig, BareAppConfig, ExpoConfig, IOSConfig, getConfig } from '@expo/config';
-import * as PackageManager from '@expo/package-manager';
 import spawnAsync from '@expo/spawn-async';
 import { Exp, IosPlist, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
@@ -132,7 +131,7 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
     log.nested('Please choose your app name:');
     log.nested(`  ${log.chalk.green(`${program.name()} init`)} ${log.chalk.cyan('<app-name>')}`);
     log.newLine();
-    log.nested(`Run ${log.chalk.green(`${program.name()} init --help`)} for more info.`);
+    log.nested(`Run ${log.chalk.green(`${program.name()} init --help`)} for more info`);
     log.newLine();
     process.exit(1);
   }
@@ -263,7 +262,7 @@ async function action(projectDir: string, command: Command) {
 
   // Install dependencies
 
-  const packageManager = resolvePackageManager(options);
+  const packageManager = CreateApp.resolvePackageManager(options);
 
   // TODO: not this
   const workflow = isBare ? 'bare' : 'managed';
@@ -330,39 +329,10 @@ async function action(projectDir: string, command: Command) {
   }
 }
 
-type PackageManagerName = 'npm' | 'yarn';
-
-// TODO: Use in eject as well
-function resolvePackageManager(
-  options: Pick<Options, 'yarn' | 'npm' | 'install'>
-): PackageManagerName {
-  let packageManager: PackageManagerName = 'npm';
-  if (options.yarn || (!options.npm && PackageManager.shouldUseYarn())) {
-    packageManager = 'yarn';
-  } else {
-    packageManager = 'npm';
-  }
-  if (options.install) {
-    log.addNewLineIfNone();
-    log(
-      packageManager === 'yarn'
-        ? '🧶 Using Yarn to install packages. You can pass --npm to use npm instead.'
-        : '📦 Using npm to install packages.'
-    );
-    log.newLine();
-  }
-
-  return packageManager;
-}
-
-async function installNodeDependenciesAsync(
-  projectRoot: string,
-  packageManager: 'yarn' | 'npm',
-  flags: { silent: boolean } = { silent: true }
-) {
+async function installNodeDependenciesAsync(projectRoot: string, packageManager: 'yarn' | 'npm') {
   const installJsDepsStep = CreateApp.logNewSection('Installing JavaScript dependencies.');
   try {
-    await CreateApp.installNodeDependenciesAsync(projectRoot, packageManager, flags);
+    await CreateApp.installNodeDependenciesAsync(projectRoot, packageManager);
     installJsDepsStep.succeed('Installed JavaScript dependencies.');
   } catch {
     installJsDepsStep.fail(

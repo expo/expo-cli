@@ -6,23 +6,31 @@ import { ExpoConfig } from '../Config.types';
 import { Document } from './Manifest';
 
 export function getPackage(config: ExpoConfig) {
-  if (config.android && config.android.package) {
-    return config.android.package;
-  }
-
-  return null;
+  return config.android?.package ?? null;
 }
 
 function getPackageRoot(projectRoot: string) {
   return path.join(projectRoot, 'android', 'app', 'src', 'main', 'java');
 }
 
-function getCurrentPackageName(projectRoot: string) {
-  const packageRoot = getPackageRoot(projectRoot);
-  const mainApplicationPath = globSync('**/MainApplication.java', {
+function getMainApplicationPath({
+  projectRoot,
+  packageRoot = getPackageRoot(projectRoot),
+}: {
+  packageRoot?: string;
+  projectRoot: string;
+}): string {
+  const mainApplications = globSync('**/MainApplication.java', {
     absolute: true,
     cwd: packageRoot,
-  })[0];
+  });
+  // If there's more than one, we'll probably have a problem.
+  return mainApplications[0];
+}
+
+function getCurrentPackageName(projectRoot: string) {
+  const packageRoot = getPackageRoot(projectRoot);
+  const mainApplicationPath = getMainApplicationPath({ projectRoot, packageRoot });
   const packagePath = path.dirname(mainApplicationPath);
   const packagePathParts = packagePath.replace(packageRoot, '').split(path.sep).filter(Boolean);
 

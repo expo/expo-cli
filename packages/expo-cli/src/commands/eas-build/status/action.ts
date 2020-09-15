@@ -1,11 +1,12 @@
 import { getConfig } from '@expo/config';
-import { Analytics, ApiV2, UserManager } from '@expo/xdl';
+import { ApiV2, UserManager } from '@expo/xdl';
 import ora from 'ora';
 
 import log from '../../../log';
 import { ensureProjectExistsAsync } from '../../../projects';
 import { printTableJsonArray } from '../../utils/cli-table';
 import { AnalyticsEvent, Build, BuildCommandPlatform, BuildStatus } from '../types';
+import Analytics from '../utils/analytics';
 
 interface BuildStatusOptions {
   platform: BuildCommandPlatform;

@@ -422,6 +422,13 @@ function _renderUnversionedUniversalModulesDependencies(
       excludedUnimodules.push('expo-splash-screen', 'expo-updates');
     }
 
+    const expoModulesThatAreNotUnimodules = [];
+    if (sdkMajorVersion >= 39) {
+      expoModulesThatAreNotUnimodules.push(
+        `pod 'EXRandom', path: '${universalModulesPath}/expo-random/ios'`
+      );
+    }
+
     return indentString(
       `
 # Install unimodules
@@ -431,7 +438,11 @@ use_unimodules!(
   exclude: [
     ${excludedUnimodules.map(module => `'${module}'`).join(',\n    ')}
   ],
-)`,
+)
+
+# Expo modules that are not unimodules
+${expoModulesThatAreNotUnimodules.join('\n')}
+`,
       2
     );
   } else {

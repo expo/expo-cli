@@ -79,10 +79,41 @@ export async function assertFolderEmptyAsync({
   return true;
 }
 
+export type PackageManagerName = 'npm' | 'yarn';
+
+export function resolvePackageManager(options: {
+  yarn?: boolean;
+  npm?: boolean;
+  install?: boolean;
+}): PackageManagerName {
+  let packageManager: PackageManagerName = 'npm';
+  if (options.yarn || (!options.npm && PackageManager.shouldUseYarn())) {
+    packageManager = 'yarn';
+  } else {
+    packageManager = 'npm';
+  }
+  if (options.install) {
+    log.addNewLineIfNone();
+    log(
+      packageManager === 'yarn'
+        ? '🧶 Using Yarn to install packages. You can pass --npm to use npm instead.'
+        : '📦 Using npm to install packages.'
+    );
+    log.newLine();
+  }
+
+  return packageManager;
+}
+
+const EXPO_DEBUG = getenv.boolish('EXPO_DEBUG', false);
+
 export async function installNodeDependenciesAsync(
   projectRoot: string,
-  packageManager: 'yarn' | 'npm',
-  flags: { silent: boolean } = { silent: false }
+  packageManager: PackageManagerName,
+  flags: { silent: boolean } = {
+    // default to silent
+    silent: !EXPO_DEBUG,
+  }
 ) {
   const options = { cwd: projectRoot, silent: flags.silent };
   if (packageManager === 'yarn') {
@@ -116,6 +147,8 @@ export async function installNodeDependenciesAsync(
 
 export function logNewSection(title: string) {
   const spinner = ora(log.chalk.bold(title));
+  // respect loading indicators
+  log.setSpinner(spinner);
   spinner.start();
   return spinner;
 }
@@ -138,7 +171,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
     log,
-    silent: getenv.boolish('EXPO_DEBUG', true),
+    silent: !EXPO_DEBUG,
   });
 
   if (!(await packageManager.isCLIInstalledAsync())) {

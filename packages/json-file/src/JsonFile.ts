@@ -6,7 +6,7 @@ import set from 'lodash/set';
 import { promisify } from 'util';
 import writeFileAtomic from 'write-file-atomic';
 
-import JsonFileError from './JsonFileError';
+import JsonFileError, { EmptyJsonFileError } from './JsonFileError';
 
 const readFileAsync = promisify(readFile);
 const writeFileAtomicAsync: (
@@ -133,14 +133,15 @@ function read<TJSONObject extends JSONObject>(
   try {
     json = readFileSync(file, 'utf8');
   } catch (error) {
+    assertEmptyJsonString(json, file);
     const defaultValue = cantReadFileDefault(options);
     if (defaultValue === undefined) {
-      throw new JsonFileError(`Can't read JSON file: ${file}`, error, error.code);
+      throw new JsonFileError(`Can't read JSON file: ${file}`, error, error.code, file);
     } else {
       return defaultValue;
     }
   }
-  return parseJsonString(json, options);
+  return parseJsonString(json, options, file);
 }
 
 async function readAsync<TJSONObject extends JSONObject>(
@@ -151,6 +152,7 @@ async function readAsync<TJSONObject extends JSONObject>(
   try {
     json = await readFileAsync(file, 'utf8');
   } catch (error) {
+    assertEmptyJsonString(json, file);
     const defaultValue = cantReadFileDefault(options);
     if (defaultValue === undefined) {
       throw new JsonFileError(`Can't read JSON file: ${file}`, error, error.code);
@@ -163,8 +165,10 @@ async function readAsync<TJSONObject extends JSONObject>(
 
 function parseJsonString<TJSONObject extends JSONObject>(
   json: string,
-  options?: Options<TJSONObject>
+  options?: Options<TJSONObject>,
+  fileName?: string
 ): TJSONObject {
+  assertEmptyJsonString(json, fileName);
   try {
     if (_getOption(options, 'json5')) {
       return JSON5.parse(json);
@@ -180,7 +184,7 @@ function parseJsonString<TJSONObject extends JSONObject>(
         e.codeFrame = codeFrame;
         e.message += `\n${codeFrame}`;
       }
-      throw new JsonFileError(`Error parsing JSON: ${json}`, e, 'EJSONPARSE');
+      throw new JsonFileError(`Error parsing JSON: ${json}`, e, 'EJSONPARSE', fileName);
     } else {
       return defaultValue;
     }
@@ -334,4 +338,10 @@ function locationFromSyntaxError(error: any, sourceString: string) {
   }
 
   return null;
+}
+
+function assertEmptyJsonString(json?: string, file?: string) {
+  if (json?.trim() === '') {
+    throw new EmptyJsonFileError(file);
+  }
 }

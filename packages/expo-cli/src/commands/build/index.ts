@@ -4,7 +4,7 @@ import { Command } from 'commander';
 
 import CommandError from '../../CommandError';
 import log from '../../log';
-import prompt from '../../prompt';
+import { confirmAsync } from '../../prompts';
 import * as ProjectUtils from '../utils/ProjectUtils';
 import AndroidBuilder from './AndroidBuilder';
 import BaseBuilder from './BaseBuilder';
@@ -41,13 +41,11 @@ async function maybeBailOnWorkflowWarning({
     return false;
   }
 
-  const answer = await prompt({
-    type: 'confirm',
-    name: 'ignoreWorkflowWarning',
+  const answer = await confirmAsync({
     message: `Would you like to proceed?`,
   });
 
-  return !answer.ignoreWorkflowWarning;
+  return !answer;
 }
 
 export default function (program: Command) {

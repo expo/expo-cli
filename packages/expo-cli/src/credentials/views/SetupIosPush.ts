@@ -1,6 +1,6 @@
 import CommandError from '../../CommandError';
 import log from '../../log';
-import prompt, { Question } from '../../prompts';
+import { confirmAsync } from '../../prompts';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
 import * as iosPushView from './IosPushCredentials';
@@ -26,13 +26,9 @@ export class SetupIosPush implements IView {
         );
       }
 
-      const confirmQuestion: Question = {
-        type: 'confirm',
-        name: 'confirm',
+      const confirm = await confirmAsync({
         message: `We've detected legacy Push Certificates on file. Would you like to upgrade to the newer standard?`,
-      };
-
-      const { confirm } = await prompt(confirmQuestion);
+      });
       if (!confirm) {
         log(`Using Deprecated Push Cert: ${deprecatedPushId} on file`);
         return null;

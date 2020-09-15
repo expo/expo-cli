@@ -3,23 +3,21 @@ import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
-import prompt from '../prompt';
+import { confirmAsync } from '../prompts';
 import * as Eject from './eject/Eject';
 import * as LegacyEject from './eject/LegacyEject';
 
 async function userWantsToEjectWithoutUpgradingAsync() {
-  const answer = await prompt({
-    type: 'confirm',
-    name: 'ejectWithoutUpgrading',
+  const answer = await confirmAsync({
     message: `We recommend upgrading to the latest SDK version before ejecting. SDK 37 introduces support for OTA updates and notifications in ejected projects, and includes many features that make ejecting your project easier. Would you like to continue ejecting anyways?`,
   });
 
-  return answer.ejectWithoutUpgrading;
+  return answer;
 }
 
 async function action(
   projectDir: string,
-  options: LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions
+  options: (LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions) & { npm?: boolean }
 ) {
   let exp: ExpoConfig;
   try {
@@ -29,6 +27,10 @@ async function action(
     console.log(chalk.red(error.message));
     console.log();
     process.exit(1);
+  }
+
+  if (options.npm) {
+    options.packageManager = 'npm';
   }
 
   // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3 for ExpoKit
@@ -67,5 +69,7 @@ export default function (program: Command) {
       '-f --force',
       'Will attempt to generate an iOS project even when the system is not running macOS. Unsafe and may fail.'
     )
+    .option('--no-install', 'Skip installing npm packages and CocoaPods.')
+    .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .asyncActionProjectDir(action);
 }

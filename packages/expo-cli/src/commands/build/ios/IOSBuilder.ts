@@ -29,7 +29,7 @@ import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
 import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
 import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
 import log from '../../../log';
-import prompt from '../../../prompt';
+import { confirmAsync } from '../../../prompts';
 import { getOrPromptForBundleIdentifier } from '../../eject/ConfigValidation';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
@@ -86,13 +86,9 @@ class IOSBuilder extends BaseBuilder {
       return;
     }
 
-    const { confirm } = await prompt([
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: `Do you have access to the Apple account that will be used for submitting this app to the App Store?`,
-      },
-    ]);
+    const confirm = await confirmAsync({
+      message: `Do you have access to the Apple account that will be used for submitting this app to the App Store?`,
+    });
     if (confirm) {
       return await ctx.ensureAppleCtx();
     } else {

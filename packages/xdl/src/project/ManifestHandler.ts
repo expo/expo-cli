@@ -4,7 +4,7 @@ import http from 'http';
 import os from 'os';
 import { URL } from 'url';
 
-import * as Analytics from '../Analytics';
+import Analytics from '../Analytics';
 import ApiV2 from '../ApiV2';
 import Config from '../Config';
 import * as Exp from '../Exp';
@@ -117,7 +117,14 @@ export function getManifestHandler(projectRoot: string) {
       // We intentionally don't `await`. We want to continue trying even
       // if there is a potential error in the package.json and don't want to slow
       // down the request
-      Doctor.validateWithNetworkAsync(projectRoot);
+      Doctor.validateWithNetworkAsync(projectRoot).catch(error => {
+        ProjectUtils.logError(
+          projectRoot,
+          'expo',
+          `Error: could not load config json at ${projectRoot}: ${error.toString()}`,
+          'doctor-config-json-not-read'
+        );
+      });
 
       const { manifestString, exp, hostInfo } = await getManifestResponseFromHeadersAsync({
         projectRoot,
