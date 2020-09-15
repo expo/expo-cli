@@ -1,4 +1,4 @@
-import { AndroidConfig, BareAppConfig, ExpoConfig, IOSConfig, getConfig } from '@expo/config';
+import { AndroidConfig, BareAppConfig, IOSConfig, getConfig } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import { Exp, IosPlist, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
@@ -12,7 +12,6 @@ import path from 'path';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
-import CommandError from '../CommandError';
 import log from '../log';
 import prompt from '../prompt';
 import prompts from '../prompts';
@@ -531,37 +530,6 @@ async function configureUpdatesProjectFilesAsync(
     });
   } finally {
     await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
-  }
-}
-
-function validateName(parentDir: string, name: string | undefined) {
-  if (typeof name !== 'string' || name === '') {
-    return 'The project name can not be empty.';
-  }
-  if (!/^[a-z0-9@.\-_]+$/i.test(name)) {
-    return 'The project name can only contain URL-friendly characters.';
-  }
-  const dir = path.join(parentDir, name);
-  if (!isNonExistentOrEmptyDir(dir)) {
-    return `The path "${dir}" already exists. Please choose a different parent directory or project name.`;
-  }
-  return true;
-}
-
-function validateProjectName(name: string) {
-  return (
-    /^[a-z0-9]+$/i.test(name) || 'Project name can only include ASCII characters A-Z, a-z and 0-9'
-  );
-}
-
-function isNonExistentOrEmptyDir(dir: string) {
-  try {
-    return fs.statSync(dir).isDirectory() && fs.readdirSync(dir).length === 0;
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return true;
-    }
-    throw error;
   }
 }
 
