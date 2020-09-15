@@ -139,7 +139,7 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
 
 export function getPackageJson(
   projectRoot: string,
-  config: Pick<ExpoConfig, 'nodeModulesPath'> = {}
+  config: Partial<Pick<ExpoConfig, 'nodeModulesPath'>> = {}
 ): PackageJSONConfig {
   const [pkg] = getPackageJsonAndPath(projectRoot, config);
   return pkg;
@@ -147,7 +147,7 @@ export function getPackageJson(
 
 function getPackageJsonAndPath(
   projectRoot: string,
-  config: Pick<ExpoConfig, 'nodeModulesPath'> = {}
+  config: Partial<Pick<ExpoConfig, 'nodeModulesPath'>> = {}
 ): [PackageJSONConfig, string] {
   const packageJsonPath = getRootPackageJsonPath(projectRoot, config);
   return [JsonFile.read(packageJsonPath), packageJsonPath];
