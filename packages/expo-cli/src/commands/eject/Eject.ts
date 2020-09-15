@@ -23,7 +23,6 @@ import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync'
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
-import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import { learnMore } from '../utils/TerminalLink';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
@@ -123,23 +122,6 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
       `- 📁 In the bare workflow, ${chalk.yellow(
         `${'assetBundlePatterns'}`
       )} no longer affects your builds. To learn about assets in the bare workflow, read here: https://docs.expo.io/bare/updating-your-app/#embedding-assets`
-    );
-  }
-
-  //todo remove this
-  if (await usesOldExpoUpdatesAsync(projectRoot)) {
-    log.nested(
-      `- 🚀 ${
-        (terminalLink(
-          'expo-updates',
-          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
-        ),
-        {
-          fallback: (text: string) => text,
-        })
-      } has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
-        'expo publish'
-      )}. ${log.chalk.dim(learnMore('https://expo.fyi/release-builds-with-expo-updates'))}`
     );
   }
 
