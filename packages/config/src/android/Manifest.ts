@@ -105,6 +105,29 @@ export type MetaDataItem = {
   value?: string;
 };
 
+export type MetaDataItemMap = Record<
+  string,
+  {
+    resource?: string;
+    value?: string;
+  }
+>;
+
+/**
+ * Returns the main application and asserts if there are more than one.
+ */
+export function getMainApplication(androidManifestJson: Document): Document {
+  const mainApplications = androidManifestJson.manifest.application.filter(
+    (e: any) => e['$']['android:name'] === '.MainApplication'
+  );
+  if (mainApplications.length > 1) {
+    throw new Error('Found more than one .MainApplication in the AndroidManifest.xml');
+  } else if (!mainApplications.length) {
+    throw new Error('No .MainApplication found in the AndroidManifest.xml');
+  }
+  return mainApplications[0];
+}
+
 export function removeAllMetaDataItemsFromMainApplication(mainApplication: any) {
   if ('meta-data' in mainApplication) {
     mainApplication['meta-data'] = [];
@@ -114,13 +137,21 @@ export function removeAllMetaDataItemsFromMainApplication(mainApplication: any) 
 
 export function addMetaDataItemToMainApplication(mainApplication: any, item: MetaDataItem) {
   let existingMetaDataItem;
-  const newItem = {
-    $: {
-      'android:name': item.name,
-      'android:value': item.value,
-      'android:resource': item.resource,
-    },
+  const xmlProps: Record<string, any> = {
+    'android:name': item.name,
   };
+
+  if (item.value !== undefined) {
+    xmlProps['android:value'] = item.value;
+  }
+  if (item.resource !== undefined) {
+    xmlProps['android:resource'] = item.resource;
+  }
+
+  const newItem = {
+    $: xmlProps,
+  };
+
   if ('meta-data' in mainApplication) {
     existingMetaDataItem = mainApplication['meta-data'].filter(
       (e: any) => e['$']['android:name'] === item.name

@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { MetaDataItem } from './Manifest';
+import { MetaDataItemMap } from './Manifest';
 import { addOrRemoveMetaDataItemInArray } from './MetaData';
 
 export function getGoogleMobileAdsAppId(config: ExpoConfig) {
@@ -10,9 +10,8 @@ export function getGoogleMobileAdsAutoInit(config: ExpoConfig) {
   return config.android?.config?.googleMobileAdsAutoInit ?? false;
 }
 
-export function syncGoogleMobileAdsConfigMetaData(config: ExpoConfig): MetaDataItem[] {
-  let metadata = config.android?.metadata ?? [];
-  metadata = metadata as MetaDataItem[];
+export function syncGoogleMobileAdsConfigMetaData(config: ExpoConfig): MetaDataItemMap {
+  let metadata = config.android?.metadata ?? {};
 
   const appId = getGoogleMobileAdsAppId(config);
 
@@ -27,7 +26,7 @@ export function syncGoogleMobileAdsConfigMetaData(config: ExpoConfig): MetaDataI
     metadata,
     {
       name: 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT',
-      value: String(!autoInit),
+      value: !autoInit,
     },
     !!appId && autoInit != null
   );

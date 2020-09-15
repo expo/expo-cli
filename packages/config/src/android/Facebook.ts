@@ -1,7 +1,7 @@
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
-import { Document, MetaDataItem } from './Manifest';
+import { Document, MetaDataItemMap, getMainApplication } from './Manifest';
 import { addOrRemoveMetaDataItemInArray } from './MetaData';
 import {
   getProjectStringsXMLPathAsync,
@@ -76,9 +76,8 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
   return true;
 }
 
-export function syncFacebookConfigMetaData(config: ExpoConfig): MetaDataItem[] {
-  let metadata = config.android?.metadata ?? [];
-  metadata = metadata as MetaDataItem[];
+export function syncFacebookConfigMetaData(config: ExpoConfig): MetaDataItemMap {
+  let metadata = config.android?.metadata ?? {};
 
   const appId = getFacebookAppId(config);
   const displayName = getFacebookDisplayName(config);
@@ -117,9 +116,7 @@ export function syncFacebookConfigMetaData(config: ExpoConfig): MetaDataItem[] {
 export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
   const scheme = getFacebookScheme(config);
 
-  const mainApplication = manifestDocument?.manifest?.application?.filter(
-    (e: any) => e['$']['android:name'] === '.MainApplication'
-  )[0];
+  const mainApplication = getMainApplication(manifestDocument);
 
   // Remove all Facebook CustomTabActivities first
   if (mainApplication.hasOwnProperty('activity')) {

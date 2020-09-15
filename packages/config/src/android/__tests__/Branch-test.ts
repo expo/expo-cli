@@ -17,28 +17,22 @@ describe('Android branch test', () => {
         android: { config: { branch: { apiKey: 'MY-API-KEY' } } },
       });
 
-      expect(metadata).toStrictEqual([
-        {
-          name: 'io.branch.sdk.BranchKey',
-          value: 'MY-API-KEY',
-        },
-      ]);
+      expect(metadata).toStrictEqual({ 'io.branch.sdk.BranchKey': { value: 'MY-API-KEY' } });
     });
 
     it('removes branch config from existing metadata when the expo specific value is missing', async () => {
       const metadata = await syncBranchConfigMetaData({
         android: {
           config: {},
-          metadata: [
-            {
-              name: 'io.branch.sdk.BranchKey',
+          metadata: {
+            'io.branch.sdk.BranchKey': {
               value: 'MY-API-KEY',
             },
-          ],
+          },
         },
       });
 
-      expect(metadata).toStrictEqual([]);
+      expect(metadata).toStrictEqual({});
     });
   });
 });

@@ -11,7 +11,7 @@ import {
   setFacebookConfig,
   syncFacebookConfigMetaData,
 } from '../Facebook';
-import { readAndroidManifestAsync } from '../Manifest';
+import { getMainApplication, readAndroidManifestAsync } from '../Manifest';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
@@ -99,9 +99,7 @@ describe('Android facebook config', () => {
     // Run this twice to ensure copies don't get added.
     androidManifestJson = await setFacebookConfig(facebookConfig, androidManifestJson);
 
-    const mainApplication = androidManifestJson.manifest.application.filter(
-      e => e['$']['android:name'] === '.MainApplication'
-    )[0];
+    const mainApplication = getMainApplication(androidManifestJson);
     const facebookActivity = mainApplication['activity'].filter(
       e => e['$']['android:name'] === 'com.facebook.CustomTabActivity'
     );
@@ -115,9 +113,7 @@ describe('Android facebook config', () => {
     const facebookConfig = {};
     androidManifestJson = await setFacebookConfig(facebookConfig, androidManifestJson);
 
-    const mainApplication = androidManifestJson.manifest.application.filter(
-      e => e['$']['android:name'] === '.MainApplication'
-    )[0];
+    const mainApplication = getMainApplication(androidManifestJson);
 
     const facebookActivity = mainApplication['activity'].filter(
       e => e['$']['android:name'] === 'com.facebook.CustomTabActivity'
@@ -129,60 +125,30 @@ describe('Android facebook config', () => {
     it('adds facebook key config to metadata', async () => {
       const metadata = syncFacebookConfigMetaData(facebookConfig);
 
-      expect(metadata).toStrictEqual([
-        {
-          name: 'com.facebook.sdk.ApplicationId',
-          value: '@string/facebook_app_id',
-        },
-        {
-          name: 'com.facebook.sdk.ApplicationName',
-          value: 'my-display-name',
-        },
-        {
-          name: 'com.facebook.sdk.AutoInitEnabled',
-          value: 'true',
-        },
-        {
-          name: 'com.facebook.sdk.AutoLogAppEventsEnabled',
-          value: 'false',
-        },
-        {
-          name: 'com.facebook.sdk.AdvertiserIDCollectionEnabled',
-          value: 'false',
-        },
-      ]);
+      expect(metadata).toStrictEqual({
+        'com.facebook.sdk.AdvertiserIDCollectionEnabled': { value: 'false' },
+        'com.facebook.sdk.ApplicationId': { value: '@string/facebook_app_id' },
+        'com.facebook.sdk.ApplicationName': { value: 'my-display-name' },
+        'com.facebook.sdk.AutoInitEnabled': { value: 'true' },
+        'com.facebook.sdk.AutoLogAppEventsEnabled': { value: 'false' },
+      });
     });
 
     it('removes facebook API key from existing metadata when the expo specific value is missing', async () => {
       const metadata = syncFacebookConfigMetaData({
         android: {
           config: {},
-          metadata: [
-            {
-              name: 'com.facebook.sdk.ApplicationId',
-              value: '@string/facebook_app_id',
-            },
-            {
-              name: 'com.facebook.sdk.ApplicationName',
-              value: 'my-display-name',
-            },
-            {
-              name: 'com.facebook.sdk.AutoInitEnabled',
-              value: 'true',
-            },
-            {
-              name: 'com.facebook.sdk.AutoLogAppEventsEnabled',
-              value: 'false',
-            },
-            {
-              name: 'com.facebook.sdk.AdvertiserIDCollectionEnabled',
-              value: 'false',
-            },
-          ],
+          metadata: {
+            'com.facebook.sdk.AdvertiserIDCollectionEnabled': { value: 'false' },
+            'com.facebook.sdk.ApplicationId': { value: '@string/facebook_app_id' },
+            'com.facebook.sdk.ApplicationName': { value: 'my-display-name' },
+            'com.facebook.sdk.AutoInitEnabled': { value: 'true' },
+            'com.facebook.sdk.AutoLogAppEventsEnabled': { value: 'false' },
+          },
         },
       } as any);
 
-      expect(metadata).toStrictEqual([]);
+      expect(metadata).toStrictEqual({});
     });
   });
 });

@@ -5,7 +5,7 @@ import {
   setGoogleMapsApiKey,
   syncGoogleMapsApiConfigMetaData,
 } from '../GoogleMapsApiKey';
-import { readAndroidManifestAsync } from '../Manifest';
+import { getMainApplication, readAndroidManifestAsync } from '../Manifest';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
@@ -28,9 +28,7 @@ describe('Android google maps api key', () => {
       androidManifestJson
     );
 
-    const mainApplication = androidManifestJson.manifest.application.filter(
-      e => e['$']['android:name'] === '.MainApplication'
-    )[0];
+    const mainApplication = getMainApplication(androidManifestJson);
 
     const usesLibraryItem = mainApplication['uses-library'].filter(
       e => e['$']['android:name'] === 'org.apache.http.legacy'
@@ -45,28 +43,26 @@ describe('Android google maps api key', () => {
         android: { config: { googleMaps: { apiKey: 'MY-API-KEY' } } },
       });
 
-      expect(metadata).toStrictEqual([
-        {
-          name: 'com.google.android.geo.API_KEY',
+      expect(metadata).toStrictEqual({
+        'com.google.android.geo.API_KEY': {
           value: 'MY-API-KEY',
         },
-      ]);
+      });
     });
 
     it('removes google API key from existing metadata when the expo specific value is missing', async () => {
       const metadata = await syncGoogleMapsApiConfigMetaData({
         android: {
           config: {},
-          metadata: [
-            {
-              name: 'com.google.android.geo.API_KEY',
+          metadata: {
+            'com.google.android.geo.API_KEY': {
               value: 'MY-API-KEY',
             },
-          ],
+          },
         },
       });
 
-      expect(metadata).toStrictEqual([]);
+      expect(metadata).toStrictEqual({});
     });
   });
 });

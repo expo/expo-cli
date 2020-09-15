@@ -84,7 +84,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     exp.android.metadata = AndroidConfig.GoogleMobileAds.syncGoogleMobileAdsConfigMetaData(exp);
     exp.android.metadata = AndroidConfig.Updates.syncUpdatesConfigMetaData(exp, username);
 
-    androidManifest = await AndroidConfig.MetaData.setMetaData(exp, androidManifest);
+    androidManifest = await AndroidConfig.MetaData.setMetaDataXML(exp, androidManifest);
     androidManifest = await AndroidConfig.Facebook.setFacebookConfig(exp, androidManifest);
 
     androidManifest = await AndroidConfig.Package.setPackageInAndroidManifest(exp, androidManifest);

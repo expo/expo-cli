@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { MetaDataItem } from './Manifest';
+import { MetaDataItemMap } from './Manifest';
 import { addOrRemoveMetaDataItemInArray } from './MetaData';
 
 export function getUpdateUrl(config: ExpoConfig, username: string | null) {
@@ -34,9 +34,8 @@ export function getUpdatesCheckOnLaunch(config: ExpoConfig) {
 export function syncUpdatesConfigMetaData(
   config: ExpoConfig,
   username: string | null
-): MetaDataItem[] {
-  let metadata = config.android?.metadata ?? [];
-  metadata = metadata as MetaDataItem[];
+): MetaDataItemMap {
+  let metadata = config.android?.metadata ?? {};
 
   const enabled = getUpdatesEnabled(config);
   const checkAutomatically = getUpdatesCheckOnLaunch(config);

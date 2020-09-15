@@ -1,14 +1,13 @@
 import { ExpoConfig } from '../Config.types';
-import { MetaDataItem } from './Manifest';
+import { MetaDataItemMap } from './Manifest';
 import { addOrRemoveMetaDataItemInArray } from './MetaData';
 
 export function getBranchApiKey(config: ExpoConfig) {
   return config.android?.config?.branch?.apiKey ?? null;
 }
 
-export function syncBranchConfigMetaData(config: ExpoConfig): MetaDataItem[] {
-  let metadata = config.android?.metadata ?? [];
-  metadata = metadata as MetaDataItem[];
+export function syncBranchConfigMetaData(config: ExpoConfig): MetaDataItemMap {
+  let metadata = config.android?.metadata ?? {};
 
   const apiKey = getBranchApiKey(config);
 

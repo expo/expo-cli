@@ -46,12 +46,7 @@ describe('Android Updates config', () => {
     it('skips adding extra updates config to metadata if enabled is false', async () => {
       const metadata = Updates.syncUpdatesConfigMetaData(config, 'user');
 
-      expect(metadata).toStrictEqual([
-        {
-          name: 'expo.modules.updates.ENABLED',
-          value: 'false',
-        },
-      ]);
+      expect(metadata).toStrictEqual({ 'expo.modules.updates.ENABLED': { value: 'false' } });
     });
     it('adds updates config to metadata', async () => {
       const metadata = Updates.syncUpdatesConfigMetaData(
@@ -68,28 +63,13 @@ describe('Android Updates config', () => {
         'user'
       );
 
-      expect(metadata).toStrictEqual([
-        {
-          name: 'expo.modules.updates.EXPO_UPDATE_URL',
-          value: 'https://exp.host/@owner/my-app',
-        },
-        {
-          name: 'expo.modules.updates.EXPO_SDK_VERSION',
-          value: '37.0.0',
-        },
-        {
-          name: 'expo.modules.updates.ENABLED',
-          value: 'true',
-        },
-        {
-          name: 'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH',
-          value: 'NEVER',
-        },
-        {
-          name: 'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS',
-          value: 2000,
-        },
-      ]);
+      expect(metadata).toStrictEqual({
+        'expo.modules.updates.ENABLED': { value: 'true' },
+        'expo.modules.updates.EXPO_SDK_VERSION': { value: '37.0.0' },
+        'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH': { value: 'NEVER' },
+        'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS': { value: 2000 },
+        'expo.modules.updates.EXPO_UPDATE_URL': { value: 'https://exp.host/@owner/my-app' },
+      });
     });
 
     it('removes updates config from existing metadata when the expo specific value is missing', async () => {
@@ -99,44 +79,23 @@ describe('Android Updates config', () => {
             enabled: false,
           },
           android: {
-            metadata: [
-              {
-                name: 'expo.modules.updates.EXPO_UPDATE_URL',
-                value: 'https://exp.host/@owner/my-app',
-              },
-              {
-                name: 'expo.modules.updates.EXPO_SDK_VERSION',
-                value: '37.0.0',
-              },
-              {
-                name: 'expo.modules.updates.ENABLED',
-                value: 'false',
-              },
-              {
-                name: 'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH',
-                value: 'NEVER',
-              },
-              {
-                name: 'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS',
-                value: 2000,
-              },
-            ],
+            metadata: {
+              'expo.modules.updates.ENABLED': { value: 'true' },
+              'expo.modules.updates.EXPO_SDK_VERSION': { value: '37.0.0' },
+              'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH': { value: 'NEVER' },
+              'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS': { value: 2000 },
+              'expo.modules.updates.EXPO_UPDATE_URL': { value: 'https://exp.host/@owner/my-app' },
+            },
           },
         } as any,
         null
       );
 
-      // TODO: We end up with two of these if the incoming config already had disabled the metadata.
-      expect(metadata).toStrictEqual([
-        {
-          name: 'expo.modules.updates.ENABLED',
+      expect(metadata).toStrictEqual({
+        'expo.modules.updates.ENABLED': {
           value: 'false',
         },
-        {
-          name: 'expo.modules.updates.ENABLED',
-          value: 'false',
-        },
-      ]);
+      });
     });
   });
 });

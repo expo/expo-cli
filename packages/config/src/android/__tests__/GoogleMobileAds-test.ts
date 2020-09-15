@@ -27,36 +27,32 @@ describe('GoogleMobileAds', () => {
         },
       });
 
-      expect(metadata).toStrictEqual([
-        {
-          name: 'com.google.android.gms.ads.APPLICATION_ID',
+      expect(metadata).toStrictEqual({
+        'com.google.android.gms.ads.APPLICATION_ID': {
           value: 'MY-API-KEY',
         },
-        {
-          name: 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT',
+        'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT': {
           value: 'true',
         },
-      ]);
+      });
     });
 
     it('removes google mobile ads API key from existing metadata when the expo specific value is missing', async () => {
       const metadata = syncGoogleMobileAdsConfigMetaData({
         android: {
           config: {},
-          metadata: [
-            {
-              name: 'com.google.android.gms.ads.APPLICATION_ID',
+          metadata: {
+            'com.google.android.gms.ads.APPLICATION_ID': {
               value: 'MY-API-KEY',
             },
-            {
-              name: 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT',
+            'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT': {
               value: 'true',
             },
-          ],
+          },
         },
       });
 
-      expect(metadata).toStrictEqual([]);
+      expect(metadata).toStrictEqual({});
     });
   });
 });
