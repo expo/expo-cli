@@ -66,7 +66,8 @@ function printDeprecationWarnings(deprecationInfo?: DeprecationInfo): void {
     );
     log.warn(deprecationInfo.message);
   } else {
-    log(deprecationInfo); // should not happen
+    log.warn('An unexpected warning was encountered. Please report it as a bug:');
+    log.warn(deprecationInfo);
   }
 }
 
