@@ -105,15 +105,15 @@ export class Context {
     this._appleCtxOptions = pick(options, ['appleId', 'appleIdPassword', 'teamId']);
     this._nonInteractive = options.nonInteractive;
 
-    // Check if we are in project context by looking for a manifest
-    const status = await Doctor.validateWithoutNetworkAsync(projectDir, {
-      skipSDKVersionRequirement: true,
-    });
-    if (status !== Doctor.FATAL) {
+    // try to acccess project context
+    try {
       const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
       this._manifest = exp;
       this._hasProjectContext = true;
       this.logOwnerAndProject();
+    } catch (error) {
+      // ignore error
+      // startcredentials manager without project context
     }
   }
 }

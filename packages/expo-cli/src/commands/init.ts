@@ -1,4 +1,4 @@
-import { AndroidConfig, BareAppConfig, ExpoConfig, IOSConfig, getConfig } from '@expo/config';
+import { AndroidConfig, BareAppConfig, IOSConfig, getConfig } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import { Exp, IosPlist, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
@@ -12,7 +12,6 @@ import path from 'path';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
-import CommandError from '../CommandError';
 import log from '../log';
 import prompt from '../prompt';
 import prompts from '../prompts';
@@ -131,7 +130,7 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
     log.nested('Please choose your app name:');
     log.nested(`  ${log.chalk.green(`${program.name()} init`)} ${log.chalk.cyan('<app-name>')}`);
     log.newLine();
-    log.nested(`Run ${log.chalk.green(`${program.name()} init --help`)} for more info.`);
+    log.nested(`Run ${log.chalk.green(`${program.name()} init --help`)} for more info`);
     log.newLine();
     process.exit(1);
   }
@@ -532,92 +531,6 @@ async function configureUpdatesProjectFilesAsync(
   } finally {
     await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
   }
-}
-
-function validateName(parentDir: string, name: string | undefined) {
-  if (typeof name !== 'string' || name === '') {
-    return 'The project name can not be empty.';
-  }
-  if (!/^[a-z0-9@.\-_]+$/i.test(name)) {
-    return 'The project name can only contain URL-friendly characters.';
-  }
-  const dir = path.join(parentDir, name);
-  if (!isNonExistentOrEmptyDir(dir)) {
-    return `The path "${dir}" already exists. Please choose a different parent directory or project name.`;
-  }
-  return true;
-}
-
-function validateProjectName(name: string) {
-  return (
-    /^[a-z0-9]+$/i.test(name) || 'Project name can only include ASCII characters A-Z, a-z and 0-9'
-  );
-}
-
-function isNonExistentOrEmptyDir(dir: string) {
-  try {
-    return fs.statSync(dir).isDirectory() && fs.readdirSync(dir).length === 0;
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return true;
-    }
-    throw error;
-  }
-}
-
-async function promptForBareConfig(
-  parentDir: string,
-  dirName: string | undefined,
-  options: Options
-): Promise<BareAppConfig> {
-  let projectName: string;
-  if (dirName) {
-    const validationResult = validateProjectName(dirName);
-    if (validationResult !== true) {
-      throw new CommandError('INVALID_PROJECT_NAME', validationResult);
-    }
-    projectName = dirName;
-  } else {
-    ({ projectName } = await prompt({
-      name: 'projectName',
-      message: 'What would you like to name your app?',
-      default: 'MyApp',
-      filter: (name: string) => name.trim(),
-      validate: (name: string) => validateProjectName(name),
-    }));
-  }
-
-  return {
-    name: projectName,
-    expo: {
-      name: options.name || projectName,
-      slug: projectName,
-    },
-  };
-}
-
-async function promptForManagedConfig(
-  parentDir: string,
-  dirName: string | undefined,
-  options: Options
-): Promise<{ expo: Pick<ExpoConfig, 'name' | 'slug'> }> {
-  let slug;
-  if (dirName) {
-    slug = dirName;
-  } else {
-    ({ slug } = await prompt({
-      name: 'slug',
-      message: 'What would you like to name your app?',
-      default: 'my-app',
-      filter: (name: string) => name.trim(),
-      validate: (name: string) => validateName(parentDir, name),
-    }));
-  }
-  const expo = { name: slug, slug };
-  if (options.name) {
-    expo.name = options.name;
-  }
-  return { expo };
 }
 
 export default function (program: Command) {

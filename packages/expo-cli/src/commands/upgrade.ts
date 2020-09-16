@@ -170,11 +170,13 @@ async function makeBreakingChangesToConfigAsync(
       // IMPORTANT: adding a new case here? be sure to update the dynamic config situation above
       case '37.0.0':
         if (rootConfig?.expo?.androidNavigationBar?.visible !== undefined) {
+          // @ts-ignore: boolean | enum not supported in JSON schemas
           if (rootConfig?.expo.androidNavigationBar?.visible === false) {
             step.succeed(
               `Updated "androidNavigationBar.visible" property in app.json to "leanback"...`
             );
             rootConfig.expo.androidNavigationBar.visible = 'leanback';
+            // @ts-ignore: boolean | enum not supported in JSON schemas
           } else if (rootConfig?.expo.androidNavigationBar?.visible === true) {
             step.succeed(
               `Removed extraneous "androidNavigationBar.visible" property in app.json...`
@@ -224,7 +226,6 @@ async function maybeBailOnUnsafeFunctionalityAsync(
 
     const answer = await confirmAsync({
       message: `This command works best on SDK 33 and higher. We can try updating for you, but you will likely need to follow up with the instructions from https://docs.expo.io/workflow/upgrading-expo-sdk-walkthrough/. Continue anyways?`,
-      initial: true,
     });
 
     if (!answer) {
@@ -265,7 +266,6 @@ async function shouldBailWhenUsingLatest(
     }
     const answer = await confirmAsync({
       message: `You are already using the latest SDK version. Do you want to run the update anyways? This may be useful to ensure that all of your packages are set to the correct version.`,
-      initial: true,
     });
 
     if (!answer) {
@@ -551,7 +551,10 @@ export async function upgradeAsync(
 
   const clearingCacheStep = logNewSection('Clearing the packager cache.');
   try {
-    await Project.startReactNativeServerAsync(projectRoot, { reset: true, nonPersistent: true });
+    await Project.startReactNativeServerAsync({
+      projectRoot,
+      options: { reset: true, nonPersistent: true },
+    });
   } catch (e) {
     clearingCacheStep.fail(`Failed to clear packager cache with error: ${e.message}`);
   } finally {

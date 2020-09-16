@@ -10,7 +10,7 @@ import ProgressBar from 'progress';
 import prompts from 'prompts';
 import semver from 'semver';
 
-import * as Analytics from './Analytics';
+import Analytics from './Analytics';
 import Api from './Api';
 import * as Binaries from './Binaries';
 import Logger from './Logger';

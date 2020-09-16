@@ -1,14 +1,14 @@
-import { ExpoConfig, getConfig } from '@expo/config';
+import { ExpoAppManifest, ExpoConfig, getConfig } from '@expo/config';
 import express from 'express';
 import http from 'http';
 import os from 'os';
 import { URL } from 'url';
 
-import * as Analytics from '../Analytics';
+import Analytics from '../Analytics';
 import ApiV2 from '../ApiV2';
 import Config from '../Config';
 import * as Exp from '../Exp';
-import { PublicConfig, resolveGoogleServicesFile, resolveManifestAssets } from '../ProjectAssets';
+import { resolveGoogleServicesFile, resolveManifestAssets } from '../ProjectAssets';
 import * as ProjectSettings from '../ProjectSettings';
 import * as UrlUtils from '../UrlUtils';
 import UserManager, { ANONYMOUS_USERNAME } from '../User';
@@ -117,7 +117,14 @@ export function getManifestHandler(projectRoot: string) {
       // We intentionally don't `await`. We want to continue trying even
       // if there is a potential error in the package.json and don't want to slow
       // down the request
-      Doctor.validateWithNetworkAsync(projectRoot);
+      Doctor.validateWithNetworkAsync(projectRoot).catch(error => {
+        ProjectUtils.logError(
+          projectRoot,
+          'expo',
+          `Error: could not load config json at ${projectRoot}: ${error.toString()}`,
+          'doctor-config-json-not-read'
+        );
+      });
 
       const { manifestString, exp, hostInfo } = await getManifestResponseFromHeadersAsync({
         projectRoot,
@@ -185,7 +192,7 @@ export async function getManifestResponseAsync({
   const [packagerOpts, bundleUrlPackagerOpts] = await getPackagerOptionsAsync(projectRoot);
 
   // Read the config
-  const { exp: manifest } = getConfig(projectRoot);
+  const manifest = getConfig(projectRoot).exp as ExpoAppManifest;
 
   // Mutate the manifest
   manifest.xde = true; // deprecated
@@ -212,9 +219,9 @@ export async function getManifestResponseAsync({
   // Resolve all assets and set them on the manifest as URLs
   await resolveManifestAssets({
     projectRoot,
-    manifest: manifest as PublicConfig,
+    manifest: manifest as ExpoAppManifest,
     async resolver(path) {
-      return manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + 'assets/' + path;
+      return manifest.bundleUrl!.match(/^https?:\/\/.*?\//)![0] + 'assets/' + path;
     },
   });
 
@@ -241,7 +248,7 @@ function getManifestEnvironment(): Record<string, any> {
 }
 
 async function getManifestStringAsync(
-  manifest: ExpoConfig,
+  manifest: ExpoAppManifest,
   hostUUID: string,
   acceptSignature?: string | string[]
 ): Promise<string> {
@@ -272,7 +279,7 @@ async function createHostInfoAsync(): Promise<HostInfo> {
 }
 
 export async function getSignedManifestStringAsync(
-  manifest: ExpoConfig,
+  manifest: Partial<ExpoAppManifest>,
   // NOTE: we currently ignore the currentSession that is passed in, see the note below about analytics.
   currentSession: { sessionSecret?: string; accessToken?: string }
 ) {

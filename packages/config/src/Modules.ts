@@ -53,7 +53,7 @@ export function fileExists(file: string): boolean {
 
 export function getRootPackageJsonPath(
   projectRoot: string,
-  exp: Pick<ExpoConfig, 'nodeModulesPath'>
+  exp: Partial<Pick<ExpoConfig, 'nodeModulesPath'>>
 ): string {
   const packageJsonPath =
     'nodeModulesPath' in exp && typeof exp.nodeModulesPath === 'string'

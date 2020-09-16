@@ -1,6 +1,7 @@
 import invariant from 'invariant';
 
 import prompt, { ChoiceType, Question } from '../../prompt';
+import { confirmAsync } from '../../prompts';
 import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
@@ -131,10 +132,8 @@ export class SelectAndroidExperience implements IView {
     if (ctx.hasProjectContext && this.askAboutProjectMode) {
       const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
 
-      const { runProjectContext } = await prompt([
+      const runProjectContext = await confirmAsync([
         {
-          type: 'confirm',
-          name: 'runProjectContext',
           message: `You are currently in a directory with ${experienceName} experience. Do you want to select it?`,
         },
       ]);

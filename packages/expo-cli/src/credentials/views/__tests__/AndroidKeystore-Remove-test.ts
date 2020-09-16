@@ -1,13 +1,13 @@
 import fs from 'fs-extra';
 
 import { mockExpoXDL } from '../../../__tests__/mock-utils';
-import prompt from '../../../prompt';
+import { confirmAsync } from '../../../prompts';
 import { testExperienceName } from '../../test-fixtures/mocks-constants';
 import { getCtxMock } from '../../test-fixtures/mocks-context';
 import { RemoveKeystore } from '../AndroidKeystore';
 
 jest.mock('../../actions/list');
-jest.mock('../../../prompt');
+jest.mock('../../../prompts');
 jest.mock('fs-extra');
 mockExpoXDL({
   AndroidCredentials: {
@@ -31,8 +31,8 @@ afterAll(() => {
   console.log = originalLog;
 });
 beforeEach(() => {
-  (prompt as any).mockReset();
-  (prompt as any).mockImplementation(() => {
+  (confirmAsync as any).mockReset();
+  (confirmAsync as any).mockImplementation(() => {
     throw new Error('Should not be called');
   });
 });
@@ -41,8 +41,8 @@ describe('RemoveKeystore', () => {
   describe('existing credentials', () => {
     it('should display warning prompt and abort', async () => {
       const ctx = getCtxMock();
-      (prompt as any)
-        .mockImplementationOnce(() => ({ confirm: false })) // prompt with warning message, abort
+      (confirmAsync as any)
+        .mockImplementationOnce(() => false) // prompt with warning message, abort
         .mockImplementation(x => {
           throw new Error("shouldn't happen");
         });
@@ -51,7 +51,7 @@ describe('RemoveKeystore', () => {
       const lastView = await view.open(ctx);
 
       expect(lastView).toBe(null);
-      expect((prompt as any).mock.calls.length).toBe(1);
+      expect((confirmAsync as any).mock.calls.length).toBe(1);
       expect(ctx.android.fetchKeystore.mock.calls.length).toBe(1);
       expect(ctx.android.removeKeystore.mock.calls.length).toBe(0);
     });
@@ -62,13 +62,13 @@ describe('RemoveKeystore', () => {
 
       // first: prompt with warning message, true means continue
       // second: ask if cli should display credentials, user won't see that because when() should return false
-      (prompt as any)
-        .mockImplementationOnce(() => ({ confirm: true }))
+      (confirmAsync as any)
+        .mockImplementationOnce(() => true)
         .mockImplementationOnce(question => {
           if (question.when()) {
             throw new Error("shouldn't happen");
           }
-          return { confirm: undefined };
+          return undefined;
         })
         .mockImplementation(() => {
           throw new Error("shouldn't happen");
@@ -78,7 +78,7 @@ describe('RemoveKeystore', () => {
       const lastView = await view.open(ctx);
 
       expect(lastView).toBe(null);
-      expect((prompt as any).mock.calls.length).toBe(1);
+      expect((confirmAsync as any).mock.calls.length).toBe(1);
       expect(ctx.android.fetchKeystore.mock.calls.length).toBe(2);
       expect(ctx.android.removeKeystore.mock.calls.length).toBe(1);
     });
@@ -88,13 +88,13 @@ describe('RemoveKeystore', () => {
 
       // first: prompt with warning message, true means continue
       // second: ask if cli should display credentials, user won't see that because when() should return false
-      (prompt as any)
-        .mockImplementationOnce(() => ({ confirm: true }))
+      (confirmAsync as any)
+        .mockImplementationOnce(() => true)
         .mockImplementationOnce(question => {
           if (question.when()) {
             throw new Error("shouldn't happen");
           }
-          return { confirm: undefined };
+          return undefined;
         })
         .mockImplementation(() => {
           throw new Error("shouldn't happen");
@@ -110,7 +110,7 @@ describe('RemoveKeystore', () => {
         expect(e.message).toMatch('Deleting build credentials is a destructive operation');
       }
 
-      expect(prompt).not.toHaveBeenCalled();
+      expect(confirmAsync).not.toHaveBeenCalled();
     });
   });
 
@@ -121,7 +121,7 @@ describe('RemoveKeystore', () => {
           fetchKeystore: jest.fn().mockImplementationOnce(() => null),
         },
       });
-      (prompt as any).mockImplementation(() => {
+      (confirmAsync as any).mockImplementation(() => {
         throw new Error("shouldn't happen");
       });
 
@@ -129,7 +129,7 @@ describe('RemoveKeystore', () => {
       const lastView = await view.open(ctx);
 
       expect(lastView).toBe(null);
-      expect((prompt as any).mock.calls.length).toBe(0);
+      expect((confirmAsync as any).mock.calls.length).toBe(0);
       expect(ctx.android.fetchKeystore.mock.calls.length).toBe(1);
       expect(ctx.android.removeKeystore.mock.calls.length).toBe(0);
     });

@@ -1,7 +1,0 @@
-.npm
-node_modules
-.DS_Store
-.npm-cache
-.vscode
-npm-debug.log
-/build

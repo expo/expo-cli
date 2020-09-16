@@ -76,8 +76,6 @@ it(`can eject a minimal project`, async () => {
   expect(outputPkgJson.scripts['ios']).toBe('react-native run-ios');
   expect(outputPkgJson.scripts['android']).toBe('react-native run-android');
   expect(outputPkgJson.scripts['web']).toBe('expo web');
-  // The eject command should be deleted
-  expect(outputPkgJson.scripts['eject']).not.toBeDefined();
   // The react-native fork is replaced with the upstream react-native version
   expect(outputPkgJson.dependencies['react-native']).not.toBe(
     minimumNativePkgJson.dependencies['react-native']

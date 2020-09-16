@@ -394,9 +394,9 @@ export default async function (
           },
           {
             name: env.config.web?.shortName,
-            isFullScreen: env.config.web?.meta.apple.touchFullscreen,
-            isWebAppCapable: env.config.web?.meta.apple.mobileWebAppCapable,
-            barStyle: env.config.web?.meta.apple.barStyle,
+            isFullScreen: env.config.web?.meta?.apple?.touchFullscreen,
+            isWebAppCapable: !!env.config.web?.meta?.apple?.mobileWebAppCapable,
+            barStyle: env.config.web?.meta?.apple?.barStyle,
           },
           ensureSourceAbsolute(getSafariIconConfig(env.config)),
           ensureSourceAbsolute(getSafariStartupImageConfig(env.config))

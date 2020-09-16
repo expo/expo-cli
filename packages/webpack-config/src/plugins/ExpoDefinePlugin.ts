@@ -8,6 +8,7 @@ import { Environment, Mode } from '../types';
 function createEnvironmentConstants(appManifest: ExpoConfig) {
   return {
     ...appManifest,
+    // @ts-ignore: displayName doesn't exist on ExpoConfig
     name: appManifest.displayName || appManifest.name,
     /**
      * Omit app.json properties that get removed during the native turtle build

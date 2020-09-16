@@ -12,16 +12,16 @@ export default function (program: Command) {
   const easJsonPath = path.join(process.cwd(), 'eas.json');
   const hasEasJson = fs.pathExistsSync(easJsonPath);
 
-  if (!hasEasJson) {
-    return;
-  }
-
   program
     .command('eas:build:init [path]')
     .description('Initialize build configuration for the project')
     .helpGroup('eas')
     .option('--skip-credentials-check', 'Skip checking credentials', false)
     .asyncActionProjectDir(initAction, { checkConfig: true });
+
+  if (!hasEasJson) {
+    return;
+  }
 
   program
     .command('eas:credentials:sync [path]')
