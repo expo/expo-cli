@@ -27,4 +27,4 @@ build/Release
 node_modules
 
 # Don't include babel transpiled output
-lib
+build
