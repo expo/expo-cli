@@ -120,9 +120,9 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
 
   if (usesAssetBundlePatterns(projectRoot)) {
     log.nested(
-      `- 📁 In the bare workflow, ${chalk.yellow(
-        `${'assetBundlePatterns'}`
-      )} no longer affects your builds. To learn about assets in the bare workflow, read here: https://docs.expo.io/bare/updating-your-app/#embedding-assets`
+      `- 📁 The property ${chalk.bold(
+        `'assetBundlePatterns'`
+      )} is not used in the bare-workflow. ${log.chalk.dim(learnMore('https://docs.expo.io/bare/updating-your-app/#embedding-assets'))}`
     );
   }
 
