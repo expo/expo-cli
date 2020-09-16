@@ -281,6 +281,16 @@ function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
           config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Base/Frameworks'
           config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Maps/Frameworks'`
       : '';
+  const maybeExcludeIdfaCodeFromBranch =
+    sdkMajorVersion >= 39
+      ? `
+      if ${podNameExpression} == 'Branch'
+        ${targetExpression}.native_target.build_configurations.each do |config|
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'BRANCH_EXCLUDE_IDFA_CODE=1'
+        end
+      end`
+      : '';
   return `
       if ${podNameExpression} == 'ExpoKit'
         ${targetExpression}.native_target.build_configurations.each do |config|
@@ -293,6 +303,8 @@ function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
           ${maybeFrameworkSearchPathDef}
         end
       end
+
+      ${maybeExcludeIdfaCodeFromBranch}
 `;
 }
 
