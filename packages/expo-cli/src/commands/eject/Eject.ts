@@ -51,10 +51,13 @@ export type EjectAsyncOptions = {
 export async function ejectAsync(projectRoot: string, options?: EjectAsyncOptions): Promise<void> {
   if (await maybeBailOnGitStatusAsync()) return;
 
+  const { exp, pkg } = await ensureConfigAsync(projectRoot);
   const tempDir = temporary.directory();
 
   const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync(
     projectRoot,
+    exp,
+    pkg,
     tempDir
   );
   // Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
@@ -84,7 +87,8 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
   if (shouldInstall && needsPodInstall) {
     podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
   }
-  await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot, options);
+
+  await warnIfDependenciesRequireAdditionalSetupAsync(pkg, options);
 
   log.newLine();
   log.nested(`➡️  ${chalk.bold('Next steps')}`);
@@ -118,10 +122,10 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
     )}`
   );
 
-  if (usesAssetBundlePatterns(projectRoot)) {
+  if (exp.hasOwnProperty('assetBundlePatterns')) {
     log.nested(
       `- 📁 The property ${chalk.bold(
-        `'assetBundlePatterns'`
+        `assetBundlePatterns`
       )} does not have the same effect in the bare workflow. ${log.chalk.dim(
         learnMore('https://docs.expo.io/bare/updating-your-app/#embedding-assets')
       )}`
@@ -285,11 +289,6 @@ async function ensureConfigAsync(
   }
 
   return { exp, pkg };
-}
-
-function usesAssetBundlePatterns(projectRoot: string): boolean {
-  const { exp } = getConfig(projectRoot);
-  return exp.hasOwnProperty('assetBundlePatterns');
 }
 
 function createFileHash(contents: string): string {
@@ -577,13 +576,12 @@ async function cloneNativeDirectoriesAsync({
  */
 async function createNativeProjectsFromTemplateAsync(
   projectRoot: string,
+  exp: ExpoConfig,
+  pkg: PackageJSONConfig,
   tempDir: string
 ): Promise<
   { hasNewProjectFiles: boolean; needsPodInstall: boolean } & DependenciesModificationResults
 > {
-  // We need the SDK version to proceed
-  const { exp, pkg } = await ensureConfigAsync(projectRoot);
-
   const copiedPaths = await cloneNativeDirectoriesAsync({ projectRoot, tempDir, exp });
 
   writeMetroConfig({ projectRoot, pkg, tempDir });
@@ -634,14 +632,9 @@ function createDependenciesMap(dependencies: any): DependenciesMap {
  * users to add some code, eg: to their AppDelegate.
  */
 async function warnIfDependenciesRequireAdditionalSetupAsync(
-  projectRoot: string,
+  pkg: PackageJSONConfig,
   options?: EjectAsyncOptions
 ): Promise<void> {
-  // We just need the custom `nodeModulesPath` from the config.
-  const { exp, pkg } = getConfig(projectRoot, {
-    skipSDKVersionRequirement: true,
-  });
-
   const pkgsWithExtraSetup: Record<string, string> = {
     'expo-camera': 'https://github.com/expo/expo/tree/master/packages/expo-camera',
     'expo-image-picker': 'https://github.com/expo/expo/tree/master/packages/expo-image-picker',
