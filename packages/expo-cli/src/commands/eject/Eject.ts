@@ -122,7 +122,9 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
     log.nested(
       `- 📁 The property ${chalk.bold(
         `'assetBundlePatterns'`
-      )} is not used in the bare-workflow. ${log.chalk.dim(learnMore('https://docs.expo.io/bare/updating-your-app/#embedding-assets'))}`
+      )} does not have the same effect in the bare workflow. ${log.chalk.dim(
+        learnMore('https://docs.expo.io/bare/updating-your-app/#embedding-assets')
+      )}`
     );
   }
 
@@ -644,11 +646,13 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
     'expo-camera': 'https://github.com/expo/expo/tree/master/packages/expo-camera',
     'expo-image-picker': 'https://github.com/expo/expo/tree/master/packages/expo-image-picker',
     'lottie-react-native': 'https://github.com/react-native-community/lottie-react-native',
-    'expo-constants': `${chalk.yellow(
+    'expo-constants': `${chalk.bold(
       'Constants.manifest'
-    )} is not available in the bare workflow. You should replace it with ${chalk.yellow(
+    )} is not available in the bare workflow. You should replace it with ${chalk.bold(
       'Updates.manifest'
-    )}: https://docs.expo.io/versions/latest/sdk/updates/#updatesmanifest`,
+    )}. ${log.chalk.dim(
+      learnMore('https://docs.expo.io/versions/latest/sdk/updates/#updatesmanifest')
+    )}`,
   };
   const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(
     pkgName => pkgName in pkgsWithExtraSetup
