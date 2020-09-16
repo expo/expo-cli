@@ -281,7 +281,7 @@ function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
           config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Base/Frameworks'
           config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Maps/Frameworks'`
       : '';
-  const maybeExcludeIdfaCodeFromBranch =
+  const excludeIdfaCodeFromBranchSinceSDK39 =
     sdkMajorVersion >= 39
       ? `
       if ${podNameExpression} == 'Branch'
@@ -304,7 +304,7 @@ function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
         end
       end
 
-      ${maybeExcludeIdfaCodeFromBranch}
+      ${excludeIdfaCodeFromBranchSinceSDK39}
 `;
 }
 
