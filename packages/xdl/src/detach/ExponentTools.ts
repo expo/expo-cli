@@ -195,11 +195,11 @@ function isDirectory(dir: string) {
 
 type LocaleMap = { [lang: string]: any };
 
-async function getResolvedLocalesAsync(exp: ExpoConfig): Promise<LocaleMap> {
+async function getResolvedLocalesAsync(projectRoot: string, exp: ExpoConfig): Promise<LocaleMap> {
   const locales: LocaleMap = {};
   if (exp.locales !== undefined) {
-    for (const [lang, path] of Object.entries(exp.locales)) {
-      const s = await fs.readFile(path as string, 'utf8');
+    for (const [lang, localePath] of Object.entries(exp.locales)) {
+      const s = await fs.readFile(path.resolve(projectRoot, localePath as string), 'utf8');
       try {
         locales[lang] = JSON.parse(s);
       } catch (e) {

@@ -6,11 +6,11 @@ import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import {
-  IconOptions,
   getChromeIconConfig,
   getFaviconIconConfig,
   getSafariIconConfig,
   getSafariStartupImageConfig,
+  IconOptions,
 } from 'expo-pwa';
 import { readFileSync } from 'fs-extra';
 import { boolish } from 'getenv';
@@ -394,9 +394,9 @@ export default async function (
           },
           {
             name: env.config.web?.shortName,
-            isFullScreen: env.config.web?.meta.apple.touchFullscreen,
-            isWebAppCapable: env.config.web?.meta.apple.mobileWebAppCapable,
-            barStyle: env.config.web?.meta.apple.barStyle,
+            isFullScreen: env.config.web?.meta?.apple?.touchFullscreen,
+            isWebAppCapable: !!env.config.web?.meta?.apple?.mobileWebAppCapable,
+            barStyle: env.config.web?.meta?.apple?.barStyle,
           },
           ensureSourceAbsolute(getSafariIconConfig(env.config)),
           ensureSourceAbsolute(getSafariStartupImageConfig(env.config))

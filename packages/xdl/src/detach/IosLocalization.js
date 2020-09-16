@@ -3,10 +3,14 @@ import path from 'path';
 
 import { getResolvedLocalesAsync } from './ExponentTools';
 
-export async function writeLocalizationResourcesAsync({ supportingDirectory, context }) {
+export async function writeLocalizationResourcesAsync({
+  projectRoot,
+  supportingDirectory,
+  context,
+}) {
   let locales = {};
   if (context.type === 'user') {
-    locales = await getResolvedLocalesAsync(context.config);
+    locales = await getResolvedLocalesAsync(projectRoot, context.config);
   } else if (context.type === 'service') {
     locales = context.config.locales !== undefined ? context.config.locales : {};
   }

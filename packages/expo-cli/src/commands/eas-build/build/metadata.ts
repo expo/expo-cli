@@ -60,7 +60,7 @@ async function collectMetadata<T extends Platform>(
   }
 ): Promise<BuildMetadata> {
   return {
-    appVersion: ctx.commandCtx.exp.version,
+    appVersion: ctx.commandCtx.exp.version!,
     cliVersion: packageJSON.version,
     workflow: ctx.buildProfile.workflow,
     credentialsSource,

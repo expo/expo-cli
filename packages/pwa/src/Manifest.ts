@@ -1,7 +1,6 @@
 import {
   AppJSONConfig,
   ExpoConfig,
-  WebPlatformConfig,
   getConfig,
   getNameFromConfig,
   getWebOutputPath,
@@ -44,6 +43,7 @@ export function getConfigForPWA(projectRoot: string): PWAConfig {
 
 function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): PWAConfig {
   // For RN CLI support
+  // @ts-ignore: expo object doesn't exist on ExpoConfig
   const appManifest = appJSON.expo || appJSON || {};
   const { web: webManifest = {}, splash = {}, ios = {}, android = {} } = appManifest;
   const { build: webBuild = {}, webDangerous = {}, meta = {} } = webManifest;
@@ -273,7 +273,7 @@ function isObject(item: any): item is Record<any, any> {
   return typeof item === 'object' && !Array.isArray(item) && item !== null;
 }
 
-export function createPWAManifestFromWebConfig(config?: WebPlatformConfig): Manifest {
+export function createPWAManifestFromWebConfig(config?: ExpoConfig['web']): Manifest {
   if (!isObject(config)) {
     throw new Error('Web config must be a valid object');
   }

@@ -23,9 +23,9 @@ import * as IosWorkspace from './IosWorkspace';
 import logger from './Logger';
 import {
   AnyStandaloneContext,
+  isStandaloneContextDataService,
   StandaloneContextService,
   StandaloneContextUser,
-  isStandaloneContextDataService,
 } from './StandaloneContext';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
@@ -545,6 +545,7 @@ export async function configureAsync(context: AnyStandaloneContext): Promise<voi
   const {
     intermediatesDirectory,
     iosProjectDirectory,
+    projectRootDirectory,
     projectName,
     supportingDirectory,
   } = IosWorkspace.getPaths(context);
@@ -572,6 +573,7 @@ export async function configureAsync(context: AnyStandaloneContext): Promise<voi
     if (!isExpoClientBuild) {
       await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
       await IosLocalization.writeLocalizationResourcesAsync({
+        projectRoot: projectRootDirectory,
         supportingDirectory,
         context,
       });

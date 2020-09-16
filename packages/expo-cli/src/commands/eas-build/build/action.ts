@@ -11,15 +11,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { CredentialsSource, EasJsonReader } from '../../../easJson';
 import log from '../../../log';
 import { ensureProjectExistsAsync } from '../../../projects';
-import { UploadType, uploadAsync } from '../../../uploads';
+import { uploadAsync, UploadType } from '../../../uploads';
 import { createProgressTracker } from '../../utils/progress';
 import { platformDisplayNames } from '../constants';
 import {
   AnalyticsEvent,
   Build,
   BuildCommandPlatform,
-  BuildStatus,
   Builder,
+  BuildStatus,
   CommandContext,
 } from '../types';
 import Analytics from '../utils/analytics';
@@ -30,7 +30,7 @@ import {
   ensureGitStatusIsCleanAsync,
   makeProjectTarballAsync,
 } from '../utils/git';
-import { printBuildResults, printLogsUrls } from '../utils/misc';
+import { printBuildResults, printDeprecationWarnings, printLogsUrls } from '../utils/misc';
 import AndroidBuilder from './builders/AndroidBuilder';
 import iOSBuilder from './builders/iOSBuilder';
 import { collectMetadata } from './metadata';
@@ -205,10 +205,11 @@ async function startBuildAsync<T extends Platform>(
     log(`Starting ${platformDisplayNames[job.platform]} build`);
 
     try {
-      const { buildId } = await client.postAsync(`projects/${projectId}/builds`, {
+      const { buildId, deprecationInfo } = await client.postAsync(`projects/${projectId}/builds`, {
         job,
         metadata,
       } as any);
+      printDeprecationWarnings(deprecationInfo);
       Analytics.logEvent(AnalyticsEvent.BUILD_REQUEST_SUCCESS, builder.ctx.trackingCtx.properties);
       return buildId;
     } catch (error) {
@@ -216,6 +217,9 @@ async function startBuildAsync<T extends Platform>(
         ...builder.ctx.trackingCtx,
         reason: error.message,
       });
+      if (error.code === 'TURTLE_DEPRECATED_JOB_FORMAT') {
+        log.error('EAS Build API changed, upgrade to latest expo-cli');
+      }
       throw error;
     }
   } finally {

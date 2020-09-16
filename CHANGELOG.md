@@ -10,6 +10,9 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [expo-cli] EAS Build: Improve errors and warnings when deprecating API [#2639](https://github.com/expo/expo-cli/pull/2639)
+- [expo-cli] support `--config` flag in `expo credentials:manager` [#2641](https://github.com/expo/expo-cli/pull/2641)
+
 ### 🐛 Bug fixes
 
 ## [Wed, 9 Sep 2020 13:28:10 -0700](https://github.com/expo/expo-cli/commit/7b9b00b12095ce6ea5c02c03f793fcc6bf0f55a7)
