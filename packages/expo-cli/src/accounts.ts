@@ -23,7 +23,7 @@ export async function loginOrRegisterAsync(): Promise<User> {
   if (program.nonInteractive) {
     throw new CommandError(
       'NOT_LOGGED_IN',
-      `Not logged in. Use \`${program.name()} login -u username -p password\` to log in.`
+      `Not logged in. Use \`EXPO_CLI_PASSWORD=<password> ${program.name()} login -u username\` to log in.`
     );
   }
 
@@ -67,6 +67,13 @@ export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
 }
 
 export async function login(options: CommandOptions): Promise<User> {
+  if (options.password) {
+    log.warn(
+      `The argument ${log.chalk.bold(
+        '--password'
+      )} is deprecated. Use the environment variable EXPO_CLI_PASSWORD instead.`
+    );
+  }
   const user = await UserManager.getCurrentUserAsync();
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!nonInteractive) {
