@@ -281,6 +281,20 @@ function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
           config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Base/Frameworks'
           config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Maps/Frameworks'`
       : '';
+  // In SDK39, in preparation for iOS 14 we've decided to remove IDFA code.
+  // By adding this macro to shell apps we'll remove this code from Branch
+  // on compilation level, see:
+  // https://github.com/BranchMetrics/ios-branch-deep-linking-attribution/blob/ac991f9d0bc9bad640b25a0f1192679a8cfa083a/Branch-SDK/BNCSystemObserver.m#L49-L75
+  const excludeIdfaCodeFromBranchSinceSDK39 =
+    sdkMajorVersion >= 39
+      ? `
+      if ${podNameExpression} == 'Branch'
+        ${targetExpression}.native_target.build_configurations.each do |config|
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'BRANCH_EXCLUDE_IDFA_CODE=1'
+        end
+      end`
+      : '';
   return `
       if ${podNameExpression} == 'ExpoKit'
         ${targetExpression}.native_target.build_configurations.each do |config|
@@ -293,6 +307,8 @@ function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
           ${maybeFrameworkSearchPathDef}
         end
       end
+
+      ${excludeIdfaCodeFromBranchSinceSDK39}
 `;
 }
 
