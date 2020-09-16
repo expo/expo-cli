@@ -38,5 +38,3 @@ coverage/
 
 # this is the build folder for @expo/webpack-config for some reason
 packages/webpack-config/webpack
-
-packages/osascript/lib
