@@ -16,7 +16,7 @@ npm-debug.log
 *.tsbuildinfo
 .history
 
-**/*/build
+packages/*/build/
 
 # Logs
 logs
