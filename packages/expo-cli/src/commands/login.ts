@@ -9,6 +9,9 @@ export default function (program: Command) {
     .alias('signin')
     .helpGroup('auth')
     .option('-u, --username [string]', 'Username')
-    .option('-p, --password [string]', 'Password')
+    .option(
+      '-p, --password [string]',
+      'Password. Deprecated in favor of the environment variable EXPO_CLI_PASSWORD'
+    )
     .asyncAction(login);
 }
