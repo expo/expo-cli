@@ -53,7 +53,7 @@ export default async function readPbxProject(projectRootPath: string): Promise<I
     throw new Error(`Couldn't locate application PBXNativeTarget in '.xcodeproj' file.`);
   }
 
-  if (applicationNativeTarget.target.name !== projectName) {
+  if (String(applicationNativeTarget.target.name) !== projectName) {
     throw new Error(
       `Application native target name mismatch. Expected ${projectName}, but found ${applicationNativeTarget.target.name}.`
     );
