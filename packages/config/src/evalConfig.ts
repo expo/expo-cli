@@ -23,10 +23,13 @@ export function evalConfig(
 ): DynamicConfigResults {
   const babel = require('@babel/core');
   const preset = require('@expo/babel-preset-cli');
-  const { code } = babel.transformFileSync(require.resolve(configFile), {
-    only: [configFile],
+
+  const { code } = babel.transformFileSync(configFile, {
+    // only: [configFile],
     cwd: request?.projectRoot || process.cwd(),
     babelrc: false,
+    configFile: false,
+    comments: false,
     ignore: [/node_modules/],
     filename: 'unknown',
     presets: [preset],
