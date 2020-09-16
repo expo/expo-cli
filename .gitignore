@@ -19,7 +19,7 @@ npm-debug.log
 packages/*/build/
 
 # Logs
-logs
+packages/*/logs/
 *.log
 
 # Runtime data
