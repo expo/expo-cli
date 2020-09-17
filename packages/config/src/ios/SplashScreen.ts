@@ -1,14 +1,14 @@
 import {
+  configureIosSplashScreen,
   IosSplashScreenConfig,
   SplashScreenImageResizeMode,
-  configureIosSplashScreen,
 } from '@expo/configure-splash-screen';
 
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
 
 export function getSplashScreen(config: ExpoConfig): IosSplashScreenConfig | undefined {
-  if (!config.splash || !config.ios?.splash) {
+  if (!config.splash && !config.ios?.splash) {
     return;
   }
 
@@ -27,6 +27,7 @@ export function getSplashScreen(config: ExpoConfig): IosSplashScreenConfig | und
 
 export async function setSplashScreenAsync(config: ExpoConfig, projectRoot: string) {
   const splashConfig = getSplashScreen(config);
+
   if (!splashConfig) {
     return;
   }
