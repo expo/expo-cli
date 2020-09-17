@@ -1,7 +1,7 @@
 import { resolve } from 'path';
 
 import { getBranchApiKey, setBranchApiKey } from '../Branch';
-import { readAndroidManifestAsync } from '../Manifest';
+import { getMainApplication, readAndroidManifestAsync } from '../Manifest';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
@@ -23,9 +23,7 @@ describe('Android branch test', () => {
       { android: { config: { branch: { apiKey: 'MY-API-KEY' } } } },
       androidManifestJson
     );
-    const mainApplication = androidManifestJson.manifest.application.filter(
-      e => e['$']['android:name'] === '.MainApplication'
-    )[0];
+    const mainApplication = getMainApplication(androidManifestJson);
 
     const apiKeyItem = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'io.branch.sdk.BranchKey'

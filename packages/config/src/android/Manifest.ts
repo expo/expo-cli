@@ -133,6 +133,14 @@ export async function getPackageAsync(manifest: Document): Promise<string | null
   return manifest.manifest?.['$']?.package ?? null;
 }
 
+export function getMainApplication(manifest: Document): any | null {
+  return (
+    manifest?.manifest?.application?.filter(
+      (e: any) => e['$']['android:name'] === '.MainApplication'
+    )[0] ?? null
+  );
+}
+
 export function getMainActivity(manifest: Document): any | null {
   const mainActivity = manifest.manifest.application[0].activity.filter(
     (e: any) => e['$']['android:name'] === '.MainActivity'
