@@ -16,6 +16,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🐛 Bug fixes
 
 - [configure-splash-screen] Fix error when project's name contains only numeric characters [#2657](https://github.com/expo/expo-cli/pull/2657)
+- [expo-cli] Fix credential fetching for team members acting on behalf of a project owner [#2660](https://github.com/expo/expo-cli/pull/2660)
 
 ## [Wed, 9 Sep 2020 13:28:10 -0700](https://github.com/expo/expo-cli/commit/7b9b00b12095ce6ea5c02c03f793fcc6bf0f55a7)
 
