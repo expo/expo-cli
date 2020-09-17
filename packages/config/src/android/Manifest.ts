@@ -99,6 +99,13 @@ export async function getPackageAsync(manifest: Document): Promise<string | null
   return manifest.manifest?.['$']?.package ?? null;
 }
 
+export function getMainActivity(manifest: Document): any | null {
+  const mainActivity = manifest.manifest.application[0].activity.filter(
+    (e: any) => e['$']['android:name'] === '.MainActivity'
+  );
+  return mainActivity[0] ?? null;
+}
+
 export function addMetaDataItemToMainApplication(
   mainApplication: any,
   itemName: string,

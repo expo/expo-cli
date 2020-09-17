@@ -7,11 +7,14 @@ import { XMLItem } from './Styles';
 
 const BASE_STYLES_XML = `<?xml version="1.0" encoding="utf-8"?><resources></resources>`;
 
-export async function getProjectColorsXMLPathAsync(projectDir: string): Promise<string | null> {
+export async function getProjectColorsXMLPathAsync(
+  projectDir: string,
+  { kind = 'values' }: { kind?: string } = {}
+): Promise<string | null> {
   try {
     const shellPath = path.join(projectDir, 'android');
     if ((await fs.stat(shellPath)).isDirectory()) {
-      const colorsPath = path.join(shellPath, 'app/src/main/res/values/colors.xml');
+      const colorsPath = path.join(shellPath, `app/src/main/res/${kind}/colors.xml`);
       await fs.ensureFile(colorsPath);
       return colorsPath;
     }
