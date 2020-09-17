@@ -6,17 +6,70 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
-- [expo-cli] Remove deprecated --web-only flag from start command
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+## [Thu, 17 Sep 2020 13:28:59 -0700](https://github.com/expo/expo-cli/commit/f0c9270058f38cc1b58bd03765e3e1de747c7b39)
+
+### 🛠 Breaking changes
+
+- [cli] Remove deprecated --web-only flag from start command
 
 ### 🎉 New features
 
-- [expo-cli] EAS Build: Improve errors and warnings when deprecating API [#2639](https://github.com/expo/expo-cli/pull/2639)
-- [expo-cli] support `--config` flag in `expo credentials:manager` [#2641](https://github.com/expo/expo-cli/pull/2641)
+- [cli] EAS Build: Improve errors and warnings when deprecating API [#2639](https://github.com/expo/expo-cli/pull/2639)
+- [cli] support `--config` flag in `expo credentials:manager` [#2641](https://github.com/expo/expo-cli/pull/2641)
+- [cli] warn the user when the bundle ID or package name is already in use ([#2616](https://github.com/expo/expo-cli/issues/2616))
+- [cli] Make gitignore and native project step idempotent in eject ([#2620](https://github.com/expo/expo-cli/issues/2620))
+- [cli] Added no-install and npm args to eject ([#2621](https://github.com/expo/expo-cli/issues/2621))
+- [cli] Improve JSON error formatting ([#2635](https://github.com/expo/expo-cli/issues/2635))
+- [cli] warn about Constants.manifest and assetBundlePatterns on eject ([#2648](https://github.com/expo/expo-cli/issues/2648))
+- [cli] Log about upload after build:ios completes ([#2649](https://github.com/expo/expo-cli/issues/2649))
+- [config-types] Generate types for Expo config ([#2622](https://github.com/expo/expo-cli/issues/2622))
+- [optimize] Compile expo/config in expo-optimize - faster install time! ([#2643](https://github.com/expo/expo-cli/issues/2643))
+- [xdl] Exclude IDFA code from Branch ([#2655](https://github.com/expo/expo-cli/issues/2655))
 
 ### 🐛 Bug fixes
 
 - [configure-splash-screen] Fix error when project's name contains only numeric characters [#2657](https://github.com/expo/expo-cli/pull/2657)
-- [expo-cli] Fix credential fetching for team members acting on behalf of a project owner [#2660](https://github.com/expo/expo-cli/pull/2660)
+- [cli] Fix credential fetching for team members acting on behalf of a project owner [#2660](https://github.com/expo/expo-cli/pull/2660)
+- [cli] Fix errors preventing expo eas:build:init from working
+- [cli] add missing owner query param ([#2660](https://github.com/expo/expo-cli/issues/2660))
+- [next-adapter] Next warning Expected Document Component Html was not rendered ([#2661](https://github.com/expo/expo-cli/issues/2661))
+- [config] Disable using the project's babel.config.js for transpiling app.config.js ([#2656](https://github.com/expo/expo-cli/issues/2656))
+- [configure-splash-screen] Fix error up upon numeric name ([#2657](https://github.com/expo/expo-cli/issues/2657))
+- [xdl] resolve locales from project root ([#2647](https://github.com/expo/expo-cli/issues/2647))
+- [cli] Remove external config evaluation script ([#2625](https://github.com/expo/expo-cli/issues/2625))
+- [cli] remove extra config reads ([#2636](https://github.com/expo/expo-cli/issues/2636))
+- [xdl] Fix path to expo-random
+- [xdl] Add expo-random to SDK39+ iOS shell apps ([#2640](https://github.com/expo/expo-cli/issues/2640))
+- [cli] Added better logs for invalid custom config paths ([#2626](https://github.com/expo/expo-cli/issues/2626))
+
+### 📦 Packages updated
+
+- @expo/babel-preset-cli@0.2.18
+- @expo/config@3.3.1
+- @expo/configure-splash-screen@0.1.16
+- @expo/dev-server@0.1.26
+- @expo/dev-tools@0.13.43
+- @expo/electron-adapter@0.0.17
+- expo-cli@3.27.5
+- expo-codemod@1.0.29
+- expo-optimize@0.1.48
+- @expo/image-utils@0.3.6
+- @expo/json-file@8.2.23
+- @expo/metro-config@0.1.26
+- @expo/next-adapter@2.1.30
+- @expo/osascript@2.0.24
+- @expo/package-manager@0.0.32
+- @expo/plist@0.0.10
+- pod-install@0.1.11
+- expo-pwa@0.0.36
+- @expo/schemer@1.3.21
+- uri-scheme@1.0.32
+- @expo/webpack-config@0.12.30
+- @expo/xdl@58.0.4
 
 ## [Wed, 9 Sep 2020 13:28:10 -0700](https://github.com/expo/expo-cli/commit/7b9b00b12095ce6ea5c02c03f793fcc6bf0f55a7)
 
