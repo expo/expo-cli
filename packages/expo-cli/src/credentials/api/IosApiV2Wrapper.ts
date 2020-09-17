@@ -41,7 +41,7 @@ export default class ApiClient {
     id: number,
     accountName: string
   ): Promise<IosDistCredentials | IosPushCredentials> {
-    return await this.api.getAsync(`credentials/ios/userCredentials/${id}`);
+    return await this.api.getAsync(`credentials/ios/userCredentials/${id}`, { owner: accountName });
   }
 
   public async createDistCertApi(
