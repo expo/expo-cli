@@ -1,7 +1,7 @@
 import { ExpoConfig } from '../Config.types';
 import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
-import { writeXMLAsync } from './Manifest';
-import { getProjectStylesXMLPathAsync, readStylesXMLAsync, setStylesItem, XMLItem } from './Styles';
+import { readXMLAsync, writeXMLAsync } from './Manifest';
+import { getProjectStylesXMLPathAsync, setStylesItem, XMLItem } from './Styles';
 
 const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
@@ -29,7 +29,7 @@ export async function setRootViewBackgroundColor(config: ExpoConfig, projectDire
     return false;
   }
 
-  let stylesJSON = await readStylesXMLAsync(stylesPath);
+  let stylesJSON = await readXMLAsync({ path: stylesPath });
   let colorsJSON = await readColorsXMLAsync(colorsPath);
 
   const colorItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
@@ -42,7 +42,11 @@ export async function setRootViewBackgroundColor(config: ExpoConfig, projectDire
   styleItemToAdd[0].$.name = ANDROID_WINDOW_BACKGROUND;
 
   colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
-  stylesJSON = setStylesItem(styleItemToAdd, stylesJSON);
+  stylesJSON = setStylesItem({
+    item: styleItemToAdd,
+    xml: stylesJSON,
+    parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+  });
 
   try {
     await Promise.all([

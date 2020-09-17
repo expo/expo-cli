@@ -1,7 +1,7 @@
 import { ExpoConfig } from '../Config.types';
 import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
-import { writeXMLAsync } from './Manifest';
-import { getProjectStylesXMLPathAsync, readStylesXMLAsync, setStylesItem, XMLItem } from './Styles';
+import { readXMLAsync, writeXMLAsync } from './Manifest';
+import { getProjectStylesXMLPathAsync, setStylesItem, XMLItem } from './Styles';
 
 const COLOR_PRIMARY_KEY = 'colorPrimary';
 const DEFAULT_PRIMARY_COLOR = '#023c69';
@@ -19,7 +19,7 @@ export async function setPrimaryColor(config: ExpoConfig, projectDirectory: stri
     return false;
   }
 
-  let stylesJSON = await readStylesXMLAsync(stylesPath);
+  let stylesJSON = await readXMLAsync({ path: stylesPath });
   let colorsJSON = await readColorsXMLAsync(colorsPath);
 
   const colorItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
@@ -32,7 +32,11 @@ export async function setPrimaryColor(config: ExpoConfig, projectDirectory: stri
   styleItemToAdd[0].$.name = COLOR_PRIMARY_KEY;
 
   colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
-  stylesJSON = setStylesItem(styleItemToAdd, stylesJSON);
+  stylesJSON = setStylesItem({
+    item: styleItemToAdd,
+    xml: stylesJSON,
+    parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+  });
 
   try {
     await Promise.all([

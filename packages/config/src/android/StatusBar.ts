@@ -1,7 +1,7 @@
 import { ExpoConfig } from '../Config.types';
 import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
-import { writeXMLAsync } from './Manifest';
-import { getProjectStylesXMLPathAsync, readStylesXMLAsync, setStylesItem, XMLItem } from './Styles';
+import { readXMLAsync, writeXMLAsync } from './Manifest';
+import { getProjectStylesXMLPathAsync, setStylesItem, XMLItem } from './Styles';
 
 const COLOR_PRIMARY_DARK_KEY = 'colorPrimaryDark';
 const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
@@ -25,7 +25,7 @@ export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: s
     return false;
   }
 
-  let stylesJSON = await readStylesXMLAsync(stylesPath);
+  let stylesJSON = await readXMLAsync({ path: stylesPath });
   let colorsJSON = await readColorsXMLAsync(colorsPath);
 
   const styleItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
@@ -45,10 +45,18 @@ export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: s
   // Default is light-content, don't need to do anything to set it
   if (statusBarStyle === 'dark-content') {
     const statusBarStyleItem: XMLItem[] = [{ _: 'true', $: { name: WINDOW_LIGHT_STATUS_BAR } }];
-    stylesJSON = setStylesItem(statusBarStyleItem, stylesJSON);
+    stylesJSON = setStylesItem({
+      item: statusBarStyleItem,
+      xml: stylesJSON,
+      parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+    });
   }
 
-  stylesJSON = setStylesItem(styleItemToAdd, stylesJSON);
+  stylesJSON = setStylesItem({
+    item: styleItemToAdd,
+    xml: stylesJSON,
+    parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+  });
 
   try {
     await Promise.all([
