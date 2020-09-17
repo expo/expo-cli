@@ -1,17 +1,7 @@
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectColorsXMLPathAsync,
-  readColorsXMLAsync,
-  setColorItem,
-  writeColorsXMLAsync,
-} from './Colors';
-import {
-  XMLItem,
-  getProjectStylesXMLPathAsync,
-  readStylesXMLAsync,
-  setStylesItem,
-  writeStylesXMLAsync,
-} from './Styles';
+import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
+import { writeXMLAsync } from './Manifest';
+import { getProjectStylesXMLPathAsync, readStylesXMLAsync, setStylesItem, XMLItem } from './Styles';
 
 const COLOR_PRIMARY_DARK_KEY = 'colorPrimaryDark';
 const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
@@ -61,8 +51,10 @@ export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: s
   stylesJSON = setStylesItem(styleItemToAdd, stylesJSON);
 
   try {
-    await writeColorsXMLAsync(colorsPath, colorsJSON);
-    await writeStylesXMLAsync(stylesPath, stylesJSON);
+    await Promise.all([
+      writeXMLAsync({ path: colorsPath, xml: colorsJSON }),
+      writeXMLAsync({ path: stylesPath, xml: stylesJSON }),
+    ]);
   } catch (e) {
     throw new Error(
       `Error setting Android status bar config. Cannot write colors.xml to ${colorsPath}, or styles.xml to ${stylesPath}.`

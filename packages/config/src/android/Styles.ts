@@ -1,34 +1,23 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { Builder, Parser } from 'xml2js';
+import { Builder } from 'xml2js';
 
-import { Document } from './Manifest';
+import { Document, getProjectXMLPathAsync, readXMLAsync } from './Manifest';
 
 export type XMLItem = {
   _: string;
   $: { name: string };
 };
 
-export async function getProjectStylesXMLPathAsync(projectDir: string): Promise<string | null> {
-  try {
-    const shellPath = path.join(projectDir, 'android');
-    if ((await fs.stat(shellPath)).isDirectory()) {
-      const stylesPath = path.join(shellPath, 'app/src/main/res/values/styles.xml');
-      await fs.ensureFile(stylesPath);
-      return stylesPath;
-    }
-  } catch (error) {
-    throw new Error(`Could not create android/app/src/main/res/values/styles.xml`);
-  }
-
-  return null;
+export async function getProjectStylesXMLPathAsync(
+  projectDir: string,
+  { kind = 'values' }: { kind?: string } = {}
+): Promise<string | null> {
+  return getProjectXMLPathAsync(projectDir, { kind, name: 'styles' });
 }
 
-export async function readStylesXMLAsync(stylesPath: string): Promise<Document> {
-  const contents = await fs.readFile(stylesPath, { encoding: 'utf8', flag: 'r' });
-  const parser = new Parser();
-  const manifest = parser.parseStringPromise(contents);
-  return manifest;
+export async function readStylesXMLAsync(path: string): Promise<Document> {
+  return readXMLAsync({ path });
 }
 
 export async function writeStylesXMLAsync(stylesPath: string, stylesContent: any): Promise<void> {

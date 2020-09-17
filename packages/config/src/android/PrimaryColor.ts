@@ -1,17 +1,7 @@
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectColorsXMLPathAsync,
-  readColorsXMLAsync,
-  setColorItem,
-  writeColorsXMLAsync,
-} from './Colors';
-import {
-  XMLItem,
-  getProjectStylesXMLPathAsync,
-  readStylesXMLAsync,
-  setStylesItem,
-  writeStylesXMLAsync,
-} from './Styles';
+import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
+import { writeXMLAsync } from './Manifest';
+import { getProjectStylesXMLPathAsync, readStylesXMLAsync, setStylesItem, XMLItem } from './Styles';
 
 const COLOR_PRIMARY_KEY = 'colorPrimary';
 const DEFAULT_PRIMARY_COLOR = '#023c69';
@@ -45,8 +35,10 @@ export async function setPrimaryColor(config: ExpoConfig, projectDirectory: stri
   stylesJSON = setStylesItem(styleItemToAdd, stylesJSON);
 
   try {
-    await writeColorsXMLAsync(colorsPath, colorsJSON);
-    await writeStylesXMLAsync(stylesPath, stylesJSON);
+    await Promise.all([
+      writeXMLAsync({ path: colorsPath, xml: colorsJSON }),
+      writeXMLAsync({ path: stylesPath, xml: stylesJSON }),
+    ]);
   } catch (e) {
     throw new Error(
       `Error setting Android primary color. Cannot write new styles.xml to ${stylesPath}.`

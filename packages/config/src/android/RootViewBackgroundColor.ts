@@ -1,17 +1,7 @@
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectColorsXMLPathAsync,
-  readColorsXMLAsync,
-  setColorItem,
-  writeColorsXMLAsync,
-} from './Colors';
-import {
-  XMLItem,
-  getProjectStylesXMLPathAsync,
-  readStylesXMLAsync,
-  setStylesItem,
-  writeStylesXMLAsync,
-} from './Styles';
+import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
+import { writeXMLAsync } from './Manifest';
+import { getProjectStylesXMLPathAsync, readStylesXMLAsync, setStylesItem, XMLItem } from './Styles';
 
 const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
@@ -55,8 +45,10 @@ export async function setRootViewBackgroundColor(config: ExpoConfig, projectDire
   stylesJSON = setStylesItem(styleItemToAdd, stylesJSON);
 
   try {
-    await writeColorsXMLAsync(colorsPath, colorsJSON);
-    await writeStylesXMLAsync(stylesPath, stylesJSON);
+    await Promise.all([
+      writeXMLAsync({ path: colorsPath, xml: colorsJSON }),
+      writeXMLAsync({ path: stylesPath, xml: stylesJSON }),
+    ]);
   } catch (e) {
     throw new Error(
       `Error setting Android root view background color. Cannot write new styles.xml to ${stylesPath}.`

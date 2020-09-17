@@ -1,18 +1,8 @@
 import { ExpoConfig } from '../Config.types';
 import { addWarningAndroid } from '../WarningAggregator';
-import {
-  getProjectColorsXMLPathAsync,
-  readColorsXMLAsync,
-  setColorItem,
-  writeColorsXMLAsync,
-} from './Colors';
-import {
-  XMLItem,
-  getProjectStylesXMLPathAsync,
-  readStylesXMLAsync,
-  setStylesItem,
-  writeStylesXMLAsync,
-} from './Styles';
+import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
+import { writeXMLAsync } from './Manifest';
+import { getProjectStylesXMLPathAsync, readStylesXMLAsync, setStylesItem, XMLItem } from './Styles';
 
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 const WINDOW_LIGHT_NAVIGATION_BAR = 'android:windowLightNavigationBar';
@@ -67,8 +57,10 @@ export async function setNavigationBarConfig(config: ExpoConfig, projectDirector
   }
 
   try {
-    await writeColorsXMLAsync(colorsPath, colorsJSON);
-    await writeStylesXMLAsync(stylesPath, stylesJSON);
+    await Promise.all([
+      writeXMLAsync({ path: colorsPath, xml: colorsJSON }),
+      writeXMLAsync({ path: stylesPath, xml: stylesJSON }),
+    ]);
   } catch (e) {
     throw new Error(
       `Error setting Android navigation bar color. Cannot write colors.xml to ${colorsPath}, or styles.xml to ${stylesPath}.`
