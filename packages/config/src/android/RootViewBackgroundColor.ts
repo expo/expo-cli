@@ -7,7 +7,7 @@ const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
 
 export function getRootViewBackgroundColor(config: ExpoConfig) {
-  if (config.android && config.android.backgroundColor) {
+  if (config.android?.backgroundColor) {
     return config.android.backgroundColor;
   }
   if (config.backgroundColor) {

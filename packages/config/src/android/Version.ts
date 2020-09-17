@@ -22,7 +22,7 @@ export function setVersionName(
 }
 
 export function getVersionCode(config: ExpoConfig) {
-  return config.android && config.android.versionCode ? config.android.versionCode : null;
+  return config.android?.versionCode ? config.android.versionCode : null;
 }
 
 export function setVersionCode(
