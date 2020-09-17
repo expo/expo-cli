@@ -17,7 +17,7 @@ export default function (program: Command) {
     .description('Initialize build configuration for the project')
     .helpGroup('eas')
     .option('--skip-credentials-check', 'Skip checking credentials', false)
-    .asyncActionProjectDir(initAction, { checkConfig: true });
+    .asyncActionProjectDir(initAction, { checkConfig: true, skipSDKVersionRequirement: true });
 
   if (!hasEasJson) {
     return;
