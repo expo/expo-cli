@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 
-import { readAndroidManifestAsync } from '../Manifest';
+import { getMainApplication, readAndroidManifestAsync } from '../Manifest';
 import * as Updates from '../Updates';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
@@ -44,9 +44,7 @@ describe('Android Updates config', () => {
       },
     };
     androidManifestJson = await Updates.setUpdatesConfig(config, androidManifestJson, 'user');
-    const mainApplication = androidManifestJson.manifest.application.filter(
-      e => e['$']['android:name'] === '.MainApplication'
-    )[0];
+    const mainApplication = getMainApplication(androidManifestJson);
 
     const updateUrl = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'expo.modules.updates.EXPO_UPDATE_URL'

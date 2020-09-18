@@ -1,23 +1,13 @@
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectColorsXMLPathAsync,
-  readColorsXMLAsync,
-  setColorItem,
-  writeColorsXMLAsync,
-} from './Colors';
-import {
-  XMLItem,
-  getProjectStylesXMLPathAsync,
-  readStylesXMLAsync,
-  setStylesItem,
-  writeStylesXMLAsync,
-} from './Styles';
+import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
+import { readXMLAsync, writeXMLAsync } from './Manifest';
+import { getProjectStylesXMLPathAsync, setStylesItem, XMLItem } from './Styles';
 
 const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
 
 export function getRootViewBackgroundColor(config: ExpoConfig) {
-  if (config.android && config.android.backgroundColor) {
+  if (config.android?.backgroundColor) {
     return config.android.backgroundColor;
   }
   if (config.backgroundColor) {
@@ -39,7 +29,7 @@ export async function setRootViewBackgroundColor(config: ExpoConfig, projectDire
     return false;
   }
 
-  let stylesJSON = await readStylesXMLAsync(stylesPath);
+  let stylesJSON = await readXMLAsync({ path: stylesPath });
   let colorsJSON = await readColorsXMLAsync(colorsPath);
 
   const colorItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
@@ -52,11 +42,17 @@ export async function setRootViewBackgroundColor(config: ExpoConfig, projectDire
   styleItemToAdd[0].$.name = ANDROID_WINDOW_BACKGROUND;
 
   colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
-  stylesJSON = setStylesItem(styleItemToAdd, stylesJSON);
+  stylesJSON = setStylesItem({
+    item: styleItemToAdd,
+    xml: stylesJSON,
+    parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+  });
 
   try {
-    await writeColorsXMLAsync(colorsPath, colorsJSON);
-    await writeStylesXMLAsync(stylesPath, stylesJSON);
+    await Promise.all([
+      writeXMLAsync({ path: colorsPath, xml: colorsJSON }),
+      writeXMLAsync({ path: stylesPath, xml: stylesJSON }),
+    ]);
   } catch (e) {
     throw new Error(
       `Error setting Android root view background color. Cannot write new styles.xml to ${stylesPath}.`
