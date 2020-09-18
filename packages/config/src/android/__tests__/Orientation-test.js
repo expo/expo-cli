@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 
-import { readAndroidManifestAsync } from '../Manifest';
+import { getMainActivity, readAndroidManifestAsync } from '../Manifest';
 import { getOrientation, setAndroidOrientation } from '../Orientation';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
@@ -24,10 +24,9 @@ describe('Android orientation', () => {
         androidManifestJson
       );
 
-      const mainActivity = androidManifestJson.manifest.application[0].activity.filter(
-        e => e['$']['android:name'] === '.MainActivity'
-      );
-      expect(mainActivity[0]['$']['android:screenOrientation']).toMatch('landscape');
+      const mainActivity = getMainActivity(androidManifestJson);
+
+      expect(mainActivity['$']['android:screenOrientation']).toMatch('landscape');
     });
 
     it('replaces orientation attribute if present', async () => {
@@ -37,10 +36,10 @@ describe('Android orientation', () => {
         { orientation: 'portrait' },
         androidManifestJson
       );
-      const mainActivity = androidManifestJson.manifest.application[0].activity.filter(
-        e => e['$']['android:name'] === '.MainActivity'
-      );
-      expect(mainActivity[0]['$']['android:screenOrientation']).toMatch('portrait');
+
+      const mainActivity = getMainActivity(androidManifestJson);
+
+      expect(mainActivity['$']['android:screenOrientation']).toMatch('portrait');
     });
 
     it('replaces orientation with unspecified if provided default', async () => {
@@ -50,10 +49,9 @@ describe('Android orientation', () => {
         androidManifestJson
       );
 
-      const mainActivity = androidManifestJson.manifest.application[0].activity.filter(
-        e => e['$']['android:name'] === '.MainActivity'
-      );
-      expect(mainActivity[0]['$']['android:screenOrientation']).toMatch('unspecified');
+      const mainActivity = getMainActivity(androidManifestJson);
+
+      expect(mainActivity['$']['android:screenOrientation']).toMatch('unspecified');
     });
   });
 });

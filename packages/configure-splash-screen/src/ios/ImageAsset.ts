@@ -47,9 +47,16 @@ async function copyImageFiles(
  */
 export default async function configureImageAssets(
   iosProjectPath: string,
-  imagePath?: string,
-  darkModeImagePath?: string
+  config: {
+    image?: string;
+    darkMode?: {
+      image?: string;
+    };
+  } = {}
 ) {
+  const imagePath = config.image;
+  const darkModeImagePath = config.darkMode?.image;
+
   const imageSetPath = path.resolve(iosProjectPath, IMAGESET_PATH);
 
   // ensure old SplashScreen imageSet is removed

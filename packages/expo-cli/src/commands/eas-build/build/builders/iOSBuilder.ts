@@ -1,4 +1,4 @@
-import { BuildType, Job, Platform, iOS, sanitizeJob } from '@expo/build-tools';
+import { BuildType, iOS, Job, Platform, sanitizeJob } from '@expo/build-tools';
 import { IOSConfig } from '@expo/config';
 import chalk from 'chalk';
 import figures from 'figures';
@@ -13,9 +13,9 @@ import iOSCredentialsProvider, {
 import * as ProvisioningProfileUtils from '../../../../credentials/utils/provisioningProfile';
 import {
   CredentialsSource,
-  Workflow,
   iOSGenericBuildProfile,
   iOSManagedBuildProfile,
+  Workflow,
 } from '../../../../easJson';
 import { gitRootDirectory } from '../../../../git';
 import log from '../../../../log';
@@ -60,7 +60,13 @@ class iOSBuilder implements Builder<Platform.iOS> {
   public async ensureCredentialsAsync(): Promise<
     CredentialsSource.LOCAL | CredentialsSource.REMOTE | undefined
   > {
-    this.secretEnvs = await readSecretEnvsAsync(this.ctx.commandCtx.projectDir);
+    try {
+      this.secretEnvs = await readSecretEnvsAsync(this.ctx.commandCtx.projectDir);
+    } catch {
+      // credentials.json can not exist and that is fine.
+      // TODO: handle this better than with try/catch
+    }
+
     if (!this.shouldLoadCredentials()) {
       return;
     }

@@ -1,7 +1,8 @@
+import { Color } from 'color-string';
 import path from 'path';
 import { Element } from 'xml-js';
 
-import { StatusBarStyle } from '../constants';
+import { SplashScreenStatusBarStyle, SplashScreenStatusBarStyleType } from '../constants';
 import {
   readXmlFile,
   writeXmlFile,
@@ -23,7 +24,7 @@ function configureStyle(
     addStatusBarBackgroundColor,
   }: {
     statusBarHidden?: boolean;
-    statusBarStyle?: StatusBarStyle;
+    statusBarStyle?: SplashScreenStatusBarStyleType;
     addStatusBarBackgroundColor?: boolean;
   }
 ): Element {
@@ -67,11 +68,13 @@ function configureStyle(
               },
               {
                 idx:
-                  statusBarStyle === undefined || statusBarStyle === StatusBarStyle.DEFAULT
+                  statusBarStyle === undefined ||
+                  statusBarStyle === SplashScreenStatusBarStyle.DEFAULT
                     ? undefined
                     : idx++,
                 deletionFlag:
-                  statusBarStyle === undefined || statusBarStyle === StatusBarStyle.DEFAULT,
+                  statusBarStyle === undefined ||
+                  statusBarStyle === SplashScreenStatusBarStyle.DEFAULT,
                 name: 'item',
                 attributes: {
                   name: 'android:windowLightStatusBar',
@@ -79,9 +82,9 @@ function configureStyle(
                 elements: [
                   {
                     text:
-                      statusBarStyle === StatusBarStyle.LIGHT_CONTENT
+                      statusBarStyle === SplashScreenStatusBarStyle.LIGHT_CONTENT
                         ? 'false'
-                        : statusBarStyle === StatusBarStyle.DARK_CONTENT
+                        : statusBarStyle === SplashScreenStatusBarStyle.DARK_CONTENT
                         ? 'true'
                         : '',
                   },
@@ -165,18 +168,24 @@ function elementWithStyleElement(element: Element): Element | undefined {
  */
 export default async function configureStylesXml(
   androidMainPath: string,
-  {
-    statusBarHidden,
-    statusBarStyle = StatusBarStyle.DEFAULT,
-    darkModeStatusBarStyle,
-    addStatusBarBackgroundColor = false,
-  }: {
-    statusBarHidden?: boolean;
-    statusBarStyle?: StatusBarStyle;
-    darkModeStatusBarStyle?: StatusBarStyle;
-    addStatusBarBackgroundColor?: boolean;
+  config: {
+    statusBar?: {
+      style?: SplashScreenStatusBarStyleType;
+      hidden?: boolean;
+      backgroundColor?: Color;
+    };
+    darkMode?: {
+      statusBar?: {
+        style?: SplashScreenStatusBarStyleType;
+      };
+    };
   } = {}
 ) {
+  const statusBarStyle = config.statusBar?.style ?? SplashScreenStatusBarStyle.DEFAULT;
+  const statusBarHidden = config.statusBar?.hidden;
+  const darkModeStatusBarStyle = config.darkMode?.statusBar?.style;
+  const addStatusBarBackgroundColor = Boolean(config.statusBar?.backgroundColor);
+
   if (darkModeStatusBarStyle && !statusBarStyle) {
     throw new Error(
       `'darkModeStatusBarStyle' is available only if 'statusBarStyle' is provided as well.`

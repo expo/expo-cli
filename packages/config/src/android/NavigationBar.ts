@@ -1,18 +1,8 @@
 import { ExpoConfig } from '../Config.types';
 import { addWarningAndroid } from '../WarningAggregator';
-import {
-  getProjectColorsXMLPathAsync,
-  readColorsXMLAsync,
-  setColorItem,
-  writeColorsXMLAsync,
-} from './Colors';
-import {
-  XMLItem,
-  getProjectStylesXMLPathAsync,
-  readStylesXMLAsync,
-  setStylesItem,
-  writeStylesXMLAsync,
-} from './Styles';
+import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
+import { readXMLAsync, writeXMLAsync } from './Manifest';
+import { getProjectStylesXMLPathAsync, setStylesItem, XMLItem } from './Styles';
 
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 const WINDOW_LIGHT_NAVIGATION_BAR = 'android:windowLightNavigationBar';
@@ -40,7 +30,7 @@ export async function setNavigationBarConfig(config: ExpoConfig, projectDirector
     return false;
   }
 
-  let stylesJSON = await readStylesXMLAsync(stylesPath);
+  let stylesJSON = await readXMLAsync({ path: stylesPath });
   let colorsJSON = await readColorsXMLAsync(colorsPath);
 
   if (immersiveMode) {
@@ -57,18 +47,28 @@ export async function setNavigationBarConfig(config: ExpoConfig, projectDirector
     const styleItemToAdd: XMLItem[] = [
       { _: `@color/${NAVIGATION_BAR_COLOR}`, $: { name: `android:${NAVIGATION_BAR_COLOR}` } },
     ];
-    stylesJSON = setStylesItem(styleItemToAdd, stylesJSON);
+    stylesJSON = setStylesItem({
+      item: styleItemToAdd,
+      xml: stylesJSON,
+      parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+    });
   }
   if (barStyle === 'dark-content') {
     const navigationBarStyleItem: XMLItem[] = [
       { _: 'true', $: { name: WINDOW_LIGHT_NAVIGATION_BAR } },
     ];
-    stylesJSON = setStylesItem(navigationBarStyleItem, stylesJSON);
+    stylesJSON = setStylesItem({
+      item: navigationBarStyleItem,
+      xml: stylesJSON,
+      parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+    });
   }
 
   try {
-    await writeColorsXMLAsync(colorsPath, colorsJSON);
-    await writeStylesXMLAsync(stylesPath, stylesJSON);
+    await Promise.all([
+      writeXMLAsync({ path: colorsPath, xml: colorsJSON }),
+      writeXMLAsync({ path: stylesPath, xml: stylesJSON }),
+    ]);
   } catch (e) {
     throw new Error(
       `Error setting Android navigation bar color. Cannot write colors.xml to ${colorsPath}, or styles.xml to ${stylesPath}.`

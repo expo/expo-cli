@@ -1,10 +1,10 @@
 import { resolve } from 'path';
 
-import { readAndroidManifestAsync } from '../Manifest';
+import { getMainActivity, readAndroidManifestAsync } from '../Manifest';
 import {
-  ON_CONFIGURATION_CHANGED,
   addOnConfigurationChangedMainActivity,
   getUserInterfaceStyle,
+  ON_CONFIGURATION_CHANGED,
   setUiModeAndroidManifest,
 } from '../UserInterfaceStyle';
 
@@ -86,10 +86,9 @@ describe('User interface style', () => {
       { userInterfaceStyle: 'light' },
       androidManifestJson
     );
-    const mainActivity = androidManifestJson.manifest.application[0].activity.filter(
-      e => e['$']['android:name'] === '.MainActivity'
-    );
-    expect(mainActivity[0]['$']['android:configChanges']).toMatch(
+
+    const mainActivity = getMainActivity(androidManifestJson);
+    expect(mainActivity['$']['android:configChanges']).toMatch(
       'keyboard|keyboardHidden|orientation|screenSize|uiMode'
     );
   });

@@ -1,6 +1,6 @@
 // Based on https://github.com/zeit/next.js/tree/canary/examples/with-react-native-web
 // and https://github.com/expo/expo-cli/blob/master/packages/webpack-config/web-default/index.html
-import NextDocument, { Head, Main, NextScript } from 'next/document';
+import NextDocument, { Head, Html, Main, NextScript } from 'next/document';
 import * as React from 'react';
 import { AppRegistry } from 'react-native';
 
@@ -56,7 +56,7 @@ export class Document extends NextDocument {
   static getInitialProps = getInitialProps;
   render() {
     return (
-      <html>
+      <Html>
         <Head>
           <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         </Head>
@@ -64,7 +64,7 @@ export class Document extends NextDocument {
           <Main />
           <NextScript />
         </body>
-      </html>
+      </Html>
     );
   }
 }

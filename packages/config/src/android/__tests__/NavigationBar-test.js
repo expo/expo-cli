@@ -1,14 +1,15 @@
 import { vol } from 'memfs';
 
 import { readColorsXMLAsync } from '../Colors';
+import { readXMLAsync } from '../Manifest';
 import {
   getNavigationBarColor,
   getNavigationBarImmersiveMode,
   getNavigationBarStyle,
   setNavigationBarConfig,
 } from '../NavigationBar';
-import { readStylesXMLAsync } from '../Styles';
 import { sampleStylesXML } from './StatusBar-test';
+
 jest.mock('fs');
 
 jest.mock('../../WarningAggregator');
@@ -65,9 +66,9 @@ describe('Android navigation bar', () => {
         )
       ).toBe(true);
 
-      const stylesJSON = await readStylesXMLAsync(
-        '/app/android/app/src/main/res/values/styles.xml'
-      );
+      const stylesJSON = await readXMLAsync({
+        path: '/app/android/app/src/main/res/values/styles.xml',
+      });
       const colorsJSON = await readColorsXMLAsync(
         '/app/android/app/src/main/res/values/colors.xml'
       );

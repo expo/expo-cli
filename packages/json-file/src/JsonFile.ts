@@ -1,14 +1,14 @@
 import { codeFrameColumns } from '@babel/code-frame';
-import { readFile, readFileSync } from 'fs';
+import { mkdirp, readFile, readFileSync } from 'fs-extra';
 import JSON5 from 'json5';
 import get from 'lodash/get';
 import set from 'lodash/set';
+import path from 'path';
 import { promisify } from 'util';
 import writeFileAtomic from 'write-file-atomic';
 
 import JsonFileError, { EmptyJsonFileError } from './JsonFileError';
 
-const readFileAsync = promisify(readFile);
 const writeFileAtomicAsync: (
   filename: string,
   data: string | Buffer,
@@ -27,6 +27,7 @@ type Options<TJSONObject extends JSONObject> = {
   badJsonDefault?: TJSONObject;
   jsonParseErrorDefault?: TJSONObject;
   cantReadFileDefault?: TJSONObject;
+  ensureDir?: boolean;
   default?: TJSONObject;
   json5?: boolean;
   space?: number;
@@ -37,6 +38,7 @@ const DEFAULT_OPTIONS = {
   badJsonDefault: undefined,
   jsonParseErrorDefault: undefined,
   cantReadFileDefault: undefined,
+  ensureDir: false,
   default: undefined,
   json5: false,
   space: 2,
@@ -150,7 +152,7 @@ async function readAsync<TJSONObject extends JSONObject>(
 ): Promise<TJSONObject> {
   let json;
   try {
-    json = await readFileAsync(file, 'utf8');
+    json = await readFile(file, 'utf8');
   } catch (error) {
     assertEmptyJsonString(json, file);
     const defaultValue = cantReadFileDefault(options);
@@ -209,6 +211,9 @@ async function writeAsync<TJSONObject extends JSONObject>(
   object: TJSONObject,
   options?: Options<TJSONObject>
 ): Promise<TJSONObject> {
+  if (options?.ensureDir) {
+    await mkdirp(path.dirname(file));
+  }
   const space = _getOption(options, 'space');
   const json5 = _getOption(options, 'json5');
   const addNewLineAtEOF = _getOption(options, 'addNewLineAtEOF');

@@ -51,10 +51,13 @@ export type EjectAsyncOptions = {
 export async function ejectAsync(projectRoot: string, options?: EjectAsyncOptions): Promise<void> {
   if (await maybeBailOnGitStatusAsync()) return;
 
+  const { exp, pkg } = await ensureConfigAsync(projectRoot);
   const tempDir = temporary.directory();
 
   const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync(
     projectRoot,
+    exp,
+    pkg,
     tempDir
   );
   // Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
@@ -84,7 +87,8 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
   if (shouldInstall && needsPodInstall) {
     podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
   }
-  await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot, options);
+
+  await warnIfDependenciesRequireAdditionalSetupAsync(pkg, options);
 
   log.newLine();
   log.nested(`➡️  ${chalk.bold('Next steps')}`);
@@ -117,6 +121,16 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
       'expo fetch:android:keystore'
     )}`
   );
+
+  if (exp.hasOwnProperty('assetBundlePatterns')) {
+    log.nested(
+      `- 📁 The property ${chalk.bold(
+        `assetBundlePatterns`
+      )} does not have the same effect in the bare workflow. ${log.chalk.dim(
+        learnMore('https://docs.expo.io/bare/updating-your-app/#embedding-assets')
+      )}`
+    );
+  }
 
   if (await usesOldExpoUpdatesAsync(projectRoot)) {
     log.nested(
@@ -562,13 +576,12 @@ async function cloneNativeDirectoriesAsync({
  */
 async function createNativeProjectsFromTemplateAsync(
   projectRoot: string,
+  exp: ExpoConfig,
+  pkg: PackageJSONConfig,
   tempDir: string
 ): Promise<
   { hasNewProjectFiles: boolean; needsPodInstall: boolean } & DependenciesModificationResults
 > {
-  // We need the SDK version to proceed
-  const { exp, pkg } = await ensureConfigAsync(projectRoot);
-
   const copiedPaths = await cloneNativeDirectoriesAsync({ projectRoot, tempDir, exp });
 
   writeMetroConfig({ projectRoot, pkg, tempDir });
@@ -619,31 +632,21 @@ function createDependenciesMap(dependencies: any): DependenciesMap {
  * users to add some code, eg: to their AppDelegate.
  */
 async function warnIfDependenciesRequireAdditionalSetupAsync(
-  projectRoot: string,
+  pkg: PackageJSONConfig,
   options?: EjectAsyncOptions
 ): Promise<void> {
-  // We just need the custom `nodeModulesPath` from the config.
-  const { exp, pkg } = getConfig(projectRoot, {
-    skipSDKVersionRequirement: true,
-  });
-
-  const extraSetupPath = projectHasModule('expo/requiresExtraSetup.json', projectRoot, exp);
-  if (!extraSetupPath) {
-    const expoPath = projectHasModule('expo', projectRoot, exp);
-    // Check if expo is installed just in case the user has some version of expo that doesn't include a `requiresExtraSetup.json`.
-    if (!expoPath) {
-      log.addNewLineIfNone();
-      // This can occur when --no-install is used.
-      log.nestedWarn(
-        `⚠️  Not sure if any modules require extra setup because the ${log.chalk.bold(
-          'expo'
-        )} package is not installed.`
-      );
-    }
-    return;
-  }
-
-  const pkgsWithExtraSetup = await JsonFile.readAsync(extraSetupPath);
+  const pkgsWithExtraSetup: Record<string, string> = {
+    'expo-camera': 'https://github.com/expo/expo/tree/master/packages/expo-camera',
+    'expo-image-picker': 'https://github.com/expo/expo/tree/master/packages/expo-image-picker',
+    'lottie-react-native': 'https://github.com/react-native-community/lottie-react-native',
+    'expo-constants': `${chalk.bold(
+      'Constants.manifest'
+    )} is not available in the bare workflow. You should replace it with ${chalk.bold(
+      'Updates.manifest'
+    )}. ${log.chalk.dim(
+      learnMore('https://docs.expo.io/versions/latest/sdk/updates/#updatesmanifest')
+    )}`,
+  };
   const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(
     pkgName => pkgName in pkgsWithExtraSetup
   );
