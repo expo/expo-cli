@@ -15,7 +15,7 @@ export function getScheme(config: { scheme?: string | string[] }): string[] {
 }
 
 export function setScheme(
-  config: Pick<ExpoConfig, 'scheme' | 'ios'>,
+  config: Partial<Pick<ExpoConfig, 'scheme' | 'ios'>>,
   infoPlist: InfoPlist
 ): InfoPlist {
   const scheme = [
