@@ -56,7 +56,7 @@ export class Document extends NextDocument {
   static getInitialProps = getInitialProps;
   render() {
     return (
-      <html>
+      <Html>
         <Head>
           <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         </Head>
@@ -64,7 +64,7 @@ export class Document extends NextDocument {
           <Main />
           <NextScript />
         </body>
-      </html>
+      </Html>
     );
   }
 }
