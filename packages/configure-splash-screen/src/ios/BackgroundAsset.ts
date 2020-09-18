@@ -1,4 +1,4 @@
-import { ColorDescriptor } from 'color-string';
+import { Color } from 'color-string';
 import fs from 'fs-extra';
 import path from 'path';
 import { PNG } from 'pngjs';
@@ -29,7 +29,7 @@ async function createContentsJsonFile(
   await fs.mkdirp(imageSetPath);
 }
 
-async function createPngFile(filePath: string, color: ColorDescriptor) {
+async function createPngFile(filePath: string, color: Color) {
   const png = new PNG({
     width: 1,
     height: 1,
@@ -38,7 +38,7 @@ async function createPngFile(filePath: string, color: ColorDescriptor) {
     inputColorType: 6,
     inputHasAlpha: true,
   });
-  const [r, g, b, a] = color.value;
+  const [r, g, b, a] = color;
   const bitmap = new Uint8Array([r, g, b, a * 255]);
   const buffer = Buffer.from(bitmap);
   png.data = buffer;
@@ -48,11 +48,7 @@ async function createPngFile(filePath: string, color: ColorDescriptor) {
   });
 }
 
-async function createFiles(
-  iosProjectPath: string,
-  color: ColorDescriptor,
-  darkModeColor?: ColorDescriptor
-) {
+async function createFiles(iosProjectPath: string, color: Color, darkModeColor?: Color) {
   await createPngFile(path.resolve(iosProjectPath, PNG_PATH), color);
   if (darkModeColor) {
     await createPngFile(path.resolve(iosProjectPath, DARK_PNG_PATH), darkModeColor);
@@ -64,9 +60,16 @@ async function createFiles(
  */
 export default async function configureAssets(
   iosProjectPath: string,
-  color: ColorDescriptor,
-  darkModeColor?: ColorDescriptor
+  config: {
+    backgroundColor: Color;
+    darkMode?: {
+      backgroundColor?: Color;
+    };
+  }
 ) {
+  const backgroundColor = config.backgroundColor;
+  const darkModeBackgroundColor = config.darkMode?.backgroundColor;
+
   const imageSetPath = path.resolve(iosProjectPath, IMAGESET_PATH);
 
   // ensure old SplashScreenBackground imageSet is removed
@@ -74,6 +77,6 @@ export default async function configureAssets(
     await fs.remove(imageSetPath);
   }
 
-  await createContentsJsonFile(iosProjectPath, imageSetPath, !!darkModeColor);
-  await createFiles(iosProjectPath, color, darkModeColor);
+  await createContentsJsonFile(iosProjectPath, imageSetPath, !!darkModeBackgroundColor);
+  await createFiles(iosProjectPath, backgroundColor, darkModeBackgroundColor);
 }

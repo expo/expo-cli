@@ -20,7 +20,9 @@ describe('BackgrooundAsset', () => {
     const iosProjectPath = `/app/ios/ReactNativeProject`;
 
     it(`creates correct files for given color`, async () => {
-      await configureBackgroundAsset(iosProjectPath, colorString.get('#F2389C'));
+      await configureBackgroundAsset(iosProjectPath, {
+        backgroundColor: colorString.get('#F2389C').value,
+      });
       const imageResult = vol.readFileSync(
         `${iosProjectPath}/Images.xcassets/SplashScreenBackground.imageset/background.png`,
         'utf-8'
@@ -54,8 +56,12 @@ describe('BackgrooundAsset', () => {
     });
 
     it(`updates color files`, async () => {
-      await configureBackgroundAsset(iosProjectPath, colorString.get('#F2389C'));
-      await configureBackgroundAsset(iosProjectPath, colorString.get('#2F8825'));
+      await configureBackgroundAsset(iosProjectPath, {
+        backgroundColor: colorString.get('#F2389C').value,
+      });
+      await configureBackgroundAsset(iosProjectPath, {
+        backgroundColor: colorString.get('#2F8825').value,
+      });
       const imageResult = vol.readFileSync(
         `${iosProjectPath}/Images.xcassets/SplashScreenBackground.imageset/background.png`,
         'utf-8'
@@ -64,11 +70,10 @@ describe('BackgrooundAsset', () => {
     });
 
     it(`creates per-appearance files while dark mode is enabled`, async () => {
-      await configureBackgroundAsset(
-        iosProjectPath,
-        colorString.get('#FEFEFE'),
-        colorString.get('#0E0E0E')
-      );
+      await configureBackgroundAsset(iosProjectPath, {
+        backgroundColor: colorString.get('#FEFEFE').value,
+        darkMode: { backgroundColor: colorString.get('#0E0E0E').value },
+      });
 
       const imageResult = vol.readFileSync(
         `${iosProjectPath}/Images.xcassets/SplashScreenBackground.imageset/background.png`,

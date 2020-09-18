@@ -30,7 +30,9 @@ describe('Drawables', () => {
     const filePathDarkMode = `${androidMainPath}/res/drawable-night/splashscreen_image.png`;
 
     it('creates correct file', async () => {
-      await configureDrawables(androidMainPath, '/assets/background.png');
+      await configureDrawables(androidMainPath, {
+        image: '/assets/background.png',
+      });
       const received = getDirFromFS(vol.toJSON(), '/app');
       const expected = {
         ...reactNativeProject,
@@ -40,7 +42,10 @@ describe('Drawables', () => {
     });
 
     it('creates correct file for dark mode', async () => {
-      await configureDrawables(androidMainPath, '/assets/background.png', '/assets/background.png');
+      await configureDrawables(androidMainPath, {
+        image: '/assets/background.png',
+        darkMode: { image: '/assets/background.png' },
+      });
       const received = getDirFromFS(vol.toJSON(), '/app');
       const expected = {
         ...reactNativeProject,
@@ -69,7 +74,9 @@ describe('Drawables', () => {
         vol.mkdirpSync(path.dirname(filePath));
         vol.writeFileSync(filePath, backgroundImage);
       }
-      await configureDrawables(androidMainPath, '/assets/background.png');
+      await configureDrawables(androidMainPath, {
+        image: '/assets/background.png',
+      });
       const received = getDirFromFS(vol.toJSON(), '/app');
       const expected = {
         ...reactNativeProject,

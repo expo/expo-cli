@@ -1,4 +1,4 @@
-import colorString, { ColorDescriptor } from 'color-string';
+import colorString, { Color } from 'color-string';
 import path from 'path';
 import { Element } from 'xml-js';
 
@@ -18,8 +18,8 @@ function ensureDesiredXmlContent(
     backgroundColor,
     statusBarBackgroundColor,
   }: {
-    backgroundColor?: ColorDescriptor;
-    statusBarBackgroundColor?: ColorDescriptor;
+    backgroundColor?: Color;
+    statusBarBackgroundColor?: Color;
   }
 ): Element {
   let idx = 0;
@@ -71,9 +71,9 @@ function ensureDesiredXmlContent(
  * - `#RRGGBBAA` ➡️ `#AARRGGBB`,
  * - `#RGBA` ➡️ `#ARGB`.
  */
-function getAndroidStyleHex(color: ColorDescriptor): string {
+function getAndroidStyleHex(color: Color): string {
   return colorString.to
-    .hex(color.value)
+    .hex(color)
     .replace(/^(#)([0-F]{2})([0-F]{4})([0-F]{2}$)/i, '$1$4$2$3')
     .replace(/^(#)([0-F])([0-F]{2})([0-F])$/i, '$1$4$2$3');
 }
@@ -83,19 +83,25 @@ function getAndroidStyleHex(color: ColorDescriptor): string {
  */
 export default async function configureColorsXml(
   androidMainPath: string,
-  {
-    backgroundColor,
-    darkModeBackgroundColor,
-    statusBarBackgroundColor,
-    darkModeStatusBarBackgroundColor,
-  }: {
-    backgroundColor: ColorDescriptor;
-    darkModeBackgroundColor?: ColorDescriptor;
-    statusBarBackgroundColor?: ColorDescriptor;
-    darkModeStatusBarBackgroundColor?: ColorDescriptor;
+  config: {
+    backgroundColor: Color;
+    statusBar?: {
+      backgroundColor?: Color;
+    };
+    darkMode?: {
+      backgroundColor?: Color;
+      statusBar?: {
+        backgroundColor?: Color;
+      };
+    };
   }
 ) {
-  if (darkModeStatusBarBackgroundColor && !darkModeStatusBarBackgroundColor) {
+  const backgroundColor = config.backgroundColor;
+  const darkModeBackgroundColor = config.darkMode?.backgroundColor;
+  const statusBarBackgroundColor = config.statusBar?.backgroundColor;
+  const darkModeStatusBarBackgroundColor = config.darkMode?.statusBar?.backgroundColor;
+
+  if (darkModeStatusBarBackgroundColor && !statusBarBackgroundColor) {
     throw new Error(
       `'darkModeStatusBarBackgroundColor' is available only if 'statusBarBackgroundColor' is provided as well.`
     );

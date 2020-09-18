@@ -3,9 +3,10 @@
   "version": "0.1.16",
   "description": "Supplementary module for 'expo-splash-screen' providing cli configuration command",
   "bin": {
-    "configure-splash-screen": "./build/configure.js",
-    "expo-splash-screen": "./build/configure.js"
+    "configure-splash-screen": "./build/index-cli.js",
+    "expo-splash-screen": "./build/index-cli.js"
   },
+  "main": "./build/index.js",
   "scripts": {
     "start": "yarn run prepare",
     "build": "tsc",
@@ -44,6 +45,7 @@
     "core-js": "^3.6.5",
     "deep-equal": "^2.0.3",
     "fs-extra": "^9.0.0",
+    "lodash": "^4.17.15",
     "pngjs": "^5.0.0",
     "xcode": "^3.0.0",
     "xml-js": "^1.6.11"
@@ -57,8 +59,10 @@
     "@types/color-string": "^1.5.0",
     "@types/deep-equal": "^1.0.1",
     "@types/fs-extra": "^9.0.1",
-    "@types/jest": "^26.0.8",
+    "@types/jest": "^25.2.2",
+    "@types/lodash": "^4.14.155",
     "babel-jest": "^26.2.2",
+    "conditional-type-checks": "^1.0.5",
     "eslint": "^6.8.0",
     "jest": "^26.2.2",
     "memfs": "^3.1.2",
