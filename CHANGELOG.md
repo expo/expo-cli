@@ -7,6 +7,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🛠 Breaking changes
 
 - [xdl] Build iOS shell app artifact in the current directory (instead of one level up).
+- [configure-splash-screen] Simplified and unified arguments, parameters and `--help` output. See `configure-splash-screen --help` to see the changes. [#2297](https://github.com/expo/expo-cli/pull/2297)
 
 ### 🎉 New features
 

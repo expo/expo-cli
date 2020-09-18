@@ -11,24 +11,20 @@ import {
 import configureIos from './ios';
 import { validateEnumValue } from './validators';
 
-const AVAILABLE_OPTIONS_NAMES = [
-  'imageResizeMode',
-  'platform',
-  'backgroundColor',
-  'imagePath',
-  'darkModeBackgroundColor',
-  'darkModeImagePath',
-  'statusBarHidden',
-  'statusBarStyle',
-  'darkModeStatusBarStyle',
-  'statusBarTranslucent',
-  'statusBarBackgroundColor',
-  'darkModeStatusBarBackgroundColor',
-] as const;
-
-type CLIOptionName = typeof AVAILABLE_OPTIONS_NAMES[number];
-
-type CLIOptions = Partial<Record<CLIOptionName, string>>;
+type RawCLIOptions = Partial<{
+  imageResizeMode: string;
+  platform: string;
+  backgroundColor: string;
+  imagePath: string;
+  darkModeBackgroundColor: string;
+  darkModeImagePath: string;
+  statusBarHidden: boolean;
+  statusBarStyle: string;
+  darkModeStatusBarStyle: string;
+  statusBarTranslucent: boolean;
+  statusBarBackgroundColor: string;
+  darkModeStatusBarBackgroundColor: string;
+}>;
 
 interface Configuration {
   platform: PlatformType;
@@ -67,7 +63,7 @@ function configurationFromOptions({
   darkModeImagePath,
   darkModeStatusBarStyle,
   darkModeStatusBarBackgroundColor,
-}: CLIOptions): Configuration {
+}: RawCLIOptions): Configuration {
   let resolvedPlatform: PlatformType = Platform.ALL;
   try {
     resolvedPlatform = (platform && validateEnumValue(platform, Platform)) || Platform.ALL;
@@ -142,11 +138,13 @@ export default () =>
     .passCommandToAction(false)
     .option(
       '-p, --platform <platform>',
-      `Selected platform to configure. Available values: ${getAvailableOptions(Platform)}.`
+      `Selected platform to configure. Available values: ${getAvailableOptions(
+        Platform
+      )} (default: "${Platform.ALL}").`
     )
     .option(
       '-b, --background-color <color>',
-      `Valid css-formatted color (hex (#RRGGBB[AA]), rgb[a], hsl[a], named color (https://drafts.csswg.org/css-color/#named-colors)) that would be used as the background color for native splash screen view.`
+      `(required) Valid css-formatted color (hex (#RRGGBB[AA]), rgb[a], hsl[a], named color (https://drafts.csswg.org/css-color/#named-colors)) that would be used as the background color for native splash screen view.`
     )
     .option(
       '-i, --image-path <path>',
@@ -154,23 +152,25 @@ export default () =>
     )
     .option(
       '-r, --image-resize-mode <resizeMode>',
-      `ResizeMode to be used for native splash screen image. Available values: ${getAvailableOptions(
+      `ResizeMode to be used for native splash screen image. Available only if 'image-path' is provided as well. Available values: ${getAvailableOptions(
         SplashScreenImageResizeMode
-      )} (only available for android platform)).`
+      )} (only available for android platform)) (default: "${
+        SplashScreenImageResizeMode.CONTAIN
+      }").`
     )
     .option(
       '--dark-mode-background-color <color>',
-      `Color (see 'background-color' supported formats) that would be used as the background color for native splash screen in dark mode.`
+      `Color (see 'background-color' supported formats) that would be used as the background color for native splash screen in dark mode. Providing this option enables other dark-mode related options.`
     )
     .option(
       '--dark-mode-image-path <path>',
-      'Path to valid .png image that will be displayed in native splash screen in dark mode only.'
+      `Path to valid .png image that will be displayed in native splash screen in dark mode only. Available only if 'dark-mode-background-color' is provided as well.`
     )
     .option(
       '--status-bar-style <style>',
       `Customizes the color of the StatusBar icons. Available values: ${getAvailableOptions(
         SplashScreenStatusBarStyle
-      )}.`
+      )} (default: "${SplashScreenStatusBarStyle.DEFAULT}").`
     )
     .option('--status-bar-hidden', `Hides the StatusBar.`)
     .option(
@@ -183,13 +183,13 @@ export default () =>
     )
     .option(
       '--dark-mode-status-bar-style <style>',
-      `(only for Android platform) The very same as 'statusbar-style' option, but applied only in dark mode. Available only if 'statusbar-style' is provided.`
+      `(only for Android platform) The very same as 'status-bar-style' option, but applied only in dark mode. Available only if 'dark-mode-background-color' and 'status-bar-style' are provided as well.`
     )
     .option(
       '--dark-mode-status-bar-background-color <color>',
-      `(only for Android platform) The very same as 'status-bar-background-color', but applied only in the dark mode. Available only if 'statusbar-style' is provided.`
+      `(only for Android platform) The very same as 'status-bar-background-color', but applied only in the dark mode. Available only if 'dark-mode-background-color' and 'status-bar-style' are provided as well.`
     )
-    .action(async (options: CLIOptions) => {
+    .action(async (options: RawCLIOptions) => {
       const configuration = configurationFromOptions(options);
       await action(configuration);
     });
