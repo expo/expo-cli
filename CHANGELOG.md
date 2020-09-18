@@ -6,6 +6,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [xdl] Build iOS shell app artifact in the current directory (instead of one level up).
+
 ### 🎉 New features
 
 ### 🐛 Bug fixes
