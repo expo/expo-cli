@@ -1,8 +1,8 @@
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
-import { Document, MetaDataItemMap, getMainApplication } from './Manifest';
-import { addOrRemoveMetaDataItemInArray } from './MetaData';
+import { Document, getMainApplication, MetaDataItemMap } from './Manifest';
+import { addOrRemoveMetadataItemInArray, getMetadataFromConfig } from './MetaData';
 import {
   getProjectStringsXMLPathAsync,
   readStringsXMLAsync,
@@ -77,7 +77,7 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
 }
 
 export function syncFacebookConfigMetaData(config: ExpoConfig): MetaDataItemMap {
-  let metadata = config.android?.metadata ?? {};
+  let metadata = getMetadataFromConfig(config);
 
   const appId = getFacebookAppId(config);
   const displayName = getFacebookDisplayName(config);
@@ -85,7 +85,7 @@ export function syncFacebookConfigMetaData(config: ExpoConfig): MetaDataItemMap 
   const autoLogAppEvents = getFacebookAutoLogAppEvents(config);
   const advertiserIdCollection = getFacebookAdvertiserIDCollection(config);
 
-  metadata = addOrRemoveMetaDataItemInArray(
+  metadata = addOrRemoveMetadataItemInArray(
     metadata,
     {
       name: 'com.facebook.sdk.ApplicationId',
@@ -93,19 +93,19 @@ export function syncFacebookConfigMetaData(config: ExpoConfig): MetaDataItemMap 
     },
     appId != null
   );
-  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+  metadata = addOrRemoveMetadataItemInArray(metadata, {
     name: 'com.facebook.sdk.ApplicationName',
     value: displayName,
   });
-  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+  metadata = addOrRemoveMetadataItemInArray(metadata, {
     name: 'com.facebook.sdk.AutoInitEnabled',
     value: autoInitEnabled,
   });
-  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+  metadata = addOrRemoveMetadataItemInArray(metadata, {
     name: 'com.facebook.sdk.AutoLogAppEventsEnabled',
     value: autoLogAppEvents,
   });
-  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+  metadata = addOrRemoveMetadataItemInArray(metadata, {
     name: 'com.facebook.sdk.AdvertiserIDCollectionEnabled',
     value: advertiserIdCollection,
   });

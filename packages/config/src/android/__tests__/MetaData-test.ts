@@ -1,16 +1,16 @@
 import { resolve } from 'path';
 
 import { getMainApplication, readAndroidManifestAsync } from '../Manifest';
-import { addOrRemoveMetaDataItemInArray, setMetaDataXML } from '../MetaData';
+import { addOrRemoveMetadataItemInArray, setMetadataXML } from '../MetaData';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
 
 describe('metadata', () => {
-  describe('setMetaDataXML', () => {
+  describe('setMetadataXML', () => {
     it(`converts the metadata object into XML meta-data tags`, async () => {
       let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
-      androidManifestJson = await setMetaDataXML(
+      androidManifestJson = await setMetadataXML(
         {
           android: {
             metadata: {
@@ -34,28 +34,28 @@ describe('metadata', () => {
     });
   });
 
-  describe('addOrRemoveMetaDataItemInArray', () => {
+  describe('addOrRemoveMetadataItemInArray', () => {
     it(`allows overriding the value for modification`, () => {
       expect(
-        addOrRemoveMetaDataItemInArray({}, { name: 'foo', value: 'bar' }, false)
+        addOrRemoveMetadataItemInArray({}, { name: 'foo', value: 'bar' }, false)
       ).toStrictEqual({});
       // can be used to add/subtract a meta item even if the value is truthy.
-      expect(addOrRemoveMetaDataItemInArray({}, { name: 'foo', value: 'bar' }, true)).toStrictEqual(
+      expect(addOrRemoveMetadataItemInArray({}, { name: 'foo', value: 'bar' }, true)).toStrictEqual(
         {
           foo: { value: 'bar' },
         }
       );
     });
     it(`skips a falsey value`, () => {
-      expect(addOrRemoveMetaDataItemInArray({}, { name: 'foo', value: null })).toStrictEqual({});
+      expect(addOrRemoveMetadataItemInArray({}, { name: 'foo', value: null })).toStrictEqual({});
     });
     it(`adds a truthy value to a metadata object`, () => {
-      expect(addOrRemoveMetaDataItemInArray({}, { name: 'foo', value: 'bar' })).toStrictEqual({
+      expect(addOrRemoveMetadataItemInArray({}, { name: 'foo', value: 'bar' })).toStrictEqual({
         foo: { value: 'bar' },
       });
     });
     it(`serializes a boolean value`, () => {
-      expect(addOrRemoveMetaDataItemInArray({}, { name: 'foo', value: false })).toStrictEqual({
+      expect(addOrRemoveMetadataItemInArray({}, { name: 'foo', value: false })).toStrictEqual({
         foo: { value: 'false' },
       });
     });

@@ -1,17 +1,17 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, MetaDataItemMap, getMainApplication } from './Manifest';
-import { addOrRemoveMetaDataItemInArray } from './MetaData';
+import { Document, getMainApplication, MetaDataItemMap } from './Manifest';
+import { addOrRemoveMetadataItemInArray, getMetadataFromConfig } from './MetaData';
 
 export function getGoogleMapsApiKey(config: ExpoConfig) {
   return config.android?.config?.googleMaps?.apiKey ?? null;
 }
 
 export function syncGoogleMapsApiConfigMetaData(config: ExpoConfig): MetaDataItemMap {
-  let metadata = config.android?.metadata ?? {};
+  let metadata = getMetadataFromConfig(config);
 
   const apiKey = getGoogleMapsApiKey(config);
 
-  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+  metadata = addOrRemoveMetadataItemInArray(metadata, {
     name: 'com.google.android.geo.API_KEY',
     value: apiKey,
   });

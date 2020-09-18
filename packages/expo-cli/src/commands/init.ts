@@ -524,7 +524,7 @@ async function configureUpdatesProjectFilesAsync(
   // @ts-ignore: metadata is untyped.
   exp.android.metadata = await AndroidConfig.Updates.syncUpdatesConfigMetaData(exp, username);
 
-  const androidManifest = await AndroidConfig.MetaData.setMetaDataXML(exp, androidManifestJSON);
+  const androidManifest = await AndroidConfig.MetaData.setMetadataXML(exp, androidManifestJSON);
 
   await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, androidManifest);
 

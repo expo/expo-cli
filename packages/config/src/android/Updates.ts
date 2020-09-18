@@ -1,6 +1,6 @@
 import { ExpoConfig } from '../Config.types';
 import { MetaDataItemMap } from './Manifest';
-import { addOrRemoveMetaDataItemInArray } from './MetaData';
+import { addOrRemoveMetadataItemInArray, getMetadataFromConfig } from './MetaData';
 
 export function getUpdateUrl(config: ExpoConfig, username: string | null) {
   const user = typeof config.owner === 'string' ? config.owner : username;
@@ -35,7 +35,7 @@ export function syncUpdatesConfigMetaData(
   config: ExpoConfig,
   username: string | null
 ): MetaDataItemMap {
-  let metadata = config.android?.metadata ?? {};
+  let metadata = getMetadataFromConfig(config);
 
   const enabled = getUpdatesEnabled(config);
   const checkAutomatically = getUpdatesCheckOnLaunch(config);
@@ -43,7 +43,7 @@ export function syncUpdatesConfigMetaData(
   const updateUrl = getUpdateUrl(config, username);
   const sdkVersion = getSDKVersion(config);
 
-  metadata = addOrRemoveMetaDataItemInArray(
+  metadata = addOrRemoveMetadataItemInArray(
     metadata,
     {
       name: 'expo.modules.updates.EXPO_UPDATE_URL',
@@ -51,7 +51,7 @@ export function syncUpdatesConfigMetaData(
     },
     enabled && !!updateUrl
   );
-  metadata = addOrRemoveMetaDataItemInArray(
+  metadata = addOrRemoveMetadataItemInArray(
     metadata,
     {
       name: 'expo.modules.updates.EXPO_SDK_VERSION',
@@ -60,11 +60,11 @@ export function syncUpdatesConfigMetaData(
     enabled && !!sdkVersion
   );
   // TODO(Bacon): Do we want to have `enabled: false` or will omitting the property work.
-  metadata = addOrRemoveMetaDataItemInArray(metadata, {
+  metadata = addOrRemoveMetadataItemInArray(metadata, {
     name: 'expo.modules.updates.ENABLED',
     value: enabled,
   });
-  metadata = addOrRemoveMetaDataItemInArray(
+  metadata = addOrRemoveMetadataItemInArray(
     metadata,
     {
       name: 'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH',
@@ -72,7 +72,7 @@ export function syncUpdatesConfigMetaData(
     },
     enabled && !!checkAutomatically
   );
-  metadata = addOrRemoveMetaDataItemInArray(
+  metadata = addOrRemoveMetadataItemInArray(
     metadata,
     {
       name: 'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS',

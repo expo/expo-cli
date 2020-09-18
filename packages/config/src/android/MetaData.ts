@@ -1,13 +1,17 @@
 import { ExpoConfig } from '../Config.types';
 import {
-  Document,
-  MetaDataItemMap,
   addMetaDataItemToMainApplication,
+  Document,
   getMainApplication,
+  MetaDataItemMap,
   removeAllMetaDataItemsFromMainApplication,
 } from './Manifest';
 
-export function addOrRemoveMetaDataItemInArray(
+export function getMetadataFromConfig(config: Pick<ExpoConfig, 'android'>): any {
+  return config.android?.metadata ?? {};
+}
+
+export function addOrRemoveMetadataItemInArray(
   metadata: MetaDataItemMap,
   item: { name: string; value: any },
   shouldAdd: boolean = item.value != null
@@ -23,13 +27,13 @@ export function addOrRemoveMetaDataItemInArray(
   return metadata;
 }
 
-export function setMetaDataXML(
+export function setMetadataXML(
   config: Pick<ExpoConfig, 'android'>,
   manifestDocument: Document
 ): Document {
   let mainApplication = getMainApplication(manifestDocument);
 
-  const metaData = config.android?.metadata ?? {};
+  const metaData = getMetadataFromConfig(config);
 
   // Clear all meta data tags first
   removeAllMetaDataItemsFromMainApplication(mainApplication);
