@@ -1,11 +1,16 @@
 import { AndroidConfig, getConfig } from '@expo/config';
+import { withPlugins } from '@expo/config/build/plugins/withPlugins';
 import { UserManager } from '@expo/xdl';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import path from 'path';
 
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
-import { compose } from './composePlugins';
+import {
+  commitFilesAsync,
+  getFileSystemAndroidAsync,
+  getFileSystemIosAsync,
+} from './configureFileSystem';
 
 async function modifyBuildGradleAsync(
   projectRoot: string,
@@ -66,8 +71,10 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   // Check package before reading the config because it may mutate the config if the user is prompted to define it.
   await getOrPromptForPackage(projectRoot);
 
+  const files = await getFileSystemAndroidAsync(projectRoot);
   const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  const { exp, pack } = compose(
+
+  const { expo: exp, pack } = withPlugins(
     [
       AndroidConfig.Facebook.withFacebook,
       AndroidConfig.Branch.withBranch,
@@ -118,11 +125,13 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
 
     androidManifest = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifest, username);
 
-    if (pack?.android) {
+    if (typeof pack?.android?.manifest === 'function') {
       androidManifest = (
         await pack.android.manifest({
+          projectRoot,
           data: androidManifest,
           filePath,
+          files,
         })
       ).data!;
     }
@@ -157,4 +166,6 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   // TODOs
   await AndroidConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
   await AndroidConfig.Icon.setIconAsync(exp, projectRoot);
+
+  await commitFilesAsync(path.join(projectRoot, 'android'), files);
 }

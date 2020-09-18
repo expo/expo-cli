@@ -1,10 +1,9 @@
 import { generateImageAsync } from '@expo/image-utils';
-import * as fs from 'fs-extra';
 import { join } from 'path';
 
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig, IOSPackModifierProps } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
-import { getProjectName } from './utils/Xcodeproj';
+import { withAfter } from '../plugins/withAfter';
 
 type ContentsJsonImageIdiom = 'iphone' | 'ipad' | 'ios-marketing';
 interface ContentsJsonImage {
@@ -98,21 +97,25 @@ export function getIcons(config: Pick<ExpoConfig, 'icon' | 'ios'>): string | nul
   return config.ios?.icon || config.icon || null;
 }
 
-export async function setIconsAsync(config: ExpoConfig, projectRoot: string) {
+export const withIcons: ConfigPlugin = config => {
+  return withAfter(config, 'ios', async props => ({
+    ...props,
+    files: await setIconsAsync(config.exp, props),
+  }));
+};
+
+export async function setIconsAsync(
+  config: ExpoConfig,
+  { projectRoot, projectName, files }: IOSPackModifierProps
+): Promise<Pick<IOSPackModifierProps, 'files'>> {
   const icon = getIcons(config);
   if (!icon) {
     addWarningIOS(
       'icon',
       'This is the image that your app uses on your home screen, you will need to configure it manually.'
     );
-    return;
+    return { files };
   }
-
-  // Something like projectRoot/ios/MyApp/
-  const iosNamedProjectRoot = getIosNamedProjectPath(projectRoot);
-
-  // Ensure the Images.xcassets/AppIcon.appiconset path exists
-  await fs.ensureDir(join(iosNamedProjectRoot, IMAGESET_PATH));
 
   // Store the image JSON data for assigning via the Contents.json
   const imagesJson: ContentsJson['images'] = [];
@@ -148,8 +151,9 @@ export async function setIconsAsync(config: ExpoConfig, projectRoot: string) {
             }
           );
           // Write image buffer to the file system.
-          const assetPath = join(iosNamedProjectRoot, IMAGESET_PATH, filename);
-          await fs.writeFile(assetPath, source);
+          // const assetPath = join(iosNamedProjectRoot, IMAGESET_PATH, filename);
+          files.append(join(projectName, IMAGESET_PATH, filename), source);
+          // await fs.writeFile(assetPath, source);
           // Save a reference to the generated image so we don't create a duplicate.
           generatedIcons[filename] = true;
         }
@@ -163,45 +167,23 @@ export async function setIconsAsync(config: ExpoConfig, projectRoot: string) {
     }
   }
 
-  // Finally, write the Config.json
-  await writeContentsJsonAsync(iosNamedProjectRoot, { images: imagesJson });
-}
-
-/**
- * Return the project's named iOS path: ios/MyProject/
- *
- * @param projectRoot Expo project root path.
- */
-function getIosNamedProjectPath(projectRoot: string): string {
-  const projectName = getProjectName(projectRoot);
-  return join(projectRoot, 'ios', projectName);
-}
-
-/**
- * Writes the Config.json which is used to assign images to their respective platform, dpi, and idiom.
- *
- * @param iosNamedProjectRoot named iOS project path
- * @param contents image json data
- */
-async function writeContentsJsonAsync(
-  iosNamedProjectRoot: string,
-  { images }: Pick<ContentsJson, 'images'>
-): Promise<void> {
-  await fs.writeFile(
-    join(iosNamedProjectRoot, CONTENTS_PATH),
-    JSON.stringify(
-      {
-        images,
-        info: {
-          version: 1,
-          // common practice is for the tool that generated the icons to be the "author"
-          author: 'expo',
-        },
-      },
-      null,
-      2
-    )
+  // Writes the Config.json which is used to assign images to their respective platform, dpi, and idiom.
+  files.append(
+    join(projectName, CONTENTS_PATH),
+    JSON.stringify(createContentsJSON(imagesJson), null, 2)
   );
+  return { files };
+}
+
+function createContentsJSON(images: any[]): any {
+  return {
+    images,
+    info: {
+      version: 1,
+      // common practice is for the tool that generated the icons to be the "author"
+      author: 'expo',
+    },
+  };
 }
 
 function getAppleIconName(size: number, scale: number): string {

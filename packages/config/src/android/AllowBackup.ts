@@ -8,7 +8,10 @@ export function getAllowBackup(config: Pick<ExpoConfig, 'android'>): boolean {
 }
 
 export const withAllowBackup: ConfigPlugin = config => {
-  return withManifest(config, props => setAllowBackup(config.exp, props.data!));
+  return withManifest(config, async props => ({
+    ...props,
+    data: await setAllowBackup(config.exp, props.data!),
+  }));
 };
 
 export async function setAllowBackup(

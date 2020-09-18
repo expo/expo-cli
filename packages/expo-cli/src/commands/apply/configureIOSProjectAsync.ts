@@ -1,16 +1,25 @@
-import { IOSConfig, WarningAggregator, getConfig } from '@expo/config';
+import { getConfig, IOSConfig, WarningAggregator } from '@expo/config';
 import { getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
+import { withPlugins } from '@expo/config/build/plugins/withPlugins';
 import { IosPlist, UserManager } from '@expo/xdl';
 import path from 'path';
 
 import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
+import { commitFilesAsync, getFileSystemIosAsync } from './configureFileSystem';
 
 export default async function configureIOSProjectAsync(projectRoot: string) {
+  const files = await getFileSystemIosAsync(projectRoot);
+
   // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
   const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
   IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, bundleIdentifier);
 
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { expo: exp, pack } = withPlugins([IOSConfig.Icons.withIcons], {
+    pack: originalConfig.pack,
+    expo: originalConfig.exp,
+  });
+
   const username = await UserManager.getCurrentUsernameAsync();
 
   IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
@@ -64,9 +73,20 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   }
 
   // Other
-  await IOSConfig.Icons.setIconsAsync(exp, projectRoot);
+  // await IOSConfig.Icons.setIconsAsync(exp, projectRoot);
   await IOSConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
   await IOSConfig.Locales.setLocalesAsync(exp, projectRoot);
+  const projectName = getProjectName(projectRoot);
+
+  await pack?.ios?.after?.({
+    // data: androidManifest,
+    // filePath,
+    projectName,
+    projectRoot,
+    files,
+  });
+
+  await commitFilesAsync(path.join(projectRoot, 'ios'), files);
 }
 
 async function modifyEntitlementsPlistAsync(projectRoot: string, callback: (plist: any) => any) {

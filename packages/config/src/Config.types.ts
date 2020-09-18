@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
 
-type PackModifierProps = {
+export type PackModifierProps = {
   /**
    * The JSON representation of an XML object.
    */
@@ -15,15 +15,26 @@ type PackModifierProps = {
    * file path for the output data.
    */
   filePath?: string;
+  /**
+   * Shared file system for the output project.
+   */
+  files: Record<string, { source: () => Buffer | string }>;
+
+  projectRoot: string;
 };
 
-export type PackModifier = (
-  props: PackModifierProps
-) => PackModifierProps | Promise<PackModifierProps>;
+export type PackModifier<T> = (props: T) => T | Promise<T>;
 
+export type IOSPackModifierProps = PackModifierProps & {
+  // Something like projectRoot/ios/[MyApp]/
+  projectName: string;
+};
 export type PackConfig = {
   android?: {
-    [key: string]: PackModifier;
+    [key: string]: PackModifier<PackModifierProps>;
+  };
+  ios?: {
+    [key: string]: PackModifier<IOSPackModifierProps>;
   };
 };
 
