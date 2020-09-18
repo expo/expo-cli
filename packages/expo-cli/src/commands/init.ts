@@ -1,4 +1,4 @@
-import { AndroidConfig, BareAppConfig, IOSConfig, getConfig } from '@expo/config';
+import { AndroidConfig, BareAppConfig, getConfig, IOSConfig } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import { Exp, IosPlist, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
@@ -267,7 +267,7 @@ async function action(projectDir: string, command: Command) {
   const workflow = isBare ? 'bare' : 'managed';
 
   let podsInstalled: boolean = false;
-  const needsPodsInstalled = await fs.existsSync(path.join(projectRoot, 'ios'));
+  const needsPodsInstalled = fs.existsSync(path.join(projectRoot, 'ios'));
   if (options.install) {
     await installNodeDependenciesAsync(projectRoot, packageManager);
     if (needsPodsInstalled) {
@@ -507,7 +507,11 @@ async function configureUpdatesProjectFilesAsync(
   initialConfig: BareAppConfig,
   username: string
 ) {
-  const { exp } = await getConfig(projectRoot);
+  // skipSDKVersionRequirement here so that this will work when you use the
+  // --no-install flag. the tradeoff is that the SDK version field won't be
+  // filled in, but we should be getting rid of that for expo-updates ASAP
+  // anyways.
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   // apply Android config
   const androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
@@ -523,7 +527,9 @@ async function configureUpdatesProjectFilesAsync(
   await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
 
   // apply iOS config
-  const supportingDirectory = path.join(projectRoot, 'ios', initialConfig.name, 'Supporting');
+  const iosSourceRoot = IOSConfig.getSourceRoot(projectRoot);
+  const supportingDirectory = path.join(iosSourceRoot, 'Supporting');
+
   try {
     await IosPlist.modifyAsync(supportingDirectory, 'Expo', expoPlist => {
       return IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
