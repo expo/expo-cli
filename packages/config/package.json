@@ -1,6 +1,6 @@
 {
   "name": "@expo/config",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "A library for interacting with the app.json",
   "main": "build/index.js",
   "scripts": {
@@ -35,9 +35,9 @@
     "@babel/core": "7.9.0",
     "@expo/babel-preset-cli": "0.2.18",
     "@expo/config-types": "^39.0.0",
+    "@expo/configure-splash-screen": "0.1.17",
     "@expo/image-utils": "0.3.6",
-    "@expo/json-file": "8.2.23",
-    "@expo/configure-splash-screen": "~0.1.11",
+    "@expo/json-file": "8.2.24",
     "@expo/plist": "0.0.10",
     "fs-extra": "9.0.0",
     "glob": "7.1.6",
