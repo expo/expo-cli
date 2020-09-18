@@ -48,5 +48,13 @@ export function evalConfig(
     throw new ConfigError(`Config file ${configFile} cannot return a Promise.`, 'INVALID_CONFIG');
   }
 
-  return { config: serializeAndEvaluate(result), exportedObjectType };
+  // If the expo object exists, only serialize that, otherwise serialize the entire object.
+  // This preserves the functions in the pack config for further evaluation.
+  if (result?.expo) {
+    result.expo = serializeAndEvaluate(result.expo);
+  } else {
+    result = serializeAndEvaluate(result);
+  }
+
+  return { config: result, exportedObjectType };
 }

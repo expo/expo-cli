@@ -5,6 +5,7 @@ import { sync as globSync } from 'glob';
 import path from 'path';
 
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
+import { compose } from './composePlugins';
 
 async function modifyBuildGradleAsync(
   projectRoot: string,
@@ -28,7 +29,10 @@ async function modifyAppBuildGradleAsync(
 
 async function modifyAndroidManifestAsync(
   projectRoot: string,
-  callback: (androidManifest: AndroidConfig.Manifest.Document) => AndroidConfig.Manifest.Document
+  callback: (props: {
+    androidManifest: AndroidConfig.Manifest.Document;
+    filePath: string;
+  }) => AndroidConfig.Manifest.Document
 ) {
   const androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
     projectRoot
@@ -39,7 +43,10 @@ async function modifyAndroidManifestAsync(
   const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
     androidManifestPath
   );
-  const result = await callback(androidManifestJSON);
+  const result = await callback({
+    androidManifest: androidManifestJSON,
+    filePath: androidManifestPath,
+  });
   await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
 }
 
@@ -59,7 +66,16 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   // Check package before reading the config because it may mutate the config if the user is prompted to define it.
   await getOrPromptForPackage(projectRoot);
 
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { exp, pack } = compose(
+    [
+      AndroidConfig.Facebook.withFacebook,
+      AndroidConfig.Branch.withBranch,
+      AndroidConfig.AllowBackup.withAllowBackup,
+    ],
+    originalConfig
+  );
+
   const username = await UserManager.getCurrentUsernameAsync();
 
   await modifyBuildGradleAsync(projectRoot, (buildGradle: string) => {
@@ -75,14 +91,11 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     return buildGradle;
   });
 
-  await modifyAndroidManifestAsync(projectRoot, async androidManifest => {
+  await modifyAndroidManifestAsync(projectRoot, async ({ androidManifest, filePath }) => {
     androidManifest = await AndroidConfig.Package.setPackageInAndroidManifest(exp, androidManifest);
-    androidManifest = await AndroidConfig.AllowBackup.setAllowBackup(exp, androidManifest);
     androidManifest = await AndroidConfig.Scheme.setScheme(exp, androidManifest);
     androidManifest = await AndroidConfig.Orientation.setAndroidOrientation(exp, androidManifest);
     androidManifest = await AndroidConfig.Permissions.setAndroidPermissions(exp, androidManifest);
-    androidManifest = await AndroidConfig.Branch.setBranchApiKey(exp, androidManifest);
-    androidManifest = await AndroidConfig.Facebook.setFacebookConfig(exp, androidManifest);
     androidManifest = await AndroidConfig.UserInterfaceStyle.setUiModeAndroidManifest(
       exp,
       androidManifest
@@ -92,6 +105,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
       exp,
       androidManifest
     );
+
     androidManifest = await AndroidConfig.GoogleMapsApiKey.setGoogleMapsApiKey(
       exp,
       androidManifest
@@ -103,6 +117,15 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     );
 
     androidManifest = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifest, username);
+
+    if (pack?.android) {
+      androidManifest = (
+        await pack.android.manifest({
+          data: androidManifest,
+          filePath,
+        })
+      ).data!;
+    }
 
     return androidManifest;
   });

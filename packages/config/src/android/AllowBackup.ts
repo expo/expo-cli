@@ -1,11 +1,15 @@
-import { ExpoConfig } from '../Config.types';
-import { Document } from './Manifest';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { Document, withManifest } from './Manifest';
 
 export function getAllowBackup(config: Pick<ExpoConfig, 'android'>): boolean {
   // Defaults to true.
   // https://docs.expo.io/versions/latest/config/app/#allowbackup
   return config.android?.allowBackup ?? true;
 }
+
+export const withAllowBackup: ConfigPlugin = config => {
+  return withManifest(config, props => setAllowBackup(config.exp, props.data!));
+};
 
 export async function setAllowBackup(
   config: Pick<ExpoConfig, 'android'>,

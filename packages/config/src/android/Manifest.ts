@@ -3,6 +3,8 @@ import { EOL } from 'os';
 import path from 'path';
 import { Builder, Parser } from 'xml2js';
 
+import { ExpoConfig, PackConfig, PackModifier, ProjectConfig } from '../Config.types';
+
 export type Document = { [key: string]: any };
 
 export type InputOptions = {
@@ -173,4 +175,30 @@ export function addMetaDataItemToMainApplication(
     mainApplication['meta-data'] = [newItem];
   }
   return mainApplication;
+}
+
+/**
+ * Utility plugin for extending the manifest modifier.
+ *
+ * @param config ProjectConfig object
+ * @param action new async modifier
+ */
+export function withManifest(
+  { exp, pack }: Pick<ProjectConfig, 'exp' | 'pack'>,
+  action: PackModifier
+): { exp: ExpoConfig; pack: PackConfig } {
+  if (!pack) {
+    pack = {};
+  }
+  if (!pack.android) {
+    pack.android = {};
+  }
+
+  const { manifest } = pack.android;
+  pack.android.manifest = async props => {
+    const results = await action(props);
+    return manifest ? manifest(results) : results;
+  };
+
+  return { exp, pack };
 }

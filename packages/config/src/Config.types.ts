@@ -1,4 +1,35 @@
 import { ExpoConfig } from '@expo/config-types';
+import { JSONObject } from '@expo/json-file';
+
+type PackModifierProps = {
+  /**
+   * The JSON representation of an XML object.
+   */
+  data?: JSONObject;
+  /**
+   * Raw data representation of object.
+   */
+  contents?: Buffer;
+
+  /**
+   * file path for the output data.
+   */
+  filePath?: string;
+};
+
+export type PackModifier = (
+  props: PackModifierProps
+) => PackModifierProps | Promise<PackModifierProps>;
+
+export type PackConfig = {
+  android?: {
+    [key: string]: PackModifier;
+  };
+};
+
+export type ExportedConfig = Pick<ProjectConfig, 'exp' | 'pack'>;
+
+export type ConfigPlugin = (config: ExportedConfig) => ExportedConfig;
 
 export { ExpoConfig };
 export type PackageJSONConfig = { [key: string]: any };
@@ -7,6 +38,10 @@ export type ProjectConfig = {
    * Fully evaluated Expo config with default values injected.
    */
   exp: ExpoConfig;
+  /**
+   * Dynamic config for processing native files during the generation process. This only exists if an Expo config exports and `expo` and `pack` object.
+   */
+  pack: PackConfig | null;
   /**
    * Project package.json object with default values injected.
    */

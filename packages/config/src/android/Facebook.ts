@@ -1,7 +1,12 @@
 import { Parser } from 'xml2js';
 
-import { ExpoConfig } from '../Config.types';
-import { addMetaDataItemToMainApplication, Document, getMainApplication } from './Manifest';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import {
+  addMetaDataItemToMainApplication,
+  Document,
+  getMainApplication,
+  withManifest,
+} from './Manifest';
 import {
   getProjectStringsXMLPathAsync,
   readStringsXMLAsync,
@@ -75,6 +80,42 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
   return true;
 }
 
+function removeFacebookCustomTabActivities(mainApplication: any) {
+  // Remove all Facebook CustomTabActivities first
+  if (mainApplication.hasOwnProperty('activity')) {
+    mainApplication['activity'] = mainApplication['activity'].filter(
+      (activity: Record<string, any>) => {
+        return activity['$']?.['android:name'] !== 'com.facebook.CustomTabActivity';
+      }
+    );
+  }
+}
+
+async function ensureFacebookActivityAsync({
+  mainApplication,
+  scheme,
+}: {
+  mainApplication: any;
+  scheme: string;
+}) {
+  const facebookSchemeActivityXML = facebookSchemeActivity(scheme);
+  const parser = new Parser();
+  const facebookSchemeActivityJSON = await parser.parseStringPromise(facebookSchemeActivityXML);
+
+  //TODO: don't write if facebook scheme activity is already present
+  if (mainApplication.hasOwnProperty('activity')) {
+    mainApplication['activity'] = mainApplication['activity'].concat(
+      facebookSchemeActivityJSON['activity']
+    );
+  } else {
+    mainApplication['activity'] = facebookSchemeActivityJSON['activity'];
+  }
+}
+
+export const withFacebook: ConfigPlugin = config => {
+  return withManifest(config, props => setFacebookConfig(config.exp, props.data!));
+};
+
 export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
   const scheme = getFacebookScheme(config);
   const appId = getFacebookAppId(config);
@@ -85,28 +126,10 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
 
   let mainApplication = getMainApplication(manifestDocument);
 
-  // Remove all Facebook CustomTabActivities first
-  if (mainApplication.hasOwnProperty('activity')) {
-    mainApplication['activity'] = mainApplication['activity'].filter(
-      (activity: Record<string, any>) => {
-        return activity['$']?.['android:name'] !== 'com.facebook.CustomTabActivity';
-      }
-    );
-  }
+  removeFacebookCustomTabActivities(mainApplication);
 
   if (scheme) {
-    const facebookSchemeActivityXML = facebookSchemeActivity(scheme);
-    const parser = new Parser();
-    const facebookSchemeActivityJSON = await parser.parseStringPromise(facebookSchemeActivityXML);
-
-    //TODO: don't write if facebook scheme activity is already present
-    if (mainApplication.hasOwnProperty('activity')) {
-      mainApplication['activity'] = mainApplication['activity'].concat(
-        facebookSchemeActivityJSON['activity']
-      );
-    } else {
-      mainApplication['activity'] = facebookSchemeActivityJSON['activity'];
-    }
+    ensureFacebookActivityAsync({ scheme, mainApplication });
   }
 
   if (appId) {
