@@ -90,7 +90,7 @@ function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCred
   }
 
   // partial apple id params were set, assume user has intention of passing it in
-  if (!(passedAppleId && passedAppleIdPassword)) {
+  if (!passedAppleIdPassword) {
     throw new Error(
       'In order to provide your Apple ID credentials, you must set the --apple-id flag and set the EXPO_APPLE_PASSWORD environment variable.'
     );
