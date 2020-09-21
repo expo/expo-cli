@@ -73,20 +73,18 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   const projectName = getProjectName(projectRoot);
 
   // Configure the Xcode project
-  if (typeof pack?.ios?.xcodeproj === 'function') {
-    await modifyPbxprojAsync(projectRoot, async project => {
-      if (typeof pack?.ios?.xcodeproj === 'function') {
-        project = (
-          await pack.ios.xcodeproj({
-            ...projectFileSystem,
-            projectName,
-            data: project,
-          })
-        ).data!;
-      }
-      return project;
-    });
-  }
+  await modifyPbxprojAsync(projectRoot, async data => {
+    if (typeof pack?.ios?.xcodeproj === 'function') {
+      data = (
+        await pack.ios.xcodeproj({
+          ...projectFileSystem,
+          projectName,
+          data,
+        })
+      ).data;
+    }
+    return data;
+  });
 
   // Configure the Info.plist
   await modifyInfoPlistAsync(projectRoot, async infoPlist => {
@@ -122,17 +120,17 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   // TODO: fix this on Windows! We will ignore errors for now so people can just proceed
   try {
     // Configure entitlements/capabilities
-    await modifyEntitlementsPlistAsync(projectRoot, async plist => {
+    await modifyEntitlementsPlistAsync(projectRoot, async data => {
       if (typeof pack?.ios?.entitlements === 'function') {
-        plist = (
+        data = (
           await pack.ios.entitlements({
             ...projectFileSystem,
             projectName,
-            data: plist,
+            data,
           })
         ).data;
       }
-      return plist;
+      return data;
     });
   } catch (e) {
     WarningAggregator.addWarningIOS(
