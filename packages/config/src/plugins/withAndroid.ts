@@ -1,3 +1,5 @@
+import { sync as globSync } from 'glob';
+import * as path from 'path';
 import { Builder } from 'xml2js';
 
 import {
@@ -5,33 +7,97 @@ import {
   ExportedConfig,
   PackFileModifierProps,
   PackModifier,
+  ProjectFile,
   ProjectFileSystem,
 } from '../Config.types';
 import { BASE_COLORS_XML } from '../android/Colors';
 import { Document, readXMLProjectFileAsync } from '../android/Manifest';
 import { withAfter, withModifier } from './withAfter';
 
-export function withDangerousBuildGradle<
-  T extends ProjectFileSystem = PackFileModifierProps<string>
->(config: ExportedConfig, action: PackModifier<T>): ExportedConfig {
-  return withModifier<T>(config, 'android', 'dangerousBuildGradle', action);
-}
-export function withDangerousAppBuildGradle<
-  T extends ProjectFileSystem = PackFileModifierProps<string>
->(config: ExportedConfig, action: PackModifier<T>): ExportedConfig {
-  return withModifier<T>(config, 'android', 'dangerousAppBuildGradle', action);
-}
-export function withDangerousMainActivity<
-  T extends ProjectFileSystem = PackFileModifierProps<string>
->(config: ExportedConfig, action: PackModifier<T>): ExportedConfig {
-  return withModifier<T>(config, 'android', 'dangerousMainActivity', action);
+export function withDangerousBuildGradle(
+  config: ExportedConfig,
+  action: PackModifier<PackFileModifierProps<string>>
+): ExportedConfig {
+  return withAfter(config, 'android', async props => {
+    const filePath = Object.keys(props.files).find(
+      key => !key.endsWith('app/build.gradle') && key.endsWith('build.gradle')
+    );
+    if (!filePath || !props.files[filePath]) {
+      throw new Error('Failed to find android /build.gradle');
+    }
+
+    const file = props.files[filePath];
+    const contents = readFileAsString(file);
+    const results = await action({ ...props, data: contents });
+
+    props.pushFile(filePath, results.data);
+
+    return {
+      ...props,
+      ...results,
+    };
+  });
 }
 
-export function withStrings<T extends ProjectFileSystem = AnyAndroidFileResourceModifier>(
+export function withDangerousAppBuildGradle(
   config: ExportedConfig,
-  action: PackModifier<T>
+  action: PackModifier<PackFileModifierProps<string>>
 ): ExportedConfig {
-  return withModifier<T>(config, 'android', 'strings', action);
+  return withAfter(config, 'android', async props => {
+    const filePath = Object.keys(props.files).find(key => key.endsWith('app/build.gradle'));
+    if (!filePath || !props.files[filePath]) {
+      throw new Error('Failed to find android app/build.gradle');
+    }
+
+    const file = props.files[filePath];
+    const contents = readFileAsString(file);
+    const results = await action({ ...props, data: contents });
+
+    props.pushFile(filePath, results.data);
+
+    return {
+      ...props,
+      ...results,
+    };
+  });
+}
+
+export function withStrings(
+  config: ExportedConfig,
+  action: PackModifier<PackFileModifierProps<Document>>
+): ExportedConfig {
+  return withModifier<PackFileModifierProps<Document>>(config, 'android', 'strings', action);
+}
+
+export function withDangerousMainActivity(
+  config: ExportedConfig,
+  action: PackModifier<PackFileModifierProps<string>>
+): ExportedConfig {
+  return withAfter(config, 'android', async props => {
+    const filePath = Object.keys(props.files).find(key => key.endsWith('/MainActivity.java'));
+    if (!filePath || !props.files[filePath]) {
+      throw new Error('Failed to find android MainActivity.java');
+    }
+
+    const file = props.files[filePath];
+    const contents = readFileAsString(file);
+    const results = await action({ ...props, data: contents });
+
+    props.pushFile(filePath, results.data);
+
+    return {
+      ...props,
+      ...results,
+    };
+  });
+}
+
+function readFileAsString(file: ProjectFile): string {
+  const contents = file.source();
+  if (typeof contents === 'string') {
+    return contents;
+  }
+  return contents.toString();
 }
 
 export const withOptionalColors = (

@@ -2,9 +2,6 @@ import { AndroidConfig, getConfig } from '@expo/config';
 import { Document } from '@expo/config/build/android/Manifest';
 import { withPlugins } from '@expo/config/build/plugins/withPlugins';
 import { UserManager } from '@expo/xdl';
-import fs from 'fs-extra';
-import { sync as globSync } from 'glob';
-import path from 'path';
 
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
 import { commitFilesAsync, getFileSystemAndroidAsync } from './configureFileSystem';
@@ -12,39 +9,10 @@ import { commitFilesAsync, getFileSystemAndroidAsync } from './configureFileSyst
 type ModifyFileProps<T> = { data: T; filePath: string };
 type ModifyFileTransform<T> = (props: ModifyFileProps<T>) => Promise<T>;
 
-async function modifyFileAsync(filePath: string, callback: ModifyFileTransform<string>) {
-  const data = fs.readFileSync(filePath).toString();
-  const result = await callback({ data, filePath });
-  fs.writeFileSync(filePath, result);
-}
-
 async function modifyXMLFileAsync(filePath: string, callback: ModifyFileTransform<Document>) {
   const data = await AndroidConfig.Manifest.readXMLAsync({ path: filePath });
   const result = await callback({ data, filePath });
   await AndroidConfig.Manifest.writeXMLAsync({ path: filePath, xml: result });
-}
-
-async function modifyBuildGradleAsync(projectRoot: string, callback: ModifyFileTransform<string>) {
-  const filePath = path.join(projectRoot, 'android', 'build.gradle');
-  return modifyFileAsync(filePath, callback);
-}
-
-async function modifyAppBuildGradleAsync(
-  projectRoot: string,
-  callback: ModifyFileTransform<string>
-) {
-  const filePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
-  return modifyFileAsync(filePath, callback);
-}
-
-async function modifyMainActivityJavaAsync(
-  projectRoot: string,
-  callback: ModifyFileTransform<string>
-) {
-  const filePath = globSync(
-    path.join(projectRoot, 'android/app/src/main/java/**/MainActivity.java')
-  )[0];
-  return modifyFileAsync(filePath, callback);
 }
 
 async function modifyAndroidManifestAsync(
@@ -105,47 +73,10 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     ],
     { expo: originalConfig.exp, pack: originalConfig.pack }
   );
-
-  await modifyBuildGradleAsync(projectRoot, async ({ data, filePath }) => {
-    if (typeof pack?.android?.dangerousBuildGradle === 'function') {
-      data = (
-        await pack.android.dangerousBuildGradle({
-          ...projectFileSystem,
-          data,
-          filePath,
-        })
-      ).data;
-    }
-    return data;
-  });
-  await modifyAppBuildGradleAsync(projectRoot, async ({ data, filePath }) => {
-    if (typeof pack?.android?.dangerousAppBuildGradle === 'function') {
-      data = (
-        await pack.android.dangerousAppBuildGradle({
-          ...projectFileSystem,
-          data,
-          filePath,
-        })
-      ).data;
-    }
-    return data;
-  });
   await modifyAndroidManifestAsync(projectRoot, async ({ data, filePath }) => {
     if (typeof pack?.android?.manifest === 'function') {
       data = (
         await pack.android.manifest({
-          ...projectFileSystem,
-          data,
-          filePath,
-        })
-      ).data!;
-    }
-    return data;
-  });
-  await modifyMainActivityJavaAsync(projectRoot, async ({ data, filePath }) => {
-    if (typeof pack?.android?.dangerousMainActivity === 'function') {
-      data = (
-        await pack.android.dangerousMainActivity({
           ...projectFileSystem,
           data,
           filePath,
