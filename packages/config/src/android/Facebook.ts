@@ -115,7 +115,7 @@ async function ensureFacebookActivityAsync({
 export const withFacebook: ConfigPlugin = config => {
   return withManifest(config, async props => ({
     ...props,
-    data: await setFacebookConfig(config.exp, props.data!),
+    data: await setFacebookConfig(config.expo, props.data!),
   }));
 };
 

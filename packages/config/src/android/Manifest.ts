@@ -1,3 +1,4 @@
+import { JSONObject } from '@expo/json-file';
 import fs from 'fs-extra';
 import { EOL } from 'os';
 import path from 'path';
@@ -5,11 +6,14 @@ import { Builder, Parser } from 'xml2js';
 
 import {
   ExpoConfig,
+  ExportedConfig,
+  FileModifierProps,
   PackConfig,
+  PackFileModifierProps,
   PackModifier,
-  PackModifierProps,
-  ProjectConfig,
+  ProjectFileSystem,
 } from '../Config.types';
+import { withModifier } from '../plugins/withAfter';
 
 export type Document = { [key: string]: any };
 
@@ -189,25 +193,9 @@ export function addMetaDataItemToMainApplication(
  * @param config ProjectConfig object
  * @param action new async modifier
  */
-export function withManifest(
-  { exp, pack }: Pick<ProjectConfig, 'exp' | 'pack'>,
-  action: PackModifier<PackModifierProps>
-): { exp: ExpoConfig; pack: PackConfig } {
-  if (!pack) {
-    pack = {};
-  }
-  if (!pack.android) {
-    pack.android = {};
-  }
-
-  const { manifest } = pack.android;
-  pack.android.manifest = async props => {
-    const results = await action(props);
-    if (!results.data || !results.files) {
-      throw new Error('Invalid modifier: ' + action);
-    }
-    return manifest ? manifest(results) : results;
-  };
-
-  return { exp, pack };
+export function withManifest<T extends ProjectFileSystem = PackFileModifierProps<JSONObject>>(
+  config: ExportedConfig,
+  action: PackModifier<T>
+): ExportedConfig {
+  return withModifier<T>(config, 'android', 'manifest', action);
 }

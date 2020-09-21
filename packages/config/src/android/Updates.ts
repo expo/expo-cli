@@ -1,5 +1,10 @@
-import { ExpoConfig } from '../Config.types';
-import { addMetaDataItemToMainApplication, Document, getMainApplication } from './Manifest';
+import { ConfigPlugin, ExpoConfig, ExportedConfig } from '../Config.types';
+import {
+  addMetaDataItemToMainApplication,
+  Document,
+  getMainApplication,
+  withManifest,
+} from './Manifest';
 
 export function getUpdateUrl(config: ExpoConfig, username: string | null) {
   const user = typeof config.owner === 'string' ? config.owner : username;
@@ -29,6 +34,13 @@ export function getUpdatesCheckOnLaunch(config: ExpoConfig) {
   }
   return 'ALWAYS';
 }
+
+export const withUpdates = (config: ExportedConfig, username: string) => {
+  return withManifest(config, async props => ({
+    ...props,
+    data: await setUpdatesConfig(config.expo, props.data, username),
+  }));
+};
 
 export async function setUpdatesConfig(
   config: ExpoConfig,

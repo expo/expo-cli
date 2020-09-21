@@ -2,8 +2,9 @@ import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import path from 'path';
 
-import { ExpoConfig } from '../Config.types';
-import { Document } from './Manifest';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withDangerousAppBuildGradle } from '../plugins/withAndroid';
+import { Document, withManifest } from './Manifest';
 
 export function getPackage(config: ExpoConfig) {
   return config.android?.package ?? null;
@@ -100,6 +101,20 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
     } catch (_) {}
   });
 }
+
+export const withAppGradle: ConfigPlugin = config => {
+  return withDangerousAppBuildGradle(config, async props => ({
+    ...props,
+    data: await setPackageInBuildGradle(config.expo, props.data),
+  }));
+};
+
+export const withPackageManifest: ConfigPlugin = config => {
+  return withManifest(config, async props => ({
+    ...props,
+    data: await setPackageInAndroidManifest(config.expo, props.data),
+  }));
+};
 
 export function setPackageInBuildGradle(config: ExpoConfig, buildGradle: string) {
   const packageName = getPackage(config);

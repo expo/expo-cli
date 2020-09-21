@@ -1,7 +1,8 @@
 import fs from 'fs-extra';
 import { resolve } from 'path';
 
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withDangerousAppBuildGradle, withDangerousBuildGradle } from '../plugins/withAndroid';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';
 
@@ -38,6 +39,13 @@ const googleServicesPlugin = 'com.google.gms.google-services';
 // NOTE(brentvatne): This may be annoying to keep up to date...
 const googleServicesVersion = '4.3.3';
 
+export const withClassPath: ConfigPlugin = config => {
+  return withDangerousBuildGradle(config, async props => ({
+    ...props,
+    data: await setClassPath(config.expo, props.data),
+  }));
+};
+
 /**
  * Adding the Google Services plugin
  * NOTE(brentvatne): string replacement is a fragile approach! we need a
@@ -60,6 +68,13 @@ export function setClassPath(config: ExpoConfig, buildGradle: string) {
         classpath '${googleServicesClassPath}:${googleServicesVersion}'`
   );
 }
+
+export const withApplyPlugin: ConfigPlugin = config => {
+  return withDangerousAppBuildGradle(config, async props => ({
+    ...props,
+    data: await applyPlugin(config.expo, props.data),
+  }));
+};
 
 export function applyPlugin(config: ExpoConfig, appBuildGradle: string) {
   const googleServicesFile = getGoogleServicesFilePath(config);

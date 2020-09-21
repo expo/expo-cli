@@ -1,4 +1,5 @@
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withDangerousAppBuildGradle } from '../plugins/withAndroid';
 
 const DEFAULT_VERSION_NAME = '1.0';
 const DEFAULT_VERSION_CODE = '1';
@@ -6,6 +7,13 @@ const DEFAULT_VERSION_CODE = '1';
 export function getVersionName(config: ExpoConfig) {
   return config.version ? config.version : null;
 }
+
+export const withVersionName: ConfigPlugin = config => {
+  return withDangerousAppBuildGradle(config, async props => ({
+    ...props,
+    data: await setVersionName(config.expo, props.data),
+  }));
+};
 
 export function setVersionName(
   config: ExpoConfig,
@@ -24,6 +32,13 @@ export function setVersionName(
 export function getVersionCode(config: ExpoConfig) {
   return config.android?.versionCode ? config.android.versionCode : null;
 }
+
+export const withVersionCode: ConfigPlugin = config => {
+  return withDangerousAppBuildGradle(config, async props => ({
+    ...props,
+    data: await setVersionCode(config.expo, props.data),
+  }));
+};
 
 export function setVersionCode(
   config: ExpoConfig,

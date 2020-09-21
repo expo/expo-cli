@@ -1,5 +1,5 @@
-import { ExpoConfig } from '../Config.types';
-import { Document } from './Manifest';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { Document, withManifest } from './Manifest';
 
 type XMLPermission = { $: { 'android:name': string } };
 
@@ -55,6 +55,13 @@ function prefixAndroidPermissionsIfNecessary(permissions: string[]): string[] {
 export function getAndroidPermissions(config: ExpoConfig): string[] {
   return config.android?.permissions ?? [];
 }
+
+export const withPermissions: ConfigPlugin = config => {
+  return withManifest(config, async props => ({
+    ...props,
+    data: await setAndroidPermissions(config.expo, props.data),
+  }));
+};
 
 export async function setAndroidPermissions(config: ExpoConfig, manifestDocument: Document) {
   const permissions = getAndroidPermissions(config);

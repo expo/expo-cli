@@ -1,5 +1,6 @@
-import { ExpoConfig } from '../Config.types';
-import { Document, getMainActivity } from './Manifest';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withDangerousMainActivity } from '../plugins/withAndroid';
+import { Document, getMainActivity, withManifest } from './Manifest';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';
 
@@ -21,6 +22,13 @@ export function getUserInterfaceStyle(config: ExpoConfig): string | null {
   return result ?? null;
 }
 
+export const withUIModeManifest: ConfigPlugin = config => {
+  return withManifest(config, async props => ({
+    ...props,
+    data: await setUiModeAndroidManifest(config.expo, props.data),
+  }));
+};
+
 export async function setUiModeAndroidManifest(config: ExpoConfig, manifestDocument: Document) {
   const userInterfaceStyle = getUserInterfaceStyle(config);
   if (!userInterfaceStyle) {
@@ -34,6 +42,13 @@ export async function setUiModeAndroidManifest(config: ExpoConfig, manifestDocum
 
   return manifestDocument;
 }
+
+export const withOnConfigurationChangedMainActivity: ConfigPlugin = config => {
+  return withDangerousMainActivity(config, async props => ({
+    ...props,
+    data: await addOnConfigurationChangedMainActivity(config.expo, props.data),
+  }));
+};
 
 export function addOnConfigurationChangedMainActivity(
   config: ExpoConfig,

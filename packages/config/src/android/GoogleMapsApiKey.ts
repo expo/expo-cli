@@ -1,9 +1,16 @@
-import { ExpoConfig } from '../Config.types';
-import { Document, getMainApplication } from './Manifest';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { Document, getMainApplication, withManifest } from './Manifest';
 
 export function getGoogleMapsApiKey(config: ExpoConfig) {
   return config.android?.config?.googleMaps?.apiKey ?? null;
 }
+
+export const withGoogleMapsApiKey: ConfigPlugin = config => {
+  return withManifest(config, async props => ({
+    ...props,
+    data: await setGoogleMapsApiKey(config.expo, props.data),
+  }));
+};
 
 export async function setGoogleMapsApiKey(config: ExpoConfig, manifestDocument: Document) {
   const apiKey = getGoogleMapsApiKey(config);

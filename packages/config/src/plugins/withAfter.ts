@@ -26,6 +26,9 @@ export function withModifier<T extends ProjectFileSystem>(
   // @ts-ignore
   pack[platform]![modifier] = async (props: T) => {
     const results = await action(props);
+    if (!results.files) {
+      throw new Error('Invalid modifier: ' + action);
+    }
     // @ts-ignore
     return mod ? mod(results) : results;
   };

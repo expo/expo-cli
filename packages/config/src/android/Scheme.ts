@@ -1,6 +1,6 @@
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
 import { addWarningAndroid } from '../WarningAggregator';
-import { Document } from './Manifest';
+import { Document, withManifest } from './Manifest';
 
 export type IntentFilterProps = {
   actions: string[];
@@ -135,6 +135,13 @@ export function ensureManifestHasValidIntentFilter(manifestDocument: Document): 
   }
   return false;
 }
+
+export const withScheme: ConfigPlugin = config => {
+  return withManifest(config, async props => ({
+    ...props,
+    data: await setScheme(config.expo, props.data),
+  }));
+};
 
 export function hasScheme(scheme: string, manifestDocument: Document): boolean {
   const schemes = getSchemesFromManifest(manifestDocument);

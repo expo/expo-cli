@@ -64,20 +64,33 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   const projectFileSystem = await getFileSystemAndroidAsync(projectRoot);
   const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
+  const username = await UserManager.getCurrentUsernameAsync();
+
   const { expo: exp, pack } = withPlugins(
     [
       AndroidConfig.Facebook.withFacebook,
       AndroidConfig.Branch.withBranch,
       AndroidConfig.AllowBackup.withAllowBackup,
+      AndroidConfig.GoogleServices.withClassPath,
+      AndroidConfig.GoogleServices.withApplyPlugin,
+      AndroidConfig.Package.withAppGradle,
+      AndroidConfig.Version.withVersionCode,
+      AndroidConfig.Version.withVersionName,
+      AndroidConfig.Package.withPackageManifest,
+      AndroidConfig.Scheme.withScheme,
+      AndroidConfig.Orientation.withOrientation,
+      AndroidConfig.Permissions.withPermissions,
+      AndroidConfig.UserInterfaceStyle.withUIModeManifest,
+      AndroidConfig.GoogleMobileAds.withGoogleMobileAdsConfig,
+      AndroidConfig.GoogleMapsApiKey.withGoogleMapsApiKey,
+      AndroidConfig.IntentFilters.withIntentFilters,
+      [AndroidConfig.Updates.withUpdates, username],
+      AndroidConfig.UserInterfaceStyle.withOnConfigurationChangedMainActivity,
     ],
     { expo: originalConfig.exp, pack: originalConfig.pack }
   );
 
-  const username = await UserManager.getCurrentUsernameAsync();
-
   await modifyBuildGradleAsync(projectRoot, async ({ data, filePath }) => {
-    data = AndroidConfig.GoogleServices.setClassPath(exp, data);
-
     if (typeof pack?.android?.dangerousBuildGradle === 'function') {
       data = (
         await pack.android.dangerousBuildGradle({
@@ -85,16 +98,11 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
           data,
           filePath,
         })
-      ).data!;
+      ).data;
     }
     return data;
   });
   await modifyAppBuildGradleAsync(projectRoot, async ({ data, filePath }) => {
-    data = AndroidConfig.GoogleServices.applyPlugin(exp, data);
-    data = AndroidConfig.Package.setPackageInBuildGradle(exp, data);
-    data = AndroidConfig.Version.setVersionCode(exp, data);
-    data = AndroidConfig.Version.setVersionName(exp, data);
-
     if (typeof pack?.android?.dangerousAppBuildGradle === 'function') {
       data = (
         await pack.android.dangerousAppBuildGradle({
@@ -102,38 +110,11 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
           data,
           filePath,
         })
-      ).data!;
+      ).data;
     }
     return data;
   });
-
   await modifyAndroidManifestAsync(projectRoot, async ({ androidManifest, filePath }) => {
-    androidManifest = await AndroidConfig.Package.setPackageInAndroidManifest(exp, androidManifest);
-    androidManifest = await AndroidConfig.Scheme.setScheme(exp, androidManifest);
-    androidManifest = await AndroidConfig.Orientation.setAndroidOrientation(exp, androidManifest);
-    androidManifest = await AndroidConfig.Permissions.setAndroidPermissions(exp, androidManifest);
-    androidManifest = await AndroidConfig.UserInterfaceStyle.setUiModeAndroidManifest(
-      exp,
-      androidManifest
-    );
-
-    androidManifest = await AndroidConfig.GoogleMobileAds.setGoogleMobileAdsConfig(
-      exp,
-      androidManifest
-    );
-
-    androidManifest = await AndroidConfig.GoogleMapsApiKey.setGoogleMapsApiKey(
-      exp,
-      androidManifest
-    );
-
-    androidManifest = await AndroidConfig.IntentFilters.setAndroidIntentFilters(
-      exp,
-      androidManifest
-    );
-
-    androidManifest = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifest, username);
-
     if (typeof pack?.android?.manifest === 'function') {
       androidManifest = (
         await pack.android.manifest({
@@ -143,13 +124,9 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
         })
       ).data!;
     }
-
     return androidManifest;
   });
-
   await modifyMainActivityJavaAsync(projectRoot, async ({ data, filePath }) => {
-    data = AndroidConfig.UserInterfaceStyle.addOnConfigurationChangedMainActivity(exp, data);
-
     if (typeof pack?.android?.dangerousMainActivity === 'function') {
       data = (
         await pack.android.dangerousMainActivity({

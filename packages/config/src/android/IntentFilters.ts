@@ -1,13 +1,20 @@
 import { Parser } from 'xml2js';
 
-import { ExpoConfig } from '../Config.types';
-import { Document, getMainActivity } from './Manifest';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { Document, getMainActivity, withManifest } from './Manifest';
 
 // TODO: make it so intent filters aren't written again if you run the command again
 
 export function getIntentFilters(config: ExpoConfig) {
   return config.android?.intentFilters ?? [];
 }
+
+export const withIntentFilters: ConfigPlugin = config => {
+  return withManifest(config, async props => ({
+    ...props,
+    data: await setAndroidIntentFilters(config.expo, props.data),
+  }));
+};
 
 export async function setAndroidIntentFilters(config: ExpoConfig, manifestDocument: Document) {
   const intentFilters = getIntentFilters(config);
