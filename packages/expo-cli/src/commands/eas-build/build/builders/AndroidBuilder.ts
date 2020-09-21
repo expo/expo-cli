@@ -47,12 +47,7 @@ class AndroidBuilder implements Builder<Platform.Android> {
     CredentialsSource.LOCAL | CredentialsSource.REMOTE | undefined
   > {
     this.credentialsPrepared = true;
-    try {
-      this.secretEnvs = await readSecretEnvsAsync(this.ctx.commandCtx.projectDir);
-    } catch {
-      // credentials.json can not exist and that is fine.
-      // TODO: handle this better than with try/catch
-    }
+    this.secretEnvs = await readSecretEnvsAsync(this.ctx.commandCtx.projectDir);
 
     if (!this.shouldLoadCredentials()) {
       return;
