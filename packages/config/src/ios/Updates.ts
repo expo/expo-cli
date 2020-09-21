@@ -1,4 +1,5 @@
-import { ExpoConfig } from '../Config.types';
+import { ExpoConfig, ExportedConfig } from '../Config.types';
+import { withEntitlementsPlist, withExpoPlist } from '../plugins/withPlist';
 import { ExpoPlist } from './IosConfig.types';
 
 export function getUpdateUrl(config: ExpoConfig, username: string | null) {
@@ -30,15 +31,24 @@ export function getUpdatesCheckOnLaunch(config: ExpoConfig) {
   return 'ALWAYS';
 }
 
+export const withUpdates = (
+  config: ExportedConfig,
+  { expoUsername }: { expoUsername: string | null }
+) =>
+  withExpoPlist(config, ({ data, ...props }) => ({
+    ...props,
+    data: setUpdatesConfig(config.expo, data, expoUsername),
+  }));
+
 export function setUpdatesConfig(
   config: ExpoConfig,
   expoPlist: ExpoPlist,
   username: string | null
-) {
-  let newExpoPlist = {
+): ExpoPlist {
+  let newExpoPlist: ExpoPlist = {
     ...expoPlist,
     EXUpdatesEnabled: getUpdatesEnabled(config),
-    EXUpdatesURL: getUpdateUrl(config, username),
+    EXUpdatesURL: getUpdateUrl(config, username) ?? undefined,
     EXUpdatesCheckOnLaunch: getUpdatesCheckOnLaunch(config),
     EXUpdatesLaunchWaitMs: getUpdatesTimeout(config),
   };

@@ -32,6 +32,10 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, bundleIdentifier);
 
   const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+
+  const expoUsername = await UserManager.getCurrentUsernameAsync();
+
+  // Add all built-in plugins
   const { expo: exp, pack } = withPlugins(
     [
       [withExistingInfoPlist, projectRoot],
@@ -49,12 +53,13 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
       IOSConfig.Version.withBuildNumber,
       IOSConfig.Version.withVersion,
       IOSConfig.Google.withGoogleServicesFile,
-
+      [IOSConfig.Updates.withUpdates, { expoUsername }],
       // Entitlements
       IOSConfig.Entitlements.withAppleSignInEntitlement,
       IOSConfig.Entitlements.withAccessesContactNotes,
+      // TODO: We don't have a mechanism for getting the apple team id here yet
+      [IOSConfig.Entitlements.withICloudEntitlement, { appleTeamId: 'TODO-GET-APPLE-TEAM-ID' }],
       IOSConfig.Entitlements.withAssociatedDomains,
-
       // XcodeProject
       IOSConfig.DeviceFamily.withDeviceFamily,
       IOSConfig.Locales.withLocales,
@@ -66,8 +71,6 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   );
 
   const projectName = getProjectName(projectRoot);
-
-  // IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
 
   // Configure the Xcode project
   if (typeof pack?.ios?.xcodeproj === 'function') {
@@ -90,33 +93,36 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
     infoPlist =
       exp.ios?.infoPlist ||
       IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(exp, infoPlist);
-    // if (typeof pack?.ios?.info === 'function') {
-    //   infoPlist = (
-    //     await pack.ios.info({
-    //       projectRoot,
-    //       projectName,
-    //       data: infoPlist,
-    //       // filePath,
-    //       files,
-    //     })
-    //   ).data;
-    // }
+    if (typeof pack?.ios?.info === 'function') {
+      infoPlist = (
+        await pack.ios.info({
+          ...projectFileSystem,
+          projectName,
+          data: infoPlist,
+        })
+      ).data;
+    }
     return infoPlist;
   });
 
   // Configure Expo.plist
-  await modifyExpoPlistAsync(projectRoot, async expoPlist => {
-    const username = await UserManager.getCurrentUsernameAsync();
-    expoPlist = IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
-    return expoPlist;
+  await modifyExpoPlistAsync(projectRoot, async data => {
+    if (typeof pack?.ios?.expoPlist === 'function') {
+      data = (
+        await pack.ios.expoPlist({
+          ...projectFileSystem,
+          projectName,
+          data,
+        })
+      ).data;
+    }
+    return data;
   });
 
   // TODO: fix this on Windows! We will ignore errors for now so people can just proceed
   try {
     // Configure entitlements/capabilities
     await modifyEntitlementsPlistAsync(projectRoot, async plist => {
-      // TODO: We don't have a mechanism for getting the apple team id here yet
-      plist = IOSConfig.Entitlements.setICloudEntitlement(exp, 'TODO-GET-APPLE-TEAM-ID', plist);
       if (typeof pack?.ios?.entitlements === 'function') {
         plist = (
           await pack.ios.entitlements({
@@ -126,7 +132,6 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
           })
         ).data;
       }
-
       return plist;
     });
   } catch (e) {
@@ -139,6 +144,7 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   // Other
   await IOSConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
 
+  // Run all post plugins
   await pack?.ios?.after?.({
     ...projectFileSystem,
     projectName,

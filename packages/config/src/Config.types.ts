@@ -74,6 +74,7 @@ export interface PackConfig {
   ios?: {
     info?: IOSPlistModifier;
     entitlements?: IOSPlistModifier;
+    expoPlist?: IOSPlistModifier;
     xcodeproj?: IOSPackXcodeProjModifier;
     after?: PackModifier<IOSProjectModifierProps & ProjectFileSystem>;
   };

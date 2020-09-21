@@ -1,7 +1,7 @@
 import { XcodeProject } from 'xcode';
 
 import { ExpoConfig, ExportedConfig, IOSPackModifierProps, PackModifier } from '../Config.types';
-import { InfoPlist, Plist } from '../ios/IosConfig.types';
+import { ExpoPlist, InfoPlist, Plist } from '../ios/IosConfig.types';
 import { withModifier } from './withAfter';
 
 export const withInfoPlist = (
@@ -28,6 +28,13 @@ export const withEntitlementsPlist = (
 
   return { expo, ...config };
 };
+
+export function withExpoPlist(
+  config: ExportedConfig,
+  action: PackModifier<IOSPackModifierProps<ExpoPlist>>
+): ExportedConfig {
+  return withModifier<IOSPackModifierProps<ExpoPlist>>(config, 'ios', 'expoPlist', action);
+}
 
 export function withXcodeProj(
   config: ExportedConfig,

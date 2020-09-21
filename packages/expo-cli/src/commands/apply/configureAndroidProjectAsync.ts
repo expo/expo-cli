@@ -174,7 +174,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
 
   // If we renamed the package, we should also move it around and rename it in source files
   await AndroidConfig.Package.renamePackageOnDisk(exp, projectRoot);
-  // await AndroidConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
+  await AndroidConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
 
   await pack?.android?.after?.(projectFileSystem);
 

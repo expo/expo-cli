@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import path from 'path';
 
-import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig, ExportedConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { withEntitlementsPlist } from '../plugins/withPlist';
 import { Plist } from './IosConfig.types';
@@ -22,11 +22,18 @@ export const withAccessesContactNotes: ConfigPlugin = config =>
   withEntitlementsPlist(config, setAccessesContactNotes);
 export const withAssociatedDomains: ConfigPlugin = config =>
   withEntitlementsPlist(config, setAssociatedDomains);
+export const withICloudEntitlement = (
+  config: ExportedConfig,
+  { appleTeamId }: { appleTeamId: string }
+) =>
+  withEntitlementsPlist(config, (config, plist) =>
+    setICloudEntitlement(config, plist, appleTeamId)
+  );
 
 export function setICloudEntitlement(
   config: ExpoConfig,
-  _appleTeamId: string,
-  entitlementsPlist: any
+  entitlementsPlist: any,
+  _appleTeamId: string
 ) {
   if (config.ios?.usesIcloudStorage) {
     // TODO: need access to the appleTeamId for this one!
