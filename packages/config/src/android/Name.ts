@@ -2,10 +2,10 @@ import { ExpoConfig } from '../Config.types';
 import {
   getProjectStringsXMLPathAsync,
   readStringsXMLAsync,
+  removeStringItem,
   setStringItem,
   writeStringsXMLAsync,
 } from './Strings';
-import { XMLItem } from './Styles';
 
 export function getName(config: ExpoConfig) {
   return typeof config.name === 'string' ? config.name : null;
@@ -36,8 +36,7 @@ export async function setName(
   }
 
   let stringsJSON = await readStringsXMLAsync(stringsPath);
-  const stringItemToAdd: XMLItem[] = [{ _: name, $: { name: 'app_name' } }];
-  stringsJSON = setStringItem(stringItemToAdd, stringsJSON);
+  stringsJSON = applyName(name, stringsJSON);
 
   try {
     await writeStringsXMLAsync(stringsPath, stringsJSON);
@@ -45,4 +44,11 @@ export async function setName(
     throw new Error(`Error setting name. Cannot write strings.xml to ${stringsPath}.`);
   }
   return true;
+}
+
+function applyName(name: string | null, stringsJSON: Document): Document {
+  if (name) {
+    return setStringItem([{ $: { name: 'app_name' }, _: name }], stringsJSON);
+  }
+  return removeStringItem('app_name', stringsJSON);
 }
