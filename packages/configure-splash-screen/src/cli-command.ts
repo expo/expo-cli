@@ -175,7 +175,7 @@ export default () =>
     .option('--status-bar-hidden', `Hides the status bar.`)
     .option(
       '--status-bar-background-color <color>',
-      `(only for Android platform) Customizes the background color of the StatusBar. Accepts a valid color (see 'background-color' supported formats).`
+      `(only for Android platform) Customizes the background color of the status bar. Accepts a valid color (see 'background-color' supported formats).`
     )
     .option(
       '--status-bar-translucent',
