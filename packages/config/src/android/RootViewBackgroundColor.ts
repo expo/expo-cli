@@ -1,4 +1,5 @@
-import { ExpoConfig } from '../Config.types';
+import { ExpoConfig, ExportedConfig } from '../Config.types';
+import { withOptionalStylesColorsPair } from '../plugins/withAndroid';
 import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
 import { readXMLAsync, writeXMLAsync } from './Manifest';
 import { getProjectStylesXMLPathAsync, setStylesItem, XMLItem } from './Styles';
@@ -16,6 +17,33 @@ export function getRootViewBackgroundColor(config: ExpoConfig) {
 
   return null;
 }
+
+export const withRootViewBackgroundColor = (
+  config: ExportedConfig,
+  kind: string = 'values'
+): ExportedConfig => {
+  const hexString = getRootViewBackgroundColor(config.expo);
+  if (!hexString) {
+    return config;
+  }
+
+  return withOptionalStylesColorsPair(config, kind, async props => {
+    const colorItemToAdd = { _: hexString, $: { name: WINDOW_BACKGROUND_COLOR } };
+    const styleItemToAdd = {
+      _: `@color/${WINDOW_BACKGROUND_COLOR}`,
+      $: { name: ANDROID_WINDOW_BACKGROUND },
+    };
+
+    props.colors = setColorItem([colorItemToAdd], props.colors);
+    props.styles = setStylesItem({
+      item: [styleItemToAdd],
+      xml: props.styles,
+      parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+    });
+
+    return props;
+  });
+};
 
 export async function setRootViewBackgroundColor(config: ExpoConfig, projectDirectory: string) {
   const hexString = getRootViewBackgroundColor(config);

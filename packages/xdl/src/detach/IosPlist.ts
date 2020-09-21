@@ -22,25 +22,7 @@ function _getNormalizedPlistFilename(plistName: string) {
 function read(plistPath: string, plistName: string): Record<string, any> {
   const plistFilename = _getNormalizedPlistFilename(plistName);
   const configPlistName = path.join(plistPath, plistFilename);
-  const configFilename = path.join(plistPath, `${plistName}.json`);
-
-  // grab original plist as json object
-  let config: Record<string, any>;
-  // if (process.platform === 'darwin') {
-  //   spawnSync('plutil', ['-convert', 'json', configPlistName, '-o', configFilename]);
-  //   const configContents = fs.readFileSync(configFilename, 'utf8');
-
-  //   try {
-  //     config = JSON.parse(configContents);
-  //   } catch (e) {
-  //     logger.info(`Error parsing ${configFilename}`, e);
-  //     logger.info('The erroneous file contents was:', configContents);
-  //     config = {};
-  //   }
-  // } else {
-  config = plist.parse(fs.readFileSync(configPlistName, 'utf8'));
-  // }
-  return config;
+  return plist.parse(fs.readFileSync(configPlistName, 'utf8'));
 }
 
 /**

@@ -5,7 +5,7 @@ const DEFAULT_VERSION_NAME = '1.0';
 const DEFAULT_VERSION_CODE = '1';
 
 export function getVersionName(config: ExpoConfig) {
-  return config.version ? config.version : null;
+  return config.version ?? null;
 }
 
 export const withVersionName: ConfigPlugin = config => {

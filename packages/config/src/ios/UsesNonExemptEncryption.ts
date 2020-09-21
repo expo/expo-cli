@@ -3,15 +3,16 @@ import { withInfoPlist } from '../plugins/withPlist';
 import { InfoPlist } from './IosConfig.types';
 
 export function getUsesNonExemptEncryption(config: ExpoConfig) {
-  return config.ios?.config?.hasOwnProperty('usesNonExemptEncryption')
-    ? !!config.ios.config.usesNonExemptEncryption
-    : null;
+  return config?.ios?.config?.usesNonExemptEncryption ?? null;
 }
 
 export const withUsesNonExemptEncryption: ConfigPlugin = config =>
   withInfoPlist(config, setUsesNonExemptEncryption);
 
-export function setUsesNonExemptEncryption(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setUsesNonExemptEncryption(
+  config: ExpoConfig,
+  { ITSAppUsesNonExemptEncryption, ...infoPlist }: InfoPlist
+) {
   const usesNonExemptEncryption = getUsesNonExemptEncryption(config);
 
   // Make no changes if the key is left blank

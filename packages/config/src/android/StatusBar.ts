@@ -1,4 +1,5 @@
-import { ExpoConfig } from '../Config.types';
+import { ExpoConfig, ExportedConfig } from '../Config.types';
+import { withOptionalStylesColorsPair } from '../plugins/withAndroid';
 import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
 import { readXMLAsync, writeXMLAsync } from './Manifest';
 import { getProjectStylesXMLPathAsync, setStylesItem, XMLItem } from './Styles';
@@ -14,6 +15,48 @@ export function getStatusBarColor(config: ExpoConfig) {
 export function getStatusBarStyle(config: ExpoConfig) {
   return config.androidStatusBar?.barStyle || 'light-content';
 }
+
+export const withStatusBarConfig = (
+  config: ExportedConfig,
+  kind: string = 'values'
+): ExportedConfig => {
+  return withOptionalStylesColorsPair(config, kind, async props => {
+    const hexString = getStatusBarColor(config.expo);
+    const statusBarStyle = getStatusBarStyle(config.expo);
+
+    const styleItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
+    if (hexString === 'translucent') {
+      // translucent status bar set in theme
+      styleItemToAdd[0]._ = 'true';
+      styleItemToAdd[0].$.name = WINDOW_TRANSLUCENT_STATUS;
+    } else {
+      // Need to add a color key to colors.xml to use in styles.xml
+      const colorItemToAdd: XMLItem[] = [{ _: hexString, $: { name: COLOR_PRIMARY_DARK_KEY } }];
+      props.colors = setColorItem(colorItemToAdd, props.colors);
+
+      styleItemToAdd[0]._ = `@color/${COLOR_PRIMARY_DARK_KEY}`;
+      styleItemToAdd[0].$.name = COLOR_PRIMARY_DARK_KEY;
+    }
+
+    // Default is light-content, don't need to do anything to set it
+    if (statusBarStyle === 'dark-content') {
+      const statusBarStyleItem: XMLItem[] = [{ _: 'true', $: { name: WINDOW_LIGHT_STATUS_BAR } }];
+      props.styles = setStylesItem({
+        item: statusBarStyleItem,
+        xml: props.styles,
+        parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+      });
+    }
+
+    props.styles = setStylesItem({
+      item: styleItemToAdd,
+      xml: props.styles,
+      parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+    });
+
+    return props;
+  });
+};
 
 export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: string) {
   const hexString = getStatusBarColor(config);

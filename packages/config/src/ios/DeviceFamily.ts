@@ -43,12 +43,11 @@ export function formatDeviceFamilies(deviceFamilies: number[]): string | number 
   return deviceFamilies.length === 1 ? deviceFamilies[0] : `"${deviceFamilies.join(',')}"`;
 }
 
-export const withDeviceFamily: ConfigPlugin = config => {
-  return withXcodeProj(config, async props => ({
+export const withDeviceFamily: ConfigPlugin = config =>
+  withXcodeProj(config, props => ({
     ...props,
-    data: await setDeviceFamily(config.expo, props.data),
+    data: setDeviceFamily(config.expo, props.data),
   }));
-};
 
 /**
  * Add to pbxproj under TARGETED_DEVICE_FAMILY

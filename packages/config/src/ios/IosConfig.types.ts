@@ -30,6 +30,7 @@ export type InfoPlist = {
   UISupportedInterfaceOrientations?: InterfaceOrientation[];
   GMSApiKey?: string;
   GADApplicationIdentifier?: string;
+  UIUserInterfaceStyle?: string;
 };
 
 export type ExpoPlist = {

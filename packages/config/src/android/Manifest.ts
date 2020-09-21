@@ -11,6 +11,7 @@ import {
   PackConfig,
   PackFileModifierProps,
   PackModifier,
+  ProjectFile,
   ProjectFileSystem,
 } from '../Config.types';
 import { withModifier } from '../plugins/withAfter';
@@ -40,6 +41,21 @@ export async function readXMLAsync(options: {
   fallback?: string;
 }): Promise<Document> {
   const contents = await fs.readFile(options.path, { encoding: 'utf8', flag: 'r' });
+  const parser = new Parser();
+  const manifest = parser.parseStringPromise(contents || options.fallback || '');
+  return manifest;
+}
+
+export async function readXMLProjectFileAsync(options: {
+  file: ProjectFile;
+  fallback?: string;
+}): Promise<Document> {
+  let contents: string;
+  if (options.file._rewrite) {
+    contents = options.file.source() as string;
+  } else {
+    contents = await fs.readFile(options.file._path, { encoding: 'utf8', flag: 'r' });
+  }
   const parser = new Parser();
   const manifest = parser.parseStringPromise(contents || options.fallback || '');
   return manifest;

@@ -70,19 +70,18 @@ async function modifyAndroidManifestAsync(
 export default async function configureAndroidProjectAsync(projectRoot: string) {
   // Check package before reading the config because it may mutate the config if the user is prompted to define it.
   await getOrPromptForPackage(projectRoot);
+  const username = await UserManager.getCurrentUsernameAsync();
 
   const projectFileSystem = await getFileSystemAndroidAsync(projectRoot);
-  const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
-  const username = await UserManager.getCurrentUsernameAsync();
+  const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   const { expo: exp, pack } = withPlugins(
     [
       AndroidConfig.Facebook.withFacebook,
       AndroidConfig.Branch.withBranch,
       AndroidConfig.AllowBackup.withAllowBackup,
-      AndroidConfig.GoogleServices.withClassPath,
-      AndroidConfig.GoogleServices.withApplyPlugin,
+      AndroidConfig.GoogleServices.withGoogleServices,
       AndroidConfig.Package.withAppGradle,
       AndroidConfig.Version.withVersionCode,
       AndroidConfig.Version.withVersionName,
@@ -98,7 +97,11 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
       AndroidConfig.UserInterfaceStyle.withOnConfigurationChangedMainActivity,
       AndroidConfig.Facebook.withFacebookAppIdString,
       AndroidConfig.Name.withName,
-      AndroidConfig.GoogleServices.withConfigFile,
+      AndroidConfig.PrimaryColor.withPrimaryColor,
+      AndroidConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
+      AndroidConfig.NavigationBar.withNavigationBarConfig,
+      AndroidConfig.StatusBar.withStatusBarConfig,
+      AndroidConfig.Icon.withIcons,
     ],
     { expo: originalConfig.exp, pack: originalConfig.pack }
   );
@@ -153,39 +156,27 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   });
 
   const stringsPath = await AndroidConfig.Strings.getProjectStringsXMLPathAsync(projectRoot);
-  await modifyXMLFileAsync(stringsPath, async ({ data, filePath }) => {
-    if (typeof pack?.android?.strings === 'function') {
-      data = (
-        await pack.android.strings({
-          ...projectFileSystem,
-          kind: 'values',
-          data,
-          filePath,
-        })
-      ).data!;
-    }
-    return data;
-  });
-
-  // const stylesPath = await AndroidConfig.Styles.getProjectStylesXMLPathAsync(projectRoot);
-  // if (stylesPath) {
-  // }
+  if (stringsPath) {
+    await modifyXMLFileAsync(stringsPath, async ({ data, filePath }) => {
+      if (typeof pack?.android?.strings === 'function') {
+        data = (
+          await pack.android.strings({
+            ...projectFileSystem,
+            kind: 'values',
+            data,
+            filePath,
+          })
+        ).data!;
+      }
+      return data;
+    });
+  }
 
   // If we renamed the package, we should also move it around and rename it in source files
   await AndroidConfig.Package.renamePackageOnDisk(exp, projectRoot);
+  // await AndroidConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
 
-  // Modify colors.xml and styles.xml
-  await AndroidConfig.RootViewBackgroundColor.setRootViewBackgroundColor(exp, projectRoot);
-  await AndroidConfig.NavigationBar.setNavigationBarConfig(exp, projectRoot);
-  await AndroidConfig.StatusBar.setStatusBarConfig(exp, projectRoot);
-  await AndroidConfig.PrimaryColor.setPrimaryColor(exp, projectRoot);
-
-  // add google-services.json to project
-  // await AndroidConfig.GoogleServices.setGoogleServicesFile(exp, projectRoot);
-
-  // TODOs
-  await AndroidConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
-  await AndroidConfig.Icon.setIconAsync(exp, projectRoot);
+  await pack?.android?.after?.(projectFileSystem);
 
   await commitFilesAsync(projectFileSystem);
 }

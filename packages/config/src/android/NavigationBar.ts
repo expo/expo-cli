@@ -1,5 +1,6 @@
-import { ExpoConfig } from '../Config.types';
+import { ExpoConfig, ExportedConfig } from '../Config.types';
 import { addWarningAndroid } from '../WarningAggregator';
+import { withOptionalStylesColorsPair } from '../plugins/withAndroid';
 import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
 import { readXMLAsync, writeXMLAsync } from './Manifest';
 import { getProjectStylesXMLPathAsync, setStylesItem, XMLItem } from './Styles';
@@ -18,6 +19,50 @@ export function getNavigationBarColor(config: ExpoConfig) {
 export function getNavigationBarStyle(config: ExpoConfig) {
   return config.androidNavigationBar?.barStyle || 'light-content';
 }
+
+export const withNavigationBarConfig = (
+  config: ExportedConfig,
+  kind: string = 'values'
+): ExportedConfig => {
+  return withOptionalStylesColorsPair(config, kind, async props => {
+    const immersiveMode = getNavigationBarImmersiveMode(config.expo);
+    const hexString = getNavigationBarColor(config.expo);
+    const barStyle = getNavigationBarStyle(config.expo);
+
+    if (immersiveMode) {
+      // Immersive mode needs to be set programatically
+      addWarningAndroid(
+        'androidNavigationBar.visible',
+        'Hiding the navigation bar must be done programmatically. Refer to the Android documentation - https://developer.android.com/training/system-ui/immersive - for instructions.'
+      );
+    }
+    if (hexString) {
+      const colorItemToAdd: XMLItem[] = [{ _: hexString, $: { name: NAVIGATION_BAR_COLOR } }];
+      props.colors = setColorItem(colorItemToAdd, props.colors);
+
+      const styleItemToAdd: XMLItem[] = [
+        { _: `@color/${NAVIGATION_BAR_COLOR}`, $: { name: `android:${NAVIGATION_BAR_COLOR}` } },
+      ];
+      props.styles = setStylesItem({
+        item: styleItemToAdd,
+        xml: props.styles,
+        parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+      });
+    }
+    if (barStyle === 'dark-content') {
+      const navigationBarStyleItem: XMLItem[] = [
+        { _: 'true', $: { name: WINDOW_LIGHT_NAVIGATION_BAR } },
+      ];
+      props.styles = setStylesItem({
+        item: navigationBarStyleItem,
+        xml: props.styles,
+        parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+      });
+    }
+
+    return props;
+  });
+};
 
 export async function setNavigationBarConfig(config: ExpoConfig, projectDirectory: string) {
   const immersiveMode = getNavigationBarImmersiveMode(config);

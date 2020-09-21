@@ -2,7 +2,6 @@ import { ProjectFileSystem } from '@expo/config/build/Config.types';
 import { getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { XcodeProject } from 'xcode';
 
 async function walkAsync(dir: string, shallow: boolean): Promise<string[]> {
   let results: string[] = [];
@@ -86,7 +85,6 @@ async function getFileSystemAsync(
     projectRoot,
     platformProjectRoot,
     pushFile(filePath: string, contents: Buffer | string) {
-      console.log('append: ', filePath);
       files[filePath] = {
         _rewrite: true,
         _path: path.join(platformProjectRoot, filePath),
@@ -103,14 +101,12 @@ export async function commitFilesAsync({ files }: Pick<ProjectFileSystem, 'files
   const commit = Object.values(files).filter(
     file => typeof file !== 'function' && file._rewrite !== false
   );
-  console.log('Commit files to system: ', commit);
-
   await Promise.all(
     commit.map(file => {
       if (!file._path) {
         throw new Error(`Failed to commit files. No path defined for file: ${file}`);
       }
-      fs.ensureDirSync(path.basename(file._path));
+      fs.ensureDirSync(path.dirname(file._path));
       fs.writeFile(file._path, file.source());
     })
   );

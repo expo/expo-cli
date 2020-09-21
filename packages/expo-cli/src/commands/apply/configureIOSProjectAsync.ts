@@ -1,10 +1,4 @@
-import {
-  ConfigPlugin,
-  ExportedConfig,
-  getConfig,
-  IOSConfig,
-  WarningAggregator,
-} from '@expo/config';
+import { ExportedConfig, getConfig, IOSConfig, WarningAggregator } from '@expo/config';
 import { getPbxproj, getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
 import { withPlugins } from '@expo/config/build/plugins/withPlugins';
 import { IosPlist, UserManager } from '@expo/xdl';
@@ -21,8 +15,6 @@ const withExistingInfoPlist = (config: ExportedConfig, projectRoot: string): Exp
 
   if (!config.expo.ios) config.expo.ios = {};
   if (!config.expo.ios.infoPlist) config.expo.ios.infoPlist = {};
-
-  console.log('contents: ', contents);
 
   config.expo.ios.infoPlist = {
     ...(contents || {}),

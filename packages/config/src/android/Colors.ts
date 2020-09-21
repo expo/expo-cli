@@ -1,7 +1,7 @@
 import { Document, getProjectXMLPathAsync, readXMLAsync } from './Manifest';
 import { XMLItem } from './Styles';
 
-const BASE_STYLES_XML = `<?xml version="1.0" encoding="utf-8"?><resources></resources>`;
+export const BASE_COLORS_XML = `<?xml version="1.0" encoding="utf-8"?><resources></resources>`;
 
 export async function getProjectColorsXMLPathAsync(
   projectDir: string,
@@ -11,7 +11,7 @@ export async function getProjectColorsXMLPathAsync(
 }
 
 export async function readColorsXMLAsync(path: string): Promise<Document> {
-  return readXMLAsync({ path, fallback: BASE_STYLES_XML });
+  return readXMLAsync({ path, fallback: BASE_COLORS_XML });
 }
 
 export function setColorItem(itemToAdd: XMLItem[], colorFileContentsJSON: Document) {

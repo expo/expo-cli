@@ -5,9 +5,9 @@ import { findSchemeNames } from './utils/Xcodeproj';
 
 export function getScheme(config: { scheme?: string | string[] }): string[] {
   if (Array.isArray(config.scheme)) {
-    function validate(value: any): value is string {
+    const validate = (value: any): value is string => {
       return typeof value === 'string';
-    }
+    };
     return config.scheme.filter<string>(validate);
   } else if (typeof config.scheme === 'string') {
     return [config.scheme];

@@ -38,7 +38,7 @@ function reduceExpoObject(config?: any): ExportedConfig {
       throw new Error(`pack object was defined in the config but it's not an object.`);
     }
     // TODO: We should warn users in the future that if there are more values than "expo", those values outside of "expo" will be omitted in favor of the "expo" object.
-    return { exp: config.expo as ExpoConfig, pack: (config.pack as PackConfig) ?? null };
+    return { expo: config.expo as ExpoConfig, pack: (config.pack as PackConfig) ?? null };
   }
   if (config.pack != null) {
     throw new Error(
@@ -49,7 +49,7 @@ function reduceExpoObject(config?: any): ExportedConfig {
       )}`
     );
   }
-  return { exp: config, pack: null };
+  return { expo: config, pack: null };
 }
 
 /**
@@ -107,14 +107,14 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
   // Can only change the package.json location if an app.json or app.config.json exists with nodeModulesPath
   const [packageJson, packageJsonPath] = getPackageJsonAndPath(
     projectRoot,
-    jsonFileWithNodeModulesPath.exp
+    jsonFileWithNodeModulesPath.expo
   );
 
   function fillAndReturnConfig(config: ExportedConfig, dynamicConfigObjectType: string | null) {
     return {
       ...ensureConfigHasDefaultValues(
         projectRoot,
-        config.exp,
+        config.expo,
         packageJson,
         options.skipSDKVersionRequirement
       ),
@@ -128,7 +128,7 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
 
   // Fill in the static config
   function getContextConfig(config: ExportedConfig) {
-    return ensureConfigHasDefaultValues(projectRoot, config.exp, packageJson, true).exp;
+    return ensureConfigHasDefaultValues(projectRoot, config.expo, packageJson, true).exp;
   }
 
   if (paths.dynamicConfigPath) {
@@ -472,6 +472,7 @@ export async function writeConfigJsonAsync(
 
   return {
     exp,
+    pack: null,
     pkg,
     rootConfig,
     staticConfigPath,

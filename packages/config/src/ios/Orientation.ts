@@ -1,6 +1,6 @@
 import { ConfigPlugin, ExpoConfig } from '../Config.types';
 import { withInfoPlist } from '../plugins/withPlist';
-import { InfoPlist } from './IosConfig.types';
+import { InfoPlist, InterfaceOrientation } from './IosConfig.types';
 
 export function getOrientation(config: ExpoConfig) {
   if (config.orientation) {
@@ -10,17 +10,17 @@ export function getOrientation(config: ExpoConfig) {
   return null;
 }
 
-export const PORTRAIT_ORIENTATIONS = [
+export const PORTRAIT_ORIENTATIONS: InterfaceOrientation[] = [
   'UIInterfaceOrientationPortrait',
   'UIInterfaceOrientationPortraitUpsideDown',
 ];
 
-export const LANDSCAPE_ORIENTATIONS = [
+export const LANDSCAPE_ORIENTATIONS: InterfaceOrientation[] = [
   'UIInterfaceOrientationLandscapeLeft',
   'UIInterfaceOrientationLandscapeRight',
 ];
 
-function getUISupportedInterfaceOrientations(orientation: string | null) {
+function getUISupportedInterfaceOrientations(orientation: string | null): InterfaceOrientation[] {
   if (orientation === 'portrait') {
     return PORTRAIT_ORIENTATIONS;
   } else if (orientation === 'landscape') {
@@ -32,7 +32,10 @@ function getUISupportedInterfaceOrientations(orientation: string | null) {
 
 export const withOrientation: ConfigPlugin = config => withInfoPlist(config, setOrientation);
 
-export function setOrientation(config: ExpoConfig, infoPlist: InfoPlist): InfoPlist {
+export function setOrientation(
+  config: ExpoConfig,
+  { UISupportedInterfaceOrientations, ...infoPlist }: InfoPlist
+): InfoPlist {
   const orientation = getOrientation(config);
 
   return {

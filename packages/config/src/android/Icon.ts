@@ -2,9 +2,11 @@ import { compositeImagesAsync, generateImageAsync } from '@expo/image-utils';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig, ProjectFileSystem } from '../Config.types';
+import { withAfter } from '../plugins/withAfter';
+import { withOptionalColors } from '../plugins/withAndroid';
+import { withPlugins } from '../plugins/withPlugins';
 import * as Colors from './Colors';
-import { writeXMLAsync } from './Manifest';
 
 type DPIString = 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
 type dpiMap = Record<DPIString, { folderName: string; scale: number }>;
@@ -17,7 +19,7 @@ const dpiValues: dpiMap = {
   xxxhdpi: { folderName: 'mipmap-xxxhdpi', scale: 4 },
 };
 const BASELINE_PIXEL_SIZE = 48;
-const ANDROID_RES_PATH = 'android/app/src/main/res/';
+const ANDROID_RES_PATH = 'app/src/main/res/';
 const MIPMAP_ANYDPI_V26 = 'mipmap-anydpi-v26';
 const ICON_BACKGROUND = 'iconBackground';
 const IC_LAUNCHER_PNG = 'ic_launcher.png';
@@ -39,6 +41,58 @@ export function getAdaptiveIcon(config: ExpoConfig) {
   };
 }
 
+export const withIcons: ConfigPlugin = config => {
+  return withPlugins([withIconImages, withIconColor], config);
+};
+
+export const withIconImages: ConfigPlugin = config => {
+  return withAfter<ProjectFileSystem>(config, 'android', async props => ({
+    ...props,
+    ...(await setIconsAsync(config.expo, props)),
+  }));
+};
+
+export const withIconColor: ConfigPlugin = config => {
+  return withOptionalColors(config, 'values', async props => {
+    const { backgroundColor } = getAdaptiveIcon(config.expo);
+
+    if (backgroundColor) {
+      const colorItemToAdd = [
+        {
+          _: backgroundColor,
+          $: { name: ICON_BACKGROUND },
+        },
+      ];
+      props.colors = Colors.setColorItem(colorItemToAdd, props.colors);
+    } else {
+      console.warn(
+        'Unable to find a colors.xml file in your android project. Background color is not being set.'
+      );
+      // TODO: Remove color item
+    }
+
+    return props;
+  });
+};
+
+export async function setIconsAsync(
+  config: ExpoConfig,
+  props: ProjectFileSystem
+): Promise<Pick<ProjectFileSystem, 'files'>> {
+  const { foregroundImage, backgroundColor, backgroundImage } = getAdaptiveIcon(config);
+  const icon = foregroundImage ?? getIcon(config);
+
+  if (!icon) {
+    return props;
+  }
+
+  await configureLegacyIconAsync(icon, backgroundImage, backgroundColor, props);
+
+  await configureAdaptiveIconAsync(icon, backgroundImage, backgroundColor ?? '#FFFFFF', props);
+
+  return props;
+}
+
 /**
  * Resizes the user-provided icon to create a set of legacy icon files in
  * their respective "mipmap" directories for <= Android 7, and creates a set of adaptive
@@ -52,14 +106,14 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
     return null;
   }
 
-  await configureLegacyIconAsync(projectRoot, icon, backgroundImage, backgroundColor);
+  // await configureLegacyIconAsync(projectRoot, icon, backgroundImage, backgroundColor);
 
-  await configureAdaptiveIconAsync(
-    projectRoot,
-    icon,
-    backgroundImage,
-    backgroundColor ?? '#FFFFFF'
-  );
+  // await configureAdaptiveIconAsync(
+  //   projectRoot,
+  //   icon,
+  //   backgroundImage,
+  //   backgroundColor ?? '#FFFFFF'
+  // );
 
   return true;
 }
@@ -71,14 +125,14 @@ export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
  * the background is set to transparent.)
  */
 async function configureLegacyIconAsync(
-  projectRoot: string,
   icon: string,
   backgroundImage: string | null,
-  backgroundColor: string | null
+  backgroundColor: string | null,
+  { projectRoot, pushFile }: ProjectFileSystem
 ) {
   Promise.all(
     Object.values(dpiValues).map(async ({ folderName, scale }) => {
-      const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
+      const dpiFolderPath = path.join(ANDROID_RES_PATH, folderName);
       const iconSizePx = BASELINE_PIXEL_SIZE * scale;
 
       // backgroundImage overrides backgroundColor
@@ -148,9 +202,8 @@ async function configureLegacyIconAsync(
           });
         }
 
-        await fs.ensureDir(dpiFolderPath);
-        await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_PNG), squareIconImage);
-        await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG), roundIconImage);
+        pushFile(path.join(dpiFolderPath, IC_LAUNCHER_PNG), squareIconImage);
+        pushFile(path.join(dpiFolderPath, IC_LAUNCHER_ROUND_PNG), roundIconImage);
       } catch (e) {
         throw new Error('Encountered an issue resizing app icon: ' + e);
       }
@@ -165,16 +218,16 @@ async function configureLegacyIconAsync(
  * - A backgroundColor was specified
  */
 export async function configureAdaptiveIconAsync(
-  projectRoot: string,
   foregroundImage: string,
   backgroundImage: string | null,
-  backgroundColor: string
+  backgroundColor: string,
+  { projectRoot, pushFile }: ProjectFileSystem
 ) {
-  await setBackgroundColorAsync(projectRoot, backgroundColor);
+  // await setBackgroundColorAsync(projectRoot, backgroundColor);
 
   Promise.all(
     Object.values(dpiValues).map(async ({ folderName, scale }) => {
-      const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
+      const dpiFolderPath = path.join(ANDROID_RES_PATH, folderName);
       const iconSizePx = BASELINE_PIXEL_SIZE * scale;
 
       try {
@@ -190,10 +243,8 @@ export async function configureAdaptiveIconAsync(
             }
           )
         ).source;
-        await fs.writeFile(
-          path.resolve(dpiFolderPath, IC_LAUNCHER_FOREGROUND_PNG),
-          adpativeIconForeground
-        );
+
+        pushFile(path.join(dpiFolderPath, IC_LAUNCHER_FOREGROUND_PNG), adpativeIconForeground);
 
         if (backgroundImage) {
           const adpativeIconBackground = (
@@ -208,10 +259,8 @@ export async function configureAdaptiveIconAsync(
               }
             )
           ).source;
-          await fs.writeFile(
-            path.resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG),
-            adpativeIconBackground
-          );
+
+          pushFile(path.join(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG), adpativeIconBackground);
         } else {
           // Remove any instances of ic_launcher_background.png that are there from previous icons
           await removeBackgroundImageFilesAsync(projectRoot);
@@ -224,26 +273,11 @@ export async function configureAdaptiveIconAsync(
 
   // create ic_launcher.xml and ic_launcher_round.xml
   const icLauncherXmlString = createAdaptiveIconXmlString(backgroundImage);
-  await createAdaptiveIconXmlFiles(projectRoot, icLauncherXmlString);
-}
 
-async function setBackgroundColorAsync(projectRoot: string, backgroundColor: string) {
-  const colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectRoot);
-  if (!colorsXmlPath) {
-    console.warn(
-      'Unable to find a colors.xml file in your android project. Background color is not being set.'
-    );
-    return;
-  }
-  let colorsJson = await Colors.readColorsXMLAsync(colorsXmlPath);
-  const colorItemToAdd = [
-    {
-      _: backgroundColor,
-      $: { name: ICON_BACKGROUND },
-    },
-  ];
-  colorsJson = Colors.setColorItem(colorItemToAdd, colorsJson);
-  await writeXMLAsync({ path: colorsXmlPath, xml: colorsJson });
+  const anyDpiV26Directory = path.join(ANDROID_RES_PATH, MIPMAP_ANYDPI_V26);
+
+  pushFile(path.join(anyDpiV26Directory, IC_LAUNCHER_XML), icLauncherXmlString);
+  pushFile(path.join(anyDpiV26Directory, IC_LAUNCHER_ROUND_XML), icLauncherXmlString);
 }
 
 export const createAdaptiveIconXmlString = (backgroundImage: string | null) => {
@@ -259,16 +293,9 @@ export const createAdaptiveIconXmlString = (backgroundImage: string | null) => {
 </adaptive-icon>`;
 };
 
-async function createAdaptiveIconXmlFiles(projectRoot: string, icLauncherXmlString: string) {
-  const anyDpiV26Directory = path.resolve(projectRoot, ANDROID_RES_PATH, MIPMAP_ANYDPI_V26);
-  await fs.ensureDir(anyDpiV26Directory);
-  await fs.writeFile(path.resolve(anyDpiV26Directory, IC_LAUNCHER_XML), icLauncherXmlString);
-  await fs.writeFile(path.resolve(anyDpiV26Directory, IC_LAUNCHER_ROUND_XML), icLauncherXmlString);
-}
-
 async function removeBackgroundImageFilesAsync(projectRoot: string) {
   Promise.all(
-    Object.values(dpiValues).map(async ({ folderName, scale }) => {
+    Object.values(dpiValues).map(async ({ folderName }) => {
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
       await fs.remove(path.resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG));
     })

@@ -4,12 +4,17 @@ import { resolve } from 'path';
 import { ConfigPlugin, ExpoConfig, ExportedConfig, ProjectFileSystem } from '../Config.types';
 import { withAfter } from '../plugins/withAfter';
 import { withDangerousAppBuildGradle, withDangerousBuildGradle } from '../plugins/withAndroid';
+import { withPlugins } from '../plugins/withPlugins';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';
 
 export function getGoogleServicesFilePath(config: ExpoConfig) {
   return config.android?.googleServicesFile ?? null;
 }
+
+export const withGoogleServices = (config: ExportedConfig): ExportedConfig => {
+  return withPlugins([withClassPath, withApplyPlugin, withConfigFile], config);
+};
 
 export const withConfigFile = (
   config: ExportedConfig,
