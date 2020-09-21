@@ -47,16 +47,16 @@ yarn run configure-splash-screen [options]
 
 - `-p, --platform <platform>` - Selected platform to configure. Available values: "android" | "ios" | "all" (default: "all").
 - `-b, --background-color <color>` - (required) Valid css-formatted color (hex (#RRGGBB[AA]), rgb[a], hsl[a], named color (https://drafts.csswg.org/css-color/#named-colors)) that would be used as the background color for native splash screen view.
-- `-i, --image-path <path>` - Path to valid .png image that will be displayed in native splash screen.
-- `-r, --image-resize-mode <resizeMode>` - ResizeMode to be used for native splash screen image. Available only if 'image-path' is provided as well. Available values: "contain" | "cover" | "native" (only available for android platform)) (default: "contain"). See [resize modes](https://github.com/expo/expo/tree/master/packages/expo-splash-screen#built-in-splash-screen-image-resize-modes) for more information.
-- `--dark-mode-background-color <color>` - Color (see 'background-color' supported formats) that would be used as the background color for native splash screen in dark mode. Providing this option enables other dark-mode related options.
-- `--dark-mode-image-path <path>` - Path to valid .png image that will be displayed in native splash screen in dark mode only. Available only if 'dark-mode-background-color' is provided as well.
-- `--status-bar-style <style>` - Customizes the color of the StatusBar icons. Available values: "default" | "light-content" | "dark-content" (default: "default").
-- `--status-bar-hidden` - Hides the StatusBar.
-- `--status-bar-background-color <color>` - (only for Android platform) Customizes the background color of the StatusBar. Accepts a valid color (see 'background-color' supported formats).
+- `-i, --image-path <path>` - Path to valid .png image that will be displayed on the splash screen.
+- `-r, --image-resize-mode <resizeMode>` - Resize mode to be used for the splash screen image. Available only if 'image-path' is provided as well. Available values: "contain" | "cover" | "native" ("native" is only available for Android)) (default: "contain"). See [resize modes](https://github.com/expo/expo/tree/master/packages/expo-splash-screen#built-in-splash-screen-image-resize-modes) for more information.
+- `--dark-mode-background-color <color>` - Color (see 'background-color' supported formats) that would be used as the background color for the splash screen in dark mode. Providing this option enables other dark-mode related options.
+- `--dark-mode-image-path <path>` - Path to valid .png image that will be displayed on the splash screen in dark mode only. Available only if 'dark-mode-background-color' is provided as well.
+- `--status-bar-style <style>` - Customizes the color of the status bar icons. Available values: "default" | "light-content" | "dark-content" (default: "default").
+- `--status-bar-hidden` - Hides the status bar.
+- `--status-bar-background-color <color>` - (only for Android platform) Customizes the background color of the status bar. Accepts a valid color (see 'background-color' supported formats).
 - `--status-bar-translucent` - (only for Android platform) Makes the StatusBar translucent (enables drawing under the StatusBar area).
-- `--dark-mode-status-bar-style <style>` - (only for Android platform) The very same as 'status-bar-style' option, but applied only in dark mode. Available only if 'dark-mode-background-color' and 'status-bar-style' are provided as well.
-- `--dark-mode-status-bar-background-color <color>` - (only for Android platform) The very same as 'status-bar-background-color', but applied only in the dark mode. Available only if 'dark-mode-background-color' and 'status-bar-style' are provided as well.
+- `--dark-mode-status-bar-style <style>` - (only for Android platform) The same as 'status-bar-style', but applied only in dark mode. Available only if 'dark-mode-background-color' and 'status-bar-style' are provided as well.
+- `--dark-mode-status-bar-background-color <color>` - (only for Android platform) The same as 'status-bar-background-color', but applied only in the dark mode. Available only if 'dark-mode-background-color' and 'status-bar-style' are provided as well.
 
 To see all the available options:
 
