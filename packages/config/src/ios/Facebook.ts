@@ -1,4 +1,5 @@
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withInfoPlist } from '../plugins/withPlist';
 import { InfoPlist } from './IosConfig.types';
 import { appendScheme } from './Scheme';
 
@@ -37,6 +38,8 @@ export function getFacebookAdvertiserIDCollection(config: ExpoConfig) {
 /**
  * Setters
  */
+
+export const withFacebook: ConfigPlugin = config => withInfoPlist(config, setFacebookConfig);
 
 export function setFacebookConfig(config: ExpoConfig, infoPlist: InfoPlist) {
   infoPlist = setFacebookAppId(config, infoPlist);

@@ -1,7 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig, ExportedConfig, IOSPackModifierProps } from '../Config.types';
+import { withAfter } from '../plugins/withAfter';
+import { withInfoPlist } from '../plugins/withPlist';
 import { InfoPlist } from './IosConfig.types';
 import { appendScheme } from './Scheme';
 import { addFileToGroup, getPbxproj, getProjectName, getSourceRoot } from './utils/Xcodeproj';
@@ -65,12 +67,33 @@ export function setGoogleSignInReservedClientId(config: ExpoConfig, infoPlist: I
   return appendScheme(reservedClientId, infoPlist);
 }
 
+export const withGoogle: ConfigPlugin = config => withInfoPlist(config, setGoogleConfig);
+
 export function setGoogleConfig(config: ExpoConfig, infoPlist: InfoPlist) {
   infoPlist = setGoogleMapsApiKey(config, infoPlist);
   infoPlist = setGoogleMobileAdsAppId(config, infoPlist);
   infoPlist = setGoogleSignInReservedClientId(config, infoPlist);
   return infoPlist;
 }
+
+export const withGoogleServicesFile = (config: ExportedConfig) => {
+  return withAfter<IOSPackModifierProps<unknown>>(config, 'ios', props => {
+    const googleServicesFileRelativePath = getGoogleServicesFile(config.expo);
+    if (googleServicesFileRelativePath != null) {
+      const googleServiceFilePath = path.resolve(props.projectRoot, googleServicesFileRelativePath);
+      props.files.append(
+        path.join(props.projectName, 'GoogleService-Info.plist'),
+        fs.readFileSync(googleServiceFilePath)
+      );
+      // TODO: Make files automatically sync in xcode
+      let project = getPbxproj(props.projectRoot);
+      const projectName = getProjectName(props.projectRoot);
+      project = addFileToGroup(`${projectName}/GoogleService-Info.plist`, projectName, project);
+      fs.writeFileSync(project.filepath, project.writeSync());
+    }
+    return props;
+  });
+};
 
 export function setGoogleServicesFile(config: ExpoConfig, projectRoot: string) {
   const googleServicesFileRelativePath = getGoogleServicesFile(config);

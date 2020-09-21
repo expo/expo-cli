@@ -100,7 +100,7 @@ export function getIcons(config: Pick<ExpoConfig, 'icon' | 'ios'>): string | nul
 export const withIcons: ConfigPlugin = config => {
   return withAfter(config, 'ios', async props => ({
     ...props,
-    files: await setIconsAsync(config.exp, props),
+    files: await setIconsAsync(config.expo, props),
   }));
 };
 

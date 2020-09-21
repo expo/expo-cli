@@ -1,4 +1,5 @@
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withInfoPlist } from '../plugins/withPlist';
 import { InfoPlist } from './IosConfig.types';
 
 export function getUsesNonExemptEncryption(config: ExpoConfig) {
@@ -6,6 +7,9 @@ export function getUsesNonExemptEncryption(config: ExpoConfig) {
     ? !!config.ios.config.usesNonExemptEncryption
     : null;
 }
+
+export const withUsesNonExemptEncryption: ConfigPlugin = config =>
+  withInfoPlist(config, setUsesNonExemptEncryption);
 
 export function setUsesNonExemptEncryption(config: ExpoConfig, infoPlist: InfoPlist) {
   const usesNonExemptEncryption = getUsesNonExemptEncryption(config);

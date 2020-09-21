@@ -2,8 +2,10 @@ import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import path from 'path';
 
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
+import { withEntitlementsPlist } from '../plugins/withPlist';
+import { Plist } from './IosConfig.types';
 import {
   getPbxproj,
   getProjectName,
@@ -13,6 +15,13 @@ import {
 } from './utils/Xcodeproj';
 
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
+
+export const withAppleSignInEntitlement: ConfigPlugin = config =>
+  withEntitlementsPlist(config, setAppleSignInEntitlement);
+export const withAccessesContactNotes: ConfigPlugin = config =>
+  withEntitlementsPlist(config, setAccessesContactNotes);
+export const withAssociatedDomains: ConfigPlugin = config =>
+  withEntitlementsPlist(config, setAssociatedDomains);
 
 export function setICloudEntitlement(
   config: ExpoConfig,
@@ -33,7 +42,7 @@ export function setICloudEntitlement(
 
 export function setAppleSignInEntitlement(
   config: ExpoConfig,
-  { 'com.apple.developer.applesignin': _, ...entitlementsPlist }: any
+  { 'com.apple.developer.applesignin': _, ...entitlementsPlist }: Plist
 ) {
   if (config.ios?.usesAppleSignIn) {
     return {

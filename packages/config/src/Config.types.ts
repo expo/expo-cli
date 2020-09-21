@@ -1,16 +1,14 @@
 import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
+import { XcodeProject } from 'xcode';
 
-export type PackModifierProps = {
+import { InfoPlist } from './ios';
+
+export type PackModifierProps<IData> = {
   /**
    * The JSON representation of an XML object.
    */
-  data?: JSONObject;
-  /**
-   * Raw data representation of object.
-   */
-  contents?: Buffer;
-
+  data?: IData; //JSONObject;
   /**
    * file path for the output data.
    */
@@ -25,20 +23,27 @@ export type PackModifierProps = {
 
 export type PackModifier<T> = (props: T) => T | Promise<T>;
 
-export type IOSPackModifierProps = PackModifierProps & {
+export type IOSPackModifierProps<IData> = PackModifierProps<IData> & {
   // Something like projectRoot/ios/[MyApp]/
   projectName: string;
 };
+
+export type IOSPackXcodeProjModifier = PackModifier<IOSPackModifierProps<XcodeProject>>;
+type IOSPackEntitlementsProjModifier = PackModifier<IOSPackModifierProps<InfoPlist>>;
+
 export type PackConfig = {
   android?: {
-    [key: string]: PackModifier<PackModifierProps>;
+    [key: string]: PackModifier<PackModifierProps<JSONObject>>;
   };
   ios?: {
-    [key: string]: PackModifier<IOSPackModifierProps>;
+    entitlements?: IOSPackEntitlementsProjModifier;
+    xcodeproj?: IOSPackXcodeProjModifier;
+    after?: PackModifier<Omit<PackModifierProps<JSONObject>, 'data'>>;
+    // [key: string]: PackModifier<IOSPackModifierProps>;
   };
 };
 
-export type ExportedConfig = Pick<ProjectConfig, 'exp' | 'pack'>;
+export type ExportedConfig = { pack: PackConfig | null; expo: ExpoConfig };
 
 export type ConfigPlugin = (config: ExportedConfig) => ExportedConfig;
 

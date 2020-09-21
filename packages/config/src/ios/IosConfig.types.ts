@@ -1,3 +1,5 @@
+import { JSONObject } from '@expo/json-file';
+
 export type URLScheme = {
   CFBundleURLName?: string;
   CFBundleURLSchemes: string[];
@@ -8,6 +10,8 @@ export type InterfaceOrientation =
   | 'UIInterfaceOrientationPortraitUpsideDown'
   | 'UIInterfaceOrientationLandscapeLeft'
   | 'UIInterfaceOrientationLandscapeRight';
+
+export type Plist = JSONObject;
 
 export type InfoPlist = {
   CFBundleShortVersionString?: string;

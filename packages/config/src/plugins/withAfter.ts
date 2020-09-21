@@ -1,10 +1,10 @@
-import { ExpoConfig, PackConfig, PackModifier, ProjectConfig } from '../Config.types';
+import { ExportedConfig, PackModifier } from '../Config.types';
 
 export function withAfter<T>(
-  { exp, pack }: Pick<ProjectConfig, 'exp' | 'pack'>,
+  { expo, pack }: ExportedConfig,
   platform: 'ios' | 'android',
   action: PackModifier<T>
-): { exp: ExpoConfig; pack: PackConfig } {
+): ExportedConfig {
   if (!pack) {
     pack = {};
   }
@@ -20,5 +20,29 @@ export function withAfter<T>(
     return after ? after(results) : results;
   };
 
-  return { exp, pack };
+  return { expo, pack };
+}
+
+export function withModifier<T>(
+  { expo, pack }: ExportedConfig,
+  platform: 'ios' | 'android',
+  modifier: string,
+  action: PackModifier<T>
+): ExportedConfig {
+  if (!pack) {
+    pack = {};
+  }
+  if (!pack[platform]) {
+    pack[platform] = {};
+  }
+
+  const mod = pack[platform][modifier]!;
+  // @ts-ignore
+  pack[platform]![modifier] = async (props: T) => {
+    const results = await action(props);
+    // @ts-ignore
+    return mod ? mod(results) : results;
+  };
+
+  return { expo, pack };
 }

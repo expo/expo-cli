@@ -1,8 +1,10 @@
 import { getConfig, IOSConfig, WarningAggregator } from '@expo/config';
-import { getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
+import { getPbxproj, getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
 import { withPlugins } from '@expo/config/build/plugins/withPlugins';
 import { IosPlist, UserManager } from '@expo/xdl';
+import fs from 'fs-extra';
 import path from 'path';
+import { XcodeProject } from 'xcode';
 
 import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
 import { commitFilesAsync, getFileSystemIosAsync } from './configureFileSystem';
@@ -15,36 +17,77 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, bundleIdentifier);
 
   const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  const { expo: exp, pack } = withPlugins([IOSConfig.Icons.withIcons], {
-    pack: originalConfig.pack,
-    expo: originalConfig.exp,
-  });
+  const { expo: exp, pack } = withPlugins(
+    [
+      IOSConfig.Icons.withIcons,
+      IOSConfig.Branch.withBranch,
+      IOSConfig.Facebook.withFacebook,
+      IOSConfig.Google.withGoogle,
+      IOSConfig.Name.withDisplayName,
+      // IOSConfig.Name.withName,
+      IOSConfig.Orientation.withOrientation,
+      IOSConfig.RequiresFullScreen.withRequiresFullScreen,
+      IOSConfig.Scheme.withScheme,
+      IOSConfig.UserInterfaceStyle.withUserInterfaceStyle,
+      IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
+      IOSConfig.Version.withBuildNumber,
+      IOSConfig.Version.withVersion,
+      IOSConfig.Google.withGoogleServicesFile,
 
-  const username = await UserManager.getCurrentUsernameAsync();
+      // Entitlements
+      IOSConfig.Entitlements.withAppleSignInEntitlement,
+      IOSConfig.Entitlements.withAccessesContactNotes,
+      IOSConfig.Entitlements.withAssociatedDomains,
 
-  IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
-  IOSConfig.DeviceFamily.setDeviceFamily(exp, projectRoot);
+      // XcodeProject
+      IOSConfig.DeviceFamily.withDeviceFamily,
+    ],
+    {
+      pack: originalConfig.pack,
+      expo: originalConfig.exp,
+    }
+  );
+
+  // IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
+  // IOSConfig.DeviceFamily.setDeviceFamily(exp, projectRoot);
+  await IOSConfig.Locales.setLocalesAsync(exp, projectRoot);
 
   // Configure the Info.plist
-  await modifyInfoPlistAsync(projectRoot, infoPlist => {
-    infoPlist = IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(exp, infoPlist);
-    infoPlist = IOSConfig.Branch.setBranchApiKey(exp, infoPlist);
-    infoPlist = IOSConfig.Facebook.setFacebookConfig(exp, infoPlist);
-    infoPlist = IOSConfig.Google.setGoogleConfig(exp, infoPlist);
-    infoPlist = IOSConfig.Name.setDisplayName(exp, infoPlist);
-    infoPlist = IOSConfig.Orientation.setOrientation(exp, infoPlist);
-    infoPlist = IOSConfig.RequiresFullScreen.setRequiresFullScreen(exp, infoPlist);
-    infoPlist = IOSConfig.Scheme.setScheme(exp, infoPlist);
-    infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(exp, infoPlist);
-    infoPlist = IOSConfig.UsesNonExemptEncryption.setUsesNonExemptEncryption(exp, infoPlist);
-    infoPlist = IOSConfig.Version.setBuildNumber(exp, infoPlist);
-    infoPlist = IOSConfig.Version.setVersion(exp, infoPlist);
+  await modifyPbxprojAsync(projectRoot, async project => {
+    if (typeof pack?.ios?.xcodeproj === 'function') {
+      project = (
+        await pack.ios.xcodeproj({
+          projectRoot,
+          projectName,
+          data: project,
+          // filePath,
+          files,
+        })
+      ).data!;
+    }
+    return project;
+  });
 
+  // Configure the Info.plist
+  await modifyInfoPlistAsync(projectRoot, async infoPlist => {
+    infoPlist = IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(exp, infoPlist);
+    // if (typeof pack?.ios?.info === 'function') {
+    //   infoPlist = (
+    //     await pack.ios.info({
+    //       projectRoot,
+    //       projectName,
+    //       data: infoPlist,
+    //       // filePath,
+    //       files,
+    //     })
+    //   ).data!;
+    // }
     return infoPlist;
   });
 
   // Configure Expo.plist
-  await modifyExpoPlistAsync(projectRoot, expoPlist => {
+  await modifyExpoPlistAsync(projectRoot, async expoPlist => {
+    const username = await UserManager.getCurrentUsernameAsync();
     expoPlist = IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
     return expoPlist;
   });
@@ -52,18 +95,22 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   // TODO: fix this on Windows! We will ignore errors for now so people can just proceed
   try {
     // Configure entitlements/capabilities
-    await modifyEntitlementsPlistAsync(projectRoot, entitlementsPlist => {
+    await modifyEntitlementsPlistAsync(projectRoot, async plist => {
       // TODO: We don't have a mechanism for getting the apple team id here yet
-      entitlementsPlist = IOSConfig.Entitlements.setICloudEntitlement(
-        exp,
-        'TODO-GET-APPLE-TEAM-ID',
-        entitlementsPlist
-      );
+      plist = IOSConfig.Entitlements.setICloudEntitlement(exp, 'TODO-GET-APPLE-TEAM-ID', plist);
+      if (typeof pack?.ios?.entitlements === 'function') {
+        plist = (
+          await pack.ios.entitlements({
+            projectRoot,
+            projectName,
+            data: plist,
+            // filePath,
+            files,
+          })
+        ).data!;
+      }
 
-      entitlementsPlist = IOSConfig.Entitlements.setAppleSignInEntitlement(exp, entitlementsPlist);
-      entitlementsPlist = IOSConfig.Entitlements.setAccessesContactNotes(exp, entitlementsPlist);
-      entitlementsPlist = IOSConfig.Entitlements.setAssociatedDomains(exp, entitlementsPlist);
-      return entitlementsPlist;
+      return plist;
     });
   } catch (e) {
     WarningAggregator.addWarningIOS(
@@ -75,7 +122,6 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   // Other
   // await IOSConfig.Icons.setIconsAsync(exp, projectRoot);
   await IOSConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
-  await IOSConfig.Locales.setLocalesAsync(exp, projectRoot);
   const projectName = getProjectName(projectRoot);
 
   await pack?.ios?.after?.({
@@ -101,6 +147,15 @@ async function modifyInfoPlistAsync(projectRoot: string, callback: (plist: any) 
   const { iosProjectDirectory } = getIOSPaths(projectRoot);
   await IosPlist.modifyAsync(iosProjectDirectory, 'Info', callback);
   await IosPlist.cleanBackupAsync(iosProjectDirectory, 'Info', false);
+}
+
+async function modifyPbxprojAsync(
+  projectRoot: string,
+  callback: (project: XcodeProject) => Promise<XcodeProject>
+) {
+  const project = getPbxproj(projectRoot);
+  const result = await callback(project);
+  fs.writeFileSync(project.filepath, result.writeSync());
 }
 
 async function modifyExpoPlistAsync(projectRoot: string, callback: (plist: any) => any) {
