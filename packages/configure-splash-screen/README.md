@@ -5,7 +5,7 @@ You can use it to configure your native iOS and Android project according to you
 
 ## Content
 
-- [📜 CHANGELOG](./CHANGELOG.md)
+- [📜 CHANGELOG](../../CHANGELOG.md)
 - [🚀 Features](#-features)
 - [🗒 Usage](#-usage)
 - [🖥 Installation](#-installation)
@@ -21,6 +21,7 @@ You can use it to configure your native iOS and Android project according to you
 - Configures the `StatusBar`'s attributes:
   - `hiding`,
   - `style`.
+- Supports separate SplashScreenView configuration for the dark mode.
 
 ### 🤖 Android
 
@@ -32,32 +33,30 @@ You can use it to configure your native iOS and Android project according to you
   - `style`,
   - `backgroundColor`,
   - `translucency`.
+- Supports separate SplashScreenView configuration for the dark mode.
 
 ## 🗒 Usage
 
 Command syntax:
 
 ```
-yarn run configure-splash-screen [options] <backgroundColor> [imagePathOrDarkModeBackgroundColor] [imagePath] [darkModeImagePath]
+yarn run configure-splash-screen [options]
 ```
-
-### Arguments
-
-- `backgroundColor` - (required) Valid css-formatted color (hex (#RRGGBB[AA]), rgb[a], hsl[a], named color (https://drafts.csswg.org/css-color/#named-colors)) that would be used as the background color for native splash screen view.
-- `imagePathOrDarkModeBackgroundColor` - (optional) Path to a valid .png image or valid css-formatted color (see backgroundColor supported formats). When script detects that this argument is a path to a .png file, it assumes dark mode is not supported. Otherwise this argument is treated as a background color for native splash screen in dark mode.
-- `imagePath` - (optional) Path to valid .png image that will be displayed in native splash screen. This argument is available only if dark mode support is detected.
-- `darkModeImagePath` - (optional) Path to valid .png image that will be displayed in native splash screen in dark mode only. If this argument is not specified then image from imagePath will be used in dark mode as well. This argument is available only if dark mode support is detected.
 
 ### Options:
 
-- `-r, --resize-mode [resizeMode]` - ResizeMode to be used for native splash screen image. Available values: "contain" | "cover" | "native" (only available for android platform)) (default: "contain"). See [resize modes](https://github.com/expo/expo/tree/master/packages/expo-splash-screen#built-in-splash-screen-image-resize-modes) for more information.
-- `-p, --platform [platform]` - Selected platform to configure. Available values: "android" | "ios" | "all". (default: "all")
-- `--statusbar-style [statusBarStyle]` - Customizes the color of the StatusBar icons. Available values: "default" | "light-content" | "dark-content". (default: "default")
-- `--dark-mode-statusbar-style [darkModeStatusBarStyle]` - (only for Android platform) The very same as 'statusbar-style' option, but applied only in dark mode. Available only if 'statusbar-style' is provided.
-- `--statusbar-hidden` - Hides the StatusBar.
-- `--statusbar-background-color [statusBarBackgroundColor]` - (only for Android platform) Customizes the background color of the StatusBar. Valid css-formatted color (see backgroundColor supported formats).
-- `--dark-mode-statusbar-background-color [darkModeStatusBarBackgroundColor]` - (only for Android platform) The very same as 'statusbar-background-color' option, but applied only in dark mode. Available only if `statusbar-style` is provided.
-- `--statusbar-translucent` - (only for Android platform) Makes the StatusBar translucent (enables drawing under the StatusBar area).
+- `-p, --platform <platform>` - Selected platform to configure. Available values: "android" | "ios" | "all" (default: "all").
+- `-b, --background-color <color>` - (required) Valid css-formatted color (hex (#RRGGBB[AA]), rgb[a], hsl[a], named color (https://drafts.csswg.org/css-color/#named-colors)) that would be used as the background color for native splash screen view.
+- `-i, --image-path <path>` - Path to valid .png image that will be displayed on the splash screen.
+- `-r, --image-resize-mode <resizeMode>` - Resize mode to be used for the splash screen image. Available only if 'image-path' is provided as well. Available values: "contain" | "cover" | "native" ("native" is only available for Android)) (default: "contain"). See [resize modes](https://github.com/expo/expo/tree/master/packages/expo-splash-screen#built-in-splash-screen-image-resize-modes) for more information.
+- `--dark-mode-background-color <color>` - Color (see 'background-color' supported formats) that would be used as the background color for the splash screen in dark mode. Providing this option enables other dark-mode related options.
+- `--dark-mode-image-path <path>` - Path to valid .png image that will be displayed on the splash screen in dark mode only. Available only if 'dark-mode-background-color' is provided as well.
+- `--status-bar-style <style>` - Customizes the color of the status bar icons. Available values: "default" | "light-content" | "dark-content" (default: "default").
+- `--status-bar-hidden` - Hides the status bar.
+- `--status-bar-background-color <color>` - (only for Android platform) Customizes the background color of the status bar. Accepts a valid color (see 'background-color' supported formats).
+- `--status-bar-translucent` - (only for Android platform) Makes the status bar translucent (enables drawing under the status bar area).
+- `--dark-mode-status-bar-style <style>` - (only for Android platform) The same as 'status-bar-style', but applied only in dark mode. Available only if 'dark-mode-background-color' and 'status-bar-style' are provided as well.
+- `--dark-mode-status-bar-background-color <color>` - (only for Android platform) The same as 'status-bar-background-color', but applied only in the dark mode. Available only if 'dark-mode-background-color' and 'status-bar-style' are provided as well.
 
 To see all the available options:
 
