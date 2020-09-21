@@ -65,10 +65,7 @@ export const withIconColor: ConfigPlugin = config => {
       ];
       props.colors = Colors.setColorItem(colorItemToAdd, props.colors);
     } else {
-      console.warn(
-        'Unable to find a colors.xml file in your android project. Background color is not being set.'
-      );
-      // TODO: Remove color item
+      props.colors = Colors.removeColorItem(ICON_BACKGROUND, props.colors);
     }
 
     return props;

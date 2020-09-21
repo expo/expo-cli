@@ -35,3 +35,14 @@ export function setColorItem(itemToAdd: XMLItem[], colorFileContentsJSON: Docume
   }
   return colorFileContentsJSON;
 }
+
+export function removeColorItem(named: string, contents: Document) {
+  if (contents.resources?.color) {
+    const index = contents.resources.color.findIndex((e: XMLItem) => e['$'].name === named);
+    if (index > -1) {
+      // replace the previous value
+      contents.resources.color.splice(index, 1);
+    }
+  }
+  return contents;
+}
