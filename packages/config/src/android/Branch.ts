@@ -6,9 +6,9 @@ export function getBranchApiKey(config: ExpoConfig) {
 }
 
 export const withBranch: ConfigPlugin = config => {
-  return withManifest(config, async props => ({
+  return withManifest(config, props => ({
     ...props,
-    data: await setBranchApiKey(config.expo, props.data!),
+    data: setBranchApiKey(config.expo, props.data!),
   }));
 };
 

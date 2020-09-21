@@ -1,43 +1,40 @@
 import { ConfigPlugin, ExpoConfig } from '../Config.types';
-import { Document, withManifest } from './Manifest';
+import { Document, getMainApplication, withManifest } from './Manifest';
 
+/**
+ * Defaults to true. https://docs.expo.io/versions/latest/config/app/#allowbackup
+ *
+ * @param config
+ */
 export function getAllowBackup(config: Pick<ExpoConfig, 'android'>): boolean {
-  // Defaults to true.
-  // https://docs.expo.io/versions/latest/config/app/#allowbackup
   return config.android?.allowBackup ?? true;
 }
 
 export const withAllowBackup: ConfigPlugin = config => {
-  return withManifest(config, async props => ({
+  return withManifest(config, props => ({
     ...props,
-    data: await setAllowBackup(config.expo, props.data!),
+    data: setAllowBackup(config.expo, props.data!),
   }));
 };
 
-export async function setAllowBackup(
+export function setAllowBackup(
   config: Pick<ExpoConfig, 'android'>,
   manifestDocument: Document
-) {
+): Document {
   const allowBackup = getAllowBackup(config);
 
-  if (Array.isArray(manifestDocument.manifest.application)) {
-    for (const application of manifestDocument.manifest.application) {
-      if (application?.['$']) {
-        application['$']['android:allowBackup'] = allowBackup ? 'true' : 'false';
-      }
-    }
+  const mainApplication = getMainApplication(manifestDocument);
+  if (mainApplication?.['$']) {
+    mainApplication['$']['android:allowBackup'] = String(allowBackup);
   }
-
   return manifestDocument;
 }
 
 export function getAllowBackupFromManifest(manifestDocument: Document): boolean | null {
-  if (Array.isArray(manifestDocument.manifest.application)) {
-    for (const application of manifestDocument.manifest.application) {
-      if (application?.['$']) {
-        return application['$']['android:allowBackup'] === 'true';
-      }
-    }
+  const mainApplication = getMainApplication(manifestDocument);
+
+  if (mainApplication?.['$']) {
+    return mainApplication['$']['android:allowBackup'] === 'true';
   }
 
   return null;

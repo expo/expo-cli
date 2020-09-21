@@ -42,19 +42,15 @@ export function getFacebookDisplayName(config: ExpoConfig) {
   return config.facebookDisplayName ?? null;
 }
 export function getFacebookAutoInitEnabled(config: ExpoConfig) {
-  return config.hasOwnProperty('facebookAutoInitEnabled') ? config.facebookAutoInitEnabled : null;
+  return config.facebookAutoInitEnabled ?? null;
 }
 
 export function getFacebookAutoLogAppEvents(config: ExpoConfig) {
-  return config.hasOwnProperty('facebookAutoLogAppEventsEnabled')
-    ? config.facebookAutoLogAppEventsEnabled
-    : null;
+  return config.facebookAutoLogAppEventsEnabled ?? null;
 }
 
 export function getFacebookAdvertiserIDCollection(config: ExpoConfig) {
-  return config.hasOwnProperty('facebookAdvertiserIDCollectionEnabled')
-    ? config.facebookAdvertiserIDCollectionEnabled
-    : null;
+  return config.facebookAdvertiserIDCollectionEnabled ?? null;
 }
 
 export const withFacebookAppIdString: ConfigPlugin = config => {
@@ -96,7 +92,7 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
 
 function removeFacebookCustomTabActivities(mainApplication: any) {
   // Remove all Facebook CustomTabActivities first
-  if (mainApplication.hasOwnProperty('activity')) {
+  if ('activity' in mainApplication) {
     mainApplication['activity'] = mainApplication['activity'].filter(
       (activity: Record<string, any>) => {
         return activity['$']?.['android:name'] !== 'com.facebook.CustomTabActivity';
@@ -117,7 +113,7 @@ async function ensureFacebookActivityAsync({
   const facebookSchemeActivityJSON = await parser.parseStringPromise(facebookSchemeActivityXML);
 
   //TODO: don't write if facebook scheme activity is already present
-  if (mainApplication.hasOwnProperty('activity')) {
+  if ('activity' in mainApplication) {
     mainApplication['activity'] = mainApplication['activity'].concat(
       facebookSchemeActivityJSON['activity']
     );
@@ -127,13 +123,13 @@ async function ensureFacebookActivityAsync({
 }
 
 export const withFacebook: ConfigPlugin = config => {
-  return withManifest(config, async props => ({
+  return withManifest(config, props => ({
     ...props,
-    data: await setFacebookConfig(config.expo, props.data!),
+    data: setFacebookConfig(config.expo, props.data!),
   }));
 };
 
-export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
+export function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
   const scheme = getFacebookScheme(config);
   const appId = getFacebookAppId(config);
   const displayName = getFacebookDisplayName(config);
