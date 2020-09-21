@@ -54,7 +54,7 @@ yarn run configure-splash-screen [options]
 - `--status-bar-style <style>` - Customizes the color of the status bar icons. Available values: "default" | "light-content" | "dark-content" (default: "default").
 - `--status-bar-hidden` - Hides the status bar.
 - `--status-bar-background-color <color>` - (only for Android platform) Customizes the background color of the status bar. Accepts a valid color (see 'background-color' supported formats).
-- `--status-bar-translucent` - (only for Android platform) Makes the StatusBar translucent (enables drawing under the StatusBar area).
+- `--status-bar-translucent` - (only for Android platform) Makes the status bar translucent (enables drawing under the status bar area).
 - `--dark-mode-status-bar-style <style>` - (only for Android platform) The same as 'status-bar-style', but applied only in dark mode. Available only if 'dark-mode-background-color' and 'status-bar-style' are provided as well.
 - `--dark-mode-status-bar-background-color <color>` - (only for Android platform) The same as 'status-bar-background-color', but applied only in the dark mode. Available only if 'dark-mode-background-color' and 'status-bar-style' are provided as well.
 
