@@ -8,24 +8,30 @@ import path from 'path';
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
 import { commitFilesAsync, getFileSystemAndroidAsync } from './configureFileSystem';
 
-async function modifyBuildGradleAsync(
-  projectRoot: string,
-  callback: (buildGradle: string) => string
-) {
-  const buildGradlePath = path.join(projectRoot, 'android', 'build.gradle');
-  const buildGradleString = fs.readFileSync(buildGradlePath).toString();
-  const result = callback(buildGradleString);
-  fs.writeFileSync(buildGradlePath, result);
+type ModifyFileProps = { data: string; filePath: string };
+type ModifyFileTransform = (props: ModifyFileProps) => Promise<string>;
+
+async function modifyFileAsync(filePath: string, callback: ModifyFileTransform) {
+  const data = fs.readFileSync(filePath).toString();
+  const result = callback({ data, filePath });
+  fs.writeFileSync(filePath, result);
 }
 
-async function modifyAppBuildGradleAsync(
-  projectRoot: string,
-  callback: (buildGradle: string) => string
-) {
-  const buildGradlePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
-  const buildGradleString = fs.readFileSync(buildGradlePath).toString();
-  const result = callback(buildGradleString);
-  fs.writeFileSync(buildGradlePath, result);
+async function modifyBuildGradleAsync(projectRoot: string, callback: ModifyFileTransform) {
+  const filePath = path.join(projectRoot, 'android', 'build.gradle');
+  return modifyFileAsync(filePath, callback);
+}
+
+async function modifyAppBuildGradleAsync(projectRoot: string, callback: ModifyFileTransform) {
+  const filePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
+  return modifyFileAsync(filePath, callback);
+}
+
+async function modifyMainActivityJavaAsync(projectRoot: string, callback: ModifyFileTransform) {
+  const filePath = globSync(
+    path.join(projectRoot, 'android/app/src/main/java/**/MainActivity.java')
+  )[0];
+  return modifyFileAsync(filePath, callback);
 }
 
 async function modifyAndroidManifestAsync(
@@ -51,18 +57,6 @@ async function modifyAndroidManifestAsync(
   await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
 }
 
-async function modifyMainActivityJavaAsync(
-  projectRoot: string,
-  callback: (mainActivityJava: string) => string
-) {
-  const mainActivityJavaPath = globSync(
-    path.join(projectRoot, 'android/app/src/main/java/**/MainActivity.java')
-  )[0];
-  const mainActivityString = fs.readFileSync(mainActivityJavaPath).toString();
-  const result = callback(mainActivityString);
-  fs.writeFileSync(mainActivityJavaPath, result);
-}
-
 export default async function configureAndroidProjectAsync(projectRoot: string) {
   // Check package before reading the config because it may mutate the config if the user is prompted to define it.
   await getOrPromptForPackage(projectRoot);
@@ -81,17 +75,36 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
 
   const username = await UserManager.getCurrentUsernameAsync();
 
-  await modifyBuildGradleAsync(projectRoot, (buildGradle: string) => {
-    buildGradle = AndroidConfig.GoogleServices.setClassPath(exp, buildGradle);
-    return buildGradle;
-  });
+  await modifyBuildGradleAsync(projectRoot, async ({ data, filePath }) => {
+    data = AndroidConfig.GoogleServices.setClassPath(exp, data);
 
-  await modifyAppBuildGradleAsync(projectRoot, (buildGradle: string) => {
-    buildGradle = AndroidConfig.GoogleServices.applyPlugin(exp, buildGradle);
-    buildGradle = AndroidConfig.Package.setPackageInBuildGradle(exp, buildGradle);
-    buildGradle = AndroidConfig.Version.setVersionCode(exp, buildGradle);
-    buildGradle = AndroidConfig.Version.setVersionName(exp, buildGradle);
-    return buildGradle;
+    if (typeof pack?.android?.dangerousBuildGradle === 'function') {
+      data = (
+        await pack.android.dangerousBuildGradle({
+          ...projectFileSystem,
+          data,
+          filePath,
+        })
+      ).data!;
+    }
+    return data;
+  });
+  await modifyAppBuildGradleAsync(projectRoot, async ({ data, filePath }) => {
+    data = AndroidConfig.GoogleServices.applyPlugin(exp, data);
+    data = AndroidConfig.Package.setPackageInBuildGradle(exp, data);
+    data = AndroidConfig.Version.setVersionCode(exp, data);
+    data = AndroidConfig.Version.setVersionName(exp, data);
+
+    if (typeof pack?.android?.dangerousAppBuildGradle === 'function') {
+      data = (
+        await pack.android.dangerousAppBuildGradle({
+          ...projectFileSystem,
+          data,
+          filePath,
+        })
+      ).data!;
+    }
+    return data;
   });
 
   await modifyAndroidManifestAsync(projectRoot, async ({ androidManifest, filePath }) => {
@@ -134,12 +147,19 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     return androidManifest;
   });
 
-  await modifyMainActivityJavaAsync(projectRoot, mainActivity => {
-    mainActivity = AndroidConfig.UserInterfaceStyle.addOnConfigurationChangedMainActivity(
-      exp,
-      mainActivity
-    );
-    return mainActivity;
+  await modifyMainActivityJavaAsync(projectRoot, async ({ data, filePath }) => {
+    data = AndroidConfig.UserInterfaceStyle.addOnConfigurationChangedMainActivity(exp, data);
+
+    if (typeof pack?.android?.dangerousMainActivity === 'function') {
+      data = (
+        await pack.android.dangerousMainActivity({
+          ...projectFileSystem,
+          data,
+          filePath,
+        })
+      ).data!;
+    }
+    return data;
   });
 
   // If we renamed the package, we should also move it around and rename it in source files

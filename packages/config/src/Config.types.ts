@@ -58,6 +58,9 @@ type IOSPlistModifier = PackModifier<IOSPackModifierProps<InfoPlist>>;
 export interface PackConfig {
   android?: {
     manifest?: PackModifier<PackFileModifierProps<JSONObject>>;
+    dangerousBuildGradle?: PackModifier<PackFileModifierProps<string>>;
+    dangerousAppBuildGradle?: PackModifier<PackFileModifierProps<string>>;
+    dangerousMainActivity?: PackModifier<PackFileModifierProps<string>>;
     after?: PackModifier;
   };
   ios?: {
