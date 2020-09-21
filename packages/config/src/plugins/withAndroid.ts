@@ -1,9 +1,6 @@
-import { sync as globSync } from 'glob';
-import * as path from 'path';
 import { Builder } from 'xml2js';
 
 import {
-  AnyAndroidFileResourceModifier,
   ExportedConfig,
   PackFileModifierProps,
   PackModifier,

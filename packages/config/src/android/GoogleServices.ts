@@ -12,7 +12,7 @@ export function getGoogleServicesFilePath(config: ExpoConfig) {
   return config.android?.googleServicesFile ?? null;
 }
 
-export const withGoogleServices = (config: ExportedConfig): ExportedConfig => {
+export const withGoogleServices: ConfigPlugin = config => {
   return withPlugins([withClassPath, withApplyPlugin, withConfigFile], config);
 };
 
