@@ -17,8 +17,7 @@ public class MainActivity extends ReactActivity {
 `;
 
 export function getUserInterfaceStyle(config: ExpoConfig): string | null {
-  const result = config.android?.userInterfaceStyle ?? config.userInterfaceStyle;
-  return result ?? null;
+  return config.android?.userInterfaceStyle ?? config.userInterfaceStyle ?? null;
 }
 
 export async function setUiModeAndroidManifest(config: ExpoConfig, manifestDocument: Document) {

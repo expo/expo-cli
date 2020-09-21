@@ -2,7 +2,7 @@ import { ExpoConfig } from '../Config.types';
 import { InfoPlist } from './IosConfig.types';
 
 export function getVersion(config: ExpoConfig) {
-  return config.version ? config.version : '0.0.0';
+  return config.version || '0.0.0';
 }
 
 export function setVersion(config: ExpoConfig, infoPlist: InfoPlist) {

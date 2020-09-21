@@ -4,7 +4,7 @@ import { ExpoPlist } from './IosConfig.types';
 export function getUpdateUrl(config: ExpoConfig, username: string | null) {
   const user = typeof config.owner === 'string' ? config.owner : username;
   if (!user) {
-    return null;
+    return undefined;
   }
   return `https://exp.host/@${user}/${config.slug}`;
 }
@@ -34,7 +34,7 @@ export function setUpdatesConfig(
   config: ExpoConfig,
   expoPlist: ExpoPlist,
   username: string | null
-) {
+): ExpoPlist {
   let newExpoPlist = {
     ...expoPlist,
     EXUpdatesEnabled: getUpdatesEnabled(config),

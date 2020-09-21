@@ -4,6 +4,7 @@ import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
+import { Plist } from './IosConfig.types';
 import {
   getPbxproj,
   getProjectName,
@@ -16,9 +17,9 @@ import {
 
 export function setICloudEntitlement(
   config: ExpoConfig,
-  _appleTeamId: string,
-  entitlementsPlist: any
-) {
+  appleTeamId: string,
+  entitlementsPlist: Plist
+): Plist {
   if (config.ios?.usesIcloudStorage) {
     // TODO: need access to the appleTeamId for this one!
     addWarningIOS(
@@ -33,8 +34,8 @@ export function setICloudEntitlement(
 
 export function setAppleSignInEntitlement(
   config: ExpoConfig,
-  { 'com.apple.developer.applesignin': _, ...entitlementsPlist }: any
-) {
+  { 'com.apple.developer.applesignin': _, ...entitlementsPlist }: Plist
+): Plist {
   if (config.ios?.usesAppleSignIn) {
     return {
       ...entitlementsPlist,
@@ -47,8 +48,8 @@ export function setAppleSignInEntitlement(
 
 export function setAccessesContactNotes(
   config: ExpoConfig,
-  { 'com.apple.developer.contacts.notes': _, ...entitlementsPlist }: any
-) {
+  { 'com.apple.developer.contacts.notes': _, ...entitlementsPlist }: Plist
+): Plist {
   if (config.ios?.accessesContactNotes) {
     return {
       ...entitlementsPlist,
@@ -61,8 +62,8 @@ export function setAccessesContactNotes(
 
 export function setAssociatedDomains(
   config: ExpoConfig,
-  { 'com.apple.developer.associated-domains': _, ...entitlementsPlist }: any
-) {
+  { 'com.apple.developer.associated-domains': _, ...entitlementsPlist }: Plist
+): Plist {
   if (config.ios?.associatedDomains) {
     return {
       ...entitlementsPlist,
