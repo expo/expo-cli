@@ -19,19 +19,15 @@ export function getFacebookDisplayName(config: ExpoConfig) {
   return config.facebookDisplayName ?? null;
 }
 export function getFacebookAutoInitEnabled(config: ExpoConfig) {
-  return config.hasOwnProperty('facebookAutoInitEnabled') ? config.facebookAutoInitEnabled : null;
+  return config.facebookAutoInitEnabled ?? null;
 }
 
 export function getFacebookAutoLogAppEvents(config: ExpoConfig) {
-  return config.hasOwnProperty('facebookAutoLogAppEventsEnabled')
-    ? config.facebookAutoLogAppEventsEnabled
-    : null;
+  return config.facebookAutoLogAppEventsEnabled ?? null;
 }
 
 export function getFacebookAdvertiserIDCollection(config: ExpoConfig) {
-  return config.hasOwnProperty('facebookAdvertiserIDCollectionEnabled')
-    ? config.facebookAdvertiserIDCollectionEnabled
-    : null;
+  return config.facebookAdvertiserIDCollectionEnabled ?? null;
 }
 
 /**

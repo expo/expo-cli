@@ -36,19 +36,47 @@ export function getFacebookDisplayName(config: ExpoConfig) {
   return config.facebookDisplayName ?? null;
 }
 export function getFacebookAutoInitEnabled(config: ExpoConfig) {
-  return config.hasOwnProperty('facebookAutoInitEnabled') ? config.facebookAutoInitEnabled : null;
+  return config.facebookAutoInitEnabled ?? null;
 }
 
 export function getFacebookAutoLogAppEvents(config: ExpoConfig) {
-  return config.hasOwnProperty('facebookAutoLogAppEventsEnabled')
-    ? config.facebookAutoLogAppEventsEnabled
-    : null;
+  return config.facebookAutoLogAppEventsEnabled ?? null;
 }
 
 export function getFacebookAdvertiserIDCollection(config: ExpoConfig) {
-  return config.hasOwnProperty('facebookAdvertiserIDCollectionEnabled')
-    ? config.facebookAdvertiserIDCollectionEnabled
-    : null;
+  return config.facebookAdvertiserIDCollectionEnabled ?? null;
+}
+
+function removeFacebookCustomTabActivities(mainApplication: any) {
+  // Remove all Facebook CustomTabActivities first
+  if ('activity' in mainApplication) {
+    mainApplication['activity'] = mainApplication['activity'].filter(
+      (activity: Record<string, any>) => {
+        return activity['$']?.['android:name'] !== 'com.facebook.CustomTabActivity';
+      }
+    );
+  }
+}
+
+async function ensureFacebookActivityAsync({
+  mainApplication,
+  scheme,
+}: {
+  mainApplication: any;
+  scheme: string;
+}) {
+  const facebookSchemeActivityXML = facebookSchemeActivity(scheme);
+  const parser = new Parser();
+  const facebookSchemeActivityJSON = await parser.parseStringPromise(facebookSchemeActivityXML);
+
+  //TODO: don't write if facebook scheme activity is already present
+  if ('activity' in mainApplication) {
+    mainApplication['activity'] = mainApplication['activity'].concat(
+      facebookSchemeActivityJSON['activity']
+    );
+  } else {
+    mainApplication['activity'] = facebookSchemeActivityJSON['activity'];
+  }
 }
 
 export async function setFacebookAppIdString(config: ExpoConfig, projectDirectory: string) {
@@ -85,28 +113,10 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
 
   let mainApplication = getMainApplication(manifestDocument);
 
-  // Remove all Facebook CustomTabActivities first
-  if (mainApplication.hasOwnProperty('activity')) {
-    mainApplication['activity'] = mainApplication['activity'].filter(
-      (activity: Record<string, any>) => {
-        return activity['$']?.['android:name'] !== 'com.facebook.CustomTabActivity';
-      }
-    );
-  }
+  removeFacebookCustomTabActivities(mainApplication);
 
   if (scheme) {
-    const facebookSchemeActivityXML = facebookSchemeActivity(scheme);
-    const parser = new Parser();
-    const facebookSchemeActivityJSON = await parser.parseStringPromise(facebookSchemeActivityXML);
-
-    //TODO: don't write if facebook scheme activity is already present
-    if (mainApplication.hasOwnProperty('activity')) {
-      mainApplication['activity'] = mainApplication['activity'].concat(
-        facebookSchemeActivityJSON['activity']
-      );
-    } else {
-      mainApplication['activity'] = facebookSchemeActivityJSON['activity'];
-    }
+    ensureFacebookActivityAsync({ scheme, mainApplication });
   }
 
   if (appId) {
