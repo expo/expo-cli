@@ -179,7 +179,7 @@ export default () =>
     )
     .option(
       '--status-bar-translucent',
-      `(only for Android platform) Makes the StatusBar translucent (enables drawing under the StatusBar area).`
+      `(only for Android platform) Makes the status bar translucent (enables drawing under the status bar area).`
     )
     .option(
       '--dark-mode-status-bar-style <style>',
