@@ -1,6 +1,7 @@
 import { Parser } from 'xml2js';
 
 import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withStrings } from '../plugins/withAndroid';
 import {
   addMetaDataItemToMainApplication,
   Document,
@@ -56,21 +57,34 @@ export function getFacebookAdvertiserIDCollection(config: ExpoConfig) {
     : null;
 }
 
-export async function setFacebookAppIdString(config: ExpoConfig, projectDirectory: string) {
+export const withFacebookAppIdString: ConfigPlugin = config => {
+  return withStrings(config, props => ({
+    ...props,
+    data: applyFacebookAppIdString(config.expo, props.data),
+  }));
+};
+
+export function applyFacebookAppIdString(config: ExpoConfig, stringsJSON: Document): Document {
   const appId = getFacebookAppId(config);
 
-  const stringsPath = await getProjectStringsXMLPathAsync(projectDirectory);
-  if (!stringsPath) {
-    throw new Error(`There was a problem setting your Facebook App ID in ${stringsPath}.`);
-  }
-
-  let stringsJSON = await readStringsXMLAsync(stringsPath);
   if (appId) {
     const stringItemToAdd: XMLItem[] = [{ _: appId, $: { name: 'facebook_app_id' } }];
     stringsJSON = setStringItem(stringItemToAdd, stringsJSON);
   } else {
     stringsJSON = removeStringItem('facebook_app_id', stringsJSON);
   }
+
+  return stringsJSON;
+}
+
+export async function setFacebookAppIdString(config: ExpoConfig, projectDirectory: string) {
+  const stringsPath = await getProjectStringsXMLPathAsync(projectDirectory);
+  if (!stringsPath) {
+    throw new Error(`There was a problem setting your Facebook App ID in ${stringsPath}.`);
+  }
+
+  let stringsJSON = await readStringsXMLAsync(stringsPath);
+  stringsJSON = applyFacebookAppIdString(config, stringsJSON);
 
   try {
     await writeStringsXMLAsync(stringsPath, stringsJSON);

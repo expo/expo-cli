@@ -1,13 +1,42 @@
 import fs from 'fs-extra';
 import { resolve } from 'path';
 
-import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig, ExportedConfig, ProjectFileSystem } from '../Config.types';
+import { withAfter } from '../plugins/withAfter';
 import { withDangerousAppBuildGradle, withDangerousBuildGradle } from '../plugins/withAndroid';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';
 
 export function getGoogleServicesFilePath(config: ExpoConfig) {
   return config.android?.googleServicesFile ?? null;
+}
+
+export const withConfigFile = (
+  config: ExportedConfig,
+  targetPath: string = DEFAULT_TARGET_PATH
+): ExportedConfig => {
+  return withAfter(config, 'android', async props => ({
+    ...props,
+    ...(await applyGoogleServiceFile(config.expo, props, targetPath)),
+  }));
+};
+
+export function applyGoogleServiceFile(
+  config: ExpoConfig,
+  { projectRoot, files, pushFile }: ProjectFileSystem,
+  targetPath: string
+): Pick<ProjectFileSystem, 'files'> {
+  const partialSourcePath = getGoogleServicesFilePath(config);
+  if (!partialSourcePath) {
+    return { files };
+  }
+
+  const completeSourcePath = resolve(projectRoot, partialSourcePath);
+  const destinationPath = resolve(projectRoot, targetPath);
+
+  pushFile(destinationPath, fs.readFileSync(completeSourcePath));
+
+  return { files };
 }
 
 export async function setGoogleServicesFile(

@@ -1,4 +1,5 @@
 import { AndroidConfig, getConfig } from '@expo/config';
+import { Document } from '@expo/config/build/android/Manifest';
 import { withPlugins } from '@expo/config/build/plugins/withPlugins';
 import { UserManager } from '@expo/xdl';
 import fs from 'fs-extra';
@@ -8,26 +9,38 @@ import path from 'path';
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
 import { commitFilesAsync, getFileSystemAndroidAsync } from './configureFileSystem';
 
-type ModifyFileProps = { data: string; filePath: string };
-type ModifyFileTransform = (props: ModifyFileProps) => Promise<string>;
+type ModifyFileProps<T> = { data: T; filePath: string };
+type ModifyFileTransform<T> = (props: ModifyFileProps<T>) => Promise<T>;
 
-async function modifyFileAsync(filePath: string, callback: ModifyFileTransform) {
+async function modifyFileAsync(filePath: string, callback: ModifyFileTransform<string>) {
   const data = fs.readFileSync(filePath).toString();
-  const result = callback({ data, filePath });
+  const result = await callback({ data, filePath });
   fs.writeFileSync(filePath, result);
 }
 
-async function modifyBuildGradleAsync(projectRoot: string, callback: ModifyFileTransform) {
+async function modifyXMLFileAsync(filePath: string, callback: ModifyFileTransform<Document>) {
+  const data = await AndroidConfig.Manifest.readXMLAsync({ path: filePath });
+  const result = await callback({ data, filePath });
+  await AndroidConfig.Manifest.writeXMLAsync({ path: filePath, xml: result });
+}
+
+async function modifyBuildGradleAsync(projectRoot: string, callback: ModifyFileTransform<string>) {
   const filePath = path.join(projectRoot, 'android', 'build.gradle');
   return modifyFileAsync(filePath, callback);
 }
 
-async function modifyAppBuildGradleAsync(projectRoot: string, callback: ModifyFileTransform) {
+async function modifyAppBuildGradleAsync(
+  projectRoot: string,
+  callback: ModifyFileTransform<string>
+) {
   const filePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
   return modifyFileAsync(filePath, callback);
 }
 
-async function modifyMainActivityJavaAsync(projectRoot: string, callback: ModifyFileTransform) {
+async function modifyMainActivityJavaAsync(
+  projectRoot: string,
+  callback: ModifyFileTransform<string>
+) {
   const filePath = globSync(
     path.join(projectRoot, 'android/app/src/main/java/**/MainActivity.java')
   )[0];
@@ -36,10 +49,7 @@ async function modifyMainActivityJavaAsync(projectRoot: string, callback: Modify
 
 async function modifyAndroidManifestAsync(
   projectRoot: string,
-  callback: (props: {
-    androidManifest: AndroidConfig.Manifest.Document;
-    filePath: string;
-  }) => AndroidConfig.Manifest.Document
+  callback: ModifyFileTransform<AndroidConfig.Manifest.Document>
 ) {
   const androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
     projectRoot
@@ -51,7 +61,7 @@ async function modifyAndroidManifestAsync(
     androidManifestPath
   );
   const result = await callback({
-    androidManifest: androidManifestJSON,
+    data: androidManifestJSON,
     filePath: androidManifestPath,
   });
   await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
@@ -86,6 +96,9 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
       AndroidConfig.IntentFilters.withIntentFilters,
       [AndroidConfig.Updates.withUpdates, username],
       AndroidConfig.UserInterfaceStyle.withOnConfigurationChangedMainActivity,
+      AndroidConfig.Facebook.withFacebookAppIdString,
+      AndroidConfig.Name.withName,
+      AndroidConfig.GoogleServices.withConfigFile,
     ],
     { expo: originalConfig.exp, pack: originalConfig.pack }
   );
@@ -114,17 +127,17 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     }
     return data;
   });
-  await modifyAndroidManifestAsync(projectRoot, async ({ androidManifest, filePath }) => {
+  await modifyAndroidManifestAsync(projectRoot, async ({ data, filePath }) => {
     if (typeof pack?.android?.manifest === 'function') {
-      androidManifest = (
+      data = (
         await pack.android.manifest({
           ...projectFileSystem,
-          data: androidManifest,
+          data,
           filePath,
         })
       ).data!;
     }
-    return androidManifest;
+    return data;
   });
   await modifyMainActivityJavaAsync(projectRoot, async ({ data, filePath }) => {
     if (typeof pack?.android?.dangerousMainActivity === 'function') {
@@ -139,6 +152,25 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     return data;
   });
 
+  const stringsPath = await AndroidConfig.Strings.getProjectStringsXMLPathAsync(projectRoot);
+  await modifyXMLFileAsync(stringsPath, async ({ data, filePath }) => {
+    if (typeof pack?.android?.strings === 'function') {
+      data = (
+        await pack.android.strings({
+          ...projectFileSystem,
+          kind: 'values',
+          data,
+          filePath,
+        })
+      ).data!;
+    }
+    return data;
+  });
+
+  // const stylesPath = await AndroidConfig.Styles.getProjectStylesXMLPathAsync(projectRoot);
+  // if (stylesPath) {
+  // }
+
   // If we renamed the package, we should also move it around and rename it in source files
   await AndroidConfig.Package.renamePackageOnDisk(exp, projectRoot);
 
@@ -148,12 +180,8 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   await AndroidConfig.StatusBar.setStatusBarConfig(exp, projectRoot);
   await AndroidConfig.PrimaryColor.setPrimaryColor(exp, projectRoot);
 
-  // Modify strings.xml
-  await AndroidConfig.Facebook.setFacebookAppIdString(exp, projectRoot);
-  await AndroidConfig.Name.setName(exp, projectRoot);
-
   // add google-services.json to project
-  await AndroidConfig.GoogleServices.setGoogleServicesFile(exp, projectRoot);
+  // await AndroidConfig.GoogleServices.setGoogleServicesFile(exp, projectRoot);
 
   // TODOs
   await AndroidConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);

@@ -1,7 +1,10 @@
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withStrings } from '../plugins/withAndroid';
+import { Document } from './Manifest';
 import {
   getProjectStringsXMLPathAsync,
   readStringsXMLAsync,
+  removeStringItem,
   setStringItem,
   writeStringsXMLAsync,
 } from './Strings';
@@ -9,6 +12,24 @@ import { XMLItem } from './Styles';
 
 export function getName(config: ExpoConfig) {
   return typeof config.name === 'string' ? config.name : null;
+}
+
+export const withName: ConfigPlugin = config => {
+  return withStrings(config, props => ({
+    ...props,
+    data: applyName(config.expo, props.data),
+  }));
+};
+
+function applyName(config: ExpoConfig, stringsJSON: Document): Document {
+  const name = getName(config);
+
+  if (name) {
+    const stringItemToAdd: XMLItem[] = [{ _: name, $: { name: 'app_name' } }];
+
+    return setStringItem(stringItemToAdd, stringsJSON);
+  }
+  return removeStringItem('app_name', stringsJSON);
 }
 
 /**

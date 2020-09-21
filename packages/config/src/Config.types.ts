@@ -42,6 +42,10 @@ export interface IOSProjectModifierProps {
   projectName: string;
 }
 
+export interface AndroidResourceProjectModifierProps {
+  // app/src/main/res/${kind}/${name}.xml
+  kind: string;
+}
 export interface PackFileModifierProps<IData> extends ProjectFileSystem, FileModifierProps<IData> {}
 
 export type PackModifier<T extends ProjectFileSystem = ProjectFileSystem> = (
@@ -52,6 +56,9 @@ export interface IOSPackModifierProps<IData>
   extends IOSProjectModifierProps,
     PackFileModifierProps<IData> {}
 
+export type AnyAndroidFileResourceModifier = PackFileModifierProps<JSONObject> &
+  AndroidResourceProjectModifierProps;
+
 export type IOSPackXcodeProjModifier = PackModifier<IOSPackModifierProps<XcodeProject>>;
 type IOSPlistModifier = PackModifier<IOSPackModifierProps<InfoPlist>>;
 
@@ -61,6 +68,7 @@ export interface PackConfig {
     dangerousBuildGradle?: PackModifier<PackFileModifierProps<string>>;
     dangerousAppBuildGradle?: PackModifier<PackFileModifierProps<string>>;
     dangerousMainActivity?: PackModifier<PackFileModifierProps<string>>;
+    strings?: PackModifier<AnyAndroidFileResourceModifier>;
     after?: PackModifier;
   };
   ios?: {
