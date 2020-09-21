@@ -227,7 +227,7 @@ export async function configureAdaptiveIconAsync(
   await createAdaptiveIconXmlFiles(projectRoot, icLauncherXmlString);
 }
 
-async function setBackgroundColorAsync(projectRoot: string, backgroundColor: string) {
+async function setBackgroundColorAsync(projectRoot: string, backgroundColor: string | null) {
   const colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectRoot);
   if (!colorsXmlPath) {
     console.warn(
@@ -236,13 +236,18 @@ async function setBackgroundColorAsync(projectRoot: string, backgroundColor: str
     return;
   }
   let colorsJson = await Colors.readColorsXMLAsync(colorsXmlPath);
-  const colorItemToAdd = [
-    {
-      _: backgroundColor,
-      $: { name: ICON_BACKGROUND },
-    },
-  ];
-  colorsJson = Colors.setColorItem(colorItemToAdd, colorsJson);
+  if (backgroundColor) {
+    const colorItemToAdd = [
+      {
+        _: backgroundColor,
+        $: { name: ICON_BACKGROUND },
+      },
+    ];
+    colorsJson = Colors.setColorItem(colorItemToAdd, colorsJson);
+  } else {
+    colorsJson = Colors.removeColorItem(ICON_BACKGROUND, colorsJson);
+  }
+
   await writeXMLAsync({ path: colorsXmlPath, xml: colorsJson });
 }
 
