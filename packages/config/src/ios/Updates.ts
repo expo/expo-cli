@@ -1,5 +1,5 @@
 import { ExpoConfig, ExportedConfig } from '../Config.types';
-import { withEntitlementsPlist, withExpoPlist } from '../plugins/withPlist';
+import { withExpoPlist } from '../plugins/withPlist';
 import { ExpoPlist } from './IosConfig.types';
 
 export function getUpdateUrl(config: ExpoConfig, username: string | null) {

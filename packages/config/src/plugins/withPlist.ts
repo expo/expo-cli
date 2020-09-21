@@ -16,18 +16,12 @@ export const withInfoPlist = (
   return { expo, ...config };
 };
 
-export const withEntitlementsPlist = (
-  { expo, ...config }: ExportedConfig,
-  action: (expo: ExpoConfig, plist: Plist) => Plist
-): ExportedConfig => {
-  if (!expo.ios) expo.ios = {};
-  // @ts-ignore: TODO: Support entitlements object
-  if (!expo.ios.entitlements) expo.ios.entitlements = {};
-  // @ts-ignore: TODO: Support entitlements object
-  expo.ios.entitlements = action(expo, expo.ios.entitlements);
-
-  return { expo, ...config };
-};
+export function withEntitlementsPlist(
+  config: ExportedConfig,
+  action: PackModifier<IOSPackModifierProps<Plist>>
+): ExportedConfig {
+  return withModifier<IOSPackModifierProps<Plist>>(config, 'ios', 'entitlements', action);
+}
 
 export function withExpoPlist(
   config: ExportedConfig,

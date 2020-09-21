@@ -16,19 +16,33 @@ import {
 
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
 
-export const withAppleSignInEntitlement: ConfigPlugin = config =>
-  withEntitlementsPlist(config, setAppleSignInEntitlement);
-export const withAccessesContactNotes: ConfigPlugin = config =>
-  withEntitlementsPlist(config, setAccessesContactNotes);
-export const withAssociatedDomains: ConfigPlugin = config =>
-  withEntitlementsPlist(config, setAssociatedDomains);
+export const withAccessesContactNotes: ConfigPlugin = config => {
+  return withEntitlementsPlist(config, props => ({
+    ...props,
+    data: setAccessesContactNotes(config.expo, props.data),
+  }));
+};
+export const withAssociatedDomains: ConfigPlugin = config => {
+  return withEntitlementsPlist(config, props => ({
+    ...props,
+    data: setAssociatedDomains(config.expo, props.data),
+  }));
+};
 export const withICloudEntitlement = (
   config: ExportedConfig,
   { appleTeamId }: { appleTeamId: string }
-) =>
-  withEntitlementsPlist(config, (config, plist) =>
-    setICloudEntitlement(config, plist, appleTeamId)
-  );
+) => {
+  return withEntitlementsPlist(config, props => ({
+    ...props,
+    data: setICloudEntitlement(config.expo, props.data, appleTeamId),
+  }));
+};
+export const withAppleSignInEntitlement: ConfigPlugin = config => {
+  return withEntitlementsPlist(config, props => ({
+    ...props,
+    data: setAppleSignInEntitlement(config.expo, props.data),
+  }));
+};
 
 export function setICloudEntitlement(
   config: ExpoConfig,
