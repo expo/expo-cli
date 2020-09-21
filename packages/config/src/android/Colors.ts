@@ -1,38 +1,17 @@
-import fs from 'fs-extra';
-import path from 'path';
-import { Builder, Parser } from 'xml2js';
-
-import { Document } from './Manifest';
+import { Document, getProjectXMLPathAsync, readXMLAsync } from './Manifest';
 import { XMLItem } from './Styles';
 
 const BASE_STYLES_XML = `<?xml version="1.0" encoding="utf-8"?><resources></resources>`;
 
-export async function getProjectColorsXMLPathAsync(projectDir: string): Promise<string | null> {
-  try {
-    const shellPath = path.join(projectDir, 'android');
-    if ((await fs.stat(shellPath)).isDirectory()) {
-      const colorsPath = path.join(shellPath, 'app/src/main/res/values/colors.xml');
-      await fs.ensureFile(colorsPath);
-      return colorsPath;
-    }
-  } catch (error) {
-    throw new Error('No android directory found in your project.');
-  }
-
-  return null;
+export async function getProjectColorsXMLPathAsync(
+  projectDir: string,
+  { kind = 'values' }: { kind?: string } = {}
+): Promise<string | null> {
+  return getProjectXMLPathAsync(projectDir, { kind, name: 'colors' });
 }
 
-export async function readColorsXMLAsync(colorsPath: string): Promise<Document> {
-  const contents = await fs.readFile(colorsPath, { encoding: 'utf8', flag: 'r' });
-  const parser = new Parser();
-  const manifest = parser.parseStringPromise(contents || BASE_STYLES_XML);
-  return manifest;
-}
-
-export async function writeColorsXMLAsync(colorsPath: string, colorsContent: any): Promise<void> {
-  const colorsXml = new Builder().buildObject(colorsContent);
-  await fs.ensureDir(path.dirname(colorsPath));
-  await fs.writeFile(colorsPath, colorsXml);
+export async function readColorsXMLAsync(path: string): Promise<Document> {
+  return readXMLAsync({ path, fallback: BASE_STYLES_XML });
 }
 
 export function setColorItem(itemToAdd: XMLItem[], colorFileContentsJSON: Document) {

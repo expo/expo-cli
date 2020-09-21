@@ -1,7 +1,7 @@
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
-import { Document, addMetaDataItemToMainApplication } from './Manifest';
+import { addMetaDataItemToMainApplication, Document, getMainApplication } from './Manifest';
 import {
   getProjectStringsXMLPathAsync,
   readStringsXMLAsync,
@@ -83,9 +83,7 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
   const autoLogAppEvents = getFacebookAutoLogAppEvents(config);
   const advertiserIdCollection = getFacebookAdvertiserIDCollection(config);
 
-  let mainApplication = manifestDocument?.manifest?.application?.filter(
-    (e: any) => e['$']['android:name'] === '.MainApplication'
-  )[0];
+  let mainApplication = getMainApplication(manifestDocument);
 
   // Remove all Facebook CustomTabActivities first
   if (mainApplication.hasOwnProperty('activity')) {

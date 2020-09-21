@@ -1,7 +1,7 @@
 import { resolve } from 'path';
 
 import { getGoogleMapsApiKey, setGoogleMapsApiKey } from '../GoogleMapsApiKey';
-import { readAndroidManifestAsync } from '../Manifest';
+import { getMainApplication, readAndroidManifestAsync } from '../Manifest';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
@@ -24,9 +24,7 @@ describe('Android google maps api key', () => {
       androidManifestJson
     );
 
-    const mainApplication = androidManifestJson.manifest.application.filter(
-      e => e['$']['android:name'] === '.MainApplication'
-    )[0];
+    const mainApplication = getMainApplication(androidManifestJson);
 
     const apiKeyItem = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'com.google.android.geo.API_KEY'

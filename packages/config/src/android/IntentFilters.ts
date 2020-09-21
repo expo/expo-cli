@@ -1,7 +1,7 @@
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
-import { Document } from './Manifest';
+import { Document, getMainActivity } from './Manifest';
 
 // TODO: make it so intent filters aren't written again if you run the command again
 
@@ -19,11 +19,9 @@ export async function setAndroidIntentFilters(config: ExpoConfig, manifestDocume
   const parser = new Parser();
   const intentFiltersJSON = await parser.parseStringPromise(intentFiltersXML);
 
-  const mainActivity = manifestDocument.manifest.application[0].activity.filter(
-    (e: any) => e['$']['android:name'] === '.MainActivity'
-  );
+  const mainActivity = getMainActivity(manifestDocument);
 
-  mainActivity[0]['intent-filter'] = mainActivity[0]['intent-filter'].concat(
+  mainActivity['intent-filter'] = mainActivity['intent-filter'].concat(
     intentFiltersJSON['intent-filter']
   );
 

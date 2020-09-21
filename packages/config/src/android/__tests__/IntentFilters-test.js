@@ -1,7 +1,7 @@
 import { resolve } from 'path';
 
 import { getIntentFilters, setAndroidIntentFilters } from '../IntentFilters';
-import { readAndroidManifestAsync } from '../Manifest';
+import { getMainActivity, readAndroidManifestAsync } from '../Manifest';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
@@ -31,11 +31,7 @@ describe('Android intent filters', () => {
       androidManifestJson
     );
 
-    expect(
-      androidManifestJson.manifest.application[0].activity.filter(
-        e => e['$']['android:name'] === '.MainActivity'
-      )[0]['intent-filter']
-    ).toHaveLength(2);
+    expect(getMainActivity(androidManifestJson)['intent-filter']).toHaveLength(2);
   });
 
   xit(`does not duplicate android intent filters`, async () => {
@@ -76,10 +72,8 @@ describe('Android intent filters', () => {
       androidManifestJson
     );
 
-    expect(
-      androidManifestJson.manifest.application[0].activity.filter(
-        e => e['$']['android:name'] === '.MainActivity'
-      )[0]['intent-filter']
-    ).toHaveLength(2);
+    const mainActivity = getMainActivity(androidManifestJson);
+
+    expect(mainActivity['intent-filter']).toHaveLength(2);
   });
 });
