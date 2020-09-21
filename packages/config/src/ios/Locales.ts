@@ -3,7 +3,7 @@ import * as fs from 'fs-extra';
 import { join } from 'path';
 import { XcodeProject } from 'xcode';
 
-import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig, IOSPackModifierProps } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { withEntitlementsPlist, withXcodeProj } from '../plugins/withPlist';
 import {
@@ -17,62 +17,26 @@ export function getLocales(config: ExpoConfig): Record<string, string> | null {
   return config.locales ?? null;
 }
 
-// export const withLocales: ConfigPlugin = config => {
-//   return withXcodeProj(config, async props => ({
-//     ...props,
-//     ...(await applyLocalesAsync(config.expo, props. props)),
-//   }));
-// };
+export const withLocales: ConfigPlugin = config => {
+  return withXcodeProj(config, async props => ({
+    ...props,
+    ...(await setLocalesAsync(config.expo, props)),
+  }));
+};
 
-// export async function applyLocalesAsync(config: ExpoConfig, projectRoot: string, project: XcodeProject): Promise<void> {
-//   const locales = getLocales(config);
-//   if (!locales) {
-//     return;
-//   }
-//   // possibly validate CFBundleAllowMixedLocalizations is enabled
-//   const localesMap = await getResolvedLocalesAsync(projectRoot, locales);
-
-//   const projectName = getProjectName(projectRoot);
-//   const supportingDirectory = join(projectRoot, 'ios', projectName, 'Supporting');
-
-//   // TODO: Should we delete all before running? Revisit after we land on a lock file.
-//   const stringName = 'InfoPlist.strings';
-
-//   for (const [lang, localizationObj] of Object.entries(localesMap)) {
-//     const dir = join(supportingDirectory, `${lang}.lproj`);
-//     await fs.ensureDir(dir);
-//     const strings = join(dir, stringName);
-//     const buffer = [];
-//     for (const [plistKey, localVersion] of Object.entries(localizationObj)) {
-//       buffer.push(`${plistKey} = "${localVersion}";`);
-//     }
-//     // Write the file to the file system.
-//     await fs.writeFile(strings, buffer.join('\n'));
-
-//     // deep find the correct folder
-//     const group = ensureGroupRecursively(project, `${projectName}/Supporting/${lang}.lproj`);
-
-//     // Ensure the file doesn't already exist
-//     if (!group?.children.some(({ comment }) => comment === stringName)) {
-//       // Only write the file if it doesn't already exist.
-//       project = addFileToGroup(strings, `${projectName}/Supporting/${lang}.lproj`, project);
-//     }
-//   }
-
-//   // Sync the Xcode project with the changes.
-//   fs.writeFileSync(project.filepath, project.writeSync());
-// }
-
-export async function setLocalesAsync(config: ExpoConfig, projectRoot: string): Promise<void> {
+export async function setLocalesAsync(
+  config: ExpoConfig,
+  props: IOSPackModifierProps<XcodeProject>
+): Promise<IOSPackModifierProps<XcodeProject>> {
   const locales = getLocales(config);
   if (!locales) {
-    return;
+    return props;
   }
+
+  let { projectRoot, projectName, data: project } = props;
   // possibly validate CFBundleAllowMixedLocalizations is enabled
   const localesMap = await getResolvedLocalesAsync(projectRoot, locales);
 
-  let project = getPbxproj(projectRoot);
-  const projectName = getProjectName(projectRoot);
   const supportingDirectory = join(projectRoot, 'ios', projectName, 'Supporting');
 
   // TODO: Should we delete all before running? Revisit after we land on a lock file.
@@ -80,14 +44,14 @@ export async function setLocalesAsync(config: ExpoConfig, projectRoot: string): 
 
   for (const [lang, localizationObj] of Object.entries(localesMap)) {
     const dir = join(supportingDirectory, `${lang}.lproj`);
-    await fs.ensureDir(dir);
+    // await fs.ensureDir(dir);
     const strings = join(dir, stringName);
     const buffer = [];
     for (const [plistKey, localVersion] of Object.entries(localizationObj)) {
       buffer.push(`${plistKey} = "${localVersion}";`);
     }
     // Write the file to the file system.
-    await fs.writeFile(strings, buffer.join('\n'));
+    props.pushFile(strings, buffer.join('\n'));
 
     // deep find the correct folder
     const group = ensureGroupRecursively(project, `${projectName}/Supporting/${lang}.lproj`);
@@ -99,8 +63,9 @@ export async function setLocalesAsync(config: ExpoConfig, projectRoot: string): 
     }
   }
 
-  // Sync the Xcode project with the changes.
-  fs.writeFileSync(project.filepath, project.writeSync());
+  return props;
+  // // Sync the Xcode project with the changes.
+  // fs.writeFileSync(project.filepath, project.writeSync());
 }
 
 type LocaleMap = Record<string, any>;

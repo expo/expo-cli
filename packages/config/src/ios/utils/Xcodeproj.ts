@@ -118,6 +118,28 @@ function pbxGroupByPath(project: XcodeProject, path: string): null | PBXGroup {
   return group ?? null;
 }
 
+export async function syncXcodePaths({
+  files,
+  project,
+}: {
+  project: XcodeProject;
+  files: string[];
+}) {
+  const nativeProjectRoot = path.dirname(project.filepath);
+  for (const file of files) {
+    const xcpath = path.relative(file, nativeProjectRoot);
+    const xcfolder = path.dirname(xcpath);
+    const xcfilename = path.basename(xcpath);
+    // deep find the correct folder
+    const group = ensureGroupRecursively(project, xcfolder);
+    // Ensure the file doesn't already exist
+    if (!group?.children.some(({ comment }) => comment === xcfilename)) {
+      // Only write the file if it doesn't already exist.
+      project = addFileToGroup(xcpath, xcfolder, project);
+    }
+  }
+}
+
 export function ensureGroupRecursively(project: XcodeProject, filepath: string): PBXGroup | null {
   const components = splitPath(filepath);
   const hasChild = (group: PBXGroup, name: string) =>

@@ -1,7 +1,12 @@
 import { generateImageAsync } from '@expo/image-utils';
 import { join } from 'path';
 
-import { ConfigPlugin, ExpoConfig, IOSPackModifierProps } from '../Config.types';
+import {
+  ConfigPlugin,
+  ExpoConfig,
+  IOSProjectModifierProps,
+  ProjectFileSystem,
+} from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { withAfter } from '../plugins/withAfter';
 
@@ -98,16 +103,16 @@ export function getIcons(config: Pick<ExpoConfig, 'icon' | 'ios'>): string | nul
 }
 
 export const withIcons: ConfigPlugin = config => {
-  return withAfter(config, 'ios', async props => ({
+  return withAfter<ProjectFileSystem & IOSProjectModifierProps>(config, 'ios', async props => ({
     ...props,
-    files: await setIconsAsync(config.expo, props),
+    ...(await setIconsAsync(config.expo, props)),
   }));
 };
 
 export async function setIconsAsync(
   config: ExpoConfig,
-  { projectRoot, projectName, files }: IOSPackModifierProps
-): Promise<Pick<IOSPackModifierProps, 'files'>> {
+  { projectRoot, projectName, files, pushFile }: ProjectFileSystem & IOSProjectModifierProps
+): Promise<Pick<ProjectFileSystem, 'files'>> {
   const icon = getIcons(config);
   if (!icon) {
     addWarningIOS(
@@ -152,7 +157,7 @@ export async function setIconsAsync(
           );
           // Write image buffer to the file system.
           // const assetPath = join(iosNamedProjectRoot, IMAGESET_PATH, filename);
-          files.append(join(projectName, IMAGESET_PATH, filename), source);
+          pushFile(join(projectName, IMAGESET_PATH, filename), source);
           // await fs.writeFile(assetPath, source);
           // Save a reference to the generated image so we don't create a duplicate.
           generatedIcons[filename] = true;
@@ -168,7 +173,7 @@ export async function setIconsAsync(
   }
 
   // Writes the Config.json which is used to assign images to their respective platform, dpi, and idiom.
-  files.append(
+  pushFile(
     join(projectName, CONTENTS_PATH),
     JSON.stringify(createContentsJSON(imagesJson), null, 2)
   );

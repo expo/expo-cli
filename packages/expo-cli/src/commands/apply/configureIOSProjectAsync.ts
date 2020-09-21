@@ -10,7 +10,7 @@ import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
 import { commitFilesAsync, getFileSystemIosAsync } from './configureFileSystem';
 
 export default async function configureIOSProjectAsync(projectRoot: string) {
-  const files = await getFileSystemIosAsync(projectRoot);
+  const projectFileSystem = await getFileSystemIosAsync(projectRoot);
 
   // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
   const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
@@ -41,6 +41,7 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
 
       // XcodeProject
       IOSConfig.DeviceFamily.withDeviceFamily,
+      IOSConfig.Locales.withLocales,
     ],
     {
       pack: originalConfig.pack,
@@ -50,23 +51,23 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
 
   // IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
   // IOSConfig.DeviceFamily.setDeviceFamily(exp, projectRoot);
-  await IOSConfig.Locales.setLocalesAsync(exp, projectRoot);
+  // await IOSConfig.Locales.setLocalesAsync(exp, projectRoot);
 
   // Configure the Info.plist
-  await modifyPbxprojAsync(projectRoot, async project => {
-    if (typeof pack?.ios?.xcodeproj === 'function') {
-      project = (
-        await pack.ios.xcodeproj({
-          projectRoot,
-          projectName,
-          data: project,
-          // filePath,
-          files,
-        })
-      ).data!;
-    }
-    return project;
-  });
+  if (typeof pack?.ios?.xcodeproj === 'function') {
+    await modifyPbxprojAsync(projectRoot, async project => {
+      if (typeof pack?.ios?.xcodeproj === 'function') {
+        project = (
+          await pack.ios.xcodeproj({
+            ...projectFileSystem,
+            projectName,
+            data: project,
+          })
+        ).data!;
+      }
+      return project;
+    });
+  }
 
   // Configure the Info.plist
   await modifyInfoPlistAsync(projectRoot, async infoPlist => {
@@ -101,11 +102,9 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
       if (typeof pack?.ios?.entitlements === 'function') {
         plist = (
           await pack.ios.entitlements({
-            projectRoot,
+            ...projectFileSystem,
             projectName,
             data: plist,
-            // filePath,
-            files,
           })
         ).data!;
       }
@@ -127,12 +126,11 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   await pack?.ios?.after?.({
     // data: androidManifest,
     // filePath,
-    projectName,
+    ...projectFileSystem,
     projectRoot,
-    files,
   });
 
-  await commitFilesAsync(path.join(projectRoot, 'ios'), files);
+  await commitFilesAsync(projectFileSystem);
 }
 
 async function modifyEntitlementsPlistAsync(projectRoot: string, callback: (plist: any) => any) {

@@ -4,44 +4,71 @@ import { XcodeProject } from 'xcode';
 
 import { InfoPlist } from './ios';
 
-export type PackModifierProps<IData> = {
+export interface ProjectFileSystem {
+  readonly projectRoot: string;
   /**
-   * The JSON representation of an XML object.
+   * Project root for the specific platform.
    */
-  data?: IData; //JSONObject;
+  readonly platformProjectRoot: string;
+  /**
+   * Used to append a file to the files object.
+   */
+  readonly pushFile: (filePath: string, contents: Buffer | string) => void;
+  /**
+   * Shared file system for the output project.
+   */
+  readonly files: Record<string, ProjectFile>;
+}
+
+export type ProjectFile = {
+  _rewrite: boolean;
+  _path: string;
+  source: () => Buffer | string;
+};
+
+export interface FileModifierProps<IData> {
+  /**
+   * The Object representation of a complex file type.
+   */
+  data: IData;
   /**
    * file path for the output data.
    */
   filePath?: string;
-  /**
-   * Shared file system for the output project.
-   */
-  files: Record<string, { source: () => Buffer | string }>;
+}
 
-  projectRoot: string;
-};
-
-export type PackModifier<T> = (props: T) => T | Promise<T>;
-
-export type IOSPackModifierProps<IData> = PackModifierProps<IData> & {
+export interface IOSProjectModifierProps {
   // Something like projectRoot/ios/[MyApp]/
   projectName: string;
-};
+}
+
+export interface PackFileModifierProps<IData> extends ProjectFileSystem, FileModifierProps<IData> {}
+
+export type PackModifier<T extends ProjectFileSystem = ProjectFileSystem> = (
+  props: T
+) => T | Promise<T>;
+
+export interface IOSPackModifierProps<IData>
+  extends IOSProjectModifierProps,
+    PackFileModifierProps<IData> {}
 
 export type IOSPackXcodeProjModifier = PackModifier<IOSPackModifierProps<XcodeProject>>;
-type IOSPackEntitlementsProjModifier = PackModifier<IOSPackModifierProps<InfoPlist>>;
+type IOSPlistModifier = PackModifier<IOSPackModifierProps<InfoPlist>>;
 
-export type PackConfig = {
+export interface PackConfig {
   android?: {
-    [key: string]: PackModifier<PackModifierProps<JSONObject>>;
+    manifest?: PackModifier<PackFileModifierProps<JSONObject>>;
+    after?: PackModifier;
   };
   ios?: {
-    entitlements?: IOSPackEntitlementsProjModifier;
+    info?: IOSPlistModifier;
+    entitlements?: IOSPlistModifier;
     xcodeproj?: IOSPackXcodeProjModifier;
-    after?: PackModifier<Omit<PackModifierProps<JSONObject>, 'data'>>;
-    // [key: string]: PackModifier<IOSPackModifierProps>;
+    after?: PackModifier<IOSProjectModifierProps & ProjectFileSystem>;
   };
-};
+}
+
+export type PackPlatforms = keyof PackConfig;
 
 export type ExportedConfig = { pack: PackConfig | null; expo: ExpoConfig };
 

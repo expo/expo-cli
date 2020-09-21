@@ -6,11 +6,7 @@ import { sync as globSync } from 'glob';
 import path from 'path';
 
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
-import {
-  commitFilesAsync,
-  getFileSystemAndroidAsync,
-  getFileSystemIosAsync,
-} from './configureFileSystem';
+import { commitFilesAsync, getFileSystemAndroidAsync } from './configureFileSystem';
 
 async function modifyBuildGradleAsync(
   projectRoot: string,
@@ -71,7 +67,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   // Check package before reading the config because it may mutate the config if the user is prompted to define it.
   await getOrPromptForPackage(projectRoot);
 
-  const files = await getFileSystemAndroidAsync(projectRoot);
+  const projectFileSystem = await getFileSystemAndroidAsync(projectRoot);
   const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   const { expo: exp, pack } = withPlugins(
@@ -80,7 +76,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
       AndroidConfig.Branch.withBranch,
       AndroidConfig.AllowBackup.withAllowBackup,
     ],
-    originalConfig
+    { expo: originalConfig.exp, pack: originalConfig.pack }
   );
 
   const username = await UserManager.getCurrentUsernameAsync();
@@ -128,10 +124,9 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     if (typeof pack?.android?.manifest === 'function') {
       androidManifest = (
         await pack.android.manifest({
-          projectRoot,
+          ...projectFileSystem,
           data: androidManifest,
           filePath,
-          files,
         })
       ).data!;
     }
@@ -167,5 +162,5 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   await AndroidConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
   await AndroidConfig.Icon.setIconAsync(exp, projectRoot);
 
-  await commitFilesAsync(path.join(projectRoot, 'android'), files);
+  await commitFilesAsync(projectFileSystem);
 }

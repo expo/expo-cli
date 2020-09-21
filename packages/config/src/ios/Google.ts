@@ -31,7 +31,7 @@ export function getGoogleServicesFile(config: ExpoConfig) {
   return config.ios?.googleServicesFile ?? null;
 }
 
-export function setGoogleMapsApiKey(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setGoogleMapsApiKey(config: ExpoConfig, { GMSApiKey, ...infoPlist }: InfoPlist) {
   const apiKey = getGoogleMapsApiKey(config);
 
   if (apiKey === null) {
@@ -44,7 +44,10 @@ export function setGoogleMapsApiKey(config: ExpoConfig, infoPlist: InfoPlist) {
   };
 }
 
-export function setGoogleMobileAdsAppId(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setGoogleMobileAdsAppId(
+  config: ExpoConfig,
+  { GADApplicationIdentifier, ...infoPlist }: InfoPlist
+): InfoPlist {
   const appId = getGoogleMobileAdsAppId(config);
 
   if (appId === null) {
@@ -81,7 +84,7 @@ export const withGoogleServicesFile = (config: ExportedConfig) => {
     const googleServicesFileRelativePath = getGoogleServicesFile(config.expo);
     if (googleServicesFileRelativePath != null) {
       const googleServiceFilePath = path.resolve(props.projectRoot, googleServicesFileRelativePath);
-      props.files.append(
+      props.pushFile(
         path.join(props.projectName, 'GoogleService-Info.plist'),
         fs.readFileSync(googleServiceFilePath)
       );

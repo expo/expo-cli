@@ -1,45 +1,38 @@
-import { PackModifierProps } from '@expo/config';
+import { ProjectFileSystem } from '@expo/config/build/Config.types';
 import { getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
 import fs from 'fs-extra';
 import * as path from 'path';
 
-async function walkAsync(dir: string, shallow: boolean): Promise<any> {
-  return new Promise((resolve, reject) => {
-    var results: any[] = [];
-    fs.readdir(dir, function (err, list) {
-      if (err) {
-        return reject(err);
+async function walkAsync(dir: string, shallow: boolean): Promise<string[]> {
+  let results: string[] = [];
+  const list = await fs.readdir(dir);
+
+  // TODO: do-while?
+  let pending = list.length;
+  if (pending) {
+    for (let file of list) {
+      file = path.resolve(dir, file);
+      const stat = await fs.stat(file);
+      if (stat && stat.isDirectory()) {
+        if (!shallow) {
+          const res = await walkAsync(file, false);
+          results = results.concat(res);
+        }
+        if (!--pending) {
+          break;
+        }
+      } else {
+        results.push(file);
+        if (!--pending) {
+          break;
+        }
       }
-      var pending = list.length;
-      if (!pending) {
-        return resolve(results);
-      }
-      list.forEach(function (file) {
-        file = path.resolve(dir, file);
-        fs.stat(file, async (err, stat) => {
-          if (stat && stat.isDirectory()) {
-            if (!shallow) {
-              const res = await walkAsync(file, false);
-              results = results.concat(res);
-            }
-            if (!--pending) {
-              resolve(results);
-            }
-          } else {
-            results.push(file);
-            if (!--pending) {
-              resolve(results);
-            }
-          }
-        });
-      });
-    });
-  });
+    }
+  }
+  return results;
 }
 
-export async function getFileSystemIosAsync(
-  projectRoot: string
-): Promise<PackModifierProps['files']> {
+export async function getFileSystemIosAsync(projectRoot: string): Promise<ProjectFileSystem> {
   const iosPath = path.join(projectRoot, 'ios');
   const projectName = getProjectName(projectRoot);
   const iosProjectPath = path.join(iosPath, projectName);
@@ -48,27 +41,27 @@ export async function getFileSystemIosAsync(
   let filePaths = await walkAsync(iosPath, true);
   filePaths = filePaths.concat(await walkAsync(iosProjectPath, false));
   filePaths = filePaths.concat(await walkAsync(iosXCProjectPath, false));
-  return getFileSystemAsync(iosPath, filePaths);
+  return getFileSystemAsync(projectRoot, iosPath, filePaths);
 }
 
-export async function getFileSystemAndroidAsync(
-  projectRoot: string
-): Promise<PackModifierProps['files']> {
+export async function getFileSystemAndroidAsync(projectRoot: string): Promise<ProjectFileSystem> {
   const androidPath = path.join(projectRoot, 'android');
   let filePaths = await walkAsync(androidPath, true);
   filePaths = filePaths.concat(await walkAsync(path.join(androidPath, 'app'), true));
   filePaths = filePaths.concat(await walkAsync(path.join(androidPath, 'app/src/main'), false));
 
-  return getFileSystemAsync(androidPath, filePaths);
+  return getFileSystemAsync(projectRoot, androidPath, filePaths);
 }
 
 async function getFileSystemAsync(
   projectRoot: string,
+  platformProjectRoot: string,
   filePaths: string[]
-): Promise<PackModifierProps['files']> {
+): Promise<ProjectFileSystem> {
   const files: Record<string, any> = {};
   for (const filePath of filePaths) {
-    const key = '/' + path.relative(projectRoot, filePath);
+    // sandbox all native project files so android cannot access ios files and vise-versa.
+    const key = path.relative(platformProjectRoot, filePath);
     files[key] = {
       _rewrite: false,
       _path: filePath,
@@ -88,25 +81,24 @@ async function getFileSystemAsync(
     // });
   }
 
-  // All files start with slash so there will be no conflict.
-  files.append = (filePath: string, contents: Buffer | string) => {
-    console.log('append: ', filePath);
-    files[filePath] = {
-      _rewrite: true,
-      _path: path.join(projectRoot, filePath),
-      source() {
-        return contents;
-      },
-    };
+  return {
+    projectRoot,
+    platformProjectRoot,
+    pushFile(filePath: string, contents: Buffer | string) {
+      console.log('append: ', filePath);
+      files[filePath] = {
+        _rewrite: true,
+        _path: path.join(platformProjectRoot, filePath),
+        source() {
+          return contents;
+        },
+      };
+    },
+    files,
   };
-
-  return files;
 }
 
-export async function commitFilesAsync(
-  nativeProjectRoot: string,
-  files: PackModifierProps['files']
-): Promise<void> {
+export async function commitFilesAsync({ files }: Pick<ProjectFileSystem, 'files'>): Promise<void> {
   const commit = Object.values(files).filter(
     file => typeof file !== 'function' && file._rewrite !== false
   );
