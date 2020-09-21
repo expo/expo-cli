@@ -2,6 +2,7 @@ import { ProjectFileSystem } from '@expo/config/build/Config.types';
 import { getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
 import fs from 'fs-extra';
 import * as path from 'path';
+import { XcodeProject } from 'xcode';
 
 async function walkAsync(dir: string, shallow: boolean): Promise<string[]> {
   let results: string[] = [];

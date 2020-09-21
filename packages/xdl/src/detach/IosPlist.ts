@@ -1,4 +1,5 @@
 import plist from '@expo/plist';
+import { spawnSync } from 'child_process';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -13,6 +14,33 @@ function _getNormalizedPlistFilename(plistName: string) {
     plistFilename = `${plistName}.plist`;
   }
   return plistFilename;
+}
+
+/**
+ *  @param plistName base filename of property list. if no extension, assumes .plist
+ */
+function read(plistPath: string, plistName: string): Record<string, any> {
+  const plistFilename = _getNormalizedPlistFilename(plistName);
+  const configPlistName = path.join(plistPath, plistFilename);
+  const configFilename = path.join(plistPath, `${plistName}.json`);
+
+  // grab original plist as json object
+  let config: Record<string, any>;
+  // if (process.platform === 'darwin') {
+  //   spawnSync('plutil', ['-convert', 'json', configPlistName, '-o', configFilename]);
+  //   const configContents = fs.readFileSync(configFilename, 'utf8');
+
+  //   try {
+  //     config = JSON.parse(configContents);
+  //   } catch (e) {
+  //     logger.info(`Error parsing ${configFilename}`, e);
+  //     logger.info('The erroneous file contents was:', configContents);
+  //     config = {};
+  //   }
+  // } else {
+  config = plist.parse(fs.readFileSync(configPlistName, 'utf8'));
+  // }
+  return config;
 }
 
 /**
@@ -47,7 +75,7 @@ async function modifyAsync(plistPath: string, plistName: string, transform: (con
   }
 
   // apply transformation
-  config = transform(config);
+  config = await transform(config);
 
   // back up old plist and swap in modified one
   fs.copyFileSync(configPlistName, `${configPlistName}.bak`);
@@ -106,4 +134,4 @@ async function cleanBackupAsync(plistPath: string, plistName: string, restoreOri
   await fs.remove(configFilename);
 }
 
-export { modifyAsync, cleanBackupAsync, createBlankAsync };
+export { modifyAsync, read, cleanBackupAsync, createBlankAsync };

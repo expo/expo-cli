@@ -1,17 +1,11 @@
 import JsonFile from '@expo/json-file';
-import * as fs from 'fs-extra';
 import { join } from 'path';
 import { XcodeProject } from 'xcode';
 
 import { ConfigPlugin, ExpoConfig, IOSPackModifierProps } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
-import { withEntitlementsPlist, withXcodeProj } from '../plugins/withPlist';
-import {
-  addFileToGroup,
-  ensureGroupRecursively,
-  getPbxproj,
-  getProjectName,
-} from './utils/Xcodeproj';
+import { withXcodeProj } from '../plugins/withPlist';
+import { addFileToGroup, ensureGroupRecursively } from './utils/Xcodeproj';
 
 export function getLocales(config: ExpoConfig): Record<string, string> | null {
   return config.locales ?? null;

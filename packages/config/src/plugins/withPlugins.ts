@@ -8,9 +8,10 @@ function ensureArray<T>(input: T | T[]): T[] {
 }
 
 type ExportedConfig = Pick<ProjectConfig, 'pack'> & { expo: ProjectConfig['exp'] };
-type PluginAction = (config: ExportedConfig) => ExportedConfig;
 // Action or action with arguments
-type Plugin = PluginAction | [PluginAction, any];
+type Plugin =
+  | ((config: ExportedConfig) => ExportedConfig)
+  | [(config: ExportedConfig, args: any) => ExportedConfig, any];
 
 export function withPlugins(plugins: Plugin[], config: ExportedConfig): ExportedConfig {
   const out = plugins.reduce((prev, curr) => {

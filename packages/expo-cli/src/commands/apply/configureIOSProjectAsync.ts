@@ -1,4 +1,10 @@
-import { getConfig, IOSConfig, WarningAggregator } from '@expo/config';
+import {
+  ConfigPlugin,
+  ExportedConfig,
+  getConfig,
+  IOSConfig,
+  WarningAggregator,
+} from '@expo/config';
 import { getPbxproj, getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
 import { withPlugins } from '@expo/config/build/plugins/withPlugins';
 import { IosPlist, UserManager } from '@expo/xdl';
@@ -8,6 +14,23 @@ import { XcodeProject } from 'xcode';
 
 import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
 import { commitFilesAsync, getFileSystemIosAsync } from './configureFileSystem';
+
+const withExistingInfoPlist = (config: ExportedConfig, projectRoot: string): ExportedConfig => {
+  const { iosProjectDirectory } = getIOSPaths(projectRoot);
+  const contents = IosPlist.read(iosProjectDirectory, 'Info');
+
+  if (!config.expo.ios) config.expo.ios = {};
+  if (!config.expo.ios.infoPlist) config.expo.ios.infoPlist = {};
+
+  console.log('contents: ', contents);
+
+  config.expo.ios.infoPlist = {
+    ...(contents || {}),
+    ...config.expo.ios.infoPlist,
+  };
+
+  return config;
+};
 
 export default async function configureIOSProjectAsync(projectRoot: string) {
   const projectFileSystem = await getFileSystemIosAsync(projectRoot);
@@ -19,6 +42,7 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const { expo: exp, pack } = withPlugins(
     [
+      [withExistingInfoPlist, projectRoot],
       IOSConfig.Icons.withIcons,
       IOSConfig.Branch.withBranch,
       IOSConfig.Facebook.withFacebook,
@@ -49,11 +73,11 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
     }
   );
 
-  // IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
-  // IOSConfig.DeviceFamily.setDeviceFamily(exp, projectRoot);
-  // await IOSConfig.Locales.setLocalesAsync(exp, projectRoot);
+  const projectName = getProjectName(projectRoot);
 
-  // Configure the Info.plist
+  // IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
+
+  // Configure the Xcode project
   if (typeof pack?.ios?.xcodeproj === 'function') {
     await modifyPbxprojAsync(projectRoot, async project => {
       if (typeof pack?.ios?.xcodeproj === 'function') {
@@ -71,7 +95,9 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
 
   // Configure the Info.plist
   await modifyInfoPlistAsync(projectRoot, async infoPlist => {
-    infoPlist = IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(exp, infoPlist);
+    infoPlist =
+      exp.ios?.infoPlist ||
+      IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(exp, infoPlist);
     // if (typeof pack?.ios?.info === 'function') {
     //   infoPlist = (
     //     await pack.ios.info({
@@ -81,7 +107,7 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
     //       // filePath,
     //       files,
     //     })
-    //   ).data!;
+    //   ).data;
     // }
     return infoPlist;
   });
@@ -106,7 +132,7 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
             projectName,
             data: plist,
           })
-        ).data!;
+        ).data;
       }
 
       return plist;
@@ -119,15 +145,11 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   }
 
   // Other
-  // await IOSConfig.Icons.setIconsAsync(exp, projectRoot);
   await IOSConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
-  const projectName = getProjectName(projectRoot);
 
   await pack?.ios?.after?.({
-    // data: androidManifest,
-    // filePath,
     ...projectFileSystem,
-    projectRoot,
+    projectName,
   });
 
   await commitFilesAsync(projectFileSystem);
