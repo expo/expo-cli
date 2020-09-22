@@ -60,7 +60,10 @@ export function setGoogleMobileAdsAppId(
   };
 }
 
-export function setGoogleSignInReservedClientId(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setGoogleSignInReservedClientId(
+  config: ExpoConfig,
+  infoPlist: InfoPlist
+): InfoPlist {
   const reservedClientId = getGoogleSignInReservedClientId(config);
 
   if (reservedClientId === null) {

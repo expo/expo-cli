@@ -14,15 +14,15 @@ export function setUserInterfaceStyle(
   { UIUserInterfaceStyle: _, ...infoPlist }: InfoPlist
 ): InfoPlist {
   const userInterfaceStyle = getUserInterfaceStyle(config);
-  const UIUserInterfaceStyle = mapUserInterfaceStyleForInfoPlist(userInterfaceStyle);
+  const style = mapUserInterfaceStyleForInfoPlist(userInterfaceStyle);
 
-  if (!UIUserInterfaceStyle) {
+  if (!style) {
     return infoPlist;
   }
 
   return {
     ...infoPlist,
-    UIUserInterfaceStyle,
+    UIUserInterfaceStyle: style,
   };
 }
 

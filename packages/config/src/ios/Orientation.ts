@@ -3,11 +3,7 @@ import { withInfoPlist } from '../plugins/withPlist';
 import { InfoPlist, InterfaceOrientation } from './IosConfig.types';
 
 export function getOrientation(config: ExpoConfig) {
-  if (config.orientation) {
-    return config.orientation;
-  }
-
-  return null;
+  return config.orientation ?? null;
 }
 
 export const PORTRAIT_ORIENTATIONS: InterfaceOrientation[] = [

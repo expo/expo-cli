@@ -18,11 +18,13 @@ import * as Updates from './Updates';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
 import * as Version from './Version';
+import { getSourceRoot } from './utils/Xcodeproj';
 
 // We can change this to export * as X with TypeScript 3.8+
 // https://devblogs.microsoft.com/typescript/announcing-typescript-3-8-beta/#export-star-as-namespace-syntax
 // .. but we should wait for this to be the default VSCode version.
 export {
+  getSourceRoot,
   Branch,
   BundleIdenitifer,
   CustomInfoPlistEntries,

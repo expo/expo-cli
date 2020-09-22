@@ -1,5 +1,5 @@
-import { BuildType, iOS, Job, Platform, sanitizeJob } from '@expo/build-tools';
 import { IOSConfig } from '@expo/config';
+import { BuildType, iOS, Job, Platform, sanitizeJob } from '@expo/eas-build-job';
 import chalk from 'chalk';
 import figures from 'figures';
 import sortBy from 'lodash/sortBy';
@@ -60,12 +60,7 @@ class iOSBuilder implements Builder<Platform.iOS> {
   public async ensureCredentialsAsync(): Promise<
     CredentialsSource.LOCAL | CredentialsSource.REMOTE | undefined
   > {
-    try {
-      this.secretEnvs = await readSecretEnvsAsync(this.ctx.commandCtx.projectDir);
-    } catch {
-      // credentials.json can not exist and that is fine.
-      // TODO: handle this better than with try/catch
-    }
+    this.secretEnvs = await readSecretEnvsAsync(this.ctx.commandCtx.projectDir);
 
     if (!this.shouldLoadCredentials()) {
       return;

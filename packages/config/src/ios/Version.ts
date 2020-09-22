@@ -3,7 +3,7 @@ import { withInfoPlist } from '../plugins/withPlist';
 import { InfoPlist } from './IosConfig.types';
 
 export function getVersion(config: ExpoConfig) {
-  return config.version ? config.version : '0.0.0';
+  return config.version || '0.0.0';
 }
 
 export const withVersion: ConfigPlugin = config => withInfoPlist(config, setVersion);

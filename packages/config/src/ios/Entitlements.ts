@@ -14,6 +14,8 @@ import {
   isNotTestHost,
 } from './utils/Xcodeproj';
 
+type Plist = Record<string, any>;
+
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
 
 export const withAccessesContactNotes: ConfigPlugin = config => {
@@ -77,8 +79,8 @@ export function setAppleSignInEntitlement(
 
 export function setAccessesContactNotes(
   config: ExpoConfig,
-  { 'com.apple.developer.contacts.notes': _, ...entitlementsPlist }: any
-) {
+  { 'com.apple.developer.contacts.notes': _, ...entitlementsPlist }: Plist
+): Plist {
   if (config.ios?.accessesContactNotes) {
     return {
       ...entitlementsPlist,
@@ -91,8 +93,8 @@ export function setAccessesContactNotes(
 
 export function setAssociatedDomains(
   config: ExpoConfig,
-  { 'com.apple.developer.associated-domains': _, ...entitlementsPlist }: any
-) {
+  { 'com.apple.developer.associated-domains': _, ...entitlementsPlist }: Plist
+): Plist {
   if (config.ios?.associatedDomains) {
     return {
       ...entitlementsPlist,

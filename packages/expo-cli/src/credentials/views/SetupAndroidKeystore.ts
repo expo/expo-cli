@@ -1,5 +1,3 @@
-import commandExists from 'command-exists';
-
 import log from '../../log';
 import { Context, IView } from '../context';
 import * as credentialsJsonReader from '../credentialsJson/read';
@@ -30,14 +28,7 @@ export class SetupAndroidKeystore implements IView {
       }
     }
 
-    if (await keytoolCommandExists()) {
-      return new UpdateKeystore(this.experienceName);
-    } else {
-      log.warn(
-        'The `keytool` utility was not found in your PATH. A new Keystore will be generated on Expo servers.'
-      );
-      return null;
-    }
+    return new UpdateKeystore(this.experienceName, { bestEffortKeystoreGeneration: true });
   }
 }
 
@@ -56,14 +47,5 @@ export class SetupAndroidBuildCredentialsFromLocal implements IView {
     }
     await ctx.android.updateKeystore(this.experienceName, localCredentials.keystore);
     return null;
-  }
-}
-
-async function keytoolCommandExists(): Promise<boolean> {
-  try {
-    await commandExists('keytool');
-    return true;
-  } catch (err) {
-    return false;
   }
 }

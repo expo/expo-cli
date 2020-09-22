@@ -6,13 +6,80 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
-- [xdl] Build iOS shell app artifact in the current directory (instead of one level up).
+- [xdl] Deprecated `Project.getManifestUrlWithFallbackAsync()` in favor of `UrlUtils.constructManifestUrlAsync()`. [#2684](https://github.com/expo/expo-cli/pull/2684)
+- [xdl] Deprecated `Project.getUrlAsync()` in favor of `UrlUtils.constructManifestUrlAsync()`. [#2684](https://github.com/expo/expo-cli/pull/2684)
+- [xdl] Removed `Project.getSlugAsync()`, `Project.stopTunnelsAsync()`, `Project.startExpoServerAsync()`, `Project.stopExpoServerAsync()`, `Project.ProjectStatus`. [#2684](https://github.com/expo/expo-cli/pull/2684)
+
+### 🎉 New features
+
+- [expo-cli] replace @expo/build-tools with @expo/eas-build-job to reduce depencies size. [#2679](https://github.com/expo/expo-cli/pull/2679)
+
+### 🐛 Bug fixes
+
+## [Mon, 21 Sep 2020 19:11:42 -0700](https://github.com/expo/expo-cli/commit/d77fcb4613fa535ca809c833acc016759d93d996)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [configure-splash-screen] Simplified and unified arguments, parameters and `--help` output. See `configure-splash-screen --help` to see the changes. [#2297](https://github.com/expo/expo-cli/pull/2297)
+
+### 🐛 Bug fixes
+
+- [xdl] Fix downloadApkAsync so it uses passed in URL rather than always depending on versions endpoint `androidUrl`
+- [cli] Bring back support for EXPO_APPLE_ID ([#2671](https://github.com/expo/expo-cli/issues/2671))
+
+### 📦 Packages updated
+
+- @expo/config@3.3.3
+- @expo/configure-splash-screen@0.1.19
+- @expo/dev-server@0.1.28
+- @expo/dev-tools@0.13.45
+- @expo/electron-adapter@0.0.19
+- expo-cli@3.27.7
+- expo-optimize@0.1.50
+- @expo/metro-config@0.1.28
+- @expo/next-adapter@2.1.33
+- expo-pwa@0.0.38
+- uri-scheme@1.0.34
+- @expo/webpack-config@0.12.32
+- @expo/xdl@58.0.6
+
+## [Fri, 18 Sep 2020 12:23:25 -0700](https://github.com/expo/expo-cli/commit/a5eb9cafd0b46120d3fcafa861b4fac164c7d978)
+
+### 🛠 Breaking changes
 
 ### 🎉 New features
 
 - [json-file] Add `ensureDir` option [#2664](https://github.com/expo/expo-cli/pull/2664)
+- [configure-splash-screen] Refactor and integrate with `@expo/config` ([#2297](https://github.com/expo/expo-cli/issues/2297))
 
 ### 🐛 Bug fixes
+
+- [cli] `build:android` fix missing keytool warning if user want to specify ceredentials manually [#2662](https://github.com/expo/expo-cli/pull/2662)
+- [cli] Re-use source root lookup from @expo/config to fix updates config on init for projects with names that are altered for native project compat
+- [cli] fix prompt helpers ([#2667](https://github.com/expo/expo-cli/issues/2667))
+- [xdl] Build iOS shell app artifact in the current directory (instead of one level up). ([#2608](https://github.com/expo/expo-cli/issues/2608))
+- [next-adapter] ReferenceError Html is not defined ([#2666](https://github.com/expo/expo-cli/issues/2666))
+
+### 📦 Packages updated
+
+- @expo/config@3.3.2
+- @expo/configure-splash-screen@0.1.17
+- @expo/dev-server@0.1.27
+- @expo/dev-tools@0.13.44
+- @expo/electron-adapter@0.0.18
+- expo-cli@3.27.6
+- expo-optimize@0.1.49
+- @expo/json-file@8.2.24
+- @expo/metro-config@0.1.27
+- @expo/next-adapter@2.1.32
+- @expo/package-manager@0.0.33
+- pod-install@0.1.12
+- expo-pwa@0.0.37
+- uri-scheme@1.0.33
+- @expo/webpack-config@0.12.31
+- @expo/xdl@58.0.5
 
 ## [Thu, 17 Sep 2020 13:28:59 -0700](https://github.com/expo/expo-cli/commit/f0c9270058f38cc1b58bd03765e3e1de747c7b39)
 

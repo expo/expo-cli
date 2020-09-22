@@ -79,12 +79,13 @@ export async function validateIosConfig(
  * - `config.statusBar.hidden` might exists,
  * - `config.statusBar.style` is a recognizable value (one of `SplashScreenStatusBarStyle`),
  * - `config.statusBar.translucent` might exist,
+ * - `config.statusBar.backgroundColor` is a valid css-formatted color,
  *
  * - `config.darkMode.backgroundColor` is a valid css-formatted color,
  * - `config.darkMode.imagePath`
  *   - is provided only if `config.darkMode.backgroundColor` is provided as well
  *   - and it's pointing to a valid .png file,
- * - `config.statusBar.backgroundColor` is a valid css-formatted color,
+ *
  * - `config.darkMode.statusBar.style`
  *    - is provided only if `config.darkMode.backgroundColor` is provided as well
  *    - and `config.statusBar.style` is provided as well

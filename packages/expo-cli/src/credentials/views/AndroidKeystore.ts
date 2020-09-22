@@ -1,5 +1,6 @@
 import { AndroidCredentials } from '@expo/xdl';
 import chalk from 'chalk';
+import commandExists from 'command-exists';
 import fs from 'fs-extra';
 import omit from 'lodash/omit';
 import os from 'os';
@@ -13,24 +14,48 @@ import { askForUserProvided } from '../actions/promptForCredentials';
 import { Context, IView } from '../context';
 import { Keystore, keystoreSchema } from '../credentials';
 
+interface UpdateKeystoreOptions {
+  bestEffortKeystoreGeneration: boolean;
+}
+
+async function keytoolCommandExists(): Promise<boolean> {
+  try {
+    await commandExists('keytool');
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
 class UpdateKeystore implements IView {
-  constructor(private experienceName: string) {}
+  constructor(
+    private experienceName: string,
+    private options: UpdateKeystoreOptions = { bestEffortKeystoreGeneration: false }
+  ) {}
 
   async open(ctx: Context): Promise<IView | null> {
     if (await ctx.android.fetchKeystore(this.experienceName)) {
       this.displayWarning();
     }
     const keystore = await this.provideOrGenerate(ctx);
+    if (!keystore) {
+      return null;
+    }
 
     await ctx.android.updateKeystore(this.experienceName, keystore);
     log(chalk.green('Keystore updated successfully'));
     return null;
   }
 
-  async provideOrGenerate(ctx: Context): Promise<Keystore> {
+  async provideOrGenerate(ctx: Context): Promise<Keystore | null> {
     const providedKeystore = await askForUserProvided(keystoreSchema);
     if (providedKeystore) {
       return providedKeystore;
+    } else if (this.options.bestEffortKeystoreGeneration && !(await keytoolCommandExists())) {
+      log.warn(
+        'The `keytool` utility was not found in your PATH. A new Keystore will be generated on Expo servers.'
+      );
+      return null;
     }
 
     const tmpKeystoreName = path.join(

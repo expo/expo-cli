@@ -21,6 +21,7 @@ import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
+import { learnMore } from './logs/TerminalLink';
 import { getImageDimensionsAsync } from './tools/ImageUtils';
 
 type Device = {
@@ -213,9 +214,11 @@ export async function getAttachedDevicesAsync(): Promise<Device[]> {
   }[] = splitItems
     .slice(1, splitItems.length)
     .map(line => {
-      // ['FA8251A00719', 'device', 'usb:336592896X', 'product:walleye', 'model:Pixel_2', 'device:walleye', 'transport_id:4']
-      // ['emulator-5554', 'offline', 'transport_id:1']
-      const props = line.split(' ');
+      // unauthorized: ['FA8251A00719', 'unauthorized', 'usb:338690048X', 'transport_id:5']
+      // authorized: ['FA8251A00719', 'device', 'usb:336592896X', 'product:walleye', 'model:Pixel_2', 'device:walleye', 'transport_id:4']
+      // emulator: ['emulator-5554', 'offline', 'transport_id:1']
+      const props = line.split(' ').filter(Boolean);
+
       const isAuthorized = props[1] !== 'unauthorized';
       const type = line.includes('emulator') ? 'emulator' : 'device';
       return { props, type, isAuthorized };
@@ -232,9 +235,19 @@ export async function getAttachedDevicesAsync(): Promise<Device[]> {
     let name: string | null = null;
 
     if (type === 'device') {
-      // Possibly formatted like `model:Pixel_2`
-      // Transform to `Pixel_2`
-      name = deviceInfo.find(info => info.includes('model:'))!.replace('model:', '');
+      if (isAuthorized) {
+        // Possibly formatted like `model:Pixel_2`
+        // Transform to `Pixel_2`
+        const modelItem = deviceInfo.find(info => info.includes('model:'));
+        if (modelItem) {
+          name = modelItem.replace('model:', '');
+        }
+      }
+      // unauthorized devices don't have a name available to read
+      if (!name) {
+        // Device FA8251A00719
+        name = `Device ${pid}`;
+      }
     } else {
       // Given an emulator pid, get the emulator name which can be used to start the emulator later.
       name = (await getAbdNameForEmulatorIdAsync(pid)) ?? '';
@@ -350,19 +363,19 @@ export async function downloadApkAsync(
   url?: string,
   downloadProgressCallback?: (roundedProgress: number) => void
 ) {
-  const versions = await Versions.versionsAsync();
-  const apkPath = path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`);
+  if (!url) {
+    const versions = await Versions.versionsAsync();
+    url = versions.androidUrl;
+  }
+
+  const filename = path.parse(url).name;
+  const apkPath = path.join(_apkCacheDirectory(), `${filename}.apk`);
 
   if (await fs.pathExists(apkPath)) {
     return apkPath;
   }
 
-  await Api.downloadAsync(
-    url || versions.androidUrl,
-    path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`),
-    undefined,
-    downloadProgressCallback
-  );
+  await Api.downloadAsync(url, apkPath, undefined, downloadProgressCallback);
   return apkPath;
 }
 
@@ -437,9 +450,11 @@ export async function upgradeExpoAsync(url?: string): Promise<boolean> {
     if (!devices.length) {
       throw new Error('no devices connected');
     }
-    const device = devices[0];
 
-    await attemptToStartEmulatorOrAssertAsync(devices[0]);
+    const device = await attemptToStartEmulatorOrAssertAsync(devices[0]);
+    if (!device) {
+      return false;
+    }
 
     await uninstallExpoAsync(device);
     await installExpoAsync({ device, url });
@@ -461,17 +476,6 @@ export async function upgradeExpoAsync(url?: string): Promise<boolean> {
   } catch (e) {
     Logger.global.error(e.message);
     return false;
-  }
-}
-
-// Open Url
-export async function assertDeviceReadyAsync(device: Device) {
-  const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
-
-  if (!(await _isDeviceAuthorizedAsync(device))) {
-    throw new Error(
-      `This computer is not authorized to debug the device. Please follow the instructions here to enable USB debugging:\n${genymotionMessage}`
-    );
   }
 }
 
@@ -506,16 +510,27 @@ async function _openUrlAsync({ pid, url }: { pid: string; url: string }) {
   return openProject;
 }
 
-async function attemptToStartEmulatorOrAssertAsync(device: Device): Promise<Device> {
+async function attemptToStartEmulatorOrAssertAsync(device: Device): Promise<Device | null> {
   // TODO: Add a light-weight method for checking since a device could disconnect.
 
   if (!(await isDeviceBootedAsync(device))) {
     device = await startEmulatorAsync(device);
   }
-  // TODO: Validate specific device
-  await assertDeviceReadyAsync(device);
+
+  if (!(await _isDeviceAuthorizedAsync(device))) {
+    logUnauthorized(device);
+    return null;
+  }
 
   return device;
+}
+
+function logUnauthorized(device: Device) {
+  Logger.global.warn(
+    `\nThis computer is not authorized for developing on ${chalk.bold(device.name)}. ${chalk.dim(
+      learnMore('https://expo.fyi/authorize-android-device')
+    )}`
+  );
 }
 
 // Keep a list of simulator UDIDs so we can prevent asking multiple times if a user wants to upgrade.
@@ -532,7 +547,11 @@ async function openUrlAsync({
   device: Device;
 }): Promise<void> {
   try {
-    device = await attemptToStartEmulatorOrAssertAsync(device);
+    const bootedDevice = await attemptToStartEmulatorOrAssertAsync(device);
+    if (!bootedDevice) {
+      return;
+    }
+    device = bootedDevice;
 
     let installedExpo = false;
     if (!isDetached) {
@@ -879,6 +898,20 @@ export async function maybeStopAdbDaemonAsync() {
   }
 }
 
+function nameStyleForDevice(device: Device) {
+  const isActive = device.isBooted;
+  if (!isActive) {
+    // Use no style changes for a disconnected device that is available to be opened.
+    return (text: string) => text;
+  }
+  // A device that is connected and ready to be used should be bolded to match iOS.
+  if (device.isAuthorized) {
+    return chalk.bold;
+  }
+  // Devices that are unauthorized and connected cannot be used, but they are connected so gray them out.
+  return (text: string) => chalk.bold(chalk.gray(text));
+}
+
 async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
   // TODO: provide an option to add or download more simulators
 
@@ -891,10 +924,10 @@ async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
     limit: 11,
     message: 'Select a device/emulator',
     choices: devices.map(item => {
-      const isActive = item.isBooted;
-      const format = isActive ? chalk.bold : (text: string) => text;
+      const format = nameStyleForDevice(item);
+      const type = item.isAuthorized ? item.type : 'unauthorized';
       return {
-        title: `${format(item.name)} ${chalk.dim(`(${item.type})`)}`,
+        title: `${format(item.name)} ${chalk.dim(`(${type})`)}`,
         value: item.name,
       };
     }),
@@ -903,7 +936,16 @@ async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
       return choices.filter((choice: any) => regex.test(choice.title));
     },
   });
+
   // Resume interactions on the TerminalUI
   Prompts.resumeInteractions();
-  return value ? devices.find(({ name }) => name === value)! : null;
+
+  const device = value ? devices.find(({ name }) => name === value)! : null;
+
+  if (device?.isAuthorized === false) {
+    logUnauthorized(device);
+    return null;
+  }
+
+  return device;
 }

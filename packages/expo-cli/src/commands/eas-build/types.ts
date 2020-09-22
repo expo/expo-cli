@@ -1,5 +1,5 @@
-import { Job, Platform } from '@expo/build-tools';
 import { ExpoConfig } from '@expo/config';
+import { Job, Platform } from '@expo/eas-build-job';
 import { User } from '@expo/xdl';
 
 import { AndroidBuildProfile, CredentialsSource, iOSBuildProfile } from '../../easJson';
