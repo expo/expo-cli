@@ -6,11 +6,11 @@ import { ConfigPlugin, ExpoConfig } from '../Config.types';
 import { withDangerousAppBuildGradle } from '../plugins/withAndroid';
 import { Document, withManifest } from './Manifest';
 
-export function getPackage(config: ExpoConfig) {
+export function getPackage(config: ExpoConfig): string | null {
   return config.android?.package ?? null;
 }
 
-function getPackageRoot(projectRoot: string) {
+function getPackageRoot(projectRoot: string): string {
   return path.join(projectRoot, 'android', 'app', 'src', 'main', 'java');
 }
 
@@ -29,7 +29,7 @@ function getMainApplicationPath({
   return mainApplications[0];
 }
 
-function getCurrentPackageName(projectRoot: string) {
+function getCurrentPackageName(projectRoot: string): string {
   const packageRoot = getPackageRoot(projectRoot);
   const mainApplicationPath = getMainApplicationPath({ projectRoot, packageRoot });
   const packagePath = path.dirname(mainApplicationPath);
@@ -115,7 +115,7 @@ export const withPackageManifest: ConfigPlugin = config => {
   }));
 };
 
-export function setPackageInBuildGradle(config: ExpoConfig, buildGradle: string) {
+export function setPackageInBuildGradle(config: ExpoConfig, buildGradle: string): string {
   const packageName = getPackage(config);
   if (packageName === null) {
     return buildGradle;
@@ -125,7 +125,10 @@ export function setPackageInBuildGradle(config: ExpoConfig, buildGradle: string)
   return buildGradle.replace(pattern, `applicationId '${packageName}'`);
 }
 
-export async function setPackageInAndroidManifest(config: ExpoConfig, manifestDocument: Document) {
+export function setPackageInAndroidManifest(
+  config: ExpoConfig,
+  manifestDocument: Document
+): Document {
   const packageName = getPackage(config);
 
   manifestDocument['manifest']['$']['package'] = packageName;

@@ -35,44 +35,12 @@ async function modifyAndroidManifestAsync(
   await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
 }
 
-export default async function configureAndroidProjectAsync(projectRoot: string) {
-  // Check package before reading the config because it may mutate the config if the user is prompted to define it.
-  await getOrPromptForPackage(projectRoot);
-  const username = await UserManager.getCurrentUsernameAsync();
-
+async function compileAndroidPluginsAsync(
+  projectRoot: string,
+  { expo, pack }: ExportedConfig
+): Promise<{ projectFileSystem: ProjectFileSystem }> {
   const projectFileSystem = await getFileSystemAndroidAsync(projectRoot);
 
-  const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-
-  const { expo: exp, pack } = withPlugins(
-    [
-      AndroidConfig.Facebook.withFacebook,
-      AndroidConfig.Branch.withBranch,
-      AndroidConfig.AllowBackup.withAllowBackup,
-      AndroidConfig.GoogleServices.withGoogleServices,
-      AndroidConfig.Package.withAppGradle,
-      AndroidConfig.Version.withVersionCode,
-      AndroidConfig.Version.withVersionName,
-      AndroidConfig.Package.withPackageManifest,
-      AndroidConfig.Scheme.withScheme,
-      AndroidConfig.Orientation.withOrientation,
-      AndroidConfig.Permissions.withPermissions,
-      AndroidConfig.UserInterfaceStyle.withUIModeManifest,
-      AndroidConfig.GoogleMobileAds.withGoogleMobileAdsConfig,
-      AndroidConfig.GoogleMapsApiKey.withGoogleMapsApiKey,
-      AndroidConfig.IntentFilters.withIntentFilters,
-      [AndroidConfig.Updates.withUpdates, username],
-      AndroidConfig.UserInterfaceStyle.withOnConfigurationChangedMainActivity,
-      AndroidConfig.Facebook.withFacebookAppIdString,
-      AndroidConfig.Name.withName,
-      AndroidConfig.PrimaryColor.withPrimaryColor,
-      AndroidConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
-      AndroidConfig.NavigationBar.withNavigationBarConfig,
-      AndroidConfig.StatusBar.withStatusBarConfig,
-      AndroidConfig.Icon.withIcons,
-    ],
-    { expo: originalConfig.exp, pack: originalConfig.pack }
-  );
   await modifyAndroidManifestAsync(projectRoot, async ({ data, filePath }) => {
     if (typeof pack?.android?.manifest === 'function') {
       data = (
@@ -102,12 +70,54 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
       return data;
     });
   }
-
-  // If we renamed the package, we should also move it around and rename it in source files
-  await AndroidConfig.Package.renamePackageOnDisk(exp, projectRoot);
-  await AndroidConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
-
   await pack?.android?.after?.(projectFileSystem);
 
+  return { projectFileSystem };
+}
+
+function getExportedConfig(projectRoot: string): ExportedConfig {
+  const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  return { expo: originalConfig.exp, pack: originalConfig.pack };
+}
+
+export default async function configureAndroidProjectAsync(projectRoot: string) {
+  // Check package before reading the config because it may mutate the config if the user is prompted to define it.
+  await getOrPromptForPackage(projectRoot);
+
+  const { expo, pack } = withPlugins(
+    [
+      AndroidConfig.Facebook.withFacebook,
+      AndroidConfig.Branch.withBranch,
+      AndroidConfig.AllowBackup.withAllowBackup,
+      AndroidConfig.GoogleServices.withGoogleServices,
+      AndroidConfig.Package.withAppGradle,
+      AndroidConfig.Version.withVersionCode,
+      AndroidConfig.Version.withVersionName,
+      AndroidConfig.Package.withPackageManifest,
+      AndroidConfig.Scheme.withScheme,
+      AndroidConfig.Orientation.withOrientation,
+      AndroidConfig.Permissions.withPermissions,
+      AndroidConfig.UserInterfaceStyle.withUIModeManifest,
+      AndroidConfig.GoogleMobileAds.withGoogleMobileAdsConfig,
+      AndroidConfig.GoogleMapsApiKey.withGoogleMapsApiKey,
+      AndroidConfig.IntentFilters.withIntentFilters,
+      [AndroidConfig.Updates.withUpdates, await UserManager.getCurrentUsernameAsync()],
+      AndroidConfig.UserInterfaceStyle.withOnConfigurationChangedMainActivity,
+      AndroidConfig.Facebook.withFacebookAppIdString,
+      AndroidConfig.Name.withName,
+      AndroidConfig.PrimaryColor.withPrimaryColor,
+      AndroidConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
+      AndroidConfig.NavigationBar.withNavigationBarConfig,
+      AndroidConfig.StatusBar.withStatusBarConfig,
+      AndroidConfig.Icon.withIcons,
+    ],
+    getExportedConfig(projectRoot)
+  );
+
+  const { projectFileSystem } = await compileAndroidPluginsAsync(projectRoot, { expo, pack });
   await commitFilesAsync(projectFileSystem);
+
+  // If we renamed the package, we should also move it around and rename it in source files
+  await AndroidConfig.Package.renamePackageOnDisk(expo, projectRoot);
+  await AndroidConfig.SplashScreen.setSplashScreenAsync(expo, projectRoot);
 }

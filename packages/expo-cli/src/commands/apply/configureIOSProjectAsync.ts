@@ -24,51 +24,11 @@ const withExistingInfoPlist = (config: ExportedConfig, projectRoot: string): Exp
   return config;
 };
 
-export default async function configureIOSProjectAsync(projectRoot: string) {
+async function compileIOSPluginsAsync(
+  projectRoot: string,
+  { expo, pack }: ExportedConfig
+): Promise<{ projectFileSystem: ProjectFileSystem }> {
   const projectFileSystem = await getFileSystemIosAsync(projectRoot);
-
-  // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
-  const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
-  IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, bundleIdentifier);
-
-  const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-
-  const expoUsername = await UserManager.getCurrentUsernameAsync();
-
-  // Add all built-in plugins
-  const { expo: exp, pack } = withPlugins(
-    [
-      [withExistingInfoPlist, projectRoot],
-      IOSConfig.Icons.withIcons,
-      IOSConfig.Branch.withBranch,
-      IOSConfig.Facebook.withFacebook,
-      IOSConfig.Google.withGoogle,
-      IOSConfig.Name.withDisplayName,
-      // IOSConfig.Name.withName,
-      IOSConfig.Orientation.withOrientation,
-      IOSConfig.RequiresFullScreen.withRequiresFullScreen,
-      IOSConfig.Scheme.withScheme,
-      IOSConfig.UserInterfaceStyle.withUserInterfaceStyle,
-      IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
-      IOSConfig.Version.withBuildNumber,
-      IOSConfig.Version.withVersion,
-      IOSConfig.Google.withGoogleServicesFile,
-      [IOSConfig.Updates.withUpdates, { expoUsername }],
-      // Entitlements
-      IOSConfig.Entitlements.withAppleSignInEntitlement,
-      IOSConfig.Entitlements.withAccessesContactNotes,
-      // TODO: We don't have a mechanism for getting the apple team id here yet
-      [IOSConfig.Entitlements.withICloudEntitlement, { appleTeamId: 'TODO-GET-APPLE-TEAM-ID' }],
-      IOSConfig.Entitlements.withAssociatedDomains,
-      // XcodeProject
-      IOSConfig.DeviceFamily.withDeviceFamily,
-      IOSConfig.Locales.withLocales,
-    ],
-    {
-      pack: originalConfig.pack,
-      expo: originalConfig.exp,
-    }
-  );
 
   const projectName = getProjectName(projectRoot);
 
@@ -87,20 +47,19 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   });
 
   // Configure the Info.plist
-  await modifyInfoPlistAsync(projectRoot, async infoPlist => {
-    infoPlist =
-      exp.ios?.infoPlist ||
-      IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(exp, infoPlist);
+  await modifyInfoPlistAsync(projectRoot, async data => {
+    data =
+      expo.ios?.infoPlist || IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(expo, data);
     if (typeof pack?.ios?.info === 'function') {
-      infoPlist = (
+      data = (
         await pack.ios.info({
           ...projectFileSystem,
           projectName,
-          data: infoPlist,
+          data,
         })
       ).data;
     }
-    return infoPlist;
+    return data;
   });
 
   // Configure Expo.plist
@@ -139,16 +98,65 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
     );
   }
 
-  // Other
-  await IOSConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
-
   // Run all post plugins
   await pack?.ios?.after?.({
     ...projectFileSystem,
     projectName,
   });
 
+  return { projectFileSystem };
+}
+
+function getExportedConfig(projectRoot: string): ExportedConfig {
+  const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  return { expo: originalConfig.exp, pack: originalConfig.pack };
+}
+
+export default async function configureIOSProjectAsync(projectRoot: string) {
+  // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
+  const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
+
+  // Add all built-in plugins
+  const { expo, pack } = withPlugins(
+    [
+      [withExistingInfoPlist, projectRoot],
+      [IOSConfig.BundleIdenitifer.withBundleIdentifierInPbxproj, { bundleIdentifier }],
+      IOSConfig.Icons.withIcons,
+      IOSConfig.Branch.withBranch,
+      IOSConfig.Facebook.withFacebook,
+      IOSConfig.Google.withGoogle,
+      IOSConfig.Name.withDisplayName,
+      // IOSConfig.Name.withName,
+      IOSConfig.Orientation.withOrientation,
+      IOSConfig.RequiresFullScreen.withRequiresFullScreen,
+      IOSConfig.Scheme.withScheme,
+      IOSConfig.UserInterfaceStyle.withUserInterfaceStyle,
+      IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
+      IOSConfig.Version.withBuildNumber,
+      IOSConfig.Version.withVersion,
+      IOSConfig.Google.withGoogleServicesFile,
+      [
+        IOSConfig.Updates.withUpdates,
+        { expoUsername: await UserManager.getCurrentUsernameAsync() },
+      ],
+      // Entitlements
+      IOSConfig.Entitlements.withAppleSignInEntitlement,
+      IOSConfig.Entitlements.withAccessesContactNotes,
+      // TODO: We don't have a mechanism for getting the apple team id here yet
+      [IOSConfig.Entitlements.withICloudEntitlement, { appleTeamId: 'TODO-GET-APPLE-TEAM-ID' }],
+      IOSConfig.Entitlements.withAssociatedDomains,
+      // XcodeProject
+      IOSConfig.DeviceFamily.withDeviceFamily,
+      IOSConfig.Locales.withLocales,
+    ],
+    getExportedConfig(projectRoot)
+  );
+
+  const { projectFileSystem } = await compileIOSPluginsAsync(projectRoot, { expo, pack });
   await commitFilesAsync(projectFileSystem);
+
+  // Other
+  await IOSConfig.SplashScreen.setSplashScreenAsync(expo, projectRoot);
 }
 
 async function modifyEntitlementsPlistAsync(projectRoot: string, callback: (plist: any) => any) {

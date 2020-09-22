@@ -5,7 +5,6 @@ import path from 'path';
 import { ConfigPlugin, ExpoConfig, ExportedConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { withEntitlementsPlist } from '../plugins/withPlist';
-import { Plist } from './IosConfig.types';
 import {
   getPbxproj,
   getProjectName,

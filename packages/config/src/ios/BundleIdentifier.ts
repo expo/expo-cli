@@ -1,9 +1,10 @@
 import plist, { PlistObject } from '@expo/plist';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
-import xcode from 'xcode';
+import xcode, { XcodeProject } from 'xcode';
 
-import { ExpoConfig } from '../Config.types';
+import { ExpoConfig, ExportedConfig } from '../Config.types';
+import { withAllPbxproj } from '../plugins/withPlist';
 import { InfoPlist } from './IosConfig.types';
 import {
   ConfigurationSectionEntry,
@@ -32,6 +33,23 @@ function setBundleIdentifier(config: ExpoConfig, infoPlist: InfoPlist): InfoPlis
   };
 }
 
+export const withBundleIdentifierInPbxproj = (
+  config: ExportedConfig,
+  {
+    bundleIdentifier,
+    updateProductName = true,
+  }: { bundleIdentifier: string; updateProductName?: boolean }
+): ExportedConfig => {
+  return withAllPbxproj(config, async props => {
+    return {
+      ...props,
+      data: props.data.map(project =>
+        applyBundleIdentifierForPbxproj(project, bundleIdentifier, updateProductName)
+      ),
+    };
+  });
+};
+
 /**
  * Gets the bundle identifier of the Xcode project found in the project directory.
  * If either the Xcode project doesn't exist or the project is not configured
@@ -51,7 +69,10 @@ function getBundleIdentifierFromPbxproj(projectRoot: string): string | null {
   }
   const project = xcode.project(pbxprojPath);
   project.parseSync();
+  return getBundleIdentifierFromPbxprojObject(project);
+}
 
+function getBundleIdentifierFromPbxprojObject(project: XcodeProject): string | null {
   const nativeTarget = findFirstNativeTarget(project);
 
   for (const [, item] of getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)) {
@@ -91,9 +112,17 @@ function updateBundleIdentifierForPbxproj(
   bundleIdentifier: string,
   updateProductName: boolean = true
 ): void {
-  const project = xcode.project(pbxprojPath);
+  let project = xcode.project(pbxprojPath);
   project.parseSync();
+  project = applyBundleIdentifierForPbxproj(project, bundleIdentifier, updateProductName);
+  fs.writeFileSync(pbxprojPath, project.writeSync());
+}
 
+function applyBundleIdentifierForPbxproj(
+  project: XcodeProject,
+  bundleIdentifier: string,
+  updateProductName: boolean = true
+): XcodeProject {
   const nativeTarget = findFirstNativeTarget(project);
 
   getBuildConfigurationForId(project, nativeTarget.buildConfigurationList).forEach(
@@ -112,7 +141,8 @@ function updateBundleIdentifierForPbxproj(
       }
     }
   );
-  fs.writeFileSync(pbxprojPath, project.writeSync());
+
+  return project;
 }
 
 /**
@@ -153,8 +183,17 @@ function resetPlistBundleIdentifier(plistPath: string): void {
   const rawPlist = fs.readFileSync(plistPath, 'utf8');
   const plistObject = plist.parse(rawPlist) as PlistObject;
 
+  const xml = applyPlistBundleIdentifier(plistObject);
+  if (xml && xml !== rawPlist) {
+    fs.writeFileSync(plistPath, xml);
+  }
+}
+
+function applyPlistBundleIdentifier(plistObject: PlistObject): string | null {
   if (plistObject.CFBundleIdentifier) {
-    if (plistObject.CFBundleIdentifier === defaultBundleId) return;
+    if (plistObject.CFBundleIdentifier === defaultBundleId) {
+      return null;
+    }
 
     // attempt to match default Info.plist format
     const format = { pretty: true, indent: `\t` };
@@ -167,10 +206,9 @@ function resetPlistBundleIdentifier(plistPath: string): void {
       format
     );
 
-    if (xml !== rawPlist) {
-      fs.writeFileSync(plistPath, xml);
-    }
+    return xml;
   }
+  return null;
 }
 
 export {
