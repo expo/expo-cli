@@ -58,8 +58,6 @@ export async function setLocalesAsync(
   }
 
   return props;
-  // // Sync the Xcode project with the changes.
-  // fs.writeFileSync(project.filepath, project.writeSync());
 }
 
 type LocaleMap = Record<string, any>;

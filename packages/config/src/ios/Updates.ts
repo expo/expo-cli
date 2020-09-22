@@ -48,7 +48,7 @@ export function setUpdatesConfig(
   let newExpoPlist: ExpoPlist = {
     ...expoPlist,
     EXUpdatesEnabled: getUpdatesEnabled(config),
-    EXUpdatesURL: getUpdateUrl(config, username) ?? undefined,
+    EXUpdatesURL: getUpdateUrl(config, username),
     EXUpdatesCheckOnLaunch: getUpdatesCheckOnLaunch(config),
     EXUpdatesLaunchWaitMs: getUpdatesTimeout(config),
   };

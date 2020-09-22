@@ -72,6 +72,11 @@ export const withIconColor: ConfigPlugin = config => {
   });
 };
 
+/**
+ * Resizes the user-provided icon to create a set of legacy icon files in
+ * their respective "mipmap" directories for <= Android 7, and creates a set of adaptive
+ * icon files for > Android 7 from the adaptive icon files (if provided).
+ */
 export async function setIconsAsync(
   config: ExpoConfig,
   props: ProjectFileSystem
@@ -88,31 +93,6 @@ export async function setIconsAsync(
   await configureAdaptiveIconAsync(icon, backgroundImage, backgroundColor ?? '#FFFFFF', props);
 
   return props;
-}
-
-/**
- * Resizes the user-provided icon to create a set of legacy icon files in
- * their respective "mipmap" directories for <= Android 7, and creates a set of adaptive
- * icon files for > Android 7 from the adaptive icon files (if provided).
- */
-export async function setIconAsync(config: ExpoConfig, projectRoot: string) {
-  const { foregroundImage, backgroundColor, backgroundImage } = getAdaptiveIcon(config);
-  const icon = foregroundImage ?? getIcon(config);
-
-  if (!icon) {
-    return null;
-  }
-
-  // await configureLegacyIconAsync(projectRoot, icon, backgroundImage, backgroundColor);
-
-  // await configureAdaptiveIconAsync(
-  //   projectRoot,
-  //   icon,
-  //   backgroundImage,
-  //   backgroundColor ?? '#FFFFFF'
-  // );
-
-  return true;
 }
 
 /**

@@ -31,7 +31,10 @@ export function getGoogleServicesFile(config: ExpoConfig) {
   return config.ios?.googleServicesFile ?? null;
 }
 
-export function setGoogleMapsApiKey(config: ExpoConfig, { GMSApiKey, ...infoPlist }: InfoPlist) {
+export function setGoogleMapsApiKey(
+  config: ExpoConfig,
+  { GMSApiKey, ...infoPlist }: InfoPlist
+): InfoPlist {
   const apiKey = getGoogleMapsApiKey(config);
 
   if (apiKey === null) {
