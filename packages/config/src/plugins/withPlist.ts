@@ -42,7 +42,7 @@ export function withAllPbxproj(
   config: ExportedConfig,
   action: PackModifier<IOSPackModifierProps<XcodeProject[]>>
 ): ExportedConfig {
-  return withModifier<IOSPackModifierProps<XcodeProject[]>>(config, 'ios', 'after', props => {
+  return withModifier<IOSPackModifierProps<XcodeProject[]>>(config, 'ios', 'after', async props => {
     const keys = Object.keys(props.files).filter(file => file.endsWith('project.pbxproj'));
     const data = keys.map(key => {
       const project = xcode.project(props.files[key]._path);
@@ -50,11 +50,13 @@ export function withAllPbxproj(
       return project;
     });
 
+    props = await action({ ...props, data });
+
     // this isn't fully compliant with the in-memory filesystem. Rewrite now so xcode projects can be read correctly in other plugins.
-    for (const project of data) {
+    for (const project of props.data) {
       fs.writeFileSync(project.filepath, project.writeSync());
     }
 
-    return action({ ...props, data });
+    return props;
   });
 }

@@ -113,11 +113,11 @@ function createEntitlementsFile(projectRoot: string) {
    * Write file from template
    */
   const entitlementsPath = getDefaultEntitlementsPath(projectRoot);
-  if (!fs.pathExistsSync(path.dirname(entitlementsPath))) {
-    fs.mkdirSync(path.dirname(entitlementsPath));
-  }
+  const entitlementsDir = path.dirname(entitlementsPath);
+  fs.ensureDirSync(entitlementsDir);
   fs.writeFileSync(entitlementsPath, ENTITLEMENTS_TEMPLATE);
-  const entitlementsRelativePath = entitlementsPath.replace(`${projectRoot}/ios/`, '');
+  const platformRoot = path.join(projectRoot, 'ios');
+  const entitlementsRelativePath = path.relative(platformRoot, entitlementsPath);
 
   /**
    * Add file to pbxproj under CODE_SIGN_ENTITLEMENTS
@@ -160,7 +160,6 @@ function getExistingEntitlementsPath(projectRoot: string): string | null {
     return null;
   }
   const [entitlementsPath, ...otherEntitlementsPaths] = entitlementsPaths[0];
-
   if (entitlementsPaths.length > 1) {
     console.warn(
       `Found multiple entitlements paths, using ${entitlementsPath}. Other paths ${JSON.stringify(
