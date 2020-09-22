@@ -6,6 +6,10 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [xdl] Deprecated `Project.getManifestUrlWithFallbackAsync()` in favor of `UrlUtils.constructManifestUrlAsync()`. [#2684](https://github.com/expo/expo-cli/pull/2684)
+- [xdl] Deprecated `Project.getUrlAsync()` in favor of `UrlUtils.constructManifestUrlAsync()`. [#2684](https://github.com/expo/expo-cli/pull/2684)
+- [xdl] Removed `Project.getSlugAsync()`, `Project.stopTunnelsAsync()`, `Project.startExpoServerAsync()`, `Project.stopExpoServerAsync()`, `Project.ProjectStatus`. [#2684](https://github.com/expo/expo-cli/pull/2684)
+
 ### 🎉 New features
 
 - [expo-cli] replace @expo/build-tools with @expo/eas-build-job to reduce depencies size. [#2679](https://github.com/expo/expo-cli/pull/2679)

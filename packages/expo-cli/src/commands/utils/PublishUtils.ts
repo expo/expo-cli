@@ -1,5 +1,5 @@
 import { getConfig } from '@expo/config';
-import { ApiV2, Project, UserManager } from '@expo/xdl';
+import { ApiV2, UserManager } from '@expo/xdl';
 import ora from 'ora';
 
 import log from '../../log';
@@ -80,7 +80,7 @@ export async function getPublishHistoryAsync(
   const api = ApiV2.clientForUser(user);
   return await api.postAsync('publish/history', {
     owner: exp.owner,
-    slug: await Project.getSlugAsync({ projectRoot, exp }),
+    slug: exp.slug,
     version: VERSION,
     releaseChannel: options.releaseChannel,
     count: options.count,
@@ -95,10 +95,11 @@ export async function setPublishToChannelAsync(
 ): Promise<any> {
   const user = await UserManager.ensureLoggedInAsync();
   const api = ApiV2.clientForUser(user);
+  const exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
   return await api.postAsync('publish/set', {
     releaseChannel: options.releaseChannel,
     publishId: options.publishId,
-    slug: await Project.getSlugAsync({ projectRoot }),
+    slug: exp.slug,
   });
 }
 
@@ -220,13 +221,12 @@ export async function getPublicationDetailAsync(
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
-  const slug = await Project.getSlugAsync({ projectRoot, exp });
 
   const api = ApiV2.clientForUser(user);
   const result = await api.postAsync('publish/details', {
     owner: exp.owner,
     publishId: options.publishId,
-    slug,
+    slug: exp.slug,
   });
 
   if (!result.queryResult) {
