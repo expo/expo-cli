@@ -1,4 +1,4 @@
-import { Platform } from '@expo/build-tools';
+import { Platform } from '@expo/eas-build-job';
 import chalk from 'chalk';
 import figures from 'figures';
 import fs from 'fs-extra';

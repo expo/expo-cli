@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [expo-cli] replace @expo/build-tools with @expo/eas-build-job to reduce depencies size. [#2679](https://github.com/expo/expo-cli/pull/2679)
+
 ### 🐛 Bug fixes
 
 ## [Mon, 21 Sep 2020 19:11:42 -0700](https://github.com/expo/expo-cli/commit/d77fcb4613fa535ca809c833acc016759d93d996)
