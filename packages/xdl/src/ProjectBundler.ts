@@ -99,7 +99,7 @@ export async function exportForAppHosting(
   assetUrl: string,
   outputDir: string,
   options: {
-    platforms?: Platform[];
+    // platforms?: Platform[];
     isDev?: boolean;
     dumpAssetmap?: boolean;
     dumpSourcemap?: boolean;
@@ -116,7 +116,8 @@ export async function exportForAppHosting(
   const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
   await fs.ensureDir(bundlesPathToWrite);
 
-  const platforms = options.platforms ?? ['android', 'ios'];
+  //   const platforms = options.platforms ?? ['android', 'ios'];
+  const platforms: Platform[] = ['android', 'ios'];
   const bundles = await buildPublishBundlesAsync(projectRoot, options.publishOptions, {
     dev: options.isDev,
     platforms,
