@@ -350,19 +350,19 @@ export async function downloadApkAsync(
   url?: string,
   downloadProgressCallback?: (roundedProgress: number) => void
 ) {
-  const versions = await Versions.versionsAsync();
-  const apkPath = path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`);
+  if (!url) {
+    const versions = await Versions.versionsAsync();
+    url = versions.androidUrl;
+  }
+
+  const filename = path.parse(url).name;
+  const apkPath = path.join(_apkCacheDirectory(), `${filename}.apk`);
 
   if (await fs.pathExists(apkPath)) {
     return apkPath;
   }
 
-  await Api.downloadAsync(
-    url || versions.androidUrl,
-    path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`),
-    undefined,
-    downloadProgressCallback
-  );
+  await Api.downloadAsync(url, apkPath, undefined, downloadProgressCallback);
   return apkPath;
 }
 
