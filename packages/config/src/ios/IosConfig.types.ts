@@ -25,6 +25,8 @@ export type InfoPlist = {
   FacebookAdvertiserIDCollectionEnabled?: boolean;
   UISupportedInterfaceOrientations?: InterfaceOrientation[];
   GMSApiKey?: string;
+  GADApplicationIdentifier?: string;
+  UIUserInterfaceStyle?: string;
 };
 
 export type ExpoPlist = {

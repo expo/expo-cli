@@ -79,7 +79,6 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
       if (files.length === 0) {
         fs.rmdirSync(pathToCheck);
       }
-    } catch (_) {
     } finally {
       oldPathParts.pop();
     }
@@ -97,7 +96,7 @@ export function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
         contents = contents.replace(new RegExp(currentPackageName, 'g'), newPackageName);
         fs.writeFileSync(filepath, contents);
       }
-    } catch (_) {}
+    } catch {}
   });
 }
 

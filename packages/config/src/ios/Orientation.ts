@@ -1,25 +1,21 @@
 import { ExpoConfig } from '../Config.types';
-import { InfoPlist } from './IosConfig.types';
+import { InfoPlist, InterfaceOrientation } from './IosConfig.types';
 
 export function getOrientation(config: ExpoConfig) {
-  if (config.orientation) {
-    return config.orientation;
-  }
-
-  return null;
+  return config.orientation ?? null;
 }
 
-export const PORTRAIT_ORIENTATIONS = [
+export const PORTRAIT_ORIENTATIONS: InterfaceOrientation[] = [
   'UIInterfaceOrientationPortrait',
   'UIInterfaceOrientationPortraitUpsideDown',
 ];
 
-export const LANDSCAPE_ORIENTATIONS = [
+export const LANDSCAPE_ORIENTATIONS: InterfaceOrientation[] = [
   'UIInterfaceOrientationLandscapeLeft',
   'UIInterfaceOrientationLandscapeRight',
 ];
 
-function getUISupportedInterfaceOrientations(orientation: string | null) {
+function getUISupportedInterfaceOrientations(orientation: string | null): InterfaceOrientation[] {
   if (orientation === 'portrait') {
     return PORTRAIT_ORIENTATIONS;
   } else if (orientation === 'landscape') {

@@ -29,7 +29,10 @@ export function getGoogleServicesFile(config: ExpoConfig) {
   return config.ios?.googleServicesFile ?? null;
 }
 
-export function setGoogleMapsApiKey(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setGoogleMapsApiKey(
+  config: ExpoConfig,
+  { GMSApiKey, ...infoPlist }: InfoPlist
+): InfoPlist {
   const apiKey = getGoogleMapsApiKey(config);
 
   if (apiKey === null) {
@@ -42,7 +45,10 @@ export function setGoogleMapsApiKey(config: ExpoConfig, infoPlist: InfoPlist) {
   };
 }
 
-export function setGoogleMobileAdsAppId(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setGoogleMobileAdsAppId(
+  config: ExpoConfig,
+  { GADApplicationIdentifier, ...infoPlist }: InfoPlist
+): InfoPlist {
   const appId = getGoogleMobileAdsAppId(config);
 
   if (appId === null) {
@@ -55,7 +61,10 @@ export function setGoogleMobileAdsAppId(config: ExpoConfig, infoPlist: InfoPlist
   };
 }
 
-export function setGoogleSignInReservedClientId(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setGoogleSignInReservedClientId(
+  config: ExpoConfig,
+  infoPlist: InfoPlist
+): InfoPlist {
   const reservedClientId = getGoogleSignInReservedClientId(config);
 
   if (reservedClientId === null) {
@@ -65,7 +74,7 @@ export function setGoogleSignInReservedClientId(config: ExpoConfig, infoPlist: I
   return appendScheme(reservedClientId, infoPlist);
 }
 
-export function setGoogleConfig(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setGoogleConfig(config: ExpoConfig, infoPlist: InfoPlist): InfoPlist {
   infoPlist = setGoogleMapsApiKey(config, infoPlist);
   infoPlist = setGoogleMobileAdsAppId(config, infoPlist);
   infoPlist = setGoogleSignInReservedClientId(config, infoPlist);
