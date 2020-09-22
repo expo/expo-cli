@@ -1,4 +1,4 @@
-import { ProjectConfig } from '../Config.types';
+import { ConfigPlugin, ProjectConfig } from '../Config.types';
 
 function ensureArray<T>(input: T | T[]): T[] {
   if (Array.isArray(input)) {
@@ -8,12 +8,8 @@ function ensureArray<T>(input: T | T[]): T[] {
 }
 
 type ExportedConfig = Pick<ProjectConfig, 'pack'> & { expo: ProjectConfig['exp'] };
-// Action or action with arguments
-type Plugin =
-  | ((config: ExportedConfig) => ExportedConfig)
-  | [(config: ExportedConfig, args: any) => ExportedConfig, any];
 
-export function withPlugins(plugins: Plugin[], config: ExportedConfig): ExportedConfig {
+export function withPlugins(config: ExportedConfig, plugins: ConfigPlugin[]): ExportedConfig {
   const out = plugins.reduce((prev, curr) => {
     const [plugin, args] = ensureArray(curr);
     return plugin(prev, args);

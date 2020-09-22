@@ -42,7 +42,7 @@ export function getAdaptiveIcon(config: ExpoConfig) {
 }
 
 export const withIcons: ConfigPlugin = config => {
-  return withPlugins([withIconImages, withIconColor], config);
+  return withPlugins(config, [withIconImages, withIconColor]);
 };
 
 export const withIconImages: ConfigPlugin = config => {

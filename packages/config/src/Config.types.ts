@@ -81,7 +81,9 @@ export type PackPlatforms = keyof PackConfig;
 
 export type ExportedConfig = { pack: PackConfig | null; expo: ExpoConfig };
 
-export type ConfigPlugin = (config: ExportedConfig) => ExportedConfig;
+export type ConfigPlugin =
+  | ((config: ExportedConfig) => ExportedConfig)
+  | [(config: ExportedConfig, args: any) => ExportedConfig, any];
 
 export { ExpoConfig };
 export type PackageJSONConfig = { [key: string]: any };

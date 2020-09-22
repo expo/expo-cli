@@ -13,7 +13,7 @@ export function getGoogleServicesFilePath(config: ExpoConfig) {
 }
 
 export const withGoogleServices: ConfigPlugin = config => {
-  return withPlugins([withClassPath, withApplyPlugin, withConfigFile], config);
+  return withPlugins(config, [withClassPath, withApplyPlugin, withConfigFile]);
 };
 
 export const withConfigFile = (

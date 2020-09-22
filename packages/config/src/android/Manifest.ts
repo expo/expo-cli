@@ -5,10 +5,7 @@ import path from 'path';
 import { Builder, Parser } from 'xml2js';
 
 import {
-  ExpoConfig,
   ExportedConfig,
-  FileModifierProps,
-  PackConfig,
   PackFileModifierProps,
   PackModifier,
   ProjectFile,

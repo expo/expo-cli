@@ -1,4 +1,5 @@
 import { AndroidConfig, getConfig } from '@expo/config';
+import { ExportedConfig, ProjectFileSystem } from '@expo/config/build/Config.types';
 import { Document } from '@expo/config/build/android/Manifest';
 import { withPlugins } from '@expo/config/build/plugins/withPlugins';
 import { UserManager } from '@expo/xdl';
@@ -80,39 +81,46 @@ function getExportedConfig(projectRoot: string): ExportedConfig {
   return { expo: originalConfig.exp, pack: originalConfig.pack };
 }
 
+function withExpoPlugins(
+  config: ExportedConfig,
+  { projectRoot, expoUsername }: { projectRoot: string; expoUsername: string | null }
+): ExportedConfig {
+  return withPlugins(config, [
+    AndroidConfig.Facebook.withFacebook,
+    AndroidConfig.Branch.withBranch,
+    AndroidConfig.AllowBackup.withAllowBackup,
+    AndroidConfig.GoogleServices.withGoogleServices,
+    AndroidConfig.Package.withAppGradle,
+    AndroidConfig.Version.withVersionCode,
+    AndroidConfig.Version.withVersionName,
+    AndroidConfig.Package.withPackageManifest,
+    AndroidConfig.Scheme.withScheme,
+    AndroidConfig.Orientation.withOrientation,
+    AndroidConfig.Permissions.withPermissions,
+    AndroidConfig.UserInterfaceStyle.withUIModeManifest,
+    AndroidConfig.GoogleMobileAds.withGoogleMobileAdsConfig,
+    AndroidConfig.GoogleMapsApiKey.withGoogleMapsApiKey,
+    AndroidConfig.IntentFilters.withIntentFilters,
+    [AndroidConfig.Updates.withUpdates, expoUsername],
+    AndroidConfig.UserInterfaceStyle.withOnConfigurationChangedMainActivity,
+    AndroidConfig.Facebook.withFacebookAppIdString,
+    AndroidConfig.Name.withName,
+    AndroidConfig.PrimaryColor.withPrimaryColor,
+    AndroidConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
+    AndroidConfig.NavigationBar.withNavigationBarConfig,
+    AndroidConfig.StatusBar.withStatusBarConfig,
+    AndroidConfig.Icon.withIcons,
+  ]);
+}
+
 export default async function configureAndroidProjectAsync(projectRoot: string) {
   // Check package before reading the config because it may mutate the config if the user is prompted to define it.
   await getOrPromptForPackage(projectRoot);
 
-  const { expo, pack } = withPlugins(
-    [
-      AndroidConfig.Facebook.withFacebook,
-      AndroidConfig.Branch.withBranch,
-      AndroidConfig.AllowBackup.withAllowBackup,
-      AndroidConfig.GoogleServices.withGoogleServices,
-      AndroidConfig.Package.withAppGradle,
-      AndroidConfig.Version.withVersionCode,
-      AndroidConfig.Version.withVersionName,
-      AndroidConfig.Package.withPackageManifest,
-      AndroidConfig.Scheme.withScheme,
-      AndroidConfig.Orientation.withOrientation,
-      AndroidConfig.Permissions.withPermissions,
-      AndroidConfig.UserInterfaceStyle.withUIModeManifest,
-      AndroidConfig.GoogleMobileAds.withGoogleMobileAdsConfig,
-      AndroidConfig.GoogleMapsApiKey.withGoogleMapsApiKey,
-      AndroidConfig.IntentFilters.withIntentFilters,
-      [AndroidConfig.Updates.withUpdates, await UserManager.getCurrentUsernameAsync()],
-      AndroidConfig.UserInterfaceStyle.withOnConfigurationChangedMainActivity,
-      AndroidConfig.Facebook.withFacebookAppIdString,
-      AndroidConfig.Name.withName,
-      AndroidConfig.PrimaryColor.withPrimaryColor,
-      AndroidConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
-      AndroidConfig.NavigationBar.withNavigationBarConfig,
-      AndroidConfig.StatusBar.withStatusBarConfig,
-      AndroidConfig.Icon.withIcons,
-    ],
-    getExportedConfig(projectRoot)
-  );
+  const { expo, pack } = withExpoPlugins(getExportedConfig(projectRoot), {
+    projectRoot,
+    expoUsername: await UserManager.getCurrentUsernameAsync(),
+  });
 
   const { projectFileSystem } = await compileAndroidPluginsAsync(projectRoot, { expo, pack });
   await commitFilesAsync(projectFileSystem);

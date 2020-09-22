@@ -1,4 +1,5 @@
-import { ExportedConfig, getConfig, IOSConfig, WarningAggregator } from '@expo/config';
+import { getConfig, IOSConfig, WarningAggregator } from '@expo/config';
+import { ExportedConfig, ProjectFileSystem } from '@expo/config/build/Config.types';
 import { getPbxproj, getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
 import { withPlugins } from '@expo/config/build/plugins/withPlugins';
 import { IosPlist, UserManager } from '@expo/xdl';
@@ -112,45 +113,54 @@ function getExportedConfig(projectRoot: string): ExportedConfig {
   return { expo: originalConfig.exp, pack: originalConfig.pack };
 }
 
+function withExpoPlugins(
+  config: ExportedConfig,
+  {
+    projectRoot,
+    bundleIdentifier,
+    expoUsername,
+  }: { projectRoot: string; bundleIdentifier: string; expoUsername: string | null }
+): ExportedConfig {
+  return withPlugins(config, [
+    [withExistingInfoPlist, projectRoot],
+    [IOSConfig.BundleIdenitifer.withBundleIdentifierInPbxproj, { bundleIdentifier }],
+    IOSConfig.Icons.withIcons,
+    IOSConfig.Branch.withBranch,
+    IOSConfig.Facebook.withFacebook,
+    IOSConfig.Google.withGoogle,
+    IOSConfig.Name.withDisplayName,
+    // IOSConfig.Name.withName,
+    IOSConfig.Orientation.withOrientation,
+    IOSConfig.RequiresFullScreen.withRequiresFullScreen,
+    IOSConfig.Scheme.withScheme,
+    IOSConfig.UserInterfaceStyle.withUserInterfaceStyle,
+    IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
+    IOSConfig.Version.withBuildNumber,
+    IOSConfig.Version.withVersion,
+    IOSConfig.Google.withGoogleServicesFile,
+    [IOSConfig.Updates.withUpdates, { expoUsername }],
+    // Entitlements
+    IOSConfig.Entitlements.withAppleSignInEntitlement,
+    IOSConfig.Entitlements.withAccessesContactNotes,
+    // TODO: We don't have a mechanism for getting the apple team id here yet
+    [IOSConfig.Entitlements.withICloudEntitlement, { appleTeamId: 'TODO-GET-APPLE-TEAM-ID' }],
+    IOSConfig.Entitlements.withAssociatedDomains,
+    // XcodeProject
+    IOSConfig.DeviceFamily.withDeviceFamily,
+    IOSConfig.Locales.withLocales,
+  ]);
+}
+
 export default async function configureIOSProjectAsync(projectRoot: string) {
   // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
   const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
-
+  const expoUsername = await UserManager.getCurrentUsernameAsync();
   // Add all built-in plugins
-  const { expo, pack } = withPlugins(
-    [
-      [withExistingInfoPlist, projectRoot],
-      [IOSConfig.BundleIdenitifer.withBundleIdentifierInPbxproj, { bundleIdentifier }],
-      IOSConfig.Icons.withIcons,
-      IOSConfig.Branch.withBranch,
-      IOSConfig.Facebook.withFacebook,
-      IOSConfig.Google.withGoogle,
-      IOSConfig.Name.withDisplayName,
-      // IOSConfig.Name.withName,
-      IOSConfig.Orientation.withOrientation,
-      IOSConfig.RequiresFullScreen.withRequiresFullScreen,
-      IOSConfig.Scheme.withScheme,
-      IOSConfig.UserInterfaceStyle.withUserInterfaceStyle,
-      IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
-      IOSConfig.Version.withBuildNumber,
-      IOSConfig.Version.withVersion,
-      IOSConfig.Google.withGoogleServicesFile,
-      [
-        IOSConfig.Updates.withUpdates,
-        { expoUsername: await UserManager.getCurrentUsernameAsync() },
-      ],
-      // Entitlements
-      IOSConfig.Entitlements.withAppleSignInEntitlement,
-      IOSConfig.Entitlements.withAccessesContactNotes,
-      // TODO: We don't have a mechanism for getting the apple team id here yet
-      [IOSConfig.Entitlements.withICloudEntitlement, { appleTeamId: 'TODO-GET-APPLE-TEAM-ID' }],
-      IOSConfig.Entitlements.withAssociatedDomains,
-      // XcodeProject
-      IOSConfig.DeviceFamily.withDeviceFamily,
-      IOSConfig.Locales.withLocales,
-    ],
-    getExportedConfig(projectRoot)
-  );
+  const { expo, pack } = withExpoPlugins(getExportedConfig(projectRoot), {
+    projectRoot,
+    bundleIdentifier,
+    expoUsername,
+  });
 
   const { projectFileSystem } = await compileIOSPluginsAsync(projectRoot, { expo, pack });
   await commitFilesAsync(projectFileSystem);
