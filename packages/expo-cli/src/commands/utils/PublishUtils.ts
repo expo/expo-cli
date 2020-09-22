@@ -1,4 +1,4 @@
-import { getConfig } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import { ApiV2, Project, UserManager } from '@expo/xdl';
 import ora from 'ora';
 
@@ -63,6 +63,21 @@ export type PublicationDetail = {
 
 const VERSION = 2;
 
+async function getSlugAsync({
+  projectRoot,
+  exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp,
+}: {
+  projectRoot: string;
+  exp?: Pick<ExpoConfig, 'slug'>;
+}): Promise<string> {
+  if (exp.slug) {
+    return exp.slug;
+  }
+  throw new Error(
+    `Your project config in ${projectRoot} must contain a "slug" field. Please supply this in your app.config.js or app.json`
+  );
+}
+
 export async function getPublishHistoryAsync(
   projectRoot: string,
   options: HistoryOptions
@@ -80,7 +95,7 @@ export async function getPublishHistoryAsync(
   const api = ApiV2.clientForUser(user);
   return await api.postAsync('publish/history', {
     owner: exp.owner,
-    slug: await Project.getSlugAsync({ projectRoot, exp }),
+    slug: await getSlugAsync({ projectRoot, exp }),
     version: VERSION,
     releaseChannel: options.releaseChannel,
     count: options.count,
@@ -98,7 +113,7 @@ export async function setPublishToChannelAsync(
   return await api.postAsync('publish/set', {
     releaseChannel: options.releaseChannel,
     publishId: options.publishId,
-    slug: await Project.getSlugAsync({ projectRoot }),
+    slug: await getSlugAsync({ projectRoot }),
   });
 }
 
@@ -220,7 +235,7 @@ export async function getPublicationDetailAsync(
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
-  const slug = await Project.getSlugAsync({ projectRoot, exp });
+  const slug = await getSlugAsync({ projectRoot, exp });
 
   const api = ApiV2.clientForUser(user);
   const result = await api.postAsync('publish/details', {

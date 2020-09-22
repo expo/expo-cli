@@ -25,7 +25,7 @@ interface HostInfo {
   serverOSVersion: string;
 }
 
-type PackagerOptions = ProjectSettings.ProjectSettings;
+export type PackagerOptions = ProjectSettings.ProjectSettings;
 
 type CachedSignedManifest =
   | {

@@ -3,6 +3,7 @@ import path from 'path';
 
 import Analytics from '../Analytics';
 import Logger, { Log, LogStream } from '../Logger';
+import { XDLError } from '../xdl';
 
 const MAX_MESSAGE_LENGTH = 200;
 const _projectRootToLogger: { [projectRoot: string]: Log } = {};
@@ -146,4 +147,10 @@ export function clearNotification(projectRoot: string, id: string) {
 
 export function attachLoggerStream(projectRoot: string, stream: LogStream) {
   _getLogger(projectRoot).addStream(stream);
+}
+
+export async function assertValidProjectRoot(projectRoot: string) {
+  if (!projectRoot) {
+    throw new XDLError('NO_PROJECT_ROOT', 'No project root specified');
+  }
 }
