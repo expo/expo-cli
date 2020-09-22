@@ -1,20 +1,20 @@
 import {
+  configFilename,
   ExpoAppManifest,
   ExpoConfig,
+  getConfig,
+  getDefaultTarget,
   Hook,
   HookArguments,
   HookType,
   PackageJSONConfig,
   Platform,
   ProjectTarget,
-  configFilename,
-  getConfig,
-  getDefaultTarget,
   readExpRcAsync,
   resolveModule,
 } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
-import { MetroDevServerOptions, bundleAsync, runMetroDevServerAsync } from '@expo/dev-server';
+import { bundleAsync, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import joi from '@hapi/joi';
@@ -120,7 +120,7 @@ type Release = {
   platform: string;
 };
 
-export type ProjectStatus = 'running' | 'ill' | 'exited';
+type ProjectStatus = 'running' | 'ill' | 'exited';
 
 export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
   const { packagerPort, expoServerPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
@@ -131,16 +131,6 @@ export async function currentStatus(projectDir: string): Promise<ProjectStatus> 
   } else {
     return 'exited';
   }
-}
-
-// DECPRECATED: use UrlUtils.constructManifestUrlAsync
-export async function getManifestUrlWithFallbackAsync(
-  projectRoot: string
-): Promise<{ url: string; isUrlFallback: false }> {
-  return {
-    url: await UrlUtils.constructManifestUrlAsync(projectRoot),
-    isUrlFallback: false,
-  };
 }
 
 async function _assertValidProjectRoot(projectRoot: string) {
@@ -167,48 +157,6 @@ function _requireFromProject(modulePath: string, projectRoot: string, exp: ExpoC
     // $FlowIssue: doesn't work with dynamic requires
     return require(fullPath);
   } catch (e) {
-    return null;
-  }
-}
-
-// TODO: Move to @expo/config
-export async function getSlugAsync({
-  projectRoot,
-  exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp,
-}: {
-  projectRoot: string;
-  exp?: Pick<ExpoConfig, 'slug'>;
-}): Promise<string> {
-  if (exp.slug) {
-    return exp.slug;
-  }
-  throw new XDLError(
-    'INVALID_MANIFEST',
-    `Your project config in ${projectRoot} must contain a "slug" field. Please supply this in your app.config.js or app.json`
-  );
-}
-
-export async function getLatestReleaseAsync(
-  projectRoot: string,
-  options: {
-    releaseChannel: string;
-    platform: string;
-    owner?: string;
-  }
-): Promise<Release | null> {
-  const user = await UserManager.ensureLoggedInAsync();
-  const api = ApiV2.clientForUser(user);
-  const result = await api.postAsync('publish/history', {
-    owner: options.owner,
-    slug: await getSlugAsync({ projectRoot }),
-    releaseChannel: options.releaseChannel,
-    count: 1,
-    platform: options.platform,
-  });
-  const { queryResult } = result;
-  if (queryResult && queryResult.length > 0) {
-    return queryResult[0];
-  } else {
     return null;
   }
 }
@@ -1670,7 +1618,7 @@ export async function stopReactNativeServerAsync(projectRoot: string): Promise<v
   });
 }
 
-export async function startExpoServerAsync(projectRoot: string): Promise<void> {
+async function startExpoServerAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
   const app = express();
@@ -1727,7 +1675,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
   await Exp.saveRecentExpRootAsync(projectRoot);
 }
 
-export async function stopExpoServerAsync(projectRoot: string): Promise<void> {
+async function stopExpoServerAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (packagerInfo && packagerInfo.expoServerPort) {
@@ -1936,7 +1884,7 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
   ]);
 }
 
-export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
+async function stopTunnelsAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   // This will kill all ngrok tunnels in the process.
   // We'll need to change this if we ever support more than one project
@@ -1979,12 +1927,6 @@ export async function setOptionsAsync(
     throw new XDLError('INVALID_OPTIONS', 'packagerPort must be an integer');
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, options);
-}
-
-// DEPRECATED(2019-08-21): use UrlUtils.constructManifestUrlAsync
-export async function getUrlAsync(projectRoot: string, options: object = {}): Promise<string> {
-  _assertValidProjectRoot(projectRoot);
-  return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
 }
 
 export async function startAsync(
