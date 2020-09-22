@@ -1,4 +1,4 @@
-import { ExpoAppManifest, ExpoConfig } from '@expo/config';
+import { ExpoAppManifest, ExpoConfig, Platform } from '@expo/config';
 import { BundleAssetWithFileHashes, BundleOutput } from '@expo/dev-server';
 import fs from 'fs-extra';
 import chunk from 'lodash/chunk';
@@ -20,6 +20,8 @@ const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 
 type ManifestAsset = { fileHashes: string[]; files: string[]; hash: string };
 
+export type PlatformBundles = { [key in Platform]?: BundleOutput };
+
 export type Asset = ManifestAsset | BundleAssetWithFileHashes;
 
 type ManifestResolutionError = Error & {
@@ -27,14 +29,12 @@ type ManifestResolutionError = Error & {
   manifestField?: string;
 };
 
-type BundlesByPlatform = { android: BundleOutput; ios: BundleOutput };
-
 type ExportAssetsOptions = {
   projectRoot: string;
   exp: ExpoAppManifest;
   hostedUrl: string;
   assetPath: string;
-  bundles: BundlesByPlatform;
+  bundles: PlatformBundles;
   outputDir?: string;
 };
 
@@ -323,7 +323,7 @@ async function collectAssets(
   projectRoot: string,
   exp: ExpoAppManifest,
   hostedAssetPrefix: string,
-  bundles: BundlesByPlatform
+  bundleMap: PlatformBundles
 ): Promise<Asset[]> {
   // Resolve manifest assets to their hosted URL and add them to the list of assets to
   // be uploaded. Modifies exp.
@@ -341,5 +341,10 @@ async function collectAssets(
     strict: true,
   });
 
-  return [...bundles.ios.assets, ...bundles.android.assets, ...manifestAssets];
+  return [
+    ...(bundleMap.ios?.assets || []),
+    ...(bundleMap.web?.assets || []),
+    ...(bundleMap.android?.assets || []),
+    ...manifestAssets,
+  ];
 }

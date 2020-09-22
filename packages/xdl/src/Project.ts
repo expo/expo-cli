@@ -1,20 +1,25 @@
 import {
+  configFilename,
   ExpoAppManifest,
   ExpoConfig,
+  getConfig,
+  getDefaultTarget,
   Hook,
   HookArguments,
   HookType,
   PackageJSONConfig,
   Platform,
   ProjectTarget,
-  configFilename,
-  getConfig,
-  getDefaultTarget,
   readExpRcAsync,
   resolveModule,
 } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
-import { MetroDevServerOptions, bundleAsync, runMetroDevServerAsync } from '@expo/dev-server';
+import {
+  bundleAsync,
+  BundleOutput,
+  MetroDevServerOptions,
+  runMetroDevServerAsync,
+} from '@expo/dev-server';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import joi from '@hapi/joi';
@@ -53,7 +58,7 @@ import { maySkipManifestValidation } from './Env';
 import { ErrorCode } from './ErrorCode';
 import * as Exp from './Exp';
 import logger from './Logger';
-import { Asset, exportAssetsAsync, publishAssetsAsync } from './ProjectAssets';
+import { Asset, exportAssetsAsync, PlatformBundles, publishAssetsAsync } from './ProjectAssets';
 import * as ProjectSettings from './ProjectSettings';
 import * as Sentry from './Sentry';
 import * as ThirdParty from './ThirdParty';
@@ -376,6 +381,7 @@ export async function exportForAppHosting(
   assetUrl: string,
   outputDir: string,
   options: {
+    platforms?: Platform[];
     isDev?: boolean;
     dumpAssetmap?: boolean;
     dumpSourcemap?: boolean;
@@ -392,11 +398,14 @@ export async function exportForAppHosting(
   const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
   await fs.ensureDir(bundlesPathToWrite);
 
+  const platforms = options.platforms ?? ['android', 'ios'];
   const bundles = await buildPublishBundlesAsync(projectRoot, options.publishOptions, {
     dev: options.isDev,
+    platforms,
   });
-  const iosBundle = bundles.ios.code;
-  const androidBundle = bundles.android.code;
+
+  const iosBundle = bundles.ios!.code;
+  const androidBundle = bundles.android!.code;
 
   const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
@@ -505,8 +514,8 @@ export async function exportForAppHosting(
     JSON.stringify(iosManifest)
   );
 
-  const iosSourceMap = bundles.ios.map;
-  const androidSourceMap = bundles.android.map;
+  const iosSourceMap = bundles.ios!.map;
+  const androidSourceMap = bundles.android!.map;
 
   // build source maps
   if (options.dumpSourcemap) {
@@ -630,10 +639,10 @@ export interface PublishedProjectResult {
 
 export async function publishAsync(
   projectRoot: string,
-  options: PublishOptions = {}
+  publishOptions: PublishOptions = {}
 ): Promise<PublishedProjectResult> {
-  options.target = options.target ?? getDefaultTarget(projectRoot);
-  const target = options.target;
+  publishOptions.target = publishOptions.target ?? getDefaultTarget(projectRoot);
+  const target = publishOptions.target;
   const user = await UserManager.ensureLoggedInAsync();
 
   Analytics.logEvent('Publish', {
@@ -650,26 +659,26 @@ export async function publishAsync(
   }
 
   // Get project config
-  const { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, options);
+  const { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
 
   // TODO: refactor this out to a function, throw error if length doesn't match
   const { hooks } = exp;
   delete exp.hooks;
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
-  const bundles = await buildPublishBundlesAsync(projectRoot, options);
-  const androidBundle = bundles.android.code;
-  const iosBundle = bundles.ios.code;
+  const bundles = await buildPublishBundlesAsync(projectRoot, publishOptions);
+  const androidBundle = bundles.android!.code;
+  const iosBundle = bundles.ios!.code;
 
   const files = [
-    ['index.ios.js', bundles.ios.code],
-    ['index.android.js', bundles.android.code],
+    ['index.ios.js', bundles.ios!.code],
+    ['index.android.js', bundles.android!.code],
   ];
   // Account for inline source maps
-  if (bundles.ios.map) {
-    files.push([chalk.dim('index.ios.js.map'), bundles.ios.map]);
+  if (bundles.ios!.map) {
+    files.push([chalk.dim('index.ios.js.map'), bundles.ios!.map]);
   }
-  if (bundles.android.map) {
-    files.push([chalk.dim('index.android.js.map'), bundles.android.map]);
+  if (bundles.android!.map) {
+    files.push([chalk.dim('index.android.js.map'), bundles.android!.map]);
   }
 
   logger.global.info('');
@@ -690,8 +699,8 @@ export async function publishAsync(
 
   const shouldPublishAndroidMaps = !!exp.android && !!exp.android.publishSourceMapPath;
   const shouldPublishIosMaps = !!exp.ios && !!exp.ios.publishSourceMapPath;
-  const androidSourceMap = hasHooks || shouldPublishAndroidMaps ? bundles.android.map : null;
-  const iosSourceMap = hasHooks || shouldPublishIosMaps ? bundles.ios.map : null;
+  const androidSourceMap = hasHooks || shouldPublishAndroidMaps ? bundles.android!.map : null;
+  const iosSourceMap = hasHooks || shouldPublishIosMaps ? bundles.ios!.map : null;
 
   let response;
   try {
@@ -700,7 +709,7 @@ export async function publishAsync(
       exp,
       iosBundle,
       androidBundle,
-      options,
+      options: publishOptions,
     });
   } catch (e) {
     if (e.serverError === 'SCHEMA_VALIDATION_ERROR') {
@@ -725,13 +734,13 @@ export async function publishAsync(
       ExponentTools.getManifestAsync(response.url, {
         'Exponent-SDK-Version': exp.sdkVersion,
         'Exponent-Platform': 'android',
-        'Expo-Release-Channel': options.releaseChannel,
+        'Expo-Release-Channel': publishOptions.releaseChannel,
         Accept: 'application/expo+json,application/json',
       }),
       ExponentTools.getManifestAsync(response.url, {
         'Exponent-SDK-Version': exp.sdkVersion,
         'Exponent-Platform': 'ios',
-        'Expo-Release-Channel': options.releaseChannel,
+        'Expo-Release-Channel': publishOptions.releaseChannel,
         Accept: 'application/expo+json,application/json',
       }),
     ]);
@@ -766,7 +775,7 @@ export async function publishAsync(
     projectRoot,
     pkg,
     exp,
-    releaseChannel: options.releaseChannel ?? 'default',
+    releaseChannel: publishOptions.releaseChannel ?? 'default',
     iosManifestUrl: fullManifestUrl,
     iosManifest,
     iosBundle,
@@ -791,8 +800,8 @@ export async function publishAsync(
   return {
     ...response,
     url:
-      options.releaseChannel && options.releaseChannel !== 'default'
-        ? `${response.url}?release-channel=${options.releaseChannel}`
+      publishOptions.releaseChannel && publishOptions.releaseChannel !== 'default'
+        ? `${response.url}?release-channel=${publishOptions.releaseChannel}`
         : response.url,
   };
 }
@@ -868,8 +877,8 @@ async function _getPublishExpConfigAsync(
 async function buildPublishBundlesAsync(
   projectRoot: string,
   publishOptions: PublishOptions = {},
-  bundleOptions: { dev?: boolean } = {}
-) {
+  bundleOptions: { dev?: boolean; platforms?: Platform[] } = {}
+): Promise<PlatformBundles> {
   if (!getenv.boolish('EXPO_USE_DEV_SERVER', false)) {
     try {
       await startReactNativeServerAsync({
@@ -888,7 +897,7 @@ async function buildPublishBundlesAsync(
     }
   }
 
-  const platforms: Platform[] = ['android', 'ios'];
+  const platforms: Platform[] = bundleOptions.platforms ?? ['android', 'ios'];
   const [android, ios] = await bundleAsync(
     projectRoot,
     {
@@ -911,7 +920,10 @@ async function buildPublishBundlesAsync(
 }
 
 // Fetch iOS and Android bundles for publishing
-async function fetchPublishBundlesAsync(projectRoot: string, opts?: PackagerOptions) {
+async function fetchPublishBundlesAsync(
+  projectRoot: string,
+  opts?: PackagerOptions
+): Promise<PlatformBundles> {
   const entryPoint = Exp.determineEntryPoint(projectRoot);
   const publishUrl = await UrlUtils.constructPublishUrlAsync(
     projectRoot,
