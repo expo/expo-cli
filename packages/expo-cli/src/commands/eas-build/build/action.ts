@@ -1,4 +1,4 @@
-import { Platform } from '@expo/build-tools';
+import { Platform } from '@expo/eas-build-job';
 import { ApiV2 } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
@@ -11,15 +11,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { CredentialsSource, EasJsonReader } from '../../../easJson';
 import log from '../../../log';
 import { ensureProjectExistsAsync } from '../../../projects';
-import { UploadType, uploadAsync } from '../../../uploads';
+import { uploadAsync, UploadType } from '../../../uploads';
 import { createProgressTracker } from '../../utils/progress';
 import { platformDisplayNames } from '../constants';
 import {
   AnalyticsEvent,
   Build,
   BuildCommandPlatform,
-  BuildStatus,
   Builder,
+  BuildStatus,
   CommandContext,
 } from '../types';
 import Analytics from '../utils/analytics';

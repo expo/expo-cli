@@ -1,5 +1,5 @@
-import { BuildType, iOS, Job, Platform, sanitizeJob } from '@expo/build-tools';
 import { IOSConfig } from '@expo/config';
+import { BuildType, iOS, Job, Platform, sanitizeJob } from '@expo/eas-build-job';
 import chalk from 'chalk';
 import figures from 'figures';
 import sortBy from 'lodash/sortBy';

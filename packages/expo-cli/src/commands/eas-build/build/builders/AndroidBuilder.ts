@@ -1,4 +1,4 @@
-import { Android, BuildType, Job, Platform, sanitizeJob } from '@expo/build-tools';
+import { Android, BuildType, Job, Platform, sanitizeJob } from '@expo/eas-build-job';
 import chalk from 'chalk';
 import figures from 'figures';
 import fs from 'fs-extra';

@@ -64,10 +64,10 @@
     "rimraf": "^3.0.2"
   },
   "dependencies": {
-    "@expo/build-tools": "^0.1.16",
     "@expo/bunyan": "3.0.2",
     "@expo/config": "3.3.3",
     "@expo/dev-tools": "0.13.45",
+    "@expo/eas-build-job": "^0.1.0",
     "@expo/json-file": "8.2.24",
     "@expo/package-manager": "0.0.33",
     "@expo/plist": "0.0.10",
