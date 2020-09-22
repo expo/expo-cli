@@ -642,7 +642,6 @@ export async function openProjectAsync({
     return { success: true, url: projectUrl };
   } catch (e) {
     Logger.global.error(`Couldn't start project on Android: ${e.message}`);
-    Logger.global.error(chalk.gray(e.stack));
     return { success: false, error: e };
   }
 }
