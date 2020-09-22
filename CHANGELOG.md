@@ -10,7 +10,34 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Mon, 21 Sep 2020 19:11:42 -0700](https://github.com/expo/expo-cli/commit/d77fcb4613fa535ca809c833acc016759d93d996)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
 - [configure-splash-screen] Simplified and unified arguments, parameters and `--help` output. See `configure-splash-screen --help` to see the changes. [#2297](https://github.com/expo/expo-cli/pull/2297)
+
+### 🐛 Bug fixes
+
+- [xdl] Fix downloadApkAsync so it uses passed in URL rather than always depending on versions endpoint `androidUrl`
+- [cli] Bring back support for EXPO_APPLE_ID ([#2671](https://github.com/expo/expo-cli/issues/2671))
+
+### 📦 Packages updated
+
+- @expo/config@3.3.3
+- @expo/configure-splash-screen@0.1.19
+- @expo/dev-server@0.1.28
+- @expo/dev-tools@0.13.45
+- @expo/electron-adapter@0.0.19
+- expo-cli@3.27.7
+- expo-optimize@0.1.50
+- @expo/metro-config@0.1.28
+- @expo/next-adapter@2.1.33
+- expo-pwa@0.0.38
+- uri-scheme@1.0.34
+- @expo/webpack-config@0.12.32
+- @expo/xdl@58.0.6
 
 ## [Fri, 18 Sep 2020 12:23:25 -0700](https://github.com/expo/expo-cli/commit/a5eb9cafd0b46120d3fcafa861b4fac164c7d978)
 
