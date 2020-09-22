@@ -4,7 +4,6 @@ import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
-import { Plist } from './IosConfig.types';
 import {
   getPbxproj,
   getProjectName,
@@ -12,6 +11,8 @@ import {
   isNotComment,
   isNotTestHost,
 } from './utils/Xcodeproj';
+
+type Plist = Record<string, any>;
 
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
 
