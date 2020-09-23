@@ -6,15 +6,43 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+## [Tue, 22 Sep 2020 22:27:01 -0700](https://github.com/expo/expo-cli/commit/877053dc8395e1cd98d2296eccf336d4f7c08f05)
+
+### 🛠 Breaking changes
+
 - [xdl] Deprecated `Project.getManifestUrlWithFallbackAsync()` in favor of `UrlUtils.constructManifestUrlAsync()`. [#2684](https://github.com/expo/expo-cli/pull/2684)
 - [xdl] Deprecated `Project.getUrlAsync()` in favor of `UrlUtils.constructManifestUrlAsync()`. [#2684](https://github.com/expo/expo-cli/pull/2684)
 - [xdl] Removed `Project.getSlugAsync()`, `Project.stopTunnelsAsync()`, `Project.startExpoServerAsync()`, `Project.stopExpoServerAsync()`, `Project.ProjectStatus`. [#2684](https://github.com/expo/expo-cli/pull/2684)
 
 ### 🎉 New features
 
-- [expo-cli] replace @expo/build-tools with @expo/eas-build-job to reduce depencies size. [#2679](https://github.com/expo/expo-cli/pull/2679)
+- [expo-cli] replace @expo/build-tools with @expo/eas-build-job to reduce dependencies size. [#2679](https://github.com/expo/expo-cli/pull/2679)
+- [expo-cli] Upgrade - skip installing the expo package if it is already set to the correct version
+- [expo-cli] Upgrade - link to upgrade-helper in bare workflow when relevant
 
 ### 🐛 Bug fixes
+
+- [config] improve modules ([#2674](https://github.com/expo/expo-cli/issues/2674))
+- [expo-cli] Support unauthorized devices ([#2681](https://github.com/expo/expo-cli/issues/2681))
+
+### 📦 Packages updated
+
+- @expo/config@3.3.4
+- @expo/dev-server@0.1.29
+- @expo/dev-tools@0.13.46
+- @expo/electron-adapter@0.0.20
+- expo-cli@3.27.8
+- expo-optimize@0.1.51
+- @expo/metro-config@0.1.29
+- @expo/next-adapter@2.1.34
+- expo-pwa@0.0.39
+- uri-scheme@1.0.35
+- @expo/webpack-config@0.12.33
+- @expo/xdl@58.0.7
 
 ## [Mon, 21 Sep 2020 19:11:42 -0700](https://github.com/expo/expo-cli/commit/d77fcb4613fa535ca809c833acc016759d93d996)
 
