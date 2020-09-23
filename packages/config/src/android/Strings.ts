@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Builder } from 'xml2js';
 
-import { Document, getProjectXMLPathAsync, readXMLAsync } from './Manifest';
+import { Document, getProjectResourcePathAsync, readXMLAsync } from './Manifest';
 import { XMLItem } from './Styles';
 
 const BASE_STRINGS_XML = `<resources></resources>`;
@@ -11,7 +11,7 @@ export async function getProjectStringsXMLPathAsync(
   projectDir: string,
   { kind = 'values' }: { kind?: string } = {}
 ): Promise<string | null> {
-  return getProjectXMLPathAsync(projectDir, { kind, name: 'strings' });
+  return getProjectResourcePathAsync(projectDir, { kind, name: 'strings' });
 }
 
 export async function readStringsXMLAsync(stringsPath: string): Promise<Document> {

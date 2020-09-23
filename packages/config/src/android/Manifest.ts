@@ -3,15 +3,17 @@ import { EOL } from 'os';
 import path from 'path';
 import { Builder, Parser } from 'xml2js';
 
+import * as XML from './XML';
+
 export type Document = { [key: string]: any };
 
 export type InputOptions = {
   manifestPath?: string | null;
   projectRoot?: string | null;
-  manifest?: Document | null;
+  manifest?: XML.XMLObject | null;
 };
 
-export function logManifest(doc: Document) {
+export function logManifest(doc: XML.XMLObject) {
   const builder = new Builder();
   const xmlInput = builder.buildObject(doc);
   console.log(xmlInput);
@@ -26,7 +28,7 @@ export async function writeXMLAsync(options: { path: string; xml: any }): Promis
 export async function readXMLAsync(options: {
   path: string;
   fallback?: string;
-}): Promise<Document> {
+}): Promise<XML.XMLObject> {
   const contents = await fs.readFile(options.path, { encoding: 'utf8', flag: 'r' });
   const parser = new Parser();
   const manifest = parser.parseStringPromise(contents || options.fallback || '');
@@ -88,7 +90,7 @@ export async function writeAndroidManifestAsync(
   await fs.writeFile(manifestPath, manifestXml);
 }
 
-export async function getProjectXMLPathAsync(
+export async function getProjectResourcePathAsync(
   projectDir: string,
   { kind = 'values', name }: { kind?: string; name: string }
 ): Promise<string | null> {
@@ -122,18 +124,18 @@ export async function getProjectAndroidManifestPathAsync(
   return null;
 }
 
-export async function readAndroidManifestAsync(manifestPath: string): Promise<Document> {
+export async function readAndroidManifestAsync(manifestPath: string): Promise<XML.XMLObject> {
   const contents = await fs.readFile(manifestPath, { encoding: 'utf8', flag: 'r' });
   const parser = new Parser();
   const manifest = parser.parseStringPromise(contents);
   return manifest;
 }
 
-export async function getPackageAsync(manifest: Document): Promise<string | null> {
+export async function getPackageAsync(manifest: XML.XMLObject): Promise<string | null> {
   return manifest.manifest?.['$']?.package ?? null;
 }
 
-export function getMainApplication(manifest: Document): any | null {
+export function getMainApplication(manifest: XML.XMLObject): any | null {
   return (
     manifest?.manifest?.application?.filter(
       (e: any) => e['$']['android:name'] === '.MainApplication'
@@ -141,8 +143,8 @@ export function getMainApplication(manifest: Document): any | null {
   );
 }
 
-export function getMainActivity(manifest: Document): any | null {
-  const mainActivity = manifest.manifest.application[0].activity.filter(
+export function getMainActivity(manifest: XML.XMLObject): any | null {
+  const mainActivity = manifest?.manifest?.application?.[0]?.activity?.filter?.(
     (e: any) => e['$']['android:name'] === '.MainActivity'
   );
   return mainActivity[0] ?? null;
