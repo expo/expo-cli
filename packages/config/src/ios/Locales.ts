@@ -11,7 +11,11 @@ import {
   getProjectName,
 } from './utils/Xcodeproj';
 
-export function getLocales(config: ExpoConfig): Record<string, string> | null {
+type LocaleJson = Record<string, string>;
+type ResolvedLocalesJson = Record<string, LocaleJson>;
+type ExpoConfigLocales = NonNullable<ExpoConfig['locales']>;
+
+export function getLocales(config: ExpoConfig): Record<string, string | LocaleJson> | null {
   return config.locales ?? null;
 }
 
@@ -55,23 +59,27 @@ export async function setLocalesAsync(config: ExpoConfig, projectRoot: string): 
   fs.writeFileSync(project.filepath, project.writeSync());
 }
 
-type LocaleMap = Record<string, any>;
-
-async function getResolvedLocalesAsync(
+export async function getResolvedLocalesAsync(
   projectRoot: string,
-  input: Record<string, string>
-): Promise<LocaleMap> {
-  const locales: LocaleMap = {};
-  for (const [lang, path] of Object.entries(input)) {
-    try {
-      locales[lang] = await JsonFile.readAsync(join(projectRoot, path));
-    } catch (e) {
-      // Add a warning when a json file cannot be parsed.
-      addWarningIOS(
-        `locales-${lang}`,
-        `Failed to parse JSON of locale file for language: ${lang}`,
-        'https://docs.expo.io/distribution/app-stores/#localizing-your-ios-app'
-      );
+  input: ExpoConfigLocales
+): Promise<ResolvedLocalesJson> {
+  const locales: ResolvedLocalesJson = {};
+  for (const [lang, localeJsonPath] of Object.entries(input)) {
+    if (typeof localeJsonPath === 'string') {
+      try {
+        locales[lang] = await JsonFile.readAsync(join(projectRoot, localeJsonPath));
+      } catch (e) {
+        // Add a warning when a json file cannot be parsed.
+        addWarningIOS(
+          `locales-${lang}`,
+          `Failed to parse JSON of locale file for language: ${lang}`,
+          'https://docs.expo.io/distribution/app-stores/#localizing-your-ios-app'
+        );
+      }
+    } else {
+      // In the off chance that someone defined the locales json in the config, pass it directly to the object.
+      // We do this to make the types more elegant.
+      locales[lang] = localeJsonPath;
     }
   }
 

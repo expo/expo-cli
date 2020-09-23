@@ -1,10 +1,20 @@
 import { fs, vol } from 'memfs';
 import * as path from 'path';
 
+import { addWarningIOS } from '../../WarningAggregator';
 import { getLocales, setLocalesAsync } from '../Locales';
 const actualFs = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
+
+jest.mock('../../WarningAggregator', () => ({
+  addWarningIOS: jest.fn(),
+}));
+
+afterAll(() => {
+  jest.unmock('fs');
+  jest.unmock('../../WarningAggregator');
+});
 
 function getDirFromFS(fsJSON: Record<string, string | null>, rootDir: string) {
   return Object.entries(fsJSON)
@@ -59,6 +69,10 @@ describe('e2e: iOS locales', () => {
         platforms: ['ios', 'android'],
         locales: {
           fr: 'lang/fr.json',
+          // doesn't exist
+          xx: 'lang/xx.json',
+          // partially support inlining the JSON so our Expo Config type doesn't conflict with the resolved manifest type.
+          es: { CFBundleDisplayName: 'spanish-name' },
         },
       },
       projectRoot
@@ -73,7 +87,15 @@ describe('e2e: iOS locales', () => {
     const after = getDirFromFS(vol.toJSON(), projectRoot);
     const locales = Object.keys(after).filter(value => value.endsWith('InfoPlist.strings'));
 
-    expect(locales.length).toBe(1);
+    expect(locales.length).toBe(2);
     expect(after[locales[0]]).toMatchSnapshot();
+    // Test that the inlined locale is resolved.
+    expect(after[locales[1]]).toMatch(/spanish-name/);
+    // Test a warning is thrown for an invalid locale JSON file.
+    expect(addWarningIOS).toHaveBeenCalledWith(
+      'locales-xx',
+      'Failed to parse JSON of locale file for language: xx',
+      'https://docs.expo.io/distribution/app-stores/#localizing-your-ios-app'
+    );
   });
 });
