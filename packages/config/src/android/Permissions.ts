@@ -1,7 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { Document } from './Manifest';
-
-type XMLPermission = { $: { 'android:name': string } };
+import { Document, ManifestUsesPermission } from './Manifest';
 
 const USES_PERMISSION = 'uses-permission';
 
@@ -68,11 +66,11 @@ export async function setAndroidPermissions(config: ExpoConfig, manifestDocument
     permissionsToAdd = [...providedPermissions, ...requiredPermissions];
   }
 
-  let manifestPermissions: XMLPermission[] = [];
+  let manifestPermissions: ManifestUsesPermission[] = [];
   if (!manifestDocument.manifest.hasOwnProperty('uses-permission')) {
     manifestDocument.manifest['uses-permission'] = [];
   }
-  manifestPermissions = manifestDocument.manifest['uses-permission'];
+  manifestPermissions = manifestDocument.manifest['uses-permission'] ?? [];
 
   permissionsToAdd.forEach(permission => {
     if (!isPermissionAlreadyRequested(permission, manifestPermissions)) {
@@ -85,7 +83,7 @@ export async function setAndroidPermissions(config: ExpoConfig, manifestDocument
 
 export function isPermissionAlreadyRequested(
   permission: string,
-  manifestPermissions: XMLPermission[]
+  manifestPermissions: ManifestUsesPermission[]
 ): boolean {
   const hasPermission = manifestPermissions.filter(
     (e: any) => e['$']['android:name'] === permission
@@ -93,7 +91,10 @@ export function isPermissionAlreadyRequested(
   return hasPermission.length > 0;
 }
 
-export function addPermissionToManifest(permission: string, manifestPermissions: XMLPermission[]) {
+export function addPermissionToManifest(
+  permission: string,
+  manifestPermissions: ManifestUsesPermission[]
+) {
   manifestPermissions.push({ $: { 'android:name': permission } });
   return manifestPermissions;
 }
@@ -104,6 +105,7 @@ export function removePermissions(doc: Document, permissionNames?: string[]) {
   const nextPermissions = [];
   for (const attribute of permissions) {
     if (targetNames) {
+      // @ts-ignore: name isn't part of the type
       const value = attribute['$']['android:name'] || attribute['$']['name'];
       if (!targetNames.includes(value)) {
         nextPermissions.push(attribute);
@@ -115,7 +117,7 @@ export function removePermissions(doc: Document, permissionNames?: string[]) {
 }
 
 export function addPermission(doc: Document, permissionName: string): void {
-  const usesPermissions: { [key: string]: any }[] = doc.manifest[USES_PERMISSION] || [];
+  const usesPermissions: ManifestUsesPermission[] = doc.manifest[USES_PERMISSION] || [];
   usesPermissions.push({
     $: { 'android:name': permissionName },
   });

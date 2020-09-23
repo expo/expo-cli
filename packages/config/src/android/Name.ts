@@ -4,8 +4,9 @@ import {
   readStringsXMLAsync,
   removeStringItem,
   setStringItem,
-  writeStringsXMLAsync,
+  StringsResourceXML,
 } from './Strings';
+import { writeXMLAsync } from './XML';
 
 export function getName(config: ExpoConfig) {
   return typeof config.name === 'string' ? config.name : null;
@@ -39,14 +40,14 @@ export async function setName(
   stringsJSON = applyName(name, stringsJSON);
 
   try {
-    await writeStringsXMLAsync(stringsPath, stringsJSON);
+    await writeXMLAsync({ path: stringsPath, xml: stringsJSON });
   } catch (e) {
     throw new Error(`Error setting name. Cannot write strings.xml to ${stringsPath}.`);
   }
   return true;
 }
 
-function applyName(name: string | null, stringsJSON: Document): Document {
+function applyName(name: string | null, stringsJSON: StringsResourceXML): StringsResourceXML {
   if (name) {
     return setStringItem([{ $: { name: 'app_name' }, _: name }], stringsJSON);
   }

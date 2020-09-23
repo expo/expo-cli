@@ -1,7 +1,8 @@
 import { ExpoConfig } from '../Config.types';
 import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
-import { readXMLAsync, writeXMLAsync } from './Manifest';
-import { getProjectStylesXMLPathAsync, setStylesItem, XMLItem } from './Styles';
+import { ResourceItemXML } from './Resources';
+import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
+import { readXMLAsync, writeXMLAsync } from './XML';
 
 const COLOR_PRIMARY_DARK_KEY = 'colorPrimaryDark';
 const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
@@ -28,14 +29,16 @@ export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: s
   let stylesJSON = await readXMLAsync({ path: stylesPath });
   let colorsJSON = await readColorsXMLAsync(colorsPath);
 
-  const styleItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
+  const styleItemToAdd: ResourceItemXML[] = [{ _: '', $: { name: '' } }];
   if (hexString === 'translucent') {
     // translucent status bar set in theme
     styleItemToAdd[0]._ = 'true';
     styleItemToAdd[0].$.name = WINDOW_TRANSLUCENT_STATUS;
   } else {
     // Need to add a color key to colors.xml to use in styles.xml
-    const colorItemToAdd: XMLItem[] = [{ _: hexString, $: { name: COLOR_PRIMARY_DARK_KEY } }];
+    const colorItemToAdd: ResourceItemXML[] = [
+      { _: hexString, $: { name: COLOR_PRIMARY_DARK_KEY } },
+    ];
     colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
 
     styleItemToAdd[0]._ = `@color/${COLOR_PRIMARY_DARK_KEY}`;
@@ -44,7 +47,9 @@ export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: s
 
   // Default is light-content, don't need to do anything to set it
   if (statusBarStyle === 'dark-content') {
-    const statusBarStyleItem: XMLItem[] = [{ _: 'true', $: { name: WINDOW_LIGHT_STATUS_BAR } }];
+    const statusBarStyleItem: ResourceItemXML[] = [
+      { _: 'true', $: { name: WINDOW_LIGHT_STATUS_BAR } },
+    ];
     stylesJSON = setStylesItem({
       item: statusBarStyleItem,
       xml: stylesJSON,

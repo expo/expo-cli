@@ -1,7 +1,13 @@
-import { Document, getProjectResourcePathAsync, readXMLAsync } from './Manifest';
-import { XMLItem } from './Styles';
+import { getProjectResourcePathAsync, ResourceItemXML } from './Resources';
+import { readXMLAsync } from './XML';
 
 const BASE_STYLES_XML = `<?xml version="1.0" encoding="utf-8"?><resources></resources>`;
+
+export type ColorResourceXML = {
+  resources?: {
+    color?: ResourceItemXML[];
+  };
+};
 
 export async function getProjectColorsXMLPathAsync(
   projectDir: string,
@@ -10,14 +16,17 @@ export async function getProjectColorsXMLPathAsync(
   return getProjectResourcePathAsync(projectDir, { kind, name: 'colors' });
 }
 
-export async function readColorsXMLAsync(path: string): Promise<Document> {
+export async function readColorsXMLAsync(path: string): Promise<ColorResourceXML> {
   return readXMLAsync({ path, fallback: BASE_STYLES_XML });
 }
 
-export function setColorItem(itemToAdd: XMLItem[], colorFileContentsJSON: Document) {
+export function setColorItem(
+  itemToAdd: ResourceItemXML[],
+  colorFileContentsJSON: ColorResourceXML
+) {
   if (colorFileContentsJSON.resources?.color) {
     const colorNameExists = colorFileContentsJSON.resources.color.filter(
-      (e: XMLItem) => e['$'].name === itemToAdd[0]['$'].name
+      (e: ResourceItemXML) => e['$'].name === itemToAdd[0]['$'].name
     )[0];
     if (colorNameExists) {
       colorNameExists['_'] = itemToAdd[0]['_'];
@@ -27,7 +36,7 @@ export function setColorItem(itemToAdd: XMLItem[], colorFileContentsJSON: Docume
       );
     }
   } else {
-    if (typeof colorFileContentsJSON.resources === 'string') {
+    if (!colorFileContentsJSON.resources || typeof colorFileContentsJSON.resources === 'string') {
       //file was empty and JSON is `{resources : ''}`
       colorFileContentsJSON.resources = {};
     }
@@ -36,9 +45,9 @@ export function setColorItem(itemToAdd: XMLItem[], colorFileContentsJSON: Docume
   return colorFileContentsJSON;
 }
 
-export function removeColorItem(named: string, contents: Document) {
+export function removeColorItem(named: string, contents: ColorResourceXML) {
   if (contents.resources?.color) {
-    const index = contents.resources.color.findIndex((e: XMLItem) => e['$'].name === named);
+    const index = contents.resources.color.findIndex((e: ResourceItemXML) => e['$'].name === named);
     if (index > -1) {
       // replace the previous value
       contents.resources.color.splice(index, 1);

@@ -4,7 +4,7 @@ import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
 import * as Colors from './Colors';
-import { writeXMLAsync } from './Manifest';
+import { writeXMLAsync } from './XML';
 
 type DPIString = 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
 type dpiMap = Record<DPIString, { folderName: string; scale: number }>;

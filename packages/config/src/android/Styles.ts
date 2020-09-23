@@ -1,12 +1,17 @@
-import fs from 'fs-extra';
-import path from 'path';
-import { Builder } from 'xml2js';
+import { getProjectResourcePathAsync, ResourceItemXML } from './Resources';
 
-import { Document, getProjectResourcePathAsync } from './Manifest';
+export type StyleResourceGroupXML = {
+  $: {
+    name: string;
+    parent: string;
+  };
+  item: ResourceItemXML[];
+};
 
-export type XMLItem = {
-  _: string;
-  $: { name: string; [key: string]: string };
+export type StyleResourceXML = {
+  resources?: {
+    style?: StyleResourceGroupXML[];
+  };
 };
 
 export async function getProjectStylesXMLPathAsync(
@@ -16,42 +21,28 @@ export async function getProjectStylesXMLPathAsync(
   return getProjectResourcePathAsync(projectDir, { kind, name: 'styles' });
 }
 
-export async function writeStylesXMLAsync(options: { path: string; xml: any }): Promise<void> {
-  const stylesXml = new Builder().buildObject(options.xml);
-  await fs.ensureDir(path.dirname(options.path));
-  await fs.writeFile(options.path, stylesXml);
+export function buildItem({ name, value }: { name: string; value: string }): ResourceItemXML {
+  return { _: value, $: { name } };
 }
 
-export function buildItem({
-  name,
-  parent,
-  value,
-}: {
-  name: string;
-  parent?: string;
-  value: string;
-}): XMLItem {
-  const item: XMLItem = { _: value, $: { name } };
-  if (parent) {
-    item['$'].parent = parent;
-  }
-  return item;
-}
-
-function ensureStyleShape(xml: Document): Document {
+function ensureStyleShape(xml: StyleResourceXML): StyleResourceXML {
   if (!xml) {
     xml = {};
   }
   if (!xml.resources) {
     xml.resources = {};
   }
-  if (!Array.isArray(xml.resources.style)) {
+  if (!Array.isArray(xml?.resources?.style)) {
     xml.resources.style = [];
   }
   return xml;
 }
 
-function buildParent(parent: { name: string; parent: string; items?: any[] }): Document {
+function buildParent(parent: {
+  name: string;
+  parent: string;
+  items?: any[];
+}): StyleResourceGroupXML {
   return {
     $: { name: parent.name, parent: parent.parent },
     item: parent.items ?? [],
@@ -59,10 +50,10 @@ function buildParent(parent: { name: string; parent: string; items?: any[] }): D
 }
 
 export function getStyleParent(
-  xml: Document,
+  xml: StyleResourceXML,
   parent: { name: string; parent?: string }
-): Document | null {
-  const app = xml.resources.style.filter?.((e: any) => {
+): StyleResourceGroupXML | null {
+  const app = xml?.resources?.style?.filter?.((e: any) => {
     let matches = e['$']['name'] === parent.name;
     if (parent.parent != null && matches) {
       matches = e['$']['parent'] === parent.parent;
@@ -77,23 +68,21 @@ export function setStylesItem({
   xml,
   parent,
 }: {
-  item: XMLItem[];
-  xml: Document;
+  item: ResourceItemXML[];
+  xml: StyleResourceXML;
   parent: { name: string; parent: string };
-}): Document {
+}): StyleResourceXML {
   xml = ensureStyleShape(xml);
 
   let appTheme = getStyleParent(xml, parent);
 
   if (!appTheme) {
     appTheme = buildParent(parent);
-    xml.resources.style.push(appTheme);
+    xml.resources!.style!.push(appTheme);
   }
 
   if (appTheme.item) {
-    const existingItem = appTheme.item.filter(
-      (_item: XMLItem) => _item['$'].name === item[0].$.name
-    )[0];
+    const existingItem = appTheme.item.filter(_item => _item['$'].name === item[0].$.name)[0];
 
     // Don't want to 2 of the same item, so if one exists, we overwrite it
     if (existingItem) {

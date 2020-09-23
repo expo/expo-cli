@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainApplication } from './Manifest';
+import { Document, getMainApplication, ManifestMetaData } from './Manifest';
 
 export function getGoogleMobileAdsAppId(config: ExpoConfig) {
   return config.android?.config?.googleMobileAdsAppId ?? null;
@@ -17,7 +17,10 @@ export async function setGoogleMobileAdsConfig(config: ExpoConfig, manifestDocum
     return manifestDocument;
   }
 
-  const mainApplication = getMainApplication(manifestDocument);
+  let mainApplication = getMainApplication(manifestDocument);
+  if (!mainApplication) {
+    mainApplication = { $: { 'android:name': '.MainApplication' } };
+  }
 
   // add application ID
   let existingApplicationId;
@@ -27,7 +30,7 @@ export async function setGoogleMobileAdsConfig(config: ExpoConfig, manifestDocum
       'android:value': appId,
     },
   };
-  if (mainApplication.hasOwnProperty('meta-data')) {
+  if (mainApplication['meta-data']) {
     existingApplicationId = mainApplication['meta-data'].filter(
       (e: any) => e['$']['android:name'] === 'com.google.android.gms.ads.APPLICATION_ID'
     );
@@ -42,18 +45,18 @@ export async function setGoogleMobileAdsConfig(config: ExpoConfig, manifestDocum
 
   // add delay auto init
   let existingDelayAutoInit;
-  const newDelayAutoInit = {
+  const newDelayAutoInit: ManifestMetaData = {
     $: {
       'android:name': 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT',
-      'android:value': !autoInit,
+      'android:value': String(!autoInit),
     },
   };
-  if (mainApplication.hasOwnProperty('meta-data')) {
+  if (mainApplication['meta-data']) {
     existingDelayAutoInit = mainApplication['meta-data'].filter(
       (e: any) => e['$']['android:name'] === 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT'
     );
     if (existingDelayAutoInit.length) {
-      existingDelayAutoInit[0]['$']['android:value'] = !autoInit;
+      existingDelayAutoInit[0]['$']['android:value'] = String(!autoInit);
     } else {
       mainApplication['meta-data'].push(newDelayAutoInit);
     }

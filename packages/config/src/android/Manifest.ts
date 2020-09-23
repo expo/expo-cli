@@ -1,111 +1,145 @@
 import fs from 'fs-extra';
-import { EOL } from 'os';
 import path from 'path';
-import { Builder, Parser } from 'xml2js';
 
 import * as XML from './XML';
 
-export type Document = { [key: string]: any };
+export type StringBoolean = 'true' | 'false';
+
+type ManifestMetaDataAttributes = AndroidManifestAttributes & {
+  'android:value'?: string;
+  'android:resource'?: string;
+};
+
+type AndroidManifestAttributes = {
+  'android:name': string | 'android.intent.action.VIEW';
+};
+
+type ManifestAction = {
+  $: AndroidManifestAttributes;
+};
+
+type ManifestCategory = {
+  $: AndroidManifestAttributes;
+};
+
+type ManifestData = {
+  $: {
+    [key: string]: string | undefined;
+    'android:host'?: string;
+    'android:pathPrefix'?: string;
+    'android:scheme'?: string;
+  };
+};
+
+type ManifestReciever = {
+  $: AndroidManifestAttributes & {
+    'android:exported'?: StringBoolean;
+    'android:enabled'?: StringBoolean;
+  };
+  'intent-filter'?: ManifestIntentFilter[];
+};
+
+type ManifestIntentFilter = {
+  action?: ManifestAction[];
+  data?: ManifestData[];
+  category?: ManifestCategory[];
+};
+
+export type ManifestMetaData = {
+  $: ManifestMetaDataAttributes;
+};
+
+type ManifestServiceAttributes = AndroidManifestAttributes & {
+  'android:enabled'?: StringBoolean;
+  'android:exported'?: StringBoolean;
+  'android:permission'?: string;
+  // ...
+};
+
+type ManifestService = {
+  $: ManifestServiceAttributes;
+  'intent-filter'?: ManifestIntentFilter[];
+};
+
+type ManifestApplicationAttributes = {
+  'android:name': string | '.MainApplication';
+  'android:icon'?: string;
+  'android:label'?: string;
+  'android:allowBackup'?: StringBoolean;
+  'android:largeHeap'?: StringBoolean;
+  'android:requestLegacyExternalStorage'?: StringBoolean;
+  'android:usesCleartextTraffic'?: StringBoolean;
+  [key: string]: string | undefined;
+};
+
+export type ManifestActivity = {
+  $: ManifestApplicationAttributes & {
+    'android:exported'?: StringBoolean;
+    'android:launchMode'?: string;
+    'android:theme'?: string;
+    [key: string]: string | undefined;
+  };
+  'intent-filter'?: ManifestIntentFilter[];
+  // ...
+};
+
+export type ManifestUsesLibrary = {
+  $: AndroidManifestAttributes & {
+    'android:required'?: StringBoolean;
+  };
+};
+
+type ManifestApplication = {
+  $: ManifestApplicationAttributes;
+  activity?: ManifestActivity[];
+  service?: ManifestService[];
+  receiver?: ManifestReciever[];
+  'meta-data'?: ManifestMetaData[];
+  'uses-library'?: ManifestUsesLibrary[];
+  // ...
+};
+
+type ManifestPermission = {
+  $: AndroidManifestAttributes & {
+    'android:protectionLevel'?: string | 'signature';
+  };
+};
+
+export type ManifestUsesPermission = {
+  $: AndroidManifestAttributes;
+};
+
+type ManifestUsesFeature = {
+  $: AndroidManifestAttributes & {
+    'android:glEsVersion'?: string;
+    'android:required': StringBoolean;
+  };
+};
+
+export type Document = {
+  manifest: {
+    // Probably more, but this is currently all we'd need for most cases in Expo.
+    $: { 'xmlns:android': string; package?: string; [key: string]: string | undefined };
+    permission?: ManifestPermission[];
+    'uses-permission'?: ManifestUsesPermission[];
+    'uses-feature'?: ManifestUsesFeature[];
+    application?: ManifestApplication[];
+  };
+};
 
 export type InputOptions = {
   manifestPath?: string | null;
   projectRoot?: string | null;
-  manifest?: XML.XMLObject | null;
+  manifest?: Document | null;
 };
-
-export function logManifest(doc: XML.XMLObject) {
-  const builder = new Builder();
-  const xmlInput = builder.buildObject(doc);
-  console.log(xmlInput);
-}
-
-export async function writeXMLAsync(options: { path: string; xml: any }): Promise<void> {
-  const xml = new Builder().buildObject(options.xml);
-  await fs.ensureDir(path.dirname(options.path));
-  await fs.writeFile(options.path, xml);
-}
-
-export async function readXMLAsync(options: {
-  path: string;
-  fallback?: string;
-}): Promise<XML.XMLObject> {
-  const contents = await fs.readFile(options.path, { encoding: 'utf8', flag: 'r' });
-  const parser = new Parser();
-  const manifest = parser.parseStringPromise(contents || options.fallback || '');
-  return manifest;
-}
-
-const stringTimesN = (n: number, char: string) => Array(n + 1).join(char);
-
-export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): string {
-  let xmlInput: string;
-  if (typeof manifest === 'string') {
-    xmlInput = manifest;
-  } else if (manifest.toString) {
-    const builder = new Builder({ headless: true });
-    xmlInput = builder.buildObject(manifest);
-    return xmlInput;
-  } else {
-    throw new Error(`@expo/android-manifest: invalid manifest value passed in: ${manifest}`);
-  }
-  const indentString = stringTimesN(indentLevel, ' ');
-
-  let formatted = '';
-  const regex = /(>)(<)(\/*)/g;
-  const xml = xmlInput.replace(regex, `$1${newline}$2$3`);
-  let pad = 0;
-  xml
-    .split(/\r?\n/)
-    .map((line: string) => line.trim())
-    .forEach((line: string) => {
-      let indent = 0;
-      if (line.match(/.+<\/\w[^>]*>$/)) {
-        indent = 0;
-      } else if (line.match(/^<\/\w/)) {
-        // Somehow istanbul doesn't see the else case as covered, although it is. Skip it.
-        /* istanbul ignore else  */
-        if (pad !== 0) {
-          pad -= 1;
-        }
-      } else if (line.match(/^<\w([^>]*[^/])?>.*$/)) {
-        indent = 1;
-      } else {
-        indent = 0;
-      }
-
-      const padding = stringTimesN(pad, indentString);
-      formatted += padding + line + newline; // eslint-disable-line prefer-template
-      pad += indent;
-    });
-
-  return formatted.trim();
-}
 
 export async function writeAndroidManifestAsync(
   manifestPath: string,
-  manifest: any
+  manifest: Document
 ): Promise<void> {
-  const manifestXml = format(manifest);
+  const manifestXml = XML.format(manifest);
   await fs.ensureDir(path.dirname(manifestPath));
   await fs.writeFile(manifestPath, manifestXml);
-}
-
-export async function getProjectResourcePathAsync(
-  projectDir: string,
-  { kind = 'values', name }: { kind?: string; name: string }
-): Promise<string | null> {
-  try {
-    const shellPath = path.join(projectDir, 'android');
-    if ((await fs.stat(shellPath)).isDirectory()) {
-      const stylesPath = path.join(shellPath, `app/src/main/res/${kind}/${name}.xml`);
-      await fs.ensureFile(stylesPath);
-      return stylesPath;
-    }
-  } catch (error) {
-    throw new Error(`Could not create android/app/src/main/res/${kind}/${name}.xml`);
-  }
-
-  return null;
 }
 
 export async function getProjectAndroidManifestPathAsync(
@@ -124,37 +158,39 @@ export async function getProjectAndroidManifestPathAsync(
   return null;
 }
 
-export async function readAndroidManifestAsync(manifestPath: string): Promise<XML.XMLObject> {
-  const contents = await fs.readFile(manifestPath, { encoding: 'utf8', flag: 'r' });
-  const parser = new Parser();
-  const manifest = parser.parseStringPromise(contents);
-  return manifest;
+export async function readAndroidManifestAsync(manifestPath: string): Promise<Document> {
+  const xml = await XML.readXMLAsync({ path: manifestPath });
+  if (!isManifest(xml)) {
+    throw new Error('Invalid manifest found at: ' + manifestPath);
+  }
+  return xml;
 }
 
-export async function getPackageAsync(manifest: XML.XMLObject): Promise<string | null> {
-  return manifest.manifest?.['$']?.package ?? null;
+function isManifest(xml: XML.XMLObject): xml is Document {
+  // TODO: Maybe more validation
+  return !!xml.manifest;
 }
 
-export function getMainApplication(manifest: XML.XMLObject): any | null {
+export function getMainApplication(manifest: Document): ManifestApplication | null {
   return (
     manifest?.manifest?.application?.filter(
-      (e: any) => e['$']['android:name'] === '.MainApplication'
+      e => e?.['$']?.['android:name'] === '.MainApplication'
     )[0] ?? null
   );
 }
 
-export function getMainActivity(manifest: XML.XMLObject): any | null {
+export function getMainActivity(manifest: Document): ManifestActivity | null {
   const mainActivity = manifest?.manifest?.application?.[0]?.activity?.filter?.(
     (e: any) => e['$']['android:name'] === '.MainActivity'
   );
-  return mainActivity[0] ?? null;
+  return mainActivity?.[0] ?? null;
 }
 
 export function addMetaDataItemToMainApplication(
   mainApplication: any,
   itemName: string,
   itemValue: string
-) {
+): ManifestApplication {
   let existingMetaDataItem;
   const newItem = {
     $: {

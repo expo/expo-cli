@@ -1,7 +1,8 @@
 import { ExpoConfig } from '../Config.types';
 import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
-import { readXMLAsync, writeXMLAsync } from './Manifest';
-import { getProjectStylesXMLPathAsync, setStylesItem, XMLItem } from './Styles';
+import { ResourceItemXML } from './Resources';
+import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
+import { readXMLAsync, writeXMLAsync } from './XML';
 
 const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
@@ -32,8 +33,8 @@ export async function setRootViewBackgroundColor(config: ExpoConfig, projectDire
   let stylesJSON = await readXMLAsync({ path: stylesPath });
   let colorsJSON = await readColorsXMLAsync(colorsPath);
 
-  const colorItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
-  const styleItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
+  const colorItemToAdd: ResourceItemXML[] = [{ _: '', $: { name: '' } }];
+  const styleItemToAdd: ResourceItemXML[] = [{ _: '', $: { name: '' } }];
 
   colorItemToAdd[0]._ = hexString;
   colorItemToAdd[0].$.name = WINDOW_BACKGROUND_COLOR;

@@ -1,9 +1,9 @@
 import { vol } from 'memfs';
 
 import { readColorsXMLAsync } from '../Colors';
-import { readXMLAsync } from '../Manifest';
 import { getStatusBarColor, getStatusBarStyle, setStatusBarConfig } from '../StatusBar';
 import { getProjectStylesXMLPathAsync } from '../Styles';
+import { readXMLAsync } from '../XML';
 
 jest.mock('fs');
 

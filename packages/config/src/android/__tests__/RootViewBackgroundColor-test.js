@@ -1,8 +1,8 @@
 import { vol } from 'memfs';
 
 import { readColorsXMLAsync } from '../Colors';
-import { readXMLAsync } from '../Manifest';
 import { getRootViewBackgroundColor, setRootViewBackgroundColor } from '../RootViewBackgroundColor';
+import { readXMLAsync } from '../XML';
 import { sampleStylesXML } from './StatusBar-test';
 
 jest.mock('fs');
