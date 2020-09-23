@@ -23,3 +23,11 @@ export async function getMainActivityAsync(
     language: isJava ? 'java' : 'kt',
   };
 }
+
+export function getAndroidBuildGradle(projectRoot: string): string {
+  return path.join(projectRoot, 'android', 'build.gradle');
+}
+
+export function getAppBuildGradle(projectRoot: string): string {
+  return path.join(projectRoot, 'android', 'app', 'build.gradle');
+}

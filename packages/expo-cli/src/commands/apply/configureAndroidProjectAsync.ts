@@ -1,7 +1,6 @@
 import { AndroidConfig, getConfig, WarningAggregator } from '@expo/config';
 import { UserManager } from '@expo/xdl';
 import fs from 'fs-extra';
-import path from 'path';
 
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
 
@@ -9,7 +8,7 @@ async function modifyBuildGradleAsync(
   projectRoot: string,
   callback: (buildGradle: string) => string
 ) {
-  const buildGradlePath = path.join(projectRoot, 'android', 'build.gradle');
+  const buildGradlePath = AndroidConfig.Paths.getAndroidBuildGradle(projectRoot);
   const buildGradleString = fs.readFileSync(buildGradlePath).toString();
   const result = callback(buildGradleString);
   fs.writeFileSync(buildGradlePath, result);
@@ -19,7 +18,7 @@ async function modifyAppBuildGradleAsync(
   projectRoot: string,
   callback: (buildGradle: string) => string
 ) {
-  const buildGradlePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
+  const buildGradlePath = AndroidConfig.Paths.getAppBuildGradle(projectRoot);
   const buildGradleString = fs.readFileSync(buildGradlePath).toString();
   const result = callback(buildGradleString);
   fs.writeFileSync(buildGradlePath, result);
@@ -106,8 +105,6 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   });
 
   await modifyMainActivityAsync(projectRoot, async ({ contents, language }) => {
-    contents = await AndroidConfig.SplashScreen.configureMainActivity(exp, contents, language);
-
     if (language === 'java') {
       contents = AndroidConfig.UserInterfaceStyle.addOnConfigurationChangedMainActivity(
         exp,
