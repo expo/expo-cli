@@ -138,9 +138,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   } else if (!supportsAssetPlugins) {
     // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
     // major version in the sdkVersion field, so check for 11.0.0 to be sure.
-    if (!supportsAssetPlugins) {
-      queryParams += '&includeAssetFileHashes=true';
-    }
+    queryParams += '&includeAssetFileHashes=true';
   }
 
   return queryParams;
@@ -211,7 +209,7 @@ export async function constructUrlAsync(
     if (exp.detach) {
       // Normalize schemes and filter invalid schemes.
       const schemes = (Array.isArray(exp.scheme) ? exp.scheme : [exp.scheme]).filter(
-        scheme => typeof scheme === 'string' && !!scheme
+        (scheme: any) => typeof scheme === 'string' && !!scheme
       );
       // Get the first valid scheme.
       const firstScheme = schemes[0];

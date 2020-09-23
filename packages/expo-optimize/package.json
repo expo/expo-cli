@@ -1,6 +1,6 @@
 {
   "name": "expo-optimize",
-  "version": "0.1.47",
+  "version": "0.1.51",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -28,17 +28,15 @@
     "prepare": "yarn run clean && yarn run build:prod",
     "lint": "eslint .",
     "watch": "yarn run build -w",
-    "build": "ncc build ./src/index.ts -o build/ -e @expo/config",
-    "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register -e @expo/config",
+    "build": "ncc build ./src/index.ts -o build/",
+    "build:prod": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
     "clean": "rimraf ./build/"
   },
-  "dependencies": {
-    "@expo/config": "3.3.0"
-  },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.17",
-    "@expo/image-utils": "0.3.5",
-    "@expo/json-file": "8.2.22",
+    "@expo/babel-preset-cli": "0.2.18",
+    "@expo/config": "3.3.4",
+    "@expo/image-utils": "0.3.6",
+    "@expo/json-file": "8.2.24",
     "@types/node": "^12.6.8",
     "@zeit/ncc": "^0.20.5",
     "chalk": "^4.0.0",

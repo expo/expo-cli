@@ -101,6 +101,9 @@ export async function readIosCredentialsAsync(projectDir: string): Promise<iOSCr
 export async function readSecretEnvsAsync(
   projectDir: string
 ): Promise<Record<string, string> | undefined> {
+  if (!(await fileExistsAsync(projectDir))) {
+    return undefined;
+  }
   const credentialsJson = await readAsync(projectDir);
   const npmToken = credentialsJson?.experimental?.npmToken;
   return npmToken ? { NPM_TOKEN: npmToken } : undefined;

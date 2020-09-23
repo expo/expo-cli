@@ -1,7 +1,7 @@
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
-import { Document } from './Manifest';
+import { addMetaDataItemToMainApplication, Document, getMainApplication } from './Manifest';
 import {
   getProjectStringsXMLPathAsync,
   readStringsXMLAsync,
@@ -36,19 +36,47 @@ export function getFacebookDisplayName(config: ExpoConfig) {
   return config.facebookDisplayName ?? null;
 }
 export function getFacebookAutoInitEnabled(config: ExpoConfig) {
-  return config.hasOwnProperty('facebookAutoInitEnabled') ? config.facebookAutoInitEnabled : null;
+  return config.facebookAutoInitEnabled ?? null;
 }
 
 export function getFacebookAutoLogAppEvents(config: ExpoConfig) {
-  return config.hasOwnProperty('facebookAutoLogAppEventsEnabled')
-    ? config.facebookAutoLogAppEventsEnabled
-    : null;
+  return config.facebookAutoLogAppEventsEnabled ?? null;
 }
 
 export function getFacebookAdvertiserIDCollection(config: ExpoConfig) {
-  return config.hasOwnProperty('facebookAdvertiserIDCollectionEnabled')
-    ? config.facebookAdvertiserIDCollectionEnabled
-    : null;
+  return config.facebookAdvertiserIDCollectionEnabled ?? null;
+}
+
+function removeFacebookCustomTabActivities(mainApplication: any) {
+  // Remove all Facebook CustomTabActivities first
+  if ('activity' in mainApplication) {
+    mainApplication['activity'] = mainApplication['activity'].filter(
+      (activity: Record<string, any>) => {
+        return activity['$']?.['android:name'] !== 'com.facebook.CustomTabActivity';
+      }
+    );
+  }
+}
+
+async function ensureFacebookActivityAsync({
+  mainApplication,
+  scheme,
+}: {
+  mainApplication: any;
+  scheme: string;
+}) {
+  const facebookSchemeActivityXML = facebookSchemeActivity(scheme);
+  const parser = new Parser();
+  const facebookSchemeActivityJSON = await parser.parseStringPromise(facebookSchemeActivityXML);
+
+  //TODO: don't write if facebook scheme activity is already present
+  if ('activity' in mainApplication) {
+    mainApplication['activity'] = mainApplication['activity'].concat(
+      facebookSchemeActivityJSON['activity']
+    );
+  } else {
+    mainApplication['activity'] = facebookSchemeActivityJSON['activity'];
+  }
 }
 
 export async function setFacebookAppIdString(config: ExpoConfig, projectDirectory: string) {
@@ -83,32 +111,12 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
   const autoLogAppEvents = getFacebookAutoLogAppEvents(config);
   const advertiserIdCollection = getFacebookAdvertiserIDCollection(config);
 
-  let mainApplication = manifestDocument?.manifest?.application?.filter(
-    (e: any) => e['$']['android:name'] === '.MainApplication'
-  )[0];
+  let mainApplication = getMainApplication(manifestDocument);
 
-  // Remove all Facebook CustomTabActivities first
-  if (mainApplication.hasOwnProperty('activity')) {
-    mainApplication['activity'] = mainApplication['activity'].filter(
-      (activity: Record<string, any>) => {
-        return activity['$']?.['android:name'] !== 'com.facebook.CustomTabActivity';
-      }
-    );
-  }
+  removeFacebookCustomTabActivities(mainApplication);
 
   if (scheme) {
-    const facebookSchemeActivityXML = facebookSchemeActivity(scheme);
-    const parser = new Parser();
-    const facebookSchemeActivityJSON = await parser.parseStringPromise(facebookSchemeActivityXML);
-
-    //TODO: don't write if facebook scheme activity is already present
-    if (mainApplication.hasOwnProperty('activity')) {
-      mainApplication['activity'] = mainApplication['activity'].concat(
-        facebookSchemeActivityJSON['activity']
-      );
-    } else {
-      mainApplication['activity'] = facebookSchemeActivityJSON['activity'];
-    }
+    ensureFacebookActivityAsync({ scheme, mainApplication });
   }
 
   if (appId) {
@@ -120,8 +128,7 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
   } else {
     mainApplication = removeMetaDataItemFromMainApplication(
       mainApplication,
-      'com.facebook.sdk.ApplicationId',
-      '@string/facebook_app_id' // The corresponding string is set in setFacebookAppIdString
+      'com.facebook.sdk.ApplicationId'
     );
   }
   if (displayName) {
@@ -176,51 +183,13 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
   return manifestDocument;
 }
 
-function addMetaDataItemToMainApplication(
-  mainApplication: any,
-  itemName: string,
-  itemValue: string
-) {
-  let existingMetaDataItem;
-  const newItem = {
-    $: {
-      'android:name': itemName,
-      'android:value': itemValue,
-    },
-  };
+// TODO: Use Manifest version after https://github.com/expo/expo-cli/pull/2587 lands
+function removeMetaDataItemFromMainApplication(mainApplication: any, itemName: string) {
   if (mainApplication.hasOwnProperty('meta-data')) {
-    existingMetaDataItem = mainApplication['meta-data'].filter(
+    const index = mainApplication['meta-data'].findIndex(
       (e: any) => e['$']['android:name'] === itemName
     );
-    if (existingMetaDataItem.length) {
-      existingMetaDataItem[0]['$']['android:value'] = itemValue;
-    } else {
-      mainApplication['meta-data'].push(newItem);
-    }
-  } else {
-    mainApplication['meta-data'] = [newItem];
-  }
-  return mainApplication;
-}
 
-function removeMetaDataItemFromMainApplication(
-  mainApplication: any,
-  itemName: string,
-  itemValue?: string
-) {
-  if ('meta-data' in mainApplication) {
-    const index = mainApplication['meta-data'].findIndex((e: any) => {
-      if (e['$']['android:name'] === itemName) {
-        if (typeof itemValue !== 'undefined') {
-          if (e['$']['android:value'] === itemValue) {
-            return true;
-          }
-        } else {
-          return true;
-        }
-      }
-      return false;
-    });
     if (index > -1) {
       mainApplication['meta-data'].splice(index, 1);
     }

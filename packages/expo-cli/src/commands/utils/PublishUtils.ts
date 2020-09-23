@@ -1,9 +1,9 @@
 import { getConfig } from '@expo/config';
-import { ApiV2, Project, UserManager } from '@expo/xdl';
+import { ApiV2, UserManager } from '@expo/xdl';
 import ora from 'ora';
 
 import log from '../../log';
-import prompt from '../../prompt';
+import { confirmAsync } from '../../prompts';
 import * as table from './cli-table';
 
 export type HistoryOptions = {
@@ -64,7 +64,7 @@ export type PublicationDetail = {
 const VERSION = 2;
 
 export async function getPublishHistoryAsync(
-  projectDir: string,
+  projectRoot: string,
   options: HistoryOptions
 ): Promise<any> {
   if (options.count && (isNaN(options.count) || options.count < 1 || options.count > 100)) {
@@ -73,14 +73,14 @@ export async function getPublishHistoryAsync(
 
   // TODO(ville): handle the API result for not authenticated user instead of checking upfront
   const user = await UserManager.ensureLoggedInAsync();
-  const { exp } = getConfig(projectDir, {
+  const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
   const api = ApiV2.clientForUser(user);
   return await api.postAsync('publish/history', {
     owner: exp.owner,
-    slug: await Project.getSlugAsync(projectDir),
+    slug: exp.slug,
     version: VERSION,
     releaseChannel: options.releaseChannel,
     count: options.count,
@@ -90,15 +90,16 @@ export async function getPublishHistoryAsync(
 }
 
 export async function setPublishToChannelAsync(
-  projectDir: string,
+  projectRoot: string,
   options: SetOptions
 ): Promise<any> {
   const user = await UserManager.ensureLoggedInAsync();
   const api = ApiV2.clientForUser(user);
+  const exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
   return await api.postAsync('publish/set', {
     releaseChannel: options.releaseChannel,
     publishId: options.publishId,
-    slug: await Project.getSlugAsync(projectDir),
+    slug: exp.slug,
   });
 }
 
@@ -202,13 +203,9 @@ async function _printAndConfirm(
   if (partialOptions.parent && partialOptions.parent.nonInteractive) {
     return;
   }
-  const { confirm } = await prompt([
-    {
-      type: 'confirm',
-      name: 'confirm',
-      message: `${platform}: Users on the '${channel}' channel will receive the above publication as a result of the rollback.`,
-    },
-  ]);
+  const confirm = await confirmAsync({
+    message: `${platform}: Users on the '${channel}' channel will receive the above publication as a result of the rollback.`,
+  });
 
   if (!confirm) {
     throw new Error(`You can run 'publish:set' to send the desired publication to users`);
@@ -216,21 +213,20 @@ async function _printAndConfirm(
 }
 
 export async function getPublicationDetailAsync(
-  projectDir: string,
+  projectRoot: string,
   options: DetailOptions
 ): Promise<PublicationDetail> {
   // TODO(ville): handle the API result for not authenticated user instead of checking upfront
   const user = await UserManager.ensureLoggedInAsync();
-  const { exp } = getConfig(projectDir, {
+  const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
-  const slug = await Project.getSlugAsync(projectDir);
 
   const api = ApiV2.clientForUser(user);
   const result = await api.postAsync('publish/details', {
     owner: exp.owner,
     publishId: options.publishId,
-    slug,
+    slug: exp.slug,
   });
 
   if (!result.queryResult) {

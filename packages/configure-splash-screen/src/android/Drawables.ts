@@ -104,13 +104,15 @@ async function copyDrawableFile(srcPath: string | undefined, dstPath: string) {
  * @see https://developer.android.com/training/multiscreen/screendensities
  *
  * @param androidMainPath Absolute path to the main directory containing code and resources in Android project. In general that would be `android/app/src/main`.
- * @param splashScreenImagePath Absolute path
- * @param darkModeSplashScreenImagePath Absolute path
  */
 export default async function configureDrawables(
   androidMainPath: string,
-  splashScreenImagePath?: string,
-  darkModeSplashScreenImagePath?: string
+  config: {
+    image?: string;
+    darkMode?: {
+      image?: string;
+    };
+  } = {}
 ) {
   await Promise.all(
     Object.values(DRAWABLES_CONFIGS).map(async ({ modes }) => {
@@ -126,11 +128,11 @@ export default async function configureDrawables(
 
   await Promise.all([
     copyDrawableFile(
-      splashScreenImagePath,
+      config.image,
       path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.modes.light.path)
     ),
     copyDrawableFile(
-      darkModeSplashScreenImagePath,
+      config.darkMode?.image,
       path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.modes.dark.path)
     ),
   ]);

@@ -1,5 +1,6 @@
 import { AndroidCredentials } from '@expo/xdl';
 import chalk from 'chalk';
+import commandExists from 'command-exists';
 import fs from 'fs-extra';
 import omit from 'lodash/omit';
 import os from 'os';
@@ -8,29 +9,53 @@ import { v4 as uuid } from 'uuid';
 
 import CommandError from '../../CommandError';
 import log from '../../log';
-import prompt, { Question } from '../../prompt';
+import { confirmAsync } from '../../prompts';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { Context, IView } from '../context';
 import { Keystore, keystoreSchema } from '../credentials';
 
+interface UpdateKeystoreOptions {
+  bestEffortKeystoreGeneration: boolean;
+}
+
+async function keytoolCommandExists(): Promise<boolean> {
+  try {
+    await commandExists('keytool');
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
 class UpdateKeystore implements IView {
-  constructor(private experienceName: string) {}
+  constructor(
+    private experienceName: string,
+    private options: UpdateKeystoreOptions = { bestEffortKeystoreGeneration: false }
+  ) {}
 
   async open(ctx: Context): Promise<IView | null> {
     if (await ctx.android.fetchKeystore(this.experienceName)) {
       this.displayWarning();
     }
     const keystore = await this.provideOrGenerate(ctx);
+    if (!keystore) {
+      return null;
+    }
 
     await ctx.android.updateKeystore(this.experienceName, keystore);
     log(chalk.green('Keystore updated successfully'));
     return null;
   }
 
-  async provideOrGenerate(ctx: Context): Promise<Keystore> {
+  async provideOrGenerate(ctx: Context): Promise<Keystore | null> {
     const providedKeystore = await askForUserProvided(keystoreSchema);
     if (providedKeystore) {
       return providedKeystore;
+    } else if (this.options.bestEffortKeystoreGeneration && !(await keytoolCommandExists())) {
+      log.warn(
+        'The `keytool` utility was not found in your PATH. A new Keystore will be generated on Expo servers.'
+      );
+      return null;
     }
 
     const tmpKeystoreName = path.join(
@@ -92,16 +117,11 @@ class RemoveKeystore implements IView {
       );
     }
 
-    const questions: Question[] = [
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: 'Permanently delete the Android build credentials from our servers?',
-        default: false,
-      },
-    ];
-    const answers = await prompt(questions);
-    if (answers.confirm) {
+    const answers = await confirmAsync({
+      message: 'Permanently delete the Android build credentials from our servers?',
+      initial: false,
+    });
+    if (answers) {
       log('Backing up your Android Keystore now...');
       await new DownloadKeystore(this.experienceName, {
         displayCredentials: true,
@@ -156,9 +176,7 @@ class DownloadKeystore implements IView {
     } else if (ctx.nonInteractive) {
       displayCredentials = true;
     } else {
-      const { confirm } = await prompt({
-        type: 'confirm',
-        name: 'confirm',
+      const confirm = await confirmAsync({
         message: 'Do you want to display the Android Keystore credentials?',
       });
 

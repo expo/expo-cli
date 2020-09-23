@@ -553,6 +553,7 @@ export async function configureAsync(context: AnyStandaloneContext): Promise<voi
   const {
     intermediatesDirectory,
     iosProjectDirectory,
+    projectRootDirectory,
     projectName,
     supportingDirectory,
   } = IosWorkspace.getPaths(context);
@@ -580,6 +581,7 @@ export async function configureAsync(context: AnyStandaloneContext): Promise<voi
     if (!isExpoClientBuild) {
       await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
       await IosLocalization.writeLocalizationResourcesAsync({
+        projectRoot: projectRootDirectory,
         supportingDirectory,
         context,
       });

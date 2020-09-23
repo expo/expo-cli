@@ -47,6 +47,28 @@ export function maybeFormatSdkVersion(sdkVersionString: string | null): string |
 }
 
 /**
+ * Read the version of an installed package from package.json in node_modules
+ * This is preferable to reading it from the project package.json because we get
+ * the exact installed version and not a range.
+ */
+async function getExactInstalledModuleVersionAsync(
+  moduleName: string,
+  projectRoot: string,
+  options?: { nodeModulesPath?: string }
+) {
+  try {
+    const pkg = await JsonFile.readAsync(
+      ConfigUtils.resolveModule(`${moduleName}/package.json`, projectRoot, {
+        nodeModulesPath: options?.nodeModulesPath,
+      })
+    );
+    return pkg.version as string;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
  * Produce a list of dependencies used by the project that need to be updated
  */
 export async function getUpdatedDependenciesAsync(
@@ -170,11 +192,13 @@ async function makeBreakingChangesToConfigAsync(
       // IMPORTANT: adding a new case here? be sure to update the dynamic config situation above
       case '37.0.0':
         if (rootConfig?.expo?.androidNavigationBar?.visible !== undefined) {
+          // @ts-ignore: boolean | enum not supported in JSON schemas
           if (rootConfig?.expo.androidNavigationBar?.visible === false) {
             step.succeed(
               `Updated "androidNavigationBar.visible" property in app.json to "leanback"...`
             );
             rootConfig.expo.androidNavigationBar.visible = 'leanback';
+            // @ts-ignore: boolean | enum not supported in JSON schemas
           } else if (rootConfig?.expo.androidNavigationBar?.visible === true) {
             step.succeed(
               `Removed extraneous "androidNavigationBar.visible" property in app.json...`
@@ -224,7 +248,6 @@ async function maybeBailOnUnsafeFunctionalityAsync(
 
     const answer = await confirmAsync({
       message: `This command works best on SDK 33 and higher. We can try updating for you, but you will likely need to follow up with the instructions from https://docs.expo.io/workflow/upgrading-expo-sdk-walkthrough/. Continue anyways?`,
-      initial: true,
     });
 
     if (!answer) {
@@ -265,7 +288,6 @@ async function shouldBailWhenUsingLatest(
     }
     const answer = await confirmAsync({
       message: `You are already using the latest SDK version. Do you want to run the update anyways? This may be useful to ensure that all of your packages are set to the correct version.`,
-      initial: true,
     });
 
     if (!answer) {
@@ -394,6 +416,12 @@ export async function upgradeAsync(
     maybeFormatSdkVersion(requestedSdkVersion) || latestSdkVersion.version;
   let targetSdkVersion = sdkVersions[targetSdkVersionString];
 
+  const previousReactNativeVersion = await getExactInstalledModuleVersionAsync(
+    'react-native',
+    projectRoot,
+    exp
+  );
+
   // Maybe bail out early if people are trying to update to the current version
   if (await shouldBailWhenUsingLatest(currentSdkVersionString, targetSdkVersionString)) return;
 
@@ -459,15 +487,23 @@ export async function upgradeAsync(
 
   log.addNewLineIfNone();
   const expoPackageToInstall = `expo@^${targetSdkVersionString}`;
-  const installingPackageStep = logNewSection(`Installing the ${expoPackageToInstall} package...`);
-  log.addNewLineIfNone();
-  try {
-    await packageManager.addAsync(expoPackageToInstall);
-  } catch (e) {
-    installingPackageStep.fail(`Failed to install expo package with error: ${e.message}`);
-    throw e;
+
+  // Skip installing the Expo package again if it's already installed. @satya164
+  // wanted this in order to work around an issue with yarn workspaces on
+  // react-navigation.
+  if (targetSdkVersionString !== currentSdkVersionString) {
+    const installingPackageStep = logNewSection(
+      `Installing the ${expoPackageToInstall} package...`
+    );
+    log.addNewLineIfNone();
+    try {
+      await packageManager.addAsync(expoPackageToInstall);
+    } catch (e) {
+      installingPackageStep.fail(`Failed to install expo package with error: ${e.message}`);
+      throw e;
+    }
+    installingPackageStep.succeed(`Installed ${expoPackageToInstall}`);
   }
-  installingPackageStep.succeed(`Installed ${expoPackageToInstall}`);
 
   // Evaluate project config (app.config.js)
   const { exp: currentExp, dynamicConfigPath } = ConfigUtils.getConfig(projectRoot);
@@ -551,7 +587,10 @@ export async function upgradeAsync(
 
   const clearingCacheStep = logNewSection('Clearing the packager cache.');
   try {
-    await Project.startReactNativeServerAsync(projectRoot, { reset: true, nonPersistent: true });
+    await Project.startReactNativeServerAsync({
+      projectRoot,
+      options: { reset: true, nonPersistent: true },
+    });
   } catch (e) {
     clearingCacheStep.fail(`Failed to clear packager cache with error: ${e.message}`);
   } finally {
@@ -597,11 +636,55 @@ export async function upgradeAsync(
   // Add some basic additional instructions for bare workflow
   if (workflow === 'bare') {
     log.addNewLineIfNone();
+
+    // The upgrade helper only accepts exact version, so in case we use version range expressions in our
+    // versions data let's read the version from the source of truth - package.json in node_modules.
+    const newReactNativeVersion = await getExactInstalledModuleVersionAsync(
+      'react-native',
+      projectRoot,
+      exp
+    );
+
+    // It's possible that the developer has upgraded react-native already because it's bare workflow.
+    // If the version is the same, we don't need to provide an upgrade helper link.
+    // If for some reason we are unable to resolve the previous/new react-native version, just skip this information.
+    if (
+      previousReactNativeVersion &&
+      newReactNativeVersion &&
+      !semver.eq(previousReactNativeVersion, newReactNativeVersion)
+    ) {
+      const upgradeHelperUrl = `https://react-native-community.github.io/upgrade-helper/`;
+
+      if (semver.lt(previousReactNativeVersion, newReactNativeVersion)) {
+        log(
+          chalk.bold(
+            `⬆️  To finish your react-native upgrade, update your native projects as outlined here:
+${chalk.gray(`${upgradeHelperUrl}?from=${previousReactNativeVersion}&to=${newReactNativeVersion}`)}`
+          )
+        );
+      } else {
+        log(
+          chalk.bold(
+            `👉 react-native has been changed from ${previousReactNativeVersion} to ${newReactNativeVersion} because this is the version used in SDK ${targetSdkVersionString}.`
+          )
+        );
+        log(
+          chalk.bold(
+            chalk.grey(
+              `Bare workflow apps are free to adjust their react-native version at the developer's discretion. You may want to re-install react-native@${previousReactNativeVersion} before proceeding.`
+            )
+          )
+        );
+      }
+
+      log.newLine();
+    }
+
     log(
       chalk.bold(
-        `It will be necessary to re-build your native projects to compile the updated dependencies. You will need to run ${chalk.grey(
+        `🏗  Run ${chalk.grey(
           'pod install'
-        )} in your ios directory before re-building the iOS project.`
+        )} in your iOS directory and then re-build your native projects to compile the updated dependencies.`
       )
     );
     log.addNewLineIfNone();

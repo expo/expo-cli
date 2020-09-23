@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import CommandError from '../../CommandError';
 import * as appleApi from '../../appleApi';
 import log from '../../log';
-import prompts from '../../prompts';
+import prompts, { confirmAsync } from '../../prompts';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
 import * as credentialsJsonReader from '../credentialsJson/read';
@@ -58,13 +58,9 @@ export class SetupIosBuildCredentials implements IView {
       return;
     }
 
-    const { confirm } = await prompts([
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: `Do you have access to the Apple account that will be used for submitting this app to the App Store?`,
-      },
-    ]);
+    const confirm = await confirmAsync({
+      message: `Do you have access to the Apple account that will be used for submitting this app to the App Store?`,
+    });
     if (confirm) {
       return await ctx.ensureAppleCtx();
     } else {

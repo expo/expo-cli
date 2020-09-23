@@ -1,7 +1,11 @@
 import deepEqual from 'deep-equal';
 import { Element, js2xml, xml2js, Attributes } from 'xml-js';
 
-import { readFileWithFallback, createDirAndWriteFile, removeFileIfExists } from '../file-helpers';
+import {
+  readFileWithFallback,
+  createDirAndWriteFile,
+  removeFileIfExists,
+} from '../utils/file-utils';
 
 type ExplicitNewValue<T> = { newValue: T };
 type WithExplicitNewValue<T> = T | ExplicitNewValue<T>;

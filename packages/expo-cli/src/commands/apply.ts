@@ -23,6 +23,7 @@ async function ensureConfigExistsAsync(projectRoot: string): Promise<void> {
       // writeConfigJsonAsync(projectRoot, config.exp);
       await JsonFile.writeAsync(
         path.join(projectRoot, 'app.json'),
+        // @ts-ignore: ExpoConfig is not assignable to JSONObject
         { expo: config.exp },
         { json5: false }
       );

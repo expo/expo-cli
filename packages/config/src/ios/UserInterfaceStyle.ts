@@ -1,26 +1,28 @@
 import { ExpoConfig } from '../Config.types';
 import { InfoPlist } from './IosConfig.types';
 
-export function getUserInterfaceStyle(config: ExpoConfig) {
-  const result = config.ios?.userInterfaceStyle ?? config.userInterfaceStyle;
-  return result ?? null;
+export function getUserInterfaceStyle(config: ExpoConfig): string | null {
+  return config.ios?.userInterfaceStyle ?? config.userInterfaceStyle ?? null;
 }
 
-export function setUserInterfaceStyle(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setUserInterfaceStyle(
+  config: ExpoConfig,
+  { UIUserInterfaceStyle, ...infoPlist }: InfoPlist
+) {
   const userInterfaceStyle = getUserInterfaceStyle(config);
-  const UIUserInterfaceStyle = _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle);
+  const style = mapUserInterfaceStyleForInfoPlist(userInterfaceStyle);
 
-  if (!UIUserInterfaceStyle) {
+  if (!style) {
     return infoPlist;
   }
 
   return {
     ...infoPlist,
-    UIUserInterfaceStyle,
+    UIUserInterfaceStyle: style,
   };
 }
 
-function _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle: string | null): string | null {
+function mapUserInterfaceStyleForInfoPlist(userInterfaceStyle: string | null): string | null {
   switch (userInterfaceStyle) {
     case 'light':
       return 'Light';

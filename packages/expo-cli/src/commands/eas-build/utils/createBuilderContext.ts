@@ -1,4 +1,4 @@
-import { Platform } from '@expo/build-tools';
+import { Platform } from '@expo/eas-build-job';
 
 import { EasConfig } from '../../../easJson';
 import { BuilderContext, CommandContext, PlatformBuildProfile } from '../types';

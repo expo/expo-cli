@@ -1,7 +1,7 @@
 import { vol } from 'memfs';
 import * as path from 'path';
 
-import { ResizeMode } from '../../constants';
+import { SplashScreenImageResizeMode } from '../../constants';
 import configureDrawableXml from '../Drawable.xml';
 import reactNativeProject from './fixtures/react-native-project-structure';
 
@@ -40,7 +40,9 @@ describe('Drawable.xml', () => {
     const fileDirPath = path.dirname(filePath);
 
     it('creates correct file', async () => {
-      await configureDrawableXml(androidMainPath, ResizeMode.NATIVE);
+      await configureDrawableXml(androidMainPath, {
+        imageResizeMode: SplashScreenImageResizeMode.NATIVE,
+      });
       const actual = vol.readFileSync(filePath, 'utf-8');
       const expected = generateDrawableFileContent({ addBitmapItem: true });
       expect(actual).toEqual(expected);
@@ -49,7 +51,9 @@ describe('Drawable.xml', () => {
     it('updates existing almost empty file', async () => {
       vol.mkdirpSync(fileDirPath);
       vol.writeFileSync(filePath, `<?xml version="1.0" encoding="utf-8"?>`);
-      await configureDrawableXml(androidMainPath, ResizeMode.COVER);
+      await configureDrawableXml(androidMainPath, {
+        imageResizeMode: SplashScreenImageResizeMode.COVER,
+      });
       const actual = vol.readFileSync(filePath, 'utf-8');
       const expected = generateDrawableFileContent();
       expect(actual).toEqual(expected);
@@ -58,7 +62,9 @@ describe('Drawable.xml', () => {
     it('removes bitmap element if mode is not NATIVE', async () => {
       vol.mkdirpSync(fileDirPath);
       vol.writeFileSync(filePath, generateDrawableFileContent({ addBitmapItem: true }));
-      await configureDrawableXml(androidMainPath, ResizeMode.CONTAIN);
+      await configureDrawableXml(androidMainPath, {
+        imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
+      });
       const actual = vol.readFileSync(filePath, 'utf-8');
       const expected = generateDrawableFileContent();
       expect(actual).toEqual(expected);

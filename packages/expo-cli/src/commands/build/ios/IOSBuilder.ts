@@ -29,7 +29,7 @@ import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
 import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
 import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
 import log from '../../../log';
-import prompt from '../../../prompt';
+import { confirmAsync } from '../../../prompts';
 import { getOrPromptForBundleIdentifier } from '../../eject/ConfigValidation';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
@@ -86,13 +86,9 @@ class IOSBuilder extends BaseBuilder {
       return;
     }
 
-    const { confirm } = await prompt([
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: `Do you have access to the Apple account that will be used for submitting this app to the App Store?`,
-      },
-    ]);
+    const confirm = await confirmAsync({
+      message: `Do you have access to the Apple account that will be used for submitting this app to the App Store?`,
+    });
     if (confirm) {
       return await ctx.ensureAppleCtx();
     } else {
@@ -195,7 +191,6 @@ class IOSBuilder extends BaseBuilder {
 
   async _setupDistCert(ctx: Context, appLookupParams: AppLookupParams): Promise<void> {
     try {
-      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
       const distCertFromParams = await getDistCertFromParams(this.options);
       if (distCertFromParams) {
         await useDistCertFromParams(ctx, appLookupParams, distCertFromParams);
@@ -210,7 +205,6 @@ class IOSBuilder extends BaseBuilder {
 
   async _setupPushCert(ctx: Context, appLookupParams: AppLookupParams): Promise<void> {
     try {
-      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
       const pushKeyFromParams = await getPushKeyFromParams(this.options);
       if (pushKeyFromParams) {
         await usePushKeyFromParams(ctx, appLookupParams, pushKeyFromParams);
@@ -225,7 +219,6 @@ class IOSBuilder extends BaseBuilder {
 
   async _setupProvisioningProfile(ctx: Context, appLookupParams: AppLookupParams) {
     try {
-      const nonInteractive = this.options.parent && this.options.parent.nonInteractive;
       const provisioningProfileFromParams = await getProvisioningProfileFromParams(
         this.options.provisioningProfilePath
       );

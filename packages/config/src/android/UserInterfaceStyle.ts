@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { Document } from './Manifest';
+import { Document, getMainActivity } from './Manifest';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';
 
@@ -16,9 +16,8 @@ public class MainActivity extends ReactActivity {
     }
 `;
 
-export function getUserInterfaceStyle(config: ExpoConfig): string {
-  const result = config.android?.userInterfaceStyle ?? config.userInterfaceStyle;
-  return result ?? null;
+export function getUserInterfaceStyle(config: ExpoConfig): string | null {
+  return config.android?.userInterfaceStyle ?? config.userInterfaceStyle ?? null;
 }
 
 export async function setUiModeAndroidManifest(config: ExpoConfig, manifestDocument: Document) {
@@ -27,10 +26,9 @@ export async function setUiModeAndroidManifest(config: ExpoConfig, manifestDocum
     return manifestDocument;
   }
 
-  const mainActivity = manifestDocument.manifest.application[0].activity.filter(
-    (e: any) => e['$']['android:name'] === '.MainActivity'
-  );
-  mainActivity[0]['$'][CONFIG_CHANGES_ATTRIBUTE] =
+  const mainActivity = getMainActivity(manifestDocument);
+
+  mainActivity['$'][CONFIG_CHANGES_ATTRIBUTE] =
     'keyboard|keyboardHidden|orientation|screenSize|uiMode';
 
   return manifestDocument;

@@ -1,54 +1,24 @@
-import { ColorDescriptor } from 'color-string';
+export const SplashScreenImageResizeMode = {
+  CONTAIN: 'contain',
+  COVER: 'cover',
+  NATIVE: 'native',
+} as const;
+export type SplashScreenImageResizeModeType = TypeFromConstObject<
+  typeof SplashScreenImageResizeMode
+>;
 
-export enum ResizeMode {
-  CONTAIN = 'contain',
-  COVER = 'cover',
-  NATIVE = 'native',
-}
+export const Platform = {
+  ANDROID: 'android',
+  IOS: 'ios',
+  ALL: 'all',
+} as const;
+export type PlatformType = TypeFromConstObject<typeof Platform>;
 
-export enum Platform {
-  ANDROID = 'android',
-  IOS = 'ios',
-  ALL = 'all',
-}
+export const SplashScreenStatusBarStyle = {
+  DEFAULT: 'default',
+  LIGHT_CONTENT: 'light-content',
+  DARK_CONTENT: 'dark-content',
+} as const;
+export type SplashScreenStatusBarStyleType = TypeFromConstObject<typeof SplashScreenStatusBarStyle>;
 
-export enum StatusBarStyle {
-  DEFAULT = 'default',
-  LIGHT_CONTENT = 'light-content',
-  DARK_CONTENT = 'dark-content',
-}
-
-/**
- * These arguments have to be provided by the user or omitted if possible.
- */
-export interface Arguments {
-  backgroundColor: ColorDescriptor;
-  /**
-   * Absolute path
-   */
-  imagePath?: string;
-  darkModeBackgroundColor?: ColorDescriptor;
-  /**
-   * Absolute path
-   */
-  darkModeImagePath?: string;
-}
-
-/**
- * These might be optionally provided by the user. There are default values for them.
- */
-export interface StatusBarOptions {
-  statusBarHidden: boolean;
-  statusBarStyle: StatusBarStyle;
-}
-
-/**
- * These might be optionally provided by the user. There are default values for them.
- * Android only
- */
-export interface AndroidOnlyStatusBarOptions {
-  darkModeStatusBarStyle?: StatusBarStyle;
-  statusBarTranslucent?: true;
-  statusBarBackgroundColor?: ColorDescriptor;
-  darkModeStatusBarBackgroundColor?: ColorDescriptor;
-}
+type TypeFromConstObject<T extends object> = T[keyof T];

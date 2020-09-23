@@ -75,7 +75,8 @@ export async function requestAppleIdCreds(options: Options): Promise<AppleCreden
 }
 
 function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCredentials | null {
-  const passedAppleIdPassword = appleId
+  const passedAppleId = appleId || process.env.EXPO_APPLE_ID;
+  const passedAppleIdPassword = passedAppleId
     ? appleIdPassword || process.env.EXPO_APPLE_PASSWORD || process.env.EXPO_APPLE_ID_PASSWORD
     : undefined;
 
@@ -84,19 +85,19 @@ function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCred
   }
 
   // none of the apple id params were set, assume user has no intention of passing it in
-  if (!appleId) {
+  if (!passedAppleId) {
     return null;
   }
 
   // partial apple id params were set, assume user has intention of passing it in
-  if (!(appleId && passedAppleIdPassword)) {
+  if (!passedAppleIdPassword) {
     throw new Error(
       'In order to provide your Apple ID credentials, you must set the --apple-id flag and set the EXPO_APPLE_PASSWORD environment variable.'
     );
   }
 
   return {
-    appleId: appleId as string,
+    appleId: passedAppleId as string,
     appleIdPassword: passedAppleIdPassword as string,
   };
 }

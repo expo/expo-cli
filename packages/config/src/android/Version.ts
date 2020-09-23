@@ -4,7 +4,7 @@ const DEFAULT_VERSION_NAME = '1.0';
 const DEFAULT_VERSION_CODE = '1';
 
 export function getVersionName(config: ExpoConfig) {
-  return config.version ? config.version : null;
+  return config.version ?? null;
 }
 
 export function setVersionName(
@@ -22,7 +22,7 @@ export function setVersionName(
 }
 
 export function getVersionCode(config: ExpoConfig) {
-  return config.android && config.android.versionCode ? config.android.versionCode : null;
+  return config.android?.versionCode ? config.android.versionCode : null;
 }
 
 export function setVersionCode(

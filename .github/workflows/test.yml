@@ -8,25 +8,36 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['10', '12']
+    name: Build with Node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
       - run: yarn install --frozen-lockfile --check-files
       - run: yarn lerna run prepare --stream
       - uses: actions/cache@v1
         id: cache-build
         with:
           path: '.'
-          key: ${{ github.sha }}
+          key: ${{ github.sha }}-${{ matrix.node }}
   test:
     runs-on: ubuntu-latest
     needs: build
     strategy:
       fail-fast: false
       matrix:
+        node: ['10', '12']
         package:
           [
+            electron-adapter,
+            dev-tools,
             babel-preset-cli,
             config,
             dev-server,
@@ -43,13 +54,17 @@ jobs:
             webpack-config,
             xdl,
           ]
-    name: Test ${{ matrix.package }}
+    name: Test ${{ matrix.package }} on Node ${{ matrix.node }}
     steps:
       - uses: actions/cache@v1
         id: restore-build
         with:
           path: '.'
-          key: ${{ github.sha }}
+          key: ${{ github.sha }}-${{ matrix.node }}
+      - name: Set up Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
       - name: Test ${{ matrix.package }}
         run: cd packages/${{ matrix.package }} && yarn test
         # run: cd packages/${{ matrix.package }} && yarn test --coverage

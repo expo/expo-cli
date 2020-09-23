@@ -4,9 +4,9 @@ import { findSchemeNames } from './utils/Xcodeproj';
 
 export function getScheme(config: { scheme?: string | string[] }): string[] {
   if (Array.isArray(config.scheme)) {
-    function validate(value: any): value is string {
+    const validate = (value: any): value is string => {
       return typeof value === 'string';
-    }
+    };
     return config.scheme.filter<string>(validate);
   } else if (typeof config.scheme === 'string') {
     return [config.scheme];
@@ -15,10 +15,14 @@ export function getScheme(config: { scheme?: string | string[] }): string[] {
 }
 
 export function setScheme(
-  config: Pick<ExpoConfig, 'scheme' | 'ios'>,
+  config: Partial<Pick<ExpoConfig, 'scheme' | 'ios'>>,
   infoPlist: InfoPlist
 ): InfoPlist {
-  const scheme = [...getScheme(config), ...getScheme(config.ios ?? {})];
+  const scheme = [
+    ...getScheme(config),
+    // @ts-ignore: TODO: ios.scheme is an unreleased -- harder to add to turtle v1.
+    ...getScheme(config.ios ?? {}),
+  ];
   // Add the bundle identifier to the list of schemes for easier Google auth and parity with Turtle v1.
   if (config.ios?.bundleIdentifier) {
     scheme.push(config.ios.bundleIdentifier);

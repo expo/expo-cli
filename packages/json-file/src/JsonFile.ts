@@ -1,14 +1,14 @@
 import { codeFrameColumns } from '@babel/code-frame';
-import { readFile, readFileSync } from 'fs';
+import { mkdirp, readFile, readFileSync } from 'fs-extra';
 import JSON5 from 'json5';
 import get from 'lodash/get';
 import set from 'lodash/set';
+import path from 'path';
 import { promisify } from 'util';
 import writeFileAtomic from 'write-file-atomic';
 
-import JsonFileError from './JsonFileError';
+import JsonFileError, { EmptyJsonFileError } from './JsonFileError';
 
-const readFileAsync = promisify(readFile);
 const writeFileAtomicAsync: (
   filename: string,
   data: string | Buffer,
@@ -27,6 +27,7 @@ type Options<TJSONObject extends JSONObject> = {
   badJsonDefault?: TJSONObject;
   jsonParseErrorDefault?: TJSONObject;
   cantReadFileDefault?: TJSONObject;
+  ensureDir?: boolean;
   default?: TJSONObject;
   json5?: boolean;
   space?: number;
@@ -37,6 +38,7 @@ const DEFAULT_OPTIONS = {
   badJsonDefault: undefined,
   jsonParseErrorDefault: undefined,
   cantReadFileDefault: undefined,
+  ensureDir: false,
   default: undefined,
   json5: false,
   space: 2,
@@ -133,14 +135,15 @@ function read<TJSONObject extends JSONObject>(
   try {
     json = readFileSync(file, 'utf8');
   } catch (error) {
+    assertEmptyJsonString(json, file);
     const defaultValue = cantReadFileDefault(options);
     if (defaultValue === undefined) {
-      throw new JsonFileError(`Can't read JSON file: ${file}`, error, error.code);
+      throw new JsonFileError(`Can't read JSON file: ${file}`, error, error.code, file);
     } else {
       return defaultValue;
     }
   }
-  return parseJsonString(json, options);
+  return parseJsonString(json, options, file);
 }
 
 async function readAsync<TJSONObject extends JSONObject>(
@@ -149,8 +152,9 @@ async function readAsync<TJSONObject extends JSONObject>(
 ): Promise<TJSONObject> {
   let json;
   try {
-    json = await readFileAsync(file, 'utf8');
+    json = await readFile(file, 'utf8');
   } catch (error) {
+    assertEmptyJsonString(json, file);
     const defaultValue = cantReadFileDefault(options);
     if (defaultValue === undefined) {
       throw new JsonFileError(`Can't read JSON file: ${file}`, error, error.code);
@@ -163,8 +167,10 @@ async function readAsync<TJSONObject extends JSONObject>(
 
 function parseJsonString<TJSONObject extends JSONObject>(
   json: string,
-  options?: Options<TJSONObject>
+  options?: Options<TJSONObject>,
+  fileName?: string
 ): TJSONObject {
+  assertEmptyJsonString(json, fileName);
   try {
     if (_getOption(options, 'json5')) {
       return JSON5.parse(json);
@@ -180,7 +186,7 @@ function parseJsonString<TJSONObject extends JSONObject>(
         e.codeFrame = codeFrame;
         e.message += `\n${codeFrame}`;
       }
-      throw new JsonFileError(`Error parsing JSON: ${json}`, e, 'EJSONPARSE');
+      throw new JsonFileError(`Error parsing JSON: ${json}`, e, 'EJSONPARSE', fileName);
     } else {
       return defaultValue;
     }
@@ -205,6 +211,9 @@ async function writeAsync<TJSONObject extends JSONObject>(
   object: TJSONObject,
   options?: Options<TJSONObject>
 ): Promise<TJSONObject> {
+  if (options?.ensureDir) {
+    await mkdirp(path.dirname(file));
+  }
   const space = _getOption(options, 'space');
   const json5 = _getOption(options, 'json5');
   const addNewLineAtEOF = _getOption(options, 'addNewLineAtEOF');
@@ -334,4 +343,10 @@ function locationFromSyntaxError(error: any, sourceString: string) {
   }
 
   return null;
+}
+
+function assertEmptyJsonString(json?: string, file?: string) {
+  if (json?.trim() === '') {
+    throw new EmptyJsonFileError(file);
+  }
 }

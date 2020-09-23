@@ -1,9 +1,8 @@
-import colorString from 'color-string';
 import { vol } from 'memfs';
 import * as path from 'path';
 
 import { getDirFromFS, readFileFromActualFS, getPng1x1FileContent } from '../../__tests__/helpers';
-import { ResizeMode } from '../../constants';
+import { SplashScreenImageResizeMode } from '../../constants';
 import configureIos from '../index';
 import reactNativeProject from './fixtures/react-native-project-structure';
 import reactNativeProjectWithSplashScreenConfiured from './fixtures/react-native-project-structure-with-splash-screen-configured';
@@ -24,8 +23,7 @@ describe('ios', () => {
 
     it('configures project correctly with defaults', async () => {
       await configureIos('/app', {
-        resizeMode: ResizeMode.CONTAIN,
-        backgroundColor: colorString.get('#E3F29238')!,
+        backgroundColor: '#E3F29238',
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
       // I don't compare `.pbxproj` as every time it is filled with new UUIDs
@@ -50,9 +48,9 @@ describe('ios', () => {
       vol.mkdirpSync('/assets');
       vol.writeFileSync('/assets/background.png', backgroundImage);
       await configureIos('/app', {
-        resizeMode: ResizeMode.COVER,
-        backgroundColor: colorString.get('yellow')!,
-        imagePath: '/assets/background.png',
+        backgroundColor: 'yellow',
+        imageResizeMode: SplashScreenImageResizeMode.COVER,
+        image: '/assets/background.png',
       });
       const received = getDirFromFS(vol.toJSON(), '/app');
       // I don't compare `.pbxproj` as every time it is filled with new UUIDs

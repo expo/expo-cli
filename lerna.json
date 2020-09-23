@@ -3,5 +3,12 @@
   "registry": "https://registry.npmjs.org/",
   "useWorkspaces": true,
   "version": "independent",
-  "packages": ["packages/*"]
+  "packages": ["packages/*"],
+  "commands": {
+    "publish": {
+      "ignoreChanges": [
+        "packages/config-types/**/*"
+      ]
+    }
+  }
 }

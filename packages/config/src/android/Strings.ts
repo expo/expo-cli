@@ -1,32 +1,21 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { Builder, Parser } from 'xml2js';
+import { Builder } from 'xml2js';
 
-import { Document } from './Manifest';
+import { Document, getProjectXMLPathAsync, readXMLAsync } from './Manifest';
 import { XMLItem } from './Styles';
 
 const BASE_STRINGS_XML = `<resources></resources>`;
 
-export async function getProjectStringsXMLPathAsync(projectDir: string): Promise<string | null> {
-  try {
-    const shellPath = path.join(projectDir, 'android');
-    if ((await fs.stat(shellPath)).isDirectory()) {
-      const stringsPath = path.join(shellPath, 'app/src/main/res/values/strings.xml');
-      await fs.ensureFile(stringsPath);
-      return stringsPath;
-    }
-  } catch (error) {
-    throw new Error('No android directory found in your project.');
-  }
-
-  return null;
+export async function getProjectStringsXMLPathAsync(
+  projectDir: string,
+  { kind = 'values' }: { kind?: string } = {}
+): Promise<string | null> {
+  return getProjectXMLPathAsync(projectDir, { kind, name: 'strings' });
 }
 
 export async function readStringsXMLAsync(stringsPath: string): Promise<Document> {
-  const contents = await fs.readFile(stringsPath, { encoding: 'utf8', flag: 'r' });
-  const parser = new Parser();
-  const manifest = parser.parseStringPromise(contents || BASE_STRINGS_XML);
-  return manifest;
+  return readXMLAsync({ path: stringsPath, fallback: BASE_STRINGS_XML });
 }
 
 export async function writeStringsXMLAsync(

@@ -1,4 +1,9 @@
-import { isPkgMainExpoAppEntry, stripDashes } from '../Eject';
+import {
+  hashForDependencyMap,
+  isPkgMainExpoAppEntry,
+  shouldDeleteMainField,
+  stripDashes,
+} from '../Eject';
 
 describe('stripDashes', () => {
   it(`removes spaces and dashes from a string`, () => {
@@ -7,6 +12,28 @@ describe('stripDashes', () => {
     expect(stripDashes('-----')).toBe('');
     expect(stripDashes(' ')).toBe('');
     expect(stripDashes(' \n-\n-')).toBe('');
+  });
+});
+
+describe('hashForDependencyMap', () => {
+  it(`dependencies in any order hash to the same value`, () => {
+    expect(hashForDependencyMap({ a: '1.0.0', b: 2, c: '~3.0' })).toBe(
+      hashForDependencyMap({ c: '~3.0', b: 2, a: '1.0.0' })
+    );
+  });
+});
+
+describe('shouldDeleteMainField', () => {
+  it(`should delete non index field`, () => {
+    expect(shouldDeleteMainField(null)).toBe(false);
+    expect(shouldDeleteMainField()).toBe(false);
+    expect(shouldDeleteMainField('expo/AppEntry')).toBe(true);
+    // non-expo fields
+    expect(shouldDeleteMainField('.src/other.js')).toBe(false);
+    expect(shouldDeleteMainField('index.js')).toBe(false);
+    expect(shouldDeleteMainField('index.ios.js')).toBe(false);
+    expect(shouldDeleteMainField('index.ts')).toBe(false);
+    expect(shouldDeleteMainField('./index')).toBe(false);
   });
 });
 

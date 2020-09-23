@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import { ResizeMode } from '../../constants';
+import { SplashScreenImageResizeMode } from '../../constants';
 import configureStoryboard from '../Storyboard';
 import readPbxProject from '../pbxproj';
 import reactNativeProject from './fixtures/react-native-project-structure';
@@ -24,10 +24,7 @@ describe('Storyboard', () => {
 
     it('creates .storyboard file', async () => {
       const iosProject = await readPbxProject(iosProjectPath);
-      await configureStoryboard(iosProject, {
-        resizeMode: ResizeMode.COVER,
-        splashScreenImagePresent: false,
-      });
+      await configureStoryboard(iosProject);
       const actual = vol.readFileSync(filePath, 'utf-8');
       const expected = `<?xml version="1.0" encoding="UTF-8"?>
 <document
@@ -185,8 +182,8 @@ describe('Storyboard', () => {
       );
       const iosProject = await readPbxProject(iosProjectPath);
       await configureStoryboard(iosProject, {
-        resizeMode: ResizeMode.CONTAIN,
-        splashScreenImagePresent: true,
+        imageResizeMode: SplashScreenImageResizeMode.CONTAIN,
+        image: './',
       });
       const actual = vol.readFileSync(filePath, 'utf-8');
       const expected = `<?xml version="1.0" encoding="UTF-8"?>
@@ -288,8 +285,7 @@ describe('Storyboard', () => {
       const iosProject = await readPbxProject(iosProjectPath);
       await expect(async () => {
         await configureStoryboard(iosProject, {
-          resizeMode: ResizeMode.NATIVE,
-          splashScreenImagePresent: false,
+          imageResizeMode: SplashScreenImageResizeMode.NATIVE,
         });
       }).rejects.toThrow();
     });
@@ -298,8 +294,7 @@ describe('Storyboard', () => {
       const iosProject = await readPbxProject(iosProjectPath);
       const original = iosProject.pbxProject.writeSync();
       await configureStoryboard(iosProject, {
-        resizeMode: ResizeMode.COVER,
-        splashScreenImagePresent: false,
+        imageResizeMode: SplashScreenImageResizeMode.COVER,
       });
 
       const result = iosProject.pbxProject.writeSync();
@@ -319,13 +314,11 @@ describe('Storyboard', () => {
     it('consecutive calls does not modify .pbxproj', async () => {
       const iosProject = await readPbxProject(iosProjectPath);
       await configureStoryboard(iosProject, {
-        resizeMode: ResizeMode.COVER,
-        splashScreenImagePresent: false,
+        imageResizeMode: SplashScreenImageResizeMode.COVER,
       });
       const afterFirstCall = iosProject.pbxProject.writeSync();
       await configureStoryboard(iosProject, {
-        resizeMode: ResizeMode.COVER,
-        splashScreenImagePresent: false,
+        imageResizeMode: SplashScreenImageResizeMode.COVER,
       });
       const afterSecondCall = iosProject.pbxProject.writeSync();
       expect(afterSecondCall).toEqual(afterFirstCall);

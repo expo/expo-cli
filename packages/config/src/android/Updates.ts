@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, addMetaDataItemToMainApplication } from './Manifest';
+import { addMetaDataItemToMainApplication, Document, getMainApplication } from './Manifest';
 
 export function getUpdateUrl(config: ExpoConfig, username: string | null) {
   const user = typeof config.owner === 'string' ? config.owner : username;
@@ -35,9 +35,7 @@ export async function setUpdatesConfig(
   manifestDocument: Document,
   username: string | null
 ) {
-  const mainApplication = manifestDocument.manifest.application.filter(
-    (e: any) => e['$']['android:name'] === '.MainApplication'
-  )[0];
+  const mainApplication = getMainApplication(manifestDocument);
 
   addMetaDataItemToMainApplication(
     mainApplication,

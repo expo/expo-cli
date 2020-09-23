@@ -1,5 +1,5 @@
-import { BuildType, Job, Platform, iOS, sanitizeJob } from '@expo/build-tools';
 import { IOSConfig } from '@expo/config';
+import { BuildType, iOS, Job, Platform, sanitizeJob } from '@expo/eas-build-job';
 import chalk from 'chalk';
 import figures from 'figures';
 import sortBy from 'lodash/sortBy';
@@ -13,9 +13,9 @@ import iOSCredentialsProvider, {
 import * as ProvisioningProfileUtils from '../../../../credentials/utils/provisioningProfile';
 import {
   CredentialsSource,
-  Workflow,
   iOSGenericBuildProfile,
   iOSManagedBuildProfile,
+  Workflow,
 } from '../../../../easJson';
 import { gitRootDirectory } from '../../../../git';
 import log from '../../../../log';
@@ -61,6 +61,7 @@ class iOSBuilder implements Builder<Platform.iOS> {
     CredentialsSource.LOCAL | CredentialsSource.REMOTE | undefined
   > {
     this.secretEnvs = await readSecretEnvsAsync(this.ctx.commandCtx.projectDir);
+
     if (!this.shouldLoadCredentials()) {
       return;
     }

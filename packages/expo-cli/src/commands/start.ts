@@ -52,25 +52,6 @@ function getBooleanArg(rawArgs: string[], argName: string): boolean {
   }
 }
 
-/**
- * If the project config `platforms` only contains the "web" field.
- * If no `platforms` array is defined this could still resolve true because platforms
- * will be inferred from the existence of `react-native-web` and `react-native`.
- *
- * @param projectRoot
- */
-function isWebOnly(projectRoot: string): boolean {
-  // TODO(Bacon): Limit the amount of times that the config is evaluated
-  // currently we read it the first time without the SDK version then later read it with the SDK version if react-native is installed.
-  const { exp } = getConfig(projectRoot, {
-    skipSDKVersionRequirement: true,
-  });
-  if (Array.isArray(exp.platforms) && exp.platforms.length === 1) {
-    return exp.platforms[0] === 'web';
-  }
-  return false;
-}
-
 // The main purpose of this function is to take existing options object and
 // support boolean args with as defined in the hasBooleanArg and getBooleanArg
 // functions.
@@ -80,7 +61,7 @@ async function normalizeOptionsAsync(
 ): Promise<NormalizedOptions> {
   const opts: NormalizedOptions = {
     ...options, // This is necessary to ensure we don't drop any options
-    webOnly: options.webOnly ?? isWebOnly(projectDir),
+    webOnly: !!options.webOnly, // This is only ever true in the start:web command
     nonInteractive: options.parent?.nonInteractive,
   };
 
@@ -163,7 +144,7 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
 async function startWebAction(projectDir: string, options: NormalizedOptions): Promise<void> {
   const { exp, rootPath } = await configureProjectAsync(projectDir, options);
   const startOpts = parseStartOptions(options);
-  await Project.startAsync(rootPath, startOpts);
+  await Project.startAsync(rootPath, { ...startOpts, exp });
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
   if (!options.nonInteractive && !exp.isDetached) {
@@ -179,7 +160,7 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
 
   const startOpts = parseStartOptions(options);
 
-  await Project.startAsync(rootPath, startOpts);
+  await Project.startAsync(rootPath, { ...startOpts, exp });
 
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
@@ -333,10 +314,6 @@ export default (program: any) => {
     .helpGroup('core')
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .option('-c, --clear', 'Clear the Metro bundler cache')
-    .option(
-      '--web-only',
-      'Only start the Webpack dev server for web. [Deprecated]: use `expo start:web`'
-    )
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .option('--dev', 'Turn development mode on')
@@ -350,9 +327,6 @@ export default (program: any) => {
     .asyncActionProjectDir(
       async (projectDir: string, options: Options): Promise<void> => {
         const normalizedOptions = await normalizeOptionsAsync(projectDir, options);
-        if (normalizedOptions.webOnly) {
-          return await startWebAction(projectDir, normalizedOptions);
-        }
         return await action(projectDir, normalizedOptions);
       }
     );

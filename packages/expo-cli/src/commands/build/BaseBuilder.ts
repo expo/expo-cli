@@ -380,7 +380,13 @@ ${job.id}
       const artifactUrl = completedJob.artifactId
         ? UrlUtils.constructArtifactUrl(completedJob.artifactId)
         : completedJob.artifacts.url;
+      log.addNewLineIfNone();
       log(`${chalk.green('Successfully built standalone app:')} ${chalk.underline(artifactUrl)}`);
+      if (process.platform === 'darwin') {
+        log.newLine();
+        log(`You can publish to the App Store with ${chalk.bold('expo upload:ios')}`);
+      }
+      log.newLine();
     } else {
       log('Alternatively, run `expo build:status` to monitor it from the command line.');
     }

@@ -1,4 +1,4 @@
-import { ExpoConfig, PackageJSONConfig, ProjectTarget, getConfig } from '@expo/config';
+import { ExpoAppManifest, PackageJSONConfig, ProjectTarget, getConfig } from '@expo/config';
 import fs from 'fs-extra';
 import path from 'path';
 import semver from 'semver';
@@ -14,7 +14,7 @@ import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 export type EmbeddedAssetsConfiguration = {
   projectRoot: string;
   pkg: PackageJSONConfig;
-  exp: PublicConfig;
+  exp: ExpoAppManifest;
   releaseChannel?: string;
   iosManifestUrl: string;
   iosManifest: any;
@@ -27,10 +27,6 @@ export type EmbeddedAssetsConfiguration = {
   target: ProjectTarget;
 };
 
-type PublicConfig = ExpoConfig & {
-  sdkVersion: string;
-};
-
 export async function configureAsync(config: EmbeddedAssetsConfiguration) {
   await _maybeWriteArtifactsToDiskAsync(config);
   await _maybeConfigureExpoKitEmbeddedAssetsAsync(config);
@@ -40,7 +36,7 @@ export async function configureAsync(config: EmbeddedAssetsConfiguration) {
 export function getEmbeddedManifestPath(
   platform: 'ios' | 'android',
   projectRoot: string,
-  exp: PublicConfig
+  exp: ExpoAppManifest
 ): string {
   if (platform === 'ios') {
     return exp.ios && exp.ios.publishManifestPath
@@ -57,7 +53,7 @@ export function getEmbeddedManifestPath(
 function _getDefaultEmbeddedManifestPath(
   platform: 'ios' | 'android',
   projectRoot: string,
-  exp: PublicConfig
+  exp: ExpoAppManifest
 ): string {
   return path.join(_getDefaultEmbeddedAssetDir(platform, projectRoot, exp), 'app.manifest');
 }
@@ -65,7 +61,7 @@ function _getDefaultEmbeddedManifestPath(
 function _getDefaultEmbeddedBundlePath(
   platform: 'ios' | 'android',
   projectRoot: string,
-  exp: PublicConfig
+  exp: ExpoAppManifest
 ): string {
   return path.join(_getDefaultEmbeddedAssetDir(platform, projectRoot, exp), 'app.bundle');
 }
@@ -73,7 +69,7 @@ function _getDefaultEmbeddedBundlePath(
 function _getDefaultEmbeddedAssetDir(
   platform: 'ios' | 'android',
   projectRoot: string,
-  exp: PublicConfig
+  exp: ExpoAppManifest
 ): string {
   if (platform === 'ios') {
     const { iosSupportingDirectory } = getIOSPaths(projectRoot);
@@ -87,7 +83,7 @@ function _getDefaultEmbeddedAssetDir(
 
 export function shouldEmbedAssetsForExpoUpdates(
   projectRoot: string,
-  exp: PublicConfig,
+  exp: ExpoAppManifest,
   pkg: PackageJSONConfig,
   target: ProjectTarget
 ): boolean {
@@ -158,22 +154,22 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
   }
 
   // allow custom overrides
-  if (exp.android && exp.android.publishBundlePath) {
+  if (exp.android?.publishBundlePath) {
     androidBundlePath = exp.android.publishBundlePath;
   }
-  if (exp.android && exp.android.publishManifestPath) {
+  if (exp.android?.publishManifestPath) {
     androidManifestPath = exp.android.publishManifestPath;
   }
-  if (exp.android && exp.android.publishSourceMapPath) {
+  if (exp.android?.publishSourceMapPath) {
     androidSourceMapPath = exp.android.publishSourceMapPath;
   }
-  if (exp.ios && exp.ios.publishBundlePath) {
+  if (exp.ios?.publishBundlePath) {
     iosBundlePath = exp.ios.publishBundlePath;
   }
-  if (exp.ios && exp.ios.publishManifestPath) {
+  if (exp.ios?.publishManifestPath) {
     iosManifestPath = exp.ios.publishManifestPath;
   }
-  if (exp.ios && exp.ios.publishSourceMapPath) {
+  if (exp.ios?.publishSourceMapPath) {
     iosSourceMapPath = exp.ios.publishSourceMapPath;
   }
 

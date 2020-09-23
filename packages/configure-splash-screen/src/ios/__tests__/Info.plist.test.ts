@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import { StatusBarStyle } from '../../constants';
+import { SplashScreenStatusBarStyle } from '../../constants';
 import configureInfoPlist from '../Info.plist';
 import reactNativeProject from './fixtures/react-native-project-structure';
 
@@ -30,7 +30,7 @@ describe('Info.plist', () => {
     describe('StatusBar configuration', () => {
       it('inserts UIStatusBarHidden', async () => {
         await configureInfoPlist(iosProjectPath, {
-          statusBarHidden: true,
+          statusBar: { hidden: true },
         });
         const actual = vol.readFileSync(filePath, 'utf-8');
         expect(actual).toMatch(/<key>UIStatusBarHidden<\/key>(\n|.)*<true\/>/);
@@ -38,10 +38,10 @@ describe('Info.plist', () => {
 
       it('updates UIStatusBarHidden', async () => {
         await configureInfoPlist(iosProjectPath, {
-          statusBarHidden: true,
+          statusBar: { hidden: true },
         });
         await configureInfoPlist(iosProjectPath, {
-          statusBarHidden: false,
+          statusBar: { hidden: false },
         });
         const actual = vol.readFileSync(filePath, 'utf-8');
         expect(actual).toMatch(/<key>UIStatusBarHidden<\/key>(\n|.)*<false\/>/);
@@ -49,7 +49,7 @@ describe('Info.plist', () => {
 
       it('inserts UIStatusBarStyle', async () => {
         await configureInfoPlist(iosProjectPath, {
-          statusBarStyle: StatusBarStyle.LIGHT_CONTENT,
+          statusBar: { style: SplashScreenStatusBarStyle.LIGHT_CONTENT },
         });
         const actual = vol.readFileSync(filePath, 'utf-8');
         expect(actual).toMatch(
@@ -59,10 +59,10 @@ describe('Info.plist', () => {
 
       it('updates UIStatusBarStyle', async () => {
         await configureInfoPlist(iosProjectPath, {
-          statusBarStyle: StatusBarStyle.LIGHT_CONTENT,
+          statusBar: { style: SplashScreenStatusBarStyle.LIGHT_CONTENT },
         });
         await configureInfoPlist(iosProjectPath, {
-          statusBarStyle: StatusBarStyle.DARK_CONTENT,
+          statusBar: { style: SplashScreenStatusBarStyle.DARK_CONTENT },
         });
         const actual = vol.readFileSync(filePath, 'utf-8');
         expect(actual).toMatch(

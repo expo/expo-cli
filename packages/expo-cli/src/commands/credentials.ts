@@ -16,24 +16,29 @@ type Options = {
 
 export default function (program: CommanderStatic) {
   program
-    .command('credentials:manager')
+    .command('credentials:manager [path]')
     .description('Manage your credentials')
     .helpGroup('credentials')
     .option('-p --platform <platform>', 'Platform: [android|ios]', /^(android|ios)$/i)
-    .asyncAction(async (options: Options) => {
-      const projectDir = process.cwd();
-      const context = new Context();
-      await context.init(projectDir, {
-        nonInteractive: options.parent?.nonInteractive,
-      });
-      let mainpage;
-      if (options.platform === 'android') {
-        mainpage = new SelectAndroidExperience();
-      } else if (options.platform === 'ios') {
-        mainpage = new SelectIosExperience();
-      } else {
-        mainpage = new SelectPlatform();
+    .asyncActionProjectDir(
+      async (projectDir: string, options: Options) => {
+        const context = new Context();
+        await context.init(projectDir, {
+          nonInteractive: options.parent?.nonInteractive,
+        });
+        let mainpage;
+        if (options.platform === 'android') {
+          mainpage = new SelectAndroidExperience();
+        } else if (options.platform === 'ios') {
+          mainpage = new SelectIosExperience();
+        } else {
+          mainpage = new SelectPlatform();
+        }
+        await runCredentialsManagerStandalone(context, mainpage);
+      },
+      {
+        checkConfig: false,
+        skipSDKVersionRequirement: true,
       }
-      await runCredentialsManagerStandalone(context, mainpage);
-    }, /* skip project validation */ true);
+    );
 }

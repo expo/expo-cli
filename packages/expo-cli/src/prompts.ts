@@ -73,7 +73,7 @@ export async function autoCompleteAsync(
  * @param options
  */
 export async function selectAsync(
-  questions: NamelessQuestion | NamelessQuestion[],
+  questions: NamelessQuestion,
   options?: PromptOptions
 ): Promise<string> {
   const { value } = await prompt(
@@ -95,11 +95,12 @@ export async function selectAsync(
  * @param options
  */
 export async function confirmAsync(
-  questions: NamelessQuestion | NamelessQuestion[],
+  questions: NamelessQuestion,
   options?: PromptOptions
 ): Promise<boolean> {
   const { value } = await prompt(
     {
+      initial: true,
       ...questions,
       name: 'value',
       type: 'confirm',
@@ -116,7 +117,7 @@ export async function confirmAsync(
  * @param options
  */
 export async function toggleConfirmAsync(
-  questions: NamelessQuestion | NamelessQuestion[],
+  questions: NamelessQuestion,
   options?: PromptOptions
 ): Promise<boolean> {
   const { value } = await prompt(

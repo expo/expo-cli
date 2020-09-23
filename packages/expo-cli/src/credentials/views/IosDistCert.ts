@@ -9,6 +9,7 @@ import CommandError from '../../CommandError';
 import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
+import { confirmAsync } from '../../prompts';
 import { displayIosUserCredentials } from '../actions/list';
 import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
@@ -72,13 +73,9 @@ export class RemoveIosDist implements IView {
 
     if (appsList && !ctx.nonInteractive) {
       log('Removing Distribution Certificate');
-      const { confirm } = await prompt([
-        {
-          type: 'confirm',
-          name: 'confirm',
-          message: `You are removing certificate used by ${appsList}. Do you want to continue?`,
-        },
-      ]);
+      const confirm = await confirmAsync({
+        message: `You are removing certificate used by ${appsList}. Do you want to continue?`,
+      });
       if (!confirm) {
         log('Aborting');
         return;
@@ -91,13 +88,9 @@ export class RemoveIosDist implements IView {
     let shouldRevoke = this.shouldRevoke;
     if (selected.certId) {
       if (!shouldRevoke && !ctx.nonInteractive) {
-        const { revoke } = await prompt([
-          {
-            type: 'confirm',
-            name: 'revoke',
-            message: `Do you also want to revoke it on Apple Developer Portal?`,
-          },
-        ]);
+        const revoke = await confirmAsync({
+          message: `Do you also want to revoke it on Apple Developer Portal?`,
+        });
         shouldRevoke = revoke;
       }
 
@@ -156,12 +149,9 @@ export class UpdateIosDist implements IView {
         );
       }
 
-      const question: Question = {
-        type: 'confirm',
-        name: 'confirm',
+      const confirm = await confirmAsync({
         message: `You are updating certificate used by ${appsList}. Do you want to continue?`,
-      };
-      const { confirm } = await prompt(question);
+      });
       if (!confirm) {
         log('Aborting update process');
         return;
@@ -245,19 +235,16 @@ export class CreateOrReuseDistributionCert implements IView {
 
     // autoselect creds if we find valid certs
     const autoselectedCertificate = existingCertificates[0];
-    const confirmQuestion: Question = {
-      type: 'confirm',
-      name: 'confirm',
-      message: `${formatDistCert(
-        autoselectedCertificate,
-        await ctx.ios.getAllCredentials(this.app.accountName),
-        'VALID'
-      )} \n Would you like to use this certificate?`,
-      pageSize: Infinity,
-    };
 
     if (!ctx.nonInteractive) {
-      const { confirm } = await prompt(confirmQuestion);
+      const confirm = await confirmAsync({
+        message: `${formatDistCert(
+          autoselectedCertificate,
+          await ctx.ios.getAllCredentials(this.app.accountName),
+          'VALID'
+        )} \n Would you like to use this certificate?`,
+        limit: Infinity,
+      });
       if (!confirm) {
         return await this._createOrReuse(ctx);
       }

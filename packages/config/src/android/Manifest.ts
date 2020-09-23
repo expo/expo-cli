@@ -17,6 +17,22 @@ export function logManifest(doc: Document) {
   console.log(xmlInput);
 }
 
+export async function writeXMLAsync(options: { path: string; xml: any }): Promise<void> {
+  const xml = new Builder().buildObject(options.xml);
+  await fs.ensureDir(path.dirname(options.path));
+  await fs.writeFile(options.path, xml);
+}
+
+export async function readXMLAsync(options: {
+  path: string;
+  fallback?: string;
+}): Promise<Document> {
+  const contents = await fs.readFile(options.path, { encoding: 'utf8', flag: 'r' });
+  const parser = new Parser();
+  const manifest = parser.parseStringPromise(contents || options.fallback || '');
+  return manifest;
+}
+
 const stringTimesN = (n: number, char: string) => Array(n + 1).join(char);
 
 export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): string {
@@ -72,6 +88,24 @@ export async function writeAndroidManifestAsync(
   await fs.writeFile(manifestPath, manifestXml);
 }
 
+export async function getProjectXMLPathAsync(
+  projectDir: string,
+  { kind = 'values', name }: { kind?: string; name: string }
+): Promise<string | null> {
+  try {
+    const shellPath = path.join(projectDir, 'android');
+    if ((await fs.stat(shellPath)).isDirectory()) {
+      const stylesPath = path.join(shellPath, `app/src/main/res/${kind}/${name}.xml`);
+      await fs.ensureFile(stylesPath);
+      return stylesPath;
+    }
+  } catch (error) {
+    throw new Error(`Could not create android/app/src/main/res/${kind}/${name}.xml`);
+  }
+
+  return null;
+}
+
 export async function getProjectAndroidManifestPathAsync(
   projectDir: string
 ): Promise<string | null> {
@@ -97,6 +131,21 @@ export async function readAndroidManifestAsync(manifestPath: string): Promise<Do
 
 export async function getPackageAsync(manifest: Document): Promise<string | null> {
   return manifest.manifest?.['$']?.package ?? null;
+}
+
+export function getMainApplication(manifest: Document): any | null {
+  return (
+    manifest?.manifest?.application?.filter(
+      (e: any) => e['$']['android:name'] === '.MainApplication'
+    )[0] ?? null
+  );
+}
+
+export function getMainActivity(manifest: Document): any | null {
+  const mainActivity = manifest.manifest.application[0].activity.filter(
+    (e: any) => e['$']['android:name'] === '.MainActivity'
+  );
+  return mainActivity[0] ?? null;
 }
 
 export function addMetaDataItemToMainApplication(
