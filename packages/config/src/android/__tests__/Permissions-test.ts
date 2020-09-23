@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 
-import { format, readAndroidManifestAsync } from '../Manifest';
+import { readAndroidManifestAsync } from '../Manifest';
 import {
   ensurePermission,
   ensurePermissions,
@@ -10,6 +10,7 @@ import {
   requiredPermissions,
   setAndroidPermissions,
 } from '../Permissions';
+import { format } from '../XML';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
