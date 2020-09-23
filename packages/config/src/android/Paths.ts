@@ -34,12 +34,14 @@ export function getAppBuildGradle(projectRoot: string): string {
 
 export async function getAndroidManifestAsync(projectRoot: string): Promise<string> {
   const shellPath = path.join(projectRoot, 'android');
-  if ((await fs.stat(shellPath)).isDirectory()) {
-    const manifestPath = path.join(shellPath, 'app/src/main/AndroidManifest.xml');
-    if ((await fs.stat(manifestPath)).isFile()) {
-      return manifestPath;
+  try {
+    if ((await fs.stat(shellPath)).isDirectory()) {
+      const manifestPath = path.join(shellPath, 'app/src/main/AndroidManifest.xml');
+      if ((await fs.stat(manifestPath)).isFile()) {
+        return manifestPath;
+      }
     }
-  }
+  } catch {}
 
   throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectRoot}"`);
 }
@@ -49,11 +51,15 @@ export async function getResourceXMLAsync(
   { kind = 'values', name }: { kind?: string; name: string }
 ): Promise<string> {
   const shellPath = path.join(projectDir, 'android');
-  if ((await fs.stat(shellPath)).isDirectory()) {
-    const stylesPath = path.join(shellPath, `app/src/main/res/${kind}/${name}.xml`);
-    await fs.ensureFile(stylesPath);
-    return stylesPath;
-  }
+  try {
+    if ((await fs.stat(shellPath)).isDirectory()) {
+      const stylesPath = path.join(shellPath, `app/src/main/res/${kind}/${name}.xml`);
+      //   await fs.ensureFile(stylesPath);
+      if ((await fs.stat(stylesPath)).isFile()) {
+        return stylesPath;
+      }
+    }
+  } catch {}
 
   throw new Error(
     `Could not find android/app/src/main/res/${kind}/${name}.xml because the android project folder is missing.`
