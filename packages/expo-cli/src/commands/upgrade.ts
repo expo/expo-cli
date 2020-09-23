@@ -487,15 +487,23 @@ export async function upgradeAsync(
 
   log.addNewLineIfNone();
   const expoPackageToInstall = `expo@^${targetSdkVersionString}`;
-  const installingPackageStep = logNewSection(`Installing the ${expoPackageToInstall} package...`);
-  log.addNewLineIfNone();
-  try {
-    await packageManager.addAsync(expoPackageToInstall);
-  } catch (e) {
-    installingPackageStep.fail(`Failed to install expo package with error: ${e.message}`);
-    throw e;
+
+  // Skip installing the Expo package again if it's already installed. @satya164
+  // wanted this in order to work around an issue with yarn workspaces on
+  // react-navigation.
+  if (targetSdkVersionString !== currentSdkVersionString) {
+    const installingPackageStep = logNewSection(
+      `Installing the ${expoPackageToInstall} package...`
+    );
+    log.addNewLineIfNone();
+    try {
+      await packageManager.addAsync(expoPackageToInstall);
+    } catch (e) {
+      installingPackageStep.fail(`Failed to install expo package with error: ${e.message}`);
+      throw e;
+    }
+    installingPackageStep.succeed(`Installed ${expoPackageToInstall}`);
   }
-  installingPackageStep.succeed(`Installed ${expoPackageToInstall}`);
 
   // Evaluate project config (app.config.js)
   const { exp: currentExp, dynamicConfigPath } = ConfigUtils.getConfig(projectRoot);
