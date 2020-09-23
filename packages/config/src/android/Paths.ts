@@ -6,7 +6,7 @@ export async function getMainActivityAsync(
   projectRoot: string
 ): Promise<{ path: string; language: 'java' | 'kt' }> {
   const mainActivityJavaPath = globSync(
-    path.join(projectRoot, 'android/app/src/main/java/**/MainActivity.')
+    path.join(projectRoot, 'android/app/src/main/java/**/MainActivity.{java,kt}')
   )[0];
 
   const mainActivityPathJava = path.resolve(mainActivityJavaPath, '../MainActivity.java');
