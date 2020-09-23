@@ -232,7 +232,11 @@ export interface ExpoConfig {
    * Provide overrides by locale for System Dialog prompts like Permissions Boxes
    */
   locales?: {
-    [k: string]: string;
+    [k: string]:
+      | string
+      | {
+          [k: string]: any;
+        };
   };
   /**
    * Configuration that is specific to the iOS platform.
@@ -865,11 +869,7 @@ export interface ExpoConfig {
    */
   experiments?: {
     /**
-     * Use the unstable LogBox re-design available in React Native 0.62. This option is only available in SDK 38.
-     */
-    redesignedLogBox?: boolean;
-    /**
-     * Enables Turbo Modules, which are a type of native module that use a different way of communicating between JS and platform code. When installing a Turbo Module you will need to enable this experimental option (the library still needs to be already a part of Expo SDK, like react-native-reanimated v2). Turbo Modules do not support remote debugging and enabling this option will disable remove debugging.
+     * Enables Turbo Modules, which are a type of native modules that use a different way of communicating between JS and platform code. When installing a Turbo Module you will need to enable this experimental option (the library still needs to be a part of Expo SDK already, like react-native-reanimated v2). Turbo Modules do not support remote debugging and enabling this option will disable remote debugging.
      */
     turboModules?: boolean;
   };
