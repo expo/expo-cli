@@ -8,7 +8,8 @@ import semver from 'semver';
 
 import log from './log';
 
-const { name, version } = require('../package.json');
+const packageJSON = require('../package.json');
+const { name, version } = packageJSON;
 
 const UpdateCacher = new FsCache.Cacher(
   async () => {
