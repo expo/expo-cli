@@ -168,12 +168,20 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
       await IosPlist.createBlankAsync(supportingDirectory, entitlementsFilename);
     }
     const result = IosPlist.modifyAsync(supportingDirectory, entitlementsFilename, entitlements => {
+      if (manifest.ios?.entitlements) {
+        for (const key in manifest.ios.entitlements) {
+          if (manifest.ios.entitlements.hasOwnProperty(key)) {
+            entitlements[key] = manifest.ios.entitlements[key];
+          }
+        }
+      }
+
       // push notif entitlement changes based on build configuration
       entitlements['aps-environment'] =
         context.build.configuration === 'Release' ? 'production' : 'development';
 
       // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
-      if (manifest.ios && manifest.ios.usesIcloudStorage && appleTeamId) {
+      if (manifest.ios?.usesIcloudStorage && appleTeamId) {
         entitlements['com.apple.developer.icloud-container-identifiers'] = [
           'iCloud.' + manifest.ios.bundleIdentifier,
         ];
