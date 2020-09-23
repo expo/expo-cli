@@ -23,9 +23,9 @@ import * as IosWorkspace from './IosWorkspace';
 import logger from './Logger';
 import {
   AnyStandaloneContext,
+  isStandaloneContextDataService,
   StandaloneContextService,
   StandaloneContextUser,
-  isStandaloneContextDataService,
 } from './StandaloneContext';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
@@ -145,10 +145,10 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
       'Your iOS ExpoKit project will not contain an .entitlements file by default. If you need specific Apple entitlements, enable them manually via Xcode or the Apple Developer website.'
     );
     const keysToFlag = [];
-    if (exp.ios && exp.ios.usesIcloudStorage) {
+    if (exp.ios?.usesIcloudStorage) {
       keysToFlag.push('ios.usesIcloudStorage');
     }
-    if (exp.ios && exp.ios.associatedDomains) {
+    if (exp.ios?.associatedDomains) {
       keysToFlag.push('ios.associatedDomains');
     }
     if (keysToFlag.length) {
@@ -168,12 +168,20 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
       await IosPlist.createBlankAsync(supportingDirectory, entitlementsFilename);
     }
     const result = IosPlist.modifyAsync(supportingDirectory, entitlementsFilename, entitlements => {
+      if (manifest.ios?.entitlements) {
+        for (const key in manifest.ios.entitlements) {
+          if (manifest.ios.entitlements.hasOwnProperty(key)) {
+            entitlements[key] = manifest.ios.entitlements[key];
+          }
+        }
+      }
+
       // push notif entitlement changes based on build configuration
       entitlements['aps-environment'] =
         context.build.configuration === 'Release' ? 'production' : 'development';
 
       // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
-      if (manifest.ios && manifest.ios.usesIcloudStorage && appleTeamId) {
+      if (manifest.ios?.usesIcloudStorage && appleTeamId) {
         entitlements['com.apple.developer.icloud-container-identifiers'] = [
           'iCloud.' + manifest.ios.bundleIdentifier,
         ];
@@ -196,20 +204,20 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
         });
       }
 
-      if (manifest.ios && manifest.ios.usesAppleSignIn) {
+      if (manifest.ios?.usesAppleSignIn) {
         entitlements['com.apple.developer.applesignin'] = ['Default'];
       } else if (entitlements.hasOwnProperty('com.apple.developer.applesignin')) {
         delete entitlements['com.apple.developer.applesignin'];
       }
 
-      if (manifest.ios && manifest.ios.accessesContactNotes) {
+      if (manifest.ios?.accessesContactNotes) {
         entitlements['com.apple.developer.contacts.notes'] = manifest.ios.accessesContactNotes;
       } else if (entitlements.hasOwnProperty('com.apple.developer.contacts.notes')) {
         delete entitlements['com.apple.developer.contacts.notes'];
       }
 
       // Add app associated domains remove exp-specific ones.
-      if (manifest.ios && manifest.ios.associatedDomains) {
+      if (manifest.ios?.associatedDomains) {
         entitlements['com.apple.developer.associated-domains'] = manifest.ios.associatedDomains;
       } else if (entitlements.hasOwnProperty('com.apple.developer.associated-domains')) {
         delete entitlements['com.apple.developer.associated-domains'];

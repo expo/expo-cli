@@ -44,6 +44,11 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   try {
     // Configure entitlements/capabilities
     await modifyEntitlementsPlistAsync(projectRoot, entitlementsPlist => {
+      entitlementsPlist = IOSConfig.Entitlements.setCustomEntitlementsEntries(
+        exp,
+        entitlementsPlist
+      );
+
       // TODO: We don't have a mechanism for getting the apple team id here yet
       entitlementsPlist = IOSConfig.Entitlements.setICloudEntitlement(
         exp,

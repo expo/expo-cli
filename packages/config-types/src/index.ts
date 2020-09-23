@@ -350,6 +350,12 @@ export interface ExpoConfig {
       [k: string]: any;
     };
     /**
+     * Dictionary of arbitrary configuration to add to your standalone app's native *.entitlements (plist). Applied prior to all other Expo-specific configuration. No other validation is performed, so use this at your own risk of rejection from the App Store.
+     */
+    entitlements?: {
+      [k: string]: any;
+    };
+    /**
      * An array that contains Associated Domains for the standalone app. See [Apple's docs for config](https://developer.apple.com/documentation/uikit/core_app/allowing_apps_and_websites_to_link_to_your_content/enabling_universal_links).
      */
     associatedDomains?: string[];
