@@ -18,7 +18,6 @@ type Plist = Record<string, any>;
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
 
 export function getConfigEntitlements(config: ExpoConfig) {
-  // @ts-ignore: not typed yet
   return config.ios?.entitlements ?? {};
 }
 
