@@ -42,7 +42,6 @@ import * as ProjectUtils from './project/ProjectUtils';
 import FormData from './tools/FormData';
 import * as FsCache from './tools/FsCache';
 import * as ImageUtils from './tools/ImageUtils';
-import * as ModuleVersion from './tools/ModuleVersion';
 
 const AndroidShellApp: any = require('./detach/AndroidShellApp.js');
 const Detach: any = require('./detach/Detach.js');
@@ -93,7 +92,6 @@ export { IosShellApp };
 export { IosCodeSigning };
 export { Logger };
 export { LoggerDetach };
-export { ModuleVersion };
 export { Modules };
 export { NotificationCode };
 export { PackagerLogsStream, LogRecord, LogUpdater };
