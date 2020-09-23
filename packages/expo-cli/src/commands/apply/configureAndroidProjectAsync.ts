@@ -28,12 +28,7 @@ async function modifyAndroidManifestAsync(
   projectRoot: string,
   callback: (androidManifest: AndroidConfig.Manifest.Document) => AndroidConfig.Manifest.Document
 ) {
-  const androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
-    projectRoot
-  );
-  if (!androidManifestPath) {
-    throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectRoot}"`);
-  }
+  const androidManifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(projectRoot);
   const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
     androidManifestPath
   );
@@ -46,7 +41,6 @@ async function modifyMainActivityAsync(
   callback: (props: { contents: string; language: 'java' | 'kt' }) => Promise<string>
 ) {
   const mainActivity = await AndroidConfig.Paths.getMainActivityAsync(projectRoot);
-
   const contents = fs.readFileSync(mainActivity.path).toString();
   const result = await callback({ contents, language: mainActivity.language });
   fs.writeFileSync(mainActivity.path, result);

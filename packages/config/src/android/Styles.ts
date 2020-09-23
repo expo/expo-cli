@@ -2,7 +2,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Builder } from 'xml2js';
 
-import { Document, getProjectXMLPathAsync } from './Manifest';
+import { Document } from './Manifest';
+import { getResourceXMLAsync } from './Paths';
 
 export type XMLItem = {
   _: string;
@@ -12,8 +13,8 @@ export type XMLItem = {
 export async function getProjectStylesXMLPathAsync(
   projectDir: string,
   { kind = 'values' }: { kind?: string } = {}
-): Promise<string | null> {
-  return getProjectXMLPathAsync(projectDir, { kind, name: 'styles' });
+): Promise<string> {
+  return getResourceXMLAsync(projectDir, { kind, name: 'styles' });
 }
 
 export async function writeStylesXMLAsync(options: { path: string; xml: any }): Promise<void> {
