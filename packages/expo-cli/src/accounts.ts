@@ -7,7 +7,7 @@ import invariant from 'invariant';
 import CommandError from './CommandError';
 import log from './log';
 import prompt, { Question } from './prompt';
-import { confirmAsync } from './prompts';
+import promptNew, { confirmAsync, Question as NewQuestion, selectAsync } from './prompts';
 
 UserManager.initialize();
 
@@ -20,12 +20,12 @@ type CommandOptions = {
   };
 };
 
-enum UserSecondFactorDeviceMethod {
+export enum UserSecondFactorDeviceMethod {
   AUTHENTICATOR = 'authenticator',
   SMS = 'sms',
 }
 
-type SecondFactorDevice = {
+export type SecondFactorDevice = {
   id: string;
   method: UserSecondFactorDeviceMethod;
   sms_phone_number: string | null;
@@ -112,14 +112,16 @@ export async function login(options: CommandOptions): Promise<User> {
  */
 async function _promptForOTPAsync(cancelBehavior: 'cancel' | 'menu'): Promise<string | null> {
   const enterMessage =
-    cancelBehavior === 'cancel' ? 'press Enter to cancel' : 'press Enter for other options';
-  const otpQuestion: Question = {
-    type: 'input',
+    cancelBehavior === 'cancel'
+      ? `press ${log.chalk.bold('Enter')} to cancel`
+      : `press ${log.chalk.bold('Enter')} for more options`;
+  const otpQuestion: NewQuestion = {
+    type: 'text',
     name: 'otp',
-    message: `One-time Password or Backup Code (${enterMessage}):`,
+    message: `One-time password or backup code (${enterMessage}):`,
   };
 
-  const { otp } = await prompt(otpQuestion);
+  const { otp } = await promptNew(otpQuestion);
   if (!otp) {
     return null;
   }
@@ -139,7 +141,10 @@ async function _promptForBackupOTPAsync(
   const nonPrimarySecondFactorDevices = secondFactorDevices.filter(device => !device.is_primary);
 
   if (nonPrimarySecondFactorDevices.length === 0) {
-    throw new Error('No other second-factor devices set up');
+    log.warn(
+      'No other second-factor devices set up. Ensure you have set up and certified a backup device.'
+    );
+    process.exit(1);
   }
 
   const hasAuthenticatorSecondFactorDevice = nonPrimarySecondFactorDevices.find(
@@ -154,38 +159,35 @@ async function _promptForBackupOTPAsync(
   const cancelChoiceSentinel = -2;
 
   const deviceChoices = smsNonPrimarySecondFactorDevices.map((device, idx) => ({
-    name: device.sms_phone_number!,
+    title: device.sms_phone_number!,
     value: idx,
   }));
 
   if (hasAuthenticatorSecondFactorDevice) {
     deviceChoices.push({
-      name: 'Authenticator',
+      title: 'Authenticator',
       value: authenticatorChoiceSentinel,
     });
   }
 
   deviceChoices.push({
-    name: 'Cancel',
+    title: 'Cancel',
     value: cancelChoiceSentinel,
   });
 
-  const question: Question = {
-    type: 'list',
-    name: 'choice',
+  const question = {
     message: 'Select a second-factor device:',
     choices: deviceChoices,
-    pageSize: Infinity,
   };
 
-  const { choice } = await prompt(question);
-  if (choice === cancelChoiceSentinel) {
-    throw new Error('Cancelled login');
-  } else if (choice === authenticatorChoiceSentinel) {
+  const selectedValue = await selectAsync(question);
+  if (selectedValue === cancelChoiceSentinel) {
+    return null;
+  } else if (selectedValue === authenticatorChoiceSentinel) {
     return await _promptForOTPAsync('cancel');
   }
 
-  const device = smsNonPrimarySecondFactorDevices[choice];
+  const device = smsNonPrimarySecondFactorDevices[selectedValue];
 
   const apiAnonymous = ApiV2.clientForUser();
   await apiAnonymous.postAsync('auth/send-sms-otp', {
@@ -212,7 +214,7 @@ async function _promptForBackupOTPAsync(
  *    we should show a picker of the SMS devices that they can have an OTP code sent to, and when
  *    the user picks one we show a prompt for the sent OTP.
  */
-async function _retryUsernamePasswordAuthWithOTPAsync(
+export async function _retryUsernamePasswordAuthWithOTPAsync(
   username: string,
   password: string,
   metadata: {
@@ -234,14 +236,14 @@ async function _retryUsernamePasswordAuthWithOTPAsync(
       primaryDevice,
       'OTP should only automatically be sent when there is a primary device'
     );
-    console.log(
+    log(
       `One-time password was sent to the phone number ending in ${primaryDevice.sms_phone_number}.`
     );
     otp = await _promptForOTPAsync('menu');
   }
 
   if (primaryDevice?.method === UserSecondFactorDeviceMethod.AUTHENTICATOR) {
-    console.log(`One-time password from authenticator required.`);
+    log('One-time password from authenticator required.');
     otp = await _promptForOTPAsync('menu');
   }
 
@@ -251,7 +253,8 @@ async function _retryUsernamePasswordAuthWithOTPAsync(
   }
 
   if (!otp) {
-    throw new Error('Cancelled login');
+    log.warn('Cancelled login');
+    process.exit(1);
   }
 
   return await UserManager.loginAsync('user-pass', {

@@ -14,6 +14,10 @@ const prompt = jest.fn(
 // see: https://github.com/terkelg/prompts/issues/254
 prompt.separator = (title: string): Choice => ({ title, disable: true, value: undefined });
 
+export const selectAsync = jest.fn(
+  (questions: any, options?: PromptOptions) => prompt(questions, options).value
+);
+
 export const confirmAsync = jest.fn(
   (questions: Question | Question[], options?: PromptOptions) => prompt(questions, options).value
 );

@@ -39,7 +39,8 @@ export default function prompt(
 // see: https://github.com/terkelg/prompts/issues/254
 prompt.separator = (title: string): Choice => ({ title, disable: true, value: undefined });
 
-type NamelessQuestion = Omit<Question<'value'>, 'name' | 'type'>;
+export type NamelessQuestion = Omit<Question<'value'>, 'name' | 'type'>;
+
 /**
  * Create an auto complete list that can be searched and cancelled.
  *
@@ -75,7 +76,7 @@ export async function autoCompleteAsync(
 export async function selectAsync(
   questions: NamelessQuestion,
   options?: PromptOptions
-): Promise<string> {
+): Promise<any> {
   const { value } = await prompt(
     {
       limit: 11,
