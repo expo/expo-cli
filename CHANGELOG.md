@@ -10,7 +10,30 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 24 Sep 2020 16:18:06 -0700](https://github.com/expo/expo-cli/commit/8443580c8093f28550c7ebbb8d1b66bacc83a201)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
 - [config] Disable splash screen applying on eject until we fix issue with @expo/configure-splash-screen versioning. [#2700](https://github.com/expo/expo-cli/pull/2700).
+
+### 📦 Packages updated
+
+- @expo/config@3.3.6
+- @expo/dev-server@0.1.31
+- @expo/dev-tools@0.13.48
+- @expo/electron-adapter@0.0.22
+- expo-cli@3.27.10
+- expo-optimize@0.1.53
+- @expo/metro-config@0.1.31
+- @expo/next-adapter@2.1.36
+- expo-pwa@0.0.41
+- uri-scheme@1.0.37
+- @expo/webpack-config@0.12.35
+- @expo/xdl@58.0.9
 
 ## [Thu, 24 Sep 2020 15:27:32 -0700](https://github.com/expo/expo-cli/commit/c76d808751c8f20203b0d3555ec3a210a37d0d1d)
 
