@@ -17,7 +17,7 @@ export async function setPrimaryColor(config: ExpoConfig, projectDirectory: stri
   const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
 
   let stylesJSON = await readXMLAsync({ path: stylesPath });
-  let colorsJSON = await readColorsXMLAsync(colorsPath);
+  let colorsJSON = await readColorsXMLAsync({ path: colorsPath });
 
   const colorItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
   const styleItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];

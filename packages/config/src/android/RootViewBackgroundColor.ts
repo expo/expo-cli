@@ -27,7 +27,7 @@ export async function setRootViewBackgroundColor(config: ExpoConfig, projectDire
   const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
 
   let stylesJSON = await readXMLAsync({ path: stylesPath });
-  let colorsJSON = await readColorsXMLAsync(colorsPath);
+  let colorsJSON = await readColorsXMLAsync({ path: colorsPath });
 
   const colorItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
   const styleItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];

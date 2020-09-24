@@ -32,36 +32,55 @@ export function getAppBuildGradle(projectRoot: string): string {
   return path.join(projectRoot, 'android', 'app', 'build.gradle');
 }
 
-export async function getAndroidManifestAsync(projectRoot: string): Promise<string> {
-  const shellPath = path.join(projectRoot, 'android');
-  try {
-    if ((await fs.stat(shellPath)).isDirectory()) {
-      const manifestPath = path.join(shellPath, 'app/src/main/AndroidManifest.xml');
-      if ((await fs.stat(manifestPath)).isFile()) {
-        return manifestPath;
-      }
-    }
-  } catch {}
-
-  throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectRoot}"`);
+export async function getProjectPathOrThrowAsync(projectRoot: string): Promise<string> {
+  const projectPath = path.join(projectRoot, 'android');
+  if (await directoryExistsAsync(projectPath)) {
+    return projectPath;
+  }
+  throw new Error(`Android project folder is missing in project: ${projectRoot}`);
 }
 
-export async function getResourceXMLAsync(
-  projectDir: string,
-  { kind = 'values', name }: { kind?: string; name: string }
-): Promise<string> {
-  const shellPath = path.join(projectDir, 'android');
-  try {
-    if ((await fs.stat(shellPath)).isDirectory()) {
-      const stylesPath = path.join(shellPath, `app/src/main/res/${kind}/${name}.xml`);
-      //   await fs.ensureFile(stylesPath);
-      if ((await fs.stat(stylesPath)).isFile()) {
-        return stylesPath;
-      }
-    }
-  } catch {}
+export async function getAndroidManifestAsync(projectRoot: string): Promise<string> {
+  const projectPath = await getProjectPathOrThrowAsync(projectRoot);
 
-  throw new Error(
-    `Could not find android/app/src/main/res/${kind}/${name}.xml because the android project folder is missing.`
-  );
+  const filePath = path.join(projectPath, 'app/src/main/AndroidManifest.xml');
+  // if (await fileExistsAsync(filePath)) {
+  return filePath;
+  // }
+}
+
+/**
+ * Name of the resource folder.
+ */
+export type ResourceKind = 'values' | 'values-night' | 'values-v23';
+
+export async function getResourceXMLAsync(
+  projectRoot: string,
+  { kind = 'values', name }: { kind?: ResourceKind; name: 'colors' | 'strings' | 'styles' | string }
+): Promise<string> {
+  const projectPath = await getProjectPathOrThrowAsync(projectRoot);
+
+  const filePath = path.join(projectPath, `app/src/main/res/${kind}/${name}.xml`);
+  return filePath;
+}
+
+/**
+ * A non-failing version of async FS stat.
+ *
+ * @param file
+ */
+async function statAsync(file: string): Promise<fs.Stats | null> {
+  try {
+    return await fs.stat(file);
+  } catch {
+    return null;
+  }
+}
+
+async function fileExistsAsync(file: string): Promise<boolean> {
+  return (await statAsync(file))?.isFile() ?? false;
+}
+
+async function directoryExistsAsync(file: string): Promise<boolean> {
+  return (await statAsync(file))?.isDirectory() ?? false;
 }

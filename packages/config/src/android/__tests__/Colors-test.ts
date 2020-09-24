@@ -28,7 +28,7 @@ describe(readColorsXMLAsync, () => {
     const path = await getProjectColorsXMLPathAsync('/app');
     expect(path).toBe('/app/android/app/src/main/res/values/colors.xml');
     // read the colors object
-    let colors = await readColorsXMLAsync(path);
+    let colors = await readColorsXMLAsync({ path });
     expect(colors).toStrictEqual({ resources: '' });
 
     const colorItemToAdd = [

@@ -3,7 +3,7 @@ import path from 'path';
 import { Builder } from 'xml2js';
 
 import { Document } from './Manifest';
-import { getResourceXMLAsync } from './Paths';
+import { getResourceXMLAsync, ResourceKind } from './Paths';
 
 export type XMLItem = {
   _: string;
@@ -12,7 +12,7 @@ export type XMLItem = {
 
 export async function getProjectStylesXMLPathAsync(
   projectDir: string,
-  { kind = 'values' }: { kind?: string } = {}
+  { kind = 'values' }: { kind?: ResourceKind } = {}
 ): Promise<string> {
   return getResourceXMLAsync(projectDir, { kind, name: 'styles' });
 }

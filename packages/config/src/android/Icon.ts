@@ -229,7 +229,7 @@ export async function configureAdaptiveIconAsync(
 
 async function setBackgroundColorAsync(projectRoot: string, backgroundColor: string | null) {
   const colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectRoot);
-  let colorsJson = await Colors.readColorsXMLAsync(colorsXmlPath);
+  let colorsJson = await Colors.readColorsXMLAsync({ path: colorsXmlPath });
   if (backgroundColor) {
     const colorItemToAdd = [
       {

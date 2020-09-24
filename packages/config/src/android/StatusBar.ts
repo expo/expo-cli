@@ -23,7 +23,7 @@ export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: s
   const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
 
   let stylesJSON = await readXMLAsync({ path: stylesPath });
-  let colorsJSON = await readColorsXMLAsync(colorsPath);
+  let colorsJSON = await readColorsXMLAsync({ path: colorsPath });
 
   const styleItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
   if (hexString === 'translucent') {

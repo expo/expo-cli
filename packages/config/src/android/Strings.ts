@@ -3,14 +3,14 @@ import path from 'path';
 import { Builder } from 'xml2js';
 
 import { Document, readXMLAsync } from './Manifest';
-import { getResourceXMLAsync } from './Paths';
+import { getResourceXMLAsync, ResourceKind } from './Paths';
 import { XMLItem } from './Styles';
 
 const BASE_STRINGS_XML = `<resources></resources>`;
 
 export async function getProjectStringsXMLPathAsync(
   projectDir: string,
-  { kind = 'values' }: { kind?: string } = {}
+  { kind = 'values' }: { kind?: ResourceKind } = {}
 ): Promise<string> {
   return getResourceXMLAsync(projectDir, { kind, name: 'strings' });
 }
