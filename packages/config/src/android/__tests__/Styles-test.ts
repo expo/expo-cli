@@ -1,8 +1,8 @@
 import { vol } from 'memfs';
 
-import { buildItem } from '../Resources';
+import { buildItem, readResourcesXMLAsync } from '../Resources';
 import { getProjectStylesXMLPathAsync, getStyleParent, setStylesItem } from '../Styles';
-import { readXMLAsync, writeXMLAsync } from '../XML';
+import { writeXMLAsync } from '../XML';
 jest.mock('fs');
 
 const mockStyles = `
@@ -36,7 +36,7 @@ describe('Styles', () => {
 
   it(`sets a style on an empty resource item`, async () => {
     const stylesPath = await getProjectStylesXMLPathAsync('/empty')!;
-    const xml = await readXMLAsync({ path: stylesPath });
+    const xml = await readResourcesXMLAsync({ path: stylesPath });
     const parent = { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' };
     setStylesItem({
       xml,
@@ -45,7 +45,7 @@ describe('Styles', () => {
     });
     await writeXMLAsync({ path: stylesPath, xml });
 
-    const modifiedXml = await readXMLAsync({ path: stylesPath });
+    const modifiedXml = await readResourcesXMLAsync({ path: stylesPath });
 
     expect(getStyleParent(modifiedXml, parent)).toStrictEqual({
       $: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
@@ -54,7 +54,7 @@ describe('Styles', () => {
   });
   it(`changes the value of a style`, async () => {
     const stylesPath = await getProjectStylesXMLPathAsync('/app')!;
-    const xml = await readXMLAsync({ path: stylesPath });
+    const xml = await readResourcesXMLAsync({ path: stylesPath });
     const parent = { name: 'Theme.App.SplashScreen', parent: 'Theme.AppCompat.Light.NoActionBar' };
     setStylesItem({
       xml,
@@ -63,7 +63,7 @@ describe('Styles', () => {
     });
     await writeXMLAsync({ path: stylesPath, xml });
 
-    const modifiedXml = await readXMLAsync({ path: stylesPath });
+    const modifiedXml = await readResourcesXMLAsync({ path: stylesPath });
 
     expect(getStyleParent(modifiedXml, parent)).toStrictEqual({
       $: { name: 'Theme.App.SplashScreen', parent: 'Theme.AppCompat.Light.NoActionBar' },
