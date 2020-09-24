@@ -41,7 +41,7 @@ describe('Styles', () => {
     setStylesItem({
       xml,
       parent,
-      item: [buildItem({ name: 'android:textColor', value: '#fff000' })],
+      item: buildItem({ name: 'android:textColor', value: '#fff000' }),
     });
     await writeXMLAsync({ path: stylesPath, xml });
 
@@ -59,7 +59,7 @@ describe('Styles', () => {
     setStylesItem({
       xml,
       parent,
-      item: [buildItem({ name: 'android:textColor', value: '#ffffff' })],
+      item: buildItem({ name: 'android:textColor', value: '#ffffff' }),
     });
     await writeXMLAsync({ path: stylesPath, xml });
 

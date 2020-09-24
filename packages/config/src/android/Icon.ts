@@ -4,7 +4,7 @@ import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
 import * as Colors from './Colors';
-import { readResourcesXMLAsync } from './Resources';
+import { buildItem, readResourcesXMLAsync } from './Resources';
 import { writeXMLAsync } from './XML';
 
 type DPIString = 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
@@ -232,12 +232,7 @@ async function setBackgroundColorAsync(projectRoot: string, backgroundColor: str
   const colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectRoot);
   let colorsJson = await readResourcesXMLAsync({ path: colorsXmlPath });
   if (backgroundColor) {
-    const colorItemToAdd = [
-      {
-        _: backgroundColor,
-        $: { name: ICON_BACKGROUND },
-      },
-    ];
+    const colorItemToAdd = buildItem({ name: ICON_BACKGROUND, value: backgroundColor });
     colorsJson = Colors.setColorItem(colorItemToAdd, colorsJson);
   } else {
     colorsJson = Colors.removeColorItem(ICON_BACKGROUND, colorsJson);

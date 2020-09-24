@@ -1,6 +1,6 @@
 import { ExpoConfig } from '../Config.types';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
-import { readResourcesXMLAsync, ResourceItemXML } from './Resources';
+import { buildItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
 import { writeXMLAsync } from './XML';
 
@@ -30,14 +30,11 @@ export async function setRootViewBackgroundColor(config: ExpoConfig, projectDire
   let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
   let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });
 
-  const colorItemToAdd: ResourceItemXML[] = [{ _: '', $: { name: '' } }];
-  const styleItemToAdd: ResourceItemXML[] = [{ _: '', $: { name: '' } }];
-
-  colorItemToAdd[0]._ = hexString;
-  colorItemToAdd[0].$.name = WINDOW_BACKGROUND_COLOR;
-
-  styleItemToAdd[0]._ = `@color/${WINDOW_BACKGROUND_COLOR}`;
-  styleItemToAdd[0].$.name = ANDROID_WINDOW_BACKGROUND;
+  const colorItemToAdd = buildItem({ name: WINDOW_BACKGROUND_COLOR, value: hexString });
+  const styleItemToAdd = buildItem({
+    name: ANDROID_WINDOW_BACKGROUND,
+    value: `@color/${WINDOW_BACKGROUND_COLOR}`,
+  });
 
   colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
   stylesJSON = setStylesItem({

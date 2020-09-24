@@ -2,30 +2,28 @@ import { getResourceXMLPathAsync } from './Paths';
 import { ResourceItemXML, ResourceKind, ResourceXML } from './Resources';
 
 export async function getProjectColorsXMLPathAsync(
-  projectDir: string,
+  projectRoot: string,
   { kind }: { kind?: ResourceKind } = {}
 ): Promise<string> {
-  return getResourceXMLPathAsync(projectDir, { kind, name: 'colors' });
+  return getResourceXMLPathAsync(projectRoot, { kind, name: 'colors' });
 }
 
-export function setColorItem(itemToAdd: ResourceItemXML[], colorFileContentsJSON: ResourceXML) {
+export function setColorItem(itemToAdd: ResourceItemXML, colorFileContentsJSON: ResourceXML) {
   if (colorFileContentsJSON.resources?.color) {
     const colorNameExists = colorFileContentsJSON.resources.color.filter(
-      (e: ResourceItemXML) => e['$'].name === itemToAdd[0]['$'].name
+      (e: ResourceItemXML) => e['$'].name === itemToAdd['$'].name
     )[0];
     if (colorNameExists) {
-      colorNameExists['_'] = itemToAdd[0]['_'];
+      colorNameExists['_'] = itemToAdd['_'];
     } else {
-      colorFileContentsJSON.resources.color = colorFileContentsJSON.resources.color.concat(
-        itemToAdd
-      );
+      colorFileContentsJSON.resources.color.push(itemToAdd);
     }
   } else {
     if (!colorFileContentsJSON.resources || typeof colorFileContentsJSON.resources === 'string') {
       //file was empty and JSON is `{resources : ''}`
       colorFileContentsJSON.resources = {};
     }
-    colorFileContentsJSON.resources.color = itemToAdd;
+    colorFileContentsJSON.resources.color = [itemToAdd];
   }
   return colorFileContentsJSON;
 }

@@ -42,7 +42,7 @@ export function setStylesItem({
   xml,
   parent,
 }: {
-  item: ResourceItemXML[];
+  item: ResourceItemXML;
   xml: ResourceXML;
   parent: { name: string; parent: string };
 }): ResourceXML {
@@ -56,16 +56,16 @@ export function setStylesItem({
   }
 
   if (appTheme.item) {
-    const existingItem = appTheme.item.filter(_item => _item['$'].name === item[0].$.name)[0];
+    const existingItem = appTheme.item.filter(_item => _item['$'].name === item.$.name)[0];
 
     // Don't want to 2 of the same item, so if one exists, we overwrite it
     if (existingItem) {
-      existingItem['_'] = item[0]['_'];
+      existingItem['_'] = item['_'];
     } else {
-      appTheme.item = appTheme.item.concat(item);
+      appTheme.item.push(item);
     }
   } else {
-    appTheme.item = item;
+    appTheme.item = [item];
   }
   return xml;
 }
