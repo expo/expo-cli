@@ -1649,7 +1649,7 @@ export async function stopReactNativeServerAsync(projectRoot: string): Promise<v
   });
 }
 
-async function startExpoServerAsync(projectRoot: string): Promise<void> {
+export async function startExpoServerAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
   const app = express();
