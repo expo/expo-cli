@@ -1,28 +1,17 @@
 import { getResourceXMLPathAsync } from './Paths';
-import { fallbackResourceString, ResourceItemXML, ResourceKind } from './Resources';
-import { readXMLAsync } from './XML';
-
-export type StringsResourceXML = {
-  resources?: {
-    string?: ResourceItemXML[];
-  };
-};
+import { ResourceItemXML, ResourceKind, ResourceXML } from './Resources';
 
 export async function getProjectStringsXMLPathAsync(
   projectDir: string,
-  { kind = 'values' }: { kind?: ResourceKind } = {}
+  { kind }: { kind?: ResourceKind } = {}
 ): Promise<string> {
   return getResourceXMLPathAsync(projectDir, { kind, name: 'strings' });
 }
 
-export async function readStringsXMLAsync(stringsPath: string): Promise<StringsResourceXML> {
-  return readXMLAsync({ path: stringsPath, fallback: fallbackResourceString });
-}
-
 export function setStringItem(
   itemToAdd: ResourceItemXML[],
-  stringFileContentsJSON: StringsResourceXML
-): StringsResourceXML {
+  stringFileContentsJSON: ResourceXML
+): ResourceXML {
   if (stringFileContentsJSON?.resources?.string) {
     const stringNameExists = stringFileContentsJSON.resources.string.filter(
       (e: ResourceItemXML) => e['$'].name === itemToAdd[0]['$'].name
@@ -45,10 +34,7 @@ export function setStringItem(
   return stringFileContentsJSON;
 }
 
-export function removeStringItem(
-  named: string,
-  stringFileContentsJSON: StringsResourceXML
-): StringsResourceXML {
+export function removeStringItem(named: string, stringFileContentsJSON: ResourceXML): ResourceXML {
   if (stringFileContentsJSON?.resources?.string) {
     const stringNameExists = stringFileContentsJSON.resources.string.findIndex(
       (e: ResourceItemXML) => e['$'].name === named

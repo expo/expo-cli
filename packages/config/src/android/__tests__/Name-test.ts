@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { vol } from 'memfs';
 
 import { getName, setName } from '../Name';
-import { readStringsXMLAsync } from '../Strings';
+import { readResourcesXMLAsync } from '../Resources';
 
 jest.mock('fs');
 
@@ -37,7 +37,7 @@ describe('name', () => {
     expect(await setName({ name: `'E&x<p>o"` }, '/app')).toBe(true);
 
     const stringsPath = '/app/android/app/src/main/res/values/strings.xml';
-    const stringsJSON = await readStringsXMLAsync(stringsPath);
+    const stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
     const contents = await fs.readFile(stringsPath, { encoding: 'utf8', flag: 'r' });
 
     // Test that it's written in escaped form

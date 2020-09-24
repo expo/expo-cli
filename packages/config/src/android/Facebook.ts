@@ -2,13 +2,8 @@ import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
 import { addMetaDataItemToMainApplication, Document, getMainApplication } from './Manifest';
-import { ResourceItemXML } from './Resources';
-import {
-  getProjectStringsXMLPathAsync,
-  readStringsXMLAsync,
-  removeStringItem,
-  setStringItem,
-} from './Strings';
+import { readResourcesXMLAsync, ResourceItemXML } from './Resources';
+import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';
 
 const facebookSchemeActivity = (scheme: string) => `
@@ -87,7 +82,7 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
     throw new Error(`There was a problem setting your Facebook App ID in ${stringsPath}.`);
   }
 
-  let stringsJSON = await readStringsXMLAsync(stringsPath);
+  let stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
   if (appId) {
     const stringItemToAdd: ResourceItemXML[] = [{ _: appId, $: { name: 'facebook_app_id' } }];
     stringsJSON = setStringItem(stringItemToAdd, stringsJSON);

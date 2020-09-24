@@ -1,11 +1,6 @@
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectStringsXMLPathAsync,
-  readStringsXMLAsync,
-  removeStringItem,
-  setStringItem,
-  StringsResourceXML,
-} from './Strings';
+import { readResourcesXMLAsync, ResourceXML } from './Resources';
+import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';
 
 export function getName(config: ExpoConfig) {
@@ -36,7 +31,7 @@ export async function setName(
     throw new Error(`There was a problem setting your Facebook App ID in ${stringsPath}.`);
   }
 
-  let stringsJSON = await readStringsXMLAsync(stringsPath);
+  let stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
   stringsJSON = applyName(name, stringsJSON);
 
   try {
@@ -47,7 +42,7 @@ export async function setName(
   return true;
 }
 
-function applyName(name: string | null, stringsJSON: StringsResourceXML): StringsResourceXML {
+function applyName(name: string | null, stringsJSON: ResourceXML): ResourceXML {
   if (name) {
     return setStringItem([{ $: { name: 'app_name' }, _: name }], stringsJSON);
   }
