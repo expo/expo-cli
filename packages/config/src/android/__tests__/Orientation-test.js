@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 
-import { getMainActivity, readAndroidManifestAsync } from '../Manifest';
+import { getMainActivityXML, readAndroidManifestAsync } from '../Manifest';
 import { getOrientation, setAndroidOrientation } from '../Orientation';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
@@ -24,7 +24,7 @@ describe('Android orientation', () => {
         androidManifestJson
       );
 
-      const mainActivity = getMainActivity(androidManifestJson);
+      const mainActivity = getMainActivityXML(androidManifestJson);
 
       expect(mainActivity['$']['android:screenOrientation']).toMatch('landscape');
     });
@@ -37,7 +37,7 @@ describe('Android orientation', () => {
         androidManifestJson
       );
 
-      const mainActivity = getMainActivity(androidManifestJson);
+      const mainActivity = getMainActivityXML(androidManifestJson);
 
       expect(mainActivity['$']['android:screenOrientation']).toMatch('portrait');
     });
@@ -49,7 +49,7 @@ describe('Android orientation', () => {
         androidManifestJson
       );
 
-      const mainActivity = getMainActivity(androidManifestJson);
+      const mainActivity = getMainActivityXML(androidManifestJson);
 
       expect(mainActivity['$']['android:screenOrientation']).toMatch('unspecified');
     });

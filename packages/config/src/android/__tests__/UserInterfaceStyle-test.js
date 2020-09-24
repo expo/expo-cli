@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 
-import { getMainActivity, readAndroidManifestAsync } from '../Manifest';
+import { getMainActivityXML, readAndroidManifestAsync } from '../Manifest';
 import {
   addOnConfigurationChangedMainActivity,
   getUserInterfaceStyle,
@@ -87,7 +87,7 @@ describe('User interface style', () => {
       androidManifestJson
     );
 
-    const mainActivity = getMainActivity(androidManifestJson);
+    const mainActivity = getMainActivityXML(androidManifestJson);
     expect(mainActivity['$']['android:configChanges']).toMatch(
       'keyboard|keyboardHidden|orientation|screenSize|uiMode'
     );

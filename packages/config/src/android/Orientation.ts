@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainActivity } from './Manifest';
+import { Document, getMainActivityXML } from './Manifest';
 
 export const SCREEN_ORIENTATION_ATTRIBUTE = 'android:screenOrientation';
 
@@ -13,7 +13,7 @@ export async function setAndroidOrientation(config: ExpoConfig, manifestDocument
     return manifestDocument;
   }
 
-  let mainActivity = getMainActivity(manifestDocument);
+  let mainActivity = getMainActivityXML(manifestDocument);
   if (!mainActivity) {
     mainActivity = { $: { 'android:name': '.MainActivity' } };
   }

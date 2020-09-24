@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 
-import { getMainActivity, readAndroidManifestAsync } from '../Manifest';
+import { getMainActivityXML, readAndroidManifestAsync } from '../Manifest';
 import {
   appendScheme,
   ensureManifestHasValidIntentFilter,
@@ -47,7 +47,7 @@ describe('scheme', () => {
       androidManifestJson
     );
 
-    const mainActivity = getMainActivity(androidManifestJson);
+    const mainActivity = getMainActivityXML(androidManifestJson);
     const intentFilters = mainActivity['intent-filter'];
 
     const schemeIntent = [];

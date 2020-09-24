@@ -163,7 +163,7 @@ export function getMainApplication(manifest: Document): ManifestApplication | nu
   );
 }
 
-export function getMainActivity(manifest: Document): ManifestActivity | null {
+export function getMainActivityXML(manifest: Document): ManifestActivity | null {
   const mainActivity = manifest?.manifest?.application?.[0]?.activity?.filter?.(
     (e: any) => e['$']['android:name'] === '.MainActivity'
   );

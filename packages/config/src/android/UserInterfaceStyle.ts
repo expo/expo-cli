@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainActivity } from './Manifest';
+import { Document, getMainActivityXML } from './Manifest';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';
 
@@ -26,7 +26,7 @@ export async function setUiModeAndroidManifest(config: ExpoConfig, manifestDocum
     return manifestDocument;
   }
 
-  let mainActivity = getMainActivity(manifestDocument);
+  let mainActivity = getMainActivityXML(manifestDocument);
   if (!mainActivity) {
     mainActivity = { $: { 'android:name': '.MainActivity' } };
   }
