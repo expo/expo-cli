@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import { buildItem, readResourcesXMLAsync } from '../Resources';
+import { buildResourceItem, readResourcesXMLAsync } from '../Resources';
 import { getProjectStylesXMLPathAsync, getStyleParent, setStylesItem } from '../Styles';
 import { writeXMLAsync } from '../XML';
 jest.mock('fs');
@@ -41,7 +41,7 @@ describe('Styles', () => {
     setStylesItem({
       xml,
       parent,
-      item: buildItem({ name: 'android:textColor', value: '#fff000' }),
+      item: buildResourceItem({ name: 'android:textColor', value: '#fff000' }),
     });
     await writeXMLAsync({ path: stylesPath, xml });
 
@@ -59,7 +59,7 @@ describe('Styles', () => {
     setStylesItem({
       xml,
       parent,
-      item: buildItem({ name: 'android:textColor', value: '#ffffff' }),
+      item: buildResourceItem({ name: 'android:textColor', value: '#ffffff' }),
     });
     await writeXMLAsync({ path: stylesPath, xml });
 

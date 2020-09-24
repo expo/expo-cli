@@ -1,6 +1,6 @@
 import { ExpoConfig } from '../Config.types';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
-import { buildItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
+import { buildResourceItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
 import { writeXMLAsync } from './XML';
 
@@ -20,8 +20,8 @@ export async function setPrimaryColor(config: ExpoConfig, projectDirectory: stri
   let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
   let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });
 
-  const colorItemToAdd = buildItem({ name: COLOR_PRIMARY_KEY, value: hexString });
-  const styleItemToAdd = buildItem({
+  const colorItemToAdd = buildResourceItem({ name: COLOR_PRIMARY_KEY, value: hexString });
+  const styleItemToAdd = buildResourceItem({
     name: COLOR_PRIMARY_KEY,
     value: `@color/${COLOR_PRIMARY_KEY}`,
   });

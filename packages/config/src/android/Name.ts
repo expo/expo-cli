@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { buildItem, readResourcesXMLAsync, ResourceXML } from './Resources';
+import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from './Resources';
 import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';
 
@@ -44,7 +44,7 @@ export async function setName(
 
 function applyName(name: string | null, stringsJSON: ResourceXML): ResourceXML {
   if (name) {
-    return setStringItem([buildItem({ name: 'app_name', value: name })], stringsJSON);
+    return setStringItem([buildResourceItem({ name: 'app_name', value: name })], stringsJSON);
   }
   return removeStringItem('app_name', stringsJSON);
 }

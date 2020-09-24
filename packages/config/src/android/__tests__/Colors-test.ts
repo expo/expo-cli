@@ -1,7 +1,7 @@
 import { vol } from 'memfs';
 
 import { getProjectColorsXMLPathAsync, removeColorItem, setColorItem } from '../Colors';
-import { buildItem, readResourcesXMLAsync } from '../Resources';
+import { buildResourceItem, readResourcesXMLAsync } from '../Resources';
 
 jest.mock('fs');
 
@@ -27,7 +27,7 @@ describe(setColorItem, () => {
     let colors = await readResourcesXMLAsync({ path });
     expect(colors).toStrictEqual({ resources: {} });
 
-    const colorItemToAdd = buildItem({ name: 'somn', value: '#fff000' });
+    const colorItemToAdd = buildResourceItem({ name: 'somn', value: '#fff000' });
 
     // Add a color item
     colors = setColorItem(colorItemToAdd, colors);

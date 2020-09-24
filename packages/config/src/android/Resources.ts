@@ -74,7 +74,13 @@ export function ensureDefaultResourceXML(xml: XMLObject): ResourceXML {
  *
  * @param props name and value strings.
  */
-export function buildItem({ name, value }: { name: string; value: string }): ResourceItemXML {
+export function buildResourceItem({
+  name,
+  value,
+}: {
+  name: string;
+  value: string;
+}): ResourceItemXML {
   return { $: { name }, _: value };
 }
 

@@ -1,6 +1,6 @@
 import { ExpoConfig } from '../Config.types';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
-import { buildItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
+import { buildResourceItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
 import { writeXMLAsync } from './XML';
 
@@ -29,13 +29,13 @@ export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: s
   let styleItemToAdd: ResourceItemXML;
   if (hexString === 'translucent') {
     // translucent status bar set in theme
-    styleItemToAdd = buildItem({ name: WINDOW_TRANSLUCENT_STATUS, value: 'true' });
+    styleItemToAdd = buildResourceItem({ name: WINDOW_TRANSLUCENT_STATUS, value: 'true' });
   } else {
     // Need to add a color key to colors.xml to use in styles.xml
-    const colorItemToAdd = buildItem({ name: COLOR_PRIMARY_DARK_KEY, value: hexString });
+    const colorItemToAdd = buildResourceItem({ name: COLOR_PRIMARY_DARK_KEY, value: hexString });
     colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
 
-    styleItemToAdd = buildItem({
+    styleItemToAdd = buildResourceItem({
       name: COLOR_PRIMARY_DARK_KEY,
       value: `@color/${COLOR_PRIMARY_DARK_KEY}`,
     });
@@ -43,7 +43,7 @@ export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: s
 
   // Default is light-content, don't need to do anything to set it
   if (statusBarStyle === 'dark-content') {
-    const statusBarStyleItem: ResourceItemXML = buildItem({
+    const statusBarStyleItem: ResourceItemXML = buildResourceItem({
       name: WINDOW_LIGHT_STATUS_BAR,
       value: `true`,
     });
