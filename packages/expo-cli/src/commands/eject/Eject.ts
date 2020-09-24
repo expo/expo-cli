@@ -49,7 +49,7 @@ export type EjectAsyncOptions = {
  * 6. Log project info
  */
 export async function ejectAsync(projectRoot: string, options?: EjectAsyncOptions): Promise<void> {
-  // if (await maybeBailOnGitStatusAsync()) return;
+  if (await maybeBailOnGitStatusAsync()) return;
 
   const { exp, pkg } = await ensureConfigAsync(projectRoot);
   const tempDir = temporary.directory();
