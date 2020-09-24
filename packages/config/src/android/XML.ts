@@ -49,7 +49,10 @@ export async function readXMLAsync(options: {
   path: string;
   fallback?: string;
 }): Promise<XMLObject> {
-  const contents = await fs.readFile(options.path, { encoding: 'utf8', flag: 'r' });
+  let contents: string = '';
+  try {
+    contents = await fs.readFile(options.path, { encoding: 'utf8', flag: 'r' });
+  } catch {}
   const parser = new Parser();
   const manifest = await parser.parseStringPromise(contents || options.fallback || '');
   return manifest;
