@@ -84,7 +84,7 @@ export function buildResourceItem({
   return { $: { name }, _: value };
 }
 
-export function buildGroup(parent: {
+export function buildResourceGroup(parent: {
   name: string;
   parent: string;
   items?: ResourceItemXML[];

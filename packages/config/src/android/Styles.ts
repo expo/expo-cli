@@ -1,6 +1,6 @@
 import { getResourceXMLPathAsync } from './Paths';
 import {
-  buildGroup,
+  buildResourceGroup,
   ensureDefaultResourceXML,
   ResourceGroupXML,
   ResourceItemXML,
@@ -51,7 +51,7 @@ export function setStylesItem({
   let appTheme = getStyleParent(xml, parent);
 
   if (!appTheme) {
-    appTheme = buildGroup(parent);
+    appTheme = buildResourceGroup(parent);
     xml.resources!.style!.push(appTheme);
   }
 
