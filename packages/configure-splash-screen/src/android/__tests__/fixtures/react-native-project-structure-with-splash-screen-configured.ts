@@ -7,7 +7,7 @@ import com.facebook.react.ReactActivity;
 
 import com.facebook.react.ReactRootView;
 
-import expo.modules.splashscreen.SplashScreen;
+import expo.modules.splashscreen.singletons.SplashScreen;
 import expo.modules.splashscreen.SplashScreenImageResizeMode;
 
 public class MainActivity extends ReactActivity {

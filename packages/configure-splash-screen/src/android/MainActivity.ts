@@ -68,8 +68,8 @@ export default async function configureMainActivity(
     // importing SplashScreen
     .applyAction(content => {
       const [succeeded, newContent] = replace(content, {
-        replacePattern: /^import expo\.modules\.splashscreen\.SplashScreen.*?\nimport expo\.modules\.splashscreen\.SplashScreenImageResizeMode.*?$/m,
-        replaceContent: `import expo.modules.splashscreen.SplashScreen${LE}
+        replacePattern: /^import expo\.modules\.splashscreen\..*?SplashScreen.*?\nimport expo\.modules\.splashscreen\.SplashScreenImageResizeMode.*?$/m,
+        replaceContent: `import expo.modules.splashscreen.singletons.SplashScreen${LE}
 import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}`,
       });
       return [newContent, 'replacedSplashImports', succeeded];
@@ -80,7 +80,7 @@ import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}`,
       }
       const [succeeded, newContent] = insert(content, {
         insertPattern: isJava ? /(?=public class .* extends .* {.*$)/m : /(?=class .* : .* {.*$)/m,
-        insertContent: `import expo.modules.splashscreen.SplashScreen${LE}
+        insertContent: `import expo.modules.splashscreen.singletons.SplashScreen${LE}
 import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}
 
 `,
