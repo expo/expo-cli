@@ -4,6 +4,7 @@ import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
 import * as Colors from './Colors';
+import { readResourcesXMLAsync } from './Resources';
 import { writeXMLAsync } from './XML';
 
 type DPIString = 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
@@ -229,7 +230,7 @@ export async function configureAdaptiveIconAsync(
 
 async function setBackgroundColorAsync(projectRoot: string, backgroundColor: string | null) {
   const colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectRoot);
-  let colorsJson = await Colors.readColorsXMLAsync({ path: colorsXmlPath });
+  let colorsJson = await readResourcesXMLAsync({ path: colorsXmlPath });
   if (backgroundColor) {
     const colorItemToAdd = [
       {

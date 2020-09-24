@@ -1,49 +1,28 @@
-import { getResourceXMLAsync } from './Paths';
-import { ResourceItemXML, ResourceKind } from './Resources';
-
-export type StyleResourceGroupXML = {
-  $: {
-    name: string;
-    parent: string;
-  };
-  item: ResourceItemXML[];
-};
-
-export type StyleResourceXML = {
-  resources?: {
-    style?: StyleResourceGroupXML[];
-  };
-};
+import { getResourceXMLPathAsync } from './Paths';
+import {
+  ensureDefaultResourceXML,
+  ResourceGroupXML,
+  ResourceItemXML,
+  ResourceKind,
+  ResourceXML,
+} from './Resources';
 
 export async function getProjectStylesXMLPathAsync(
   projectDir: string,
   { kind = 'values' }: { kind?: ResourceKind } = {}
 ): Promise<string> {
-  return getResourceXMLAsync(projectDir, { kind, name: 'styles' });
+  return getResourceXMLPathAsync(projectDir, { kind, name: 'styles' });
 }
 
-export function buildItem({ name, value }: { name: string; value: string }): ResourceItemXML {
-  return { _: value, $: { name } };
-}
-
-function ensureStyleShape(xml: StyleResourceXML): StyleResourceXML {
-  if (!xml) {
-    xml = {};
-  }
-  if (!xml.resources) {
-    xml.resources = {};
-  }
+function ensureDefaultStyleResourceXML(xml: ResourceXML): ResourceXML {
+  xml = ensureDefaultResourceXML(xml);
   if (!Array.isArray(xml?.resources?.style)) {
     xml.resources.style = [];
   }
   return xml;
 }
 
-function buildParent(parent: {
-  name: string;
-  parent: string;
-  items?: any[];
-}): StyleResourceGroupXML {
+function buildParent(parent: { name: string; parent: string; items?: any[] }): ResourceGroupXML {
   return {
     $: { name: parent.name, parent: parent.parent },
     item: parent.items ?? [],
@@ -51,9 +30,9 @@ function buildParent(parent: {
 }
 
 export function getStyleParent(
-  xml: StyleResourceXML,
+  xml: ResourceXML,
   parent: { name: string; parent?: string }
-): StyleResourceGroupXML | null {
+): ResourceGroupXML | null {
   const app = xml?.resources?.style?.filter?.((e: any) => {
     let matches = e['$']['name'] === parent.name;
     if (parent.parent != null && matches) {
@@ -70,10 +49,10 @@ export function setStylesItem({
   parent,
 }: {
   item: ResourceItemXML[];
-  xml: StyleResourceXML;
+  xml: ResourceXML;
   parent: { name: string; parent: string };
-}): StyleResourceXML {
-  xml = ensureStyleShape(xml);
+}): ResourceXML {
+  xml = ensureDefaultStyleResourceXML(xml);
 
   let appTheme = getStyleParent(xml, parent);
 

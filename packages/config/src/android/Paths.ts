@@ -51,7 +51,7 @@ export async function getAndroidManifestAsync(projectRoot: string): Promise<stri
   // }
 }
 
-export async function getResourceXMLAsync(
+export async function getResourceXMLPathAsync(
   projectRoot: string,
   { kind = 'values', name }: { kind?: ResourceKind; name: 'colors' | 'strings' | 'styles' | string }
 ): Promise<string> {
@@ -74,7 +74,7 @@ async function statAsync(file: string): Promise<fs.Stats | null> {
   }
 }
 
-async function fileExistsAsync(file: string): Promise<boolean> {
+export async function fileExistsAsync(file: string): Promise<boolean> {
   return (await statAsync(file))?.isFile() ?? false;
 }
 

@@ -1,6 +1,7 @@
 import { vol } from 'memfs';
 
-import { buildItem, getProjectStylesXMLPathAsync, getStyleParent, setStylesItem } from '../Styles';
+import { buildItem } from '../Resources';
+import { getProjectStylesXMLPathAsync, getStyleParent, setStylesItem } from '../Styles';
 import { readXMLAsync, writeXMLAsync } from '../XML';
 jest.mock('fs');
 

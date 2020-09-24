@@ -1,9 +1,8 @@
 import { vol } from 'memfs';
 
-import { readColorsXMLAsync } from '../Colors';
+import { readResourcesXMLAsync } from '../Resources';
 import { getStatusBarColor, getStatusBarStyle, setStatusBarConfig } from '../StatusBar';
 import { getProjectStylesXMLPathAsync } from '../Styles';
-import { readXMLAsync } from '../XML';
 
 jest.mock('fs');
 
@@ -58,10 +57,10 @@ describe('Android status bar', () => {
         )
       ).toBe(true);
 
-      const stylesJSON = await readXMLAsync({
+      const stylesJSON = await readResourcesXMLAsync({
         path: await getProjectStylesXMLPathAsync('/app'),
       });
-      const colorsJSON = await readColorsXMLAsync({
+      const colorsJSON = await readResourcesXMLAsync({
         path: '/app/android/app/src/main/res/values/colors.xml',
       });
       expect(

@@ -1,12 +1,12 @@
 import { vol } from 'memfs';
 
-import { readColorsXMLAsync } from '../Colors';
 import {
   getNavigationBarColor,
   getNavigationBarImmersiveMode,
   getNavigationBarStyle,
   setNavigationBarConfig,
 } from '../NavigationBar';
+import { readResourcesXMLAsync } from '../Resources';
 import { readXMLAsync } from '../XML';
 import { sampleStylesXML } from './StatusBar-test';
 
@@ -69,7 +69,7 @@ describe('Android navigation bar', () => {
       const stylesJSON = await readXMLAsync({
         path: '/app/android/app/src/main/res/values/styles.xml',
       });
-      const colorsJSON = await readColorsXMLAsync({
+      const colorsJSON = await readResourcesXMLAsync({
         path: '/app/android/app/src/main/res/values/colors.xml',
       });
 

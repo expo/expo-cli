@@ -1,9 +1,9 @@
 import { ExpoConfig } from '../Config.types';
 import { addWarningAndroid } from '../WarningAggregator';
-import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
-import { ResourceItemXML } from './Resources';
+import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
+import { readResourcesXMLAsync, ResourceItemXML } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
-import { readXMLAsync, writeXMLAsync } from './XML';
+import { writeXMLAsync } from './XML';
 
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 const WINDOW_LIGHT_NAVIGATION_BAR = 'android:windowLightNavigationBar';
@@ -28,8 +28,8 @@ export async function setNavigationBarConfig(config: ExpoConfig, projectDirector
   const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
   const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
 
-  let stylesJSON = await readXMLAsync({ path: stylesPath });
-  let colorsJSON = await readColorsXMLAsync({ path: colorsPath });
+  let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
+  let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });
 
   if (immersiveMode) {
     // Immersive mode needs to be set programatically

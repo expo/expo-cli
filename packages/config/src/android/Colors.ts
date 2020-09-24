@@ -1,30 +1,14 @@
-import { getResourceXMLAsync } from './Paths';
-import { ResourceItemXML, ResourceKind } from './Resources';
-import { readXMLAsync } from './XML';
-
-const BASE_STYLES_XML = `<?xml version="1.0" encoding="utf-8"?><resources></resources>`;
-
-export type ColorResourceXML = {
-  resources?: {
-    color?: ResourceItemXML[];
-  };
-};
+import { getResourceXMLPathAsync } from './Paths';
+import { ResourceItemXML, ResourceKind, ResourceXML } from './Resources';
 
 export async function getProjectColorsXMLPathAsync(
   projectDir: string,
   { kind = 'values' }: { kind?: ResourceKind } = {}
 ): Promise<string> {
-  return getResourceXMLAsync(projectDir, { kind, name: 'colors' });
+  return getResourceXMLPathAsync(projectDir, { kind, name: 'colors' });
 }
 
-export async function readColorsXMLAsync({ path }: { path: string }): Promise<ColorResourceXML> {
-  return readXMLAsync({ path, fallback: BASE_STYLES_XML });
-}
-
-export function setColorItem(
-  itemToAdd: ResourceItemXML[],
-  colorFileContentsJSON: ColorResourceXML
-) {
+export function setColorItem(itemToAdd: ResourceItemXML[], colorFileContentsJSON: ResourceXML) {
   if (colorFileContentsJSON.resources?.color) {
     const colorNameExists = colorFileContentsJSON.resources.color.filter(
       (e: ResourceItemXML) => e['$'].name === itemToAdd[0]['$'].name
@@ -46,7 +30,7 @@ export function setColorItem(
   return colorFileContentsJSON;
 }
 
-export function removeColorItem(named: string, contents: ColorResourceXML) {
+export function removeColorItem(named: string, contents: ResourceXML) {
   if (contents.resources?.color) {
     const index = contents.resources.color.findIndex((e: ResourceItemXML) => e['$'].name === named);
     if (index > -1) {
