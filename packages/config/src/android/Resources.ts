@@ -77,3 +77,14 @@ export function ensureDefaultResourceXML(xml: XMLObject): ResourceXML {
 export function buildItem({ name, value }: { name: string; value: string }): ResourceItemXML {
   return { $: { name }, _: value };
 }
+
+export function buildGroup(parent: {
+  name: string;
+  parent: string;
+  items?: ResourceItemXML[];
+}): ResourceGroupXML {
+  return {
+    $: { name: parent.name, parent: parent.parent },
+    item: parent.items ?? [],
+  };
+}

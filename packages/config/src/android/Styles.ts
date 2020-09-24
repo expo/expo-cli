@@ -1,5 +1,6 @@
 import { getResourceXMLPathAsync } from './Paths';
 import {
+  buildGroup,
   ensureDefaultResourceXML,
   ResourceGroupXML,
   ResourceItemXML,
@@ -8,10 +9,10 @@ import {
 } from './Resources';
 
 export async function getProjectStylesXMLPathAsync(
-  projectDir: string,
-  { kind = 'values' }: { kind?: ResourceKind } = {}
+  projectRoot: string,
+  { kind }: { kind?: ResourceKind } = {}
 ): Promise<string> {
-  return getResourceXMLPathAsync(projectDir, { kind, name: 'styles' });
+  return getResourceXMLPathAsync(projectRoot, { kind, name: 'styles' });
 }
 
 function ensureDefaultStyleResourceXML(xml: ResourceXML): ResourceXML {
@@ -20,13 +21,6 @@ function ensureDefaultStyleResourceXML(xml: ResourceXML): ResourceXML {
     xml.resources.style = [];
   }
   return xml;
-}
-
-function buildParent(parent: { name: string; parent: string; items?: any[] }): ResourceGroupXML {
-  return {
-    $: { name: parent.name, parent: parent.parent },
-    item: parent.items ?? [],
-  };
 }
 
 export function getStyleParent(
@@ -57,7 +51,7 @@ export function setStylesItem({
   let appTheme = getStyleParent(xml, parent);
 
   if (!appTheme) {
-    appTheme = buildParent(parent);
+    appTheme = buildGroup(parent);
     xml.resources!.style!.push(appTheme);
   }
 

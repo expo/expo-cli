@@ -3,7 +3,7 @@ import { ResourceItemXML, ResourceKind, ResourceXML } from './Resources';
 
 export async function getProjectColorsXMLPathAsync(
   projectDir: string,
-  { kind = 'values' }: { kind?: ResourceKind } = {}
+  { kind }: { kind?: ResourceKind } = {}
 ): Promise<string> {
   return getResourceXMLPathAsync(projectDir, { kind, name: 'colors' });
 }
