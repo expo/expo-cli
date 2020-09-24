@@ -1,7 +1,6 @@
 import { vol } from 'memfs';
 
-import { readColorsXMLAsync } from '../Colors';
-import { readXMLAsync } from '../Manifest';
+import { readResourcesXMLAsync } from '../Resources';
 import { getStatusBarColor, getStatusBarStyle, setStatusBarConfig } from '../StatusBar';
 import { getProjectStylesXMLPathAsync } from '../Styles';
 
@@ -58,12 +57,12 @@ describe('Android status bar', () => {
         )
       ).toBe(true);
 
-      const stylesJSON = await readXMLAsync({
+      const stylesJSON = await readResourcesXMLAsync({
         path: await getProjectStylesXMLPathAsync('/app'),
       });
-      const colorsJSON = await readColorsXMLAsync(
-        '/app/android/app/src/main/res/values/colors.xml'
-      );
+      const colorsJSON = await readResourcesXMLAsync({
+        path: '/app/android/app/src/main/res/values/colors.xml',
+      });
       expect(
         stylesJSON.resources.style
           .filter(e => e['$']['name'] === 'AppTheme')[0]

@@ -2,14 +2,9 @@ import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
 import { addMetaDataItemToMainApplication, Document, getMainApplication } from './Manifest';
-import {
-  getProjectStringsXMLPathAsync,
-  readStringsXMLAsync,
-  removeStringItem,
-  setStringItem,
-  writeStringsXMLAsync,
-} from './Strings';
-import { XMLItem } from './Styles';
+import { readResourcesXMLAsync, ResourceItemXML } from './Resources';
+import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
+import { writeXMLAsync } from './XML';
 
 const facebookSchemeActivity = (scheme: string) => `
 <activity
@@ -87,16 +82,16 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
     throw new Error(`There was a problem setting your Facebook App ID in ${stringsPath}.`);
   }
 
-  let stringsJSON = await readStringsXMLAsync(stringsPath);
+  let stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
   if (appId) {
-    const stringItemToAdd: XMLItem[] = [{ _: appId, $: { name: 'facebook_app_id' } }];
+    const stringItemToAdd: ResourceItemXML[] = [{ _: appId, $: { name: 'facebook_app_id' } }];
     stringsJSON = setStringItem(stringItemToAdd, stringsJSON);
   } else {
     stringsJSON = removeStringItem('facebook_app_id', stringsJSON);
   }
 
   try {
-    await writeStringsXMLAsync(stringsPath, stringsJSON);
+    await writeXMLAsync({ path: stringsPath, xml: stringsJSON });
   } catch (e) {
     throw new Error(`Error setting facebookAppId. Cannot write strings.xml to ${stringsPath}.`);
   }

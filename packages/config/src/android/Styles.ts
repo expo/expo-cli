@@ -1,91 +1,33 @@
-import fs from 'fs-extra';
-import path from 'path';
-import { Builder } from 'xml2js';
-
-import { Document, getProjectXMLPathAsync } from './Manifest';
-
-export type XMLItem = {
-  _: string;
-  $: { name: string; [key: string]: string };
-};
+import { getResourceXMLPathAsync } from './Paths';
+import {
+  buildResourceGroup,
+  ensureDefaultResourceXML,
+  ResourceGroupXML,
+  ResourceItemXML,
+  ResourceKind,
+  ResourceXML,
+} from './Resources';
 
 export async function getProjectStylesXMLPathAsync(
-  projectDir: string,
-  { kind = 'values' }: { kind?: string } = {}
-): Promise<string | null> {
-  return getProjectXMLPathAsync(projectDir, { kind, name: 'styles' });
+  projectRoot: string,
+  { kind }: { kind?: ResourceKind } = {}
+): Promise<string> {
+  return getResourceXMLPathAsync(projectRoot, { kind, name: 'styles' });
 }
 
-export async function writeStylesXMLAsync(options: { path: string; xml: any }): Promise<void> {
-  const stylesXml = new Builder().buildObject(options.xml);
-  await fs.ensureDir(path.dirname(options.path));
-  await fs.writeFile(options.path, stylesXml);
-}
-
-export function buildItem({
-  name,
-  parent,
-  value,
-}: {
-  name: string;
-  parent?: string;
-  value: string;
-}): XMLItem {
-  const item: XMLItem = { _: value, $: { name } };
-  if (parent) {
-    item['$'].parent = parent;
-  }
-  return item;
-}
-
-function ensureStyleShape(xml: Document): Document {
-  if (!xml) {
-    xml = {};
-  }
-  if (!xml.resources) {
-    xml.resources = {};
-  }
-  if (!Array.isArray(xml.resources.style)) {
+function ensureDefaultStyleResourceXML(xml: ResourceXML): ResourceXML {
+  xml = ensureDefaultResourceXML(xml);
+  if (!Array.isArray(xml?.resources?.style)) {
     xml.resources.style = [];
   }
   return xml;
 }
 
-function buildParent(parent: { name: string; parent: string; items?: any[] }): Document {
-  return {
-    $: { name: parent.name, parent: parent.parent },
-    item: parent.items ?? [],
-  };
-}
-
-export function removeStyleParent({
-  xml,
-  parent,
-}: {
-  xml: Document;
-  parent: { name: string; parent?: string };
-}): [Document, boolean] {
-  xml = ensureStyleShape(xml);
-
-  const index = xml.resources.style.findIndex?.((e: any) => {
-    let matches = e['$']['name'] === parent.name;
-    if (parent.parent != null && matches) {
-      matches = e['$']['parent'] === parent.parent;
-    }
-    return matches;
-  });
-  const shouldRemove = index > -1;
-  if (shouldRemove) {
-    xml.resources.style.splice(index, 1);
-  }
-  return [xml, shouldRemove];
-}
-
 export function getStyleParent(
-  xml: Document,
+  xml: ResourceXML,
   parent: { name: string; parent?: string }
-): Document | null {
-  const app = xml.resources.style.filter?.((e: any) => {
+): ResourceGroupXML | null {
+  const app = xml?.resources?.style?.filter?.((e: any) => {
     let matches = e['$']['name'] === parent.name;
     if (parent.parent != null && matches) {
       matches = e['$']['parent'] === parent.parent;
@@ -99,16 +41,17 @@ export function ensureStylesObject({
   xml,
   parent,
 }: {
-  xml: Document;
+  item: ResourceItemXML;
+  xml: ResourceXML;
   parent: { name: string; parent: string };
-}): [Document, Document] {
-  xml = ensureStyleShape(xml);
+}): [ResourceXML, ResourceGroupXML] {
+  xml = ensureDefaultStyleResourceXML(xml);
 
   let appTheme = getStyleParent(xml, parent);
 
   if (!appTheme) {
-    appTheme = buildParent(parent);
-    xml.resources.style.push(appTheme);
+    appTheme = buildResourceGroup(parent);
+    xml.resources!.style!.push(appTheme);
   }
 
   return [xml, appTheme];
@@ -128,18 +71,16 @@ export function setStylesItem({
   const appTheme = results[1];
 
   if (appTheme.item) {
-    const existingItem = appTheme.item.filter(
-      (_item: XMLItem) => _item['$'].name === item[0].$.name
-    )[0];
+    const existingItem = appTheme.item.filter(_item => _item['$'].name === item.$.name)[0];
 
     // Don't want to 2 of the same item, so if one exists, we overwrite it
     if (existingItem) {
-      existingItem['_'] = item[0]['_'];
+      existingItem['_'] = item['_'];
     } else {
-      appTheme.item = appTheme.item.concat(item);
+      appTheme.item.push(item);
     }
   } else {
-    appTheme.item = item;
+    appTheme.item = [item];
   }
   return xml;
 }
@@ -150,9 +91,9 @@ export function removeStylesItem({
   parent,
 }: {
   name: string;
-  xml: Document;
+  xml: ResourceXML;
   parent: { name: string; parent: string };
-}): Document {
+}): ResourceXML {
   const results = ensureStylesObject({ xml, parent });
   xml = results[0];
   const appTheme = results[1];
@@ -164,4 +105,28 @@ export function removeStylesItem({
     }
   }
   return xml;
+}
+
+export function removeStyleParent({
+  xml,
+  parent,
+}: {
+  xml: ResourceXML;
+  parent: { name: string; parent?: string };
+}): [Document, boolean] {
+  xml = ensureDefaultStyleResourceXML(xml);
+
+  const index =
+    xml.resources.style?.findIndex?.((e: any) => {
+      let matches = e['$']['name'] === parent.name;
+      if (parent.parent != null && matches) {
+        matches = e['$']['parent'] === parent.parent;
+      }
+      return matches;
+    }) ?? -1;
+  const shouldRemove = index > -1;
+  if (xml.resources.style && shouldRemove) {
+    xml.resources.style.splice(index, 1);
+  }
+  return [xml, shouldRemove];
 }

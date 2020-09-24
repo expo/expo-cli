@@ -1,8 +1,9 @@
 import { ExpoConfig } from '../Config.types';
 import { addWarningAndroid } from '../WarningAggregator';
-import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
-import { readXMLAsync, writeXMLAsync } from './Manifest';
-import { getProjectStylesXMLPathAsync, setStylesItem, XMLItem } from './Styles';
+import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
+import { buildResourceItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
+import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
+import { writeXMLAsync } from './XML';
 
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 const WINDOW_LIGHT_NAVIGATION_BAR = 'android:windowLightNavigationBar';
@@ -26,12 +27,9 @@ export async function setNavigationBarConfig(config: ExpoConfig, projectDirector
 
   const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
   const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
-  if (!colorsPath || !stylesPath) {
-    return false;
-  }
 
-  let stylesJSON = await readXMLAsync({ path: stylesPath });
-  let colorsJSON = await readColorsXMLAsync(colorsPath);
+  let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
+  let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });
 
   if (immersiveMode) {
     // Immersive mode needs to be set programatically
@@ -41,12 +39,13 @@ export async function setNavigationBarConfig(config: ExpoConfig, projectDirector
     );
   }
   if (hexString) {
-    const colorItemToAdd: XMLItem[] = [{ _: hexString, $: { name: NAVIGATION_BAR_COLOR } }];
+    const colorItemToAdd = buildResourceItem({ name: NAVIGATION_BAR_COLOR, value: hexString });
     colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
 
-    const styleItemToAdd: XMLItem[] = [
-      { _: `@color/${NAVIGATION_BAR_COLOR}`, $: { name: `android:${NAVIGATION_BAR_COLOR}` } },
-    ];
+    const styleItemToAdd = buildResourceItem({
+      name: `android:${NAVIGATION_BAR_COLOR}`,
+      value: `@color/${NAVIGATION_BAR_COLOR}`,
+    });
     stylesJSON = setStylesItem({
       item: styleItemToAdd,
       xml: stylesJSON,
@@ -54,9 +53,10 @@ export async function setNavigationBarConfig(config: ExpoConfig, projectDirector
     });
   }
   if (barStyle === 'dark-content') {
-    const navigationBarStyleItem: XMLItem[] = [
-      { _: 'true', $: { name: WINDOW_LIGHT_NAVIGATION_BAR } },
-    ];
+    const navigationBarStyleItem = buildResourceItem({
+      name: WINDOW_LIGHT_NAVIGATION_BAR,
+      value: 'true',
+    });
     stylesJSON = setStylesItem({
       item: navigationBarStyleItem,
       xml: stylesJSON,

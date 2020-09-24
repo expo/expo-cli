@@ -3,9 +3,15 @@ import { EOL } from 'os';
 import path from 'path';
 import { Builder, Parser } from 'xml2js';
 
-export type Document = { [key: string]: any };
+export type XMLValue = boolean | number | string | null | XMLArray | XMLObject;
 
-export function logXMLString(doc: Document) {
+export interface XMLArray extends Array<XMLValue> {}
+
+export interface XMLObject {
+  [key: string]: XMLValue | undefined;
+}
+
+export function logXMLString(doc: XMLObject) {
   const builder = new Builder();
   const xmlInput = builder.buildObject(doc);
   console.log(xmlInput);
@@ -23,13 +29,13 @@ async function removeFileIfExists(filePath: string) {
   }
 }
 
-function hasResources(xml: Document): boolean {
-  return typeof xml.resources !== 'string' && xml.resources.length;
+function hasResources(xml: XMLObject): boolean {
+  return Array.isArray(xml.resources) && !!xml.resources.length;
 }
 
 export async function writeXMLOrRemoveFileUponNoResourcesAsync(
   filePath: string,
-  xml: Document,
+  xml: XMLObject,
   { disregardComments }: { disregardComments?: boolean } = {}
 ) {
   if (hasResources(xml)) {
@@ -42,8 +48,13 @@ export async function writeXMLOrRemoveFileUponNoResourcesAsync(
 export async function readXMLAsync(options: {
   path: string;
   fallback?: string;
-}): Promise<Document> {
-  const contents = await fs.readFile(options.path, { encoding: 'utf8', flag: 'r' });
+}): Promise<XMLObject> {
+  let contents: string = '';
+  try {
+    contents = await fs.readFile(options.path, { encoding: 'utf8', flag: 'r' });
+  } catch {
+    // catch and use fallback
+  }
   const parser = new Parser();
   const manifest = await parser.parseStringPromise(contents || options.fallback || '');
   return manifest;

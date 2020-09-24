@@ -1,7 +1,6 @@
 import { vol } from 'memfs';
 
-import { readColorsXMLAsync } from '../Colors';
-import { readXMLAsync } from '../Manifest';
+import { readResourcesXMLAsync } from '../Resources';
 import { getRootViewBackgroundColor, setRootViewBackgroundColor } from '../RootViewBackgroundColor';
 import { sampleStylesXML } from './StatusBar-test';
 
@@ -40,12 +39,12 @@ describe('Root view background color', () => {
     it(`sets the android:windowBackground in Styles.xml if backgroundColor is given`, async () => {
       expect(await setRootViewBackgroundColor({ backgroundColor: '#654321' }, '/app')).toBe(true);
 
-      const stylesJSON = await readXMLAsync({
+      const stylesJSON = await readResourcesXMLAsync({
         path: '/app/android/app/src/main/res/values/styles.xml',
       });
-      const colorsJSON = await readColorsXMLAsync(
-        '/app/android/app/src/main/res/values/colors.xml'
-      );
+      const colorsJSON = await readResourcesXMLAsync({
+        path: '/app/android/app/src/main/res/values/colors.xml',
+      });
 
       expect(
         stylesJSON.resources.style

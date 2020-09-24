@@ -12,7 +12,7 @@ export async function setBranchApiKey(config: ExpoConfig, manifestDocument: Docu
     return manifestDocument;
   }
 
-  const mainApplication = getMainApplication(manifestDocument);
+  let mainApplication = getMainApplication(manifestDocument);
 
   let existingBranchApiKeyItem;
   const newBranchApiKeyItem = {
@@ -21,7 +21,7 @@ export async function setBranchApiKey(config: ExpoConfig, manifestDocument: Docu
       'android:value': apiKey,
     },
   };
-  if (mainApplication.hasOwnProperty('meta-data')) {
+  if (mainApplication?.['meta-data']) {
     existingBranchApiKeyItem = mainApplication['meta-data'].filter(
       (e: any) => e['$']['android:name'] === 'io.branch.sdk.BranchKey'
     );
@@ -31,6 +31,9 @@ export async function setBranchApiKey(config: ExpoConfig, manifestDocument: Docu
       mainApplication['meta-data'].push(newBranchApiKeyItem);
     }
   } else {
+    if (!mainApplication) {
+      mainApplication = { $: { 'android:name': '.MainApplication' } };
+    }
     mainApplication['meta-data'] = [newBranchApiKeyItem];
   }
 

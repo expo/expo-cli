@@ -1,10 +1,10 @@
 import {
-  format,
-  getPackageAsync,
+  Document,
   readAndroidManifestAsync,
   writeAndroidManifestAsync,
 } from '@expo/config/build/android/Manifest';
 import * as Scheme from '@expo/config/build/android/Scheme';
+import { format } from '@expo/config/build/android/XML';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { existsSync } from 'fs';
@@ -148,13 +148,17 @@ export async function getAsync({
   return await Scheme.getSchemesFromManifest(manifest);
 }
 
+function getPackage(manifest: Document): string | null {
+  return manifest.manifest?.['$']?.package ?? null;
+}
+
 export async function getProjectIdAsync({
   projectRoot,
   manifestPath,
 }: Pick<Options, 'projectRoot' | 'manifestPath'>): Promise<string> {
   const resolvedManifestPath = manifestPath ?? getConfigPath(projectRoot);
   const manifest = await readConfigAsync(resolvedManifestPath);
-  const androidPackage = await getPackageAsync(manifest);
+  const androidPackage = getPackage(manifest);
   if (!androidPackage)
     throw new CommandError(
       `Android: Failed to resolve android package for Manifest at path: ${resolvedManifestPath}`

@@ -2,11 +2,13 @@ import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
+import { ResourceKind } from './Resources';
+
 export async function getMainActivityAsync(
   projectRoot: string
 ): Promise<{ path: string; language: 'java' | 'kt' }> {
   const mainActivityJavaPath = globSync(
-    path.join(projectRoot, 'android/app/src/main/java/**/MainActivity.')
+    path.join(projectRoot, 'android/app/src/main/java/**/MainActivity.{java,kt}')
   )[0];
 
   const mainActivityPathJava = path.resolve(mainActivityJavaPath, '../MainActivity.java');
@@ -22,4 +24,60 @@ export async function getMainActivityAsync(
     path: isJava ? mainActivityPathJava : mainActivityPathKotlin,
     language: isJava ? 'java' : 'kt',
   };
+}
+
+export function getAndroidBuildGradle(projectRoot: string): string {
+  return path.join(projectRoot, 'android', 'build.gradle');
+}
+
+export function getAppBuildGradle(projectRoot: string): string {
+  return path.join(projectRoot, 'android', 'app', 'build.gradle');
+}
+
+export async function getProjectPathOrThrowAsync(projectRoot: string): Promise<string> {
+  const projectPath = path.join(projectRoot, 'android');
+  if (await directoryExistsAsync(projectPath)) {
+    return projectPath;
+  }
+  throw new Error(`Android project folder is missing in project: ${projectRoot}`);
+}
+
+export async function getAndroidManifestAsync(projectRoot: string): Promise<string> {
+  const projectPath = await getProjectPathOrThrowAsync(projectRoot);
+
+  const filePath = path.join(projectPath, 'app/src/main/AndroidManifest.xml');
+  // if (await fileExistsAsync(filePath)) {
+  return filePath;
+  // }
+}
+
+export async function getResourceXMLPathAsync(
+  projectRoot: string,
+  { kind = 'values', name }: { kind?: ResourceKind; name: 'colors' | 'strings' | 'styles' | string }
+): Promise<string> {
+  const projectPath = await getProjectPathOrThrowAsync(projectRoot);
+
+  const filePath = path.join(projectPath, `app/src/main/res/${kind}/${name}.xml`);
+  return filePath;
+}
+
+/**
+ * A non-failing version of async FS stat.
+ *
+ * @param file
+ */
+async function statAsync(file: string): Promise<fs.Stats | null> {
+  try {
+    return await fs.stat(file);
+  } catch {
+    return null;
+  }
+}
+
+export async function fileExistsAsync(file: string): Promise<boolean> {
+  return (await statAsync(file))?.isFile() ?? false;
+}
+
+async function directoryExistsAsync(file: string): Promise<boolean> {
+  return (await statAsync(file))?.isDirectory() ?? false;
 }

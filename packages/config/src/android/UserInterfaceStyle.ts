@@ -26,8 +26,10 @@ export async function setUiModeAndroidManifest(config: ExpoConfig, manifestDocum
     return manifestDocument;
   }
 
-  const mainActivity = getMainActivity(manifestDocument);
-
+  let mainActivity = getMainActivity(manifestDocument);
+  if (!mainActivity) {
+    mainActivity = { $: { 'android:name': '.MainActivity' } };
+  }
   mainActivity['$'][CONFIG_CHANGES_ATTRIBUTE] =
     'keyboard|keyboardHidden|orientation|screenSize|uiMode';
 

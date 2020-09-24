@@ -113,7 +113,11 @@ export function setPackageInBuildGradle(config: ExpoConfig, buildGradle: string)
 export async function setPackageInAndroidManifest(config: ExpoConfig, manifestDocument: Document) {
   const packageName = getPackage(config);
 
-  manifestDocument['manifest']['$']['package'] = packageName;
+  if (packageName) {
+    manifestDocument['manifest']['$']['package'] = packageName;
+  } else {
+    delete manifestDocument['manifest']['$']['package'];
+  }
 
   return manifestDocument;
 }

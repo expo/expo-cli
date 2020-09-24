@@ -1,13 +1,8 @@
 import { vol } from 'memfs';
 
-import { readXMLAsync } from '../Manifest';
-import {
-  buildItem,
-  getProjectStylesXMLPathAsync,
-  getStyleParent,
-  setStylesItem,
-  writeStylesXMLAsync,
-} from '../Styles';
+import { buildResourceItem, readResourcesXMLAsync } from '../Resources';
+import { getProjectStylesXMLPathAsync, getStyleParent, setStylesItem } from '../Styles';
+import { writeXMLAsync } from '../XML';
 jest.mock('fs');
 
 const mockStyles = `
@@ -41,16 +36,16 @@ describe('Styles', () => {
 
   it(`sets a style on an empty resource item`, async () => {
     const stylesPath = await getProjectStylesXMLPathAsync('/empty')!;
-    const xml = await readXMLAsync({ path: stylesPath });
+    const xml = await readResourcesXMLAsync({ path: stylesPath });
     const parent = { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' };
     setStylesItem({
       xml,
       parent,
-      item: [buildItem({ name: 'android:textColor', value: '#fff000' })],
+      item: buildResourceItem({ name: 'android:textColor', value: '#fff000' }),
     });
-    await writeStylesXMLAsync({ path: stylesPath, xml });
+    await writeXMLAsync({ path: stylesPath, xml });
 
-    const modifiedXml = await readXMLAsync({ path: stylesPath });
+    const modifiedXml = await readResourcesXMLAsync({ path: stylesPath });
 
     expect(getStyleParent(modifiedXml, parent)).toStrictEqual({
       $: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
@@ -59,16 +54,16 @@ describe('Styles', () => {
   });
   it(`changes the value of a style`, async () => {
     const stylesPath = await getProjectStylesXMLPathAsync('/app')!;
-    const xml = await readXMLAsync({ path: stylesPath });
+    const xml = await readResourcesXMLAsync({ path: stylesPath });
     const parent = { name: 'Theme.App.SplashScreen', parent: 'Theme.AppCompat.Light.NoActionBar' };
     setStylesItem({
       xml,
       parent,
-      item: [buildItem({ name: 'android:textColor', value: '#ffffff' })],
+      item: buildResourceItem({ name: 'android:textColor', value: '#ffffff' }),
     });
-    await writeStylesXMLAsync({ path: stylesPath, xml });
+    await writeXMLAsync({ path: stylesPath, xml });
 
-    const modifiedXml = await readXMLAsync({ path: stylesPath });
+    const modifiedXml = await readResourcesXMLAsync({ path: stylesPath });
 
     expect(getStyleParent(modifiedXml, parent)).toStrictEqual({
       $: { name: 'Theme.App.SplashScreen', parent: 'Theme.AppCompat.Light.NoActionBar' },

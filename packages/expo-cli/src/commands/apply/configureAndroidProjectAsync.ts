@@ -1,7 +1,6 @@
 import { AndroidConfig, getConfig, WarningAggregator } from '@expo/config';
 import { UserManager } from '@expo/xdl';
 import fs from 'fs-extra';
-import path from 'path';
 
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
 
@@ -9,7 +8,7 @@ async function modifyBuildGradleAsync(
   projectRoot: string,
   callback: (buildGradle: string) => string
 ) {
-  const buildGradlePath = path.join(projectRoot, 'android', 'build.gradle');
+  const buildGradlePath = AndroidConfig.Paths.getAndroidBuildGradle(projectRoot);
   const buildGradleString = fs.readFileSync(buildGradlePath).toString();
   const result = callback(buildGradleString);
   fs.writeFileSync(buildGradlePath, result);
@@ -19,7 +18,7 @@ async function modifyAppBuildGradleAsync(
   projectRoot: string,
   callback: (buildGradle: string) => string
 ) {
-  const buildGradlePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
+  const buildGradlePath = AndroidConfig.Paths.getAppBuildGradle(projectRoot);
   const buildGradleString = fs.readFileSync(buildGradlePath).toString();
   const result = callback(buildGradleString);
   fs.writeFileSync(buildGradlePath, result);
@@ -27,14 +26,11 @@ async function modifyAppBuildGradleAsync(
 
 async function modifyAndroidManifestAsync(
   projectRoot: string,
-  callback: (androidManifest: AndroidConfig.Manifest.Document) => AndroidConfig.Manifest.Document
+  callback: (
+    androidManifest: AndroidConfig.Manifest.Document
+  ) => Promise<AndroidConfig.Manifest.Document>
 ) {
-  const androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
-    projectRoot
-  );
-  if (!androidManifestPath) {
-    throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectRoot}"`);
-  }
+  const androidManifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(projectRoot);
   const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
     androidManifestPath
   );
@@ -47,7 +43,6 @@ async function modifyMainActivityAsync(
   callback: (props: { contents: string; language: 'java' | 'kt' }) => Promise<string>
 ) {
   const mainActivity = await AndroidConfig.Paths.getMainActivityAsync(projectRoot);
-
   const contents = fs.readFileSync(mainActivity.path).toString();
   const result = await callback({ contents, language: mainActivity.language });
   fs.writeFileSync(mainActivity.path, result);
