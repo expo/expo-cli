@@ -52,7 +52,9 @@ export async function readXMLAsync(options: {
   let contents: string = '';
   try {
     contents = await fs.readFile(options.path, { encoding: 'utf8', flag: 'r' });
-  } catch {}
+  } catch {
+    // catch and use fallback
+  }
   const parser = new Parser();
   const manifest = await parser.parseStringPromise(contents || options.fallback || '');
   return manifest;
