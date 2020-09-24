@@ -37,7 +37,6 @@ import * as utils from '../utils';
 import { ensurePNGIsNotTransparent } from './utils/image';
 
 const noBundleIdMessage = `Your project must have a \`bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
-const transporterAppUrl = `https://apps.apple.com/us/app/transporter/id1450874784`;
 
 function missingBundleIdentifierError() {
   return new XDLError('INVALID_OPTIONS', noBundleIdMessage);
@@ -355,12 +354,9 @@ class IOSBuilder extends BaseBuilder {
 
     log.newLine();
     log(
-      `You can now publish to the App Store with ${TerminalLink.fallbackToTextAndUrl(
-        'Transporter.app',
-        transporterAppUrl
-      )} or ${chalk.bold('expo upload:ios')}. ${TerminalLink.learnMore(
-        'https://docs.expo.io/distribution/uploading-apps/'
-      )}`
+      `You can now publish to the App Store with ${TerminalLink.transporterAppLink()} or ${chalk.bold(
+        'expo upload:ios'
+      )}. ${TerminalLink.learnMore('https://docs.expo.io/distribution/uploading-apps/')}`
     );
   }
 

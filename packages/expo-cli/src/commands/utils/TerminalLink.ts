@@ -43,3 +43,10 @@ export function learnMore(url: string): string {
     fallback: (text, url) => `Learn more: ${log.chalk.underline(url)}`,
   });
 }
+
+export function transporterAppLink() {
+  return fallbackToTextAndUrl(
+    'Transporter.app',
+    'https://apps.apple.com/us/app/transporter/id1450874784'
+  );
+}
