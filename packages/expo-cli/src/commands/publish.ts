@@ -1,4 +1,4 @@
-import { PackageJSONConfig, ProjectTarget, getConfig, getDefaultTarget } from '@expo/config';
+import { getConfig, getDefaultTarget, PackageJSONConfig, ProjectTarget } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
 import { Project } from '@expo/xdl';
 import chalk from 'chalk';
@@ -36,7 +36,7 @@ export async function action(
 
   const target = options.target ?? getDefaultTarget(projectDir);
 
-  log.newLine();
+  log.addNewLineIfNone();
 
   // Log building info before building.
   // This gives the user sometime to bail out if the info is unexpected.

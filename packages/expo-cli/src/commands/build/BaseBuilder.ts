@@ -1,4 +1,4 @@
-import { ExpoConfig, ProjectConfig, getConfig } from '@expo/config';
+import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
 import { Project, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
@@ -10,7 +10,7 @@ import { action as publishAction } from '../publish';
 import * as UrlUtils from '../utils/url';
 import { BuilderOptions } from './BaseBuilder.types';
 import BuildError from './BuildError';
-import { PLATFORMS, Platform } from './constants';
+import { Platform, PLATFORMS } from './constants';
 
 const secondsToMilliseconds = (seconds: number): number => seconds * 1000;
 
@@ -152,6 +152,7 @@ Please see the docs (${chalk.underline(
           reuseStatus.downloadUrl!
         )}`
       );
+      log.newLine();
     }
   }
 
@@ -382,11 +383,6 @@ ${job.id}
         : completedJob.artifacts.url;
       log.addNewLineIfNone();
       log(`${chalk.green('Successfully built standalone app:')} ${chalk.underline(artifactUrl)}`);
-      if (process.platform === 'darwin') {
-        log.newLine();
-        log(`You can publish to the App Store with ${chalk.bold('expo upload:ios')}`);
-      }
-      log.newLine();
     } else {
       log('Alternatively, run `expo build:status` to monitor it from the command line.');
     }
