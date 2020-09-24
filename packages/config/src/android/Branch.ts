@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainApplication } from './Manifest';
+import { Document, getMainApplicationXML } from './Manifest';
 
 export function getBranchApiKey(config: ExpoConfig) {
   return config.android?.config?.branch?.apiKey ?? null;
@@ -12,7 +12,7 @@ export async function setBranchApiKey(config: ExpoConfig, manifestDocument: Docu
     return manifestDocument;
   }
 
-  let mainApplication = getMainApplication(manifestDocument);
+  let mainApplication = getMainApplicationXML(manifestDocument);
 
   let existingBranchApiKeyItem;
   const newBranchApiKeyItem = {

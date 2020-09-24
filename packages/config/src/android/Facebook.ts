@@ -1,7 +1,7 @@
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
-import { addMetaDataItemToMainApplication, Document, getMainApplication } from './Manifest';
+import { addMetaDataItemToMainApplication, Document, getMainApplicationXML } from './Manifest';
 import { readResourcesXMLAsync, ResourceItemXML } from './Resources';
 import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';
@@ -106,7 +106,7 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
   const autoLogAppEvents = getFacebookAutoLogAppEvents(config);
   const advertiserIdCollection = getFacebookAdvertiserIDCollection(config);
 
-  let mainApplication = getMainApplication(manifestDocument);
+  let mainApplication = getMainApplicationXML(manifestDocument);
 
   removeFacebookCustomTabActivities(mainApplication);
 

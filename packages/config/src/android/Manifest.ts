@@ -155,7 +155,7 @@ function isManifest(xml: XML.XMLObject): xml is Document {
   return !!xml.manifest;
 }
 
-export function getMainApplication(manifest: Document): ManifestApplication | null {
+export function getMainApplicationXML(manifest: Document): ManifestApplication | null {
   return (
     manifest?.manifest?.application?.filter(
       e => e?.['$']?.['android:name'] === '.MainApplication'

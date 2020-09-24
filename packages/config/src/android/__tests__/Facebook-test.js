@@ -10,7 +10,7 @@ import {
   getFacebookScheme,
   setFacebookConfig,
 } from '../Facebook';
-import { getMainApplication, readAndroidManifestAsync } from '../Manifest';
+import { getMainApplicationXML, readAndroidManifestAsync } from '../Manifest';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
@@ -96,7 +96,7 @@ describe('Android facebook config', () => {
     // Run this twice to ensure copies don't get added.
     androidManifestJson = await setFacebookConfig(facebookConfig, androidManifestJson);
 
-    const mainApplication = getMainApplication(androidManifestJson);
+    const mainApplication = getMainApplicationXML(androidManifestJson);
     const facebookActivity = mainApplication['activity'].filter(
       e => e['$']['android:name'] === 'com.facebook.CustomTabActivity'
     );
@@ -145,7 +145,7 @@ describe('Android facebook config', () => {
     const facebookConfig = {};
     androidManifestJson = await setFacebookConfig(facebookConfig, androidManifestJson);
 
-    const mainApplication = getMainApplication(androidManifestJson);
+    const mainApplication = getMainApplicationXML(androidManifestJson);
 
     const facebookActivity = mainApplication['activity'].filter(
       e => e['$']['android:name'] === 'com.facebook.CustomTabActivity'

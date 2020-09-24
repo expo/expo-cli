@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainApplication, StringBoolean } from './Manifest';
+import { Document, getMainApplicationXML, StringBoolean } from './Manifest';
 
 export function getAllowBackup(config: Pick<ExpoConfig, 'android'>): boolean {
   // Defaults to true.
@@ -13,7 +13,7 @@ export async function setAllowBackup(
 ) {
   const allowBackup = getAllowBackup(config);
 
-  const mainApplication = getMainApplication(manifestDocument);
+  const mainApplication = getMainApplicationXML(manifestDocument);
   if (mainApplication?.['$']) {
     mainApplication['$']['android:allowBackup'] = String(allowBackup) as StringBoolean;
   }
@@ -22,7 +22,7 @@ export async function setAllowBackup(
 }
 
 export function getAllowBackupFromManifest(manifestDocument: Document): boolean | null {
-  const mainApplication = getMainApplication(manifestDocument);
+  const mainApplication = getMainApplicationXML(manifestDocument);
 
   if (mainApplication?.['$']) {
     return mainApplication['$']['android:allowBackup'] === 'true';

@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainApplication, ManifestMetaData } from './Manifest';
+import { Document, getMainApplicationXML, ManifestMetaData } from './Manifest';
 
 export function getGoogleMobileAdsAppId(config: ExpoConfig) {
   return config.android?.config?.googleMobileAdsAppId ?? null;
@@ -17,7 +17,7 @@ export async function setGoogleMobileAdsConfig(config: ExpoConfig, manifestDocum
     return manifestDocument;
   }
 
-  let mainApplication = getMainApplication(manifestDocument);
+  let mainApplication = getMainApplicationXML(manifestDocument);
   if (!mainApplication) {
     mainApplication = { $: { 'android:name': '.MainApplication' } };
   }

@@ -5,7 +5,7 @@ import {
   getGoogleMobileAdsAutoInit,
   setGoogleMobileAdsConfig,
 } from '../GoogleMobileAds';
-import { getMainApplication, readAndroidManifestAsync } from '../Manifest';
+import { getMainApplicationXML, readAndroidManifestAsync } from '../Manifest';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
@@ -36,7 +36,7 @@ describe('Android permissions', () => {
       androidManifestJson
     );
 
-    const mainApplication = getMainApplication(androidManifestJson);
+    const mainApplication = getMainApplicationXML(androidManifestJson);
 
     const apiKeyItem = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'com.google.android.gms.ads.APPLICATION_ID'
