@@ -6,26 +6,21 @@ import deepEqual from 'deep-equal';
 import { Builder } from 'xml2js';
 
 import { SplashScreenStatusBarStyleType } from '../../Config.types';
+import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from '../Resources';
 import {
-  Document,
-  readXMLAsync,
-  writeXMLAsync,
-  writeXMLOrRemoveFileUponNoResourcesAsync,
-} from '../Manifest';
-import {
-  buildItem,
-  ensureStylesObject,
+  ensureStyleGroup,
   getProjectStylesXMLPathAsync,
   getStyleParent,
-  removeStyleParent,
-  removeStylesItem,
+  removeStyleGroup,
+  removeStyleItem,
   setStylesItem,
 } from '../Styles';
+import { writeXMLAsync, writeXMLOrRemoveFileUponNoResourcesAsync } from '../XML';
 
 const STYLE_NAME = 'Theme.App.SplashScreen';
 
 function configureStyle(
-  xml: Document,
+  xml: ResourceXML,
   {
     statusBarHidden,
     statusBarStyle,
@@ -35,52 +30,53 @@ function configureStyle(
     statusBarStyle?: SplashScreenStatusBarStyleType;
     addStatusBarBackgroundColor?: boolean;
   }
-): Document {
+): ResourceXML {
   const parent = { name: STYLE_NAME, parent: 'Theme.AppCompat.Light.NoActionBar' };
 
   setStylesItem({
     xml,
-    item: [buildItem({ name: 'android:windowBackground', value: '@drawable/splashscreen' })],
+    item: buildResourceItem({ name: 'android:windowBackground', value: '@drawable/splashscreen' }),
     parent,
   });
 
   if (statusBarHidden == null) {
-    removeStylesItem({ xml, name: 'android:windowFullscreen', parent });
+    removeStyleItem({ xml, name: 'android:windowFullscreen', parent });
   } else {
     setStylesItem({
       xml,
-      item: [buildItem({ name: 'android:windowFullscreen', value: String(statusBarHidden) })],
+      item: buildResourceItem({ name: 'android:windowFullscreen', value: String(statusBarHidden) }),
       parent,
     });
   }
   if (statusBarStyle === undefined || statusBarStyle === SplashScreenStatusBarStyle.DEFAULT) {
-    removeStylesItem({ xml, name: 'android:windowLightStatusBar', parent });
+    removeStyleItem({ xml, name: 'android:windowLightStatusBar', parent });
   } else {
     setStylesItem({
       xml,
-      item: [
-        buildItem({
-          name: 'android:windowLightStatusBar',
-          value:
-            statusBarStyle === SplashScreenStatusBarStyle.LIGHT_CONTENT
-              ? 'false'
-              : statusBarStyle === SplashScreenStatusBarStyle.DARK_CONTENT
-              ? 'true'
-              : '',
-        }),
-      ],
+      item: buildResourceItem({
+        name: 'android:windowLightStatusBar',
+        value:
+          statusBarStyle === SplashScreenStatusBarStyle.LIGHT_CONTENT
+            ? 'false'
+            : statusBarStyle === SplashScreenStatusBarStyle.DARK_CONTENT
+            ? 'true'
+            : '',
+      }),
+
       parent,
     });
   }
 
   if (!addStatusBarBackgroundColor) {
-    removeStylesItem({ xml, name: 'android:statusBarColor', parent });
+    removeStyleItem({ xml, name: 'android:statusBarColor', parent });
   } else {
     setStylesItem({
       xml,
-      item: [
-        buildItem({ name: 'android:statusBarColor', value: '@color/splashscreen_statusbar_color' }),
-      ],
+      item: buildResourceItem({
+        name: 'android:statusBarColor',
+        value: '@color/splashscreen_statusbar_color',
+      }),
+
       parent,
     });
   }
@@ -90,7 +86,7 @@ function configureStyle(
 /**
  * Compares two subparts (`style` elements with STYLE_NAME name attribute) of given elements disregarding comments
  */
-function areStyleElementsEqual(a: Document, b: Document): boolean {
+function areStyleElementsEqual(a: ResourceXML, b: ResourceXML): boolean {
   const styleA = getStyleParent(a, { name: STYLE_NAME });
   const styleB = getStyleParent(b, { name: STYLE_NAME });
 
@@ -123,12 +119,11 @@ export async function setStylesAsync(
     kind: 'values-v23',
   }))!;
 
-  const fallback = '<?xml version="1.0" encoding="utf-8"?>';
-  const xmlContent = await readXMLAsync({ path: filePath, fallback });
+  const xmlContent = await readResourcesXMLAsync({ path: filePath });
 
   // Create a fallback item based on the existing styles that will be used for the other themes.
   const fallbackItem = { resources: {} };
-  ensureStylesObject({
+  ensureStyleGroup({
     xml: fallbackItem,
     parent: { name: STYLE_NAME, parent: 'Theme.AppCompat.Light.NoActionBar' },
   });
@@ -137,12 +132,12 @@ export async function setStylesAsync(
     ? new Builder().buildObject(fallbackItem)
     : undefined;
 
-  const v23XmlContent = await readXMLAsync({
+  const v23XmlContent = await readResourcesXMLAsync({
     path: v23FilePath,
     fallback: contentWithSingleStyleString,
   });
 
-  const v23DarkXmlContent = await readXMLAsync({
+  const v23DarkXmlContent = await readResourcesXMLAsync({
     path: v23DarkFilePath,
     fallback: contentWithSingleStyleString,
   });
@@ -166,7 +161,7 @@ export async function setStylesAsync(
   if (areStyleElementsEqual(configuredV23DarkXmlContent, configuredV23XmlContent)) {
     await writeXMLOrRemoveFileUponNoResourcesAsync(
       v23DarkFilePath,
-      removeStyleParent({
+      removeStyleGroup({
         xml: configuredV23DarkXmlContent,
         parent: { name: STYLE_NAME },
       })
@@ -178,7 +173,7 @@ export async function setStylesAsync(
   if (areStyleElementsEqual(configuredV23XmlContent, configuredXmlContent)) {
     await writeXMLOrRemoveFileUponNoResourcesAsync(
       v23FilePath,
-      removeStyleParent({
+      removeStyleGroup({
         xml: configuredV23XmlContent,
         parent: { name: STYLE_NAME },
       })

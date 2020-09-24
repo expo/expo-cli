@@ -3,13 +3,14 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { SplashScreenImageResizeMode } from '../../Config.types';
-import { getProjectResourceXMLPathAsync, writeXMLAsync } from '../Manifest';
+import { getResourceXMLPathAsync } from '../Paths';
+import { writeXMLAsync } from '../XML';
 
 export async function configureDrawableXMLAsync(
   { imageResizeMode: resizeMode }: Pick<AndroidSplashScreenConfig, 'imageResizeMode'>,
   projectRoot: string
 ) {
-  const filePath = (await getProjectResourceXMLPathAsync(projectRoot, {
+  const filePath = (await getResourceXMLPathAsync(projectRoot, {
     name: 'splashscreen',
     kind: 'drawable',
   }))!;

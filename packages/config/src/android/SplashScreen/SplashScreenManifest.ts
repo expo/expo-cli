@@ -1,15 +1,15 @@
 import { ExpoConfig } from '../../Config.types';
-import { Document } from '../Manifest';
+import { Document, getMainActivity } from '../Manifest';
 import { getSplashScreenConfig } from './SplashScreenConfig';
 
-export function setSplashScreenManifest(config: ExpoConfig, manifestDocument: Document): Document {
-  const mainActivity = manifestDocument.manifest.application[0].activity.filter(
-    (e: any) => e['$']['android:name'] === '.MainActivity'
-  )[0];
-
+export function setSplashScreenManifest(config: ExpoConfig, manifest: Document): Document {
+  let mainActivity = getMainActivity(manifest);
+  if (!mainActivity) {
+    mainActivity = { $: { 'android:name': '.MainActivity' } };
+  }
   mainActivity['$']['android:theme'] = getSplashScreenConfig(config)
     ? '@style/Theme.App.SplashScreen'
     : undefined;
 
-  return manifestDocument;
+  return manifest;
 }

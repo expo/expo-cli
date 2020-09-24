@@ -37,38 +37,33 @@ export function getStyleParent(
   return app ?? null;
 }
 
-export function ensureStylesObject({
+export function ensureStyleGroup({
   xml,
   parent,
 }: {
-  item: ResourceItemXML;
   xml: ResourceXML;
   parent: { name: string; parent: string };
 }): [ResourceXML, ResourceGroupXML] {
   xml = ensureDefaultStyleResourceXML(xml);
 
-  let appTheme = getStyleParent(xml, parent);
+  let group = getStyleParent(xml, parent);
 
-  if (!appTheme) {
-    appTheme = buildResourceGroup(parent);
-    xml.resources!.style!.push(appTheme);
+  if (!group) {
+    group = buildResourceGroup(parent);
+    xml.resources!.style!.push(group);
   }
-
-  return [xml, appTheme];
+  return [xml, group];
 }
 
 export function setStylesItem({
   item,
-  xml,
-  parent,
+  ...props
 }: {
-  item: XMLItem[];
-  xml: Document;
+  item: ResourceItemXML;
+  xml: ResourceXML;
   parent: { name: string; parent: string };
-}): Document {
-  const results = ensureStylesObject({ xml, parent });
-  xml = results[0];
-  const appTheme = results[1];
+}): ResourceXML {
+  const [xml, appTheme] = ensureStyleGroup(props);
 
   if (appTheme.item) {
     const existingItem = appTheme.item.filter(_item => _item['$'].name === item.$.name)[0];
@@ -85,21 +80,18 @@ export function setStylesItem({
   return xml;
 }
 
-export function removeStylesItem({
+export function removeStyleItem({
   name,
-  xml,
-  parent,
+  ...props
 }: {
   name: string;
   xml: ResourceXML;
   parent: { name: string; parent: string };
 }): ResourceXML {
-  const results = ensureStylesObject({ xml, parent });
-  xml = results[0];
-  const appTheme = results[1];
+  const [xml, appTheme] = ensureStyleGroup(props);
 
   if (appTheme.item) {
-    const existingItem = appTheme.item.findIndex((_item: XMLItem) => _item['$'].name === name);
+    const existingItem = appTheme.item.findIndex(item => item['$'].name === name);
     if (existingItem > -1) {
       appTheme.item.splice(existingItem, 1);
     }
@@ -107,13 +99,13 @@ export function removeStylesItem({
   return xml;
 }
 
-export function removeStyleParent({
+export function removeStyleGroup({
   xml,
   parent,
 }: {
   xml: ResourceXML;
   parent: { name: string; parent?: string };
-}): [Document, boolean] {
+}): ResourceXML {
   xml = ensureDefaultStyleResourceXML(xml);
 
   const index =
@@ -128,5 +120,5 @@ export function removeStyleParent({
   if (xml.resources.style && shouldRemove) {
     xml.resources.style.splice(index, 1);
   }
-  return [xml, shouldRemove];
+  return xml;
 }

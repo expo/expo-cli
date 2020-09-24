@@ -1,23 +1,11 @@
 import { AndroidSplashScreenConfig } from '@expo/configure-splash-screen';
 
-import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from '../Colors';
-import { Document, writeXMLAsync } from '../Manifest';
-
-function applyColorToXML(
-  document: Document,
-  {
-    name,
-    color,
-  }: {
-    name: string;
-    color: string;
-  }
-): Document {
-  return setColorItem([{ _: color, $: { name } }], document);
-}
+import { getProjectColorsXMLPathAsync, setColorItem } from '../Colors';
+import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from '../Resources';
+import { writeXMLAsync } from '../XML';
 
 function applyColorsToXML(
-  document: Document,
+  xml: ResourceXML,
   {
     backgroundColor,
     statusBarBackgroundColor,
@@ -25,19 +13,21 @@ function applyColorsToXML(
     backgroundColor?: string;
     statusBarBackgroundColor?: string;
   }
-): Document {
-  if (backgroundColor)
-    document = applyColorToXML(document, {
-      color: backgroundColor,
-      name: 'splashscreen_background',
-    });
-  if (statusBarBackgroundColor)
-    document = applyColorToXML(document, {
-      color: statusBarBackgroundColor,
-      name: 'splashscreen_statusbar_color',
-    });
+): ResourceXML {
+  if (backgroundColor) {
+    xml = setColorItem(
+      buildResourceItem({ name: 'splashscreen_background', value: backgroundColor }),
+      xml
+    );
+  }
+  if (statusBarBackgroundColor) {
+    xml = setColorItem(
+      buildResourceItem({ name: 'splashscreen_statusbar_color', value: statusBarBackgroundColor }),
+      xml
+    );
+  }
 
-  return document;
+  return xml;
 }
 
 export async function setColorsAsync(
@@ -60,7 +50,7 @@ export async function setColorsAsync(
   });
 
   if (darkColorsPath) {
-    let darkColorsJSON = await readColorsXMLAsync(darkColorsPath);
+    let darkColorsJSON = await readResourcesXMLAsync({ path: darkColorsPath });
     darkColorsJSON = applyColorsToXML(darkColorsJSON, {
       statusBarBackgroundColor: darkModeStatusBarBackgroundColor,
       backgroundColor: darkModeBackgroundColor,
@@ -69,7 +59,7 @@ export async function setColorsAsync(
   }
   const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
   if (colorsPath) {
-    let colorsJSON = await readColorsXMLAsync(colorsPath);
+    let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });
     colorsJSON = applyColorsToXML(colorsJSON, {
       statusBarBackgroundColor,
       backgroundColor,
