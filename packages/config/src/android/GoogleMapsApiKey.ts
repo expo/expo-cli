@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainApplication } from './Manifest';
+import { Document, getMainApplication, ManifestUsesLibrary } from './Manifest';
 
 export function getGoogleMapsApiKey(config: ExpoConfig) {
   return config.android?.config?.googleMaps?.apiKey ?? null;
@@ -12,8 +12,10 @@ export async function setGoogleMapsApiKey(config: ExpoConfig, manifestDocument: 
     return manifestDocument;
   }
 
-  const mainApplication = getMainApplication(manifestDocument);
-
+  let mainApplication = getMainApplication(manifestDocument);
+  if (!mainApplication) {
+    mainApplication = { $: { 'android:name': '.MainApplication' } };
+  }
   // add meta-data item
   let existingMetaDataItem;
   const metaDataItem = {
@@ -22,7 +24,7 @@ export async function setGoogleMapsApiKey(config: ExpoConfig, manifestDocument: 
       'android:value': apiKey,
     },
   };
-  if ('meta-data' in mainApplication) {
+  if (mainApplication['meta-data']) {
     existingMetaDataItem = mainApplication['meta-data'].filter(
       (e: any) => e['$']['android:name'] === 'com.google.android.geo.API_KEY'
     );
@@ -37,14 +39,14 @@ export async function setGoogleMapsApiKey(config: ExpoConfig, manifestDocument: 
 
   // add uses-library item
   let existingUsesLibraryItem;
-  const newUsesLibraryItem = {
+  const newUsesLibraryItem: ManifestUsesLibrary = {
     $: {
       'android:name': 'org.apache.http.legacy',
       'android:required': 'false',
     },
   };
 
-  if (mainApplication.hasOwnProperty('uses-library')) {
+  if (mainApplication?.['uses-library']) {
     existingUsesLibraryItem = mainApplication['uses-library'].filter(
       (e: any) => e['$']['android:name'] === 'org.apache.http.legacy'
     );

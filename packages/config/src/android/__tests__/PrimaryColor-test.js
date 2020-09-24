@@ -1,8 +1,7 @@
 import { vol } from 'memfs';
 
-import { readColorsXMLAsync } from '../Colors';
-import { readXMLAsync } from '../Manifest';
 import { getPrimaryColor, setPrimaryColor } from '../PrimaryColor';
+import { readResourcesXMLAsync } from '../Resources';
 import { sampleStylesXML } from './StatusBar-test';
 
 jest.mock('fs');
@@ -31,10 +30,10 @@ describe('Android primary color', () => {
     it(`sets the colorPrimary item in Styles.xml if backgroundColor is given`, async () => {
       expect(await setPrimaryColor({ primaryColor: '#654321' }, '/app')).toBe(true);
 
-      const stylesJSON = await readXMLAsync({
+      const stylesJSON = await readResourcesXMLAsync({
         path: '/app/android/app/src/main/res/values/styles.xml',
       });
-      const colorsJSON = await readColorsXMLAsync({
+      const colorsJSON = await readResourcesXMLAsync({
         path: '/app/android/app/src/main/res/values/colors.xml',
       });
 

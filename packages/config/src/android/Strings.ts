@@ -1,37 +1,20 @@
-import fs from 'fs-extra';
-import path from 'path';
-import { Builder } from 'xml2js';
-
-import { Document, readXMLAsync } from './Manifest';
-import { getResourceXMLAsync, ResourceKind } from './Paths';
-import { XMLItem } from './Styles';
-
-const BASE_STRINGS_XML = `<resources></resources>`;
+import { getResourceXMLPathAsync } from './Paths';
+import { ResourceItemXML, ResourceKind, ResourceXML } from './Resources';
 
 export async function getProjectStringsXMLPathAsync(
   projectDir: string,
-  { kind = 'values' }: { kind?: ResourceKind } = {}
+  { kind }: { kind?: ResourceKind } = {}
 ): Promise<string> {
-  return getResourceXMLAsync(projectDir, { kind, name: 'strings' });
+  return getResourceXMLPathAsync(projectDir, { kind, name: 'strings' });
 }
 
-export async function readStringsXMLAsync(stringsPath: string): Promise<Document> {
-  return readXMLAsync({ path: stringsPath, fallback: BASE_STRINGS_XML });
-}
-
-export async function writeStringsXMLAsync(
-  stringsPath: string,
-  stringsContent: any
-): Promise<void> {
-  const stringsXml = new Builder().buildObject(stringsContent);
-  await fs.ensureDir(path.dirname(stringsPath));
-  await fs.writeFile(stringsPath, stringsXml);
-}
-
-export function setStringItem(itemToAdd: XMLItem[], stringFileContentsJSON: Document) {
-  if (stringFileContentsJSON.resources.string) {
+export function setStringItem(
+  itemToAdd: ResourceItemXML[],
+  stringFileContentsJSON: ResourceXML
+): ResourceXML {
+  if (stringFileContentsJSON?.resources?.string) {
     const stringNameExists = stringFileContentsJSON.resources.string.filter(
-      (e: XMLItem) => e['$'].name === itemToAdd[0]['$'].name
+      (e: ResourceItemXML) => e['$'].name === itemToAdd[0]['$'].name
     )[0];
     if (stringNameExists) {
       // replace the previous value
@@ -42,7 +25,7 @@ export function setStringItem(itemToAdd: XMLItem[], stringFileContentsJSON: Docu
       );
     }
   } else {
-    if (typeof stringFileContentsJSON.resources === 'string') {
+    if (!stringFileContentsJSON.resources || typeof stringFileContentsJSON.resources === 'string') {
       // file was empty and JSON is `{resources : ''}`
       stringFileContentsJSON.resources = {};
     }
@@ -51,10 +34,10 @@ export function setStringItem(itemToAdd: XMLItem[], stringFileContentsJSON: Docu
   return stringFileContentsJSON;
 }
 
-export function removeStringItem(named: string, stringFileContentsJSON: Document) {
-  if (stringFileContentsJSON.resources.string) {
+export function removeStringItem(named: string, stringFileContentsJSON: ResourceXML): ResourceXML {
+  if (stringFileContentsJSON?.resources?.string) {
     const stringNameExists = stringFileContentsJSON.resources.string.findIndex(
-      (e: XMLItem) => e['$'].name === named
+      (e: ResourceItemXML) => e['$'].name === named
     );
     if (stringNameExists > -1) {
       // replace the previous value

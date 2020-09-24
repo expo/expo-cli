@@ -1,11 +1,7 @@
 import { ExpoConfig } from '../Config.types';
-import {
-  getProjectStringsXMLPathAsync,
-  readStringsXMLAsync,
-  removeStringItem,
-  setStringItem,
-  writeStringsXMLAsync,
-} from './Strings';
+import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from './Resources';
+import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
+import { writeXMLAsync } from './XML';
 
 export function getName(config: ExpoConfig) {
   return typeof config.name === 'string' ? config.name : null;
@@ -35,20 +31,20 @@ export async function setName(
     throw new Error(`There was a problem setting your Facebook App ID in ${stringsPath}.`);
   }
 
-  let stringsJSON = await readStringsXMLAsync(stringsPath);
+  let stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
   stringsJSON = applyName(name, stringsJSON);
 
   try {
-    await writeStringsXMLAsync(stringsPath, stringsJSON);
+    await writeXMLAsync({ path: stringsPath, xml: stringsJSON });
   } catch (e) {
     throw new Error(`Error setting name. Cannot write strings.xml to ${stringsPath}.`);
   }
   return true;
 }
 
-function applyName(name: string | null, stringsJSON: Document): Document {
+function applyName(name: string | null, stringsJSON: ResourceXML): ResourceXML {
   if (name) {
-    return setStringItem([{ $: { name: 'app_name' }, _: name }], stringsJSON);
+    return setStringItem([buildResourceItem({ name: 'app_name', value: name })], stringsJSON);
   }
   return removeStringItem('app_name', stringsJSON);
 }

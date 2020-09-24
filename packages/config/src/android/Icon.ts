@@ -4,7 +4,8 @@ import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
 import * as Colors from './Colors';
-import { writeXMLAsync } from './Manifest';
+import { buildResourceItem, readResourcesXMLAsync } from './Resources';
+import { writeXMLAsync } from './XML';
 
 type DPIString = 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
 type dpiMap = Record<DPIString, { folderName: string; scale: number }>;
@@ -229,14 +230,9 @@ export async function configureAdaptiveIconAsync(
 
 async function setBackgroundColorAsync(projectRoot: string, backgroundColor: string | null) {
   const colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectRoot);
-  let colorsJson = await Colors.readColorsXMLAsync({ path: colorsXmlPath });
+  let colorsJson = await readResourcesXMLAsync({ path: colorsXmlPath });
   if (backgroundColor) {
-    const colorItemToAdd = [
-      {
-        _: backgroundColor,
-        $: { name: ICON_BACKGROUND },
-      },
-    ];
+    const colorItemToAdd = buildResourceItem({ name: ICON_BACKGROUND, value: backgroundColor });
     colorsJson = Colors.setColorItem(colorItemToAdd, colorsJson);
   } else {
     colorsJson = Colors.removeColorItem(ICON_BACKGROUND, colorsJson);

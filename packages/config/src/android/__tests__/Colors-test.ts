@@ -1,15 +1,11 @@
 import { vol } from 'memfs';
 
-import {
-  getProjectColorsXMLPathAsync,
-  readColorsXMLAsync,
-  removeColorItem,
-  setColorItem,
-} from '../Colors';
+import { getProjectColorsXMLPathAsync, removeColorItem, setColorItem } from '../Colors';
+import { buildResourceItem, readResourcesXMLAsync } from '../Resources';
 
 jest.mock('fs');
 
-describe(readColorsXMLAsync, () => {
+describe(setColorItem, () => {
   beforeAll(async () => {
     const directoryJSON = {
       './android/app/src/main/res/values/colors.xml': '<resources></resources>',
@@ -28,22 +24,17 @@ describe(readColorsXMLAsync, () => {
     const path = await getProjectColorsXMLPathAsync('/app');
     expect(path).toBe('/app/android/app/src/main/res/values/colors.xml');
     // read the colors object
-    let colors = await readColorsXMLAsync({ path });
-    expect(colors).toStrictEqual({ resources: '' });
+    let colors = await readResourcesXMLAsync({ path });
+    expect(colors).toStrictEqual({ resources: {} });
 
-    const colorItemToAdd = [
-      {
-        _: '#fff000',
-        $: { name: 'somn' },
-      },
-    ];
+    const colorItemToAdd = buildResourceItem({ name: 'somn', value: '#fff000' });
 
     // Add a color item
     colors = setColorItem(colorItemToAdd, colors);
     // check the object
-    expect(colors).toStrictEqual({ resources: { color: colorItemToAdd } });
+    expect(colors).toStrictEqual({ resources: { color: [colorItemToAdd] } });
     // change the color
-    colorItemToAdd[0]._ = '#000000';
+    colorItemToAdd._ = '#000000';
     // reassign the color
     colors = setColorItem(colorItemToAdd, colors);
     // check the object is reassigned

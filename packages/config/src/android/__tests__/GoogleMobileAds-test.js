@@ -48,6 +48,6 @@ describe('Android permissions', () => {
       e => e['$']['android:name'] === 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT'
     );
     expect(usesLibraryItem).toHaveLength(1);
-    expect(usesLibraryItem[0]['$']['android:value']).toBe(true);
+    expect(usesLibraryItem[0]['$']['android:value']).toBe('true');
   });
 });

@@ -1,7 +1,7 @@
 import {
   AndroidSplashScreenConfig,
-  SplashScreenImageResizeMode,
   configureAndroidSplashScreen,
+  SplashScreenImageResizeMode,
 } from '@expo/configure-splash-screen';
 
 import { ExpoConfig } from '../Config.types';

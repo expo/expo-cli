@@ -21,9 +21,11 @@ export async function setAndroidIntentFilters(config: ExpoConfig, manifestDocume
 
   const mainActivity = getMainActivity(manifestDocument);
 
-  mainActivity['intent-filter'] = mainActivity['intent-filter'].concat(
-    intentFiltersJSON['intent-filter']
-  );
+  if (mainActivity) {
+    mainActivity['intent-filter'] = mainActivity['intent-filter']?.concat(
+      intentFiltersJSON['intent-filter']
+    );
+  }
 
   return manifestDocument;
 }

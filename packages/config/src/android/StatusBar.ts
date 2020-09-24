@@ -1,7 +1,8 @@
 import { ExpoConfig } from '../Config.types';
-import { getProjectColorsXMLPathAsync, readColorsXMLAsync, setColorItem } from './Colors';
-import { readXMLAsync, writeXMLAsync } from './Manifest';
-import { getProjectStylesXMLPathAsync, setStylesItem, XMLItem } from './Styles';
+import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
+import { buildResourceItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
+import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
+import { writeXMLAsync } from './XML';
 
 const COLOR_PRIMARY_DARK_KEY = 'colorPrimaryDark';
 const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
@@ -22,26 +23,30 @@ export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: s
   const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
   const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
 
-  let stylesJSON = await readXMLAsync({ path: stylesPath });
-  let colorsJSON = await readColorsXMLAsync({ path: colorsPath });
+  let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
+  let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });
 
-  const styleItemToAdd: XMLItem[] = [{ _: '', $: { name: '' } }];
+  let styleItemToAdd: ResourceItemXML;
   if (hexString === 'translucent') {
     // translucent status bar set in theme
-    styleItemToAdd[0]._ = 'true';
-    styleItemToAdd[0].$.name = WINDOW_TRANSLUCENT_STATUS;
+    styleItemToAdd = buildResourceItem({ name: WINDOW_TRANSLUCENT_STATUS, value: 'true' });
   } else {
     // Need to add a color key to colors.xml to use in styles.xml
-    const colorItemToAdd: XMLItem[] = [{ _: hexString, $: { name: COLOR_PRIMARY_DARK_KEY } }];
+    const colorItemToAdd = buildResourceItem({ name: COLOR_PRIMARY_DARK_KEY, value: hexString });
     colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
 
-    styleItemToAdd[0]._ = `@color/${COLOR_PRIMARY_DARK_KEY}`;
-    styleItemToAdd[0].$.name = COLOR_PRIMARY_DARK_KEY;
+    styleItemToAdd = buildResourceItem({
+      name: COLOR_PRIMARY_DARK_KEY,
+      value: `@color/${COLOR_PRIMARY_DARK_KEY}`,
+    });
   }
 
   // Default is light-content, don't need to do anything to set it
   if (statusBarStyle === 'dark-content') {
-    const statusBarStyleItem: XMLItem[] = [{ _: 'true', $: { name: WINDOW_LIGHT_STATUS_BAR } }];
+    const statusBarStyleItem: ResourceItemXML = buildResourceItem({
+      name: WINDOW_LIGHT_STATUS_BAR,
+      value: `true`,
+    });
     stylesJSON = setStylesItem({
       item: statusBarStyleItem,
       xml: stylesJSON,
