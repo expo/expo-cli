@@ -32,6 +32,16 @@ export function getSplashScreenConfig(config: ExpoConfig): AndroidSplashScreenCo
 }
 
 export async function setSplashScreenAsync(config: ExpoConfig, projectRoot: string) {
+  const splashScreenIsSupported = false; // config.sdkVersion === '39.0.0'
+  if (!splashScreenIsSupported) {
+    addWarningAndroid(
+      'splash',
+      'Unable to automatically configure splash screen. Please refer to the expo-splash-screen README for more information: https://github.com/expo/expo/tree/master/packages/expo-splash-screen'
+    );
+
+    return;
+  }
+
   const splashConfig = getSplashScreenConfig(config);
   if (!splashConfig) {
     return;
