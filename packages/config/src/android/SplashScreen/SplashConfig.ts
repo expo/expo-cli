@@ -24,7 +24,7 @@ export function getSplashConfig(config: ExpoConfig): SplashScreenConfig | null {
       xhdpi: splash.xhdpi ?? splash.image ?? null,
       hdpi: splash.hdpi ?? splash.image ?? null,
       mdpi: splash.mdpi ?? splash.image ?? null,
-      backgroundColor: splash.backgroundColor || null,
+      backgroundColor: splash.backgroundColor ?? null,
       resizeMode: splash.resizeMode ?? defaultResizeMode,
     };
   }
@@ -32,12 +32,12 @@ export function getSplashConfig(config: ExpoConfig): SplashScreenConfig | null {
   if (config.splash) {
     const splash = config.splash;
     return {
-      xxxhdpi: splash.image || null,
-      xxhdpi: splash.image || null,
-      xhdpi: splash.image || null,
-      hdpi: splash.image || null,
-      mdpi: splash.image || null,
-      backgroundColor: splash.backgroundColor || null,
+      xxxhdpi: splash.image ?? null,
+      xxhdpi: splash.image ?? null,
+      xhdpi: splash.image ?? null,
+      hdpi: splash.image ?? null,
+      mdpi: splash.image ?? null,
+      backgroundColor: splash.backgroundColor ?? null,
       resizeMode: splash.resizeMode ?? defaultResizeMode,
     };
   }
@@ -53,12 +53,12 @@ export function getDarkSplashConfig(config: ExpoConfig): SplashScreenConfig | nu
     const splash = config.android?.splash?.dark;
     const lightTheme = getSplashConfig(config);
     return {
-      xxxhdpi: splash.xxxhdpi ?? splash.image ?? null,
-      xxhdpi: splash.xxhdpi ?? splash.image ?? null,
-      xhdpi: splash.xhdpi ?? splash.image ?? null,
-      hdpi: splash.hdpi ?? splash.image ?? null,
-      mdpi: splash.mdpi ?? splash.image ?? null,
-      backgroundColor: splash.backgroundColor || null,
+      xxxhdpi: splash.image ?? null,
+      xxhdpi: splash.image ?? null,
+      xhdpi: splash.image ?? null,
+      hdpi: splash.image ?? null,
+      mdpi: splash.image ?? null,
+      backgroundColor: splash.backgroundColor ?? null,
       // Can't support dark resizeMode because the resize mode is hardcoded into the MainActivity.java
       resizeMode: lightTheme?.resizeMode ?? defaultResizeMode,
     };
