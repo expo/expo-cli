@@ -19,7 +19,7 @@ export async function setSplashMainActivity(
     return fileContent;
   }
 
-  const resizeMode = splashConfig.resizeMode;
+  const { resizeMode } = splashConfig;
   const isJava = language === 'java';
   const LE = isJava ? ';' : '';
 

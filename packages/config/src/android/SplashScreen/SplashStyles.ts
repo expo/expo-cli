@@ -11,10 +11,17 @@ const styleResourceGroup = {
 };
 const SPLASH_COLOR_NAME = 'splashscreen_background';
 
+export function getSplashBackgroundColor(config: ExpoConfig): string | null {
+  return getSplashConfig(config)?.backgroundColor ?? null;
+}
+
+export function getSplashDarkBackgroundColor(config: ExpoConfig): string | null {
+  return getDarkSplashConfig(config)?.backgroundColor ?? null;
+}
+
 export async function setSplashStylesAsync(config: ExpoConfig, projectDirectory: string) {
-  // TODO: dark theme -- need to add it to the config first.
-  const backgroundColor = getSplashConfig(config)?.backgroundColor ?? null;
-  const darkBackgroundColor = getDarkSplashConfig(config)?.backgroundColor ?? null;
+  const backgroundColor = getSplashBackgroundColor(config);
+  const darkBackgroundColor = getSplashDarkBackgroundColor(config);
 
   // TODO: Does this need to be themed?
   setSplashStylesForThemeAsync({
@@ -36,7 +43,7 @@ export async function setSplashStylesAsync(config: ExpoConfig, projectDirectory:
   return true;
 }
 
-async function setSplashStylesForThemeAsync({
+export async function setSplashStylesForThemeAsync({
   projectRoot,
   kind,
 }: {
@@ -61,7 +68,7 @@ async function setSplashStylesForThemeAsync({
   return xml;
 }
 
-async function setSplashColorsForThemeAsync({
+export async function setSplashColorsForThemeAsync({
   projectRoot,
   kind,
   backgroundColor,
