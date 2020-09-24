@@ -3,6 +3,7 @@ import { EOL } from 'os';
 import path from 'path';
 import { Builder, Parser } from 'xml2js';
 
+import * as XML from './XML';
 export type Document = { [key: string]: any };
 
 export type InputOptions = {
@@ -21,6 +22,28 @@ export async function writeXMLAsync(options: { path: string; xml: any }): Promis
   const xml = new Builder().buildObject(options.xml);
   await fs.ensureDir(path.dirname(options.path));
   await fs.writeFile(options.path, xml);
+}
+
+export async function removeFileIfExists(filePath: string) {
+  if (await fs.pathExists(filePath)) {
+    await fs.unlink(filePath);
+  }
+}
+
+function hasResources(xml: Document): boolean {
+  return typeof xml.resources !== 'string' && xml.resources.length;
+}
+
+export async function writeXMLOrRemoveFileUponNoResourcesAsync(
+  filePath: string,
+  xml: Document,
+  { disregardComments }: { disregardComments?: boolean } = {}
+) {
+  if (hasResources(xml)) {
+    await writeXMLAsync({ path: filePath, xml });
+  } else {
+    await removeFileIfExists(filePath);
+  }
 }
 
 export async function readXMLAsync(options: {
@@ -86,6 +109,13 @@ export async function writeAndroidManifestAsync(
   const manifestXml = format(manifest);
   await fs.ensureDir(path.dirname(manifestPath));
   await fs.writeFile(manifestPath, manifestXml);
+}
+
+export async function getProjectResourceXMLPathAsync(
+  projectDir: string,
+  { kind = 'values', name }: { kind?: string; name: string }
+): Promise<string | null> {
+  return getProjectXMLPathAsync(projectDir, { kind, name });
 }
 
 export async function getProjectXMLPathAsync(

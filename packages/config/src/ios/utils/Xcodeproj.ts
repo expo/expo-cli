@@ -153,6 +153,7 @@ export function getPbxproj(projectRoot: string): XcodeProject {
   const pbxprojPaths = globSync('ios/*/project.pbxproj', { absolute: true, cwd: projectRoot });
   const [pbxprojPath, ...otherPbxprojPaths] = pbxprojPaths;
 
+  // TODO: Avoid this better
   if (pbxprojPaths.length > 1) {
     console.warn(
       `Found multiple pbxproject files paths, using ${pbxprojPath}. Other paths ${JSON.stringify(

@@ -1,10 +1,10 @@
 import {
   WarningAggregator as ConfigWarningAggregator,
   ExpoConfig,
-  PackageJSONConfig,
-  WarningAggregator,
   getConfig,
+  PackageJSONConfig,
   projectHasModule,
+  WarningAggregator,
 } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import { Exp } from '@expo/xdl';
@@ -49,7 +49,7 @@ export type EjectAsyncOptions = {
  * 6. Log project info
  */
 export async function ejectAsync(projectRoot: string, options?: EjectAsyncOptions): Promise<void> {
-  if (await maybeBailOnGitStatusAsync()) return;
+  // if (await maybeBailOnGitStatusAsync()) return;
 
   const { exp, pkg } = await ensureConfigAsync(projectRoot);
   const tempDir = temporary.directory();

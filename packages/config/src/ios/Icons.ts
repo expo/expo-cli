@@ -4,27 +4,11 @@ import { join } from 'path';
 
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
+import { ContentsJson, ContentsJsonImageIdiom, writeContentsJsonAsync } from './AssetContents';
 import { getProjectName } from './utils/Xcodeproj';
-
-type ContentsJsonImageIdiom = 'iphone' | 'ipad' | 'ios-marketing';
-interface ContentsJsonImage {
-  idiom: ContentsJsonImageIdiom;
-  size: string;
-  scale: string;
-  filename: string;
-}
-
-interface ContentsJson {
-  images: ContentsJsonImage[];
-  info: {
-    version: number;
-    author: string;
-  };
-}
 
 const IMAGE_CACHE_NAME = 'icons';
 const IMAGESET_PATH = 'Images.xcassets/AppIcon.appiconset';
-const CONTENTS_PATH = `${IMAGESET_PATH}/Contents.json`;
 
 // Hard-coding seemed like the clearest and safest way to implement the sizes.
 export const ICON_CONTENTS: {
@@ -164,7 +148,7 @@ export async function setIconsAsync(config: ExpoConfig, projectRoot: string) {
   }
 
   // Finally, write the Config.json
-  await writeContentsJsonAsync(iosNamedProjectRoot, { images: imagesJson });
+  await writeContentsJsonAsync(join(iosNamedProjectRoot, IMAGESET_PATH), { images: imagesJson });
 }
 
 /**
@@ -175,33 +159,6 @@ export async function setIconsAsync(config: ExpoConfig, projectRoot: string) {
 function getIosNamedProjectPath(projectRoot: string): string {
   const projectName = getProjectName(projectRoot);
   return join(projectRoot, 'ios', projectName);
-}
-
-/**
- * Writes the Config.json which is used to assign images to their respective platform, dpi, and idiom.
- *
- * @param iosNamedProjectRoot named iOS project path
- * @param contents image json data
- */
-async function writeContentsJsonAsync(
-  iosNamedProjectRoot: string,
-  { images }: Pick<ContentsJson, 'images'>
-): Promise<void> {
-  await fs.writeFile(
-    join(iosNamedProjectRoot, CONTENTS_PATH),
-    JSON.stringify(
-      {
-        images,
-        info: {
-          version: 1,
-          // common practice is for the tool that generated the icons to be the "author"
-          author: 'expo',
-        },
-      },
-      null,
-      2
-    )
-  );
 }
 
 function getAppleIconName(size: number, scale: number): string {

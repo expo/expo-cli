@@ -9,7 +9,7 @@ import configureDrawables from './Drawables';
 import configureMainActivity from './MainActivity';
 import configureStylesXml from './Styles.xml';
 
-export default async function configureAndroid(
+export default async function configureAndroidSplashScreen(
   projectRootPath: string,
   configJSON: AndroidSplashScreenConfigJSON
 ) {

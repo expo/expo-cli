@@ -12,11 +12,12 @@ import * as Name from './Name';
 import * as NavigationBar from './NavigationBar';
 import * as Orientation from './Orientation';
 import * as Package from './Package';
+import * as Paths from './Paths';
 import * as Permissions from './Permissions';
 import * as PrimaryColor from './PrimaryColor';
 import * as RootViewBackgroundColor from './RootViewBackgroundColor';
 import * as Scheme from './Scheme';
-import * as SplashScreen from './SplashScreen';
+import * as SplashScreen from './SplashScreen/SplashScreen';
 import * as StatusBar from './StatusBar';
 import * as Styles from './Styles';
 import * as Updates from './Updates';
@@ -38,6 +39,7 @@ export {
   NavigationBar,
   Orientation,
   Package,
+  Paths,
   Permissions,
   PrimaryColor,
   RootViewBackgroundColor,
