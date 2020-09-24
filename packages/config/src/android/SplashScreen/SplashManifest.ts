@@ -15,7 +15,7 @@ export function setSplashManifest(config: ExpoConfig, manifest: Document): Docum
   }
   mainActivity['$']['android:theme'] = getSplashConfig(config)
     ? '@style/Theme.App.SplashScreen'
-    : undefined;
+    : '@style/AppTheme';
 
   return manifest;
 }

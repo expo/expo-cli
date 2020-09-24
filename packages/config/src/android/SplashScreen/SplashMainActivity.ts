@@ -1,4 +1,5 @@
-import { ExpoConfig, SplashScreenImageResizeMode } from '../../Config.types';
+import { ExpoConfig } from '../../Config.types';
+import { getStatusBarTranslucent } from '../StatusBar';
 import StateManager from '../utils/StateManager';
 import { insert, replace } from '../utils/string-utils';
 import { getSplashConfig } from './SplashConfig';
@@ -12,10 +13,13 @@ export async function setSplashMainActivity(
   language: 'java' | 'kt'
 ): Promise<string> {
   const splashConfig = getSplashConfig(config);
-  if (!splashConfig) return fileContent;
+  const statusBarTranslucent = getStatusBarTranslucent(config) ?? false;
+  if (!splashConfig) {
+    // TODO: Remove splash screen code.
+    return fileContent;
+  }
 
-  const resizeMode = splashConfig.imageResizeMode ?? SplashScreenImageResizeMode.CONTAIN;
-  const statusBarTranslucent: boolean = splashConfig.statusBar?.translucent ?? false;
+  const resizeMode = splashConfig.resizeMode;
   const isJava = language === 'java';
   const LE = isJava ? ';' : '';
 
@@ -58,7 +62,7 @@ import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}
         insertPattern: /(?<=^.*super\.onCreate.*$)/m, // insert just below super.onCreate
         insertContent: `
       // SplashScreen.show(...) has to be called after super.onCreate(...)
-      // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
+      // Below line is handled by '@expo/config' command and it's discouraged to modify it manually
       SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${statusBarTranslucent})${LE}`,
       });
       return [newContent, 'insertedInOnCreate', succeeded];
@@ -81,7 +85,7 @@ import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}
     }) {
       super.onCreate(savedInstanceState)${LE}
       // SplashScreen.show(...) has to be called after super.onCreate(...)
-      // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
+      // Below line is handled by '@expo/config' command and it's discouraged to modify it manually
       SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${statusBarTranslucent})${LE}
     }
   `,

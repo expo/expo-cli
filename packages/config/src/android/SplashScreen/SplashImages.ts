@@ -1,6 +1,8 @@
-import { AndroidSplashScreenConfig } from '@expo/configure-splash-screen';
+import { ExpoConfig } from '@expo/config-types';
 import fs from 'fs-extra';
 import path from 'path';
+
+import { getDarkSplashConfig, getSplashConfig, SplashScreenConfig } from './SplashConfig';
 
 const SPLASH_SCREEN_FILENAME = 'splashscreen_image.png';
 
@@ -92,10 +94,19 @@ const DRAWABLES_CONFIGS: {
  *
  * @param androidMainPath Absolute path to the main directory containing code and resources in Android project. In general that would be `android/app/src/main`.
  */
-export async function setSplashImageDrawablesAsync(
-  config: Pick<AndroidSplashScreenConfig, 'image' | 'darkMode'>,
-  projectRoot: string
-) {
+export async function setSplashImageDrawablesAsync(config: ExpoConfig, projectRoot: string) {
+  await clearAllExistingSplashImagesAsync(projectRoot);
+
+  const splash = getSplashConfig(config);
+  const darkSplash = getDarkSplashConfig(config);
+
+  await Promise.all([
+    setSplashImageDrawablesForThemeAsync(splash, 'light', projectRoot),
+    setSplashImageDrawablesForThemeAsync(darkSplash, 'dark', projectRoot),
+  ]);
+}
+
+async function clearAllExistingSplashImagesAsync(projectRoot: string) {
   const androidMainPath = path.join(projectRoot, 'android/app/src/main');
 
   await Promise.all(
@@ -109,15 +120,24 @@ export async function setSplashImageDrawablesAsync(
       );
     })
   );
+}
+
+export async function setSplashImageDrawablesForThemeAsync(
+  config: SplashScreenConfig | null,
+  theme: 'dark' | 'light',
+  projectRoot: string
+) {
+  // Only run if an image exists
+  if (!config?.mdpi) {
+    return;
+  }
+  const androidMainPath = path.join(projectRoot, 'android/app/src/main');
 
   await Promise.all([
+    // TODO: Support all the other image sizes that are provided.
     copyDrawableFile(
-      config.image,
-      path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.modes.light.path)
-    ),
-    copyDrawableFile(
-      config.darkMode?.image,
-      path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.modes.dark.path)
+      config.mdpi,
+      path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.modes[theme].path)
     ),
   ]);
 }

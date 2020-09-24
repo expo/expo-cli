@@ -1,5 +1,4 @@
 import { ExpoConfig } from '../../Config.types';
-import { setSplashColorsAsync } from './SplashColors';
 import { getSplashConfig } from './SplashConfig';
 import { setSplashDrawableAsync } from './SplashDrawable';
 import { setSplashImageDrawablesAsync } from './SplashImages';
@@ -14,10 +13,9 @@ export async function setSplashScreenAsync(config: ExpoConfig, projectRoot: stri
   // try {
   if (splashConfig) {
     await Promise.all([
-      setSplashImageDrawablesAsync(splashConfig, projectRoot),
-      setSplashColorsAsync(splashConfig, projectRoot),
+      setSplashImageDrawablesAsync(config, projectRoot),
       setSplashDrawableAsync(splashConfig, projectRoot),
-      setSplashStylesAsync(splashConfig, projectRoot),
+      setSplashStylesAsync(config, projectRoot),
     ]);
   }
   // } catch (e) {

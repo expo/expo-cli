@@ -1,11 +1,10 @@
-import { AndroidSplashScreenConfig } from '@expo/configure-splash-screen';
-
 import { SplashScreenImageResizeMode } from '../../Config.types';
 import { getResourceXMLPathAsync } from '../Paths';
 import { writeXMLAsync } from '../XML';
+import { SplashScreenConfig } from './SplashConfig';
 
 export async function setSplashDrawableAsync(
-  { imageResizeMode: resizeMode }: Pick<AndroidSplashScreenConfig, 'imageResizeMode'>,
+  { resizeMode }: Pick<SplashScreenConfig, 'resizeMode'>,
   projectRoot: string
 ) {
   const filePath = (await getResourceXMLPathAsync(projectRoot, {
@@ -22,6 +21,7 @@ export async function setSplashDrawableAsync(
       item: [
         {
           $: {
+            // TODO: Ensure these keys don't get out of sync
             'android:drawable': '@color/splashscreen_background',
           },
         },
@@ -30,6 +30,7 @@ export async function setSplashDrawableAsync(
             {
               $: {
                 'android:gravity': 'center',
+                // TODO: Ensure these keys don't get out of sync
                 'android:src': '@drawable/splashscreen_image',
               },
             },

@@ -1,30 +1,68 @@
-import { AndroidSplashScreenConfig } from '@expo/configure-splash-screen';
+import { ExpoConfig } from '../../Config.types';
 
-import { ExpoConfig, SplashScreenImageResizeMode } from '../../Config.types';
+export type SplashScreenConfig = {
+  xxxhdpi: string | null;
+  xxhdpi: string | null;
+  xhdpi: string | null;
+  hdpi: string | null;
+  mdpi: string | null;
+  backgroundColor: string | null;
+  resizeMode: 'contain' | 'cover' | 'native';
+};
 
-export function getSplashConfig(config: ExpoConfig): AndroidSplashScreenConfig | undefined {
-  const image =
-    config.android?.splash?.xxxhdpi ??
-    config.android?.splash?.xxhdpi ??
-    config.android?.splash?.xhdpi ??
-    config.android?.splash?.hdpi ??
-    config.android?.splash?.mdpi ??
-    config.splash?.image;
-  if (!image) {
-    return;
+const defaultResizeMode = 'contain';
+
+export function getSplashConfig(config: ExpoConfig): SplashScreenConfig | null {
+  // Respect the splash screen object, don't mix and match across different splash screen objects
+  // in case the user wants the top level splash to apply to every platform except android.
+  if (config.android?.splash) {
+    const splash = config.android?.splash;
+    return {
+      // TODO: Does this not support `image`?
+      xxxhdpi: splash.xxxhdpi ?? splash.image ?? null,
+      xxhdpi: splash.xxhdpi ?? splash.image ?? null,
+      xhdpi: splash.xhdpi ?? splash.image ?? null,
+      hdpi: splash.hdpi ?? splash.image ?? null,
+      mdpi: splash.mdpi ?? splash.image ?? null,
+      backgroundColor: splash.backgroundColor || null,
+      resizeMode: splash.resizeMode ?? defaultResizeMode,
+    };
   }
 
-  const result: AndroidSplashScreenConfig = {
-    imageResizeMode:
-      config.android?.splash?.resizeMode ??
-      config.splash?.resizeMode ??
-      SplashScreenImageResizeMode.CONTAIN,
-    backgroundColor:
-      config.android?.splash?.backgroundColor ?? config.splash?.backgroundColor ?? '#FFFFFF', // white
-    image,
-    statusBar: config.android?.splash?.statusBar,
-    darkMode: config.android?.splash?.darkMode,
-  };
+  if (config.splash) {
+    const splash = config.splash;
+    return {
+      xxxhdpi: splash.image || null,
+      xxhdpi: splash.image || null,
+      xhdpi: splash.image || null,
+      hdpi: splash.image || null,
+      mdpi: splash.image || null,
+      backgroundColor: splash.backgroundColor || null,
+      resizeMode: splash.resizeMode ?? defaultResizeMode,
+    };
+  }
 
-  return result;
+  return null;
+}
+
+// TODO: dark isn't supported in the Expo config spec yet.
+export function getDarkSplashConfig(config: ExpoConfig): SplashScreenConfig | null {
+  // Respect the splash screen object, don't mix and match across different splash screen objects
+  // in case the user wants the top level splash to apply to every platform except android.
+  if (config.android?.splash?.dark) {
+    const splash = config.android?.splash?.dark;
+    const lightTheme = getSplashConfig(config);
+    return {
+      xxxhdpi: splash.xxxhdpi ?? splash.image ?? null,
+      xxhdpi: splash.xxhdpi ?? splash.image ?? null,
+      xhdpi: splash.xhdpi ?? splash.image ?? null,
+      hdpi: splash.hdpi ?? splash.image ?? null,
+      mdpi: splash.mdpi ?? splash.image ?? null,
+      backgroundColor: splash.backgroundColor || null,
+      // Can't support dark resizeMode because the resize mode is hardcoded into the MainActivity.java
+      resizeMode: lightTheme?.resizeMode ?? defaultResizeMode,
+    };
+  }
+
+  return null;
 }
