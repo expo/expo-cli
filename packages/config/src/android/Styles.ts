@@ -1,4 +1,5 @@
-import { getProjectResourcePathAsync, ResourceItemXML } from './Resources';
+import { getResourceXMLAsync } from './Paths';
+import { ResourceItemXML, ResourceKind } from './Resources';
 
 export type StyleResourceGroupXML = {
   $: {
@@ -16,9 +17,9 @@ export type StyleResourceXML = {
 
 export async function getProjectStylesXMLPathAsync(
   projectDir: string,
-  { kind = 'values' }: { kind?: string } = {}
-): Promise<string | null> {
-  return getProjectResourcePathAsync(projectDir, { kind, name: 'styles' });
+  { kind = 'values' }: { kind?: ResourceKind } = {}
+): Promise<string> {
+  return getResourceXMLAsync(projectDir, { kind, name: 'styles' });
 }
 
 export function buildItem({ name, value }: { name: string; value: string }): ResourceItemXML {

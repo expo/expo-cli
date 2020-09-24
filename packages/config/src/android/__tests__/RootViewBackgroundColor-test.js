@@ -43,9 +43,9 @@ describe('Root view background color', () => {
       const stylesJSON = await readXMLAsync({
         path: '/app/android/app/src/main/res/values/styles.xml',
       });
-      const colorsJSON = await readColorsXMLAsync(
-        '/app/android/app/src/main/res/values/colors.xml'
-      );
+      const colorsJSON = await readColorsXMLAsync({
+        path: '/app/android/app/src/main/res/values/colors.xml',
+      });
 
       expect(
         stylesJSON.resources.style

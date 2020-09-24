@@ -142,22 +142,6 @@ export async function writeAndroidManifestAsync(
   await fs.writeFile(manifestPath, manifestXml);
 }
 
-export async function getProjectAndroidManifestPathAsync(
-  projectDir: string
-): Promise<string | null> {
-  try {
-    const shellPath = path.join(projectDir, 'android');
-    if ((await fs.stat(shellPath)).isDirectory()) {
-      const manifestPath = path.join(shellPath, 'app/src/main/AndroidManifest.xml');
-      if ((await fs.stat(manifestPath)).isFile()) {
-        return manifestPath;
-      }
-    }
-  } catch (error) {}
-
-  return null;
-}
-
 export async function readAndroidManifestAsync(manifestPath: string): Promise<Document> {
   const xml = await XML.readXMLAsync({ path: manifestPath });
   if (!isManifest(xml)) {

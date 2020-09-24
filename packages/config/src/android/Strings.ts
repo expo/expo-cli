@@ -1,4 +1,5 @@
-import { getProjectResourcePathAsync, ResourceItemXML } from './Resources';
+import { getResourceXMLAsync } from './Paths';
+import { ResourceItemXML, ResourceKind } from './Resources';
 import { readXMLAsync } from './XML';
 
 const BASE_STRINGS_XML = `<resources></resources>`;
@@ -11,9 +12,9 @@ export type StringsResourceXML = {
 
 export async function getProjectStringsXMLPathAsync(
   projectDir: string,
-  { kind = 'values' }: { kind?: string } = {}
-): Promise<string | null> {
-  return getProjectResourcePathAsync(projectDir, { kind, name: 'strings' });
+  { kind = 'values' }: { kind?: ResourceKind } = {}
+): Promise<string> {
+  return getResourceXMLAsync(projectDir, { kind, name: 'strings' });
 }
 
 export async function readStringsXMLAsync(stringsPath: string): Promise<StringsResourceXML> {
