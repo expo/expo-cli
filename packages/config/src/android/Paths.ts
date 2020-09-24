@@ -2,6 +2,8 @@ import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
+import { ResourceKind } from './Resources';
+
 export async function getMainActivityAsync(
   projectRoot: string
 ): Promise<{ path: string; language: 'java' | 'kt' }> {
@@ -48,11 +50,6 @@ export async function getAndroidManifestAsync(projectRoot: string): Promise<stri
   return filePath;
   // }
 }
-
-/**
- * Name of the resource folder.
- */
-export type ResourceKind = 'values' | 'values-night' | 'values-v23';
 
 export async function getResourceXMLAsync(
   projectRoot: string,

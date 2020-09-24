@@ -13,21 +13,7 @@ export type ResourceItemXML = {
     name: string;
   };
 };
-
-export async function getProjectResourcePathAsync(
-  projectDir: string,
-  { kind = 'values', name }: { kind?: string; name: string }
-): Promise<string | null> {
-  try {
-    const shellPath = path.join(projectDir, 'android');
-    if ((await fs.stat(shellPath)).isDirectory()) {
-      const stylesPath = path.join(shellPath, `app/src/main/res/${kind}/${name}.xml`);
-      await fs.ensureFile(stylesPath);
-      return stylesPath;
-    }
-  } catch (error) {
-    throw new Error(`Could not create android/app/src/main/res/${kind}/${name}.xml`);
-  }
-
-  return null;
-}
+/**
+ * Name of the resource folder.
+ */
+export type ResourceKind = 'values' | 'values-night' | 'values-v23';
