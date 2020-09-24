@@ -1,8 +1,6 @@
-import { AndroidConfig, getConfig } from '@expo/config';
+import { AndroidConfig, getConfig, WarningAggregator } from '@expo/config';
 import { UserManager } from '@expo/xdl';
 import fs from 'fs-extra';
-import { sync as globSync } from 'glob';
-import path from 'path';
 
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
 
@@ -10,7 +8,7 @@ async function modifyBuildGradleAsync(
   projectRoot: string,
   callback: (buildGradle: string) => string
 ) {
-  const buildGradlePath = path.join(projectRoot, 'android', 'build.gradle');
+  const buildGradlePath = AndroidConfig.Paths.getAndroidBuildGradle(projectRoot);
   const buildGradleString = fs.readFileSync(buildGradlePath).toString();
   const result = callback(buildGradleString);
   fs.writeFileSync(buildGradlePath, result);
@@ -20,7 +18,7 @@ async function modifyAppBuildGradleAsync(
   projectRoot: string,
   callback: (buildGradle: string) => string
 ) {
-  const buildGradlePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
+  const buildGradlePath = AndroidConfig.Paths.getAppBuildGradle(projectRoot);
   const buildGradleString = fs.readFileSync(buildGradlePath).toString();
   const result = callback(buildGradleString);
   fs.writeFileSync(buildGradlePath, result);
@@ -30,12 +28,7 @@ async function modifyAndroidManifestAsync(
   projectRoot: string,
   callback: (androidManifest: AndroidConfig.Manifest.Document) => AndroidConfig.Manifest.Document
 ) {
-  const androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
-    projectRoot
-  );
-  if (!androidManifestPath) {
-    throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectRoot}"`);
-  }
+  const androidManifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(projectRoot);
   const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
     androidManifestPath
   );
@@ -43,16 +36,14 @@ async function modifyAndroidManifestAsync(
   await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
 }
 
-async function modifyMainActivityJavaAsync(
+async function modifyMainActivityAsync(
   projectRoot: string,
-  callback: (mainActivityJava: string) => string
+  callback: (props: { contents: string; language: 'java' | 'kt' }) => Promise<string>
 ) {
-  const mainActivityJavaPath = globSync(
-    path.join(projectRoot, 'android/app/src/main/java/**/MainActivity.java')
-  )[0];
-  const mainActivityString = fs.readFileSync(mainActivityJavaPath).toString();
-  const result = callback(mainActivityString);
-  fs.writeFileSync(mainActivityJavaPath, result);
+  const mainActivity = await AndroidConfig.Paths.getMainActivityAsync(projectRoot);
+  const contents = fs.readFileSync(mainActivity.path).toString();
+  const result = await callback({ contents, language: mainActivity.language });
+  fs.writeFileSync(mainActivity.path, result);
 }
 
 export default async function configureAndroidProjectAsync(projectRoot: string) {
@@ -107,12 +98,19 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     return androidManifest;
   });
 
-  await modifyMainActivityJavaAsync(projectRoot, mainActivity => {
-    mainActivity = AndroidConfig.UserInterfaceStyle.addOnConfigurationChangedMainActivity(
-      exp,
-      mainActivity
-    );
-    return mainActivity;
+  await modifyMainActivityAsync(projectRoot, async ({ contents, language }) => {
+    if (language === 'java') {
+      contents = AndroidConfig.UserInterfaceStyle.addOnConfigurationChangedMainActivity(
+        exp,
+        contents
+      );
+    } else {
+      WarningAggregator.addWarningAndroid(
+        'userInterfaceStyle',
+        `Cannot automatically configure MainActivity if it's not java`
+      );
+    }
+    return contents;
   });
 
   // If we renamed the package, we should also move it around and rename it in source files

@@ -27,7 +27,10 @@ export async function readXMLAsync(options: {
   path: string;
   fallback?: string;
 }): Promise<Document> {
-  const contents = await fs.readFile(options.path, { encoding: 'utf8', flag: 'r' });
+  let contents: string = '';
+  try {
+    contents = await fs.readFile(options.path, { encoding: 'utf8', flag: 'r' });
+  } catch {}
   const parser = new Parser();
   const manifest = parser.parseStringPromise(contents || options.fallback || '');
   return manifest;
@@ -86,40 +89,6 @@ export async function writeAndroidManifestAsync(
   const manifestXml = format(manifest);
   await fs.ensureDir(path.dirname(manifestPath));
   await fs.writeFile(manifestPath, manifestXml);
-}
-
-export async function getProjectXMLPathAsync(
-  projectDir: string,
-  { kind = 'values', name }: { kind?: string; name: string }
-): Promise<string | null> {
-  try {
-    const shellPath = path.join(projectDir, 'android');
-    if ((await fs.stat(shellPath)).isDirectory()) {
-      const stylesPath = path.join(shellPath, `app/src/main/res/${kind}/${name}.xml`);
-      await fs.ensureFile(stylesPath);
-      return stylesPath;
-    }
-  } catch (error) {
-    throw new Error(`Could not create android/app/src/main/res/${kind}/${name}.xml`);
-  }
-
-  return null;
-}
-
-export async function getProjectAndroidManifestPathAsync(
-  projectDir: string
-): Promise<string | null> {
-  try {
-    const shellPath = path.join(projectDir, 'android');
-    if ((await fs.stat(shellPath)).isDirectory()) {
-      const manifestPath = path.join(shellPath, 'app/src/main/AndroidManifest.xml');
-      if ((await fs.stat(manifestPath)).isFile()) {
-        return manifestPath;
-      }
-    }
-  } catch (error) {}
-
-  return null;
 }
 
 export async function readAndroidManifestAsync(manifestPath: string): Promise<Document> {

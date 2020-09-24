@@ -2,16 +2,17 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Builder } from 'xml2js';
 
-import { Document, getProjectXMLPathAsync, readXMLAsync } from './Manifest';
+import { Document, readXMLAsync } from './Manifest';
+import { getResourceXMLAsync, ResourceKind } from './Paths';
 import { XMLItem } from './Styles';
 
 const BASE_STRINGS_XML = `<resources></resources>`;
 
 export async function getProjectStringsXMLPathAsync(
   projectDir: string,
-  { kind = 'values' }: { kind?: string } = {}
-): Promise<string | null> {
-  return getProjectXMLPathAsync(projectDir, { kind, name: 'strings' });
+  { kind = 'values' }: { kind?: ResourceKind } = {}
+): Promise<string> {
+  return getResourceXMLAsync(projectDir, { kind, name: 'strings' });
 }
 
 export async function readStringsXMLAsync(stringsPath: string): Promise<Document> {

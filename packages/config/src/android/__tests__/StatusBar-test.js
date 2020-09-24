@@ -61,9 +61,9 @@ describe('Android status bar', () => {
       const stylesJSON = await readXMLAsync({
         path: await getProjectStylesXMLPathAsync('/app'),
       });
-      const colorsJSON = await readColorsXMLAsync(
-        '/app/android/app/src/main/res/values/colors.xml'
-      );
+      const colorsJSON = await readColorsXMLAsync({
+        path: '/app/android/app/src/main/res/values/colors.xml',
+      });
       expect(
         stylesJSON.resources.style
           .filter(e => e['$']['name'] === 'AppTheme')[0]

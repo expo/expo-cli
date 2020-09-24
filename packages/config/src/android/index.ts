@@ -12,6 +12,7 @@ import * as Name from './Name';
 import * as NavigationBar from './NavigationBar';
 import * as Orientation from './Orientation';
 import * as Package from './Package';
+import * as Paths from './Paths';
 import * as Permissions from './Permissions';
 import * as PrimaryColor from './PrimaryColor';
 import * as RootViewBackgroundColor from './RootViewBackgroundColor';
@@ -38,6 +39,7 @@ export {
   NavigationBar,
   Orientation,
   Package,
+  Paths,
   Permissions,
   PrimaryColor,
   RootViewBackgroundColor,

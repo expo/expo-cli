@@ -1,16 +1,17 @@
-import { Document, getProjectXMLPathAsync, readXMLAsync } from './Manifest';
+import { Document, readXMLAsync } from './Manifest';
+import { getResourceXMLAsync, ResourceKind } from './Paths';
 import { XMLItem } from './Styles';
 
 const BASE_STYLES_XML = `<?xml version="1.0" encoding="utf-8"?><resources></resources>`;
 
 export async function getProjectColorsXMLPathAsync(
   projectDir: string,
-  { kind = 'values' }: { kind?: string } = {}
-): Promise<string | null> {
-  return getProjectXMLPathAsync(projectDir, { kind, name: 'colors' });
+  { kind = 'values' }: { kind?: ResourceKind } = {}
+): Promise<string> {
+  return getResourceXMLAsync(projectDir, { kind, name: 'colors' });
 }
 
-export async function readColorsXMLAsync(path: string): Promise<Document> {
+export async function readColorsXMLAsync({ path }: { path: string }): Promise<Document> {
   return readXMLAsync({ path, fallback: BASE_STYLES_XML });
 }
 

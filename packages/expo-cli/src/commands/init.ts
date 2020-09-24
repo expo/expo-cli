@@ -514,12 +514,7 @@ async function configureUpdatesProjectFilesAsync(
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   // apply Android config
-  const androidManifestPath = await AndroidConfig.Manifest.getProjectAndroidManifestPathAsync(
-    projectRoot
-  );
-  if (!androidManifestPath) {
-    throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectRoot}"`);
-  }
+  const androidManifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(projectRoot);
   const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
     androidManifestPath
   );
