@@ -71,10 +71,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   await modifyAndroidManifestAsync(projectRoot, async androidManifest => {
     androidManifest = await AndroidConfig.Package.setPackageInAndroidManifest(exp, androidManifest);
     androidManifest = await AndroidConfig.AllowBackup.setAllowBackup(exp, androidManifest);
-    androidManifest = await AndroidConfig.SplashScreen.setSplashScreenManifest(
-      exp,
-      androidManifest
-    );
+    androidManifest = await AndroidConfig.SplashScreen.setSplashManifest(exp, androidManifest);
     androidManifest = await AndroidConfig.Scheme.setScheme(exp, androidManifest);
     androidManifest = await AndroidConfig.Orientation.setAndroidOrientation(exp, androidManifest);
     androidManifest = await AndroidConfig.Permissions.setAndroidPermissions(exp, androidManifest);
@@ -105,7 +102,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   });
 
   await modifyMainActivityAsync(projectRoot, async ({ contents, language }) => {
-    contents = await AndroidConfig.SplashScreen.configureMainActivity(exp, contents, language);
+    contents = await AndroidConfig.SplashScreen.setSplashMainActivity(exp, contents, language);
 
     if (language === 'java') {
       contents = AndroidConfig.UserInterfaceStyle.addOnConfigurationChangedMainActivity(
@@ -138,6 +135,6 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   await AndroidConfig.GoogleServices.setGoogleServicesFile(exp, projectRoot);
 
   // TODOs
-  await AndroidConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
   await AndroidConfig.Icon.setIconAsync(exp, projectRoot);
+  await AndroidConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
 }

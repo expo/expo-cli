@@ -1,17 +1,17 @@
 import { ExpoConfig, SplashScreenImageResizeMode } from '../../Config.types';
 import StateManager from '../utils/StateManager';
 import { insert, replace } from '../utils/string-utils';
-import { getSplashScreenConfig } from './SplashScreenConfig';
+import { getSplashConfig } from './SplashConfig';
 
 /**
  * Injects specific code to MainActivity that would trigger SplashScreen mounting process.
  */
-export async function configureMainActivity(
+export async function setSplashMainActivity(
   config: ExpoConfig,
   fileContent: string,
   language: 'java' | 'kt'
 ): Promise<string> {
-  const splashConfig = getSplashScreenConfig(config);
+  const splashConfig = getSplashConfig(config);
   if (!splashConfig) return fileContent;
 
   const resizeMode = splashConfig.imageResizeMode ?? SplashScreenImageResizeMode.CONTAIN;
@@ -25,7 +25,7 @@ export async function configureMainActivity(
       const [succeeded, newContent] = replace(content, {
         replacePattern: /^import expo\.modules\.splashscreen\.SplashScreen.*?\nimport expo\.modules\.splashscreen\.SplashScreenImageResizeMode.*?$/m,
         replaceContent: `import expo.modules.splashscreen.SplashScreen${LE}
-  import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}`,
+import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}`,
       });
       return [newContent, 'replacedSplashImports', succeeded];
     })
@@ -36,7 +36,7 @@ export async function configureMainActivity(
       const [succeeded, newContent] = insert(content, {
         insertPattern: isJava ? /(?=public class .* extends .* {.*$)/m : /(?=class .* : .* {.*$)/m,
         insertContent: `import expo.modules.splashscreen.SplashScreen${LE}
-  import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}
+import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}
   
   `,
       });

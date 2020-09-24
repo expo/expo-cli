@@ -13,7 +13,7 @@ const IMAGESET_PATH = 'Images.xcassets/AppIcon.appiconset';
 // Hard-coding seemed like the clearest and safest way to implement the sizes.
 export const ICON_CONTENTS: {
   idiom: ContentsJsonImageIdiom;
-  sizes: { size: number; scales: number[] }[];
+  sizes: { size: number; scales: (1 | 2 | 3)[] }[];
 }[] = [
   {
     idiom: 'iphone',
@@ -140,6 +140,7 @@ export async function setIconsAsync(config: ExpoConfig, projectRoot: string) {
         imagesJson.push({
           idiom: platform.idiom,
           size: `${size}x${size}`,
+          // @ts-ignore: template types not supported in TS yet
           scale: `${scale}x`,
           filename,
         });

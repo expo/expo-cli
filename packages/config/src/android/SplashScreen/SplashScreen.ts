@@ -1,22 +1,23 @@
 import { ExpoConfig } from '../../Config.types';
-import { setColorsAsync } from './SplashScreenColors';
-import { getSplashScreenConfig } from './SplashScreenConfig';
-import { configureDrawables, configureDrawableXMLAsync } from './SplashScreenDrawable';
-import { setStylesAsync } from './SplashScreenStyles';
+import { setSplashColorsAsync } from './SplashColors';
+import { getSplashConfig } from './SplashConfig';
+import { setSplashDrawableAsync } from './SplashDrawable';
+import { setSplashImageDrawablesAsync } from './SplashImages';
+import { setSplashStylesAsync } from './SplashStyles';
 
-export { configureMainActivity } from './SplashScreenMainActivity';
-export { setSplashScreenManifest } from './SplashScreenManifest';
+export { setSplashMainActivity } from './SplashMainActivity';
+export { setSplashManifest } from './SplashManifest';
 
 export async function setSplashScreenAsync(config: ExpoConfig, projectRoot: string) {
-  const splashConfig = getSplashScreenConfig(config);
+  const splashConfig = getSplashConfig(config);
 
   // try {
   if (splashConfig) {
     await Promise.all([
-      configureDrawables(splashConfig, projectRoot),
-      setColorsAsync(splashConfig, projectRoot),
-      configureDrawableXMLAsync(splashConfig, projectRoot),
-      setStylesAsync(splashConfig, projectRoot),
+      setSplashImageDrawablesAsync(splashConfig, projectRoot),
+      setSplashColorsAsync(splashConfig, projectRoot),
+      setSplashDrawableAsync(splashConfig, projectRoot),
+      setSplashStylesAsync(splashConfig, projectRoot),
     ]);
   }
   // } catch (e) {

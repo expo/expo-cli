@@ -2,7 +2,7 @@ import { AndroidSplashScreenConfig } from '@expo/configure-splash-screen';
 
 import { ExpoConfig, SplashScreenImageResizeMode } from '../../Config.types';
 
-export function getSplashScreenConfig(config: ExpoConfig): AndroidSplashScreenConfig | undefined {
+export function getSplashConfig(config: ExpoConfig): AndroidSplashScreenConfig | undefined {
   const image =
     config.android?.splash?.xxxhdpi ??
     config.android?.splash?.xxhdpi ??

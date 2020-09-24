@@ -2,47 +2,6 @@ import { AndroidSplashScreenConfig } from '@expo/configure-splash-screen';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { SplashScreenImageResizeMode } from '../../Config.types';
-import { getResourceXMLPathAsync } from '../Paths';
-import { writeXMLAsync } from '../XML';
-
-export async function configureDrawableXMLAsync(
-  { imageResizeMode: resizeMode }: Pick<AndroidSplashScreenConfig, 'imageResizeMode'>,
-  projectRoot: string
-) {
-  const filePath = (await getResourceXMLPathAsync(projectRoot, {
-    name: 'splashscreen',
-    kind: 'drawable',
-  }))!;
-
-  // Nuke and rewrite the splashscreen XML drawable
-  const xmlContent = {
-    'layer-list': {
-      $: {
-        'xmlns:android': 'http://schemas.android.com/apk/res/android',
-      },
-      item: [
-        {
-          $: {
-            'android:drawable': '@color/splashscreen_background',
-          },
-        },
-        resizeMode === SplashScreenImageResizeMode.NATIVE && {
-          bitmap: [
-            {
-              $: {
-                'android:gravity': 'center',
-                'android:src': '@drawable/splashscreen_image',
-              },
-            },
-          ],
-        },
-      ].filter(Boolean),
-    },
-  };
-  await writeXMLAsync({ path: filePath, xml: xmlContent });
-}
-
 const SPLASH_SCREEN_FILENAME = 'splashscreen_image.png';
 
 type DRAWABLE_SIZE = 'default' | 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
@@ -127,27 +86,13 @@ const DRAWABLES_CONFIGS: {
 };
 
 /**
- * @param srcPath Absolute path
- * @param dstPath Absolute path
- */
-async function copyDrawableFile(srcPath: string | undefined, dstPath: string) {
-  if (!srcPath) {
-    return;
-  }
-  if (!(await fs.pathExists(path.dirname(dstPath)))) {
-    await fs.mkdir(path.dirname(dstPath));
-  }
-  await fs.copyFile(srcPath, path.resolve(dstPath));
-}
-
-/**
  * Deletes all previous splash_screen_images and copies new one to desired drawable directory.
  * If path isn't provided then no new image is placed in drawable directories.
  * @see https://developer.android.com/training/multiscreen/screendensities
  *
  * @param androidMainPath Absolute path to the main directory containing code and resources in Android project. In general that would be `android/app/src/main`.
  */
-export async function configureDrawables(
+export async function setSplashImageDrawablesAsync(
   config: Pick<AndroidSplashScreenConfig, 'image' | 'darkMode'>,
   projectRoot: string
 ) {
@@ -175,4 +120,19 @@ export async function configureDrawables(
       path.resolve(androidMainPath, DRAWABLES_CONFIGS.default.modes.dark.path)
     ),
   ]);
+}
+
+/**
+ * @param srcPath Absolute path
+ * @param dstPath Absolute path
+ */
+async function copyDrawableFile(srcPath: string | undefined, dstPath: string) {
+  if (!srcPath) {
+    return;
+  }
+  // TODO: Generate optimal images, don't copy
+  if (!(await fs.pathExists(path.dirname(dstPath)))) {
+    await fs.mkdir(path.dirname(dstPath));
+  }
+  await fs.copyFile(srcPath, path.resolve(dstPath));
 }
