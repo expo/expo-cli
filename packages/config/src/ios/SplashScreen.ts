@@ -152,7 +152,7 @@ function setStatusBarInfoPlist(
   return config;
 }
 
-function setSplashInfoPlist(config: ExpoConfig, splash: IOSSplashConfig | null): ExpoConfig {
+export function setSplashInfoPlist(config: ExpoConfig, splash: IOSSplashConfig | null): ExpoConfig {
   if (!config.ios) {
     config.ios = {};
   }
@@ -192,16 +192,8 @@ function setSplashInfoPlist(config: ExpoConfig, splash: IOSSplashConfig | null):
 
   return config;
 }
-export async function setSplashScreenAsync(config: ExpoConfig, projectRoot: string) {
-  const splashConfig = getSplashConfig(config);
 
-  config = await setSplashInfoPlist(config, splashConfig);
-  // config = await setStatusBarInfoPlist(config, splashConfig);
-
-  if (!splashConfig) {
-    return;
-  }
-
+export function warnUnsupportedSplashProperties(config: ExpoConfig) {
   if (config.ios?.splash?.xib) {
     addWarningIOS(
       'splash',
@@ -220,6 +212,19 @@ export async function setSplashScreenAsync(config: ExpoConfig, projectRoot: stri
       'ios.splash.userInterfaceStyle is not supported in bare workflow. Please use ios.splash.darkImage (TODO) instead.'
     );
   }
+}
+
+export async function setSplashScreenAsync(config: ExpoConfig, projectRoot: string) {
+  const splashConfig = getSplashConfig(config);
+
+  config = await setSplashInfoPlist(config, splashConfig);
+  // config = await setStatusBarInfoPlist(config, splashConfig);
+
+  if (!splashConfig) {
+    return;
+  }
+
+  warnUnsupportedSplashProperties(config);
 
   const { projectName, projectPath } = Paths.getPaths(projectRoot);
   const project = getPbxproj(projectRoot);
@@ -340,15 +345,13 @@ async function createSplashScreenBackgroundImageAsync({
   });
 }
 
-export async function writeContentsJsonFileAsync({
-  assetPath,
+export function buildContentsJsonImages({
   image,
   darkImage,
 }: {
-  assetPath: string;
   image: string;
   darkImage: string | null;
-}) {
+}): ContentsJsonImage[] {
   const idiom: ContentsJsonImageIdiom = 'universal';
   const images: ContentsJsonImage[] = [
     {
@@ -396,6 +399,20 @@ export async function writeContentsJsonFileAsync({
       scale: '3x' as ContentsJsonImageScale,
     },
   ].filter(el => (el.appearances?.[0]?.value === 'dark' ? Boolean(darkImage) : true));
+
+  return images;
+}
+
+async function writeContentsJsonFileAsync({
+  assetPath,
+  image,
+  darkImage,
+}: {
+  assetPath: string;
+  image: string;
+  darkImage: string | null;
+}) {
+  const images = buildContentsJsonImages({ image, darkImage });
 
   await writeContentsJsonAsync(assetPath, { images });
 }
