@@ -1,4 +1,4 @@
-import { IOSConfig, WarningAggregator, getConfig } from '@expo/config';
+import { getConfig, IOSConfig, WarningAggregator } from '@expo/config';
 import { getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
 import { IosPlist, UserManager } from '@expo/xdl';
 import path from 'path';
@@ -15,6 +15,9 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
 
   IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
   IOSConfig.DeviceFamily.setDeviceFamily(exp, projectRoot);
+
+  // Must be invoked before the Info.plist stuff
+  await IOSConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
 
   // Configure the Info.plist
   await modifyInfoPlistAsync(projectRoot, infoPlist => {
@@ -70,7 +73,6 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
 
   // Other
   await IOSConfig.Icons.setIconsAsync(exp, projectRoot);
-  await IOSConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
   await IOSConfig.Locales.setLocalesAsync(exp, projectRoot);
 }
 
