@@ -65,7 +65,7 @@ export interface IOSSplashConfig {
   backgroundColor: string;
   resizeMode: NonNullable<ExpoConfigIosSplash['resizeMode']>;
   userInterfaceStyle: NonNullable<ExpoConfigIosSplash['userInterfaceStyle']>;
-  // TODO: DARK
+  // TODO: These are here just to test the functionality, the API should be more robust and account for tablet images.
   darkImage: string;
   darkBackgroundColor: string;
 }
