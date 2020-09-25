@@ -2,11 +2,11 @@ import dateFormat from 'dateformat';
 
 import {
   DetailOptions,
-  HistoryOptions,
-  Publication,
   getPublicationDetailAsync,
   getPublishHistoryAsync,
+  HistoryOptions,
   printPublicationDetailAsync,
+  Publication,
 } from './utils/PublishUtils';
 import * as table from './utils/cli-table';
 
@@ -23,11 +23,7 @@ export default (program: any) => {
       '-c, --release-channel <channel-name>',
       'Filter by release channel. If this flag is not included, the most recent publications will be shown.'
     )
-    .option(
-      '-count, --count <number-of-logs>',
-      'Number of logs to view, maximum 100, default 5.',
-      parseInt
-    )
+    .option('--count <number-of-logs>', 'Number of logs to view, maximum 100, default 5.', parseInt)
     .option(
       '-p, --platform <ios|android>',
       'Filter by platform, android or ios. Defaults to both platforms.'
