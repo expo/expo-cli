@@ -7,7 +7,7 @@
     "watch": "tsc --watch",
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
-    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "lint": "eslint .",
     "test": "jest"
   },
@@ -46,7 +46,8 @@
     "@expo/babel-preset-cli": "0.2.18",
     "@types/connect": "^3.4.33",
     "connect": "^3.7.0",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "rimraf": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"
