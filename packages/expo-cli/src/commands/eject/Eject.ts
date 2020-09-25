@@ -1,10 +1,10 @@
 import {
   WarningAggregator as ConfigWarningAggregator,
   ExpoConfig,
-  PackageJSONConfig,
-  WarningAggregator,
   getConfig,
+  PackageJSONConfig,
   projectHasModule,
+  WarningAggregator,
 } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import { Exp } from '@expo/xdl';
@@ -348,9 +348,7 @@ function writeMetroConfig({
       `- You will need to add the ${chalk.bold(
         'hashAssetFiles'
       )} plugin to your Metro configuration. ${log.chalk.dim(
-        learnMore(
-          'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md#metroconfigjs'
-        )
+        learnMore('https://docs.expo.io/bare/installing-updates/')
       )}`
     );
     log.newLine();
