@@ -1,10 +1,9 @@
-import { SplashScreenImageResizeMode } from '@expo/configure-splash-screen';
 import fs from 'fs-extra';
 import Jimp from 'jimp';
 import * as path from 'path';
 import { UUID, XcodeProject } from 'xcode';
 
-import { ExpoConfig, SplashScreenImageResizeModeType } from '../Config.types';
+import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
 import {
   ContentsJsonImage,
@@ -69,10 +68,6 @@ export interface IOSSplashConfig {
   // TODO: DARK
   darkImage: string;
   darkBackgroundColor: string;
-  // Resize mode cannot be supported for dark mode:
-  // darkResizeMode: NonNullable<ExpoConfigIosSplash['resizeMode']>;
-  // TODO: Status bar
-  // statusBar: StatusBarConfig | null;
 }
 
 // TODO: Maybe use an array on splash with theme value. Then remove the array in serialization for legacy and manifest.
@@ -238,13 +233,12 @@ export async function setSplashScreenAsync(config: ExpoConfig, projectRoot: stri
       image: splashConfig.image,
       darkImage: splashConfig.darkImage,
     });
-    await configureStoryboard({ projectPath, projectName, project }, splashConfig);
+    await setSplashStoryboardAsync({ projectPath, projectName, project }, splashConfig);
   } catch (e) {
     addWarningIOS('splash', e);
   }
 }
 
-// TODO: Use image-utils and resize the image
 async function copyImageFiles({
   projectPath,
   image,
@@ -286,7 +280,7 @@ async function configureImageAssets({
     return;
   }
 
-  await writeContentsJsonFile({
+  await writeContentsJsonFileAsync({
     assetPath: imageSetPath,
     image: PNG_FILENAME,
     darkImage: darkImage ? DARK_PNG_FILENAME : null,
@@ -339,14 +333,14 @@ async function createSplashScreenBackgroundImageAsync({
     color,
     darkColor: darkModeEnabled ? darkColor : null,
   });
-  await writeContentsJsonFile({
+  await writeContentsJsonFileAsync({
     assetPath: path.resolve(iosNamedProjectRoot, BACKGROUND_IMAGESET_PATH),
     image: PNG_FILENAME,
     darkImage: darkModeEnabled ? DARK_PNG_FILENAME : null,
   });
 }
 
-export async function writeContentsJsonFile({
+export async function writeContentsJsonFileAsync({
   assetPath,
   image,
   darkImage,
@@ -466,7 +460,7 @@ function updatePbxProject({
  * Creates [STORYBOARD] file containing ui description of Splash/Launch Screen.
  * > WARNING: modifies `pbxproj`
  */
-export default async function configureStoryboard(
+export async function setSplashStoryboardAsync(
   {
     projectPath,
     projectName,
