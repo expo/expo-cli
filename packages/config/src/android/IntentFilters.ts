@@ -1,15 +1,20 @@
+import { AndroidIntentFiltersData, ExpoConfig } from '@expo/config-types';
 import { Parser } from 'xml2js';
 
-import { ExpoConfig } from '../Config.types';
 import { Document, getMainActivity } from './Manifest';
 
+type AndroidConfig = NonNullable<ExpoConfig['android']>;
+type AndroidIntentFilters = NonNullable<AndroidConfig['intentFilters']>;
 // TODO: make it so intent filters aren't written again if you run the command again
 
-export function getIntentFilters(config: ExpoConfig) {
+export function getIntentFilters(config: ExpoConfig): AndroidIntentFilters {
   return config.android?.intentFilters ?? [];
 }
 
-export async function setAndroidIntentFilters(config: ExpoConfig, manifestDocument: Document) {
+export async function setAndroidIntentFilters(
+  config: ExpoConfig,
+  manifestDocument: Document
+): Promise<Document> {
   const intentFilters = getIntentFilters(config);
   if (!intentFilters.length) {
     return manifestDocument;
@@ -30,7 +35,7 @@ export async function setAndroidIntentFilters(config: ExpoConfig, manifestDocume
   return manifestDocument;
 }
 
-export default function renderIntentFilters(intentFilters: any) {
+export default function renderIntentFilters(intentFilters: AndroidIntentFilters): string[] {
   // returns an array of <intent-filter> tags:
   // [
   //   `<intent-filter>
@@ -44,7 +49,7 @@ export default function renderIntentFilters(intentFilters: any) {
   //   </intent-filter>`,
   //   ...
   // ]
-  return intentFilters.map((intentFilter: any) => {
+  return intentFilters.map(intentFilter => {
     const autoVerify = intentFilter.autoVerify ? ' android:autoVerify="true"' : '';
 
     return `<intent-filter${autoVerify}>
@@ -55,20 +60,25 @@ export default function renderIntentFilters(intentFilters: any) {
   });
 }
 
-function renderIntentFilterDatumEntries(datum: any) {
+function renderIntentFilterDatumEntries(datum: AndroidIntentFiltersData): string {
   return Object.keys(datum)
+    .filter(Boolean)
     .map(key => `android:${key}="${datum[key]}"`)
     .join(' ');
 }
 
-function renderIntentFilterData(data: any) {
+function renderIntentFilterData(
+  data?: AndroidIntentFiltersData | AndroidIntentFiltersData[]
+): string {
   return (Array.isArray(data) ? data : [data])
+    .filter(Boolean)
     .map(datum => `<data ${renderIntentFilterDatumEntries(datum)}/>`)
     .join('\n');
 }
 
-function renderIntentFilterCategory(category: any) {
+function renderIntentFilterCategory(category?: string | string[]): string {
   return (Array.isArray(category) ? category : [category])
+    .filter(Boolean)
     .map(cat => `<category android:name="android.intent.category.${cat}"/>`)
     .join('\n');
 }

@@ -609,7 +609,7 @@ export interface ExpoConfig {
       autoVerify?: boolean;
       action: string;
       data?: AndroidIntentFiltersData | AndroidIntentFiltersData[];
-      category?: string | any[];
+      category?: string | string[];
     }[];
     /**
      * Allows your user's app data to be automatically backed up to their Google Drive. If this is set to false, no backup or restore of the application will ever be performed (this is useful if your app deals with sensitive information). Defaults to the Android default, which is `true`.
