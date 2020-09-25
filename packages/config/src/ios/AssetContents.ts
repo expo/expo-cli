@@ -3,18 +3,18 @@ import { join } from 'path';
 
 export type ContentsJsonImageIdiom = 'iphone' | 'ipad' | 'ios-marketing' | 'universal';
 
-type ImageAppearance = {
+export type ContentsJsonImageAppearance = {
   appearance: 'luminosity';
   value: 'dark';
 };
 
-type ImageScale = '1x' | '2x' | '3x';
+export type ContentsJsonImageScale = '1x' | '2x' | '3x';
 
 export interface ContentsJsonImage {
-  appearances?: ImageAppearance[];
+  appearances?: ContentsJsonImageAppearance[];
   idiom: ContentsJsonImageIdiom;
   size?: string;
-  scale: ImageScale;
+  scale: ContentsJsonImageScale;
   filename?: string;
 }
 
