@@ -10,6 +10,64 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 24 Sep 2020 16:18:06 -0700](https://github.com/expo/expo-cli/commit/8443580c8093f28550c7ebbb8d1b66bacc83a201)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+- [config] Disable splash screen applying on eject until we fix issue with @expo/configure-splash-screen versioning. [#2700](https://github.com/expo/expo-cli/pull/2700).
+
+### 📦 Packages updated
+
+- @expo/config@3.3.6
+- @expo/dev-server@0.1.31
+- @expo/dev-tools@0.13.48
+- @expo/electron-adapter@0.0.22
+- expo-cli@3.27.10
+- expo-optimize@0.1.53
+- @expo/metro-config@0.1.31
+- @expo/next-adapter@2.1.36
+- expo-pwa@0.0.41
+- uri-scheme@1.0.37
+- @expo/webpack-config@0.12.35
+- @expo/xdl@58.0.9
+
+## [Thu, 24 Sep 2020 15:27:32 -0700](https://github.com/expo/expo-cli/commit/c76d808751c8f20203b0d3555ec3a210a37d0d1d)
+
+### 🎉 New features
+
+- [cli] Improved package name validation ([#2687](https://github.com/expo/expo-cli/issues/2687))
+- [cli] Recommend Transporter.app if expo upload:ios fails
+- [cli] Only show upload:ios command when build is for an iOS archive
+- [config] Created XML module ([#2694](https://github.com/expo/expo-cli/issues/2694))
+- [config][eject] Added ios.entitlements ([#2624](https://github.com/expo/expo-cli/issues/2624))
+- [config] Created Paths module ([#2695](https://github.com/expo/expo-cli/issues/2695))
+- [config] Resolve inline locales ([#2691](https://github.com/expo/expo-cli/issues/2691))
+- [config-types] Update for schema changes ([#2690](https://github.com/expo/expo-cli/issues/2690))
+- [xdl] use `process.env.METRO_NODE_OPTIONS` when starting Metro ([#2401](https://github.com/expo/expo-cli/issues/2401))
+
+### 🐛 Bug fixes
+
+- [xdl] add export modificator for Project.startExpoServerAsync function ([#2697](https://github.com/expo/expo-cli/issues/2697))
+
+### 📦 Packages updated
+
+- @expo/config@3.3.5
+- @expo/dev-server@0.1.30
+- @expo/dev-tools@0.13.47
+- @expo/electron-adapter@0.0.21
+- expo-cli@3.27.9
+- expo-optimize@0.1.52
+- @expo/metro-config@0.1.30
+- @expo/next-adapter@2.1.35
+- expo-pwa@0.0.40
+- uri-scheme@1.0.36
+- @expo/webpack-config@0.12.34
+- @expo/xdl@58.0.8
+
 ## [Tue, 22 Sep 2020 22:27:01 -0700](https://github.com/expo/expo-cli/commit/877053dc8395e1cd98d2296eccf336d4f7c08f05)
 
 ### 🛠 Breaking changes

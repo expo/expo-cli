@@ -3,7 +3,6 @@ import chalk from 'chalk';
 import pickBy from 'lodash/pickBy';
 import os from 'os';
 import semver from 'semver';
-import terminalLink from 'terminal-link';
 
 import CommandError, { ErrorCodes } from '../../../CommandError';
 import * as apple from '../../../appleApi';
@@ -11,18 +10,18 @@ import { displayProjectCredentials } from '../../../credentials/actions/list';
 import { Context } from '../../../credentials/context';
 import { runCredentialsManager } from '../../../credentials/route';
 import {
-  RemoveIosDist,
   getDistCertFromParams,
+  RemoveIosDist,
   useDistCertFromParams,
 } from '../../../credentials/views/IosDistCert';
 import {
-  RemoveProvisioningProfile,
   getProvisioningProfileFromParams,
+  RemoveProvisioningProfile,
   useProvisioningProfileFromParams,
 } from '../../../credentials/views/IosProvisioningProfile';
 import {
-  RemoveIosPush,
   getPushKeyFromParams,
+  RemoveIosPush,
   usePushKeyFromParams,
 } from '../../../credentials/views/IosPushCredentials';
 import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
@@ -31,6 +30,7 @@ import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
 import log from '../../../log';
 import { confirmAsync } from '../../../prompts';
 import { getOrPromptForBundleIdentifier } from '../../eject/ConfigValidation';
+import * as TerminalLink from '../../utils/TerminalLink';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
 import * as utils from '../utils';
@@ -66,6 +66,8 @@ class IOSBuilder extends BaseBuilder {
       await this.checkStatusBeforeBuild();
     }
     await this.build(publishedExpIds);
+
+    this.maybeExplainUploadStep();
     this.maybeWarnDamagedSimulator();
   }
 
@@ -154,7 +156,7 @@ class IOSBuilder extends BaseBuilder {
     } catch (e) {
       if (e.code === ErrorCodes.NON_INTERACTIVE) {
         log.newLine();
-        const link = terminalLink(
+        const link = TerminalLink.fallbackToTextAndUrl(
           'expo.fyi/credentials-non-interactive',
           'https://expo.fyi/credentials-non-interactive'
         );
@@ -343,6 +345,19 @@ class IOSBuilder extends BaseBuilder {
         // something weird happened, let's assume the icon is correct
       }
     }
+  }
+
+  maybeExplainUploadStep() {
+    if (process.platform !== 'darwin' || this.options.type === 'simulator') {
+      return;
+    }
+
+    log.newLine();
+    log(
+      `You can now publish to the App Store with ${TerminalLink.transporterAppLink()} or ${chalk.bold(
+        'expo upload:ios'
+      )}. ${TerminalLink.learnMore('https://docs.expo.io/distribution/uploading-apps/')}`
+    );
   }
 
   // warns for "damaged" builds when targeting simulator

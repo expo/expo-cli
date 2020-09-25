@@ -17,19 +17,14 @@ ${bold('3) Eject')}: Create an app and eject it immediately. Check that it build
 
     <repo-dir>/packages/expo-cli/bin/expo.js init testapp --template blank
     cd testapp
-    <repo-dir>/packages/expo-cli/bin/expo.js eject --eject-method expoKit
-    <repo-dir>/packages/expo-cli/bin/expo.js start
+    <repo-dir>/packages/expo-cli/bin/expo.js eject
 
     # In another terminal:
     # Test that it builds for iOS
-    cd ios
-    pod install
-    open testapp.xcworkspace
-    # then press "Run" in Xcode
+    yarn ios
 
     # Test that it builds for Android
-    cd ../android
-    ./gradlew installDevKernelDebug`
+    yarn android`
 );
 
 prompts({

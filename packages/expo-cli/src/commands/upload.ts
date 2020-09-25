@@ -7,6 +7,7 @@ import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader
 import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
 import { AndroidSubmitCommandOptions } from './upload/submission-service/android/types';
 import { SubmissionMode } from './upload/submission-service/types';
+import * as TerminalLink from './utils/TerminalLink';
 
 const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
 
@@ -123,7 +124,15 @@ export default function (program: Command) {
         const uploader = new IOSUploader(projectDir, options);
         await uploader.upload();
       } catch (err) {
-        log.error('Failed to upload the standalone app to the app store.');
+        log.error('Failed to upload the standalone app to the App Store.');
+        log.warn(
+          `We recommend using ${chalk.bold(
+            TerminalLink.transporterAppLink()
+          )} instead of the ${chalk.bold(
+            'expo upload:ios'
+          )} command if you have any trouble with it.`
+        );
+
         throw err;
       }
     });
