@@ -140,10 +140,6 @@ describe(_retryUsernamePasswordAuthWithOTPAsync, () => {
     const consoleFn = jest.fn();
     console.warn = consoleFn;
 
-    const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('process exit called');
-    });
-
     (prompt as any)
       .mockImplementationOnce(() => ({ otp: null }))
       .mockImplementation(() => {
@@ -162,12 +158,9 @@ describe(_retryUsernamePasswordAuthWithOTPAsync, () => {
         ],
         smsAutomaticallySent: false,
       })
-    ).rejects.toThrowError('process exit called');
-
-    expect(consoleFn.mock.calls[0][0]).toContain(
+    ).rejects.toThrowError(
       'No other second-factor devices set up. Ensure you have set up and certified a backup device.'
     );
-    expect(mockExit).toHaveBeenCalledWith(1);
   });
 
   it('prompts for authenticator OTP when user selects authenticator secondary', async () => {
@@ -268,10 +261,6 @@ describe(_retryUsernamePasswordAuthWithOTPAsync, () => {
         throw new Error("shouldn't happen");
       });
 
-    const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('process exit called');
-    });
-
     await expect(
       _retryUsernamePasswordAuthWithOTPAsync('blah', 'blah', {
         secondFactorDevices: [
@@ -290,8 +279,6 @@ describe(_retryUsernamePasswordAuthWithOTPAsync, () => {
         ],
         smsAutomaticallySent: false,
       })
-    ).rejects.toThrowError('process exit called');
-
-    expect(mockExit).toHaveBeenCalledWith(1);
+    ).rejects.toThrowError('Cancelled login');
   });
 });

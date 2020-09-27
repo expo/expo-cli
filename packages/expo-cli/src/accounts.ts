@@ -141,10 +141,10 @@ async function _promptForBackupOTPAsync(
   const nonPrimarySecondFactorDevices = secondFactorDevices.filter(device => !device.is_primary);
 
   if (nonPrimarySecondFactorDevices.length === 0) {
-    log.warn(
+    throw new CommandError(
+      'LOGIN_CANCELLED',
       'No other second-factor devices set up. Ensure you have set up and certified a backup device.'
     );
-    process.exit(1);
   }
 
   const hasAuthenticatorSecondFactorDevice = nonPrimarySecondFactorDevices.find(
@@ -253,8 +253,7 @@ export async function _retryUsernamePasswordAuthWithOTPAsync(
   }
 
   if (!otp) {
-    log.warn('Cancelled login');
-    process.exit(1);
+    throw new CommandError('LOGIN_CANCELLED', 'Cancelled login');
   }
 
   return await UserManager.loginAsync('user-pass', {
