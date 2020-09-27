@@ -2,6 +2,7 @@ import { getConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
 import Schemer from '@expo/schemer';
 import fs from 'fs';
+import { boolish } from 'getenv';
 import path from 'path';
 
 import ApiV2 from '../ApiV2';
@@ -22,6 +23,14 @@ export async function validatorFromProjectRoot(projectRoot: string): Promise<Sch
   const schema = await getSchemaAsync(exp.sdkVersion);
   const validator = new Schemer(schema);
   return validator;
+}
+
+export async function validateAsync(projectRoot: string) {
+  const { exp } = getConfig(projectRoot);
+  if (!exp.sdkVersion) throw new Error(`Couldn't read local manifest`);
+  const schema = await getSchemaAsync(exp.sdkVersion);
+  const validator = new Schemer(schema);
+  await validator.validateAll(exp);
 }
 
 export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
@@ -54,7 +63,7 @@ export async function getAssetSchemasAsync(sdkVersion: string): Promise<string[]
 }
 
 async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema }> {
-  if (process.env.LOCAL_XDL_SCHEMA) {
+  if (boolish('LOCAL_XDL_SCHEMA', false)) {
     if (process.env.EXPONENT_UNIVERSE_DIR) {
       return JSON.parse(
         fs

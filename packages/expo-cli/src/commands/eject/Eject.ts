@@ -6,7 +6,7 @@ import {
   projectHasModule,
   WarningAggregator,
 } from '@expo/config';
-import JsonFile from '@expo/json-file';
+import JsonFile, { JSONObject } from '@expo/json-file';
 import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
 import crypto from 'crypto';
@@ -266,7 +266,7 @@ async function ensureConfigAsync(
       await JsonFile.writeAsync(
         // TODO: Write to app.config.json because it's easier to convert to a js config file.
         path.join(projectRoot, 'app.json'),
-        { expo: config.exp as Partial<ExpoConfig> },
+        { expo: (config.exp as unknown) as JSONObject },
         { json5: false }
       );
     }
