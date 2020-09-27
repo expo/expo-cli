@@ -33,7 +33,7 @@ export async function createClientBuildRequest({
     addUdid,
     bundleIdentifier,
     email,
-    customAppConfig,
+    customAppConfig: customAppConfig as any,
     credentials: {
       ...(pushKey && pushKey.apnsKeyP8 ? { apnsKeyP8: pushKey.apnsKeyP8 } : null),
       ...(pushKey && pushKey.apnsKeyId ? { apnsKeyId: pushKey.apnsKeyId } : null),

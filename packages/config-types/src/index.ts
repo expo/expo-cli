@@ -179,10 +179,6 @@ export interface ExpoConfig {
     backgroundColor?: string;
   };
   /**
-   * Adds a notification to your standalone app with refresh button and debug info.
-   */
-  androidShowExponentNotificationInShellApp?: boolean;
-  /**
    * Settings that apply specifically to running this app in a development client
    */
   developmentClient?: {
@@ -612,68 +608,8 @@ export interface ExpoConfig {
        */
       autoVerify?: boolean;
       action: string;
-      data?:
-        | {
-            /**
-             * the scheme of the URL, e.g. `https`
-             */
-            scheme?: string;
-            /**
-             * the host, e.g. `myapp.io`
-             */
-            host?: string;
-            /**
-             * the port, e.g. `3000`
-             */
-            port?: string;
-            /**
-             * an exact path for URLs that should be matched by the filter, e.g. `/records`
-             */
-            path?: string;
-            /**
-             *  a regex for paths that should be matched by the filter, e.g. `.*`
-             */
-            pathPattern?: string;
-            /**
-             * a prefix for paths that should be matched by the filter, e.g. `/records/` will match `/records/123`
-             */
-            pathPrefix?: string;
-            /**
-             * a mime type for URLs that should be matched by the filter
-             */
-            mimeType?: string;
-          }[]
-        | {
-            /**
-             * the scheme of the URL, e.g. `https`
-             */
-            scheme?: string;
-            /**
-             * the host, e.g. `myapp.io`
-             */
-            host?: string;
-            /**
-             * the port, e.g. `3000`
-             */
-            port?: string;
-            /**
-             * an exact path for URLs that should be matched by the filter, e.g. `/records`
-             */
-            path?: string;
-            /**
-             *  a regex for paths that should be matched by the filter, e.g. `.*`
-             */
-            pathPattern?: string;
-            /**
-             * a prefix for paths that should be matched by the filter, e.g. `/records/` will match `/records/123`
-             */
-            pathPrefix?: string;
-            /**
-             * a mime type for URLs that should be matched by the filter
-             */
-            mimeType?: string;
-          }[];
-      category?: string | any[];
+      data?: AndroidIntentFiltersData | AndroidIntentFiltersData[];
+      category?: string | string[];
     }[];
     /**
      * Allows your user's app data to be automatically backed up to their Google Drive. If this is set to false, no backup or restore of the application will ever be performed (this is useful if your app deals with sensitive information). Defaults to the Android default, which is `true`.
@@ -879,4 +815,34 @@ export interface ExpoConfig {
      */
     turboModules?: boolean;
   };
+}
+export interface AndroidIntentFiltersData {
+  /**
+   * the scheme of the URL, e.g. `https`
+   */
+  scheme?: string;
+  /**
+   * the host, e.g. `myapp.io`
+   */
+  host?: string;
+  /**
+   * the port, e.g. `3000`
+   */
+  port?: string;
+  /**
+   * an exact path for URLs that should be matched by the filter, e.g. `/records`
+   */
+  path?: string;
+  /**
+   *  a regex for paths that should be matched by the filter, e.g. `.*`
+   */
+  pathPattern?: string;
+  /**
+   * a prefix for paths that should be matched by the filter, e.g. `/records/` will match `/records/123`
+   */
+  pathPrefix?: string;
+  /**
+   * a mime type for URLs that should be matched by the filter
+   */
+  mimeType?: string;
 }

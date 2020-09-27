@@ -1,4 +1,5 @@
 import { ExpoAppManifest, ExpoConfig, getConfig } from '@expo/config';
+import { JSONObject } from '@expo/json-file';
 import express from 'express';
 import http from 'http';
 import os from 'os';
@@ -295,7 +296,7 @@ export async function getSignedManifestStringAsync(
       remoteUsername: manifest.owner ?? (await UserManager.getCurrentUsernameAsync()),
       remotePackageName: manifest.slug,
     },
-    manifest,
+    manifest: manifest as JSONObject,
   });
   _cachedSignedManifest.manifestString = manifestString;
   _cachedSignedManifest.signedManifest = response;
