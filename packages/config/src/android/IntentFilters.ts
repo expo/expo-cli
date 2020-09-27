@@ -60,11 +60,12 @@ export default function renderIntentFilters(intentFilters: AndroidIntentFilters)
   });
 }
 
-function renderIntentFilterDatumEntries(datum: AndroidIntentFiltersData): string {
-  return Object.keys(datum)
-    .filter(Boolean)
-    .map(key => `android:${key}="${datum[key]}"`)
-    .join(' ');
+function renderIntentFilterDatumEntries(datum: AndroidIntentFiltersData = {}): string {
+  const entries: string[] = [];
+  for (const [key, value] of Object.entries(datum)) {
+    entries.push(`android:${key}="${value}"`);
+  }
+  return entries.join(' ');
 }
 
 function renderIntentFilterData(
