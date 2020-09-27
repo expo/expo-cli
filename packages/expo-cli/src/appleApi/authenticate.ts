@@ -1,8 +1,8 @@
 import { UserSettings } from '@expo/xdl';
 import chalk from 'chalk';
-import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
+import { learnMore } from '../commands/utils/TerminalLink';
 import log from '../log';
 import prompt from '../prompt';
 import { nonEmptyInput } from '../validators';
@@ -117,7 +117,6 @@ async function _promptForAppleId({
     );
 
     // https://docs.expo.io/distribution/security/#apple-developer-account-credentials
-    const here = terminalLink('here', 'https://bit.ly/2VtGWhU');
     log(
       wrap(
         chalk.bold(
@@ -125,7 +124,7 @@ async function _promptForAppleId({
         )
       )
     );
-    log(wrap(chalk.grey(`Learn more ${here}`)));
+    log(wrap(chalk.dim(learnMore('https://bit.ly/2VtGWhU'))));
   }
 
   // Get the email address that was last used and set it as
