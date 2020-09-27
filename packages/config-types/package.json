@@ -2,7 +2,8 @@
   "name": "@expo/config-types",
   "version": "40.0.0-beta.1",
   "description": "Types for the Expo config object app.config.ts",
-  "main": "build/index.js",
+  "types": "build/ExpoConfig.d.ts",
+  "main": "build/ExpoConfig.js",
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
