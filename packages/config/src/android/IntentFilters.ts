@@ -1,10 +1,9 @@
-import { AndroidIntentFiltersData, ExpoConfig } from '@expo/config-types';
+import { Android, AndroidIntentFiltersData, ExpoConfig } from '@expo/config-types';
 import { Parser } from 'xml2js';
 
 import { Document, getMainActivity } from './Manifest';
 
-type AndroidConfig = NonNullable<ExpoConfig['android']>;
-type AndroidIntentFilters = NonNullable<AndroidConfig['intentFilters']>;
+type AndroidIntentFilters = NonNullable<Android['intentFilters']>;
 // TODO: make it so intent filters aren't written again if you run the command again
 
 export function getIntentFilters(config: ExpoConfig): AndroidIntentFilters {
