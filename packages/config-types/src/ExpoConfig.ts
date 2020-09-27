@@ -233,503 +233,6 @@ export interface ExpoConfig {
         };
   };
   /**
-   * Configuration that is specific to the iOS platform.
-   */
-  ios?: {
-    /**
-     * The manifest for the iOS version of your app will be written to this path during publish.
-     */
-    publishManifestPath?: string;
-    /**
-     * The bundle for the iOS version of your app will be written to this path during publish.
-     */
-    publishBundlePath?: string;
-    /**
-     * The bundle identifier for your iOS standalone app. You make it up, but it needs to be unique on the App Store. See [this StackOverflow question](http://stackoverflow.com/questions/11347470/what-does-bundle-identifier-mean-in-the-ios-project).
-     */
-    bundleIdentifier?: string;
-    /**
-     * Build number for your iOS standalone app. Corresponds to `CFBundleVersion` and must match Apple's [specified format](https://developer.apple.com/library/content/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html#//apple_ref/doc/uid/20001431-102364). (Note: Transporter will pull the value for `Version Number` from `expo.version` and NOT from `expo.ios.buildNumber`.)
-     */
-    buildNumber?: string;
-    /**
-     * The background color for your iOS app, behind any of your React views. Overrides the top-level `backgroundColor` key if it is present.
-     */
-    backgroundColor?: string;
-    /**
-     * Local path or remote URL to an image to use for your app's icon on iOS. If specified, this overrides the top-level `icon` key. Use a 1024x1024 icon which follows Apple's interface guidelines for icons, including color profile and transparency.
-     *
-     *  Expo will generate the other required sizes. This icon will appear on the home screen and within the Expo app.
-     */
-    icon?: string;
-    /**
-     * Merchant ID for use with Apple Pay in your standalone app.
-     */
-    merchantId?: string;
-    /**
-     * URL to your app on the Apple App Store, if you have deployed it there. This is used to link to your store page from your Expo project page if your app is public.
-     */
-    appStoreUrl?: string;
-    /**
-     * Note: This property key is not included in the production manifest and will evaluate to `undefined`. It is used internally only in the build process, because it contains API keys that some may want to keep private.
-     */
-    config?: {
-      /**
-       * [Branch](https://branch.io/) key to hook up Branch linking services.
-       */
-      branch?: {
-        /**
-         * Your Branch API key
-         */
-        apiKey?: string;
-      };
-      /**
-       * Sets `ITSAppUsesNonExemptEncryption` in the standalone ipa's Info.plist to the given boolean value.
-       */
-      usesNonExemptEncryption?: boolean;
-      /**
-       * [Google Maps iOS SDK](https://developers.google.com/maps/documentation/ios-sdk/start) key for your standalone app.
-       */
-      googleMapsApiKey?: string;
-      /**
-       * [Google Mobile Ads App ID](https://support.google.com/admob/answer/6232340) Google AdMob App ID.
-       */
-      googleMobileAdsAppId?: string;
-      /**
-       * A boolean indicating whether to initialize Google App Measurement and begin sending user-level event data to Google immediately when the app starts. The default in Expo (Client and in standalone apps) is `false`. [Sets the opposite of the given value to the following key in `Info.plist`.](https://developers.google.com/admob/ios/eu-consent#delay_app_measurement_optional)
-       */
-      googleMobileAdsAutoInit?: boolean;
-      /**
-       * [Google Sign-In iOS SDK](https://developers.google.com/identity/sign-in/ios/start-integrating) keys for your standalone app.
-       */
-      googleSignIn?: {
-        /**
-         * The reserved client ID URL scheme. Can be found in `GoogleService-Info.plist`.
-         */
-        reservedClientId?: string;
-      };
-    };
-    /**
-     * @deprecated Use `updates.enabled` instead.
-     */
-    isRemoteJSEnabled?: boolean;
-    /**
-     * [Firebase Configuration File](https://support.google.com/firebase/answer/7015592) Location of the `GoogleService-Info.plist` file for configuring Firebase.
-     */
-    googleServicesFile?: string;
-    /**
-     * @deprecated Use `updates` key with `fallbackToCacheTimeout: 0` instead.
-     */
-    loadJSInBackgroundExperimental?: boolean;
-    /**
-     * Whether your standalone iOS app supports tablet screen sizes. Defaults to `false`.
-     */
-    supportsTablet?: boolean;
-    /**
-     * If true, indicates that your standalone iOS app does not support handsets, and only supports tablets.
-     */
-    isTabletOnly?: boolean;
-    /**
-     * If true, indicates that your standalone iOS app does not support Slide Over and Split View on iPad. Defaults to `true` currently, but will change to `false` in a future SDK version.
-     */
-    requireFullScreen?: boolean;
-    /**
-     * Configuration to force the app to always use the light or dark user-interface appearance, such as "dark mode", or make it automatically adapt to the system preferences. If not provided, defaults to `light`.
-     */
-    userInterfaceStyle?: 'light' | 'dark' | 'automatic';
-    /**
-     * Dictionary of arbitrary configuration to add to your standalone app's native Info.plist. Applied prior to all other Expo-specific configuration. No other validation is performed, so use this at your own risk of rejection from the App Store.
-     */
-    infoPlist?: {
-      [k: string]: any;
-    };
-    /**
-     * Dictionary of arbitrary configuration to add to your standalone app's native *.entitlements (plist). Applied prior to all other Expo-specific configuration. No other validation is performed, so use this at your own risk of rejection from the App Store.
-     */
-    entitlements?: {
-      [k: string]: any;
-    };
-    /**
-     * An array that contains Associated Domains for the standalone app. See [Apple's docs for config](https://developer.apple.com/documentation/uikit/core_app/allowing_apps_and_websites_to_link_to_your_content/enabling_universal_links).
-     */
-    associatedDomains?: string[];
-    /**
-     * A boolean indicating if the app uses iCloud Storage for `DocumentPicker`. See `DocumentPicker` docs for details.
-     */
-    usesIcloudStorage?: boolean;
-    /**
-     * A boolean indicating if the app uses Apple Sign-In. See `AppleAuthentication` docs for details.
-     */
-    usesAppleSignIn?: boolean;
-    /**
-     * A Boolean value that indicates whether the app may access the notes stored in contacts. You must [receive permission from Apple](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_contacts_notes) before you can submit your app for review with this capability.
-     */
-    accessesContactNotes?: boolean;
-    /**
-     * Configuration for loading and splash screen for standalone iOS apps.
-     */
-    splash?: {
-      /**
-       * Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo client.
-       */
-      xib?: string;
-      /**
-       * Color to fill the loading screen background
-       */
-      backgroundColor?: string;
-      /**
-       * Determines how the `image` will be displayed in the splash loading screen. Must be one of `cover` or `contain`, defaults to `contain`.
-       */
-      resizeMode?: 'cover' | 'contain';
-      /**
-       * Local path or remote URL to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
-       */
-      image?: string;
-      /**
-       * Local path or remote URL to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
-       */
-      tabletImage?: string;
-      /**
-       * Supported user interface styles. If left blank, `light` will be used. Use `automatic` if you would like to support either `light` or `dark` depending on iOS settings.
-       */
-      userInterfaceStyle?: 'light' | 'dark' | 'automatic';
-      [k: string]: any;
-    };
-  };
-  /**
-   * Configuration that is specific to the Android platform.
-   */
-  android?: {
-    /**
-     * If set to true, APK will contain only unimodules that are explicitly added in package.json and their dependecies
-     */
-    enableDangerousExperimentalLeanBuilds?: boolean;
-    /**
-     * The manifest for the Android version of your app will be written to this path during publish.
-     */
-    publishManifestPath?: string;
-    /**
-     * The bundle for the Android version of your app will be written to this path during publish.
-     */
-    publishBundlePath?: string;
-    /**
-     * The package name for your Android standalone app. You make it up, but it needs to be unique on the Play Store. See [this StackOverflow question](http://stackoverflow.com/questions/6273892/android-package-name-convention).
-     */
-    package?: string;
-    /**
-     * Version number required by Google Play. Increment by one for each release. Must be an integer. [Learn more](https://developer.android.com/studio/publish/versioning.html)
-     */
-    versionCode?: number;
-    /**
-     * The background color for your Android app, behind any of your React views. Overrides the top-level `backgroundColor` key if it is present.
-     */
-    backgroundColor?: string;
-    /**
-     * Configuration to force the app to always use the light or dark user-interface appearance, such as "dark mode", or make it automatically adapt to the system preferences. If not provided, defaults to `light`.
-     */
-    userInterfaceStyle?: 'light' | 'dark' | 'automatic';
-    /**
-     * A Boolean value that indicates whether the app should use the new notifications API.
-     */
-    useNextNotificationsApi?: boolean;
-    /**
-     * Local path or remote URL to an image to use for your app's icon on Android. If specified, this overrides the top-level `icon` key. We recommend that you use a 1024x1024 png file (transparency is recommended for the Google Play Store). This icon will appear on the home screen and within the Expo app.
-     */
-    icon?: string;
-    /**
-     * Settings for an Adaptive Launcher Icon on Android. [Learn more](https://developer.android.com/guide/practices/ui_guidelines/icon_design_adaptive)
-     */
-    adaptiveIcon?: {
-      /**
-       * Local path or remote URL to an image to use for your app's icon on Android. If specified, this overrides the top-level `icon` and the `android.icon` keys. Should follow the [specified guidelines](https://developer.android.com/guide/practices/ui_guidelines/icon_design_adaptive). This icon will appear on the home screen.
-       */
-      foregroundImage?: string;
-      /**
-       * Local path or remote URL to a background image for your app's Adaptive Icon on Android. If specified, this overrides the `backgroundColor` key. Must have the same dimensions as  foregroundImage`, and has no effect if `foregroundImage` is not specified. Should follow the [specified guidelines](https://developer.android.com/guide/practices/ui_guidelines/icon_design_adaptive).
-       */
-      backgroundImage?: string;
-      /**
-       * Color to use as the background for your app's Adaptive Icon on Android. Defaults to white, `#FFFFFF`. Has no effect if `foregroundImage` is not specified.
-       */
-      backgroundColor?: string;
-    };
-    /**
-     * URL to your app on the Google Play Store, if you have deployed it there. This is used to link to your store page from your Expo project page if your app is public.
-     */
-    playStoreUrl?: string;
-    /**
-     * List of permissions used by the standalone app.
-     *
-     *  To use ONLY the following minimum necessary permissions and none of the extras supported by Expo in a default managed app, set `permissions` to `[]`. The minimum necessary permissions do not require a Privacy Policy when uploading to Google Play Store and are:
-     * • receive data from Internet
-     * • view network connections
-     * • full network access
-     * • change your audio settings
-     * • prevent device from sleeping
-     *
-     *  To use ALL permissions supported by Expo by default, do not specify the `permissions` key.
-     *
-     *   To use the minimum necessary permissions ALONG with certain additional permissions, specify those extras in `permissions`, e.g.
-     *
-     *  `[ "CAMERA", "ACCESS_FINE_LOCATION" ]`.
-     *
-     *   You can specify the following permissions depending on what you need:
-     *
-     * - `ACCESS_COARSE_LOCATION`
-     * - `ACCESS_FINE_LOCATION`
-     * - `ACCESS_BACKGROUND_LOCATION`
-     * - `CAMERA`
-     * - `RECORD_AUDIO`
-     * - `READ_CONTACTS`
-     * - `WRITE_CONTACTS`
-     * - `READ_CALENDAR`
-     * - `WRITE_CALENDAR`
-     * - `READ_EXTERNAL_STORAGE`
-     * - `WRITE_EXTERNAL_STORAGE`
-     * - `USE_FINGERPRINT`
-     * - `USE_BIOMETRIC`
-     * - `WRITE_SETTINGS`
-     * - `VIBRATE`
-     * - `READ_PHONE_STATE`
-     * - `com.anddoes.launcher.permission.UPDATE_COUNT`
-     * - `com.android.launcher.permission.INSTALL_SHORTCUT`
-     * - `com.google.android.c2dm.permission.RECEIVE`
-     * - `com.google.android.gms.permission.ACTIVITY_RECOGNITION`
-     * - `com.google.android.providers.gsf.permission.READ_GSERVICES`
-     * - `com.htc.launcher.permission.READ_SETTINGS`
-     * - `com.htc.launcher.permission.UPDATE_SHORTCUT`
-     * - `com.majeur.launcher.permission.UPDATE_BADGE`
-     * - `com.sec.android.provider.badge.permission.READ`
-     * - `com.sec.android.provider.badge.permission.WRITE`
-     * - `com.sonyericsson.home.permission.BROADCAST_BADGE`
-     *
-     */
-    permissions?: string[];
-    /**
-     * [Firebase Configuration File](https://support.google.com/firebase/answer/7015592) Location of the `GoogleService-Info.plist` file for configuring Firebase. Including this key automatically enables FCM in your standalone app.
-     */
-    googleServicesFile?: string;
-    /**
-     * Note: This property key is not included in the production manifest and will evaluate to `undefined`. It is used internally only in the build process, because it contains API keys that some may want to keep private.
-     */
-    config?: {
-      /**
-       * [Branch](https://branch.io/) key to hook up Branch linking services.
-       */
-      branch?: {
-        /**
-         * Your Branch API key
-         */
-        apiKey?: string;
-      };
-      /**
-       * [Google Maps Android SDK](https://developers.google.com/maps/documentation/android-api/signup) configuration for your standalone app.
-       */
-      googleMaps?: {
-        /**
-         * Your Google Maps Android SDK API key
-         */
-        apiKey?: string;
-      };
-      /**
-       * [Google Mobile Ads App ID](https://support.google.com/admob/answer/6232340) Google AdMob App ID.
-       */
-      googleMobileAdsAppId?: string;
-      /**
-       * A boolean indicating whether to initialize Google App Measurement and begin sending user-level event data to Google immediately when the app starts. The default in Expo (Client and in standalone apps) is `false`. [Sets the opposite of the given value to the following key in `Info.plist`](https://developers.google.com/admob/ios/eu-consent#delay_app_measurement_optional)
-       */
-      googleMobileAdsAutoInit?: boolean;
-      /**
-       * @deprecated Use `googleServicesFile` instead. [Google Sign-In Android SDK](https://developers.google.com/identity/sign-in/android/start-integrating) keys for your standalone app.
-       */
-      googleSignIn?: {
-        /**
-         * The Android API key. Can be found in the credentials section of the developer console or in `google-services.json`.
-         */
-        apiKey?: string;
-        /**
-         * The SHA-1 hash of the signing certificate used to build the APK without any separator (`:`). Can be found in `google-services.json`. https://developers.google.com/android/guides/client-auth
-         */
-        certificateHash?: string;
-      };
-    };
-    /**
-     * Configuration for loading and splash screen for standalone Android apps.
-     */
-    splash?: {
-      /**
-       * Color to fill the loading screen background
-       */
-      backgroundColor?: string;
-      /**
-       * Determines how the `image` will be displayed in the splash loading screen. Must be one of `cover`, `contain` or `native`, defaults to `contain`.
-       */
-      resizeMode?: 'cover' | 'contain' | 'native';
-      /**
-       * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
-       *
-       *  `Natural sized image (baseline)`
-       */
-      mdpi?: string;
-      /**
-       * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
-       *
-       *  `Scale 1.5x`
-       */
-      hdpi?: string;
-      /**
-       * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
-       *
-       *  `Scale 2x`
-       */
-      xhdpi?: string;
-      /**
-       * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
-       *
-       *  `Scale 3x`
-       */
-      xxhdpi?: string;
-      /**
-       * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
-       *
-       *  `Scale 4x`
-       */
-      xxxhdpi?: string;
-      [k: string]: any;
-    };
-    /**
-     * Configuration for setting an array of custom intent filters in Android manifest. [Learn more](https://developer.android.com/guide/components/intents-filters)
-     */
-    intentFilters?: {
-      /**
-       * You may also use an intent filter to set your app as the default handler for links (without showing the user a dialog with options). To do so use `true` and then configure your server to serve a JSON file verifying that you own the domain. [Learn more](developer.android.com/training/app-links)
-       */
-      autoVerify?: boolean;
-      action: string;
-      data?: AndroidIntentFiltersData | AndroidIntentFiltersData[];
-      category?: string | string[];
-    }[];
-    /**
-     * Allows your user's app data to be automatically backed up to their Google Drive. If this is set to false, no backup or restore of the application will ever be performed (this is useful if your app deals with sensitive information). Defaults to the Android default, which is `true`.
-     */
-    allowBackup?: boolean;
-    /**
-     * Determines how the software keyboard will impact the layout of your application. This maps to the `android:windowSoftInputMode` property. Defaults to `resize`. Valid values: `resize`, `pan`.
-     */
-    softwareKeyboardLayoutMode?: 'resize' | 'pan';
-  };
-  /**
-   * Configuration that is specific to the web platform.
-   */
-  web?: {
-    /**
-     * Relative path of an image to use for your app's favicon.
-     */
-    favicon?: string;
-    /**
-     * Defines the title of the document, defaults to the outer level name
-     */
-    name?: string;
-    /**
-     * A short version of the app's name, 12 characters or fewer. Used in app launcher and new tab pages. Maps to `short_name` in the PWA manifest.json. Defaults to the `name` property.
-     */
-    shortName?: string;
-    /**
-     * Specifies the primary language for the values in the name and short_name members. This value is a string containing a single language tag.
-     */
-    lang?: string;
-    /**
-     * Defines the navigation scope of this website's context. This restricts what web pages can be viewed while the manifest is applied. If the user navigates outside the scope, it returns to a normal web page inside a browser tab/window. If the scope is a relative URL, the base URL will be the URL of the manifest.
-     */
-    scope?: string;
-    /**
-     * Defines the color of the Android tool bar, and may be reflected in the app's preview in task switchers.
-     */
-    themeColor?: string;
-    /**
-     * Provides a general description of what the pinned website does.
-     */
-    description?: string;
-    /**
-     * Specifies the primary text direction for the name, short_name, and description members. Together with the lang member, it helps the correct display of right-to-left languages.
-     */
-    dir?: 'auto' | 'ltr' | 'rtl';
-    /**
-     * Defines the developers’ preferred display mode for the website.
-     */
-    display?: 'fullscreen' | 'standalone' | 'minimal-ui' | 'browser';
-    /**
-     * The URL that loads when a user launches the application (e.g., when added to home screen), typically the index. Note: This has to be a relative URL, relative to the manifest URL.
-     */
-    startUrl?: string;
-    /**
-     * Defines the default orientation for all the website's top level browsing contexts.
-     */
-    orientation?:
-      | 'any'
-      | 'natural'
-      | 'landscape'
-      | 'landscape-primary'
-      | 'landscape-secondary'
-      | 'portrait'
-      | 'portrait-primary'
-      | 'portrait-secondary';
-    /**
-     * Defines the expected “background color” for the website. This value repeats what is already available in the site’s CSS, but can be used by browsers to draw the background color of a shortcut when the manifest is available before the stylesheet has loaded. This creates a smooth transition between launching the web application and loading the site's content.
-     */
-    backgroundColor?: string;
-    /**
-     * If content is set to default, the status bar appears normal. If set to black, the status bar has a black background. If set to black-translucent, the status bar is black and translucent. If set to default or black, the web content is displayed below the status bar. If set to black-translucent, the web content is displayed on the entire screen, partially obscured by the status bar.
-     */
-    barStyle?: 'default' | 'black' | 'black-translucent';
-    /**
-     * Hints for the user agent to indicate to the user that the specified native applications (defined in expo.ios and expo.android) are recommended over the website.
-     */
-    preferRelatedApplications?: boolean;
-    /**
-     * Experimental features. These will break without deprecation notice.
-     */
-    dangerous?: {
-      [k: string]: any;
-    };
-    /**
-     * Configuration for PWA splash screens.
-     */
-    splash?: {
-      /**
-       * Color to fill the loading screen background
-       */
-      backgroundColor?: string;
-      /**
-       * Determines how the `image` will be displayed in the splash loading screen. Must be one of `cover` or `contain`, defaults to `contain`.
-       */
-      resizeMode?: 'cover' | 'contain';
-      /**
-       * Local path or remote URL to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
-       */
-      image?: string;
-      [k: string]: any;
-    };
-    /**
-     * Firebase web configuration. Used by the expo-firebase packages on both web and native. [Learn more](https://firebase.google.com/docs/reference/js/firebase.html#initializeapp)
-     */
-    config?: {
-      firebase?: {
-        apiKey?: string;
-        authDomain?: string;
-        databaseURL?: string;
-        projectId?: string;
-        storageBucket?: string;
-        messagingSenderId?: string;
-        appId?: string;
-        measurementId?: string;
-        [k: string]: any;
-      };
-      [k: string]: any;
-    };
-    [k: string]: any;
-  };
-  /**
    * Used for all Facebook libraries. Set up your Facebook App ID at https://developers.facebook.com.
    */
   facebookAppId?: string;
@@ -764,9 +267,189 @@ export interface ExpoConfig {
     [k: string]: any;
   };
   /**
-   * Configuration for loading and splash screen for standalone apps.
+   * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/versions/latest/guides/offline-support.html)
+   */
+  assetBundlePatterns?: string[];
+  splash?: Splash;
+  ios?: IOS;
+  android?: Android;
+  web?: Web;
+  /**
+   * Configuration for scripts to run to hook into the publish process
+   */
+  hooks?: {
+    postPublish?: PublishHook[];
+    postExport?: PublishHook[];
+  };
+  /**
+   * Enable experimental features that may be unstable, unsupported, or removed without deprecation notices.
+   */
+  experiments?: {
+    /**
+     * Enables Turbo Modules, which are a type of native modules that use a different way of communicating between JS and platform code. When installing a Turbo Module you will need to enable this experimental option (the library still needs to be a part of Expo SDK already, like react-native-reanimated v2). Turbo Modules do not support remote debugging and enabling this option will disable remote debugging.
+     */
+    turboModules?: boolean;
+  };
+}
+/**
+ * Configuration for loading and splash screen for standalone apps.
+ */
+export interface Splash {
+  /**
+   * Color to fill the loading screen background
+   */
+  backgroundColor?: string;
+  /**
+   * Determines how the `image` will be displayed in the splash loading screen. Must be one of `cover` or `contain`, defaults to `contain`.
+   */
+  resizeMode?: 'cover' | 'contain';
+  /**
+   * Local path or remote URL to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
+   */
+  image?: string;
+  [k: string]: any;
+}
+/**
+ * Configuration that is specific to the iOS platform.
+ */
+export interface IOS {
+  /**
+   * The manifest for the iOS version of your app will be written to this path during publish.
+   */
+  publishManifestPath?: string;
+  /**
+   * The bundle for the iOS version of your app will be written to this path during publish.
+   */
+  publishBundlePath?: string;
+  /**
+   * The bundle identifier for your iOS standalone app. You make it up, but it needs to be unique on the App Store. See [this StackOverflow question](http://stackoverflow.com/questions/11347470/what-does-bundle-identifier-mean-in-the-ios-project).
+   */
+  bundleIdentifier?: string;
+  /**
+   * Build number for your iOS standalone app. Corresponds to `CFBundleVersion` and must match Apple's [specified format](https://developer.apple.com/library/content/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html#//apple_ref/doc/uid/20001431-102364). (Note: Transporter will pull the value for `Version Number` from `expo.version` and NOT from `expo.ios.buildNumber`.)
+   */
+  buildNumber?: string;
+  /**
+   * The background color for your iOS app, behind any of your React views. Overrides the top-level `backgroundColor` key if it is present.
+   */
+  backgroundColor?: string;
+  /**
+   * Local path or remote URL to an image to use for your app's icon on iOS. If specified, this overrides the top-level `icon` key. Use a 1024x1024 icon which follows Apple's interface guidelines for icons, including color profile and transparency.
+   *
+   *  Expo will generate the other required sizes. This icon will appear on the home screen and within the Expo app.
+   */
+  icon?: string;
+  /**
+   * Merchant ID for use with Apple Pay in your standalone app.
+   */
+  merchantId?: string;
+  /**
+   * URL to your app on the Apple App Store, if you have deployed it there. This is used to link to your store page from your Expo project page if your app is public.
+   */
+  appStoreUrl?: string;
+  /**
+   * Note: This property key is not included in the production manifest and will evaluate to `undefined`. It is used internally only in the build process, because it contains API keys that some may want to keep private.
+   */
+  config?: {
+    /**
+     * [Branch](https://branch.io/) key to hook up Branch linking services.
+     */
+    branch?: {
+      /**
+       * Your Branch API key
+       */
+      apiKey?: string;
+    };
+    /**
+     * Sets `ITSAppUsesNonExemptEncryption` in the standalone ipa's Info.plist to the given boolean value.
+     */
+    usesNonExemptEncryption?: boolean;
+    /**
+     * [Google Maps iOS SDK](https://developers.google.com/maps/documentation/ios-sdk/start) key for your standalone app.
+     */
+    googleMapsApiKey?: string;
+    /**
+     * [Google Mobile Ads App ID](https://support.google.com/admob/answer/6232340) Google AdMob App ID.
+     */
+    googleMobileAdsAppId?: string;
+    /**
+     * A boolean indicating whether to initialize Google App Measurement and begin sending user-level event data to Google immediately when the app starts. The default in Expo (Client and in standalone apps) is `false`. [Sets the opposite of the given value to the following key in `Info.plist`.](https://developers.google.com/admob/ios/eu-consent#delay_app_measurement_optional)
+     */
+    googleMobileAdsAutoInit?: boolean;
+    /**
+     * [Google Sign-In iOS SDK](https://developers.google.com/identity/sign-in/ios/start-integrating) keys for your standalone app.
+     */
+    googleSignIn?: {
+      /**
+       * The reserved client ID URL scheme. Can be found in `GoogleService-Info.plist`.
+       */
+      reservedClientId?: string;
+    };
+  };
+  /**
+   * @deprecated Use `updates.enabled` instead.
+   */
+  isRemoteJSEnabled?: boolean;
+  /**
+   * [Firebase Configuration File](https://support.google.com/firebase/answer/7015592) Location of the `GoogleService-Info.plist` file for configuring Firebase.
+   */
+  googleServicesFile?: string;
+  /**
+   * @deprecated Use `updates` key with `fallbackToCacheTimeout: 0` instead.
+   */
+  loadJSInBackgroundExperimental?: boolean;
+  /**
+   * Whether your standalone iOS app supports tablet screen sizes. Defaults to `false`.
+   */
+  supportsTablet?: boolean;
+  /**
+   * If true, indicates that your standalone iOS app does not support handsets, and only supports tablets.
+   */
+  isTabletOnly?: boolean;
+  /**
+   * If true, indicates that your standalone iOS app does not support Slide Over and Split View on iPad. Defaults to `true` currently, but will change to `false` in a future SDK version.
+   */
+  requireFullScreen?: boolean;
+  /**
+   * Configuration to force the app to always use the light or dark user-interface appearance, such as "dark mode", or make it automatically adapt to the system preferences. If not provided, defaults to `light`.
+   */
+  userInterfaceStyle?: 'light' | 'dark' | 'automatic';
+  /**
+   * Dictionary of arbitrary configuration to add to your standalone app's native Info.plist. Applied prior to all other Expo-specific configuration. No other validation is performed, so use this at your own risk of rejection from the App Store.
+   */
+  infoPlist?: {
+    [k: string]: any;
+  };
+  /**
+   * Dictionary of arbitrary configuration to add to your standalone app's native *.entitlements (plist). Applied prior to all other Expo-specific configuration. No other validation is performed, so use this at your own risk of rejection from the App Store.
+   */
+  entitlements?: {
+    [k: string]: any;
+  };
+  /**
+   * An array that contains Associated Domains for the standalone app. See [Apple's docs for config](https://developer.apple.com/documentation/uikit/core_app/allowing_apps_and_websites_to_link_to_your_content/enabling_universal_links).
+   */
+  associatedDomains?: string[];
+  /**
+   * A boolean indicating if the app uses iCloud Storage for `DocumentPicker`. See `DocumentPicker` docs for details.
+   */
+  usesIcloudStorage?: boolean;
+  /**
+   * A boolean indicating if the app uses Apple Sign-In. See `AppleAuthentication` docs for details.
+   */
+  usesAppleSignIn?: boolean;
+  /**
+   * A Boolean value that indicates whether the app may access the notes stored in contacts. You must [receive permission from Apple](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_contacts_notes) before you can submit your app for review with this capability.
+   */
+  accessesContactNotes?: boolean;
+  /**
+   * Configuration for loading and splash screen for standalone iOS apps.
    */
   splash?: {
+    /**
+     * Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo client.
+     */
+    xib?: string;
     /**
      * Color to fill the loading screen background
      */
@@ -779,40 +462,238 @@ export interface ExpoConfig {
      * Local path or remote URL to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
      */
     image?: string;
+    /**
+     * Local path or remote URL to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
+     */
+    tabletImage?: string;
+    /**
+     * Supported user interface styles. If left blank, `light` will be used. Use `automatic` if you would like to support either `light` or `dark` depending on iOS settings.
+     */
+    userInterfaceStyle?: 'light' | 'dark' | 'automatic';
+    [k: string]: any;
+  };
+}
+/**
+ * Configuration that is specific to the Android platform.
+ */
+export interface Android {
+  /**
+   * If set to true, APK will contain only unimodules that are explicitly added in package.json and their dependecies
+   */
+  enableDangerousExperimentalLeanBuilds?: boolean;
+  /**
+   * The manifest for the Android version of your app will be written to this path during publish.
+   */
+  publishManifestPath?: string;
+  /**
+   * The bundle for the Android version of your app will be written to this path during publish.
+   */
+  publishBundlePath?: string;
+  /**
+   * The package name for your Android standalone app. You make it up, but it needs to be unique on the Play Store. See [this StackOverflow question](http://stackoverflow.com/questions/6273892/android-package-name-convention).
+   */
+  package?: string;
+  /**
+   * Version number required by Google Play. Increment by one for each release. Must be an integer. [Learn more](https://developer.android.com/studio/publish/versioning.html)
+   */
+  versionCode?: number;
+  /**
+   * The background color for your Android app, behind any of your React views. Overrides the top-level `backgroundColor` key if it is present.
+   */
+  backgroundColor?: string;
+  /**
+   * Configuration to force the app to always use the light or dark user-interface appearance, such as "dark mode", or make it automatically adapt to the system preferences. If not provided, defaults to `light`.
+   */
+  userInterfaceStyle?: 'light' | 'dark' | 'automatic';
+  /**
+   * A Boolean value that indicates whether the app should use the new notifications API.
+   */
+  useNextNotificationsApi?: boolean;
+  /**
+   * Local path or remote URL to an image to use for your app's icon on Android. If specified, this overrides the top-level `icon` key. We recommend that you use a 1024x1024 png file (transparency is recommended for the Google Play Store). This icon will appear on the home screen and within the Expo app.
+   */
+  icon?: string;
+  /**
+   * Settings for an Adaptive Launcher Icon on Android. [Learn more](https://developer.android.com/guide/practices/ui_guidelines/icon_design_adaptive)
+   */
+  adaptiveIcon?: {
+    /**
+     * Local path or remote URL to an image to use for your app's icon on Android. If specified, this overrides the top-level `icon` and the `android.icon` keys. Should follow the [specified guidelines](https://developer.android.com/guide/practices/ui_guidelines/icon_design_adaptive). This icon will appear on the home screen.
+     */
+    foregroundImage?: string;
+    /**
+     * Local path or remote URL to a background image for your app's Adaptive Icon on Android. If specified, this overrides the `backgroundColor` key. Must have the same dimensions as  foregroundImage`, and has no effect if `foregroundImage` is not specified. Should follow the [specified guidelines](https://developer.android.com/guide/practices/ui_guidelines/icon_design_adaptive).
+     */
+    backgroundImage?: string;
+    /**
+     * Color to use as the background for your app's Adaptive Icon on Android. Defaults to white, `#FFFFFF`. Has no effect if `foregroundImage` is not specified.
+     */
+    backgroundColor?: string;
+  };
+  /**
+   * URL to your app on the Google Play Store, if you have deployed it there. This is used to link to your store page from your Expo project page if your app is public.
+   */
+  playStoreUrl?: string;
+  /**
+   * List of permissions used by the standalone app.
+   *
+   *  To use ONLY the following minimum necessary permissions and none of the extras supported by Expo in a default managed app, set `permissions` to `[]`. The minimum necessary permissions do not require a Privacy Policy when uploading to Google Play Store and are:
+   * • receive data from Internet
+   * • view network connections
+   * • full network access
+   * • change your audio settings
+   * • prevent device from sleeping
+   *
+   *  To use ALL permissions supported by Expo by default, do not specify the `permissions` key.
+   *
+   *   To use the minimum necessary permissions ALONG with certain additional permissions, specify those extras in `permissions`, e.g.
+   *
+   *  `[ "CAMERA", "ACCESS_FINE_LOCATION" ]`.
+   *
+   *   You can specify the following permissions depending on what you need:
+   *
+   * - `ACCESS_COARSE_LOCATION`
+   * - `ACCESS_FINE_LOCATION`
+   * - `ACCESS_BACKGROUND_LOCATION`
+   * - `CAMERA`
+   * - `RECORD_AUDIO`
+   * - `READ_CONTACTS`
+   * - `WRITE_CONTACTS`
+   * - `READ_CALENDAR`
+   * - `WRITE_CALENDAR`
+   * - `READ_EXTERNAL_STORAGE`
+   * - `WRITE_EXTERNAL_STORAGE`
+   * - `USE_FINGERPRINT`
+   * - `USE_BIOMETRIC`
+   * - `WRITE_SETTINGS`
+   * - `VIBRATE`
+   * - `READ_PHONE_STATE`
+   * - `com.anddoes.launcher.permission.UPDATE_COUNT`
+   * - `com.android.launcher.permission.INSTALL_SHORTCUT`
+   * - `com.google.android.c2dm.permission.RECEIVE`
+   * - `com.google.android.gms.permission.ACTIVITY_RECOGNITION`
+   * - `com.google.android.providers.gsf.permission.READ_GSERVICES`
+   * - `com.htc.launcher.permission.READ_SETTINGS`
+   * - `com.htc.launcher.permission.UPDATE_SHORTCUT`
+   * - `com.majeur.launcher.permission.UPDATE_BADGE`
+   * - `com.sec.android.provider.badge.permission.READ`
+   * - `com.sec.android.provider.badge.permission.WRITE`
+   * - `com.sonyericsson.home.permission.BROADCAST_BADGE`
+   *
+   */
+  permissions?: string[];
+  /**
+   * [Firebase Configuration File](https://support.google.com/firebase/answer/7015592) Location of the `GoogleService-Info.plist` file for configuring Firebase. Including this key automatically enables FCM in your standalone app.
+   */
+  googleServicesFile?: string;
+  /**
+   * Note: This property key is not included in the production manifest and will evaluate to `undefined`. It is used internally only in the build process, because it contains API keys that some may want to keep private.
+   */
+  config?: {
+    /**
+     * [Branch](https://branch.io/) key to hook up Branch linking services.
+     */
+    branch?: {
+      /**
+       * Your Branch API key
+       */
+      apiKey?: string;
+    };
+    /**
+     * [Google Maps Android SDK](https://developers.google.com/maps/documentation/android-api/signup) configuration for your standalone app.
+     */
+    googleMaps?: {
+      /**
+       * Your Google Maps Android SDK API key
+       */
+      apiKey?: string;
+    };
+    /**
+     * [Google Mobile Ads App ID](https://support.google.com/admob/answer/6232340) Google AdMob App ID.
+     */
+    googleMobileAdsAppId?: string;
+    /**
+     * A boolean indicating whether to initialize Google App Measurement and begin sending user-level event data to Google immediately when the app starts. The default in Expo (Client and in standalone apps) is `false`. [Sets the opposite of the given value to the following key in `Info.plist`](https://developers.google.com/admob/ios/eu-consent#delay_app_measurement_optional)
+     */
+    googleMobileAdsAutoInit?: boolean;
+    /**
+     * @deprecated Use `googleServicesFile` instead. [Google Sign-In Android SDK](https://developers.google.com/identity/sign-in/android/start-integrating) keys for your standalone app.
+     */
+    googleSignIn?: {
+      /**
+       * The Android API key. Can be found in the credentials section of the developer console or in `google-services.json`.
+       */
+      apiKey?: string;
+      /**
+       * The SHA-1 hash of the signing certificate used to build the APK without any separator (`:`). Can be found in `google-services.json`. https://developers.google.com/android/guides/client-auth
+       */
+      certificateHash?: string;
+    };
+  };
+  /**
+   * Configuration for loading and splash screen for standalone Android apps.
+   */
+  splash?: {
+    /**
+     * Color to fill the loading screen background
+     */
+    backgroundColor?: string;
+    /**
+     * Determines how the `image` will be displayed in the splash loading screen. Must be one of `cover`, `contain` or `native`, defaults to `contain`.
+     */
+    resizeMode?: 'cover' | 'contain' | 'native';
+    /**
+     * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
+     *
+     *  `Natural sized image (baseline)`
+     */
+    mdpi?: string;
+    /**
+     * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
+     *
+     *  `Scale 1.5x`
+     */
+    hdpi?: string;
+    /**
+     * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
+     *
+     *  `Scale 2x`
+     */
+    xhdpi?: string;
+    /**
+     * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
+     *
+     *  `Scale 3x`
+     */
+    xxhdpi?: string;
+    /**
+     * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
+     *
+     *  `Scale 4x`
+     */
+    xxxhdpi?: string;
     [k: string]: any;
   };
   /**
-   * Configuration for scripts to run to hook into the publish process
+   * Configuration for setting an array of custom intent filters in Android manifest. [Learn more](https://developer.android.com/guide/components/intents-filters)
    */
-  hooks?: {
-    postPublish?: {
-      file?: string;
-      config?: {
-        [k: string]: any;
-      };
-      [k: string]: any;
-    }[];
-    postExport?: {
-      file?: string;
-      config?: {
-        [k: string]: any;
-      };
-      [k: string]: any;
-    }[];
-  };
-  /**
-   * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/versions/latest/guides/offline-support.html)
-   */
-  assetBundlePatterns?: string[];
-  /**
-   * Enable experimental features that may be unstable, unsupported, or removed without deprecation notices.
-   */
-  experiments?: {
+  intentFilters?: {
     /**
-     * Enables Turbo Modules, which are a type of native modules that use a different way of communicating between JS and platform code. When installing a Turbo Module you will need to enable this experimental option (the library still needs to be a part of Expo SDK already, like react-native-reanimated v2). Turbo Modules do not support remote debugging and enabling this option will disable remote debugging.
+     * You may also use an intent filter to set your app as the default handler for links (without showing the user a dialog with options). To do so use `true` and then configure your server to serve a JSON file verifying that you own the domain. [Learn more](developer.android.com/training/app-links)
      */
-    turboModules?: boolean;
-  };
+    autoVerify?: boolean;
+    action: string;
+    data?: AndroidIntentFiltersData | AndroidIntentFiltersData[];
+    category?: string | string[];
+  }[];
+  /**
+   * Allows your user's app data to be automatically backed up to their Google Drive. If this is set to false, no backup or restore of the application will ever be performed (this is useful if your app deals with sensitive information). Defaults to the Android default, which is `true`.
+   */
+  allowBackup?: boolean;
+  /**
+   * Determines how the software keyboard will impact the layout of your application. This maps to the `android:windowSoftInputMode` property. Defaults to `resize`. Valid values: `resize`, `pan`.
+   */
+  softwareKeyboardLayoutMode?: 'resize' | 'pan';
 }
 export interface AndroidIntentFiltersData {
   /**
@@ -843,4 +724,122 @@ export interface AndroidIntentFiltersData {
    * a MIME type for URLs that should be matched by the filter
    */
   mimeType?: string;
+}
+/**
+ * Configuration that is specific to the web platform.
+ */
+export interface Web {
+  /**
+   * Relative path of an image to use for your app's favicon.
+   */
+  favicon?: string;
+  /**
+   * Defines the title of the document, defaults to the outer level name
+   */
+  name?: string;
+  /**
+   * A short version of the app's name, 12 characters or fewer. Used in app launcher and new tab pages. Maps to `short_name` in the PWA manifest.json. Defaults to the `name` property.
+   */
+  shortName?: string;
+  /**
+   * Specifies the primary language for the values in the name and short_name members. This value is a string containing a single language tag.
+   */
+  lang?: string;
+  /**
+   * Defines the navigation scope of this website's context. This restricts what web pages can be viewed while the manifest is applied. If the user navigates outside the scope, it returns to a normal web page inside a browser tab/window. If the scope is a relative URL, the base URL will be the URL of the manifest.
+   */
+  scope?: string;
+  /**
+   * Defines the color of the Android tool bar, and may be reflected in the app's preview in task switchers.
+   */
+  themeColor?: string;
+  /**
+   * Provides a general description of what the pinned website does.
+   */
+  description?: string;
+  /**
+   * Specifies the primary text direction for the name, short_name, and description members. Together with the lang member, it helps the correct display of right-to-left languages.
+   */
+  dir?: 'auto' | 'ltr' | 'rtl';
+  /**
+   * Defines the developers’ preferred display mode for the website.
+   */
+  display?: 'fullscreen' | 'standalone' | 'minimal-ui' | 'browser';
+  /**
+   * The URL that loads when a user launches the application (e.g., when added to home screen), typically the index. Note: This has to be a relative URL, relative to the manifest URL.
+   */
+  startUrl?: string;
+  /**
+   * Defines the default orientation for all the website's top level browsing contexts.
+   */
+  orientation?:
+    | 'any'
+    | 'natural'
+    | 'landscape'
+    | 'landscape-primary'
+    | 'landscape-secondary'
+    | 'portrait'
+    | 'portrait-primary'
+    | 'portrait-secondary';
+  /**
+   * Defines the expected “background color” for the website. This value repeats what is already available in the site’s CSS, but can be used by browsers to draw the background color of a shortcut when the manifest is available before the stylesheet has loaded. This creates a smooth transition between launching the web application and loading the site's content.
+   */
+  backgroundColor?: string;
+  /**
+   * If content is set to default, the status bar appears normal. If set to black, the status bar has a black background. If set to black-translucent, the status bar is black and translucent. If set to default or black, the web content is displayed below the status bar. If set to black-translucent, the web content is displayed on the entire screen, partially obscured by the status bar.
+   */
+  barStyle?: 'default' | 'black' | 'black-translucent';
+  /**
+   * Hints for the user agent to indicate to the user that the specified native applications (defined in expo.ios and expo.android) are recommended over the website.
+   */
+  preferRelatedApplications?: boolean;
+  /**
+   * Experimental features. These will break without deprecation notice.
+   */
+  dangerous?: {
+    [k: string]: any;
+  };
+  /**
+   * Configuration for PWA splash screens.
+   */
+  splash?: {
+    /**
+     * Color to fill the loading screen background
+     */
+    backgroundColor?: string;
+    /**
+     * Determines how the `image` will be displayed in the splash loading screen. Must be one of `cover` or `contain`, defaults to `contain`.
+     */
+    resizeMode?: 'cover' | 'contain';
+    /**
+     * Local path or remote URL to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
+     */
+    image?: string;
+    [k: string]: any;
+  };
+  /**
+   * Firebase web configuration. Used by the expo-firebase packages on both web and native. [Learn more](https://firebase.google.com/docs/reference/js/firebase.html#initializeapp)
+   */
+  config?: {
+    firebase?: {
+      apiKey?: string;
+      authDomain?: string;
+      databaseURL?: string;
+      projectId?: string;
+      storageBucket?: string;
+      messagingSenderId?: string;
+      appId?: string;
+      measurementId?: string;
+      [k: string]: any;
+    };
+    [k: string]: any;
+  };
+  [k: string]: any;
+}
+export interface PublishHook {
+  file?: string;
+  config?: {
+    [k: string]: any;
+  };
+  [k: string]: any;
 }
