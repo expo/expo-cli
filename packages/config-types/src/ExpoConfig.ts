@@ -92,39 +92,6 @@ export interface ExpoConfig {
     androidCollapsedTitle?: string;
   };
   /**
-   * @deprecated Use `splash` instead. Configuration for the loading screen that users see when opening your app, while fetching & caching bundle and assets.
-   */
-  loading?: {
-    /**
-     * Local path or remote URL to an image to display while starting up the app. Image size and aspect ratio are up to you. Must be a .png.
-     */
-    icon?: string;
-    /**
-     * If no icon is provided, we will show the Expo logo. You can choose between `white` and `blue`.
-     */
-    exponentIconColor?: 'white' | 'blue';
-    /**
-     * Similar to `exponentIconColor` but instead indicate if it should be grayscale (`1`) or not (`0`).
-     */
-    exponentIconGrayscale?: number;
-    /**
-     * Local path or remote URL to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
-     */
-    backgroundImage?: string;
-    /**
-     * Color to fill the loading screen background
-     */
-    backgroundColor?: string;
-    /**
-     * By default, Expo shows some text at the bottom of the loading screen. Set this to `true` to disable.
-     */
-    hideExponentText?: boolean;
-    /**
-     * @deprecated Previously used for changing the style of the iOS loading indicator.
-     */
-    loadingIndicatorStyleExperimental?: string;
-  };
-  /**
    * By default, Expo looks for the application registered with the AppRegistry as `main`. If you would like to change this, you can specify the name in this property.
    */
   appKey?: string;
