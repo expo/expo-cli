@@ -34,7 +34,9 @@ describe('MainActivity', () => {
           : `
     // SplashScreen.show(...) has to be called after super.onCreate(...)
     // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.${addSplashScreenShowWith}, ${statusBarTranslucent})${LE}`
+    SplashScreen.show(this, SplashScreenImageResizeMode.${addSplashScreenShowWith}, ReactRootView${
+              kotlin ? '::class.java' : '.class'
+            }, ${statusBarTranslucent})${LE}`
       }
   }
 `;
@@ -48,6 +50,8 @@ import android.os.Bundle${LE}
 `
 }
 import com.facebook.react.ReactActivity${LE}
+
+import com.facebook.react.ReactRootView${LE}
 ${
   !addSplashScreenShowWith
     ? ''

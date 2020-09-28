@@ -44,6 +44,27 @@ export default async function configureMainActivity(
     'utf-8'
   );
   const { state: newFileContent } = new StateManager<string, boolean>(fileContent)
+    // importing ReactRootView
+    .applyAction(content => {
+      const [succeeded, newContent] = replace(content, {
+        replacePattern: /^import com\.facebook\.react\.ReactRootView.*?$/m,
+        replaceContent: `import com.facebook.react.ReactRootView${LE}`,
+      });
+      return [newContent, 'replacedReactRootViewImports', succeeded];
+    })
+    .applyAction((content, { replacedReactRootViewImports }) => {
+      if (replacedReactRootViewImports) {
+        return [content, 'insertedReactRootViewImports', false];
+      }
+      const [succeeded, newContent] = insert(content, {
+        insertPattern: isJava ? /(?=public class .* extends .* {.*$)/m : /(?=class .* : .* {.*$)/m,
+        insertContent: `import com.facebook.react.ReactRootView${LE}
+
+`,
+      });
+
+      return [newContent, 'insertedReactRootViewImports', succeeded];
+    })
     // importing SplashScreen
     .applyAction(content => {
       const [succeeded, newContent] = replace(content, {
@@ -70,7 +91,9 @@ import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}
     .applyAction(content => {
       const [succeeded, newContent] = replace(content, {
         replacePattern: /(?<=super\.onCreate(.|\n)*?)SplashScreen\.show\(this, SplashScreenImageResizeMode\..*\).*$/m,
-        replaceContent: `SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${statusBarTranslucent})${LE}`,
+        replaceContent: `SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ReactRootView${
+          isKotlin ? '::class.java' : '.class'
+        }, ${statusBarTranslucent})${LE}`,
       });
       return [newContent, 'replacedInOnCreate', succeeded];
     })
@@ -83,7 +106,9 @@ import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}
         insertContent: `
     // SplashScreen.show(...) has to be called after super.onCreate(...)
     // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${statusBarTranslucent})${LE}`,
+    SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ReactRootView${
+          isKotlin ? '::class.java' : '.class'
+        }, ${statusBarTranslucent})${LE}`,
       });
       return [newContent, 'insertedInOnCreate', succeeded];
     })
@@ -106,7 +131,9 @@ import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}
     super.onCreate(savedInstanceState)${LE}
     // SplashScreen.show(...) has to be called after super.onCreate(...)
     // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
-    SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ${statusBarTranslucent})${LE}
+    SplashScreen.show(this, SplashScreenImageResizeMode.${resizeMode.toUpperCase()}, ReactRootView${
+          isKotlin ? '::class.java' : '.class'
+        }, ${statusBarTranslucent})${LE}
   }
 `,
       });
