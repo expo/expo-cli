@@ -28,6 +28,7 @@ const COMMANDS = [
   require('./upgrade'),
   require('./upload'),
   require('./url'),
+  require('./validate-dependencies'),
   require('./webhooks'),
   require('./whoami'),
 ];

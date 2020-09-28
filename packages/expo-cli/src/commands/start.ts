@@ -1,19 +1,17 @@
-import { ExpoConfig, PackageJSONConfig, getConfig, projectHasModule } from '@expo/config';
+import { ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
 // @ts-ignore: not typed
 import { DevToolsServer } from '@expo/dev-tools';
-import JsonFile from '@expo/json-file';
-import { Project, ProjectSettings, UrlUtils, UserSettings, Versions } from '@expo/xdl';
+import { Project, ProjectSettings, UrlUtils, UserSettings } from '@expo/xdl';
 import chalk from 'chalk';
-import intersection from 'lodash/intersection';
 import path from 'path';
 import openBrowser from 'react-dev-utils/openBrowser';
-import semver from 'semver';
 
 import { installExitHooks } from '../exit';
 import log from '../log';
 import sendTo from '../sendTo';
 import urlOpts, { URLOptions } from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
+import * as Dependencies from './utils/Dependencies';
 
 type NormalizedOptions = URLOptions & {
   webOnly?: boolean;
@@ -156,7 +154,7 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
   const { exp, pkg, rootPath } = await configureProjectAsync(projectDir, options);
 
   // TODO: only validate dependencies if starting in managed workflow
-  await validateDependenciesVersions(projectDir, exp, pkg);
+  await Dependencies.listIncompatibleDependencies(projectDir, exp, pkg);
 
   const startOpts = parseStartOptions(options);
 
@@ -181,70 +179,6 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
     log(`Your native app is running at ${chalk.underline(url)}`);
   }
   log.nested(chalk.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
-}
-
-async function validateDependenciesVersions(
-  projectDir: string,
-  exp: ExpoConfig,
-  pkg: PackageJSONConfig
-): Promise<void> {
-  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
-    return;
-  }
-
-  const bundleNativeModulesPath = projectHasModule(
-    'expo/bundledNativeModules.json',
-    projectDir,
-    exp
-  );
-  if (!bundleNativeModulesPath) {
-    log.warn(
-      `Your project is in SDK version >= 33.0.0, but the ${chalk.underline(
-        'expo'
-      )} package version seems to be older.`
-    );
-    return;
-  }
-
-  const bundledNativeModules = await JsonFile.readAsync(bundleNativeModulesPath);
-  const bundledNativeModulesNames = Object.keys(bundledNativeModules);
-  const projectDependencies = Object.keys(pkg.dependencies || []);
-
-  const modulesToCheck = intersection(bundledNativeModulesNames, projectDependencies);
-  const incorrectDeps = [];
-  for (const moduleName of modulesToCheck) {
-    const expectedRange = bundledNativeModules[moduleName];
-    const actualRange = pkg.dependencies[moduleName];
-    if (
-      (semver.valid(actualRange) || semver.validRange(actualRange)) &&
-      typeof expectedRange === 'string' &&
-      !semver.intersects(expectedRange, actualRange)
-    ) {
-      incorrectDeps.push({
-        moduleName,
-        expectedRange,
-        actualRange,
-      });
-    }
-  }
-  if (incorrectDeps.length > 0) {
-    log.warn(
-      "Some of your project's dependencies are not compatible with currently installed expo package version:"
-    );
-    incorrectDeps.forEach(({ moduleName, expectedRange, actualRange }) => {
-      log.warn(
-        ` - ${chalk.underline(moduleName)} - expected version range: ${chalk.underline(
-          expectedRange
-        )} - actual version installed: ${chalk.underline(actualRange)}`
-      );
-    });
-    log.warn(
-      'Your project may not work correctly until you install the correct versions of the packages.\n' +
-        `To install the correct versions of these packages, please run: ${chalk.inverse(
-          'expo install [package-name ...]'
-        )}`
-    );
-  }
 }
 
 async function tryOpeningDevToolsAsync({
