@@ -335,7 +335,7 @@ async function installNodeDependenciesAsync(projectRoot: string, packageManager:
     installJsDepsStep.succeed('Installed JavaScript dependencies.');
   } catch {
     installJsDepsStep.fail(
-      `Something when wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to initialize the app.`
+      `Something went wrong installing JavaScript dependencies. Check your ${packageManager} logs. Continuing to initialize the app.`
     );
   }
 }
