@@ -203,7 +203,7 @@ async function installNodeDependenciesAsync(
   } catch {
     installJsDepsStep.fail(
       chalk.red(
-        `Something when wrong installing JavaScript dependencies, check your ${packageManager} logfile or run ${chalk.bold(
+        `Something went wrong installing JavaScript dependencies, check your ${packageManager} logfile or run ${chalk.bold(
           `${packageManager} install`
         )} again manually.`
       )
