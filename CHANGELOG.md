@@ -10,6 +10,44 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Mon, 28 Sep 2020 12:02:49 -0700](https://github.com/expo/expo-cli/commit/19e206bdc3973aa5263a11999c9624ef3590b00d)
+
+### 🛠 Breaking changes
+
+- [config-types] remove loading key ([#2722](https://github.com/expo/expo-cli/issues/2722))
+
+### 🎉 New features
+
+- [configure-splash-screen]<feat>: Accommodate Android singletons.SplashScreen import from the subpackage ([#2699](https://github.com/expo/expo-cli/issues/2699))
+- [configure-splash-screen]<feat>: Make Android configuration conform to the new native API ([#2698](https://github.com/expo/expo-cli/issues/2698))
+- [config-types] Split up platform configs ([#2716](https://github.com/expo/expo-cli/issues/2716))
+- [config-types] Rename root config file to ExpoConfig ([#2715](https://github.com/expo/expo-cli/issues/2715))
+
+### 🐛 Bug fixes
+
+- [config-types] android.intentFilters.data type fix ([#2707](https://github.com/expo/expo-cli/issues/2707))
+- [cli] Fix typo when JS installation fails on eject ([#2712](https://github.com/expo/expo-cli/issues/2712))
+- [cli] Revert "Improved package name validation ([#2687](https://github.com/expo/expo-cli/issues/2687))"
+- [cli] Fix link to hashAsseFiles information on eject
+- [cli] Remove short form of --count (-count didn't work, -c is taken)
+- [cli] Fix windows build compatibility ([#2705](https://github.com/expo/expo-cli/issues/2705))
+
+### 📦 Packages updated
+
+- @expo/config@3.3.7
+- @expo/configure-splash-screen@0.2.1
+- @expo/dev-server@0.1.32
+- @expo/dev-tools@0.13.49
+- @expo/electron-adapter@0.0.23
+- expo-cli@3.27.11
+- expo-optimize@0.1.54
+- @expo/metro-config@0.1.32
+- @expo/next-adapter@2.1.37
+- expo-pwa@0.0.42
+- uri-scheme@1.0.38
+- @expo/webpack-config@0.12.36
+- @expo/xdl@58.0.10
+
 ## [Thu, 24 Sep 2020 16:18:06 -0700](https://github.com/expo/expo-cli/commit/8443580c8093f28550c7ebbb8d1b66bacc83a201)
 
 ### 🛠 Breaking changes
