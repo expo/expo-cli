@@ -56,7 +56,7 @@ ${
   !addSplashScreenShowWith
     ? ''
     : `
-import expo.modules.splashscreen.SplashScreen${LE}
+import expo.modules.splashscreen.singletons.SplashScreen${LE}
 import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}
 `
 }
