@@ -32,7 +32,7 @@ export function getSplashScreenConfig(config: ExpoConfig): AndroidSplashScreenCo
 }
 
 export async function setSplashScreenAsync(config: ExpoConfig, projectRoot: string) {
-  const splashScreenIsSupported = false; // config.sdkVersion === '39.0.0'
+  const splashScreenIsSupported = config.sdkVersion === '39.0.0' || !config.sdkVersion;
   if (!splashScreenIsSupported) {
     addWarningAndroid(
       'splash',

@@ -26,7 +26,7 @@ export function getSplashScreen(config: ExpoConfig): IosSplashScreenConfig | und
 }
 
 export async function setSplashScreenAsync(config: ExpoConfig, projectRoot: string) {
-  const splashScreenIsSupported = false; // config.sdkVersion === '39.0.0'
+  const splashScreenIsSupported = config.sdkVersion === '39.0.0' || !config.sdkVersion;
   if (!splashScreenIsSupported) {
     addWarningIOS(
       'splash',
