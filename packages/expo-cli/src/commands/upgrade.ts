@@ -482,7 +482,7 @@ export async function upgradeAsync(
     npm: options.npm,
     yarn: options.yarn,
     log,
-    silent: getenv.boolish('EXPO_DEBUG', true),
+    silent: !getenv.boolish('EXPO_DEBUG', false),
   });
 
   log.addNewLineIfNone();
