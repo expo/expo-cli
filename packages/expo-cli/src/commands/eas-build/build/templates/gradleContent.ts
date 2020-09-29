@@ -1,4 +1,8 @@
-export default `android {
+export default `// Build integration with EAS
+
+import java.nio.file.Paths
+
+android {
   signingConfigs {
     release {
       // This is necessary to avoid needing the user to define a release signing config manually
@@ -29,8 +33,12 @@ project.afterEvaluate {
       } else {
         try {
           def credentials = new groovy.json.JsonSlurper().parse(credentialsJson)
+          def keystorePath = Paths.get(credentials.android.keystore.keystorePath);
+          def storeFilePath = keystorePath.isAbsolute()
+            ? keystorePath
+            : rootProject.file("..").toPath().resolve(keystorePath);
 
-          storeFile rootProject.file("../" + credentials.android.keystore.keystorePath)
+          storeFile storeFilePath.toFile()
           storePassword credentials.android.keystore.keystorePassword
           keyAlias credentials.android.keystore.keyAlias
           keyPassword credentials.android.keystore.keyPassword
