@@ -35,21 +35,33 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
     log,
   });
 
-  // This ends up being confusing for people. If they're using expo install,
-  // let's just install the deps such that they work in the client even if
-  // it's a bare project.
-  //
-  // if (workflow === 'bare') {
-  //   return await packageManager.addAsync(...packages);
-  // }
+  const { exp, pkg } = ConfigUtils.getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
-  const { exp } = ConfigUtils.getConfig(projectRoot);
+  // If using `expo install` in a project without the expo package even listed
+  // in package.json, just fall through to npm/yarn.
+  //
+  if (!pkg.dependencies['expo']) {
+    return await packageManager.addAsync(...packages);
+  }
+
+  if (!exp.sdkVersion) {
+    log.addNewLineIfNone();
+    log.error(
+      `The ${log.chalk.bold(`expo`)} package was found in your ${log.chalk.bold(
+        `package.json`
+      )} but we couldn't resolve the Expo SDK version. Run ${log.chalk.bold(
+        `${packageManager.name.toLowerCase()} install`
+      )} and then try this command again.`
+    );
+    log.newLine();
+    process.exit(1);
+    return;
+  }
+
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     log.addNewLineIfNone();
     log.error(
-      `${log.chalk.bold(
-        `expo install`
-      )} is only available for managed apps using Expo SDK version 33 or higher.`
+      `${log.chalk.bold(`expo install`)} is only available for Expo SDK version 33 or higher.`
     );
     log.newLine();
     log(log.chalk.cyan(`Current version: ${log.chalk.bold(exp.sdkVersion)}`));

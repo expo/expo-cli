@@ -10,6 +10,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+- Make `expo install` pass through to npm or yarn directly when running it in a bare React Native app without the expo package installed
+
 ## [Mon, 28 Sep 2020 12:02:49 -0700](https://github.com/expo/expo-cli/commit/19e206bdc3973aa5263a11999c9624ef3590b00d)
 
 ### 🛠 Breaking changes
