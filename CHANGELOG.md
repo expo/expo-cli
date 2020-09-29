@@ -18,8 +18,6 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
-- [configure-splash-screen]<feat>: Accommodate Android singletons.SplashScreen import from the subpackage ([#2699](https://github.com/expo/expo-cli/issues/2699))
-- [configure-splash-screen]<feat>: Make Android configuration conform to the new native API ([#2698](https://github.com/expo/expo-cli/issues/2698))
 - [config-types] Split up platform configs ([#2716](https://github.com/expo/expo-cli/issues/2716))
 - [config-types] Rename root config file to ExpoConfig ([#2715](https://github.com/expo/expo-cli/issues/2715))
 
@@ -47,6 +45,13 @@ This is the log of notable changes to Expo CLI and related packages.
 - uri-scheme@1.0.38
 - @expo/webpack-config@0.12.36
 - @expo/xdl@58.0.10
+
+## [Mon, 28 Sep 2020 15:47:29 +0200](https://github.com/expo/expo-cli/commit/3407fb46596c77197b8dd140046a5388026aec36)
+
+### 🎉 New features
+
+- [configure-splash-screen]<feat>: Accommodate Android singletons.SplashScreen import from the subpackage ([#2699](https://github.com/expo/expo-cli/issues/2699))
+- [configure-splash-screen]<feat>: Make Android configuration conform to the new native API ([#2698](https://github.com/expo/expo-cli/issues/2698))
 
 ## [Thu, 24 Sep 2020 16:18:06 -0700](https://github.com/expo/expo-cli/commit/8443580c8093f28550c7ebbb8d1b66bacc83a201)
 
