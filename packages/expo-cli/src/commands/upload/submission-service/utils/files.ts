@@ -8,7 +8,7 @@ import stream from 'stream';
 import tar from 'tar';
 import { promisify } from 'util';
 
-import { UploadType, uploadAsync } from '../../../../uploads';
+import { uploadAsync, UploadType } from '../../../../uploads';
 import { createProgressTracker } from '../../../utils/progress';
 
 const pipeline = promisify(stream.pipeline);

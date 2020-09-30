@@ -3,7 +3,6 @@ import {
   ExpoConfig,
   getConfig,
   PackageJSONConfig,
-  projectHasModule,
   WarningAggregator,
 } from '@expo/config';
 import JsonFile, { JSONObject } from '@expo/json-file';

@@ -1,7 +1,7 @@
 import { ExpoConfig } from '../Config.types';
 import { addWarningAndroid } from '../WarningAggregator';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
-import { buildResourceItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
+import { buildResourceItem, readResourcesXMLAsync } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
 import { writeXMLAsync } from './XML';
 

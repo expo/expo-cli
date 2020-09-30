@@ -1,7 +1,7 @@
 import {
+  getOrientation,
   LANDSCAPE_ORIENTATIONS,
   PORTRAIT_ORIENTATIONS,
-  getOrientation,
   setOrientation,
 } from '../Orientation';
 

@@ -11,10 +11,10 @@ import log from '../../log';
 import prompt, { Question } from '../../prompt';
 import { confirmAsync } from '../../prompts';
 import { displayIosUserCredentials } from '../actions/list';
-import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
+import { askForUserProvided, CredentialSchema } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
-import { IosCredentials, IosDistCredentials, distCertSchema } from '../credentials';
+import { distCertSchema, IosCredentials, IosDistCredentials } from '../credentials';
 import { RemoveProvisioningProfile } from './IosProvisioningProfile';
 
 const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `

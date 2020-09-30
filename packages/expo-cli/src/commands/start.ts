@@ -1,4 +1,4 @@
-import { ExpoConfig, PackageJSONConfig, getConfig, projectHasModule } from '@expo/config';
+import { ExpoConfig, getConfig, PackageJSONConfig, projectHasModule } from '@expo/config';
 // @ts-ignore: not typed
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';

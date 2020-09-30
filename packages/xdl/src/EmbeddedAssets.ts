@@ -1,4 +1,4 @@
-import { ExpoAppManifest, PackageJSONConfig, ProjectTarget, getConfig } from '@expo/config';
+import { ExpoAppManifest, getConfig, PackageJSONConfig, ProjectTarget } from '@expo/config';
 import fs from 'fs-extra';
 import path from 'path';
 import semver from 'semver';

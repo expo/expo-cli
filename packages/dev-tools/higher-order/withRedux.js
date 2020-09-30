@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Provider, connect } from 'react-redux';
+import { connect, Provider } from 'react-redux';
 
 const __NEXT_REDUX_STORE__ = '__NEXT_REDUX_STORE__';
 const isCallOnServer = () => Object.prototype.toString.call(global.process) === '[object process]';

@@ -22,6 +22,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: yarn install --frozen-lockfile --check-files
       - run: yarn lerna run prepare --stream
+      - run: yarn lint --max-warnings=0
       - uses: actions/cache@v1
         id: cache-build
         with:

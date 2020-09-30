@@ -1,5 +1,5 @@
 import { ExpoConfig, getConfig } from '@expo/config';
-import { ApiV2, Doctor, User, UserManager } from '@expo/xdl';
+import { ApiV2, User, UserManager } from '@expo/xdl';
 import pick from 'lodash/pick';
 
 import { AppleCtx, authenticate } from '../appleApi';

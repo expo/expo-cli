@@ -1,6 +1,4 @@
-import * as osascript from '@expo/osascript';
-import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
-import path from 'path';
+import spawnAsync from '@expo/spawn-async';
 
 import Logger from './Logger';
 

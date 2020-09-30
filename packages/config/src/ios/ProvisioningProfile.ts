@@ -2,12 +2,12 @@ import fs from 'fs-extra';
 
 import {
   ConfigurationSectionEntry,
-  ProjectSectionEntry,
   findFirstNativeTarget,
   getBuildConfigurationForId,
   getPbxproj,
   getProjectSection,
   isNotComment,
+  ProjectSectionEntry,
 } from './utils/Xcodeproj';
 
 type ProvisioningProfileSettings = {

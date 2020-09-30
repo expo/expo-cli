@@ -1,5 +1,5 @@
 import { AsyncSeriesWaterfallHook } from 'tapable';
-import { Compiler, compilation } from 'webpack';
+import { compilation, Compiler } from 'webpack';
 
 export type Options = {
   path: string;
