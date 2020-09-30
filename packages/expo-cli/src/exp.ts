@@ -105,13 +105,13 @@ Command.prototype.prepareCommands = function () {
     .map(function (cmd: Command, i: number) {
       const args = cmd._args.map(humanReadableArgName).join(' ');
 
-      // Remove alias. We still show this with --help on the command.
-      const alias = null; //cmd._alias;
-
       const description = cmd._description;
+      // Remove alias. We still show this with --help on the command.
+      // const alias = cmd._alias;
+      // const nameWithAlias = cmd._name + (alias ? '|' + alias : '');
+      const nameWithAlias = cmd._name;
       return [
-        cmd._name +
-          (alias ? '|' + alias : '') +
+        nameWithAlias +
           // Remove the redundant [options] string that's shown after every command.
           // (cmd.options.length ? ' [options]' : '') +
           (args ? ' ' + args : ''),
@@ -119,6 +119,35 @@ Command.prototype.prepareCommands = function () {
         cmd.__helpGroup ?? 'misc',
       ];
     });
+};
+
+/**
+ * Set / get the command usage `str`.
+ *
+ * @param {String} str
+ * @return {String|Command}
+ * @api public
+ */
+
+// @ts-ignore
+Command.prototype.usage = function (str: string) {
+  var args = this._args.map(function (arg: any[]) {
+    return humanReadableArgName(arg);
+  });
+
+  const commandsStr = this.commands.length ? '[command]' : '';
+  const argsStr = this._args.length ? args.join(' ') : '';
+
+  let usage = commandsStr + argsStr;
+  if (usage.length) usage += ' ';
+  usage += '[options]';
+
+  if (arguments.length === 0) {
+    return this._usage || usage;
+  }
+  this._usage = str;
+
+  return this;
 };
 
 Command.prototype.helpInformation = function () {
