@@ -5,8 +5,8 @@ import path from 'path';
 import temporary from 'tempy';
 
 import {
-  EXPO_CLI,
   createMinimalProjectAsync,
+  EXPO_CLI,
   minimumAppJson,
   minimumNativePkgJson,
 } from '../TestUtils';

@@ -8,8 +8,8 @@ import slugify from 'slugify';
 import {
   AppJSONConfig,
   ConfigFilePaths,
-  ExpRc,
   ExpoConfig,
+  ExpRc,
   GetConfigOptions,
   PackageJSONConfig,
   Platform,

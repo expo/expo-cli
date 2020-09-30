@@ -1,5 +1,5 @@
 import Log from '@expo/bunyan';
-import { Platform, getConfig, projectHasModule } from '@expo/config';
+import { getConfig, Platform, projectHasModule } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
 import bodyParser from 'body-parser';

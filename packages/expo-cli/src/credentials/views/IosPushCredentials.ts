@@ -4,12 +4,12 @@ import ora from 'ora';
 import terminalLink from 'terminal-link';
 
 import CommandError from '../../CommandError';
-import { PushKey, PushKeyInfo, PushKeyManager, isPushKey } from '../../appleApi';
+import { isPushKey, PushKey, PushKeyInfo, PushKeyManager } from '../../appleApi';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
 import { confirmAsync } from '../../prompts';
 import { displayIosUserCredentials } from '../actions/list';
-import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
+import { askForUserProvided, CredentialSchema } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
 import {

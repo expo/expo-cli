@@ -1,4 +1,4 @@
-import { Compiler, Plugin, compilation as compilationNS } from 'webpack';
+import { compilation as compilationNS, Compiler, Plugin } from 'webpack';
 
 import { BeforeEmitOptions } from './JsonWebpackPlugin';
 

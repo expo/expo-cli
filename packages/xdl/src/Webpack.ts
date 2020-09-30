@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';
 import * as path from 'path';
-import { Urls, choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
+import { choosePort, prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import openBrowser from 'react-dev-utils/openBrowser';
 import webpack from 'webpack';

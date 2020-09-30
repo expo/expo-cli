@@ -1,7 +1,7 @@
 import { fs, vol } from 'memfs';
 import * as path from 'path';
 
-import { ICON_CONTENTS, getIcons, setIconsAsync } from '../Icons';
+import { getIcons, ICON_CONTENTS, setIconsAsync } from '../Icons';
 const actualFs = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');

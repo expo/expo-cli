@@ -1,4 +1,4 @@
-import { IOSConfig, WarningAggregator, getConfig } from '@expo/config';
+import { getConfig, IOSConfig, WarningAggregator } from '@expo/config';
 import { getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
 import { IosPlist, UserManager } from '@expo/xdl';
 import path from 'path';

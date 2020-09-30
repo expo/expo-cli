@@ -24,7 +24,7 @@ import {
   ReleaseStatus,
   ReleaseTrack,
 } from './AndroidSubmissionConfig';
-import { ServiceAccountSource, getServiceAccountAsync } from './ServiceAccountSource';
+import { getServiceAccountAsync, ServiceAccountSource } from './ServiceAccountSource';
 import { AndroidSubmissionContext } from './types';
 
 export interface AndroidSubmissionOptions

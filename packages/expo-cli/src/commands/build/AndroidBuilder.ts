@@ -3,15 +3,15 @@ import { Android } from '@expo/xdl';
 import { Context } from '../../credentials';
 import { runCredentialsManager } from '../../credentials/route';
 import {
-  RemoveKeystore,
   getKeystoreFromParams,
+  RemoveKeystore,
   useKeystore,
 } from '../../credentials/views/AndroidKeystore';
 import { SetupAndroidKeystore } from '../../credentials/views/SetupAndroidKeystore';
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
 import BaseBuilder from './BaseBuilder';
 import BuildError from './BuildError';
-import { PLATFORMS, Platform } from './constants';
+import { Platform, PLATFORMS } from './constants';
 import * as utils from './utils';
 
 const { ANDROID } = PLATFORMS;

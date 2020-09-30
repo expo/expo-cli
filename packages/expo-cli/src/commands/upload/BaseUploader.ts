@@ -1,4 +1,4 @@
-import { ExpoConfig, Platform, getConfig } from '@expo/config';
+import { ExpoConfig, getConfig, Platform } from '@expo/config';
 import { StandaloneBuild } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
