@@ -236,14 +236,14 @@ export async function _retryUsernamePasswordAuthWithOTPAsync(
       primaryDevice,
       'OTP should only automatically be sent when there is a primary device'
     );
-    log(
+    log.nested(
       `One-time password was sent to the phone number ending in ${primaryDevice.sms_phone_number}.`
     );
     otp = await _promptForOTPAsync('menu');
   }
 
   if (primaryDevice?.method === UserSecondFactorDeviceMethod.AUTHENTICATOR) {
-    log('One-time password from authenticator required.');
+    log.nested('One-time password from authenticator required.');
     otp = await _promptForOTPAsync('menu');
   }
 
@@ -321,7 +321,7 @@ async function _usernamePasswordAuth(
   }
 
   if (user) {
-    console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
+    log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
     return user;
   } else {
     throw new Error('Unexpected Error: No user returned from the API');
@@ -329,7 +329,7 @@ async function _usernamePasswordAuth(
 }
 
 export async function register(): Promise<User> {
-  console.log(
+  log(
     `
 Thanks for signing up for Expo!
 Just a few questions:
@@ -390,6 +390,6 @@ Just a few questions:
   ];
   const answers = await prompt(questions);
   const registeredUser = await UserManager.registerAsync(answers as RegistrationData);
-  console.log('\nThanks for signing up!');
+  log('\nThanks for signing up!');
   return registeredUser;
 }

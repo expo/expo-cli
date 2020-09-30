@@ -164,9 +164,9 @@ async function action(projectDir: string, command: Command) {
   let resolvedTemplate: string | null = options.template ?? null;
   // @ts-ignore: This guards against someone passing --template without a name after it.
   if (resolvedTemplate === true) {
-    console.log();
-    console.log('Please specify the template');
-    console.log();
+    log();
+    log('Please specify the template');
+    log();
     process.exit(1);
   }
 

@@ -47,7 +47,7 @@ export default function (program: Command) {
             'Channel Set Status ',
             'SUCCESS'
           );
-          console.log(tableString);
+          log(tableString);
         } catch (e) {
           log.error(e);
         }

@@ -118,7 +118,7 @@ function printBuildTable(builds: Build[]) {
 
   const buildTable = printTableJsonArray(headers, refactoredBuilds, colWidths);
 
-  console.log(buildTable);
+  log(buildTable);
 }
 
 export default statusAction;

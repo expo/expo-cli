@@ -139,7 +139,7 @@ export async function action(projectDir: string = './', options: Options = { for
     choices: values,
   });
   if (!answer) {
-    console.log('\n\u203A Exiting...\n');
+    log('\n\u203A Exiting...\n');
     return;
   }
   await generateFilesAsync({ projectDir, staticPath, options, answer, templateFolder });

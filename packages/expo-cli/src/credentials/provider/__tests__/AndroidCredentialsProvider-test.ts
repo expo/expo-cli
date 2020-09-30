@@ -13,17 +13,6 @@ const cliOptions = {
 
 const mockFetchKeystore = jest.fn();
 
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
-
 jest.mock('fs');
 jest.mock('../../route');
 jest.mock('../../context', () => {

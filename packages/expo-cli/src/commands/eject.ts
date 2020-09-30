@@ -3,6 +3,7 @@ import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
+import log from '../log';
 import { confirmAsync } from '../prompts';
 import * as Eject from './eject/Eject';
 import * as LegacyEject from './eject/LegacyEject';
@@ -23,9 +24,9 @@ async function action(
   try {
     exp = getConfig(projectDir).exp;
   } catch (error) {
-    console.log();
-    console.log(chalk.red(error.message));
-    console.log();
+    log();
+    log(chalk.red(error.message));
+    log();
     process.exit(1);
   }
 

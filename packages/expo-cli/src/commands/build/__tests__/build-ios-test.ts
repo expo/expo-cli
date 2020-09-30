@@ -106,20 +106,6 @@ describe('build ios', () => {
     vol.reset();
   });
 
-  const originalWarn = console.warn;
-  const originalLog = console.log;
-  const originalError = console.error;
-  beforeAll(() => {
-    console.warn = jest.fn();
-    console.log = jest.fn();
-    console.error = jest.fn();
-  });
-  afterAll(() => {
-    console.warn = originalWarn;
-    console.log = originalLog;
-    console.error = originalError;
-  });
-
   afterEach(() => {
     const mockedXDLModuleObjects = Object.values(mockedXDLModules);
     for (const module of mockedXDLModuleObjects) {
