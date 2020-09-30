@@ -1,4 +1,4 @@
-import { AndroidConfig } from '@expo/config';
+import { AndroidConfig, WarningAggregator } from '@expo/config';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import path from 'path';
@@ -1326,6 +1326,22 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       '<meta-data android:name="com.facebook.sdk.AdvertiserIDCollectionEnabled" android:value="true"/>',
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
+  }
+
+  // Log Android warnings from @expo/config
+  const warningsAndroid = WarningAggregator.flushWarningsAndroid();
+  if (warningsAndroid.length) {
+    const getSpacer = text => {
+      if (text.endsWith('.')) {
+        return ' ';
+      } else {
+        return '. ';
+      }
+    };
+
+    warningsAndroid.forEach(([property, warning, link]) => {
+      console.warn(`- ${property}: ${warning}${link ? `${getSpacer(warning)}${link}` : ''}`);
+    });
   }
 }
 
