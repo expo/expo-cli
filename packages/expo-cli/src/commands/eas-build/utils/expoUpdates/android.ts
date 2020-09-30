@@ -111,10 +111,6 @@ export async function configureUpdatesAndroidAsync({
 }
 
 async function isUpdatesConfiguredAndroidAsync(projectDir: string) {
-  if (!isExpoUpdatesInstalled(projectDir)) {
-    return true;
-  }
-
   const { exp, username } = await getConfigurationOptionsAsync(projectDir);
 
   const buildGradlePath = getAndroidBuildGradlePath(projectDir);

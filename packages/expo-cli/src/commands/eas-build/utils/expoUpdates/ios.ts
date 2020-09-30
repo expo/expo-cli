@@ -117,10 +117,6 @@ async function modifyExpoPlistAsync(projectDir: string, callback: (expoPlist: an
 }
 
 async function isUpdatesConfiguredIOSAsync(projectDir: string) {
-  if (!isExpoUpdatesInstalled(projectDir)) {
-    return true;
-  }
-
   const { exp, username } = await getConfigurationOptionsAsync(projectDir);
 
   const pbxprojPath = await getPbxprojPathAsync(projectDir);
