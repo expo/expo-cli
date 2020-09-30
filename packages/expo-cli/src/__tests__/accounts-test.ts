@@ -2,6 +2,7 @@ import { ApiV2 } from '@expo/xdl';
 
 import { _retryUsernamePasswordAuthWithOTPAsync, UserSecondFactorDeviceMethod } from '../accounts';
 import { jester } from '../credentials/test-fixtures/mocks-constants';
+import log from '../log';
 import prompt, { selectAsync } from '../prompts';
 import { mockExpoXDL } from './mock-utils';
 
@@ -15,17 +16,6 @@ mockExpoXDL({
   ApiV2: {
     clientForUser: jest.fn(),
   },
-});
-
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
 });
 
 beforeEach(() => {
@@ -47,8 +37,7 @@ beforeEach(() => {
 
 describe(_retryUsernamePasswordAuthWithOTPAsync, () => {
   it('shows SMS OTP prompt when SMS is primary and code was automatically sent', async () => {
-    const consoleFn = jest.fn();
-    console.log = consoleFn;
+    const logSpy = jest.spyOn(log, 'nested').mockImplementation(() => {});
 
     (prompt as any)
       .mockImplementationOnce(() => ({ otp: 'hello' }))
@@ -68,15 +57,16 @@ describe(_retryUsernamePasswordAuthWithOTPAsync, () => {
       smsAutomaticallySent: true,
     });
 
-    expect(consoleFn.mock.calls[0][0]).toContain(
+    expect(logSpy.mock.calls[0][0]).toContain(
       'One-time password was sent to the phone number ending'
     );
     expect(result).toBe(jester);
+
+    logSpy.mockRestore();
   });
 
   it('shows authenticator OTP prompt when authenticator is primary', async () => {
-    const consoleFn = jest.fn();
-    console.log = consoleFn;
+    const logSpy = jest.spyOn(log, 'nested').mockImplementation(() => {});
 
     (prompt as any)
       .mockImplementationOnce(() => ({ otp: 'hello' }))
@@ -96,7 +86,7 @@ describe(_retryUsernamePasswordAuthWithOTPAsync, () => {
       smsAutomaticallySent: false,
     });
 
-    expect(consoleFn.mock.calls[0][0]).toEqual('One-time password from authenticator required.');
+    expect(logSpy.mock.calls[0][0]).toEqual('One-time password from authenticator required.');
     expect(result).toBe(jester);
   });
 
@@ -137,9 +127,6 @@ describe(_retryUsernamePasswordAuthWithOTPAsync, () => {
   });
 
   it('shows a warning when when user bails on primary and does not have any secondary set up', async () => {
-    const consoleFn = jest.fn();
-    console.warn = consoleFn;
-
     (prompt as any)
       .mockImplementationOnce(() => ({ otp: null }))
       .mockImplementation(() => {

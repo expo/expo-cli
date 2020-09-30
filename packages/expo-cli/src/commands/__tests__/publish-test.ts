@@ -11,7 +11,7 @@ import {
 jest.mock('fs');
 jest.mock('../../log', () => ({
   nestedWarn: jest.fn(),
-  chalk: { underline: jest.fn() },
+  chalk: { underline: jest.fn(), dim: jest.fn() },
 }));
 
 describe('isInvalidReleaseChannel', () => {

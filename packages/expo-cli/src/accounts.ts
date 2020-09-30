@@ -236,14 +236,14 @@ export async function _retryUsernamePasswordAuthWithOTPAsync(
       primaryDevice,
       'OTP should only automatically be sent when there is a primary device'
     );
-    log(
+    log.nested(
       `One-time password was sent to the phone number ending in ${primaryDevice.sms_phone_number}.`
     );
     otp = await _promptForOTPAsync('menu');
   }
 
   if (primaryDevice?.method === UserSecondFactorDeviceMethod.AUTHENTICATOR) {
-    log('One-time password from authenticator required.');
+    log.nested('One-time password from authenticator required.');
     otp = await _promptForOTPAsync('menu');
   }
 
