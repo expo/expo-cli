@@ -1,3 +1,4 @@
+import { AndroidConfig } from '@expo/config';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import path from 'path';
@@ -1029,6 +1030,11 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       })
     );
   }
+
+  await AndroidConfig.SplashScreen.setSplashScreenAsync(
+    manifest,
+    isRunningInUserContext ? context.data.projectPath : path.join(shellPath, '..')
+  );
 
   await AssetBundle.bundleAsync(
     context,
