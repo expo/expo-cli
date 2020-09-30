@@ -196,3 +196,16 @@ export function addMetaDataItemToMainApplication(
   }
   return mainApplication;
 }
+
+export function removeMetaDataItemFromMainApplication(mainApplication: any, itemName: string) {
+  if (mainApplication.hasOwnProperty('meta-data')) {
+    const index = mainApplication['meta-data'].findIndex(
+      (e: any) => e['$']['android:name'] === itemName
+    );
+
+    if (index > -1) {
+      mainApplication['meta-data'].splice(index, 1);
+    }
+  }
+  return mainApplication;
+}

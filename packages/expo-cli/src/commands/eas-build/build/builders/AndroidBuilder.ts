@@ -1,8 +1,5 @@
 import { Android, BuildType, Job, Platform, sanitizeJob } from '@expo/eas-build-job';
-import chalk from 'chalk';
-import figures from 'figures';
 import fs from 'fs-extra';
-import ora from 'ora';
 import path from 'path';
 
 import CommandError from '../../../../CommandError';
@@ -17,9 +14,12 @@ import {
   Workflow,
 } from '../../../../easJson';
 import { gitAddAsync, gitRootDirectory } from '../../../../git';
-import log from '../../../../log';
 import { Builder, BuilderContext } from '../../types';
-import * as gitUtils from '../../utils/git';
+import {
+  configureUpdatesAndroidAsync,
+  setUpdatesVersionsAndroidAsync,
+} from '../../utils/expoUpdates';
+import { modifyAndCommitAsync } from '../../utils/git';
 import { ensureCredentialsAsync } from '../credentials';
 import gradleContent from '../templates/gradleContent';
 
@@ -32,6 +32,15 @@ interface CommonJobProperties {
     };
     secretEnvs?: Record<string, string>;
   };
+}
+
+function hasApplyLine(content: string, applyLine: string) {
+  return (
+    content
+      .split('\n')
+      // Check for both single and double quotes
+      .some(line => line === applyLine || line === applyLine.replace(/"/g, "'"))
+  );
 }
 
 class AndroidBuilder implements Builder<Platform.Android> {
@@ -81,68 +90,67 @@ class AndroidBuilder implements Builder<Platform.Android> {
     const buildGradleContent = await fs.readFile(path.join(buildGradlePath), 'utf-8');
     const applyEasGradle = 'apply from: "./eas-build.gradle"';
 
-    const hasEasGradleApply = buildGradleContent
-      .split('\n')
-      // Check for both single and double quotes
-      .some(line => line === applyEasGradle || line === applyEasGradle.replace(/"/g, "'"));
+    const hasEasGradleApply = hasApplyLine(buildGradleContent, applyEasGradle);
 
     return hasEasGradleApply && hasEasGradleFile;
   }
 
   public async ensureProjectConfiguredAsync(): Promise<void> {
-    if (!(await this.isProjectConfiguredAsync())) {
+    const { projectDir, exp, nonInteractive } = this.ctx.commandCtx;
+
+    const isProjectConfigured = await this.isProjectConfiguredAsync();
+
+    if (!isProjectConfigured) {
       throw new CommandError(
         'Project is not configured. Please run "expo eas:build:init" first to configure the project'
       );
     }
+
+    await modifyAndCommitAsync(
+      async () => {
+        await setUpdatesVersionsAndroidAsync({ projectDir, exp });
+      },
+      {
+        startMessage: 'Making sure runtime version is correct on Android',
+        commitMessage: 'Set runtime version in Android project',
+        commitSuccessMessage: 'Successfully committed the configuration changes',
+        successMessage: 'We updated the runtime version in your Android project',
+        nonInteractive,
+      }
+    );
   }
 
   public async configureProjectAsync(): Promise<void> {
-    const spinner = ora('Making sure your Android project is set up properly');
+    const { projectDir, exp, nonInteractive } = this.ctx.commandCtx;
 
-    if (await this.isProjectConfiguredAsync()) {
-      spinner.succeed('Android project is already configured');
-      return;
-    }
+    await modifyAndCommitAsync(
+      async () => {
+        const androidAppDir = path.join(projectDir, 'android', 'app');
+        const buildGradlePath = path.join(androidAppDir, 'build.gradle');
+        const easGradlePath = path.join(androidAppDir, 'eas-build.gradle');
 
-    const { projectDir } = this.ctx.commandCtx;
+        await fs.writeFile(easGradlePath, gradleContent);
+        await gitAddAsync(easGradlePath, { intentToAdd: true });
 
-    const androidAppDir = path.join(projectDir, 'android', 'app');
-    const buildGradlePath = path.join(androidAppDir, 'build.gradle');
-    const easGradlePath = path.join(androidAppDir, 'eas-build.gradle');
+        const buildGradleContent = await fs.readFile(path.join(buildGradlePath), 'utf-8');
+        const applyEasGradle = 'apply from: "./eas-build.gradle"';
 
-    await fs.writeFile(easGradlePath, gradleContent);
-    await gitAddAsync(easGradlePath, { intentToAdd: true });
+        const hasEasGradleApply = hasApplyLine(buildGradleContent, applyEasGradle);
 
-    const buildGradleContent = await fs.readFile(path.join(buildGradlePath), 'utf-8');
-    const applyEasGradle = 'apply from: "./eas-build.gradle"';
-
-    await fs.writeFile(buildGradlePath, `${buildGradleContent.trim()}\n${applyEasGradle}\n`);
-
-    try {
-      await gitUtils.ensureGitStatusIsCleanAsync();
-      spinner.succeed();
-    } catch (err) {
-      if (err instanceof gitUtils.DirtyGitTreeError) {
-        spinner.succeed('We configured your Android project to build it on the Expo servers');
-        log.newLine();
-
-        try {
-          await gitUtils.reviewAndCommitChangesAsync('Configure Android project', {
-            nonInteractive: this.ctx.commandCtx.nonInteractive,
-          });
-
-          log(`${chalk.green(figures.tick)} Successfully committed the configuration changes.`);
-        } catch (e) {
-          throw new Error(
-            "Aborting, run the command again once you're ready. Make sure to commit any changes you've made."
-          );
+        if (!hasEasGradleApply) {
+          await fs.writeFile(buildGradlePath, `${buildGradleContent.trim()}\n${applyEasGradle}\n`);
         }
-      } else {
-        spinner.fail();
-        throw err;
+
+        await configureUpdatesAndroidAsync({ projectDir, exp });
+      },
+      {
+        startMessage: 'Configuring the Android project',
+        commitMessage: 'Configure Android project',
+        commitSuccessMessage: 'Successfully committed the configuration changes',
+        successMessage: 'We configured your Android project to build it on the Expo servers',
+        nonInteractive,
       }
-    }
+    );
   }
 
   public async prepareJobAsync(archiveUrl: string): Promise<Job> {

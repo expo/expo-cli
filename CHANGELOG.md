@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [expo-cli] EAS Build: Configure `expo-updates` automatically if it's installed when running `eas:build:init` [#2587](https://github.com/expo/expo-cli/pull/2587)
+
 ### 🐛 Bug fixes
 
 - Make `expo install` pass through to npm or yarn directly when running it in a bare React Native app without the expo package installed

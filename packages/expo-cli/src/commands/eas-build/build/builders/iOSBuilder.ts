@@ -1,9 +1,6 @@
 import { IOSConfig } from '@expo/config';
 import { BuildType, iOS, Job, Platform, sanitizeJob } from '@expo/eas-build-job';
-import chalk from 'chalk';
-import figures from 'figures';
 import sortBy from 'lodash/sortBy';
-import ora from 'ora';
 import path from 'path';
 
 import { readSecretEnvsAsync } from '../../../../credentials/credentialsJson/read';
@@ -21,7 +18,8 @@ import { gitRootDirectory } from '../../../../git';
 import log from '../../../../log';
 import prompts from '../../../../prompts';
 import { Builder, BuilderContext } from '../../types';
-import * as gitUtils from '../../utils/git';
+import { configureUpdatesIOSAsync, setUpdatesVersionsIOSAsync } from '../../utils/expoUpdates';
+import { modifyAndCommitAsync } from '../../utils/git';
 import { ensureCredentialsAsync } from '../credentials';
 import { getBundleIdentifier } from '../utils/ios';
 
@@ -99,10 +97,42 @@ class iOSBuilder implements Builder<Platform.iOS> {
   }
 
   public async ensureProjectConfiguredAsync(): Promise<void> {
-    await this.configureProjectAsync();
+    const { projectDir, nonInteractive, exp } = this.ctx.commandCtx;
+
+    await modifyAndCommitAsync(
+      async () => {
+        await this.configureEasBuildAsync();
+        await setUpdatesVersionsIOSAsync({ projectDir, exp });
+      },
+      {
+        startMessage: 'Making sure your Xcode project is set up properly',
+        commitMessage: 'Configure Xcode project',
+        commitSuccessMessage: 'Successfully committed the configuration changes',
+        successMessage: 'We configured your Xcode project to build it on the Expo servers',
+        nonInteractive,
+      }
+    );
   }
 
   public async configureProjectAsync(): Promise<void> {
+    const { projectDir, nonInteractive, exp } = this.ctx.commandCtx;
+
+    await modifyAndCommitAsync(
+      async () => {
+        await this.configureEasBuildAsync();
+        await configureUpdatesIOSAsync({ projectDir, exp });
+      },
+      {
+        startMessage: 'Configuring the Xcode project',
+        commitMessage: 'Configure Xcode project',
+        commitSuccessMessage: 'Successfully committed the configuration changes',
+        successMessage: 'We configured your Xcode project to build it on the Expo servers',
+        nonInteractive,
+      }
+    );
+  }
+
+  private async configureEasBuildAsync(): Promise<void> {
     if (this.ctx.buildProfile.workflow !== Workflow.Generic) {
       return;
     }
@@ -113,49 +143,20 @@ class iOSBuilder implements Builder<Platform.iOS> {
       throw new Error('Call ensureCredentialsAsync first!');
     }
 
-    const spinner = ora('Configuring the Xcode project');
+    const { projectDir, exp } = this.ctx.commandCtx;
 
-    const bundleIdentifier = await getBundleIdentifier(
-      this.ctx.commandCtx.projectDir,
-      this.ctx.commandCtx.exp
-    );
+    const bundleIdentifier = await getBundleIdentifier(projectDir, exp);
 
     const profileName = ProvisioningProfileUtils.readProfileName(
       this.credentials.provisioningProfile
     );
     const appleTeam = ProvisioningProfileUtils.readAppleTeam(this.credentials.provisioningProfile);
 
-    const { projectDir } = this.ctx.commandCtx;
     IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectDir, bundleIdentifier, false);
     IOSConfig.ProvisioningProfile.setProvisioningProfileForPbxproj(projectDir, {
       profileName,
       appleTeamId: appleTeam.teamId,
     });
-
-    try {
-      await gitUtils.ensureGitStatusIsCleanAsync();
-      spinner.succeed();
-    } catch (err) {
-      if (err instanceof gitUtils.DirtyGitTreeError) {
-        spinner.succeed('We configured the Xcode project to build it on the Expo servers');
-        log.newLine();
-
-        try {
-          await gitUtils.reviewAndCommitChangesAsync('Configure Xcode project', {
-            nonInteractive: this.ctx.commandCtx.nonInteractive,
-          });
-
-          log(`${chalk.green(figures.tick)} Successfully committed the configuration changes.`);
-        } catch (e) {
-          throw new Error(
-            "Aborting, run the command again once you're ready. Make sure to commit any changes you've made."
-          );
-        }
-      } else {
-        spinner.fail();
-        throw err;
-      }
-    }
   }
 
   private async prepareJobCommonAsync(archiveUrl: string): Promise<Partial<CommonJobProperties>> {
