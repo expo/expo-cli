@@ -724,7 +724,7 @@ async function promptForSimulatorAsync(
   // TODO: Bail on non-interactive
   const results = await promptForDeviceAsync(devices);
 
-  return results ? devices.find(({ name }) => results === name)! : null;
+  return results ? devices.find(({ udid }) => results === udid)! : null;
 }
 
 async function promptForDeviceAsync(devices: SimControl.Device[]): Promise<string | undefined> {
@@ -744,7 +744,7 @@ async function promptForDeviceAsync(devices: SimControl.Device[]): Promise<strin
       const format = isActive ? chalk.bold : (text: string) => text;
       return {
         title: `${format(item.name)} ${chalk.dim(`(${item.osVersion})`)}`,
-        value: item.name,
+        value: item.udid,
       };
     }),
     suggest: (input: any, choices: any) => {
