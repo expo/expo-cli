@@ -62,6 +62,15 @@ describe('getConfig', () => {
       expect(exp.foo).toBe('bar');
       expect(exp.name).toBe('cool+export-json_app.config');
     });
+    it('parses a js config with import', () => {
+      const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
+      const configPath = path.resolve(projectRoot, 'with-import_app.config.js');
+      setCustomConfigPath(projectRoot, configPath);
+      const { exp } = getConfig(projectRoot, {
+        skipSDKVersionRequirement: true,
+      });
+      expect(exp.foo).toBe('bar');
+    });
     xit('parses a yaml config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/yaml');
       const { exp } = getConfig(projectRoot, {
