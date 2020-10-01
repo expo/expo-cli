@@ -1,6 +1,6 @@
-import { Color } from 'color-string';
-
 import { SplashScreenImageResizeModeType, SplashScreenStatusBarStyleType } from './constants';
+
+export type Color = [number, number, number, number];
 
 /**
  * iOS SplashScreen config.

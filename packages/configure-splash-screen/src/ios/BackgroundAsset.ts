@@ -1,8 +1,8 @@
-import { Color } from 'color-string';
 import fs from 'fs-extra';
 import path from 'path';
 import { PNG } from 'pngjs';
 
+import { Color } from '../SplashScreenConfig';
 import { writeContentsJsonFile } from './Contents.json';
 
 const PNG_FILENAME = 'background.png';

@@ -1,7 +1,8 @@
-import colorString, { Color } from 'color-string';
+import colorString from 'color-string';
 import path from 'path';
 import { Element } from 'xml-js';
 
+import { Color } from '../SplashScreenConfig';
 import {
   readXmlFile,
   writeXmlFile,

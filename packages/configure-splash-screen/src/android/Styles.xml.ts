@@ -1,7 +1,7 @@
-import { Color } from 'color-string';
 import path from 'path';
 import { Element } from 'xml-js';
 
+import { Color } from '../SplashScreenConfig';
 import { SplashScreenStatusBarStyle, SplashScreenStatusBarStyleType } from '../constants';
 import {
   readXmlFile,
