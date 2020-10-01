@@ -35,7 +35,7 @@ export function evalConfig(
     presets: [preset],
   });
 
-  let result = requireString(code);
+  let result = requireString(code, configFile);
   if (result.default != null) {
     result = result.default;
   }
