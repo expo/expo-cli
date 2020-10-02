@@ -8,8 +8,6 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
-- [expo-cli] EAS Build: Configure `expo-updates` automatically if it's installed when running `eas:build:init` [#2587](https://github.com/expo/expo-cli/pull/2587)
-
 ### 🐛 Bug fixes
 
 ## [Fri, 2 Oct 2020 11:17:40 -0700](https://github.com/expo/expo-cli/commit/b02ce39f257045aa512ead62bdffa3a766a02c97)
@@ -20,7 +18,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - [cli] Add two-factor authentication to login ([#2581](https://github.com/expo/expo-cli/issues/2581))
 - [cli] Make `expo install` pass through to npm or yarn directly when running it in a bare React Native app without the expo package installed. ([#2729](https://github.com/expo/expo-cli/issues/2729))
-- [cli] Configure expo updates when building with eas ([#2587](https://github.com/expo/expo-cli/issues/2587))
+- [cli] EAS Build: Configure `expo-updates` automatically if it's installed when running `eas:build:init` [#2587](https://github.com/expo/expo-cli/pull/2587)
 - [cli] Support absolute path in credentials.json for gradle
 
 ### 🐛 Bug fixes
