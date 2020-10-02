@@ -50,9 +50,7 @@ const div = chalk.dim(`|`);
 const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOnly'> = {}) => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
-  const username = await UserManager.getCurrentUsernameAsync();
   const devMode = dev ? 'development' : 'production';
-  const currentAuth = `@${username}`;
   const currentToggle = openDevToolsAtStartup ? 'disabled' : 'enabled';
 
   const isMac = process.platform === 'darwin';
@@ -74,7 +72,6 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
     ['d', `open Expo DevTools`],
     ['shift+d', `toggle auto opening DevTools on startup`, currentToggle],
     !options.webOnly && ['e', `share the app link by email`],
-    ['s', username ? `sign out` : `sign in`, currentAuth],
   ];
 
   log.nested(
@@ -107,7 +104,6 @@ export const printServerInfo = async (
     return;
   }
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
-  const username = await UserManager.getCurrentUsernameAsync();
   log.newLine();
   log.nested(`  ${u(url)}`);
   log.newLine();
@@ -118,21 +114,9 @@ export const printServerInfo = async (
   const iosInfo = process.platform === 'darwin' ? `, or ${b('i')} for iOS simulator` : '';
   const webInfo = `${b`w`} to run on ${u`w`}eb`;
   log.nested(wrap(u('To run the app with live reloading, choose one of:')));
-  if (username) {
-    log.nested(
-      item(
-        `Sign in as ${i(
-          '@' + username
-        )} in Expo client on Android or iOS. Your projects will automatically appear in the "Projects" tab.`
-      )
-    );
-  }
   log.nested(item(`Scan the QR code above with the Expo app (Android) or the Camera app (iOS).`));
   log.nested(item(`Press ${b`a`} for Android emulator${iosInfo}, or ${webInfo}.`));
   log.nested(item(`Press ${b`e`} to send a link to your phone with email.`));
-  if (!username) {
-    log.nested(item(`Press ${b`s`} to sign in and enable more options.`));
-  }
 
   Webpack.printConnectionInstructions(projectDir);
   printHelp();
@@ -381,26 +365,6 @@ Please reload the project in the Expo app for the change to take effect.`
           log('Restarting Metro bundler...');
         }
         Project.startAsync(projectRoot, { ...options, reset });
-        break;
-      }
-      case 's': {
-        const authSession = await UserManager.getSessionAsync();
-        if (authSession?.accessToken) {
-          log(chalk.yellow('Please remove the EXPO_TOKEN environment var to sign out.'));
-        } else if (authSession?.sessionSecret) {
-          await UserManager.logoutAsync();
-          log('Signed out.');
-        } else {
-          stopWaitingForCommand();
-          try {
-            await loginOrRegisterIfLoggedOutAsync();
-          } catch (e) {
-            log.error(e);
-          } finally {
-            startWaitingForCommand();
-          }
-        }
-        printHelp();
         break;
       }
       case 'o':
