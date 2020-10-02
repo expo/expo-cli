@@ -12,7 +12,41 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
-- Make `expo install` pass through to npm or yarn directly when running it in a bare React Native app without the expo package installed
+## [Fri, 2 Oct 2020 11:17:40 -0700](https://github.com/expo/expo-cli/commit/b02ce39f257045aa512ead62bdffa3a766a02c97)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [cli] Add two-factor authentication to login ([#2581](https://github.com/expo/expo-cli/issues/2581))
+- [cli] Make `expo install` pass through to npm or yarn directly when running it in a bare React Native app without the expo package installed. ([#2729](https://github.com/expo/expo-cli/issues/2729))
+- [cli] Configure expo updates when building with eas ([#2587](https://github.com/expo/expo-cli/issues/2587))
+- [cli] Support absolute path in credentials.json for gradle
+
+### 🐛 Bug fixes
+
+- [config] Fix relative module resolution for config files ([#2744](https://github.com/expo/expo-cli/issues/2744))
+- [configure-splash-screen] don't export color-string types ([#2739](https://github.com/expo/expo-cli/issues/2739))
+- [cli] Fix simulator picking when multiple device versions exist ([#2742](https://github.com/expo/expo-cli/issues/2742))
+- [cli] Fix EXPO_DEBUG on expo upgrade
+- [cli] Fix command help options order ([#2721](https://github.com/expo/expo-cli/issues/2721))
+- [xdl] Add support for splash screen SDK-39 standalone app configuration & building ([#2747](https://github.com/expo/expo-cli/issues/2747))
+
+### 📦 Packages updated
+
+- @expo/config@3.3.9
+- @expo/dev-server@0.1.34
+- @expo/dev-tools@0.13.51
+- @expo/electron-adapter@0.0.25
+- expo-cli@3.27.13
+- expo-optimize@0.1.56
+- @expo/image-utils@0.3.7
+- @expo/metro-config@0.1.34
+- @expo/next-adapter@2.1.39
+- expo-pwa@0.0.44
+- uri-scheme@1.0.40
+- @expo/webpack-config@0.12.38
+- @expo/xdl@58.0.12
 
 ## [Mon, 28 Sep 2020 12:02:49 -0700](https://github.com/expo/expo-cli/commit/19e206bdc3973aa5263a11999c9624ef3590b00d)
 
