@@ -35,3 +35,9 @@ export default class CommandError extends ExtendableError {
     this.isCommandError = true;
   }
 }
+
+export class AbortCommandError extends CommandError {
+  constructor() {
+    super('ABORTED', 'Interactive prompt was cancelled.');
+  }
+}
