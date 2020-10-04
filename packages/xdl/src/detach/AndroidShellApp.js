@@ -670,7 +670,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       await regexFileAsync(
         /<item>.*<\/item>/,
         '',
-        path.join(shellPath, 'app', 'src', 'main', 'res', 'drawable', 'splashscreen.xml')
+        path.join(shellPath, 'app', 'src', 'main', 'res', 'drawable', 'splash_background.xml')
       );
     }
   }
