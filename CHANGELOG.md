@@ -10,6 +10,23 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Sat, 3 Oct 2020 22:11:17 -0700](https://github.com/expo/expo-cli/commit/6d8f7c734f501b9f194d232df7a0f65d9b9415e7)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+- [xdl] Revert regex replace for < SDK 39 splash screen
+- [expo-cli] Disable TerminalUI sign in/out method (s) ([#2752](https://github.com/expo/expo-cli/issues/2752))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.52
+- expo-cli@3.27.14
+- @expo/xdl@58.0.13
+
 ## [Fri, 2 Oct 2020 11:17:40 -0700](https://github.com/expo/expo-cli/commit/b02ce39f257045aa512ead62bdffa3a766a02c97)
 
 ### 🛠 Breaking changes
