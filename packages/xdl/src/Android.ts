@@ -426,7 +426,7 @@ export async function isDeviceBootedAsync({
 }
 
 export async function uninstallExpoAsync(device: Device): Promise<string | undefined> {
-  Logger.global.info('Uninstalling Expo from Android device.');
+  Logger.global.info('Uninstalling Expo client from Android device.');
 
   // we need to check if its installed, else we might bump into "Failure [DELETE_FAILED_INTERNAL_ERROR]"
   const isInstalled = await _isExpoInstalledAsync(device);
