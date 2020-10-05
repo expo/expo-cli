@@ -24,6 +24,7 @@ jest.mock('../../utils/git', () => {
 });
 jest.mock('../../build/builders/iOSBuilder');
 jest.mock('../../../../git');
+jest.mock('../../../../credentials/utils/validateKeystore');
 jest.mock('@expo/image-utils', () => ({
   generateImageAsync(input, { src }) {
     const fs = require('fs');

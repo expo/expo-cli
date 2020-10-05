@@ -67,7 +67,10 @@ class AndroidBuilder implements Builder<Platform.Android> {
         projectName: this.ctx.commandCtx.projectName,
         accountName: this.ctx.commandCtx.accountName,
       },
-      { nonInteractive: this.ctx.commandCtx.nonInteractive }
+      {
+        nonInteractive: this.ctx.commandCtx.nonInteractive,
+        skipCredentialsCheck: this.ctx.commandCtx.skipCredentialsCheck,
+      }
     );
     await provider.initAsync();
     const credentialsSource = await ensureCredentialsAsync(

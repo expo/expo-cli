@@ -12,6 +12,8 @@ const mockedUser = {
 
 const mockProjectUrl = 'http://fakeurl.com';
 const mockPostAsync = jest.fn();
+
+jest.mock('@expo/spawn-async');
 jest.mock('@expo/config', () => {
   const pkg = jest.requireActual('@expo/config');
   return {
@@ -40,6 +42,7 @@ jest.mock('../../../../projects', () => {
 });
 jest.mock('../../utils/git');
 jest.mock('../../../../git');
+jest.mock('../../../../credentials/utils/validateKeystore');
 jest.mock('../../../../uploads', () => ({
   UploadType: {},
   uploadAsync: () => mockProjectUrl,

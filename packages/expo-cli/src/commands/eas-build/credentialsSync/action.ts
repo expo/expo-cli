@@ -92,7 +92,10 @@ async function updateRemoteCredentialsAsync(
   if ([BuildCommandPlatform.ALL, BuildCommandPlatform.ANDROID].includes(platform)) {
     try {
       const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
-      await runCredentialsManager(ctx, new SetupAndroidBuildCredentialsFromLocal(experienceName));
+      await runCredentialsManager(
+        ctx,
+        new SetupAndroidBuildCredentialsFromLocal(experienceName, { skipKeystoreValidation: false })
+      );
       Analytics.logEvent(AnalyticsEvent.CREDENTIALS_SYNC_UPDATE_REMOTE_SUCCESS, {
         ...trackingCtx,
         platform: 'android',

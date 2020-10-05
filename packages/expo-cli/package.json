@@ -116,7 +116,7 @@
     "slash": "1.0.0",
     "strip-ansi": "^6.0.0",
     "tar": "^6.0.5",
-    "tempy": "^0.3.0",
+    "tempy": "^0.7.1",
     "terminal-link": "^2.1.1",
     "untildify": "3.0.3",
     "uuid": "^8.0.0",

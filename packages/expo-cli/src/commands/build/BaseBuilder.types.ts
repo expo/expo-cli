@@ -31,6 +31,7 @@ export type AndroidOptions = CommonOptions & {
   keystorePath?: string;
   keystoreAlias?: string;
   generateKeystore: boolean;
+  skipCredentialsCheck?: boolean;
 };
 
 export type BuilderOptions = Omit<Partial<IosOptions> & Partial<AndroidOptions>, 'type'> & {

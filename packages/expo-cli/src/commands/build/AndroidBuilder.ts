@@ -61,6 +61,7 @@ export default class AndroidBuilder extends BaseBuilder {
 
   async collectAndValidateCredentials(): Promise<void> {
     const nonInteractive = this.options.parent?.nonInteractive;
+    const skipCredentialsCheck = this.options.skipCredentialsCheck === true;
 
     const ctx = new Context();
     await ctx.init(this.projectDir, { nonInteractive });
@@ -78,13 +79,18 @@ export default class AndroidBuilder extends BaseBuilder {
 
     const paramKeystore = await getKeystoreFromParams(this.options);
     if (paramKeystore) {
-      await useKeystore(ctx, experienceName, paramKeystore);
+      await useKeystore(ctx, {
+        experienceName,
+        keystore: paramKeystore,
+        skipKeystoreValidation: skipCredentialsCheck,
+      });
     } else {
       await runCredentialsManager(
         ctx,
         new SetupAndroidKeystore(experienceName, {
           nonInteractive,
           allowMissingKeystore: true,
+          skipKeystoreValidation: skipCredentialsCheck,
         })
       );
     }

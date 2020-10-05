@@ -36,7 +36,9 @@ describe('SetupAndroidBuildCredentialsFromLocal', () => {
     await fs.writeFile('keystore.jks', Buffer.from(testKeystore.keystore, 'base64'));
 
     const ctx = getCtxMock();
-    const view = new SetupAndroidBuildCredentialsFromLocal(testExperienceName);
+    const view = new SetupAndroidBuildCredentialsFromLocal(testExperienceName, {
+      skipKeystoreValidation: true,
+    });
     const lastView = await view.open(ctx);
 
     expect(lastView).toBe(null);
@@ -58,7 +60,9 @@ describe('SetupAndroidBuildCredentialsFromLocal', () => {
     await fs.writeFile('keystore.jks', Buffer.from(testKeystore.keystore, 'base64'));
 
     const ctx = getCtxMock();
-    const view = new SetupAndroidBuildCredentialsFromLocal(testExperienceName);
+    const view = new SetupAndroidBuildCredentialsFromLocal(testExperienceName, {
+      skipKeystoreValidation: true,
+    });
     await expect(view.open(ctx)).rejects.toThrowError();
   });
   it('should fail if keystore file (specified in credentials.json) does not exist', async () => {
@@ -76,7 +80,9 @@ describe('SetupAndroidBuildCredentialsFromLocal', () => {
     });
 
     const ctx = getCtxMock();
-    const view = new SetupAndroidBuildCredentialsFromLocal(testExperienceName);
+    const view = new SetupAndroidBuildCredentialsFromLocal(testExperienceName, {
+      skipKeystoreValidation: true,
+    });
     await expect(view.open(ctx)).rejects.toThrowError();
   });
   it('should fail if there are missing fields in ios config in credentials.json', async () => {
@@ -98,7 +104,9 @@ describe('SetupAndroidBuildCredentialsFromLocal', () => {
     await fs.writeFile('keystore.jks', Buffer.from(testKeystore.keystore, 'base64'));
 
     const ctx = getCtxMock();
-    const view = new SetupAndroidBuildCredentialsFromLocal(testExperienceName);
+    const view = new SetupAndroidBuildCredentialsFromLocal(testExperienceName, {
+      skipKeystoreValidation: true,
+    });
     await expect(view.open(ctx)).rejects.toThrowError();
   });
   it('should update keystore on www if provisioningProfile and distribuiton certificate are missing', async () => {
@@ -124,7 +132,9 @@ describe('SetupAndroidBuildCredentialsFromLocal', () => {
     await fs.writeFile('keystore.jks', Buffer.from(testKeystore.keystore, 'base64'));
 
     const ctx = getCtxMock();
-    const view = new SetupAndroidBuildCredentialsFromLocal(testExperienceName);
+    const view = new SetupAndroidBuildCredentialsFromLocal(testExperienceName, {
+      skipKeystoreValidation: true,
+    });
     const lastView = await view.open(ctx);
 
     expect(lastView).toBe(null);
