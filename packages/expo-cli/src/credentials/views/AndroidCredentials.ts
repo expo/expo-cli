@@ -47,7 +47,7 @@ class ExperienceView implements IView {
   handleAction(context: Context, selected: string): IView | null {
     switch (selected) {
       case 'update-keystore':
-        return new UpdateKeystore(this.experienceName);
+        return new UpdateKeystore(this.experienceName, { skipKeystoreValidation: false });
       case 'remove-keystore':
         return new RemoveKeystore(this.experienceName);
       case 'update-fcm-key':

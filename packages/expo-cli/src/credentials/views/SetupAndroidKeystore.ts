@@ -1,11 +1,13 @@
 import log from '../../log';
 import { Context, IView } from '../context';
 import * as credentialsJsonReader from '../credentialsJson/read';
+import validateKeystoreAsync from '../utils/validateKeystore';
 import { UpdateKeystore } from './AndroidKeystore';
 
 interface Options {
   nonInteractive?: boolean;
   allowMissingKeystore?: boolean;
+  skipKeystoreValidation: boolean;
 }
 
 export class SetupAndroidKeystore implements IView {
@@ -28,12 +30,18 @@ export class SetupAndroidKeystore implements IView {
       }
     }
 
-    return new UpdateKeystore(this.experienceName, { bestEffortKeystoreGeneration: true });
+    return new UpdateKeystore(this.experienceName, {
+      bestEffortKeystoreGeneration: true,
+      skipKeystoreValidation: this.options.skipKeystoreValidation,
+    });
   }
 }
 
 export class SetupAndroidBuildCredentialsFromLocal implements IView {
-  constructor(private experienceName: string) {}
+  constructor(
+    private experienceName: string,
+    private options: { skipKeystoreValidation: boolean }
+  ) {}
 
   async open(ctx: Context): Promise<IView | null> {
     let localCredentials;
@@ -44,6 +52,9 @@ export class SetupAndroidBuildCredentialsFromLocal implements IView {
         'Reading credentials from credentials.json failed. Make sure this file is correct and all credentials are present there.'
       );
       throw error;
+    }
+    if (!this.options.skipKeystoreValidation) {
+      await validateKeystoreAsync(localCredentials.keystore);
     }
     await ctx.android.updateKeystore(this.experienceName, localCredentials.keystore);
     return null;

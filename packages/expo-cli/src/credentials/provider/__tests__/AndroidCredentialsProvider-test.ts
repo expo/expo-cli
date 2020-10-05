@@ -25,6 +25,8 @@ jest.mock('../../context', () => {
     })),
   };
 });
+jest.mock('../../utils/validateKeystore');
+
 beforeEach(() => {
   mockFetchKeystore.mockReset();
   vol.reset();

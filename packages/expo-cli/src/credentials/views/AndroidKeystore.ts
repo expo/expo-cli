@@ -13,9 +13,11 @@ import { confirmAsync } from '../../prompts';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { Context, IView } from '../context';
 import { Keystore, keystoreSchema } from '../credentials';
+import validateKeystoreAsync from '../utils/validateKeystore';
 
 interface UpdateKeystoreOptions {
-  bestEffortKeystoreGeneration: boolean;
+  bestEffortKeystoreGeneration?: boolean;
+  skipKeystoreValidation: boolean;
 }
 
 async function keytoolCommandExists(): Promise<boolean> {
@@ -28,10 +30,7 @@ async function keytoolCommandExists(): Promise<boolean> {
 }
 
 class UpdateKeystore implements IView {
-  constructor(
-    private experienceName: string,
-    private options: UpdateKeystoreOptions = { bestEffortKeystoreGeneration: false }
-  ) {}
+  constructor(private experienceName: string, private options: UpdateKeystoreOptions) {}
 
   async open(ctx: Context): Promise<IView | null> {
     if (await ctx.android.fetchKeystore(this.experienceName)) {
@@ -41,7 +40,9 @@ class UpdateKeystore implements IView {
     if (!keystore) {
       return null;
     }
-
+    if (!this.options.skipKeystoreValidation) {
+      await validateKeystoreAsync(keystore);
+    }
     await ctx.android.updateKeystore(this.experienceName, keystore);
     log(chalk.green('Keystore updated successfully'));
     return null;
@@ -248,7 +249,17 @@ async function getKeystoreFromParams(options: {
   }
 }
 
-async function useKeystore(ctx: Context, experienceName: string, keystore: Keystore) {
+async function useKeystore(
+  ctx: Context,
+  {
+    experienceName,
+    keystore,
+    skipKeystoreValidation,
+  }: { experienceName: string; keystore: Keystore; skipKeystoreValidation: boolean }
+) {
+  if (!skipKeystoreValidation) {
+    await validateKeystoreAsync(keystore);
+  }
   await ctx.android.updateKeystore(experienceName, keystore);
 }
 
