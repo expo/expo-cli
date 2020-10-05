@@ -18,6 +18,7 @@ jest.mock('got', () => {
     },
   };
 });
+jest.mock('temp-dir', () => '/tmp');
 jest.mock('../files', () => {
   const filesModule = jest.requireActual('../files');
   return {
@@ -31,6 +32,7 @@ jest.mock('../files', () => {
 });
 
 beforeAll(async () => {
+  vol.mkdirpSync('/tmp');
   vol.writeFileSync(
     '/apk-archive.tar.gz',
     originalFs.readFileSync(path.join(__dirname, 'fixtures/apk-archive.tar.gz'))
