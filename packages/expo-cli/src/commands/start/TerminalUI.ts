@@ -51,7 +51,7 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
   const { dev } = await ProjectSettings.readAsync(projectDir);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
   const devMode = dev ? 'development' : 'production';
-  const currentToggle = openDevToolsAtStartup ? 'disabled' : 'enabled';
+  const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
 
   const isMac = process.platform === 'darwin';
 
