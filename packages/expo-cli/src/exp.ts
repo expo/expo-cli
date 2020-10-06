@@ -30,6 +30,7 @@ import ProgressBar from 'progress';
 import stripAnsi from 'strip-ansi';
 import url from 'url';
 
+import { AbortCommandError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
 import log from './log';
@@ -334,7 +335,9 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
       Analytics.flush();
     } catch (err) {
       // TODO: Find better ways to consolidate error messages
-      if (err.isCommandError) {
+      if (err instanceof AbortCommandError) {
+        // Do nothing when a prompt is cancelled.
+      } else if (err.isCommandError) {
         log.error(err.message);
       } else if (err._isApiError) {
         log.error(chalk.red(err.message));

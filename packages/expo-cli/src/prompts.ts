@@ -1,7 +1,7 @@
 import program from 'commander';
 import prompts, { Choice, Options, PromptType, PromptObject as Question } from 'prompts';
 
-import CommandError from './CommandError';
+import CommandError, { AbortCommandError } from './CommandError';
 
 export { PromptType, Question };
 
@@ -29,7 +29,7 @@ export default function prompt(
   }
   return prompts(questions, {
     onCancel() {
-      throw new CommandError('ABORTED');
+      throw new AbortCommandError();
     },
     ...options,
   });
