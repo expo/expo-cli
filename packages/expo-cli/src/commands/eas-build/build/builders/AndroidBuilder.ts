@@ -200,6 +200,7 @@ class AndroidBuilder implements Builder<Platform.Android> {
       type: BuildType.Generic,
       gradleCommand: buildProfile.gradleCommand,
       artifactPath: buildProfile.artifactPath,
+      releaseChannel: buildProfile.releaseChannel,
       projectRootDirectory,
     };
   }
