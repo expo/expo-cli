@@ -403,7 +403,7 @@ export async function installExpoAsync({ device, url }: { device: Device; url?: 
   const path = await downloadApkAsync(url, progress => bar.tick(1, progress));
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
-  Logger.global.info(`Installing Expo on device`);
+  Logger.global.info(`Installing Expo client on device`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   warningTimer = setWarningTimer();
   const result = await getAdbOutputAsync(adbPidArgs(device.pid, 'install', path));
