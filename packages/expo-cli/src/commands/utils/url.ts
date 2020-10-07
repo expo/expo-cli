@@ -20,9 +20,9 @@ export function constructBuildLogsUrl({
   v2?: boolean;
 }): string {
   if (v2) {
-    return `${getExpoDomainUrl()}/dashboard/${username}/builds/v2/${buildId}`;
+    return `${getExpoDomainUrl()}/accounts/${username}/builds/v2/${buildId}`;
   } else if (username) {
-    return `${getExpoDomainUrl()}/dashboard/${username}/builds/${buildId}`;
+    return `${getExpoDomainUrl()}/accounts/${username}/builds/${buildId}`;
   } else {
     return `${getExpoDomainUrl()}/builds/${buildId}`;
   }
