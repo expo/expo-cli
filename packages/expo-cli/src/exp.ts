@@ -227,7 +227,7 @@ Command.prototype.commandHelp = function () {
       'eject',
       'experimental',
       'internal',
-      // add any others and remove duplicates
+      // add any others and remove duplicatesd
       ...Object.keys(helpGroups),
     ]),
   ];
