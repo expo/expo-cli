@@ -72,6 +72,8 @@ it(`can eject a minimal project`, async () => {
 
   const outputPkgJson = await JsonFile.readAsync(path.join(projectRoot, 'package.json'));
 
+  // Remove main
+  expect(outputPkgJson.main).toBe(undefined);
   // Scripts should be rewritten to use react-native-community/cli
   expect(outputPkgJson.scripts['ios']).toBe('react-native run-ios');
   expect(outputPkgJson.scripts['android']).toBe('react-native run-android');

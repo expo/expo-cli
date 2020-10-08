@@ -37,6 +37,7 @@ export async function tryRunAsync(args: string[], options?: SpawnOptions): Promi
 
 // TODO(Bacon): This is too much stuff
 export const minimumNativePkgJson = {
+  main: 'node_modules/expo/AppEntry.js',
   dependencies: {
     expo: '37.0.11',
     react: '16.9.0',
