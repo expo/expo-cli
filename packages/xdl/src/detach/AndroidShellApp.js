@@ -1290,6 +1290,11 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       `"package_name": "${javaPackage}"`,
       path.join(shellPath, 'app', 'google-services.json')
     );
+    await regexFileAsync(
+      '"package_name": ".fcm.ScopedExpoFcmMessagingService"',
+      `"package_name": ".fcm.ExpoFcmMessagingService"`,
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
 
     // Google sign in
     await regexFileAsync(
