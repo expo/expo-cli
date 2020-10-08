@@ -403,7 +403,7 @@ export async function installExpoAsync({ device, url }: { device: Device; url?: 
   const path = await downloadApkAsync(url, progress => bar.tick(1, progress));
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
-  Logger.global.info(`Installing Expo on device`);
+  Logger.global.info(`Installing Expo client on device`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   warningTimer = setWarningTimer();
   const result = await getAdbOutputAsync(adbPidArgs(device.pid, 'install', path));
@@ -426,7 +426,7 @@ export async function isDeviceBootedAsync({
 }
 
 export async function uninstallExpoAsync(device: Device): Promise<string | undefined> {
-  Logger.global.info('Uninstalling Expo from Android device.');
+  Logger.global.info('Uninstalling Expo client from Android device.');
 
   // we need to check if its installed, else we might bump into "Failure [DELETE_FAILED_INTERNAL_ERROR]"
   const isInstalled = await _isExpoInstalledAsync(device);
