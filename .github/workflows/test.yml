@@ -109,27 +109,22 @@ jobs:
 
   windows:
     runs-on: windows-latest
-    needs: build
     strategy:
       fail-fast: false
       matrix:
-        node: ['10', '12']
-        package:
-          - expo-cli
-    name: Test ${{ matrix.package }} on Node ${{ matrix.node }} (Windows)
+        node: ['12']
+    name: Windows e2e on Node ${{ matrix.node }}
     steps:
-      - uses: actions/cache@v1
-        id: restore-build
+      - uses: actions/checkout@v2
         with:
-          path: '.'
-          key: ${{ github.sha }}-${{ matrix.node }}
+          fetch-depth: 1
       - name: Set up Node
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-      - name: Verify dependencies
+      - name: Install dependencies
         run: yarn install --frozen-lockfile
-      - name: Test ${{ matrix.package }}
-        working-directory: packages\${{ matrix.package }}
-        run: yarn test
+      - name: Test Expo CLI
+        working-directory: packages\expo-cli
+        run: yarn test e2e
 
