@@ -34,7 +34,7 @@ function getCurrentPackageName(projectRoot: string) {
   const packageRoot = getPackageRoot(projectRoot);
   const mainApplicationPath = getMainApplicationPath({ projectRoot, packageRoot });
   const packagePath = path.dirname(mainApplicationPath);
-  const packagePathParts = packagePath.replace(packageRoot, '').split(path.sep).filter(Boolean);
+  const packagePathParts = path.relative(packageRoot, packagePath).split(path.sep).filter(Boolean);
 
   return packagePathParts.join('.');
 }
