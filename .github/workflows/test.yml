@@ -29,33 +29,36 @@ jobs:
           path: '.'
           key: ${{ github.sha }}-${{ matrix.node }}
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: build
     strategy:
       fail-fast: false
       matrix:
         node: ['10', '12']
+        os: [ubuntu-latest]
         package:
-          [
-            electron-adapter,
-            dev-tools,
-            babel-preset-cli,
-            config,
-            dev-server,
-            expo-cli,
-            expo-codemod,
-            image-utils,
-            json-file,
-            metro-config,
-            package-manager,
-            plist,
-            pwa,
-            schemer,
-            uri-scheme,
-            webpack-config,
-            xdl,
-          ]
-    name: Test ${{ matrix.package }} on Node ${{ matrix.node }}
+          - electron-adapter
+          - dev-tools
+          - babel-preset-cli
+          - config
+          - dev-server
+          - expo-cli
+          - expo-codemod
+          - image-utils
+          - json-file
+          - metro-config
+          - package-manager
+          - plist
+          - pwa
+          - schemer
+          - uri-scheme
+          - webpack-config
+          - xdl
+        include:
+          - node: '12'
+            os: windows-latest
+            package: expo-cli
+    name: Test ${{ matrix.package }} on Node ${{ matrix.node }} (${{ matrix.os }})
     steps:
       - uses: actions/cache@v1
         id: restore-build
@@ -67,10 +70,9 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Test ${{ matrix.package }}
-        run: cd packages/${{ matrix.package }} && yarn test
-        # run: cd packages/${{ matrix.package }} && yarn test --coverage
-        env:
-          CI: true
+        working-directory: packages/${{ matrix.package }}
+        run: yarn test
+        # run: yarn test --coverage
       # - name: Get Test Flag Name
       #   id: cov-flag-name
       #   run: echo "::set-output name=flag::$(echo ${{ matrix.package }} | perl -pe 's/[^a-z]+([a-z])/\U\1/gi;s/^([A-Z])/\l\1/')"
