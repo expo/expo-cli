@@ -1,7 +1,7 @@
 {
   "name": "@expo/pkcs12",
   "version": "0.0.1",
-  "description": "PKCS12 Utilities for Node.js",
+  "description": "PKCS#12 Utilities for Node.js",
   "main": "build/index.js",
   "scripts": {
     "watch": "tsc --watch",
