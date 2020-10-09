@@ -25,7 +25,9 @@ function getMainApplicationPath({
     cwd: packageRoot,
   });
   // If there's more than one, we'll probably have a problem.
-  return mainApplications[0];
+  // Also, glob always returns a posix formatted path (even on windows),
+  // lets normalize that so we can use it with `.split(path.sep)`
+  return path.normalize(mainApplications[0]);
 }
 
 function getCurrentPackageName(projectRoot: string) {
