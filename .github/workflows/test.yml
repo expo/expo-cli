@@ -124,6 +124,8 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+      - name: Build dependencies
+        run: yarn lerna run prepare --stream
       - name: Test Expo CLI
         working-directory: packages\expo-cli
         run: yarn test e2e
