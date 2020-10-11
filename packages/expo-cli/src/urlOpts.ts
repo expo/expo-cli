@@ -18,10 +18,10 @@ export type URLOptions = {
 
 function addOptions(program: Command) {
   program
-    .option('-a, --android', 'Opens your app in Expo on a connected Android device')
+    .option('-a, --android', 'Opens your app in Expo client on a connected Android device')
     .option(
       '-i, --ios',
-      'Opens your app in Expo in a currently running iOS simulator on your computer'
+      'Opens your app in Expo client in a currently running iOS simulator on your computer'
     )
     .option('-w, --web', 'Opens your app in a web browser')
     .option(
