@@ -79,7 +79,7 @@ function getHash(
   if (inputEncoding) {
     hash.update(data, inputEncoding);
   } else {
-    hash.update(data); // use node default inputEncoding
+    hash.update(data); // use Node's default inputEncoding
   }
   const digest = hash.digest(hashEncoding ?? 'hex');
   return upperCase ? digest.toUpperCase() : digest;
