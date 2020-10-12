@@ -92,7 +92,7 @@ describe('PKCS12 Tests', () => {
     const serialNumber = getFormattedSerialNumber(certificate);
     expect(serialNumber).toEqual(expectedSerialNumber);
   });
-  it('Conventional P12 Certificate Data', async () => {
+  it('reads X.509 certificates from conventional p12 files', async () => {
     const { base64EncodedP12, password } = conventionalP12;
     const p12 = getPKCS12(base64EncodedP12, password);
     const certificate = getX509Certificate(p12);
