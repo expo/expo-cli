@@ -32,7 +32,7 @@ const keystoreP12 = {
   sha256Fingerprint: 'EECDD35E90BB272D52EC261B4063C5D586980795452340525F9C8CC56DB53E2B',
 };
 describe('PKCS12 Tests', () => {
-  it('Conventional P12 Cert Fingerprints', async () => {
+  it('computes fingerprints of certificates in conventional p12 files', async () => {
     const {
       base64EncodedP12,
       password,
