@@ -85,7 +85,7 @@ describe('PKCS12 Tests', () => {
     expect(sha1Fingerprint).toEqual(expectedSha1Fingerprint);
     expect(sha256Fingerprint).toEqual(expectedSha256Fingerprint);
   });
-  it('Conventional P12 Serial Number', async () => {
+  it('reads X.509 certificate serial numbers from conventional p12 files', async () => {
     const { base64EncodedP12, password, serialNumber: expectedSerialNumber } = conventionalP12;
     const p12 = getPKCS12(base64EncodedP12, password);
     const certificate = getX509Certificate(p12);
