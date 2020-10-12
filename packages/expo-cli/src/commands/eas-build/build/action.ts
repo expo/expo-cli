@@ -58,6 +58,12 @@ async function buildAction(projectDir: string, options: BuildOptions): Promise<v
     );
   }
 
+  if (process.env.EAS_OUTPUT_JOB_JSON === '1' && requestedPlatform === BuildCommandPlatform.ALL) {
+    throw new Error(
+      `You can build for only one platform at a time when EAS_OUTPUT_JOB_JSON=true is set`
+    );
+  }
+
   const trackingCtx = {
     tracking_id: uuidv4(),
     requested_platform: options.platform,
@@ -204,6 +210,11 @@ async function startBuildAsync<T extends Platform>(
     });
     const job = await builder.prepareJobAsync(archiveUrl);
     log(`Starting ${platformDisplayNames[job.platform]} build`);
+
+    if (process.env.EAS_OUTPUT_JOB_JSON === '1') {
+      process.stdout.write(`JSON for the job:\n${JSON.stringify(job)}\n`);
+      process.exit(0);
+    }
 
     try {
       const { buildId, deprecationInfo } = await client.postAsync(`projects/${projectId}/builds`, {
