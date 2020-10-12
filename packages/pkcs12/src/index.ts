@@ -55,7 +55,7 @@ export function getPKCS12(
   const base64EncodedP12 = Buffer.isBuffer(p12BufferOrBase64String)
     ? p12BufferOrBase64String.toString('base64')
     : p12BufferOrBase64String;
-  const password = String(maybePassword || '');
+  const password = String(maybePassword ?? '');
   const p12Der = forge.util.decode64(base64EncodedP12);
   const p12Asn1 = forge.asn1.fromDer(p12Der);
   return forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
