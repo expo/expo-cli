@@ -58,7 +58,7 @@ describe('PKCS12 Tests', () => {
     expect(sha1Fingerprint).toEqual(expectedSha1Fingerprint);
     expect(sha256Fingerprint).toEqual(expectedSha256Fingerprint);
   });
-  it('Keystore P12 Cert Fingerprints', async () => {
+  it('computes fingerprints of certificates in p12 keystores', async () => {
     const {
       base64EncodedP12,
       password,
