@@ -64,12 +64,10 @@ export function getPKCS12(
 function getHash(
   data: string,
   {
-    upperCase,
     hashAlgorithm,
     hashEncoding,
     inputEncoding,
   }: {
-    upperCase?: boolean;
     hashAlgorithm?: string;
     hashEncoding?: HexBase64Latin1Encoding;
     inputEncoding?: Utf8AsciiLatin1Encoding;
@@ -81,24 +79,20 @@ function getHash(
   } else {
     hash.update(data); // use Node's default inputEncoding
   }
-  const digest = hash.digest(hashEncoding ?? 'hex');
-  return upperCase ? digest.toUpperCase() : digest;
+  return hash.digest(hashEncoding ?? 'hex');
 }
 
 export function getCertificateFingerprint(
   certificate: forge.pki.Certificate,
   {
-    upperCase,
     hashAlgorithm,
   }: {
-    upperCase?: boolean;
     hashAlgorithm?: string;
   }
 ): string {
   const certAsn1 = forge.pki.certificateToAsn1(certificate);
   const certDer = forge.asn1.toDer(certAsn1).getBytes(); // binary encoded string
   return getHash(certDer, {
-    upperCase,
     hashAlgorithm,
     hashEncoding: 'hex',
     inputEncoding: 'latin1', // latin1 is an alias for binary
