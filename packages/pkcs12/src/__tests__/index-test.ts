@@ -1,9 +1,9 @@
 import {
   getCertificateFingerprint,
   getFormattedSerialNumber,
-  getPKCS12,
   getX509Certificate,
   getX509CertificateByFriendlyName,
+  parsePKCS12,
 } from '..';
 
 // https://pkijs.org/examples/PKCS12SimpleExample.html
@@ -40,7 +40,7 @@ describe('reading PKCS#12 files', () => {
       sha1Fingerprint: expectedSha1Fingerprint,
       sha256Fingerprint: expectedSha256Fingerprint,
     } = conventionalP12;
-    const p12 = getPKCS12(base64EncodedP12, password);
+    const p12 = parsePKCS12(base64EncodedP12, password);
     const certificate = getX509Certificate(p12);
     const md5Fingerprint = getCertificateFingerprint(certificate, {
       hashAlgorithm: 'md5',
@@ -64,7 +64,7 @@ describe('reading PKCS#12 files', () => {
       sha1Fingerprint: expectedSha1Fingerprint,
       sha256Fingerprint: expectedSha256Fingerprint,
     } = keystoreP12;
-    const p12 = getPKCS12(base64EncodedP12, password);
+    const p12 = parsePKCS12(base64EncodedP12, password);
     const certificate = getX509CertificateByFriendlyName(p12, alias);
     const md5Fingerprint = getCertificateFingerprint(certificate, {
       hashAlgorithm: 'md5',
@@ -81,15 +81,33 @@ describe('reading PKCS#12 files', () => {
   });
   it('reads X.509 certificate serial numbers from conventional p12 files', async () => {
     const { base64EncodedP12, password, serialNumber: expectedSerialNumber } = conventionalP12;
-    const p12 = getPKCS12(base64EncodedP12, password);
+    const p12 = parsePKCS12(base64EncodedP12, password);
     const certificate = getX509Certificate(p12);
     const serialNumber = getFormattedSerialNumber(certificate);
     expect(serialNumber).toEqual(expectedSerialNumber);
   });
-  it('reads X.509 certificates from conventional p12 files', async () => {
+  it('reads X.509 certificates from conventional p12 files using #getX509Certificate', async () => {
     const { base64EncodedP12, password } = conventionalP12;
-    const p12 = getPKCS12(base64EncodedP12, password);
+    const p12 = parsePKCS12(base64EncodedP12, password);
     const certificate = getX509Certificate(p12);
     expect(certificate).toMatchSnapshot();
+  });
+  it('reads X.509 certificates from p12 keystores using #getX509Certificate', async () => {
+    const { base64EncodedP12, password } = keystoreP12;
+    const p12 = parsePKCS12(base64EncodedP12, password);
+    // gets an arbitrary certificate from the keystore
+    const certificate = getX509Certificate(p12);
+    expect(certificate).toMatchSnapshot();
+  });
+  it('reads X.509 certificates from p12 keystores using #getX509CertificateByFriendlyName', async () => {
+    const { base64EncodedP12, password, alias } = keystoreP12;
+    const p12 = parsePKCS12(base64EncodedP12, password);
+    const certificate = getX509CertificateByFriendlyName(p12, alias);
+    expect(certificate).toMatchSnapshot();
+  });
+  it('fails to read X.509 certificates from conventional p12 files using #getX509CertificateByFriendlyName', async () => {
+    const { base64EncodedP12, password } = conventionalP12;
+    const p12 = parsePKCS12(base64EncodedP12, password);
+    expect(() => getX509CertificateByFriendlyName(p12, 'ruhroh')).toThrow();
   });
 });

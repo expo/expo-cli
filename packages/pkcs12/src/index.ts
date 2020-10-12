@@ -48,7 +48,7 @@ export function getX509CertificateByFriendlyName(
   return certificate;
 }
 
-export function getPKCS12(
+export function parsePKCS12(
   p12BufferOrBase64String: Buffer | string,
   maybePassword: string | null
 ): forge.pkcs12.Pkcs12Pfx {
