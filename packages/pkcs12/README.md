@@ -15,7 +15,7 @@ const sha1Fingerprint = getCertificateFingerprint(certificate, {
 }); // Hash like 02EC75A7181C575757BAA931FE3105B7125FF10A
 ```
 
-## Extracting a certificate from a keystore formatted PKCS#12 file
+## Extracting a certificate from a keystore in a PKCS#12 file
 
 ```
 const p12 = getPKCS12(base64EncodedP12, password); // deserializes encodedP12
