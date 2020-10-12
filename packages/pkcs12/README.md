@@ -1,6 +1,6 @@
 # PKCS#12
 
-PKCS#12 Utility functions to extract conventional and keystore formatted PKCS#12 files
+PKCS#12 utility functions to extract certificates from conventional and keystore PKCS#12 files
 
 # Examples
 
