@@ -28,7 +28,7 @@ export function getX509Certificate(p12: forge.pkcs12.Pkcs12Pfx): forge.pki.Certi
 
 /**
  * Extracts a certificate from PKCS#12
- * This is assumed to be a PKCS#12 in Keystore format where the friendlyName (alias) contains a PrivateKeyEntry
+ * This is assumed to be a PKCS#12 containing a keystore where the friendlyName (alias) contains a PrivateKeyEntry
  * A PrivateKeyEntry contains exactly one certificate and one key
  * https://docs.oracle.com/javase/7/docs/api/java/security/KeyStore.PrivateKeyEntry.html
  */
