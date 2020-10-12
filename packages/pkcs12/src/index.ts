@@ -2,7 +2,7 @@ import crypto, { HexBase64Latin1Encoding, Utf8AsciiLatin1Encoding } from 'crypto
 import forge from 'node-forge';
 
 /**
- * returns serial number as an uppercased hexidecimal string
+ * Returns the serial number of the given X.509 certificate as an uppercased hexadecimal string
  */
 export function getFormattedSerialNumber(certificate: forge.pki.Certificate): string | null {
   const { serialNumber } = certificate;
