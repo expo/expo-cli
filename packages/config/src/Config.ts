@@ -9,9 +9,11 @@ import {
   AppJSONConfig,
   ConfigFilePaths,
   ExpoConfig,
+  ExportedConfig,
   ExpRc,
   GetConfigOptions,
   PackageJSONConfig,
+  PackConfig,
   Platform,
   ProjectConfig,
   ProjectTarget,
@@ -28,14 +30,26 @@ import { getDynamicConfig, getStaticConfig } from './getConfig';
  *
  * @param config Input config object to reduce
  */
-function reduceExpoObject(config?: any): ExpoConfig | null {
+function reduceExpoObject(config?: any): ExportedConfig {
   if (!config) return config === undefined ? null : config;
 
   if (typeof config.expo === 'object') {
+    if (config.plugins && typeof config.plugins !== 'object') {
+      throw new Error(`plugins object was defined in the config but it's not an object.`);
+    }
     // TODO: We should warn users in the future that if there are more values than "expo", those values outside of "expo" will be omitted in favor of the "expo" object.
-    return config.expo as ExpoConfig;
+    return { expo: config.expo as ExpoConfig, plugins: (config.plugins as PackConfig) ?? null };
   }
-  return config;
+  if (config.plugins != null) {
+    throw new Error(
+      `plugins object must exist outside of the Expo config:\n${JSON.stringify(
+        { expo: {}, plugins: {} },
+        null,
+        2
+      )}`
+    );
+  }
+  return { expo: config, plugins: null };
 }
 
 /**
@@ -69,7 +83,7 @@ function getSupportedPlatforms(
  * module.exports = function({ config }) {
  *   // mutate the config before returning it.
  *   config.slug = 'new slug'
- *   return config;
+ *   return { expo: config };
  * }
  *
  * **Supports**
@@ -89,21 +103,22 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
   const rootConfig = (rawStaticConfig || {}) as AppJSONConfig;
   const staticConfig = reduceExpoObject(rawStaticConfig) || {};
 
-  const jsonFileWithNodeModulesPath = reduceExpoObject(rootConfig) as ExpoConfig;
+  const jsonFileWithNodeModulesPath = reduceExpoObject(rootConfig);
   // Can only change the package.json location if an app.json or app.config.json exists with nodeModulesPath
   const [packageJson, packageJsonPath] = getPackageJsonAndPath(
     projectRoot,
-    jsonFileWithNodeModulesPath
+    jsonFileWithNodeModulesPath.expo
   );
 
-  function fillAndReturnConfig(config: any, dynamicConfigObjectType: string | null) {
+  function fillAndReturnConfig(config: ExportedConfig, dynamicConfigObjectType: string | null) {
     return {
       ...ensureConfigHasDefaultValues(
         projectRoot,
-        config,
+        config.expo,
         packageJson,
         options.skipSDKVersionRequirement
       ),
+      plugins: config.plugins,
       dynamicConfigObjectType,
       rootConfig,
       dynamicConfigPath: paths.dynamicConfigPath,
@@ -112,8 +127,8 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
   }
 
   // Fill in the static config
-  function getContextConfig(config: any = {}) {
-    return ensureConfigHasDefaultValues(projectRoot, config, packageJson, true).exp;
+  function getContextConfig(config: ExportedConfig) {
+    return ensureConfigHasDefaultValues(projectRoot, config.expo, packageJson, true).exp;
   }
 
   if (paths.dynamicConfigPath) {
@@ -147,8 +162,11 @@ export function getPackageJson(
 
 function getPackageJsonAndPath(
   projectRoot: string,
-  config: Partial<Pick<ExpoConfig, 'nodeModulesPath'>> = {}
+  config: Partial<Pick<ExpoConfig, 'nodeModulesPath'>> | null = {}
 ): [PackageJSONConfig, string] {
+  if (!config) {
+    config = {};
+  }
   const packageJsonPath = getRootPackageJsonPath(projectRoot, config);
   return [JsonFile.read(packageJsonPath), packageJsonPath];
 }
@@ -196,6 +214,7 @@ export function readConfigJson(
 
   return {
     ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
+    plugins: null,
     dynamicConfigPath: null,
     dynamicConfigObjectType: null,
     rootConfig: { ...outputRootConfig } as AppJSONConfig,
@@ -385,10 +404,13 @@ const APP_JSON_EXAMPLE = JSON.stringify({
 
 function ensureConfigHasDefaultValues(
   projectRoot: string,
-  exp: Partial<ExpoConfig>,
+  exp: Partial<ExpoConfig> | null,
   pkg: JSONObject,
   skipSDKVersionRequirement: boolean = false
 ): { exp: ExpoConfig; pkg: PackageJSONConfig } {
+  if (!exp) {
+    exp = {};
+  }
   // Defaults for package.json fields
   const pkgName = typeof pkg.name === 'string' ? pkg.name : path.basename(projectRoot);
   const pkgVersion = typeof pkg.version === 'string' ? pkg.version : '1.0.0';
@@ -450,6 +472,7 @@ export async function writeConfigJsonAsync(
 
   return {
     exp,
+    plugins: null,
     pkg,
     rootConfig,
     staticConfigPath,

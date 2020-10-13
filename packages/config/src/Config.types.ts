@@ -1,12 +1,91 @@
 import { ExpoConfig } from '@expo/config-types';
+import { JSONObject } from '@expo/json-file';
+import { XcodeProject } from 'xcode';
+
+import { InfoPlist } from './ios';
+
+export interface ProjectFileSystem {
+  readonly projectRoot: string;
+  /**
+   * Project root for the specific platform.
+   */
+  readonly platformProjectRoot: string;
+}
+
+export interface FileModifierProps<IData> {
+  /**
+   * The Object representation of a complex file type.
+   */
+  data: IData;
+  /**
+   * file path for the output data.
+   */
+  filePath?: string;
+}
+
+export interface IOSProjectModifierProps {
+  // Something like projectRoot/ios/[MyApp]/
+  projectName: string;
+}
+
+export interface AndroidResourceProjectModifierProps {
+  // app/src/main/res/${kind}/${name}.xml
+  kind: string;
+}
+export interface PluginFileModifierProps<IData>
+  extends ProjectFileSystem,
+    FileModifierProps<IData> {}
+
+export type PluginModifier<T extends ProjectFileSystem = ProjectFileSystem> = (
+  props: T
+) => T | Promise<T>;
+
+export interface IOSPluginModifierProps<IData>
+  extends IOSProjectModifierProps,
+    PluginFileModifierProps<IData> {}
+
+export type AnyAndroidFileResourceModifier = PluginFileModifierProps<JSONObject> &
+  AndroidResourceProjectModifierProps;
+
+export type IOSPluginXcodeProjModifier = PluginModifier<IOSPluginModifierProps<XcodeProject>>;
+type IOSPlistModifier = PluginModifier<IOSPluginModifierProps<InfoPlist>>;
+
+export interface PluginConfig {
+  android?: {
+    manifest?: PluginModifier<PluginFileModifierProps<JSONObject>>;
+    strings?: PluginModifier<AnyAndroidFileResourceModifier>;
+    after?: PluginModifier;
+  };
+  ios?: {
+    info?: IOSPlistModifier;
+    entitlements?: IOSPlistModifier;
+    expoPlist?: IOSPlistModifier;
+    xcodeproj?: IOSPluginXcodeProjModifier;
+    after?: PluginModifier<IOSProjectModifierProps & ProjectFileSystem>;
+  };
+}
+
+export type PluginPlatforms = keyof PluginConfig;
+
+export type ExportedConfig = { plugin: PluginConfig | null; expo: ExpoConfig };
+
+export type ConfigPlugin =
+  | ((config: ExportedConfig) => ExportedConfig)
+  | [(config: ExportedConfig, args: any) => ExportedConfig, any];
 
 export { ExpoConfig };
+
 export type PackageJSONConfig = { [key: string]: any };
+
 export type ProjectConfig = {
   /**
    * Fully evaluated Expo config with default values injected.
    */
   exp: ExpoConfig;
+  /**
+   * Dynamic config for processing native files during the generation process. This only exists if an Expo config exports and `expo` and `plugin` object.
+   */
+  plugin: PluginConfig | null;
   /**
    * Project package.json object with default values injected.
    */
