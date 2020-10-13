@@ -126,7 +126,10 @@ function setBundleIdentifierForPbxproj(
   updateProductName: boolean = true
 ): void {
   // Get all pbx projects in the ${projectRoot}/ios directory
-  const pbxprojPaths = getAllPBXProjectPaths(projectRoot);
+  let pbxprojPaths: string[] = [];
+  try {
+    pbxprojPaths = getAllPBXProjectPaths(projectRoot);
+  } catch {}
 
   for (const pbxprojPath of pbxprojPaths) {
     updateBundleIdentifierForPbxproj(pbxprojPath, bundleIdentifier, updateProductName);

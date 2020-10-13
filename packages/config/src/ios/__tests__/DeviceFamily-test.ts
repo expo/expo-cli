@@ -1,9 +1,26 @@
+import { fs, vol } from 'memfs';
+import * as path from 'path';
+
 import {
   formatDeviceFamilies,
   getDeviceFamilies,
   getIsTabletOnly,
   getSupportsTablet,
+  setDeviceFamily,
 } from '../DeviceFamily';
+
+const actualFs = jest.requireActual('fs') as typeof fs;
+
+jest.mock('fs');
+
+jest.mock('../../WarningAggregator', () => ({
+  addWarningIOS: jest.fn(),
+}));
+
+afterAll(() => {
+  jest.unmock('fs');
+  jest.unmock('../../WarningAggregator');
+});
 
 const TABLET_AND_PHONE_SUPPORTED = [1, 2];
 const ONLY_PHONE_SUPPORTED = [1];
@@ -46,7 +63,7 @@ describe('device family', () => {
   // It's important that this format is always correct.
   // Otherwise the xcode parser will throw `Expected ".", "/*", ";", or [0-9] but "," found.` when we attempt to write to it.
   it(`formats the families correctly`, () => {
-    expect(formatDeviceFamilies([1])).toEqual(1);
+    expect(formatDeviceFamilies([1])).toEqual(`"1"`);
     expect(formatDeviceFamilies([1, 2, 3])).toEqual(`"1,2,3"`);
   });
 
@@ -60,4 +77,30 @@ describe('device family', () => {
   //     UIDeviceFamily: TABLET_AND_PHONE_SUPPORTED,
   //   });
   // });
+});
+
+describe(setDeviceFamily, () => {
+  const projectRoot = '/tablet';
+  beforeAll(async () => {
+    vol.fromJSON(
+      {
+        'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
+          path.join(__dirname, 'fixtures/project.pbxproj'),
+          'utf-8'
+        ),
+        'ios/testproject/AppDelegate.m': '',
+      },
+      projectRoot
+    );
+  });
+
+  afterAll(() => {
+    vol.reset();
+  });
+
+  it('updates device families without throwing', async () => {
+    setDeviceFamily({ name: '', slug: '', ios: {} }, projectRoot);
+    setDeviceFamily({ name: '', slug: '', ios: { supportsTablet: true } }, projectRoot);
+    setDeviceFamily({ name: '', slug: '', ios: { isTabletOnly: true } }, projectRoot);
+  });
 });

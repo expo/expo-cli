@@ -4,19 +4,11 @@ import { ExpoConfig } from '../Config.types';
 import { getPbxproj } from './utils/Xcodeproj';
 
 export function getSupportsTablet(config: ExpoConfig): boolean {
-  if (config.ios?.supportsTablet) {
-    return !!config.ios?.supportsTablet;
-  }
-
-  return false;
+  return !!config.ios?.supportsTablet;
 }
 
 export function getIsTabletOnly(config: ExpoConfig): boolean {
-  if (config.ios?.isTabletOnly) {
-    return !!config.ios.isTabletOnly;
-  }
-
-  return false;
+  return !!config?.ios?.isTabletOnly;
 }
 
 export function getDeviceFamilies(config: ExpoConfig): number[] {
@@ -29,6 +21,7 @@ export function getDeviceFamilies(config: ExpoConfig): number[] {
   } else if (supportsTablet) {
     return [1, 2];
   } else {
+    // is iPhone only
     return [1];
   }
 }
@@ -40,7 +33,7 @@ export function getDeviceFamilies(config: ExpoConfig): number[] {
  * @param deviceFamilies
  */
 export function formatDeviceFamilies(deviceFamilies: number[]): string | number {
-  return deviceFamilies.length === 1 ? deviceFamilies[0] : `"${deviceFamilies.join(',')}"`;
+  return `"${deviceFamilies.join(',')}"`;
 }
 
 /**
