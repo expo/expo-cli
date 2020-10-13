@@ -28,11 +28,10 @@ export function getDeviceFamilies(config: ExpoConfig): number[] {
 
 /**
  * Wrapping the families in double quotes is the only way to set a value with a comma in it.
- * Use a number when only value is returned, this better emulates Xcode.
  *
  * @param deviceFamilies
  */
-export function formatDeviceFamilies(deviceFamilies: number[]): string | number {
+export function formatDeviceFamilies(deviceFamilies: number[]): string {
   return `"${deviceFamilies.join(',')}"`;
 }
 
