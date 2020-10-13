@@ -1,7 +1,12 @@
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
-import { addMetaDataItemToMainApplication, Document, getMainApplication } from './Manifest';
+import {
+  addMetaDataItemToMainApplication,
+  Document,
+  getMainApplication,
+  removeMetaDataItemFromMainApplication,
+} from './Manifest';
 import { readResourcesXMLAsync, ResourceItemXML } from './Resources';
 import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';
@@ -98,7 +103,7 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
   return true;
 }
 
-export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
+export function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
   const scheme = getFacebookScheme(config);
   const appId = getFacebookAppId(config);
   const displayName = getFacebookDisplayName(config);
@@ -176,18 +181,4 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
   }
 
   return manifestDocument;
-}
-
-// TODO: Use Manifest version after https://github.com/expo/expo-cli/pull/2587 lands
-function removeMetaDataItemFromMainApplication(mainApplication: any, itemName: string) {
-  if (mainApplication.hasOwnProperty('meta-data')) {
-    const index = mainApplication['meta-data'].findIndex(
-      (e: any) => e['$']['android:name'] === itemName
-    );
-
-    if (index > -1) {
-      mainApplication['meta-data'].splice(index, 1);
-    }
-  }
-  return mainApplication;
 }
