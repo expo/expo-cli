@@ -598,7 +598,7 @@ export interface Android {
     };
   };
   /**
-   * Configuration for loading and splash screen for standalone Android apps.
+   * Configuration for loading and splash screen for managed and standalone Android apps.
    */
   splash?: {
     /**
@@ -610,31 +610,35 @@ export interface Android {
      */
     resizeMode?: 'cover' | 'contain' | 'native';
     /**
-     * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
+     * Local path or remote URL to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
+     */
+    image?: string;
+    /**
+     * Local path or remote URL to an image to fill the background of the loading screen in "native" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
      *
      *  `Natural sized image (baseline)`
      */
     mdpi?: string;
     /**
-     * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
+     * Local path or remote URL to an image to fill the background of the loading screen in "native" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
      *
      *  `Scale 1.5x`
      */
     hdpi?: string;
     /**
-     * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
+     * Local path or remote URL to an image to fill the background of the loading screen in "native" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
      *
      *  `Scale 2x`
      */
     xhdpi?: string;
     /**
-     * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
+     * Local path or remote URL to an image to fill the background of the loading screen in "native" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
      *
      *  `Scale 3x`
      */
     xxhdpi?: string;
     /**
-     * Local path or remote URL to an image to fill the background of the loading screen in "cover" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
+     * Local path or remote URL to an image to fill the background of the loading screen in "native" mode. Image size and aspect ratio are up to you. [Learn more]( https://developer.android.com/training/multiscreen/screendensities)
      *
      *  `Scale 4x`
      */
