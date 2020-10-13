@@ -1,10 +1,10 @@
 import plist, { PlistObject } from '@expo/plist';
 import fs from 'fs-extra';
-import { sync as globSync } from 'glob';
 import xcode from 'xcode';
 
 import { ExpoConfig } from '../Config.types';
 import { InfoPlist } from './IosConfig.types';
+import { getAllInfoPlistPaths, getAllPBXProjectPaths, getPBXProjectPath } from './Paths';
 import {
   ConfigurationSectionEntry,
   findFirstNativeTarget,
@@ -41,12 +41,10 @@ function setBundleIdentifier(config: ExpoConfig, infoPlist: InfoPlist): InfoPlis
  * @returns {string | null} bundle identifier of the Xcode project or null if the project is not configured
  */
 function getBundleIdentifierFromPbxproj(projectRoot: string): string | null {
-  // TODO(dsokal):
-  // I'm not sure if it's either possible or common that an iOS project has multiple project.pbxproj files.
-  // For now, I'm assuming that the glob returns at last one file.
-  const pbxprojPaths = globSync('ios/*/project.pbxproj', { absolute: true, cwd: projectRoot });
-  const pbxprojPath = pbxprojPaths.length > 0 ? pbxprojPaths[0] : undefined;
-  if (!pbxprojPath) {
+  let pbxprojPath: string;
+  try {
+    pbxprojPath = getPBXProjectPath(projectRoot);
+  } catch {
     return null;
   }
   const project = xcode.project(pbxprojPath);
@@ -128,7 +126,7 @@ function setBundleIdentifierForPbxproj(
   updateProductName: boolean = true
 ): void {
   // Get all pbx projects in the ${projectRoot}/ios directory
-  const pbxprojPaths = globSync('ios/*/project.pbxproj', { absolute: true, cwd: projectRoot });
+  const pbxprojPaths = getAllPBXProjectPaths(projectRoot);
 
   for (const pbxprojPath of pbxprojPaths) {
     updateBundleIdentifierForPbxproj(pbxprojPath, bundleIdentifier, updateProductName);
@@ -142,7 +140,7 @@ function setBundleIdentifierForPbxproj(
 const defaultBundleId = '$(PRODUCT_BUNDLE_IDENTIFIER)';
 
 function resetAllPlistBundleIdentifiers(projectRoot: string): void {
-  const infoPlistPaths = globSync('ios/*/Info.plist', { absolute: true, cwd: projectRoot });
+  const infoPlistPaths = getAllInfoPlistPaths(projectRoot);
 
   for (const plistPath of infoPlistPaths) {
     resetPlistBundleIdentifier(plistPath);

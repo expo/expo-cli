@@ -1,6 +1,6 @@
 import { ExpoConfig } from '../Config.types';
 import { InfoPlist, URLScheme } from './IosConfig.types';
-import { findSchemeNames } from './utils/Xcodeproj';
+import { findSchemeNames } from './Paths';
 
 export function getScheme(config: { scheme?: string | string[] }): string[] {
   if (Array.isArray(config.scheme)) {

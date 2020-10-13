@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
-import { sync as globSync } from 'glob';
 import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { InfoPlist } from './IosConfig.types';
+import * as Paths from './Paths';
 import {
   getPbxproj,
   getProjectName,
@@ -90,7 +90,7 @@ export function setAssociatedDomains(
 }
 
 export function getEntitlementsPath(projectRoot: string): string {
-  return getExistingEntitlementsPath(projectRoot) ?? createEntitlementsFile(projectRoot);
+  return Paths.getEntitlementsPath(projectRoot) ?? createEntitlementsFile(projectRoot);
 }
 
 function createEntitlementsFile(projectRoot: string) {
@@ -135,24 +135,3 @@ const ENTITLEMENTS_TEMPLATE = `
 </dict>
 </plist>
 `;
-
-/**
- * Get the path to an existing entitlements file or use the default
- */
-function getExistingEntitlementsPath(projectRoot: string): string | null {
-  const entitlementsPaths = globSync('ios/*/.entitlements', { absolute: true, cwd: projectRoot });
-  if (entitlementsPaths.length === 0) {
-    return null;
-  }
-  const [entitlementsPath, ...otherEntitlementsPaths] = entitlementsPaths[0];
-
-  if (entitlementsPaths.length > 1) {
-    console.warn(
-      `Found multiple entitlements paths, using ${entitlementsPath}. Other paths ${JSON.stringify(
-        otherEntitlementsPaths
-      )} ignored.`
-    );
-  }
-
-  return entitlementsPath;
-}
