@@ -28,7 +28,7 @@ export function evalConfig(
     // only: [configFile],
     cwd: request?.projectRoot || process.cwd(),
     babelrc: false,
-    configFile: false,
+    // configFile: false,
     comments: false,
     ignore: [/node_modules/],
     filename: 'unknown',
