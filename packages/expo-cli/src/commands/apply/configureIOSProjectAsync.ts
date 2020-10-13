@@ -1,5 +1,7 @@
 import { getConfig, IOSConfig, WarningAggregator } from '@expo/config';
+import { ExportedConfig } from '@expo/config/build/Config.types';
 import { getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
+import { withPlugins } from '@expo/config/build/plugins/core-plugins';
 import { IosPlist, UserManager } from '@expo/xdl';
 import path from 'path';
 
@@ -10,32 +12,41 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
   IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, bundleIdentifier);
 
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  //// New System
+  // Add all built-in plugins
+  const { expo, plugins } = withExpoPlugins(getExportedConfig(projectRoot), {
+    projectRoot,
+    bundleIdentifier,
+  });
+  await compileIOSPluginsAsync(projectRoot, { expo, plugins });
+
+  //// Current System
+
   const username = await UserManager.getCurrentUsernameAsync();
 
-  IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
+  IOSConfig.Google.setGoogleServicesFile(expo, projectRoot);
 
   // Configure the Info.plist
   await modifyInfoPlistAsync(projectRoot, infoPlist => {
-    infoPlist = IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(exp, infoPlist);
-    infoPlist = IOSConfig.Branch.setBranchApiKey(exp, infoPlist);
-    infoPlist = IOSConfig.Facebook.setFacebookConfig(exp, infoPlist);
-    infoPlist = IOSConfig.Google.setGoogleConfig(exp, infoPlist);
-    infoPlist = IOSConfig.Name.setDisplayName(exp, infoPlist);
-    infoPlist = IOSConfig.Orientation.setOrientation(exp, infoPlist);
-    infoPlist = IOSConfig.RequiresFullScreen.setRequiresFullScreen(exp, infoPlist);
-    infoPlist = IOSConfig.Scheme.setScheme(exp, infoPlist);
-    infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(exp, infoPlist);
-    infoPlist = IOSConfig.UsesNonExemptEncryption.setUsesNonExemptEncryption(exp, infoPlist);
-    infoPlist = IOSConfig.Version.setBuildNumber(exp, infoPlist);
-    infoPlist = IOSConfig.Version.setVersion(exp, infoPlist);
+    infoPlist = IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(expo, infoPlist);
+    infoPlist = IOSConfig.Branch.setBranchApiKey(expo, infoPlist);
+    infoPlist = IOSConfig.Facebook.setFacebookConfig(expo, infoPlist);
+    infoPlist = IOSConfig.Google.setGoogleConfig(expo, infoPlist);
+    infoPlist = IOSConfig.Name.setDisplayName(expo, infoPlist);
+    infoPlist = IOSConfig.Orientation.setOrientation(expo, infoPlist);
+    infoPlist = IOSConfig.RequiresFullScreen.setRequiresFullScreen(expo, infoPlist);
+    infoPlist = IOSConfig.Scheme.setScheme(expo, infoPlist);
+    infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(expo, infoPlist);
+    infoPlist = IOSConfig.UsesNonExemptEncryption.setUsesNonExemptEncryption(expo, infoPlist);
+    infoPlist = IOSConfig.Version.setBuildNumber(expo, infoPlist);
+    infoPlist = IOSConfig.Version.setVersion(expo, infoPlist);
 
     return infoPlist;
   });
 
   // Configure Expo.plist
   await modifyExpoPlistAsync(projectRoot, expoPlist => {
-    expoPlist = IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
+    expoPlist = IOSConfig.Updates.setUpdatesConfig(expo, expoPlist, username);
     return expoPlist;
   });
 
@@ -44,20 +55,20 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
     // Configure entitlements/capabilities
     await modifyEntitlementsPlistAsync(projectRoot, entitlementsPlist => {
       entitlementsPlist = IOSConfig.Entitlements.setCustomEntitlementsEntries(
-        exp,
+        expo,
         entitlementsPlist
       );
 
       // TODO: We don't have a mechanism for getting the apple team id here yet
       entitlementsPlist = IOSConfig.Entitlements.setICloudEntitlement(
-        exp,
+        expo,
         'TODO-GET-APPLE-TEAM-ID',
         entitlementsPlist
       );
 
-      entitlementsPlist = IOSConfig.Entitlements.setAppleSignInEntitlement(exp, entitlementsPlist);
-      entitlementsPlist = IOSConfig.Entitlements.setAccessesContactNotes(exp, entitlementsPlist);
-      entitlementsPlist = IOSConfig.Entitlements.setAssociatedDomains(exp, entitlementsPlist);
+      entitlementsPlist = IOSConfig.Entitlements.setAppleSignInEntitlement(expo, entitlementsPlist);
+      entitlementsPlist = IOSConfig.Entitlements.setAccessesContactNotes(expo, entitlementsPlist);
+      entitlementsPlist = IOSConfig.Entitlements.setAssociatedDomains(expo, entitlementsPlist);
       return entitlementsPlist;
     });
   } catch (e) {
@@ -68,10 +79,104 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   }
 
   // Other
-  await IOSConfig.Icons.setIconsAsync(exp, projectRoot);
-  await IOSConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
-  await IOSConfig.Locales.setLocalesAsync(exp, projectRoot);
-  IOSConfig.DeviceFamily.setDeviceFamily(exp, projectRoot);
+  await IOSConfig.Icons.setIconsAsync(expo, projectRoot);
+  await IOSConfig.SplashScreen.setSplashScreenAsync(expo, projectRoot);
+  await IOSConfig.Locales.setLocalesAsync(expo, projectRoot);
+  IOSConfig.DeviceFamily.setDeviceFamily(expo, projectRoot);
+}
+
+async function compileIOSPluginsAsync(
+  projectRoot: string,
+  { expo, plugins }: ExportedConfig
+): Promise<void> {
+  const projectName = getProjectName(projectRoot);
+
+  const projectFileSystem = {
+    projectRoot,
+    platformProjectRoot: path.join(projectRoot, 'ios'),
+    projectName,
+  };
+
+  // Configure the Info.plist
+  await modifyInfoPlistAsync(projectRoot, async data => {
+    data =
+      expo.ios?.infoPlist || IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(expo, data);
+    if (typeof plugins?.ios?.info === 'function') {
+      data = (
+        await plugins.ios.info({
+          ...projectFileSystem,
+          data,
+        })
+      ).data;
+    }
+    return data;
+  });
+
+  // Configure Expo.plist
+  await modifyExpoPlistAsync(projectRoot, async data => {
+    if (typeof plugins?.ios?.expoPlist === 'function') {
+      data = (
+        await plugins.ios.expoPlist({
+          ...projectFileSystem,
+          data,
+        })
+      ).data;
+    }
+    return data;
+  });
+
+  // TODO: fix this on Windows! We will ignore errors for now so people can just proceed
+  try {
+    // Configure entitlements/capabilities
+    await modifyEntitlementsPlistAsync(projectRoot, async data => {
+      if (typeof plugins?.ios?.entitlements === 'function') {
+        data = (
+          await plugins.ios.entitlements({
+            ...projectFileSystem,
+            data,
+          })
+        ).data;
+      }
+      return data;
+    });
+  } catch (e) {
+    WarningAggregator.addWarningIOS(
+      'entitlements',
+      'iOS entitlements could not be applied. Please ensure that contact notes, Apple Sign In, and associated domains entitlements are properly configured if you use them in your app.'
+    );
+  }
+
+  // Run all post plugins
+  await plugins?.ios?.file?.({
+    ...projectFileSystem,
+  });
+}
+
+function getExportedConfig(projectRoot: string): ExportedConfig {
+  const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  return { expo: originalConfig.exp, plugins: originalConfig.plugins };
+}
+
+function withExpoPlugins(
+  config: ExportedConfig,
+  { projectRoot, bundleIdentifier }: { projectRoot: string; bundleIdentifier: string }
+): ExportedConfig {
+  return withPlugins(config, [[withExistingInfoPlist, projectRoot]]);
+}
+
+function withExistingInfoPlist(config: ExportedConfig, projectRoot: string): ExportedConfig {
+  const { iosProjectDirectory } = getIOSPaths(projectRoot);
+  const contents = IosPlist.read(iosProjectDirectory, 'Info');
+
+  if (!config.expo.ios) config.expo.ios = {};
+  if (!config.expo.ios.infoPlist) config.expo.ios.infoPlist = {};
+
+  config.expo.ios.infoPlist = {
+    ...(contents || {}),
+    ...config.expo.ios.infoPlist,
+  };
+
+  return config;
 }
 
 async function modifyEntitlementsPlistAsync(projectRoot: string, callback: (plist: any) => any) {

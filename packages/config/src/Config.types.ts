@@ -67,6 +67,7 @@ export interface PluginConfig {
 
 export type PluginPlatforms = keyof PluginConfig;
 
+// TODO: Migrate ProjectConfig to using expo instead if exp
 export type ExportedConfig = { plugins: PluginConfig | null; expo: ExpoConfig };
 
 export type ConfigPlugin =
