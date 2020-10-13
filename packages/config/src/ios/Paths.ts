@@ -50,7 +50,9 @@ export function getAllXcodeProjectPaths(projectRoot: string): string[] {
   const iosFolder = 'ios';
   const pbxprojPaths = globSync('**/*.xcodeproj', { cwd: projectRoot, ignore: ignoredPaths })
     .filter(project => !/test|example|sample/i.test(project) || path.dirname(project) === iosFolder)
-    .sort(project => (path.dirname(project) === iosFolder ? -1 : 1));
+    .sort(project => (path.dirname(project) === iosFolder ? -1 : 1))
+    // sort alphabetically to ensure this works the same across different devices (Fail in CI (linux) without this)
+    .sort();
 
   if (!pbxprojPaths.length) {
     throw new UnexpectedError(

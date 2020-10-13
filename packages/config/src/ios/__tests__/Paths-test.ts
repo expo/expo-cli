@@ -62,10 +62,10 @@ describe(getXcodeProjectPath, () => {
   });
 
   it(`warns when multiple paths are found`, () => {
-    expect(getXcodeProjectPath('/multiple')).toBe('/multiple/ios/testproject.xcodeproj');
+    expect(getXcodeProjectPath('/multiple')).toBe('/multiple/ios/otherproject.xcodeproj');
     expect(addWarningIOS).toHaveBeenLastCalledWith(
       'paths-xcodeproj',
-      'Found multiple *.xcodeproj file paths, using "/multiple/ios/testproject.xcodeproj". Ignored paths: ["/multiple/ios/otherproject.xcodeproj"]'
+      'Found multiple *.xcodeproj file paths, using "/multiple/ios/otherproject.xcodeproj". Ignored paths: ["/multiple/ios/testproject.xcodeproj"]'
     );
   });
 });
