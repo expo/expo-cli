@@ -4,10 +4,10 @@
     "target": "ES2018",
     "module": "CommonJS",
     "lib": ["es2018", "es2020.string"],
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "./build",
     "esModuleInterop": true
   },
-  "include": ["./src"],
+  "include": ["src/**/*", "./package.json"],
   "exclude": ["**/__mocks__/*", "**/__tests__/*"]
 }

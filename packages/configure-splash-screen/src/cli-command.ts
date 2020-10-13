@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 
+import packageJSON from '../package.json';
 import { AndroidSplashScreenConfigJSON, IosSplashScreenConfigJSON } from './SplashScreenConfig';
 import configureAndroid from './android';
 import {
@@ -134,6 +135,7 @@ export default () =>
     .description(
       'Idempotent operation that configures native splash screens using provided backgroundColor and optional .png file. Supports light and dark modes configuration. Dark mode is supported only on iOS 13+ and Android 10+.'
     )
+    .version(packageJSON.version)
     .allowUnknownOption(false)
     .passCommandToAction(false)
     .option(
