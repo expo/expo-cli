@@ -13,8 +13,8 @@ import {
   ExpRc,
   GetConfigOptions,
   PackageJSONConfig,
-  PackConfig,
   Platform,
+  PluginConfig,
   ProjectConfig,
   ProjectTarget,
   WriteConfigOptions,
@@ -38,7 +38,7 @@ function reduceExpoObject(config?: any): ExportedConfig {
       throw new Error(`plugins object was defined in the config but it's not an object.`);
     }
     // TODO: We should warn users in the future that if there are more values than "expo", those values outside of "expo" will be omitted in favor of the "expo" object.
-    return { expo: config.expo as ExpoConfig, plugins: (config.plugins as PackConfig) ?? null };
+    return { expo: config.expo as ExpoConfig, plugins: (config.plugins as PluginConfig) ?? null };
   }
   if (config.plugins != null) {
     throw new Error(

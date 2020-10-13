@@ -54,20 +54,20 @@ export interface PluginConfig {
   android?: {
     manifest?: PluginModifier<PluginFileModifierProps<JSONObject>>;
     strings?: PluginModifier<AnyAndroidFileResourceModifier>;
-    after?: PluginModifier;
+    file?: PluginModifier;
   };
   ios?: {
     info?: IOSPlistModifier;
     entitlements?: IOSPlistModifier;
     expoPlist?: IOSPlistModifier;
     xcodeproj?: IOSPluginXcodeProjModifier;
-    after?: PluginModifier<IOSProjectModifierProps & ProjectFileSystem>;
+    file?: PluginModifier<IOSProjectModifierProps & ProjectFileSystem>;
   };
 }
 
 export type PluginPlatforms = keyof PluginConfig;
 
-export type ExportedConfig = { plugin: PluginConfig | null; expo: ExpoConfig };
+export type ExportedConfig = { plugins: PluginConfig | null; expo: ExpoConfig };
 
 export type ConfigPlugin =
   | ((config: ExportedConfig) => ExportedConfig)
@@ -83,9 +83,9 @@ export type ProjectConfig = {
    */
   exp: ExpoConfig;
   /**
-   * Dynamic config for processing native files during the generation process. This only exists if an Expo config exports and `expo` and `plugin` object.
+   * Dynamic config for processing native files during the generation process. This only exists if an Expo config exports and `expo` and `plugins` object.
    */
-  plugin: PluginConfig | null;
+  plugins: PluginConfig | null;
   /**
    * Project package.json object with default values injected.
    */
