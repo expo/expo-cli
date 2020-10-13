@@ -2,10 +2,10 @@ import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import got from 'got';
 import Request from 'got/dist/source/core';
-import os from 'os';
 import { basename, extname, join } from 'path';
 import stream from 'stream';
 import tar from 'tar';
+import temporary from 'tempy';
 import { promisify } from 'util';
 
 import { uploadAsync, UploadType } from '../../../../uploads';
@@ -57,7 +57,7 @@ async function downloadAppArchiveAsync(url: string): Promise<string> {
   const filename = basename(url);
   // Since we may need to rename the destination path,
   // add everything to a folder which can be nuked to ensure we don't accidentally use an old build with the same name.
-  const destinationFolder = await createTemporaryDirectoryForExtractionAsync();
+  const destinationFolder = temporary.directory();
   const destinationPath = join(destinationFolder, filename);
 
   const downloadStream = createDownloadStream(url);
@@ -81,19 +81,6 @@ async function uploadAppArchiveAsync(path: string): Promise<string> {
   );
 }
 
-async function createTemporaryDirectoryForExtractionAsync(): Promise<string> {
-  // Since we may need to rename the destination path,
-  // add everything to a folder which can be nuked to ensure we don't accidentally use an old build with the same name.
-  const destinationFolder = join(os.tmpdir(), 'expo-submission-service');
-
-  if (await fs.pathExists(destinationFolder)) {
-    await fs.remove(destinationFolder);
-  }
-  await fs.ensureDir(destinationFolder);
-
-  return destinationFolder;
-}
-
 async function decompressTarAsync(src: string, destination: string): Promise<void> {
   await pipeline(fs.createReadStream(src), tar.extract({ cwd: destination }, []));
 }
@@ -108,7 +95,7 @@ async function extractLocalArchiveAsync(filePath: string): Promise<string> {
   const filename = basename(filePath);
   // Since we may need to rename the destination path,
   // add everything to a folder which can be nuked to ensure we don't accidentally use an old build with the same name.
-  const destinationFolder = await createTemporaryDirectoryForExtractionAsync();
+  const destinationFolder = temporary.directory();
   const destinationPath = join(destinationFolder, filename);
 
   // Special use-case for downloading an EAS tar.gz file and unpackaging it.
