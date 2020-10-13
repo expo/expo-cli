@@ -67,16 +67,13 @@ async function ensureFacebookActivityAsync({
 }) {
   const facebookSchemeActivityXML = facebookSchemeActivity(scheme);
   const parser = new Parser();
-  const facebookSchemeActivityJSON = await parser.parseStringPromise(facebookSchemeActivityXML);
+  const facebookSchemeActivityJSON = (await parser.parseStringPromise(facebookSchemeActivityXML))
+    .activity;
 
-  //TODO: don't write if facebook scheme activity is already present
-  if ('activity' in mainApplication) {
-    mainApplication['activity'] = mainApplication['activity'].concat(
-      facebookSchemeActivityJSON['activity']
-    );
-  } else {
-    mainApplication['activity'] = facebookSchemeActivityJSON['activity'];
+  if (!Array.isArray(mainApplication.activity)) {
+    mainApplication.activity = [];
   }
+  mainApplication.activity.push(facebookSchemeActivityJSON);
 }
 
 export async function setFacebookAppIdString(config: ExpoConfig, projectDirectory: string) {
