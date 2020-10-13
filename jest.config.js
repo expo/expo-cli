@@ -10,6 +10,7 @@ module.exports = {
     require('./packages/json-file/jest.config'),
     require('./packages/metro-config/jest.config'),
     require('./packages/package-manager/jest.config'),
+    require('./packages/pkcs12/jest.config'),
     require('./packages/plist/jest.config'),
     require('./packages/pwa/jest.config'),
     require('./packages/schemer/jest.config'),

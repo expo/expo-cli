@@ -16,6 +16,7 @@
 /packages/metro-config/build
 /packages/next-adapter/build
 /packages/package-manager/build
+/packages/pkcs12/build
 /packages/plist/build
 /packages/pod-install/build
 /packages/pwa/build

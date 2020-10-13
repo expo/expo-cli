@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [pkcs12] new package for PKCS#12 utility functions
+
 ### 🐛 Bug fixes
 
 ## [Sat, 3 Oct 2020 22:11:17 -0700](https://github.com/expo/expo-cli/commit/6d8f7c734f501b9f194d232df7a0f65d9b9415e7)

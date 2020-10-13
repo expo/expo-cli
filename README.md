@@ -61,7 +61,7 @@ Expo CLI
 <!-- Begin auto-generation -->
 
 | Package                                                                   | Version                                                                                                                                                             |
-| ---                                                                       | ---                                                                                                                                                                 |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [**`@expo/babel-preset-cli`**](./packages/babel-preset-cli)               | [![badges](https://img.shields.io/npm/v/@expo/babel-preset-cli?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/babel-preset-cli)               |
 | [**`@expo/config`**](./packages/config)                                   | [![badges](https://img.shields.io/npm/v/@expo/config?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/config)                                   |
 | [**`@expo/config-types`**](./packages/config-types)                       | [![badges](https://img.shields.io/npm/v/@expo/config-types?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/config-types)                       |
@@ -78,6 +78,7 @@ Expo CLI
 | [**`@expo/next-adapter`**](./packages/next-adapter)                       | [![badges](https://img.shields.io/npm/v/@expo/next-adapter?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/next-adapter)                       |
 | [**`@expo/osascript`**](./packages/osascript)                             | [![badges](https://img.shields.io/npm/v/@expo/osascript?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/osascript)                             |
 | [**`@expo/package-manager`**](./packages/package-manager)                 | [![badges](https://img.shields.io/npm/v/@expo/package-manager?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/package-manager)                 |
+| [**`@expo/pkcs12`**](./packages/pkcs12)                                   | [![badges](https://img.shields.io/npm/v/@expo/pkcs12?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/pkcs12)                                   |
 | [**`@expo/plist`**](./packages/plist)                                     | [![badges](https://img.shields.io/npm/v/@expo/plist?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/plist)                                     |
 | [**`pod-install`**](./packages/pod-install)                               | [![badges](https://img.shields.io/npm/v/pod-install?color=32cd32&style=flat-square)](https://www.npmjs.com/package/pod-install)                                     |
 | [**`expo-pwa`**](./packages/pwa)                                          | [![badges](https://img.shields.io/npm/v/expo-pwa?color=32cd32&style=flat-square)](https://www.npmjs.com/package/expo-pwa)                                           |
