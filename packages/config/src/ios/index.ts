@@ -10,6 +10,7 @@ import { InfoPlist } from './IosConfig.types';
 import * as Locales from './Locales';
 import * as Name from './Name';
 import * as Orientation from './Orientation';
+import { getSourceRoot } from './Paths';
 import * as ProvisioningProfile from './ProvisioningProfile';
 import * as RequiresFullScreen from './RequiresFullScreen';
 import * as Scheme from './Scheme';
@@ -18,7 +19,6 @@ import * as Updates from './Updates';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
 import * as Version from './Version';
-import { getSourceRoot } from './utils/Xcodeproj';
 
 // We can change this to export * as X with TypeScript 3.8+
 // https://devblogs.microsoft.com/typescript/announcing-typescript-3-8-beta/#export-star-as-namespace-syntax

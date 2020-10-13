@@ -3,8 +3,9 @@ import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
 import { InfoPlist } from './IosConfig.types';
+import { getSourceRoot } from './Paths';
 import { appendScheme } from './Scheme';
-import { addFileToGroup, getPbxproj, getProjectName, getSourceRoot } from './utils/Xcodeproj';
+import { addFileToGroup, getPbxproj, getProjectName } from './utils/Xcodeproj';
 
 export function getGoogleMapsApiKey(config: ExpoConfig) {
   return config.ios?.config?.googleMapsApiKey ?? null;

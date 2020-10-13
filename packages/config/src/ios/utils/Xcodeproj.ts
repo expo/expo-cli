@@ -1,6 +1,4 @@
-// @ts-ignore
-import { sync as globSync } from 'glob';
-import path from 'path';
+import * as path from 'path';
 import xcode, {
   PBXGroup,
   PBXNativeTarget,
@@ -11,6 +9,8 @@ import xcode, {
   XcodeProject,
 } from 'xcode';
 import pbxFile from 'xcode/lib/pbxFile';
+
+import * as Paths from '../Paths';
 
 export type ProjectSectionEntry = [string, PBXProject];
 
@@ -25,20 +25,8 @@ export type ConfigurationListEntry = [string, XCConfigurationList];
 export type ConfigurationSectionEntry = [string, XCBuildConfiguration];
 
 export function getProjectName(projectRoot: string) {
-  const sourceRoot = getSourceRoot(projectRoot);
+  const sourceRoot = Paths.getSourceRoot(projectRoot);
   return path.basename(sourceRoot);
-}
-
-export function getSourceRoot(projectRoot: string): string {
-  // Account for Swift or Objective-C
-  const paths = globSync('ios/*/AppDelegate.*', {
-    absolute: true,
-    cwd: projectRoot,
-  });
-  if (!paths.length) {
-    throw new Error(`Could not locate a valid iOS project at root: ${projectRoot}`);
-  }
-  return path.dirname(paths[0]);
 }
 
 // TODO(brentvatne): I couldn't figure out how to do this with an existing
@@ -138,30 +126,12 @@ export function ensureGroupRecursively(project: XcodeProject, filepath: string):
   return topMostGroup ?? null;
 }
 
-export function findSchemeNames(projectRoot: string): string[] {
-  const schemePaths = globSync('ios/*.xcodeproj/xcshareddata/xcschemes/*.xcscheme', {
-    absolute: true,
-    cwd: projectRoot,
-  });
-  return schemePaths.map(schemePath => path.basename(schemePath).split('.')[0]);
-}
-
 /**
  * Get the pbxproj for the given path
  */
 export function getPbxproj(projectRoot: string): XcodeProject {
-  const pbxprojPaths = globSync('ios/*/project.pbxproj', { absolute: true, cwd: projectRoot });
-  const [pbxprojPath, ...otherPbxprojPaths] = pbxprojPaths;
-
-  if (pbxprojPaths.length > 1) {
-    console.warn(
-      `Found multiple pbxproject files paths, using ${pbxprojPath}. Other paths ${JSON.stringify(
-        otherPbxprojPaths
-      )} ignored.`
-    );
-  }
-
-  const project = xcode.project(pbxprojPath);
+  const projectPath = Paths.getPBXProjectPath(projectRoot);
+  const project = xcode.project(projectPath);
   project.parseSync();
   return project;
 }

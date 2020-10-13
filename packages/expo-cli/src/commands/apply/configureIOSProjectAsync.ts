@@ -14,7 +14,6 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   const username = await UserManager.getCurrentUsernameAsync();
 
   IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
-  IOSConfig.DeviceFamily.setDeviceFamily(exp, projectRoot);
 
   // Configure the Info.plist
   await modifyInfoPlistAsync(projectRoot, infoPlist => {
@@ -72,6 +71,7 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   await IOSConfig.Icons.setIconsAsync(exp, projectRoot);
   await IOSConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
   await IOSConfig.Locales.setLocalesAsync(exp, projectRoot);
+  IOSConfig.DeviceFamily.setDeviceFamily(exp, projectRoot);
 }
 
 async function modifyEntitlementsPlistAsync(projectRoot: string, callback: (plist: any) => any) {

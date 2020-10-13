@@ -4,19 +4,11 @@ import { ExpoConfig } from '../Config.types';
 import { getPbxproj } from './utils/Xcodeproj';
 
 export function getSupportsTablet(config: ExpoConfig): boolean {
-  if (config.ios?.supportsTablet) {
-    return !!config.ios?.supportsTablet;
-  }
-
-  return false;
+  return !!config.ios?.supportsTablet;
 }
 
 export function getIsTabletOnly(config: ExpoConfig): boolean {
-  if (config.ios?.isTabletOnly) {
-    return !!config.ios.isTabletOnly;
-  }
-
-  return false;
+  return !!config?.ios?.isTabletOnly;
 }
 
 export function getDeviceFamilies(config: ExpoConfig): number[] {
@@ -29,18 +21,18 @@ export function getDeviceFamilies(config: ExpoConfig): number[] {
   } else if (supportsTablet) {
     return [1, 2];
   } else {
+    // is iPhone only
     return [1];
   }
 }
 
 /**
  * Wrapping the families in double quotes is the only way to set a value with a comma in it.
- * Use a number when only value is returned, this better emulates Xcode.
  *
  * @param deviceFamilies
  */
-export function formatDeviceFamilies(deviceFamilies: number[]): string | number {
-  return deviceFamilies.length === 1 ? deviceFamilies[0] : `"${deviceFamilies.join(',')}"`;
+export function formatDeviceFamilies(deviceFamilies: number[]): string {
+  return `"${deviceFamilies.join(',')}"`;
 }
 
 /**

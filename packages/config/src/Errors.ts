@@ -10,6 +10,12 @@ export class ConfigError extends Error {
   }
 }
 
+export class UnexpectedError extends Error {
+  constructor(message: string) {
+    super(`${message}\nPlease report this as an issue on https://github.com/expo/expo-cli/issues`);
+  }
+}
+
 export function errorFromJSON({ name, ...json }: any): Error {
   let error: any;
   if (name === 'TypeError') {

@@ -1,6 +1,7 @@
 import { vol } from 'memfs';
 
-import { fileExistsAsync, getResourceXMLPathAsync } from '../Paths';
+import { fileExistsAsync } from '../../Modules';
+import { getResourceXMLPathAsync } from '../Paths';
 import { readResourcesXMLAsync } from '../Resources';
 
 jest.mock('fs');

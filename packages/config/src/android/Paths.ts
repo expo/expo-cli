@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
+import { directoryExistsAsync } from '../Modules';
 import { ResourceKind } from './Resources';
 
 export async function getMainActivityAsync(
@@ -59,25 +60,4 @@ export async function getResourceXMLPathAsync(
 
   const filePath = path.join(projectPath, `app/src/main/res/${kind}/${name}.xml`);
   return filePath;
-}
-
-/**
- * A non-failing version of async FS stat.
- *
- * @param file
- */
-async function statAsync(file: string): Promise<fs.Stats | null> {
-  try {
-    return await fs.stat(file);
-  } catch {
-    return null;
-  }
-}
-
-export async function fileExistsAsync(file: string): Promise<boolean> {
-  return (await statAsync(file))?.isFile() ?? false;
-}
-
-async function directoryExistsAsync(file: string): Promise<boolean> {
-  return (await statAsync(file))?.isDirectory() ?? false;
 }
