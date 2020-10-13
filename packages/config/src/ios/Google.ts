@@ -1,11 +1,12 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { XcodeProject } from 'xcode';
 
 import { ExpoConfig } from '../Config.types';
 import { InfoPlist } from './IosConfig.types';
 import { getSourceRoot } from './Paths';
 import { appendScheme } from './Scheme';
-import { addFileToGroup, getPbxproj, getProjectName } from './utils/Xcodeproj';
+import { addFileToGroup, getProjectName } from './utils/Xcodeproj';
 
 export function getGoogleMapsApiKey(config: ExpoConfig) {
   return config.ios?.config?.googleMapsApiKey ?? null;
@@ -82,10 +83,13 @@ export function setGoogleConfig(config: ExpoConfig, infoPlist: InfoPlist): InfoP
   return infoPlist;
 }
 
-export function setGoogleServicesFile(config: ExpoConfig, projectRoot: string) {
+export function setGoogleServicesFile(
+  config: ExpoConfig,
+  { projectRoot, project }: { project: XcodeProject; projectRoot: string }
+): XcodeProject {
   const googleServicesFileRelativePath = getGoogleServicesFile(config);
   if (googleServicesFileRelativePath === null) {
-    return;
+    return project;
   }
 
   const googleServiceFilePath = path.resolve(projectRoot, googleServicesFileRelativePath);
@@ -94,8 +98,7 @@ export function setGoogleServicesFile(config: ExpoConfig, projectRoot: string) {
     path.join(getSourceRoot(projectRoot), 'GoogleService-Info.plist')
   );
 
-  let project = getPbxproj(projectRoot);
   const projectName = getProjectName(projectRoot);
   project = addFileToGroup(`${projectName}/GoogleService-Info.plist`, projectName, project);
-  fs.writeFileSync(project.filepath, project.writeSync());
+  return project;
 }
