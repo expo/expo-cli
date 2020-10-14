@@ -12,7 +12,7 @@ export interface ProjectFileSystem {
   readonly platformProjectRoot: string;
 }
 
-export interface FileModifierProps<IData> {
+interface FileModifierProps<IData> {
   /**
    * The Object representation of a complex file type.
    */
@@ -28,10 +28,6 @@ export interface IOSProjectModifierProps {
   projectName: string;
 }
 
-export interface AndroidResourceProjectModifierProps {
-  // app/src/main/res/${kind}/${name}.xml
-  kind: string;
-}
 export interface PluginFileModifierProps<IData>
   extends ProjectFileSystem,
     FileModifierProps<IData> {}
@@ -44,22 +40,18 @@ export interface IOSPluginModifierProps<IData>
   extends IOSProjectModifierProps,
     PluginFileModifierProps<IData> {}
 
-export type AnyAndroidFileResourceModifier = PluginFileModifierProps<JSONObject> &
-  AndroidResourceProjectModifierProps;
+export type IOSXcodeProjectModifier = PluginModifier<IOSPluginModifierProps<XcodeProject>>;
 
-export type IOSPluginXcodeProjModifier = PluginModifier<IOSPluginModifierProps<XcodeProject>>;
-type IOSPlistModifier = PluginModifier<IOSPluginModifierProps<InfoPlist>>;
+export type IOSPlistModifier = PluginModifier<IOSPluginModifierProps<InfoPlist>>;
 
 export interface PluginConfig {
   android?: {
-    manifest?: PluginModifier<PluginFileModifierProps<JSONObject>>;
-    strings?: PluginModifier<AnyAndroidFileResourceModifier>;
     file?: PluginModifier;
   };
   ios?: {
     entitlements?: IOSPlistModifier;
     expoPlist?: IOSPlistModifier;
-    xcodeproj?: IOSPluginXcodeProjModifier;
+    xcodeproj?: IOSXcodeProjectModifier;
     file?: PluginModifier<IOSProjectModifierProps & ProjectFileSystem>;
   };
 }
