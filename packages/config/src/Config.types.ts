@@ -57,7 +57,6 @@ export interface PluginConfig {
     file?: PluginModifier;
   };
   ios?: {
-    info?: IOSPlistModifier;
     entitlements?: IOSPlistModifier;
     expoPlist?: IOSPlistModifier;
     xcodeproj?: IOSPluginXcodeProjModifier;
@@ -65,14 +64,15 @@ export interface PluginConfig {
   };
 }
 
-export type PluginPlatforms = keyof PluginConfig;
+export type PluginPlatform = keyof PluginConfig;
 
 // TODO: Migrate ProjectConfig to using expo instead if exp
 export type ExportedConfig = { plugins: PluginConfig | null; expo: ExpoConfig };
 
-export type ConfigPlugin =
-  | ((config: ExportedConfig) => ExportedConfig)
-  | [(config: ExportedConfig, args: any) => ExportedConfig, any];
+export type ConfigPlugin<IProps = any | undefined> = (
+  config: ExportedConfig,
+  props: IProps
+) => ExportedConfig;
 
 export { ExpoConfig };
 

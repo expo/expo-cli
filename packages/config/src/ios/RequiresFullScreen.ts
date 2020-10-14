@@ -1,4 +1,5 @@
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withInfoPlist } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 
 // NOTES: This is defaulted to `true` for now to match the behavior prior to SDK
@@ -21,3 +22,6 @@ export function setRequiresFullScreen(config: ExpoConfig, infoPlist: InfoPlist) 
     UIRequiresFullScreen: getRequiresFullScreen(config),
   };
 }
+
+export const withRequiresFullScreen: ConfigPlugin = config =>
+  withInfoPlist(config, setRequiresFullScreen);

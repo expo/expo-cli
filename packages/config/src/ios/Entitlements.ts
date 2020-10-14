@@ -1,8 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig, ExportedConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
+import { withEntitlementsPlist } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import * as Paths from './Paths';
 import {
@@ -14,6 +15,37 @@ import {
 } from './utils/Xcodeproj';
 
 type Plist = Record<string, any>;
+
+export const withAccessesContactNotes: ConfigPlugin = config => {
+  return withEntitlementsPlist(config, props => ({
+    ...props,
+    data: setAccessesContactNotes(config.expo, props.data),
+  }));
+};
+
+export const withAssociatedDomains: ConfigPlugin = config => {
+  return withEntitlementsPlist(config, props => ({
+    ...props,
+    data: setAssociatedDomains(config.expo, props.data),
+  }));
+};
+
+export const withICloudEntitlement = (
+  config: ExportedConfig,
+  { appleTeamId }: { appleTeamId: string }
+) => {
+  return withEntitlementsPlist(config, props => ({
+    ...props,
+    data: setICloudEntitlement(config.expo, props.data, appleTeamId),
+  }));
+};
+
+export const withAppleSignInEntitlement: ConfigPlugin = config => {
+  return withEntitlementsPlist(config, props => ({
+    ...props,
+    data: setAppleSignInEntitlement(config.expo, props.data),
+  }));
+};
 
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
 
@@ -32,8 +64,8 @@ export function setCustomEntitlementsEntries(config: ExpoConfig, entitlements: I
 
 export function setICloudEntitlement(
   config: ExpoConfig,
-  appleTeamId: string,
-  entitlementsPlist: Plist
+  entitlementsPlist: Plist,
+  appleTeamId: string
 ): Plist {
   if (config.ios?.usesIcloudStorage) {
     // TODO: need access to the appleTeamId for this one!

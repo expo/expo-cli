@@ -12,43 +12,21 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
   IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, bundleIdentifier);
 
+  const expoUsername = await UserManager.getCurrentUsernameAsync();
+
   //// New System
   // Add all built-in plugins
   const { expo, plugins } = withExpoPlugins(getExportedConfig(projectRoot), {
     projectRoot,
     bundleIdentifier,
+    expoUsername,
   });
   await compileIOSPluginsAsync(projectRoot, { expo, plugins });
 
   //// Current System
-
-  const username = await UserManager.getCurrentUsernameAsync();
+  // TODO: Convert all of this to config plugins
 
   IOSConfig.Google.setGoogleServicesFile(expo, projectRoot);
-
-  // Configure the Info.plist
-  await modifyInfoPlistAsync(projectRoot, infoPlist => {
-    infoPlist = IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(expo, infoPlist);
-    infoPlist = IOSConfig.Branch.setBranchApiKey(expo, infoPlist);
-    infoPlist = IOSConfig.Facebook.setFacebookConfig(expo, infoPlist);
-    infoPlist = IOSConfig.Google.setGoogleConfig(expo, infoPlist);
-    infoPlist = IOSConfig.Name.setDisplayName(expo, infoPlist);
-    infoPlist = IOSConfig.Orientation.setOrientation(expo, infoPlist);
-    infoPlist = IOSConfig.RequiresFullScreen.setRequiresFullScreen(expo, infoPlist);
-    infoPlist = IOSConfig.Scheme.setScheme(expo, infoPlist);
-    infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(expo, infoPlist);
-    infoPlist = IOSConfig.UsesNonExemptEncryption.setUsesNonExemptEncryption(expo, infoPlist);
-    infoPlist = IOSConfig.Version.setBuildNumber(expo, infoPlist);
-    infoPlist = IOSConfig.Version.setVersion(expo, infoPlist);
-
-    return infoPlist;
-  });
-
-  // Configure Expo.plist
-  await modifyExpoPlistAsync(projectRoot, expoPlist => {
-    expoPlist = IOSConfig.Updates.setUpdatesConfig(expo, expoPlist, username);
-    return expoPlist;
-  });
 
   // TODO: fix this on Windows! We will ignore errors for now so people can just proceed
   try {
@@ -58,17 +36,6 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
         expo,
         entitlementsPlist
       );
-
-      // TODO: We don't have a mechanism for getting the apple team id here yet
-      entitlementsPlist = IOSConfig.Entitlements.setICloudEntitlement(
-        expo,
-        'TODO-GET-APPLE-TEAM-ID',
-        entitlementsPlist
-      );
-
-      entitlementsPlist = IOSConfig.Entitlements.setAppleSignInEntitlement(expo, entitlementsPlist);
-      entitlementsPlist = IOSConfig.Entitlements.setAccessesContactNotes(expo, entitlementsPlist);
-      entitlementsPlist = IOSConfig.Entitlements.setAssociatedDomains(expo, entitlementsPlist);
       return entitlementsPlist;
     });
   } catch (e) {
@@ -89,26 +56,16 @@ async function compileIOSPluginsAsync(
   projectRoot: string,
   { expo, plugins }: ExportedConfig
 ): Promise<void> {
-  const projectName = getProjectName(projectRoot);
-
   const projectFileSystem = {
     projectRoot,
     platformProjectRoot: path.join(projectRoot, 'ios'),
-    projectName,
+    projectName: getProjectName(projectRoot),
   };
 
   // Configure the Info.plist
   await modifyInfoPlistAsync(projectRoot, async data => {
     data =
       expo.ios?.infoPlist || IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(expo, data);
-    if (typeof plugins?.ios?.info === 'function') {
-      data = (
-        await plugins.ios.info({
-          ...projectFileSystem,
-          data,
-        })
-      ).data;
-    }
     return data;
   });
 
@@ -159,17 +116,51 @@ function getExportedConfig(projectRoot: string): ExportedConfig {
 
 function withExpoPlugins(
   config: ExportedConfig,
-  { projectRoot, bundleIdentifier }: { projectRoot: string; bundleIdentifier: string }
+  {
+    projectRoot,
+    expoUsername,
+  }: { projectRoot: string; bundleIdentifier: string; expoUsername: string | null }
 ): ExportedConfig {
-  return withPlugins(config, [[withExistingInfoPlist, projectRoot]]);
+  return withPlugins(config, [
+    [withExistingInfoPlist, projectRoot],
+    // [IOSConfig.BundleIdenitifer.withBundleIdentifierInPbxproj, { bundleIdentifier }],
+    // IOSConfig.Icons.withIcons,
+    IOSConfig.Branch.withBranch,
+    IOSConfig.Facebook.withFacebook,
+    IOSConfig.Google.withGoogle,
+    IOSConfig.Name.withDisplayName,
+    // IOSConfig.Name.withName,
+    IOSConfig.Orientation.withOrientation,
+    IOSConfig.RequiresFullScreen.withRequiresFullScreen,
+    IOSConfig.Scheme.withScheme,
+    IOSConfig.UserInterfaceStyle.withUserInterfaceStyle,
+    IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
+    IOSConfig.Version.withBuildNumber,
+    IOSConfig.Version.withVersion,
+    // IOSConfig.Google.withGoogleServicesFile,
+    [IOSConfig.Updates.withUpdates, { expoUsername }],
+    // Entitlements
+    IOSConfig.Entitlements.withAppleSignInEntitlement,
+    IOSConfig.Entitlements.withAccessesContactNotes,
+    // TODO: We don't have a mechanism for getting the apple team id here yet
+    [IOSConfig.Entitlements.withICloudEntitlement, { appleTeamId: 'TODO-GET-APPLE-TEAM-ID' }],
+    IOSConfig.Entitlements.withAssociatedDomains,
+    // XcodeProject
+    //  IOSConfig.DeviceFamily.withDeviceFamily,
+    //  IOSConfig.Locales.withLocales,
+  ]);
 }
 
 function withExistingInfoPlist(config: ExportedConfig, projectRoot: string): ExportedConfig {
   const { iosProjectDirectory } = getIOSPaths(projectRoot);
   const contents = IosPlist.read(iosProjectDirectory, 'Info');
 
-  if (!config.expo.ios) config.expo.ios = {};
-  if (!config.expo.ios.infoPlist) config.expo.ios.infoPlist = {};
+  if (!config.expo.ios) {
+    config.expo.ios = {};
+  }
+  if (!config.expo.ios.infoPlist) {
+    config.expo.ios.infoPlist = {};
+  }
 
   config.expo.ios.infoPlist = {
     ...(contents || {}),

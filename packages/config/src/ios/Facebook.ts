@@ -1,4 +1,5 @@
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withInfoPlist } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import { appendScheme } from './Scheme';
 
@@ -177,3 +178,5 @@ export function setFacebookApplicationQuerySchemes(
     LSApplicationQueriesSchemes: updatedSchemes,
   };
 }
+
+export const withFacebook: ConfigPlugin = config => withInfoPlist(config, setFacebookConfig);

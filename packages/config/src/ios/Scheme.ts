@@ -1,4 +1,5 @@
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withInfoPlist } from '../plugins/ios-plugins';
 import { InfoPlist, URLScheme } from './IosConfig.types';
 import { findSchemeNames } from './Paths';
 
@@ -13,6 +14,8 @@ export function getScheme(config: { scheme?: string | string[] }): string[] {
   }
   return [];
 }
+
+export const withScheme: ConfigPlugin = config => withInfoPlist(config, setScheme);
 
 export function setScheme(
   config: Partial<Pick<ExpoConfig, 'scheme' | 'ios'>>,

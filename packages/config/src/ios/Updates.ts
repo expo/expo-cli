@@ -1,4 +1,5 @@
-import { ExpoConfig } from '../Config.types';
+import { ExpoConfig, ExportedConfig } from '../Config.types';
+import { withExpoPlist } from '../plugins/ios-plugins';
 import { ExpoPlist } from './IosConfig.types';
 
 export enum Config {
@@ -42,6 +43,15 @@ export function getUpdatesCheckOnLaunch(config: ExpoConfig) {
   }
   return 'ALWAYS';
 }
+
+export const withUpdates = (
+  config: ExportedConfig,
+  { expoUsername }: { expoUsername: string | null }
+) =>
+  withExpoPlist(config, ({ data, ...props }) => ({
+    ...props,
+    data: setUpdatesConfig(config.expo, data, expoUsername),
+  }));
 
 export function setUpdatesConfig(
   config: ExpoConfig,

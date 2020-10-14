@@ -1,5 +1,10 @@
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withInfoPlist } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
+
+export const withDisplayName: ConfigPlugin = config => withInfoPlist(config, setDisplayName);
+
+export const withName: ConfigPlugin = config => withInfoPlist(config, setName);
 
 export function getName(config: ExpoConfig) {
   return typeof config.name === 'string' ? config.name : null;

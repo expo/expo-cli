@@ -1,11 +1,14 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withInfoPlist } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import { getSourceRoot } from './Paths';
 import { appendScheme } from './Scheme';
 import { addFileToGroup, getPbxproj, getProjectName } from './utils/Xcodeproj';
+
+export const withGoogle: ConfigPlugin = config => withInfoPlist(config, setGoogleConfig);
 
 export function getGoogleMapsApiKey(config: ExpoConfig) {
   return config.ios?.config?.googleMapsApiKey ?? null;
