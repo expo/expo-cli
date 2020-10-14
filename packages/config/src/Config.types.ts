@@ -42,22 +42,6 @@ export interface IOSPluginModifierProps<IData>
 
 export type IOSXcodeProjectModifier = PluginModifier<IOSPluginModifierProps<XcodeProject>>;
 
-export type IOSPlistModifier = PluginModifier<IOSPluginModifierProps<InfoPlist>>;
-
-export interface PluginConfig {
-  android?: {
-    file?: PluginModifier;
-  };
-  ios?: {
-    entitlements?: IOSPlistModifier;
-    expoPlist?: IOSPlistModifier;
-    xcodeproj?: IOSXcodeProjectModifier;
-    file?: PluginModifier<IOSProjectModifierProps & ProjectFileSystem>;
-  };
-}
-
-export type PluginPlatform = keyof PluginConfig;
-
 // TODO: Migrate ProjectConfig to using expo instead if exp
 export interface ExportedConfig {
   plugins: PluginConfig | null;
@@ -68,6 +52,28 @@ export type ConfigPlugin<IProps = any | undefined> = (
   config: ExportedConfig,
   props: IProps
 ) => ExportedConfig;
+
+export type ConfigModifierPlugin<
+  IProps extends ProjectFileSystem = ProjectFileSystem,
+  IResults extends ProjectFileSystem = IProps
+> = (config: ExportedConfig, props: IProps) => Promise<[ExportedConfig, IResults]>;
+
+export type IOSPlistModifier = ConfigModifierPlugin<IOSPluginModifierProps<InfoPlist>>;
+
+export interface PluginConfig {
+  android?: {
+    file?: PluginModifier;
+  };
+  ios?: {
+    infoPlist?: IOSPlistModifier;
+    entitlements?: IOSPlistModifier;
+    expoPlist?: IOSPlistModifier;
+    // xcodeproj?: IOSXcodeProjectModifier;
+    // file?: PluginModifier<IOSProjectModifierProps & ProjectFileSystem>;
+  };
+}
+
+export type PluginPlatform = keyof PluginConfig;
 
 export { ExpoConfig };
 

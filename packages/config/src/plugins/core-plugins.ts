@@ -1,12 +1,14 @@
 import {
+  ConfigModifierPlugin,
   ConfigPlugin,
   ExportedConfig,
+  IOSPlistModifier,
   PluginModifier,
   PluginPlatform,
   ProjectFileSystem,
 } from '../Config.types';
 
-function ensureArray<T>(input: T | T[]): T[] {
+export function ensureArray<T>(input: T | T[]): T[] {
   if (Array.isArray(input)) {
     return input;
   }
@@ -40,7 +42,7 @@ export const withPlugins: ConfigPlugin<(ConfigPlugin | AppliedConfigPlugin)[]> =
  * @param action method to run on the modifier when the config is compiled
  */
 export function withModifier<T extends ProjectFileSystem>(
-  { expo, plugins }: ExportedConfig,
+  { plugins, ...config }: ExportedConfig,
   {
     platform,
     modifier,
@@ -65,5 +67,40 @@ export function withModifier<T extends ProjectFileSystem>(
     return modifierPlugin ? modifierPlugin(results) : results;
   };
 
-  return { expo, plugins };
+  return { plugins, ...config };
+}
+
+export type AsyncDataProviderModifier<T extends ProjectFileSystem> = ProjectFileSystem & {
+  nextAction: ConfigModifierPlugin<T>;
+};
+
+export function withAsyncDataProvider<T extends ProjectFileSystem>(
+  { plugins, ...config }: ExportedConfig,
+  {
+    platform,
+    modifier,
+    action,
+  }: {
+    platform: PluginPlatform;
+    modifier: string;
+    action: ConfigModifierPlugin<T & { nextAction: ConfigModifierPlugin<T> }, T>;
+  }
+): ExportedConfig {
+  if (!plugins) {
+    plugins = {};
+  }
+  if (!plugins[platform]) {
+    plugins[platform] = {};
+  }
+
+  const modifierPlugin: ConfigModifierPlugin<T> =
+    (plugins[platform] as Record<string, any>)[modifier] ?? ((config, props) => [config, props]);
+
+  const extendedPlugin: ConfigModifierPlugin<T> = async (config, props) => {
+    return action(config, { ...props, nextAction: modifierPlugin });
+  };
+
+  (plugins[platform] as any)[modifier] = extendedPlugin;
+
+  return { plugins, ...config };
 }
