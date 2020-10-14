@@ -79,4 +79,26 @@ describe(compilePluginsAsync, () => {
     const data = await fs.readFile('/app/ios/ReactNativeProject/Info.plist', 'utf8');
     expect(data).toMatch(/CFBundleDevelopmentRegion-crazy-random-value/);
   });
+
+  for (const invalid of [[{}], null, 7]) {
+    it(`throws on invalid modifier results (${invalid})`, async () => {
+      // A basic plugin exported from an app.json
+      const exportedConfig: ExportedConfig = {
+        expo: { name: 'app', slug: '' },
+        plugins: {
+          ios: {
+            async infoPlist(config, props) {
+              // Return an invalid config
+              return invalid as any;
+            },
+          },
+        },
+      };
+
+      // Apply modifier plugin
+      await expect(compilePluginsAsync('/app', exportedConfig)).rejects.toThrow(
+        /Modifier `plugins.ios.infoPlist` evaluated to an object that is not a valid project config/
+      );
+    });
+  }
 });

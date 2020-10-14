@@ -2,14 +2,14 @@ import { JSONObject } from '@expo/json-file';
 import { XcodeProject } from 'xcode';
 
 import {
-  ConfigDataModifierPlugin,
+  ConfigModifierPlugin,
   ConfigPlugin,
   ExpoConfig,
   ExportedConfig,
   IOSPluginModifierProps,
 } from '../Config.types';
 import { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
-import { withModifier } from './core-plugins';
+import { withExtendedModifier } from './core-plugins';
 
 type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPlist;
 
@@ -35,30 +35,30 @@ export const withInfoPlist: ConfigPlugin<MutateInfoPlistAction> = (
   return { expo, ...config };
 };
 
-export const withEntitlementsPlist: ConfigPlugin<ConfigDataModifierPlugin<
+export const withEntitlementsPlist: ConfigPlugin<ConfigModifierPlugin<
   IOSPluginModifierProps<JSONObject>
 >> = (config, action) => {
-  return withModifier(config, {
+  return withExtendedModifier(config, {
     platform: 'ios',
     modifier: 'entitlements',
     action,
   });
 };
 
-export const withExpoPlist: ConfigPlugin<ConfigDataModifierPlugin<
+export const withExpoPlist: ConfigPlugin<ConfigModifierPlugin<
   IOSPluginModifierProps<ExpoPlist>
 >> = (config, action) => {
-  return withModifier(config, {
+  return withExtendedModifier(config, {
     platform: 'ios',
     modifier: 'expoPlist',
     action,
   });
 };
 
-export const withXcodeProject: ConfigPlugin<ConfigDataModifierPlugin<
+export const withXcodeProject: ConfigPlugin<ConfigModifierPlugin<
   IOSPluginModifierProps<XcodeProject>
 >> = (config, action) => {
-  return withModifier(config, {
+  return withExtendedModifier(config, {
     platform: 'ios',
     modifier: 'xcodeproj',
     action,

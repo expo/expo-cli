@@ -1,5 +1,5 @@
 import { ConfigPlugin, ExportedConfig } from '../../Config.types';
-import { withModifier, withPlugins } from '../core-plugins';
+import { withExtendedModifier, withPlugins } from '../core-plugins';
 
 describe(withPlugins, () => {
   it('compiles plugins in the correct order', () => {
@@ -26,13 +26,13 @@ describe(withPlugins, () => {
   });
 });
 
-describe(withModifier, () => {
+describe(withExtendedModifier, () => {
   it('compiles modifier plugins', async () => {
     // A basic plugin exported from an app.json
     const exportedConfig: ExportedConfig = { expo: { name: 'app', slug: '' }, plugins: null };
 
     // Apply modifier plugin
-    let config = withModifier<any>(exportedConfig, {
+    let config = withExtendedModifier<any>(exportedConfig, {
       platform: 'ios',
       modifier: 'custom',
       action(props) {

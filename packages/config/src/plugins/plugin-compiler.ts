@@ -5,23 +5,40 @@ import path from 'path';
 import { XcodeProject } from 'xcode';
 
 import {
-  ConfigPlugin,
+  ConfigModifierPlugin,
   ExpoConfig,
   ExportedConfig,
   IOSPluginModifierProps,
+  PluginConfig,
   PluginPlatform,
 } from '../Config.types';
 import * as WarningAggregator from '../WarningAggregator';
 import { InfoPlist } from '../ios';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { getPbxproj, getProjectName } from '../ios/utils/Xcodeproj';
-import { ensureArray, withAsyncDataProvider } from './core-plugins';
+import { ensureArray, withDataProvider } from './core-plugins';
 
 export async function compilePluginsAsync(projectRoot: string, config: ExportedConfig) {
   config = applyIOSDataProviders(projectRoot, config);
   config = applyAndroidDataProviders(projectRoot, config);
 
   return await evalPluginsAsync(config, { projectRoot });
+}
+
+function resolveModifierResults(results: any, platformName: string, modifierName: string) {
+  // If the results came from a modifier, they'd be in the form of [config, data].
+  // Ensure the results are an array and omit the data since it should've been written by a data provider plugin.
+  const ensuredResults = ensureArray(results)[0] as any;
+
+  // Sanity check to help locate non compliant modifiers.
+  if (!ensuredResults?.expo || !ensuredResults?.plugins) {
+    throw new Error(
+      `Modifier \`plugins.${platformName}.${modifierName}\` evaluated to an object that is not a valid project config. Instead got: ${JSON.stringify(
+        ensuredResults
+      )}`
+    );
+  }
+  return ensuredResults;
 }
 
 function applyAndroidDataProviders(projectRoot: string, config: ExportedConfig): ExportedConfig {
@@ -36,16 +53,17 @@ function applyIOSDataProviders(projectRoot: string, config: ExportedConfig): Exp
   );
 
   // Append a rule to supply Info.plist data to plugins on `plugins.ios.infoPlist`
-  config = withAsyncDataProvider<IOSPluginModifierProps<InfoPlist>>(config, {
+  config = withDataProvider<IOSPluginModifierProps<InfoPlist>>(config, {
     platform: 'ios',
     modifier: 'infoPlist',
-    async action(config, { nextAction, ...props }) {
+    async action(config, { modifyAsync, ...props }) {
       let results: [ExportedConfig, IOSPluginModifierProps<JSONObject>] = [config, props];
       await IosPlist.modifyAsync(iosProjectDirectory, 'Info', async data => {
-        results = await nextAction(config, {
+        results = await modifyAsync(config, {
           ...props,
           data,
         });
+        resolveModifierResults(results, props.platform, props.modifier);
         return results[1].data;
       });
       await IosPlist.cleanBackupAsync(iosProjectDirectory, 'Info', false);
@@ -54,17 +72,18 @@ function applyIOSDataProviders(projectRoot: string, config: ExportedConfig): Exp
   });
 
   // Append a rule to supply Expo.plist data to plugins on `plugins.ios.expoPlist`
-  config = withAsyncDataProvider<IOSPluginModifierProps<JSONObject>>(config, {
+  config = withDataProvider<IOSPluginModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'expoPlist',
-    async action(config, { nextAction, ...props }) {
+    async action(config, { modifyAsync, ...props }) {
       let results: [ExportedConfig, IOSPluginModifierProps<JSONObject>] = [config, props];
       try {
         await IosPlist.modifyAsync(iosProjectDirectory, 'Expo', async data => {
-          results = await nextAction(config, {
+          results = await modifyAsync(config, {
             ...props,
             data,
           });
+          resolveModifierResults(results, props.platform, props.modifier);
           return results[1].data;
         });
       } catch (error) {
@@ -81,10 +100,10 @@ function applyIOSDataProviders(projectRoot: string, config: ExportedConfig): Exp
   });
 
   // Append a rule to supply .entitlements data to plugins on `plugins.ios.entitlements`
-  config = withAsyncDataProvider<IOSPluginModifierProps<JSONObject>>(config, {
+  config = withDataProvider<IOSPluginModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'entitlements',
-    async action(config, { nextAction, ...props }) {
+    async action(config, { modifyAsync, ...props }) {
       let results: [ExportedConfig, IOSPluginModifierProps<JSONObject>] = [config, props];
 
       const directory = path.dirname(entitlementsPath);
@@ -92,10 +111,11 @@ function applyIOSDataProviders(projectRoot: string, config: ExportedConfig): Exp
 
       try {
         await IosPlist.modifyAsync(directory, filename, async data => {
-          results = await nextAction(config, {
+          results = await modifyAsync(config, {
             ...props,
             data,
           });
+          resolveModifierResults(results, props.platform, props.modifier);
           return results[1].data;
         });
       } catch (error) {
@@ -111,15 +131,16 @@ function applyIOSDataProviders(projectRoot: string, config: ExportedConfig): Exp
   });
 
   // Append a rule to supply .xcodeproj data to plugins on `plugins.ios.xcodeproj`
-  config = withAsyncDataProvider<IOSPluginModifierProps<XcodeProject>>(config, {
+  config = withDataProvider<IOSPluginModifierProps<XcodeProject>>(config, {
     platform: 'ios',
     modifier: 'xcodeproj',
-    async action(config, { nextAction, ...props }) {
+    async action(config, { modifyAsync, ...props }) {
       const data = getPbxproj(projectRoot);
-      const results = await nextAction(config, {
+      const results = await modifyAsync(config, {
         ...props,
         data,
       });
+      resolveModifierResults(results, props.platform, props.modifier);
       const resultData = results[1].data;
       await writeFile(resultData.filepath, resultData.writeSync());
       return results;
@@ -138,12 +159,12 @@ export async function evalPluginsAsync(
   config: ExportedConfig,
   props: { projectRoot: string }
 ): Promise<ExportedConfig> {
-  for (const [platformName, platform] of Object.entries(config.plugins ?? {})) {
-    const platformProjectRoot = path.join(props.projectRoot, 'ios');
+  for (const [platformName, platform] of Object.entries(config.plugins ?? ({} as PluginConfig))) {
+    const platformProjectRoot = path.join(props.projectRoot, platformName);
     const projectName = platformName === 'ios' ? getProjectName(props.projectRoot) : undefined;
 
     for (const [modifier, plugin] of Object.entries(platform)) {
-      const results = await (plugin as ConfigPlugin<{
+      const results = await (plugin as ConfigModifierPlugin<{
         projectRoot: string;
         platformProjectRoot: string;
         projectName?: string;
@@ -156,9 +177,9 @@ export async function evalPluginsAsync(
         platform: platformName as PluginPlatform,
         modifier,
       });
-      // If the results came from a modifier, they'd be in the form of [config, data].
-      // Ensure the results are an array and omit the data since it should've been written by a data provider plugin.
-      [config] = ensureArray(results);
+
+      // Sanity check to help locate non compliant modifiers.
+      config = resolveModifierResults(results, platformName, modifier);
     }
   }
   return config;

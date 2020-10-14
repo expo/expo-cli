@@ -10,6 +10,16 @@ export interface PluginModifierProps {
    * Project root for the specific platform.
    */
   readonly platformProjectRoot: string;
+
+  /**
+   * Name of the modifier.
+   */
+  readonly modifier: string;
+
+  /**
+   * Name of the platform used in the plugins config.
+   */
+  readonly platform: PluginPlatform;
 }
 
 interface PluginDataModifierProps<IData> extends PluginModifierProps {
@@ -41,17 +51,13 @@ export type ConfigPlugin<IProps = any | undefined> = (
   props: IProps
 ) => ExportedConfig;
 
-export type PluginModifier<T extends PluginModifierProps = PluginModifierProps> = (
-  props: T
-) => OptionalPromise<T>;
-
-export type ConfigDataModifierPlugin<
+export type ConfigModifierPlugin<
   IProps extends PluginModifierProps = PluginModifierProps,
   // Return value is the same as the props unless specified otherwise
   IResults extends PluginModifierProps = IProps
 > = (config: ExportedConfig, props: IProps) => OptionalPromise<[ExportedConfig, IResults]>;
 
-type IOSConfigModifierPlugin<T> = ConfigDataModifierPlugin<IOSPluginModifierProps<T>>;
+type IOSConfigModifierPlugin<T> = ConfigModifierPlugin<IOSPluginModifierProps<T>>;
 
 export interface PluginConfig {
   // android?: {
