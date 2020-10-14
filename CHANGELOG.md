@@ -8,6 +8,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [configure-splash-screen] Added `--version, -V` option for version printing. ([#2785](https://github.com/expo/expo-cli/pull/2785))
 - [pkcs12] new package for PKCS#12 utility functions
 
 ### 🐛 Bug fixes
