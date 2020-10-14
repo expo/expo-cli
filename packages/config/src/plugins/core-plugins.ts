@@ -13,7 +13,7 @@ export function ensureArray<T>(input: T | T[]): T[] {
   return [input];
 }
 
-type AppliedConfigPlugin<T = any> = [ConfigPlugin<T>, T];
+type AppliedConfigPlugin<T = any> = ConfigPlugin<T> | [ConfigPlugin<T>, T];
 
 /**
  * Plugin to chain a list of plugins together.
@@ -21,7 +21,7 @@ type AppliedConfigPlugin<T = any> = [ConfigPlugin<T>, T];
  * @param config exported config
  * @param plugins list of config config plugins to apply to the exported config
  */
-export const withPlugins: ConfigPlugin<(ConfigPlugin | AppliedConfigPlugin)[]> = (
+export const withPlugins: ConfigPlugin<AppliedConfigPlugin[]> = (
   config,
   plugins
 ): ExportedConfig => {
@@ -40,7 +40,7 @@ export const withPlugins: ConfigPlugin<(ConfigPlugin | AppliedConfigPlugin)[]> =
  * @param action method to run on the modifier when the config is compiled
  */
 export function withExtendedModifier<T extends PluginModifierProps>(
-  { plugins, ...config }: ExportedConfig,
+  config: ExportedConfig,
   {
     platform,
     modifier,
@@ -51,31 +51,18 @@ export function withExtendedModifier<T extends PluginModifierProps>(
     action: ConfigModifierPlugin<T>;
   }
 ): ExportedConfig {
-  if (!plugins) {
-    plugins = {};
-  }
-  if (!plugins[platform]) {
-    plugins[platform] = {};
-  }
-
-  const modifierPlugin = (plugins[platform] as Record<string, any>)[modifier];
-
-  const extendedPlugin: ConfigModifierPlugin<T> = async (config, props) => {
-    const results = await action(config, { ...props, modifyAsync: modifierPlugin });
-    return modifierPlugin ? modifierPlugin(...results) : results;
-  };
-
-  (plugins[platform] as any)[modifier] = extendedPlugin;
-
-  return { plugins, ...config };
+  return withInterceptedModifier(config, {
+    platform,
+    modifier,
+    async action(config, { nextModifier, ...props }) {
+      const results = await action(config, props as T);
+      return nextModifier(...results);
+    },
+  });
 }
 
-export type AsyncDataProviderModifier<T extends PluginModifierProps> = PluginModifierProps & {
-  modifyAsync: ConfigModifierPlugin<T>;
-};
-
-export function withDataProvider<T extends PluginModifierProps>(
-  { plugins, ...config }: ExportedConfig,
+export function withInterceptedModifier<T extends PluginModifierProps>(
+  config: ExportedConfig,
   {
     platform,
     modifier,
@@ -83,27 +70,25 @@ export function withDataProvider<T extends PluginModifierProps>(
   }: {
     platform: PluginPlatform;
     modifier: string;
-    action: ConfigModifierPlugin<T & { modifyAsync: ConfigModifierPlugin<T> }, T>;
+    action: ConfigModifierPlugin<T & { nextModifier: ConfigModifierPlugin<T> }, T>;
   }
 ): ExportedConfig {
-  if (!plugins) {
-    plugins = {};
+  if (!config.plugins) {
+    config.plugins = {};
   }
-  if (!plugins[platform]) {
-    plugins[platform] = {};
+  if (!config.plugins[platform]) {
+    config.plugins[platform] = {};
   }
 
   const modifierPlugin: ConfigModifierPlugin<T> =
-    (plugins[platform] as Record<string, any>)[modifier] ?? ((config, props) => [config, props]);
+    (config.plugins[platform] as Record<string, any>)[modifier] ??
+    ((config, props) => [config, props]);
 
   const extendedModifier: ConfigModifierPlugin<T> = async (config, props) => {
-    return action(config, { ...props, modifyAsync: modifierPlugin });
+    return action(config, { ...props, nextModifier: modifierPlugin });
   };
 
-  // @ts-ignore: used for asserting when a modifier isn't a data provider in the compiler.
-  extendedModifier.isDataProvider = true;
+  (config.plugins[platform] as any)[modifier] = extendedModifier;
 
-  (plugins[platform] as any)[modifier] = extendedModifier;
-
-  return { plugins, ...config };
+  return config;
 }

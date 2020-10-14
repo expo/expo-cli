@@ -31,10 +31,9 @@ describe(compilePluginsAsync, () => {
     };
     const config = await compilePluginsAsync('/app', exportedConfig);
 
-    expect(config.expo).toStrictEqual({
-      name: 'app',
-      slug: '',
-    });
+    expect(config.expo.name).toBe('app');
+    expect(config.expo.ios.infoPlist).toBeDefined();
+    expect(config.expo.ios.entitlements).toBeDefined();
     expect(Object.values(config.plugins.ios).every(value => typeof value === 'function')).toBe(
       true
     );
@@ -65,10 +64,9 @@ describe(compilePluginsAsync, () => {
     expect(internalValue).toBe('en');
 
     // App config should have been modified
-    expect(config.expo).toStrictEqual({
-      name: 'app',
-      slug: '',
-    });
+    expect(config.expo.name).toBe('app');
+    expect(config.expo.ios.infoPlist).toBeDefined();
+    expect(config.expo.ios.entitlements).toBeDefined();
 
     // Plugins should all be functions
     expect(Object.values(config.plugins.ios).every(value => typeof value === 'function')).toBe(

@@ -16,7 +16,7 @@ import * as WarningAggregator from '../WarningAggregator';
 import { InfoPlist } from '../ios';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { getPbxproj, getProjectName } from '../ios/utils/Xcodeproj';
-import { ensureArray, withDataProvider } from './core-plugins';
+import { ensureArray, withInterceptedModifier } from './core-plugins';
 
 export async function compilePluginsAsync(projectRoot: string, config: ExportedConfig) {
   config = applyIOSDataProviders(projectRoot, config);
@@ -53,15 +53,29 @@ function applyIOSDataProviders(projectRoot: string, config: ExportedConfig): Exp
   );
 
   // Append a rule to supply Info.plist data to plugins on `plugins.ios.infoPlist`
-  config = withDataProvider<IOSPluginModifierProps<InfoPlist>>(config, {
+  config = withInterceptedModifier<IOSPluginModifierProps<InfoPlist>>(config, {
     platform: 'ios',
     modifier: 'infoPlist',
-    async action(config, { modifyAsync, ...props }) {
+    async action(config, { nextModifier, ...props }) {
       let results: [ExportedConfig, IOSPluginModifierProps<JSONObject>] = [config, props];
       await IosPlist.modifyAsync(iosProjectDirectory, 'Info', async data => {
-        results = await modifyAsync(config, {
+        // Apply all of the Info.plist values to the expo.ios.infoPlist object
+        // TODO: Remove this in favor of just overwriting the Info.plist with the Expo object. This will enable people to actually remove values.
+        if (!config.expo.ios) {
+          config.expo.ios = {};
+        }
+        if (!config.expo.ios.infoPlist) {
+          config.expo.ios.infoPlist = {};
+        }
+
+        config.expo.ios.infoPlist = {
+          ...(data || {}),
+          ...config.expo.ios.infoPlist,
+        };
+
+        results = await nextModifier(config, {
           ...props,
-          data,
+          data: config.expo.ios.infoPlist as InfoPlist,
         });
         resolveModifierResults(results, props.platform, props.modifier);
         return results[1].data;
@@ -72,14 +86,14 @@ function applyIOSDataProviders(projectRoot: string, config: ExportedConfig): Exp
   });
 
   // Append a rule to supply Expo.plist data to plugins on `plugins.ios.expoPlist`
-  config = withDataProvider<IOSPluginModifierProps<JSONObject>>(config, {
+  config = withInterceptedModifier<IOSPluginModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'expoPlist',
-    async action(config, { modifyAsync, ...props }) {
+    async action(config, { nextModifier, ...props }) {
       let results: [ExportedConfig, IOSPluginModifierProps<JSONObject>] = [config, props];
       try {
-        await IosPlist.modifyAsync(iosProjectDirectory, 'Expo', async data => {
-          results = await modifyAsync(config, {
+        await IosPlist.modifyAsync(supportingDirectory, 'Expo', async data => {
+          results = await nextModifier(config, {
             ...props,
             data,
           });
@@ -100,10 +114,10 @@ function applyIOSDataProviders(projectRoot: string, config: ExportedConfig): Exp
   });
 
   // Append a rule to supply .entitlements data to plugins on `plugins.ios.entitlements`
-  config = withDataProvider<IOSPluginModifierProps<JSONObject>>(config, {
+  config = withInterceptedModifier<IOSPluginModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'entitlements',
-    async action(config, { modifyAsync, ...props }) {
+    async action(config, { nextModifier, ...props }) {
       let results: [ExportedConfig, IOSPluginModifierProps<JSONObject>] = [config, props];
 
       const directory = path.dirname(entitlementsPath);
@@ -111,9 +125,23 @@ function applyIOSDataProviders(projectRoot: string, config: ExportedConfig): Exp
 
       try {
         await IosPlist.modifyAsync(directory, filename, async data => {
-          results = await modifyAsync(config, {
+          // Apply all of the .entitlements values to the expo.ios.entitlements object
+          // TODO: Remove this in favor of just overwriting the .entitlements with the Expo object. This will enable people to actually remove values.
+          if (!config.expo.ios) {
+            config.expo.ios = {};
+          }
+          if (!config.expo.ios.entitlements) {
+            config.expo.ios.entitlements = {};
+          }
+
+          config.expo.ios.entitlements = {
+            ...(data || {}),
+            ...config.expo.ios.entitlements,
+          };
+
+          results = await nextModifier(config, {
             ...props,
-            data,
+            data: config.expo.ios.entitlements as JSONObject,
           });
           resolveModifierResults(results, props.platform, props.modifier);
           return results[1].data;
@@ -131,12 +159,12 @@ function applyIOSDataProviders(projectRoot: string, config: ExportedConfig): Exp
   });
 
   // Append a rule to supply .xcodeproj data to plugins on `plugins.ios.xcodeproj`
-  config = withDataProvider<IOSPluginModifierProps<XcodeProject>>(config, {
+  config = withInterceptedModifier<IOSPluginModifierProps<XcodeProject>>(config, {
     platform: 'ios',
     modifier: 'xcodeproj',
-    async action(config, { modifyAsync, ...props }) {
+    async action(config, { nextModifier, ...props }) {
       const data = getPbxproj(projectRoot);
-      const results = await modifyAsync(config, {
+      const results = await nextModifier(config, {
         ...props,
         data,
       });

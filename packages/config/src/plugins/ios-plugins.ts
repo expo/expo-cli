@@ -5,7 +5,6 @@ import {
   ConfigModifierPlugin,
   ConfigPlugin,
   ExpoConfig,
-  ExportedConfig,
   IOSPluginModifierProps,
 } from '../Config.types';
 import { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
@@ -16,23 +15,21 @@ type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPli
 export function createInfoPlistPlugin(
   action: MutateInfoPlistAction
 ): ConfigPlugin<MutateInfoPlistAction> {
-  return config => withInfoPlist(config, action);
+  return config =>
+    withInfoPlist(config, async (config, props) => [
+      config,
+      { ...props, data: await action(config.expo, props.data) },
+    ]);
 }
 
-export const withInfoPlist: ConfigPlugin<MutateInfoPlistAction> = (
-  { expo, ...config },
-  action
-): ExportedConfig => {
-  if (!expo.ios) {
-    expo.ios = {};
-  }
-  if (!expo.ios.infoPlist) {
-    expo.ios.infoPlist = {};
-  }
-
-  expo.ios.infoPlist = action(expo, expo.ios.infoPlist);
-
-  return { expo, ...config };
+export const withInfoPlist: ConfigPlugin<ConfigModifierPlugin<
+  IOSPluginModifierProps<InfoPlist>
+>> = (config, action) => {
+  return withExtendedModifier(config, {
+    platform: 'ios',
+    modifier: 'infoPlist',
+    action,
+  });
 };
 
 export const withEntitlementsPlist: ConfigPlugin<ConfigModifierPlugin<
