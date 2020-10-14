@@ -1,7 +1,9 @@
 import { getConfig, IOSConfig, WarningAggregator } from '@expo/config';
-import { getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
+import { getPbxproj, getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
 import { IosPlist, UserManager } from '@expo/xdl';
+import { writeFile } from 'fs-extra';
 import path from 'path';
+import { XcodeProject } from 'xcode';
 
 import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
 
@@ -13,7 +15,13 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const username = await UserManager.getCurrentUsernameAsync();
 
-  IOSConfig.Google.setGoogleServicesFile(exp, projectRoot);
+  // Configure the Xcode project
+  await modifyPbxprojAsync(projectRoot, async project => {
+    project = await IOSConfig.Google.setGoogleServicesFile(exp, { project, projectRoot });
+    project = await IOSConfig.Locales.setLocalesAsync(exp, { project, projectRoot });
+    project = IOSConfig.DeviceFamily.setDeviceFamily(exp, { project });
+    return project;
+  });
 
   // Configure the Info.plist
   await modifyInfoPlistAsync(projectRoot, infoPlist => {
@@ -70,8 +78,15 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   // Other
   await IOSConfig.Icons.setIconsAsync(exp, projectRoot);
   await IOSConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
-  await IOSConfig.Locales.setLocalesAsync(exp, projectRoot);
-  IOSConfig.DeviceFamily.setDeviceFamily(exp, projectRoot);
+}
+
+async function modifyPbxprojAsync(
+  projectRoot: string,
+  callbackAsync: (project: XcodeProject) => Promise<XcodeProject>
+) {
+  const project = getPbxproj(projectRoot);
+  const result = await callbackAsync(project);
+  await writeFile(project.filepath, result.writeSync());
 }
 
 async function modifyEntitlementsPlistAsync(projectRoot: string, callback: (plist: any) => any) {

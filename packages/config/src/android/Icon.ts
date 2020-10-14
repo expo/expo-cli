@@ -263,7 +263,7 @@ async function createAdaptiveIconXmlFiles(projectRoot: string, icLauncherXmlStri
 
 async function removeBackgroundImageFilesAsync(projectRoot: string) {
   Promise.all(
-    Object.values(dpiValues).map(async ({ folderName, scale }) => {
+    Object.values(dpiValues).map(async ({ folderName }) => {
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
       await fs.remove(path.resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG));
     })

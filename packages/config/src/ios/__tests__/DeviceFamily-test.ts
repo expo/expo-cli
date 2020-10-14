@@ -1,3 +1,4 @@
+import { ExpoConfig } from '@expo/config-types';
 import { fs, vol } from 'memfs';
 import * as path from 'path';
 
@@ -8,6 +9,7 @@ import {
   getSupportsTablet,
   setDeviceFamily,
 } from '../DeviceFamily';
+import { getPbxproj } from '../utils/Xcodeproj';
 
 const actualFs = jest.requireActual('fs') as typeof fs;
 
@@ -99,8 +101,14 @@ describe(setDeviceFamily, () => {
   });
 
   it('updates device families without throwing', async () => {
-    setDeviceFamily({ name: '', slug: '', ios: {} }, projectRoot);
-    setDeviceFamily({ name: '', slug: '', ios: { supportsTablet: true } }, projectRoot);
-    setDeviceFamily({ name: '', slug: '', ios: { isTabletOnly: true } }, projectRoot);
+    setDeviceFamilyForRoot({ name: '', slug: '', ios: {} }, projectRoot);
+    setDeviceFamilyForRoot({ name: '', slug: '', ios: { supportsTablet: true } }, projectRoot);
+    setDeviceFamilyForRoot({ name: '', slug: '', ios: { isTabletOnly: true } }, projectRoot);
   });
 });
+
+function setDeviceFamilyForRoot(config: ExpoConfig, projectRoot: string) {
+  let project = getPbxproj(projectRoot);
+  project = setDeviceFamily(config, { project });
+  fs.writeFileSync(project.filepath, project.writeSync());
+}
