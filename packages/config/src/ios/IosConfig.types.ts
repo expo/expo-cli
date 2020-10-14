@@ -16,6 +16,7 @@ export type InfoPlist = {
   CFBundleIdentifier?: string;
   CFBundleName?: string;
   CFBundleURLTypes?: URLScheme[];
+  CFBundleDevelopmentRegion?: string;
   ITSAppUsesNonExemptEncryption?: boolean;
   LSApplicationQueriesSchemes?: string[];
   FacebookAppID?: string;

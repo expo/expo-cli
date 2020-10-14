@@ -32,9 +32,11 @@ export interface PluginFileModifierProps<IData>
   extends ProjectFileSystem,
     FileModifierProps<IData> {}
 
+type OptionalPromise<T> = Promise<T> | T;
+
 export type PluginModifier<T extends ProjectFileSystem = ProjectFileSystem> = (
   props: T
-) => T | Promise<T>;
+) => OptionalPromise<T>;
 
 export interface IOSPluginModifierProps<IData>
   extends IOSProjectModifierProps,
@@ -56,7 +58,7 @@ export type ConfigPlugin<IProps = any | undefined> = (
 export type ConfigModifierPlugin<
   IProps extends ProjectFileSystem = ProjectFileSystem,
   IResults extends ProjectFileSystem = IProps
-> = (config: ExportedConfig, props: IProps) => Promise<[ExportedConfig, IResults]>;
+> = (config: ExportedConfig, props: IProps) => OptionalPromise<[ExportedConfig, IResults]>;
 
 export type IOSPlistModifier = ConfigModifierPlugin<IOSPluginModifierProps<InfoPlist>>;
 

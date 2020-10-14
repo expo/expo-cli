@@ -1,6 +1,10 @@
+import { JSONObject } from '@expo/json-file';
 import { IosPlist } from '@expo/xdl';
+import { writeFile } from 'fs-extra';
 import path from 'path';
+import { XcodeProject } from 'xcode';
 
+import { WarningAggregator } from '..';
 import { getConfig } from '../Config';
 import {
   ConfigPlugin,
@@ -10,7 +14,8 @@ import {
   PluginPlatform,
 } from '../Config.types';
 import { InfoPlist } from '../ios';
-import { getProjectName } from '../ios/utils/Xcodeproj';
+import { getEntitlementsPath } from '../ios/Entitlements';
+import { getPbxproj, getProjectName } from '../ios/utils/Xcodeproj';
 import { ensureArray, withAsyncDataProvider } from './core-plugins';
 
 export async function compilePluginsAsync(projectRoot: string, config: ExportedConfig) {
@@ -18,13 +23,15 @@ export async function compilePluginsAsync(projectRoot: string, config: ExportedC
   //   let config = getExportedConfig(projectRoot);
 
   const { iosProjectDirectory } = getIOSPaths(projectRoot, config.expo);
+  const supportingDirectory = path.join(iosProjectDirectory, 'Supporting');
+  const entitlementsPath = getEntitlementsPath(projectRoot);
 
   // Append a rule to supply Info.plist data to plugins on `plugins.ios.infoPlist`
   config = withAsyncDataProvider<IOSPluginModifierProps<InfoPlist>>(config, {
     platform: 'ios',
     modifier: 'infoPlist',
     async action(config, { nextAction, ...props }) {
-      let results: [ExportedConfig, IOSPluginModifierProps<InfoPlist>];
+      let results: [ExportedConfig, IOSPluginModifierProps<JSONObject>] = [config, props];
       await IosPlist.modifyAsync(iosProjectDirectory, 'Info', async data => {
         results = await nextAction(config, {
           ...props,
@@ -33,7 +40,80 @@ export async function compilePluginsAsync(projectRoot: string, config: ExportedC
         return results[1].data;
       });
       await IosPlist.cleanBackupAsync(iosProjectDirectory, 'Info', false);
-      return results!;
+      return results;
+    },
+  });
+
+  // Append a rule to supply Expo.plist data to plugins on `plugins.ios.expoPlist`
+  config = withAsyncDataProvider<IOSPluginModifierProps<JSONObject>>(config, {
+    platform: 'ios',
+    modifier: 'expoPlist',
+    async action(config, { nextAction, ...props }) {
+      let results: [ExportedConfig, IOSPluginModifierProps<JSONObject>] = [config, props];
+      try {
+        await IosPlist.modifyAsync(iosProjectDirectory, 'Expo', async data => {
+          results = await nextAction(config, {
+            ...props,
+            data,
+          });
+          return results[1].data;
+        });
+      } catch (error) {
+        WarningAggregator.addWarningIOS(
+          'updates',
+          'Expo.plist configuration could not be applied. You will need to create Expo.plist if it does not exist and add Updates configuration manually.',
+          'https://docs.expo.io/bare/updating-your-app/#configuration-options'
+        );
+      } finally {
+        await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
+      }
+      return results;
+    },
+  });
+
+  // Append a rule to supply .entitlements data to plugins on `plugins.ios.entitlements`
+  config = withAsyncDataProvider<IOSPluginModifierProps<JSONObject>>(config, {
+    platform: 'ios',
+    modifier: 'entitlements',
+    async action(config, { nextAction, ...props }) {
+      let results: [ExportedConfig, IOSPluginModifierProps<JSONObject>] = [config, props];
+
+      const directory = path.dirname(entitlementsPath);
+      const filename = path.basename(entitlementsPath, 'plist');
+
+      try {
+        await IosPlist.modifyAsync(directory, filename, async data => {
+          results = await nextAction(config, {
+            ...props,
+            data,
+          });
+          return results[1].data;
+        });
+      } catch (error) {
+        WarningAggregator.addWarningIOS(
+          'entitlements',
+          `${filename} configuration could not be applied.`
+        );
+      } finally {
+        await IosPlist.cleanBackupAsync(directory, filename, false);
+      }
+      return results;
+    },
+  });
+
+  // Append a rule to supply .xcodeproj data to plugins on `plugins.ios.xcodeproj`
+  config = withAsyncDataProvider<IOSPluginModifierProps<XcodeProject>>(config, {
+    platform: 'ios',
+    modifier: 'xcodeproj',
+    async action(config, { nextAction, ...props }) {
+      const data = getPbxproj(projectRoot);
+      const results = await nextAction(config, {
+        ...props,
+        data,
+      });
+      const resultData = results[1].data;
+      await writeFile(resultData.filepath, resultData.writeSync());
+      return results;
     },
   });
 

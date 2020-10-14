@@ -50,7 +50,7 @@ export function withModifier<T extends ProjectFileSystem>(
   }: {
     platform: PluginPlatform;
     modifier: string;
-    action: PluginModifier<T>;
+    action: ConfigModifierPlugin<T>;
   }
 ): ExportedConfig {
   if (!plugins) {
@@ -62,10 +62,12 @@ export function withModifier<T extends ProjectFileSystem>(
 
   const modifierPlugin = (plugins[platform] as Record<string, any>)[modifier];
 
-  (plugins[platform] as Record<string, any>)[modifier] = async (props: T) => {
-    const results = await action(props);
-    return modifierPlugin ? modifierPlugin(results) : results;
+  const extendedPlugin: ConfigModifierPlugin<T> = async (config, props) => {
+    const results = await action(config, { ...props, nextAction: modifierPlugin });
+    return modifierPlugin ? modifierPlugin(...results) : results;
   };
+
+  (plugins[platform] as any)[modifier] = extendedPlugin;
 
   return { plugins, ...config };
 }

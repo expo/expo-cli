@@ -47,11 +47,15 @@ export function getUpdatesCheckOnLaunch(config: ExpoConfig) {
 export const withUpdates = (
   config: ExportedConfig,
   { expoUsername }: { expoUsername: string | null }
-) =>
-  withExpoPlist(config, ({ data, ...props }) => ({
-    ...props,
-    data: setUpdatesConfig(config.expo, data, expoUsername),
-  }));
+) => {
+  return withExpoPlist(config, (config, { data, ...props }) => [
+    config,
+    {
+      ...props,
+      data: setUpdatesConfig(config.expo, data, expoUsername),
+    },
+  ]);
+};
 
 export function setUpdatesConfig(
   config: ExpoConfig,

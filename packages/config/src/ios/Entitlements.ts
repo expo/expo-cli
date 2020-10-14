@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import { ConfigPlugin, ExpoConfig, ExportedConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { withEntitlementsPlist } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
@@ -17,34 +17,46 @@ import {
 type Plist = Record<string, any>;
 
 export const withAccessesContactNotes: ConfigPlugin = config => {
-  return withEntitlementsPlist(config, props => ({
-    ...props,
-    data: setAccessesContactNotes(config.expo, props.data),
-  }));
+  return withEntitlementsPlist(config, (config, props) => [
+    config,
+    {
+      ...props,
+      data: setAccessesContactNotes(config.expo, props.data),
+    },
+  ]);
 };
 
 export const withAssociatedDomains: ConfigPlugin = config => {
-  return withEntitlementsPlist(config, props => ({
-    ...props,
-    data: setAssociatedDomains(config.expo, props.data),
-  }));
+  return withEntitlementsPlist(config, (config, props) => [
+    config,
+    {
+      ...props,
+      data: setAssociatedDomains(config.expo, props.data),
+    },
+  ]);
 };
 
 export const withICloudEntitlement: ConfigPlugin<{ appleTeamId: string }> = (
   config,
   { appleTeamId }
 ) => {
-  return withEntitlementsPlist(config, props => ({
-    ...props,
-    data: setICloudEntitlement(config.expo, props.data, appleTeamId),
-  }));
+  return withEntitlementsPlist(config, (config, props) => [
+    config,
+    {
+      ...props,
+      data: setICloudEntitlement(config.expo, props.data, appleTeamId),
+    },
+  ]);
 };
 
 export const withAppleSignInEntitlement: ConfigPlugin = config => {
-  return withEntitlementsPlist(config, props => ({
-    ...props,
-    data: setAppleSignInEntitlement(config.expo, props.data),
-  }));
+  return withEntitlementsPlist(config, (config, props) => [
+    config,
+    {
+      ...props,
+      data: setAppleSignInEntitlement(config.expo, props.data),
+    },
+  ]);
 };
 
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
