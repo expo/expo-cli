@@ -15,6 +15,12 @@ function ensureArray<T>(input: T | T[]): T[] {
 
 type AppliedConfigPlugin<T = any> = [ConfigPlugin<T>, T];
 
+/**
+ * Plugin to chain a list of plugins together.
+ *
+ * @param config exported config
+ * @param plugins list of config config plugins to apply to the exported config
+ */
 export const withPlugins: ConfigPlugin<(ConfigPlugin | AppliedConfigPlugin)[]> = (
   config,
   plugins
@@ -25,6 +31,14 @@ export const withPlugins: ConfigPlugin<(ConfigPlugin | AppliedConfigPlugin)[]> =
   }, config);
 };
 
+/**
+ * Plugin to extend a modifier function in the plugins config.
+ *
+ * @param config exported config
+ * @param platform platform to target (ios or android)
+ * @param modifier name of the platform function to extend
+ * @param action method to run on the modifier when the config is compiled
+ */
 export function withModifier<T extends ProjectFileSystem>(
   { expo, plugins }: ExportedConfig,
   {
