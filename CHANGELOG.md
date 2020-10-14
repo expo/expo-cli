@@ -12,8 +12,6 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ## [Wed, 14 Oct 2020 14:27:23 -0700](https://github.com/expo/expo-cli/commit/0fde837f6024c2cd53e089df894063b3f4b38ca2)
 
-### 🛠 Breaking changes
-
 ### 🎉 New features
 
 - [configure-splash-screen] Added `--version, -V` option for version printing. ([#2785](https://github.com/expo/expo-cli/pull/2785))
