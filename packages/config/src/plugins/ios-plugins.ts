@@ -2,7 +2,7 @@ import { JSONObject } from '@expo/json-file';
 import { XcodeProject } from 'xcode';
 
 import {
-  ConfigModifierPlugin,
+  ConfigDataModifierPlugin,
   ConfigPlugin,
   ExpoConfig,
   ExportedConfig,
@@ -35,7 +35,7 @@ export const withInfoPlist: ConfigPlugin<MutateInfoPlistAction> = (
   return { expo, ...config };
 };
 
-export const withEntitlementsPlist: ConfigPlugin<ConfigModifierPlugin<
+export const withEntitlementsPlist: ConfigPlugin<ConfigDataModifierPlugin<
   IOSPluginModifierProps<JSONObject>
 >> = (config, action) => {
   return withModifier(config, {
@@ -45,7 +45,7 @@ export const withEntitlementsPlist: ConfigPlugin<ConfigModifierPlugin<
   });
 };
 
-export const withExpoPlist: ConfigPlugin<ConfigModifierPlugin<
+export const withExpoPlist: ConfigPlugin<ConfigDataModifierPlugin<
   IOSPluginModifierProps<ExpoPlist>
 >> = (config, action) => {
   return withModifier(config, {
@@ -55,7 +55,7 @@ export const withExpoPlist: ConfigPlugin<ConfigModifierPlugin<
   });
 };
 
-export const withXcodeProject: ConfigPlugin<ConfigModifierPlugin<
+export const withXcodeProject: ConfigPlugin<ConfigDataModifierPlugin<
   IOSPluginModifierProps<XcodeProject>
 >> = (config, action) => {
   return withModifier(config, {

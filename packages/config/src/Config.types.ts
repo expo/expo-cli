@@ -4,7 +4,7 @@ import { XcodeProject } from 'xcode';
 
 import { InfoPlist } from './ios';
 
-export interface ProjectFileSystem {
+export interface PluginModifierProps {
   readonly projectRoot: string;
   /**
    * Project root for the specific platform.
@@ -12,7 +12,7 @@ export interface ProjectFileSystem {
   readonly platformProjectRoot: string;
 }
 
-interface FileModifierProps<IData> {
+interface PluginDataModifierProps<IData> extends PluginModifierProps {
   /**
    * The Object representation of a complex file type.
    */
@@ -23,26 +23,12 @@ interface FileModifierProps<IData> {
   filePath?: string;
 }
 
-export interface IOSProjectModifierProps {
-  // Something like projectRoot/ios/[MyApp]/
-  projectName: string;
-}
-
-export interface PluginFileModifierProps<IData>
-  extends ProjectFileSystem,
-    FileModifierProps<IData> {}
-
 type OptionalPromise<T> = Promise<T> | T;
 
-export type PluginModifier<T extends ProjectFileSystem = ProjectFileSystem> = (
-  props: T
-) => OptionalPromise<T>;
-
-export interface IOSPluginModifierProps<IData>
-  extends IOSProjectModifierProps,
-    PluginFileModifierProps<IData> {}
-
-export type IOSXcodeProjectModifier = PluginModifier<IOSPluginModifierProps<XcodeProject>>;
+export type IOSPluginModifierProps<IData> = PluginDataModifierProps<IData> & {
+  // Something like projectRoot/ios/[MyApp]/
+  projectName: string;
+};
 
 // TODO: Migrate ProjectConfig to using expo instead if exp
 export interface ExportedConfig {
@@ -55,23 +41,26 @@ export type ConfigPlugin<IProps = any | undefined> = (
   props: IProps
 ) => ExportedConfig;
 
-export type ConfigModifierPlugin<
-  IProps extends ProjectFileSystem = ProjectFileSystem,
-  IResults extends ProjectFileSystem = IProps
+export type PluginModifier<T extends PluginModifierProps = PluginModifierProps> = (
+  props: T
+) => OptionalPromise<T>;
+
+export type ConfigDataModifierPlugin<
+  IProps extends PluginModifierProps = PluginModifierProps,
+  // Return value is the same as the props unless specified otherwise
+  IResults extends PluginModifierProps = IProps
 > = (config: ExportedConfig, props: IProps) => OptionalPromise<[ExportedConfig, IResults]>;
 
-export type IOSPlistModifier = ConfigModifierPlugin<IOSPluginModifierProps<InfoPlist>>;
+type IOSConfigModifierPlugin<T> = ConfigDataModifierPlugin<IOSPluginModifierProps<T>>;
 
 export interface PluginConfig {
-  android?: {
-    file?: PluginModifier;
-  };
+  // android?: {
+  // };
   ios?: {
-    infoPlist?: IOSPlistModifier;
-    entitlements?: IOSPlistModifier;
-    expoPlist?: IOSPlistModifier;
-    // xcodeproj?: IOSXcodeProjectModifier;
-    // file?: PluginModifier<IOSProjectModifierProps & ProjectFileSystem>;
+    infoPlist?: IOSConfigModifierPlugin<InfoPlist>;
+    entitlements?: IOSConfigModifierPlugin<JSONObject>;
+    expoPlist?: IOSConfigModifierPlugin<JSONObject>;
+    xcodeproj?: IOSConfigModifierPlugin<XcodeProject>;
   };
 }
 

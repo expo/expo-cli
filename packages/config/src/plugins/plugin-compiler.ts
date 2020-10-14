@@ -4,8 +4,6 @@ import { writeFile } from 'fs-extra';
 import path from 'path';
 import { XcodeProject } from 'xcode';
 
-import { WarningAggregator } from '..';
-import { getConfig } from '../Config';
 import {
   ConfigPlugin,
   ExpoConfig,
@@ -13,18 +11,29 @@ import {
   IOSPluginModifierProps,
   PluginPlatform,
 } from '../Config.types';
+import * as WarningAggregator from '../WarningAggregator';
 import { InfoPlist } from '../ios';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { getPbxproj, getProjectName } from '../ios/utils/Xcodeproj';
 import { ensureArray, withAsyncDataProvider } from './core-plugins';
 
 export async function compilePluginsAsync(projectRoot: string, config: ExportedConfig) {
-  // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
-  //   let config = getExportedConfig(projectRoot);
+  config = applyIOSDataProviders(projectRoot, config);
+  config = applyAndroidDataProviders(projectRoot, config);
 
-  const { iosProjectDirectory } = getIOSPaths(projectRoot, config.expo);
-  const supportingDirectory = path.join(iosProjectDirectory, 'Supporting');
-  const entitlementsPath = getEntitlementsPath(projectRoot);
+  return await evalPluginsAsync(config, { projectRoot });
+}
+
+function applyAndroidDataProviders(projectRoot: string, config: ExportedConfig): ExportedConfig {
+  // TODO: Support android plugins
+  return config;
+}
+
+function applyIOSDataProviders(projectRoot: string, config: ExportedConfig): ExportedConfig {
+  const { iosProjectDirectory, entitlementsPath, supportingDirectory } = getIOSPaths(
+    projectRoot,
+    config.expo
+  );
 
   // Append a rule to supply Info.plist data to plugins on `plugins.ios.infoPlist`
   config = withAsyncDataProvider<IOSPluginModifierProps<InfoPlist>>(config, {
@@ -117,7 +126,7 @@ export async function compilePluginsAsync(projectRoot: string, config: ExportedC
     },
   });
 
-  return await evalPluginsAsync(config, { projectRoot });
+  return config;
 }
 
 /**
@@ -155,98 +164,6 @@ export async function evalPluginsAsync(
   return config;
 }
 
-// async function compileIOSPluginsAsync(
-//   projectRoot: string,
-//   { expo, plugins }: ExportedConfig
-// ): Promise<void> {
-//   const projectFileSystem = {
-//     projectRoot,
-//     platformProjectRoot: path.join(projectRoot, 'ios'),
-//     projectName: getProjectName(projectRoot),
-//   };
-
-//   // Configure the Info.plist
-//   await modifyInfoPlistAsync(projectRoot, async data => {
-//     data =
-//       expo.ios?.infoPlist || IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(expo, data);
-//     return data;
-//   });
-
-//   // Configure Expo.plist
-//   await modifyExpoPlistAsync(projectRoot, async data => {
-//     if (typeof plugins?.ios?.expoPlist === 'function') {
-//       data = (
-//         await plugins.ios.expoPlist({
-//           ...projectFileSystem,
-//           data,
-//         })
-//       ).data;
-//     }
-//     return data;
-//   });
-
-//   // TODO: fix this on Windows! We will ignore errors for now so people can just proceed
-//   try {
-//     // Configure entitlements/capabilities
-//     await modifyEntitlementsPlistAsync(projectRoot, async data => {
-//       if (typeof plugins?.ios?.entitlements === 'function') {
-//         data = (
-//           await plugins.ios.entitlements({
-//             ...projectFileSystem,
-//             data,
-//           })
-//         ).data;
-//       }
-//       return data;
-//     });
-//   } catch (e) {
-//     WarningAggregator.addWarningIOS(
-//       'entitlements',
-//       'iOS entitlements could not be applied. Please ensure that contact notes, Apple Sign In, and associated domains entitlements are properly configured if you use them in your app.'
-//     );
-//   }
-
-//   // Run all post plugins
-//   await plugins?.ios?.file?.({
-//     ...projectFileSystem,
-//   });
-// }
-
-function getExportedConfig(projectRoot: string): ExportedConfig {
-  const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  return { expo: originalConfig.exp, plugins: originalConfig.plugins };
-}
-
-// async function modifyEntitlementsPlistAsync(projectRoot: string, callback: (plist: any) => any) {
-//   const entitlementsPath = IOSConfig.Entitlements.getEntitlementsPath(projectRoot);
-//   const directory = path.dirname(entitlementsPath);
-//   const filename = path.basename(entitlementsPath, 'plist');
-//   await IosPlist.modifyAsync(directory, filename, callback);
-//   await IosPlist.cleanBackupAsync(directory, filename, false);
-// }
-
-// async function modifyInfoPlistAsync(projectRoot: string, callback: (plist: any) => any) {
-//   const { iosProjectDirectory } = getIOSPaths(projectRoot);
-//   await IosPlist.modifyAsync(iosProjectDirectory, 'Info', callback);
-//   await IosPlist.cleanBackupAsync(iosProjectDirectory, 'Info', false);
-// }
-
-// async function modifyExpoPlistAsync(projectRoot: string, callback: (plist: any) => any) {
-//   const { iosProjectDirectory } = getIOSPaths(projectRoot);
-//   const supportingDirectory = path.join(iosProjectDirectory, 'Supporting');
-//   try {
-//     await IosPlist.modifyAsync(supportingDirectory, 'Expo', callback);
-//   } catch (error) {
-//     WarningAggregator.addWarningIOS(
-//       'updates',
-//       'Expo.plist configuration could not be applied. You will need to create Expo.plist if it does not exist and add Updates configuration manually.',
-//       'https://docs.expo.io/bare/updating-your-app/#configuration-options'
-//     );
-//   } finally {
-//     await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
-//   }
-// }
-
 // TODO: come up with a better solution for using app.json expo.name in various places
 function sanitizedName(name: string) {
   return name
@@ -276,10 +193,13 @@ function getIOSPaths(projectRoot: string, exp: ExpoConfig) {
 
   const iosProjectDirectory = path.join(projectRoot, 'ios', projectName);
   const iconPath = path.join(iosProjectDirectory, 'Assets.xcassets', 'AppIcon.appiconset');
-
+  const supportingDirectory = path.join(iosProjectDirectory, 'Supporting');
+  const entitlementsPath = getEntitlementsPath(projectRoot);
   return {
     projectName,
+    supportingDirectory,
     iosProjectDirectory,
+    entitlementsPath,
     iconPath,
   };
 }

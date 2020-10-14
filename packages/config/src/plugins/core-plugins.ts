@@ -1,11 +1,9 @@
 import {
-  ConfigModifierPlugin,
+  ConfigDataModifierPlugin,
   ConfigPlugin,
   ExportedConfig,
-  IOSPlistModifier,
-  PluginModifier,
+  PluginModifierProps,
   PluginPlatform,
-  ProjectFileSystem,
 } from '../Config.types';
 
 export function ensureArray<T>(input: T | T[]): T[] {
@@ -41,7 +39,7 @@ export const withPlugins: ConfigPlugin<(ConfigPlugin | AppliedConfigPlugin)[]> =
  * @param modifier name of the platform function to extend
  * @param action method to run on the modifier when the config is compiled
  */
-export function withModifier<T extends ProjectFileSystem>(
+export function withModifier<T extends PluginModifierProps>(
   { plugins, ...config }: ExportedConfig,
   {
     platform,
@@ -50,7 +48,7 @@ export function withModifier<T extends ProjectFileSystem>(
   }: {
     platform: PluginPlatform;
     modifier: string;
-    action: ConfigModifierPlugin<T>;
+    action: ConfigDataModifierPlugin<T>;
   }
 ): ExportedConfig {
   if (!plugins) {
@@ -62,7 +60,7 @@ export function withModifier<T extends ProjectFileSystem>(
 
   const modifierPlugin = (plugins[platform] as Record<string, any>)[modifier];
 
-  const extendedPlugin: ConfigModifierPlugin<T> = async (config, props) => {
+  const extendedPlugin: ConfigDataModifierPlugin<T> = async (config, props) => {
     const results = await action(config, { ...props, nextAction: modifierPlugin });
     return modifierPlugin ? modifierPlugin(...results) : results;
   };
@@ -72,11 +70,11 @@ export function withModifier<T extends ProjectFileSystem>(
   return { plugins, ...config };
 }
 
-export type AsyncDataProviderModifier<T extends ProjectFileSystem> = ProjectFileSystem & {
-  nextAction: ConfigModifierPlugin<T>;
+export type AsyncDataProviderModifier<T extends PluginModifierProps> = PluginModifierProps & {
+  nextAction: ConfigDataModifierPlugin<T>;
 };
 
-export function withAsyncDataProvider<T extends ProjectFileSystem>(
+export function withAsyncDataProvider<T extends PluginModifierProps>(
   { plugins, ...config }: ExportedConfig,
   {
     platform,
@@ -85,7 +83,7 @@ export function withAsyncDataProvider<T extends ProjectFileSystem>(
   }: {
     platform: PluginPlatform;
     modifier: string;
-    action: ConfigModifierPlugin<T & { nextAction: ConfigModifierPlugin<T> }, T>;
+    action: ConfigDataModifierPlugin<T & { nextAction: ConfigDataModifierPlugin<T> }, T>;
   }
 ): ExportedConfig {
   if (!plugins) {
@@ -95,10 +93,10 @@ export function withAsyncDataProvider<T extends ProjectFileSystem>(
     plugins[platform] = {};
   }
 
-  const modifierPlugin: ConfigModifierPlugin<T> =
+  const modifierPlugin: ConfigDataModifierPlugin<T> =
     (plugins[platform] as Record<string, any>)[modifier] ?? ((config, props) => [config, props]);
 
-  const extendedPlugin: ConfigModifierPlugin<T> = async (config, props) => {
+  const extendedPlugin: ConfigDataModifierPlugin<T> = async (config, props) => {
     return action(config, { ...props, nextAction: modifierPlugin });
   };
 
