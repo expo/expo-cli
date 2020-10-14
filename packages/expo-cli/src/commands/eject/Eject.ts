@@ -503,6 +503,17 @@ export function hashForDependencyMap(deps: DependenciesMap): string {
   return createFileHash(depsString);
 }
 
+export function getTargetPaths(pkg: PackageJSONConfig) {
+  const targetPaths = ['ios', 'android'];
+
+  // Only create index.js if we are going to replace the app "main" entry point
+  if (shouldDeleteMainField(pkg.main)) {
+    targetPaths.push('index.js');
+  }
+
+  return targetPaths;
+}
+
 /**
  * Extract the template and copy the ios and android directories over to the project directory.
  *
@@ -526,12 +537,8 @@ async function cloneNativeDirectoriesAsync({
   const creatingNativeProjectStep = CreateApp.logNewSection(
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
-  const targetPaths = ['ios', 'android'];
 
-  // Only create index.js if we are going to replace the app "main" entry point
-  if (shouldDeleteMainField(pkg.main)) {
-    targetPaths.push('index.js');
-  }
+  const targetPaths = getTargetPaths(pkg);
 
   let copiedPaths: string[] = [];
   let skippedPaths: string[] = [];
