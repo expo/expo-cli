@@ -3,6 +3,8 @@ import { JSONObject } from '@expo/json-file';
 import Schemer from '@expo/schemer';
 import fs from 'fs';
 import { boolish } from 'getenv';
+import { default as JsonSchemaRefParser } from 'json-schema-ref-parser';
+import traverse from 'json-schema-traverse';
 import path from 'path';
 
 import ApiV2 from '../ApiV2';
@@ -44,8 +46,11 @@ export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
  * @param sdkVersion
  */
 export async function getAssetSchemasAsync(sdkVersion: string): Promise<string[]> {
-  const schema = await getSchemaAsync(sdkVersion);
+  const rawSchema = await getSchemaAsync(sdkVersion);
   const assetSchemas: string[] = [];
+
+  const schema = await JsonSchemaRefParser.dereference(rawSchema);
+
   const visit = (node: Schema, fieldPath: string) => {
     if (node.meta && node.meta.asset) {
       assetSchemas.push(fieldPath);

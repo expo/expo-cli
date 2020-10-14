@@ -1,5 +1,6 @@
 import Ajv from 'ajv';
 import fs from 'fs';
+import { default as JsonSchemaRefParser } from 'json-schema-ref-parser';
 import traverse from 'json-schema-traverse';
 import get from 'lodash/get';
 import path from 'path';
@@ -148,7 +149,10 @@ export default class Schemer {
 
   async _validateAssetsAsync(data: any) {
     const assets: AssetField[] = [];
-    traverse(this.schema, { allKeys: true }, (subSchema, jsonPointer, a, b, c, d, property) => {
+
+    const schema = await JsonSchemaRefParser.dereference(this.schema);
+
+    traverse(schema, { allKeys: true }, (subSchema, jsonPointer, a, b, c, d, property) => {
       if (property && subSchema.meta && subSchema.meta.asset) {
         const fieldPath = schemaPointerToFieldPath(jsonPointer);
         assets.push({
@@ -239,6 +243,10 @@ export default class Schemer {
     }
   }
 
+  /**
+   * This function cannot resolve '$ref' in the schema object
+   * so it works only for non-referenced fields/sub-schemas
+   */
   async validateProperty(fieldPath: string, data: any) {
     const subSchema = fieldPathToSchema(this.schema, fieldPath);
     this.ajv.validate(subSchema, data);
