@@ -30,9 +30,9 @@ export const withAssociatedDomains: ConfigPlugin = config => {
   }));
 };
 
-export const withICloudEntitlement = (
-  config: ExportedConfig,
-  { appleTeamId }: { appleTeamId: string }
+export const withICloudEntitlement: ConfigPlugin<{ appleTeamId: string }> = (
+  config,
+  { appleTeamId }
 ) => {
   return withEntitlementsPlist(config, props => ({
     ...props,

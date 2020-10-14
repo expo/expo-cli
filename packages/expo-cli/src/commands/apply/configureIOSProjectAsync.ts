@@ -1,5 +1,5 @@
 import { getConfig, IOSConfig, WarningAggregator } from '@expo/config';
-import { ExportedConfig } from '@expo/config/build/Config.types';
+import { ConfigPlugin, ExportedConfig } from '@expo/config/build/Config.types';
 import { getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
 import { withPlugins } from '@expo/config/build/plugins/core-plugins';
 import { IosPlist, UserManager } from '@expo/xdl';
@@ -11,7 +11,6 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
   const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
   IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, bundleIdentifier);
-
   const expoUsername = await UserManager.getCurrentUsernameAsync();
 
   //// New System
@@ -21,6 +20,7 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
     bundleIdentifier,
     expoUsername,
   });
+
   await compileIOSPluginsAsync(projectRoot, { expo, plugins });
 
   //// Current System
@@ -51,6 +51,70 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   await IOSConfig.Locales.setLocalesAsync(expo, projectRoot);
   IOSConfig.DeviceFamily.setDeviceFamily(expo, projectRoot);
 }
+
+/**
+ * Config plugin to apply all of the custom Expo config plugins we support by default.
+ * TODO: In the future most of this should go into versioned packages like expo-facebook, expo-updates, etc...
+ */
+const withExpoPlugins: ConfigPlugin<{
+  projectRoot: string;
+  bundleIdentifier: string;
+  expoUsername: string | null;
+}> = (config, { projectRoot, expoUsername }) => {
+  return withPlugins(config, [
+    [withExistingInfoPlist, projectRoot],
+    // [IOSConfig.BundleIdenitifer.withBundleIdentifierInPbxproj, { bundleIdentifier }],
+    // IOSConfig.Icons.withIcons,
+    IOSConfig.Branch.withBranch,
+    IOSConfig.Facebook.withFacebook,
+    IOSConfig.Google.withGoogle,
+    IOSConfig.Name.withDisplayName,
+    // IOSConfig.Name.withName,
+    IOSConfig.Orientation.withOrientation,
+    IOSConfig.RequiresFullScreen.withRequiresFullScreen,
+    IOSConfig.Scheme.withScheme,
+    IOSConfig.UserInterfaceStyle.withUserInterfaceStyle,
+    IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
+    IOSConfig.Version.withBuildNumber,
+    IOSConfig.Version.withVersion,
+    // IOSConfig.Google.withGoogleServicesFile,
+    [IOSConfig.Updates.withUpdates, { expoUsername }],
+    // Entitlements
+    IOSConfig.Entitlements.withAppleSignInEntitlement,
+    IOSConfig.Entitlements.withAccessesContactNotes,
+    // TODO: We don't have a mechanism for getting the apple team id here yet
+    [IOSConfig.Entitlements.withICloudEntitlement, { appleTeamId: 'TODO-GET-APPLE-TEAM-ID' }],
+    IOSConfig.Entitlements.withAssociatedDomains,
+    // XcodeProject
+    //  IOSConfig.DeviceFamily.withDeviceFamily,
+    //  IOSConfig.Locales.withLocales,
+  ]);
+};
+
+/**
+ * Plugin to apply the current contents of the project's Info.plist to the Expo config ios.infoPlist object.
+ * TODO: In the future this should go away in favor of just overwriting the Info.plist every time.
+ */
+const withExistingInfoPlist: ConfigPlugin<string> = (config, projectRoot) => {
+  const { iosProjectDirectory } = getIOSPaths(projectRoot);
+  const contents = IosPlist.read(iosProjectDirectory, 'Info');
+
+  if (!config.expo.ios) {
+    config.expo.ios = {};
+  }
+  if (!config.expo.ios.infoPlist) {
+    config.expo.ios.infoPlist = {};
+  }
+
+  config.expo.ios.infoPlist = {
+    ...(contents || {}),
+    ...config.expo.ios.infoPlist,
+  };
+
+  return config;
+};
+
+//// Compiler
 
 async function compileIOSPluginsAsync(
   projectRoot: string,
@@ -112,62 +176,6 @@ async function compileIOSPluginsAsync(
 function getExportedConfig(projectRoot: string): ExportedConfig {
   const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   return { expo: originalConfig.exp, plugins: originalConfig.plugins };
-}
-
-function withExpoPlugins(
-  config: ExportedConfig,
-  {
-    projectRoot,
-    expoUsername,
-  }: { projectRoot: string; bundleIdentifier: string; expoUsername: string | null }
-): ExportedConfig {
-  return withPlugins(config, [
-    [withExistingInfoPlist, projectRoot],
-    // [IOSConfig.BundleIdenitifer.withBundleIdentifierInPbxproj, { bundleIdentifier }],
-    // IOSConfig.Icons.withIcons,
-    IOSConfig.Branch.withBranch,
-    IOSConfig.Facebook.withFacebook,
-    IOSConfig.Google.withGoogle,
-    IOSConfig.Name.withDisplayName,
-    // IOSConfig.Name.withName,
-    IOSConfig.Orientation.withOrientation,
-    IOSConfig.RequiresFullScreen.withRequiresFullScreen,
-    IOSConfig.Scheme.withScheme,
-    IOSConfig.UserInterfaceStyle.withUserInterfaceStyle,
-    IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
-    IOSConfig.Version.withBuildNumber,
-    IOSConfig.Version.withVersion,
-    // IOSConfig.Google.withGoogleServicesFile,
-    [IOSConfig.Updates.withUpdates, { expoUsername }],
-    // Entitlements
-    IOSConfig.Entitlements.withAppleSignInEntitlement,
-    IOSConfig.Entitlements.withAccessesContactNotes,
-    // TODO: We don't have a mechanism for getting the apple team id here yet
-    [IOSConfig.Entitlements.withICloudEntitlement, { appleTeamId: 'TODO-GET-APPLE-TEAM-ID' }],
-    IOSConfig.Entitlements.withAssociatedDomains,
-    // XcodeProject
-    //  IOSConfig.DeviceFamily.withDeviceFamily,
-    //  IOSConfig.Locales.withLocales,
-  ]);
-}
-
-function withExistingInfoPlist(config: ExportedConfig, projectRoot: string): ExportedConfig {
-  const { iosProjectDirectory } = getIOSPaths(projectRoot);
-  const contents = IosPlist.read(iosProjectDirectory, 'Info');
-
-  if (!config.expo.ios) {
-    config.expo.ios = {};
-  }
-  if (!config.expo.ios.infoPlist) {
-    config.expo.ios.infoPlist = {};
-  }
-
-  config.expo.ios.infoPlist = {
-    ...(contents || {}),
-    ...config.expo.ios.infoPlist,
-  };
-
-  return config;
 }
 
 async function modifyEntitlementsPlistAsync(projectRoot: string, callback: (plist: any) => any) {

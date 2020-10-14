@@ -67,7 +67,10 @@ export interface PluginConfig {
 export type PluginPlatform = keyof PluginConfig;
 
 // TODO: Migrate ProjectConfig to using expo instead if exp
-export type ExportedConfig = { plugins: PluginConfig | null; expo: ExpoConfig };
+export interface ExportedConfig {
+  plugins: PluginConfig | null;
+  expo: ExpoConfig;
+}
 
 export type ConfigPlugin<IProps = any | undefined> = (
   config: ExportedConfig,
@@ -76,9 +79,9 @@ export type ConfigPlugin<IProps = any | undefined> = (
 
 export { ExpoConfig };
 
-export type PackageJSONConfig = { [key: string]: any };
+export type PackageJSONConfig = Record<string, any>;
 
-export type ProjectConfig = {
+export interface ProjectConfig {
   /**
    * Fully evaluated Expo config with default values injected.
    */
@@ -115,7 +118,7 @@ export type ProjectConfig = {
    * Returns null if no dynamic config file exists.
    */
   dynamicConfigObjectType: string | null;
-};
+}
 export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
 export type BareAppConfig = { name: string; [key: string]: any };
 export type HookArguments = {
