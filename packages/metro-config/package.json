@@ -1,6 +1,6 @@
 {
   "name": "@expo/metro-config",
-  "version": "0.1.34",
+  "version": "0.1.35",
   "description": "A Metro config for running React Native projects with the Metro bundler",
   "main": "build/ExpoMetroConfig.js",
   "scripts": {
@@ -34,7 +34,7 @@
     "transformer.js"
   ],
   "dependencies": {
-    "@expo/config": "3.3.9",
+    "@expo/config": "3.3.10",
     "metro-react-native-babel-transformer": "^0.58.0"
   },
   "devDependencies": {
