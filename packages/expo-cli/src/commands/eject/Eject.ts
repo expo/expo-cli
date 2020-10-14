@@ -503,6 +503,17 @@ export function hashForDependencyMap(deps: DependenciesMap): string {
   return createFileHash(depsString);
 }
 
+export function getTargetPaths(pkg: PackageJSONConfig) {
+  const targetPaths = ['ios', 'android'];
+
+  // Only create index.js if we are going to replace the app "main" entry point
+  if (shouldDeleteMainField(pkg.main)) {
+    targetPaths.push('index.js');
+  }
+
+  return targetPaths;
+}
+
 /**
  * Extract the template and copy the ios and android directories over to the project directory.
  *
@@ -512,10 +523,12 @@ async function cloneNativeDirectoriesAsync({
   projectRoot,
   tempDir,
   exp,
+  pkg,
 }: {
   projectRoot: string;
   tempDir: string;
   exp: Pick<ExpoConfig, 'name' | 'sdkVersion'>;
+  pkg: PackageJSONConfig;
 }): Promise<string[]> {
   const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
 
@@ -524,7 +537,9 @@ async function cloneNativeDirectoriesAsync({
   const creatingNativeProjectStep = CreateApp.logNewSection(
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
-  const targetPaths = ['ios', 'android', 'index.js'];
+
+  const targetPaths = getTargetPaths(pkg);
+
   let copiedPaths: string[] = [];
   let skippedPaths: string[] = [];
   try {
@@ -579,7 +594,7 @@ async function createNativeProjectsFromTemplateAsync(
 ): Promise<
   { hasNewProjectFiles: boolean; needsPodInstall: boolean } & DependenciesModificationResults
 > {
-  const copiedPaths = await cloneNativeDirectoriesAsync({ projectRoot, tempDir, exp });
+  const copiedPaths = await cloneNativeDirectoriesAsync({ projectRoot, tempDir, exp, pkg });
 
   writeMetroConfig({ projectRoot, pkg, tempDir });
 
