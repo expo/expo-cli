@@ -19,8 +19,8 @@ import { getPbxproj, getProjectName } from '../ios/utils/Xcodeproj';
 import { ensureArray, withInterceptedModifier } from './core-plugins';
 
 export async function compilePluginsAsync(projectRoot: string, config: ExportedConfig) {
-  config = applyIOSDataProviders(projectRoot, config);
-  config = applyAndroidDataProviders(projectRoot, config);
+  config = applyIOSCoreModifiers(projectRoot, config);
+  config = applyAndroidCoreModifiers(projectRoot, config);
 
   return await evalPluginsAsync(config, { projectRoot });
 }
@@ -41,12 +41,12 @@ function resolveModifierResults(results: any, platformName: string, modifierName
   return ensuredResults;
 }
 
-function applyAndroidDataProviders(projectRoot: string, config: ExportedConfig): ExportedConfig {
+function applyAndroidCoreModifiers(projectRoot: string, config: ExportedConfig): ExportedConfig {
   // TODO: Support android plugins
   return config;
 }
 
-function applyIOSDataProviders(projectRoot: string, config: ExportedConfig): ExportedConfig {
+function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): ExportedConfig {
   const { iosProjectDirectory, entitlementsPath, supportingDirectory } = getIOSPaths(
     projectRoot,
     config.expo
