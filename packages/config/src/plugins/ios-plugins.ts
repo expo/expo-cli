@@ -13,6 +13,12 @@ import { withModifier } from './core-plugins';
 
 type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPlist;
 
+export function createInfoPlistPlugin(
+  action: MutateInfoPlistAction
+): ConfigPlugin<MutateInfoPlistAction> {
+  return config => withInfoPlist(config, action);
+}
+
 export const withInfoPlist: ConfigPlugin<MutateInfoPlistAction> = (
   { expo, ...config },
   action
@@ -28,12 +34,6 @@ export const withInfoPlist: ConfigPlugin<MutateInfoPlistAction> = (
 
   return { expo, ...config };
 };
-
-export function createInfoPlistPlugin(
-  action: MutateInfoPlistAction
-): ConfigPlugin<MutateInfoPlistAction> {
-  return config => withInfoPlist(config, action);
-}
 
 export const withEntitlementsPlist: ConfigPlugin<PluginModifier<
   IOSPluginModifierProps<JSONObject>
@@ -56,10 +56,9 @@ export const withExpoPlist: ConfigPlugin<PluginModifier<IOSPluginModifierProps<E
   });
 };
 
-export const withXcodeProj: ConfigPlugin<PluginModifier<IOSPluginModifierProps<XcodeProject>>> = (
-  config,
-  action
-) => {
+export const withXcodeProject: ConfigPlugin<PluginModifier<
+  IOSPluginModifierProps<XcodeProject>
+>> = (config, action) => {
   return withModifier(config, {
     platform: 'ios',
     modifier: 'xcodeproj',
