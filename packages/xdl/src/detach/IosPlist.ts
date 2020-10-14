@@ -18,15 +18,6 @@ function _getNormalizedPlistFilename(plistName: string) {
 /**
  *  @param plistName base filename of property list. if no extension, assumes .plist
  */
-function read(plistPath: string, plistName: string): Record<string, any> {
-  const plistFilename = _getNormalizedPlistFilename(plistName);
-  const configPlistName = path.join(plistPath, plistFilename);
-  return plist.parse(fs.readFileSync(configPlistName, 'utf8'));
-}
-
-/**
- *  @param plistName base filename of property list. if no extension, assumes .plist
- */
 async function modifyAsync(plistPath: string, plistName: string, transform: (config: any) => any) {
   const plistFilename = _getNormalizedPlistFilename(plistName);
   const configPlistName = path.join(plistPath, plistFilename);
@@ -115,4 +106,4 @@ async function cleanBackupAsync(plistPath: string, plistName: string, restoreOri
   await fs.remove(configFilename);
 }
 
-export { modifyAsync, read, cleanBackupAsync, createBlankAsync };
+export { modifyAsync, cleanBackupAsync, createBlankAsync };
