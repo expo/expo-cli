@@ -29,6 +29,7 @@ import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
 
 type DependenciesMap = { [key: string]: string | number };
+type PlatformsArray = ('ios' | 'android')[];
 
 export type EjectAsyncOptions = {
   verbose?: boolean;
@@ -50,14 +51,31 @@ export type EjectAsyncOptions = {
 export async function ejectAsync(projectRoot: string, options?: EjectAsyncOptions): Promise<void> {
   if (await maybeBailOnGitStatusAsync()) return;
 
+  const platforms: PlatformsArray = ['android'];
+
+  // Skip ejecting for iOS on Windows
+  if (process.platform !== 'win32') {
+    platforms.push('ios');
+  }
+
   const { exp, pkg } = await ensureConfigAsync(projectRoot);
   const tempDir = temporary.directory();
+
+  if (!platforms.includes('ios')) {
+    log.warn(
+      `⚠️  Skipping generating the iOS native project files. Run ${chalk.bold(
+        'expo eject'
+      )} again from macOS or Linux to generate the iOS project.`
+    );
+    log.newLine();
+  }
 
   const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync(
     projectRoot,
     exp,
     pkg,
-    tempDir
+    tempDir,
+    platforms
   );
   // Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
   // This will be used to prevent the node modules from being nuked every time.
@@ -77,13 +95,18 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
   }
 
   // Apply Expo config to native projects
-  await configureIOSStepAsync(projectRoot);
-  await configureAndroidStepAsync(projectRoot);
+  if (platforms.includes('ios')) {
+    await configureIOSStepAsync(projectRoot);
+  }
+
+  if (platforms.includes('android')) {
+    await configureAndroidStepAsync(projectRoot);
+  }
 
   // Install CocoaPods
   let podsInstalled: boolean = false;
   // err towards running pod install less because it's slow and users can easily run npx pod-install afterwards.
-  if (shouldInstall && needsPodInstall) {
+  if (platforms.includes('ios') && shouldInstall && needsPodInstall) {
     podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
   }
 
@@ -154,8 +177,14 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
       'To compile and run your project in development, execute one of the following commands:'
     );
 
-    log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
-    log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
+    if (platforms.includes('ios')) {
+      log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
+    }
+
+    if (platforms.includes('android')) {
+      log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
+    }
+
     log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
   }
 }
@@ -503,8 +532,8 @@ export function hashForDependencyMap(deps: DependenciesMap): string {
   return createFileHash(depsString);
 }
 
-export function getTargetPaths(pkg: PackageJSONConfig) {
-  const targetPaths = ['ios', 'android'];
+export function getTargetPaths(pkg: PackageJSONConfig, platforms: PlatformsArray) {
+  const targetPaths: string[] = [...platforms];
 
   // Only create index.js if we are going to replace the app "main" entry point
   if (shouldDeleteMainField(pkg.main)) {
@@ -524,11 +553,13 @@ async function cloneNativeDirectoriesAsync({
   tempDir,
   exp,
   pkg,
+  platforms,
 }: {
   projectRoot: string;
   tempDir: string;
   exp: Pick<ExpoConfig, 'name' | 'sdkVersion'>;
   pkg: PackageJSONConfig;
+  platforms: PlatformsArray;
 }): Promise<string[]> {
   const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
 
@@ -538,7 +569,7 @@ async function cloneNativeDirectoriesAsync({
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
 
-  const targetPaths = getTargetPaths(pkg);
+  const targetPaths = getTargetPaths(pkg, platforms);
 
   let copiedPaths: string[] = [];
   let skippedPaths: string[] = [];
@@ -550,7 +581,7 @@ async function cloneNativeDirectoriesAsync({
       path.join(tempDir, '.gitignore')
     );
 
-    let message = `Created native projects`;
+    let message = `Created native project${platforms.length > 1 ? 's' : ''}`;
 
     if (skippedPaths.length) {
       message += log.chalk.dim(
@@ -590,11 +621,18 @@ async function createNativeProjectsFromTemplateAsync(
   projectRoot: string,
   exp: ExpoConfig,
   pkg: PackageJSONConfig,
-  tempDir: string
+  tempDir: string,
+  platforms: PlatformsArray
 ): Promise<
   { hasNewProjectFiles: boolean; needsPodInstall: boolean } & DependenciesModificationResults
 > {
-  const copiedPaths = await cloneNativeDirectoriesAsync({ projectRoot, tempDir, exp, pkg });
+  const copiedPaths = await cloneNativeDirectoriesAsync({
+    projectRoot,
+    tempDir,
+    exp,
+    pkg,
+    platforms,
+  });
 
   writeMetroConfig({ projectRoot, pkg, tempDir });
 

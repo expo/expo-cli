@@ -26,7 +26,7 @@ describe('hashForDependencyMap', () => {
 
 describe('getTargetPaths', () => {
   it(`should include index.js when pkg.main should be deleted`, () => {
-    expect(getTargetPaths({ main: 'node_modules/expo/AppEntry.js' })).toEqual([
+    expect(getTargetPaths({ main: 'node_modules/expo/AppEntry.js' }, ['ios', 'android'])).toEqual([
       'ios',
       'android',
       'index.js',
@@ -34,7 +34,14 @@ describe('getTargetPaths', () => {
   });
 
   it(`should not include index.js when pkg.main is left alone`, () => {
-    expect(getTargetPaths({ main: './src/index.js' })).toEqual(['ios', 'android']);
+    expect(getTargetPaths({ main: './src/index.js' }, ['ios', 'android'])).toEqual([
+      'ios',
+      'android',
+    ]);
+  });
+
+  it(`should only include paths for given platforms`, () => {
+    expect(getTargetPaths({ main: './src/index.js' }, ['ios'])).toEqual(['ios']);
   });
 });
 
