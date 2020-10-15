@@ -44,7 +44,10 @@ async function createPngFile(filePath: string, color: Color) {
   png.data = buffer;
 
   return new Promise(resolve => {
-    png.pack().pipe(fs.createWriteStream(filePath)).on('finish', resolve);
+    png
+      .pack()
+      .pipe(fs.createWriteStream(filePath))
+      .on('finish', resolve);
   });
 }
 

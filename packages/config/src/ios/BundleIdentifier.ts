@@ -2,7 +2,8 @@ import plist, { PlistObject } from '@expo/plist';
 import fs from 'fs-extra';
 import xcode from 'xcode';
 
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withDangerousModifier } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import { getAllInfoPlistPaths, getAllPBXProjectPaths, getPBXProjectPath } from './Paths';
 import {
@@ -10,6 +11,17 @@ import {
   findFirstNativeTarget,
   getBuildConfigurationForId,
 } from './utils/Xcodeproj';
+
+export const withBundleIdentifier: ConfigPlugin<{ bundleIdentifier: string }> = (
+  config,
+  { bundleIdentifier }
+) => {
+  return withDangerousModifier(config, async config => {
+    // TODO: Probably want to read from the Expo config instead (ios.bundleIdentifier).
+    await setBundleIdentifierForPbxproj(config.props.projectRoot, bundleIdentifier);
+    return config;
+  });
+};
 
 function getBundleIdentifier(config: ExpoConfig): string | null {
   return config.ios?.bundleIdentifier ?? null;

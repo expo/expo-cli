@@ -1,7 +1,16 @@
-import * as fs from 'fs-extra';
+import { XcodeProject } from 'xcode';
 
-import { ExpoConfig } from '../Config.types';
-import { getPbxproj } from './utils/Xcodeproj';
+import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { withXcodeProject } from '../plugins/ios-plugins';
+
+export const withDeviceFamily: ConfigPlugin = config => {
+  return withXcodeProject(config, async config => {
+    config.props.data = await setDeviceFamily(config.expo, {
+      project: config.props.data,
+    });
+    return config;
+  });
+};
 
 export function getSupportsTablet(config: ExpoConfig): boolean {
   return !!config.ios?.supportsTablet;
@@ -38,10 +47,12 @@ export function formatDeviceFamilies(deviceFamilies: number[]): string {
 /**
  * Add to pbxproj under TARGETED_DEVICE_FAMILY
  */
-export function setDeviceFamily(config: ExpoConfig, projectRoot: string) {
+export function setDeviceFamily(
+  config: ExpoConfig,
+  { project }: { project: XcodeProject }
+): XcodeProject {
   const deviceFamilies = formatDeviceFamilies(getDeviceFamilies(config));
 
-  const project = getPbxproj(projectRoot);
   const configurations = project.pbxXCBuildConfigurationSection();
   // @ts-ignore
   for (const { buildSettings } of Object.values(configurations || {})) {
@@ -52,5 +63,5 @@ export function setDeviceFamily(config: ExpoConfig, projectRoot: string) {
     }
   }
 
-  fs.writeFileSync(project.filepath, project.writeSync());
+  return project;
 }

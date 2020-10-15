@@ -1,4 +1,5 @@
 import {
+  getTargetPaths,
   hashForDependencyMap,
   isPkgMainExpoAppEntry,
   shouldDeleteMainField,
@@ -20,6 +21,27 @@ describe('hashForDependencyMap', () => {
     expect(hashForDependencyMap({ a: '1.0.0', b: 2, c: '~3.0' })).toBe(
       hashForDependencyMap({ c: '~3.0', b: 2, a: '1.0.0' })
     );
+  });
+});
+
+describe('getTargetPaths', () => {
+  it(`should include index.js when pkg.main should be deleted`, () => {
+    expect(getTargetPaths({ main: 'node_modules/expo/AppEntry.js' }, ['ios', 'android'])).toEqual([
+      'ios',
+      'android',
+      'index.js',
+    ]);
+  });
+
+  it(`should not include index.js when pkg.main is left alone`, () => {
+    expect(getTargetPaths({ main: './src/index.js' }, ['ios', 'android'])).toEqual([
+      'ios',
+      'android',
+    ]);
+  });
+
+  it(`should only include paths for given platforms`, () => {
+    expect(getTargetPaths({ main: './src/index.js' }, ['ios'])).toEqual(['ios']);
   });
 });
 

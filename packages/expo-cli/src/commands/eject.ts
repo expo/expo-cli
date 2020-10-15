@@ -50,26 +50,17 @@ async function action(
   }
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
     .command('eject [path]')
     .description(
       // TODO: Use Learn more link when it lands
-      `Create native iOS and Android project files. Read more: https://expo.fyi/eject`
+      `Create native iOS and Android project files. Read more: https://docs.expo.io/bare/customizing/`
     )
     .longDescription(
       'Create Xcode and Android Studio projects for your app. Use this if you need to add custom native functionality.'
     )
     .helpGroup('eject')
-    .option(
-      '--eject-method [type]',
-      `Eject method to use. [Depreacted]: Ejecting to ExpoKit is not available on SDK >= 37 and not recommended for older SDK versions. We recommend updating to SDK >= 37 and ejecting to bare.`,
-      (value: string) => value.toLowerCase()
-    )
-    .option(
-      '-f --force',
-      'Will attempt to generate an iOS project even when the system is not running macOS. Unsafe and may fail.'
-    )
     .option('--no-install', 'Skip installing npm packages and CocoaPods.')
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .asyncActionProjectDir(action);

@@ -1,7 +1,12 @@
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
-import { addMetaDataItemToMainApplication, Document, getMainApplication } from './Manifest';
+import {
+  addMetaDataItemToMainApplication,
+  Document,
+  getMainApplication,
+  removeMetaDataItemFromMainApplication,
+} from './Manifest';
 import { readResourcesXMLAsync, ResourceItemXML } from './Resources';
 import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';
@@ -62,16 +67,13 @@ async function ensureFacebookActivityAsync({
 }) {
   const facebookSchemeActivityXML = facebookSchemeActivity(scheme);
   const parser = new Parser();
-  const facebookSchemeActivityJSON = await parser.parseStringPromise(facebookSchemeActivityXML);
+  const facebookSchemeActivityJSON = (await parser.parseStringPromise(facebookSchemeActivityXML))
+    .activity;
 
-  //TODO: don't write if facebook scheme activity is already present
-  if ('activity' in mainApplication) {
-    mainApplication['activity'] = mainApplication['activity'].concat(
-      facebookSchemeActivityJSON['activity']
-    );
-  } else {
-    mainApplication['activity'] = facebookSchemeActivityJSON['activity'];
+  if (!Array.isArray(mainApplication.activity)) {
+    mainApplication.activity = [];
   }
+  mainApplication.activity.push(facebookSchemeActivityJSON);
 }
 
 export async function setFacebookAppIdString(config: ExpoConfig, projectDirectory: string) {
@@ -100,6 +102,7 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
 
 export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
   const scheme = getFacebookScheme(config);
+
   const appId = getFacebookAppId(config);
   const displayName = getFacebookDisplayName(config);
   const autoInitEnabled = getFacebookAutoInitEnabled(config);
@@ -111,7 +114,7 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
   removeFacebookCustomTabActivities(mainApplication);
 
   if (scheme) {
-    ensureFacebookActivityAsync({ scheme, mainApplication });
+    await ensureFacebookActivityAsync({ scheme, mainApplication });
   }
 
   if (appId) {
@@ -176,18 +179,4 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
   }
 
   return manifestDocument;
-}
-
-// TODO: Use Manifest version after https://github.com/expo/expo-cli/pull/2587 lands
-function removeMetaDataItemFromMainApplication(mainApplication: any, itemName: string) {
-  if (mainApplication.hasOwnProperty('meta-data')) {
-    const index = mainApplication['meta-data'].findIndex(
-      (e: any) => e['$']['android:name'] === itemName
-    );
-
-    if (index > -1) {
-      mainApplication['meta-data'].splice(index, 1);
-    }
-  }
-  return mainApplication;
 }

@@ -3,6 +3,7 @@ import * as path from 'path';
 
 import { addWarningIOS } from '../../WarningAggregator';
 import { getLocales, setLocalesAsync } from '../Locales';
+import { getPbxproj } from '../utils/Xcodeproj';
 const actualFs = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
@@ -61,7 +62,9 @@ describe('e2e: iOS locales', () => {
       projectRoot
     );
 
-    await setLocalesAsync(
+    let project = getPbxproj(projectRoot);
+
+    project = await setLocalesAsync(
       {
         slug: 'testproject',
         version: '1',
@@ -75,8 +78,10 @@ describe('e2e: iOS locales', () => {
           es: { CFBundleDisplayName: 'spanish-name' },
         },
       },
-      projectRoot
+      { project, projectRoot }
     );
+    // Sync the Xcode project with the changes.
+    fs.writeFileSync(project.filepath, project.writeSync());
   });
 
   afterAll(() => {

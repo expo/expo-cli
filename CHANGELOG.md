@@ -8,9 +8,45 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
-- [pkcs12] new package for PKCS#12 utility functions
+### 🐛 Bug fixes
+
+## [Wed, 14 Oct 2020 14:27:23 -0700](https://github.com/expo/expo-cli/commit/0fde837f6024c2cd53e089df894063b3f4b38ca2)
+
+### 🎉 New features
+
+- [configure-splash-screen] Added `--version, -V` option for version printing. ([#2785](https://github.com/expo/expo-cli/pull/2785))
+- [pkcs12] new package for PKCS#12 utilities ([#2773](https://github.com/expo/expo-cli/issues/2773))
+- [config] Created paths module for ios ([#2784](https://github.com/expo/expo-cli/issues/2784))
+- [cli] Skip ejecting iOS on Windows - this doesn't work properly at the moment, so we instead encourage people to use macOS or Linux for ejecting the iOS project.
+- [cli] Update expo.io URLs used in expo-cli to match changes to the website ([#2767](https://github.com/expo/expo-cli/issues/2767))
 
 ### 🐛 Bug fixes
+
+- [cli] Fix parallel uploads ([#2736](https://github.com/expo/expo-cli/issues/2736))
+- [cli] Add "client" copy to Android and iOS open option ([#2778](https://github.com/expo/expo-cli/issues/2778))
+- [cli] Add a EAS_OUTPUT_JOB_JSON environment variable to output JSON for the job
+- [cli] Update Android install/uninstall copy ([#2763](https://github.com/expo/expo-cli/issues/2763))
+- [cli] Disable error message when aborting ([#2751](https://github.com/expo/expo-cli/issues/2751))
+- [cli] use correct description for openDevToolsAtStartup in the ? message ([#2755](https://github.com/expo/expo-cli/issues/2755))
+- [config] minor plugin updates ([#2788](https://github.com/expo/expo-cli/issues/2788))
+- [config] Fix Android scandir error when ejecting on windows ([#2774](https://github.com/expo/expo-cli/issues/2774))
+
+### 📦 Packages updated
+
+- @expo/config@3.3.10
+- @expo/configure-splash-screen@0.3.0
+- @expo/dev-server@0.1.35
+- @expo/dev-tools@0.13.53
+- @expo/electron-adapter@0.0.26
+- expo-cli@3.28.0
+- expo-optimize@0.1.57
+- @expo/metro-config@0.1.35
+- @expo/next-adapter@2.1.40
+- @expo/pkcs12@0.0.1
+- expo-pwa@0.0.45
+- uri-scheme@1.0.41
+- @expo/webpack-config@0.12.39
+- @expo/xdl@58.0.14
 
 ## [Sat, 3 Oct 2020 22:11:17 -0700](https://github.com/expo/expo-cli/commit/6d8f7c734f501b9f194d232df7a0f65d9b9415e7)
 

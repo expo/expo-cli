@@ -1,10 +1,10 @@
 {
   "name": "@expo/configure-splash-screen",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Supplementary module for 'expo-splash-screen' providing cli configuration command",
   "bin": {
-    "configure-splash-screen": "./build/index-cli.js",
-    "expo-splash-screen": "./build/index-cli.js"
+    "configure-splash-screen": "./build/src/index-cli.js",
+    "expo-splash-screen": "./build/src/index-cli.js"
   },
   "main": "./build/index.js",
   "scripts": {
@@ -67,7 +67,8 @@
     "jest": "^26.2.2",
     "memfs": "^3.1.2",
     "rimraf": "^3.0.2",
-    "ts-jest": "^26.1.4"
+    "ts-jest": "^26.1.4",
+    "typescript": "^4.0.3"
   },
   "files": [
     "build"

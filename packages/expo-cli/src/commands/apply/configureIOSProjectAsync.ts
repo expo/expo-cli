@@ -1,5 +1,5 @@
-import { ConfigPlugin, ExportedConfig, getConfig, IOSConfig } from '@expo/config/build/index';
-import { withPlugins } from '@expo/config/build/plugins/core-plugins';
+import { ExportedConfig, getConfig, IOSConfig } from '@expo/config/build';
+import { withExpoIOSPlugins } from '@expo/config/build/plugins/expo-plugins';
 import { compilePluginsAsync } from '@expo/config/build/plugins/plugin-compiler';
 import { UserManager } from '@expo/xdl';
 
@@ -15,65 +15,14 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   let config = getExportedConfig(projectRoot);
 
   // Add all built-in plugins
-  config = withExpoPlugins(config, {
-    projectRoot,
+  config = withExpoIOSPlugins(config, {
     bundleIdentifier,
     expoUsername,
   });
 
   // compile all plugins and modifiers
-  const { expo } = await compilePluginsAsync(projectRoot, config);
-
-  //// Current System
-  // TODO: Convert all of this to config plugins
-
-  IOSConfig.Google.setGoogleServicesFile(expo, projectRoot);
-
-  // Other
-  await IOSConfig.Icons.setIconsAsync(expo, projectRoot);
-  await IOSConfig.SplashScreen.setSplashScreenAsync(expo, projectRoot);
-  await IOSConfig.Locales.setLocalesAsync(expo, projectRoot);
-  IOSConfig.DeviceFamily.setDeviceFamily(expo, projectRoot);
+  await compilePluginsAsync(projectRoot, config);
 }
-
-/**
- * Config plugin to apply all of the custom Expo config plugins we support by default.
- * TODO: In the future most of this should go into versioned packages like expo-facebook, expo-updates, etc...
- */
-const withExpoPlugins: ConfigPlugin<{
-  projectRoot: string;
-  bundleIdentifier: string;
-  expoUsername: string | null;
-}> = (config, { projectRoot, expoUsername }) => {
-  return withPlugins(config, [
-    // [withExistingInfoPlist, projectRoot],
-    // [IOSConfig.BundleIdenitifer.withBundleIdentifierInPbxproj, { bundleIdentifier }],
-    // IOSConfig.Icons.withIcons,
-    IOSConfig.Branch.withBranch,
-    IOSConfig.Facebook.withFacebook,
-    IOSConfig.Google.withGoogle,
-    IOSConfig.Name.withDisplayName,
-    // IOSConfig.Name.withName,
-    IOSConfig.Orientation.withOrientation,
-    IOSConfig.RequiresFullScreen.withRequiresFullScreen,
-    IOSConfig.Scheme.withScheme,
-    IOSConfig.UserInterfaceStyle.withUserInterfaceStyle,
-    IOSConfig.UsesNonExemptEncryption.withUsesNonExemptEncryption,
-    IOSConfig.Version.withBuildNumber,
-    IOSConfig.Version.withVersion,
-    // IOSConfig.Google.withGoogleServicesFile,
-    [IOSConfig.Updates.withUpdates, { expoUsername }],
-    // Entitlements
-    IOSConfig.Entitlements.withAppleSignInEntitlement,
-    IOSConfig.Entitlements.withAccessesContactNotes,
-    // TODO: We don't have a mechanism for getting the apple team id here yet
-    [IOSConfig.Entitlements.withICloudEntitlement, { appleTeamId: 'TODO-GET-APPLE-TEAM-ID' }],
-    IOSConfig.Entitlements.withAssociatedDomains,
-    // XcodeProject
-    //  IOSConfig.DeviceFamily.withDeviceFamily,
-    //  IOSConfig.Locales.withLocales,
-  ]);
-};
 
 function getExportedConfig(projectRoot: string): ExportedConfig {
   const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });

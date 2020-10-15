@@ -134,6 +134,7 @@ export default () =>
     .description(
       'Idempotent operation that configures native splash screens using provided backgroundColor and optional .png file. Supports light and dark modes configuration. Dark mode is supported only on iOS 13+ and Android 10+.'
     )
+    .version(require('../package.json').version)
     .allowUnknownOption(false)
     .passCommandToAction(false)
     .option(

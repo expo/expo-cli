@@ -61,3 +61,13 @@ export const withXcodeProject: ConfigPlugin<ConfigModifierPlugin<
     action,
   });
 };
+
+export const withDangerousModifier: ConfigPlugin<ConfigModifierPlugin<
+  IOSPluginModifierProps<unknown>
+>> = (config, action) => {
+  return withExtendedModifier(config, {
+    platform: 'ios',
+    modifier: 'dangerous',
+    action,
+  });
+};
