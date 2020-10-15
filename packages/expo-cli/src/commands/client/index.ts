@@ -213,7 +213,7 @@ export default function (program: Command) {
           ({ email } = await prompt({
             name: 'email',
             message: 'Please enter an email address to notify, when the build is completed:',
-            default: context.user.email,
+            default: context?.user?.email,
             filter: value => value.trim(),
             validate: (value: string) =>
               /.+@.+/.test(value) ? true : "That doesn't look like a valid email.",
