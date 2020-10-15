@@ -48,7 +48,6 @@ export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
 export async function getAssetSchemasAsync(sdkVersion: string): Promise<string[]> {
   const schema = await getSchemaAsync(sdkVersion);
   const assetSchemas: string[] = [];
-
   const visit = (node: Schema, fieldPath: string) => {
     if (node.meta && node.meta.asset) {
       assetSchemas.push(fieldPath);

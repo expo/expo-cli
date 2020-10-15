@@ -13251,11 +13251,6 @@ json-schema-traverse@0.3.1, json-schema-traverse@^0.3.0:
   resolved "https://registry.yarnpkg.com/json-schema-traverse/-/json-schema-traverse-0.3.1.tgz#349a6d44c53a51de89b40805c5d5e59b417d3340"
   integrity sha1-NJptRMU6Ud6JtAgFxdXlm0F9M0A=
 
-json-schema-traverse@0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/json-schema-traverse/-/json-schema-traverse-0.5.0.tgz#1069a6097f9e9a567bfc6cc215e85f606ebf6480"
-  integrity sha512-x+TRJIQFskrNnFKE2Viz9FCSjK1vIh+H/uaBiOYszh/IcZmAFneQ35H4osWDJp1NPXccuV2I0RMXmi2ZS6Kqcg==
-
 json-schema-traverse@^0.4.1:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/json-schema-traverse/-/json-schema-traverse-0.4.1.tgz#69f6a87d9513ab8bb8fe63bdb0979c448e684660"

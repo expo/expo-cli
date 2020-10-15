@@ -240,10 +240,6 @@ export default class Schemer {
     }
   }
 
-  /**
-   * This function cannot resolve '$ref' in the schema object
-   * so it works only for non-referenced fields/sub-schemas
-   */
   async validateProperty(fieldPath: string, data: any) {
     const subSchema = fieldPathToSchema(this.schema, fieldPath);
     this.ajv.validate(subSchema, data);
