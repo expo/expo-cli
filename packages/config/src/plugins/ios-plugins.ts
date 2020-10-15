@@ -25,20 +25,34 @@ export function createInfoPlistPlugin(
 export const withInfoPlist: ConfigPlugin<ConfigModifierPlugin<
   IOSPluginModifierProps<InfoPlist>
 >> = (config, action) => {
-  return withExtendedModifier(config, {
+  return withExtendedModifier<IOSPluginModifierProps<InfoPlist>>(config, {
     platform: 'ios',
     modifier: 'infoPlist',
-    action,
+    async action(config) {
+      config = await action(config);
+      if (!config.expo.ios) {
+        config.expo.ios = {};
+      }
+      config.expo.ios.infoPlist = config.props.data;
+      return config;
+    },
   });
 };
 
 export const withEntitlementsPlist: ConfigPlugin<ConfigModifierPlugin<
   IOSPluginModifierProps<JSONObject>
 >> = (config, action) => {
-  return withExtendedModifier(config, {
+  return withExtendedModifier<IOSPluginModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'entitlements',
-    action,
+    async action(config) {
+      config = await action(config);
+      if (!config.expo.ios) {
+        config.expo.ios = {};
+      }
+      config.expo.ios.entitlements = config.props.data;
+      return config;
+    },
   });
 };
 

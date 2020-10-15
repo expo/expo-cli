@@ -10,6 +10,10 @@ export const withExpoIOSPlugins: ConfigPlugin<{
   bundleIdentifier: string;
   expoUsername: string | null;
 }> = (config, { bundleIdentifier, expoUsername }) => {
+  // Set the bundle ID ahead of time.
+  if (!config.expo.ios) config.expo.ios = {};
+  config.expo.ios.bundleIdentifier = bundleIdentifier;
+
   return withPlugins(config, [
     [IOSConfig.BundleIdenitifer.withBundleIdentifier, { bundleIdentifier }],
     IOSConfig.Branch.withBranch,
