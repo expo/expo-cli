@@ -84,6 +84,7 @@ export function withInterceptedModifier<T extends PluginModifierProps>(
     (config.plugins[platform] as Record<string, any>)[modifier] ?? (config => config);
 
   const extendedModifier: ConfigModifierPlugin<T> = async ({ props, ...config }) => {
+    // console.log(`-[mod]-> ${platform}.${modifier}`);
     return action({ ...config, props: { ...props, nextModifier: modifierPlugin } });
   };
 
