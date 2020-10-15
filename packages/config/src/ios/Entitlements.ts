@@ -17,46 +17,34 @@ import {
 type Plist = Record<string, any>;
 
 export const withAccessesContactNotes: ConfigPlugin = config => {
-  return withEntitlementsPlist(config, (config, props) => [
-    config,
-    {
-      ...props,
-      data: setAccessesContactNotes(config.expo, props.data),
-    },
-  ]);
+  return withEntitlementsPlist(config, config => {
+    config.props.data = setAccessesContactNotes(config.expo, config.props.data);
+    return config;
+  });
 };
 
 export const withAssociatedDomains: ConfigPlugin = config => {
-  return withEntitlementsPlist(config, (config, props) => [
-    config,
-    {
-      ...props,
-      data: setAssociatedDomains(config.expo, props.data),
-    },
-  ]);
+  return withEntitlementsPlist(config, config => {
+    config.props.data = setAssociatedDomains(config.expo, config.props.data);
+    return config;
+  });
 };
 
 export const withICloudEntitlement: ConfigPlugin<{ appleTeamId: string }> = (
   config,
   { appleTeamId }
 ) => {
-  return withEntitlementsPlist(config, (config, props) => [
-    config,
-    {
-      ...props,
-      data: setICloudEntitlement(config.expo, props.data, appleTeamId),
-    },
-  ]);
+  return withEntitlementsPlist(config, config => {
+    config.props.data = setICloudEntitlement(config.expo, config.props.data, appleTeamId);
+    return config;
+  });
 };
 
 export const withAppleSignInEntitlement: ConfigPlugin = config => {
-  return withEntitlementsPlist(config, (config, props) => [
-    config,
-    {
-      ...props,
-      data: setAppleSignInEntitlement(config.expo, props.data),
-    },
-  ]);
+  return withEntitlementsPlist(config, config => {
+    config.props.data = setAppleSignInEntitlement(config.expo, config.props.data);
+    return config;
+  });
 };
 
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply

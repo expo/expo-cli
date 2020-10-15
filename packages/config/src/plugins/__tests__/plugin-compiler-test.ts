@@ -1,11 +1,9 @@
 import fs from 'fs-extra';
 import { vol } from 'memfs';
-import * as path from 'path';
 
-import { ConfigPlugin, ExportedConfig } from '../../Config.types';
+import { ExportedConfig } from '../../Config.types';
 import { compilePluginsAsync } from '../plugin-compiler';
 import rnFixture from './fixtures/react-native-project';
-const actualFs = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
 
@@ -46,13 +44,14 @@ describe(compilePluginsAsync, () => {
       expo: { name: 'app', slug: '' },
       plugins: {
         ios: {
-          async infoPlist(config, props) {
-            console.log('INFO: ', props);
+          async infoPlist(config) {
+            console.log('INFO: ', config.props);
             // Store the incoming value
-            internalValue = props.data.CFBundleDevelopmentRegion;
+            internalValue = config.props.data.CFBundleDevelopmentRegion;
             // Modify the data
-            props.data.CFBundleDevelopmentRegion = 'CFBundleDevelopmentRegion-crazy-random-value';
-            return [config, props];
+            config.props.data.CFBundleDevelopmentRegion =
+              'CFBundleDevelopmentRegion-crazy-random-value';
+            return config;
           },
         },
       },
@@ -85,7 +84,7 @@ describe(compilePluginsAsync, () => {
         expo: { name: 'app', slug: '' },
         plugins: {
           ios: {
-            async infoPlist(config, props) {
+            async infoPlist(config) {
               // Return an invalid config
               return invalid as any;
             },

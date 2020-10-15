@@ -6,7 +6,7 @@ import {
   PluginPlatform,
 } from '../Config.types';
 
-export function ensureArray<T>(input: T | T[]): T[] {
+function ensureArray<T>(input: T | T[]): T[] {
   if (Array.isArray(input)) {
     return input;
   }
@@ -54,9 +54,9 @@ export function withExtendedModifier<T extends PluginModifierProps>(
   return withInterceptedModifier(config, {
     platform,
     modifier,
-    async action(config, { nextModifier, ...props }) {
-      const results = await action(config, props as T);
-      return nextModifier(...results);
+    async action({ props: { nextModifier, ...props }, ...config }) {
+      const results = await action({ ...config, props: props as T });
+      return nextModifier(results);
     },
   });
 }
@@ -81,11 +81,10 @@ export function withInterceptedModifier<T extends PluginModifierProps>(
   }
 
   const modifierPlugin: ConfigModifierPlugin<T> =
-    (config.plugins[platform] as Record<string, any>)[modifier] ??
-    ((config, props) => [config, props]);
+    (config.plugins[platform] as Record<string, any>)[modifier] ?? (config => config);
 
-  const extendedModifier: ConfigModifierPlugin<T> = async (config, props) => {
-    return action(config, { ...props, nextModifier: modifierPlugin });
+  const extendedModifier: ConfigModifierPlugin<T> = async ({ props, ...config }) => {
+    return action({ ...config, props: { ...props, nextModifier: modifierPlugin } });
   };
 
   (config.plugins[platform] as any)[modifier] = extendedModifier;

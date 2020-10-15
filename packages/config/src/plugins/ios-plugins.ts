@@ -16,10 +16,10 @@ export function createInfoPlistPlugin(
   action: MutateInfoPlistAction
 ): ConfigPlugin<MutateInfoPlistAction> {
   return config =>
-    withInfoPlist(config, async (config, props) => [
-      config,
-      { ...props, data: await action(config.expo, props.data) },
-    ]);
+    withInfoPlist(config, async config => {
+      config.props.data = await action(config.expo, config.props.data);
+      return config;
+    });
 }
 
 export const withInfoPlist: ConfigPlugin<ConfigModifierPlugin<

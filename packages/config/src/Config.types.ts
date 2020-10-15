@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
 import { XcodeProject } from 'xcode';
 
-import { InfoPlist } from './ios';
+import { InfoPlist } from './ios/IosConfig.types';
 
 export interface PluginModifierProps {
   readonly projectRoot: string;
@@ -46,16 +46,26 @@ export interface ExportedConfig {
   expo: ExpoConfig;
 }
 
+export interface ExportedConfigWithProps<Props = any | undefined> extends ExportedConfig {
+  props: Props;
+}
+
 export type ConfigPlugin<IProps = any | undefined> = (
   config: ExportedConfig,
   props: IProps
 ) => ExportedConfig;
 
+// export type ConfigPlugin<
+//   IProps extends PluginModifierProps = PluginModifierProps,
+//   // Return value is the same as the props unless specified otherwise
+//   IResults extends PluginModifierProps = IProps
+// > = (config: ExportedConfigWithProps<IProps>) => ExportedConfigWithProps<IResults>;
+
 export type ConfigModifierPlugin<
   IProps extends PluginModifierProps = PluginModifierProps,
   // Return value is the same as the props unless specified otherwise
   IResults extends PluginModifierProps = IProps
-> = (config: ExportedConfig, props: IProps) => OptionalPromise<[ExportedConfig, IResults]>;
+> = (config: ExportedConfigWithProps<IProps>) => OptionalPromise<ExportedConfigWithProps<IResults>>;
 
 type IOSConfigModifierPlugin<T> = ConfigModifierPlugin<IOSPluginModifierProps<T>>;
 

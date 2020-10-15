@@ -1,5 +1,4 @@
-import { getConfig, IOSConfig } from '@expo/config';
-import { ConfigPlugin, ExportedConfig } from '@expo/config/build/Config.types';
+import { ConfigPlugin, ExportedConfig, getConfig, IOSConfig } from '@expo/config/build/index';
 import { withPlugins } from '@expo/config/build/plugins/core-plugins';
 import { compilePluginsAsync } from '@expo/config/build/plugins/plugin-compiler';
 import { UserManager } from '@expo/xdl';

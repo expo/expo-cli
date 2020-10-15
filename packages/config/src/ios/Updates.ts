@@ -48,13 +48,10 @@ export const withUpdates = (
   config: ExportedConfig,
   { expoUsername }: { expoUsername: string | null }
 ) => {
-  return withExpoPlist(config, (config, { data, ...props }) => [
-    config,
-    {
-      ...props,
-      data: setUpdatesConfig(config.expo, data, expoUsername),
-    },
-  ]);
+  return withExpoPlist(config, config => {
+    config.props.data = setUpdatesConfig(config.expo, config.props.data, expoUsername);
+    return config;
+  });
 };
 
 export function setUpdatesConfig(

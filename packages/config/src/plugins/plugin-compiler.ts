@@ -8,15 +8,16 @@ import {
   ConfigModifierPlugin,
   ExpoConfig,
   ExportedConfig,
+  ExportedConfigWithProps,
   IOSPluginModifierProps,
   PluginConfig,
   PluginPlatform,
 } from '../Config.types';
-import * as WarningAggregator from '../WarningAggregator';
-import { InfoPlist } from '../ios';
+import { addWarningIOS } from '../WarningAggregator';
 import { getEntitlementsPath } from '../ios/Entitlements';
+import { InfoPlist } from '../ios/IosConfig.types';
 import { getPbxproj, getProjectName } from '../ios/utils/Xcodeproj';
-import { ensureArray, withInterceptedModifier } from './core-plugins';
+import { withInterceptedModifier } from './core-plugins';
 
 export async function compilePluginsAsync(projectRoot: string, config: ExportedConfig) {
   config = applyIOSCoreModifiers(projectRoot, config);
@@ -28,7 +29,7 @@ export async function compilePluginsAsync(projectRoot: string, config: ExportedC
 function resolveModifierResults(results: any, platformName: string, modifierName: string) {
   // If the results came from a modifier, they'd be in the form of [config, data].
   // Ensure the results are an array and omit the data since it should've been written by a data provider plugin.
-  const ensuredResults = ensureArray(results)[0] as any;
+  const ensuredResults = results;
 
   // Sanity check to help locate non compliant modifiers.
   if (!ensuredResults?.expo || !ensuredResults?.plugins) {
@@ -56,8 +57,12 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   config = withInterceptedModifier<IOSPluginModifierProps<InfoPlist>>(config, {
     platform: 'ios',
     modifier: 'infoPlist',
-    async action(config, { nextModifier, ...props }) {
-      let results: [ExportedConfig, IOSPluginModifierProps<JSONObject>] = [config, props];
+    async action({ props: { nextModifier, ...props }, ...config }) {
+      let results: ExportedConfigWithProps<IOSPluginModifierProps<JSONObject>> = {
+        ...config,
+        props,
+      };
+
       await IosPlist.modifyAsync(iosProjectDirectory, 'Info', async data => {
         // Apply all of the Info.plist values to the expo.ios.infoPlist object
         // TODO: Remove this in favor of just overwriting the Info.plist with the Expo object. This will enable people to actually remove values.
@@ -73,12 +78,15 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
           ...config.expo.ios.infoPlist,
         };
 
-        results = await nextModifier(config, {
-          ...props,
-          data: config.expo.ios.infoPlist as InfoPlist,
+        results = await nextModifier({
+          ...config,
+          props: {
+            ...props,
+            data: config.expo.ios.infoPlist as InfoPlist,
+          },
         });
         resolveModifierResults(results, props.platform, props.modifier);
-        return results[1].data;
+        return results.props.data;
       });
       await IosPlist.cleanBackupAsync(iosProjectDirectory, 'Info', false);
       return results;
@@ -89,19 +97,27 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   config = withInterceptedModifier<IOSPluginModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'expoPlist',
-    async action(config, { nextModifier, ...props }) {
-      let results: [ExportedConfig, IOSPluginModifierProps<JSONObject>] = [config, props];
+    async action({ props: { nextModifier, ...props }, ...config }) {
+      let results: ExportedConfigWithProps<IOSPluginModifierProps<JSONObject>> = {
+        ...config,
+        props,
+      };
+
       try {
         await IosPlist.modifyAsync(supportingDirectory, 'Expo', async data => {
-          results = await nextModifier(config, {
-            ...props,
-            data,
+          results = await nextModifier({
+            ...config,
+            props: {
+              ...props,
+              data,
+            },
           });
+
           resolveModifierResults(results, props.platform, props.modifier);
-          return results[1].data;
+          return results.props.data;
         });
       } catch (error) {
-        WarningAggregator.addWarningIOS(
+        addWarningIOS(
           'updates',
           'Expo.plist configuration could not be applied. You will need to create Expo.plist if it does not exist and add Updates configuration manually.',
           'https://docs.expo.io/bare/updating-your-app/#configuration-options'
@@ -117,8 +133,11 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   config = withInterceptedModifier<IOSPluginModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'entitlements',
-    async action(config, { nextModifier, ...props }) {
-      let results: [ExportedConfig, IOSPluginModifierProps<JSONObject>] = [config, props];
+    async action({ props: { nextModifier, ...props }, ...config }) {
+      let results: ExportedConfigWithProps<IOSPluginModifierProps<JSONObject>> = {
+        ...config,
+        props,
+      };
 
       const directory = path.dirname(entitlementsPath);
       const filename = path.basename(entitlementsPath, 'plist');
@@ -139,18 +158,18 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
             ...config.expo.ios.entitlements,
           };
 
-          results = await nextModifier(config, {
-            ...props,
-            data: config.expo.ios.entitlements as JSONObject,
+          results = await nextModifier({
+            ...config,
+            props: {
+              ...props,
+              data: config.expo.ios.entitlements as JSONObject,
+            },
           });
           resolveModifierResults(results, props.platform, props.modifier);
-          return results[1].data;
+          return results.props.data;
         });
       } catch (error) {
-        WarningAggregator.addWarningIOS(
-          'entitlements',
-          `${filename} configuration could not be applied.`
-        );
+        addWarningIOS('entitlements', `${filename} configuration could not be applied.`);
       } finally {
         await IosPlist.cleanBackupAsync(directory, filename, false);
       }
@@ -162,14 +181,17 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   config = withInterceptedModifier<IOSPluginModifierProps<XcodeProject>>(config, {
     platform: 'ios',
     modifier: 'xcodeproj',
-    async action(config, { nextModifier, ...props }) {
+    async action({ props: { nextModifier, ...props }, ...config }) {
       const data = getPbxproj(projectRoot);
-      const results = await nextModifier(config, {
-        ...props,
-        data,
+      const results = await nextModifier({
+        ...config,
+        props: {
+          ...props,
+          data,
+        },
       });
       resolveModifierResults(results, props.platform, props.modifier);
-      const resultData = results[1].data;
+      const resultData = results.props.data;
       await writeFile(resultData.filepath, resultData.writeSync());
       return results;
     },
@@ -198,12 +220,15 @@ export async function evalPluginsAsync(
         projectName?: string;
         modifier: string;
         platform: PluginPlatform;
-      }>)(config, {
-        ...props,
-        projectName,
-        platformProjectRoot,
-        platform: platformName as PluginPlatform,
-        modifier,
+      }>)({
+        ...config,
+        props: {
+          ...props,
+          projectName,
+          platformProjectRoot,
+          platform: platformName as PluginPlatform,
+          modifier,
+        },
       });
 
       // Sanity check to help locate non compliant modifiers.
