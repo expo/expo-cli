@@ -5,13 +5,18 @@ import {
   ConfigModifierPlugin,
   ConfigPlugin,
   ExpoConfig,
-  IOSPluginModifierProps,
+  PluginModifierProps,
 } from '../Config.types';
 import { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
 import { withExtendedModifier } from './core-plugins';
 
 type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPlist;
 
+/**
+ * Helper method for creating modifiers from existing config functions.
+ *
+ * @param action
+ */
 export function createInfoPlistPlugin(
   action: MutateInfoPlistAction
 ): ConfigPlugin<MutateInfoPlistAction> {
@@ -22,10 +27,18 @@ export function createInfoPlistPlugin(
     });
 }
 
-export const withInfoPlist: ConfigPlugin<ConfigModifierPlugin<
-  IOSPluginModifierProps<InfoPlist>
->> = (config, action) => {
-  return withExtendedModifier<IOSPluginModifierProps<InfoPlist>>(config, {
+/**
+ * Provides the Info.plist file for modification.
+ * Keeps the config's expo.ios.infoPlist object in sync with the data.
+ *
+ * @param config
+ * @param action
+ */
+export const withInfoPlist: ConfigPlugin<ConfigModifierPlugin<PluginModifierProps<InfoPlist>>> = (
+  config,
+  action
+) => {
+  return withExtendedModifier<PluginModifierProps<InfoPlist>>(config, {
     platform: 'ios',
     modifier: 'infoPlist',
     async action(config) {
@@ -39,10 +52,17 @@ export const withInfoPlist: ConfigPlugin<ConfigModifierPlugin<
   });
 };
 
+/**
+ * Provides the main .entitlements file for modification.
+ * Keeps the config's expo.ios.entitlements object in sync with the data.
+ *
+ * @param config
+ * @param action
+ */
 export const withEntitlementsPlist: ConfigPlugin<ConfigModifierPlugin<
-  IOSPluginModifierProps<JSONObject>
+  PluginModifierProps<JSONObject>
 >> = (config, action) => {
-  return withExtendedModifier<IOSPluginModifierProps<JSONObject>>(config, {
+  return withExtendedModifier<PluginModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'entitlements',
     async action(config) {
@@ -56,9 +76,16 @@ export const withEntitlementsPlist: ConfigPlugin<ConfigModifierPlugin<
   });
 };
 
-export const withExpoPlist: ConfigPlugin<ConfigModifierPlugin<
-  IOSPluginModifierProps<ExpoPlist>
->> = (config, action) => {
+/**
+ * Provides the Expo.plist for modification.
+ *
+ * @param config
+ * @param action
+ */
+export const withExpoPlist: ConfigPlugin<ConfigModifierPlugin<PluginModifierProps<ExpoPlist>>> = (
+  config,
+  action
+) => {
   return withExtendedModifier(config, {
     platform: 'ios',
     modifier: 'expoPlist',
@@ -66,8 +93,14 @@ export const withExpoPlist: ConfigPlugin<ConfigModifierPlugin<
   });
 };
 
+/**
+ * Provides the main .xcodeproj for modification.
+ *
+ * @param config
+ * @param action
+ */
 export const withXcodeProject: ConfigPlugin<ConfigModifierPlugin<
-  IOSPluginModifierProps<XcodeProject>
+  PluginModifierProps<XcodeProject>
 >> = (config, action) => {
   return withExtendedModifier(config, {
     platform: 'ios',
@@ -76,8 +109,14 @@ export const withXcodeProject: ConfigPlugin<ConfigModifierPlugin<
   });
 };
 
+/**
+ * Modifiers that don't modify any data, all unresolved functionality is performed inside a dangerous modifier.
+ *
+ * @param config
+ * @param action
+ */
 export const withDangerousModifier: ConfigPlugin<ConfigModifierPlugin<
-  IOSPluginModifierProps<unknown>
+  PluginModifierProps<unknown>
 >> = (config, action) => {
   return withExtendedModifier(config, {
     platform: 'ios',

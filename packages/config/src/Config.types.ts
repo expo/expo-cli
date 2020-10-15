@@ -4,7 +4,7 @@ import { XcodeProject } from 'xcode';
 
 import { InfoPlist } from './ios/IosConfig.types';
 
-export interface PluginModifierProps {
+export interface PluginModifierProps<Data = unknown> {
   readonly projectRoot: string;
   /**
    * Project root for the specific platform.
@@ -20,6 +20,18 @@ export interface PluginModifierProps {
    * Name of the platform used in the plugins config.
    */
   readonly platform: PluginPlatform;
+
+  /**
+   * [iOS]: The path component used for querying project files.
+   *
+   * @example projectRoot/ios/[projectName]/
+   */
+  readonly projectName?: string;
+
+  /**
+   * The Object representation of a complex file type.
+   */
+  data: Data;
 }
 
 interface PluginDataModifierProps<IData> extends PluginModifierProps {
@@ -35,10 +47,7 @@ interface PluginDataModifierProps<IData> extends PluginModifierProps {
 
 type OptionalPromise<T> = Promise<T> | T;
 
-export type IOSPluginModifierProps<IData> = PluginDataModifierProps<IData> & {
-  // Something like projectRoot/ios/[MyApp]/
-  projectName: string;
-};
+export type IOSPluginModifierProps<IData> = PluginModifierProps<IData>;
 
 // TODO: Migrate ProjectConfig to using expo instead if exp
 export interface ExportedConfig {

@@ -10,8 +10,8 @@ import {
   ExpoConfig,
   ExportedConfig,
   ExportedConfigWithProps,
-  IOSPluginModifierProps,
   PluginConfig,
+  PluginModifierProps,
   PluginPlatform,
 } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
@@ -52,11 +52,11 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   const { iosProjectDirectory, supportingDirectory } = getIOSPaths(projectRoot, config.expo);
 
   // Append a rule to supply Info.plist data to plugins on `plugins.ios.infoPlist`
-  config = withInterceptedModifier<IOSPluginModifierProps<InfoPlist>>(config, {
+  config = withInterceptedModifier<PluginModifierProps<InfoPlist>>(config, {
     platform: 'ios',
     modifier: 'infoPlist',
     async action({ props: { nextModifier, ...props }, ...config }) {
-      let results: ExportedConfigWithProps<IOSPluginModifierProps<JSONObject>> = {
+      let results: ExportedConfigWithProps<PluginModifierProps<JSONObject>> = {
         ...config,
         props,
       };
@@ -92,11 +92,11 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   });
 
   // Append a rule to supply Expo.plist data to plugins on `plugins.ios.expoPlist`
-  config = withInterceptedModifier<IOSPluginModifierProps<JSONObject>>(config, {
+  config = withInterceptedModifier<PluginModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'expoPlist',
     async action({ props: { nextModifier, ...props }, ...config }) {
-      let results: ExportedConfigWithProps<IOSPluginModifierProps<JSONObject>> = {
+      let results: ExportedConfigWithProps<PluginModifierProps<JSONObject>> = {
         ...config,
         props,
       };
@@ -128,7 +128,7 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   });
 
   // Append a rule to supply .xcodeproj data to plugins on `plugins.ios.xcodeproj`
-  config = withInterceptedModifier<IOSPluginModifierProps<XcodeProject>>(config, {
+  config = withInterceptedModifier<PluginModifierProps<XcodeProject>>(config, {
     platform: 'ios',
     modifier: 'xcodeproj',
     async action({ props: { nextModifier, ...props }, ...config }) {
@@ -154,14 +154,13 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
 
 const withEntitlementsBaseModifier: ConfigPlugin = config => {
   // Append a rule to supply .entitlements data to plugins on `plugins.ios.entitlements`
-  return withInterceptedModifier<IOSPluginModifierProps<JSONObject>>(config, {
+  return withInterceptedModifier<PluginModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'entitlements',
     async action({ props: { nextModifier, ...props }, ...config }) {
-      // TODO: Entitlements path can change dynamically, we should define rules for ensuring this is predictable.
       const entitlementsPath = getEntitlementsPath(props.projectRoot);
 
-      let results: ExportedConfigWithProps<IOSPluginModifierProps<JSONObject>> = {
+      let results: ExportedConfigWithProps<PluginModifierProps<JSONObject>> = {
         ...config,
         props,
       };
@@ -219,13 +218,7 @@ export async function evalPluginsAsync(
     const projectName = platformName === 'ios' ? getProjectName(props.projectRoot) : undefined;
 
     for (const [modifier, plugin] of Object.entries(platform)) {
-      const results = await (plugin as ConfigModifierPlugin<{
-        projectRoot: string;
-        platformProjectRoot: string;
-        projectName?: string;
-        modifier: string;
-        platform: PluginPlatform;
-      }>)({
+      const results = await (plugin as ConfigModifierPlugin<PluginModifierProps>)({
         ...config,
         props: {
           ...props,
@@ -233,6 +226,7 @@ export async function evalPluginsAsync(
           platformProjectRoot,
           platform: platformName as PluginPlatform,
           modifier,
+          data: null,
         },
       });
 
