@@ -1,6 +1,6 @@
 import Ajv from 'ajv';
 import fs from 'fs';
-import { default as JsonSchemaRefParser } from 'json-schema-ref-parser';
+import schemaDerefSync from 'json-schema-deref-sync';
 import traverse from 'json-schema-traverse';
 import get from 'lodash/get';
 import path from 'path';
@@ -49,7 +49,7 @@ export default class Schemer {
     };
 
     this.ajv = new Ajv(this.options);
-    this.schema = schema;
+    this.schema = schemaDerefSync(schema);
     this.rootDir = this.options.rootDir || __dirname;
     this.manualValidationErrors = [];
   }
@@ -149,10 +149,7 @@ export default class Schemer {
 
   async _validateAssetsAsync(data: any) {
     const assets: AssetField[] = [];
-
-    const schema = await JsonSchemaRefParser.dereference(this.schema);
-
-    traverse(schema, { allKeys: true }, (subSchema, jsonPointer, a, b, c, d, property) => {
+    traverse(this.schema, { allKeys: true }, (subSchema, jsonPointer, a, b, c, d, property) => {
       if (property && subSchema.meta && subSchema.meta.asset) {
         const fieldPath = schemaPointerToFieldPath(jsonPointer);
         assets.push({
