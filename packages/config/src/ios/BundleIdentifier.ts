@@ -1,4 +1,5 @@
 import plist, { PlistObject } from '@expo/plist';
+import assert from 'assert';
 import fs from 'fs-extra';
 import xcode from 'xcode';
 
@@ -12,13 +13,17 @@ import {
   getBuildConfigurationForId,
 } from './utils/Xcodeproj';
 
-export const withBundleIdentifier: ConfigPlugin<{ bundleIdentifier: string }> = (
+export const withBundleIdentifier: ConfigPlugin<{ bundleIdentifier?: string }> = (
   config,
   { bundleIdentifier }
 ) => {
   return withDangerousModifier(config, async config => {
-    // TODO: Probably want to read from the Expo config instead (ios.bundleIdentifier).
-    await setBundleIdentifierForPbxproj(config.props.projectRoot, bundleIdentifier);
+    const bundleId = bundleIdentifier ?? config.expo.ios?.bundleIdentifier;
+    assert(
+      bundleId,
+      '`bundleIdentifier` must be defined in the app config (`expo.ios.bundleIdentifier`) or passed to the plugin `withBundleIdentifier`.'
+    );
+    await setBundleIdentifierForPbxproj(config.props.projectRoot, bundleId!);
     return config;
   });
 };

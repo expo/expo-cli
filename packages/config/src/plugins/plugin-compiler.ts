@@ -6,6 +6,7 @@ import { XcodeProject } from 'xcode';
 
 import {
   ConfigModifierPlugin,
+  ConfigPlugin,
   ExpoConfig,
   ExportedConfig,
   ExportedConfigWithProps,
@@ -48,10 +49,7 @@ function applyAndroidCoreModifiers(projectRoot: string, config: ExportedConfig):
 }
 
 function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): ExportedConfig {
-  const { iosProjectDirectory, entitlementsPath, supportingDirectory } = getIOSPaths(
-    projectRoot,
-    config.expo
-  );
+  const { iosProjectDirectory, supportingDirectory } = getIOSPaths(projectRoot, config.expo);
 
   // Append a rule to supply Info.plist data to plugins on `plugins.ios.infoPlist`
   config = withInterceptedModifier<IOSPluginModifierProps<InfoPlist>>(config, {
@@ -129,11 +127,40 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
     },
   });
 
+  // Append a rule to supply .xcodeproj data to plugins on `plugins.ios.xcodeproj`
+  config = withInterceptedModifier<IOSPluginModifierProps<XcodeProject>>(config, {
+    platform: 'ios',
+    modifier: 'xcodeproj',
+    async action({ props: { nextModifier, ...props }, ...config }) {
+      const data = getPbxproj(projectRoot);
+      const results = await nextModifier({
+        ...config,
+        props: {
+          ...props,
+          data,
+        },
+      });
+      resolveModifierResults(results, props.platform, props.modifier);
+      const resultData = results.props.data;
+      await writeFile(resultData.filepath, resultData.writeSync());
+      return results;
+    },
+  });
+
+  config = withEntitlementsBaseModifier(config, {});
+
+  return config;
+}
+
+const withEntitlementsBaseModifier: ConfigPlugin = config => {
   // Append a rule to supply .entitlements data to plugins on `plugins.ios.entitlements`
-  config = withInterceptedModifier<IOSPluginModifierProps<JSONObject>>(config, {
+  return withInterceptedModifier<IOSPluginModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'entitlements',
     async action({ props: { nextModifier, ...props }, ...config }) {
+      // TODO: Entitlements path can change dynamically, we should define rules for ensuring this is predictable.
+      const entitlementsPath = getEntitlementsPath(props.projectRoot);
+
       let results: ExportedConfigWithProps<IOSPluginModifierProps<JSONObject>> = {
         ...config,
         props,
@@ -176,29 +203,7 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
       return results;
     },
   });
-
-  // Append a rule to supply .xcodeproj data to plugins on `plugins.ios.xcodeproj`
-  config = withInterceptedModifier<IOSPluginModifierProps<XcodeProject>>(config, {
-    platform: 'ios',
-    modifier: 'xcodeproj',
-    async action({ props: { nextModifier, ...props }, ...config }) {
-      const data = getPbxproj(projectRoot);
-      const results = await nextModifier({
-        ...config,
-        props: {
-          ...props,
-          data,
-        },
-      });
-      resolveModifierResults(results, props.platform, props.modifier);
-      const resultData = results.props.data;
-      await writeFile(resultData.filepath, resultData.writeSync());
-      return results;
-    },
-  });
-
-  return config;
-}
+};
 
 /**
  * A generic plugin compiler.
@@ -268,12 +273,10 @@ function getIOSPaths(projectRoot: string, exp: ExpoConfig) {
   const iosProjectDirectory = path.join(projectRoot, 'ios', projectName);
   const iconPath = path.join(iosProjectDirectory, 'Assets.xcassets', 'AppIcon.appiconset');
   const supportingDirectory = path.join(iosProjectDirectory, 'Supporting');
-  const entitlementsPath = getEntitlementsPath(projectRoot);
   return {
     projectName,
     supportingDirectory,
     iosProjectDirectory,
-    entitlementsPath,
     iconPath,
   };
 }
