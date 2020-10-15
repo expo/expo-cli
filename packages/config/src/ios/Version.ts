@@ -13,7 +13,7 @@ export function setVersion(config: ExpoConfig, infoPlist: InfoPlist) {
 }
 
 export function getBuildNumber(config: ExpoConfig) {
-  return config.ios && config.ios.buildNumber ? config.ios.buildNumber : '1';
+  return config.ios?.buildNumber ? config.ios.buildNumber : '1';
 }
 
 export function setBuildNumber(config: ExpoConfig, infoPlist: InfoPlist) {
