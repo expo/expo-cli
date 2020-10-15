@@ -1,7 +1,8 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { withEntitlementsPlist } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';

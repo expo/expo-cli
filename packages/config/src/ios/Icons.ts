@@ -2,9 +2,10 @@ import { generateImageAsync } from '@expo/image-utils';
 import * as fs from 'fs-extra';
 import { join } from 'path';
 
-import { ConfigPlugin, ExpoConfig } from '../Config.types';
-import { withDangerousModifier } from '../plugins/ios-plugins';
+import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
+import { withDangerousModifier } from '../plugins/ios-plugins';
 import { getProjectName } from './utils/Xcodeproj';
 
 export const withIcons: ConfigPlugin = config => {

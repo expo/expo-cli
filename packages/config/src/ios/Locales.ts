@@ -3,9 +3,10 @@ import * as fs from 'fs-extra';
 import { join } from 'path';
 import { XcodeProject } from 'xcode';
 
-import { ConfigPlugin, ExpoConfig } from '../Config.types';
-import { withXcodeProject } from '../plugins/ios-plugins';
+import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
+import { withXcodeProject } from '../plugins/ios-plugins';
 import { addFileToGroup, ensureGroupRecursively, getProjectName } from './utils/Xcodeproj';
 
 type LocaleJson = Record<string, string>;

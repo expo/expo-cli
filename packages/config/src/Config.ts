@@ -9,18 +9,17 @@ import {
   AppJSONConfig,
   ConfigFilePaths,
   ExpoConfig,
-  ExportedConfig,
   ExpRc,
   GetConfigOptions,
   PackageJSONConfig,
   Platform,
-  PluginConfig,
   ProjectConfig,
   ProjectTarget,
   WriteConfigOptions,
 } from './Config.types';
 import { ConfigError } from './Errors';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
+import { ExportedConfig, PluginConfig } from './Plugin.types';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 

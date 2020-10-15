@@ -1,89 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
-import { JSONObject } from '@expo/json-file';
-import { XcodeProject } from 'xcode';
 
-import { InfoPlist } from './ios/IosConfig.types';
-
-export interface PluginModifierProps<Data = unknown> {
-  readonly projectRoot: string;
-  /**
-   * Project root for the specific platform.
-   */
-  readonly platformProjectRoot: string;
-
-  /**
-   * Name of the modifier.
-   */
-  readonly modifier: string;
-
-  /**
-   * Name of the platform used in the plugins config.
-   */
-  readonly platform: PluginPlatform;
-
-  /**
-   * [iOS]: The path component used for querying project files.
-   *
-   * @example projectRoot/ios/[projectName]/
-   */
-  readonly projectName?: string;
-
-  /**
-   * The Object representation of a complex file type.
-   */
-  data: Data;
-}
-
-interface PluginDataModifierProps<IData> extends PluginModifierProps {
-  /**
-   * The Object representation of a complex file type.
-   */
-  data: IData;
-  /**
-   * file path for the output data.
-   */
-  filePath?: string;
-}
-
-type OptionalPromise<T> = Promise<T> | T;
-
-export type IOSPluginModifierProps<IData> = PluginModifierProps<IData>;
-
-// TODO: Migrate ProjectConfig to using expo instead if exp
-export interface ExportedConfig {
-  plugins?: PluginConfig | null;
-  expo: ExpoConfig;
-}
-
-export interface ExportedConfigWithProps<Props = any | undefined> extends ExportedConfig {
-  props: Props;
-}
-
-export type ConfigPlugin<IProps = any | undefined> = (
-  config: ExportedConfig,
-  props: IProps
-) => ExportedConfig;
-
-export type ConfigModifierPlugin<
-  IProps extends PluginModifierProps = PluginModifierProps,
-  // Return value is the same as the props unless specified otherwise
-  IResults extends PluginModifierProps = IProps
-> = (config: ExportedConfigWithProps<IProps>) => OptionalPromise<ExportedConfigWithProps<IResults>>;
-
-type IOSConfigModifierPlugin<T> = ConfigModifierPlugin<IOSPluginModifierProps<T>>;
-
-export interface PluginConfig {
-  // android?: {
-  // };
-  ios?: {
-    infoPlist?: IOSConfigModifierPlugin<InfoPlist>;
-    entitlements?: IOSConfigModifierPlugin<JSONObject>;
-    expoPlist?: IOSConfigModifierPlugin<JSONObject>;
-    xcodeproj?: IOSConfigModifierPlugin<XcodeProject>;
-  };
-}
-
-export type PluginPlatform = keyof PluginConfig;
+import { PluginConfig } from './Plugin.types';
 
 export { ExpoConfig };
 
@@ -97,7 +14,7 @@ export interface ProjectConfig {
   /**
    * Dynamic config for processing native files during the generation process. This only exists if an Expo config exports and `expo` and `plugins` object.
    */
-  plugins: PluginConfig | null;
+  plugins?: PluginConfig | null;
   /**
    * Project package.json object with default values injected.
    */

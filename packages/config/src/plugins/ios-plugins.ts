@@ -1,12 +1,8 @@
 import { JSONObject } from '@expo/json-file';
 import { XcodeProject } from 'xcode';
 
-import {
-  ConfigModifierPlugin,
-  ConfigPlugin,
-  ExpoConfig,
-  PluginModifierProps,
-} from '../Config.types';
+import { ExpoConfig } from '../Config.types';
+import { ConfigModifierPlugin, ConfigPlugin, PluginModifierProps } from '../Plugin.types';
 import { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
 import { withExtendedModifier } from './core-plugins';
 

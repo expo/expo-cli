@@ -4,9 +4,10 @@ import {
   SplashScreenImageResizeMode,
 } from '@expo/configure-splash-screen';
 
-import { ConfigPlugin, ExpoConfig } from '../Config.types';
-import { withDangerousModifier } from '../plugins/ios-plugins';
+import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
+import { withDangerousModifier } from '../plugins/ios-plugins';
 
 export const withSplashScreen: ConfigPlugin = config => {
   return withDangerousModifier(config, async config => {

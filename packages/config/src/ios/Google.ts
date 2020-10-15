@@ -2,7 +2,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import { XcodeProject } from 'xcode';
 
-import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { createInfoPlistPlugin, withXcodeProject } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import { getSourceRoot } from './Paths';

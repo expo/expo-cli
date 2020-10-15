@@ -1,3 +1,4 @@
+import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
 import { IosPlist } from '@expo/xdl';
 import { writeFile } from 'fs-extra';
@@ -7,13 +8,12 @@ import { XcodeProject } from 'xcode';
 import {
   ConfigModifierPlugin,
   ConfigPlugin,
-  ExpoConfig,
   ExportedConfig,
   ExportedConfigWithProps,
   PluginConfig,
   PluginModifierProps,
   PluginPlatform,
-} from '../Config.types';
+} from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { InfoPlist } from '../ios/IosConfig.types';

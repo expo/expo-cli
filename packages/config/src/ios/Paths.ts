@@ -1,4 +1,3 @@
-// @ts-ignore
 import { pathExistsSync } from 'fs-extra';
 import { sync as globSync } from 'glob';
 import * as path from 'path';

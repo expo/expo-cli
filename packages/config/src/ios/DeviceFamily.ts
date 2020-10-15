@@ -1,6 +1,7 @@
 import { XcodeProject } from 'xcode';
 
-import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { withXcodeProject } from '../plugins/ios-plugins';
 
 export const withDeviceFamily: ConfigPlugin = config => {

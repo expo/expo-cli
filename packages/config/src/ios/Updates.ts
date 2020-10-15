@@ -1,4 +1,5 @@
-import { ExpoConfig, ExportedConfig } from '../Config.types';
+import { ExpoConfig } from '../Config.types';
+import { ExportedConfig } from '../Plugin.types';
 import { withExpoPlist } from '../plugins/ios-plugins';
 import { ExpoPlist } from './IosConfig.types';
 

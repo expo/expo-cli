@@ -1,4 +1,4 @@
-import { ConfigPlugin } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import * as IOSConfig from '../ios';
 import { withPlugins } from './core-plugins';
 

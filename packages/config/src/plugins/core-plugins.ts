@@ -4,7 +4,7 @@ import {
   ExportedConfig,
   PluginModifierProps,
   PluginPlatform,
-} from '../Config.types';
+} from '../Plugin.types';
 
 function ensureArray<T>(input: T | T[]): T[] {
   if (Array.isArray(input)) {

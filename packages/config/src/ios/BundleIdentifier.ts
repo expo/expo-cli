@@ -3,7 +3,8 @@ import assert from 'assert';
 import fs from 'fs-extra';
 import xcode from 'xcode';
 
-import { ConfigPlugin, ExpoConfig } from '../Config.types';
+import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { withDangerousModifier } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import { getAllInfoPlistPaths, getAllPBXProjectPaths, getPBXProjectPath } from './Paths';
