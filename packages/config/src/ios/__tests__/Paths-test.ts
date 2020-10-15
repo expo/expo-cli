@@ -65,7 +65,7 @@ describe(getXcodeProjectPath, () => {
     expect(getXcodeProjectPath('/multiple')).toBe('/multiple/ios/otherproject.xcodeproj');
     expect(addWarningIOS).toHaveBeenLastCalledWith(
       'paths-xcodeproj',
-      'Found multiple *.xcodeproj file paths, using "/multiple/ios/otherproject.xcodeproj". Ignored paths: ["/multiple/ios/testproject.xcodeproj"]'
+      'Found multiple *.xcodeproj file paths, using "ios/otherproject.xcodeproj". Ignored paths: ["ios/testproject.xcodeproj"]'
     );
   });
 });
@@ -156,7 +156,7 @@ describe(getAppDelegate, () => {
     });
     expect(addWarningIOS).toHaveBeenLastCalledWith(
       'paths-app-delegate',
-      'Found multiple AppDelegate file paths, using "/confusing/ios/testproject/AppDelegate.m". Ignored paths: ["/confusing/ios/testproject/AppDelegate.swift"]'
+      'Found multiple AppDelegate file paths, using "ios/testproject/AppDelegate.m". Ignored paths: ["ios/testproject/AppDelegate.swift"]'
     );
   });
 });

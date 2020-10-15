@@ -1,6 +1,7 @@
 import { AndroidConfig, BareAppConfig, getConfig, IOSConfig } from '@expo/config';
+import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
-import { Exp, IosPlist, UserManager } from '@expo/xdl';
+import { Exp, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import fs from 'fs-extra';
@@ -525,13 +526,11 @@ async function configureUpdatesProjectFilesAsync(
   const iosSourceRoot = IOSConfig.getSourceRoot(projectRoot);
   const supportingDirectory = path.join(iosSourceRoot, 'Supporting');
 
-  try {
-    await IosPlist.modifyAsync(supportingDirectory, 'Expo', expoPlist => {
-      return IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
-    });
-  } finally {
-    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
-  }
+  const plistFilePath = path.join(supportingDirectory, 'Expo.plist');
+  let data = plist.parse(fs.readFileSync(plistFilePath, 'utf8'));
+  data = IOSConfig.Updates.setUpdatesConfig(exp, data, username);
+
+  await fs.writeFile(plistFilePath, plist.build(data));
 }
 
 export default function (program: Command) {
