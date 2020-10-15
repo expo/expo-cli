@@ -1,7 +1,8 @@
 import { getConfig, IOSConfig, WarningAggregator } from '@expo/config';
 import { getPbxproj, getProjectName } from '@expo/config/build/ios/utils/Xcodeproj';
-import { IosPlist, UserManager } from '@expo/xdl';
-import { writeFile } from 'fs-extra';
+import plist from '@expo/plist';
+import { UserManager } from '@expo/xdl';
+import { readFile, writeFile } from 'fs-extra';
 import path from 'path';
 import { XcodeProject } from 'xcode';
 
@@ -91,31 +92,34 @@ async function modifyPbxprojAsync(
 
 async function modifyEntitlementsPlistAsync(projectRoot: string, callback: (plist: any) => any) {
   const entitlementsPath = IOSConfig.Entitlements.getEntitlementsPath(projectRoot);
-  const directory = path.dirname(entitlementsPath);
-  const filename = path.basename(entitlementsPath, 'plist');
-  await IosPlist.modifyAsync(directory, filename, callback);
-  await IosPlist.cleanBackupAsync(directory, filename, false);
+  let data = plist.parse(await readFile(entitlementsPath, 'utf8'));
+  data = await callback(data);
+  await writeFile(entitlementsPath, plist.build(data));
 }
 
 async function modifyInfoPlistAsync(projectRoot: string, callback: (plist: any) => any) {
   const { iosProjectDirectory } = getIOSPaths(projectRoot);
-  await IosPlist.modifyAsync(iosProjectDirectory, 'Info', callback);
-  await IosPlist.cleanBackupAsync(iosProjectDirectory, 'Info', false);
+  const infoPath = path.resolve(iosProjectDirectory, 'Info.plist');
+  let data = plist.parse(await readFile(infoPath, 'utf8'));
+  data = await callback(data);
+  await writeFile(infoPath, plist.build(data));
 }
 
 async function modifyExpoPlistAsync(projectRoot: string, callback: (plist: any) => any) {
   const { iosProjectDirectory } = getIOSPaths(projectRoot);
   const supportingDirectory = path.join(iosProjectDirectory, 'Supporting');
+
   try {
-    await IosPlist.modifyAsync(supportingDirectory, 'Expo', callback);
+    const infoPath = path.resolve(supportingDirectory, 'Expo.plist');
+    let data = plist.parse(await readFile(infoPath, 'utf8'));
+    data = await callback(data);
+    await writeFile(infoPath, plist.build(data));
   } catch (error) {
     WarningAggregator.addWarningIOS(
       'updates',
       'Expo.plist configuration could not be applied. You will need to create Expo.plist if it does not exist and add Updates configuration manually.',
       'https://docs.expo.io/bare/updating-your-app/#configuration-options'
     );
-  } finally {
-    await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
   }
 }
 
