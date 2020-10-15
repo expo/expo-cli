@@ -97,10 +97,12 @@ describe('Android facebook config', () => {
     androidManifestJson = await setFacebookConfig(facebookConfig, androidManifestJson);
 
     const mainApplication = getMainApplication(androidManifestJson);
+
     const facebookActivity = mainApplication['activity'].filter(
       e => e['$']['android:name'] === 'com.facebook.CustomTabActivity'
     );
     expect(facebookActivity).toHaveLength(1);
+
     const applicationId = mainApplication['meta-data'].filter(
       e => e['$']['android:name'] === 'com.facebook.sdk.ApplicationId'
     );

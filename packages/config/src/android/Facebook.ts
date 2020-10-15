@@ -100,8 +100,9 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
   return true;
 }
 
-export function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
+export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
   const scheme = getFacebookScheme(config);
+
   const appId = getFacebookAppId(config);
   const displayName = getFacebookDisplayName(config);
   const autoInitEnabled = getFacebookAutoInitEnabled(config);
@@ -113,7 +114,7 @@ export function setFacebookConfig(config: ExpoConfig, manifestDocument: Document
   removeFacebookCustomTabActivities(mainApplication);
 
   if (scheme) {
-    ensureFacebookActivityAsync({ scheme, mainApplication });
+    await ensureFacebookActivityAsync({ scheme, mainApplication });
   }
 
   if (appId) {
