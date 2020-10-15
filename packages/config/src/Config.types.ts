@@ -42,7 +42,7 @@ export type IOSPluginModifierProps<IData> = PluginDataModifierProps<IData> & {
 
 // TODO: Migrate ProjectConfig to using expo instead if exp
 export interface ExportedConfig {
-  plugins: PluginConfig | null;
+  plugins?: PluginConfig | null;
   expo: ExpoConfig;
 }
 
@@ -54,12 +54,6 @@ export type ConfigPlugin<IProps = any | undefined> = (
   config: ExportedConfig,
   props: IProps
 ) => ExportedConfig;
-
-// export type ConfigPlugin<
-//   IProps extends PluginModifierProps = PluginModifierProps,
-//   // Return value is the same as the props unless specified otherwise
-//   IResults extends PluginModifierProps = IProps
-// > = (config: ExportedConfigWithProps<IProps>) => ExportedConfigWithProps<IResults>;
 
 export type ConfigModifierPlugin<
   IProps extends PluginModifierProps = PluginModifierProps,
