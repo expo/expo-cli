@@ -1,7 +1,7 @@
 'use strict';
 var __importDefault =
   (this && this.__importDefault) ||
-  function(mod) {
+  function (mod) {
     return mod && mod.__esModule ? mod : { default: mod };
   };
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -39,10 +39,7 @@ async function createPngFile(filePath, color) {
   const buffer = Buffer.from(bitmap);
   png.data = buffer;
   return new Promise(resolve => {
-    png
-      .pack()
-      .pipe(fs_extra_1.default.createWriteStream(filePath))
-      .on('finish', resolve);
+    png.pack().pipe(fs_extra_1.default.createWriteStream(filePath)).on('finish', resolve);
   });
 }
 async function createFiles(iosProjectPath, color, darkModeColor) {
