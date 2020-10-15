@@ -23,6 +23,7 @@ export function getAppDelegate(projectRoot: string): { path: string; language: '
     warnMultipleFiles({
       tag: 'app-delegate',
       fileName: 'AppDelegate',
+      projectRoot,
       using,
       extra,
     });
@@ -72,6 +73,7 @@ export function getXcodeProjectPath(projectRoot: string): string {
     warnMultipleFiles({
       tag: 'xcodeproj',
       fileName: '*.xcodeproj',
+      projectRoot,
       using,
       extra,
     });
@@ -101,6 +103,7 @@ export function getPBXProjectPath(projectRoot: string): string {
     warnMultipleFiles({
       tag: 'project-pbxproj',
       fileName: 'project.pbxproj',
+      projectRoot,
       using,
       extra,
     });
@@ -131,6 +134,7 @@ export function getInfoPlistPath(projectRoot: string): string {
     warnMultipleFiles({
       tag: 'info-plist',
       fileName: 'Info.plist',
+      projectRoot,
       using,
       extra,
     });
@@ -139,22 +143,28 @@ export function getInfoPlistPath(projectRoot: string): string {
   return using;
 }
 
+export function getAllEntitlementsPaths(projectRoot: string): string[] {
+  const paths = globSync('ios/*/*.entitlements', {
+    absolute: true,
+    cwd: projectRoot,
+    ignore: ignoredPaths,
+  });
+  return paths;
+}
+
 /**
  * Get the entitlements file path if it exists.
  *
  * @param projectRoot
  */
 export function getEntitlementsPath(projectRoot: string): string | null {
-  const [using, ...extra] = globSync('ios/*/.entitlements', {
-    absolute: true,
-    cwd: projectRoot,
-    ignore: ignoredPaths,
-  });
+  const [using, ...extra] = getAllEntitlementsPaths(projectRoot);
 
   if (extra.length) {
     warnMultipleFiles({
       tag: 'entitlements',
       fileName: '*.entitlements',
+      projectRoot,
       using,
       extra,
     });
@@ -166,18 +176,22 @@ export function getEntitlementsPath(projectRoot: string): string | null {
 function warnMultipleFiles({
   tag,
   fileName,
+  projectRoot,
   using,
   extra,
 }: {
   tag: string;
   fileName: string;
+  projectRoot?: string;
   using: string;
   extra: string[];
 }) {
+  const usingPath = projectRoot ? path.relative(projectRoot, using) : using;
+  const extraPaths = projectRoot ? extra.map(v => path.relative(projectRoot, v)) : extra;
   addWarningIOS(
     `paths-${tag}`,
-    `Found multiple ${fileName} file paths, using "${using}". Ignored paths: ${JSON.stringify(
-      extra
+    `Found multiple ${fileName} file paths, using "${usingPath}". Ignored paths: ${JSON.stringify(
+      extraPaths
     )}`
   );
 }
