@@ -1,6 +1,5 @@
 import Ajv from 'ajv';
 import fs from 'fs';
-import schemaDerefSync from 'json-schema-deref-sync';
 import traverse from 'json-schema-traverse';
 import get from 'lodash/get';
 import path from 'path';
@@ -49,7 +48,7 @@ export default class Schemer {
     };
 
     this.ajv = new Ajv(this.options);
-    this.schema = schemaDerefSync(schema);
+    this.schema = schema;
     this.rootDir = this.options.rootDir || __dirname;
     this.manualValidationErrors = [];
   }
