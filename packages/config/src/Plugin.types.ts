@@ -4,7 +4,7 @@ import { XcodeProject } from 'xcode';
 
 import { InfoPlist } from './ios/IosConfig.types';
 
-export interface PluginModifierProps<Data = unknown> {
+export interface ModifierPluginProps<Data = unknown> {
   readonly projectRoot: string;
   /**
    * Project root for the specific platform.
@@ -51,22 +51,22 @@ export type ConfigPlugin<IProps = any | undefined> = (
   props: IProps
 ) => ExportedConfig;
 
-export type ConfigModifierPlugin<
-  IProps extends PluginModifierProps = PluginModifierProps,
+export type ModifierPlugin<
+  IProps extends ModifierPluginProps = ModifierPluginProps,
   // Return value is the same as the props unless specified otherwise
-  IResults extends PluginModifierProps = IProps
+  IResults extends ModifierPluginProps = IProps
 > = (config: ExportedConfigWithProps<IProps>) => OptionalPromise<ExportedConfigWithProps<IResults>>;
 
-type IOSConfigModifierPlugin<T> = ConfigModifierPlugin<PluginModifierProps<T>>;
+type IOSModifierPlugin<T> = ModifierPlugin<ModifierPluginProps<T>>;
 
 export interface ModifierConfig {
   // android?: {
   // };
   ios?: {
-    infoPlist?: IOSConfigModifierPlugin<InfoPlist>;
-    entitlements?: IOSConfigModifierPlugin<JSONObject>;
-    expoPlist?: IOSConfigModifierPlugin<JSONObject>;
-    xcodeproj?: IOSConfigModifierPlugin<XcodeProject>;
+    infoPlist?: IOSModifierPlugin<InfoPlist>;
+    entitlements?: IOSModifierPlugin<JSONObject>;
+    expoPlist?: IOSModifierPlugin<JSONObject>;
+    xcodeproj?: IOSModifierPlugin<XcodeProject>;
   };
 }
 
