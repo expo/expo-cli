@@ -81,7 +81,7 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
           data: config.expo.ios.infoPlist as InfoPlist,
         },
       });
-      resolveModifierResults(results, props.platform, props.modifier);
+      resolveModifierResults(results, props.platform, props.modifierName);
       data = results.props.data;
 
       await writeFile(filePath, plist.build(data));
@@ -111,7 +111,7 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
             data,
           },
         });
-        resolveModifierResults(results, props.platform, props.modifier);
+        resolveModifierResults(results, props.platform, props.modifierName);
         data = results.props.data;
 
         await writeFile(filePath, plist.build(data));
@@ -139,7 +139,7 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
           data,
         },
       });
-      resolveModifierResults(results, props.platform, props.modifier);
+      resolveModifierResults(results, props.platform, props.modifierName);
       const resultData = results.props.data;
       await writeFile(resultData.filepath, resultData.writeSync());
       return results;
@@ -187,7 +187,7 @@ const withEntitlementsBaseModifier: ConfigPlugin = config => {
             data: config.expo.ios.entitlements as JSONObject,
           },
         });
-        resolveModifierResults(results, props.platform, props.modifier);
+        resolveModifierResults(results, props.platform, props.modifierName);
         await writeFile(entitlementsPath, plist.build(results.props.data));
       } catch (error) {
         addWarningIOS('entitlements', `${entitlementsPath} configuration could not be applied.`);

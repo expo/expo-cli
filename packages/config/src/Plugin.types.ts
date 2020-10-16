@@ -18,7 +18,7 @@ export interface ModifierPluginProps<Data = unknown> {
   /**
    * Name of the modifier.
    */
-  readonly modifier: string;
+  readonly modifierName: string;
 
   /**
    * Name of the platform used in the modifiers config.

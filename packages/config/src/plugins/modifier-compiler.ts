@@ -46,7 +46,7 @@ export async function evalModifiersAsync(
           projectName,
           platformProjectRoot,
           platform: platformName as ModifierPlatform,
-          modifier: modifierName,
+          modifierName,
           data: null,
         },
       });
