@@ -4,6 +4,10 @@ import { XcodeProject } from 'xcode';
 
 import { InfoPlist } from './ios/IosConfig.types';
 
+type OptionalPromise<T> = Promise<T> | T;
+
+type Plist = JSONObject;
+
 export interface ModifierPluginProps<Data = unknown> {
   readonly projectRoot: string;
   /**
@@ -34,8 +38,6 @@ export interface ModifierPluginProps<Data = unknown> {
   data: Data;
 }
 
-type OptionalPromise<T> = Promise<T> | T;
-
 // TODO: Migrate ProjectConfig to using expo instead if exp
 export interface ExportedConfig {
   modifiers?: ModifierConfig | null;
@@ -46,16 +48,16 @@ export interface ExportedConfigWithProps<Props = any | undefined> extends Export
   props: Props;
 }
 
-export type ConfigPlugin<IProps = any | undefined> = (
+export type ConfigPlugin<Props = any | undefined> = (
   config: ExportedConfig,
-  props: IProps
+  props: Props
 ) => ExportedConfig;
 
 export type ModifierPlugin<
-  IProps extends ModifierPluginProps = ModifierPluginProps,
+  Props extends ModifierPluginProps = ModifierPluginProps,
   // Return value is the same as the props unless specified otherwise
-  IResults extends ModifierPluginProps = IProps
-> = (config: ExportedConfigWithProps<IProps>) => OptionalPromise<ExportedConfigWithProps<IResults>>;
+  Results extends ModifierPluginProps = Props
+> = (config: ExportedConfigWithProps<Props>) => OptionalPromise<ExportedConfigWithProps<Results>>;
 
 type IOSModifierPlugin<T> = ModifierPlugin<ModifierPluginProps<T>>;
 
@@ -64,8 +66,8 @@ export interface ModifierConfig {
   // };
   ios?: {
     infoPlist?: IOSModifierPlugin<InfoPlist>;
-    entitlements?: IOSModifierPlugin<JSONObject>;
-    expoPlist?: IOSModifierPlugin<JSONObject>;
+    entitlements?: IOSModifierPlugin<Plist>;
+    expoPlist?: IOSModifierPlugin<Plist>;
     xcodeproj?: IOSModifierPlugin<XcodeProject>;
   };
 }

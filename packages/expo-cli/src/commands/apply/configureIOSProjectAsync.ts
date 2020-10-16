@@ -1,7 +1,7 @@
 import { getConfig } from '@expo/config';
 import { ExportedConfig } from '@expo/config/build/Plugin.types';
 import { withExpoIOSPlugins } from '@expo/config/build/plugins/expo-plugins';
-import { compileModifiersAsync } from '@expo/config/build/plugins/plugin-compiler';
+import { compileModifiersAsync } from '@expo/config/build/plugins/modifier-compiler';
 import { UserManager } from '@expo/xdl';
 
 import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
@@ -20,7 +20,7 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   });
 
   // compile all plugins and modifiers
-  await compileModifiersAsync(projectRoot, config);
+  await compileModifiersAsync(config, projectRoot);
 }
 
 function getExportedConfig(projectRoot: string): ExportedConfig {

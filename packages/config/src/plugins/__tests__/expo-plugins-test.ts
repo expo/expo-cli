@@ -3,7 +3,7 @@ import { vol } from 'memfs';
 
 import { ExportedConfig } from '../../Plugin.types';
 import { withExpoIOSPlugins } from '../expo-plugins';
-import { compileModifiersAsync } from '../plugin-compiler';
+import { compileModifiersAsync } from '../modifier-compiler';
 import rnFixture from './fixtures/react-native-project';
 
 jest.mock('fs');
@@ -43,7 +43,7 @@ describe(withExpoIOSPlugins, () => {
       expoUsername: 'bacon',
     });
     // Apply modifier
-    config = await compileModifiersAsync('/app', config);
+    config = await compileModifiersAsync(config, '/app');
     // This should be false because ios.config.usesNonExemptEncryption is used in favor of ios.infoPlist.ITSAppUsesNonExemptEncryption
     expect(config.expo.ios?.infoPlist?.ITSAppUsesNonExemptEncryption).toBe(false);
   });
@@ -74,7 +74,7 @@ describe(withExpoIOSPlugins, () => {
     });
 
     // Apply modifier
-    config = await compileModifiersAsync('/app', config);
+    config = await compileModifiersAsync(config, '/app');
 
     // App config should have been modified
     expect(config.expo.name).toBe('app');

@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { vol } from 'memfs';
 
 import { ExportedConfig } from '../../Plugin.types';
-import { compileModifiersAsync } from '../plugin-compiler';
+import { compileModifiersAsync } from '../modifier-compiler';
 import rnFixture from './fixtures/react-native-project';
 
 jest.mock('fs');
@@ -27,7 +27,7 @@ describe(compileModifiersAsync, () => {
       expo: { name: 'app', slug: '' },
       modifiers: null,
     };
-    const config = await compileModifiersAsync('/app', exportedConfig);
+    const config = await compileModifiersAsync(exportedConfig, projectRoot);
 
     expect(config.expo.name).toBe('app');
     expect(config.expo.ios.infoPlist).toBeDefined();
@@ -58,7 +58,7 @@ describe(compileModifiersAsync, () => {
     };
 
     // Apply modifier plugin
-    const config = await compileModifiersAsync('/app', exportedConfig);
+    const config = await compileModifiersAsync(exportedConfig, projectRoot);
 
     expect(internalValue).toBe('en');
 
@@ -93,7 +93,7 @@ describe(compileModifiersAsync, () => {
       };
 
       // Apply modifier plugin
-      await expect(compileModifiersAsync('/app', exportedConfig)).rejects.toThrow(
+      await expect(compileModifiersAsync(exportedConfig, projectRoot)).rejects.toThrow(
         /Modifier `modifiers.ios.infoPlist` evaluated to an object that is not a valid project config/
       );
     });

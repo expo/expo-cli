@@ -9,9 +9,6 @@ import {
   ConfigPlugin,
   ExportedConfig,
   ExportedConfigWithProps,
-  ModifierConfig,
-  ModifierPlatform,
-  ModifierPlugin,
   ModifierPluginProps,
 } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
@@ -20,14 +17,13 @@ import { InfoPlist } from '../ios/IosConfig.types';
 import { getPbxproj, getProjectName } from '../ios/utils/Xcodeproj';
 import { withInterceptedModifier } from './core-plugins';
 
-export async function compileModifiersAsync(projectRoot: string, config: ExportedConfig) {
+export function withCoreModifiers(config: ExportedConfig, projectRoot: string): ExportedConfig {
   config = applyIOSCoreModifiers(projectRoot, config);
   config = applyAndroidCoreModifiers(projectRoot, config);
-
-  return await evalModifiersAsync(config, { projectRoot });
+  return config;
 }
 
-function resolveModifierResults(results: any, platformName: string, modifierName: string) {
+export function resolveModifierResults(results: any, platformName: string, modifierName: string) {
   // If the results came from a modifier, they'd be in the form of [config, data].
   // Ensure the results are an array and omit the data since it should've been written by a data provider plugin.
   const ensuredResults = results;
@@ -200,41 +196,6 @@ const withEntitlementsBaseModifier: ConfigPlugin = config => {
     },
   });
 };
-
-/**
- * A generic plugin compiler.
- *
- * @param config
- */
-export async function evalModifiersAsync(
-  config: ExportedConfig,
-  props: { projectRoot: string }
-): Promise<ExportedConfig> {
-  for (const [platformName, platform] of Object.entries(
-    config.modifiers ?? ({} as ModifierConfig)
-  )) {
-    const platformProjectRoot = path.join(props.projectRoot, platformName);
-    const projectName = platformName === 'ios' ? getProjectName(props.projectRoot) : undefined;
-
-    for (const [modifierName, modifier] of Object.entries(platform)) {
-      const results = await (modifier as ModifierPlugin<ModifierPluginProps>)({
-        ...config,
-        props: {
-          ...props,
-          projectName,
-          platformProjectRoot,
-          platform: platformName as ModifierPlatform,
-          modifier: modifierName,
-          data: null,
-        },
-      });
-
-      // Sanity check to help locate non compliant modifiers.
-      config = resolveModifierResults(results, platformName, modifierName);
-    }
-  }
-  return config;
-}
 
 // TODO: come up with a better solution for using app.json expo.name in various places
 function sanitizedName(name: string) {
