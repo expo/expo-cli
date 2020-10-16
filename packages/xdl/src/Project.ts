@@ -355,8 +355,15 @@ export async function exportForAppHosting(
     publishOptions?: PublishOptions;
   } = {}
 ): Promise<void> {
-  const defaultTarget = getDefaultTarget(projectRoot);
-  const target = options.publishOptions?.target ?? defaultTarget;
+  // Get project config
+  const publishOptions = options.publishOptions || {};
+  const { exp, pkg, hooks } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
+
+  const target = options.publishOptions?.target ?? getDefaultTarget(projectRoot);
+
+  if (!publishOptions.target && target === 'bare') {
+    logBareWorkflowWarnings(pkg);
+  }
 
   // build the bundles
   // make output dirs if not exists
@@ -365,10 +372,7 @@ export async function exportForAppHosting(
   const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
   await fs.ensureDir(bundlesPathToWrite);
 
-  const publishOptions = options.publishOptions || {};
-  const { exp, pkg, hooks } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
-
-  const bundles = await buildPublishBundlesAsync(projectRoot, options.publishOptions, {
+  const bundles = await buildPublishBundlesAsync(projectRoot, publishOptions, {
     dev: options.isDev,
     useDevServer: shouldUseDevServer(exp),
   });
@@ -388,6 +392,7 @@ export async function exportForAppHosting(
 
   logger.global.info('Finished saving JS Bundles.');
 
+  // save the assets
   const { assets } = await exportAssetsAsync({
     projectRoot,
     exp,
@@ -604,8 +609,7 @@ export async function publishAsync(
   projectRoot: string,
   options: PublishOptions = {}
 ): Promise<PublishedProjectResult> {
-  options.target = options.target ?? getDefaultTarget(projectRoot);
-  const target = options.target;
+  const target = options.target ?? getDefaultTarget(projectRoot);
   const user = await UserManager.ensureLoggedInAsync();
 
   Analytics.logEvent('Publish', {
@@ -628,6 +632,12 @@ export async function publishAsync(
   if (exp.isKernel && user.kind === 'robot') {
     throw new XDLError('ROBOT_ACCOUNT_ERROR', 'Kernel builds are not available for robot users');
   }
+
+  if (!options.target && target === 'bare') {
+    logBareWorkflowWarnings(pkg);
+  }
+
+  logger.global.info(`Building optimized bundles and generating sourcemaps...`);
 
   // TODO: refactor this out to a function, throw error if length doesn't match
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
@@ -1852,3 +1862,32 @@ export async function stopAsync(projectDir: string): Promise<void> {
 }
 
 export { startTunnelsAsync, stopTunnelsAsync };
+
+/**
+ * Warn users if they attempt to publish in a bare project that may also be
+ * using Expo client and does not If the developer does not have the Expo
+ * package installed then we do not need to warn them as there is no way that
+ * it will run in Expo client in development even. We should revisit this with
+ * dev client, and possibly also by excluding SDK version for bare
+ * expo-updates usage in the future (and then surfacing this as an error in
+ * the Expo client app instead)
+ *
+ * Related: https://github.com/expo/expo/issues/9517
+ *
+ * @param pkg package.json
+ */
+export function logBareWorkflowWarnings(pkg: PackageJSONConfig) {
+  const hasExpoInstalled = pkg.dependencies?.['expo'];
+  if (!hasExpoInstalled) {
+    return;
+  }
+  logger.global.warn(
+    `\n- ${chalk.bold('Workflow target')}: This is a ${chalk.bold(
+      'bare workflow'
+    )} project. The resulting publish will only run properly inside of a native build of your project. If you want to publish a version of your app that will run in Expo client, please use ${chalk.bold(
+      'expo publish --target managed'
+    )}. You can skip this warning by explicitly running ${chalk.bold(
+      'expo publish --target bare'
+    )} in the future.\n`
+  );
+}
