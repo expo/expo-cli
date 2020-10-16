@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
-import { IosPlist } from '@expo/xdl';
-import { writeFile } from 'fs-extra';
+import plist from '@expo/plist';
+import { readFile, writeFile } from 'fs-extra';
 import path from 'path';
 import { XcodeProject } from 'xcode';
 
@@ -61,32 +61,35 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
         props,
       };
 
-      await IosPlist.modifyAsync(iosProjectDirectory, 'Info', async data => {
-        // Apply all of the Info.plist values to the expo.ios.infoPlist object
-        // TODO: Remove this in favor of just overwriting the Info.plist with the Expo object. This will enable people to actually remove values.
-        if (!config.expo.ios) {
-          config.expo.ios = {};
-        }
-        if (!config.expo.ios.infoPlist) {
-          config.expo.ios.infoPlist = {};
-        }
+      // Apply all of the Info.plist values to the expo.ios.infoPlist object
+      // TODO: Remove this in favor of just overwriting the Info.plist with the Expo object. This will enable people to actually remove values.
+      if (!config.expo.ios) {
+        config.expo.ios = {};
+      }
+      if (!config.expo.ios.infoPlist) {
+        config.expo.ios.infoPlist = {};
+      }
 
-        config.expo.ios.infoPlist = {
-          ...(data || {}),
-          ...config.expo.ios.infoPlist,
-        };
+      const filePath = path.resolve(iosProjectDirectory, 'Info.plist');
+      let data = plist.parse(await readFile(filePath, 'utf8'));
 
-        results = await nextModifier({
-          ...config,
-          props: {
-            ...props,
-            data: config.expo.ios.infoPlist as InfoPlist,
-          },
-        });
-        resolveModifierResults(results, props.platform, props.modifier);
-        return results.props.data;
+      config.expo.ios.infoPlist = {
+        ...(data || {}),
+        ...config.expo.ios.infoPlist,
+      };
+
+      results = await nextModifier({
+        ...config,
+        props: {
+          ...props,
+          data: config.expo.ios.infoPlist as InfoPlist,
+        },
       });
-      await IosPlist.cleanBackupAsync(iosProjectDirectory, 'Info', false);
+      resolveModifierResults(results, props.platform, props.modifier);
+      data = results.props.data;
+
+      await writeFile(filePath, plist.build(data));
+
       return results;
     },
   });
@@ -102,26 +105,26 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
       };
 
       try {
-        await IosPlist.modifyAsync(supportingDirectory, 'Expo', async data => {
-          results = await nextModifier({
-            ...config,
-            props: {
-              ...props,
-              data,
-            },
-          });
+        const filePath = path.resolve(supportingDirectory, 'Expo.plist');
+        let data = plist.parse(await readFile(filePath, 'utf8'));
 
-          resolveModifierResults(results, props.platform, props.modifier);
-          return results.props.data;
+        results = await nextModifier({
+          ...config,
+          props: {
+            ...props,
+            data,
+          },
         });
+        resolveModifierResults(results, props.platform, props.modifier);
+        data = results.props.data;
+
+        await writeFile(filePath, plist.build(data));
       } catch (error) {
         addWarningIOS(
           'updates',
           'Expo.plist configuration could not be applied. You will need to create Expo.plist if it does not exist and add Updates configuration manually.',
           'https://docs.expo.io/bare/updating-your-app/#configuration-options'
         );
-      } finally {
-        await IosPlist.cleanBackupAsync(supportingDirectory, 'Expo', false);
       }
       return results;
     },
@@ -165,39 +168,33 @@ const withEntitlementsBaseModifier: ConfigPlugin = config => {
         props,
       };
 
-      const directory = path.dirname(entitlementsPath);
-      const filename = path.basename(entitlementsPath, 'plist');
-
       try {
-        await IosPlist.modifyAsync(directory, filename, async data => {
-          // Apply all of the .entitlements values to the expo.ios.entitlements object
-          // TODO: Remove this in favor of just overwriting the .entitlements with the Expo object. This will enable people to actually remove values.
-          if (!config.expo.ios) {
-            config.expo.ios = {};
-          }
-          if (!config.expo.ios.entitlements) {
-            config.expo.ios.entitlements = {};
-          }
+        const data = plist.parse(await readFile(entitlementsPath, 'utf8'));
+        // Apply all of the .entitlements values to the expo.ios.entitlements object
+        // TODO: Remove this in favor of just overwriting the .entitlements with the Expo object. This will enable people to actually remove values.
+        if (!config.expo.ios) {
+          config.expo.ios = {};
+        }
+        if (!config.expo.ios.entitlements) {
+          config.expo.ios.entitlements = {};
+        }
 
-          config.expo.ios.entitlements = {
-            ...(data || {}),
-            ...config.expo.ios.entitlements,
-          };
+        config.expo.ios.entitlements = {
+          ...(data || {}),
+          ...config.expo.ios.entitlements,
+        };
 
-          results = await nextModifier({
-            ...config,
-            props: {
-              ...props,
-              data: config.expo.ios.entitlements as JSONObject,
-            },
-          });
-          resolveModifierResults(results, props.platform, props.modifier);
-          return results.props.data;
+        results = await nextModifier({
+          ...config,
+          props: {
+            ...props,
+            data: config.expo.ios.entitlements as JSONObject,
+          },
         });
+        resolveModifierResults(results, props.platform, props.modifier);
+        await writeFile(entitlementsPath, plist.build(results.props.data));
       } catch (error) {
-        addWarningIOS('entitlements', `${filename} configuration could not be applied.`);
-      } finally {
-        await IosPlist.cleanBackupAsync(directory, filename, false);
+        addWarningIOS('entitlements', `${entitlementsPath} configuration could not be applied.`);
       }
       return results;
     },
