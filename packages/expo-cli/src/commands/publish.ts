@@ -64,15 +64,9 @@ export async function action(
 
   logOptimizeWarnings({ projectRoot: projectDir });
 
-  if (!options.target && target === 'bare') {
-    logBareWorkflowWarnings(pkg);
-  }
-
   log.addNewLineIfNone();
 
   // Build and publish the project.
-
-  log(`Building optimized bundles and generating sourcemaps...`);
 
   if (options.quiet) {
     simpleSpinner.start();
@@ -81,7 +75,7 @@ export async function action(
   const result = await Project.publishAsync(projectDir, {
     releaseChannel: options.releaseChannel,
     quiet: options.quiet,
-    target,
+    target: options.target,
     resetCache: options.clear,
   });
 
@@ -114,8 +108,6 @@ export async function action(
       await sendTo.sendUrlAsync(websiteUrl, recipient);
     }
   }
-
-  log.newLine();
 
   return result;
 }
@@ -264,39 +256,6 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
         `npx expo-optimize`
       )}`,
       'https://docs.expo.io/distribution/optimizing-updates/#optimize-images'
-    )
-  );
-}
-
-/**
- * Warn users if they attempt to publish in a bare project that may also be
- * using Expo client and does not If the developer does not have the Expo
- * package installed then we do not need to warn them as there is no way that
- * it will run in Expo client in development even. We should revisit this with
- * dev client, and possibly also by excluding SDK version for bare
- * expo-updates usage in the future (and then surfacing this as an error in
- * the Expo client app instead)
- *
- * Related: https://github.com/expo/expo/issues/9517
- *
- * @param pkg package.json
- */
-export function logBareWorkflowWarnings(pkg: PackageJSONConfig) {
-  const hasExpoInstalled = pkg.dependencies?.['expo'];
-  if (!hasExpoInstalled) {
-    return;
-  }
-
-  log.nestedWarn(
-    formatNamedWarning(
-      'Workflow target',
-      `This is a ${chalk.bold(
-        'bare workflow'
-      )} project. The resulting publish will only run properly inside of a native build of your project. If you want to publish a version of your app that will run in Expo client, please use ${chalk.bold(
-        'expo publish --target managed'
-      )}. You can skip this warning by explicitly running ${chalk.bold(
-        'expo publish --target bare'
-      )} in the future.`
     )
   );
 }

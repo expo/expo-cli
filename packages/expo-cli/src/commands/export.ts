@@ -1,4 +1,4 @@
-import { getDefaultTarget, ProjectTarget } from '@expo/config';
+import { ProjectTarget } from '@expo/config';
 import { Project, UrlUtils } from '@expo/xdl';
 import program, { Command } from 'commander';
 import crypto from 'crypto';
@@ -84,7 +84,7 @@ async function exportFilesAsync(
     isDev: options.dev,
     publishOptions: {
       resetCache: !!options.clear,
-      target: options.target ?? getDefaultTarget(projectRoot),
+      target: options.target,
     },
   };
   const absoluteOutputDir = path.resolve(process.cwd(), options.outputDir);
