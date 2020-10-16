@@ -1,9 +1,9 @@
 import {
   ConfigPlugin,
   ExportedConfig,
+  Modifier,
   ModifierPlatform,
-  ModifierPlugin,
-  ModifierPluginProps,
+  ModifierProps,
 } from '../Plugin.types';
 
 function ensureArray<T>(input: T | T[]): T[] {
@@ -39,7 +39,7 @@ export const withPlugins: ConfigPlugin<AppliedConfigPlugin[]> = (
  * @param modifier name of the platform function to extend
  * @param action method to run on the modifier when the config is compiled
  */
-export function withExtendedModifier<T extends ModifierPluginProps>(
+export function withExtendedModifier<T extends ModifierProps>(
   config: ExportedConfig,
   {
     platform,
@@ -48,7 +48,7 @@ export function withExtendedModifier<T extends ModifierPluginProps>(
   }: {
     platform: ModifierPlatform;
     modifier: string;
-    action: ModifierPlugin<T>;
+    action: Modifier<T>;
   }
 ): ExportedConfig {
   return withInterceptedModifier(config, {
@@ -61,7 +61,7 @@ export function withExtendedModifier<T extends ModifierPluginProps>(
   });
 }
 
-export function withInterceptedModifier<T extends ModifierPluginProps>(
+export function withInterceptedModifier<T extends ModifierProps>(
   config: ExportedConfig,
   {
     platform,
@@ -70,7 +70,7 @@ export function withInterceptedModifier<T extends ModifierPluginProps>(
   }: {
     platform: ModifierPlatform;
     modifier: string;
-    action: ModifierPlugin<T & { nextModifier: ModifierPlugin<T> }, T>;
+    action: Modifier<T & { nextModifier: Modifier<T> }, T>;
   }
 ): ExportedConfig {
   if (!config.modifiers) {
@@ -80,10 +80,10 @@ export function withInterceptedModifier<T extends ModifierPluginProps>(
     config.modifiers[platform] = {};
   }
 
-  const modifierPlugin: ModifierPlugin<T> =
+  const modifierPlugin: Modifier<T> =
     (config.modifiers[platform] as Record<string, any>)[modifier] ?? (config => config);
 
-  const extendedModifier: ModifierPlugin<T> = async ({ props, ...config }) => {
+  const extendedModifier: Modifier<T> = async ({ props, ...config }) => {
     // console.log(`-[mod]-> ${platform}.${modifier}`);
     return action({ ...config, props: { ...props, nextModifier: modifierPlugin } });
   };

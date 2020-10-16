@@ -9,7 +9,7 @@ import {
   ConfigPlugin,
   ExportedConfig,
   ExportedConfigWithProps,
-  ModifierPluginProps,
+  ModifierProps,
 } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { getEntitlementsPath } from '../ios/Entitlements';
@@ -48,11 +48,11 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   const { iosProjectDirectory, supportingDirectory } = getIOSPaths(projectRoot, config.expo);
 
   // Append a rule to supply Info.plist data to modifiers on `modifiers.ios.infoPlist`
-  config = withInterceptedModifier<ModifierPluginProps<InfoPlist>>(config, {
+  config = withInterceptedModifier<ModifierProps<InfoPlist>>(config, {
     platform: 'ios',
     modifier: 'infoPlist',
     async action({ props: { nextModifier, ...props }, ...config }) {
-      let results: ExportedConfigWithProps<ModifierPluginProps<JSONObject>> = {
+      let results: ExportedConfigWithProps<ModifierProps<JSONObject>> = {
         ...config,
         props,
       };
@@ -91,11 +91,11 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   });
 
   // Append a rule to supply Expo.plist data to modifiers on `modifiers.ios.expoPlist`
-  config = withInterceptedModifier<ModifierPluginProps<JSONObject>>(config, {
+  config = withInterceptedModifier<ModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'expoPlist',
     async action({ props: { nextModifier, ...props }, ...config }) {
-      let results: ExportedConfigWithProps<ModifierPluginProps<JSONObject>> = {
+      let results: ExportedConfigWithProps<ModifierProps<JSONObject>> = {
         ...config,
         props,
       };
@@ -127,7 +127,7 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   });
 
   // Append a rule to supply .xcodeproj data to modifiers on `modifiers.ios.xcodeproj`
-  config = withInterceptedModifier<ModifierPluginProps<XcodeProject>>(config, {
+  config = withInterceptedModifier<ModifierProps<XcodeProject>>(config, {
     platform: 'ios',
     modifier: 'xcodeproj',
     async action({ props: { nextModifier, ...props }, ...config }) {
@@ -153,13 +153,13 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
 
 const withEntitlementsBaseModifier: ConfigPlugin = config => {
   // Append a rule to supply .entitlements data to modifiers on `modifiers.ios.entitlements`
-  return withInterceptedModifier<ModifierPluginProps<JSONObject>>(config, {
+  return withInterceptedModifier<ModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'entitlements',
     async action({ props: { nextModifier, ...props }, ...config }) {
       const entitlementsPath = getEntitlementsPath(props.projectRoot);
 
-      let results: ExportedConfigWithProps<ModifierPluginProps<JSONObject>> = {
+      let results: ExportedConfigWithProps<ModifierProps<JSONObject>> = {
         ...config,
         props,
       };

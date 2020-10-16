@@ -2,10 +2,10 @@ import path from 'path';
 
 import {
   ExportedConfig,
+  Modifier,
   ModifierConfig,
   ModifierPlatform,
-  ModifierPlugin,
-  ModifierPluginProps,
+  ModifierProps,
 } from '../Plugin.types';
 import { getProjectName } from '../ios/utils/Xcodeproj';
 import { resolveModifierResults, withCoreModifiers } from './compiler-plugins';
@@ -39,7 +39,7 @@ export async function evalModifiersAsync(
     const projectName = platformName === 'ios' ? getProjectName(props.projectRoot) : undefined;
 
     for (const [modifierName, modifier] of Object.entries(platform)) {
-      const results = await (modifier as ModifierPlugin<ModifierPluginProps>)({
+      const results = await (modifier as Modifier<ModifierProps>)({
         ...config,
         props: {
           ...props,

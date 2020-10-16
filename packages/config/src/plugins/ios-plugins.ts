@@ -2,7 +2,7 @@ import { JSONObject } from '@expo/json-file';
 import { XcodeProject } from 'xcode';
 
 import { ExpoConfig } from '../Config.types';
-import { ConfigPlugin, ModifierPlugin, ModifierPluginProps } from '../Plugin.types';
+import { ConfigPlugin, Modifier, ModifierProps } from '../Plugin.types';
 import { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
 import { withExtendedModifier } from './core-plugins';
 
@@ -30,11 +30,8 @@ export function createInfoPlistPlugin(
  * @param config
  * @param action
  */
-export const withInfoPlist: ConfigPlugin<ModifierPlugin<ModifierPluginProps<InfoPlist>>> = (
-  config,
-  action
-) => {
-  return withExtendedModifier<ModifierPluginProps<InfoPlist>>(config, {
+export const withInfoPlist: ConfigPlugin<Modifier<ModifierProps<InfoPlist>>> = (config, action) => {
+  return withExtendedModifier<ModifierProps<InfoPlist>>(config, {
     platform: 'ios',
     modifier: 'infoPlist',
     async action(config) {
@@ -55,10 +52,11 @@ export const withInfoPlist: ConfigPlugin<ModifierPlugin<ModifierPluginProps<Info
  * @param config
  * @param action
  */
-export const withEntitlementsPlist: ConfigPlugin<ModifierPlugin<
-  ModifierPluginProps<JSONObject>
->> = (config, action) => {
-  return withExtendedModifier<ModifierPluginProps<JSONObject>>(config, {
+export const withEntitlementsPlist: ConfigPlugin<Modifier<ModifierProps<JSONObject>>> = (
+  config,
+  action
+) => {
+  return withExtendedModifier<ModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'entitlements',
     async action(config) {
@@ -78,10 +76,7 @@ export const withEntitlementsPlist: ConfigPlugin<ModifierPlugin<
  * @param config
  * @param action
  */
-export const withExpoPlist: ConfigPlugin<ModifierPlugin<ModifierPluginProps<ExpoPlist>>> = (
-  config,
-  action
-) => {
+export const withExpoPlist: ConfigPlugin<Modifier<ModifierProps<ExpoPlist>>> = (config, action) => {
   return withExtendedModifier(config, {
     platform: 'ios',
     modifier: 'expoPlist',
@@ -95,7 +90,7 @@ export const withExpoPlist: ConfigPlugin<ModifierPlugin<ModifierPluginProps<Expo
  * @param config
  * @param action
  */
-export const withXcodeProject: ConfigPlugin<ModifierPlugin<ModifierPluginProps<XcodeProject>>> = (
+export const withXcodeProject: ConfigPlugin<Modifier<ModifierProps<XcodeProject>>> = (
   config,
   action
 ) => {
@@ -112,7 +107,7 @@ export const withXcodeProject: ConfigPlugin<ModifierPlugin<ModifierPluginProps<X
  * @param config
  * @param action
  */
-export const withDangerousModifier: ConfigPlugin<ModifierPlugin<ModifierPluginProps<unknown>>> = (
+export const withDangerousModifier: ConfigPlugin<Modifier<ModifierProps<unknown>>> = (
   config,
   action
 ) => {

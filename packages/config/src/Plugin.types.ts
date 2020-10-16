@@ -8,7 +8,10 @@ type OptionalPromise<T> = Promise<T> | T;
 
 type Plist = JSONObject;
 
-export interface ModifierPluginProps<Data = unknown> {
+export interface ModifierProps<Data = unknown> {
+  /**
+   * Project root directory for the universal app.
+   */
   readonly projectRoot: string;
   /**
    * Project root for the specific platform.
@@ -44,31 +47,28 @@ export interface ExportedConfig {
   expo: ExpoConfig;
 }
 
-export interface ExportedConfigWithProps<Props = any | undefined> extends ExportedConfig {
+export interface ExportedConfigWithProps<Props = any> extends ExportedConfig {
   props: Props;
 }
 
-export type ConfigPlugin<Props = any | undefined> = (
-  config: ExportedConfig,
-  props: Props
-) => ExportedConfig;
+export type ConfigPlugin<Props = any> = (config: ExportedConfig, props: Props) => ExportedConfig;
 
-export type ModifierPlugin<
-  Props extends ModifierPluginProps = ModifierPluginProps,
+export type Modifier<
+  Props extends ModifierProps = ModifierProps,
   // Return value is the same as the props unless specified otherwise
-  Results extends ModifierPluginProps = Props
+  Results extends ModifierProps = Props
 > = (config: ExportedConfigWithProps<Props>) => OptionalPromise<ExportedConfigWithProps<Results>>;
 
-type IOSModifierPlugin<T> = ModifierPlugin<ModifierPluginProps<T>>;
+type IOSModifier<T> = Modifier<ModifierProps<T>>;
 
 export interface ModifierConfig {
   // android?: {
   // };
   ios?: {
-    infoPlist?: IOSModifierPlugin<InfoPlist>;
-    entitlements?: IOSModifierPlugin<Plist>;
-    expoPlist?: IOSModifierPlugin<Plist>;
-    xcodeproj?: IOSModifierPlugin<XcodeProject>;
+    infoPlist?: IOSModifier<InfoPlist>;
+    entitlements?: IOSModifier<Plist>;
+    expoPlist?: IOSModifier<Plist>;
+    xcodeproj?: IOSModifier<XcodeProject>;
   };
 }
 
