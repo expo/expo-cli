@@ -10,9 +10,9 @@ import {
   ConfigPlugin,
   ExportedConfig,
   ExportedConfigWithProps,
-  PluginConfig,
+  ModifierConfig,
+  ModifierPlatform,
   PluginModifierProps,
-  PluginPlatform,
 } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { getEntitlementsPath } from '../ios/Entitlements';
@@ -20,11 +20,11 @@ import { InfoPlist } from '../ios/IosConfig.types';
 import { getPbxproj, getProjectName } from '../ios/utils/Xcodeproj';
 import { withInterceptedModifier } from './core-plugins';
 
-export async function compilePluginsAsync(projectRoot: string, config: ExportedConfig) {
+export async function compileModifiersAsync(projectRoot: string, config: ExportedConfig) {
   config = applyIOSCoreModifiers(projectRoot, config);
   config = applyAndroidCoreModifiers(projectRoot, config);
 
-  return await evalPluginsAsync(config, { projectRoot });
+  return await evalModifiersAsync(config, { projectRoot });
 }
 
 function resolveModifierResults(results: any, platformName: string, modifierName: string) {
@@ -33,9 +33,9 @@ function resolveModifierResults(results: any, platformName: string, modifierName
   const ensuredResults = results;
 
   // Sanity check to help locate non compliant modifiers.
-  if (!ensuredResults?.expo || !ensuredResults?.plugins) {
+  if (!ensuredResults?.expo || !ensuredResults?.modifiers) {
     throw new Error(
-      `Modifier \`plugins.${platformName}.${modifierName}\` evaluated to an object that is not a valid project config. Instead got: ${JSON.stringify(
+      `Modifier \`modifiers.${platformName}.${modifierName}\` evaluated to an object that is not a valid project config. Instead got: ${JSON.stringify(
         ensuredResults
       )}`
     );
@@ -44,14 +44,14 @@ function resolveModifierResults(results: any, platformName: string, modifierName
 }
 
 function applyAndroidCoreModifiers(projectRoot: string, config: ExportedConfig): ExportedConfig {
-  // TODO: Support android plugins
+  // TODO: Support android modifiers
   return config;
 }
 
 function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): ExportedConfig {
   const { iosProjectDirectory, supportingDirectory } = getIOSPaths(projectRoot, config.expo);
 
-  // Append a rule to supply Info.plist data to plugins on `plugins.ios.infoPlist`
+  // Append a rule to supply Info.plist data to modifiers on `modifiers.ios.infoPlist`
   config = withInterceptedModifier<PluginModifierProps<InfoPlist>>(config, {
     platform: 'ios',
     modifier: 'infoPlist',
@@ -94,7 +94,7 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
     },
   });
 
-  // Append a rule to supply Expo.plist data to plugins on `plugins.ios.expoPlist`
+  // Append a rule to supply Expo.plist data to modifiers on `modifiers.ios.expoPlist`
   config = withInterceptedModifier<PluginModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'expoPlist',
@@ -130,7 +130,7 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
     },
   });
 
-  // Append a rule to supply .xcodeproj data to plugins on `plugins.ios.xcodeproj`
+  // Append a rule to supply .xcodeproj data to modifiers on `modifiers.ios.xcodeproj`
   config = withInterceptedModifier<PluginModifierProps<XcodeProject>>(config, {
     platform: 'ios',
     modifier: 'xcodeproj',
@@ -156,7 +156,7 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
 }
 
 const withEntitlementsBaseModifier: ConfigPlugin = config => {
-  // Append a rule to supply .entitlements data to plugins on `plugins.ios.entitlements`
+  // Append a rule to supply .entitlements data to modifiers on `modifiers.ios.entitlements`
   return withInterceptedModifier<PluginModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'entitlements',
@@ -206,29 +206,31 @@ const withEntitlementsBaseModifier: ConfigPlugin = config => {
  *
  * @param config
  */
-export async function evalPluginsAsync(
+export async function evalModifiersAsync(
   config: ExportedConfig,
   props: { projectRoot: string }
 ): Promise<ExportedConfig> {
-  for (const [platformName, platform] of Object.entries(config.plugins ?? ({} as PluginConfig))) {
+  for (const [platformName, platform] of Object.entries(
+    config.modifiers ?? ({} as ModifierConfig)
+  )) {
     const platformProjectRoot = path.join(props.projectRoot, platformName);
     const projectName = platformName === 'ios' ? getProjectName(props.projectRoot) : undefined;
 
-    for (const [modifier, plugin] of Object.entries(platform)) {
-      const results = await (plugin as ConfigModifierPlugin<PluginModifierProps>)({
+    for (const [modifierName, modifier] of Object.entries(platform)) {
+      const results = await (modifier as ConfigModifierPlugin<PluginModifierProps>)({
         ...config,
         props: {
           ...props,
           projectName,
           platformProjectRoot,
-          platform: platformName as PluginPlatform,
-          modifier,
+          platform: platformName as ModifierPlatform,
+          modifier: modifierName,
           data: null,
         },
       });
 
       // Sanity check to help locate non compliant modifiers.
-      config = resolveModifierResults(results, platformName, modifier);
+      config = resolveModifierResults(results, platformName, modifierName);
     }
   }
   return config;

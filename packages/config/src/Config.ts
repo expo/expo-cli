@@ -19,7 +19,7 @@ import {
 } from './Config.types';
 import { ConfigError } from './Errors';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
-import { ExportedConfig, PluginConfig } from './Plugin.types';
+import { ExportedConfig, ModifierConfig } from './Plugin.types';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 
@@ -33,22 +33,25 @@ function reduceExpoObject(config?: any): ExportedConfig {
   if (!config) return config === undefined ? null : config;
 
   if (typeof config.expo === 'object') {
-    if (config.plugins && typeof config.plugins !== 'object') {
-      throw new Error(`plugins object was defined in the config but it's not an object.`);
+    if (config.modifiers && typeof config.modifiers !== 'object') {
+      throw new Error(`modifiers object was defined in the config but it's not an object.`);
     }
     // TODO: We should warn users in the future that if there are more values than "expo", those values outside of "expo" will be omitted in favor of the "expo" object.
-    return { expo: config.expo as ExpoConfig, plugins: (config.plugins as PluginConfig) ?? null };
+    return {
+      expo: config.expo as ExpoConfig,
+      modifiers: (config.modifiers as ModifierConfig) ?? null,
+    };
   }
-  if (config.plugins != null) {
+  if (config.modifiers != null) {
     throw new Error(
-      `plugins object must exist outside of the Expo config:\n${JSON.stringify(
-        { expo: {}, plugins: {} },
+      `modifiers object must exist outside of the Expo config:\n${JSON.stringify(
+        { expo: {}, modifiers: {} },
         null,
         2
       )}`
     );
   }
-  return { expo: config, plugins: null };
+  return { expo: config, modifiers: null };
 }
 
 /**
@@ -117,7 +120,7 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
         packageJson,
         options.skipSDKVersionRequirement
       ),
-      plugins: config.plugins,
+      modifiers: config.modifiers,
       dynamicConfigObjectType,
       rootConfig,
       dynamicConfigPath: paths.dynamicConfigPath,
@@ -213,7 +216,7 @@ export function readConfigJson(
 
   return {
     ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
-    plugins: null,
+    modifiers: null,
     dynamicConfigPath: null,
     dynamicConfigObjectType: null,
     rootConfig: { ...outputRootConfig } as AppJSONConfig,
@@ -471,7 +474,7 @@ export async function writeConfigJsonAsync(
 
   return {
     exp,
-    plugins: null,
+    modifiers: null,
     pkg,
     rootConfig,
     staticConfigPath,

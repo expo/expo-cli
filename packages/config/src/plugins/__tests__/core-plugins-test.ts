@@ -27,11 +27,11 @@ describe(withPlugins, () => {
 });
 
 describe(withExtendedModifier, () => {
-  it('compiles modifier plugins', async () => {
+  it('compiles modifiers', async () => {
     // A basic plugin exported from an app.json
-    const exportedConfig: ExportedConfig = { expo: { name: 'app', slug: '' }, plugins: null };
+    const exportedConfig: ExportedConfig = { expo: { name: 'app', slug: '' }, modifiers: null };
 
-    // Apply modifier plugin
+    // Apply modifier
     let config = withExtendedModifier<any>(exportedConfig, {
       platform: 'ios',
       modifier: 'custom',
@@ -43,7 +43,7 @@ describe(withExtendedModifier, () => {
     });
 
     // Compile plugins generically
-    config = await compilePluginsAsync(config);
+    config = await compileModifiersAsync(config);
 
     // App config should have been modified
     expect(config.expo).toStrictEqual({
@@ -52,7 +52,7 @@ describe(withExtendedModifier, () => {
     });
 
     // Plugins should all be functions
-    expect(Object.values(config.plugins.ios).every(value => typeof value === 'function')).toBe(
+    expect(Object.values(config.modifiers.ios).every(value => typeof value === 'function')).toBe(
       true
     );
   });
@@ -63,8 +63,9 @@ describe(withExtendedModifier, () => {
  *
  * @param config
  */
-async function compilePluginsAsync(config: ExportedConfig): Promise<ExportedConfig> {
-  for (const platform of Object.values(config.plugins)) {
+async function compileModifiersAsync(config: ExportedConfig): Promise<ExportedConfig> {
+  // TODO: Use actual compiler
+  for (const platform of Object.values(config.modifiers)) {
     for (const plugin of Object.values(platform)) {
       config = await (plugin as any)(config);
     }

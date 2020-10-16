@@ -1,13 +1,13 @@
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 
-import { ExportedConfig } from '../../Config.types';
-import { compilePluginsAsync } from '../plugin-compiler';
+import { ExportedConfig } from '../../Plugin.types';
+import { compileModifiersAsync } from '../plugin-compiler';
 import rnFixture from './fixtures/react-native-project';
 
 jest.mock('fs');
 
-describe(compilePluginsAsync, () => {
+describe(compileModifiersAsync, () => {
   const projectRoot = '/app';
   beforeEach(async () => {
     // Trick XDL Info.plist reading
@@ -21,28 +21,28 @@ describe(compilePluginsAsync, () => {
     vol.reset();
   });
 
-  it('compiles with no plugins', async () => {
+  it('compiles with no modifiers', async () => {
     // A basic plugin exported from an app.json
     const exportedConfig: ExportedConfig = {
       expo: { name: 'app', slug: '' },
-      plugins: null,
+      modifiers: null,
     };
-    const config = await compilePluginsAsync('/app', exportedConfig);
+    const config = await compileModifiersAsync('/app', exportedConfig);
 
     expect(config.expo.name).toBe('app');
     expect(config.expo.ios.infoPlist).toBeDefined();
     expect(config.expo.ios.entitlements).toBeDefined();
-    expect(Object.values(config.plugins.ios).every(value => typeof value === 'function')).toBe(
+    expect(Object.values(config.modifiers.ios).every(value => typeof value === 'function')).toBe(
       true
     );
   });
 
-  it('compiles modifier plugins', async () => {
+  it('compiles modifiers', async () => {
     // A basic plugin exported from an app.json
     let internalValue = '';
     const exportedConfig: ExportedConfig = {
       expo: { name: 'app', slug: '' },
-      plugins: {
+      modifiers: {
         ios: {
           async infoPlist(config) {
             console.log('INFO: ', config.props);
@@ -58,7 +58,7 @@ describe(compilePluginsAsync, () => {
     };
 
     // Apply modifier plugin
-    const config = await compilePluginsAsync('/app', exportedConfig);
+    const config = await compileModifiersAsync('/app', exportedConfig);
 
     expect(internalValue).toBe('en');
 
@@ -68,7 +68,7 @@ describe(compilePluginsAsync, () => {
     expect(config.expo.ios.entitlements).toBeDefined();
 
     // Plugins should all be functions
-    expect(Object.values(config.plugins.ios).every(value => typeof value === 'function')).toBe(
+    expect(Object.values(config.modifiers.ios).every(value => typeof value === 'function')).toBe(
       true
     );
 
@@ -82,7 +82,7 @@ describe(compilePluginsAsync, () => {
       // A basic plugin exported from an app.json
       const exportedConfig: ExportedConfig = {
         expo: { name: 'app', slug: '' },
-        plugins: {
+        modifiers: {
           ios: {
             async infoPlist(config) {
               // Return an invalid config
@@ -93,8 +93,8 @@ describe(compilePluginsAsync, () => {
       };
 
       // Apply modifier plugin
-      await expect(compilePluginsAsync('/app', exportedConfig)).rejects.toThrow(
-        /Modifier `plugins.ios.infoPlist` evaluated to an object that is not a valid project config/
+      await expect(compileModifiersAsync('/app', exportedConfig)).rejects.toThrow(
+        /Modifier `modifiers.ios.infoPlist` evaluated to an object that is not a valid project config/
       );
     });
   }

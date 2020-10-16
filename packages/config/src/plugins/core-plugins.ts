@@ -2,8 +2,8 @@ import {
   ConfigModifierPlugin,
   ConfigPlugin,
   ExportedConfig,
+  ModifierPlatform,
   PluginModifierProps,
-  PluginPlatform,
 } from '../Plugin.types';
 
 function ensureArray<T>(input: T | T[]): T[] {
@@ -46,7 +46,7 @@ export function withExtendedModifier<T extends PluginModifierProps>(
     modifier,
     action,
   }: {
-    platform: PluginPlatform;
+    platform: ModifierPlatform;
     modifier: string;
     action: ConfigModifierPlugin<T>;
   }
@@ -68,27 +68,27 @@ export function withInterceptedModifier<T extends PluginModifierProps>(
     modifier,
     action,
   }: {
-    platform: PluginPlatform;
+    platform: ModifierPlatform;
     modifier: string;
     action: ConfigModifierPlugin<T & { nextModifier: ConfigModifierPlugin<T> }, T>;
   }
 ): ExportedConfig {
-  if (!config.plugins) {
-    config.plugins = {};
+  if (!config.modifiers) {
+    config.modifiers = {};
   }
-  if (!config.plugins[platform]) {
-    config.plugins[platform] = {};
+  if (!config.modifiers[platform]) {
+    config.modifiers[platform] = {};
   }
 
   const modifierPlugin: ConfigModifierPlugin<T> =
-    (config.plugins[platform] as Record<string, any>)[modifier] ?? (config => config);
+    (config.modifiers[platform] as Record<string, any>)[modifier] ?? (config => config);
 
   const extendedModifier: ConfigModifierPlugin<T> = async ({ props, ...config }) => {
     // console.log(`-[mod]-> ${platform}.${modifier}`);
     return action({ ...config, props: { ...props, nextModifier: modifierPlugin } });
   };
 
-  (config.plugins[platform] as any)[modifier] = extendedModifier;
+  (config.modifiers[platform] as any)[modifier] = extendedModifier;
 
   return config;
 }

@@ -1,6 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
 
-import { PluginConfig } from './Plugin.types';
+import { ModifierConfig } from './Plugin.types';
 
 export { ExpoConfig };
 
@@ -12,9 +12,9 @@ export interface ProjectConfig {
    */
   exp: ExpoConfig;
   /**
-   * Dynamic config for processing native files during the generation process. This only exists if an Expo config exports and `expo` and `plugins` object.
+   * Dynamic config for processing native files during the generation process. This only exists if an Expo config exports and `expo` and `modifiers` object.
    */
-  plugins?: PluginConfig | null;
+  modifiers?: ModifierConfig | null;
   /**
    * Project package.json object with default values injected.
    */

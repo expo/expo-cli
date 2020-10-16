@@ -17,9 +17,9 @@ export interface PluginModifierProps<Data = unknown> {
   readonly modifier: string;
 
   /**
-   * Name of the platform used in the plugins config.
+   * Name of the platform used in the modifiers config.
    */
-  readonly platform: PluginPlatform;
+  readonly platform: ModifierPlatform;
 
   /**
    * [iOS]: The path component used for querying project files.
@@ -38,7 +38,7 @@ type OptionalPromise<T> = Promise<T> | T;
 
 // TODO: Migrate ProjectConfig to using expo instead if exp
 export interface ExportedConfig {
-  plugins?: PluginConfig | null;
+  modifiers?: ModifierConfig | null;
   expo: ExpoConfig;
 }
 
@@ -59,7 +59,7 @@ export type ConfigModifierPlugin<
 
 type IOSConfigModifierPlugin<T> = ConfigModifierPlugin<PluginModifierProps<T>>;
 
-export interface PluginConfig {
+export interface ModifierConfig {
   // android?: {
   // };
   ios?: {
@@ -70,4 +70,4 @@ export interface PluginConfig {
   };
 }
 
-export type PluginPlatform = keyof PluginConfig;
+export type ModifierPlatform = keyof ModifierConfig;

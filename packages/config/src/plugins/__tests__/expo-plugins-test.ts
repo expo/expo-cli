@@ -3,7 +3,7 @@ import { vol } from 'memfs';
 
 import { ExportedConfig } from '../../Config.types';
 import { withExpoIOSPlugins } from '../expo-plugins';
-import { compilePluginsAsync } from '../plugin-compiler';
+import { compileModifiersAsync } from '../plugin-compiler';
 import rnFixture from './fixtures/react-native-project';
 
 jest.mock('fs');
@@ -42,13 +42,13 @@ describe(withExpoIOSPlugins, () => {
       bundleIdentifier: 'com.bacon.todo',
       expoUsername: 'bacon',
     });
-    // Apply modifier plugin
-    config = await compilePluginsAsync('/app', config);
+    // Apply modifier
+    config = await compileModifiersAsync('/app', config);
     // This should be false because ios.config.usesNonExemptEncryption is used in favor of ios.infoPlist.ITSAppUsesNonExemptEncryption
     expect(config.expo.ios?.infoPlist?.ITSAppUsesNonExemptEncryption).toBe(false);
   });
 
-  it('compiles modifier plugins', async () => {
+  it('compiles modifiers', async () => {
     let config: ExportedConfig = {
       expo: {
         name: 'app',
@@ -65,7 +65,7 @@ describe(withExpoIOSPlugins, () => {
           },
         },
       },
-      plugins: null,
+      modifiers: null,
     };
 
     config = withExpoIOSPlugins(config, {
@@ -73,8 +73,8 @@ describe(withExpoIOSPlugins, () => {
       expoUsername: 'bacon',
     });
 
-    // Apply modifier plugin
-    config = await compilePluginsAsync('/app', config);
+    // Apply modifier
+    config = await compileModifiersAsync('/app', config);
 
     // App config should have been modified
     expect(config.expo.name).toBe('app');
@@ -92,8 +92,8 @@ describe(withExpoIOSPlugins, () => {
     // Shape
     expect(config.expo).toStrictEqual({});
 
-    // Plugins should all be functions
-    expect(Object.values(config.plugins.ios).every(value => typeof value === 'function')).toBe(
+    // Modifiers should all be functions
+    expect(Object.values(config.modifiers.ios).every(value => typeof value === 'function')).toBe(
       true
     );
 
