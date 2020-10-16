@@ -1,4 +1,4 @@
-import { ConfigPlugin, ExportedConfig } from '../../Config.types';
+import { ConfigPlugin, ExportedConfig } from '../../Plugin.types';
 import { withExtendedModifier, withPlugins } from '../core-plugins';
 
 describe(withPlugins, () => {

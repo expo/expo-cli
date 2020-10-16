@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 
-import { ExportedConfig } from '../../Config.types';
+import { ExportedConfig } from '../../Plugin.types';
 import { withExpoIOSPlugins } from '../expo-plugins';
 import { compileModifiersAsync } from '../plugin-compiler';
 import rnFixture from './fixtures/react-native-project';
