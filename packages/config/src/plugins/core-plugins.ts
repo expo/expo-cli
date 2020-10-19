@@ -64,7 +64,7 @@ export function withInterceptedModifier<T>(
   }: {
     platform: ModifierPlatform;
     modifier: string;
-    action: Modifier<T, T>;
+    action: Modifier<T>;
   }
 ): ExportedConfig {
   if (!config.modifiers) {

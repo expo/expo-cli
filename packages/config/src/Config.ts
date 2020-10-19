@@ -19,7 +19,7 @@ import {
 } from './Config.types';
 import { ConfigError } from './Errors';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
-import { ExportedConfig, ModifierConfig } from './Plugin.types';
+import { ModifierConfig } from './Plugin.types';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 
@@ -67,7 +67,7 @@ export function getConfigWithModifiers(
   options?: GetConfigOptions
 ): ProjectConfig {
   const config = getConfig(projectRoot, options);
-  // Add the modifiers back to the object.
+  // @ts-ignore: Add the modifiers back to the object.
   config.exp.modifiers = config.modifiers ?? null;
   return config;
 }
@@ -472,7 +472,6 @@ export async function writeConfigJsonAsync(
 
   return {
     exp,
-    modifiers: exp.modifiers ?? null,
     pkg,
     rootConfig,
     staticConfigPath,

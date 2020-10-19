@@ -53,11 +53,9 @@ export interface ExportedConfigWithProps<Data = any> extends ExpoConfig {
 
 export type ConfigPlugin<Props = any> = (config: ExpoConfig, props: Props) => ExpoConfig;
 
-export type Modifier<
-  Props = any,
-  // Return value is the same as the props unless specified otherwise
-  Results = Props
-> = (config: ExportedConfigWithProps<Props>) => OptionalPromise<ExportedConfigWithProps<Results>>;
+export type Modifier<Props = any> = (
+  config: ExportedConfigWithProps<Props>
+) => OptionalPromise<ExportedConfigWithProps<Props>>;
 
 export interface ModifierConfig {
   // android?: {

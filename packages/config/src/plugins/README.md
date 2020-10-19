@@ -25,15 +25,15 @@ Say you wanted to create a plugin which added custom values to the native iOS In
 ```ts
 const withMySDK = (config, { apiKey }) => {
   // Ensure the objects exist
-  if (!config.expo.ios) {
-    config.expo.ios = {};
+  if (!config.ios) {
+    config.ios = {};
   }
-  if (!config.expo.ios.infoPlist) {
-    config.expo.ios.infoPlist = {};
+  if (!config.ios.infoPlist) {
+    config.ios.infoPlist = {};
   }
 
   // Append the apiKey
-  config.expo.ios.infoPlist['MY_CUSTOM_NATIVE_IOS_API_KEY'] = apiKey;
+  config.ios.infoPlist['MY_CUSTOM_NATIVE_IOS_API_KEY'] = apiKey;
 
   return config;
 };
@@ -42,9 +42,7 @@ const withMySDK = (config, { apiKey }) => {
 
 /// Create a config
 const config = {
-  expo: {
-    name: 'my app',
-  },
+  name: 'my app',
 };
 
 /// Use the plugin
@@ -53,14 +51,12 @@ export default withMySDK(config, { apiKey: 'X-XXX-XXX' });
 
 #### Chaining Plugins
 
-If you have a lot of plugins, the code can start to get unreadable and hard to manipulate, to combat this, `expo/config-plugins` provides a plugin `withPlugins` which can be used to chain plugins together and execute them in order. `withPlugins` also ensures that the config object is passed with an `expo` object.
+If you have a lot of plugins, the code can start to get unreadable and hard to manipulate, to combat this, `expo/config-plugins` provides a plugin `withPlugins` which can be used to chain plugins together and execute them in order.
 
 ```js
 /// Create a config
 const config = {
-  expo: {
-    name: 'my app',
-  },
+  name: 'my app',
 };
 
 // ❌ Hard to read
@@ -80,11 +76,11 @@ withPlugins(config, [
 
 An async function which accepts a config and a data object, then manipulates and returns both as an object.
 
-Modifiers (mods for short) are added to the `modifiers` object of the Expo config, they only work when an `expo` object is also present, i.e `{ expo: {}, modifiers: {} }`. The `modifiers` object is different to `expo` because it doesn't get serialized after the initial reading, this means you can use it to perform actions _during_ code generation. If possible, you should attempt to use basic plugins instead of modifiers as they're easier to work with.
+Modifiers (mods for short) are added to the `modifiers` object of the Expo config. The `modifiers` object is different to the rest of the Expo config because it doesn't get serialized after the initial reading, this means you can use it to perform actions _during_ code generation. If possible, you should attempt to use basic plugins instead of modifiers as they're simpler to work with.
 
 - `modifiers` are omitted in the manifest and cannot be accessed via `Constants.manifest`. `modifiers` exist for the sole purpose of modifying native files during code generation!
 - mods can be used to read and write files safely during the `expo eject` command. This is how Expo CLI modifies the Info.plist, entitlements, xcproj, etc...
-- modifiers are platform specific and should always be added to a platform specific object:
+- mods are platform specific and should always be added to a platform specific object:
 
 ```js
 {
@@ -125,9 +121,9 @@ import { ConfigPlugin, withXcodeProject } from '@expo/config-plugins';
 
 const withCustomProductName: ConfigPlugin = (config, customName) => {
   return withXcodeProject(config, async config => {
-    // config = { expo, modifiers, props: { data } }
+    // config = { modResults, modRequest, ...expoConfig }
 
-    const xcodeProject = config.props.data;
+    const xcodeProject = config.modResults;
     xcodeProject.productName = customName;
 
     return config;
@@ -138,9 +134,7 @@ const withCustomProductName: ConfigPlugin = (config, customName) => {
 
 /// Create a config
 const config = {
-  expo: {
-    name: 'my app',
-  },
+  name: 'my app',
 };
 
 /// Use the plugin
@@ -155,7 +149,7 @@ Some parts of the modifier system aren't fully flushed out, these parts use the 
 export const withIcons: ConfigPlugin = config => {
   return withDangerousModifier(config, async config => {
     // No modifications are made to the config
-    await setIconsAsync(config.expo, config.props.projectRoot);
+    await setIconsAsync(config, config.modRequest.projectRoot);
     return config;
   });
 };
