@@ -1406,10 +1406,10 @@
     mv "~2"
     safe-json-stringify "~1"
 
-"@expo/configure-splash-screen@0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@expo/configure-splash-screen/-/configure-splash-screen-0.2.1.tgz#de29b781990d32d9f48d630b912aaf017afccbf3"
-  integrity sha512-6n7ji1WKDCdLe2Mto4u4W72kTLhAbhXhC7ydVk1HxDYCcbewNLfgiwhchPtPGyUMnSDizVWph5aDoiKxqVHqNQ==
+"@expo/configure-splash-screen@0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@expo/configure-splash-screen/-/configure-splash-screen-0.3.0.tgz#37f52cf084078e2ba847f01a9977b8bc3f887021"
+  integrity sha512-Bglih9V0XQyHOtBYcsZBgTmNksr8bGBQ9CKXWod9aICQSyyim5Kmb3BtOaE/PJN7FcNCYBtueb33YkfNu1t1MQ==
   dependencies:
     "@react-native-community/cli-platform-android" "^4.10.0"
     "@react-native-community/cli-platform-ios" "^4.10.0"
