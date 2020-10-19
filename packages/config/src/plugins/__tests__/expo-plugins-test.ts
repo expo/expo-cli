@@ -248,13 +248,13 @@ describe(withExpoIOSPlugins, () => {
       'ios/ReactNativeProject/Supporting/en.lproj/InfoPlist.strings',
       'ios/ReactNativeProject/Supporting/es.lproj/InfoPlist.strings',
       'ios/ReactNativeProject/GoogleService-Info.plist',
-      'ios/ReactNativeProject/$(TARGET_NAME).entitlements',
+      'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
       'config/GoogleService-Info.plist',
       'locales/en-US.json',
     ]);
 
-    expect(after['ios/ReactNativeProject/$(TARGET_NAME).entitlements']).toMatch(
+    expect(after['ios/ReactNativeProject/ReactNativeProject.entitlements']).toMatch(
       'com.apple.developer.associated-domains'
     );
 

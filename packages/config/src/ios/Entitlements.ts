@@ -9,6 +9,7 @@ import { InfoPlist } from './IosConfig.types';
 import * as Paths from './Paths';
 import {
   getPbxproj,
+  getProductName,
   getProjectName,
   isBuildConfig,
   isNotComment,
@@ -131,7 +132,7 @@ export function getEntitlementsPath(projectRoot: string): string {
    */
   const project = getPbxproj(projectRoot);
   const projectName = getProjectName(projectRoot);
-  const productName = project.productName;
+  const productName = getProductName(project);
 
   const entitlementsRelativePath = path.join(projectName, `${productName}.entitlements`);
   const entitlementsPath = path.normalize(path.join(projectRoot, 'ios', entitlementsRelativePath));
