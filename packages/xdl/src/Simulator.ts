@@ -429,9 +429,11 @@ export async function _downloadSimulatorAppAsync(
 export async function installExpoOnSimulatorAsync({
   url,
   simulator,
+  version,
 }: {
   simulator: Pick<SimControl.Device, 'name' | 'udid'>;
   url?: string;
+  version?: string;
 }) {
   const bar = new ProgressBar(
     `Installing the Expo client app on ${simulator.name} [:bar] :percent :etas`,
@@ -461,7 +463,12 @@ export async function installExpoOnSimulatorAsync({
   const dir = await _downloadSimulatorAppAsync(url, progress => bar.tick(1, progress));
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
-  Logger.global.info(`Installing Expo client on ${simulator.name}`);
+  if (version) {
+    Logger.global.info(`Installing Expo client ${version} on ${simulator.name}`);
+  } else {
+    Logger.global.info(`Installing Expo client on ${simulator.name}`);
+  }
+
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   warningTimer = setWarningTimer();
 
@@ -495,6 +502,7 @@ export async function upgradeExpoAsync(
   options: {
     udid?: string;
     url?: string;
+    version?: string;
   } = {}
 ): Promise<boolean> {
   if (!(await isSimulatorInstalledAsync())) {
@@ -504,7 +512,11 @@ export async function upgradeExpoAsync(
   const simulator = await ensureSimulatorOpenAsync(options);
 
   await uninstallExpoAppFromSimulatorAsync(simulator);
-  const installResult = await installExpoOnSimulatorAsync({ url: options.url, simulator });
+  const installResult = await installExpoOnSimulatorAsync({
+    url: options.url,
+    version: options.version,
+    simulator,
+  });
   if (installResult.status !== 0) {
     return false;
   }
