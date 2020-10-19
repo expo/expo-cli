@@ -14,7 +14,7 @@ export async function compileModifiersAsync(
   projectRoot: string
 ): Promise<ExportedConfig> {
   config = withCoreModifiers(config, projectRoot);
-  return await evalModifiersAsync(config, { projectRoot });
+  return await evalModifiersAsync(config, projectRoot);
 }
 
 /**
@@ -24,19 +24,19 @@ export async function compileModifiersAsync(
  */
 export async function evalModifiersAsync(
   config: ExportedConfig,
-  props: { projectRoot: string }
+  projectRoot: string
 ): Promise<ExportedConfig> {
   for (const [platformName, platform] of Object.entries(
     config.modifiers ?? ({} as ModifierConfig)
   )) {
     const entries = Object.entries(platform);
     if (entries.length) {
-      const platformProjectRoot = path.join(props.projectRoot, platformName);
-      const projectName = platformName === 'ios' ? getProjectName(props.projectRoot) : undefined;
+      const platformProjectRoot = path.join(projectRoot, platformName);
+      const projectName = platformName === 'ios' ? getProjectName(projectRoot) : undefined;
 
       for (const [modifierName, modifier] of entries) {
         const modRequest = {
-          ...props,
+          projectRoot,
           projectName,
           platformProjectRoot,
           platform: platformName as ModifierPlatform,
@@ -57,8 +57,6 @@ export async function evalModifiersAsync(
       }
     }
   }
-  // // Delete modifiers after they've been compiled.
-  // delete config.modifiers;
 
   return config;
 }

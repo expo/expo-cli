@@ -1,5 +1,4 @@
 import { getConfigWithModifiers } from '@expo/config';
-import { ExportedConfig } from '@expo/config/build/Plugin.types';
 import { withExpoIOSPlugins } from '@expo/config/build/plugins/expo-plugins';
 import { compileModifiersAsync } from '@expo/config/build/plugins/modifier-compiler';
 import { UserManager } from '@expo/xdl';

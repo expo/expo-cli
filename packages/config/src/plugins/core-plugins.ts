@@ -50,9 +50,7 @@ export function withExtendedModifier<T>(
     modifier,
     async action({ modRequest: { nextModifier, ...modRequest }, modResults, ...config }) {
       const results = await action({ modRequest, modResults: modResults as T, ...config });
-      // TODO: Fix types so this check isn't required
-      if (!nextModifier) throw new Error('nextModifier is not defined');
-      return nextModifier(results as any);
+      return nextModifier!(results as any);
     },
   });
 }

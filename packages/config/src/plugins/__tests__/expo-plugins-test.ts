@@ -32,7 +32,7 @@ describe(evalModifiersAsync, () => {
       name: 'app',
       slug: '',
     };
-    config = await evalModifiersAsync(config, { projectRoot: '/' });
+    config = await evalModifiersAsync(config, '/');
     expect(config.ios).toBeUndefined();
   });
 });

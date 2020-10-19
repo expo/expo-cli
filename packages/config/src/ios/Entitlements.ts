@@ -4,7 +4,7 @@ import path from 'path';
 import { ExpoConfig } from '../Config.types';
 import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
-import { withEntitlementsPlist } from '../plugins/ios-plugins';
+import { createEntitlementsPlugin, withEntitlementsPlist } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import * as Paths from './Paths';
 import {
@@ -18,19 +18,11 @@ import {
 
 type Plist = Record<string, any>;
 
-export const withAccessesContactNotes: ConfigPlugin = config => {
-  return withEntitlementsPlist(config, config => {
-    config.modResults = setAccessesContactNotes(config, config.modResults);
-    return config;
-  });
-};
+export const withAccessesContactNotes = createEntitlementsPlugin(setAccessesContactNotes);
 
-export const withAssociatedDomains: ConfigPlugin = config => {
-  return withEntitlementsPlist(config, config => {
-    config.modResults = setAssociatedDomains(config, config.modResults);
-    return config;
-  });
-};
+export const withAssociatedDomains = createEntitlementsPlugin(setAssociatedDomains);
+
+export const withAppleSignInEntitlement = createEntitlementsPlugin(setAppleSignInEntitlement);
 
 export const withICloudEntitlement: ConfigPlugin<{ appleTeamId: string }> = (
   config,
@@ -38,13 +30,6 @@ export const withICloudEntitlement: ConfigPlugin<{ appleTeamId: string }> = (
 ) => {
   return withEntitlementsPlist(config, config => {
     config.modResults = setICloudEntitlement(config, config.modResults, appleTeamId);
-    return config;
-  });
-};
-
-export const withAppleSignInEntitlement: ConfigPlugin = config => {
-  return withEntitlementsPlist(config, config => {
-    config.modResults = setAppleSignInEntitlement(config, config.modResults);
     return config;
   });
 };

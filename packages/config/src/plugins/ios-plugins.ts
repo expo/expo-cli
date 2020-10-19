@@ -23,6 +23,23 @@ export function createInfoPlistPlugin(
     });
 }
 
+type MutateEntitlementsPlistAction = (expo: ExpoConfig, entitlements: JSONObject) => JSONObject;
+
+/**
+ * Helper method for creating modifiers from existing config functions.
+ *
+ * @param action
+ */
+export function createEntitlementsPlugin(
+  action: MutateEntitlementsPlistAction
+): ConfigPlugin<MutateEntitlementsPlistAction> {
+  return config =>
+    withEntitlementsPlist(config, async config => {
+      config.modResults = await action(config, config.modResults);
+      return config;
+    });
+}
+
 /**
  * Provides the Info.plist file for modification.
  * Keeps the config's expo.ios.infoPlist object in sync with the data.

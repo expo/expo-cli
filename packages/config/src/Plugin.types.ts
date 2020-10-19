@@ -35,7 +35,6 @@ export interface ModifierProps<T = any> {
    */
   readonly projectName?: string;
 
-  // nextModifier: Modifier<T>
   nextModifier?: Modifier<T>;
 }
 

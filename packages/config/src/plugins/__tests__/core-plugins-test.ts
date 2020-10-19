@@ -45,7 +45,7 @@ describe(withExtendedModifier, () => {
     });
 
     // Compile plugins generically
-    config = await evalModifiersAsync(config, { projectRoot: '/' });
+    config = await evalModifiersAsync(config, '/');
 
     // Plugins should all be functions
     expect(
