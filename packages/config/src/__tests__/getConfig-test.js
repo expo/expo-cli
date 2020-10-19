@@ -63,6 +63,15 @@ describe('getDynamicConfig', () => {
     );
   });
 
+  it(`only serializes expo object`, async () => {
+    const { config } = await getDynamicConfig(
+      join(__dirname, 'fixtures/behavior/dynamic-and-static/app.config.js')
+    );
+    expect(config.expo.name).toBe('my-app');
+    expect(typeof config.other.name).toBe('function');
+    expect(config.other.name()).toBe('my-app');
+  });
+
   describe('process.cwd in a child process', () => {
     const originalCwd = process.cwd();
     const projectRoot = join(__dirname, 'fixtures/behavior/dynamic-cwd');

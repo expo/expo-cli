@@ -1,5 +1,10 @@
 import { ExpoConfig } from '@expo/config-types';
 
+// TODO: Migrate ProjectConfig to using expo instead if exp
+export interface ExportedConfig {
+  expo: ExpoConfig;
+}
+
 export { ExpoConfig };
 export type PackageJSONConfig = { [key: string]: any };
 export type ProjectConfig = {
