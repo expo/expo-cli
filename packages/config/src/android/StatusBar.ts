@@ -1,4 +1,5 @@
 import { ExpoConfig } from '../Config.types';
+import { addWarningAndroid } from '../WarningAggregator';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
 import { buildResourceItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
@@ -9,6 +10,12 @@ const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
 const WINDOW_LIGHT_STATUS_BAR = 'android:windowLightStatusBar';
 
 export function getStatusBarColor(config: ExpoConfig) {
+  if (config.androidStatusBarColor != null) {
+    addWarningAndroid(
+      'status-bar',
+      '`androidStatusBarColor` is deprecated, use `androidStatusBar.backgroundColor` instead.'
+    );
+  }
   return config.androidStatusBar?.backgroundColor || 'translucent';
 }
 

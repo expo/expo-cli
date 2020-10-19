@@ -4,6 +4,7 @@ import * as path from 'path';
 import { addWarningIOS } from '../../WarningAggregator';
 import { getLocales, setLocalesAsync } from '../Locales';
 import { getPbxproj } from '../utils/Xcodeproj';
+import { getDirFromFS } from './utils/getDirFromFS';
 const actualFs = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
@@ -16,20 +17,6 @@ afterAll(() => {
   jest.unmock('fs');
   jest.unmock('../../WarningAggregator');
 });
-
-function getDirFromFS(fsJSON: Record<string, string | null>, rootDir: string) {
-  return Object.entries(fsJSON)
-    .filter(([path, value]) => value !== null && path.startsWith(rootDir))
-    .reduce<Record<string, string>>(
-      (acc, [path, fileContent]) => ({
-        ...acc,
-        [path.substring(rootDir.length).startsWith('/')
-          ? path.substring(rootDir.length + 1)
-          : path.substring(rootDir.length)]: fileContent,
-      }),
-      {}
-    );
-}
 
 describe('iOS Locales', () => {
   it(`returns null if no values are provided`, () => {

@@ -2,6 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 import { fs, vol } from 'memfs';
 import * as path from 'path';
 
+import { addWarningIOS } from '../../WarningAggregator';
 import {
   formatDeviceFamilies,
   getDeviceFamilies,
@@ -27,6 +28,16 @@ afterAll(() => {
 const TABLET_AND_PHONE_SUPPORTED = [1, 2];
 const ONLY_PHONE_SUPPORTED = [1];
 const ONLY_TABLET_SUPPORTED = [2];
+
+describe(getDeviceFamilies, () => {
+  it(`warns about invalid config`, () => {
+    getDeviceFamilies({ ios: { isTabletOnly: true, supportsTablet: false } } as any);
+    expect(addWarningIOS).toHaveBeenLastCalledWith(
+      'device-family',
+      'Found contradictory values: `{ ios: { isTabletOnly: true, supportsTablet: false } }`. Using `{ isTabletOnly: true }`.'
+    );
+  });
+});
 
 describe('device family', () => {
   it(`returns false ios.isTabletOnly is not provided`, () => {
