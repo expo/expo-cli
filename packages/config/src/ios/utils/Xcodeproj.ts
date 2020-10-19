@@ -136,6 +136,22 @@ export function getPbxproj(projectRoot: string): XcodeProject {
   return project;
 }
 
+/**
+ * Get the productName for a project, if the name is using a variable `$(TARGET_NAME)`, then attempt to get the value of that variable.
+ *
+ * @param project
+ */
+export function getProductName(project: XcodeProject): string {
+  let productName = project.productName;
+
+  if (productName === '$(TARGET_NAME)') {
+    const targetName = project.getFirstTarget()?.firstTarget?.productName;
+    productName = targetName ?? project.productName;
+  }
+
+  return productName;
+}
+
 export function getProjectSection(project: XcodeProject) {
   return project.pbxProjectSection();
 }

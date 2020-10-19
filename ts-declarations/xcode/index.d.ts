@@ -380,7 +380,7 @@ declare module 'xcode' {
     getFirstProject(): { uuid: UUID; firstProject: PBXProject };
     getFirstTarget(): {
       uuid: UUID;
-      firstTarget: unknown;
+      firstTarget: PBXNativeTarget;
     };
     /**
      * Retrieves PBXNativeTarget by the type
