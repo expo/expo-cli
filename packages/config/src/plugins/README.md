@@ -1,0 +1,164 @@
+# Advanced configuration
+
+Expo config is a powerful tool for generating native app code from a unified JavaScript interface. Most basic functionality can be controlled simply by using the the [static Expo config](https://docs.expo.io/versions/latest/config/app/), but some features require access to the native file system during ejection. To support complex behavior we've created config plugins, and modifiers!
+
+> Here is a [colorful chart](https://whimsical.com/UjytoYXT2RN43LywvWExfK) for visual learners.
+
+## Plugins
+
+A function which accepts a config, modifies it, then returns the modified config.
+
+- Plugins should be named using a similar format: `with<Plugin Functionality>` i.e. `withFacebook`.
+- Plugins should be synchronous and their return value should be evaluated. The only exception to this is when `modifiers` are added.
+- Custom properties can be passed to the plugin using a second argument.
+
+### Creating a Plugin
+
+Here is an example of the most basic config plugin:
+
+```ts
+const withNothing = config => config;
+```
+
+Say you wanted to create a plugin which added custom values to the native iOS Info.plist:
+
+```ts
+const withMySDK = (config, { apiKey }) => {
+  // Ensure the objects exist
+  if (!config.expo.ios) {
+    config.expo.ios = {};
+  }
+  if (!config.expo.ios.infoPlist) {
+    config.expo.ios.infoPlist = {};
+  }
+
+  // Append the apiKey
+  config.expo.ios.infoPlist['MY_CUSTOM_NATIVE_IOS_API_KEY'] = apiKey;
+
+  return config;
+};
+
+// 💡 Usage:
+
+/// Create a config
+const config = {
+  expo: {
+    name: 'my app',
+  },
+};
+
+/// Use the plugin
+export default withMySDK(config, { apiKey: 'X-XXX-XXX' });
+```
+
+#### Chaining Plugins
+
+If you have a lot of plugins, the code can start to get unreadable and hard to manipulate, to combat this, `expo/config-plugins` provides a plugin `withPlugins` which can be used to chain plugins together and execute them in order. `withPlugins` also ensures that the config object is passed with an `expo` object.
+
+```js
+/// Create a config
+const config = {
+  expo: {
+    name: 'my app',
+  },
+};
+
+// ❌ Hard to read
+withDelta(withFoo(withBar(config, 'input 1'), 'input 2'), 'input 3');
+
+// ✅ Easy to read
+import { withPlugins } from '@expo/config-plugins';
+
+withPlugins(config, [
+  [withBar, 'input 1'],
+  [withFoo, 'input 2'],
+  [withDelta, 'input 3'],
+]);
+```
+
+## Modifiers
+
+An async function which accepts a config and a data object, then manipulates and returns both as an object.
+
+Modifiers (mods for short) are added to the `modifiers` object of the Expo config, they only work when an `expo` object is also present, i.e `{ expo: {}, modifiers: {} }`. The `modifiers` object is different to `expo` because it doesn't get serialized after the initial reading, this means you can use it to perform actions _during_ code generation. If possible, you should attempt to use basic plugins instead of modifiers as they're easier to work with.
+
+- `modifiers` are omitted in the manifest and cannot be accessed via `Constants.manifest`. `modifiers` exist for the sole purpose of modifying native files during code generation!
+- mods can be used to read and write files safely during the `expo eject` command. This is how Expo CLI modifies the Info.plist, entitlements, xcproj, etc...
+- modifiers are platform specific and should always be added to a platform specific object:
+
+```js
+{
+  modifiers: {
+      ios: { /* ... */ },
+      android: { /* ... */ }
+  }
+}
+```
+
+### How it works
+
+- The config is read using `getConfig` from `expo/config`
+- All of the core functionality supported by Expo is added via plugins in `withExpoIOSPlugins`. This is stuff like name, version, icons, locales, etc.
+- The config is passed to the compiler `compileModifiersAsync`
+- The compiler adds base modifiers which are responsible for reading data (like Info.plist), executing a named modifier (like `modifiers.ios.infoPlist`), then writing the results to the file system.
+- The compiler iterates over all of the modifiers and asynchronously evaluates them while providing base props like the `projectRoot`.
+  - After each modifier, error handling asserts if the modifier chain was corrupted by an invalid modifier.
+
+### Default Modifiers
+
+The following default modifiers are provided by the mod compiler for common file manipulation:
+
+- `modifiers.ios.infoPlist` -- Modify the `ios/<name>/Info.plist` as JSON
+- `modifiers.ios.entitlements` -- Modify the `ios/<name>/<product-name>.entitlements` as JSON
+- `modifiers.ios.expoPlist` -- Modify the `ios/<name>/Expo.plist` as JSON (Expo updates config for iOS).
+- `modifiers.ios.xcodeproj` -- Modify the `ios/<name>.xcodeproj` as an `XcodeProject` object from the [`xcode`](https://www.npmjs.com/package/xcode) JS package.
+
+After the mods are resolved, the contents of each modifier will be written to disk. Custom default modifiers can be added to support new native files.
+For example, you can create a modifier to support the `GoogleServices-Info.plist`, and pass it to other modifiers.
+
+### Creating a Modifier
+
+Say you wanted to write a modifier to update the Xcode Project's "product name":
+
+```ts
+import { ConfigPlugin, withXcodeProject } from '@expo/config-plugins';
+
+const withCustomProductName: ConfigPlugin = (config, customName) => {
+  return withXcodeProject(config, async config => {
+    // config = { expo, modifiers, props: { data } }
+
+    const xcodeProject = config.props.data;
+    xcodeProject.productName = customName;
+
+    return config;
+  });
+};
+
+// 💡 Usage:
+
+/// Create a config
+const config = {
+  expo: {
+    name: 'my app',
+  },
+};
+
+/// Use the plugin
+export default withCustomProductName(config, 'new_name');
+```
+
+### Experimental functionality
+
+Some parts of the modifier system aren't fully flushed out, these parts use the `withDangerousModifier` to read/write data without a base modifier. These methods essentially act as their own base modifier and cannot be extended. Icons for example currently use the dangerous modifier to perform a single generation step with no ability to customize the results.
+
+```ts
+export const withIcons: ConfigPlugin = config => {
+  return withDangerousModifier(config, async config => {
+    // No modifications are made to the config
+    await setIconsAsync(config.expo, config.props.projectRoot);
+    return config;
+  });
+};
+```
+
+Be careful using `withDangerousModifier` as it is subject to change in the future. The order with which it gets executed is not reliable either.
