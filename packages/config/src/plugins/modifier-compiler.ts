@@ -1,12 +1,6 @@
 import path from 'path';
 
-import {
-  ExportedConfig,
-  Modifier,
-  ModifierConfig,
-  ModifierPlatform,
-  ModifierProps,
-} from '../Plugin.types';
+import { ExportedConfig, Modifier, ModifierConfig, ModifierPlatform } from '../Plugin.types';
 import { getProjectName } from '../ios/utils/Xcodeproj';
 import { resolveModifierResults, withCoreModifiers } from './compiler-plugins';
 
@@ -41,23 +35,25 @@ export async function evalModifiersAsync(
       const projectName = platformName === 'ios' ? getProjectName(props.projectRoot) : undefined;
 
       for (const [modifierName, modifier] of entries) {
-        const evalProps = {
+        const modInfo = {
           ...props,
           projectName,
           platformProjectRoot,
           platform: platformName as ModifierPlatform,
           modifierName,
-          data: null,
         };
-        const results = await (modifier as Modifier<ModifierProps>)({
+        const results = await (modifier as Modifier)({
           ...config,
-          modProps: evalProps,
+          modResults: null,
+          modInfo,
         });
 
         // Sanity check to help locate non compliant modifiers.
         config = resolveModifierResults(results, platformName, modifierName);
-        // @ts-ignore: props are added for modifications
-        delete config.modProps;
+        // @ts-ignore: data is added for modifications
+        delete config.modResults;
+        // @ts-ignore: info is added for modifications
+        delete config.modInfo;
       }
     }
   }

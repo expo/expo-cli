@@ -1,10 +1,4 @@
-import {
-  ConfigPlugin,
-  ExportedConfig,
-  Modifier,
-  ModifierPlatform,
-  ModifierProps,
-} from '../Plugin.types';
+import { ConfigPlugin, ExportedConfig, Modifier, ModifierPlatform } from '../Plugin.types';
 
 function ensureArray<T>(input: T | T[]): T[] {
   if (Array.isArray(input)) {
@@ -39,7 +33,7 @@ export const withPlugins: ConfigPlugin<AppliedConfigPlugin[]> = (
  * @param modifier name of the platform function to extend
  * @param action method to run on the modifier when the config is compiled
  */
-export function withExtendedModifier<T extends ModifierProps>(
+export function withExtendedModifier<T>(
   config: ExportedConfig,
   {
     platform,
@@ -54,14 +48,16 @@ export function withExtendedModifier<T extends ModifierProps>(
   return withInterceptedModifier(config, {
     platform,
     modifier,
-    async action({ modProps: { nextModifier, ...modProps }, ...config }) {
-      const results = await action({ ...config, modProps: modProps as T });
-      return nextModifier(results);
+    async action({ modInfo: { nextModifier, ...modInfo }, modResults, ...config }) {
+      const results = await action({ modInfo, modResults: modResults as T, ...config });
+      // TODO: Fix types so this check isn't required
+      if (!nextModifier) throw new Error('nextModifier is not defined');
+      return nextModifier(results as any);
     },
   });
 }
 
-export function withInterceptedModifier<T extends ModifierProps>(
+export function withInterceptedModifier<T>(
   config: ExportedConfig,
   {
     platform,
@@ -70,7 +66,7 @@ export function withInterceptedModifier<T extends ModifierProps>(
   }: {
     platform: ModifierPlatform;
     modifier: string;
-    action: Modifier<T & { nextModifier: Modifier<T> }, T>;
+    action: Modifier<T, T>;
   }
 ): ExportedConfig {
   if (!config.modifiers) {
@@ -83,9 +79,9 @@ export function withInterceptedModifier<T extends ModifierProps>(
   const modifierPlugin: Modifier<T> =
     (config.modifiers[platform] as Record<string, any>)[modifier] ?? (config => config);
 
-  const extendedModifier: Modifier<T> = async ({ modProps, ...config }) => {
+  const extendedModifier: Modifier<T> = async ({ modInfo, ...config }) => {
     // console.log(`-[mod]-> ${platform}.${modifier}`);
-    return action({ ...config, modProps: { ...modProps, nextModifier: modifierPlugin } });
+    return action({ ...config, modInfo: { ...modInfo, nextModifier: modifierPlugin } });
   };
 
   (config.modifiers[platform] as any)[modifier] = extendedModifier;

@@ -24,7 +24,7 @@ export const withBundleIdentifier: ConfigPlugin<{ bundleIdentifier?: string }> =
       bundleId,
       '`bundleIdentifier` must be defined in the app config (`expo.ios.bundleIdentifier`) or passed to the plugin `withBundleIdentifier`.'
     );
-    await setBundleIdentifierForPbxproj(config.modProps.projectRoot, bundleId!);
+    await setBundleIdentifierForPbxproj(config.modInfo.projectRoot, bundleId!);
     return config;
   });
 };

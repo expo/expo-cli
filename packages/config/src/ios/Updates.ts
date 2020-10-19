@@ -50,7 +50,7 @@ export const withUpdates = (
   { expoUsername }: { expoUsername: string | null }
 ) => {
   return withExpoPlist(config, config => {
-    config.modProps.data = setUpdatesConfig(config, config.modProps.data, expoUsername);
+    config.modResults = setUpdatesConfig(config, config.modResults, expoUsername);
     return config;
   });
 };

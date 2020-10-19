@@ -7,8 +7,8 @@ import { withXcodeProject } from '../plugins/ios-plugins';
 
 export const withDeviceFamily: ConfigPlugin = config => {
   return withXcodeProject(config, async config => {
-    config.modProps.data = await setDeviceFamily(config, {
-      project: config.modProps.data,
+    config.modResults = await setDeviceFamily(config, {
+      project: config.modResults,
     });
     return config;
   });

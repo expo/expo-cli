@@ -5,12 +5,7 @@ import { readFile, writeFile } from 'fs-extra';
 import path from 'path';
 import { XcodeProject } from 'xcode';
 
-import {
-  ConfigPlugin,
-  ExportedConfig,
-  ExportedConfigWithProps,
-  ModifierProps,
-} from '../Plugin.types';
+import { ConfigPlugin, ExportedConfig, ExportedConfigWithProps } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { InfoPlist } from '../ios/IosConfig.types';
@@ -48,13 +43,13 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   const { iosProjectDirectory, supportingDirectory } = getIOSPaths(projectRoot, config);
 
   // Append a rule to supply Info.plist data to modifiers on `modifiers.ios.infoPlist`
-  config = withInterceptedModifier<ModifierProps<InfoPlist>>(config, {
+  config = withInterceptedModifier<InfoPlist>(config, {
     platform: 'ios',
     modifier: 'infoPlist',
-    async action({ modProps: { nextModifier, ...modProps }, ...config }) {
-      let results: ExportedConfigWithProps<ModifierProps<JSONObject>> = {
+    async action({ modInfo: { nextModifier, ...modInfo }, ...config }) {
+      let results: ExportedConfigWithProps<JSONObject> = {
         ...config,
-        modProps,
+        modInfo,
       };
 
       // Apply all of the Info.plist values to the expo.ios.infoPlist object
@@ -73,16 +68,14 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
         ...(data || {}),
         ...config.ios.infoPlist,
       };
-
-      results = await nextModifier({
+      // TODO: Fix type
+      results = await nextModifier!({
         ...config,
-        modProps: {
-          ...modProps,
-          data: config.ios.infoPlist as InfoPlist,
-        },
+        modInfo,
+        modResults: config.ios.infoPlist as InfoPlist,
       });
-      resolveModifierResults(results, modProps.platform, modProps.modifierName);
-      data = results.modProps.data;
+      resolveModifierResults(results, modInfo.platform, modInfo.modifierName);
+      data = results.modResults;
 
       await writeFile(filePath, plist.build(data));
 
@@ -91,30 +84,29 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   });
 
   // Append a rule to supply Expo.plist data to modifiers on `modifiers.ios.expoPlist`
-  config = withInterceptedModifier<ModifierProps<JSONObject>>(config, {
+  config = withInterceptedModifier<JSONObject>(config, {
     platform: 'ios',
     modifier: 'expoPlist',
-    async action({ modProps: { nextModifier, ...modProps }, ...config }) {
-      let results: ExportedConfigWithProps<ModifierProps<JSONObject>> = {
+    async action({ modInfo: { nextModifier, ...modInfo }, ...config }) {
+      let results: ExportedConfigWithProps<JSONObject> = {
         ...config,
-        modProps,
+        modInfo,
       };
 
       try {
         const filePath = path.resolve(supportingDirectory, 'Expo.plist');
-        let data = plist.parse(await readFile(filePath, 'utf8'));
+        let modResults = plist.parse(await readFile(filePath, 'utf8'));
 
-        results = await nextModifier({
+        // TODO: Fix type
+        results = await nextModifier!({
           ...config,
-          modProps: {
-            ...modProps,
-            data,
-          },
+          modResults,
+          modInfo,
         });
-        resolveModifierResults(results, modProps.platform, modProps.modifierName);
-        data = results.modProps.data;
+        resolveModifierResults(results, modInfo.platform, modInfo.modifierName);
+        modResults = results.modResults;
 
-        await writeFile(filePath, plist.build(data));
+        await writeFile(filePath, plist.build(modResults));
       } catch (error) {
         addWarningIOS(
           'updates',
@@ -127,20 +119,19 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   });
 
   // Append a rule to supply .xcodeproj data to modifiers on `modifiers.ios.xcodeproj`
-  config = withInterceptedModifier<ModifierProps<XcodeProject>>(config, {
+  config = withInterceptedModifier<XcodeProject>(config, {
     platform: 'ios',
     modifier: 'xcodeproj',
-    async action({ modProps: { nextModifier, ...modProps }, ...config }) {
-      const data = getPbxproj(projectRoot);
-      const results = await nextModifier({
+    async action({ modInfo: { nextModifier, ...modInfo }, ...config }) {
+      const modResults = getPbxproj(projectRoot);
+      // TODO: Fix type
+      const results = await nextModifier!({
         ...config,
-        modProps: {
-          ...modProps,
-          data,
-        },
+        modResults,
+        modInfo,
       });
-      resolveModifierResults(results, modProps.platform, modProps.modifierName);
-      const resultData = results.modProps.data;
+      resolveModifierResults(results, modInfo.platform, modInfo.modifierName);
+      const resultData = results.modResults;
       await writeFile(resultData.filepath, resultData.writeSync());
       return results;
     },
@@ -153,15 +144,15 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
 
 const withEntitlementsBaseModifier: ConfigPlugin = config => {
   // Append a rule to supply .entitlements data to modifiers on `modifiers.ios.entitlements`
-  return withInterceptedModifier<ModifierProps<JSONObject>>(config, {
+  return withInterceptedModifier<JSONObject>(config, {
     platform: 'ios',
     modifier: 'entitlements',
-    async action({ modProps: { nextModifier, ...modProps }, ...config }) {
-      const entitlementsPath = getEntitlementsPath(modProps.projectRoot);
+    async action({ modInfo: { nextModifier, ...modInfo }, ...config }) {
+      const entitlementsPath = getEntitlementsPath(modInfo.projectRoot);
 
-      let results: ExportedConfigWithProps<ModifierProps<JSONObject>> = {
+      let results: ExportedConfigWithProps<JSONObject> = {
         ...config,
-        modProps,
+        modInfo,
       };
 
       try {
@@ -180,15 +171,14 @@ const withEntitlementsBaseModifier: ConfigPlugin = config => {
           ...config.ios.entitlements,
         };
 
-        results = await nextModifier({
+        // TODO: Fix type
+        results = await nextModifier!({
           ...config,
-          modProps: {
-            ...modProps,
-            data: config.ios.entitlements as JSONObject,
-          },
+          modInfo,
+          modResults: config.ios.entitlements as JSONObject,
         });
-        resolveModifierResults(results, modProps.platform, modProps.modifierName);
-        await writeFile(entitlementsPath, plist.build(results.modProps.data));
+        resolveModifierResults(results, modInfo.platform, modInfo.modifierName);
+        await writeFile(entitlementsPath, plist.build(results.modResults));
       } catch (error) {
         addWarningIOS('entitlements', `${entitlementsPath} configuration could not be applied.`);
       }

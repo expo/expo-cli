@@ -15,9 +15,9 @@ type ExpoConfigLocales = NonNullable<ExpoConfig['locales']>;
 
 export const withLocales: ConfigPlugin = config => {
   return withXcodeProject(config, async config => {
-    config.modProps.data = await setLocalesAsync(config, {
-      projectRoot: config.modProps.projectRoot,
-      project: config.modProps.data,
+    config.modResults = await setLocalesAsync(config, {
+      projectRoot: config.modInfo.projectRoot,
+      project: config.modResults,
     });
     return config;
   });

@@ -48,9 +48,9 @@ describe(compileModifiersAsync, () => {
         ios: {
           async infoPlist(config) {
             // Store the incoming value
-            internalValue = config.modProps.data.CFBundleDevelopmentRegion;
+            internalValue = config.modResults.CFBundleDevelopmentRegion;
             // Modify the data
-            config.modProps.data.CFBundleDevelopmentRegion =
+            config.modResults.CFBundleDevelopmentRegion =
               'CFBundleDevelopmentRegion-crazy-random-value';
             return config;
           },

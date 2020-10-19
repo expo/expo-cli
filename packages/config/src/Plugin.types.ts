@@ -8,7 +8,7 @@ type OptionalPromise<T> = Promise<T> | T;
 
 type Plist = JSONObject;
 
-export interface ModifierProps<Data = unknown> {
+export interface ModifierProps<T = any> {
   /**
    * Project root directory for the universal app.
    */
@@ -35,10 +35,8 @@ export interface ModifierProps<Data = unknown> {
    */
   readonly projectName?: string;
 
-  /**
-   * The Object representation of a complex file type.
-   */
-  data: Data;
+  // nextModifier: Modifier<T>
+  nextModifier?: Modifier<T>;
 }
 
 // TODO: Migrate ProjectConfig to using expo instead if exp
@@ -46,26 +44,30 @@ export interface ExportedConfig extends ExpoConfig {
   modifiers?: ModifierConfig | null;
 }
 
-export interface ExportedConfigWithProps<Props = any> extends ExpoConfig {
-  modProps: Props;
+export interface ExportedConfigWithProps<Data = any> extends ExpoConfig {
+  /**
+   * The Object representation of a complex file type.
+   */
+  modResults: Data;
+  modInfo: ModifierProps<Data>;
 }
 
 export type ConfigPlugin<Props = any> = (config: ExpoConfig, props: Props) => ExpoConfig;
 
 export type Modifier<
-  Props extends ModifierProps = ModifierProps,
+  Props = any,
   // Return value is the same as the props unless specified otherwise
-  Results extends ModifierProps = Props
+  Results = Props
 > = (config: ExportedConfigWithProps<Props>) => OptionalPromise<ExportedConfigWithProps<Results>>;
 
 export interface ModifierConfig {
   // android?: {
   // };
   ios?: {
-    infoPlist?: Modifier<ModifierProps<InfoPlist>>;
-    entitlements?: Modifier<ModifierProps<Plist>>;
-    expoPlist?: Modifier<ModifierProps<Plist>>;
-    xcodeproj?: Modifier<ModifierProps<XcodeProject>>;
+    infoPlist?: Modifier<InfoPlist>;
+    entitlements?: Modifier<Plist>;
+    expoPlist?: Modifier<Plist>;
+    xcodeproj?: Modifier<XcodeProject>;
   };
 }
 
