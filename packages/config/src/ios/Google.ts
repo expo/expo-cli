@@ -15,7 +15,7 @@ export const withGoogle = createInfoPlistPlugin(setGoogleConfig);
 export const withGoogleServicesFile: ConfigPlugin = config => {
   return withXcodeProject(config, config => {
     config.modResults = setGoogleServicesFile(config, {
-      projectRoot: config.modInfo.projectRoot,
+      projectRoot: config.modRequest.projectRoot,
       project: config.modResults,
     });
     return config;

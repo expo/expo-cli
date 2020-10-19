@@ -35,7 +35,7 @@ export async function evalModifiersAsync(
       const projectName = platformName === 'ios' ? getProjectName(props.projectRoot) : undefined;
 
       for (const [modifierName, modifier] of entries) {
-        const modInfo = {
+        const modRequest = {
           ...props,
           projectName,
           platformProjectRoot,
@@ -45,7 +45,7 @@ export async function evalModifiersAsync(
         const results = await (modifier as Modifier)({
           ...config,
           modResults: null,
-          modInfo,
+          modRequest,
         });
 
         // Sanity check to help locate non compliant modifiers.
@@ -53,7 +53,7 @@ export async function evalModifiersAsync(
         // @ts-ignore: data is added for modifications
         delete config.modResults;
         // @ts-ignore: info is added for modifications
-        delete config.modInfo;
+        delete config.modRequest;
       }
     }
   }

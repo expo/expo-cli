@@ -49,7 +49,7 @@ export interface ExportedConfigWithProps<Data = any> extends ExpoConfig {
    * The Object representation of a complex file type.
    */
   modResults: Data;
-  modInfo: ModifierProps<Data>;
+  modRequest: ModifierProps<Data>;
 }
 
 export type ConfigPlugin<Props = any> = (config: ExpoConfig, props: Props) => ExpoConfig;

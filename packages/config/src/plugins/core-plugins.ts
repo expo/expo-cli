@@ -48,8 +48,8 @@ export function withExtendedModifier<T>(
   return withInterceptedModifier(config, {
     platform,
     modifier,
-    async action({ modInfo: { nextModifier, ...modInfo }, modResults, ...config }) {
-      const results = await action({ modInfo, modResults: modResults as T, ...config });
+    async action({ modRequest: { nextModifier, ...modRequest }, modResults, ...config }) {
+      const results = await action({ modRequest, modResults: modResults as T, ...config });
       // TODO: Fix types so this check isn't required
       if (!nextModifier) throw new Error('nextModifier is not defined');
       return nextModifier(results as any);
@@ -79,9 +79,9 @@ export function withInterceptedModifier<T>(
   const modifierPlugin: Modifier<T> =
     (config.modifiers[platform] as Record<string, any>)[modifier] ?? (config => config);
 
-  const extendedModifier: Modifier<T> = async ({ modInfo, ...config }) => {
+  const extendedModifier: Modifier<T> = async ({ modRequest, ...config }) => {
     // console.log(`-[mod]-> ${platform}.${modifier}`);
-    return action({ ...config, modInfo: { ...modInfo, nextModifier: modifierPlugin } });
+    return action({ ...config, modRequest: { ...modRequest, nextModifier: modifierPlugin } });
   };
 
   (config.modifiers[platform] as any)[modifier] = extendedModifier;
