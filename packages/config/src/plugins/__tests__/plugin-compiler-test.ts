@@ -45,7 +45,6 @@ describe(compileModifiersAsync, () => {
       modifiers: {
         ios: {
           async infoPlist(config) {
-            console.log('INFO: ', config.props);
             // Store the incoming value
             internalValue = config.props.data.CFBundleDevelopmentRegion;
             // Modify the data
