@@ -59,16 +59,14 @@ export type Modifier<
   Results extends ModifierProps = Props
 > = (config: ExportedConfigWithProps<Props>) => OptionalPromise<ExportedConfigWithProps<Results>>;
 
-type IOSModifier<T> = Modifier<ModifierProps<T>>;
-
 export interface ModifierConfig {
   // android?: {
   // };
   ios?: {
-    infoPlist?: IOSModifier<InfoPlist>;
-    entitlements?: IOSModifier<Plist>;
-    expoPlist?: IOSModifier<Plist>;
-    xcodeproj?: IOSModifier<XcodeProject>;
+    infoPlist?: Modifier<ModifierProps<InfoPlist>>;
+    entitlements?: Modifier<ModifierProps<Plist>>;
+    expoPlist?: Modifier<ModifierProps<Plist>>;
+    xcodeproj?: Modifier<ModifierProps<XcodeProject>>;
   };
 }
 

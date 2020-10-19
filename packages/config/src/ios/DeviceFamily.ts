@@ -2,6 +2,7 @@ import { XcodeProject } from 'xcode';
 
 import { ExpoConfig } from '../Config.types';
 import { ConfigPlugin } from '../Plugin.types';
+import { addWarningIOS } from '../WarningAggregator';
 import { withXcodeProject } from '../plugins/ios-plugins';
 
 export const withDeviceFamily: ConfigPlugin = config => {
@@ -24,6 +25,13 @@ export function getIsTabletOnly(config: ExpoConfig): boolean {
 export function getDeviceFamilies(config: ExpoConfig): number[] {
   const supportsTablet = getSupportsTablet(config);
   const isTabletOnly = getIsTabletOnly(config);
+
+  if (isTabletOnly && config.ios?.supportsTablet === false) {
+    addWarningIOS(
+      'device-family',
+      `Found contradictory values: \`{ ios: { isTabletOnly: true, supportsTablet: false } }\`. Using \`{ isTabletOnly: true }\`.`
+    );
+  }
 
   // 1 is iPhone, 2 is iPad
   if (isTabletOnly) {

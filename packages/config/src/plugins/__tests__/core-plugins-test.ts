@@ -1,5 +1,6 @@
 import { ConfigPlugin, ExportedConfig } from '../../Plugin.types';
 import { withExtendedModifier, withPlugins } from '../core-plugins';
+import { evalModifiersAsync } from '../modifier-compiler';
 
 describe(withPlugins, () => {
   it('compiles plugins in the correct order', () => {
@@ -33,7 +34,7 @@ describe(withExtendedModifier, () => {
 
     // Apply modifier
     let config = withExtendedModifier<any>(exportedConfig, {
-      platform: 'ios',
+      platform: 'android',
       modifier: 'custom',
       action(props) {
         // Capitalize app name
@@ -43,7 +44,7 @@ describe(withExtendedModifier, () => {
     });
 
     // Compile plugins generically
-    config = await compileModifiersAsync(config);
+    config = await evalModifiersAsync(config, { projectRoot: '/' });
 
     // App config should have been modified
     expect(config.expo).toStrictEqual({
@@ -52,23 +53,8 @@ describe(withExtendedModifier, () => {
     });
 
     // Plugins should all be functions
-    expect(Object.values(config.modifiers.ios).every(value => typeof value === 'function')).toBe(
-      true
-    );
+    expect(
+      Object.values(config.modifiers.android).every(value => typeof value === 'function')
+    ).toBe(true);
   });
 });
-
-/**
- * A generic plugin compiler.
- *
- * @param config
- */
-async function compileModifiersAsync(config: ExportedConfig): Promise<ExportedConfig> {
-  // TODO: Use actual compiler
-  for (const platform of Object.values(config.modifiers)) {
-    for (const plugin of Object.values(platform)) {
-      config = await (plugin as any)(config);
-    }
-  }
-  return config;
-}

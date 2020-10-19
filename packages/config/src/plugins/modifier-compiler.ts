@@ -35,24 +35,28 @@ export async function evalModifiersAsync(
   for (const [platformName, platform] of Object.entries(
     config.modifiers ?? ({} as ModifierConfig)
   )) {
-    const platformProjectRoot = path.join(props.projectRoot, platformName);
-    const projectName = platformName === 'ios' ? getProjectName(props.projectRoot) : undefined;
+    const entries = Object.entries(platform);
+    if (entries.length) {
+      const platformProjectRoot = path.join(props.projectRoot, platformName);
+      const projectName = platformName === 'ios' ? getProjectName(props.projectRoot) : undefined;
 
-    for (const [modifierName, modifier] of Object.entries(platform)) {
-      const results = await (modifier as Modifier<ModifierProps>)({
-        ...config,
-        props: {
+      for (const [modifierName, modifier] of entries) {
+        const evalProps = {
           ...props,
           projectName,
           platformProjectRoot,
           platform: platformName as ModifierPlatform,
           modifierName,
           data: null,
-        },
-      });
+        };
+        const results = await (modifier as Modifier<ModifierProps>)({
+          ...config,
+          props: evalProps,
+        });
 
-      // Sanity check to help locate non compliant modifiers.
-      config = resolveModifierResults(results, platformName, modifierName);
+        // Sanity check to help locate non compliant modifiers.
+        config = resolveModifierResults(results, platformName, modifierName);
+      }
     }
   }
   return config;
