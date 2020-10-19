@@ -25,6 +25,10 @@ export const withPlugins: ConfigPlugin<AppliedConfigPlugin[]> = (
   config,
   plugins
 ): ExportedConfig => {
+  // If a user passed a config without the expo object, then expand it.
+  if (config && !config.expo) {
+    config = { expo: config } as any;
+  }
   return plugins.reduce((prev, curr) => {
     const [plugins, args] = ensureArray(curr);
     return plugins(prev, args);

@@ -25,6 +25,9 @@ describe(withPlugins, () => {
       ])
     ).toStrictEqual({ expo: { extra: ['alpha', 'beta', 'charlie', 'beta', 'delta'] } });
   });
+  it('fixes the expo config object', () => {
+    expect(withPlugins({ name: 'hey' } as any, [])).toStrictEqual({ expo: { name: 'hey' } });
+  });
 });
 
 describe(withExtendedModifier, () => {
