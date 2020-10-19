@@ -260,7 +260,7 @@ describe(withExpoIOSPlugins, () => {
 
     expect(after['ios/ReactNativeProject/Info.plist']).toMatch(/com.bacon.todo/);
     expect(after['ios/ReactNativeProject/Supporting/en.lproj/InfoPlist.strings']).toMatch(
-      /foo = \"uhh bar\"/
+      /foo = "uhh bar"/
     );
     expect(after['ios/ReactNativeProject/GoogleService-Info.plist']).toBe('noop');
   });
