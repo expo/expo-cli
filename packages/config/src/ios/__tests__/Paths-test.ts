@@ -24,7 +24,7 @@ describe(getXcodeProjectPath, () => {
         'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
-        ),
+        ) as string,
         'ios/Podfile': 'content',
         'ios/TestPod.podspec': 'noop',
         'ios/testproject/AppDelegate.m': '',
@@ -38,11 +38,11 @@ describe(getXcodeProjectPath, () => {
         'ios/otherproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
-        ),
+        ) as string,
         'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
-        ),
+        ) as string,
         'ios/testproject/AppDelegate.m': '',
       },
       '/multiple'
@@ -77,7 +77,7 @@ describe(getAppDelegate, () => {
         'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
-        ),
+        ) as string,
         'ios/Podfile': 'content',
         'ios/TestPod.podspec': 'noop',
         'ios/testproject/AppDelegate.m': '',
@@ -91,7 +91,7 @@ describe(getAppDelegate, () => {
         'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
-        ),
+        ) as string,
         'ios/Podfile': 'content',
         'ios/TestPod.podspec': 'noop',
         'ios/testproject/AppDelegate.swift': '',
@@ -104,7 +104,7 @@ describe(getAppDelegate, () => {
         'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
-        ),
+        ) as string,
         'ios/Podfile': 'content',
         'ios/TestPod.podspec': 'noop',
       },
@@ -116,7 +116,7 @@ describe(getAppDelegate, () => {
         'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
-        ),
+        ) as string,
         'ios/Podfile': 'content',
         'ios/TestPod.podspec': 'noop',
         'ios/testproject/AppDelegate.swift': '',
