@@ -24,6 +24,7 @@ export interface AndroidManagedBuildProfile {
   workflow: Workflow.Managed;
   credentialsSource: CredentialsSource;
   buildType?: 'apk' | 'app-bundle';
+  releaseChannel?: undefined;
 }
 
 export interface AndroidGenericBuildProfile {
@@ -32,12 +33,14 @@ export interface AndroidGenericBuildProfile {
   gradleCommand?: string;
   artifactPath?: string;
   withoutCredentials?: boolean;
+  releaseChannel?: string;
 }
 
 export interface iOSManagedBuildProfile {
   workflow: Workflow.Managed;
   credentialsSource: CredentialsSource;
   buildType?: 'archive' | 'simulator';
+  releaseChannel?: undefined;
 }
 
 export interface iOSGenericBuildProfile {
@@ -45,6 +48,7 @@ export interface iOSGenericBuildProfile {
   credentialsSource: CredentialsSource;
   scheme?: string;
   artifactPath?: string;
+  releaseChannel?: string;
 }
 
 export type AndroidBuildProfile = AndroidManagedBuildProfile | AndroidGenericBuildProfile;
@@ -88,6 +92,7 @@ const AndroidGenericSchema = Joi.object({
   credentialsSource: Joi.string().valid('local', 'remote', 'auto').default('auto'),
   gradleCommand: Joi.string(),
   artifactPath: Joi.string(),
+  releaseChannel: Joi.string(),
   withoutCredentials: Joi.boolean(),
 });
 
@@ -101,6 +106,7 @@ const iOSGenericSchema = Joi.object({
   workflow: Joi.string().valid('generic').required(),
   credentialsSource: Joi.string().valid('local', 'remote', 'auto').default('auto'),
   scheme: Joi.string(),
+  releaseChannel: Joi.string(),
   artifactPath: Joi.string(),
 });
 

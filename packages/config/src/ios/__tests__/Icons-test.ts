@@ -2,6 +2,7 @@ import { fs, vol } from 'memfs';
 import * as path from 'path';
 
 import { getIcons, ICON_CONTENTS, setIconsAsync } from '../Icons';
+import { getDirFromFS } from './utils/getDirFromFS';
 const actualFs = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
@@ -17,20 +18,6 @@ afterAll(() => {
   jest.unmock('@expo/image-utils');
   jest.unmock('fs');
 });
-
-function getDirFromFS(fsJSON: Record<string, string | null>, rootDir: string) {
-  return Object.entries(fsJSON)
-    .filter(([path, value]) => value !== null && path.startsWith(rootDir))
-    .reduce<Record<string, string>>(
-      (acc, [path, fileContent]) => ({
-        ...acc,
-        [path.substring(rootDir.length).startsWith('/')
-          ? path.substring(rootDir.length + 1)
-          : path.substring(rootDir.length)]: fileContent,
-      }),
-      {}
-    );
-}
 
 describe('iOS Icons', () => {
   it(`returns null if no icon values provided`, () => {

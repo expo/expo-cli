@@ -35,11 +35,11 @@ export function getX509Certificate(p12: forge.pkcs12.Pkcs12Pfx): forge.pki.Certi
 export function getX509CertificateByFriendlyName(
   p12: forge.pkcs12.Pkcs12Pfx,
   friendlyName: string
-): forge.pki.Certificate {
+): forge.pki.Certificate | null {
   const certBagType = forge.pki.oids.certBag;
   const bags = p12.getBags({ friendlyName, bagType: certBagType }).friendlyName;
   if (!bags || bags.length === 0) {
-    throw new Error(`PKCS12: No certificates found under friendlyName: ${friendlyName}`);
+    return null;
   }
   const certificate = bags[0].cert;
   if (!certificate) {

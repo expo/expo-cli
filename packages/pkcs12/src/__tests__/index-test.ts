@@ -105,9 +105,10 @@ describe('reading PKCS#12 files', () => {
     const certificate = getX509CertificateByFriendlyName(p12, alias);
     expect(certificate).toMatchSnapshot();
   });
-  it('fails to read X.509 certificates from conventional p12 files using #getX509CertificateByFriendlyName', async () => {
+  it('returns null if there are no X.509 certificates under friendly name for p12 keystores using #getX509CertificateByFriendlyName', async () => {
     const { base64EncodedP12, password } = conventionalP12;
     const p12 = parsePKCS12(base64EncodedP12, password);
-    expect(() => getX509CertificateByFriendlyName(p12, 'ruhroh')).toThrow();
+    const certificate = getX509CertificateByFriendlyName(p12, 'no keystore here :(');
+    expect(certificate).toBe(null);
   });
 });

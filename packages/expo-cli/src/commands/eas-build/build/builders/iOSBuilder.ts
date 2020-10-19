@@ -192,6 +192,7 @@ class iOSBuilder implements Builder<Platform.iOS> {
       type: BuildType.Generic,
       scheme: this.scheme,
       artifactPath: buildProfile.artifactPath,
+      releaseChannel: buildProfile.releaseChannel,
       projectRootDirectory,
     };
   }

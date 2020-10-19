@@ -66,6 +66,7 @@ async function collectMetadata<T extends Platform>(
     credentialsSource,
     sdkVersion: ctx.commandCtx.exp.sdkVersion,
     trackingContext: ctx.trackingCtx,
+    releaseChannel: ctx.buildProfile.releaseChannel,
   };
 }
 
