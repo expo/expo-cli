@@ -11,7 +11,7 @@ import { withDangerousModifier } from '../plugins/ios-plugins';
 
 export const withSplashScreen: ConfigPlugin = config => {
   return withDangerousModifier(config, async config => {
-    await setSplashScreenAsync(config.expo, config.props.projectRoot);
+    await setSplashScreenAsync(config, config.modProps.projectRoot);
     return config;
   });
 };

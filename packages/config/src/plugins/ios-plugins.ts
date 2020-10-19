@@ -18,7 +18,7 @@ export function createInfoPlistPlugin(
 ): ConfigPlugin<MutateInfoPlistAction> {
   return config =>
     withInfoPlist(config, async config => {
-      config.props.data = await action(config.expo, config.props.data);
+      config.modProps.data = await action(config, config.modProps.data);
       return config;
     });
 }
@@ -36,10 +36,10 @@ export const withInfoPlist: ConfigPlugin<Modifier<ModifierProps<InfoPlist>>> = (
     modifier: 'infoPlist',
     async action(config) {
       config = await action(config);
-      if (!config.expo.ios) {
-        config.expo.ios = {};
+      if (!config.ios) {
+        config.ios = {};
       }
-      config.expo.ios.infoPlist = config.props.data;
+      config.ios.infoPlist = config.modProps.data;
       return config;
     },
   });
@@ -61,10 +61,10 @@ export const withEntitlementsPlist: ConfigPlugin<Modifier<ModifierProps<JSONObje
     modifier: 'entitlements',
     async action(config) {
       config = await action(config);
-      if (!config.expo.ios) {
-        config.expo.ios = {};
+      if (!config.ios) {
+        config.ios = {};
       }
-      config.expo.ios.entitlements = config.props.data;
+      config.ios.entitlements = config.modProps.data;
       return config;
     },
   });

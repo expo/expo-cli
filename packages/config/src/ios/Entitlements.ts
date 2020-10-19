@@ -20,14 +20,14 @@ type Plist = Record<string, any>;
 
 export const withAccessesContactNotes: ConfigPlugin = config => {
   return withEntitlementsPlist(config, config => {
-    config.props.data = setAccessesContactNotes(config.expo, config.props.data);
+    config.modProps.data = setAccessesContactNotes(config, config.modProps.data);
     return config;
   });
 };
 
 export const withAssociatedDomains: ConfigPlugin = config => {
   return withEntitlementsPlist(config, config => {
-    config.props.data = setAssociatedDomains(config.expo, config.props.data);
+    config.modProps.data = setAssociatedDomains(config, config.modProps.data);
     return config;
   });
 };
@@ -37,14 +37,14 @@ export const withICloudEntitlement: ConfigPlugin<{ appleTeamId: string }> = (
   { appleTeamId }
 ) => {
   return withEntitlementsPlist(config, config => {
-    config.props.data = setICloudEntitlement(config.expo, config.props.data, appleTeamId);
+    config.modProps.data = setICloudEntitlement(config, config.modProps.data, appleTeamId);
     return config;
   });
 };
 
 export const withAppleSignInEntitlement: ConfigPlugin = config => {
   return withEntitlementsPlist(config, config => {
-    config.props.data = setAppleSignInEntitlement(config.expo, config.props.data);
+    config.modProps.data = setAppleSignInEntitlement(config, config.modProps.data);
     return config;
   });
 };

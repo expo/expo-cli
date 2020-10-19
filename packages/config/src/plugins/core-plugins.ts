@@ -25,10 +25,6 @@ export const withPlugins: ConfigPlugin<AppliedConfigPlugin[]> = (
   config,
   plugins
 ): ExportedConfig => {
-  // If a user passed a config without the expo object, then expand it.
-  if (config && !config.expo) {
-    config = { expo: config } as any;
-  }
   return plugins.reduce((prev, curr) => {
     const [plugins, args] = ensureArray(curr);
     return plugins(prev, args);
@@ -58,8 +54,8 @@ export function withExtendedModifier<T extends ModifierProps>(
   return withInterceptedModifier(config, {
     platform,
     modifier,
-    async action({ props: { nextModifier, ...props }, ...config }) {
-      const results = await action({ ...config, props: props as T });
+    async action({ modProps: { nextModifier, ...modProps }, ...config }) {
+      const results = await action({ ...config, modProps: modProps as T });
       return nextModifier(results);
     },
   });
@@ -87,9 +83,9 @@ export function withInterceptedModifier<T extends ModifierProps>(
   const modifierPlugin: Modifier<T> =
     (config.modifiers[platform] as Record<string, any>)[modifier] ?? (config => config);
 
-  const extendedModifier: Modifier<T> = async ({ props, ...config }) => {
+  const extendedModifier: Modifier<T> = async ({ modProps, ...config }) => {
     // console.log(`-[mod]-> ${platform}.${modifier}`);
-    return action({ ...config, props: { ...props, nextModifier: modifierPlugin } });
+    return action({ ...config, modProps: { ...modProps, nextModifier: modifierPlugin } });
   };
 
   (config.modifiers[platform] as any)[modifier] = extendedModifier;

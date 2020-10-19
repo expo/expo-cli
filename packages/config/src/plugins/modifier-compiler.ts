@@ -51,13 +51,18 @@ export async function evalModifiersAsync(
         };
         const results = await (modifier as Modifier<ModifierProps>)({
           ...config,
-          props: evalProps,
+          modProps: evalProps,
         });
 
         // Sanity check to help locate non compliant modifiers.
         config = resolveModifierResults(results, platformName, modifierName);
+        // @ts-ignore: props are added for modifications
+        delete config.modProps;
       }
     }
   }
+  // // Delete modifiers after they've been compiled.
+  // delete config.modifiers;
+
   return config;
 }

@@ -11,7 +11,7 @@ import { getProjectName } from './utils/Xcodeproj';
 
 export const withIcons: ConfigPlugin = config => {
   return withDangerousModifier(config, async config => {
-    await setIconsAsync(config.expo, config.props.projectRoot);
+    await setIconsAsync(config, config.modProps.projectRoot);
     return config;
   });
 };

@@ -24,14 +24,15 @@ describe(compileModifiersAsync, () => {
   it('compiles with no modifiers', async () => {
     // A basic plugin exported from an app.json
     const exportedConfig: ExportedConfig = {
-      expo: { name: 'app', slug: '' },
+      name: 'app',
+      slug: '',
       modifiers: null,
     };
     const config = await compileModifiersAsync(exportedConfig, projectRoot);
 
-    expect(config.expo.name).toBe('app');
-    expect(config.expo.ios.infoPlist).toBeDefined();
-    expect(config.expo.ios.entitlements).toBeDefined();
+    expect(config.name).toBe('app');
+    expect(config.ios.infoPlist).toBeDefined();
+    expect(config.ios.entitlements).toBeDefined();
     expect(Object.values(config.modifiers.ios).every(value => typeof value === 'function')).toBe(
       true
     );
@@ -41,14 +42,15 @@ describe(compileModifiersAsync, () => {
     // A basic plugin exported from an app.json
     let internalValue = '';
     const exportedConfig: ExportedConfig = {
-      expo: { name: 'app', slug: '' },
+      name: 'app',
+      slug: '',
       modifiers: {
         ios: {
           async infoPlist(config) {
             // Store the incoming value
-            internalValue = config.props.data.CFBundleDevelopmentRegion;
+            internalValue = config.modProps.data.CFBundleDevelopmentRegion;
             // Modify the data
-            config.props.data.CFBundleDevelopmentRegion =
+            config.modProps.data.CFBundleDevelopmentRegion =
               'CFBundleDevelopmentRegion-crazy-random-value';
             return config;
           },
@@ -62,9 +64,9 @@ describe(compileModifiersAsync, () => {
     expect(internalValue).toBe('en');
 
     // App config should have been modified
-    expect(config.expo.name).toBe('app');
-    expect(config.expo.ios.infoPlist).toBeDefined();
-    expect(config.expo.ios.entitlements).toBeDefined();
+    expect(config.name).toBe('app');
+    expect(config.ios.infoPlist).toBeDefined();
+    expect(config.ios.entitlements).toBeDefined();
 
     // Plugins should all be functions
     expect(Object.values(config.modifiers.ios).every(value => typeof value === 'function')).toBe(
@@ -80,7 +82,8 @@ describe(compileModifiersAsync, () => {
     it(`throws on invalid modifier results (${invalid})`, async () => {
       // A basic plugin exported from an app.json
       const exportedConfig: ExportedConfig = {
-        expo: { name: 'app', slug: '' },
+        name: 'app',
+        slug: '',
         modifiers: {
           ios: {
             async infoPlist(config) {

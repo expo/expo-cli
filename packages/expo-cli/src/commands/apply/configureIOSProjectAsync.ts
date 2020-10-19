@@ -1,4 +1,4 @@
-import { getConfig } from '@expo/config';
+import { getConfigWithModifiers } from '@expo/config';
 import { ExportedConfig } from '@expo/config/build/Plugin.types';
 import { withExpoIOSPlugins } from '@expo/config/build/plugins/expo-plugins';
 import { compileModifiersAsync } from '@expo/config/build/plugins/modifier-compiler';
@@ -11,7 +11,7 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
   const expoUsername = await UserManager.getCurrentUsernameAsync();
 
-  let config = getExportedConfig(projectRoot);
+  let { exp: config } = getConfigWithModifiers(projectRoot, { skipSDKVersionRequirement: true });
 
   // Add all built-in plugins
   config = withExpoIOSPlugins(config, {
@@ -21,9 +21,4 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
 
   // compile all plugins and modifiers
   await compileModifiersAsync(config, projectRoot);
-}
-
-function getExportedConfig(projectRoot: string): ExportedConfig {
-  const originalConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  return { expo: originalConfig.exp, modifiers: originalConfig.modifiers };
 }

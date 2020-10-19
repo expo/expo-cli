@@ -5,16 +5,16 @@ import { evalModifiersAsync } from '../modifier-compiler';
 describe(withPlugins, () => {
   it('compiles plugins in the correct order', () => {
     const pluginA: ConfigPlugin = config => {
-      config.expo.extra.push('alpha');
+      config.extra.push('alpha');
       return config;
     };
     const pluginB: ConfigPlugin = (config, props = 'charlie') => {
-      config.expo.extra.push('beta', props);
+      config.extra.push('beta', props);
       return config;
     };
 
     expect(
-      withPlugins({ expo: { extra: [] } } as any, [
+      withPlugins({ extra: [] } as any, [
         // Standard plugin
         pluginA,
         // Plugin with no properties
@@ -23,25 +23,23 @@ describe(withPlugins, () => {
         // Plugin with properties
         [pluginB, 'delta'],
       ])
-    ).toStrictEqual({ expo: { extra: ['alpha', 'beta', 'charlie', 'beta', 'delta'] } });
-  });
-  it('fixes the expo config object', () => {
-    expect(withPlugins({ name: 'hey' } as any, [])).toStrictEqual({ expo: { name: 'hey' } });
+    ).toStrictEqual({ extra: ['alpha', 'beta', 'charlie', 'beta', 'delta'] });
   });
 });
 
 describe(withExtendedModifier, () => {
   it('compiles modifiers', async () => {
     // A basic plugin exported from an app.json
-    const exportedConfig: ExportedConfig = { expo: { name: 'app', slug: '' }, modifiers: null };
+    const exportedConfig: ExportedConfig = { name: 'app', slug: '', modifiers: null };
 
     // Apply modifier
     let config = withExtendedModifier<any>(exportedConfig, {
+      // @ts-ignore: unsupported platform
       platform: 'android',
       modifier: 'custom',
       action(props) {
         // Capitalize app name
-        props.expo.name = (props.expo.name as string).toUpperCase();
+        props.name = (props.name as string).toUpperCase();
         return props;
       },
     });
@@ -49,15 +47,18 @@ describe(withExtendedModifier, () => {
     // Compile plugins generically
     config = await evalModifiersAsync(config, { projectRoot: '/' });
 
+    // Plugins should all be functions
+    expect(
+      // @ts-ignore: unsupported platform
+      Object.values(config.modifiers.android).every(value => typeof value === 'function')
+    ).toBe(true);
+
+    delete config.modifiers;
+
     // App config should have been modified
-    expect(config.expo).toStrictEqual({
+    expect(config).toStrictEqual({
       name: 'APP',
       slug: '',
     });
-
-    // Plugins should all be functions
-    expect(
-      Object.values(config.modifiers.android).every(value => typeof value === 'function')
-    ).toBe(true);
   });
 });

@@ -23,35 +23,23 @@ import { ExportedConfig, ModifierConfig } from './Plugin.types';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 
+type SplitConfigs = { expo: ExpoConfig; modifiers: ModifierConfig };
+
 /**
  * If a config has an `expo` object then that will be used as the config.
  * This method reduces out other top level values if an `expo` object exists.
  *
  * @param config Input config object to reduce
  */
-function reduceExpoObject(config?: any): ExportedConfig {
+function reduceExpoObject(config?: any): SplitConfigs {
   if (!config) return config === undefined ? null : config;
 
-  if (typeof config.expo === 'object') {
-    if (config.modifiers && typeof config.modifiers !== 'object') {
-      throw new Error(`modifiers object was defined in the config but it's not an object.`);
-    }
-    // TODO: We should warn users in the future that if there are more values than "expo", those values outside of "expo" will be omitted in favor of the "expo" object.
-    return {
-      expo: config.expo as ExpoConfig,
-      modifiers: (config.modifiers as ModifierConfig) ?? null,
-    };
-  }
-  if (config.modifiers != null) {
-    throw new Error(
-      `modifiers object must exist outside of the Expo config:\n${JSON.stringify(
-        { expo: {}, modifiers: {} },
-        null,
-        2
-      )}`
-    );
-  }
-  return { expo: config, modifiers: null };
+  const { modifiers, ...expo } = config.expo ?? config;
+
+  return {
+    expo,
+    modifiers,
+  };
 }
 
 /**
@@ -72,6 +60,16 @@ function getSupportedPlatforms(
     platforms.push('web');
   }
   return platforms;
+}
+
+export function getConfigWithModifiers(
+  projectRoot: string,
+  options?: GetConfigOptions
+): ProjectConfig {
+  const config = getConfig(projectRoot, options);
+  // Add the modifiers back to the object.
+  config.exp.modifiers = config.modifiers ?? null;
+  return config;
 }
 
 /**
@@ -112,7 +110,7 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
     jsonFileWithNodeModulesPath.expo
   );
 
-  function fillAndReturnConfig(config: ExportedConfig, dynamicConfigObjectType: string | null) {
+  function fillAndReturnConfig(config: SplitConfigs, dynamicConfigObjectType: string | null) {
     return {
       ...ensureConfigHasDefaultValues(
         projectRoot,
@@ -129,7 +127,7 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
   }
 
   // Fill in the static config
-  function getContextConfig(config: ExportedConfig) {
+  function getContextConfig(config: SplitConfigs) {
     return ensureConfigHasDefaultValues(projectRoot, config.expo, packageJson, true).exp;
   }
 
@@ -474,7 +472,7 @@ export async function writeConfigJsonAsync(
 
   return {
     exp,
-    modifiers: null,
+    modifiers: exp.modifiers ?? null,
     pkg,
     rootConfig,
     staticConfigPath,

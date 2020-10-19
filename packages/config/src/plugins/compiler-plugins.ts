@@ -29,7 +29,7 @@ export function resolveModifierResults(results: any, platformName: string, modif
   const ensuredResults = results;
 
   // Sanity check to help locate non compliant modifiers.
-  if (!ensuredResults?.expo || !ensuredResults?.modifiers) {
+  if (!ensuredResults || typeof ensuredResults !== 'object' || !ensuredResults?.modifiers) {
     throw new Error(
       `Modifier \`modifiers.${platformName}.${modifierName}\` evaluated to an object that is not a valid project config. Instead got: ${JSON.stringify(
         ensuredResults
@@ -45,44 +45,44 @@ function applyAndroidCoreModifiers(projectRoot: string, config: ExportedConfig):
 }
 
 function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): ExportedConfig {
-  const { iosProjectDirectory, supportingDirectory } = getIOSPaths(projectRoot, config.expo);
+  const { iosProjectDirectory, supportingDirectory } = getIOSPaths(projectRoot, config);
 
   // Append a rule to supply Info.plist data to modifiers on `modifiers.ios.infoPlist`
   config = withInterceptedModifier<ModifierProps<InfoPlist>>(config, {
     platform: 'ios',
     modifier: 'infoPlist',
-    async action({ props: { nextModifier, ...props }, ...config }) {
+    async action({ modProps: { nextModifier, ...modProps }, ...config }) {
       let results: ExportedConfigWithProps<ModifierProps<JSONObject>> = {
         ...config,
-        props,
+        modProps,
       };
 
       // Apply all of the Info.plist values to the expo.ios.infoPlist object
       // TODO: Remove this in favor of just overwriting the Info.plist with the Expo object. This will enable people to actually remove values.
-      if (!config.expo.ios) {
-        config.expo.ios = {};
+      if (!config.ios) {
+        config.ios = {};
       }
-      if (!config.expo.ios.infoPlist) {
-        config.expo.ios.infoPlist = {};
+      if (!config.ios.infoPlist) {
+        config.ios.infoPlist = {};
       }
 
       const filePath = path.resolve(iosProjectDirectory, 'Info.plist');
       let data = plist.parse(await readFile(filePath, 'utf8'));
 
-      config.expo.ios.infoPlist = {
+      config.ios.infoPlist = {
         ...(data || {}),
-        ...config.expo.ios.infoPlist,
+        ...config.ios.infoPlist,
       };
 
       results = await nextModifier({
         ...config,
-        props: {
-          ...props,
-          data: config.expo.ios.infoPlist as InfoPlist,
+        modProps: {
+          ...modProps,
+          data: config.ios.infoPlist as InfoPlist,
         },
       });
-      resolveModifierResults(results, props.platform, props.modifierName);
-      data = results.props.data;
+      resolveModifierResults(results, modProps.platform, modProps.modifierName);
+      data = results.modProps.data;
 
       await writeFile(filePath, plist.build(data));
 
@@ -94,10 +94,10 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   config = withInterceptedModifier<ModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'expoPlist',
-    async action({ props: { nextModifier, ...props }, ...config }) {
+    async action({ modProps: { nextModifier, ...modProps }, ...config }) {
       let results: ExportedConfigWithProps<ModifierProps<JSONObject>> = {
         ...config,
-        props,
+        modProps,
       };
 
       try {
@@ -106,13 +106,13 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
 
         results = await nextModifier({
           ...config,
-          props: {
-            ...props,
+          modProps: {
+            ...modProps,
             data,
           },
         });
-        resolveModifierResults(results, props.platform, props.modifierName);
-        data = results.props.data;
+        resolveModifierResults(results, modProps.platform, modProps.modifierName);
+        data = results.modProps.data;
 
         await writeFile(filePath, plist.build(data));
       } catch (error) {
@@ -130,17 +130,17 @@ function applyIOSCoreModifiers(projectRoot: string, config: ExportedConfig): Exp
   config = withInterceptedModifier<ModifierProps<XcodeProject>>(config, {
     platform: 'ios',
     modifier: 'xcodeproj',
-    async action({ props: { nextModifier, ...props }, ...config }) {
+    async action({ modProps: { nextModifier, ...modProps }, ...config }) {
       const data = getPbxproj(projectRoot);
       const results = await nextModifier({
         ...config,
-        props: {
-          ...props,
+        modProps: {
+          ...modProps,
           data,
         },
       });
-      resolveModifierResults(results, props.platform, props.modifierName);
-      const resultData = results.props.data;
+      resolveModifierResults(results, modProps.platform, modProps.modifierName);
+      const resultData = results.modProps.data;
       await writeFile(resultData.filepath, resultData.writeSync());
       return results;
     },
@@ -156,39 +156,39 @@ const withEntitlementsBaseModifier: ConfigPlugin = config => {
   return withInterceptedModifier<ModifierProps<JSONObject>>(config, {
     platform: 'ios',
     modifier: 'entitlements',
-    async action({ props: { nextModifier, ...props }, ...config }) {
-      const entitlementsPath = getEntitlementsPath(props.projectRoot);
+    async action({ modProps: { nextModifier, ...modProps }, ...config }) {
+      const entitlementsPath = getEntitlementsPath(modProps.projectRoot);
 
       let results: ExportedConfigWithProps<ModifierProps<JSONObject>> = {
         ...config,
-        props,
+        modProps,
       };
 
       try {
         const data = plist.parse(await readFile(entitlementsPath, 'utf8'));
         // Apply all of the .entitlements values to the expo.ios.entitlements object
         // TODO: Remove this in favor of just overwriting the .entitlements with the Expo object. This will enable people to actually remove values.
-        if (!config.expo.ios) {
-          config.expo.ios = {};
+        if (!config.ios) {
+          config.ios = {};
         }
-        if (!config.expo.ios.entitlements) {
-          config.expo.ios.entitlements = {};
+        if (!config.ios.entitlements) {
+          config.ios.entitlements = {};
         }
 
-        config.expo.ios.entitlements = {
+        config.ios.entitlements = {
           ...(data || {}),
-          ...config.expo.ios.entitlements,
+          ...config.ios.entitlements,
         };
 
         results = await nextModifier({
           ...config,
-          props: {
-            ...props,
-            data: config.expo.ios.entitlements as JSONObject,
+          modProps: {
+            ...modProps,
+            data: config.ios.entitlements as JSONObject,
           },
         });
-        resolveModifierResults(results, props.platform, props.modifierName);
-        await writeFile(entitlementsPath, plist.build(results.props.data));
+        resolveModifierResults(results, modProps.platform, modProps.modifierName);
+        await writeFile(entitlementsPath, plist.build(results.modProps.data));
       } catch (error) {
         addWarningIOS('entitlements', `${entitlementsPath} configuration could not be applied.`);
       }

@@ -29,13 +29,11 @@ afterAll(() => {
 describe(evalModifiersAsync, () => {
   it(`runs with no core modifiers`, async () => {
     let config: ExportedConfig = {
-      expo: {
-        name: 'app',
-        slug: '',
-      },
+      name: 'app',
+      slug: '',
     };
     config = await evalModifiersAsync(config, { projectRoot: '/' });
-    expect(config.expo.ios).toBeUndefined();
+    expect(config.ios).toBeUndefined();
   });
 });
 
@@ -68,11 +66,9 @@ describe(withExpoIOSPlugins, () => {
   // Ensure helpful error messages are thrown
   it(`fails to locate the project name in an invalid project`, async () => {
     const config = {
-      expo: {
-        name: 'app',
-        slug: '',
-        ios: {},
-      },
+      name: 'app',
+      slug: '',
+      ios: {},
     };
     await expect(compileModifiersAsync(config, '/invalid')).rejects.toThrow(
       'Could not locate a valid AppDelegate at root'
@@ -81,16 +77,14 @@ describe(withExpoIOSPlugins, () => {
 
   it('prefers named keys over info.plist overrides', async () => {
     let config: ExportedConfig = {
-      expo: {
-        name: 'app',
-        slug: '',
-        ios: {
-          config: {
-            usesNonExemptEncryption: false,
-          },
-          infoPlist: {
-            ITSAppUsesNonExemptEncryption: true,
-          },
+      name: 'app',
+      slug: '',
+      ios: {
+        config: {
+          usesNonExemptEncryption: false,
+        },
+        infoPlist: {
+          ITSAppUsesNonExemptEncryption: true,
         },
       },
     };
@@ -102,107 +96,106 @@ describe(withExpoIOSPlugins, () => {
     // Apply modifier
     config = await compileModifiersAsync(config, '/app');
     // This should be false because ios.config.usesNonExemptEncryption is used in favor of ios.infoPlist.ITSAppUsesNonExemptEncryption
-    expect(config.expo.ios?.infoPlist?.ITSAppUsesNonExemptEncryption).toBe(false);
+    expect(config.ios?.infoPlist?.ITSAppUsesNonExemptEncryption).toBe(false);
   });
 
   it('compiles modifiers', async () => {
     let config: ExportedConfig = {
-      expo: {
-        name: 'my cool app',
-        slug: 'mycoolapp',
-        description: 'my app is great because it uses expo',
-        // owner?: string;
-        // privacy?: 'public' | 'unlisted' | 'hidden';
-        // sdkVersion?: string;
-        // runtimeVersion?: string;
-        version: '1.0.0',
-        platforms: ['android', 'ios', 'web'],
-        githubUrl: 'https://github.com/expo/expo',
-        orientation: 'default',
-        userInterfaceStyle: 'dark',
-        backgroundColor: 'orange',
-        primaryColor: '#fff000',
-        // icon: './icons/icon.png',
-        notification: {
-          icon: './icons/notification-icon.png',
-          color: 'green',
-          iosDisplayInForeground: true,
-          androidMode: 'collapse',
-          androidCollapsedTitle: '#{unread_notifications} new interactions',
-        },
-        appKey: 'othermain',
-        androidStatusBar: {
-          barStyle: 'light-content',
-          backgroundColor: '#000FFF',
-          hidden: false,
-          translucent: true,
-        },
-        androidNavigationBar: {
-          visible: 'sticky-immersive',
-          barStyle: 'dark-content',
-
-          backgroundColor: '#ff0000',
-        },
-        developmentClient: {
-          silentLaunch: true,
-        },
-        scheme: 'my-app-redirect',
-        // entryPoint: './index.js',
-        // rnCliPath?: string;
-        packagerOpts: {
-          extraThing: true,
-        },
-        // ignoreNodeModulesValidation?: boolean;
-        // nodeModulesPath?: string;
-        updates: {
-          enabled: true,
-          checkAutomatically: 'ON_ERROR_RECOVERY',
-          fallbackToCacheTimeout: 650,
-        },
-        locales: {
-          en: './locales/en-US.json',
-          es: { foo: 'el bar' },
-        },
-        facebookAppId: '1234567890',
-        facebookAutoInitEnabled: true,
-        facebookAutoLogAppEventsEnabled: true,
-        facebookAdvertiserIDCollectionEnabled: true,
-        facebookDisplayName: 'my-fb-test-app',
-        facebookScheme: 'fb1234567890',
-        ios: {
-          // publishManifestPath: './ios-manifest'
-          publishBundlePath: './ios-dist',
-          bundleIdentifier: 'com.bacon.tester.expoapp',
-          buildNumber: '6.5.0',
-          backgroundColor: '#ff0000',
-          // icon: './icons/ios-icon.png',
-          merchantId: 'TEST_MERCHANT_ID',
-          appStoreUrl: 'https://itunes.apple.com/us/app/pillar-valley/id1336398804?ls=1&mt=8',
-          config: {
-            branch: {
-              apiKey: 'MY_BRANCH_KEY',
-            },
-            usesNonExemptEncryption: true,
-            googleMapsApiKey: 'TEST_googleMapsApiKey',
-            googleMobileAdsAppId: 'TEST_googleMobileAdsAppId',
-            googleMobileAdsAutoInit: true,
-            googleSignIn: {
-              reservedClientId: 'GOOGLE_SIGN_IN_CLIENT_ID',
-            },
-          },
-          googleServicesFile: './config/GoogleService-Info.plist',
-          supportsTablet: true,
-          isTabletOnly: false,
-          requireFullScreen: true,
-          userInterfaceStyle: 'automatic',
-          infoPlist: { bar: { val: ['foo'] } },
-          entitlements: { foo: 'bar' },
-          associatedDomains: ['applinks:https://pillarvalley.netlify.app'],
-          usesIcloudStorage: true,
-          usesAppleSignIn: true,
-          accessesContactNotes: true,
-        },
+      name: 'my cool app',
+      slug: 'mycoolapp',
+      description: 'my app is great because it uses expo',
+      // owner?: string;
+      // privacy?: 'public' | 'unlisted' | 'hidden';
+      // sdkVersion?: string;
+      // runtimeVersion?: string;
+      version: '1.0.0',
+      platforms: ['android', 'ios', 'web'],
+      githubUrl: 'https://github.com/expo/expo',
+      orientation: 'default',
+      userInterfaceStyle: 'dark',
+      backgroundColor: 'orange',
+      primaryColor: '#fff000',
+      // icon: './icons/icon.png',
+      notification: {
+        icon: './icons/notification-icon.png',
+        color: 'green',
+        iosDisplayInForeground: true,
+        androidMode: 'collapse',
+        androidCollapsedTitle: '#{unread_notifications} new interactions',
       },
+      appKey: 'othermain',
+      androidStatusBar: {
+        barStyle: 'light-content',
+        backgroundColor: '#000FFF',
+        hidden: false,
+        translucent: true,
+      },
+      androidNavigationBar: {
+        visible: 'sticky-immersive',
+        barStyle: 'dark-content',
+
+        backgroundColor: '#ff0000',
+      },
+      developmentClient: {
+        silentLaunch: true,
+      },
+      scheme: 'my-app-redirect',
+      // entryPoint: './index.js',
+      // rnCliPath?: string;
+      packagerOpts: {
+        extraThing: true,
+      },
+      // ignoreNodeModulesValidation?: boolean;
+      // nodeModulesPath?: string;
+      updates: {
+        enabled: true,
+        checkAutomatically: 'ON_ERROR_RECOVERY',
+        fallbackToCacheTimeout: 650,
+      },
+      locales: {
+        en: './locales/en-US.json',
+        es: { foo: 'el bar' },
+      },
+      facebookAppId: '1234567890',
+      facebookAutoInitEnabled: true,
+      facebookAutoLogAppEventsEnabled: true,
+      facebookAdvertiserIDCollectionEnabled: true,
+      facebookDisplayName: 'my-fb-test-app',
+      facebookScheme: 'fb1234567890',
+      ios: {
+        // publishManifestPath: './ios-manifest'
+        publishBundlePath: './ios-dist',
+        bundleIdentifier: 'com.bacon.tester.expoapp',
+        buildNumber: '6.5.0',
+        backgroundColor: '#ff0000',
+        // icon: './icons/ios-icon.png',
+        merchantId: 'TEST_MERCHANT_ID',
+        appStoreUrl: 'https://itunes.apple.com/us/app/pillar-valley/id1336398804?ls=1&mt=8',
+        config: {
+          branch: {
+            apiKey: 'MY_BRANCH_KEY',
+          },
+          usesNonExemptEncryption: true,
+          googleMapsApiKey: 'TEST_googleMapsApiKey',
+          googleMobileAdsAppId: 'TEST_googleMobileAdsAppId',
+          googleMobileAdsAutoInit: true,
+          googleSignIn: {
+            reservedClientId: 'GOOGLE_SIGN_IN_CLIENT_ID',
+          },
+        },
+        googleServicesFile: './config/GoogleService-Info.plist',
+        supportsTablet: true,
+        isTabletOnly: false,
+        requireFullScreen: true,
+        userInterfaceStyle: 'automatic',
+        infoPlist: { bar: { val: ['foo'] } },
+        entitlements: { foo: 'bar' },
+        associatedDomains: ['applinks:https://pillarvalley.netlify.app'],
+        usesIcloudStorage: true,
+        usesAppleSignIn: true,
+        accessesContactNotes: true,
+      },
+
       modifiers: null,
     };
 
@@ -215,26 +208,28 @@ describe(withExpoIOSPlugins, () => {
     config = await compileModifiersAsync(config, '/app');
 
     // App config should have been modified
-    expect(config.expo.name).toBe('my cool app');
-    expect(config.expo.ios.infoPlist).toBeDefined();
-    expect(config.expo.ios.entitlements).toBeDefined();
+    expect(config.name).toBe('my cool app');
+    expect(config.ios.infoPlist).toBeDefined();
+    expect(config.ios.entitlements).toBeDefined();
 
     // Google Sign In
     expect(
-      config.expo.ios?.infoPlist?.CFBundleURLTypes?.find(({ CFBundleURLSchemes }) =>
+      config.ios?.infoPlist?.CFBundleURLTypes?.find(({ CFBundleURLSchemes }) =>
         CFBundleURLSchemes.includes('GOOGLE_SIGN_IN_CLIENT_ID')
       )
     ).toBeDefined();
     // Branch
-    expect(config.expo.ios?.infoPlist?.branch_key?.live).toBe('MY_BRANCH_KEY');
-
-    // Shape
-    expect(config.expo).toMatchSnapshot();
+    expect(config.ios?.infoPlist?.branch_key?.live).toBe('MY_BRANCH_KEY');
 
     // Modifiers should all be functions
     expect(Object.values(config.modifiers.ios).every(value => typeof value === 'function')).toBe(
       true
     );
+
+    delete config.modifiers;
+
+    // Shape
+    expect(config).toMatchSnapshot();
 
     // Test the written files...
     const after = getDirFromFS(vol.toJSON(), projectRoot);

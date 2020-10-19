@@ -42,16 +42,15 @@ export interface ModifierProps<Data = unknown> {
 }
 
 // TODO: Migrate ProjectConfig to using expo instead if exp
-export interface ExportedConfig {
+export interface ExportedConfig extends ExpoConfig {
   modifiers?: ModifierConfig | null;
-  expo: ExpoConfig;
 }
 
-export interface ExportedConfigWithProps<Props = any> extends ExportedConfig {
-  props: Props;
+export interface ExportedConfigWithProps<Props = any> extends ExpoConfig {
+  modProps: Props;
 }
 
-export type ConfigPlugin<Props = any> = (config: ExportedConfig, props: Props) => ExportedConfig;
+export type ConfigPlugin<Props = any> = (config: ExpoConfig, props: Props) => ExpoConfig;
 
 export type Modifier<
   Props extends ModifierProps = ModifierProps,
