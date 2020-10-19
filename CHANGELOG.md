@@ -10,6 +10,40 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Mon, 19 Oct 2020 16:43:59 -0700](https://github.com/expo/expo-cli/commit/1062d0bba966500dba751a890938445ee195d919)
+
+### 🎉 New features
+
+- [cli] Add support for --latest flag in client:install:x ([#2804](https://github.com/expo/expo-cli/issues/2804))
+- [cli] Add `releaseChannel` field to the profile in `eas.json`
+- [config] Created AssetContents ([#2798](https://github.com/expo/expo-cli/issues/2798))
+- [config] disjointed features from plugins ios ([#2811](https://github.com/expo/expo-cli/issues/2811))
+- [pkcs12] return null if pkcs keystore has no cert under friendly name ([#2805](https://github.com/expo/expo-cli/issues/2805))
+- [pkcs12] amend readme with updated method names
+
+### 🐛 Bug fixes
+
+- [config] fix entitlements functionality ([#2797](https://github.com/expo/expo-cli/issues/2797))
+- [config] setFacebookConfig needs to be async function due to ensureFacebookActivityAsync
+- [cli] Use expo/plist instead of xdl IosPlist ([#2799](https://github.com/expo/expo-cli/issues/2799))
+- [cli] Fix custom Expo client build ([#2796](https://github.com/expo/expo-cli/issues/2796))
+
+### 📦 Packages updated
+
+- @expo/config@3.3.11
+- @expo/dev-server@0.1.36
+- @expo/dev-tools@0.13.54
+- @expo/electron-adapter@0.0.27
+- expo-cli@3.28.1
+- expo-optimize@0.1.58
+- @expo/metro-config@0.1.36
+- @expo/next-adapter@2.1.41
+- @expo/pkcs12@0.0.2
+- expo-pwa@0.0.46
+- uri-scheme@1.0.42
+- @expo/webpack-config@0.12.40
+- @expo/xdl@58.0.15
+
 ## [Wed, 14 Oct 2020 14:27:23 -0700](https://github.com/expo/expo-cli/commit/0fde837f6024c2cd53e089df894063b3f4b38ca2)
 
 ### 🎉 New features
