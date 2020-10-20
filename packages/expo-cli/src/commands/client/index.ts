@@ -291,7 +291,7 @@ export default function (program: Command) {
     .description('Install the Expo client for iOS on the simulator')
     .option(
       '--latest',
-      'Ignore the local project version and install the latest available version of Expo client'
+      `Install the latest version of Expo client, ignoring the current project version.`
     )
     .helpGroup('client')
     .asyncAction(async (command: Command) => {
@@ -405,7 +405,7 @@ export default function (program: Command) {
     .description('Install the Expo client for Android on a connected device or emulator')
     .option(
       '--latest',
-      'Ignore the local project version and install the latest available version of Expo client'
+      `Install the latest version of Expo client, ignore the current project version.`
     )
     .helpGroup('client')
     .asyncAction(async (command: Command) => {
