@@ -21,6 +21,7 @@ import {
 } from '../utils/git';
 
 interface BuildOptions {
+  platform?: BuildCommandPlatform;
   skipCredentialsCheck?: boolean; // noop for now
   parent?: {
     nonInteractive: boolean;
@@ -28,7 +29,17 @@ interface BuildOptions {
 }
 
 async function initAction(projectDir: string, options: BuildOptions): Promise<void> {
+  const buildCommandPlatforms = Object.values(BuildCommandPlatform);
+  const { platform: requestedPlatform = BuildCommandPlatform.ALL } = options;
   const nonInteractive = options.parent?.nonInteractive === true;
+
+  if (!buildCommandPlatforms.includes(requestedPlatform)) {
+    throw new Error(
+      `-p/--platform needs to be one of the valid platforms: ${buildCommandPlatforms
+        .map(p => log.chalk.bold(p))
+        .join(', ')}`
+    );
+  }
 
   const spinner = ora('Checking for eas.json file');
 
@@ -80,7 +91,7 @@ async function initAction(projectDir: string, options: BuildOptions): Promise<vo
   }
 
   const commandCtx = await createCommandContextAsync({
-    requestedPlatform: BuildCommandPlatform.ALL,
+    requestedPlatform,
     profile: 'release',
     projectDir,
     trackingCtx: {},
@@ -94,27 +105,37 @@ async function initAction(projectDir: string, options: BuildOptions): Promise<vo
     commandCtx.requestedPlatform
   ).readAsync(commandCtx.profile);
 
-  const androidCtx = createBuilderContext<Platform.Android>({
-    commandCtx,
-    platform: Platform.Android,
-    easConfig,
-  });
+  if (
+    requestedPlatform === BuildCommandPlatform.ALL ||
+    requestedPlatform === BuildCommandPlatform.ANDROID
+  ) {
+    const androidCtx = createBuilderContext<Platform.Android>({
+      commandCtx,
+      platform: Platform.Android,
+      easConfig,
+    });
 
-  const androidBuilder = new AndroidBuilder(androidCtx);
+    const androidBuilder = new AndroidBuilder(androidCtx);
 
-  await androidBuilder.ensureCredentialsAsync();
-  await androidBuilder.configureProjectAsync();
+    await androidBuilder.ensureCredentialsAsync();
+    await androidBuilder.configureProjectAsync();
+  }
 
-  const iosCtx = createBuilderContext<Platform.iOS>({
-    commandCtx,
-    platform: Platform.iOS,
-    easConfig,
-  });
+  if (
+    requestedPlatform === BuildCommandPlatform.ALL ||
+    requestedPlatform === BuildCommandPlatform.IOS
+  ) {
+    const iosCtx = createBuilderContext<Platform.iOS>({
+      commandCtx,
+      platform: Platform.iOS,
+      easConfig,
+    });
 
-  const iosBuilder = new iOSBuilder(iosCtx);
+    const iosBuilder = new iOSBuilder(iosCtx);
 
-  await iosBuilder.ensureCredentialsAsync();
-  await iosBuilder.configureProjectAsync();
+    await iosBuilder.ensureCredentialsAsync();
+    await iosBuilder.configureProjectAsync();
+  }
 }
 
 export default initAction;
