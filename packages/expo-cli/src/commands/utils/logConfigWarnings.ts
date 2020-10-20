@@ -42,17 +42,17 @@ function getSpacer(text: string) {
 }
 
 /**
- * Warn users if they attempt to publish in a bare project that may also be
- * using Expo client and does not If the developer does not have the Expo
- * package installed then we do not need to warn them as there is no way that
- * it will run in Expo client in development even. We should revisit this with
- * dev client, and possibly also by excluding SDK version for bare
- * expo-updates usage in the future (and then surfacing this as an error in
- * the Expo client app instead)
+ * Warn users if they attempt to export or publish in a bare project that may also
+ * be using the Expo client and does not if the developer does not have the Expo
+ * package installed (without it, there is no way the project will run in the Expo
+ * client. We should revisit this with dev client, and possibly also by excluding SDK
+ * version for bare expo-updates usage in the future (and then surfacing this
+ * as an error in the Expo client app instead)
  *
  * Related: https://github.com/expo/expo/issues/9517
  *
- * @param pkg package.json
+ * @param pkg         package.json
+ * @param commandName name of the command to warn about
  */
 export function logBareWorkflowWarnings(pkg: PackageJSONConfig, commandName: string) {
   const hasExpoInstalled = pkg.dependencies?.['expo'];
