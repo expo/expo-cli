@@ -2,6 +2,7 @@ import { vol } from 'memfs';
 
 import log from '../../log';
 import { isInvalidReleaseChannel, logExpoUpdatesWarnings, logOptimizeWarnings } from '../publish';
+import { logBareWorkflowWarnings } from '../utils/logConfigWarnings';
 
 jest.mock('fs');
 jest.mock('../../log', () => ({
@@ -41,6 +42,18 @@ describe('warnings', () => {
   it(`warns about expo-updates not working in ExpoKit`, () => {
     (log.nestedWarn as jest.Mock).mockReset();
     logExpoUpdatesWarnings({ dependencies: { 'expo-updates': '1.0.0', expokit: '1.0.0' } });
+    expect(log.nestedWarn).toBeCalledTimes(1);
+  });
+
+  it(`skips bare workflow warnings if expo is not installed in a bare project`, () => {
+    (log.nestedWarn as jest.Mock).mockReset();
+    logBareWorkflowWarnings({}, 'publish');
+    expect(log.nestedWarn).toBeCalledTimes(0);
+  });
+
+  it(`warns about publishing in a bare workflow project when expo is installed`, () => {
+    (log.nestedWarn as jest.Mock).mockReset();
+    logBareWorkflowWarnings({ dependencies: { expo: '1.0.0' } }, 'publish');
     expect(log.nestedWarn).toBeCalledTimes(1);
   });
 
