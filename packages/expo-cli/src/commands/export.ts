@@ -1,4 +1,4 @@
-import { ProjectTarget } from '@expo/config';
+import { getDefaultTarget, getPackageJson, ProjectTarget } from '@expo/config';
 import { Project, UrlUtils } from '@expo/xdl';
 import program, { Command } from 'commander';
 import crypto from 'crypto';
@@ -11,6 +11,7 @@ import log from '../log';
 import prompt from '../prompts';
 import * as CreateApp from './utils/CreateApp';
 import { downloadAndDecompressAsync } from './utils/Tar';
+import { logBareWorkflowWarnings } from './utils/logConfigWarnings';
 
 type Options = {
   outputDir: string;
@@ -162,6 +163,14 @@ function collect<T>(val: T, memo: T[]): T[] {
 export async function action(projectDir: string, options: Options) {
   // Ensure URL
   options.publicUrl = await ensurePublicUrlAsync(options.publicUrl, options.dev);
+
+  // Warn about publishing in bare without a target
+  const target = options.target ?? getDefaultTarget(projectDir);
+  if (!options.target && target === 'bare') {
+    log.newLine();
+    logBareWorkflowWarnings(getPackageJson(projectDir), 'export');
+  }
+  options.target = target;
 
   // Ensure the output directory is created
   const outputPath = path.resolve(projectDir, options.outputDir);

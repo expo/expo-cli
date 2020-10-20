@@ -1,4 +1,5 @@
 import { WarningAggregator } from '@expo/config-plugins';
+import { PackageJSONConfig } from '@expo/config';
 import chalk from 'chalk';
 
 import log from '../../log';
@@ -38,4 +39,36 @@ function getSpacer(text: string) {
   } else {
     return '. ';
   }
+}
+
+/**
+ * Warn users if they attempt to publish in a bare project that may also be
+ * using Expo client and does not If the developer does not have the Expo
+ * package installed then we do not need to warn them as there is no way that
+ * it will run in Expo client in development even. We should revisit this with
+ * dev client, and possibly also by excluding SDK version for bare
+ * expo-updates usage in the future (and then surfacing this as an error in
+ * the Expo client app instead)
+ *
+ * Related: https://github.com/expo/expo/issues/9517
+ *
+ * @param pkg package.json
+ */
+export function logBareWorkflowWarnings(pkg: PackageJSONConfig, commandName: string) {
+  const hasExpoInstalled = pkg.dependencies?.['expo'];
+  if (!hasExpoInstalled) {
+    return;
+  }
+  log.nestedWarn(
+    formatNamedWarning(
+      'Workflow target',
+      `This is a ${chalk.bold(
+        'bare workflow'
+      )} project. The resulting ${commandName} will only run properly inside of a native build of your project. If you want to ${commandName} a version of your app that will run in the Expo client, please use ${chalk.bold(
+        `expo ${commandName} --target managed`
+      )}. You can skip this warning by explicitly running ${chalk.bold(
+        `expo ${commandName} --target bare`
+      )} in the future.`
+    )
+  );
 }
