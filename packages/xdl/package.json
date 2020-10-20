@@ -66,6 +66,7 @@
     "internal-ip": "4.3.0",
     "invariant": "2.2.4",
     "is-reachable": "^4.0.0",
+    "json-schema-deref-sync": "^0.13.0",
     "latest-version": "5.1.0",
     "lodash": "4.17.15",
     "md5hex": "1.0.0",

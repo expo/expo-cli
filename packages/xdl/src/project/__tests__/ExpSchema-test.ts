@@ -1,7 +1,20 @@
 import { getAssetSchemasAsync } from '../ExpSchema';
 
-it(`asset schemas return an array of strings`, async () => {
-  const schemas = await getAssetSchemasAsync('38.0.0');
-  expect(schemas.every(field => typeof field === 'string')).toBe(true);
-  expect(schemas.includes('icon')).toBe(true);
+describe(`getAssetSchemasAsync return array of strings including some known values`, () => {
+  test.each([
+    [
+      '38.0.0',
+      ['icon', 'notification.icon', 'splash.image', 'ios.splash.xib', 'android.splash.xxhdpi'],
+    ],
+    [
+      'UNVERSIONED',
+      ['icon', 'notification.icon', 'splash.image', 'ios.splash.xib', 'android.splash.xxhdpi'],
+    ],
+  ])('for SDK %s', async (sdkVersion, expectedAssetsPaths) => {
+    const schemas = await getAssetSchemasAsync(sdkVersion);
+    expect(schemas.every(field => typeof field === 'string')).toBe(true);
+    for (const el of expectedAssetsPaths) {
+      expect(schemas).toContain(el);
+    }
+  });
 });
