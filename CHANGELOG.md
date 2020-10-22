@@ -10,6 +10,27 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 22 Oct 2020 15:31:16 -0700](https://github.com/expo/expo-cli/commit/8def7d96509daf819754b0b7af09e1f3159896c1)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [cli] Support --platform option for eas:build:init
+- [cli] Update --latest flag help message
+- [cli] Validate the credentials for android keystore
+
+### 🐛 Bug fixes
+
+- [cli][xdl] Pass owner through to findReusableBuildAsync
+- [xdl] Rename debug to expo raw log to avoid collision ([#2818](https://github.com/expo/expo-cli/issues/2818))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.55
+- expo-cli@3.28.2
+- @expo/xdl@58.0.16
+
 ## [Mon, 19 Oct 2020 16:43:59 -0700](https://github.com/expo/expo-cli/commit/1062d0bba966500dba751a890938445ee195d919)
 
 ### 🎉 New features
