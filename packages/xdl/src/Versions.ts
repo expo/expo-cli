@@ -144,13 +144,19 @@ export async function newestReleasedSdkVersionAsync(): Promise<{
   version: string;
   data: SDKVersion | null;
 }> {
+  const betaOptInEnabled = getenv.boolish('EXPO_BETA', false);
   const sdkVersions = await sdkVersionsAsync();
+
   let result = null;
   let highestMajorVersion = '0.0.0';
+
   for (const [version, data] of Object.entries(sdkVersions)) {
+    const hasReleaseNotes = !!data.releaseNoteUrl;
+    const isBeta = !!data.beta;
+
     if (
       semver.major(version) > semver.major(highestMajorVersion) &&
-      (data.releaseNoteUrl || (data.beta && getenv.boolish('EXPO_BETA', false)))
+      (hasReleaseNotes || (isBeta && betaOptInEnabled))
     ) {
       highestMajorVersion = version;
       result = data;
