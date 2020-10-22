@@ -1,5 +1,6 @@
 import { ExpoConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
+import getenv from 'getenv';
 import pickBy from 'lodash/pickBy';
 import path from 'path';
 import semver from 'semver';
@@ -27,6 +28,7 @@ export type SDKVersion = {
   androidClientUrl?: string;
   androidClientVersion?: string;
   relatedPackages?: { [name: string]: string };
+  beta?: boolean;
 };
 
 export type SDKVersions = { [version: string]: SDKVersion };
@@ -142,11 +144,20 @@ export async function newestReleasedSdkVersionAsync(): Promise<{
   version: string;
   data: SDKVersion | null;
 }> {
+  const betaOptInEnabled = getenv.boolish('EXPO_BETA', false);
   const sdkVersions = await sdkVersionsAsync();
+
   let result = null;
   let highestMajorVersion = '0.0.0';
+
   for (const [version, data] of Object.entries(sdkVersions)) {
-    if (semver.major(version) > semver.major(highestMajorVersion) && data.releaseNoteUrl) {
+    const hasReleaseNotes = !!data.releaseNoteUrl;
+    const isBeta = !!data.beta;
+
+    if (
+      semver.major(version) > semver.major(highestMajorVersion) &&
+      (hasReleaseNotes || (isBeta && betaOptInEnabled))
+    ) {
       highestMajorVersion = version;
       result = data;
     }
@@ -157,6 +168,9 @@ export async function newestReleasedSdkVersionAsync(): Promise<{
   };
 }
 
+/**
+ * Be careful when using this! It can include unreleased and beta SDK versions.
+ */
 export async function newestSdkVersionAsync(): Promise<{
   version: string;
   data: SDKVersion | null;
