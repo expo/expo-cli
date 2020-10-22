@@ -14,7 +14,7 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(projectRoot, bundleIdentifier);
 
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  const username = await UserManager.getCurrentUsernameAsync();
+  const username = process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
 
   // Configure the Xcode project
   await modifyPbxprojAsync(projectRoot, async project => {

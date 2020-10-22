@@ -28,7 +28,7 @@ project.afterEvaluate {
     def credentialsJson = rootProject.file("../credentials.json");
 
     if (credentialsJson.exists()) {
-      if (config.storeFile) {
+      if (config.storeFile && System.getenv("EAS_BUILD") != "true") {
         println("Path to release keystore file is already set, ignoring 'credentials.json'")
       } else {
         try {
