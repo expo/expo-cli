@@ -1705,7 +1705,6 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
     const port = info.port;
     ProjectUtils.logDebug(projectRoot, 'expo', `Local server listening at http://${host}:${port}`);
   });
-  await Exp.saveRecentExpRootAsync(projectRoot);
 }
 
 async function stopExpoServerAsync(projectRoot: string): Promise<void> {
