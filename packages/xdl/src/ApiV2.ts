@@ -9,8 +9,11 @@ import QueryString from 'querystring';
 
 import Config from './Config';
 import * as ConnectionStatus from './ConnectionStatus';
+import Logger from './Logger';
 
 export const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
+
+const debug = Logger.debug('api:v2');
 
 // These aren't constants because some commands switch between staging and prod
 function _rootBaseUrl() {
@@ -231,11 +234,14 @@ export default class ApiV2Client {
     try {
       response = await axios.request(reqOptions);
       result = response.data;
+      debug.info({ res: response });
     } catch (e) {
       const maybeErrorData = idx(e, _ => _.response.data.errors.length);
       if (maybeErrorData) {
         result = e.response.data;
+        debug.warn({ res: e.response });
       } else {
+        debug.error({ res: e.response });
         throw e;
       }
     }

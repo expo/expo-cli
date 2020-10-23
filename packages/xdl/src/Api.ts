@@ -9,6 +9,7 @@ import { MAX_CONTENT_LENGTH } from './ApiV2';
 import Config from './Config';
 import * as ConnectionStatus from './ConnectionStatus';
 import * as Extract from './Extract';
+import Logger from './Logger';
 import * as Session from './Session';
 import UserManager from './User';
 import UserSettings from './UserSettings';
@@ -16,6 +17,7 @@ import XDLError from './XDLError';
 
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;
+const debug = Logger.debug('api:v1');
 
 let exponentClient = 'xdl';
 
@@ -106,6 +108,7 @@ async function _callMethodAsync(
 
   const response = await axios.request(options);
   if (!response) {
+    debug.error({ req: options });
     throw new Error('Unexpected error: Request failed.');
   }
   const responseBody = response.data;
@@ -114,6 +117,7 @@ async function _callMethodAsync(
     try {
       responseObj = JSON.parse(responseBody);
     } catch (e) {
+      debug.error({ req: options, res: response });
       throw new XDLError(
         'INVALID_JSON',
         'Invalid JSON returned from API: ' + e + '. Response body: ' + responseBody
@@ -123,6 +127,7 @@ async function _callMethodAsync(
     responseObj = responseBody;
   }
   if (responseObj.err) {
+    debug.error({ req: options, res: response });
     const err = new ApiError(
       responseObj.code || 'API_ERROR',
       'API Response Error: ' + responseObj.err
@@ -130,6 +135,7 @@ async function _callMethodAsync(
     err.serverError = responseObj.err;
     throw err;
   } else {
+    debug.info({ res: response });
     return returnEntireResponse ? response : responseObj;
   }
 }
@@ -168,6 +174,7 @@ async function _downloadAsync(
     cancelToken: token,
   };
   const response = await axios(url, config);
+  debug.info({ res: response });
   await new Promise(resolve => {
     const totalDownloadSize = response.data.headers['content-length'];
     let downloadProgress = 0;

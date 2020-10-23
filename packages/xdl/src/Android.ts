@@ -42,6 +42,8 @@ const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
 const EMULATOR_MAX_WAIT_TIMEOUT = 60 * 1000 * 3;
 
+const debug = Logger.debug('android');
+
 function whichEmulator(): string {
   if (process.env.ANDROID_HOME) {
     return `${process.env.ANDROID_HOME}/emulator/emulator`;
@@ -296,8 +298,10 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
 
   try {
     const result = await spawnAsync(adb, args);
+    debug.info({ spawn: { args, result, command: adb } });
     return result.stdout;
   } catch (e) {
+    debug.error({ spawn: { args, result: e, command: adb } });
     let errorMessage = (e.stderr || e.stdout || e.message).trim();
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
