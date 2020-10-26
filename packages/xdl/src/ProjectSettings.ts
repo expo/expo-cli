@@ -131,6 +131,30 @@ export function dotExpoProjectDirectory(projectRoot: string): string {
   }
 
   fs.mkdirpSync(dirPath);
+  fs.writeFileSync(
+    path.resolve(dirPath, 'README.txt'),
+    `
+> Why do I have a folder named ".expo" in my project?
+
+The ".expo" folder is created when an Expo project is started using
+"expo start" command.
+
+> What does the "packager-info.json" file contain?
+
+The "packager-info.json" file contains ports numbers and process PID that are
+used to serve the application to the mobile device/simulator.
+
+> What does the "settings.json" file contain?
+
+The "settings.json" file contains the server configuration that is used to
+serve the application manifest.
+
+> Should I commit the ".expo" folder?
+
+No, you should not share the ".expo" folder.
+Upon creation, it will be automatically added to your ".gitignore" file.
+`
+  );
   return dirPath;
 }
 

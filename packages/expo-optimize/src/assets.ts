@@ -3,7 +3,7 @@ import { isAvailableAsync, sharpAsync } from '@expo/image-utils';
 import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
 import crypto from 'crypto';
-import { ensureDirSync, move, readFileSync, statSync, unlinkSync } from 'fs-extra';
+import { ensureDirSync, move, readFileSync, statSync, unlinkSync, writeFileSync } from 'fs-extra';
 import { sync as globSync } from 'glob';
 import { basename, join, parse, relative } from 'path';
 import prettyBytes from 'pretty-bytes';
@@ -18,6 +18,22 @@ async function readAssetJsonAsync(
   const dirPath = join(projectDir, '.expo-shared');
 
   ensureDirSync(dirPath);
+  writeFileSync(
+    join(dirPath, 'README.txt'),
+    `
+> Why do I have a folder named ".expo-shared" in my project?
+
+The ".expo-shared" folder is created when
+
+> What does the "assets.json" file contain?
+
+The "assets.json" file describes the assets that are optimized for further use.
+
+> Should I commit the ".expo-shared" folder?
+
+Yes, you should share the ".expo-shared" folder with your collaborators.
+`
+  );
 
   const assetJson = new JsonFile<AssetOptimizationState>(join(dirPath, 'assets.json'));
   if (!fileExists(assetJson.file)) {
