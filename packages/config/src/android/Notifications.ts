@@ -47,32 +47,26 @@ export async function setNotificationIconAsync(config: ExpoConfig, projectRoot: 
 export async function applyAndroidManifestChanges(config: ExpoConfig, manifestDocument: Document) {
   const icon = getNotificationIcon(config);
   const color = getNotificationColor(config);
-  let mainApplication = getMainApplication(manifestDocument);
+  const mainApplication = getMainApplication(manifestDocument);
   if (icon) {
-    mainApplication = addMetaDataItemToMainApplication(
+    addMetaDataItemToMainApplication(
       mainApplication,
       META_DATA_NOTIFICATION_ICON,
       NOTIFICATION_ICON_RESOURCE,
       'resource'
     );
   } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      META_DATA_NOTIFICATION_ICON
-    );
+    removeMetaDataItemFromMainApplication(mainApplication, META_DATA_NOTIFICATION_ICON);
   }
   if (color) {
-    mainApplication = addMetaDataItemToMainApplication(
+    addMetaDataItemToMainApplication(
       mainApplication,
       META_DATA_NOTIFICATION_ICON_COLOR,
       NOTIFICATION_ICON_COLOR_RESOURCE,
       'resource'
     );
   } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      META_DATA_NOTIFICATION_ICON_COLOR
-    );
+    removeMetaDataItemFromMainApplication(mainApplication, META_DATA_NOTIFICATION_ICON_COLOR);
   }
   return manifestDocument;
 }
