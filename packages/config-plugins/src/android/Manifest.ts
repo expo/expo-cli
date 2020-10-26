@@ -180,18 +180,19 @@ export function getMainActivity(androidManifest: AndroidManifest): ManifestActiv
 export function addMetaDataItemToMainApplication(
   mainApplication: ManifestApplication,
   itemName: string,
-  itemValue: string
+  itemValue: string,
+  itemType: 'resource' | 'value' = 'value'
 ): ManifestApplication {
   let existingMetaDataItem;
   const newItem = {
-    $: prefixAndroidKeys({ name: itemName, value: itemValue }),
+    $: prefixAndroidKeys({ name: itemName, [itemType]: itemValue }),
   } as ManifestMetaData;
   if (mainApplication['meta-data']) {
     existingMetaDataItem = mainApplication['meta-data'].filter(
       (e: any) => e.$['android:name'] === itemName
     );
     if (existingMetaDataItem.length) {
-      existingMetaDataItem[0].$['android:value'] = itemValue;
+      existingMetaDataItem[0].$[itemType === 'value' ? 'android:value' : 'android:resource'] = itemValue;
     } else {
       mainApplication['meta-data'].push(newItem);
     }
