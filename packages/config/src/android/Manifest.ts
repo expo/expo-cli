@@ -209,3 +209,18 @@ export function removeMetaDataItemFromMainApplication(mainApplication: any, item
   }
   return mainApplication;
 }
+
+export function getMainApplicationMetaDataValue(
+  androidManifest: Document,
+  name: string
+): string | undefined {
+  const mainApplication = getMainApplication(androidManifest);
+
+  if (mainApplication?.hasOwnProperty('meta-data')) {
+    const item = mainApplication?.['meta-data']?.find((e: any) => e.$['android:name'] === name);
+
+    return item?.$['android:value'];
+  }
+
+  return undefined;
+}
