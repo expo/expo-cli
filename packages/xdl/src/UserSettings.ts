@@ -49,15 +49,6 @@ function userSettingsJsonFile(): JsonFile<UserSettingsData> {
   });
 }
 
-function recentExpsJsonFile() {
-  // TODO(ville): Add array support to JsonFile.
-  // @ts-ignore JsonFile doesn't officially support arrays, only objects
-  return new JsonFile<string[]>(path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json'), {
-    jsonParseErrorDefault: [],
-    cantReadFileDefault: [],
-  });
-}
-
 var mkdirped = false;
 function dotExpoHomeDirectory() {
   let dirPath;
@@ -115,7 +106,6 @@ function accessToken(): string | null {
 
 const UserSettings = Object.assign(userSettingsJsonFile(), {
   dotExpoHomeDirectory,
-  recentExpsJsonFile,
   userSettingsFile,
   userSettingsJsonFile,
   accessToken,
