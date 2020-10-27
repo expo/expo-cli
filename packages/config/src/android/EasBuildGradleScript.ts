@@ -17,18 +17,27 @@ android {
   }
 }
 
-project.afterEvaluate {
-  android.signingConfigs.release { config ->
-    def debug = gradle.startParameter.taskNames.any { it.toLowerCase().contains('debug') }
+def isEasBuildConfigured = false
 
-    if (debug) {
-      return
-    }
+tasks.whenTaskAdded {
+  def debug = gradle.startParameter.taskNames.any { it.toLowerCase().contains('debug') }
 
+  if (debug) {
+    return
+  }
+
+  // We only need to configure EAS build once
+  if (isEasBuildConfigured) {
+    return
+  }
+
+  isEasBuildConfigured = true;
+
+  android.signingConfigs.release {
     def credentialsJson = rootProject.file("../credentials.json");
 
     if (credentialsJson.exists()) {
-      if (config.storeFile && System.getenv("EAS_BUILD") != "true") {
+      if (storeFile && System.getenv("EAS_BUILD") != "true") {
         println("Path to release keystore file is already set, ignoring 'credentials.json'")
       } else {
         try {
@@ -47,14 +56,14 @@ project.afterEvaluate {
         }
       }
     } else {
-      if (config.storeFile == null) {
+      if (storeFile == null) {
         println("Couldn't find a 'credentials.json' file, skipping release keystore configuration")
       }
     }
   }
 
-  android.buildTypes.release { config ->
-    config.signingConfig android.signingConfigs.release
+  android.buildTypes.release {
+    signingConfig android.signingConfigs.release
   }
 }
 `;
