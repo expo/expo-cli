@@ -1056,6 +1056,15 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     isRunningInUserContext
   );
 
+  // Notifications
+  if (manifest.notification.color) {
+    await regexFileAsync(
+      '"notification_icon_color">#005eff',
+      `"notification_icon_color">${manifest.notification.color}`,
+      path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
+    );
+  }
+
   // Splash Background
   if (backgroundImages && backgroundImages.length > 0) {
     // Delete the placeholder images
