@@ -1057,13 +1057,11 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   );
 
   // Notifications
-  if (manifest.notification.color) {
-    await regexFileAsync(
-      '"notification_icon_color">#005eff',
-      `"notification_icon_color">${manifest.notification.color}`,
-      path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
-    );
-  }
+  await regexFileAsync(
+    '"notification_icon_color">#005eff',
+    `"notification_icon_color">${manifest.notification?.color ?? '#ffffff'}`,
+    path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
+  );
 
   // Splash Background
   if (backgroundImages && backgroundImages.length > 0) {
