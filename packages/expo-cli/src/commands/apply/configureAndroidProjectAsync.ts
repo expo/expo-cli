@@ -53,7 +53,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   await getOrPromptForPackage(projectRoot);
 
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  const username = await UserManager.getCurrentUsernameAsync();
+  const username = process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
 
   await modifyBuildGradleAsync(projectRoot, (buildGradle: string) => {
     buildGradle = AndroidConfig.GoogleServices.setClassPath(exp, buildGradle);
