@@ -3,6 +3,7 @@ import path from 'path';
 import resolveFrom from 'resolve-from';
 
 import { getConfig } from '../Config';
+import { ProjectConfig } from '../Config.types';
 import { resolveModule } from '../Modules';
 import { getManagedExtensions } from './extensions';
 
@@ -37,19 +38,21 @@ export function getAbsolutePathWithProjectRoot(
 export function getEntryPoint(
   projectRoot: string,
   entryFiles: string[],
-  platforms: string[]
+  platforms: string[],
+  projectConfig?: ProjectConfig
 ): string | null {
   const extensions = getManagedExtensions(platforms);
-  return getEntryPointWithExtensions(projectRoot, entryFiles, extensions);
+  return getEntryPointWithExtensions(projectRoot, entryFiles, extensions, projectConfig);
 }
 
 // Used to resolve the main entry file for a project.
 export function getEntryPointWithExtensions(
   projectRoot: string,
   entryFiles: string[],
-  extensions: string[]
+  extensions: string[],
+  projectConfig?: ProjectConfig
 ): string {
-  const { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { exp, pkg } = projectConfig ?? getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   // This will first look in the `app.json`s `expo.entryPoint` field for a potential main file.
   // We check the Expo config first in case you want your project to start differently with Expo then in a standalone environment.
