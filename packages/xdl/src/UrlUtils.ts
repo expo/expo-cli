@@ -211,10 +211,7 @@ function assertValidOptions(opts: Partial<URLOptions>): URLOptions {
     strict: joi.boolean(),
     minify: joi.boolean(),
     https: joi.boolean().optional(),
-    urlRandomness: joi
-      .string()
-      .optional()
-      .allow(null),
+    urlRandomness: joi.string().optional().allow(null),
   });
 
   const { error } = schema.validate(opts);
