@@ -175,3 +175,17 @@ describe(UrlUtils.constructUrlAsync, () => {
     );
   });
 });
+
+describe(UrlUtils.constructSourceMapUrlAsync, () => {
+  it(`creates a source map url`, async () => {
+    await expect(UrlUtils.constructSourceMapUrlAsync(projectRoot, './App.tsx')).resolves.toBe(
+      'http://127.0.0.1:80/./App.tsx.map?dev=false&hot=false&minify=true'
+    );
+  });
+
+  it(`creates a source map url for localhost`, async () => {
+    await expect(
+      UrlUtils.constructSourceMapUrlAsync(projectRoot, './App.tsx', 'localhost')
+    ).resolves.toBe('http://127.0.0.1:80/./App.tsx.map?dev=false&hot=false&minify=true');
+  });
+});

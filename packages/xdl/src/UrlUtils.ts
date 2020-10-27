@@ -17,6 +17,12 @@ interface URLOptions extends Omit<ProjectSettings.ProjectSettings, 'urlRandomnes
   urlType: null | 'exp' | 'http' | 'no-protocol' | 'redirect';
 }
 
+interface MetroQueryOptions {
+  dev?: boolean;
+  strict?: boolean;
+  minify?: boolean;
+}
+
 export async function constructBundleUrlAsync(
   projectRoot: string,
   opts: Partial<URLOptions>,
@@ -59,13 +65,13 @@ export async function constructUrlWithExtensionAsync(
   entryPoint: string,
   ext: string,
   requestHostname?: string,
-  opts?: object
+  metroQueryOptions?: MetroQueryOptions
 ) {
   const defaultOpts = {
     dev: false,
     minify: true,
   };
-  opts = opts || defaultOpts;
+  metroQueryOptions = metroQueryOptions || defaultOpts;
   let bundleUrl = await constructBundleUrlAsync(
     projectRoot,
     {
@@ -78,7 +84,7 @@ export async function constructUrlWithExtensionAsync(
   const mainModulePath = guessMainModulePath(entryPoint);
   bundleUrl += `/${mainModulePath}.${ext}`;
 
-  const queryParams = constructBundleQueryParams(projectRoot, opts);
+  const queryParams = constructBundleQueryParams(projectRoot, metroQueryOptions);
   return `${bundleUrl}?${queryParams}`;
 }
 
@@ -86,14 +92,14 @@ export async function constructPublishUrlAsync(
   projectRoot: string,
   entryPoint: string,
   requestHostname?: string,
-  opts?: object
+  metroQueryOptions?: MetroQueryOptions
 ): Promise<string> {
   return await constructUrlWithExtensionAsync(
     projectRoot,
     entryPoint,
     'bundle',
     requestHostname,
-    opts
+    metroQueryOptions
   );
 }
 
@@ -127,17 +133,14 @@ export async function constructDebuggerHostAsync(
   );
 }
 
-export function constructBundleQueryParams(
-  projectRoot: string,
-  opts: { dev?: boolean; strict?: boolean; minify?: boolean }
-): string {
+export function constructBundleQueryParams(projectRoot: string, opts: MetroQueryOptions): string {
   const { exp } = getConfig(projectRoot);
   return constructBundleQueryParamsWithConfig(projectRoot, opts, exp);
 }
 
 export function constructBundleQueryParamsWithConfig(
   projectRoot: string,
-  opts: { dev?: boolean; strict?: boolean; minify?: boolean },
+  opts: MetroQueryOptions,
   exp: Pick<ExpoConfig, 'sdkVersion' | 'nodeModulesPath'>
 ): string {
   const queryParams: Record<string, boolean | string> = {
@@ -150,6 +153,7 @@ export function constructBundleQueryParamsWithConfig(
   }
 
   if ('minify' in opts) {
+    // TODO: Maybe default this to true if dev is false
     queryParams.minify = !!opts.minify;
   }
 
