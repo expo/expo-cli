@@ -185,7 +185,7 @@ describe('getManifestResponseAsync', () => {
 
     // Ensure the bundle URL is built correctly
     expect(res.exp.bundleUrl).toBe(
-      'http://127.0.0.1:80/index.bundle?platform=ios&dev=true&minify=false&hot=false'
+      'http://127.0.0.1:80/index.bundle?platform=ios&dev=true&hot=false&minify=false'
     );
     expect(res.exp.debuggerHost).toBe('127.0.0.1:80');
     expect(res.exp.logUrl).toBe('http://127.0.0.1:80/logs');
