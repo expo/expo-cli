@@ -1,8 +1,6 @@
-import { fs, vol } from 'memfs';
-import * as path from 'path';
+import { vol } from 'memfs';
 
 import * as UrlUtils from '../UrlUtils';
-const actualFs = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
 jest.mock('resolve-from');
