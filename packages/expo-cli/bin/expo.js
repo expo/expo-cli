@@ -44,7 +44,7 @@ async function warnUponCmdExe() {
   if (process.platform === 'win32') {
     // we're on Windows & we want to suggest using PowerShell instead of CMD
     const psList = require('ps-list');
-    (async () => {
+    await (async () => {
       const usersProcesses = await psList({ all: false });
       // find parent process name
       const shellProcess = usersProcesses.find(({ pid }) => pid === process.ppid) || {};
@@ -52,7 +52,7 @@ async function warnUponCmdExe() {
         // eslint-disable-next-line no-console
         console.warn(
           yellow(
-            'WARNING: Please avoid using cmd.exe for development. Instead use PowerShell or Bash via WSL.'
+            'WARNING: Please avoid using cmd.exe for development. Instead use PowerShell or Bash via WSL.\n'
           )
         );
       }
