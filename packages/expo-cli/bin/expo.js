@@ -17,25 +17,51 @@ var supportedVersions =
   '* >=12.13.0 <13.0.0 (Active LTS)\n' +
   '* >=14.0.0  <15.0.0 (Current Release)\n';
 
-// If newer than the current release
-if (major > 14) {
-  // eslint-disable-next-line no-console
-  console.warn(
-    yellow(
-      'WARNING: expo-cli has not yet been tested against Node.js ' +
-        process.version +
-        '.\n' +
-        'If you encounter any issues, please report them to https://github.com/expo/expo-cli/issues\n' +
-        '\n' +
-        supportedVersions
-    )
-  );
-} else if (!((major === 10 && minor >= 13) || (major === 12 && minor >= 13) || major === 14)) {
-  // eslint-disable-next-line no-console
-  console.error(
-    red('ERROR: Node.js ' + process.version + ' is no longer supported.\n\n' + supportedVersions)
-  );
-  process.exit(1);
+function warnOrExitUponWrongNodeVersion() {
+  // If newer than the current release
+  if (major > 14) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      yellow(
+        'WARNING: expo-cli has not yet been tested against Node.js ' +
+          process.version +
+          '.\n' +
+          'If you encounter any issues, please report them to https://github.com/expo/expo-cli/issues\n' +
+          '\n' +
+          supportedVersions
+      )
+    );
+  } else if (!((major === 10 && minor >= 13) || (major === 12 && minor >= 13) || major === 14)) {
+    // eslint-disable-next-line no-console
+    console.error(
+      red('ERROR: Node.js ' + process.version + ' is no longer supported.\n\n' + supportedVersions)
+    );
+    process.exit(1);
+  }
 }
 
-require('../build/exp.js').run('expo');
+async function warnUponCmdExe() {
+  if (process.platform === 'win32') {
+    // we're on Windows & we want to suggest using PowerShell instead of CMD
+    const psList = require('ps-list');
+    (async () => {
+      const usersProcesses = await psList({ all: false });
+      // find parent process name
+      const shellProcess = usersProcesses.find(({ pid }) => pid === process.ppid) || {};
+      if ((shellProcess.name || '').toLowerCase().includes('cmd.exe')) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          yellow(
+            'WARNING: Please avoid using cmd.exe for development. Instead use PowerShell or Bash via WSL.'
+          )
+        );
+      }
+    })();
+  }
+}
+
+(async () => {
+  warnOrExitUponWrongNodeVersion();
+  await warnUponCmdExe();
+  require('../build/exp.js').run('expo');
+})();
