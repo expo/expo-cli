@@ -1,228 +1,91 @@
-import { AndroidConfig, ExpoConfig, projectHasModule } from '@expo/config';
+import { AndroidConfig, ExpoConfig } from '@expo/config';
 import { UserManager } from '@expo/xdl';
-import * as fs from 'fs-extra';
-import path from 'path';
+import fs from 'fs-extra';
 
-import CommandError from '../../../../CommandError';
-import getConfigurationOptionsAsync from './getConfigurationOptions';
-import isExpoUpdatesInstalled from './isExpoUpdatesInstalled';
+import log from '../../../../log';
+import { ensureValidVersions } from './base';
 
-function getAndroidBuildScript(projectDir: string, exp: ExpoConfig) {
-  const androidBuildScriptPath = projectHasModule(
-    'expo-updates/scripts/create-manifest-android.gradle',
-    projectDir,
-    exp
-  );
-
-  if (!androidBuildScriptPath) {
-    throw new Error(
-      "Could not find the build script for Android. This could happen in case of outdated 'node_modules'. Run 'npm install' to make sure that it's up-to-date."
-    );
-  }
-
-  return `apply from: ${JSON.stringify(
-    path.relative(path.join(projectDir, 'android', 'app'), androidBuildScriptPath)
-  )}`;
-}
-
-export async function setUpdatesVersionsAndroidAsync({
-  projectDir,
-  exp,
-}: {
-  projectDir: string;
-  exp: ExpoConfig;
-}) {
-  if (!isExpoUpdatesInstalled(projectDir)) {
-    return;
-  }
-
-  const isUpdatesConfigured = await isUpdatesConfiguredAndroidAsync(projectDir);
-
-  if (!isUpdatesConfigured) {
-    throw new CommandError(
-      '"expo-updates" is installed, but not configured in the project. Please run "expo eas:build:init" first to configure "expo-updates"'
-    );
-  }
-
-  const {
-    path: androidManifestPath,
-    data: androidManifestJSON,
-  } = await getAndroidManifestJSONAsync(projectDir);
-
-  const runtimeVersion = AndroidConfig.Updates.getRuntimeVersion(exp);
-  const sdkVersion = AndroidConfig.Updates.getSDKVersion(exp);
-
-  const currentRuntimeVersion = getAndroidMetadataValue(
-    androidManifestJSON,
-    AndroidConfig.Updates.Config.RUNTIME_VERSION
-  );
-
-  const currentSdkVersion = getAndroidMetadataValue(
-    androidManifestJSON,
-    AndroidConfig.Updates.Config.SDK_VERSION
-  );
-
-  if (
-    (runtimeVersion && runtimeVersion === currentRuntimeVersion) ||
-    (sdkVersion && sdkVersion === currentSdkVersion)
-  ) {
-    return;
-  }
-
-  const result = await AndroidConfig.Updates.setVersionsConfig(exp, androidManifestJSON);
-
-  await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
-}
-
-export async function configureUpdatesAndroidAsync({
-  projectDir,
-  exp,
-}: {
-  projectDir: string;
-  exp: ExpoConfig;
-}) {
-  if (!isExpoUpdatesInstalled(projectDir)) {
-    return;
-  }
-
+export async function configureUpdatesAsync(projectDir: string, exp: ExpoConfig): Promise<void> {
+  ensureValidVersions(exp);
   const username = await UserManager.getCurrentUsernameAsync();
-  const buildGradlePath = getAndroidBuildGradlePath(projectDir);
-  const buildGradleContent = await getAndroidBuildGradleContentAsync(buildGradlePath);
+  const buildGradlePath = AndroidConfig.Paths.getAppBuildGradle(projectDir);
+  const buildGradleContent = await fs.readFile(buildGradlePath, 'utf8');
 
-  if (!hasBuildScriptApply(buildGradleContent, projectDir, exp)) {
-    const androidBuildScript = getAndroidBuildScript(projectDir, exp);
+  if (!AndroidConfig.Updates.hasGradleScriptApply(buildGradleContent, projectDir, exp)) {
+    const gradleScriptApply = AndroidConfig.Updates.getGradleScriptApplyString(projectDir, exp);
 
     await fs.writeFile(
       buildGradlePath,
-      `${buildGradleContent}\n// Integration with Expo updates\n${androidBuildScript}\n`
+      `${buildGradleContent}\n// Integration with Expo updates\n${gradleScriptApply}\n`
     );
   }
 
-  const {
-    path: androidManifestPath,
-    data: androidManifestJSON,
-  } = await getAndroidManifestJSONAsync(projectDir);
+  const androidManifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(projectDir);
+  if (!androidManifestPath) {
+    throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectDir}"`);
+  }
+  const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(
+    androidManifestPath
+  );
 
-  if (!isMetadataSetAndroid(androidManifestJSON, exp, username)) {
-    const result = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifestJSON, username);
+  if (!AndroidConfig.Updates.isMainApplicationMetaDataSynced(exp, androidManifest, username)) {
+    const result = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifest, username);
 
     await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
   }
 }
 
-async function isUpdatesConfiguredAndroidAsync(projectDir: string) {
-  const { exp, username } = await getConfigurationOptionsAsync(projectDir);
-
-  const buildGradlePath = getAndroidBuildGradlePath(projectDir);
-  const buildGradleContent = await getAndroidBuildGradleContentAsync(buildGradlePath);
-
-  if (!hasBuildScriptApply(buildGradleContent, projectDir, exp)) {
-    return false;
-  }
-
-  const { data: androidManifestJSON } = await getAndroidManifestJSONAsync(projectDir);
-
-  if (!isMetadataSetAndroid(androidManifestJSON, exp, username)) {
-    return false;
-  }
-
-  return true;
-}
-
-function getAndroidBuildGradlePath(projectDir: string) {
-  const buildGradlePath = path.join(projectDir, 'android', 'app', 'build.gradle');
-
-  return buildGradlePath;
-}
-
-async function getAndroidBuildGradleContentAsync(buildGradlePath: string) {
-  if (!(await fs.pathExists(buildGradlePath))) {
-    throw new Error(`Couldn't find gradle build script at ${buildGradlePath}`);
-  }
-
-  const buildGradleContent = await fs.readFile(buildGradlePath, 'utf-8');
-
-  return buildGradleContent;
-}
-
-function hasBuildScriptApply(
-  buildGradleContent: string,
+export async function syncUpdatesConfigurationAsync(
   projectDir: string,
   exp: ExpoConfig
-): boolean {
-  const androidBuildScript = getAndroidBuildScript(projectDir, exp);
+): Promise<void> {
+  ensureValidVersions(exp);
+  const username = await UserManager.getCurrentUsernameAsync();
+  try {
+    await ensureUpdatesConfiguredAsync(projectDir, exp);
+  } catch (error) {
+    log.error(
+      'expo-updates module is not configured. Please run "expo eas:build:init" first to configure the project'
+    );
+    throw error;
+  }
 
-  return (
-    buildGradleContent
-      .split('\n')
-      // Check for both single and double quotes
-      .some(line => line === androidBuildScript || line === androidBuildScript.replace(/"/g, "'"))
-  );
-}
-
-async function getAndroidManifestJSONAsync(projectDir: string) {
   const androidManifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(projectDir);
-
   if (!androidManifestPath) {
     throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectDir}"`);
   }
+  let androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(androidManifestPath);
 
-  const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
+  if (!AndroidConfig.Updates.isVersionSynced(exp, androidManifest)) {
+    androidManifest = AndroidConfig.Updates.setVersionsConfig(exp, androidManifest);
+    await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, androidManifest);
+  }
+
+  if (!AndroidConfig.Updates.isMainApplicationMetaDataSynced(exp, androidManifest, username)) {
+    log.warn(
+      'Native project configuration is not synced with values present in your app.json, run expo eas:build:init to make sure all values are applied in antive project'
+    );
+  }
+}
+
+async function ensureUpdatesConfiguredAsync(projectDir: string, exp: ExpoConfig): Promise<void> {
+  const buildGradlePath = AndroidConfig.Paths.getAppBuildGradle(projectDir);
+  const buildGradleContent = await fs.readFile(buildGradlePath, 'utf8');
+
+  if (!AndroidConfig.Updates.hasGradleScriptApply(buildGradleContent, projectDir, exp)) {
+    const gradleScriptApply = AndroidConfig.Updates.getGradleScriptApplyString(projectDir, exp);
+    throw new Error(`Missing ${gradleScriptApply} in ${buildGradlePath}`);
+  }
+
+  const androidManifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(projectDir);
+  if (!androidManifestPath) {
+    throw new Error(`Could not find AndroidManifest.xml in project directory: "${projectDir}"`);
+  }
+  const androidManifest = await AndroidConfig.Manifest.readAndroidManifestAsync(
     androidManifestPath
   );
 
-  return {
-    path: androidManifestPath,
-    data: androidManifestJSON,
-  };
-}
-
-function isMetadataSetAndroid(
-  androidManifestJSON: AndroidConfig.Manifest.Document,
-  exp: ExpoConfig,
-  username: string | null
-): boolean {
-  const currentUpdateUrl = AndroidConfig.Updates.getUpdateUrl(exp, username);
-
-  const setUpdateUrl = getAndroidMetadataValue(
-    androidManifestJSON,
-    AndroidConfig.Updates.Config.UPDATE_URL
-  );
-
-  return Boolean(
-    isVersionsSetAndroid(androidManifestJSON) &&
-      currentUpdateUrl &&
-      setUpdateUrl === currentUpdateUrl
-  );
-}
-
-function isVersionsSetAndroid(androidManifestJSON: AndroidConfig.Manifest.Document): boolean {
-  const runtimeVersion = getAndroidMetadataValue(
-    androidManifestJSON,
-    AndroidConfig.Updates.Config.RUNTIME_VERSION
-  );
-
-  const sdkVersion = getAndroidMetadataValue(
-    androidManifestJSON,
-    AndroidConfig.Updates.Config.SDK_VERSION
-  );
-
-  return Boolean(runtimeVersion || sdkVersion);
-}
-
-function getAndroidMetadataValue(
-  androidManifestJSON: AndroidConfig.Manifest.Document,
-  name: string
-): string | undefined {
-  const mainApplication = androidManifestJSON.manifest?.application?.filter(
-    (e: any) => e['$']['android:name'] === '.MainApplication'
-  )[0];
-
-  if (mainApplication?.hasOwnProperty('meta-data')) {
-    const item = mainApplication?.['meta-data']?.find((e: any) => e.$['android:name'] === name);
-
-    return item?.$['android:value'];
+  if (!AndroidConfig.Updates.isMainApplicationMetaDataSet(androidManifest)) {
+    throw new Error('Missing values in AndroidManifest.xml');
   }
-
-  return undefined;
 }

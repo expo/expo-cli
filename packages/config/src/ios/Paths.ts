@@ -173,6 +173,19 @@ export function getEntitlementsPath(projectRoot: string): string | null {
   return using ?? null;
 }
 
+export function getExpoPlistPath(projectRoot: string): string {
+  const xcodeprojPath = getXcodeProjectPath(projectRoot);
+  const expoPlistPath = path.resolve(
+    projectRoot,
+    'ios',
+    path.basename(xcodeprojPath).replace(/\.xcodeproj$/, ''),
+    'Supporting',
+    'Expo.plist'
+  );
+
+  return expoPlistPath;
+}
+
 function warnMultipleFiles({
   tag,
   fileName,

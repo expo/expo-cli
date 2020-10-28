@@ -18,7 +18,8 @@ import { gitRootDirectory } from '../../../../git';
 import log from '../../../../log';
 import prompts from '../../../../prompts';
 import { Builder, BuilderContext } from '../../types';
-import { configureUpdatesIOSAsync, setUpdatesVersionsIOSAsync } from '../../utils/expoUpdates';
+import { isExpoUpdatesInstalled } from '../../utils/expoUpdates/base';
+import { configureUpdatesAsync, syncUpdatesConfigurationAsync } from '../../utils/expoUpdates/ios';
 import { modifyAndCommitAsync } from '../../utils/git';
 import { ensureCredentialsAsync } from '../credentials';
 import { getBundleIdentifier } from '../utils/ios';
@@ -102,7 +103,9 @@ class iOSBuilder implements Builder<Platform.iOS> {
     await modifyAndCommitAsync(
       async () => {
         await this.configureEasBuildAsync();
-        await setUpdatesVersionsIOSAsync({ projectDir, exp });
+        if (isExpoUpdatesInstalled(projectDir)) {
+          await syncUpdatesConfigurationAsync(projectDir, exp);
+        }
       },
       {
         startMessage: 'Making sure your Xcode project is set up properly',
@@ -120,7 +123,9 @@ class iOSBuilder implements Builder<Platform.iOS> {
     await modifyAndCommitAsync(
       async () => {
         await this.configureEasBuildAsync();
-        await configureUpdatesIOSAsync({ projectDir, exp });
+        if (isExpoUpdatesInstalled(projectDir)) {
+          await configureUpdatesAsync(projectDir, exp);
+        }
       },
       {
         startMessage: 'Configuring the Xcode project',
