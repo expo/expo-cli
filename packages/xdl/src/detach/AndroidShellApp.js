@@ -1060,8 +1060,8 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   // This is set to "#005eff" in the Expo client app, but
   // just to be safe we'll match any value with a regex
   await regexFileAsync(
-    '"notification_icon_color">#005eff',
-    `"notification_icon_color">${manifest.notification?.color ?? '#ffffff'}`,
+    /"notification_icon_color">.*?</,
+    `"notification_icon_color">${manifest.notification?.color ?? '#ffffff'}<`,
     path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
   );
 
