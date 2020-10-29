@@ -171,7 +171,6 @@ export function constructBundleQueryParamsWithConfig(
   if (usesAssetPluginsQueryParam) {
     // Use an absolute path here so that we can not worry about symlinks/relative requires
     const pluginModule = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
-    // queryParams += `&assetPlugin=${encodeURIComponent(pluginModule)}`;
     queryParams.assetPlugin = encodeURIComponent(pluginModule);
   } else if (!supportsAssetPlugins) {
     // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
