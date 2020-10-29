@@ -104,7 +104,7 @@ export function setVersionsConfig(config: ExpoConfig, manifestDocument: Document
   return manifestDocument;
 }
 
-export function getGradleScriptApplyString(projectDir: string, config: ExpoConfig): string {
+export function formatApplyLineForBuildGradle(projectDir: string, config: ExpoConfig): string {
   const updatesGradleScriptPath = projectHasModule(
     'expo-updates/scripts/create-manifest-android.gradle',
     projectDir,
@@ -122,12 +122,12 @@ export function getGradleScriptApplyString(projectDir: string, config: ExpoConfi
   )}`;
 }
 
-export function hasGradleScriptApply(
+export function isBuildGradleConfigured(
   buildGradleContent: string,
   projectDir: string,
   config: ExpoConfig
 ): boolean {
-  const androidBuildScript = getGradleScriptApplyString(projectDir, config);
+  const androidBuildScript = formatApplyLineForBuildGradle(projectDir, config);
 
   return (
     buildGradleContent
@@ -139,16 +139,10 @@ export function hasGradleScriptApply(
 
 export function isMainApplicationMetaDataSet(manifest: Document): boolean {
   const updateUrl = getMainApplicationMetaDataValue(manifest, Config.UPDATE_URL);
-  if (!updateUrl) {
-    return false;
-  }
-
   const runtimeVersion = getMainApplicationMetaDataValue(manifest, Config.RUNTIME_VERSION);
   const sdkVersion = getMainApplicationMetaDataValue(manifest, Config.SDK_VERSION);
-  if (!sdkVersion && !runtimeVersion) {
-    return false;
-  }
-  return true;
+
+  return Boolean(updateUrl && (sdkVersion || runtimeVersion));
 }
 
 export function isMainApplicationMetaDataSynced(
@@ -156,55 +150,26 @@ export function isMainApplicationMetaDataSynced(
   manifest: Document,
   username: string | null
 ): boolean {
-  const metadata = [
-    {
-      expectedValue: getUpdateUrl(config, username),
-      manifestMetadata: Config.UPDATE_URL,
-    },
-    {
-      expectedValue: String(getUpdatesEnabled(config)),
-      manifestMetadata: Config.ENABLED,
-    },
-    {
-      expectedValue: String(getUpdatesTimeout(config)),
-      manifestMetadata: Config.LAUNCH_WAIT_MS,
-    },
-    {
-      expectedValue: getUpdatesCheckOnLaunch(config),
-      manifestMetadata: Config.CHECK_ON_LAUNCH,
-    },
-  ];
-
-  for (const { manifestMetadata, expectedValue } of metadata) {
-    const currentValue = getMainApplicationMetaDataValue(manifest, manifestMetadata);
-    if (currentValue !== expectedValue) {
-      return false;
-    }
-  }
-
-  if (!isVersionSynced(config, manifest)) {
-    return false;
-  }
-
-  return true;
+  return (
+    getUpdateUrl(config, username) ===
+      getMainApplicationMetaDataValue(manifest, Config.UPDATE_URL) &&
+    String(getUpdatesEnabled(config)) ===
+      getMainApplicationMetaDataValue(manifest, Config.ENABLED) &&
+    String(getUpdatesTimeout(config)) ===
+      getMainApplicationMetaDataValue(manifest, Config.LAUNCH_WAIT_MS) &&
+    getUpdatesCheckOnLaunch(config) ===
+      getMainApplicationMetaDataValue(manifest, Config.CHECK_ON_LAUNCH) &&
+    areVersionsSynced(config, manifest)
+  );
 }
 
-export function isVersionSynced(config: ExpoConfig, manifest: Document): boolean {
+export function areVersionsSynced(config: ExpoConfig, manifest: Document): boolean {
   const expectedRuntimeVersion = getRuntimeVersion(config);
   const expectedSdkVersion = getSDKVersion(config);
   const currentRuntimeVersion = getMainApplicationMetaDataValue(manifest, Config.RUNTIME_VERSION);
   const currentSdkVersion = getMainApplicationMetaDataValue(manifest, Config.SDK_VERSION);
 
-  if (!currentSdkVersion && !currentRuntimeVersion) {
-    return false;
-  }
-
-  if (
-    currentSdkVersion !== expectedSdkVersion ||
-    currentRuntimeVersion !== expectedRuntimeVersion
-  ) {
-    return false;
-  }
-
-  return true;
+  return (
+    currentRuntimeVersion === expectedRuntimeVersion && currentSdkVersion === expectedSdkVersion
+  );
 }

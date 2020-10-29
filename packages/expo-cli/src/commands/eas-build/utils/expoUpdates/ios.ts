@@ -6,15 +6,19 @@ import path from 'path';
 
 import { gitAddAsync } from '../../../../git';
 import log from '../../../../log';
-import { ensureValidVersions } from './base';
+import { ensureValidVersions } from './common';
 
 export async function configureUpdatesAsync(projectDir: string, exp: ExpoConfig): Promise<void> {
   ensureValidVersions(exp);
   const username = await UserManager.getCurrentUsernameAsync();
-  const xcodeProject = IOSConfig.XcodeUtils.getPbxproj(projectDir);
+  let xcodeProject = IOSConfig.XcodeUtils.getPbxproj(projectDir);
 
-  if (!IOSConfig.Updates.hasBuildPhaseShellScript(projectDir, exp, xcodeProject)) {
-    IOSConfig.Updates.setBuildPhaseShellScript(projectDir, exp, xcodeProject);
+  if (!IOSConfig.Updates.isShellScriptBuildPhaseConfigured(projectDir, exp, xcodeProject)) {
+    xcodeProject = IOSConfig.Updates.ensureBundleReactNativePhaseContainsConfigurationScript(
+      projectDir,
+      exp,
+      xcodeProject
+    );
     await fs.writeFile(IOSConfig.Paths.getPBXProjectPath(projectDir), xcodeProject.writeSync());
   }
 
@@ -60,7 +64,7 @@ export async function ensureUpdatesConfiguredAsync(
 ): Promise<void> {
   const xcodeProject = IOSConfig.XcodeUtils.getPbxproj(projectDir);
 
-  if (!IOSConfig.Updates.hasBuildPhaseShellScript(projectDir, exp, xcodeProject)) {
+  if (!IOSConfig.Updates.isShellScriptBuildPhaseConfigured(projectDir, exp, xcodeProject)) {
     const script = 'expo-updates/scripts/create-manifest-ios.sh';
     const buildPhase = '"Bundle React Native code and images"';
     throw new Error(`Path to ${script} is missing in a ${buildPhase} build phase.`);

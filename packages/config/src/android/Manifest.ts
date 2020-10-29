@@ -218,7 +218,6 @@ export function getMainApplicationMetaDataValue(
 
   if (mainApplication?.hasOwnProperty('meta-data')) {
     const item = mainApplication?.['meta-data']?.find((e: any) => e.$['android:name'] === name);
-
     return item?.$['android:value'] ?? null;
   }
 

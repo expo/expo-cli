@@ -88,7 +88,7 @@ export function setVersionsConfig(config: ExpoConfig, expoPlist: ExpoPlist): Exp
   return newExpoPlist;
 }
 
-function getBuildPhaseShellScriptPath(projectDir: string, config: ExpoConfig): string {
+function formatConfigurationScriptPath(projectDir: string, config: ExpoConfig): string {
   const buildScriptPath = projectHasModule(
     'expo-updates/scripts/create-manifest-ios.sh',
     projectDir,
@@ -112,11 +112,11 @@ interface ShellScriptBuildPhase {
 }
 
 function getBundleReactNativePhase(project: xcode.XcodeProject): ShellScriptBuildPhase {
-  const scriptBuildPhase = project.hash.project.objects.PBXShellScriptBuildPhase as Record<
+  const shellScriptBuildPhase = project.hash.project.objects.PBXShellScriptBuildPhase as Record<
     string,
     ShellScriptBuildPhase
   >;
-  const bundleReactNative = Object.values(scriptBuildPhase).find(
+  const bundleReactNative = Object.values(shellScriptBuildPhase).find(
     buildPhase => buildPhase.name === '"Bundle React Native code and images"'
   );
 
@@ -127,13 +127,13 @@ function getBundleReactNativePhase(project: xcode.XcodeProject): ShellScriptBuil
   return bundleReactNative;
 }
 
-export function setBuildPhaseShellScript(
+export function ensureBundleReactNativePhaseContainsConfigurationScript(
   projectDir: string,
   config: ExpoConfig,
   project: xcode.XcodeProject
 ): xcode.XcodeProject {
   const bundleReactNative = getBundleReactNativePhase(project);
-  const buildPhaseShellScriptPath = getBuildPhaseShellScriptPath(projectDir, config);
+  const buildPhaseShellScriptPath = formatConfigurationScriptPath(projectDir, config);
 
   if (!bundleReactNative.shellScript.includes(buildPhaseShellScriptPath)) {
     bundleReactNative.shellScript = `${bundleReactNative.shellScript.replace(
@@ -144,26 +144,20 @@ export function setBuildPhaseShellScript(
   return project;
 }
 
-export function hasBuildPhaseShellScript(
+export function isShellScriptBuildPhaseConfigured(
   projectDir: string,
   config: ExpoConfig,
   project: xcode.XcodeProject
 ): boolean {
   const bundleReactNative = getBundleReactNativePhase(project);
-  const buildPhaseShellScriptPath = getBuildPhaseShellScriptPath(projectDir, config);
-
+  const buildPhaseShellScriptPath = formatConfigurationScriptPath(projectDir, config);
   return bundleReactNative.shellScript.includes(buildPhaseShellScriptPath);
 }
 
 export function isPlistConfigurationSet(expoPlist: ExpoPlist): boolean {
-  if (!expoPlist.EXUpdatesURL) {
-    return false;
-  }
-
-  if (!expoPlist.EXUpdatesSDKVersion && !expoPlist.EXUpdatesRuntimeVersion) {
-    return false;
-  }
-  return true;
+  return Boolean(
+    expoPlist.EXUpdatesURL && (expoPlist.EXUpdatesSDKVersion || expoPlist.EXUpdatesRuntimeVersion)
+  );
 }
 
 export function isPlistConfigurationSynced(
@@ -171,24 +165,13 @@ export function isPlistConfigurationSynced(
   expoPlist: ExpoPlist,
   username: string | null
 ): boolean {
-  if (getUpdateUrl(config, username) !== expoPlist.EXUpdatesURL) {
-    return false;
-  }
-  if (getUpdatesEnabled(config) !== expoPlist.EXUpdatesEnabled) {
-    return false;
-  }
-  if (getUpdatesTimeout(config) !== expoPlist.EXUpdatesLaunchWaitMs) {
-    return false;
-  }
-  if (getUpdatesCheckOnLaunch(config) !== expoPlist.EXUpdatesCheckOnLaunch) {
-    return false;
-  }
-
-  if (!isPlistVersionConfigurationSynced(config, expoPlist)) {
-    return false;
-  }
-
-  return true;
+  return (
+    getUpdateUrl(config, username) === expoPlist.EXUpdatesURL &&
+    getUpdatesEnabled(config) === expoPlist.EXUpdatesEnabled &&
+    getUpdatesTimeout(config) === expoPlist.EXUpdatesLaunchWaitMs &&
+    getUpdatesCheckOnLaunch(config) === expoPlist.EXUpdatesCheckOnLaunch &&
+    isPlistVersionConfigurationSynced(config, expoPlist)
+  );
 }
 
 export function isPlistVersionConfigurationSynced(
@@ -200,16 +183,7 @@ export function isPlistVersionConfigurationSynced(
   const currentRuntimeVersion = expoPlist.EXUpdatesRuntimeVersion ?? null;
   const currentSdkVersion = expoPlist.EXUpdatesSDKVersion ?? null;
 
-  if (!currentSdkVersion && !currentRuntimeVersion) {
-    return false;
-  }
-
-  if (
-    currentSdkVersion !== expectedSdkVersion ||
-    currentRuntimeVersion !== expectedRuntimeVersion
-  ) {
-    return false;
-  }
-
-  return true;
+  return (
+    currentSdkVersion === expectedSdkVersion || currentRuntimeVersion === expectedRuntimeVersion
+  );
 }

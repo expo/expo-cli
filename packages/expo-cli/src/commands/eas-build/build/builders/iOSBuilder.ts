@@ -18,7 +18,7 @@ import { gitRootDirectory } from '../../../../git';
 import log from '../../../../log';
 import prompts from '../../../../prompts';
 import { Builder, BuilderContext } from '../../types';
-import { isExpoUpdatesInstalled } from '../../utils/expoUpdates/base';
+import { isExpoUpdatesInstalled } from '../../utils/expoUpdates/common';
 import { configureUpdatesAsync, syncUpdatesConfigurationAsync } from '../../utils/expoUpdates/ios';
 import { modifyAndCommitAsync } from '../../utils/git';
 import { ensureCredentialsAsync } from '../credentials';

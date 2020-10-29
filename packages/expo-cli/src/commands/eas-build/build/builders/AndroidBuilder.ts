@@ -19,7 +19,7 @@ import {
   configureUpdatesAsync,
   syncUpdatesConfigurationAsync,
 } from '../../utils/expoUpdates/android';
-import { isExpoUpdatesInstalled } from '../../utils/expoUpdates/base';
+import { isExpoUpdatesInstalled } from '../../utils/expoUpdates/common';
 import { modifyAndCommitAsync } from '../../utils/git';
 import { ensureCredentialsAsync } from '../credentials';
 
