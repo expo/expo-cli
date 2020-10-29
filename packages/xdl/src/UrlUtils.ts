@@ -36,7 +36,7 @@ export async function constructManifestUrlAsync(
   opts?: Partial<URLOptions>,
   requestHostname?: string
 ) {
-  return await constructUrlAsync(projectRoot, opts ?? {}, false, requestHostname);
+  return await constructUrlAsync(projectRoot, opts ?? null, false, requestHostname);
 }
 
 // gets the base manifest URL and removes the scheme
