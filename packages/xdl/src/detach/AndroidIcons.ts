@@ -232,7 +232,7 @@ async function createAndWriteIconsToPathAsync(
     );
   }
 
-  // Notification icon
+  // Remove Expo client notification icon resources
   globSync('**/shell_notification_icon.png', {
     cwd: resPath,
     absolute: true,
@@ -240,6 +240,8 @@ async function createAndWriteIconsToPathAsync(
     fs.removeSync(filePath);
   });
 
+  // Add provided notification icon resources, falling back
+  // to the app icon if no `notification.icon` is provided
   await _resizeIconsAsync(
     context,
     resPath,
