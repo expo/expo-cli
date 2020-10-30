@@ -1,228 +1,100 @@
-import { ExpoConfig, IOSConfig, projectHasModule } from '@expo/config';
+import { ExpoConfig, IOSConfig } from '@expo/config';
 import plist from '@expo/plist';
 import { UserManager } from '@expo/xdl';
-import * as fs from 'fs-extra';
-import glob from 'glob';
+import fs from 'fs-extra';
 import path from 'path';
-import xcode from 'xcode';
 
-import CommandError from '../../../../CommandError';
 import { gitAddAsync } from '../../../../git';
-import getConfigurationOptionsAsync from './getConfigurationOptions';
-import isExpoUpdatesInstalled from './isExpoUpdatesInstalled';
+import log from '../../../../log';
+import { ensureValidVersions } from './common';
 
-function getIOSBuildScript(projectDir: string, exp: ExpoConfig) {
-  const iOSBuildScriptPath = projectHasModule(
-    'expo-updates/scripts/create-manifest-ios.sh',
-    projectDir,
-    exp
-  );
-
-  if (!iOSBuildScriptPath) {
-    throw new Error(
-      "Could not find the build script for iOS. This could happen in case of outdated 'node_modules'. Run 'npm install' to make sure that it's up-to-date."
-    );
-  }
-
-  return path.relative(path.join(projectDir, 'ios'), iOSBuildScriptPath);
-}
-
-export async function setUpdatesVersionsIOSAsync({
-  projectDir,
-  exp,
-}: {
-  projectDir: string;
-  exp: ExpoConfig;
-}) {
-  if (!isExpoUpdatesInstalled(projectDir)) {
-    return;
-  }
-
-  const isUpdatesConfigured = await isUpdatesConfiguredIOSAsync(projectDir);
-
-  if (!isUpdatesConfigured) {
-    throw new CommandError(
-      '"expo-updates" is installed, but not configured in the project. Please run "expo eas:build:init" first to configure "expo-updates"'
-    );
-  }
-
-  await modifyExpoPlistAsync(projectDir, expoPlist => {
-    const runtimeVersion = IOSConfig.Updates.getRuntimeVersion(exp);
-    const sdkVersion = IOSConfig.Updates.getSDKVersion(exp);
-
-    if (
-      (runtimeVersion && expoPlist[IOSConfig.Updates.Config.RUNTIME_VERSION] === runtimeVersion) ||
-      (sdkVersion && expoPlist[IOSConfig.Updates.Config.SDK_VERSION] === sdkVersion)
-    ) {
-      return expoPlist;
-    }
-
-    return IOSConfig.Updates.setVersionsConfig(exp, expoPlist);
-  });
-}
-
-export async function configureUpdatesIOSAsync({
-  projectDir,
-  exp,
-}: {
-  projectDir: string;
-  exp: ExpoConfig;
-}) {
-  if (!isExpoUpdatesInstalled(projectDir)) {
-    return;
-  }
-
+export async function configureUpdatesAsync(projectDir: string, exp: ExpoConfig): Promise<void> {
+  ensureValidVersions(exp);
   const username = await UserManager.getCurrentUsernameAsync();
-  const pbxprojPath = await getPbxprojPathAsync(projectDir);
-  const project = await getXcodeProjectAsync(pbxprojPath);
-  const bundleReactNative = await getBundleReactNativePhaseAsync(project);
-  const iOSBuildScript = getIOSBuildScript(projectDir, exp);
+  let xcodeProject = IOSConfig.XcodeUtils.getPbxproj(projectDir);
 
-  if (!bundleReactNative.shellScript.includes(iOSBuildScript)) {
-    bundleReactNative.shellScript = `${bundleReactNative.shellScript.replace(
-      /"$/,
-      ''
-    )}${iOSBuildScript}\\n"`;
+  if (!IOSConfig.Updates.isShellScriptBuildPhaseConfigured(projectDir, exp, xcodeProject)) {
+    xcodeProject = IOSConfig.Updates.ensureBundleReactNativePhaseContainsConfigurationScript(
+      projectDir,
+      exp,
+      xcodeProject
+    );
+    await fs.writeFile(IOSConfig.Paths.getPBXProjectPath(projectDir), xcodeProject.writeSync());
   }
 
-  await fs.writeFile(pbxprojPath, project.writeSync());
-
-  await modifyExpoPlistAsync(projectDir, expoPlist => {
-    return IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
-  });
+  let expoPlist = await readExpoPlistAsync(projectDir);
+  if (!IOSConfig.Updates.isPlistConfigurationSynced(exp, expoPlist, username)) {
+    expoPlist = IOSConfig.Updates.setUpdatesConfig(exp, expoPlist, username);
+    await writeExpoPlistAsync(projectDir, expoPlist);
+  }
+  // TODO: ensure ExpoPlist in pbxproj
 }
 
-async function modifyExpoPlistAsync(projectDir: string, callback: (expoPlist: any) => any) {
-  const pbxprojPath = await getPbxprojPathAsync(projectDir);
-  const expoPlistPath = getExpoPlistPath(projectDir, pbxprojPath);
+export async function syncUpdatesConfigurationAsync(
+  projectDir: string,
+  exp: ExpoConfig
+): Promise<void> {
+  ensureValidVersions(exp);
+  const username = await UserManager.getCurrentUsernameAsync();
+  try {
+    await ensureUpdatesConfiguredAsync(projectDir, exp);
+  } catch (error) {
+    log.error(
+      'expo-updates module is not configured. Please run "expo eas:build:init" first to configure the project'
+    );
+    throw error;
+  }
+
+  let expoPlist = await readExpoPlistAsync(projectDir);
+  if (!IOSConfig.Updates.isPlistVersionConfigurationSynced(exp, expoPlist)) {
+    expoPlist = IOSConfig.Updates.setVersionsConfig(exp, expoPlist);
+    await writeExpoPlistAsync(projectDir, expoPlist);
+  }
+
+  if (!IOSConfig.Updates.isPlistConfigurationSynced(exp, expoPlist, username)) {
+    log.warn(
+      'Native project configuration is not synced with values present in you app.json, run expo eas:build:init to make sure all values are applied in antive project'
+    );
+  }
+}
+
+export async function ensureUpdatesConfiguredAsync(
+  projectDir: string,
+  exp: ExpoConfig
+): Promise<void> {
+  const xcodeProject = IOSConfig.XcodeUtils.getPbxproj(projectDir);
+
+  if (!IOSConfig.Updates.isShellScriptBuildPhaseConfigured(projectDir, exp, xcodeProject)) {
+    const script = 'expo-updates/scripts/create-manifest-ios.sh';
+    const buildPhase = '"Bundle React Native code and images"';
+    throw new Error(`Path to ${script} is missing in a ${buildPhase} build phase.`);
+  }
+
+  const expoPlist = await readExpoPlistAsync(projectDir);
+  if (!IOSConfig.Updates.isPlistConfigurationSet(expoPlist)) {
+    throw new Error('Missing values in Expo.plist');
+  }
+}
+
+async function readExpoPlistAsync(projectDir: string): Promise<IOSConfig.ExpoPlist> {
+  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(projectDir);
 
   let expoPlist = {};
-
   if (await fs.pathExists(expoPlistPath)) {
     const expoPlistContent = await fs.readFile(expoPlistPath, 'utf8');
     expoPlist = plist.parse(expoPlistContent);
   }
+  return expoPlist;
+}
 
-  const updatedExpoPlist = callback(expoPlist);
-
-  if (updatedExpoPlist === expoPlist) {
-    return;
-  }
-
-  const expoPlistContent = plist.build(updatedExpoPlist);
+async function writeExpoPlistAsync(
+  projectDir: string,
+  expoPlist: IOSConfig.ExpoPlist
+): Promise<void> {
+  const expoPlistPath = IOSConfig.Paths.getExpoPlistPath(projectDir);
+  const expoPlistContent = plist.build(expoPlist);
 
   await fs.mkdirp(path.dirname(expoPlistPath));
   await fs.writeFile(expoPlistPath, expoPlistContent);
   await gitAddAsync(expoPlistPath, { intentToAdd: true });
-}
-
-async function isUpdatesConfiguredIOSAsync(projectDir: string) {
-  const { exp, username } = await getConfigurationOptionsAsync(projectDir);
-
-  const pbxprojPath = await getPbxprojPathAsync(projectDir);
-  const project = await getXcodeProjectAsync(pbxprojPath);
-  const bundleReactNative = await getBundleReactNativePhaseAsync(project);
-  const iOSBuildScript = getIOSBuildScript(projectDir, exp);
-
-  if (!bundleReactNative.shellScript.includes(iOSBuildScript)) {
-    return false;
-  }
-
-  const expoPlistPath = getExpoPlistPath(projectDir, pbxprojPath);
-
-  if (!(await fs.pathExists(expoPlistPath))) {
-    return false;
-  }
-
-  const expoPlist = await fs.readFile(expoPlistPath, 'utf8');
-  const expoPlistData = plist.parse(expoPlist);
-
-  return isMetadataSetIOS(expoPlistData, exp, username);
-}
-
-function isMetadataSetIOS(expoPlistData: any, exp: ExpoConfig, username: string | null) {
-  const currentUpdateUrl = IOSConfig.Updates.getUpdateUrl(exp, username);
-
-  if (
-    isVersionsSetIOS(expoPlistData) &&
-    currentUpdateUrl &&
-    expoPlistData[IOSConfig.Updates.Config.UPDATE_URL] === currentUpdateUrl
-  ) {
-    return true;
-  }
-
-  return false;
-}
-
-function isVersionsSetIOS(expoPlistData: any) {
-  if (
-    expoPlistData[IOSConfig.Updates.Config.RUNTIME_VERSION] ||
-    expoPlistData[IOSConfig.Updates.Config.SDK_VERSION]
-  ) {
-    return true;
-  }
-
-  return false;
-}
-
-async function getPbxprojPathAsync(projectDir: string) {
-  const pbxprojPaths = await new Promise<string[]>((resolve, reject) =>
-    glob('ios/*/project.pbxproj', { absolute: true, cwd: projectDir }, (err, res) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(res);
-      }
-    })
-  );
-
-  const pbxprojPath = pbxprojPaths.length > 0 ? pbxprojPaths[0] : undefined;
-
-  if (!pbxprojPath) {
-    throw new Error(`Could not find Xcode project in project directory: "${projectDir}"`);
-  }
-
-  return pbxprojPath;
-}
-
-async function getXcodeProjectAsync(pbxprojPath: string) {
-  const project = xcode.project(pbxprojPath);
-
-  await new Promise((resolve, reject) =>
-    project.parse(err => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    })
-  );
-
-  return project;
-}
-
-function getExpoPlistPath(projectDir: string, pbxprojPath: string) {
-  const xcodeprojPath = path.resolve(pbxprojPath, '..');
-  const expoPlistPath = path.resolve(
-    projectDir,
-    'ios',
-    path.basename(xcodeprojPath).replace(/\.xcodeproj$/, ''),
-    'Supporting',
-    'Expo.plist'
-  );
-
-  return expoPlistPath;
-}
-
-async function getBundleReactNativePhaseAsync(project: xcode.XcodeProject) {
-  const scriptBuildPhase = project.hash.project.objects.PBXShellScriptBuildPhase;
-  const bundleReactNative = Object.values(scriptBuildPhase).find(
-    buildPhase => buildPhase.name === '"Bundle React Native code and images"'
-  );
-
-  if (!bundleReactNative) {
-    throw new Error(`Couldn't find a build phase script for "Bundle React Native code and images"`);
-  }
-
-  return bundleReactNative;
 }

@@ -173,6 +173,15 @@ export function getEntitlementsPath(projectRoot: string): string | null {
   return using ?? null;
 }
 
+export function getSupportingPath(projectRoot: string): string {
+  return path.resolve(projectRoot, 'ios', path.basename(getSourceRoot(projectRoot)), 'Supporting');
+}
+
+export function getExpoPlistPath(projectRoot: string): string {
+  const supportingPath = getSupportingPath(projectRoot);
+  return path.join(supportingPath, 'Expo.plist');
+}
+
 function warnMultipleFiles({
   tag,
   fileName,

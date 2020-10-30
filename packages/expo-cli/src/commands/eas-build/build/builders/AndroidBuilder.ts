@@ -16,9 +16,10 @@ import {
 import { gitAddAsync, gitRootDirectory } from '../../../../git';
 import { Builder, BuilderContext } from '../../types';
 import {
-  configureUpdatesAndroidAsync,
-  setUpdatesVersionsAndroidAsync,
-} from '../../utils/expoUpdates';
+  configureUpdatesAsync,
+  syncUpdatesConfigurationAsync,
+} from '../../utils/expoUpdates/android';
+import { isExpoUpdatesInstalled } from '../../utils/expoUpdates/common';
 import { modifyAndCommitAsync } from '../../utils/git';
 import { ensureCredentialsAsync } from '../credentials';
 
@@ -87,7 +88,9 @@ class AndroidBuilder implements Builder<Platform.Android> {
 
     await modifyAndCommitAsync(
       async () => {
-        await setUpdatesVersionsAndroidAsync({ projectDir, exp });
+        if (isExpoUpdatesInstalled(projectDir)) {
+          await syncUpdatesConfigurationAsync(projectDir, exp);
+        }
       },
       {
         startMessage: 'Making sure runtime version is correct on Android',
@@ -108,7 +111,9 @@ class AndroidBuilder implements Builder<Platform.Android> {
         const easGradlePath = AndroidConfig.EasBuild.getEasBuildGradlePath(projectDir);
         await gitAddAsync(easGradlePath, { intentToAdd: true });
 
-        await configureUpdatesAndroidAsync({ projectDir, exp });
+        if (isExpoUpdatesInstalled(projectDir)) {
+          await configureUpdatesAsync(projectDir, exp);
+        }
       },
       {
         startMessage: 'Configuring the Android project',
