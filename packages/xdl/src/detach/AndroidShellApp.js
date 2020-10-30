@@ -1056,6 +1056,15 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     isRunningInUserContext
   );
 
+  // Set the tint color for icons in the notification tray
+  // This is set to "#005eff" in the Expo client app, but
+  // just to be safe we'll match any value with a regex
+  await regexFileAsync(
+    /"notification_icon_color">.*?</,
+    `"notification_icon_color">${manifest.notification?.color ?? '#ffffff'}<`,
+    path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
+  );
+
   // Splash Background
   if (backgroundImages && backgroundImages.length > 0) {
     // Delete the placeholder images
