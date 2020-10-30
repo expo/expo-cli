@@ -1,6 +1,8 @@
-import { getConfig, resolveModule } from '@expo/config';
+import { ExpoConfig, getConfig, resolveModule } from '@expo/config';
 import joi from '@hapi/joi';
+import assert from 'assert';
 import os from 'os';
+import QueryString from 'querystring';
 import url from 'url';
 import validator from 'validator';
 
@@ -11,24 +13,37 @@ import XDLError from './XDLError';
 import ip from './ip';
 import * as ProjectUtils from './project/ProjectUtils';
 
+interface URLOptions extends Omit<ProjectSettings.ProjectSettings, 'urlRandomness'> {
+  urlType: null | 'exp' | 'http' | 'no-protocol' | 'redirect';
+}
+
+interface MetroQueryOptions {
+  dev?: boolean;
+  strict?: boolean;
+  minify?: boolean;
+}
+
 export async function constructBundleUrlAsync(
   projectRoot: string,
-  opts: any,
+  opts: Partial<URLOptions>,
   requestHostname?: string
 ) {
-  return constructUrlAsync(projectRoot, opts, true, requestHostname);
+  return await constructUrlAsync(projectRoot, opts, true, requestHostname);
 }
 
 export async function constructManifestUrlAsync(
   projectRoot: string,
-  opts?: any,
+  opts?: Partial<URLOptions>,
   requestHostname?: string
 ) {
-  return constructUrlAsync(projectRoot, opts, false, requestHostname);
+  return await constructUrlAsync(projectRoot, opts ?? null, false, requestHostname);
 }
 
 // gets the base manifest URL and removes the scheme
-export async function constructHostUriAsync(projectRoot: string, requestHostname?: string) {
+export async function constructHostUriAsync(
+  projectRoot: string,
+  requestHostname?: string
+): Promise<string> {
   const urlString = await constructUrlAsync(projectRoot, null, false, requestHostname);
   // we need to use node's legacy urlObject api since the newer one doesn't like empty protocols
   const urlObj = url.parse(urlString);
@@ -37,7 +52,10 @@ export async function constructHostUriAsync(projectRoot: string, requestHostname
   return url.format(urlObj);
 }
 
-export async function constructLogUrlAsync(projectRoot: string, requestHostname?: string) {
+export async function constructLogUrlAsync(
+  projectRoot: string,
+  requestHostname?: string
+): Promise<string> {
   const baseUrl = await constructUrlAsync(projectRoot, { urlType: 'http' }, false, requestHostname);
   return `${baseUrl}/logs`;
 }
@@ -47,13 +65,13 @@ export async function constructUrlWithExtensionAsync(
   entryPoint: string,
   ext: string,
   requestHostname?: string,
-  opts?: object
+  metroQueryOptions?: MetroQueryOptions
 ) {
   const defaultOpts = {
     dev: false,
     minify: true,
   };
-  opts = opts || defaultOpts;
+  metroQueryOptions = metroQueryOptions || defaultOpts;
   let bundleUrl = await constructBundleUrlAsync(
     projectRoot,
     {
@@ -66,7 +84,7 @@ export async function constructUrlWithExtensionAsync(
   const mainModulePath = guessMainModulePath(entryPoint);
   bundleUrl += `/${mainModulePath}.${ext}`;
 
-  const queryParams = await constructBundleQueryParamsAsync(projectRoot, opts);
+  const queryParams = constructBundleQueryParams(projectRoot, metroQueryOptions);
   return `${bundleUrl}?${queryParams}`;
 }
 
@@ -74,14 +92,14 @@ export async function constructPublishUrlAsync(
   projectRoot: string,
   entryPoint: string,
   requestHostname?: string,
-  opts?: object
-) {
+  metroQueryOptions?: MetroQueryOptions
+): Promise<string> {
   return await constructUrlWithExtensionAsync(
     projectRoot,
     entryPoint,
     'bundle',
     requestHostname,
-    opts
+    metroQueryOptions
   );
 }
 
@@ -89,7 +107,7 @@ export async function constructSourceMapUrlAsync(
   projectRoot: string,
   entryPoint: string,
   requestHostname?: string
-) {
+): Promise<string> {
   return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'map', requestHostname);
 }
 
@@ -97,12 +115,15 @@ export async function constructAssetsUrlAsync(
   projectRoot: string,
   entryPoint: string,
   requestHostname?: string
-) {
+): Promise<string> {
   return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'assets', requestHostname);
 }
 
-export async function constructDebuggerHostAsync(projectRoot: string, requestHostname?: string) {
-  return constructUrlAsync(
+export async function constructDebuggerHostAsync(
+  projectRoot: string,
+  requestHostname?: string
+): Promise<string> {
+  return await constructUrlAsync(
     projectRoot,
     {
       urlType: 'no-protocol',
@@ -112,20 +133,36 @@ export async function constructDebuggerHostAsync(projectRoot: string, requestHos
   );
 }
 
-export async function constructBundleQueryParamsAsync(projectRoot: string, opts: any) {
-  let queryParams = `dev=${encodeURIComponent(!!opts.dev)}`;
-
-  if (opts.hasOwnProperty('strict')) {
-    queryParams += `&strict=${encodeURIComponent(!!opts.strict)}`;
-  }
-
-  if (opts.hasOwnProperty('minify')) {
-    queryParams += `&minify=${encodeURIComponent(!!opts.minify)}`;
-  }
-
-  queryParams += '&hot=false';
-
+export function constructBundleQueryParams(projectRoot: string, opts: MetroQueryOptions): string {
   const { exp } = getConfig(projectRoot);
+  return constructBundleQueryParamsWithConfig(projectRoot, opts, exp);
+}
+
+export function constructBundleQueryParamsWithConfig(
+  projectRoot: string,
+  opts: MetroQueryOptions,
+  exp: Pick<ExpoConfig, 'sdkVersion' | 'nodeModulesPath'>
+): string {
+  const queryParams: Record<string, boolean | string> = {
+    dev: !!opts.dev,
+    hot: false,
+  };
+
+  if ('strict' in opts) {
+    queryParams.strict = !!opts.strict;
+  }
+
+  if ('minify' in opts) {
+    // TODO: Maybe default this to true if dev is false
+    queryParams.minify = !!opts.minify;
+  }
+
+  // No special requirements after SDK 33 (Jun 5 2019)
+  if (Versions.gteSdkVersion(exp, '33.0.0')) {
+    return QueryString.stringify(queryParams);
+  }
+
+  // TODO: Remove this ...
 
   // SDK11 to SDK32 require us to inject hashAssetFiles through the params, but this is not
   // needed with SDK33+
@@ -134,14 +171,14 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   if (usesAssetPluginsQueryParam) {
     // Use an absolute path here so that we can not worry about symlinks/relative requires
     const pluginModule = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
-    queryParams += `&assetPlugin=${encodeURIComponent(pluginModule)}`;
+    queryParams.assetPlugin = encodeURIComponent(pluginModule);
   } else if (!supportsAssetPlugins) {
     // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
     // major version in the sdkVersion field, so check for 11.0.0 to be sure.
-    queryParams += '&includeAssetFileHashes=true';
+    queryParams.includeAssetFileHashes = true;
   }
 
-  return queryParams;
+  return QueryString.stringify(queryParams);
 }
 
 export async function constructWebAppUrlAsync(
@@ -164,64 +201,87 @@ export async function constructWebAppUrlAsync(
   return `${urlType}://${host}:${packagerInfo.webpackServerPort}`;
 }
 
-export async function constructUrlAsync(
-  projectRoot: string,
-  opts: any,
-  isPackager: boolean,
-  requestHostname?: string
-): Promise<string> {
-  if (opts) {
-    const schema = joi.object().keys({
-      urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol'),
-      lanType: joi.any().valid('ip', 'hostname'),
-      hostType: joi.any().valid('localhost', 'lan', 'tunnel'),
-      dev: joi.boolean(),
-      strict: joi.boolean(),
-      minify: joi.boolean(),
-      https: joi.boolean().optional(),
-      urlRandomness: joi.string().optional().allow(null),
-    });
+function assertValidOptions(opts: Partial<URLOptions>): URLOptions {
+  const schema = joi.object().keys({
+    urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol'),
+    lanType: joi.any().valid('ip', 'hostname'),
+    hostType: joi.any().valid('localhost', 'lan', 'tunnel'),
+    dev: joi.boolean(),
+    strict: joi.boolean(),
+    minify: joi.boolean(),
+    https: joi.boolean().optional(),
+    urlRandomness: joi.string().optional().allow(null),
+  });
 
-    const { error } = schema.validate(opts);
-    if (error) {
-      throw new XDLError('INVALID_OPTIONS', error.toString());
-    }
+  const { error } = schema.validate(opts);
+  if (error) {
+    throw new XDLError('INVALID_OPTIONS', error.toString());
+  }
+  return opts as URLOptions;
+}
+
+async function ensureOptionsAsync(
+  projectRoot: string,
+  opts: Partial<URLOptions> | null
+): Promise<URLOptions> {
+  if (opts) {
+    assertValidOptions(opts);
   }
 
   const defaultOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
   if (!opts) {
-    opts = defaultOpts;
-  } else {
-    opts = Object.assign({}, defaultOpts, opts);
+    return { urlType: null, ...defaultOpts };
   }
+  const optionsWithDefaults = { ...defaultOpts, ...opts };
+  return assertValidOptions(optionsWithDefaults);
+}
+
+function resolveProtocol(
+  projectRoot: string,
+  { urlType }: Pick<URLOptions, 'urlType'>
+): string | null {
+  if (urlType === 'http') {
+    return 'http';
+  } else if (urlType === 'no-protocol') {
+    return null;
+  }
+  let protocol = 'exp';
+
+  const { exp } = getConfig(projectRoot);
+
+  // We only use these values from the config
+  const { scheme, detach, sdkVersion } = exp;
+
+  if (detach) {
+    // Normalize schemes and filter invalid schemes.
+    const schemes = (Array.isArray(scheme) ? scheme : [scheme]).filter(
+      (scheme: any) => typeof scheme === 'string' && !!scheme
+    );
+    // Get the first valid scheme.
+    const firstScheme = schemes[0];
+    if (firstScheme && Versions.gteSdkVersion({ sdkVersion }, '27.0.0')) {
+      protocol = firstScheme;
+    } else if (detach.scheme) {
+      // must keep this fallback in place for older projects
+      // and those detached with an older version of xdl
+      protocol = detach.scheme;
+    }
+  }
+
+  return protocol;
+}
+
+export async function constructUrlAsync(
+  projectRoot: string,
+  incomingOpts: Partial<URLOptions> | null,
+  isPackager: boolean,
+  requestHostname?: string
+): Promise<string> {
+  const opts = await ensureOptionsAsync(projectRoot, incomingOpts);
 
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
 
-  let protocol;
-  if (opts.urlType === 'http') {
-    protocol = 'http';
-  } else if (opts.urlType === 'no-protocol') {
-    protocol = null;
-  } else {
-    protocol = 'exp';
-
-    const { exp } = getConfig(projectRoot);
-    if (exp.detach) {
-      // Normalize schemes and filter invalid schemes.
-      const schemes = (Array.isArray(exp.scheme) ? exp.scheme : [exp.scheme]).filter(
-        (scheme: any) => typeof scheme === 'string' && !!scheme
-      );
-      // Get the first valid scheme.
-      const firstScheme = schemes[0];
-      if (firstScheme && Versions.gteSdkVersion(exp, '27.0.0')) {
-        protocol = firstScheme;
-      } else if (exp.detach.scheme) {
-        // must keep this fallback in place for older projects
-        // and those detached with an older version of xdl
-        protocol = exp.detach.scheme;
-      }
-    }
-  }
+  let protocol = resolveProtocol(projectRoot, opts);
 
   let hostname;
   let port;
@@ -285,29 +345,34 @@ export async function constructUrlAsync(
     }
   }
 
-  let url_ = '';
-  if (protocol) {
-    url_ += `${protocol}://`;
-  }
-
-  if (!hostname) {
-    throw new Error('Hostname cannot be inferred.');
-  }
-
-  url_ += hostname;
-
-  if (port) {
-    url_ += `:${port}`;
-  } else {
-    // Android HMR breaks without this :|
-    url_ += ':80';
-  }
+  const url_ = joinURLComponents({ protocol, hostname, port });
 
   if (opts.urlType === 'redirect') {
-    return `https://exp.host/--/to-exp/${encodeURIComponent(url_)}`;
+    return createRedirectURL(url_);
   }
 
   return url_;
+}
+
+function createRedirectURL(url: string): string {
+  return `https://exp.host/--/to-exp/${encodeURIComponent(url)}`;
+}
+
+function joinURLComponents({
+  protocol,
+  hostname,
+  port,
+}: {
+  protocol?: string | null;
+  hostname?: string | null;
+  port?: string | number | null;
+}): string {
+  assert(hostname, 'hostname cannot be inferred.');
+  // Android HMR breaks without this port 80
+  const validPort = port ?? '80';
+  const validProtocol = protocol ? `${protocol}://` : '';
+
+  return `${validProtocol}${hostname}:${validPort}`;
 }
 
 export function guessMainModulePath(entryPoint: string): string {
