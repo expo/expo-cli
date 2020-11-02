@@ -1,4 +1,4 @@
-import { ConfigPlugin, ExportedConfig, Modifier, ModifierPlatform } from '../Plugin.types';
+import { ConfigPlugin, ExportedConfig, Mod, ModPlatform } from '../Plugin.types';
 
 function ensureArray<T>(input: T | T[]): T[] {
   if (Array.isArray(input)) {
@@ -26,63 +26,63 @@ export const withPlugins: ConfigPlugin<AppliedConfigPlugin[]> = (
 };
 
 /**
- * Plugin to extend a modifier function in the plugins config.
+ * Plugin to extend a mod function in the plugins config.
  *
  * @param config exported config
  * @param platform platform to target (ios or android)
- * @param modifier name of the platform function to extend
- * @param action method to run on the modifier when the config is compiled
+ * @param mod name of the platform function to extend
+ * @param action method to run on the mod when the config is compiled
  */
-export function withExtendedModifier<T>(
+export function withExtendedMod<T>(
   config: ExportedConfig,
   {
     platform,
-    modifier,
+    mod,
     action,
   }: {
-    platform: ModifierPlatform;
-    modifier: string;
-    action: Modifier<T>;
+    platform: ModPlatform;
+    mod: string;
+    action: Mod<T>;
   }
 ): ExportedConfig {
-  return withInterceptedModifier(config, {
+  return withInterceptedMod(config, {
     platform,
-    modifier,
-    async action({ modRequest: { nextModifier, ...modRequest }, modResults, ...config }) {
+    mod,
+    async action({ modRequest: { nextMod, ...modRequest }, modResults, ...config }) {
       const results = await action({ modRequest, modResults: modResults as T, ...config });
-      return nextModifier!(results as any);
+      return nextMod!(results as any);
     },
   });
 }
 
-export function withInterceptedModifier<T>(
+export function withInterceptedMod<T>(
   config: ExportedConfig,
   {
     platform,
-    modifier,
+    mod,
     action,
   }: {
-    platform: ModifierPlatform;
-    modifier: string;
-    action: Modifier<T>;
+    platform: ModPlatform;
+    mod: string;
+    action: Mod<T>;
   }
 ): ExportedConfig {
-  if (!config.modifiers) {
-    config.modifiers = {};
+  if (!config.mods) {
+    config.mods = {};
   }
-  if (!config.modifiers[platform]) {
-    config.modifiers[platform] = {};
+  if (!config.mods[platform]) {
+    config.mods[platform] = {};
   }
 
-  const modifierPlugin: Modifier<T> =
-    (config.modifiers[platform] as Record<string, any>)[modifier] ?? (config => config);
+  const modPlugin: Mod<T> =
+    (config.mods[platform] as Record<string, any>)[mod] ?? (config => config);
 
-  const extendedModifier: Modifier<T> = async ({ modRequest, ...config }) => {
-    // console.log(`-[mod]-> ${platform}.${modifier}`);
-    return action({ ...config, modRequest: { ...modRequest, nextModifier: modifierPlugin } });
+  const extendedMod: Mod<T> = async ({ modRequest, ...config }) => {
+    // console.log(`-[mod]-> ${platform}.${mod}`);
+    return action({ ...config, modRequest: { ...modRequest, nextMod: modPlugin } });
   };
 
-  (config.modifiers[platform] as any)[modifier] = extendedModifier;
+  (config.mods[platform] as any)[mod] = extendedMod;
 
   return config;
 }

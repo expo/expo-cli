@@ -1,6 +1,6 @@
 import { ConfigPlugin, ExportedConfig } from '../../Plugin.types';
-import { withExtendedModifier, withPlugins } from '../core-plugins';
-import { evalModifiersAsync } from '../modifier-compiler';
+import { withExtendedMod, withPlugins } from '../core-plugins';
+import { evalModsAsync } from '../mod-compiler';
 
 describe(withPlugins, () => {
   it('compiles plugins in the correct order', () => {
@@ -27,16 +27,16 @@ describe(withPlugins, () => {
   });
 });
 
-describe(withExtendedModifier, () => {
-  it('compiles modifiers', async () => {
+describe(withExtendedMod, () => {
+  it('compiles mods', async () => {
     // A basic plugin exported from an app.json
-    const exportedConfig: ExportedConfig = { name: 'app', slug: '', modifiers: null };
+    const exportedConfig: ExportedConfig = { name: 'app', slug: '', mods: null };
 
-    // Apply modifier
-    let config = withExtendedModifier<any>(exportedConfig, {
+    // Apply mod
+    let config = withExtendedMod<any>(exportedConfig, {
       // @ts-ignore: unsupported platform
       platform: 'android',
-      modifier: 'custom',
+      mod: 'custom',
       action(props) {
         // Capitalize app name
         props.name = (props.name as string).toUpperCase();
@@ -45,15 +45,15 @@ describe(withExtendedModifier, () => {
     });
 
     // Compile plugins generically
-    config = await evalModifiersAsync(config, '/');
+    config = await evalModsAsync(config, '/');
 
     // Plugins should all be functions
     expect(
       // @ts-ignore: unsupported platform
-      Object.values(config.modifiers.android).every(value => typeof value === 'function')
+      Object.values(config.mods.android).every(value => typeof value === 'function')
     ).toBe(true);
 
-    delete config.modifiers;
+    delete config.mods;
 
     // App config should have been modified
     expect(config).toStrictEqual({

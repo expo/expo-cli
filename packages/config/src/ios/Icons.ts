@@ -5,12 +5,12 @@ import { join } from 'path';
 import { ExpoConfig } from '../Config.types';
 import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
-import { withDangerousModifier } from '../plugins/ios-plugins';
+import { withDangerousMod } from '../plugins/ios-plugins';
 import { ContentsJson, ContentsJsonImageIdiom, writeContentsJsonAsync } from './AssetContents';
 import { getProjectName } from './utils/Xcodeproj';
 
 export const withIcons: ConfigPlugin = config => {
-  return withDangerousModifier(config, async config => {
+  return withDangerousMod(config, async config => {
     await setIconsAsync(config, config.modRequest.projectRoot);
     return config;
   });

@@ -7,10 +7,10 @@ import {
 import { ExpoConfig } from '../Config.types';
 import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
-import { withDangerousModifier } from '../plugins/ios-plugins';
+import { withDangerousMod } from '../plugins/ios-plugins';
 
 export const withSplashScreen: ConfigPlugin = config => {
-  return withDangerousModifier(config, async config => {
+  return withDangerousMod(config, async config => {
     await setSplashScreenAsync(config, config.modRequest.projectRoot);
     return config;
   });

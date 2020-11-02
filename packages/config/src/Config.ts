@@ -19,11 +19,11 @@ import {
 } from './Config.types';
 import { ConfigError } from './Errors';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
-import { ModifierConfig } from './Plugin.types';
+import { ModConfig } from './Plugin.types';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 
-type SplitConfigs = { expo: ExpoConfig; modifiers: ModifierConfig };
+type SplitConfigs = { expo: ExpoConfig; mods: ModConfig };
 
 /**
  * If a config has an `expo` object then that will be used as the config.
@@ -34,11 +34,11 @@ type SplitConfigs = { expo: ExpoConfig; modifiers: ModifierConfig };
 function reduceExpoObject(config?: any): SplitConfigs {
   if (!config) return config === undefined ? null : config;
 
-  const { modifiers, ...expo } = config.expo ?? config;
+  const { mods, ...expo } = config.expo ?? config;
 
   return {
     expo,
-    modifiers,
+    mods,
   };
 }
 
@@ -62,13 +62,10 @@ function getSupportedPlatforms(
   return platforms;
 }
 
-export function getConfigWithModifiers(
-  projectRoot: string,
-  options?: GetConfigOptions
-): ProjectConfig {
+export function getConfigWithMods(projectRoot: string, options?: GetConfigOptions): ProjectConfig {
   const config = getConfig(projectRoot, options);
-  // @ts-ignore: Add the modifiers back to the object.
-  config.exp.modifiers = config.modifiers ?? null;
+  // @ts-ignore: Add the mods back to the object.
+  config.exp.mods = config.mods ?? null;
   return config;
 }
 
@@ -118,7 +115,7 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
         packageJson,
         options.skipSDKVersionRequirement
       ),
-      modifiers: config.modifiers,
+      mods: config.mods,
       dynamicConfigObjectType,
       rootConfig,
       dynamicConfigPath: paths.dynamicConfigPath,
@@ -214,7 +211,7 @@ export function readConfigJson(
 
   return {
     ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
-    modifiers: null,
+    mods: null,
     dynamicConfigPath: null,
     dynamicConfigObjectType: null,
     rootConfig: { ...outputRootConfig } as AppJSONConfig,

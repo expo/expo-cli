@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`withExpoIOSPlugins compiles modifiers 1`] = `
+exports[`withExpoIOSPlugins compiles mods 1`] = `
 Object {
   "androidNavigationBar": Object {
     "backgroundColor": "#ff0000",

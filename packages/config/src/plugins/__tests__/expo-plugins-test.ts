@@ -5,7 +5,7 @@ import * as path from 'path';
 import { ExportedConfig } from '../../Plugin.types';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
 import { withExpoIOSPlugins } from '../expo-plugins';
-import { compileModifiersAsync, evalModifiersAsync } from '../modifier-compiler';
+import { compileModsAsync, evalModsAsync } from '../mod-compiler';
 import rnFixture from './fixtures/react-native-project';
 const actualFs = jest.requireActual('fs') as typeof fs;
 
@@ -26,13 +26,13 @@ afterAll(() => {
   jest.unmock('fs');
 });
 
-describe(evalModifiersAsync, () => {
-  it(`runs with no core modifiers`, async () => {
+describe(evalModsAsync, () => {
+  it(`runs with no core mods`, async () => {
     let config: ExportedConfig = {
       name: 'app',
       slug: '',
     };
-    config = await evalModifiersAsync(config, '/');
+    config = await evalModsAsync(config, '/');
     expect(config.ios).toBeUndefined();
   });
 });
@@ -70,7 +70,7 @@ describe(withExpoIOSPlugins, () => {
       slug: '',
       ios: {},
     };
-    await expect(compileModifiersAsync(config, '/invalid')).rejects.toThrow(
+    await expect(compileModsAsync(config, '/invalid')).rejects.toThrow(
       'Could not locate a valid AppDelegate at root'
     );
   });
@@ -93,13 +93,13 @@ describe(withExpoIOSPlugins, () => {
       bundleIdentifier: 'com.bacon.todo',
       expoUsername: 'bacon',
     });
-    // Apply modifier
-    config = await compileModifiersAsync(config, '/app');
+    // Apply mod
+    config = await compileModsAsync(config, '/app');
     // This should be false because ios.config.usesNonExemptEncryption is used in favor of ios.infoPlist.ITSAppUsesNonExemptEncryption
     expect(config.ios?.infoPlist?.ITSAppUsesNonExemptEncryption).toBe(false);
   });
 
-  it('compiles modifiers', async () => {
+  it('compiles mods', async () => {
     let config: ExportedConfig = {
       name: 'my cool app',
       slug: 'mycoolapp',
@@ -196,7 +196,7 @@ describe(withExpoIOSPlugins, () => {
         accessesContactNotes: true,
       },
 
-      modifiers: null,
+      mods: null,
     };
 
     config = withExpoIOSPlugins(config, {
@@ -204,8 +204,8 @@ describe(withExpoIOSPlugins, () => {
       expoUsername: 'bacon',
     });
 
-    // Apply modifier
-    config = await compileModifiersAsync(config, '/app');
+    // Apply mod
+    config = await compileModsAsync(config, '/app');
 
     // App config should have been modified
     expect(config.name).toBe('my cool app');
@@ -221,12 +221,10 @@ describe(withExpoIOSPlugins, () => {
     // Branch
     expect(config.ios?.infoPlist?.branch_key?.live).toBe('MY_BRANCH_KEY');
 
-    // Modifiers should all be functions
-    expect(Object.values(config.modifiers.ios).every(value => typeof value === 'function')).toBe(
-      true
-    );
+    // Mods should all be functions
+    expect(Object.values(config.mods.ios).every(value => typeof value === 'function')).toBe(true);
 
-    delete config.modifiers;
+    delete config.mods;
 
     // Shape
     expect(config).toMatchSnapshot();

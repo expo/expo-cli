@@ -2,14 +2,14 @@ import { JSONObject } from '@expo/json-file';
 import { XcodeProject } from 'xcode';
 
 import { ExpoConfig } from '../Config.types';
-import { ConfigPlugin, Modifier } from '../Plugin.types';
+import { ConfigPlugin, Mod } from '../Plugin.types';
 import { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
-import { withExtendedModifier } from './core-plugins';
+import { withExtendedMod } from './core-plugins';
 
 type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPlist;
 
 /**
- * Helper method for creating modifiers from existing config functions.
+ * Helper method for creating mods from existing config functions.
  *
  * @param action
  */
@@ -26,7 +26,7 @@ export function createInfoPlistPlugin(
 type MutateEntitlementsPlistAction = (expo: ExpoConfig, entitlements: JSONObject) => JSONObject;
 
 /**
- * Helper method for creating modifiers from existing config functions.
+ * Helper method for creating mods from existing config functions.
  *
  * @param action
  */
@@ -47,10 +47,10 @@ export function createEntitlementsPlugin(
  * @param config
  * @param action
  */
-export const withInfoPlist: ConfigPlugin<Modifier<InfoPlist>> = (config, action) => {
-  return withExtendedModifier<InfoPlist>(config, {
+export const withInfoPlist: ConfigPlugin<Mod<InfoPlist>> = (config, action) => {
+  return withExtendedMod<InfoPlist>(config, {
     platform: 'ios',
-    modifier: 'infoPlist',
+    mod: 'infoPlist',
     async action(config) {
       config = await action(config);
       if (!config.ios) {
@@ -69,10 +69,10 @@ export const withInfoPlist: ConfigPlugin<Modifier<InfoPlist>> = (config, action)
  * @param config
  * @param action
  */
-export const withEntitlementsPlist: ConfigPlugin<Modifier<JSONObject>> = (config, action) => {
-  return withExtendedModifier<JSONObject>(config, {
+export const withEntitlementsPlist: ConfigPlugin<Mod<JSONObject>> = (config, action) => {
+  return withExtendedMod<JSONObject>(config, {
     platform: 'ios',
-    modifier: 'entitlements',
+    mod: 'entitlements',
     async action(config) {
       config = await action(config);
       if (!config.ios) {
@@ -90,10 +90,10 @@ export const withEntitlementsPlist: ConfigPlugin<Modifier<JSONObject>> = (config
  * @param config
  * @param action
  */
-export const withExpoPlist: ConfigPlugin<Modifier<ExpoPlist>> = (config, action) => {
-  return withExtendedModifier(config, {
+export const withExpoPlist: ConfigPlugin<Mod<ExpoPlist>> = (config, action) => {
+  return withExtendedMod(config, {
     platform: 'ios',
-    modifier: 'expoPlist',
+    mod: 'expoPlist',
     action,
   });
 };
@@ -104,24 +104,24 @@ export const withExpoPlist: ConfigPlugin<Modifier<ExpoPlist>> = (config, action)
  * @param config
  * @param action
  */
-export const withXcodeProject: ConfigPlugin<Modifier<XcodeProject>> = (config, action) => {
-  return withExtendedModifier(config, {
+export const withXcodeProject: ConfigPlugin<Mod<XcodeProject>> = (config, action) => {
+  return withExtendedMod(config, {
     platform: 'ios',
-    modifier: 'xcodeproj',
+    mod: 'xcodeproj',
     action,
   });
 };
 
 /**
- * Modifiers that don't modify any data, all unresolved functionality is performed inside a dangerous modifier.
+ * Mods that don't modify any data, all unresolved functionality is performed inside a dangerous mod.
  *
  * @param config
  * @param action
  */
-export const withDangerousModifier: ConfigPlugin<Modifier<unknown>> = (config, action) => {
-  return withExtendedModifier(config, {
+export const withDangerousMod: ConfigPlugin<Mod<unknown>> = (config, action) => {
+  return withExtendedMod(config, {
     platform: 'ios',
-    modifier: 'dangerous',
+    mod: 'dangerous',
     action,
   });
 };

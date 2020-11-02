@@ -3,7 +3,7 @@ import requireString from 'require-from-string';
 
 import { AppJSONConfig, ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
-import { serializeSkippingModifiers } from './Serialize';
+import { serializeSkippingMods } from './Serialize';
 // import babel from '@babel/core';
 
 type RawDynamicConfig = AppJSONConfig | Partial<ExpoConfig> | null;
@@ -50,9 +50,9 @@ export function evalConfig(
 
   // If the expo object exists, ignore all other values.
   if (result?.expo) {
-    result = serializeSkippingModifiers(result.expo);
+    result = serializeSkippingMods(result.expo);
   } else {
-    result = serializeSkippingModifiers(result);
+    result = serializeSkippingMods(result);
   }
 
   return { config: result, exportedObjectType };

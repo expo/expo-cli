@@ -8,7 +8,7 @@ type OptionalPromise<T> = Promise<T> | T;
 
 type Plist = JSONObject;
 
-export interface ModifierProps<T = any> {
+export interface ModProps<T = any> {
   /**
    * Project root directory for the universal app.
    */
@@ -19,14 +19,14 @@ export interface ModifierProps<T = any> {
   readonly platformProjectRoot: string;
 
   /**
-   * Name of the modifier.
+   * Name of the mod.
    */
-  readonly modifierName: string;
+  readonly modName: string;
 
   /**
-   * Name of the platform used in the modifiers config.
+   * Name of the platform used in the mods config.
    */
-  readonly platform: ModifierPlatform;
+  readonly platform: ModPlatform;
 
   /**
    * [iOS]: The path component used for querying project files.
@@ -35,12 +35,12 @@ export interface ModifierProps<T = any> {
    */
   readonly projectName?: string;
 
-  nextModifier?: Modifier<T>;
+  nextMod?: Mod<T>;
 }
 
 // TODO: Migrate ProjectConfig to using expo instead if exp
 export interface ExportedConfig extends ExpoConfig {
-  modifiers?: ModifierConfig | null;
+  mods?: ModConfig | null;
 }
 
 export interface ExportedConfigWithProps<Data = any> extends ExpoConfig {
@@ -48,24 +48,24 @@ export interface ExportedConfigWithProps<Data = any> extends ExpoConfig {
    * The Object representation of a complex file type.
    */
   modResults: Data;
-  modRequest: ModifierProps<Data>;
+  modRequest: ModProps<Data>;
 }
 
 export type ConfigPlugin<Props = any> = (config: ExpoConfig, props: Props) => ExpoConfig;
 
-export type Modifier<Props = any> = (
+export type Mod<Props = any> = (
   config: ExportedConfigWithProps<Props>
 ) => OptionalPromise<ExportedConfigWithProps<Props>>;
 
-export interface ModifierConfig {
+export interface ModConfig {
   // android?: {
   // };
   ios?: {
-    infoPlist?: Modifier<InfoPlist>;
-    entitlements?: Modifier<Plist>;
-    expoPlist?: Modifier<Plist>;
-    xcodeproj?: Modifier<XcodeProject>;
+    infoPlist?: Mod<InfoPlist>;
+    entitlements?: Mod<Plist>;
+    expoPlist?: Mod<Plist>;
+    xcodeproj?: Mod<XcodeProject>;
   };
 }
 
-export type ModifierPlatform = keyof ModifierConfig;
+export type ModPlatform = keyof ModConfig;

@@ -1,6 +1,6 @@
 # Advanced configuration
 
-Expo config is a powerful tool for generating native app code from a unified JavaScript interface. Most basic functionality can be controlled simply by using the the [static Expo config](https://docs.expo.io/versions/latest/config/app/), but some features require access to the native file system during ejection. To support complex behavior we've created config plugins, and modifiers!
+Expo config is a powerful tool for generating native app code from a unified JavaScript interface. Most basic functionality can be controlled simply by using the the [static Expo config](https://docs.expo.io/versions/latest/config/app/), but some features require access to the native file system during ejection. To support complex behavior we've created config plugins, and mods (short for modifiers)!
 
 > Here is a [colorful chart](https://whimsical.com/UjytoYXT2RN43LywvWExfK) for visual learners.
 
@@ -9,7 +9,7 @@ Expo config is a powerful tool for generating native app code from a unified Jav
 A function which accepts a config, modifies it, then returns the modified config.
 
 - Plugins should be named using a similar format: `with<Plugin Functionality>` i.e. `withFacebook`.
-- Plugins should be synchronous and their return value should be evaluated. The only exception to this is when `modifiers` are added.
+- Plugins should be synchronous and their return value should be evaluated. The only exception to this is when `mods` are added.
 - Custom properties can be passed to the plugin using a second argument.
 
 ### Creating a Plugin
@@ -76,15 +76,15 @@ withPlugins(config, [
 
 An async function which accepts a config and a data object, then manipulates and returns both as an object.
 
-Modifiers (mods for short) are added to the `modifiers` object of the Expo config. The `modifiers` object is different to the rest of the Expo config because it doesn't get serialized after the initial reading, this means you can use it to perform actions _during_ code generation. If possible, you should attempt to use basic plugins instead of modifiers as they're simpler to work with.
+Modifiers (mods for short) are added to the `mods` object of the Expo config. The `mods` object is different to the rest of the Expo config because it doesn't get serialized after the initial reading, this means you can use it to perform actions _during_ code generation. If possible, you should attempt to use basic plugins instead of mods as they're simpler to work with.
 
-- `modifiers` are omitted in the manifest and cannot be accessed via `Constants.manifest`. `modifiers` exist for the sole purpose of modifying native files during code generation!
+- `mods` are omitted in the manifest and cannot be accessed via `Constants.manifest`. `mods` exist for the sole purpose of modifying native files during code generation!
 - mods can be used to read and write files safely during the `expo eject` command. This is how Expo CLI modifies the Info.plist, entitlements, xcproj, etc...
 - mods are platform specific and should always be added to a platform specific object:
 
 ```js
 {
-  modifiers: {
+  mods: {
       ios: { /* ... */ },
       android: { /* ... */ }
   }
@@ -96,25 +96,25 @@ Modifiers (mods for short) are added to the `modifiers` object of the Expo confi
 - The config is read using `getConfig` from `expo/config`
 - All of the core functionality supported by Expo is added via plugins in `withExpoIOSPlugins`. This is stuff like name, version, icons, locales, etc.
 - The config is passed to the compiler `compileModifiersAsync`
-- The compiler adds base modifiers which are responsible for reading data (like Info.plist), executing a named modifier (like `modifiers.ios.infoPlist`), then writing the results to the file system.
-- The compiler iterates over all of the modifiers and asynchronously evaluates them while providing base props like the `projectRoot`.
-  - After each modifier, error handling asserts if the modifier chain was corrupted by an invalid modifier.
+- The compiler adds base mods which are responsible for reading data (like Info.plist), executing a named mod (like `mods.ios.infoPlist`), then writing the results to the file system.
+- The compiler iterates over all of the mods and asynchronously evaluates them while providing base props like the `projectRoot`.
+  - After each mod, error handling asserts if the mod chain was corrupted by an invalid mod.
 
 ### Default Modifiers
 
-The following default modifiers are provided by the mod compiler for common file manipulation:
+The following default mods are provided by the mod compiler for common file manipulation:
 
-- `modifiers.ios.infoPlist` -- Modify the `ios/<name>/Info.plist` as JSON
-- `modifiers.ios.entitlements` -- Modify the `ios/<name>/<product-name>.entitlements` as JSON
-- `modifiers.ios.expoPlist` -- Modify the `ios/<name>/Expo.plist` as JSON (Expo updates config for iOS).
-- `modifiers.ios.xcodeproj` -- Modify the `ios/<name>.xcodeproj` as an `XcodeProject` object from the [`xcode`](https://www.npmjs.com/package/xcode) JS package.
+- `mods.ios.infoPlist` -- Modify the `ios/<name>/Info.plist` as JSON
+- `mods.ios.entitlements` -- Modify the `ios/<name>/<product-name>.entitlements` as JSON
+- `mods.ios.expoPlist` -- Modify the `ios/<name>/Expo.plist` as JSON (Expo updates config for iOS).
+- `mods.ios.xcodeproj` -- Modify the `ios/<name>.xcodeproj` as an `XcodeProject` object from the [`xcode`](https://www.npmjs.com/package/xcode) JS package.
 
-After the mods are resolved, the contents of each modifier will be written to disk. Custom default modifiers can be added to support new native files.
-For example, you can create a modifier to support the `GoogleServices-Info.plist`, and pass it to other modifiers.
+After the mods are resolved, the contents of each mod will be written to disk. Custom default mods can be added to support new native files.
+For example, you can create a mod to support the `GoogleServices-Info.plist`, and pass it to other mods.
 
 ### Creating a Modifier
 
-Say you wanted to write a modifier to update the Xcode Project's "product name":
+Say you wanted to write a mod to update the Xcode Project's "product name":
 
 ```ts
 import { ConfigPlugin, withXcodeProject } from '@expo/config-plugins';
@@ -143,7 +143,7 @@ export default withCustomProductName(config, 'new_name');
 
 ### Experimental functionality
 
-Some parts of the modifier system aren't fully flushed out, these parts use the `withDangerousModifier` to read/write data without a base modifier. These methods essentially act as their own base modifier and cannot be extended. Icons for example currently use the dangerous modifier to perform a single generation step with no ability to customize the results.
+Some parts of the mod system aren't fully flushed out, these parts use the `withDangerousModifier` to read/write data without a base mod. These methods essentially act as their own base mod and cannot be extended. Icons for example currently use the dangerous mod to perform a single generation step with no ability to customize the results.
 
 ```ts
 export const withIcons: ConfigPlugin = config => {

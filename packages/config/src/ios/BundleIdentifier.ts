@@ -5,7 +5,7 @@ import xcode from 'xcode';
 
 import { ExpoConfig } from '../Config.types';
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousModifier } from '../plugins/ios-plugins';
+import { withDangerousMod } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import { getAllInfoPlistPaths, getAllPBXProjectPaths, getPBXProjectPath } from './Paths';
 import {
@@ -18,7 +18,7 @@ export const withBundleIdentifier: ConfigPlugin<{ bundleIdentifier?: string }> =
   config,
   { bundleIdentifier }
 ) => {
-  return withDangerousModifier(config, async config => {
+  return withDangerousMod(config, async config => {
     const bundleId = bundleIdentifier ?? config.ios?.bundleIdentifier;
     assert(
       bundleId,
