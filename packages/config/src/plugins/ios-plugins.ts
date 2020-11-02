@@ -13,9 +13,7 @@ type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPli
  *
  * @param action
  */
-export function createInfoPlistPlugin(
-  action: MutateInfoPlistAction
-): ConfigPlugin<MutateInfoPlistAction> {
+export function createInfoPlistPlugin(action: MutateInfoPlistAction): ConfigPlugin<void> {
   return config =>
     withInfoPlist(config, async config => {
       config.modResults = await action(config, config.modResults);
@@ -32,7 +30,7 @@ type MutateEntitlementsPlistAction = (expo: ExpoConfig, entitlements: JSONObject
  */
 export function createEntitlementsPlugin(
   action: MutateEntitlementsPlistAction
-): ConfigPlugin<MutateEntitlementsPlistAction> {
+): ConfigPlugin<void> {
   return config =>
     withEntitlementsPlist(config, async config => {
       config.modResults = await action(config, config.modResults);
