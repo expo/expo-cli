@@ -12,7 +12,7 @@ export interface ProjectConfig {
    */
   exp: ExpoConfig;
   /**
-   * Dynamic config for processing native files during the generation process. This only exists if an Expo config exports and `expo` and `mods` object.
+   * Dynamic config for processing native files during the generation process.
    */
   mods?: ModConfig | null;
   /**
