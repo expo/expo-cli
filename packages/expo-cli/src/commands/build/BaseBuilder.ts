@@ -139,7 +139,8 @@ export default class BaseBuilder {
       this.options.releaseChannel!,
       this.platform(),
       this.manifest.sdkVersion!,
-      this.manifest.slug!
+      this.manifest.slug!,
+      this.manifest.owner
     );
     if (reuseStatus.canReuse) {
       log.warn(`Did you know that Expo provides over-the-air updates?

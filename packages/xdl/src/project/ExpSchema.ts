@@ -3,6 +3,7 @@ import { JSONObject } from '@expo/json-file';
 import Schemer from '@expo/schemer';
 import fs from 'fs';
 import { boolish } from 'getenv';
+import schemaDerefSync from 'json-schema-deref-sync';
 import path from 'path';
 
 import ApiV2 from '../ApiV2';
@@ -35,7 +36,8 @@ export async function validateAsync(projectRoot: string) {
 
 export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
   const json = await _getSchemaJSONAsync(sdkVersion);
-  return json.schema;
+  const schema = schemaDerefSync(json.schema);
+  return schema;
 }
 
 /**

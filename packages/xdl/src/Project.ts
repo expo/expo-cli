@@ -573,7 +573,8 @@ export async function findReusableBuildAsync(
   releaseChannel: string,
   platform: string,
   sdkVersion: string,
-  slug: string
+  slug: string,
+  owner?: string
 ): Promise<{ downloadUrl?: string; canReuse: boolean }> {
   const user = await UserManager.getCurrentUserAsync();
 
@@ -582,6 +583,7 @@ export async function findReusableBuildAsync(
     platform,
     sdkVersion,
     slug,
+    owner,
   });
 
   return buildReuseStatus;
@@ -1703,7 +1705,6 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
     const port = info.port;
     ProjectUtils.logDebug(projectRoot, 'expo', `Local server listening at http://${host}:${port}`);
   });
-  await Exp.saveRecentExpRootAsync(projectRoot);
 }
 
 async function stopExpoServerAsync(projectRoot: string): Promise<void> {

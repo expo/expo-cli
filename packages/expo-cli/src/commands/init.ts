@@ -523,7 +523,7 @@ async function configureUpdatesProjectFilesAsync(
   await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
 
   // apply iOS config
-  const iosSourceRoot = IOSConfig.getSourceRoot(projectRoot);
+  const iosSourceRoot = IOSConfig.Paths.getSourceRoot(projectRoot);
   const supportingDirectory = path.join(iosSourceRoot, 'Supporting');
 
   const plistFilePath = path.join(supportingDirectory, 'Expo.plist');

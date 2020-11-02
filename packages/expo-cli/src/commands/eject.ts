@@ -35,15 +35,10 @@ async function action(
   }
 
   // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3 for ExpoKit
+  // TODO: remove LegacyEject when SDK 36 is no longer supported: after SDK 40 is released.
   if (Versions.lteSdkVersion(exp, '36.0.0')) {
-    // Don't show a warning if we haven't released SDK 37 yet
-    const latestReleasedVersion = await Versions.newestReleasedSdkVersionAsync();
-    if (Versions.lteSdkVersion({ sdkVersion: latestReleasedVersion.version }, '36.0.0')) {
+    if (options.force || (await userWantsToEjectWithoutUpgradingAsync())) {
       await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
-    } else {
-      if (options.force || (await userWantsToEjectWithoutUpgradingAsync())) {
-        await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
-      }
     }
   } else {
     await Eject.ejectAsync(projectDir, options as Eject.EjectAsyncOptions);
@@ -61,6 +56,7 @@ export default function (program: Command) {
       'Create Xcode and Android Studio projects for your app. Use this if you need to add custom native functionality.'
     )
     .helpGroup('eject')
+    .option('--force', 'Skip legacy eject warnings.') // TODO: remove the force flag when SDK 36 is no longer supported: after SDK 40 is released.
     .option('--no-install', 'Skip installing npm packages and CocoaPods.')
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .asyncActionProjectDir(action);

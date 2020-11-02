@@ -195,18 +195,6 @@ async function extractTemplateAppAsyncImpl(
   });
 }
 
-export async function saveRecentExpRootAsync(root: string) {
-  root = path.resolve(root);
-
-  // Write the recent Exps JSON file
-  const recentExpsJsonFile = UserSettings.recentExpsJsonFile();
-  let recentExps = await recentExpsJsonFile.readAsync();
-  // Filter out copies of this so we don't get dupes in this list
-  recentExps = recentExps.filter((dir: string) => dir !== root);
-  recentExps.unshift(root);
-  return await recentExpsJsonFile.writeAsync(recentExps.slice(0, 100));
-}
-
 export async function sendAsync(recipient: string, url_: string, allowUnauthed: boolean = true) {
   const user = await UserManager.ensureLoggedInAsync();
   const api = ApiV2.clientForUser(user);

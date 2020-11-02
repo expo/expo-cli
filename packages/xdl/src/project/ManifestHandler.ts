@@ -94,7 +94,7 @@ async function getBundleUrlAsync({
   packagerOpts: PackagerOptions;
   bundleUrlPackagerOpts: PackagerOptions;
 }): Promise<string> {
-  const queryParams = await UrlUtils.constructBundleQueryParamsAsync(projectRoot, packagerOpts);
+  const queryParams = UrlUtils.constructBundleQueryParams(projectRoot, packagerOpts);
 
   const path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(
     platform

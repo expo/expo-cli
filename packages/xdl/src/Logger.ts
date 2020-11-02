@@ -18,7 +18,7 @@ const logger = bunyan.createLogger({
   name: 'expo',
   serializers: bunyan.stdSerializers,
   streams:
-    process.env.DEBUG && process.env.NODE_ENV !== 'production'
+    process.env.EXPO_RAW_LOG && process.env.NODE_ENV !== 'production'
       ? [
           {
             type: 'raw',

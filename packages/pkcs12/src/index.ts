@@ -37,7 +37,9 @@ export function getX509CertificateByFriendlyName(
   friendlyName: string
 ): forge.pki.Certificate | null {
   const certBagType = forge.pki.oids.certBag;
-  const bags = p12.getBags({ friendlyName, bagType: certBagType }).friendlyName;
+  // node-forge converts friendly names to lowercase, so we search by lowercase
+  const bags = p12.getBags({ friendlyName: friendlyName.toLowerCase(), bagType: certBagType })
+    .friendlyName;
   if (!bags || bags.length === 0) {
     return null;
   }

@@ -6,6 +6,7 @@ import { UpdateKeystore } from '../AndroidKeystore';
 
 jest.mock('../../actions/list');
 jest.mock('../../../prompts');
+jest.mock('../../utils/validateKeystore');
 jest.mock('fs-extra');
 mockExpoXDL({
   AndroidCredentials: {
@@ -31,7 +32,7 @@ describe('UpdateKeystore', () => {
           throw new Error("shouldn't happen");
         });
 
-      const view = new UpdateKeystore(testExperienceName);
+      const view = new UpdateKeystore(testExperienceName, { skipKeystoreValidation: true });
       const lastView = await view.open(ctx);
 
       expect(lastView).toBe(null);
@@ -47,7 +48,7 @@ describe('UpdateKeystore', () => {
         .mockImplementationOnce(() => ({ answer: true })) // user specified
         .mockImplementation(() => ({ input: 'test' })); // keystore credentials
 
-      const view = new UpdateKeystore(testExperienceName);
+      const view = new UpdateKeystore(testExperienceName, { skipKeystoreValidation: true });
       const lastView = await view.open(ctx);
 
       expect(lastView).toBe(null);
@@ -70,7 +71,7 @@ describe('UpdateKeystore', () => {
           throw new Error("shouldn't happen");
         });
 
-      const view = new UpdateKeystore(testExperienceName);
+      const view = new UpdateKeystore(testExperienceName, { skipKeystoreValidation: true });
       const lastView = await view.open(ctx);
 
       expect(lastView).toBe(null);
@@ -90,7 +91,7 @@ describe('UpdateKeystore', () => {
         .mockImplementationOnce(() => ({ answer: true })) // user specified
         .mockImplementation(() => ({ input: 'test' })); // keystore credentials
 
-      const view = new UpdateKeystore(testExperienceName);
+      const view = new UpdateKeystore(testExperienceName, { skipKeystoreValidation: true });
       const lastView = await view.open(ctx);
 
       expect(lastView).toBe(null);

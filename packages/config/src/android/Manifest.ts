@@ -198,14 +198,34 @@ export function addMetaDataItemToMainApplication(
 }
 
 export function removeMetaDataItemFromMainApplication(mainApplication: any, itemName: string) {
+  const index = findMetaDataItem(mainApplication, itemName);
+  if (mainApplication?.['meta-data'] && index > -1) {
+    mainApplication['meta-data'].splice(index, 1);
+  }
+  return mainApplication;
+}
+
+export function findMetaDataItem(mainApplication: any, itemName: string): number {
   if (mainApplication.hasOwnProperty('meta-data')) {
     const index = mainApplication['meta-data'].findIndex(
       (e: any) => e['$']['android:name'] === itemName
     );
 
-    if (index > -1) {
-      mainApplication['meta-data'].splice(index, 1);
-    }
+    return index;
   }
-  return mainApplication;
+  return -1;
+}
+
+export function getMainApplicationMetaDataValue(
+  androidManifest: Document,
+  name: string
+): string | null {
+  const mainApplication = getMainApplication(androidManifest);
+
+  if (mainApplication?.hasOwnProperty('meta-data')) {
+    const item = mainApplication?.['meta-data']?.find((e: any) => e.$['android:name'] === name);
+    return item?.$['android:value'] ?? null;
+  }
+
+  return null;
 }
