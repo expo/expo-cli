@@ -39,7 +39,7 @@ describe('Android permissions', () => {
     );
 
     const manifestPermissionsJSON = androidManifestJson.manifest['uses-permission'];
-    const manifestPermissions = manifestPermissionsJSON.map(e => e['$']['android:name']);
+    const manifestPermissions = manifestPermissionsJSON.map(e => e.$['android:name']);
 
     expect(
       manifestPermissions.every(permission =>

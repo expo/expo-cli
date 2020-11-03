@@ -50,11 +50,14 @@ function prefixAndroidPermissionsIfNecessary(permissions: string[]): string[] {
   });
 }
 
-export function getAndroidPermissions(config: ExpoConfig): string[] {
+export function getAndroidPermissions(config: Pick<ExpoConfig, 'android'>): string[] {
   return config.android?.permissions ?? [];
 }
 
-export async function setAndroidPermissions(config: ExpoConfig, manifestDocument: AndroidManifest) {
+export async function setAndroidPermissions(
+  config: Pick<ExpoConfig, 'android'>,
+  manifestDocument: AndroidManifest
+) {
   const permissions = getAndroidPermissions(config);
   let permissionsToAdd = [];
   if (permissions === null) {
