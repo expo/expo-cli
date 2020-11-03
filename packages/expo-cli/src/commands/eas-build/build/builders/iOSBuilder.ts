@@ -1,5 +1,5 @@
 import { IOSConfig } from '@expo/config';
-import { BuildType, iOS, Job, Platform, sanitizeJob } from '@expo/eas-build-job';
+import { iOS, Job, Platform, sanitizeJob, Workflow } from '@expo/eas-build-job';
 import sortBy from 'lodash/sortBy';
 import path from 'path';
 
@@ -12,7 +12,6 @@ import {
   CredentialsSource,
   iOSGenericBuildProfile,
   iOSManagedBuildProfile,
-  Workflow,
 } from '../../../../easJson';
 import { gitRootDirectory } from '../../../../git';
 import log from '../../../../log';
@@ -194,7 +193,7 @@ class iOSBuilder implements Builder<Platform.iOS> {
     const projectRootDirectory = path.relative(await gitRootDirectory(), process.cwd()) || '.';
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
-      type: BuildType.Generic,
+      type: Workflow.Generic,
       scheme: this.scheme,
       artifactPath: buildProfile.artifactPath,
       releaseChannel: buildProfile.releaseChannel,
@@ -208,9 +207,7 @@ class iOSBuilder implements Builder<Platform.iOS> {
   ): Promise<Partial<iOS.ManagedJob>> {
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
-      type: BuildType.Managed,
-      packageJson: { example: 'packageJson' },
-      manifest: { example: 'manifest' },
+      type: Workflow.Managed,
     };
   }
 

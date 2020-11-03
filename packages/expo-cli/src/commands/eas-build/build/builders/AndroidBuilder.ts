@@ -1,5 +1,5 @@
 import { AndroidConfig } from '@expo/config';
-import { Android, BuildType, Job, Platform, sanitizeJob } from '@expo/eas-build-job';
+import { Android, Job, Platform, sanitizeJob, Workflow } from '@expo/eas-build-job';
 import path from 'path';
 
 import CommandError from '../../../../CommandError';
@@ -11,7 +11,6 @@ import {
   AndroidGenericBuildProfile,
   AndroidManagedBuildProfile,
   CredentialsSource,
-  Workflow,
 } from '../../../../easJson';
 import { gitAddAsync, gitRootDirectory } from '../../../../git';
 import { Builder, BuilderContext } from '../../types';
@@ -169,7 +168,7 @@ class AndroidBuilder implements Builder<Platform.Android> {
     const projectRootDirectory = path.relative(await gitRootDirectory(), process.cwd()) || '.';
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
-      type: BuildType.Generic,
+      type: Workflow.Generic,
       gradleCommand: buildProfile.gradleCommand,
       artifactPath: buildProfile.artifactPath,
       releaseChannel: buildProfile.releaseChannel,
@@ -183,9 +182,7 @@ class AndroidBuilder implements Builder<Platform.Android> {
   ): Promise<Partial<Android.ManagedJob>> {
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
-      type: BuildType.Managed,
-      packageJson: { example: 'packageJson' },
-      manifest: { example: 'manifest' },
+      type: Workflow.Managed,
     };
   }
 

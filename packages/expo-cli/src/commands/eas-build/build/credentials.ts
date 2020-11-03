@@ -1,6 +1,8 @@
+import { Workflow } from '@expo/eas-build-job';
+
 import CommandError from '../../../CommandError';
 import { CredentialsProvider } from '../../../credentials/provider';
-import { CredentialsSource, Workflow } from '../../../easJson';
+import { CredentialsSource } from '../../../easJson';
 import log from '../../../log';
 import prompts from '../../../prompts';
 import { platformDisplayNames } from '../constants';
