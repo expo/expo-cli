@@ -56,7 +56,7 @@ export function getAndroidPermissions(config: Pick<ExpoConfig, 'android'>): stri
 
 export async function setAndroidPermissions(
   config: Pick<ExpoConfig, 'android'>,
-  manifestDocument: AndroidManifest
+  manifest: AndroidManifest
 ) {
   const permissions = getAndroidPermissions(config);
   let permissionsToAdd = [];
@@ -69,11 +69,12 @@ export async function setAndroidPermissions(
     permissionsToAdd = [...providedPermissions, ...requiredPermissions];
   }
 
-  let manifestPermissions: ManifestUsesPermission[] = [];
-  if (!manifestDocument.manifest.hasOwnProperty('uses-permission')) {
-    manifestDocument.manifest['uses-permission'] = [];
+  if (!manifest.manifest.hasOwnProperty('uses-permission')) {
+    manifest.manifest['uses-permission'] = [];
   }
-  manifestPermissions = manifestDocument.manifest['uses-permission'] ?? [];
+  // manifest.manifest['uses-permission'] = [];
+
+  const manifestPermissions = manifest.manifest['uses-permission'] ?? [];
 
   permissionsToAdd.forEach(permission => {
     if (!isPermissionAlreadyRequested(permission, manifestPermissions)) {
@@ -81,15 +82,14 @@ export async function setAndroidPermissions(
     }
   });
 
-  return manifestDocument;
+  return manifest;
 }
 
 export function isPermissionAlreadyRequested(
   permission: string,
   manifestPermissions: ManifestUsesPermission[]
 ): boolean {
-  const hasPermission = manifestPermissions.filter((e: any) => e.$['android:name'] === permission);
-  return hasPermission.length > 0;
+  return manifestPermissions.some(e => e.$['android:name'] === permission);
 }
 
 export function addPermissionToManifest(
