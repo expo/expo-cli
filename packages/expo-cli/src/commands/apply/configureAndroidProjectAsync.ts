@@ -1,4 +1,4 @@
-import { AndroidConfig, getConfig, getConfigWithMods, WarningAggregator } from '@expo/config';
+import { AndroidConfig, getConfig, getConfigWithMods } from '@expo/config';
 import { withExpoAndroidPlugins } from '@expo/config/build/plugins/expo-plugins';
 import { compileModsAsync } from '@expo/config/build/plugins/mod-compiler';
 import { UserManager } from '@expo/xdl';
@@ -24,16 +24,6 @@ async function modifyAppBuildGradleAsync(
   const buildGradleString = fs.readFileSync(buildGradlePath).toString();
   const result = callback(buildGradleString);
   fs.writeFileSync(buildGradlePath, result);
-}
-
-async function modifyMainActivityAsync(
-  projectRoot: string,
-  callback: (props: { contents: string; language: 'java' | 'kt' }) => Promise<string>
-) {
-  const mainActivity = await AndroidConfig.Paths.getMainActivityAsync(projectRoot);
-  const contents = fs.readFileSync(mainActivity.path).toString();
-  const result = await callback({ contents, language: mainActivity.language });
-  fs.writeFileSync(mainActivity.path, result);
 }
 
 export default async function configureAndroidProjectAsync(projectRoot: string) {
@@ -67,21 +57,6 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     buildGradle = AndroidConfig.Version.setVersionCode(exp, buildGradle);
     buildGradle = AndroidConfig.Version.setVersionName(exp, buildGradle);
     return buildGradle;
-  });
-
-  await modifyMainActivityAsync(projectRoot, async ({ contents, language }) => {
-    if (language === 'java') {
-      contents = AndroidConfig.UserInterfaceStyle.addOnConfigurationChangedMainActivity(
-        exp,
-        contents
-      );
-    } else {
-      WarningAggregator.addWarningAndroid(
-        'userInterfaceStyle',
-        `Cannot automatically configure MainActivity if it's not java`
-      );
-    }
-    return contents;
   });
 
   // If we renamed the package, we should also move it around and rename it in source files

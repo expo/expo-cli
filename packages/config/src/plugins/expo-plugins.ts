@@ -83,5 +83,6 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     [AndroidConfig.Updates.withUpdates, { expoUsername }],
 
     // MainActivity.*
+    AndroidConfig.UserInterfaceStyle.withUiModeMainActivity,
   ]);
 };

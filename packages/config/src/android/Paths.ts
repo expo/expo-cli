@@ -5,9 +5,15 @@ import * as path from 'path';
 import { directoryExistsAsync } from '../Modules';
 import { ResourceKind } from './Resources';
 
+export interface ProjectFile<L extends string = string> {
+  path: string;
+  language: L;
+  contents: string;
+}
+
 export async function getMainActivityAsync(
   projectRoot: string
-): Promise<{ path: string; language: 'java' | 'kt' }> {
+): Promise<ProjectFile<'java' | 'kt'>> {
   const mainActivityJavaPath = globSync(
     path.join(projectRoot, 'android/app/src/main/java/**/MainActivity.{java,kt}')
   )[0];
@@ -21,8 +27,10 @@ export async function getMainActivityAsync(
   if (!isJava && !isKotlin) {
     throw new Error(`Failed to find 'MainActivity' file for project: ${projectRoot}.`);
   }
+  const filePath = isJava ? mainActivityPathJava : mainActivityPathKotlin;
   return {
-    path: isJava ? mainActivityPathJava : mainActivityPathKotlin,
+    path: filePath,
+    contents: fs.readFileSync(filePath, 'utf8'),
     language: isJava ? 'java' : 'kt',
   };
 }

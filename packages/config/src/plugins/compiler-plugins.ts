@@ -9,7 +9,7 @@ import { ConfigPlugin, ExportedConfig, ExportedConfigWithProps } from '../Plugin
 import { addWarningAndroid, addWarningIOS } from '../WarningAggregator';
 import { Manifest } from '../android';
 import { AndroidManifest } from '../android/Manifest';
-import { getAndroidManifestAsync } from '../android/Paths';
+import { getAndroidManifestAsync, getMainActivityAsync, ProjectFile } from '../android/Paths';
 import { readResourcesXMLAsync, ResourceXML } from '../android/Resources';
 import { getProjectStringsXMLPathAsync } from '../android/Strings';
 import { writeXMLAsync } from '../android/XML';
@@ -43,6 +43,7 @@ export function resolveModResults(results: any, platformName: string, modName: s
 function applyAndroidCoreMods(projectRoot: string, config: ExportedConfig): ExportedConfig {
   config = withAndroidStringsXMLBaseMod(config);
   config = withAndroidManifestBaseMod(config);
+  config = withAndroidMainActivityBaseMod(config);
   return config;
 }
 
@@ -109,6 +110,42 @@ const withAndroidStringsXMLBaseMod: ConfigPlugin<void> = config => {
         addWarningAndroid(
           `${modRequest.platform}-${modRequest.modName}`,
           `strings.xml configuration could not be applied. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
+
+const withAndroidMainActivityBaseMod: ConfigPlugin<void> = config => {
+  // Append a rule to supply strings.xml data to mods on `mods.android.strings`
+  return withInterceptedMod<ProjectFile<'java' | 'kt'>>(config, {
+    platform: 'android',
+    mod: 'mainActivity',
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<ProjectFile<'java' | 'kt'>> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        let modResults = await getMainActivityAsync(modRequest.projectRoot);
+        // Currently don't support changing the path or language
+        const filePath = modResults.path;
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await writeXMLAsync({ path: filePath, xml: modResults });
+      } catch (error) {
+        addWarningAndroid(
+          `${modRequest.platform}-${modRequest.modName}`,
+          `MainActivity could not be modified. ${error.message}`
         );
       }
       return results;

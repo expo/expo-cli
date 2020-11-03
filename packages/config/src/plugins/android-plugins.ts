@@ -2,6 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin, Mod } from '../Plugin.types';
 import { AndroidManifest } from '../android/Manifest';
+import { ProjectFile } from '../android/Paths';
 import { ResourceXML } from '../android/Resources';
 import { withExtendedMod } from './core-plugins';
 
@@ -56,6 +57,20 @@ export const withStringsXml: ConfigPlugin<Mod<ResourceXML>> = (config, action) =
   return withExtendedMod(config, {
     platform: 'android',
     mod: 'strings',
+    action,
+  });
+};
+
+/**
+ * Provides the project MainActivity for modification.
+ *
+ * @param config
+ * @param action
+ */
+export const withMainActivity: ConfigPlugin<Mod<ProjectFile<'java' | 'kt'>>> = (config, action) => {
+  return withExtendedMod(config, {
+    platform: 'android',
+    mod: 'mainActivity',
     action,
   });
 };

@@ -29,11 +29,13 @@ describe(getMainActivityAsync, () => {
       '/app/android/app/src/main/java/com/bacon/app/MainActivity.java'
     );
     expect(mainActivity.language).toBe('java');
+    expect(mainActivity.contents).toBe('...');
   });
   it(`gets a kotlin project`, async () => {
     const mainActivity = await getMainActivityAsync('/kt');
     expect(mainActivity.path).toBe('/kt/android/app/src/main/java/com/bacon/app/MainActivity.kt');
     expect(mainActivity.language).toBe('kt');
+    expect(mainActivity.contents).toBe('...');
   });
 });
 

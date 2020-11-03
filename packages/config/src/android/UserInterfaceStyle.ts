@@ -1,5 +1,7 @@
 import { ExpoConfig } from '../Config.types';
-import { createAndroidManifestPlugin } from '../plugins/android-plugins';
+import { ConfigPlugin } from '../Plugin.types';
+import { addWarningAndroid } from '../WarningAggregator';
+import { createAndroidManifestPlugin, withMainActivity } from '../plugins/android-plugins';
 import { AndroidManifest, getMainActivity } from './Manifest';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';
@@ -18,6 +20,23 @@ public class MainActivity extends ReactActivity {
 `;
 
 export const withUiModeManifest = createAndroidManifestPlugin(setUiModeAndroidManifest);
+
+export const withUiModeMainActivity: ConfigPlugin<void> = config => {
+  return withMainActivity(config, config => {
+    if (config.modResults.language === 'java') {
+      config.modResults.contents = addOnConfigurationChangedMainActivity(
+        config,
+        config.modResults.contents
+      );
+    } else {
+      addWarningAndroid(
+        'android-userInterfaceStyle',
+        `Cannot automatically configure MainActivity if it's not java`
+      );
+    }
+    return config;
+  });
+};
 
 export function getUserInterfaceStyle(config: ExpoConfig): string | null {
   return config.android?.userInterfaceStyle ?? config.userInterfaceStyle ?? null;
