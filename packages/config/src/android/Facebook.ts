@@ -3,7 +3,7 @@ import { assert } from '../Errors';
 import {
   addMetaDataItemToMainApplication,
   AndroidManifest,
-  getMainApplication,
+  getMainApplicationOrThrow,
   ManifestActivity,
   ManifestApplication,
   prefixAndroidKeys,
@@ -154,9 +154,7 @@ export function setFacebookConfig(config: ExpoConfigFacebook, androidManifest: A
   const autoLogAppEvents = getFacebookAutoLogAppEvents(config);
   const advertiserIdCollection = getFacebookAdvertiserIDCollection(config);
 
-  let mainApplication = getMainApplication(androidManifest);
-
-  assert(mainApplication != null, 'Main application is not defined in the AndroidManifest.xml');
+  let mainApplication = getMainApplicationOrThrow(androidManifest);
 
   mainApplication = ensureFacebookActivity({ scheme, mainApplication });
 

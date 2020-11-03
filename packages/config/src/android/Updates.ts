@@ -5,8 +5,8 @@ import { projectHasModule } from '../Modules';
 import {
   addMetaDataItemToMainApplication,
   AndroidManifest,
-  getMainApplication,
   getMainApplicationMetaDataValue,
+  getMainApplicationOrThrow,
   removeMetaDataItemFromMainApplication,
 } from './Manifest';
 
@@ -69,7 +69,7 @@ export async function setUpdatesConfig(
   manifestDocument: AndroidManifest,
   username: string | null
 ): Promise<AndroidManifest> {
-  const mainApplication = getMainApplication(manifestDocument);
+  const mainApplication = getMainApplicationOrThrow(manifestDocument);
 
   addMetaDataItemToMainApplication(
     mainApplication,
@@ -101,7 +101,7 @@ export function setVersionsConfig(
   config: Pick<ExpoConfigUpdates, 'sdkVersion' | 'runtimeVersion'>,
   manifestDocument: AndroidManifest
 ): AndroidManifest {
-  const mainApplication = getMainApplication(manifestDocument);
+  const mainApplication = getMainApplicationOrThrow(manifestDocument);
 
   const runtimeVersion = getRuntimeVersion(config);
   const sdkVersion = getSDKVersion(config);

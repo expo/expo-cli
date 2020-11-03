@@ -178,16 +178,15 @@ export function getMainActivity(manifest: AndroidManifest): ManifestActivity | n
 }
 
 export function addMetaDataItemToMainApplication(
-  // TODO: Type
-  mainApplication: any,
+  mainApplication: ManifestApplication,
   itemName: string,
   itemValue: string
 ): ManifestApplication {
   let existingMetaDataItem;
   const newItem = {
     $: prefixAndroidKeys({ name: itemName, value: itemValue }),
-  };
-  if (mainApplication.hasOwnProperty('meta-data')) {
+  } as ManifestMetaData;
+  if (mainApplication['meta-data']) {
     existingMetaDataItem = mainApplication['meta-data'].filter(
       (e: any) => e.$['android:name'] === itemName
     );

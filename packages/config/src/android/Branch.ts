@@ -2,7 +2,7 @@ import { ExpoConfig } from '../Config.types';
 import {
   addMetaDataItemToMainApplication,
   AndroidManifest,
-  getMainApplication,
+  getMainApplicationOrThrow,
   removeMetaDataItemFromMainApplication,
 } from './Manifest';
 
@@ -13,7 +13,7 @@ export function getBranchApiKey(config: ExpoConfig) {
 export async function setBranchApiKey(config: ExpoConfig, manifestDocument: AndroidManifest) {
   const apiKey = getBranchApiKey(config);
 
-  const mainApplication = getMainApplication(manifestDocument);
+  const mainApplication = getMainApplicationOrThrow(manifestDocument);
 
   if (apiKey) {
     // If the item exists, add it back
