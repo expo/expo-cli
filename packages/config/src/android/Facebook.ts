@@ -62,26 +62,36 @@ function getFacebookSchemeActivity(scheme: string) {
   }) as ManifestActivity;
 }
 
-export function getFacebookScheme(config: ExpoConfig) {
+type ExpoConfigFacebook = Pick<
+  ExpoConfig,
+  | 'facebookScheme'
+  | 'facebookAdvertiserIDCollectionEnabled'
+  | 'facebookAppId'
+  | 'facebookAutoInitEnabled'
+  | 'facebookAutoLogAppEventsEnabled'
+  | 'facebookDisplayName'
+>;
+
+export function getFacebookScheme(config: ExpoConfigFacebook) {
   return config.facebookScheme ?? null;
 }
 
-export function getFacebookAppId(config: ExpoConfig) {
+export function getFacebookAppId(config: ExpoConfigFacebook) {
   return config.facebookAppId ?? null;
 }
 
-export function getFacebookDisplayName(config: ExpoConfig) {
+export function getFacebookDisplayName(config: ExpoConfigFacebook) {
   return config.facebookDisplayName ?? null;
 }
-export function getFacebookAutoInitEnabled(config: ExpoConfig) {
+export function getFacebookAutoInitEnabled(config: ExpoConfigFacebook) {
   return config.facebookAutoInitEnabled ?? null;
 }
 
-export function getFacebookAutoLogAppEvents(config: ExpoConfig) {
+export function getFacebookAutoLogAppEvents(config: ExpoConfigFacebook) {
   return config.facebookAutoLogAppEventsEnabled ?? null;
 }
 
-export function getFacebookAdvertiserIDCollection(config: ExpoConfig) {
+export function getFacebookAdvertiserIDCollection(config: ExpoConfigFacebook) {
   return config.facebookAdvertiserIDCollectionEnabled ?? null;
 }
 
@@ -108,7 +118,7 @@ function ensureFacebookActivity({
   return mainApplication;
 }
 
-export async function setFacebookAppIdString(config: ExpoConfig, projectDirectory: string) {
+export async function setFacebookAppIdString(config: ExpoConfigFacebook, projectDirectory: string) {
   const stringsPath = await getProjectStringsXMLPathAsync(projectDirectory);
   assert(stringsPath, `There was a problem setting your Facebook App ID in "${stringsPath}"`);
 
@@ -123,7 +133,7 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
   return true;
 }
 
-function applyFacebookAppIdString(config: ExpoConfig, stringsJSON: ResourceXML) {
+function applyFacebookAppIdString(config: ExpoConfigFacebook, stringsJSON: ResourceXML) {
   const appId = getFacebookAppId(config);
 
   if (appId) {
@@ -135,7 +145,7 @@ function applyFacebookAppIdString(config: ExpoConfig, stringsJSON: ResourceXML) 
   return removeStringItem('facebook_app_id', stringsJSON);
 }
 
-export function setFacebookConfig(config: ExpoConfig, androidManifest: AndroidManifest) {
+export function setFacebookConfig(config: ExpoConfigFacebook, androidManifest: AndroidManifest) {
   const scheme = getFacebookScheme(config);
 
   const appId = getFacebookAppId(config);
