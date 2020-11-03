@@ -17,7 +17,7 @@ export function getName(config: Pick<ExpoConfig, 'name'>) {
 export function setDisplayName(
   configOrName: Pick<ExpoConfig, 'name'> | string,
   { CFBundleDisplayName, ...infoPlist }: InfoPlist
-) {
+): InfoPlist {
   let name: string | null = null;
   if (typeof configOrName === 'string') {
     name = configOrName;
@@ -42,7 +42,7 @@ export function setDisplayName(
 export function setName(
   config: Pick<ExpoConfig, 'name'>,
   { CFBundleName, ...infoPlist }: InfoPlist
-) {
+): InfoPlist {
   const name = getName(config);
 
   if (!name) {

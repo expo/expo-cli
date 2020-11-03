@@ -18,7 +18,10 @@ export function getRequiresFullScreen(config: Pick<ExpoConfig, 'ios'>) {
 }
 
 // Whether requires full screen on iPad
-export function setRequiresFullScreen(config: Pick<ExpoConfig, 'ios'>, infoPlist: InfoPlist) {
+export function setRequiresFullScreen(
+  config: Pick<ExpoConfig, 'ios'>,
+  infoPlist: InfoPlist
+): InfoPlist {
   return {
     ...infoPlist,
     UIRequiresFullScreen: getRequiresFullScreen(config),

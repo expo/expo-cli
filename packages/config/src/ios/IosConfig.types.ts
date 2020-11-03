@@ -30,6 +30,8 @@ export type InfoPlist = {
   GMSApiKey?: string;
   GADApplicationIdentifier?: string;
   UIUserInterfaceStyle?: InterfaceStyle;
+  UIRequiresFullScreen?: boolean;
+  branch_key?: { live?: string };
 };
 
 export type ExpoPlist = {

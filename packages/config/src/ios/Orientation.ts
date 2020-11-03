@@ -28,7 +28,10 @@ function getUISupportedInterfaceOrientations(orientation: string | null): Interf
   }
 }
 
-export function setOrientation(config: Pick<ExpoConfig, 'orientation'>, infoPlist: InfoPlist) {
+export function setOrientation(
+  config: Pick<ExpoConfig, 'orientation'>,
+  infoPlist: InfoPlist
+): InfoPlist {
   const orientation = getOrientation(config);
 
   return {
