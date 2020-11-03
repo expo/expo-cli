@@ -26,7 +26,7 @@ describe('Android orientation', () => {
 
       const mainActivity = getMainActivity(androidManifestJson);
 
-      expect(mainActivity['$']['android:screenOrientation']).toMatch('landscape');
+      expect(mainActivity.$['android:screenOrientation']).toMatch('landscape');
     });
 
     it('replaces orientation attribute if present', async () => {
@@ -39,7 +39,7 @@ describe('Android orientation', () => {
 
       const mainActivity = getMainActivity(androidManifestJson);
 
-      expect(mainActivity['$']['android:screenOrientation']).toMatch('portrait');
+      expect(mainActivity.$['android:screenOrientation']).toMatch('portrait');
     });
 
     it('replaces orientation with unspecified if provided default', async () => {
@@ -51,7 +51,7 @@ describe('Android orientation', () => {
 
       const mainActivity = getMainActivity(androidManifestJson);
 
-      expect(mainActivity['$']['android:screenOrientation']).toMatch('unspecified');
+      expect(mainActivity.$['android:screenOrientation']).toMatch('unspecified');
     });
   });
 });
