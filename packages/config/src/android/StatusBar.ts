@@ -9,7 +9,9 @@ const COLOR_PRIMARY_DARK_KEY = 'colorPrimaryDark';
 const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
 const WINDOW_LIGHT_STATUS_BAR = 'android:windowLightStatusBar';
 
-export function getStatusBarColor(config: ExpoConfig) {
+export function getStatusBarColor(
+  config: Pick<ExpoConfig, 'androidStatusBarColor' | 'androidStatusBar'>
+) {
   if (config.androidStatusBarColor != null) {
     addWarningAndroid(
       'status-bar',
@@ -19,11 +21,14 @@ export function getStatusBarColor(config: ExpoConfig) {
   return config.androidStatusBar?.backgroundColor || 'translucent';
 }
 
-export function getStatusBarStyle(config: ExpoConfig) {
+export function getStatusBarStyle(config: Pick<ExpoConfig, 'androidStatusBar'>) {
   return config.androidStatusBar?.barStyle || 'light-content';
 }
 
-export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: string) {
+export async function setStatusBarConfig(
+  config: Pick<ExpoConfig, 'androidStatusBarColor' | 'androidStatusBar'>,
+  projectDirectory: string
+) {
   const hexString = getStatusBarColor(config);
   const statusBarStyle = getStatusBarStyle(config);
 
