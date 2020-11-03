@@ -1,18 +1,9 @@
-import { Platform } from '@expo/eas-build-job';
+import { Platform, Workflow } from '@expo/eas-build-job';
 import Joi from '@hapi/joi';
 import fs from 'fs-extra';
 import path from 'path';
 
 // TODO(wkozyra95): move it to @expo/config or to separate package
-
-// Workflow is representing different value than BuildType from @expo/eas-build-job
-// Each workflow has a set of BuildTypes available
-// - Generic workflow allows to build 'generic' and 'generic-client'
-// - Managed workflow allows to build 'managed' and 'managed-client'
-export enum Workflow {
-  Generic = 'generic',
-  Managed = 'managed',
-}
 
 export enum CredentialsSource {
   LOCAL = 'local',
