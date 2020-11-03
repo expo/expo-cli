@@ -2,29 +2,8 @@ import { AndroidConfig, getConfig, getConfigWithMods } from '@expo/config';
 import { withExpoAndroidPlugins } from '@expo/config/build/plugins/expo-plugins';
 import { compileModsAsync } from '@expo/config/build/plugins/mod-compiler';
 import { UserManager } from '@expo/xdl';
-import fs from 'fs-extra';
 
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
-
-async function modifyBuildGradleAsync(
-  projectRoot: string,
-  callback: (buildGradle: string) => string
-) {
-  const buildGradlePath = AndroidConfig.Paths.getAndroidBuildGradle(projectRoot);
-  const buildGradleString = fs.readFileSync(buildGradlePath).toString();
-  const result = callback(buildGradleString);
-  fs.writeFileSync(buildGradlePath, result);
-}
-
-async function modifyAppBuildGradleAsync(
-  projectRoot: string,
-  callback: (buildGradle: string) => string
-) {
-  const buildGradlePath = AndroidConfig.Paths.getAppBuildGradle(projectRoot);
-  const buildGradleString = fs.readFileSync(buildGradlePath).toString();
-  const result = callback(buildGradleString);
-  fs.writeFileSync(buildGradlePath, result);
-}
 
 export default async function configureAndroidProjectAsync(projectRoot: string) {
   // Check package before reading the config because it may mutate the config if the user is prompted to define it.
@@ -45,19 +24,6 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
 
   // Legacy -- TODO: Replace with plugins
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-
-  await modifyBuildGradleAsync(projectRoot, (buildGradle: string) => {
-    buildGradle = AndroidConfig.GoogleServices.setClassPath(exp, buildGradle);
-    return buildGradle;
-  });
-
-  await modifyAppBuildGradleAsync(projectRoot, (buildGradle: string) => {
-    buildGradle = AndroidConfig.GoogleServices.applyPlugin(exp, buildGradle);
-    buildGradle = AndroidConfig.Package.setPackageInBuildGradle(exp, buildGradle);
-    buildGradle = AndroidConfig.Version.setVersionCode(exp, buildGradle);
-    buildGradle = AndroidConfig.Version.setVersionName(exp, buildGradle);
-    return buildGradle;
-  });
 
   // If we renamed the package, we should also move it around and rename it in source files
   await AndroidConfig.Package.renamePackageOnDisk(exp, projectRoot);

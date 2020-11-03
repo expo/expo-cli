@@ -63,9 +63,13 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.Name.withName,
     AndroidConfig.Facebook.withFacebookAppIdString,
 
-    // build.gradle
+    // project build.gradle
+    AndroidConfig.GoogleServices.withClassPath,
 
     // app/build.gradle
+    AndroidConfig.GoogleServices.withApplyPlugin,
+    AndroidConfig.Package.withPackageGradle,
+    AndroidConfig.Version.withVersion,
 
     // AndroidManifest.xml
     AndroidConfig.Package.withPackageManifest,
@@ -84,5 +88,7 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
 
     // MainActivity.*
     AndroidConfig.UserInterfaceStyle.withUiModeMainActivity,
+
+    // Danger
   ]);
 };

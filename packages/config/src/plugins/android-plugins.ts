@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin, Mod } from '../Plugin.types';
 import { AndroidManifest } from '../android/Manifest';
-import { ProjectFile } from '../android/Paths';
+import { ApplicationProjectFile, GradleProjectFile, ProjectFile } from '../android/Paths';
 import { ResourceXML } from '../android/Resources';
 import { withExtendedMod } from './core-plugins';
 
@@ -67,10 +67,38 @@ export const withStringsXml: ConfigPlugin<Mod<ResourceXML>> = (config, action) =
  * @param config
  * @param action
  */
-export const withMainActivity: ConfigPlugin<Mod<ProjectFile<'java' | 'kt'>>> = (config, action) => {
+export const withMainActivity: ConfigPlugin<Mod<ApplicationProjectFile>> = (config, action) => {
   return withExtendedMod(config, {
     platform: 'android',
     mod: 'mainActivity',
+    action,
+  });
+};
+
+/**
+ * Provides the project build.gradle for modification.
+ *
+ * @param config
+ * @param action
+ */
+export const withProjectBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config, action) => {
+  return withExtendedMod(config, {
+    platform: 'android',
+    mod: 'projectBuildGradle',
+    action,
+  });
+};
+
+/**
+ * Provides the app/build.gradle for modification.
+ *
+ * @param config
+ * @param action
+ */
+export const withAppBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config, action) => {
+  return withExtendedMod(config, {
+    platform: 'android',
+    mod: 'appBuildGradle',
     action,
   });
 };
@@ -83,7 +111,7 @@ export const withMainActivity: ConfigPlugin<Mod<ProjectFile<'java' | 'kt'>>> = (
  */
 export const withDangerousAndroidMod: ConfigPlugin<Mod<unknown>> = (config, action) => {
   return withExtendedMod(config, {
-    platform: 'ios',
+    platform: 'android',
     mod: 'dangerous',
     action,
   });

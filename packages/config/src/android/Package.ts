@@ -3,10 +3,26 @@ import { sync as globSync } from 'glob';
 import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
-import { createAndroidManifestPlugin } from '../plugins/android-plugins';
+import { ConfigPlugin } from '../Plugin.types';
+import { addWarningAndroid } from '../WarningAggregator';
+import { createAndroidManifestPlugin, withAppBuildGradle } from '../plugins/android-plugins';
 import { AndroidManifest } from './Manifest';
 
 export const withPackageManifest = createAndroidManifestPlugin(setPackageInAndroidManifest);
+
+export const withPackageGradle: ConfigPlugin<void> = config => {
+  return withAppBuildGradle(config, config => {
+    if (config.modResults.language === 'groovy') {
+      config.modResults.contents = setPackageInBuildGradle(config, config.modResults.contents);
+    } else {
+      addWarningAndroid(
+        'android-package',
+        `Cannot automatically configure app build.gradle if it's not groovy`
+      );
+    }
+    return config;
+  });
+};
 
 export function getPackage(config: ExpoConfig) {
   return config.android?.package ?? null;

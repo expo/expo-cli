@@ -2,8 +2,39 @@ import fs from 'fs-extra';
 import { resolve } from 'path';
 
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
+import { addWarningAndroid } from '../WarningAggregator';
+import { withAppBuildGradle, withProjectBuildGradle } from '../plugins/android-plugins';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';
+
+export const withClassPath: ConfigPlugin<void> = config => {
+  return withProjectBuildGradle(config, config => {
+    if (config.modResults.language === 'groovy') {
+      config.modResults.contents = setClassPath(config, config.modResults.contents);
+    } else {
+      addWarningAndroid(
+        'android-google-services',
+        `Cannot automatically configure project build.gradle if it's not groovy`
+      );
+    }
+    return config;
+  });
+};
+
+export const withApplyPlugin: ConfigPlugin<void> = config => {
+  return withAppBuildGradle(config, config => {
+    if (config.modResults.language === 'groovy') {
+      config.modResults.contents = applyPlugin(config, config.modResults.contents);
+    } else {
+      addWarningAndroid(
+        'android-google-services',
+        `Cannot automatically configure app build.gradle if it's not groovy`
+      );
+    }
+    return config;
+  });
+};
 
 export function getGoogleServicesFilePath(config: ExpoConfig) {
   return config.android?.googleServicesFile ?? null;

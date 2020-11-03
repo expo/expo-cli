@@ -3,7 +3,7 @@ import { JSONObject } from '@expo/json-file';
 import { XcodeProject } from 'xcode';
 
 import { AndroidManifest } from './android/Manifest';
-import { ProjectFile } from './android/Paths';
+import * as AndroidPaths from './android/Paths';
 import { ResourceXML } from './android/Resources';
 import { InfoPlist } from './ios/IosConfig.types';
 
@@ -64,7 +64,9 @@ export interface ModConfig {
   android?: {
     manifest?: Mod<AndroidManifest>;
     strings?: Mod<ResourceXML>;
-    mainActivity?: Mod<ProjectFile<'java' | 'kt'>>;
+    mainActivity?: Mod<AndroidPaths.ApplicationProjectFile>;
+    appBuildGradle?: Mod<AndroidPaths.GradleProjectFile>;
+    projectBuildGradle?: Mod<AndroidPaths.GradleProjectFile>;
   };
   ios?: {
     infoPlist?: Mod<InfoPlist>;

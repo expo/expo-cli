@@ -9,7 +9,7 @@ import { ConfigPlugin, ExportedConfig, ExportedConfigWithProps } from '../Plugin
 import { addWarningAndroid, addWarningIOS } from '../WarningAggregator';
 import { Manifest } from '../android';
 import { AndroidManifest } from '../android/Manifest';
-import { getAndroidManifestAsync, getMainActivityAsync, ProjectFile } from '../android/Paths';
+import * as AndroidPaths from '../android/Paths';
 import { readResourcesXMLAsync, ResourceXML } from '../android/Resources';
 import { getProjectStringsXMLPathAsync } from '../android/Strings';
 import { writeXMLAsync } from '../android/XML';
@@ -44,6 +44,8 @@ function applyAndroidCoreMods(projectRoot: string, config: ExportedConfig): Expo
   config = withAndroidStringsXMLBaseMod(config);
   config = withAndroidManifestBaseMod(config);
   config = withAndroidMainActivityBaseMod(config);
+  config = withAndroidProjectBuildGradleBaseMod(config);
+  config = withAndroidAppBuildGradleBaseMod(config);
   return config;
 }
 
@@ -59,7 +61,7 @@ const withAndroidManifestBaseMod: ConfigPlugin<void> = config => {
       };
 
       try {
-        const filePath = await getAndroidManifestAsync(modRequest.projectRoot);
+        const filePath = await AndroidPaths.getAndroidManifestAsync(modRequest.projectRoot);
         let modResults = await Manifest.readAndroidManifestAsync(filePath);
 
         results = await nextMod!({
@@ -117,19 +119,88 @@ const withAndroidStringsXMLBaseMod: ConfigPlugin<void> = config => {
   });
 };
 
-const withAndroidMainActivityBaseMod: ConfigPlugin<void> = config => {
-  // Append a rule to supply strings.xml data to mods on `mods.android.strings`
-  return withInterceptedMod<ProjectFile<'java' | 'kt'>>(config, {
+const withAndroidProjectBuildGradleBaseMod: ConfigPlugin<void> = config => {
+  return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
     platform: 'android',
-    mod: 'mainActivity',
+    mod: 'projectBuildGradle',
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      let results: ExportedConfigWithProps<ProjectFile<'java' | 'kt'>> = {
+      let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
         ...config,
         modRequest,
       };
 
       try {
-        let modResults = await getMainActivityAsync(modRequest.projectRoot);
+        let modResults = await AndroidPaths.getProjectBuildGradleAsync(modRequest.projectRoot);
+        // Currently don't support changing the path or language
+        const filePath = modResults.path;
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await writeXMLAsync({ path: filePath, xml: modResults });
+      } catch (error) {
+        addWarningAndroid(
+          `${modRequest.platform}-${modRequest.modName}`,
+          `Project build.gradle could not be modified. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
+
+const withAndroidAppBuildGradleBaseMod: ConfigPlugin<void> = config => {
+  return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
+    platform: 'android',
+    mod: 'appBuildGradle',
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        let modResults = await AndroidPaths.getAppBuildGradleAsync(modRequest.projectRoot);
+        // Currently don't support changing the path or language
+        const filePath = modResults.path;
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await writeXMLAsync({ path: filePath, xml: modResults });
+      } catch (error) {
+        addWarningAndroid(
+          `${modRequest.platform}-${modRequest.modName}`,
+          `App build.gradle could not be modified. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
+
+const withAndroidMainActivityBaseMod: ConfigPlugin<void> = config => {
+  return withInterceptedMod<AndroidPaths.ApplicationProjectFile>(config, {
+    platform: 'android',
+    mod: 'mainActivity',
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<AndroidPaths.ApplicationProjectFile> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        let modResults = await AndroidPaths.getMainActivityAsync(modRequest.projectRoot);
         // Currently don't support changing the path or language
         const filePath = modResults.path;
 
