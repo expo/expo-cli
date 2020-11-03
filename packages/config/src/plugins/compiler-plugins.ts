@@ -137,12 +137,12 @@ function applyIOSCoreMods(projectRoot: string, config: ExportedConfig): Exported
     },
   });
 
-  config = withEntitlementsBaseMod(config, {});
+  config = withEntitlementsBaseMod(config);
 
   return config;
 }
 
-const withEntitlementsBaseMod: ConfigPlugin = config => {
+const withEntitlementsBaseMod: ConfigPlugin<void> = config => {
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
   return withInterceptedMod<JSONObject>(config, {
     platform: 'ios',

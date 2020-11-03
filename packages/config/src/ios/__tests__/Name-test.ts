@@ -2,7 +2,7 @@ import { getName, setDisplayName, setName } from '../Name';
 
 describe('name', () => {
   it(`returns null if no bundleIdentifier is provided`, () => {
-    expect(getName({})).toBe(null);
+    expect(getName({} as any)).toBe(null);
   });
 
   it(`returns the name if provided`, () => {
@@ -16,6 +16,6 @@ describe('name', () => {
   });
 
   it(`makes no changes to the infoPlist no name is provided`, () => {
-    expect(setName({}, {})).toMatchObject({});
+    expect(setName({} as any, {})).toMatchObject({});
   });
 });

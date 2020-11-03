@@ -1,11 +1,12 @@
-import { fs as memfs, vol } from 'memfs';
+import * as fs from 'fs-extra';
+import { vol } from 'memfs';
 import path from 'path';
 
 import { setProvisioningProfileForPbxproj } from '../ProvisioningProfile';
 
 jest.mock('fs');
 
-const originalFs = jest.requireActual('fs');
+const originalFs = jest.requireActual('fs') as typeof fs;
 
 describe('ProvisioningProfile module', () => {
   describe(setProvisioningProfileForPbxproj, () => {
@@ -32,7 +33,7 @@ describe('ProvisioningProfile module', () => {
         profileName: '*[expo] com.swmansion.dominik.abcd.v2 AppStore 2020-07-24T07:56:22.983Z',
         appleTeamId: 'J5FM626PE2',
       });
-      const pbxprojContents = memfs.readFileSync(path.join(projectRoot, pbxProjPath), 'utf-8');
+      const pbxprojContents = fs.readFileSync(path.join(projectRoot, pbxProjPath), 'utf-8');
       expect(pbxprojContents).toMatchSnapshot();
     });
   });

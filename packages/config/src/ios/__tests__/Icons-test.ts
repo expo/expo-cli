@@ -1,4 +1,5 @@
-import { fs, vol } from 'memfs';
+import * as fs from 'fs-extra';
+import { vol } from 'memfs';
 import * as path from 'path';
 
 import { getIcons, ICON_CONTENTS, setIconsAsync } from '../Icons';
