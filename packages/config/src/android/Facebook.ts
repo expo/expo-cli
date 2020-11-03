@@ -1,15 +1,19 @@
 import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
+import { assert } from '../Errors';
+import { createStringsXmlPlugin } from '../plugins/android-plugins';
 import {
   addMetaDataItemToMainApplication,
   Document,
   getMainApplication,
   removeMetaDataItemFromMainApplication,
 } from './Manifest';
-import { readResourcesXMLAsync, ResourceItemXML } from './Resources';
+import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from './Resources';
 import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';
+
+export const withFacebookAppIdString = createStringsXmlPlugin(applyFacebookAppIdString);
 
 const facebookSchemeActivity = (scheme: string) => `
 <activity
@@ -77,27 +81,30 @@ async function ensureFacebookActivityAsync({
 }
 
 export async function setFacebookAppIdString(config: ExpoConfig, projectDirectory: string) {
-  const appId = getFacebookAppId(config);
-
   const stringsPath = await getProjectStringsXMLPathAsync(projectDirectory);
-  if (!stringsPath) {
-    throw new Error(`There was a problem setting your Facebook App ID in ${stringsPath}.`);
-  }
+  assert(stringsPath, `There was a problem setting your Facebook App ID in "${stringsPath}"`);
 
   let stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
-  if (appId) {
-    const stringItemToAdd: ResourceItemXML[] = [{ _: appId, $: { name: 'facebook_app_id' } }];
-    stringsJSON = setStringItem(stringItemToAdd, stringsJSON);
-  } else {
-    stringsJSON = removeStringItem('facebook_app_id', stringsJSON);
-  }
+  stringsJSON = applyFacebookAppIdString(config, stringsJSON);
 
   try {
     await writeXMLAsync({ path: stringsPath, xml: stringsJSON });
-  } catch (e) {
-    throw new Error(`Error setting facebookAppId. Cannot write strings.xml to ${stringsPath}.`);
+  } catch {
+    throw new Error(`Error setting facebookAppId. Cannot write strings.xml to "${stringsPath}"`);
   }
   return true;
+}
+
+function applyFacebookAppIdString(config: ExpoConfig, stringsJSON: ResourceXML) {
+  const appId = getFacebookAppId(config);
+
+  if (appId) {
+    return setStringItem(
+      [buildResourceItem({ name: 'facebook_app_id', value: appId })],
+      stringsJSON
+    );
+  }
+  return removeStringItem('facebook_app_id', stringsJSON);
 }
 
 export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {

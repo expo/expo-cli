@@ -1,7 +1,34 @@
+import { ExpoConfig } from '@expo/config-types';
+
 import { ConfigPlugin, Mod } from '../Plugin.types';
 import { AndroidManifest } from '../android/Manifest';
 import { ResourceXML } from '../android/Resources';
 import { withExtendedMod } from './core-plugins';
+
+type MutateDataAction<T> = (expo: ExpoConfig, data: T) => T;
+
+/**
+ * Helper method for creating mods from existing config functions.
+ *
+ * @param action
+ */
+export function createAndroidManifestPlugin(
+  action: MutateDataAction<AndroidManifest>
+): ConfigPlugin<void> {
+  return config =>
+    withAndroidManifest(config, async config => {
+      config.modResults = await action(config, config.modResults);
+      return config;
+    });
+}
+
+export function createStringsXmlPlugin(action: MutateDataAction<ResourceXML>): ConfigPlugin<void> {
+  return config =>
+    withStringsXml(config, async config => {
+      config.modResults = await action(config, config.modResults);
+      return config;
+    });
+}
 
 /**
  * Provides the AndroidManifest.xml for modification.

@@ -59,7 +59,16 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
   config.android.package = props.package;
 
   return withPlugins(config, [
+    // strings.xml
     AndroidConfig.Name.withName,
+    AndroidConfig.Facebook.withFacebookAppIdString,
+
+    // build.gradle
+
+    // app/build.gradle
+
+    // AndroidManifest.xml
+    AndroidConfig.AllowBackup.withAllowBackup,
     // TODO: Support Android
   ]);
 };

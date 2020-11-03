@@ -144,7 +144,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   await AndroidConfig.PrimaryColor.setPrimaryColor(exp, projectRoot);
 
   // Modify strings.xml
-  await AndroidConfig.Facebook.setFacebookAppIdString(exp, projectRoot);
+  // await AndroidConfig.Facebook.setFacebookAppIdString(exp, projectRoot);
   // await AndroidConfig.Name.setName(exp, projectRoot);
 
   // add google-services.json to project

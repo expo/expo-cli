@@ -1,5 +1,8 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainApplication, StringBoolean } from './Manifest';
+import { createAndroidManifestPlugin } from '../plugins/android-plugins';
+import { AndroidManifest, getMainApplication, StringBoolean } from './Manifest';
+
+export const withAllowBackup = createAndroidManifestPlugin(setAllowBackup);
 
 export function getAllowBackup(config: Pick<ExpoConfig, 'android'>): boolean {
   // Defaults to true.
@@ -7,9 +10,9 @@ export function getAllowBackup(config: Pick<ExpoConfig, 'android'>): boolean {
   return config.android?.allowBackup ?? true;
 }
 
-export async function setAllowBackup(
+export function setAllowBackup(
   config: Pick<ExpoConfig, 'android'>,
-  manifestDocument: Document
+  manifestDocument: AndroidManifest
 ) {
   const allowBackup = getAllowBackup(config);
 
@@ -21,7 +24,7 @@ export async function setAllowBackup(
   return manifestDocument;
 }
 
-export function getAllowBackupFromManifest(manifestDocument: Document): boolean | null {
+export function getAllowBackupFromManifest(manifestDocument: AndroidManifest): boolean | null {
   const mainApplication = getMainApplication(manifestDocument);
 
   if (mainApplication?.['$']) {
