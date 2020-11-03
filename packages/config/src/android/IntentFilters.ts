@@ -6,12 +6,12 @@ import { AndroidManifest, getMainActivity } from './Manifest';
 type AndroidIntentFilters = NonNullable<Android['intentFilters']>;
 // TODO: make it so intent filters aren't written again if you run the command again
 
-export function getIntentFilters(config: ExpoConfig): AndroidIntentFilters {
+export function getIntentFilters(config: Pick<ExpoConfig, 'android'>): AndroidIntentFilters {
   return config.android?.intentFilters ?? [];
 }
 
 export async function setAndroidIntentFilters(
-  config: ExpoConfig,
+  config: Pick<ExpoConfig, 'android'>,
   manifestDocument: AndroidManifest
 ): Promise<AndroidManifest> {
   const intentFilters = getIntentFilters(config);
