@@ -29,8 +29,8 @@ export async function setScheme(
     ...getScheme(config.android ?? {}),
   ];
   // Add the package name to the list of schemes for easier Google auth and parity with Turtle v1.
-  if (config.android?.['package']) {
-    scheme.push(config.android['package']);
+  if (config.android?.package) {
+    scheme.push(config.android.package);
   }
   if (scheme.length === 0) {
     return manifestDocument;
