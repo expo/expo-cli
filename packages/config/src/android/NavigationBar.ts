@@ -8,19 +8,22 @@ import { writeXMLAsync } from './XML';
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 const WINDOW_LIGHT_NAVIGATION_BAR = 'android:windowLightNavigationBar';
 
-export function getNavigationBarImmersiveMode(config: ExpoConfig) {
+export function getNavigationBarImmersiveMode(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
   return config.androidNavigationBar?.visible || null;
 }
 
-export function getNavigationBarColor(config: ExpoConfig) {
+export function getNavigationBarColor(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
   return config.androidNavigationBar?.backgroundColor || null;
 }
 
-export function getNavigationBarStyle(config: ExpoConfig) {
+export function getNavigationBarStyle(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
   return config.androidNavigationBar?.barStyle || 'light-content';
 }
 
-export async function setNavigationBarConfig(config: ExpoConfig, projectDirectory: string) {
+export async function setNavigationBarConfig(
+  config: Pick<ExpoConfig, 'androidNavigationBar'>,
+  projectDirectory: string
+) {
   const immersiveMode = getNavigationBarImmersiveMode(config);
   const hexString = getNavigationBarColor(config);
   const barStyle = getNavigationBarStyle(config);
