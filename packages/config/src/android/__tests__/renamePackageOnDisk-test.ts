@@ -40,8 +40,8 @@ public class SomeClass {
 
     afterEach(() => vol.reset());
 
-    it('re-creates the directory structure and replaces occurrences of old package in files', () => {
-      renamePackageOnDisk({ android: { package: 'xyz.bront.app' } }, '/myapp');
+    it('re-creates the directory structure and replaces occurrences of old package in files', async () => {
+      await renamePackageOnDisk({ android: { package: 'xyz.bront.app' } }, '/myapp');
       const mainActivityPath = '/myapp/android/app/src/main/java/xyz/bront/app/MainActivity.java';
       expect(fs.existsSync(mainActivityPath)).toBeTruthy();
       expect(fs.readFileSync(mainActivityPath).toString()).toMatch('package xyz.bront.app');
@@ -57,8 +57,8 @@ public class SomeClass {
       expect(fs.readFileSync(buckPath).toString()).not.toMatch('com.lololol');
     });
 
-    it('does not clobber itself if package has similar parts', () => {
-      renamePackageOnDisk({ android: { package: 'com.bront' } }, '/myapp');
+    it('does not clobber itself if package has similar parts', async () => {
+      await renamePackageOnDisk({ android: { package: 'com.bront' } }, '/myapp');
       const mainActivityPath = '/myapp/android/app/src/main/java/com/bront/MainActivity.java';
       expect(fs.existsSync(mainActivityPath)).toBeTruthy();
       expect(fs.readFileSync(mainActivityPath).toString()).toMatch('package com.bront');

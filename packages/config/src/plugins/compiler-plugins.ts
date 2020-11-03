@@ -5,6 +5,7 @@ import { readFile, writeFile } from 'fs-extra';
 import path from 'path';
 import { XcodeProject } from 'xcode';
 
+import { assert } from '../Errors';
 import { ConfigPlugin, ExportedConfig, ExportedConfigWithProps } from '../Plugin.types';
 import { addWarningAndroid, addWarningIOS } from '../WarningAggregator';
 import { Manifest } from '../android';
@@ -247,7 +248,9 @@ function applyIOSCoreMods(projectRoot: string, config: ExportedConfig): Exported
       }
 
       const filePath = path.resolve(iosProjectDirectory, 'Info.plist');
-      let data = plist.parse(await readFile(filePath, 'utf8'));
+      const contents = await readFile(filePath, 'utf8');
+      assert(contents, 'Info.plist is empty');
+      let data = plist.parse(contents);
 
       config.ios.infoPlist = {
         ...(data || {}),

@@ -1,7 +1,48 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`withExpoIOSPlugins compiles mods 1`] = `
+exports[`built-in plugins compiles mods 1`] = `
 Object {
+  "android": Object {
+    "adaptiveIcon": Object {
+      "backgroundImage": "./icons/background.png",
+      "foregroundImage": "./icons/foreground.png",
+    },
+    "allowBackup": true,
+    "backgroundColor": "#ff0000",
+    "config": Object {
+      "branch": Object {
+        "apiKey": "MY_BRANCH_ANDROID_KEY",
+      },
+      "googleMaps": Object {
+        "apiKey": "MY_GOOGLE_MAPS_ANDROID_KEY",
+      },
+      "googleMobileAdsAppId": "MY_GOOGLE_MOBILE_ADS_APP_ID",
+      "googleMobileAdsAutoInit": true,
+    },
+    "googleServicesFile": "./config/google-services.json",
+    "intentFilters": Array [
+      Object {
+        "action": "VIEW",
+        "autoVerify": true,
+        "category": Array [
+          "BROWSABLE",
+          "DEFAULT",
+        ],
+        "data": Object {
+          "host": "*.expo.io",
+          "scheme": "https",
+        },
+      },
+    ],
+    "package": "com.bacon.todo",
+    "permissions": Array [
+      "CAMERA",
+      "com.sec.android.provider.badge.permission.WRITE",
+    ],
+    "softwareKeyboardLayoutMode": "pan",
+    "userInterfaceStyle": "light",
+    "versionCode": 6,
+  },
   "androidNavigationBar": Object {
     "backgroundColor": "#ff0000",
     "barStyle": "dark-content",
@@ -135,7 +176,6 @@ Object {
     },
     "isTabletOnly": false,
     "merchantId": "TEST_MERCHANT_ID",
-    "publishBundlePath": "./ios-dist",
     "requireFullScreen": true,
     "supportsTablet": true,
     "userInterfaceStyle": "automatic",

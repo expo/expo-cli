@@ -2,7 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin, Mod } from '../Plugin.types';
 import { AndroidManifest } from '../android/Manifest';
-import { ApplicationProjectFile, GradleProjectFile, ProjectFile } from '../android/Paths';
+import { ApplicationProjectFile, GradleProjectFile } from '../android/Paths';
 import { ResourceXML } from '../android/Resources';
 import { withExtendedMod } from './core-plugins';
 

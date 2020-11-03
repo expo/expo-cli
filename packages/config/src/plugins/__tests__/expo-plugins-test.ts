@@ -4,7 +4,7 @@ import * as path from 'path';
 
 import { ExportedConfig } from '../../Plugin.types';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
-import { withExpoIOSPlugins } from '../expo-plugins';
+import { withExpoAndroidPlugins, withExpoIOSPlugins } from '../expo-plugins';
 import { compileModsAsync, evalModsAsync } from '../mod-compiler';
 import rnFixture from './fixtures/react-native-project';
 const actualFs = jest.requireActual('fs') as typeof fs;
@@ -20,6 +20,16 @@ jest.mock('@expo/image-utils', () => ({
     return foreground;
   },
 }));
+
+// Weird issues with Android Icon module make it hard to mock test.
+jest.mock('../../android/Icon', () => {
+  return {
+    withIcons(config) {
+      return config;
+    },
+    setIconAsync() {},
+  };
+});
 
 afterAll(() => {
   jest.unmock('@expo/image-utils');
@@ -37,7 +47,7 @@ describe(evalModsAsync, () => {
   });
 });
 
-describe(withExpoIOSPlugins, () => {
+describe('built-in plugins', () => {
   const projectRoot = '/app';
   const iconPath = path.resolve(__dirname, '../../ios/__tests__/fixtures/icons/icon.png');
 
@@ -51,6 +61,9 @@ describe(withExpoIOSPlugins, () => {
       {
         ...rnFixture,
         'config/GoogleService-Info.plist': 'noop',
+        'config/google-services.json': '{}',
+        './icons/foreground.png': icon,
+        './icons/background.png': icon,
         './icons/notification-icon.png': icon,
         './icons/ios-icon.png': icon,
         'locales/en-US.json': JSON.stringify({ foo: 'uhh bar', fallback: 'fallback' }, null, 2),
@@ -164,7 +177,7 @@ describe(withExpoIOSPlugins, () => {
       facebookScheme: 'fb1234567890',
       ios: {
         // publishManifestPath: './ios-manifest'
-        publishBundlePath: './ios-dist',
+        // publishBundlePath: './ios-dist',
         bundleIdentifier: 'com.bacon.tester.expoapp',
         buildNumber: '6.5.0',
         backgroundColor: '#ff0000',
@@ -195,12 +208,51 @@ describe(withExpoIOSPlugins, () => {
         usesAppleSignIn: true,
         accessesContactNotes: true,
       },
-
+      android: {
+        package: 'com.bacon.tester.expoapp',
+        versionCode: 6,
+        backgroundColor: '#ff0000',
+        userInterfaceStyle: 'light',
+        // icon: './icons/android-icon.png',
+        adaptiveIcon: {
+          foregroundImage: './icons/foreground.png',
+          backgroundImage: './icons/background.png',
+        },
+        permissions: ['CAMERA', 'com.sec.android.provider.badge.permission.WRITE'],
+        googleServicesFile: './config/google-services.json',
+        config: {
+          branch: {
+            apiKey: 'MY_BRANCH_ANDROID_KEY',
+          },
+          googleMaps: {
+            apiKey: 'MY_GOOGLE_MAPS_ANDROID_KEY',
+          },
+          googleMobileAdsAppId: 'MY_GOOGLE_MOBILE_ADS_APP_ID',
+          googleMobileAdsAutoInit: true,
+        },
+        intentFilters: [
+          {
+            autoVerify: true,
+            action: 'VIEW',
+            data: {
+              scheme: 'https',
+              host: '*.expo.io',
+            },
+            category: ['BROWSABLE', 'DEFAULT'],
+          },
+        ],
+        allowBackup: true,
+        softwareKeyboardLayoutMode: 'pan',
+      },
       mods: null,
     };
 
     config = withExpoIOSPlugins(config, {
       bundleIdentifier: 'com.bacon.todo',
+      expoUsername: 'bacon',
+    });
+    config = withExpoAndroidPlugins(config, {
+      package: 'com.bacon.todo',
       expoUsername: 'bacon',
     });
 
@@ -243,7 +295,15 @@ describe(withExpoIOSPlugins, () => {
       'ios/ReactNativeProject/GoogleService-Info.plist',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
+      'android/app/src/main/java/com/bacon/todo/MainActivity.java',
+      'android/app/src/main/java/com/bacon/todo/MainApplication.java',
+      'android/app/src/main/AndroidManifest.xml',
+      'android/app/src/main/res/values/styles.xml',
+      'android/app/src/main/res/values/strings.xml',
+      'android/app/src/main/res/values/colors.xml',
+      'android/app/google-services.json',
       'config/GoogleService-Info.plist',
+      'config/google-services.json',
       'locales/en-US.json',
     ]);
 
