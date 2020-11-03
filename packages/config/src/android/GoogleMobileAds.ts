@@ -9,16 +9,16 @@ import {
 const APPLICATION_ID = 'com.google.android.gms.ads.APPLICATION_ID';
 const DELAY_APP_MEASUREMENT_INIT = 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT';
 
-export function getGoogleMobileAdsAppId(config: ExpoConfig) {
+export function getGoogleMobileAdsAppId(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.config?.googleMobileAdsAppId ?? null;
 }
 
-export function getGoogleMobileAdsAutoInit(config: ExpoConfig) {
+export function getGoogleMobileAdsAutoInit(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.config?.googleMobileAdsAutoInit ?? false;
 }
 
-export async function setGoogleMobileAdsConfig(
-  config: ExpoConfig,
+export function setGoogleMobileAdsConfig(
+  config: Pick<ExpoConfig, 'android'>,
   manifestDocument: AndroidManifest
 ) {
   const appId = getGoogleMobileAdsAppId(config);
