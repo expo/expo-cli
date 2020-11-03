@@ -8,11 +8,14 @@ import {
   removeUsesLibraryItemFromMainApplication,
 } from './Manifest';
 
-export function getGoogleMapsApiKey(config: ExpoConfig) {
+export function getGoogleMapsApiKey(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.config?.googleMaps?.apiKey ?? null;
 }
 
-export async function setGoogleMapsApiKey(config: ExpoConfig, manifestDocument: AndroidManifest) {
+export function setGoogleMapsApiKey(
+  config: Pick<ExpoConfig, 'android'>,
+  manifestDocument: AndroidManifest
+) {
   const apiKey = getGoogleMapsApiKey(config);
   const mainApplication = getMainApplicationOrThrow(manifestDocument);
 
