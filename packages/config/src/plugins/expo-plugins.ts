@@ -1,4 +1,5 @@
 import { ConfigPlugin } from '../Plugin.types';
+import * as AndroidConfig from '../android';
 import * as IOSConfig from '../ios';
 import { withPlugins } from './core-plugins';
 
@@ -49,8 +50,16 @@ export const withExpoIOSPlugins: ConfigPlugin<{
  * Config plugin to apply all of the custom Expo Android config plugins we support by default.
  * TODO: In the future most of this should go into versioned packages like expo-facebook, expo-updates, etc...
  */
-export const withExpoAndroidPlugins: ConfigPlugin<unknown> = config => {
+export const withExpoAndroidPlugins: ConfigPlugin<{
+  package: string;
+  expoUsername: string | null;
+}> = (config, { expoUsername, ...props }) => {
+  // Set the package name ahead of time.
+  if (!config.android) config.android = {};
+  config.android.package = props.package;
+
   return withPlugins(config, [
+    AndroidConfig.Name.withName,
     // TODO: Support Android
   ]);
 };

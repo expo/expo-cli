@@ -1,3 +1,5 @@
+import assert from 'assert';
+
 import { ConfigErrorCode } from './Config.types';
 
 /**
@@ -40,3 +42,5 @@ export function errorToJSON(error: any): any {
     stack: error.stack,
   };
 }
+
+export { assert };

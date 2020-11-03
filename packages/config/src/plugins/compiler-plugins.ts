@@ -10,6 +10,9 @@ import { addWarningAndroid, addWarningIOS } from '../WarningAggregator';
 import { Manifest } from '../android';
 import { AndroidManifest } from '../android/Manifest';
 import { getAndroidManifestAsync } from '../android/Paths';
+import { readResourcesXMLAsync, ResourceXML } from '../android/Resources';
+import { getProjectStringsXMLPathAsync } from '../android/Strings';
+import { writeXMLAsync } from '../android/XML';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { InfoPlist } from '../ios/IosConfig.types';
 import { getPbxproj, getProjectName } from '../ios/utils/Xcodeproj';
@@ -38,6 +41,7 @@ export function resolveModResults(results: any, platformName: string, modName: s
 }
 
 function applyAndroidCoreMods(projectRoot: string, config: ExportedConfig): ExportedConfig {
+  config = withAndroidStringsXMLBaseMod(config);
   config = withAndroidManifestBaseMod(config);
   return config;
 }
@@ -57,7 +61,6 @@ const withAndroidManifestBaseMod: ConfigPlugin<void> = config => {
         const filePath = await getAndroidManifestAsync(modRequest.projectRoot);
         let modResults = await Manifest.readAndroidManifestAsync(filePath);
 
-        // TODO: Fix type
         results = await nextMod!({
           ...config,
           modResults,
@@ -71,6 +74,41 @@ const withAndroidManifestBaseMod: ConfigPlugin<void> = config => {
         addWarningAndroid(
           'android-manifest',
           `AndroidManifest.xml configuration could not be applied. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
+
+const withAndroidStringsXMLBaseMod: ConfigPlugin<void> = config => {
+  // Append a rule to supply strings.xml data to mods on `mods.android.strings`
+  return withInterceptedMod<ResourceXML>(config, {
+    platform: 'android',
+    mod: 'strings',
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<ResourceXML> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        const filePath = await getProjectStringsXMLPathAsync(modRequest.projectRoot);
+        let modResults = await readResourcesXMLAsync({ path: filePath });
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await writeXMLAsync({ path: filePath, xml: modResults });
+      } catch (error) {
+        addWarningAndroid(
+          `${modRequest.platform}-${modRequest.modName}`,
+          `strings.xml configuration could not be applied. ${error.message}`
         );
       }
       return results;

@@ -3,6 +3,7 @@ import { JSONObject } from '@expo/json-file';
 import { XcodeProject } from 'xcode';
 
 import { AndroidManifest } from './android/Manifest';
+import { ResourceXML } from './android/Resources';
 import { InfoPlist } from './ios/IosConfig.types';
 
 type OptionalPromise<T> = Promise<T> | T;
@@ -61,6 +62,7 @@ export type Mod<Props = any> = (
 export interface ModConfig {
   android?: {
     manifest?: Mod<AndroidManifest>;
+    strings?: Mod<ResourceXML>;
   };
   ios?: {
     infoPlist?: Mod<InfoPlist>;

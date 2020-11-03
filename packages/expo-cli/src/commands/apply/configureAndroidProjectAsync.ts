@@ -1,4 +1,6 @@
-import { AndroidConfig, getConfig, WarningAggregator } from '@expo/config';
+import { AndroidConfig, getConfig, getConfigWithMods, WarningAggregator } from '@expo/config';
+import { withExpoAndroidPlugins } from '@expo/config/build/plugins/expo-plugins';
+import { compileModsAsync } from '@expo/config/build/plugins/mod-compiler';
 import { UserManager } from '@expo/xdl';
 import fs from 'fs-extra';
 
@@ -50,10 +52,23 @@ async function modifyMainActivityAsync(
 
 export default async function configureAndroidProjectAsync(projectRoot: string) {
   // Check package before reading the config because it may mutate the config if the user is prompted to define it.
-  await getOrPromptForPackage(projectRoot);
+  const packageName = await getOrPromptForPackage(projectRoot);
+  const expoUsername =
+    process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
 
+  let { exp: config } = getConfigWithMods(projectRoot, { skipSDKVersionRequirement: true });
+
+  // Add all built-in plugins
+  config = withExpoAndroidPlugins(config, {
+    package: packageName,
+    expoUsername,
+  });
+
+  // compile all plugins and mods
+  await compileModsAsync(config, projectRoot);
+
+  // Legacy -- TODO: Replace with plugins
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  const username = process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
 
   await modifyBuildGradleAsync(projectRoot, (buildGradle: string) => {
     buildGradle = AndroidConfig.GoogleServices.setClassPath(exp, buildGradle);
@@ -95,7 +110,11 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
       androidManifest
     );
 
-    androidManifest = await AndroidConfig.Updates.setUpdatesConfig(exp, androidManifest, username);
+    androidManifest = await AndroidConfig.Updates.setUpdatesConfig(
+      exp,
+      androidManifest,
+      expoUsername
+    );
 
     return androidManifest;
   });
@@ -126,7 +145,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
 
   // Modify strings.xml
   await AndroidConfig.Facebook.setFacebookAppIdString(exp, projectRoot);
-  await AndroidConfig.Name.setName(exp, projectRoot);
+  // await AndroidConfig.Name.setName(exp, projectRoot);
 
   // add google-services.json to project
   await AndroidConfig.GoogleServices.setGoogleServicesFile(exp, projectRoot);
