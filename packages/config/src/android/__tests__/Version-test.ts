@@ -60,17 +60,17 @@ describe('versionCode', () => {
   });
 
   it(`returns the version code if provided`, () => {
-    expect(getVersionCode({ android: { versionCode: '5' } })).toBe('5');
+    expect(getVersionCode({ android: { versionCode: 5 } })).toBe(5);
   });
 
   it(`sets the version code in build.gradle if version code is given`, () => {
-    expect(setVersionCode({ android: { versionCode: '5' } }, EXAMPLE_BUILD_GRADLE)).toMatch(
+    expect(setVersionCode({ android: { versionCode: 5 } }, EXAMPLE_BUILD_GRADLE)).toMatch(
       'versionCode 5'
     );
   });
 
   it(`replaces provided version code in build.gradle if version code is given`, () => {
-    expect(setVersionCode({ android: { versionCode: '5' } }, EXAMPLE_BUILD_GRADLE_2, '4')).toMatch(
+    expect(setVersionCode({ android: { versionCode: 5 } }, EXAMPLE_BUILD_GRADLE_2, '4')).toMatch(
       'versionCode 5'
     );
   });
