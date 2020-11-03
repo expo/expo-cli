@@ -5,12 +5,12 @@ import { ExpoConfig } from '../Config.types';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';
 
-export function getGoogleServicesFilePath(config: ExpoConfig) {
+export function getGoogleServicesFilePath(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.googleServicesFile ?? null;
 }
 
 export async function setGoogleServicesFile(
-  config: ExpoConfig,
+  config: Pick<ExpoConfig, 'android'>,
   projectDirectory: string,
   targetPath: string = DEFAULT_TARGET_PATH
 ) {
@@ -43,7 +43,7 @@ const googleServicesVersion = '4.3.3';
  * NOTE(brentvatne): string replacement is a fragile approach! we need a
  * better solution than this.
  */
-export function setClassPath(config: ExpoConfig, buildGradle: string) {
+export function setClassPath(config: Pick<ExpoConfig, 'android'>, buildGradle: string) {
   const googleServicesFile = getGoogleServicesFilePath(config);
   if (!googleServicesFile) {
     return buildGradle;
@@ -61,7 +61,7 @@ export function setClassPath(config: ExpoConfig, buildGradle: string) {
   );
 }
 
-export function applyPlugin(config: ExpoConfig, appBuildGradle: string) {
+export function applyPlugin(config: Pick<ExpoConfig, 'android'>, appBuildGradle: string) {
   const googleServicesFile = getGoogleServicesFilePath(config);
   if (!googleServicesFile) {
     return appBuildGradle;

@@ -17,19 +17,16 @@ describe('google services file', () => {
   });
 
   it(`returns null if no googleServicesFile is provided`, () => {
-    expect(getGoogleServicesFilePath({}, fixturesPath)).toBe(null);
+    expect(getGoogleServicesFilePath({})).toBe(null);
   });
 
   it(`returns googleServicesFile path if provided`, () => {
     expect(
-      getGoogleServicesFilePath(
-        {
-          android: {
-            googleServicesFile: 'path/to/google-services.json',
-          },
+      getGoogleServicesFilePath({
+        android: {
+          googleServicesFile: 'path/to/google-services.json',
         },
-        fixturesPath
-      )
+      })
     ).toBe('path/to/google-services.json');
   });
 
