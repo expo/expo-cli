@@ -59,10 +59,6 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
   config.android.package = props.package;
 
   return withPlugins(config, [
-    // strings.xml
-    AndroidConfig.Name.withName,
-    AndroidConfig.Facebook.withFacebookAppIdString,
-
     // project build.gradle
     AndroidConfig.GoogleServices.withClassPath,
 
@@ -89,6 +85,24 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     // MainActivity.*
     AndroidConfig.UserInterfaceStyle.withUiModeMainActivity,
 
-    // Danger
+    // strings.xml
+    AndroidConfig.Name.withName,
+    AndroidConfig.Facebook.withFacebookAppIdString,
+
+    // Dangerous
+
+    // If we renamed the package, we should also move it around and rename it in source files
+    AndroidConfig.Package.withPackageRefactor,
+
+    AndroidConfig.GoogleServices.withGoogleServicesFile,
+
+    // Modify colors.xml and styles.xml
+    AndroidConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
+    AndroidConfig.NavigationBar.withNavigationBar,
+    AndroidConfig.StatusBar.withStatusBar,
+    AndroidConfig.PrimaryColor.withPrimaryColor,
+
+    AndroidConfig.Icon.withIcons,
+    AndroidConfig.SplashScreen.withSplashScreen,
   ]);
 };

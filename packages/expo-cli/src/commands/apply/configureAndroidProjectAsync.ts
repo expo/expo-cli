@@ -1,4 +1,4 @@
-import { AndroidConfig, getConfig, getConfigWithMods } from '@expo/config';
+import { getConfigWithMods } from '@expo/config';
 import { withExpoAndroidPlugins } from '@expo/config/build/plugins/expo-plugins';
 import { compileModsAsync } from '@expo/config/build/plugins/mod-compiler';
 import { UserManager } from '@expo/xdl';
@@ -21,27 +21,4 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
 
   // compile all plugins and mods
   await compileModsAsync(config, projectRoot);
-
-  // Legacy -- TODO: Replace with plugins
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-
-  // If we renamed the package, we should also move it around and rename it in source files
-  await AndroidConfig.Package.renamePackageOnDisk(exp, projectRoot);
-
-  // Modify colors.xml and styles.xml
-  await AndroidConfig.RootViewBackgroundColor.setRootViewBackgroundColor(exp, projectRoot);
-  await AndroidConfig.NavigationBar.setNavigationBarConfig(exp, projectRoot);
-  await AndroidConfig.StatusBar.setStatusBarConfig(exp, projectRoot);
-  await AndroidConfig.PrimaryColor.setPrimaryColor(exp, projectRoot);
-
-  // Modify strings.xml
-  // await AndroidConfig.Facebook.setFacebookAppIdString(exp, projectRoot);
-  // await AndroidConfig.Name.setName(exp, projectRoot);
-
-  // add google-services.json to project
-  await AndroidConfig.GoogleServices.setGoogleServicesFile(exp, projectRoot);
-
-  // TODOs
-  await AndroidConfig.SplashScreen.setSplashScreenAsync(exp, projectRoot);
-  await AndroidConfig.Icon.setIconAsync(exp, projectRoot);
 }

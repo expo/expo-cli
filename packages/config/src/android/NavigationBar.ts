@@ -1,5 +1,7 @@
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { addWarningAndroid } from '../WarningAggregator';
+import { withDangerousAndroidMod } from '../plugins/android-plugins';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
@@ -7,6 +9,13 @@ import { writeXMLAsync } from './XML';
 
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 const WINDOW_LIGHT_NAVIGATION_BAR = 'android:windowLightNavigationBar';
+
+export const withNavigationBar: ConfigPlugin<void> = config => {
+  return withDangerousAndroidMod(config, async config => {
+    await setNavigationBarConfig(config, config.modRequest.projectRoot);
+    return config;
+  });
+};
 
 export function getNavigationBarImmersiveMode(config: ExpoConfig) {
   return config.androidNavigationBar?.visible || null;

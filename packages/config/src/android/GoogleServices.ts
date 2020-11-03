@@ -4,7 +4,11 @@ import { resolve } from 'path';
 import { ExpoConfig } from '../Config.types';
 import { ConfigPlugin } from '../Plugin.types';
 import { addWarningAndroid } from '../WarningAggregator';
-import { withAppBuildGradle, withProjectBuildGradle } from '../plugins/android-plugins';
+import {
+  withAppBuildGradle,
+  withDangerousAndroidMod,
+  withProjectBuildGradle,
+} from '../plugins/android-plugins';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';
 
@@ -32,6 +36,16 @@ export const withApplyPlugin: ConfigPlugin<void> = config => {
         `Cannot automatically configure app build.gradle if it's not groovy`
       );
     }
+    return config;
+  });
+};
+
+/**
+ * Add `google-services.json` to project
+ */
+export const withGoogleServicesFile: ConfigPlugin<void> = config => {
+  return withDangerousAndroidMod(config, async config => {
+    await setGoogleServicesFile(config, config.modRequest.projectRoot);
     return config;
   });
 };

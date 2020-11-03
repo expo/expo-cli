@@ -3,6 +3,8 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
+import { withDangerousAndroidMod } from '../plugins/android-plugins';
 import * as Colors from './Colors';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';
 import { writeXMLAsync } from './XML';
@@ -27,6 +29,13 @@ const IC_LAUNCHER_BACKGROUND_PNG = 'ic_launcher_background.png';
 const IC_LAUNCHER_FOREGROUND_PNG = 'ic_launcher_foreground.png';
 const IC_LAUNCHER_XML = 'ic_launcher.xml';
 const IC_LAUNCHER_ROUND_XML = 'ic_launcher_round.xml';
+
+export const withIcons: ConfigPlugin<void> = config => {
+  return withDangerousAndroidMod(config, async config => {
+    await setIconAsync(config, config.modRequest.projectRoot);
+    return config;
+  });
+};
 
 export function getIcon(config: ExpoConfig) {
   return config.icon || config.android?.icon || null;

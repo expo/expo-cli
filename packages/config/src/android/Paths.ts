@@ -79,9 +79,7 @@ export async function getAndroidManifestAsync(projectRoot: string): Promise<stri
   const projectPath = await getProjectPathOrThrowAsync(projectRoot);
 
   const filePath = path.join(projectPath, 'app/src/main/AndroidManifest.xml');
-  // if (await fileExistsAsync(filePath)) {
   return filePath;
-  // }
 }
 
 export async function getResourceXMLPathAsync(

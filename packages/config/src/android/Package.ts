@@ -5,7 +5,11 @@ import path from 'path';
 import { ExpoConfig } from '../Config.types';
 import { ConfigPlugin } from '../Plugin.types';
 import { addWarningAndroid } from '../WarningAggregator';
-import { createAndroidManifestPlugin, withAppBuildGradle } from '../plugins/android-plugins';
+import {
+  createAndroidManifestPlugin,
+  withAppBuildGradle,
+  withDangerousAndroidMod,
+} from '../plugins/android-plugins';
 import { AndroidManifest } from './Manifest';
 
 export const withPackageManifest = createAndroidManifestPlugin(setPackageInAndroidManifest);
@@ -20,6 +24,13 @@ export const withPackageGradle: ConfigPlugin<void> = config => {
         `Cannot automatically configure app build.gradle if it's not groovy`
       );
     }
+    return config;
+  });
+};
+
+export const withPackageRefactor: ConfigPlugin<void> = config => {
+  return withDangerousAndroidMod(config, async config => {
+    await renamePackageOnDisk(config, config.modRequest.projectRoot);
     return config;
   });
 };
