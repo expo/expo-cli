@@ -89,7 +89,7 @@ export type ManifestUsesLibrary = {
   };
 };
 
-type ManifestApplication = {
+export type ManifestApplication = {
   $: ManifestApplicationAttributes;
   activity?: ManifestActivity[];
   service?: ManifestService[];
@@ -116,7 +116,7 @@ type ManifestUsesFeature = {
   };
 };
 
-export type Document = {
+export type AndroidManifest = {
   manifest: {
     // Probably more, but this is currently all we'd need for most cases in Expo.
     $: { 'xmlns:android': string; package?: string; [key: string]: string | undefined };
@@ -127,22 +127,24 @@ export type Document = {
   };
 };
 
+export type Document = AndroidManifest;
+
 export type InputOptions = {
   manifestPath?: string | null;
   projectRoot?: string | null;
-  manifest?: Document | null;
+  manifest?: AndroidManifest | null;
 };
 
 export async function writeAndroidManifestAsync(
   manifestPath: string,
-  manifest: Document
+  manifest: AndroidManifest
 ): Promise<void> {
   const manifestXml = XML.format(manifest);
   await fs.ensureDir(path.dirname(manifestPath));
   await fs.writeFile(manifestPath, manifestXml);
 }
 
-export async function readAndroidManifestAsync(manifestPath: string): Promise<Document> {
+export async function readAndroidManifestAsync(manifestPath: string): Promise<AndroidManifest> {
   const xml = await XML.readXMLAsync({ path: manifestPath });
   if (!isManifest(xml)) {
     throw new Error('Invalid manifest found at: ' + manifestPath);
@@ -150,12 +152,12 @@ export async function readAndroidManifestAsync(manifestPath: string): Promise<Do
   return xml;
 }
 
-function isManifest(xml: XML.XMLObject): xml is Document {
+function isManifest(xml: XML.XMLObject): xml is AndroidManifest {
   // TODO: Maybe more validation
   return !!xml.manifest;
 }
 
-export function getMainApplication(manifest: Document): ManifestApplication | null {
+export function getMainApplication(manifest: AndroidManifest): ManifestApplication | null {
   return (
     manifest?.manifest?.application?.filter(
       e => e?.['$']?.['android:name'] === '.MainApplication'
@@ -163,7 +165,7 @@ export function getMainApplication(manifest: Document): ManifestApplication | nu
   );
 }
 
-export function getMainActivity(manifest: Document): ManifestActivity | null {
+export function getMainActivity(manifest: AndroidManifest): ManifestActivity | null {
   const mainActivity = manifest?.manifest?.application?.[0]?.activity?.filter?.(
     (e: any) => e['$']['android:name'] === '.MainActivity'
   );
@@ -217,7 +219,7 @@ export function findMetaDataItem(mainApplication: any, itemName: string): number
 }
 
 export function getMainApplicationMetaDataValue(
-  androidManifest: Document,
+  androidManifest: AndroidManifest,
   name: string
 ): string | null {
   const mainApplication = getMainApplication(androidManifest);

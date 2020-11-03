@@ -92,9 +92,9 @@ describe('Android facebook config', () => {
       facebookAutoInitEnabled: true,
       facebookAdvertiserIDCollectionEnabled: false,
     };
-    androidManifestJson = await setFacebookConfig(facebookConfig, androidManifestJson);
+    androidManifestJson = setFacebookConfig(facebookConfig, androidManifestJson);
     // Run this twice to ensure copies don't get added.
-    androidManifestJson = await setFacebookConfig(facebookConfig, androidManifestJson);
+    androidManifestJson = setFacebookConfig(facebookConfig, androidManifestJson);
 
     const mainApplication = getMainApplication(androidManifestJson);
 
@@ -145,7 +145,7 @@ describe('Android facebook config', () => {
     let androidManifestJson = await parser.parseStringPromise(filledManifest);
 
     const facebookConfig = {};
-    androidManifestJson = await setFacebookConfig(facebookConfig, androidManifestJson);
+    androidManifestJson = setFacebookConfig(facebookConfig, androidManifestJson);
 
     const mainApplication = getMainApplication(androidManifestJson);
 
