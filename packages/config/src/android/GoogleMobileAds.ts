@@ -1,5 +1,13 @@
 import { ExpoConfig } from '../Config.types';
-import { AndroidManifest, getMainApplication, ManifestMetaData } from './Manifest';
+import {
+  addMetaDataItemToMainApplication,
+  AndroidManifest,
+  getMainApplicationOrThrow,
+  removeMetaDataItemFromMainApplication,
+} from './Manifest';
+
+const APPLICATION_ID = 'com.google.android.gms.ads.APPLICATION_ID';
+const DELAY_APP_MEASUREMENT_INIT = 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT';
 
 export function getGoogleMobileAdsAppId(config: ExpoConfig) {
   return config.android?.config?.googleMobileAdsAppId ?? null;
@@ -15,56 +23,18 @@ export async function setGoogleMobileAdsConfig(
 ) {
   const appId = getGoogleMobileAdsAppId(config);
   const autoInit = getGoogleMobileAdsAutoInit(config);
+  const mainApplication = getMainApplicationOrThrow(manifestDocument);
 
-  if (!appId) {
-    return manifestDocument;
-  }
-
-  let mainApplication = getMainApplication(manifestDocument);
-  if (!mainApplication) {
-    mainApplication = { $: { 'android:name': '.MainApplication' } };
-  }
-
-  // add application ID
-  let existingApplicationId;
-  const newApplicationId = {
-    $: {
-      'android:name': 'com.google.android.gms.ads.APPLICATION_ID',
-      'android:value': appId,
-    },
-  };
-  if (mainApplication['meta-data']) {
-    existingApplicationId = mainApplication['meta-data'].filter(
-      (e: any) => e['$']['android:name'] === 'com.google.android.gms.ads.APPLICATION_ID'
+  if (appId) {
+    addMetaDataItemToMainApplication(mainApplication, APPLICATION_ID, appId);
+    addMetaDataItemToMainApplication(
+      mainApplication,
+      DELAY_APP_MEASUREMENT_INIT,
+      String(!autoInit)
     );
-    if (existingApplicationId.length) {
-      existingApplicationId[0]['$']['android:value'] = appId;
-    } else {
-      mainApplication['meta-data'].push(newApplicationId);
-    }
   } else {
-    mainApplication['meta-data'] = [newApplicationId];
-  }
-
-  // add delay auto init
-  let existingDelayAutoInit;
-  const newDelayAutoInit: ManifestMetaData = {
-    $: {
-      'android:name': 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT',
-      'android:value': String(!autoInit),
-    },
-  };
-  if (mainApplication['meta-data']) {
-    existingDelayAutoInit = mainApplication['meta-data'].filter(
-      (e: any) => e['$']['android:name'] === 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT'
-    );
-    if (existingDelayAutoInit.length) {
-      existingDelayAutoInit[0]['$']['android:value'] = String(!autoInit);
-    } else {
-      mainApplication['meta-data'].push(newDelayAutoInit);
-    }
-  } else {
-    mainApplication['meta-data'] = [newDelayAutoInit];
+    removeMetaDataItemFromMainApplication(mainApplication, APPLICATION_ID);
+    removeMetaDataItemFromMainApplication(mainApplication, DELAY_APP_MEASUREMENT_INIT);
   }
 
   return manifestDocument;

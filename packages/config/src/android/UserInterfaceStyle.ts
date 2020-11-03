@@ -33,7 +33,7 @@ export async function setUiModeAndroidManifest(
   if (!mainActivity) {
     mainActivity = { $: { 'android:name': '.MainActivity' } };
   }
-  mainActivity['$'][CONFIG_CHANGES_ATTRIBUTE] =
+  mainActivity.$[CONFIG_CHANGES_ATTRIBUTE] =
     'keyboard|keyboardHidden|orientation|screenSize|uiMode';
 
   return manifestDocument;

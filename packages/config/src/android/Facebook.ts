@@ -6,6 +6,7 @@ import {
   getMainApplication,
   ManifestActivity,
   ManifestApplication,
+  prefixAndroidKeys,
   removeMetaDataItemFromMainApplication,
 } from './Manifest';
 import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from './Resources';
@@ -22,17 +23,9 @@ function buildXMLItem({
   return { ...(children ?? {}), $: head };
 }
 
-function buildAndroidHead(head: Record<string, string>) {
-  // prefix all head keys with `android:`
-  return Object.entries(head).reduce(
-    (prev, [key, curr]) => ({ ...prev, [`android:${key}`]: curr }),
-    {}
-  );
-}
-
 function buildAndroidItem(datum: string | Record<string, any>) {
   const item = typeof datum === 'string' ? { name: datum } : datum;
-  const head = buildAndroidHead(item);
+  const head = prefixAndroidKeys(item);
   return buildXMLItem({ head });
 }
 
@@ -50,7 +43,7 @@ function getFacebookSchemeActivity(scheme: string) {
 </activity>
    */
   return buildXMLItem({
-    head: buildAndroidHead({
+    head: prefixAndroidKeys({
       name: 'com.facebook.CustomTabActivity',
       exported: 'true',
     }),
@@ -102,7 +95,7 @@ function ensureFacebookActivity({
   if (Array.isArray(mainApplication.activity)) {
     // Remove all Facebook CustomTabActivities first
     mainApplication.activity = mainApplication.activity.filter(activity => {
-      return activity['$']?.['android:name'] !== 'com.facebook.CustomTabActivity';
+      return activity.$?.['android:name'] !== 'com.facebook.CustomTabActivity';
     });
   } else {
     mainApplication.activity = [];
