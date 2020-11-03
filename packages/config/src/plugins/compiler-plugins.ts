@@ -6,7 +6,10 @@ import path from 'path';
 import { XcodeProject } from 'xcode';
 
 import { ConfigPlugin, ExportedConfig, ExportedConfigWithProps } from '../Plugin.types';
-import { addWarningIOS } from '../WarningAggregator';
+import { addWarningAndroid, addWarningIOS } from '../WarningAggregator';
+import { Manifest } from '../android';
+import { AndroidManifest } from '../android/Manifest';
+import { getAndroidManifestAsync } from '../android/Paths';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { InfoPlist } from '../ios/IosConfig.types';
 import { getPbxproj, getProjectName } from '../ios/utils/Xcodeproj';
@@ -35,9 +38,45 @@ export function resolveModResults(results: any, platformName: string, modName: s
 }
 
 function applyAndroidCoreMods(projectRoot: string, config: ExportedConfig): ExportedConfig {
-  // TODO: Support android mods
+  config = withAndroidManifestBaseMod(config);
   return config;
 }
+
+const withAndroidManifestBaseMod: ConfigPlugin<void> = config => {
+  // Append a rule to supply AndroidManifest.xml data to mods on `mods.android.manifest`
+  return withInterceptedMod<AndroidManifest>(config, {
+    platform: 'android',
+    mod: 'manifest',
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<AndroidManifest> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        const filePath = await getAndroidManifestAsync(modRequest.projectRoot);
+        let modResults = await Manifest.readAndroidManifestAsync(filePath);
+
+        // TODO: Fix type
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await Manifest.writeAndroidManifestAsync(filePath, modResults);
+      } catch (error) {
+        addWarningAndroid(
+          'android-manifest',
+          `AndroidManifest.xml configuration could not be applied. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
 
 function applyIOSCoreMods(projectRoot: string, config: ExportedConfig): ExportedConfig {
   const { iosProjectDirectory, supportingDirectory } = getIOSPaths(projectRoot, config);
@@ -137,12 +176,12 @@ function applyIOSCoreMods(projectRoot: string, config: ExportedConfig): Exported
     },
   });
 
-  config = withEntitlementsBaseMod(config, {});
+  config = withEntitlementsBaseMod(config);
 
   return config;
 }
 
-const withEntitlementsBaseMod: ConfigPlugin = config => {
+const withEntitlementsBaseMod: ConfigPlugin<void> = config => {
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
   return withInterceptedMod<JSONObject>(config, {
     platform: 'ios',

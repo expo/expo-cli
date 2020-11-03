@@ -116,6 +116,8 @@ type ManifestUsesFeature = {
   };
 };
 
+export type AndroidManifest = Document;
+
 export type Document = {
   manifest: {
     // Probably more, but this is currently all we'd need for most cases in Expo.

@@ -2,6 +2,7 @@ import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
 import { XcodeProject } from 'xcode';
 
+import { AndroidManifest } from './android/Manifest';
 import { InfoPlist } from './ios/IosConfig.types';
 
 type OptionalPromise<T> = Promise<T> | T;
@@ -58,8 +59,9 @@ export type Mod<Props = any> = (
 ) => OptionalPromise<ExportedConfigWithProps<Props>>;
 
 export interface ModConfig {
-  // android?: {
-  // };
+  android?: {
+    manifest?: Mod<AndroidManifest>;
+  };
   ios?: {
     infoPlist?: Mod<InfoPlist>;
     entitlements?: Mod<Plist>;
