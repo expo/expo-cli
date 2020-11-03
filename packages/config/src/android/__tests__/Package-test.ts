@@ -43,6 +43,6 @@ describe('package', () => {
       androidManifestJson
     );
 
-    expect(androidManifestJson['manifest']['$']['package']).toMatch('com.test.package');
+    expect(androidManifestJson.manifest.$.package).toMatch('com.test.package');
   });
 });
