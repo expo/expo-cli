@@ -127,8 +127,6 @@ export type AndroidManifest = {
   };
 };
 
-export type Document = AndroidManifest;
-
 export type InputOptions = {
   manifestPath?: string | null;
   projectRoot?: string | null;

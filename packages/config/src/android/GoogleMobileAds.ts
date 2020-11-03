@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainApplication, ManifestMetaData } from './Manifest';
+import { AndroidManifest, getMainApplication, ManifestMetaData } from './Manifest';
 
 export function getGoogleMobileAdsAppId(config: ExpoConfig) {
   return config.android?.config?.googleMobileAdsAppId ?? null;
@@ -9,7 +9,10 @@ export function getGoogleMobileAdsAutoInit(config: ExpoConfig) {
   return config.android?.config?.googleMobileAdsAutoInit ?? false;
 }
 
-export async function setGoogleMobileAdsConfig(config: ExpoConfig, manifestDocument: Document) {
+export async function setGoogleMobileAdsConfig(
+  config: ExpoConfig,
+  manifestDocument: AndroidManifest
+) {
   const appId = getGoogleMobileAdsAppId(config);
   const autoInit = getGoogleMobileAdsAutoInit(config);
 

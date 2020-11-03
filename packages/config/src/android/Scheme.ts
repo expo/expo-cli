@@ -1,6 +1,6 @@
 import { ExpoConfig } from '../Config.types';
 import { addWarningAndroid } from '../WarningAggregator';
-import { Document, ManifestActivity } from './Manifest';
+import { AndroidManifest, ManifestActivity } from './Manifest';
 
 export type IntentFilterProps = {
   actions: string[];
@@ -21,7 +21,7 @@ export function getScheme(config: { scheme?: string | string[] }): string[] {
 
 export async function setScheme(
   config: Pick<ExpoConfig, 'scheme' | 'android'>,
-  manifestDocument: Document
+  manifestDocument: AndroidManifest
 ) {
   const scheme = [
     ...getScheme(config),
@@ -77,7 +77,7 @@ function propertiesFromIntentFilter(intentFilter: any): IntentFilterProps {
   };
 }
 
-function getSingleTaskIntentFilters(manifestDocument: Document): any[] {
+function getSingleTaskIntentFilters(manifestDocument: AndroidManifest): any[] {
   if (!Array.isArray(manifestDocument.manifest.application)) return [];
 
   let outputSchemes: any[] = [];
@@ -96,7 +96,7 @@ function getSingleTaskIntentFilters(manifestDocument: Document): any[] {
   return outputSchemes;
 }
 
-export function getSchemesFromManifest(manifestDocument: Document): string[] {
+export function getSchemesFromManifest(manifestDocument: AndroidManifest): string[] {
   const outputSchemes: IntentFilterProps[] = [];
 
   const singleTaskIntentFilters = getSingleTaskIntentFilters(manifestDocument);
@@ -110,7 +110,7 @@ export function getSchemesFromManifest(manifestDocument: Document): string[] {
   return outputSchemes.reduce<string[]>((prev, { schemes }) => [...prev, ...schemes], []);
 }
 
-export function ensureManifestHasValidIntentFilter(manifestDocument: Document): boolean {
+export function ensureManifestHasValidIntentFilter(manifestDocument: AndroidManifest): boolean {
   if (!Array.isArray(manifestDocument.manifest.application)) {
     return false;
   }
@@ -143,12 +143,12 @@ export function ensureManifestHasValidIntentFilter(manifestDocument: Document): 
   return false;
 }
 
-export function hasScheme(scheme: string, manifestDocument: Document): boolean {
+export function hasScheme(scheme: string, manifestDocument: AndroidManifest): boolean {
   const schemes = getSchemesFromManifest(manifestDocument);
   return schemes.includes(scheme);
 }
 
-export function appendScheme(scheme: string, manifestDocument: Document): Document {
+export function appendScheme(scheme: string, manifestDocument: AndroidManifest): AndroidManifest {
   if (!Array.isArray(manifestDocument.manifest.application)) {
     return manifestDocument;
   }
@@ -172,7 +172,7 @@ export function appendScheme(scheme: string, manifestDocument: Document): Docume
   return manifestDocument;
 }
 
-export function removeScheme(scheme: string, manifestDocument: Document): Document {
+export function removeScheme(scheme: string, manifestDocument: AndroidManifest): AndroidManifest {
   if (!Array.isArray(manifestDocument.manifest.application)) {
     return manifestDocument;
   }

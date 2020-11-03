@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainActivity } from './Manifest';
+import { AndroidManifest, getMainActivity } from './Manifest';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';
 
@@ -20,7 +20,10 @@ export function getUserInterfaceStyle(config: ExpoConfig): string | null {
   return config.android?.userInterfaceStyle ?? config.userInterfaceStyle ?? null;
 }
 
-export async function setUiModeAndroidManifest(config: ExpoConfig, manifestDocument: Document) {
+export async function setUiModeAndroidManifest(
+  config: ExpoConfig,
+  manifestDocument: AndroidManifest
+) {
   const userInterfaceStyle = getUserInterfaceStyle(config);
   if (!userInterfaceStyle) {
     return manifestDocument;
