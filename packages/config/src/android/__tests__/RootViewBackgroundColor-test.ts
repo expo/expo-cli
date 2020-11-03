@@ -48,11 +48,11 @@ describe('Root view background color', () => {
 
       expect(
         stylesJSON.resources.style
-          .filter(e => e['$']['name'] === 'AppTheme')[0]
-          .item.filter(item => item['$'].name === 'android:windowBackground')[0]['_']
+          .filter(e => e.$.name === 'AppTheme')[0]
+          .item.filter(item => item.$.name === 'android:windowBackground')[0]._
       ).toMatch('@color/activityBackground');
       expect(
-        colorsJSON.resources.color.filter(e => e['$']['name'] === 'activityBackground')[0]['_']
+        colorsJSON.resources.color.filter(e => e.$.name === 'activityBackground')[0]._
       ).toMatch('#654321');
     });
   });
