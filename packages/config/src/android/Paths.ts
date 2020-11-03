@@ -55,7 +55,7 @@ export async function getMainActivityAsync(projectRoot: string): Promise<Applica
   return getProjectFileAsync(projectRoot, 'MainActivity');
 }
 
-export async function getProjectBuildGradleAsync(projectRoot: string): Promise<GradleProjectFile> {
+async function getBuildGradleAsync(projectRoot: string): Promise<GradleProjectFile> {
   const groovyPath = path.resolve(projectRoot, 'build.gradle');
   const ktPath = path.resolve(projectRoot, 'build.gradle.kts');
 
@@ -73,8 +73,12 @@ export async function getProjectBuildGradleAsync(projectRoot: string): Promise<G
   };
 }
 
+export async function getProjectBuildGradleAsync(projectRoot: string): Promise<GradleProjectFile> {
+  return getBuildGradleAsync(path.join(projectRoot, 'android'));
+}
+
 export async function getAppBuildGradleAsync(projectRoot: string): Promise<GradleProjectFile> {
-  return getProjectBuildGradleAsync(path.join(projectRoot, 'app'));
+  return getBuildGradleAsync(path.join(projectRoot, 'android', 'app'));
 }
 
 export function getAndroidBuildGradle(projectRoot: string): string {

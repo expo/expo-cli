@@ -143,7 +143,7 @@ const withAndroidProjectBuildGradleBaseMod: ConfigPlugin<void> = config => {
         resolveModResults(results, modRequest.platform, modRequest.modName);
         modResults = results.modResults;
 
-        await writeXMLAsync({ path: filePath, xml: modResults });
+        await writeFile(filePath, modResults.contents);
       } catch (error) {
         addWarningAndroid(
           `${modRequest.platform}-${modRequest.modName}`,
@@ -178,7 +178,7 @@ const withAndroidAppBuildGradleBaseMod: ConfigPlugin<void> = config => {
         resolveModResults(results, modRequest.platform, modRequest.modName);
         modResults = results.modResults;
 
-        await writeXMLAsync({ path: filePath, xml: modResults });
+        await writeFile(filePath, modResults.contents);
       } catch (error) {
         addWarningAndroid(
           `${modRequest.platform}-${modRequest.modName}`,
@@ -213,7 +213,7 @@ const withAndroidMainActivityBaseMod: ConfigPlugin<void> = config => {
         resolveModResults(results, modRequest.platform, modRequest.modName);
         modResults = results.modResults;
 
-        await writeXMLAsync({ path: filePath, xml: modResults });
+        await writeFile(filePath, modResults.contents);
       } catch (error) {
         addWarningAndroid(
           `${modRequest.platform}-${modRequest.modName}`,
