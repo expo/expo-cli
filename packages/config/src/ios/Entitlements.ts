@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
+import slash from 'slash';
 
 import { ExpoConfig } from '../Config.types';
 import { addWarningIOS } from '../WarningAggregator';
@@ -101,13 +102,16 @@ export function getEntitlementsPath(projectRoot: string): string {
   const projectName = getProjectName(projectRoot);
   const productName = getProductName(project);
 
-  const entitlementsRelativePath = path.join(projectName, `${productName}.entitlements`);
-  const entitlementsPath = path.normalize(path.join(projectRoot, 'ios', entitlementsRelativePath));
+  // Use posix formatted path, even on Windows
+  const entitlementsRelativePath = slash(path.join(projectName, `${productName}.entitlements`));
+  const entitlementsPath = slash(
+    path.normalize(path.join(projectRoot, 'ios', entitlementsRelativePath))
+  );
 
   const pathsToDelete: string[] = [];
 
   while (paths.length) {
-    const last = path.normalize(paths.pop()!);
+    const last = slash(path.normalize(paths.pop()!));
     if (last !== entitlementsPath) {
       pathsToDelete.push(last);
     } else {
