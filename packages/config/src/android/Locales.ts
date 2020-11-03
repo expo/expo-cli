@@ -2,14 +2,14 @@ import JsonFile from '@expo/json-file';
 import { join } from 'path';
 
 import { ExpoConfig } from '../Config.types';
+import { addWarningAndroid } from '../WarningAggregator';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';
 import { getProjectStringsXMLPathAsync, setStringItem } from './Strings';
-import { addWarningAndroid } from '../WarningAggregator';
 import { writeXMLAsync } from './XML';
 
 type LocaleJson = Record<string, string>;
 type ResolvedLocalesJson = Record<string, LocaleJson>;
-type ExpoConfigLocales = NonNullable<ExpoConfig['android']['locales']>;
+type ExpoConfigLocales = NonNullable<ExpoConfig['android']>['locales'];
 
 export function getLocales(config: ExpoConfig): Record<string, string | LocaleJson> | null {
   return config.android.locales ?? null;
@@ -27,12 +27,15 @@ export async function setLocalesAsync(
   const localesMap = await getResolvedLocalesAsync(projectDirectory, locales);
 
   for (const [lang, localizationObj] of Object.entries(localesMap)) {
-    const stringsPath = await getProjectStringsXMLPathAsync(projectDirectory, { kind: `values-${lang}` });
+    const stringsPath = await getProjectStringsXMLPathAsync(projectDirectory, {
+      kind: `values-${lang}`,
+    });
+
     if (!stringsPath) {
-      throw new Error(`There was a problem setting your locale in ${stringsPath}.`);
+      throw new Error(`There was a problem setting the locale in ${stringsPath}.`);
     }
 
-    let stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
+    const stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
 
     for (const [name, value] of Object.entries(localizationObj)) {
       setStringItem([buildResourceItem({ name, value })], stringsJSON);
