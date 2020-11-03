@@ -68,7 +68,20 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     // app/build.gradle
 
     // AndroidManifest.xml
+    AndroidConfig.Package.withPackageManifest,
     AndroidConfig.AllowBackup.withAllowBackup,
-    // TODO: Support Android
+    AndroidConfig.Scheme.withScheme,
+    AndroidConfig.Orientation.withOrientation,
+    AndroidConfig.Permissions.withPermissions,
+    AndroidConfig.Branch.withBranch,
+    AndroidConfig.Facebook.withFacebookManifest,
+
+    AndroidConfig.UserInterfaceStyle.withUiModeManifest,
+    AndroidConfig.GoogleMobileAds.withGoogleMobileAdsConfig,
+    AndroidConfig.GoogleMapsApiKey.withGoogleMapsApiKey,
+    AndroidConfig.IntentFilters.withAndroidIntentFilters,
+    [AndroidConfig.Updates.withUpdates, { expoUsername }],
+
+    // MainActivity.*
   ]);
 };

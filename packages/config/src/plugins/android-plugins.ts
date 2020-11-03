@@ -5,7 +5,9 @@ import { AndroidManifest } from '../android/Manifest';
 import { ResourceXML } from '../android/Resources';
 import { withExtendedMod } from './core-plugins';
 
-type MutateDataAction<T> = (expo: ExpoConfig, data: T) => T;
+type OptionalPromise<T> = T | Promise<T>;
+
+type MutateDataAction<T> = (expo: ExpoConfig, data: T) => OptionalPromise<T>;
 
 /**
  * Helper method for creating mods from existing config functions.

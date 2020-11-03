@@ -2,7 +2,7 @@ import { Parser } from 'xml2js';
 
 import { ExpoConfig } from '../Config.types';
 import { assert } from '../Errors';
-import { createStringsXmlPlugin } from '../plugins/android-plugins';
+import { createAndroidManifestPlugin, createStringsXmlPlugin } from '../plugins/android-plugins';
 import {
   addMetaDataItemToMainApplication,
   Document,
@@ -14,6 +14,7 @@ import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from '
 import { writeXMLAsync } from './XML';
 
 export const withFacebookAppIdString = createStringsXmlPlugin(applyFacebookAppIdString);
+export const withFacebookManifest = createAndroidManifestPlugin(setFacebookConfig);
 
 const facebookSchemeActivity = (scheme: string) => `
 <activity

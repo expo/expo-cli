@@ -1,5 +1,6 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainActivity } from './Manifest';
+import { createAndroidManifestPlugin } from '../plugins/android-plugins';
+import { AndroidManifest, getMainActivity } from './Manifest';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';
 
@@ -16,11 +17,13 @@ public class MainActivity extends ReactActivity {
     }
 `;
 
+export const withUiModeManifest = createAndroidManifestPlugin(setUiModeAndroidManifest);
+
 export function getUserInterfaceStyle(config: ExpoConfig): string | null {
   return config.android?.userInterfaceStyle ?? config.userInterfaceStyle ?? null;
 }
 
-export async function setUiModeAndroidManifest(config: ExpoConfig, manifestDocument: Document) {
+export function setUiModeAndroidManifest(config: ExpoConfig, manifestDocument: AndroidManifest) {
   const userInterfaceStyle = getUserInterfaceStyle(config);
   if (!userInterfaceStyle) {
     return manifestDocument;

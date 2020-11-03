@@ -1,11 +1,15 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainApplication, ManifestUsesLibrary } from './Manifest';
+import { createAndroidManifestPlugin } from '../plugins/android-plugins';
+import { AndroidManifest, getMainApplication, ManifestUsesLibrary } from './Manifest';
+
+export const withGoogleMapsApiKey = createAndroidManifestPlugin(setGoogleMapsApiKey);
 
 export function getGoogleMapsApiKey(config: ExpoConfig) {
   return config.android?.config?.googleMaps?.apiKey ?? null;
 }
 
-export async function setGoogleMapsApiKey(config: ExpoConfig, manifestDocument: Document) {
+// TODO: Update all XML handling in this method
+export function setGoogleMapsApiKey(config: ExpoConfig, manifestDocument: AndroidManifest) {
   const apiKey = getGoogleMapsApiKey(config);
 
   if (!apiKey) {
@@ -13,6 +17,7 @@ export async function setGoogleMapsApiKey(config: ExpoConfig, manifestDocument: 
   }
 
   let mainApplication = getMainApplication(manifestDocument);
+  // TODO: assert instead
   if (!mainApplication) {
     mainApplication = { $: { 'android:name': '.MainApplication' } };
   }

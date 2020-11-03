@@ -26,20 +26,6 @@ async function modifyAppBuildGradleAsync(
   fs.writeFileSync(buildGradlePath, result);
 }
 
-async function modifyAndroidManifestAsync(
-  projectRoot: string,
-  callback: (
-    androidManifest: AndroidConfig.Manifest.Document
-  ) => Promise<AndroidConfig.Manifest.Document>
-) {
-  const androidManifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(projectRoot);
-  const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(
-    androidManifestPath
-  );
-  const result = await callback(androidManifestJSON);
-  await AndroidConfig.Manifest.writeAndroidManifestAsync(androidManifestPath, result);
-}
-
 async function modifyMainActivityAsync(
   projectRoot: string,
   callback: (props: { contents: string; language: 'java' | 'kt' }) => Promise<string>
@@ -81,42 +67,6 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     buildGradle = AndroidConfig.Version.setVersionCode(exp, buildGradle);
     buildGradle = AndroidConfig.Version.setVersionName(exp, buildGradle);
     return buildGradle;
-  });
-
-  await modifyAndroidManifestAsync(projectRoot, async androidManifest => {
-    androidManifest = await AndroidConfig.Package.setPackageInAndroidManifest(exp, androidManifest);
-    androidManifest = await AndroidConfig.AllowBackup.setAllowBackup(exp, androidManifest);
-    androidManifest = await AndroidConfig.Scheme.setScheme(exp, androidManifest);
-    androidManifest = await AndroidConfig.Orientation.setAndroidOrientation(exp, androidManifest);
-    androidManifest = await AndroidConfig.Permissions.setAndroidPermissions(exp, androidManifest);
-    androidManifest = await AndroidConfig.Branch.setBranchApiKey(exp, androidManifest);
-    androidManifest = await AndroidConfig.Facebook.setFacebookConfig(exp, androidManifest);
-    androidManifest = await AndroidConfig.UserInterfaceStyle.setUiModeAndroidManifest(
-      exp,
-      androidManifest
-    );
-
-    androidManifest = await AndroidConfig.GoogleMobileAds.setGoogleMobileAdsConfig(
-      exp,
-      androidManifest
-    );
-    androidManifest = await AndroidConfig.GoogleMapsApiKey.setGoogleMapsApiKey(
-      exp,
-      androidManifest
-    );
-
-    androidManifest = await AndroidConfig.IntentFilters.setAndroidIntentFilters(
-      exp,
-      androidManifest
-    );
-
-    androidManifest = await AndroidConfig.Updates.setUpdatesConfig(
-      exp,
-      androidManifest,
-      expoUsername
-    );
-
-    return androidManifest;
   });
 
   await modifyMainActivityAsync(projectRoot, async ({ contents, language }) => {

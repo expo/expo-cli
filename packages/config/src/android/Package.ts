@@ -3,7 +3,10 @@ import { sync as globSync } from 'glob';
 import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
-import { Document } from './Manifest';
+import { createAndroidManifestPlugin } from '../plugins/android-plugins';
+import { AndroidManifest } from './Manifest';
+
+export const withPackageManifest = createAndroidManifestPlugin(setPackageInAndroidManifest);
 
 export function getPackage(config: ExpoConfig) {
   return config.android?.package ?? null;
@@ -112,13 +115,13 @@ export function setPackageInBuildGradle(config: ExpoConfig, buildGradle: string)
   return buildGradle.replace(pattern, `applicationId '${packageName}'`);
 }
 
-export async function setPackageInAndroidManifest(config: ExpoConfig, manifestDocument: Document) {
+export function setPackageInAndroidManifest(config: ExpoConfig, manifestDocument: AndroidManifest) {
   const packageName = getPackage(config);
 
   if (packageName) {
-    manifestDocument['manifest']['$']['package'] = packageName;
+    manifestDocument.manifest.$.package = packageName;
   } else {
-    delete manifestDocument['manifest']['$']['package'];
+    delete manifestDocument.manifest.$.package;
   }
 
   return manifestDocument;
