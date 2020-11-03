@@ -1,7 +1,18 @@
 import { XcodeProject } from 'xcode';
 
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
+import { withXcodeProject } from '../plugins/ios-plugins';
+
+export const withDeviceFamily: ConfigPlugin = config => {
+  return withXcodeProject(config, async config => {
+    config.modResults = await setDeviceFamily(config, {
+      project: config.modResults,
+    });
+    return config;
+  });
+};
 
 export function getSupportsTablet(config: ExpoConfig): boolean {
   return !!config.ios?.supportsTablet;

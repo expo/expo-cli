@@ -1,6 +1,9 @@
 import { ExpoConfig } from '../Config.types';
+import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist, URLScheme } from './IosConfig.types';
 import { findSchemeNames } from './Paths';
+
+export const withScheme = createInfoPlistPlugin(setScheme);
 
 export function getScheme(config: { scheme?: string | string[] }): string[] {
   if (Array.isArray(config.scheme)) {

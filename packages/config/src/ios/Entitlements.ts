@@ -3,7 +3,9 @@ import path from 'path';
 import slash from 'slash';
 
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
+import { createEntitlementsPlugin, withEntitlementsPlist } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import * as Paths from './Paths';
 import {
@@ -16,6 +18,22 @@ import {
 } from './utils/Xcodeproj';
 
 type Plist = Record<string, any>;
+
+export const withAccessesContactNotes = createEntitlementsPlugin(setAccessesContactNotes);
+
+export const withAssociatedDomains = createEntitlementsPlugin(setAssociatedDomains);
+
+export const withAppleSignInEntitlement = createEntitlementsPlugin(setAppleSignInEntitlement);
+
+export const withICloudEntitlement: ConfigPlugin<{ appleTeamId: string }> = (
+  config,
+  { appleTeamId }
+) => {
+  return withEntitlementsPlist(config, config => {
+    config.modResults = setICloudEntitlement(config, config.modResults, appleTeamId);
+    return config;
+  });
+};
 
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
 
@@ -34,8 +52,8 @@ export function setCustomEntitlementsEntries(config: ExpoConfig, entitlements: I
 
 export function setICloudEntitlement(
   config: ExpoConfig,
-  appleTeamId: string,
-  entitlementsPlist: Plist
+  entitlementsPlist: Plist,
+  appleTeamId: string
 ): Plist {
   if (config.ios?.usesIcloudStorage) {
     // TODO: need access to the appleTeamId for this one!

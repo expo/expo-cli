@@ -5,7 +5,16 @@ import {
 } from '@expo/configure-splash-screen';
 
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
+import { withDangerousMod } from '../plugins/ios-plugins';
+
+export const withSplashScreen: ConfigPlugin = config => {
+  return withDangerousMod(config, async config => {
+    await setSplashScreenAsync(config, config.modRequest.projectRoot);
+    return config;
+  });
+};
 
 export function getSplashScreen(config: ExpoConfig): IosSplashScreenConfig | undefined {
   if (!config.splash && !config.ios?.splash) {

@@ -1,5 +1,8 @@
 import { ExpoConfig } from '../Config.types';
+import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
+
+export const withUsesNonExemptEncryption = createInfoPlistPlugin(setUsesNonExemptEncryption);
 
 export function getUsesNonExemptEncryption(config: ExpoConfig) {
   return config?.ios?.config?.usesNonExemptEncryption ?? null;

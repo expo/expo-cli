@@ -1,6 +1,9 @@
 import { ExpoConfig } from '../Config.types';
+import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import { appendScheme } from './Scheme';
+
+export const withFacebook = createInfoPlistPlugin(setFacebookConfig);
 
 /**
  * Getters

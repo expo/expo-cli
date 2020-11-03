@@ -4,12 +4,24 @@ import { join } from 'path';
 import { XcodeProject } from 'xcode';
 
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
+import { withXcodeProject } from '../plugins/ios-plugins';
 import { addFileToGroup, ensureGroupRecursively, getProjectName } from './utils/Xcodeproj';
 
 type LocaleJson = Record<string, string>;
 type ResolvedLocalesJson = Record<string, LocaleJson>;
 type ExpoConfigLocales = NonNullable<ExpoConfig['locales']>;
+
+export const withLocales: ConfigPlugin = config => {
+  return withXcodeProject(config, async config => {
+    config.modResults = await setLocalesAsync(config, {
+      projectRoot: config.modRequest.projectRoot,
+      project: config.modResults,
+    });
+    return config;
+  });
+};
 
 export function getLocales(config: ExpoConfig): Record<string, string | LocaleJson> | null {
   return config.locales ?? null;

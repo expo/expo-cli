@@ -3,6 +3,8 @@ import xcode from 'xcode';
 
 import { ExpoConfig } from '../Config.types';
 import { projectHasModule } from '../Modules';
+import { ExportedConfig } from '../Plugin.types';
+import { withExpoPlist } from '../plugins/ios-plugins';
 import { ExpoPlist } from './IosConfig.types';
 
 export enum Config {
@@ -46,6 +48,16 @@ export function getUpdatesCheckOnLaunch(config: ExpoConfig): 'NEVER' | 'ALWAYS' 
   }
   return 'ALWAYS';
 }
+
+export const withUpdates = (
+  config: ExportedConfig,
+  { expoUsername }: { expoUsername: string | null }
+) => {
+  return withExpoPlist(config, config => {
+    config.modResults = setUpdatesConfig(config, config.modResults, expoUsername);
+    return config;
+  });
+};
 
 export function setUpdatesConfig(
   config: ExpoConfig,

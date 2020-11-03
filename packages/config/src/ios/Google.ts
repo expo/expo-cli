@@ -3,10 +3,24 @@ import path from 'path';
 import { XcodeProject } from 'xcode';
 
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
+import { createInfoPlistPlugin, withXcodeProject } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import { getSourceRoot } from './Paths';
 import { appendScheme } from './Scheme';
 import { addFileToGroup, getProjectName } from './utils/Xcodeproj';
+
+export const withGoogle = createInfoPlistPlugin(setGoogleConfig);
+
+export const withGoogleServicesFile: ConfigPlugin = config => {
+  return withXcodeProject(config, config => {
+    config.modResults = setGoogleServicesFile(config, {
+      projectRoot: config.modRequest.projectRoot,
+      project: config.modResults,
+    });
+    return config;
+  });
+};
 
 export function getGoogleMapsApiKey(config: ExpoConfig) {
   return config.ios?.config?.googleMapsApiKey ?? null;

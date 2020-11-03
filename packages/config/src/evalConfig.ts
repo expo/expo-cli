@@ -3,7 +3,7 @@ import requireString from 'require-from-string';
 
 import { AppJSONConfig, ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
-import { serializeAndEvaluate } from './Serialize';
+import { serializeSkippingMods } from './Serialize';
 // import babel from '@babel/core';
 
 type RawDynamicConfig = AppJSONConfig | Partial<ExpoConfig> | null;
@@ -48,5 +48,12 @@ export function evalConfig(
     throw new ConfigError(`Config file ${configFile} cannot return a Promise.`, 'INVALID_CONFIG');
   }
 
-  return { config: serializeAndEvaluate(result), exportedObjectType };
+  // If the expo object exists, ignore all other values.
+  if (result?.expo) {
+    result = serializeSkippingMods(result.expo);
+  } else {
+    result = serializeSkippingMods(result);
+  }
+
+  return { config: result, exportedObjectType };
 }
