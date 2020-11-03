@@ -10,6 +10,11 @@ import {
   removeMetaDataItemFromMainApplication,
 } from './Manifest';
 
+type ExpoConfigUpdates = Pick<
+  ExpoConfig,
+  'sdkVersion' | 'owner' | 'runtimeVersion' | 'nodeModulesPath' | 'updates' | 'slug'
+>;
+
 export enum Config {
   ENABLED = 'expo.modules.updates.ENABLED',
   CHECK_ON_LAUNCH = 'expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH',
@@ -19,7 +24,10 @@ export enum Config {
   UPDATE_URL = 'expo.modules.updates.EXPO_UPDATE_URL',
 }
 
-export function getUpdateUrl(config: ExpoConfig, username: string | null): string | null {
+export function getUpdateUrl(
+  config: Pick<ExpoConfigUpdates, 'owner' | 'slug'>,
+  username: string | null
+): string | null {
   const user = typeof config.owner === 'string' ? config.owner : username;
   if (!user) {
     return null;
@@ -27,23 +35,27 @@ export function getUpdateUrl(config: ExpoConfig, username: string | null): strin
   return `https://exp.host/@${user}/${config.slug}`;
 }
 
-export function getRuntimeVersion(config: ExpoConfig): string | null {
+export function getRuntimeVersion(
+  config: Pick<ExpoConfigUpdates, 'runtimeVersion'>
+): string | null {
   return typeof config.runtimeVersion === 'string' ? config.runtimeVersion : null;
 }
 
-export function getSDKVersion(config: ExpoConfig): string | null {
+export function getSDKVersion(config: Pick<ExpoConfigUpdates, 'sdkVersion'>): string | null {
   return typeof config.sdkVersion === 'string' ? config.sdkVersion : null;
 }
 
-export function getUpdatesEnabled(config: ExpoConfig): boolean {
+export function getUpdatesEnabled(config: Pick<ExpoConfigUpdates, 'updates'>): boolean {
   return config.updates?.enabled !== false;
 }
 
-export function getUpdatesTimeout(config: ExpoConfig): number {
+export function getUpdatesTimeout(config: Pick<ExpoConfigUpdates, 'updates'>): number {
   return config.updates?.fallbackToCacheTimeout ?? 0;
 }
 
-export function getUpdatesCheckOnLaunch(config: ExpoConfig): 'NEVER' | 'ALWAYS' {
+export function getUpdatesCheckOnLaunch(
+  config: Pick<ExpoConfigUpdates, 'updates'>
+): 'NEVER' | 'ALWAYS' {
   if (config.updates?.checkAutomatically === 'ON_ERROR_RECOVERY') {
     return 'NEVER';
   } else if (config.updates?.checkAutomatically === 'ON_LOAD') {
@@ -53,7 +65,7 @@ export function getUpdatesCheckOnLaunch(config: ExpoConfig): 'NEVER' | 'ALWAYS' 
 }
 
 export async function setUpdatesConfig(
-  config: ExpoConfig,
+  config: ExpoConfigUpdates,
   manifestDocument: AndroidManifest,
   username: string | null
 ): Promise<AndroidManifest> {
@@ -86,7 +98,7 @@ export async function setUpdatesConfig(
 }
 
 export function setVersionsConfig(
-  config: ExpoConfig,
+  config: Pick<ExpoConfigUpdates, 'sdkVersion' | 'runtimeVersion'>,
   manifestDocument: AndroidManifest
 ): AndroidManifest {
   const mainApplication = getMainApplication(manifestDocument);
@@ -107,7 +119,10 @@ export function setVersionsConfig(
   return manifestDocument;
 }
 
-export function formatApplyLineForBuildGradle(projectDir: string, config: ExpoConfig): string {
+export function formatApplyLineForBuildGradle(
+  projectDir: string,
+  config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>
+): string {
   const updatesGradleScriptPath = projectHasModule(
     'expo-updates/scripts/create-manifest-android.gradle',
     projectDir,
@@ -128,7 +143,7 @@ export function formatApplyLineForBuildGradle(projectDir: string, config: ExpoCo
 export function isBuildGradleConfigured(
   buildGradleContent: string,
   projectDir: string,
-  config: ExpoConfig
+  config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>
 ): boolean {
   const androidBuildScript = formatApplyLineForBuildGradle(projectDir, config);
 
@@ -149,7 +164,7 @@ export function isMainApplicationMetaDataSet(manifest: AndroidManifest): boolean
 }
 
 export function isMainApplicationMetaDataSynced(
-  config: ExpoConfig,
+  config: ExpoConfigUpdates,
   manifest: AndroidManifest,
   username: string | null
 ): boolean {
@@ -166,7 +181,10 @@ export function isMainApplicationMetaDataSynced(
   );
 }
 
-export function areVersionsSynced(config: ExpoConfig, manifest: AndroidManifest): boolean {
+export function areVersionsSynced(
+  config: Pick<ExpoConfigUpdates, 'runtimeVersion' | 'sdkVersion'>,
+  manifest: AndroidManifest
+): boolean {
   const expectedRuntimeVersion = getRuntimeVersion(config);
   const expectedSdkVersion = getSDKVersion(config);
   const currentRuntimeVersion = getMainApplicationMetaDataValue(manifest, Config.RUNTIME_VERSION);
