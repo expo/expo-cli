@@ -7,11 +7,14 @@ import { writeXMLAsync } from './XML';
 const COLOR_PRIMARY_KEY = 'colorPrimary';
 const DEFAULT_PRIMARY_COLOR = '#023c69';
 
-export function getPrimaryColor(config: ExpoConfig) {
+export function getPrimaryColor(config: Pick<ExpoConfig, 'primaryColor'>) {
   return config.primaryColor ?? DEFAULT_PRIMARY_COLOR;
 }
 
-export async function setPrimaryColor(config: ExpoConfig, projectDirectory: string) {
+export async function setPrimaryColor(
+  config: Pick<ExpoConfig, 'primaryColor'>,
+  projectDirectory: string
+) {
   const hexString = getPrimaryColor(config);
 
   const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
