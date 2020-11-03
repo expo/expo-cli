@@ -66,10 +66,9 @@ function isValidRedirectIntentFilter({ actions, categories, schemes }: IntentFil
 }
 
 function propertiesFromIntentFilter(intentFilter: any): IntentFilterProps {
-  const actions = intentFilter?.action?.map((data: any) => data?.['$']?.['android:name']) ?? [];
-  const categories =
-    intentFilter?.category?.map((data: any) => data?.['$']?.['android:name']) ?? [];
-  const schemes = intentFilter?.data?.map((data: any) => data?.['$']?.['android:scheme']) ?? [];
+  const actions = intentFilter?.action?.map((data: any) => data?.$?.['android:name']) ?? [];
+  const categories = intentFilter?.category?.map((data: any) => data?.$?.['android:name']) ?? [];
+  const schemes = intentFilter?.data?.map((data: any) => data?.$?.['android:scheme']) ?? [];
   return {
     schemes,
     actions,
@@ -86,7 +85,7 @@ function getSingleTaskIntentFilters(manifestDocument: AndroidManifest): any[] {
     // @ts-ignore
     const activities = Array.isArray(activity) ? activity : [activity];
     const singleTaskActivities = (activities as ManifestActivity[]).filter(
-      activity => activity?.['$']?.['android:launchMode'] === 'singleTask'
+      activity => activity?.$?.['android:launchMode'] === 'singleTask'
     );
     for (const activity of singleTaskActivities) {
       const intentFilters = activity['intent-filter'];
@@ -117,7 +116,7 @@ export function ensureManifestHasValidIntentFilter(manifestDocument: AndroidMani
 
   for (const application of manifestDocument.manifest.application) {
     for (const activity of application.activity || []) {
-      if (activity?.['$']?.['android:launchMode'] === 'singleTask') {
+      if (activity?.$?.['android:launchMode'] === 'singleTask') {
         for (const intentFilter of activity['intent-filter'] || []) {
           // Parse valid intent filters...
           const properties = propertiesFromIntentFilter(intentFilter);
@@ -155,7 +154,7 @@ export function appendScheme(scheme: string, manifestDocument: AndroidManifest):
 
   for (const application of manifestDocument.manifest.application) {
     for (const activity of application.activity || []) {
-      if (activity?.['$']?.['android:launchMode'] === 'singleTask') {
+      if (activity?.$?.['android:launchMode'] === 'singleTask') {
         for (const intentFilter of activity['intent-filter'] || []) {
           const properties = propertiesFromIntentFilter(intentFilter);
           if (isValidRedirectIntentFilter(properties)) {
@@ -179,14 +178,14 @@ export function removeScheme(scheme: string, manifestDocument: AndroidManifest):
 
   for (const application of manifestDocument.manifest.application) {
     for (const activity of application.activity || []) {
-      if (activity?.['$']?.['android:launchMode'] === 'singleTask') {
+      if (activity?.$?.['android:launchMode'] === 'singleTask') {
         for (const intentFilter of activity['intent-filter'] || []) {
           // Parse valid intent filters...
           const properties = propertiesFromIntentFilter(intentFilter);
           if (isValidRedirectIntentFilter(properties)) {
             for (const dataKey in intentFilter?.data || []) {
               const data = intentFilter.data?.[dataKey];
-              if (data?.['$']?.['android:scheme'] === scheme) {
+              if (data?.$?.['android:scheme'] === scheme) {
                 delete intentFilter.data?.[dataKey];
               }
             }

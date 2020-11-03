@@ -119,9 +119,9 @@ export async function setPackageInAndroidManifest(
   const packageName = getPackage(config);
 
   if (packageName) {
-    manifestDocument['manifest']['$']['package'] = packageName;
+    manifestDocument.manifest.$.package = packageName;
   } else {
-    delete manifestDocument['manifest']['$']['package'];
+    delete manifestDocument.manifest.$.package;
   }
 
   return manifestDocument;

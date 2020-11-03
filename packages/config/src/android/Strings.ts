@@ -14,7 +14,7 @@ export function setStringItem(
 ): ResourceXML {
   if (stringFileContentsJSON?.resources?.string) {
     const stringNameExists = stringFileContentsJSON.resources.string.filter(
-      (e: ResourceItemXML) => e['$'].name === itemToAdd[0]['$'].name
+      (e: ResourceItemXML) => e.$.name === itemToAdd[0].$.name
     )[0];
     if (stringNameExists) {
       // replace the previous value
@@ -37,7 +37,7 @@ export function setStringItem(
 export function removeStringItem(named: string, stringFileContentsJSON: ResourceXML): ResourceXML {
   if (stringFileContentsJSON?.resources?.string) {
     const stringNameExists = stringFileContentsJSON.resources.string.findIndex(
-      (e: ResourceItemXML) => e['$'].name === named
+      (e: ResourceItemXML) => e.$.name === named
     );
     if (stringNameExists > -1) {
       // replace the previous value

@@ -17,7 +17,7 @@ export async function setAndroidOrientation(config: ExpoConfig, manifestDocument
   if (!mainActivity) {
     mainActivity = { $: { 'android:name': '.MainActivity' } };
   }
-  mainActivity['$'][SCREEN_ORIENTATION_ATTRIBUTE] =
+  mainActivity.$[SCREEN_ORIENTATION_ATTRIBUTE] =
     orientation !== 'default' ? orientation : 'unspecified';
 
   return manifestDocument;

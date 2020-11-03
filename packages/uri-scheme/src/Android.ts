@@ -149,7 +149,7 @@ export async function getAsync({
 }
 
 function getPackage(manifest: AndroidManifest): string | null {
-  return manifest.manifest?.['$']?.package ?? null;
+  return manifest.manifest?.$?.package ?? null;
 }
 
 export async function getProjectIdAsync({

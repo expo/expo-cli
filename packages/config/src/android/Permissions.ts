@@ -85,9 +85,7 @@ export function isPermissionAlreadyRequested(
   permission: string,
   manifestPermissions: ManifestUsesPermission[]
 ): boolean {
-  const hasPermission = manifestPermissions.filter(
-    (e: any) => e['$']['android:name'] === permission
-  );
+  const hasPermission = manifestPermissions.filter((e: any) => e.$['android:name'] === permission);
   return hasPermission.length > 0;
 }
 
@@ -106,7 +104,7 @@ export function removePermissions(doc: AndroidManifest, permissionNames?: string
   for (const attribute of permissions) {
     if (targetNames) {
       // @ts-ignore: name isn't part of the type
-      const value = attribute['$']['android:name'] || attribute['$']['name'];
+      const value = attribute.$['android:name'] || attribute.$.name;
       if (!targetNames.includes(value)) {
         nextPermissions.push(attribute);
       }
@@ -168,7 +166,7 @@ export function ensurePermissionNameFormat(permissionName: string): string {
 export function getPermissions(doc: AndroidManifest): string[] {
   const usesPermissions: { [key: string]: any }[] = doc.manifest[USES_PERMISSION] || [];
   const permissions = usesPermissions.map(permissionObject => {
-    return permissionObject['$']['android:name'] || permissionObject['$']['name'];
+    return permissionObject.$['android:name'] || permissionObject.$.name;
   });
   return permissions;
 }
