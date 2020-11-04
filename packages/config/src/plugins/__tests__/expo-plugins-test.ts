@@ -1,12 +1,16 @@
+import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 import * as path from 'path';
+import xcode from 'xcode';
 
 import { ExportedConfig } from '../../Plugin.types';
+import { readXMLAsync } from '../../android/XML';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
 import { withExpoAndroidPlugins, withExpoIOSPlugins } from '../expo-plugins';
 import { compileModsAsync, evalModsAsync } from '../mod-compiler';
 import rnFixture from './fixtures/react-native-project';
+
 const actualFs = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
@@ -316,5 +320,61 @@ describe('built-in plugins', () => {
       /foo = "uhh bar"/
     );
     expect(after['ios/ReactNativeProject/GoogleService-Info.plist']).toBe('noop');
+
+    expect(after['android/app/src/main/java/com/bacon/todo/MainApplication.java']).toMatch(
+      'package com.bacon.todo;'
+    );
+    expect(after['android/app/src/main/java/com/bacon/todo/MainActivity.java']).toMatch(
+      '// Added automatically by Expo Config'
+    );
+    expect(after['android/app/src/main/res/values/strings.xml']).toMatch(
+      '<string name="app_name">my cool app</string>'
+    );
+
+    // Ensure files are always written in the correct format
+    for (const xmlPath of [
+      'android/app/src/main/AndroidManifest.xml',
+      'android/app/src/main/res/values/styles.xml',
+      'android/app/src/main/res/values/strings.xml',
+      'android/app/src/main/res/values/colors.xml',
+      'ios/ReactNativeProject/Info.plist',
+      'ios/ReactNativeProject/Base.lproj/LaunchScreen.xib',
+    ]) {
+      const isValid = await isValidXMLAsync(path.join(projectRoot, xmlPath));
+      if (!isValid) throw new Error(`Invalid XML file format at: "${xmlPath}"`);
+    }
+
+    // Ensure files are always written in the correct format
+    for (const xmlPath of [
+      'ios/ReactNativeProject/Images.xcassets/AppIcon.appiconset/Contents.json',
+      'ios/ReactNativeProject/Images.xcassets/Contents.json',
+      'android/app/google-services.json',
+    ]) {
+      const isValid = await isValidJSONAsync(path.join(projectRoot, xmlPath));
+      if (!isValid) throw new Error(`Invalid JSON file format at: "${xmlPath}"`);
+    }
+
+    // Ensure the Xcode project file can be read and parsed.
+    const project = xcode.project(
+      path.join(projectRoot, 'ios/ReactNativeProject.xcodeproj/project.pbxproj')
+    );
+    project.parseSync();
   });
 });
+
+async function isValidXMLAsync(filePath: string) {
+  try {
+    const res = await readXMLAsync({ path: filePath });
+    return !!res;
+  } catch {
+    return false;
+  }
+}
+async function isValidJSONAsync(filePath: string) {
+  try {
+    const res = await JsonFile.readAsync(filePath);
+    return !!res;
+  } catch {
+    return false;
+  }
+}
