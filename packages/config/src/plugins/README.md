@@ -104,10 +104,16 @@ Modifiers (mods for short) are added to the `mods` object of the Expo config. Th
 
 The following default mods are provided by the mod compiler for common file manipulation:
 
-- `mods.ios.infoPlist` -- Modify the `ios/<name>/Info.plist` as JSON
-- `mods.ios.entitlements` -- Modify the `ios/<name>/<product-name>.entitlements` as JSON
-- `mods.ios.expoPlist` -- Modify the `ios/<name>/Expo.plist` as JSON (Expo updates config for iOS).
-- `mods.ios.xcodeproj` -- Modify the `ios/<name>.xcodeproj` as an `XcodeProject` object from the [`xcode`](https://www.npmjs.com/package/xcode) JS package.
+- `mods.ios.infoPlist` -- Modify the `ios/<name>/Info.plist` as JSON (parsed with [`@expo/plist`](https://www.npmjs.com/package/@expo/plist)).
+- `mods.ios.entitlements` -- Modify the `ios/<name>/<product-name>.entitlements` as JSON (parsed with [`@expo/plist`](https://www.npmjs.com/package/@expo/plist)).
+- `mods.ios.expoPlist` -- Modify the `ios/<name>/Expo.plist` as JSON (Expo updates config for iOS) (parsed with [`@expo/plist`](https://www.npmjs.com/package/@expo/plist)).
+- `mods.ios.xcodeproj` -- Modify the `ios/<name>.xcodeproj` as an `XcodeProject` object (parsed with [`xcode`](https://www.npmjs.com/package/xcode)).
+
+- `mods.android.manifest` -- Modify the `android/app/src/main/AndroidManifest.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+- `mods.android.strings` -- Modify the `android/app/src/main/res/values/strings.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+- `mods.android.mainActivity` -- Modify the `android/app/src/main/[package]/MainActivity.java` as a string.
+- `mods.android.appBuildGradle` -- Modify the `android/app/build.gradle` as a string.
+- `mods.android.projectBuildGradle` -- Modify the `android/build.gradle` as a string.
 
 After the mods are resolved, the contents of each mod will be written to disk. Custom default mods can be added to support new native files.
 For example, you can create a mod to support the `GoogleServices-Info.plist`, and pass it to other mods.
