@@ -88,7 +88,7 @@ describe('User interface style', () => {
     );
 
     const mainActivity = getMainActivity(androidManifestJson);
-    expect(mainActivity['$']['android:configChanges']).toMatch(
+    expect(mainActivity.$['android:configChanges']).toMatch(
       'keyboard|keyboardHidden|orientation|screenSize|uiMode'
     );
   });

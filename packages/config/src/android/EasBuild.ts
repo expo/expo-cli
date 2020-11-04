@@ -15,8 +15,8 @@ function hasApplyLine(content: string, applyLine: string): boolean {
   );
 }
 
-export function getEasBuildGradlePath(projectDir: string): string {
-  return path.join(projectDir, 'android', 'app', 'eas-build.gradle');
+export function getEasBuildGradlePath(projectRoot: string): string {
+  return path.join(projectRoot, 'android', 'app', 'eas-build.gradle');
 }
 
 export async function configureEasBuildAsync(projectRoot: string): Promise<void> {

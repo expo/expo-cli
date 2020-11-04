@@ -10,6 +10,35 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 3 Nov 2020 10:49:55 -0800](https://github.com/expo/expo-cli/commit/de4124a9cfc50715e0c9748151dfdbe254e57074)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [config] config plugins iOS ([#2789](https://github.com/expo/expo-cli/issues/2789))
+
+### 🐛 Bug fixes
+
+- [cli] Use exact @expo/eas-build-job version, update it, and fix related TS errors ([#2850](https://github.com/expo/expo-cli/issues/2850))
+- [cli] Fix eas gradle script not working when used with react-native-config
+- [config] Force entitlement paths to be in posix ([#2841](https://github.com/expo/expo-cli/issues/2841))
+
+### 📦 Packages updated
+
+- @expo/config@3.3.13
+- @expo/dev-server@0.1.38
+- @expo/dev-tools@0.13.57
+- @expo/electron-adapter@0.0.29
+- expo-cli@3.28.4
+- expo-optimize@0.1.60
+- @expo/metro-config@0.1.38
+- @expo/next-adapter@2.1.43
+- expo-pwa@0.0.48
+- uri-scheme@1.0.44
+- @expo/webpack-config@0.12.42
+- @expo/xdl@58.0.18
+
 ## [Thu, 22 Oct 2020 15:31:16 -0700](https://github.com/expo/expo-cli/commit/8def7d96509daf819754b0b7af09e1f3159896c1)
 
 ### 🛠 Breaking changes

@@ -36,7 +36,7 @@ export const withPackageRefactor: ConfigPlugin<void> = config => {
   });
 };
 
-export function getPackage(config: ExpoConfig) {
+export function getPackage(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.package ?? null;
 }
 
@@ -56,7 +56,10 @@ async function getCurrentPackageName(projectRoot: string) {
 // NOTE(brentvatne): this assumes that our MainApplication.java file is in the root of the package
 // this makes sense for standard react-native projects but may not apply in customized projects, so if
 // we want this to be runnable in any app we need to handle other possibilities
-export async function renamePackageOnDisk(config: ExpoConfig, projectRoot: string) {
+export async function renamePackageOnDisk(
+  config: Pick<ExpoConfig, 'android'>,
+  projectRoot: string
+) {
   const newPackageName = getPackage(config);
   if (newPackageName === null) {
     return;
@@ -116,7 +119,7 @@ export async function renamePackageOnDisk(config: ExpoConfig, projectRoot: strin
   });
 }
 
-export function setPackageInBuildGradle(config: ExpoConfig, buildGradle: string) {
+export function setPackageInBuildGradle(config: Pick<ExpoConfig, 'android'>, buildGradle: string) {
   const packageName = getPackage(config);
   if (packageName === null) {
     return buildGradle;
@@ -126,14 +129,17 @@ export function setPackageInBuildGradle(config: ExpoConfig, buildGradle: string)
   return buildGradle.replace(pattern, `applicationId '${packageName}'`);
 }
 
-export function setPackageInAndroidManifest(config: ExpoConfig, manifestDocument: AndroidManifest) {
+export function setPackageInAndroidManifest(
+  config: Pick<ExpoConfig, 'android'>,
+  androidManifest: AndroidManifest
+) {
   const packageName = getPackage(config);
 
   if (packageName) {
-    manifestDocument.manifest.$.package = packageName;
+    androidManifest.manifest.$.package = packageName;
   } else {
-    delete manifestDocument.manifest.$.package;
+    delete androidManifest.manifest.$.package;
   }
 
-  return manifestDocument;
+  return androidManifest;
 }

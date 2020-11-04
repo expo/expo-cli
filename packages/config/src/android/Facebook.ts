@@ -1,23 +1,49 @@
-import { Parser } from 'xml2js';
-
 import { ExpoConfig } from '../Config.types';
 import { assert } from '../Errors';
 import { createAndroidManifestPlugin, createStringsXmlPlugin } from '../plugins/android-plugins';
 import {
   addMetaDataItemToMainApplication,
-  Document,
-  getMainApplication,
+  AndroidManifest,
+  getMainApplicationOrThrow,
+  ManifestActivity,
+  ManifestApplication,
+  prefixAndroidKeys,
   removeMetaDataItemFromMainApplication,
 } from './Manifest';
 import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from './Resources';
 import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';
 
+const CUSTOM_TAB_ACTIVITY = 'com.facebook.CustomTabActivity';
+const STRING_FACEBOOK_APP_ID = 'facebook_app_id';
+const META_APP_ID = 'com.facebook.sdk.ApplicationId';
+const META_APP_NAME = 'com.facebook.sdk.ApplicationName';
+const META_AUTO_INIT = 'com.facebook.sdk.AutoInitEnabled';
+const META_AUTO_LOG_APP_EVENTS = 'com.facebook.sdk.AutoLogAppEventsEnabled';
+const META_AD_ID_COLLECTION = 'com.facebook.sdk.AdvertiserIDCollectionEnabled';
+
 export const withFacebookAppIdString = createStringsXmlPlugin(applyFacebookAppIdString);
 export const withFacebookManifest = createAndroidManifestPlugin(setFacebookConfig);
 
-const facebookSchemeActivity = (scheme: string) => `
-<activity
+function buildXMLItem({
+  head,
+  children,
+}: {
+  head: Record<string, string>;
+  children?: Record<string, string | any[]>;
+}) {
+  return { ...(children ?? {}), $: head };
+}
+
+function buildAndroidItem(datum: string | Record<string, any>) {
+  const item = typeof datum === 'string' ? { name: datum } : datum;
+  const head = prefixAndroidKeys(item);
+  return buildXMLItem({ head });
+}
+
+function getFacebookSchemeActivity(scheme: string) {
+  /**
+ <activity
     android:name="com.facebook.CustomTabActivity"
     android:exported="true">
     <intent-filter>
@@ -27,62 +53,85 @@ const facebookSchemeActivity = (scheme: string) => `
         <data android:scheme="${scheme}" />
     </intent-filter>
 </activity>
-`;
+   */
+  return buildXMLItem({
+    head: prefixAndroidKeys({
+      name: CUSTOM_TAB_ACTIVITY,
+      exported: 'true',
+    }),
+    children: {
+      'intent-filter': [
+        {
+          action: [buildAndroidItem('android.intent.action.VIEW')],
+          category: [
+            buildAndroidItem('android.intent.category.DEFAULT'),
+            buildAndroidItem('android.intent.category.BROWSABLE'),
+          ],
+          data: [buildAndroidItem({ scheme })],
+        },
+      ],
+    },
+  }) as ManifestActivity;
+}
 
-export function getFacebookScheme(config: ExpoConfig) {
+type ExpoConfigFacebook = Pick<
+  ExpoConfig,
+  | 'facebookScheme'
+  | 'facebookAdvertiserIDCollectionEnabled'
+  | 'facebookAppId'
+  | 'facebookAutoInitEnabled'
+  | 'facebookAutoLogAppEventsEnabled'
+  | 'facebookDisplayName'
+>;
+
+export function getFacebookScheme(config: ExpoConfigFacebook) {
   return config.facebookScheme ?? null;
 }
 
-export function getFacebookAppId(config: ExpoConfig) {
+export function getFacebookAppId(config: ExpoConfigFacebook) {
   return config.facebookAppId ?? null;
 }
 
-export function getFacebookDisplayName(config: ExpoConfig) {
+export function getFacebookDisplayName(config: ExpoConfigFacebook) {
   return config.facebookDisplayName ?? null;
 }
-export function getFacebookAutoInitEnabled(config: ExpoConfig) {
+export function getFacebookAutoInitEnabled(config: ExpoConfigFacebook) {
   return config.facebookAutoInitEnabled ?? null;
 }
 
-export function getFacebookAutoLogAppEvents(config: ExpoConfig) {
+export function getFacebookAutoLogAppEvents(config: ExpoConfigFacebook) {
   return config.facebookAutoLogAppEventsEnabled ?? null;
 }
 
-export function getFacebookAdvertiserIDCollection(config: ExpoConfig) {
+export function getFacebookAdvertiserIDCollection(config: ExpoConfigFacebook) {
   return config.facebookAdvertiserIDCollectionEnabled ?? null;
 }
 
-function removeFacebookCustomTabActivities(mainApplication: any) {
-  // Remove all Facebook CustomTabActivities first
-  if ('activity' in mainApplication) {
-    mainApplication['activity'] = mainApplication['activity'].filter(
-      (activity: Record<string, any>) => {
-        return activity['$']?.['android:name'] !== 'com.facebook.CustomTabActivity';
-      }
-    );
-  }
-}
-
-async function ensureFacebookActivityAsync({
+function ensureFacebookActivity({
   mainApplication,
   scheme,
 }: {
-  mainApplication: any;
-  scheme: string;
+  mainApplication: ManifestApplication;
+  scheme: string | null;
 }) {
-  const facebookSchemeActivityXML = facebookSchemeActivity(scheme);
-  const parser = new Parser();
-  const facebookSchemeActivityJSON = (await parser.parseStringPromise(facebookSchemeActivityXML))
-    .activity;
-
-  if (!Array.isArray(mainApplication.activity)) {
+  if (Array.isArray(mainApplication.activity)) {
+    // Remove all Facebook CustomTabActivities first
+    mainApplication.activity = mainApplication.activity.filter(activity => {
+      return activity.$?.['android:name'] !== CUSTOM_TAB_ACTIVITY;
+    });
+  } else {
     mainApplication.activity = [];
   }
-  mainApplication.activity.push(facebookSchemeActivityJSON);
+
+  // If a new scheme is defined, append it to the activity.
+  if (scheme) {
+    mainApplication.activity.push(getFacebookSchemeActivity(scheme));
+  }
+  return mainApplication;
 }
 
-export async function setFacebookAppIdString(config: ExpoConfig, projectDirectory: string) {
-  const stringsPath = await getProjectStringsXMLPathAsync(projectDirectory);
+export async function setFacebookAppIdString(config: ExpoConfigFacebook, projectRoot: string) {
+  const stringsPath = await getProjectStringsXMLPathAsync(projectRoot);
   assert(stringsPath, `There was a problem setting your Facebook App ID in "${stringsPath}"`);
 
   let stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
@@ -96,19 +145,19 @@ export async function setFacebookAppIdString(config: ExpoConfig, projectDirector
   return true;
 }
 
-function applyFacebookAppIdString(config: ExpoConfig, stringsJSON: ResourceXML) {
+function applyFacebookAppIdString(config: ExpoConfigFacebook, stringsJSON: ResourceXML) {
   const appId = getFacebookAppId(config);
 
   if (appId) {
     return setStringItem(
-      [buildResourceItem({ name: 'facebook_app_id', value: appId })],
+      [buildResourceItem({ name: STRING_FACEBOOK_APP_ID, value: appId })],
       stringsJSON
     );
   }
-  return removeStringItem('facebook_app_id', stringsJSON);
+  return removeStringItem(STRING_FACEBOOK_APP_ID, stringsJSON);
 }
 
-export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Document) {
+export function setFacebookConfig(config: ExpoConfigFacebook, androidManifest: AndroidManifest) {
   const scheme = getFacebookScheme(config);
 
   const appId = getFacebookAppId(config);
@@ -117,74 +166,56 @@ export async function setFacebookConfig(config: ExpoConfig, manifestDocument: Do
   const autoLogAppEvents = getFacebookAutoLogAppEvents(config);
   const advertiserIdCollection = getFacebookAdvertiserIDCollection(config);
 
-  let mainApplication = getMainApplication(manifestDocument);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let mainApplication = getMainApplicationOrThrow(androidManifest);
 
-  removeFacebookCustomTabActivities(mainApplication);
-
-  if (scheme) {
-    await ensureFacebookActivityAsync({ scheme, mainApplication });
-  }
+  mainApplication = ensureFacebookActivity({ scheme, mainApplication });
 
   if (appId) {
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
-      'com.facebook.sdk.ApplicationId',
-      '@string/facebook_app_id' // The corresponding string is set in setFacebookAppIdString
+      META_APP_ID,
+      // The corresponding string is set in setFacebookAppIdString
+      `@string/${STRING_FACEBOOK_APP_ID}`
     );
   } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      'com.facebook.sdk.ApplicationId'
-    );
+    mainApplication = removeMetaDataItemFromMainApplication(mainApplication, META_APP_ID);
   }
   if (displayName) {
-    mainApplication = addMetaDataItemToMainApplication(
-      mainApplication,
-      'com.facebook.sdk.ApplicationName',
-      displayName
-    );
+    mainApplication = addMetaDataItemToMainApplication(mainApplication, META_APP_NAME, displayName);
   } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      'com.facebook.sdk.ApplicationName'
-    );
+    mainApplication = removeMetaDataItemFromMainApplication(mainApplication, META_APP_NAME);
   }
   if (autoInitEnabled !== null) {
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
-      'com.facebook.sdk.AutoInitEnabled',
+      META_AUTO_INIT,
       autoInitEnabled ? 'true' : 'false'
     );
   } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      'com.facebook.sdk.AutoInitEnabled'
-    );
+    mainApplication = removeMetaDataItemFromMainApplication(mainApplication, META_AUTO_INIT);
   }
   if (autoLogAppEvents !== null) {
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
-      'com.facebook.sdk.AutoLogAppEventsEnabled',
+      META_AUTO_LOG_APP_EVENTS,
       autoLogAppEvents ? 'true' : 'false'
     );
   } else {
     mainApplication = removeMetaDataItemFromMainApplication(
       mainApplication,
-      'com.facebook.sdk.AutoLogAppEventsEnabled'
+      META_AUTO_LOG_APP_EVENTS
     );
   }
   if (advertiserIdCollection !== null) {
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
-      'com.facebook.sdk.AdvertiserIDCollectionEnabled',
+      META_AD_ID_COLLECTION,
       advertiserIdCollection ? 'true' : 'false'
     );
   } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      'com.facebook.sdk.AdvertiserIDCollectionEnabled'
-    );
+    mainApplication = removeMetaDataItemFromMainApplication(mainApplication, META_AD_ID_COLLECTION);
   }
 
-  return manifestDocument;
+  return androidManifest;
 }

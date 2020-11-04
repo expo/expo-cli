@@ -7,7 +7,7 @@ import { writeXMLAsync } from './XML';
 
 export const withName = createStringsXmlPlugin(applyNameFromConfig);
 
-export function getName(config: ExpoConfig) {
+export function getName(config: Pick<ExpoConfig, 'name'>) {
   return typeof config.name === 'string' ? config.name : null;
 }
 
@@ -15,8 +15,11 @@ export function getName(config: ExpoConfig) {
  * Changes the display name on the home screen,
  * notifications, and others.
  */
-export async function setName(config: ExpoConfig, projectDirectory: string): Promise<boolean> {
-  const stringsPath = await getProjectStringsXMLPathAsync(projectDirectory);
+export async function setName(
+  config: Pick<ExpoConfig, 'name'>,
+  projectRoot: string
+): Promise<boolean> {
+  const stringsPath = await getProjectStringsXMLPathAsync(projectRoot);
   assert(stringsPath);
 
   let stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
@@ -30,7 +33,10 @@ export async function setName(config: ExpoConfig, projectDirectory: string): Pro
   return true;
 }
 
-function applyNameFromConfig(config: ExpoConfig, stringsJSON: ResourceXML): ResourceXML {
+function applyNameFromConfig(
+  config: Pick<ExpoConfig, 'name'>,
+  stringsJSON: ResourceXML
+): ResourceXML {
   const name = getName(config);
   if (name) {
     return setStringItem([buildResourceItem({ name: 'app_name', value: name })], stringsJSON);

@@ -25,7 +25,7 @@ describe('name', () => {
   });
 
   it(`returns null if no name is provided`, () => {
-    expect(getName({})).toBe(null);
+    expect(getName({} as any)).toBe(null);
   });
 
   it(`returns the name if provided`, () => {
@@ -44,7 +44,7 @@ describe('name', () => {
     expect(contents.includes(`'E&amp;x&lt;p&gt;o"`)).toBe(true);
 
     // And parsed in unescaped form
-    expect(stringsJSON.resources.string.filter(e => e['$']['name'] === 'app_name')[0]['_']).toBe(
+    expect(stringsJSON.resources.string.filter(e => e['$']['name'] === 'app_name')[0]._).toBe(
       `'E&x<p>o"`
     );
   });

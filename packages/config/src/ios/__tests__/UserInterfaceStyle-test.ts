@@ -28,6 +28,8 @@ describe('user interface style', () => {
 
   // TODO: should we default to 'Light' just as we do in the client if none is specified?
   it(`makes no changes to the infoPlist if the value is invalid`, () => {
-    expect(setUserInterfaceStyle({ userInterfaceStyle: 'not-a-real-one' }, {})).toMatchObject({});
+    expect(
+      setUserInterfaceStyle({ userInterfaceStyle: 'not-a-real-one' as any }, {})
+    ).toMatchObject({});
   });
 });

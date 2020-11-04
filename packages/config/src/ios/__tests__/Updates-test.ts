@@ -3,7 +3,7 @@ import * as Updates from '../Updates';
 describe('iOS Updates config', () => {
   it(`returns correct default values from all getters if no value provided`, () => {
     expect(Updates.getSDKVersion({})).toBe(null);
-    expect(Updates.getUpdateUrl({}, null)).toBe(null);
+    expect(Updates.getUpdateUrl({ slug: 'foo' }, null)).toBe(null);
     expect(Updates.getUpdatesCheckOnLaunch({})).toBe('ALWAYS');
     expect(Updates.getUpdatesEnabled({})).toBe(true);
     expect(Updates.getUpdatesTimeout({})).toBe(0);

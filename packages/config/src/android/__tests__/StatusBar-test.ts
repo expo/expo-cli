@@ -65,16 +65,16 @@ describe('Android status bar', () => {
       });
       expect(
         stylesJSON.resources.style
-          .filter(e => e['$']['name'] === 'AppTheme')[0]
-          .item.filter(item => item['$'].name === 'colorPrimaryDark')[0]['_']
+          .filter(e => e.$.name === 'AppTheme')[0]
+          .item.filter(item => item.$.name === 'colorPrimaryDark')[0]._
       ).toMatch('@color/colorPrimaryDark');
-      expect(
-        colorsJSON.resources.color.filter(e => e['$']['name'] === 'colorPrimaryDark')[0]['_']
-      ).toMatch('#654321');
+      expect(colorsJSON.resources.color.filter(e => e.$.name === 'colorPrimaryDark')[0]._).toMatch(
+        '#654321'
+      );
       expect(
         stylesJSON.resources.style
-          .filter(e => e['$']['name'] === 'AppTheme')[0]
-          .item.filter(item => item['$'].name === 'android:windowLightStatusBar')[0]['_']
+          .filter(e => e.$.name === 'AppTheme')[0]
+          .item.filter(item => item.$.name === 'android:windowLightStatusBar')[0]._
       ).toMatch('true');
     });
 

@@ -18,7 +18,9 @@ export const withStatusBar: ConfigPlugin<void> = config => {
   });
 };
 
-export function getStatusBarColor(config: ExpoConfig) {
+export function getStatusBarColor(
+  config: Pick<ExpoConfig, 'androidStatusBarColor' | 'androidStatusBar'>
+) {
   if (config.androidStatusBarColor != null) {
     addWarningAndroid(
       'status-bar',
@@ -28,16 +30,19 @@ export function getStatusBarColor(config: ExpoConfig) {
   return config.androidStatusBar?.backgroundColor || 'translucent';
 }
 
-export function getStatusBarStyle(config: ExpoConfig) {
+export function getStatusBarStyle(config: Pick<ExpoConfig, 'androidStatusBar'>) {
   return config.androidStatusBar?.barStyle || 'light-content';
 }
 
-export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: string) {
+export async function setStatusBarConfig(
+  config: Pick<ExpoConfig, 'androidStatusBarColor' | 'androidStatusBar'>,
+  projectRoot: string
+) {
   const hexString = getStatusBarColor(config);
   const statusBarStyle = getStatusBarStyle(config);
 
-  const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
+  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
+  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
 
   let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
   let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });

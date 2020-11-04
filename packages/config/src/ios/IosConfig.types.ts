@@ -9,6 +9,8 @@ export type InterfaceOrientation =
   | 'UIInterfaceOrientationLandscapeLeft'
   | 'UIInterfaceOrientationLandscapeRight';
 
+export type InterfaceStyle = 'Light' | 'Dark' | 'Automatic';
+
 export type InfoPlist = {
   CFBundleShortVersionString?: string;
   CFBundleVersion?: string;
@@ -27,7 +29,9 @@ export type InfoPlist = {
   UISupportedInterfaceOrientations?: InterfaceOrientation[];
   GMSApiKey?: string;
   GADApplicationIdentifier?: string;
-  UIUserInterfaceStyle?: string;
+  UIUserInterfaceStyle?: InterfaceStyle;
+  UIRequiresFullScreen?: boolean;
+  branch_key?: { live?: string };
 };
 
 export type ExpoPlist = {

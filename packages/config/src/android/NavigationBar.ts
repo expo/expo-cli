@@ -17,25 +17,28 @@ export const withNavigationBar: ConfigPlugin<void> = config => {
   });
 };
 
-export function getNavigationBarImmersiveMode(config: ExpoConfig) {
+export function getNavigationBarImmersiveMode(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
   return config.androidNavigationBar?.visible || null;
 }
 
-export function getNavigationBarColor(config: ExpoConfig) {
+export function getNavigationBarColor(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
   return config.androidNavigationBar?.backgroundColor || null;
 }
 
-export function getNavigationBarStyle(config: ExpoConfig) {
+export function getNavigationBarStyle(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
   return config.androidNavigationBar?.barStyle || 'light-content';
 }
 
-export async function setNavigationBarConfig(config: ExpoConfig, projectDirectory: string) {
+export async function setNavigationBarConfig(
+  config: Pick<ExpoConfig, 'androidNavigationBar'>,
+  projectRoot: string
+) {
   const immersiveMode = getNavigationBarImmersiveMode(config);
   const hexString = getNavigationBarColor(config);
   const barStyle = getNavigationBarStyle(config);
 
-  const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
+  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
+  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
 
   let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
   let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });

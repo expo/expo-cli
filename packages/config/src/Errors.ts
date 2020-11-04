@@ -1,4 +1,4 @@
-import assert from 'assert';
+import nodeAssert from 'assert';
 
 import { ConfigErrorCode } from './Config.types';
 
@@ -43,4 +43,7 @@ export function errorToJSON(error: any): any {
   };
 }
 
-export { assert };
+export function assert(value: any, message?: string | Error): asserts value {
+  // TODO: Upgrade node? TypeScript isn't properly asserting values without this wrapper.
+  return nodeAssert(value, message);
+}

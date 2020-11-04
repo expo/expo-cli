@@ -21,8 +21,8 @@ describe('writes Facebook app id to strings.xml correctly', () => {
     const stringsJSON = await readResourcesXMLAsync({
       path: '/app/android/app/src/main/res/values/strings.xml',
     });
-    expect(
-      stringsJSON.resources.string.filter(e => e['$']['name'] === 'facebook_app_id')[0]['_']
-    ).toMatch('my-app-id');
+    expect(stringsJSON.resources.string.filter(e => e.$.name === 'facebook_app_id')[0]._).toMatch(
+      'my-app-id'
+    );
   });
 });

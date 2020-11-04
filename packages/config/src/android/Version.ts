@@ -21,12 +21,12 @@ export const withVersion: ConfigPlugin<void> = config => {
   });
 };
 
-export function getVersionName(config: ExpoConfig) {
+export function getVersionName(config: Pick<ExpoConfig, 'version'>) {
   return config.version ?? null;
 }
 
 export function setVersionName(
-  config: ExpoConfig,
+  config: Pick<ExpoConfig, 'version'>,
   buildGradle: string,
   versionToReplace = DEFAULT_VERSION_NAME
 ) {
@@ -39,12 +39,12 @@ export function setVersionName(
   return buildGradle.replace(pattern, `versionName "${versionName}"`);
 }
 
-export function getVersionCode(config: ExpoConfig) {
-  return config.android?.versionCode ? config.android.versionCode : null;
+export function getVersionCode(config: Pick<ExpoConfig, 'android'>) {
+  return config.android?.versionCode ?? null;
 }
 
 export function setVersionCode(
-  config: ExpoConfig,
+  config: Pick<ExpoConfig, 'android'>,
   buildGradle: string,
   versionCodeToReplace = DEFAULT_VERSION_CODE
 ) {

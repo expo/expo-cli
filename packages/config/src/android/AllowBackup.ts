@@ -4,7 +4,7 @@ import { AndroidManifest, getMainApplication, StringBoolean } from './Manifest';
 
 export const withAllowBackup = createAndroidManifestPlugin(setAllowBackup);
 
-export function getAllowBackup(config: Pick<ExpoConfig, 'android'>): boolean {
+export function getAllowBackup(config: Pick<ExpoConfig, 'android'>) {
   // Defaults to true.
   // https://docs.expo.io/versions/latest/config/app/#allowbackup
   return config.android?.allowBackup ?? true;
@@ -12,23 +12,23 @@ export function getAllowBackup(config: Pick<ExpoConfig, 'android'>): boolean {
 
 export function setAllowBackup(
   config: Pick<ExpoConfig, 'android'>,
-  manifestDocument: AndroidManifest
+  androidManifest: AndroidManifest
 ) {
   const allowBackup = getAllowBackup(config);
 
-  const mainApplication = getMainApplication(manifestDocument);
-  if (mainApplication?.['$']) {
-    mainApplication['$']['android:allowBackup'] = String(allowBackup) as StringBoolean;
+  const mainApplication = getMainApplication(androidManifest);
+  if (mainApplication?.$) {
+    mainApplication.$['android:allowBackup'] = String(allowBackup) as StringBoolean;
   }
 
-  return manifestDocument;
+  return androidManifest;
 }
 
-export function getAllowBackupFromManifest(manifestDocument: AndroidManifest): boolean | null {
-  const mainApplication = getMainApplication(manifestDocument);
+export function getAllowBackupFromManifest(androidManifest: AndroidManifest): boolean | null {
+  const mainApplication = getMainApplication(androidManifest);
 
-  if (mainApplication?.['$']) {
-    return mainApplication['$']['android:allowBackup'] === 'true';
+  if (mainApplication?.$) {
+    return String(mainApplication.$['android:allowBackup']) === 'true';
   }
 
   return null;
