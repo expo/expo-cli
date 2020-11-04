@@ -20,8 +20,8 @@ describe(getGoogleMapsApiKey, () => {
 
 describe(setGoogleMapsApiKey, () => {
   it('adds and removes google maps key', async () => {
-    function hasSingleEntry(androidManifestJson: AndroidManifest) {
-      const mainApplication = getMainApplicationOrThrow(androidManifestJson);
+    function hasSingleEntry(manifest: AndroidManifest) {
+      const mainApplication = getMainApplicationOrThrow(manifest);
 
       const apiKeyItem = mainApplication['meta-data'].filter(
         e => e.$['android:name'] === 'com.google.android.geo.API_KEY'
@@ -35,8 +35,8 @@ describe(setGoogleMapsApiKey, () => {
       expect(usesLibraryItem).toHaveLength(1);
       expect(usesLibraryItem[0].$['android:required']).toBe(false);
     }
-    function isRemoved(androidManifestJson: AndroidManifest) {
-      const mainApplication = getMainApplicationOrThrow(androidManifestJson);
+    function isRemoved(manifest: AndroidManifest) {
+      const mainApplication = getMainApplicationOrThrow(manifest);
 
       const apiKeyItem = mainApplication['meta-data'].filter(
         e => e.$['android:name'] === 'com.google.android.geo.API_KEY'
@@ -49,27 +49,27 @@ describe(setGoogleMapsApiKey, () => {
       expect(usesLibraryItem).toHaveLength(0);
     }
 
-    let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
+    let manifest = await readAndroidManifestAsync(sampleManifestPath);
 
     // Add the key once
-    androidManifestJson = setGoogleMapsApiKey(
+    manifest = setGoogleMapsApiKey(
       { android: { config: { googleMaps: { apiKey: 'MY-API-KEY' } } } },
-      androidManifestJson
+      manifest
     );
 
-    hasSingleEntry(androidManifestJson);
+    hasSingleEntry(manifest);
 
     // Test that adding it twice doesn't cause duplicate entries
-    androidManifestJson = setGoogleMapsApiKey(
+    manifest = setGoogleMapsApiKey(
       { android: { config: { googleMaps: { apiKey: 'MY-API-KEY' } } } },
-      androidManifestJson
+      manifest
     );
 
-    hasSingleEntry(androidManifestJson);
+    hasSingleEntry(manifest);
 
     // Remove meta
-    androidManifestJson = setGoogleMapsApiKey({}, androidManifestJson);
+    manifest = setGoogleMapsApiKey({}, manifest);
 
-    isRemoved(androidManifestJson);
+    isRemoved(manifest);
   });
 });
