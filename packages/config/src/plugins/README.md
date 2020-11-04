@@ -111,7 +111,7 @@ The following default mods are provided by the mod compiler for common file mani
 
 - `mods.android.manifest` -- Modify the `android/app/src/main/AndroidManifest.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
 - `mods.android.strings` -- Modify the `android/app/src/main/res/values/strings.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
-- `mods.android.mainActivity` -- Modify the `android/app/src/main/[package]/MainActivity.java` as a string.
+- `mods.android.mainActivity` -- Modify the `android/app/src/main/<package>/MainActivity.java` as a string.
 - `mods.android.appBuildGradle` -- Modify the `android/app/build.gradle` as a string.
 - `mods.android.projectBuildGradle` -- Modify the `android/build.gradle` as a string.
 

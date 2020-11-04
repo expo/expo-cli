@@ -72,7 +72,7 @@ export interface ModConfig {
      */
     strings?: Mod<ResourceXML>;
     /**
-     * Modify the `android/app/src/main/[package]/MainActivity.java` as a string.
+     * Modify the `android/app/src/main/<package>/MainActivity.java` as a string.
      */
     mainActivity?: Mod<AndroidPaths.ApplicationProjectFile>;
     /**
