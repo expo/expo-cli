@@ -27,8 +27,8 @@ async function modifyAppBuildGradleAsync(
 async function modifyAndroidManifestAsync(
   projectRoot: string,
   callback: (
-    androidManifest: AndroidConfig.Manifest.Document
-  ) => Promise<AndroidConfig.Manifest.Document>
+    androidManifest: AndroidConfig.Manifest.AndroidManifest
+  ) => Promise<AndroidConfig.Manifest.AndroidManifest>
 ) {
   const androidManifestPath = await AndroidConfig.Paths.getAndroidManifestAsync(projectRoot);
   const androidManifestJSON = await AndroidConfig.Manifest.readAndroidManifestAsync(

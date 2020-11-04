@@ -5,13 +5,13 @@ import {
   getGoogleMobileAdsAutoInit,
   setGoogleMobileAdsConfig,
 } from '../GoogleMobileAds';
-import { getMainApplication, readAndroidManifestAsync } from '../Manifest';
+import { getMainApplicationOrThrow, readAndroidManifestAsync } from '../Manifest';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
 const sampleManifestPath = resolve(fixturesPath, 'react-native-AndroidManifest.xml');
 
 describe('Android permissions', () => {
-  it(`returns falsey for both if no android google mobileads config is provided`, () => {
+  it(`returns falsey for both if no android GoogleMobileAds config is provided`, () => {
     expect(getGoogleMobileAdsAppId({ android: { config: {} } })).toBe(null);
     expect(getGoogleMobileAdsAutoInit({ android: { config: {} } })).toBe(false);
   });
@@ -25,7 +25,7 @@ describe('Android permissions', () => {
     ).toBe(true);
   });
 
-  it('add google mobile ads app config to androidmanifest.xml', async () => {
+  it('add google mobile ads app config to AndroidManifest.xml', async () => {
     let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
     androidManifestJson = await setGoogleMobileAdsConfig(
       {
@@ -36,18 +36,18 @@ describe('Android permissions', () => {
       androidManifestJson
     );
 
-    const mainApplication = getMainApplication(androidManifestJson);
+    const mainApplication = getMainApplicationOrThrow(androidManifestJson);
 
     const apiKeyItem = mainApplication['meta-data'].filter(
-      e => e['$']['android:name'] === 'com.google.android.gms.ads.APPLICATION_ID'
+      e => e.$['android:name'] === 'com.google.android.gms.ads.APPLICATION_ID'
     );
     expect(apiKeyItem).toHaveLength(1);
-    expect(apiKeyItem[0]['$']['android:value']).toMatch('MY-API-KEY');
+    expect(apiKeyItem[0].$['android:value']).toMatch('MY-API-KEY');
 
     const usesLibraryItem = mainApplication['meta-data'].filter(
-      e => e['$']['android:name'] === 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT'
+      e => e.$['android:name'] === 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT'
     );
     expect(usesLibraryItem).toHaveLength(1);
-    expect(usesLibraryItem[0]['$']['android:value']).toBe('true');
+    expect(usesLibraryItem[0].$['android:value']).toBe('true');
   });
 });

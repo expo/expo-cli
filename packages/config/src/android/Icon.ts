@@ -77,7 +77,7 @@ async function configureLegacyIconAsync(
   backgroundImage: string | null,
   backgroundColor: string | null
 ) {
-  Promise.all(
+  await Promise.all(
     Object.values(dpiValues).map(async ({ folderName, scale }) => {
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
       const iconSizePx = BASELINE_PIXEL_SIZE * scale;
@@ -173,7 +173,7 @@ export async function configureAdaptiveIconAsync(
 ) {
   await setBackgroundColorAsync(projectRoot, backgroundColor);
 
-  Promise.all(
+  await Promise.all(
     Object.values(dpiValues).map(async ({ folderName, scale }) => {
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
       const iconSizePx = BASELINE_PIXEL_SIZE * scale;
@@ -262,7 +262,7 @@ async function createAdaptiveIconXmlFiles(projectRoot: string, icLauncherXmlStri
 }
 
 async function removeBackgroundImageFilesAsync(projectRoot: string) {
-  Promise.all(
+  return await Promise.all(
     Object.values(dpiValues).map(async ({ folderName }) => {
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
       await fs.remove(path.resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG));

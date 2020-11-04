@@ -28,9 +28,9 @@ export function getStyleParent(
   parent: { name: string; parent?: string }
 ): ResourceGroupXML | null {
   const app = xml?.resources?.style?.filter?.((e: any) => {
-    let matches = e['$']['name'] === parent.name;
+    let matches = e.$.name === parent.name;
     if (parent.parent != null && matches) {
-      matches = e['$']['parent'] === parent.parent;
+      matches = e.$.parent === parent.parent;
     }
     return matches;
   })?.[0];
@@ -56,11 +56,11 @@ export function setStylesItem({
   }
 
   if (appTheme.item) {
-    const existingItem = appTheme.item.filter(_item => _item['$'].name === item.$.name)[0];
+    const existingItem = appTheme.item.filter(_item => _item.$.name === item.$.name)[0];
 
     // Don't want to 2 of the same item, so if one exists, we overwrite it
     if (existingItem) {
-      existingItem['_'] = item['_'];
+      existingItem._ = item._;
     } else {
       appTheme.item.push(item);
     }

@@ -1,5 +1,5 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainActivity } from './Manifest';
+import { AndroidManifest, getMainActivity } from './Manifest';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';
 
@@ -16,41 +16,46 @@ public class MainActivity extends ReactActivity {
     }
 `;
 
-export function getUserInterfaceStyle(config: ExpoConfig): string | null {
+export function getUserInterfaceStyle(
+  config: Pick<ExpoConfig, 'android' | 'userInterfaceStyle'>
+): string | null {
   return config.android?.userInterfaceStyle ?? config.userInterfaceStyle ?? null;
 }
 
-export async function setUiModeAndroidManifest(config: ExpoConfig, manifestDocument: Document) {
+export async function setUiModeAndroidManifest(
+  config: Pick<ExpoConfig, 'android' | 'userInterfaceStyle'>,
+  androidManifest: AndroidManifest
+) {
   const userInterfaceStyle = getUserInterfaceStyle(config);
   if (!userInterfaceStyle) {
-    return manifestDocument;
+    return androidManifest;
   }
 
-  let mainActivity = getMainActivity(manifestDocument);
+  let mainActivity = getMainActivity(androidManifest);
   if (!mainActivity) {
     mainActivity = { $: { 'android:name': '.MainActivity' } };
   }
-  mainActivity['$'][CONFIG_CHANGES_ATTRIBUTE] =
+  mainActivity.$[CONFIG_CHANGES_ATTRIBUTE] =
     'keyboard|keyboardHidden|orientation|screenSize|uiMode';
 
-  return manifestDocument;
+  return androidManifest;
 }
 
 export function addOnConfigurationChangedMainActivity(
-  config: ExpoConfig,
-  MainActivity: string
+  config: Pick<ExpoConfig, 'android' | 'userInterfaceStyle'>,
+  mainActivity: string
 ): string {
   const userInterfaceStyle = getUserInterfaceStyle(config);
   if (!userInterfaceStyle) {
-    return MainActivity;
+    return mainActivity;
   }
 
   // Cruzan: this is not ideal, but I'm not sure of a better way to handle writing to MainActivity.java
-  if (MainActivity.match(`onConfigurationChanged`)?.length) {
-    return MainActivity;
+  if (mainActivity.match(`onConfigurationChanged`)?.length) {
+    return mainActivity;
   }
 
-  const MainActivityWithImports = addJavaImports(MainActivity, [
+  const MainActivityWithImports = addJavaImports(mainActivity, [
     'android.content.Intent',
     'android.content.res.Configuration',
   ]);

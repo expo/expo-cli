@@ -41,7 +41,11 @@ describe('scheme', () => {
     androidManifestJson = await setScheme(
       {
         scheme: 'myapp',
-        android: { scheme: ['android-only'], package: 'com.demo.value' },
+        android: {
+          // @ts-ignore
+          scheme: ['android-only'],
+          package: 'com.demo.value',
+        },
         ios: { scheme: 'ios-only' },
       },
       androidManifestJson
@@ -54,8 +58,8 @@ describe('scheme', () => {
 
     for (const intent of intentFilters) {
       if ('data' in intent) {
-        for (const dataFilter of intent['data']) {
-          const possibleScheme = dataFilter['$']['android:scheme'];
+        for (const dataFilter of intent.data) {
+          const possibleScheme = dataFilter.$['android:scheme'];
           if (possibleScheme) {
             schemeIntent.push(possibleScheme);
           }
@@ -68,10 +72,10 @@ describe('scheme', () => {
 });
 
 function removeSingleTaskFromActivities(manifest) {
-  for (const application of manifest.manifest['application']) {
+  for (const application of manifest.manifest.application) {
     for (const activity of application.activity) {
-      if (activity['$']['android:launchMode'] === 'singleTask') {
-        delete activity['$']['android:launchMode'];
+      if (activity.$['android:launchMode'] === 'singleTask') {
+        delete activity.$['android:launchMode'];
       }
     }
   }

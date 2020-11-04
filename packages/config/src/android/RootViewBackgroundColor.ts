@@ -7,7 +7,9 @@ import { writeXMLAsync } from './XML';
 const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
 
-export function getRootViewBackgroundColor(config: ExpoConfig) {
+export function getRootViewBackgroundColor(
+  config: Pick<ExpoConfig, 'android' | 'backgroundColor'>
+) {
   if (config.android?.backgroundColor) {
     return config.android.backgroundColor;
   }
@@ -18,14 +20,17 @@ export function getRootViewBackgroundColor(config: ExpoConfig) {
   return null;
 }
 
-export async function setRootViewBackgroundColor(config: ExpoConfig, projectDirectory: string) {
+export async function setRootViewBackgroundColor(
+  config: Pick<ExpoConfig, 'android' | 'backgroundColor'>,
+  projectRoot: string
+) {
   const hexString = getRootViewBackgroundColor(config);
   if (!hexString) {
     return false;
   }
 
-  const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
+  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
+  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
 
   let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
   let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });

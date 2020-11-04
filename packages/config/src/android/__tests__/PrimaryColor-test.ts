@@ -39,12 +39,12 @@ describe('Android primary color', () => {
 
       expect(
         stylesJSON.resources.style
-          .filter(e => e['$']['name'] === 'AppTheme')[0]
-          .item.filter(item => item['$'].name === 'colorPrimary')[0]['_']
+          .filter(e => e.$.name === 'AppTheme')[0]
+          .item.filter(item => item.$.name === 'colorPrimary')[0]._
       ).toMatch('@color/colorPrimary');
-      expect(
-        colorsJSON.resources.color.filter(e => e['$']['name'] === 'colorPrimary')[0]['_']
-      ).toMatch('#654321');
+      expect(colorsJSON.resources.color.filter(e => e.$.name === 'colorPrimary')[0]._).toMatch(
+        '#654321'
+      );
     });
   });
 });

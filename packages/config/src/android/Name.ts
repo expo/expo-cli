@@ -3,7 +3,7 @@ import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from './Resourc
 import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';
 
-export function getName(config: ExpoConfig) {
+export function getName(config: Pick<ExpoConfig, 'name'>) {
   return typeof config.name === 'string' ? config.name : null;
 }
 
@@ -12,8 +12,8 @@ export function getName(config: ExpoConfig) {
  * notifications, and others.
  */
 export async function setName(
-  configOrName: ExpoConfig | string,
-  projectDirectory: string
+  configOrName: Pick<ExpoConfig, 'name'> | string,
+  projectRoot: string
 ): Promise<boolean> {
   let name: string | null = null;
   if (typeof configOrName === 'string') {
@@ -26,7 +26,7 @@ export async function setName(
     return false;
   }
 
-  const stringsPath = await getProjectStringsXMLPathAsync(projectDirectory);
+  const stringsPath = await getProjectStringsXMLPathAsync(projectRoot);
   if (!stringsPath) {
     throw new Error(`There was a problem setting your Facebook App ID in ${stringsPath}.`);
   }

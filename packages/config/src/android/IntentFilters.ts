@@ -1,29 +1,29 @@
 import { Android, AndroidIntentFiltersData, ExpoConfig } from '@expo/config-types';
 import { Parser } from 'xml2js';
 
-import { Document, getMainActivity } from './Manifest';
+import { AndroidManifest, getMainActivity } from './Manifest';
 
 type AndroidIntentFilters = NonNullable<Android['intentFilters']>;
 // TODO: make it so intent filters aren't written again if you run the command again
 
-export function getIntentFilters(config: ExpoConfig): AndroidIntentFilters {
+export function getIntentFilters(config: Pick<ExpoConfig, 'android'>): AndroidIntentFilters {
   return config.android?.intentFilters ?? [];
 }
 
 export async function setAndroidIntentFilters(
-  config: ExpoConfig,
-  manifestDocument: Document
-): Promise<Document> {
+  config: Pick<ExpoConfig, 'android'>,
+  androidManifest: AndroidManifest
+): Promise<AndroidManifest> {
   const intentFilters = getIntentFilters(config);
   if (!intentFilters.length) {
-    return manifestDocument;
+    return androidManifest;
   }
 
   const intentFiltersXML = renderIntentFilters(intentFilters).join('');
   const parser = new Parser();
   const intentFiltersJSON = await parser.parseStringPromise(intentFiltersXML);
 
-  const mainActivity = getMainActivity(manifestDocument);
+  const mainActivity = getMainActivity(androidManifest);
 
   if (mainActivity) {
     mainActivity['intent-filter'] = mainActivity['intent-filter']?.concat(
@@ -31,7 +31,7 @@ export async function setAndroidIntentFilters(
     );
   }
 
-  return manifestDocument;
+  return androidManifest;
 }
 
 export default function renderIntentFilters(intentFilters: AndroidIntentFilters): string[] {

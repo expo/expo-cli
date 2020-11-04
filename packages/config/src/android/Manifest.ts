@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 
+import { assert } from '../Errors';
 import * as XML from './XML';
 
 export type StringBoolean = 'true' | 'false';
@@ -127,19 +128,11 @@ export type AndroidManifest = {
   };
 };
 
-export type Document = AndroidManifest;
-
-export type InputOptions = {
-  manifestPath?: string | null;
-  projectRoot?: string | null;
-  manifest?: AndroidManifest | null;
-};
-
 export async function writeAndroidManifestAsync(
   manifestPath: string,
-  manifest: AndroidManifest
+  androidManifest: AndroidManifest
 ): Promise<void> {
-  const manifestXml = XML.format(manifest);
+  const manifestXml = XML.format(androidManifest);
   await fs.ensureDir(path.dirname(manifestPath));
   await fs.writeFile(manifestPath, manifestXml);
 }
@@ -157,39 +150,42 @@ function isManifest(xml: XML.XMLObject): xml is AndroidManifest {
   return !!xml.manifest;
 }
 
-export function getMainApplication(manifest: AndroidManifest): ManifestApplication | null {
+export function getMainApplication(androidManifest: AndroidManifest): ManifestApplication | null {
   return (
-    manifest?.manifest?.application?.filter(
-      e => e?.['$']?.['android:name'] === '.MainApplication'
+    androidManifest?.manifest?.application?.filter(
+      e => e?.$?.['android:name'] === '.MainApplication'
     )[0] ?? null
   );
 }
 
-export function getMainActivity(manifest: AndroidManifest): ManifestActivity | null {
-  const mainActivity = manifest?.manifest?.application?.[0]?.activity?.filter?.(
-    (e: any) => e['$']['android:name'] === '.MainActivity'
+export function getMainApplicationOrThrow(androidManifest: AndroidManifest): ManifestApplication {
+  const mainApplication = getMainApplication(androidManifest);
+  assert(mainApplication, 'AndroidManifest.xml is missing the required MainApplication element');
+  return mainApplication;
+}
+
+export function getMainActivity(androidManifest: AndroidManifest): ManifestActivity | null {
+  const mainActivity = androidManifest?.manifest?.application?.[0]?.activity?.filter?.(
+    (e: any) => e.$['android:name'] === '.MainActivity'
   );
   return mainActivity?.[0] ?? null;
 }
 
 export function addMetaDataItemToMainApplication(
-  mainApplication: any,
+  mainApplication: ManifestApplication,
   itemName: string,
   itemValue: string
 ): ManifestApplication {
   let existingMetaDataItem;
   const newItem = {
-    $: {
-      'android:name': itemName,
-      'android:value': itemValue,
-    },
-  };
-  if (mainApplication.hasOwnProperty('meta-data')) {
+    $: prefixAndroidKeys({ name: itemName, value: itemValue }),
+  } as ManifestMetaData;
+  if (mainApplication['meta-data']) {
     existingMetaDataItem = mainApplication['meta-data'].filter(
-      (e: any) => e['$']['android:name'] === itemName
+      (e: any) => e.$['android:name'] === itemName
     );
     if (existingMetaDataItem.length) {
-      existingMetaDataItem[0]['$']['android:value'] = itemValue;
+      existingMetaDataItem[0].$['android:value'] = itemValue;
     } else {
       mainApplication['meta-data'].push(newItem);
     }
@@ -207,15 +203,26 @@ export function removeMetaDataItemFromMainApplication(mainApplication: any, item
   return mainApplication;
 }
 
-export function findMetaDataItem(mainApplication: any, itemName: string): number {
-  if (mainApplication.hasOwnProperty('meta-data')) {
-    const index = mainApplication['meta-data'].findIndex(
-      (e: any) => e['$']['android:name'] === itemName
-    );
+function findApplicationSubItem(
+  mainApplication: ManifestApplication,
+  category: keyof ManifestApplication,
+  itemName: string
+): number {
+  const parent = mainApplication[category];
+  if (Array.isArray(parent)) {
+    const index = parent.findIndex((e: any) => e.$['android:name'] === itemName);
 
     return index;
   }
   return -1;
+}
+
+export function findMetaDataItem(mainApplication: any, itemName: string): number {
+  return findApplicationSubItem(mainApplication, 'meta-data', itemName);
+}
+
+export function findUsesLibraryItem(mainApplication: any, itemName: string): number {
+  return findApplicationSubItem(mainApplication, 'uses-library', itemName);
 }
 
 export function getMainApplicationMetaDataValue(
@@ -230,4 +237,49 @@ export function getMainApplicationMetaDataValue(
   }
 
   return null;
+}
+
+export function addUsesLibraryItemToMainApplication(
+  mainApplication: ManifestApplication,
+  item: { name: string; required?: boolean }
+): ManifestApplication {
+  let existingMetaDataItem;
+  const newItem = {
+    $: prefixAndroidKeys(item),
+  } as ManifestUsesLibrary;
+
+  if (mainApplication['uses-library']) {
+    existingMetaDataItem = mainApplication['uses-library'].filter(
+      e => e.$['android:name'] === item.name
+    );
+    if (existingMetaDataItem.length) {
+      existingMetaDataItem[0].$ = newItem.$;
+    } else {
+      mainApplication['uses-library'].push(newItem);
+    }
+  } else {
+    mainApplication['uses-library'] = [newItem];
+  }
+  return mainApplication;
+}
+
+export function removeUsesLibraryItemFromMainApplication(
+  mainApplication: ManifestApplication,
+  itemName: string
+) {
+  const index = findUsesLibraryItem(mainApplication, itemName);
+  if (mainApplication?.['uses-library'] && index > -1) {
+    mainApplication['uses-library'].splice(index, 1);
+  }
+  return mainApplication;
+}
+
+export function prefixAndroidKeys<T extends Record<string, any> = Record<string, string>>(
+  head: T
+): Record<string, any> {
+  // prefix all keys with `android:`
+  return Object.entries(head).reduce(
+    (prev, [key, curr]) => ({ ...prev, [`android:${key}`]: curr }),
+    {} as T
+  );
 }
