@@ -5,7 +5,7 @@ import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { withXcodeProject } from '../plugins/ios-plugins';
 
-export const withDeviceFamily: ConfigPlugin = config => {
+export const withDeviceFamily: ConfigPlugin<void> = config => {
   return withXcodeProject(config, async config => {
     config.modResults = await setDeviceFamily(config, {
       project: config.modResults,
@@ -14,15 +14,15 @@ export const withDeviceFamily: ConfigPlugin = config => {
   });
 };
 
-export function getSupportsTablet(config: ExpoConfig): boolean {
+export function getSupportsTablet(config: Pick<ExpoConfig, 'ios'>): boolean {
   return !!config.ios?.supportsTablet;
 }
 
-export function getIsTabletOnly(config: ExpoConfig): boolean {
+export function getIsTabletOnly(config: Pick<ExpoConfig, 'ios'>): boolean {
   return !!config?.ios?.isTabletOnly;
 }
 
-export function getDeviceFamilies(config: ExpoConfig): number[] {
+export function getDeviceFamilies(config: Pick<ExpoConfig, 'ios'>): number[] {
   const supportsTablet = getSupportsTablet(config);
   const isTabletOnly = getIsTabletOnly(config);
 
@@ -57,7 +57,7 @@ export function formatDeviceFamilies(deviceFamilies: number[]): string {
  * Add to pbxproj under TARGETED_DEVICE_FAMILY
  */
 export function setDeviceFamily(
-  config: ExpoConfig,
+  config: Pick<ExpoConfig, 'ios'>,
   { project }: { project: XcodeProject }
 ): XcodeProject {
   const deviceFamilies = formatDeviceFamilies(getDeviceFamilies(config));

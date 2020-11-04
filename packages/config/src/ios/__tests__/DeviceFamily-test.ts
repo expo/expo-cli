@@ -1,5 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
-import { fs, vol } from 'memfs';
+import * as fs from 'fs-extra';
+import { vol } from 'memfs';
 import * as path from 'path';
 
 import { addWarningIOS } from '../../WarningAggregator';

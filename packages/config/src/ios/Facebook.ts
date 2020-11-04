@@ -3,6 +3,18 @@ import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import { appendScheme } from './Scheme';
 
+type ExpoConfigFacebook = Pick<
+  ExpoConfig,
+  | 'facebookScheme'
+  | 'facebookAdvertiserIDCollectionEnabled'
+  | 'facebookAppId'
+  | 'facebookAutoInitEnabled'
+  | 'facebookAutoLogAppEventsEnabled'
+  | 'facebookDisplayName'
+>;
+
+const fbSchemes = ['fbapi', 'fb-messenger-api', 'fbauth2', 'fbshareextension'];
+
 export const withFacebook = createInfoPlistPlugin(setFacebookConfig);
 
 /**
@@ -10,26 +22,26 @@ export const withFacebook = createInfoPlistPlugin(setFacebookConfig);
  * TODO: these getters are the same between ios/android, we could reuse them
  */
 
-export function getFacebookScheme(config: ExpoConfig) {
+export function getFacebookScheme(config: ExpoConfigFacebook) {
   return config.facebookScheme ?? null;
 }
 
-export function getFacebookAppId(config: ExpoConfig) {
+export function getFacebookAppId(config: Pick<ExpoConfigFacebook, 'facebookAppId'>) {
   return config.facebookAppId ?? null;
 }
 
-export function getFacebookDisplayName(config: ExpoConfig) {
+export function getFacebookDisplayName(config: ExpoConfigFacebook) {
   return config.facebookDisplayName ?? null;
 }
-export function getFacebookAutoInitEnabled(config: ExpoConfig) {
+export function getFacebookAutoInitEnabled(config: ExpoConfigFacebook) {
   return config.facebookAutoInitEnabled ?? null;
 }
 
-export function getFacebookAutoLogAppEvents(config: ExpoConfig) {
+export function getFacebookAutoLogAppEvents(config: ExpoConfigFacebook) {
   return config.facebookAutoLogAppEventsEnabled ?? null;
 }
 
-export function getFacebookAdvertiserIDCollection(config: ExpoConfig) {
+export function getFacebookAdvertiserIDCollection(config: ExpoConfigFacebook) {
   return config.facebookAdvertiserIDCollectionEnabled ?? null;
 }
 
@@ -37,7 +49,7 @@ export function getFacebookAdvertiserIDCollection(config: ExpoConfig) {
  * Setters
  */
 
-export function setFacebookConfig(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setFacebookConfig(config: ExpoConfigFacebook, infoPlist: InfoPlist) {
   infoPlist = setFacebookAppId(config, infoPlist);
   infoPlist = setFacebookApplicationQuerySchemes(config, infoPlist);
   infoPlist = setFacebookDisplayName(config, infoPlist);
@@ -48,13 +60,13 @@ export function setFacebookConfig(config: ExpoConfig, infoPlist: InfoPlist) {
   return infoPlist;
 }
 
-export function setFacebookScheme(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setFacebookScheme(config: ExpoConfigFacebook, infoPlist: InfoPlist) {
   const facebookScheme = getFacebookScheme(config);
   return appendScheme(facebookScheme, infoPlist);
 }
 
 export function setFacebookAutoInitEnabled(
-  config: ExpoConfig,
+  config: ExpoConfigFacebook,
   { FacebookAutoInitEnabled, ...infoPlist }: InfoPlist
 ) {
   const facebookAutoInitEnabled = getFacebookAutoInitEnabled(config);
@@ -70,7 +82,7 @@ export function setFacebookAutoInitEnabled(
 }
 
 export function setFacebookAutoLogAppEventsEnabled(
-  config: ExpoConfig,
+  config: ExpoConfigFacebook,
   { FacebookAutoLogAppEventsEnabled, ...infoPlist }: InfoPlist
 ) {
   const facebookAutoLogAppEventsEnabled = getFacebookAutoLogAppEvents(config);
@@ -86,7 +98,7 @@ export function setFacebookAutoLogAppEventsEnabled(
 }
 
 export function setFacebookAdvertiserIDCollectionEnabled(
-  config: ExpoConfig,
+  config: ExpoConfigFacebook,
   { FacebookAdvertiserIDCollectionEnabled, ...infoPlist }: InfoPlist
 ) {
   const facebookAdvertiserIDCollectionEnabled = getFacebookAdvertiserIDCollection(config);
@@ -101,7 +113,10 @@ export function setFacebookAdvertiserIDCollectionEnabled(
   };
 }
 
-export function setFacebookAppId(config: ExpoConfig, { FacebookAppID, ...infoPlist }: InfoPlist) {
+export function setFacebookAppId(
+  config: Pick<ExpoConfigFacebook, 'facebookAppId'>,
+  { FacebookAppID, ...infoPlist }: InfoPlist
+) {
   const facebookAppId = getFacebookAppId(config);
   if (facebookAppId) {
     return {
@@ -114,7 +129,7 @@ export function setFacebookAppId(config: ExpoConfig, { FacebookAppID, ...infoPli
 }
 
 export function setFacebookDisplayName(
-  config: ExpoConfig,
+  config: ExpoConfigFacebook,
   { FacebookDisplayName, ...infoPlist }: InfoPlist
 ) {
   const facebookDisplayName = getFacebookDisplayName(config);
@@ -129,10 +144,8 @@ export function setFacebookDisplayName(
   return infoPlist;
 }
 
-const fbSchemes = ['fbapi', 'fb-messenger-api', 'fbauth2', 'fbshareextension'];
-
 export function setFacebookApplicationQuerySchemes(
-  config: ExpoConfig,
+  config: Pick<ExpoConfigFacebook, 'facebookAppId'>,
   infoPlist: InfoPlist
 ): InfoPlist {
   const facebookAppId = getFacebookAppId(config);

@@ -4,11 +4,11 @@ import { InfoPlist } from './IosConfig.types';
 
 export const withBranch = createInfoPlistPlugin(setBranchApiKey);
 
-export function getBranchApiKey(config: ExpoConfig) {
+export function getBranchApiKey(config: Pick<ExpoConfig, 'ios'>) {
   return config.ios?.config?.branch?.apiKey ?? null;
 }
 
-export function setBranchApiKey(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setBranchApiKey(config: Pick<ExpoConfig, 'ios'>, infoPlist: InfoPlist): InfoPlist {
   const apiKey = getBranchApiKey(config);
 
   if (apiKey === null) {

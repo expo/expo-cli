@@ -12,7 +12,7 @@ import { addFileToGroup, getProjectName } from './utils/Xcodeproj';
 
 export const withGoogle = createInfoPlistPlugin(setGoogleConfig);
 
-export const withGoogleServicesFile: ConfigPlugin = config => {
+export const withGoogleServicesFile: ConfigPlugin<void> = config => {
   return withXcodeProject(config, config => {
     config.modResults = setGoogleServicesFile(config, {
       projectRoot: config.modRequest.projectRoot,
@@ -22,7 +22,7 @@ export const withGoogleServicesFile: ConfigPlugin = config => {
   });
 };
 
-export function getGoogleMapsApiKey(config: ExpoConfig) {
+export function getGoogleMapsApiKey(config: Pick<ExpoConfig, 'ios'>) {
   return config.ios?.config?.googleMapsApiKey ?? null;
 }
 
@@ -33,20 +33,20 @@ export function getGoogleMapsApiKey(config: ExpoConfig) {
 // that arises in ejecting because it's possible for the package to be installed and
 // not crashing in the managed workflow, then you eject and the app crashes because
 // you don't have an id to fall back to.
-export function getGoogleMobileAdsAppId(config: ExpoConfig) {
+export function getGoogleMobileAdsAppId(config: Pick<ExpoConfig, 'ios'>) {
   return config.ios?.config?.googleMobileAdsAppId ?? null;
 }
 
-export function getGoogleSignInReservedClientId(config: ExpoConfig) {
+export function getGoogleSignInReservedClientId(config: Pick<ExpoConfig, 'ios'>) {
   return config.ios?.config?.googleSignIn?.reservedClientId ?? null;
 }
 
-export function getGoogleServicesFile(config: ExpoConfig) {
+export function getGoogleServicesFile(config: Pick<ExpoConfig, 'ios'>) {
   return config.ios?.googleServicesFile ?? null;
 }
 
 export function setGoogleMapsApiKey(
-  config: ExpoConfig,
+  config: Pick<ExpoConfig, 'ios'>,
   { GMSApiKey, ...infoPlist }: InfoPlist
 ): InfoPlist {
   const apiKey = getGoogleMapsApiKey(config);
@@ -62,7 +62,7 @@ export function setGoogleMapsApiKey(
 }
 
 export function setGoogleMobileAdsAppId(
-  config: ExpoConfig,
+  config: Pick<ExpoConfig, 'ios'>,
   { GADApplicationIdentifier, ...infoPlist }: InfoPlist
 ): InfoPlist {
   const appId = getGoogleMobileAdsAppId(config);
@@ -78,7 +78,7 @@ export function setGoogleMobileAdsAppId(
 }
 
 export function setGoogleSignInReservedClientId(
-  config: ExpoConfig,
+  config: Pick<ExpoConfig, 'ios'>,
   infoPlist: InfoPlist
 ): InfoPlist {
   const reservedClientId = getGoogleSignInReservedClientId(config);
@@ -90,7 +90,7 @@ export function setGoogleSignInReservedClientId(
   return appendScheme(reservedClientId, infoPlist);
 }
 
-export function setGoogleConfig(config: ExpoConfig, infoPlist: InfoPlist): InfoPlist {
+export function setGoogleConfig(config: Pick<ExpoConfig, 'ios'>, infoPlist: InfoPlist): InfoPlist {
   infoPlist = setGoogleMapsApiKey(config, infoPlist);
   infoPlist = setGoogleMobileAdsAppId(config, infoPlist);
   infoPlist = setGoogleSignInReservedClientId(config, infoPlist);
@@ -98,7 +98,7 @@ export function setGoogleConfig(config: ExpoConfig, infoPlist: InfoPlist): InfoP
 }
 
 export function setGoogleServicesFile(
-  config: ExpoConfig,
+  config: Pick<ExpoConfig, 'ios'>,
   { projectRoot, project }: { project: XcodeProject; projectRoot: string }
 ): XcodeProject {
   const googleServicesFileRelativePath = getGoogleServicesFile(config);
