@@ -18,7 +18,7 @@ export function setStringItem(
     )[0];
     if (stringNameExists) {
       // replace the previous value
-      stringNameExists['_'] = itemToAdd[0]['_'];
+      stringNameExists._ = itemToAdd[0]._;
     } else {
       stringFileContentsJSON.resources.string = stringFileContentsJSON.resources.string.concat(
         itemToAdd

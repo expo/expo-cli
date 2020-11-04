@@ -3,7 +3,7 @@ import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from './Resourc
 import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';
 
-export function getName(config: ExpoConfig) {
+export function getName(config: Pick<ExpoConfig, 'name'>) {
   return typeof config.name === 'string' ? config.name : null;
 }
 
@@ -12,7 +12,7 @@ export function getName(config: ExpoConfig) {
  * notifications, and others.
  */
 export async function setName(
-  configOrName: ExpoConfig | string,
+  configOrName: Pick<ExpoConfig, 'name'> | string,
   projectRoot: string
 ): Promise<boolean> {
   let name: string | null = null;

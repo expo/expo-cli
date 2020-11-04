@@ -74,16 +74,16 @@ describe('Android navigation bar', () => {
 
       expect(
         stylesJSON.resources.style
-          .filter(e => e['$']['name'] === 'AppTheme')[0]
-          .item.filter(item => item['$'].name === 'android:navigationBarColor')[0]['_']
+          .filter(e => e.$.name === 'AppTheme')[0]
+          .item.filter(item => item.$.name === 'android:navigationBarColor')[0]._
       ).toMatch('@color/navigationBarColor');
       expect(
-        colorsJSON.resources.color.filter(e => e['$']['name'] === 'navigationBarColor')[0]['_']
+        colorsJSON.resources.color.filter(e => e.$.name === 'navigationBarColor')[0]._
       ).toMatch('#111111');
       expect(
         stylesJSON.resources.style
-          .filter(e => e['$']['name'] === 'AppTheme')[0]
-          .item.filter(item => item['$'].name === 'android:windowLightNavigationBar')[0]['_']
+          .filter(e => e.$.name === 'AppTheme')[0]
+          .item.filter(item => item.$.name === 'android:windowLightNavigationBar')[0]._
       ).toMatch('true');
     });
 
