@@ -63,7 +63,7 @@ const dsaKeystoreP12 = {
   sha1Fingerprint: '10c530286a74e0c2e6e6ecf6845edbf686da2aee',
   sha256Fingerprint: '822007287d1c8759e5900c34337339bc88a0112feecb4e01e6c74adc830ce3c5',
 };
-describe('computing fingerprints of x509 certificates', () => {
+describe('computing fingerprints of X.509 certificates', () => {
   it('computes fingerprints of certificates in conventional p12 files', async () => {
     const {
       base64EncodedP12,
@@ -112,72 +112,51 @@ describe('computing fingerprints of x509 certificates', () => {
     expect(sha256Fingerprint).toEqual(expectedSha256Fingerprint);
   });
 });
-describe('computing fingerprints from the asn1 representation of a x509 certificate', () => {
-  it('computes fingerprints of unsupported certificates using their asn1 values in p12 keystores', async () => {
-    const {
-      base64EncodedP12,
-      password,
-      alias,
-      md5Fingerprint: expectedMd5Fingerprint,
-      sha1Fingerprint: expectedSha1Fingerprint,
-      sha256Fingerprint: expectedSha256Fingerprint,
-    } = dsaKeystoreP12;
-    const p12 = parsePKCS12(base64EncodedP12, password);
-    const asn1 = getX509Asn1ByFriendlyName(p12, alias);
-    const md5Fingerprint = getAsn1Hash(asn1, {
-      hashAlgorithm: 'md5',
-    });
-    const sha1Fingerprint = getAsn1Hash(asn1, {
-      hashAlgorithm: 'sha1',
-    });
-    const sha256Fingerprint = getAsn1Hash(asn1, {
-      hashAlgorithm: 'sha256',
-    });
-    expect(md5Fingerprint).toEqual(expectedMd5Fingerprint);
-    expect(sha1Fingerprint).toEqual(expectedSha1Fingerprint);
-    expect(sha256Fingerprint).toEqual(expectedSha256Fingerprint);
-  });
-  it('computes fingerprints of supported certificates using their asn1 values in p12 keystores', async () => {
-    const {
-      base64EncodedP12,
-      password,
-      alias,
-      md5Fingerprint: expectedMd5Fingerprint,
-      sha1Fingerprint: expectedSha1Fingerprint,
-      sha256Fingerprint: expectedSha256Fingerprint,
-    } = keystoreP12;
-    const p12 = parsePKCS12(base64EncodedP12, password);
-    const asn1 = getX509Asn1ByFriendlyName(p12, alias);
-    const md5Fingerprint = getAsn1Hash(asn1, {
-      hashAlgorithm: 'md5',
-    });
-    const sha1Fingerprint = getAsn1Hash(asn1, {
-      hashAlgorithm: 'sha1',
-    });
-    const sha256Fingerprint = getAsn1Hash(asn1, {
-      hashAlgorithm: 'sha256',
-    });
-    expect(md5Fingerprint).toEqual(expectedMd5Fingerprint);
-    expect(sha1Fingerprint).toEqual(expectedSha1Fingerprint);
-    expect(sha256Fingerprint).toEqual(expectedSha256Fingerprint);
-  });
+describe('computing fingerprints from the ASN.1 representation of an X.509 certificate', () => {
+  it.each([
+    ['supported RSA certificates', keystoreP12],
+    ['unsupported DSA certificates', dsaKeystoreP12],
+  ])(
+    'computes fingerprints of %s using their ASN.1 values in PKCS #12 keystores',
+    async (_description, keystoreP12) => {
+      const {
+        base64EncodedP12,
+        password,
+        alias,
+        md5Fingerprint: expectedMd5Fingerprint,
+        sha1Fingerprint: expectedSha1Fingerprint,
+        sha256Fingerprint: expectedSha256Fingerprint,
+      } = keystoreP12;
+      const p12 = parsePKCS12(base64EncodedP12, password);
+      const asn1 = getX509Asn1ByFriendlyName(p12, alias);
+      const md5Fingerprint = getAsn1Hash(asn1, {
+        hashAlgorithm: 'md5',
+      });
+      const sha1Fingerprint = getAsn1Hash(asn1, {
+        hashAlgorithm: 'sha1',
+      });
+      const sha256Fingerprint = getAsn1Hash(asn1, {
+        hashAlgorithm: 'sha256',
+      });
+      expect(md5Fingerprint).toEqual(expectedMd5Fingerprint);
+      expect(sha1Fingerprint).toEqual(expectedSha1Fingerprint);
+      expect(sha256Fingerprint).toEqual(expectedSha256Fingerprint);
+    }
+  );
 });
-describe('getting the asn1 representation of a x509 certificate from PKCS#12 files', () => {
-  it('gets the asn1 value of an unsupported X.509 certificate from p12 keystores', async () => {
-    const { base64EncodedP12, password, alias } = dsaKeystoreP12;
-    const p12 = parsePKCS12(base64EncodedP12, password);
-    const asn1 = getX509Asn1ByFriendlyName(p12, alias);
-    expect(asn1).toMatchSnapshot();
-  });
-  it('gets the asn1 value of a supported X.509 certificate from p12 keystores', async () => {
+describe('getting the ASN.1 representation of a X.509 certificate from PKCS#12 files', () => {
+  it.each([
+    ['supported RSA certificates', keystoreP12],
+    ['unsupported DSA certificates', dsaKeystoreP12],
+  ])('gets the ASN.1 value of %s from PKCS #12 keystores', async (_description, keystoreP12) => {
     const { base64EncodedP12, password, alias } = keystoreP12;
     const p12 = parsePKCS12(base64EncodedP12, password);
     const asn1 = getX509Asn1ByFriendlyName(p12, alias);
     expect(asn1).toMatchSnapshot();
   });
 });
-describe('reading x509 certificates from PKCS#12 files', () => {
-  it('is unable to parse a DSA x509 certificate (limitation)', async () => {
+describe('reading X.509 certificates from PKCS#12 files', () => {
+  it('is unable to parse a DSA X.509 certificate (limitation)', async () => {
     const { base64EncodedP12, password, alias } = dsaKeystoreP12;
     const p12 = parsePKCS12(base64EncodedP12, password);
     expect(() => {

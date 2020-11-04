@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`getting the asn1 representation of a x509 certificate from PKCS#12 files gets the asn1 value of a supported X.509 certificate from p12 keystores 1`] = `
+exports[`getting the ASN.1 representation of a X.509 certificate from PKCS#12 files gets the ASN.1 value of supported RSA certificates from PKCS #12 keystores 1`] = `
 Object {
   "composed": true,
   "constructed": true,
@@ -637,7 +637,7 @@ PÂ$*ccÁ­AM½çÁ»2¤òaõ~±ªz¬°ÀÕ#WA³/ªå\\"i8¥ÄÐÒ�
 }
 `;
 
-exports[`getting the asn1 representation of a x509 certificate from PKCS#12 files gets the asn1 value of an unsupported X.509 certificate from p12 keystores 1`] = `
+exports[`getting the ASN.1 representation of a X.509 certificate from PKCS#12 files gets the ASN.1 value of unsupported DSA certificates from PKCS #12 keystores 1`] = `
 Object {
   "composed": true,
   "constructed": true,
@@ -956,7 +956,7 @@ Z^³¬»Å%OnÄBI§¶ôÈ.!&ëáÚ¶´½Ô½pärà3¯33ø©�
 }
 `;
 
-exports[`reading x509 certificates from PKCS#12 files reads X.509 certificates from conventional p12 files using #getX509Certificate 1`] = `
+exports[`reading X.509 certificates from PKCS#12 files reads X.509 certificates from conventional p12 files using #getX509Certificate 1`] = `
 Object {
   "extensions": Array [
     Object {
@@ -1564,7 +1564,7 @@ eBÿ±ÄÖ¥\\"*Ü´«Cñ¡<C1õdùpXuÒMt3Ær-Yþ5R¢p�
 }
 `;
 
-exports[`reading x509 certificates from PKCS#12 files reads X.509 certificates from p12 keystores using #getX509Certificate 1`] = `
+exports[`reading X.509 certificates from PKCS#12 files reads X.509 certificates from p12 keystores using #getX509Certificate 1`] = `
 Object {
   "extensions": Array [
     Object {
@@ -2404,7 +2404,7 @@ PÂ$*ccÁ­AM½çÁ»2¤òaõ~±ªz¬°ÀÕ#WA³/ªå\\"i8¥ÄÐÒ�
 }
 `;
 
-exports[`reading x509 certificates from PKCS#12 files reads X.509 certificates from p12 keystores using #getX509CertificateByFriendlyName 1`] = `
+exports[`reading X.509 certificates from PKCS#12 files reads X.509 certificates from p12 keystores using #getX509CertificateByFriendlyName 1`] = `
 Object {
   "extensions": Array [
     Object {
@@ -3244,7 +3244,7 @@ PÂ$*ccÁ­AM½çÁ»2¤òaõ~±ªz¬°ÀÕ#WA³/ªå\\"i8¥ÄÐÒ�
 }
 `;
 
-exports[`reading x509 certificates from PKCS#12 files reads X.509 certificates from p12 keystores with uppercase alias using #getX509CertificateByFriendlyName 1`] = `
+exports[`reading X.509 certificates from PKCS#12 files reads X.509 certificates from p12 keystores with uppercase alias using #getX509CertificateByFriendlyName 1`] = `
 Object {
   "extensions": Array [
     Object {

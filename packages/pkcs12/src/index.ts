@@ -19,7 +19,7 @@ export function getX509Certificate(p12: forge.pkcs12.Pkcs12Pfx): forge.pki.Certi
   if (!bags || bags.length === 0) {
     throw new Error(`PKCS12: No certificates found`);
   }
-  return extractx509CertificateFromBag(bags[0]);
+  return getX509CertificateFromBag(bags[0]);
 }
 
 /**
@@ -39,15 +39,15 @@ export function getX509CertificateByFriendlyName(
   if (!bags || bags.length === 0) {
     return null;
   }
-  return extractx509CertificateFromBag(bags[0]);
+  return getX509CertificateFromBag(bags[0]);
 }
 
-function extractx509CertificateFromBag(bag: forge.pkcs12.Bag): forge.pki.Certificate {
+function getX509CertificateFromBag(bag: forge.pkcs12.Bag): forge.pki.Certificate {
   const { cert, asn1 } = bag;
   if (!cert && asn1) {
     // if asn1 is present but certificate isnt, the certificate type was unknown
     // github.com/digitalbazaar/forge/blob/1887cfce43a8f5ca9cb5c256168cf12ce1715ecf/lib/pkcs12.js#L703
-    throw new Error('PKCS12: unknown x509 certificate type');
+    throw new Error('PKCS12: unknown X.509 certificate type');
   }
   if (!cert) {
     throw new Error('PKCS12: bag is not a certificate');
