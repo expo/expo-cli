@@ -1,6 +1,10 @@
 import { vol } from 'memfs';
 
-import { getMainActivityAsync, getResourceXMLPathAsync } from '../Paths';
+import {
+  getMainActivityAsync,
+  getProjectBuildGradleAsync,
+  getResourceXMLPathAsync,
+} from '../Paths';
 
 jest.mock('fs');
 
@@ -36,6 +40,39 @@ describe(getMainActivityAsync, () => {
     expect(mainActivity.path).toBe('/kt/android/app/src/main/java/com/bacon/app/MainActivity.kt');
     expect(mainActivity.language).toBe('kt');
     expect(mainActivity.contents).toBe('...');
+  });
+});
+
+describe(getProjectBuildGradleAsync, () => {
+  beforeAll(async () => {
+    vol.fromJSON(
+      {
+        './android/build.gradle': '...',
+      },
+      '/app'
+    );
+    vol.fromJSON(
+      {
+        './android/build.gradle.kts': '...',
+      },
+      '/kt'
+    );
+  });
+  afterAll(async () => {
+    vol.reset();
+  });
+
+  it(`gets a groovy gradle`, async () => {
+    const file = await getProjectBuildGradleAsync('/app');
+    expect(file.path).toBe('/app/android/build.gradle');
+    expect(file.language).toBe('groovy');
+    expect(file.contents).toBe('...');
+  });
+  it(`gets a kotlin gradle`, async () => {
+    const file = await getProjectBuildGradleAsync('/kt');
+    expect(file.path).toBe('/kt/android/build.gradle.kts');
+    expect(file.language).toBe('kt');
+    expect(file.contents).toBe('...');
   });
 });
 
