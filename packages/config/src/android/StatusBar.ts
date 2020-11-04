@@ -27,13 +27,13 @@ export function getStatusBarStyle(config: Pick<ExpoConfig, 'androidStatusBar'>) 
 
 export async function setStatusBarConfig(
   config: Pick<ExpoConfig, 'androidStatusBarColor' | 'androidStatusBar'>,
-  projectDirectory: string
+  projectRoot: string
 ) {
   const hexString = getStatusBarColor(config);
   const statusBarStyle = getStatusBarStyle(config);
 
-  const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
+  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
+  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
 
   let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
   let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });

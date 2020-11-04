@@ -128,17 +128,11 @@ export type AndroidManifest = {
   };
 };
 
-export type InputOptions = {
-  manifestPath?: string | null;
-  projectRoot?: string | null;
-  manifest?: AndroidManifest | null;
-};
-
 export async function writeAndroidManifestAsync(
   manifestPath: string,
-  manifest: AndroidManifest
+  androidManifest: AndroidManifest
 ): Promise<void> {
-  const manifestXml = XML.format(manifest);
+  const manifestXml = XML.format(androidManifest);
   await fs.ensureDir(path.dirname(manifestPath));
   await fs.writeFile(manifestPath, manifestXml);
 }
@@ -156,22 +150,22 @@ function isManifest(xml: XML.XMLObject): xml is AndroidManifest {
   return !!xml.manifest;
 }
 
-export function getMainApplication(manifest: AndroidManifest): ManifestApplication | null {
+export function getMainApplication(androidManifest: AndroidManifest): ManifestApplication | null {
   return (
-    manifest?.manifest?.application?.filter(
+    androidManifest?.manifest?.application?.filter(
       e => e?.$?.['android:name'] === '.MainApplication'
     )[0] ?? null
   );
 }
 
-export function getMainApplicationOrThrow(manifest: AndroidManifest): ManifestApplication {
-  const mainApplication = getMainApplication(manifest);
+export function getMainApplicationOrThrow(androidManifest: AndroidManifest): ManifestApplication {
+  const mainApplication = getMainApplication(androidManifest);
   assert(mainApplication, 'AndroidManifest.xml is missing the required MainApplication element');
   return mainApplication;
 }
 
-export function getMainActivity(manifest: AndroidManifest): ManifestActivity | null {
-  const mainActivity = manifest?.manifest?.application?.[0]?.activity?.filter?.(
+export function getMainActivity(androidManifest: AndroidManifest): ManifestActivity | null {
+  const mainActivity = androidManifest?.manifest?.application?.[0]?.activity?.filter?.(
     (e: any) => e.$['android:name'] === '.MainActivity'
   );
   return mainActivity?.[0] ?? null;

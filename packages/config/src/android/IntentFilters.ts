@@ -12,18 +12,18 @@ export function getIntentFilters(config: Pick<ExpoConfig, 'android'>): AndroidIn
 
 export async function setAndroidIntentFilters(
   config: Pick<ExpoConfig, 'android'>,
-  manifestDocument: AndroidManifest
+  androidManifest: AndroidManifest
 ): Promise<AndroidManifest> {
   const intentFilters = getIntentFilters(config);
   if (!intentFilters.length) {
-    return manifestDocument;
+    return androidManifest;
   }
 
   const intentFiltersXML = renderIntentFilters(intentFilters).join('');
   const parser = new Parser();
   const intentFiltersJSON = await parser.parseStringPromise(intentFiltersXML);
 
-  const mainActivity = getMainActivity(manifestDocument);
+  const mainActivity = getMainActivity(androidManifest);
 
   if (mainActivity) {
     mainActivity['intent-filter'] = mainActivity['intent-filter']?.concat(
@@ -31,7 +31,7 @@ export async function setAndroidIntentFilters(
     );
   }
 
-  return manifestDocument;
+  return androidManifest;
 }
 
 export default function renderIntentFilters(intentFilters: AndroidIntentFilters): string[] {

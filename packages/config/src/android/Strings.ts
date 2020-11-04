@@ -2,10 +2,10 @@ import { getResourceXMLPathAsync } from './Paths';
 import { ResourceItemXML, ResourceKind, ResourceXML } from './Resources';
 
 export async function getProjectStringsXMLPathAsync(
-  projectDir: string,
+  projectRoot: string,
   { kind }: { kind?: ResourceKind } = {}
 ): Promise<string> {
-  return getResourceXMLPathAsync(projectDir, { kind, name: 'strings' });
+  return getResourceXMLPathAsync(projectRoot, { kind, name: 'strings' });
 }
 
 export function setStringItem(

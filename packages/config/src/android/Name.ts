@@ -13,7 +13,7 @@ export function getName(config: ExpoConfig) {
  */
 export async function setName(
   configOrName: ExpoConfig | string,
-  projectDirectory: string
+  projectRoot: string
 ): Promise<boolean> {
   let name: string | null = null;
   if (typeof configOrName === 'string') {
@@ -26,7 +26,7 @@ export async function setName(
     return false;
   }
 
-  const stringsPath = await getProjectStringsXMLPathAsync(projectDirectory);
+  const stringsPath = await getProjectStringsXMLPathAsync(projectRoot);
   if (!stringsPath) {
     throw new Error(`There was a problem setting your Facebook App ID in ${stringsPath}.`);
   }

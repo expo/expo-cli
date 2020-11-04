@@ -19,11 +19,11 @@ export function getGoogleMobileAdsAutoInit(config: Pick<ExpoConfig, 'android'>) 
 
 export function setGoogleMobileAdsConfig(
   config: Pick<ExpoConfig, 'android'>,
-  manifestDocument: AndroidManifest
+  androidManifest: AndroidManifest
 ) {
   const appId = getGoogleMobileAdsAppId(config);
   const autoInit = getGoogleMobileAdsAutoInit(config);
-  const mainApplication = getMainApplicationOrThrow(manifestDocument);
+  const mainApplication = getMainApplicationOrThrow(androidManifest);
 
   if (appId) {
     addMetaDataItemToMainApplication(mainApplication, APPLICATION_ID, appId);
@@ -37,5 +37,5 @@ export function setGoogleMobileAdsConfig(
     removeMetaDataItemFromMainApplication(mainApplication, DELAY_APP_MEASUREMENT_INIT);
   }
 
-  return manifestDocument;
+  return androidManifest;
 }

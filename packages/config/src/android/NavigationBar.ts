@@ -22,14 +22,14 @@ export function getNavigationBarStyle(config: Pick<ExpoConfig, 'androidNavigatio
 
 export async function setNavigationBarConfig(
   config: Pick<ExpoConfig, 'androidNavigationBar'>,
-  projectDirectory: string
+  projectRoot: string
 ) {
   const immersiveMode = getNavigationBarImmersiveMode(config);
   const hexString = getNavigationBarColor(config);
   const barStyle = getNavigationBarStyle(config);
 
-  const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
+  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
+  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
 
   let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
   let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });

@@ -112,17 +112,17 @@ export function setPackageInBuildGradle(config: Pick<ExpoConfig, 'android'>, bui
   return buildGradle.replace(pattern, `applicationId '${packageName}'`);
 }
 
-export async function setPackageInAndroidManifest(
+export function setPackageInAndroidManifest(
   config: Pick<ExpoConfig, 'android'>,
-  manifest: AndroidManifest
+  androidManifest: AndroidManifest
 ) {
   const packageName = getPackage(config);
 
   if (packageName) {
-    manifest.manifest.$.package = packageName;
+    androidManifest.manifest.$.package = packageName;
   } else {
-    delete manifest.manifest.$.package;
+    delete androidManifest.manifest.$.package;
   }
 
-  return manifest;
+  return androidManifest;
 }

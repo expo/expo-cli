@@ -5,13 +5,19 @@ import { ExpoConfig } from '../Config.types';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';
 
+const googleServicesClassPath = 'com.google.gms:google-services';
+const googleServicesPlugin = 'com.google.gms.google-services';
+
+// NOTE(brentvatne): This may be annoying to keep up to date...
+const googleServicesVersion = '4.3.3';
+
 export function getGoogleServicesFilePath(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.googleServicesFile ?? null;
 }
 
 export async function setGoogleServicesFile(
   config: Pick<ExpoConfig, 'android'>,
-  projectDirectory: string,
+  projectRoot: string,
   targetPath: string = DEFAULT_TARGET_PATH
 ) {
   const partialSourcePath = getGoogleServicesFilePath(config);
@@ -19,8 +25,8 @@ export async function setGoogleServicesFile(
     return false;
   }
 
-  const completeSourcePath = resolve(projectDirectory, partialSourcePath);
-  const destinationPath = resolve(projectDirectory, targetPath);
+  const completeSourcePath = resolve(projectRoot, partialSourcePath);
+  const destinationPath = resolve(projectRoot, targetPath);
 
   try {
     await fs.copy(completeSourcePath, destinationPath);
@@ -31,12 +37,6 @@ export async function setGoogleServicesFile(
   }
   return true;
 }
-
-const googleServicesClassPath = 'com.google.gms:google-services';
-const googleServicesPlugin = 'com.google.gms.google-services';
-
-// NOTE(brentvatne): This may be annoying to keep up to date...
-const googleServicesVersion = '4.3.3';
 
 /**
  * Adding the Google Services plugin

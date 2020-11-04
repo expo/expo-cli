@@ -19,9 +19,9 @@ export function getScheme(config: { scheme?: string | string[] }): string[] {
   return [];
 }
 
-export async function setScheme(
+export function setScheme(
   config: Pick<ExpoConfig, 'scheme' | 'android'>,
-  manifestDocument: AndroidManifest
+  androidManifest: AndroidManifest
 ) {
   const scheme = [
     ...getScheme(config),
@@ -33,29 +33,29 @@ export async function setScheme(
     scheme.push(config.android.package);
   }
   if (scheme.length === 0) {
-    return manifestDocument;
+    return androidManifest;
   }
 
-  if (!ensureManifestHasValidIntentFilter(manifestDocument)) {
+  if (!ensureManifestHasValidIntentFilter(androidManifest)) {
     addWarningAndroid(
       'scheme',
       `Cannot add schemes because the provided manifest does not have a valid Activity with \`android:launchMode="singleTask"\`.\nThis guide can help you get setup properly https://expo.fyi/setup-android-uri-scheme`
     );
-    return manifestDocument;
+    return androidManifest;
   }
 
   // Get the current schemes and remove them.
-  const currentSchemes = getSchemesFromManifest(manifestDocument);
+  const currentSchemes = getSchemesFromManifest(androidManifest);
   for (const uri of currentSchemes) {
-    manifestDocument = removeScheme(uri, manifestDocument);
+    androidManifest = removeScheme(uri, androidManifest);
   }
 
   // Now add all the new schemes.
   for (const uri of scheme) {
-    manifestDocument = appendScheme(uri, manifestDocument);
+    androidManifest = appendScheme(uri, androidManifest);
   }
 
-  return manifestDocument;
+  return androidManifest;
 }
 
 function isValidRedirectIntentFilter({ actions, categories, schemes }: IntentFilterProps): boolean {
@@ -76,11 +76,11 @@ function propertiesFromIntentFilter(intentFilter: any): IntentFilterProps {
   };
 }
 
-function getSingleTaskIntentFilters(manifestDocument: AndroidManifest): any[] {
-  if (!Array.isArray(manifestDocument.manifest.application)) return [];
+function getSingleTaskIntentFilters(androidManifest: AndroidManifest): any[] {
+  if (!Array.isArray(androidManifest.manifest.application)) return [];
 
   let outputSchemes: any[] = [];
-  for (const application of manifestDocument.manifest.application) {
+  for (const application of androidManifest.manifest.application) {
     const { activity } = application;
     // @ts-ignore
     const activities = Array.isArray(activity) ? activity : [activity];
@@ -95,10 +95,10 @@ function getSingleTaskIntentFilters(manifestDocument: AndroidManifest): any[] {
   return outputSchemes;
 }
 
-export function getSchemesFromManifest(manifestDocument: AndroidManifest): string[] {
+export function getSchemesFromManifest(androidManifest: AndroidManifest): string[] {
   const outputSchemes: IntentFilterProps[] = [];
 
-  const singleTaskIntentFilters = getSingleTaskIntentFilters(manifestDocument);
+  const singleTaskIntentFilters = getSingleTaskIntentFilters(androidManifest);
   for (const intentFilter of singleTaskIntentFilters) {
     const properties = propertiesFromIntentFilter(intentFilter);
     if (isValidRedirectIntentFilter(properties)) {
@@ -109,12 +109,12 @@ export function getSchemesFromManifest(manifestDocument: AndroidManifest): strin
   return outputSchemes.reduce<string[]>((prev, { schemes }) => [...prev, ...schemes], []);
 }
 
-export function ensureManifestHasValidIntentFilter(manifestDocument: AndroidManifest): boolean {
-  if (!Array.isArray(manifestDocument.manifest.application)) {
+export function ensureManifestHasValidIntentFilter(androidManifest: AndroidManifest): boolean {
+  if (!Array.isArray(androidManifest.manifest.application)) {
     return false;
   }
 
-  for (const application of manifestDocument.manifest.application) {
+  for (const application of androidManifest.manifest.application) {
     for (const activity of application.activity || []) {
       if (activity?.$?.['android:launchMode'] === 'singleTask') {
         for (const intentFilter of activity['intent-filter'] || []) {
@@ -142,17 +142,17 @@ export function ensureManifestHasValidIntentFilter(manifestDocument: AndroidMani
   return false;
 }
 
-export function hasScheme(scheme: string, manifestDocument: AndroidManifest): boolean {
-  const schemes = getSchemesFromManifest(manifestDocument);
+export function hasScheme(scheme: string, androidManifest: AndroidManifest): boolean {
+  const schemes = getSchemesFromManifest(androidManifest);
   return schemes.includes(scheme);
 }
 
-export function appendScheme(scheme: string, manifestDocument: AndroidManifest): AndroidManifest {
-  if (!Array.isArray(manifestDocument.manifest.application)) {
-    return manifestDocument;
+export function appendScheme(scheme: string, androidManifest: AndroidManifest): AndroidManifest {
+  if (!Array.isArray(androidManifest.manifest.application)) {
+    return androidManifest;
   }
 
-  for (const application of manifestDocument.manifest.application) {
+  for (const application of androidManifest.manifest.application) {
     for (const activity of application.activity || []) {
       if (activity?.$?.['android:launchMode'] === 'singleTask') {
         for (const intentFilter of activity['intent-filter'] || []) {
@@ -168,15 +168,15 @@ export function appendScheme(scheme: string, manifestDocument: AndroidManifest):
       }
     }
   }
-  return manifestDocument;
+  return androidManifest;
 }
 
-export function removeScheme(scheme: string, manifestDocument: AndroidManifest): AndroidManifest {
-  if (!Array.isArray(manifestDocument.manifest.application)) {
-    return manifestDocument;
+export function removeScheme(scheme: string, androidManifest: AndroidManifest): AndroidManifest {
+  if (!Array.isArray(androidManifest.manifest.application)) {
+    return androidManifest;
   }
 
-  for (const application of manifestDocument.manifest.application) {
+  for (const application of androidManifest.manifest.application) {
     for (const activity of application.activity || []) {
       if (activity?.$?.['android:launchMode'] === 'singleTask') {
         for (const intentFilter of activity['intent-filter'] || []) {
@@ -196,5 +196,5 @@ export function removeScheme(scheme: string, manifestDocument: AndroidManifest):
     }
   }
 
-  return manifestDocument;
+  return androidManifest;
 }

@@ -7,21 +7,21 @@ export function getOrientation(config: Pick<ExpoConfig, 'orientation'>) {
   return typeof config.orientation === 'string' ? config.orientation : null;
 }
 
-export async function setAndroidOrientation(
+export function setAndroidOrientation(
   config: Pick<ExpoConfig, 'orientation'>,
-  manifest: AndroidManifest
+  androidManifest: AndroidManifest
 ) {
   const orientation = getOrientation(config);
   if (!orientation) {
-    return manifest;
+    return androidManifest;
   }
 
-  let mainActivity = getMainActivity(manifest);
+  let mainActivity = getMainActivity(androidManifest);
   if (!mainActivity) {
     mainActivity = { $: { 'android:name': '.MainActivity' } };
   }
   mainActivity.$[SCREEN_ORIENTATION_ATTRIBUTE] =
     orientation !== 'default' ? orientation : 'unspecified';
 
-  return manifest;
+  return androidManifest;
 }

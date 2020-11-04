@@ -24,21 +24,21 @@ export function getUserInterfaceStyle(
 
 export async function setUiModeAndroidManifest(
   config: Pick<ExpoConfig, 'android' | 'userInterfaceStyle'>,
-  manifest: AndroidManifest
+  androidManifest: AndroidManifest
 ) {
   const userInterfaceStyle = getUserInterfaceStyle(config);
   if (!userInterfaceStyle) {
-    return manifest;
+    return androidManifest;
   }
 
-  let mainActivity = getMainActivity(manifest);
+  let mainActivity = getMainActivity(androidManifest);
   if (!mainActivity) {
     mainActivity = { $: { 'android:name': '.MainActivity' } };
   }
   mainActivity.$[CONFIG_CHANGES_ATTRIBUTE] =
     'keyboard|keyboardHidden|orientation|screenSize|uiMode';
 
-  return manifest;
+  return androidManifest;
 }
 
 export function addOnConfigurationChangedMainActivity(

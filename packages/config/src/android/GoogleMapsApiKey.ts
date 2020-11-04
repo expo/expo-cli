@@ -14,10 +14,10 @@ export function getGoogleMapsApiKey(config: Pick<ExpoConfig, 'android'>) {
 
 export function setGoogleMapsApiKey(
   config: Pick<ExpoConfig, 'android'>,
-  manifestDocument: AndroidManifest
+  androidManifest: AndroidManifest
 ) {
   const apiKey = getGoogleMapsApiKey(config);
-  const mainApplication = getMainApplicationOrThrow(manifestDocument);
+  const mainApplication = getMainApplicationOrThrow(androidManifest);
 
   if (apiKey) {
     // If the item exists, add it back
@@ -32,5 +32,5 @@ export function setGoogleMapsApiKey(
     removeUsesLibraryItemFromMainApplication(mainApplication, 'org.apache.http.legacy');
   }
 
-  return manifestDocument;
+  return androidManifest;
 }

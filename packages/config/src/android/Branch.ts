@@ -10,10 +10,10 @@ export function getBranchApiKey(config: ExpoConfig) {
   return config.android?.config?.branch?.apiKey ?? null;
 }
 
-export async function setBranchApiKey(config: ExpoConfig, manifestDocument: AndroidManifest) {
+export function setBranchApiKey(config: ExpoConfig, androidManifest: AndroidManifest) {
   const apiKey = getBranchApiKey(config);
 
-  const mainApplication = getMainApplicationOrThrow(manifestDocument);
+  const mainApplication = getMainApplicationOrThrow(androidManifest);
 
   if (apiKey) {
     // If the item exists, add it back
@@ -22,5 +22,5 @@ export async function setBranchApiKey(config: ExpoConfig, manifestDocument: Andr
     // Remove any existing item
     removeMetaDataItemFromMainApplication(mainApplication, 'io.branch.sdk.BranchKey');
   }
-  return manifestDocument;
+  return androidManifest;
 }

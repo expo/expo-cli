@@ -20,8 +20,8 @@ describe(getGoogleMapsApiKey, () => {
 
 describe(setGoogleMapsApiKey, () => {
   it('adds and removes google maps key', async () => {
-    function hasSingleEntry(manifest: AndroidManifest) {
-      const mainApplication = getMainApplicationOrThrow(manifest);
+    function hasSingleEntry(androidManifest: AndroidManifest) {
+      const mainApplication = getMainApplicationOrThrow(androidManifest);
 
       const apiKeyItem = mainApplication['meta-data'].filter(
         e => e.$['android:name'] === 'com.google.android.geo.API_KEY'
@@ -35,8 +35,8 @@ describe(setGoogleMapsApiKey, () => {
       expect(usesLibraryItem).toHaveLength(1);
       expect(usesLibraryItem[0].$['android:required']).toBe(false);
     }
-    function isRemoved(manifest: AndroidManifest) {
-      const mainApplication = getMainApplicationOrThrow(manifest);
+    function isRemoved(androidManifest: AndroidManifest) {
+      const mainApplication = getMainApplicationOrThrow(androidManifest);
 
       const apiKeyItem = mainApplication['meta-data'].filter(
         e => e.$['android:name'] === 'com.google.android.geo.API_KEY'

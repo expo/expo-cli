@@ -22,15 +22,15 @@ export function getRootViewBackgroundColor(
 
 export async function setRootViewBackgroundColor(
   config: Pick<ExpoConfig, 'android' | 'backgroundColor'>,
-  projectDirectory: string
+  projectRoot: string
 ) {
   const hexString = getRootViewBackgroundColor(config);
   if (!hexString) {
     return false;
   }
 
-  const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
+  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
+  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
 
   let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
   let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });

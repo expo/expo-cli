@@ -118,8 +118,8 @@ function ensureFacebookActivity({
   return mainApplication;
 }
 
-export async function setFacebookAppIdString(config: ExpoConfigFacebook, projectDirectory: string) {
-  const stringsPath = await getProjectStringsXMLPathAsync(projectDirectory);
+export async function setFacebookAppIdString(config: ExpoConfigFacebook, projectRoot: string) {
+  const stringsPath = await getProjectStringsXMLPathAsync(projectRoot);
   assert(stringsPath, `There was a problem setting your Facebook App ID in "${stringsPath}"`);
 
   let stringsJSON = await readResourcesXMLAsync({ path: stringsPath });

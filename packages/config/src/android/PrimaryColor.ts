@@ -13,12 +13,12 @@ export function getPrimaryColor(config: Pick<ExpoConfig, 'primaryColor'>) {
 
 export async function setPrimaryColor(
   config: Pick<ExpoConfig, 'primaryColor'>,
-  projectDirectory: string
+  projectRoot: string
 ) {
   const hexString = getPrimaryColor(config);
 
-  const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
+  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
+  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
 
   let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
   let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });

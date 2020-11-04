@@ -148,8 +148,8 @@ export async function getAsync({
   return await Scheme.getSchemesFromManifest(manifest);
 }
 
-function getPackage(manifest: AndroidManifest): string | null {
-  return manifest.manifest?.$?.package ?? null;
+function getPackage(androidManifest: AndroidManifest): string | null {
+  return androidManifest.manifest?.$?.package ?? null;
 }
 
 export async function getProjectIdAsync({

@@ -56,7 +56,7 @@ export function getAndroidPermissions(config: Pick<ExpoConfig, 'android'>): stri
 
 export async function setAndroidPermissions(
   config: Pick<ExpoConfig, 'android'>,
-  manifest: AndroidManifest
+  androidManifest: AndroidManifest
 ) {
   const permissions = getAndroidPermissions(config);
   let permissionsToAdd = [];
@@ -69,12 +69,12 @@ export async function setAndroidPermissions(
     permissionsToAdd = [...providedPermissions, ...requiredPermissions];
   }
 
-  if (!manifest.manifest.hasOwnProperty('uses-permission')) {
-    manifest.manifest['uses-permission'] = [];
+  if (!androidManifest.manifest.hasOwnProperty('uses-permission')) {
+    androidManifest.manifest['uses-permission'] = [];
   }
   // manifest.manifest['uses-permission'] = [];
 
-  const manifestPermissions = manifest.manifest['uses-permission'] ?? [];
+  const manifestPermissions = androidManifest.manifest['uses-permission'] ?? [];
 
   permissionsToAdd.forEach(permission => {
     if (!isPermissionAlreadyRequested(permission, manifestPermissions)) {
@@ -82,7 +82,7 @@ export async function setAndroidPermissions(
     }
   });
 
-  return manifest;
+  return androidManifest;
 }
 
 export function isPermissionAlreadyRequested(
@@ -100,9 +100,9 @@ export function addPermissionToManifest(
   return manifestPermissions;
 }
 
-export function removePermissions(doc: AndroidManifest, permissionNames?: string[]) {
+export function removePermissions(androidManifest: AndroidManifest, permissionNames?: string[]) {
   const targetNames = permissionNames ? permissionNames.map(ensurePermissionNameFormat) : null;
-  const permissions = doc.manifest[USES_PERMISSION] || [];
+  const permissions = androidManifest.manifest[USES_PERMISSION] || [];
   const nextPermissions = [];
   for (const attribute of permissions) {
     if (targetNames) {
@@ -114,28 +114,28 @@ export function removePermissions(doc: AndroidManifest, permissionNames?: string
     }
   }
 
-  doc.manifest[USES_PERMISSION] = nextPermissions;
+  androidManifest.manifest[USES_PERMISSION] = nextPermissions;
 }
 
-export function addPermission(doc: AndroidManifest, permissionName: string): void {
-  const usesPermissions: ManifestUsesPermission[] = doc.manifest[USES_PERMISSION] || [];
+export function addPermission(androidManifest: AndroidManifest, permissionName: string): void {
+  const usesPermissions: ManifestUsesPermission[] = androidManifest.manifest[USES_PERMISSION] || [];
   usesPermissions.push({
     $: { 'android:name': permissionName },
   });
-  doc.manifest[USES_PERMISSION] = usesPermissions;
+  androidManifest.manifest[USES_PERMISSION] = usesPermissions;
 }
 
 export function ensurePermissions(
-  doc: AndroidManifest,
+  androidManifest: AndroidManifest,
   permissionNames: string[]
 ): { [permission: string]: boolean } {
-  const permissions = getPermissions(doc);
+  const permissions = getPermissions(androidManifest);
 
   const results: { [permission: string]: boolean } = {};
   for (const permissionName of permissionNames) {
     const targetName = ensurePermissionNameFormat(permissionName);
     if (!permissions.includes(targetName)) {
-      addPermission(doc, targetName);
+      addPermission(androidManifest, targetName);
       results[permissionName] = true;
     } else {
       results[permissionName] = false;
@@ -144,12 +144,15 @@ export function ensurePermissions(
   return results;
 }
 
-export function ensurePermission(doc: AndroidManifest, permissionName: string): boolean {
-  const permissions = getPermissions(doc);
+export function ensurePermission(
+  androidManifest: AndroidManifest,
+  permissionName: string
+): boolean {
+  const permissions = getPermissions(androidManifest);
   const targetName = ensurePermissionNameFormat(permissionName);
 
   if (!permissions.includes(targetName)) {
-    addPermission(doc, targetName);
+    addPermission(androidManifest, targetName);
     return true;
   }
   return false;
@@ -166,8 +169,8 @@ export function ensurePermissionNameFormat(permissionName: string): string {
   }
 }
 
-export function getPermissions(doc: AndroidManifest): string[] {
-  const usesPermissions: { [key: string]: any }[] = doc.manifest[USES_PERMISSION] || [];
+export function getPermissions(androidManifest: AndroidManifest): string[] {
+  const usesPermissions: { [key: string]: any }[] = androidManifest.manifest[USES_PERMISSION] || [];
   const permissions = usesPermissions.map(permissionObject => {
     return permissionObject.$['android:name'] || permissionObject.$.name;
   });

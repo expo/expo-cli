@@ -7,22 +7,22 @@ export function getAllowBackup(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.allowBackup ?? true;
 }
 
-export async function setAllowBackup(
+export function setAllowBackup(
   config: Pick<ExpoConfig, 'android'>,
-  manifestDocument: AndroidManifest
+  androidManifest: AndroidManifest
 ) {
   const allowBackup = getAllowBackup(config);
 
-  const mainApplication = getMainApplication(manifestDocument);
+  const mainApplication = getMainApplication(androidManifest);
   if (mainApplication?.$) {
     mainApplication.$['android:allowBackup'] = String(allowBackup) as StringBoolean;
   }
 
-  return manifestDocument;
+  return androidManifest;
 }
 
-export function getAllowBackupFromManifest(manifestDocument: AndroidManifest): boolean | null {
-  const mainApplication = getMainApplication(manifestDocument);
+export function getAllowBackupFromManifest(androidManifest: AndroidManifest): boolean | null {
+  const mainApplication = getMainApplication(androidManifest);
 
   if (mainApplication?.$) {
     return String(mainApplication.$['android:allowBackup']) === 'true';
