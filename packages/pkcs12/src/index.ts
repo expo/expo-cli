@@ -19,11 +19,7 @@ export function getX509Certificate(p12: forge.pkcs12.Pkcs12Pfx): forge.pki.Certi
   if (!bags || bags.length === 0) {
     throw new Error(`PKCS12: No certificates found`);
   }
-  const certificate = bags[0].cert;
-  if (!certificate) {
-    throw new Error('PKCS12: bag is not a certificate');
-  }
-  return certificate;
+  return extractx509CertificateFromBag(bags[0]);
 }
 
 /**
@@ -43,11 +39,40 @@ export function getX509CertificateByFriendlyName(
   if (!bags || bags.length === 0) {
     return null;
   }
-  const certificate = bags[0].cert;
-  if (!certificate) {
+  return extractx509CertificateFromBag(bags[0]);
+}
+
+function extractx509CertificateFromBag(bag: forge.pkcs12.Bag): forge.pki.Certificate {
+  const { cert, asn1 } = bag;
+  if (!cert && asn1) {
+    // if asn1 is present but certificate isnt, the certificate type was unknown
+    // github.com/digitalbazaar/forge/blob/1887cfce43a8f5ca9cb5c256168cf12ce1715ecf/lib/pkcs12.js#L703
+    throw new Error('PKCS12: unknown x509 certificate type');
+  }
+  if (!cert) {
     throw new Error('PKCS12: bag is not a certificate');
   }
-  return certificate;
+  return cert;
+}
+
+export function getX509Asn1ByFriendlyName(
+  p12: forge.pkcs12.Pkcs12Pfx,
+  friendlyName: string
+): forge.asn1.Asn1 | null {
+  const certBagType = forge.pki.oids.certBag;
+  // node-forge converts friendly names to lowercase, so we search by lowercase
+  const bags = p12.getBags({ friendlyName: friendlyName.toLowerCase(), bagType: certBagType })
+    .friendlyName;
+  if (!bags || bags.length === 0) {
+    return null;
+  }
+  const { cert, asn1 } = bags[0];
+  if (cert) {
+    return forge.pki.certificateToAsn1(cert);
+  }
+  // if asn1 is present but certificate isnt, the certificate type was unknown
+  // github.com/digitalbazaar/forge/blob/1887cfce43a8f5ca9cb5c256168cf12ce1715ecf/lib/pkcs12.js#L703
+  return asn1 ?? null;
 }
 
 export function parsePKCS12(
@@ -84,6 +109,22 @@ function getHash(
   return hash.digest(hashEncoding ?? 'hex');
 }
 
+export function getAsn1Hash(
+  asn1: forge.asn1.Asn1,
+  {
+    hashAlgorithm,
+  }: {
+    hashAlgorithm?: string;
+  }
+): string {
+  const certDer = forge.asn1.toDer(asn1).getBytes(); // binary encoded string
+  return getHash(certDer, {
+    hashAlgorithm,
+    hashEncoding: 'hex',
+    inputEncoding: 'latin1', // latin1 is an alias for binary
+  });
+}
+
 export function getCertificateFingerprint(
   certificate: forge.pki.Certificate,
   {
@@ -93,10 +134,7 @@ export function getCertificateFingerprint(
   }
 ): string {
   const certAsn1 = forge.pki.certificateToAsn1(certificate);
-  const certDer = forge.asn1.toDer(certAsn1).getBytes(); // binary encoded string
-  return getHash(certDer, {
+  return getAsn1Hash(certAsn1, {
     hashAlgorithm,
-    hashEncoding: 'hex',
-    inputEncoding: 'latin1', // latin1 is an alias for binary
   });
 }

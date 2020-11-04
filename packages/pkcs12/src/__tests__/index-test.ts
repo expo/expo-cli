@@ -1,6 +1,8 @@
 import {
+  getAsn1Hash,
   getCertificateFingerprint,
   getFormattedSerialNumber,
+  getX509Asn1ByFriendlyName,
   getX509Certificate,
   getX509CertificateByFriendlyName,
   parsePKCS12,
@@ -39,7 +41,29 @@ const uppercaseAliasKeystoreP12 = {
   password: 'password',
   alias: 'UPPERCASE',
 };
-describe('reading PKCS#12 files', () => {
+
+/**
+ * Generate DSA certificate:
+ * openssl dsaparam -out params.pem 3072
+ * openssl gendsa -out key.pem params.pem
+ * openssl req -new -key key.pem -out req.pem
+ * openssl x509 -req -in req.pem -signkey key.pem -out certificate.cer
+ *
+ * Package into a PKCS#12 keystore:
+ * keytool -import -alias test -file certificate.cer -keystore dsapkcs.keystore -storetype pkcs12
+ *
+ * node-forge only supports RSA certificates, so this certificate will be 'unknown'
+ */
+const dsaKeystoreP12 = {
+  base64EncodedP12:
+    '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',
+  password: 'password',
+  alias: 'test',
+  md5Fingerprint: 'f1371f2a5cd89d813882aebce8f609a4',
+  sha1Fingerprint: '10c530286a74e0c2e6e6ecf6845edbf686da2aee',
+  sha256Fingerprint: '822007287d1c8759e5900c34337339bc88a0112feecb4e01e6c74adc830ce3c5',
+};
+describe('computing fingerprints of x509 certificates', () => {
   it('computes fingerprints of certificates in conventional p12 files', async () => {
     const {
       base64EncodedP12,
@@ -86,6 +110,79 @@ describe('reading PKCS#12 files', () => {
     expect(md5Fingerprint).toEqual(expectedMd5Fingerprint);
     expect(sha1Fingerprint).toEqual(expectedSha1Fingerprint);
     expect(sha256Fingerprint).toEqual(expectedSha256Fingerprint);
+  });
+});
+describe('computing fingerprints from the asn1 representation of a x509 certificate', () => {
+  it('computes fingerprints of unsupported certificates using their asn1 values in p12 keystores', async () => {
+    const {
+      base64EncodedP12,
+      password,
+      alias,
+      md5Fingerprint: expectedMd5Fingerprint,
+      sha1Fingerprint: expectedSha1Fingerprint,
+      sha256Fingerprint: expectedSha256Fingerprint,
+    } = dsaKeystoreP12;
+    const p12 = parsePKCS12(base64EncodedP12, password);
+    const asn1 = getX509Asn1ByFriendlyName(p12, alias);
+    const md5Fingerprint = getAsn1Hash(asn1, {
+      hashAlgorithm: 'md5',
+    });
+    const sha1Fingerprint = getAsn1Hash(asn1, {
+      hashAlgorithm: 'sha1',
+    });
+    const sha256Fingerprint = getAsn1Hash(asn1, {
+      hashAlgorithm: 'sha256',
+    });
+    expect(md5Fingerprint).toEqual(expectedMd5Fingerprint);
+    expect(sha1Fingerprint).toEqual(expectedSha1Fingerprint);
+    expect(sha256Fingerprint).toEqual(expectedSha256Fingerprint);
+  });
+  it('computes fingerprints of supported certificates using their asn1 values in p12 keystores', async () => {
+    const {
+      base64EncodedP12,
+      password,
+      alias,
+      md5Fingerprint: expectedMd5Fingerprint,
+      sha1Fingerprint: expectedSha1Fingerprint,
+      sha256Fingerprint: expectedSha256Fingerprint,
+    } = keystoreP12;
+    const p12 = parsePKCS12(base64EncodedP12, password);
+    const asn1 = getX509Asn1ByFriendlyName(p12, alias);
+    const md5Fingerprint = getAsn1Hash(asn1, {
+      hashAlgorithm: 'md5',
+    });
+    const sha1Fingerprint = getAsn1Hash(asn1, {
+      hashAlgorithm: 'sha1',
+    });
+    const sha256Fingerprint = getAsn1Hash(asn1, {
+      hashAlgorithm: 'sha256',
+    });
+    expect(md5Fingerprint).toEqual(expectedMd5Fingerprint);
+    expect(sha1Fingerprint).toEqual(expectedSha1Fingerprint);
+    expect(sha256Fingerprint).toEqual(expectedSha256Fingerprint);
+  });
+});
+describe('getting the asn1 representation of a x509 certificate from PKCS#12 files', () => {
+  it('gets the asn1 value of an unsupported X.509 certificate from p12 keystores', async () => {
+    const { base64EncodedP12, password, alias } = dsaKeystoreP12;
+    const p12 = parsePKCS12(base64EncodedP12, password);
+    const asn1 = getX509Asn1ByFriendlyName(p12, alias);
+    expect(asn1).toMatchSnapshot();
+  });
+  it('gets the asn1 value of a supported X.509 certificate from p12 keystores', async () => {
+    const { base64EncodedP12, password, alias } = keystoreP12;
+    const p12 = parsePKCS12(base64EncodedP12, password);
+    const asn1 = getX509Asn1ByFriendlyName(p12, alias);
+    expect(asn1).toMatchSnapshot();
+  });
+});
+describe('reading x509 certificates from PKCS#12 files', () => {
+  it('is unable to parse a DSA x509 certificate (limitation)', async () => {
+    const { base64EncodedP12, password, alias } = dsaKeystoreP12;
+    const p12 = parsePKCS12(base64EncodedP12, password);
+    expect(() => {
+      getX509CertificateByFriendlyName(p12, alias);
+    }).toThrowError();
   });
   it('reads X.509 certificate serial numbers from conventional p12 files', async () => {
     const { base64EncodedP12, password, serialNumber: expectedSerialNumber } = conventionalP12;
