@@ -40,7 +40,7 @@ export function setScheme(
   };
 }
 
-// TODO: update this to work well idempotently!
+// TODO: update this to be idempotent!
 export function appendScheme(scheme: string | null, infoPlist: InfoPlist): InfoPlist {
   if (!scheme) {
     return infoPlist;

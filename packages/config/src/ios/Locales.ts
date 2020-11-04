@@ -13,7 +13,7 @@ type LocaleJson = Record<string, string>;
 type ResolvedLocalesJson = Record<string, LocaleJson>;
 type ExpoConfigLocales = NonNullable<ExpoConfig['locales']>;
 
-export const withLocales: ConfigPlugin = config => {
+export const withLocales: ConfigPlugin<void> = config => {
   return withXcodeProject(config, async config => {
     config.modResults = await setLocalesAsync(config, {
       projectRoot: config.modRequest.projectRoot,
@@ -23,12 +23,14 @@ export const withLocales: ConfigPlugin = config => {
   });
 };
 
-export function getLocales(config: ExpoConfig): Record<string, string | LocaleJson> | null {
+export function getLocales(
+  config: Pick<ExpoConfig, 'locales'>
+): Record<string, string | LocaleJson> | null {
   return config.locales ?? null;
 }
 
 export async function setLocalesAsync(
-  config: ExpoConfig,
+  config: Pick<ExpoConfig, 'locales'>,
   { projectRoot, project }: { projectRoot: string; project: XcodeProject }
 ): Promise<XcodeProject> {
   const locales = getLocales(config);

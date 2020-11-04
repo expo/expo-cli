@@ -9,7 +9,7 @@ import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { withDangerousMod } from '../plugins/ios-plugins';
 
-export const withSplashScreen: ConfigPlugin = config => {
+export const withSplashScreen: ConfigPlugin<void> = config => {
   return withDangerousMod(config, async config => {
     await setSplashScreenAsync(config, config.modRequest.projectRoot);
     return config;

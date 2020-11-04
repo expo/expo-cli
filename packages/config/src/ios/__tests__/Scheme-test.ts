@@ -18,8 +18,13 @@ describe('scheme', () => {
     expect(
       setScheme(
         {
+          // @ts-ignore: TODO -- add this to the ExpoConfig type
           scheme: ['myapp', 'more'],
-          ios: { scheme: ['ios-only'], bundleIdentifier: 'com.demo.value' },
+          ios: {
+            // @ts-ignore: TODO -- add this to the ExpoConfig type
+            scheme: ['ios-only'],
+            bundleIdentifier: 'com.demo.value',
+          },
         },
         {}
       )

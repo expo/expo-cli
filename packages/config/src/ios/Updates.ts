@@ -7,6 +7,11 @@ import { ExportedConfig } from '../Plugin.types';
 import { withExpoPlist } from '../plugins/ios-plugins';
 import { ExpoPlist } from './IosConfig.types';
 
+type ExpoConfigUpdates = Pick<
+  ExpoConfig,
+  'sdkVersion' | 'owner' | 'runtimeVersion' | 'nodeModulesPath' | 'updates' | 'slug'
+>;
+
 export enum Config {
   ENABLED = 'EXUpdatesEnabled',
   CHECK_ON_LAUNCH = 'EXUpdatesCheckOnLaunch',
@@ -16,7 +21,10 @@ export enum Config {
   UPDATE_URL = 'EXUpdatesURL',
 }
 
-export function getUpdateUrl(config: ExpoConfig, username: string | null): string | null {
+export function getUpdateUrl(
+  config: Pick<ExpoConfigUpdates, 'owner' | 'slug'>,
+  username: string | null
+): string | null {
   const user = typeof config.owner === 'string' ? config.owner : username;
   if (!user) {
     return null;
@@ -24,23 +32,27 @@ export function getUpdateUrl(config: ExpoConfig, username: string | null): strin
   return `https://exp.host/@${user}/${config.slug}`;
 }
 
-export function getRuntimeVersion(config: ExpoConfig): string | null {
+export function getRuntimeVersion(
+  config: Pick<ExpoConfigUpdates, 'runtimeVersion'>
+): string | null {
   return typeof config.runtimeVersion === 'string' ? config.runtimeVersion : null;
 }
 
-export function getSDKVersion(config: ExpoConfig): string | null {
+export function getSDKVersion(config: Pick<ExpoConfigUpdates, 'sdkVersion'>): string | null {
   return typeof config.sdkVersion === 'string' ? config.sdkVersion : null;
 }
 
-export function getUpdatesEnabled(config: ExpoConfig): boolean {
+export function getUpdatesEnabled(config: Pick<ExpoConfigUpdates, 'updates'>): boolean {
   return config.updates?.enabled !== false;
 }
 
-export function getUpdatesTimeout(config: ExpoConfig) {
+export function getUpdatesTimeout(config: Pick<ExpoConfigUpdates, 'updates'>) {
   return config.updates?.fallbackToCacheTimeout ?? 0;
 }
 
-export function getUpdatesCheckOnLaunch(config: ExpoConfig): 'NEVER' | 'ALWAYS' {
+export function getUpdatesCheckOnLaunch(
+  config: Pick<ExpoConfigUpdates, 'updates'>
+): 'NEVER' | 'ALWAYS' {
   if (config.updates?.checkAutomatically === 'ON_ERROR_RECOVERY') {
     return 'NEVER';
   } else if (config.updates?.checkAutomatically === 'ON_LOAD') {
@@ -60,7 +72,7 @@ export const withUpdates = (
 };
 
 export function setUpdatesConfig(
-  config: ExpoConfig,
+  config: ExpoConfigUpdates,
   expoPlist: ExpoPlist,
   username: string | null
 ): ExpoPlist {
@@ -81,7 +93,7 @@ export function setUpdatesConfig(
   return setVersionsConfig(config, newExpoPlist);
 }
 
-export function setVersionsConfig(config: ExpoConfig, expoPlist: ExpoPlist): ExpoPlist {
+export function setVersionsConfig(config: ExpoConfigUpdates, expoPlist: ExpoPlist): ExpoPlist {
   const newExpoPlist = { ...expoPlist };
 
   const runtimeVersion = getRuntimeVersion(config);
@@ -100,10 +112,13 @@ export function setVersionsConfig(config: ExpoConfig, expoPlist: ExpoPlist): Exp
   return newExpoPlist;
 }
 
-function formatConfigurationScriptPath(projectDir: string, config: ExpoConfig): string {
+function formatConfigurationScriptPath(
+  projectRoot: string,
+  config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>
+): string {
   const buildScriptPath = projectHasModule(
     'expo-updates/scripts/create-manifest-ios.sh',
-    projectDir,
+    projectRoot,
     config
   );
 
@@ -113,7 +128,7 @@ function formatConfigurationScriptPath(projectDir: string, config: ExpoConfig): 
     );
   }
 
-  return path.relative(path.join(projectDir, 'ios'), buildScriptPath);
+  return path.relative(path.join(projectRoot, 'ios'), buildScriptPath);
 }
 
 interface ShellScriptBuildPhase {
@@ -140,12 +155,12 @@ function getBundleReactNativePhase(project: xcode.XcodeProject): ShellScriptBuil
 }
 
 export function ensureBundleReactNativePhaseContainsConfigurationScript(
-  projectDir: string,
-  config: ExpoConfig,
+  projectRoot: string,
+  config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>,
   project: xcode.XcodeProject
 ): xcode.XcodeProject {
   const bundleReactNative = getBundleReactNativePhase(project);
-  const buildPhaseShellScriptPath = formatConfigurationScriptPath(projectDir, config);
+  const buildPhaseShellScriptPath = formatConfigurationScriptPath(projectRoot, config);
 
   if (!bundleReactNative.shellScript.includes(buildPhaseShellScriptPath)) {
     bundleReactNative.shellScript = `${bundleReactNative.shellScript.replace(
@@ -157,12 +172,12 @@ export function ensureBundleReactNativePhaseContainsConfigurationScript(
 }
 
 export function isShellScriptBuildPhaseConfigured(
-  projectDir: string,
-  config: ExpoConfig,
+  projectRoot: string,
+  config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>,
   project: xcode.XcodeProject
 ): boolean {
   const bundleReactNative = getBundleReactNativePhase(project);
-  const buildPhaseShellScriptPath = formatConfigurationScriptPath(projectDir, config);
+  const buildPhaseShellScriptPath = formatConfigurationScriptPath(projectRoot, config);
   return bundleReactNative.shellScript.includes(buildPhaseShellScriptPath);
 }
 
@@ -173,7 +188,7 @@ export function isPlistConfigurationSet(expoPlist: ExpoPlist): boolean {
 }
 
 export function isPlistConfigurationSynced(
-  config: ExpoConfig,
+  config: ExpoConfigUpdates,
   expoPlist: ExpoPlist,
   username: string | null
 ): boolean {
@@ -187,7 +202,7 @@ export function isPlistConfigurationSynced(
 }
 
 export function isPlistVersionConfigurationSynced(
-  config: ExpoConfig,
+  config: Pick<ExpoConfigUpdates, 'sdkVersion' | 'runtimeVersion'>,
   expoPlist: ExpoPlist
 ): boolean {
   const expectedRuntimeVersion = getRuntimeVersion(config);

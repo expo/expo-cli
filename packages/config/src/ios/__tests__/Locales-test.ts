@@ -1,4 +1,5 @@
-import { fs, vol } from 'memfs';
+import * as fs from 'fs-extra';
+import { vol } from 'memfs';
 import * as path from 'path';
 
 import { addWarningIOS } from '../../WarningAggregator';
@@ -26,9 +27,9 @@ describe('iOS Locales', () => {
   it(`returns the locales object`, () => {
     expect(
       getLocales({
-        locales: [{}],
+        locales: {},
       })
-    ).toStrictEqual([{}]);
+    ).toStrictEqual({});
   });
 });
 
@@ -53,10 +54,6 @@ describe('e2e: iOS locales', () => {
 
     project = await setLocalesAsync(
       {
-        slug: 'testproject',
-        version: '1',
-        name: 'testproject',
-        platforms: ['ios', 'android'],
         locales: {
           fr: 'lang/fr.json',
           // doesn't exist
