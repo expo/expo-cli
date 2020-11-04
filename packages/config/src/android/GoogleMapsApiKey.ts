@@ -8,6 +8,9 @@ import {
   removeUsesLibraryItemFromMainApplication,
 } from './Manifest';
 
+const META_API_KEY = 'com.google.android.geo.API_KEY';
+const LIB_HTTP = 'org.apache.http.legacy';
+
 export function getGoogleMapsApiKey(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.config?.googleMaps?.apiKey ?? null;
 }
@@ -21,15 +24,15 @@ export function setGoogleMapsApiKey(
 
   if (apiKey) {
     // If the item exists, add it back
-    addMetaDataItemToMainApplication(mainApplication, 'com.google.android.geo.API_KEY', apiKey);
+    addMetaDataItemToMainApplication(mainApplication, META_API_KEY, apiKey);
     addUsesLibraryItemToMainApplication(mainApplication, {
-      name: 'org.apache.http.legacy',
+      name: LIB_HTTP,
       required: false,
     });
   } else {
     // Remove any existing item
-    removeMetaDataItemFromMainApplication(mainApplication, 'com.google.android.geo.API_KEY');
-    removeUsesLibraryItemFromMainApplication(mainApplication, 'org.apache.http.legacy');
+    removeMetaDataItemFromMainApplication(mainApplication, META_API_KEY);
+    removeUsesLibraryItemFromMainApplication(mainApplication, LIB_HTTP);
   }
 
   return androidManifest;

@@ -1,10 +1,10 @@
 import { getResourceXMLPathAsync } from './Paths';
 import { ResourceItemXML, ResourceKind, ResourceXML } from './Resources';
 
-export async function getProjectColorsXMLPathAsync(
+export function getProjectColorsXMLPathAsync(
   projectRoot: string,
   { kind }: { kind?: ResourceKind } = {}
-): Promise<string> {
+) {
   return getResourceXMLPathAsync(projectRoot, { kind, name: 'colors' });
 }
 

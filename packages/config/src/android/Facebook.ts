@@ -13,6 +13,14 @@ import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from './Resourc
 import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';
 
+const CUSTOM_TAB_ACTIVITY = 'com.facebook.CustomTabActivity';
+const STRING_FACEBOOK_APP_ID = 'facebook_app_id';
+const META_APP_ID = 'com.facebook.sdk.ApplicationId';
+const META_APP_NAME = 'com.facebook.sdk.ApplicationName';
+const META_AUTO_INIT = 'com.facebook.sdk.AutoInitEnabled';
+const META_AUTO_LOG_APP_EVENTS = 'com.facebook.sdk.AutoLogAppEventsEnabled';
+const META_AD_ID_COLLECTION = 'com.facebook.sdk.AdvertiserIDCollectionEnabled';
+
 function buildXMLItem({
   head,
   children,
@@ -44,7 +52,7 @@ function getFacebookSchemeActivity(scheme: string) {
    */
   return buildXMLItem({
     head: prefixAndroidKeys({
-      name: 'com.facebook.CustomTabActivity',
+      name: CUSTOM_TAB_ACTIVITY,
       exported: 'true',
     }),
     children: {
@@ -105,7 +113,7 @@ function ensureFacebookActivity({
   if (Array.isArray(mainApplication.activity)) {
     // Remove all Facebook CustomTabActivities first
     mainApplication.activity = mainApplication.activity.filter(activity => {
-      return activity.$?.['android:name'] !== 'com.facebook.CustomTabActivity';
+      return activity.$?.['android:name'] !== CUSTOM_TAB_ACTIVITY;
     });
   } else {
     mainApplication.activity = [];
@@ -138,11 +146,11 @@ function applyFacebookAppIdString(config: ExpoConfigFacebook, stringsJSON: Resou
 
   if (appId) {
     return setStringItem(
-      [buildResourceItem({ name: 'facebook_app_id', value: appId })],
+      [buildResourceItem({ name: STRING_FACEBOOK_APP_ID, value: appId })],
       stringsJSON
     );
   }
-  return removeStringItem('facebook_app_id', stringsJSON);
+  return removeStringItem(STRING_FACEBOOK_APP_ID, stringsJSON);
 }
 
 export function setFacebookConfig(config: ExpoConfigFacebook, androidManifest: AndroidManifest) {
@@ -162,62 +170,47 @@ export function setFacebookConfig(config: ExpoConfigFacebook, androidManifest: A
   if (appId) {
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
-      'com.facebook.sdk.ApplicationId',
-      '@string/facebook_app_id' // The corresponding string is set in setFacebookAppIdString
+      META_APP_ID,
+      // The corresponding string is set in setFacebookAppIdString
+      `@string/${STRING_FACEBOOK_APP_ID}`
     );
   } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      'com.facebook.sdk.ApplicationId'
-    );
+    mainApplication = removeMetaDataItemFromMainApplication(mainApplication, META_APP_ID);
   }
   if (displayName) {
-    mainApplication = addMetaDataItemToMainApplication(
-      mainApplication,
-      'com.facebook.sdk.ApplicationName',
-      displayName
-    );
+    mainApplication = addMetaDataItemToMainApplication(mainApplication, META_APP_NAME, displayName);
   } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      'com.facebook.sdk.ApplicationName'
-    );
+    mainApplication = removeMetaDataItemFromMainApplication(mainApplication, META_APP_NAME);
   }
   if (autoInitEnabled !== null) {
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
-      'com.facebook.sdk.AutoInitEnabled',
+      META_AUTO_INIT,
       autoInitEnabled ? 'true' : 'false'
     );
   } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      'com.facebook.sdk.AutoInitEnabled'
-    );
+    mainApplication = removeMetaDataItemFromMainApplication(mainApplication, META_AUTO_INIT);
   }
   if (autoLogAppEvents !== null) {
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
-      'com.facebook.sdk.AutoLogAppEventsEnabled',
+      META_AUTO_LOG_APP_EVENTS,
       autoLogAppEvents ? 'true' : 'false'
     );
   } else {
     mainApplication = removeMetaDataItemFromMainApplication(
       mainApplication,
-      'com.facebook.sdk.AutoLogAppEventsEnabled'
+      META_AUTO_LOG_APP_EVENTS
     );
   }
   if (advertiserIdCollection !== null) {
     mainApplication = addMetaDataItemToMainApplication(
       mainApplication,
-      'com.facebook.sdk.AdvertiserIDCollectionEnabled',
+      META_AD_ID_COLLECTION,
       advertiserIdCollection ? 'true' : 'false'
     );
   } else {
-    mainApplication = removeMetaDataItemFromMainApplication(
-      mainApplication,
-      'com.facebook.sdk.AdvertiserIDCollectionEnabled'
-    );
+    mainApplication = removeMetaDataItemFromMainApplication(mainApplication, META_AD_ID_COLLECTION);
   }
 
   return androidManifest;

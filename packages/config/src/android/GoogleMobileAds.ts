@@ -6,8 +6,8 @@ import {
   removeMetaDataItemFromMainApplication,
 } from './Manifest';
 
-const APPLICATION_ID = 'com.google.android.gms.ads.APPLICATION_ID';
-const DELAY_APP_MEASUREMENT_INIT = 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT';
+const META_APPLICATION_ID = 'com.google.android.gms.ads.APPLICATION_ID';
+const META_DELAY_APP_MEASUREMENT_INIT = 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT';
 
 export function getGoogleMobileAdsAppId(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.config?.googleMobileAdsAppId ?? null;
@@ -26,15 +26,15 @@ export function setGoogleMobileAdsConfig(
   const mainApplication = getMainApplicationOrThrow(androidManifest);
 
   if (appId) {
-    addMetaDataItemToMainApplication(mainApplication, APPLICATION_ID, appId);
+    addMetaDataItemToMainApplication(mainApplication, META_APPLICATION_ID, appId);
     addMetaDataItemToMainApplication(
       mainApplication,
-      DELAY_APP_MEASUREMENT_INIT,
+      META_DELAY_APP_MEASUREMENT_INIT,
       String(!autoInit)
     );
   } else {
-    removeMetaDataItemFromMainApplication(mainApplication, APPLICATION_ID);
-    removeMetaDataItemFromMainApplication(mainApplication, DELAY_APP_MEASUREMENT_INIT);
+    removeMetaDataItemFromMainApplication(mainApplication, META_APPLICATION_ID);
+    removeMetaDataItemFromMainApplication(mainApplication, META_DELAY_APP_MEASUREMENT_INIT);
   }
 
   return androidManifest;
