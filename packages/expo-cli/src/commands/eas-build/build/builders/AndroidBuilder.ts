@@ -180,9 +180,11 @@ class AndroidBuilder implements Builder<Platform.Android> {
     archiveUrl: string,
     _buildProfile: AndroidManagedBuildProfile
   ): Promise<Partial<Android.ManagedJob>> {
+    const projectRootDirectory = path.relative(await gitRootDirectory(), process.cwd()) || '.';
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
       type: Workflow.Managed,
+      projectRootDirectory,
     };
   }
 

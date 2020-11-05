@@ -205,9 +205,11 @@ class iOSBuilder implements Builder<Platform.iOS> {
     archiveUrl: string,
     _buildProfile: iOSManagedBuildProfile
   ): Promise<Partial<iOS.ManagedJob>> {
+    const projectRootDirectory = path.relative(await gitRootDirectory(), process.cwd()) || '.';
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
       type: Workflow.Managed,
+      projectRootDirectory,
     };
   }
 
