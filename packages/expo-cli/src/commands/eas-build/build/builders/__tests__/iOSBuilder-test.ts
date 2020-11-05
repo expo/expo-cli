@@ -92,9 +92,7 @@ describe('iOSBuilder', () => {
     }, 10000);
   });
 
-  // TODO: fix this test, which is currently failing due to:
-  // "ValidationError: "projectRootDirectory" is required"
-  xdescribe('preparing managed job', () => {
+  describe('preparing managed job', () => {
     it('should prepare valid job', async () => {
       setupCredentialsConfig();
       const ctx: any = {
@@ -116,8 +114,7 @@ describe('iOSBuilder', () => {
         platform: 'ios',
         type: 'managed',
         projectUrl,
-        packageJson: { example: 'packageJson' },
-        manifest: { example: 'manifest' },
+        projectRootDirectory: '.',
         secrets: {
           buildCredentials: {
             distributionCertificate: {

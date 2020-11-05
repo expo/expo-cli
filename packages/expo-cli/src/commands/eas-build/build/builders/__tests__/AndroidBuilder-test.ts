@@ -81,9 +81,7 @@ describe('AndroidBuilder', () => {
     });
   });
 
-  // TODO: fix this test, which is currently failing due to:
-  // "ValidationError: "projectRootDirectory" is required"
-  xdescribe('preparing managed job', () => {
+  describe('preparing managed job', () => {
     it('should prepare valid job', async () => {
       setupCredentialsConfig();
       const ctx: any = {
@@ -101,11 +99,11 @@ describe('AndroidBuilder', () => {
       await builder.ensureCredentialsAsync();
       const job = await builder.prepareJobAsync(projectUrl);
       expect(job).toEqual({
+        artifactType: 'app-bundle', // TODO: should be buildType
         platform: 'android',
         type: 'managed',
         projectUrl,
-        packageJson: { example: 'packageJson' },
-        manifest: { example: 'manifest' },
+        projectRootDirectory: '.',
         secrets: {
           buildCredentials: {
             keystore: {
