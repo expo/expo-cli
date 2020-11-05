@@ -10,6 +10,40 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 4 Nov 2020 19:04:11 -0800](https://github.com/expo/expo-cli/commit/4a29c163952ea8f4a27e3621b2aa08fce164923e)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [xdl][cli] <feat>: Add READMEs to the .expo & .expo-shared folders ([#2830](https://github.com/expo/expo-cli/issues/2830))
+
+### 🐛 Bug fixes
+
+- [configure-splash-screen] Use proper bin paths to files ([#2840](https://github.com/expo/expo-cli/issues/2840))
+- [config] android fixes ([#2851](https://github.com/expo/expo-cli/issues/2851))
+- [config] iOS fix types ([#2852](https://github.com/expo/expo-cli/issues/2852))
+- [config] Updated Android Facebook module to better accommodate plugins ([#2848](https://github.com/expo/expo-cli/issues/2848))
+- [pkcs12] add fingerprint support for unparseable x509 certs ([#2854](https://github.com/expo/expo-cli/issues/2854))
+- [traveling-fastlane] publish 1.15.2
+- [travelling-fastlane] Update app_produce to return App ID ([#2855](https://github.com/expo/expo-cli/issues/2855))
+
+### 📦 Packages updated
+
+- @expo/config@3.3.14
+- @expo/dev-server@0.1.39
+- @expo/dev-tools@0.13.58
+- @expo/electron-adapter@0.0.30
+- expo-cli@3.28.5
+- expo-optimize@0.1.61
+- @expo/metro-config@0.1.39
+- @expo/next-adapter@2.1.44
+- @expo/pkcs12@0.0.4
+- expo-pwa@0.0.49
+- uri-scheme@1.0.45
+- @expo/webpack-config@0.12.43
+- @expo/xdl@58.0.19
+
 ## [Tue, 3 Nov 2020 10:49:55 -0800](https://github.com/expo/expo-cli/commit/de4124a9cfc50715e0c9748151dfdbe254e57074)
 
 ### 🛠 Breaking changes
