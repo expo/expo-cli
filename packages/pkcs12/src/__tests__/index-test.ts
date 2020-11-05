@@ -1,6 +1,8 @@
 import {
+  getAsn1Hash,
   getCertificateFingerprint,
   getFormattedSerialNumber,
+  getX509Asn1ByFriendlyName,
   getX509Certificate,
   getX509CertificateByFriendlyName,
   parsePKCS12,
@@ -27,6 +29,7 @@ const keystoreP12 = {
     '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',
   password: 'password',
   alias: 'test-alias',
+  // Expected fingerprints derived from: keytool -list -v -keystore [keystore-path]
   md5Fingerprint: 'ccd9d0fd20a862b1e67ea838c99dd0c5',
   sha1Fingerprint: '2ef9743a1bf12189af5503787b54bfd3254b46a8',
   sha256Fingerprint: 'eecdd35e90bb272d52ec261b4063c5d586980795452340525f9c8cc56db53e2b',
@@ -39,7 +42,30 @@ const uppercaseAliasKeystoreP12 = {
   password: 'password',
   alias: 'UPPERCASE',
 };
-describe('reading PKCS#12 files', () => {
+
+/**
+ * Generate DSA certificate:
+ * openssl dsaparam -out params.pem 3072
+ * openssl gendsa -out key.pem params.pem
+ * openssl req -new -key key.pem -out req.pem
+ * openssl x509 -req -in req.pem -signkey key.pem -out certificate.cer
+ *
+ * Package into a PKCS#12 keystore:
+ * keytool -import -alias test -file certificate.cer -keystore dsapkcs.keystore -storetype pkcs12
+ *
+ * node-forge only supports RSA certificates, so this certificate will be 'unknown'
+ */
+const dsaKeystoreP12 = {
+  base64EncodedP12:
+    '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',
+  password: 'password',
+  alias: 'test',
+  // Expected fingerprints derived from: keytool -list -v -keystore [keystore-path]
+  md5Fingerprint: 'f1371f2a5cd89d813882aebce8f609a4',
+  sha1Fingerprint: '10c530286a74e0c2e6e6ecf6845edbf686da2aee',
+  sha256Fingerprint: '822007287d1c8759e5900c34337339bc88a0112feecb4e01e6c74adc830ce3c5',
+};
+describe('computing fingerprints of X.509 certificates', () => {
   it('computes fingerprints of certificates in conventional p12 files', async () => {
     const {
       base64EncodedP12,
@@ -86,6 +112,58 @@ describe('reading PKCS#12 files', () => {
     expect(md5Fingerprint).toEqual(expectedMd5Fingerprint);
     expect(sha1Fingerprint).toEqual(expectedSha1Fingerprint);
     expect(sha256Fingerprint).toEqual(expectedSha256Fingerprint);
+  });
+});
+describe('computing fingerprints from the ASN.1 representation of an X.509 certificate', () => {
+  it.each([
+    ['supported RSA certificates', keystoreP12],
+    ['unsupported DSA certificates', dsaKeystoreP12],
+  ])(
+    'computes fingerprints of %s using their ASN.1 values in PKCS #12 keystores',
+    async (_description, keystoreP12) => {
+      const {
+        base64EncodedP12,
+        password,
+        alias,
+        md5Fingerprint: expectedMd5Fingerprint,
+        sha1Fingerprint: expectedSha1Fingerprint,
+        sha256Fingerprint: expectedSha256Fingerprint,
+      } = keystoreP12;
+      const p12 = parsePKCS12(base64EncodedP12, password);
+      const asn1 = getX509Asn1ByFriendlyName(p12, alias);
+      const md5Fingerprint = getAsn1Hash(asn1, {
+        hashAlgorithm: 'md5',
+      });
+      const sha1Fingerprint = getAsn1Hash(asn1, {
+        hashAlgorithm: 'sha1',
+      });
+      const sha256Fingerprint = getAsn1Hash(asn1, {
+        hashAlgorithm: 'sha256',
+      });
+      expect(md5Fingerprint).toEqual(expectedMd5Fingerprint);
+      expect(sha1Fingerprint).toEqual(expectedSha1Fingerprint);
+      expect(sha256Fingerprint).toEqual(expectedSha256Fingerprint);
+    }
+  );
+});
+describe('getting the ASN.1 representation of a X.509 certificate from PKCS#12 files', () => {
+  it.each([
+    ['supported RSA certificates', keystoreP12],
+    ['unsupported DSA certificates', dsaKeystoreP12],
+  ])('gets the ASN.1 value of %s from PKCS #12 keystores', async (_description, keystoreP12) => {
+    const { base64EncodedP12, password, alias } = keystoreP12;
+    const p12 = parsePKCS12(base64EncodedP12, password);
+    const asn1 = getX509Asn1ByFriendlyName(p12, alias);
+    expect(asn1).toMatchSnapshot();
+  });
+});
+describe('reading X.509 certificates from PKCS#12 files', () => {
+  it('is unable to parse a DSA X.509 certificate (limitation)', async () => {
+    const { base64EncodedP12, password, alias } = dsaKeystoreP12;
+    const p12 = parsePKCS12(base64EncodedP12, password);
+    expect(() => {
+      getX509CertificateByFriendlyName(p12, alias);
+    }).toThrowError();
   });
   it('reads X.509 certificate serial numbers from conventional p12 files', async () => {
     const { base64EncodedP12, password, serialNumber: expectedSerialNumber } = conventionalP12;
