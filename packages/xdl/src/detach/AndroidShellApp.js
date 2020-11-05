@@ -467,7 +467,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   const splashBackgroundColor = getSplashScreenBackgroundColor(manifest);
   const updatesDisabled = manifest.updates && manifest.updates.enabled === false;
   const updatesCheckAutomaticallyDisabled =
-    manifest.updates && manifest.checkAutomatically === 'ON_ERROR_RECOVERY';
+    manifest.updates && manifest.updates.checkAutomatically === 'ON_ERROR_RECOVERY';
   const fallbackToCacheTimeout = manifest.updates && manifest.updates.fallbackToCacheTimeout;
 
   // Clean build directories
