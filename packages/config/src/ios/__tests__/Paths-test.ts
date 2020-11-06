@@ -4,7 +4,7 @@ import * as path from 'path';
 
 import { UnexpectedError } from '../../Errors';
 import { addWarningIOS } from '../../WarningAggregator';
-import { getAppDelegate, getXcodeProjectPath } from '../Paths';
+import { getAllInfoPlistPaths, getAppDelegate, getXcodeProjectPath } from '../Paths';
 const actualFs = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
@@ -159,5 +159,31 @@ describe(getAppDelegate, () => {
       'paths-app-delegate',
       'Found multiple AppDelegate file paths, using "ios/testproject/AppDelegate.m". Ignored paths: ["ios/testproject/AppDelegate.swift"]'
     );
+  });
+});
+
+describe(getAllInfoPlistPaths, () => {
+  beforeAll(async () => {
+    const project = {
+      'ExampleE2E-tvOS/Info.plist': '',
+      'ExampleE2E/Info.plist': '',
+      'ExampleE2E-tvOSTests/Info.plist': '',
+      'ExampleE2ETests/Info.plist': '',
+    };
+    vol.fromJSON(project, path.join('/app', 'ios'));
+    vol.fromJSON(project, '/app');
+  });
+
+  afterAll(() => {
+    vol.reset();
+  });
+
+  it(`gets paths in order`, () => {
+    expect(getAllInfoPlistPaths('/app')).toStrictEqual([
+      '/app/ios/ExampleE2E/Info.plist',
+      '/app/ios/ExampleE2E-tvOS/Info.plist',
+      '/app/ios/ExampleE2ETests/Info.plist',
+      '/app/ios/ExampleE2E-tvOSTests/Info.plist',
+    ]);
   });
 });

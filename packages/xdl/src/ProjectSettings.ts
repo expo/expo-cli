@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 export type ProjectSettings = {
+  scheme: string | null;
   hostType: 'localhost' | 'lan' | 'tunnel';
   lanType: 'ip' | 'hostname';
   dev: boolean;
@@ -15,6 +16,7 @@ export type Settings = ProjectSettings;
 
 const projectSettingsFile = 'settings.json';
 const projectSettingsDefaults: ProjectSettings = {
+  scheme: null,
   hostType: 'lan',
   lanType: 'ip',
   dev: true,

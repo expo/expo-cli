@@ -203,6 +203,8 @@ export async function constructWebAppUrlAsync(
 
 function assertValidOptions(opts: Partial<URLOptions>): URLOptions {
   const schema = joi.object().keys({
+    scheme: joi.string().optional().allow(null),
+    // Replaced by `scheme`
     urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol'),
     lanType: joi.any().valid('ip', 'hostname'),
     hostType: joi.any().valid('localhost', 'lan', 'tunnel'),
@@ -238,8 +240,11 @@ async function ensureOptionsAsync(
 
 function resolveProtocol(
   projectRoot: string,
-  { urlType }: Pick<URLOptions, 'urlType'>
+  { urlType, ...options }: Pick<URLOptions, 'urlType' | 'scheme'>
 ): string | null {
+  if (options.scheme) {
+    return options.scheme;
+  }
   if (urlType === 'http') {
     return 'http';
   } else if (urlType === 'no-protocol') {

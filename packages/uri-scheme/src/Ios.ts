@@ -5,12 +5,23 @@ import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import fs from 'fs';
 import { sync as globSync } from 'glob';
+import * as path from 'path';
 
 import { Options } from './Options';
 
+const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
+
 export function isAvailable(projectRoot: string): boolean {
-  const reactNativeIos = globSync('ios/*.xcodeproj', { absolute: true, cwd: projectRoot });
-  const currentIos = globSync('*.xcodeproj', { absolute: true, cwd: projectRoot });
+  const reactNativeIos = globSync('ios/*.xcodeproj', {
+    ignore: ignoredPaths,
+    absolute: true,
+    cwd: projectRoot,
+  });
+  const currentIos = globSync('*.xcodeproj', {
+    ignore: ignoredPaths,
+    absolute: true,
+    cwd: projectRoot,
+  });
   return !!currentIos.length || !!reactNativeIos.length;
 }
 
@@ -91,14 +102,20 @@ export async function getAsync({
   return schemes;
 }
 
+function getInfoPlistsInDirectory(projectRoot: string): string[] {
+  // longer name means more suffixes, we want the shortest possible one to be first.
+  return globSync('*/Info.plist', { ignore: ignoredPaths, absolute: true, cwd: projectRoot }).sort(
+    (a, b) => a.length - b.length
+  );
+}
+
 export function getConfigPath(projectRoot: string): string {
   // TODO: Figure out how to avoid using the Tests info.plist
-
-  const rnInfoPlistPaths = globSync('ios/*/Info.plist', { absolute: true, cwd: projectRoot });
+  const rnInfoPlistPaths = getInfoPlistsInDirectory(path.join(projectRoot, 'ios'));
   if (rnInfoPlistPaths.length) {
     return rnInfoPlistPaths[0];
   }
-  const infoPlistPaths = globSync('*/Info.plist', { absolute: true, cwd: projectRoot });
+  const infoPlistPaths = getInfoPlistsInDirectory(projectRoot);
   return infoPlistPaths[0];
 }
 
