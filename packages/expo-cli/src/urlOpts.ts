@@ -5,8 +5,10 @@ import qrcodeTerminal from 'qrcode-terminal';
 
 import CommandError from './CommandError';
 import log from './log';
+import { getDevClientSchemeAsync } from './schemes';
 
 export type URLOptions = {
+  devClient?: boolean;
   android?: boolean;
   ios?: boolean;
   web?: boolean;
@@ -18,6 +20,7 @@ export type URLOptions = {
 
 function addOptions(program: Command) {
   program
+    .option('--dev-client', 'Starts the bundler for use with the Expo dev client')
     .option('-a, --android', 'Opens your app in Expo client on a connected Android device')
     .option(
       '-i, --ios',
@@ -59,6 +62,11 @@ async function optsAsync(projectDir: string, options: any) {
     opts.hostType = 'lan';
   } else if (options.localhost) {
     opts.hostType = 'localhost';
+  }
+
+  if (options.devClient) {
+    const scheme = await getDevClientSchemeAsync(projectDir);
+    // TODO: Use scheme, pending https://github.com/expo/expo-cli/pull/2860
   }
 
   await ProjectSettings.setAsync(projectDir, opts);
