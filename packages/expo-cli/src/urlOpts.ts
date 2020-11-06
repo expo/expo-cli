@@ -67,23 +67,26 @@ async function optsAsync(projectDir: string, options: any) {
     opts.hostType = 'localhost';
   }
 
-  if (opts.devClient) {
+  // Prevent using --dev-client in a managed app.
+  if (options.devClient) {
     const target = process.env.EXPO_TARGET ?? getDefaultTarget(projectDir);
     if (target !== 'bare') {
       log.warn(
-        `${log.chalk.cyan(
+        `\nOption ${log.chalk.cyan(
           '--dev-client'
         )} can only be used in bare workflow apps. Run ${log.chalk.cyan(
           'expo eject'
-        )} and try again`
+        )} and try again\n`
       );
       throw new AbortCommandError();
     }
   }
 
   if (typeof options.scheme === 'string') {
+    // Use the custom scheme
     opts.scheme = options.scheme ?? null;
   } else if (options.devClient) {
+    // Attempt to find the scheme or warn the user how to setup a custom scheme
     opts.scheme = await getDevClientSchemeAsync(projectDir);
   } else {
     // Ensure this is reset when users don't use `--scheme` or `--dev-client`
