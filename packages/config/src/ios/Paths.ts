@@ -116,7 +116,10 @@ export function getAllInfoPlistPaths(projectRoot: string): string[] {
     absolute: true,
     cwd: projectRoot,
     ignore: ignoredPaths,
-  });
+  }).sort(
+    // longer name means more suffixes, we want the shortest possible one to be first.
+    (a, b) => a.length - b.length
+  );
 
   if (!paths.length) {
     throw new UnexpectedError(
