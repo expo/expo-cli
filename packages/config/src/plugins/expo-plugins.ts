@@ -89,11 +89,7 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.Name.withName,
     AndroidConfig.Facebook.withFacebookAppIdString,
 
-    // Dangerous
-
-    // If we renamed the package, we should also move it around and rename it in source files
-    AndroidConfig.Package.withPackageRefactor,
-
+    // Dangerous -- these plugins run in reverse order.
     AndroidConfig.GoogleServices.withGoogleServicesFile,
 
     // Modify colors.xml and styles.xml
@@ -104,5 +100,9 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
 
     AndroidConfig.Icon.withIcons,
     AndroidConfig.SplashScreen.withSplashScreen,
+
+    // If we renamed the package, we should also move it around and rename it in source files
+    // Added last to ensure this plugin runs first. Out of tree solutions will mistakenly resolve the package incorrectly otherwise.
+    AndroidConfig.Package.withPackageRefactor,
   ]);
 };
