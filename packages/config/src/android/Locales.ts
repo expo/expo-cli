@@ -12,7 +12,7 @@ type ResolvedLocalesJson = Record<string, LocaleJson>;
 type ExpoConfigLocales = NonNullable<ExpoConfig['android']>['locales'];
 
 export function getLocales(config: ExpoConfig): Record<string, string | LocaleJson> | null {
-  return config.android.locales ?? null;
+  return (config.android && config.android.locales) ?? null;
 }
 
 export async function setLocalesAsync(
