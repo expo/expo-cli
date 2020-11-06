@@ -4,6 +4,7 @@ import {
   ExpoConfig,
   getConfig,
   getDefaultTarget,
+  getPublicExpoConfig,
   Hook,
   HookArguments,
   HookType,
@@ -388,7 +389,7 @@ export async function exportForAppHosting(
   // save the assets
   // Get project config
   const publishOptions = options.publishOptions || {};
-  const { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
+  const { exp, pkg, hooks } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
   const { assets } = await exportAssetsAsync({
     projectRoot,
     exp,
@@ -416,8 +417,6 @@ export async function exportForAppHosting(
   }
 
   // Delete keys that are normally deleted in the publish process
-  const { hooks } = exp;
-  delete exp.hooks;
   const validPostExportHooks: LoadedHook[] = prepareHooks(hooks, 'postExport', projectRoot, exp);
 
   // Add assetUrl to manifest
@@ -626,11 +625,9 @@ export async function publishAsync(
   }
 
   // Get project config
-  const { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, options);
+  const { exp, pkg, hooks } = await _getPublishExpConfigAsync(projectRoot, options);
 
   // TODO: refactor this out to a function, throw error if length doesn't match
-  const { hooks } = exp;
-  delete exp.hooks;
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
   const bundles = await buildPublishBundlesAsync(projectRoot, options);
   const androidBundle = bundles.android.code;
@@ -808,6 +805,7 @@ async function _getPublishExpConfigAsync(
 ): Promise<{
   exp: ExpoAppManifest;
   pkg: PackageJSONConfig;
+  hooks: ExpoConfig['hooks'];
 }> {
   if (options.releaseChannel != null && typeof options.releaseChannel !== 'string') {
     throw new XDLError('INVALID_OPTIONS', 'releaseChannel must be a string');
@@ -815,15 +813,10 @@ async function _getPublishExpConfigAsync(
   options.releaseChannel = options.releaseChannel || 'default';
 
   // Verify that exp/app.json and package.json exist
-  const { exp, pkg } = getConfig(projectRoot);
+  const { exp: privateExp, pkg } = getConfig(projectRoot);
+  const { hooks } = privateExp;
 
-  if (exp.android?.config) {
-    delete exp.android.config;
-  }
-
-  if (exp.ios?.config) {
-    delete exp.ios.config;
-  }
+  const exp = getPublicExpoConfig(projectRoot);
 
   const { sdkVersion } = exp;
 
@@ -838,6 +831,7 @@ async function _getPublishExpConfigAsync(
       sdkVersion: sdkVersion!,
     },
     pkg,
+    hooks,
   };
 }
 
