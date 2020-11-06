@@ -10,6 +10,7 @@ export type URLOptions = {
   android?: boolean;
   ios?: boolean;
   web?: boolean;
+  scheme?: string;
   host?: 'lan' | 'tunnel' | 'localhost';
   tunnel?: boolean;
   lan?: boolean;
@@ -18,6 +19,7 @@ export type URLOptions = {
 
 function addOptions(program: Command) {
   program
+    .option('--scheme <scheme>', 'Custom URI protocol to use with a dev client')
     .option('-a, --android', 'Opens your app in Expo client on a connected Android device')
     .option(
       '-i, --ios',
@@ -59,6 +61,13 @@ async function optsAsync(projectDir: string, options: any) {
     opts.hostType = 'lan';
   } else if (options.localhost) {
     opts.hostType = 'localhost';
+  }
+
+  if (typeof options.scheme === 'string') {
+    opts.scheme = options.scheme ?? null;
+  } else {
+    // Ensure this is reset when users don't use `--scheme`
+    opts.scheme = null;
   }
 
   await ProjectSettings.setAsync(projectDir, opts);
