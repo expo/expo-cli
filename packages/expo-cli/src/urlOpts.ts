@@ -69,8 +69,8 @@ async function optsAsync(projectDir: string, options: any) {
 
   // Prevent using --dev-client in a managed app.
   if (options.devClient) {
-    const target = process.env.EXPO_TARGET ?? getDefaultTarget(projectDir);
-    if (target !== 'bare') {
+    const defaultTarget = getDefaultTarget(projectDir);
+    if (defaultTarget !== 'bare') {
       log.warn(
         `\nOption ${log.chalk.cyan(
           '--dev-client'

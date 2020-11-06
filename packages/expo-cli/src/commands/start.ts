@@ -138,6 +138,10 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
     startOpts.maxWorkers = options.maxWorkers;
   }
 
+  if (options.devClient) {
+    startOpts.target = 'bare';
+  }
+
   return startOpts;
 }
 
