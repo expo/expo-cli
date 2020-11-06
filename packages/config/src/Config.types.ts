@@ -60,6 +60,11 @@ export type HookArguments = {
   log: (msg: any) => void;
 };
 
+export type PublicExpoConfig = Omit<ExpoConfig, 'hooks' | 'ios' | 'android'> & {
+  ios?: Omit<ExpoConfig['ios'], 'config'>;
+  android?: Omit<ExpoConfig['android'], 'config'>;
+};
+
 export type ExpoAppManifest = ExpoConfig & {
   sdkVersion: string;
   bundledAssets?: string[];

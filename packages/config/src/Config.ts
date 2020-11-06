@@ -15,6 +15,7 @@ import {
   Platform,
   ProjectConfig,
   ProjectTarget,
+  PublicExpoConfig,
   WriteConfigOptions,
 } from './Config.types';
 import { ConfigError } from './Errors';
@@ -147,6 +148,28 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
 
   // No app.config.js but json or no config
   return fillAndReturnConfig(staticConfig || {}, null);
+}
+
+/**
+ * Evaluate and return the public-facing portions of the Expo config for a project.
+ * The resulting config should be suitable for hosting or embedding in a publicly readable location.
+ *
+ * @param projectRoot the root folder containing all of your application code
+ * @param options enforce criteria for a project config
+ */
+export function getPublicExpoConfig(
+  projectRoot: string,
+  options: GetConfigOptions = {}
+): PublicExpoConfig {
+  const { exp } = getConfig(projectRoot, options);
+  delete exp.hooks;
+  if (exp.ios?.config) {
+    delete exp.ios.config;
+  }
+  if (exp.android?.config) {
+    delete exp.android.config;
+  }
+  return exp;
 }
 
 export function getPackageJson(
