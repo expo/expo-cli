@@ -76,22 +76,6 @@ describe('getConfig', () => {
       // @ts-ignore: foo property is not defined
       expect(exp.foo).toBe('bar');
     });
-    xit('parses a yaml config', () => {
-      const projectRoot = path.resolve(__dirname, './fixtures/language-support/yaml');
-      const { exp } = getConfig(projectRoot, {
-        skipSDKVersionRequirement: true,
-      });
-      // @ts-ignore: foo property is not defined
-      expect(exp.foo).toBe('bar');
-    });
-    xit('parses a toml config', () => {
-      const projectRoot = path.resolve(__dirname, './fixtures/language-support/toml');
-      const { exp } = getConfig(projectRoot, {
-        skipSDKVersionRequirement: true,
-      });
-      // @ts-ignore: foo property is not defined
-      expect(exp.foo).toBe('bar');
-    });
   });
 
   function resetAllCustomFixtureLocations() {
