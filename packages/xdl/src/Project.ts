@@ -4,14 +4,12 @@ import {
   ExpoConfig,
   getConfig,
   getDefaultTarget,
-  getPublicExpoConfig,
   Hook,
   HookArguments,
   HookType,
   PackageJSONConfig,
   Platform,
   ProjectTarget,
-  PublicExpoConfig,
   readExpRcAsync,
   resolveModule,
 } from '@expo/config';
@@ -288,7 +286,7 @@ function prepareHooks(
   hooks: ExpoConfig['hooks'],
   hookType: HookType,
   projectRoot: string,
-  exp: PublicExpoConfig
+  exp: ExpoConfig
 ) {
   const validHooks: LoadedHook[] = [];
 
@@ -777,7 +775,7 @@ async function _uploadArtifactsAsync({
   options,
   pkg,
 }: {
-  exp: PublicExpoConfig;
+  exp: ExpoConfig;
   iosBundle: string;
   androidBundle: string;
   options: PublishOptions;
@@ -813,10 +811,9 @@ async function _getPublishExpConfigAsync(
   options.releaseChannel = options.releaseChannel || 'default';
 
   // Verify that exp/app.json and package.json exist
-  const { exp: privateExp, pkg } = getConfig(projectRoot);
+  const { exp: privateExp } = getConfig(projectRoot);
   const { hooks } = privateExp;
-
-  const exp = getPublicExpoConfig(projectRoot);
+  const { exp, pkg } = getConfig(projectRoot, { isPublicConfig: true });
 
   const { sdkVersion } = exp;
 
