@@ -556,7 +556,7 @@ function isDynamicFilePath(filePath: string): boolean {
  */
 export function getProjectConfigDescription(
   projectRoot: string,
-  projectConfig: ProjectConfig
+  projectConfig: Partial<ProjectConfig>
 ): string | null {
   if (projectConfig.dynamicConfigPath) {
     const relativeDynamicConfigPath = path.relative(projectRoot, projectConfig.dynamicConfigPath);
