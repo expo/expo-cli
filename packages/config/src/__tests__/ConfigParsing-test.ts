@@ -22,6 +22,7 @@ describe('getConfig', () => {
       const { exp } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
+      // @ts-ignore: foo property is not defined
       expect(exp.foo).toBe('bar+value');
       expect(exp.name).toBe('rewrote+ts-config-test');
     });
@@ -34,6 +35,7 @@ describe('getConfig', () => {
       expect(dynamicConfigPath).toBe(path.join(projectRoot, 'app.config.js'));
       expect(staticConfigPath).toBe(path.join(projectRoot, 'app.json'));
 
+      // @ts-ignore: foo property is not defined
       expect(exp.foo).toBe('bar');
       // Ensure the config is passed the package.json values
       expect(exp.name).toBe('js-config-test+config');
@@ -47,6 +49,7 @@ describe('getConfig', () => {
       const { exp, staticConfigPath } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
+      // @ts-ignore: foo property is not defined
       expect(exp.foo).toBe('bar');
       expect(exp.name).toBe('js-config-test+config-default');
       // Static is undefined when a custom path is a dynamic config.
@@ -59,6 +62,7 @@ describe('getConfig', () => {
       const { exp } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
+      // @ts-ignore: foo property is not defined
       expect(exp.foo).toBe('bar');
       expect(exp.name).toBe('cool+export-json_app.config');
     });
@@ -69,6 +73,7 @@ describe('getConfig', () => {
       const { exp } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
+      // @ts-ignore: foo property is not defined
       expect(exp.foo).toBe('bar');
     });
     xit('parses a yaml config', () => {
@@ -76,6 +81,7 @@ describe('getConfig', () => {
       const { exp } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
+      // @ts-ignore: foo property is not defined
       expect(exp.foo).toBe('bar');
     });
     xit('parses a toml config', () => {
@@ -83,6 +89,7 @@ describe('getConfig', () => {
       const { exp } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
+      // @ts-ignore: foo property is not defined
       expect(exp.foo).toBe('bar');
     });
   });
@@ -114,6 +121,7 @@ describe('getConfig', () => {
 
       // Ensure the expo object is reduced out. See #1542.
       // Also test that a nested expo object isn't recursively reduced.
+      // @ts-ignore: expo property is not defined
       expect(exp.expo).toStrictEqual({ name: 'app-staging-expo-expo-name' });
       // name is read from the correct config at the custom location.
       expect(exp.name).toBe('app-staging-expo-name');
@@ -133,6 +141,7 @@ describe('getConfig', () => {
       // name is read from the default config.
       expect(baseExp.name).toBe('app-expo-name');
       // A base app.json is parsed differently, ensure the app.json parsing doesn't accidentally reduce the "expo" object multiple times.
+      // @ts-ignore: expo property is not defined
       expect(baseExp.expo).toStrictEqual({ name: 'app-expo-expo-name' });
     });
   });
