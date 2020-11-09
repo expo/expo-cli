@@ -4,11 +4,6 @@ import * as path from 'path';
 
 import { getConfig, resetCustomConfigPaths, setCustomConfigPath } from '../Config';
 
-const fixtures = {
-  customLocationJson: 'custom-location-json',
-  syntaxError: 'syntax-error',
-};
-
 const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
@@ -190,7 +185,7 @@ describe(getConfig, () => {
 
     // Test that setCustomConfigPath works to read custom json configs.
     it('uses a custom location', () => {
-      const projectRoot = fixtures.customLocationJson;
+      const projectRoot = 'custom-location-json';
       const customConfigPath = path.resolve(projectRoot, 'src/app.staging.json');
       setCustomConfigPath(projectRoot, customConfigPath);
 
