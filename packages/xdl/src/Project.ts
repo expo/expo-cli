@@ -11,6 +11,7 @@ import {
   PackageJSONConfig,
   Platform,
   ProjectTarget,
+  PublicExpoConfig,
   readExpRcAsync,
   resolveModule,
 } from '@expo/config';
@@ -287,7 +288,7 @@ function prepareHooks(
   hooks: ExpoConfig['hooks'],
   hookType: HookType,
   projectRoot: string,
-  exp: ExpoConfig
+  exp: PublicExpoConfig
 ) {
   const validHooks: LoadedHook[] = [];
 
@@ -777,7 +778,7 @@ async function _uploadArtifactsAsync({
   options,
   pkg,
 }: {
-  exp: ExpoConfig;
+  exp: PublicExpoConfig;
   iosBundle: string;
   androidBundle: string;
   options: PublishOptions;
