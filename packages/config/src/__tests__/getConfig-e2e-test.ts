@@ -9,7 +9,7 @@ const mockConfigContext = {} as any;
 describe(getDynamicConfig, () => {
   describe('process.cwd in a child process', () => {
     const originalCwd = process.cwd();
-    const projectRoot = join(__dirname, 'fixtures/behavior/dynamic-cwd');
+    const projectRoot = join(__dirname, 'fixtures/dynamic-cwd');
 
     beforeEach(() => {
       process.chdir(__dirname);
@@ -38,7 +38,7 @@ describe(getDynamicConfig, () => {
 
 describe(getConfig, () => {
   it('parses a js config with import', () => {
-    const projectRoot = resolve(__dirname, './fixtures/language-support/js');
+    const projectRoot = resolve(__dirname, './fixtures/require-file');
     const configPath = resolve(projectRoot, 'with-import_app.config.js');
 
     setCustomConfigPath(projectRoot, configPath);

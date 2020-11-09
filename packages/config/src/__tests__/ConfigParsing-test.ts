@@ -18,24 +18,16 @@ describe(getConfig, () => {
           if (config.slug) config.slug += '+config';
           return config;
         };`,
-        'app.json': JSON.stringify(
-          {
-            expo: {
-              foo: 'invalid',
-              slug: 'someslug',
-            },
+        'app.json': JSON.stringify({
+          expo: {
+            foo: 'invalid',
+            slug: 'someslug',
           },
-          null,
-          2
-        ),
-        'package.json': JSON.stringify(
-          {
-            name: 'js-config-test',
-            version: '1.0.0',
-          },
-          null,
-          2
-        ),
+        }),
+        'package.json': JSON.stringify({
+          name: 'js-config-test',
+          version: '1.0.0',
+        }),
         'with-default_app.config.js': `export default function ({ config }) {
           config.foo = 'bar';
           if (config.name) config.name += '+config-default';
@@ -57,7 +49,7 @@ describe(getConfig, () => {
     vol.fromJSON(
       {
         'app.config.ts': fsReal.readFileSync(
-          path.join(__dirname, './fixtures/language-support/ts/app.config.ts'),
+          path.join(__dirname, './fixtures/ts/app.config.ts'),
           'utf8'
         ),
         'package.json': JSON.stringify(
