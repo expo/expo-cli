@@ -3,7 +3,7 @@ import { ensureSlash, getEntryPointWithExtensions } from '../paths';
 // TODO: Bacon: Add test for resolving entry point
 // TODO: Bacon: Add test for custom config paths
 
-describe('ensureSlash', () => {
+describe(ensureSlash, () => {
   it(`ensures the ending slash is added`, () => {
     expect(ensureSlash('', true)).toBe('/');
     expect(ensureSlash('/', true)).toBe('/');
@@ -14,7 +14,7 @@ describe('ensureSlash', () => {
   });
 });
 
-describe('getEntryPointWithExtensions', () => {
+describe(getEntryPointWithExtensions, () => {
   // Allow legacy versions to continue to use the getEntry without the last argument 'mode'
   it(`doesn't throw when mode isn't defined`, () => {
     // Test that it throws the error after the config error.
