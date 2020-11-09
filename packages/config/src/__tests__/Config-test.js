@@ -1,11 +1,6 @@
 import { vol } from 'memfs';
 
-import {
-  getConfig,
-  getProjectConfigDescription,
-  getPublicExpoConfig,
-  readConfigJson,
-} from '../Config';
+import { getConfig, getProjectConfigDescription, readConfigJson } from '../Config';
 
 jest.mock('fs');
 jest.mock('resolve-from');
@@ -42,7 +37,7 @@ describe(`getProjectConfigDescription`, () => {
   });
 });
 
-describe('getPublicExpoConfig', () => {
+describe('getConfig with omitPrivateExpoConfig', () => {
   const appJsonWithPrivateData = {
     name: 'testing 123',
     version: '0.1.0',
@@ -100,7 +95,7 @@ describe('getPublicExpoConfig', () => {
   afterAll(() => vol.reset());
 
   it('removes only private data from the config', () => {
-    const exp = getPublicExpoConfig('/private-data');
+    const { exp } = getConfig('/private-data', { omitPrivateExpoConfig: true });
 
     expect(exp.hooks).toBeUndefined();
 
@@ -114,7 +109,7 @@ describe('getPublicExpoConfig', () => {
   });
 
   it('does not remove properties from a config with no private data', () => {
-    const exp = getPublicExpoConfig('/no-private-data');
+    const { exp } = getConfig('/no-private-data', { omitPrivateExpoConfig: true });
     expect(exp).toMatchObject(appJsonNoPrivateData);
   });
 });

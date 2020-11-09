@@ -15,7 +15,6 @@ import {
   Platform,
   ProjectConfig,
   ProjectTarget,
-  PublicExpoConfig,
   WriteConfigOptions,
 } from './Config.types';
 import { ConfigError } from './Errors';
@@ -75,6 +74,8 @@ export function getConfigWithMods(projectRoot: string, options?: GetConfigOption
  * If a function is exported from the `app.config.js` then a partial config will be passed as an argument.
  * The partial config is composed from any existing app.json, and certain fields from the `package.json` like name and description.
  *
+ * If options.omitPrivateExpoConfig is true, the Expo config will include only public-facing portions.
+ * The resulting config should be suitable for hosting or embedding in a publicly readable location.
  *
  * **Example**
  * ```js
@@ -109,7 +110,7 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
   );
 
   function fillAndReturnConfig(config: SplitConfigs, dynamicConfigObjectType: string | null) {
-    return {
+    const configWithDefaultValues = {
       ...ensureConfigHasDefaultValues(
         projectRoot,
         config.expo,
@@ -122,6 +123,20 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
       dynamicConfigPath: paths.dynamicConfigPath,
       staticConfigPath: paths.staticConfigPath,
     };
+
+    if (options.omitPrivateExpoConfig) {
+      if (configWithDefaultValues.exp.hooks) {
+        delete configWithDefaultValues.exp.hooks;
+      }
+      if (configWithDefaultValues.exp.ios?.config) {
+        delete configWithDefaultValues.exp.ios.config;
+      }
+      if (configWithDefaultValues.exp.android?.config) {
+        delete configWithDefaultValues.exp.android.config;
+      }
+    }
+
+    return configWithDefaultValues;
   }
 
   // Fill in the static config
@@ -148,28 +163,6 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
 
   // No app.config.js but json or no config
   return fillAndReturnConfig(staticConfig || {}, null);
-}
-
-/**
- * Evaluate and return the public-facing portions of the Expo config for a project.
- * The resulting config should be suitable for hosting or embedding in a publicly readable location.
- *
- * @param projectRoot the root folder containing all of your application code
- * @param options enforce criteria for a project config
- */
-export function getPublicExpoConfig(
-  projectRoot: string,
-  options: GetConfigOptions = {}
-): PublicExpoConfig {
-  const { exp } = getConfig(projectRoot, options);
-  delete exp.hooks;
-  if (exp.ios?.config) {
-    delete exp.ios.config;
-  }
-  if (exp.android?.config) {
-    delete exp.android.config;
-  }
-  return exp;
 }
 
 export function getPackageJson(
