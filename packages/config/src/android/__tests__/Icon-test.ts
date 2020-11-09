@@ -71,7 +71,7 @@ describe('Android Icon', () => {
 });
 
 describe('e2e: ONLY android legacy icon', () => {
-  const legacyIconPath = path.resolve(__dirname, './fixtures/adaptiveIconForeground.png');
+  const legacyIconPath = path.resolve(__dirname, './fixtures/icon.png');
   const projectRoot = '/app';
   const icon = require('../Icon');
   const spyOnConfigureAdaptiveIconAsync = jest.spyOn(icon, 'configureAdaptiveIconAsync');
@@ -116,14 +116,8 @@ describe('e2e: ONLY android legacy icon', () => {
 });
 
 describe('e2e: android adaptive icon', () => {
-  const adaptiveIconForegroundPath = path.resolve(
-    __dirname,
-    './fixtures/adaptiveIconForeground.png'
-  );
-  const adaptiveIconBackgroundPath = path.resolve(
-    __dirname,
-    './fixtures/adaptiveIconBackground.png'
-  );
+  const adaptiveIconForegroundPath = path.resolve(__dirname, './fixtures/icon.png');
+  const adaptiveIconBackgroundPath = path.resolve(__dirname, './fixtures/icon.png');
   const projectRoot = '/app';
 
   beforeAll(async () => {
