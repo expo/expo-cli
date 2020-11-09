@@ -37,7 +37,7 @@ describe(`getProjectConfigDescription`, () => {
   });
 });
 
-describe('getConfig with omitPrivateExpoConfig', () => {
+describe('getConfig public config', () => {
   const appJsonWithPrivateData = {
     name: 'testing 123',
     version: '0.1.0',
@@ -95,7 +95,7 @@ describe('getConfig with omitPrivateExpoConfig', () => {
   afterAll(() => vol.reset());
 
   it('removes only private data from the config', () => {
-    const { exp } = getConfig('/private-data', { omitPrivateExpoConfig: true });
+    const { exp } = getConfig('/private-data', { isPublicConfig: true });
 
     expect(exp.hooks).toBeUndefined();
 
@@ -109,7 +109,7 @@ describe('getConfig with omitPrivateExpoConfig', () => {
   });
 
   it('does not remove properties from a config with no private data', () => {
-    const { exp } = getConfig('/no-private-data', { omitPrivateExpoConfig: true });
+    const { exp } = getConfig('/no-private-data', { isPublicConfig: true });
     expect(exp).toMatchObject(appJsonNoPrivateData);
   });
 });
