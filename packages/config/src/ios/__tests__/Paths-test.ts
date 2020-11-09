@@ -14,7 +14,6 @@ jest.mock('../../WarningAggregator', () => ({
 }));
 
 afterAll(() => {
-  jest.unmock('fs');
   jest.unmock('../../WarningAggregator');
 });
 

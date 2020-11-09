@@ -17,7 +17,6 @@ jest.mock('@expo/image-utils', () => ({
 
 afterAll(() => {
   jest.unmock('@expo/image-utils');
-  jest.unmock('fs');
 });
 
 describe('iOS Icons', () => {
