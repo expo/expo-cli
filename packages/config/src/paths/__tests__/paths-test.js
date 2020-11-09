@@ -25,5 +25,4 @@ describe('getEntryPointWithExtensions', () => {
   });
 });
 
-// getAbsolutePathWithProjectRoot;
 // getEntryPoint;
