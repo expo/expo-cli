@@ -3,15 +3,18 @@ import { join } from 'path';
 import { getConfigFilePaths, modifyConfigAsync } from '../Config';
 import { getDynamicConfig, getStaticConfig } from '../getConfig';
 
+const mockConfigContext = {} as any;
+
 describe('modifyConfigAsync', () => {
   it(`can write to a static only config`, async () => {
     const { type, config } = await modifyConfigAsync(
       join(__dirname, 'fixtures/behavior/static-override'),
-      { foo: 'bar' },
+      { foo: 'bar' } as any,
       { skipSDKVersionRequirement: true },
       { dryRun: true }
     );
     expect(type).toBe('success');
+    // @ts-ignore: foo property is not defined
     expect(config.foo).toBe('bar');
   });
   it(`cannot write to a dynamic config`, async () => {
@@ -41,7 +44,7 @@ describe('getDynamicConfig', () => {
     expect(
       getDynamicConfig(
         join(__dirname, 'fixtures/behavior/dynamic-export-types/exports-function.app.config.js'),
-        {}
+        mockConfigContext
       ).exportedObjectType
     ).toBe('function');
   });
@@ -49,7 +52,7 @@ describe('getDynamicConfig', () => {
     expect(
       getDynamicConfig(
         join(__dirname, 'fixtures/behavior/dynamic-export-types/exports-object.app.config.js'),
-        {}
+        mockConfigContext
       ).exportedObjectType
     ).toBe('object');
   });
@@ -58,7 +61,7 @@ describe('getDynamicConfig', () => {
   // config is used instead of defaulting to a valid substitution.
   it(`throws a useful error for dynamic configs with a syntax error`, () => {
     const paths = getConfigFilePaths(join(__dirname, 'fixtures/behavior/syntax-error'));
-    expect(() => getDynamicConfig(paths.dynamicConfigPath, {})).toThrowError(
+    expect(() => getDynamicConfig(paths.dynamicConfigPath, mockConfigContext)).toThrowError(
       'Unexpected token (3:4)'
     );
   });
@@ -78,12 +81,12 @@ describe('getDynamicConfig', () => {
     // Test that hot evaluation is spawned in the expected location
     // https://github.com/expo/expo-cli/pull/2220
     it('process.cwd in read-config script is not equal to the project root', () => {
-      const { config } = getDynamicConfig(join(projectRoot, 'app.config.ts'), {});
-      expect(config.processCwd).toBe(__dirname);
+      const { config } = getDynamicConfig(join(projectRoot, 'app.config.ts'), mockConfigContext);
+      expect(config.extra.processCwd).toBe(__dirname);
       expect(
         getDynamicConfig(join(projectRoot, 'app.config.ts'), {
           projectRoot,
-        }).config.processCwd
+        } as any).config.extra.processCwd
       ).toBe(__dirname);
     });
   });
