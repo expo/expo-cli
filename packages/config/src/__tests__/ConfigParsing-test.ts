@@ -12,12 +12,6 @@ describe(getConfig, () => {
   beforeAll(async () => {
     vol.fromJSON(
       {
-        'app.config.js': `module.exports = function ({ config }) {
-          config.foo = 'bar';
-          if (config.name) config.name += '+config';
-          if (config.slug) config.slug += '+config';
-          return config;
-        };`,
         'app.json': JSON.stringify({
           expo: {
             foo: 'invalid',
@@ -28,54 +22,44 @@ describe(getConfig, () => {
           name: 'js-config-test',
           version: '1.0.0',
         }),
+        // Config exporting a function on the module.exports object
+        'app.config.js': `module.exports = function ({ config }) {
+          config.foo = 'bar';
+          if (config.name) config.name += '+config';
+          if (config.slug) config.slug += '+config';
+          return config;
+        };`,
+        // Config exporting a function as default
         'with-default_app.config.js': `export default function ({ config }) {
           config.foo = 'bar';
           if (config.name) config.name += '+config-default';
           return config;
         }`,
+        // Config exporting an object (JSON)
         'export-json_app.config.js': `module.exports = {
           foo: 'bar',
           name: 'cool+export-json_app.config',
-        };`,
-        'with-import_app.config.js': `const { foo } = require('./export-json_app.config.js');
-
-        module.exports = function ({ config }) {
-          config.foo = foo;
-          return config;
         };`,
       },
       'js'
     );
     vol.fromJSON(
       {
+        // Read this TS file so we can validate the types
         'app.config.ts': fsReal.readFileSync(
           path.join(__dirname, './fixtures/ts/app.config.ts'),
           'utf8'
         ),
-        'package.json': JSON.stringify(
-          {
-            name: 'ts-config-test',
-            version: '1.0.0',
-          },
-          null,
-          2
-        ),
-        'tsconfig.json': JSON.stringify({
-          compilerOptions: {
-            allowSyntheticDefaultImports: true,
-            jsx: 'react-native',
-            lib: ['dom', 'esnext'],
-            moduleResolution: 'node',
-            noEmit: true,
-            skipLibCheck: true,
-            resolveJsonModule: true,
-          },
+        'package.json': JSON.stringify({
+          name: 'ts-config-test',
+          version: '1.0.0',
         }),
       },
       'ts'
     );
     vol.fromJSON(
       {
+        // A custom config location
         'src/app.staging.json': JSON.stringify({
           name: 'app-staging-name',
           expo: {
@@ -94,13 +78,9 @@ describe(getConfig, () => {
             },
           },
         }),
-        'package.json': JSON.stringify(
-          {
-            version: '1.0.0',
-          },
-          null,
-          2
-        ),
+        'package.json': JSON.stringify({
+          version: '1.0.0',
+        }),
       },
       'custom-location-json'
     );
