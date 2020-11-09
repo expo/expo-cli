@@ -1,24 +1,139 @@
+import * as fs from 'fs';
+import { vol } from 'memfs';
 import * as path from 'path';
 
-import { getConfig, setCustomConfigPath } from '../Config';
+import { getConfig, resetCustomConfigPaths, setCustomConfigPath } from '../Config';
 
 const fixtures = {
-  customLocationJson: path.resolve(__dirname, 'fixtures/behavior/custom-location-json'),
-  syntaxError: path.resolve(__dirname, 'fixtures/behavior/syntax-error'),
+  customLocationJson: 'custom-location-json',
+  syntaxError: 'syntax-error',
 };
 
-describe('getConfig', () => {
+const fsReal = jest.requireActual('fs') as typeof fs;
+
+jest.mock('fs');
+
+describe(getConfig, () => {
+  beforeAll(async () => {
+    vol.fromJSON(
+      {
+        'app.config.js': `module.exports = function ({ config }) {
+          config.foo = 'bar';
+          if (config.name) config.name += '+config';
+          if (config.slug) config.slug += '+config';
+          return config;
+        };`,
+        'app.json': JSON.stringify(
+          {
+            expo: {
+              foo: 'invalid',
+              slug: 'someslug',
+            },
+          },
+          null,
+          2
+        ),
+        'package.json': JSON.stringify(
+          {
+            name: 'js-config-test',
+            version: '1.0.0',
+          },
+          null,
+          2
+        ),
+        'with-default_app.config.js': `export default function ({ config }) {
+          config.foo = 'bar';
+          if (config.name) config.name += '+config-default';
+          return config;
+        }`,
+        'export-json_app.config.js': `module.exports = {
+          foo: 'bar',
+          name: 'cool+export-json_app.config',
+        };`,
+        'with-import_app.config.js': `const { foo } = require('./export-json_app.config.js');
+
+        module.exports = function ({ config }) {
+          config.foo = foo;
+          return config;
+        };`,
+      },
+      'js'
+    );
+    vol.fromJSON(
+      {
+        'app.config.ts': fsReal.readFileSync(
+          path.join(__dirname, './fixtures/language-support/ts/app.config.ts'),
+          'utf8'
+        ),
+        'package.json': JSON.stringify(
+          {
+            name: 'ts-config-test',
+            version: '1.0.0',
+          },
+          null,
+          2
+        ),
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            allowSyntheticDefaultImports: true,
+            jsx: 'react-native',
+            lib: ['dom', 'esnext'],
+            moduleResolution: 'node',
+            noEmit: true,
+            skipLibCheck: true,
+            resolveJsonModule: true,
+          },
+        }),
+      },
+      'ts'
+    );
+    vol.fromJSON(
+      {
+        'src/app.staging.json': JSON.stringify({
+          name: 'app-staging-name',
+          expo: {
+            name: 'app-staging-expo-name',
+            expo: {
+              name: 'app-staging-expo-expo-name',
+            },
+          },
+        }),
+        'app.json': JSON.stringify({
+          name: 'app-name',
+          expo: {
+            name: 'app-expo-name',
+            expo: {
+              name: 'app-expo-expo-name',
+            },
+          },
+        }),
+        'package.json': JSON.stringify(
+          {
+            version: '1.0.0',
+          },
+          null,
+          2
+        ),
+      },
+      'custom-location-json'
+    );
+  });
+
+  afterAll(() => {
+    vol.reset();
+  });
+
   // Tests the following:
   // - All supported languages are working
   // - ensure `app.config` has higher priority to `app`
   // - generated `.expo` object is created and the language hint is added
   describe('language support', () => {
     beforeEach(() => {
-      const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
+      const projectRoot = 'js';
       setCustomConfigPath(projectRoot, undefined);
     });
     it('parses a ts config', () => {
-      const projectRoot = path.resolve(__dirname, './fixtures/language-support/ts');
+      const projectRoot = 'ts';
       const { exp } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
@@ -28,7 +143,7 @@ describe('getConfig', () => {
     });
     it('parses a js config', () => {
       // ensure config is composed (package.json values still exist)
-      const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
+      const projectRoot = 'js';
       const { exp, dynamicConfigPath, staticConfigPath } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,
       });
@@ -43,7 +158,7 @@ describe('getConfig', () => {
       expect(exp.slug).toBe('someslug+config');
     });
     it('parses a js config with export default', () => {
-      const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
+      const projectRoot = 'js';
       const configPath = path.resolve(projectRoot, 'with-default_app.config.js');
       setCustomConfigPath(projectRoot, configPath);
       const { exp, staticConfigPath } = getConfig(projectRoot, {
@@ -56,7 +171,7 @@ describe('getConfig', () => {
       expect(staticConfigPath).toBe(null);
     });
     it('parses a js config that exports json', () => {
-      const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
+      const projectRoot = 'js';
       const configPath = path.resolve(projectRoot, 'export-json_app.config.js');
       setCustomConfigPath(projectRoot, configPath);
       const { exp } = getConfig(projectRoot, {
@@ -66,33 +181,16 @@ describe('getConfig', () => {
       expect(exp.foo).toBe('bar');
       expect(exp.name).toBe('cool+export-json_app.config');
     });
-    it('parses a js config with import', () => {
-      const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
-      const configPath = path.resolve(projectRoot, 'with-import_app.config.js');
-      setCustomConfigPath(projectRoot, configPath);
-      const { exp } = getConfig(projectRoot, {
-        skipSDKVersionRequirement: true,
-      });
-      // @ts-ignore: foo property is not defined
-      expect(exp.foo).toBe('bar');
-    });
   });
-
-  function resetAllCustomFixtureLocations() {
-    // Reset custom paths
-    for (const fixturePath of Object.values(fixtures)) {
-      setCustomConfigPath(fixturePath, undefined);
-    }
-  }
 
   describe('behavior', () => {
     beforeEach(() => {
-      resetAllCustomFixtureLocations();
+      resetCustomConfigPaths();
     });
 
     // Test that setCustomConfigPath works to read custom json configs.
     it('uses a custom location', () => {
-      const projectRoot = path.resolve(fixtures.customLocationJson);
+      const projectRoot = fixtures.customLocationJson;
       const customConfigPath = path.resolve(projectRoot, 'src/app.staging.json');
       setCustomConfigPath(projectRoot, customConfigPath);
 
@@ -117,7 +215,7 @@ describe('getConfig', () => {
       expect(exp.platforms).toEqual(expect.any(Array));
 
       // Ensure this works
-      resetAllCustomFixtureLocations();
+      resetCustomConfigPaths();
       // After the reset, read the root config and ensure it doesn't match the custom location config.
       const { exp: baseExp } = getConfig(projectRoot, {
         skipSDKVersionRequirement: true,

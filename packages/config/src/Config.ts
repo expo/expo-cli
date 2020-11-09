@@ -321,6 +321,12 @@ export async function readExpRcAsync(projectRoot: string): Promise<ExpRc> {
 
 const customConfigPaths: { [projectRoot: string]: string } = {};
 
+export function resetCustomConfigPaths(): void {
+  for (const key of Object.keys(customConfigPaths)) {
+    delete customConfigPaths[key];
+  }
+}
+
 export function setCustomConfigPath(projectRoot: string, configPath: string): void {
   customConfigPaths[projectRoot] = configPath;
 }

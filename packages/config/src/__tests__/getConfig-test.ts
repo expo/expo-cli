@@ -1,14 +1,60 @@
-import { join } from 'path';
+import { vol } from 'memfs';
 
 import { getConfigFilePaths, modifyConfigAsync } from '../Config';
 import { getDynamicConfig, getStaticConfig } from '../getConfig';
 
 const mockConfigContext = {} as any;
 
-describe('modifyConfigAsync', () => {
+jest.mock('fs');
+
+describe(modifyConfigAsync, () => {
+  beforeAll(async () => {
+    vol.fromJSON(
+      {
+        'package.json': JSON.stringify({}),
+      },
+      'no-config'
+    );
+    vol.fromJSON(
+      {
+        'package.json': JSON.stringify({}),
+        'app.config.js': 'export default {};',
+        'app.config.json': JSON.stringify({}),
+      },
+      'dynamic-and-static'
+    );
+    vol.fromJSON(
+      {
+        'app.config.json': JSON.stringify(
+          {
+            name: 'app-config-json',
+            slug: 'app-config-json',
+            version: '1.0.0',
+            platforms: [],
+          },
+          null,
+          2
+        ),
+        'app.json': JSON.stringify(
+          {
+            name: 'app-json',
+          },
+          null,
+          2
+        ),
+        'package.json': JSON.stringify({}),
+      },
+      'static-override'
+    );
+  });
+
+  afterAll(() => {
+    vol.reset();
+  });
+
   it(`can write to a static only config`, async () => {
     const { type, config } = await modifyConfigAsync(
-      join(__dirname, 'fixtures/behavior/static-override'),
+      'static-override',
       { foo: 'bar' } as any,
       { skipSDKVersionRequirement: true },
       { dryRun: true }
@@ -19,7 +65,7 @@ describe('modifyConfigAsync', () => {
   });
   it(`cannot write to a dynamic config`, async () => {
     const { type, config } = await modifyConfigAsync(
-      join(__dirname, 'fixtures/behavior/dynamic-and-static'),
+      'dynamic-and-static',
       {},
       { skipSDKVersionRequirement: true },
       { dryRun: true }
@@ -29,7 +75,7 @@ describe('modifyConfigAsync', () => {
   });
   it(`cannot write to a project without a config`, async () => {
     const { type, config } = await modifyConfigAsync(
-      join(__dirname, 'fixtures/behavior/no-config'),
+      'no-config',
       {},
       { skipSDKVersionRequirement: true },
       { dryRun: true }
@@ -39,64 +85,97 @@ describe('modifyConfigAsync', () => {
   });
 });
 
-describe('getDynamicConfig', () => {
+const invalidConfig = `/* eslint-disable */
+module.exports = {
+    >
+}`;
+
+describe(getDynamicConfig, () => {
+  beforeAll(async () => {
+    vol.fromJSON(
+      {
+        'exports-function.app.config.js': `export default function (config) {
+          return { ...config };
+        }`,
+        'exports-object.app.config.js': `export default {};`,
+      },
+      'dynamic-export-types'
+    );
+    vol.fromJSON(
+      {
+        // This file exists to test that an invalid app.config.ts
+        // gets used instead of defaulting to a valid app.config.js
+        'app.config.js': `export default {};`,
+        // This is a syntax error:
+        'app.config.ts': invalidConfig,
+      },
+      'syntax-error'
+    );
+  });
+
+  afterAll(() => {
+    vol.reset();
+  });
+
   it(`exports a function`, () => {
     expect(
-      getDynamicConfig(
-        join(__dirname, 'fixtures/behavior/dynamic-export-types/exports-function.app.config.js'),
-        mockConfigContext
-      ).exportedObjectType
+      getDynamicConfig('dynamic-export-types/exports-function.app.config.js', mockConfigContext)
+        .exportedObjectType
     ).toBe('function');
   });
+
   it(`exports an object`, () => {
     expect(
-      getDynamicConfig(
-        join(__dirname, 'fixtures/behavior/dynamic-export-types/exports-object.app.config.js'),
-        mockConfigContext
-      ).exportedObjectType
+      getDynamicConfig('dynamic-export-types/exports-object.app.config.js', mockConfigContext)
+        .exportedObjectType
     ).toBe('object');
   });
 
   // This tests error are thrown properly and ensures that a more specific
   // config is used instead of defaulting to a valid substitution.
   it(`throws a useful error for dynamic configs with a syntax error`, () => {
-    const paths = getConfigFilePaths(join(__dirname, 'fixtures/behavior/syntax-error'));
+    const paths = getConfigFilePaths('syntax-error');
     expect(() => getDynamicConfig(paths.dynamicConfigPath, mockConfigContext)).toThrowError(
       'Unexpected token (3:4)'
     );
   });
-
-  describe('process.cwd in a child process', () => {
-    const originalCwd = process.cwd();
-    const projectRoot = join(__dirname, 'fixtures/behavior/dynamic-cwd');
-
-    beforeEach(() => {
-      process.chdir(__dirname);
-    });
-
-    afterEach(() => {
-      process.chdir(originalCwd);
-    });
-
-    // Test that hot evaluation is spawned in the expected location
-    // https://github.com/expo/expo-cli/pull/2220
-    it('process.cwd in read-config script is not equal to the project root', () => {
-      const { config } = getDynamicConfig(join(projectRoot, 'app.config.ts'), mockConfigContext);
-      expect(config.extra.processCwd).toBe(__dirname);
-      expect(
-        getDynamicConfig(join(projectRoot, 'app.config.ts'), {
-          projectRoot,
-        } as any).config.extra.processCwd
-      ).toBe(__dirname);
-    });
-  });
 });
 
-describe('getStaticConfig', () => {
+describe(getStaticConfig, () => {
+  beforeAll(async () => {
+    vol.fromJSON(
+      {
+        'package.json': JSON.stringify({}),
+        'app.json': JSON.stringify(
+          {
+            name: 'app-json',
+          },
+          null,
+          2
+        ),
+        'app.config.json': JSON.stringify(
+          {
+            name: 'app-config-json',
+            slug: 'app-config-json',
+            version: '1.0.0',
+            platforms: [],
+          },
+          null,
+          2
+        ),
+      },
+      'static-override'
+    );
+  });
+
+  afterAll(() => {
+    vol.reset();
+  });
+
   // This tests error are thrown properly and ensures that a more specific
   // config is used instead of defaulting to a valid substitution.
   it(`uses app.config.json instead of app.json if both exist`, () => {
-    const paths = getConfigFilePaths(join(__dirname, 'fixtures/behavior/static-override'));
+    const paths = getConfigFilePaths('static-override');
     expect(paths.staticConfigPath).toMatch(/app\.config\.json/);
 
     expect(getStaticConfig(paths.staticConfigPath).name).toBe('app-config-json');
