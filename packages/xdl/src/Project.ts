@@ -417,7 +417,6 @@ export async function exportForAppHosting(
     );
   }
 
-  // Delete keys that are normally deleted in the publish process
   const validPostExportHooks: LoadedHook[] = prepareHooks(hooks, 'postExport', projectRoot, exp);
 
   // Add assetUrl to manifest
