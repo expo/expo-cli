@@ -137,6 +137,7 @@ export type ConfigContext = {
 };
 
 export type GetConfigOptions = {
+  isPublicConfig?: boolean;
   skipSDKVersionRequirement?: boolean;
   strict?: boolean;
 };
