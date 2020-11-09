@@ -5,13 +5,9 @@ import * as path from 'path';
 
 import { getEntitlementsPath } from '../Entitlements';
 
-const actualFs = jest.requireActual('fs') as typeof fs;
+const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
-
-afterAll(() => {
-  jest.unmock('fs');
-});
 
 describe(getEntitlementsPath, () => {
   const projectRoot = '/app';
@@ -19,7 +15,7 @@ describe(getEntitlementsPath, () => {
   beforeAll(async () => {
     vol.fromJSON(
       {
-        'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
         ),
@@ -37,7 +33,7 @@ describe(getEntitlementsPath, () => {
     );
     vol.fromJSON(
       {
-        'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
         ),

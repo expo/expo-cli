@@ -1,27 +1,21 @@
-import * as fs from 'fs-extra';
+import * as fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 
 import { UnexpectedError } from '../../Errors';
 import { addWarningIOS } from '../../WarningAggregator';
 import { getAllInfoPlistPaths, getAppDelegate, getXcodeProjectPath } from '../Paths';
-const actualFs = jest.requireActual('fs') as typeof fs;
+
+const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
-
-jest.mock('../../WarningAggregator', () => ({
-  addWarningIOS: jest.fn(),
-}));
-
-afterAll(() => {
-  jest.unmock('../../WarningAggregator');
-});
+jest.mock('../../WarningAggregator');
 
 describe(getXcodeProjectPath, () => {
   beforeAll(async () => {
     vol.fromJSON(
       {
-        'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
         ),
@@ -35,11 +29,11 @@ describe(getXcodeProjectPath, () => {
     // More than one
     vol.fromJSON(
       {
-        'ios/otherproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
+        'ios/otherproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
         ),
-        'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
         ),
@@ -74,7 +68,7 @@ describe(getAppDelegate, () => {
   beforeAll(async () => {
     vol.fromJSON(
       {
-        'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
         ) as string,
@@ -88,7 +82,7 @@ describe(getAppDelegate, () => {
 
     vol.fromJSON(
       {
-        'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
         ) as string,
@@ -101,7 +95,7 @@ describe(getAppDelegate, () => {
 
     vol.fromJSON(
       {
-        'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
         ) as string,
@@ -113,7 +107,7 @@ describe(getAppDelegate, () => {
 
     vol.fromJSON(
       {
-        'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
         ) as string,
