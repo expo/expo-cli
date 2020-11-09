@@ -1,4 +1,5 @@
-import { fs, vol } from 'memfs';
+import * as fs from 'fs';
+import { vol } from 'memfs';
 import * as path from 'path';
 
 import { ExpoConfig } from '../../Config.types';
@@ -10,23 +11,10 @@ import {
   LIST_OF_ANDROID_ADAPTIVE_ICON_FILES_FINAL,
   SAMPLE_COLORS_XML,
 } from './fixtures/icon';
-const actualFs = jest.requireActual('fs') as typeof fs;
+
+const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
-
-jest.mock('@expo/image-utils', () => ({
-  generateImageAsync(input, { src }) {
-    const fs = require('fs');
-    return { source: fs.readFileSync(src) };
-  },
-  compositeImagesAsync({ foreground }) {
-    return foreground;
-  },
-}));
-
-afterAll(() => {
-  jest.unmock('@expo/image-utils');
-});
 
 function setUpMipmapDirectories() {
   vol.mkdirpSync('/app/android/app/src/main/res/mipmap-mdpi');
@@ -88,7 +76,7 @@ describe('e2e: ONLY android legacy icon', () => {
   const icon = require('../Icon');
   const spyOnConfigureAdaptiveIconAsync = jest.spyOn(icon, 'configureAdaptiveIconAsync');
   beforeAll(async () => {
-    const icon = actualFs.readFileSync(legacyIconPath);
+    const icon = fsReal.readFileSync(legacyIconPath);
     vol.fromJSON(
       { './android/app/src/main/res/values/colors.xml': SAMPLE_COLORS_XML },
       projectRoot
@@ -139,8 +127,8 @@ describe('e2e: android adaptive icon', () => {
   const projectRoot = '/app';
 
   beforeAll(async () => {
-    const adaptiveIconForeground = actualFs.readFileSync(adaptiveIconForegroundPath);
-    const adaptiveIconBackground = actualFs.readFileSync(adaptiveIconBackgroundPath);
+    const adaptiveIconForeground = fsReal.readFileSync(adaptiveIconForegroundPath);
+    const adaptiveIconBackground = fsReal.readFileSync(adaptiveIconBackgroundPath);
 
     vol.fromJSON(
       { './android/app/src/main/res/values/colors.xml': SAMPLE_COLORS_XML },

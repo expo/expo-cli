@@ -1,23 +1,13 @@
-import * as fs from 'fs-extra';
+import * as fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 
 import { getIcons, ICON_CONTENTS, setIconsAsync } from '../Icons';
 import { getDirFromFS } from './utils/getDirFromFS';
-const actualFs = jest.requireActual('fs') as typeof fs;
+
+const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
-
-jest.mock('@expo/image-utils', () => ({
-  generateImageAsync(input, { src }) {
-    const fs = require('fs');
-    return { source: fs.readFileSync(src) };
-  },
-}));
-
-afterAll(() => {
-  jest.unmock('@expo/image-utils');
-});
 
 describe('iOS Icons', () => {
   it(`returns null if no icon values provided`, () => {
@@ -70,11 +60,11 @@ describe('e2e: iOS icons', () => {
 
   const projectRoot = '/app';
   beforeAll(async () => {
-    const icon = actualFs.readFileSync(iconPath);
+    const icon = fsReal.readFileSync(iconPath);
 
     vol.fromJSON(
       {
-        'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
         ),

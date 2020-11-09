@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 
@@ -7,23 +7,10 @@ import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
 import { withExpoIOSPlugins } from '../expo-plugins';
 import { compileModsAsync, evalModsAsync } from '../mod-compiler';
 import rnFixture from './fixtures/react-native-project';
-const actualFs = jest.requireActual('fs') as typeof fs;
+
+const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
-
-jest.mock('@expo/image-utils', () => ({
-  generateImageAsync(input, { src }) {
-    const fs = require('fs');
-    return { source: fs.readFileSync(src) };
-  },
-  compositeImagesAsync({ foreground }) {
-    return foreground;
-  },
-}));
-
-afterAll(() => {
-  jest.unmock('@expo/image-utils');
-});
 
 describe(evalModsAsync, () => {
   it(`runs with no core mods`, async () => {
@@ -41,7 +28,7 @@ describe(withExpoIOSPlugins, () => {
   const iconPath = path.resolve(__dirname, '../../ios/__tests__/fixtures/icons/icon.png');
 
   beforeEach(async () => {
-    const icon = actualFs.readFileSync(iconPath) as any;
+    const icon = fsReal.readFileSync(iconPath) as any;
     // Trick XDL Info.plist reading
     Object.defineProperty(process, 'platform', {
       value: 'not-darwin',
