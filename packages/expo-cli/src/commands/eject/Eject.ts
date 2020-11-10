@@ -702,9 +702,7 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
     'expo-notifications',
     'expo-screen-orientation',
     'expo-sensors',
-    'expo-splash-screen',
     'expo-task-manager',
-    'expo-updates',
   ].reduce(
     (prev, curr) => ({
       ...prev,
