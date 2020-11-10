@@ -1,5 +1,6 @@
 import { ExpoConfig } from '../Config.types';
 import { addWarningAndroid } from '../WarningAggregator';
+import { createAndroidManifestPlugin } from '../plugins/android-plugins';
 import { AndroidManifest, ManifestActivity } from './Manifest';
 
 export type IntentFilterProps = {
@@ -7,6 +8,8 @@ export type IntentFilterProps = {
   categories: string[];
   schemes: string[];
 };
+
+export const withScheme = createAndroidManifestPlugin(setScheme);
 
 export function getScheme(config: { scheme?: string | string[] }): string[] {
   if (Array.isArray(config.scheme)) {

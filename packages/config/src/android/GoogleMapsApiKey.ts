@@ -1,4 +1,5 @@
 import { ExpoConfig } from '../Config.types';
+import { createAndroidManifestPlugin } from '../plugins/android-plugins';
 import {
   addMetaDataItemToMainApplication,
   addUsesLibraryItemToMainApplication,
@@ -10,6 +11,8 @@ import {
 
 const META_API_KEY = 'com.google.android.geo.API_KEY';
 const LIB_HTTP = 'org.apache.http.legacy';
+
+export const withGoogleMapsApiKey = createAndroidManifestPlugin(setGoogleMapsApiKey);
 
 export function getGoogleMapsApiKey(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.config?.googleMaps?.apiKey ?? null;

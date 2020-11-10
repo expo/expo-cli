@@ -2,6 +2,8 @@ import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
 import { projectHasModule } from '../Modules';
+import { ConfigPlugin } from '../Plugin.types';
+import { withAndroidManifest } from '../plugins/android-plugins';
 import {
   addMetaDataItemToMainApplication,
   AndroidManifest,
@@ -23,6 +25,16 @@ export enum Config {
   RUNTIME_VERSION = 'expo.modules.updates.EXPO_RUNTIME_VERSION',
   UPDATE_URL = 'expo.modules.updates.EXPO_UPDATE_URL',
 }
+
+export const withUpdates: ConfigPlugin<{ expoUsername: string | null }> = (
+  config,
+  { expoUsername }
+) => {
+  return withAndroidManifest(config, config => {
+    config.modResults = setUpdatesConfig(config, config.modResults, expoUsername);
+    return config;
+  });
+};
 
 export function getUpdateUrl(
   config: Pick<ExpoConfigUpdates, 'owner' | 'slug'>,
@@ -64,11 +76,11 @@ export function getUpdatesCheckOnLaunch(
   return 'ALWAYS';
 }
 
-export async function setUpdatesConfig(
+export function setUpdatesConfig(
   config: ExpoConfigUpdates,
   androidManifest: AndroidManifest,
   username: string | null
-): Promise<AndroidManifest> {
+): AndroidManifest {
   const mainApplication = getMainApplicationOrThrow(androidManifest);
 
   addMetaDataItemToMainApplication(

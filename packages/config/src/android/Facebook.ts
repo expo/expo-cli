@@ -1,5 +1,6 @@
 import { ExpoConfig } from '../Config.types';
 import { assert } from '../Errors';
+import { createAndroidManifestPlugin, createStringsXmlPlugin } from '../plugins/android-plugins';
 import {
   addMetaDataItemToMainApplication,
   AndroidManifest,
@@ -20,6 +21,9 @@ const META_APP_NAME = 'com.facebook.sdk.ApplicationName';
 const META_AUTO_INIT = 'com.facebook.sdk.AutoInitEnabled';
 const META_AUTO_LOG_APP_EVENTS = 'com.facebook.sdk.AutoLogAppEventsEnabled';
 const META_AD_ID_COLLECTION = 'com.facebook.sdk.AdvertiserIDCollectionEnabled';
+
+export const withFacebookAppIdString = createStringsXmlPlugin(applyFacebookAppIdString);
+export const withFacebookManifest = createAndroidManifestPlugin(setFacebookConfig);
 
 function buildXMLItem({
   head,

@@ -1,4 +1,5 @@
 import { ExpoConfig } from '../Config.types';
+import { createAndroidManifestPlugin } from '../plugins/android-plugins';
 import { AndroidManifest, ManifestUsesPermission } from './Manifest';
 
 const USES_PERMISSION = 'uses-permission';
@@ -10,6 +11,7 @@ export const requiredPermissions = [
   'android.permission.WAKE_LOCK',
   'com.google.android.c2dm.permission.RECEIVE',
 ];
+
 export const allPermissions = [
   ...requiredPermissions,
   'android.permission.ACCESS_WIFI_STATE',
@@ -41,6 +43,8 @@ export const allPermissions = [
   'com.sonyericsson.home.permission.BROADCAST_BADGE',
 ];
 
+export const withPermissions = createAndroidManifestPlugin(setAndroidPermissions);
+
 function prefixAndroidPermissionsIfNecessary(permissions: string[]): string[] {
   return permissions.map(permission => {
     if (!permission.includes('.')) {
@@ -54,7 +58,7 @@ export function getAndroidPermissions(config: Pick<ExpoConfig, 'android'>): stri
   return config.android?.permissions ?? [];
 }
 
-export async function setAndroidPermissions(
+export function setAndroidPermissions(
   config: Pick<ExpoConfig, 'android'>,
   androidManifest: AndroidManifest
 ) {
