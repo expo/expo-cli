@@ -3,7 +3,6 @@ import { vol } from 'memfs';
 import { getConfig, getProjectConfigDescription, readConfigJson } from '../Config';
 
 jest.mock('fs');
-jest.mock('resolve-from');
 
 describe(`getProjectConfigDescription`, () => {
   it(`describes a project using both a static and dynamic config`, () => {

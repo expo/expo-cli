@@ -11,20 +11,9 @@ import { withExpoAndroidPlugins, withExpoIOSPlugins } from '../expo-plugins';
 import { compileModsAsync, evalModsAsync } from '../mod-compiler';
 import rnFixture from './fixtures/react-native-project';
 
-const actualFs = jest.requireActual('fs') as typeof fs;
+const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
-
-jest.mock('@expo/image-utils', () => ({
-  generateImageAsync(input, { src }) {
-    const fs = require('fs');
-    return { source: fs.readFileSync(src) };
-  },
-  compositeImagesAsync({ foreground }) {
-    return foreground;
-  },
-}));
-
 // Weird issues with Android Icon module make it hard to mock test.
 jest.mock('../../android/Icon', () => {
   return {
@@ -33,11 +22,6 @@ jest.mock('../../android/Icon', () => {
     },
     setIconAsync() {},
   };
-});
-
-afterAll(() => {
-  jest.unmock('@expo/image-utils');
-  jest.unmock('fs');
 });
 
 describe(evalModsAsync, () => {
@@ -56,7 +40,7 @@ describe('built-in plugins', () => {
   const iconPath = path.resolve(__dirname, '../../ios/__tests__/fixtures/icons/icon.png');
 
   beforeEach(async () => {
-    const icon = actualFs.readFileSync(iconPath) as any;
+    const icon = fsReal.readFileSync(iconPath) as any;
     // Trick XDL Info.plist reading
     Object.defineProperty(process, 'platform', {
       value: 'not-darwin',

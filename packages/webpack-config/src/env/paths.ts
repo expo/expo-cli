@@ -1,11 +1,6 @@
 /* eslint-env node */
 import { ExpoConfig, getConfig, getWebOutputPath } from '@expo/config';
-import {
-  ensureSlash,
-  getAbsolutePathWithProjectRoot,
-  getEntryPoint,
-  getPossibleProjectRoot,
-} from '@expo/config/paths';
+import { ensureSlash, getEntryPoint, getPossibleProjectRoot } from '@expo/config/paths';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 import fs from 'fs';
 import path from 'path';
@@ -13,6 +8,15 @@ import url from 'url';
 
 import { Environment, FilePaths, InputEnvironment } from '../types';
 import getMode from './getMode';
+
+function getAbsolutePathWithProjectRoot(projectRoot: string, ...pathComponents: string[]): string {
+  // Simple check if we are dealing with a URL.
+  if (pathComponents?.length === 1 && pathComponents[0].startsWith('http')) {
+    return pathComponents[0];
+  }
+
+  return path.resolve(projectRoot, ...pathComponents);
+}
 
 function getModulesPath(projectRoot: string): string {
   const workspaceRoot = findWorkspaceRoot(path.resolve(projectRoot)); // Absolute path or null

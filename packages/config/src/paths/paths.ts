@@ -23,18 +23,6 @@ export function getPossibleProjectRoot(): string {
   return fs.realpathSync(process.cwd());
 }
 
-export function getAbsolutePathWithProjectRoot(
-  projectRoot: string,
-  ...pathComponents: string[]
-): string {
-  // Simple check if we are dealing with an URL
-  if (pathComponents && pathComponents.length === 1 && pathComponents[0].startsWith('http')) {
-    return pathComponents[0];
-  }
-
-  return path.resolve(projectRoot, ...pathComponents);
-}
-
 export function getEntryPoint(
   projectRoot: string,
   entryFiles: string[],
