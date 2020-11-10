@@ -54,8 +54,7 @@ export interface ExportedConfigWithProps<Data = any> extends ExpoConfig {
   modRequest: ModProps<Data>;
 }
 
-// TODO: Change any to void
-export type ConfigPlugin<Props = any> = (config: ExpoConfig, props: Props) => ExpoConfig;
+export type ConfigPlugin<Props = void> = (config: ExpoConfig, props: Props) => ExpoConfig;
 
 export type Mod<Props = any> = (
   config: ExportedConfigWithProps<Props>

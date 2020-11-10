@@ -4,7 +4,7 @@ import { evalModsAsync } from '../mod-compiler';
 
 describe(withPlugins, () => {
   it('compiles plugins in the correct order', () => {
-    const pluginA: ConfigPlugin<void> = config => {
+    const pluginA: ConfigPlugin = config => {
       config.extra.push('alpha');
       return config;
     };

@@ -30,7 +30,7 @@ const IC_LAUNCHER_FOREGROUND_PNG = 'ic_launcher_foreground.png';
 const IC_LAUNCHER_XML = 'ic_launcher.xml';
 const IC_LAUNCHER_ROUND_XML = 'ic_launcher_round.xml';
 
-export const withIcons: ConfigPlugin<void> = config => {
+export const withIcons: ConfigPlugin = config => {
   return withDangerousAndroidMod(config, async config => {
     await setIconAsync(config, config.modRequest.projectRoot);
     return config;

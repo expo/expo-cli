@@ -15,7 +15,7 @@ import { getMainApplicationAsync } from './Paths';
 
 export const withPackageManifest = createAndroidManifestPlugin(setPackageInAndroidManifest);
 
-export const withPackageGradle: ConfigPlugin<void> = config => {
+export const withPackageGradle: ConfigPlugin = config => {
   return withAppBuildGradle(config, config => {
     if (config.modResults.language === 'groovy') {
       config.modResults.contents = setPackageInBuildGradle(config, config.modResults.contents);
@@ -29,7 +29,7 @@ export const withPackageGradle: ConfigPlugin<void> = config => {
   });
 };
 
-export const withPackageRefactor: ConfigPlugin<void> = config => {
+export const withPackageRefactor: ConfigPlugin = config => {
   return withDangerousAndroidMod(config, async config => {
     await renamePackageOnDisk(config, config.modRequest.projectRoot);
     return config;

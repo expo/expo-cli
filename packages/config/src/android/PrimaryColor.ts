@@ -9,7 +9,7 @@ import { writeXMLAsync } from './XML';
 const COLOR_PRIMARY_KEY = 'colorPrimary';
 const DEFAULT_PRIMARY_COLOR = '#023c69';
 
-export const withPrimaryColor: ConfigPlugin<void> = config => {
+export const withPrimaryColor: ConfigPlugin = config => {
   return withDangerousAndroidMod(config, async config => {
     await setPrimaryColor(config, config.modRequest.projectRoot);
     return config;

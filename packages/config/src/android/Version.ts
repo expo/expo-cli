@@ -6,7 +6,7 @@ import { withAppBuildGradle } from '../plugins/android-plugins';
 const DEFAULT_VERSION_NAME = '1.0';
 const DEFAULT_VERSION_CODE = '1';
 
-export const withVersion: ConfigPlugin<void> = config => {
+export const withVersion: ConfigPlugin = config => {
   return withAppBuildGradle(config, config => {
     if (config.modResults.language === 'groovy') {
       config.modResults.contents = setVersionCode(config, config.modResults.contents);

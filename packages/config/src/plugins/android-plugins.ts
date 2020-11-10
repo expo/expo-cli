@@ -17,7 +17,7 @@ type MutateDataAction<T> = (expo: ExpoConfig, data: T) => OptionalPromise<T>;
  */
 export function createAndroidManifestPlugin(
   action: MutateDataAction<AndroidManifest>
-): ConfigPlugin<void> {
+): ConfigPlugin {
   return config =>
     withAndroidManifest(config, async config => {
       config.modResults = await action(config, config.modResults);
@@ -25,7 +25,7 @@ export function createAndroidManifestPlugin(
     });
 }
 
-export function createStringsXmlPlugin(action: MutateDataAction<ResourceXML>): ConfigPlugin<void> {
+export function createStringsXmlPlugin(action: MutateDataAction<ResourceXML>): ConfigPlugin {
   return config =>
     withStringsXml(config, async config => {
       config.modResults = await action(config, config.modResults);
