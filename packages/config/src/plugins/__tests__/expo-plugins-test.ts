@@ -181,7 +181,6 @@ describe('built-in plugins', () => {
       facebookScheme: 'fb1234567890',
       ios: {
         // publishManifestPath: './ios-manifest'
-        // publishBundlePath: './ios-dist',
         bundleIdentifier: 'com.bacon.tester.expoapp',
         buildNumber: '6.5.0',
         backgroundColor: '#ff0000',
@@ -217,7 +216,6 @@ describe('built-in plugins', () => {
         versionCode: 6,
         backgroundColor: '#ff0000',
         userInterfaceStyle: 'light',
-        // icon: './icons/android-icon.png',
         adaptiveIcon: {
           foregroundImage: './icons/foreground.png',
           backgroundImage: './icons/background.png',
