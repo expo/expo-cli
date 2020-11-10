@@ -81,6 +81,10 @@ export async function getAppBuildGradleAsync(projectRoot: string): Promise<Gradl
   return getBuildGradleAsync(path.join(projectRoot, 'android', 'app'));
 }
 
+export function getAndroidGeneratedGradleFolder(projectRoot: string): string {
+  return path.join(projectRoot, 'android', '.expo');
+}
+
 export function getAndroidBuildGradle(projectRoot: string): string {
   return path.join(projectRoot, 'android', 'build.gradle');
 }

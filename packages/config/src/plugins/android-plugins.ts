@@ -76,7 +76,7 @@ export const withMainActivity: ConfigPlugin<Mod<ApplicationProjectFile>> = (conf
 };
 
 /**
- * Provides the project build.gradle for modification.
+ * Provides the project `build.gradle` for modification.
  *
  * @param config
  * @param action
@@ -90,7 +90,24 @@ export const withProjectBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (con
 };
 
 /**
- * Provides the app/build.gradle for modification.
+ * Provides the generated `.expo/project-build.gradle` for modification.
+ *
+ * @param config
+ * @param action
+ */
+export const withExpoProjectBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (
+  config,
+  action
+) => {
+  return withExtendedMod(config, {
+    platform: 'android',
+    mod: 'expoProjectBuildGradle',
+    action,
+  });
+};
+
+/**
+ * Provides the `app/build.gradle` for modification.
  *
  * @param config
  * @param action
@@ -99,6 +116,20 @@ export const withAppBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config,
   return withExtendedMod(config, {
     platform: 'android',
     mod: 'appBuildGradle',
+    action,
+  });
+};
+
+/**
+ * Provides the generated `.expo/app-build.gradle` for modification.
+ *
+ * @param config
+ * @param action
+ */
+export const withExpoAppBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config, action) => {
+  return withExtendedMod(config, {
+    platform: 'android',
+    mod: 'expoAppBuildGradle',
     action,
   });
 };

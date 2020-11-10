@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
 import plist from '@expo/plist';
-import { readFile, writeFile } from 'fs-extra';
+import { ensureDir, readFile, writeFile } from 'fs-extra';
 import path from 'path';
 import { XcodeProject } from 'xcode';
 
@@ -47,6 +47,8 @@ function applyAndroidCoreMods(projectRoot: string, config: ExportedConfig): Expo
   config = withAndroidMainActivityBaseMod(config);
   config = withAndroidProjectBuildGradleBaseMod(config);
   config = withAndroidAppBuildGradleBaseMod(config);
+  config = withAndroidExpoProjectBuildGradleBaseMod(config);
+  config = withAndroidExpoAppBuildGradleBaseMod(config);
   return config;
 }
 
@@ -183,6 +185,92 @@ const withAndroidAppBuildGradleBaseMod: ConfigPlugin<void> = config => {
         addWarningAndroid(
           `${modRequest.platform}-${modRequest.modName}`,
           `App build.gradle could not be modified. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
+
+const withAndroidExpoAppBuildGradleBaseMod: ConfigPlugin<void> = config => {
+  return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
+    platform: 'android',
+    mod: 'expoAppBuildGradle',
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        const fileName = 'app-build.gradle';
+        const folderName = AndroidPaths.getAndroidGeneratedGradleFolder(modRequest.projectRoot);
+        const filePath = path.join(folderName, fileName);
+        await ensureDir(folderName);
+
+        results = await nextMod!({
+          ...config,
+          modResults: { language: 'groovy', contents: '', path: filePath },
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        const modResults = results.modResults;
+
+        await writeFile(filePath, modResults.contents);
+      } catch (error) {
+        addWarningAndroid(
+          `${modRequest.platform}-${modRequest.modName}`,
+          `Generated app-build.gradle could not be modified. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
+
+const withAndroidExpoProjectBuildGradleBaseMod: ConfigPlugin<void> = config => {
+  return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
+    platform: 'android',
+    mod: 'expoProjectBuildGradle',
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        const fileName = 'project-build.gradle';
+        const folderName = AndroidPaths.getAndroidGeneratedGradleFolder(modRequest.projectRoot);
+        const filePath = path.join(folderName, fileName);
+        await ensureDir(folderName);
+
+        const baseContents = [
+          '// GENERATED FILE DO NOT MODIFY. REGENERATE VIA EXPO CLI (expo eject)',
+          "// This file is used for Expo config plugins to safely modify a project's `./build.gradle` file,",
+          '// if this file ever causes build errors, simply delete it and run `expo eject` again.',
+          '',
+          'allprojects {',
+          'repositories {',
+          '// @begin allprojects-repositories',
+          // custom maven files can regex between these tags.
+          '// @end allprojects-repositories',
+          '}',
+          '}',
+        ];
+
+        results = await nextMod!({
+          ...config,
+          modResults: { language: 'groovy', contents: baseContents.join('\n'), path: filePath },
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        const modResults = results.modResults;
+
+        await writeFile(filePath, modResults.contents);
+      } catch (error) {
+        addWarningAndroid(
+          `${modRequest.platform}-${modRequest.modName}`,
+          `Generated project-build.gradle could not be modified. ${error.message}`
         );
       }
       return results;
