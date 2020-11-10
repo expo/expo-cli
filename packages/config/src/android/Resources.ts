@@ -25,8 +25,9 @@ export type ResourceItemXML = {
 };
 /**
  * Name of the resource folder.
+ * Values after the dash are qualifiers: https://developer.android.com/guide/topics/resources/providing-resources#AlternativeResources
  */
-export type ResourceKind = 'values' | 'values-night' | 'values-v23';
+export type ResourceKind = 'values' | 'values-night' | 'values-v23' | string;
 
 const fallbackResourceString = `<?xml version="1.0" encoding="utf-8"?><resources></resources>`;
 

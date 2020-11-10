@@ -7,6 +7,7 @@ import * as GoogleMapsApiKey from './GoogleMapsApiKey';
 import * as GoogleMobileAds from './GoogleMobileAds';
 import * as GoogleServices from './GoogleServices';
 import * as Icon from './Icon';
+import * as Locales from './Locales';
 import * as IntentFilters from './IntentFilters';
 import * as Manifest from './Manifest';
 import * as Name from './Name';
@@ -36,6 +37,7 @@ export {
   GoogleMobileAds,
   GoogleServices,
   Icon,
+  Locales,
   IntentFilters,
   Name,
   NavigationBar,
