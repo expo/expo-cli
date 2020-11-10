@@ -1,5 +1,8 @@
 import { ExpoConfig } from '../Config.types';
-import { AndroidManifest, getMainActivity } from './Manifest';
+import { ConfigPlugin } from '../Plugin.types';
+import { addWarningAndroid } from '../WarningAggregator';
+import { createAndroidManifestPlugin, withMainActivity } from '../plugins/android-plugins';
+import { AndroidManifest, getMainActivityOrThrow } from './Manifest';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';
 
@@ -16,25 +19,42 @@ public class MainActivity extends ReactActivity {
     }
 `;
 
+export const withUiModeManifest = createAndroidManifestPlugin(setUiModeAndroidManifest);
+
+export const withUiModeMainActivity: ConfigPlugin<void> = config => {
+  return withMainActivity(config, config => {
+    if (config.modResults.language === 'java') {
+      config.modResults.contents = addOnConfigurationChangedMainActivity(
+        config,
+        config.modResults.contents
+      );
+    } else {
+      addWarningAndroid(
+        'android-userInterfaceStyle',
+        `Cannot automatically configure MainActivity if it's not java`
+      );
+    }
+    return config;
+  });
+};
+
 export function getUserInterfaceStyle(
   config: Pick<ExpoConfig, 'android' | 'userInterfaceStyle'>
 ): string | null {
   return config.android?.userInterfaceStyle ?? config.userInterfaceStyle ?? null;
 }
 
-export async function setUiModeAndroidManifest(
+export function setUiModeAndroidManifest(
   config: Pick<ExpoConfig, 'android' | 'userInterfaceStyle'>,
   androidManifest: AndroidManifest
 ) {
   const userInterfaceStyle = getUserInterfaceStyle(config);
+  // TODO: Remove this if we decide to remove any uiMode configuration when not specified
   if (!userInterfaceStyle) {
     return androidManifest;
   }
 
-  let mainActivity = getMainActivity(androidManifest);
-  if (!mainActivity) {
-    mainActivity = { $: { 'android:name': '.MainActivity' } };
-  }
+  const mainActivity = getMainActivityOrThrow(androidManifest);
   mainActivity.$[CONFIG_CHANGES_ATTRIBUTE] =
     'keyboard|keyboardHidden|orientation|screenSize|uiMode';
 

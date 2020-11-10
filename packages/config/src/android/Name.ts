@@ -1,7 +1,11 @@
 import { ExpoConfig } from '../Config.types';
+import { assert } from '../Errors';
+import { createStringsXmlPlugin } from '../plugins/android-plugins';
 import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from './Resources';
 import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';
+
+export const withName = createStringsXmlPlugin(applyNameFromConfig);
 
 export function getName(config: Pick<ExpoConfig, 'name'>) {
   return typeof config.name === 'string' ? config.name : null;
@@ -12,37 +16,28 @@ export function getName(config: Pick<ExpoConfig, 'name'>) {
  * notifications, and others.
  */
 export async function setName(
-  configOrName: Pick<ExpoConfig, 'name'> | string,
+  config: Pick<ExpoConfig, 'name'>,
   projectRoot: string
 ): Promise<boolean> {
-  let name: string | null = null;
-  if (typeof configOrName === 'string') {
-    name = configOrName;
-  } else {
-    name = getName(configOrName);
-  }
-  if (!name) {
-    // TODO: Maybe just remove the value from strings instead?
-    return false;
-  }
-
   const stringsPath = await getProjectStringsXMLPathAsync(projectRoot);
-  if (!stringsPath) {
-    throw new Error(`There was a problem setting your Facebook App ID in ${stringsPath}.`);
-  }
+  assert(stringsPath);
 
   let stringsJSON = await readResourcesXMLAsync({ path: stringsPath });
-  stringsJSON = applyName(name, stringsJSON);
+  stringsJSON = applyNameFromConfig(config, stringsJSON);
 
   try {
     await writeXMLAsync({ path: stringsPath, xml: stringsJSON });
-  } catch (e) {
+  } catch {
     throw new Error(`Error setting name. Cannot write strings.xml to ${stringsPath}.`);
   }
   return true;
 }
 
-function applyName(name: string | null, stringsJSON: ResourceXML): ResourceXML {
+function applyNameFromConfig(
+  config: Pick<ExpoConfig, 'name'>,
+  stringsJSON: ResourceXML
+): ResourceXML {
+  const name = getName(config);
   if (name) {
     return setStringItem([buildResourceItem({ name: 'app_name', value: name })], stringsJSON);
   }

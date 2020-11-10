@@ -56,6 +56,17 @@ export function withExtendedMod<T>(
   });
 }
 
+/**
+ * Plugin to intercept execution of a given `mod` with the given `action`.
+ * If an action was already set on the given `config` config for `mod`, then it
+ * will be provided to the `action` as `nextMod` when it's evaluated, otherwise
+ * `nextMod` will be an identity function.
+ *
+ * @param config exported config
+ * @param platform platform to target (ios or android)
+ * @param mod name of the platform function to intercept
+ * @param action method to run on the mod when the config is compiled
+ */
 export function withInterceptedMod<T>(
   config: ExportedConfig,
   {
@@ -75,15 +86,14 @@ export function withInterceptedMod<T>(
     config.mods[platform] = {};
   }
 
-  const modPlugin: Mod<T> =
+  const interceptedMod: Mod<T> =
     (config.mods[platform] as Record<string, any>)[mod] ?? (config => config);
 
-  const extendedMod: Mod<T> = async ({ modRequest, ...config }) => {
-    // console.log(`-[mod]-> ${platform}.${mod}`);
-    return action({ ...config, modRequest: { ...modRequest, nextMod: modPlugin } });
+  const interceptingMod: Mod<T> = async ({ modRequest, ...config }) => {
+    return action({ ...config, modRequest: { ...modRequest, nextMod: interceptedMod } });
   };
 
-  (config.mods[platform] as any)[mod] = extendedMod;
+  (config.mods[platform] as any)[mod] = interceptingMod;
 
   return config;
 }

@@ -1,5 +1,7 @@
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { addWarningAndroid } from '../WarningAggregator';
+import { withDangerousAndroidMod } from '../plugins/android-plugins';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
 import { buildResourceItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
@@ -8,6 +10,13 @@ import { writeXMLAsync } from './XML';
 const COLOR_PRIMARY_DARK_KEY = 'colorPrimaryDark';
 const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
 const WINDOW_LIGHT_STATUS_BAR = 'android:windowLightStatusBar';
+
+export const withStatusBar: ConfigPlugin<void> = config => {
+  return withDangerousAndroidMod(config, async config => {
+    await setStatusBarConfig(config, config.modRequest.projectRoot);
+    return config;
+  });
+};
 
 export function getStatusBarColor(
   config: Pick<ExpoConfig, 'androidStatusBarColor' | 'androidStatusBar'>

@@ -164,6 +164,12 @@ export function getMainApplicationOrThrow(androidManifest: AndroidManifest): Man
   return mainApplication;
 }
 
+export function getMainActivityOrThrow(androidManifest: AndroidManifest): ManifestActivity {
+  const mainActivity = getMainActivity(androidManifest);
+  assert(mainActivity, 'AndroidManifest.xml is missing the required MainActivity element');
+  return mainActivity;
+}
+
 export function getMainActivity(androidManifest: AndroidManifest): ManifestActivity | null {
   const mainActivity = androidManifest?.manifest?.application?.[0]?.activity?.filter?.(
     (e: any) => e.$['android:name'] === '.MainActivity'

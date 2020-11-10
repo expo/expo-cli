@@ -1,4 +1,5 @@
 import { ExpoConfig } from '../Config.types';
+import { createAndroidManifestPlugin } from '../plugins/android-plugins';
 import {
   addMetaDataItemToMainApplication,
   AndroidManifest,
@@ -8,6 +9,8 @@ import {
 
 const META_APPLICATION_ID = 'com.google.android.gms.ads.APPLICATION_ID';
 const META_DELAY_APP_MEASUREMENT_INIT = 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT';
+
+export const withGoogleMobileAdsConfig = createAndroidManifestPlugin(setGoogleMobileAdsConfig);
 
 export function getGoogleMobileAdsAppId(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.config?.googleMobileAdsAppId ?? null;

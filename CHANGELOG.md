@@ -10,6 +10,37 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Mon, 9 Nov 2020 13:44:59 -0800](https://github.com/expo/expo-cli/commit/d5b8759b32d5a7747067a969728d9ba732926824)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [cli] Added support for a custom scheme property ([#2860](https://github.com/expo/expo-cli/issues/2860))
+- [cli] Clarify the experimental nature of the --dev-client flag
+- [cli] Created scheme resolver for dev-client ([#2861](https://github.com/expo/expo-cli/issues/2861))
+- [uri-scheme] sort Info.plist files by length ([#2859](https://github.com/expo/expo-cli/issues/2859))
+
+### 🐛 Bug fixes
+
+- [xdl] speed improvement - remove extra config read when resolving entry point ([#2836](https://github.com/expo/expo-cli/issues/2836))
+- [xdl] fix updates ON_ERROR_RECOVERY setting for SDK 39 ([#2856](https://github.com/expo/expo-cli/issues/2856))
+
+### 📦 Packages updated
+
+- @expo/config@3.3.15
+- @expo/dev-server@0.1.40
+- @expo/dev-tools@0.13.59
+- @expo/electron-adapter@0.0.31
+- expo-cli@3.28.6
+- expo-optimize@0.1.62
+- @expo/metro-config@0.1.40
+- @expo/next-adapter@2.1.45
+- expo-pwa@0.0.50
+- uri-scheme@1.0.46
+- @expo/webpack-config@0.12.44
+- @expo/xdl@58.0.20
+
 ## [Wed, 4 Nov 2020 19:04:11 -0800](https://github.com/expo/expo-cli/commit/4a29c163952ea8f4a27e3621b2aa08fce164923e)
 
 ### 🛠 Breaking changes

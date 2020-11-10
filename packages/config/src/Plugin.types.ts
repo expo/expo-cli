@@ -2,6 +2,9 @@ import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
 import { XcodeProject } from 'xcode';
 
+import { AndroidManifest } from './android/Manifest';
+import * as AndroidPaths from './android/Paths';
+import { ResourceXML } from './android/Resources';
 import { InfoPlist } from './ios/IosConfig.types';
 
 type OptionalPromise<T> = Promise<T> | T;
@@ -51,6 +54,7 @@ export interface ExportedConfigWithProps<Data = any> extends ExpoConfig {
   modRequest: ModProps<Data>;
 }
 
+// TODO: Change any to void
 export type ConfigPlugin<Props = any> = (config: ExpoConfig, props: Props) => ExpoConfig;
 
 export type Mod<Props = any> = (
@@ -58,12 +62,44 @@ export type Mod<Props = any> = (
 ) => OptionalPromise<ExportedConfigWithProps<Props>>;
 
 export interface ModConfig {
-  // android?: {
-  // };
+  android?: {
+    /**
+     * Modify the `android/app/src/main/AndroidManifest.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+     */
+    manifest?: Mod<AndroidManifest>;
+    /**
+     * Modify the `android/app/src/main/res/values/strings.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+     */
+    strings?: Mod<ResourceXML>;
+    /**
+     * Modify the `android/app/src/main/<package>/MainActivity.java` as a string.
+     */
+    mainActivity?: Mod<AndroidPaths.ApplicationProjectFile>;
+    /**
+     * Modify the `android/app/build.gradle` as a string.
+     */
+    appBuildGradle?: Mod<AndroidPaths.GradleProjectFile>;
+    /**
+     * Modify the `android/build.gradle` as a string.
+     */
+    projectBuildGradle?: Mod<AndroidPaths.GradleProjectFile>;
+  };
   ios?: {
+    /**
+     * Modify the `ios/<name>/Info.plist` as JSON (parsed with [`@expo/plist`](https://www.npmjs.com/package/@expo/plist)).
+     */
     infoPlist?: Mod<InfoPlist>;
+    /**
+     * Modify the `ios/<name>/<product-name>.entitlements` as JSON (parsed with [`@expo/plist`](https://www.npmjs.com/package/@expo/plist)).
+     */
     entitlements?: Mod<Plist>;
+    /**
+     * Modify the `ios/<name>/Expo.plist` as JSON (Expo updates config for iOS) (parsed with [`@expo/plist`](https://www.npmjs.com/package/@expo/plist)).
+     */
     expoPlist?: Mod<Plist>;
+    /**
+     * Modify the `ios/<name>.xcodeproj` as an `XcodeProject` (parsed with [`xcode`](https://www.npmjs.com/package/xcode))
+     */
     xcodeproj?: Mod<XcodeProject>;
   };
 }
