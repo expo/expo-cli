@@ -1,6 +1,6 @@
 import { ExpoConfig } from '../Config.types';
 import { ConfigPlugin } from '../Plugin.types';
-import { createAndroidManifestPlugin } from '../plugins/android-plugins';
+import { withAndroidManifest } from '../plugins/android-plugins';
 import { AndroidManifest, ManifestUsesPermission } from './Manifest';
 
 const USES_PERMISSION = 'uses-permission';
@@ -54,7 +54,10 @@ export const withPermissions: ConfigPlugin<string[] | void> = (config, permissio
       ...new Set(config.android.permissions.concat(permissions)),
     ];
   }
-  return createAndroidManifestPlugin(setAndroidPermissions);
+  return withAndroidManifest(config, async config => {
+    config.modResults = await setAndroidPermissions(config, config.modResults);
+    return config;
+  });
 };
 
 function prefixAndroidPermissionsIfNecessary(permissions: string[]): string[] {
