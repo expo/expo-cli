@@ -62,13 +62,6 @@ function getSupportedPlatforms(
   return platforms;
 }
 
-export function getConfigWithMods(projectRoot: string, options?: GetConfigOptions): ProjectConfig {
-  const config = getConfig(projectRoot, options);
-  // @ts-ignore: Add the mods back to the object.
-  config.exp.mods = config.mods ?? null;
-  return config;
-}
-
 /**
  * Evaluate the config for an Expo project.
  * If a function is exported from the `app.config.js` then a partial config will be passed as an argument.
@@ -134,6 +127,10 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
       if (configWithDefaultValues.exp.android?.config) {
         delete configWithDefaultValues.exp.android.config;
       }
+    }
+    if (options.isModdedConfig) {
+      // @ts-ignore: Add the mods back to the object.
+      configWithDefaultValues.exp.mods = config.mods ?? null;
     }
 
     return configWithDefaultValues;

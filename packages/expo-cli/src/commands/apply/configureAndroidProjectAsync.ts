@@ -1,4 +1,4 @@
-import { getConfigWithMods } from '@expo/config';
+import { getConfig } from '@expo/config';
 import { withExpoAndroidPlugins } from '@expo/config/build/plugins/expo-plugins';
 import { compileModsAsync } from '@expo/config/build/plugins/mod-compiler';
 import { UserManager } from '@expo/xdl';
@@ -11,7 +11,10 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   const expoUsername =
     process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
 
-  let { exp: config } = getConfigWithMods(projectRoot, { skipSDKVersionRequirement: true });
+  let { exp: config } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+    isModdedConfig: true,
+  });
 
   // Add all built-in plugins
   config = withExpoAndroidPlugins(config, {
