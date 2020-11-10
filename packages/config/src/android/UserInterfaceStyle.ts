@@ -49,7 +49,7 @@ export function setUiModeAndroidManifest(
   androidManifest: AndroidManifest
 ) {
   const userInterfaceStyle = getUserInterfaceStyle(config);
-  // TODO: Remove
+  // TODO: Remove this if we decide to remove any uiMode configuration when not specified 
   if (!userInterfaceStyle) {
     return androidManifest;
   }
