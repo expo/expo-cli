@@ -157,13 +157,9 @@ describe('built-in plugins', () => {
         silentLaunch: true,
       },
       scheme: 'my-app-redirect',
-      // entryPoint: './index.js',
-      // rnCliPath?: string;
       packagerOpts: {
         extraThing: true,
       },
-      // ignoreNodeModulesValidation?: boolean;
-      // nodeModulesPath?: string;
       updates: {
         enabled: true,
         checkAutomatically: 'ON_ERROR_RECOVERY',
@@ -180,11 +176,9 @@ describe('built-in plugins', () => {
       facebookDisplayName: 'my-fb-test-app',
       facebookScheme: 'fb1234567890',
       ios: {
-        // publishManifestPath: './ios-manifest'
         bundleIdentifier: 'com.bacon.tester.expoapp',
         buildNumber: '6.5.0',
         backgroundColor: '#ff0000',
-        // icon: './icons/ios-icon.png',
         merchantId: 'TEST_MERCHANT_ID',
         appStoreUrl: 'https://itunes.apple.com/us/app/pillar-valley/id1336398804?ls=1&mt=8',
         config: {

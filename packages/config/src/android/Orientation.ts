@@ -1,7 +1,6 @@
 import { ExpoConfig } from '../Config.types';
-import { assert } from '../Errors';
 import { createAndroidManifestPlugin } from '../plugins/android-plugins';
-import { AndroidManifest, getMainActivity } from './Manifest';
+import { AndroidManifest, getMainActivityOrThrow } from './Manifest';
 
 export const SCREEN_ORIENTATION_ATTRIBUTE = 'android:screenOrientation';
 
@@ -16,13 +15,12 @@ export function setAndroidOrientation(
   androidManifest: AndroidManifest
 ) {
   const orientation = getOrientation(config);
-  // TODO: Remove this if we decide to remove any orientation configuration when not specified 
+  // TODO: Remove this if we decide to remove any orientation configuration when not specified
   if (!orientation) {
     return androidManifest;
   }
 
-  const mainActivity = getMainActivity(androidManifest);
-  assert(mainActivity, 'AndroidManifest.xml is missing the required MainActivity element');
+  const mainActivity = getMainActivityOrThrow(androidManifest);
 
   mainActivity.$[SCREEN_ORIENTATION_ATTRIBUTE] =
     orientation !== 'default' ? orientation : 'unspecified';

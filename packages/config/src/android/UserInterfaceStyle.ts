@@ -2,7 +2,7 @@ import { ExpoConfig } from '../Config.types';
 import { ConfigPlugin } from '../Plugin.types';
 import { addWarningAndroid } from '../WarningAggregator';
 import { createAndroidManifestPlugin, withMainActivity } from '../plugins/android-plugins';
-import { AndroidManifest, getMainActivity } from './Manifest';
+import { AndroidManifest, getMainActivityOrThrow } from './Manifest';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';
 
@@ -49,16 +49,12 @@ export function setUiModeAndroidManifest(
   androidManifest: AndroidManifest
 ) {
   const userInterfaceStyle = getUserInterfaceStyle(config);
-  // TODO: Remove this if we decide to remove any uiMode configuration when not specified 
+  // TODO: Remove this if we decide to remove any uiMode configuration when not specified
   if (!userInterfaceStyle) {
     return androidManifest;
   }
 
-  let mainActivity = getMainActivity(androidManifest);
-  // TODO: Assert
-  if (!mainActivity) {
-    mainActivity = { $: { 'android:name': '.MainActivity' } };
-  }
+  const mainActivity = getMainActivityOrThrow(androidManifest);
   mainActivity.$[CONFIG_CHANGES_ATTRIBUTE] =
     'keyboard|keyboardHidden|orientation|screenSize|uiMode';
 
