@@ -16,7 +16,7 @@ export function setAndroidOrientation(
   androidManifest: AndroidManifest
 ) {
   const orientation = getOrientation(config);
-  // TODO: Remove this
+  // TODO: Remove this if we decide to remove any orientation configuration when not specified 
   if (!orientation) {
     return androidManifest;
   }
