@@ -9,7 +9,7 @@ import { writeXMLAsync } from './XML';
 const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
 
-export const withRootViewBackgroundColor: ConfigPlugin<void> = config => {
+export const withRootViewBackgroundColor: ConfigPlugin = config => {
   return withDangerousAndroidMod(config, async config => {
     await setRootViewBackgroundColor(config, config.modRequest.projectRoot);
     return config;

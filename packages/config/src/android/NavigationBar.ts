@@ -10,7 +10,7 @@ import { writeXMLAsync } from './XML';
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 const WINDOW_LIGHT_NAVIGATION_BAR = 'android:windowLightNavigationBar';
 
-export const withNavigationBar: ConfigPlugin<void> = config => {
+export const withNavigationBar: ConfigPlugin = config => {
   return withDangerousAndroidMod(config, async config => {
     await setNavigationBarConfig(config, config.modRequest.projectRoot);
     return config;

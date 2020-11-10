@@ -11,7 +11,7 @@ const COLOR_PRIMARY_DARK_KEY = 'colorPrimaryDark';
 const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
 const WINDOW_LIGHT_STATUS_BAR = 'android:windowLightStatusBar';
 
-export const withStatusBar: ConfigPlugin<void> = config => {
+export const withStatusBar: ConfigPlugin = config => {
   return withDangerousAndroidMod(config, async config => {
     await setStatusBarConfig(config, config.modRequest.projectRoot);
     return config;

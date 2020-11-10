@@ -21,7 +21,7 @@ public class MainActivity extends ReactActivity {
 
 export const withUiModeManifest = createAndroidManifestPlugin(setUiModeAndroidManifest);
 
-export const withUiModeMainActivity: ConfigPlugin<void> = config => {
+export const withUiModeMainActivity: ConfigPlugin = config => {
   return withMainActivity(config, config => {
     if (config.modResults.language === 'java') {
       config.modResults.contents = addOnConfigurationChangedMainActivity(

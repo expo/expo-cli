@@ -50,7 +50,7 @@ function applyAndroidCoreMods(projectRoot: string, config: ExportedConfig): Expo
   return config;
 }
 
-const withAndroidManifestBaseMod: ConfigPlugin<void> = config => {
+const withAndroidManifestBaseMod: ConfigPlugin = config => {
   // Append a rule to supply AndroidManifest.xml data to mods on `mods.android.manifest`
   return withInterceptedMod<AndroidManifest>(config, {
     platform: 'android',
@@ -85,7 +85,7 @@ const withAndroidManifestBaseMod: ConfigPlugin<void> = config => {
   });
 };
 
-const withAndroidStringsXMLBaseMod: ConfigPlugin<void> = config => {
+const withAndroidStringsXMLBaseMod: ConfigPlugin = config => {
   // Append a rule to supply strings.xml data to mods on `mods.android.strings`
   return withInterceptedMod<ResourceXML>(config, {
     platform: 'android',
@@ -120,7 +120,7 @@ const withAndroidStringsXMLBaseMod: ConfigPlugin<void> = config => {
   });
 };
 
-const withAndroidProjectBuildGradleBaseMod: ConfigPlugin<void> = config => {
+const withAndroidProjectBuildGradleBaseMod: ConfigPlugin = config => {
   return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
     platform: 'android',
     mod: 'projectBuildGradle',
@@ -155,7 +155,7 @@ const withAndroidProjectBuildGradleBaseMod: ConfigPlugin<void> = config => {
   });
 };
 
-const withAndroidAppBuildGradleBaseMod: ConfigPlugin<void> = config => {
+const withAndroidAppBuildGradleBaseMod: ConfigPlugin = config => {
   return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
     platform: 'android',
     mod: 'appBuildGradle',
@@ -190,7 +190,7 @@ const withAndroidAppBuildGradleBaseMod: ConfigPlugin<void> = config => {
   });
 };
 
-const withAndroidMainActivityBaseMod: ConfigPlugin<void> = config => {
+const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
   return withInterceptedMod<AndroidPaths.ApplicationProjectFile>(config, {
     platform: 'android',
     mod: 'mainActivity',
@@ -330,7 +330,7 @@ function applyIOSCoreMods(projectRoot: string, config: ExportedConfig): Exported
   return config;
 }
 
-const withEntitlementsBaseMod: ConfigPlugin<void> = config => {
+const withEntitlementsBaseMod: ConfigPlugin = config => {
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
   return withInterceptedMod<JSONObject>(config, {
     platform: 'ios',

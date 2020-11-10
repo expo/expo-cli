@@ -12,7 +12,7 @@ import { addFileToGroup, getProjectName } from './utils/Xcodeproj';
 
 export const withGoogle = createInfoPlistPlugin(setGoogleConfig);
 
-export const withGoogleServicesFile: ConfigPlugin<void> = config => {
+export const withGoogleServicesFile: ConfigPlugin = config => {
   return withXcodeProject(config, config => {
     config.modResults = setGoogleServicesFile(config, {
       projectRoot: config.modRequest.projectRoot,

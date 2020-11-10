@@ -9,7 +9,7 @@ import { withDangerousMod } from '../plugins/ios-plugins';
 import { ContentsJson, ContentsJsonImageIdiom, writeContentsJsonAsync } from './AssetContents';
 import { getProjectName } from './utils/Xcodeproj';
 
-export const withIcons: ConfigPlugin<void> = config => {
+export const withIcons: ConfigPlugin = config => {
   return withDangerousMod(config, async config => {
     await setIconsAsync(config, config.modRequest.projectRoot);
     return config;
