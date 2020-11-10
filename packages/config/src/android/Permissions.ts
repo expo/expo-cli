@@ -1,4 +1,5 @@
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { createAndroidManifestPlugin } from '../plugins/android-plugins';
 import { AndroidManifest, ManifestUsesPermission } from './Manifest';
 
@@ -43,7 +44,17 @@ export const allPermissions = [
   'com.sonyericsson.home.permission.BROADCAST_BADGE',
 ];
 
-export const withPermissions = createAndroidManifestPlugin(setAndroidPermissions);
+export const withPermissions: ConfigPlugin<string[] | void> = (config, permissions) => {
+  if (Array.isArray(permissions)) {
+    if (!config.android) config.android = {};
+    if (!config.android.permissions) config.android.permissions = [];
+    config.android.permissions = [
+      // @ts-ignore
+      ...new Set(config.android.permissions.concat(permissions)),
+    ];
+  }
+  return createAndroidManifestPlugin(setAndroidPermissions);
+};
 
 function prefixAndroidPermissionsIfNecessary(permissions: string[]): string[] {
   return permissions.map(permission => {
