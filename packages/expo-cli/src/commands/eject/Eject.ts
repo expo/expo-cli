@@ -685,9 +685,35 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
   pkg: PackageJSONConfig,
   options?: EjectAsyncOptions
 ): Promise<void> {
+  const expoPackagesWithExtraSetup = [
+    'expo-camera',
+    'expo-image-picker',
+    'expo-av',
+    'expo-ads-admob',
+    'expo-background-fetch',
+    'expo-barcode-scanner',
+    'expo-brightness',
+    'expo-calendar',
+    'expo-contacts',
+    'expo-facebook',
+    'expo-file-system',
+    'expo-location',
+    'expo-media-library',
+    'expo-notifications',
+    'expo-screen-orientation',
+    'expo-sensors',
+    'expo-splash-screen',
+    'expo-task-manager',
+    'expo-updates',
+  ].reduce(
+    (prev, curr) => ({
+      ...prev,
+      [curr]: `https://github.com/expo/expo/tree/master/packages/${curr}`,
+    }),
+    {}
+  );
   const pkgsWithExtraSetup: Record<string, string> = {
-    'expo-camera': 'https://github.com/expo/expo/tree/master/packages/expo-camera',
-    'expo-image-picker': 'https://github.com/expo/expo/tree/master/packages/expo-image-picker',
+    ...expoPackagesWithExtraSetup,
     'lottie-react-native': 'https://github.com/react-native-community/lottie-react-native',
     'expo-constants': `${chalk.bold(
       'Constants.manifest'
