@@ -1,4 +1,5 @@
 import { ExpoConfig } from '../Config.types';
+import { createAndroidManifestPlugin } from '../plugins/android-plugins';
 import {
   addMetaDataItemToMainApplication,
   AndroidManifest,
@@ -7,6 +8,8 @@ import {
 } from './Manifest';
 
 const META_BRANCH_KEY = 'io.branch.sdk.BranchKey';
+
+export const withBranch = createAndroidManifestPlugin(setBranchApiKey);
 
 export function getBranchApiKey(config: ExpoConfig) {
   return config.android?.config?.branch?.apiKey ?? null;

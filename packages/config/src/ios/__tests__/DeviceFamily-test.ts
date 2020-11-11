@@ -1,5 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
-import * as fs from 'fs-extra';
+import * as fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 
@@ -13,18 +13,10 @@ import {
 } from '../DeviceFamily';
 import { getPbxproj } from '../utils/Xcodeproj';
 
-const actualFs = jest.requireActual('fs') as typeof fs;
+const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
-
-jest.mock('../../WarningAggregator', () => ({
-  addWarningIOS: jest.fn(),
-}));
-
-afterAll(() => {
-  jest.unmock('fs');
-  jest.unmock('../../WarningAggregator');
-});
+jest.mock('../../WarningAggregator');
 
 const TABLET_AND_PHONE_SUPPORTED = [1, 2];
 const ONLY_PHONE_SUPPORTED = [1];
@@ -98,7 +90,7 @@ describe(setDeviceFamily, () => {
   beforeAll(async () => {
     vol.fromJSON(
       {
-        'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
         ),

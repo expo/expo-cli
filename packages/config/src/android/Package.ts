@@ -3,7 +3,38 @@ import { sync as globSync } from 'glob';
 import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
+import { addWarningAndroid } from '../WarningAggregator';
+import {
+  createAndroidManifestPlugin,
+  withAppBuildGradle,
+  withDangerousAndroidMod,
+} from '../plugins/android-plugins';
 import { AndroidManifest } from './Manifest';
+import { getMainApplicationAsync } from './Paths';
+
+export const withPackageManifest = createAndroidManifestPlugin(setPackageInAndroidManifest);
+
+export const withPackageGradle: ConfigPlugin = config => {
+  return withAppBuildGradle(config, config => {
+    if (config.modResults.language === 'groovy') {
+      config.modResults.contents = setPackageInBuildGradle(config, config.modResults.contents);
+    } else {
+      addWarningAndroid(
+        'android-package',
+        `Cannot automatically configure app build.gradle if it's not groovy`
+      );
+    }
+    return config;
+  });
+};
+
+export const withPackageRefactor: ConfigPlugin = config => {
+  return withDangerousAndroidMod(config, async config => {
+    await renamePackageOnDisk(config, config.modRequest.projectRoot);
+    return config;
+  });
+};
 
 export function getPackage(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.package ?? null;
@@ -13,27 +44,10 @@ function getPackageRoot(projectRoot: string) {
   return path.join(projectRoot, 'android', 'app', 'src', 'main', 'java');
 }
 
-function getMainApplicationPath({
-  projectRoot,
-  packageRoot = getPackageRoot(projectRoot),
-}: {
-  packageRoot?: string;
-  projectRoot: string;
-}): string {
-  const mainApplications = globSync('**/MainApplication.java', {
-    absolute: true,
-    cwd: packageRoot,
-  });
-  // If there's more than one, we'll probably have a problem.
-  // Also, glob always returns a posix formatted path (even on windows),
-  // lets normalize that so we can use it with `.split(path.sep)`
-  return path.normalize(mainApplications[0]);
-}
-
-function getCurrentPackageName(projectRoot: string) {
+async function getCurrentPackageName(projectRoot: string) {
   const packageRoot = getPackageRoot(projectRoot);
-  const mainApplicationPath = getMainApplicationPath({ projectRoot, packageRoot });
-  const packagePath = path.dirname(mainApplicationPath);
+  const mainApplication = await getMainApplicationAsync(projectRoot);
+  const packagePath = path.dirname(mainApplication.path);
   const packagePathParts = path.relative(packageRoot, packagePath).split(path.sep).filter(Boolean);
 
   return packagePathParts.join('.');
@@ -42,13 +56,16 @@ function getCurrentPackageName(projectRoot: string) {
 // NOTE(brentvatne): this assumes that our MainApplication.java file is in the root of the package
 // this makes sense for standard react-native projects but may not apply in customized projects, so if
 // we want this to be runnable in any app we need to handle other possibilities
-export function renamePackageOnDisk(config: Pick<ExpoConfig, 'android'>, projectRoot: string) {
+export async function renamePackageOnDisk(
+  config: Pick<ExpoConfig, 'android'>,
+  projectRoot: string
+) {
   const newPackageName = getPackage(config);
   if (newPackageName === null) {
     return;
   }
 
-  const currentPackageName = getCurrentPackageName(projectRoot);
+  const currentPackageName = await getCurrentPackageName(projectRoot);
   if (currentPackageName === newPackageName) {
     return;
   }

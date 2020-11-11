@@ -3,7 +3,6 @@ import { vol } from 'memfs';
 import { getConfig, getProjectConfigDescription, readConfigJson } from '../Config';
 
 jest.mock('fs');
-jest.mock('resolve-from');
 
 describe(`getProjectConfigDescription`, () => {
   it(`describes a project using both a static and dynamic config`, () => {
@@ -34,6 +33,83 @@ describe(`getProjectConfigDescription`, () => {
       staticConfigPath: null,
     });
     expect(message).toBe(null);
+  });
+});
+
+describe('getConfig public config', () => {
+  const appJsonWithPrivateData = {
+    name: 'testing 123',
+    version: '0.1.0',
+    slug: 'testing-123',
+    sdkVersion: '100.0.0',
+    hooks: {
+      postPublish: [],
+    },
+    android: {
+      config: {
+        googleMaps: {
+          apiKey: 'test-key',
+        },
+      },
+      versionCode: 1,
+    },
+    ios: {
+      config: {
+        googleMapsApiKey: 'test-key',
+      },
+      buildNumber: '1.0',
+    },
+  };
+
+  const appJsonNoPrivateData = {
+    name: 'testing 123',
+    version: '0.1.0',
+    slug: 'testing-123',
+    sdkVersion: '100.0.0',
+    ios: {
+      buildNumber: '1.0',
+    },
+  };
+
+  beforeAll(() => {
+    const packageJson = JSON.stringify(
+      {
+        name: 'testing123',
+        version: '0.1.0',
+        description: 'fake description',
+        main: 'index.js',
+      },
+      null,
+      2
+    );
+
+    vol.fromJSON({
+      '/private-data/package.json': packageJson,
+      '/private-data/app.json': JSON.stringify({ expo: appJsonWithPrivateData }),
+      '/no-private-data/package.json': packageJson,
+      '/no-private-data/app.json': JSON.stringify({ expo: appJsonNoPrivateData }),
+    });
+  });
+
+  afterAll(() => vol.reset());
+
+  it('removes only private data from the config', () => {
+    const { exp } = getConfig('/private-data', { isPublicConfig: true });
+
+    expect(exp.hooks).toBeUndefined();
+
+    expect(exp.ios).toBeDefined();
+    expect(exp.ios.buildNumber).toEqual(appJsonWithPrivateData.ios.buildNumber);
+    expect(exp.ios.config).toBeUndefined();
+
+    expect(exp.android).toBeDefined();
+    expect(exp.android.versionCode).toEqual(appJsonWithPrivateData.android.versionCode);
+    expect(exp.android.config).toBeUndefined();
+  });
+
+  it('does not remove properties from a config with no private data', () => {
+    const { exp } = getConfig('/no-private-data', { isPublicConfig: true });
+    expect(exp).toMatchObject(appJsonNoPrivateData);
   });
 });
 

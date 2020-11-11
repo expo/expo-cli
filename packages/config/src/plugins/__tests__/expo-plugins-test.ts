@@ -1,29 +1,27 @@
+import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 import * as path from 'path';
+import xcode from 'xcode';
 
 import { ExportedConfig } from '../../Plugin.types';
+import { readXMLAsync } from '../../android/XML';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
-import { withExpoIOSPlugins } from '../expo-plugins';
+import { withExpoAndroidPlugins, withExpoIOSPlugins } from '../expo-plugins';
 import { compileModsAsync, evalModsAsync } from '../mod-compiler';
 import rnFixture from './fixtures/react-native-project';
-const actualFs = jest.requireActual('fs') as typeof fs;
+
+const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
-
-jest.mock('@expo/image-utils', () => ({
-  generateImageAsync(input, { src }) {
-    const fs = require('fs');
-    return { source: fs.readFileSync(src) };
-  },
-  compositeImagesAsync({ foreground }) {
-    return foreground;
-  },
-}));
-
-afterAll(() => {
-  jest.unmock('@expo/image-utils');
-  jest.unmock('fs');
+// Weird issues with Android Icon module make it hard to mock test.
+jest.mock('../../android/Icon', () => {
+  return {
+    withIcons(config) {
+      return config;
+    },
+    setIconAsync() {},
+  };
 });
 
 describe(evalModsAsync, () => {
@@ -37,12 +35,12 @@ describe(evalModsAsync, () => {
   });
 });
 
-describe(withExpoIOSPlugins, () => {
+describe('built-in plugins', () => {
   const projectRoot = '/app';
   const iconPath = path.resolve(__dirname, '../../ios/__tests__/fixtures/icons/icon.png');
 
   beforeEach(async () => {
-    const icon = actualFs.readFileSync(iconPath) as any;
+    const icon = fsReal.readFileSync(iconPath) as any;
     // Trick XDL Info.plist reading
     Object.defineProperty(process, 'platform', {
       value: 'not-darwin',
@@ -51,6 +49,9 @@ describe(withExpoIOSPlugins, () => {
       {
         ...rnFixture,
         'config/GoogleService-Info.plist': 'noop',
+        'config/google-services.json': '{}',
+        './icons/foreground.png': icon,
+        './icons/background.png': icon,
         './icons/notification-icon.png': icon,
         './icons/ios-icon.png': icon,
         'locales/en-US.json': JSON.stringify({ foo: 'uhh bar', fallback: 'fallback' }, null, 2),
@@ -140,13 +141,9 @@ describe(withExpoIOSPlugins, () => {
         silentLaunch: true,
       },
       scheme: 'my-app-redirect',
-      // entryPoint: './index.js',
-      // rnCliPath?: string;
       packagerOpts: {
         extraThing: true,
       },
-      // ignoreNodeModulesValidation?: boolean;
-      // nodeModulesPath?: string;
       updates: {
         enabled: true,
         checkAutomatically: 'ON_ERROR_RECOVERY',
@@ -163,12 +160,9 @@ describe(withExpoIOSPlugins, () => {
       facebookDisplayName: 'my-fb-test-app',
       facebookScheme: 'fb1234567890',
       ios: {
-        // publishManifestPath: './ios-manifest'
-        publishBundlePath: './ios-dist',
         bundleIdentifier: 'com.bacon.tester.expoapp',
         buildNumber: '6.5.0',
         backgroundColor: '#ff0000',
-        // icon: './icons/ios-icon.png',
         merchantId: 'TEST_MERCHANT_ID',
         appStoreUrl: 'https://itunes.apple.com/us/app/pillar-valley/id1336398804?ls=1&mt=8',
         config: {
@@ -195,12 +189,50 @@ describe(withExpoIOSPlugins, () => {
         usesAppleSignIn: true,
         accessesContactNotes: true,
       },
-
+      android: {
+        package: 'com.bacon.tester.expoapp',
+        versionCode: 6,
+        backgroundColor: '#ff0000',
+        userInterfaceStyle: 'light',
+        adaptiveIcon: {
+          foregroundImage: './icons/foreground.png',
+          backgroundImage: './icons/background.png',
+        },
+        permissions: ['CAMERA', 'com.sec.android.provider.badge.permission.WRITE'],
+        googleServicesFile: './config/google-services.json',
+        config: {
+          branch: {
+            apiKey: 'MY_BRANCH_ANDROID_KEY',
+          },
+          googleMaps: {
+            apiKey: 'MY_GOOGLE_MAPS_ANDROID_KEY',
+          },
+          googleMobileAdsAppId: 'MY_GOOGLE_MOBILE_ADS_APP_ID',
+          googleMobileAdsAutoInit: true,
+        },
+        intentFilters: [
+          {
+            autoVerify: true,
+            action: 'VIEW',
+            data: {
+              scheme: 'https',
+              host: '*.expo.io',
+            },
+            category: ['BROWSABLE', 'DEFAULT'],
+          },
+        ],
+        allowBackup: true,
+        softwareKeyboardLayoutMode: 'pan',
+      },
       mods: null,
     };
 
     config = withExpoIOSPlugins(config, {
       bundleIdentifier: 'com.bacon.todo',
+      expoUsername: 'bacon',
+    });
+    config = withExpoAndroidPlugins(config, {
+      package: 'com.bacon.todo',
       expoUsername: 'bacon',
     });
 
@@ -243,7 +275,15 @@ describe(withExpoIOSPlugins, () => {
       'ios/ReactNativeProject/GoogleService-Info.plist',
       'ios/ReactNativeProject/ReactNativeProject.entitlements',
       'ios/ReactNativeProject.xcodeproj/project.pbxproj',
+      'android/app/src/main/java/com/bacon/todo/MainActivity.java',
+      'android/app/src/main/java/com/bacon/todo/MainApplication.java',
+      'android/app/src/main/AndroidManifest.xml',
+      'android/app/src/main/res/values/styles.xml',
+      'android/app/src/main/res/values/strings.xml',
+      'android/app/src/main/res/values/colors.xml',
+      'android/app/google-services.json',
       'config/GoogleService-Info.plist',
+      'config/google-services.json',
       'locales/en-US.json',
     ]);
 
@@ -256,5 +296,61 @@ describe(withExpoIOSPlugins, () => {
       /foo = "uhh bar"/
     );
     expect(after['ios/ReactNativeProject/GoogleService-Info.plist']).toBe('noop');
+
+    expect(after['android/app/src/main/java/com/bacon/todo/MainApplication.java']).toMatch(
+      'package com.bacon.todo;'
+    );
+    expect(after['android/app/src/main/java/com/bacon/todo/MainActivity.java']).toMatch(
+      '// Added automatically by Expo Config'
+    );
+    expect(after['android/app/src/main/res/values/strings.xml']).toMatch(
+      '<string name="app_name">my cool app</string>'
+    );
+
+    // Ensure files are always written in the correct format
+    for (const xmlPath of [
+      'android/app/src/main/AndroidManifest.xml',
+      'android/app/src/main/res/values/styles.xml',
+      'android/app/src/main/res/values/strings.xml',
+      'android/app/src/main/res/values/colors.xml',
+      'ios/ReactNativeProject/Info.plist',
+      'ios/ReactNativeProject/Base.lproj/LaunchScreen.xib',
+    ]) {
+      const isValid = await isValidXMLAsync(path.join(projectRoot, xmlPath));
+      if (!isValid) throw new Error(`Invalid XML file format at: "${xmlPath}"`);
+    }
+
+    // Ensure files are always written in the correct format
+    for (const xmlPath of [
+      'ios/ReactNativeProject/Images.xcassets/AppIcon.appiconset/Contents.json',
+      'ios/ReactNativeProject/Images.xcassets/Contents.json',
+      'android/app/google-services.json',
+    ]) {
+      const isValid = await isValidJSONAsync(path.join(projectRoot, xmlPath));
+      if (!isValid) throw new Error(`Invalid JSON file format at: "${xmlPath}"`);
+    }
+
+    // Ensure the Xcode project file can be read and parsed.
+    const project = xcode.project(
+      path.join(projectRoot, 'ios/ReactNativeProject.xcodeproj/project.pbxproj')
+    );
+    project.parseSync();
   });
 });
+
+async function isValidXMLAsync(filePath: string) {
+  try {
+    const res = await readXMLAsync({ path: filePath });
+    return !!res;
+  } catch {
+    return false;
+  }
+}
+async function isValidJSONAsync(filePath: string) {
+  try {
+    const res = await JsonFile.readAsync(filePath);
+    return !!res;
+  } catch {
+    return false;
+  }
+}

@@ -1,4 +1,4 @@
-import { ConfigContext, ExpoConfig } from '../../../../';
+import { ConfigContext, ExpoConfig } from '@expo/config';
 
 const foo = { bar: { foo: 'value' } };
 

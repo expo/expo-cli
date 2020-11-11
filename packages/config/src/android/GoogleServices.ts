@@ -2,6 +2,13 @@ import fs from 'fs-extra';
 import { resolve } from 'path';
 
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
+import { addWarningAndroid } from '../WarningAggregator';
+import {
+  withAppBuildGradle,
+  withDangerousAndroidMod,
+  withProjectBuildGradle,
+} from '../plugins/android-plugins';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';
 
@@ -10,6 +17,44 @@ const googleServicesPlugin = 'com.google.gms.google-services';
 
 // NOTE(brentvatne): This may be annoying to keep up to date...
 const googleServicesVersion = '4.3.3';
+
+export const withClassPath: ConfigPlugin = config => {
+  return withProjectBuildGradle(config, config => {
+    if (config.modResults.language === 'groovy') {
+      config.modResults.contents = setClassPath(config, config.modResults.contents);
+    } else {
+      addWarningAndroid(
+        'android-google-services',
+        `Cannot automatically configure project build.gradle if it's not groovy`
+      );
+    }
+    return config;
+  });
+};
+
+export const withApplyPlugin: ConfigPlugin = config => {
+  return withAppBuildGradle(config, config => {
+    if (config.modResults.language === 'groovy') {
+      config.modResults.contents = applyPlugin(config, config.modResults.contents);
+    } else {
+      addWarningAndroid(
+        'android-google-services',
+        `Cannot automatically configure app build.gradle if it's not groovy`
+      );
+    }
+    return config;
+  });
+};
+
+/**
+ * Add `google-services.json` to project
+ */
+export const withGoogleServicesFile: ConfigPlugin = config => {
+  return withDangerousAndroidMod(config, async config => {
+    await setGoogleServicesFile(config, config.modRequest.projectRoot);
+    return config;
+  });
+};
 
 export function getGoogleServicesFilePath(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.googleServicesFile ?? null;

@@ -62,18 +62,13 @@ function getSupportedPlatforms(
   return platforms;
 }
 
-export function getConfigWithMods(projectRoot: string, options?: GetConfigOptions): ProjectConfig {
-  const config = getConfig(projectRoot, options);
-  // @ts-ignore: Add the mods back to the object.
-  config.exp.mods = config.mods ?? null;
-  return config;
-}
-
 /**
  * Evaluate the config for an Expo project.
  * If a function is exported from the `app.config.js` then a partial config will be passed as an argument.
  * The partial config is composed from any existing app.json, and certain fields from the `package.json` like name and description.
  *
+ * If options.isPublicConfig is true, the Expo config will include only public-facing options (omitting private keys).
+ * The resulting config should be suitable for hosting or embedding in a publicly readable location.
  *
  * **Example**
  * ```js
@@ -108,7 +103,7 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
   );
 
   function fillAndReturnConfig(config: SplitConfigs, dynamicConfigObjectType: string | null) {
-    return {
+    const configWithDefaultValues = {
       ...ensureConfigHasDefaultValues(
         projectRoot,
         config.expo,
@@ -121,6 +116,24 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
       dynamicConfigPath: paths.dynamicConfigPath,
       staticConfigPath: paths.staticConfigPath,
     };
+
+    if (options.isPublicConfig) {
+      if (configWithDefaultValues.exp.hooks) {
+        delete configWithDefaultValues.exp.hooks;
+      }
+      if (configWithDefaultValues.exp.ios?.config) {
+        delete configWithDefaultValues.exp.ios.config;
+      }
+      if (configWithDefaultValues.exp.android?.config) {
+        delete configWithDefaultValues.exp.android.config;
+      }
+    }
+    if (options.isModdedConfig) {
+      // @ts-ignore: Add the mods back to the object.
+      configWithDefaultValues.exp.mods = config.mods ?? null;
+    }
+
+    return configWithDefaultValues;
   }
 
   // Fill in the static config
@@ -320,6 +333,12 @@ export async function readExpRcAsync(projectRoot: string): Promise<ExpRc> {
 }
 
 const customConfigPaths: { [projectRoot: string]: string } = {};
+
+export function resetCustomConfigPaths(): void {
+  for (const key of Object.keys(customConfigPaths)) {
+    delete customConfigPaths[key];
+  }
+}
 
 export function setCustomConfigPath(projectRoot: string, configPath: string): void {
   customConfigPaths[projectRoot] = configPath;
@@ -556,7 +575,7 @@ function isDynamicFilePath(filePath: string): boolean {
  */
 export function getProjectConfigDescription(
   projectRoot: string,
-  projectConfig: ProjectConfig
+  projectConfig: Partial<ProjectConfig>
 ): string | null {
   if (projectConfig.dynamicConfigPath) {
     const relativeDynamicConfigPath = path.relative(projectRoot, projectConfig.dynamicConfigPath);

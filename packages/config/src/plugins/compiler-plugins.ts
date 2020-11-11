@@ -5,8 +5,15 @@ import { readFile, writeFile } from 'fs-extra';
 import path from 'path';
 import { XcodeProject } from 'xcode';
 
+import { assert } from '../Errors';
 import { ConfigPlugin, ExportedConfig, ExportedConfigWithProps } from '../Plugin.types';
-import { addWarningIOS } from '../WarningAggregator';
+import { addWarningAndroid, addWarningIOS } from '../WarningAggregator';
+import { Manifest } from '../android';
+import { AndroidManifest } from '../android/Manifest';
+import * as AndroidPaths from '../android/Paths';
+import { readResourcesXMLAsync, ResourceXML } from '../android/Resources';
+import { getProjectStringsXMLPathAsync } from '../android/Strings';
+import { writeXMLAsync } from '../android/XML';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { InfoPlist } from '../ios/IosConfig.types';
 import { getPbxproj, getProjectName } from '../ios/utils/Xcodeproj';
@@ -35,9 +42,188 @@ export function resolveModResults(results: any, platformName: string, modName: s
 }
 
 function applyAndroidCoreMods(projectRoot: string, config: ExportedConfig): ExportedConfig {
-  // TODO: Support android mods
+  config = withAndroidStringsXMLBaseMod(config);
+  config = withAndroidManifestBaseMod(config);
+  config = withAndroidMainActivityBaseMod(config);
+  config = withAndroidProjectBuildGradleBaseMod(config);
+  config = withAndroidAppBuildGradleBaseMod(config);
   return config;
 }
+
+const withAndroidManifestBaseMod: ConfigPlugin = config => {
+  // Append a rule to supply AndroidManifest.xml data to mods on `mods.android.manifest`
+  return withInterceptedMod<AndroidManifest>(config, {
+    platform: 'android',
+    mod: 'manifest',
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<AndroidManifest> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        const filePath = await AndroidPaths.getAndroidManifestAsync(modRequest.projectRoot);
+        let modResults = await Manifest.readAndroidManifestAsync(filePath);
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await Manifest.writeAndroidManifestAsync(filePath, modResults);
+      } catch (error) {
+        addWarningAndroid(
+          'android-manifest',
+          `AndroidManifest.xml configuration could not be applied. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
+
+const withAndroidStringsXMLBaseMod: ConfigPlugin = config => {
+  // Append a rule to supply strings.xml data to mods on `mods.android.strings`
+  return withInterceptedMod<ResourceXML>(config, {
+    platform: 'android',
+    mod: 'strings',
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<ResourceXML> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        const filePath = await getProjectStringsXMLPathAsync(modRequest.projectRoot);
+        let modResults = await readResourcesXMLAsync({ path: filePath });
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await writeXMLAsync({ path: filePath, xml: modResults });
+      } catch (error) {
+        addWarningAndroid(
+          `${modRequest.platform}-${modRequest.modName}`,
+          `strings.xml configuration could not be applied. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
+
+const withAndroidProjectBuildGradleBaseMod: ConfigPlugin = config => {
+  return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
+    platform: 'android',
+    mod: 'projectBuildGradle',
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        let modResults = await AndroidPaths.getProjectBuildGradleAsync(modRequest.projectRoot);
+        // Currently don't support changing the path or language
+        const filePath = modResults.path;
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await writeFile(filePath, modResults.contents);
+      } catch (error) {
+        addWarningAndroid(
+          `${modRequest.platform}-${modRequest.modName}`,
+          `Project build.gradle could not be modified. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
+
+const withAndroidAppBuildGradleBaseMod: ConfigPlugin = config => {
+  return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
+    platform: 'android',
+    mod: 'appBuildGradle',
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        let modResults = await AndroidPaths.getAppBuildGradleAsync(modRequest.projectRoot);
+        // Currently don't support changing the path or language
+        const filePath = modResults.path;
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await writeFile(filePath, modResults.contents);
+      } catch (error) {
+        addWarningAndroid(
+          `${modRequest.platform}-${modRequest.modName}`,
+          `App build.gradle could not be modified. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
+
+const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
+  return withInterceptedMod<AndroidPaths.ApplicationProjectFile>(config, {
+    platform: 'android',
+    mod: 'mainActivity',
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<AndroidPaths.ApplicationProjectFile> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        let modResults = await AndroidPaths.getMainActivityAsync(modRequest.projectRoot);
+        // Currently don't support changing the path or language
+        const filePath = modResults.path;
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await writeFile(filePath, modResults.contents);
+      } catch (error) {
+        addWarningAndroid(
+          `${modRequest.platform}-${modRequest.modName}`,
+          `MainActivity could not be modified. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
 
 function applyIOSCoreMods(projectRoot: string, config: ExportedConfig): ExportedConfig {
   const { iosProjectDirectory, supportingDirectory } = getIOSPaths(projectRoot, config);
@@ -62,7 +248,9 @@ function applyIOSCoreMods(projectRoot: string, config: ExportedConfig): Exported
       }
 
       const filePath = path.resolve(iosProjectDirectory, 'Info.plist');
-      let data = plist.parse(await readFile(filePath, 'utf8'));
+      const contents = await readFile(filePath, 'utf8');
+      assert(contents, 'Info.plist is empty');
+      let data = plist.parse(contents);
 
       config.ios.infoPlist = {
         ...(data || {}),
@@ -142,7 +330,7 @@ function applyIOSCoreMods(projectRoot: string, config: ExportedConfig): Exported
   return config;
 }
 
-const withEntitlementsBaseMod: ConfigPlugin<void> = config => {
+const withEntitlementsBaseMod: ConfigPlugin = config => {
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
   return withInterceptedMod<JSONObject>(config, {
     platform: 'ios',

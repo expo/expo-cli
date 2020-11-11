@@ -4,7 +4,7 @@ import { evalModsAsync } from '../mod-compiler';
 
 describe(withPlugins, () => {
   it('compiles plugins in the correct order', () => {
-    const pluginA: ConfigPlugin<void> = config => {
+    const pluginA: ConfigPlugin = config => {
       config.extra.push('alpha');
       return config;
     };
@@ -34,7 +34,6 @@ describe(withExtendedMod, () => {
 
     // Apply mod
     let config = withExtendedMod<any>(exportedConfig, {
-      // @ts-ignore: unsupported platform
       platform: 'android',
       mod: 'custom',
       action(props) {
@@ -48,10 +47,9 @@ describe(withExtendedMod, () => {
     config = await evalModsAsync(config, '/');
 
     // Plugins should all be functions
-    expect(
-      // @ts-ignore: unsupported platform
-      Object.values(config.mods.android).every(value => typeof value === 'function')
-    ).toBe(true);
+    expect(Object.values(config.mods.android).every(value => typeof value === 'function')).toBe(
+      true
+    );
 
     delete config.mods;
 

@@ -22,7 +22,10 @@ export type URLOptions = {
 
 function addOptions(program: Command) {
   program
-    .option('--dev-client', 'Starts the bundler for use with the Expo dev client')
+    .option(
+      '--dev-client',
+      'Experimental: Starts the bundler for use with the expo-development-client'
+    )
     .option('--scheme <scheme>', 'Custom URI protocol to use with a dev client')
     .option('-a, --android', 'Opens your app in Expo client on a connected Android device')
     .option(
@@ -69,8 +72,8 @@ async function optsAsync(projectDir: string, options: any) {
 
   // Prevent using --dev-client in a managed app.
   if (options.devClient) {
-    const target = process.env.EXPO_TARGET ?? getDefaultTarget(projectDir);
-    if (target !== 'bare') {
+    const defaultTarget = getDefaultTarget(projectDir);
+    if (defaultTarget !== 'bare') {
       log.warn(
         `\nOption ${log.chalk.cyan(
           '--dev-client'

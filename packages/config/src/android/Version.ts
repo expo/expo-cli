@@ -1,7 +1,25 @@
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
+import { addWarningAndroid } from '../WarningAggregator';
+import { withAppBuildGradle } from '../plugins/android-plugins';
 
 const DEFAULT_VERSION_NAME = '1.0';
 const DEFAULT_VERSION_CODE = '1';
+
+export const withVersion: ConfigPlugin = config => {
+  return withAppBuildGradle(config, config => {
+    if (config.modResults.language === 'groovy') {
+      config.modResults.contents = setVersionCode(config, config.modResults.contents);
+      config.modResults.contents = setVersionName(config, config.modResults.contents);
+    } else {
+      addWarningAndroid(
+        'android-version',
+        `Cannot automatically configure app build.gradle if it's not groovy`
+      );
+    }
+    return config;
+  });
+};
 
 export function getVersionName(config: Pick<ExpoConfig, 'version'>) {
   return config.version ?? null;

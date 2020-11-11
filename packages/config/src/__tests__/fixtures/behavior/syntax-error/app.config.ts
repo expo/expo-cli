@@ -1,4 +1,0 @@
-/* eslint-disable */
-module.exports = {
-    >
-}

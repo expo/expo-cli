@@ -3,7 +3,6 @@ import { vol } from 'memfs';
 import { getWebOutputPath, readConfigJson } from '../Config';
 
 jest.mock('fs');
-jest.mock('resolve-from');
 
 describe('getWebOutputPath', () => {
   beforeAll(() => {
