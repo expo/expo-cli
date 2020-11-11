@@ -5,6 +5,7 @@ import {
   PackageJSONConfig,
   WarningAggregator,
 } from '@expo/config';
+import { getBareExtensions, getFileWithExtensions } from '@expo/config/paths';
 import JsonFile, { JSONObject } from '@expo/json-file';
 import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
@@ -512,6 +513,17 @@ async function updatePackageJSONAsync({
   };
 }
 
+export function resolveBareEntryFile(projectRoot: string, main: any) {
+  // expo app entry is disallowed for bare projects.
+  if (isPkgMainExpoAppEntry(main)) return null;
+  // Look at the `package.json`s `main` field for the main file.
+  const resolvedMainField = main ?? './index';
+  // Get a list of possible extensions for the main file.
+  const extensions = getBareExtensions(['ios', 'android']);
+  // Testing the main field against all of the provided extensions - for legacy reasons we can't use node module resolution as the package.json allows you to pass in a file without a relative path and expect it as a relative path.
+  return getFileWithExtensions(projectRoot, resolvedMainField, extensions);
+}
+
 export function shouldDeleteMainField(main?: any): boolean {
   if (!main || !isPkgMainExpoAppEntry(main)) {
     return false;
@@ -532,11 +544,16 @@ export function hashForDependencyMap(deps: DependenciesMap): string {
   return createFileHash(depsString);
 }
 
-export function getTargetPaths(pkg: PackageJSONConfig, platforms: PlatformsArray) {
+export function getTargetPaths(
+  projectRoot: string,
+  pkg: PackageJSONConfig,
+  platforms: PlatformsArray
+) {
   const targetPaths: string[] = [...platforms];
 
-  // Only create index.js if we are going to replace the app "main" entry point
-  if (shouldDeleteMainField(pkg.main)) {
+  const bareEntryFile = resolveBareEntryFile(projectRoot, pkg.main);
+  // Only create index.js if we cannot resolve the existing entry point (after replacing the expo entry).
+  if (!bareEntryFile) {
     targetPaths.push('index.js');
   }
 
@@ -569,7 +586,7 @@ async function cloneNativeDirectoriesAsync({
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
 
-  const targetPaths = getTargetPaths(pkg, platforms);
+  const targetPaths = getTargetPaths(projectRoot, pkg, platforms);
 
   let copiedPaths: string[] = [];
   let skippedPaths: string[] = [];
