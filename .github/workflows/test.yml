@@ -23,7 +23,7 @@ jobs:
       - run: yarn install --frozen-lockfile --check-files
       - run: yarn lerna run prepare --stream
       - run: yarn lint --max-warnings=0
-      - uses: actions/cache@v1
+      - uses: actions/cache@v2
         id: cache-build
         with:
           path: '.'
@@ -58,7 +58,7 @@ jobs:
           ]
     name: Test ${{ matrix.package }} on Node ${{ matrix.node }}
     steps:
-      - uses: actions/cache@v1
+      - uses: actions/cache@v2
         id: restore-build
         with:
           path: '.'
@@ -89,7 +89,7 @@ jobs:
       fail-fast: false
     name: Expo Webpack
     steps:
-      - uses: actions/cache@v1
+      - uses: actions/cache@v2
         id: restore-build
         with:
           path: '.'
