@@ -27,7 +27,7 @@ jobs:
         id: cache-build
         with:
           path: '.'
-          key: ${{ github.sha }}-${{ matrix.node }}
+          key: v2-${{ github.sha }}-${{ matrix.node }}
   test:
     runs-on: ubuntu-latest
     needs: build
@@ -62,7 +62,7 @@ jobs:
         id: restore-build
         with:
           path: '.'
-          key: ${{ github.sha }}-${{ matrix.node }}
+          key: v2-${{ github.sha }}-${{ matrix.node }}
       - name: Set up Node
         uses: actions/setup-node@v1
         with:
@@ -93,7 +93,7 @@ jobs:
         id: restore-build
         with:
           path: '.'
-          key: ${{ github.sha }}
+          key: v2-${{ github.sha }}-${{ matrix.node }}
       - name: Install puppeteer
         working-directory: packages/webpack-config
         run: yarn add -D puppeteer@3.1.0
