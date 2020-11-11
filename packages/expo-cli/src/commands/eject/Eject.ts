@@ -514,7 +514,7 @@ async function updatePackageJSONAsync({
 }
 
 export function resolveBareEntryFile(projectRoot: string, main: any) {
-  // expo app entry is disallowed for bare projects.
+  // expo app entry is not needed for bare projects.
   if (isPkgMainExpoAppEntry(main)) return null;
   // Look at the `package.json`s `main` field for the main file.
   const resolvedMainField = main ?? './index';
