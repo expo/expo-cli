@@ -45,7 +45,6 @@ export default function (program: Command) {
     .option('--verbose', 'Always print logs from Submission Service')
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: AndroidSubmitCommandOptions) => {
-      // TODO: remove this once we verify `fastlane supply` works on linux / windows
       if (options.useSubmissionService) {
         log.warn(
           '\n`--use-submission-service is now the default and the flag will be deprecated in the future.`'
@@ -110,7 +109,7 @@ export default function (program: Command) {
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: IosPlatformOptions) => {
       try {
-        // TODO: remove this once we verify `fastlane supply` works on linux / windows
+        // TODO: remove this once we remove fastlane
         checkRuntimePlatform('ios');
 
         const args = pick(options, SOURCE_OPTIONS);
