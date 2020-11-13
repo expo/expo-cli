@@ -225,42 +225,50 @@ export async function getAttachedDevicesAsync(): Promise<Device[]> {
     })
     .filter(({ props: [pid] }) => !!pid);
 
-  const devicePromises = attachedDevices.map<Promise<Device>>(async props => {
-    const {
-      type,
-      props: [pid, ...deviceInfo],
-      isAuthorized,
-    } = props;
+  const devicePromises = attachedDevices.map<Promise<Device>>(
+    async ({ type, props: [pid, ...deviceInfo], isAuthorized }) => {
+      let name: string | null = null;
 
-    let name: string | null = null;
-
-    if (type === 'device') {
-      if (isAuthorized) {
-        // Possibly formatted like `model:Pixel_2`
-        // Transform to `Pixel_2`
-        const modelItem = deviceInfo.find(info => info.includes('model:'));
-        if (modelItem) {
-          name = modelItem.replace('model:', '');
+      if (type === 'device') {
+        if (isAuthorized) {
+          // Possibly formatted like `model:Pixel_2`
+          // Transform to `Pixel_2`
+          const modelItem = deviceInfo.find(info => info.includes('model:'));
+          if (modelItem) {
+            name = modelItem.replace('model:', '');
+          }
+        }
+        // unauthorized devices don't have a name available to read
+        if (!name) {
+          // Device FA8251A00719
+          name = `Device ${pid}`;
+        }
+      } else {
+        try {
+          // Given an emulator pid, get the emulator name which can be used to start the emulator later.
+          name = await getAbdNameForEmulatorIdAsync(pid);
+        } catch (err) {
+          // adb failed to establish a serial connection to the emulator likely because it is running on a different host
+          Logger.global.warn(`adb: ${err.message}`);
+        } finally {
+          if (!name) {
+            // Treat the emulator as a device
+            type = 'device';
+            const modelItem = deviceInfo.find(info => info.includes('model:'))!;
+            name = `Emulator ${modelItem.replace('model:', '')}`;
+          }
         }
       }
-      // unauthorized devices don't have a name available to read
-      if (!name) {
-        // Device FA8251A00719
-        name = `Device ${pid}`;
-      }
-    } else {
-      // Given an emulator pid, get the emulator name which can be used to start the emulator later.
-      name = (await getAbdNameForEmulatorIdAsync(pid)) ?? '';
-    }
 
-    return {
-      pid,
-      name,
-      type,
-      isAuthorized,
-      isBooted: true,
-    };
-  });
+      return {
+        pid,
+        name,
+        type,
+        isAuthorized,
+        isBooted: true,
+      };
+    }
+  );
 
   return Promise.all(devicePromises);
 }
