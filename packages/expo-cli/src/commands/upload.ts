@@ -6,7 +6,6 @@ import log from '../log';
 import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
 import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
 import { AndroidSubmitCommandOptions } from './upload/submission-service/android/types';
-import { SubmissionMode } from './upload/submission-service/types';
 import * as TerminalLink from './utils/TerminalLink';
 
 const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
@@ -52,7 +51,7 @@ export default function (program: Command) {
           '\n`--use-submission-service is now the default and the flag will be deprecated in the future.`'
         );
       }
-      const ctx = AndroidSubmitCommand.createContext(SubmissionMode.online, projectDir, options);
+      const ctx = AndroidSubmitCommand.createContext(projectDir, options);
       const command = new AndroidSubmitCommand(ctx);
       await command.runAsync();
     });
