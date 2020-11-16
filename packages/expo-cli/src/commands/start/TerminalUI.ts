@@ -3,7 +3,6 @@ import {
   Exp,
   Project,
   ProjectSettings,
-  ProjectUtils,
   Prompts,
   Simulator,
   UrlUtils,
