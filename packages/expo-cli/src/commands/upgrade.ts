@@ -514,7 +514,9 @@ export async function upgradeAsync(
   }
 
   // Evaluate project config (app.config.js)
-  const { exp: currentExp, dynamicConfigPath } = ConfigUtils.getConfig(projectRoot);
+  const { exp: currentExp, dynamicConfigPath, staticConfigPath } = ConfigUtils.getConfig(
+    projectRoot
+  );
 
   const removingSdkVersionStep = logNewSection('Validating configuration.');
   if (dynamicConfigPath) {
@@ -529,7 +531,7 @@ export async function upgradeAsync(
     } else {
       removingSdkVersionStep.succeed('Validated configuration.');
     }
-  } else {
+  } else if (staticConfigPath) {
     try {
       const { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
       if (rootConfig.expo.sdkVersion && rootConfig.expo.sdkVersion !== 'UNVERSIONED') {
@@ -539,9 +541,12 @@ export async function upgradeAsync(
       } else {
         removingSdkVersionStep.succeed('Validated configuration.');
       }
-    } catch (_) {
+    } catch {
       removingSdkVersionStep.fail('Unable to validate configuration.');
     }
+  } else {
+    // No config present, nothing to change
+    removingSdkVersionStep.succeed('Validated configuration.');
   }
 
   await makeBreakingChangesToConfigAsync(projectRoot, targetSdkVersionString);
