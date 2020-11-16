@@ -2,7 +2,7 @@ import * as ConfigUtils from '@expo/config';
 import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 
-import prompt from '../../prompt';
+import prompt from '../../prompts';
 import { findProjectRootAsync } from './ProjectUtils';
 
 export async function getExpoSdkConfig(path: string) {
@@ -89,10 +89,9 @@ interface InstallClientOptions {
 
 export async function askClientToInstall(options: InstallClientOptions): Promise<AvailableClient> {
   const answer = await prompt({
-    type: 'list',
+    type: 'select',
     name: 'targetClient',
     message: 'Choose an SDK version to install the client for:',
-    pageSize: 20,
     choices: options.clients.map(client => {
       const clientVersion = `- client ${client.clientVersion || 'version unknown'}`;
       const clientLabels = [
@@ -106,7 +105,7 @@ export async function askClientToInstall(options: InstallClientOptions): Promise
 
       return {
         value: client,
-        name: `${chalk.bold(client.sdkVersionString)} ${chalk.gray(clientMessage)}`,
+        title: `${chalk.bold(client.sdkVersionString)} ${chalk.gray(clientMessage)}`,
       };
     }),
   });
