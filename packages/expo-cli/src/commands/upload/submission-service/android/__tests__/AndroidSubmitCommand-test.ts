@@ -7,13 +7,9 @@ import { jester } from '../../../../../__tests__/user-fixtures';
 import { ensureProjectExistsAsync } from '../../../../../projects';
 import SubmissionService from '../../SubmissionService';
 import { Platform, Submission, SubmissionStatus } from '../../SubmissionService.types';
-import {
-  AndroidSubmissionConfig,
-  ArchiveType,
-  ReleaseStatus,
-  ReleaseTrack,
-} from '../AndroidSubmissionConfig';
+import { ArchiveType, ReleaseStatus, ReleaseTrack } from '../AndroidSubmissionConfig';
 import AndroidSubmitCommand from '../AndroidSubmitCommand';
+import { AndroidOnlineSubmissionConfig } from '../AndroidSubmitter';
 import { AndroidSubmitCommandOptions } from '../types';
 
 jest.mock('fs');
@@ -98,7 +94,7 @@ describe(AndroidSubmitCommand, () => {
       const command = new AndroidSubmitCommand(ctx);
       await command.runAsync();
 
-      const androidSubmissionConfig: AndroidSubmissionConfig = {
+      const androidSubmissionConfig: AndroidOnlineSubmissionConfig = {
         archiveUrl: 'http://expo.io/fake.apk',
         archiveType: ArchiveType.apk,
         androidPackage: testProject.appJSON.expo.android?.package,

@@ -29,7 +29,6 @@ export interface AndroidSubmissionOptions
   androidPackageSource: AndroidPackageSource;
   archiveSource: ArchiveSource;
   serviceAccountSource: ServiceAccountSource;
-  projectId: string;
 }
 
 interface ResolvedSourceOptions {
@@ -53,11 +52,11 @@ class AndroidSubmitter {
       { ...this.options, projectId },
       resolvedSourceOptions
     );
-    const submitter = new AndroidOnlineSubmitter(
+    const onlineSubmitter = new AndroidOnlineSubmitter(
       submissionConfig,
       this.ctx.commandOptions.verbose ?? false
     );
-    await submitter.submitAsync();
+    await onlineSubmitter.submitAsync();
   }
 
   private async resolveSourceOptions(): Promise<ResolvedSourceOptions> {
@@ -72,11 +71,16 @@ class AndroidSubmitter {
   }
 }
 
+export type AndroidOnlineSubmissionConfig = AndroidSubmissionConfig & { projectId: string };
+interface AndroidOnlineSubmissionOptions extends AndroidSubmissionOptions {
+  projectId: string;
+}
+
 class AndroidOnlineSubmitter {
   static async formatSubmissionConfigAndPrintSummary(
-    options: AndroidSubmissionOptions,
+    options: AndroidOnlineSubmissionOptions,
     { archive, androidPackage, serviceAccountPath }: ResolvedSourceOptions
-  ): Promise<AndroidSubmissionConfig> {
+  ): Promise<AndroidOnlineSubmissionConfig> {
     const serviceAccount = await fs.readFile(serviceAccountPath, 'utf-8');
     const submissionConfig = {
       androidPackage,
@@ -93,7 +97,7 @@ class AndroidOnlineSubmitter {
   }
 
   constructor(
-    private submissionConfig: AndroidSubmissionConfig,
+    private submissionConfig: AndroidOnlineSubmissionConfig,
     private verbose: boolean = false
   ) {}
 
