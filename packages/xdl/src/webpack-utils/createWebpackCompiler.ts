@@ -7,7 +7,6 @@
 import boxen from 'boxen';
 import chalk from 'chalk';
 import { Urls } from 'react-dev-utils/WebpackDevServerUtils';
-import clearConsole from 'react-dev-utils/clearConsole';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import webpack from 'webpack';
 
@@ -28,6 +27,10 @@ function log(projectRoot: string, message: string, showInDevtools = true) {
   } else {
     console.log(message);
   }
+}
+
+function clearLogs() {
+  process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
 }
 
 function logWarning(projectRoot: string, message: string) {
@@ -133,7 +136,7 @@ export default function createWebpackCompiler({
   // Whether or not you have warnings or errors, you will get this event.
   compiler.hooks.done.tap('done', async stats => {
     if (SHOULD_CLEAR_CONSOLE && !nonInteractive) {
-      clearConsole();
+      clearLogs();
     }
 
     // We have switched off the default Webpack output in WebpackDevServer
