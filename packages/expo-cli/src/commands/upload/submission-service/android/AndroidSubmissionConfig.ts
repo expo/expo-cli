@@ -5,6 +5,7 @@ export interface AndroidSubmissionConfig {
   track: ReleaseTrack;
   serviceAccount: string;
   releaseStatus?: ReleaseStatus;
+  projectId: string;
 }
 
 enum ArchiveType {

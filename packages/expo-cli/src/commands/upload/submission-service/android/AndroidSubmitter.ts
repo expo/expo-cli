@@ -29,6 +29,7 @@ export interface AndroidSubmissionOptions
   androidPackageSource: AndroidPackageSource;
   archiveSource: ArchiveSource;
   serviceAccountSource: ServiceAccountSource;
+  projectId: string;
 }
 
 interface ResolvedSourceOptions {
@@ -42,10 +43,6 @@ class AndroidSubmitter {
 
   async submitAsync(): Promise<void> {
     const resolvedSourceOptions = await this.resolveSourceOptions();
-    await this.submitOnlineAsync(resolvedSourceOptions);
-  }
-
-  private async submitOnlineAsync(resolvedSourceOptions: ResolvedSourceOptions): Promise<void> {
     const user = await UserManager.ensureLoggedInAsync();
     const exp = getExpoConfig(this.ctx.projectDir);
     const projectId = await ensureProjectExistsAsync(user, {
@@ -56,11 +53,11 @@ class AndroidSubmitter {
       { ...this.options, projectId },
       resolvedSourceOptions
     );
-    const onlineSubmitter = new AndroidOnlineSubmitter(
+    const submitter = new AndroidOnlineSubmitter(
       submissionConfig,
       this.ctx.commandOptions.verbose ?? false
     );
-    await onlineSubmitter.submitAsync();
+    await submitter.submitAsync();
   }
 
   private async resolveSourceOptions(): Promise<ResolvedSourceOptions> {
@@ -75,16 +72,11 @@ class AndroidSubmitter {
   }
 }
 
-export type AndroidOnlineSubmissionConfig = AndroidSubmissionConfig & { projectId: string };
-interface AndroidOnlineSubmissionOptions extends AndroidSubmissionOptions {
-  projectId: string;
-}
-
 class AndroidOnlineSubmitter {
   static async formatSubmissionConfigAndPrintSummary(
-    options: AndroidOnlineSubmissionOptions,
+    options: AndroidSubmissionOptions,
     { archive, androidPackage, serviceAccountPath }: ResolvedSourceOptions
-  ): Promise<AndroidOnlineSubmissionConfig> {
+  ): Promise<AndroidSubmissionConfig> {
     const serviceAccount = await fs.readFile(serviceAccountPath, 'utf-8');
     const submissionConfig = {
       androidPackage,
@@ -101,7 +93,7 @@ class AndroidOnlineSubmitter {
   }
 
   constructor(
-    private submissionConfig: AndroidOnlineSubmissionConfig,
+    private submissionConfig: AndroidSubmissionConfig,
     private verbose: boolean = false
   ) {}
 
