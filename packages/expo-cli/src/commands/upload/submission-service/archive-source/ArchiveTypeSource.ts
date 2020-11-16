@@ -1,5 +1,5 @@
 import log from '../../../../log';
-import prompt from '../../../../prompt';
+import prompt from '../../../../prompts';
 import { ArchiveType } from '../android/AndroidSubmissionConfig';
 
 enum ArchiveTypeSourceType {
@@ -83,11 +83,11 @@ async function handlePromptSourceAsync(
   const inferredArchiveType = inferArchiveTypeFromLocation(location);
   const { archiveType: archiveTypeRaw } = await prompt({
     name: 'archiveType',
-    type: 'list',
+    type: 'select',
     message: "What's the archive type?",
     choices: [
-      { name: 'APK', value: ArchiveType.apk },
-      { name: 'AAB', value: ArchiveType.aab },
+      { title: 'APK', value: ArchiveType.apk },
+      { title: 'AAB', value: ArchiveType.aab },
     ],
     ...(inferredArchiveType && { default: inferredArchiveType }),
   });
