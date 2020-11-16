@@ -1,7 +1,6 @@
 import invariant from 'invariant';
 
-import prompt, { ChoiceType, Question } from '../../prompt';
-import prompts, { confirmAsync, Question as QuestionNew } from '../../prompts';
+import prompts, { confirmAsync } from '../../prompts';
 import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
@@ -34,16 +33,15 @@ export class SelectIosExperience implements IView {
 
     await displayIosCredentials(iosCredentials);
 
-    const projectSpecificActions: ChoiceType<string>[] = ctx.hasProjectContext
+    const projectSpecificActions: { value: string; title: string }[] = ctx.hasProjectContext
       ? [
-          prompt.separator('---- Current project actions ----'),
           {
             value: 'use-existing-push-ios',
-            name: 'Use existing Push Notifications Key in current project',
+            title: 'Use existing Push Notifications Key in current project',
           },
           {
             value: 'use-existing-dist-ios',
-            name: 'Use existing Distribution Certificate in current project',
+            title: 'Use existing Distribution Certificate in current project',
           },
           // {
           //   value: 'current-remove-push-ios',
@@ -57,28 +55,25 @@ export class SelectIosExperience implements IView {
           //   value: 'current-remove-app-ios',
           //   name: 'Remove all credentials for current project',
           // },
-          prompt.separator('---- Account level actions ----'),
         ]
       : [];
 
-    const question: Question = {
-      type: 'list',
+    const { action } = await prompts({
+      type: 'select',
       name: 'action',
       message: 'What do you want to do?',
       choices: [
         ...projectSpecificActions,
-        { value: 'remove-provisioning-profile', name: 'Remove Provisioning Profile' },
-        { value: 'create-ios-push', name: 'Add new Push Notifications Key' },
-        { value: 'remove-ios-push', name: 'Remove Push Notification credentials' },
-        { value: 'update-ios-push', name: 'Update Push Notifications Key' },
-        { value: 'create-ios-dist', name: 'Add new Distribution Certificate' },
-        { value: 'remove-ios-dist', name: 'Remove Distribution Certificate' },
-        { value: 'update-ios-dist', name: 'Update Distribution Certificate' },
+        { value: 'remove-provisioning-profile', title: 'Remove Provisioning Profile' },
+        { value: 'create-ios-push', title: 'Add new Push Notifications Key' },
+        { value: 'remove-ios-push', title: 'Remove Push Notification credentials' },
+        { value: 'update-ios-push', title: 'Update Push Notifications Key' },
+        { value: 'create-ios-dist', title: 'Add new Distribution Certificate' },
+        { value: 'remove-ios-dist', title: 'Remove Distribution Certificate' },
+        { value: 'update-ios-dist', title: 'Update Distribution Certificate' },
       ],
-      pageSize: Infinity,
-    };
-
-    const { action } = await prompt(question);
+      optionsPerPage: 20,
+    });
     return this.handleAction(ctx, accountName, action);
   }
 
@@ -146,7 +141,7 @@ export class SelectAndroidExperience implements IView {
     const credentials = await ctx.android.fetchAll();
     await displayAndroidCredentials(Object.values(credentials));
 
-    const question: QuestionNew = {
+    const { experienceName } = await prompts({
       type: 'select',
       name: 'experienceName',
       message: 'Select application',
@@ -155,8 +150,7 @@ export class SelectAndroidExperience implements IView {
         value: cred.experienceName,
       })),
       optionsPerPage: 20,
-    };
-    const { experienceName } = await prompts(question);
+    });
 
     return new androidView.ExperienceView(experienceName);
   }
