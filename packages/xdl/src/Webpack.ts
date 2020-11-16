@@ -108,7 +108,7 @@ async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<vo
   try {
     withTag(chalk.dim(`Clearing ${mode} cache directory...`));
     await fs.remove(cacheFolder);
-  } catch (_) {}
+  } catch {}
 }
 
 export async function startAsync(

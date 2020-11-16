@@ -88,11 +88,11 @@ export function printPreviewNotice(projectRoot: string, showInDevtools: boolean)
   log(
     projectRoot,
     boxen(
-      chalk.magenta(
-        'Expo web is in beta, please report any bugs or missing features on the Expo repo.\n' +
+      chalk.magenta.dim(
+        'Expo web is in late beta, please report any bugs or missing features on the Expo repo.\n' +
           'You can follow the V1 release for more info: https://github.com/expo/expo/issues/6782'
       ),
-      { borderColor: 'magenta', padding: 1 }
+      { dimBorder: true, borderColor: 'magenta', padding: { top: 0, left: 1, bottom: 0, right: 1 } }
     ),
     showInDevtools
   );
