@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import path from 'path';
 
 import Analytics from '../Analytics';
@@ -70,22 +69,6 @@ export function logWithLevel(
 
 export function logDebug(projectRoot: string, tag: LogTag, message: string, id?: string) {
   _getLogger(projectRoot).debug({ tag }, message.toString());
-}
-
-export function getPlatformTag(platform: string): string {
-  const input = platform.toLowerCase().trim();
-  switch (input) {
-    case 'ios':
-      return chalk.bgWhite.black(' iOS ');
-    case 'android':
-      return chalk.bgGreen.black(' Android ');
-    case 'node':
-      return chalk.bgCyan.black(' Node ');
-    case 'web':
-      return chalk.bgMagenta.black(' web ');
-    default:
-      return chalk.bgWhite.black(` ${platform} `);
-  }
 }
 
 export function logInfo(projectRoot: string, tag: LogTag, message: string, id?: string) {

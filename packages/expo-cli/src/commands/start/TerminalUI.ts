@@ -40,9 +40,8 @@ const clearConsole = (): void => {
 };
 
 const printHelp = (): void => {
-  const PLATFORM_TAG = ProjectUtils.getPlatformTag('Expo');
   log.newLine();
-  log.nested(`${PLATFORM_TAG} Press ${b('?')} to show a list of all available commands.`);
+  log.nested(`Press ${b('?')} to show a list of all available commands.`);
 };
 
 const div = chalk.dim(`|`);
@@ -100,7 +99,6 @@ export const printServerInfo = async (
 ) => {
   if (options.webOnly) {
     Webpack.printConnectionInstructions(projectDir);
-    printHelp();
     return;
   }
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
