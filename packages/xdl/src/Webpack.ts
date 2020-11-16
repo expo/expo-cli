@@ -95,7 +95,6 @@ export function printConnectionInstructions(projectRoot: string, options = {}) {
     appName: devServerInfo.appName,
     urls: devServerInfo.urls,
     showInDevtools: false,
-    showHelp: false,
     ...options,
   });
 }
