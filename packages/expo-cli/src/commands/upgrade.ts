@@ -169,9 +169,12 @@ async function makeBreakingChangesToConfigAsync(
     'Updating your app.json to account for breaking changes (if applicable)...'
   );
 
-  const { exp: currentExp, dynamicConfigPath } = ConfigUtils.getConfig(projectRoot, {
-    skipSDKVersionRequirement: true,
-  });
+  const { exp: currentExp, dynamicConfigPath, staticConfigPath } = ConfigUtils.getConfig(
+    projectRoot,
+    {
+      skipSDKVersionRequirement: true,
+    }
+  );
 
   // Bail out early if we have a dynamic config!
   if (dynamicConfigPath) {
@@ -183,6 +186,11 @@ async function makeBreakingChangesToConfigAsync(
     } else {
       step.succeed('No additional changes necessary to app config.');
     }
+    return;
+  } else if (!staticConfigPath) {
+    // No config in the project, modifications don't need to be made.
+    // NOTICE: If we ever need to just simply add a value to the config for no reason, this check would break that.
+    step.succeed('No config present, skipping updates.');
     return;
   }
 
