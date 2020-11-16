@@ -7,7 +7,7 @@ import CommandError from '../../CommandError';
 import { authenticate, requestAppleIdCreds } from '../../appleApi';
 import { Context } from '../../credentials/context';
 import log from '../../log';
-import prompt, { Question } from '../../prompt';
+import prompt, { Question } from '../../prompts';
 import BaseUploader, { PlatformOptions } from './BaseUploader';
 import { runFastlaneAsync } from './utils';
 
@@ -15,7 +15,7 @@ const PLATFORM = 'ios';
 
 const APP_NAME_TOO_LONG_MSG = `An app name can't be longer than 30 characters.`;
 const APP_NAME_QUESTION: Question = {
-  type: 'input',
+  type: 'text',
   name: 'appName',
   message: 'How would you like to name your app?',
   validate(appName: string): string | true {
