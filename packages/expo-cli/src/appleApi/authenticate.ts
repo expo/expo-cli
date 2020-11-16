@@ -4,7 +4,7 @@ import wordwrap from 'wordwrap';
 
 import { learnMore } from '../commands/utils/TerminalLink';
 import log from '../log';
-import prompt from '../prompt';
+import prompt from '../prompts';
 import { nonEmptyInput } from '../validators';
 import { runAction, travelingFastlane } from './fastlane';
 import * as Keychain from './keychain';
@@ -133,12 +133,12 @@ async function _promptForAppleId({
 
   const { appleId: promptAppleId } = await prompt(
     {
-      type: 'input',
+      type: 'text',
       name: 'appleId',
       message: `Apple ID:`,
       validate: nonEmptyInput,
-      default: lastAppleId ?? undefined,
-      ...(previousAppleId && { default: previousAppleId }),
+      initial: lastAppleId ?? undefined,
+      ...(previousAppleId && { initial: previousAppleId }),
     },
     {
       nonInteractiveHelp: 'Pass your Apple ID using the --apple-id flag.',
@@ -205,7 +205,7 @@ async function _chooseTeam(teams: FastlaneTeam[], userProvidedTeamId?: string): 
   } else {
     log(`You have ${teams.length} teams associated with your account`);
     const choices = teams.map((team, i) => ({
-      name: `${i + 1}) ${team.teamId} "${team.name}" (${team.type})`,
+      title: `${i + 1}) ${team.teamId} "${team.name}" (${team.type})`,
       value: team,
     }));
     const { team } = await prompt(
