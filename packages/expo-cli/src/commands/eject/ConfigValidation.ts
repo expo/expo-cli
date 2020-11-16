@@ -3,8 +3,7 @@ import { UserManager } from '@expo/xdl';
 import got from 'got';
 
 import log from '../../log';
-import prompt from '../../prompt';
-import { confirmAsync } from '../../prompts';
+import prompt, { confirmAsync } from '../../prompts';
 import { learnMore } from '../utils/TerminalLink';
 import { isUrlAvailableAsync } from '../utils/url';
 
@@ -133,15 +132,14 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
   // prompt a better error message, recommend a default value, and help the user
   // validate their custom bundle ID upfront.
   const { bundleIdentifier } = await prompt(
-    [
-      {
-        name: 'bundleIdentifier',
-        default: recommendedBundleId,
-        // The Apple helps people know this isn't an EAS feature.
-        message: `What would you like your iOS bundle identifier to be?`,
-        validate: validateBundleId,
-      },
-    ],
+    {
+      type: 'text',
+      name: 'bundleIdentifier',
+      initial: recommendedBundleId,
+      // The Apple helps people know this isn't an EAS feature.
+      message: `What would you like your iOS bundle identifier to be?`,
+      validate: validateBundleId,
+    },
     {
       nonInteractiveHelp: noBundleIdMessage,
     }
@@ -220,14 +218,13 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
   // prompt a better error message, recommend a default value, and help the user
   // validate their custom android package upfront.
   const { packageName } = await prompt(
-    [
-      {
-        name: 'packageName',
-        default: recommendedPackage,
-        message: `What would you like your Android package name to be?`,
-        validate: validatePackage,
-      },
-    ],
+    {
+      type: 'text',
+      name: 'packageName',
+      initial: recommendedPackage,
+      message: `What would you like your Android package name to be?`,
+      validate: validatePackage,
+    },
     {
       nonInteractiveHelp: noPackageMessage,
     }
