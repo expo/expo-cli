@@ -6,7 +6,6 @@ import log from '../log';
 import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
 import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
 import { AndroidSubmitCommandOptions } from './upload/submission-service/android/types';
-import { SubmissionMode } from './upload/submission-service/types';
 import * as TerminalLink from './utils/TerminalLink';
 
 const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
@@ -46,13 +45,12 @@ export default function (program: Command) {
     .option('--verbose', 'Always print logs from Submission Service')
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: AndroidSubmitCommandOptions) => {
-      // TODO: remove this once we verify `fastlane supply` works on linux / windows
       if (options.useSubmissionService) {
         log.warn(
           '\n`--use-submission-service is now the default and the flag will be deprecated in the future.`'
         );
       }
-      const ctx = AndroidSubmitCommand.createContext(SubmissionMode.online, projectDir, options);
+      const ctx = AndroidSubmitCommand.createContext(projectDir, options);
       const command = new AndroidSubmitCommand(ctx);
       await command.runAsync();
     });
@@ -111,7 +109,7 @@ export default function (program: Command) {
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: IosPlatformOptions) => {
       try {
-        // TODO: remove this once we verify `fastlane supply` works on linux / windows
+        // TODO: remove this once we remove fastlane
         checkRuntimePlatform('ios');
 
         const args = pick(options, SOURCE_OPTIONS);

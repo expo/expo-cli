@@ -1,5 +1,4 @@
 import { ArchiveType } from '../android/AndroidSubmissionConfig';
-import { SubmissionMode } from '../types';
 import {
   ArchiveFileSource,
   ArchiveFileSourceType,
@@ -17,8 +16,8 @@ export interface Archive {
   type: ArchiveType;
 }
 
-async function getArchiveAsync(mode: SubmissionMode, source: ArchiveSource): Promise<Archive> {
-  const location = await getArchiveFileLocationAsync(mode, source.archiveFile);
+async function getArchiveAsync(source: ArchiveSource): Promise<Archive> {
+  const location = await getArchiveFileLocationAsync(source.archiveFile);
   const type = await getArchiveTypeAsync(source.archiveType, location);
   return {
     location,
