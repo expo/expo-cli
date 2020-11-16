@@ -8,8 +8,7 @@ import terminalLink from 'terminal-link';
 import CommandError from '../../CommandError';
 import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';
 import log from '../../log';
-import prompt, { Question } from '../../prompt';
-import { confirmAsync } from '../../prompts';
+import prompt, { confirmAsync, Question } from '../../prompts';
 import { displayIosUserCredentials } from '../actions/list';
 import { askForUserProvided, CredentialSchema } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
@@ -259,18 +258,17 @@ export class CreateOrReuseDistributionCert implements IView {
   async _createOrReuse(ctx: Context): Promise<IView | null> {
     const choices = [
       {
-        name: '[Choose existing certificate] (Recommended)',
+        title: '[Choose existing certificate] (Recommended)',
         value: 'CHOOSE_EXISTING',
       },
-      { name: '[Add a new certificate]', value: 'GENERATE' },
+      { title: '[Add a new certificate]', value: 'GENERATE' },
     ];
 
     const question: Question = {
-      type: 'list',
+      type: 'select',
       name: 'action',
       message: 'Select an iOS distribution certificate to use for code signing:',
       choices,
-      pageSize: Infinity,
     };
 
     const { action } = await prompt(question);
@@ -344,11 +342,11 @@ async function selectDistCertFromList(
   }
 
   const question: Question = {
-    type: 'list',
+    type: 'select',
     name: 'credentialsIndex',
     message: 'Select certificate from the list.',
     choices: distCerts.map((entry, index) => ({
-      name: formatDistCert(entry, iosCredentials, getValidityStatus(entry, validDistCerts)),
+      title: formatDistCert(entry, iosCredentials, getValidityStatus(entry, validDistCerts)),
       value: index,
     })),
   };
@@ -460,14 +458,13 @@ async function generateDistCert(ctx: Context, accountName: string): Promise<Dist
 
       const { revoke } = await prompt([
         {
-          type: 'checkbox',
+          type: 'multiselect',
           name: 'revoke',
           message: 'Select certificates to revoke.',
           choices: certs.map((cert, index) => ({
             value: index,
-            name: formatDistCertFromApple(cert, credentials),
+            title: formatDistCertFromApple(cert, credentials),
           })),
-          pageSize: Infinity,
         },
       ]);
 
