@@ -92,6 +92,7 @@ export async function askClientToInstall(options: InstallClientOptions): Promise
     type: 'select',
     name: 'targetClient',
     message: 'Choose an SDK version to install the client for:',
+    optionsPerPage: 20,
     choices: options.clients.map(client => {
       const clientVersion = `- client ${client.clientVersion || 'version unknown'}`;
       const clientLabels = [

@@ -194,6 +194,7 @@ export class CreateOrReuseProvisioningProfile implements IView {
       name: 'action',
       message: 'Select a Provisioning Profile:',
       choices,
+      optionsPerPage: 20,
     };
 
     const { action } = await prompt(question);

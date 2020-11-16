@@ -508,6 +508,7 @@ async function generatePushKey(ctx: Context, accountName: string): Promise<PushK
             value: index,
             title: formatPushKeyFromApple(key, credentials),
           })),
+          optionsPerPage: 20,
         },
       ]);
 

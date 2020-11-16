@@ -269,6 +269,7 @@ export class CreateOrReuseDistributionCert implements IView {
       name: 'action',
       message: 'Select an iOS distribution certificate to use for code signing:',
       choices,
+      optionsPerPage: 20,
     };
 
     const { action } = await prompt(question);
@@ -461,6 +462,7 @@ async function generateDistCert(ctx: Context, accountName: string): Promise<Dist
           type: 'multiselect',
           name: 'revoke',
           message: 'Select certificates to revoke.',
+          optionsPerPage: 20,
           choices: certs.map((cert, index) => ({
             value: index,
             title: formatDistCertFromApple(cert, credentials),

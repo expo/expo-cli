@@ -18,6 +18,7 @@ export class SelectPlatform implements IView {
       name: 'platform',
       message: 'Select platform',
       choices: ['ios', 'android'].map(value => ({ value, title: value })),
+      optionsPerPage: 20,
     });
     const view = platform === 'ios' ? new SelectIosExperience() : new SelectAndroidExperience();
     CredentialsManager.get().changeMainView(view);
@@ -153,6 +154,7 @@ export class SelectAndroidExperience implements IView {
         title: cred.experienceName,
         value: cred.experienceName,
       })),
+      optionsPerPage: 20,
     };
     const { experienceName } = await prompts(question);
 
