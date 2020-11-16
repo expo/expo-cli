@@ -1,7 +1,7 @@
 import invariant from 'invariant';
 
 import prompt, { ChoiceType, Question } from '../../prompt';
-import { confirmAsync } from '../../prompts';
+import prompts, { confirmAsync, Question as QuestionNew } from '../../prompts';
 import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
@@ -13,15 +13,12 @@ import * as iosPushView from './IosPushCredentials';
 
 export class SelectPlatform implements IView {
   async open(ctx: Context): Promise<IView | null> {
-    const { platform } = await prompt([
-      {
-        type: 'list',
-        name: 'platform',
-        message: 'Select platform',
-        pageSize: Infinity,
-        choices: ['ios', 'android'],
-      },
-    ]);
+    const { platform } = await prompts({
+      type: 'select',
+      name: 'platform',
+      message: 'Select platform',
+      choices: ['ios', 'android'].map(value => ({ value, title: value })),
+    });
     const view = platform === 'ios' ? new SelectIosExperience() : new SelectAndroidExperience();
     CredentialsManager.get().changeMainView(view);
     return view;
@@ -148,17 +145,16 @@ export class SelectAndroidExperience implements IView {
     const credentials = await ctx.android.fetchAll();
     await displayAndroidCredentials(Object.values(credentials));
 
-    const question: Question = {
-      type: 'list',
+    const question: QuestionNew = {
+      type: 'select',
       name: 'experienceName',
       message: 'Select application',
       choices: Object.values(credentials).map(cred => ({
-        name: cred.experienceName,
+        title: cred.experienceName,
         value: cred.experienceName,
       })),
-      pageSize: Infinity,
     };
-    const { experienceName } = await prompt(question);
+    const { experienceName } = await prompts(question);
 
     return new androidView.ExperienceView(experienceName);
   }
@@ -186,17 +182,15 @@ export class DoQuit implements IQuit {
 
 export class AskQuit implements IQuit {
   async runAsync(mainpage: IView): Promise<IView> {
-    const { selected } = await prompt([
-      {
-        type: 'list',
-        name: 'selected',
-        message: 'Do you want to quit Credential Manager',
-        choices: [
-          { value: 'exit', name: 'Quit Credential Manager' },
-          { value: 'mainpage', name: 'Go back to experience overview.' },
-        ],
-      },
-    ]);
+    const { selected } = await prompts({
+      type: 'select',
+      name: 'selected',
+      message: 'Do you want to quit Credential Manager',
+      choices: [
+        { value: 'exit', title: 'Quit Credential Manager' },
+        { value: 'mainpage', title: 'Go back to experience overview.' },
+      ],
+    });
     if (selected === 'exit') {
       process.exit(0);
     }
