@@ -210,7 +210,7 @@ async function _chooseTeam(teams: FastlaneTeam[], userProvidedTeamId?: string): 
     }));
     const { team } = await prompt(
       {
-        type: 'list',
+        type: 'select',
         name: 'team',
         message: 'Which team would you like to use?',
         choices,
