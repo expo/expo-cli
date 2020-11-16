@@ -1,4 +1,5 @@
-import prompt from '../../../../prompt';
+import prompt from '../../../../prompts';
+import { nonEmptyInput } from '../../../../validators';
 
 enum AndroidPackageSourceType {
   userDefined,
@@ -27,8 +28,8 @@ async function getAndroidPackageAsync(source: AndroidPackageSource) {
     const { androidPackage } = await prompt({
       name: 'androidPackage',
       message: 'Android package name:',
-      type: 'input',
-      validate: (val: string): boolean => val !== '',
+      type: 'text',
+      validate: nonEmptyInput,
     });
     return androidPackage;
   } else {
