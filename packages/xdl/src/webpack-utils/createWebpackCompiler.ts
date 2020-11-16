@@ -49,21 +49,23 @@ export function printInstructions(
   printPreviewNotice(projectRoot, showInDevtools);
 
   let message = '\n';
-  message += `You can now view ${chalk.bold(appName)} in the browser.\n`;
+  message += `You can now view ${chalk.bold(appName)} in the browser\n`;
+
+  const divider = chalk.dim`|`;
 
   if (urls.lanUrlForTerminal) {
-    message += `\n  ${chalk.bold('Local:')}            ${urls.localUrlForTerminal}`;
-    message += `\n  ${chalk.bold('On Your Network:')}  ${urls.lanUrlForTerminal}`;
+    message += `\n \u203A ${chalk.reset('Local')}   ${divider} ${urls.localUrlForTerminal}`;
+    message += `\n \u203A ${chalk.reset('LAN')}     ${divider} ${urls.lanUrlForTerminal}`;
   } else {
-    message += `\n  ${urls.localUrlForTerminal}`;
+    message += `\n \u203A ${urls.localUrlForTerminal}`;
   }
 
   message += '\n';
 
-  message += `\n \u203A To create a optimized production build, run ${chalk.bold(
-    `expo build:web`
-  )}`;
-  const divider = chalk.dim`|`;
+  message += `\n \u203A Run ${chalk.bold(`expo build:web`)} to optimize and build for production`;
+
+  message += '\n';
+
   message += `\n \u203A Press ${chalk.bold(`w`)} ${divider} open in the browser`;
   message += `\n \u203A Press ${chalk.bold(`?`)} ${divider} show all commands`;
 
