@@ -20,7 +20,7 @@ export class UpdateFcmKey implements IView {
       type: 'text',
       name: 'fcmApiKey',
       message: 'FCM Api Key',
-      validate: value => value.length > 0 || "FCM Api Key can't be empty",
+      validate: (value: string) => value.length > 0 || "FCM Api Key can't be empty",
     });
 
     await ctx.android.updateFcmKey(this.experienceName, fcmApiKey);
