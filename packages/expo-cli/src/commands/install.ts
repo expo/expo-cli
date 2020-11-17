@@ -7,7 +7,7 @@ import fs from 'fs';
 import npmPackageArg from 'npm-package-arg';
 import path from 'path';
 
-import { SilentError } from '../CommandError';
+import CommandError, { SilentError } from '../CommandError';
 import log from '../log';
 import { findProjectRootAsync } from './utils/ProjectUtils';
 
@@ -49,15 +49,14 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   }
 
   if (!exp.sdkVersion) {
-    const message = `The ${log.chalk.bold(`expo`)} package was found in your ${log.chalk.bold(
-      `package.json`
-    )} but we couldn't resolve the Expo SDK version. Run ${log.chalk.bold(
-      `${packageManager.name.toLowerCase()} install`
-    )} and then try this command again.`;
     log.addNewLineIfNone();
-    log.error(message);
-    log.newLine();
-    throw new SilentError(message);
+    throw new CommandError(
+      `The ${log.chalk.bold(`expo`)} package was found in your ${log.chalk.bold(
+        `package.json`
+      )} but we couldn't resolve the Expo SDK version. Run ${log.chalk.bold(
+        `${packageManager.name.toLowerCase()} install`
+      )} and then try this command again.\n`
+    );
   }
 
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
