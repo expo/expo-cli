@@ -10,7 +10,6 @@ async function action(projectDir: string) {
   if ((await Doctor.validateWithNetworkAsync(projectDir)) === Doctor.NO_ISSUES) {
     log(`Didn't find any issues with the project!`);
   }
-  process.exit();
 }
 
 export default function (program: Command) {
