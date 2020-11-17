@@ -352,17 +352,19 @@ async function getAppNamesAsync(
     ({ displayName, name } = await prompt(
       [
         {
+          type: 'text',
           name: 'displayName',
           message: "What should your app appear as on a user's home screen?",
-          default: name || exp.name,
+          initial: name || exp.name,
           validate({ length }: string): true | ValidationErrorMessage {
             return length ? true : 'App display name cannot be empty.';
           },
         },
         {
+          type: 'text',
           name: 'name',
           message: 'What should your Android Studio and Xcode projects be called?',
-          default: pkg.name ? stripDashes(pkg.name) : undefined,
+          initial: pkg.name ? stripDashes(pkg.name) : undefined,
           validate(value: string): true | ValidationErrorMessage {
             if (value.length === 0) {
               return 'Project name cannot be empty.';
