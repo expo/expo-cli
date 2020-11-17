@@ -50,7 +50,6 @@ export default function (program: Command) {
   program
     .command('eject [path]')
     .description(
-      // TODO: Use Learn more link when it lands
       `Create native iOS and Android project files. ${chalk.dim(
         learnMore('https://docs.expo.io/bare/customizing/')
       )}`
