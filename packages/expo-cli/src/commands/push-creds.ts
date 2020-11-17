@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 
-import { SilentError } from '../CommandError';
+import CommandError from '../CommandError';
 import { Context } from '../credentials/context';
 import log from '../log';
 
@@ -34,11 +34,9 @@ export default function (program: Command) {
 
       const fcmCredentials = await ctx.android.fetchFcmKey(experienceName);
       if (fcmCredentials?.fcmApiKey) {
-        log(`FCM Api Key: ${fcmCredentials?.fcmApiKey}`);
+        log(`FCM API key: ${fcmCredentials?.fcmApiKey}`);
       } else {
-        const message = `There is no FCM Api Key configured for this project`;
-        log(message);
-        throw new SilentError(message);
+        throw new CommandError(`There is no FCM API key configured for this project`);
       }
     });
 
