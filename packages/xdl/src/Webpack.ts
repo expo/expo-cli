@@ -18,6 +18,7 @@ import * as UrlUtils from './UrlUtils';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
 import ip from './ip';
+import { learnMore } from './logs/TerminalLink';
 import * as ProjectUtils from './project/ProjectUtils';
 import { DEFAULT_PORT, HOST, isDebugModeEnabled } from './webpack-utils/WebpackEnvironment';
 import createWebpackCompiler, { printInstructions } from './webpack-utils/createWebpackCompiler';
@@ -354,12 +355,17 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
 
   await bundleWebAppAsync(projectRoot, config);
 
-  if (!env.offline) {
+  const hasSWPlugin = config.plugins?.find(item => {
+    return item?.constructor?.name === 'GenerateSW';
+  });
+  if (!hasSWPlugin) {
     ProjectUtils.logInfo(
       projectRoot,
       WEBPACK_LOG_TAG,
       chalk.green(
-        'Offline (PWA) support is not enabled in this build. Learn more https://expo.fyi/enabling-web-service-workers\n'
+        `Offline (PWA) support is not enabled in this build. ${chalk.dim(
+          learnMore('https://expo.fyi/enabling-web-service-workers')
+        )}\n`
       )
     );
   }
