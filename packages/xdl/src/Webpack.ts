@@ -80,9 +80,6 @@ export async function restartAsync(
   return await startAsync(projectRoot, options);
 }
 
-const PLATFORM_TAG = ProjectUtils.getPlatformTag('web');
-const withTag = (...messages: any[]) => [PLATFORM_TAG + ' ', ...messages].join('');
-
 let devServerInfo: {
   urls: Urls;
   protocol: 'http' | 'https';
@@ -98,15 +95,18 @@ export function printConnectionInstructions(projectRoot: string, options = {}) {
     appName: devServerInfo.appName,
     urls: devServerInfo.urls,
     showInDevtools: false,
-    showHelp: false,
     ...options,
   });
 }
 
 async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<void> {
   const cacheFolder = path.join(projectRoot, '.expo', 'web', 'cache', mode);
+  ProjectUtils.logInfo(
+    projectRoot,
+    WEBPACK_LOG_TAG,
+    chalk.dim(`Clearing ${mode} cache directory...`)
+  );
   try {
-    withTag(chalk.dim(`Clearing ${mode} cache directory...`));
     await fs.remove(cacheFolder);
   } catch {}
 }
@@ -129,7 +129,7 @@ export async function startAsync(
     ProjectUtils.logError(
       projectRoot,
       WEBPACK_LOG_TAG,
-      withTag(chalk.red(`${serverName} is already running.`))
+      chalk.red(`${serverName} is already running.`)
     );
     return null;
   }
@@ -165,9 +165,7 @@ export async function startAsync(
   ProjectUtils.logInfo(
     projectRoot,
     WEBPACK_LOG_TAG,
-    withTag(
-      `Starting ${serverName} on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`
-    )
+    `Starting ${serverName} on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`
   );
 
   const protocol = env.https ? 'https' : 'http';
@@ -288,11 +286,9 @@ export async function compileWebAppAsync(
         ProjectUtils.logWarning(
           projectRoot,
           WEBPACK_LOG_TAG,
-          withTag(
-            chalk.yellow(
-              '\nTreating warnings as errors because `process.env.CI = true` and `process.env.EXPO_WEB_BUILD_STRICT = true`. \n' +
-                'Most CI servers set it automatically.\n'
-            )
+          chalk.yellow(
+            '\nTreating warnings as errors because `process.env.CI = true` and `process.env.EXPO_WEB_BUILD_STRICT = true`. \n' +
+              'Most CI servers set it automatically.\n'
           )
         );
         return reject(new Error(messages.warnings.join('\n\n')));
@@ -314,18 +310,14 @@ export async function bundleWebAppAsync(projectRoot: string, config: WebpackConf
       ProjectUtils.logWarning(
         projectRoot,
         WEBPACK_LOG_TAG,
-        withTag(chalk.yellow('Compiled with warnings.\n'))
+        chalk.yellow('Compiled with warnings.\n')
       );
       ProjectUtils.logWarning(projectRoot, WEBPACK_LOG_TAG, warnings.join('\n\n'));
     } else {
-      ProjectUtils.logInfo(
-        projectRoot,
-        WEBPACK_LOG_TAG,
-        withTag(chalk.green('Compiled successfully.\n'))
-      );
+      ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, chalk.green('Compiled successfully.\n'));
     }
   } catch (error) {
-    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, withTag(chalk.red('Failed to compile.\n')));
+    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, chalk.red('Failed to compile.\n'));
     throw error;
   }
 }
@@ -366,10 +358,8 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
     ProjectUtils.logInfo(
       projectRoot,
       WEBPACK_LOG_TAG,
-      withTag(
-        chalk.green(
-          'Offline (PWA) support is not enabled in this build. Learn more https://expo.fyi/enabling-web-service-workers\n'
-        )
+      chalk.green(
+        'Offline (PWA) support is not enabled in this build. Learn more https://expo.fyi/enabling-web-service-workers\n'
       )
     );
   }
@@ -389,7 +379,7 @@ export function isRunning(): boolean {
 
 export function getServer(projectRoot: string): DevServer | null {
   if (webpackDevServerInstance == null) {
-    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, withTag('Webpack is not running.'));
+    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is not running.');
   }
   return webpackDevServerInstance;
 }
