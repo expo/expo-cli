@@ -1,4 +1,4 @@
-import * as ConfigUtils from '@expo/config';
+import { getConfig, projectHasModule } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Versions } from '@expo/xdl';
@@ -35,7 +35,7 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
     log,
   });
 
-  const { exp, pkg } = ConfigUtils.getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  const { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   // If using `expo install` in a project without the expo package even listed
   // in package.json, just fall through to npm/yarn.
@@ -77,7 +77,7 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
     await packageManager.installAsync();
   }
 
-  const bundledNativeModulesPath = ConfigUtils.projectHasModule(
+  const bundledNativeModulesPath = projectHasModule(
     'expo/bundledNativeModules.json',
     projectRoot,
     exp

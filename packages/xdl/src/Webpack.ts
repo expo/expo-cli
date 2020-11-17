@@ -1,4 +1,4 @@
-import * as ConfigUtils from '@expo/config';
+import { getConfig, getNameFromConfig } from '@expo/config';
 import { isUsingYarn } from '@expo/package-manager';
 import chalk from 'chalk';
 import * as devcert from 'devcert';
@@ -335,7 +335,7 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
 
   if (typeof env.offline === 'undefined') {
     try {
-      const expoConfig = ConfigUtils.getConfig(projectRoot, { skipSDKVersionRequirement: true });
+      const expoConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
       // If offline isn't defined, check the version and keep offline enabled for SDK 38 and prior
       if (expoConfig.exp.sdkVersion)
         if (Versions.lteSdkVersion(expoConfig.exp, '38.0.0')) {
@@ -366,10 +366,10 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
 }
 
 export async function getProjectNameAsync(projectRoot: string): Promise<string> {
-  const { exp } = ConfigUtils.getConfig(projectRoot, {
+  const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
-  const webName = ConfigUtils.getNameFromConfig(exp).webName ?? exp.name;
+  const webName = getNameFromConfig(exp).webName ?? exp.name;
   return webName;
 }
 

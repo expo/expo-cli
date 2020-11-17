@@ -1,5 +1,5 @@
-import * as ConfigUtils from '@expo/config';
-import { ExpoConfig } from '@expo/config';
+import { getConfig, readConfigJsonAsync, resolveModule, writeConfigJsonAsync } from '@expo/config';
+import { ExpoConfig } from '@expo/config-types';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Android, Project, Simulator, Versions } from '@expo/xdl';
@@ -58,7 +58,7 @@ async function getExactInstalledModuleVersionAsync(
 ) {
   try {
     const pkg = await JsonFile.readAsync(
-      ConfigUtils.resolveModule(`${moduleName}/package.json`, projectRoot, {
+      resolveModule(`${moduleName}/package.json`, projectRoot, {
         nodeModulesPath: options?.nodeModulesPath,
       })
     );
@@ -77,9 +77,9 @@ export async function getUpdatedDependenciesAsync(
   targetSdkVersion: TargetSDKVersion | null
 ): Promise<DependencyList> {
   // Get the updated version for any bundled modules
-  const { exp, pkg } = ConfigUtils.getConfig(projectRoot);
+  const { exp, pkg } = getConfig(projectRoot);
   const bundledNativeModules = (await JsonFile.readAsync(
-    ConfigUtils.resolveModule('expo/bundledNativeModules.json', projectRoot, exp)
+    resolveModule('expo/bundledNativeModules.json', projectRoot, exp)
   )) as DependencyList;
 
   // Smoosh regular and dev dependencies together for now
@@ -169,7 +169,7 @@ async function makeBreakingChangesToConfigAsync(
     'Updating your app.json to account for breaking changes (if applicable)...'
   );
 
-  const { exp: currentExp, dynamicConfigPath } = ConfigUtils.getConfig(projectRoot, {
+  const { exp: currentExp, dynamicConfigPath } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
@@ -186,7 +186,7 @@ async function makeBreakingChangesToConfigAsync(
     return;
   }
 
-  const { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { rootConfig } = await readConfigJsonAsync(projectRoot);
   try {
     switch (targetSdkVersionString) {
       // IMPORTANT: adding a new case here? be sure to update the dynamic config situation above
@@ -209,7 +209,7 @@ async function makeBreakingChangesToConfigAsync(
             step.succeed('No additional changes necessary to app.json config.');
             return;
           }
-          await ConfigUtils.writeConfigJsonAsync(projectRoot, rootConfig.expo);
+          await writeConfigJsonAsync(projectRoot, rootConfig.expo);
         } else if (currentExp?.androidNavigationBar?.visible !== undefined) {
           step.stopAndPersist({
             symbol: '⚠️ ',
@@ -235,7 +235,7 @@ async function makeBreakingChangesToConfigAsync(
 }
 
 async function maybeBailOnUnsafeFunctionalityAsync(
-  exp: Pick<ConfigUtils.ExpoConfig, 'sdkVersion'>
+  exp: Pick<ExpoConfig, 'sdkVersion'>
 ): Promise<boolean> {
   // Give people a chance to bail out if they're updating from a super old version because YMMV
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
@@ -400,7 +400,7 @@ export async function upgradeAsync(
   },
   options: Options
 ) {
-  const { exp, pkg } = await ConfigUtils.getConfig(projectRoot);
+  const { exp, pkg } = await getConfig(projectRoot);
 
   if (await maybeBailOnGitStatusAsync()) return;
 
@@ -506,7 +506,7 @@ export async function upgradeAsync(
   }
 
   // Evaluate project config (app.config.js)
-  const { exp: currentExp, dynamicConfigPath } = ConfigUtils.getConfig(projectRoot);
+  const { exp: currentExp, dynamicConfigPath } = getConfig(projectRoot);
 
   const removingSdkVersionStep = logNewSection('Validating configuration.');
   if (dynamicConfigPath) {
@@ -523,10 +523,10 @@ export async function upgradeAsync(
     }
   } else {
     try {
-      const { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+      const { rootConfig } = await readConfigJsonAsync(projectRoot);
       if (rootConfig.expo.sdkVersion && rootConfig.expo.sdkVersion !== 'UNVERSIONED') {
         log.addNewLineIfNone();
-        await ConfigUtils.writeConfigJsonAsync(projectRoot, { sdkVersion: undefined });
+        await writeConfigJsonAsync(projectRoot, { sdkVersion: undefined });
         removingSdkVersionStep.succeed('Removed deprecated sdkVersion field from app.json.');
       } else {
         removingSdkVersionStep.succeed('Validated configuration.');
