@@ -86,14 +86,13 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   );
 
   if (!bundledNativeModulesPath) {
-    const message = `The dependency map ${log.chalk.bold(
-      `expo/bundledNativeModules.json`
-    )} cannot be found, please ensure you have the package "${log.chalk
-      .bold`expo`}" installed in your project.`;
     log.addNewLineIfNone();
-    log.error(message);
-    log.newLine();
-    throw new SilentError(message);
+    throw new CommandError(
+      `The dependency map ${log.chalk.bold(
+        `expo/bundledNativeModules.json`
+      )} cannot be found, please ensure you have the package "${log.chalk
+        .bold`expo`}" installed in your project.\n`
+    );
   }
 
   const bundledNativeModules = await JsonFile.readAsync(bundledNativeModulesPath);
