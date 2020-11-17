@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import terminalLink from 'terminal-link';
 
+import { SilentError } from '../CommandError';
 import log from '../log';
 
 type Options = {
@@ -23,7 +24,7 @@ async function action(projectDir: string, options: Options) {
         'https://expo.fyi/release-builds-with-expo-updates'
       )}`
     );
-    process.exit(1);
+    throw new SilentError(e);
   }
 }
 

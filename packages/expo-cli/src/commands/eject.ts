@@ -3,6 +3,7 @@ import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
+import { SilentError } from '../CommandError';
 import log from '../log';
 import { confirmAsync } from '../prompts';
 import * as Eject from './eject/Eject';
@@ -28,7 +29,7 @@ async function action(
     log();
     log(chalk.red(error.message));
     log();
-    process.exit(1);
+    throw new SilentError(error);
   }
 
   if (options.npm) {

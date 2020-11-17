@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 
+import { SilentError } from '../CommandError';
 import { Context } from '../credentials/context';
 import log from '../log';
 
@@ -35,8 +36,9 @@ export default function (program: Command) {
       if (fcmCredentials?.fcmApiKey) {
         log(`FCM Api Key: ${fcmCredentials?.fcmApiKey}`);
       } else {
-        log(`There is no FCM Api Key configured for this project`);
-        process.exit(1);
+        const message = `There is no FCM Api Key configured for this project`;
+        log(message);
+        throw new SilentError(message);
       }
     });
 

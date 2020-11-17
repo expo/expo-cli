@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import path from 'path';
 
+import { SilentError } from '../CommandError';
 import log from '../log';
 import configureAndroidProjectAsync from './apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from './apply/configureIOSProjectAsync';
@@ -34,7 +35,7 @@ async function ensureConfigExistsAsync(projectRoot: string): Promise<void> {
     log();
     log(chalk.red(error.message));
     log();
-    process.exit(1);
+    throw new SilentError(error);
   }
 }
 

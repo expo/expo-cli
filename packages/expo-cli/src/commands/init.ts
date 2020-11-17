@@ -13,6 +13,7 @@ import path from 'path';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
+import { SilentError } from '../CommandError';
 import log from '../log';
 import prompt from '../prompt';
 import prompts from '../prompts';
@@ -64,8 +65,9 @@ const isMacOS = process.platform === 'darwin';
 function assertValidName(folderName: string) {
   const validation = CreateApp.validateName(folderName);
   if (typeof validation === 'string') {
-    log.error(`Cannot create an app named ${chalk.red(`"${folderName}"`)}. ${validation}`);
-    process.exit(1);
+    const message = `Cannot create an app named ${chalk.red(`"${folderName}"`)}. ${validation}`;
+    log.error(message);
+    throw new SilentError(message);
   }
 }
 
@@ -84,10 +86,11 @@ function parseOptions(command: Command): Options {
 
 async function assertFolderEmptyAsync(projectRoot: string, folderName?: string) {
   if (!(await CreateApp.assertFolderEmptyAsync({ projectRoot, folderName, overwrite: false }))) {
+    const message = 'Try using a new directory name, or moving these files.';
     log.newLine();
-    log.nested('Try using a new directory name, or moving these files.');
+    log.nested(message);
     log.newLine();
-    process.exit(1);
+    throw new SilentError(message);
   }
 }
 
@@ -127,13 +130,16 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
   }
 
   if (!name) {
-    log.newLine();
-    log.nested('Please choose your app name:');
-    log.nested(`  ${log.chalk.green(`${program.name()} init`)} ${log.chalk.cyan('<app-name>')}`);
-    log.newLine();
-    log.nested(`Run ${log.chalk.green(`${program.name()} init --help`)} for more info`);
-    log.newLine();
-    process.exit(1);
+    const message = [
+      '',
+      'Please choose your app name:',
+      `  ${log.chalk.green(`${program.name()} init`)} ${log.chalk.cyan('<app-name>')}`,
+      '',
+      `Run ${log.chalk.green(`${program.name()} init --help`)} for more info`,
+      '',
+    ].join('\n');
+    log.nested(message);
+    throw new SilentError(message);
   }
 
   const projectRoot = path.resolve(name);
@@ -165,10 +171,11 @@ async function action(projectDir: string, command: Command) {
   let resolvedTemplate: string | null = options.template ?? null;
   // @ts-ignore: This guards against someone passing --template without a name after it.
   if (resolvedTemplate === true) {
+    const message = 'Please specify the template';
     log();
-    log('Please specify the template');
+    log.nested(message);
     log();
-    process.exit(1);
+    throw new SilentError(message);
   }
 
   // Download and sync templates
