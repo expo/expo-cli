@@ -13,7 +13,7 @@ import path from 'path';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
-import { SilentError } from '../CommandError';
+import CommandError, { SilentError } from '../CommandError';
 import log from '../log';
 import prompt from '../prompt';
 import prompts from '../prompts';
@@ -65,9 +65,9 @@ const isMacOS = process.platform === 'darwin';
 function assertValidName(folderName: string) {
   const validation = CreateApp.validateName(folderName);
   if (typeof validation === 'string') {
-    const message = `Cannot create an app named ${chalk.red(`"${folderName}"`)}. ${validation}`;
-    log.error(message);
-    throw new SilentError(message);
+    throw new CommandError(
+      `Cannot create an app named ${chalk.red(`"${folderName}"`)}. ${validation}`
+    );
   }
 }
 
@@ -171,11 +171,7 @@ async function action(projectDir: string, command: Command) {
   let resolvedTemplate: string | null = options.template ?? null;
   // @ts-ignore: This guards against someone passing --template without a name after it.
   if (resolvedTemplate === true) {
-    const message = 'Please specify the template';
-    log();
-    log.nested(message);
-    log();
-    throw new SilentError(message);
+    throw new CommandError('Please specify the template name');
   }
 
   // Download and sync templates
