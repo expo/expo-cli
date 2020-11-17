@@ -5,10 +5,10 @@ import JsonFile from '@expo/json-file';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
-import inquirer from 'inquirer';
 import isPlainObject from 'lodash/isPlainObject';
 import path from 'path';
 import process from 'process';
+import prompts from 'prompts';
 import rimraf from 'rimraf';
 import uuid from 'uuid';
 
@@ -32,13 +32,12 @@ import installPackagesAsync from './installPackagesAsync';
 const SERVICE_CONTEXT_PROJECT_NAME = 'exponent-view-template';
 
 async function yesnoAsync(message) {
-  const { ok } = await inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'ok',
-      message,
-    },
-  ]);
+  const { ok } = await prompts({
+    type: 'confirm',
+    name: 'ok',
+    initial: true,
+    message,
+  });
   return ok;
 }
 
@@ -177,13 +176,12 @@ async function _detachAsync(projectRoot, options) {
       logger.info(
         `You'll need to specify an iOS bundle identifier. See: https://docs.expo.io/versions/latest/config/app/#ios`
       );
-      const { iosBundleIdentifier } = await inquirer.prompt([
-        {
-          name: 'iosBundleIdentifier',
-          message: 'What would you like your iOS bundle identifier to be?',
-          validate: value => /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value),
-        },
-      ]);
+      const { iosBundleIdentifier } = await prompts({
+        type: 'text',
+        name: 'iosBundleIdentifier',
+        message: 'What would you like your iOS bundle identifier to be?',
+        validate: value => /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value),
+      });
       exp.ios.bundleIdentifier = iosBundleIdentifier;
     }
 
@@ -201,16 +199,15 @@ async function _detachAsync(projectRoot, options) {
       logger.info(
         `You'll need to specify an Android package name. See: https://docs.expo.io/versions/latest/config/app/#android`
       );
-      const { androidPackage } = await inquirer.prompt([
-        {
-          name: 'androidPackage',
-          message: 'What would you like your Android package name to be?',
-          validate: value =>
-            /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(value)
-              ? true
-              : "Invalid format of Android package name (only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter)",
-        },
-      ]);
+      const { androidPackage } = await prompts({
+        type: 'text',
+        name: 'androidPackage',
+        message: 'What would you like your Android package name to be?',
+        validate: value =>
+          /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(value)
+            ? true
+            : "Invalid format of Android package name (only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter)",
+      });
       exp.android.package = androidPackage;
     }
 
