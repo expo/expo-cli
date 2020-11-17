@@ -41,7 +41,7 @@ export default function prompt(
 
 // todo: replace this workaround, its still selectable by the cursor
 // see: https://github.com/terkelg/prompts/issues/254
-prompt.separator = (title: string): Choice => ({ title, disable: true, value: undefined });
+prompt.separator = (title: string) => ({ title, disabled: true, value: undefined });
 
 export type NamelessQuestion = Omit<Question<'value'>, 'name' | 'type'>;
 
@@ -85,6 +85,52 @@ export async function selectAsync(
     {
       limit: 11,
       ...questions,
+      // @ts-ignore: onRender not in the types
+      onRender(this: {
+        cursor: number;
+        firstRender: boolean;
+        choices: (Omit<prompts.Choice, 'disable'> & { disabled?: boolean })[];
+        render: () => void;
+        moveCursor: (n: number) => void;
+        fire: () => void;
+        up: () => void;
+        down: () => void;
+      }) {
+        if (this.firstRender) {
+          // Ensure the initial state isn't on a disabled item.
+          while (this.choices[this.cursor].disabled) {
+            this.cursor++;
+            if (this.cursor > this.choices.length - 1) break;
+          }
+          this.fire();
+
+          this.up = () => {
+            let next = this.cursor;
+            while (true) {
+              if (next <= 0) break;
+              next--;
+              if (!this.choices[next].disabled) break;
+            }
+            if (!this.choices[next].disabled) {
+              this.moveCursor(next);
+              this.render();
+            }
+          };
+
+          this.down = () => {
+            let next = this.cursor;
+            while (true) {
+              if (next >= this.choices.length - 1) break;
+              next++;
+              if (!this.choices[next].disabled) break;
+            }
+            if (!this.choices[next].disabled) {
+              this.moveCursor(next);
+              this.render();
+            }
+          };
+        }
+      },
       name: 'value',
       type: 'select',
     },

@@ -14,8 +14,7 @@ import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
 import log from '../log';
-import prompt from '../prompt';
-import prompts from '../prompts';
+import prompts, { selectAsync } from '../prompts';
 import * as CreateApp from './utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 
@@ -197,19 +196,17 @@ async function action(projectDir: string, command: Command) {
     const descriptionColumn =
       Math.max(...FEATURED_TEMPLATES.map(t => (typeof t === 'object' ? t.shortName.length : 0))) +
       2;
-    const { template } = await prompt(
+    const template = await selectAsync(
       {
-        type: 'list',
-        name: 'template',
         message: 'Choose a template:',
-        pageSize: 20,
+        optionsPerPage: 20,
         choices: FEATURED_TEMPLATES.map(template => {
           if (typeof template === 'string') {
-            return prompt.separator(template);
+            return prompts.separator(template);
           } else {
             return {
               value: template.name,
-              name:
+              title:
                 chalk.bold(padEnd(template.shortName, descriptionColumn)) +
                 trimStart(
                   wordwrap(
