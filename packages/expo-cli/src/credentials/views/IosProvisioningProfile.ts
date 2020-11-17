@@ -14,8 +14,7 @@ import {
   ProvisioningProfileManager,
 } from '../../appleApi';
 import log from '../../log';
-import prompt, { Question } from '../../prompt';
-import { confirmAsync } from '../../prompts';
+import prompt, { confirmAsync, Question } from '../../prompts';
 import { displayIosAppCredentials } from '../actions/list';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
@@ -184,18 +183,18 @@ export class CreateOrReuseProvisioningProfile implements IView {
   async _createOrReuse(ctx: Context): Promise<IView | null> {
     const choices = [
       {
-        name: '[Choose existing provisioning profile] (Recommended)',
+        title: '[Choose existing provisioning profile] (Recommended)',
         value: 'CHOOSE_EXISTING',
       },
-      { name: '[Add a new provisioning profile]', value: 'GENERATE' },
+      { title: '[Add a new provisioning profile]', value: 'GENERATE' },
     ];
 
     const question: Question = {
-      type: 'list',
+      type: 'select',
       name: 'action',
       message: 'Select a Provisioning Profile:',
       choices,
-      pageSize: Infinity,
+      optionsPerPage: 20,
     };
 
     const { action } = await prompt(question);
@@ -224,11 +223,11 @@ async function selectProfileFromApple(
   }
 
   const question: Question = {
-    type: 'list',
+    type: 'select',
     name: 'credentialsIndex',
     message: 'Select Provisioning Profile from the list.',
     choices: profiles.map((entry, index) => ({
-      name: formatProvisioningProfileFromApple(entry),
+      title: formatProvisioningProfileFromApple(entry),
       value: index,
     })),
   };
@@ -254,11 +253,11 @@ async function selectProfileFromExpo(
   };
 
   const question: Question = {
-    type: 'list',
+    type: 'select',
     name: 'credentialsIndex',
     message: 'Select Provisioning Profile from the list.',
     choices: profiles.map((entry, index) => ({
-      name: getName(entry),
+      title: getName(entry),
       value: index,
     })),
   };

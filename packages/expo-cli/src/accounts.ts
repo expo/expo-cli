@@ -6,8 +6,8 @@ import invariant from 'invariant';
 
 import CommandError from './CommandError';
 import log from './log';
-import prompt, { Question } from './prompt';
 import promptNew, { confirmAsync, Question as NewQuestion, selectAsync } from './prompts';
+import { nonEmptyInput } from './validators';
 
 UserManager.initialize();
 
@@ -42,27 +42,27 @@ export async function loginOrRegisterAsync(): Promise<User> {
     );
   }
 
-  const question: Question = {
-    type: 'list',
+  const question: NewQuestion = {
+    type: 'select',
     name: 'action',
     message: 'How would you like to authenticate?',
     choices: [
       {
-        name: 'Make a new Expo account',
+        title: 'Make a new Expo account',
         value: 'register',
       },
       {
-        name: 'Log in with an existing Expo account',
+        title: 'Log in with an existing Expo account',
         value: 'existingUser',
       },
       {
-        name: 'Cancel',
+        title: 'Cancel',
         value: 'cancel',
       },
     ],
   };
 
-  const { action } = await prompt(question);
+  const { action } = await promptNew(question);
 
   if (action === 'register') {
     return register();
@@ -212,7 +212,7 @@ async function _promptForBackupOTPAsync(
  *    OTP (or backup code) and also give the user a way to cancel and move to case 3 below.
  * 3. User doesn't have a primary device or doesn't have access to their primary device. In this case
  *    we should show a picker of the SMS devices that they can have an OTP code sent to, and when
- *    the user picks one we show a prompt for the sent OTP.
+ *    the user picks one we show a prompt() for the sent OTP.
  */
 export async function _retryUsernamePasswordAuthWithOTPAsync(
   username: string,
@@ -268,18 +268,14 @@ async function _usernamePasswordAuth(
   password?: string,
   otp?: string
 ): Promise<User> {
-  const questions: Question[] = [];
+  const questions: NewQuestion[] = [];
   if (!username) {
     questions.push({
-      type: 'input',
+      type: 'text',
       name: 'username',
       message: 'Username/Email Address:',
-      validate(val: string) {
-        if (val.trim() === '') {
-          return false;
-        }
-        return true;
-      },
+      format: val => val.trim(),
+      validate: nonEmptyInput,
     });
   }
 
@@ -288,16 +284,12 @@ async function _usernamePasswordAuth(
       type: 'password',
       name: 'password',
       message: 'Password:',
-      validate(val: string) {
-        if (val.trim() === '') {
-          return false;
-        }
-        return true;
-      },
+      format: val => val.trim(),
+      validate: nonEmptyInput,
     });
   }
 
-  const answers = await prompt(questions);
+  const answers = await promptNew(questions);
 
   const data = {
     username: username || answers.username,
@@ -336,36 +328,26 @@ Just a few questions:
 `
   );
 
-  const questions: Question[] = [
+  const questions: NewQuestion[] = [
     {
-      type: 'input',
+      type: 'text',
       name: 'email',
       message: 'E-mail:',
-      filter: val => val.trim(),
-      validate(val) {
-        if (val.trim() === '') {
-          return false;
-        }
-        return true;
-      },
+      format: val => val.trim(),
+      validate: nonEmptyInput,
     },
     {
-      type: 'input',
+      type: 'text',
       name: 'username',
       message: 'Username:',
-      filter: val => val.trim(),
-      validate(val) {
-        if (val.trim() === '') {
-          return false;
-        }
-        return true;
-      },
+      format: val => val.trim(),
+      validate: nonEmptyInput,
     },
     {
       type: 'password',
       name: 'password',
       message: 'Password:',
-      filter: val => val.trim(),
+      format: val => val.trim(),
       validate(val) {
         if (val.trim() === '') {
           return 'Please create a password';
@@ -377,6 +359,7 @@ Just a few questions:
       type: 'password',
       name: 'passwordRepeat',
       message: 'Confirm Password:',
+      format: val => val.trim(),
       validate(val, answers) {
         if (val.trim() === '') {
           return false;
@@ -388,7 +371,7 @@ Just a few questions:
       },
     },
   ];
-  const answers = await prompt(questions);
+  const answers = await promptNew(questions);
   const registeredUser = await UserManager.registerAsync(answers as RegistrationData);
   log('\nThanks for signing up!');
   return registeredUser;

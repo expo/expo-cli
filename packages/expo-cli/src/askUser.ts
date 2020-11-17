@@ -1,7 +1,7 @@
 import { UserSettings } from '@expo/xdl';
 
 import log from './log';
-import prompt from './prompt';
+import prompt from './prompts';
 
 async function askForSendToAsync(): Promise<string> {
   const cachedValue = await UserSettings.getAsync('sendTo', null);
@@ -9,10 +9,10 @@ async function askForSendToAsync(): Promise<string> {
   const answers = await prompt(
     [
       {
-        type: 'input',
+        type: 'text',
         name: 'sendTo',
         message: `Your email address ${cachedValue ? ' (space to not send anything)' : ''}:`,
-        default: cachedValue ?? undefined,
+        initial: cachedValue ?? undefined,
       },
     ],
     { nonInteractiveHelp: 'Please specify email address with --send-to.' }

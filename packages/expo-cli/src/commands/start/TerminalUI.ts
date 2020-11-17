@@ -34,10 +34,6 @@ type StartOptions = {
   webOnly?: boolean;
 };
 
-const clearConsole = (): void => {
-  process.stdout.write(process.platform === 'win32' ? '\x1Bc' : '\x1B[2J\x1B[3J\x1B[H');
-};
-
 const printHelp = (): void => {
   log.newLine();
   log.nested(`Press ${b('?')} to show a list of all available commands.`);
@@ -160,7 +156,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
       switch (key) {
         case 'A':
         case 'a':
-          clearConsole();
+          log.clear();
           log('Opening the web project in Chrome on Android...');
           await Android.openWebProjectAsync({
             projectRoot,
@@ -170,7 +166,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           break;
         case 'i':
         case 'I':
-          clearConsole();
+          log.clear();
           log('Opening the web project in Safari on iOS...');
           await Simulator.openWebProjectAsync({
             projectRoot,
@@ -192,19 +188,19 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
     } else {
       switch (key) {
         case 'A':
-          clearConsole();
+          log.clear();
           await Android.openProjectAsync({ projectRoot, shouldPrompt: true });
           printHelp();
           break;
         case 'a': {
-          clearConsole();
+          log.clear();
           log('Opening on Android...');
           await Android.openProjectAsync({ projectRoot });
           printHelp();
           break;
         }
         case 'I':
-          clearConsole();
+          log.clear();
           await Simulator.openProjectAsync({
             projectRoot,
             shouldPrompt: true,
@@ -212,7 +208,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           printHelp();
           break;
         case 'i': {
-          clearConsole();
+          log.clear();
 
           // note(brentvatne): temporarily remove logic for picking the
           // simulator until we have parity for Android. this also ensures that we
@@ -253,10 +249,10 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
             startWaitingForCommand();
           };
           const cancel = async () => {
-            clearConsole();
+            log.clear();
             printHelp();
           };
-          clearConsole();
+          log.clear();
           process.stdin.addListener('keypress', handleKeypress);
           log('Please enter your email address (press ESC to cancel) ');
           rl.question(
@@ -300,7 +296,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         break;
       }
       case CTRL_L: {
-        clearConsole();
+        log.clear();
         break;
       }
       case '?': {
@@ -308,14 +304,14 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         break;
       }
       case 'w': {
-        clearConsole();
+        log.clear();
         log('Attempting to open the project in a web browser...');
         await Webpack.openAsync(projectRoot);
         await printServerInfo(projectRoot, options);
         break;
       }
       case 'c': {
-        clearConsole();
+        log.clear();
         await printServerInfo(projectRoot, options);
         break;
       }
@@ -327,7 +323,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         break;
       }
       case 'D': {
-        clearConsole();
+        log.clear();
         const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', true));
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
         log(
@@ -339,7 +335,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         break;
       }
       case 'p': {
-        clearConsole();
+        log.clear();
         const projectSettings = await ProjectSettings.readAsync(projectRoot);
         const dev = !projectSettings.dev;
         await ProjectSettings.setAsync(projectRoot, { dev, minify: !dev });
@@ -354,7 +350,7 @@ Please reload the project in the Expo app for the change to take effect.`
       }
       case 'r':
       case 'R': {
-        clearConsole();
+        log.clear();
         const reset = key === 'R';
         if (reset) {
           log('Restarting Metro bundler and clearing cache...');
