@@ -3,8 +3,7 @@ import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
-import { SilentError } from '../CommandError';
-import log from '../log';
+import CommandError from '../CommandError';
 import { confirmAsync } from '../prompts';
 import * as Eject from './eject/Eject';
 import * as LegacyEject from './eject/LegacyEject';
@@ -26,10 +25,8 @@ async function action(
   try {
     exp = getConfig(projectDir).exp;
   } catch (error) {
-    log();
-    log(chalk.red(error.message));
-    log();
-    throw new SilentError(error);
+    // format as a single-line error message
+    throw new CommandError(error.message);
   }
 
   if (options.npm) {
