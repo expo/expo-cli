@@ -138,11 +138,6 @@ function checkRuntimePlatform(targetPlatform: 'android' | 'ios'): void {
   if (process.platform !== 'darwin') {
     if (targetPlatform === 'android') {
       log.error('Local Android uploads are only supported on macOS.');
-      log(
-        chalk.bold(
-          'Try the --use-submission-service flag to upload your app from Expo servers. This feature is behind a flag because it is experimental.'
-        )
-      );
     } else {
       log.error('Currently, iOS uploads are only supported on macOS, sorry :(');
     }
