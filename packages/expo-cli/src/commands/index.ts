@@ -12,7 +12,6 @@ const COMMANDS = [
   require('./eject'),
   require('./export'),
   require('./fetch'),
-  require('./generate-module'),
   require('./init'),
   require('./install'),
   require('./login'),
