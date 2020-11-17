@@ -1,5 +1,3 @@
-import ExtendableError from 'es6-error';
-
 const ERROR_PREFIX = 'Error: ';
 
 export const ErrorCodes = {
@@ -18,24 +16,23 @@ export const ErrorCodes = {
 
 export type ErrorCode = keyof typeof ErrorCodes;
 
-export default class CommandError extends ExtendableError {
+export default class CommandError extends Error {
+  readonly name = 'CommandError';
+  readonly isCommandError = true;
   code: string;
-  isCommandError: true;
 
   constructor(code: string, message: string = '') {
+    super('');
     // If e.toString() was called to get `message` we don't want it to look
     // like "Error: Error:".
     if (message.startsWith(ERROR_PREFIX)) {
       message = message.substring(ERROR_PREFIX.length);
     }
 
-    super(message || code);
-
+    this.message = message || code;
     this.code = code;
-    this.isCommandError = true;
   }
 }
-
 export class AbortCommandError extends CommandError {
   constructor() {
     super('ABORTED', 'Interactive prompt was cancelled.');
