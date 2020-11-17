@@ -31,6 +31,7 @@ class ApiError extends Error {
     this.code = code;
   }
 }
+ApiError.prototype.name = ApiError.name;
 
 // These aren't constants because some commands switch between staging and prod
 function _rootBaseUrl() {

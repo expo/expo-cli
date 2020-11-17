@@ -23,6 +23,7 @@ export class TurtleApiError extends Error {
     this.code = code;
   }
 }
+TurtleApiError.prototype.name = TurtleApiError.name;
 
 type RequestOptions = {
   httpMethod: 'get' | 'post' | 'put' | 'delete';

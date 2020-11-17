@@ -42,6 +42,7 @@ export class ApiV2Error extends Error {
     this.code = code;
   }
 }
+ApiV2Error.prototype.name = ApiV2Error.name;
 
 type RequestOptions = {
   httpMethod: 'get' | 'post' | 'put' | 'patch' | 'delete';

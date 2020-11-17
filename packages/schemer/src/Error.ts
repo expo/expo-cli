@@ -6,6 +6,7 @@ export class SchemerError extends Error {
     this.errors = errors;
   }
 }
+SchemerError.prototype.name = SchemerError.name;
 
 export class ValidationError extends Error {
   errorCode: string;
@@ -34,6 +35,7 @@ export class ValidationError extends Error {
     this.meta = meta;
   }
 }
+ValidationError.prototype.name = ValidationError.name;
 
 export type ErrorCode = keyof typeof ErrorCodes;
 

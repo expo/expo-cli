@@ -19,3 +19,4 @@ export default class XDLError extends Error {
     this.isXDLError = true;
   }
 }
+XDLError.prototype.name = XDLError.name;

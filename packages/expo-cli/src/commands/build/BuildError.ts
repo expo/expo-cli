@@ -5,3 +5,4 @@ export default class BuildError extends Error {
     super();
   }
 }
+BuildError.prototype.name = BuildError.name;
