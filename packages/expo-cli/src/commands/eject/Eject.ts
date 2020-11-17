@@ -18,7 +18,7 @@ import semver from 'semver';
 import temporary from 'tempy';
 import terminalLink from 'terminal-link';
 
-import { SilentError } from '../../CommandError';
+import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
@@ -302,10 +302,8 @@ async function ensureConfigAsync(
     }
   } catch (error) {
     // TODO(Bacon): Currently this is already handled in the command
-    log();
-    log(chalk.red(error.message));
-    log();
-    throw new SilentError(error);
+    log.addNewLineIfNone();
+    throw new CommandError(`${error.message}\n`);
   }
 
   // Prompt for the Android package first because it's more strict than the bundle identifier
@@ -614,7 +612,7 @@ async function cloneNativeDirectoriesAsync({
     }
     creatingNativeProjectStep.succeed(message);
   } catch (e) {
-    log(chalk.red(e.message));
+    log.error(e.message);
     creatingNativeProjectStep.fail(
       'Failed to create the native project - see the output above for more information.'
     );
