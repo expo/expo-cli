@@ -1,4 +1,4 @@
-import * as ConfigUtils from '@expo/config';
+import { findConfigFile, getConfig, readConfigJsonAsync, resolveModule } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Detach, Exp, IosWorkspace, Versions } from '@expo/xdl';
@@ -30,12 +30,12 @@ const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string): Promise<void> {
   // We just need the custom `nodeModulesPath` from the config.
-  const { exp, pkg } = await ConfigUtils.getConfig(projectRoot, {
+  const { exp, pkg } = await getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
   const pkgsWithExtraSetup = await JsonFile.readAsync(
-    ConfigUtils.resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
+    resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
   );
   const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(pkgName =>
     pkgsWithExtraSetup.hasOwnProperty(pkgName)
@@ -170,8 +170,8 @@ function ensureDependenciesMap(dependencies: any): DependenciesMap {
 async function ejectToBareAsync(projectRoot: string): Promise<void> {
   const useYarn = PackageManager.isUsingYarn(projectRoot);
   const npmOrYarn = useYarn ? 'yarn' : 'npm';
-  const { configPath, configName } = ConfigUtils.findConfigFile(projectRoot);
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { configPath, configName } = findConfigFile(projectRoot);
+  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
 
   const configBuffer = await fse.readFile(configPath);
   const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
@@ -344,8 +344,8 @@ if (Platform.OS === 'web') {
 async function getAppNamesAsync(
   projectRoot: string
 ): Promise<{ displayName: string; name: string }> {
-  const { configPath, configName } = ConfigUtils.findConfigFile(projectRoot);
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { configPath, configName } = findConfigFile(projectRoot);
+  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
 
   const configBuffer = await fse.readFile(configPath);
   const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};

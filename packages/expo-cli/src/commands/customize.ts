@@ -1,4 +1,4 @@
-import * as ConfigUtils from '@expo/config';
+import { getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
@@ -85,7 +85,7 @@ async function generateFilesAsync({
 export async function action(projectDir: string = './', options: Options = { force: false }) {
   // Get the static path (defaults to 'web/')
   // Doesn't matter if expo is installed or which mode is used.
-  const { exp } = ConfigUtils.getConfig(projectDir, {
+  const { exp } = getConfig(projectDir, {
     skipSDKVersionRequirement: true,
   });
 

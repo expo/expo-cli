@@ -1,4 +1,5 @@
-import * as ConfigUtils from '@expo/config';
+import { getConfig } from '@expo/config';
+import { ExpoConfig } from '@expo/config-types';
 import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 
@@ -8,7 +9,7 @@ import { findProjectRootAsync } from './ProjectUtils';
 export async function getExpoSdkConfig(path: string) {
   try {
     const { projectRoot } = await findProjectRootAsync(path);
-    const { exp } = ConfigUtils.getConfig(projectRoot, {
+    const { exp } = getConfig(projectRoot, {
       skipSDKVersionRequirement: true,
     });
     return exp;
@@ -47,7 +48,7 @@ export function getClient(platform: ClientPlatform, sdk?: Versions.SDKVersion | 
 interface AvailableClientOptions {
   sdkVersions: Versions.SDKVersions;
   platform: ClientPlatform;
-  project?: ConfigUtils.ExpoConfig;
+  project?: ExpoConfig;
 }
 
 interface AvailableClient {
