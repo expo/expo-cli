@@ -1,5 +1,5 @@
 import log from '../../../../log';
-import prompt from '../../../../prompt';
+import prompt from '../../../../prompts';
 import { existingFile } from '../../../../validators';
 import { learnMore } from '../../../utils/TerminalLink';
 
@@ -62,8 +62,8 @@ async function askForServiceAccountPathAsync(): Promise<string> {
   const { filePath } = await prompt({
     name: 'filePath',
     message: 'Path to Google Service Account file:',
-    default: 'api-0000000000000000000-111111-aaaaaabbbbbb.json',
-    type: 'input',
+    initial: 'api-0000000000000000000-111111-aaaaaabbbbbb.json',
+    type: 'text',
     validate: async (path: string): Promise<boolean | string> => {
       if (!(await existingFile(path, false))) {
         return `File ${path} doesn't exist.`;

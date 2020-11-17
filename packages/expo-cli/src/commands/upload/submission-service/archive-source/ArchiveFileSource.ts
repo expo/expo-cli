@@ -3,7 +3,7 @@ import { StandaloneBuild } from '@expo/xdl';
 import validator from 'validator';
 
 import log from '../../../../log';
-import prompt from '../../../../prompt';
+import prompt from '../../../../prompts';
 import { existingFile } from '../../../../validators';
 import { getAppConfig } from '../utils/config';
 import {
@@ -170,20 +170,20 @@ async function handleBuildIdSourceAsync(source: ArchiveFileBuildIdSource): Promi
 async function handlePromptSourceAsync(source: ArchiveFilePromptSource): Promise<string> {
   const { sourceType: sourceTypeRaw } = await prompt({
     name: 'sourceType',
-    type: 'list',
+    type: 'select',
     message: 'What would you like to submit?',
     choices: [
-      { name: 'I have a url to the app archive', value: ArchiveFileSourceType.url },
+      { title: 'I have a url to the app archive', value: ArchiveFileSourceType.url },
       {
-        name: "I'd like to upload the app archive from my computer",
+        title: "I'd like to upload the app archive from my computer",
         value: ArchiveFileSourceType.path,
       },
       {
-        name: 'The latest build from Expo servers',
+        title: 'The latest build from Expo servers',
         value: ArchiveFileSourceType.latest,
       },
       {
-        name: 'A build identified by a build id',
+        title: 'A build identified by a build id',
         value: ArchiveFileSourceType.buildId,
       },
     ],
@@ -234,8 +234,8 @@ async function askForArchiveUrlAsync(): Promise<string> {
   const { url } = await prompt({
     name: 'url',
     message: 'URL:',
-    default: defaultArchiveUrl,
-    type: 'input',
+    initial: defaultArchiveUrl,
+    type: 'text',
     validate: (url: string): string | boolean => {
       if (url === defaultArchiveUrl) {
         return 'That was just an example URL, meant to show you the format that we expect for the response.';
@@ -254,8 +254,8 @@ async function askForArchivePathAsync(): Promise<string> {
   const { path } = await prompt({
     name: 'path',
     message: 'Path to the app archive file (aab or apk):',
-    default: defaultArchivePath,
-    type: 'input',
+    initial: defaultArchivePath,
+    type: 'text',
     validate: async (path: string): Promise<boolean | string> => {
       if (path === defaultArchivePath) {
         return 'That was just an example path, meant to show you the format that we expect for the response.';
@@ -273,7 +273,7 @@ async function askForBuildIdAsync(): Promise<string> {
   const { id } = await prompt({
     name: 'id',
     message: 'Build ID:',
-    type: 'input',
+    type: 'text',
     validate: (val: string): string | boolean => {
       if (!validator.isUUID(val)) {
         return `${val} is not a valid id`;

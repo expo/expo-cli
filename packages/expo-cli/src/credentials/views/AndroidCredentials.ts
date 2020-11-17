@@ -1,7 +1,7 @@
 import isEmpty from 'lodash/isEmpty';
 
 import log from '../../log';
-import prompt from '../../prompt';
+import prompt from '../../prompts';
 import { displayAndroidAppCredentials } from '../actions/list';
 import { Context, IView } from '../context';
 import { DownloadKeystore, RemoveKeystore, UpdateKeystore } from './AndroidKeystore';
@@ -21,25 +21,23 @@ class ExperienceView implements IView {
       log.newLine();
     }
 
-    const { action } = await prompt([
-      {
-        type: 'list',
-        name: 'action',
-        message: 'What do you want to do?',
-        choices: [
-          { value: 'update-keystore', name: 'Update upload Keystore' },
-          { value: 'remove-keystore', name: 'Remove keystore' },
-          { value: 'update-fcm-key', name: 'Update FCM Api Key' },
-          { value: 'fetch-keystore', name: 'Download Keystore from the Expo servers' },
-          // { value: 'fetch-public-cert', name: 'Extract public cert from Keystore' },
-          // {
-          //   value: 'fetch-private-signing-key',
-          //   name:
-          //     'Extract private signing key (required when migration to App Signing by Google Play)',
-          // },
-        ],
-      },
-    ]);
+    const { action } = await prompt({
+      type: 'select',
+      name: 'action',
+      message: 'What do you want to do?',
+      choices: [
+        { value: 'update-keystore', title: 'Update upload Keystore' },
+        { value: 'remove-keystore', title: 'Remove keystore' },
+        { value: 'update-fcm-key', title: 'Update FCM Api Key' },
+        { value: 'fetch-keystore', title: 'Download Keystore from the Expo servers' },
+        // { value: 'fetch-public-cert', title: 'Extract public cert from Keystore' },
+        // {
+        //   value: 'fetch-private-signing-key',
+        //   title:
+        //     'Extract private signing key (required when migration to App Signing by Google Play)',
+        // },
+      ],
+    });
 
     return this.handleAction(ctx, action);
   }

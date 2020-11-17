@@ -1,9 +1,13 @@
 import program from 'commander';
-import prompts, { Choice, Options, PromptType, PromptObject as Question } from 'prompts';
+import prompts, { Choice, Options, PromptObject, PromptType } from 'prompts';
 
 import CommandError, { AbortCommandError } from './CommandError';
 
-export { PromptType, Question };
+export type Question<V extends string = string> = PromptObject<V> & {
+  optionsPerPage?: number;
+};
+
+export { PromptType };
 
 type PromptOptions = { nonInteractiveHelp?: string } & Options;
 

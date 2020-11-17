@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import prompt from '../../../../../prompt';
+import prompt from '../../../../../prompts';
 import {
   getServiceAccountAsync,
   ServiceAccountSource,
@@ -8,7 +8,7 @@ import {
 } from '../ServiceAccountSource';
 
 jest.mock('fs');
-jest.mock('../../../../../prompt');
+jest.mock('../../../../../prompts');
 
 describe(getServiceAccountAsync, () => {
   beforeAll(() => {
