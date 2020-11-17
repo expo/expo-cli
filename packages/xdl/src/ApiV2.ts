@@ -31,6 +31,7 @@ async function _convertFormDataToBuffer(formData: FormData): Promise<{ data: Buf
 }
 
 export class ApiV2Error extends Error {
+  readonly name = 'ApiV2Error';
   code: string;
   details?: JSONValue;
   serverStack?: string;
@@ -42,7 +43,6 @@ export class ApiV2Error extends Error {
     this.code = code;
   }
 }
-ApiV2Error.prototype.name = ApiV2Error.name;
 
 type RequestOptions = {
   httpMethod: 'get' | 'post' | 'put' | 'patch' | 'delete';

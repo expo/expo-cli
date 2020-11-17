@@ -22,6 +22,7 @@ type HttpMethod = 'get' | 'post' | 'put' | 'delete';
 type RequestOptions = AxiosRequestConfig & { formData?: FormData };
 
 class ApiError extends Error {
+  readonly name = 'ApiError';
   code: string;
   readonly _isApiError = true;
   serverError: any;
@@ -31,7 +32,6 @@ class ApiError extends Error {
     this.code = code;
   }
 }
-ApiError.prototype.name = ApiError.name;
 
 // These aren't constants because some commands switch between staging and prod
 function _rootBaseUrl() {

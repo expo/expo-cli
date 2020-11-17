@@ -13,6 +13,8 @@ import FormData from './tools/FormData';
 const apiBaseUrl = `${Config.turtleApi.scheme}://${Config.turtleApi.host}:${Config.turtleApi.port}`;
 
 export class TurtleApiError extends Error {
+  readonly name = 'TurtleApiError';
+
   code: string;
   details?: JSONValue;
   serverStack?: string;
@@ -23,7 +25,6 @@ export class TurtleApiError extends Error {
     this.code = code;
   }
 }
-TurtleApiError.prototype.name = TurtleApiError.name;
 
 type RequestOptions = {
   httpMethod: 'get' | 'post' | 'put' | 'delete';

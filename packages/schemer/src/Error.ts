@@ -1,14 +1,16 @@
 export class SchemerError extends Error {
+  readonly name = 'SchemerError';
   errors: ValidationError[];
+
   constructor(errors: ValidationError[]) {
-    const message = errors.map(e => e.message).join('\n');
-    super(message);
+    super('');
+    this.message = errors.map(e => e.message).join('\n');
     this.errors = errors;
   }
 }
-SchemerError.prototype.name = SchemerError.name;
 
 export class ValidationError extends Error {
+  readonly name = 'ValidationError';
   errorCode: string;
   fieldPath: string;
   message: string;
@@ -35,7 +37,6 @@ export class ValidationError extends Error {
     this.meta = meta;
   }
 }
-ValidationError.prototype.name = ValidationError.name;
 
 export type ErrorCode = keyof typeof ErrorCodes;
 
