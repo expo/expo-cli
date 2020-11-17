@@ -1,11 +1,9 @@
 import { getConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
-import chalk from 'chalk';
 import { Command } from 'commander';
 import path from 'path';
 
-import { SilentError } from '../CommandError';
-import log from '../log';
+import CommandError from '../CommandError';
 import configureAndroidProjectAsync from './apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from './apply/configureIOSProjectAsync';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from './utils/logConfigWarnings';
@@ -32,10 +30,7 @@ async function ensureConfigExistsAsync(projectRoot: string): Promise<void> {
     }
   } catch (error) {
     // TODO(Bacon): Currently this is already handled in the command
-    log();
-    log(chalk.red(error.message));
-    log();
-    throw new SilentError(error);
+    throw new CommandError(error.message);
   }
 }
 
