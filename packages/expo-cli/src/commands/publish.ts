@@ -6,7 +6,7 @@ import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
 
-import { SilentError } from '../CommandError';
+import CommandError from '../CommandError';
 import log from '../log';
 import sendTo from '../sendTo';
 import * as TerminalLink from './utils/TerminalLink';
@@ -128,10 +128,9 @@ export function isInvalidReleaseChannel(releaseChannel?: string): boolean {
 // TODO(Bacon): should we prompt with a normalized value?
 function assertValidReleaseChannel(releaseChannel?: string): void {
   if (isInvalidReleaseChannel(releaseChannel)) {
-    const message =
-      'Release channel name can only contain lowercase letters, numbers and special characters . _ and -';
-    log.error(message);
-    throw new SilentError(message);
+    throw new CommandError(
+      'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
+    );
   }
 }
 
