@@ -59,6 +59,11 @@ export default async function readPbxProject(projectRootPath: string): Promise<I
     );
   }
 
+  // PBXVariantGroup may not exist in bare project, but is required by xcode package
+  if (!pbxProject.hash.project.objects.PBXVariantGroup) {
+    pbxProject.hash.project.objects.PBXVariantGroup = {};
+  }
+
   return {
     projectName,
     projectPath,
