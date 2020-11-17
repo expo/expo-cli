@@ -32,10 +32,6 @@ const COMMANDS = [
   require('./whoami'),
 ];
 
-if (process.env.EXPO_DEV) {
-  COMMANDS.push(require('./apply'));
-}
-
 export function registerCommands(program: Command) {
   COMMANDS.forEach(commandModule => {
     commandModule.default(program);
