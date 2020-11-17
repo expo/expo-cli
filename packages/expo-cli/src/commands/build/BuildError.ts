@@ -1,6 +1,4 @@
-import ExtendableError from 'es6-error';
-
-export default class BuildError extends ExtendableError {
+export default class BuildError extends Error {
   name = 'BuildError';
 
   constructor(public message: string) {

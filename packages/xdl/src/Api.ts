@@ -1,6 +1,5 @@
 import axios, { AxiosRequestConfig, Canceler } from 'axios';
 import concat from 'concat-stream';
-import ExtendableError from 'es6-error';
 import FormData from 'form-data';
 import fs from 'fs-extra';
 import path from 'path';
@@ -22,7 +21,7 @@ let exponentClient = 'xdl';
 type HttpMethod = 'get' | 'post' | 'put' | 'delete';
 type RequestOptions = AxiosRequestConfig & { formData?: FormData };
 
-class ApiError extends ExtendableError {
+class ApiError extends Error {
   code: string;
   readonly _isApiError = true;
   serverError: any;

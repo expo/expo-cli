@@ -1,18 +1,12 @@
-import ExtendableError from 'es6-error';
-
 import { ErrorCode } from './ErrorCode';
 
 const ERROR_PREFIX = 'Error: ';
 
-export default class XDLError extends ExtendableError {
+export default class XDLError extends Error {
   code: string;
   isXDLError: true;
 
-  constructor(
-    code: ErrorCode,
-    message: string,
-    options: { noTrack: boolean } = { noTrack: false }
-  ) {
+  constructor(code: ErrorCode, message: string) {
     // If e.toString() was called to get `message` we don't want it to look
     // like "Error: Error:".
     if (message.startsWith(ERROR_PREFIX)) {

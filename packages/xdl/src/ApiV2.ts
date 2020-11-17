@@ -1,7 +1,6 @@
 import { JSONObject, JSONValue } from '@expo/json-file';
 import axios, { AxiosRequestConfig } from 'axios';
 import concat from 'concat-stream';
-import ExtendableError from 'es6-error';
 import FormData from 'form-data';
 import idx from 'idx';
 import merge from 'lodash/merge';
@@ -31,7 +30,7 @@ async function _convertFormDataToBuffer(formData: FormData): Promise<{ data: Buf
   });
 }
 
-export class ApiV2Error extends ExtendableError {
+export class ApiV2Error extends Error {
   code: string;
   details?: JSONValue;
   serverStack?: string;

@@ -1,7 +1,6 @@
 import { JSONObject, JSONValue } from '@expo/json-file';
 import axios, { AxiosRequestConfig } from 'axios';
 import concat from 'concat-stream';
-import ExtendableError from 'es6-error';
 import fs from 'fs-extra';
 import idx from 'idx';
 import merge from 'lodash/merge';
@@ -13,7 +12,7 @@ import FormData from './tools/FormData';
 
 const apiBaseUrl = `${Config.turtleApi.scheme}://${Config.turtleApi.host}:${Config.turtleApi.port}`;
 
-export class TurtleApiError extends ExtendableError {
+export class TurtleApiError extends Error {
   code: string;
   details?: JSONValue;
   serverStack?: string;

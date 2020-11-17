@@ -1,5 +1,3 @@
-import ExtendableError from 'es6-error';
-
 const ERROR_PREFIX = 'Error: ';
 
 export const ErrorCodes = {
@@ -18,7 +16,7 @@ export const ErrorCodes = {
 
 export type ErrorCode = keyof typeof ErrorCodes;
 
-export default class CommandError extends ExtendableError {
+export default class CommandError extends Error {
   code: string;
   isCommandError: true;
 

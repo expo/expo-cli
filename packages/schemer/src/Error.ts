@@ -1,6 +1,4 @@
-import ExtendableError from 'es6-error';
-
-export class SchemerError extends ExtendableError {
+export class SchemerError extends Error {
   errors: ValidationError[];
   constructor(errors: ValidationError[]) {
     const message = errors.map(e => e.message).join('\n');
@@ -9,7 +7,7 @@ export class SchemerError extends ExtendableError {
   }
 }
 
-export class ValidationError extends ExtendableError {
+export class ValidationError extends Error {
   errorCode: string;
   fieldPath: string;
   message: string;
