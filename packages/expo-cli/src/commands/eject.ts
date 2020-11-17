@@ -7,6 +7,7 @@ import log from '../log';
 import { confirmAsync } from '../prompts';
 import * as Eject from './eject/Eject';
 import * as LegacyEject from './eject/LegacyEject';
+import { learnMore } from './utils/TerminalLink';
 
 async function userWantsToEjectWithoutUpgradingAsync() {
   const answer = await confirmAsync({
@@ -50,7 +51,9 @@ export default function (program: Command) {
     .command('eject [path]')
     .description(
       // TODO: Use Learn more link when it lands
-      `Create native iOS and Android project files. Read more: https://docs.expo.io/bare/customizing/`
+      `Create native iOS and Android project files. ${chalk.dim(
+        learnMore('https://docs.expo.io/bare/customizing/')
+      )}`
     )
     .longDescription(
       'Create Xcode and Android Studio projects for your app. Use this if you need to add custom native functionality.'
