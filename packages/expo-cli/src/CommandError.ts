@@ -18,6 +18,9 @@ export const ErrorCodes = {
 
 export type ErrorCode = keyof typeof ErrorCodes;
 
+/**
+ * General error, formatted as a message in red text when caught by expo-cli (no stack trace is printed). Should be used in favor of `log.error()` in most cases.
+ */
 export default class CommandError extends ExtendableError {
   code: string;
   isCommandError: true;
