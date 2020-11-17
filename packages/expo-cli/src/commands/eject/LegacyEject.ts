@@ -12,8 +12,9 @@ import temporary from 'tempy';
 
 import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import log from '../../log';
-import prompt, { Question } from '../../prompt';
+import prompt, { Question } from '../../prompts';
 import { validateGitStatusAsync } from '../utils/ProjectUtils';
+import { learnMore } from '../utils/TerminalLink';
 
 type ValidationErrorMessage = string;
 
@@ -76,33 +77,28 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
 
   const reactNativeOptionMessage = "Bare: I'd like a bare React Native project.";
 
-  const questions: Question[] = [
-    {
-      type: 'list',
-      name: 'ejectMethod',
-      message:
-        'How would you like to eject your app?\n  Read more: https://docs.expo.io/expokit/eject/',
-      default: 'bare',
-      choices: [
-        {
-          name: reactNativeOptionMessage,
-          value: 'bare',
-          short: 'Bare',
-        },
-        {
-          name:
-            "ExpoKit: I'll create or log in with an Expo account to use React Native and the Expo SDK.",
-          value: 'expokit',
-          short: 'ExpoKit',
-        },
-        {
-          name: "Cancel: I'll continue with my current project structure.",
-          value: 'cancel',
-          short: 'cancel',
-        },
-      ],
-    },
-  ];
+  const questions: Question = {
+    type: 'select',
+    name: 'ejectMethod',
+    message: `How would you like to eject your app?\n  ${chalk.dim(
+      learnMore('https://docs.expo.io/expokit/eject/')
+    )}`,
+    choices: [
+      {
+        title: reactNativeOptionMessage,
+        value: 'bare',
+      },
+      {
+        title:
+          "ExpoKit: I'll create or log in with an Expo account to use React Native and the Expo SDK.",
+        value: 'expokit',
+      },
+      {
+        title: "Cancel: I'll continue with my current project structure.",
+        value: 'cancel',
+      },
+    ],
+  };
 
   const ejectMethod =
     options.ejectMethod ||
