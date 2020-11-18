@@ -2,6 +2,7 @@ import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
 import { Project, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
+import invariant from 'invariant';
 import ora from 'ora';
 import semver from 'semver';
 
@@ -101,7 +102,7 @@ export default class BaseBuilder {
       sdkVersion: this.manifest.sdkVersion,
     } as any);
 
-    if ('jobs' in buildStatus && buildStatus.jobs?.length > 0) {
+    if (buildStatus.jobs && buildStatus.jobs.length > 0) {
       throw new BuildError('Cannot start a new build, as there is already an in-progress build.');
     }
   }
@@ -124,10 +125,16 @@ export default class BaseBuilder {
       return;
     }
 
+    const { canPurchasePriorityBuilds, numberOfRemainingPriorityBuilds } = buildStatus;
+    invariant(
+      canPurchasePriorityBuilds !== undefined && numberOfRemainingPriorityBuilds !== undefined,
+      'canPurchasePriorityBuilds and numberOfRemainingPriorityBuilds should be defined when there are build jobs'
+    );
+
     await this.logBuildStatuses({
       jobs: buildStatus.jobs,
-      canPurchasePriorityBuilds: buildStatus.canPurchasePriorityBuilds,
-      numberOfRemainingPriorityBuilds: buildStatus.numberOfRemainingPriorityBuilds,
+      canPurchasePriorityBuilds,
+      numberOfRemainingPriorityBuilds,
       hasUnlimitedPriorityBuilds: buildStatus.hasUnlimitedPriorityBuilds,
     });
   }
@@ -301,8 +308,8 @@ ${job.id}
         ...(publicUrl ? { publicUrl } : {}),
       });
 
-      const [job] = result.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId);
-
+      const jobs = result.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId);
+      const job = jobs ? jobs[0] : null;
       if (job) {
         switch (job.status) {
           case 'finished':
