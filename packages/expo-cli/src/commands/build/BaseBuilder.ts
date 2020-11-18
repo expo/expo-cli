@@ -125,16 +125,10 @@ export default class BaseBuilder {
       return;
     }
 
-    const { canPurchasePriorityBuilds, numberOfRemainingPriorityBuilds } = buildStatus;
-    invariant(
-      canPurchasePriorityBuilds !== undefined && numberOfRemainingPriorityBuilds !== undefined,
-      'canPurchasePriorityBuilds and numberOfRemainingPriorityBuilds should be defined when there are build jobs'
-    );
-
     await this.logBuildStatuses({
       jobs: buildStatus.jobs,
-      canPurchasePriorityBuilds,
-      numberOfRemainingPriorityBuilds,
+      canPurchasePriorityBuilds: buildStatus.canPurchasePriorityBuilds,
+      numberOfRemainingPriorityBuilds: buildStatus.numberOfRemainingPriorityBuilds,
       hasUnlimitedPriorityBuilds: buildStatus.hasUnlimitedPriorityBuilds,
     });
   }
@@ -165,9 +159,9 @@ Please see the docs (${chalk.underline(
   }
 
   async logBuildStatuses(buildStatus: {
-    jobs: Record<string, any>[];
-    canPurchasePriorityBuilds: boolean;
-    numberOfRemainingPriorityBuilds: number;
+    jobs: Project.BuildJobFields[];
+    canPurchasePriorityBuilds?: boolean;
+    numberOfRemainingPriorityBuilds?: number;
     hasUnlimitedPriorityBuilds?: boolean;
   }) {
     log('=================');
@@ -196,7 +190,8 @@ Please see the docs (${chalk.underline(
       );
 
       const hasPriorityBuilds =
-        buildStatus.numberOfRemainingPriorityBuilds > 0 || buildStatus.hasUnlimitedPriorityBuilds;
+        (buildStatus.numberOfRemainingPriorityBuilds || 0) > 0 ||
+        buildStatus.hasUnlimitedPriorityBuilds;
       const shouldShowUpgradeInfo =
         !hasPriorityBuilds &&
         i === 0 &&
