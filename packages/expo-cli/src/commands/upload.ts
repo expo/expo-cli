@@ -111,7 +111,9 @@ export default function (program: Command) {
     .asyncActionProjectDir(async (projectDir: string, options: IosPlatformOptions) => {
       try {
         // TODO: remove this once we remove fastlane
-        assertRuntimePlatform('ios');
+        if (process.platform !== 'darwin') {
+          throw new CommandError('Currently, iOS uploads are only supported on macOS, sorry :(');
+        }
 
         const args = pick(options, SOURCE_OPTIONS);
         if (Object.keys(args).length > 1) {
@@ -133,13 +135,4 @@ export default function (program: Command) {
         throw err;
       }
     });
-}
-
-function assertRuntimePlatform(targetPlatform: 'android' | 'ios'): void {
-  if (process.platform !== 'darwin') {
-    if (targetPlatform === 'android') {
-      throw new CommandError('Local Android uploads are only supported on macOS.');
-    }
-    throw new CommandError('Currently, iOS uploads are only supported on macOS, sorry :(');
-  }
 }
