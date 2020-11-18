@@ -41,6 +41,7 @@
     "typescript": "^3.8.3"
   },
   "resolutions": {
-    "@types/webpack": "4.41.18"
+    "@types/webpack": "4.41.18",
+    "hermes-engine": "0.0.0"
   }
 }
