@@ -293,32 +293,39 @@ ${job.id}
       `Waiting for build to complete.\nYou can press Ctrl+C to exit. It won't cancel the build, you'll be able to monitor it at the printed URL.`
     );
     const spinner = ora().start();
+    let i = 0;
     while (true) {
+      i++;
       const result = await Project.getBuildStatusAsync(this.projectDir, {
         current: false,
         ...(publicUrl ? { publicUrl } : {}),
       });
 
-      const job = result.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId)[0];
+      const [job] = result.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId);
 
-      switch (job.status) {
-        case 'finished':
-          spinner.succeed('Build finished.');
-          return job;
-        case 'pending':
-        case 'sent-to-queue':
-          spinner.text = 'Build queued...';
-          break;
-        case 'started':
-        case 'in-progress':
-          spinner.text = 'Build in progress...';
-          break;
-        case 'errored':
-          spinner.fail('Build failed.');
-          throw new BuildError(`Standalone build failed!`);
-        default:
-          spinner.warn('Unknown status.');
-          throw new BuildError(`Unknown status: ${job.status} - aborting!`);
+      if (job) {
+        switch (job.status) {
+          case 'finished':
+            spinner.succeed('Build finished.');
+            return job;
+          case 'pending':
+          case 'sent-to-queue':
+            spinner.text = 'Build queued...';
+            break;
+          case 'started':
+          case 'in-progress':
+            spinner.text = 'Build in progress...';
+            break;
+          case 'errored':
+            spinner.fail('Build failed.');
+            throw new BuildError(`Standalone build failed!`);
+          default:
+            spinner.warn('Unknown status.');
+            throw new BuildError(`Unknown status: ${job.status} - aborting!`);
+        }
+      } else if (i > 5) {
+        spinner.warn('Unknown status.');
+        throw new BuildError(`Failed to locate build job for id "${buildId}"`);
       }
       await delayAsync(secondsToMilliseconds(interval));
     }
