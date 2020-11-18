@@ -160,27 +160,13 @@ export class CocoaPodsPackageManager implements PackageManager {
     });
   }
 
-  private async _installAsync(shouldUpdate: boolean = true): Promise<void> {
+  private async _installAsync(): Promise<void> {
     try {
       await this._runAsync(['install']);
     } catch (error) {
-      const stderr = error.stderr ?? error.stdout;
-
       // When pods are outdated, they'll throw an error informing you to run "pod repo update"
       // Attempt to run that command and try installing again.
-      if (stderr.includes('pod repo update') && shouldUpdate) {
-        !this.silent &&
-          console.log(
-            chalk.yellow(
-              `\u203A Couldn't install Pods. ${chalk.dim(`Updating the repo and trying again.`)}`
-            )
-          );
-        await this.podRepoUpdateAsync();
-        // Include a boolean to ensure pod repo update isn't invoked in the unlikely case where the pods fail to update.
-        await this._installAsync(false);
-      } else {
-        throw new Error(stderr);
-      }
+      await this.podInstallRepoUpdateAsync();
     }
   }
 
@@ -210,9 +196,9 @@ export class CocoaPodsPackageManager implements PackageManager {
   }
 
   // Private
-  private async podRepoUpdateAsync(): Promise<void> {
+  private async podInstallRepoUpdateAsync(): Promise<void> {
     try {
-      await this._runAsync(['repo', 'update']);
+      await this._runAsync(['install', '--repo-update']);
     } catch (error) {
       throw new Error(error.stderr ?? error.stdout);
     }
