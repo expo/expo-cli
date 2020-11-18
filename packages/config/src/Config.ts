@@ -117,6 +117,15 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
       staticConfigPath: paths.staticConfigPath,
     };
 
+    if (options.isPrivateConfig) {
+      return {
+        exp: {
+          hooks: configWithDefaultValues.exp.hooks,
+          ios: configWithDefaultValues.exp.ios?.config,
+          android: configWithDefaultValues.exp.android?.config,
+        },
+      };
+    }
     if (options.isPublicConfig) {
       if (configWithDefaultValues.exp.hooks) {
         delete configWithDefaultValues.exp.hooks;

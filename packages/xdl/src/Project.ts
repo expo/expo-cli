@@ -1057,8 +1057,12 @@ async function getConfigAsync(
     };
   } else {
     // get the externally hosted manifest
+    const { exp: privateExp } = getConfig(projectRoot, { isPrivateConfig: true });
     return {
-      exp: await ThirdParty.getManifest(options.publicUrl, options),
+      exp: {
+        ...(await ThirdParty.getManifest(options.publicUrl, options)),
+        ...privateExp,
+      },
       configName: options.publicUrl,
       configPrefix: '',
       pkg: {},

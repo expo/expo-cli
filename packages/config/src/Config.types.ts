@@ -137,6 +137,7 @@ export type ConfigContext = {
 };
 
 export type GetConfigOptions = {
+  isPrivateConfig?: boolean;
   isPublicConfig?: boolean;
   /**
    * Should the config `mods` be preserved in the config? Used for compiling mods in the eject command.

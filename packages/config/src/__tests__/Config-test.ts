@@ -113,6 +113,87 @@ describe('getConfig public config', () => {
   });
 });
 
+describe('getConfig private config', () => {
+  const appJsonWithPrivateData = {
+    name: 'testing 123',
+    version: '0.1.0',
+    slug: 'testing-123',
+    sdkVersion: '100.0.0',
+    hooks: {
+      postPublish: [],
+    },
+    android: {
+      config: {
+        googleMaps: {
+          apiKey: 'test-key',
+        },
+      },
+      versionCode: 1,
+    },
+    ios: {
+      config: {
+        googleMapsApiKey: 'test-key',
+      },
+      buildNumber: '1.0',
+    },
+  };
+
+  const appJsonNoPrivateData = {
+    name: 'testing 123',
+    version: '0.1.0',
+    slug: 'testing-123',
+    sdkVersion: '100.0.0',
+    ios: {
+      buildNumber: '1.0',
+    },
+  };
+
+  beforeAll(() => {
+    const packageJson = JSON.stringify(
+      {
+        name: 'testing123',
+        version: '0.1.0',
+        description: 'fake description',
+        main: 'index.js',
+      },
+      null,
+      2
+    );
+
+    vol.fromJSON({
+      '/private-data/package.json': packageJson,
+      '/private-data/app.json': JSON.stringify({ expo: appJsonWithPrivateData }),
+      '/no-private-data/package.json': packageJson,
+      '/no-private-data/app.json': JSON.stringify({ expo: appJsonNoPrivateData }),
+    });
+  });
+
+  afterAll(() => vol.reset());
+
+  it('returns only private data from the config', () => {
+    const { exp } = getConfig('/private-data', { isPrivateConfig: true });
+
+    expect(exp).toEqual({
+      hooks: {
+        postPublish: [],
+      },
+      android: {
+        googleMaps: {
+          apiKey: 'test-key',
+        },
+      },
+      ios: {
+        googleMapsApiKey: 'test-key',
+      },
+    });
+  });
+
+  it('returns empty object from a config with no private data', () => {
+    const { exp } = getConfig('/no-private-data', { isPrivateConfig: true });
+    expect(exp).toEqual({});
+  });
+});
+
 describe('readConfigJson', () => {
   describe('sdkVersion', () => {
     beforeAll(() => {
