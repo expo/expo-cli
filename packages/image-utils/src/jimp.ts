@@ -16,9 +16,14 @@ type JimpGlobalOptions = Omit<SharpGlobalOptions, 'input'> & {
 };
 
 export async function resizeBufferAsync(buffer: Buffer, sizes: number[]): Promise<Buffer[]> {
-  const jimpImage = await Jimp.read(buffer);
-  const mime = jimpImage.getMIME();
-  return Promise.all(sizes.map(size => jimpImage.resize(size, size).getBufferAsync(mime)));
+  return Promise.all(
+    sizes.map(async size => {
+      const jimpImage = await Jimp.read(buffer);
+      const mime = jimpImage.getMIME();
+
+      return jimpImage.resize(size, size).getBufferAsync(mime);
+    })
+  );
 }
 
 export function convertFormat(format?: string): string | undefined {
