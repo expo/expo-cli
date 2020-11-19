@@ -30,7 +30,7 @@ import ProgressBar from 'progress';
 import stripAnsi from 'strip-ansi';
 import url from 'url';
 
-import { AbortCommandError } from './CommandError';
+import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
 import log from './log';
@@ -335,15 +335,15 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
       Analytics.flush();
     } catch (err) {
       // TODO: Find better ways to consolidate error messages
-      if (err instanceof AbortCommandError) {
-        // Do nothing when a prompt is cancelled.
+      if (err instanceof AbortCommandError || err instanceof SilentError) {
+        // Do nothing when a prompt is cancelled or the error is logged in a pretty way.
       } else if (err.isCommandError) {
         log.error(err.message);
       } else if (err._isApiError) {
         log.error(chalk.red(err.message));
       } else if (err.isXDLError) {
         log.error(err.message);
-      } else if (err.isJsonFileError) {
+      } else if (err.isJsonFileError || err.isConfigError) {
         if (err.code === 'EJSONEMPTY') {
           // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
           log.error(err.message);

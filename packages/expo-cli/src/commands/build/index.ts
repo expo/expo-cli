@@ -12,15 +12,15 @@ import { AndroidOptions, IosOptions } from './BaseBuilder.types';
 import IOSBuilder from './ios/IOSBuilder';
 
 async function maybeBailOnWorkflowWarning({
-  projectDir,
+  projectRoot,
   platform,
   nonInteractive,
 }: {
-  projectDir: string;
+  projectRoot: string;
   platform: 'ios' | 'android';
   nonInteractive: boolean;
 }) {
-  const { workflow } = await ProjectUtils.findProjectRootAsync(projectDir);
+  const { workflow } = await ProjectUtils.findProjectRootAsync(projectRoot);
   if (workflow === 'managed') {
     return false;
   }
@@ -46,6 +46,21 @@ async function maybeBailOnWorkflowWarning({
   });
 
   return !answer;
+}
+
+function assertReleaseChannel(releaseChannel: any): asserts releaseChannel {
+  const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+  if (!channelRe.test(releaseChannel)) {
+    throw new CommandError(
+      'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
+    );
+  }
+}
+
+function assertPublicUrl(publicUrl: any) {
+  if (publicUrl && !UrlUtils.isHttps(publicUrl)) {
+    throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL');
+  }
 }
 
 export default function (program: Command) {
@@ -89,11 +104,11 @@ export default function (program: Command) {
     .option('--skip-workflow-check', 'Skip warning about build service bare workflow limitations.')
     .description('Build and sign a standalone IPA for the Apple App Store')
     .asyncActionProjectDir(
-      async (projectDir: string, options: IosOptions) => {
+      async (projectRoot: string, options: IosOptions) => {
         if (!options.skipWorkflowCheck) {
           if (
             await maybeBailOnWorkflowWarning({
-              projectDir,
+              projectRoot,
               platform: 'ios',
               nonInteractive: program.nonInteractive,
             })
@@ -106,17 +121,10 @@ export default function (program: Command) {
             "--skip-credentials-check and --clear-credentials can't be used together"
           );
         }
-        if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
-          throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-        }
-        const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
-        if (!channelRe.test(options.releaseChannel)) {
-          log.error(
-            'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
-          );
-          process.exit(1);
-        }
-        const iosBuilder = new IOSBuilder(projectDir, options);
+        assertPublicUrl(options.publicUrl);
+        assertReleaseChannel(options.releaseChannel);
+
+        const iosBuilder = new IOSBuilder(projectRoot, options);
         return iosBuilder.command();
       },
       { checkConfig: true }
@@ -138,7 +146,7 @@ export default function (program: Command) {
     .option('-t --type <build>', 'Type of build: [app-bundle|apk].')
     .description('Build and sign a standalone APK or App Bundle for the Google Play Store')
     .asyncActionProjectDir(
-      async (projectDir: string, options: AndroidOptions) => {
+      async (projectRoot: string, options: AndroidOptions) => {
         if (options.generateKeystore) {
           log.warn(
             `The --generate-keystore flag is deprecated and does not do anything. A Keystore will always be generated on the Expo servers if it's missing.`
@@ -147,7 +155,7 @@ export default function (program: Command) {
         if (!options.skipWorkflowCheck) {
           if (
             await maybeBailOnWorkflowWarning({
-              projectDir,
+              projectRoot,
               platform: 'android',
               nonInteractive: program.nonInteractive,
             })
@@ -156,18 +164,10 @@ export default function (program: Command) {
           }
         }
 
-        if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
-          throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-        }
-        const channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
-        if (!channelRe.test(options.releaseChannel)) {
-          log.error(
-            'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
-          );
-          process.exit(1);
-        }
+        assertPublicUrl(options.publicUrl);
+        assertReleaseChannel(options.releaseChannel);
 
-        const androidBuilder = new AndroidBuilder(projectDir, options);
+        const androidBuilder = new AndroidBuilder(projectRoot, options);
         return androidBuilder.command();
       },
       { checkConfig: true }
@@ -184,8 +184,8 @@ export default function (program: Command) {
     .option('-d, --dev', 'Turns dev flag on before bundling')
     .description('Build the web app for production')
     .asyncActionProjectDir(
-      (projectDir: string, options: { pwa: boolean; clear: boolean; dev: boolean }) => {
-        return Webpack.bundleAsync(projectDir, {
+      (projectRoot: string, options: { pwa: boolean; clear: boolean; dev: boolean }) => {
+        return Webpack.bundleAsync(projectRoot, {
           ...options,
           dev: typeof options.dev === 'undefined' ? false : options.dev,
         });
@@ -201,11 +201,9 @@ export default function (program: Command) {
       'The URL of an externally hosted manifest (for self-hosted apps).'
     )
     .description(`Get the status of the latest build for the project`)
-    .asyncActionProjectDir(async (projectDir: string, options: { publicUrl?: string }) => {
-      if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
-        throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-      }
-      const builder = new BaseBuilder(projectDir, options);
+    .asyncActionProjectDir(async (projectRoot: string, options: { publicUrl?: string }) => {
+      assertPublicUrl(options.publicUrl);
+      const builder = new BaseBuilder(projectRoot, options);
       return builder.commandCheckStatus();
     });
 }
