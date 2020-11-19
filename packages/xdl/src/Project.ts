@@ -334,6 +334,15 @@ export async function runHook(hook: LoadedHook, hookOptions: Omit<HookArguments,
 }
 
 /**
+ * Returns true if we should use Metro using its JS APIs via @expo/dev-server (the modern and fast
+ * way), false if we should fall back to spawning it as a subprocess (supported for backwards
+ * compatibility with SDK39 and older).
+ */
+function shouldUseDevServer(exp: ExpoConfig) {
+  return Versions.gteSdkVersion(exp, '40.0.0') || getenv.boolish('EXPO_USE_DEV_SERVER', false);
+}
+
+/**
  * Apps exporting for self hosting will have the files created in the project directory the following way:
 .
 ├── android-index.json
@@ -366,8 +375,12 @@ export async function exportForAppHosting(
   const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
   await fs.ensureDir(bundlesPathToWrite);
 
+  const publishOptions = options.publishOptions || {};
+  const { exp, pkg, hooks } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
+
   const bundles = await buildPublishBundlesAsync(projectRoot, options.publishOptions, {
     dev: options.isDev,
+    useDevServer: shouldUseDevServer(exp),
   });
   const iosBundle = bundles.ios.code;
   const androidBundle = bundles.android.code;
@@ -385,10 +398,6 @@ export async function exportForAppHosting(
 
   logger.global.info('Finished saving JS Bundles.');
 
-  // save the assets
-  // Get project config
-  const publishOptions = options.publishOptions || {};
-  const { exp, pkg, hooks } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
   const { assets } = await exportAssetsAsync({
     projectRoot,
     exp,
@@ -627,7 +636,9 @@ export async function publishAsync(
 
   // TODO: refactor this out to a function, throw error if length doesn't match
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
-  const bundles = await buildPublishBundlesAsync(projectRoot, options);
+  const bundles = await buildPublishBundlesAsync(projectRoot, options, {
+    useDevServer: shouldUseDevServer(exp),
+  });
   const androidBundle = bundles.android.code;
   const iosBundle = bundles.ios.code;
 
@@ -835,9 +846,9 @@ async function _getPublishExpConfigAsync(
 async function buildPublishBundlesAsync(
   projectRoot: string,
   publishOptions: PublishOptions = {},
-  bundleOptions: { dev?: boolean } = {}
+  bundleOptions: { dev?: boolean; useDevServer: boolean }
 ) {
-  if (!getenv.boolish('EXPO_USE_DEV_SERVER', false)) {
+  if (!bundleOptions.useDevServer) {
     try {
       await startReactNativeServerAsync({
         projectRoot,
@@ -1968,7 +1979,7 @@ export async function startAsync(
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
-  } else if (getenv.boolish('EXPO_USE_DEV_SERVER', false)) {
+  } else if (shouldUseDevServer(exp)) {
     await startDevServerAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'native');
   } else {
