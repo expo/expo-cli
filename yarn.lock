@@ -3341,13 +3341,6 @@
   dependencies:
     "@types/node" "*"
 
-"@types/clipboardy@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@types/clipboardy/-/clipboardy-2.0.1.tgz#91f694d47c0e716da7549d3baeca58a29a46d2b4"
-  integrity sha512-vLJm1iL6jFfEd+3/J4WTC65ppyGyaRTjpoB8bPhtiSrOCD0LFDr9GQYhoYNAsbt6JaY0amYacloIEEEOYUkkFg==
-  dependencies:
-    clipboardy "*"
-
 "@types/color-name@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@types/color-name/-/color-name-1.1.1.tgz#1c1261bbeaa10a8055bbc5d8ab84b7b2afc846a0"
@@ -5043,11 +5036,6 @@ arch@^2.1.0:
   resolved "https://registry.yarnpkg.com/arch/-/arch-2.1.1.tgz#8f5c2731aa35a30929221bb0640eed65175ec84e"
   integrity sha512-BLM56aPo9vLLFVa8+/+pJLnrZ7QGGTVHWsCwieAWT9o9K8UeGaQbzZbGoabWLOo2ksBCztoXdqBZBplqLDDCSg==
 
-arch@^2.1.1:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/arch/-/arch-2.1.2.tgz#0c52bbe7344bb4fa260c443d2cbad9c00ff2f0bf"
-  integrity sha512-NTBIIbAfkJeIletyABbVtdPgeKfDafR+1mZV/AyyfC1UkVkp9iUjV+wwmqtUgphHYajbI86jejBJp5e+jkGTiQ==
-
 archy@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/archy/-/archy-1.0.0.tgz#f9c8c13757cc1dd7bc379ac77b2c62a5c2868c40"
@@ -6676,15 +6664,6 @@ cli-width@^2.0.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/cli-width/-/cli-width-2.2.0.tgz#ff19ede8a9a5e579324147b0c11f0fbcbabed639"
   integrity sha1-/xnt6Kml5XkyQUewwR8PvLq+1jk=
-
-clipboardy@*, clipboardy@2.3.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/clipboardy/-/clipboardy-2.3.0.tgz#3c2903650c68e46a91b388985bc2774287dba290"
-  integrity sha512-mKhiIL2DrQIsuXMgBgnfEHOZOryC7kY7YO//TN6c63wlEm3NG5tz+YgY5rVi29KCmq/QQjKYvM7a19+MDOTHOQ==
-  dependencies:
-    arch "^2.1.1"
-    execa "^1.0.0"
-    is-wsl "^2.1.1"
 
 clipboardy@1.2.3:
   version "1.2.3"
