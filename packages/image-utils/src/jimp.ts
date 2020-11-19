@@ -18,6 +18,7 @@ type JimpGlobalOptions = Omit<SharpGlobalOptions, 'input'> & {
 export async function resizeBufferAsync(buffer: Buffer, sizes: number[]): Promise<Buffer[]> {
   return Promise.all(
     sizes.map(async size => {
+      // Parse the buffer each time to prevent mutable copies.
       const jimpImage = await Jimp.read(buffer);
       const mime = jimpImage.getMIME();
 
