@@ -1835,3 +1835,5 @@ export async function stopAsync(projectDir: string): Promise<void> {
     });
   }
 }
+
+export { startTunnelsAsync, stopTunnelsAsync };
