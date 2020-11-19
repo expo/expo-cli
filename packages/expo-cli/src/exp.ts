@@ -343,7 +343,7 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
         log.error(chalk.red(err.message));
       } else if (err.isXDLError) {
         log.error(err.message);
-      } else if (err.isJsonFileError) {
+      } else if (err.isJsonFileError || err.isConfigError) {
         if (err.code === 'EJSONEMPTY') {
           // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
           log.error(err.message);

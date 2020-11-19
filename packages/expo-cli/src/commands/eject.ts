@@ -21,13 +21,7 @@ async function action(
   projectDir: string,
   options: (LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions) & { npm?: boolean }
 ) {
-  let exp: ExpoConfig;
-  try {
-    exp = getConfig(projectDir).exp;
-  } catch (error) {
-    // format as a single-line error message
-    throw new CommandError(error.message);
-  }
+  const { exp } = getConfig(projectDir);
 
   if (options.npm) {
     options.packageManager = 'npm';
