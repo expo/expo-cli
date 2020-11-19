@@ -1,6 +1,5 @@
 import { getDefaultTarget } from '@expo/config';
 import { Command } from 'commander';
-// @ts-ignore
 import envinfo from 'envinfo';
 
 import log from '../log';
