@@ -1105,13 +1105,13 @@ export interface BuildJobFields {
 }
 
 export type BuildStatusResult = {
-  jobs: BuildJobFields[];
-  err: null;
+  jobs?: BuildJobFields[];
+  err?: null;
   userHasBuiltAppBefore: boolean;
   userHasBuiltExperienceBefore: boolean;
-  canPurchasePriorityBuilds: boolean;
-  numberOfRemainingPriorityBuilds: number;
-  hasUnlimitedPriorityBuilds: boolean;
+  canPurchasePriorityBuilds?: boolean;
+  numberOfRemainingPriorityBuilds?: number;
+  hasUnlimitedPriorityBuilds?: boolean;
 };
 
 export type BuildCreatedResult = {
