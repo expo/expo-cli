@@ -209,3 +209,27 @@ export async function toggleConfirmAsync(
   );
   return value ?? null;
 }
+
+/**
+ * Prompt the user for an email address.
+ *
+ * @param questions
+ * @param options
+ */
+export async function promptEmailAsync(
+  questions: NamelessQuestion,
+  options?: PromptOptions
+): Promise<string> {
+  const { value } = await prompt(
+    {
+      type: 'text',
+      format: value => value.trim(),
+      validate: (value: string) =>
+        /.+@.+/.test(value) ? true : "That doesn't look like a valid email.",
+      ...questions,
+      name: 'value',
+    },
+    options
+  );
+  return value.trim();
+}

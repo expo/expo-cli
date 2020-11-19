@@ -8,7 +8,7 @@ import path from 'path';
 
 import CommandError from '../CommandError';
 import log from '../log';
-import sendTo from '../sendTo';
+import * as sendTo from '../sendTo';
 import * as TerminalLink from './utils/TerminalLink';
 import { formatNamedWarning } from './utils/logConfigWarnings';
 
