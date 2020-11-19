@@ -29,6 +29,7 @@ import path from 'path';
 import ProgressBar from 'progress';
 import stripAnsi from 'strip-ansi';
 import url from 'url';
+import wrapAnsi from 'wrap-ansi';
 
 import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
@@ -90,8 +91,8 @@ function humanReadableArgName(arg: any): string {
 }
 
 function breakSentence(input: string): string {
-  // Break a sentence by the word after a max character count
-  return input.replace(/(.{1,72})(?:\n|$| )/g, '$1\n').trim();
+  // Break a sentence by the word after a max character count, adjusting for ansi characters
+  return wrapAnsi(input, 72);
 }
 
 Command.prototype.prepareCommands = function () {
