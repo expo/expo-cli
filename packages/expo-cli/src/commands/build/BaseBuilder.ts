@@ -190,7 +190,7 @@ Please see the docs (${chalk.underline(
       );
 
       const hasPriorityBuilds =
-        (buildStatus.numberOfRemainingPriorityBuilds || 0) > 0 ||
+        (buildStatus.numberOfRemainingPriorityBuilds ?? 0) > 0 ||
         buildStatus.hasUnlimitedPriorityBuilds;
       const shouldShowUpgradeInfo =
         !hasPriorityBuilds &&
