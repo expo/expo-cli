@@ -101,7 +101,7 @@ export default class BaseBuilder {
       sdkVersion: this.manifest.sdkVersion,
     } as any);
 
-    if ('jobs' in buildStatus && buildStatus.jobs?.length > 0) {
+    if (buildStatus.jobs && buildStatus.jobs.length > 0) {
       throw new BuildError('Cannot start a new build, as there is already an in-progress build.');
     }
   }
@@ -158,9 +158,9 @@ Please see the docs (${chalk.underline(
   }
 
   async logBuildStatuses(buildStatus: {
-    jobs: Record<string, any>[];
-    canPurchasePriorityBuilds: boolean;
-    numberOfRemainingPriorityBuilds: number;
+    jobs: Project.BuildJobFields[];
+    canPurchasePriorityBuilds?: boolean;
+    numberOfRemainingPriorityBuilds?: number;
     hasUnlimitedPriorityBuilds?: boolean;
   }) {
     log('=================');
@@ -189,7 +189,8 @@ Please see the docs (${chalk.underline(
       );
 
       const hasPriorityBuilds =
-        buildStatus.numberOfRemainingPriorityBuilds > 0 || buildStatus.hasUnlimitedPriorityBuilds;
+        (buildStatus.numberOfRemainingPriorityBuilds ?? 0) > 0 ||
+        buildStatus.hasUnlimitedPriorityBuilds;
       const shouldShowUpgradeInfo =
         !hasPriorityBuilds &&
         i === 0 &&
@@ -301,8 +302,8 @@ ${job.id}
         ...(publicUrl ? { publicUrl } : {}),
       });
 
-      const [job] = result.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId);
-
+      const jobs = result.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId);
+      const job = jobs ? jobs[0] : null;
       if (job) {
         switch (job.status) {
           case 'finished':
