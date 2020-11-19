@@ -11,6 +11,7 @@ import * as Locales from './Locales';
 import * as Name from './Name';
 import * as Orientation from './Orientation';
 import * as Paths from './Paths';
+import * as Permissions from './Permissions';
 import * as ProvisioningProfile from './ProvisioningProfile';
 import * as RequiresFullScreen from './RequiresFullScreen';
 import * as Scheme from './Scheme';
@@ -41,6 +42,7 @@ export {
   Orientation,
   Paths,
   ProvisioningProfile,
+  Permissions,
   RequiresFullScreen,
   Scheme,
   Updates,
