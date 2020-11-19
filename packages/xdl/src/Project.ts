@@ -16,7 +16,6 @@ import {
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import { bundleAsync, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
 import JsonFile from '@expo/json-file';
-import ngrok from '@expo/ngrok';
 import joi from '@hapi/joi';
 import axios from 'axios';
 import chalk from 'chalk';
@@ -59,7 +58,6 @@ import * as Sentry from './Sentry';
 import * as ThirdParty from './ThirdParty';
 import * as UrlUtils from './UrlUtils';
 import UserManager, { ANONYMOUS_USERNAME, User } from './User';
-import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import * as Watchman from './Watchman';
 import * as Webpack from './Webpack';
@@ -69,15 +67,13 @@ import * as TableText from './logs/TableText';
 import * as Doctor from './project/Doctor';
 import { getManifestHandler } from './project/ManifestHandler';
 import * as ProjectUtils from './project/ProjectUtils';
+import { assertValidProjectRoot } from './project/errors';
+import { startTunnelsAsync, stopTunnelsAsync } from './project/ngrok';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 import FormData from './tools/FormData';
-
 const MINIMUM_BUNDLE_SIZE = 500;
-const TUNNEL_TIMEOUT = 10 * 1000;
 
 const treekillAsync = promisify<number, string>(treekill);
-const ngrokConnectAsync = promisify(ngrok.connect);
-const ngrokKillAsync = promisify(ngrok.kill);
 
 type SelfHostedIndex = ExpoAppManifest & {
   dependencies: string[];
@@ -130,12 +126,6 @@ export async function currentStatus(projectDir: string): Promise<ProjectStatus> 
     return 'ill';
   } else {
     return 'exited';
-  }
-}
-
-async function _assertValidProjectRoot(projectRoot: string) {
-  if (!projectRoot) {
-    throw new XDLError('NO_PROJECT_ROOT', 'No project root specified');
   }
 }
 
@@ -1196,7 +1186,7 @@ export async function getBuildStatusAsync(
 ): Promise<BuildStatusResult> {
   const user = await UserManager.ensureLoggedInAsync();
 
-  _assertValidProjectRoot(projectRoot);
+  assertValidProjectRoot(projectRoot);
   _validateOptions(options);
   const { exp } = await _getExpAsync(projectRoot, options);
 
@@ -1210,7 +1200,7 @@ export async function startBuildAsync(
 ): Promise<BuildCreatedResult> {
   const user = await UserManager.ensureLoggedInAsync();
 
-  _assertValidProjectRoot(projectRoot);
+  assertValidProjectRoot(projectRoot);
   _validateOptions(options);
   const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
   _validateManifest(options, exp, configName, configPrefix);
@@ -1429,7 +1419,7 @@ export async function startReactNativeServerAsync({
   exp?: ExpoConfig;
   verbose?: boolean;
 }): Promise<void> {
-  _assertValidProjectRoot(projectRoot);
+  assertValidProjectRoot(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
   await Watchman.unblockAndGetVersionAsync(projectRoot);
@@ -1620,7 +1610,7 @@ function _nodePathForProjectRoot(projectRoot: string): string {
   return paths.join(path.delimiter);
 }
 export async function stopReactNativeServerAsync(projectRoot: string): Promise<void> {
-  _assertValidProjectRoot(projectRoot);
+  assertValidProjectRoot(projectRoot);
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort || !packagerInfo.packagerPid) {
     ProjectUtils.logDebug(projectRoot, 'expo', `No packager found for project at ${projectRoot}.`);
@@ -1643,7 +1633,7 @@ export async function stopReactNativeServerAsync(projectRoot: string): Promise<v
 }
 
 export async function startExpoServerAsync(projectRoot: string): Promise<void> {
-  _assertValidProjectRoot(projectRoot);
+  assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
   const app = express();
   app.use(
@@ -1699,7 +1689,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
 }
 
 async function stopExpoServerAsync(projectRoot: string): Promise<void> {
-  _assertValidProjectRoot(projectRoot);
+  assertValidProjectRoot(projectRoot);
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (packagerInfo && packagerInfo.expoServerPort) {
     try {
@@ -1715,7 +1705,7 @@ async function stopExpoServerAsync(projectRoot: string): Promise<void> {
 }
 
 async function startDevServerAsync(projectRoot: string, startOptions: StartOptions) {
-  _assertValidProjectRoot(projectRoot);
+  assertValidProjectRoot(projectRoot);
 
   const port = await _getFreePortAsync(19000); // Create packager options
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -1743,209 +1733,13 @@ async function startDevServerAsync(projectRoot: string, startOptions: StartOptio
   middleware.use(getManifestHandler(projectRoot));
 }
 
-async function _connectToNgrokAsync(
-  projectRoot: string,
-  args: ngrok.NgrokOptions,
-  hostnameAsync: () => Promise<string>,
-  ngrokPid: number | null | undefined,
-  attempts: number = 0
-): Promise<string> {
-  try {
-    const configPath = path.join(UserSettings.dotExpoHomeDirectory(), 'ngrok.yml');
-    const hostname = await hostnameAsync();
-    const url = await ngrokConnectAsync({
-      hostname,
-      configPath,
-      ...args,
-    });
-    return url;
-  } catch (e) {
-    // Attempt to connect 3 times
-    if (attempts >= 2) {
-      if (e.message) {
-        throw new XDLError('NGROK_ERROR', e.toString());
-      } else {
-        throw new XDLError('NGROK_ERROR', JSON.stringify(e));
-      }
-    }
-    if (!attempts) {
-      attempts = 0;
-    } // Attempt to fix the issue
-    if (e.error_code && e.error_code === 103) {
-      if (attempts === 0) {
-        // Failed to start tunnel. Might be because url already bound to another session.
-        if (ngrokPid) {
-          try {
-            process.kill(ngrokPid, 'SIGKILL');
-          } catch (e) {
-            ProjectUtils.logDebug(projectRoot, 'expo', `Couldn't kill ngrok with PID ${ngrokPid}`);
-          }
-        } else {
-          await ngrokKillAsync();
-        }
-      } else {
-        // Change randomness to avoid conflict if killing ngrok didn't help
-        await Exp.resetProjectRandomnessAsync(projectRoot);
-      }
-    } // Wait 100ms and then try again
-    await delayAsync(100);
-    return _connectToNgrokAsync(projectRoot, args, hostnameAsync, null, attempts + 1);
-  }
-}
-
-export async function startTunnelsAsync(projectRoot: string): Promise<void> {
-  const username = (await UserManager.getCurrentUsernameAsync()) || ANONYMOUS_USERNAME;
-  _assertValidProjectRoot(projectRoot);
-  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  if (!packagerInfo.packagerPort) {
-    throw new XDLError('NO_PACKAGER_PORT', `No packager found for project at ${projectRoot}.`);
-  }
-  if (!packagerInfo.expoServerPort) {
-    throw new XDLError(
-      'NO_EXPO_SERVER_PORT',
-      `No Expo server found for project at ${projectRoot}.`
-    );
-  }
-  const expoServerPort = packagerInfo.expoServerPort;
-  await stopTunnelsAsync(projectRoot);
-  if (await Android.startAdbReverseAsync(projectRoot)) {
-    ProjectUtils.logInfo(
-      projectRoot,
-      'expo',
-      'Successfully ran `adb reverse`. Localhost URLs should work on the connected Android device.'
-    );
-  }
-  const packageShortName = path.parse(projectRoot).base;
-  const expRc = await readExpRcAsync(projectRoot);
-
-  let startedTunnelsSuccessfully = false;
-
-  // Some issues with ngrok cause it to hang indefinitely. After
-  // TUNNEL_TIMEOUTms we just throw an error.
-  await Promise.race([
-    (async () => {
-      await delayAsync(TUNNEL_TIMEOUT);
-      if (!startedTunnelsSuccessfully) {
-        throw new Error('Starting tunnels timed out');
-      }
-    })(),
-    (async () => {
-      const expoServerNgrokUrl = await _connectToNgrokAsync(
-        projectRoot,
-        {
-          authtoken: Config.ngrok.authToken,
-          port: expoServerPort,
-          proto: 'http',
-        },
-        async () => {
-          const randomness = expRc.manifestTunnelRandomness
-            ? expRc.manifestTunnelRandomness
-            : await Exp.getProjectRandomnessAsync(projectRoot);
-          return [
-            randomness,
-            UrlUtils.domainify(username),
-            UrlUtils.domainify(packageShortName),
-            Config.ngrok.domain,
-          ].join('.');
-        },
-        packagerInfo.ngrokPid
-      );
-      const packagerNgrokUrl = await _connectToNgrokAsync(
-        projectRoot,
-        {
-          authtoken: Config.ngrok.authToken,
-          port: packagerInfo.packagerPort,
-          proto: 'http',
-        },
-        async () => {
-          const randomness = expRc.manifestTunnelRandomness
-            ? expRc.manifestTunnelRandomness
-            : await Exp.getProjectRandomnessAsync(projectRoot);
-          return [
-            'packager',
-            randomness,
-            UrlUtils.domainify(username),
-            UrlUtils.domainify(packageShortName),
-            Config.ngrok.domain,
-          ].join('.');
-        },
-        packagerInfo.ngrokPid
-      );
-      await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-        expoServerNgrokUrl,
-        packagerNgrokUrl,
-        ngrokPid: ngrok.process().pid,
-      });
-
-      startedTunnelsSuccessfully = true;
-
-      ProjectUtils.logWithLevel(
-        projectRoot,
-        'info',
-        {
-          tag: 'expo',
-          _expoEventType: 'TUNNEL_READY',
-        },
-        'Tunnel ready.'
-      );
-
-      ngrok.addListener('statuschange', (status: string) => {
-        if (status === 'reconnecting') {
-          ProjectUtils.logError(
-            projectRoot,
-            'expo',
-            'We noticed your tunnel is having issues. ' +
-              'This may be due to intermittent problems with our tunnel provider. ' +
-              'If you have trouble connecting to your app, try to Restart the project, ' +
-              'or switch Host to LAN.'
-          );
-        } else if (status === 'online') {
-          ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
-        }
-      });
-    })(),
-  ]);
-}
-
-async function stopTunnelsAsync(projectRoot: string): Promise<void> {
-  _assertValidProjectRoot(projectRoot);
-  // This will kill all ngrok tunnels in the process.
-  // We'll need to change this if we ever support more than one project
-  // open at a time in XDE.
-  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  const ngrokProcess = ngrok.process();
-  const ngrokProcessPid = ngrokProcess ? ngrokProcess.pid : null;
-  ngrok.removeAllListeners('statuschange');
-  if (packagerInfo.ngrokPid && packagerInfo.ngrokPid !== ngrokProcessPid) {
-    // Ngrok is running in some other process. Kill at the os level.
-    try {
-      process.kill(packagerInfo.ngrokPid);
-    } catch (e) {
-      ProjectUtils.logDebug(
-        projectRoot,
-        'expo',
-        `Couldn't kill ngrok with PID ${packagerInfo.ngrokPid}`
-      );
-    }
-  } else {
-    // Ngrok is running from the current process. Kill using ngrok api.
-    await ngrokKillAsync();
-  }
-  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-    expoServerNgrokUrl: null,
-    packagerNgrokUrl: null,
-    ngrokPid: null,
-  });
-  await Android.stopAdbReverseAsync(projectRoot);
-}
-
 export async function setOptionsAsync(
   projectRoot: string,
   options: {
     packagerPort?: number;
   }
 ): Promise<void> {
-  _assertValidProjectRoot(projectRoot); // Check to make sure all options are valid
+  assertValidProjectRoot(projectRoot); // Check to make sure all options are valid
   if (options.packagerPort != null && !Number.isInteger(options.packagerPort)) {
     throw new XDLError('INVALID_OPTIONS', 'packagerPort must be an integer');
   }
@@ -1957,7 +1751,7 @@ export async function startAsync(
   { exp = getConfig(projectRoot).exp, ...options }: StartOptions & { exp?: ExpoConfig } = {},
   verbose: boolean = true
 ): Promise<ExpoConfig> {
-  _assertValidProjectRoot(projectRoot);
+  assertValidProjectRoot(projectRoot);
   Analytics.logEvent('Start Project', {
     projectRoot,
     developerTool: Config.developerTool,
