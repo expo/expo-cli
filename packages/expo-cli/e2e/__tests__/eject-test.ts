@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import temporary from 'tempy';
 
+import { actionAsync } from '../../src/commands/eject';
 import {
   createMinimalProjectAsync,
   EXPO_CLI,
@@ -54,7 +55,7 @@ it(`can eject a minimal project`, async () => {
     expo: {
       name: 'h"&<world/>🚀',
     },
-  });
+  } as any);
 
   // Run a standard eject command
   const res = executeDefaultAsync(projectRoot, ['eject']);
@@ -102,13 +103,10 @@ it(`warns the user to install modules if the sdkVersion is not defined`, async (
     JSON.stringify({ expo: { ...minimumAppJson, sdkVersion: undefined } })
   );
 
-  expect.assertions(1);
-  try {
-    // Run a standard eject command
-    await spawnAsync(EXPO_CLI, ['eject'], { cwd: projectRoot });
-  } catch (e) {
-    expect(e.stdout).toMatch(/Cannot determine which native SDK version your project uses/);
-  }
+  // Run a standard eject command
+  await expect(actionAsync(projectRoot, {})).rejects.toThrow(
+    /Cannot determine which native SDK version your project uses/
+  );
 });
 
 // TODO(Bacon): Test more cases after cleaning up the cmd
