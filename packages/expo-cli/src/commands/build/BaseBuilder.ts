@@ -2,7 +2,6 @@ import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
 import { Project, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
-import invariant from 'invariant';
 import ora from 'ora';
 import semver from 'semver';
 
