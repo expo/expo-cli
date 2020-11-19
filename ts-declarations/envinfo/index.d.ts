@@ -10,5 +10,5 @@ declare module 'envinfo' {
       npmGlobalPackages?: string[];
     },
     props?: { yaml?: boolean; title?: string }
-  ): string;
+  ): Promise<string>;
 }
