@@ -101,7 +101,7 @@ export default class BaseBuilder {
       sdkVersion: this.manifest.sdkVersion,
     } as any);
 
-    if ('jobs' in buildStatus && buildStatus.jobs?.length > 0) {
+    if (buildStatus.jobs && buildStatus.jobs.length > 0) {
       throw new BuildError('Cannot start a new build, as there is already an in-progress build.');
     }
   }
@@ -158,9 +158,9 @@ Please see the docs (${chalk.underline(
   }
 
   async logBuildStatuses(buildStatus: {
-    jobs: Record<string, any>[];
-    canPurchasePriorityBuilds: boolean;
-    numberOfRemainingPriorityBuilds: number;
+    jobs: Project.BuildJobFields[];
+    canPurchasePriorityBuilds?: boolean;
+    numberOfRemainingPriorityBuilds?: number;
     hasUnlimitedPriorityBuilds?: boolean;
   }) {
     log('=================');
@@ -189,7 +189,8 @@ Please see the docs (${chalk.underline(
       );
 
       const hasPriorityBuilds =
-        buildStatus.numberOfRemainingPriorityBuilds > 0 || buildStatus.hasUnlimitedPriorityBuilds;
+        (buildStatus.numberOfRemainingPriorityBuilds ?? 0) > 0 ||
+        buildStatus.hasUnlimitedPriorityBuilds;
       const shouldShowUpgradeInfo =
         !hasPriorityBuilds &&
         i === 0 &&
@@ -293,32 +294,39 @@ ${job.id}
       `Waiting for build to complete.\nYou can press Ctrl+C to exit. It won't cancel the build, you'll be able to monitor it at the printed URL.`
     );
     const spinner = ora().start();
+    let i = 0;
     while (true) {
+      i++;
       const result = await Project.getBuildStatusAsync(this.projectDir, {
         current: false,
         ...(publicUrl ? { publicUrl } : {}),
       });
 
-      const job = result.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId)[0];
-
-      switch (job.status) {
-        case 'finished':
-          spinner.succeed('Build finished.');
-          return job;
-        case 'pending':
-        case 'sent-to-queue':
-          spinner.text = 'Build queued...';
-          break;
-        case 'started':
-        case 'in-progress':
-          spinner.text = 'Build in progress...';
-          break;
-        case 'errored':
-          spinner.fail('Build failed.');
-          throw new BuildError(`Standalone build failed!`);
-        default:
-          spinner.warn('Unknown status.');
-          throw new BuildError(`Unknown status: ${job.status} - aborting!`);
+      const jobs = result.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId);
+      const job = jobs ? jobs[0] : null;
+      if (job) {
+        switch (job.status) {
+          case 'finished':
+            spinner.succeed('Build finished.');
+            return job;
+          case 'pending':
+          case 'sent-to-queue':
+            spinner.text = 'Build queued...';
+            break;
+          case 'started':
+          case 'in-progress':
+            spinner.text = 'Build in progress...';
+            break;
+          case 'errored':
+            spinner.fail('Build failed.');
+            throw new BuildError(`Standalone build failed!`);
+          default:
+            spinner.warn('Unknown status.');
+            throw new BuildError(`Unknown status: ${job.status} - aborting!`);
+        }
+      } else if (i > 5) {
+        spinner.warn('Unknown status.');
+        throw new BuildError(`Failed to locate build job for id "${buildId}"`);
       }
       await delayAsync(secondsToMilliseconds(interval));
     }

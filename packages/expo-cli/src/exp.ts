@@ -1,5 +1,5 @@
 import bunyan from '@expo/bunyan';
-import * as ConfigUtils from '@expo/config';
+import { setCustomConfigPath } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
 import {
   Analytics,
@@ -470,7 +470,7 @@ Command.prototype.asyncActionProjectDir = function (
         process.exit(1);
         // throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
       }
-      ConfigUtils.setCustomConfigPath(projectDir, pathToConfig);
+      setCustomConfigPath(projectDir, pathToConfig);
     }
 
     const logLines = (msg: any, logFn: (...args: any[]) => void) => {

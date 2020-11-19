@@ -1,4 +1,4 @@
-import * as ConfigUtils from '@expo/config';
+import { findConfigFile, getConfig, readConfigJsonAsync, resolveModule } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Detach, Exp, IosWorkspace, Versions } from '@expo/xdl';
@@ -12,8 +12,9 @@ import temporary from 'tempy';
 
 import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import log from '../../log';
-import prompt, { Question } from '../../prompt';
+import prompt, { Question } from '../../prompts';
 import { validateGitStatusAsync } from '../utils/ProjectUtils';
+import { learnMore } from '../utils/TerminalLink';
 
 type ValidationErrorMessage = string;
 
@@ -30,12 +31,12 @@ const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string): Promise<void> {
   // We just need the custom `nodeModulesPath` from the config.
-  const { exp, pkg } = await ConfigUtils.getConfig(projectRoot, {
+  const { exp, pkg } = await getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
   const pkgsWithExtraSetup = await JsonFile.readAsync(
-    ConfigUtils.resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
+    resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
   );
   const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(pkgName =>
     pkgsWithExtraSetup.hasOwnProperty(pkgName)
@@ -76,33 +77,28 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
 
   const reactNativeOptionMessage = "Bare: I'd like a bare React Native project.";
 
-  const questions: Question[] = [
-    {
-      type: 'list',
-      name: 'ejectMethod',
-      message:
-        'How would you like to eject your app?\n  Read more: https://docs.expo.io/expokit/eject/',
-      default: 'bare',
-      choices: [
-        {
-          name: reactNativeOptionMessage,
-          value: 'bare',
-          short: 'Bare',
-        },
-        {
-          name:
-            "ExpoKit: I'll create or log in with an Expo account to use React Native and the Expo SDK.",
-          value: 'expokit',
-          short: 'ExpoKit',
-        },
-        {
-          name: "Cancel: I'll continue with my current project structure.",
-          value: 'cancel',
-          short: 'cancel',
-        },
-      ],
-    },
-  ];
+  const questions: Question = {
+    type: 'select',
+    name: 'ejectMethod',
+    message: `How would you like to eject your app?\n  ${chalk.dim(
+      learnMore('https://docs.expo.io/expokit/eject/')
+    )}`,
+    choices: [
+      {
+        title: reactNativeOptionMessage,
+        value: 'bare',
+      },
+      {
+        title:
+          "ExpoKit: I'll create or log in with an Expo account to use React Native and the Expo SDK.",
+        value: 'expokit',
+      },
+      {
+        title: "Cancel: I'll continue with my current project structure.",
+        value: 'cancel',
+      },
+    ],
+  };
 
   const ejectMethod =
     options.ejectMethod ||
@@ -170,8 +166,8 @@ function ensureDependenciesMap(dependencies: any): DependenciesMap {
 async function ejectToBareAsync(projectRoot: string): Promise<void> {
   const useYarn = PackageManager.isUsingYarn(projectRoot);
   const npmOrYarn = useYarn ? 'yarn' : 'npm';
-  const { configPath, configName } = ConfigUtils.findConfigFile(projectRoot);
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { configPath, configName } = findConfigFile(projectRoot);
+  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
 
   const configBuffer = await fse.readFile(configPath);
   const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
@@ -344,8 +340,8 @@ if (Platform.OS === 'web') {
 async function getAppNamesAsync(
   projectRoot: string
 ): Promise<{ displayName: string; name: string }> {
-  const { configPath, configName } = ConfigUtils.findConfigFile(projectRoot);
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { configPath, configName } = findConfigFile(projectRoot);
+  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
 
   const configBuffer = await fse.readFile(configPath);
   const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
@@ -356,17 +352,19 @@ async function getAppNamesAsync(
     ({ displayName, name } = await prompt(
       [
         {
+          type: 'text',
           name: 'displayName',
           message: "What should your app appear as on a user's home screen?",
-          default: name || exp.name,
+          initial: name || exp.name,
           validate({ length }: string): true | ValidationErrorMessage {
             return length ? true : 'App display name cannot be empty.';
           },
         },
         {
+          type: 'text',
           name: 'name',
           message: 'What should your Android Studio and Xcode projects be called?',
-          default: pkg.name ? stripDashes(pkg.name) : undefined,
+          initial: pkg.name ? stripDashes(pkg.name) : undefined,
           validate(value: string): true | ValidationErrorMessage {
             if (value.length === 0) {
               return 'Project name cannot be empty.';

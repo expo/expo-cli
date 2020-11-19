@@ -1,4 +1,4 @@
-import * as ConfigUtils from '@expo/config';
+import { getConfig, getNameFromConfig } from '@expo/config';
 import { isUsingYarn } from '@expo/package-manager';
 import chalk from 'chalk';
 import * as devcert from 'devcert';
@@ -18,6 +18,7 @@ import * as UrlUtils from './UrlUtils';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
 import ip from './ip';
+import { learnMore } from './logs/TerminalLink';
 import * as ProjectUtils from './project/ProjectUtils';
 import { DEFAULT_PORT, HOST, isDebugModeEnabled } from './webpack-utils/WebpackEnvironment';
 import createWebpackCompiler, { printInstructions } from './webpack-utils/createWebpackCompiler';
@@ -335,7 +336,7 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
 
   if (typeof env.offline === 'undefined') {
     try {
-      const expoConfig = ConfigUtils.getConfig(projectRoot, { skipSDKVersionRequirement: true });
+      const expoConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
       // If offline isn't defined, check the version and keep offline enabled for SDK 38 and prior
       if (expoConfig.exp.sdkVersion)
         if (Versions.lteSdkVersion(expoConfig.exp, '38.0.0')) {
@@ -354,22 +355,27 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
 
   await bundleWebAppAsync(projectRoot, config);
 
-  if (!env.offline) {
+  const hasSWPlugin = config.plugins?.find(item => {
+    return item?.constructor?.name === 'GenerateSW';
+  });
+  if (!hasSWPlugin) {
     ProjectUtils.logInfo(
       projectRoot,
       WEBPACK_LOG_TAG,
       chalk.green(
-        'Offline (PWA) support is not enabled in this build. Learn more https://expo.fyi/enabling-web-service-workers\n'
+        `Offline (PWA) support is not enabled in this build. ${chalk.dim(
+          learnMore('https://expo.fyi/enabling-web-service-workers')
+        )}\n`
       )
     );
   }
 }
 
 export async function getProjectNameAsync(projectRoot: string): Promise<string> {
-  const { exp } = ConfigUtils.getConfig(projectRoot, {
+  const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
-  const webName = ConfigUtils.getNameFromConfig(exp).webName ?? exp.name;
+  const webName = getNameFromConfig(exp).webName ?? exp.name;
   return webName;
 }
 
