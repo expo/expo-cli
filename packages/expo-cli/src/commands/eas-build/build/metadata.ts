@@ -1,4 +1,6 @@
-import { CredentialsSource, Workflow } from '../../../easJson';
+import { Workflow } from '@expo/eas-build-job';
+
+import { CredentialsSource } from '../../../easJson';
 import { BuilderContext, Platform, TrackingContext } from '../types';
 
 /**
@@ -66,6 +68,7 @@ async function collectMetadata<T extends Platform>(
     credentialsSource,
     sdkVersion: ctx.commandCtx.exp.sdkVersion,
     trackingContext: ctx.trackingCtx,
+    releaseChannel: ctx.buildProfile.releaseChannel,
   };
 }
 

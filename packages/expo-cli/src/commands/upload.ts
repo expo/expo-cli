@@ -2,11 +2,11 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import pick from 'lodash/pick';
 
+import CommandError from '../CommandError';
 import log from '../log';
 import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
 import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
 import { AndroidSubmitCommandOptions } from './upload/submission-service/android/types';
-import { SubmissionMode } from './upload/submission-service/types';
 import * as TerminalLink from './utils/TerminalLink';
 
 const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
@@ -46,15 +46,12 @@ export default function (program: Command) {
     .option('--verbose', 'Always print logs from Submission Service')
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: AndroidSubmitCommandOptions) => {
-      // TODO: remove this once we verify `fastlane supply` works on linux / windows
-      if (!options.useSubmissionService) {
-        checkRuntimePlatform('android');
+      if (options.useSubmissionService) {
+        log.warn(
+          '\n`--use-submission-service is now the default and the flag will be deprecated in the future.`'
+        );
       }
-
-      const submissionMode = options.useSubmissionService
-        ? SubmissionMode.online
-        : SubmissionMode.offline;
-      const ctx = AndroidSubmitCommand.createContext(submissionMode, projectDir, options);
+      const ctx = AndroidSubmitCommand.createContext(projectDir, options);
       const command = new AndroidSubmitCommand(ctx);
       await command.runAsync();
     });
@@ -106,15 +103,17 @@ export default function (program: Command) {
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
 
     .on('--help', function () {
-      console.log('Available languages:');
-      console.log(`  ${LANGUAGES.join(', ')}`);
-      console.log();
+      log('Available languages:');
+      log(`  ${LANGUAGES.join(', ')}`);
+      log();
     })
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: IosPlatformOptions) => {
       try {
-        // TODO: remove this once we verify `fastlane supply` works on linux / windows
-        checkRuntimePlatform('ios');
+        // TODO: remove this once we remove fastlane
+        if (process.platform !== 'darwin') {
+          throw new CommandError('Currently, iOS uploads are only supported on macOS, sorry :(');
+        }
 
         const args = pick(options, SOURCE_OPTIONS);
         if (Object.keys(args).length > 1) {
@@ -136,20 +135,4 @@ export default function (program: Command) {
         throw err;
       }
     });
-}
-
-function checkRuntimePlatform(targetPlatform: 'android' | 'ios'): void {
-  if (process.platform !== 'darwin') {
-    if (targetPlatform === 'android') {
-      log.error('Local Android uploads are only supported on macOS.');
-      log(
-        chalk.bold(
-          'Try the --use-submission-service flag to upload your app from Expo servers. This feature is behind a flag because it is experimental.'
-        )
-      );
-    } else {
-      log.error('Currently, iOS uploads are only supported on macOS, sorry :(');
-    }
-    process.exit(1);
-  }
 }

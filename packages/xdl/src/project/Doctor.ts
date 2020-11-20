@@ -1,9 +1,9 @@
 import {
-  ExpoConfig,
-  PackageJSONConfig,
   configFilename,
+  ExpoConfig,
   getConfig,
   getPackageJson,
+  PackageJSONConfig,
   resolveModule,
 } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';

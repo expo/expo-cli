@@ -3,6 +3,8 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
+import { withDangerousAndroidMod } from '../plugins/android-plugins';
 import * as Colors from './Colors';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';
 import { writeXMLAsync } from './XML';
@@ -27,6 +29,13 @@ const IC_LAUNCHER_BACKGROUND_PNG = 'ic_launcher_background.png';
 const IC_LAUNCHER_FOREGROUND_PNG = 'ic_launcher_foreground.png';
 const IC_LAUNCHER_XML = 'ic_launcher.xml';
 const IC_LAUNCHER_ROUND_XML = 'ic_launcher_round.xml';
+
+export const withIcons: ConfigPlugin = config => {
+  return withDangerousAndroidMod(config, async config => {
+    await setIconAsync(config, config.modRequest.projectRoot);
+    return config;
+  });
+};
 
 export function getIcon(config: ExpoConfig) {
   return config.icon || config.android?.icon || null;
@@ -77,7 +86,7 @@ async function configureLegacyIconAsync(
   backgroundImage: string | null,
   backgroundColor: string | null
 ) {
-  Promise.all(
+  await Promise.all(
     Object.values(dpiValues).map(async ({ folderName, scale }) => {
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
       const iconSizePx = BASELINE_PIXEL_SIZE * scale;
@@ -85,76 +94,72 @@ async function configureLegacyIconAsync(
       // backgroundImage overrides backgroundColor
       backgroundColor = backgroundImage ? 'transparent' : backgroundColor ?? 'transparent';
 
-      try {
-        let squareIconImage: Buffer = (
+      let squareIconImage: Buffer = (
+        await generateImageAsync(
+          { projectRoot, cacheType: 'android-standard-square' },
+          {
+            src: icon,
+            width: iconSizePx,
+            height: iconSizePx,
+            resizeMode: 'cover',
+            backgroundColor,
+          }
+        )
+      ).source;
+      let roundIconImage: Buffer = (
+        await generateImageAsync(
+          { projectRoot, cacheType: 'android-standard-circle' },
+          {
+            src: icon,
+            width: iconSizePx,
+            height: iconSizePx,
+            resizeMode: 'cover',
+            backgroundColor,
+            borderRadius: iconSizePx / 2,
+          }
+        )
+      ).source;
+
+      if (backgroundImage) {
+        // Layer the buffers we just created on top of the background image that's provided
+        const squareBackgroundLayer = (
           await generateImageAsync(
-            { projectRoot, cacheType: 'android-standard-square' },
+            { projectRoot, cacheType: 'android-standard-square-background' },
             {
-              src: icon,
+              src: backgroundImage,
               width: iconSizePx,
               height: iconSizePx,
               resizeMode: 'cover',
-              backgroundColor,
+              backgroundColor: 'transparent',
             }
           )
         ).source;
-        let roundIconImage: Buffer = (
+        const roundBackgroundLayer = (
           await generateImageAsync(
-            { projectRoot, cacheType: 'android-standard-circle' },
+            { projectRoot, cacheType: 'android-standard-round-background' },
             {
-              src: icon,
+              src: backgroundImage,
               width: iconSizePx,
               height: iconSizePx,
               resizeMode: 'cover',
-              backgroundColor,
+              backgroundColor: 'transparent',
               borderRadius: iconSizePx / 2,
             }
           )
         ).source;
-
-        if (backgroundImage) {
-          // Layer the buffers we just created on top of the background image that's provided
-          const squareBackgroundLayer = (
-            await generateImageAsync(
-              { projectRoot, cacheType: 'android-standard-square-background' },
-              {
-                src: backgroundImage,
-                width: iconSizePx,
-                height: iconSizePx,
-                resizeMode: 'cover',
-                backgroundColor: 'transparent',
-              }
-            )
-          ).source;
-          const roundBackgroundLayer = (
-            await generateImageAsync(
-              { projectRoot, cacheType: 'android-standard-round-background' },
-              {
-                src: backgroundImage,
-                width: iconSizePx,
-                height: iconSizePx,
-                resizeMode: 'cover',
-                backgroundColor: 'transparent',
-                borderRadius: iconSizePx / 2,
-              }
-            )
-          ).source;
-          squareIconImage = await compositeImagesAsync({
-            foreground: squareIconImage,
-            background: squareBackgroundLayer,
-          });
-          roundIconImage = await compositeImagesAsync({
-            foreground: roundIconImage,
-            background: roundBackgroundLayer,
-          });
-        }
-
-        await fs.ensureDir(dpiFolderPath);
-        await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_PNG), squareIconImage);
-        await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG), roundIconImage);
-      } catch (e) {
-        throw new Error('Encountered an issue resizing app icon: ' + e);
+        squareIconImage = await compositeImagesAsync({
+          foreground: squareIconImage,
+          background: squareBackgroundLayer,
+        });
+        roundIconImage = await compositeImagesAsync({
+          foreground: roundIconImage,
+          background: roundBackgroundLayer,
+        });
       }
+
+      await fs.ensureDir(dpiFolderPath);
+      await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_PNG), squareIconImage);
+      await fs.writeFile(path.resolve(dpiFolderPath, IC_LAUNCHER_ROUND_PNG), roundIconImage);
     })
   );
 }
@@ -173,7 +178,7 @@ export async function configureAdaptiveIconAsync(
 ) {
   await setBackgroundColorAsync(projectRoot, backgroundColor);
 
-  Promise.all(
+  await Promise.all(
     Object.values(dpiValues).map(async ({ folderName, scale }) => {
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
       const iconSizePx = BASELINE_PIXEL_SIZE * scale;
@@ -262,8 +267,8 @@ async function createAdaptiveIconXmlFiles(projectRoot: string, icLauncherXmlStri
 }
 
 async function removeBackgroundImageFilesAsync(projectRoot: string) {
-  Promise.all(
-    Object.values(dpiValues).map(async ({ folderName, scale }) => {
+  return await Promise.all(
+    Object.values(dpiValues).map(async ({ folderName }) => {
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, folderName);
       await fs.remove(path.resolve(dpiFolderPath, IC_LAUNCHER_BACKGROUND_PNG));
     })

@@ -1,5 +1,5 @@
 import {
-  Document,
+  AndroidManifest,
   readAndroidManifestAsync,
   writeAndroidManifestAsync,
 } from '@expo/config/build/android/Manifest';
@@ -148,8 +148,8 @@ export async function getAsync({
   return await Scheme.getSchemesFromManifest(manifest);
 }
 
-function getPackage(manifest: Document): string | null {
-  return manifest.manifest?.['$']?.package ?? null;
+function getPackage(androidManifest: AndroidManifest): string | null {
+  return androidManifest.manifest?.$?.package ?? null;
 }
 
 export async function getProjectIdAsync({

@@ -1,7 +1,9 @@
-import { fs, vol } from 'memfs';
+import * as fs from 'fs';
+import { vol } from 'memfs';
 import * as path from 'path';
 
 import { ExpoConfig } from '../../Config.types';
+import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
 import { createAdaptiveIconXmlString, getAdaptiveIcon, getIcon, setIconAsync } from '../Icon';
 import {
   ADAPTIVE_ICON_XML_WITH_BACKGROUND_COLOR,
@@ -9,38 +11,10 @@ import {
   LIST_OF_ANDROID_ADAPTIVE_ICON_FILES_FINAL,
   SAMPLE_COLORS_XML,
 } from './fixtures/icon';
-const actualFs = jest.requireActual('fs') as typeof fs;
+
+const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
-
-jest.mock('@expo/image-utils', () => ({
-  generateImageAsync(input, { src }) {
-    const fs = require('fs');
-    return { source: fs.readFileSync(src) };
-  },
-  compositeImagesAsync({ foreground }) {
-    return foreground;
-  },
-}));
-
-afterAll(() => {
-  jest.unmock('@expo/image-utils');
-  jest.unmock('fs');
-});
-
-function getDirFromFS(fsJSON: Record<string, string | null>, rootDir: string) {
-  return Object.entries(fsJSON)
-    .filter(([path, value]) => value !== null && path.startsWith(rootDir))
-    .reduce<Record<string, string>>(
-      (acc, [path, fileContent]) => ({
-        ...acc,
-        [path.substring(rootDir.length).startsWith('/')
-          ? path.substring(rootDir.length + 1)
-          : path.substring(rootDir.length)]: fileContent,
-      }),
-      {}
-    );
-}
 
 function setUpMipmapDirectories() {
   vol.mkdirpSync('/app/android/app/src/main/res/mipmap-mdpi');
@@ -97,12 +71,12 @@ describe('Android Icon', () => {
 });
 
 describe('e2e: ONLY android legacy icon', () => {
-  const legacyIconPath = path.resolve(__dirname, './fixtures/adaptiveIconForeground.png');
+  const legacyIconPath = path.resolve(__dirname, './fixtures/icon.png');
   const projectRoot = '/app';
   const icon = require('../Icon');
   const spyOnConfigureAdaptiveIconAsync = jest.spyOn(icon, 'configureAdaptiveIconAsync');
   beforeAll(async () => {
-    const icon = actualFs.readFileSync(legacyIconPath);
+    const icon = fsReal.readFileSync(legacyIconPath);
     vol.fromJSON(
       { './android/app/src/main/res/values/colors.xml': SAMPLE_COLORS_XML },
       projectRoot
@@ -142,19 +116,13 @@ describe('e2e: ONLY android legacy icon', () => {
 });
 
 describe('e2e: android adaptive icon', () => {
-  const adaptiveIconForegroundPath = path.resolve(
-    __dirname,
-    './fixtures/adaptiveIconForeground.png'
-  );
-  const adaptiveIconBackgroundPath = path.resolve(
-    __dirname,
-    './fixtures/adaptiveIconBackground.png'
-  );
+  const adaptiveIconForegroundPath = path.resolve(__dirname, './fixtures/icon.png');
+  const adaptiveIconBackgroundPath = path.resolve(__dirname, './fixtures/icon.png');
   const projectRoot = '/app';
 
   beforeAll(async () => {
-    const adaptiveIconForeground = actualFs.readFileSync(adaptiveIconForegroundPath);
-    const adaptiveIconBackground = actualFs.readFileSync(adaptiveIconBackgroundPath);
+    const adaptiveIconForeground = fsReal.readFileSync(adaptiveIconForegroundPath);
+    const adaptiveIconBackground = fsReal.readFileSync(adaptiveIconBackgroundPath);
 
     vol.fromJSON(
       { './android/app/src/main/res/values/colors.xml': SAMPLE_COLORS_XML },

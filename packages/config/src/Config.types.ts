@@ -1,12 +1,20 @@
 import { ExpoConfig } from '@expo/config-types';
 
+import { ModConfig } from './Plugin.types';
+
 export { ExpoConfig };
-export type PackageJSONConfig = { [key: string]: any };
-export type ProjectConfig = {
+
+export type PackageJSONConfig = Record<string, any>;
+
+export interface ProjectConfig {
   /**
    * Fully evaluated Expo config with default values injected.
    */
   exp: ExpoConfig;
+  /**
+   * Dynamic config for processing native files during the generation process.
+   */
+  mods?: ModConfig | null;
   /**
    * Project package.json object with default values injected.
    */
@@ -35,7 +43,7 @@ export type ProjectConfig = {
    * Returns null if no dynamic config file exists.
    */
   dynamicConfigObjectType: string | null;
-};
+}
 export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
 export type BareAppConfig = { name: string; [key: string]: any };
 export type HookArguments = {
@@ -129,6 +137,13 @@ export type ConfigContext = {
 };
 
 export type GetConfigOptions = {
+  isPublicConfig?: boolean;
+  /**
+   * Should the config `mods` be preserved in the config? Used for compiling mods in the eject command.
+   *
+   * @default false
+   */
+  isModdedConfig?: boolean;
   skipSDKVersionRequirement?: boolean;
   strict?: boolean;
 };

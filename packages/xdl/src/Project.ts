@@ -334,6 +334,15 @@ export async function runHook(hook: LoadedHook, hookOptions: Omit<HookArguments,
 }
 
 /**
+ * Returns true if we should use Metro using its JS APIs via @expo/dev-server (the modern and fast
+ * way), false if we should fall back to spawning it as a subprocess (supported for backwards
+ * compatibility with SDK39 and older).
+ */
+function shouldUseDevServer(exp: ExpoConfig) {
+  return Versions.gteSdkVersion(exp, '40.0.0') || getenv.boolish('EXPO_USE_DEV_SERVER', false);
+}
+
+/**
  * Apps exporting for self hosting will have the files created in the project directory the following way:
 .
 ├── android-index.json
@@ -366,8 +375,12 @@ export async function exportForAppHosting(
   const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
   await fs.ensureDir(bundlesPathToWrite);
 
+  const publishOptions = options.publishOptions || {};
+  const { exp, pkg, hooks } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
+
   const bundles = await buildPublishBundlesAsync(projectRoot, options.publishOptions, {
     dev: options.isDev,
+    useDevServer: shouldUseDevServer(exp),
   });
   const iosBundle = bundles.ios.code;
   const androidBundle = bundles.android.code;
@@ -385,10 +398,6 @@ export async function exportForAppHosting(
 
   logger.global.info('Finished saving JS Bundles.');
 
-  // save the assets
-  // Get project config
-  const publishOptions = options.publishOptions || {};
-  const { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
   const { assets } = await exportAssetsAsync({
     projectRoot,
     exp,
@@ -415,9 +424,6 @@ export async function exportForAppHosting(
     );
   }
 
-  // Delete keys that are normally deleted in the publish process
-  const { hooks } = exp;
-  delete exp.hooks;
   const validPostExportHooks: LoadedHook[] = prepareHooks(hooks, 'postExport', projectRoot, exp);
 
   // Add assetUrl to manifest
@@ -573,7 +579,8 @@ export async function findReusableBuildAsync(
   releaseChannel: string,
   platform: string,
   sdkVersion: string,
-  slug: string
+  slug: string,
+  owner?: string
 ): Promise<{ downloadUrl?: string; canReuse: boolean }> {
   const user = await UserManager.getCurrentUserAsync();
 
@@ -582,6 +589,7 @@ export async function findReusableBuildAsync(
     platform,
     sdkVersion,
     slug,
+    owner,
   });
 
   return buildReuseStatus;
@@ -624,13 +632,13 @@ export async function publishAsync(
   }
 
   // Get project config
-  const { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, options);
+  const { exp, pkg, hooks } = await _getPublishExpConfigAsync(projectRoot, options);
 
   // TODO: refactor this out to a function, throw error if length doesn't match
-  const { hooks } = exp;
-  delete exp.hooks;
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
-  const bundles = await buildPublishBundlesAsync(projectRoot, options);
+  const bundles = await buildPublishBundlesAsync(projectRoot, options, {
+    useDevServer: shouldUseDevServer(exp),
+  });
   const androidBundle = bundles.android.code;
   const iosBundle = bundles.ios.code;
 
@@ -806,6 +814,7 @@ async function _getPublishExpConfigAsync(
 ): Promise<{
   exp: ExpoAppManifest;
   pkg: PackageJSONConfig;
+  hooks: ExpoConfig['hooks'];
 }> {
   if (options.releaseChannel != null && typeof options.releaseChannel !== 'string') {
     throw new XDLError('INVALID_OPTIONS', 'releaseChannel must be a string');
@@ -813,15 +822,9 @@ async function _getPublishExpConfigAsync(
   options.releaseChannel = options.releaseChannel || 'default';
 
   // Verify that exp/app.json and package.json exist
-  const { exp, pkg } = getConfig(projectRoot);
-
-  if (exp.android?.config) {
-    delete exp.android.config;
-  }
-
-  if (exp.ios?.config) {
-    delete exp.ios.config;
-  }
+  const { exp: privateExp } = getConfig(projectRoot);
+  const { hooks } = privateExp;
+  const { exp, pkg } = getConfig(projectRoot, { isPublicConfig: true });
 
   const { sdkVersion } = exp;
 
@@ -836,15 +839,16 @@ async function _getPublishExpConfigAsync(
       sdkVersion: sdkVersion!,
     },
     pkg,
+    hooks,
   };
 }
 
 async function buildPublishBundlesAsync(
   projectRoot: string,
   publishOptions: PublishOptions = {},
-  bundleOptions: { dev?: boolean } = {}
+  bundleOptions: { dev?: boolean; useDevServer: boolean }
 ) {
-  if (!getenv.boolish('EXPO_USE_DEV_SERVER', false)) {
+  if (!bundleOptions.useDevServer) {
     try {
       await startReactNativeServerAsync({
         projectRoot,
@@ -1112,13 +1116,13 @@ export interface BuildJobFields {
 }
 
 export type BuildStatusResult = {
-  jobs: BuildJobFields[];
-  err: null;
+  jobs?: BuildJobFields[];
+  err?: null;
   userHasBuiltAppBefore: boolean;
   userHasBuiltExperienceBefore: boolean;
-  canPurchasePriorityBuilds: boolean;
-  numberOfRemainingPriorityBuilds: number;
-  hasUnlimitedPriorityBuilds: boolean;
+  canPurchasePriorityBuilds?: boolean;
+  numberOfRemainingPriorityBuilds?: number;
+  hasUnlimitedPriorityBuilds?: boolean;
 };
 
 export type BuildCreatedResult = {
@@ -1703,7 +1707,6 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
     const port = info.port;
     ProjectUtils.logDebug(projectRoot, 'expo', `Local server listening at http://${host}:${port}`);
   });
-  await Exp.saveRecentExpRootAsync(projectRoot);
 }
 
 async function stopExpoServerAsync(projectRoot: string): Promise<void> {
@@ -1976,7 +1979,7 @@ export async function startAsync(
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
-  } else if (getenv.boolish('EXPO_USE_DEV_SERVER', false)) {
+  } else if (shouldUseDevServer(exp)) {
     await startDevServerAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'native');
   } else {

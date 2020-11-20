@@ -4,7 +4,9 @@ import * as path from 'path';
 import { UUID, XcodeProject } from 'xcode';
 
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
+import { withDangerousMod } from '../plugins/ios-plugins';
 import {
   ContentsJsonImage,
   ContentsJsonImageAppearance,
@@ -15,6 +17,13 @@ import {
 import * as Paths from './Paths';
 import { getUserInterfaceStyle } from './UserInterfaceStyle';
 import { getApplicationNativeTarget, getPbxproj } from './utils/Xcodeproj';
+
+export const withSplashScreen: ConfigPlugin = config => {
+  return withDangerousMod(config, async config => {
+    await setSplashScreenAsync(config, config.modRequest.projectRoot);
+    return config;
+  });
+};
 
 const STORYBOARD_FILE_PATH = './SplashScreen.storyboard';
 const IMAGESET_PATH = 'Images.xcassets/SplashScreen.imageset';

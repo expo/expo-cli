@@ -22,11 +22,11 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: yarn install --frozen-lockfile --check-files
       - run: yarn lerna run prepare --stream
-      - uses: actions/cache@v1
-        id: cache-build
+      - run: yarn lint --max-warnings=0
+      - uses: actions/cache@v2
         with:
-          path: '.'
-          key: ${{ github.sha }}-${{ matrix.node }}
+          path: '*'
+          key: v2-${{ github.sha }}-${{ matrix.node }}
   test:
     runs-on: ubuntu-latest
     needs: build
@@ -47,6 +47,7 @@ jobs:
             json-file,
             metro-config,
             package-manager,
+            pkcs12,
             plist,
             pwa,
             schemer,
@@ -56,11 +57,10 @@ jobs:
           ]
     name: Test ${{ matrix.package }} on Node ${{ matrix.node }}
     steps:
-      - uses: actions/cache@v1
-        id: restore-build
+      - uses: actions/cache@v2
         with:
-          path: '.'
-          key: ${{ github.sha }}-${{ matrix.node }}
+          path: '*'
+          key: v2-${{ github.sha }}-${{ matrix.node }}
       - name: Set up Node
         uses: actions/setup-node@v1
         with:
@@ -87,11 +87,10 @@ jobs:
       fail-fast: false
     name: Expo Webpack
     steps:
-      - uses: actions/cache@v1
-        id: restore-build
+      - uses: actions/cache@v2
         with:
-          path: '.'
-          key: ${{ github.sha }}
+          path: '*'
+          key: v2-${{ github.sha }}-${{ matrix.node }}
       - name: Install puppeteer
         working-directory: packages/webpack-config
         run: yarn add -D puppeteer@3.1.0

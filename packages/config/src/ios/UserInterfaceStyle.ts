@@ -1,14 +1,19 @@
 import { ExpoConfig } from '../Config.types';
-import { InfoPlist } from './IosConfig.types';
+import { createInfoPlistPlugin } from '../plugins/ios-plugins';
+import { InfoPlist, InterfaceStyle } from './IosConfig.types';
 
-export function getUserInterfaceStyle(config: ExpoConfig): string | null {
+export const withUserInterfaceStyle = createInfoPlistPlugin(setUserInterfaceStyle);
+
+export function getUserInterfaceStyle(
+  config: Pick<ExpoConfig, 'ios' | 'userInterfaceStyle'>
+): string | null {
   return config.ios?.userInterfaceStyle ?? config.userInterfaceStyle ?? null;
 }
 
 export function setUserInterfaceStyle(
-  config: ExpoConfig,
+  config: Pick<ExpoConfig, 'ios' | 'userInterfaceStyle'>,
   { UIUserInterfaceStyle, ...infoPlist }: InfoPlist
-) {
+): InfoPlist {
   const userInterfaceStyle = getUserInterfaceStyle(config);
   const style = mapUserInterfaceStyleForInfoPlist(userInterfaceStyle);
 
@@ -22,7 +27,9 @@ export function setUserInterfaceStyle(
   };
 }
 
-function mapUserInterfaceStyleForInfoPlist(userInterfaceStyle: string | null): string | null {
+function mapUserInterfaceStyleForInfoPlist(
+  userInterfaceStyle: string | null
+): InterfaceStyle | null {
   switch (userInterfaceStyle) {
     case 'light':
       return 'Light';

@@ -1,7 +1,6 @@
 import { JSONObject, JSONValue } from '@expo/json-file';
 import axios, { AxiosRequestConfig } from 'axios';
 import concat from 'concat-stream';
-import ExtendableError from 'es6-error';
 import FormData from 'form-data';
 import idx from 'idx';
 import merge from 'lodash/merge';
@@ -31,10 +30,12 @@ async function _convertFormDataToBuffer(formData: FormData): Promise<{ data: Buf
   });
 }
 
-export class ApiV2Error extends ExtendableError {
+export class ApiV2Error extends Error {
+  readonly name = 'ApiV2Error';
   code: string;
   details?: JSONValue;
   serverStack?: string;
+  metadata?: object;
   readonly _isApiError = true;
 
   constructor(message: string, code: string = 'UNKNOWN') {
@@ -244,6 +245,7 @@ export default class ApiV2Client {
       const error = new ApiV2Error(responseError.message, responseError.code);
       error.serverStack = responseError.stack;
       error.details = responseError.details;
+      error.metadata = responseError.metadata;
       throw error;
     }
 

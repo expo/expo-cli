@@ -61,17 +61,6 @@ describe('assertFolderEmptyAsync', () => {
     vol.reset();
   });
 
-  const originalWarn = console.warn;
-  const originalLog = console.log;
-  beforeEach(() => {
-    console.warn = jest.fn();
-    console.log = jest.fn();
-  });
-  afterAll(() => {
-    console.warn = originalWarn;
-    console.log = originalLog;
-  });
-
   it(`returns false when conflicts are found and they cannot be removed`, async () => {
     // Should return false indicating that the CLI must exit.
     expect(await assertFolderEmptyAsync({ projectRoot: '/alpha', overwrite: false })).toBe(false);

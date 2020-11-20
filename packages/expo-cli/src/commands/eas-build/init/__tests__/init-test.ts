@@ -15,9 +15,16 @@ jest.mock('../../../../projects', () => {
     ensureProjectExistsAsync: () => 'fakeProjectId',
   };
 });
-jest.mock('../../utils/git');
+jest.mock('../../utils/git', () => {
+  return {
+    ensureGitRepoExistsAsync: jest.fn(),
+    ensureGitStatusIsCleanAsync: jest.fn(),
+    modifyAndCommitAsync: cb => cb(),
+  };
+});
 jest.mock('../../build/builders/iOSBuilder');
 jest.mock('../../../../git');
+jest.mock('../../../../credentials/utils/validateKeystore');
 jest.mock('@expo/image-utils', () => ({
   generateImageAsync(input, { src }) {
     const fs = require('fs');
@@ -103,17 +110,6 @@ function setupProjectConfig(overrideConfig: any) {
   );
   vol.writeFileSync('/projectdir/pprofile', pprofile.content);
 }
-
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
 
 beforeEach(() => {
   vol.reset();

@@ -1,8 +1,5 @@
-import { Android, BuildType, Job, Platform, sanitizeJob } from '@expo/eas-build-job';
-import chalk from 'chalk';
-import figures from 'figures';
-import fs from 'fs-extra';
-import ora from 'ora';
+import { AndroidConfig } from '@expo/config';
+import { Android, Job, Platform, sanitizeJob, Workflow } from '@expo/eas-build-job';
 import path from 'path';
 
 import CommandError from '../../../../CommandError';
@@ -14,14 +11,16 @@ import {
   AndroidGenericBuildProfile,
   AndroidManagedBuildProfile,
   CredentialsSource,
-  Workflow,
 } from '../../../../easJson';
 import { gitAddAsync, gitRootDirectory } from '../../../../git';
-import log from '../../../../log';
 import { Builder, BuilderContext } from '../../types';
-import * as gitUtils from '../../utils/git';
+import {
+  configureUpdatesAsync,
+  syncUpdatesConfigurationAsync,
+} from '../../utils/expoUpdates/android';
+import { isExpoUpdatesInstalled } from '../../utils/expoUpdates/common';
+import { modifyAndCommitAsync } from '../../utils/git';
 import { ensureCredentialsAsync } from '../credentials';
-import gradleContent from '../templates/gradleContent';
 
 interface CommonJobProperties {
   platform: Platform.Android;
@@ -58,7 +57,10 @@ class AndroidBuilder implements Builder<Platform.Android> {
         projectName: this.ctx.commandCtx.projectName,
         accountName: this.ctx.commandCtx.accountName,
       },
-      { nonInteractive: this.ctx.commandCtx.nonInteractive }
+      {
+        nonInteractive: this.ctx.commandCtx.nonInteractive,
+        skipCredentialsCheck: this.ctx.commandCtx.skipCredentialsCheck,
+      }
     );
     await provider.initAsync();
     const credentialsSource = await ensureCredentialsAsync(
@@ -71,78 +73,55 @@ class AndroidBuilder implements Builder<Platform.Android> {
     return credentialsSource;
   }
 
-  private async isProjectConfiguredAsync(): Promise<boolean> {
-    const androidAppDir = path.join(this.ctx.commandCtx.projectDir, 'android', 'app');
-    const buildGradlePath = path.join(androidAppDir, 'build.gradle');
-    const easGradlePath = path.join(androidAppDir, 'eas-build.gradle');
-
-    const hasEasGradleFile = await fs.pathExists(easGradlePath);
-
-    const buildGradleContent = await fs.readFile(path.join(buildGradlePath), 'utf-8');
-    const applyEasGradle = 'apply from: "./eas-build.gradle"';
-
-    const hasEasGradleApply = buildGradleContent
-      .split('\n')
-      // Check for both single and double quotes
-      .some(line => line === applyEasGradle || line === applyEasGradle.replace(/"/g, "'"));
-
-    return hasEasGradleApply && hasEasGradleFile;
-  }
-
   public async ensureProjectConfiguredAsync(): Promise<void> {
-    if (!(await this.isProjectConfiguredAsync())) {
+    const { projectDir, exp, nonInteractive } = this.ctx.commandCtx;
+
+    const isProjectConfigured = await AndroidConfig.EasBuild.isEasBuildGradleConfiguredAsync(
+      projectDir
+    );
+    if (!isProjectConfigured) {
       throw new CommandError(
         'Project is not configured. Please run "expo eas:build:init" first to configure the project'
       );
     }
+
+    await modifyAndCommitAsync(
+      async () => {
+        if (isExpoUpdatesInstalled(projectDir)) {
+          await syncUpdatesConfigurationAsync(projectDir, exp);
+        }
+      },
+      {
+        startMessage: 'Making sure runtime version is correct on Android',
+        commitMessage: 'Set runtime version in Android project',
+        commitSuccessMessage: 'Successfully committed the configuration changes',
+        successMessage: 'We updated the runtime version in your Android project',
+        nonInteractive,
+      }
+    );
   }
 
   public async configureProjectAsync(): Promise<void> {
-    const spinner = ora('Making sure your Android project is set up properly');
+    const { projectDir, exp, nonInteractive } = this.ctx.commandCtx;
 
-    if (await this.isProjectConfiguredAsync()) {
-      spinner.succeed('Android project is already configured');
-      return;
-    }
+    await modifyAndCommitAsync(
+      async () => {
+        await AndroidConfig.EasBuild.configureEasBuildAsync(projectDir);
+        const easGradlePath = AndroidConfig.EasBuild.getEasBuildGradlePath(projectDir);
+        await gitAddAsync(easGradlePath, { intentToAdd: true });
 
-    const { projectDir } = this.ctx.commandCtx;
-
-    const androidAppDir = path.join(projectDir, 'android', 'app');
-    const buildGradlePath = path.join(androidAppDir, 'build.gradle');
-    const easGradlePath = path.join(androidAppDir, 'eas-build.gradle');
-
-    await fs.writeFile(easGradlePath, gradleContent);
-    await gitAddAsync(easGradlePath, { intentToAdd: true });
-
-    const buildGradleContent = await fs.readFile(path.join(buildGradlePath), 'utf-8');
-    const applyEasGradle = 'apply from: "./eas-build.gradle"';
-
-    await fs.writeFile(buildGradlePath, `${buildGradleContent.trim()}\n${applyEasGradle}\n`);
-
-    try {
-      await gitUtils.ensureGitStatusIsCleanAsync();
-      spinner.succeed();
-    } catch (err) {
-      if (err instanceof gitUtils.DirtyGitTreeError) {
-        spinner.succeed('We configured your Android project to build it on the Expo servers');
-        log.newLine();
-
-        try {
-          await gitUtils.reviewAndCommitChangesAsync('Configure Android project', {
-            nonInteractive: this.ctx.commandCtx.nonInteractive,
-          });
-
-          log(`${chalk.green(figures.tick)} Successfully committed the configuration changes.`);
-        } catch (e) {
-          throw new Error(
-            "Aborting, run the command again once you're ready. Make sure to commit any changes you've made."
-          );
+        if (isExpoUpdatesInstalled(projectDir)) {
+          await configureUpdatesAsync(projectDir, exp);
         }
-      } else {
-        spinner.fail();
-        throw err;
+      },
+      {
+        startMessage: 'Configuring the Android project',
+        commitMessage: 'Configure Android project',
+        commitSuccessMessage: 'Successfully committed the configuration changes',
+        successMessage: 'We configured your Android project to build it on the Expo servers',
+        nonInteractive,
       }
-    }
+    );
   }
 
   public async prepareJobAsync(archiveUrl: string): Promise<Job> {
@@ -189,9 +168,10 @@ class AndroidBuilder implements Builder<Platform.Android> {
     const projectRootDirectory = path.relative(await gitRootDirectory(), process.cwd()) || '.';
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
-      type: BuildType.Generic,
+      type: Workflow.Generic,
       gradleCommand: buildProfile.gradleCommand,
       artifactPath: buildProfile.artifactPath,
+      releaseChannel: buildProfile.releaseChannel,
       projectRootDirectory,
     };
   }
@@ -200,11 +180,11 @@ class AndroidBuilder implements Builder<Platform.Android> {
     archiveUrl: string,
     _buildProfile: AndroidManagedBuildProfile
   ): Promise<Partial<Android.ManagedJob>> {
+    const projectRootDirectory = path.relative(await gitRootDirectory(), process.cwd()) || '.';
     return {
       ...(await this.prepareJobCommonAsync(archiveUrl)),
-      type: BuildType.Managed,
-      packageJson: { example: 'packageJson' },
-      manifest: { example: 'manifest' },
+      type: Workflow.Managed,
+      projectRootDirectory,
     };
   }
 

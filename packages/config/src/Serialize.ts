@@ -20,3 +20,21 @@ export function serializeAndEvaluate(val: any): any {
   // symbol
   throw new ConfigError(`Expo config doesn't support \`Symbols\`: ${val}`, 'INVALID_CONFIG');
 }
+
+export function serializeSkippingMods(val: any): any {
+  if (typeof val === 'object' && !Array.isArray(val)) {
+    const output: { [key: string]: any } = {};
+    for (const property in val) {
+      if (val.hasOwnProperty(property)) {
+        if (property === 'mods') {
+          // Don't serialize mods
+          output[property] = val[property];
+        } else {
+          output[property] = serializeAndEvaluate(val[property]);
+        }
+      }
+    }
+    return output;
+  }
+  return serializeAndEvaluate(val);
+}

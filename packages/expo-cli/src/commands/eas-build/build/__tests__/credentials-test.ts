@@ -1,20 +1,11 @@
+import { Workflow } from '@expo/eas-build-job';
+
 import { CredentialsProvider } from '../../../../credentials/provider';
-import { CredentialsSource, Workflow } from '../../../../easJson';
+import { CredentialsSource } from '../../../../easJson';
 import prompts from '../../../../prompts';
 import { ensureCredentialsAsync } from '../credentials';
 
 jest.mock('../../../../prompts');
-
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
 
 function createMockCredentialsProvider({
   hasRemote,

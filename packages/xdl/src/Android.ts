@@ -379,7 +379,15 @@ export async function downloadApkAsync(
   return apkPath;
 }
 
-export async function installExpoAsync({ device, url }: { device: Device; url?: string }) {
+export async function installExpoAsync({
+  device,
+  url,
+  version,
+}: {
+  device: Device;
+  url?: string;
+  version?: string;
+}) {
   const bar = new ProgressBar('Downloading the Expo client app [:bar] :percent :etas', {
     total: 100,
     width: 64,
@@ -403,7 +411,11 @@ export async function installExpoAsync({ device, url }: { device: Device; url?: 
   const path = await downloadApkAsync(url, progress => bar.tick(1, progress));
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
 
-  Logger.global.info(`Installing Expo on device`);
+  if (version) {
+    Logger.global.info(`Installing Expo client ${version} on device`);
+  } else {
+    Logger.global.info(`Installing Expo client on device`);
+  }
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   warningTimer = setWarningTimer();
   const result = await getAdbOutputAsync(adbPidArgs(device.pid, 'install', path));
@@ -426,7 +438,7 @@ export async function isDeviceBootedAsync({
 }
 
 export async function uninstallExpoAsync(device: Device): Promise<string | undefined> {
-  Logger.global.info('Uninstalling Expo from Android device.');
+  Logger.global.info('Uninstalling Expo client from Android device.');
 
   // we need to check if its installed, else we might bump into "Failure [DELETE_FAILED_INTERNAL_ERROR]"
   const isInstalled = await _isExpoInstalledAsync(device);
@@ -444,7 +456,12 @@ export async function uninstallExpoAsync(device: Device): Promise<string | undef
   }
 }
 
-export async function upgradeExpoAsync(url?: string): Promise<boolean> {
+export async function upgradeExpoAsync(options?: {
+  url?: string;
+  version?: string;
+}): Promise<boolean> {
+  const { url, version } = options || {};
+
   try {
     const devices = await getAttachedDevicesAsync();
     if (!devices.length) {
@@ -457,7 +474,7 @@ export async function upgradeExpoAsync(url?: string): Promise<boolean> {
     }
 
     await uninstallExpoAsync(device);
-    await installExpoAsync({ device, url });
+    await installExpoAsync({ device, url, version });
     if (_lastUrl) {
       Logger.global.info(`Opening ${_lastUrl} in Expo.`);
       await getAdbOutputAsync([

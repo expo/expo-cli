@@ -12,6 +12,8 @@ const mockedUser = {
 
 const mockProjectUrl = 'http://fakeurl.com';
 const mockPostAsync = jest.fn();
+
+jest.mock('@expo/spawn-async');
 jest.mock('@expo/config', () => {
   const pkg = jest.requireActual('@expo/config');
   return {
@@ -40,6 +42,7 @@ jest.mock('../../../../projects', () => {
 });
 jest.mock('../../utils/git');
 jest.mock('../../../../git');
+jest.mock('../../../../credentials/utils/validateKeystore');
 jest.mock('../../../../uploads', () => ({
   UploadType: {},
   uploadAsync: () => mockProjectUrl,
@@ -149,17 +152,6 @@ function setupProjectConfig(overrideConfig: any) {
   );
   vol.writeFileSync('/projectdir/pprofile', pprofile.content);
 }
-
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
 
 beforeEach(() => {
   vol.reset();

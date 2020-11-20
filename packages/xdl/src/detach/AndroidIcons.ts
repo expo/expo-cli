@@ -232,25 +232,25 @@ async function createAndWriteIconsToPathAsync(
     );
   }
 
-  // Notification icon
-  if (notificationIconUrl) {
-    globSync('**/shell_notification_icon.png', {
-      cwd: resPath,
-      absolute: true,
-    }).forEach(filePath => {
-      fs.removeSync(filePath);
-    });
+  // Remove Expo client notification icon resources
+  globSync('**/shell_notification_icon.png', {
+    cwd: resPath,
+    absolute: true,
+  }).forEach(filePath => {
+    fs.removeSync(filePath);
+  });
 
-    await _resizeIconsAsync(
-      context,
-      resPath,
-      'drawable-',
-      24,
-      'shell_notification_icon.png',
-      notificationIconUrl,
-      isDetached
-    );
-  }
+  // Add provided notification icon resources, falling back
+  // to the app icon if no `notification.icon` is provided
+  await _resizeIconsAsync(
+    context,
+    resPath,
+    'drawable-',
+    24,
+    'shell_notification_icon.png',
+    notificationIconUrl ?? iconUrl,
+    isDetached
+  );
 }
 
 export { createAndWriteIconsToPathAsync };

@@ -1,7 +1,12 @@
 import { ExpoConfig } from '../Config.types';
+import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 
-export function getName(config: ExpoConfig) {
+export const withDisplayName = createInfoPlistPlugin(setDisplayName);
+
+export const withName = createInfoPlistPlugin(setName);
+
+export function getName(config: Pick<ExpoConfig, 'name'>) {
   return typeof config.name === 'string' ? config.name : null;
 }
 
@@ -10,9 +15,9 @@ export function getName(config: ExpoConfig) {
  * notifications, and others.
  */
 export function setDisplayName(
-  configOrName: ExpoConfig | string,
+  configOrName: Pick<ExpoConfig, 'name'> | string,
   { CFBundleDisplayName, ...infoPlist }: InfoPlist
-) {
+): InfoPlist {
   let name: string | null = null;
   if (typeof configOrName === 'string') {
     name = configOrName;
@@ -34,7 +39,10 @@ export function setDisplayName(
  * CFBundleName is recommended to be 16 chars or less and is used in lists, eg:
  * sometimes on the App Store
  */
-export function setName(config: ExpoConfig, { CFBundleName, ...infoPlist }: InfoPlist) {
+export function setName(
+  config: Pick<ExpoConfig, 'name'>,
+  { CFBundleName, ...infoPlist }: InfoPlist
+): InfoPlist {
   const name = getName(config);
 
   if (!name) {

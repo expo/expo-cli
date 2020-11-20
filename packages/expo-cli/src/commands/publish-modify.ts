@@ -4,10 +4,10 @@ import uniqBy from 'lodash/uniqBy';
 import * as table from '../commands/utils/cli-table';
 import log from '../log';
 import {
-  Publication,
-  RollbackOptions,
   getPublicationDetailAsync,
   getPublishHistoryAsync,
+  Publication,
+  RollbackOptions,
   rollbackPublicationFromChannelAsync,
   setPublishToChannelAsync,
 } from './utils/PublishUtils';
@@ -47,7 +47,7 @@ export default function (program: Command) {
             'Channel Set Status ',
             'SUCCESS'
           );
-          console.log(tableString);
+          log(tableString);
         } catch (e) {
           log.error(e);
         }

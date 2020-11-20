@@ -207,7 +207,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
     step.stopAndPersist({
       symbol: '⚠️ ',
       text: log.chalk.red(
-        'Something when wrong running `pod install` in the `ios` directory. Continuing with project sync, you can debug this afterwards.'
+        'Something went wrong running `pod install` in the `ios` directory. Continuing with project sync, you can debug this afterwards.'
       ),
     });
     if (e.message) {

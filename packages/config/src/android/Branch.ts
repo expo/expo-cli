@@ -1,41 +1,31 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainApplication } from './Manifest';
+import { createAndroidManifestPlugin } from '../plugins/android-plugins';
+import {
+  addMetaDataItemToMainApplication,
+  AndroidManifest,
+  getMainApplicationOrThrow,
+  removeMetaDataItemFromMainApplication,
+} from './Manifest';
+
+const META_BRANCH_KEY = 'io.branch.sdk.BranchKey';
+
+export const withBranch = createAndroidManifestPlugin(setBranchApiKey);
 
 export function getBranchApiKey(config: ExpoConfig) {
   return config.android?.config?.branch?.apiKey ?? null;
 }
 
-export async function setBranchApiKey(config: ExpoConfig, manifestDocument: Document) {
+export function setBranchApiKey(config: ExpoConfig, androidManifest: AndroidManifest) {
   const apiKey = getBranchApiKey(config);
 
-  if (!apiKey) {
-    return manifestDocument;
-  }
+  const mainApplication = getMainApplicationOrThrow(androidManifest);
 
-  let mainApplication = getMainApplication(manifestDocument);
-
-  let existingBranchApiKeyItem;
-  const newBranchApiKeyItem = {
-    $: {
-      'android:name': 'io.branch.sdk.BranchKey',
-      'android:value': apiKey,
-    },
-  };
-  if (mainApplication?.['meta-data']) {
-    existingBranchApiKeyItem = mainApplication['meta-data'].filter(
-      (e: any) => e['$']['android:name'] === 'io.branch.sdk.BranchKey'
-    );
-    if (existingBranchApiKeyItem.length) {
-      existingBranchApiKeyItem[0]['$']['android:value'] = apiKey;
-    } else {
-      mainApplication['meta-data'].push(newBranchApiKeyItem);
-    }
+  if (apiKey) {
+    // If the item exists, add it back
+    addMetaDataItemToMainApplication(mainApplication, META_BRANCH_KEY, apiKey);
   } else {
-    if (!mainApplication) {
-      mainApplication = { $: { 'android:name': '.MainApplication' } };
-    }
-    mainApplication['meta-data'] = [newBranchApiKeyItem];
+    // Remove any existing item
+    removeMetaDataItemFromMainApplication(mainApplication, META_BRANCH_KEY);
   }
-
-  return manifestDocument;
+  return androidManifest;
 }

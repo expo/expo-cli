@@ -10,16 +10,6 @@ import {
 } from '../test-fixtures/mocks-android';
 import { testExperienceName, testJester2ExperienceName } from '../test-fixtures/mocks-constants';
 
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
 beforeEach(() => {});
 
 describe('AndroidApi - Basic Tests', () => {

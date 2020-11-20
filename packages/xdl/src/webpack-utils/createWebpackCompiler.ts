@@ -7,7 +7,6 @@
 import boxen from 'boxen';
 import chalk from 'chalk';
 import { Urls } from 'react-dev-utils/WebpackDevServerUtils';
-import clearConsole from 'react-dev-utils/clearConsole';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import webpack from 'webpack';
 
@@ -18,10 +17,6 @@ const CONSOLE_TAG = 'expo';
 
 const SHOULD_CLEAR_CONSOLE = shouldWebpackClearLogs();
 
-const PLATFORM_TAG = ProjectUtils.getPlatformTag('web');
-
-const withTag = (...messages: any[]) => [PLATFORM_TAG + ' ', ...messages].join('');
-
 function log(projectRoot: string, message: string, showInDevtools = true) {
   if (showInDevtools) {
     ProjectUtils.logInfo(projectRoot, CONSOLE_TAG, message);
@@ -30,12 +25,16 @@ function log(projectRoot: string, message: string, showInDevtools = true) {
   }
 }
 
+function clearLogs() {
+  process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
+}
+
 function logWarning(projectRoot: string, message: string) {
-  ProjectUtils.logWarning(projectRoot, CONSOLE_TAG, withTag(message));
+  ProjectUtils.logWarning(projectRoot, CONSOLE_TAG, message);
 }
 
 function logError(projectRoot: string, message: string) {
-  ProjectUtils.logError(projectRoot, CONSOLE_TAG, withTag(message));
+  ProjectUtils.logError(projectRoot, CONSOLE_TAG, message);
 }
 
 export function printInstructions(
@@ -44,55 +43,47 @@ export function printInstructions(
     appName,
     urls,
     showInDevtools,
-    showHelp,
   }: {
     appName: string;
     urls: Urls;
     showInDevtools: boolean;
-    showHelp: boolean;
   }
 ) {
   printPreviewNotice(projectRoot, showInDevtools);
 
   let message = '\n';
-  message += `${ProjectUtils.getPlatformTag('React')} You can now view ${chalk.bold(
-    appName
-  )} in the browser.\n`;
+  message += `You can now view ${chalk.bold(appName)} in the browser\n`;
+
+  const divider = chalk.dim`|`;
 
   if (urls.lanUrlForTerminal) {
-    message += `\n  ${chalk.bold('Local:')}            ${urls.localUrlForTerminal}`;
-    message += `\n  ${chalk.bold('On Your Network:')}  ${urls.lanUrlForTerminal}`;
+    message += `\n \u203A ${chalk.reset('Local')}   ${divider} ${urls.localUrlForTerminal}`;
+    message += `\n \u203A ${chalk.reset('LAN')}     ${divider} ${urls.lanUrlForTerminal}`;
   } else {
-    message += `\n  ${urls.localUrlForTerminal}`;
+    message += `\n \u203A ${urls.localUrlForTerminal}`;
   }
 
-  message += `\n\nNote that the development build is not optimized.\n`;
+  message += '\n';
 
-  message += `\n \u203A To create a production build, run ${chalk.bold(`expo build:web`)}`;
-  message += `\n \u203A Press ${chalk.bold(`w`)} to open the project in browser.`;
-  message += `\n \u203A Press ${chalk.bold(`Ctrl+C`)} to exit.`;
+  message += `\n \u203A Run ${chalk.bold(`expo build:web`)} to optimize and build for production`;
+
+  message += '\n';
+
+  message += `\n \u203A Press ${chalk.bold(`w`)} ${divider} open in the browser`;
+  message += `\n \u203A Press ${chalk.bold(`?`)} ${divider} show all commands`;
 
   log(projectRoot, message, showInDevtools);
-
-  if (showHelp) {
-    const PLATFORM_TAG = ProjectUtils.getPlatformTag('Expo');
-    log(
-      projectRoot,
-      `\n${PLATFORM_TAG} Press ${chalk.bold('?')} to show a list of all available commands.`,
-      showInDevtools
-    );
-  }
 }
 
 export function printPreviewNotice(projectRoot: string, showInDevtools: boolean) {
   log(
     projectRoot,
     boxen(
-      chalk.magenta(
-        'Expo web is in beta, please report any bugs or missing features on the Expo repo.\n' +
+      chalk.magenta.dim(
+        'Expo web is in late beta, please report any bugs or missing features on the Expo repo.\n' +
           'You can follow the V1 release for more info: https://github.com/expo/expo/issues/6782'
       ),
-      { borderColor: 'magenta', padding: 1 }
+      { dimBorder: true, borderColor: 'magenta', padding: { top: 0, left: 1, bottom: 0, right: 1 } }
     ),
     showInDevtools
   );
@@ -133,7 +124,7 @@ export default function createWebpackCompiler({
   // Whether or not you have warnings or errors, you will get this event.
   compiler.hooks.done.tap('done', async stats => {
     if (SHOULD_CLEAR_CONSOLE && !nonInteractive) {
-      clearConsole();
+      clearLogs();
     }
 
     // We have switched off the default Webpack output in WebpackDevServer
@@ -160,7 +151,6 @@ export default function createWebpackCompiler({
         appName,
         urls,
         showInDevtools: isFirstCompile,
-        showHelp: true,
       });
     }
 
@@ -214,7 +204,6 @@ export function printSuccessMessages({
       appName,
       urls,
       showInDevtools: isFirstCompile,
-      showHelp: false,
     });
   }
 }

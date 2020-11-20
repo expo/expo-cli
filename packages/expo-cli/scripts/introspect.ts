@@ -4,6 +4,7 @@ import '../build/exp.js';
 import program, { Command, Option } from 'commander';
 
 import { registerCommands } from '../build/commands/index.js';
+import log from '../src/log.js';
 
 // import side-effects
 type OptionData = {
@@ -92,9 +93,9 @@ function formatCommandsAsMarkdown(commands: CommandData[]) {
 
 const commands = generateCommandJSON();
 
-console.log('');
+log('');
 if (['markdown', 'md'].includes(process.argv[2])) {
-  console.info(formatCommandsAsMarkdown(commands));
+  log(formatCommandsAsMarkdown(commands));
 } else {
-  console.info(JSON.stringify(commands));
+  log(JSON.stringify(commands));
 }

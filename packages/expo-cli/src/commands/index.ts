@@ -12,7 +12,6 @@ const COMMANDS = [
   require('./eject'),
   require('./export'),
   require('./fetch'),
-  require('./generate-module'),
   require('./init'),
   require('./install'),
   require('./login'),
@@ -31,10 +30,6 @@ const COMMANDS = [
   require('./webhooks'),
   require('./whoami'),
 ];
-
-if (process.env.EXPO_DEV) {
-  COMMANDS.push(require('./apply'));
-}
 
 export function registerCommands(program: Command) {
   COMMANDS.forEach(commandModule => {

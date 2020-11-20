@@ -171,6 +171,19 @@ export async function uninstallAsync(options: {
   return simctlAsync(['uninstall', deviceUDIDOrBooted(options.udid), options.bundleIdentifier]);
 }
 
+function parseSimControlJSONResults(input: string): any {
+  try {
+    return JSON.parse(input);
+  } catch (error) {
+    // Nov 15, 2020: Observed this can happen when opening the simulator and the simulator prompts the user to update the XC command line tools.
+    // Unexpected token I in JSON at position 0
+    if (error.message.match('Unexpected token')) {
+      Logger.global.error(`Apple's simctl returned malformed JSON:\n${input}`);
+    }
+    throw error;
+  }
+}
+
 // TODO: Compare with
 // const results = await SimControl.xcrunAsync(['instruments', '-s']);
 export async function listAsync(
@@ -178,7 +191,7 @@ export async function listAsync(
   query?: string | 'available'
 ): Promise<SimulatorDeviceList> {
   const result = await simctlAsync(['list', type, '--json', query]);
-  const info = JSON.parse(result.stdout) as SimulatorDeviceList;
+  const info = parseSimControlJSONResults(result.stdout) as SimulatorDeviceList;
 
   for (const runtime of Object.keys(info.devices)) {
     // Given a string like 'com.apple.CoreSimulator.SimRuntime.tvOS-13-4'
@@ -313,7 +326,6 @@ export async function isXcrunInstalledAsync() {
     await spawnAsync('xcrun', ['--version']);
     return true;
   } catch (error) {
-    console.log('ERR: ', error);
     return false;
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "expo-optimize",
-  "version": "0.1.53",
+  "version": "0.1.62",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -34,8 +34,8 @@
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.18",
-    "@expo/config": "3.3.6",
-    "@expo/image-utils": "0.3.6",
+    "@expo/config": "3.3.15",
+    "@expo/image-utils": "0.3.7",
     "@expo/json-file": "8.2.24",
     "@types/node": "^12.6.8",
     "@zeit/ncc": "^0.20.5",

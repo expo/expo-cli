@@ -1,22 +1,27 @@
 import { ExpoConfig } from '../Config.types';
+import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 
-export function getVersion(config: ExpoConfig) {
+export const withVersion = createInfoPlistPlugin(setVersion);
+
+export const withBuildNumber = createInfoPlistPlugin(setBuildNumber);
+
+export function getVersion(config: Pick<ExpoConfig, 'version'>) {
   return config.version || '0.0.0';
 }
 
-export function setVersion(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setVersion(config: Pick<ExpoConfig, 'version'>, infoPlist: InfoPlist): InfoPlist {
   return {
     ...infoPlist,
     CFBundleShortVersionString: getVersion(config),
   };
 }
 
-export function getBuildNumber(config: ExpoConfig) {
-  return config.ios && config.ios.buildNumber ? config.ios.buildNumber : '1';
+export function getBuildNumber(config: Pick<ExpoConfig, 'ios'>) {
+  return config.ios?.buildNumber ? config.ios.buildNumber : '1';
 }
 
-export function setBuildNumber(config: ExpoConfig, infoPlist: InfoPlist) {
+export function setBuildNumber(config: Pick<ExpoConfig, 'ios'>, infoPlist: InfoPlist): InfoPlist {
   return {
     ...infoPlist,
     CFBundleVersion: getBuildNumber(config),

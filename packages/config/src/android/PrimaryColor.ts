@@ -1,21 +1,33 @@
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
+import { withDangerousAndroidMod } from '../plugins/android-plugins';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
-import { buildResourceItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
+import { buildResourceItem, readResourcesXMLAsync } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
 import { writeXMLAsync } from './XML';
 
 const COLOR_PRIMARY_KEY = 'colorPrimary';
 const DEFAULT_PRIMARY_COLOR = '#023c69';
 
-export function getPrimaryColor(config: ExpoConfig) {
+export const withPrimaryColor: ConfigPlugin = config => {
+  return withDangerousAndroidMod(config, async config => {
+    await setPrimaryColor(config, config.modRequest.projectRoot);
+    return config;
+  });
+};
+
+export function getPrimaryColor(config: Pick<ExpoConfig, 'primaryColor'>) {
   return config.primaryColor ?? DEFAULT_PRIMARY_COLOR;
 }
 
-export async function setPrimaryColor(config: ExpoConfig, projectDirectory: string) {
+export async function setPrimaryColor(
+  config: Pick<ExpoConfig, 'primaryColor'>,
+  projectRoot: string
+) {
   const hexString = getPrimaryColor(config);
 
-  const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
+  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
+  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
 
   let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
   let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });

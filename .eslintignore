@@ -8,6 +8,7 @@ vendor
 /packages/osascript/lib
 /packages/webpack-config/webpack
 /packages/config/src/__tests__/fixtures/behavior/syntax-error
+/unlinked-packages/*/build
 
 # Generated
 .expo

@@ -37,7 +37,8 @@ self.addEventListener('push', event => {
     data,
   };
   options.icon = data._icon || payload.icon || self.notificationIcon || null;
-  options.image = data._richContent && data._richContent.image ? options.data._richContent.image : payload.image;
+  options.image =
+    data._richContent && data._richContent.image ? options.data._richContent.image : payload.image;
   options.tag = data._tag || payload.collapseKey;
   if (options.tag) {
     options.renotify = data._renotify;

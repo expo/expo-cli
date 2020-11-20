@@ -3,6 +3,7 @@ import { vol } from 'memfs';
 
 import { mockExpoXDL } from '../../__tests__/mock-utils';
 import { jester } from '../../credentials/test-fixtures/mocks-constants';
+import log from '../../log';
 import { collectMergeSourceUrlsAsync, ensurePublicUrlAsync, promptPublicUrlAsync } from '../export';
 
 jest.mock('fs');
@@ -35,17 +36,6 @@ it(`throws a coded error when prompted in non interactive`, async () => {
 });
 
 describe('ensurePublicUrlAsync', () => {
-  const originalWarn = console.warn;
-  const originalLog = console.log;
-  beforeEach(() => {
-    console.warn = jest.fn();
-    console.log = jest.fn();
-  });
-  afterAll(() => {
-    console.warn = originalWarn;
-    console.log = originalLog;
-  });
-
   it(`throws when a URL is not HTTPS in prod`, async () => {
     await expect(ensurePublicUrlAsync('bacon', false)).rejects.toThrow('must be a valid HTTPS URL');
     await expect(ensurePublicUrlAsync('ssh://bacon.io', false)).rejects.toThrow(
@@ -53,16 +43,24 @@ describe('ensurePublicUrlAsync', () => {
     );
   });
   it(`does not throw when an invalid URL is used in dev mode`, async () => {
+    const logWarnSpy = jest.spyOn(log, 'nestedWarn').mockImplementation(() => {});
+
     await expect(ensurePublicUrlAsync('bacon', true)).resolves.toBe('bacon');
     await expect(ensurePublicUrlAsync('ssh://bacon.io', true)).resolves.toBe('ssh://bacon.io');
     // Ensure we warn about the invalid URL in dev mode.
-    expect(console.warn).toBeCalledTimes(2);
+    expect(logWarnSpy).toBeCalledTimes(2);
+
+    logWarnSpy.mockReset();
   });
 
   it(`validates a URL`, async () => {
+    const logWarnSpy = jest.spyOn(log, 'nestedWarn').mockImplementation(() => {});
+
     await expect(ensurePublicUrlAsync('https://expo.io', true)).resolves.toBe('https://expo.io');
     // No warnings thrown
-    expect(console.warn).toBeCalledTimes(0);
+    expect(logWarnSpy).toBeCalledTimes(0);
+
+    logWarnSpy.mockReset();
   });
 });
 

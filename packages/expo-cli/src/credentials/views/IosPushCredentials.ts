@@ -4,12 +4,11 @@ import ora from 'ora';
 import terminalLink from 'terminal-link';
 
 import CommandError from '../../CommandError';
-import { PushKey, PushKeyInfo, PushKeyManager, isPushKey } from '../../appleApi';
+import { isPushKey, PushKey, PushKeyInfo, PushKeyManager } from '../../appleApi';
 import log from '../../log';
-import prompt, { Question } from '../../prompt';
-import { confirmAsync } from '../../prompts';
+import prompt, { confirmAsync, Question } from '../../prompts';
 import { displayIosUserCredentials } from '../actions/list';
-import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
+import { askForUserProvided, CredentialSchema } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
 import {
@@ -283,18 +282,17 @@ export class CreateOrReusePushKey implements IView {
   async _createOrReuse(ctx: Context): Promise<IView | null> {
     const choices = [
       {
-        name: '[Choose existing push key] (Recommended)',
+        title: '[Choose existing push key] (Recommended)',
         value: 'CHOOSE_EXISTING',
       },
-      { name: '[Add a new push key]', value: 'GENERATE' },
+      { title: '[Add a new push key]', value: 'GENERATE' },
     ];
 
     const question: Question = {
-      type: 'list',
+      type: 'select',
       name: 'action',
       message: 'Select an iOS push key to use for push notifications:',
       choices,
-      pageSize: Infinity,
     };
 
     const { action } = await prompt(question);
@@ -388,11 +386,11 @@ async function selectPushCredFromList(
   };
 
   const question: Question = {
-    type: 'list',
+    type: 'select',
     name: 'credentialsIndex',
     message: 'Select credentials from list',
     choices: pushCredentials.map((entry, index) => ({
-      name: getName(entry),
+      title: getName(entry),
       value: index,
     })),
   };
@@ -503,14 +501,14 @@ async function generatePushKey(ctx: Context, accountName: string): Promise<PushK
 
       const { revoke } = await prompt([
         {
-          type: 'checkbox',
+          type: 'multiselect',
           name: 'revoke',
           message: 'Select Push Notifications Key to revoke.',
           choices: keys.map((key, index) => ({
             value: index,
-            name: formatPushKeyFromApple(key, credentials),
+            title: formatPushKeyFromApple(key, credentials),
           })),
-          pageSize: Infinity,
+          optionsPerPage: 20,
         },
       ]);
 

@@ -2,8 +2,10 @@ import { vol } from 'memfs';
 
 import AndroidBuilder from '../AndroidBuilder';
 
+jest.mock('@expo/spawn-async');
 jest.mock('fs');
 jest.mock('../../../../../git');
+jest.mock('../../../../../credentials/utils/validateKeystore');
 jest.mock('../../../../../credentials/context', () => {
   return {
     Context: jest.fn().mockImplementation(() => ({
@@ -36,16 +38,6 @@ function setupCredentialsConfig() {
   });
 }
 
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
 beforeEach(() => {
   vol.reset();
 });
@@ -107,11 +99,11 @@ describe('AndroidBuilder', () => {
       await builder.ensureCredentialsAsync();
       const job = await builder.prepareJobAsync(projectUrl);
       expect(job).toEqual({
+        artifactType: 'app-bundle', // TODO: should be buildType
         platform: 'android',
         type: 'managed',
         projectUrl,
-        packageJson: { example: 'packageJson' },
-        manifest: { example: 'manifest' },
+        projectRootDirectory: '.',
         secrets: {
           buildCredentials: {
             keystore: {

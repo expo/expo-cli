@@ -1,4 +1,5 @@
 import { ExpoAppManifest, ExpoConfig, getConfig } from '@expo/config';
+import { JSONObject } from '@expo/json-file';
 import express from 'express';
 import http from 'http';
 import os from 'os';
@@ -93,7 +94,7 @@ async function getBundleUrlAsync({
   packagerOpts: PackagerOptions;
   bundleUrlPackagerOpts: PackagerOptions;
 }): Promise<string> {
-  const queryParams = await UrlUtils.constructBundleQueryParamsAsync(projectRoot, packagerOpts);
+  const queryParams = UrlUtils.constructBundleQueryParams(projectRoot, packagerOpts);
 
   const path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(
     platform
@@ -180,20 +181,18 @@ export async function getManifestResponseAsync({
   host?: string;
   acceptSignature?: string | string[];
 }): Promise<{ exp: ExpoConfig; manifestString: string; hostInfo: HostInfo }> {
+  // Read the config
+  const projectConfig = getConfig(projectRoot);
+  const manifest = projectConfig.exp as ExpoAppManifest;
   // Read from headers
   const hostname = stripPort(host);
 
   // Get project entry point and initial module
-  const entryPoint = Exp.determineEntryPoint(projectRoot, platform);
+  const entryPoint = Exp.determineEntryPoint(projectRoot, platform, projectConfig);
   const mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
-
   // Gather packager and host info
   const hostInfo = await createHostInfoAsync();
   const [packagerOpts, bundleUrlPackagerOpts] = await getPackagerOptionsAsync(projectRoot);
-
-  // Read the config
-  const manifest = getConfig(projectRoot).exp as ExpoAppManifest;
-
   // Mutate the manifest
   manifest.xde = true; // deprecated
   manifest.developer = {
@@ -215,7 +214,6 @@ export async function getManifestResponseAsync({
   manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot, hostname);
   manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, hostname);
   manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
-
   // Resolve all assets and set them on the manifest as URLs
   await resolveManifestAssets({
     projectRoot,
@@ -224,7 +222,6 @@ export async function getManifestResponseAsync({
       return manifest.bundleUrl!.match(/^https?:\/\/.*?\//)![0] + 'assets/' + path;
     },
   });
-
   // The server normally inserts this but if we're offline we'll do it here
   await resolveGoogleServicesFile(projectRoot, manifest);
 
@@ -295,7 +292,7 @@ export async function getSignedManifestStringAsync(
       remoteUsername: manifest.owner ?? (await UserManager.getCurrentUsernameAsync()),
       remotePackageName: manifest.slug,
     },
-    manifest,
+    manifest: manifest as JSONObject,
   });
   _cachedSignedManifest.manifestString = manifestString;
   _cachedSignedManifest.signedManifest = response;

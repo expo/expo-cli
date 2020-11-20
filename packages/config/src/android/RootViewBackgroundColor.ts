@@ -1,13 +1,24 @@
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
+import { withDangerousAndroidMod } from '../plugins/android-plugins';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
-import { buildResourceItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
+import { buildResourceItem, readResourcesXMLAsync } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
 import { writeXMLAsync } from './XML';
 
 const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
 
-export function getRootViewBackgroundColor(config: ExpoConfig) {
+export const withRootViewBackgroundColor: ConfigPlugin = config => {
+  return withDangerousAndroidMod(config, async config => {
+    await setRootViewBackgroundColor(config, config.modRequest.projectRoot);
+    return config;
+  });
+};
+
+export function getRootViewBackgroundColor(
+  config: Pick<ExpoConfig, 'android' | 'backgroundColor'>
+) {
   if (config.android?.backgroundColor) {
     return config.android.backgroundColor;
   }
@@ -18,14 +29,17 @@ export function getRootViewBackgroundColor(config: ExpoConfig) {
   return null;
 }
 
-export async function setRootViewBackgroundColor(config: ExpoConfig, projectDirectory: string) {
+export async function setRootViewBackgroundColor(
+  config: Pick<ExpoConfig, 'android' | 'backgroundColor'>,
+  projectRoot: string
+) {
   const hexString = getRootViewBackgroundColor(config);
   if (!hexString) {
     return false;
   }
 
-  const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
+  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
+  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
 
   let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
   let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });

@@ -1,5 +1,5 @@
 import bunyan from '@expo/bunyan';
-import * as ConfigUtils from '@expo/config';
+import { setCustomConfigPath } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
 import {
   Analytics,
@@ -8,9 +8,9 @@ import {
   Binaries,
   Config,
   Doctor,
+  Logger,
   LogRecord,
   LogUpdater,
-  Logger,
   NotificationCode,
   PackagerLogsStream,
   Project,
@@ -29,7 +29,9 @@ import path from 'path';
 import ProgressBar from 'progress';
 import stripAnsi from 'strip-ansi';
 import url from 'url';
+import wrapAnsi from 'wrap-ansi';
 
+import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
 import log from './log';
@@ -89,8 +91,8 @@ function humanReadableArgName(arg: any): string {
 }
 
 function breakSentence(input: string): string {
-  // Break a sentence by the word after a max character count
-  return input.replace(/(.{1,72})(?:\n|$| )/g, '$1\n').trim();
+  // Break a sentence by the word after a max character count, adjusting for ansi characters
+  return wrapAnsi(input, 72);
 }
 
 Command.prototype.prepareCommands = function () {
@@ -105,13 +107,13 @@ Command.prototype.prepareCommands = function () {
     .map(function (cmd: Command, i: number) {
       const args = cmd._args.map(humanReadableArgName).join(' ');
 
-      // Remove alias. We still show this with --help on the command.
-      const alias = null; //cmd._alias;
-
       const description = cmd._description;
+      // Remove alias. We still show this with --help on the command.
+      // const alias = cmd._alias;
+      // const nameWithAlias = cmd._name + (alias ? '|' + alias : '');
+      const nameWithAlias = cmd._name;
       return [
-        cmd._name +
-          (alias ? '|' + alias : '') +
+        nameWithAlias +
           // Remove the redundant [options] string that's shown after every command.
           // (cmd.options.length ? ' [options]' : '') +
           (args ? ' ' + args : ''),
@@ -119,6 +121,35 @@ Command.prototype.prepareCommands = function () {
         cmd.__helpGroup ?? 'misc',
       ];
     });
+};
+
+/**
+ * Set / get the command usage `str`.
+ *
+ * @param {String} str
+ * @return {String|Command}
+ * @api public
+ */
+
+// @ts-ignore
+Command.prototype.usage = function (str: string) {
+  var args = this._args.map(function (arg: any[]) {
+    return humanReadableArgName(arg);
+  });
+
+  const commandsStr = this.commands.length ? '[command]' : '';
+  const argsStr = this._args.length ? args.join(' ') : '';
+
+  let usage = commandsStr + argsStr;
+  if (usage.length) usage += ' ';
+  usage += '[options]';
+
+  if (arguments.length === 0) {
+    return this._usage || usage;
+  }
+  this._usage = str;
+
+  return this;
 };
 
 Command.prototype.helpInformation = function () {
@@ -305,13 +336,15 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
       Analytics.flush();
     } catch (err) {
       // TODO: Find better ways to consolidate error messages
-      if (err.isCommandError) {
+      if (err instanceof AbortCommandError || err instanceof SilentError) {
+        // Do nothing when a prompt is cancelled or the error is logged in a pretty way.
+      } else if (err.isCommandError) {
         log.error(err.message);
       } else if (err._isApiError) {
         log.error(chalk.red(err.message));
       } else if (err.isXDLError) {
         log.error(err.message);
-      } else if (err.isJsonFileError) {
+      } else if (err.isJsonFileError || err.isConfigError) {
         if (err.code === 'EJSONEMPTY') {
           // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
           log.error(err.message);
@@ -438,7 +471,7 @@ Command.prototype.asyncActionProjectDir = function (
         process.exit(1);
         // throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
       }
-      ConfigUtils.setCustomConfigPath(projectDir, pathToConfig);
+      setCustomConfigPath(projectDir, pathToConfig);
     }
 
     const logLines = (msg: any, logFn: (...args: any[]) => void) => {
@@ -694,7 +727,7 @@ function runAsync(programName: string) {
       program.help();
     }
   } catch (e) {
-    console.error(e);
+    log.error(e);
     throw e;
   }
 }
@@ -777,7 +810,7 @@ export function run(programName: string) {
   (async function () {
     await Promise.all([writePathAsync(), runAsync(programName)]);
   })().catch(e => {
-    console.error('Uncaught Error', e);
+    log.error('Uncaught Error', e);
     process.exit(1);
   });
 }

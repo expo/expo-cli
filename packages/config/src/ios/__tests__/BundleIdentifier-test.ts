@@ -90,11 +90,16 @@ describe('BundleIdentifier module', () => {
   describe(setBundleIdentifierForPbxproj, () => {
     const projectRoot = '/testproject';
     const pbxProjPath = 'ios/testproject.xcodeproj/project.pbxproj';
+    const otherPbxProjPath = 'ios/otherproject.xcodeproj/project.pbxproj';
 
     beforeEach(() => {
       vol.fromJSON(
         {
           [pbxProjPath]: originalFs.readFileSync(
+            path.join(__dirname, 'fixtures/project.pbxproj'),
+            'utf-8'
+          ),
+          [otherPbxProjPath]: originalFs.readFileSync(
             path.join(__dirname, 'fixtures/project.pbxproj'),
             'utf-8'
           ),
@@ -107,7 +112,13 @@ describe('BundleIdentifier module', () => {
     it('sets the bundle identifier in the pbxproj file', () => {
       setBundleIdentifierForPbxproj(projectRoot, 'com.swmansion.dominik.abcd.v2');
       const pbxprojContents = memfs.readFileSync(path.join(projectRoot, pbxProjPath), 'utf-8');
+      const otherPbxprojContents = memfs.readFileSync(
+        path.join(projectRoot, otherPbxProjPath),
+        'utf-8'
+      );
       expect(pbxprojContents).toMatchSnapshot();
+      // Ensure all paths are modified
+      expect(pbxprojContents).toBe(otherPbxprojContents);
     });
   });
 });

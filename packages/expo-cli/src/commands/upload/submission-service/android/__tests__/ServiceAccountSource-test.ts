@@ -1,28 +1,22 @@
 import { vol } from 'memfs';
 
-import prompt from '../../../../../prompt';
+import prompt from '../../../../../prompts';
 import {
+  getServiceAccountAsync,
   ServiceAccountSource,
   ServiceAccountSourceType,
-  getServiceAccountAsync,
 } from '../ServiceAccountSource';
 
 jest.mock('fs');
-jest.mock('../../../../../prompt');
+jest.mock('../../../../../prompts');
 
 describe(getServiceAccountAsync, () => {
-  const originalConsoleWarn = console.warn;
-  const originalConsoleLog = console.log;
   beforeAll(() => {
-    console.warn = jest.fn();
-    console.log = jest.fn();
     vol.fromJSON({
       '/google-service-account.json': JSON.stringify({ service: 'account' }),
     });
   });
   afterAll(() => {
-    console.warn = originalConsoleWarn;
-    console.log = originalConsoleLog;
     vol.reset();
   });
 

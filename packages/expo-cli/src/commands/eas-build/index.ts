@@ -16,6 +16,11 @@ export default function (program: Command) {
     .command('eas:build:init [path]')
     .description('Initialize build configuration for the project')
     .helpGroup('eas')
+    .option(
+      '-p --platform <platform>',
+      'Platform to configure: ios, android, all',
+      /^(all|android|ios)$/i
+    )
     .option('--skip-credentials-check', 'Skip checking credentials', false)
     .asyncActionProjectDir(initAction, { checkConfig: true, skipSDKVersionRequirement: true });
 

@@ -2,11 +2,11 @@ import { getConfig, getDefaultTarget, PackageJSONConfig, ProjectTarget } from '@
 import simpleSpinner from '@expo/simple-spinner';
 import { Project } from '@expo/xdl';
 import chalk from 'chalk';
-import clipboard from 'clipboardy';
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
 
+import CommandError from '../CommandError';
 import log from '../log';
 import sendTo from '../sendTo';
 import * as TerminalLink from './utils/TerminalLink';
@@ -128,10 +128,9 @@ export function isInvalidReleaseChannel(releaseChannel?: string): boolean {
 // TODO(Bacon): should we prompt with a normalized value?
 function assertValidReleaseChannel(releaseChannel?: string): void {
   if (isInvalidReleaseChannel(releaseChannel)) {
-    log.error(
+    throw new CommandError(
       'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
     );
-    process.exit(1);
   }
 }
 
@@ -146,14 +145,6 @@ function logManifestUrl({ url, sdkVersion }: { url: string; sdkVersion?: string 
       TerminalLink.learnMore('https://expo.fyi/manifest-url')
     )}`
   );
-}
-
-function copyToClipboard(value: string): boolean {
-  try {
-    clipboard.writeSync(value);
-    return true;
-  } catch {}
-  return false;
 }
 
 /**

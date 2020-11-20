@@ -1,63 +1,42 @@
 import { ExpoConfig } from '../Config.types';
-import { Document, getMainApplication, ManifestUsesLibrary } from './Manifest';
+import { createAndroidManifestPlugin } from '../plugins/android-plugins';
+import {
+  addMetaDataItemToMainApplication,
+  addUsesLibraryItemToMainApplication,
+  AndroidManifest,
+  getMainApplicationOrThrow,
+  removeMetaDataItemFromMainApplication,
+  removeUsesLibraryItemFromMainApplication,
+} from './Manifest';
 
-export function getGoogleMapsApiKey(config: ExpoConfig) {
+const META_API_KEY = 'com.google.android.geo.API_KEY';
+const LIB_HTTP = 'org.apache.http.legacy';
+
+export const withGoogleMapsApiKey = createAndroidManifestPlugin(setGoogleMapsApiKey);
+
+export function getGoogleMapsApiKey(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.config?.googleMaps?.apiKey ?? null;
 }
 
-export async function setGoogleMapsApiKey(config: ExpoConfig, manifestDocument: Document) {
+export function setGoogleMapsApiKey(
+  config: Pick<ExpoConfig, 'android'>,
+  androidManifest: AndroidManifest
+) {
   const apiKey = getGoogleMapsApiKey(config);
+  const mainApplication = getMainApplicationOrThrow(androidManifest);
 
-  if (!apiKey) {
-    return manifestDocument;
-  }
-
-  let mainApplication = getMainApplication(manifestDocument);
-  if (!mainApplication) {
-    mainApplication = { $: { 'android:name': '.MainApplication' } };
-  }
-  // add meta-data item
-  let existingMetaDataItem;
-  const metaDataItem = {
-    $: {
-      'android:name': 'com.google.android.geo.API_KEY',
-      'android:value': apiKey,
-    },
-  };
-  if (mainApplication['meta-data']) {
-    existingMetaDataItem = mainApplication['meta-data'].filter(
-      (e: any) => e['$']['android:name'] === 'com.google.android.geo.API_KEY'
-    );
-    if (existingMetaDataItem.length) {
-      existingMetaDataItem[0]['$']['android:value'] = apiKey;
-    } else {
-      mainApplication['meta-data'].push(metaDataItem);
-    }
+  if (apiKey) {
+    // If the item exists, add it back
+    addMetaDataItemToMainApplication(mainApplication, META_API_KEY, apiKey);
+    addUsesLibraryItemToMainApplication(mainApplication, {
+      name: LIB_HTTP,
+      required: false,
+    });
   } else {
-    mainApplication['meta-data'] = [metaDataItem];
+    // Remove any existing item
+    removeMetaDataItemFromMainApplication(mainApplication, META_API_KEY);
+    removeUsesLibraryItemFromMainApplication(mainApplication, LIB_HTTP);
   }
 
-  // add uses-library item
-  let existingUsesLibraryItem;
-  const newUsesLibraryItem: ManifestUsesLibrary = {
-    $: {
-      'android:name': 'org.apache.http.legacy',
-      'android:required': 'false',
-    },
-  };
-
-  if (mainApplication?.['uses-library']) {
-    existingUsesLibraryItem = mainApplication['uses-library'].filter(
-      (e: any) => e['$']['android:name'] === 'org.apache.http.legacy'
-    );
-    if (existingUsesLibraryItem.length) {
-      existingUsesLibraryItem[0]['$']['android:required'] = 'false';
-    } else {
-      mainApplication['uses-library'].push(newUsesLibraryItem);
-    }
-  } else {
-    mainApplication['uses-library'] = [newUsesLibraryItem];
-  }
-
-  return manifestDocument;
+  return androidManifest;
 }

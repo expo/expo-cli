@@ -1,4 +1,4 @@
-import { Orientation, isLandscape, isPortrait, isValid } from './Orientation';
+import { isLandscape, isPortrait, isValid, Orientation } from './Orientation';
 
 interface Device {
   names: string[];

@@ -163,12 +163,14 @@ exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(a
   );
 };
 
-function backgroundImagesForApp(shellPath, manifest, isDetached) {
+function backgroundImagesForApp(shellPath, manifest, isDetached, majorSdkVersion) {
   // returns an array like:
   // [
   //   {url: 'urlToDownload', path: 'pathToSaveTo'},
   //   {url: 'anotherURlToDownload', path: 'anotherPathToSaveTo'},
   // ]
+  const splashImageFilename =
+    majorSdkVersion >= 39 ? 'splashscreen_image.png' : 'shell_launch_background_image.png';
   const basePath = path.join(shellPath, 'app', 'src', 'main', 'res');
   const splash = manifest && manifest.android && manifest.android.splash;
   if (splash) {
@@ -177,7 +179,7 @@ function backgroundImagesForApp(shellPath, manifest, isDetached) {
       if (url) {
         acc.push({
           url,
-          path: path.join(basePath, `drawable-${imageKey}`, 'shell_launch_background_image.png'),
+          path: path.join(basePath, `drawable-${imageKey}`, splashImageFilename),
         });
       }
 
@@ -197,7 +199,7 @@ function backgroundImagesForApp(shellPath, manifest, isDetached) {
     return [
       {
         url,
-        path: path.join(basePath, 'drawable-xxxhdpi', 'shell_launch_background_image.png'),
+        path: path.join(basePath, 'drawable-xxxhdpi', splashImageFilename),
       },
     ];
   }
@@ -226,15 +228,23 @@ function getSplashScreenBackgroundColor(manifest) {
   ImageDrawable that is provided by Android native splash screen API
 */
 function shouldShowLoadingView(manifest, sdkVersion) {
-  const resizeMode =
-    (manifest.android && manifest.android.splash && manifest.android.splash.resizeMode) ||
-    (manifest.splash && manifest.splash.resizeMode);
+  const resizeMode = getSplashImageResizeMode(manifest);
 
   return (
     resizeMode &&
     (parseSdkMajorVersion(sdkVersion) >= 33
       ? resizeMode === 'contain' || resizeMode === 'cover'
       : resizeMode === 'cover')
+  );
+}
+
+/**
+ * @return {string | undefined}
+ */
+function getSplashImageResizeMode(manifest) {
+  return (
+    (manifest.android && manifest.android.splash && manifest.android.splash.resizeMode) ||
+    (manifest.splash && manifest.splash.resizeMode)
   );
 }
 
@@ -447,13 +457,18 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   const bundleUrl = manifest.bundleUrl;
   const isFullManifest = !!bundleUrl;
   const version = manifest.version ? manifest.version : '0.0.0';
-  const backgroundImages = backgroundImagesForApp(shellPath, manifest, isRunningInUserContext);
+  const majorSdkVersion = parseSdkMajorVersion(sdkVersion);
+  const backgroundImages = backgroundImagesForApp(
+    shellPath,
+    manifest,
+    isRunningInUserContext,
+    majorSdkVersion
+  );
   const splashBackgroundColor = getSplashScreenBackgroundColor(manifest);
   const updatesDisabled = manifest.updates && manifest.updates.enabled === false;
   const updatesCheckAutomaticallyDisabled =
-    manifest.updates && manifest.checkAutomatically === 'ON_ERROR_RECOVERY';
+    manifest.updates && manifest.updates.checkAutomatically === 'ON_ERROR_RECOVERY';
   const fallbackToCacheTimeout = manifest.updates && manifest.updates.fallbackToCacheTimeout;
-  const majorSdkVersion = parseSdkMajorVersion(sdkVersion);
 
   // Clean build directories
   await fs.remove(path.join(shellPath, 'app', 'build'));
@@ -631,30 +646,55 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     );
   }
 
-  // Handle 'contain' and 'cover' splashScreen mode by showing only background color and then actual splashScreen image inside AppLoadingView
-  if (shouldShowLoadingView(manifest, sdkVersion)) {
-    await regexFileAsync(
-      'SHOW_LOADING_VIEW_IN_SHELL_APP = false',
-      'SHOW_LOADING_VIEW_IN_SHELL_APP = true',
-      path.join(
-        shellPath,
-        'app',
-        'src',
-        'main',
-        'java',
-        'host',
-        'exp',
-        'exponent',
-        'generated',
-        'AppConstants.java'
-      )
-    );
+  if (majorSdkVersion < 39) {
+    // Handle 'contain' and 'cover' splashScreen mode by showing only background color and then actual splashScreen image inside AppLoadingView
+    if (shouldShowLoadingView(manifest, sdkVersion)) {
+      await regexFileAsync(
+        'SHOW_LOADING_VIEW_IN_SHELL_APP = false',
+        'SHOW_LOADING_VIEW_IN_SHELL_APP = true',
+        path.join(
+          shellPath,
+          'app',
+          'src',
+          'main',
+          'java',
+          'host',
+          'exp',
+          'exponent',
+          'generated',
+          'AppConstants.java'
+        )
+      );
 
-    // show only background color if LoadingView will appear
+      // show only background color if LoadingView will appear
+      await regexFileAsync(
+        /<item>.*<\/item>/,
+        '',
+        path.join(shellPath, 'app', 'src', 'main', 'res', 'drawable', 'splash_background.xml')
+      );
+    }
+  }
+
+  // Android SplashScreen is showing custom ImageView, but when imageResizeMode is set to 'native'
+  // it also shows the static image from the very start of the app
+  if (majorSdkVersion >= 39 && getSplashImageResizeMode(manifest) !== 'native') {
+    // template is assuming that we're actually showing the 'native' mode splash screen,
+    // so if we're not we need to remove it
     await regexFileAsync(
-      /<item>.*<\/item>/,
+      /<item>(.|\s)*?<\/item>/,
       '',
-      path.join(shellPath, 'app', 'src', 'main', 'res', 'drawable', 'splash_background.xml')
+      path.join(shellPath, 'app', 'src', 'main', 'res', 'drawable', 'splashscreen.xml')
+    );
+  }
+
+  // Pass the correct SplashScreenImageResizeMode into the AppConstants
+  if (majorSdkVersion >= 39) {
+    await regexFileAsync(
+      /SPLASH_SCREEN_IMAGE_RESIZE_MODE = SplashScreenImageResizeMode\..*?;/,
+      `SPLASH_SCREEN_IMAGE_RESIZE_MODE = SplashScreenImageResizeMode.${(
+        getSplashImageResizeMode(manifest) || 'contain'
+      ).toUpperCase()};`,
+      path.join(shellPath, 'app/src/main/java/host/exp/exponent/generated/AppConstants.java')
     );
   }
 
@@ -740,11 +780,19 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   );
 
   // Splash Screen background color
-  await regexFileAsync(
-    '"splashBackground">#FFFFFF',
-    `"splashBackground">${splashBackgroundColor}`,
-    path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
-  );
+  if (majorSdkVersion >= 39) {
+    await regexFileAsync(
+      '"splashscreen_background">#FFFFFF',
+      `"splashscreen_background">${splashBackgroundColor}`,
+      path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
+    );
+  } else {
+    await regexFileAsync(
+      '"splashBackground">#FFFFFF',
+      `"splashBackground">${splashBackgroundColor}`,
+      path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
+    );
+  }
 
   // Change stripe schemes and add meta-data
   const randomID = uuid.v4();
@@ -1008,10 +1056,21 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     isRunningInUserContext
   );
 
+  // Set the tint color for icons in the notification tray
+  // This is set to "#005eff" in the Expo client app, but
+  // just to be safe we'll match any value with a regex
+  await regexFileAsync(
+    /"notification_icon_color">.*?</,
+    `"notification_icon_color">${manifest.notification?.color ?? '#ffffff'}<`,
+    path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
+  );
+
   // Splash Background
   if (backgroundImages && backgroundImages.length > 0) {
     // Delete the placeholder images
-    globSync('**/shell_launch_background_image.png', {
+    const splashImageFilename =
+      majorSdkVersion >= 39 ? 'splashscreen_image.png' : 'shell_launch_background_image.png';
+    globSync(`**/${splashImageFilename}'`, {
       cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
       absolute: true,
     }).forEach(filePath => {

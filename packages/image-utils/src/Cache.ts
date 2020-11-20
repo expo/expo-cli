@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { ensureDir, readFile, readFileSync, readdirSync, remove, writeFile } from 'fs-extra';
+import { ensureDir, readdirSync, readFile, readFileSync, remove, writeFile } from 'fs-extra';
 import { join, resolve } from 'path';
 
 import { ImageOptions } from './Image.types';

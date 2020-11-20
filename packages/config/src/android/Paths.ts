@@ -2,28 +2,83 @@ import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
+import { assert } from '../Errors';
+import { directoryExistsAsync } from '../Modules';
 import { ResourceKind } from './Resources';
 
-export async function getMainActivityAsync(
-  projectRoot: string
-): Promise<{ path: string; language: 'java' | 'kt' }> {
-  const mainActivityJavaPath = globSync(
-    path.join(projectRoot, 'android/app/src/main/java/**/MainActivity.{java,kt}')
-  )[0];
+export interface ProjectFile<L extends string = string> {
+  path: string;
+  language: L;
+  contents: string;
+}
 
-  const mainActivityPathJava = path.resolve(mainActivityJavaPath, '../MainActivity.java');
-  const mainActivityPathKotlin = path.resolve(mainActivityJavaPath, '../MainActivity.kt');
+export type GradleProjectFile = ProjectFile<'groovy' | 'kt'>;
+
+export type ApplicationProjectFile = ProjectFile<'java' | 'kt'>;
+
+async function getProjectFileAsync(
+  projectRoot: string,
+  name: string
+): Promise<ApplicationProjectFile> {
+  const mainActivityJavaPath = globSync(
+    path.join(projectRoot, `android/app/src/main/java/**/${name}.{java,kt}`)
+  )[0];
+  assert(
+    mainActivityJavaPath,
+    `Project file "${name}" does not exist in android project for root "${projectRoot}"`
+  );
+
+  const mainActivityPathJava = path.resolve(mainActivityJavaPath, `../${name}.java`);
+  const mainActivityPathKotlin = path.resolve(mainActivityJavaPath, `../${name}.kt`);
 
   const isJava = await fs.pathExists(mainActivityPathJava);
   const isKotlin = !isJava && (await fs.pathExists(mainActivityPathKotlin));
 
   if (!isJava && !isKotlin) {
-    throw new Error(`Failed to find 'MainActivity' file for project: ${projectRoot}.`);
+    throw new Error(`Failed to find '${name}' file for project: ${projectRoot}.`);
   }
+  const filePath = isJava ? mainActivityPathJava : mainActivityPathKotlin;
   return {
-    path: isJava ? mainActivityPathJava : mainActivityPathKotlin,
+    path: path.normalize(filePath),
+    contents: fs.readFileSync(filePath, 'utf8'),
     language: isJava ? 'java' : 'kt',
   };
+}
+
+export async function getMainApplicationAsync(
+  projectRoot: string
+): Promise<ApplicationProjectFile> {
+  return getProjectFileAsync(projectRoot, 'MainApplication');
+}
+
+export async function getMainActivityAsync(projectRoot: string): Promise<ApplicationProjectFile> {
+  return getProjectFileAsync(projectRoot, 'MainActivity');
+}
+
+async function getBuildGradleAsync(projectRoot: string): Promise<GradleProjectFile> {
+  const groovyPath = path.resolve(projectRoot, 'build.gradle');
+  const ktPath = path.resolve(projectRoot, 'build.gradle.kts');
+
+  const isGroovy = await fs.pathExists(groovyPath);
+  const isKotlin = !isGroovy && (await fs.pathExists(ktPath));
+
+  if (!isGroovy && !isKotlin) {
+    throw new Error(`Failed to find 'build.gradle' file for project: ${projectRoot}.`);
+  }
+  const filePath = isGroovy ? groovyPath : ktPath;
+  return {
+    path: path.normalize(filePath),
+    contents: fs.readFileSync(filePath, 'utf8'),
+    language: isGroovy ? 'groovy' : 'kt',
+  };
+}
+
+export async function getProjectBuildGradleAsync(projectRoot: string): Promise<GradleProjectFile> {
+  return getBuildGradleAsync(path.join(projectRoot, 'android'));
+}
+
+export async function getAppBuildGradleAsync(projectRoot: string): Promise<GradleProjectFile> {
+  return getBuildGradleAsync(path.join(projectRoot, 'android', 'app'));
 }
 
 export function getAndroidBuildGradle(projectRoot: string): string {
@@ -46,9 +101,7 @@ export async function getAndroidManifestAsync(projectRoot: string): Promise<stri
   const projectPath = await getProjectPathOrThrowAsync(projectRoot);
 
   const filePath = path.join(projectPath, 'app/src/main/AndroidManifest.xml');
-  // if (await fileExistsAsync(filePath)) {
   return filePath;
-  // }
 }
 
 export async function getResourceXMLPathAsync(
@@ -59,25 +112,4 @@ export async function getResourceXMLPathAsync(
 
   const filePath = path.join(projectPath, `app/src/main/res/${kind}/${name}.xml`);
   return filePath;
-}
-
-/**
- * A non-failing version of async FS stat.
- *
- * @param file
- */
-async function statAsync(file: string): Promise<fs.Stats | null> {
-  try {
-    return await fs.stat(file);
-  } catch {
-    return null;
-  }
-}
-
-export async function fileExistsAsync(file: string): Promise<boolean> {
-  return (await statAsync(file))?.isFile() ?? false;
-}
-
-async function directoryExistsAsync(file: string): Promise<boolean> {
-  return (await statAsync(file))?.isDirectory() ?? false;
 }

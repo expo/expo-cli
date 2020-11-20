@@ -1,4 +1,7 @@
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
+import { addWarningAndroid } from '../WarningAggregator';
+import { withDangerousAndroidMod } from '../plugins/android-plugins';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
 import { buildResourceItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
@@ -8,20 +11,38 @@ const COLOR_PRIMARY_DARK_KEY = 'colorPrimaryDark';
 const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
 const WINDOW_LIGHT_STATUS_BAR = 'android:windowLightStatusBar';
 
-export function getStatusBarColor(config: ExpoConfig) {
+export const withStatusBar: ConfigPlugin = config => {
+  return withDangerousAndroidMod(config, async config => {
+    await setStatusBarConfig(config, config.modRequest.projectRoot);
+    return config;
+  });
+};
+
+export function getStatusBarColor(
+  config: Pick<ExpoConfig, 'androidStatusBarColor' | 'androidStatusBar'>
+) {
+  if (config.androidStatusBarColor != null) {
+    addWarningAndroid(
+      'status-bar',
+      '`androidStatusBarColor` is deprecated, use `androidStatusBar.backgroundColor` instead.'
+    );
+  }
   return config.androidStatusBar?.backgroundColor || 'translucent';
 }
 
-export function getStatusBarStyle(config: ExpoConfig) {
+export function getStatusBarStyle(config: Pick<ExpoConfig, 'androidStatusBar'>) {
   return config.androidStatusBar?.barStyle || 'light-content';
 }
 
-export async function setStatusBarConfig(config: ExpoConfig, projectDirectory: string) {
+export async function setStatusBarConfig(
+  config: Pick<ExpoConfig, 'androidStatusBarColor' | 'androidStatusBar'>,
+  projectRoot: string
+) {
   const hexString = getStatusBarColor(config);
   const statusBarStyle = getStatusBarStyle(config);
 
-  const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
+  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
+  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
 
   let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
   let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });

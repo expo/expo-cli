@@ -9,9 +9,7 @@ import {
 } from '../Google';
 import { appendScheme } from '../Scheme';
 
-jest.mock('../Scheme', () => ({
-  appendScheme: jest.fn(),
-}));
+jest.mock('../Scheme');
 
 describe('ios google config', () => {
   it(`returns null from all getters if no value provided`, () => {

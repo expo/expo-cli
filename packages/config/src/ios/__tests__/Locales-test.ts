@@ -1,34 +1,16 @@
-import { fs, vol } from 'memfs';
+import * as fs from 'fs';
+import { vol } from 'memfs';
 import * as path from 'path';
 
 import { addWarningIOS } from '../../WarningAggregator';
 import { getLocales, setLocalesAsync } from '../Locales';
-const actualFs = jest.requireActual('fs') as typeof fs;
+import { getPbxproj } from '../utils/Xcodeproj';
+import { getDirFromFS } from './utils/getDirFromFS';
+
+const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
-
-jest.mock('../../WarningAggregator', () => ({
-  addWarningIOS: jest.fn(),
-}));
-
-afterAll(() => {
-  jest.unmock('fs');
-  jest.unmock('../../WarningAggregator');
-});
-
-function getDirFromFS(fsJSON: Record<string, string | null>, rootDir: string) {
-  return Object.entries(fsJSON)
-    .filter(([path, value]) => value !== null && path.startsWith(rootDir))
-    .reduce<Record<string, string>>(
-      (acc, [path, fileContent]) => ({
-        ...acc,
-        [path.substring(rootDir.length).startsWith('/')
-          ? path.substring(rootDir.length + 1)
-          : path.substring(rootDir.length)]: fileContent,
-      }),
-      {}
-    );
-}
+jest.mock('../../WarningAggregator');
 
 describe('iOS Locales', () => {
   it(`returns null if no values are provided`, () => {
@@ -38,9 +20,9 @@ describe('iOS Locales', () => {
   it(`returns the locales object`, () => {
     expect(
       getLocales({
-        locales: [{}],
+        locales: {},
       })
-    ).toStrictEqual([{}]);
+    ).toStrictEqual({});
   });
 });
 
@@ -49,7 +31,7 @@ describe('e2e: iOS locales', () => {
   beforeAll(async () => {
     vol.fromJSON(
       {
-        'ios/testproject.xcodeproj/project.pbxproj': actualFs.readFileSync(
+        'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
           path.join(__dirname, 'fixtures/project.pbxproj'),
           'utf-8'
         ),
@@ -61,12 +43,10 @@ describe('e2e: iOS locales', () => {
       projectRoot
     );
 
-    await setLocalesAsync(
+    let project = getPbxproj(projectRoot);
+
+    project = await setLocalesAsync(
       {
-        slug: 'testproject',
-        version: '1',
-        name: 'testproject',
-        platforms: ['ios', 'android'],
         locales: {
           fr: 'lang/fr.json',
           // doesn't exist
@@ -75,8 +55,10 @@ describe('e2e: iOS locales', () => {
           es: { CFBundleDisplayName: 'spanish-name' },
         },
       },
-      projectRoot
+      { project, projectRoot }
     );
+    // Sync the Xcode project with the changes.
+    fs.writeFileSync(project.filepath, project.writeSync());
   });
 
   afterAll(() => {

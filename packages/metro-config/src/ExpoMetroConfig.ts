@@ -1,8 +1,8 @@
 import {
-  ProjectTarget,
   getConfig,
   getDefaultTarget,
   projectHasModule,
+  ProjectTarget,
   resolveModule,
 } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';

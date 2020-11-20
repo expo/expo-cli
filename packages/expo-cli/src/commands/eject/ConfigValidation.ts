@@ -2,9 +2,9 @@ import { ExpoConfig, getConfig, modifyConfigAsync } from '@expo/config';
 import { UserManager } from '@expo/xdl';
 import got from 'got';
 
+import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
-import prompt from '../../prompt';
-import { confirmAsync } from '../../prompts';
+import prompt, { confirmAsync } from '../../prompts';
 import { learnMore } from '../utils/TerminalLink';
 import { isUrlAvailableAsync } from '../utils/url';
 
@@ -15,22 +15,8 @@ function validateBundleId(value: string): boolean {
   return /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value);
 }
 
-/**
- * Validates an Android package name given the following constraints: https://developer.android.com/studio/build/application-id
- *
- * @param value
- */
-export function validatePackage(value: string): boolean {
-  if (
-    !/^(?:[a-zA-Z]+(?:\d*[a-zA-Z_]*)*)(?:\.[a-zA-Z]+(?:\d*[a-zA-Z_]*)*)+$/.test(value) ||
-    // No android reserved words https://stackoverflow.com/a/39331217
-    !/(?!^abstract$|^abstract\..*|.*\.abstract\..*|.*\.abstract$|^assert$|^assert\..*|.*\.assert\..*|.*\.assert$|^boolean$|^boolean\..*|.*\.boolean\..*|.*\.boolean$|^break$|^break\..*|.*\.break\..*|.*\.break$|^byte$|^byte\..*|.*\.byte\..*|.*\.byte$|^case$|^case\..*|.*\.case\..*|.*\.case$|^catch$|^catch\..*|.*\.catch\..*|.*\.catch$|^char$|^char\..*|.*\.char\..*|.*\.char$|^class$|^class\..*|.*\.class\..*|.*\.class$|^const$|^const\..*|.*\.const\..*|.*\.const$|^continue$|^continue\..*|.*\.continue\..*|.*\.continue$|^default$|^default\..*|.*\.default\..*|.*\.default$|^do$|^do\..*|.*\.do\..*|.*\.do$|^double$|^double\..*|.*\.double\..*|.*\.double$|^else$|^else\..*|.*\.else\..*|.*\.else$|^enum$|^enum\..*|.*\.enum\..*|.*\.enum$|^extends$|^extends\..*|.*\.extends\..*|.*\.extends$|^final$|^final\..*|.*\.final\..*|.*\.final$|^finally$|^finally\..*|.*\.finally\..*|.*\.finally$|^float$|^float\..*|.*\.float\..*|.*\.float$|^for$|^for\..*|.*\.for\..*|.*\.for$|^goto$|^goto\..*|.*\.goto\..*|.*\.goto$|^if$|^if\..*|.*\.if\..*|.*\.if$|^implements$|^implements\..*|.*\.implements\..*|.*\.implements$|^import$|^import\..*|.*\.import\..*|.*\.import$|^instanceof$|^instanceof\..*|.*\.instanceof\..*|.*\.instanceof$|^int$|^int\..*|.*\.int\..*|.*\.int$|^interface$|^interface\..*|.*\.interface\..*|.*\.interface$|^long$|^long\..*|.*\.long\..*|.*\.long$|^native$|^native\..*|.*\.native\..*|.*\.native$|^new$|^new\..*|.*\.new\..*|.*\.new$|^package$|^package\..*|.*\.package\..*|.*\.package$|^private$|^private\..*|.*\.private\..*|.*\.private$|^protected$|^protected\..*|.*\.protected\..*|.*\.protected$|^public$|^public\..*|.*\.public\..*|.*\.public$|^return$|^return\..*|.*\.return\..*|.*\.return$|^short$|^short\..*|.*\.short\..*|.*\.short$|^static$|^static\..*|.*\.static\..*|.*\.static$|^strictfp$|^strictfp\..*|.*\.strictfp\..*|.*\.strictfp$|^super$|^super\..*|.*\.super\..*|.*\.super$|^switch$|^switch\..*|.*\.switch\..*|.*\.switch$|^synchronized$|^synchronized\..*|.*\.synchronized\..*|.*\.synchronized$|^this$|^this\..*|.*\.this\..*|.*\.this$|^throw$|^throw\..*|.*\.throw\..*|.*\.throw$|^throws$|^throws\..*|.*\.throws\..*|.*\.throws$|^transient$|^transient\..*|.*\.transient\..*|.*\.transient$|^try$|^try\..*|.*\.try\..*|.*\.try$|^void$|^void\..*|.*\.void\..*|.*\.void$|^volatile$|^volatile\..*|.*\.volatile\..*|.*\.volatile$|^while$|^while\..*|.*\.while\..*|.*\.while$)(^(?:[a-z_]+(?:\d*[a-zA-Z_]*)*)(?:\.[a-z_]+(?:\d*[a-zA-Z_]*)*)*$)/.test(
-      value
-    )
-  ) {
-    return false;
-  }
-  return true;
+function validatePackage(value: string): boolean {
+  return /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(value);
 }
 
 const cachedBundleIdResults: Record<string, string> = {};
@@ -112,14 +98,9 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
     if (validateBundleId(currentBundleId)) {
       return currentBundleId;
     }
-
-    log(
-      log.chalk.red(
-        `The ios.bundleIdentifier defined in your Expo config is not formatted properly. Only alphanumeric characters, '.', '-', and '_' are allowed, and each '.' must be followed by a letter.`
-      )
+    throw new CommandError(
+      `The ios.bundleIdentifier defined in your Expo config is not formatted properly. Only alphanumeric characters, '.', '-', and '_' are allowed, and each '.' must be followed by a letter.`
     );
-
-    process.exit(1);
   }
 
   // Recommend a bundle ID based on the username and project slug.
@@ -147,15 +128,14 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
   // prompt a better error message, recommend a default value, and help the user
   // validate their custom bundle ID upfront.
   const { bundleIdentifier } = await prompt(
-    [
-      {
-        name: 'bundleIdentifier',
-        default: recommendedBundleId,
-        // The Apple helps people know this isn't an EAS feature.
-        message: `What would you like your iOS bundle identifier to be?`,
-        validate: validateBundleId,
-      },
-    ],
+    {
+      type: 'text',
+      name: 'bundleIdentifier',
+      initial: recommendedBundleId,
+      // The Apple helps people know this isn't an EAS feature.
+      message: `What would you like your iOS bundle identifier to be?`,
+      validate: validateBundleId,
+    },
     {
       nonInteractiveHelp: noBundleIdMessage,
     }
@@ -198,13 +178,9 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
     if (validatePackage(currentPackage)) {
       return currentPackage;
     }
-    log(
-      log.chalk.red(
-        `Invalid format of Android package name. Only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter.`
-      )
+    throw new CommandError(
+      `Invalid format of Android package name. Only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter.`
     );
-
-    process.exit(1);
   }
 
   // Recommend a package name based on the username and project slug.
@@ -234,14 +210,13 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
   // prompt a better error message, recommend a default value, and help the user
   // validate their custom android package upfront.
   const { packageName } = await prompt(
-    [
-      {
-        name: 'packageName',
-        default: recommendedPackage,
-        message: `What would you like your Android package name to be?`,
-        validate: validatePackage,
-      },
-    ],
+    {
+      type: 'text',
+      name: 'packageName',
+      initial: recommendedPackage,
+      message: `What would you like your Android package name to be?`,
+      validate: validatePackage,
+    },
     {
       nonInteractiveHelp: noPackageMessage,
     }
@@ -289,7 +264,7 @@ async function attemptModification(
   if (modification.type === 'success') {
     log.newLine();
   } else {
-    warnAboutConfigAndExit(modification.type, modification.message!, exactEdits);
+    warnAboutConfigAndThrow(modification.type, modification.message!, exactEdits);
   }
 }
 
@@ -301,7 +276,7 @@ function logNoConfig() {
   );
 }
 
-function warnAboutConfigAndExit(type: string, message: string, edits: Partial<ExpoConfig>) {
+function warnAboutConfigAndThrow(type: string, message: string, edits: Partial<ExpoConfig>) {
   log.addNewLineIfNone();
   if (type === 'warn') {
     // The project is using a dynamic config, give the user a helpful log and bail out.
@@ -311,7 +286,7 @@ function warnAboutConfigAndExit(type: string, message: string, edits: Partial<Ex
   }
 
   notifyAboutManualConfigEdits(edits);
-  process.exit(1);
+  throw new SilentError();
 }
 
 function notifyAboutManualConfigEdits(edits: Partial<ExpoConfig>) {

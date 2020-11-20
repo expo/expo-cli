@@ -55,17 +55,6 @@ describe('publish details', () => {
     vol.reset();
   });
 
-  const originalWarn = console.warn;
-  const originalLog = console.log;
-  beforeAll(() => {
-    console.warn = jest.fn();
-    console.log = jest.fn();
-  });
-  afterAll(() => {
-    console.warn = originalWarn;
-    console.log = originalLog;
-  });
-
   it('Get publication details', async () => {
     const detailOptions = {
       publishId: 'test-uuid',

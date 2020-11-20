@@ -1,6 +1,9 @@
 import { ExpoConfig } from '../Config.types';
+import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist, URLScheme } from './IosConfig.types';
-import { findSchemeNames } from './utils/Xcodeproj';
+import { findSchemeNames } from './Paths';
+
+export const withScheme = createInfoPlistPlugin(setScheme);
 
 export function getScheme(config: { scheme?: string | string[] }): string[] {
   if (Array.isArray(config.scheme)) {
@@ -37,7 +40,7 @@ export function setScheme(
   };
 }
 
-// TODO: update this to work well idempotently!
+// TODO: update this to be idempotent!
 export function appendScheme(scheme: string | null, infoPlist: InfoPlist): InfoPlist {
   if (!scheme) {
     return infoPlist;

@@ -3,7 +3,6 @@ import {
   Exp,
   Project,
   ProjectSettings,
-  ProjectUtils,
   Prompts,
   Simulator,
   UrlUtils,
@@ -35,14 +34,9 @@ type StartOptions = {
   webOnly?: boolean;
 };
 
-const clearConsole = (): void => {
-  process.stdout.write(process.platform === 'win32' ? '\x1Bc' : '\x1B[2J\x1B[3J\x1B[H');
-};
-
 const printHelp = (): void => {
-  const PLATFORM_TAG = ProjectUtils.getPlatformTag('Expo');
   log.newLine();
-  log.nested(`${PLATFORM_TAG} Press ${b('?')} to show a list of all available commands.`);
+  log.nested(`Press ${b('?')} to show a list of all available commands.`);
 };
 
 const div = chalk.dim(`|`);
@@ -50,10 +44,8 @@ const div = chalk.dim(`|`);
 const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOnly'> = {}) => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
-  const username = await UserManager.getCurrentUsernameAsync();
   const devMode = dev ? 'development' : 'production';
-  const currentAuth = `@${username}`;
-  const currentToggle = openDevToolsAtStartup ? 'disabled' : 'enabled';
+  const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
 
   const isMac = process.platform === 'darwin';
 
@@ -74,7 +66,6 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
     ['d', `open Expo DevTools`],
     ['shift+d', `toggle auto opening DevTools on startup`, currentToggle],
     !options.webOnly && ['e', `share the app link by email`],
-    ['s', username ? `sign out` : `sign in`, currentAuth],
   ];
 
   log.nested(
@@ -103,11 +94,9 @@ export const printServerInfo = async (
 ) => {
   if (options.webOnly) {
     Webpack.printConnectionInstructions(projectDir);
-    printHelp();
     return;
   }
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
-  const username = await UserManager.getCurrentUsernameAsync();
   log.newLine();
   log.nested(`  ${u(url)}`);
   log.newLine();
@@ -118,21 +107,9 @@ export const printServerInfo = async (
   const iosInfo = process.platform === 'darwin' ? `, or ${b('i')} for iOS simulator` : '';
   const webInfo = `${b`w`} to run on ${u`w`}eb`;
   log.nested(wrap(u('To run the app with live reloading, choose one of:')));
-  if (username) {
-    log.nested(
-      item(
-        `Sign in as ${i(
-          '@' + username
-        )} in Expo client on Android or iOS. Your projects will automatically appear in the "Projects" tab.`
-      )
-    );
-  }
   log.nested(item(`Scan the QR code above with the Expo app (Android) or the Camera app (iOS).`));
   log.nested(item(`Press ${b`a`} for Android emulator${iosInfo}, or ${webInfo}.`));
   log.nested(item(`Press ${b`e`} to send a link to your phone with email.`));
-  if (!username) {
-    log.nested(item(`Press ${b`s`} to sign in and enable more options.`));
-  }
 
   Webpack.printConnectionInstructions(projectDir);
   printHelp();
@@ -179,7 +156,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
       switch (key) {
         case 'A':
         case 'a':
-          clearConsole();
+          log.clear();
           log('Opening the web project in Chrome on Android...');
           await Android.openWebProjectAsync({
             projectRoot,
@@ -189,7 +166,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           break;
         case 'i':
         case 'I':
-          clearConsole();
+          log.clear();
           log('Opening the web project in Safari on iOS...');
           await Simulator.openWebProjectAsync({
             projectRoot,
@@ -211,19 +188,19 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
     } else {
       switch (key) {
         case 'A':
-          clearConsole();
+          log.clear();
           await Android.openProjectAsync({ projectRoot, shouldPrompt: true });
           printHelp();
           break;
         case 'a': {
-          clearConsole();
+          log.clear();
           log('Opening on Android...');
           await Android.openProjectAsync({ projectRoot });
           printHelp();
           break;
         }
         case 'I':
-          clearConsole();
+          log.clear();
           await Simulator.openProjectAsync({
             projectRoot,
             shouldPrompt: true,
@@ -231,7 +208,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           printHelp();
           break;
         case 'i': {
-          clearConsole();
+          log.clear();
 
           // note(brentvatne): temporarily remove logic for picking the
           // simulator until we have parity for Android. this also ensures that we
@@ -272,10 +249,10 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
             startWaitingForCommand();
           };
           const cancel = async () => {
-            clearConsole();
+            log.clear();
             printHelp();
           };
-          clearConsole();
+          log.clear();
           process.stdin.addListener('keypress', handleKeypress);
           log('Please enter your email address (press ESC to cancel) ');
           rl.question(
@@ -319,7 +296,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         break;
       }
       case CTRL_L: {
-        clearConsole();
+        log.clear();
         break;
       }
       case '?': {
@@ -327,14 +304,14 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         break;
       }
       case 'w': {
-        clearConsole();
+        log.clear();
         log('Attempting to open the project in a web browser...');
         await Webpack.openAsync(projectRoot);
         await printServerInfo(projectRoot, options);
         break;
       }
       case 'c': {
-        clearConsole();
+        log.clear();
         await printServerInfo(projectRoot, options);
         break;
       }
@@ -346,7 +323,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         break;
       }
       case 'D': {
-        clearConsole();
+        log.clear();
         const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', true));
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
         log(
@@ -358,7 +335,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         break;
       }
       case 'p': {
-        clearConsole();
+        log.clear();
         const projectSettings = await ProjectSettings.readAsync(projectRoot);
         const dev = !projectSettings.dev;
         await ProjectSettings.setAsync(projectRoot, { dev, minify: !dev });
@@ -373,7 +350,7 @@ Please reload the project in the Expo app for the change to take effect.`
       }
       case 'r':
       case 'R': {
-        clearConsole();
+        log.clear();
         const reset = key === 'R';
         if (reset) {
           log('Restarting Metro bundler and clearing cache...');
@@ -381,26 +358,6 @@ Please reload the project in the Expo app for the change to take effect.`
           log('Restarting Metro bundler...');
         }
         Project.startAsync(projectRoot, { ...options, reset });
-        break;
-      }
-      case 's': {
-        const authSession = await UserManager.getSessionAsync();
-        if (authSession?.accessToken) {
-          log(chalk.yellow('Please remove the EXPO_TOKEN environment var to sign out.'));
-        } else if (authSession?.sessionSecret) {
-          await UserManager.logoutAsync();
-          log('Signed out.');
-        } else {
-          stopWaitingForCommand();
-          try {
-            await loginOrRegisterIfLoggedOutAsync();
-          } catch (e) {
-            log.error(e);
-          } finally {
-            startWaitingForCommand();
-          }
-        }
-        printHelp();
         break;
       }
       case 'o':

@@ -1,4 +1,4 @@
-import { PWAConfig, getConfigForPWA } from 'expo-pwa';
+import { getConfigForPWA, PWAConfig } from 'expo-pwa';
 
 import { Environment } from '../types';
 

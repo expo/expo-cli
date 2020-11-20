@@ -1,6 +1,7 @@
 import * as AllowBackup from './AllowBackup';
 import * as Branch from './Branch';
 import * as Colors from './Colors';
+import * as EasBuild from './EasBuild';
 import * as Facebook from './Facebook';
 import * as GoogleMapsApiKey from './GoogleMapsApiKey';
 import * as GoogleMobileAds from './GoogleMobileAds';
@@ -26,6 +27,7 @@ import * as Version from './Version';
 
 export {
   AllowBackup,
+  EasBuild,
   Manifest,
   Branch,
   Colors,

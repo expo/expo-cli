@@ -6,11 +6,11 @@ import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import {
-  IconOptions,
   getChromeIconConfig,
   getFaviconIconConfig,
   getSafariIconConfig,
   getSafariStartupImageConfig,
+  IconOptions,
 } from 'expo-pwa';
 import { readFileSync } from 'fs-extra';
 import { boolish } from 'getenv';

@@ -1,32 +1,44 @@
 import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
 import { addWarningAndroid } from '../WarningAggregator';
+import { withDangerousAndroidMod } from '../plugins/android-plugins';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
-import { buildResourceItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
+import { buildResourceItem, readResourcesXMLAsync } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
 import { writeXMLAsync } from './XML';
 
 const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 const WINDOW_LIGHT_NAVIGATION_BAR = 'android:windowLightNavigationBar';
 
-export function getNavigationBarImmersiveMode(config: ExpoConfig) {
+export const withNavigationBar: ConfigPlugin = config => {
+  return withDangerousAndroidMod(config, async config => {
+    await setNavigationBarConfig(config, config.modRequest.projectRoot);
+    return config;
+  });
+};
+
+export function getNavigationBarImmersiveMode(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
   return config.androidNavigationBar?.visible || null;
 }
 
-export function getNavigationBarColor(config: ExpoConfig) {
+export function getNavigationBarColor(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
   return config.androidNavigationBar?.backgroundColor || null;
 }
 
-export function getNavigationBarStyle(config: ExpoConfig) {
+export function getNavigationBarStyle(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
   return config.androidNavigationBar?.barStyle || 'light-content';
 }
 
-export async function setNavigationBarConfig(config: ExpoConfig, projectDirectory: string) {
+export async function setNavigationBarConfig(
+  config: Pick<ExpoConfig, 'androidNavigationBar'>,
+  projectRoot: string
+) {
   const immersiveMode = getNavigationBarImmersiveMode(config);
   const hexString = getNavigationBarColor(config);
   const barStyle = getNavigationBarStyle(config);
 
-  const stylesPath = await getProjectStylesXMLPathAsync(projectDirectory);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectDirectory);
+  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
+  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
 
   let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
   let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });

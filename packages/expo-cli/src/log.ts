@@ -26,7 +26,7 @@ function _updateIsLastLineNewLine(args: any[]) {
 function _maybePrintNewLine() {
   if (_printNewLineBeforeNextLog) {
     _printNewLineBeforeNextLog = false;
-    console.log();
+    console.log(); // eslint-disable-line no-console
   }
 }
 
@@ -34,21 +34,21 @@ function consoleLog(...args: any[]) {
   _maybePrintNewLine();
   _updateIsLastLineNewLine(args);
 
-  console.log(...args);
+  console.log(...args); // eslint-disable-line no-console
 }
 
 function consoleWarn(...args: any[]) {
   _maybePrintNewLine();
   _updateIsLastLineNewLine(args);
 
-  console.warn(...args);
+  console.warn(...args); // eslint-disable-line no-console
 }
 
 function consoleError(...args: any[]) {
   _maybePrintNewLine();
   _updateIsLastLineNewLine(args);
 
-  console.error(...args);
+  console.error(...args); // eslint-disable-line no-console
 }
 
 function respectProgressBars(commitLogs: () => void) {
@@ -168,6 +168,10 @@ log.gray = function (...args: any[]) {
   respectProgressBars(() => {
     consoleLog(...withPrefixAndTextColor(args));
   });
+};
+
+log.clear = function () {
+  process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
 };
 
 log.chalk = chalk;

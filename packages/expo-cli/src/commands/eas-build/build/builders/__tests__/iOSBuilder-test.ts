@@ -47,16 +47,6 @@ function setupCredentialsConfig() {
   });
 }
 
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
 beforeEach(() => {
   vol.reset();
 });
@@ -124,8 +114,7 @@ describe('iOSBuilder', () => {
         platform: 'ios',
         type: 'managed',
         projectUrl,
-        packageJson: { example: 'packageJson' },
-        manifest: { example: 'manifest' },
+        projectRootDirectory: '.',
         secrets: {
           buildCredentials: {
             distributionCertificate: {
