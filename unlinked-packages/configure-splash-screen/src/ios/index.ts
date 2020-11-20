@@ -8,7 +8,7 @@ import configureInfoPlist from './Info.plist';
 import configureStoryboard from './Storyboard';
 import readPbxProject from './pbxproj';
 
-export default async function configureIosSplashScreen(
+export default async function configureIos(
   projectRootPath: string,
   config: IosSplashScreenConfigJSON
 ) {

@@ -5,7 +5,9 @@ import path from 'path';
  * Creates file with given content with possible parent directories creation.
  */
 export async function createDirAndWriteFile(filePath: string, content: string) {
-  await fs.ensureDir(path.dirname(filePath));
+  if (!(await fs.pathExists(path.dirname(filePath)))) {
+    await fs.mkdirp(path.dirname(filePath));
+  }
   await fs.writeFile(filePath, content);
 }
 
