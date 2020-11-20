@@ -1,9 +1,9 @@
 #!/usr/bin/env ts-node-script
-import '../build/exp.js';
 
 import program, { Command, Option } from 'commander';
 
 import { registerCommands } from '../build/commands/index.js';
+import { helpGroupOrder } from '../build/exp.js';
 
 // import side-effects
 type OptionData = {
@@ -15,6 +15,7 @@ type OptionData = {
 
 type CommandData = {
   name: string;
+  group: string;
   description: string;
   alias?: string;
   options: OptionData[];
@@ -41,6 +42,7 @@ function optionAsJSON(option: Option & { defaultValue: any }): OptionData {
 function commandAsJSON(command: Command): CommandData {
   return {
     name: command.name(),
+    group: command.__helpGroup,
     description: command.description(),
     alias: command.alias(),
     options: command.options.map(optionAsJSON),
@@ -62,7 +64,7 @@ function formatOptionsAsMarkdown(options: OptionData[]) {
 
   return [
     `| Option         | Description             |`,
-    `| ------------ | ----------------------- |`,
+    `| -------------- | ----------------------- |`,
     ...options.map(formatOptionAsMarkdown),
     '',
   ].join('\n');
@@ -86,8 +88,52 @@ function formatCommandAsMarkdown(command: CommandData): string {
   ].join('\n');
 }
 
+function groupBy<T>(arr: T[], block: (v: T) => any): Record<string, T[]> {
+  const out: Record<string, T[]> = {};
+
+  for (const i of arr) {
+    const key = block(i);
+    if (!(key in out)) {
+      out[key] = [];
+    }
+    out[key].push(i);
+  }
+
+  return out;
+}
+
+function sortCommands(commands: CommandData[]) {
+  const groupedCommands = groupBy(commands, command => command.group);
+  const groupOrder = [...new Set([...helpGroupOrder, ...Object.keys(groupedCommands)])];
+  // Reverse the groups
+  const sortedGroups: Record<string, CommandData[]> = {};
+  while (groupOrder.length) {
+    const group = groupOrder.shift()!;
+    if (group in groupedCommands) {
+      sortedGroups[group] = groupedCommands[group];
+    }
+  }
+  return sortedGroups;
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 function formatCommandsAsMarkdown(commands: CommandData[]) {
-  return commands.map(formatCommandAsMarkdown).join('\n');
+  const grouped = sortCommands(commands);
+  return Object.entries(grouped)
+    .map(([groupName, commands]) => {
+      // Omit internal and eas commands from the docs
+      if (['eas', 'internal'].includes(groupName)) {
+        return '';
+      }
+
+      const md = commands.map(formatCommandAsMarkdown).join('\n');
+      const header = capitalize(groupName);
+      return `### ${header}\n\n${md}`;
+    })
+    .join('\n');
 }
 
 const commands = generateCommandJSON();
