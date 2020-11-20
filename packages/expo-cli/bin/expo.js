@@ -52,7 +52,7 @@ async function warnUponCmdExe() {
         // eslint-disable-next-line no-console
         console.warn(
           yellow(
-            'WARNING: Please avoid using cmd.exe for development. Instead use PowerShell or Bash via WSL.\n'
+            'WARNING: We recommend using PowerShell or Bash via WSL for development with expo-cli on Windows. You may encounter issues using cmd.exe.\n'
           )
         );
       }
