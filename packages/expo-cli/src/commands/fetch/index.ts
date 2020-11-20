@@ -5,7 +5,7 @@ import {
   fetchAndroidKeystoreAsync,
   fetchAndroidUploadCertAsync,
 } from './android';
-import fetchIosCerts from './ios';
+import fetchIosCertsAsync from './ios';
 
 export default function (program: Command) {
   program
@@ -15,7 +15,7 @@ export default function (program: Command) {
       `Fetch this project's iOS certificates/keys and provisioning profile. Writes files to the PROJECT_DIR and prints passwords to stdout.`
     )
     .helpGroup('credentials')
-    .asyncActionProjectDir(fetchIosCerts);
+    .asyncActionProjectDir(fetchIosCertsAsync);
 
   program
     .command('fetch:android:keystore [path]')

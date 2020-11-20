@@ -1,22 +1,19 @@
 import chalk from 'chalk';
-import fs from 'fs-extra';
-import path from 'path';
+import * as fs from 'fs-extra';
+import * as path from 'path';
 
 import { Context } from '../../credentials/context';
 import log from '../../log';
+import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
 
-async function fetchIosCerts(projectDir: string): Promise<void> {
-  const inProjectDir = (filename: string): string => path.resolve(projectDir, filename);
+async function fetchIosCertsAsync(projectRoot: string): Promise<void> {
+  const inProjectDir = (filename: string): string => path.resolve(projectRoot, filename);
+
+  const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
+
   try {
     const ctx = new Context();
-    await ctx.init(projectDir);
-
-    const bundleIdentifier = ctx.manifest?.ios?.bundleIdentifier;
-    if (!bundleIdentifier) {
-      throw new Error(
-        `Your project must have a \`bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`
-      );
-    }
+    await ctx.init(projectRoot);
 
     const app = {
       accountName: ctx.manifest.owner ?? ctx.user.username,
@@ -63,7 +60,7 @@ async function fetchIosCerts(projectDir: string): Promise<void> {
     }
     if (provisioningProfile) {
       const provisioningProfilePath = path.resolve(
-        projectDir,
+        projectRoot,
         `${app.projectName}.mobileprovision`
       );
       await fs.writeFile(provisioningProfilePath, Buffer.from(provisioningProfile, 'base64'));
@@ -86,4 +83,4 @@ Push P12 password:         ${
   log('All done!');
 }
 
-export default fetchIosCerts;
+export default fetchIosCertsAsync;
