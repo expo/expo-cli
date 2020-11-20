@@ -192,42 +192,28 @@ function replaceAll(string: string, search: string, replace: string): string {
   return string.split(search).join(replace);
 }
 
-// Extended the help renderer to add a custom format and groupings.
-Command.prototype.commandHelp = function () {
-  if (!this.commands.length) {
-    return '';
-  }
-  const width: number = this.padWidth();
-  const commands: string[][] = this.prepareCommands();
+export const helpGroupOrder = [
+  'auth',
+  'core',
+  'client',
+  'info',
+  'publish',
+  'build',
+  'credentials',
+  'eas',
+  'notifications',
+  'url',
+  'webhooks',
+  'upload',
+  'eject',
+  'experimental',
+  'internal',
+];
 
-  const helpGroups: Record<string, string[][]> = {};
-
-  // Sort commands into helpGroups
-  for (const command of commands) {
-    const groupName = command[2];
-    if (!helpGroups[groupName]) {
-      helpGroups[groupName] = [];
-    }
-    helpGroups[groupName].push(command);
-  }
-
+function sortHelpGroups(helpGroups: Record<string, string[][]>): Record<string, string[][]> {
   const groupOrder = [
     ...new Set([
-      'auth',
-      'core',
-      'client',
-      'info',
-      'publish',
-      'build',
-      'credentials',
-      'eas',
-      'notifications',
-      'url',
-      'webhooks',
-      'upload',
-      'eject',
-      'experimental',
-      'internal',
+      ...helpGroupOrder,
       // add any others and remove duplicates
       ...Object.keys(helpGroups),
     ]),
@@ -267,39 +253,66 @@ Command.prototype.commandHelp = function () {
     }
   }
 
+  return Object.keys(sortedGroups).reduce(
+    (prev, curr) => ({
+      ...prev,
+      // Sort subgroups that have a defined order
+      [curr]: sortSubGroupWithOrder(curr, helpGroups[curr]),
+    }),
+    {}
+  );
+}
+
+// Extended the help renderer to add a custom format and groupings.
+Command.prototype.commandHelp = function () {
+  if (!this.commands.length) {
+    return '';
+  }
+  const width: number = this.padWidth();
+  const commands: string[][] = this.prepareCommands();
+
+  const helpGroups: Record<string, string[][]> = {};
+
+  // Sort commands into helpGroups
+  for (const command of commands) {
+    const groupName = command[2];
+    if (!helpGroups[groupName]) {
+      helpGroups[groupName] = [];
+    }
+    helpGroups[groupName].push(command);
+  }
+
+  const sorted = sortHelpGroups(helpGroups);
+
   // Render everything.
   return [
     '' + chalk.bold('Commands:'),
     '',
     // Render all of the groups.
-    Object.keys(sortedGroups)
-      .map(groupName => {
-        // Sort subgroups that have a defined order
-        const group = sortSubGroupWithOrder(groupName, helpGroups[groupName]);
-        return (
-          group
-            // Render the command and description
-            .map(([cmd, description]: string[]) => {
-              // Dim the arguments that come after the command, this makes scanning a bit easier.
-              let [noArgsCmd, ...noArgsCmdArgs] = cmd.split(' ');
-              if (noArgsCmdArgs.length) {
-                noArgsCmd += ` ${chalk.dim(noArgsCmdArgs.join(' '))}`;
-              }
+    Object.values(sorted)
+      .map(group =>
+        group
+          // Render the command and description
+          .map(([cmd, description]: string[]) => {
+            // Dim the arguments that come after the command, this makes scanning a bit easier.
+            let [noArgsCmd, ...noArgsCmdArgs] = cmd.split(' ');
+            if (noArgsCmdArgs.length) {
+              noArgsCmd += ` ${chalk.dim(noArgsCmdArgs.join(' '))}`;
+            }
 
-              // Word wrap the description.
-              let wrappedDescription = description;
-              if (description) {
-                // Ensure the wrapped description appears on the same padded line.
-                wrappedDescription = '  ' + replaceAll(description, '\n', pad('\n', width + 3));
-              }
+            // Word wrap the description.
+            let wrappedDescription = description;
+            if (description) {
+              // Ensure the wrapped description appears on the same padded line.
+              wrappedDescription = '  ' + replaceAll(description, '\n', pad('\n', width + 3));
+            }
 
-              const paddedName = wrappedDescription ? pad(noArgsCmd, width) : noArgsCmd;
-              return paddedName + wrappedDescription;
-            })
-            .join('\n')
-            .replace(/^/gm, '    ')
-        );
-      })
+            const paddedName = wrappedDescription ? pad(noArgsCmd, width) : noArgsCmd;
+            return paddedName + wrappedDescription;
+          })
+          .join('\n')
+          .replace(/^/gm, '    ')
+      )
       // Double new line to add spacing between groups
       .join('\n\n'),
     '',
