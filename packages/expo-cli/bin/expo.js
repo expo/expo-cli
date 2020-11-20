@@ -43,9 +43,9 @@ function warnOrExitUponWrongNodeVersion() {
 async function warnUponCmdExe() {
   if (process.platform === 'win32') {
     // we're on Windows & we want to suggest using PowerShell instead of CMD
-    const psList = require('ps-list');
+
     await (async () => {
-      const usersProcesses = await psList({ all: false });
+      const usersProcesses = [];
       // find parent process name
       const shellProcess = usersProcesses.find(({ pid }) => pid === process.ppid) || {};
       if ((shellProcess.name || '').toLowerCase().includes('cmd.exe')) {
