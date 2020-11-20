@@ -40,36 +40,34 @@ describe(setSplashInfoPlist, () => {
   it(`skips warning if dark mode isn't defined`, () => {
     // @ts-ignore: jest
     WarningAggregator.addWarningIOS.mockImplementationOnce();
-    let config: ExpoConfig = {
+    const config: ExpoConfig = {
       slug: '',
       name: '',
       userInterfaceStyle: 'light',
       ios: { splash: { image: 'b' } },
     };
-    const splash = getSplashConfig(config);
-    config = setSplashInfoPlist(config, splash);
+    const infoPlist = setSplashInfoPlist(config, {});
 
     // Check if the warning was thrown
     expect(WarningAggregator.addWarningIOS).toHaveBeenCalledTimes(0);
 
     // Ensure these values are set
-    expect(config.ios.infoPlist.UIUserInterfaceStyle).not.toBeDefined();
-    expect(config.ios.infoPlist.UILaunchStoryboardName).toBe('SplashScreen');
+    expect(infoPlist.UIUserInterfaceStyle).not.toBeDefined();
+    expect(infoPlist.UILaunchStoryboardName).toBe('SplashScreen');
   });
   it(`warns about dark mode conflicts and resets the interface style`, () => {
     // @ts-ignore: jest
     WarningAggregator.addWarningIOS.mockImplementationOnce();
 
-    let config: ExpoConfig = {
+    const config: ExpoConfig = {
       slug: '',
       name: '',
       userInterfaceStyle: 'light',
 
       ios: { splash: { image: 'b', darkImage: 'v' } },
     };
-    const splash = getSplashConfig(config);
 
-    config = setSplashInfoPlist(config, splash);
+    const infoPlist = setSplashInfoPlist(config, {});
 
     // Check if the warning was thrown
     expect(WarningAggregator.addWarningIOS).toHaveBeenCalledWith(
@@ -78,8 +76,8 @@ describe(setSplashInfoPlist, () => {
     );
 
     // Ensure these values are set
-    expect(config.ios.infoPlist.UIUserInterfaceStyle).toBe('Automatic');
-    expect(config.ios.infoPlist.UILaunchStoryboardName).toBe('SplashScreen');
+    expect(infoPlist.UIUserInterfaceStyle).toBe('Automatic');
+    expect(infoPlist.UILaunchStoryboardName).toBe('SplashScreen');
   });
 });
 

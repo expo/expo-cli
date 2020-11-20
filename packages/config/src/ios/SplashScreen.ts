@@ -76,6 +76,9 @@ export interface IOSSplashConfig {
 }
 
 export const withSplashScreen: ConfigPlugin = config => {
+  // only warn once
+  warnUnsupportedSplashProperties(config);
+
   return withPlugins(config, [
     withSplashScreenInfoPlist,
     withSplashScreenAssets,
@@ -83,11 +86,9 @@ export const withSplashScreen: ConfigPlugin = config => {
   ]);
 };
 
-export const withSplashScreenInfoPlist = createInfoPlistPlugin(setSplashThing);
+const withSplashScreenInfoPlist = createInfoPlistPlugin(setSplashInfoPlist);
 
-export const withSplashStatusBarInfoPlist = createInfoPlistPlugin(setStatusBarThing);
-
-export const withSplashScreenAssets: ConfigPlugin = config => {
+const withSplashScreenAssets: ConfigPlugin = config => {
   return withDangerousMod(config, async config => {
     const splashConfig = getSplashConfig(config);
     if (!splashConfig) {
@@ -110,7 +111,7 @@ export const withSplashScreenAssets: ConfigPlugin = config => {
   });
 };
 
-export const withSplashXcodeProject: ConfigPlugin = config => {
+const withSplashXcodeProject: ConfigPlugin = config => {
   return withXcodeProject(config, async config => {
     const splashConfig = getSplashConfig(config);
     if (!splashConfig) {
@@ -125,19 +126,7 @@ export const withSplashXcodeProject: ConfigPlugin = config => {
   });
 };
 
-function setStatusBarThing(config: ExpoConfig, infoPlist: InfoPlist): InfoPlist {
-  return setStatusBarInfoPlist(
-    {
-      /** TODO */
-    },
-    infoPlist
-  );
-}
-
-function setSplashThing(config: ExpoConfig, infoPlist: InfoPlist): InfoPlist {
-  // only warn once
-  warnUnsupportedSplashProperties(config);
-
+export function setSplashInfoPlist(config: ExpoConfig, infoPlist: InfoPlist): InfoPlist {
   const splash = getSplashConfig(config);
   if (!splash) {
     return infoPlist;
@@ -212,71 +201,6 @@ export function getSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
   }
 
   return null;
-}
-
-function getUIStatusBarStyle(statusBarStyle: StatusBarStyle): string {
-  return `UIStatusBarStyle${statusBarStyle
-    .replace(/(^\w)|(-\w)/g, s => s.toUpperCase())
-    .replace(/-/g, '')}`;
-}
-
-function setStatusBarInfoPlist(
-  statusBar: Pick<StatusBarConfig, 'hidden' | 'style'> | null,
-  infoPlist: InfoPlist
-): InfoPlist {
-  if (statusBar?.hidden != null) {
-    infoPlist.UIStatusBarHidden = !!statusBar.hidden;
-  } else {
-    delete infoPlist.UIStatusBarHidden;
-  }
-
-  if (statusBar?.style) {
-    infoPlist.UIStatusBarStyle = getUIStatusBarStyle(statusBar.style);
-  } else {
-    delete infoPlist.UIStatusBarStyle;
-  }
-  return infoPlist;
-}
-
-export function setSplashInfoPlist(config: ExpoConfig, splash: IOSSplashConfig | null): ExpoConfig {
-  if (!config.ios) {
-    config.ios = {};
-  }
-  if (!config.ios.infoPlist) {
-    config.ios.infoPlist = {};
-  }
-
-  const {
-    // Remove values
-    UILaunchStoryboardName,
-    UIUserInterfaceStyle,
-    ...infoPlist
-  } = config.ios.infoPlist;
-
-  const isDarkModeEnabled = !!splash?.darkImage;
-
-  if (isDarkModeEnabled) {
-    const existing = getUserInterfaceStyle(config);
-    // Add a warning to prevent the dark mode splash screen from not being shown -- this was learned the hard way.
-    if (existing && existing !== 'automatic') {
-      addWarningIOS(
-        'splash',
-        'The existing `userInterfaceStyle` property is preventing splash screen from working properly. Please remove it or disable dark mode splash screens.'
-      );
-    }
-    // assigning it to auto anyways, but this is fragile because the order of operations matter now
-    infoPlist.UIUserInterfaceStyle = 'Automatic';
-  }
-
-  if (splash) {
-    // TODO: What to do here ??
-    infoPlist.UILaunchStoryboardName = 'SplashScreen';
-  }
-
-  // Mutate the config
-  config.ios.infoPlist = infoPlist;
-
-  return config;
 }
 
 export function warnUnsupportedSplashProperties(config: ExpoConfig) {
@@ -354,6 +278,9 @@ async function createPngFileAsync(filePath: string, color: string) {
   return png.writeAsync(filePath);
 }
 
+const PNG_PATH = `${BACKGROUND_IMAGESET_PATH}/${PNG_FILENAME}`;
+const DARK_PNG_PATH = `${BACKGROUND_IMAGESET_PATH}/${DARK_PNG_FILENAME}`;
+
 async function createBackgroundImagesAsync({
   projectPath,
   color,
@@ -363,9 +290,6 @@ async function createBackgroundImagesAsync({
   color: string;
   darkColor: string | null;
 }) {
-  const PNG_PATH = `${BACKGROUND_IMAGESET_PATH}/${PNG_FILENAME}`;
-  const DARK_PNG_PATH = `${BACKGROUND_IMAGESET_PATH}/${DARK_PNG_FILENAME}`;
-
   await createPngFileAsync(path.resolve(projectPath, PNG_PATH), color);
   if (darkColor) {
     await createPngFileAsync(path.resolve(projectPath, DARK_PNG_PATH), darkColor);
