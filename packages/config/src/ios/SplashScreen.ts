@@ -3,10 +3,12 @@ import Jimp from 'jimp';
 import * as path from 'path';
 import { UUID, XcodeProject } from 'xcode';
 
+import { InfoPlist } from '.';
 import { ExpoConfig } from '../Config.types';
 import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
-import { withDangerousMod } from '../plugins/ios-plugins';
+import { withPlugins } from '../plugins/core-plugins';
+import { createInfoPlistPlugin, withDangerousMod, withXcodeProject } from '../plugins/ios-plugins';
 import {
   ContentsJsonImage,
   ContentsJsonImageAppearance,
@@ -16,14 +18,7 @@ import {
 } from './AssetContents';
 import * as Paths from './Paths';
 import { getUserInterfaceStyle } from './UserInterfaceStyle';
-import { getApplicationNativeTarget, getPbxproj } from './utils/Xcodeproj';
-
-export const withSplashScreen: ConfigPlugin = config => {
-  return withDangerousMod(config, async config => {
-    await setSplashScreenAsync(config, config.modRequest.projectRoot);
-    return config;
-  });
-};
+import { getApplicationNativeTarget } from './utils/Xcodeproj';
 
 const STORYBOARD_FILE_PATH = './SplashScreen.storyboard';
 const IMAGESET_PATH = 'Images.xcassets/SplashScreen.imageset';
@@ -79,6 +74,101 @@ export interface IOSSplashConfig {
   darkBackgroundColor: string;
 }
 
+export const withSplashScreen: ConfigPlugin = config => {
+  return withPlugins(config, [
+    withSplashScreenInfoPlist,
+    withSplashScreenAssets,
+    withSplashXcodeProject,
+  ]);
+};
+
+export const withSplashScreenInfoPlist = createInfoPlistPlugin(setSplashThing);
+
+export const withSplashStatusBarInfoPlist = createInfoPlistPlugin(setStatusBarThing);
+
+export const withSplashScreenAssets: ConfigPlugin = config => {
+  return withDangerousMod(config, async config => {
+    const splashConfig = getSplashConfig(config);
+    if (!splashConfig) {
+      return config;
+    }
+    const projectPath = Paths.getSourceRoot(config.modRequest.projectRoot);
+
+    await createSplashScreenBackgroundImageAsync({
+      iosNamedProjectRoot: projectPath,
+      splash: splashConfig,
+    });
+
+    await configureImageAssets({
+      projectPath,
+      image: splashConfig.image,
+      darkImage: splashConfig.darkImage,
+    });
+
+    return config;
+  });
+};
+
+export const withSplashXcodeProject: ConfigPlugin = config => {
+  return withXcodeProject(config, async config => {
+    const splashConfig = getSplashConfig(config);
+    if (!splashConfig) {
+      return config;
+    }
+    const projectPath = Paths.getSourceRoot(config.modRequest.projectRoot);
+    config.modResults = await setSplashStoryboardAsync(
+      { projectPath, projectName: config.modRequest.projectName!, project: config.modResults },
+      splashConfig
+    );
+    return config;
+  });
+};
+
+function setStatusBarThing(config: ExpoConfig, infoPlist: InfoPlist): InfoPlist {
+  return setStatusBarInfoPlist(
+    {
+      /** TODO */
+    },
+    infoPlist
+  );
+}
+
+function setSplashThing(config: ExpoConfig, infoPlist: InfoPlist): InfoPlist {
+  // only warn once
+  warnUnsupportedSplashProperties(config);
+
+  const splash = getSplashConfig(config);
+  if (!splash) {
+    return infoPlist;
+  }
+
+  const isDarkModeEnabled = !!splash?.darkImage;
+
+  if (isDarkModeEnabled) {
+    const existing = getUserInterfaceStyle(config);
+    // Add a warning to prevent the dark mode splash screen from not being shown -- this was learned the hard way.
+    if (existing && existing !== 'automatic') {
+      addWarningIOS(
+        'splash',
+        'The existing `userInterfaceStyle` property is preventing splash screen from working properly. Please remove it or disable dark mode splash screens.'
+      );
+    }
+    // assigning it to auto anyways, but this is fragile because the order of operations matter now
+    infoPlist.UIUserInterfaceStyle = 'Automatic';
+  } else {
+    delete infoPlist.UIUserInterfaceStyle;
+  }
+
+  if (splash) {
+    // TODO: What to do here ??
+    infoPlist.UILaunchStoryboardName = 'SplashScreen';
+  } else {
+    delete infoPlist.UILaunchStoryboardName;
+  }
+
+  return infoPlist;
+}
+
 // TODO: Maybe use an array on splash with theme value. Then remove the array in serialization for legacy and manifest.
 export function getSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
   // Respect the splash screen object, don't mix and match across different splash screen objects
@@ -130,35 +220,21 @@ function getUIStatusBarStyle(statusBarStyle: StatusBarStyle): string {
 }
 
 function setStatusBarInfoPlist(
-  config: ExpoConfig,
-  statusBar: Pick<StatusBarConfig, 'hidden' | 'style'> | null
-): ExpoConfig {
-  if (!config.ios) {
-    config.ios = {};
-  }
-  if (!config.ios.infoPlist) {
-    config.ios.infoPlist = {};
-  }
-
-  const {
-    // Remove values
-    UIStatusBarHidden,
-    UIStatusBarStyle,
-    ...infoPlist
-  } = config.ios.infoPlist;
-
+  statusBar: Pick<StatusBarConfig, 'hidden' | 'style'> | null,
+  infoPlist: InfoPlist
+): InfoPlist {
   if (statusBar?.hidden != null) {
     infoPlist.UIStatusBarHidden = !!statusBar.hidden;
+  } else {
+    delete infoPlist.UIStatusBarHidden;
   }
 
   if (statusBar?.style) {
     infoPlist.UIStatusBarStyle = getUIStatusBarStyle(statusBar.style);
+  } else {
+    delete infoPlist.UIStatusBarStyle;
   }
-
-  // Mutate the config
-  config.ios.infoPlist = infoPlist;
-
-  return config;
+  return infoPlist;
 }
 
 export function setSplashInfoPlist(config: ExpoConfig, splash: IOSSplashConfig | null): ExpoConfig {
@@ -220,36 +296,6 @@ export function warnUnsupportedSplashProperties(config: ExpoConfig) {
       'splash',
       'ios.splash.userInterfaceStyle is not supported in bare workflow. Please use ios.splash.darkImage (TODO) instead.'
     );
-  }
-}
-
-export async function setSplashScreenAsync(config: ExpoConfig, projectRoot: string) {
-  const splashConfig = getSplashConfig(config);
-
-  config = await setSplashInfoPlist(config, splashConfig);
-  // config = await setStatusBarInfoPlist(config, splashConfig);
-
-  if (!splashConfig) {
-    return;
-  }
-
-  warnUnsupportedSplashProperties(config);
-
-  const { projectName, projectPath } = Paths.getPaths(projectRoot);
-  const project = getPbxproj(projectRoot);
-  try {
-    await createSplashScreenBackgroundImageAsync({
-      iosNamedProjectRoot: projectPath,
-      splash: splashConfig,
-    });
-    await configureImageAssets({
-      projectPath,
-      image: splashConfig.image,
-      darkImage: splashConfig.darkImage,
-    });
-    await setSplashStoryboardAsync({ projectPath, projectName, project }, splashConfig);
-  } catch (e) {
-    addWarningIOS('splash', e);
   }
 }
 
@@ -493,7 +539,7 @@ export async function setSplashStoryboardAsync(
     project,
   }: { projectPath: string; projectName: string; project: XcodeProject },
   config: Pick<IOSSplashConfig, 'image' | 'resizeMode'>
-) {
+): Promise<XcodeProject> {
   const resizeMode = config.resizeMode;
   const splashScreenImagePresent = Boolean(config.image);
 
@@ -621,4 +667,5 @@ export async function setSplashStoryboardAsync(
   );
 
   await updatePbxProject({ projectName, project });
+  return project;
 }

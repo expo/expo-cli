@@ -12,6 +12,9 @@ export type InterfaceOrientation =
 export type InterfaceStyle = 'Light' | 'Dark' | 'Automatic';
 
 export type InfoPlist = {
+  UIStatusBarHidden?: boolean;
+  UIStatusBarStyle?: string;
+  UILaunchStoryboardName?: string | 'SplashScreen';
   CFBundleShortVersionString?: string;
   CFBundleVersion?: string;
   CFBundleDisplayName?: string;

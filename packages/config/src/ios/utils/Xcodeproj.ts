@@ -29,6 +29,26 @@ export function getProjectName(projectRoot: string) {
   return path.basename(sourceRoot);
 }
 
+export function getApplicationNativeTarget({
+  project,
+  projectName,
+}: {
+  project: XcodeProject;
+  projectName: string;
+}) {
+  const applicationNativeTarget = project.getTarget('com.apple.product-type.application');
+  if (!applicationNativeTarget) {
+    throw new Error(`Couldn't locate application PBXNativeTarget in '.xcodeproj' file.`);
+  }
+
+  if (String(applicationNativeTarget.target.name) !== projectName) {
+    throw new Error(
+      `Application native target name mismatch. Expected ${projectName}, but found ${applicationNativeTarget.target.name}.`
+    );
+  }
+  return applicationNativeTarget;
+}
+
 // TODO(brentvatne): I couldn't figure out how to do this with an existing
 // higher level function exposed by the xcode library, but we should find out how to do
 // that and replace this with it
