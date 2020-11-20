@@ -18,7 +18,7 @@ import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/I
 import { SetupIosDist } from '../../credentials/views/SetupIosDist';
 import { SetupIosPush } from '../../credentials/views/SetupIosPush';
 import log from '../../log';
-import prompt, { confirmAsync, promptEmailAsync } from '../../prompts';
+import { confirmAsync, promptEmailAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
