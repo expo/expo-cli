@@ -4,18 +4,8 @@ import * as path from 'path';
 
 import { UnexpectedError } from '../Errors';
 import { addWarningIOS } from '../WarningAggregator';
-import { getProjectName } from './utils/Xcodeproj';
 
 const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
-
-export function getPaths(projectRoot: string): { projectName: string; projectPath: string } {
-  const projectName = getProjectName(projectRoot);
-  const projectPath = path.join(projectRoot, 'ios', projectName);
-  return {
-    projectName,
-    projectPath,
-  };
-}
 
 export function getAppDelegate(projectRoot: string): { path: string; language: 'objc' | 'swift' } {
   const [using, ...extra] = globSync('ios/*/AppDelegate.{m,swift}', {
