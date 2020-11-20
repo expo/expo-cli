@@ -1,10 +1,11 @@
 import fs from 'fs-extra';
 import Jimp from 'jimp';
 import * as path from 'path';
-import { UUID, XcodeProject } from 'xcode';
+import { XcodeProject } from 'xcode';
 
 import { InfoPlist } from '.';
 import { ExpoConfig } from '../Config.types';
+import { assert } from '../Errors';
 import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { withPlugins } from '../plugins/core-plugins';
@@ -18,7 +19,7 @@ import {
 } from './AssetContents';
 import * as Paths from './Paths';
 import { getUserInterfaceStyle } from './UserInterfaceStyle';
-import { getApplicationNativeTarget } from './utils/Xcodeproj';
+import { addStoryboardFileToProject, getApplicationNativeTarget } from './utils/Xcodeproj';
 
 const STORYBOARD_FILE_PATH = './SplashScreen.storyboard';
 const IMAGESET_PATH = 'Images.xcassets/SplashScreen.imageset';
@@ -473,35 +474,6 @@ async function writeContentsJsonFileAsync({
 }
 
 /**
- * @param filePath
- * @param param1.target PBXNativeTarget reference
- * @param param1.group PBXGroup reference
- */
-export function addStoryboardFileToProject(
-  pbxProject: XcodeProject,
-  filePath: string,
-  { target, group }: { target: UUID; group: UUID }
-) {
-  const file = pbxProject.addFile(filePath, undefined, {
-    lastKnownFileType: 'file.storyboard',
-    defaultEncoding: 4,
-    target,
-  });
-  if (!file) {
-    throw new Error('File already exists in the project');
-  }
-  delete pbxProject.pbxFileReferenceSection()[file.fileRef].explicitFileType;
-  delete pbxProject.pbxFileReferenceSection()[file.fileRef].includeInIndex;
-
-  file.uuid = pbxProject.generateUuid();
-  file.target = target;
-
-  pbxProject.addToPbxBuildFileSection(file);
-  pbxProject.addToPbxResourcesBuildPhase(file);
-  pbxProject.addToPbxGroup(file, group);
-}
-
-/**
  * Modifies `.pbxproj` by:
  * - adding reference for `.storyboard` file
  */
@@ -518,9 +490,7 @@ function updatePbxProject({
   const storyboardFilePath = path.join(projectName, STORYBOARD_FILE_PATH);
   if (!project.hasFile(storyboardFilePath)) {
     const group = project.findPBXGroupKey({ name: projectName });
-    if (!group) {
-      throw new Error(`Couldn't locate proper PBXGroup '.xcodeproj' file.`);
-    }
+    assert(group, `Couldn't locate proper PBXGroup (${projectName}) '.xcodeproj' file.`);
     addStoryboardFileToProject(project, storyboardFilePath, {
       target: applicationNativeTarget.uuid,
       group,

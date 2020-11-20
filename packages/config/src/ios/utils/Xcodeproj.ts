@@ -49,6 +49,35 @@ export function getApplicationNativeTarget({
   return applicationNativeTarget;
 }
 
+/**
+ * @param filePath
+ * @param param1.target PBXNativeTarget reference
+ * @param param1.group PBXGroup reference
+ */
+export function addStoryboardFileToProject(
+  pbxProject: XcodeProject,
+  filePath: string,
+  { target, group }: { target: UUID; group: UUID }
+) {
+  const file = pbxProject.addFile(filePath, undefined, {
+    lastKnownFileType: 'file.storyboard',
+    defaultEncoding: 4,
+    target,
+  });
+  if (!file) {
+    throw new Error('File already exists in the project');
+  }
+  delete pbxProject.pbxFileReferenceSection()[file.fileRef].explicitFileType;
+  delete pbxProject.pbxFileReferenceSection()[file.fileRef].includeInIndex;
+
+  file.uuid = pbxProject.generateUuid();
+  file.target = target;
+
+  pbxProject.addToPbxBuildFileSection(file);
+  pbxProject.addToPbxResourcesBuildPhase(file);
+  pbxProject.addToPbxGroup(file, group);
+}
+
 // TODO(brentvatne): I couldn't figure out how to do this with an existing
 // higher level function exposed by the xcode library, but we should find out how to do
 // that and replace this with it
