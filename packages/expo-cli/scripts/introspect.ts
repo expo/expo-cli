@@ -4,7 +4,6 @@ import '../build/exp.js';
 import program, { Command, Option } from 'commander';
 
 import { registerCommands } from '../build/commands/index.js';
-import log from '../src/log.js';
 
 // import side-effects
 type OptionData = {
@@ -93,9 +92,12 @@ function formatCommandsAsMarkdown(commands: CommandData[]) {
 
 const commands = generateCommandJSON();
 
-log('');
+// eslint-disable-next-line no-console
+console.log('');
 if (['markdown', 'md'].includes(process.argv[2])) {
-  log(formatCommandsAsMarkdown(commands));
+  // eslint-disable-next-line no-console
+  console.log(formatCommandsAsMarkdown(commands));
 } else {
-  log(JSON.stringify(commands));
+  // eslint-disable-next-line no-console
+  console.log(JSON.stringify(commands));
 }
