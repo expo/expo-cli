@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
+import CommandError from '../../CommandError';
 import { Context } from '../../credentials/context';
 import log from '../../log';
 import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
@@ -77,7 +78,9 @@ Push P12 password:         ${
     }
 `);
   } catch (e) {
-    throw new Error('Unable to fetch credentials for this project. Are you sure they exist?');
+    throw new CommandError(
+      'Unable to fetch credentials for this project. Are you sure they exist?'
+    );
   }
 
   log('All done!');
