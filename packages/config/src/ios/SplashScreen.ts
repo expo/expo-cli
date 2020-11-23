@@ -32,6 +32,7 @@ type ExpoConfigIosSplash = NonNullable<NonNullable<ExpoConfig['ios']>['splash']>
 const defaultResizeMode = 'contain';
 const defaultBackgroundColor = '#ffffff';
 const defaultUserInterfaceStyle = 'automatic';
+
 export interface IOSSplashConfig {
   image: string;
   // tabletImage: string | null;
@@ -201,14 +202,11 @@ async function copyImageFiles({
   image: string;
   darkImage: string | null;
 }) {
-  const PNG_PATH = `${IMAGESET_PATH}/${PNG_FILENAME}`;
-  const DARK_PNG_PATH = `${IMAGESET_PATH}/${DARK_PNG_FILENAME}`;
-
   if (image) {
-    await fs.copyFile(image, path.resolve(projectPath, PNG_PATH));
+    await fs.copyFile(image, path.resolve(projectPath, IMAGESET_PATH, PNG_FILENAME));
   }
   if (darkImage) {
-    await fs.copyFile(darkImage, path.resolve(projectPath, DARK_PNG_PATH));
+    await fs.copyFile(darkImage, path.resolve(projectPath, IMAGESET_PATH, DARK_PNG_FILENAME));
   }
 }
 
@@ -246,9 +244,6 @@ async function createPngFileAsync(filePath: string, color: string) {
   return png.writeAsync(filePath);
 }
 
-const PNG_PATH = `${BACKGROUND_IMAGESET_PATH}/${PNG_FILENAME}`;
-const DARK_PNG_PATH = `${BACKGROUND_IMAGESET_PATH}/${DARK_PNG_FILENAME}`;
-
 async function createBackgroundImagesAsync({
   projectPath,
   color,
@@ -258,9 +253,15 @@ async function createBackgroundImagesAsync({
   color: string;
   darkColor: string | null;
 }) {
-  await createPngFileAsync(path.resolve(projectPath, PNG_PATH), color);
+  await createPngFileAsync(
+    path.resolve(projectPath, BACKGROUND_IMAGESET_PATH, PNG_FILENAME),
+    color
+  );
   if (darkColor) {
-    await createPngFileAsync(path.resolve(projectPath, DARK_PNG_PATH), darkColor);
+    await createPngFileAsync(
+      path.resolve(projectPath, BACKGROUND_IMAGESET_PATH, DARK_PNG_FILENAME),
+      darkColor
+    );
   }
 }
 
