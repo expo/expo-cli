@@ -19,6 +19,7 @@ SCRIPTS = [
   'manage_dist_certs',
   'manage_provisioning_profiles',
   'manage_push_keys',
+  'new_manage_provisioning_profiles',
   'pilot_upload',
   'preload',
   'resolve_itc_team_id',
