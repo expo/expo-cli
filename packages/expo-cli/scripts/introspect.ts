@@ -74,7 +74,7 @@ function formatCommandAsMarkdown(command: CommandData): string {
   return [
     `<details>`,
     `<summary>`,
-    `<h3>expo ${command.name}</h3>`,
+    `<h4>expo ${command.name}</h4>`,
     `<p>${command.description}</p>`,
     `</summary>`,
     `<p>`,
@@ -131,7 +131,7 @@ function formatCommandsAsMarkdown(commands: CommandData[]) {
 
       const md = commands.map(formatCommandAsMarkdown).join('\n');
       const header = capitalize(groupName);
-      return `### ${header}\n\n${md}`;
+      return `---\n\n### ${header}\n\n${md}`;
     })
     .join('\n');
 }
