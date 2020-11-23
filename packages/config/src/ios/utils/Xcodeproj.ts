@@ -42,7 +42,7 @@ export function addFileToGroup(
   file.fileRef = project.generateUuid();
   project.addToPbxFileReferenceSection(file);
   project.addToPbxBuildFileSection(file);
-  project.addToPbxSourcesBuildPhase(file);
+  project.addToPbxResourcesBuildPhase(file);
   const group = pbxGroupByPath(project, groupName);
   if (!group) {
     throw Error(`Group by name ${groupName} not found!`);
