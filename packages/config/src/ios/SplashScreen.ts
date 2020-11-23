@@ -3,13 +3,12 @@ import Jimp from 'jimp';
 import * as path from 'path';
 import { XcodeProject } from 'xcode';
 
-import { InfoPlist } from '.';
 import { ExpoConfig } from '../Config.types';
 import { assert } from '../Errors';
 import { ConfigPlugin } from '../Plugin.types';
 import { addWarningIOS } from '../WarningAggregator';
 import { withPlugins } from '../plugins/core-plugins';
-import { createInfoPlistPlugin, withDangerousMod, withXcodeProject } from '../plugins/ios-plugins';
+import { withDangerousMod, withInfoPlist, withXcodeProject } from '../plugins/ios-plugins';
 import {
   ContentsJsonImage,
   ContentsJsonImageAppearance,
@@ -17,6 +16,7 @@ import {
   ContentsJsonImageScale,
   writeContentsJsonAsync,
 } from './AssetContents';
+import { InfoPlist } from './IosConfig.types';
 import * as Paths from './Paths';
 import { getUserInterfaceStyle } from './UserInterfaceStyle';
 import { addStoryboardFileToProject, getApplicationNativeTarget } from './utils/Xcodeproj';
@@ -44,59 +44,73 @@ export interface IOSSplashConfig {
   darkBackgroundColor: string;
 }
 
+interface SplashImage {
+  image: string;
+  resizeMode: IOSSplashConfig['resizeMode'];
+  backgroundColor: string;
+}
+
 export const withSplashScreen: ConfigPlugin = config => {
   // only warn once
   warnUnsupportedSplashProperties(config);
 
+  const splashConfig = getSplashConfig(config);
+
   return withPlugins(config, [
-    withSplashScreenInfoPlist,
-    withSplashScreenAssets,
-    withSplashXcodeProject,
+    [withSplashScreenInfoPlist, splashConfig],
+    [withSplashScreenAssets, splashConfig],
+    [withSplashXcodeProject, splashConfig],
   ]);
 };
 
-const withSplashScreenInfoPlist = createInfoPlistPlugin(setSplashInfoPlist);
+const withSplashScreenInfoPlist: ConfigPlugin<IOSSplashConfig> = (config, splash) => {
+  return withInfoPlist(config, async config => {
+    config.modResults = await setSplashInfoPlist(config, config.modResults, splash);
+    return config;
+  });
+};
 
-const withSplashScreenAssets: ConfigPlugin = config => {
+const withSplashScreenAssets: ConfigPlugin<IOSSplashConfig> = (config, splash) => {
   return withDangerousMod(config, async config => {
-    const splashConfig = getSplashConfig(config);
-    if (!splashConfig) {
+    if (!splash) {
       return config;
     }
     const projectPath = Paths.getSourceRoot(config.modRequest.projectRoot);
 
     await createSplashScreenBackgroundImageAsync({
       iosNamedProjectRoot: projectPath,
-      splash: splashConfig,
+      splash,
     });
 
     await configureImageAssets({
       projectPath,
-      image: splashConfig.image,
-      darkImage: splashConfig.darkImage,
+      image: splash.image,
+      darkImage: splash.darkImage,
     });
 
     return config;
   });
 };
 
-const withSplashXcodeProject: ConfigPlugin = config => {
+const withSplashXcodeProject: ConfigPlugin<IOSSplashConfig> = (config, splash) => {
   return withXcodeProject(config, async config => {
-    const splashConfig = getSplashConfig(config);
-    if (!splashConfig) {
+    if (!splash) {
       return config;
     }
     const projectPath = Paths.getSourceRoot(config.modRequest.projectRoot);
     config.modResults = await setSplashStoryboardAsync(
       { projectPath, projectName: config.modRequest.projectName!, project: config.modResults },
-      splashConfig
+      splash
     );
     return config;
   });
 };
 
-export function setSplashInfoPlist(config: ExpoConfig, infoPlist: InfoPlist): InfoPlist {
-  const splash = getSplashConfig(config);
+export function setSplashInfoPlist(
+  config: ExpoConfig,
+  infoPlist: InfoPlist,
+  splash: IOSSplashConfig
+): InfoPlist {
   if (!splash) {
     return infoPlist;
   }

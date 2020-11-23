@@ -46,7 +46,10 @@ describe(setSplashInfoPlist, () => {
       userInterfaceStyle: 'light',
       ios: { splash: { image: 'b' } },
     };
-    const infoPlist = setSplashInfoPlist(config, {});
+    const infoPlist = setSplashInfoPlist(config, {}, {
+      userInterfaceStyle: 'light',
+      image: 'b',
+    } as any);
 
     // Check if the warning was thrown
     expect(WarningAggregator.addWarningIOS).toHaveBeenCalledTimes(0);
@@ -67,7 +70,11 @@ describe(setSplashInfoPlist, () => {
       ios: { splash: { image: 'b', darkImage: 'v' } },
     };
 
-    const infoPlist = setSplashInfoPlist(config, {});
+    const infoPlist = setSplashInfoPlist(config, {}, {
+      userInterfaceStyle: 'light',
+      image: 'b',
+      darkImage: 'v',
+    } as any);
 
     // Check if the warning was thrown
     expect(WarningAggregator.addWarningIOS).toHaveBeenCalledWith(
