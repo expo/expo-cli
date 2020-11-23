@@ -1,9 +1,8 @@
-import { ExpoConfig, getConfig } from '@expo/config';
+import { getConfig } from '@expo/config';
 import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
-import log from '../log';
 import { confirmAsync } from '../prompts';
 import * as Eject from './eject/Eject';
 import * as LegacyEject from './eject/LegacyEject';
@@ -17,19 +16,11 @@ async function userWantsToEjectWithoutUpgradingAsync() {
   return answer;
 }
 
-async function action(
+export async function actionAsync(
   projectDir: string,
   options: (LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions) & { npm?: boolean }
 ) {
-  let exp: ExpoConfig;
-  try {
-    exp = getConfig(projectDir).exp;
-  } catch (error) {
-    log();
-    log(chalk.red(error.message));
-    log();
-    process.exit(1);
-  }
+  const { exp } = getConfig(projectDir);
 
   if (options.npm) {
     options.packageManager = 'npm';
@@ -61,5 +52,5 @@ export default function (program: Command) {
     .option('--force', 'Skip legacy eject warnings.') // TODO: remove the force flag when SDK 36 is no longer supported: after SDK 40 is released.
     .option('--no-install', 'Skip installing npm packages and CocoaPods.')
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
-    .asyncActionProjectDir(action);
+    .asyncActionProjectDir(actionAsync);
 }

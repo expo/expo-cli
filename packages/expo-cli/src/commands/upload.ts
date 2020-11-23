@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import pick from 'lodash/pick';
 
+import CommandError from '../CommandError';
 import log from '../log';
 import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
 import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
@@ -110,7 +111,9 @@ export default function (program: Command) {
     .asyncActionProjectDir(async (projectDir: string, options: IosPlatformOptions) => {
       try {
         // TODO: remove this once we remove fastlane
-        checkRuntimePlatform('ios');
+        if (process.platform !== 'darwin') {
+          throw new CommandError('Currently, iOS uploads are only supported on macOS, sorry :(');
+        }
 
         const args = pick(options, SOURCE_OPTIONS);
         if (Object.keys(args).length > 1) {
@@ -132,20 +135,4 @@ export default function (program: Command) {
         throw err;
       }
     });
-}
-
-function checkRuntimePlatform(targetPlatform: 'android' | 'ios'): void {
-  if (process.platform !== 'darwin') {
-    if (targetPlatform === 'android') {
-      log.error('Local Android uploads are only supported on macOS.');
-      log(
-        chalk.bold(
-          'Try the --use-submission-service flag to upload your app from Expo servers. This feature is behind a flag because it is experimental.'
-        )
-      );
-    } else {
-      log.error('Currently, iOS uploads are only supported on macOS, sorry :(');
-    }
-    process.exit(1);
-  }
 }

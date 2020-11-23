@@ -18,6 +18,7 @@ import semver from 'semver';
 import temporary from 'tempy';
 import terminalLink from 'terminal-link';
 
+import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
@@ -49,7 +50,10 @@ export type EjectAsyncOptions = {
  * 5. Install CocoaPods
  * 6. Log project info
  */
-export async function ejectAsync(projectRoot: string, options?: EjectAsyncOptions): Promise<void> {
+export async function ejectAsync(
+  projectRoot: string,
+  options: EjectAsyncOptions = {}
+): Promise<void> {
   if (await maybeBailOnGitStatusAsync()) return;
 
   const platforms: PlatformsArray = ['android'];
@@ -71,13 +75,13 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
     log.newLine();
   }
 
-  const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync(
+  const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync({
     projectRoot,
     exp,
     pkg,
     tempDir,
-    platforms
-  );
+    platforms,
+  });
   // Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
   // This will be used to prevent the node modules from being nuked every time.
   const isSyncing = !hasNewProjectFiles;
@@ -230,15 +234,12 @@ async function installNodeDependenciesAsync(
     await CreateApp.installNodeDependenciesAsync(projectRoot, packageManager);
     installJsDepsStep.succeed('Installed JavaScript dependencies.');
   } catch {
-    installJsDepsStep.fail(
-      chalk.red(
-        `Something went wrong installing JavaScript dependencies, check your ${packageManager} logfile or run ${chalk.bold(
-          `${packageManager} install`
-        )} again manually.`
-      )
-    );
+    const message = `Something went wrong installing JavaScript dependencies, check your ${packageManager} logfile or run ${chalk.bold(
+      `${packageManager} install`
+    )} again manually.`;
+    installJsDepsStep.fail(chalk.red(message));
     // TODO: actually show the error message from the package manager! :O
-    process.exit(1);
+    throw new SilentError(message);
   }
 }
 
@@ -301,10 +302,8 @@ async function ensureConfigAsync(
     }
   } catch (error) {
     // TODO(Bacon): Currently this is already handled in the command
-    log();
-    log(chalk.red(error.message));
-    log();
-    process.exit(1);
+    log.addNewLineIfNone();
+    throw new CommandError(`${error.message}\n`);
   }
 
   // Prompt for the Android package first because it's more strict than the bundle identifier
@@ -563,6 +562,7 @@ export function getTargetPaths(
 /**
  * Extract the template and copy the ios and android directories over to the project directory.
  *
+ * @param force should create native projects even if they already exist.
  * @return `true` if any project files were created.
  */
 async function cloneNativeDirectoriesAsync({
@@ -612,7 +612,7 @@ async function cloneNativeDirectoriesAsync({
     }
     creatingNativeProjectStep.succeed(message);
   } catch (e) {
-    log(chalk.red(e.message));
+    log.error(e.message);
     creatingNativeProjectStep.fail(
       'Failed to create the native project - see the output above for more information.'
     );
@@ -621,7 +621,7 @@ async function cloneNativeDirectoriesAsync({
         'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
       )
     );
-    process.exit(1);
+    throw new SilentError(e);
   }
 
   return copiedPaths;
@@ -634,13 +634,19 @@ async function cloneNativeDirectoriesAsync({
  *
  * @return `true` if the project is ejecting, and `false` if it's syncing.
  */
-async function createNativeProjectsFromTemplateAsync(
-  projectRoot: string,
-  exp: ExpoConfig,
-  pkg: PackageJSONConfig,
-  tempDir: string,
-  platforms: PlatformsArray
-): Promise<
+async function createNativeProjectsFromTemplateAsync({
+  projectRoot,
+  exp,
+  pkg,
+  tempDir,
+  platforms,
+}: {
+  projectRoot: string;
+  exp: ExpoConfig;
+  pkg: PackageJSONConfig;
+  tempDir: string;
+  platforms: PlatformsArray;
+}): Promise<
   { hasNewProjectFiles: boolean; needsPodInstall: boolean } & DependenciesModificationResults
 > {
   const copiedPaths = await cloneNativeDirectoriesAsync({

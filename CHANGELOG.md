@@ -6,7 +6,11 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [cli] Removed `generate-module` command ([#2903](https://github.com/expo/expo-cli/pull/2903))
+
 ### 🎉 New features
+
+- [xdl] Switch to in-process Metro JS bundling through `@expo/dev-server` starting from SDK 40 ([#2921](https://github.com/expo/expo-cli/pull/2921))
 
 ### 🐛 Bug fixes
 

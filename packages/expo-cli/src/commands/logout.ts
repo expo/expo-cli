@@ -1,6 +1,7 @@
 import { UserManager } from '@expo/xdl';
 import { Command } from 'commander';
 
+import CommandError from '../CommandError';
 import log from '../log';
 
 async function action() {
@@ -8,7 +9,7 @@ async function action() {
     await UserManager.logoutAsync();
     log('Logged out');
   } catch (e) {
-    throw new Error("Unexpected Error: Couldn't logout");
+    throw new CommandError(`Couldn't logout: ${e.message}`);
   }
 }
 

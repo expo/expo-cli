@@ -1,14 +1,13 @@
 import { getDefaultTarget } from '@expo/config';
 import { Command } from 'commander';
-// @ts-ignore
 import envinfo from 'envinfo';
 
 import log from '../log';
 
 const packageJSON = require('../../package.json');
 
-async function action(projectRoot: string): Promise<void> {
-  const info = await envinfo.run(
+function getEnvironmentInfoAsync(): Promise<string> {
+  return envinfo.run(
     {
       System: ['OS', 'Shell'],
       Binaries: ['Node', 'Yarn', 'npm', 'Watchman'],
@@ -31,7 +30,10 @@ async function action(projectRoot: string): Promise<void> {
       title: `Expo CLI ${packageJSON.version} environment info`,
     }
   );
+}
 
+async function actionAsync(projectRoot: string): Promise<void> {
+  const info = await getEnvironmentInfoAsync();
   const workflow = getDefaultTarget(projectRoot ?? process.cwd());
   const lines = info.split('\n');
   lines.pop();
@@ -44,5 +46,5 @@ export default function (program: Command) {
     .command('diagnostics [path]')
     .description('Log environment info to the console')
     .helpGroup('info')
-    .asyncAction(action);
+    .asyncAction(actionAsync);
 }
