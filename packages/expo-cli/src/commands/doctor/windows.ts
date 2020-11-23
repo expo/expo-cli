@@ -1,4 +1,9 @@
 import { yellow } from 'chalk';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
+
+// I deliberately use `execFile` instead of `spawn`, because I expect the output of known format always.
+const execFileAsync = promisify(execFile);
 
 /**
  * Windows only. On any other platform (including WSL on Windows) it's no-op.
@@ -10,14 +15,7 @@ export async function warnUponCmdExe() {
     return;
   }
 
-  const { execFile } = require('child_process');
-  const { promisify } = require('util');
-
-  // I deliberately use `execFile` instead of `spawn`, because I expect the output of known format always.
-  const execFileAsync = promisify(execFile);
-
   // we're on Windows & we want to suggest using PowerShell instead of CMD
-
   await (async () => {
     // https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/tasklist
     const { stdout, stderr } = await execFileAsync(
@@ -33,7 +31,6 @@ export async function warnUponCmdExe() {
     }
 
     const [parentProcessName] = stdout.match(/(?<=^").*?(?=",)/) || [''];
-
     if (parentProcessName.toLowerCase().includes('cmd.exe')) {
       // eslint-disable-next-line no-console
       console.warn(
