@@ -62,7 +62,7 @@
     "pnp-webpack-plugin": "^1.5.0",
     "postcss-safe-parser": "^4.0.2",
     "progress": "^2.0.3",
-    "react-dev-utils": "10.2.1",
+    "react-dev-utils": "~11.0.1",
     "react-refresh": "^0.8.2",
     "style-loader": "~1.2.1",
     "terser-webpack-plugin": "^3.0.6",

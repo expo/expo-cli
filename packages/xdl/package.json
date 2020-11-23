@@ -84,7 +84,7 @@
     "progress": "2.0.3",
     "prompts": "^2.3.2",
     "raven": "2.6.3",
-    "react-dev-utils": "~10.2.1",
+    "react-dev-utils": "~11.0.1",
     "read-last-lines": "1.6.0",
     "replace-string": "1.1.0",
     "semver": "5.5.0",
