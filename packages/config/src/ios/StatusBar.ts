@@ -1,6 +1,5 @@
 import { InfoPlist } from '.';
 import { ExpoConfig } from '../Config.types';
-import { addWarningIOS } from '../WarningAggregator';
 import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 
 type StatusBarStyle = 'auto' | 'light' | 'dark'; // | 'inverted'
@@ -70,25 +69,4 @@ function setStatusBarInfoPlist(
     delete infoPlist.UIStatusBarStyle;
   }
   return infoPlist;
-}
-
-export function warnUnsupportedSplashProperties(config: ExpoConfig) {
-  if (config.ios?.splash?.xib) {
-    addWarningIOS(
-      'splash',
-      'ios.splash.xib is not supported in bare workflow. Please use ios.splash.image instead.'
-    );
-  }
-  if (config.ios?.splash?.tabletImage) {
-    addWarningIOS(
-      'splash',
-      'ios.splash.tabletImage is not supported in bare workflow. Please use ios.splash.image instead.'
-    );
-  }
-  if (config.ios?.splash?.userInterfaceStyle) {
-    addWarningIOS(
-      'splash',
-      'ios.splash.userInterfaceStyle is not supported in bare workflow. Please use ios.splash.darkImage (TODO) instead.'
-    );
-  }
 }
