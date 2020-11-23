@@ -22,7 +22,7 @@ export async function warnUponCmdExe() {
     // https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/tasklist
     const { stdout, stderr } = await execFileAsync(
       'tasklist',
-      ['/nh', '/fo', 'csv', '/fi', `"PID eq ${process.ppid}"`],
+      ['/nh', '/fo', 'csv', '/fi', `PID eq ${process.ppid}`],
       { windowsHide: true }
     );
     if (!stdout.startsWith('') || stderr !== '') {
