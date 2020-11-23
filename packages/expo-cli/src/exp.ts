@@ -37,6 +37,7 @@ import { registerCommands } from './commands';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
+import { warnUponCmdExe } from './windows';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build
@@ -808,6 +809,7 @@ async function writePathAsync() {
 // This is the entry point of the CLI
 export function run(programName: string) {
   (async function () {
+    await warnUponCmdExe();
     await Promise.all([writePathAsync(), runAsync(programName)]);
   })().catch(e => {
     log.error('Uncaught Error', e);
