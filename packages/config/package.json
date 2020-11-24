@@ -39,6 +39,7 @@
     "@expo/image-utils": "0.3.7",
     "@expo/json-file": "8.2.24",
     "@expo/plist": "0.0.10",
+    "find-up": "^5.0.0",
     "fs-extra": "9.0.0",
     "glob": "7.1.6",
     "invariant": "^2.2.4",
@@ -51,6 +52,7 @@
     "xml2js": "^0.4.23"
   },
   "devDependencies": {
+    "@types/find-up": "^4.0.0",
     "@types/fs-extra": "^9.0.1",
     "@types/invariant": "^2.2.30",
     "@types/xml2js": "^0.4.5",

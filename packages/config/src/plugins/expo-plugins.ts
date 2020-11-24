@@ -2,20 +2,23 @@ import { ConfigPlugin } from '../Plugin.types';
 import * as AndroidConfig from '../android';
 import * as IOSConfig from '../ios';
 import { withPlugins } from './core-plugins';
+import { withStaticPlugins } from './static-plugin';
 
 /**
  * Config plugin to apply all of the custom Expo iOS config plugins we support by default.
  * TODO: In the future most of this should go into versioned packages like expo-facebook, expo-updates, etc...
  */
 export const withExpoIOSPlugins: ConfigPlugin<{
+  projectRoot: string;
   bundleIdentifier: string;
   expoUsername: string | null;
-}> = (config, { bundleIdentifier, expoUsername }) => {
+}> = (config, { projectRoot, bundleIdentifier, expoUsername }) => {
   // Set the bundle ID ahead of time.
   if (!config.ios) config.ios = {};
   config.ios.bundleIdentifier = bundleIdentifier;
 
   return withPlugins(config, [
+    [withStaticPlugins, projectRoot],
     [IOSConfig.BundleIdenitifer.withBundleIdentifier, { bundleIdentifier }],
     IOSConfig.Branch.withBranch,
     IOSConfig.Facebook.withFacebook,
@@ -52,13 +55,15 @@ export const withExpoIOSPlugins: ConfigPlugin<{
  */
 export const withExpoAndroidPlugins: ConfigPlugin<{
   package: string;
+  projectRoot: string;
   expoUsername: string | null;
-}> = (config, { expoUsername, ...props }) => {
+}> = (config, { expoUsername, projectRoot, ...props }) => {
   // Set the package name ahead of time.
   if (!config.android) config.android = {};
   config.android.package = props.package;
 
   return withPlugins(config, [
+    [withStaticPlugins, projectRoot],
     // project build.gradle
     AndroidConfig.GoogleServices.withClassPath,
 
