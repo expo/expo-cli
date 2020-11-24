@@ -1065,18 +1065,18 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
   );
 
-  // Splash Background
-  if (backgroundImages && backgroundImages.length > 0) {
-    // Delete the placeholder images
-    const splashImageFilename =
-      majorSdkVersion >= 39 ? 'splashscreen_image.png' : 'shell_launch_background_image.png';
-    globSync(`**/${splashImageFilename}'`, {
-      cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
-      absolute: true,
-    }).forEach(filePath => {
-      fs.removeSync(filePath);
-    });
+  // Delete the placeholder splash images
+  const splashImageFilename =
+    majorSdkVersion >= 39 ? 'splashscreen_image.png' : 'shell_launch_background_image.png';
+  globSync(`**/${splashImageFilename}`, {
+    cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
+    absolute: true,
+  }).forEach(filePath => {
+    fs.removeSync(filePath);
+  });
 
+  // Use the splash images provided by the user
+  if (backgroundImages && backgroundImages.length > 0) {
     await Promise.all(
       backgroundImages.map(async image => {
         if (isRunningInUserContext) {
