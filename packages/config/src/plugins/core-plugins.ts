@@ -7,19 +7,19 @@ function ensureArray<T>(input: T | T[]): T[] {
   return [input];
 }
 
-type AppliedConfigPlugin<T> = ConfigPlugin<T> | [ConfigPlugin<T>, T];
-
 /**
  * Plugin to chain a list of plugins together.
  *
  * @param config exported config
  * @param plugins list of config config plugins to apply to the exported config
  */
-export const withPlugins: ConfigPlugin<AppliedConfigPlugin<any>[]> = (
-  config,
-  // TODO: Type this somehow if possible.
-  plugins
-): ExportedConfig => {
+export const withPlugins: ConfigPlugin<
+  (
+    | ConfigPlugin
+    // TODO: Type this somehow if possible.
+    | [ConfigPlugin<any>, any]
+  )[]
+> = (config, plugins): ExportedConfig => {
   return plugins.reduce((prev, curr) => {
     const [plugins, args] = ensureArray(curr);
     return plugins(prev, args);
