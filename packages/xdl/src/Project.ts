@@ -84,6 +84,7 @@ type LoadedHook = Hook & {
 };
 
 export type StartOptions = {
+  devClient?: boolean;
   reset?: boolean;
   nonInteractive?: boolean;
   nonPersistent?: boolean;
@@ -613,7 +614,9 @@ export async function publishAsync(
     developerTool: Config.developerTool,
   });
 
-  const validationStatus = await Doctor.validateWithNetworkAsync(projectRoot);
+  const validationStatus = await Doctor.validateWithNetworkAsync(projectRoot, {
+    skipSDKVersionRequirement: target === 'bare',
+  });
   if (validationStatus === Doctor.ERROR || validationStatus === Doctor.FATAL) {
     throw new XDLError(
       'PUBLISH_VALIDATION_ERROR',
@@ -811,10 +814,12 @@ async function _getPublishExpConfigAsync(
   }
   options.releaseChannel = options.releaseChannel || 'default';
 
+  const skipSDKVersionRequirement = options.target === 'bare';
+
   // Verify that exp/app.json and package.json exist
-  const { exp: privateExp } = getConfig(projectRoot);
+  const { exp: privateExp } = getConfig(projectRoot, { skipSDKVersionRequirement });
   const { hooks } = privateExp;
-  const { exp, pkg } = getConfig(projectRoot, { isPublicConfig: true });
+  const { exp, pkg } = getConfig(projectRoot, { isPublicConfig: true, skipSDKVersionRequirement });
 
   const { sdkVersion } = exp;
 
@@ -1422,7 +1427,7 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
 export async function startReactNativeServerAsync({
   projectRoot,
   options = {},
-  exp = getConfig(projectRoot).exp,
+  exp,
   verbose = true,
 }: {
   projectRoot: string;
@@ -1430,6 +1435,10 @@ export async function startReactNativeServerAsync({
   exp?: ExpoConfig;
   verbose?: boolean;
 }): Promise<void> {
+  if (!exp) {
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: options.target === 'bare' }).exp;
+  }
+
   assertValidProjectRoot(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
@@ -1643,7 +1652,10 @@ export async function stopReactNativeServerAsync(projectRoot: string): Promise<v
   });
 }
 
-export async function startExpoServerAsync(projectRoot: string): Promise<void> {
+export async function startExpoServerAsync(
+  projectRoot: string,
+  options: StartOptions
+): Promise<void> {
   assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
   const app = express();
@@ -1660,8 +1672,12 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
   );
   if (
     (ConnectionStatus.isOffline()
-      ? await Doctor.validateWithoutNetworkAsync(projectRoot)
-      : await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL
+      ? await Doctor.validateWithoutNetworkAsync(projectRoot, {
+          skipSDKVersionRequirement: options.target === 'bare',
+        })
+      : await Doctor.validateWithNetworkAsync(projectRoot, {
+          skipSDKVersionRequirement: options.target === 'bare',
+        })) === Doctor.FATAL
   ) {
     throw new Error(`Couldn't start project. Please fix the errors and restart the project.`);
   }
@@ -1759,10 +1775,18 @@ export async function setOptionsAsync(
 
 export async function startAsync(
   projectRoot: string,
-  { exp = getConfig(projectRoot).exp, ...options }: StartOptions & { exp?: ExpoConfig } = {},
+  options: StartOptions & { exp?: ExpoConfig } = {},
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
+  let { exp } = options;
+
+  if (!exp) {
+    exp = getConfig(projectRoot, {
+      skipSDKVersionRequirement: options.target === 'bare' || options.devClient,
+    }).exp;
+  }
+
   Analytics.logEvent('Start Project', {
     projectRoot,
     developerTool: Config.developerTool,
@@ -1773,11 +1797,11 @@ export async function startAsync(
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
-  } else if (shouldUseDevServer(exp)) {
+  } else if (shouldUseDevServer(exp) || options.devClient) {
     await startDevServerAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'native');
   } else {
-    await startExpoServerAsync(projectRoot);
+    await startExpoServerAsync(projectRoot, options);
     await startReactNativeServerAsync({ projectRoot, exp, options, verbose });
     DevSession.startSession(projectRoot, exp, 'native');
   }

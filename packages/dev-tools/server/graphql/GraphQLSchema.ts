@@ -432,7 +432,7 @@ const resolvers = {
     },
     async manifestUrl(project) {
       if ((await Project.currentStatus(project.projectDir)) === 'running') {
-        return UrlUtils.constructManifestUrlAsync(project.projectDir);
+        return UrlUtils.constructDeepLinkAsync(project.projectDir);
       } else {
         return null;
       }
@@ -442,7 +442,7 @@ const resolvers = {
     },
     async config(project) {
       try {
-        const { exp } = getConfig(project.projectDir);
+        const { exp } = getConfig(project.projectDir, { skipSDKVersionRequirement: true });
         return exp;
       } catch (error) {
         ProjectUtils.logError(project.projectDir, 'expo', error.message);

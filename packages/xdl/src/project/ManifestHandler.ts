@@ -118,14 +118,16 @@ export function getManifestHandler(projectRoot: string) {
       // We intentionally don't `await`. We want to continue trying even
       // if there is a potential error in the package.json and don't want to slow
       // down the request
-      Doctor.validateWithNetworkAsync(projectRoot).catch(error => {
-        ProjectUtils.logError(
-          projectRoot,
-          'expo',
-          `Error: could not load config json at ${projectRoot}: ${error.toString()}`,
-          'doctor-config-json-not-read'
-        );
-      });
+      Doctor.validateWithNetworkAsync(projectRoot, { skipSDKVersionRequirement: true }).catch(
+        error => {
+          ProjectUtils.logError(
+            projectRoot,
+            'expo',
+            `Error: could not load config json at ${projectRoot}: ${error.toString()}`,
+            'doctor-config-json-not-read'
+          );
+        }
+      );
 
       const { manifestString, exp, hostInfo } = await getManifestResponseFromHeadersAsync({
         projectRoot,
@@ -182,7 +184,7 @@ export async function getManifestResponseAsync({
   acceptSignature?: string | string[];
 }): Promise<{ exp: ExpoConfig; manifestString: string; hostInfo: HostInfo }> {
   // Read the config
-  const projectConfig = getConfig(projectRoot);
+  const projectConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const manifest = projectConfig.exp as ExpoAppManifest;
   // Read from headers
   const hostname = stripPort(host);

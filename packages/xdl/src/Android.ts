@@ -641,7 +641,7 @@ export async function openProjectAsync({
   try {
     await startAdbReverseAsync(projectRoot);
 
-    const projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
+    const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot);
     const { exp } = getConfig(projectRoot, {
       skipSDKVersionRequirement: true,
     });

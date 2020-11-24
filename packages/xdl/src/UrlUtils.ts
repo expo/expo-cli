@@ -14,7 +14,7 @@ import ip from './ip';
 import * as ProjectUtils from './project/ProjectUtils';
 
 interface URLOptions extends Omit<ProjectSettings.ProjectSettings, 'urlRandomness'> {
-  urlType: null | 'exp' | 'http' | 'no-protocol' | 'redirect';
+  urlType: null | 'exp' | 'http' | 'no-protocol' | 'redirect' | 'custom';
 }
 
 interface MetroQueryOptions {
@@ -31,12 +31,44 @@ export async function constructBundleUrlAsync(
   return await constructUrlAsync(projectRoot, opts, true, requestHostname);
 }
 
+export async function constructDeepLinkAsync(
+  projectRoot: string,
+  opts?: Partial<URLOptions>,
+  requestHostname?: string
+) {
+  const { devClient } = await ProjectSettings.getPackagerOptsAsync(projectRoot);
+
+  if (devClient) {
+    return constructDevClientUrlAsync(projectRoot, opts, requestHostname);
+  } else {
+    return constructManifestUrlAsync(projectRoot, opts, requestHostname);
+  }
+}
+
 export async function constructManifestUrlAsync(
   projectRoot: string,
   opts?: Partial<URLOptions>,
   requestHostname?: string
 ) {
   return await constructUrlAsync(projectRoot, opts ?? null, false, requestHostname);
+}
+
+export async function constructDevClientUrlAsync(
+  projectRoot: string,
+  opts?: Partial<URLOptions>,
+  requestHostname?: string
+) {
+  const { scheme } = await ProjectSettings.getPackagerOptsAsync(projectRoot);
+  if (!scheme || typeof scheme !== 'string') {
+    throw new XDLError('NO_DEV_CLIENT_SCHEME', 'No scheme specified for development client');
+  }
+  const protocol = resolveProtocol(projectRoot, { scheme, urlType: 'custom' });
+  const manifestUrl = await constructManifestUrlAsync(
+    projectRoot,
+    { ...opts, urlType: 'http' },
+    requestHostname
+  );
+  return `${protocol}://expo-development-client/?url=${encodeURIComponent(manifestUrl)}`;
 }
 
 // gets the base manifest URL and removes the scheme
@@ -134,7 +166,9 @@ export async function constructDebuggerHostAsync(
 }
 
 export function constructBundleQueryParams(projectRoot: string, opts: MetroQueryOptions): string {
-  const { exp } = getConfig(projectRoot);
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
   return constructBundleQueryParamsWithConfig(projectRoot, opts, exp);
 }
 
@@ -203,6 +237,7 @@ export async function constructWebAppUrlAsync(
 
 function assertValidOptions(opts: Partial<URLOptions>): URLOptions {
   const schema = joi.object().keys({
+    devClient: joi.boolean().optional(),
     scheme: joi.string().optional().allow(null),
     // Replaced by `scheme`
     urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol'),
@@ -242,17 +277,18 @@ function resolveProtocol(
   projectRoot: string,
   { urlType, ...options }: Pick<URLOptions, 'urlType' | 'scheme'>
 ): string | null {
-  if (options.scheme) {
-    return options.scheme;
-  }
   if (urlType === 'http') {
     return 'http';
   } else if (urlType === 'no-protocol') {
     return null;
+  } else if (urlType === 'custom') {
+    return options.scheme;
   }
   let protocol = 'exp';
 
-  const { exp } = getConfig(projectRoot);
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: process.env.EXPO_TARGET === 'bare',
+  });
 
   // We only use these values from the config
   const { scheme, detach, sdkVersion } = exp;

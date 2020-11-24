@@ -96,7 +96,7 @@ export const printServerInfo = async (
     Webpack.printConnectionInstructions(projectDir);
     return;
   }
-  const url = await UrlUtils.constructManifestUrlAsync(projectDir);
+  const url = await UrlUtils.constructDeepLinkAsync(projectDir);
   log.newLine();
   log.nested(`  ${u(url)}`);
   log.newLine();
@@ -106,8 +106,12 @@ export const printServerInfo = async (
   const item = (text: string): string => '  \u2022 ' + wrapItem(text).trimStart();
   const iosInfo = process.platform === 'darwin' ? `, or ${b('i')} for iOS simulator` : '';
   const webInfo = `${b`w`} to run on ${u`w`}eb`;
-  log.nested(wrap(u('To run the app with live reloading, choose one of:')));
+  log.nested(wrap(u('To run the app, choose one of:')));
+
+  // TODO: if dev client, chanege this message!
   log.nested(item(`Scan the QR code above with the Expo app (Android) or the Camera app (iOS).`));
+
+  // TODO: if no react-native-web in package.json then don't show web info
   log.nested(item(`Press ${b`a`} for Android emulator${iosInfo}, or ${webInfo}.`));
   log.nested(item(`Press ${b`e`} to send a link to your phone with email.`));
 
@@ -229,7 +233,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         }
         case 'e': {
           stopWaitingForCommand();
-          const lanAddress = await UrlUtils.constructManifestUrlAsync(projectRoot, {
+          const lanAddress = await UrlUtils.constructDeepLinkAsync(projectRoot, {
             hostType: 'lan',
           });
           const defaultRecipient = await UserSettings.getAsync('sendTo', null);

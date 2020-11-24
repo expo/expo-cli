@@ -39,6 +39,16 @@ export function getDefaultConfig(
     resolveModule('react-native/package.json', projectRoot, exp)
   );
 
+  let hashAssetFilesPath;
+  try {
+    hashAssetFilesPath = resolveModule('expo-asset/tools/hashAssetFiles', projectRoot, exp);
+  } catch {
+    // TODO: we should warn/throw an error if the user has expo-updates installed but does not
+    // have hashAssetFiles available, or if the user is in managed workflow and does not have
+    // hashAssetFiles available. but in a bare app w/o expo-updates, just using dev-client,
+    // it is not needed
+  }
+
   const target = options.target ?? process.env.EXPO_TARGET ?? getDefaultTarget(projectRoot);
   if (!(target === 'managed' || target === 'bare')) {
     throw new Error(
@@ -85,7 +95,7 @@ export function getDefaultConfig(
       babelTransformerPath: require.resolve('metro-react-native-babel-transformer'),
       // TODO: Bacon: Add path for web platform
       assetRegistryPath: path.join(reactNativePath, 'Libraries/Image/AssetRegistry'),
-      assetPlugins: [resolveModule('expo-asset/tools/hashAssetFiles', projectRoot, exp)],
+      assetPlugins: hashAssetFilesPath ? [hashAssetFilesPath] : undefined,
     },
   });
 }

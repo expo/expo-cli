@@ -29,5 +29,7 @@ export type ErrorCode =
   | 'WEBPACK_DEPRECATED'
   | 'WEBPACK_INVALID_OPTION'
   | 'NETWORK_REQUIRED'
-  //Shell Apps
-  | 'CREDENTIAL_ERROR';
+  // Shell Apps
+  | 'CREDENTIAL_ERROR'
+  // Dev Client
+  | 'NO_DEV_CLIENT_SCHEME';

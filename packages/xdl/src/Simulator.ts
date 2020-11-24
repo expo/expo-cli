@@ -638,7 +638,7 @@ export async function openProjectAsync({
   projectRoot: string;
   shouldPrompt?: boolean;
 }): Promise<{ success: true; url: string } | { success: false; error: string }> {
-  const projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
+  const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, {
     hostType: 'localhost',
   });
   const { exp } = getConfig(projectRoot, {

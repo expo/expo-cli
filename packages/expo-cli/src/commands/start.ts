@@ -113,6 +113,8 @@ async function normalizeOptionsAsync(
 
 async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions): Promise<void> {
   await ProjectSettings.setAsync(projectDir, {
+    devClient: options.devClient,
+    scheme: options.scheme,
     dev: options.dev,
     minify: options.minify,
     https: options.https,
@@ -139,6 +141,9 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
   }
 
   if (options.devClient) {
+    startOpts.devClient = true;
+
+    // TODO: is this redundant?
     startOpts.target = 'bare';
   }
 
@@ -166,7 +171,7 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
 
   await Project.startAsync(rootPath, { ...startOpts, exp });
 
-  const url = await UrlUtils.constructManifestUrlAsync(projectDir);
+  const url = await UrlUtils.constructDeepLinkAsync(projectDir);
 
   const recipient = await sendTo.getRecipient(options.sendTo);
   if (recipient) {
@@ -285,7 +290,8 @@ async function configureProjectAsync(
   log(chalk.gray(`Starting project at ${projectDir}`));
 
   const projectConfig = getConfig(projectDir, {
-    skipSDKVersionRequirement: options.webOnly,
+    skipSDKVersionRequirement:
+      options.webOnly || options.devClient || process.env.EXPO_TARGET === 'bare',
   });
   const { exp, pkg } = projectConfig;
 
