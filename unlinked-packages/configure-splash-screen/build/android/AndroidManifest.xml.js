@@ -6,7 +6,6 @@ var __importDefault =
   };
 Object.defineProperty(exports, '__esModule', { value: true });
 const path_1 = __importDefault(require('path'));
-
 const xml_manipulation_1 = require('../xml-manipulation');
 const ANDROID_MANIFEST_XML_FILE_PATH = './AndroidManifest.xml';
 function configureAndroidManifest(xml) {

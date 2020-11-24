@@ -6,7 +6,6 @@ var __importDefault =
   };
 Object.defineProperty(exports, '__esModule', { value: true });
 const fs_extra_1 = __importDefault(require('fs-extra'));
-
 const validators_1 = require('../validators');
 const BackgroundAsset_1 = __importDefault(require('./BackgroundAsset'));
 const ImageAsset_1 = __importDefault(require('./ImageAsset'));

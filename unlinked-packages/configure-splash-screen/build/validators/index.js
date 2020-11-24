@@ -12,7 +12,7 @@ const utils_1 = require('./utils');
 var utils_2 = require('./utils');
 Object.defineProperty(exports, 'validateEnumValue', {
   enumerable: true,
-  get() {
+  get: function () {
     return utils_2.validateEnumValue;
   },
 });

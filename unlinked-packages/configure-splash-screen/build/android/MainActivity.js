@@ -8,7 +8,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
 const cli_platform_android_1 = require('@react-native-community/cli-platform-android');
 const fs_extra_1 = __importDefault(require('fs-extra'));
 const path_1 = __importDefault(require('path'));
-
 const constants_1 = require('../constants');
 const StateManager_1 = __importDefault(require('../utils/StateManager'));
 const string_utils_1 = require('../utils/string-utils');

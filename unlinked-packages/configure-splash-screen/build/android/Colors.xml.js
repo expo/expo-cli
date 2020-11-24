@@ -7,7 +7,6 @@ var __importDefault =
 Object.defineProperty(exports, '__esModule', { value: true });
 const color_string_1 = __importDefault(require('color-string'));
 const path_1 = __importDefault(require('path'));
-
 const xml_manipulation_1 = require('../xml-manipulation');
 const COLORS_XML_FILE_PATH = './res/values/colors.xml';
 const COLORS_NIGHT_XML_FILE_PATH = './res/values-night/colors.xml';

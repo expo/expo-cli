@@ -7,7 +7,7 @@ exports.addStoryboardFileToProject = void 0;
  * @param param1.group PBXGroup reference
  */
 function addStoryboardFileToProject(pbxProject, filePath, { target, group }) {
-  const file = pbxProject.addFile(filePath, undefined, {
+  const file = pbxProject.addFile(filePath, group, {
     lastKnownFileType: 'file.storyboard',
     defaultEncoding: 4,
     target,
@@ -21,7 +21,6 @@ function addStoryboardFileToProject(pbxProject, filePath, { target, group }) {
   file.target = target;
   pbxProject.addToPbxBuildFileSection(file);
   pbxProject.addToPbxResourcesBuildPhase(file);
-  pbxProject.addToPbxGroup(file, group);
 }
 exports.addStoryboardFileToProject = addStoryboardFileToProject;
 //# sourceMappingURL=index.js.map

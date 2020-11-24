@@ -8,7 +8,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
 const fs_extra_1 = __importDefault(require('fs-extra'));
 const path_1 = __importDefault(require('path'));
 const pngjs_1 = require('pngjs');
-
 const Contents_json_1 = require('./Contents.json');
 const PNG_FILENAME = 'background.png';
 const DARK_PNG_FILENAME = 'dark_background.png';

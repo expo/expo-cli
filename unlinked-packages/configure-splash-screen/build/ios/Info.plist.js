@@ -7,7 +7,6 @@ var __importDefault =
 Object.defineProperty(exports, '__esModule', { value: true });
 const fs_extra_1 = __importDefault(require('fs-extra'));
 const path_1 = __importDefault(require('path'));
-
 const StateManager_1 = __importDefault(require('../utils/StateManager'));
 const string_utils_1 = require('../utils/string-utils');
 const INFO_PLIST_FILE_PATH = 'Info.plist';
