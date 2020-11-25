@@ -24,8 +24,8 @@ import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { withInterceptedMod } from './core-plugins';
 
 export function withBaseMods(config: ExportedConfig): ExportedConfig {
-  config = applyIOSCoreMods(config);
-  config = applyAndroidCoreMods(config);
+  config = applyIOSBaseMods(config);
+  config = applyAndroidBaseMods(config);
   return config;
 }
 
@@ -45,7 +45,7 @@ export function resolveModResults(results: any, platformName: string, modName: s
   return ensuredResults;
 }
 
-function applyAndroidCoreMods(config: ExportedConfig): ExportedConfig {
+function applyAndroidBaseMods(config: ExportedConfig): ExportedConfig {
   config = withExpoDangerousBaseMod(config, 'android');
   config = withAndroidStringsXMLBaseMod(config);
   config = withAndroidManifestBaseMod(config);
@@ -235,7 +235,7 @@ const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
   });
 };
 
-function applyIOSCoreMods(config: ExportedConfig): ExportedConfig {
+function applyIOSBaseMods(config: ExportedConfig): ExportedConfig {
   config = withExpoDangerousBaseMod(config, 'ios');
   config = withIosInfoPlistBaseMod(config);
   config = withExpoPlistBaseMod(config);
