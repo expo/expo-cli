@@ -58,14 +58,10 @@ function moduleNameIsDirectFileReference(name: string): boolean {
   return slashCount > 0;
 }
 
-function findUpPlugin(root: string): string {
-  // Get the closest package.json to the node module
-  const packageJson = findUpPackageJson(root);
-  // resolve the root folder for the node module
-  const moduleRoot = path.dirname(packageJson);
+function resolveExpoPluginFile(root: string): string | null {
   // Find the expo plugin root file
   const pluginModuleFile = resolveFrom.silent(
-    moduleRoot,
+    root,
     // use ./ so it isn't resolved as a node module
     `./${pluginFileName}`
   );
@@ -74,9 +70,16 @@ function findUpPlugin(root: string): string {
   if (pluginModuleFile && fileExists(pluginModuleFile)) {
     return pluginModuleFile;
   }
+  return null;
+}
 
+function findUpPlugin(root: string): string {
+  // Get the closest package.json to the node module
+  const packageJson = findUpPackageJson(root);
+  // resolve the root folder for the node module
+  const moduleRoot = path.dirname(packageJson);
   // use whatever the initial resolved file was ex: `node_modules/my-package/index.js` or `./something.js`
-  return root;
+  return resolveExpoPluginFile(moduleRoot) ?? root;
 }
 
 function normalizeJSONPluginOptions(plugins?: JSONPluginsList): JSONPlugin[] {

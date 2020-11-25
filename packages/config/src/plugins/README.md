@@ -237,7 +237,7 @@ Sometimes you want your package to export React components and also support a pl
 
 `module: './my-config-plugin'`
 
-This approach can be used during library development to help emulate how the node module structure will work.
+This is different to how node module's work because `index.expo-plugin` won't be resolved by default in a folder. You'll have to manually specify the file to use it.
 
 ```
 ╭── app.config.js ➡️ Expo Config
@@ -245,18 +245,9 @@ This approach can be used during library development to help emulate how the nod
     ╰── index.js ➡️ ✅ By default, node resolves a folder's index.js file as the main file.
 ```
 
-If an `index.expo-plugin.js` file is present in the folder, that'll be used instead of the `index.js`.
-
-```
-╭── app.config.js ➡️ Expo Config
-╰── my-config-plugin/ ➡️ Folder containing plugin code
-    ├── index.expo-plugin.js ➡️ ✅ `module.exports = (config) => config`
-    ╰── index.js ➡️ ❌ Ignored because `index.expo-plugin.js` exists.
-```
-
 #### Module internals
 
-If a file inside a node module is specified, then `index.expo-plugin.js` resolution will be skipped. This is referred to as "reaching inside a package" and is bad form. We support this to make testing, and plugin authoring easier.
+If a file inside a node module is specified, then root `index.expo-plugin.js` resolution will be skipped. This is referred to as "reaching inside a package" and is bad form. We support this to make testing, and plugin authoring easier.
 
 - `expo-splash-screen/build/index.js`
 - `expo-splash-screen/build`
@@ -268,6 +259,13 @@ If a file inside a node module is specified, then `index.expo-plugin.js` resolut
     ├── index.expo-plugin.js ➡️ ❌ Ignored because the reference reaches into the package internals
     ╰── build/index.js ➡️ ✅ `module.exports = (config) => config`
 ```
+
+### Why index.expo-plugin
+
+Config resolution searches for a `index.expo-plugin.js` first when a node module name or folder path are provided.
+This is because node environments are often different to iOS, Android, or web JS environments and therefore require different transpilation presets (ex: `module.exports` instead of `import/export`).
+
+Because of this reasoning, the root of a Node module is searched instead of right next to the `index.js`. Imagine you had a TypeScript node module where the transpiled main file was located at `build/index.js`, if Expo config plugin resolution searched for `build/index.expo-plugin.js` you'd lose the ability to transpile the file differently.
 
 ### Creating static plugins
 
