@@ -22,8 +22,14 @@ const META_AUTO_INIT = 'com.facebook.sdk.AutoInitEnabled';
 const META_AUTO_LOG_APP_EVENTS = 'com.facebook.sdk.AutoLogAppEventsEnabled';
 const META_AD_ID_COLLECTION = 'com.facebook.sdk.AdvertiserIDCollectionEnabled';
 
-export const withFacebookAppIdString = createStringsXmlPlugin(applyFacebookAppIdString);
-export const withFacebookManifest = createAndroidManifestPlugin(setFacebookConfig);
+export const withFacebookAppIdString = createStringsXmlPlugin(
+  applyFacebookAppIdString,
+  'withFacebookAppIdString'
+);
+export const withFacebookManifest = createAndroidManifestPlugin(
+  setFacebookConfig,
+  'withFacebookManifest'
+);
 
 function buildXMLItem({
   head,

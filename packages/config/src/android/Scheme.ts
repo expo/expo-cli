@@ -9,7 +9,7 @@ export type IntentFilterProps = {
   schemes: string[];
 };
 
-export const withScheme = createAndroidManifestPlugin(setScheme);
+export const withScheme = createAndroidManifestPlugin(setScheme, 'withScheme');
 
 export function getScheme(config: { scheme?: string | string[] }): string[] {
   if (Array.isArray(config.scheme)) {

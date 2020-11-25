@@ -19,7 +19,10 @@ public class MainActivity extends ReactActivity {
     }
 `;
 
-export const withUiModeManifest = createAndroidManifestPlugin(setUiModeAndroidManifest);
+export const withUiModeManifest = createAndroidManifestPlugin(
+  setUiModeAndroidManifest,
+  'withUiModeManifest'
+);
 
 export const withUiModeMainActivity: ConfigPlugin = config => {
   return withMainActivity(config, config => {

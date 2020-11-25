@@ -13,7 +13,10 @@ import {
 import { AndroidManifest } from './Manifest';
 import { getMainApplicationAsync } from './Paths';
 
-export const withPackageManifest = createAndroidManifestPlugin(setPackageInAndroidManifest);
+export const withPackageManifest = createAndroidManifestPlugin(
+  setPackageInAndroidManifest,
+  'withPackageManifest'
+);
 
 export const withPackageGradle: ConfigPlugin = config => {
   return withAppBuildGradle(config, config => {
