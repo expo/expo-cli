@@ -20,6 +20,7 @@ import { getProjectStringsXMLPathAsync } from '../android/Strings';
 import { writeXMLAsync } from '../android/XML';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { InfoPlist } from '../ios/IosConfig.types';
+import { getInfoPlistPath } from '../ios/Paths';
 import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { withInterceptedMod } from './core-plugins';
 
@@ -334,6 +335,8 @@ const withIosInfoPlistBaseMod: ConfigPlugin = config => {
     mod: 'infoPlist',
     skipEmptyMod: true,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      const filePath = getInfoPlistPath(modRequest.projectRoot);
+
       let results: ExportedConfigWithProps<JSONObject> = {
         ...config,
         modRequest,
@@ -348,12 +351,6 @@ const withIosInfoPlistBaseMod: ConfigPlugin = config => {
         config.ios.infoPlist = {};
       }
 
-      const iosProjectDirectory = path.join(
-        modRequest.platformProjectRoot,
-        modRequest.projectName!
-      );
-
-      const filePath = path.resolve(iosProjectDirectory, 'Info.plist');
       const contents = await readFile(filePath, 'utf8');
       assert(contents, 'Info.plist is empty');
       let data = plist.parse(contents);

@@ -6,6 +6,7 @@ import xcode from 'xcode';
 
 import { ExportedConfig } from '../../Plugin.types';
 import { readXMLAsync } from '../../android/XML';
+import { withBranch } from '../../ios/Branch';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
 import { withExpoAndroidPlugins, withExpoIOSPlugins } from '../expo-plugins';
 import { compileModsAsync, evalModsAsync } from '../mod-compiler';
@@ -66,13 +67,13 @@ describe('built-in plugins', () => {
 
   // Ensure helpful error messages are thrown
   it(`fails to locate the project name in an invalid project`, async () => {
-    const config = {
+    const config = withBranch({
       name: 'app',
       slug: '',
       ios: {},
-    };
+    });
     await expect(compileModsAsync(config, '/invalid')).rejects.toThrow(
-      'Could not locate a valid AppDelegate at root'
+      'Failed to locate Info.plist files relative'
     );
   });
 
