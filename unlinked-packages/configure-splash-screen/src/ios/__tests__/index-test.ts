@@ -9,6 +9,7 @@ import reactNativeProjectWithSplashScreenConfiured from './fixtures/react-native
 
 // in `__mocks__/fs.ts` memfs is being used as a mocking library
 jest.mock('fs');
+const originalFs = jest.requireActual('fs');
 // in `__mocks__/xcode.ts` parsing job for `.pbxproj` is performed synchronously on single tread
 jest.mock('xcode');
 
@@ -117,6 +118,47 @@ describe('ios', () => {
           ),
       };
       expect(received).toEqual(expected);
+    });
+
+    it('configures bare flow project with background color and image', async () => {
+      const backgroundImagePath = path.resolve(
+        __dirname,
+        '../../__tests__/fixtures/background.png'
+      );
+      const backgroundImage = await readFileFromActualFS(backgroundImagePath);
+      vol.fromJSON(
+        {
+          ...reactNativeProject,
+          'ios/ReactNativeProject.xcodeproj/project.pbxproj': originalFs.readFileSync(
+            path.join(__dirname, 'fixtures/react-native-init-template-project.pbxproj'),
+            'utf-8'
+          ),
+        },
+        '/app'
+      );
+      vol.mkdirpSync('/assets');
+      vol.writeFileSync('/assets/background.png', backgroundImage);
+
+      await configureIos('/app', {
+        backgroundColor: 'rgb(30, 120, 80)',
+        image: '/assets/background.png',
+      });
+
+      const {
+        'ios/ReactNativeProject.xcodeproj/project.pbxproj': actualPbxproj,
+        ...restActual
+      } = getDirFromFS(vol.toJSON(), '/app');
+      expect(actualPbxproj).toMatch(
+        /[A-F0-9]{24} \/\* SplashScreen\.storyboard in Resources \*\/,/
+      );
+      expect(actualPbxproj).toMatch(/[A-F0-9]{24} \/\* SplashScreen\.storyboard \*\/,/);
+      expect(actualPbxproj).toMatch(
+        /[A-F0-9]{24} \/\* SplashScreen\.storyboard \*\/ = {isa = PBXFileReference; name = "SplashScreen\.storyboard"; path = "ReactNativeProject\/SplashScreen\.storyboard"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = file\.storyboard; };/
+      );
+      expect(actualPbxproj).toMatch(
+        /[A-F0-9]{24} \/\* SplashScreen\.storyboard in Resources \*\/ = {isa = PBXBuildFile; fileRef = [A-F0-9]{24} \/\* SplashScreen.storyboard \*\/; };/
+      );
+      expect(restActual).toMatchSnapshot();
     });
   });
 });
