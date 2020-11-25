@@ -113,6 +113,8 @@ export async function ejectAsync(
   // err towards running pod install less because it's slow and users can easily run npx pod-install afterwards.
   if (platforms.includes('ios') && shouldInstall && needsPodInstall) {
     podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
+  } else {
+    log.debug('Skipped pod install');
   }
 
   await warnIfDependenciesRequireAdditionalSetupAsync(pkg, options);
