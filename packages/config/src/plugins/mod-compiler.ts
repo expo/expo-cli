@@ -1,8 +1,11 @@
+import { boolish } from 'getenv';
 import path from 'path';
 
 import { ExportedConfig, Mod, ModConfig, ModPlatform } from '../Plugin.types';
 import { getHackyProjectName } from '../ios/utils/Xcodeproj';
 import { resolveModResults, withBaseMods } from './compiler-plugins';
+
+const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 /**
  *
@@ -46,6 +49,7 @@ export async function evalModsAsync(
           platformProjectRoot,
           platform: platformName as ModPlatform,
           modName,
+          isDebug: EXPO_DEBUG,
         };
 
         const results = await (mod as Mod)({

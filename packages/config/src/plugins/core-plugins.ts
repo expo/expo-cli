@@ -123,7 +123,7 @@ export function withInterceptedMod<T>(
   }
 
   async function interceptingMod({ modRequest, ...config }: ExportedConfigWithProps<T>) {
-    if (EXPO_DEBUG) {
+    if (modRequest.isDebug) {
       // In debug mod, log the plugin stack in the order which they were invoked
       const modStack = chalk.bold(`${platform}.${mod}`);
       console.log(`${modStack}: ${debugTrace}`);
