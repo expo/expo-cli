@@ -51,10 +51,7 @@ async function getCurrentPackageName(projectRoot: string) {
   const packageRoot = getPackageRoot(projectRoot);
   const mainApplication = await getMainApplicationAsync(projectRoot);
   const packagePath = path.dirname(mainApplication.path);
-  const packagePathParts = path
-    .relative(packageRoot, packagePath)
-    .split(path.sep)
-    .filter(Boolean);
+  const packagePathParts = path.relative(packageRoot, packagePath).split(path.sep).filter(Boolean);
 
   return packagePathParts.join('.');
 }
