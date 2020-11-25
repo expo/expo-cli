@@ -29,7 +29,10 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
   if (log.isDebug) {
     log.debug();
     log.debug('Evaluated iOS config:');
-    log.info(config);
+    // @ts-ignore: mods not on config type
+    const { mods, ...rest } = config;
+    log.info(JSON.stringify(rest, null, 2));
+    log.info(mods);
     log.debug();
   }
 }

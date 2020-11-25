@@ -29,7 +29,10 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   if (log.isDebug) {
     log.debug();
     log.debug('Evaluated Android config:');
-    log.info(config);
+    // @ts-ignore: mods not on config type
+    const { mods, ...rest } = config;
+    log.info(JSON.stringify(rest, null, 2));
+    log.info(mods);
     log.debug();
   }
 }
