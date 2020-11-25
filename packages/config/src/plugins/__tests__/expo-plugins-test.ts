@@ -228,12 +228,10 @@ describe('built-in plugins', () => {
     };
 
     config = withExpoIOSPlugins(config, {
-      projectRoot,
       bundleIdentifier: 'com.bacon.todo',
       expoUsername: 'bacon',
     });
     config = withExpoAndroidPlugins(config, {
-      projectRoot,
       package: 'com.bacon.todo',
       expoUsername: 'bacon',
     });
