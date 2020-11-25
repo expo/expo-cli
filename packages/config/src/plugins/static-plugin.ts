@@ -12,7 +12,7 @@ type JSONPlugin = { module: string; props?: Record<string, any> };
 type JSONPluginsList = (JSONPlugin | string)[];
 
 // Default plugin entry file name.
-const pluginFileName = 'expo-plugin';
+const pluginFileName = 'index.expo-plugin';
 
 function findUpPackageJson(root: string): string {
   const packageJson = findUp.sync('package.json', { cwd: root });
@@ -27,7 +27,7 @@ function resolvePluginForModule(projectRoot: string, modulePath: string): string
     `Failed to resolve plugin for module "${modulePath}" relative to "${projectRoot}"`
   );
   // If the modulePath is something like `@bacon/package/index.js` or `expo-foo/build/app`
-  // then skip resolving the module `expo-plugin.js`
+  // then skip resolving the module `index.expo-plugin.js`
   if (moduleNameIsDirectFileReference(modulePath)) {
     return resolved;
   }
