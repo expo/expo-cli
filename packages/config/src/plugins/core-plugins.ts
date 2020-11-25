@@ -76,7 +76,7 @@ export function withExtendedMod<T>(
  * @param config exported config
  * @param platform platform to target (ios or android)
  * @param mod name of the platform function to intercept
- * @param skipEmptyChain should skip running the action if there is no existing mod to intercept
+ * @param skipEmptyMod should skip running the action if there is no existing mod to intercept
  * @param action method to run on the mod when the config is compiled
  */
 export function withInterceptedMod<T>(
@@ -85,12 +85,12 @@ export function withInterceptedMod<T>(
     platform,
     mod,
     action,
-    skipEmptyChain,
+    skipEmptyMod,
   }: {
     platform: ModPlatform;
     mod: string;
     action: Mod<T>;
-    skipEmptyChain?: boolean;
+    skipEmptyMod?: boolean;
   }
 ): ExportedConfig {
   if (!config.mods) {
@@ -104,7 +104,7 @@ export function withInterceptedMod<T>(
 
   // No existing mod to intercept
   if (!interceptedMod) {
-    if (skipEmptyChain) {
+    if (skipEmptyMod) {
       // Skip running the action
       return config;
     }
@@ -123,7 +123,7 @@ export function withInterceptedMod<T>(
   }
 
   async function interceptingMod({ modRequest, ...config }: ExportedConfigWithProps<T>) {
-    if (EXPO_DEBUG) {
+    if (modRequest.isDebug) {
       // In debug mod, log the plugin stack in the order which they were invoked
       const modStack = chalk.bold(`${platform}.${mod}`);
       console.log(`${modStack}: ${debugTrace}`);

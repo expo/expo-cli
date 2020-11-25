@@ -16,6 +16,7 @@ export interface ModProps<T = any> {
    * Project root directory for the universal app.
    */
   readonly projectRoot: string;
+
   /**
    * Project root for the specific platform.
    */
@@ -37,6 +38,11 @@ export interface ModProps<T = any> {
    * @example projectRoot/ios/[projectName]/
    */
   readonly projectName?: string;
+
+  /**
+   * true when the environment variable EXPO_DEBUG is enabled.
+   */
+  readonly isDebug: boolean;
 
   nextMod?: Mod<T>;
 }

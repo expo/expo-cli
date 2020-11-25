@@ -1,4 +1,3 @@
-import { ExpoConfig } from '@expo/config-types';
 import { JSONObject } from '@expo/json-file';
 import plist from '@expo/plist';
 import { readFile, writeFile } from 'fs-extra';
@@ -6,7 +5,12 @@ import path from 'path';
 import { XcodeProject } from 'xcode';
 
 import { assert } from '../Errors';
-import { ConfigPlugin, ExportedConfig, ExportedConfigWithProps } from '../Plugin.types';
+import {
+  ConfigPlugin,
+  ExportedConfig,
+  ExportedConfigWithProps,
+  ModPlatform,
+} from '../Plugin.types';
 import { addWarningAndroid, addWarningIOS } from '../WarningAggregator';
 import { Manifest } from '../android';
 import { AndroidManifest } from '../android/Manifest';
@@ -16,12 +20,13 @@ import { getProjectStringsXMLPathAsync } from '../android/Strings';
 import { writeXMLAsync } from '../android/XML';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { InfoPlist } from '../ios/IosConfig.types';
-import { getPbxproj, getProjectName } from '../ios/utils/Xcodeproj';
+import { getInfoPlistPath } from '../ios/Paths';
+import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { withInterceptedMod } from './core-plugins';
 
-export function withCoreMods(config: ExportedConfig, projectRoot: string): ExportedConfig {
-  config = applyIOSCoreMods(projectRoot, config);
-  config = applyAndroidCoreMods(projectRoot, config);
+export function withBaseMods(config: ExportedConfig): ExportedConfig {
+  config = applyIOSBaseMods(config);
+  config = applyAndroidBaseMods(config);
   return config;
 }
 
@@ -41,7 +46,8 @@ export function resolveModResults(results: any, platformName: string, modName: s
   return ensuredResults;
 }
 
-function applyAndroidCoreMods(projectRoot: string, config: ExportedConfig): ExportedConfig {
+function applyAndroidBaseMods(config: ExportedConfig): ExportedConfig {
+  config = withExpoDangerousBaseMod(config, 'android');
   config = withAndroidStringsXMLBaseMod(config);
   config = withAndroidManifestBaseMod(config);
   config = withAndroidMainActivityBaseMod(config);
@@ -55,6 +61,7 @@ const withAndroidManifestBaseMod: ConfigPlugin = config => {
   return withInterceptedMod<AndroidManifest>(config, {
     platform: 'android',
     mod: 'manifest',
+    skipEmptyMod: true,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidManifest> = {
         ...config,
@@ -90,6 +97,7 @@ const withAndroidStringsXMLBaseMod: ConfigPlugin = config => {
   return withInterceptedMod<ResourceXML>(config, {
     platform: 'android',
     mod: 'strings',
+    skipEmptyMod: true,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<ResourceXML> = {
         ...config,
@@ -124,6 +132,7 @@ const withAndroidProjectBuildGradleBaseMod: ConfigPlugin = config => {
   return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
     platform: 'android',
     mod: 'projectBuildGradle',
+    skipEmptyMod: true,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
         ...config,
@@ -159,6 +168,7 @@ const withAndroidAppBuildGradleBaseMod: ConfigPlugin = config => {
   return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
     platform: 'android',
     mod: 'appBuildGradle',
+    skipEmptyMod: true,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
         ...config,
@@ -194,6 +204,7 @@ const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
   return withInterceptedMod<AndroidPaths.ApplicationProjectFile>(config, {
     platform: 'android',
     mod: 'mainActivity',
+    skipEmptyMod: true,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidPaths.ApplicationProjectFile> = {
         ...config,
@@ -225,62 +236,50 @@ const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
   });
 };
 
-function applyIOSCoreMods(projectRoot: string, config: ExportedConfig): ExportedConfig {
-  const { iosProjectDirectory, supportingDirectory } = getIOSPaths(projectRoot, config);
+function applyIOSBaseMods(config: ExportedConfig): ExportedConfig {
+  config = withExpoDangerousBaseMod(config, 'ios');
+  config = withIosInfoPlistBaseMod(config);
+  config = withExpoPlistBaseMod(config);
+  config = withXcodeProjectBaseMod(config);
+  config = withEntitlementsBaseMod(config);
 
-  // Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
-  config = withInterceptedMod<InfoPlist>(config, {
-    platform: 'ios',
-    mod: 'infoPlist',
+  return config;
+}
+
+const withExpoDangerousBaseMod: ConfigPlugin<ModPlatform> = (config, platform) => {
+  // Used for scheduling when dangerous mods run.
+  return withInterceptedMod<JSONObject>(config, {
+    platform,
+    mod: 'dangerous',
+    skipEmptyMod: true,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      let results: ExportedConfigWithProps<JSONObject> = {
+      const results = await nextMod!({
         ...config,
         modRequest,
-      };
-
-      // Apply all of the Info.plist values to the expo.ios.infoPlist object
-      // TODO: Remove this in favor of just overwriting the Info.plist with the Expo object. This will enable people to actually remove values.
-      if (!config.ios) {
-        config.ios = {};
-      }
-      if (!config.ios.infoPlist) {
-        config.ios.infoPlist = {};
-      }
-
-      const filePath = path.resolve(iosProjectDirectory, 'Info.plist');
-      const contents = await readFile(filePath, 'utf8');
-      assert(contents, 'Info.plist is empty');
-      let data = plist.parse(contents);
-
-      config.ios.infoPlist = {
-        ...(data || {}),
-        ...config.ios.infoPlist,
-      };
-      // TODO: Fix type
-      results = await nextMod!({
-        ...config,
-        modRequest,
-        modResults: config.ios.infoPlist as InfoPlist,
       });
       resolveModResults(results, modRequest.platform, modRequest.modName);
-      data = results.modResults;
-
-      await writeFile(filePath, plist.build(data));
-
       return results;
     },
   });
+};
 
+const withExpoPlistBaseMod: ConfigPlugin = config => {
   // Append a rule to supply Expo.plist data to mods on `mods.ios.expoPlist`
-  config = withInterceptedMod<JSONObject>(config, {
+  return withInterceptedMod<JSONObject>(config, {
     platform: 'ios',
     mod: 'expoPlist',
+    skipEmptyMod: true,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      const supportingDirectory = path.join(
+        modRequest.platformProjectRoot,
+        modRequest.projectName!,
+        'Supporting'
+      );
+
       let results: ExportedConfigWithProps<JSONObject> = {
         ...config,
         modRequest,
       };
-
       try {
         const filePath = path.resolve(supportingDirectory, 'Expo.plist');
         let modResults = plist.parse(await readFile(filePath, 'utf8'));
@@ -305,13 +304,16 @@ function applyIOSCoreMods(projectRoot: string, config: ExportedConfig): Exported
       return results;
     },
   });
+};
 
+const withXcodeProjectBaseMod: ConfigPlugin = config => {
   // Append a rule to supply .xcodeproj data to mods on `mods.ios.xcodeproj`
-  config = withInterceptedMod<XcodeProject>(config, {
+  return withInterceptedMod<XcodeProject>(config, {
     platform: 'ios',
     mod: 'xcodeproj',
+    skipEmptyMod: true,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      const modResults = getPbxproj(projectRoot);
+      const modResults = getPbxproj(modRequest.projectRoot);
       // TODO: Fix type
       const results = await nextMod!({
         ...config,
@@ -324,17 +326,61 @@ function applyIOSCoreMods(projectRoot: string, config: ExportedConfig): Exported
       return results;
     },
   });
+};
 
-  config = withEntitlementsBaseMod(config);
+const withIosInfoPlistBaseMod: ConfigPlugin = config => {
+  // Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
+  return withInterceptedMod<InfoPlist>(config, {
+    platform: 'ios',
+    mod: 'infoPlist',
+    skipEmptyMod: true,
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      const filePath = getInfoPlistPath(modRequest.projectRoot);
 
-  return config;
-}
+      let results: ExportedConfigWithProps<JSONObject> = {
+        ...config,
+        modRequest,
+      };
+
+      // Apply all of the Info.plist values to the expo.ios.infoPlist object
+      // TODO: Remove this in favor of just overwriting the Info.plist with the Expo object. This will enable people to actually remove values.
+      if (!config.ios) {
+        config.ios = {};
+      }
+      if (!config.ios.infoPlist) {
+        config.ios.infoPlist = {};
+      }
+
+      const contents = await readFile(filePath, 'utf8');
+      assert(contents, 'Info.plist is empty');
+      let data = plist.parse(contents);
+
+      config.ios.infoPlist = {
+        ...(data || {}),
+        ...config.ios.infoPlist,
+      };
+      // TODO: Fix type
+      results = await nextMod!({
+        ...config,
+        modRequest,
+        modResults: config.ios.infoPlist as InfoPlist,
+      });
+      resolveModResults(results, modRequest.platform, modRequest.modName);
+      data = results.modResults;
+
+      await writeFile(filePath, plist.build(data));
+
+      return results;
+    },
+  });
+};
 
 const withEntitlementsBaseMod: ConfigPlugin = config => {
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
   return withInterceptedMod<JSONObject>(config, {
     platform: 'ios',
     mod: 'entitlements',
+    skipEmptyMod: true,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       const entitlementsPath = getEntitlementsPath(modRequest.projectRoot);
 
@@ -374,41 +420,3 @@ const withEntitlementsBaseMod: ConfigPlugin = config => {
     },
   });
 };
-
-// TODO: come up with a better solution for using app.json expo.name in various places
-function sanitizedName(name: string) {
-  return name
-    .replace(/[\W_]+/g, '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
-
-// TODO: it's silly and kind of fragile that we look at app config to determine
-// the ios project paths. Overall this function needs to be revamped, just a
-// placeholder for now! Make this more robust when we support applying config
-// at any time (currently it's only applied on eject).
-function getIOSPaths(projectRoot: string, exp: ExpoConfig) {
-  let projectName: string | null = null;
-
-  // Attempt to get the current ios folder name (apply).
-  try {
-    projectName = getProjectName(projectRoot);
-  } catch {
-    // If no iOS project exists then create a new one (eject).
-    projectName = exp.name;
-    if (!projectName) {
-      throw new Error('Your project needs a name in app.json/app.config.js.');
-    }
-    projectName = sanitizedName(projectName);
-  }
-
-  const iosProjectDirectory = path.join(projectRoot, 'ios', projectName);
-  const iconPath = path.join(iosProjectDirectory, 'Assets.xcassets', 'AppIcon.appiconset');
-  const supportingDirectory = path.join(iosProjectDirectory, 'Supporting');
-  return {
-    projectName,
-    supportingDirectory,
-    iosProjectDirectory,
-    iconPath,
-  };
-}
