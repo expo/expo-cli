@@ -3,6 +3,7 @@ import { withExpoAndroidPlugins } from '@expo/config/build/plugins/expo-plugins'
 import { compileModsAsync } from '@expo/config/build/plugins/mod-compiler';
 import { UserManager } from '@expo/xdl';
 
+import log from '../../log';
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
 
 export default async function configureAndroidProjectAsync(projectRoot: string) {
@@ -23,5 +24,12 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   });
 
   // compile all plugins and mods
-  await compileModsAsync(config, projectRoot);
+  config = await compileModsAsync(config, projectRoot);
+
+  if (log.isDebug) {
+    log.debug();
+    log.debug('Evaluated Android config:');
+    log.info(config);
+    log.debug();
+  }
 }

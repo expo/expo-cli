@@ -40,6 +40,13 @@ function consoleDebug(...args: any[]) {
   console.debug(...args); // eslint-disable-line no-console
 }
 
+function consoleInfo(...args: any[]) {
+  _maybePrintNewLine();
+  _updateIsLastLineNewLine(args);
+
+  console.info(...args); // eslint-disable-line no-console
+}
+
 function consoleLog(...args: any[]) {
   _maybePrintNewLine();
   _updateIsLastLineNewLine(args);
@@ -168,13 +175,24 @@ log.warn = function warn(...args: any[]) {
   });
 };
 
+log.isDebug = EXPO_DEBUG;
+
 // Only show these logs when EXPO_DEBUG is active
 log.debug = function debug(...args: any[]) {
   if (!EXPO_DEBUG) {
     return;
   }
   respectProgressBars(() => {
-    consoleDebug(...withPrefixAndTextColor(args, chalk.gray));
+    consoleDebug(...withPrefixAndTextColor(args));
+  });
+};
+
+log.info = function info(...args: any[]) {
+  if (!EXPO_DEBUG) {
+    return;
+  }
+  respectProgressBars(() => {
+    consoleInfo(...args);
   });
 };
 
