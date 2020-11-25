@@ -1,8 +1,8 @@
 import path from 'path';
 
 import { ExportedConfig, Mod, ModConfig, ModPlatform } from '../Plugin.types';
-import { getProjectName } from '../ios/utils/Xcodeproj';
-import { resolveModResults, withCoreMods } from './compiler-plugins';
+import { getHackyProjectName } from '../ios/utils/Xcodeproj';
+import { resolveModResults, withBaseMods } from './compiler-plugins';
 
 /**
  *
@@ -13,7 +13,7 @@ export async function compileModsAsync(
   config: ExportedConfig,
   projectRoot: string
 ): Promise<ExportedConfig> {
-  config = withCoreMods(config, projectRoot);
+  config = withBaseMods(config);
   return await evalModsAsync(config, projectRoot);
 }
 
@@ -29,8 +29,15 @@ export async function evalModsAsync(
   for (const [platformName, platform] of Object.entries(config.mods ?? ({} as ModConfig))) {
     const entries = Object.entries(platform);
     if (entries.length) {
+      const dangerousIndex = entries.findIndex(([modName]) => modName === 'dangerous');
+      if (dangerousIndex > -1) {
+        // Move dangerous item to the first position if it exists, this ensures that all dangerous code runs first.
+        entries.splice(0, 0, entries.splice(dangerousIndex, 1)[0]);
+      }
+
       const platformProjectRoot = path.join(projectRoot, platformName);
-      const projectName = platformName === 'ios' ? getProjectName(projectRoot) : undefined;
+      const projectName =
+        platformName === 'ios' ? getHackyProjectName(projectRoot, config) : undefined;
 
       for (const [modName, mod] of entries) {
         const modRequest = {
@@ -40,6 +47,7 @@ export async function evalModsAsync(
           platform: platformName as ModPlatform,
           modName,
         };
+
         const results = await (mod as Mod)({
           ...config,
           modResults: null,

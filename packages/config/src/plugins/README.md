@@ -161,4 +161,6 @@ export const withIcons: ConfigPlugin = config => {
 };
 ```
 
-Be careful using `withDangerousModifier` as it is subject to change in the future. The order with which it gets executed is not reliable either.
+Be careful using `withDangerousModifier` as it is subject to change in the future.
+The order with which it gets executed is not reliable either.
+Currently dangerous mods run first before all other base modifiers.
