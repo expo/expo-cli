@@ -13,12 +13,18 @@ type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPli
  *
  * @param action
  */
-export function createInfoPlistPlugin(action: MutateInfoPlistAction): ConfigPlugin {
-  return config =>
+export function createInfoPlistPlugin(action: MutateInfoPlistAction, name?: string): ConfigPlugin {
+  const withUnknown: ConfigPlugin = config =>
     withInfoPlist(config, async config => {
       config.modResults = await action(config, config.modResults);
       return config;
     });
+  if (name) {
+    Object.defineProperty(withUnknown, 'name', {
+      value: name,
+    });
+  }
+  return withUnknown;
 }
 
 type MutateEntitlementsPlistAction = (expo: ExpoConfig, entitlements: JSONObject) => JSONObject;
@@ -28,12 +34,21 @@ type MutateEntitlementsPlistAction = (expo: ExpoConfig, entitlements: JSONObject
  *
  * @param action
  */
-export function createEntitlementsPlugin(action: MutateEntitlementsPlistAction): ConfigPlugin {
-  return config =>
+export function createEntitlementsPlugin(
+  action: MutateEntitlementsPlistAction,
+  name: string
+): ConfigPlugin {
+  const withUnknown: ConfigPlugin = config =>
     withEntitlementsPlist(config, async config => {
       config.modResults = await action(config, config.modResults);
       return config;
     });
+  if (name) {
+    Object.defineProperty(withUnknown, 'name', {
+      value: name,
+    });
+  }
+  return withUnknown;
 }
 
 /**

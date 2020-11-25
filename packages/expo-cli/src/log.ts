@@ -1,7 +1,10 @@
 import chalk from 'chalk';
 import program from 'commander';
+import { boolish } from 'getenv';
 import { Ora } from 'ora';
 import terminalLink from 'terminal-link';
+
+const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 type Color = (...text: string[]) => string;
 
@@ -28,6 +31,20 @@ function _maybePrintNewLine() {
     _printNewLineBeforeNextLog = false;
     console.log(); // eslint-disable-line no-console
   }
+}
+
+function consoleDebug(...args: any[]) {
+  _maybePrintNewLine();
+  _updateIsLastLineNewLine(args);
+
+  console.debug(...args); // eslint-disable-line no-console
+}
+
+function consoleInfo(...args: any[]) {
+  _maybePrintNewLine();
+  _updateIsLastLineNewLine(args);
+
+  console.info(...args); // eslint-disable-line no-console
 }
 
 function consoleLog(...args: any[]) {
@@ -95,7 +112,7 @@ function log(...args: any[]) {
   });
 }
 
-log.nested = function (message: any) {
+log.nested = function(message: any) {
   respectProgressBars(() => {
     consoleLog(message);
   });
@@ -146,7 +163,7 @@ log.error = function error(...args: any[]) {
   });
 };
 
-log.nestedError = function (message: string) {
+log.nestedError = function(message: string) {
   respectProgressBars(() => {
     consoleError(chalk.red(message));
   });
@@ -158,19 +175,40 @@ log.warn = function warn(...args: any[]) {
   });
 };
 
-log.nestedWarn = function (message: string) {
+log.isDebug = EXPO_DEBUG;
+
+// Only show these logs when EXPO_DEBUG is active
+log.debug = function debug(...args: any[]) {
+  if (!EXPO_DEBUG) {
+    return;
+  }
+  respectProgressBars(() => {
+    consoleDebug(...withPrefixAndTextColor(args));
+  });
+};
+
+log.info = function info(...args: any[]) {
+  if (!EXPO_DEBUG) {
+    return;
+  }
+  respectProgressBars(() => {
+    consoleInfo(...args);
+  });
+};
+
+log.nestedWarn = function(message: string) {
   respectProgressBars(() => {
     consoleWarn(chalk.yellow(message));
   });
 };
 
-log.gray = function (...args: any[]) {
+log.gray = function(...args: any[]) {
   respectProgressBars(() => {
     consoleLog(...withPrefixAndTextColor(args));
   });
 };
 
-log.clear = function () {
+log.clear = function() {
   process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
 };
 

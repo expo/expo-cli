@@ -7,7 +7,10 @@ import { AndroidManifest, getMainActivityOrThrow } from './Manifest';
 type AndroidIntentFilters = NonNullable<Android['intentFilters']>;
 // TODO: make it so intent filters aren't written again if you run the command again
 
-export const withAndroidIntentFilters = createAndroidManifestPlugin(setAndroidIntentFilters);
+export const withAndroidIntentFilters = createAndroidManifestPlugin(
+  setAndroidIntentFilters,
+  'withAndroidIntentFilters'
+);
 
 export function getIntentFilters(config: Pick<ExpoConfig, 'android'>): AndroidIntentFilters {
   return config.android?.intentFilters ?? [];

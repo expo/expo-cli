@@ -4,7 +4,10 @@ import { AndroidManifest, getMainActivityOrThrow } from './Manifest';
 
 export const SCREEN_ORIENTATION_ATTRIBUTE = 'android:screenOrientation';
 
-export const withOrientation = createAndroidManifestPlugin(setAndroidOrientation);
+export const withOrientation = createAndroidManifestPlugin(
+  setAndroidOrientation,
+  'withOrientation'
+);
 
 export function getOrientation(config: Pick<ExpoConfig, 'orientation'>) {
   return typeof config.orientation === 'string' ? config.orientation : null;
