@@ -16,21 +16,37 @@ type MutateDataAction<T> = (expo: ExpoConfig, data: T) => OptionalPromise<T>;
  * @param action
  */
 export function createAndroidManifestPlugin(
-  action: MutateDataAction<AndroidManifest>
+  action: MutateDataAction<AndroidManifest>,
+  name: string
 ): ConfigPlugin {
-  return config =>
+  const withUnknown: ConfigPlugin = config =>
     withAndroidManifest(config, async config => {
       config.modResults = await action(config, config.modResults);
       return config;
     });
+  if (name) {
+    Object.defineProperty(withUnknown, 'name', {
+      value: name,
+    });
+  }
+  return withUnknown;
 }
 
-export function createStringsXmlPlugin(action: MutateDataAction<ResourceXML>): ConfigPlugin {
-  return config =>
+export function createStringsXmlPlugin(
+  action: MutateDataAction<ResourceXML>,
+  name: string
+): ConfigPlugin {
+  const withUnknown: ConfigPlugin = config =>
     withStringsXml(config, async config => {
       config.modResults = await action(config, config.modResults);
       return config;
     });
+  if (name) {
+    Object.defineProperty(withUnknown, 'name', {
+      value: name,
+    });
+  }
+  return withUnknown;
 }
 
 /**
