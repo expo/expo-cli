@@ -22,7 +22,6 @@ export default async function configureIOSProjectAsync(projectRoot: string) {
 
   // Add all built-in plugins
   config = withExpoIOSPlugins(config, {
-    projectRoot,
     bundleIdentifier,
     expoUsername,
   });

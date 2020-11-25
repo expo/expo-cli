@@ -22,7 +22,6 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
 
   // Add all built-in plugins
   config = withExpoAndroidPlugins(config, {
-    projectRoot,
     package: packageName,
     expoUsername,
   });

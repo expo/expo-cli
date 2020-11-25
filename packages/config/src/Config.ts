@@ -22,6 +22,7 @@ import { getRootPackageJsonPath, projectHasModule } from './Modules';
 import { ModConfig } from './Plugin.types';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
+import { withStaticPlugins } from './plugins/static-plugin';
 
 type SplitConfigs = { expo: ExpoConfig; mods: ModConfig };
 
@@ -132,6 +133,9 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
       // @ts-ignore: Add the mods back to the object.
       configWithDefaultValues.exp.mods = config.mods ?? null;
     }
+
+    // Apply static json plugins
+    configWithDefaultValues.exp = withStaticPlugins(configWithDefaultValues.exp, projectRoot);
 
     return configWithDefaultValues;
   }
