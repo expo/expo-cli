@@ -162,3 +162,130 @@ export const withIcons: ConfigPlugin = config => {
 ```
 
 Be careful using `withDangerousModifier` as it is subject to change in the future. The order with which it gets executed is not reliable either.
+
+## Static Plugins
+
+You won't need to migrate away from your existing `app.json` or `app.config.json` to use config plugins (although it is recommended). Plugins can be resolved automatically using the JSON plugins array.
+
+```js
+{
+  name: 'My App',
+  plugins: [
+    // A config plugin!
+    'expo-splash-screen'
+  ]
+}
+```
+
+Static plugins can be added in two different formats:
+
+```js
+{
+  plugins: [
+    // Long form with properties
+    {
+      module: 'my-plugin',
+      props: {
+        /* Passed as the second parameter to the config plugin */
+      },
+    },
+    // Short hand -- gets normalized to { module: 'my-plugin', props: {} }
+    'my-plugin',
+  ];
+}
+```
+
+> 💡 Everything in the Expo config must be able to be converted to JSON (with the exception of the `mods` field). So no async functions!
+
+### Module Resolution
+
+Modules can be resolved in a few ways.
+
+> Any resolution pattern that isn't specified below is unexpected behavior, and subject to breaking changes.
+
+#### Project file
+
+`./my-config-plugin.js`
+
+```
+╭── app.config.js ➡️ Expo Config
+╰── my-config-plugin.js ➡️ ✅ `module.exports = (config) => config`
+```
+
+#### Project folder
+
+`./my-config-plugin`
+
+```
+╭── app.config.js ➡️ Expo Config
+╰── my-config-plugin/ ➡️ Folder containing plugin code
+    ├── expo-plugin.js ➡️ ✅ `module.exports = (config) => config`
+    ╰── index.js ➡️ Ignored because `expo-plugin.js` exists.
+```
+
+#### Node module
+
+`expo-splash-screen`
+
+```
+╭── app.config.js ➡️ Expo Config
+╰── node_modules/expo-splash-screen/ ➡️ Module installed from NPM (works with Yarn workspaces as well).
+    ├── package.json ➡️ The `main` file will be used if `expo-plugin.js` doesn't exist.
+    ├── expo-plugin.js ➡️ ✅ `module.exports = (config) => config`
+    ╰── build/index.js ➡️ Ignored because `expo-plugin.js` exists. Could be used with `expo-splash-screen/build/index.js`
+```
+
+#### Module internal
+
+If a file inside a node module is specified, then `expo-plugin.js` resolution will be skipped. This is referred to as "reaching inside a package" and is bad form. We support this to make testing, and plugin authoring easier.
+
+- `expo-splash-screen/build/index.js`
+- `expo-splash-screen/build`
+
+```
+╭── app.config.js ➡️ Expo Config
+╰── node_modules/expo-splash-screen/ ➡️ Module installed from NPM (works with Yarn workspaces as well).
+    ├── package.json ➡️ The `main` file will be used if `expo-plugin.js` doesn't exist.
+    ├── expo-plugin.js ➡️ Ignored because the reference reaches into the package internals
+    ╰── build/index.js ➡️ ✅ `module.exports = (config) => config`
+```
+
+### Creating static plugins
+
+- The root file should be `expo-plugin.js` in a module
+- Static plugins should export a `ConfigPlugin`
+- Plugins should be transpiled for Node environments!
+  - No `import/export` keywords, use `module.exports` in the shipped plugin file.
+  - Expo only transpiles the user's `app.config` file, anything more would require a bundler which would add too many "opinions" for a config file 🙃
+
+Example:
+
+`my-plugin.js`
+
+```js
+module.exports = (config, name) => {
+  config.name = 'custom-' + name;
+};
+```
+
+`app.config.json`
+
+```js
+{
+  name: "my-app",
+  plugins: [
+    { module: './my-plugin', props: 'app' }
+  ]
+}
+```
+
+↓ ↓ ↓
+
+**Evaluated config JSON**
+
+```json
+{
+  "name": "custom-app",
+  "plugins": [{ "module": "./my-plugin", "props": "app" }]
+}
+```

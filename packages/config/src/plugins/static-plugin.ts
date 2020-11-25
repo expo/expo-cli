@@ -26,7 +26,36 @@ function resolvePluginForModule(projectRoot: string, modulePath: string): string
     resolved,
     `Failed to resolve plugin for module "${modulePath}" relative to "${projectRoot}"`
   );
+  // If the modulePath is something like `@bacon/package/index.js` or `expo-foo/build/app`
+  // then skip resolving the module `expo-plugin.js`
+  if (moduleNameIsDirectFileReference(modulePath)) {
+    return resolved;
+  }
   return findUpPlugin(resolved);
+}
+
+// TODO: Test windows
+function pathIsFilePath(name: string): boolean {
+  // Matches lines starting with: . / ~/
+  return !!name.match(/^(\.|~\/|\/)/g);
+}
+
+// TODO: If this doesn't work on windows, scrap it.
+function moduleNameIsDirectFileReference(name: string): boolean {
+  if (pathIsFilePath(name)) {
+    return true;
+  }
+
+  // TODO: Use this on windows path.sep
+  const slashCount = name.match(/\//g)?.length ?? 0;
+
+  // Orgs (like @expo/config ) should have more than one slash to be a direct file.
+  if (name.startsWith('@')) {
+    return slashCount > 1;
+  }
+
+  // Regular packages should be considered direct reference if they have more than one slash.
+  return slashCount > 0;
 }
 
 function findUpPlugin(root: string): string {
