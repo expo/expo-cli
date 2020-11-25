@@ -9,7 +9,7 @@ import {
 
 const META_BRANCH_KEY = 'io.branch.sdk.BranchKey';
 
-export const withBranch = createAndroidManifestPlugin(setBranchApiKey);
+export const withBranch = createAndroidManifestPlugin(setBranchApiKey, 'withBranch');
 
 export function getBranchApiKey(config: ExpoConfig) {
   return config.android?.config?.branch?.apiKey ?? null;

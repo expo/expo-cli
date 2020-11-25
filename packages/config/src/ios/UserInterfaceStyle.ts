@@ -2,7 +2,10 @@ import { ExpoConfig } from '../Config.types';
 import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist, InterfaceStyle } from './IosConfig.types';
 
-export const withUserInterfaceStyle = createInfoPlistPlugin(setUserInterfaceStyle);
+export const withUserInterfaceStyle = createInfoPlistPlugin(
+  setUserInterfaceStyle,
+  'withUserInterfaceStyle'
+);
 
 export function getUserInterfaceStyle(
   config: Pick<ExpoConfig, 'ios' | 'userInterfaceStyle'>

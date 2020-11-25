@@ -5,7 +5,7 @@ import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from './Resourc
 import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';
 
-export const withName = createStringsXmlPlugin(applyNameFromConfig);
+export const withName = createStringsXmlPlugin(applyNameFromConfig, 'withName');
 
 export function getName(config: Pick<ExpoConfig, 'name'>) {
   return typeof config.name === 'string' ? config.name : null;

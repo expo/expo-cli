@@ -31,8 +31,10 @@ describe(compileModsAsync, () => {
     const config = await compileModsAsync(exportedConfig, projectRoot);
 
     expect(config.name).toBe('app');
-    expect(config.ios.infoPlist).toBeDefined();
-    expect(config.ios.entitlements).toBeDefined();
+    // Base mods are skipped when no mods are applied, these shouldn't be defined.
+    expect(config.ios?.infoPlist).toBeUndefined();
+    expect(config.ios?.entitlements).toBeUndefined();
+    // Adds base mods
     expect(Object.values(config.mods.ios).every(value => typeof value === 'function')).toBe(true);
   });
 
@@ -64,7 +66,8 @@ describe(compileModsAsync, () => {
     // App config should have been modified
     expect(config.name).toBe('app');
     expect(config.ios.infoPlist).toBeDefined();
-    expect(config.ios.entitlements).toBeDefined();
+    // No entitlements mod means this won't be defined
+    expect(config.ios.entitlements).toBeUndefined();
 
     // Plugins should all be functions
     expect(Object.values(config.mods.ios).every(value => typeof value === 'function')).toBe(true);

@@ -2,9 +2,9 @@ import { ExpoConfig } from '../Config.types';
 import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 
-export const withVersion = createInfoPlistPlugin(setVersion);
+export const withVersion = createInfoPlistPlugin(setVersion, 'withVersion');
 
-export const withBuildNumber = createInfoPlistPlugin(setBuildNumber);
+export const withBuildNumber = createInfoPlistPlugin(setBuildNumber, 'withBuildNumber');
 
 export function getVersion(config: Pick<ExpoConfig, 'version'>) {
   return config.version || '0.0.0';

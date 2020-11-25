@@ -24,13 +24,11 @@ function ensureArray<T>(input: T | T[]): T[] {
  * @param config exported config
  * @param plugins list of config config plugins to apply to the exported config
  */
-export const withPlugins: ConfigPlugin<
-  (
-    | ConfigPlugin
-    // TODO: Type this somehow if possible.
-    | [ConfigPlugin<any>, any]
-  )[]
-> = (config, plugins): ExportedConfig => {
+export const withPlugins: ConfigPlugin<(
+  | ConfigPlugin
+  // TODO: Type this somehow if possible.
+  | [ConfigPlugin<any>, any]
+)[]> = (config, plugins): ExportedConfig => {
   return plugins.reduce((prev, curr) => {
     const [plugins, args] = ensureArray(curr);
     return plugins(prev, args);
@@ -76,6 +74,7 @@ export function withExtendedMod<T>(
  * @param config exported config
  * @param platform platform to target (ios or android)
  * @param mod name of the platform function to intercept
+ * @param skipEmptyMod should skip running the action if there is no existing mod to intercept
  * @param action method to run on the mod when the config is compiled
  */
 export function withInterceptedMod<T>(
@@ -84,10 +83,12 @@ export function withInterceptedMod<T>(
     platform,
     mod,
     action,
+    skipEmptyMod,
   }: {
     platform: ModPlatform;
     mod: string;
     action: Mod<T>;
+    skipEmptyMod?: boolean;
   }
 ): ExportedConfig {
   if (!config.mods) {
@@ -97,8 +98,18 @@ export function withInterceptedMod<T>(
     config.mods[platform] = {};
   }
 
-  const interceptedMod: Mod<T> =
-    (config.mods[platform] as Record<string, any>)[mod] ?? (config => config);
+  let interceptedMod: Mod<T> = (config.mods[platform] as Record<string, any>)[mod];
+
+  // No existing mod to intercept
+  if (!interceptedMod) {
+    if (skipEmptyMod) {
+      // Skip running the action
+      return config;
+    }
+    // Use a noop mod and continue
+    const noopMod: Mod<T> = config => config;
+    interceptedMod = noopMod;
+  }
 
   // Create a stack trace for debugging ahead of time
   let debugTrace: string = '';
@@ -110,7 +121,7 @@ export function withInterceptedMod<T>(
   }
 
   async function interceptingMod({ modRequest, ...config }: ExportedConfigWithProps<T>) {
-    if (EXPO_DEBUG) {
+    if (modRequest.isDebug) {
       // In debug mod, log the plugin stack in the order which they were invoked
       const modStack = chalk.bold(`${platform}.${mod}`);
       console.log(`${modStack}: ${debugTrace}`);

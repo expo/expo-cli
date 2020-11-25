@@ -12,7 +12,10 @@ import {
 const META_API_KEY = 'com.google.android.geo.API_KEY';
 const LIB_HTTP = 'org.apache.http.legacy';
 
-export const withGoogleMapsApiKey = createAndroidManifestPlugin(setGoogleMapsApiKey);
+export const withGoogleMapsApiKey = createAndroidManifestPlugin(
+  setGoogleMapsApiKey,
+  'withGoogleMapsApiKey'
+);
 
 export function getGoogleMapsApiKey(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.config?.googleMaps?.apiKey ?? null;

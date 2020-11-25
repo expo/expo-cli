@@ -1,3 +1,4 @@
+import { ExpoConfig } from '@expo/config-types';
 import * as path from 'path';
 import xcode, {
   PBXGroup,
@@ -10,6 +11,7 @@ import xcode, {
 } from 'xcode';
 import pbxFile from 'xcode/lib/pbxFile';
 
+import { assert } from '../../Errors';
 import * as Paths from '../Paths';
 
 export type ProjectSectionEntry = [string, PBXProject];
@@ -27,6 +29,30 @@ export type ConfigurationSectionEntry = [string, XCBuildConfiguration];
 export function getProjectName(projectRoot: string) {
   const sourceRoot = Paths.getSourceRoot(projectRoot);
   return path.basename(sourceRoot);
+}
+
+// TODO: come up with a better solution for using app.json expo.name in various places
+function sanitizedName(name: string) {
+  return name
+    .replace(/[\W_]+/g, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+// TODO: it's silly and kind of fragile that we look at app config to determine
+// the ios project paths. Overall this function needs to be revamped, just a
+// placeholder for now! Make this more robust when we support applying config
+// at any time (currently it's only applied on eject).
+export function getHackyProjectName(projectRoot: string, config: ExpoConfig): string {
+  // Attempt to get the current ios folder name (apply).
+  try {
+    return getProjectName(projectRoot);
+  } catch {
+    // If no iOS project exists then create a new one (eject).
+    const projectName = config.name;
+    assert(projectName, 'Your project needs a name in app.json/app.config.js.');
+    return sanitizedName(projectName);
+  }
 }
 
 // TODO(brentvatne): I couldn't figure out how to do this with an existing

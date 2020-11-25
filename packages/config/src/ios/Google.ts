@@ -10,7 +10,7 @@ import { getSourceRoot } from './Paths';
 import { appendScheme } from './Scheme';
 import { addFileToGroup, getProjectName } from './utils/Xcodeproj';
 
-export const withGoogle = createInfoPlistPlugin(setGoogleConfig);
+export const withGoogle = createInfoPlistPlugin(setGoogleConfig, 'withGoogle');
 
 export const withGoogleServicesFile: ConfigPlugin = config => {
   return withXcodeProject(config, config => {

@@ -15,7 +15,7 @@ type ExpoConfigFacebook = Pick<
 
 const fbSchemes = ['fbapi', 'fb-messenger-api', 'fbauth2', 'fbshareextension'];
 
-export const withFacebook = createInfoPlistPlugin(setFacebookConfig);
+export const withFacebook = createInfoPlistPlugin(setFacebookConfig, 'withFacebook');
 
 /**
  * Getters

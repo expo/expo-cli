@@ -19,11 +19,20 @@ import {
 
 type Plist = Record<string, any>;
 
-export const withAccessesContactNotes = createEntitlementsPlugin(setAccessesContactNotes);
+export const withAccessesContactNotes = createEntitlementsPlugin(
+  setAccessesContactNotes,
+  'withAccessesContactNotes'
+);
 
-export const withAssociatedDomains = createEntitlementsPlugin(setAssociatedDomains);
+export const withAssociatedDomains = createEntitlementsPlugin(
+  setAssociatedDomains,
+  'withAssociatedDomains'
+);
 
-export const withAppleSignInEntitlement = createEntitlementsPlugin(setAppleSignInEntitlement);
+export const withAppleSignInEntitlement = createEntitlementsPlugin(
+  setAppleSignInEntitlement,
+  'withAppleSignInEntitlement'
+);
 
 export const withICloudEntitlement: ConfigPlugin<{ appleTeamId: string }> = (
   config,
