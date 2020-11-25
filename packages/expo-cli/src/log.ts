@@ -112,7 +112,7 @@ function log(...args: any[]) {
   });
 }
 
-log.nested = function(message: any) {
+log.nested = function (message: any) {
   respectProgressBars(() => {
     consoleLog(message);
   });
@@ -163,7 +163,7 @@ log.error = function error(...args: any[]) {
   });
 };
 
-log.nestedError = function(message: string) {
+log.nestedError = function (message: string) {
   respectProgressBars(() => {
     consoleError(chalk.red(message));
   });
@@ -196,19 +196,19 @@ log.info = function info(...args: any[]) {
   });
 };
 
-log.nestedWarn = function(message: string) {
+log.nestedWarn = function (message: string) {
   respectProgressBars(() => {
     consoleWarn(chalk.yellow(message));
   });
 };
 
-log.gray = function(...args: any[]) {
+log.gray = function (...args: any[]) {
   respectProgressBars(() => {
     consoleLog(...withPrefixAndTextColor(args));
   });
 };
 
-log.clear = function() {
+log.clear = function () {
   process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
 };
 

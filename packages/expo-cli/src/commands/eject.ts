@@ -40,7 +40,7 @@ export async function actionAsync(
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('eject [path]')
     .description(
