@@ -1,4 +1,5 @@
-import { AndroidConfig, BareAppConfig, getConfig, IOSConfig } from '@expo/config';
+import { BareAppConfig, getConfig } from '@expo/config';
+import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
 import { Exp, UserManager } from '@expo/xdl';

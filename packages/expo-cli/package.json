@@ -66,6 +66,7 @@
   "dependencies": {
     "@expo/bunyan": "3.0.2",
     "@expo/config": "3.3.15",
+    "@expo/config-plugins": "1.0.0",
     "@expo/dev-tools": "0.13.59",
     "@expo/eas-build-job": "0.1.2",
     "@expo/json-file": "8.2.24",

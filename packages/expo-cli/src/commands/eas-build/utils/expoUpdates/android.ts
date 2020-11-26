@@ -1,4 +1,5 @@
-import { AndroidConfig, ExpoConfig } from '@expo/config';
+import { AndroidConfig } from '@expo/config-plugins';
+import { ExpoConfig } from '@expo/config-types';
 import { UserManager } from '@expo/xdl';
 import fs from 'fs-extra';
 

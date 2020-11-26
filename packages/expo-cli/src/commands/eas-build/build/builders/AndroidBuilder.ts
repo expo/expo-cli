@@ -1,4 +1,4 @@
-import { AndroidConfig } from '@expo/config';
+import { AndroidConfig } from '@expo/config-plugins';
 import { Android, Job, Platform, sanitizeJob, Workflow } from '@expo/eas-build-job';
 import path from 'path';
 
