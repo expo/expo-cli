@@ -51,6 +51,7 @@ function applyAndroidBaseMods(config: ExportedConfig): ExportedConfig {
   config = withAndroidStringsXMLBaseMod(config);
   config = withAndroidManifestBaseMod(config);
   config = withAndroidMainActivityBaseMod(config);
+  config = withAndroidSettingsGradleBaseMod(config);
   config = withAndroidProjectBuildGradleBaseMod(config);
   config = withAndroidAppBuildGradleBaseMod(config);
   return config;
@@ -157,6 +158,42 @@ const withAndroidProjectBuildGradleBaseMod: ConfigPlugin = config => {
         WarningAggregator.addWarningAndroid(
           `${modRequest.platform}-${modRequest.modName}`,
           `Project build.gradle could not be modified. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
+
+const withAndroidSettingsGradleBaseMod: ConfigPlugin = config => {
+  return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
+    platform: 'android',
+    mod: 'settingsGradle',
+    skipEmptyMod: true,
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        let modResults = await AndroidPaths.getSettingsGradleAsync(modRequest.projectRoot);
+        // Currently don't support changing the path or language
+        const filePath = modResults.path;
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await writeFile(filePath, modResults.contents);
+      } catch (error) {
+        WarningAggregator.addWarningAndroid(
+          `${modRequest.platform}-${modRequest.modName}`,
+          `Project settings.gradle could not be modified. ${error.message}`
         );
       }
       return results;

@@ -92,7 +92,7 @@ export const withMainActivity: ConfigPlugin<Mod<ApplicationProjectFile>> = (conf
 };
 
 /**
- * Provides the project build.gradle for modification.
+ * Provides the project /build.gradle for modification.
  *
  * @param config
  * @param action
@@ -115,6 +115,20 @@ export const withAppBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config,
   return withExtendedMod(config, {
     platform: 'android',
     mod: 'appBuildGradle',
+    action,
+  });
+};
+
+/**
+ * Provides the /settings.gradle for modification.
+ *
+ * @param config
+ * @param action
+ */
+export const withSettingsGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config, action) => {
+  return withExtendedMod(config, {
+    platform: 'android',
+    mod: 'settingsGradle',
     action,
   });
 };
