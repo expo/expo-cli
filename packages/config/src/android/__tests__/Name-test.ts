@@ -1,16 +1,51 @@
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 
-import { getName, setName } from '../Name';
+import { applyNameSettingsGradle, getName, sanitizeNameForGradle, setName } from '../Name';
 import { readResourcesXMLAsync } from '../Resources';
 
 jest.mock('fs');
+
+const mockSettingsGradle = `rootProject.name = 'My-Co0l 😃 Pet_Project!'
+
+apply from: '../node_modules/react-native-unimodules/gradle.groovy'
+includeUnimodulesProjects()
+
+apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle");
+applyNativeModulesSettingsGradle(settings)
+
+include ':app'
+`;
 
 export const sampleStringsXML = `
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <resources>
   <string name="app_name">expo &amp;bo&lt;y&gt;'</string>
 </resources>`;
+
+const badName = `😃/\\:<>"?*|$F0g.`;
+const badNameCleaned = `😃$F0g.`;
+
+describe(sanitizeNameForGradle, () => {
+  it('removes invalid characters', () => {
+    expect(sanitizeNameForGradle(badName)).toBe(badNameCleaned);
+  });
+});
+describe(applyNameSettingsGradle, () => {
+  it('replaces name in settings', () => {
+    const modified = applyNameSettingsGradle({ name: badName }, mockSettingsGradle);
+    expect(modified.includes(`rootProject.name = '${badNameCleaned}'\n`)).toBe(true);
+  });
+  it('replaces name in settings with odd linting', () => {
+    // No spaces and double quotes are supported too right now.
+    const modified = applyNameSettingsGradle(
+      { name: badName },
+      `rootProject.name="My-Co0l 😃 Pet_Project!"`
+    );
+    // Replaces with expected linting
+    expect(modified).toBe(`rootProject.name = '${badNameCleaned}'`);
+  });
+});
 
 describe('name', () => {
   beforeAll(async () => {

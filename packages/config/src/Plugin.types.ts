@@ -88,6 +88,10 @@ export interface ModConfig {
      * Modify the `android/build.gradle` as a string.
      */
     projectBuildGradle?: Mod<AndroidPaths.GradleProjectFile>;
+    /**
+     * Modify the `android/settings.gradle` as a string.
+     */
+    settingsGradle?: Mod<AndroidPaths.GradleProjectFile>;
   };
   ios?: {
     /**

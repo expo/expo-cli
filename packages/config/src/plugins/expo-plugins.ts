@@ -59,6 +59,9 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
   config.android.package = props.package;
 
   return withPlugins(config, [
+    // settings.gradle
+    AndroidConfig.Name.withNameSettingsGradle,
+
     // project build.gradle
     AndroidConfig.GoogleServices.withClassPath,
 
