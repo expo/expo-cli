@@ -17,6 +17,7 @@ npm-debug.log
 .history
 
 packages/*/build/
+unlinked-packages/*/build/
 
 # Logs
 packages/*/logs/
