@@ -1,4 +1,4 @@
-import { ExpoConfig } from '@expo/config-types';
+import { AndroidIntentFiltersData, ExpoConfig } from '@expo/config-types';
 
 // import { ModConfig } from './Plugin.types';
 
@@ -105,15 +105,7 @@ export type IntentFilter = {
   action: string;
   category?: string[];
   autoVerify?: boolean;
-  data?: {
-    scheme?: string;
-    host?: string;
-    port?: string;
-    path?: string;
-    pathPattern?: string;
-    pathPrefix?: string;
-    mimeType?: string;
-  };
+  data?: AndroidIntentFiltersData;
 };
 
 export type ExpRc = { [key: string]: any };
