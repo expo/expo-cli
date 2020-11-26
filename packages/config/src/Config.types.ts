@@ -1,4 +1,4 @@
-import { AndroidIntentFiltersData, ExpoConfig } from '@expo/config-types';
+import { ExpoConfig } from '@expo/config-types';
 
 // import { ModConfig } from './Plugin.types';
 
@@ -100,13 +100,6 @@ export enum ProjectPrivacy {
   PUBLIC = 'public',
   UNLISTED = 'unlisted',
 }
-
-export type IntentFilter = {
-  action: string;
-  category?: string[];
-  autoVerify?: boolean;
-  data?: AndroidIntentFiltersData;
-};
 
 export type ExpRc = { [key: string]: any };
 export type Platform = 'android' | 'ios' | 'web';
