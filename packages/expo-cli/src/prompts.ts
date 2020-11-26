@@ -89,7 +89,7 @@ export async function selectAsync(
       onRender(this: {
         cursor: number;
         firstRender: boolean;
-        choices: (Omit<prompts.Choice, 'disable'> & { disabled?: boolean })[];
+        choices: (prompts.Choice & { disable?: boolean })[];
         render: () => void;
         moveCursor: (n: number) => void;
         fire: () => void;
@@ -99,8 +99,14 @@ export async function selectAsync(
         next: () => void;
       }) {
         if (this.firstRender) {
-          // Ensure the initial state isn't on a disabled item.
-          while (this.choices[this.cursor].disabled) {
+          // Flip the disabled value to prevent prompts from styling it with a strike-through
+          this.choices = this.choices.map(({ // @ts-ignore: broken types
+            disabled, ...choice }) => ({
+            ...choice,
+            disable: disabled,
+          }));
+          // Ensure the initial state isn't on a disable item.
+          while (this.choices[this.cursor].disable) {
             this.cursor++;
             if (this.cursor > this.choices.length - 1) break;
           }
@@ -112,9 +118,9 @@ export async function selectAsync(
             while (true) {
               if (next <= 0) break;
               next--;
-              if (!this.choices[next].disabled) break;
+              if (!this.choices[next].disable) break;
             }
-            if (!this.choices[next].disabled && next !== this.cursor) {
+            if (!this.choices[next].disable && next !== this.cursor) {
               this.moveCursor(next);
               this.render();
             } else {
@@ -128,9 +134,9 @@ export async function selectAsync(
             while (true) {
               if (next >= this.choices.length - 1) break;
               next++;
-              if (!this.choices[next].disabled) break;
+              if (!this.choices[next].disable) break;
             }
-            if (!this.choices[next].disabled && next !== this.cursor) {
+            if (!this.choices[next].disable && next !== this.cursor) {
               this.moveCursor(next);
               this.render();
             } else {
@@ -145,9 +151,9 @@ export async function selectAsync(
             while (i < this.choices.length) {
               i++;
               next = (next + 1) % this.choices.length;
-              if (!this.choices[next].disabled) break;
+              if (!this.choices[next].disable) break;
             }
-            if (!this.choices[next].disabled) {
+            if (!this.choices[next].disable) {
               this.moveCursor(next);
               this.render();
             } else {
