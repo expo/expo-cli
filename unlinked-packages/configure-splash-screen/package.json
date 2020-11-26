@@ -26,14 +26,14 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
-    "directory": "packages/configure-splash-screen"
+    "directory": "unlinked-packages/configure-splash-screen"
   },
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
   "author": "650 Industries, Inc.",
   "license": "MIT",
-  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/configure-splash-screen",
+  "homepage": "https://github.com/expo/expo-cli/tree/master/unlinked-packages/configure-splash-screen",
   "engines": {
     "node": ">=10"
   },
