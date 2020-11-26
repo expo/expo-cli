@@ -10,9 +10,9 @@ import { readResourcesXMLAsync } from '../Resources';
 import { sampleStylesXML } from './StatusBar-test';
 
 jest.mock('fs');
-jest.mock('../../WarningAggregator');
+jest.mock('../../utils/warnings');
 
-const { addWarningAndroid } = require('../../WarningAggregator');
+const { addWarningAndroid } = require('../../utils/warnings');
 
 describe('Android navigation bar', () => {
   it(`returns 'translucent' if no status bar color is provided`, () => {

@@ -9,7 +9,7 @@ import { getAllInfoPlistPaths, getAppDelegate, getXcodeProjectPath } from '../Pa
 const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
-jest.mock('../../WarningAggregator');
+jest.mock('../../utils/warnings');
 
 describe(getXcodeProjectPath, () => {
   beforeAll(async () => {

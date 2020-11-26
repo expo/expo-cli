@@ -16,7 +16,7 @@ import { getPbxproj } from '../utils/Xcodeproj';
 const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
-jest.mock('../../WarningAggregator');
+jest.mock('../../utils/warnings');
 
 const TABLET_AND_PHONE_SUPPORTED = [1, 2];
 const ONLY_PHONE_SUPPORTED = [1];
