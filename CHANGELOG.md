@@ -15,7 +15,16 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🐛 Bug fixes
 
 - [xdl] On Android remove default template splash image when no splash image is specified in the app manifest ([#2883](https://github.com/expo/expo-cli/pull/2883))
+
+## [Thu Nov 26 12:36:20 2020 +0100](https://github.com/expo/expo-cli/commit/5c432616d39fe0a8894b50d2e613284674a536e1)
+
+### 🐛 Bug fixes
+
 - [configure-splash-screen] On iOS fix auto-configuration when there's no PBXVariantGroup in the project ([#2945](https://github.com/expo/expo-cli/pull/2945))
+
+### 📦 Packages updated
+
+- @expo/configure-splash-screen@0.3.1
 
 ## [Mon, 9 Nov 2020 13:44:59 -0800](https://github.com/expo/expo-cli/commit/d5b8759b32d5a7747067a969728d9ba732926824)
 
