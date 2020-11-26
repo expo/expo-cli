@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousAndroidMod } from '../plugins/android-plugins';
+import { withDangerousMod } from '../plugins/core-plugins';
 import * as Colors from './Colors';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';
 import { writeXMLAsync } from './XML';
@@ -31,10 +31,13 @@ const IC_LAUNCHER_XML = 'ic_launcher.xml';
 const IC_LAUNCHER_ROUND_XML = 'ic_launcher_round.xml';
 
 export const withIcons: ConfigPlugin = config => {
-  return withDangerousAndroidMod(config, async config => {
-    await setIconAsync(config, config.modRequest.projectRoot);
-    return config;
-  });
+  return withDangerousMod(config, [
+    'android',
+    async config => {
+      await setIconAsync(config, config.modRequest.projectRoot);
+      return config;
+    },
+  ]);
 };
 
 export function getIcon(config: ExpoConfig) {

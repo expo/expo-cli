@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousAndroidMod } from '../plugins/android-plugins';
+import { withDangerousMod } from '../plugins/core-plugins';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
@@ -11,10 +11,13 @@ const COLOR_PRIMARY_KEY = 'colorPrimary';
 const DEFAULT_PRIMARY_COLOR = '#023c69';
 
 export const withPrimaryColor: ConfigPlugin = config => {
-  return withDangerousAndroidMod(config, async config => {
-    await setPrimaryColor(config, config.modRequest.projectRoot);
-    return config;
-  });
+  return withDangerousMod(config, [
+    'android',
+    async config => {
+      await setPrimaryColor(config, config.modRequest.projectRoot);
+      return config;
+    },
+  ]);
 };
 
 export function getPrimaryColor(config: Pick<ExpoConfig, 'primaryColor'>) {

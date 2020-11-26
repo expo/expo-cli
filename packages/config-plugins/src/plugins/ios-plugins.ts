@@ -122,17 +122,3 @@ export const withXcodeProject: ConfigPlugin<Mod<XcodeProject>> = (config, action
     action,
   });
 };
-
-/**
- * Mods that don't modify any data, all unresolved functionality is performed inside a dangerous mod.
- *
- * @param config
- * @param action
- */
-export const withDangerousMod: ConfigPlugin<Mod<unknown>> = (config, action) => {
-  return withExtendedMod(config, {
-    platform: 'ios',
-    mod: 'dangerous',
-    action,
-  });
-};

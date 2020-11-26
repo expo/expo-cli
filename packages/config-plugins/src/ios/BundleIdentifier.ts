@@ -18,15 +18,18 @@ export const withBundleIdentifier: ConfigPlugin<{ bundleIdentifier?: string }> =
   config,
   { bundleIdentifier }
 ) => {
-  return withDangerousMod(config, async config => {
-    const bundleId = bundleIdentifier ?? config.ios?.bundleIdentifier;
-    assert(
-      bundleId,
-      '`bundleIdentifier` must be defined in the app config (`expo.ios.bundleIdentifier`) or passed to the plugin `withBundleIdentifier`.'
-    );
-    await setBundleIdentifierForPbxproj(config.modRequest.projectRoot, bundleId!);
-    return config;
-  });
+  return withDangerousMod(config, [
+    'ios',
+    async config => {
+      const bundleId = bundleIdentifier ?? config.ios?.bundleIdentifier;
+      assert(
+        bundleId,
+        '`bundleIdentifier` must be defined in the app config (`expo.ios.bundleIdentifier`) or passed to the plugin `withBundleIdentifier`.'
+      );
+      await setBundleIdentifierForPbxproj(config.modRequest.projectRoot, bundleId!);
+      return config;
+    },
+  ]);
 };
 
 function getBundleIdentifier(config: ExpoConfig): string | null {

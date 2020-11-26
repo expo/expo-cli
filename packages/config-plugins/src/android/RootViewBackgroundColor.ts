@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousAndroidMod } from '../plugins/android-plugins';
+import { withDangerousMod } from '../plugins/core-plugins';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
@@ -11,10 +11,13 @@ const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
 
 export const withRootViewBackgroundColor: ConfigPlugin = config => {
-  return withDangerousAndroidMod(config, async config => {
-    await setRootViewBackgroundColor(config, config.modRequest.projectRoot);
-    return config;
-  });
+  return withDangerousMod(config, [
+    'android',
+    async config => {
+      await setRootViewBackgroundColor(config, config.modRequest.projectRoot);
+      return config;
+    },
+  ]);
 };
 
 export function getRootViewBackgroundColor(

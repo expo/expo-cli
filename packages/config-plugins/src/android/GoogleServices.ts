@@ -3,11 +3,8 @@ import fs from 'fs-extra';
 import { resolve } from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
-import {
-  withAppBuildGradle,
-  withDangerousAndroidMod,
-  withProjectBuildGradle,
-} from '../plugins/android-plugins';
+import { withAppBuildGradle, withProjectBuildGradle } from '../plugins/android-plugins';
+import { withDangerousMod } from '../plugins/core-plugins';
 import * as WarningAggregator from '../utils/warnings';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';
@@ -50,10 +47,13 @@ export const withApplyPlugin: ConfigPlugin = config => {
  * Add `google-services.json` to project
  */
 export const withGoogleServicesFile: ConfigPlugin = config => {
-  return withDangerousAndroidMod(config, async config => {
-    await setGoogleServicesFile(config, config.modRequest.projectRoot);
-    return config;
-  });
+  return withDangerousMod(config, [
+    'android',
+    async config => {
+      await setGoogleServicesFile(config, config.modRequest.projectRoot);
+      return config;
+    },
+  ]);
 };
 
 export function getGoogleServicesFilePath(config: Pick<ExpoConfig, 'android'>) {

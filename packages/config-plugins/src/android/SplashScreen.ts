@@ -6,14 +6,17 @@ import {
 } from '@expo/configure-splash-screen';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousAndroidMod } from '../plugins/android-plugins';
+import { withDangerousMod } from '../plugins/core-plugins';
 import * as WarningAggregator from '../utils/warnings';
 
 export const withSplashScreen: ConfigPlugin = config => {
-  return withDangerousAndroidMod(config, async config => {
-    await setSplashScreenAsync(config, config.modRequest.projectRoot);
-    return config;
-  });
+  return withDangerousMod(config, [
+    'android',
+    async config => {
+      await setSplashScreenAsync(config, config.modRequest.projectRoot);
+      return config;
+    },
+  ]);
 };
 
 export function getSplashScreenConfig(config: ExpoConfig): AndroidSplashScreenConfig | undefined {

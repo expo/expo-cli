@@ -10,10 +10,13 @@ import { ContentsJson, ContentsJsonImageIdiom, writeContentsJsonAsync } from './
 import { getProjectName } from './utils/Xcodeproj';
 
 export const withIcons: ConfigPlugin = config => {
-  return withDangerousMod(config, async config => {
-    await setIconsAsync(config, config.modRequest.projectRoot);
-    return config;
-  });
+  return withDangerousMod(config, [
+    'ios',
+    async config => {
+      await setIconsAsync(config, config.modRequest.projectRoot);
+      return config;
+    },
+  ]);
 };
 
 const IMAGE_CACHE_NAME = 'icons';

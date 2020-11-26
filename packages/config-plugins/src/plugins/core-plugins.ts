@@ -38,6 +38,25 @@ export const withPlugins: ConfigPlugin<
 };
 
 /**
+ * Mods that don't modify any data, all unresolved functionality is performed inside a dangerous mod.
+ * All dangerous mods run first before other mods.
+ *
+ * @param config
+ * @param platform
+ * @param action
+ */
+export const withDangerousMod: ConfigPlugin<[ModPlatform, Mod<unknown>]> = (
+  config,
+  [platform, action]
+) => {
+  return withExtendedMod(config, {
+    platform,
+    mod: 'dangerous',
+    action,
+  });
+};
+
+/**
  * Plugin to extend a mod function in the plugins config.
  *
  * @param config exported config
@@ -191,7 +210,7 @@ function getDebugPluginStackFromStackTrace(stacktrace?: string): string {
         return pluginName;
       })
       // Join the results:
-      // withExpoAndroidPlugins ➜ withPlugins ➜ withIcons ➜ withDangerousAndroidMod ➜ withExtendedMod
+      // withExpoAndroidPlugins ➜ withPlugins ➜ withIcons ➜ withDangerousMod ➜ withExtendedMod
       .join(' ➜ ')
   );
 }

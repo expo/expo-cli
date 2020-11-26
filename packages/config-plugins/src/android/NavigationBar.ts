@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousAndroidMod } from '../plugins/android-plugins';
+import { withDangerousMod } from '../plugins/core-plugins';
 import * as WarningAggregator from '../utils/warnings';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';
@@ -12,10 +12,13 @@ const NAVIGATION_BAR_COLOR = 'navigationBarColor';
 const WINDOW_LIGHT_NAVIGATION_BAR = 'android:windowLightNavigationBar';
 
 export const withNavigationBar: ConfigPlugin = config => {
-  return withDangerousAndroidMod(config, async config => {
-    await setNavigationBarConfig(config, config.modRequest.projectRoot);
-    return config;
-  });
+  return withDangerousMod(config, [
+    'android',
+    async config => {
+      await setNavigationBarConfig(config, config.modRequest.projectRoot);
+      return config;
+    },
+  ]);
 };
 
 export function getNavigationBarImmersiveMode(config: Pick<ExpoConfig, 'androidNavigationBar'>) {

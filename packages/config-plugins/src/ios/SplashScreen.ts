@@ -10,10 +10,13 @@ import { withDangerousMod } from '../plugins/ios-plugins';
 import * as WarningAggregator from '../utils/warnings';
 
 export const withSplashScreen: ConfigPlugin = config => {
-  return withDangerousMod(config, async config => {
-    await setSplashScreenAsync(config, config.modRequest.projectRoot);
-    return config;
-  });
+  return withDangerousMod(config, [
+    'ios',
+    async config => {
+      await setSplashScreenAsync(config, config.modRequest.projectRoot);
+      return config;
+    },
+  ]);
 };
 
 export function getSplashScreen(config: ExpoConfig): IosSplashScreenConfig | undefined {

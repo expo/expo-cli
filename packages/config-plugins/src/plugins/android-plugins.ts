@@ -118,17 +118,3 @@ export const withAppBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config,
     action,
   });
 };
-
-/**
- * Mods that don't modify any data, all unresolved functionality is performed inside a dangerous mod.
- *
- * @param config
- * @param action
- */
-export const withDangerousAndroidMod: ConfigPlugin<Mod<unknown>> = (config, action) => {
-  return withExtendedMod(config, {
-    platform: 'android',
-    mod: 'dangerous',
-    action,
-  });
-};

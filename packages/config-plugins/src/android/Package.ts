@@ -4,11 +4,8 @@ import { sync as globSync } from 'glob';
 import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
-import {
-  createAndroidManifestPlugin,
-  withAppBuildGradle,
-  withDangerousAndroidMod,
-} from '../plugins/android-plugins';
+import { createAndroidManifestPlugin, withAppBuildGradle } from '../plugins/android-plugins';
+import { withDangerousMod } from '../plugins/core-plugins';
 import * as WarningAggregator from '../utils/warnings';
 import { AndroidManifest } from './Manifest';
 import { getMainApplicationAsync } from './Paths';
@@ -33,10 +30,13 @@ export const withPackageGradle: ConfigPlugin = config => {
 };
 
 export const withPackageRefactor: ConfigPlugin = config => {
-  return withDangerousAndroidMod(config, async config => {
-    await renamePackageOnDisk(config, config.modRequest.projectRoot);
-    return config;
-  });
+  return withDangerousMod(config, [
+    'android',
+    async config => {
+      await renamePackageOnDisk(config, config.modRequest.projectRoot);
+      return config;
+    },
+  ]);
 };
 
 export function getPackage(config: Pick<ExpoConfig, 'android'>) {
