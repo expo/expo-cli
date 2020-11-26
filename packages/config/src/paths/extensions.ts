@@ -1,4 +1,4 @@
-import invariant from 'invariant';
+import { assert } from '../Errors';
 
 export type LanguageOptions = {
   isTS: boolean;
@@ -12,9 +12,9 @@ export function getExtensions(
   workflows: string[]
 ): string[] {
   // In the past we used spread operators to collect the values so now we enforce type safety on them.
-  invariant(Array.isArray(platforms), 'Expected: `platforms: string[]`');
-  invariant(Array.isArray(extensions), 'Expected: `extensions: string[]`');
-  invariant(Array.isArray(workflows), 'Expected: `workflows: string[]`');
+  assert(Array.isArray(platforms), 'Expected: `platforms: string[]`');
+  assert(Array.isArray(extensions), 'Expected: `extensions: string[]`');
+  assert(Array.isArray(workflows), 'Expected: `workflows: string[]`');
 
   const fileExtensions = [];
   // support .expo files

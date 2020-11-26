@@ -1,6 +1,5 @@
 import { getConfig } from '@expo/config';
-import { withExpoAndroidPlugins } from '@expo/config/build/plugins/expo-plugins';
-import { compileModsAsync } from '@expo/config/build/plugins/mod-compiler';
+import { compileModsAsync, withExpoAndroidPlugins } from '@expo/config-plugins';
 import { UserManager } from '@expo/xdl';
 
 import log from '../../log';
