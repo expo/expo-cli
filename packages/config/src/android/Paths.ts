@@ -55,15 +55,18 @@ export async function getMainActivityAsync(projectRoot: string): Promise<Applica
   return getProjectFileAsync(projectRoot, 'MainActivity');
 }
 
-async function getBuildGradleAsync(projectRoot: string): Promise<GradleProjectFile> {
-  const groovyPath = path.resolve(projectRoot, 'build.gradle');
-  const ktPath = path.resolve(projectRoot, 'build.gradle.kts');
+async function getGradleFileAsync(
+  projectRoot: string,
+  gradleName: string
+): Promise<GradleProjectFile> {
+  const groovyPath = path.resolve(projectRoot, `${gradleName}.gradle`);
+  const ktPath = path.resolve(projectRoot, `${gradleName}.gradle.kts`);
 
   const isGroovy = await fs.pathExists(groovyPath);
   const isKotlin = !isGroovy && (await fs.pathExists(ktPath));
 
   if (!isGroovy && !isKotlin) {
-    throw new Error(`Failed to find 'build.gradle' file for project: ${projectRoot}.`);
+    throw new Error(`Failed to find '${gradleName}.gradle' file for project: ${projectRoot}.`);
   }
   const filePath = isGroovy ? groovyPath : ktPath;
   return {
@@ -74,15 +77,15 @@ async function getBuildGradleAsync(projectRoot: string): Promise<GradleProjectFi
 }
 
 export async function getProjectBuildGradleAsync(projectRoot: string): Promise<GradleProjectFile> {
-  return getBuildGradleAsync(path.join(projectRoot, 'android'));
+  return getGradleFileAsync(path.join(projectRoot, 'android'), 'build');
+}
+
+export async function getSettingsGradleAsync(projectRoot: string): Promise<GradleProjectFile> {
+  return getGradleFileAsync(path.join(projectRoot, 'android'), 'settings');
 }
 
 export async function getAppBuildGradleAsync(projectRoot: string): Promise<GradleProjectFile> {
-  return getBuildGradleAsync(path.join(projectRoot, 'android', 'app'));
-}
-
-export function getAndroidBuildGradle(projectRoot: string): string {
-  return path.join(projectRoot, 'android', 'build.gradle');
+  return getGradleFileAsync(path.join(projectRoot, 'android', 'app'), 'build');
 }
 
 export function getAppBuildGradle(projectRoot: string): string {
