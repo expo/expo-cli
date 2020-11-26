@@ -8,7 +8,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
 exports.writeXmlFileOrRemoveFileUponNoResources = exports.xmlElementsEqual = exports.writeXmlFile = exports.readXmlFile = exports.mergeXmlElements = void 0;
 const deep_equal_1 = __importDefault(require('deep-equal'));
 const xml_js_1 = require('xml-js');
-
 const file_utils_1 = require('../utils/file-utils');
 function isElementType(el) {
   return el.name !== undefined;

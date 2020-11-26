@@ -6,7 +6,6 @@ var __importDefault =
   };
 Object.defineProperty(exports, '__esModule', { value: true });
 const path_1 = __importDefault(require('path'));
-
 const constants_1 = require('../constants');
 const xml_manipulation_1 = require('../xml-manipulation');
 const STYLES_XML_FILE_PATH = './res/values/styles.xml';

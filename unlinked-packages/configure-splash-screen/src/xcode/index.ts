@@ -10,7 +10,7 @@ export function addStoryboardFileToProject(
   filePath: string,
   { target, group }: { target: UUID; group: UUID }
 ) {
-  const file = pbxProject.addFile(filePath, undefined, {
+  const file = pbxProject.addFile(filePath, group, {
     lastKnownFileType: 'file.storyboard',
     defaultEncoding: 4,
     target,
@@ -26,5 +26,4 @@ export function addStoryboardFileToProject(
 
   pbxProject.addToPbxBuildFileSection(file);
   pbxProject.addToPbxResourcesBuildPhase(file);
-  pbxProject.addToPbxGroup(file, group);
 }

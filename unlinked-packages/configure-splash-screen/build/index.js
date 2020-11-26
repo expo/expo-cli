@@ -9,27 +9,27 @@ exports.SplashScreenStatusBarStyle = exports.SplashScreenImageResizeMode = expor
 var ios_1 = require('./ios');
 Object.defineProperty(exports, 'configureIosSplashScreen', {
   enumerable: true,
-  get() {
+  get: function () {
     return __importDefault(ios_1).default;
   },
 });
 var android_1 = require('./android');
 Object.defineProperty(exports, 'configureAndroidSplashScreen', {
   enumerable: true,
-  get() {
+  get: function () {
     return __importDefault(android_1).default;
   },
 });
 var constants_1 = require('./constants');
 Object.defineProperty(exports, 'SplashScreenImageResizeMode', {
   enumerable: true,
-  get() {
+  get: function () {
     return constants_1.SplashScreenImageResizeMode;
   },
 });
 Object.defineProperty(exports, 'SplashScreenStatusBarStyle', {
   enumerable: true,
-  get() {
+  get: function () {
     return constants_1.SplashScreenStatusBarStyle;
   },
 });

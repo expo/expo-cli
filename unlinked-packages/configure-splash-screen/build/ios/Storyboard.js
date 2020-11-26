@@ -6,7 +6,6 @@ var __importDefault =
   };
 Object.defineProperty(exports, '__esModule', { value: true });
 const path_1 = __importDefault(require('path'));
-
 const constants_1 = require('../constants');
 const file_utils_1 = require('../utils/file-utils');
 const xcode_1 = require('../xcode');

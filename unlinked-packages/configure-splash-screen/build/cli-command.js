@@ -6,7 +6,6 @@ var __importDefault =
   };
 Object.defineProperty(exports, '__esModule', { value: true });
 const commander_1 = require('commander');
-
 const android_1 = __importDefault(require('./android'));
 const constants_1 = require('./constants');
 const ios_1 = __importDefault(require('./ios'));

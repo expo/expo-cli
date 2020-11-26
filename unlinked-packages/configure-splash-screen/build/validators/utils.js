@@ -6,7 +6,7 @@ var __createBinding =
         if (k2 === undefined) k2 = k;
         Object.defineProperty(o, k2, {
           enumerable: true,
-          get() {
+          get: function () {
             return m[k];
           },
         });

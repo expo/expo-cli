@@ -6,7 +6,6 @@ var __importDefault =
   };
 Object.defineProperty(exports, '__esModule', { value: true });
 const path_1 = __importDefault(require('path'));
-
 const validators_1 = require('../validators');
 const AndroidManifest_xml_1 = __importDefault(require('./AndroidManifest.xml'));
 const Colors_xml_1 = __importDefault(require('./Colors.xml'));
