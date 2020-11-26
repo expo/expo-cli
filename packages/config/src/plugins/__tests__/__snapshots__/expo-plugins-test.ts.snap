@@ -89,6 +89,7 @@ Object {
       "usesNonExemptEncryption": true,
     },
     "entitlements": Object {
+      "aps-environment": "development",
       "com.apple.developer.applesignin": Array [
         "Default",
       ],
