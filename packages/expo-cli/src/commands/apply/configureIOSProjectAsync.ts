@@ -1,6 +1,5 @@
 import { getConfig } from '@expo/config';
-import { withExpoIOSPlugins } from '@expo/config-plugins/build/plugins/expo-plugins';
-import { compileModsAsync } from '@expo/config-plugins/build/plugins/mod-compiler';
+import { compileModsAsync, withExpoIOSPlugins } from '@expo/config-plugins';
 import { UserManager } from '@expo/xdl';
 
 import log from '../../log';
