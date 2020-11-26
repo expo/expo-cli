@@ -1,4 +1,3 @@
-import { WarningAggregator } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import { generateImageAsync } from '@expo/image-utils';
 import * as fs from 'fs-extra';
@@ -6,6 +5,7 @@ import { join } from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withDangerousMod } from '../plugins/ios-plugins';
+import * as WarningAggregator from '../utils/warnings';
 import { ContentsJson, ContentsJsonImageIdiom, writeContentsJsonAsync } from './AssetContents';
 import { getProjectName } from './utils/Xcodeproj';
 

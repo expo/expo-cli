@@ -1,11 +1,9 @@
-import { WarningAggregator } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
 import plist from '@expo/plist';
 import { readFile, writeFile } from 'fs-extra';
 import path from 'path';
 import { XcodeProject } from 'xcode';
 
-import { assert } from '../Errors';
 import {
   ConfigPlugin,
   ExportedConfig,
@@ -22,9 +20,10 @@ import { getEntitlementsPath } from '../ios/Entitlements';
 import { InfoPlist } from '../ios/IosConfig.types';
 import { getInfoPlistPath } from '../ios/Paths';
 import { getPbxproj } from '../ios/utils/Xcodeproj';
+import { assert } from '../utils/errors';
+import * as WarningAggregator from '../utils/warnings';
 import { withInterceptedMod } from './core-plugins';
 
-const { addWarningAndroid, addWarningIOS } = WarningAggregator;
 export function withBaseMods(config: ExportedConfig): ExportedConfig {
   config = applyIOSBaseMods(config);
   config = applyAndroidBaseMods(config);
@@ -83,7 +82,7 @@ const withAndroidManifestBaseMod: ConfigPlugin = config => {
 
         await Manifest.writeAndroidManifestAsync(filePath, modResults);
       } catch (error) {
-        addWarningAndroid(
+        WarningAggregator.addWarningAndroid(
           'android-manifest',
           `AndroidManifest.xml configuration could not be applied. ${error.message}`
         );
@@ -119,7 +118,7 @@ const withAndroidStringsXMLBaseMod: ConfigPlugin = config => {
 
         await writeXMLAsync({ path: filePath, xml: modResults });
       } catch (error) {
-        addWarningAndroid(
+        WarningAggregator.addWarningAndroid(
           `${modRequest.platform}-${modRequest.modName}`,
           `strings.xml configuration could not be applied. ${error.message}`
         );
@@ -155,7 +154,7 @@ const withAndroidProjectBuildGradleBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        addWarningAndroid(
+        WarningAggregator.addWarningAndroid(
           `${modRequest.platform}-${modRequest.modName}`,
           `Project build.gradle could not be modified. ${error.message}`
         );
@@ -191,7 +190,7 @@ const withAndroidAppBuildGradleBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        addWarningAndroid(
+        WarningAggregator.addWarningAndroid(
           `${modRequest.platform}-${modRequest.modName}`,
           `App build.gradle could not be modified. ${error.message}`
         );
@@ -227,7 +226,7 @@ const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        addWarningAndroid(
+        WarningAggregator.addWarningAndroid(
           `${modRequest.platform}-${modRequest.modName}`,
           `MainActivity could not be modified. ${error.message}`
         );
@@ -296,7 +295,7 @@ const withExpoPlistBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, plist.build(modResults));
       } catch (error) {
-        addWarningIOS(
+        WarningAggregator.addWarningIOS(
           'updates',
           'Expo.plist configuration could not be applied. You will need to create Expo.plist if it does not exist and add Updates configuration manually.',
           'https://docs.expo.io/bare/updating-your-app/#configuration-options'
@@ -415,7 +414,10 @@ const withEntitlementsBaseMod: ConfigPlugin = config => {
         resolveModResults(results, modRequest.platform, modRequest.modName);
         await writeFile(entitlementsPath, plist.build(results.modResults));
       } catch (error) {
-        addWarningIOS('entitlements', `${entitlementsPath} configuration could not be applied.`);
+        WarningAggregator.addWarningIOS(
+          'entitlements',
+          `${entitlementsPath} configuration could not be applied.`
+        );
       }
       return results;
     },

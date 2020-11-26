@@ -1,8 +1,8 @@
-import { WarningAggregator } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withDangerousAndroidMod } from '../plugins/android-plugins';
+import * as WarningAggregator from '../utils/warnings';
 import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';
 import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';

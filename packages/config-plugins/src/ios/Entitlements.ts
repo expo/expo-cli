@@ -1,4 +1,3 @@
-import { WarningAggregator } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import fs from 'fs-extra';
 import path from 'path';
@@ -6,6 +5,7 @@ import slash from 'slash';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { createEntitlementsPlugin, withEntitlementsPlist } from '../plugins/ios-plugins';
+import * as WarningAggregator from '../utils/warnings';
 import { InfoPlist } from './IosConfig.types';
 import * as Paths from './Paths';
 import {

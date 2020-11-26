@@ -1,4 +1,3 @@
-import { WarningAggregator } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import JsonFile from '@expo/json-file';
 import * as fs from 'fs-extra';
@@ -7,6 +6,7 @@ import { XcodeProject } from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withXcodeProject } from '../plugins/ios-plugins';
+import * as WarningAggregator from '../utils/warnings';
 import { addFileToGroup, ensureGroupRecursively, getProjectName } from './utils/Xcodeproj';
 
 type LocaleJson = Record<string, string>;

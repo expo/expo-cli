@@ -1,3 +1,6 @@
+/**
+ * These are the versioned first-party plugins with some of the future third-party plugins mixed in for legacy support.
+ */
 import { ConfigPlugin } from '../Plugin.types';
 import * as AndroidConfig from '../android';
 import * as IOSConfig from '../ios';

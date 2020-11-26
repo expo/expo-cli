@@ -1,9 +1,9 @@
-import { WarningAggregator } from '@expo/config';
 import { pathExistsSync } from 'fs-extra';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
-import { UnexpectedError } from '../Errors';
+import { UnexpectedError } from '../utils/errors';
+import * as WarningAggregator from '../utils/warnings';
 
 const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
 

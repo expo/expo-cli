@@ -1,7 +1,7 @@
-import { WarningAggregator } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 
 import { createAndroidManifestPlugin } from '../plugins/android-plugins';
+import * as WarningAggregator from '../utils/warnings';
 import { AndroidManifest, ManifestActivity } from './Manifest';
 
 export type IntentFilterProps = {

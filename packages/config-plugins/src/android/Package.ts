@@ -1,4 +1,3 @@
-import { WarningAggregator } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
@@ -10,6 +9,7 @@ import {
   withAppBuildGradle,
   withDangerousAndroidMod,
 } from '../plugins/android-plugins';
+import * as WarningAggregator from '../utils/warnings';
 import { AndroidManifest } from './Manifest';
 import { getMainApplicationAsync } from './Paths';
 

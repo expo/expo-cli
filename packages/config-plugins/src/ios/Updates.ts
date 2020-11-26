@@ -1,10 +1,10 @@
-import { projectHasModule } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import * as path from 'path';
 import xcode from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withExpoPlist } from '../plugins/ios-plugins';
+import { projectHasModule } from '../utils/modules';
 import { ExpoPlist } from './IosConfig.types';
 
 type ExpoConfigUpdates = Pick<

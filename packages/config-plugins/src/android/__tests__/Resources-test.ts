@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import { fileExistsAsync } from '../../Modules';
+import { fileExistsAsync } from '../../utils/modules';
 import { getResourceXMLPathAsync } from '../Paths';
 import { readResourcesXMLAsync } from '../Resources';
 

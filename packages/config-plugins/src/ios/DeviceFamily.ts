@@ -1,9 +1,9 @@
-import { WarningAggregator } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import { XcodeProject } from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withXcodeProject } from '../plugins/ios-plugins';
+import * as WarningAggregator from '../utils/warnings';
 
 export const withDeviceFamily: ConfigPlugin = config => {
   return withXcodeProject(config, async config => {

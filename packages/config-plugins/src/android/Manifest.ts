@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import { assert } from '../Errors';
+import { assert } from '../utils/errors';
 import * as XML from './XML';
 
 export type StringBoolean = 'true' | 'false';

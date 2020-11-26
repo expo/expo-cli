@@ -1,4 +1,3 @@
-import { WarningAggregator } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import {
   AndroidSplashScreenConfig,
@@ -8,6 +7,7 @@ import {
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withDangerousAndroidMod } from '../plugins/android-plugins';
+import * as WarningAggregator from '../utils/warnings';
 
 export const withSplashScreen: ConfigPlugin = config => {
   return withDangerousAndroidMod(config, async config => {

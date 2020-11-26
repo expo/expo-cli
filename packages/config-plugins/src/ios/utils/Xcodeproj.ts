@@ -11,7 +11,7 @@ import xcode, {
 } from 'xcode';
 import pbxFile from 'xcode/lib/pbxFile';
 
-import { assert } from '../../Errors';
+import { assert } from '../../utils/errors';
 import * as Paths from '../Paths';
 
 export type ProjectSectionEntry = [string, PBXProject];

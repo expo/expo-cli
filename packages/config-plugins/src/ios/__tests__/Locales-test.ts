@@ -1,8 +1,8 @@
-import { WarningAggregator } from '@expo/config';
 import * as fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 
+import * as WarningAggregator from '../../utils/warnings';
 import { getLocales, setLocalesAsync } from '../Locales';
 import { getPbxproj } from '../utils/Xcodeproj';
 import { getDirFromFS } from './utils/getDirFromFS';

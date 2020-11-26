@@ -1,4 +1,3 @@
-import { WarningAggregator } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import fs from 'fs-extra';
 import { resolve } from 'path';
@@ -9,6 +8,7 @@ import {
   withDangerousAndroidMod,
   withProjectBuildGradle,
 } from '../plugins/android-plugins';
+import * as WarningAggregator from '../utils/warnings';
 
 const DEFAULT_TARGET_PATH = './android/app/google-services.json';
 

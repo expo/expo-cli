@@ -1,8 +1,8 @@
-import { WarningAggregator } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { createAndroidManifestPlugin, withMainActivity } from '../plugins/android-plugins';
+import * as WarningAggregator from '../utils/warnings';
 import { AndroidManifest, getMainActivityOrThrow } from './Manifest';
 
 export const CONFIG_CHANGES_ATTRIBUTE = 'android:configChanges';

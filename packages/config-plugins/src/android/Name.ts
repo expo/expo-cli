@@ -1,7 +1,7 @@
 import { ExpoConfig } from '@expo/config-types';
 
-import { assert } from '../Errors';
 import { createStringsXmlPlugin } from '../plugins/android-plugins';
+import { assert } from '../utils/errors';
 import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from './Resources';
 import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
 import { writeXMLAsync } from './XML';

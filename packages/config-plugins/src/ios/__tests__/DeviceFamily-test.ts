@@ -1,9 +1,9 @@
-import { WarningAggregator } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import * as fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 
+import * as WarningAggregator from '../../utils/warnings';
 import {
   formatDeviceFamilies,
   getDeviceFamilies,

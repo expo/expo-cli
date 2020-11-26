@@ -1,8 +1,8 @@
-import { WarningAggregator } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAppBuildGradle } from '../plugins/android-plugins';
+import * as WarningAggregator from '../utils/warnings';
 
 const DEFAULT_VERSION_NAME = '1.0';
 const DEFAULT_VERSION_CODE = '1';

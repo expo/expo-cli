@@ -1,9 +1,9 @@
-import { directoryExistsAsync } from '@expo/config';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
-import { assert } from '../Errors';
+import { assert } from '../utils/errors';
+import { directoryExistsAsync } from '../utils/modules';
 import { ResourceKind } from './Resources';
 
 export interface ProjectFile<L extends string = string> {

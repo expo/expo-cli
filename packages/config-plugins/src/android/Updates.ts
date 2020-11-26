@@ -1,9 +1,9 @@
-import { projectHasModule } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidManifest } from '../plugins/android-plugins';
+import { projectHasModule } from '../utils/modules';
 import {
   addMetaDataItemToMainApplication,
   AndroidManifest,

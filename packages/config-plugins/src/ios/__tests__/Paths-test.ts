@@ -1,9 +1,9 @@
-import { WarningAggregator } from '@expo/config';
 import * as fs from 'fs';
 import { vol } from 'memfs';
 import * as path from 'path';
 
-import { UnexpectedError } from '../../Errors';
+import { UnexpectedError } from '../../utils/errors';
+import * as WarningAggregator from '../../utils/warnings';
 import { getAllInfoPlistPaths, getAppDelegate, getXcodeProjectPath } from '../Paths';
 
 const fsReal = jest.requireActual('fs') as typeof fs;
