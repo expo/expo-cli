@@ -74,12 +74,6 @@ export function createRunOncePlugin<T>(
   return (config, props) => {
     return withRunOnce(config, { plugin: c => plugin(c, props), name, version });
   };
-  // if (name) {
-  //   Object.defineProperty(withUnknown, 'name', {
-  //     value: name,
-  //   });
-  // }
-  // return withUnknown;
 }
 
 /**
