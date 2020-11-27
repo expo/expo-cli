@@ -19,6 +19,7 @@ export * from './Plugin.types';
 
 export {
   withPlugins,
+  withRunOnce,
   withDangerousMod,
   withExtendedMod,
   withInterceptedMod,

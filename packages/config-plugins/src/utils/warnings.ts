@@ -1,3 +1,5 @@
+import { ModPlatform } from '../Plugin.types';
+
 type WarningArray = [string, string, string | undefined];
 let _warningsIOS: WarningArray[] = [];
 let _warningsAndroid: WarningArray[] = [];
@@ -16,6 +18,19 @@ export function addWarningAndroid(tag: string, text: string, link?: string) {
 
 export function addWarningIOS(tag: string, text: string, link?: string) {
   _warningsIOS = [..._warningsIOS, [tag, text, link]];
+}
+
+export function addWarningForPlatform(
+  platform: ModPlatform,
+  tag: string,
+  text: string,
+  link?: string
+) {
+  if (platform === 'ios') {
+    addWarningIOS(tag, text, link);
+  } else {
+    addWarningAndroid(tag, text, link);
+  }
 }
 
 export function flushWarningsAndroid() {
