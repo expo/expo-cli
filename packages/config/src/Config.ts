@@ -118,6 +118,9 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
     };
 
     if (options.isPublicConfig) {
+      // Delete internal value used for dev tooling
+      delete configWithDefaultValues.exp._internal;
+
       if (configWithDefaultValues.exp.hooks) {
         delete configWithDefaultValues.exp.hooks;
       }
