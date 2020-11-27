@@ -1,6 +1,6 @@
 import { ExpoConfig } from '@expo/config';
 import { Job, Platform } from '@expo/eas-build-job';
-import { User } from '@expo/xdl';
+import { RobotUser, User } from '@expo/xdl';
 
 import { AndroidBuildProfile, CredentialsSource, iOSBuildProfile } from '../../easJson';
 
@@ -38,7 +38,7 @@ export interface CommandContext {
   requestedPlatform: BuildCommandPlatform;
   profile: string;
   projectDir: string;
-  user: User;
+  user: User | RobotUser;
   accountName: string;
   projectName: string;
   exp: ExpoConfig;

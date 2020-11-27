@@ -1,5 +1,5 @@
 import { getConfig } from '@expo/config';
-import { User, UserManager } from '@expo/xdl';
+import { UserManager } from '@expo/xdl';
 
 import { BuildCommandPlatform, CommandContext, TrackingContext } from '../types';
 
@@ -20,7 +20,7 @@ export default async function createCommandContextAsync({
   skipCredentialsCheck?: boolean;
   skipProjectConfiguration?: boolean;
 }): Promise<CommandContext> {
-  const user: User = await UserManager.ensureLoggedInAsync();
+  const user = await UserManager.ensureLoggedInAsync();
   const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
   const accountName = exp.owner || user.username;
   const projectName = exp.slug;

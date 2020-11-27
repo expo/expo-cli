@@ -1,5 +1,5 @@
 import { getConfig, setCustomConfigPath } from '@expo/config';
-import { Android, Simulator, UserManager, Versions } from '@expo/xdl';
+import { Android, Simulator, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
 import { Command } from 'commander';
@@ -211,7 +211,7 @@ export default function (program: Command) {
         } else {
           email = await promptEmailAsync({
             message: 'Please enter an email address to notify, when the build is completed:',
-            initial: context?.user?.email,
+            initial: (context?.user as User)?.email,
           });
         }
         log.newLine();
