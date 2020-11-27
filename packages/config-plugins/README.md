@@ -186,12 +186,12 @@ Static plugins can be added in two different formats:
   plugins: [
     // Long form with properties
     {
-      module: 'my-plugin',
+      resolve: 'my-plugin',
       props: {
         /* Passed as the second parameter to the config plugin */
       },
     },
-    // Short hand -- gets normalized to { module: 'my-plugin', props: {} }
+    // Short hand -- gets normalized to { resolve: 'my-plugin', props: {} }
     'my-plugin',
   ];
 }
@@ -201,22 +201,22 @@ Static plugins can be added in two different formats:
 
 ### Module Resolution
 
-Static plugins can be resolved in a few different ways. Here are the different patterns for strings you could pass in the `plugins` array (`module` prop).
+Static plugins can be resolved in a few different ways. Here are the different patterns for strings you could pass in the `plugins` array (`resolve` prop).
 
 > Any resolution pattern that isn't specified below is unexpected behavior, and subject to breaking changes.
 
 #### Project file
 
-`module: './my-config-plugin.js'`
+`resolve: './my-config-plugin.js'`
 
 ```
 ╭── app.config.js ➡️ Expo Config
-╰── my-config-plugin.js ➡️ ✅ `module.exports = (config) => config`
+╰── my-config-plugin.js ➡️ ✅ `resolve.exports = (config) => config`
 ```
 
-#### Node module
+#### Node resolve
 
-`module: 'expo-splash-screen'`
+`resolve: 'expo-splash-screen'`
 
 ```
 ╭── app.config.js ➡️ Expo Config
@@ -237,9 +237,9 @@ Sometimes you want your package to export React components and also support a pl
 
 #### Project folder
 
-`module: './my-config-plugin'`
+`resolve: './my-config-plugin'`
 
-This is different to how node module's work because `app.config.js` won't be resolved by default in a folder. You'll have to manually specify the file to use it.
+This is different to how Node module's work because `app.config.js` won't be resolved by default in a folder. You'll have to manually specify the file to use it.
 
 ```
 ╭── app.config.js ➡️ Expo Config
@@ -249,10 +249,10 @@ This is different to how node module's work because `app.config.js` won't be res
 
 #### Module internals
 
-If a file inside a node module is specified, then the module's root `app.config.js` resolution will be skipped. This is referred to as "reaching inside a package" and is bad form. We support this to make testing, and plugin authoring easier.
+If a file inside a Node module is specified, then the module's root `app.config.js` resolution will be skipped. This is referred to as "reaching inside a package" and is bad form. We support this to make testing, and plugin authoring easier.
 
-- `module: 'expo-splash-screen/build/index.js'`
-- `module: 'expo-splash-screen/build'`
+- `resolve: 'expo-splash-screen/build/index.js'`
+- `resolve: 'expo-splash-screen/build'`
 
 ```
 ╭── app.config.js ➡️ Expo Config
@@ -264,14 +264,14 @@ If a file inside a node module is specified, then the module's root `app.config.
 
 ### Why app.config.js for plugins
 
-Config resolution searches for a `app.config.js` first when a node module name is provided.
+Config resolution searches for a `app.config.js` first when a Node module name is provided.
 This is because node environments are often different to iOS, Android, or web JS environments and therefore require different transpilation presets (ex: `module.exports` instead of `import/export`).
 
-Because of this reasoning, the root of a Node module is searched instead of right next to the `index.js`. Imagine you had a TypeScript node module where the transpiled main file was located at `build/index.js`, if Expo config plugin resolution searched for `build/app.config.js` you'd lose the ability to transpile the file differently.
+Because of this reasoning, the root of a Node module is searched instead of right next to the `index.js`. Imagine you had a TypeScript Node module where the transpiled main file was located at `build/index.js`, if Expo config plugin resolution searched for `build/app.config.js` you'd lose the ability to transpile the file differently.
 
 ### Creating static plugins
 
-- The root file can be any JS file or the root `app.config.js` in a node module.
+- The root file can be any JS file or the root `app.config.js` in a Node module.
 - The file should export a `ConfigPlugin` function.
 - Plugins should be transpiled for Node environments ahead of time!
   - No `import/export` keywords, use `module.exports` in the shipped plugin file.
@@ -295,7 +295,7 @@ module.exports = function withCustomName(config, name) {
 ```json
 {
   "name": "my-app",
-  "plugins": [{ "module": "./my-plugin", "props": "app" }]
+  "plugins": [{ "resolve": "./my-plugin", "props": "app" }]
 }
 ```
 
@@ -306,6 +306,6 @@ module.exports = function withCustomName(config, name) {
 ```json
 {
   "name": "custom-app",
-  "plugins": [{ "module": "./my-plugin", "props": "app" }]
+  "plugins": [{ "resolve": "./my-plugin", "props": "app" }]
 }
 ```

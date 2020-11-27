@@ -7,7 +7,7 @@ import { assert } from './Errors';
 import { fileExists } from './Modules';
 import { resolveConfigPluginExport } from './evalConfig';
 
-type JSONPlugin = { module: string; props?: Record<string, any> };
+type JSONPlugin = { resolve: string; props?: Record<string, any> };
 type JSONPluginsList = (JSONPlugin | string)[];
 
 // Default plugin entry file name.
@@ -88,7 +88,7 @@ function normalizeJSONPluginOptions(plugins?: JSONPluginsList): JSONPlugin[] {
 
   return plugins.reduce<JSONPlugin[]>((prev, curr) => {
     if (typeof curr === 'string') {
-      curr = { module: curr };
+      curr = { resolve: curr };
     } else if (!curr.props) {
       curr.props = {};
     }
@@ -100,8 +100,30 @@ function normalizeJSONPluginOptions(plugins?: JSONPluginsList): JSONPlugin[] {
 // Resolve the module function and assert type
 function resolveConfigPluginFunction(projectRoot: string, pluginModulePath: string) {
   const moduleFilePath = resolvePluginForModule(projectRoot, pluginModulePath);
-  const result = require(moduleFilePath);
+  const result = requirePluginFile(moduleFilePath, pluginModulePath);
   return resolveConfigPluginExport(result, moduleFilePath);
+}
+
+function requirePluginFile(filePath: string, pluginModulePath: string): any {
+  try {
+    return require(filePath);
+  } catch (error) {
+    // TODO: Improve error messages
+    throw error;
+    // const message = [
+    //   'Failed to load static config plugin:',
+    //   `├── resolve: ${pluginModulePath}`,
+    //   `╰── module:  ${filePath}`,
+    //   error.message,
+
+    // ]
+    //   .filter(Boolean)
+    //   .join('\n');
+
+    //   error.fileName
+    // console.info(error);
+    // throw new ConfigError(message, 'INVALID_PLUGIN');
+  }
 }
 
 /**
@@ -115,7 +137,7 @@ const withStaticPlugins: ConfigPlugin<string> = (config, projectRoot) => {
   const plugins = normalizeJSONPluginOptions(config.plugins);
   // Resolve and evaluate plugins
   for (const plugin of plugins) {
-    const withStaticPlugin = resolveConfigPluginFunction(projectRoot, plugin.module);
+    const withStaticPlugin = resolveConfigPluginFunction(projectRoot, plugin.resolve);
     config = withStaticPlugin(config, plugin.props);
   }
   return config;
