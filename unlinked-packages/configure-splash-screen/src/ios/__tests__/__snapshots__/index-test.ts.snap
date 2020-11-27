@@ -1,0 +1,380 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ios configureIos configures bare flow project with background color and image 1`] = `
+Object {
+  "ios/ReactNativeProject/AppDelegate.m": "#import \\"AppDelegate.h\\"
+
+#import <React/RCTBridge.h>
+#import <React/RCTBundleURLProvider.h>
+#import <React/RCTRootView.h>
+
+#if DEBUG
+#import <FlipperKit/FlipperClient.h>
+#import <FlipperKitLayoutPlugin/FlipperKitLayoutPlugin.h>
+#import <FlipperKitUserDefaultsPlugin/FKUserDefaultsPlugin.h>
+#import <FlipperKitNetworkPlugin/FlipperKitNetworkPlugin.h>
+#import <SKIOSNetworkPlugin/SKIOSNetworkAdapter.h>
+#import <FlipperKitReactPlugin/FlipperKitReactPlugin.h>
+
+static void InitializeFlipper(UIApplication *application) {
+  FlipperClient *client = [FlipperClient sharedClient];
+  SKDescriptorMapper *layoutDescriptorMapper = [[SKDescriptorMapper alloc] initWithDefaults];
+  [client addPlugin:[[FlipperKitLayoutPlugin alloc] initWithRootNode:application withDescriptorMapper:layoutDescriptorMapper]];
+  [client addPlugin:[[FKUserDefaultsPlugin alloc] initWithSuiteName:nil]];
+  [client addPlugin:[FlipperKitReactPlugin new]];
+  [client addPlugin:[[FlipperKitNetworkPlugin alloc] initWithNetworkAdapter:[SKIOSNetworkAdapter new]]];
+  [client start];
+}
+#endif
+
+@implementation AppDelegate
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+#if DEBUG
+  InitializeFlipper(application);
+#endif
+
+  RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+  RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
+                                                    moduleName:@\\"ReactNativeProject\\"
+                                            initialProperties:nil];
+
+  rootView.backgroundColor = [[UIColor alloc] initWithRed:1.0f green:1.0f blue:1.0f alpha:1];
+
+  self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+  UIViewController *rootViewController = [UIViewController new];
+  rootViewController.view = rootView;
+  self.window.rootViewController = rootViewController;
+  [self.window makeKeyAndVisible];
+  return YES;
+}
+
+- (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
+{
+#if DEBUG
+  return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@\\"index\\" fallbackResource:nil];
+#else
+  return [[NSBundle mainBundle] URLForResource:@\\"main\\" withExtension:@\\"jsbundle\\"];
+#endif
+}
+
+@end
+",
+  "ios/ReactNativeProject/Base.lproj/LaunchScreen.xib": "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\" standalone=\\"no\\"?>
+<document type=\\"com.apple.InterfaceBuilder3.CocoaTouch.XIB\\" version=\\"3.0\\" toolsVersion=\\"7702\\" systemVersion=\\"14D136\\" targetRuntime=\\"iOS.CocoaTouch\\" propertyAccessControl=\\"none\\" useAutolayout=\\"YES\\" launchScreen=\\"YES\\" useTraitCollections=\\"YES\\">
+    <dependencies>
+        <deployment identifier=\\"iOS\\"/>
+        <plugIn identifier=\\"com.apple.InterfaceBuilder.IBCocoaTouchPlugin\\" version=\\"7701\\"/>
+        <capability name=\\"Constraints with non-1.0 multipliers\\" minToolsVersion=\\"5.1\\"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier=\\"IBFilesOwner\\" id=\\"-1\\" userLabel=\\"File's Owner\\"/>
+        <placeholder placeholderIdentifier=\\"IBFirstResponder\\" id=\\"-2\\" customClass=\\"UIResponder\\"/>
+        <view contentMode=\\"scaleToFill\\" id=\\"iN0-l3-epB\\">
+            <rect key=\\"frame\\" x=\\"0.0\\" y=\\"0.0\\" width=\\"480\\" height=\\"480\\"/>
+            <autoresizingMask key=\\"autoresizingMask\\" widthSizable=\\"YES\\" heightSizable=\\"YES\\"/>
+            <subviews>
+                <label opaque=\\"NO\\" clipsSubviews=\\"YES\\" userInteractionEnabled=\\"NO\\" contentMode=\\"left\\" horizontalHuggingPriority=\\"251\\" verticalHuggingPriority=\\"251\\" text=\\"Powered by React Native\\" textAlignment=\\"center\\" lineBreakMode=\\"tailTruncation\\" baselineAdjustment=\\"alignBaselines\\" minimumFontSize=\\"9\\" translatesAutoresizingMaskIntoConstraints=\\"NO\\" id=\\"8ie-xW-0ye\\">
+                    <rect key=\\"frame\\" x=\\"20\\" y=\\"439\\" width=\\"441\\" height=\\"21\\"/>
+                    <fontDescription key=\\"fontDescription\\" type=\\"system\\" pointSize=\\"17\\"/>
+                    <color key=\\"textColor\\" cocoaTouchSystemColor=\\"darkTextColor\\"/>
+                    <nil key=\\"highlightedColor\\"/>
+                </label>
+                <label opaque=\\"NO\\" clipsSubviews=\\"YES\\" userInteractionEnabled=\\"NO\\" contentMode=\\"left\\" horizontalHuggingPriority=\\"251\\" verticalHuggingPriority=\\"251\\" text=\\"ReactNativeProject\\" textAlignment=\\"center\\" lineBreakMode=\\"middleTruncation\\" baselineAdjustment=\\"alignBaselines\\" minimumFontSize=\\"18\\" translatesAutoresizingMaskIntoConstraints=\\"NO\\" id=\\"kId-c2-rCX\\">
+                    <rect key=\\"frame\\" x=\\"20\\" y=\\"140\\" width=\\"441\\" height=\\"43\\"/>
+                    <fontDescription key=\\"fontDescription\\" type=\\"boldSystem\\" pointSize=\\"36\\"/>
+                    <color key=\\"textColor\\" cocoaTouchSystemColor=\\"darkTextColor\\"/>
+                    <nil key=\\"highlightedColor\\"/>
+                </label>
+            </subviews>
+            <color key=\\"backgroundColor\\" white=\\"1\\" alpha=\\"1\\" colorSpace=\\"custom\\" customColorSpace=\\"calibratedWhite\\"/>
+            <constraints>
+                <constraint firstItem=\\"kId-c2-rCX\\" firstAttribute=\\"centerY\\" secondItem=\\"iN0-l3-epB\\" secondAttribute=\\"bottom\\" multiplier=\\"1/3\\" constant=\\"1\\" id=\\"5cJ-9S-tgC\\"/>
+                <constraint firstAttribute=\\"centerX\\" secondItem=\\"kId-c2-rCX\\" secondAttribute=\\"centerX\\" id=\\"Koa-jz-hwk\\"/>
+                <constraint firstAttribute=\\"bottom\\" secondItem=\\"8ie-xW-0ye\\" secondAttribute=\\"bottom\\" constant=\\"20\\" id=\\"Kzo-t9-V3l\\"/>
+                <constraint firstItem=\\"8ie-xW-0ye\\" firstAttribute=\\"leading\\" secondItem=\\"iN0-l3-epB\\" secondAttribute=\\"leading\\" constant=\\"20\\" symbolic=\\"YES\\" id=\\"MfP-vx-nX0\\"/>
+                <constraint firstAttribute=\\"centerX\\" secondItem=\\"8ie-xW-0ye\\" secondAttribute=\\"centerX\\" id=\\"ZEH-qu-HZ9\\"/>
+                <constraint firstItem=\\"kId-c2-rCX\\" firstAttribute=\\"leading\\" secondItem=\\"iN0-l3-epB\\" secondAttribute=\\"leading\\" constant=\\"20\\" symbolic=\\"YES\\" id=\\"fvb-Df-36g\\"/>
+            </constraints>
+            <nil key=\\"simulatedStatusBarMetrics\\"/>
+            <freeformSimulatedSizeMetrics key=\\"simulatedDestinationMetrics\\"/>
+            <point key=\\"canvasLocation\\" x=\\"548\\" y=\\"455\\"/>
+        </view>
+    </objects>
+</document>
+ ",
+  "ios/ReactNativeProject/Images.xcassets/AppIcon.appiconset/Contents.json": "{
+  \\"images\\" : [
+    {
+      \\"idiom\\" : \\"iphone\\",
+      \\"size\\" : \\"29x29\\",
+      \\"scale\\" : \\"2x\\"
+    },
+    {
+      \\"idiom\\" : \\"iphone\\",
+      \\"size\\" : \\"29x29\\",
+      \\"scale\\" : \\"3x\\"
+    },
+    {
+      \\"idiom\\" : \\"iphone\\",
+      \\"size\\" : \\"40x40\\",
+      \\"scale\\" : \\"2x\\"
+    },
+    {
+      \\"idiom\\" : \\"iphone\\",
+      \\"size\\" : \\"40x40\\",
+      \\"scale\\" : \\"3x\\"
+    },
+    {
+      \\"idiom\\" : \\"iphone\\",
+      \\"size\\" : \\"60x60\\",
+      \\"scale\\" : \\"2x\\"
+    },
+    {
+      \\"idiom\\" : \\"iphone\\",
+      \\"size\\" : \\"60x60\\",
+      \\"scale\\" : \\"3x\\"
+    }
+  ],
+  \\"info\\" : {
+    \\"version\\" : 1,
+    \\"author\\" : \\"xcode\\"
+  }
+}",
+  "ios/ReactNativeProject/Images.xcassets/Contents.json": "{
+  \\"info\\" : {
+    \\"version\\" : 1,
+    \\"author\\" : \\"xcode\\"
+  }
+}
+",
+  "ios/ReactNativeProject/Images.xcassets/SplashScreen.imageset/Contents.json": "{
+  \\"images\\": [
+    {
+      \\"idiom\\": \\"universal\\",
+      \\"filename\\": \\"splashscreen.png\\",
+      \\"scale\\": \\"1x\\"
+    },
+    {
+      \\"idiom\\": \\"universal\\",
+      \\"scale\\": \\"2x\\"
+    },
+    {
+      \\"idiom\\": \\"universal\\",
+      \\"scale\\": \\"3x\\"
+    }
+  ],
+  \\"info\\": {
+    \\"version\\": 1,
+    \\"author\\": \\"xcode\\"
+  }
+}",
+  "ios/ReactNativeProject/Images.xcassets/SplashScreen.imageset/splashscreen.png": "�PNG
+
+   
+IHDR   (   (   ���m   gAMA  ���a    cHRM  z&  ��  �   ��  u0  �\`  :�  p��Q<   leXIfMM *                  >       F�i       N       H      H    �       (�       (    ���   	pHYs     ��  2iTXtXML:com.adobe.xmp     <x:xmpmeta xmlns:x=\\"adobe:ns:meta/\\" x:xmptk=\\"XMP Core 5.4.0\\">
+   <rdf:RDF xmlns:rdf=\\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\\">
+      <rdf:Description rdf:about=\\"\\"
+            xmlns:tiff=\\"http://ns.adobe.com/tiff/1.0/\\"
+            xmlns:exif=\\"http://ns.adobe.com/exif/1.0/\\">
+         <tiff:Orientation>1</tiff:Orientation>
+         <exif:ColorSpace>1</exif:ColorSpace>
+         <exif:PixelXDimension>380</exif:PixelXDimension>
+         <exif:PixelYDimension>433</exif:PixelYDimension>
+      </rdf:Description>
+   </rdf:RDF>
+</x:xmpmeta>
+�t�  �IDATX	�X�UU����q�㾸�.(����#s�TdC��Ic�jj²���F�r4Lt�45h���t|�*�\`�
+:(��ʠ�\\"����s�y�o�������>����������k�;B����M�RA�\\\\F:�B.�E���g��QGk��L������~x�Ga��R��D\\"���.$� ~�!4H	X��B�A����n������'>����a,�0l�V���l��F��N�҇�z��Z��|>�t*M��^\\\\#�3b� �wsj�{G��X-���d2	���f:�J��I�j-�|Ty�
+�82gpZ��ڣ�N����y��\\"U�?_�@y��J���K�Y��Ҡt\\"��-�MwR�@�G�ӚZ��c���q�#��k�A\\"@�Ҡ2�޷W�5���e:�pr�L&=���
+�L�3�������>�oi6
+s�2/߷�)\`̋�_�VP��ڠc.��H�F�Ϯ+TH��F}�������\`�o���?�$��I�
+��zh4#�1�5J�Ef~�k�	�@��G�?��8fq5��p�R���n$�G�b�Yқ2��j�an�,���x�.�XZ��|�]>\\"]a�zg�[�֛�|��r���,&O��9�?�6NҢ�\\"����]�\\"�z�i�{�r��9
+Y���;�*��$��$܁B����yl;vlǝw�×柆������i[��f�8p\` /����n:�yԛ��mI&{(OwBy��5�x�O��+�~����I�P�!�ך*�hg��U�I�a\\\\��B�Y�I\`o���Bi��X<�݁�������Dd2e�6��6D�4���¥s�Ƶ�����6�A'�$B'eo�h�ob�����6��D�CC��:8�fq�!=%�6ٯKb[�TM���߁���
+v���%��1xxSO���߻w�x'6o�B!��D�F閠�.�ՌI3��*�֬	�|��ߔ:ݣl���D���c֍�����I��Ɵ&���!��6?^z_y�nx	?Mb$ڔ�9���\\"5èN���9�~�*��Z�6�bm�Sg�@gg�%�]c��N��r�S���ݽ?�,���.���,���y?���4�f���{C����톗f��@�[t��ǒo����z�W\\\\�a�ȧ�ȡ�\\"��U�T�5z�>u\\"�S��nOW���\\"�o�]+0�N$2�<�����㹶ZWH�0�����K2�3c�4ޔb�sP���=��;��_dP�vj�:	(�0��vr��\\\\<�a	7��[W���\`!x]��M�٨m�c�GHeV۟�K�Є\\"wͶ���GˤI��!mGWd��u�i���¹'���?[����;P,Ryt�\\\\�����P��F=���lD���{P˲e��e1t�Ԃ�ǌ��-��7z��U�&�mֹg��9g\`���b��w�5T�ph��T*��6��ͷ�h�ĵ鉾*w{�y;Y��݃��Z�b6�Y]H{�Z�<<��l���.�dB��O�v�,�����x�!��g,��A�mb�xjK[<�D�<y���F
+vҨDr�y�p2TZ󮊄|���Tf��c���?����}^�b0�L��_���Xs�_�i���%c��K#�7�	��%�v�V�����
+WZ��gy�
+n~➟��;w�� ���򊔋'M�k�Y���<��o]���{�d�VX�hI���f-j�ј�8��N��a���Յ�q=��˹�T)�z�����sf��<�SU@�����ۉ%_��OM�ú�������b��!�?\\"��b�N������V6oy��7������(6��,�賸�˗����P�����lW,Z�N��v�aqA���Eqs�綁�q?�+��N���7���42��B^w��	��kO�y���oᆻÞ��\\"��*i�͋��Ƣ���
+�Z��}�����?�������d�-�p�BSa��UDVĹV��)�rS�ǘW��f�������uxc�6�*����g���KΡ���w����C �@���(F���sO#�;�K!���$1[۳�):�j��r
+X21����:N6Zc�U�-W�ѱ�ō?��݂�k7§M*����.�-�<��^}�)��7C�C�F���1���e�>�J��[R*{�B	PG���4������\\"���{��(�Q��+7�,�;�ilX�	�y�52A!gL��jh1�t���ex��iӓFU���&G^\\"�Z��K�RH�X�brg��X�#W�����f�r�ZQ��@��3o++�z�ɸ�˰l��������\\\\:ؤ	��v��X���84X���on�&7�6��I��d!]�&�A���i~�h�<!�{�Yx�͝8��W
+
+�f�~%d��t�O�t1��R�Ң�����_��V�Ǌ?=�/�;y����\`��P@�X��^�[� [�P��T��� �'��J?���IUNf4�6e�2),���^�	��z��+��L$���iP�h��U�x��V:�U&~�k|�Չ���Eh��J�+�N/)��T��Eg�\\"��O\`�T�&�P�.֍F���M�4� ]���1�8eZ7�t�qL�±�4�m{·��2cg�z�����o�����p��)4'��D�y��@}��sl?v��=�1X�iQ�!,�����k�õ˩Y}P����N>/l|�M=����%+#[���PR�׬G�Z��:e�����
+hG��^�u��M'.��/��r�B	��>�*^||��Ԣ�Q79SyS�V೜��ڗJ�@�4cYI<;�X��Go�~V�ܠo3� �+�+$��>�2��k!�Rji�IS*�B҉�X���j�.~�v��k��b}^���d�&}R��T_���mR׌׷�,a�ךH#.>?����h�>A+��_�A+�T�bX�wyr;�	׶c���\\\\�Y�����p�h,���ʴ��:��>�4�:�Y^���G�8#7����Z�;�>�w8��4�Ӎ��U��]�@*�    IEND�B\`�",
+  "ios/ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/Contents.json": "{
+  \\"images\\": [
+    {
+      \\"idiom\\": \\"universal\\",
+      \\"filename\\": \\"background.png\\",
+      \\"scale\\": \\"1x\\"
+    },
+    {
+      \\"idiom\\": \\"universal\\",
+      \\"scale\\": \\"2x\\"
+    },
+    {
+      \\"idiom\\": \\"universal\\",
+      \\"scale\\": \\"3x\\"
+    }
+  ],
+  \\"info\\": {
+    \\"version\\": 1,
+    \\"author\\": \\"xcode\\"
+  }
+}",
+  "ios/ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/background.png": "�PNG
+
+   
+IHDR         ĉ   IDATx�~�   IDATc��� ��Ӝ��    IEND�B\`�",
+  "ios/ReactNativeProject/Info.plist": "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>
+<!DOCTYPE plist PUBLIC \\"-//Apple//DTD PLIST 1.0//EN\\" \\"http://www.apple.com/DTDs/PropertyList-1.0.dtd\\">
+<plist version=\\"1.0\\">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleDisplayName</key>
+  <string>ReactNativeProject</string>
+  <key>CFBundleExecutable</key>
+  <string>$(EXECUTABLE_NAME)</string>
+  <key>CFBundleIdentifier</key>
+  <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>$(PRODUCT_NAME)</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>1.0</string>
+  <key>CFBundleSignature</key>
+  <string>????</string>
+  <key>CFBundleVersion</key>
+  <string>1</string>
+  <key>LSRequiresIPhoneOS</key>
+  <true/>
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <true/>
+    <key>NSExceptionDomains</key>
+    <dict>
+      <key>localhost</key>
+      <dict>
+        <key>NSExceptionAllowsInsecureHTTPLoads</key>
+        <true/>
+      </dict>
+    </dict>
+  </dict>
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string></string>
+  <key>UILaunchStoryboardName</key>
+  <string>SplashScreen</string>
+  <key>UIRequiredDeviceCapabilities</key>
+  <array>
+    <string>armv7</string>
+  </array>
+  <key>UISupportedInterfaceOrientations</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+    <string>UIInterfaceOrientationLandscapeLeft</string>
+    <string>UIInterfaceOrientationLandscapeRight</string>
+  </array>
+  <key>UIViewControllerBasedStatusBarAppearance</key>
+  <false/>
+</dict>
+</plist>
+",
+  "ios/ReactNativeProject/SplashScreen.storyboard": "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>
+<document
+  type=\\"com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB\\"
+  version=\\"3.0\\"
+  toolsVersion=\\"16096\\"
+  targetRuntime=\\"iOS.CocoaTouch\\"
+  propertyAccessControl=\\"none\\"
+  useAutolayout=\\"YES\\"
+  launchScreen=\\"YES\\"
+  useTraitCollections=\\"YES\\"
+  useSafeAreas=\\"YES\\"
+  colorMatched=\\"YES\\"
+  initialViewController=\\"EXPO-VIEWCONTROLLER-1\\"
+>
+  <device id=\\"retina5_5\\" orientation=\\"portrait\\" appearance=\\"light\\"/>
+  <dependencies>
+    <deployment identifier=\\"iOS\\"/>
+    <plugIn identifier=\\"com.apple.InterfaceBuilder.IBCocoaTouchPlugin\\" version=\\"16087\\"/>
+    <capability name=\\"Safe area layout guides\\" minToolsVersion=\\"9.0\\"/>
+    <capability name=\\"documents saved in the Xcode 8 format\\" minToolsVersion=\\"8.0\\"/>
+  </dependencies>
+  <scenes>
+    <!--View Controller-->
+    <scene sceneID=\\"EXPO-SCENE-1\\">
+      <objects>
+        <viewController
+          storyboardIdentifier=\\"SplashScreenViewController\\"
+          id=\\"EXPO-VIEWCONTROLLER-1\\"
+          sceneMemberID=\\"viewController\\"
+        >
+          <view
+            key=\\"view\\"
+            userInteractionEnabled=\\"NO\\"
+            contentMode=\\"scaleToFill\\"
+            insetsLayoutMarginsFromSafeArea=\\"NO\\"
+            id=\\"EXPO-ContainerView\\"
+            userLabel=\\"ContainerView\\"
+          >
+            <rect key=\\"frame\\" x=\\"0.0\\" y=\\"0.0\\" width=\\"414\\" height=\\"736\\"/>
+            <autoresizingMask key=\\"autoresizingMask\\" flexibleMaxX=\\"YES\\" flexibleMaxY=\\"YES\\"/>
+            <subviews>
+              <imageView
+                userInteractionEnabled=\\"NO\\"
+                contentMode=\\"scaleAspectFill\\"
+                horizontalHuggingPriority=\\"251\\"
+                verticalHuggingPriority=\\"251\\"
+                insetsLayoutMarginsFromSafeArea=\\"NO\\"
+                image=\\"SplashScreenBackground\\"
+                translatesAutoresizingMaskIntoConstraints=\\"NO\\"
+                id=\\"EXPO-SplashScreenBackground\\"
+                userLabel=\\"SplashScreenBackground\\"
+              >
+                <rect key=\\"frame\\" x=\\"0.0\\" y=\\"0.0\\" width=\\"414\\" height=\\"736\\"/>
+              </imageView>
+              <imageView
+                clipsSubviews=\\"YES\\"
+                userInteractionEnabled=\\"NO\\"
+                contentMode=\\"scaleAspectFit\\"
+                horizontalHuggingPriority=\\"251\\"
+                verticalHuggingPriority=\\"251\\"
+                translatesAutoresizingMaskIntoConstraints=\\"NO\\"
+                image=\\"SplashScreen\\"
+                id=\\"EXPO-SplashScreen\\"
+                userLabel=\\"SplashScreen\\"
+              >
+                <rect key=\\"frame\\" x=\\"0.0\\" y=\\"0.0\\" width=\\"414\\" height=\\"736\\"/>
+              </imageView>
+            </subviews>
+            <constraints>
+              <constraint firstItem=\\"EXPO-SplashScreenBackground\\" firstAttribute=\\"top\\" secondItem=\\"EXPO-ContainerView\\" secondAttribute=\\"top\\" id=\\"1gX-mQ-vu6\\"/>
+              <constraint firstItem=\\"EXPO-SplashScreenBackground\\" firstAttribute=\\"leading\\" secondItem=\\"EXPO-ContainerView\\" secondAttribute=\\"leading\\" id=\\"6tX-OG-Sck\\"/>
+              <constraint firstItem=\\"EXPO-SplashScreenBackground\\" firstAttribute=\\"trailing\\" secondItem=\\"EXPO-ContainerView\\" secondAttribute=\\"trailing\\" id=\\"ABX-8g-7v4\\"/>
+              <constraint firstItem=\\"EXPO-SplashScreenBackground\\" firstAttribute=\\"bottom\\" secondItem=\\"EXPO-ContainerView\\" secondAttribute=\\"bottom\\" id=\\"jkI-2V-eW5\\"/>
+              <constraint firstItem=\\"EXPO-SplashScreen\\" firstAttribute=\\"top\\" secondItem=\\"EXPO-ContainerView\\" secondAttribute=\\"top\\" id=\\"2VS-Uz-0LU\\"/>
+              <constraint firstItem=\\"EXPO-SplashScreen\\" firstAttribute=\\"leading\\" secondItem=\\"EXPO-ContainerView\\" secondAttribute=\\"leading\\" id=\\"LhH-Ei-DKo\\"/>
+              <constraint firstItem=\\"EXPO-SplashScreen\\" firstAttribute=\\"trailing\\" secondItem=\\"EXPO-ContainerView\\" secondAttribute=\\"trailing\\" id=\\"I6l-TP-6fn\\"/>
+              <constraint firstItem=\\"EXPO-SplashScreen\\" firstAttribute=\\"bottom\\" secondItem=\\"EXPO-ContainerView\\" secondAttribute=\\"bottom\\" id=\\"nbp-HC-eaG\\"/>
+            </constraints>
+            <viewLayoutGuide key=\\"safeArea\\" id=\\"Rmq-lb-GrQ\\"/>
+          </view>
+        </viewController>
+        <placeholder placeholderIdentifier=\\"IBFirstResponder\\" id=\\"EXPO-PLACEHOLDER-1\\" userLabel=\\"First Responder\\" sceneMemberID=\\"firstResponder\\"/>
+      </objects>
+      <point key=\\"canvasLocation\\" x=\\"140.625\\" y=\\"129.4921875\\"/>
+    </scene>
+  </scenes>
+  <resources>
+    <image name=\\"SplashScreen\\" width=\\"414\\" height=\\"736\\"/>
+    <image name=\\"SplashScreenBackground\\" width=\\"1\\" height=\\"1\\"/>
+  </resources>
+</document>
+",
+}
+`;

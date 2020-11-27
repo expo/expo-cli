@@ -1,6 +1,6 @@
 {
   "name": "@expo/json-file",
-  "version": "8.2.24",
+  "version": "8.2.25",
   "description": "A module for reading, writing, and manipulating JSON files",
   "main": "build/JsonFile.js",
   "scripts": {
@@ -28,7 +28,7 @@
     "build"
   ],
   "dependencies": {
-    "@babel/code-frame": "^7.0.0-beta.44",
+    "@babel/code-frame": "~7.10.4",
     "fs-extra": "9.0.0",
     "json5": "^1.0.1",
     "lodash": "^4.17.15",

@@ -11,7 +11,7 @@ import semver from 'semver';
 
 import { installExitHooks } from '../exit';
 import log from '../log';
-import sendTo from '../sendTo';
+import * as sendTo from '../sendTo';
 import urlOpts, { URLOptions } from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
 

@@ -3,6 +3,7 @@ import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
+import log from '../log';
 import { confirmAsync } from '../prompts';
 import * as Eject from './eject/Eject';
 import * as LegacyEject from './eject/LegacyEject';
@@ -30,9 +31,11 @@ export async function actionAsync(
   // TODO: remove LegacyEject when SDK 36 is no longer supported: after SDK 40 is released.
   if (Versions.lteSdkVersion(exp, '36.0.0')) {
     if (options.force || (await userWantsToEjectWithoutUpgradingAsync())) {
+      log.debug('Eject Mode: Legacy');
       await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
     }
   } else {
+    log.debug('Eject Mode: Latest');
     await Eject.ejectAsync(projectDir, options as Eject.EjectAsyncOptions);
   }
 }
