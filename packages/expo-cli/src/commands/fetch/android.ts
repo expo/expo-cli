@@ -46,7 +46,7 @@ export async function fetchAndroidKeystoreAsync(
   const keystoreFilename = `${ctx.manifest.slug}.jks`;
   await maybeRenameExistingFileAsync(projectRoot, keystoreFilename);
   const backupKeystoreOutputPath = path.resolve(projectRoot, keystoreFilename);
-  const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+  const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
   assertSlug(ctx.manifest.slug);
   await runCredentialsManager(
@@ -69,7 +69,7 @@ export async function fetchAndroidHashesAsync(
   const outputPath = path.resolve(projectRoot, `${ctx.manifest.slug}.tmp.jks`);
   try {
     assertSlug(ctx.manifest.slug);
-    const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+    const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
     const view = new DownloadKeystore(experienceName, {
       outputPath,
       quiet: true,
@@ -112,7 +112,7 @@ export async function fetchAndroidUploadCertAsync(
 
   try {
     assertSlug(ctx.manifest.slug);
-    const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+    const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
     const view = new DownloadKeystore(experienceName, {
       outputPath: keystorePath,
       quiet: true,

@@ -1,17 +1,16 @@
 import { IOSConfig } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import plist from '@expo/plist';
-import { UserManager } from '@expo/xdl';
 import fs from 'fs-extra';
 import path from 'path';
 
 import { gitAddAsync } from '../../../../git';
 import log from '../../../../log';
-import { ensureValidVersions } from './common';
+import { ensureValidVersions, getAccountName } from './common';
 
 export async function configureUpdatesAsync(projectDir: string, exp: ExpoConfig): Promise<void> {
   ensureValidVersions(exp);
-  const username = await UserManager.getCurrentUsernameAsync();
+  const username = await getAccountName(exp);
   let xcodeProject = IOSConfig.XcodeUtils.getPbxproj(projectDir);
 
   if (!IOSConfig.Updates.isShellScriptBuildPhaseConfigured(projectDir, exp, xcodeProject)) {
@@ -36,7 +35,7 @@ export async function syncUpdatesConfigurationAsync(
   exp: ExpoConfig
 ): Promise<void> {
   ensureValidVersions(exp);
-  const username = await UserManager.getCurrentUsernameAsync();
+  const username = await getAccountName(exp);
   try {
     await ensureUpdatesConfiguredAsync(projectDir, exp);
   } catch (error) {
