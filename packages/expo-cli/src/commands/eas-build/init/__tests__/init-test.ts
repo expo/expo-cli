@@ -13,6 +13,7 @@ jest.mock('fs');
 jest.mock('../../../../projects', () => {
   return {
     ensureProjectExistsAsync: () => 'fakeProjectId',
+    getProjectOwner: () => mockedUser.username,
   };
 });
 jest.mock('../../utils/git', () => {
