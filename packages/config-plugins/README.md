@@ -1,6 +1,17 @@
 # Expo Config Plugins
 
-The Expo config is a powerful tool for generating native app code from a unified JavaScript interface. Most basic functionality can be controlled by using the the [static Expo config](https://docs.expo.io/versions/latest/config/app/), but some features require manipulation of the native project files. To support complex behavior we've created config plugins, and mods (short for modifiers).
+The Expo config is a powerful tool for generating and configuring native app code from a unified JavaScript interface. Most basic functionality can be controlled by using the the [static Expo config](https://docs.expo.io/versions/latest/config/app/), but some features require manipulation of the native project files. To support complex behavior we've created config plugins, and mods (short for modifiers).
+
+## TL;DR
+
+Expo config helps you do the following:
+
+- Change values in native files easily.
+  - Customize the `Info.plist` or `AndroidManifest.xml` files as JSON objects via JavaScript(!!)
+- Safely read, parse, and write native files in a controlled order.
+  - If you have multiple different third-party packages writing to the same files, race conditions can occur.
+- Provide a JavaScript interface for build-time settings with native React plugins (Turbo Modules, Native Modules, Unimodules, etc.).
+  - Plugins like Firebase, or Facebook SDK require native API keys to be added. You can do that via JavaScript across platforms rather than diving into an unfamiliar native codebase and guessing what things do.
 
 > Here is a [colorful chart](https://whimsical.com/UjytoYXT2RN43LywvWExfK) for visual learners.
 
@@ -114,6 +125,9 @@ The following default mods are provided by the mod compiler for common file mani
 - `mods.android.mainActivity` -- Modify the `android/app/src/main/<package>/MainActivity.java` as a string.
 - `mods.android.appBuildGradle` -- Modify the `android/app/build.gradle` as a string.
 - `mods.android.projectBuildGradle` -- Modify the `android/build.gradle` as a string.
+- `mods.android.settingsBuildGradle` -- Modify the `android/settings.gradle` as a string.
+- `mods.android.expoAppBuildGradle` -- Modify the `android/.expo/app-build.gradle` as a string.
+- `mods.android.expoProjectBuildGradle` -- Modify the `android/.expo/project-build.gradle` as a string.
 
 After the mods are resolved, the contents of each mod will be written to disk. Custom default mods can be added to support new native files.
 For example, you can create a mod to support the `GoogleServices-Info.plist`, and pass it to other mods.
@@ -164,3 +178,111 @@ export const withIcons: ConfigPlugin = config => {
 Be careful using `withDangerousModifier` as it is subject to change in the future.
 The order with which it gets executed is not reliable either.
 Currently dangerous mods run first before all other modifiers, this is because we use dangerous mods internally for large file system refactoring like when the package name changes.
+
+## Android
+
+React Android plugins (Turbo Modules, Native Modules, Unimodules, etc.) often need access to a couple different native files to be setup and configured properly.
+Expo config enables you to configure these files automatically with JavaScript via Config mods.
+
+### Gradle files
+
+Gradle files are used to configure how Android projects are built. Often, you'll need to modify them to import native packages. Most of this is handled already in React by our autolinking, but sometimes more customization options are required.
+
+### Project build.gradle
+
+> Located at `android/build.gradle`
+
+- The top-level Android build file, used for specifying common options that all sub-projects/modules use.
+- Used for importing dependencies (kinda like a `package.json`).
+- This file can be modified as a string via `mods.android.expoProjectBuildGradle`.
+
+```ts
+import { withProjectBuildGradle, ConfigPlugin } from '@expo/config-plugins';
+
+export const withCommentInProjectBuildGradle: ConfigPlugin = config => {
+  return withProjectBuildGradle(config, config => {
+    config.modResults.contents += '\n// Appended useless comment to gradle file';
+    return config;
+  });
+};
+```
+
+### Generated Gradle files
+
+It's not safe to modify the gradle files directly though:
+
+- Regexes are fragile and hard to validate.
+- Some operations cannot be idempotent, meaning you might be able to add code, but how would you remove it if the config changes. This is made especially difficult with package versioning.
+- How to detect what was manually added by the user (considered bad form when recompiling the config mods).
+
+To combat this, we expose a generated gradle file that gets imported at the bottom of the project `build.gradle` file.
+This allows for safer operations because it's reset every time the config is recompiled, this means you don't have to worry about removing previous modifications.
+
+Sample file structure:
+
+```
+┌── app.config.js ➡️ Expo Config
+└── android/ ➡️ Project folder
+    ├── .expo/ ➡️ Generated gradle folder
+    │   ├── app-build.gradle ➡️ 🟣 Generated gradle file for `android/app/build.gradle`
+    │   └── project-build.gradle ➡️ 🔵 Generated gradle file for `android/build.gradle`
+    ├── app/ ➡️ Android app folder
+    │   └── build.gradle ➡️ 🟣 App gradle file
+    └── build.gradle ➡️ 🔵 Project gradle file
+```
+
+#### Example usage
+
+You need to make the following modification to [support the package `expo-camera`](https://www.npmjs.com/package/expo-camera#configure-for-android):
+
+`android/build.gradle`
+
+```groovy
+allprojects {
+    repositories {
+
+        // * Your other repositories here *
+
+        // * Add a new maven block after other repositories / blocks *
+        maven {
+            // expo-camera bundles a custom com.google.android:cameraview
+            url "$rootDir/../node_modules/expo-camera/android/maven"
+        }
+    }
+}
+```
+
+A lot could go wrong here, you could put the block in the wrong place, use the wrong file, etc...
+
+Instead, this could be done safely, using the generated file like so:
+
+`my-camera-plugin.js`
+
+```js
+const { AndroidConfig } = require('@expo/config-plugins');
+
+const withCameraGradle = config => {
+  return AndroidConfig.Gradle.withProjectGradleMavenPackage(config, {
+    // Appends the following path relative to the root android folder.
+    filePath: '../node_modules/expo-camera/android/maven',
+    // An ID used for debugging
+    mavenPluginId: 'expo-camera',
+  });
+};
+
+module.exports = withCameraGradle;
+```
+
+`app.config.ts`
+
+```ts
+import withCameraGradle from './my-camera-plugin';
+
+const config = {
+  /* My Expo Config */
+};
+
+export default withCameraGradle(config);
+```
+
+This will push a maven block to the project gradle!

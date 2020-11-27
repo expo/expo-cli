@@ -38,6 +38,8 @@ export {
   withProjectBuildGradle,
   withAppBuildGradle,
   withSettingsGradle,
+  withExpoAppBuildGradle,
+  withExpoProjectBuildGradle,
 } from './plugins/android-plugins';
 
 export { compileModsAsync } from './plugins/mod-compiler';
