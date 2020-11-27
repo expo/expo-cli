@@ -1,6 +1,6 @@
 import { ExpoConfig } from '@expo/config-types';
 
-import * as WarningAggregator from '../../WarningAggregator';
+import * as WarningAggregator from '../../utils/warnings';
 import {
   buildContentsJsonImages,
   getSplashConfig,
@@ -8,17 +8,12 @@ import {
   warnUnsupportedSplashProperties,
 } from '../SplashScreen';
 
-jest.mock('../../WarningAggregator');
-
 jest.mock('fs');
-
-// jest.mock('../../WarningAggregator', () => ({
-//   addWarningIOS: jest.fn(),
-// }));
+jest.mock('../../utils/warnings');
 
 afterAll(() => {
   jest.unmock('fs');
-  jest.unmock('../../WarningAggregator');
+  jest.unmock('../../utils/warnings');
 });
 
 describe(getSplashConfig, () => {
