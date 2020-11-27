@@ -469,9 +469,13 @@ export interface Android {
    */
   publishBundlePath?: string;
   /**
-   * The package name for your Android standalone app. You make it up, but it needs to be unique on the Play Store. See [this StackOverflow question](http://stackoverflow.com/questions/6273892/android-package-name-convention).
+   * The package name for your Android standalone app. By default it is also used as the `applicationId` in your application. You can provide `applicationId` separately.
    */
   package?: string;
+  /**
+   * Unique application ID that identifies your app on the device and in Google Play Store. Providing this is optional as the value provided in the `package` parameter is being used as as default value for this parameter as well. Once the application is published to the store with the specific `applicationId`, this value cannot be changed. [Learn more](https://developer.android.com/studio/build/application-id)
+   */
+  applicationId?: string;
   /**
    * Version number required by Google Play. Increment by one for each release. Must be an integer. [Learn more](https://developer.android.com/studio/publish/versioning.html)
    */
