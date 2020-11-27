@@ -12,6 +12,20 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Fri, 27 Nov 2020 10:31:00 -0800](https://github.com/expo/expo-cli/commit/939de8ba6eb90979f7975de5ae2197208319773b)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+- [cli] fix prompt selection ([#2966](https://github.com/expo/expo-cli/issues/2966))
+
+### 📦 Packages updated
+
+- expo-cli@4.0.2
+
 ## [Thu, 26 Nov 2020 16:54:28 -0800](https://github.com/expo/expo-cli/commit/1995c2f93d03a733480d95f22145170622158b01)
 
 ### 🛠 Breaking changes
