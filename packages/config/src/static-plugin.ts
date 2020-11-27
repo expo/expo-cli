@@ -3,10 +3,8 @@ import findUp from 'find-up';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
 
-import { assert } from '../Errors';
-import { fileExists } from '../Modules';
-import { ConfigPlugin } from '../Plugin.types';
-import { withPlugins } from './core-plugins';
+import { assert } from './Errors';
+import { fileExists } from './Modules';
 
 type JSONPlugin = { module: string; props?: Record<string, any> };
 type JSONPluginsList = (JSONPlugin | string)[];
@@ -99,7 +97,7 @@ function normalizeJSONPluginOptions(plugins?: JSONPluginsList): JSONPlugin[] {
 }
 
 function resolveConfigPluginArray(projectRoot: string, plugins: JSONPlugin[]) {
-  const configPlugins: [ConfigPlugin, any][] = [];
+  const configPlugins: [(config: ExpoConfig) => ExpoConfig, any][] = [];
   for (const plugin of plugins) {
     const result = resolveConfigPluginFunction(projectRoot, plugin.module);
     configPlugins.push([result, plugin.props]);
@@ -133,5 +131,6 @@ export function withStaticPlugins(config: ExpoConfig, projectRoot: string): Expo
   // Resolve plugin functions
   const configPlugins = resolveConfigPluginArray(projectRoot, plugins);
   // Compose plugins
-  return withPlugins(config, configPlugins);
+  // return withPlugins(config, configPlugins);
+  return config; // TODO
 }
