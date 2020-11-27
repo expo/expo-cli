@@ -96,6 +96,24 @@ const withAndroidExpoAppBuildGradleBaseMod: ConfigPlugin<void> = config => {
   });
 };
 
+export function getTemplateGeneratedProjectBuildGradleContents() {
+  const baseContents = [
+    '// GENERATED FILE DO NOT MODIFY. REGENERATE VIA EXPO CLI (expo eject)',
+    "// This file is used for Expo config plugins to safely modify a project's `./build.gradle` file,",
+    '// if this file ever causes build errors, simply delete it and run `expo eject` again.',
+    '',
+    'allprojects {',
+    'repositories {',
+    '// @begin allprojects-repositories',
+    // custom maven files can regex between these tags.
+    '// @end allprojects-repositories',
+    '}',
+    '}',
+  ];
+
+  return baseContents.join('\n');
+}
+
 const withAndroidExpoProjectBuildGradleBaseMod: ConfigPlugin<void> = config => {
   return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
     platform: 'android',
@@ -113,23 +131,13 @@ const withAndroidExpoProjectBuildGradleBaseMod: ConfigPlugin<void> = config => {
         const filePath = path.join(folderName, fileName);
         await ensureDir(folderName);
 
-        const baseContents = [
-          '// GENERATED FILE DO NOT MODIFY. REGENERATE VIA EXPO CLI (expo eject)',
-          "// This file is used for Expo config plugins to safely modify a project's `./build.gradle` file,",
-          '// if this file ever causes build errors, simply delete it and run `expo eject` again.',
-          '',
-          'allprojects {',
-          'repositories {',
-          '// @begin allprojects-repositories',
-          // custom maven files can regex between these tags.
-          '// @end allprojects-repositories',
-          '}',
-          '}',
-        ];
-
         results = await nextMod!({
           ...config,
-          modResults: { language: 'groovy', contents: baseContents.join('\n'), path: filePath },
+          modResults: {
+            language: 'groovy',
+            contents: getTemplateGeneratedProjectBuildGradleContents(),
+            path: filePath,
+          },
           modRequest,
         });
         resolveModResults(results, modRequest.platform, modRequest.modName);

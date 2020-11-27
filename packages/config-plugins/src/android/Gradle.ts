@@ -70,26 +70,30 @@ export const withProjectGradleMavenPackage: ConfigPlugin<{
    */
   filePath: string;
   /**
-   * An unchanging tag that's used to remove old filePaths, often this is the name of a node module (ex: expo-camera).
+   * An optional ID used to prevent duplicates.
    */
-  mavenPluginId: string;
+  mavenPluginId?: string;
 }> = (config, { filePath, mavenPluginId }) => {
   return withExpoProjectBuildGradle(config, async modConfig => {
     // commit the changes
-    modConfig.modResults.contents = applyProjectGradleMavenPackage(
-      modConfig.modResults.contents,
-      filePath,
-      mavenPluginId
-    );
+    modConfig.modResults.contents = applyProjectGradleMavenPackage({
+      contents: modConfig.modResults.contents,
+      importFilePath: filePath,
+      mavenPluginId,
+    });
     return modConfig;
   });
 };
 
-export function applyProjectGradleMavenPackage(
-  contents: string,
-  filePath: string,
-  mavenPluginId: string
-): string {
+export function applyProjectGradleMavenPackage({
+  contents,
+  importFilePath: filePath,
+  mavenPluginId,
+}: {
+  contents: string;
+  importFilePath: string;
+  mavenPluginId?: string;
+}): string {
   const pluginIdTag = `@plugin ${mavenPluginId}`;
   const addition = `maven{url "$rootDir/${filePath}"} // ${pluginIdTag}`;
   const lines = contents.split('\n');
