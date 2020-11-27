@@ -12,6 +12,25 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Thu, 26 Nov 2020 16:54:28 -0800](https://github.com/expo/expo-cli/commit/1995c2f93d03a733480d95f22145170622158b01)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+- [cli] Disable strikethrough in expo-cli select prompts
+- [config] Run splash first config in dangerous configs to fix race condition ([#2959](https://github.com/expo/expo-cli/issues/2959))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.2
+- @expo/dev-tools@0.13.61
+- expo-cli@4.0.1
+- uri-scheme@1.0.48
+- @expo/xdl@59.0.1
+
 ## [Thu, 26 Nov 2020 12:25:12 -0800](https://github.com/expo/expo-cli/commit/a69fdfdcda48ca1ebf09b1e862fe84043f569d9d)
 
 ### 🛠 Breaking changes
