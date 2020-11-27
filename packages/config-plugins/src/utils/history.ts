@@ -9,28 +9,28 @@ export type PluginHistoryItem = {
 };
 
 export function getHistoryItem(
-  config: Pick<ExpoConfig, 'extra'>,
+  config: Pick<ExpoConfig, '_internal'>,
   name: string
 ): PluginHistoryItem | null {
-  return config.extra?._pluginHistory?.[name] ?? null;
+  return config._internal?.pluginHistory?.[name] ?? null;
 }
 
 export function addHistoryItem(
   config: ExpoConfig,
   item: Omit<PluginHistoryItem, 'version'> & { version?: string }
 ): ExpoConfig {
-  if (!config.extra) {
-    config.extra = {};
+  if (!config._internal) {
+    config._internal = {};
   }
-  if (!config.extra._pluginHistory) {
-    config.extra._pluginHistory = {};
+  if (!config._internal.pluginHistory) {
+    config._internal.pluginHistory = {};
   }
 
   if (!item.version) {
     item.version = 'UNVERSIONED';
   }
 
-  config.extra._pluginHistory[item.name] = item;
+  config._internal.pluginHistory[item.name] = item;
 
   return config;
 }
