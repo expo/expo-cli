@@ -35,7 +35,7 @@ export function addGradleImport({
   contents: string;
   filePath: string;
 }): string {
-  const importStatement = `apply from: "$rootDir/${filePath}" // @generated via expo-cli`;
+  const importStatement = `apply from: "$rootDir/${filePath}"`;
   if (contents.includes(importStatement)) {
     return contents;
   }
