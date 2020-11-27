@@ -5,8 +5,6 @@ import { applyProjectGradleMavenPackage } from '../Gradle';
 jest.mock('fs');
 jest.mock('../../utils/warnings');
 
-const badNameCleaned = `😃$F0g.`;
-
 describe(applyProjectGradleMavenPackage, () => {
   it('appends packages to gradle', () => {
     const contents = getTemplateGeneratedProjectBuildGradleContents();

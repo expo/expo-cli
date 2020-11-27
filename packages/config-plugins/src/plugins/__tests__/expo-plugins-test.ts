@@ -284,7 +284,6 @@ describe('built-in plugins', () => {
       'android/app/src/main/res/values/strings.xml',
       'android/app/google-services.json',
       'android/.expo/project-build.gradle',
-      'android/.expo/app-build.gradle',
       'config/GoogleService-Info.plist',
       'config/google-services.json',
       'locales/en-US.json',

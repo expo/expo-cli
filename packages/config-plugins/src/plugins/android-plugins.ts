@@ -149,17 +149,3 @@ export const withSettingsGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config,
     action,
   });
 };
-
-/**
- * Provides the generated `.expo/app-build.gradle` for modification.
- *
- * @param config
- * @param action
- */
-export const withExpoAppBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (config, action) => {
-  return withExtendedMod(config, {
-    platform: 'android',
-    mod: 'expoAppBuildGradle',
-    action,
-  });
-};

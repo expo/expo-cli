@@ -23,23 +23,6 @@ export const withGeneratedProjectBuildGradleImport: ConfigPlugin<void> = config 
   });
 };
 
-export const withGeneratedAppBuildGradleImport: ConfigPlugin<void> = config => {
-  return withAppBuildGradle(config, config => {
-    if (config.modResults.language === 'groovy') {
-      config.modResults.contents = addGradleImport({
-        contents: config.modResults.contents,
-        filePath: '.expo/app-build.gradle',
-      });
-    } else {
-      addWarningAndroid(
-        'android-generated-app-gradle',
-        `Cannot automatically configure app build.gradle if it's not groovy`
-      );
-    }
-    return config;
-  });
-};
-
 /**
  *
  * @param contents string contents of build.gradle file

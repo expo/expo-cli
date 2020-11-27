@@ -70,7 +70,6 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.GoogleServices.withClassPath,
 
     // app/build.gradle
-    AndroidConfig.Gradle.withGeneratedAppBuildGradleImport,
     AndroidConfig.GoogleServices.withApplyPlugin,
     AndroidConfig.Package.withPackageGradle,
     AndroidConfig.Version.withVersion,

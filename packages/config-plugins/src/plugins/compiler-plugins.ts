@@ -55,46 +55,8 @@ function applyAndroidBaseMods(config: ExportedConfig): ExportedConfig {
   config = withAndroidProjectBuildGradleBaseMod(config);
   config = withAndroidAppBuildGradleBaseMod(config);
   config = withAndroidExpoProjectBuildGradleBaseMod(config);
-  config = withAndroidExpoAppBuildGradleBaseMod(config);
   return config;
 }
-
-const withAndroidExpoAppBuildGradleBaseMod: ConfigPlugin<void> = config => {
-  return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
-    platform: 'android',
-    mod: 'expoAppBuildGradle',
-    skipEmptyMod: true,
-    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
-        ...config,
-        modRequest,
-      };
-
-      try {
-        const fileName = 'app-build.gradle';
-        const folderName = AndroidPaths.getAndroidGeneratedGradleFolder(modRequest.projectRoot);
-        const filePath = path.join(folderName, fileName);
-        await ensureDir(folderName);
-
-        results = await nextMod!({
-          ...config,
-          modResults: { language: 'groovy', contents: '', path: filePath },
-          modRequest,
-        });
-        resolveModResults(results, modRequest.platform, modRequest.modName);
-        const modResults = results.modResults;
-
-        await writeFile(filePath, modResults.contents);
-      } catch (error) {
-        WarningAggregator.addWarningAndroid(
-          `${modRequest.platform}-${modRequest.modName}`,
-          `Generated app-build.gradle could not be modified. ${error.message}`
-        );
-      }
-      return results;
-    },
-  });
-};
 
 export function getTemplateGeneratedProjectBuildGradleContents() {
   const baseContents = [

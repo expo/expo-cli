@@ -82,7 +82,6 @@ export interface ModConfig {
     mainActivity?: Mod<AndroidPaths.ApplicationProjectFile>;
     /**
      * Dangerously modify the `android/app/build.gradle` as a string.
-     * Use `expoAppBuildGradle` instead.
      */
     appBuildGradle?: Mod<AndroidPaths.GradleProjectFile>;
     /**
@@ -90,12 +89,6 @@ export interface ModConfig {
      * Use `expoProjectBuildGradle` instead.
      */
     projectBuildGradle?: Mod<AndroidPaths.GradleProjectFile>;
-    /**
-     * Modify the generated `android/.expo/app-build.gradle` as a string.
-     * This file is used to extend the contents of `android/app/build.gradle` safely.
-     * Should be used in favor of `appBuildGradle`.
-     */
-    expoAppBuildGradle?: Mod<AndroidPaths.GradleProjectFile>;
     /**
      * Modify the generated `android/.expo/project-build.gradle` as a string.
      * This file is used to extend the contents of `android/build.gradle` safely.

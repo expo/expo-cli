@@ -38,7 +38,6 @@ export {
   withProjectBuildGradle,
   withAppBuildGradle,
   withSettingsGradle,
-  withExpoAppBuildGradle,
   withExpoProjectBuildGradle,
 } from './plugins/android-plugins';
 
