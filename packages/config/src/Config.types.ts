@@ -1,6 +1,9 @@
 import { ExpoConfig } from '@expo/config-types';
 
-import { ModConfig } from './Plugin.types';
+// import { ModConfig } from './Plugin.types';
+
+// TODO
+export type ModConfig = { ios?: any; android?: any };
 
 export { ExpoConfig };
 
@@ -97,21 +100,6 @@ export enum ProjectPrivacy {
   PUBLIC = 'public',
   UNLISTED = 'unlisted',
 }
-
-export type IntentFilter = {
-  action: string;
-  category?: string[];
-  autoVerify?: boolean;
-  data?: {
-    scheme?: string;
-    host?: string;
-    port?: string;
-    path?: string;
-    pathPattern?: string;
-    pathPrefix?: string;
-    mimeType?: string;
-  };
-};
 
 export type ExpRc = { [key: string]: any };
 export type Platform = 'android' | 'ios' | 'web';

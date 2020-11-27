@@ -1,10 +1,5 @@
-import {
-  WarningAggregator as ConfigWarningAggregator,
-  ExpoConfig,
-  getConfig,
-  PackageJSONConfig,
-  WarningAggregator,
-} from '@expo/config';
+import { ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
+import { WarningAggregator } from '@expo/config-plugins';
 import { getBareExtensions, getFileWithExtensions } from '@expo/config/paths';
 import JsonFile, { JSONObject } from '@expo/json-file';
 import { Exp } from '@expo/xdl';
@@ -113,6 +108,8 @@ export async function ejectAsync(
   // err towards running pod install less because it's slow and users can easily run npx pod-install afterwards.
   if (platforms.includes('ios') && shouldInstall && needsPodInstall) {
     podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
+  } else {
+    log.debug('Skipped pod install');
   }
 
   await warnIfDependenciesRequireAdditionalSetupAsync(pkg, options);
@@ -197,7 +194,7 @@ export async function ejectAsync(
 async function configureIOSStepAsync(projectRoot: string) {
   const applyingIOSConfigStep = CreateApp.logNewSection('iOS config syncing');
   await configureIOSProjectAsync(projectRoot);
-  if (ConfigWarningAggregator.hasWarningsIOS()) {
+  if (WarningAggregator.hasWarningsIOS()) {
     applyingIOSConfigStep.stopAndPersist({
       symbol: '⚠️ ',
       text: chalk.red('iOS config synced with warnings that should be fixed:'),
@@ -246,7 +243,7 @@ async function installNodeDependenciesAsync(
 async function configureAndroidStepAsync(projectRoot: string) {
   const applyingAndroidConfigStep = CreateApp.logNewSection('Android config syncing');
   await configureAndroidProjectAsync(projectRoot);
-  if (ConfigWarningAggregator.hasWarningsAndroid()) {
+  if (WarningAggregator.hasWarningsAndroid()) {
     applyingAndroidConfigStep.stopAndPersist({
       symbol: '⚠️ ',
       text: chalk.red('Android config synced with warnings that should be fixed:'),

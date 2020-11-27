@@ -1,7 +1,10 @@
 import chalk from 'chalk';
 import program from 'commander';
+import { boolish } from 'getenv';
 import { Ora } from 'ora';
 import terminalLink from 'terminal-link';
+
+const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 type Color = (...text: string[]) => string;
 
@@ -28,6 +31,20 @@ function _maybePrintNewLine() {
     _printNewLineBeforeNextLog = false;
     console.log(); // eslint-disable-line no-console
   }
+}
+
+function consoleDebug(...args: any[]) {
+  _maybePrintNewLine();
+  _updateIsLastLineNewLine(args);
+
+  console.debug(...args); // eslint-disable-line no-console
+}
+
+function consoleInfo(...args: any[]) {
+  _maybePrintNewLine();
+  _updateIsLastLineNewLine(args);
+
+  console.info(...args); // eslint-disable-line no-console
 }
 
 function consoleLog(...args: any[]) {
@@ -155,6 +172,27 @@ log.nestedError = function (message: string) {
 log.warn = function warn(...args: any[]) {
   respectProgressBars(() => {
     consoleWarn(...withPrefixAndTextColor(args, chalk.yellow));
+  });
+};
+
+log.isDebug = EXPO_DEBUG;
+
+// Only show these logs when EXPO_DEBUG is active
+log.debug = function debug(...args: any[]) {
+  if (!EXPO_DEBUG) {
+    return;
+  }
+  respectProgressBars(() => {
+    consoleDebug(...withPrefixAndTextColor(args));
+  });
+};
+
+log.info = function info(...args: any[]) {
+  if (!EXPO_DEBUG) {
+    return;
+  }
+  respectProgressBars(() => {
+    consoleInfo(...args);
   });
 };
 
