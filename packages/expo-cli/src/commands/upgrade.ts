@@ -12,6 +12,7 @@ import ora from 'ora';
 import semver from 'semver';
 import terminalLink from 'terminal-link';
 
+import CommandError from '../CommandError';
 import log from '../log';
 import { confirmAsync, selectAsync } from '../prompts';
 import { findProjectRootAsync } from './utils/ProjectUtils';
@@ -465,21 +466,32 @@ export async function upgradeAsync(
       await maybeUpgradeEmulatorAsync();
     }
   } else if (!targetSdkVersion) {
-    if (program.nonInteractive) {
-      log.warn(
-        `You provided the target SDK version value of ${targetSdkVersionString} which does not seem to exist. Upgrading anyways because the command is running in nonInteractive mode.`
-      );
-    } else {
-      // If they provide an apparently unsupported sdk version then let people try
-      // anyways, maybe we want to use this for testing alpha versions or
-      // something...
-      const answer = await confirmAsync({
-        message: `You provided the target SDK version value of ${targetSdkVersionString} which does not seem to exist. But hey, I'm just a program, what do I know. Do you want to try to upgrade to it anyways?`,
-      });
+    // This is useful when testing the beta internally, before actually
+    // releasing it as a public beta. At this point, we won't have "beta" set on
+    // the versions endpoint and so Versions.releasedSdkVersionsAsync will not
+    // return the beta version, even with the EXPO_BETA flag set.
+    if (getenv.boolish('EXPO_BETA', false)) {
+      const allSdkVersions = await Versions.sdkVersionsAsync();
+      targetSdkVersion = allSdkVersions[targetSdkVersionString];
+    }
 
-      if (!answer) {
-        return;
-      }
+    // If we still don't have a version, even after searching through unreleased versions
+    // when the EXPO_BETA flag is set, then we will just bail out because this is not
+    // going to work!
+    if (!targetSdkVersion) {
+      const sdkVersionNumbers = Object.keys(sdkVersions).map(value => parseInt(value, 10));
+      const minSdkVersion = sdkVersionNumbers.reduce(
+        (val, acc) => Math.min(val, acc),
+        sdkVersionNumbers[0]
+      );
+      const maxSdkVersion = sdkVersionNumbers.reduce(
+        (val, acc) => Math.max(val, acc),
+        sdkVersionNumbers[0]
+      );
+      throw new CommandError(
+        `You provided the target SDK version value of ${targetSdkVersionString}, which does not seem to exist.\n` +
+          `Valid SDK versions are in the range of ${minSdkVersion}.0.0 to ${maxSdkVersion}.0.0.`
+      );
     }
   }
 
@@ -491,7 +503,10 @@ export async function upgradeAsync(
   });
 
   log.addNewLineIfNone();
-  const expoPackageToInstall = `expo@^${targetSdkVersionString}`;
+
+  const expoPackageToInstall = getenv.boolish('EXPO_BETA', false)
+    ? `expo@next`
+    : `expo@^${targetSdkVersionString}`;
 
   // Skip installing the Expo package again if it's already installed. @satya164
   // wanted this in order to work around an issue with yarn workspaces on
@@ -521,7 +536,7 @@ export async function upgradeAsync(
     ) {
       log.addNewLineIfNone();
       removingSdkVersionStep.warn(
-        'Please manually delete the sdkVersion field in your project app.config file. It is now automatically determined based on the expo package version in your package.json.'
+        'Please manually delete the sdkVersion field in your project app config file. It is now automatically determined based on the expo package version in your package.json.'
       );
     } else {
       removingSdkVersionStep.succeed('Validated configuration.');
@@ -704,9 +719,15 @@ ${chalk.gray(`${upgradeHelperUrl}?from=${previousReactNativeVersion}&to=${newRea
     );
     log(chalk.bold(targetSdkVersion.releaseNoteUrl));
   } else {
-    log.gray(
-      `Unable to find release notes for ${targetSdkVersionString}, please try to find them on https://blog.expo.io to learn more about other potentially important upgrade steps and breaking changes.`
-    );
+    if (getenv.boolish('EXPO_BETA', false)) {
+      log.gray(
+        `Release notes are not available for beta releases. Please refer to the CHANGELOG: https://github.com/expo/expo/blob/master/CHANGELOG.md.`
+      );
+    } else {
+      log.gray(
+        `Unable to find release notes for ${targetSdkVersionString}, please try to find them on https://blog.expo.io to learn more about other potentially important upgrade steps and breaking changes.`
+      );
+    }
   }
 
   const skippedSdkVersions = pickBy(sdkVersions, (_data, sdkVersionString) => {
