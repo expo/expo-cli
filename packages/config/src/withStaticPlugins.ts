@@ -81,18 +81,23 @@ function findUpPlugin(root: string): string {
   return resolveExpoPluginFile(moduleRoot) ?? root;
 }
 
-function normalizeJSONPluginOptions(plugins?: JSONPluginsList): JSONPlugin[] {
+function normalizeJSONPlugin(plugin: string | JSONPlugin): JSONPlugin {
+  if (typeof plugin === 'string') {
+    plugin = { resolve: plugin };
+  } else if (plugin.props === undefined) {
+    plugin.props = {};
+  }
+
+  return plugin;
+}
+
+function normalizeJSONPluginList(plugins?: JSONPluginsList): JSONPlugin[] {
   if (!plugins || !Array.isArray(plugins)) {
     return [];
   }
 
   return plugins.reduce<JSONPlugin[]>((prev, curr) => {
-    if (typeof curr === 'string') {
-      curr = { resolve: curr };
-    } else if (!curr.props) {
-      curr.props = {};
-    }
-    prev.push(curr);
+    prev.push(normalizeJSONPlugin(curr));
     return prev;
   }, []);
 }
@@ -134,12 +139,46 @@ function requirePluginFile(filePath: string, pluginModulePath: string): any {
  */
 const withStaticPlugins: ConfigPlugin<string> = (config, projectRoot) => {
   // @ts-ignore
-  const plugins = normalizeJSONPluginOptions(config.plugins);
+  const plugins = normalizeJSONPluginList(config.plugins);
   // Resolve and evaluate plugins
   for (const plugin of plugins) {
     const withStaticPlugin = resolveConfigPluginFunction(projectRoot, plugin.resolve);
     config = withStaticPlugin(config, plugin.props);
   }
+  return config;
+};
+
+export const withStaticPlugin: ConfigPlugin<{
+  projectRoot: string;
+  plugin: string | JSONPlugin;
+  fallback?: ConfigPlugin<{ _resolverError: Error } & any>;
+}> = (config, props) => {
+  const plugin = normalizeJSONPlugin(props.plugin);
+  // Ensure no one uses this property by accident.
+  assert(
+    !plugin.props?._resolverError,
+    `Plugin property '_resolverError' is a reserved property of \`withStaticPlugin\``
+  );
+
+  let withStaticPlugin: ConfigPlugin<unknown>;
+  try {
+    // Resolve and evaluate plugins.
+    withStaticPlugin = resolveConfigPluginFunction(props.projectRoot, plugin.resolve);
+  } catch (error) {
+    // If the static module failed to resolve, attempt to use a fallback.
+    // This enables support for built-in plugins with versioned variations living in other packages.
+    if (props.fallback) {
+      if (!plugin.props) plugin.props = {};
+      // Pass this to the fallback plugin for potential warnings about needing to install a versioned package.
+      plugin.props._resolverError = error;
+      withStaticPlugin = props.fallback;
+    } else {
+      // If no fallback, throw the resolution error.
+      throw error;
+    }
+  }
+  // Execute the plugin.
+  config = withStaticPlugin(config, plugin.props);
   return config;
 };
 
