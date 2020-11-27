@@ -2,9 +2,9 @@ import { ExpoConfig, getConfig, modifyConfigAsync } from '@expo/config';
 import { UserManager } from '@expo/xdl';
 import got from 'got';
 
+import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
-import prompt from '../../prompt';
-import { confirmAsync } from '../../prompts';
+import prompt, { confirmAsync } from '../../prompts';
 import { learnMore } from '../utils/TerminalLink';
 import { isUrlAvailableAsync } from '../utils/url';
 
@@ -98,14 +98,9 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
     if (validateBundleId(currentBundleId)) {
       return currentBundleId;
     }
-
-    log(
-      log.chalk.red(
-        `The ios.bundleIdentifier defined in your Expo config is not formatted properly. Only alphanumeric characters, '.', '-', and '_' are allowed, and each '.' must be followed by a letter.`
-      )
+    throw new CommandError(
+      `The ios.bundleIdentifier defined in your Expo config is not formatted properly. Only alphanumeric characters, '.', '-', and '_' are allowed, and each '.' must be followed by a letter.`
     );
-
-    process.exit(1);
   }
 
   // Recommend a bundle ID based on the username and project slug.
@@ -133,15 +128,14 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
   // prompt a better error message, recommend a default value, and help the user
   // validate their custom bundle ID upfront.
   const { bundleIdentifier } = await prompt(
-    [
-      {
-        name: 'bundleIdentifier',
-        default: recommendedBundleId,
-        // The Apple helps people know this isn't an EAS feature.
-        message: `What would you like your iOS bundle identifier to be?`,
-        validate: validateBundleId,
-      },
-    ],
+    {
+      type: 'text',
+      name: 'bundleIdentifier',
+      initial: recommendedBundleId,
+      // The Apple helps people know this isn't an EAS feature.
+      message: `What would you like your iOS bundle identifier to be?`,
+      validate: validateBundleId,
+    },
     {
       nonInteractiveHelp: noBundleIdMessage,
     }
@@ -184,13 +178,9 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
     if (validatePackage(currentPackage)) {
       return currentPackage;
     }
-    log(
-      log.chalk.red(
-        `Invalid format of Android package name. Only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter.`
-      )
+    throw new CommandError(
+      `Invalid format of Android package name. Only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter.`
     );
-
-    process.exit(1);
   }
 
   // Recommend a package name based on the username and project slug.
@@ -220,14 +210,13 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
   // prompt a better error message, recommend a default value, and help the user
   // validate their custom android package upfront.
   const { packageName } = await prompt(
-    [
-      {
-        name: 'packageName',
-        default: recommendedPackage,
-        message: `What would you like your Android package name to be?`,
-        validate: validatePackage,
-      },
-    ],
+    {
+      type: 'text',
+      name: 'packageName',
+      initial: recommendedPackage,
+      message: `What would you like your Android package name to be?`,
+      validate: validatePackage,
+    },
     {
       nonInteractiveHelp: noPackageMessage,
     }
@@ -275,7 +264,7 @@ async function attemptModification(
   if (modification.type === 'success') {
     log.newLine();
   } else {
-    warnAboutConfigAndExit(modification.type, modification.message!, exactEdits);
+    warnAboutConfigAndThrow(modification.type, modification.message!, exactEdits);
   }
 }
 
@@ -287,7 +276,7 @@ function logNoConfig() {
   );
 }
 
-function warnAboutConfigAndExit(type: string, message: string, edits: Partial<ExpoConfig>) {
+function warnAboutConfigAndThrow(type: string, message: string, edits: Partial<ExpoConfig>) {
   log.addNewLineIfNone();
   if (type === 'warn') {
     // The project is using a dynamic config, give the user a helpful log and bail out.
@@ -297,7 +286,7 @@ function warnAboutConfigAndExit(type: string, message: string, edits: Partial<Ex
   }
 
   notifyAboutManualConfigEdits(edits);
-  process.exit(1);
+  throw new SilentError();
 }
 
 function notifyAboutManualConfigEdits(edits: Partial<ExpoConfig>) {

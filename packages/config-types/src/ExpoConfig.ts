@@ -71,11 +71,11 @@ export interface ExpoConfig {
    */
   notification?: {
     /**
-     * Local path or remote URL to an image to use as the icon for push notifications. 96x96 png grayscale with transparency.
+     * (Android only) Local path or remote URL to an image to use as the icon for push notifications. 96x96 png grayscale with transparency. We recommend following [Google's design guidelines](https://material.io/design/iconography/product-icons.html#design-principles). If not provided, defaults to your app icon.
      */
     icon?: string;
     /**
-     * Tint color for the push notification image when it appears in the notification tray.
+     * (Android only) Tint color for the push notification image when it appears in the notification tray. Defaults to `#ffffff`
      */
     color?: string;
     /**

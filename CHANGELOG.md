@@ -6,9 +6,109 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+
+### 🎉 New features
+
+
+### 🐛 Bug fixes
+
+## [Thu, 26 Nov 2020 16:54:28 -0800](https://github.com/expo/expo-cli/commit/1995c2f93d03a733480d95f22145170622158b01)
+
+### 🛠 Breaking changes
+
 ### 🎉 New features
 
 ### 🐛 Bug fixes
+
+- [cli] Disable strikethrough in expo-cli select prompts
+- [config] Run splash first config in dangerous configs to fix race condition ([#2959](https://github.com/expo/expo-cli/issues/2959))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.2
+- @expo/dev-tools@0.13.61
+- expo-cli@4.0.1
+- uri-scheme@1.0.48
+- @expo/xdl@59.0.1
+
+## [Thu, 26 Nov 2020 12:25:12 -0800](https://github.com/expo/expo-cli/commit/a69fdfdcda48ca1ebf09b1e862fe84043f569d9d)
+
+### 🛠 Breaking changes
+
+- [cli] Removed `generate-module` command ([#2903](https://github.com/expo/expo-cli/pull/2903))
+- [cli] Use submission service by default ([#2876](https://github.com/expo/expo-cli/issues/2876))
+- [cli] Delete apply command in favor of eject. Don't worry, you probably were not using this command anyways. ([#2899](https://github.com/expo/expo-cli/issues/2899))
+
+### 🎉 New features
+
+- [cli] Record simctl error ([#2887](https://github.com/expo/expo-cli/issues/2887))
+- [cli] Replace process.exits with errors ([#2901](https://github.com/expo/expo-cli/issues/2901))
+- [cli] Support grouping and hiding in the introspect script ([#2931](https://github.com/expo/expo-cli/issues/2931))
+- [cli] debug logging ([#2946](https://github.com/expo/expo-cli/issues/2946))
+- [config plugins] Implement debug logging for mods ([#2950](https://github.com/expo/expo-cli/issues/2950))
+- [config plugins] Prevent passing a plugin that requires props without props ([#2937](https://github.com/expo/expo-cli/issues/2937))
+- [config plugins] Support updating the project settings.gradle name ([#2955](https://github.com/expo/expo-cli/issues/2955))
+- [config plugins] base mod improvements ([#2948](https://github.com/expo/expo-cli/issues/2948))
+- [config plugins] name all config plugins ([#2949](https://github.com/expo/expo-cli/issues/2949))
+- [config-plugins] create package ([#2956](https://github.com/expo/expo-cli/issues/2956))
+- [config] add option to get public expo config method ([#2863](https://github.com/expo/expo-cli/issues/2863))
+- [config] android plugins ([#2849](https://github.com/expo/expo-cli/issues/2849))
+- [deps] remove inquirer
+- [deps] upgrade react-dev-utils to 11.0.1 ([#2906](https://github.com/expo/expo-cli/issues/2906))
+- [deps] upgrade to bunyan 4.0.0 ([#2920](https://github.com/expo/expo-cli/issues/2920))
+- [web] Improve PWA warning ([#2907](https://github.com/expo/expo-cli/issues/2907))
+- [web] promote web warning to late beta ([#2889](https://github.com/expo/expo-cli/issues/2889))
+- [xdl] Switch to in-process Metro JS bundling through `@expo/dev-server` starting from SDK 40 ([#2921](https://github.com/expo/expo-cli/pull/2921))
+
+### 🐛 Bug fixes
+
+- [actions] Upgrade cache to v2 ([#2872](https://github.com/expo/expo-cli/issues/2872))
+- [cli] Fix build/status return types ([#2915](https://github.com/expo/expo-cli/issues/2915))
+- [cli] Replace inquirer with prompts in init ([#2905](https://github.com/expo/expo-cli/issues/2905))
+- [cli] Resolve main fields to determine if an index.js should be generated ([#2874](https://github.com/expo/expo-cli/issues/2874))
+- [cli] delete generate-module ([#2903](https://github.com/expo/expo-cli/issues/2903))
+- [cli][upgrade] support projects without a config ([#2888](https://github.com/expo/expo-cli/issues/2888))
+- [config plugins] Enable notifications by default ([#2958](https://github.com/expo/expo-cli/issues/2958))
+- [config plugins] add files to 'copy bundle resources', not 'compile sources' build phase ([#2936](https://github.com/expo/expo-cli/issues/2936))
+- [config] permissions plugins ([#2871](https://github.com/expo/expo-cli/issues/2871))
+- [config][xdl] migrate project/publish to getPublicExpoConfig ([#2864](https://github.com/expo/expo-cli/issues/2864))
+- [eject] Added more packages with extra setup ([#2870](https://github.com/expo/expo-cli/issues/2870))
+- [image-utils] Fix blurry web favicon ([#2914](https://github.com/expo/expo-cli/issues/2914))
+- [traveling-fastlane] add slightly modified manage_provisioning_profile ([#2928](https://github.com/expo/expo-cli/issues/2928))
+- [xdl] On Android remove default template splash image when no splash image is specified in the app manifest ([#2883](https://github.com/expo/expo-cli/pull/2883))
+- [xdl] Switch to in-process Metro JS bundling starting from SDK 40 ([#2921](https://github.com/expo/expo-cli/issues/2921))
+- [xdl] Update web terminal UI ([#2890](https://github.com/expo/expo-cli/issues/2890))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.1
+- @expo/config@3.3.16
+- @expo/dev-server@0.1.41
+- @expo/dev-tools@0.13.60
+- @expo/electron-adapter@0.0.32
+- expo-cli@4.0.0
+- expo-optimize@0.1.63
+- @expo/image-utils@0.3.8
+- @expo/json-file@8.2.25
+- @expo/metro-config@0.1.41
+- @expo/next-adapter@2.1.46
+- @expo/package-manager@0.0.34
+- pod-install@0.1.13
+- expo-pwa@0.0.51
+- @expo/schemer@1.3.22
+- uri-scheme@1.0.47
+- @expo/webpack-config@0.12.45
+- @expo/xdl@59.0.0
+
+## [Thu Nov 26 12:36:20 2020 +0100](https://github.com/expo/expo-cli/commit/5c432616d39fe0a8894b50d2e613284674a536e1)
+
+### 🐛 Bug fixes
+
+- [configure-splash-screen] On iOS fix auto-configuration when there's no PBXVariantGroup in the project ([#2945](https://github.com/expo/expo-cli/pull/2945))
+
+### 📦 Packages updated
+
+- @expo/configure-splash-screen@0.3.1
 
 ## [Mon, 9 Nov 2020 13:44:59 -0800](https://github.com/expo/expo-cli/commit/d5b8759b32d5a7747067a969728d9ba732926824)
 

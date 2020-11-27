@@ -1,6 +1,9 @@
 import { ExpoConfig } from '@expo/config-types';
 
-import { ModConfig } from './Plugin.types';
+// import { ModConfig } from './Plugin.types';
+
+// TODO
+export type ModConfig = { ios?: any; android?: any };
 
 export { ExpoConfig };
 
@@ -98,21 +101,6 @@ export enum ProjectPrivacy {
   UNLISTED = 'unlisted',
 }
 
-export type IntentFilter = {
-  action: string;
-  category?: string[];
-  autoVerify?: boolean;
-  data?: {
-    scheme?: string;
-    host?: string;
-    port?: string;
-    path?: string;
-    pathPattern?: string;
-    pathPrefix?: string;
-    mimeType?: string;
-  };
-};
-
 export type ExpRc = { [key: string]: any };
 export type Platform = 'android' | 'ios' | 'web';
 export type ProjectTarget = 'managed' | 'bare';
@@ -138,6 +126,12 @@ export type ConfigContext = {
 
 export type GetConfigOptions = {
   isPublicConfig?: boolean;
+  /**
+   * Should the config `mods` be preserved in the config? Used for compiling mods in the eject command.
+   *
+   * @default false
+   */
+  isModdedConfig?: boolean;
   skipSDKVersionRequirement?: boolean;
   strict?: boolean;
 };

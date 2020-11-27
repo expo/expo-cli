@@ -13,6 +13,7 @@ module.exports = () => {
     manageDistCerts: p('manage_dist_certs'),
     managePushKeys: p('manage_push_keys'),
     manageProvisioningProfiles: p('manage_provisioning_profiles'),
+    newManageProvisioningProfiles: p('new_manage_provisioning_profiles'),
     pilotUpload: p('pilot_upload'),
     resolveItcTeamId: p('resolve_itc_team_id'),
     supplyAndroid: p('supply_android'),

@@ -1,4 +1,5 @@
-import { AndroidConfig, BareAppConfig, getConfig, IOSConfig } from '@expo/config';
+import { BareAppConfig, getConfig } from '@expo/config';
+import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
 import { Exp, UserManager } from '@expo/xdl';
@@ -13,9 +14,9 @@ import path from 'path';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
+import CommandError, { SilentError } from '../CommandError';
 import log from '../log';
-import prompt from '../prompt';
-import prompts from '../prompts';
+import prompts, { selectAsync } from '../prompts';
 import * as CreateApp from './utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 
@@ -64,8 +65,9 @@ const isMacOS = process.platform === 'darwin';
 function assertValidName(folderName: string) {
   const validation = CreateApp.validateName(folderName);
   if (typeof validation === 'string') {
-    log.error(`Cannot create an app named ${chalk.red(`"${folderName}"`)}. ${validation}`);
-    process.exit(1);
+    throw new CommandError(
+      `Cannot create an app named ${chalk.red(`"${folderName}"`)}. ${validation}`
+    );
   }
 }
 
@@ -84,10 +86,11 @@ function parseOptions(command: Command): Options {
 
 async function assertFolderEmptyAsync(projectRoot: string, folderName?: string) {
   if (!(await CreateApp.assertFolderEmptyAsync({ projectRoot, folderName, overwrite: false }))) {
+    const message = 'Try using a new directory name, or moving these files.';
     log.newLine();
-    log.nested('Try using a new directory name, or moving these files.');
+    log.nested(message);
     log.newLine();
-    process.exit(1);
+    throw new SilentError(message);
   }
 }
 
@@ -127,13 +130,16 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
   }
 
   if (!name) {
-    log.newLine();
-    log.nested('Please choose your app name:');
-    log.nested(`  ${log.chalk.green(`${program.name()} init`)} ${log.chalk.cyan('<app-name>')}`);
-    log.newLine();
-    log.nested(`Run ${log.chalk.green(`${program.name()} init --help`)} for more info`);
-    log.newLine();
-    process.exit(1);
+    const message = [
+      '',
+      'Please choose your app name:',
+      `  ${log.chalk.green(`${program.name()} init`)} ${log.chalk.cyan('<app-name>')}`,
+      '',
+      `Run ${log.chalk.green(`${program.name()} init --help`)} for more info`,
+      '',
+    ].join('\n');
+    log.nested(message);
+    throw new SilentError(message);
   }
 
   const projectRoot = path.resolve(name);
@@ -165,10 +171,7 @@ async function action(projectDir: string, command: Command) {
   let resolvedTemplate: string | null = options.template ?? null;
   // @ts-ignore: This guards against someone passing --template without a name after it.
   if (resolvedTemplate === true) {
-    log();
-    log('Please specify the template');
-    log();
-    process.exit(1);
+    throw new CommandError('Please specify the template name');
   }
 
   // Download and sync templates
@@ -197,19 +200,17 @@ async function action(projectDir: string, command: Command) {
     const descriptionColumn =
       Math.max(...FEATURED_TEMPLATES.map(t => (typeof t === 'object' ? t.shortName.length : 0))) +
       2;
-    const { template } = await prompt(
+    const template = await selectAsync(
       {
-        type: 'list',
-        name: 'template',
         message: 'Choose a template:',
-        pageSize: 20,
+        optionsPerPage: 20,
         choices: FEATURED_TEMPLATES.map(template => {
           if (typeof template === 'string') {
-            return prompt.separator(template);
+            return prompts.separator(template);
           } else {
             return {
               value: template.name,
-              name:
+              title:
                 chalk.bold(padEnd(template.shortName, descriptionColumn)) +
                 trimStart(
                   wordwrap(

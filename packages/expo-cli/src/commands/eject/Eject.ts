@@ -1,10 +1,6 @@
-import {
-  WarningAggregator as ConfigWarningAggregator,
-  ExpoConfig,
-  getConfig,
-  PackageJSONConfig,
-  WarningAggregator,
-} from '@expo/config';
+import { ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
+import { WarningAggregator } from '@expo/config-plugins';
+import { getBareExtensions, getFileWithExtensions } from '@expo/config/paths';
 import JsonFile, { JSONObject } from '@expo/json-file';
 import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
@@ -17,6 +13,7 @@ import semver from 'semver';
 import temporary from 'tempy';
 import terminalLink from 'terminal-link';
 
+import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
@@ -48,7 +45,10 @@ export type EjectAsyncOptions = {
  * 5. Install CocoaPods
  * 6. Log project info
  */
-export async function ejectAsync(projectRoot: string, options?: EjectAsyncOptions): Promise<void> {
+export async function ejectAsync(
+  projectRoot: string,
+  options: EjectAsyncOptions = {}
+): Promise<void> {
   if (await maybeBailOnGitStatusAsync()) return;
 
   const platforms: PlatformsArray = ['android'];
@@ -70,13 +70,13 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
     log.newLine();
   }
 
-  const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync(
+  const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync({
     projectRoot,
     exp,
     pkg,
     tempDir,
-    platforms
-  );
+    platforms,
+  });
   // Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
   // This will be used to prevent the node modules from being nuked every time.
   const isSyncing = !hasNewProjectFiles;
@@ -108,6 +108,8 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
   // err towards running pod install less because it's slow and users can easily run npx pod-install afterwards.
   if (platforms.includes('ios') && shouldInstall && needsPodInstall) {
     podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
+  } else {
+    log.debug('Skipped pod install');
   }
 
   await warnIfDependenciesRequireAdditionalSetupAsync(pkg, options);
@@ -192,7 +194,7 @@ export async function ejectAsync(projectRoot: string, options?: EjectAsyncOption
 async function configureIOSStepAsync(projectRoot: string) {
   const applyingIOSConfigStep = CreateApp.logNewSection('iOS config syncing');
   await configureIOSProjectAsync(projectRoot);
-  if (ConfigWarningAggregator.hasWarningsIOS()) {
+  if (WarningAggregator.hasWarningsIOS()) {
     applyingIOSConfigStep.stopAndPersist({
       symbol: '⚠️ ',
       text: chalk.red('iOS config synced with warnings that should be fixed:'),
@@ -229,22 +231,19 @@ async function installNodeDependenciesAsync(
     await CreateApp.installNodeDependenciesAsync(projectRoot, packageManager);
     installJsDepsStep.succeed('Installed JavaScript dependencies.');
   } catch {
-    installJsDepsStep.fail(
-      chalk.red(
-        `Something went wrong installing JavaScript dependencies, check your ${packageManager} logfile or run ${chalk.bold(
-          `${packageManager} install`
-        )} again manually.`
-      )
-    );
+    const message = `Something went wrong installing JavaScript dependencies, check your ${packageManager} logfile or run ${chalk.bold(
+      `${packageManager} install`
+    )} again manually.`;
+    installJsDepsStep.fail(chalk.red(message));
     // TODO: actually show the error message from the package manager! :O
-    process.exit(1);
+    throw new SilentError(message);
   }
 }
 
 async function configureAndroidStepAsync(projectRoot: string) {
   const applyingAndroidConfigStep = CreateApp.logNewSection('Android config syncing');
   await configureAndroidProjectAsync(projectRoot);
-  if (ConfigWarningAggregator.hasWarningsAndroid()) {
+  if (WarningAggregator.hasWarningsAndroid()) {
     applyingAndroidConfigStep.stopAndPersist({
       symbol: '⚠️ ',
       text: chalk.red('Android config synced with warnings that should be fixed:'),
@@ -300,10 +299,8 @@ async function ensureConfigAsync(
     }
   } catch (error) {
     // TODO(Bacon): Currently this is already handled in the command
-    log();
-    log(chalk.red(error.message));
-    log();
-    process.exit(1);
+    log.addNewLineIfNone();
+    throw new CommandError(`${error.message}\n`);
   }
 
   // Prompt for the Android package first because it's more strict than the bundle identifier
@@ -512,6 +509,17 @@ async function updatePackageJSONAsync({
   };
 }
 
+export function resolveBareEntryFile(projectRoot: string, main: any) {
+  // expo app entry is not needed for bare projects.
+  if (isPkgMainExpoAppEntry(main)) return null;
+  // Look at the `package.json`s `main` field for the main file.
+  const resolvedMainField = main ?? './index';
+  // Get a list of possible extensions for the main file.
+  const extensions = getBareExtensions(['ios', 'android']);
+  // Testing the main field against all of the provided extensions - for legacy reasons we can't use node module resolution as the package.json allows you to pass in a file without a relative path and expect it as a relative path.
+  return getFileWithExtensions(projectRoot, resolvedMainField, extensions);
+}
+
 export function shouldDeleteMainField(main?: any): boolean {
   if (!main || !isPkgMainExpoAppEntry(main)) {
     return false;
@@ -532,11 +540,16 @@ export function hashForDependencyMap(deps: DependenciesMap): string {
   return createFileHash(depsString);
 }
 
-export function getTargetPaths(pkg: PackageJSONConfig, platforms: PlatformsArray) {
+export function getTargetPaths(
+  projectRoot: string,
+  pkg: PackageJSONConfig,
+  platforms: PlatformsArray
+) {
   const targetPaths: string[] = [...platforms];
 
-  // Only create index.js if we are going to replace the app "main" entry point
-  if (shouldDeleteMainField(pkg.main)) {
+  const bareEntryFile = resolveBareEntryFile(projectRoot, pkg.main);
+  // Only create index.js if we cannot resolve the existing entry point (after replacing the expo entry).
+  if (!bareEntryFile) {
     targetPaths.push('index.js');
   }
 
@@ -546,6 +559,7 @@ export function getTargetPaths(pkg: PackageJSONConfig, platforms: PlatformsArray
 /**
  * Extract the template and copy the ios and android directories over to the project directory.
  *
+ * @param force should create native projects even if they already exist.
  * @return `true` if any project files were created.
  */
 async function cloneNativeDirectoriesAsync({
@@ -569,7 +583,7 @@ async function cloneNativeDirectoriesAsync({
     'Creating native project directories (./ios and ./android) and updating .gitignore'
   );
 
-  const targetPaths = getTargetPaths(pkg, platforms);
+  const targetPaths = getTargetPaths(projectRoot, pkg, platforms);
 
   let copiedPaths: string[] = [];
   let skippedPaths: string[] = [];
@@ -595,7 +609,7 @@ async function cloneNativeDirectoriesAsync({
     }
     creatingNativeProjectStep.succeed(message);
   } catch (e) {
-    log(chalk.red(e.message));
+    log.error(e.message);
     creatingNativeProjectStep.fail(
       'Failed to create the native project - see the output above for more information.'
     );
@@ -604,7 +618,7 @@ async function cloneNativeDirectoriesAsync({
         'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
       )
     );
-    process.exit(1);
+    throw new SilentError(e);
   }
 
   return copiedPaths;
@@ -617,13 +631,19 @@ async function cloneNativeDirectoriesAsync({
  *
  * @return `true` if the project is ejecting, and `false` if it's syncing.
  */
-async function createNativeProjectsFromTemplateAsync(
-  projectRoot: string,
-  exp: ExpoConfig,
-  pkg: PackageJSONConfig,
-  tempDir: string,
-  platforms: PlatformsArray
-): Promise<
+async function createNativeProjectsFromTemplateAsync({
+  projectRoot,
+  exp,
+  pkg,
+  tempDir,
+  platforms,
+}: {
+  projectRoot: string;
+  exp: ExpoConfig;
+  pkg: PackageJSONConfig;
+  tempDir: string;
+  platforms: PlatformsArray;
+}): Promise<
   { hasNewProjectFiles: boolean; needsPodInstall: boolean } & DependenciesModificationResults
 > {
   const copiedPaths = await cloneNativeDirectoriesAsync({
@@ -685,9 +705,31 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
   pkg: PackageJSONConfig,
   options?: EjectAsyncOptions
 ): Promise<void> {
+  const expoPackagesWithExtraSetup = [
+    'expo-camera',
+    'expo-image-picker',
+    'expo-av',
+    'expo-background-fetch',
+    'expo-barcode-scanner',
+    'expo-brightness',
+    'expo-calendar',
+    'expo-contacts',
+    'expo-file-system',
+    'expo-location',
+    'expo-media-library',
+    'expo-notifications',
+    'expo-screen-orientation',
+    'expo-sensors',
+    'expo-task-manager',
+  ].reduce(
+    (prev, curr) => ({
+      ...prev,
+      [curr]: `https://github.com/expo/expo/tree/master/packages/${curr}`,
+    }),
+    {}
+  );
   const pkgsWithExtraSetup: Record<string, string> = {
-    'expo-camera': 'https://github.com/expo/expo/tree/master/packages/expo-camera',
-    'expo-image-picker': 'https://github.com/expo/expo/tree/master/packages/expo-image-picker',
+    ...expoPackagesWithExtraSetup,
     'lottie-react-native': 'https://github.com/react-native-community/lottie-react-native',
     'expo-constants': `${chalk.bold(
       'Constants.manifest'

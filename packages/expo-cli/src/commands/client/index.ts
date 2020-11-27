@@ -18,8 +18,7 @@ import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/I
 import { SetupIosDist } from '../../credentials/views/SetupIosDist';
 import { SetupIosPush } from '../../credentials/views/SetupIosPush';
 import log from '../../log';
-import prompt from '../../prompt';
-import { confirmAsync } from '../../prompts';
+import { confirmAsync, promptEmailAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
@@ -210,14 +209,10 @@ export default function (program: Command) {
         if (user) {
           email = user.email;
         } else {
-          ({ email } = await prompt({
-            name: 'email',
+          email = await promptEmailAsync({
             message: 'Please enter an email address to notify, when the build is completed:',
-            default: context?.user?.email,
-            filter: value => value.trim(),
-            validate: (value: string) =>
-              /.+@.+/.test(value) ? true : "That doesn't look like a valid email.",
-          }));
+            initial: context?.user?.email,
+          });
         }
         log.newLine();
 

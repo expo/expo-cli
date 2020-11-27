@@ -11,6 +11,7 @@ import {
   ExpoConfig,
   ExpRc,
   GetConfigOptions,
+  ModConfig,
   PackageJSONConfig,
   Platform,
   ProjectConfig,
@@ -19,7 +20,6 @@ import {
 } from './Config.types';
 import { ConfigError } from './Errors';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
-import { ModConfig } from './Plugin.types';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 
@@ -60,13 +60,6 @@ function getSupportedPlatforms(
     platforms.push('web');
   }
   return platforms;
-}
-
-export function getConfigWithMods(projectRoot: string, options?: GetConfigOptions): ProjectConfig {
-  const config = getConfig(projectRoot, options);
-  // @ts-ignore: Add the mods back to the object.
-  config.exp.mods = config.mods ?? null;
-  return config;
 }
 
 /**
@@ -134,6 +127,10 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
       if (configWithDefaultValues.exp.android?.config) {
         delete configWithDefaultValues.exp.android.config;
       }
+    }
+    if (options.isModdedConfig) {
+      // @ts-ignore: Add the mods back to the object.
+      configWithDefaultValues.exp.mods = config.mods ?? null;
     }
 
     return configWithDefaultValues;
@@ -336,6 +333,12 @@ export async function readExpRcAsync(projectRoot: string): Promise<ExpRc> {
 }
 
 const customConfigPaths: { [projectRoot: string]: string } = {};
+
+export function resetCustomConfigPaths(): void {
+  for (const key of Object.keys(customConfigPaths)) {
+    delete customConfigPaths[key];
+  }
+}
 
 export function setCustomConfigPath(projectRoot: string, configPath: string): void {
   customConfigPaths[projectRoot] = configPath;
@@ -572,7 +575,7 @@ function isDynamicFilePath(filePath: string): boolean {
  */
 export function getProjectConfigDescription(
   projectRoot: string,
-  projectConfig: ProjectConfig
+  projectConfig: Partial<ProjectConfig>
 ): string | null {
   if (projectConfig.dynamicConfigPath) {
     const relativeDynamicConfigPath = path.relative(projectRoot, projectConfig.dynamicConfigPath);

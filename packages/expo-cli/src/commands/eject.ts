@@ -1,4 +1,4 @@
-import { ExpoConfig, getConfig } from '@expo/config';
+import { getConfig } from '@expo/config';
 import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
@@ -7,6 +7,7 @@ import log from '../log';
 import { confirmAsync } from '../prompts';
 import * as Eject from './eject/Eject';
 import * as LegacyEject from './eject/LegacyEject';
+import { learnMore } from './utils/TerminalLink';
 
 async function userWantsToEjectWithoutUpgradingAsync() {
   const answer = await confirmAsync({
@@ -16,19 +17,11 @@ async function userWantsToEjectWithoutUpgradingAsync() {
   return answer;
 }
 
-async function action(
+export async function actionAsync(
   projectDir: string,
   options: (LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions) & { npm?: boolean }
 ) {
-  let exp: ExpoConfig;
-  try {
-    exp = getConfig(projectDir).exp;
-  } catch (error) {
-    log();
-    log(chalk.red(error.message));
-    log();
-    process.exit(1);
-  }
+  const { exp } = getConfig(projectDir);
 
   if (options.npm) {
     options.packageManager = 'npm';
@@ -38,9 +31,11 @@ async function action(
   // TODO: remove LegacyEject when SDK 36 is no longer supported: after SDK 40 is released.
   if (Versions.lteSdkVersion(exp, '36.0.0')) {
     if (options.force || (await userWantsToEjectWithoutUpgradingAsync())) {
+      log.debug('Eject Mode: Legacy');
       await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
     }
   } else {
+    log.debug('Eject Mode: Latest');
     await Eject.ejectAsync(projectDir, options as Eject.EjectAsyncOptions);
   }
 }
@@ -49,8 +44,9 @@ export default function (program: Command) {
   program
     .command('eject [path]')
     .description(
-      // TODO: Use Learn more link when it lands
-      `Create native iOS and Android project files. Read more: https://docs.expo.io/bare/customizing/`
+      `Create native iOS and Android project files. ${chalk.dim(
+        learnMore('https://docs.expo.io/bare/customizing/')
+      )}`
     )
     .longDescription(
       'Create Xcode and Android Studio projects for your app. Use this if you need to add custom native functionality.'
@@ -59,5 +55,5 @@ export default function (program: Command) {
     .option('--force', 'Skip legacy eject warnings.') // TODO: remove the force flag when SDK 36 is no longer supported: after SDK 40 is released.
     .option('--no-install', 'Skip installing npm packages and CocoaPods.')
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
-    .asyncActionProjectDir(action);
+    .asyncActionProjectDir(actionAsync);
 }

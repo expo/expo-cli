@@ -1,4 +1,4 @@
-import { AndroidConfig, IOSConfig } from '@expo/config';
+import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import * as fs from 'fs-extra';
 

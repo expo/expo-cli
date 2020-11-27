@@ -10,7 +10,6 @@ import {
   ArchiveTypeSource,
   ArchiveTypeSourceType,
 } from '../archive-source';
-import { SubmissionMode } from '../types';
 import { getExpoConfig } from '../utils/config';
 import { AndroidPackageSource, AndroidPackageSourceType } from './AndroidPackageSource';
 import { ArchiveType, ReleaseStatus, ReleaseTrack } from './AndroidSubmissionConfig';
@@ -20,12 +19,10 @@ import { AndroidSubmissionContext, AndroidSubmitCommandOptions } from './types';
 
 class AndroidSubmitCommand {
   static createContext(
-    mode: SubmissionMode,
     projectDir: string,
     commandOptions: AndroidSubmitCommandOptions
   ): AndroidSubmissionContext {
     return {
-      mode,
       projectDir,
       commandOptions,
     };
@@ -34,7 +31,7 @@ class AndroidSubmitCommand {
   constructor(private ctx: AndroidSubmissionContext) {}
 
   async runAsync(): Promise<void> {
-    if (this.ctx.mode === SubmissionMode.online && !(await UserManager.getCurrentUserAsync())) {
+    if (!(await UserManager.getCurrentUserAsync())) {
       await UserManager.ensureLoggedInAsync();
       log.addNewLineIfNone();
     }

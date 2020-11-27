@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import validator from 'validator';
 
-import CommandError from '../CommandError';
+import CommandError, { SilentError } from '../CommandError';
 import log from '../log';
 import prompt from '../prompts';
 import * as CreateApp from './utils/CreateApp';
@@ -175,14 +175,13 @@ export async function action(projectDir: string, options: Options) {
       overwrite: options.force,
     }))
   ) {
+    const message = `Try using a new directory name with ${log.chalk.bold(
+      '--output-dir'
+    )}, moving these files, or using ${log.chalk.bold('--force')} to overwrite them.`;
     log.newLine();
-    log.nested(
-      `Try using a new directory name with ${log.chalk.bold(
-        '--output-dir'
-      )}, moving these files, or using ${log.chalk.bold('--force')} to overwrite them.`
-    );
+    log.nested(message);
     log.newLine();
-    process.exit(1);
+    throw new SilentError(message);
   }
 
   // Wrap the XDL method for exporting assets

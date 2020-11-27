@@ -1,7 +1,6 @@
 import invariant from 'invariant';
 
-import prompt, { ChoiceType, Question } from '../../prompt';
-import { confirmAsync } from '../../prompts';
+import prompts, { confirmAsync } from '../../prompts';
 import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
@@ -13,15 +12,13 @@ import * as iosPushView from './IosPushCredentials';
 
 export class SelectPlatform implements IView {
   async open(ctx: Context): Promise<IView | null> {
-    const { platform } = await prompt([
-      {
-        type: 'list',
-        name: 'platform',
-        message: 'Select platform',
-        pageSize: Infinity,
-        choices: ['ios', 'android'],
-      },
-    ]);
+    const { platform } = await prompts({
+      type: 'select',
+      name: 'platform',
+      message: 'Select platform',
+      choices: ['ios', 'android'].map(value => ({ value, title: value })),
+      optionsPerPage: 20,
+    });
     const view = platform === 'ios' ? new SelectIosExperience() : new SelectAndroidExperience();
     CredentialsManager.get().changeMainView(view);
     return view;
@@ -36,16 +33,15 @@ export class SelectIosExperience implements IView {
 
     await displayIosCredentials(iosCredentials);
 
-    const projectSpecificActions: ChoiceType<string>[] = ctx.hasProjectContext
+    const projectSpecificActions: { value: string; title: string }[] = ctx.hasProjectContext
       ? [
-          prompt.separator('---- Current project actions ----'),
           {
             value: 'use-existing-push-ios',
-            name: 'Use existing Push Notifications Key in current project',
+            title: 'Use existing Push Notifications Key in current project',
           },
           {
             value: 'use-existing-dist-ios',
-            name: 'Use existing Distribution Certificate in current project',
+            title: 'Use existing Distribution Certificate in current project',
           },
           // {
           //   value: 'current-remove-push-ios',
@@ -59,28 +55,25 @@ export class SelectIosExperience implements IView {
           //   value: 'current-remove-app-ios',
           //   name: 'Remove all credentials for current project',
           // },
-          prompt.separator('---- Account level actions ----'),
         ]
       : [];
 
-    const question: Question = {
-      type: 'list',
+    const { action } = await prompts({
+      type: 'select',
       name: 'action',
       message: 'What do you want to do?',
       choices: [
         ...projectSpecificActions,
-        { value: 'remove-provisioning-profile', name: 'Remove Provisioning Profile' },
-        { value: 'create-ios-push', name: 'Add new Push Notifications Key' },
-        { value: 'remove-ios-push', name: 'Remove Push Notification credentials' },
-        { value: 'update-ios-push', name: 'Update Push Notifications Key' },
-        { value: 'create-ios-dist', name: 'Add new Distribution Certificate' },
-        { value: 'remove-ios-dist', name: 'Remove Distribution Certificate' },
-        { value: 'update-ios-dist', name: 'Update Distribution Certificate' },
+        { value: 'remove-provisioning-profile', title: 'Remove Provisioning Profile' },
+        { value: 'create-ios-push', title: 'Add new Push Notifications Key' },
+        { value: 'remove-ios-push', title: 'Remove Push Notification credentials' },
+        { value: 'update-ios-push', title: 'Update Push Notifications Key' },
+        { value: 'create-ios-dist', title: 'Add new Distribution Certificate' },
+        { value: 'remove-ios-dist', title: 'Remove Distribution Certificate' },
+        { value: 'update-ios-dist', title: 'Update Distribution Certificate' },
       ],
-      pageSize: Infinity,
-    };
-
-    const { action } = await prompt(question);
+      optionsPerPage: 20,
+    });
     return this.handleAction(ctx, accountName, action);
   }
 
@@ -148,17 +141,16 @@ export class SelectAndroidExperience implements IView {
     const credentials = await ctx.android.fetchAll();
     await displayAndroidCredentials(Object.values(credentials));
 
-    const question: Question = {
-      type: 'list',
+    const { experienceName } = await prompts({
+      type: 'select',
       name: 'experienceName',
       message: 'Select application',
       choices: Object.values(credentials).map(cred => ({
-        name: cred.experienceName,
+        title: cred.experienceName,
         value: cred.experienceName,
       })),
-      pageSize: Infinity,
-    };
-    const { experienceName } = await prompt(question);
+      optionsPerPage: 20,
+    });
 
     return new androidView.ExperienceView(experienceName);
   }
@@ -186,17 +178,15 @@ export class DoQuit implements IQuit {
 
 export class AskQuit implements IQuit {
   async runAsync(mainpage: IView): Promise<IView> {
-    const { selected } = await prompt([
-      {
-        type: 'list',
-        name: 'selected',
-        message: 'Do you want to quit Credential Manager',
-        choices: [
-          { value: 'exit', name: 'Quit Credential Manager' },
-          { value: 'mainpage', name: 'Go back to experience overview.' },
-        ],
-      },
-    ]);
+    const { selected } = await prompts({
+      type: 'select',
+      name: 'selected',
+      message: 'Do you want to quit Credential Manager',
+      choices: [
+        { value: 'exit', title: 'Quit Credential Manager' },
+        { value: 'mainpage', title: 'Go back to experience overview.' },
+      ],
+    });
     if (selected === 'exit') {
       process.exit(0);
     }
