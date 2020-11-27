@@ -44,22 +44,22 @@ export interface IOSSplashConfig {
   darkBackgroundColor: string;
 }
 
-interface SplashImage {
-  image: string;
-  resizeMode: IOSSplashConfig['resizeMode'];
-  backgroundColor: string;
-}
-
-export const withSplashScreen: ConfigPlugin = config => {
+export const withSplashScreen: ConfigPlugin<IOSSplashConfig | undefined | null | void> = (
+  config,
+  splash
+) => {
   // only warn once
   warnUnsupportedSplashProperties(config);
 
-  const splashConfig = getSplashConfig(config);
+  // If the user didn't specify a splash object, infer the splash object from the Expo config.
+  if (!splash) {
+    splash = getSplashConfig(config);
+  }
 
   return withPlugins(config, [
-    [withSplashScreenInfoPlist, splashConfig],
-    [withSplashScreenAssets, splashConfig],
-    [withSplashXcodeProject, splashConfig],
+    [withSplashScreenInfoPlist, splash],
+    [withSplashScreenAssets, splash],
+    [withSplashXcodeProject, splash],
   ]);
 };
 
