@@ -11,12 +11,31 @@ import { isUrlAvailableAsync } from '../utils/url';
 const noIOSBundleIdMessage = `Your project must have a \`ios.bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
 const noAndroidPackageMessage = `Your project must have a \`android.package\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/android-package`;
 
-function validateBundleId(value: string): boolean {
-  return /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value);
+/**
+ * Checks whether the given `iOSBundleId` has the correct format.
+ * @throws When the provided value has incorrect format.
+ */
+function isIOSBundleIdValid(iOSBundleId?: string): boolean {
+  if (!iOSBundleId) {
+    return false;
+  }
+  return /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(iOSBundleId);
 }
 
-function validatePackage(value: string): boolean {
-  return /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(value);
+/**
+ * Checks whether the given `androidPackageName` has the correct format.
+ * Android package name is just a dot-separated string of Java identifiers.
+ * @warning Kotlin accepts slightly different package names that is not supported here.
+ * @see https://docs.oracle.com/javase/tutorial/java/nutsandbolts/variables.html
+ * @see https://docs.oracle.com/javase/tutorial/java/package/namingpkgs.html
+ */
+function isAndroidPackageNameValid(androidPackageName?: string): boolean {
+  if (!androidPackageName) {
+    return false;
+  }
+  return /(?!(?:^|.*\.)(?:abstract|assert|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|enum|extends|extends|false|final|finally|float|for|goto|if|implements|import|import|instanceof|interface|long|native|new|null|package|private|protected|public|return|short|static|strictfp|super|switch|synchronized|this|throw|throws|transient|true|try|void|volatile|volatile|while)(?:\.|$))(^[a-zA-Z_$][a-zA-Z0-9_$]*(\.[a-zA-Z_$][a-zA-Z0-9_$]*)*$)/.test(
+    androidPackageName
+  );
 }
 
 const cachedIOSBundleIdResults: Record<string, string> = {};
@@ -106,7 +125,7 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
 
   const currentBundleId = exp.ios?.bundleIdentifier;
   if (currentBundleId) {
-    if (validateBundleId(currentBundleId)) {
+    if (isIOSBundleIdValid(currentBundleId)) {
       return currentBundleId;
     }
     throw new CommandError(
@@ -117,12 +136,12 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
   // Recommend a bundle ID based on the username and project slug.
   let recommendedBundleId: string | undefined;
   // Attempt to use the android package name first since it's convenient to have them aligned.
-  if (exp.android?.package && validateBundleId(exp.android?.package)) {
+  if (exp.android?.package && isIOSBundleIdValid(exp.android?.package)) {
     recommendedBundleId = exp.android?.package;
   } else {
     const username = exp.owner ?? (await UserManager.getCurrentUsernameAsync());
     const possibleId = `com.${username}.${exp.slug}`;
-    if (username && validateBundleId(possibleId)) {
+    if (username && isIOSBundleIdValid(possibleId)) {
       recommendedBundleId = possibleId;
     }
   }
@@ -145,7 +164,7 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
       initial: recommendedBundleId,
       // The Apple helps people know this isn't an EAS feature.
       message: `What would you like your iOS bundle identifier to be?`,
-      validate: validateBundleId,
+      validate: isIOSBundleIdValid,
     },
     {
       nonInteractiveHelp: noIOSBundleIdMessage,
@@ -197,7 +216,7 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
 
   const currentPackage = exp.android?.package;
   if (currentPackage) {
-    if (validatePackage(currentPackage)) {
+    if (isAndroidPackageNameValid(currentPackage)) {
       return currentPackage;
     }
     throw new CommandError(
@@ -208,13 +227,13 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
   // Recommend a package name based on the username and project slug.
   let recommendedPackage: string | undefined;
   // Attempt to use the ios bundle id first since it's convenient to have them aligned.
-  if (exp.ios?.bundleIdentifier && validatePackage(exp.ios.bundleIdentifier)) {
+  if (exp.ios?.bundleIdentifier && isAndroidPackageNameValid(exp.ios.bundleIdentifier)) {
     recommendedPackage = exp.ios.bundleIdentifier;
   } else {
     const username = exp.owner ?? (await UserManager.getCurrentUsernameAsync());
     // It's common to use dashes in your node project name, strip them from the suggested package name.
     const possibleId = `com.${username}.${exp.slug}`.split('-').join('');
-    if (username && validatePackage(possibleId)) {
+    if (username && isAndroidPackageNameValid(possibleId)) {
       recommendedPackage = possibleId;
     }
   }
@@ -237,7 +256,7 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
       name: 'packageName',
       initial: recommendedPackage,
       message: `What would you like your Android package name to be?`,
-      validate: validatePackage,
+      validate: isAndroidPackageNameValid,
     },
     {
       nonInteractiveHelp: noAndroidPackageMessage,
