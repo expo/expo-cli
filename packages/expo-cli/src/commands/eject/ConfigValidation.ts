@@ -90,6 +90,17 @@ function formatInUseWarning(appName: string, author: string, id: string): string
   )} is already using ${log.chalk.bold(id)}`;
 }
 
+/**
+ * Tries to read `ios.bundleIdentifier` from the application manifest.
+ * It tries to obtain the value according to the following rules:
+ * 1. read `ios.bundleIdentifier` and return it if present (throws upon wrong format) or upon no value 🔽
+ * 2. read `android.applicationId` and use it as a suggestion for the user or upon no value 🔽
+ * 3. read `android.package` and use it as a suggestion for the user or upon no value 🔽
+ * 4. create `username`-based value and use it as a suggestion for the user.
+ *
+ * @sideEffect If there was not `ios.bundleIdentifier` in the manifest then the manifest is mutated with the user input.
+ * @throws When there is a value in `ios.bundleIdentifier`, but the format of this value is incorrect.
+ */
 export async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<string> {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
@@ -170,6 +181,17 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
   return bundleIdentifier;
 }
 
+/**
+ * Tries to read `android.package` from the application manifest.
+ * It tries to obtain the value according to the following rules:
+ * 1. read `android.package` and return it if present (throws upon wrong format) or upon no value 🔽
+ * 2. read `android.applicationId` and use it as a suggestion for the user or upon no value 🔽
+ * 3. read `ios.bundleIdentifier` and use it as a suggestion for the user or upon no value 🔽
+ * 4. create `username`-based value and use it as a suggestion for the user.
+ *
+ * @sideEffect If there was not `android.package` in the manifest then the manifest is mutated with the user input.
+ * @throws When there is a value in `android.package`, but the format of the this value is incorrect.
+ */
 export async function getOrPromptForPackage(projectRoot: string): Promise<string> {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
