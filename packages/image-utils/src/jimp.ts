@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import Jimp from 'jimp';
+import Jimp from 'jimp/es';
 import * as path from 'path';
 
 import {
