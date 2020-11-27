@@ -134,6 +134,9 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
     }
 
     if (options.isPublicConfig) {
+      // Remove internal values with references to user's file paths from the public config.
+      delete configWithDefaultValues.exp._internal;
+
       if (configWithDefaultValues.exp.hooks) {
         delete configWithDefaultValues.exp.hooks;
       }
