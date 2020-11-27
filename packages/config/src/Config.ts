@@ -22,7 +22,7 @@ import { ConfigError } from './Errors';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
-import { withStaticPlugins } from './plugins/static-plugin';
+import withStaticPlugins from './withStaticPlugins';
 
 type SplitConfigs = { expo: ExpoConfig; mods: ModConfig };
 

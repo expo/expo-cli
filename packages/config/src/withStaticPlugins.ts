@@ -1,16 +1,17 @@
-import { ExpoConfig } from '@expo/config-types';
 import findUp from 'find-up';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
 
+import { ConfigPlugin } from './Config.types';
 import { assert } from './Errors';
 import { fileExists } from './Modules';
+import { resolveConfigPluginExport } from './evalConfig';
 
 type JSONPlugin = { module: string; props?: Record<string, any> };
 type JSONPluginsList = (JSONPlugin | string)[];
 
 // Default plugin entry file name.
-const pluginFileName = 'index.expo-plugin';
+const pluginFileName = 'app.config.js';
 
 function findUpPackageJson(root: string): string {
   const packageJson = findUp.sync('package.json', { cwd: root });
@@ -96,27 +97,11 @@ function normalizeJSONPluginOptions(plugins?: JSONPluginsList): JSONPlugin[] {
   }, []);
 }
 
-function resolveConfigPluginArray(projectRoot: string, plugins: JSONPlugin[]) {
-  const configPlugins: [(config: ExpoConfig) => ExpoConfig, any][] = [];
-  for (const plugin of plugins) {
-    const result = resolveConfigPluginFunction(projectRoot, plugin.module);
-    configPlugins.push([result, plugin.props]);
-  }
-  return configPlugins;
-}
-
 // Resolve the module function and assert type
 function resolveConfigPluginFunction(projectRoot: string, pluginModulePath: string) {
   const moduleFilePath = resolvePluginForModule(projectRoot, pluginModulePath);
-  let result = require(moduleFilePath);
-  if (result.default != null) {
-    result = result.default;
-  }
-  assert(
-    typeof result === 'function',
-    `Config plugin "${pluginModulePath}" does not export a function. Learn more: <how to make a config plugin>`
-  );
-  return result;
+  const result = require(moduleFilePath);
+  return resolveConfigPluginExport(result, moduleFilePath);
 }
 
 /**
@@ -125,12 +110,15 @@ function resolveConfigPluginFunction(projectRoot: string, pluginModulePath: stri
  * @param config
  * @param projectRoot
  */
-export function withStaticPlugins(config: ExpoConfig, projectRoot: string): ExpoConfig {
+const withStaticPlugins: ConfigPlugin<string> = (config, projectRoot) => {
   // @ts-ignore
   const plugins = normalizeJSONPluginOptions(config.plugins);
-  // Resolve plugin functions
-  const configPlugins = resolveConfigPluginArray(projectRoot, plugins);
-  // Compose plugins
-  // return withPlugins(config, configPlugins);
-  return config; // TODO
-}
+  // Resolve and evaluate plugins
+  for (const plugin of plugins) {
+    const withStaticPlugin = resolveConfigPluginFunction(projectRoot, plugin.module);
+    config = withStaticPlugin(config, plugin.props);
+  }
+  return config;
+};
+
+export default withStaticPlugins;

@@ -167,7 +167,7 @@ Currently dangerous mods run first before all other modifiers, this is because w
 
 ## Static Plugins
 
-You won't need to migrate away from your existing `app.json` or `app.config.json` to use config plugins (although it is recommended). Plugins can be resolved automatically using the JSON plugins array.
+You don't need to migrate away from your existing `app.json` or `app.config.json` to use config plugins (although it is recommended). Plugins can be resolved automatically using the JSON `plugins` array:
 
 ```js
 {
@@ -201,13 +201,13 @@ Static plugins can be added in two different formats:
 
 ### Module Resolution
 
-Modules can be resolved in a few ways.
+Static plugins can be resolved in a few different ways. Here are the different patterns for strings you could pass in the `plugins` array (`module` prop).
 
 > Any resolution pattern that isn't specified below is unexpected behavior, and subject to breaking changes.
 
 #### Project file
 
-`./my-config-plugin.js`
+`module: './my-config-plugin.js'`
 
 ```
 ╭── app.config.js ➡️ Expo Config
@@ -225,13 +225,13 @@ Modules can be resolved in a few ways.
     ╰── build/index.js ➡️  ✅ Node resolves to this module.
 ```
 
-Sometimes you want your package to export React components and also support a plugin, to support this, multiple entry points are used. If a `index.expo-plugin.js` file is present in the module's root folder, it'll be used instead of the package's main file.
+Sometimes you want your package to export React components and also support a plugin, to support this, multiple entry points are used. If a `app.config.js` file is present in the Node module's root folder, it'll be used instead of the package's main file.
 
 ```
 ╭── app.config.js ➡️ Expo Config
 ╰── node_modules/expo-splash-screen/ ➡️ Module installed from NPM (works with Yarn workspaces as well).
     ├── package.json ➡️ The `main` file will be used if `index.expo-plugin.js` doesn't exist.
-    ├── index.expo-plugin.js ➡️ ✅ `module.exports = (config) => config`
+    ├── app.config.js ➡️ ✅ `module.exports = (config) => config` -- must export a function.
     ╰── build/index.js ➡️ ❌ Ignored because `index.expo-plugin.js` exists. This could be used with `expo-splash-screen/build/index.js`
 ```
 
@@ -239,7 +239,7 @@ Sometimes you want your package to export React components and also support a pl
 
 `module: './my-config-plugin'`
 
-This is different to how node module's work because `index.expo-plugin` won't be resolved by default in a folder. You'll have to manually specify the file to use it.
+This is different to how node module's work because `app.config.js` won't be resolved by default in a folder. You'll have to manually specify the file to use it.
 
 ```
 ╭── app.config.js ➡️ Expo Config
@@ -249,33 +249,33 @@ This is different to how node module's work because `index.expo-plugin` won't be
 
 #### Module internals
 
-If a file inside a node module is specified, then root `index.expo-plugin.js` resolution will be skipped. This is referred to as "reaching inside a package" and is bad form. We support this to make testing, and plugin authoring easier.
+If a file inside a node module is specified, then the module's root `app.config.js` resolution will be skipped. This is referred to as "reaching inside a package" and is bad form. We support this to make testing, and plugin authoring easier.
 
-- `expo-splash-screen/build/index.js`
-- `expo-splash-screen/build`
+- `module: 'expo-splash-screen/build/index.js'`
+- `module: 'expo-splash-screen/build'`
 
 ```
 ╭── app.config.js ➡️ Expo Config
 ╰── node_modules/expo-splash-screen/ ➡️ Module installed from NPM (works with Yarn workspaces as well).
     ├── package.json ➡️ The `main` file will be used if `index.expo-plugin.js` doesn't exist.
-    ├── index.expo-plugin.js ➡️ ❌ Ignored because the reference reaches into the package internals
+    ├── app.config.js ➡️ ❌ Ignored because the reference reaches into the package internals.
     ╰── build/index.js ➡️ ✅ `module.exports = (config) => config`
 ```
 
-### Why index.expo-plugin
+### Why app.config.js for plugins
 
-Config resolution searches for a `index.expo-plugin.js` first when a node module name or folder path are provided.
+Config resolution searches for a `app.config.js` first when a node module name is provided.
 This is because node environments are often different to iOS, Android, or web JS environments and therefore require different transpilation presets (ex: `module.exports` instead of `import/export`).
 
-Because of this reasoning, the root of a Node module is searched instead of right next to the `index.js`. Imagine you had a TypeScript node module where the transpiled main file was located at `build/index.js`, if Expo config plugin resolution searched for `build/index.expo-plugin.js` you'd lose the ability to transpile the file differently.
+Because of this reasoning, the root of a Node module is searched instead of right next to the `index.js`. Imagine you had a TypeScript node module where the transpiled main file was located at `build/index.js`, if Expo config plugin resolution searched for `build/app.config.js` you'd lose the ability to transpile the file differently.
 
 ### Creating static plugins
 
-- The root file should be `index.expo-plugin.js` in a module.
-- Static plugins should export a `ConfigPlugin`.
-- Plugins should be transpiled for Node environments!
+- The root file can be any JS file or the root `app.config.js` in a node module.
+- The file should export a `ConfigPlugin` function.
+- Plugins should be transpiled for Node environments ahead of time!
   - No `import/export` keywords, use `module.exports` in the shipped plugin file.
-  - Expo only transpiles the user's `app.config` file, anything more would require a bundler which would add too many "opinions" for a config file 🙃
+  - Expo only transpiles the user's initial `app.config` file, anything more would require a bundler which would add too many "opinions" for a config file 🙃
 
 #### Static plugin example
 

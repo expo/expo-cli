@@ -5,6 +5,9 @@ import { ExpoConfig } from '@expo/config-types';
 // TODO
 export type ModConfig = { ios?: any; android?: any };
 
+// Copied from config-plugins to reduce package size from packages that just need to read the Expo config.
+export type ConfigPlugin<Props = void> = (config: ExpoConfig, props: Props) => ExpoConfig;
+
 export { ExpoConfig };
 
 export type PackageJSONConfig = Record<string, any>;
@@ -112,6 +115,7 @@ export type ConfigErrorCode =
   | 'MODULE_NOT_FOUND'
   | 'INVALID_MODE'
   | 'INVALID_FORMAT'
+  | 'INVALID_PLUGIN'
   | 'INVALID_CONFIG';
 
 export type ConfigContext = {
