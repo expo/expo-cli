@@ -19,7 +19,7 @@ describe(applyProjectGradleMavenPackage, () => {
       'allprojects {',
       'repositories {',
       '// @begin allprojects-repositories',
-      `maven{url \"$rootDir/../node_modules/expo-camera/android/maven\"} // @plugin expo-camera`,
+      `maven{url "$rootDir/../node_modules/expo-camera/android/maven"} // @plugin expo-camera`,
       '// @end allprojects-repositories',
       '}',
       '}',

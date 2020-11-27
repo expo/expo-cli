@@ -1,9 +1,5 @@
 import { ConfigPlugin } from '../Plugin.types';
-import {
-  withAppBuildGradle,
-  withExpoProjectBuildGradle,
-  withProjectBuildGradle,
-} from '../plugins/android-plugins';
+import { withExpoProjectBuildGradle, withProjectBuildGradle } from '../plugins/android-plugins';
 import { addWarningAndroid } from '../utils/warnings';
 
 export const withGeneratedProjectBuildGradleImport: ConfigPlugin<void> = config => {
