@@ -8,8 +8,8 @@ import prompt, { confirmAsync } from '../../prompts';
 import { learnMore } from '../utils/TerminalLink';
 import { isUrlAvailableAsync } from '../utils/url';
 
-const noBundleIdMessage = `Your project must have a \`bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
-const noPackageMessage = `Your project must have a \`package\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/android-package`;
+const noIOSBundleIdMessage = `Your project must have a \`ios.bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
+const noAndroidPackageMessage = `Your project must have a \`android.package\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/android-package`;
 
 function validateBundleId(value: string): boolean {
   return /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value);
@@ -19,18 +19,16 @@ function validatePackage(value: string): boolean {
   return /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(value);
 }
 
-const cachedBundleIdResults: Record<string, string> = {};
-const cachedPackageNameResults: Record<string, string> = {};
+const cachedIOSBundleIdResults: Record<string, string> = {};
+const cachedAndroidApplicationIdResults: Record<string, string> = {};
 
 /**
  * A quality of life method that provides a warning when the bundle ID is already in use.
- *
- * @param bundleId
  */
-async function getBundleIdWarningAsync(bundleId: string): Promise<string | null> {
+async function getIOSBundleIdWarningAsync(iOSBundleId: string): Promise<string | null> {
   // Prevent fetching for the same ID multiple times.
-  if (cachedBundleIdResults[bundleId]) {
-    return cachedBundleIdResults[bundleId];
+  if (cachedIOSBundleIdResults[iOSBundleId]) {
+    return cachedIOSBundleIdResults[iOSBundleId];
   }
 
   if (!(await isUrlAvailableAsync('itunes.apple.com'))) {
@@ -38,14 +36,14 @@ async function getBundleIdWarningAsync(bundleId: string): Promise<string | null>
     return null;
   }
 
-  const url = `http://itunes.apple.com/lookup?bundleId=${bundleId}`;
+  const url = `http://itunes.apple.com/lookup?bundleId=${iOSBundleId}`;
   try {
     const response = await got(url);
     const json = JSON.parse(response.body?.trim());
     if (json.resultCount > 0) {
       const firstApp = json.results[0];
-      const message = formatInUseWarning(firstApp.trackName, firstApp.sellerName, bundleId);
-      cachedBundleIdResults[bundleId] = message;
+      const message = formatInUseWarning(firstApp.trackName, firstApp.sellerName, iOSBundleId);
+      cachedIOSBundleIdResults[iOSBundleId] = message;
       return message;
     }
   } catch {
@@ -54,10 +52,12 @@ async function getBundleIdWarningAsync(bundleId: string): Promise<string | null>
   return null;
 }
 
-async function getPackageNameWarningAsync(packageName: string): Promise<string | null> {
+async function getAndroidApplicationIdWarningAsync(
+  androidApplicationId: string
+): Promise<string | null> {
   // Prevent fetching for the same ID multiple times.
-  if (cachedPackageNameResults[packageName]) {
-    return cachedPackageNameResults[packageName];
+  if (cachedAndroidApplicationIdResults[androidApplicationId]) {
+    return cachedAndroidApplicationIdResults[androidApplicationId];
   }
 
   if (!(await isUrlAvailableAsync('play.google.com'))) {
@@ -65,17 +65,17 @@ async function getPackageNameWarningAsync(packageName: string): Promise<string |
     return null;
   }
 
-  const url = `https://play.google.com/store/apps/details?id=${packageName}`;
+  const url = `https://play.google.com/store/apps/details?id=${androidApplicationId}`;
   try {
     const response = await got(url);
     // If the page exists, then warn the user.
     if (response.statusCode === 200) {
       // There is no JSON API for the Play Store so we can't concisely
       // locate the app name and developer to match the iOS warning.
-      const message = `⚠️  The package ${log.chalk.bold(
-        packageName
+      const message = `⚠️  The application ID ${log.chalk.bold(
+        androidApplicationId
       )} is already in use. ${log.chalk.dim(learnMore(url))}`;
-      cachedPackageNameResults[packageName] = message;
+      cachedAndroidApplicationIdResults[androidApplicationId] = message;
       return message;
     }
   } catch {
@@ -148,12 +148,12 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
       validate: validateBundleId,
     },
     {
-      nonInteractiveHelp: noBundleIdMessage,
+      nonInteractiveHelp: noIOSBundleIdMessage,
     }
   );
 
   // Warn the user if the bundle ID is already in use.
-  const warning = await getBundleIdWarningAsync(bundleIdentifier);
+  const warning = await getIOSBundleIdWarningAsync(bundleIdentifier);
   if (warning) {
     log.newLine();
     log.nestedWarn(warning);
@@ -240,12 +240,12 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
       validate: validatePackage,
     },
     {
-      nonInteractiveHelp: noPackageMessage,
+      nonInteractiveHelp: noAndroidPackageMessage,
     }
   );
 
   // Warn the user if the package name is already in use.
-  const warning = await getPackageNameWarningAsync(packageName);
+  const warning = await getAndroidApplicationIdWarningAsync(packageName);
   if (warning) {
     log.newLine();
     log.nestedWarn(warning);
