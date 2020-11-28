@@ -327,6 +327,15 @@ We need an email, username, and password to create an account for you.
 `
   );
 
+  // Answers from previous questions aren't threaded through with `prompts`, so
+  // in order to confirm the password we need to save off the password value
+  // during the initial password validation callback and then validate against
+  // it in the confirmation step.
+  //
+  // https://github.com/expo/expo-cli/issues/2970
+  //
+  let passwordInput: string | undefined;
+
   const questions: NewQuestion[] = [
     {
       type: 'text',
@@ -352,28 +361,25 @@ We need an email, username, and password to create an account for you.
           return 'Please create a password';
         }
 
+        passwordInput = val;
         return true;
       },
     },
-    // `answers` isn't threaded through to validate with prompts, so let's just skip
-    // password validation for now.
-    // https://github.com/expo/expo-cli/issues/2970
-    //
-    // {
-    //   type: 'password',
-    //   name: 'passwordRepeat',
-    //   message: 'Confirm Password:',
-    //   format: val => val.trim(),
-    //   validate(val, answers) {
-    //     if (val.trim() === '') {
-    //       return false;
-    //     }
-    //     if (!answers || !answers.password || val.trim() !== answers.password.trim()) {
-    //       return `Passwords don't match!`;
-    //     }
-    //     return true;
-    //   },
-    // },
+    {
+      type: 'password',
+      name: 'passwordRepeat',
+      message: 'Confirm Password:',
+      format: val => val.trim(),
+      validate(val) {
+        if (val.trim() === '') {
+          return false;
+        }
+        if (!passwordInput || val.trim() !== passwordInput.trim()) {
+          return `Passwords don't match!`;
+        }
+        return true;
+      },
+    },
   ];
   const answers = await promptNew(questions);
   const registeredUser = await UserManager.registerAsync(answers as RegistrationData);
