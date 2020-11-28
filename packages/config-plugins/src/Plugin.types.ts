@@ -39,11 +39,6 @@ export interface ModProps<T = any> {
    */
   readonly projectName?: string;
 
-  /**
-   * true when the environment variable EXPO_DEBUG is enabled.
-   */
-  readonly isDebug: boolean;
-
   nextMod?: Mod<T>;
 }
 

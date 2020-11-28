@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import Jimp from 'jimp';
+import Jimp from 'jimp/es';
 import fetch from 'node-fetch';
 import path from 'path';
 import stream from 'stream';

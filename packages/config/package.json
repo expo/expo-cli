@@ -38,6 +38,7 @@
     "@expo/json-file": "8.2.25",
     "find-up": "^5.0.0",
     "fs-extra": "9.0.0",
+    "getenv": "0.7.0",
     "glob": "7.1.6",
     "require-from-string": "^2.0.2",
     "resolve-from": "^5.0.0",
