@@ -12,6 +12,41 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Fri, 27 Nov 2020 14:33:45 -0800](https://github.com/expo/expo-cli/commit/7bb61ba51da0eafce3faa8cbf59124f56ebe7e7d)
+
+### 🎉 New features
+
+- [image-utils] Upgraded jimp to the smaller version ([#2963](https://github.com/expo/expo-cli/issues/2963))
+- [cli] Make it possible to run expo upgrade with beta release prior to actually setting beta flag ([#2967](https://github.com/expo/expo-cli/issues/2967))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.3
+- @expo/dev-tools@0.13.62
+- @expo/electron-adapter@0.0.33
+- expo-cli@4.0.3
+- expo-optimize@0.1.64
+- @expo/image-utils@0.3.9
+- @expo/next-adapter@2.1.47
+- expo-pwa@0.0.52
+- uri-scheme@1.0.49
+- @expo/webpack-config@0.12.46
+- @expo/xdl@59.0.2
+
+## [Fri, 27 Nov 2020 10:31:00 -0800](https://github.com/expo/expo-cli/commit/939de8ba6eb90979f7975de5ae2197208319773b)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+- [cli] fix prompt selection ([#2966](https://github.com/expo/expo-cli/issues/2966))
+
+### 📦 Packages updated
+
+- expo-cli@4.0.2
+
 ## [Thu, 26 Nov 2020 16:54:28 -0800](https://github.com/expo/expo-cli/commit/1995c2f93d03a733480d95f22145170622158b01)
 
 ### 🛠 Breaking changes

@@ -107,6 +107,13 @@ describe(getConfig, () => {
       // @ts-ignore: foo property is not defined
       expect(exp.foo).toBe('bar+value');
       expect(exp.name).toBe('rewrote+ts-config-test');
+      expect(exp._internal).toStrictEqual({
+        dynamicConfigPath: 'ts/app.config.ts',
+        isDebug: false,
+        packageJsonPath: 'ts/package.json',
+        projectRoot: 'ts',
+        staticConfigPath: null,
+      });
     });
     it('parses a js config', () => {
       // ensure config is composed (package.json values still exist)
@@ -123,6 +130,13 @@ describe(getConfig, () => {
       expect(exp.name).toBe('js-config-test+config');
       // Ensures that the app.json is read and passed to the method
       expect(exp.slug).toBe('someslug+config');
+      expect(exp._internal).toStrictEqual({
+        dynamicConfigPath: 'js/app.config.js',
+        isDebug: false,
+        packageJsonPath: 'js/package.json',
+        projectRoot: 'js',
+        staticConfigPath: 'js/app.json',
+      });
     });
     it('parses a js config with export default', () => {
       const projectRoot = 'js';
@@ -158,7 +172,7 @@ describe(getConfig, () => {
     // Test that setCustomConfigPath works to read custom json configs.
     it('uses a custom location', () => {
       const projectRoot = 'custom-location-json';
-      const customConfigPath = path.resolve(projectRoot, 'src/app.staging.json');
+      const customConfigPath = path.join(projectRoot, 'src/app.staging.json');
       setCustomConfigPath(projectRoot, customConfigPath);
 
       const { exp, staticConfigPath, dynamicConfigPath } = getConfig(projectRoot, {
@@ -192,6 +206,14 @@ describe(getConfig, () => {
       // A base app.json is parsed differently, ensure the app.json parsing doesn't accidentally reduce the "expo" object multiple times.
       // @ts-ignore: expo property is not defined
       expect(baseExp.expo).toStrictEqual({ name: 'app-expo-expo-name' });
+
+      expect(exp._internal).toStrictEqual({
+        dynamicConfigPath: null,
+        isDebug: false,
+        packageJsonPath: 'custom-location-json/package.json',
+        projectRoot: 'custom-location-json',
+        staticConfigPath: 'custom-location-json/src/app.staging.json',
+      });
     });
   });
 });

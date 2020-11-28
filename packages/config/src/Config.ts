@@ -1,5 +1,6 @@
 import JsonFile, { JSONObject } from '@expo/json-file';
 import fs from 'fs-extra';
+import { boolish } from 'getenv';
 import { sync as globSync } from 'glob';
 import path from 'path';
 import semver from 'semver';
@@ -24,6 +25,8 @@ import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 
 type SplitConfigs = { expo: ExpoConfig; mods: ModConfig };
+
+const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 /**
  * If a config has an `expo` object then that will be used as the config.
@@ -104,12 +107,14 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
 
   function fillAndReturnConfig(config: SplitConfigs, dynamicConfigObjectType: string | null) {
     const configWithDefaultValues = {
-      ...ensureConfigHasDefaultValues(
+      ...ensureConfigHasDefaultValues({
         projectRoot,
-        config.expo,
-        packageJson,
-        options.skipSDKVersionRequirement
-      ),
+        exp: config.expo,
+        pkg: packageJson,
+        skipSDKVersionRequirement: options.skipSDKVersionRequirement,
+        paths,
+        packageJsonPath,
+      }),
       mods: config.mods,
       dynamicConfigObjectType,
       rootConfig,
@@ -117,8 +122,19 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
       staticConfigPath: paths.staticConfigPath,
     };
 
+    if (!configWithDefaultValues.exp._internal) {
+      configWithDefaultValues.exp._internal = {};
+    }
+
+    configWithDefaultValues.exp._internal.projectRoot = projectRoot;
+
+    if (options.isModdedConfig) {
+      // @ts-ignore: Add the mods back to the object.
+      configWithDefaultValues.exp.mods = config.mods ?? null;
+    }
+
     if (options.isPublicConfig) {
-      // Delete internal value used for dev tooling
+      // Remove internal values with references to user's file paths from the public config.
       delete configWithDefaultValues.exp._internal;
 
       if (configWithDefaultValues.exp.hooks) {
@@ -131,17 +147,20 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
         delete configWithDefaultValues.exp.android.config;
       }
     }
-    if (options.isModdedConfig) {
-      // @ts-ignore: Add the mods back to the object.
-      configWithDefaultValues.exp.mods = config.mods ?? null;
-    }
 
     return configWithDefaultValues;
   }
 
   // Fill in the static config
   function getContextConfig(config: SplitConfigs) {
-    return ensureConfigHasDefaultValues(projectRoot, config.expo, packageJson, true).exp;
+    return ensureConfigHasDefaultValues({
+      projectRoot,
+      exp: config.expo,
+      pkg: packageJson,
+      skipSDKVersionRequirement: true,
+      paths,
+      packageJsonPath,
+    }).exp;
   }
 
   if (paths.dynamicConfigPath) {
@@ -163,6 +182,29 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
 
   // No app.config.js but json or no config
   return fillAndReturnConfig(staticConfig || {}, null);
+}
+
+/**
+ * Adds the _internals object to an ExpoConfig.
+ *
+ * @param config
+ * @param projectRoot
+ */
+function ensureInternals(
+  config: Partial<ExpoConfig>,
+  internals: { projectRoot: string; packageJsonPath?: string } & Partial<ConfigFilePaths>
+): Partial<ExpoConfig> {
+  if (!config._internal) {
+    config._internal = {};
+  }
+
+  config._internal = {
+    isDebug: EXPO_DEBUG,
+    ...config._internal,
+    ...internals,
+  };
+
+  return config;
 }
 
 export function getPackageJson(
@@ -223,10 +265,17 @@ export function readConfigJson(
 
   exp = { ...exp };
 
-  const [pkg] = getPackageJsonAndPath(projectRoot, exp);
+  const [pkg, packageJsonPath] = getPackageJsonAndPath(projectRoot, exp);
 
   return {
-    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
+    ...ensureConfigHasDefaultValues({
+      projectRoot,
+      exp,
+      pkg,
+      skipSDKVersionRequirement: skipNativeValidation,
+      paths,
+      packageJsonPath,
+    }),
     mods: null,
     dynamicConfigPath: null,
     dynamicConfigObjectType: null,
@@ -421,15 +470,29 @@ const APP_JSON_EXAMPLE = JSON.stringify({
   },
 });
 
-function ensureConfigHasDefaultValues(
-  projectRoot: string,
-  exp: Partial<ExpoConfig> | null,
-  pkg: JSONObject,
-  skipSDKVersionRequirement: boolean = false
-): { exp: ExpoConfig; pkg: PackageJSONConfig } {
+function ensureConfigHasDefaultValues({
+  projectRoot,
+  exp,
+  pkg,
+  paths,
+  packageJsonPath,
+  skipSDKVersionRequirement = false,
+}: {
+  projectRoot: string;
+  exp: Partial<ExpoConfig> | null;
+  pkg: JSONObject;
+  skipSDKVersionRequirement?: boolean;
+  paths?: ConfigFilePaths;
+  packageJsonPath?: string;
+}): { exp: ExpoConfig; pkg: PackageJSONConfig } {
   if (!exp) {
     exp = {};
   }
+  exp = ensureInternals(exp, {
+    projectRoot,
+    ...(paths ?? {}),
+    packageJsonPath,
+  });
   // Defaults for package.json fields
   const pkgName = typeof pkg.name === 'string' ? pkg.name : path.basename(projectRoot);
   const pkgVersion = typeof pkg.version === 'string' ? pkg.version : '1.0.0';

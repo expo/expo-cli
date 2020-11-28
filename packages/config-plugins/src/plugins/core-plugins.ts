@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import { boolish } from 'getenv';
 
 import {
   ConfigPlugin,
@@ -9,8 +8,6 @@ import {
   ModPlatform,
 } from '../Plugin.types';
 import { addHistoryItem, getHistoryItem, PluginHistoryItem } from '../utils/history';
-
-const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 function ensureArray<T>(input: T | T[]): T[] {
   if (Array.isArray(input)) {
@@ -173,7 +170,7 @@ export function withInterceptedMod<T>(
 
   // Create a stack trace for debugging ahead of time
   let debugTrace: string = '';
-  if (EXPO_DEBUG) {
+  if (config._internal?.isDebug) {
     // Get a stack trace via the Error API
     const stack = new Error().stack;
     // Format the stack trace to create the debug log
@@ -181,7 +178,7 @@ export function withInterceptedMod<T>(
   }
 
   async function interceptingMod({ modRequest, ...config }: ExportedConfigWithProps<T>) {
-    if (modRequest.isDebug) {
+    if (config._internal?.isDebug) {
       // In debug mod, log the plugin stack in the order which they were invoked
       const modStack = chalk.bold(`${platform}.${mod}`);
       console.log(`${modStack}: ${debugTrace}`);
