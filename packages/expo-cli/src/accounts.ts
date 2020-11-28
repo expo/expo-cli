@@ -323,8 +323,7 @@ async function _usernamePasswordAuth(
 export async function register(): Promise<User> {
   log(
     `
-Thanks for signing up for Expo!
-Just a few questions:
+We need an email, username, and password to create an account for you.
 `
   );
 
@@ -332,7 +331,7 @@ Just a few questions:
     {
       type: 'text',
       name: 'email',
-      message: 'E-mail:',
+      message: 'Email:',
       format: val => val.trim(),
       validate: nonEmptyInput,
     },
@@ -352,6 +351,7 @@ Just a few questions:
         if (val.trim() === '') {
           return 'Please create a password';
         }
+
         return true;
       },
     },
@@ -377,6 +377,12 @@ Just a few questions:
   ];
   const answers = await promptNew(questions);
   const registeredUser = await UserManager.registerAsync(answers as RegistrationData);
-  log('\nThanks for signing up!');
+  log(`\nAccount registered, you are now logged in as ${chalk.cyan(answers.username)}.`);
+  log(
+    `- You can log in to your account on ${chalk.bold(
+      'https://expo.io'
+    )} to manage and collaborate on your projects.`
+  );
+  log(`- You can log in on the Expo client app for quick access to your projects.\n`);
   return registeredUser;
 }
