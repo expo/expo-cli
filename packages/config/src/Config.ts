@@ -123,16 +123,13 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
       staticConfigPath: paths.staticConfigPath,
     };
 
-    if (!configWithDefaultValues.exp._internal) {
-      configWithDefaultValues.exp._internal = {};
-    }
-
-    configWithDefaultValues.exp._internal.projectRoot = projectRoot;
-
     if (options.isModdedConfig) {
       // @ts-ignore: Add the mods back to the object.
       configWithDefaultValues.exp.mods = config.mods ?? null;
     }
+
+    // Apply static json plugins, should be done after _internal
+    configWithDefaultValues.exp = withStaticPlugins(configWithDefaultValues.exp);
 
     if (options.isPublicConfig) {
       // Remove internal values with references to user's file paths from the public config.
@@ -148,9 +145,6 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
         delete configWithDefaultValues.exp.android.config;
       }
     }
-
-    // Apply static json plugins
-    configWithDefaultValues.exp = withStaticPlugins(configWithDefaultValues.exp, projectRoot);
 
     return configWithDefaultValues;
   }

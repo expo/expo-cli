@@ -137,22 +137,28 @@ function requirePluginFile(filePath: string, pluginModulePath: string): any {
  * @param config
  * @param projectRoot
  */
-const withStaticPlugins: ConfigPlugin<string> = (config, projectRoot) => {
+const withStaticPlugins: ConfigPlugin = config => {
   // @ts-ignore
   const plugins = normalizeJSONPluginList(config.plugins);
   // Resolve and evaluate plugins
   for (const plugin of plugins) {
-    const withStaticPlugin = resolveConfigPluginFunction(projectRoot, plugin.resolve);
+    assert(config._internal?.projectRoot, `Unexpected: projectRoot isn't defined`);
+    const withStaticPlugin = resolveConfigPluginFunction(
+      config._internal?.projectRoot,
+      plugin.resolve
+    );
     config = withStaticPlugin(config, plugin.props);
   }
   return config;
 };
 
 export const withStaticPlugin: ConfigPlugin<{
-  projectRoot: string;
   plugin: string | JSONPlugin;
   fallback?: ConfigPlugin<{ _resolverError: Error } & any>;
 }> = (config, props) => {
+  const projectRoot = config._internal?.projectRoot;
+  assert(projectRoot, `Unexpected: projectRoot isn't defined`);
+
   const plugin = normalizeJSONPlugin(props.plugin);
   // Ensure no one uses this property by accident.
   assert(
@@ -160,10 +166,10 @@ export const withStaticPlugin: ConfigPlugin<{
     `Plugin property '_resolverError' is a reserved property of \`withStaticPlugin\``
   );
 
-  let withStaticPlugin: ConfigPlugin<unknown>;
+  let withPlugin: ConfigPlugin<unknown>;
   try {
     // Resolve and evaluate plugins.
-    withStaticPlugin = resolveConfigPluginFunction(props.projectRoot, plugin.resolve);
+    withPlugin = resolveConfigPluginFunction(projectRoot, plugin.resolve);
   } catch (error) {
     // If the static module failed to resolve, attempt to use a fallback.
     // This enables support for built-in plugins with versioned variations living in other packages.
@@ -171,14 +177,14 @@ export const withStaticPlugin: ConfigPlugin<{
       if (!plugin.props) plugin.props = {};
       // Pass this to the fallback plugin for potential warnings about needing to install a versioned package.
       plugin.props._resolverError = error;
-      withStaticPlugin = props.fallback;
+      withPlugin = props.fallback;
     } else {
       // If no fallback, throw the resolution error.
       throw error;
     }
   }
   // Execute the plugin.
-  config = withStaticPlugin(config, plugin.props);
+  config = withPlugin(config, plugin.props);
   return config;
 };
 
