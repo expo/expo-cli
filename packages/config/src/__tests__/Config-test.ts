@@ -105,13 +105,7 @@ describe('getConfig public config', () => {
     expect(exp.android).toBeDefined();
     expect(exp.android.versionCode).toEqual(appJsonWithPrivateData.android.versionCode);
     expect(exp.android.config).toBeUndefined();
-    expect(exp._internal).toStrictEqual({
-      dynamicConfigPath: null,
-      isDebug: false,
-      packageJsonPath: '/private-data/package.json',
-      projectRoot: '/private-data',
-      staticConfigPath: '/private-data/app.json',
-    });
+    expect(exp._internal).toBeUndefined();
   });
 
   it('does not remove properties from a config with no private data', () => {
