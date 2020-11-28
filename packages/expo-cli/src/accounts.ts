@@ -355,21 +355,25 @@ Just a few questions:
         return true;
       },
     },
-    {
-      type: 'password',
-      name: 'passwordRepeat',
-      message: 'Confirm Password:',
-      format: val => val.trim(),
-      validate(val, answers) {
-        if (val.trim() === '') {
-          return false;
-        }
-        if (!answers || !answers.password || val.trim() !== answers.password.trim()) {
-          return `Passwords don't match!`;
-        }
-        return true;
-      },
-    },
+    // `answers` isn't threaded through to validate with prompts, so let's just skip
+    // password validation for now.
+    // https://github.com/expo/expo-cli/issues/2970
+    //
+    // {
+    //   type: 'password',
+    //   name: 'passwordRepeat',
+    //   message: 'Confirm Password:',
+    //   format: val => val.trim(),
+    //   validate(val, answers) {
+    //     if (val.trim() === '') {
+    //       return false;
+    //     }
+    //     if (!answers || !answers.password || val.trim() !== answers.password.trim()) {
+    //       return `Passwords don't match!`;
+    //     }
+    //     return true;
+    //   },
+    // },
   ];
   const answers = await promptNew(questions);
   const registeredUser = await UserManager.registerAsync(answers as RegistrationData);
