@@ -46,7 +46,7 @@ describe(applyProjectGradleMavenPackage, () => {
 
     expect(WarningAggregator.addWarningAndroid).toHaveBeenLastCalledWith(
       'android-maven-package',
-      'Failed to add maven package "../node_modules/expo-camera/android/maven" for ID "expo-camera" because the generated file `android/.expo/project-build.gradle` is malformed.'
+      'Failed to add maven package "../node_modules/expo-camera/android/maven" for ID "expo-camera" because the generated file `android/.expo-android/project-build.gradle` is malformed.'
     );
 
     // Doesn't modify

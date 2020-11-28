@@ -90,7 +90,7 @@ export interface ModConfig {
      */
     projectBuildGradle?: Mod<AndroidPaths.GradleProjectFile>;
     /**
-     * Modify the generated `android/.expo/project-build.gradle` as a string.
+     * Modify the generated `android/.expo-android/project-build.gradle` as a string.
      * This file is used to extend the contents of `android/build.gradle` safely.
      * Should be used in favor of `projectBuildGradle`.
      */

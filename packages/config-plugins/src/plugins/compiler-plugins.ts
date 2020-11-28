@@ -80,7 +80,8 @@ const withAndroidExpoProjectBuildGradleBaseMod: ConfigPlugin<void> = config => {
   return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
     platform: 'android',
     mod: 'expoProjectBuildGradle',
-    skipEmptyMod: true,
+    // Don't skip empty mod because this file is imported in project build.gradle and needs to exist.
+    skipEmptyMod: false,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
         ...config,

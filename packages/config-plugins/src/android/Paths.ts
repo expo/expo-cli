@@ -93,7 +93,7 @@ export function getAppBuildGradle(projectRoot: string): string {
 }
 
 export function getAndroidGeneratedGradleFolder(projectRoot: string): string {
-  return path.join(projectRoot, 'android', '.expo');
+  return path.join(projectRoot, 'android', '.expo-android');
 }
 
 export async function getProjectPathOrThrowAsync(projectRoot: string): Promise<string> {

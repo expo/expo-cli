@@ -106,7 +106,7 @@ export const withProjectBuildGradle: ConfigPlugin<Mod<GradleProjectFile>> = (con
 };
 
 /**
- * Provides the generated `.expo/project-build.gradle` for modification.
+ * Provides the generated `.expo-android/project-build.gradle` for modification.
  *
  * @param config
  * @param action

@@ -7,7 +7,7 @@ export const withGeneratedProjectBuildGradleImport: ConfigPlugin<void> = config 
     if (config.modResults.language === 'groovy') {
       config.modResults.contents = addGradleImport({
         contents: config.modResults.contents,
-        filePath: '.expo/project-build.gradle',
+        filePath: '.expo-android/project-build.gradle',
       });
     } else {
       addWarningAndroid(
@@ -41,7 +41,7 @@ export function addGradleImport({
 }
 
 /**
- * Adds maven packages to the generated `.expo/project-build.gradle` in the `allprojects-repositories` block.
+ * Adds maven packages to the generated `.expo-android/project-build.gradle` in the `allprojects-repositories` block.
  */
 export const withProjectGradleMavenPackage: ConfigPlugin<{
   /**
@@ -92,7 +92,7 @@ export function applyProjectGradleMavenPackage({
   } else {
     addWarningAndroid(
       'android-maven-package',
-      `Failed to add maven package "${filePath}" for ID "${mavenPluginId}" because the generated file \`android/.expo/project-build.gradle\` is malformed.`
+      `Failed to add maven package "${filePath}" for ID "${mavenPluginId}" because the generated file \`android/.expo-android/project-build.gradle\` is malformed.`
     );
   }
 

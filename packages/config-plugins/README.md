@@ -126,7 +126,7 @@ The following default mods are provided by the mod compiler for common file mani
 - `mods.android.appBuildGradle` -- Modify the `android/app/build.gradle` as a string.
 - `mods.android.projectBuildGradle` -- Modify the `android/build.gradle` as a string.
 - `mods.android.settingsBuildGradle` -- Modify the `android/settings.gradle` as a string.
-- `mods.android.expoProjectBuildGradle` -- Modify the `android/.expo/project-build.gradle` as a string.
+- `mods.android.expoProjectBuildGradle` -- Modify the `android/.expo-android/project-build.gradle` as a string.
 
 After the mods are resolved, the contents of each mod will be written to disk. Custom default mods can be added to support new native files.
 For example, you can create a mod to support the `GoogleServices-Info.plist`, and pass it to other mods.
@@ -222,7 +222,7 @@ Sample file structure:
 ```
 ┌── app.config.js ➡️ Expo Config
 └── android/ ➡️ Project folder
-    ├── .expo/ ➡️ Generated gradle folder
+    ├── .expo-android/ ➡️ Generated gradle folder
     │   └── project-build.gradle ➡️ 🔵 Generated gradle file for `android/build.gradle`
     ├── app/ ➡️ Android app folder
     │   └── build.gradle ➡️ 🟣 App gradle file
