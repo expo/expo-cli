@@ -39,7 +39,7 @@ const printHelp = (): void => {
   log.nested(`Press ${b('?')} to show a list of all available commands.`);
 };
 
-const div = chalk.dim(`|`);
+const div = chalk.dim(`│`);
 
 const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOnly'> = {}) => {
   const { dev } = await ProjectSettings.readAsync(projectDir);

@@ -35,7 +35,6 @@ import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import slug from 'slugify';
 import split from 'split';
-import terminalLink from 'terminal-link';
 import treekill from 'tree-kill';
 import urljoin from 'url-join';
 import { promisify } from 'util';
