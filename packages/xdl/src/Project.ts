@@ -64,6 +64,7 @@ import * as Webpack from './Webpack';
 import XDLError from './XDLError';
 import * as ExponentTools from './detach/ExponentTools';
 import * as TableText from './logs/TableText';
+import { learnMore } from './logs/TerminalLink';
 import * as Doctor from './project/Doctor';
 import { getManifestHandler } from './project/ManifestHandler';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -648,11 +649,9 @@ export async function publishAsync(
   logger.global.info(TableText.createFilesTable(files));
   logger.global.info('');
   logger.global.info(
-    terminalLink(
-      'Learn more about JavaScript bundle sizes',
-      `https://expo.fyi/javascript-bundle-sizes`,
-      { fallback: (text, url) => `${text}: ${url}` }
-    )
+    `💡 JavaScript bundle sizes effect startup time. ${chalk.dim(
+      learnMore(`https://expo.fyi/javascript-bundle-sizes`)
+    )}`
   );
   logger.global.info('');
 
