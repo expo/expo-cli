@@ -1,6 +1,7 @@
-import { InfoPlist } from '.';
-import { ExpoConfig } from '../Config.types';
+import { ExpoConfig } from '@expo/config-types';
+
 import { createInfoPlistPlugin } from '../plugins/ios-plugins';
+import { InfoPlist } from './IosConfig.types';
 
 type StatusBarStyle = 'auto' | 'light' | 'dark'; // | 'inverted'
 
