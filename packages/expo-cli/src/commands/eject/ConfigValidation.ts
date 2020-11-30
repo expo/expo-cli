@@ -10,6 +10,7 @@ import { isUrlAvailableAsync } from '../utils/url';
 
 const noIOSBundleIdMessage = `Your project must have a \`ios.bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
 const noAndroidPackageMessage = `Your project must have a \`android.package\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/android-package`;
+const noAndroidApplicationIdMessage = `Your project must have a \`android.applicationId\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/android-application-id`;
 
 /**
  * Checks whether the given `iOSBundleId` has the correct format.
@@ -36,6 +37,18 @@ function isAndroidPackageNameValid(androidPackageName?: string): boolean {
   return /(?!(?:^|.*\.)(?:abstract|assert|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|enum|extends|extends|false|final|finally|float|for|goto|if|implements|import|import|instanceof|interface|long|native|new|null|package|private|protected|public|return|short|static|strictfp|super|switch|synchronized|this|throw|throws|transient|true|try|void|volatile|volatile|while)(?:\.|$))(^[a-zA-Z_$][a-zA-Z0-9_$]*(\.[a-zA-Z_$][a-zA-Z0-9_$]*)*$)/.test(
     androidPackageName
   );
+}
+
+/**
+ * Checks whether the given `androidApplicationId` has the correct format.
+ * Android application ID follows the Java package naming rules, but it's stricter.
+ * @see https://developer.android.com/studio/build/application-id
+ */
+function isAndroidApplicationIdValid(androidApplicationId?: string): boolean {
+  if (!androidApplicationId) {
+    return false;
+  }
+  return /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(androidApplicationId);
 }
 
 const cachedIOSBundleIdResults: Record<string, string> = {};
@@ -221,10 +234,6 @@ export async function getOrPromptForAndroidPackageName(projectRoot: string): Pro
     nonInteractiveHelp: noAndroidPackageMessage,
   });
 
-  // Warn the user if the application ID is already in use.
-  if (await shouldRepeatUnlessAvailable(() => getAndroidApplicationIdWarningAsync(packageName))) {
-    return getOrPromptForAndroidPackageName(projectRoot);
-  }
   // Apply the changes to the config.
   await attemptModification(
     projectRoot,
@@ -233,6 +242,68 @@ export async function getOrPromptForAndroidPackageName(projectRoot: string): Pro
   );
 
   return packageName;
+}
+
+/**
+ * Tries to read `android.applicationId` from the application manifest.
+ * It tries to obtain the value according to the following rules:
+ * 1. read `android.applicationId` and return it if present (throws upon wrong format) or upon no value 🔽
+ * 2. read `android.package` and use it as a suggestion for the user or upon no value 🔽
+ * 3. read `ios.bundleIdentifier` and use it as a suggestion for the user or upon no value 🔽
+ * 4. create `username`-based value and use it as a suggestion for the user.
+ *
+ * @sideEffect If there was not `android.applicationId` in the manifest then the manifest is mutated with the user input.
+ * @throws When there is a value in `android.applicationId`, but the format of the this value is incorrect.
+ */
+export async function getOrPromptForAndroidApplicationId(projectRoot: string): Promise<string> {
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+
+  const validate = isAndroidApplicationIdValid;
+
+  const currentValue = validateValue(
+    exp.android?.applicationId,
+    validate,
+    `The android.applicationId defined in your Expo config is not formatted properly. Only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter.`
+  );
+  if (currentValue) {
+    return currentValue;
+  }
+
+  const recommendedValue = await getRecommendedValue(
+    /* eslint-disable prettier/prettier */
+    [exp.android?.package, exp.ios?.bundleIdentifier, await generateUsernameBasedId(exp, true)],
+    /* eslint-enable prettier/prettier */
+    validate
+  );
+
+  // Prompt the user for the final value.
+  // Even if the project is using a dynamic config we can still
+  // prompt a better error message, recommend a default value, and help the user
+  // validate their custom application ID upfront.
+  const applicationId = await promptForValue({
+    prePromptMessage: {
+      text: `TODO`,
+      link: 'https://expo.fyi/android-application-id',
+    },
+    initial: recommendedValue,
+    message: `What would you like your Android application ID to be?`,
+    validate,
+    nonInteractiveHelp: noAndroidApplicationIdMessage,
+  });
+
+  // Warn the user if the application ID is already in use.
+  if (await shouldRepeatUnlessAvailable(() => getAndroidApplicationIdWarningAsync(applicationId))) {
+    return getOrPromptForAndroidApplicationId(projectRoot);
+  }
+
+  // Apply the changes to the config.
+  await attemptModification(
+    projectRoot,
+    { android: { ...exp.android, applicationId } },
+    { android: { applicationId } }
+  );
+
+  return applicationId;
 }
 
 async function attemptModification(

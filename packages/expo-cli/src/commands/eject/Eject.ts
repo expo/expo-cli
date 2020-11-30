@@ -24,6 +24,7 @@ import { learnMore } from '../utils/TerminalLink';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import {
+  getOrPromptForAndroidApplicationId,
   getOrPromptForAndroidPackageName,
   getOrPromptForIOSBundleIdentifier,
 } from './ConfigValidation';
@@ -309,10 +310,9 @@ async function ensureConfigAsync({
     throw new CommandError(`${error.message}\n`);
   }
 
-  // Prompt for the Android package first because it's more strict than the bundle identifier
-  // this means you'll have a better chance at matching the bundle identifier with the package name.
   if (platforms.includes('android')) {
     await getOrPromptForAndroidPackageName(projectRoot);
+    await getOrPromptForAndroidApplicationId(projectRoot);
   }
   if (platforms.includes('ios')) {
     await getOrPromptForIOSBundleIdentifier(projectRoot);
