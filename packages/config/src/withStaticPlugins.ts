@@ -11,7 +11,7 @@ type JSONPlugin = { resolve: string; props?: Record<string, any> };
 type JSONPluginsList = (JSONPlugin | string)[];
 
 // Default plugin entry file name.
-const pluginFileName = 'app.config.js';
+const pluginFileName = 'app.plugin.js';
 
 function findUpPackageJson(root: string): string {
   const packageJson = findUp.sync('package.json', { cwd: root });
