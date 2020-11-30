@@ -10,7 +10,7 @@ import * as WarningAggregator from '../../utils/warnings';
 import {
   buildContentsJsonImages,
   getSplashConfig,
-  getSplashStoryboardContents,
+  getSplashStoryboardContentsAsync,
   setSplashInfoPlist,
   warnUnsupportedSplashProperties,
   withSplashScreen,
@@ -27,13 +27,13 @@ afterAll(() => {
   jest.unmock('../../utils/warnings');
 });
 
-describe(getSplashStoryboardContents, () => {
+describe(getSplashStoryboardContentsAsync, () => {
   it(`gets a splash screen without options`, () => {
-    const contents = getSplashStoryboardContents({});
+    const contents = getSplashStoryboardContentsAsync({});
     expect(contents).not.toMatch(/contentMode="scaleAspectFit"/);
   });
   it(`gets a splash screen with image and resize`, () => {
-    const contents = getSplashStoryboardContents({
+    const contents = getSplashStoryboardContentsAsync({
       image: './my-image.png',
       resizeMode: 'contain',
     });
@@ -175,6 +175,7 @@ describe(withSplashScreen, () => {
   });
 
   it(`runs entire process`, async () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let config: ExpoConfig = {
       name: 'foo',
       slug: 'bar',
