@@ -253,10 +253,10 @@ export default class PackagerLogsStream {
 
       case 'initialize_started':
         chunk._metroEventType = 'METRO_INITIALIZE_STARTED';
-        chunk.msg = 'Starting Metro Bundler.';
+        chunk.msg = 'Starting Metro Bundler';
         break;
       case 'initialize_done':
-        chunk.msg = `Metro Bundler ready.`;
+        chunk.msg = `Started Metro Bundler`;
         break;
       case 'initialize_failed': {
         // SDK <=22

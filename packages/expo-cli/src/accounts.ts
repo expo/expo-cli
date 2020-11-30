@@ -323,16 +323,24 @@ async function _usernamePasswordAuth(
 export async function register(): Promise<User> {
   log(
     `
-Thanks for signing up for Expo!
-Just a few questions:
+We need an email, username, and password to create an account for you.
 `
   );
+
+  // Answers from previous questions aren't threaded through with `prompts`, so
+  // in order to confirm the password we need to save off the password value
+  // during the initial password validation callback and then validate against
+  // it in the confirmation step.
+  //
+  // https://github.com/expo/expo-cli/issues/2970
+  //
+  let passwordInput: string | undefined;
 
   const questions: NewQuestion[] = [
     {
       type: 'text',
       name: 'email',
-      message: 'E-mail:',
+      message: 'Email:',
       format: val => val.trim(),
       validate: nonEmptyInput,
     },
@@ -352,6 +360,8 @@ Just a few questions:
         if (val.trim() === '') {
           return 'Please create a password';
         }
+
+        passwordInput = val;
         return true;
       },
     },
@@ -360,11 +370,11 @@ Just a few questions:
       name: 'passwordRepeat',
       message: 'Confirm Password:',
       format: val => val.trim(),
-      validate(val, answers) {
+      validate(val) {
         if (val.trim() === '') {
           return false;
         }
-        if (!answers || !answers.password || val.trim() !== answers.password.trim()) {
+        if (!passwordInput || val.trim() !== passwordInput.trim()) {
           return `Passwords don't match!`;
         }
         return true;
@@ -373,6 +383,12 @@ Just a few questions:
   ];
   const answers = await promptNew(questions);
   const registeredUser = await UserManager.registerAsync(answers as RegistrationData);
-  log('\nThanks for signing up!');
+  log(`\nAccount registered, you are now logged in as ${chalk.cyan(answers.username)}.`);
+  log(
+    `- You can log in to your account on ${chalk.bold(
+      'https://expo.io'
+    )} to manage and collaborate on your projects.`
+  );
+  log(`- You can log in on the Expo client app for quick access to your projects.\n`);
   return registeredUser;
 }

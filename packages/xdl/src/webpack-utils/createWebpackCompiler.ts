@@ -54,7 +54,7 @@ export function printInstructions(
   let message = '\n';
   message += `You can now view ${chalk.bold(appName)} in the browser\n`;
 
-  const divider = chalk.dim`|`;
+  const divider = chalk.dim`│`;
 
   if (urls.lanUrlForTerminal) {
     message += `\n \u203A ${chalk.reset('Local')}   ${divider} ${urls.localUrlForTerminal}`;

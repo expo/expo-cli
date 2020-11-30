@@ -99,6 +99,7 @@ export async function selectAsync(
         cursor: number;
         firstRender: boolean;
         choices: (Omit<prompts.Choice, 'disable'> & { disabled?: boolean })[];
+        value: string;
         render: () => void;
         moveCursor: (n: number) => void;
         fire: () => void;
@@ -114,6 +115,8 @@ export async function selectAsync(
             if (this.cursor > this.choices.length - 1) break;
           }
           this.fire();
+          // Without this, the value will be `0` instead of a string.
+          this.value = (this.choices[this.cursor] || {}).value;
 
           // Support up arrow and `k` key -- no looping
           this.up = () => {
