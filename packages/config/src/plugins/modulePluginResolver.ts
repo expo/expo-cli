@@ -2,16 +2,19 @@ import findUp from 'find-up';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
 
-import { ConfigPlugin } from './Config.types';
-import { assert } from './Errors';
-import { fileExists } from './Modules';
-import { resolveConfigPluginExport } from './evalConfig';
+import { assert } from '../Errors';
+import { fileExists } from '../Modules';
+import { resolveConfigPluginExport } from '../evalConfig';
 
-type JSONPlugin = { resolve: string; props?: Record<string, any> };
-type JSONPluginsList = (JSONPlugin | string)[];
+export type StaticPlugin<T = any> = {
+  resolve: string;
+  props?: T;
+};
+
+export type StaticPluginList = (StaticPlugin | string)[];
 
 // Default plugin entry file name.
-const pluginFileName = 'app.plugin.js';
+export const pluginFileName = 'app.plugin.js';
 
 function findUpPackageJson(root: string): string {
   const packageJson = findUp.sync('package.json', { cwd: root });
@@ -20,7 +23,7 @@ function findUpPackageJson(root: string): string {
 }
 
 function resolvePluginForModule(projectRoot: string, modulePath: string): string {
-  const resolved = resolveFrom.silent(projectRoot, modulePath);
+  const resolved = resolveFrom(projectRoot, modulePath);
   assert(
     resolved,
     `Failed to resolve plugin for module "${modulePath}" relative to "${projectRoot}"`
@@ -81,29 +84,22 @@ function findUpPlugin(root: string): string {
   return resolveExpoPluginFile(moduleRoot) ?? root;
 }
 
-function normalizeJSONPlugin(plugin: string | JSONPlugin): JSONPlugin {
+export function normalizeStaticPlugin(plugin: string | StaticPlugin): StaticPlugin {
   if (typeof plugin === 'string') {
     plugin = { resolve: plugin };
-  } else if (plugin.props === undefined) {
-    plugin.props = {};
   }
-
   return plugin;
 }
 
-function normalizeJSONPluginList(plugins?: JSONPluginsList): JSONPlugin[] {
-  if (!plugins || !Array.isArray(plugins)) {
-    return [];
-  }
-
-  return plugins.reduce<JSONPlugin[]>((prev, curr) => {
-    prev.push(normalizeJSONPlugin(curr));
-    return prev;
-  }, []);
+export function assertInternalProjectRoot(projectRoot?: string): asserts projectRoot {
+  assert(
+    projectRoot,
+    `Unexpected: Config \`_internal.projectRoot\` isn't defined by expo-cli, this is a bug.`
+  );
 }
 
 // Resolve the module function and assert type
-function resolveConfigPluginFunction(projectRoot: string, pluginModulePath: string) {
+export function resolveConfigPluginFunction(projectRoot: string, pluginModulePath: string) {
   const moduleFilePath = resolvePluginForModule(projectRoot, pluginModulePath);
   const result = requirePluginFile(moduleFilePath, pluginModulePath);
   return resolveConfigPluginExport(result, moduleFilePath);
@@ -130,62 +126,3 @@ function requirePluginFile(filePath: string, pluginModulePath: string): any {
     // throw new ConfigError(message, 'INVALID_PLUGIN');
   }
 }
-
-/**
- * Resolves static plugins array as config plugin functions.
- *
- * @param config
- * @param projectRoot
- */
-const withStaticPlugins: ConfigPlugin = config => {
-  // @ts-ignore
-  const plugins = normalizeJSONPluginList(config.plugins);
-  // Resolve and evaluate plugins
-  for (const plugin of plugins) {
-    assert(config._internal?.projectRoot, `Unexpected: projectRoot isn't defined`);
-    const withStaticPlugin = resolveConfigPluginFunction(
-      config._internal?.projectRoot,
-      plugin.resolve
-    );
-    config = withStaticPlugin(config, plugin.props);
-  }
-  return config;
-};
-
-export const withStaticPlugin: ConfigPlugin<{
-  plugin: string | JSONPlugin;
-  fallback?: ConfigPlugin<{ _resolverError: Error } & any>;
-}> = (config, props) => {
-  const projectRoot = config._internal?.projectRoot;
-  assert(projectRoot, `Unexpected: projectRoot isn't defined`);
-
-  const plugin = normalizeJSONPlugin(props.plugin);
-  // Ensure no one uses this property by accident.
-  assert(
-    !plugin.props?._resolverError,
-    `Plugin property '_resolverError' is a reserved property of \`withStaticPlugin\``
-  );
-
-  let withPlugin: ConfigPlugin<unknown>;
-  try {
-    // Resolve and evaluate plugins.
-    withPlugin = resolveConfigPluginFunction(projectRoot, plugin.resolve);
-  } catch (error) {
-    // If the static module failed to resolve, attempt to use a fallback.
-    // This enables support for built-in plugins with versioned variations living in other packages.
-    if (props.fallback) {
-      if (!plugin.props) plugin.props = {};
-      // Pass this to the fallback plugin for potential warnings about needing to install a versioned package.
-      plugin.props._resolverError = error;
-      withPlugin = props.fallback;
-    } else {
-      // If no fallback, throw the resolution error.
-      throw error;
-    }
-  }
-  // Execute the plugin.
-  config = withPlugin(config, plugin.props);
-  return config;
-};
-
-export default withStaticPlugins;
