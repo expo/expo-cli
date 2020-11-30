@@ -55,6 +55,11 @@ export async function versionsAsync(): Promise<Versions> {
     0,
     path.join(__dirname, '../caches/versions.json')
   );
+
+  // Clear cache when opting in to beta because things can change quickly in beta
+  if (getenv.boolish('EXPO_BETA', false)) {
+    versionCache.clearAsync();
+  }
   return await versionCache.getAsync();
 }
 
