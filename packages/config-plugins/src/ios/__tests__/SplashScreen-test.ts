@@ -1,12 +1,23 @@
 import { ExpoConfig } from '@expo/config-types';
+import plist from '@expo/plist';
+import * as fs from 'fs';
+import { vol } from 'memfs';
+import * as path from 'path';
 
+import projectFixtures from '../../plugins/__tests__/fixtures/react-native-project';
+import { compileModsAsync } from '../../plugins/mod-compiler';
 import * as WarningAggregator from '../../utils/warnings';
 import {
   buildContentsJsonImages,
   getSplashConfig,
+  getSplashStoryboardContents,
   setSplashInfoPlist,
   warnUnsupportedSplashProperties,
+  withSplashScreen,
 } from '../SplashScreen';
+import { getDirFromFS } from './utils/getDirFromFS';
+
+const fsReal = jest.requireActual('fs') as typeof fs;
 
 jest.mock('fs');
 jest.mock('../../utils/warnings');
@@ -14,6 +25,22 @@ jest.mock('../../utils/warnings');
 afterAll(() => {
   jest.unmock('fs');
   jest.unmock('../../utils/warnings');
+});
+
+describe(getSplashStoryboardContents, () => {
+  it(`gets a splash screen without options`, () => {
+    const contents = getSplashStoryboardContents({});
+    expect(contents).not.toMatch(/contentMode="scaleAspectFit"/);
+  });
+  it(`gets a splash screen with image and resize`, () => {
+    const contents = getSplashStoryboardContents({
+      image: './my-image.png',
+      resizeMode: 'contain',
+    });
+    // Test the splash screen XML
+    expect(contents).toMatch(/contentMode="scaleAspectFit"/);
+    expect(contents).toMatch(/id="EXPO-SplashScreen"/);
+  });
 });
 
 describe(getSplashConfig, () => {
@@ -128,3 +155,89 @@ describe(buildContentsJsonImages, () => {
     expect(buildContentsJsonImages({ image: 'somn', darkImage: null }).length).toBe(3);
   });
 });
+
+describe(withSplashScreen, () => {
+  const iconPath = path.resolve(__dirname, './fixtures/icons/icon.png');
+  const icon = fsReal.readFileSync(iconPath, 'utf8');
+  const projectRoot = '/app';
+  beforeAll(async () => {
+    vol.fromJSON(
+      {
+        ...projectFixtures,
+        'assets/splash.png': icon as any,
+      },
+      projectRoot
+    );
+  });
+
+  afterAll(() => {
+    vol.reset();
+  });
+
+  it(`runs entire process`, async () => {
+    let config: ExpoConfig = {
+      name: 'foo',
+      slug: 'bar',
+    };
+
+    // Apply the splash plugin
+    config = withSplashScreen(config, {
+      // must use full path for mock fs
+      image: '/app/assets/splash.png',
+      resizeMode: 'contain',
+      backgroundColor: '#ff00ff',
+      darkImage: '/app/assets/splash.png',
+      darkBackgroundColor: '#00ff00',
+      userInterfaceStyle: 'automatic',
+    });
+
+    // compile all plugins and mods
+    config = await compileModsAsync(config, projectRoot);
+
+    // Test Results
+
+    const infoPlist = await readPlistAsync('/app/ios/ReactNativeProject/Info.plist');
+    expect(infoPlist.UILaunchStoryboardName).toBe('SplashScreen');
+
+    const after = getDirFromFS(vol.toJSON(), path.join(projectRoot, 'ios'));
+
+    // Ensure colors are created
+    expect(
+      after['ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/image.png']
+    ).toMatch(/PNG/);
+
+    expect(
+      after['ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/dark_image.png']
+    ).toMatch(/PNG/);
+
+    // Image JSON
+    expect(
+      after['ReactNativeProject/Images.xcassets/SplashScreenBackground.imageset/Contents.json']
+    ).toBeDefined();
+
+    // Ensure images are created
+    expect(after['ReactNativeProject/Images.xcassets/SplashScreen.imageset/image.png']).toMatch(
+      /PNG/
+    );
+
+    expect(
+      after['ReactNativeProject/Images.xcassets/SplashScreen.imageset/dark_image.png']
+    ).toMatch(/PNG/);
+
+    // Image JSON
+    expect(
+      after['ReactNativeProject/Images.xcassets/SplashScreen.imageset/Contents.json']
+    ).toBeDefined();
+
+    // Test the splash screen XML
+    expect(after['ReactNativeProject/SplashScreen.storyboard']).toMatch(
+      /contentMode="scaleAspectFit"/
+    );
+    expect(after['ReactNativeProject/SplashScreen.storyboard']).toMatch(/id="EXPO-SplashScreen"/);
+  });
+});
+
+function readPlistAsync(plistPath: string) {
+  const rawPlist = fs.readFileSync(plistPath, 'utf8');
+  return plist.parse(rawPlist);
+}

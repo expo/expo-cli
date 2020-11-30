@@ -97,9 +97,6 @@ const withSplashScreenAssets: ConfigPlugin<IOSSplashConfig> = (config, splash) =
 
 const withSplashXcodeProject: ConfigPlugin<IOSSplashConfig> = (config, splash) => {
   return withXcodeProject(config, async config => {
-    if (!splash) {
-      return config;
-    }
     const projectPath = Paths.getSourceRoot(config.modRequest.projectRoot);
     config.modResults = await setSplashStoryboardAsync(
       { projectPath, projectName: config.modRequest.projectName!, project: config.modResults },
@@ -114,10 +111,6 @@ export function setSplashInfoPlist(
   infoPlist: InfoPlist,
   splash: IOSSplashConfig
 ): InfoPlist {
-  if (!splash) {
-    return infoPlist;
-  }
-
   const isDarkModeEnabled = !!splash?.darkImage;
 
   if (isDarkModeEnabled) {
@@ -153,6 +146,10 @@ export function getSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
     const splash = config.ios?.splash;
     const image = splash.image ?? null;
     if (!image) {
+      // If the user defined other properties but failed to define an image, warn.
+      if (Object.keys(splash).length) {
+        warnSplashMissingImage();
+      }
       // currently we don't support using a splash screen object if it doesn't have an image defined.
       return null;
     }
@@ -173,6 +170,10 @@ export function getSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
     const splash = config.splash;
     const image = splash.image ?? null;
     if (!image) {
+      // If the user defined other properties but failed to define an image, warn.
+      if (Object.keys(splash).length) {
+        warnSplashMissingImage();
+      }
       return null;
     }
 
@@ -188,6 +189,10 @@ export function getSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
   }
 
   return null;
+}
+
+function warnSplashMissingImage() {
+  addWarningIOS('splash-config', 'splash config object is missing an image property');
 }
 
 export function warnUnsupportedSplashProperties(config: ExpoConfig) {
@@ -413,34 +418,28 @@ function updatePbxProject({
  * Creates [STORYBOARD] file containing ui description of Splash/Launch Screen.
  * > WARNING: modifies `pbxproj`
  */
-export async function setSplashStoryboardAsync(
-  {
-    projectPath,
-    projectName,
-    project,
-  }: { projectPath: string; projectName: string; project: XcodeProject },
-  config: Pick<IOSSplashConfig, 'image' | 'resizeMode'>
-): Promise<XcodeProject> {
-  const resizeMode = config.resizeMode;
-  const splashScreenImagePresent = Boolean(config.image);
+export function getSplashStoryboardContents(
+  config?: Partial<Pick<IOSSplashConfig, 'image' | 'resizeMode'>>
+): string {
+  const resizeMode = config?.resizeMode;
+  const splashScreenImagePresent = Boolean(config?.image);
 
-  let contentMode: string;
-  switch (resizeMode) {
-    case 'contain':
-      contentMode = 'scaleAspectFit';
-      break;
-    case 'cover':
-      contentMode = 'scaleAspectFill';
-      break;
-    default:
-      throw new Error(`{ resizeMode: "${resizeMode}" } is not supported for iOS platform.`);
+  let contentMode: string = '';
+  // Only get the resize mode when the image is present.
+  if (splashScreenImagePresent) {
+    switch (resizeMode) {
+      case 'contain':
+        contentMode = 'scaleAspectFit';
+        break;
+      case 'cover':
+        contentMode = 'scaleAspectFill';
+        break;
+      default:
+        throw new Error(`{ resizeMode: "${resizeMode}" } is not supported for iOS platform.`);
+    }
   }
 
-  const filePath = path.resolve(projectPath, STORYBOARD_FILE_PATH);
-  await fs.ensureDir(projectPath);
-  await fs.writeFile(
-    filePath,
-    `<?xml version="1.0" encoding="UTF-8"?>
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <document
   type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB"
   version="3.0"
@@ -544,8 +543,22 @@ export async function setSplashStoryboardAsync(
     <image name="SplashScreenBackground" width="1" height="1"/>
   </resources>
 </document>
-`
-  );
+`;
+}
+
+export async function setSplashStoryboardAsync(
+  {
+    projectPath,
+    projectName,
+    project,
+  }: { projectPath: string; projectName: string; project: XcodeProject },
+  config?: Partial<Pick<IOSSplashConfig, 'image' | 'resizeMode'>>
+): Promise<XcodeProject> {
+  const contents = getSplashStoryboardContents(config);
+
+  const filePath = path.resolve(projectPath, STORYBOARD_FILE_PATH);
+  await fs.ensureDir(projectPath);
+  await fs.writeFile(filePath, contents);
 
   await updatePbxProject({ projectName, project });
   return project;
