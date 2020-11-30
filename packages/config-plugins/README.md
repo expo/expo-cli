@@ -51,7 +51,7 @@ export default withMySDK(config, { apiKey: 'X-XXX-XXX' });
 
 #### Chaining Plugins
 
-Once you add a few plugins, your `app.plugin.js` code can become difficult to read and manipulate. To combat this, `@expo/config-plugins` provides a `withPlugins` function which can be used to chain plugins together and execute them in order.
+Once you add a few plugins, your `app.config.js` code can become difficult to read and manipulate. To combat this, `@expo/config-plugins` provides a `withPlugins` function which can be used to chain plugins together and execute them in order.
 
 ```js
 /// Create a config
