@@ -27,6 +27,12 @@ export async function evalModsAsync(
   projectRoot: string
 ): Promise<ExportedConfig> {
   for (const [platformName, platform] of Object.entries(config.mods ?? ({} as ModConfig))) {
+    // Skip iOS on windows
+    // TODO: Support iOS eject on Windows.
+    if (platformName === 'ios' && process.platform === 'win32') {
+      continue;
+    }
+
     const entries = Object.entries(platform);
     if (entries.length) {
       const dangerousIndex = entries.findIndex(([modName]) => modName === 'dangerous');

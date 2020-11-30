@@ -94,14 +94,7 @@ export async function ejectAsync(
     await installNodeDependenciesAsync(projectRoot, packageManager, { clean: !isSyncing });
   }
 
-  // Apply Expo config to native projects
-  if (platforms.includes('ios')) {
-    await configureIOSStepAsync(projectRoot);
-  }
-
-  if (platforms.includes('android')) {
-    await configureAndroidStepAsync(projectRoot);
-  }
+  await syncConfigStepAsync(projectRoot);
 
   // Install CocoaPods
   let podsInstalled: boolean = false;
@@ -240,17 +233,18 @@ async function installNodeDependenciesAsync(
   }
 }
 
-async function configureAndroidStepAsync(projectRoot: string) {
-  const applyingAndroidConfigStep = CreateApp.logNewSection('Android config syncing');
+async function syncConfigStepAsync(projectRoot: string) {
+  const applyingConfigStep = CreateApp.logNewSection('Config syncing');
   await configureAndroidProjectAsync(projectRoot);
-  if (WarningAggregator.hasWarningsAndroid()) {
-    applyingAndroidConfigStep.stopAndPersist({
+  if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
+    applyingConfigStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: chalk.red('Android config synced with warnings that should be fixed:'),
+      text: chalk.red('Config synced with warnings that should be fixed:'),
     });
     logConfigWarningsAndroid();
+    logConfigWarningsIOS();
   } else {
-    applyingAndroidConfigStep.succeed('Android config synced');
+    applyingConfigStep.succeed('Config synced');
   }
 }
 

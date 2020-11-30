@@ -1,6 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
 
-import { createRunOncePlugin } from '../plugins/core-plugins';
 import { createInfoPlistPlugin } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import { appendScheme } from './Scheme';
@@ -17,9 +16,7 @@ type ExpoConfigFacebook = Pick<
 
 const fbSchemes = ['fbapi', 'fb-messenger-api', 'fbauth2', 'fbshareextension'];
 
-const withUnversionedFacebookIOS = createInfoPlistPlugin(setFacebookConfig, 'withFacebook');
-
-export const withFacebook = createRunOncePlugin(withUnversionedFacebookIOS, 'expo-facebook-ios');
+export const withFacebook = createInfoPlistPlugin(setFacebookConfig, 'withFacebook');
 
 /**
  * Getters

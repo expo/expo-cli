@@ -5,6 +5,9 @@ import { ConfigPlugin } from '../Plugin.types';
 import * as AndroidConfig from '../android';
 import * as IOSConfig from '../ios';
 import { withPlugins } from './core-plugins';
+import withBranch from './unversioned/expo-branch';
+import withFacebook from './unversioned/expo-facebook';
+import withSplashScreen from './unversioned/expo-splash-screen';
 
 /**
  * Config plugin to apply all of the custom Expo iOS config plugins we support by default.
@@ -20,8 +23,6 @@ export const withExpoIOSPlugins: ConfigPlugin<{
 
   return withPlugins(config, [
     [IOSConfig.BundleIdenitifer.withBundleIdentifier, { bundleIdentifier }],
-    IOSConfig.Branch.withBranch,
-    IOSConfig.Facebook.withFacebook,
     IOSConfig.Google.withGoogle,
     IOSConfig.Name.withDisplayName,
     // IOSConfig.Name.withName,
@@ -45,7 +46,6 @@ export const withExpoIOSPlugins: ConfigPlugin<{
     IOSConfig.Locales.withLocales,
     // Dangerous
     IOSConfig.Icons.withIcons,
-    IOSConfig.SplashScreen.withSplashScreen,
   ]);
 };
 
@@ -79,8 +79,6 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.Scheme.withScheme,
     AndroidConfig.Orientation.withOrientation,
     AndroidConfig.Permissions.withPermissions,
-    AndroidConfig.Branch.withBranch,
-    AndroidConfig.Facebook.withFacebookManifest,
 
     AndroidConfig.UserInterfaceStyle.withUiModeManifest,
     AndroidConfig.GoogleMobileAds.withGoogleMobileAdsConfig,
@@ -93,7 +91,6 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
 
     // strings.xml
     AndroidConfig.Name.withName,
-    AndroidConfig.Facebook.withFacebookAppIdString,
 
     // Dangerous -- these plugins run in reverse order.
     AndroidConfig.GoogleServices.withGoogleServicesFile,
@@ -108,6 +105,9 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     // If we renamed the package, we should also move it around and rename it in source files
     // Added last to ensure this plugin runs first. Out of tree solutions will mistakenly resolve the package incorrectly otherwise.
     AndroidConfig.Package.withPackageRefactor,
-    AndroidConfig.SplashScreen.withSplashScreen,
   ]);
+};
+
+export const withThirdPartyPlugins: ConfigPlugin = config => {
+  return withPlugins(config, [withBranch, withFacebook, withSplashScreen]);
 };
