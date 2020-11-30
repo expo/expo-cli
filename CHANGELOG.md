@@ -12,6 +12,36 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Mon, 30 Nov 2020 15:41:46 -0800](https://github.com/expo/expo-cli/commit/d68bfc944016efa0c553109ffca3d3222b1a92ac)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [config-plugins] Add withInternal plugin ([#2975](https://github.com/expo/expo-cli/issues/2975))
+- [config-plugins] Created withRunOnce ([#2965](https://github.com/expo/expo-cli/issues/2965))
+- [config-plugins] fix isPlistVersionConfigurationSynced condition ([#2974](https://github.com/expo/expo-cli/issues/2974))
+
+### 🐛 Bug fixes
+
+- [xdl][cli] Fix beta integration of init ([#2978](https://github.com/expo/expo-cli/issues/2978))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.5
+- @expo/config@3.3.18
+- @expo/dev-server@0.1.43
+- @expo/dev-tools@0.13.64
+- @expo/electron-adapter@0.0.35
+- expo-cli@4.0.5
+- expo-optimize@0.1.66
+- @expo/metro-config@0.1.43
+- @expo/next-adapter@2.1.49
+- expo-pwa@0.0.54
+- uri-scheme@1.0.51
+- @expo/webpack-config@0.12.48
+- @expo/xdl@59.0.4
+
 ## [Sat, 28 Nov 2020 12:49:14 -0800](https://github.com/expo/expo-cli/commit/57ddd2cadfc85b663df7dbb23dc442b9d5803b7c)
 
 ### 🎉 New features
