@@ -6,7 +6,6 @@ import { Exp, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import fs from 'fs-extra';
-import getenv from 'getenv';
 import padEnd from 'lodash/padEnd';
 import trimStart from 'lodash/trimStart';
 import npmPackageArg from 'npm-package-arg';
