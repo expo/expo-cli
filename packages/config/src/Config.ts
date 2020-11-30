@@ -1,6 +1,5 @@
 import JsonFile, { JSONObject } from '@expo/json-file';
 import fs from 'fs-extra';
-import { boolish } from 'getenv';
 import { sync as globSync } from 'glob';
 import path from 'path';
 import semver from 'semver';
@@ -26,8 +25,6 @@ import { getDynamicConfig, getStaticConfig } from './getConfig';
 import { withInternal } from './plugins/withInternal';
 
 type SplitConfigs = { expo: ExpoConfig; mods: ModConfig };
-
-const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 /**
  * If a config has an `expo` object then that will be used as the config.
