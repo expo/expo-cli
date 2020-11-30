@@ -211,6 +211,6 @@ export function isPlistVersionConfigurationSynced(
   const currentSdkVersion = expoPlist.EXUpdatesSDKVersion ?? null;
 
   return (
-    currentSdkVersion === expectedSdkVersion || currentRuntimeVersion === expectedRuntimeVersion
+    currentSdkVersion === expectedSdkVersion && currentRuntimeVersion === expectedRuntimeVersion
   );
 }
