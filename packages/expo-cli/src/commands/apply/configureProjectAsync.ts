@@ -10,14 +10,12 @@ import { UserManager } from '@expo/xdl';
 import log from '../../log';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from '../eject/ConfigValidation';
 
-export default async function configureAndroidProjectAsync(projectRoot: string) {
+export default async function configureProjectAsync(projectRoot: string) {
   // Check package before reading the config because it may mutate the config if the user is prompted to define it.
   const packageName = await getOrPromptForPackage(projectRoot);
+  const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
   const expoUsername =
     process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
-
-  // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
-  const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
 
   let { exp: config } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
@@ -30,8 +28,10 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
     expoUsername,
   });
 
+  const skipIOS = process.platform === 'win32';
+
   // Skip ejecting for iOS on Windows
-  if (process.platform !== 'win32') {
+  if (!skipIOS) {
     config = withExpoIOSPlugins(config, {
       bundleIdentifier,
       expoUsername,
@@ -42,7 +42,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   config = withThirdPartyPlugins(config);
 
   // compile all plugins and mods
-  config = await compileModsAsync(config, projectRoot);
+  config = await compileModsAsync(config, projectRoot, skipIOS);
 
   if (log.isDebug) {
     log.debug();

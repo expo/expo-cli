@@ -15,8 +15,7 @@ import terminalLink from 'terminal-link';
 
 import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
-import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
-import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
+import configureProjectAsync from '../apply/configureProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
@@ -184,20 +183,6 @@ export async function ejectAsync(
   }
 }
 
-async function configureIOSStepAsync(projectRoot: string) {
-  const applyingIOSConfigStep = CreateApp.logNewSection('iOS config syncing');
-  await configureIOSProjectAsync(projectRoot);
-  if (WarningAggregator.hasWarningsIOS()) {
-    applyingIOSConfigStep.stopAndPersist({
-      symbol: '⚠️ ',
-      text: chalk.red('iOS config synced with warnings that should be fixed:'),
-    });
-    logConfigWarningsIOS();
-  } else {
-    applyingIOSConfigStep.succeed('iOS config synced');
-  }
-}
-
 /**
  * Wraps PackageManager to install node modules and adds CLI logs.
  *
@@ -235,7 +220,7 @@ async function installNodeDependenciesAsync(
 
 async function syncConfigStepAsync(projectRoot: string) {
   const applyingConfigStep = CreateApp.logNewSection('Config syncing');
-  await configureAndroidProjectAsync(projectRoot);
+  await configureProjectAsync(projectRoot);
   if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
     applyingConfigStep.stopAndPersist({
       symbol: '⚠️ ',

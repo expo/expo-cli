@@ -11,10 +11,11 @@ import { resolveModResults, withBaseMods } from './compiler-plugins';
  */
 export async function compileModsAsync(
   config: ExportedConfig,
-  projectRoot: string
+  projectRoot: string,
+  skipIOS: boolean = false
 ): Promise<ExportedConfig> {
   config = withBaseMods(config);
-  return await evalModsAsync(config, projectRoot);
+  return await evalModsAsync(config, projectRoot, skipIOS);
 }
 
 /**
@@ -24,12 +25,13 @@ export async function compileModsAsync(
  */
 export async function evalModsAsync(
   config: ExportedConfig,
-  projectRoot: string
+  projectRoot: string,
+  skipIOS: boolean = false
 ): Promise<ExportedConfig> {
   for (const [platformName, platform] of Object.entries(config.mods ?? ({} as ModConfig))) {
     // Skip iOS on windows
     // TODO: Support iOS eject on Windows.
-    if (platformName === 'ios' && process.platform === 'win32') {
+    if (platformName === 'ios' && skipIOS) {
       continue;
     }
 
