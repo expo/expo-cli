@@ -181,13 +181,16 @@ async function action(projectDir: string, command: Command) {
     resolvedTemplate = 'blank';
   }
 
-  const { version, data: newestSdkReleaseData } = await Versions.newestReleasedSdkVersionAsync();
+  const {
+    version: newestSdkVersion,
+    data: newestSdkReleaseData,
+  } = await Versions.newestReleasedSdkVersionAsync();
 
   // If the user is opting into a beta then we need to append the template tag explicitly
   // in order to not fall back to the latest tag for templates.
   let versionParam = '';
   if (newestSdkReleaseData?.beta) {
-    const majorVersion = parseInt(version, 10);
+    const majorVersion = parseInt(newestSdkVersion, 10);
     versionParam = `@sdk-${majorVersion}`;
 
     // If the --template flag is provided without an explicit version, then opt-in to
