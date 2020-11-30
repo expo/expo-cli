@@ -156,6 +156,7 @@ export function getSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
       // currently we don't support using a splash screen object if it doesn't have an image defined.
       return null;
     }
+
     return {
       image,
       resizeMode: splash.resizeMode ?? defaultResizeMode,
@@ -174,12 +175,12 @@ export function getSplashConfig(config: ExpoConfig): IOSSplashConfig | null {
     if (!image) {
       return null;
     }
+
     return {
       image,
       resizeMode: splash.resizeMode ?? defaultResizeMode,
       backgroundColor: splash.backgroundColor ?? defaultBackgroundColor,
       userInterfaceStyle: defaultUserInterfaceStyle,
-      // tabletImage: image,
 
       darkImage: splash.darkImage ?? null,
       darkBackgroundColor: splash.darkBackgroundColor ?? '#000000',
