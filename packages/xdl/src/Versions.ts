@@ -87,7 +87,11 @@ export async function setVersionsAsync(value: any) {
 // versions
 export async function releasedSdkVersionsAsync(): Promise<SDKVersions> {
   const sdkVersions = await sdkVersionsAsync();
-  return pickBy(sdkVersions, (data, _sdkVersionString) => !!data.releaseNoteUrl);
+  return pickBy(
+    sdkVersions,
+    (data, _sdkVersionString) =>
+      !!data.releaseNoteUrl || (getenv.boolish('EXPO_BETA', false) && data.beta)
+  );
 }
 
 export function gteSdkVersion(
