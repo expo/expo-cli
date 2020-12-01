@@ -32,7 +32,10 @@ export function getPrimaryColor(config: Pick<ExpoConfig, 'primaryColor'>) {
   return config.primaryColor ?? DEFAULT_PRIMARY_COLOR;
 }
 
-function setPrimaryColorColors(config: ExpoConfig, xml: ResourceXML): ResourceXML {
+export function setPrimaryColorColors(
+  config: Pick<ExpoConfig, 'primaryColor'>,
+  xml: ResourceXML
+): ResourceXML {
   const hexString = getPrimaryColor(config);
   if (!hexString) {
     return removeColorItem(COLOR_PRIMARY_KEY, xml);
@@ -41,7 +44,10 @@ function setPrimaryColorColors(config: ExpoConfig, xml: ResourceXML): ResourceXM
   return setColorItem(item, xml);
 }
 
-function setPrimaryColorStyles(config: ExpoConfig, xml: ResourceXML): ResourceXML {
+export function setPrimaryColorStyles(
+  config: Pick<ExpoConfig, 'primaryColor'>,
+  xml: ResourceXML
+): ResourceXML {
   const hexString = getPrimaryColor(config);
   if (!hexString) {
     return removeStylesItem({

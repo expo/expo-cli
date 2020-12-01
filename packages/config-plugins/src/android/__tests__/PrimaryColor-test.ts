@@ -1,10 +1,4 @@
-import { vol } from 'memfs';
-
-import { getPrimaryColor, setPrimaryColor } from '../PrimaryColor';
-import { readResourcesXMLAsync } from '../Resources';
-import { sampleStylesXML } from './StatusBar-test';
-
-jest.mock('fs');
+import { getPrimaryColor, setPrimaryColorColors, setPrimaryColorStyles } from '../PrimaryColor';
 
 describe('Android primary color', () => {
   it(`returns default if no primary color is provided`, () => {
@@ -16,33 +10,17 @@ describe('Android primary color', () => {
   });
 
   describe('E2E: write primary color to colors.xml and styles.xml correctly', () => {
-    beforeAll(async () => {
-      const directoryJSON = {
-        './android/app/src/main/res/values/styles.xml': sampleStylesXML,
-      };
-      vol.fromJSON(directoryJSON, '/app');
-    });
-
-    afterAll(async () => {
-      vol.reset();
-    });
-
     it(`sets the colorPrimary item in Styles.xml if backgroundColor is given`, async () => {
-      expect(await setPrimaryColor({ primaryColor: '#654321' }, '/app')).toBe(true);
-
-      const stylesJSON = await readResourcesXMLAsync({
-        path: '/app/android/app/src/main/res/values/styles.xml',
-      });
-      const colorsJSON = await readResourcesXMLAsync({
-        path: '/app/android/app/src/main/res/values/colors.xml',
-      });
+      const config = { primaryColor: '#654321' };
+      const colors = setPrimaryColorColors(config, { resources: {} });
+      const styles = setPrimaryColorStyles(config, { resources: {} });
 
       expect(
-        stylesJSON.resources.style
+        styles.resources.style
           .filter(e => e.$.name === 'AppTheme')[0]
           .item.filter(item => item.$.name === 'colorPrimary')[0]._
       ).toMatch('@color/colorPrimary');
-      expect(colorsJSON.resources.color.filter(e => e.$.name === 'colorPrimary')[0]._).toMatch(
+      expect(colors.resources.color.filter(e => e.$.name === 'colorPrimary')[0]._).toMatch(
         '#654321'
       );
     });

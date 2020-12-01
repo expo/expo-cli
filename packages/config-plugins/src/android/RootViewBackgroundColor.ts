@@ -49,7 +49,7 @@ export function getRootViewBackgroundColor(
   return null;
 }
 
-function setRootViewBackgroundColorColors(
+export function setRootViewBackgroundColorColors(
   { hexString }: { hexString: string | null },
   colorsJSON: ResourceXML
 ) {
@@ -60,7 +60,7 @@ function setRootViewBackgroundColorColors(
   return setColorItem(colorItemToAdd, colorsJSON);
 }
 
-function setRootViewBackgroundColorStyles(
+export function setRootViewBackgroundColorStyles(
   { hexString }: { hexString: string | null },
   stylesJSON: ResourceXML
 ) {
