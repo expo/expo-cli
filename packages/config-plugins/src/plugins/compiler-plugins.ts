@@ -13,7 +13,13 @@ import {
 import { Manifest } from '../android';
 import { AndroidManifest } from '../android/Manifest';
 import * as AndroidPaths from '../android/Paths';
-import { readResourcesXMLAsync, ResourceXML } from '../android/Resources';
+import {
+  commitThemedResourcesAsync,
+  readResourcesXMLAsync,
+  readThemedResourcesAsync,
+  ResourceXML,
+  ThemedResources,
+} from '../android/Resources';
 import { getProjectStringsXMLPathAsync } from '../android/Strings';
 import { writeXMLAsync } from '../android/XML';
 import { getEntitlementsPath } from '../ios/Entitlements';
@@ -48,6 +54,8 @@ export function resolveModResults(results: any, platformName: string, modName: s
 
 function applyAndroidBaseMods(config: ExportedConfig): ExportedConfig {
   config = withExpoDangerousBaseMod(config, 'android');
+  config = withAndroidThemedValuesBaseMod(config, { resourceName: 'colors', mod: 'colors' });
+  config = withAndroidThemedValuesBaseMod(config, { resourceName: 'styles', mod: 'styles' });
   config = withAndroidStringsXMLBaseMod(config);
   config = withAndroidManifestBaseMod(config);
   config = withAndroidMainActivityBaseMod(config);
@@ -86,6 +94,55 @@ const withAndroidManifestBaseMod: ConfigPlugin = config => {
         WarningAggregator.addWarningAndroid(
           'android-manifest',
           `AndroidManifest.xml configuration could not be applied. ${error.message}`
+        );
+      }
+      return results;
+    },
+  });
+};
+
+/**
+ * Supply the themed values like `colors.xml` or `styles.xml` files to mods
+ */
+const withAndroidThemedValuesBaseMod: ConfigPlugin<{ resourceName: string; mod: string }> = (
+  config,
+  props
+) => {
+  return withInterceptedMod<ThemedResources>(config, {
+    platform: 'android',
+    mod: props.mod,
+    skipEmptyMod: true,
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<ThemedResources> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        let modResults = await readThemedResourcesAsync({
+          projectRoot: modRequest.projectRoot,
+          resourceName: props.resourceName,
+          resourceType: 'values',
+        });
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await commitThemedResourcesAsync({
+          projectRoot: modRequest.projectRoot,
+          resourceName: props.resourceName,
+          resources: modResults,
+          resourceType: 'values',
+        });
+      } catch (error) {
+        WarningAggregator.addWarningAndroid(
+          `${modRequest.platform}-${modRequest.modName}`,
+          `Themed ${props.resourceName}.xml configurations could not be applied. ${error.message}`
         );
       }
       return results;

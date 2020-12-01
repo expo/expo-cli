@@ -4,7 +4,7 @@ import { XcodeProject } from 'xcode';
 
 import { AndroidManifest } from './android/Manifest';
 import * as AndroidPaths from './android/Paths';
-import { ResourceXML } from './android/Resources';
+import { ResourceXML, ThemedResources } from './android/Resources';
 import { InfoPlist } from './ios/IosConfig.types';
 
 type OptionalPromise<T> = Promise<T> | T;
@@ -71,6 +71,14 @@ export interface ModConfig {
      * Modify the `android/app/src/main/res/values/strings.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
      */
     strings?: Mod<ResourceXML>;
+    /**
+     * Modify the `android/app/src/main/res/values[-theme]/colors.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+     */
+    colors?: Mod<ThemedResources>;
+    /**
+     * Modify the `android/app/src/main/res/values[-theme]/styles.xml` as JSON (parsed with [`xml2js`](https://www.npmjs.com/package/xml2js)).
+     */
+    styles?: Mod<ThemedResources>;
     /**
      * Modify the `android/app/src/main/<package>/MainActivity.java` as a string.
      */

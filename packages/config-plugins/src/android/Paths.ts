@@ -3,7 +3,8 @@ import { sync as globSync } from 'glob';
 import * as path from 'path';
 
 import { assert } from '../utils/errors';
-import { directoryExistsAsync } from '../utils/modules';
+import { directoryExistsAsync, fileExistsAsync } from '../utils/modules';
+import { addWarningAndroid } from '../utils/warnings';
 import { ResourceKind } from './Resources';
 
 export interface ProjectFile<L extends string = string> {
@@ -111,8 +112,68 @@ export async function getResourceXMLPathAsync(
   projectRoot: string,
   { kind = 'values', name }: { kind?: ResourceKind; name: 'colors' | 'strings' | 'styles' | string }
 ): Promise<string> {
-  const projectPath = await getProjectPathOrThrowAsync(projectRoot);
+  const resourcePath = await getResourceFolderAsync(projectRoot);
 
-  const filePath = path.join(projectPath, `app/src/main/res/${kind}/${name}.xml`);
+  const filePath = path.join(resourcePath, `${kind}/${name}.xml`);
   return filePath;
+}
+
+export async function getResourceFolderAsync(projectRoot: string): Promise<string> {
+  const projectPath = await getProjectPathOrThrowAsync(projectRoot);
+  return path.join(projectPath, `app/src/main/res`);
+}
+
+/**
+ * Get themed resource paths in an object `{ main: '/foo/bar/res/values/colors.xml', v23: '...' }`
+ *
+ * @param projectRoot
+ * @param name File name without extension like colors, styles, dimens
+ */
+export async function getThemedResourcePathsAsync(
+  projectRoot: string,
+  resourceType: string,
+  name: string
+): Promise<Record<string, string>> {
+  assert(
+    !resourceType.includes('-'),
+    `Themed resourceType "${resourceType}" cannot include a hyphen`
+  );
+  const resPath = await getResourceFolderAsync(projectRoot);
+
+  const resourcePaths = globSync(`**/${name}.xml`, {
+    cwd: resPath,
+    absolute: true,
+  });
+
+  // Like { main: '/foo/bar/res/values/colors.xml', v23: '...' }
+  const themedResources: Record<string, string> = {};
+  for (const filePath of resourcePaths) {
+    let resourceThemeName = path.basename(path.dirname(filePath));
+
+    if (resourceThemeName.includes(resourceType) && (await fileExistsAsync(filePath))) {
+      console.log('PATHS: ', resourceThemeName, `**/${name}.xml`, resPath);
+      if (resourceThemeName === `${resourceType}-main`) {
+        // folder like values-main or drawables-main cannot be used due to the naming system.
+        // Ignore it and warn.
+        addWarningAndroid(
+          'resource-path',
+          `Resource folder "${resourceThemeName}" (${filePath}) is reserved and cannot be modified by config plugins.`
+        );
+        continue;
+      } else if (resourceThemeName === resourceType) {
+        resourceThemeName = 'main';
+      } else {
+        // Transform values-night to `night`, and keep `values` unchanged.
+        resourceThemeName = resourceThemeName.split('-').pop() ?? resourceThemeName;
+      }
+      themedResources[resourceThemeName] = filePath;
+    }
+  }
+
+  assert(
+    themedResources.main,
+    `Project resource default "app/src/main/res/${resourceType}/${name}.xml" does not exist in android project for root "${projectRoot}"`
+  );
+
+  return themedResources;
 }
