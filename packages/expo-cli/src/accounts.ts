@@ -82,7 +82,14 @@ export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
 }
 
 export async function login(options: CommandOptions): Promise<User> {
-  const user = await UserManager.getCurrentUserOnlyAsync();
+  const user = await UserManager.getCurrentUserAsync();
+  if (user?.accessToken) {
+    throw new CommandError(
+      'ACCESS_TOKEN_ERROR',
+      'Please remove the EXPO_TOKEN environment var to login with a different user.'
+    );
+  }
+
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!nonInteractive) {
     if (user) {
@@ -91,14 +98,8 @@ export async function login(options: CommandOptions): Promise<User> {
       });
       if (!action) {
         // If user chooses to stay logged in, return
-        return user;
+        return user as User;
       }
-    }
-    if (user?.accessToken) {
-      throw new CommandError(
-        'ACCESS_TOKEN_ERROR',
-        'Please remove the EXPO_TOKEN environment var to login with a different user.'
-      );
     }
     return _usernamePasswordAuth(options.username, options.password, options.otp);
   } else if (options.username && options.password) {
@@ -327,6 +328,14 @@ async function _usernamePasswordAuth(
 }
 
 export async function register(): Promise<User> {
+  const user = await UserManager.getCurrentUserAsync();
+  if (user?.accessToken) {
+    throw new CommandError(
+      'ACCESS_TOKEN_ERROR',
+      'Please remove the EXPO_TOKEN environment var to register as a new user.'
+    );
+  }
+
   log(
     `
 We need an email, username, and password to create an account for you.

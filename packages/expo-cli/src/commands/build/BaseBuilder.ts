@@ -6,6 +6,7 @@ import ora from 'ora';
 import semver from 'semver';
 
 import log from '../../log';
+import { getProjectOwner } from '../../projects';
 import { action as publishAction } from '../publish';
 import * as UrlUtils from '../utils/url';
 import { BuilderOptions } from './BaseBuilder.types';
@@ -67,8 +68,13 @@ export default class BaseBuilder {
 
   async prepareProjectInfo(): Promise<void> {
     await this.checkProjectConfig();
-    // TODO: Move this since it can add delay
-    await this.getUserAsync();
+    // note: this validates if a robot user is used without "owner" in the manifest
+    // without this check, build/status returns "robots not allowed".
+    getProjectOwner(
+      // TODO: Move this since it can add delay
+      await this.getUserAsync(),
+      this.projectConfig.exp
+    );
   }
 
   async checkProjectConfig(): Promise<void> {

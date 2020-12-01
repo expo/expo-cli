@@ -5,6 +5,14 @@ import CommandError from '../CommandError';
 import log from '../log';
 
 async function action() {
+  const user = await UserManager.getCurrentUserAsync();
+  if (user?.accessToken) {
+    throw new CommandError(
+      'ACCESS_TOKEN_ERROR',
+      'Please remove the EXPO_TOKEN environment var to logout.'
+    );
+  }
+
   try {
     await UserManager.logoutAsync();
     log('Logged out');
