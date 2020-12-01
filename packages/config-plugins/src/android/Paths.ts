@@ -151,7 +151,6 @@ export async function getThemedResourcePathsAsync(
     let resourceThemeName = path.basename(path.dirname(filePath));
 
     if (resourceThemeName.includes(resourceType) && (await fileExistsAsync(filePath))) {
-      console.log('PATHS: ', resourceThemeName, `**/${name}.xml`, resPath);
       if (resourceThemeName === `${resourceType}-main`) {
         // folder like values-main or drawables-main cannot be used due to the naming system.
         // Ignore it and warn.

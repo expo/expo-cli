@@ -4,6 +4,7 @@ import {
   getMainActivityAsync,
   getProjectBuildGradleAsync,
   getResourceXMLPathAsync,
+  getThemedResourcePathsAsync,
 } from '../Paths';
 
 jest.mock('fs');
@@ -106,8 +107,60 @@ describe(getResourceXMLPathAsync, () => {
   });
 
   it(`throws when the android folder is missing`, async () => {
-    expect(getResourceXMLPathAsync('/managed', { name: 'somn' })).rejects.toThrow(
+    await expect(getResourceXMLPathAsync('/managed', { name: 'somn' })).rejects.toThrow(
       /Android project folder is missing in project/
+    );
+  });
+});
+
+describe(getThemedResourcePathsAsync, () => {
+  beforeAll(async () => {
+    vol.fromJSON(
+      {
+        './android/app/src/main/res/values/colors.xml': '<resources></resources>',
+        // Dark mode
+        './android/app/src/main/res/values-night/colors.xml': '<resources></resources>',
+        // Reserved name
+        './android/app/src/main/res/values-main/colors.xml': '<resources></resources>',
+      },
+      '/app'
+    );
+    vol.fromJSON(
+      {
+        './android/app/src/main/res/values/colors.xml': '<resources></resources>',
+      },
+      '/app-missing-drawables'
+    );
+    vol.fromJSON(
+      {
+        // no files -- specifically no android folder
+      },
+      '/managed'
+    );
+  });
+  afterAll(async () => {
+    vol.reset();
+  });
+
+  it(`gets a resource set that skips reserved`, async () => {
+    const paths = await getThemedResourcePathsAsync('/app', 'values', 'colors');
+    expect(paths).toStrictEqual({
+      main: '/app/android/app/src/main/res/values/colors.xml',
+      night: '/app/android/app/src/main/res/values-night/colors.xml',
+    });
+  });
+
+  it(`throws when the android folder is missing`, async () => {
+    await expect(
+      getThemedResourcePathsAsync('/managed', 'drawable', 'splashscreen')
+    ).rejects.toThrow(/Android project folder is missing in project/);
+  });
+
+  it(`throws when the main drawable is missing`, async () => {
+    await expect(
+      getThemedResourcePathsAsync('/app-missing-drawables', 'drawable', 'splashscreen')
+    ).rejects.toThrow(
+      `Project resource default "app/src/main/res/drawable/splashscreen.xml" does not exist in android project for root "/app-missing-drawables`
     );
   });
 });

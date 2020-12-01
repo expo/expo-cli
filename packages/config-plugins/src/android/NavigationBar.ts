@@ -25,16 +25,15 @@ export const withNavigationBar: ConfigPlugin = config => {
   return config;
 };
 
-export const withNavigationBarColors: ConfigPlugin = config => {
+const withNavigationBarColors: ConfigPlugin = config => {
   return withColorsXml(config, async config => {
     config.modResults.main = setNavigationBarColor(config, config.modResults.main);
     return config;
   });
 };
 
-export const withNavigationBarStyles: ConfigPlugin = config => {
+const withNavigationBarStyles: ConfigPlugin = config => {
   return withStylesXml(config, async config => {
-    console.log('MOD: ', JSON.stringify(config.modResults, null, 2));
     config.modResults.main = setNavigationBarStyles(config, config.modResults.main);
     return config;
   });
