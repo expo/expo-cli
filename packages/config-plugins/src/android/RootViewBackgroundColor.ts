@@ -1,23 +1,39 @@
 import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withDangerousMod } from '../plugins/core-plugins';
-import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
-import { buildResourceItem, readResourcesXMLAsync } from './Resources';
-import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
-import { writeXMLAsync } from './XML';
+import { withColorsXml, withStylesXml } from '../plugins/android-plugins';
+import { removeColorItem, setColorItem } from './Colors';
+import { buildResourceItem, ResourceXML } from './Resources';
+import { removeStylesItem, setStylesItem } from './Styles';
 
 const ANDROID_WINDOW_BACKGROUND = 'android:windowBackground';
 const WINDOW_BACKGROUND_COLOR = 'activityBackground';
 
 export const withRootViewBackgroundColor: ConfigPlugin = config => {
-  return withDangerousMod(config, [
-    'android',
-    async config => {
-      await setRootViewBackgroundColor(config, config.modRequest.projectRoot);
-      return config;
-    },
-  ]);
+  const hexString = getRootViewBackgroundColor(config);
+  config = withRootViewBackgroundColorColors(config, { hexString });
+  config = withRootViewBackgroundColorStyles(config, { hexString });
+  return config;
+};
+
+const withRootViewBackgroundColorColors: ConfigPlugin<{ hexString: string | null }> = (
+  config,
+  props
+) => {
+  return withColorsXml(config, async config => {
+    config.modResults.main = setRootViewBackgroundColorColors(props, config.modResults.main);
+    return config;
+  });
+};
+
+const withRootViewBackgroundColorStyles: ConfigPlugin<{ hexString: string | null }> = (
+  config,
+  props
+) => {
+  return withStylesXml(config, async config => {
+    config.modResults.main = setRootViewBackgroundColorStyles(props, config.modResults.main);
+    return config;
+  });
 };
 
 export function getRootViewBackgroundColor(
@@ -33,43 +49,35 @@ export function getRootViewBackgroundColor(
   return null;
 }
 
-export async function setRootViewBackgroundColor(
-  config: Pick<ExpoConfig, 'android' | 'backgroundColor'>,
-  projectRoot: string
+function setRootViewBackgroundColorColors(
+  { hexString }: { hexString: string | null },
+  colorsJSON: ResourceXML
 ) {
-  const hexString = getRootViewBackgroundColor(config);
   if (!hexString) {
-    return false;
+    return removeColorItem(WINDOW_BACKGROUND_COLOR, colorsJSON);
   }
-
-  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
-
-  let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
-  let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });
-
   const colorItemToAdd = buildResourceItem({ name: WINDOW_BACKGROUND_COLOR, value: hexString });
+  return setColorItem(colorItemToAdd, colorsJSON);
+}
+
+function setRootViewBackgroundColorStyles(
+  { hexString }: { hexString: string | null },
+  stylesJSON: ResourceXML
+) {
+  if (!hexString) {
+    return removeStylesItem({
+      item: ANDROID_WINDOW_BACKGROUND,
+      xml: stylesJSON,
+      parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
+    });
+  }
   const styleItemToAdd = buildResourceItem({
     name: ANDROID_WINDOW_BACKGROUND,
     value: `@color/${WINDOW_BACKGROUND_COLOR}`,
   });
-
-  colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
-  stylesJSON = setStylesItem({
+  return setStylesItem({
     item: styleItemToAdd,
     xml: stylesJSON,
     parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
   });
-
-  try {
-    await Promise.all([
-      writeXMLAsync({ path: colorsPath, xml: colorsJSON }),
-      writeXMLAsync({ path: stylesPath, xml: stylesJSON }),
-    ]);
-  } catch (e) {
-    throw new Error(
-      `Error setting Android root view background color. Cannot write new styles.xml to ${stylesPath}.`
-    );
-  }
-  return true;
 }

@@ -1,7 +1,10 @@
 import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { withColorsXml, withStylesXml } from '../plugins/android-plugins';
+import {
+  createDefaultColorsXmlPlugin,
+  createDefaultStylesXmlPlugin,
+} from '../plugins/android-plugins';
 import * as WarningAggregator from '../utils/warnings';
 import { setColorItem } from './Colors';
 import { buildResourceItem, ResourceXML } from './Resources';
@@ -25,19 +28,15 @@ export const withNavigationBar: ConfigPlugin = config => {
   return config;
 };
 
-const withNavigationBarColors: ConfigPlugin = config => {
-  return withColorsXml(config, async config => {
-    config.modResults.main = setNavigationBarColor(config, config.modResults.main);
-    return config;
-  });
-};
+const withNavigationBarColors = createDefaultColorsXmlPlugin(
+  setNavigationBarColor,
+  'withNavigationBarColors'
+);
 
-const withNavigationBarStyles: ConfigPlugin = config => {
-  return withStylesXml(config, async config => {
-    config.modResults.main = setNavigationBarStyles(config, config.modResults.main);
-    return config;
-  });
-};
+const withNavigationBarStyles = createDefaultStylesXmlPlugin(
+  setNavigationBarStyles,
+  'withNavigationBarStyles'
+);
 
 export function getNavigationBarImmersiveMode(config: Pick<ExpoConfig, 'androidNavigationBar'>) {
   return config.androidNavigationBar?.visible || null;

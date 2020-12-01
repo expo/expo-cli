@@ -95,14 +95,14 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.Name.withName,
     AndroidConfig.Facebook.withFacebookAppIdString,
 
-    // Dangerous -- these plugins run in reverse order.
-    AndroidConfig.GoogleServices.withGoogleServicesFile,
-
     // Modify colors.xml and styles.xml
-    AndroidConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
     AndroidConfig.NavigationBar.withNavigationBar,
+    AndroidConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
     AndroidConfig.StatusBar.withStatusBar,
     AndroidConfig.PrimaryColor.withPrimaryColor,
+
+    // Dangerous -- these plugins run in reverse order.
+    AndroidConfig.GoogleServices.withGoogleServicesFile,
 
     AndroidConfig.Icon.withIcons,
     // If we renamed the package, we should also move it around and rename it in source files

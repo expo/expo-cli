@@ -69,3 +69,23 @@ export function setStylesItem({
   }
   return xml;
 }
+
+export function removeStylesItem({
+  item,
+  xml,
+  parent,
+}: {
+  item: string;
+  xml: ResourceXML;
+  parent: { name: string; parent: string };
+}): ResourceXML {
+  xml = ensureDefaultStyleResourceXML(xml);
+  const appTheme = getStyleParent(xml, parent);
+  if (appTheme?.item) {
+    const index = appTheme.item.findIndex((e: ResourceItemXML) => e.$.name === item);
+    if (index > -1) {
+      appTheme.item.splice(index, 1);
+    }
+  }
+  return xml;
+}

@@ -49,6 +49,40 @@ export function createStringsXmlPlugin(
   return withUnknown;
 }
 
+export function createDefaultColorsXmlPlugin(
+  action: MutateDataAction<ResourceXML>,
+  name: string
+): ConfigPlugin {
+  const withUnknown: ConfigPlugin = config =>
+    withColorsXml(config, async config => {
+      config.modResults.main = await action(config, config.modResults.main);
+      return config;
+    });
+  if (name) {
+    Object.defineProperty(withUnknown, 'name', {
+      value: name,
+    });
+  }
+  return withUnknown;
+}
+
+export function createDefaultStylesXmlPlugin(
+  action: MutateDataAction<ResourceXML>,
+  name: string
+): ConfigPlugin {
+  const withUnknown: ConfigPlugin = config =>
+    withStylesXml(config, async config => {
+      config.modResults.main = await action(config, config.modResults.main);
+      return config;
+    });
+  if (name) {
+    Object.defineProperty(withUnknown, 'name', {
+      value: name,
+    });
+  }
+  return withUnknown;
+}
+
 /**
  * Provides the AndroidManifest.xml for modification.
  *
