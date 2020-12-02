@@ -29,7 +29,14 @@ export type ExpoWorkflow = 'managed' | 'bare';
 
 export type TargetSDKVersion = Pick<
   Versions.SDKVersion,
-  'expoReactNativeTag' | 'facebookReactVersion' | 'facebookReactNativeVersion' | 'relatedPackages'
+  | 'expoReactNativeTag'
+  | 'facebookReactVersion'
+  | 'facebookReactNativeVersion'
+  | 'relatedPackages'
+  | 'iosClientVersion'
+  | 'iosClientUrl'
+  | 'androidClientVersion'
+  | 'androidClientUrl'
 >;
 
 function logNewSection(title: string) {
@@ -330,15 +337,20 @@ async function shouldUpgradeSimulatorAsync(): Promise<boolean> {
   return answer;
 }
 
-async function maybeUpgradeSimulatorAsync() {
+async function maybeUpgradeSimulatorAsync(sdkVersion: TargetSDKVersion) {
   // Check if we can, and probably should, upgrade the (ios) simulator
   if (await shouldUpgradeSimulatorAsync()) {
-    const result = await Simulator.upgradeExpoAsync();
+    const result = await Simulator.upgradeExpoAsync({
+      url: sdkVersion.iosClientUrl,
+      version: sdkVersion.iosClientVersion,
+    });
     if (!result) {
       log.error(
         "The upgrade of your simulator didn't go as planned. You might have to reinstall it manually with expo client:install:ios."
       );
     }
+
+    log.newLine();
   }
 }
 
@@ -364,10 +376,13 @@ async function shouldUpgradeEmulatorAsync(): Promise<boolean> {
   return answer;
 }
 
-async function maybeUpgradeEmulatorAsync() {
+async function maybeUpgradeEmulatorAsync(sdkVersion: TargetSDKVersion) {
   // Check if we can, and probably should, upgrade the android client
   if (await shouldUpgradeEmulatorAsync()) {
-    const result = await Android.upgradeExpoAsync();
+    const result = await Android.upgradeExpoAsync({
+      url: sdkVersion.androidClientUrl,
+      version: sdkVersion.androidClientVersion,
+    });
     if (!result) {
       log.error(
         "The upgrade of your Android client didn't go as planned. You might have to reinstall it manually with expo client:install:android."
@@ -456,16 +471,6 @@ export async function upgradeAsync(
       targetSdkVersionString = selectedSdkVersionString;
       log.newLine();
     }
-
-    // Check if we can, and probably should, upgrade the (ios) simulator
-    if (platforms.includes('ios')) {
-      await maybeUpgradeSimulatorAsync();
-    }
-
-    // Check if we can, and probably should, upgrade the android client
-    if (platforms.includes('android')) {
-      await maybeUpgradeEmulatorAsync();
-    }
   } else if (!targetSdkVersion) {
     // This is useful when testing the beta internally, before actually
     // releasing it as a public beta. At this point, we won't have "beta" set on
@@ -494,6 +499,16 @@ export async function upgradeAsync(
           `Valid SDK versions are in the range of ${minSdkVersion}.0.0 to ${maxSdkVersion}.0.0.`
       );
     }
+  }
+
+  // Check if we can, and probably should, upgrade the (ios) simulator
+  if (platforms.includes('ios') && targetSdkVersion.iosClientUrl) {
+    await maybeUpgradeSimulatorAsync(targetSdkVersion);
+  }
+
+  // Check if we can, and probably should, upgrade the android client
+  if (platforms.includes('android') && targetSdkVersion.androidClientUrl) {
+    await maybeUpgradeEmulatorAsync(targetSdkVersion);
   }
 
   const packageManager = PackageManager.createForProject(projectRoot, {
