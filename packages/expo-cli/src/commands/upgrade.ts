@@ -37,6 +37,7 @@ export type TargetSDKVersion = Pick<
   | 'iosClientUrl'
   | 'androidClientVersion'
   | 'androidClientUrl'
+  | 'beta'
 >;
 
 function logNewSection(title: string) {
@@ -128,7 +129,11 @@ export function getDependenciesFromBundledNativeModules({
   // If sdkVersion is known and jest-expo is used, then upgrade to the current sdk version
   // jest-expo is versioned with expo because jest-expo mocks out the native SDKs used it expo.
   if (sdkVersion && projectDependencies['jest-expo']) {
-    result['jest-expo'] = `^${sdkVersion}`;
+    let jestExpoVersion = `^${sdkVersion}`;
+    if (targetSdkVersion?.beta) {
+      jestExpoVersion = `${jestExpoVersion}-beta`;
+    }
+    result['jest-expo'] = jestExpoVersion;
   }
 
   if (!targetSdkVersion) {
