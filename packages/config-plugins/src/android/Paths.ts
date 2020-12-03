@@ -145,12 +145,16 @@ export async function getThemedResourcePathsAsync(
     absolute: true,
   });
 
+  // Ensure the main path is always added
+  const mainPath = path.join(resPath, resourceType, `${name}.xml`);
+  resourcePaths.push(mainPath);
+
   // Like { main: '/foo/bar/res/values/colors.xml', v23: '...' }
   const themedResources: Record<string, string> = {};
   for (const filePath of resourcePaths) {
     let resourceThemeName = path.basename(path.dirname(filePath));
 
-    if (resourceThemeName.includes(resourceType) && (await fileExistsAsync(filePath))) {
+    if (resourceThemeName.includes(resourceType)) {
       if (resourceThemeName === `${resourceType}-main`) {
         // folder like values-main or drawables-main cannot be used due to the naming system.
         // Ignore it and warn.

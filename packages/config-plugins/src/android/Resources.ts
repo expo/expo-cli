@@ -107,7 +107,8 @@ export async function commitThemedResourcesAsync({
 
   for (const [name, contents] of Object.entries(resources)) {
     let filename = resourceType;
-    if (name !== 'main' && name !== resourceType) {
+    const isDefault = name === 'main';
+    if (!isDefault && name !== resourceType) {
       filename += `-${name}`;
     }
 
@@ -115,7 +116,8 @@ export async function commitThemedResourcesAsync({
 
     if (contents) {
       await writeXMLAsync({ path: filePath, xml: contents });
-    } else {
+    } else if (!isDefault) {
+      // Delete nullish entries that aren't the main file.
       await fs.remove(filePath);
     }
   }
