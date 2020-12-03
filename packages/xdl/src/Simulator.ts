@@ -534,9 +534,11 @@ export async function openUrlInSimulatorSafeAsync({
   url,
   udid,
   isDetached = false,
+  sdkVersion,
 }: {
   url: string;
   udid?: string;
+  sdkVersion?: string;
   isDetached: boolean;
 }): Promise<{ success: true } | { success: false; msg: string }> {
   if (!(await isSimulatorInstalledAsync())) {
@@ -558,7 +560,7 @@ export async function openUrlInSimulatorSafeAsync({
 
   try {
     if (!isDetached) {
-      await ensureExpoClientInstalledAsync(simulator);
+      await ensureExpoClientInstalledAsync(simulator, sdkVersion);
       _lastUrl = url;
     }
 
@@ -602,7 +604,10 @@ export async function openUrlInSimulatorSafeAsync({
 // This can prevent annoying interactions when they don't want to upgrade for whatever reason.
 const hasPromptedToUpgrade: Record<string, boolean> = {};
 
-async function ensureExpoClientInstalledAsync(simulator: Pick<SimControl.Device, 'udid' | 'name'>) {
+async function ensureExpoClientInstalledAsync(
+  simulator: Pick<SimControl.Device, 'udid' | 'name'>,
+  sdkVersion?: string
+) {
   let isInstalled = await isExpoClientInstalledOnSimulatorAsync(simulator);
 
   if (isInstalled) {
@@ -626,9 +631,22 @@ async function ensureExpoClientInstalledAsync(simulator: Pick<SimControl.Device,
   }
   // If it's still "not installed" then install it (again).
   if (!isInstalled) {
-    await installExpoOnSimulatorAsync({ simulator });
+    const iosClient = await getClientForSDK(sdkVersion);
+    await installExpoOnSimulatorAsync({ simulator, ...iosClient });
     await waitForExpoClientInstalledOnSimulatorAsync(simulator);
   }
+}
+
+async function getClientForSDK(sdkVersionString?: string) {
+  if (!sdkVersionString) {
+    return null;
+  }
+
+  const sdkVersion = (await Versions.sdkVersionsAsync())[sdkVersionString];
+  return {
+    url: sdkVersion.iosClientUrl,
+    version: sdkVersion.iosClientVersion,
+  };
 }
 
 export async function openProjectAsync({
@@ -660,6 +678,7 @@ export async function openProjectAsync({
   const result = await openUrlInSimulatorSafeAsync({
     udid: device.udid,
     url: projectUrl,
+    sdkVersion: exp.sdkVersion,
     isDetached: !!exp.isDetached,
   });
 
