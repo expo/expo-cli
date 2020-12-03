@@ -55,5 +55,7 @@ export default function (program: Command) {
     .option('--force', 'Skip legacy eject warnings.') // TODO: remove the force flag when SDK 36 is no longer supported: after SDK 40 is released.
     .option('--no-install', 'Skip installing npm packages and CocoaPods.')
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
+    .option('--no-ios', 'Skip iOS syncing')
+    .option('--no-android', 'Skip Android syncing')
     .asyncActionProjectDir(actionAsync);
 }

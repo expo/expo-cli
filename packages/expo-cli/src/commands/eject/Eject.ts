@@ -33,6 +33,8 @@ export type EjectAsyncOptions = {
   force?: boolean;
   install?: boolean;
   packageManager?: 'npm' | 'yarn';
+  ios?: boolean;
+  android?: boolean;
 };
 
 /**
@@ -49,26 +51,32 @@ export async function ejectAsync(
   projectRoot: string,
   options: EjectAsyncOptions = {}
 ): Promise<void> {
-  if (await maybeBailOnGitStatusAsync()) return;
+  const platforms: PlatformsArray = [];
 
-  const platforms: PlatformsArray = ['android'];
-
-  // Skip ejecting for iOS on Windows
-  if (process.platform !== 'win32') {
-    platforms.push('ios');
+  if (options.android) {
+    platforms.push('android');
   }
-
-  const { exp, pkg } = await ensureConfigAsync(projectRoot);
-  const tempDir = temporary.directory();
-
-  if (!platforms.includes('ios')) {
+  const isWindows = process.platform === 'win32';
+  // Skip ejecting for iOS on Windows
+  if (isWindows) {
     log.warn(
       `⚠️  Skipping generating the iOS native project files. Run ${chalk.bold(
         'expo eject'
       )} again from macOS or Linux to generate the iOS project.`
     );
     log.newLine();
+  } else if (options.ios) {
+    platforms.push('ios');
   }
+
+  if (!platforms?.length) {
+    throw new CommandError('At least one platform must be enabled when syncing');
+  }
+
+  if (await maybeBailOnGitStatusAsync()) return;
+
+  const { exp, pkg } = await ensureConfigAsync(projectRoot);
+  const tempDir = temporary.directory();
 
   const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync({
     projectRoot,
@@ -96,11 +104,11 @@ export async function ejectAsync(
 
   // Apply Expo config to native projects
   if (platforms.includes('ios')) {
-    await configureIOSStepAsync(projectRoot);
+    await configureIOSStepAsync({ projectRoot, platforms });
   }
 
   if (platforms.includes('android')) {
-    await configureAndroidStepAsync(projectRoot);
+    await configureAndroidStepAsync({ projectRoot, platforms });
   }
 
   // Install CocoaPods
@@ -191,9 +199,9 @@ export async function ejectAsync(
   }
 }
 
-async function configureIOSStepAsync(projectRoot: string) {
+async function configureIOSStepAsync(props: { projectRoot: string; platforms: PlatformsArray }) {
   const applyingIOSConfigStep = CreateApp.logNewSection('iOS config syncing');
-  await configureIOSProjectAsync(projectRoot);
+  await configureIOSProjectAsync(props);
   if (WarningAggregator.hasWarningsIOS()) {
     applyingIOSConfigStep.stopAndPersist({
       symbol: '⚠️ ',
@@ -240,9 +248,12 @@ async function installNodeDependenciesAsync(
   }
 }
 
-async function configureAndroidStepAsync(projectRoot: string) {
+async function configureAndroidStepAsync(props: {
+  projectRoot: string;
+  platforms: PlatformsArray;
+}) {
   const applyingAndroidConfigStep = CreateApp.logNewSection('Android config syncing');
-  await configureAndroidProjectAsync(projectRoot);
+  await configureAndroidProjectAsync(props);
   if (WarningAggregator.hasWarningsAndroid()) {
     applyingAndroidConfigStep.stopAndPersist({
       symbol: '⚠️ ',
