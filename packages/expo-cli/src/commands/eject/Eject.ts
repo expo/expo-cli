@@ -1,5 +1,5 @@
 import { ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
-import { WarningAggregator } from '@expo/config-plugins';
+import { ModPlatform, WarningAggregator } from '@expo/config-plugins';
 import { getBareExtensions, getFileWithExtensions } from '@expo/config/paths';
 import JsonFile, { JSONObject } from '@expo/json-file';
 import { Exp } from '@expo/xdl';
@@ -26,15 +26,13 @@ import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
 
 type DependenciesMap = { [key: string]: string | number };
-type PlatformsArray = ('ios' | 'android')[];
 
 export type EjectAsyncOptions = {
   verbose?: boolean;
   force?: boolean;
   install?: boolean;
   packageManager?: 'npm' | 'yarn';
-  ios?: boolean;
-  android?: boolean;
+  platforms: ModPlatform[];
 };
 
 /**
@@ -49,28 +47,21 @@ export type EjectAsyncOptions = {
  */
 export async function ejectAsync(
   projectRoot: string,
-  options: EjectAsyncOptions = {}
+  { platforms, ...options }: EjectAsyncOptions
 ): Promise<void> {
-  const platforms: PlatformsArray = [];
-
-  if (options.android) {
-    platforms.push('android');
+  if (!platforms?.length) {
+    throw new CommandError('At least one platform must be enabled when syncing');
   }
+
   const isWindows = process.platform === 'win32';
   // Skip ejecting for iOS on Windows
-  if (isWindows) {
+  if (isWindows && !platforms.includes('ios')) {
     log.warn(
       `⚠️  Skipping generating the iOS native project files. Run ${chalk.bold(
         'expo eject'
       )} again from macOS or Linux to generate the iOS project.`
     );
     log.newLine();
-  } else if (options.ios) {
-    platforms.push('ios');
-  }
-
-  if (!platforms?.length) {
-    throw new CommandError('At least one platform must be enabled when syncing');
   }
 
   if (await maybeBailOnGitStatusAsync()) return;
@@ -120,7 +111,7 @@ export async function ejectAsync(
     log.debug('Skipped pod install');
   }
 
-  await warnIfDependenciesRequireAdditionalSetupAsync(pkg, options);
+  await warnIfDependenciesRequireAdditionalSetupAsync(pkg);
 
   log.newLine();
   log.nested(`➡️  ${chalk.bold('Next steps')}`);
@@ -199,7 +190,7 @@ export async function ejectAsync(
   }
 }
 
-async function configureIOSStepAsync(props: { projectRoot: string; platforms: PlatformsArray }) {
+async function configureIOSStepAsync(props: { projectRoot: string; platforms: ModPlatform[] }) {
   const applyingIOSConfigStep = CreateApp.logNewSection('iOS config syncing');
   await configureIOSProjectAsync(props);
   if (WarningAggregator.hasWarningsIOS()) {
@@ -248,10 +239,7 @@ async function installNodeDependenciesAsync(
   }
 }
 
-async function configureAndroidStepAsync(props: {
-  projectRoot: string;
-  platforms: PlatformsArray;
-}) {
+async function configureAndroidStepAsync(props: { projectRoot: string; platforms: ModPlatform[] }) {
   const applyingAndroidConfigStep = CreateApp.logNewSection('Android config syncing');
   await configureAndroidProjectAsync(props);
   if (WarningAggregator.hasWarningsAndroid()) {
@@ -289,7 +277,7 @@ async function ensureConfigAsync({
   platforms,
 }: {
   projectRoot: string;
-  platforms: PlatformsArray;
+  platforms: ModPlatform[];
 }): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig }> {
   // We need the SDK version to proceed
 
@@ -563,7 +551,7 @@ export function hashForDependencyMap(deps: DependenciesMap): string {
 export function getTargetPaths(
   projectRoot: string,
   pkg: PackageJSONConfig,
-  platforms: PlatformsArray
+  platforms: ModPlatform[]
 ) {
   const targetPaths: string[] = [...platforms];
 
@@ -593,7 +581,7 @@ async function cloneNativeDirectoriesAsync({
   tempDir: string;
   exp: Pick<ExpoConfig, 'name' | 'sdkVersion'>;
   pkg: PackageJSONConfig;
-  platforms: PlatformsArray;
+  platforms: ModPlatform[];
 }): Promise<string[]> {
   const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
 
@@ -662,7 +650,7 @@ async function createNativeProjectsFromTemplateAsync({
   exp: ExpoConfig;
   pkg: PackageJSONConfig;
   tempDir: string;
-  platforms: PlatformsArray;
+  platforms: ModPlatform[];
 }): Promise<
   { hasNewProjectFiles: boolean; needsPodInstall: boolean } & DependenciesModificationResults
 > {
@@ -722,8 +710,7 @@ function createDependenciesMap(dependencies: any): DependenciesMap {
  * users to add some code, eg: to their AppDelegate.
  */
 async function warnIfDependenciesRequireAdditionalSetupAsync(
-  pkg: PackageJSONConfig,
-  options?: EjectAsyncOptions
+  pkg: PackageJSONConfig
 ): Promise<void> {
   const expoPackagesWithExtraSetup = [
     'expo-camera',
