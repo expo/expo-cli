@@ -75,7 +75,7 @@ export async function ejectAsync(
 
   if (await maybeBailOnGitStatusAsync()) return;
 
-  const { exp, pkg } = await ensureConfigAsync(projectRoot);
+  const { exp, pkg } = await ensureConfigAsync({ projectRoot, platforms });
   const tempDir = temporary.directory();
 
   const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync({
@@ -284,9 +284,13 @@ function copyPathsFromTemplate(
   return [copiedPaths, skippedPaths];
 }
 
-async function ensureConfigAsync(
-  projectRoot: string
-): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig }> {
+async function ensureConfigAsync({
+  projectRoot,
+  platforms,
+}: {
+  projectRoot: string;
+  platforms: PlatformsArray;
+}): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig }> {
   // We need the SDK version to proceed
 
   let exp: ExpoConfig;
@@ -316,15 +320,20 @@ async function ensureConfigAsync(
 
   // Prompt for the Android package first because it's more strict than the bundle identifier
   // this means you'll have a better chance at matching the bundle identifier with the package name.
-  await getOrPromptForPackage(projectRoot);
-  await getOrPromptForBundleIdentifier(projectRoot);
+  if (platforms.includes('android')) {
+    await getOrPromptForPackage(projectRoot);
+  }
+  if (platforms.includes('ios')) {
+    await getOrPromptForBundleIdentifier(projectRoot);
+  }
 
   if (exp.entryPoint) {
     delete exp.entryPoint;
     log(`- expo.entryPoint is not needed and has been removed.`);
   }
 
-  return { exp, pkg };
+  // Read config again because prompting for bundle id or package name may have mutated the results.
+  return getConfig(projectRoot);
 }
 
 function createFileHash(contents: string): string {
