@@ -48,4 +48,17 @@ describe(getConfig, () => {
     // @ts-ignore: foo property is not defined
     expect(exp.foo).toBe('bar');
   });
+
+  it('resolves plugins', () => {
+    const projectRoot = resolve(__dirname, './fixtures/plugins');
+    const { exp } = getConfig(projectRoot, {
+      skipSDKVersionRequirement: true,
+    });
+
+    expect(exp.name).toBe('custom-name');
+    expect(exp.slug).toBe('from-custom-plugin');
+    expect(exp.plugins[0]).toStrictEqual('./my-plugin');
+    // Ensure the plugin method is serialized into its original name
+    expect(exp.plugins[1][0]).toBe('withCustom');
+  });
 });

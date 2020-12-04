@@ -1,4 +1,4 @@
-import { withPlugins } from '@expo/config-plugins/src/plugins/core-plugins';
+import { withPlugins } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import { join } from 'path';
 
@@ -19,6 +19,48 @@ const projectRoot = join(__dirname, 'fixtures/project-files');
 
 // Not using in-memory fs because the node resolution isn't mocked out.
 describe(withStaticPlugin, () => {
+  it(`asserts wrong type`, () => {
+    const config = withInternal(
+      {
+        name: 'foo',
+        slug: 'foo',
+      },
+      '/'
+    );
+
+    expect(() =>
+      withStaticPlugin(config, {
+        plugin: true,
+      })
+    ).toThrow('Static plugin is an unexpected type: boolean');
+    expect(() =>
+      withStaticPlugin(config, {
+        plugin: [true],
+      })
+    ).toThrow('Static plugin is an unexpected type: boolean');
+    expect(() =>
+      withStaticPlugin(config, {
+        plugin: {},
+      })
+    ).toThrow('Static plugin is an unexpected type: object');
+  });
+  it(`asserts wrong number of arguments`, () => {
+    const config = withInternal(
+      {
+        name: 'foo',
+        slug: 'foo',
+      },
+      '/'
+    );
+
+    expect(() =>
+      withStaticPlugin(config, {
+        plugin: ['', '', ''],
+      })
+    ).toThrow(
+      'Wrong number of arguments provided for static config plugin, expected either 1 or 2, got 3'
+    );
+  });
   it(`uses internal projectRoot`, () => {
     let config = {
       name: 'foo',
@@ -52,13 +94,13 @@ describe(withStaticPlugin, () => {
     config = withPlugins(config, [
       c =>
         withStaticPlugin(c, {
-          plugin: { resolve: './my-plugin.js', props: { foobar: true } },
+          plugin: ['./my-plugin.js', { foobar: true }],
           projectRoot,
         }),
       // Uses a folder with index.js
       c =>
         withStaticPlugin(c, {
-          plugin: { resolve: './beta' },
+          plugin: './beta',
           projectRoot,
         }),
     ]);
@@ -82,7 +124,7 @@ describe(withStaticPlugin, () => {
 
     expect(() =>
       withStaticPlugin(config, {
-        plugin: { resolve: './not-existing.js', props: { foobar: true } },
+        plugin: ['./not-existing.js', { foobar: true }],
         projectRoot,
       })
     ).toThrow(/Cannot find module '.\/not-existing.js'/);

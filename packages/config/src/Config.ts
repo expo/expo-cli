@@ -22,6 +22,7 @@ import {
 import { ConfigError } from './Errors';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
 import { getExpoSDKVersion } from './Project';
+import { serializeAfterStaticPlugins } from './Serialize';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 import { withInternal } from './plugins/withInternal';
 import { withStaticPlugin } from './plugins/withStaticPlugin';
@@ -32,9 +33,9 @@ import { withStaticPlugin } from './plugins/withStaticPlugin';
  * @param config
  * @param projectRoot
  */
-const withStaticPlugins: ConfigPlugin = config => {
+const withPlugins: ConfigPlugin = config => {
   // @ts-ignore: plugins not on config type yet -- TODO
-  if (!Array.isArray(config.plugins)) {
+  if (!Array.isArray(config.plugins) || !config.plugins?.length) {
     return config;
   }
   // Resolve and evaluate plugins
@@ -42,7 +43,9 @@ const withStaticPlugins: ConfigPlugin = config => {
   for (const plugin of config.plugins) {
     config = withStaticPlugin(config, { plugin });
   }
-  return config;
+
+  // plugins aren't serialized by default, serialize the plugins after resolving them.
+  return serializeAfterStaticPlugins(config);
 };
 
 type SplitConfigs = { expo: ExpoConfig; mods: ModConfig };
@@ -147,7 +150,7 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
     }
 
     // Apply static json plugins, should be done after _internal
-    configWithDefaultValues.exp = withStaticPlugins(configWithDefaultValues.exp);
+    configWithDefaultValues.exp = withPlugins(configWithDefaultValues.exp);
 
     if (options.isPublicConfig) {
       // Remove internal values with references to user's file paths from the public config.

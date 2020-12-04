@@ -185,13 +185,8 @@ Static plugins can be added in two different formats:
 {
   plugins: [
     // Long form with properties
-    {
-      resolve: 'my-plugin',
-      props: {
-        /* Passed as the second parameter to the config plugin */
-      },
-    },
-    // Short hand -- gets normalized to { resolve: 'my-plugin', props: {} }
+    ['my-plugin', { /* Passed as the second parameter to the config plugin */ }]
+    // Short hand -- gets normalized to ['my-plugin', undefined]
     'my-plugin',
   ];
 }
@@ -201,22 +196,22 @@ Static plugins can be added in two different formats:
 
 ### Module Resolution
 
-Static plugins can be resolved in a few different ways. Here are the different patterns for strings you could pass in the `plugins` array (`resolve` prop).
+Static plugins can be resolved in a few different ways. Here are the different patterns for strings you could pass in the `plugins` array (the first property).
 
 > Any resolution pattern that isn't specified below is unexpected behavior, and subject to breaking changes.
 
 #### Project file
 
-`resolve: './my-config-plugin.js'`
+`'./my-config-plugin.js'`
 
 ```
 ╭── app.config.js ➡️ Expo Config
-╰── my-config-plugin.js ➡️ ✅ `resolve.exports = (config) => config`
+╰── my-config-plugin.js ➡️ ✅ `module.exports = (config) => config`
 ```
 
 #### Node resolve
 
-`resolve: 'expo-splash-screen'`
+`'expo-splash-screen'`
 
 ```
 ╭── app.config.js ➡️ Expo Config
@@ -237,7 +232,7 @@ Sometimes you want your package to export React components and also support a pl
 
 #### Project folder
 
-`resolve: './my-config-plugin'`
+`'./my-config-plugin'`
 
 This is different to how Node module's work because `app.plugin.js` won't be resolved by default in a folder. You'll have to manually specify the file to use it.
 
@@ -251,8 +246,8 @@ This is different to how Node module's work because `app.plugin.js` won't be res
 
 If a file inside a Node module is specified, then the module's root `app.plugin.js` resolution will be skipped. This is referred to as "reaching inside a package" and is bad form. We support this to make testing, and plugin authoring easier.
 
-- `resolve: 'expo-splash-screen/build/index.js'`
-- `resolve: 'expo-splash-screen/build'`
+- `'expo-splash-screen/build/index.js'`
+- `'expo-splash-screen/build'`
 
 ```
 ╭── app.config.js ➡️ Expo Config
@@ -295,7 +290,7 @@ module.exports = function withCustomName(config, name) {
 ```json
 {
   "name": "my-app",
-  "plugins": [{ "resolve": "./my-plugin", "props": "app" }]
+  "plugins": ["./my-plugin", "app"]
 }
 ```
 
@@ -306,6 +301,6 @@ module.exports = function withCustomName(config, name) {
 ```json
 {
   "name": "custom-app",
-  "plugins": [{ "resolve": "./my-plugin", "props": "app" }]
+  "plugins": ["./my-plugin", "app"]
 }
 ```

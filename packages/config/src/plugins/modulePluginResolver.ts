@@ -2,14 +2,12 @@ import findUp from 'find-up';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
 
+import { ConfigPlugin } from '../Config.types';
 import { assert } from '../Errors';
 import { fileExists } from '../Modules';
 import { resolveConfigPluginExport } from '../evalConfig';
 
-export type StaticPlugin<T = any> = {
-  resolve: string;
-  props?: T;
-};
+export type StaticPlugin<T = any> = [string | ConfigPlugin<T>, T];
 
 export type StaticPluginList = (StaticPlugin | string)[];
 
@@ -85,10 +83,14 @@ function findUpPlugin(root: string): string {
 }
 
 export function normalizeStaticPlugin(plugin: string | StaticPlugin): StaticPlugin {
-  if (typeof plugin === 'string') {
-    plugin = { resolve: plugin };
+  if (Array.isArray(plugin)) {
+    assert(
+      plugin.length > 0 && plugin.length < 3,
+      `Wrong number of arguments provided for static config plugin, expected either 1 or 2, got ${plugin.length}`
+    );
+    return plugin;
   }
-  return plugin;
+  return [plugin, undefined];
 }
 
 export function assertInternalProjectRoot(projectRoot?: string): asserts projectRoot {
