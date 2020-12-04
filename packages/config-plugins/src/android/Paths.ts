@@ -102,17 +102,20 @@ export async function getProjectPathOrThrowAsync(projectRoot: string): Promise<s
 
 export async function getAndroidManifestAsync(projectRoot: string): Promise<string> {
   const projectPath = await getProjectPathOrThrowAsync(projectRoot);
-
   const filePath = path.join(projectPath, 'app/src/main/AndroidManifest.xml');
   return filePath;
+}
+export async function getResourceFolderAsync(projectRoot: string): Promise<string> {
+  const projectPath = await getProjectPathOrThrowAsync(projectRoot);
+  return path.join(projectPath, `app/src/main/res`);
 }
 
 export async function getResourceXMLPathAsync(
   projectRoot: string,
   { kind = 'values', name }: { kind?: ResourceKind; name: 'colors' | 'strings' | 'styles' | string }
 ): Promise<string> {
-  const projectPath = await getProjectPathOrThrowAsync(projectRoot);
+  const resourcePath = await getResourceFolderAsync(projectRoot);
 
-  const filePath = path.join(projectPath, `app/src/main/res/${kind}/${name}.xml`);
+  const filePath = path.join(resourcePath, `${kind}/${name}.xml`);
   return filePath;
 }
