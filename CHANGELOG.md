@@ -16,10 +16,10 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
-- [cli] Update supported Node version ranges
 - [cli] Added ability to skip platforms when ejecting ([#2988](https://github.com/expo/expo-cli/issues/2988))
+- [cli] Fallback to jest-expo@sdkVersion-beta when using beta sdk if not otherwise defined ([#2985](https://github.com/expo/expo-cli/issues/2985))
+- [cli] Update supported Node version ranges
 - [xdl] Install the client version for the given SDK by default when opening project ([#2986](https://github.com/expo/expo-cli/issues/2986))
-- [-cli] Fallback to jest-expo@sdkVersion-beta when using beta sdk if not otherwise defined ([#2985](https://github.com/expo/expo-cli/issues/2985))
 
 ### 📦 Packages updated
 
