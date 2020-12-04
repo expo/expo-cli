@@ -257,6 +257,35 @@ If a file inside a Node module is specified, then the module's root `app.plugin.
     ╰── build/index.js ➡️ ✅ `module.exports = (config) => config`
 ```
 
+#### Functions
+
+You can also just pass in a config plugin.
+
+```js
+const withCustom = (config, props) => config;
+
+const config = {
+  plugins: [
+    [
+      withCustom,
+      {
+        /* props */
+      },
+    ],
+    // Without props
+    withCustom,
+  ],
+};
+```
+
+One caveat to using functions instead of strings is that serialization will replace the function with the function's name. This keeps manifests working as expected.
+
+```json
+{
+  "plugins": [["withCustom", {}], "withCustom"]
+}
+```
+
 ### Why app.plugin.js for plugins
 
 Config resolution searches for a `app.plugin.js` first when a Node module name is provided.
