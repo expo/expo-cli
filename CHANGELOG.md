@@ -12,6 +12,96 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Fri, 4 Dec 2020 10:38:20 -0800](https://github.com/expo/expo-cli/commit/65cb9a64cfa4cc6fb89bdc2a432acd16c6043def)
+
+### 🎉 New features
+
+- [cli] Added ability to skip platforms when ejecting ([#2988](https://github.com/expo/expo-cli/issues/2988))
+- [cli] Fallback to jest-expo@sdkVersion-beta when using beta sdk if not otherwise defined ([#2985](https://github.com/expo/expo-cli/issues/2985))
+- [cli] Update supported Node version ranges
+- [xdl] Install the client version for the given SDK by default when opening project ([#2986](https://github.com/expo/expo-cli/issues/2986))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.7
+- @expo/dev-tools@0.13.66
+- expo-cli@4.0.8
+- uri-scheme@1.0.53
+- @expo/xdl@59.0.6
+
+## [Tue, 1 Dec 2020 16:30:17 -0800](https://github.com/expo/expo-cli/commit/bc951645e2b7771ad2c2e81dbb50d1ffa7b22dc1)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+- [cli] Fix installing client for selected target SDK version in upgrade ([#2981](https://github.com/expo/expo-cli/issues/2981))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.6
+- expo-cli@4.0.7
+- uri-scheme@1.0.52
+
+## [Mon, 30 Nov 2020 15:41:46 -0800](https://github.com/expo/expo-cli/commit/d68bfc944016efa0c553109ffca3d3222b1a92ac)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [config-plugins] Add withInternal plugin ([#2975](https://github.com/expo/expo-cli/issues/2975))
+- [config-plugins] Created withRunOnce ([#2965](https://github.com/expo/expo-cli/issues/2965))
+- [config-plugins] fix isPlistVersionConfigurationSynced condition ([#2974](https://github.com/expo/expo-cli/issues/2974))
+
+### 🐛 Bug fixes
+
+- [xdl][cli] Fix beta integration of init ([#2978](https://github.com/expo/expo-cli/issues/2978))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.5
+- @expo/config@3.3.18
+- @expo/dev-server@0.1.43
+- @expo/dev-tools@0.13.64
+- @expo/electron-adapter@0.0.35
+- expo-cli@4.0.5
+- expo-optimize@0.1.66
+- @expo/metro-config@0.1.43
+- @expo/next-adapter@2.1.49
+- expo-pwa@0.0.54
+- uri-scheme@1.0.51
+- @expo/webpack-config@0.12.48
+- @expo/xdl@59.0.4
+
+## [Sat, 28 Nov 2020 12:49:14 -0800](https://github.com/expo/expo-cli/commit/57ddd2cadfc85b663df7dbb23dc442b9d5803b7c)
+
+### 🎉 New features
+
+- [config] fill _internal object ([#2968](https://github.com/expo/expo-cli/issues/2968))
+
+### 🐛 Bug fixes
+
+- [cli] Fix register command and some cleanup on messaging ([#2971](https://github.com/expo/expo-cli/issues/2971))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.4
+- @expo/config@3.3.17
+- @expo/dev-server@0.1.42
+- @expo/dev-tools@0.13.63
+- @expo/electron-adapter@0.0.34
+- expo-cli@4.0.4
+- expo-optimize@0.1.65
+- @expo/metro-config@0.1.42
+- @expo/next-adapter@2.1.48
+- expo-pwa@0.0.53
+- uri-scheme@1.0.50
+- @expo/webpack-config@0.12.47
+- @expo/xdl@59.0.3
+
+
 ## [Fri, 27 Nov 2020 14:33:45 -0800](https://github.com/expo/expo-cli/commit/7bb61ba51da0eafce3faa8cbf59124f56ebe7e7d)
 
 ### 🎉 New features

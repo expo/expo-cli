@@ -558,10 +558,12 @@ async function openUrlAsync({
   url,
   device,
   isDetached = false,
+  sdkVersion,
 }: {
   url: string;
   isDetached?: boolean;
   device: Device;
+  sdkVersion?: string;
 }): Promise<void> {
   try {
     const bootedDevice = await attemptToStartEmulatorOrAssertAsync(device);
@@ -592,7 +594,8 @@ async function openUrlAsync({
       }
 
       if (shouldInstall) {
-        await installExpoAsync({ device });
+        const androidClient = await getClientForSDK(sdkVersion);
+        await installExpoAsync({ device, ...androidClient });
         installedExpo = true;
       }
     }
@@ -631,6 +634,18 @@ async function openUrlAsync({
   }
 }
 
+async function getClientForSDK(sdkVersionString?: string) {
+  if (!sdkVersionString) {
+    return null;
+  }
+
+  const sdkVersion = (await Versions.sdkVersionsAsync())[sdkVersionString];
+  return {
+    url: sdkVersion.androidClientUrl,
+    version: sdkVersion.androidClientVersion,
+  };
+}
+
 export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
@@ -655,7 +670,12 @@ export async function openProjectAsync({
       return { success: false, error: 'escaped' };
     }
 
-    await openUrlAsync({ url: projectUrl, device, isDetached: !!exp.isDetached });
+    await openUrlAsync({
+      url: projectUrl,
+      device,
+      isDetached: !!exp.isDetached,
+      sdkVersion: exp.sdkVersion,
+    });
     return { success: true, url: projectUrl };
   } catch (e) {
     Logger.global.error(`Couldn't start project on Android: ${e.message}`);

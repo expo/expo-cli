@@ -29,7 +29,15 @@ export type ExpoWorkflow = 'managed' | 'bare';
 
 export type TargetSDKVersion = Pick<
   Versions.SDKVersion,
-  'expoReactNativeTag' | 'facebookReactVersion' | 'facebookReactNativeVersion' | 'relatedPackages'
+  | 'expoReactNativeTag'
+  | 'facebookReactVersion'
+  | 'facebookReactNativeVersion'
+  | 'relatedPackages'
+  | 'iosClientVersion'
+  | 'iosClientUrl'
+  | 'androidClientVersion'
+  | 'androidClientUrl'
+  | 'beta'
 >;
 
 function logNewSection(title: string) {
@@ -121,10 +129,15 @@ export function getDependenciesFromBundledNativeModules({
   // If sdkVersion is known and jest-expo is used, then upgrade to the current sdk version
   // jest-expo is versioned with expo because jest-expo mocks out the native SDKs used it expo.
   if (sdkVersion && projectDependencies['jest-expo']) {
-    result['jest-expo'] = `^${sdkVersion}`;
+    let jestExpoVersion = `^${sdkVersion}`;
+    if (targetSdkVersion?.beta) {
+      jestExpoVersion = `${jestExpoVersion}-beta`;
+    }
+    result['jest-expo'] = jestExpoVersion;
   }
 
   if (!targetSdkVersion) {
+    log.newLine();
     log.warn(
       `Supported react, react-native, and react-dom versions are unknown because we don't have version information for the target SDK, please update them manually.`
     );
@@ -329,15 +342,20 @@ async function shouldUpgradeSimulatorAsync(): Promise<boolean> {
   return answer;
 }
 
-async function maybeUpgradeSimulatorAsync() {
+async function maybeUpgradeSimulatorAsync(sdkVersion: TargetSDKVersion) {
   // Check if we can, and probably should, upgrade the (ios) simulator
   if (await shouldUpgradeSimulatorAsync()) {
-    const result = await Simulator.upgradeExpoAsync();
+    const result = await Simulator.upgradeExpoAsync({
+      url: sdkVersion.iosClientUrl,
+      version: sdkVersion.iosClientVersion,
+    });
     if (!result) {
       log.error(
         "The upgrade of your simulator didn't go as planned. You might have to reinstall it manually with expo client:install:ios."
       );
     }
+
+    log.newLine();
   }
 }
 
@@ -363,10 +381,13 @@ async function shouldUpgradeEmulatorAsync(): Promise<boolean> {
   return answer;
 }
 
-async function maybeUpgradeEmulatorAsync() {
+async function maybeUpgradeEmulatorAsync(sdkVersion: TargetSDKVersion) {
   // Check if we can, and probably should, upgrade the android client
   if (await shouldUpgradeEmulatorAsync()) {
-    const result = await Android.upgradeExpoAsync();
+    const result = await Android.upgradeExpoAsync({
+      url: sdkVersion.androidClientUrl,
+      version: sdkVersion.androidClientVersion,
+    });
     if (!result) {
       log.error(
         "The upgrade of your Android client didn't go as planned. You might have to reinstall it manually with expo client:install:android."
@@ -455,16 +476,6 @@ export async function upgradeAsync(
       targetSdkVersionString = selectedSdkVersionString;
       log.newLine();
     }
-
-    // Check if we can, and probably should, upgrade the (ios) simulator
-    if (platforms.includes('ios')) {
-      await maybeUpgradeSimulatorAsync();
-    }
-
-    // Check if we can, and probably should, upgrade the android client
-    if (platforms.includes('android')) {
-      await maybeUpgradeEmulatorAsync();
-    }
   } else if (!targetSdkVersion) {
     // This is useful when testing the beta internally, before actually
     // releasing it as a public beta. At this point, we won't have "beta" set on
@@ -493,6 +504,16 @@ export async function upgradeAsync(
           `Valid SDK versions are in the range of ${minSdkVersion}.0.0 to ${maxSdkVersion}.0.0.`
       );
     }
+  }
+
+  // Check if we can, and probably should, upgrade the (ios) simulator
+  if (platforms.includes('ios') && targetSdkVersion.iosClientUrl) {
+    await maybeUpgradeSimulatorAsync(targetSdkVersion);
+  }
+
+  // Check if we can, and probably should, upgrade the android client
+  if (platforms.includes('android') && targetSdkVersion.androidClientUrl) {
+    await maybeUpgradeEmulatorAsync(targetSdkVersion);
   }
 
   const packageManager = PackageManager.createForProject(projectRoot, {

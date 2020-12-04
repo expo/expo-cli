@@ -2,6 +2,14 @@
 
 exports[`built-in plugins compiles mods 1`] = `
 Object {
+  "_internal": Object {
+    "pluginHistory": Object {
+      "expo-facebook-ios": Object {
+        "name": "expo-facebook-ios",
+        "version": "UNVERSIONED",
+      },
+    },
+  },
   "android": Object {
     "adaptiveIcon": Object {
       "backgroundImage": "./icons/background.png",

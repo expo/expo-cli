@@ -1,7 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
 
-// import { ModConfig } from './Plugin.types';
-
 // TODO
 export type ModConfig = { ios?: any; android?: any };
 

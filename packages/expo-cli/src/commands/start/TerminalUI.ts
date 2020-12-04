@@ -24,6 +24,7 @@ const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
 const CTRL_L = '\u000C';
 
+const BLT = `\u203A`;
 const { bold: b, italic: i, underline: u } = chalk;
 
 type StartOptions = {
@@ -39,7 +40,7 @@ const printHelp = (): void => {
   log.nested(`Press ${b('?')} to show a list of all available commands.`);
 };
 
-const div = chalk.dim(`|`);
+const div = chalk.dim(`│`);
 
 const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOnly'> = {}) => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
@@ -74,11 +75,11 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
       // @ts-ignore: filter doesn't work
       .map(([key, message, status]) => {
         if (!key) return '';
-        let view = ` \u203A `;
+        let view = ` ${BLT} `;
         if (key.length === 1) view += 'Press ';
         view += `${b(key)} ${div} `;
         view += message;
-        // let view = ` \u203A Press ${b(key)} ${div} ${message}`;
+        // let view = ` ${BLT} Press ${b(key)} ${div} ${message}`;
         if (status) {
           view += ` ${chalk.dim(`(${i(status)})`)}`;
         }
@@ -98,12 +99,12 @@ export const printServerInfo = async (
   }
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
   log.newLine();
-  log.nested(`  ${u(url)}`);
+  log.nested(` ${u(url)}`);
   log.newLine();
   urlOpts.printQRCode(url);
-  const wrap = wordwrap(2, process.stdout.columns || 80);
+  const wrap = wordwrap(1, process.stdout.columns || 80);
   const wrapItem = wordwrap(4, process.stdout.columns || 80);
-  const item = (text: string): string => '  \u2022 ' + wrapItem(text).trimStart();
+  const item = (text: string): string => ` ${BLT} ` + wrapItem(text).trimStart();
   const iosInfo = process.platform === 'darwin' ? `, or ${b('i')} for iOS simulator` : '';
   const webInfo = `${b`w`} to run on ${u`w`}eb`;
   log.nested(wrap(u('To run the app with live reloading, choose one of:')));
@@ -182,7 +183,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           printHelp();
           break;
         case 'e':
-          log(chalk.red` \u203A Sending a URL is not supported in web-only mode`);
+          log(chalk.red` ${BLT} Sending a URL is not supported in web-only mode`);
           break;
       }
     } else {

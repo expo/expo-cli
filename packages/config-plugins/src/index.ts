@@ -3,11 +3,12 @@
  */
 import * as AndroidConfig from './android';
 import * as IOSConfig from './ios';
+import * as History from './utils/history';
 import * as WarningAggregator from './utils/warnings';
 
 export { IOSConfig, AndroidConfig };
 
-export { WarningAggregator };
+export { WarningAggregator, History };
 
 export { withExpoIOSPlugins, withExpoAndroidPlugins } from './plugins/expo-plugins';
 
@@ -19,6 +20,8 @@ export * from './Plugin.types';
 
 export {
   withPlugins,
+  withRunOnce,
+  createRunOncePlugin,
   withDangerousMod,
   withExtendedMod,
   withInterceptedMod,

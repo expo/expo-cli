@@ -47,7 +47,7 @@ export async function writeXMLOrRemoveFileUponNoResourcesAsync(
 
 export async function readXMLAsync(options: {
   path: string;
-  fallback?: string;
+  fallback?: string | null;
 }): Promise<XMLObject> {
   let contents: string = '';
   try {
