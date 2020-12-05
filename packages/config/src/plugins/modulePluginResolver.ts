@@ -9,8 +9,6 @@ import { resolveConfigPluginExport } from '../evalConfig';
 
 export type StaticPlugin<T = any> = [string | ConfigPlugin<T>, T];
 
-export type StaticPluginList = (StaticPlugin | string)[];
-
 // Default plugin entry file name.
 export const pluginFileName = 'app.plugin.js';
 
@@ -103,28 +101,15 @@ export function assertInternalProjectRoot(projectRoot?: string): asserts project
 // Resolve the module function and assert type
 export function resolveConfigPluginFunction(projectRoot: string, pluginModulePath: string) {
   const moduleFilePath = resolvePluginForModule(projectRoot, pluginModulePath);
-  const result = requirePluginFile(moduleFilePath, pluginModulePath);
+  const result = requirePluginFile(moduleFilePath);
   return resolveConfigPluginExport(result, moduleFilePath);
 }
 
-function requirePluginFile(filePath: string, pluginModulePath: string): any {
+function requirePluginFile(filePath: string): any {
   try {
     return require(filePath);
   } catch (error) {
     // TODO: Improve error messages
     throw error;
-    // const message = [
-    //   'Failed to load static config plugin:',
-    //   `├── resolve: ${pluginModulePath}`,
-    //   `╰── module:  ${filePath}`,
-    //   error.message,
-
-    // ]
-    //   .filter(Boolean)
-    //   .join('\n');
-
-    //   error.fileName
-    // console.info(error);
-    // throw new ConfigError(message, 'INVALID_PLUGIN');
   }
 }
