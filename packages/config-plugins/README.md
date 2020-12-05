@@ -252,7 +252,7 @@ If a file inside a Node module is specified, then the module's root `app.plugin.
 ```
 ╭── app.config.js ➡️ Expo Config
 ╰── node_modules/expo-splash-screen/ ➡️ Module installed from NPM (works with Yarn workspaces as well).
-    ├── package.json ➡️ The `main` file will be used if `index.expo-plugin.js` doesn't exist.
+    ├── package.json ➡️ The `main` file will be used if `app.plugin.js` doesn't exist.
     ├── app.plugin.js ➡️ ❌ Ignored because the reference reaches into the package internals.
     ╰── build/index.js ➡️ ✅ `module.exports = (config) => config`
 ```
