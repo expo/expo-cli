@@ -289,7 +289,7 @@ One caveat to using functions instead of strings is that serialization will repl
 ### Why app.plugin.js for plugins
 
 Config resolution searches for a `app.plugin.js` first when a Node module name is provided.
-This is because node environments are often different to iOS, Android, or web JS environments and therefore require different transpilation presets (ex: `module.exports` instead of `import/export`).
+This is because Node environments are often different to iOS, Android, or web JS environments and therefore require different transpilation presets (ex: `module.exports` instead of `import/export`).
 
 Because of this reasoning, the root of a Node module is searched instead of right next to the `index.js`. Imagine you had a TypeScript Node module where the transpiled main file was located at `build/index.js`, if Expo config plugin resolution searched for `build/app.plugin.js` you'd lose the ability to transpile the file differently.
 
