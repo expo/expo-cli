@@ -25,7 +25,7 @@ function resolvePluginForModule(projectRoot: string, modulePath: string): string
     `Failed to resolve plugin for module "${modulePath}" relative to "${projectRoot}"`
   );
   // If the modulePath is something like `@bacon/package/index.js` or `expo-foo/build/app`
-  // then skip resolving the module `index.expo-plugin.js`
+  // then skip resolving the module `app.plugin.js`
   if (moduleNameIsDirectFileReference(modulePath)) {
     return resolved;
   }
