@@ -39,21 +39,19 @@ function pathIsFilePath(name: string): boolean {
 }
 
 // TODO: If this doesn't work on windows, scrap it.
-function moduleNameIsDirectFileReference(name: string): boolean {
+export function moduleNameIsDirectFileReference(name: string): boolean {
   if (pathIsFilePath(name)) {
     return true;
   }
 
-  // TODO: Use this on windows path.sep
-  const slashCount = name.match(/\//g)?.length ?? 0;
-
+  const slashCount = name.split(path.sep)?.length;
   // Orgs (like @expo/config ) should have more than one slash to be a direct file.
   if (name.startsWith('@')) {
-    return slashCount > 1;
+    return slashCount > 2;
   }
 
   // Regular packages should be considered direct reference if they have more than one slash.
-  return slashCount > 0;
+  return slashCount > 1;
 }
 
 function resolveExpoPluginFile(root: string): string | null {
