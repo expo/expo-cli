@@ -43,7 +43,6 @@ function serializeAndEvaluatePlugin(val: any): any {
   if (['undefined', 'string', 'boolean', 'number', 'bigint'].includes(typeof val)) {
     return val;
   } else if (typeof val === 'function') {
-    // TODO: Attempt to replace the function with it's name
     return val.name ?? 'withAnonymous';
   } else if (Array.isArray(val)) {
     return val.map(serializeAndEvaluatePlugin);
