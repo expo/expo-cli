@@ -244,7 +244,7 @@ This is different to how Node modules work because `app.plugin.js` won't be reso
 
 #### Module internals
 
-If a file inside a Node module is specified, then the module's root `app.plugin.js` resolution will be skipped. This is referred to as "reaching inside a package" and is bad form. We support this to make testing, and plugin authoring easier.
+If a file inside a Node module is specified, then the module's root `app.plugin.js` resolution will be skipped. This is referred to as "reaching inside a package" and is bad form. We support this to make testing, and plugin authoring easier, but we don't expect library authors to expose their plugins like this as a public API.
 
 - `'expo-splash-screen/build/index.js'`
 - `'expo-splash-screen/build'`
