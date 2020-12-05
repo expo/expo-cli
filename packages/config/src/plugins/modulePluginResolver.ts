@@ -38,7 +38,6 @@ function pathIsFilePath(name: string): boolean {
   return !!name.match(/^(\.|~\/|\/)/g);
 }
 
-// TODO: If this doesn't work on windows, scrap it.
 export function moduleNameIsDirectFileReference(name: string): boolean {
   if (pathIsFilePath(name)) {
     return true;
