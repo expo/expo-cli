@@ -192,7 +192,7 @@ Static plugins can be added in two different formats:
 }
 ```
 
-> 💡 Everything in the Expo config must be able to be converted to JSON (with the exception of the `mods` field). So no async functions!
+> 💡 Everything in the Expo config must be able to be converted to JSON (with the exception of the `mods` field). So no async functions outside of `mods` in your config plugins!
 
 ### Module Resolution
 
