@@ -239,7 +239,7 @@ This is different to how Node modules work because `app.plugin.js` won't be reso
 ```
 ╭── app.config.js ➡️ Expo Config
 ╰── my-config-plugin/ ➡️ Folder containing plugin code
-    ╰── index.js ➡️ ✅ By default, node resolves a folder's index.js file as the main file.
+    ╰── index.js ➡️ ✅ By default, Node resolves a folder's index.js file as the main file.
 ```
 
 #### Module internals
