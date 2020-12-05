@@ -234,7 +234,7 @@ Sometimes you want your package to export React components and also support a pl
 
 `'./my-config-plugin'`
 
-This is different to how Node module's work because `app.plugin.js` won't be resolved by default in a folder. You'll have to manually specify the file to use it.
+This is different to how Node modules work because `app.plugin.js` won't be resolved by default in a directory. You'll have to manually specify `./my-config-plugin/app.plugin.js` to use it, otherwise `index.js` in the directory will be used.
 
 ```
 ╭── app.config.js ➡️ Expo Config
