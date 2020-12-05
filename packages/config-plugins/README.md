@@ -227,7 +227,7 @@ Sometimes you want your package to export React components and also support a pl
 ╰── node_modules/expo-splash-screen/ ➡️ Module installed from NPM (works with Yarn workspaces as well).
     ├── package.json ➡️ The `main` file will be used if `app.plugin.js` doesn't exist.
     ├── app.plugin.js ➡️ ✅ `module.exports = (config) => config` -- must export a function.
-    ╰── build/index.js ➡️ ❌ Ignored because `index.expo-plugin.js` exists. This could be used with `expo-splash-screen/build/index.js`
+    ╰── build/index.js ➡️ ❌ Ignored because `app.plugin.js` exists. This could be used with `expo-splash-screen/build/index.js`
 ```
 
 #### Project folder
