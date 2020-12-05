@@ -34,7 +34,7 @@ export async function startSession(
     try {
       let url;
       if (platform === 'native') {
-        url = await UrlUtils.constructManifestUrlAsync(projectRoot);
+        url = await UrlUtils.constructDeepLinkAsync(projectRoot);
       } else if (platform === 'web') {
         url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
       } else {

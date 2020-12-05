@@ -8,6 +8,7 @@ import CommandError, { AbortCommandError } from './CommandError';
 import log from './log';
 import { getDevClientSchemeAsync } from './schemes';
 
+// NOTE: if you update this, you should also update assertValidOptions in UrlUtils.ts
 export type URLOptions = {
   devClient?: boolean;
   android?: boolean;

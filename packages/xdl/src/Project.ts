@@ -84,6 +84,7 @@ type LoadedHook = Hook & {
 };
 
 export type StartOptions = {
+  devClient?: boolean;
   reset?: boolean;
   nonInteractive?: boolean;
   nonPersistent?: boolean;
@@ -1647,7 +1648,10 @@ export async function stopReactNativeServerAsync(projectRoot: string): Promise<v
   });
 }
 
-export async function startExpoServerAsync(projectRoot: string): Promise<void> {
+export async function startExpoServerAsync(
+  projectRoot: string,
+  options: StartOptions
+): Promise<void> {
   assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
   const app = express();
@@ -1777,11 +1781,11 @@ export async function startAsync(
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
-  } else if (shouldUseDevServer(exp)) {
+  } else if (shouldUseDevServer(exp) || options.devClient) {
     await startDevServerAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'native');
   } else {
-    await startExpoServerAsync(projectRoot);
+    await startExpoServerAsync(projectRoot, options);
     await startReactNativeServerAsync({ projectRoot, exp, options, verbose });
     DevSession.startSession(projectRoot, exp, 'native');
   }
