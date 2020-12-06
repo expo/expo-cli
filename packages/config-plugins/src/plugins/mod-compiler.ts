@@ -11,10 +11,10 @@ import { resolveModResults, withBaseMods } from './compiler-plugins';
  */
 export async function compileModsAsync(
   config: ExportedConfig,
-  projectRoot: string
+  props: { projectRoot: string; platforms?: ModPlatform[] }
 ): Promise<ExportedConfig> {
   config = withBaseMods(config);
-  return await evalModsAsync(config, projectRoot);
+  return await evalModsAsync(config, props);
 }
 
 /**
@@ -24,9 +24,12 @@ export async function compileModsAsync(
  */
 export async function evalModsAsync(
   config: ExportedConfig,
-  projectRoot: string
+  { projectRoot, platforms }: { projectRoot: string; platforms?: ModPlatform[] }
 ): Promise<ExportedConfig> {
   for (const [platformName, platform] of Object.entries(config.mods ?? ({} as ModConfig))) {
+    if (platforms && !platforms.includes(platformName as any)) {
+      continue;
+    }
     const entries = Object.entries(platform);
     if (entries.length) {
       const dangerousIndex = entries.findIndex(([modName]) => modName === 'dangerous');

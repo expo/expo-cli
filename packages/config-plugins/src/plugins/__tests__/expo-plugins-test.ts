@@ -31,7 +31,7 @@ describe(evalModsAsync, () => {
       name: 'app',
       slug: '',
     };
-    config = await evalModsAsync(config, '/');
+    config = await evalModsAsync(config, { projectRoot: '/' });
     expect(config.ios).toBeUndefined();
   });
 });
@@ -72,9 +72,19 @@ describe('built-in plugins', () => {
       slug: '',
       ios: {},
     });
-    await expect(compileModsAsync(config, '/invalid')).rejects.toThrow(
+    await expect(compileModsAsync(config, { projectRoot: '/invalid' })).rejects.toThrow(
       'Failed to locate Info.plist files relative'
     );
+  });
+
+  it(`skips platforms`, async () => {
+    const config = withBranch({
+      name: 'app',
+      slug: '',
+      ios: {},
+    });
+    // should throw if the platform isn't skipped
+    await compileModsAsync(config, { projectRoot: '/invalid', platforms: ['android'] });
   });
 
   it('prefers named keys over info.plist overrides', async () => {
@@ -96,7 +106,7 @@ describe('built-in plugins', () => {
       expoUsername: 'bacon',
     });
     // Apply mod
-    config = await compileModsAsync(config, '/app');
+    config = await compileModsAsync(config, { projectRoot: '/app' });
     // This should be false because ios.config.usesNonExemptEncryption is used in favor of ios.infoPlist.ITSAppUsesNonExemptEncryption
     expect(config.ios?.infoPlist?.ITSAppUsesNonExemptEncryption).toBe(false);
   });
@@ -238,7 +248,7 @@ describe('built-in plugins', () => {
     });
 
     // Apply mod
-    config = await compileModsAsync(config, '/app');
+    config = await compileModsAsync(config, { projectRoot: '/app' });
 
     // App config should have been modified
     expect(config.name).toBe('my cool app');

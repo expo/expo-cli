@@ -52,6 +52,9 @@ export interface ExportedConfigWithProps<Data = any> extends ExpoConfig {
    * The Object representation of a complex file type.
    */
   modResults: Data;
+  /**
+   * Additional properties supplied by the mod compiler.
+   */
   modRequest: ModProps<Data>;
 }
 

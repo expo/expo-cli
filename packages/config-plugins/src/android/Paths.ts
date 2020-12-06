@@ -3,7 +3,7 @@ import { sync as globSync } from 'glob';
 import * as path from 'path';
 
 import { assert } from '../utils/errors';
-import { directoryExistsAsync, fileExistsAsync } from '../utils/modules';
+import { directoryExistsAsync } from '../utils/modules';
 import { addWarningAndroid } from '../utils/warnings';
 import { ResourceKind } from './Resources';
 
@@ -103,7 +103,6 @@ export async function getProjectPathOrThrowAsync(projectRoot: string): Promise<s
 
 export async function getAndroidManifestAsync(projectRoot: string): Promise<string> {
   const projectPath = await getProjectPathOrThrowAsync(projectRoot);
-
   const filePath = path.join(projectPath, 'app/src/main/AndroidManifest.xml');
   return filePath;
 }

@@ -1,8 +1,10 @@
 import { getConfig } from '@expo/config';
+import { ModPlatform } from '@expo/config-plugins';
 import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
+import CommandError from '../CommandError';
 import log from '../log';
 import { confirmAsync } from '../prompts';
 import * as Eject from './eject/Eject';
@@ -17,9 +19,43 @@ async function userWantsToEjectWithoutUpgradingAsync() {
   return answer;
 }
 
+function getDefaultPlatforms(): ModPlatform[] {
+  const platforms: ModPlatform[] = ['android'];
+  if (process.platform !== 'win32') {
+    platforms.push('ios');
+  }
+  return platforms;
+}
+
+function platformsFromPlatform(platform?: string): ModPlatform[] {
+  if (!platform) {
+    return getDefaultPlatforms();
+  }
+  switch (platform) {
+    case 'ios':
+      if (process.platform === 'win32') {
+        log.warn('Ejecting on windows is unsupported');
+        // continue anyways :shrug:
+      }
+      return ['ios'];
+    case 'android':
+      return ['android'];
+    case 'all':
+      return getDefaultPlatforms();
+    default:
+      throw new CommandError(`Unsupported platform "${platform}". Options are: ios, android, all`);
+  }
+}
+
 export async function actionAsync(
   projectDir: string,
-  options: (LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions) & { npm?: boolean }
+  {
+    platform,
+    ...options
+  }: (LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions) & {
+    npm?: boolean;
+    platform?: string;
+  }
 ) {
   const { exp } = getConfig(projectDir);
 
@@ -36,7 +72,10 @@ export async function actionAsync(
     }
   } else {
     log.debug('Eject Mode: Latest');
-    await Eject.ejectAsync(projectDir, options as Eject.EjectAsyncOptions);
+    await Eject.ejectAsync(projectDir, {
+      ...options,
+      platforms: platformsFromPlatform(platform),
+    } as Eject.EjectAsyncOptions);
   }
 }
 
@@ -55,5 +94,6 @@ export default function (program: Command) {
     .option('--force', 'Skip legacy eject warnings.') // TODO: remove the force flag when SDK 36 is no longer supported: after SDK 40 is released.
     .option('--no-install', 'Skip installing npm packages and CocoaPods.')
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
+    .option('-p, --platform [platform]', 'Platforms to sync: ios, android, all. Default: all')
     .asyncActionProjectDir(actionAsync);
 }

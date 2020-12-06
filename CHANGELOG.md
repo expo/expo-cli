@@ -12,6 +12,39 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Fri, 4 Dec 2020 10:38:20 -0800](https://github.com/expo/expo-cli/commit/65cb9a64cfa4cc6fb89bdc2a432acd16c6043def)
+
+### 🎉 New features
+
+- [cli] Added ability to skip platforms when ejecting ([#2988](https://github.com/expo/expo-cli/issues/2988))
+- [cli] Fallback to jest-expo@sdkVersion-beta when using beta sdk if not otherwise defined ([#2985](https://github.com/expo/expo-cli/issues/2985))
+- [cli] Update supported Node version ranges
+- [xdl] Install the client version for the given SDK by default when opening project ([#2986](https://github.com/expo/expo-cli/issues/2986))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.7
+- @expo/dev-tools@0.13.66
+- expo-cli@4.0.8
+- uri-scheme@1.0.53
+- @expo/xdl@59.0.6
+
+## [Tue, 1 Dec 2020 16:30:17 -0800](https://github.com/expo/expo-cli/commit/bc951645e2b7771ad2c2e81dbb50d1ffa7b22dc1)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+- [cli] Fix installing client for selected target SDK version in upgrade ([#2981](https://github.com/expo/expo-cli/issues/2981))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.6
+- expo-cli@4.0.7
+- uri-scheme@1.0.52
+
 ## [Mon, 30 Nov 2020 15:41:46 -0800](https://github.com/expo/expo-cli/commit/d68bfc944016efa0c553109ffca3d3222b1a92ac)
 
 ### 🛠 Breaking changes

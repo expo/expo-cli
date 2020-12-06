@@ -83,6 +83,21 @@ describe('getDependenciesFromBundledNativeModules', () => {
       });
       expect(deps['jest-expo']).toBe('4.0.0');
     });
+
+    it('upgrades jest-expo to ^${sdkVersion}-beta when targetSdkVersion is beta and not included in relatedPackages', () => {
+      const deps = getDependenciesFromBundledNativeModules({
+        projectDependencies,
+        bundledNativeModules,
+        sdkVersion,
+        workflow: 'bare',
+        targetSdkVersion: {
+          ...targetSdkVersion,
+          relatedPackages: {},
+          beta: true,
+        },
+      });
+      expect(deps['jest-expo']).toBe('^3.0.0-beta');
+    });
   });
 
   describe('react-native', () => {

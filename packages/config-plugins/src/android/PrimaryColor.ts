@@ -51,7 +51,7 @@ export function setPrimaryColorStyles(
   const hexString = getPrimaryColor(config);
   if (!hexString) {
     return removeStylesItem({
-      item: COLOR_PRIMARY_KEY,
+      name: COLOR_PRIMARY_KEY,
       xml,
       parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
     });

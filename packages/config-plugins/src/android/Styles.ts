@@ -37,6 +37,34 @@ export function getStyleParent(
   return app ?? null;
 }
 
+export function getStylesItem({
+  name,
+  xml,
+  parent,
+}: {
+  name: string;
+  xml: ResourceXML;
+  parent: { name: string; parent: string };
+}): ResourceItemXML | null {
+  xml = ensureDefaultStyleResourceXML(xml);
+
+  const appTheme = getStyleParent(xml, parent);
+
+  if (!appTheme) {
+    return null;
+  }
+
+  if (appTheme.item) {
+    const existingItem = appTheme.item.filter(_item => _item.$.name === name)[0];
+
+    // Don't want to 2 of the same item, so if one exists, we overwrite it
+    if (existingItem) {
+      return existingItem;
+    }
+  }
+  return null;
+}
+
 export function setStylesItem({
   item,
   xml,
@@ -71,18 +99,18 @@ export function setStylesItem({
 }
 
 export function removeStylesItem({
-  item,
+  name,
   xml,
   parent,
 }: {
-  item: string;
+  name: string;
   xml: ResourceXML;
   parent: { name: string; parent: string };
 }): ResourceXML {
   xml = ensureDefaultStyleResourceXML(xml);
   const appTheme = getStyleParent(xml, parent);
   if (appTheme?.item) {
-    const index = appTheme.item.findIndex((e: ResourceItemXML) => e.$.name === item);
+    const index = appTheme.item.findIndex((e: ResourceItemXML) => e.$.name === name);
     if (index > -1) {
       appTheme.item.splice(index, 1);
     }

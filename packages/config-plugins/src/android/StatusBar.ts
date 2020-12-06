@@ -67,7 +67,7 @@ export function setStatusBarStyles({ hexString, style }: Props, xml: ResourceXML
     // xml = removeStylesItem({
     //   xml,
     //   parent,
-    //   item: WINDOW_LIGHT_STATUS_BAR,
+    //   name: WINDOW_LIGHT_STATUS_BAR,
     // });
   }
 
@@ -75,7 +75,7 @@ export function setStatusBarStyles({ hexString, style }: Props, xml: ResourceXML
     // xml = removeStylesItem({
     //   xml,
     //   parent,
-    //   item: COLOR_PRIMARY_DARK_KEY,
+    //   name: COLOR_PRIMARY_DARK_KEY,
     // });
     // translucent status bar set in theme
     xml = setStylesItem({
@@ -87,7 +87,7 @@ export function setStatusBarStyles({ hexString, style }: Props, xml: ResourceXML
     // xml = removeStylesItem({
     //   xml,
     //   parent,
-    //   item: WINDOW_TRANSLUCENT_STATUS,
+    //   name: WINDOW_TRANSLUCENT_STATUS,
     // });
     xml = setStylesItem({
       item: buildResourceItem({

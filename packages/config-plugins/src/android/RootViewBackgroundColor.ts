@@ -66,7 +66,7 @@ export function setRootViewBackgroundColorStyles(
 ) {
   if (!hexString) {
     return removeStylesItem({
-      item: ANDROID_WINDOW_BACKGROUND,
+      name: ANDROID_WINDOW_BACKGROUND,
       xml: stylesJSON,
       parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
     });

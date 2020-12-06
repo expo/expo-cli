@@ -1,11 +1,17 @@
 import { getConfig } from '@expo/config';
-import { compileModsAsync, withExpoAndroidPlugins } from '@expo/config-plugins';
+import { compileModsAsync, ModPlatform, withExpoAndroidPlugins } from '@expo/config-plugins';
 import { UserManager } from '@expo/xdl';
 
 import log from '../../log';
 import { getOrPromptForPackage } from '../eject/ConfigValidation';
 
-export default async function configureAndroidProjectAsync(projectRoot: string) {
+export default async function configureAndroidProjectAsync({
+  projectRoot,
+  platforms,
+}: {
+  projectRoot: string;
+  platforms: ModPlatform[];
+}) {
   // Check package before reading the config because it may mutate the config if the user is prompted to define it.
   const packageName = await getOrPromptForPackage(projectRoot);
   const expoUsername =
@@ -23,7 +29,7 @@ export default async function configureAndroidProjectAsync(projectRoot: string) 
   });
 
   // compile all plugins and mods
-  config = await compileModsAsync(config, projectRoot);
+  config = await compileModsAsync(config, { projectRoot, platforms });
 
   if (log.isDebug) {
     log.debug();
