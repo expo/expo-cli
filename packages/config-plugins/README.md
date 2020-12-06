@@ -6,14 +6,14 @@ The Expo config is a powerful tool for generating native app code from a unified
 
 - [Usage](#usage)
 - [What are plugins](#what-are-plugins)
-  - [Creating a plugin](#creating-a-plugin)
+- [Creating a plugin](#creating-a-plugin)
   - [Importing plugins](#importing-plugins)
-    - [Chaining plugins](#chaining-plugins)
+  - [Chaining plugins](#chaining-plugins)
 - [What are mods](#what-are-mods)
-  - [How mods works](#how-mods-works)
+- [How mods works](#how-mods-works)
   - [Default mods](#default-mods)
   - [Mod plugins](#mod-plugins)
-  - [Creating a mod](#creating-a-mod)
+- [Creating a mod](#creating-a-mod)
   - [Experimental functionality](#experimental-functionality)
 - [Plugin module resolution](#plugin-module-resolution)
   - [Project file](#project-file)
@@ -78,7 +78,7 @@ Plugins are **synchronous** functions that accept an [`ExpoConfig`][config-docs]
 - Optionally, a second argument can be passed to the plugin to configure it.
 - `plugins` are always invoked when the config is read by `@expo/config`s `getConfig` method. However, the `mods` are only invoked during the "syncing" phase of `expo eject`.
 
-### Creating a plugin
+## Creating a plugin
 
 > 💡 Hands-on learners: Try this [sandbox](https://codesandbox.io/s/expo-config-plugins-basic-example-xopto?file=/src/project/app.config.js) (check the terminal logs).
 
@@ -166,7 +166,7 @@ module.exports = function withCustomName(config, name) {
 }
 ```
 
-#### Chaining plugins
+### Chaining plugins
 
 Once you add a few plugins, your `app.config.js` code can become difficult to read and manipulate. To combat this, `@expo/config-plugins` provides a `withPlugins` function which can be used to chain plugins together and execute them in order.
 
@@ -230,7 +230,7 @@ module.exports = {
 };
 ```
 
-### How mods works
+## How mods works
 
 - The config is read using `getConfig` from `@expo/config`
 - All of the core functionality supported by Expo is added via plugins in `withExpoIOSPlugins`. This is stuff like name, version, icons, locales, etc.
@@ -291,7 +291,7 @@ A mod plugin gets passed a `config` object with additional properties `modResult
   - `platform: ModPlatform`: Name of the platform used in the mods config.
   - `projectName?: string`: iOS only: The path component used for querying project files. ex. `projectRoot/ios/[projectName]/`
 
-### Creating a mod
+## Creating a mod
 
 Say you wanted to write a mod to update the Xcode Project's "product name":
 
@@ -344,7 +344,7 @@ The strings passed to the `plugins` array can be resolved in a few different way
 
 > Any resolution pattern that isn't specified below is unexpected behavior, and subject to breaking changes.
 
-#### Project file
+### Project file
 
 You can quickly create a plugin in your project and use it in your config.
 
@@ -356,7 +356,7 @@ You can quickly create a plugin in your project and use it in your config.
 ╰── my-config-plugin.js ➡️ ✅ `module.exports = (config) => config`
 ```
 
-#### app.plugin.js
+### app.plugin.js
 
 Sometimes you want your package to export React components and also support a plugin, to do this, multiple entry points need to be used (because the transpilation (Babel preset) may be different).
 If a `app.plugin.js` file is present in the root of a Node module's folder, it'll be used instead of the package's `main` file.
@@ -372,7 +372,7 @@ If a `app.plugin.js` file is present in the root of a Node module's folder, it'l
     ╰── build/index.js ➡️ ❌ Ignored because `app.plugin.js` exists. This could be used with `expo-splash-screen/build/index.js`
 ```
 
-#### Node module default file
+### Node module default file
 
 A config plugin in a node module (without an `app.plugin.js`) will use the `main` file defined in the `package.json`.
 
@@ -386,7 +386,7 @@ A config plugin in a node module (without an `app.plugin.js`) will use the `main
     ╰── build/index.js ➡️  ✅ Node resolves to this module.
 ```
 
-#### Project folder
+### Project folder
 
 - ✅ `'./my-config-plugin'`
 - ❌ `'./my-config-plugin.js'`
@@ -399,7 +399,7 @@ This is different to how Node modules work because `app.plugin.js` won't be reso
     ╰── index.js ➡️ ✅ By default, Node resolves a folder's index.js file as the main file.
 ```
 
-#### Module internals
+### Module internals
 
 If a file inside a Node module is specified, then the module's root `app.plugin.js` resolution will be skipped. This is referred to as "reaching inside a package" and is considered **bad form**.
 We support this to make testing, and plugin authoring easier, but we don't expect library authors to expose their plugins like this as a public API.
@@ -415,7 +415,7 @@ We support this to make testing, and plugin authoring easier, but we don't expec
     ╰── build/index.js ➡️ ✅ `module.exports = (config) => config`
 ```
 
-#### Raw functions
+### Raw functions
 
 You can also just pass in a config plugin.
 
