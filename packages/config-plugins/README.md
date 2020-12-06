@@ -2,17 +2,65 @@
 
 The Expo config is a powerful tool for generating native app code from a unified JavaScript interface. Most basic functionality can be controlled by using the the [static Expo config](https://docs.expo.io/versions/latest/config/app/), but some features require manipulation of the native project files. To support complex behavior we've created config plugins, and mods (short for modifiers).
 
-> Here is a [colorful chart](https://whimsical.com/UjytoYXT2RN43LywvWExfK) for visual learners.
+> 💡 **Hands-on Learners**: Use [this sandbox][sandbox] to play with the core functionality of Expo config. For more complex tests, use a local Expo project, with `expo eject --no-install` to apply changes.
 
-## Plugins
+**Quick facts**
 
-A function which accepts a config, modifies it, then returns the modified config.
+- Plugins are functions that can change values on your Expo config.
+- Plugins are mostly meant to be used with [`expo eject`][cli-eject] or `eas build` commands.
+- We recommend you use plugins with `app.config.json` or `app.config.js` instead of `app.json` (no top-level `expo` object is required).
+- `mods` are async functions that modify native files.
+- Changes performed with `mods` will require a native rebuild.
+- `mods` are removed from the public app manifest.
+- 💡 Everything in the Expo config must be able to be converted to JSON (with the exception of the `mods` field). So no async functions outside of `mods` in your config plugins!
+
+## How to use
+
+Here is a basic config that uses the `expo-splash-screen` plugin:
+
+```json
+{
+  "name": "my app",
+  "plugins": ["expo-splash-screen"]
+}
+```
+
+Some plugins can be customized by passing an array, where the second argument is the options:
+
+```json
+{
+  "name": "my app",
+  "plugins": [
+    [
+      "expo-splash-screen",
+      {
+        /* Values passed to the plugin */
+      }
+    ]
+  ]
+}
+```
+
+If you run `expo eject`, the `mods` will be compiled, and the native files be changed! The changes won't be fully shown until you rebuild the native project with `eas build -p ios` or locally with `npx react-native run-ios` or `npx react-native run-android`.
+
+For instance, if you add a plugin that adds permission messages to your app, the app will need to be rebuilt.
+
+And that's it! Now you're using Config plugins. No more having to interact with the native projects!
+
+> 💡 Check out all the different ways you can import `plugins`: [plugin module resolution](#Plugin-module-resolution)
+
+### What are config plugins
+
+Plugins are **synchronous** functions that accept an [`ExpoConfig`][config-docs] and return a modified [`ExpoConfig`][config-docs].
 
 - Plugins should be named using the following convention: `with<Plugin Functionality>` i.e. `withFacebook`.
 - Plugins should be synchronous and their return value should be serializable, except for any `mods` that are added.
 - Optionally, a second argument can be passed to the plugin to configure it.
+- `plugins` are always invoked when the config is read by `@expo/config`s `getConfig` method. However, the `mods` are only invoked during the "syncing" phase of `expo eject`.
 
-### Creating a Plugin
+### Creating a plugin
+
+> 💡 Hands-on learners: Try this [sandbox](https://codesandbox.io/s/expo-config-plugins-basic-example-xopto?file=/src/project/app.config.js) (check the terminal logs).
 
 Here is an example of the most basic config plugin:
 
@@ -49,7 +97,56 @@ const config = {
 export default withMySDK(config, { apiKey: 'X-XXX-XXX' });
 ```
 
-#### Chaining Plugins
+### Importing plugins
+
+You may want to create a plugin in a different file, here's how:
+
+- The root file can be any JS file or a file named `app.plugin.js` in the [root of a Node module](#root-app.plugin.js).
+- The file should export a `ConfigPlugin` function.
+- Plugins should be transpiled for Node environments ahead of time!
+  - They should support the versions of Node that [Expo supports](https://docs.expo.io/get-started/installation/#requirements) (LTS).
+  - No `import/export` keywords, use `module.exports` in the shipped plugin file.
+  - Expo only transpiles the user's initial `app.config` file, anything more would require a bundler which would add too many "opinions" for a config file.
+
+Consider the following example that changes the config name:
+
+```
+╭── app.config.js ➡️ Expo Config
+╰── my-plugin.js ➡️ Our custom plugin file
+```
+
+`my-plugin.js`
+
+```js
+module.exports = function withCustomName(config, name) {
+  // Modify the config
+  config.name = 'custom-' + name;
+  // Return the results
+  return config;
+};
+```
+
+`app.config.json`
+
+```json
+{
+  "name": "my-app",
+  "plugins": ["./my-plugin", "app"]
+}
+```
+
+↓ ↓ ↓
+
+**Evaluated config JSON**
+
+```json
+{
+  "name": "custom-app",
+  "plugins": ["./my-plugin", "app"]
+}
+```
+
+#### Chaining plugins
 
 Once you add a few plugins, your `app.config.js` code can become difficult to read and manipulate. To combat this, `@expo/config-plugins` provides a `withPlugins` function which can be used to chain plugins together and execute them in order.
 
@@ -68,39 +165,65 @@ import { withPlugins } from '@expo/config-plugins';
 withPlugins(config, [
   [withBar, 'input 1'],
   [withFoo, 'input 2'],
-  [withDelta, 'input 3'],
+  // When no input is required, you can just pass the method...
+  withDelta,
 ]);
 ```
 
-## Modifiers
+To support JSON configs, we also added the `plugins` array which just uses `withPlugins` under the hood.
+Here is the same config as above, but even simpler:
+
+```js
+export default {
+  name: 'my app',
+  plugins: [
+    [withBar, 'input 1'],
+    [withFoo, 'input 2'],
+    [withDelta, 'input 3'],
+  ],
+};
+```
+
+## What are mods
 
 An async function which accepts a config and a data object, then manipulates and returns both as an object.
 
 Modifiers (mods for short) are added to the `mods` object of the Expo config. The `mods` object is different to the rest of the Expo config because it doesn't get serialized after the initial reading, this means you can use it to perform actions _during_ code generation. If possible, you should attempt to use basic plugins instead of mods as they're simpler to work with.
 
-- mods are omitted from the manifest and cannot be accessed via `Constants.manifest`. mods exist for the sole purpose of modifying native files during code generation!
-- mods can be used to read and write files safely during the `expo eject` command. This is how Expo CLI modifies the Info.plist, entitlements, xcproj, etc...
-- mods are platform specific and should always be added to a platform specific object:
+- `mods` are omitted from the manifest and **cannot** be accessed via `Updates.manifest`. mods exist for the sole purpose of modifying native files during code generation!
+- `mods` can be used to read and write files safely during the `expo eject` command. This is how Expo CLI modifies the Info.plist, entitlements, xcproj, etc...
+- `mods` are platform specific and should always be added to a platform specific object:
+
+`app.config.js`
 
 ```js
-{
+module.exports = {
+  name: 'my-app',
   mods: {
-    ios: { /* ... */ },
-    android: { /* ... */ }
-  }
-}
+    ios: {
+      /* iOS mods... */
+    },
+    android: {
+      /* Android mods... */
+    },
+  },
+};
 ```
 
-### How it works
+### How mods works
 
 - The config is read using `getConfig` from `@expo/config`
 - All of the core functionality supported by Expo is added via plugins in `withExpoIOSPlugins`. This is stuff like name, version, icons, locales, etc.
 - The config is passed to the compiler `compileModifiersAsync`
-- The compiler adds base mods which are responsible for reading data (like Info.plist), executing a named mod (like `mods.ios.infoPlist`), then writing the results to the file system.
+- The compiler adds base mods which are responsible for reading data (like `Info.plist`), executing a named mod (like `mods.ios.infoPlist`), then writing the results to the file system.
 - The compiler iterates over all of the mods and asynchronously evaluates them, providing some base props like the `projectRoot`.
   - After each mod, error handling asserts if the mod chain was corrupted by an invalid mod.
 
-### Default Modifiers
+<!-- TODO: Move to a section about mod compiler -->
+
+> 💡 Here is a [colorful chart](https://whimsical.com/UjytoYXT2RN43LywvWExfK) of the mod compiler for visual learners.
+
+### Default mods
 
 The following default mods are provided by the mod compiler for common file manipulation:
 
@@ -118,7 +241,37 @@ The following default mods are provided by the mod compiler for common file mani
 After the mods are resolved, the contents of each mod will be written to disk. Custom default mods can be added to support new native files.
 For example, you can create a mod to support the `GoogleServices-Info.plist`, and pass it to other mods.
 
-### Creating a Modifier
+### Mod plugins
+
+Mods are responsible for a lot of things, so they can be pretty difficult to understand at first.
+If you're developing a feature that requires mods, it's best not to interact with them directly.
+
+Instead you should use the helper mods provided by `@expo/config-plugins`:
+
+- iOS
+  - `withInfoPlist`
+  - `withEntitlementsPlist`
+  - `withExpoPlist`
+  - `withXcodeProject`
+- Android
+  - `withAndroidManifest`
+  - `withStringsXml`
+  - `withMainActivity`
+  - `withProjectBuildGradle`
+  - `withAppBuildGradle`
+  - `withSettingsGradle`
+
+A mod plugin gets passed a `config` object with additional properties `modResults` and `modRequest` added to it.
+
+- `modResults`: The object to modify and return. The type depends on the mod that's being used.
+- `modRequest`: Additional properties supplied by the mod compiler.
+  - `projectRoot: string`: Project root directory for the universal app.
+  - `platformProjectRoot: string`: Project root for the specific platform.
+  - `modName: string`: Name of the mod.
+  - `platform: ModPlatform`: Name of the platform used in the mods config.
+  - `projectName?: string`: iOS only: The path component used for querying project files. ex. `projectRoot/ios/[projectName]/`
+
+### Creating a mod
 
 Say you wanted to write a mod to update the Xcode Project's "product name":
 
@@ -149,7 +302,7 @@ export default withCustomProductName(config, 'new_name');
 
 ### Experimental functionality
 
-Some parts of the mod system aren't fully flushed out, these parts use `withDangerousModifier` to read/write data without a base mod. These methods essentially act as their own base mod and cannot be extended. Icons for example currently use the dangerous mod to perform a single generation step with no ability to customize the results.
+Some parts of the mod system aren't fully flushed out, these parts use `withDangerousModifier` to read/write data without a base mod. These methods essentially act as their own base mod and cannot be extended. Icons for example, currently use the dangerous mod to perform a single generation step with no ability to customize the results.
 
 ```ts
 export const withIcons: ConfigPlugin = config => {
@@ -165,38 +318,9 @@ Be careful using `withDangerousModifier` as it is subject to change in the futur
 The order with which it gets executed is not reliable either.
 Currently dangerous mods run first before all other modifiers, this is because we use dangerous mods internally for large file system refactoring like when the package name changes.
 
-## Static Plugins
+### Plugin module resolution
 
-You don't need to migrate away from your existing `app.json` or `app.config.json` to use config plugins (although it is recommended). Plugins can be resolved automatically using the JSON `plugins` array:
-
-```js
-{
-  name: 'My App',
-  plugins: [
-    // A config plugin!
-    'expo-splash-screen'
-  ]
-}
-```
-
-Static plugins can be added in two different formats:
-
-```js
-{
-  plugins: [
-    // Long form with properties
-    ['my-plugin', { /* Passed as the second parameter to the config plugin */ }]
-    // Short hand -- gets normalized to ['my-plugin', undefined]
-    'my-plugin',
-  ];
-}
-```
-
-> 💡 Everything in the Expo config must be able to be converted to JSON (with the exception of the `mods` field). So no async functions outside of `mods` in your config plugins!
-
-### Module Resolution
-
-Static plugins can be resolved in a few different ways. Here are the different patterns for strings you could pass in the `plugins` array (the first property).
+The strings passed to the `plugins` array can be resolved in a few different ways.
 
 > Any resolution pattern that isn't specified below is unexpected behavior, and subject to breaking changes.
 
@@ -220,7 +344,9 @@ Static plugins can be resolved in a few different ways. Here are the different p
     ╰── build/index.js ➡️  ✅ Node resolves to this module.
 ```
 
-Sometimes you want your package to export React components and also support a plugin, to support this, multiple entry points are used. If a `app.plugin.js` file is present in the Node module's root folder, it'll be used instead of the package's main file.
+##### Root app.plugin.js
+
+Sometimes you want your package to export React components and also support a plugin, to do this, multiple entry points are used. If a `app.plugin.js` file is present in the root of a Node module's folder, it'll be used instead of the package's main file:
 
 ```
 ╭── app.config.js ➡️ Expo Config
@@ -257,7 +383,7 @@ If a file inside a Node module is specified, then the module's root `app.plugin.
     ╰── build/index.js ➡️ ✅ `module.exports = (config) => config`
 ```
 
-#### Functions
+#### Raw functions
 
 You can also just pass in a config plugin.
 
@@ -278,7 +404,9 @@ const config = {
 };
 ```
 
-One caveat to using functions instead of strings is that serialization will replace the function with the function's name. This keeps manifests working as expected.
+One caveat to using functions instead of strings is that serialization will replace the function with the function's name. This keeps **manifests** (kinda like the `index.html` for your app) working as expected.
+
+Here is what the serialized config would look like:
 
 ```json
 {
@@ -293,43 +421,6 @@ This is because Node environments are often different to iOS, Android, or web JS
 
 Because of this reasoning, the root of a Node module is searched instead of right next to the `index.js`. Imagine you had a TypeScript Node module where the transpiled main file was located at `build/index.js`, if Expo config plugin resolution searched for `build/app.plugin.js` you'd lose the ability to transpile the file differently.
 
-### Creating static plugins
-
-- The root file can be any JS file or the root `app.plugin.js` in a Node module.
-- The file should export a `ConfigPlugin` function.
-- Plugins should be transpiled for Node environments ahead of time! They should support the versions of Node that [Expo supports](https://docs.expo.io/get-started/installation/#requirements) (LTS).
-  - No `import/export` keywords, use `module.exports` in the shipped plugin file.
-  - Expo only transpiles the user's initial `app.config` file, anything more would require a bundler which would add too many "opinions" for a config file 🙃
-
-#### Static plugin example
-
-`my-plugin.js`
-
-```js
-module.exports = function withCustomName(config, name) {
-  // Modify the config
-  config.name = 'custom-' + name;
-  // Return the results
-  return config;
-};
-```
-
-`app.config.json`
-
-```json
-{
-  "name": "my-app",
-  "plugins": ["./my-plugin", "app"]
-}
-```
-
-↓ ↓ ↓
-
-**Evaluated config JSON**
-
-```json
-{
-  "name": "custom-app",
-  "plugins": ["./my-plugin", "app"]
-}
-```
+[config-docs]: https://docs.expo.io/versions/latest/config/app/
+[cli-eject]: https://docs.expo.io/workflow/expo-cli/#eject
+[sandbox]: https://codesandbox.io/s/expo-config-plugins-8qhof?file=/src/project/app.config.js
