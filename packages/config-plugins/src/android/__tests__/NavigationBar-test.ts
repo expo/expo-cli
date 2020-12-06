@@ -1,5 +1,3 @@
-import { vol } from 'memfs';
-
 import {
   getNavigationBarColor,
   getNavigationBarImmersiveMode,
@@ -8,7 +6,6 @@ import {
   setNavigationBarStyles,
   withNavigationBar,
 } from '../NavigationBar';
-import { sampleStylesXML } from './StatusBar-test';
 
 jest.mock('fs');
 jest.mock('../../utils/warnings');

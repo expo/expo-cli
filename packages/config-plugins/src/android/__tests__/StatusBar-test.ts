@@ -1,14 +1,12 @@
 import { ExpoConfig } from '@expo/config-types';
 import { vol } from 'memfs';
 
-import { readResourcesXMLAsync } from '../Resources';
 import {
   getStatusBarColor,
   getStatusBarStyle,
   setStatusBarColors,
   setStatusBarStyles,
 } from '../StatusBar';
-import { getProjectStylesXMLPathAsync, setStylesItem } from '../Styles';
 
 jest.mock('fs');
 
