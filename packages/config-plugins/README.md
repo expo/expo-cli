@@ -297,7 +297,7 @@ Because of this reasoning, the root of a Node module is searched instead of righ
 
 - The root file can be any JS file or the root `app.plugin.js` in a Node module.
 - The file should export a `ConfigPlugin` function.
-- Plugins should be transpiled for Node environments ahead of time!
+- Plugins should be transpiled for Node environments ahead of time! They should support the versions of Node that [Expo supports](https://docs.expo.io/get-started/installation/#requirements) (LTS).
   - No `import/export` keywords, use `module.exports` in the shipped plugin file.
   - Expo only transpiles the user's initial `app.config` file, anything more would require a bundler which would add too many "opinions" for a config file 🙃
 
