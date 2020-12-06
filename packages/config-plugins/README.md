@@ -4,6 +4,26 @@ The Expo config is a powerful tool for generating native app code from a unified
 
 > 💡 **Hands-on Learners**: Use [this sandbox][sandbox] to play with the core functionality of Expo config. For more complex tests, use a local Expo project, with `expo eject --no-install` to apply changes.
 
+- [Usage](#usage)
+- [What are plugins](#what-are-plugins)
+  - [Creating a plugin](#creating-a-plugin)
+  - [Importing plugins](#importing-plugins)
+    - [Chaining plugins](#chaining-plugins)
+- [What are mods](#what-are-mods)
+  - [How mods works](#how-mods-works)
+  - [Default mods](#default-mods)
+  - [Mod plugins](#mod-plugins)
+  - [Creating a mod](#creating-a-mod)
+  - [Experimental functionality](#experimental-functionality)
+- [Plugin module resolution](#plugin-module-resolution)
+  - [Project file](#project-file)
+  - [app.plugin.js](#apppluginjs)
+  - [Node module default file](#node-module-default-file)
+  - [Project folder](#project-folder)
+  - [Module internals](#module-internals)
+  - [Raw functions](#raw-functions)
+- [Why app.plugin.js for plugins](#why-apppluginjs-for-plugins)
+
 **Quick facts**
 
 - Plugins are functions that can change values on your Expo config.
@@ -14,7 +34,7 @@ The Expo config is a powerful tool for generating native app code from a unified
 - `mods` are removed from the public app manifest.
 - 💡 Everything in the Expo config must be able to be converted to JSON (with the exception of the `mods` field). So no async functions outside of `mods` in your config plugins!
 
-## How to use
+## Usage
 
 Here is a basic config that uses the `expo-splash-screen` plugin:
 
@@ -49,7 +69,7 @@ And that's it! Now you're using Config plugins. No more having to interact with 
 
 > 💡 Check out all the different ways you can import `plugins`: [plugin module resolution](#Plugin-module-resolution)
 
-### What are config plugins
+## What are plugins
 
 Plugins are **synchronous** functions that accept an [`ExpoConfig`][config-docs] and return a modified [`ExpoConfig`][config-docs].
 
@@ -318,7 +338,7 @@ Be careful using `withDangerousModifier` as it is subject to change in the futur
 The order with which it gets executed is not reliable either.
 Currently dangerous mods run first before all other modifiers, this is because we use dangerous mods internally for large file system refactoring like when the package name changes.
 
-### Plugin module resolution
+## Plugin module resolution
 
 The strings passed to the `plugins` array can be resolved in a few different ways.
 
@@ -426,7 +446,7 @@ Here is what the serialized config would look like:
 }
 ```
 
-### Why app.plugin.js for plugins
+## Why app.plugin.js for plugins
 
 Config resolution searches for a `app.plugin.js` first when a Node module name is provided.
 This is because Node environments are often different to iOS, Android, or web JS environments and therefore require different transpilation presets (ex: `module.exports` instead of `import/export`).
