@@ -326,6 +326,8 @@ The strings passed to the `plugins` array can be resolved in a few different way
 
 #### Project file
 
+You can quickly create a plugin in your project and use it in your config.
+
 - ✅ `'./my-config-plugin'`
 - ❌ `'./my-config-plugin.js'`
 
