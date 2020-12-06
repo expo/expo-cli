@@ -326,27 +326,21 @@ The strings passed to the `plugins` array can be resolved in a few different way
 
 #### Project file
 
-`'./my-config-plugin.js'`
+- ✅ `'./my-config-plugin'`
+- ❌ `'./my-config-plugin.js'`
 
 ```
 ╭── app.config.js ➡️ Expo Config
 ╰── my-config-plugin.js ➡️ ✅ `module.exports = (config) => config`
 ```
 
-#### Node resolve
+#### app.plugin.js
 
-`'expo-splash-screen'`
+Sometimes you want your package to export React components and also support a plugin, to do this, multiple entry points need to be used (because the transpilation (Babel preset) may be different).
+If a `app.plugin.js` file is present in the root of a Node module's folder, it'll be used instead of the package's `main` file.
 
-```
-╭── app.config.js ➡️ Expo Config
-╰── node_modules/expo-splash-screen/ ➡️ Module installed from NPM (works with Yarn workspaces as well).
-    ├── package.json ➡️ The `main` file points to `build/index.js`
-    ╰── build/index.js ➡️  ✅ Node resolves to this module.
-```
-
-##### Root app.plugin.js
-
-Sometimes you want your package to export React components and also support a plugin, to do this, multiple entry points are used. If a `app.plugin.js` file is present in the root of a Node module's folder, it'll be used instead of the package's main file:
+- ✅ `'expo-splash-screen'`
+- ❌ `'expo-splash-screen/app.plugin.js'`
 
 ```
 ╭── app.config.js ➡️ Expo Config
@@ -356,9 +350,24 @@ Sometimes you want your package to export React components and also support a pl
     ╰── build/index.js ➡️ ❌ Ignored because `app.plugin.js` exists. This could be used with `expo-splash-screen/build/index.js`
 ```
 
+#### Node module default file
+
+A config plugin in a node module (without an `app.plugin.js`) will use the `main` file defined in the `package.json`.
+
+- ✅ `'expo-splash-screen'`
+- ❌ `'expo-splash-screen/build/index'`
+
+```
+╭── app.config.js ➡️ Expo Config
+╰── node_modules/expo-splash-screen/ ➡️ Module installed from NPM (works with Yarn workspaces as well).
+    ├── package.json ➡️ The `main` file points to `build/index.js`
+    ╰── build/index.js ➡️  ✅ Node resolves to this module.
+```
+
 #### Project folder
 
-`'./my-config-plugin'`
+- ✅ `'./my-config-plugin'`
+- ❌ `'./my-config-plugin.js'`
 
 This is different to how Node modules work because `app.plugin.js` won't be resolved by default in a directory. You'll have to manually specify `./my-config-plugin/app.plugin.js` to use it, otherwise `index.js` in the directory will be used.
 
@@ -370,10 +379,11 @@ This is different to how Node modules work because `app.plugin.js` won't be reso
 
 #### Module internals
 
-If a file inside a Node module is specified, then the module's root `app.plugin.js` resolution will be skipped. This is referred to as "reaching inside a package" and is bad form. We support this to make testing, and plugin authoring easier, but we don't expect library authors to expose their plugins like this as a public API.
+If a file inside a Node module is specified, then the module's root `app.plugin.js` resolution will be skipped. This is referred to as "reaching inside a package" and is considered **bad form**.
+We support this to make testing, and plugin authoring easier, but we don't expect library authors to expose their plugins like this as a public API.
 
-- `'expo-splash-screen/build/index.js'`
-- `'expo-splash-screen/build'`
+- ❌ `'expo-splash-screen/build/index.js'`
+- ❌ `'expo-splash-screen/build'`
 
 ```
 ╭── app.config.js ➡️ Expo Config
