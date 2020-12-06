@@ -233,7 +233,7 @@ declare module 'xcode' {
     removeHeaderFile(path: string, opt: unknown, group: string): unknown;
     addResourceFile(path: string, opt: unknown, group: string): unknown;
     removeResourceFile(path: string, opt: unknown, group: string): unknown;
-    addFramework(fpath: unknown, opt: unknown): unknown;
+    addFramework(fpath: string, opt: unknown): unknown;
     removeFramework(fpath: unknown, opt: unknown): unknown;
     addCopyfile(fpath: unknown, opt: unknown): unknown;
     pbxCopyfilesBuildPhaseObj(target: unknown): unknown;

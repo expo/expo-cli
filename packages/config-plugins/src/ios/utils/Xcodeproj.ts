@@ -81,6 +81,44 @@ export function addFileToGroup(
   return project;
 }
 
+export function getApplicationNativeTarget({
+  project,
+  projectName,
+}: {
+  project: XcodeProject;
+  projectName: string;
+}) {
+  const applicationNativeTarget = project.getTarget('com.apple.product-type.application');
+  assert(
+    applicationNativeTarget,
+    `Couldn't locate application PBXNativeTarget in '.xcodeproj' file.`
+  );
+  assert(
+    String(applicationNativeTarget.target.name) === projectName,
+    `Application native target name mismatch. Expected ${projectName}, but found ${applicationNativeTarget.target.name}.`
+  );
+  return applicationNativeTarget;
+}
+
+/**
+ * Add a framework to the default app native target.
+ *
+ * @param projectName Name of the PBX project.
+ * @param framework String ending in `.framework`, i.e. `StoreKit.framework`
+ */
+export function addFramework({
+  project,
+  projectName,
+  framework,
+}: {
+  project: XcodeProject;
+  projectName: string;
+  framework: string;
+}) {
+  const target = getApplicationNativeTarget({ project, projectName });
+  return project.addFramework(framework, { target: target.uuid });
+}
+
 function splitPath(path: string): string[] {
   // TODO: Should we account for other platforms that may not use `/`
   return path.split('/');
