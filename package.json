@@ -29,6 +29,7 @@
     "@expo/spawn-async": "^1.5.0",
     "@types/jest": "^26.0.8",
     "codecov": "^3.6.5",
+    "danger": "^10.5.4",
     "eslint": "^6.6.0",
     "eslint-config-universe": "^4.0.0",
     "expo-yarn-workspaces": "^1.2.1",

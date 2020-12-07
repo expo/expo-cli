@@ -80,6 +80,21 @@ jobs:
       #     flags: ${{ steps.cov-flag-name.outputs.flag }} # optional
       #     fail_ci_if_error: true # optional (default = false)
 
+  ensure-pr:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+    name: 'Ensure PR'
+    steps:
+      - uses: actions/cache@v2
+        with:
+          path: '*'
+          key: v2-${{ github.sha }}-${{ matrix.node }}
+      - name: Danger
+        run: yarn danger ci
+        env: GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   puppeteer:
     runs-on: ubuntu-latest
     needs: build
