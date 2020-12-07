@@ -1,10 +1,10 @@
 import { ApiV2, RegistrationData, User, UserManager } from '@expo/xdl';
 import { ApiV2Error } from '@expo/xdl/build/ApiV2';
-import assert from 'assert';
 import chalk from 'chalk';
 import program from 'commander';
 
 import CommandError from './CommandError';
+import { assert } from './assert';
 import log from './log';
 import promptNew, { confirmAsync, Question as NewQuestion, selectAsync } from './prompts';
 import { nonEmptyInput } from './validators';

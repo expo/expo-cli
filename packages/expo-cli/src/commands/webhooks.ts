@@ -1,6 +1,5 @@
 import { findConfigFile, getConfig } from '@expo/config';
 import { ApiV2, UserManager } from '@expo/xdl';
-import assert from 'assert';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
 import { Command } from 'commander';
@@ -8,6 +7,7 @@ import crypto from 'crypto';
 import ora from 'ora';
 
 import CommandError, { ErrorCodes } from '../CommandError';
+import { assert } from '../assert';
 import log from '../log';
 
 const SECRET_MIN_LENGTH = 16;

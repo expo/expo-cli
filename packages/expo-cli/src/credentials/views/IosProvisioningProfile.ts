@@ -1,6 +1,5 @@
 import plist, { PlistObject } from '@expo/plist';
 import { IosCodeSigning, PKCS12Utils } from '@expo/xdl';
-import assert from 'assert';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import ora from 'ora';
@@ -13,6 +12,7 @@ import {
   ProvisioningProfileInfo,
   ProvisioningProfileManager,
 } from '../../appleApi';
+import { assert } from '../../assert';
 import log from '../../log';
 import prompt, { confirmAsync, Question } from '../../prompts';
 import { displayIosAppCredentials } from '../actions/list';
