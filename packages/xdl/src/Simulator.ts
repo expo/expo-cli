@@ -379,14 +379,17 @@ export async function expoVersionOnSimulatorAsync({
 }
 
 export async function doesExpoClientNeedUpdatedAsync(
-  simulator: Pick<SimControl.Device, 'udid'>
+  simulator: Pick<SimControl.Device, 'udid'>,
+  sdkVersion?: string
 ): Promise<boolean> {
   // Test that upgrading works by returning true
   // return true;
   const versions = await Versions.versionsAsync();
+  const clientForSdk = await getClientForSDK(sdkVersion);
+  const latestVersionForSdk = clientForSdk?.version ?? versions.iosVersion;
 
   const installedVersion = await expoVersionOnSimulatorAsync(simulator);
-  if (installedVersion && semver.lt(installedVersion, versions.iosVersion)) {
+  if (installedVersion && semver.lt(installedVersion, latestVersionForSdk)) {
     return true;
   }
   return false;
@@ -613,7 +616,7 @@ async function ensureExpoClientInstalledAsync(
   if (isInstalled) {
     if (
       !hasPromptedToUpgrade[simulator.udid] &&
-      (await doesExpoClientNeedUpdatedAsync(simulator))
+      (await doesExpoClientNeedUpdatedAsync(simulator, sdkVersion))
     ) {
       // Only prompt once per simulator in a single run.
       hasPromptedToUpgrade[simulator.udid] = true;
