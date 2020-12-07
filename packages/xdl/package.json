@@ -62,7 +62,6 @@
     "idx": "2.4.0",
     "indent-string": "3.2.0",
     "internal-ip": "4.3.0",
-    "invariant": "2.2.4",
     "is-reachable": "^4.0.0",
     "json-schema-deref-sync": "^0.13.0",
     "latest-version": "5.1.0",

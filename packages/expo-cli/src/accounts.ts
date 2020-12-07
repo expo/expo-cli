@@ -1,8 +1,8 @@
 import { ApiV2, RegistrationData, User, UserManager } from '@expo/xdl';
 import { ApiV2Error } from '@expo/xdl/build/ApiV2';
+import assert from 'assert';
 import chalk from 'chalk';
 import program from 'commander';
-import invariant from 'invariant';
 
 import CommandError from './CommandError';
 import log from './log';
@@ -223,7 +223,7 @@ export async function _retryUsernamePasswordAuthWithOTPAsync(
   }
 ): Promise<User> {
   const { secondFactorDevices, smsAutomaticallySent } = metadata;
-  invariant(
+  assert(
     secondFactorDevices !== undefined && smsAutomaticallySent !== undefined,
     `Malformed OTP error metadata: ${metadata}`
   );
@@ -232,10 +232,7 @@ export async function _retryUsernamePasswordAuthWithOTPAsync(
   let otp: string | null = null;
 
   if (smsAutomaticallySent) {
-    invariant(
-      primaryDevice,
-      'OTP should only automatically be sent when there is a primary device'
-    );
+    assert(primaryDevice, 'OTP should only automatically be sent when there is a primary device');
     log.nested(
       `One-time password was sent to the phone number ending in ${primaryDevice.sms_phone_number}.`
     );

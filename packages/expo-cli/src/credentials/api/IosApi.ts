@@ -1,5 +1,5 @@
 import { ApiV2 } from '@expo/xdl';
-import invariant from 'invariant';
+import assert from 'assert';
 import forEach from 'lodash/forEach';
 import keyBy from 'lodash/keyBy';
 import omit from 'lodash/omit';
@@ -26,7 +26,7 @@ export interface AppLookupParams {
 
 export function getAppLookupParams(experienceName: string, bundleIdentifier: string) {
   const matchedExperienceName = experienceName.match(/@(.+)\/(.+)/);
-  invariant(matchedExperienceName && matchedExperienceName.length >= 3, 'invalid experience name');
+  assert(matchedExperienceName && matchedExperienceName.length >= 3, 'invalid experience name');
   return {
     accountName: matchedExperienceName[1],
     projectName: matchedExperienceName[2],
@@ -113,8 +113,8 @@ export default class IosApi {
     await this.refetchUserCredentials(id, accountName);
 
     const distCert = this.credentials[accountName]?.userCredentials?.[String(id)];
-    invariant(id && distCert, 'distribution certificate does not exists');
-    invariant(distCert.type === 'dist-cert', 'wrong type of user credential');
+    assert(id && distCert, 'distribution certificate does not exists');
+    assert(distCert.type === 'dist-cert', 'wrong type of user credential');
     return distCert as IosDistCredentials;
   }
 
@@ -129,8 +129,8 @@ export default class IosApi {
     await this.refetchUserCredentials(id, accountName);
 
     const distCert = this.credentials[accountName]?.userCredentials[String(id)];
-    invariant(distCert, 'distribution certificate does not exists');
-    invariant(distCert.type === 'dist-cert', 'wrong type of user credential');
+    assert(distCert, 'distribution certificate does not exists');
+    assert(distCert.type === 'dist-cert', 'wrong type of user credential');
     return distCert as IosDistCredentials;
   }
 
@@ -156,8 +156,8 @@ export default class IosApi {
     await this.refetchUserCredentials(id, accountName);
 
     const pushKey = this.credentials[accountName]?.userCredentials?.[String(id)];
-    invariant(id && pushKey, 'push key does not exists');
-    invariant(pushKey.type === 'push-key', 'wrong type of user credentials');
+    assert(id && pushKey, 'push key does not exists');
+    assert(pushKey.type === 'push-key', 'wrong type of user credentials');
     return pushKey;
   }
 
@@ -171,8 +171,8 @@ export default class IosApi {
     await this.refetchUserCredentials(id, accountName);
 
     const pushKey = this.credentials[accountName]?.userCredentials?.[String(id)];
-    invariant(id && pushKey, 'push key does not exists');
-    invariant(pushKey.type === 'push-key', 'wrong type of user credentials');
+    assert(id && pushKey, 'push key does not exists');
+    assert(pushKey.type === 'push-key', 'wrong type of user credentials');
     return pushKey;
   }
 

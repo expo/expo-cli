@@ -1,10 +1,10 @@
 import { findConfigFile, getConfig } from '@expo/config';
 import { ApiV2, UserManager } from '@expo/xdl';
+import assert from 'assert';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
 import { Command } from 'commander';
 import crypto from 'crypto';
-import invariant from 'invariant';
 import ora from 'ora';
 
 import CommandError, { ErrorCodes } from '../CommandError';
@@ -76,8 +76,8 @@ async function addAsync(
   projectRoot: string,
   { url, event, ...options }: { url?: string; event?: WebhookEvent; secret?: string }
 ) {
-  invariant(typeof url === 'string' && /^https?/.test(url), '--url: a HTTP URL is required');
-  invariant(typeof event === 'string', '--event: string is required');
+  assert(typeof url === 'string' && /^https?/.test(url), '--url: a HTTP URL is required');
+  assert(typeof event === 'string', '--event: string is required');
   const secret = validateSecret(options) || generateSecret();
 
   const { experienceName, project, client } = await setupAsync(projectRoot);
@@ -96,8 +96,8 @@ export async function updateAsync(
     ...options
   }: { id?: string; url?: string; event?: WebhookEvent; secret?: string }
 ) {
-  invariant(typeof id === 'string', '--id must be a webhook ID');
-  invariant(event == null || typeof event === 'string', '--event: string is required');
+  assert(typeof id === 'string', '--id must be a webhook ID');
+  assert(event == null || typeof event === 'string', '--event: string is required');
   let secret = validateSecret(options);
 
   const { project, client } = await setupAsync(projectRoot);
@@ -112,7 +112,7 @@ export async function updateAsync(
 }
 
 async function removeAsync(projectRoot: string, { id }: { id?: string }) {
-  invariant(typeof id === 'string', '--id must be a webhook ID');
+  assert(typeof id === 'string', '--id must be a webhook ID');
   const { project, client } = await setupAsync(projectRoot);
 
   await client.deleteAsync(`projects/${project.id}/webhooks/${id}`);
@@ -120,7 +120,7 @@ async function removeAsync(projectRoot: string, { id }: { id?: string }) {
 
 function validateSecret({ secret }: { secret?: string }): string | null {
   if (secret) {
-    invariant(
+    assert(
       secret.length >= SECRET_MIN_LENGTH && secret.length < SECRET_MAX_LENGTH,
       `--secret: should be ${SECRET_MIN_LENGTH}-${SECRET_MAX_LENGTH} characters long`
     );
