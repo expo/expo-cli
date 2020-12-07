@@ -28,6 +28,16 @@ Please make our job easier by filling this template out to completion.
 1-2 sentences describing the problem you're having or the feature you'd like to request
 -->
 
+## Environment
+
+<!--
+Please run `expo diagnostics` in the project folder and copy the output here:
+
+Also specify:
+
+- Phone/emulator/simulator platform, model and version:
+ -->
+
 ## Expected Behavior
 
 <!--
@@ -45,16 +55,6 @@ If there's an error message, please paste the _full terminal output and error me
 ```
 Error text goes here!
 ```
-
-## Environment
-
-<!--
-Please run `expo diagnostics` in the project folder and copy the output here:
-
-Also specify:
-
-- Phone/emulator/simulator platform, model and version:
- -->
 
 ## Reproducible Demo
 
