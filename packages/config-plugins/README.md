@@ -29,8 +29,8 @@ The Expo config is a powerful tool for generating native app code from a unified
 - Plugins are functions that can change values on your Expo config.
 - Plugins are mostly meant to be used with [`expo eject`][cli-eject] or `eas build` commands.
 - We recommend you use plugins with `app.config.json` or `app.config.js` instead of `app.json` (no top-level `expo` object is required).
-- `mods` are async functions that modify native files.
-- Changes performed with `mods` will require a native rebuild.
+- `mods` are async functions that modify native project files, such as source code or configuration (plist, xml) files.
+- Changes performed with `mods` will require rebuilding the affected native projects.
 - `mods` are removed from the public app manifest.
 - 💡 Everything in the Expo config must be able to be converted to JSON (with the exception of the `mods` field). So no async functions outside of `mods` in your config plugins!
 
@@ -230,7 +230,7 @@ module.exports = {
 };
 ```
 
-## How mods works
+## How mods work
 
 - The config is read using `getConfig` from `@expo/config`
 - All of the core functionality supported by Expo is added via plugins in `withExpoIOSPlugins`. This is stuff like name, version, icons, locales, etc.
