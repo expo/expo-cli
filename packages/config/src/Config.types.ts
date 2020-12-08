@@ -113,6 +113,7 @@ export type ConfigErrorCode =
   | 'MODULE_NOT_FOUND'
   | 'INVALID_MODE'
   | 'INVALID_FORMAT'
+  | 'INVALID_PLUGIN'
   | 'INVALID_CONFIG';
 
 export type ConfigContext = {
