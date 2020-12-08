@@ -122,7 +122,7 @@ export default withMySDK(config, { apiKey: 'X-XXX-XXX' });
 You may want to create a plugin in a different file, here's how:
 
 - The root file can be any JS file or a file named `app.plugin.js` in the [root of a Node module](#root-app.plugin.js).
-- The file should export a function that satisfies the `ConfigPlugin` type.
+- The file should export a function that satisfies the [`ConfigPlugin`][configplugin] type.
 - Plugins should be transpiled for Node environments ahead of time!
   - They should support the versions of Node that [Expo supports](https://docs.expo.io/get-started/installation/#requirements) (LTS).
   - No `import/export` keywords, use `module.exports` in the shipped plugin file.
@@ -456,3 +456,4 @@ Because of this reasoning, the root of a Node module is searched instead of righ
 [config-docs]: https://docs.expo.io/versions/latest/config/app/
 [cli-eject]: https://docs.expo.io/workflow/expo-cli/#eject
 [sandbox]: https://codesandbox.io/s/expo-config-plugins-8qhof?file=/src/project/app.config.js
+[configplugin]: ./src/Plugin.types.ts
