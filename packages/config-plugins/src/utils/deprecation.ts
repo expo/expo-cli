@@ -1,34 +1,37 @@
 import { ExpoConfig } from '@expo/config-types';
 import chalk from 'chalk';
 
-import { ConfigPlugin, ModPlatform } from '../Plugin.types';
+import { ConfigPlugin } from '../Plugin.types';
+import { gteSdkVersion } from './versions';
 import * as WarningAggregator from './warnings';
 
-export function wrapWithWithDeprecationWarning<T>({
+export function wrapWithWarning<T>({
   plugin,
-  platform,
   packageName,
+  minimumVersion,
   unversionedName,
   updateUrl,
   shouldWarn,
 }: {
   plugin: ConfigPlugin<T>;
   updateUrl: string;
-  platform: ModPlatform;
+  minimumVersion: string;
   packageName: string;
   unversionedName: string;
   shouldWarn: (config: ExpoConfig) => boolean;
 }): ConfigPlugin<T> {
   return (config, props) => {
-    // Only warn if the user intends to enable an API for their app, otherwise there will be a flood of messages for every API.
-    if (shouldWarn(config)) {
-      WarningAggregator.addWarningForPlatform(
-        platform,
-        'deprecated-plugin',
-        `Unversioned "${unversionedName}" plugin is deprecated, please update your Expo config to using the versioned plugin "${packageName}". Guide ${chalk.underline(
-          updateUrl
-        )}`
-      );
+    // First version with plugin support
+    if (gteSdkVersion(config, minimumVersion)) {
+      // Only warn if the user intends to enable an API for their app, otherwise there will be a flood of messages for every API.
+      if (shouldWarn(config)) {
+        WarningAggregator.addWarningGeneral(
+          'deprecated-plugin',
+          `Unversioned "${unversionedName}" plugin is deprecated, please update your Expo config to use the versioned plugin "${packageName}". Guide ${chalk.underline(
+            updateUrl
+          )}`
+        );
+      }
     }
     return plugin(config, props);
   };

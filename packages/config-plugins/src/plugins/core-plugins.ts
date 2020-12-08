@@ -7,14 +7,10 @@ import {
   Mod,
   ModPlatform,
 } from '../Plugin.types';
+import { assert } from '../utils/errors';
 import { addHistoryItem, getHistoryItem, PluginHistoryItem } from '../utils/history';
-
-function ensureArray<T>(input: T | T[]): T[] {
-  if (Array.isArray(input)) {
-    return input;
-  }
-  return [input];
-}
+import { StaticPlugin } from './plugin-resolver';
+import { withStaticPlugin } from './static-plugin';
 
 /**
  * Plugin to chain a list of plugins together.
@@ -22,16 +18,10 @@ function ensureArray<T>(input: T | T[]): T[] {
  * @param config exported config
  * @param plugins list of config config plugins to apply to the exported config
  */
-export const withPlugins: ConfigPlugin<
-  (
-    | ConfigPlugin
-    // TODO: Type this somehow if possible.
-    | [ConfigPlugin<any>, any]
-  )[]
-> = (config, plugins): ExportedConfig => {
-  return plugins.reduce((prev, curr) => {
-    const [plugins, args] = ensureArray(curr);
-    return plugins(prev, args);
+export const withPlugins: ConfigPlugin<(StaticPlugin | string)[]> = (config, plugins) => {
+  assert(Array.isArray(plugins), 'withPlugins expected a valid array');
+  return plugins.reduce((prev, plugin) => {
+    return withStaticPlugin(prev, { plugin });
   }, config);
 };
 

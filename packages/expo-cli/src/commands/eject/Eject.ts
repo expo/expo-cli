@@ -20,7 +20,11 @@ import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import { learnMore } from '../utils/TerminalLink';
-import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
+import {
+  logConfigWarningsAndroid,
+  logConfigWarningsGeneral,
+  logConfigWarningsIOS,
+} from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
 
@@ -226,11 +230,16 @@ async function syncConfigStepAsync({
 }) {
   const applyingConfigStep = CreateApp.logNewSection('Config syncing');
   await configureProjectAsync({ projectRoot, platforms });
-  if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
+  if (
+    WarningAggregator.hasWarningsAndroid() ||
+    WarningAggregator.hasWarningsIOS() ||
+    WarningAggregator.hasWarningsGeneral()
+  ) {
     applyingConfigStep.stopAndPersist({
       symbol: '⚠️ ',
       text: chalk.red('Config synced with warnings that should be fixed:'),
     });
+    logConfigWarningsGeneral();
     logConfigWarningsAndroid();
     logConfigWarningsIOS();
   } else {
