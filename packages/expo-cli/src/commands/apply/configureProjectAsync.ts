@@ -30,15 +30,15 @@ export default async function configureAndroidProjectAsync({
   });
 
   // Add all built-in plugins
-  config = withExpoAndroidPlugins(config, {
-    package: packageName,
-    expoUsername,
-  });
-
-  const skipIOS = process.platform === 'win32';
+  if (platforms.includes('ios')) {
+    config = withExpoAndroidPlugins(config, {
+      package: packageName,
+      expoUsername,
+    });
+  }
 
   // Skip ejecting for iOS on Windows
-  if (!skipIOS) {
+  if (platforms.includes('ios')) {
     config = withExpoIOSPlugins(config, {
       bundleIdentifier,
       expoUsername,
