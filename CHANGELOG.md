@@ -12,6 +12,38 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Mon, 7 Dec 2020 22:27:44 -0800](https://github.com/expo/expo-cli/commit/3fb08fdff7a03fb49a1f2ddc6d968ceb14be9519)
+
+### 🎉 New features
+
+- [config-plugins] Added support for static plugins ([#2943](https://github.com/expo/expo-cli/issues/2943))
+- [config-plugins] Support splash screen config on SDK 40 ([#3003](https://github.com/expo/expo-cli/issues/3003))
+- [config-plugins] added method for adding frameworks ([#2997](https://github.com/expo/expo-cli/issues/2997))
+
+### 🐛 Bug fixes
+
+- [xdl] Check for client updates for the given sdk version by default
+- [cli] fix windows post install message
+- [cli] Use unified website route for all builds (no more /v2) ([#2995](https://github.com/expo/expo-cli/issues/2995))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.10
+- @expo/config@3.3.20
+- @expo/dev-server@0.1.45
+- @expo/dev-tools@0.13.69
+- @expo/electron-adapter@0.0.37
+- expo-cli@4.0.11
+- expo-optimize@0.1.68
+- @expo/metro-config@0.1.45
+- @expo/next-adapter@2.1.51
+- pod-install@0.1.14
+- expo-pwa@0.0.56
+- @expo/schemer@1.3.23
+- uri-scheme@1.0.56
+- @expo/webpack-config@0.12.50
+- @expo/xdl@59.0.9
+
 ## [Fri, 4 Dec 2020 10:38:20 -0800](https://github.com/expo/expo-cli/commit/65cb9a64cfa4cc6fb89bdc2a432acd16c6043def)
 
 ### 🎉 New features
