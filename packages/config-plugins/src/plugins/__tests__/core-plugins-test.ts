@@ -97,7 +97,7 @@ describe(withExtendedMod, () => {
     });
 
     // Compile plugins generically
-    config = await evalModsAsync(config, '/');
+    config = await evalModsAsync(config, { projectRoot: '/' });
 
     // Plugins should all be functions
     expect(Object.values(config.mods.android).every(value => typeof value === 'function')).toBe(

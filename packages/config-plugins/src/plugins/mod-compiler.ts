@@ -11,11 +11,10 @@ import { resolveModResults, withBaseMods } from './compiler-plugins';
  */
 export async function compileModsAsync(
   config: ExportedConfig,
-  projectRoot: string,
-  skipIOS: boolean = false
+  props: { projectRoot: string; platforms?: ModPlatform[] }
 ): Promise<ExportedConfig> {
   config = withBaseMods(config);
-  return await evalModsAsync(config, projectRoot, skipIOS);
+  return await evalModsAsync(config, props);
 }
 
 /**
@@ -25,16 +24,12 @@ export async function compileModsAsync(
  */
 export async function evalModsAsync(
   config: ExportedConfig,
-  projectRoot: string,
-  skipIOS: boolean = false
+  { projectRoot, platforms }: { projectRoot: string; platforms?: ModPlatform[] }
 ): Promise<ExportedConfig> {
   for (const [platformName, platform] of Object.entries(config.mods ?? ({} as ModConfig))) {
-    // Skip iOS on windows
-    // TODO: Support iOS eject on Windows.
-    if (platformName === 'ios' && skipIOS) {
+    if (platforms && !platforms.includes(platformName as any)) {
       continue;
     }
-
     const entries = Object.entries(platform);
     if (entries.length) {
       const dangerousIndex = entries.findIndex(([modName]) => modName === 'dangerous');

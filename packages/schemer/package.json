@@ -25,7 +25,7 @@
   ],
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.18",
-    "@types/node": "^12.7.2"
+    "@types/node": "^12"
   },
   "dependencies": {
     "ajv": "^5.2.2",

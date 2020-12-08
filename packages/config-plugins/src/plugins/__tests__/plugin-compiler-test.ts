@@ -28,7 +28,7 @@ describe(compileModsAsync, () => {
       slug: '',
       mods: null,
     };
-    const config = await compileModsAsync(exportedConfig, projectRoot);
+    const config = await compileModsAsync(exportedConfig, { projectRoot });
 
     expect(config.name).toBe('app');
     // Base mods are skipped when no mods are applied, these shouldn't be defined.
@@ -59,7 +59,7 @@ describe(compileModsAsync, () => {
     };
 
     // Apply mod plugin
-    const config = await compileModsAsync(exportedConfig, projectRoot);
+    const config = await compileModsAsync(exportedConfig, { projectRoot });
 
     expect(internalValue).toBe('en');
 
@@ -94,7 +94,7 @@ describe(compileModsAsync, () => {
       };
 
       // Apply mod plugin
-      await expect(compileModsAsync(exportedConfig, projectRoot)).rejects.toThrow(
+      await expect(compileModsAsync(exportedConfig, { projectRoot })).rejects.toThrow(
         /Mod `mods.ios.infoPlist` evaluated to an object that is not a valid project config/
       );
     });

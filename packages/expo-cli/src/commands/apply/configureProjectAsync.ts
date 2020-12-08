@@ -1,6 +1,7 @@
 import { getConfig } from '@expo/config';
 import {
   compileModsAsync,
+  ModPlatform,
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
   withThirdPartyPlugins,
@@ -10,7 +11,13 @@ import { UserManager } from '@expo/xdl';
 import log from '../../log';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from '../eject/ConfigValidation';
 
-export default async function configureProjectAsync(projectRoot: string) {
+export default async function configureAndroidProjectAsync({
+  projectRoot,
+  platforms,
+}: {
+  projectRoot: string;
+  platforms: ModPlatform[];
+}) {
   // Check package before reading the config because it may mutate the config if the user is prompted to define it.
   const packageName = await getOrPromptForPackage(projectRoot);
   const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
@@ -42,7 +49,7 @@ export default async function configureProjectAsync(projectRoot: string) {
   config = withThirdPartyPlugins(config);
 
   // compile all plugins and mods
-  config = await compileModsAsync(config, projectRoot, skipIOS);
+  config = await compileModsAsync(config, { projectRoot, platforms });
 
   if (log.isDebug) {
     log.debug();

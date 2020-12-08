@@ -19,9 +19,7 @@ export function constructBuildLogsUrl({
   username?: string;
   v2?: boolean;
 }): string {
-  if (v2) {
-    return `${getExpoDomainUrl()}/accounts/${username}/builds/v2/${buildId}`;
-  } else if (username) {
+  if (username) {
     return `${getExpoDomainUrl()}/accounts/${username}/builds/${buildId}`;
   } else {
     return `${getExpoDomainUrl()}/builds/${buildId}`;
