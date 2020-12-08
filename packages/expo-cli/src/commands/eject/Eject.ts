@@ -111,7 +111,7 @@ export async function ejectAsync(
     log.debug('Skipped pod install');
   }
 
-  await warnIfDependenciesRequireAdditionalSetupAsync(pkg);
+  await warnIfDependenciesRequireAdditionalSetupAsync(pkg, exp.sdkVersion);
 
   log.newLine();
   log.nested(`➡️  ${chalk.bold('Next steps')}`);
@@ -710,7 +710,8 @@ function createDependenciesMap(dependencies: any): DependenciesMap {
  * users to add some code, eg: to their AppDelegate.
  */
 async function warnIfDependenciesRequireAdditionalSetupAsync(
-  pkg: PackageJSONConfig
+  pkg: PackageJSONConfig,
+  sdkVersion?: string
 ): Promise<void> {
   const expoPackagesWithExtraSetup = [
     'expo-camera',
@@ -738,14 +739,19 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
   const pkgsWithExtraSetup: Record<string, string> = {
     ...expoPackagesWithExtraSetup,
     'lottie-react-native': 'https://github.com/react-native-community/lottie-react-native',
-    'expo-constants': `${chalk.bold(
+  };
+
+  // Starting with SDK 40 the manifest is embedded in ejected apps automatically
+  if (sdkVersion && semver.lte(sdkVersion, '39.0.0')) {
+    pkgsWithExtraSetup['expo-constants'] = `${chalk.bold(
       'Constants.manifest'
     )} is not available in the bare workflow. You should replace it with ${chalk.bold(
       'Updates.manifest'
     )}. ${log.chalk.dim(
       learnMore('https://docs.expo.io/versions/latest/sdk/updates/#updatesmanifest')
-    )}`,
-  };
+    )}`;
+  }
+
   const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(
     pkgName => pkgName in pkgsWithExtraSetup
   );
