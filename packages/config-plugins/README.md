@@ -2,7 +2,7 @@
 
 The Expo config is a powerful tool for generating native app code from a unified JavaScript interface. Most basic functionality can be controlled by using the the [static Expo config](https://docs.expo.io/versions/latest/config/app/), but some features require manipulation of the native project files. To support complex behavior we've created config plugins, and mods (short for modifiers).
 
-> 💡 **Hands-on Learners**: Use [this sandbox][sandbox] to play with the core functionality of Expo config. For more complex tests, use a local Expo project, with `expo eject --no-install` to apply changes.
+> 💡 **Hands-on Learners**: Use [this sandbox][sandbox] to play with the core functionality of Expo config plugins. For more complex tests, use a local Expo project, with `expo eject --no-install` to apply changes.
 
 - [Usage](#usage)
 - [What are plugins](#what-are-plugins)
