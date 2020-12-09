@@ -112,7 +112,11 @@ async function _checkWatchmanVersionAsync(projectRoot: string) {
 
 export async function validateWithSchema(
   projectRoot: string,
-  exp: any,
+  {
+    // Extract internal from the config object.
+    _internal,
+    ...exp
+  }: ExpoConfig,
   schema: any,
   configName: string,
   validateAssets: boolean

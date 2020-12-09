@@ -14,8 +14,8 @@ const mockProjectUrl = 'http://fakeurl.com';
 const mockPostAsync = jest.fn();
 
 jest.mock('@expo/spawn-async');
-jest.mock('@expo/config', () => {
-  const pkg = jest.requireActual('@expo/config');
+jest.mock('@expo/config-plugins', () => {
+  const pkg = jest.requireActual('@expo/config-plugins');
   return {
     ...pkg,
     IOSConfig: {
@@ -36,7 +36,9 @@ jest.mock('@expo/config', () => {
 jest.mock('fs');
 jest.mock('prompts');
 jest.mock('../../../../projects', () => {
+  const { getProjectOwner } = jest.requireActual('../../../../projects');
   return {
+    getProjectOwner,
     ensureProjectExistsAsync: () => 'fakeProjectId',
   };
 });

@@ -35,7 +35,7 @@ export interface ExpoConfig {
    */
   runtimeVersion?: string;
   /**
-   * Your app version. In addition to this field, you'll also use `ios.buildNumber` and `android.versionCode` — read more about how to version your app [here](../../distribution/app-stores/#versioning-your-app). On iOS this corresponds to `CFBundleShortVersionString`, and on Android, this corresponds to `versionName`. The required format can be found [here](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring).
+   * Your app version. In addition to this field, you'll also use `ios.buildNumber` and `android.versionCode` — read more about how to version your app [here](https://docs.expo.io/distribution/app-stores/#versioning-your-app). On iOS this corresponds to `CFBundleShortVersionString`, and on Android, this corresponds to `versionName`. The required format can be found [here](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleshortversionstring).
    */
   version?: string;
   /**
@@ -71,15 +71,15 @@ export interface ExpoConfig {
    */
   notification?: {
     /**
-     * Local path or remote URL to an image to use as the icon for push notifications. 96x96 png grayscale with transparency.
+     * (Android only) Local path or remote URL to an image to use as the icon for push notifications. 96x96 png grayscale with transparency. We recommend following [Google's design guidelines](https://material.io/design/iconography/product-icons.html#design-principles). If not provided, defaults to your app icon.
      */
     icon?: string;
     /**
-     * Tint color for the push notification image when it appears in the notification tray.
+     * (Android only) Tint color for the push notification image when it appears in the notification tray. Defaults to `#ffffff`
      */
     color?: string;
     /**
-     * Whether or not to display notifications when the app is in the foreground on iOS. `_displayInForeground` option in the individual push notification message overrides this option. [Learn more.](https://docs.expo.io/guides/push-notifications/#3-handle-receiving-andor-selecting-the-notification) Defaults to `false`.
+     * Whether or not to display notifications when the app is in the foreground on iOS. `_displayInForeground` option in the individual push notification message overrides this option. [Learn more.](https://docs.expo.io/push-notifications/receiving-notifications/#foreground-notification-behavior) Defaults to `false`.
      */
     iosDisplayInForeground?: boolean;
     /**
@@ -100,7 +100,7 @@ export interface ExpoConfig {
    */
   androidStatusBarColor?: string;
   /**
-   * Configuration for the status bar on Android. For more details please navigate to [Configuring StatusBar](../../guides/configuring-statusbar).
+   * Configuration for the status bar on Android. For more details please navigate to [Configuring StatusBar](https://docs.expo.io/guides/configuring-statusbar/).
    */
   androidStatusBar?: {
     /**
@@ -161,7 +161,7 @@ export interface ExpoConfig {
    */
   entryPoint?: string;
   /**
-   * Any extra fields you want to pass to your experience. Values are accessible via `Expo.Constants.manifest.extra` ([Learn more](../sdk/constants.html#expoconstantsmanifest))
+   * Any extra fields you want to pass to your experience. Values are accessible via `Expo.Constants.manifest.extra` ([Learn more](https://docs.expo.io/versions/latest/sdk/constants/#constantsmanifest))
    */
   extra?: {
     [k: string]: any;
@@ -234,7 +234,7 @@ export interface ExpoConfig {
     [k: string]: any;
   };
   /**
-   * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/versions/latest/guides/offline-support.html)
+   * An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/guides/offline-support/)
    */
   assetBundlePatterns?: string[];
   splash?: Splash;
@@ -256,6 +256,18 @@ export interface ExpoConfig {
      * Enables Turbo Modules, which are a type of native modules that use a different way of communicating between JS and platform code. When installing a Turbo Module you will need to enable this experimental option (the library still needs to be a part of Expo SDK already, like react-native-reanimated v2). Turbo Modules do not support remote debugging and enabling this option will disable remote debugging.
      */
     turboModules?: boolean;
+  };
+  /**
+   * Internal properties for developer tools
+   */
+  _internal?: {
+    /**
+     * List of plugins already run on the config
+     */
+    pluginHistory?: {
+      [k: string]: any;
+    };
+    [k: string]: any;
   };
 }
 /**

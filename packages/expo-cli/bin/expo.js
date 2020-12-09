@@ -14,33 +14,31 @@ var minor = parseInt(match[2], 10);
 var supportedVersions =
   'expo-cli supports following Node.js versions:\n' +
   '* >=10.13.0 <11.0.0 (Maintenance LTS)\n' +
-  '* >=12.13.0 <13.0.0 (Active LTS)\n' +
-  '* >=14.0.0  <15.0.0 (Current Release)\n';
+  '* >=12.13.0 <13.0.0 (Maintenance LTS)\n' +
+  '* >=14.0.0 <15.0.0 (Active LTS)\n' +
+  '* >=15.0.0 <16.0.0 (Current Release)\n';
 
-function warnOrExitUponWrongNodeVersion() {
-  // If newer than the current release
-  if (major > 14) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      yellow(
-        'WARNING: expo-cli has not yet been tested against Node.js ' +
-          process.version +
-          '.\n' +
-          'If you encounter any issues, please report them to https://github.com/expo/expo-cli/issues\n' +
-          '\n' +
-          supportedVersions
-      )
-    );
-  } else if (!((major === 10 && minor >= 13) || (major === 12 && minor >= 13) || major === 14)) {
-    // eslint-disable-next-line no-console
-    console.error(
-      red('ERROR: Node.js ' + process.version + ' is no longer supported.\n\n' + supportedVersions)
-    );
-    process.exit(1);
-  }
+// If newer than the current release
+if (major > 15) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    yellow(
+      'WARNING: expo-cli has not yet been tested against Node.js ' +
+        process.version +
+        '.\n' +
+        'If you encounter any issues, please report them to https://github.com/expo/expo-cli/issues\n' +
+        '\n' +
+        supportedVersions
+    )
+  );
+} else if (
+  !((major === 10 && minor >= 13) || (major === 12 && minor >= 13) || major === 14 || major === 15)
+) {
+  // eslint-disable-next-line no-console
+  console.error(
+    red('ERROR: Node.js ' + process.version + ' is no longer supported.\n\n' + supportedVersions)
+  );
+  process.exit(1);
 }
 
-(async () => {
-  warnOrExitUponWrongNodeVersion();
-  require('../build/exp.js').run('expo');
-})();
+require('../build/exp.js').run('expo');

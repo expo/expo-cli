@@ -1,5 +1,5 @@
 import { getConfig, setCustomConfigPath } from '@expo/config';
-import { Android, Simulator, UserManager, Versions } from '@expo/xdl';
+import { Android, Simulator, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
 import { Command } from 'commander';
@@ -18,7 +18,7 @@ import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/I
 import { SetupIosDist } from '../../credentials/views/SetupIosDist';
 import { SetupIosPush } from '../../credentials/views/SetupIosPush';
 import log from '../../log';
-import prompt, { confirmAsync } from '../../prompts';
+import { confirmAsync, promptEmailAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
@@ -104,7 +104,7 @@ export default function (program: Command) {
         await context.ensureAppleCtx();
         const appleContext = context.appleCtx;
         if (user) {
-          await context.ios.getAllCredentials(user.username); // initialize credentials
+          await context.ios.getAllCredentials(context.projectOwner); // initialize credentials
         }
 
         // check if any builds are in flight
@@ -206,18 +206,13 @@ export default function (program: Command) {
         }
 
         let email;
-        if (user) {
+        if (user && user.kind === 'user') {
           email = user.email;
         } else {
-          ({ email } = await prompt({
-            type: 'text',
-            name: 'email',
+          email = await promptEmailAsync({
             message: 'Please enter an email address to notify, when the build is completed:',
-            initial: context?.user?.email,
-            format: value => value.trim(),
-            validate: (value: string) =>
-              /.+@.+/.test(value) ? true : "That doesn't look like a valid email.",
-          }));
+            initial: (context?.user as User)?.email,
+          });
         }
         log.newLine();
 

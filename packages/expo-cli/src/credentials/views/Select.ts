@@ -79,7 +79,7 @@ export class SelectIosExperience implements IView {
 
   getAppLookupParamsFromContext(ctx: Context): AppLookupParams {
     const projectName = ctx.manifest.slug;
-    const accountName = ctx.manifest.owner || ctx.user.username;
+    const accountName = ctx.projectOwner;
     const bundleIdentifier = ctx.manifest.ios?.bundleIdentifier;
     if (!bundleIdentifier) {
       throw new Error(`ios.bundleIdentifier need to be defined`);
@@ -123,7 +123,7 @@ export class SelectAndroidExperience implements IView {
 
   async open(ctx: Context): Promise<IView | null> {
     if (ctx.hasProjectContext && this.askAboutProjectMode) {
-      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+      const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
       const runProjectContext = await confirmAsync({
         message: `You are currently in a directory with ${experienceName} experience. Do you want to select it?`,

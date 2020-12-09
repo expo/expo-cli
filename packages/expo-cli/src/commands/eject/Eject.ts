@@ -1,10 +1,5 @@
-import {
-  WarningAggregator as ConfigWarningAggregator,
-  ExpoConfig,
-  getConfig,
-  PackageJSONConfig,
-  WarningAggregator,
-} from '@expo/config';
+import { ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
+import { ModPlatform, WarningAggregator } from '@expo/config-plugins';
 import { getBareExtensions, getFileWithExtensions } from '@expo/config/paths';
 import JsonFile, { JSONObject } from '@expo/json-file';
 import { Exp } from '@expo/xdl';
@@ -31,13 +26,13 @@ import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
 
 type DependenciesMap = { [key: string]: string | number };
-type PlatformsArray = ('ios' | 'android')[];
 
 export type EjectAsyncOptions = {
   verbose?: boolean;
   force?: boolean;
   install?: boolean;
   packageManager?: 'npm' | 'yarn';
+  platforms: ModPlatform[];
 };
 
 /**
@@ -52,21 +47,15 @@ export type EjectAsyncOptions = {
  */
 export async function ejectAsync(
   projectRoot: string,
-  options: EjectAsyncOptions = {}
+  { platforms, ...options }: EjectAsyncOptions
 ): Promise<void> {
-  if (await maybeBailOnGitStatusAsync()) return;
-
-  const platforms: PlatformsArray = ['android'];
-
-  // Skip ejecting for iOS on Windows
-  if (process.platform !== 'win32') {
-    platforms.push('ios');
+  if (!platforms?.length) {
+    throw new CommandError('At least one platform must be enabled when syncing');
   }
 
-  const { exp, pkg } = await ensureConfigAsync(projectRoot);
-  const tempDir = temporary.directory();
-
-  if (!platforms.includes('ios')) {
+  const isWindows = process.platform === 'win32';
+  // Skip ejecting for iOS on Windows
+  if (isWindows && !platforms.includes('ios')) {
     log.warn(
       `⚠️  Skipping generating the iOS native project files. Run ${chalk.bold(
         'expo eject'
@@ -74,6 +63,11 @@ export async function ejectAsync(
     );
     log.newLine();
   }
+
+  if (await maybeBailOnGitStatusAsync()) return;
+
+  const { exp, pkg } = await ensureConfigAsync({ projectRoot, platforms });
+  const tempDir = temporary.directory();
 
   const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync({
     projectRoot,
@@ -101,11 +95,11 @@ export async function ejectAsync(
 
   // Apply Expo config to native projects
   if (platforms.includes('ios')) {
-    await configureIOSStepAsync(projectRoot);
+    await configureIOSStepAsync({ projectRoot, platforms });
   }
 
   if (platforms.includes('android')) {
-    await configureAndroidStepAsync(projectRoot);
+    await configureAndroidStepAsync({ projectRoot, platforms });
   }
 
   // Install CocoaPods
@@ -113,9 +107,11 @@ export async function ejectAsync(
   // err towards running pod install less because it's slow and users can easily run npx pod-install afterwards.
   if (platforms.includes('ios') && shouldInstall && needsPodInstall) {
     podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
+  } else {
+    log.debug('Skipped pod install');
   }
 
-  await warnIfDependenciesRequireAdditionalSetupAsync(pkg, options);
+  await warnIfDependenciesRequireAdditionalSetupAsync(pkg, exp.sdkVersion);
 
   log.newLine();
   log.nested(`➡️  ${chalk.bold('Next steps')}`);
@@ -194,10 +190,10 @@ export async function ejectAsync(
   }
 }
 
-async function configureIOSStepAsync(projectRoot: string) {
+async function configureIOSStepAsync(props: { projectRoot: string; platforms: ModPlatform[] }) {
   const applyingIOSConfigStep = CreateApp.logNewSection('iOS config syncing');
-  await configureIOSProjectAsync(projectRoot);
-  if (ConfigWarningAggregator.hasWarningsIOS()) {
+  await configureIOSProjectAsync(props);
+  if (WarningAggregator.hasWarningsIOS()) {
     applyingIOSConfigStep.stopAndPersist({
       symbol: '⚠️ ',
       text: chalk.red('iOS config synced with warnings that should be fixed:'),
@@ -243,10 +239,10 @@ async function installNodeDependenciesAsync(
   }
 }
 
-async function configureAndroidStepAsync(projectRoot: string) {
+async function configureAndroidStepAsync(props: { projectRoot: string; platforms: ModPlatform[] }) {
   const applyingAndroidConfigStep = CreateApp.logNewSection('Android config syncing');
-  await configureAndroidProjectAsync(projectRoot);
-  if (ConfigWarningAggregator.hasWarningsAndroid()) {
+  await configureAndroidProjectAsync(props);
+  if (WarningAggregator.hasWarningsAndroid()) {
     applyingAndroidConfigStep.stopAndPersist({
       symbol: '⚠️ ',
       text: chalk.red('Android config synced with warnings that should be fixed:'),
@@ -276,9 +272,13 @@ function copyPathsFromTemplate(
   return [copiedPaths, skippedPaths];
 }
 
-async function ensureConfigAsync(
-  projectRoot: string
-): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig }> {
+async function ensureConfigAsync({
+  projectRoot,
+  platforms,
+}: {
+  projectRoot: string;
+  platforms: ModPlatform[];
+}): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig }> {
   // We need the SDK version to proceed
 
   let exp: ExpoConfig;
@@ -308,15 +308,20 @@ async function ensureConfigAsync(
 
   // Prompt for the Android package first because it's more strict than the bundle identifier
   // this means you'll have a better chance at matching the bundle identifier with the package name.
-  await getOrPromptForPackage(projectRoot);
-  await getOrPromptForBundleIdentifier(projectRoot);
+  if (platforms.includes('android')) {
+    await getOrPromptForPackage(projectRoot);
+  }
+  if (platforms.includes('ios')) {
+    await getOrPromptForBundleIdentifier(projectRoot);
+  }
 
   if (exp.entryPoint) {
     delete exp.entryPoint;
     log(`- expo.entryPoint is not needed and has been removed.`);
   }
 
-  return { exp, pkg };
+  // Read config again because prompting for bundle id or package name may have mutated the results.
+  return getConfig(projectRoot);
 }
 
 function createFileHash(contents: string): string {
@@ -546,7 +551,7 @@ export function hashForDependencyMap(deps: DependenciesMap): string {
 export function getTargetPaths(
   projectRoot: string,
   pkg: PackageJSONConfig,
-  platforms: PlatformsArray
+  platforms: ModPlatform[]
 ) {
   const targetPaths: string[] = [...platforms];
 
@@ -576,7 +581,7 @@ async function cloneNativeDirectoriesAsync({
   tempDir: string;
   exp: Pick<ExpoConfig, 'name' | 'sdkVersion'>;
   pkg: PackageJSONConfig;
-  platforms: PlatformsArray;
+  platforms: ModPlatform[];
 }): Promise<string[]> {
   const templateSpec = await validateBareTemplateExistsAsync(exp.sdkVersion!);
 
@@ -645,7 +650,7 @@ async function createNativeProjectsFromTemplateAsync({
   exp: ExpoConfig;
   pkg: PackageJSONConfig;
   tempDir: string;
-  platforms: PlatformsArray;
+  platforms: ModPlatform[];
 }): Promise<
   { hasNewProjectFiles: boolean; needsPodInstall: boolean } & DependenciesModificationResults
 > {
@@ -706,7 +711,7 @@ function createDependenciesMap(dependencies: any): DependenciesMap {
  */
 async function warnIfDependenciesRequireAdditionalSetupAsync(
   pkg: PackageJSONConfig,
-  options?: EjectAsyncOptions
+  sdkVersion?: string
 ): Promise<void> {
   const expoPackagesWithExtraSetup = [
     'expo-camera',
@@ -734,14 +739,19 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
   const pkgsWithExtraSetup: Record<string, string> = {
     ...expoPackagesWithExtraSetup,
     'lottie-react-native': 'https://github.com/react-native-community/lottie-react-native',
-    'expo-constants': `${chalk.bold(
+  };
+
+  // Starting with SDK 40 the manifest is embedded in ejected apps automatically
+  if (sdkVersion && semver.lte(sdkVersion, '39.0.0')) {
+    pkgsWithExtraSetup['expo-constants'] = `${chalk.bold(
       'Constants.manifest'
     )} is not available in the bare workflow. You should replace it with ${chalk.bold(
       'Updates.manifest'
     )}. ${log.chalk.dim(
       learnMore('https://docs.expo.io/versions/latest/sdk/updates/#updatesmanifest')
-    )}`,
-  };
+    )}`;
+  }
+
   const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(
     pkgName => pkgName in pkgsWithExtraSetup
   );

@@ -2,7 +2,6 @@ module.exports = {
   projects: [
     require('./packages/babel-preset-cli/jest.config'),
     require('./packages/config/jest.config'),
-    require('./packages/configure-splash-screen/jest.config'),
     require('./packages/dev-server/jest.config'),
     require('./packages/dev-tools/jest.config'),
     require('./packages/expo-cli/jest.config'),
@@ -17,6 +16,7 @@ module.exports = {
     require('./packages/uri-scheme/jest.config'),
     require('./packages/webpack-config/jest/unit-test-config'),
     require('./packages/xdl/jest/unit-test-config'),
+    require('./unlinked-packages/configure-splash-screen/jest.config'),
   ],
   testPathIgnorePatterns: ['.*'],
 };

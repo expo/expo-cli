@@ -11,6 +11,7 @@ import {
   ExpoConfig,
   ExpRc,
   GetConfigOptions,
+  ModConfig,
   PackageJSONConfig,
   Platform,
   ProjectConfig,
@@ -19,9 +20,10 @@ import {
 } from './Config.types';
 import { ConfigError } from './Errors';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
-import { ModConfig } from './Plugin.types';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
+import { withConfigPlugins } from './plugins/withConfigPlugins';
+import { withInternal } from './plugins/withInternal';
 
 type SplitConfigs = { expo: ExpoConfig; mods: ModConfig };
 
@@ -104,12 +106,14 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
 
   function fillAndReturnConfig(config: SplitConfigs, dynamicConfigObjectType: string | null) {
     const configWithDefaultValues = {
-      ...ensureConfigHasDefaultValues(
+      ...ensureConfigHasDefaultValues({
         projectRoot,
-        config.expo,
-        packageJson,
-        options.skipSDKVersionRequirement
-      ),
+        exp: config.expo,
+        pkg: packageJson,
+        skipSDKVersionRequirement: options.skipSDKVersionRequirement,
+        paths,
+        packageJsonPath,
+      }),
       mods: config.mods,
       dynamicConfigObjectType,
       rootConfig,
@@ -117,7 +121,18 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
       staticConfigPath: paths.staticConfigPath,
     };
 
+    if (options.isModdedConfig) {
+      // @ts-ignore: Add the mods back to the object.
+      configWithDefaultValues.exp.mods = config.mods ?? null;
+    }
+
+    // Apply static json plugins, should be done after _internal
+    configWithDefaultValues.exp = withConfigPlugins(configWithDefaultValues.exp);
+
     if (options.isPublicConfig) {
+      // Remove internal values with references to user's file paths from the public config.
+      delete configWithDefaultValues.exp._internal;
+
       if (configWithDefaultValues.exp.hooks) {
         delete configWithDefaultValues.exp.hooks;
       }
@@ -128,17 +143,20 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
         delete configWithDefaultValues.exp.android.config;
       }
     }
-    if (options.isModdedConfig) {
-      // @ts-ignore: Add the mods back to the object.
-      configWithDefaultValues.exp.mods = config.mods ?? null;
-    }
 
     return configWithDefaultValues;
   }
 
   // Fill in the static config
   function getContextConfig(config: SplitConfigs) {
-    return ensureConfigHasDefaultValues(projectRoot, config.expo, packageJson, true).exp;
+    return ensureConfigHasDefaultValues({
+      projectRoot,
+      exp: config.expo,
+      pkg: packageJson,
+      skipSDKVersionRequirement: true,
+      paths,
+      packageJsonPath,
+    }).exp;
   }
 
   if (paths.dynamicConfigPath) {
@@ -220,10 +238,17 @@ export function readConfigJson(
 
   exp = { ...exp };
 
-  const [pkg] = getPackageJsonAndPath(projectRoot, exp);
+  const [pkg, packageJsonPath] = getPackageJsonAndPath(projectRoot, exp);
 
   return {
-    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
+    ...ensureConfigHasDefaultValues({
+      projectRoot,
+      exp,
+      pkg,
+      skipSDKVersionRequirement: skipNativeValidation,
+      paths,
+      packageJsonPath,
+    }),
     mods: null,
     dynamicConfigPath: null,
     dynamicConfigObjectType: null,
@@ -418,15 +443,29 @@ const APP_JSON_EXAMPLE = JSON.stringify({
   },
 });
 
-function ensureConfigHasDefaultValues(
-  projectRoot: string,
-  exp: Partial<ExpoConfig> | null,
-  pkg: JSONObject,
-  skipSDKVersionRequirement: boolean = false
-): { exp: ExpoConfig; pkg: PackageJSONConfig } {
+function ensureConfigHasDefaultValues({
+  projectRoot,
+  exp,
+  pkg,
+  paths,
+  packageJsonPath,
+  skipSDKVersionRequirement = false,
+}: {
+  projectRoot: string;
+  exp: Partial<ExpoConfig> | null;
+  pkg: JSONObject;
+  skipSDKVersionRequirement?: boolean;
+  paths?: ConfigFilePaths;
+  packageJsonPath?: string;
+}): { exp: ExpoConfig; pkg: PackageJSONConfig } {
   if (!exp) {
     exp = {};
   }
+  exp = withInternal(exp as any, {
+    projectRoot,
+    ...(paths ?? {}),
+    packageJsonPath,
+  });
   // Defaults for package.json fields
   const pkgName = typeof pkg.name === 'string' ? pkg.name : path.basename(projectRoot);
   const pkgVersion = typeof pkg.version === 'string' ? pkg.version : '1.0.0';

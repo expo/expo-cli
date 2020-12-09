@@ -1,7 +1,8 @@
-import { AndroidConfig, BareAppConfig, getConfig, IOSConfig } from '@expo/config';
+import { BareAppConfig, getConfig } from '@expo/config';
+import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
-import { Exp, UserManager } from '@expo/xdl';
+import { Exp, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import fs from 'fs-extra';
@@ -179,6 +180,25 @@ async function action(projectDir: string, command: Command) {
     resolvedTemplate = 'blank';
   }
 
+  const {
+    version: newestSdkVersion,
+    data: newestSdkReleaseData,
+  } = await Versions.newestReleasedSdkVersionAsync();
+
+  // If the user is opting into a beta then we need to append the template tag explicitly
+  // in order to not fall back to the latest tag for templates.
+  let versionParam = '';
+  if (newestSdkReleaseData?.beta) {
+    const majorVersion = parseInt(newestSdkVersion, 10);
+    versionParam = `@sdk-${majorVersion}`;
+
+    // If the --template flag is provided without an explicit version, then opt-in to
+    // the beta version
+    if (resolvedTemplate && !resolvedTemplate.includes('@')) {
+      resolvedTemplate = `${resolvedTemplate}${versionParam}`;
+    }
+  }
+
   let templateSpec;
   if (resolvedTemplate) {
     templateSpec = npmPackageArg(resolvedTemplate);
@@ -227,7 +247,7 @@ async function action(projectDir: string, command: Command) {
           '--template: argument is required in non-interactive mode. Valid choices are: "blank", "tabs", "bare-minimum" or any custom template (name of npm package).',
       }
     );
-    templateSpec = npmPackageArg(template);
+    templateSpec = npmPackageArg(`${template}${versionParam}`);
   }
 
   const projectName = path.basename(projectRoot);

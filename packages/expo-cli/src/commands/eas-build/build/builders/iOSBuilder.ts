@@ -1,4 +1,4 @@
-import { IOSConfig } from '@expo/config';
+import { IOSConfig } from '@expo/config-plugins';
 import { iOS, Job, Platform, sanitizeJob, Workflow } from '@expo/eas-build-job';
 import sortBy from 'lodash/sortBy';
 import path from 'path';

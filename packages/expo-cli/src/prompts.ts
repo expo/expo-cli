@@ -3,6 +3,15 @@ import prompts, { Choice, Options, PromptObject, PromptType } from 'prompts';
 
 import CommandError, { AbortCommandError } from './CommandError';
 
+// NOTE(brentvatne): we don't use strikethrough anywhere in expo-cli currently,
+// and prompts doesn't give us control over disabled styles (1), so until we
+// open a PR to prompts to make it more extensible in this regard we can just
+// have strikethrough make text grey instead through monkey-patching it.
+//
+// (1): https://github.com/terkelg/prompts/blob/972fbb2d43c7b1ee5058800f441daaf51f2c240f/lib/elements/select.js#L152-L154
+const color = require('kleur');
+color.strikethrough = color.gray;
+
 export type Question<V extends string = string> = PromptObject<V> & {
   optionsPerPage?: number;
 };
@@ -90,6 +99,7 @@ export async function selectAsync(
         cursor: number;
         firstRender: boolean;
         choices: (Omit<prompts.Choice, 'disable'> & { disabled?: boolean })[];
+        value: string;
         render: () => void;
         moveCursor: (n: number) => void;
         fire: () => void;
@@ -105,6 +115,8 @@ export async function selectAsync(
             if (this.cursor > this.choices.length - 1) break;
           }
           this.fire();
+          // Without this, the value will be `0` instead of a string.
+          this.value = (this.choices[this.cursor] || {}).value;
 
           // Support up arrow and `k` key -- no looping
           this.up = () => {
@@ -208,4 +220,28 @@ export async function toggleConfirmAsync(
     options
   );
   return value ?? null;
+}
+
+/**
+ * Prompt the user for an email address.
+ *
+ * @param questions
+ * @param options
+ */
+export async function promptEmailAsync(
+  questions: NamelessQuestion,
+  options?: PromptOptions
+): Promise<string> {
+  const { value } = await prompt(
+    {
+      type: 'text',
+      format: value => value.trim(),
+      validate: (value: string) =>
+        /.+@.+/.test(value) ? true : "That doesn't look like a valid email.",
+      ...questions,
+      name: 'value',
+    },
+    options
+  );
+  return value.trim();
 }
