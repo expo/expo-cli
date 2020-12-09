@@ -83,9 +83,7 @@ const withAndroidManifestBaseMod: ConfigPlugin = config => {
 
         await Manifest.writeAndroidManifestAsync(filePath, modResults);
       } catch (error) {
-        console.error(
-          `${modRequest.platform}.${modRequest.modName}: AndroidManifest.xml mod error:`
-        );
+        console.error(`AndroidManifest.xml mod error:`);
         throw error;
       }
       return results;
@@ -119,7 +117,7 @@ const withAndroidStringsXMLBaseMod: ConfigPlugin = config => {
 
         await writeXMLAsync({ path: filePath, xml: modResults });
       } catch (error) {
-        console.error(`${modRequest.platform}.${modRequest.modName}: strings.xml mod error:`);
+        console.error(`strings.xml mod error:`);
         throw error;
       }
       return results;
@@ -153,9 +151,7 @@ const withAndroidProjectBuildGradleBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        console.error(
-          `${modRequest.platform}.${modRequest.modName}: android/build.gradle mod error:`
-        );
+        console.error(`android/build.gradle mod error:`);
         throw error;
       }
       return results;
@@ -189,9 +185,7 @@ const withAndroidSettingsGradleBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        console.error(
-          `${modRequest.platform}.${modRequest.modName}: android/settings.gradle mod error:`
-        );
+        console.error(`android/settings.gradle mod error:`);
         throw error;
       }
       return results;
@@ -225,9 +219,7 @@ const withAndroidAppBuildGradleBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        console.error(
-          `${modRequest.platform}.${modRequest.modName}: android/app/build.gradle mod error:`
-        );
+        console.error(`android/app/build.gradle mod error:`);
         throw error;
       }
       return results;
@@ -261,7 +253,7 @@ const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        console.error(`${modRequest.platform}.${modRequest.modName}: MainActivity mod error:`);
+        console.error(`MainActivity mod error:`);
         throw error;
       }
       return results;
@@ -447,11 +439,7 @@ const withEntitlementsBaseMod: ConfigPlugin = config => {
         resolveModResults(results, modRequest.platform, modRequest.modName);
         await writeFile(entitlementsPath, plist.build(results.modResults));
       } catch (error) {
-        console.error(
-          `${modRequest.platform}.${modRequest.modName}: ${path.basename(
-            entitlementsPath
-          )} mod error:`
-        );
+        console.error(`${path.basename(entitlementsPath)} mod error:`);
         throw error;
       }
       return results;

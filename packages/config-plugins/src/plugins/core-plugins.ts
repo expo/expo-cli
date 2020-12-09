@@ -181,13 +181,15 @@ export function withInterceptedMod<T>(
     const stack = new Error().stack;
     // Format the stack trace to create the debug log
     debugTrace = getDebugPluginStackFromStackTrace(stack);
+    const modStack = chalk.bold(`${platform}.${mod}`);
+
+    debugTrace = `${modStack}: ${debugTrace}`;
   }
 
   async function interceptingMod({ modRequest, ...config }: ExportedConfigWithProps<T>) {
     if (isDebug) {
       // In debug mod, log the plugin stack in the order which they were invoked
-      const modStack = chalk.bold(`${platform}.${mod}`);
-      console.log(`${modStack}: ${debugTrace}`);
+      console.log(debugTrace);
     }
     return action({ ...config, modRequest: { ...modRequest, nextMod: interceptedMod } });
   }
