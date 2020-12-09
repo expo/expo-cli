@@ -38,6 +38,7 @@
     "@expo/json-file": "8.2.25",
     "@expo/plist": "0.0.10",
     "fs-extra": "9.0.0",
+    "getenv": "0.7.0",
     "glob": "7.1.6",
     "invariant": "2.2.4",
     "slash": "^3.0.0",
