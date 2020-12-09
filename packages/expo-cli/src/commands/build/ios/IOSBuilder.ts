@@ -29,7 +29,7 @@ import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIos
 import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
 import log from '../../../log';
 import { confirmAsync } from '../../../prompts';
-import { getOrPromptForBundleIdentifier } from '../../eject/ConfigValidation';
+import { getOrPromptForIOSBundleIdentifier } from '../../eject/ConfigValidation';
 import * as TerminalLink from '../../utils/TerminalLink';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
@@ -118,7 +118,7 @@ class IOSBuilder extends BaseBuilder {
     await this.validateIcon();
 
     // Check the bundle ID and possibly prompt the user to add a new one.
-    await getOrPromptForBundleIdentifier(this.projectDir);
+    await getOrPromptForIOSBundleIdentifier(this.projectDir);
     // Update with the latest bundle ID
     this.updateProjectConfig();
   }

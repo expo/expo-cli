@@ -5,12 +5,12 @@ import * as path from 'path';
 import CommandError from '../../CommandError';
 import { Context } from '../../credentials/context';
 import log from '../../log';
-import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
+import { getOrPromptForIOSBundleIdentifier } from '../eject/ConfigValidation';
 
 async function fetchIosCertsAsync(projectRoot: string): Promise<void> {
   const inProjectDir = (filename: string): string => path.resolve(projectRoot, filename);
 
-  const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
+  const bundleIdentifier = await getOrPromptForIOSBundleIdentifier(projectRoot);
 
   try {
     const ctx = new Context();

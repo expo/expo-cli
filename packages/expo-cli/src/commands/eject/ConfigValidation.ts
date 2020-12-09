@@ -120,7 +120,7 @@ function formatInUseWarning(appName: string, author: string, id: string): string
  * @sideEffect If there was not `ios.bundleIdentifier` in the manifest then the manifest is mutated with the user input.
  * @throws When there is a value in `ios.bundleIdentifier`, but the format of this value is incorrect.
  */
-export async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<string> {
+export async function getOrPromptForIOSBundleIdentifier(projectRoot: string): Promise<string> {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   const currentBundleId = exp.ios?.bundleIdentifier;
@@ -184,7 +184,7 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
       }))
     ) {
       log.newLine();
-      return getOrPromptForBundleIdentifier(projectRoot);
+      return getOrPromptForIOSBundleIdentifier(projectRoot);
     }
   }
 
@@ -211,7 +211,7 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
  * @sideEffect If there was not `android.package` in the manifest then the manifest is mutated with the user input.
  * @throws When there is a value in `android.package`, but the format of the this value is incorrect.
  */
-export async function getOrPromptForPackage(projectRoot: string): Promise<string> {
+export async function getOrPromptForAndroidPackageName(projectRoot: string): Promise<string> {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   const currentPackage = exp.android?.package;
@@ -276,7 +276,7 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
       }))
     ) {
       log.newLine();
-      return getOrPromptForPackage(projectRoot);
+      return getOrPromptForAndroidPackageName(projectRoot);
     }
   }
 

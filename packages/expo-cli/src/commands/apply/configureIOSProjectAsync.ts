@@ -3,7 +3,7 @@ import { compileModsAsync, ModPlatform, withExpoIOSPlugins } from '@expo/config-
 import { UserManager } from '@expo/xdl';
 
 import log from '../../log';
-import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
+import { getOrPromptForIOSBundleIdentifier } from '../eject/ConfigValidation';
 
 export default async function configureIOSProjectAsync({
   projectRoot,
@@ -13,7 +13,7 @@ export default async function configureIOSProjectAsync({
   platforms: ModPlatform[];
 }) {
   // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
-  const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
+  const bundleIdentifier = await getOrPromptForIOSBundleIdentifier(projectRoot);
   const expoUsername =
     process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
 
