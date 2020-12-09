@@ -83,10 +83,10 @@ const withAndroidManifestBaseMod: ConfigPlugin = config => {
 
         await Manifest.writeAndroidManifestAsync(filePath, modResults);
       } catch (error) {
-        WarningAggregator.addWarningAndroid(
-          'android-manifest',
-          `AndroidManifest.xml configuration could not be applied. ${error.message}`
+        console.error(
+          `${modRequest.platform}.${modRequest.modName}: AndroidManifest.xml mod error:`
         );
+        throw error;
       }
       return results;
     },
@@ -119,10 +119,8 @@ const withAndroidStringsXMLBaseMod: ConfigPlugin = config => {
 
         await writeXMLAsync({ path: filePath, xml: modResults });
       } catch (error) {
-        WarningAggregator.addWarningAndroid(
-          `${modRequest.platform}-${modRequest.modName}`,
-          `strings.xml configuration could not be applied. ${error.message}`
-        );
+        console.error(`${modRequest.platform}.${modRequest.modName}: strings.xml mod error:`);
+        throw error;
       }
       return results;
     },
@@ -155,10 +153,10 @@ const withAndroidProjectBuildGradleBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        WarningAggregator.addWarningAndroid(
-          `${modRequest.platform}-${modRequest.modName}`,
-          `Project build.gradle could not be modified. ${error.message}`
+        console.error(
+          `${modRequest.platform}.${modRequest.modName}: android/build.gradle mod error:`
         );
+        throw error;
       }
       return results;
     },
@@ -191,10 +189,10 @@ const withAndroidSettingsGradleBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        WarningAggregator.addWarningAndroid(
-          `${modRequest.platform}-${modRequest.modName}`,
-          `Project settings.gradle could not be modified. ${error.message}`
+        console.error(
+          `${modRequest.platform}.${modRequest.modName}: android/settings.gradle mod error:`
         );
+        throw error;
       }
       return results;
     },
@@ -227,10 +225,10 @@ const withAndroidAppBuildGradleBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        WarningAggregator.addWarningAndroid(
-          `${modRequest.platform}-${modRequest.modName}`,
-          `App build.gradle could not be modified. ${error.message}`
+        console.error(
+          `${modRequest.platform}.${modRequest.modName}: android/app/build.gradle mod error:`
         );
+        throw error;
       }
       return results;
     },
@@ -263,10 +261,8 @@ const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        WarningAggregator.addWarningAndroid(
-          `${modRequest.platform}-${modRequest.modName}`,
-          `MainActivity could not be modified. ${error.message}`
-        );
+        console.error(`${modRequest.platform}.${modRequest.modName}: MainActivity mod error:`);
+        throw error;
       }
       return results;
     },
@@ -451,10 +447,12 @@ const withEntitlementsBaseMod: ConfigPlugin = config => {
         resolveModResults(results, modRequest.platform, modRequest.modName);
         await writeFile(entitlementsPath, plist.build(results.modResults));
       } catch (error) {
-        WarningAggregator.addWarningIOS(
-          'entitlements',
-          `${entitlementsPath} configuration could not be applied.`
+        console.error(
+          `${modRequest.platform}.${modRequest.modName}: ${path.basename(
+            entitlementsPath
+          )} mod error:`
         );
+        throw error;
       }
       return results;
     },
