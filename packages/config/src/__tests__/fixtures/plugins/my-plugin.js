@@ -1,4 +1,7 @@
+const { withAndroidManifest } = require('@expo/config-plugins');
+
 module.exports = config => {
   config.slug = 'from-custom-plugin';
-  return config;
+  // test that the mods don't get serialized
+  return withAndroidManifest(config, config => config);
 };

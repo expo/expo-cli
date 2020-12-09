@@ -64,7 +64,10 @@ export function serializeAfterStaticPlugins(val: any): any {
     const output: { [key: string]: any } = {};
     for (const property in val) {
       if (val.hasOwnProperty(property)) {
-        if (property === 'plugins' && Array.isArray(val[property])) {
+        if (property === 'mods') {
+          // Don't serialize mods
+          output[property] = val[property];
+        } else if (property === 'plugins' && Array.isArray(val[property])) {
           // Serialize the mods by removing any config plugins
           output[property] = val[property].map(serializeAndEvaluatePlugin);
         } else {
