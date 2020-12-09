@@ -3,7 +3,7 @@ import { ApiV2, UserManager } from '@expo/xdl';
 import ora from 'ora';
 
 import log from '../../../log';
-import { ensureProjectExistsAsync } from '../../../projects';
+import { ensureProjectExistsAsync, getProjectOwner } from '../../../projects';
 import { printTableJsonArray } from '../../utils/cli-table';
 import { AnalyticsEvent, Build, BuildCommandPlatform, BuildStatus } from '../types';
 import Analytics from '../utils/analytics';
@@ -46,7 +46,7 @@ async function statusAction(
   const user = await UserManager.ensureLoggedInAsync();
   const { exp } = getConfig(projectDir);
 
-  const accountName = exp.owner || user.username;
+  const accountName = getProjectOwner(user, exp);
   const projectName = exp.slug;
 
   const projectId = await ensureProjectExistsAsync(user, {

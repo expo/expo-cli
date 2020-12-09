@@ -1,14 +1,13 @@
 import { AndroidConfig } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
-import { UserManager } from '@expo/xdl';
 import fs from 'fs-extra';
 
 import log from '../../../../log';
-import { ensureValidVersions } from './common';
+import { ensureValidVersions, getAccountName } from './common';
 
 export async function configureUpdatesAsync(projectDir: string, exp: ExpoConfig): Promise<void> {
   ensureValidVersions(exp);
-  const username = await UserManager.getCurrentUsernameAsync();
+  const username = await getAccountName(exp);
   const buildGradlePath = AndroidConfig.Paths.getAppBuildGradle(projectDir);
   const buildGradleContent = await fs.readFile(buildGradlePath, 'utf8');
 
@@ -41,7 +40,7 @@ export async function syncUpdatesConfigurationAsync(
   exp: ExpoConfig
 ): Promise<void> {
   ensureValidVersions(exp);
-  const username = await UserManager.getCurrentUsernameAsync();
+  const username = await getAccountName(exp);
   try {
     await ensureUpdatesConfiguredAsync(projectDir, exp);
   } catch (error) {

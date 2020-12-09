@@ -1,11 +1,12 @@
 import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
-import { Project, User, UserManager, Versions } from '@expo/xdl';
+import { Project, RobotUser, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import ora from 'ora';
 import semver from 'semver';
 
 import log from '../../log';
+import { getProjectOwner } from '../../projects';
 import { action as publishAction } from '../publish';
 import * as UrlUtils from '../utils/url';
 import { BuilderOptions } from './BaseBuilder.types';
@@ -18,7 +19,7 @@ export default class BaseBuilder {
   protected projectConfig: ProjectConfig;
   manifest: ExpoConfig;
 
-  async getUserAsync(): Promise<User> {
+  async getUserAsync(): Promise<User | RobotUser> {
     return await UserManager.ensureLoggedInAsync();
   }
 
@@ -67,8 +68,13 @@ export default class BaseBuilder {
 
   async prepareProjectInfo(): Promise<void> {
     await this.checkProjectConfig();
-    // TODO: Move this since it can add delay
-    await this.getUserAsync();
+    // note: this validates if a robot user is used without "owner" in the manifest
+    // without this check, build/status returns "robots not allowed".
+    getProjectOwner(
+      // TODO: Move this since it can add delay
+      await this.getUserAsync(),
+      this.projectConfig.exp
+    );
   }
 
   async checkProjectConfig(): Promise<void> {
@@ -372,16 +378,15 @@ ${job.id}
       );
     }
 
-    const username = this.manifest.owner
-      ? this.manifest.owner
-      : await UserManager.getCurrentUsernameAsync();
+    const user = await UserManager.getCurrentUserAsync();
 
     if (buildId) {
-      log(
-        `You can monitor the build at\n\n ${chalk.underline(
-          UrlUtils.constructBuildLogsUrl({ buildId, username: username ?? undefined })
-        )}\n`
-      );
+      const url = UrlUtils.constructBuildLogsUrl({
+        buildId,
+        username: this.manifest.owner || (user?.kind === 'user' ? user.username : undefined),
+      });
+
+      log(`You can monitor the build at\n\n ${chalk.underline(url)}\n`);
     }
 
     if (this.options.wait) {
