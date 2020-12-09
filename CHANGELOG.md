@@ -12,6 +12,21 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 8 Dec 2020 18:21:57 -0800](https://github.com/expo/expo-cli/commit/a875d06d4ab529ff9b4e7fe570692a47bf46f1b6)
+
+### 🎉 New features
+
+- [cli] Add expo-random when upgrading to >= SDK 40 with expo-auth-session
+- [cli] Add cmd.exe detection on windows & warn about it ([#2838](https://github.com/expo/expo-cli/issues/2838))
+- [cli] Skip warning about expo-constants when ejecting in SDK 40 and greater ([#3006](https://github.com/expo/expo-cli/issues/3006))
+- [xdl] Add robots as new supported user type ([#2440](https://github.com/expo/expo-cli/issues/2440))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.70
+- expo-cli@4.0.12
+- @expo/xdl@59.0.10
+
 ## [Mon, 7 Dec 2020 22:27:44 -0800](https://github.com/expo/expo-cli/commit/3fb08fdff7a03fb49a1f2ddc6d968ceb14be9519)
 
 ### 🎉 New features
