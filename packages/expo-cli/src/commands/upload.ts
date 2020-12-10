@@ -1,3 +1,4 @@
+import { Android } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import pick from 'lodash/pick';
@@ -24,7 +25,11 @@ export default function (program: Command) {
     .option('--key <key>', 'path to the JSON key used to authenticate with Google Play')
     .option(
       '--android-package <android-package>',
-      'Android package name (using expo.android.package from app.json by default)'
+      '(Uploading using `android-package` is deprecated in favour of uploading using `android-application-id`) Android package name (using expo.android.package from app.json by default)'
+    )
+    .option(
+      '--android-application-id <application-id>',
+      'Android application ID (using expo.android.applicationId from app.json by default)'
     )
     .option('--type <archive-type>', 'archive type: apk, aab', /^(apk|aab)$/i)
     .option(
@@ -49,6 +54,11 @@ export default function (program: Command) {
       if (options.useSubmissionService) {
         log.warn(
           '\n`--use-submission-service is now the default and the flag will be deprecated in the future.`'
+        );
+      }
+      if (options.androidPackage) {
+        log.warn(
+          '\n`Uploading using --android-package is deprecated in favour of uploading using --android-application-id and will be removed in the future.`'
         );
       }
       const ctx = AndroidSubmitCommand.createContext(projectDir, options);
