@@ -74,6 +74,9 @@ async function fetchSchemaAsync(version: string): Promise<Record<string, any>> {
   const ts = await compile(schema as any, 'ExpoConfig', {
     bannerComment: `/* tslint:disable */\n/**\n* The standard Expo config object defined in \`app.config.js\` files.\n*/`,
     unknownAny: false,
+    style: {
+      singleQuote: true,
+    },
   });
   const filepath = `src/ExpoConfig.ts`;
   fs.ensureDirSync(path.dirname(filepath));
