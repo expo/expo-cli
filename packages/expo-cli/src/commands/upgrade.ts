@@ -443,6 +443,9 @@ export async function upgradeAsync(
   },
   options: Options
 ) {
+  // Force updating the versions cache
+  await Versions.versionsAsync({ skipCache: true });
+
   const { exp, pkg } = await getConfig(projectRoot);
 
   if (await maybeBailOnGitStatusAsync()) return;
