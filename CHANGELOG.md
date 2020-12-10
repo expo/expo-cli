@@ -12,6 +12,30 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Wed, 9 Dec 2020 17:12:12 -0800](https://github.com/expo/expo-cli/commit/cbbfa68a6eac9639b4217a9bcc0ca3ce30eb1378)
+
+### 🐛 Bug fixes
+
+- [cli][xdl] Clear versions cache when running expo upgrade, to be safe
+- [config] fix mod serialization ([#3008](https://github.com/expo/expo-cli/issues/3008))
+- [config-plugins] use env variable for debug when _internal isn't defined ([#3011](https://github.com/expo/expo-cli/issues/3011))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.11
+- @expo/config@3.3.21
+- @expo/dev-server@0.1.46
+- @expo/dev-tools@0.13.71
+- @expo/electron-adapter@0.0.38
+- expo-cli@4.0.13
+- expo-optimize@0.1.69
+- @expo/metro-config@0.1.46
+- @expo/next-adapter@2.1.52
+- expo-pwa@0.0.57
+- uri-scheme@1.0.57
+- @expo/webpack-config@0.12.51
+- @expo/xdl@59.0.11
+
 ## [Tue, 8 Dec 2020 18:21:57 -0800](https://github.com/expo/expo-cli/commit/a875d06d4ab529ff9b4e7fe570692a47bf46f1b6)
 
 ### 🎉 New features
