@@ -24,8 +24,7 @@ import { learnMore } from '../utils/TerminalLink';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import {
-  getOrPromptForAndroidApplicationId,
-  getOrPromptForAndroidPackageName,
+  getOrPromptForAndroidApplicationIdAndPackageName,
   getOrPromptForIOSBundleIdentifier,
 } from './ConfigValidation';
 
@@ -311,8 +310,7 @@ async function ensureConfigAsync({
   }
 
   if (platforms.includes('android')) {
-    await getOrPromptForAndroidPackageName(projectRoot);
-    await getOrPromptForAndroidApplicationId(projectRoot);
+    await getOrPromptForAndroidApplicationIdAndPackageName(projectRoot);
   }
   if (platforms.includes('ios')) {
     await getOrPromptForIOSBundleIdentifier(projectRoot);

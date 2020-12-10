@@ -10,7 +10,7 @@ import { isUrlAvailableAsync } from '../utils/url';
 
 const noIOSBundleIdMessage = `Your project must have a \`ios.bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
 const noAndroidPackageMessage = `Your project must have a \`android.package\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/android-package`;
-const noAndroidApplicationIdMessage = `Your project must have a \`android.applicationId\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/android-application-id`;
+const noAndroidApplicationIdMessage = `Your project must have a \`android.applicationId\` set in the Expo config (app.json or app.config.js) or, at least, \`android.package\`.\nSee https://expo.fyi/android-application-id`;
 
 /**
  * Checks whether the given `iOSBundleId` has the correct format.
@@ -139,7 +139,7 @@ export async function getOrPromptForIOSBundleIdentifier(projectRoot: string): Pr
   const currentValue = validateValue(
     exp.ios?.bundleIdentifier,
     isIOSBundleIdValid,
-    `The ios.bundleIdentifier defined in your Expo config is not formatted properly. Only alphanumeric characters, '.', '-', and '_' are allowed, and each '.' must be followed by a letter.`
+    `The ios.bundleIdentifier defined in your Expo config is not formatted properly. Only alphanumeric characters, '.', '-', and '_' are allowed, and segment that is separated by '.' must start from the lowercase letter.`
   );
   if (currentValue) {
     return currentValue;
@@ -248,7 +248,7 @@ export async function getOrPromptForAndroidPackageName(projectRoot: string): Pro
  * Tries to read `android.applicationId` from the application manifest.
  * It tries to obtain the value according to the following rules:
  * 1. read `android.applicationId` and return it if present (throws upon wrong format) or upon no value 🔽
- * 2. read `android.package` and use it as a suggestion for the user or upon no value 🔽
+ * 2. read `android.package` and return it if present (throws upon wrong format) or upon no value 🔽
  * 3. read `ios.bundleIdentifier` and use it as a suggestion for the user or upon no value 🔽
  * 4. create `username`-based value and use it as a suggestion for the user.
  *
@@ -267,6 +267,15 @@ export async function getOrPromptForAndroidApplicationId(projectRoot: string): P
   );
   if (currentValue) {
     return currentValue;
+  }
+
+  const androidPackageBasedValue = validateValue(
+    exp.android?.package,
+    validate,
+    `The android.applicationId is not defined, so fallbacks to reading android.package, but android.package value does not satisfy android.applicationId format. Provide android.applicationId separately or provide android.package value containing only alphanumeric character, '.' and '_' with each '.' followed by a letter.`
+  );
+  if (androidPackageBasedValue) {
+    return androidPackageBasedValue;
   }
 
   const recommendedValue = await getRecommendedValue(
@@ -304,6 +313,22 @@ export async function getOrPromptForAndroidApplicationId(projectRoot: string): P
   );
 
   return applicationId;
+}
+
+/**
+ * Tries to read `android.applicationId` and `android.package`.
+ * Starting from reading `android.package` as it's mandatory and `android.applicationId` is optional.
+ * See atomic `getOrPrompt...` functions for more info.
+ *
+ * @sideEffect If any of the values is not present in the project manifest, then the manifest would be mutated by the user input.
+ * @throws When there is a value, but it's format is invalid.
+ */
+export async function getOrPromptForAndroidApplicationIdAndPackageName(
+  projectRoot: string
+): Promise<{ applicationId: string; packageName: string }> {
+  const packageName = await getOrPromptForAndroidPackageName(projectRoot);
+  const applicationId = await getOrPromptForAndroidApplicationId(projectRoot);
+  return { packageName, applicationId };
 }
 
 async function attemptModification(

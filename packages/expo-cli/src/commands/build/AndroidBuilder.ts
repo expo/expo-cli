@@ -8,10 +8,7 @@ import {
   useKeystore,
 } from '../../credentials/views/AndroidKeystore';
 import { SetupAndroidKeystore } from '../../credentials/views/SetupAndroidKeystore';
-import {
-  getOrPromptForAndroidApplicationId,
-  getOrPromptForAndroidPackageName,
-} from '../eject/ConfigValidation';
+import { getOrPromptForAndroidApplicationIdAndPackageName } from '../eject/ConfigValidation';
 import BaseBuilder from './BaseBuilder';
 import BuildError from './BuildError';
 import { Platform, PLATFORMS } from './constants';
@@ -53,8 +50,7 @@ export default class AndroidBuilder extends BaseBuilder {
     await utils.checkIfSdkIsSupported(this.manifest.sdkVersion!, ANDROID);
 
     // Check the android application ID and package name
-    await getOrPromptForAndroidApplicationId(this.projectDir);
-    await getOrPromptForAndroidPackageName(this.projectDir);
+    await getOrPromptForAndroidApplicationIdAndPackageName(this.projectDir);
 
     this.updateProjectConfig();
   }
