@@ -388,7 +388,6 @@ export async function exportForAppHosting(
 
   logger.global.info('Finished saving JS Bundles.');
 
-  // save the assets
   const { assets } = await exportAssetsAsync({
     projectRoot,
     exp,
