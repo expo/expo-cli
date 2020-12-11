@@ -653,7 +653,7 @@ export async function publishAsync(
   logger.global.info(TableText.createFilesTable(files));
   logger.global.info('');
   logger.global.info(
-    `💡 JavaScript bundle sizes effect startup time. ${chalk.dim(
+    `💡 JavaScript bundle sizes affect startup time. ${chalk.dim(
       learnMore(`https://expo.fyi/javascript-bundle-sizes`)
     )}`
   );
