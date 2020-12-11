@@ -81,6 +81,7 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.Permissions.withPermissions,
     AndroidConfig.Branch.withBranch,
     AndroidConfig.Facebook.withFacebookManifest,
+    AndroidConfig.Notifications.withNotificationManifest,
 
     AndroidConfig.UserInterfaceStyle.withUiModeManifest,
     AndroidConfig.GoogleMobileAds.withGoogleMobileAdsConfig,
@@ -103,6 +104,7 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.NavigationBar.withNavigationBar,
     AndroidConfig.StatusBar.withStatusBar,
     AndroidConfig.PrimaryColor.withPrimaryColor,
+    AndroidConfig.Notifications.withNotificationIconColor,
 
     AndroidConfig.Icon.withIcons,
     // If we renamed the package, we should also move it around and rename it in source files
