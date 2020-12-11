@@ -1,14 +1,17 @@
+import { ExpoConfig } from '@expo/config-types';
 import { generateImageAsync } from '@expo/image-utils';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { ExpoConfig } from '../Config.types';
+import { ConfigPlugin } from '../Plugin.types';
+import { createAndroidManifestPlugin } from '../plugins/android-plugins';
+import { withDangerousMod } from '../plugins/core-plugins';
 import * as Colors from './Colors';
 import { ANDROID_RES_PATH, dpiValues } from './Icon';
 import {
   addMetaDataItemToMainApplication,
-  Document,
-  getMainApplication,
+  AndroidManifest,
+  getMainApplicationOrThrow,
   removeMetaDataItemFromMainApplication,
 } from './Manifest';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';
@@ -22,6 +25,21 @@ export const NOTIFICATION_ICON = 'notification_icon';
 export const NOTIFICATION_ICON_RESOURCE = `@drawable/${NOTIFICATION_ICON}`;
 export const NOTIFICATION_ICON_COLOR = 'notification_icon_color';
 export const NOTIFICATION_ICON_COLOR_RESOURCE = `@color/${NOTIFICATION_ICON_COLOR}`;
+
+export const withNotificationIconColor: ConfigPlugin = config => {
+  return withDangerousMod(config, [
+    'android',
+    async config => {
+      await setNotificationIconColorAsync(config, config.modRequest.projectRoot);
+      return config;
+    },
+  ]);
+};
+
+export const withNotificationManifest = createAndroidManifestPlugin(
+  setNotificationConfigAsync,
+  'withNotificationManifest'
+);
 
 export function getNotificationIcon(config: ExpoConfig) {
   return config.notification?.icon || null;
@@ -44,10 +62,13 @@ export async function setNotificationIconAsync(config: ExpoConfig, projectRoot: 
   }
 }
 
-export async function applyAndroidManifestChanges(config: ExpoConfig, manifestDocument: Document) {
+export async function setNotificationConfigAsync(
+  config: ExpoConfig,
+  manifestDocument: AndroidManifest
+) {
   const icon = getNotificationIcon(config);
   const color = getNotificationColor(config);
-  const mainApplication = getMainApplication(manifestDocument);
+  const mainApplication = getMainApplicationOrThrow(manifestDocument);
   if (icon) {
     addMetaDataItemToMainApplication(
       mainApplication,
@@ -71,7 +92,7 @@ export async function applyAndroidManifestChanges(config: ExpoConfig, manifestDo
   return manifestDocument;
 }
 
-export async function applyColorsXmlChangesAsync(config: ExpoConfig, projectRoot: string) {
+export async function setNotificationIconColorAsync(config: ExpoConfig, projectRoot: string) {
   const color = getNotificationColor(config);
   const colorsXmlPath = await Colors.getProjectColorsXMLPathAsync(projectRoot);
   let colorsJson = await readResourcesXMLAsync({ path: colorsXmlPath });
