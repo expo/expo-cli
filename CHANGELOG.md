@@ -6,9 +6,9 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [json-file] Remove undocumented support for multi-part keys in `getAsync` and `setAsync` ([#3019](https://github.com/expo/expo-cli/pulls/3019))
 
 ### 🎉 New features
-
 
 ### 🐛 Bug fixes
 
@@ -18,7 +18,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - [cli][xdl] Clear versions cache when running expo upgrade, to be safe
 - [config] fix mod serialization ([#3008](https://github.com/expo/expo-cli/issues/3008))
-- [config-plugins] use env variable for debug when _internal isn't defined ([#3011](https://github.com/expo/expo-cli/issues/3011))
+- [config-plugins] use env variable for debug when `_internal` isn't defined ([#3011](https://github.com/expo/expo-cli/issues/3011))
 
 ### 📦 Packages updated
 
@@ -150,7 +150,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
-- [config] fill _internal object ([#2968](https://github.com/expo/expo-cli/issues/2968))
+- [config] fill `_internal` object ([#2968](https://github.com/expo/expo-cli/issues/2968))
 
 ### 🐛 Bug fixes
 
@@ -171,7 +171,6 @@ This is the log of notable changes to Expo CLI and related packages.
 - uri-scheme@1.0.50
 - @expo/webpack-config@0.12.47
 - @expo/xdl@59.0.3
-
 
 ## [Fri, 27 Nov 2020 14:33:45 -0800](https://github.com/expo/expo-cli/commit/7bb61ba51da0eafce3faa8cbf59124f56ebe7e7d)
 
