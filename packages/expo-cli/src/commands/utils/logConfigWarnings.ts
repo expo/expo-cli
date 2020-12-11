@@ -1,5 +1,5 @@
-import { WarningAggregator } from '@expo/config-plugins';
 import { PackageJSONConfig } from '@expo/config';
+import { WarningAggregator } from '@expo/config-plugins';
 import chalk from 'chalk';
 
 import log from '../../log';
