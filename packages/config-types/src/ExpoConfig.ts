@@ -17,7 +17,7 @@ export interface ExpoConfig {
    */
   slug: string;
   /**
-   * The Expo account name of the team owner. If not provided, defaults to the username of the current user.
+   * The name of the Expo organization that owns this project. If not provided, defaults to the username of the current user.
    */
   owner?: string;
   /**
