@@ -50,9 +50,6 @@
     "xcode": "^3.0.0",
     "xml-js": "^1.6.11"
   },
-  "peerDependencies": {
-    "expo-splash-screen": "*"
-  },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.18",
     "@react-native-community/cli-types": "^4.10.0",
