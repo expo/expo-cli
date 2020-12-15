@@ -550,7 +550,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - [cli][xdl] Clear versions cache when running expo upgrade, to be safe
 - [config] fix mod serialization ([#3008](https://github.com/expo/expo-cli/issues/3008))
-- [config-plugins] use env variable for debug when \_internal isn't defined ([#3011](https://github.com/expo/expo-cli/issues/3011))
+- [config-plugins] use env variable for debug when `_internal` isn't defined ([#3011](https://github.com/expo/expo-cli/issues/3011))
 
 ### 📦 Packages updated
 
