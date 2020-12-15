@@ -6,6 +6,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [expo-cli] Drop support for Node.js v10
+
 ### 🎉 New features
 
 ### 🧹 Chores
