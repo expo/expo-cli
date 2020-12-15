@@ -12,6 +12,22 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Mon, 14 Dec 2020 20:47:39 -0800](https://github.com/expo/expo-cli/commit/ad6570659b8ad9fccdec8c79791b6f5d6578b824)
+
+### 🐛 Bug fixes
+
+- [configure-splash-screen][config-plugins] Bump @expo/configure-splash-screen
+- [configure-splash-screen] Remove peer dependency
+- [english] effect -> affect ([#3013](https://github.com/expo/expo-cli/issues/3013))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.12
+- @expo/dev-tools@0.13.72
+- expo-cli@4.0.14
+- uri-scheme@1.0.58
+- @expo/xdl@59.0.12
+
 ## [Wed, 9 Dec 2020 17:12:12 -0800](https://github.com/expo/expo-cli/commit/cbbfa68a6eac9639b4217a9bcc0ca3ce30eb1378)
 
 ### 🐛 Bug fixes
