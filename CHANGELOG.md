@@ -682,7 +682,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
-- [config] fill \_internal object ([#2968](https://github.com/expo/expo-cli/issues/2968))
+- [config] fill `_internal` object ([#2968](https://github.com/expo/expo-cli/issues/2968))
 
 ### 🐛 Bug fixes
 
