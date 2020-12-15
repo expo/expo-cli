@@ -132,7 +132,7 @@ it('adds a new line at the eof', async () => {
   const file = new JsonFile(filename, { json5: true });
   await file.writeAsync(obj1);
   expect(fs.existsSync(filename)).toBe(true);
-  const data = await fs.readFile(filename, 'utf-8');
+  const data = fs.readFileSync(filename, 'utf-8');
   const lastChar = data[data.length - 1];
   expect(lastChar).toEqual('\n');
 });
