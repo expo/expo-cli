@@ -2,7 +2,6 @@ module.exports = {
   projects: [
     require('./packages/babel-preset-cli/jest.config'),
     require('./packages/config/jest.config'),
-    require('./packages/configure-splash-screen/jest.config'),
     require('./packages/dev-server/jest.config'),
     require('./packages/dev-tools/jest.config'),
     require('./packages/expo-cli/jest.config'),
