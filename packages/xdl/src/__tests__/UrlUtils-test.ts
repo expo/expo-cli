@@ -26,6 +26,7 @@ afterAll(() => {
 const projectRoot = '/app';
 const detachedProjectRoot = '/detached';
 const detachedWithSchemesProjectRoot = '/detached-with-schemes';
+const devClientWithSchemesProjectRoot = '/dev-client-with-schemes';
 beforeAll(async () => {
   vol.fromJSON(
     {
@@ -51,6 +52,20 @@ beforeAll(async () => {
       }),
     },
     detachedWithSchemesProjectRoot
+  );
+  vol.fromJSON(
+    {
+      'package.json': JSON.stringify({ dependencies: { expo: '39.0.0' } }),
+      'app.json': JSON.stringify({
+        sdkVersion: '39.0.0',
+        scheme: 'custom-scheme',
+      }),
+      '.expo/settings.json': JSON.stringify({
+        scheme: 'custom-scheme',
+        devClient: true,
+      }),
+    },
+    devClientWithSchemesProjectRoot
   );
 });
 
@@ -171,6 +186,19 @@ describe(UrlUtils.constructUrlAsync, () => {
     await expect(UrlUtils.constructUrlAsync(projectRoot, null, true)).resolves.toBe(
       'exp://localhost:9999'
     );
+  });
+});
+
+describe(UrlUtils.constructDevClientUrlAsync, () => {
+  it(`fails if a shared scheme is not provided`, async () => {
+    await expect(UrlUtils.constructDevClientUrlAsync(projectRoot)).rejects.toThrow(
+      'No scheme specified for development client'
+    );
+  });
+  it(`creates dev client url if a common scheme is available`, async () => {
+    await expect(
+      UrlUtils.constructDevClientUrlAsync(devClientWithSchemesProjectRoot)
+    ).resolves.toBe('custom-scheme://expo-development-client/?url=http%3A%2F%2F100.100.1.100%3A80');
   });
 });
 
