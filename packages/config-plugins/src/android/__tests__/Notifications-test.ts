@@ -13,14 +13,8 @@ import {
 import { SAMPLE_COLORS_XML } from './fixtures/icon';
 
 jest.mock('fs');
-jest.mock('@expo/image-utils', () => ({
-  generateImageAsync(_: any, { src }) {
-    const fs = require('fs');
-    return { source: fs.readFileSync(src) };
-  },
-}));
 
-const actualFs = jest.requireActual('fs') as typeof fs;
+const fsReal = jest.requireActual('fs') as typeof fs;
 
 const LIST_OF_GENERATED_NOTIFICATION_FILES = [
   'android/app/src/main/res/drawable-mdpi/notification_icon.png',
@@ -36,7 +30,7 @@ const projectRoot = '/app';
 
 describe('Android notifications configuration', () => {
   beforeAll(async () => {
-    const icon = actualFs.readFileSync(iconPath);
+    const icon = fsReal.readFileSync(iconPath);
     vol.fromJSON(
       { './android/app/src/main/res/values/colors.xml': SAMPLE_COLORS_XML },
       projectRoot

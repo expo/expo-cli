@@ -72,13 +72,10 @@ export async function setNotificationIconAsync(config: ExpoConfig, projectRoot: 
   }
 }
 
-export async function setNotificationConfigAsync(
-  config: ExpoConfig,
-  manifestDocument: AndroidManifest
-) {
+export async function setNotificationConfigAsync(config: ExpoConfig, manifest: AndroidManifest) {
   const icon = getNotificationIcon(config);
   const color = getNotificationColor(config);
-  const mainApplication = getMainApplicationOrThrow(manifestDocument);
+  const mainApplication = getMainApplicationOrThrow(manifest);
   if (icon) {
     addMetaDataItemToMainApplication(
       mainApplication,
@@ -99,7 +96,7 @@ export async function setNotificationConfigAsync(
   } else {
     removeMetaDataItemFromMainApplication(mainApplication, META_DATA_NOTIFICATION_ICON_COLOR);
   }
-  return manifestDocument;
+  return manifest;
 }
 
 export async function setNotificationIconColorAsync(config: ExpoConfig, projectRoot: string) {
@@ -116,7 +113,7 @@ export async function setNotificationIconColorAsync(config: ExpoConfig, projectR
 }
 
 async function writeNotificationIconImageFilesAsync(icon: string, projectRoot: string) {
-  Promise.all(
+  await Promise.all(
     Object.values(dpiValues).map(async ({ folderName, scale }) => {
       const drawableFolderName = folderName.replace('mipmap', 'drawable');
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, drawableFolderName);
@@ -145,7 +142,7 @@ async function writeNotificationIconImageFilesAsync(icon: string, projectRoot: s
 }
 
 async function removeNotificationIconImageFilesAsync(projectRoot: string) {
-  Promise.all(
+  await Promise.all(
     Object.values(dpiValues).map(async ({ folderName }) => {
       const drawableFolderName = folderName.replace('mipmap', 'drawable');
       const dpiFolderPath = path.resolve(projectRoot, ANDROID_RES_PATH, drawableFolderName);
