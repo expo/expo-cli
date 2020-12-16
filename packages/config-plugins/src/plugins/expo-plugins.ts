@@ -107,6 +107,7 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.Notifications.withNotificationIconColor,
 
     AndroidConfig.Icon.withIcons,
+    AndroidConfig.Notifications.withNotificationIcons,
     // If we renamed the package, we should also move it around and rename it in source files
     // Added last to ensure this plugin runs first. Out of tree solutions will mistakenly resolve the package incorrectly otherwise.
     AndroidConfig.Package.withPackageRefactor,

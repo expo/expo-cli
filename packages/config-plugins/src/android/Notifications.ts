@@ -26,6 +26,16 @@ export const NOTIFICATION_ICON_RESOURCE = `@drawable/${NOTIFICATION_ICON}`;
 export const NOTIFICATION_ICON_COLOR = 'notification_icon_color';
 export const NOTIFICATION_ICON_COLOR_RESOURCE = `@color/${NOTIFICATION_ICON_COLOR}`;
 
+export const withNotificationIcons: ConfigPlugin = config => {
+  return withDangerousMod(config, [
+    'android',
+    async config => {
+      await setNotificationIconAsync(config, config.modRequest.projectRoot);
+      return config;
+    },
+  ]);
+};
+
 export const withNotificationIconColor: ConfigPlugin = config => {
   return withDangerousMod(config, [
     'android',
