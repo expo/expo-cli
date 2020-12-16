@@ -1,5 +1,5 @@
+import assert from 'assert';
 import fs from 'fs-extra';
-import invariant from 'invariant';
 import path from 'path';
 import rimraf from 'rimraf';
 
@@ -54,7 +54,7 @@ async function _getOrCreateTemplateDirectoryAsync(context, iosExpoViewUrl) {
       if (!isDirectory(expoRootTemplateDirectory)) {
         fs.mkdirpSync(expoRootTemplateDirectory);
         logger.info('Downloading iOS code...');
-        invariant(iosExpoViewUrl, `The URL for ExpoKit iOS must be set`);
+        assert(iosExpoViewUrl, `The URL for ExpoKit iOS must be set`);
         await Api.downloadAsync(iosExpoViewUrl, expoRootTemplateDirectory, {
           extract: true,
         });
@@ -167,7 +167,7 @@ async function _renderPodfileFromTemplateAsync(
     context.data.shellAppSdkVersion || sdkVersion
   );
   if (context.type === 'user') {
-    invariant(iosClientVersion, `The iOS client version must be specified`);
+    assert(iosClientVersion, `The iOS client version must be specified`);
     reactNativeDependencyPath = path.join(context.data.projectPath, 'node_modules', 'react-native');
     modulesPath = path.join(context.data.projectPath, 'node_modules');
 
