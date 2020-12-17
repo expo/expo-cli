@@ -32,16 +32,16 @@ describe('Applies proper Android Notification configuration to AndroidManifest.x
     const mainApplication = getMainApplication(androidManifestJson);
 
     const notificationIcon = mainApplication['meta-data'].filter(
-      e => e['$']['android:name'] === META_DATA_NOTIFICATION_ICON
+      e => e.$['android:name'] === META_DATA_NOTIFICATION_ICON
     );
     expect(notificationIcon).toHaveLength(1);
-    expect(notificationIcon[0]['$']['android:resource']).toMatch(NOTIFICATION_ICON_RESOURCE);
+    expect(notificationIcon[0].$['android:resource']).toMatch(NOTIFICATION_ICON_RESOURCE);
 
     const notificationColor = mainApplication['meta-data'].filter(
-      e => e['$']['android:name'] === META_DATA_NOTIFICATION_ICON_COLOR
+      e => e.$['android:name'] === META_DATA_NOTIFICATION_ICON_COLOR
     );
     expect(notificationColor).toHaveLength(1);
-    expect(notificationColor[0]['$']['android:resource']).toMatch(NOTIFICATION_ICON_COLOR_RESOURCE);
+    expect(notificationColor[0].$['android:resource']).toMatch(NOTIFICATION_ICON_COLOR_RESOURCE);
   });
 
   it('removes existing config if null is provided', async () => {
@@ -54,12 +54,12 @@ describe('Applies proper Android Notification configuration to AndroidManifest.x
     const mainApplication = getMainApplication(androidManifestJson);
 
     const notificationIcon = mainApplication['meta-data'].filter(
-      e => e['$']['android:name'] === META_DATA_NOTIFICATION_ICON
+      e => e.$['android:name'] === META_DATA_NOTIFICATION_ICON
     );
     expect(notificationIcon).toHaveLength(0);
 
     const notificationColor = mainApplication['meta-data'].filter(
-      e => e['$']['android:name'] === META_DATA_NOTIFICATION_ICON_COLOR
+      e => e.$['android:name'] === META_DATA_NOTIFICATION_ICON_COLOR
     );
     expect(notificationColor).toHaveLength(0);
   });
