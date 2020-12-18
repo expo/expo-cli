@@ -1740,7 +1740,7 @@ async function startDevServerAsync(projectRoot: string, startOptions: StartOptio
   }
   if (startOptions.target) {
     // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
-    // called from metro.config.js and the --target option is used to override the default target.
+    // called from metro.config.js.
     process.env.EXPO_TARGET = startOptions.target;
   }
 

@@ -140,6 +140,10 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
 
   if (options.devClient) {
     startOpts.target = 'bare';
+  } else {
+    // For `expo start`, the default target is 'managed', for both managed *and* bare apps.
+    // See: https://docs.expo.io/bare/using-expo-client
+    startOpts.target = 'managed';
   }
 
   return startOpts;
