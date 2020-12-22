@@ -12,6 +12,24 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Mon, 21 Dec 2020 18:18:20 -0800](https://github.com/expo/expo-cli/commit/62339b5fb7300569ca6cbb034251070bf8a63999)
+
+### 🛠 Breaking changes
+
+- [xdl] Update iOS deployment target in ejected Podfile (internal)
+
+### 🎉 New features
+
+- [xdl][dev-tools][cli] Update --dev-client for new requirements ([#2938](https://github.com/expo/expo-cli/issues/2938))
+
+### 📦 Packages updated
+
+- @expo/dev-server@0.1.48
+- @expo/dev-tools@0.13.74
+- expo-cli@4.0.16
+- @expo/metro-config@0.1.48
+- @expo/xdl@59.0.14
+
 ## [Mon, 14 Dec 2020 20:47:39 -0800](https://github.com/expo/expo-cli/commit/ad6570659b8ad9fccdec8c79791b6f5d6578b824)
 
 ### 🐛 Bug fixes
