@@ -8,6 +8,7 @@ export type ProjectSettings = {
   hostType: 'localhost' | 'lan' | 'tunnel';
   lanType: 'ip' | 'hostname';
   dev: boolean;
+  devClient: boolean;
   minify: boolean;
   urlRandomness: string | null;
   https: boolean;
@@ -19,6 +20,7 @@ const projectSettingsDefaults: ProjectSettings = {
   scheme: null,
   hostType: 'lan',
   lanType: 'ip',
+  devClient: false,
   dev: true,
   minify: false,
   urlRandomness: null,
