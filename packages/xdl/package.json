@@ -1,6 +1,6 @@
 {
   "name": "@expo/xdl",
-  "version": "59.0.13",
+  "version": "59.0.14",
   "description": "The Expo Development Library",
   "main": "build/xdl.js",
   "files": [
@@ -32,7 +32,7 @@
   "dependencies": {
     "@expo/bunyan": "4.0.0",
     "@expo/config": "3.3.22",
-    "@expo/dev-server": "0.1.47",
+    "@expo/dev-server": "0.1.48",
     "@expo/json-file": "8.2.25",
     "@expo/ngrok": "2.4.3",
     "@expo/osascript": "2.0.24",
