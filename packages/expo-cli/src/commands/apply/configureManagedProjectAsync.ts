@@ -64,4 +64,5 @@ export default async function configureManagedProjectAsync({
     log.info(mods);
     log.debug();
   }
+  return config;
 }

@@ -105,7 +105,8 @@ export async function ejectAsync(
     await configureAndroidStepAsync({ projectRoot, platforms });
   }
 
-  await configureManagedProjectAsync({ projectRoot, platforms });
+  // TODO: Combine all configure methods into one.
+  const managedConfig = await configureManagedProjectAsync({ projectRoot, platforms });
 
   // Install CocoaPods
   let podsInstalled: boolean = false;
@@ -116,7 +117,11 @@ export async function ejectAsync(
     log.debug('Skipped pod install');
   }
 
-  await warnIfDependenciesRequireAdditionalSetupAsync(pkg, exp.sdkVersion);
+  await warnIfDependenciesRequireAdditionalSetupAsync(
+    pkg,
+    exp.sdkVersion,
+    Object.keys(managedConfig._internal?.pluginHistory ?? {})
+  );
 
   log.newLine();
   log.nested(`➡️  ${chalk.bold('Next steps')}`);
@@ -716,15 +721,19 @@ function createDependenciesMap(dependencies: any): DependenciesMap {
  */
 async function warnIfDependenciesRequireAdditionalSetupAsync(
   pkg: PackageJSONConfig,
-  sdkVersion?: string
+  sdkVersion?: string,
+  appliedPlugins?: string[]
 ): Promise<void> {
-  const expoPackagesWithExtraSetup = expoManagedPlugins.reduce(
-    (prev, curr) => ({
-      ...prev,
-      [curr]: `https://github.com/expo/expo/tree/master/packages/${curr}`,
-    }),
-    {}
-  );
+  // TODO: Remove based on plugin history
+  const expoPackagesWithExtraSetup = expoManagedPlugins
+    .filter(plugin => !appliedPlugins?.includes(plugin))
+    .reduce(
+      (prev, curr) => ({
+        ...prev,
+        [curr]: `https://github.com/expo/expo/tree/master/packages/${curr}`,
+      }),
+      {}
+    );
   const pkgsWithExtraSetup: Record<string, string> = {
     ...expoPackagesWithExtraSetup,
     'lottie-react-native': 'https://github.com/react-native-community/lottie-react-native',
