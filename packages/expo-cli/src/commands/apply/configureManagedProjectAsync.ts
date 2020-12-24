@@ -5,6 +5,8 @@ import { withStaticPlugin } from '@expo/config/build/plugins/withStaticPlugin';
 
 import log from '../../log';
 
+// Expo managed packages that require extra update.
+// These get applied automatically to create parity with expo build in eas build.
 export const expoManagedPlugins = [
   'expo-camera',
   'expo-image-picker',
