@@ -6,6 +6,7 @@ import {
   resolveConfigPluginFunction,
   StaticPlugin,
 } from './modulePluginResolver';
+import { EXPO_DEBUG } from './withInternal';
 
 /**
  * Resolves static module plugin and potentially falls back on a provided plugin if the module cannot be resolved
@@ -41,6 +42,10 @@ export const withStaticPlugin: ConfigPlugin<{
       // Resolve and evaluate plugins.
       withPlugin = resolveConfigPluginFunction(projectRoot, pluginResolve);
     } catch (error) {
+      if (EXPO_DEBUG) {
+        // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
+        console.log(`Error resolving plugin "${pluginResolve}"`, error);
+      }
       // If the static module failed to resolve, attempt to use a fallback.
       // This enables support for built-in plugins with versioned variations living in other packages.
       if (props.fallback) {
