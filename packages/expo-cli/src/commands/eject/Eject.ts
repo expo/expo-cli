@@ -17,6 +17,9 @@ import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
+import configureManagedProjectAsync, {
+  expoManagedPlugins,
+} from '../apply/configureManagedProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
@@ -101,6 +104,8 @@ export async function ejectAsync(
   if (platforms.includes('android')) {
     await configureAndroidStepAsync({ projectRoot, platforms });
   }
+
+  await configureManagedProjectAsync({ projectRoot, platforms });
 
   // Install CocoaPods
   let podsInstalled: boolean = false;
@@ -713,23 +718,7 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
   pkg: PackageJSONConfig,
   sdkVersion?: string
 ): Promise<void> {
-  const expoPackagesWithExtraSetup = [
-    'expo-camera',
-    'expo-image-picker',
-    'expo-av',
-    'expo-background-fetch',
-    'expo-barcode-scanner',
-    'expo-brightness',
-    'expo-calendar',
-    'expo-contacts',
-    'expo-file-system',
-    'expo-location',
-    'expo-media-library',
-    'expo-notifications',
-    'expo-screen-orientation',
-    'expo-sensors',
-    'expo-task-manager',
-  ].reduce(
+  const expoPackagesWithExtraSetup = expoManagedPlugins.reduce(
     (prev, curr) => ({
       ...prev,
       [curr]: `https://github.com/expo/expo/tree/master/packages/${curr}`,
