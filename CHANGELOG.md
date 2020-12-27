@@ -12,6 +12,16 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Sun, 27 Dec 2020 13:14:17 -0800](https://github.com/expo/expo-cli/commit/a14f18284efda89a08910d5a753b1749897f54a2)
+
+### 🛠 Breaking changes
+
+- [cli] Mark expo upload:ios as unsupported ([#3030](https://github.com/expo/expo-cli/issues/3030))
+
+### 📦 Packages updated
+
+- expo-cli@4.0.17
+
 ## [Mon, 21 Dec 2020 18:18:20 -0800](https://github.com/expo/expo-cli/commit/62339b5fb7300569ca6cbb034251070bf8a63999)
 
 ### 🛠 Breaking changes
@@ -26,7 +36,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - @expo/dev-server@0.1.48
 - @expo/dev-tools@0.13.74
-- expo-cli@4.0.16
+- kkexpo-cli@4.0.16
 - @expo/metro-config@0.1.48
 - @expo/xdl@59.0.14
 
