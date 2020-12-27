@@ -55,7 +55,7 @@ export default function (program: Command) {
     .command('upload:ios [path]')
     .alias('ui')
     .description(
-      `${chalk.yellow('Deprecated:')} Use ${chalk.bold('eas submit')} or Transporter app instead.`
+      `${chalk.yellow('Unsupported:')} Use ${chalk.bold('eas submit')} or Transporter app instead.`
     )
     .longDescription(
       'Upload an iOS binary to Apple TestFlight (MacOS only). Uses the latest build by default'
@@ -105,7 +105,7 @@ export default function (program: Command) {
       };
 
       log.newLine();
-      log(chalk.yellow('expo upload:ios is deprecated'));
+      log(chalk.yellow('expo upload:ios is no longer supported'));
       log('Please use one of the following');
       log.newLine();
       logItem(chalk.cyan.bold('eas submit'), 'https://docs.expo.io/submit/ios');
