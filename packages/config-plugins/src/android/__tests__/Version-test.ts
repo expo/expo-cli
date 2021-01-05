@@ -70,7 +70,7 @@ describe('versionCode', () => {
   });
 
   it(`replaces provided version code in build.gradle if version code is given`, () => {
-    expect(setVersionCode({ android: { versionCode: 5 } }, EXAMPLE_BUILD_GRADLE_2, '4')).toMatch(
+    expect(setVersionCode({ android: { versionCode: 5 } }, EXAMPLE_BUILD_GRADLE_2)).toMatch(
       'versionCode 5'
     );
   });

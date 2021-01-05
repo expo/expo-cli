@@ -44,16 +44,12 @@ export function getVersionCode(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.versionCode ?? null;
 }
 
-export function setVersionCode(
-  config: Pick<ExpoConfig, 'android'>,
-  buildGradle: string,
-  versionCodeToReplace = DEFAULT_VERSION_CODE
-) {
+export function setVersionCode(config: Pick<ExpoConfig, 'android'>, buildGradle: string) {
   const versionCode = getVersionCode(config);
   if (versionCode === null) {
     return buildGradle;
   }
 
-  const pattern = new RegExp(`versionCode ${versionCodeToReplace}`);
+  const pattern = new RegExp(`versionCode.*`);
   return buildGradle.replace(pattern, `versionCode ${versionCode}`);
 }
