@@ -8,14 +8,15 @@ import log from '../../log';
 // Expo managed packages that require extra update.
 // These get applied automatically to create parity with expo build in eas build.
 export const expoManagedPlugins = [
-  'expo-camera',
-  'expo-image-picker',
+  'expo-app-auth',
   'expo-av',
   'expo-background-fetch',
   'expo-barcode-scanner',
   'expo-brightness',
   'expo-calendar',
+  'expo-camera',
   'expo-contacts',
+  'expo-image-picker',
   'expo-file-system',
   'expo-location',
   'expo-media-library',
