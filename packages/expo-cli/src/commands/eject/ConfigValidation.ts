@@ -8,29 +8,59 @@ import prompt, { confirmAsync } from '../../prompts';
 import { learnMore } from '../utils/TerminalLink';
 import { isUrlAvailableAsync } from '../utils/url';
 
-const noBundleIdMessage = `Your project must have a \`bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
-const noPackageMessage = `Your project must have a \`package\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/android-package`;
+const noIOSBundleIdMessage = `Your project must have a \`ios.bundleIdentifier\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/bundle-identifier`;
+const noAndroidPackageMessage = `Your project must have a \`android.package\` set in the Expo config (app.json or app.config.js).\nSee https://expo.fyi/android-package`;
+const noAndroidApplicationIdMessage = `Your project must have a \`android.applicationId\` set in the Expo config (app.json or app.config.js) or, at least, \`android.package\`.\nSee https://expo.fyi/android-application-id`;
 
-function validateBundleId(value: string): boolean {
-  return /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value);
+/**
+ * Checks whether the given `iOSBundleId` has the correct format.
+ * @throws When the provided value has incorrect format.
+ */
+function isIOSBundleIdValid(iOSBundleId?: string): boolean {
+  if (!iOSBundleId) {
+    return false;
+  }
+  return /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(iOSBundleId);
 }
 
-function validatePackage(value: string): boolean {
-  return /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(value);
+/**
+ * Checks whether the given `androidPackageName` has the correct format.
+ * Android package name is just a dot-separated string of Java identifiers.
+ * @warning Kotlin accepts slightly different package names that is not supported here.
+ * @see https://docs.oracle.com/javase/tutorial/java/nutsandbolts/variables.html
+ * @see https://docs.oracle.com/javase/tutorial/java/package/namingpkgs.html
+ */
+function isAndroidPackageNameValid(androidPackageName?: string): boolean {
+  if (!androidPackageName) {
+    return false;
+  }
+  return /(?!(?:^|.*\.)(?:abstract|assert|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|enum|extends|extends|false|final|finally|float|for|goto|if|implements|import|import|instanceof|interface|long|native|new|null|package|private|protected|public|return|short|static|strictfp|super|switch|synchronized|this|throw|throws|transient|true|try|void|volatile|volatile|while)(?:\.|$))(^[a-zA-Z_$][a-zA-Z0-9_$]*(\.[a-zA-Z_$][a-zA-Z0-9_$]*)*$)/.test(
+    androidPackageName
+  );
 }
 
-const cachedBundleIdResults: Record<string, string> = {};
-const cachedPackageNameResults: Record<string, string> = {};
+/**
+ * Checks whether the given `androidApplicationId` has the correct format.
+ * Android application ID follows the Java package naming rules, but it's stricter.
+ * @see https://developer.android.com/studio/build/application-id
+ */
+function isAndroidApplicationIdValid(androidApplicationId?: string): boolean {
+  if (!androidApplicationId) {
+    return false;
+  }
+  return /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(androidApplicationId);
+}
+
+const cachedIOSBundleIdResults: Record<string, string> = {};
+const cachedAndroidApplicationIdResults: Record<string, string> = {};
 
 /**
  * A quality of life method that provides a warning when the bundle ID is already in use.
- *
- * @param bundleId
  */
-async function getBundleIdWarningAsync(bundleId: string): Promise<string | null> {
+async function getIOSBundleIdWarningAsync(iOSBundleId: string): Promise<string | null> {
   // Prevent fetching for the same ID multiple times.
-  if (cachedBundleIdResults[bundleId]) {
-    return cachedBundleIdResults[bundleId];
+  if (cachedIOSBundleIdResults[iOSBundleId]) {
+    return cachedIOSBundleIdResults[iOSBundleId];
   }
 
   if (!(await isUrlAvailableAsync('itunes.apple.com'))) {
@@ -38,14 +68,14 @@ async function getBundleIdWarningAsync(bundleId: string): Promise<string | null>
     return null;
   }
 
-  const url = `http://itunes.apple.com/lookup?bundleId=${bundleId}`;
+  const url = `http://itunes.apple.com/lookup?bundleId=${iOSBundleId}`;
   try {
     const response = await got(url);
     const json = JSON.parse(response.body?.trim());
     if (json.resultCount > 0) {
       const firstApp = json.results[0];
-      const message = formatInUseWarning(firstApp.trackName, firstApp.sellerName, bundleId);
-      cachedBundleIdResults[bundleId] = message;
+      const message = formatInUseWarning(firstApp.trackName, firstApp.sellerName, iOSBundleId);
+      cachedIOSBundleIdResults[iOSBundleId] = message;
       return message;
     }
   } catch {
@@ -54,10 +84,12 @@ async function getBundleIdWarningAsync(bundleId: string): Promise<string | null>
   return null;
 }
 
-async function getPackageNameWarningAsync(packageName: string): Promise<string | null> {
+async function getAndroidApplicationIdWarningAsync(
+  androidApplicationId: string
+): Promise<string | null> {
   // Prevent fetching for the same ID multiple times.
-  if (cachedPackageNameResults[packageName]) {
-    return cachedPackageNameResults[packageName];
+  if (cachedAndroidApplicationIdResults[androidApplicationId]) {
+    return cachedAndroidApplicationIdResults[androidApplicationId];
   }
 
   if (!(await isUrlAvailableAsync('play.google.com'))) {
@@ -65,17 +97,17 @@ async function getPackageNameWarningAsync(packageName: string): Promise<string |
     return null;
   }
 
-  const url = `https://play.google.com/store/apps/details?id=${packageName}`;
+  const url = `https://play.google.com/store/apps/details?id=${androidApplicationId}`;
   try {
     const response = await got(url);
     // If the page exists, then warn the user.
     if (response.statusCode === 200) {
       // There is no JSON API for the Play Store so we can't concisely
       // locate the app name and developer to match the iOS warning.
-      const message = `⚠️  The package ${log.chalk.bold(
-        packageName
+      const message = `⚠️  The application ID ${log.chalk.bold(
+        androidApplicationId
       )} is already in use. ${log.chalk.dim(learnMore(url))}`;
-      cachedPackageNameResults[packageName] = message;
+      cachedAndroidApplicationIdResults[androidApplicationId] = message;
       return message;
     }
   } catch {
@@ -90,167 +122,213 @@ function formatInUseWarning(appName: string, author: string, id: string): string
   )} is already using ${log.chalk.bold(id)}`;
 }
 
-export async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<string> {
+/**
+ * Tries to read `ios.bundleIdentifier` from the application manifest.
+ * It tries to obtain the value according to the following rules:
+ * 1. read `ios.bundleIdentifier` and return it if present (throws upon wrong format) or upon no value 🔽
+ * 2. read `android.applicationId` and use it as a suggestion for the user or upon no value 🔽
+ * 3. read `android.package` and use it as a suggestion for the user or upon no value 🔽
+ * 4. create `username`-based value and use it as a suggestion for the user.
+ *
+ * @sideEffect If there was not `ios.bundleIdentifier` in the manifest then the manifest is mutated with the user input.
+ * @throws When there is a value in `ios.bundleIdentifier`, but the format of this value is incorrect.
+ */
+export async function getOrPromptForIOSBundleIdentifier(projectRoot: string): Promise<string> {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
-  const currentBundleId = exp.ios?.bundleIdentifier;
-  if (currentBundleId) {
-    if (validateBundleId(currentBundleId)) {
-      return currentBundleId;
-    }
-    throw new CommandError(
-      `The ios.bundleIdentifier defined in your Expo config is not formatted properly. Only alphanumeric characters, '.', '-', and '_' are allowed, and each '.' must be followed by a letter.`
-    );
-  }
-
-  // Recommend a bundle ID based on the username and project slug.
-  let recommendedBundleId: string | undefined;
-  // Attempt to use the android package name first since it's convenient to have them aligned.
-  if (exp.android?.package && validateBundleId(exp.android?.package)) {
-    recommendedBundleId = exp.android?.package;
-  } else {
-    const username = exp.owner ?? (await UserManager.getCurrentUsernameAsync());
-    const possibleId = `com.${username}.${exp.slug}`;
-    if (username && validateBundleId(possibleId)) {
-      recommendedBundleId = possibleId;
-    }
-  }
-
-  log.addNewLineIfNone();
-  log(
-    `${log.chalk.bold(`📝  iOS Bundle Identifier`)} ${log.chalk.dim(
-      learnMore('https://expo.fyi/bundle-identifier')
-    )}`
+  const currentValue = validateValue(
+    exp.ios?.bundleIdentifier,
+    isIOSBundleIdValid,
+    `The ios.bundleIdentifier defined in your Expo config is not formatted properly. Only alphanumeric characters, '.', '-', and '_' are allowed, and segment that is separated by '.' must start from the lowercase letter.`
   );
-  log.newLine();
+  if (currentValue) {
+    return currentValue;
+  }
+
+  const recommendedValue = await getRecommendedValue(
+    /* eslint-disable prettier/prettier */
+    [exp.android?.applicationId, exp.android?.package, await generateUsernameBasedId(exp)],
+    /* eslint-enable prettier/prettier */
+    isIOSBundleIdValid
+  );
+
   // Prompt the user for the bundle ID.
   // Even if the project is using a dynamic config we can still
   // prompt a better error message, recommend a default value, and help the user
   // validate their custom bundle ID upfront.
-  const { bundleIdentifier } = await prompt(
-    {
-      type: 'text',
-      name: 'bundleIdentifier',
-      initial: recommendedBundleId,
-      // The Apple helps people know this isn't an EAS feature.
-      message: `What would you like your iOS bundle identifier to be?`,
-      validate: validateBundleId,
+  const bundleIdentifier = await promptForValue({
+    prePromptMessage: {
+      text: `📝  iOS Bundle Identifier`,
+      link: 'https://expo.fyi/bundle-identifier',
     },
-    {
-      nonInteractiveHelp: noBundleIdMessage,
-    }
-  );
+    initial: recommendedValue,
+    // The Apple helps people know this isn't an EAS feature.
+    message: `What would you like your iOS bundle identifier to be?`,
+    validate: isIOSBundleIdValid,
+    nonInteractiveHelp: noIOSBundleIdMessage,
+  });
 
   // Warn the user if the bundle ID is already in use.
-  const warning = await getBundleIdWarningAsync(bundleIdentifier);
-  if (warning) {
-    log.newLine();
-    log.nestedWarn(warning);
-    log.newLine();
-    if (
-      !(await confirmAsync({
-        message: `Continue?`,
-        initial: true,
-      }))
-    ) {
-      log.newLine();
-      return getOrPromptForBundleIdentifier(projectRoot);
-    }
+  if (await shouldRepeatUnlessAvailable(() => getIOSBundleIdWarningAsync(bundleIdentifier))) {
+    return getOrPromptForIOSBundleIdentifier(projectRoot);
   }
 
   // Apply the changes to the config.
   await attemptModification(
     projectRoot,
-    {
-      ios: { ...(exp.ios || {}), bundleIdentifier },
-    },
+    { ios: { ...exp.ios, bundleIdentifier } },
     { ios: { bundleIdentifier } }
   );
 
   return bundleIdentifier;
 }
 
-export async function getOrPromptForPackage(projectRoot: string): Promise<string> {
+/**
+ * Tries to read `android.package` from the application manifest.
+ * It tries to obtain the value according to the following rules:
+ * 1. read `android.package` and return it if present (throws upon wrong format) or upon no value 🔽
+ * 2. read `android.applicationId` and use it as a suggestion for the user or upon no value 🔽
+ * 3. read `ios.bundleIdentifier` and use it as a suggestion for the user or upon no value 🔽
+ * 4. create `username`-based value and use it as a suggestion for the user.
+ *
+ * @sideEffect If there was not `android.package` in the manifest then the manifest is mutated with the user input.
+ * @throws When there is a value in `android.package`, but the format of the this value is incorrect.
+ */
+export async function getOrPromptForAndroidPackageName(projectRoot: string): Promise<string> {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
-  const currentPackage = exp.android?.package;
-  if (currentPackage) {
-    if (validatePackage(currentPackage)) {
-      return currentPackage;
-    }
-    throw new CommandError(
-      `Invalid format of Android package name. Only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter.`
-    );
-  }
+  const validate = isAndroidPackageNameValid;
 
-  // Recommend a package name based on the username and project slug.
-  let recommendedPackage: string | undefined;
-  // Attempt to use the ios bundle id first since it's convenient to have them aligned.
-  if (exp.ios?.bundleIdentifier && validatePackage(exp.ios.bundleIdentifier)) {
-    recommendedPackage = exp.ios.bundleIdentifier;
-  } else {
-    const username = exp.owner ?? (await UserManager.getCurrentUsernameAsync());
-    // It's common to use dashes in your node project name, strip them from the suggested package name.
-    const possibleId = `com.${username}.${exp.slug}`.split('-').join('');
-    if (username && validatePackage(possibleId)) {
-      recommendedPackage = possibleId;
-    }
-  }
-
-  log.addNewLineIfNone();
-  log(
-    `${log.chalk.bold(`📝  Android package`)} ${log.chalk.dim(
-      learnMore('https://expo.fyi/android-package')
-    )}`
+  const currentValue = validateValue(
+    exp.android?.package,
+    validate,
+    `The android.package defined in your Expo config is not formatted properly. Only alphanumeric characters, '.', '$' and '_' are allowed. No Java keyword or reserved word can be used as a single part of the package name.`
   );
-  log.newLine();
+  if (currentValue) {
+    return currentValue;
+  }
+
+  const recommendedValue = await getRecommendedValue(
+    /* eslint-disable prettier/prettier */
+    [
+      exp.android?.applicationId,
+      exp.ios?.bundleIdentifier,
+      await generateUsernameBasedId(exp, true),
+    ],
+    /* eslint-enable prettier/prettier */
+    validate
+  );
 
   // Prompt the user for the android package.
   // Even if the project is using a dynamic config we can still
   // prompt a better error message, recommend a default value, and help the user
   // validate their custom android package upfront.
-  const { packageName } = await prompt(
-    {
-      type: 'text',
-      name: 'packageName',
-      initial: recommendedPackage,
-      message: `What would you like your Android package name to be?`,
-      validate: validatePackage,
+  const packageName = await promptForValue({
+    prePromptMessage: {
+      text: `📝  Android package`,
+      link: 'https://expo.fyi/android-package',
     },
-    {
-      nonInteractiveHelp: noPackageMessage,
-    }
+    initial: recommendedValue,
+    message: `What would you like your Android package name to be?`,
+    validate,
+    nonInteractiveHelp: noAndroidPackageMessage,
+  });
+
+  // Apply the changes to the config.
+  await attemptModification(
+    projectRoot,
+    { android: { ...exp.android, package: packageName } },
+    { android: { package: packageName } }
   );
 
-  // Warn the user if the package name is already in use.
-  const warning = await getPackageNameWarningAsync(packageName);
-  if (warning) {
-    log.newLine();
-    log.nestedWarn(warning);
-    log.newLine();
-    if (
-      !(await confirmAsync({
-        message: `Continue?`,
-        initial: true,
-      }))
-    ) {
-      log.newLine();
-      return getOrPromptForPackage(projectRoot);
-    }
+  return packageName;
+}
+
+/**
+ * Tries to read `android.applicationId` from the application manifest.
+ * It tries to obtain the value according to the following rules:
+ * 1. read `android.applicationId` and return it if present (throws upon wrong format) or upon no value 🔽
+ * 2. read `android.package` and return it if present (throws upon wrong format) or upon no value 🔽
+ * 3. read `ios.bundleIdentifier` and use it as a suggestion for the user or upon no value 🔽
+ * 4. create `username`-based value and use it as a suggestion for the user.
+ *
+ * @sideEffect If there was not `android.applicationId` in the manifest then the manifest is mutated with the user input.
+ * @throws When there is a value in `android.applicationId`, but the format of the this value is incorrect.
+ */
+export async function getOrPromptForAndroidApplicationId(projectRoot: string): Promise<string> {
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+
+  const validate = isAndroidApplicationIdValid;
+
+  const currentValue = validateValue(
+    exp.android?.applicationId,
+    validate,
+    `The android.applicationId defined in your Expo config is not formatted properly. Only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter.`
+  );
+  if (currentValue) {
+    return currentValue;
+  }
+
+  const androidPackageBasedValue = validateValue(
+    exp.android?.package,
+    validate,
+    `The android.applicationId is not defined, so fallbacks to reading android.package, but android.package value does not satisfy android.applicationId format. Provide android.applicationId separately or provide android.package value containing only alphanumeric character, '.' and '_' with each '.' followed by a letter.`
+  );
+  if (androidPackageBasedValue) {
+    return androidPackageBasedValue;
+  }
+
+  const recommendedValue = await getRecommendedValue(
+    /* eslint-disable prettier/prettier */
+    [exp.android?.package, exp.ios?.bundleIdentifier, await generateUsernameBasedId(exp, true)],
+    /* eslint-enable prettier/prettier */
+    validate
+  );
+
+  // Prompt the user for the final value.
+  // Even if the project is using a dynamic config we can still
+  // prompt a better error message, recommend a default value, and help the user
+  // validate their custom application ID upfront.
+  const applicationId = await promptForValue({
+    prePromptMessage: {
+      text: `TODO`,
+      link: 'https://expo.fyi/android-application-id',
+    },
+    initial: recommendedValue,
+    message: `What would you like your Android application ID to be?`,
+    validate,
+    nonInteractiveHelp: noAndroidApplicationIdMessage,
+  });
+
+  // Warn the user if the application ID is already in use.
+  if (await shouldRepeatUnlessAvailable(() => getAndroidApplicationIdWarningAsync(applicationId))) {
+    return getOrPromptForAndroidApplicationId(projectRoot);
   }
 
   // Apply the changes to the config.
   await attemptModification(
     projectRoot,
-    {
-      android: { ...(exp.android || {}), package: packageName },
-    },
-    {
-      android: { package: packageName },
-    }
+    { android: { ...exp.android, applicationId } },
+    { android: { applicationId } }
   );
 
-  return packageName;
+  return applicationId;
+}
+
+/**
+ * Tries to read `android.applicationId` and `android.package`.
+ * Starting from reading `android.package` as it's mandatory and `android.applicationId` is optional.
+ * See atomic `getOrPrompt...` functions for more info.
+ *
+ * @sideEffect If any of the values is not present in the project manifest, then the manifest would be mutated by the user input.
+ * @throws When there is a value, but it's format is invalid.
+ */
+export async function getOrPromptForAndroidApplicationIdAndPackageName(
+  projectRoot: string
+): Promise<{ applicationId: string; packageName: string }> {
+  const packageName = await getOrPromptForAndroidPackageName(projectRoot);
+  const applicationId = await getOrPromptForAndroidApplicationId(projectRoot);
+  return { packageName, applicationId };
 }
 
 async function attemptModification(
@@ -294,4 +372,118 @@ function notifyAboutManualConfigEdits(edits: Partial<ExpoConfig>) {
   log.newLine();
   log(JSON.stringify(edits, null, 2));
   log.newLine();
+}
+
+/**
+ * Prompt the user for the the id.
+ * It suggest the id basing on `initial` value.
+ */
+async function promptForValue({
+  prePromptMessage: { text, link },
+  initial,
+  message,
+  validate,
+  nonInteractiveHelp,
+}: {
+  prePromptMessage: {
+    text: string;
+    link: string;
+  };
+  initial: string | undefined;
+  message: string;
+  validate: (value: string | undefined) => boolean;
+  nonInteractiveHelp: string;
+}): Promise<string> {
+  log.addNewLineIfNone();
+  log(`${log.chalk.bold(text)} ${log.chalk.dim(learnMore(link))}`);
+  log.newLine();
+  const { input } = await prompt(
+    {
+      type: 'text',
+      name: 'input',
+      initial,
+      message,
+      validate,
+    },
+    {
+      nonInteractiveHelp,
+    }
+  );
+  return input;
+}
+
+/**
+ * Invokes the availability check and if there's a warning prompts the user about repeating the process.
+ * When checked resource is not available, the user is prompted about possible repetition of the process.
+ * @param availabilityChecker Function returning string with a warning due to unavailability.
+ * @returns `true` if the user decided about repeating the process upon unavailability of the resource, `false` otherwise or when the resource is available.
+ */
+async function shouldRepeatUnlessAvailable(
+  availabilityChecker: () => Promise<string | null>
+): Promise<boolean> {
+  const warning = await availabilityChecker();
+  if (warning) {
+    log.newLine();
+    log.nestedWarn(warning);
+    log.newLine();
+    if (
+      !(await confirmAsync({
+        message: `Continue?`,
+        initial: true,
+      }))
+    ) {
+      log.newLine();
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * If there's a value, uses `validator` function to check it's format.
+ * If the format mismatch an error with `errorMessage` is thrown.
+ */
+function validateValue(
+  value: string | undefined,
+  validator: (value?: string) => boolean,
+  errorMessage: string
+): string | undefined {
+  if (!value) {
+    return;
+  }
+  if (!validator(value)) {
+    throw new CommandError(errorMessage);
+  }
+  return value;
+}
+
+/**
+ * Iterate over `possibleValuesOrAccessors` and find the first element that satisfies `validator`
+ * @param possibleValues
+ * @param validator
+ */
+async function getRecommendedValue(
+  possibleValues: (string | undefined)[],
+  validator: (value?: string) => boolean
+): Promise<string | undefined> {
+  const value = possibleValues.find(validator);
+  return value;
+}
+
+/**
+ * Basing on username and project slug the possible id is generated.
+ * @param replaceHyphensWithUnderscores On Android `-` is not a valid character, so it can be replaced with `_`.
+ */
+async function generateUsernameBasedId(
+  exp: ExpoConfig,
+  replaceHyphensWithUnderscores: boolean = false
+): Promise<string | undefined> {
+  const username = exp.owner ?? (await UserManager.getCurrentUsernameAsync()) ?? undefined;
+  if (!username) {
+    return;
+  }
+  if (replaceHyphensWithUnderscores) {
+    return `com.${username.replace('-', '_')}.${exp.slug.replace('-', '_')}`;
+  }
+  return `com.${username}.${exp.slug}`;
 }
