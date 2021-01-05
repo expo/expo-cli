@@ -17,6 +17,9 @@ import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
 import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
 import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
+import configureManagedProjectAsync, {
+  expoManagedPlugins,
+} from '../apply/configureManagedProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
@@ -102,6 +105,9 @@ export async function ejectAsync(
     await configureAndroidStepAsync({ projectRoot, platforms });
   }
 
+  // TODO: Combine all configure methods into one.
+  const managedConfig = await configureManagedProjectAsync({ projectRoot, platforms });
+
   // Install CocoaPods
   let podsInstalled: boolean = false;
   // err towards running pod install less because it's slow and users can easily run npx pod-install afterwards.
@@ -111,7 +117,11 @@ export async function ejectAsync(
     log.debug('Skipped pod install');
   }
 
-  await warnIfDependenciesRequireAdditionalSetupAsync(pkg, exp.sdkVersion);
+  await warnIfDependenciesRequireAdditionalSetupAsync(
+    pkg,
+    exp.sdkVersion,
+    Object.keys(managedConfig._internal?.pluginHistory ?? {})
+  );
 
   log.newLine();
   log.nested(`➡️  ${chalk.bold('Next steps')}`);
@@ -476,10 +486,12 @@ async function updatePackageJSONAsync({
     hashForDependencyMap(pkg.devDependencies) !== hashForDependencyMap(combinedDevDependencies);
   // Save the dependencies
   if (hasNewDependencies) {
-    pkg.dependencies = combinedDependencies;
+    // Use Object.assign to preserve the original order of dependencies, this makes it easier to see what changed in the git diff.
+    pkg.dependencies = Object.assign(pkg.dependencies, combinedDependencies);
   }
   if (hasNewDevDependencies) {
-    pkg.devDependencies = combinedDevDependencies;
+    // Same as with dependencies
+    pkg.devDependencies = Object.assign(pkg.devDependencies, combinedDevDependencies);
   }
 
   /**
@@ -711,31 +723,19 @@ function createDependenciesMap(dependencies: any): DependenciesMap {
  */
 async function warnIfDependenciesRequireAdditionalSetupAsync(
   pkg: PackageJSONConfig,
-  sdkVersion?: string
+  sdkVersion?: string,
+  appliedPlugins?: string[]
 ): Promise<void> {
-  const expoPackagesWithExtraSetup = [
-    'expo-camera',
-    'expo-image-picker',
-    'expo-av',
-    'expo-background-fetch',
-    'expo-barcode-scanner',
-    'expo-brightness',
-    'expo-calendar',
-    'expo-contacts',
-    'expo-file-system',
-    'expo-location',
-    'expo-media-library',
-    'expo-notifications',
-    'expo-screen-orientation',
-    'expo-sensors',
-    'expo-task-manager',
-  ].reduce(
-    (prev, curr) => ({
-      ...prev,
-      [curr]: `https://github.com/expo/expo/tree/master/packages/${curr}`,
-    }),
-    {}
-  );
+  // TODO: Remove based on plugin history
+  const expoPackagesWithExtraSetup = expoManagedPlugins
+    .filter(plugin => !appliedPlugins?.includes(plugin))
+    .reduce(
+      (prev, curr) => ({
+        ...prev,
+        [curr]: `https://github.com/expo/expo/tree/master/packages/${curr}`,
+      }),
+      {}
+    );
   const pkgsWithExtraSetup: Record<string, string> = {
     ...expoPackagesWithExtraSetup,
     'lottie-react-native': 'https://github.com/react-native-community/lottie-react-native',
