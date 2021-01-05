@@ -14,7 +14,10 @@ import { Platform, Submission, SubmissionStatus } from '../SubmissionService.typ
 import { Archive, ArchiveSource, getArchiveAsync } from '../archive-source';
 import { getExpoConfig } from '../utils/config';
 import { displayLogs } from '../utils/logs';
-import { AndroidPackageSource, getAndroidPackageAsync } from './AndroidPackageSource';
+import {
+  AndroidApplicationIdSource,
+  getAndroidApplicationIdAsync,
+} from './AndroidApplicationIdSource';
 import {
   AndroidSubmissionConfig,
   ArchiveType,
@@ -26,13 +29,13 @@ import { AndroidSubmissionContext } from './types';
 
 export interface AndroidSubmissionOptions
   extends Pick<AndroidSubmissionConfig, 'track' | 'releaseStatus'> {
-  androidPackageSource: AndroidPackageSource;
+  androidApplicationIdSource: AndroidApplicationIdSource;
   archiveSource: ArchiveSource;
   serviceAccountSource: ServiceAccountSource;
 }
 
 interface ResolvedSourceOptions {
-  androidPackage: string;
+  applicationId: string;
   archive: Archive;
   serviceAccountPath: string;
 }
@@ -60,11 +63,13 @@ class AndroidSubmitter {
   }
 
   private async resolveSourceOptions(): Promise<ResolvedSourceOptions> {
-    const androidPackage = await getAndroidPackageAsync(this.options.androidPackageSource);
+    const applicationId = await getAndroidApplicationIdAsync(
+      this.options.androidApplicationIdSource
+    );
     const archive = await getArchiveAsync(this.options.archiveSource);
     const serviceAccountPath = await getServiceAccountAsync(this.options.serviceAccountSource);
     return {
-      androidPackage,
+      applicationId,
       archive,
       serviceAccountPath,
     };
@@ -79,11 +84,11 @@ interface AndroidOnlineSubmissionOptions extends AndroidSubmissionOptions {
 class AndroidOnlineSubmitter {
   static async formatSubmissionConfigAndPrintSummary(
     options: AndroidOnlineSubmissionOptions,
-    { archive, androidPackage, serviceAccountPath }: ResolvedSourceOptions
+    { archive, applicationId, serviceAccountPath }: ResolvedSourceOptions
   ): Promise<AndroidOnlineSubmissionConfig> {
     const serviceAccount = await fs.readFile(serviceAccountPath, 'utf-8');
     const submissionConfig = {
-      androidPackage,
+      applicationId,
       archiveUrl: archive.location,
       archiveType: archive.type,
       serviceAccount,
@@ -162,7 +167,7 @@ class AndroidOnlineSubmitter {
 }
 
 interface Summary {
-  androidPackage: string;
+  applicationId: string;
   archivePath?: string;
   archiveUrl?: string;
   archiveType: ArchiveType;
@@ -173,7 +178,7 @@ interface Summary {
 }
 
 const SummaryHumanReadableKeys: Record<keyof Summary, string> = {
-  androidPackage: 'Android package',
+  applicationId: 'Android application ID',
   archivePath: 'Archive path',
   archiveUrl: 'Archive URL',
   archiveType: 'Archive type',

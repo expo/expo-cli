@@ -11,7 +11,10 @@ import {
   ArchiveTypeSourceType,
 } from '../archive-source';
 import { getExpoConfig } from '../utils/config';
-import { AndroidPackageSource, AndroidPackageSourceType } from './AndroidPackageSource';
+import {
+  AndroidApplicationIdSource,
+  AndroidApplicationIdSourceType,
+} from './AndroidApplicationIdSource';
 import { ArchiveType, ReleaseStatus, ReleaseTrack } from './AndroidSubmissionConfig';
 import AndroidSubmitter, { AndroidSubmissionOptions } from './AndroidSubmitter';
 import { ServiceAccountSource, ServiceAccountSourceType } from './ServiceAccountSource';
@@ -42,14 +45,14 @@ class AndroidSubmitCommand {
   }
 
   private getAndroidSubmissionOptions(): AndroidSubmissionOptions {
-    const androidPackageSource = this.resolveAndroidPackageSource();
+    const androidApplicationIdSource = this.resolveAndroidApplicationIdSource();
     const track = this.resolveTrack();
     const releaseStatus = this.resolveReleaseStatus();
     const archiveSource = this.resolveArchiveSource();
     const serviceAccountSource = this.resolveServiceAccountSource();
 
     const errored = [
-      androidPackageSource,
+      androidApplicationIdSource,
       track,
       releaseStatus,
       archiveSource,
@@ -62,7 +65,7 @@ class AndroidSubmitCommand {
     }
 
     return {
-      androidPackageSource: androidPackageSource.enforceValue(),
+      androidApplicationIdSource: androidApplicationIdSource.enforceValue(),
       track: track.enforceValue(),
       releaseStatus: releaseStatus.enforceValue(),
       archiveSource: archiveSource.enforceValue(),
@@ -70,23 +73,29 @@ class AndroidSubmitCommand {
     };
   }
 
-  private resolveAndroidPackageSource(): Result<AndroidPackageSource> {
-    let androidPackage: string | undefined;
-    if (this.ctx.commandOptions.androidPackage) {
-      androidPackage = this.ctx.commandOptions.androidPackage;
+  private resolveAndroidApplicationIdSource(): Result<AndroidApplicationIdSource> {
+    let androidApplicationId: string | undefined;
+    if (this.ctx.commandOptions.androidApplicationId) {
+      androidApplicationId = this.ctx.commandOptions.androidApplicationId;
+    } else if (this.ctx.commandOptions.androidPackage) {
+      // fallback to `android.package`
+      androidApplicationId = this.ctx.commandOptions.androidPackage;
     }
     const exp = getExpoConfig(this.ctx.projectDir);
-    if (exp.android?.package) {
-      androidPackage = exp.android.package;
+    if (exp.android?.applicationId) {
+      androidApplicationId = exp.android.applicationId;
+    } else if (exp.android?.package) {
+      // fallback to `android.package`
+      androidApplicationId = exp.android.package;
     }
-    if (androidPackage) {
+    if (androidApplicationId) {
       return result({
-        sourceType: AndroidPackageSourceType.userDefined,
-        androidPackage,
+        sourceType: AndroidApplicationIdSourceType.userDefined,
+        androidApplicationId,
       });
     } else {
       return result({
-        sourceType: AndroidPackageSourceType.prompt,
+        sourceType: AndroidApplicationIdSourceType.prompt,
       });
     }
   }

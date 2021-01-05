@@ -54,12 +54,14 @@ export const withExpoIOSPlugins: ConfigPlugin<{
  * TODO: In the future most of this should go into versioned packages like expo-facebook, expo-updates, etc...
  */
 export const withExpoAndroidPlugins: ConfigPlugin<{
+  applicationId: string;
   package: string;
   expoUsername: string | null;
 }> = (config, { expoUsername, ...props }) => {
-  // Set the package name ahead of time.
+  // Set the package name & application ID ahead of time.
   if (!config.android) config.android = {};
   config.android.package = props.package;
+  config.android.applicationId = props.applicationId;
 
   return withPlugins(config, [
     // settings.gradle

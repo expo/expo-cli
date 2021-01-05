@@ -32,6 +32,7 @@ mockExpoXDL({
 describe(AndroidSubmitCommand, () => {
   const testProject = createTestProject(jester, {
     android: {
+      applicationId: 'com.expo.test.project.test',
       package: 'com.expo.test.project',
     },
   });
@@ -97,7 +98,8 @@ describe(AndroidSubmitCommand, () => {
       const androidSubmissionConfig: AndroidOnlineSubmissionConfig = {
         archiveUrl: 'http://expo.io/fake.apk',
         archiveType: ArchiveType.apk,
-        androidPackage: testProject.appJSON.expo.android?.package,
+        applicationId: testProject.appJSON.expo.android?.applicationId as string,
+        // androidPackage: testProject.appJSON.expo.android?.package,
         serviceAccount: fakeFiles['/google-service-account.json'],
         releaseStatus: ReleaseStatus.draft,
         track: ReleaseTrack.internal,

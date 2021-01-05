@@ -3,7 +3,7 @@ import { compileModsAsync, ModPlatform, withExpoAndroidPlugins } from '@expo/con
 import { UserManager } from '@expo/xdl';
 
 import log from '../../log';
-import { getOrPromptForPackage } from '../eject/ConfigValidation';
+import { getOrPromptForAndroidApplicationIdAndPackageName } from '../eject/ConfigValidation';
 
 export default async function configureAndroidProjectAsync({
   projectRoot,
@@ -12,8 +12,10 @@ export default async function configureAndroidProjectAsync({
   projectRoot: string;
   platforms: ModPlatform[];
 }) {
-  // Check package before reading the config because it may mutate the config if the user is prompted to define it.
-  const packageName = await getOrPromptForPackage(projectRoot);
+  // Check package/applicationId before reading the config because it may mutate the config if the user is prompted to define them.
+  const { applicationId, packageName } = await getOrPromptForAndroidApplicationIdAndPackageName(
+    projectRoot
+  );
   const expoUsername =
     process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
 
@@ -24,6 +26,7 @@ export default async function configureAndroidProjectAsync({
 
   // Add all built-in plugins
   config = withExpoAndroidPlugins(config, {
+    applicationId,
     package: packageName,
     expoUsername,
   });

@@ -1,7 +1,9 @@
 export interface AndroidSubmissionConfig {
   archiveUrl: string;
   archiveType: ArchiveType;
-  androidPackage: string;
+  // This field is replaced by `androidApplicationId` in the public API
+  // androidPackage?: string;
+  applicationId: string;
   track: ReleaseTrack;
   serviceAccount: string;
   releaseStatus?: ReleaseStatus;
