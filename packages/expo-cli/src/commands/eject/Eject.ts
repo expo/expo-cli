@@ -15,10 +15,7 @@ import terminalLink from 'terminal-link';
 
 import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
-import configureManagedProjectAsync, {
-  expoManagedPlugins,
-} from '../apply/configureManagedProjectAsync';
-import configureProjectAsync from '../apply/configureProjectAsync';
+import configureProjectAsync, { expoManagedPlugins } from '../apply/configureProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
@@ -99,10 +96,24 @@ export async function ejectAsync(
     await installNodeDependenciesAsync(projectRoot, packageManager, { clean: !isSyncing });
   }
 
-  await syncConfigStepAsync({ projectRoot, platforms });
-
-  // TODO: Combine all configure methods into one.
-  const managedConfig = await configureManagedProjectAsync({ projectRoot, platforms });
+  // Apply Expo config to native projects
+  const applyingAndroidConfigStep = CreateApp.logNewSection('Config syncing');
+  const managedConfig = await configureProjectAsync({ projectRoot, platforms });
+  if (
+    WarningAggregator.hasWarningsGeneral() ||
+    WarningAggregator.hasWarningsAndroid() ||
+    WarningAggregator.hasWarningsIOS()
+  ) {
+    applyingAndroidConfigStep.stopAndPersist({
+      symbol: '⚠️ ',
+      text: chalk.red('Config synced with warnings that should be fixed:'),
+    });
+    logConfigWarningsGeneral();
+    logConfigWarningsAndroid();
+    logConfigWarningsIOS();
+  } else {
+    applyingAndroidConfigStep.succeed('Config synced');
+  }
 
   // Install CocoaPods
   let podsInstalled: boolean = false;
@@ -228,32 +239,6 @@ async function installNodeDependenciesAsync(
     installJsDepsStep.fail(chalk.red(message));
     // TODO: actually show the error message from the package manager! :O
     throw new SilentError(message);
-  }
-}
-
-async function syncConfigStepAsync({
-  projectRoot,
-  platforms,
-}: {
-  projectRoot: string;
-  platforms: ModPlatform[];
-}) {
-  const applyingConfigStep = CreateApp.logNewSection('Config syncing');
-  await configureProjectAsync({ projectRoot, platforms });
-  if (
-    WarningAggregator.hasWarningsAndroid() ||
-    WarningAggregator.hasWarningsIOS() ||
-    WarningAggregator.hasWarningsGeneral()
-  ) {
-    applyingConfigStep.stopAndPersist({
-      symbol: '⚠️ ',
-      text: chalk.red('Config synced with warnings that should be fixed:'),
-    });
-    logConfigWarningsGeneral();
-    logConfigWarningsAndroid();
-    logConfigWarningsIOS();
-  } else {
-    applyingConfigStep.succeed('Config synced');
   }
 }
 
