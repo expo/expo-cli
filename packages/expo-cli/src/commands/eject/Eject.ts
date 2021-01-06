@@ -15,8 +15,6 @@ import terminalLink from 'terminal-link';
 
 import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
-import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
-import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
 import configureManagedProjectAsync, {
   expoManagedPlugins,
 } from '../apply/configureManagedProjectAsync';
@@ -97,16 +95,18 @@ export async function ejectAsync(
   }
 
   // Apply Expo config to native projects
-  if (platforms.includes('ios')) {
-    await configureIOSStepAsync({ projectRoot, platforms });
-  }
-
-  if (platforms.includes('android')) {
-    await configureAndroidStepAsync({ projectRoot, platforms });
-  }
-
-  // TODO: Combine all configure methods into one.
+  const applyingAndroidConfigStep = CreateApp.logNewSection('Config syncing');
   const managedConfig = await configureManagedProjectAsync({ projectRoot, platforms });
+  if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
+    applyingAndroidConfigStep.stopAndPersist({
+      symbol: '⚠️ ',
+      text: chalk.red('Config synced with warnings that should be fixed:'),
+    });
+    logConfigWarningsAndroid();
+    logConfigWarningsIOS();
+  } else {
+    applyingAndroidConfigStep.succeed('Config synced');
+  }
 
   // Install CocoaPods
   let podsInstalled: boolean = false;
@@ -200,20 +200,6 @@ export async function ejectAsync(
   }
 }
 
-async function configureIOSStepAsync(props: { projectRoot: string; platforms: ModPlatform[] }) {
-  const applyingIOSConfigStep = CreateApp.logNewSection('iOS config syncing');
-  await configureIOSProjectAsync(props);
-  if (WarningAggregator.hasWarningsIOS()) {
-    applyingIOSConfigStep.stopAndPersist({
-      symbol: '⚠️ ',
-      text: chalk.red('iOS config synced with warnings that should be fixed:'),
-    });
-    logConfigWarningsIOS();
-  } else {
-    applyingIOSConfigStep.succeed('iOS config synced');
-  }
-}
-
 /**
  * Wraps PackageManager to install node modules and adds CLI logs.
  *
@@ -246,20 +232,6 @@ async function installNodeDependenciesAsync(
     installJsDepsStep.fail(chalk.red(message));
     // TODO: actually show the error message from the package manager! :O
     throw new SilentError(message);
-  }
-}
-
-async function configureAndroidStepAsync(props: { projectRoot: string; platforms: ModPlatform[] }) {
-  const applyingAndroidConfigStep = CreateApp.logNewSection('Android config syncing');
-  await configureAndroidProjectAsync(props);
-  if (WarningAggregator.hasWarningsAndroid()) {
-    applyingAndroidConfigStep.stopAndPersist({
-      symbol: '⚠️ ',
-      text: chalk.red('Android config synced with warnings that should be fixed:'),
-    });
-    logConfigWarningsAndroid();
-  } else {
-    applyingAndroidConfigStep.succeed('Android config synced');
   }
 }
 
