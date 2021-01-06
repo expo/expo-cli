@@ -116,7 +116,7 @@ export function resolveConfigPluginExport(result: any, configFile: string): Conf
   if (typeof result !== 'function') {
     throw new PluginError(
       `Plugin file ${configFile} must export a function. Learn more: https://github.com/expo/expo-cli/tree/master/packages/config-plugins#creating-a-plugin`,
-      'INVALID_PLUGIN'
+      'INVALID_PLUGIN_TYPE'
     );
   }
 

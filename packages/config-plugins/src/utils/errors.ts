@@ -8,7 +8,7 @@ export class UnexpectedError extends Error {
   }
 }
 
-export type PluginErrorCode = 'INVALID_PLUGIN';
+export type PluginErrorCode = 'INVALID_PLUGIN_TYPE';
 
 /**
  * Based on `JsonFileError` from `@expo/json-file`

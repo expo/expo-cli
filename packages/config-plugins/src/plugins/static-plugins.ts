@@ -64,8 +64,8 @@ export const withStaticPlugin: ConfigPlugin<{
     }
   } else {
     throw new PluginError(
-      `Static plugin is an unexpected type: ${typeof pluginResolve}`,
-      'INVALID_PLUGIN'
+      `Plugin is an unexpected type: ${typeof pluginResolve}`,
+      'INVALID_PLUGIN_TYPE'
     );
   }
   // Execute the plugin.
