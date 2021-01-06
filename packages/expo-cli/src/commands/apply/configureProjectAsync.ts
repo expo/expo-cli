@@ -83,6 +83,7 @@ export default async function configureManagedProjectAsync({
 
   // Add all built-in plugins first because they should take
   // priority over the unversioned plugins.
+  // TODO: Block unless SDK 41
   config = withManagedPlugins(config);
   // Apply all unversioned plugins
   config = withThirdPartyPlugins(config);
