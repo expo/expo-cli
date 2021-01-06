@@ -1,7 +1,7 @@
 import { AndroidCredentials } from '@expo/xdl';
+import assert from 'assert';
 import chalk from 'chalk';
 import * as fs from 'fs-extra';
-import invariant from 'invariant';
 import * as path from 'path';
 
 import { Context } from '../../credentials';
@@ -16,7 +16,7 @@ type Options = {
 };
 
 function assertSlug(slug: any): asserts slug {
-  invariant(slug, `${chalk.bold(slug)} field must be set in your app.json or app.config.js`);
+  assert(slug, `${chalk.bold(slug)} field must be set in your app.json or app.config.js`);
 }
 
 async function maybeRenameExistingFileAsync(projectRoot: string, filename: string) {
@@ -46,7 +46,7 @@ export async function fetchAndroidKeystoreAsync(
   const keystoreFilename = `${ctx.manifest.slug}.jks`;
   await maybeRenameExistingFileAsync(projectRoot, keystoreFilename);
   const backupKeystoreOutputPath = path.resolve(projectRoot, keystoreFilename);
-  const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+  const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
   assertSlug(ctx.manifest.slug);
   await runCredentialsManager(
@@ -69,7 +69,7 @@ export async function fetchAndroidHashesAsync(
   const outputPath = path.resolve(projectRoot, `${ctx.manifest.slug}.tmp.jks`);
   try {
     assertSlug(ctx.manifest.slug);
-    const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+    const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
     const view = new DownloadKeystore(experienceName, {
       outputPath,
       quiet: true,
@@ -112,7 +112,7 @@ export async function fetchAndroidUploadCertAsync(
 
   try {
     assertSlug(ctx.manifest.slug);
-    const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+    const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
     const view = new DownloadKeystore(experienceName, {
       outputPath: keystorePath,
       quiet: true,

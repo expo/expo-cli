@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { boolish } from 'getenv';
 
 import {
   ConfigPlugin,
@@ -11,6 +12,7 @@ import { assert } from '../utils/errors';
 import { addHistoryItem, getHistoryItem, PluginHistoryItem } from '../utils/history';
 import { StaticPlugin } from './plugin-resolver';
 import { withStaticPlugin } from './static-plugin';
+const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 /**
  * Plugin to chain a list of plugins together.
@@ -160,18 +162,23 @@ export function withInterceptedMod<T>(
 
   // Create a stack trace for debugging ahead of time
   let debugTrace: string = '';
-  if (config._internal?.isDebug) {
+  // Use the possibly user defined value. Otherwise fallback to the env variable.
+  // We support the env variable because user mods won't have _internal defined in time.
+  const isDebug = config._internal?.isDebug ?? EXPO_DEBUG;
+  if (isDebug) {
     // Get a stack trace via the Error API
     const stack = new Error().stack;
     // Format the stack trace to create the debug log
     debugTrace = getDebugPluginStackFromStackTrace(stack);
+    const modStack = chalk.bold(`${platform}.${mod}`);
+
+    debugTrace = `${modStack}: ${debugTrace}`;
   }
 
   async function interceptingMod({ modRequest, ...config }: ExportedConfigWithProps<T>) {
-    if (config._internal?.isDebug) {
+    if (isDebug) {
       // In debug mod, log the plugin stack in the order which they were invoked
-      const modStack = chalk.bold(`${platform}.${mod}`);
-      console.log(`${modStack}: ${debugTrace}`);
+      console.log(debugTrace);
     }
     return action({ ...config, modRequest: { ...modRequest, nextMod: interceptedMod } });
   }

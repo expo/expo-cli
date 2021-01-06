@@ -1,9 +1,12 @@
 import { Doctor } from '@expo/xdl';
 import { Command } from 'commander';
 
-import log from '../log';
+import log from '../../log';
+import { warnUponCmdExe } from './windows';
 
 async function action(projectDir: string) {
+  await warnUponCmdExe();
+
   // note: this currently only warns when something isn't right, it doesn't fail
   await Doctor.validateExpoServersAsync(projectDir);
 

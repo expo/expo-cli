@@ -113,6 +113,8 @@ async function normalizeOptionsAsync(
 
 async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions): Promise<void> {
   await ProjectSettings.setAsync(projectDir, {
+    devClient: options.devClient,
+    scheme: options.scheme,
     dev: options.dev,
     minify: options.minify,
     https: options.https,
@@ -139,7 +141,14 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
   }
 
   if (options.devClient) {
+    startOpts.devClient = true;
+
+    // TODO: is this redundant?
     startOpts.target = 'bare';
+  } else {
+    // For `expo start`, the default target is 'managed', for both managed *and* bare apps.
+    // See: https://docs.expo.io/bare/using-expo-client
+    startOpts.target = 'managed';
   }
 
   return startOpts;
@@ -166,7 +175,7 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
 
   await Project.startAsync(rootPath, { ...startOpts, exp });
 
-  const url = await UrlUtils.constructManifestUrlAsync(projectDir);
+  const url = await UrlUtils.constructDeepLinkAsync(projectDir);
 
   const recipient = await sendTo.getRecipient(options.sendTo);
   if (recipient) {

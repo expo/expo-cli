@@ -24,6 +24,8 @@ jest.mock('../../android/Icon', () => {
     setIconAsync() {},
   };
 });
+const NotificationsPlugin = require('../../android/Notifications');
+NotificationsPlugin.withNotificationIcons = jest.fn(config => config);
 
 describe(evalModsAsync, () => {
   it(`runs with no core mods`, async () => {

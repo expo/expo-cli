@@ -432,7 +432,7 @@ const resolvers = {
     },
     async manifestUrl(project) {
       if ((await Project.currentStatus(project.projectDir)) === 'running') {
-        return UrlUtils.constructManifestUrlAsync(project.projectDir);
+        return UrlUtils.constructDeepLinkAsync(project.projectDir);
       } else {
         return null;
       }

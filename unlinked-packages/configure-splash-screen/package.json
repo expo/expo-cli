@@ -1,6 +1,6 @@
 {
   "name": "@expo/configure-splash-screen",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Supplementary module for 'expo-splash-screen' providing cli configuration command",
   "bin": {
     "configure-splash-screen": "./build/index-cli.js",
@@ -49,9 +49,6 @@
     "pngjs": "^5.0.0",
     "xcode": "^3.0.0",
     "xml-js": "^1.6.11"
-  },
-  "peerDependencies": {
-    "expo-splash-screen": "*"
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.18",

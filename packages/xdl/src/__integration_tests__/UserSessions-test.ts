@@ -94,7 +94,7 @@ describe.skip('User Sessions', () => {
     expect(auth?.sessionSecret).toBe(undefined);
   });
 
-  it('should use the token in apiv2', async () => {
+  it('should use the session token with API v2 requests', async () => {
     const UserManager = _newTestUserManager();
     await UserManager.loginAsync('user-pass', {
       username: userForTest.username,
@@ -103,7 +103,7 @@ describe.skip('User Sessions', () => {
 
     const user = await UserManager.getCurrentUserAsync();
     const api = ApiV2Client.clientForUser(user);
-    const response = await api.getAsync('auth/intercomUserHash', {}, {}, true);
+    const response = await api.getAsync('auth/userInfo', {}, {}, true);
     expect(response.status).toBe(200);
   });
 });

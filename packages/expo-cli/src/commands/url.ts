@@ -61,7 +61,7 @@ async function action(projectDir: string, options: ProjectUrlOptions & URLOption
   }
   const url = options.web
     ? await getWebAppUrlAsync(projectDir)
-    : await UrlUtils.constructManifestUrlAsync(projectDir);
+    : await UrlUtils.constructDeepLinkAsync(projectDir);
 
   log.newLine();
   urlOpts.printQRCode(url);
