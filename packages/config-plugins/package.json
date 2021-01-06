@@ -38,6 +38,7 @@
     "@expo/json-file": "8.2.25",
     "@expo/plist": "0.0.11",
     "fs-extra": "9.0.0",
+    "find-up": "~5.0.0",
     "getenv": "0.7.0",
     "glob": "7.1.6",
     "slash": "^3.0.0",
@@ -48,6 +49,7 @@
   "devDependencies": {
     "@types/fs-extra": "^9.0.1",
     "@types/xml2js": "^0.4.5",
+    "@types/find-up": "^4.0.0",
     "memfs": "^2.15.5",
     "rimraf": "^3.0.2"
   },

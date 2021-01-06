@@ -1,7 +1,7 @@
 // @ts-ignore
 import requireString from 'require-from-string';
 
-import { AppJSONConfig, ConfigContext, ConfigPlugin, ExpoConfig } from './Config.types';
+import { AppJSONConfig, ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
 import { serializeSkippingMods } from './Serialize';
 // import babel from '@babel/core';
@@ -74,27 +74,4 @@ export function resolveConfigExport(
   }
 
   return { config: result, exportedObjectType };
-}
-
-/**
- * - Resolve the exported contents of an Expo config (be it default or module.exports)
- * - Assert no promise exports
- * - Return config type
- * - Serialize config
- *
- * @param result
- * @param configFile
- */
-export function resolveConfigPluginExport(result: any, configFile: string): ConfigPlugin<unknown> {
-  if (result.default != null) {
-    result = result.default;
-  }
-  if (typeof result !== 'function') {
-    throw new ConfigError(
-      `Plugin file ${configFile} must export a function. Learn more: <TODO: how to make a config plugin>`,
-      'INVALID_PLUGIN'
-    );
-  }
-
-  return result;
 }

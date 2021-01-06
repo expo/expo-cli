@@ -1,6 +1,7 @@
+import { ConfigPlugin } from '@expo/config-plugins';
 import { boolish } from 'getenv';
 
-import { ConfigFilePaths, ConfigPlugin } from '../Config.types';
+import { ConfigFilePaths } from '../Config.types';
 
 export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 

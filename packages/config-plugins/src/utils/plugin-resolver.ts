@@ -2,14 +2,12 @@ import findUp from 'find-up';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
 
-import { ConfigPlugin } from '../Config.types';
-import { assert } from '../Errors';
-import { fileExists } from '../Modules';
-import { resolveConfigPluginExport } from '../evalConfig';
-
-export type StaticPlugin<T = any> = [string | ConfigPlugin<T>, T];
+import { ConfigPlugin, StaticPlugin } from '../Plugin.types';
+import { assert, PluginError } from './errors';
+import { fileExists } from './modules';
 
 // Default plugin entry file name.
+// :DO_NOT_CHANGE_OR_YOU_WILL_BE_FIRED:
 export const pluginFileName = 'app.plugin.js';
 
 function findUpPackageJson(root: string): string {
@@ -77,7 +75,7 @@ function findUpPlugin(root: string): string {
   return resolveExpoPluginFile(moduleRoot) ?? root;
 }
 
-export function normalizeStaticPlugin(plugin: string | StaticPlugin): StaticPlugin {
+export function normalizeStaticPlugin(plugin: StaticPlugin | ConfigPlugin | string): StaticPlugin {
   if (Array.isArray(plugin)) {
     assert(
       plugin.length > 0 && plugin.length < 3,
@@ -100,6 +98,29 @@ export function resolveConfigPluginFunction(projectRoot: string, pluginModulePat
   const moduleFilePath = resolvePluginForModule(projectRoot, pluginModulePath);
   const result = requirePluginFile(moduleFilePath);
   return resolveConfigPluginExport(result, moduleFilePath);
+}
+
+/**
+ * - Resolve the exported contents of an Expo config (be it default or module.exports)
+ * - Assert no promise exports
+ * - Return config type
+ * - Serialize config
+ *
+ * @param result
+ * @param configFile
+ */
+export function resolveConfigPluginExport(result: any, configFile: string): ConfigPlugin<unknown> {
+  if (result.default != null) {
+    result = result.default;
+  }
+  if (typeof result !== 'function') {
+    throw new PluginError(
+      `Plugin file ${configFile} must export a function. Learn more: https://github.com/expo/expo-cli/tree/master/packages/config-plugins#creating-a-plugin`,
+      'INVALID_PLUGIN'
+    );
+  }
+
+  return result;
 }
 
 function requirePluginFile(filePath: string): any {

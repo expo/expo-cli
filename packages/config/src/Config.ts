@@ -1,3 +1,4 @@
+import { ModConfig } from '@expo/config-plugins';
 import JsonFile, { JSONObject } from '@expo/json-file';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
@@ -11,7 +12,6 @@ import {
   ExpoConfig,
   ExpRc,
   GetConfigOptions,
-  ModConfig,
   PackageJSONConfig,
   Platform,
   ProjectConfig,

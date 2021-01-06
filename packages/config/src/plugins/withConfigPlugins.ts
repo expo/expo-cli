@@ -1,19 +1,6 @@
-import { ConfigPlugin } from '../Config.types';
-import { serializeAfterStaticPlugins } from '../Serialize';
-import { StaticPlugin } from './modulePluginResolver';
-import { withStaticPlugin } from './withStaticPlugin';
+import { ConfigPlugin, withPlugins } from '@expo/config-plugins';
 
-/**
- * Resolves a list of plugins.
- *
- * @param config
- * @param projectRoot
- */
-const withPlugins: ConfigPlugin<(StaticPlugin | string)[]> = (config, plugins) => {
-  return plugins.reduce((prev, plugin) => {
-    return withStaticPlugin(prev, { plugin });
-  }, config);
-};
+import { serializeAfterStaticPlugins } from '../Serialize';
 
 /**
  * Resolves static plugins array as config plugin functions.
