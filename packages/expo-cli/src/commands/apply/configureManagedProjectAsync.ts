@@ -80,6 +80,10 @@ export default async function configureManagedProjectAsync({
     isModdedConfig: true,
   });
 
+  // Add all built-in plugins first because they should take
+  // priority over the unversioned plugins.
+  config = withManagedPlugins(config);
+
   if (platforms.includes('ios')) {
     // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
     const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
@@ -107,9 +111,6 @@ export default async function configureManagedProjectAsync({
       expoUsername,
     });
   }
-
-  // Add all built-in plugins
-  config = withManagedPlugins(config);
 
   // compile all plugins and mods
   config = await compileModsAsync(config, { projectRoot, platforms });
