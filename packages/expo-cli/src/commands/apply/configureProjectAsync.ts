@@ -4,6 +4,7 @@ import {
   ModPlatform,
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
+  withThirdPartyPlugins,
 } from '@expo/config-plugins';
 import { StaticPlugin } from '@expo/config/build/plugins/modulePluginResolver';
 import { withStaticPlugin } from '@expo/config/build/plugins/withStaticPlugin';
@@ -83,6 +84,8 @@ export default async function configureManagedProjectAsync({
   // Add all built-in plugins first because they should take
   // priority over the unversioned plugins.
   config = withManagedPlugins(config);
+  // Apply all unversioned plugins
+  config = withThirdPartyPlugins(config);
 
   if (platforms.includes('ios')) {
     // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
