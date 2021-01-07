@@ -105,6 +105,10 @@ export interface ModConfig {
      * Modify the `ios/<name>.xcodeproj` as an `XcodeProject` (parsed with [`xcode`](https://www.npmjs.com/package/xcode))
      */
     xcodeproj?: Mod<XcodeProject>;
+    /**
+     * Modify the `ios/<name>/AppDelegate.m` as a string (dangerous)
+     */
+    appDelegate?: Mod<XcodeProject>;
   };
 }
 

@@ -19,7 +19,12 @@ import { getProjectStringsXMLPathAsync } from '../android/Strings';
 import { writeXMLAsync } from '../android/XML';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { InfoPlist } from '../ios/IosConfig.types';
-import { getInfoPlistPath, getPBXProjectPath } from '../ios/Paths';
+import {
+  AppDelegateProjectFile,
+  getAppDelegate,
+  getInfoPlistPath,
+  getPBXProjectPath,
+} from '../ios/Paths';
 import { readPbxproj } from '../ios/utils/Xcodeproj';
 import { assert } from '../utils/errors';
 import * as WarningAggregator from '../utils/warnings';
@@ -305,12 +310,54 @@ function applyIOSBaseMods(config: ExportedConfig, props: FileModOptions): Export
   // TODO: Use versioned files from remote template repo
   config = withExpoDangerousBaseMod(config, 'ios');
   config = withIosInfoPlistBaseMod(config, props);
+  config = withAppDelegateBaseMod(config, props);
   config = withExpoPlistBaseMod(config, props);
   config = withXcodeProjectBaseMod(config, props);
   config = withEntitlementsBaseMod(config, props);
 
   return config;
 }
+
+const withAppDelegateBaseMod: ConfigPlugin<FileModOptions> = (config, { overwrite }) => {
+  return withInterceptedMod<AppDelegateProjectFile>(config, {
+    platform: 'ios',
+    mod: 'appDelegate',
+    skipEmptyMod: !overwrite,
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<AppDelegateProjectFile> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        let modResults = getAppDelegate(modRequest.projectRoot);
+        if (overwrite) {
+          modResults.contents = await readFile(
+            require.resolve('@expo/config-plugins/template/ios/AppDelegate.m'),
+            'utf8'
+          );
+        }
+
+        // Currently don't support changing the path or language
+        const filePath = modResults.path;
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await writeFile(filePath, modResults.contents);
+      } catch (error) {
+        console.error(`AppDelegate mod error:`);
+        throw error;
+      }
+      return results;
+    },
+  });
+};
 
 const withExpoDangerousBaseMod: ConfigPlugin<ModPlatform> = (config, platform) => {
   // Used for scheduling when dangerous mods run.

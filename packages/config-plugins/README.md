@@ -247,6 +247,7 @@ module.exports = {
 
 The following default mods are provided by the mod compiler for common file manipulation:
 
+- `mods.ios.appDelegate` -- Modify the `ios/<name>/AppDelegate.m` as a string.
 - `mods.ios.infoPlist` -- Modify the `ios/<name>/Info.plist` as JSON (parsed with [`@expo/plist`](https://www.npmjs.com/package/@expo/plist)).
 - `mods.ios.entitlements` -- Modify the `ios/<name>/<product-name>.entitlements` as JSON (parsed with [`@expo/plist`](https://www.npmjs.com/package/@expo/plist)).
 - `mods.ios.expoPlist` -- Modify the `ios/<name>/Expo.plist` as JSON (Expo updates config for iOS) (parsed with [`@expo/plist`](https://www.npmjs.com/package/@expo/plist)).
@@ -269,6 +270,7 @@ If you're developing a feature that requires mods, it's best not to interact wit
 Instead you should use the helper mods provided by `@expo/config-plugins`:
 
 - iOS
+  - `withAppDelegate`
   - `withInfoPlist`
   - `withEntitlementsPlist`
   - `withExpoPlist`
