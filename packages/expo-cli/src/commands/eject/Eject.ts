@@ -133,7 +133,8 @@ export async function prebuildAsync(
   if (shouldInstall) {
     await installNodeDependenciesAsync(projectRoot, packageManager, {
       // We delete the dependencies when new ones are added because native packages are more fragile.
-      clean: hasNewDependencies,
+      // npm doesn't work well so we always run the cleaning step when npm is used in favor of yarn.
+      clean: hasNewDependencies || packageManager === 'npm',
     });
   }
 
