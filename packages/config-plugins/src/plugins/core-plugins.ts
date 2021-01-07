@@ -7,34 +7,25 @@ import {
   ExportedConfigWithProps,
   Mod,
   ModPlatform,
+  StaticPlugin,
 } from '../Plugin.types';
 import { addHistoryItem, getHistoryItem, PluginHistoryItem } from '../utils/history';
+import { withStaticPlugin } from './static-plugins';
 
 const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
-function ensureArray<T>(input: T | T[]): T[] {
-  if (Array.isArray(input)) {
-    return input;
-  }
-  return [input];
-}
-
 /**
- * Plugin to chain a list of plugins together.
+ * Resolves a list of plugins.
  *
  * @param config exported config
  * @param plugins list of config config plugins to apply to the exported config
  */
-export const withPlugins: ConfigPlugin<
-  (
-    | ConfigPlugin
-    // TODO: Type this somehow if possible.
-    | [ConfigPlugin<any>, any]
-  )[]
-> = (config, plugins): ExportedConfig => {
-  return plugins.reduce((prev, curr) => {
-    const [plugins, args] = ensureArray(curr);
-    return plugins(prev, args);
+export const withPlugins: ConfigPlugin<(StaticPlugin | ConfigPlugin | string)[]> = (
+  config,
+  plugins
+) => {
+  return plugins.reduce((prev, plugin) => {
+    return withStaticPlugin(prev, { plugin });
   }, config);
 };
 

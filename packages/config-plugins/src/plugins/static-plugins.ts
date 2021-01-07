@@ -1,12 +1,14 @@
-import { ConfigPlugin } from '../Config.types';
-import { assert, ConfigError } from '../Errors';
+import { boolish } from 'getenv';
+
+import { ConfigPlugin, StaticPlugin } from '../Plugin.types';
+import { assert, PluginError } from '../utils/errors';
 import {
   assertInternalProjectRoot,
   normalizeStaticPlugin,
   resolveConfigPluginFunction,
-  StaticPlugin,
-} from './modulePluginResolver';
-import { EXPO_DEBUG } from './withInternal';
+} from '../utils/plugin-resolver';
+
+const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 /**
  * Resolves static module plugin and potentially falls back on a provided plugin if the module cannot be resolved
@@ -16,7 +18,7 @@ import { EXPO_DEBUG } from './withInternal';
  * @param projectRoot optional project root, fallback to _internal.projectRoot. Used for testing.
  */
 export const withStaticPlugin: ConfigPlugin<{
-  plugin: StaticPlugin | string;
+  plugin: StaticPlugin | ConfigPlugin | string;
   fallback?: ConfigPlugin<{ _resolverError: Error } & any>;
   projectRoot?: string;
 }> = (config, props) => {
@@ -46,6 +48,8 @@ export const withStaticPlugin: ConfigPlugin<{
         // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
         console.log(`Error resolving plugin "${pluginResolve}"`, error);
       }
+      // TODO: Maybe allow for `PluginError`s to be thrown so external plugins can assert invalid options.
+
       // If the static module failed to resolve, attempt to use a fallback.
       // This enables support for built-in plugins with versioned variations living in other packages.
       if (props.fallback) {
@@ -59,9 +63,9 @@ export const withStaticPlugin: ConfigPlugin<{
       }
     }
   } else {
-    throw new ConfigError(
-      `Static plugin is an unexpected type: ${typeof pluginResolve}`,
-      'INVALID_PLUGIN'
+    throw new PluginError(
+      `Plugin is an unexpected type: ${typeof pluginResolve}`,
+      'INVALID_PLUGIN_TYPE'
     );
   }
   // Execute the plugin.

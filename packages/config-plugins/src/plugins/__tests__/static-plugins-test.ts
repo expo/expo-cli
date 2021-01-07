@@ -2,7 +2,7 @@ import { withPlugins } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 import { join } from 'path';
 
-import { withStaticPlugin } from '../withStaticPlugin';
+import { withStaticPlugin } from '../static-plugins';
 
 function withInternal(config: ExpoConfig, projectRoot: string) {
   if (!config._internal) config._internal = {};
@@ -30,16 +30,19 @@ describe(withStaticPlugin, () => {
 
     expect(() =>
       withStaticPlugin(config, {
+        // @ts-ignore -- invalid type
         plugin: true,
       })
     ).toThrow('Static plugin is an unexpected type: boolean');
     expect(() =>
       withStaticPlugin(config, {
+        // @ts-ignore -- invalid type
         plugin: [true],
       })
     ).toThrow('Static plugin is an unexpected type: boolean');
     expect(() =>
       withStaticPlugin(config, {
+        // @ts-ignore -- invalid type
         plugin: {},
       })
     ).toThrow('Static plugin is an unexpected type: object');
@@ -55,6 +58,7 @@ describe(withStaticPlugin, () => {
 
     expect(() =>
       withStaticPlugin(config, {
+        // @ts-ignore -- invalid type
         plugin: ['', '', ''],
       })
     ).toThrow(
@@ -68,11 +72,14 @@ describe(withStaticPlugin, () => {
     };
 
     config = withPlugins(config, [
+      // @ts-ignore -- invalid type
       c => withInternal(c, projectRoot),
+      // @ts-ignore -- invalid type
       c =>
         withStaticPlugin(c, {
           plugin: './my-plugin.js',
         }),
+      // @ts-ignore -- invalid type
       withInternalRemoved,
     ]);
 
@@ -92,12 +99,14 @@ describe(withStaticPlugin, () => {
     };
 
     config = withPlugins(config, [
+      // @ts-ignore -- invalid type
       c =>
         withStaticPlugin(c, {
           plugin: ['./my-plugin.js', { foobar: true }],
           projectRoot,
         }),
       // Uses a folder with index.js
+      // @ts-ignore -- invalid type
       c =>
         withStaticPlugin(c, {
           plugin: './beta',

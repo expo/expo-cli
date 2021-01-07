@@ -1,12 +1,13 @@
-import { ConfigPlugin, ExpoConfig, getConfig } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import {
   compileModsAsync,
+  ConfigPlugin,
   ModPlatform,
+  StaticPlugin,
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
+  withStaticPlugin,
 } from '@expo/config-plugins';
-import { StaticPlugin } from '@expo/config/build/plugins/modulePluginResolver';
-import { withStaticPlugin } from '@expo/config/build/plugins/withStaticPlugin';
 import { UserManager } from '@expo/xdl';
 
 import log from '../../log';

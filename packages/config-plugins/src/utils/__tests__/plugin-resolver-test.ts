@@ -1,4 +1,4 @@
-import { moduleNameIsDirectFileReference } from '../modulePluginResolver';
+import { moduleNameIsDirectFileReference } from '../plugin-resolver';
 
 describe(moduleNameIsDirectFileReference, () => {
   it('file path', () => {

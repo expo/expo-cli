@@ -1,10 +1,5 @@
+import { ModConfig } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
-
-// TODO
-export type ModConfig = { ios?: any; android?: any };
-
-// Copied from config-plugins to reduce package size from packages that just need to read the Expo config.
-export type ConfigPlugin<Props = void> = (config: ExpoConfig, props: Props) => ExpoConfig;
 
 export { ExpoConfig };
 
