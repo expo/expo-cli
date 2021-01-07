@@ -1,7 +1,8 @@
 import { JSONObject } from '@expo/json-file';
 import plist from '@expo/plist';
-import { readFile, writeFile } from 'fs-extra';
+import { readFile, readFileSync, writeFile, writeFileSync } from 'fs-extra';
 import path from 'path';
+import tempy from 'tempy';
 import { XcodeProject } from 'xcode';
 
 import {
@@ -375,6 +376,26 @@ const withExpoPlistBaseMod: ConfigPlugin<FileModOptions> = (config, { overwrite 
   });
 };
 
+function sanitizedName(name: string) {
+  return name
+    .replace(/[\W_]+/g, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function getTemplateXcodeProject(projectPath: string, name: string): string {
+  const fileContents = readFileSync(projectPath, 'utf8');
+  const outputPath = tempy.file();
+  writeFileSync(
+    outputPath,
+    fileContents
+      .replace(/HelloWorld/g, sanitizedName(name))
+      .replace(/helloworld/g, sanitizedName(name.toLowerCase()))
+  );
+
+  return outputPath;
+}
+
 const withXcodeProjectBaseMod: ConfigPlugin<FileModOptions> = (config, { overwrite }) => {
   // Append a rule to supply .xcodeproj data to mods on `mods.ios.xcodeproj`
   return withInterceptedMod<XcodeProject>(config, {
@@ -384,7 +405,10 @@ const withXcodeProjectBaseMod: ConfigPlugin<FileModOptions> = (config, { overwri
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       const filePath = getPBXProjectPath(modRequest.projectRoot);
       const inputFilePath = overwrite
-        ? require.resolve('@expo/config-plugins/template/ios/project.pbxproj')
+        ? getTemplateXcodeProject(
+            require.resolve('@expo/config-plugins/template/ios/project.pbxproj'),
+            config.name
+          )
         : filePath;
       const modResults = readPbxproj(inputFilePath);
       modResults.filepath = filePath;

@@ -165,16 +165,15 @@ export function getEntitlementsPath(projectRoot: string): string {
 
     fs.ensureDirSync(path.dirname(entitlementsPath));
     fs.writeFileSync(entitlementsPath, template);
-
-    Object.entries(project.pbxXCBuildConfigurationSection())
-      .filter(isNotComment)
-      .filter(isBuildConfig)
-      .filter(isNotTestHost)
-      .forEach(({ 1: { buildSettings } }: any) => {
-        buildSettings.CODE_SIGN_ENTITLEMENTS = entitlementsRelativePath;
-      });
-    fs.writeFileSync(project.filepath, project.writeSync());
   }
+  Object.entries(project.pbxXCBuildConfigurationSection())
+    .filter(isNotComment)
+    .filter(isBuildConfig)
+    .filter(isNotTestHost)
+    .forEach(({ 1: { buildSettings } }: any) => {
+      buildSettings.CODE_SIGN_ENTITLEMENTS = entitlementsRelativePath;
+    });
+  fs.writeFileSync(project.filepath, project.writeSync());
 
   // Clean up others
   deleteEntitlementsFiles(pathsToDelete);
