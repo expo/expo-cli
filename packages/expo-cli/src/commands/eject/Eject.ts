@@ -109,17 +109,17 @@ export async function prebuildAsync(
   const { exp, pkg } = await ensureConfigAsync({ projectRoot, platforms });
   const tempDir = temporary.directory();
 
-  const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync({
+  const {
+    hasNewProjectFiles,
+    needsPodInstall,
+    hasNewDependencies,
+  } = await createNativeProjectsFromTemplateAsync({
     projectRoot,
     exp,
     pkg,
     tempDir,
     platforms,
   });
-
-  // Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
-  // This will be used to prevent the node modules from being nuked every time.
-  const isSyncing = !hasNewProjectFiles;
 
   // Install node modules
   const shouldInstall = options?.install !== false;
@@ -131,7 +131,10 @@ export async function prebuildAsync(
   });
 
   if (shouldInstall) {
-    await installNodeDependenciesAsync(projectRoot, packageManager, { clean: !isSyncing });
+    await installNodeDependenciesAsync(projectRoot, packageManager, {
+      // We delete the dependencies when new ones are added because native packages are more fragile.
+      clean: hasNewDependencies,
+    });
   }
 
   // Apply Expo config to native projects
