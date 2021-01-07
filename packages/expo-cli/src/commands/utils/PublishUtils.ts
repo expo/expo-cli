@@ -3,6 +3,7 @@ import { ApiV2, UserManager } from '@expo/xdl';
 import ora from 'ora';
 
 import log from '../../log';
+import { getProjectOwner } from '../../projects';
 import { confirmAsync } from '../../prompts';
 import * as table from './cli-table';
 
@@ -79,7 +80,7 @@ export async function getPublishHistoryAsync(
 
   const api = ApiV2.clientForUser(user);
   return await api.postAsync('publish/history', {
-    owner: exp.owner,
+    owner: getProjectOwner(user, exp),
     slug: exp.slug,
     version: VERSION,
     releaseChannel: options.releaseChannel,
@@ -224,7 +225,7 @@ export async function getPublicationDetailAsync(
 
   const api = ApiV2.clientForUser(user);
   const result = await api.postAsync('publish/details', {
-    owner: exp.owner,
+    owner: getProjectOwner(user, exp),
     publishId: options.publishId,
     slug: exp.slug,
   });
