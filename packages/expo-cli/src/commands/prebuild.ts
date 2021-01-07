@@ -26,8 +26,6 @@ export async function actionAsync(
   await Eject.prebuildAsync(projectDir, {
     ...options,
     platforms: platformsFromPlatform(platform),
-    // Always overwrite the mod files.
-    overwriteFiles: true,
   } as Eject.EjectAsyncOptions);
 }
 

@@ -151,10 +151,7 @@ export function getEntitlementsPath(projectRoot: string): string {
     targetPath = entitlementsPath;
 
     // Use the default template
-    let template = fs.readFileSync(
-      require.resolve('@expo/config-plugins/template/ios/entitlements.plist'),
-      'utf8'
-    );
+    let template = ENTITLEMENTS_TEMPLATE;
 
     // If an old entitlements file exists, copy it's contents into the new file.
     if (pathsToDelete.length) {
@@ -165,15 +162,16 @@ export function getEntitlementsPath(projectRoot: string): string {
 
     fs.ensureDirSync(path.dirname(entitlementsPath));
     fs.writeFileSync(entitlementsPath, template);
+
+    Object.entries(project.pbxXCBuildConfigurationSection())
+      .filter(isNotComment)
+      .filter(isBuildConfig)
+      .filter(isNotTestHost)
+      .forEach(({ 1: { buildSettings } }: any) => {
+        buildSettings.CODE_SIGN_ENTITLEMENTS = entitlementsRelativePath;
+      });
+    fs.writeFileSync(project.filepath, project.writeSync());
   }
-  Object.entries(project.pbxXCBuildConfigurationSection())
-    .filter(isNotComment)
-    .filter(isBuildConfig)
-    .filter(isNotTestHost)
-    .forEach(({ 1: { buildSettings } }: any) => {
-      buildSettings.CODE_SIGN_ENTITLEMENTS = entitlementsRelativePath;
-    });
-  fs.writeFileSync(project.filepath, project.writeSync());
 
   // Clean up others
   deleteEntitlementsFiles(pathsToDelete);
@@ -186,3 +184,14 @@ function deleteEntitlementsFiles(entitlementsPaths: string[]) {
     fs.removeSync(path);
   }
 }
+
+const ENTITLEMENTS_TEMPLATE = `
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>aps-environment</key>
+<string>development</string>
+</dict>
+</plist>
+`;

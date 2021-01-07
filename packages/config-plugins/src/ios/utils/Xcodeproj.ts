@@ -195,11 +195,7 @@ export function ensureGroupRecursively(project: XcodeProject, filepath: string):
  */
 export function getPbxproj(projectRoot: string): XcodeProject {
   const projectPath = Paths.getPBXProjectPath(projectRoot);
-  return readPbxproj(projectPath);
-}
-
-export function readPbxproj(pbxprojPath: string): XcodeProject {
-  const project = xcode.project(pbxprojPath);
+  const project = xcode.project(projectPath);
   project.parseSync();
   return project;
 }

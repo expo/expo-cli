@@ -11,30 +11,11 @@ import { resolveModResults, withBaseMods } from './compiler-plugins';
  */
 export async function compileModsAsync(
   config: ExportedConfig,
-  props: { projectRoot: string; platforms?: ModPlatform[]; overwrite?: boolean }
+  props: { projectRoot: string; platforms?: ModPlatform[] }
 ): Promise<ExportedConfig> {
-  config = withBaseMods(config, { overwrite: props.overwrite ?? false });
+  config = withBaseMods(config);
   return await evalModsAsync(config, props);
 }
-
-function sortMods(commands: [string, any][], order: string[]): [string, any][] {
-  const allKeys = commands.map(([key]) => key);
-  const completeOrder = [...new Set([...order, ...allKeys])];
-  const sorted: [string, any][] = [];
-  while (completeOrder.length) {
-    const group = completeOrder.shift()!;
-    const commandSet = commands.find(([key]) => key === group);
-    if (commandSet) {
-      sorted.push(commandSet);
-    }
-  }
-  return sorted;
-}
-
-const orders: Record<string, string[]> = {
-  ios: ['dangerous', 'xcodeproj'],
-  android: ['dangerous'],
-};
 
 /**
  * A generic plugin compiler.
@@ -49,10 +30,13 @@ export async function evalModsAsync(
     if (platforms && !platforms.includes(platformName as any)) {
       continue;
     }
-    let entries = Object.entries(platform);
+    const entries = Object.entries(platform);
     if (entries.length) {
-      // Move dangerous item to the first position if it exists, this ensures that all dangerous code runs first.
-      entries = sortMods(entries, orders[platformName]!);
+      const dangerousIndex = entries.findIndex(([modName]) => modName === 'dangerous');
+      if (dangerousIndex > -1) {
+        // Move dangerous item to the first position if it exists, this ensures that all dangerous code runs first.
+        entries.splice(0, 0, entries.splice(dangerousIndex, 1)[0]);
+      }
 
       const platformProjectRoot = path.join(projectRoot, platformName);
       const projectName =

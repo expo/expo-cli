@@ -70,11 +70,9 @@ function withManagedPlugins(config: ExpoConfig) {
 export default async function configureManagedProjectAsync({
   projectRoot,
   platforms,
-  overwrite,
 }: {
   projectRoot: string;
   platforms: ModPlatform[];
-  overwrite: boolean;
 }) {
   // let config: ExpoConfig;
   let { exp: config } = getConfig(projectRoot, {
@@ -115,7 +113,7 @@ export default async function configureManagedProjectAsync({
   }
 
   // compile all plugins and mods
-  config = await compileModsAsync(config, { projectRoot, platforms, overwrite });
+  config = await compileModsAsync(config, { projectRoot, platforms });
 
   if (log.isDebug) {
     log.debug();

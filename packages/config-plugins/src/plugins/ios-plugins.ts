@@ -4,7 +4,6 @@ import { XcodeProject } from 'xcode';
 
 import { ConfigPlugin, Mod } from '../Plugin.types';
 import { ExpoPlist, InfoPlist } from '../ios/IosConfig.types';
-import { AppDelegateProjectFile } from '../ios/Paths';
 import { withExtendedMod } from './core-plugins';
 
 type MutateInfoPlistAction = (expo: ExpoConfig, infoPlist: InfoPlist) => InfoPlist;
@@ -51,20 +50,6 @@ export function createEntitlementsPlugin(
   }
   return withUnknown;
 }
-
-/**
- * Provides the AppDelegate file for modification.
- *
- * @param config
- * @param action
- */
-export const withAppDelegate: ConfigPlugin<Mod<AppDelegateProjectFile>> = (config, action) => {
-  return withExtendedMod(config, {
-    platform: 'ios',
-    mod: 'appDelegate',
-    action,
-  });
-};
 
 /**
  * Provides the Info.plist file for modification.

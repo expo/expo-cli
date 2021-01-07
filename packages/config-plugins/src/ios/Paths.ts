@@ -1,4 +1,4 @@
-import { pathExistsSync, readFileSync } from 'fs-extra';
+import { pathExistsSync } from 'fs-extra';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
 
@@ -7,15 +7,7 @@ import * as WarningAggregator from '../utils/warnings';
 
 const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
 
-interface ProjectFile<L extends string = string> {
-  path: string;
-  language: L;
-  contents: string;
-}
-
-export type AppDelegateProjectFile = ProjectFile<'objc' | 'swift'>;
-
-export function getAppDelegate(projectRoot: string): AppDelegateProjectFile {
+export function getAppDelegate(projectRoot: string): { path: string; language: 'objc' | 'swift' } {
   const [using, ...extra] = globSync('ios/*/AppDelegate.{m,swift}', {
     absolute: true,
     cwd: projectRoot,
@@ -37,11 +29,7 @@ export function getAppDelegate(projectRoot: string): AppDelegateProjectFile {
   }
 
   const isSwift = using.match(/^.*\.(swift)$/);
-  return {
-    path: using,
-    contents: readFileSync(using, 'utf8'),
-    language: isSwift ? 'swift' : 'objc',
-  };
+  return { path: using, language: isSwift ? 'swift' : 'objc' };
 }
 
 export function getSourceRoot(projectRoot: string): string {

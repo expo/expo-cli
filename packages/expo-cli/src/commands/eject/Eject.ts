@@ -34,7 +34,6 @@ export type EjectAsyncOptions = {
   install?: boolean;
   packageManager?: 'npm' | 'yarn';
   platforms: ModPlatform[];
-  overwriteFiles?: boolean;
 };
 
 type PrebuildResults = {
@@ -103,7 +102,7 @@ export async function ejectAsync(
  */
 export async function prebuildAsync(
   projectRoot: string,
-  { platforms, overwriteFiles, ...options }: EjectAsyncOptions
+  { platforms, ...options }: EjectAsyncOptions
 ): Promise<PrebuildResults> {
   assertPlatforms(platforms);
 
@@ -140,7 +139,6 @@ export async function prebuildAsync(
   const managedConfig = await configureManagedProjectAsync({
     projectRoot,
     platforms,
-    overwrite: !!overwriteFiles,
   });
   if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
     applyingAndroidConfigStep.stopAndPersist({

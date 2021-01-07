@@ -28,7 +28,6 @@ export {
 } from './plugins/core-plugins';
 
 export {
-  withAppDelegate,
   withInfoPlist,
   withEntitlementsPlist,
   withExpoPlist,
