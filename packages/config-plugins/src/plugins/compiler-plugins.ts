@@ -18,15 +18,15 @@ import { getProjectStringsXMLPathAsync } from '../android/Strings';
 import { writeXMLAsync } from '../android/XML';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { InfoPlist } from '../ios/IosConfig.types';
-import { getInfoPlistPath } from '../ios/Paths';
-import { getPbxproj } from '../ios/utils/Xcodeproj';
+import { getInfoPlistPath, getPBXProjectPath } from '../ios/Paths';
+import { readPbxproj } from '../ios/utils/Xcodeproj';
 import { assert } from '../utils/errors';
 import * as WarningAggregator from '../utils/warnings';
 import { withInterceptedMod } from './core-plugins';
 
-export function withBaseMods(config: ExportedConfig): ExportedConfig {
-  config = applyIOSBaseMods(config);
-  config = applyAndroidBaseMods(config);
+export function withBaseMods(config: ExportedConfig, options: FileModOptions): ExportedConfig {
+  config = applyIOSBaseMods(config, options);
+  config = applyAndroidBaseMods(config, options);
   return config;
 }
 
@@ -46,23 +46,23 @@ export function resolveModResults(results: any, platformName: string, modName: s
   return ensuredResults;
 }
 
-function applyAndroidBaseMods(config: ExportedConfig): ExportedConfig {
+function applyAndroidBaseMods(config: ExportedConfig, options: FileModOptions): ExportedConfig {
   config = withExpoDangerousBaseMod(config, 'android');
-  config = withAndroidStringsXMLBaseMod(config);
-  config = withAndroidManifestBaseMod(config);
-  config = withAndroidMainActivityBaseMod(config);
-  config = withAndroidSettingsGradleBaseMod(config);
-  config = withAndroidProjectBuildGradleBaseMod(config);
-  config = withAndroidAppBuildGradleBaseMod(config);
+  config = withAndroidStringsXMLBaseMod(config, options);
+  config = withAndroidManifestBaseMod(config, options);
+  config = withAndroidMainActivityBaseMod(config, options);
+  config = withAndroidSettingsGradleBaseMod(config, options);
+  config = withAndroidProjectBuildGradleBaseMod(config, options);
+  config = withAndroidAppBuildGradleBaseMod(config, options);
   return config;
 }
 
-const withAndroidManifestBaseMod: ConfigPlugin = config => {
+const withAndroidManifestBaseMod: ConfigPlugin<FileModOptions> = (config, { overwrite }) => {
   // Append a rule to supply AndroidManifest.xml data to mods on `mods.android.manifest`
   return withInterceptedMod<AndroidManifest>(config, {
     platform: 'android',
     mod: 'manifest',
-    skipEmptyMod: true,
+    skipEmptyMod: !overwrite,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidManifest> = {
         ...config,
@@ -71,7 +71,11 @@ const withAndroidManifestBaseMod: ConfigPlugin = config => {
 
       try {
         const filePath = await AndroidPaths.getAndroidManifestAsync(modRequest.projectRoot);
-        let modResults = await Manifest.readAndroidManifestAsync(filePath);
+        const inputFilePath = overwrite
+          ? require.resolve('@expo/config-plugins/template/android/AndroidManifest.xml')
+          : filePath;
+
+        let modResults = await Manifest.readAndroidManifestAsync(inputFilePath);
 
         results = await nextMod!({
           ...config,
@@ -91,12 +95,12 @@ const withAndroidManifestBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withAndroidStringsXMLBaseMod: ConfigPlugin = config => {
+const withAndroidStringsXMLBaseMod: ConfigPlugin<FileModOptions> = (config, { overwrite }) => {
   // Append a rule to supply strings.xml data to mods on `mods.android.strings`
   return withInterceptedMod<ResourceXML>(config, {
     platform: 'android',
     mod: 'strings',
-    skipEmptyMod: true,
+    skipEmptyMod: !overwrite,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<ResourceXML> = {
         ...config,
@@ -105,7 +109,11 @@ const withAndroidStringsXMLBaseMod: ConfigPlugin = config => {
 
       try {
         const filePath = await getProjectStringsXMLPathAsync(modRequest.projectRoot);
-        let modResults = await readResourcesXMLAsync({ path: filePath });
+        const inputFilePath = overwrite
+          ? require.resolve('@expo/config-plugins/template/android/strings.xml')
+          : filePath;
+
+        let modResults = await readResourcesXMLAsync({ path: inputFilePath });
 
         results = await nextMod!({
           ...config,
@@ -125,11 +133,14 @@ const withAndroidStringsXMLBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withAndroidProjectBuildGradleBaseMod: ConfigPlugin = config => {
+const withAndroidProjectBuildGradleBaseMod: ConfigPlugin<FileModOptions> = (
+  config,
+  { overwrite }
+) => {
   return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
     platform: 'android',
     mod: 'projectBuildGradle',
-    skipEmptyMod: true,
+    skipEmptyMod: !overwrite,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
         ...config,
@@ -138,6 +149,12 @@ const withAndroidProjectBuildGradleBaseMod: ConfigPlugin = config => {
 
       try {
         let modResults = await AndroidPaths.getProjectBuildGradleAsync(modRequest.projectRoot);
+        if (overwrite) {
+          modResults.contents = await readFile(
+            require.resolve('@expo/config-plugins/template/android/project-build.gradle'),
+            'utf8'
+          );
+        }
         // Currently don't support changing the path or language
         const filePath = modResults.path;
 
@@ -159,11 +176,11 @@ const withAndroidProjectBuildGradleBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withAndroidSettingsGradleBaseMod: ConfigPlugin = config => {
+const withAndroidSettingsGradleBaseMod: ConfigPlugin<FileModOptions> = (config, { overwrite }) => {
   return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
     platform: 'android',
     mod: 'settingsGradle',
-    skipEmptyMod: true,
+    skipEmptyMod: !overwrite,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
         ...config,
@@ -172,6 +189,12 @@ const withAndroidSettingsGradleBaseMod: ConfigPlugin = config => {
 
       try {
         let modResults = await AndroidPaths.getSettingsGradleAsync(modRequest.projectRoot);
+        if (overwrite) {
+          modResults.contents = await readFile(
+            require.resolve('@expo/config-plugins/template/android/settings.gradle'),
+            'utf8'
+          );
+        }
         // Currently don't support changing the path or language
         const filePath = modResults.path;
 
@@ -193,11 +216,11 @@ const withAndroidSettingsGradleBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withAndroidAppBuildGradleBaseMod: ConfigPlugin = config => {
+const withAndroidAppBuildGradleBaseMod: ConfigPlugin<FileModOptions> = (config, { overwrite }) => {
   return withInterceptedMod<AndroidPaths.GradleProjectFile>(config, {
     platform: 'android',
     mod: 'appBuildGradle',
-    skipEmptyMod: true,
+    skipEmptyMod: !overwrite,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidPaths.GradleProjectFile> = {
         ...config,
@@ -206,6 +229,13 @@ const withAndroidAppBuildGradleBaseMod: ConfigPlugin = config => {
 
       try {
         let modResults = await AndroidPaths.getAppBuildGradleAsync(modRequest.projectRoot);
+        if (overwrite) {
+          modResults.contents = await readFile(
+            require.resolve('@expo/config-plugins/template/android/app-build.gradle'),
+            'utf8'
+          );
+        }
+
         // Currently don't support changing the path or language
         const filePath = modResults.path;
 
@@ -227,11 +257,11 @@ const withAndroidAppBuildGradleBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
+const withAndroidMainActivityBaseMod: ConfigPlugin<FileModOptions> = (config, { overwrite }) => {
   return withInterceptedMod<AndroidPaths.ApplicationProjectFile>(config, {
     platform: 'android',
     mod: 'mainActivity',
-    skipEmptyMod: true,
+    skipEmptyMod: !overwrite,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       let results: ExportedConfigWithProps<AndroidPaths.ApplicationProjectFile> = {
         ...config,
@@ -240,6 +270,13 @@ const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
 
       try {
         let modResults = await AndroidPaths.getMainActivityAsync(modRequest.projectRoot);
+        if (overwrite) {
+          modResults.contents = await readFile(
+            require.resolve('@expo/config-plugins/template/android/MainActivity.java'),
+            'utf8'
+          );
+        }
+
         // Currently don't support changing the path or language
         const filePath = modResults.path;
 
@@ -261,12 +298,15 @@ const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
   });
 };
 
-function applyIOSBaseMods(config: ExportedConfig): ExportedConfig {
+type FileModOptions = { overwrite: boolean };
+
+function applyIOSBaseMods(config: ExportedConfig, props: FileModOptions): ExportedConfig {
+  // TODO: Use versioned files from remote template repo
   config = withExpoDangerousBaseMod(config, 'ios');
-  config = withIosInfoPlistBaseMod(config);
-  config = withExpoPlistBaseMod(config);
-  config = withXcodeProjectBaseMod(config);
-  config = withEntitlementsBaseMod(config);
+  config = withIosInfoPlistBaseMod(config, props);
+  config = withExpoPlistBaseMod(config, props);
+  config = withXcodeProjectBaseMod(config, props);
+  config = withEntitlementsBaseMod(config, props);
 
   return config;
 }
@@ -288,12 +328,12 @@ const withExpoDangerousBaseMod: ConfigPlugin<ModPlatform> = (config, platform) =
   });
 };
 
-const withExpoPlistBaseMod: ConfigPlugin = config => {
+const withExpoPlistBaseMod: ConfigPlugin<FileModOptions> = (config, { overwrite }) => {
   // Append a rule to supply Expo.plist data to mods on `mods.ios.expoPlist`
   return withInterceptedMod<JSONObject>(config, {
     platform: 'ios',
     mod: 'expoPlist',
-    skipEmptyMod: true,
+    skipEmptyMod: !overwrite,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       const supportingDirectory = path.join(
         modRequest.platformProjectRoot,
@@ -305,9 +345,13 @@ const withExpoPlistBaseMod: ConfigPlugin = config => {
         ...config,
         modRequest,
       };
+      const filePath = path.resolve(supportingDirectory, 'Expo.plist');
+      const inputFilePath = overwrite
+        ? require.resolve('@expo/config-plugins/template/ios/Expo.plist')
+        : filePath;
+
       try {
-        const filePath = path.resolve(supportingDirectory, 'Expo.plist');
-        let modResults = plist.parse(await readFile(filePath, 'utf8'));
+        let modResults = plist.parse(await readFile(inputFilePath, 'utf8'));
 
         // TODO: Fix type
         results = await nextMod!({
@@ -331,14 +375,19 @@ const withExpoPlistBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withXcodeProjectBaseMod: ConfigPlugin = config => {
+const withXcodeProjectBaseMod: ConfigPlugin<FileModOptions> = (config, { overwrite }) => {
   // Append a rule to supply .xcodeproj data to mods on `mods.ios.xcodeproj`
   return withInterceptedMod<XcodeProject>(config, {
     platform: 'ios',
     mod: 'xcodeproj',
-    skipEmptyMod: true,
+    skipEmptyMod: !overwrite,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      const modResults = getPbxproj(modRequest.projectRoot);
+      const filePath = getPBXProjectPath(modRequest.projectRoot);
+      const inputFilePath = overwrite
+        ? require.resolve('@expo/config-plugins/template/ios/project.pbxproj')
+        : filePath;
+      const modResults = readPbxproj(inputFilePath);
+      modResults.filepath = filePath;
       // TODO: Fix type
       const results = await nextMod!({
         ...config,
@@ -353,14 +402,17 @@ const withXcodeProjectBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withIosInfoPlistBaseMod: ConfigPlugin = config => {
+const withIosInfoPlistBaseMod: ConfigPlugin<FileModOptions> = (config, { overwrite }) => {
   // Append a rule to supply Info.plist data to mods on `mods.ios.infoPlist`
   return withInterceptedMod<InfoPlist>(config, {
     platform: 'ios',
     mod: 'infoPlist',
-    skipEmptyMod: true,
+    skipEmptyMod: !overwrite,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
       const filePath = getInfoPlistPath(modRequest.projectRoot);
+      const inputFilePath = overwrite
+        ? require.resolve('@expo/config-plugins/template/ios/Info.plist')
+        : filePath;
 
       let results: ExportedConfigWithProps<JSONObject> = {
         ...config,
@@ -376,7 +428,7 @@ const withIosInfoPlistBaseMod: ConfigPlugin = config => {
         config.ios.infoPlist = {};
       }
 
-      const contents = await readFile(filePath, 'utf8');
+      const contents = await readFile(inputFilePath, 'utf8');
       assert(contents, 'Info.plist is empty');
       let data = plist.parse(contents);
 
@@ -390,6 +442,7 @@ const withIosInfoPlistBaseMod: ConfigPlugin = config => {
         modRequest,
         modResults: config.ios.infoPlist as InfoPlist,
       });
+
       resolveModResults(results, modRequest.platform, modRequest.modName);
       data = results.modResults;
 
@@ -400,14 +453,17 @@ const withIosInfoPlistBaseMod: ConfigPlugin = config => {
   });
 };
 
-const withEntitlementsBaseMod: ConfigPlugin = config => {
+const withEntitlementsBaseMod: ConfigPlugin<FileModOptions> = (config, { overwrite }) => {
   // Append a rule to supply .entitlements data to mods on `mods.ios.entitlements`
   return withInterceptedMod<JSONObject>(config, {
     platform: 'ios',
     mod: 'entitlements',
-    skipEmptyMod: true,
+    skipEmptyMod: !overwrite,
     async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
-      const entitlementsPath = getEntitlementsPath(modRequest.projectRoot);
+      const filePath = getEntitlementsPath(modRequest.projectRoot);
+      const inputFilePath = overwrite
+        ? require.resolve('@expo/config-plugins/template/ios/entitlements.plist')
+        : filePath;
 
       let results: ExportedConfigWithProps<JSONObject> = {
         ...config,
@@ -415,7 +471,7 @@ const withEntitlementsBaseMod: ConfigPlugin = config => {
       };
 
       try {
-        const data = plist.parse(await readFile(entitlementsPath, 'utf8'));
+        const data = plist.parse(await readFile(inputFilePath, 'utf8'));
         // Apply all of the .entitlements values to the expo.ios.entitlements object
         // TODO: Remove this in favor of just overwriting the .entitlements with the Expo object. This will enable people to actually remove values.
         if (!config.ios) {
@@ -437,9 +493,9 @@ const withEntitlementsBaseMod: ConfigPlugin = config => {
           modResults: config.ios.entitlements as JSONObject,
         });
         resolveModResults(results, modRequest.platform, modRequest.modName);
-        await writeFile(entitlementsPath, plist.build(results.modResults));
+        await writeFile(filePath, plist.build(results.modResults));
       } catch (error) {
-        console.error(`${path.basename(entitlementsPath)} mod error:`);
+        console.error(`${path.basename(filePath)} mod error:`);
         throw error;
       }
       return results;

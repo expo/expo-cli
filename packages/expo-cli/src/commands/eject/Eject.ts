@@ -34,6 +34,7 @@ export type EjectAsyncOptions = {
   install?: boolean;
   packageManager?: 'npm' | 'yarn';
   platforms: ModPlatform[];
+  overwriteFiles?: boolean;
 };
 
 type PrebuildResults = {
@@ -102,7 +103,7 @@ export async function ejectAsync(
  */
 export async function prebuildAsync(
   projectRoot: string,
-  { platforms, ...options }: EjectAsyncOptions
+  { platforms, overwriteFiles, ...options }: EjectAsyncOptions
 ): Promise<PrebuildResults> {
   assertPlatforms(platforms);
 
@@ -136,7 +137,11 @@ export async function prebuildAsync(
 
   // Apply Expo config to native projects
   const applyingAndroidConfigStep = CreateApp.logNewSection('Config syncing');
-  const managedConfig = await configureManagedProjectAsync({ projectRoot, platforms });
+  const managedConfig = await configureManagedProjectAsync({
+    projectRoot,
+    platforms,
+    overwrite: !!overwriteFiles,
+  });
   if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
     applyingAndroidConfigStep.stopAndPersist({
       symbol: '⚠️ ',

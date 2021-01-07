@@ -11,9 +11,9 @@ import { resolveModResults, withBaseMods } from './compiler-plugins';
  */
 export async function compileModsAsync(
   config: ExportedConfig,
-  props: { projectRoot: string; platforms?: ModPlatform[] }
+  props: { projectRoot: string; platforms?: ModPlatform[]; overwrite?: boolean }
 ): Promise<ExportedConfig> {
-  config = withBaseMods(config);
+  config = withBaseMods(config, { overwrite: props.overwrite ?? false });
   return await evalModsAsync(config, props);
 }
 

@@ -151,7 +151,10 @@ export function getEntitlementsPath(projectRoot: string): string {
     targetPath = entitlementsPath;
 
     // Use the default template
-    let template = ENTITLEMENTS_TEMPLATE;
+    let template = fs.readFileSync(
+      require.resolve('@expo/config-plugins/template/ios/entitlements.plist'),
+      'utf8'
+    );
 
     // If an old entitlements file exists, copy it's contents into the new file.
     if (pathsToDelete.length) {
@@ -184,14 +187,3 @@ function deleteEntitlementsFiles(entitlementsPaths: string[]) {
     fs.removeSync(path);
   }
 }
-
-const ENTITLEMENTS_TEMPLATE = `
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-<key>aps-environment</key>
-<string>development</string>
-</dict>
-</plist>
-`;
