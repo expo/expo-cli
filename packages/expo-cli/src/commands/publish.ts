@@ -1,10 +1,4 @@
-import {
-  ExpoConfig,
-  getConfig,
-  getDefaultTarget,
-  PackageJSONConfig,
-  ProjectTarget,
-} from '@expo/config';
+import { getConfig, getDefaultTarget, PackageJSONConfig, ProjectTarget } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
 import { Project, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
