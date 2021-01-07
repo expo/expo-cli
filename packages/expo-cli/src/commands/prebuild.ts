@@ -32,7 +32,7 @@ export default function (program: Command) {
   program
     .command('prebuild [path]')
     .description(
-      `Create native iOS and Android project files before building natively. ${chalk.dim(
+      `Experimental: Create native iOS and Android project files before building natively. ${chalk.dim(
         learnMore('https://docs.expo.io/bare/customizing/')
       )}`
     )
