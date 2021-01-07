@@ -18,7 +18,7 @@ export function platformsFromPlatform(platform?: string): ModPlatform[] {
   switch (platform) {
     case 'ios':
       if (process.platform === 'win32') {
-        log.warn('Ejecting on windows is unsupported locally on windows, use eas build instead');
+        log.warn('Ejecting is unsupported locally on windows, use eas build instead');
         // continue anyways :shrug:
       }
       return ['ios'];
