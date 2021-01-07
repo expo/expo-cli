@@ -18,7 +18,7 @@ import { getProjectStringsXMLPathAsync } from '../android/Strings';
 import { writeXMLAsync } from '../android/XML';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { InfoPlist } from '../ios/IosConfig.types';
-import { getInfoPlistPath } from '../ios/Paths';
+import { AppDelegateProjectFile, getAppDelegate, getInfoPlistPath } from '../ios/Paths';
 import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { assert } from '../utils/errors';
 import * as WarningAggregator from '../utils/warnings';
@@ -263,6 +263,7 @@ const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
 
 function applyIOSBaseMods(config: ExportedConfig): ExportedConfig {
   config = withExpoDangerousBaseMod(config, 'ios');
+  config = withAppDelegateBaseMod(config);
   config = withIosInfoPlistBaseMod(config);
   config = withExpoPlistBaseMod(config);
   config = withXcodeProjectBaseMod(config);
@@ -283,6 +284,40 @@ const withExpoDangerousBaseMod: ConfigPlugin<ModPlatform> = (config, platform) =
         modRequest,
       });
       resolveModResults(results, modRequest.platform, modRequest.modName);
+      return results;
+    },
+  });
+};
+
+const withAppDelegateBaseMod: ConfigPlugin = config => {
+  return withInterceptedMod<AppDelegateProjectFile>(config, {
+    platform: 'ios',
+    mod: 'appDelegate',
+    skipEmptyMod: true,
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<AppDelegateProjectFile> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        let modResults = getAppDelegate(modRequest.projectRoot);
+        // Currently don't support changing the path or language
+        const filePath = modResults.path;
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await writeFile(filePath, modResults.contents);
+      } catch (error) {
+        console.error(`AppDelegate mod error:`);
+        throw error;
+      }
       return results;
     },
   });
