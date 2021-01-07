@@ -1,14 +1,13 @@
 import { getConfig } from '@expo/config';
-import { ModPlatform } from '@expo/config-plugins';
 import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
-import CommandError from '../CommandError';
 import log from '../log';
 import { confirmAsync } from '../prompts';
 import * as Eject from './eject/Eject';
 import * as LegacyEject from './eject/LegacyEject';
+import { platformsFromPlatform } from './eject/platformOptions';
 import { learnMore } from './utils/TerminalLink';
 
 async function userWantsToEjectWithoutUpgradingAsync() {
@@ -17,34 +16,6 @@ async function userWantsToEjectWithoutUpgradingAsync() {
   });
 
   return answer;
-}
-
-function getDefaultPlatforms(): ModPlatform[] {
-  const platforms: ModPlatform[] = ['android'];
-  if (process.platform !== 'win32') {
-    platforms.push('ios');
-  }
-  return platforms;
-}
-
-function platformsFromPlatform(platform?: string): ModPlatform[] {
-  if (!platform) {
-    return getDefaultPlatforms();
-  }
-  switch (platform) {
-    case 'ios':
-      if (process.platform === 'win32') {
-        log.warn('Ejecting on windows is unsupported');
-        // continue anyways :shrug:
-      }
-      return ['ios'];
-    case 'android':
-      return ['android'];
-    case 'all':
-      return getDefaultPlatforms();
-    default:
-      throw new CommandError(`Unsupported platform "${platform}". Options are: ios, android, all`);
-  }
 }
 
 export async function actionAsync(
