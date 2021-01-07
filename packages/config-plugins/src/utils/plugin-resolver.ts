@@ -7,7 +7,6 @@ import { assert, PluginError } from './errors';
 import { fileExists } from './modules';
 
 // Default plugin entry file name.
-// :DO_NOT_CHANGE_OR_YOU_WILL_BE_FIRED:
 export const pluginFileName = 'app.plugin.js';
 
 function findUpPackageJson(root: string): string {
