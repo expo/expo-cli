@@ -11,6 +11,7 @@ export async function actionAsync(
     platform,
     ...options
   }: Eject.EjectAsyncOptions & {
+    clear?: boolean;
     npm?: boolean;
     platform?: string;
   }
@@ -18,8 +19,11 @@ export async function actionAsync(
   if (options.npm) {
     options.packageManager = 'npm';
   }
+  if (options.clear) {
+    await Eject.clearNativeFolder(projectDir, ['ios', 'android']);
+  }
 
-  await Eject.ejectAsync(projectDir, {
+  await Eject.prebuildAsync(projectDir, {
     ...options,
     platforms: platformsFromPlatform(platform),
   } as Eject.EjectAsyncOptions);
@@ -38,6 +42,7 @@ export default function (program: Command) {
     )
     .helpGroup('eject')
     .option('--no-install', 'Skip installing npm packages and CocoaPods.')
+    .option('-c, --clear', 'Clear native projects before generation')
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('-p, --platform [platform]', 'Platforms to sync: ios, android, all. Default: all')
     .asyncActionProjectDir(actionAsync);
