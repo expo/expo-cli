@@ -36,23 +36,46 @@ export type EjectAsyncOptions = {
   platforms: ModPlatform[];
 };
 
+type PrebuildResults = {
+  hasAssetBundlePatterns: boolean;
+  legacyUpdates: boolean;
+  hasNewProjectFiles: boolean;
+  platforms: ModPlatform[];
+  podInstall: boolean;
+  nodeInstall: boolean;
+  packageManager: string;
+};
+
+export async function clearNativeFolder(projectRoot: string, folders: string[]) {
+  const step = CreateApp.logNewSection(`Clearing ${folders.join(', ')}`);
+  try {
+    await Promise.all(folders.map(folderName => fs.remove(path.join(projectRoot, folderName))));
+    step.succeed(`Cleared ${folders.join(', ')} code`);
+  } catch (error) {
+    step.fail(`Failed to delete ${folders.join(', ')} code: ${error.message}`);
+    throw error;
+  }
+}
+
+function assertPlatforms(platforms: EjectAsyncOptions['platforms']) {
+  if (!platforms?.length) {
+    throw new CommandError('At least one platform must be enabled when syncing');
+  }
+}
+
 /**
  * Entry point into the eject process, delegates to other helpers to perform various steps.
  *
  * 1. Verify git is clean
- * 2. Create native projects (ios, android)
- * 3. Install node modules
- * 4. Apply config to native projects
- * 5. Install CocoaPods
- * 6. Log project info
+ * 2. Prebuild the project
+ * 3. Log project info
  */
 export async function ejectAsync(
   projectRoot: string,
   { platforms, ...options }: EjectAsyncOptions
 ): Promise<void> {
-  if (!platforms?.length) {
-    throw new CommandError('At least one platform must be enabled when syncing');
-  }
+  assertPlatforms(platforms);
+  if (await maybeBailOnGitStatusAsync()) return;
 
   const isWindows = process.platform === 'win32';
   // Skip ejecting for iOS on Windows
@@ -65,21 +88,38 @@ export async function ejectAsync(
     log.newLine();
   }
 
-  if (await maybeBailOnGitStatusAsync()) return;
+  const results = await prebuildAsync(projectRoot, { platforms, ...options });
+  logNextSteps(results);
+}
+
+/**
+ * Entry point into the prebuild process, delegates to other helpers to perform various steps.
+ *
+ * 1. Create native projects (ios, android)
+ * 2. Install node modules
+ * 3. Apply config to native projects
+ * 4. Install CocoaPods
+ */
+export async function prebuildAsync(
+  projectRoot: string,
+  { platforms, ...options }: EjectAsyncOptions
+): Promise<PrebuildResults> {
+  assertPlatforms(platforms);
 
   const { exp, pkg } = await ensureConfigAsync({ projectRoot, platforms });
   const tempDir = temporary.directory();
 
-  const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync({
+  const {
+    hasNewProjectFiles,
+    needsPodInstall,
+    hasNewDependencies,
+  } = await createNativeProjectsFromTemplateAsync({
     projectRoot,
     exp,
     pkg,
     tempDir,
     platforms,
   });
-  // Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
-  // This will be used to prevent the node modules from being nuked every time.
-  const isSyncing = !hasNewProjectFiles;
 
   // Install node modules
   const shouldInstall = options?.install !== false;
@@ -91,12 +131,19 @@ export async function ejectAsync(
   });
 
   if (shouldInstall) {
-    await installNodeDependenciesAsync(projectRoot, packageManager, { clean: !isSyncing });
+    await installNodeDependenciesAsync(projectRoot, packageManager, {
+      // We delete the dependencies when new ones are added because native packages are more fragile.
+      // npm doesn't work well so we always run the cleaning step when npm is used in favor of yarn.
+      clean: hasNewDependencies || packageManager === 'npm',
+    });
   }
 
   // Apply Expo config to native projects
   const applyingAndroidConfigStep = CreateApp.logNewSection('Config syncing');
-  const managedConfig = await configureManagedProjectAsync({ projectRoot, platforms });
+  const managedConfig = await configureManagedProjectAsync({
+    projectRoot,
+    platforms,
+  });
   if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
     applyingAndroidConfigStep.stopAndPersist({
       symbol: '⚠️ ',
@@ -123,6 +170,26 @@ export async function ejectAsync(
     Object.keys(managedConfig._internal?.pluginHistory ?? {})
   );
 
+  return {
+    packageManager,
+    nodeInstall: options.install === false,
+    podInstall: !podsInstalled,
+    legacyUpdates: await usesOldExpoUpdatesAsync(projectRoot),
+    platforms,
+    hasNewProjectFiles,
+    hasAssetBundlePatterns: exp.hasOwnProperty('assetBundlePatterns'),
+  };
+}
+
+export function logNextSteps({
+  hasAssetBundlePatterns,
+  hasNewProjectFiles,
+  legacyUpdates,
+  platforms,
+  podInstall,
+  nodeInstall,
+  packageManager,
+}: PrebuildResults) {
   log.newLine();
   log.nested(`➡️  ${chalk.bold('Next steps')}`);
 
@@ -133,11 +200,11 @@ export async function ejectAsync(
   }
 
   // Log a warning about needing to install node modules
-  if (options?.install === false) {
+  if (nodeInstall) {
     const installCmd = packageManager === 'npm' ? 'npm install' : 'yarn';
     log.nested(`- ⚠️  Install node modules: ${log.chalk.bold(installCmd)}`);
   }
-  if (!podsInstalled) {
+  if (podInstall) {
     log.nested(
       `- 🍫 When CocoaPods is installed, initialize the project workspace: ${chalk.bold(
         'npx pod-install'
@@ -155,7 +222,7 @@ export async function ejectAsync(
     )}`
   );
 
-  if (exp.hasOwnProperty('assetBundlePatterns')) {
+  if (hasAssetBundlePatterns) {
     log.nested(
       `- 📁 The property ${chalk.bold(
         `assetBundlePatterns`
@@ -165,7 +232,7 @@ export async function ejectAsync(
     );
   }
 
-  if (await usesOldExpoUpdatesAsync(projectRoot)) {
+  if (legacyUpdates) {
     log.nested(
       `- 🚀 ${
         (terminalLink(
