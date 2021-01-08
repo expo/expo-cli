@@ -129,6 +129,11 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
     // Apply static json plugins, should be done after _internal
     configWithDefaultValues.exp = withConfigPlugins(configWithDefaultValues.exp);
 
+    if (!options.isModdedConfig) {
+      // @ts-ignore: Delete mods added by static plugins when they won't have a chance to be evaluated
+      delete configWithDefaultValues.exp.mods;
+    }
+
     if (options.isPublicConfig) {
       // Remove internal values with references to user's file paths from the public config.
       delete configWithDefaultValues.exp._internal;
