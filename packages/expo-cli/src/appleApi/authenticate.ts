@@ -177,7 +177,11 @@ async function _promptForAppleId({
     }
   );
 
-  await setPasswordAsync({ appleId: promptAppleId, appleIdPassword });
+  try {
+    await setPasswordAsync({ appleId: promptAppleId, appleIdPassword });
+  } catch (error) {
+    log(chalk.yellow('Unable to save Apple ID password to the local Keychain!'));
+  }
 
   return { appleId: promptAppleId, appleIdPassword };
 }
