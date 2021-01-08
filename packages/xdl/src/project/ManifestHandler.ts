@@ -14,6 +14,7 @@ import * as ProjectSettings from '../ProjectSettings';
 import * as UrlUtils from '../UrlUtils';
 import UserManager, { ANONYMOUS_USERNAME } from '../User';
 import UserSettings from '../UserSettings';
+import * as Versions from '../Versions';
 import * as Doctor from './Doctor';
 import * as ProjectUtils from './ProjectUtils';
 
@@ -201,7 +202,11 @@ export async function getManifestResponseAsync({
   };
   manifest.packagerOpts = packagerOpts;
   manifest.mainModuleName = mainModuleName;
-  manifest.env = getManifestEnvironment();
+  // Adding the env variables to the Expo manifest is unsafe.
+  // This feature is deprecated in SDK 41 forward.
+  if (manifest.sdkVersion && Versions.lteSdkVersion(manifest, '40.0.0')) {
+    manifest.env = getManifestEnvironment();
+  }
   // Add URLs to the manifest
   manifest.bundleUrl = await getBundleUrlAsync({
     projectRoot,
