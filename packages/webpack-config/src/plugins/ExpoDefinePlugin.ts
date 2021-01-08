@@ -1,5 +1,6 @@
 import { ExpoConfig } from '@expo/config';
 import { boolish } from 'getenv';
+import semver from 'semver';
 import { DefinePlugin as OriginalDefinePlugin } from 'webpack';
 
 import { getConfig, getMode, getPublicPaths } from '../env';
@@ -58,7 +59,10 @@ export function createClientEnvironment(
   const environment = getMode({ mode });
   const __DEV__ = environment !== 'production';
 
-  const ENV_VAR_REGEX = /^(EXPO_|REACT_NATIVE_|CI$)/i;
+  // Adding the env variables to the Expo manifest is unsafe.
+  // This feature is deprecated in SDK 41 forward.
+  const isEnvBindingSupported = lteSdkVersion(nativeAppManifest, '40.0.0');
+  const ENV_VAR_REGEX = isEnvBindingSupported ? /^(EXPO_|REACT_NATIVE_|CI$)/i : /^(CI$)/i;
   const SECRET_REGEX = /(PASSWORD|SECRET|TOKEN)/i;
 
   const shouldDefineKeys = boolish('EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS', false);
@@ -134,5 +138,21 @@ export default class DefinePlugin extends OriginalDefinePlugin {
     const environmentVariables = createClientEnvironment(mode, publicUrl, publicAppManifest);
 
     super(environmentVariables);
+  }
+}
+
+function lteSdkVersion(exp: Pick<ExpoConfig, 'sdkVersion'>, sdkVersion: string): boolean {
+  if (!exp.sdkVersion) {
+    return false;
+  }
+
+  if (exp.sdkVersion === 'UNVERSIONED') {
+    return false;
+  }
+
+  try {
+    return semver.lte(exp.sdkVersion, sdkVersion);
+  } catch (e) {
+    return false;
   }
 }
