@@ -58,7 +58,7 @@ export function createClientEnvironment(
   const environment = getMode({ mode });
   const __DEV__ = environment !== 'production';
 
-  const ENV_VAR_REGEX = /^(EXPO_|REACT_NATIVE_|CI$)/i;
+  const ENV_VAR_REGEX = /^(CI$)/i;
   const SECRET_REGEX = /(PASSWORD|SECRET|TOKEN)/i;
 
   const shouldDefineKeys = boolish('EXPO_WEBPACK_DEFINE_ENVIRONMENT_AS_KEYS', false);
