@@ -811,9 +811,9 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
   warnAdditionalSetupStep.stopAndPersist({
     symbol: '⚠️ ',
     text: chalk.yellow.bold(
-      `Your app includes ${chalk.bold(`${packagesToWarn.length}`)} package${
-        plural ? 's' : ''
-      } that require${plural ? '' : 's'} additional setup in order to run:`
+      `The app has ${packagesToWarn.length} package${plural ? 's' : ''} that require${
+        plural ? '' : 's'
+      } extra setup before building:`
     ),
   });
 
