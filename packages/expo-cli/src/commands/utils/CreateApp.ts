@@ -1,4 +1,5 @@
 import * as PackageManager from '@expo/package-manager';
+import chalk from 'chalk';
 import program from 'commander';
 import fs from 'fs-extra';
 import getenv from 'getenv';
@@ -93,13 +94,11 @@ export function resolvePackageManager(options: {
     packageManager = 'npm';
   }
   if (options.install) {
-    log.addNewLineIfNone();
     log(
       packageManager === 'yarn'
-        ? '🧶 Using Yarn to install packages. You can pass --npm to use npm instead.'
+        ? `🧶 Using Yarn to install packages. ${chalk.dim('Pass --npm to use npm instead.')}`
         : '📦 Using npm to install packages.'
     );
-    log.newLine();
   }
 
   return packageManager;
