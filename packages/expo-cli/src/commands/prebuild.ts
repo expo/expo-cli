@@ -19,12 +19,14 @@ export async function actionAsync(
     options.packageManager = 'npm';
   }
 
+  const platforms = platformsFromPlatform(platform);
+
   // Clear the native folders before syncing
-  await Eject.clearNativeFolder(projectDir, ['ios', 'android']);
+  await Eject.clearNativeFolder(projectDir, platforms);
 
   await Eject.prebuildAsync(projectDir, {
     ...options,
-    platforms: platformsFromPlatform(platform),
+    platforms,
   } as Eject.EjectAsyncOptions);
 }
 
