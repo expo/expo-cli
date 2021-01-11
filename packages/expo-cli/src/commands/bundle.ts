@@ -29,6 +29,16 @@ type Metadata = {
   fileMetadata: FileMetadata;
 };
 
+/**
+ * Create files with the following directory structure:
+ *  outputDir
+ *  ├── assets
+ *  │   └── *
+ *  ├── bundles
+ *  │   ├── android.js
+ *  │   └── ios.js
+ *  └── metadata.json
+ */
 export async function action(projectDir: string, options: Options) {
   log.warn(`⚠️  'expo bundle' is experimental and subject to breaking changes`);
   // Ensure the output directory is created
