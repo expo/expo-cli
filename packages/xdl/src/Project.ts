@@ -333,55 +333,6 @@ function shouldUseDevServer(exp: ExpoConfig) {
   return Versions.gteSdkVersion(exp, '40.0.0') || getenv.boolish('EXPO_USE_DEV_SERVER', false);
 }
 
-export async function buildBundlesAsync({
-  projectRoot,
-  outputDir,
-  exp,
-  options,
-}: {
-  projectRoot: string;
-  outputDir: string;
-  exp: ExpoConfig;
-  options: { publishOptions?: PublishOptions; isDev?: boolean };
-}) {
-  // make output dirs if not exists
-  const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
-  await fs.ensureDir(assetPathToWrite);
-  const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
-  await fs.ensureDir(bundlesPathToWrite);
-
-  const bundles = await buildPublishBundlesAsync(projectRoot, options.publishOptions, {
-    dev: options.isDev,
-    useDevServer: shouldUseDevServer(exp),
-  });
-  const iosBundle = bundles.ios.code;
-  const androidBundle = bundles.android.code;
-
-  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
-  const iosBundleUrl = `ios-${iosBundleHash}.js`;
-  const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
-
-  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
-  const androidBundleUrl = `android-${androidBundleHash}.js`;
-  const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
-
-  await writeArtifactSafelyAsync(projectRoot, null, iosJsPath, iosBundle);
-  await writeArtifactSafelyAsync(projectRoot, null, androidJsPath, androidBundle);
-
-  logger.global.info('Finished saving JS Bundles.');
-  return {
-    bundles,
-    androidBundleUrl,
-    androidBundleHash,
-    androidJsPath,
-    androidBundle,
-    iosBundleUrl,
-    iosBundleHash,
-    iosJsPath,
-    iosBundle,
-  };
-}
-
 /**
  * Apps exporting for self hosting will have the files created in the project directory the following way:
 .
@@ -409,26 +360,34 @@ export async function exportForAppHosting(
   const target = options.publishOptions?.target ?? defaultTarget;
 
   // build the bundles
-  const { exp, pkg, hooks } = await _getPublishExpConfigAsync(
-    projectRoot,
-    options.publishOptions ?? {}
-  );
-  const {
-    bundles,
-    androidBundleUrl,
-    androidBundleHash,
-    androidJsPath,
-    androidBundle,
-    iosBundleUrl,
-    iosBundleHash,
-    iosJsPath,
-    iosBundle,
-  } = await buildBundlesAsync({
-    projectRoot,
-    outputDir,
-    exp,
-    options,
+  // make output dirs if not exists
+  const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
+  await fs.ensureDir(assetPathToWrite);
+  const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
+  await fs.ensureDir(bundlesPathToWrite);
+
+  const publishOptions = options.publishOptions || {};
+  const { exp, pkg, hooks } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
+
+  const bundles = await buildPublishBundlesAsync(projectRoot, options.publishOptions, {
+    dev: options.isDev,
+    useDevServer: shouldUseDevServer(exp),
   });
+  const iosBundle = bundles.ios.code;
+  const androidBundle = bundles.android.code;
+
+  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
+  const iosBundleUrl = `ios-${iosBundleHash}.js`;
+  const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
+
+  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
+  const androidBundleUrl = `android-${androidBundleHash}.js`;
+  const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
+
+  await writeArtifactSafelyAsync(projectRoot, null, iosJsPath, iosBundle);
+  await writeArtifactSafelyAsync(projectRoot, null, androidJsPath, androidBundle);
+
+  logger.global.info('Finished saving JS Bundles.');
 
   const { assets } = await exportAssetsAsync({
     projectRoot,
