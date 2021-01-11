@@ -329,7 +329,7 @@ export async function runHook(hook: LoadedHook, hookOptions: Omit<HookArguments,
  * way), false if we should fall back to spawning it as a subprocess (supported for backwards
  * compatibility with SDK39 and older).
  */
-function shouldUseDevServer(exp: ExpoConfig) {
+export function shouldUseDevServer(exp: ExpoConfig) {
   return Versions.gteSdkVersion(exp, '40.0.0') || getenv.boolish('EXPO_USE_DEV_SERVER', false);
 }
 
@@ -838,7 +838,7 @@ async function _getPublishExpConfigAsync(
   };
 }
 
-async function buildPublishBundlesAsync(
+export async function buildPublishBundlesAsync(
   projectRoot: string,
   publishOptions: PublishOptions = {},
   bundleOptions: { dev?: boolean; useDevServer: boolean }
