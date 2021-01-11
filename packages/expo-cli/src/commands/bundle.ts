@@ -1,23 +1,37 @@
 import { getConfig, getDefaultTarget, ProjectTarget } from '@expo/config';
-import { buildBundlesAsync } from '@expo/xdl/build/Project';
+import { buildPublishBundlesAsync, shouldUseDevServer } from '@expo/xdl/build/Project';
+import { saveAssetsAsync } from '@expo/xdl/build/ProjectAssets';
 import { Command } from 'commander';
 import fs from 'fs-extra';
+import { uniqBy } from 'lodash';
 import path from 'path';
 
 import { SilentError } from '../CommandError';
 import log from '../log';
+import { Platform } from './eas-build/types';
 import * as CreateApp from './utils/CreateApp';
+
+type BundlePlatforms = 'android' | 'ios';
+const bundlePlatforms: BundlePlatforms[] = [Platform.Android, Platform.iOS];
 
 type Options = {
   outputDir: string;
-  dev: boolean;
   quiet: boolean;
   target?: ProjectTarget;
   force: boolean;
 };
+type PlatformMetadata = { bundle: string; assets: { [key in 'path' | 'ext']: string }[] };
+type FileMetadata = {
+  [key in BundlePlatforms]: PlatformMetadata;
+};
+type Metadata = {
+  version: number;
+  bundler: 'metro';
+  fileMetadata: FileMetadata;
+};
 
 export async function action(projectDir: string, options: Options) {
-  log.warn(`⚠️  the  expo bundle is experimental and subject to breaking changes`);
+  log.warn(`⚠️  'expo bundle' is experimental and subject to breaking changes`);
   // Ensure the output directory is created
   const outputPath = path.resolve(projectDir, options.outputDir);
   await fs.ensureDir(outputPath);
@@ -40,31 +54,74 @@ export async function action(projectDir: string, options: Options) {
   }
 
   const { exp } = getConfig(projectDir, { isPublicConfig: true });
-  await buildBundlesAsync({
-    projectRoot: projectDir,
-    outputDir: options.outputDir,
-    exp,
-    options: {
-      isDev: options.dev,
-      publishOptions: {
-        target: options.target ?? getDefaultTarget(projectDir),
-      },
-    },
+
+  const assetPathToWrite = path.resolve(projectDir, path.join(options.outputDir, 'assets'));
+  await fs.ensureDir(assetPathToWrite);
+  const bundlesPathToWrite = path.resolve(projectDir, path.join(options.outputDir, 'bundles'));
+  await fs.ensureDir(bundlesPathToWrite);
+
+  const bundles = await buildPublishBundlesAsync(
+    projectDir,
+    { target: options.target ?? getDefaultTarget(projectDir) },
+    {
+      //dev: options.isDev,
+      useDevServer: shouldUseDevServer(exp),
+    }
+  );
+
+  // write assets
+  const uniqueAssets = uniqBy(
+    [...bundles.android.assets, ...bundles.ios.assets],
+    asset => asset.hash
+  );
+  await saveAssetsAsync(projectDir, uniqueAssets, options.outputDir);
+
+  // write bundles
+  const bundlePaths = Object.fromEntries(
+    bundlePlatforms.map(platform => [platform, path.join('bundles', `${platform}.js`)])
+  );
+  await Promise.all(
+    bundlePlatforms.map(platform => {
+      return fs.writeFile(
+        path.resolve(projectDir, path.join(options.outputDir, bundlePaths[platform])),
+        bundles[platform].code
+      );
+    })
+  );
+
+  // build metada
+  const fileMetadata: {
+    [key in BundlePlatforms]: Partial<PlatformMetadata>;
+  } = { android: {}, ios: {} };
+  bundlePlatforms.forEach(platform => {
+    bundles[platform].assets.forEach((asset: { type: string; fileHashes: string[] }) => {
+      fileMetadata[platform].assets = asset.fileHashes.map(hash => {
+        return { path: path.join('assets', hash), ext: asset.type };
+      });
+    });
+
+    fileMetadata[platform].bundle = bundlePaths[platform];
   });
-  log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
+  const metadata: Metadata = {
+    version: 0,
+    bundler: 'metro',
+    fileMetadata: fileMetadata as FileMetadata,
+  };
+  fs.writeFileSync(path.resolve(options.outputDir, 'metadata.json'), JSON.stringify(metadata));
+
+  log(`Bundling was successful. Your files can be found in ${options.outputDir}`);
 }
 
 export default function (program: Command) {
   program
     .command('bundle [path]')
-    .description('Export the static files of the app for hosting it on a web server')
-    .helpGroup('core')
+    .description('Experimental: Build the bundles for an app')
+    .helpGroup('experimental')
     .option(
       '--output-dir <dir>',
-      'The directory to export the static files to. Default directory is `dist`',
+      'The directory in which save the bundles. Default directory is `dist`',
       'dist'
     )
-    .option('--dev', 'Configure static files for developing locally using a non-https server')
     .option('-f, --force', 'Overwrite files in output directory without prompting for confirmation')
     .option('-q, --quiet', 'Suppress verbose output.')
     .option(
