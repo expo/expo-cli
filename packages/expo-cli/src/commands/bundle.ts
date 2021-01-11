@@ -11,8 +11,7 @@ import log from '../log';
 import { Platform } from './eas-build/types';
 import * as CreateApp from './utils/CreateApp';
 
-type BundlePlatforms = 'android' | 'ios';
-const bundlePlatforms: BundlePlatforms[] = [Platform.Android, Platform.iOS];
+const bundlePlatforms = [Platform.Android, Platform.iOS];
 
 type Options = {
   outputDir: string;
@@ -22,7 +21,7 @@ type Options = {
 };
 type PlatformMetadata = { bundle: string; assets: { [key in 'path' | 'ext']: string }[] };
 type FileMetadata = {
-  [key in BundlePlatforms]: PlatformMetadata;
+  [key in Platform]: PlatformMetadata;
 };
 type Metadata = {
   version: number;
@@ -64,19 +63,18 @@ export async function action(projectDir: string, options: Options) {
     projectDir,
     { target: options.target ?? getDefaultTarget(projectDir) },
     {
-      //dev: options.isDev,
       useDevServer: shouldUseDevServer(exp),
     }
   );
 
-  // write assets
+  // Write assets
   const uniqueAssets = uniqBy(
     [...bundles.android.assets, ...bundles.ios.assets],
     asset => asset.hash
   );
   await saveAssetsAsync(projectDir, uniqueAssets, options.outputDir);
 
-  // write bundles
+  // Write bundles
   const bundlePaths = Object.fromEntries(
     bundlePlatforms.map(platform => [platform, path.join('bundles', `${platform}.js`)])
   );
@@ -89,9 +87,9 @@ export async function action(projectDir: string, options: Options) {
     })
   );
 
-  // build metada
+  // Build metadata.json
   const fileMetadata: {
-    [key in BundlePlatforms]: Partial<PlatformMetadata>;
+    [key in Platform]: Partial<PlatformMetadata>;
   } = { android: {}, ios: {} };
   bundlePlatforms.forEach(platform => {
     bundles[platform].assets.forEach((asset: { type: string; fileHashes: string[] }) => {
@@ -99,7 +97,6 @@ export async function action(projectDir: string, options: Options) {
         return { path: path.join('assets', hash), ext: asset.type };
       });
     });
-
     fileMetadata[platform].bundle = bundlePaths[platform];
   });
   const metadata: Metadata = {
