@@ -195,36 +195,36 @@ export function logNextSteps({
 
   if (WarningAggregator.hasWarningsIOS() || WarningAggregator.hasWarningsAndroid()) {
     log.nested(
-      `- 👆 Review the logs above and look for any warnings (⚠️ ) that might need follow-up.`
+      `\u203A 👆 Review the logs above and look for any warnings (⚠️ ) that might need follow-up.`
     );
   }
 
   // Log a warning about needing to install node modules
   if (nodeInstall) {
     const installCmd = packageManager === 'npm' ? 'npm install' : 'yarn';
-    log.nested(`- ⚠️  Install node modules: ${log.chalk.bold(installCmd)}`);
+    log.nested(`\u203A ⚠️  Install node modules: ${log.chalk.bold(installCmd)}`);
   }
   if (podInstall) {
     log.nested(
-      `- 🍫 When CocoaPods is installed, initialize the project workspace: ${chalk.bold(
+      `\u203A 🍫 When CocoaPods is installed, initialize the project workspace: ${chalk.bold(
         'npx pod-install'
       )}`
     );
   }
   log.nested(
-    `- 💡 You may want to run ${chalk.bold(
+    `\u203A 💡 You may want to run ${chalk.bold(
       'npx @react-native-community/cli doctor'
     )} to help install any tools that your app may need to run your native projects.`
   );
   log.nested(
-    `- 🔑 Download your Android keystore (if you're not sure if you need to, just run the command and see): ${chalk.bold(
+    `\u203A 🔑 Download your Android keystore (if you're not sure if you need to, just run the command and see): ${chalk.bold(
       'expo fetch:android:keystore'
     )}`
   );
 
   if (hasAssetBundlePatterns) {
     log.nested(
-      `- 📁 The property ${chalk.bold(
+      `\u203A 📁 The property ${chalk.bold(
         `assetBundlePatterns`
       )} does not have the same effect in the bare workflow. ${log.chalk.dim(
         learnMore('https://docs.expo.io/bare/updating-your-app/#embedding-assets')
@@ -234,7 +234,7 @@ export function logNextSteps({
 
   if (legacyUpdates) {
     log.nested(
-      `- 🚀 ${
+      `\u203A 🚀 ${
         (terminalLink(
           'expo-updates',
           'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
@@ -256,14 +256,16 @@ export function logNextSteps({
     );
 
     if (platforms.includes('ios')) {
-      log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
+      log.nested(`\u203A ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
     }
 
     if (platforms.includes('android')) {
-      log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
+      log.nested(
+        `\u203A ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`
+      );
     }
 
-    log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
+    log.nested(`\u203A ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
   }
 }
 
@@ -366,7 +368,7 @@ async function ensureConfigAsync({
 
   if (exp.entryPoint) {
     delete exp.entryPoint;
-    log(`- expo.entryPoint is not needed and has been removed.`);
+    log(`\u203A expo.entryPoint is not needed and has been removed.`);
   }
 
   // Read config again because prompting for bundle id or package name may have mutated the results.
@@ -423,13 +425,13 @@ function writeMetroConfig({
   } catch (e) {
     updatingMetroConfigStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: chalk.red('Metro bundler configuration not applied:'),
+      text: chalk.yellow('Metro bundler configuration not applied:'),
     });
-    log.nested(`- ${e.message}`);
+    log.nested(`\u203A ${e.message}`);
     log.nested(
-      `- You will need to add the ${chalk.bold(
+      `\u203A You will need to add the ${chalk.bold(
         'hashAssetFiles'
-      )} plugin to your Metro configuration. ${log.chalk.dim(
+      )} plugin to your Metro configuration.\n  ${log.chalk.dim(
         learnMore('https://docs.expo.io/bare/installing-updates/')
       )}`
     );
@@ -555,7 +557,7 @@ async function updatePackageJSONAsync({
   );
   if (removedPkgMain) {
     log(
-      `- Removed ${chalk.bold(
+      `\u203A Removed ${chalk.bold(
         `"main": "${removedPkgMain}"`
       )} from package.json because we recommend using index.js as main instead.`
     );
@@ -808,15 +810,15 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
 
   warnAdditionalSetupStep.stopAndPersist({
     symbol: '⚠️ ',
-    text: chalk.red(
-      `Your app includes ${chalk.bold(`${packagesToWarn.length}`)} package${
-        plural ? 's' : ''
-      } that require${plural ? '' : 's'} additional setup in order to run:`
+    text: chalk.yellow.bold(
+      `The app has ${packagesToWarn.length} package${plural ? 's' : ''} that require${
+        plural ? '' : 's'
+      } extra setup before building:`
     ),
   });
 
   packagesToWarn.forEach(pkgName => {
-    log.nested(`- ${chalk.bold(pkgName)}: ${pkgsWithExtraSetup[pkgName]}`);
+    log.nested(`\u203A ${chalk.bold(pkgName)}: ${pkgsWithExtraSetup[pkgName]}`);
   });
 }
 
