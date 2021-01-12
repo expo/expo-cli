@@ -1,6 +1,5 @@
 import { getConfig, getDefaultTarget, ProjectTarget } from '@expo/config';
-import { buildPublishBundlesAsync, shouldUseDevServer } from '@expo/xdl/build/Project';
-import { saveAssetsAsync } from '@expo/xdl/build/ProjectAssets';
+import { Project, ProjectAssets } from '@expo/xdl';
 import { Command } from 'commander';
 import fs from 'fs-extra';
 import uniqBy from 'lodash/uniqBy';
@@ -19,7 +18,7 @@ type Options = {
   target?: ProjectTarget;
   force: boolean;
 };
-type PlatformMetadata = { bundle: string; assets: { path: string; ext: string; }[] };
+type PlatformMetadata = { bundle: string; assets: { path: string; ext: string }[] };
 type FileMetadata = {
   [key in Platform]: PlatformMetadata;
 };
@@ -69,11 +68,11 @@ export async function action(projectDir: string, options: Options) {
   const bundlesPathToWrite = path.resolve(projectDir, path.join(options.outputDir, 'bundles'));
   await fs.ensureDir(bundlesPathToWrite);
 
-  const bundles = await buildPublishBundlesAsync(
+  const bundles = await Project.buildPublishBundlesAsync(
     projectDir,
     { target: options.target ?? getDefaultTarget(projectDir) },
     {
-      useDevServer: shouldUseDevServer(exp),
+      useDevServer: Project.shouldUseDevServer(exp),
     }
   );
 
@@ -82,7 +81,7 @@ export async function action(projectDir: string, options: Options) {
     [...bundles.android.assets, ...bundles.ios.assets],
     asset => asset.hash
   );
-  await saveAssetsAsync(projectDir, uniqueAssets, options.outputDir);
+  await ProjectAssets.saveAssetsAsync(projectDir, uniqueAssets, options.outputDir);
 
   // Write bundles
   const bundlePaths = Object.fromEntries(
