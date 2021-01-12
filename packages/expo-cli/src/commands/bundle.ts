@@ -23,7 +23,7 @@ type FileMetadata = {
   [key in Platform]: PlatformMetadata;
 };
 type Metadata = {
-  version: number;
+  version: 0;
   bundler: 'metro';
   fileMetadata: FileMetadata;
 };
