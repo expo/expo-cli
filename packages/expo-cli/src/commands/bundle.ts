@@ -19,7 +19,7 @@ type Options = {
   target?: ProjectTarget;
   force: boolean;
 };
-type PlatformMetadata = { bundle: string; assets: { [key in 'path' | 'ext']: string }[] };
+type PlatformMetadata = { bundle: string; assets: { path: string; ext: string; }[] };
 type FileMetadata = {
   [key in Platform]: PlatformMetadata;
 };
