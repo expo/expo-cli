@@ -3,7 +3,7 @@ import { buildPublishBundlesAsync, shouldUseDevServer } from '@expo/xdl/build/Pr
 import { saveAssetsAsync } from '@expo/xdl/build/ProjectAssets';
 import { Command } from 'commander';
 import fs from 'fs-extra';
-import { uniqBy } from 'lodash';
+import uniqBy from 'lodash/uniqBy';
 import path from 'path';
 
 import { SilentError } from '../CommandError';
