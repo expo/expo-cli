@@ -4,7 +4,7 @@ import {
   getGoogleMobileAdsAppId,
   getGoogleMobileAdsAutoInit,
   setGoogleMobileAdsConfig,
-} from '../GoogleMobileAds';
+} from '../AdMob';
 import { getMainApplicationOrThrow, readAndroidManifestAsync } from '../Manifest';
 
 const fixturesPath = resolve(__dirname, 'fixtures');

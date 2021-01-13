@@ -5,6 +5,7 @@ import { ConfigPlugin } from '../Plugin.types';
 import * as AndroidConfig from '../android';
 import * as IOSConfig from '../ios';
 import { withPlugins } from './core-plugins';
+import withAdMob from './unversioned/expo-ads-admob';
 import withBranch from './unversioned/expo-branch';
 import withFacebook from './unversioned/expo-facebook';
 import withNotifications from './unversioned/expo-notifications';
@@ -79,7 +80,6 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.Orientation.withOrientation,
     AndroidConfig.Permissions.withPermissions,
     AndroidConfig.UserInterfaceStyle.withUiModeManifest,
-    AndroidConfig.GoogleMobileAds.withGoogleMobileAdsConfig,
     AndroidConfig.GoogleMapsApiKey.withGoogleMapsApiKey,
     AndroidConfig.IntentFilters.withAndroidIntentFilters,
 
@@ -110,6 +110,7 @@ export const withExpoVersionedSDKPlugins: ConfigPlugin<{ expoUsername: string | 
   { expoUsername }
 ) => {
   return withPlugins(config, [
+    withAdMob,
     withNotifications,
     [withUpdates, { expoUsername }],
     withBranch,

@@ -11,10 +11,7 @@ import {
 const META_APPLICATION_ID = 'com.google.android.gms.ads.APPLICATION_ID';
 const META_DELAY_APP_MEASUREMENT_INIT = 'com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT';
 
-export const withGoogleMobileAdsConfig = createAndroidManifestPlugin(
-  setGoogleMobileAdsConfig,
-  'withGoogleMobileAdsConfig'
-);
+export const withAdMob = createAndroidManifestPlugin(setAdMobConfig, 'withAdMob');
 
 export function getGoogleMobileAdsAppId(config: Pick<ExpoConfig, 'android'>) {
   return config.android?.config?.googleMobileAdsAppId ?? null;
@@ -24,7 +21,7 @@ export function getGoogleMobileAdsAutoInit(config: Pick<ExpoConfig, 'android'>) 
   return config.android?.config?.googleMobileAdsAutoInit ?? false;
 }
 
-export function setGoogleMobileAdsConfig(
+export function setAdMobConfig(
   config: Pick<ExpoConfig, 'android'>,
   androidManifest: AndroidManifest
 ) {
