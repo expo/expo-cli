@@ -9,7 +9,7 @@ import {
 } from '../../ios/SplashScreen';
 import { wrapWithWarning } from '../../utils/deprecation';
 import { createRunOncePlugin } from '../core-plugins';
-import { withStaticPlugin } from '../static-plugin';
+import { withStaticPlugin } from '../static-plugins';
 
 const packageName = 'expo-splash-screen';
 

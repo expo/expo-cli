@@ -6,7 +6,7 @@ import {
 import { getBranchApiKey as getBranchIos, withBranch as withBranchIOS } from '../../ios/Branch';
 import { wrapWithWarning } from '../../utils/deprecation';
 import { createRunOncePlugin } from '../core-plugins';
-import { withStaticPlugin } from '../static-plugin';
+import { withStaticPlugin } from '../static-plugins';
 
 const packageName = 'expo-branch';
 

@@ -8,7 +8,7 @@ import {
 } from '../../ios/Facebook';
 import { wrapWithWarning } from '../../utils/deprecation';
 import { createRunOncePlugin } from '../core-plugins';
-import { withStaticPlugin } from '../static-plugin';
+import { withStaticPlugin } from '../static-plugins';
 
 // Local unversioned facebook plugin
 

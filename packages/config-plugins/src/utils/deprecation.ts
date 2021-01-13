@@ -27,7 +27,7 @@ export function wrapWithWarning<T>({
       if (shouldWarn(config)) {
         WarningAggregator.addWarningGeneral(
           'deprecated-plugin',
-          `Unversioned "${unversionedName}" plugin is deprecated, please update your Expo config to use the versioned plugin "${packageName}". Guide ${chalk.underline(
+          `Unversioned "${unversionedName}" plugin is deprecated, please update your Expo config to use the versioned plugin "${packageName}". Learn more ${chalk.underline(
             updateUrl
           )}`
         );
