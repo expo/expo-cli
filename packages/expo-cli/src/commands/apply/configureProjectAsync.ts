@@ -6,6 +6,7 @@ import {
   StaticPlugin,
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
+  withExpoUnversionedSDKPlugins,
   withStaticPlugin,
 } from '@expo/config-plugins';
 import { UserManager } from '@expo/xdl';
@@ -84,6 +85,7 @@ export default async function configureManagedProjectAsync({
   // Add all built-in plugins first because they should take
   // priority over the unversioned plugins.
   config = withManagedPlugins(config);
+  config = withExpoUnversionedSDKPlugins(config);
 
   if (platforms.includes('ios')) {
     // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.

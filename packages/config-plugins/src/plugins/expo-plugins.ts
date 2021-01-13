@@ -110,6 +110,6 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
   ]);
 };
 
-export const withUnversionedSDKPlugins: ConfigPlugin = config => {
+export const withExpoUnversionedSDKPlugins: ConfigPlugin = config => {
   return withPlugins(config, [withBranch, withFacebook, withSplashScreen]);
 };

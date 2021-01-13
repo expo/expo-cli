@@ -8,7 +8,11 @@ import { ExportedConfig } from '../../Plugin.types';
 import { readXMLAsync } from '../../android/XML';
 import { withBranch } from '../../ios/Branch';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
-import { withExpoAndroidPlugins, withExpoIOSPlugins } from '../expo-plugins';
+import {
+  withExpoAndroidPlugins,
+  withExpoIOSPlugins,
+  withExpoUnversionedSDKPlugins,
+} from '../expo-plugins';
 import { compileModsAsync, evalModsAsync } from '../mod-compiler';
 import rnFixture from './fixtures/react-native-project';
 
@@ -248,6 +252,7 @@ describe('built-in plugins', () => {
       package: 'com.bacon.todo',
       expoUsername: 'bacon',
     });
+    config = withExpoUnversionedSDKPlugins(config);
 
     // Apply mod
     config = await compileModsAsync(config, { projectRoot: '/app' });
