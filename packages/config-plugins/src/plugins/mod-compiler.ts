@@ -17,6 +17,29 @@ export async function compileModsAsync(
   return await evalModsAsync(config, props);
 }
 
+function sortMods(commands: [string, any][], order: string[]): [string, any][] {
+  const allKeys = commands.map(([key]) => key);
+  const completeOrder = [...new Set([...order, ...allKeys])];
+  const sorted: [string, any][] = [];
+  while (completeOrder.length) {
+    const group = completeOrder.shift()!;
+    const commandSet = commands.find(([key]) => key === group);
+    if (commandSet) {
+      sorted.push(commandSet);
+    }
+  }
+  return sorted;
+}
+
+const orders: Record<string, string[]> = {
+  ios: [
+    // dangerous runs first
+    'dangerous',
+    // run the XcodeProject mod second because many plugins attempt to read from it.
+    'xcodeproj',
+  ],
+  android: ['dangerous'],
+};
 /**
  * A generic plugin compiler.
  *
@@ -30,13 +53,11 @@ export async function evalModsAsync(
     if (platforms && !platforms.includes(platformName as any)) {
       continue;
     }
-    const entries = Object.entries(platform);
+
+    let entries = Object.entries(platform);
     if (entries.length) {
-      const dangerousIndex = entries.findIndex(([modName]) => modName === 'dangerous');
-      if (dangerousIndex > -1) {
-        // Move dangerous item to the first position if it exists, this ensures that all dangerous code runs first.
-        entries.splice(0, 0, entries.splice(dangerousIndex, 1)[0]);
-      }
+      // Move dangerous item to the first position if it exists, this ensures that all dangerous code runs first.
+      entries = sortMods(entries, orders[platformName]!);
 
       const platformProjectRoot = path.join(projectRoot, platformName);
       const projectName =

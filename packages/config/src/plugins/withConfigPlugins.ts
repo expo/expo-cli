@@ -1,6 +1,5 @@
-import { withPlugins } from '@expo/config-plugins';
+import { ConfigPlugin, withPlugins } from '@expo/config-plugins';
 
-import { ConfigPlugin } from '../Config.types';
 import { serializeAfterStaticPlugins } from '../Serialize';
 
 /**

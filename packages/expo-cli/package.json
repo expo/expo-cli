@@ -108,7 +108,7 @@
     "prompts": "^2.3.2",
     "qrcode-terminal": "0.11.0",
     "react-dev-utils": "~11.0.1",
-    "semver": "5.5.0",
+    "semver": "7.3.2",
     "slash": "1.0.0",
     "strip-ansi": "^6.0.0",
     "tar": "^6.0.5",

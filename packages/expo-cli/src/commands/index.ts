@@ -16,6 +16,7 @@ const COMMANDS = [
   require('./install'),
   require('./login'),
   require('./logout'),
+  require('./prebuild'),
   require('./prepare-detached-build'),
   require('./publish'),
   require('./publish-info'),

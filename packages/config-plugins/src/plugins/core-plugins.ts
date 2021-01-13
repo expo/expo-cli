@@ -7,21 +7,24 @@ import {
   ExportedConfigWithProps,
   Mod,
   ModPlatform,
+  StaticPlugin,
 } from '../Plugin.types';
 import { assert } from '../utils/errors';
 import { addHistoryItem, getHistoryItem, PluginHistoryItem } from '../utils/history';
-import { StaticPlugin } from './plugin-resolver';
-import { withStaticPlugin } from './static-plugin';
+import { withStaticPlugin } from './static-plugins';
+
 const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 /**
- * Plugin to chain a list of plugins together.
+ * Resolves a list of plugins.
  *
  * @param config exported config
  * @param plugins list of config config plugins to apply to the exported config
  */
-export const withPlugins: ConfigPlugin<(StaticPlugin | string)[]> = (config, plugins) => {
-  assert(Array.isArray(plugins), 'withPlugins expected a valid array');
+export const withPlugins: ConfigPlugin<(StaticPlugin | ConfigPlugin | string)[]> = (
+  config,
+  plugins
+) => {
   return plugins.reduce((prev, plugin) => {
     return withStaticPlugin(prev, { plugin });
   }, config);

@@ -1,7 +1,7 @@
-import { ConfigPlugin, ModConfig } from '@expo/config-plugins';
+import { ModConfig } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
 
-export { ExpoConfig, ModConfig, ConfigPlugin };
+export { ExpoConfig };
 
 export type PackageJSONConfig = Record<string, any>;
 
