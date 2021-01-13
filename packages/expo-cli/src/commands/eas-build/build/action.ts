@@ -246,7 +246,7 @@ async function waitForBuildEndAsync(
   { timeoutSec = 1800, intervalSec = 30 } = {}
 ): Promise<(Build | null)[]> {
   const client = ApiV2.clientForUser(commandCtx.user);
-  log(`Waiting for build to complete. ${chalk.dim`You can press Ctrl+C to exit.`}`);
+  log('Waiting for build to complete. You can press Ctrl+C to exit.');
   const spinner = ora().start();
   let time = new Date().getTime();
   const endTime = time + timeoutSec * 1000;

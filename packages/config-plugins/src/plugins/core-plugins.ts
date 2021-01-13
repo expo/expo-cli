@@ -25,6 +25,10 @@ export const withPlugins: ConfigPlugin<(StaticPlugin | ConfigPlugin | string)[]>
   config,
   plugins
 ) => {
+  assert(
+    Array.isArray(plugins),
+    'withPlugins expected a valid array of plugins or plugin module paths'
+  );
   return plugins.reduce((prev, plugin) => {
     return withStaticPlugin(prev, { plugin });
   }, config);

@@ -13,7 +13,7 @@ export { WarningAggregator, History };
 export {
   withExpoIOSPlugins,
   withExpoAndroidPlugins,
-  withThirdPartyPlugins,
+  withUnversionedSDKPlugins,
 } from './plugins/expo-plugins';
 
 /**

@@ -47,7 +47,6 @@
     "xml2js": "^0.4.23"
   },
   "devDependencies": {
-    "@types/find-up": "^4.0.0",
     "@types/fs-extra": "^9.0.1",
     "@types/xml2js": "^0.4.5",
     "@types/find-up": "^4.0.0",
