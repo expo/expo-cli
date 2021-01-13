@@ -33,19 +33,19 @@ describe(withStaticPlugin, () => {
         // @ts-ignore -- invalid type
         plugin: true,
       })
-    ).toThrow('Static plugin is an unexpected type: boolean');
+    ).toThrow('Plugin is an unexpected type: boolean');
     expect(() =>
       withStaticPlugin(config, {
         // @ts-ignore -- invalid type
         plugin: [true],
       })
-    ).toThrow('Static plugin is an unexpected type: boolean');
+    ).toThrow('Plugin is an unexpected type: boolean');
     expect(() =>
       withStaticPlugin(config, {
         // @ts-ignore -- invalid type
         plugin: {},
       })
-    ).toThrow('Static plugin is an unexpected type: object');
+    ).toThrow('Plugin is an unexpected type: object');
   });
   it(`asserts wrong number of arguments`, () => {
     const config = withInternal(
@@ -66,9 +66,10 @@ describe(withStaticPlugin, () => {
     );
   });
   it(`uses internal projectRoot`, () => {
-    let config = {
+    let config: ExpoConfig = {
       name: 'foo',
       slug: 'foo',
+      _internal: { projectRoot: '.' },
     };
 
     config = withPlugins(config, [
@@ -93,9 +94,10 @@ describe(withStaticPlugin, () => {
   });
 
   it(`passes props to plugin`, () => {
-    let config = {
+    let config: ExpoConfig = {
       name: 'foo',
       slug: 'foo',
+      _internal: { projectRoot: '.' },
     };
 
     config = withPlugins(config, [
@@ -121,6 +123,9 @@ describe(withStaticPlugin, () => {
         beta: true,
         modified: true,
         foobar: true,
+      },
+      _internal: {
+        projectRoot: '.',
       },
     });
   });
