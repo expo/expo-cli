@@ -66,9 +66,10 @@ describe(withStaticPlugin, () => {
     );
   });
   it(`uses internal projectRoot`, () => {
-    let config = {
+    let config: ExpoConfig = {
       name: 'foo',
       slug: 'foo',
+      _internal: { projectRoot: '.' },
     };
 
     config = withPlugins(config, [
@@ -96,7 +97,7 @@ describe(withStaticPlugin, () => {
     let config: ExpoConfig = {
       name: 'foo',
       slug: 'foo',
-      _internal: { projectRoot },
+      _internal: { projectRoot: '.' },
     };
 
     config = withPlugins(config, [
@@ -122,6 +123,9 @@ describe(withStaticPlugin, () => {
         beta: true,
         modified: true,
         foobar: true,
+      },
+      _internal: {
+        projectRoot: '.',
       },
     });
   });
