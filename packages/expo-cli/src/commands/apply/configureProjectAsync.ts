@@ -42,7 +42,7 @@ const expoManagedVersionedPlugins = [
   // 'expo-splash-screen',
   // 'expo-facebook',
   // 'expo-branch',
-  'expo-updates',
+  // 'expo-updates',
   'expo-ads-admob',
   'expo-apple-authentication',
   'expo-document-picker',
@@ -82,22 +82,21 @@ export default async function configureManagedProjectAsync({
     isModdedConfig: true,
   });
 
+  const expoUsername =
+    process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
   // Add all built-in plugins first because they should take
   // priority over the unversioned plugins.
-  config = withExpoVersionedSDKPlugins(config);
+  config = withExpoVersionedSDKPlugins(config, { expoUsername });
   config = withManagedPlugins(config);
 
   if (platforms.includes('ios')) {
     // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
     const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
     config.ios!.bundleIdentifier = bundleIdentifier;
-    const expoUsername =
-      process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
 
     // Add all built-in plugins
     config = withExpoIOSPlugins(config, {
       bundleIdentifier,
-      expoUsername,
     });
   }
 
@@ -105,13 +104,10 @@ export default async function configureManagedProjectAsync({
     // Check package before reading the config because it may mutate the config if the user is prompted to define it.
     const packageName = await getOrPromptForPackage(projectRoot);
     config.android!.package = packageName;
-    const expoUsername =
-      process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
 
     // Add all built-in plugins
     config = withExpoAndroidPlugins(config, {
       package: packageName,
-      expoUsername,
     });
   }
 

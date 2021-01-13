@@ -8,6 +8,7 @@ import { withPlugins } from './core-plugins';
 import withBranch from './unversioned/expo-branch';
 import withFacebook from './unversioned/expo-facebook';
 import withSplashScreen from './unversioned/expo-splash-screen';
+import withUpdates from './unversioned/expo-updates';
 
 /**
  * Config plugin to apply all of the custom Expo iOS config plugins we support by default.
@@ -15,8 +16,7 @@ import withSplashScreen from './unversioned/expo-splash-screen';
  */
 export const withExpoIOSPlugins: ConfigPlugin<{
   bundleIdentifier: string;
-  expoUsername: string | null;
-}> = (config, { bundleIdentifier, expoUsername }) => {
+}> = (config, { bundleIdentifier }) => {
   // Set the bundle ID ahead of time.
   if (!config.ios) config.ios = {};
   config.ios.bundleIdentifier = bundleIdentifier;
@@ -34,7 +34,6 @@ export const withExpoIOSPlugins: ConfigPlugin<{
     IOSConfig.Version.withBuildNumber,
     IOSConfig.Version.withVersion,
     IOSConfig.Google.withGoogleServicesFile,
-    [IOSConfig.Updates.withUpdates, { expoUsername }],
     // Entitlements
     IOSConfig.Entitlements.withAppleSignInEntitlement,
     IOSConfig.Entitlements.withAccessesContactNotes,
@@ -55,8 +54,7 @@ export const withExpoIOSPlugins: ConfigPlugin<{
  */
 export const withExpoAndroidPlugins: ConfigPlugin<{
   package: string;
-  expoUsername: string | null;
-}> = (config, { expoUsername, ...props }) => {
+}> = (config, props) => {
   // Set the package name ahead of time.
   if (!config.android) config.android = {};
   config.android.package = props.package;
@@ -84,7 +82,6 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.GoogleMobileAds.withGoogleMobileAdsConfig,
     AndroidConfig.GoogleMapsApiKey.withGoogleMapsApiKey,
     AndroidConfig.IntentFilters.withAndroidIntentFilters,
-    [AndroidConfig.Updates.withUpdates, { expoUsername }],
 
     // MainActivity.*
     AndroidConfig.UserInterfaceStyle.withUiModeMainActivity,
@@ -110,6 +107,14 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
   ]);
 };
 
-export const withExpoVersionedSDKPlugins: ConfigPlugin = config => {
-  return withPlugins(config, [withBranch, withFacebook, withSplashScreen]);
+export const withExpoVersionedSDKPlugins: ConfigPlugin<{ expoUsername: string | null }> = (
+  config,
+  { expoUsername }
+) => {
+  return withPlugins(config, [
+    [withUpdates, { expoUsername }],
+    withBranch,
+    withFacebook,
+    withSplashScreen,
+  ]);
 };

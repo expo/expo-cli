@@ -109,7 +109,6 @@ describe('built-in plugins', () => {
 
     config = withExpoIOSPlugins(config, {
       bundleIdentifier: 'com.bacon.todo',
-      expoUsername: 'bacon',
     });
     // Apply mod
     config = await compileModsAsync(config, { projectRoot: '/app' });
@@ -246,13 +245,11 @@ describe('built-in plugins', () => {
 
     config = withExpoIOSPlugins(config, {
       bundleIdentifier: 'com.bacon.todo',
-      expoUsername: 'bacon',
     });
     config = withExpoAndroidPlugins(config, {
       package: 'com.bacon.todo',
-      expoUsername: 'bacon',
     });
-    config = withExpoVersionedSDKPlugins(config);
+    config = withExpoVersionedSDKPlugins(config, { expoUsername: 'bacon' });
 
     // Apply mod
     config = await compileModsAsync(config, { projectRoot: '/app' });
