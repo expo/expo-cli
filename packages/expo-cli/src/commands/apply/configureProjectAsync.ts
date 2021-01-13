@@ -39,12 +39,12 @@ export const expoManagedPlugins = [
 // Plugins that need to be automatically applied, but also get applied by expo-cli if the versioned plugin isn't available.
 // These are split up because the user doesn't need to be prompted to setup these packages.
 const expoManagedVersionedPlugins = [
-  'expo-splash-screen',
+  // 'expo-splash-screen',
+  // 'expo-facebook',
+  // 'expo-branch',
   'expo-updates',
-  'expo-facebook',
   'expo-ads-admob',
   'expo-apple-authentication',
-  'expo-branch',
   'expo-document-picker',
   'expo-firebase-analytics',
   'expo-firebase-core',
