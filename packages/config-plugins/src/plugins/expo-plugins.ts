@@ -7,6 +7,7 @@ import * as IOSConfig from '../ios';
 import { withPlugins } from './core-plugins';
 import withBranch from './unversioned/expo-branch';
 import withFacebook from './unversioned/expo-facebook';
+import withNotifications from './unversioned/expo-notifications';
 import withSplashScreen from './unversioned/expo-splash-screen';
 import withUpdates from './unversioned/expo-updates';
 
@@ -77,7 +78,6 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.Scheme.withScheme,
     AndroidConfig.Orientation.withOrientation,
     AndroidConfig.Permissions.withPermissions,
-    AndroidConfig.Notifications.withNotificationManifest,
     AndroidConfig.UserInterfaceStyle.withUiModeManifest,
     AndroidConfig.GoogleMobileAds.withGoogleMobileAdsConfig,
     AndroidConfig.GoogleMapsApiKey.withGoogleMapsApiKey,
@@ -97,10 +97,8 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.NavigationBar.withNavigationBar,
     AndroidConfig.StatusBar.withStatusBar,
     AndroidConfig.PrimaryColor.withPrimaryColor,
-    AndroidConfig.Notifications.withNotificationIconColor,
 
     AndroidConfig.Icon.withIcons,
-    AndroidConfig.Notifications.withNotificationIcons,
     // If we renamed the package, we should also move it around and rename it in source files
     // Added last to ensure this plugin runs first. Out of tree solutions will mistakenly resolve the package incorrectly otherwise.
     AndroidConfig.Package.withPackageRefactor,
@@ -112,6 +110,7 @@ export const withExpoVersionedSDKPlugins: ConfigPlugin<{ expoUsername: string | 
   { expoUsername }
 ) => {
   return withPlugins(config, [
+    withNotifications,
     [withUpdates, { expoUsername }],
     withBranch,
     withFacebook,
