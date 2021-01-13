@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import {
   ConfigurationSectionEntry,
   findFirstNativeTarget,
+  findNativeTargetByName,
   getBuildConfigurationForId,
   getPbxproj,
   getProjectSection,
@@ -11,16 +12,19 @@ import {
 } from './utils/Xcodeproj';
 
 type ProvisioningProfileSettings = {
+  targetName?: string;
   appleTeamId: string;
   profileName: string;
 };
 
 function setProvisioningProfileForPbxproj(
   projectRoot: string,
-  { profileName, appleTeamId }: ProvisioningProfileSettings
+  { targetName, profileName, appleTeamId }: ProvisioningProfileSettings
 ): void {
   const project = getPbxproj(projectRoot);
-  const nativeTarget = findFirstNativeTarget(project);
+  const [nativeTargetId, nativeTarget] = targetName
+    ? findNativeTargetByName(project, targetName)
+    : findFirstNativeTarget(project);
 
   getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)
     .filter(([, item]: ConfigurationSectionEntry) => item.buildSettings.PRODUCT_NAME)
@@ -34,10 +38,8 @@ function setProvisioningProfileForPbxproj(
   Object.entries(getProjectSection(project))
     .filter(isNotComment)
     .forEach(([, item]: ProjectSectionEntry) => {
-      // TODO(dsokal): figure out if we need to configure anything else than the first target
-      const targetId = item.targets[0].value;
-      item.attributes.TargetAttributes[targetId].DevelopmentTeam = appleTeamId;
-      item.attributes.TargetAttributes[targetId].ProvisioningStyle = 'Manual';
+      item.attributes.TargetAttributes[nativeTargetId].DevelopmentTeam = appleTeamId;
+      item.attributes.TargetAttributes[nativeTargetId].ProvisioningStyle = 'Manual';
     });
 
   fs.writeFileSync(project.filepath, project.writeSync());
