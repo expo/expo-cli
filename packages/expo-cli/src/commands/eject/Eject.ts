@@ -20,11 +20,7 @@ import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import { learnMore } from '../utils/TerminalLink';
-import {
-  logConfigWarningsAndroid,
-  logConfigWarningsGeneral,
-  logConfigWarningsIOS,
-} from '../utils/logConfigWarnings';
+import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
 
@@ -146,16 +142,11 @@ export async function prebuildAsync(
     projectRoot,
     platforms,
   });
-  if (
-    WarningAggregator.hasWarningsGeneral() ||
-    WarningAggregator.hasWarningsAndroid() ||
-    WarningAggregator.hasWarningsIOS()
-  ) {
+  if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
     applyingAndroidConfigStep.stopAndPersist({
       symbol: '⚠️ ',
       text: chalk.red('Config synced with warnings that should be fixed:'),
     });
-    logConfigWarningsGeneral();
     logConfigWarningsAndroid();
     logConfigWarningsIOS();
   } else {

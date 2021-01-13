@@ -26,17 +26,6 @@ export function logConfigWarningsAndroid() {
   return !!warningsAndroid;
 }
 
-export function logConfigWarningsGeneral() {
-  const warnings = WarningAggregator.flushWarningsGeneral();
-  if (warnings.length) {
-    warnings.forEach(([property, warning, link]) => {
-      log.nested(formatNamedWarning(property, warning, link));
-    });
-  }
-
-  return !!warnings;
-}
-
 export function formatNamedWarning(property: string, warning: string, link?: string) {
   return `- ${chalk.bold(property)}: ${warning}${
     link ? getSpacer(warning) + log.chalk.dim(TerminalLink.learnMore(link)) : ''
