@@ -11,7 +11,7 @@ import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
 import {
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
-  withExpoUnversionedSDKPlugins,
+  withExpoVersionedSDKPlugins,
 } from '../expo-plugins';
 import { compileModsAsync, evalModsAsync } from '../mod-compiler';
 import rnFixture from './fixtures/react-native-project';
@@ -252,7 +252,7 @@ describe('built-in plugins', () => {
       package: 'com.bacon.todo',
       expoUsername: 'bacon',
     });
-    config = withExpoUnversionedSDKPlugins(config);
+    config = withExpoVersionedSDKPlugins(config);
 
     // Apply mod
     config = await compileModsAsync(config, { projectRoot: '/app' });
