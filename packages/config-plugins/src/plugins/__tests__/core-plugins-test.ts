@@ -6,7 +6,7 @@ describe(withRunOnce, () => {
   it('runs plugins multiple times without withRunOnce', () => {
     const pluginA: ConfigPlugin = jest.fn(config => config);
 
-    withPlugins({ extra: [] } as any, [
+    withPlugins({ extra: [], _internal: { projectRoot: './' } } as any, [
       // Prove unsafe runs as many times as it was added
       pluginA,
       pluginA,
@@ -27,7 +27,7 @@ describe(withRunOnce, () => {
     // that different plugins can be prevented when using the same ID.
     const safePluginB = createRunOncePlugin(pluginB, pluginId);
 
-    withPlugins({ extra: [] } as any, [
+    withPlugins({ extra: [], _internal: { projectRoot: './' } } as any, [
       // Run plugin twice
       safePluginA,
       safePluginB,
