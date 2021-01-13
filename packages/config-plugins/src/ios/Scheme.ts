@@ -49,15 +49,10 @@ export function appendScheme(scheme: string | null, infoPlist: InfoPlist): InfoP
 
   const existingSchemes = infoPlist.CFBundleURLTypes;
 
-  // No need to append if we don't have any
-  if (!existingSchemes) {
-    return setScheme({ scheme }, infoPlist);
-  }
-
   return {
     ...infoPlist,
     CFBundleURLTypes: [
-      ...existingSchemes,
+      ...(existingSchemes ?? []),
       {
         CFBundleURLSchemes: [scheme],
       },

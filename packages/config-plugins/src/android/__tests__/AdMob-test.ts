@@ -1,10 +1,6 @@
 import { resolve } from 'path';
 
-import {
-  getGoogleMobileAdsAppId,
-  getGoogleMobileAdsAutoInit,
-  setGoogleMobileAdsConfig,
-} from '../AdMob';
+import { getGoogleMobileAdsAppId, getGoogleMobileAdsAutoInit, setAdMobConfig } from '../AdMob';
 import { getMainApplicationOrThrow, readAndroidManifestAsync } from '../Manifest';
 
 const fixturesPath = resolve(__dirname, 'fixtures');
@@ -27,7 +23,7 @@ describe('Android permissions', () => {
 
   it('add google mobile ads app config to AndroidManifest.xml', async () => {
     let androidManifestJson = await readAndroidManifestAsync(sampleManifestPath);
-    androidManifestJson = await setGoogleMobileAdsConfig(
+    androidManifestJson = await setAdMobConfig(
       {
         android: {
           config: { googleMobileAdsAppId: 'MY-API-KEY', googleMobileAdsAutoInit: false },
