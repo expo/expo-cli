@@ -1,16 +1,12 @@
-import {
-  AndroidManifest,
-  readAndroidManifestAsync,
-  writeAndroidManifestAsync,
-} from '@expo/config-plugins/build/android/Manifest';
-import * as Scheme from '@expo/config-plugins/build/android/Scheme';
-import { format } from '@expo/config-plugins/build/android/XML';
+import { AndroidConfig, XML } from '@expo/config-plugins';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { existsSync } from 'fs';
 import path from 'path';
 
 import { CommandError, Options } from './Options';
+
+const { Manifest, Scheme } = AndroidConfig;
 
 const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
@@ -50,7 +46,7 @@ export async function addAsync({
 
   if (dryRun) {
     console.log(chalk.magenta('Write manifest to: ', resolvedManifestPath));
-    console.log(format(manifest));
+    console.log(XML.format(manifest));
     return false;
   }
   await writeConfigAsync(resolvedManifestPath, manifest);
@@ -86,7 +82,7 @@ export async function removeAsync({
 
   if (dryRun) {
     console.log(chalk.magenta('Write manifest to: ', resolvedManifestPath));
-    console.log(format(manifest));
+    console.log(XML.format(manifest));
     return false;
   }
   await writeConfigAsync(resolvedManifestPath, manifest);
@@ -148,7 +144,7 @@ export async function getAsync({
   return await Scheme.getSchemesFromManifest(manifest);
 }
 
-function getPackage(androidManifest: AndroidManifest): string | null {
+function getPackage(androidManifest: AndroidConfig.Manifest.AndroidManifest): string | null {
   return androidManifest.manifest?.$?.package ?? null;
 }
 
@@ -180,9 +176,9 @@ export function getConfigPath(projectRoot: string): string {
 }
 
 async function readConfigAsync(path: string): Promise<any> {
-  return await readAndroidManifestAsync(path);
+  return await Manifest.readAndroidManifestAsync(path);
 }
 
 async function writeConfigAsync(path: string, result: any) {
-  await writeAndroidManifestAsync(path, result);
+  await Manifest.writeAndroidManifestAsync(path, result);
 }
