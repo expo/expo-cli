@@ -49,12 +49,16 @@ export function getSourceRoot(projectRoot: string): string {
   return path.dirname(appDelegate.path);
 }
 
-export function findSchemeNames(projectRoot: string): string[] {
-  const schemePaths = globSync('ios/*.xcodeproj/xcshareddata/xcschemes/*.xcscheme', {
+export function findSchemePaths(projectRoot: string): string[] {
+  return globSync('ios/*.xcodeproj/xcshareddata/xcschemes/*.xcscheme', {
     absolute: true,
     cwd: projectRoot,
     ignore: ignoredPaths,
   });
+}
+
+export function findSchemeNames(projectRoot: string): string[] {
+  const schemePaths = findSchemePaths(projectRoot);
   return schemePaths.map(schemePath => path.basename(schemePath).split('.')[0]);
 }
 
