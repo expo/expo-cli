@@ -15,6 +15,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🛠 Breaking changes
 
 - [cli] Environment variables matching `EXPO_` or `REACT_NATIVE_` are no longer exposed publicly to the development-mode app or website ([#3063](https://github.com/expo/expo-cli/issues/3063))
+- [cli] Remove EAS Build code, it now lives in `eas-cli` ([#3079](https://github.com/expo/expo-cli/pull/3079))
 
 ### 🎉 New features
 
