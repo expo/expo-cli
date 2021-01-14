@@ -1,14 +1,16 @@
+import path from 'path';
+
 import { readXMLAsync } from '../utils/XML';
 import { findSchemePaths } from './Paths';
 
 interface SchemeXML {
-  Scheme: {
-    BuildAction: {
-      BuildActionEntries: {
-        BuildActionEntry: {
-          BuildableReference: {
-            $: {
-              BlueprintName: string;
+  Scheme?: {
+    BuildAction?: {
+      BuildActionEntries?: {
+        BuildActionEntry?: {
+          BuildableReference?: {
+            $?: {
+              BlueprintName?: string;
             };
           }[];
         }[];
@@ -29,6 +31,12 @@ export async function getApplicationTargetForSchemeAsync(
   }
 
   const schemeXML = ((await readXMLAsync({ path: schemePath })) as unknown) as SchemeXML;
-  return schemeXML.Scheme.BuildAction[0].BuildActionEntries[0].BuildActionEntry[0]
-    .BuildableReference[0]['$'].BlueprintName;
+  const targetName =
+    schemeXML.Scheme?.BuildAction?.[0]?.BuildActionEntries?.[0]?.BuildActionEntry?.[0]
+      ?.BuildableReference?.[0]?.['$']?.BlueprintName;
+  if (!targetName) {
+    const schemeRelativePath = path.relative(projectRoot, schemePath);
+    throw new Error(`${schemeRelativePath} seems to be corrupted`);
+  }
+  return targetName;
 }
