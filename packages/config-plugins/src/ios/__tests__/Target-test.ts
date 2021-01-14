@@ -31,8 +31,8 @@ describe(getApplicationTargetForSchemeAsync, () => {
   });
 
   it('throws if the scheme does not exist', async () => {
-    expect(() => getApplicationTargetForSchemeAsync('/app', 'nonexistentscheme')).rejects.toThrow(
-      /does not exist/
-    );
+    await expect(() =>
+      getApplicationTargetForSchemeAsync('/app', 'nonexistentscheme')
+    ).rejects.toThrow(/does not exist/);
   });
 });
