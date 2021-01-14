@@ -20,6 +20,24 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - [config-plugins] ProvisioningProfile: allow setting provisioning profile for a particular target (not only for the first one)
 
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.14
+- @expo/config@3.3.23
+- @expo/dev-server@0.1.49
+- @expo/dev-tools@0.13.75
+- @expo/electron-adapter@0.0.40
+- expo-cli@4.0.18
+- expo-codemod@1.0.30
+- expo-optimize@0.1.71
+- @expo/image-utils@0.3.10
+- @expo/metro-config@0.1.49
+- @expo/next-adapter@2.1.54
+- expo-pwa@0.0.59
+- uri-scheme@1.0.60
+- @expo/webpack-config@0.12.53
+- @expo/xdl@59.0.15
+
 ## [Sun, 27 Dec 2020 13:14:17 -0800](https://github.com/expo/expo-cli/commit/a14f18284efda89a08910d5a753b1749897f54a2)
 
 ### 🛠 Breaking changes
