@@ -225,15 +225,19 @@ export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntr
   return Object.entries(section).filter(isNotComment);
 }
 
-export function findFirstNativeTarget(project: XcodeProject): PBXNativeTarget {
+export function findFirstNativeTarget(project: XcodeProject): NativeTargetSectionEntry {
   const { targets } = Object.values(getProjectSection(project))[0];
   const target = targets[0].value;
-
   const nativeTargets = getNativeTargets(project);
-  const nativeTarget = (nativeTargets.find(
-    ([key]) => key === target
-  ) as NativeTargetSectionEntry)[1];
-  return nativeTarget;
+  return nativeTargets.find(([key]) => key === target) as NativeTargetSectionEntry;
+}
+
+export function findNativeTargetByName(
+  project: XcodeProject,
+  targetName: string
+): NativeTargetSectionEntry {
+  const nativeTargets = getNativeTargets(project);
+  return nativeTargets.find(([, i]) => i.name === targetName) as NativeTargetSectionEntry;
 }
 
 export function getXCConfigurationListEntries(project: XcodeProject): ConfigurationListEntry[] {

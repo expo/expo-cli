@@ -4,7 +4,7 @@ import {
   writeAndroidManifestAsync,
 } from '@expo/config-plugins/build/android/Manifest';
 import * as Scheme from '@expo/config-plugins/build/android/Scheme';
-import { format } from '@expo/config-plugins/build/android/XML';
+import { format } from '@expo/config-plugins/build/utils/XML';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { existsSync } from 'fs';

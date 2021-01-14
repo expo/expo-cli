@@ -5,9 +5,9 @@ import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withDangerousMod } from '../plugins/core-plugins';
+import { writeXMLAsync } from '../utils/XML';
 import * as Colors from './Colors';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';
-import { writeXMLAsync } from './XML';
 
 type DPIString = 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
 type dpiMap = Record<DPIString, { folderName: string; scale: number }>;

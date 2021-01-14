@@ -6,6 +6,7 @@ import path from 'path';
 import { ConfigPlugin } from '../Plugin.types';
 import { createAndroidManifestPlugin } from '../plugins/android-plugins';
 import { withDangerousMod } from '../plugins/core-plugins';
+import { writeXMLAsync } from '../utils/XML';
 import * as Colors from './Colors';
 import { ANDROID_RES_PATH, dpiValues } from './Icon';
 import {
@@ -15,7 +16,6 @@ import {
   removeMetaDataItemFromMainApplication,
 } from './Manifest';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';
-import { writeXMLAsync } from './XML';
 
 const BASELINE_PIXEL_SIZE = 24;
 export const META_DATA_NOTIFICATION_ICON = 'expo.modules.notifications.default_notification_icon';

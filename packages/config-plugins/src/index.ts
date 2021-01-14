@@ -3,12 +3,13 @@
  */
 import * as AndroidConfig from './android';
 import * as IOSConfig from './ios';
+import * as XML from './utils/XML';
 import * as History from './utils/history';
 import * as WarningAggregator from './utils/warnings';
 
 export { IOSConfig, AndroidConfig };
 
-export { WarningAggregator, History };
+export { WarningAggregator, History, XML };
 
 export {
   withExpoIOSPlugins,

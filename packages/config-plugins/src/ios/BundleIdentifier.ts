@@ -71,8 +71,7 @@ function getBundleIdentifierFromPbxproj(projectRoot: string): string | null {
   const project = xcode.project(pbxprojPath);
   project.parseSync();
 
-  const nativeTarget = findFirstNativeTarget(project);
-
+  const [, nativeTarget] = findFirstNativeTarget(project);
   for (const [, item] of getBuildConfigurationForId(project, nativeTarget.buildConfigurationList)) {
     const bundleIdentifierRaw = item.buildSettings.PRODUCT_BUNDLE_IDENTIFIER;
     if (bundleIdentifierRaw) {
@@ -113,7 +112,7 @@ function updateBundleIdentifierForPbxproj(
   const project = xcode.project(pbxprojPath);
   project.parseSync();
 
-  const nativeTarget = findFirstNativeTarget(project);
+  const [, nativeTarget] = findFirstNativeTarget(project);
 
   getBuildConfigurationForId(project, nativeTarget.buildConfigurationList).forEach(
     ([, item]: ConfigurationSectionEntry) => {

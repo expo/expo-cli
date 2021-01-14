@@ -1,5 +1,6 @@
 import { vol } from 'memfs';
 
+import { writeXMLAsync } from '../../utils/XML';
 import { buildResourceItem, readResourcesXMLAsync } from '../Resources';
 import {
   getProjectStylesXMLPathAsync,
@@ -8,7 +9,6 @@ import {
   removeStylesItem,
   setStylesItem,
 } from '../Styles';
-import { writeXMLAsync } from '../XML';
 jest.mock('fs');
 
 const mockStyles = `
