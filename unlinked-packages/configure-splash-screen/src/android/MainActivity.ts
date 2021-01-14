@@ -1,10 +1,9 @@
-import { projectConfig } from '@react-native-community/cli-platform-android';
 import fs from 'fs-extra';
-import path from 'path';
 
 import { SplashScreenImageResizeMode, SplashScreenImageResizeModeType } from '../constants';
 import StateManager from '../utils/StateManager';
 import { insert, replace } from '../utils/string-utils';
+import { getMainActivityAsync } from './Paths';
 
 /**
  * Injects specific code to MainActivity that would trigger SplashScreen mounting process.
@@ -22,28 +21,18 @@ export default async function configureMainActivity(
   const statusBarTranslucent: boolean = config.statusBar?.translucent ?? false;
 
   // eslint-disable-next-line
-  const mainApplicationPath = projectConfig(projectRootPath)?.mainFilePath;
+  const mainActivity = await getMainActivityAsync(projectRootPath);
 
-  if (!mainApplicationPath) {
+  if (!mainActivity) {
     throw new Error(`Failed to configure 'MainActivity'.`);
   }
 
-  const mainActivityPathJava = path.resolve(mainApplicationPath, '../MainActivity.java');
-  const mainActivityPathKotlin = path.resolve(mainApplicationPath, '../MainActivity.kt');
-
-  const isJava = await fs.pathExists(mainActivityPathJava);
-  const isKotlin = !isJava && (await fs.pathExists(mainActivityPathKotlin));
-
-  if (!isJava && !isKotlin) {
-    throw new Error(`Failed to find 'MainActivity' file.`);
-  }
+  const isJava = mainActivity.language === 'java';
+  const isKotlin = mainActivity.language === 'kt';
 
   const LE = isJava ? ';' : '';
-  const fileContent = await fs.readFile(
-    isJava ? mainActivityPathJava : mainActivityPathKotlin,
-    'utf-8'
-  );
-  const { state: newFileContent } = new StateManager<string, boolean>(fileContent)
+
+  const { state: newFileContent } = new StateManager<string, boolean>(mainActivity.contents)
     // importing ReactRootView
     .applyAction(content => {
       const [succeeded, newContent] = replace(content, {
@@ -161,5 +150,5 @@ import expo.modules.splashscreen.SplashScreenImageResizeMode${LE}
       return [newContent, 'insertedBundleImport', succeeded];
     });
 
-  await fs.writeFile(isJava ? mainActivityPathJava : mainActivityPathKotlin, newFileContent);
+  await fs.writeFile(mainActivity.path, newFileContent);
 }
