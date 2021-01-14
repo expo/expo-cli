@@ -6,6 +6,7 @@ import {
   StaticPlugin,
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
+  withExpoVersionedSDKPlugins,
   withStaticPlugin,
 } from '@expo/config-plugins';
 import { UserManager } from '@expo/xdl';
@@ -28,7 +29,7 @@ export const expoManagedPlugins = [
   'expo-file-system',
   'expo-location',
   'expo-media-library',
-  'expo-notifications',
+  // 'expo-notifications',
   'expo-screen-orientation',
   'expo-sensors',
   'expo-task-manager',
@@ -38,12 +39,12 @@ export const expoManagedPlugins = [
 // Plugins that need to be automatically applied, but also get applied by expo-cli if the versioned plugin isn't available.
 // These are split up because the user doesn't need to be prompted to setup these packages.
 const expoManagedVersionedPlugins = [
-  'expo-splash-screen',
-  'expo-updates',
-  'expo-facebook',
-  'expo-ads-admob',
+  // 'expo-splash-screen',
+  // 'expo-facebook',
+  // 'expo-branch',
+  // 'expo-updates',
+  // 'expo-ads-admob',
   'expo-apple-authentication',
-  'expo-branch',
   'expo-document-picker',
   'expo-firebase-analytics',
   'expo-firebase-core',
@@ -81,21 +82,21 @@ export default async function configureManagedProjectAsync({
     isModdedConfig: true,
   });
 
+  const expoUsername =
+    process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
   // Add all built-in plugins first because they should take
   // priority over the unversioned plugins.
+  config = withExpoVersionedSDKPlugins(config, { expoUsername });
   config = withManagedPlugins(config);
 
   if (platforms.includes('ios')) {
     // Check bundle ID before reading the config because it may mutate the config if the user is prompted to define it.
     const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
     config.ios!.bundleIdentifier = bundleIdentifier;
-    const expoUsername =
-      process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
 
     // Add all built-in plugins
     config = withExpoIOSPlugins(config, {
       bundleIdentifier,
-      expoUsername,
     });
   }
 
@@ -103,13 +104,10 @@ export default async function configureManagedProjectAsync({
     // Check package before reading the config because it may mutate the config if the user is prompted to define it.
     const packageName = await getOrPromptForPackage(projectRoot);
     config.android!.package = packageName;
-    const expoUsername =
-      process.env.EAS_BUILD_USERNAME || (await UserManager.getCurrentUsernameAsync());
 
     // Add all built-in plugins
     config = withExpoAndroidPlugins(config, {
       package: packageName,
-      expoUsername,
     });
   }
 

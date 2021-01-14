@@ -5,6 +5,12 @@ import { ConfigPlugin } from '../Plugin.types';
 import * as AndroidConfig from '../android';
 import * as IOSConfig from '../ios';
 import { withPlugins } from './core-plugins';
+import withAdMob from './unversioned/expo-ads-admob';
+import withBranch from './unversioned/expo-branch';
+import withFacebook from './unversioned/expo-facebook';
+import withNotifications from './unversioned/expo-notifications';
+import withSplashScreen from './unversioned/expo-splash-screen';
+import withUpdates from './unversioned/expo-updates';
 
 /**
  * Config plugin to apply all of the custom Expo iOS config plugins we support by default.
@@ -12,16 +18,13 @@ import { withPlugins } from './core-plugins';
  */
 export const withExpoIOSPlugins: ConfigPlugin<{
   bundleIdentifier: string;
-  expoUsername: string | null;
-}> = (config, { bundleIdentifier, expoUsername }) => {
+}> = (config, { bundleIdentifier }) => {
   // Set the bundle ID ahead of time.
   if (!config.ios) config.ios = {};
   config.ios.bundleIdentifier = bundleIdentifier;
 
   return withPlugins(config, [
     [IOSConfig.BundleIdenitifer.withBundleIdentifier, { bundleIdentifier }],
-    IOSConfig.Branch.withBranch,
-    IOSConfig.Facebook.withFacebook,
     IOSConfig.Google.withGoogle,
     IOSConfig.Name.withDisplayName,
     // IOSConfig.Name.withName,
@@ -33,7 +36,6 @@ export const withExpoIOSPlugins: ConfigPlugin<{
     IOSConfig.Version.withBuildNumber,
     IOSConfig.Version.withVersion,
     IOSConfig.Google.withGoogleServicesFile,
-    [IOSConfig.Updates.withUpdates, { expoUsername }],
     // Entitlements
     IOSConfig.Entitlements.withAppleSignInEntitlement,
     IOSConfig.Entitlements.withAccessesContactNotes,
@@ -45,7 +47,6 @@ export const withExpoIOSPlugins: ConfigPlugin<{
     IOSConfig.Locales.withLocales,
     // Dangerous
     IOSConfig.Icons.withIcons,
-    IOSConfig.SplashScreen.withSplashScreen,
   ]);
 };
 
@@ -55,8 +56,7 @@ export const withExpoIOSPlugins: ConfigPlugin<{
  */
 export const withExpoAndroidPlugins: ConfigPlugin<{
   package: string;
-  expoUsername: string | null;
-}> = (config, { expoUsername, ...props }) => {
+}> = (config, props) => {
   // Set the package name ahead of time.
   if (!config.android) config.android = {};
   config.android.package = props.package;
@@ -79,22 +79,15 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.Scheme.withScheme,
     AndroidConfig.Orientation.withOrientation,
     AndroidConfig.Permissions.withPermissions,
-    AndroidConfig.Branch.withBranch,
-    AndroidConfig.Facebook.withFacebookManifest,
-    AndroidConfig.Notifications.withNotificationManifest,
-
     AndroidConfig.UserInterfaceStyle.withUiModeManifest,
-    AndroidConfig.GoogleMobileAds.withGoogleMobileAdsConfig,
     AndroidConfig.GoogleMapsApiKey.withGoogleMapsApiKey,
     AndroidConfig.IntentFilters.withAndroidIntentFilters,
-    [AndroidConfig.Updates.withUpdates, { expoUsername }],
 
     // MainActivity.*
     AndroidConfig.UserInterfaceStyle.withUiModeMainActivity,
 
     // strings.xml
     AndroidConfig.Name.withName,
-    AndroidConfig.Facebook.withFacebookAppIdString,
 
     // Dangerous -- these plugins run in reverse order.
     AndroidConfig.GoogleServices.withGoogleServicesFile,
@@ -104,13 +97,24 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.NavigationBar.withNavigationBar,
     AndroidConfig.StatusBar.withStatusBar,
     AndroidConfig.PrimaryColor.withPrimaryColor,
-    AndroidConfig.Notifications.withNotificationIconColor,
 
     AndroidConfig.Icon.withIcons,
-    AndroidConfig.Notifications.withNotificationIcons,
     // If we renamed the package, we should also move it around and rename it in source files
     // Added last to ensure this plugin runs first. Out of tree solutions will mistakenly resolve the package incorrectly otherwise.
     AndroidConfig.Package.withPackageRefactor,
-    AndroidConfig.SplashScreen.withSplashScreen,
+  ]);
+};
+
+export const withExpoVersionedSDKPlugins: ConfigPlugin<{ expoUsername: string | null }> = (
+  config,
+  { expoUsername }
+) => {
+  return withPlugins(config, [
+    withAdMob,
+    withNotifications,
+    [withUpdates, { expoUsername }],
+    withBranch,
+    withFacebook,
+    withSplashScreen,
   ]);
 };

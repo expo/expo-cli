@@ -1,10 +1,10 @@
+import * as AdMob from './AdMob';
 import * as AllowBackup from './AllowBackup';
 import * as Branch from './Branch';
 import * as Colors from './Colors';
 import * as EasBuild from './EasBuild';
 import * as Facebook from './Facebook';
 import * as GoogleMapsApiKey from './GoogleMapsApiKey';
-import * as GoogleMobileAds from './GoogleMobileAds';
 import * as GoogleServices from './GoogleServices';
 import * as Icon from './Icon';
 import * as IntentFilters from './IntentFilters';
@@ -33,7 +33,7 @@ export {
   Colors,
   Facebook,
   GoogleMapsApiKey,
-  GoogleMobileAds,
+  AdMob,
   GoogleServices,
   Icon,
   IntentFilters,

@@ -9,6 +9,7 @@ import {
   ModPlatform,
   StaticPlugin,
 } from '../Plugin.types';
+import { assert } from '../utils/errors';
 import { addHistoryItem, getHistoryItem, PluginHistoryItem } from '../utils/history';
 import { withStaticPlugin } from './static-plugins';
 
@@ -24,6 +25,10 @@ export const withPlugins: ConfigPlugin<(StaticPlugin | ConfigPlugin | string)[]>
   config,
   plugins
 ) => {
+  assert(
+    Array.isArray(plugins),
+    'withPlugins expected a valid array of plugins or plugin module paths'
+  );
   return plugins.reduce((prev, plugin) => {
     return withStaticPlugin(prev, { plugin });
   }, config);
@@ -63,7 +68,7 @@ export function createRunOncePlugin<T>(
   version?: string
 ): ConfigPlugin<T> {
   return (config, props) => {
-    return withRunOnce(config, { plugin: c => plugin(c, props), name, version });
+    return withRunOnce(config, { plugin: config => plugin(config, props), name, version });
   };
 }
 

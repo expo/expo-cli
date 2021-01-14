@@ -1,3 +1,4 @@
+import * as AdMob from './AdMob';
 import * as Branch from './Branch';
 import * as BundleIdenitifer from './BundleIdentifier';
 import * as CustomInfoPlistEntries from './CustomInfoPlistEntries';
@@ -26,6 +27,7 @@ import * as XcodeUtils from './utils/Xcodeproj';
 // https://devblogs.microsoft.com/typescript/announcing-typescript-3-8-beta/#export-star-as-namespace-syntax
 // .. but we should wait for this to be the default VSCode version.
 export {
+  AdMob,
   Branch,
   BundleIdenitifer,
   CustomInfoPlistEntries,

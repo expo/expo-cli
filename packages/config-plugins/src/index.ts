@@ -10,7 +10,11 @@ export { IOSConfig, AndroidConfig };
 
 export { WarningAggregator, History };
 
-export { withExpoIOSPlugins, withExpoAndroidPlugins } from './plugins/expo-plugins';
+export {
+  withExpoIOSPlugins,
+  withExpoAndroidPlugins,
+  withExpoVersionedSDKPlugins,
+} from './plugins/expo-plugins';
 
 /**
  * These are the "config-plugins"

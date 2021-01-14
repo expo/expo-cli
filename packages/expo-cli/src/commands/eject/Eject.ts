@@ -15,9 +15,7 @@ import terminalLink from 'terminal-link';
 
 import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
-import configureManagedProjectAsync, {
-  expoManagedPlugins,
-} from '../apply/configureManagedProjectAsync';
+import configureProjectAsync, { expoManagedPlugins } from '../apply/configureProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
@@ -140,7 +138,7 @@ export async function prebuildAsync(
 
   // Apply Expo config to native projects
   const applyingAndroidConfigStep = CreateApp.logNewSection('Config syncing');
-  const managedConfig = await configureManagedProjectAsync({
+  const managedConfig = await configureProjectAsync({
     projectRoot,
     platforms,
   });
