@@ -1,3 +1,4 @@
+import { ModConfig } from '@expo/config-plugins';
 import JsonFile, { JSONObject } from '@expo/json-file';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
@@ -11,7 +12,6 @@ import {
   ExpoConfig,
   ExpRc,
   GetConfigOptions,
-  ModConfig,
   PackageJSONConfig,
   Platform,
   ProjectConfig,
@@ -22,6 +22,7 @@ import { ConfigError } from './Errors';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
+import { withConfigPlugins } from './plugins/withConfigPlugins';
 import { withInternal } from './plugins/withInternal';
 
 type SplitConfigs = { expo: ExpoConfig; mods: ModConfig };
@@ -123,6 +124,14 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
     if (options.isModdedConfig) {
       // @ts-ignore: Add the mods back to the object.
       configWithDefaultValues.exp.mods = config.mods ?? null;
+    }
+
+    // Apply static json plugins, should be done after _internal
+    configWithDefaultValues.exp = withConfigPlugins(configWithDefaultValues.exp);
+
+    if (!options.isModdedConfig) {
+      // @ts-ignore: Delete mods added by static plugins when they won't have a chance to be evaluated
+      delete configWithDefaultValues.exp.mods;
     }
 
     if (options.isPublicConfig) {

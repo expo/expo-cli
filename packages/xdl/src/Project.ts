@@ -84,6 +84,7 @@ type LoadedHook = Hook & {
 };
 
 export type StartOptions = {
+  devClient?: boolean;
   reset?: boolean;
   nonInteractive?: boolean;
   nonPersistent?: boolean;
@@ -624,6 +625,11 @@ export async function publishAsync(
   // Get project config
   const { exp, pkg, hooks } = await _getPublishExpConfigAsync(projectRoot, options);
 
+  // Exit early if kernel builds are created with robot users
+  if (exp.isKernel && user.kind === 'robot') {
+    throw new XDLError('ROBOT_ACCOUNT_ERROR', 'Kernel builds are not available for robot users');
+  }
+
   // TODO: refactor this out to a function, throw error if length doesn't match
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
   const bundles = await buildPublishBundlesAsync(projectRoot, options, {
@@ -648,7 +654,7 @@ export async function publishAsync(
   logger.global.info(TableText.createFilesTable(files));
   logger.global.info('');
   logger.global.info(
-    `💡 JavaScript bundle sizes effect startup time. ${chalk.dim(
+    `💡 JavaScript bundle sizes affect startup time. ${chalk.dim(
       learnMore(`https://expo.fyi/javascript-bundle-sizes`)
     )}`
   );
@@ -749,7 +755,8 @@ export async function publishAsync(
   });
 
   // TODO: move to postPublish hook
-  if (exp.isKernel) {
+  // This method throws early when a robot account is used for a kernel build
+  if (exp.isKernel && user.kind !== 'robot') {
     await _handleKernelPublishedAsync({
       user,
       exp,
@@ -1641,7 +1648,10 @@ export async function stopReactNativeServerAsync(projectRoot: string): Promise<v
   });
 }
 
-export async function startExpoServerAsync(projectRoot: string): Promise<void> {
+export async function startExpoServerAsync(
+  projectRoot: string,
+  options: StartOptions
+): Promise<void> {
   assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
   const app = express();
@@ -1734,7 +1744,7 @@ async function startDevServerAsync(projectRoot: string, startOptions: StartOptio
   }
   if (startOptions.target) {
     // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
-    // called from metro.config.js and the --target option is used to override the default target.
+    // called from metro.config.js.
     process.env.EXPO_TARGET = startOptions.target;
   }
 
@@ -1771,11 +1781,11 @@ export async function startAsync(
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
-  } else if (shouldUseDevServer(exp)) {
+  } else if (shouldUseDevServer(exp) || options.devClient) {
     await startDevServerAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'native');
   } else {
-    await startExpoServerAsync(projectRoot);
+    await startExpoServerAsync(projectRoot, options);
     await startReactNativeServerAsync({ projectRoot, exp, options, verbose });
     DevSession.startSession(projectRoot, exp, 'native');
   }

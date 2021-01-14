@@ -1,6 +1,9 @@
 const xdl = jest.genMockFromModule('@expo/xdl');
 
 xdl.UrlUtils = {
+  constructDeepLinkAsync(projectDir) {
+    return this.constructManifestUrlAsync(projectDir);
+  },
   constructManifestUrlAsync(projectDir) {
     return 'exp://mock-manifest-url';
   },

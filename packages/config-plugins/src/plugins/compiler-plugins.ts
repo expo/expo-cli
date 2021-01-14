@@ -24,7 +24,7 @@ import { getProjectStringsXMLPathAsync } from '../android/Strings';
 import { writeXMLAsync } from '../android/XML';
 import { getEntitlementsPath } from '../ios/Entitlements';
 import { InfoPlist } from '../ios/IosConfig.types';
-import { getInfoPlistPath } from '../ios/Paths';
+import { AppDelegateProjectFile, getAppDelegate, getInfoPlistPath } from '../ios/Paths';
 import { getPbxproj } from '../ios/utils/Xcodeproj';
 import { assert } from '../utils/errors';
 import * as WarningAggregator from '../utils/warnings';
@@ -91,10 +91,8 @@ const withAndroidManifestBaseMod: ConfigPlugin = config => {
 
         await Manifest.writeAndroidManifestAsync(filePath, modResults);
       } catch (error) {
-        WarningAggregator.addWarningAndroid(
-          'android-manifest',
-          `AndroidManifest.xml configuration could not be applied. ${error.message}`
-        );
+        console.error(`AndroidManifest.xml mod error:`);
+        throw error;
       }
       return results;
     },
@@ -176,10 +174,8 @@ const withAndroidStringsXMLBaseMod: ConfigPlugin = config => {
 
         await writeXMLAsync({ path: filePath, xml: modResults });
       } catch (error) {
-        WarningAggregator.addWarningAndroid(
-          `${modRequest.platform}-${modRequest.modName}`,
-          `strings.xml configuration could not be applied. ${error.message}`
-        );
+        console.error(`strings.xml mod error:`);
+        throw error;
       }
       return results;
     },
@@ -212,10 +208,8 @@ const withAndroidProjectBuildGradleBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        WarningAggregator.addWarningAndroid(
-          `${modRequest.platform}-${modRequest.modName}`,
-          `Project build.gradle could not be modified. ${error.message}`
-        );
+        console.error(`android/build.gradle mod error:`);
+        throw error;
       }
       return results;
     },
@@ -248,10 +242,8 @@ const withAndroidSettingsGradleBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        WarningAggregator.addWarningAndroid(
-          `${modRequest.platform}-${modRequest.modName}`,
-          `Project settings.gradle could not be modified. ${error.message}`
-        );
+        console.error(`android/settings.gradle mod error:`);
+        throw error;
       }
       return results;
     },
@@ -284,10 +276,8 @@ const withAndroidAppBuildGradleBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        WarningAggregator.addWarningAndroid(
-          `${modRequest.platform}-${modRequest.modName}`,
-          `App build.gradle could not be modified. ${error.message}`
-        );
+        console.error(`android/app/build.gradle mod error:`);
+        throw error;
       }
       return results;
     },
@@ -320,10 +310,8 @@ const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
 
         await writeFile(filePath, modResults.contents);
       } catch (error) {
-        WarningAggregator.addWarningAndroid(
-          `${modRequest.platform}-${modRequest.modName}`,
-          `MainActivity could not be modified. ${error.message}`
-        );
+        console.error(`MainActivity mod error:`);
+        throw error;
       }
       return results;
     },
@@ -332,6 +320,7 @@ const withAndroidMainActivityBaseMod: ConfigPlugin = config => {
 
 function applyIOSBaseMods(config: ExportedConfig): ExportedConfig {
   config = withExpoDangerousBaseMod(config, 'ios');
+  config = withAppDelegateBaseMod(config);
   config = withIosInfoPlistBaseMod(config);
   config = withExpoPlistBaseMod(config);
   config = withXcodeProjectBaseMod(config);
@@ -352,6 +341,40 @@ const withExpoDangerousBaseMod: ConfigPlugin<ModPlatform> = (config, platform) =
         modRequest,
       });
       resolveModResults(results, modRequest.platform, modRequest.modName);
+      return results;
+    },
+  });
+};
+
+const withAppDelegateBaseMod: ConfigPlugin = config => {
+  return withInterceptedMod<AppDelegateProjectFile>(config, {
+    platform: 'ios',
+    mod: 'appDelegate',
+    skipEmptyMod: true,
+    async action({ modRequest: { nextMod, ...modRequest }, ...config }) {
+      let results: ExportedConfigWithProps<AppDelegateProjectFile> = {
+        ...config,
+        modRequest,
+      };
+
+      try {
+        let modResults = getAppDelegate(modRequest.projectRoot);
+        // Currently don't support changing the path or language
+        const filePath = modResults.path;
+
+        results = await nextMod!({
+          ...config,
+          modResults,
+          modRequest,
+        });
+        resolveModResults(results, modRequest.platform, modRequest.modName);
+        modResults = results.modResults;
+
+        await writeFile(filePath, modResults.contents);
+      } catch (error) {
+        console.error(`AppDelegate mod error:`);
+        throw error;
+      }
       return results;
     },
   });
@@ -508,10 +531,8 @@ const withEntitlementsBaseMod: ConfigPlugin = config => {
         resolveModResults(results, modRequest.platform, modRequest.modName);
         await writeFile(entitlementsPath, plist.build(results.modResults));
       } catch (error) {
-        WarningAggregator.addWarningIOS(
-          'entitlements',
-          `${entitlementsPath} configuration could not be applied.`
-        );
+        console.error(`${path.basename(entitlementsPath)} mod error:`);
+        throw error;
       }
       return results;
     },

@@ -39,7 +39,7 @@ async function buildAssetArchiveAsync(
   );
 
   const sdkMajorVersion = parseSdkMajorVersion(data.manifest.sdkVersion);
-  const deploymentTarget = sdkMajorVersion > 30 ? '10.0' : '9.0'; // SDK31 drops support for iOS 9.0
+  const deploymentTarget = sdkMajorVersion > 40 ? '11.0' : '10.0'; // SDK41 drops support for iOS 10.0
 
   // compile asset archive
   // prettier-ignore

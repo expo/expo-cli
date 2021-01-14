@@ -9,6 +9,7 @@ Object {
         "version": "UNVERSIONED",
       },
     },
+    "projectRoot": "/app",
   },
   "android": Object {
     "adaptiveIcon": Object {

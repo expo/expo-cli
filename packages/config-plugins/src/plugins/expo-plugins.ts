@@ -81,6 +81,7 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.Permissions.withPermissions,
     AndroidConfig.Branch.withBranch,
     AndroidConfig.Facebook.withFacebookManifest,
+    AndroidConfig.Notifications.withNotificationManifest,
 
     AndroidConfig.UserInterfaceStyle.withUiModeManifest,
     AndroidConfig.GoogleMobileAds.withGoogleMobileAdsConfig,
@@ -100,11 +101,13 @@ export const withExpoAndroidPlugins: ConfigPlugin<{
     AndroidConfig.RootViewBackgroundColor.withRootViewBackgroundColor,
     AndroidConfig.StatusBar.withStatusBar,
     AndroidConfig.PrimaryColor.withPrimaryColor,
+    AndroidConfig.Notifications.withNotificationIconColor,
 
     // Dangerous -- these plugins run in reverse order.
     AndroidConfig.GoogleServices.withGoogleServicesFile,
 
     AndroidConfig.Icon.withIcons,
+    AndroidConfig.Notifications.withNotificationIcons,
     // If we renamed the package, we should also move it around and rename it in source files
     // Added last to ensure this plugin runs first. Out of tree solutions will mistakenly resolve the package incorrectly otherwise.
     AndroidConfig.Package.withPackageRefactor,

@@ -28,6 +28,7 @@ export {
 } from './plugins/core-plugins';
 
 export {
+  withAppDelegate,
   withInfoPlist,
   withEntitlementsPlist,
   withExpoPlist,
@@ -43,4 +44,8 @@ export {
   withSettingsGradle,
 } from './plugins/android-plugins';
 
+export { withStaticPlugin } from './plugins/static-plugins';
+
 export { compileModsAsync } from './plugins/mod-compiler';
+
+export { PluginError } from './utils/errors';

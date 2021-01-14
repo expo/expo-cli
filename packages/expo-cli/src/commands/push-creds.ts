@@ -17,7 +17,7 @@ export default function (program: Command) {
 
       const ctx = new Context();
       await ctx.init(projectDir);
-      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+      const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
       await ctx.android.updateFcmKey(experienceName, options.apiKey);
       log('All done!');
@@ -30,7 +30,7 @@ export default function (program: Command) {
     .asyncActionProjectDir(async (projectDir: string) => {
       const ctx = new Context();
       await ctx.init(projectDir);
-      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+      const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
       const fcmCredentials = await ctx.android.fetchFcmKey(experienceName);
       if (fcmCredentials?.fcmApiKey) {
@@ -47,7 +47,7 @@ export default function (program: Command) {
     .asyncActionProjectDir(async (projectDir: string) => {
       const ctx = new Context();
       await ctx.init(projectDir);
-      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+      const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
       await ctx.android.removeFcmKey(experienceName);
       log('All done!');

@@ -79,7 +79,7 @@ describe('name', () => {
     expect(contents.includes(`'E&amp;x&lt;p&gt;o"`)).toBe(true);
 
     // And parsed in unescaped form
-    expect(stringsJSON.resources.string.filter(e => e['$']['name'] === 'app_name')[0]._).toBe(
+    expect(stringsJSON.resources.string.filter(e => e.$.name === 'app_name')[0]._).toBe(
       `'E&x<p>o"`
     );
   });

@@ -2,9 +2,9 @@ import { ApiV2, RegistrationData, User, UserManager } from '@expo/xdl';
 import { ApiV2Error } from '@expo/xdl/build/ApiV2';
 import chalk from 'chalk';
 import program from 'commander';
-import invariant from 'invariant';
 
 import CommandError from './CommandError';
+import { assert } from './assert';
 import log from './log';
 import promptNew, { confirmAsync, Question as NewQuestion, selectAsync } from './prompts';
 import { nonEmptyInput } from './validators';
@@ -74,7 +74,7 @@ export async function loginOrRegisterAsync(): Promise<User> {
 }
 
 export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
-  const user = await UserManager.getCurrentUserAsync();
+  const user = await UserManager.getCurrentUserOnlyAsync();
   if (user) {
     return user;
   }
@@ -83,6 +83,13 @@ export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
 
 export async function login(options: CommandOptions): Promise<User> {
   const user = await UserManager.getCurrentUserAsync();
+  if (user?.accessToken) {
+    throw new CommandError(
+      'ACCESS_TOKEN_ERROR',
+      'Please remove the EXPO_TOKEN environment var to login with a different user.'
+    );
+  }
+
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!nonInteractive) {
     if (user) {
@@ -91,7 +98,7 @@ export async function login(options: CommandOptions): Promise<User> {
       });
       if (!action) {
         // If user chooses to stay logged in, return
-        return user;
+        return user as User;
       }
     }
     return _usernamePasswordAuth(options.username, options.password, options.otp);
@@ -223,7 +230,7 @@ export async function _retryUsernamePasswordAuthWithOTPAsync(
   }
 ): Promise<User> {
   const { secondFactorDevices, smsAutomaticallySent } = metadata;
-  invariant(
+  assert(
     secondFactorDevices !== undefined && smsAutomaticallySent !== undefined,
     `Malformed OTP error metadata: ${metadata}`
   );
@@ -232,10 +239,7 @@ export async function _retryUsernamePasswordAuthWithOTPAsync(
   let otp: string | null = null;
 
   if (smsAutomaticallySent) {
-    invariant(
-      primaryDevice,
-      'OTP should only automatically be sent when there is a primary device'
-    );
+    assert(primaryDevice, 'OTP should only automatically be sent when there is a primary device');
     log.nested(
       `One-time password was sent to the phone number ending in ${primaryDevice.sms_phone_number}.`
     );
@@ -321,6 +325,14 @@ async function _usernamePasswordAuth(
 }
 
 export async function register(): Promise<User> {
+  const user = await UserManager.getCurrentUserAsync();
+  if (user?.accessToken) {
+    throw new CommandError(
+      'ACCESS_TOKEN_ERROR',
+      'Please remove the EXPO_TOKEN environment var to register as a new user.'
+    );
+  }
+
   log(
     `
 We need an email, username, and password to create an account for you.

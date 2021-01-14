@@ -1,8 +1,9 @@
+import { ConfigPlugin } from '@expo/config-plugins';
 import { boolish } from 'getenv';
 
-import { ConfigFilePaths, ConfigPlugin } from '../Config.types';
+import { ConfigFilePaths } from '../Config.types';
 
-const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
+export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 /**
  * Adds the _internal object.

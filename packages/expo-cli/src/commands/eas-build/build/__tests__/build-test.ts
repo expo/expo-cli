@@ -36,7 +36,9 @@ jest.mock('@expo/config-plugins', () => {
 jest.mock('fs');
 jest.mock('prompts');
 jest.mock('../../../../projects', () => {
+  const { getProjectOwner } = jest.requireActual('../../../../projects');
   return {
+    getProjectOwner,
     ensureProjectExistsAsync: () => 'fakeProjectId',
   };
 });

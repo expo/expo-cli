@@ -24,6 +24,8 @@ jest.mock('../../android/Icon', () => {
     setIconAsync() {},
   };
 });
+const NotificationsPlugin = require('../../android/Notifications');
+NotificationsPlugin.withNotificationIcons = jest.fn(config => config);
 
 describe(evalModsAsync, () => {
   it(`runs with no core mods`, async () => {
@@ -91,6 +93,7 @@ describe('built-in plugins', () => {
     let config: ExportedConfig = {
       name: 'app',
       slug: '',
+      _internal: { projectRoot: '.' },
       ios: {
         config: {
           usesNonExemptEncryption: false,
@@ -235,6 +238,7 @@ describe('built-in plugins', () => {
         allowBackup: true,
         softwareKeyboardLayoutMode: 'pan',
       },
+      _internal: { projectRoot: '/app' },
       mods: null,
     };
 
@@ -292,7 +296,10 @@ describe('built-in plugins', () => {
       'android/app/src/main/res/values/styles.xml',
       'android/app/src/main/res/values/strings.xml',
       'android/app/src/main/res/values/colors.xml',
+      'android/app/build.gradle',
       'android/app/google-services.json',
+      'android/settings.gradle',
+      'android/build.gradle',
       'config/GoogleService-Info.plist',
       'config/google-services.json',
       'locales/en-US.json',

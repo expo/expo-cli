@@ -1,5 +1,5 @@
 import { ExpoConfig } from '@expo/config-types';
-import { stat, Stats } from 'fs-extra';
+import { stat, Stats, statSync } from 'fs-extra';
 import resolveFrom from 'resolve-from';
 
 export function projectHasModule(
@@ -30,4 +30,12 @@ export async function fileExistsAsync(file: string): Promise<boolean> {
 
 export async function directoryExistsAsync(file: string): Promise<boolean> {
   return (await statAsync(file))?.isDirectory() ?? false;
+}
+
+export function fileExists(file: string): boolean {
+  try {
+    return statSync(file).isFile();
+  } catch (e) {
+    return false;
+  }
 }

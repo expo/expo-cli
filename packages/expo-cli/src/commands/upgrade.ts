@@ -7,6 +7,7 @@ import chalk from 'chalk';
 import program, { Command } from 'commander';
 import getenv from 'getenv';
 import difference from 'lodash/difference';
+import omit from 'lodash/omit';
 import pickBy from 'lodash/pickBy';
 import ora from 'ora';
 import semver from 'semver';
@@ -83,7 +84,8 @@ async function getExactInstalledModuleVersionAsync(
 export async function getUpdatedDependenciesAsync(
   projectRoot: string,
   workflow: ExpoWorkflow,
-  targetSdkVersion: TargetSDKVersion | null
+  targetSdkVersion: TargetSDKVersion | null,
+  targetSdkVersionString: string
 ): Promise<DependencyList> {
   // Get the updated version for any bundled modules
   const { exp, pkg } = getConfig(projectRoot);
@@ -94,13 +96,27 @@ export async function getUpdatedDependenciesAsync(
   // Smoosh regular and dev dependencies together for now
   const projectDependencies = { ...pkg.dependencies, ...pkg.devDependencies };
 
-  return getDependenciesFromBundledNativeModules({
+  const dependencies = getDependenciesFromBundledNativeModules({
     projectDependencies,
     bundledNativeModules,
     sdkVersion: exp.sdkVersion,
     workflow,
     targetSdkVersion,
   });
+
+  // Add expo-random as a dependency if using expo-auth-session and upgrading to
+  // a version where it has been moved to a peer dependency.
+  // We can remove this when we no longer support SDK versions < 40, or have a
+  // better way of installing peer dependencies.
+  if (
+    dependencies['expo-auth-session'] &&
+    !dependencies['expo-random'] &&
+    semver.gte(targetSdkVersionString, '40.0.0')
+  ) {
+    dependencies['expo-random'] = bundledNativeModules['expo-random'];
+  }
+
+  return dependencies;
 }
 
 export type UpgradeDependenciesOptions = {
@@ -427,6 +443,9 @@ export async function upgradeAsync(
   },
   options: Options
 ) {
+  // Force updating the versions cache
+  await Versions.versionsAsync({ skipCache: true });
+
   const { exp, pkg } = await getConfig(projectRoot);
 
   if (await maybeBailOnGitStatusAsync()) return;
@@ -589,14 +608,21 @@ export async function upgradeAsync(
   log.addNewLineIfNone();
 
   // Get all updated packages
-  const updates = await getUpdatedDependenciesAsync(projectRoot, workflow, targetSdkVersion);
+  const updates = await getUpdatedDependenciesAsync(
+    projectRoot,
+    workflow,
+    targetSdkVersion,
+    targetSdkVersionString
+  );
 
   // Split updated packages by dependencies and devDependencies
   const devDependencies = pickBy(updates, (_version, name) => pkg.devDependencies?.[name]);
   const devDependenciesAsStringArray = Object.keys(devDependencies).map(
     name => `${name}@${updates[name]}`
   );
-  const dependencies = pickBy(updates, (_version, name) => pkg.dependencies?.[name]);
+
+  // Anything that isn't in devDependencies must be a dependency
+  const dependencies = omit(updates, Object.keys(devDependencies));
   const dependenciesAsStringArray = Object.keys(dependencies).map(
     name => `${name}@${updates[name]}`
   );

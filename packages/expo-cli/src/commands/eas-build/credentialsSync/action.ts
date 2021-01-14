@@ -9,7 +9,7 @@ import { runCredentialsManager } from '../../../credentials/route';
 import { SetupAndroidBuildCredentialsFromLocal } from '../../../credentials/views/SetupAndroidKeystore';
 import { SetupIosBuildCredentialsFromLocal } from '../../../credentials/views/SetupIosBuildCredentials';
 import log from '../../../log';
-import { ensureProjectExistsAsync } from '../../../projects';
+import { ensureProjectExistsAsync, getProjectOwner } from '../../../projects';
 import prompts from '../../../prompts';
 import { getBundleIdentifier } from '../build/utils/ios';
 import { AnalyticsEvent, BuildCommandPlatform, TrackingContext } from '../types';
@@ -28,7 +28,7 @@ export default async function credentialsSyncAction(projectDir: string, options:
   const user = await UserManager.ensureLoggedInAsync();
   const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
 
-  const accountName = exp.owner || user.username;
+  const accountName = getProjectOwner(user, exp);
   const projectName = exp.slug;
 
   const projectId = await ensureProjectExistsAsync(user, {
@@ -91,7 +91,7 @@ async function updateRemoteCredentialsAsync(
   }
   if ([BuildCommandPlatform.ALL, BuildCommandPlatform.ANDROID].includes(platform)) {
     try {
-      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+      const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
       await runCredentialsManager(
         ctx,
         new SetupAndroidBuildCredentialsFromLocal(experienceName, { skipKeystoreValidation: false })
@@ -113,7 +113,7 @@ async function updateRemoteCredentialsAsync(
     try {
       const bundleIdentifier = await getBundleIdentifier(projectDir, ctx.manifest);
       const appLookupParams = {
-        accountName: ctx.manifest.owner ?? ctx.user.username,
+        accountName: ctx.projectOwner,
         projectName: ctx.manifest.slug,
         bundleIdentifier,
       };

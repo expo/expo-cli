@@ -1,5 +1,6 @@
 import * as osascript from '@expo/osascript';
 import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
+import chalk from 'chalk';
 import path from 'path';
 
 import Logger from './Logger';
@@ -136,7 +137,6 @@ export async function bootAsync({ udid }: { udid: string }): Promise<Device | nu
     // Skip logging since this is likely to fail.
     await xcrunAsync(['simctl', 'boot', udid]);
   } catch (error) {
-    // Silly errors
     if (!error.stderr?.match(/Unable to boot device in current state: Booted/)) {
       throw error;
     }
@@ -339,6 +339,13 @@ export async function xcrunAsync(args: string[], options?: SpawnOptions) {
         'XCODE_LICENSE_NOT_ACCEPTED',
         'Xcode license is not accepted. Please run `sudo xcodebuild -license`.'
       );
+    } else if (e.stderr?.includes('not a developer tool or in PATH')) {
+      throw new XDLError(
+        'SIMCTL_NOT_AVAILABLE',
+        `You may need to run ${chalk.bold(
+          'sudo xcode-select -s /Applications/Xcode.app'
+        )} and try again.`
+      );
     }
     throw e;
   }
@@ -347,7 +354,7 @@ export async function xcrunWithLogging(args: string[], options?: SpawnOptions) {
   try {
     return await xcrunAsync(args, options);
   } catch (e) {
-    Logger.global.error(`Error running \`xcrun ${args.join(' ')}\`: ${e.stderr}`);
+    Logger.global.error(`Error running \`xcrun ${args.join(' ')}\`: ${e.stderr || e.message}`);
     throw e;
   }
 }

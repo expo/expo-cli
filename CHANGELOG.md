@@ -6,11 +6,126 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [cli] Environment variables matching `EXPO_` or `REACT_NATIVE_` are no longer exposed publicly to the development-mode app or website ([#3063](https://github.com/expo/expo-cli/issues/3063))
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+## [Sun, 27 Dec 2020 13:14:17 -0800](https://github.com/expo/expo-cli/commit/a14f18284efda89a08910d5a753b1749897f54a2)
+
+### 🛠 Breaking changes
+
+- [cli] Mark expo upload:ios as unsupported ([#3030](https://github.com/expo/expo-cli/issues/3030))
+
+### 📦 Packages updated
+
+- expo-cli@4.0.17
+
+## [Mon, 21 Dec 2020 18:18:20 -0800](https://github.com/expo/expo-cli/commit/62339b5fb7300569ca6cbb034251070bf8a63999)
+
+### 🛠 Breaking changes
+
+- [xdl] Update iOS deployment target in ejected Podfile (internal)
+
+### 🎉 New features
+
+- [xdl][dev-tools][cli] Update --dev-client for new requirements ([#2938](https://github.com/expo/expo-cli/issues/2938))
+
+### 📦 Packages updated
+
+- @expo/dev-server@0.1.48
+- @expo/dev-tools@0.13.74
+- kkexpo-cli@4.0.16
+- @expo/metro-config@0.1.48
+- @expo/xdl@59.0.14
+
+## [Mon, 14 Dec 2020 20:47:39 -0800](https://github.com/expo/expo-cli/commit/ad6570659b8ad9fccdec8c79791b6f5d6578b824)
 
 ### 🐛 Bug fixes
+
+- [configure-splash-screen][config-plugins] Bump @expo/configure-splash-screen
+- [configure-splash-screen] Remove peer dependency
+- [english] effect -> affect ([#3013](https://github.com/expo/expo-cli/issues/3013))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.12
+- @expo/dev-tools@0.13.72
+- expo-cli@4.0.14
+- uri-scheme@1.0.58
+- @expo/xdl@59.0.12
+
+## [Wed, 9 Dec 2020 17:12:12 -0800](https://github.com/expo/expo-cli/commit/cbbfa68a6eac9639b4217a9bcc0ca3ce30eb1378)
+
+### 🐛 Bug fixes
+
+- [cli][xdl] Clear versions cache when running expo upgrade, to be safe
+- [config] fix mod serialization ([#3008](https://github.com/expo/expo-cli/issues/3008))
+- [config-plugins] use env variable for debug when \_internal isn't defined ([#3011](https://github.com/expo/expo-cli/issues/3011))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.11
+- @expo/config@3.3.21
+- @expo/dev-server@0.1.46
+- @expo/dev-tools@0.13.71
+- @expo/electron-adapter@0.0.38
+- expo-cli@4.0.13
+- expo-optimize@0.1.69
+- @expo/metro-config@0.1.46
+- @expo/next-adapter@2.1.52
+- expo-pwa@0.0.57
+- uri-scheme@1.0.57
+- @expo/webpack-config@0.12.51
+- @expo/xdl@59.0.11
+
+## [Tue, 8 Dec 2020 18:21:57 -0800](https://github.com/expo/expo-cli/commit/a875d06d4ab529ff9b4e7fe570692a47bf46f1b6)
+
+### 🎉 New features
+
+- [cli] Add expo-random when upgrading to >= SDK 40 with expo-auth-session
+- [cli] Add cmd.exe detection on windows & warn about it ([#2838](https://github.com/expo/expo-cli/issues/2838))
+- [cli] Skip warning about expo-constants when ejecting in SDK 40 and greater ([#3006](https://github.com/expo/expo-cli/issues/3006))
+- [xdl] Add robots as new supported user type ([#2440](https://github.com/expo/expo-cli/issues/2440))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.70
+- expo-cli@4.0.12
+- @expo/xdl@59.0.10
+
+## [Mon, 7 Dec 2020 22:27:44 -0800](https://github.com/expo/expo-cli/commit/3fb08fdff7a03fb49a1f2ddc6d968ceb14be9519)
+
+### 🎉 New features
+
+- [config-plugins] Added support for static plugins ([#2943](https://github.com/expo/expo-cli/issues/2943))
+- [config-plugins] Support splash screen config on SDK 40 ([#3003](https://github.com/expo/expo-cli/issues/3003))
+- [config-plugins] added method for adding frameworks ([#2997](https://github.com/expo/expo-cli/issues/2997))
+
+### 🐛 Bug fixes
+
+- [xdl] Check for client updates for the given sdk version by default
+- [cli] fix windows post install message
+- [cli] Use unified website route for all builds (no more /v2) ([#2995](https://github.com/expo/expo-cli/issues/2995))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.10
+- @expo/config@3.3.20
+- @expo/dev-server@0.1.45
+- @expo/dev-tools@0.13.69
+- @expo/electron-adapter@0.0.37
+- expo-cli@4.0.11
+- expo-optimize@0.1.68
+- @expo/metro-config@0.1.45
+- @expo/next-adapter@2.1.51
+- pod-install@0.1.14
+- expo-pwa@0.0.56
+- @expo/schemer@1.3.23
+- uri-scheme@1.0.56
+- @expo/webpack-config@0.12.50
+- @expo/xdl@59.0.9
 
 ## [Fri, 4 Dec 2020 10:38:20 -0800](https://github.com/expo/expo-cli/commit/65cb9a64cfa4cc6fb89bdc2a432acd16c6043def)
 
@@ -79,7 +194,7 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
-- [config] fill _internal object ([#2968](https://github.com/expo/expo-cli/issues/2968))
+- [config] fill \_internal object ([#2968](https://github.com/expo/expo-cli/issues/2968))
 
 ### 🐛 Bug fixes
 
@@ -100,7 +215,6 @@ This is the log of notable changes to Expo CLI and related packages.
 - uri-scheme@1.0.50
 - @expo/webpack-config@0.12.47
 - @expo/xdl@59.0.3
-
 
 ## [Fri, 27 Nov 2020 14:33:45 -0800](https://github.com/expo/expo-cli/commit/7bb61ba51da0eafce3faa8cbf59124f56ebe7e7d)
 

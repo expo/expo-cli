@@ -127,12 +127,14 @@ describe(getAppDelegate, () => {
 
   it(`returns objc path`, () => {
     expect(getAppDelegate('/objc')).toStrictEqual({
+      contents: '',
       path: '/objc/ios/testproject/AppDelegate.m',
       language: 'objc',
     });
   });
   it(`returns swift path`, () => {
     expect(getAppDelegate('/swift')).toStrictEqual({
+      contents: '',
       path: '/swift/ios/testproject/AppDelegate.swift',
       language: 'swift',
     });
@@ -145,6 +147,7 @@ describe(getAppDelegate, () => {
 
   it(`warns when multiple paths are found`, () => {
     expect(getAppDelegate('/confusing')).toStrictEqual({
+      contents: '',
       path: '/confusing/ios/testproject/AppDelegate.m',
       language: 'objc',
     });

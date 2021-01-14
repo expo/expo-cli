@@ -7,7 +7,7 @@ import pick from 'lodash/pick';
 import ora from 'ora';
 
 import log from '../../../../log';
-import { ensureProjectExistsAsync } from '../../../../projects';
+import { ensureProjectExistsAsync, getProjectOwner } from '../../../../projects';
 import { sleep } from '../../../utils/promise';
 import SubmissionService, { DEFAULT_CHECK_INTERVAL_MS } from '../SubmissionService';
 import { Platform, Submission, SubmissionStatus } from '../SubmissionService.types';
@@ -45,7 +45,7 @@ class AndroidSubmitter {
     const user = await UserManager.ensureLoggedInAsync();
     const exp = getExpoConfig(this.ctx.projectDir);
     const projectId = await ensureProjectExistsAsync(user, {
-      accountName: exp.owner || user.username,
+      accountName: getProjectOwner(user, exp),
       projectName: exp.slug,
     });
     const submissionConfig = await AndroidOnlineSubmitter.formatSubmissionConfigAndPrintSummary(
