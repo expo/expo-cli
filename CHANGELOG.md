@@ -6,11 +6,19 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+## [Thu Jan 14 14:34:05 2021 +0100](https://github.com/expo/expo-cli/commit/e8dfcc425fa8128aeaf21fb8bbba6760dc196fcf)
+
+### 🛠 Breaking changes
+
 - [cli] Environment variables matching `EXPO_` or `REACT_NATIVE_` are no longer exposed publicly to the development-mode app or website ([#3063](https://github.com/expo/expo-cli/issues/3063))
 
 ### 🎉 New features
 
-### 🐛 Bug fixes
+- [config-plugins] ProvisioningProfile: allow setting provisioning profile for a particular target (not only for the first one)
 
 ## [Sun, 27 Dec 2020 13:14:17 -0800](https://github.com/expo/expo-cli/commit/a14f18284efda89a08910d5a753b1749897f54a2)
 
