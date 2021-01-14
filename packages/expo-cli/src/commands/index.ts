@@ -8,7 +8,6 @@ const COMMANDS = [
   require('./customize'),
   require('./diagnostics'),
   require('./doctor'),
-  require('./eas-build'),
   require('./eject'),
   require('./export'),
   require('./fetch'),
