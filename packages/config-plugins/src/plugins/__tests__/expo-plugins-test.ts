@@ -5,9 +5,9 @@ import * as path from 'path';
 import xcode from 'xcode';
 
 import { ExportedConfig } from '../../Plugin.types';
-import { readXMLAsync } from '../../android/XML';
 import { withBranch } from '../../ios/Branch';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
+import { readXMLAsync } from '../../utils/XML';
 import {
   withExpoAndroidPlugins,
   withExpoIOSPlugins,
