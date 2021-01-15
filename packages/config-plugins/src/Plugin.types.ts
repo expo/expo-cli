@@ -5,7 +5,7 @@ import { XcodeProject } from 'xcode';
 import { AndroidManifest } from './android/Manifest';
 import * as AndroidPaths from './android/Paths';
 import { ResourceXML } from './android/Resources';
-import { InfoPlist } from './ios/IosConfig.types';
+import { ExpoPlist, InfoPlist } from './ios/IosConfig.types';
 
 type OptionalPromise<T> = Promise<T> | T;
 
@@ -115,3 +115,5 @@ export interface ModConfig {
 }
 
 export type ModPlatform = keyof ModConfig;
+
+export { XcodeProject, InfoPlist, ExpoPlist, AndroidManifest };
