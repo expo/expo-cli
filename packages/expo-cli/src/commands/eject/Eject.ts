@@ -461,47 +461,64 @@ type DependenciesModificationResults = {
   hasNewDevDependencies: boolean;
 };
 
-async function updatePackageJSONAsync({
-  projectRoot,
-  tempDir,
-  pkg,
-}: {
-  projectRoot: string;
-  tempDir: string;
-  pkg: PackageJSONConfig;
-}): Promise<DependenciesModificationResults> {
-  let defaultDependencies: any = {};
-  let defaultDevDependencies: any = {};
-  const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
-  defaultDependencies = createDependenciesMap(dependencies);
-  defaultDevDependencies = createDependenciesMap(devDependencies);
-  /**
-   * Update package.json scripts - `npm start` should default to `react-native
-   * start` rather than `expo start` after ejecting, for example.
-   */
-  // NOTE(brentvatne): Removing spaces between steps for now, add back when
-  // there is some additional context for steps
-  const updatingPackageJsonStep = CreateApp.logNewSection(
-    'Updating your package.json scripts, dependencies, and main file'
-  );
+function getPackageJson(projectRoot: string): JSONObject {
+  return JsonFile.read(path.join(projectRoot, 'package.json'));
+}
+
+/**
+ * Update package.json scripts - `npm start` should default to `react-native
+ * start` rather than `expo start` after ejecting, for example.
+ */
+function updatePackageJSONScripts({ pkg }: { pkg: PackageJSONConfig }) {
   if (!pkg.scripts) {
     pkg.scripts = {};
   }
   pkg.scripts.start = 'react-native start';
   pkg.scripts.ios = 'react-native run-ios';
   pkg.scripts.android = 'react-native run-android';
+}
 
-  /**
-   * Update package.json dependencies by combining the dependencies in the project we are ejecting
-   * with the dependencies in the template project. Does the same for devDependencies.
-   *
-   * - The template may have some dependencies beyond react/react-native/react-native-unimodules,
-   *   for example RNGH and Reanimated. We should prefer the version that is already being used
-   *   in the project for those, but swap the react/react-native/react-native-unimodules versions
-   *   with the ones in the template.
-   * - The same applies to expo-updates -- since some native project configuration may depend on the
-   *   version, we should always use the version of expo-updates in the template.
-   */
+/**
+ * Add new app entry points
+ */
+function updatePackageJSONEntryPoint({ pkg }: { pkg: PackageJSONConfig }): boolean {
+  let removedPkgMain = false;
+  // Check that the pkg.main doesn't match:
+  // - ./node_modules/expo/AppEntry
+  // - ./node_modules/expo/AppEntry.js
+  // - node_modules/expo/AppEntry.js
+  // - expo/AppEntry.js
+  // - expo/AppEntry
+  if (shouldDeleteMainField(pkg.main)) {
+    // Save the custom
+    removedPkgMain = pkg.main;
+    delete pkg.main;
+  }
+
+  return removedPkgMain;
+}
+
+/**
+ * Update package.json dependencies by combining the dependencies in the project we are ejecting
+ * with the dependencies in the template project. Does the same for devDependencies.
+ *
+ * - The template may have some dependencies beyond react/react-native/react-native-unimodules,
+ *   for example RNGH and Reanimated. We should prefer the version that is already being used
+ *   in the project for those, but swap the react/react-native/react-native-unimodules versions
+ *   with the ones in the template.
+ * - The same applies to expo-updates -- since some native project configuration may depend on the
+ *   version, we should always use the version of expo-updates in the template.
+ */
+function updatePackageJSONDependencies({
+  tempDir,
+  pkg,
+}: {
+  tempDir: string;
+  pkg: PackageJSONConfig;
+}): DependenciesModificationResults {
+  const { dependencies, devDependencies } = getPackageJson(tempDir);
+  const defaultDependencies = createDependenciesMap(dependencies);
+  const defaultDevDependencies = createDependenciesMap(devDependencies);
 
   const combinedDependencies: DependenciesMap = createDependenciesMap({
     ...defaultDependencies,
@@ -533,21 +550,32 @@ async function updatePackageJSONAsync({
     pkg.devDependencies = Object.assign(pkg.devDependencies, combinedDevDependencies);
   }
 
-  /**
-   * Add new app entry points
-   */
-  let removedPkgMain;
-  // Check that the pkg.main doesn't match:
-  // - ./node_modules/expo/AppEntry
-  // - ./node_modules/expo/AppEntry.js
-  // - node_modules/expo/AppEntry.js
-  // - expo/AppEntry.js
-  // - expo/AppEntry
-  if (shouldDeleteMainField(pkg.main)) {
-    // Save the custom
-    removedPkgMain = pkg.main;
-    delete pkg.main;
-  }
+  return {
+    hasNewDependencies,
+    hasNewDevDependencies,
+  };
+}
+
+async function updatePackageJSONAsync({
+  projectRoot,
+  tempDir,
+  pkg,
+}: {
+  projectRoot: string;
+  tempDir: string;
+  pkg: PackageJSONConfig;
+}): Promise<DependenciesModificationResults> {
+  // NOTE(brentvatne): Removing spaces between steps for now, add back when
+  // there is some additional context for steps
+  const updatingPackageJsonStep = CreateApp.logNewSection(
+    'Updating your package.json scripts, dependencies, and main file'
+  );
+
+  updatePackageJSONScripts({ pkg });
+
+  const results = updatePackageJSONDependencies({ pkg, tempDir });
+
+  const removedPkgMain = updatePackageJSONEntryPoint({ pkg });
   await fs.writeFile(path.resolve(projectRoot, 'package.json'), JSON.stringify(pkg, null, 2));
 
   updatingPackageJsonStep.succeed(
@@ -562,10 +590,7 @@ async function updatePackageJSONAsync({
     log.newLine();
   }
 
-  return {
-    hasNewDependencies,
-    hasNewDevDependencies,
-  };
+  return results;
 }
 
 export function resolveBareEntryFile(projectRoot: string, main: any) {
@@ -736,10 +761,11 @@ async function createNativeProjectsFromTemplateAsync({
 function createDependenciesMap(dependencies: any): DependenciesMap {
   if (typeof dependencies !== 'object') {
     throw new Error(`Dependency map is invalid, expected object but got ${typeof dependencies}`);
+  } else if (!dependencies) {
+    return {};
   }
 
   const outputMap: DependenciesMap = {};
-  if (!dependencies) return outputMap;
 
   for (const key of Object.keys(dependencies)) {
     const value = dependencies[key];
