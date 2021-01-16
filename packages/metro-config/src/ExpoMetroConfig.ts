@@ -92,6 +92,7 @@ export function getDefaultConfig(
       },
     },
     transformer: {
+      allowOptionalDependencies: true,
       babelTransformerPath: require.resolve('metro-react-native-babel-transformer'),
       // TODO: Bacon: Add path for web platform
       assetRegistryPath: path.join(reactNativePath, 'Libraries/Image/AssetRegistry'),
