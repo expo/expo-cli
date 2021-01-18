@@ -1,5 +1,6 @@
 import { getDefaultTarget, ProjectTarget } from '@expo/config';
 import { Project, UrlUtils } from '@expo/xdl';
+import { exportForPublishingAsync } from '@expo/xdl/build/Project';
 import program, { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
@@ -26,6 +27,7 @@ type Options = {
   dumpSourcemap: boolean;
   maxWorkers?: number;
   force: boolean;
+  eas: boolean;
 };
 
 export async function promptPublicUrlAsync(): Promise<string> {
@@ -75,6 +77,7 @@ async function exportFilesAsync(
     | 'outputDir'
     | 'publicUrl'
     | 'assetUrl'
+    | 'eas'
   >
 ) {
   // Make outputDir an absolute path if it isnt already
@@ -88,13 +91,17 @@ async function exportFilesAsync(
     },
   };
   const absoluteOutputDir = path.resolve(process.cwd(), options.outputDir);
-  return await Project.exportForAppHosting(
-    projectRoot,
-    options.publicUrl!,
-    options.assetUrl,
-    absoluteOutputDir,
-    exportOptions
-  );
+  if (options.eas) {
+    return await exportForPublishingAsync(projectRoot, options.outputDir, exportOptions);
+  } else {
+    return await Project.exportForAppHosting(
+      projectRoot,
+      options.publicUrl!,
+      options.assetUrl,
+      absoluteOutputDir,
+      exportOptions
+    );
+  }
 }
 
 async function mergeSourceDirectoriresAsync(
@@ -160,8 +167,10 @@ function collect<T>(val: T, memo: T[]): T[] {
 }
 
 export async function action(projectDir: string, options: Options) {
-  // Ensure URL
-  options.publicUrl = await ensurePublicUrlAsync(options.publicUrl, options.dev);
+  if (!options.eas) {
+    // Ensure URL
+    options.publicUrl = await ensurePublicUrlAsync(options.publicUrl, options.dev);
+  }
 
   // Ensure the output directory is created
   const outputPath = path.resolve(projectDir, options.outputDir);
@@ -230,5 +239,6 @@ export default function (program: Command) {
       []
     )
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
+    .option('--eas', 'build bundles for use with EAS updates.')
     .asyncActionProjectDir(action, { checkConfig: true });
 }

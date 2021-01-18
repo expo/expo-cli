@@ -349,7 +349,6 @@ export function shouldUseDevServer(exp: ExpoConfig) {
 
 export async function exportForPublishingAsync(
   projectRoot: string,
-  publicUrl: string,
   outputDir: string,
   options: {
     isDev?: boolean;
@@ -404,10 +403,14 @@ export async function exportForPublishingAsync(
     [key in BundlePlatform]: Partial<PlatformMetadata>;
   } = { android: {}, ios: {} };
   bundlePlatforms.forEach(platform => {
+    fileMetadata[platform].assets = [];
     bundles[platform].assets.forEach((asset: { type: string; fileHashes: string[] }) => {
-      fileMetadata[platform].assets = asset.fileHashes.map(hash => {
-        return { path: path.join('assets', hash), ext: asset.type };
-      });
+      fileMetadata[platform].assets = [
+        ...fileMetadata[platform].assets!,
+        ...asset.fileHashes.map(hash => {
+          return { path: path.join('assets', hash), ext: asset.type };
+        }),
+      ];
     });
     fileMetadata[platform].bundle = bundlePaths[platform];
   });
