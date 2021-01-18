@@ -234,6 +234,6 @@ export default function (program: Command) {
       []
     )
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
-    .option('--eas', 'build bundles for use with EAS updates.')
+    .option('--eas', 'export bundles for use with EAS updates.')
     .asyncActionProjectDir(action, { checkConfig: true });
 }

@@ -903,7 +903,7 @@ async function _getPublishExpConfigAsync(
   };
 }
 
-export async function buildPublishBundlesAsync(
+async function buildPublishBundlesAsync(
   projectRoot: string,
   publishOptions: PublishOptions = {},
   bundleOptions: { dev?: boolean; useDevServer: boolean }

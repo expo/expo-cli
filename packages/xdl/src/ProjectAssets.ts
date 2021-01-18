@@ -291,7 +291,7 @@ function collectAssetPaths(assets: Asset[]): Record<string, string> {
   return paths;
 }
 
-export async function saveAssetsAsync(projectRoot: string, assets: Asset[], outputDir: string) {
+async function saveAssetsAsync(projectRoot: string, assets: Asset[], outputDir: string) {
   // Collect paths by key, also effectively handles duplicates in the array
   const paths = collectAssetPaths(assets);
 
