@@ -196,13 +196,13 @@ export async function exportAssetsAsync(
   { projectRoot, exp, hostedUrl, assetPath, outputDir, bundles }: ExportAssetsOptions,
   eas?: boolean
 ) {
+  logger.global.info('Analyzing assets');
+
   let assets: Asset[];
   if (eas) {
     invariant(outputDir, 'outputDir must be specified when exporting to EAS');
     assets = uniqBy([...bundles.android.assets, ...bundles.ios.assets], asset => asset.hash);
   } else {
-    logger.global.info('Analyzing assets');
-
     const assetCdnPath = urljoin(hostedUrl, assetPath);
     assets = await collectAssets(projectRoot, exp, assetCdnPath, bundles);
   }
