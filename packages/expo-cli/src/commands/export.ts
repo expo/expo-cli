@@ -1,6 +1,5 @@
 import { getDefaultTarget, ProjectTarget } from '@expo/config';
 import { Project, UrlUtils } from '@expo/xdl';
-import { exportForPublishingAsync } from '@expo/xdl/build/Project';
 import program, { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
@@ -90,18 +89,14 @@ async function exportFilesAsync(
       target: options.target ?? getDefaultTarget(projectRoot),
     },
   };
-  const absoluteOutputDir = path.resolve(process.cwd(), options.outputDir);
-  if (options.eas) {
-    return await exportForPublishingAsync(projectRoot, options.outputDir, exportOptions);
-  } else {
-    return await Project.exportForAppHosting(
-      projectRoot,
-      options.publicUrl!,
-      options.assetUrl,
-      absoluteOutputDir,
-      exportOptions
-    );
-  }
+  return await Project.exportAppAsync(
+    projectRoot,
+    options.publicUrl!,
+    options.assetUrl,
+    options.outputDir,
+    exportOptions,
+    options.eas
+  );
 }
 
 async function mergeSourceDirectoriresAsync(

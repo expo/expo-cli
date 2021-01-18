@@ -1,9 +1,11 @@
 import { ExpoAppManifest, ExpoConfig } from '@expo/config';
 import { BundleAssetWithFileHashes, BundleOutput } from '@expo/dev-server';
 import fs from 'fs-extra';
+import invariant from 'invariant';
 import chunk from 'lodash/chunk';
 import get from 'lodash/get';
 import set from 'lodash/set';
+import uniqBy from 'lodash/uniqBy';
 import md5hex from 'md5hex';
 import minimatch from 'minimatch';
 import path from 'path';
@@ -190,18 +192,20 @@ export async function publishAssetsAsync(
   });
 }
 
-export async function exportAssetsAsync({
-  projectRoot,
-  exp,
-  hostedUrl,
-  assetPath,
-  outputDir,
-  bundles,
-}: ExportAssetsOptions) {
-  logger.global.info('Analyzing assets');
+export async function exportAssetsAsync(
+  { projectRoot, exp, hostedUrl, assetPath, outputDir, bundles }: ExportAssetsOptions,
+  eas?: boolean
+) {
+  let assets: Asset[];
+  if (eas) {
+    invariant(outputDir, 'outputDir must be specified when exporting to EAS');
+    assets = uniqBy([...bundles.android.assets, ...bundles.ios.assets], asset => asset.hash);
+  } else {
+    logger.global.info('Analyzing assets');
 
-  const assetCdnPath = urljoin(hostedUrl, assetPath);
-  const assets = await collectAssets(projectRoot, exp, assetCdnPath, bundles);
+    const assetCdnPath = urljoin(hostedUrl, assetPath);
+    assets = await collectAssets(projectRoot, exp, assetCdnPath, bundles);
+  }
 
   logger.global.info('Saving assets');
 
