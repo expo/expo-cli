@@ -29,6 +29,7 @@ import fs from 'fs-extra';
 import getenv from 'getenv';
 import HashIds from 'hashids';
 import escapeRegExp from 'lodash/escapeRegExp';
+import uniqBy from 'lodash/uniqBy';
 import { AddressInfo } from 'net';
 import path from 'path';
 import readLastLines from 'read-last-lines';
@@ -71,6 +72,7 @@ import { assertValidProjectRoot } from './project/errors';
 import { startTunnelsAsync, stopTunnelsAsync } from './project/ngrok';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 import FormData from './tools/FormData';
+import { ProjectAssets } from './xdl';
 const MINIMUM_BUNDLE_SIZE = 500;
 
 const treekillAsync = promisify<number, string>(treekill);
@@ -118,6 +120,18 @@ type Release = {
 };
 
 type ProjectStatus = 'running' | 'ill' | 'exited';
+
+type BundlePlatform = 'android' | 'ios';
+const bundlePlatforms: BundlePlatform[] = ['android', 'ios'];
+type PlatformMetadata = { bundle: string; assets: { path: string; ext: string }[] };
+type FileMetadata = {
+  [key in BundlePlatform]: PlatformMetadata;
+};
+type Metadata = {
+  version: 0;
+  bundler: 'metro';
+  fileMetadata: FileMetadata;
+};
 
 export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
   const { packagerPort, expoServerPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
@@ -331,6 +345,135 @@ export async function runHook(hook: LoadedHook, hookOptions: Omit<HookArguments,
  */
 export function shouldUseDevServer(exp: ExpoConfig) {
   return Versions.gteSdkVersion(exp, '40.0.0') || getenv.boolish('EXPO_USE_DEV_SERVER', false);
+}
+
+export async function exportForPublishingAsync(
+  projectRoot: string,
+  publicUrl: string,
+  outputDir: string,
+  options: {
+    isDev?: boolean;
+    dumpAssetmap?: boolean;
+    dumpSourcemap?: boolean;
+    publishOptions?: PublishOptions;
+  } = {}
+): Promise<void> {
+  // build the bundles
+  // make output dirs if not exists
+  const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
+  await fs.ensureDir(assetPathToWrite);
+  const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
+  await fs.ensureDir(bundlesPathToWrite);
+
+  const { exp } = await _getPublishExpConfigAsync(projectRoot, options.publishOptions || {});
+
+  const bundles = await buildPublishBundlesAsync(projectRoot, options.publishOptions, {
+    dev: options.isDev,
+    useDevServer: shouldUseDevServer(exp),
+  });
+  const iosBundle = bundles.ios.code;
+  const androidBundle = bundles.android.code;
+
+  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
+  const iosBundleUrl = `ios-${iosBundleHash}.js`;
+  const iosJsRelativePath = path.join('bundles', iosBundleUrl);
+  const iosJsPath = path.join(outputDir, iosJsRelativePath);
+
+  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
+  const androidBundleUrl = `android-${androidBundleHash}.js`;
+  const androidJsRelativePath = path.join('bundles', androidBundleUrl);
+  const androidJsPath = path.join(outputDir, androidJsRelativePath);
+
+  const bundlePaths = {
+    android: androidJsRelativePath,
+    ios: iosJsRelativePath,
+  };
+
+  await writeArtifactSafelyAsync(projectRoot, null, iosJsPath, iosBundle);
+  await writeArtifactSafelyAsync(projectRoot, null, androidJsPath, androidBundle);
+
+  logger.global.info('Finished saving JS Bundles.');
+
+  // Write assets
+  const assets = [...bundles.android.assets, ...bundles.ios.assets];
+  const uniqueAssets: Asset[] = uniqBy(assets, asset => asset.hash);
+  await ProjectAssets.saveAssetsAsync(projectRoot, uniqueAssets, outputDir);
+
+  // Build metadata.json
+  const fileMetadata: {
+    [key in BundlePlatform]: Partial<PlatformMetadata>;
+  } = { android: {}, ios: {} };
+  bundlePlatforms.forEach(platform => {
+    bundles[platform].assets.forEach((asset: { type: string; fileHashes: string[] }) => {
+      fileMetadata[platform].assets = asset.fileHashes.map(hash => {
+        return { path: path.join('assets', hash), ext: asset.type };
+      });
+    });
+    fileMetadata[platform].bundle = bundlePaths[platform];
+  });
+  const metadata: Metadata = {
+    version: 0,
+    bundler: 'metro',
+    fileMetadata: fileMetadata as FileMetadata,
+  };
+
+  fs.writeFileSync(path.resolve(outputDir, 'metadata.json'), JSON.stringify(metadata));
+  if (options.dumpAssetmap) {
+    logger.global.info('Dumping asset map.');
+
+    const assetmap: { [hash: string]: Asset } = {};
+
+    assets.forEach((asset: Asset) => {
+      assetmap[asset.hash] = asset;
+    });
+
+    await writeArtifactSafelyAsync(
+      projectRoot,
+      null,
+      path.join(outputDir, 'assetmap.json'),
+      JSON.stringify(assetmap)
+    );
+  }
+
+  // build source maps
+  if (options.dumpSourcemap) {
+    const iosSourceMap = bundles.ios.map;
+    const androidSourceMap = bundles.android.map;
+
+    // write the sourcemap files
+    const iosMapName = `ios-${iosBundleHash}.map`;
+    const iosMapPath = path.join(outputDir, 'bundles', iosMapName);
+    await writeArtifactSafelyAsync(projectRoot, null, iosMapPath, iosSourceMap);
+
+    const androidMapName = `android-${androidBundleHash}.map`;
+    const androidMapPath = path.join(outputDir, 'bundles', androidMapName);
+    await writeArtifactSafelyAsync(projectRoot, null, androidMapPath, androidSourceMap);
+
+    // Remove original mapping to incorrect sourcemap paths
+    logger.global.info('Configuring sourcemaps');
+    await truncateLastNLines(iosJsPath, 1);
+    await truncateLastNLines(androidJsPath, 1);
+
+    // Add correct mapping to sourcemap paths
+    await fs.appendFile(iosJsPath, `\n//# sourceMappingURL=${iosMapName}`);
+    await fs.appendFile(androidJsPath, `\n//# sourceMappingURL=${androidMapName}`);
+
+    // Make a debug html so user can debug their bundles
+    logger.global.info('Preparing additional debugging files');
+    const debugHtml = `
+    <script src="${urljoin('bundles', iosBundleUrl)}"></script>
+    <script src="${urljoin('bundles', androidBundleUrl)}"></script>
+    Open up this file in Chrome. In the Javascript developer console, navigate to the Source tab.
+    You can see a red coloured folder containing the original source code from your bundle.
+    `;
+
+    await writeArtifactSafelyAsync(
+      projectRoot,
+      null,
+      path.join(outputDir, 'debug.html'),
+      debugHtml
+    );
+  }
 }
 
 /**
@@ -1586,7 +1729,7 @@ export async function startReactNativeServerAsync({
       _logPackagerOutput(projectRoot, 'error', data);
     }
   });
-  const exitPromise = new Promise((resolve, reject) => {
+  const exitPromise = new Promise<void>((resolve, reject) => {
     packagerProcess.once('exit', async code => {
       ProjectUtils.logDebug(projectRoot, 'expo', `Metro Bundler process exited with code ${code}`);
       if (code) {

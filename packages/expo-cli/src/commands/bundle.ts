@@ -101,10 +101,14 @@ export async function action(projectDir: string, options: Options) {
     [key in Platform]: Partial<PlatformMetadata>;
   } = { android: {}, ios: {} };
   bundlePlatforms.forEach(platform => {
+    fileMetadata[platform].assets = [];
     bundles[platform].assets.forEach((asset: { type: string; fileHashes: string[] }) => {
-      fileMetadata[platform].assets = asset.fileHashes.map(hash => {
-        return { path: path.join('assets', hash), ext: asset.type };
-      });
+      fileMetadata[platform].assets = [
+        ...fileMetadata[platform].assets!,
+        ...asset.fileHashes.map(hash => {
+          return { path: path.join('assets', hash), ext: asset.type };
+        }),
+      ];
     });
     fileMetadata[platform].bundle = bundlePaths[platform];
   });
