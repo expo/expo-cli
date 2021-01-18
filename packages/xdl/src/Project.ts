@@ -342,7 +342,7 @@ export async function runHook(hook: LoadedHook, hookOptions: Omit<HookArguments,
  * way), false if we should fall back to spawning it as a subprocess (supported for backwards
  * compatibility with SDK39 and older).
  */
-export function shouldUseDevServer(exp: ExpoConfig) {
+function shouldUseDevServer(exp: ExpoConfig) {
   return Versions.gteSdkVersion(exp, '40.0.0') || getenv.boolish('EXPO_USE_DEV_SERVER', false);
 }
 
@@ -385,9 +385,9 @@ export async function exportAppAsync(
 
   // build the bundles
   // make output dirs if not exists
-  const assetPathToWrite = path.resolve(projectRoot, path.join(absoluteOutputDir, 'assets'));
+  const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
   await fs.ensureDir(assetPathToWrite);
-  const bundlesPathToWrite = path.resolve(projectRoot, path.join(absoluteOutputDir, 'bundles'));
+  const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
   await fs.ensureDir(bundlesPathToWrite);
 
   const { exp, pkg, hooks } = await _getPublishExpConfigAsync(
@@ -410,7 +410,7 @@ export async function exportAppAsync(
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(absoluteOutputDir, 'bundles', androidBundleUrl);
 
-  const bundlePaths = {
+  const relativeBundlePaths = {
     android: path.join('bundles', androidBundleUrl),
     ios: path.join('bundles', iosBundleUrl),
   };
@@ -447,7 +447,7 @@ export async function exportAppAsync(
           }),
         ];
       });
-      fileMetadata[platform].bundle = bundlePaths[platform];
+      fileMetadata[platform].bundle = relativeBundlePaths[platform];
     });
     const metadata: Metadata = {
       version: 0,
