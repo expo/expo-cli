@@ -56,17 +56,6 @@ export async function updateTSConfigAsync({
     };
   }
 
-  // Ensure the project is excluding node modules.
-  if (!Array.isArray(projectTSConfig.exclude)) {
-    projectTSConfig.exclude = [];
-  }
-
-  if (!projectTSConfig.exclude.find(v => String(v).includes('node_modules'))) {
-    projectTSConfig.exclude.push('node_modules');
-    const formatArray = (array: string[]) => array.join(', ');
-    modifications.push(['exclude', formatArray(projectTSConfig.exclude as string[])]);
-  }
-
   // If no changes, then quietly bail out
   if (!modifications.length) {
     return;
