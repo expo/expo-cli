@@ -528,6 +528,13 @@ function updatePackageJSONDependencies({
   const requiredDependencies = ['react', 'react-native-unimodules', 'react-native', 'expo-updates'];
 
   for (const dependenciesKey of requiredDependencies) {
+    // Only overwrite the react-native version if it's an Expo fork.
+    if (dependenciesKey === 'react-native' && pkg.dependencies?.[dependenciesKey]) {
+      const dependencyVersion = pkg.dependencies[dependenciesKey];
+      if (!dependencyVersion.includes('github.com/expo/react-native')) {
+        continue;
+      }
+    }
     combinedDependencies[dependenciesKey] = defaultDependencies[dependenciesKey];
   }
   const combinedDevDependencies: DependenciesMap = createDependenciesMap({
