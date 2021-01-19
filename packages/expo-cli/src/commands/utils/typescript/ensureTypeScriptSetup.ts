@@ -38,7 +38,7 @@ export async function ensureTypeScriptSetupAsync(projectRoot: string): Promise<v
   await updateTSConfigAsync({ projectRoot, tsConfigPath, isBootstrapping: intent.isBootstrapping });
 }
 
-async function shouldSetupTypeScriptAsync(
+export async function shouldSetupTypeScriptAsync(
   projectRoot: string
 ): Promise<{ isBootstrapping: boolean } | null> {
   const tsConfigPath = await hasTSConfig(projectRoot);

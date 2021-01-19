@@ -40,20 +40,6 @@ export async function updateTSConfigAsync({
       projectTSConfig.extends = baseTSConfigName;
       modifications.push(['extends', baseTSConfigName]);
     }
-  } else if (isBootstrapping) {
-    // TODO: Maybe don't do this
-    // SDK -40 or expo isn't installed.
-    projectTSConfig.compilerOptions = {
-      allowSyntheticDefaultImports: true,
-      jsx: 'react-native',
-      lib: ['dom', 'esnext'],
-      moduleResolution: 'node',
-      noEmit: true,
-      skipLibCheck: true,
-      resolveJsonModule: true,
-      // @ts-ignore
-      ...(projectTSConfig.compilerOptions || {}),
-    };
   }
 
   // If no changes, then quietly bail out
@@ -68,15 +54,18 @@ export async function updateTSConfigAsync({
 
   if (isBootstrapping) {
     log(`${chalk.bold`TypeScript`}: A ${chalk.cyan('tsconfig.json')} has been auto generated`);
-    log.newLine();
-    return;
+  } else {
+    log(
+      `${chalk.bold`TypeScript`}: The ${chalk.cyan(
+        'tsconfig.json'
+      )} has been updated ${chalk.dim`(Use ${TS_FEATURE_FLAG} to skip)`}`
+    );
+    logModifications(modifications);
   }
+  log.newLine();
+}
 
-  log(
-    `${chalk.bold`TypeScript`}: The ${chalk.cyan(
-      'tsconfig.json'
-    )} has been updated ${chalk.dim`(Use ${TS_FEATURE_FLAG} to skip)`}`
-  );
+function logModifications(modifications: string[][]) {
   log.newLine();
 
   log(`\u203A ${chalk.bold('Required')} modifications made to the ${chalk.cyan('tsconfig.json')}:`);

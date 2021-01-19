@@ -21,11 +21,7 @@ export function queryProjectTypeScriptFiles(projectRoot: string): string[] {
 }
 
 export function resolveBaseTSConfig(projectRoot: string): string | null {
-  try {
-    return require.resolve('expo/tsconfig.base.json', { paths: [projectRoot] });
-  } catch {
-    return null;
-  }
+  return resolveFrom.silent(projectRoot, 'expo/tsconfig.base.json') ?? null;
 }
 
 export async function hasTSConfig(projectRoot: string): Promise<string | null> {
