@@ -184,7 +184,6 @@ Object {
       ".js",
       ".jsx",
       ".json",
-      ".wasm",
     ],
     "plugins": Array [
       Object {
@@ -441,7 +440,6 @@ Object {
       ".js",
       ".jsx",
       ".json",
-      ".wasm",
     ],
     "plugins": Array [
       Object {
