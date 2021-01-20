@@ -18,12 +18,3 @@ export async function forkXCPrettyAsync() {
   }
   return null;
 }
-
-export function findBundleErrors(output: string): string | null {
-  const tag = '@react-native-error-start';
-  const indx = output.indexOf(tag);
-  const endIndx = output.indexOf('@react-native-error-end');
-  if (indx === -1 || endIndx === -1) return null;
-
-  return output.slice(indx + tag.length, endIndx);
-}

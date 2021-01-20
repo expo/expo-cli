@@ -94,12 +94,12 @@ function logPrettyItem(message: string) {
 export default function (program: Command) {
   program
     .command('ios [path]')
-    .description('Build the iOS app')
+    .description('Build the iOS app binary')
     .helpGroup('core')
-    .option('-d, --device [device]', 'Device UDID or name to run the device on')
+    .option('-d, --device [device]', 'Device name or UDID to build the app on')
     .option('--no-bundler', 'Skip starting the Metro bundler.')
     .option('-p, --port [port]', 'Port to start the Metro bundler on. Default: 8081')
-    .option('--scheme [scheme]', 'iOS scheme to build')
+    .option('--scheme [scheme]', 'Scheme to build')
     .option(
       '--configuration [configuration]',
       'Xcode configuration to use. Debug or Release. Default: Debug'

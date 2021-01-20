@@ -35,7 +35,7 @@ export type ProjectInfo = {
   name: string;
 };
 
-export function findProject(projectRoot: string): ProjectInfo {
+function resolveXcodeProject(projectRoot: string): ProjectInfo {
   let paths = findXcodeProjectPaths(projectRoot, 'xcworkspace');
   if (paths.length) {
     return { name: paths[0], isWorkspace: true };
@@ -49,7 +49,7 @@ export function findProject(projectRoot: string): ProjectInfo {
 
 const isMac = process.platform === 'darwin';
 
-const getDefaultUserTerminal = (): string | undefined => {
+function getDefaultUserTerminal(): string | undefined {
   const { REACT_TERMINAL, TERM_PROGRAM, TERM } = process.env;
 
   if (REACT_TERMINAL) {
@@ -61,13 +61,13 @@ const getDefaultUserTerminal = (): string | undefined => {
   }
 
   return TERM;
-};
+}
 
 export async function resolveOptionsAsync(
   projectDir: string,
   options: Options
 ): Promise<XcodeBuild.BuildProps> {
-  const xcodeProject = findProject(projectDir);
+  const xcodeProject = resolveXcodeProject(projectDir);
   const device = await resolveDeviceAsync(options.device);
 
   const isSimulator = !('deviceType' in device);

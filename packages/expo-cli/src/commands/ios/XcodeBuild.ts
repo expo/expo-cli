@@ -155,9 +155,11 @@ export function buildAsync({
         }
       }
     });
+
     buildProcess.stderr.on('data', (data: Buffer) => {
       errorOutput += data;
     });
+
     buildProcess.on('close', (code: number) => {
       if (xcpretty) {
         xcpretty.stdin.end();
@@ -166,12 +168,6 @@ export function buildAsync({
       }
       if (code !== 0) {
         const output = buildOutput + '\n' + errorOutput;
-
-        // const bundlingError = findBundleErrors(output);
-
-        // if (bundlingError) {
-        //   reject(new CommandError(bundlingError));
-        // }
 
         reject(
           new CommandError(

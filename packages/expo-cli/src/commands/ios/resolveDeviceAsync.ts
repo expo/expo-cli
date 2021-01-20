@@ -1,25 +1,18 @@
-import { Simulator } from '@expo/xdl';
-import {
-  listAsync,
-  listDevicesAsync,
-  SimulatorDevice,
-  XCTraceDevice,
-} from '@expo/xdl/build/SimControl';
-import { ensureSimulatorOpenAsync } from '@expo/xdl/build/Simulator';
+import { SimControl, Simulator } from '@expo/xdl';
 import chalk from 'chalk';
 
 import CommandError from '../../CommandError';
 import prompt from '../../prompts';
 
-async function getSimulatorsAsync(): Promise<SimulatorDevice[]> {
-  const simulatorDeviceInfo = await listAsync('devices');
+async function getSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
+  const simulatorDeviceInfo = await SimControl.listAsync('devices');
   return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
     return prev.concat(runtime);
   }, []);
 }
 
 async function getBuildDestinationsAsync() {
-  const devices = (await listDevicesAsync()).filter(device => {
+  const devices = (await SimControl.listDevicesAsync()).filter(device => {
     return device.deviceType === 'device';
   });
 
@@ -30,9 +23,9 @@ async function getBuildDestinationsAsync() {
 
 export async function resolveDeviceAsync(
   device: string | boolean | undefined
-): Promise<SimulatorDevice | XCTraceDevice> {
+): Promise<SimControl.SimulatorDevice | SimControl.XCTraceDevice> {
   if (!device) {
-    return await ensureSimulatorOpenAsync();
+    return await Simulator.ensureSimulatorOpenAsync();
   }
 
   const devices = await getBuildDestinationsAsync();
@@ -64,7 +57,7 @@ export async function resolveDeviceAsync(
     const device = devices.find(device => device.udid === value)!;
     const isSimulator = !('deviceType' in device);
     if (isSimulator) {
-      return await ensureSimulatorOpenAsync({ udid: device.udid });
+      return await Simulator.ensureSimulatorOpenAsync({ udid: device.udid });
     }
     return device;
   }
@@ -79,7 +72,7 @@ export async function resolveDeviceAsync(
 
   const isSimulator = !('deviceType' in resolved);
   if (isSimulator) {
-    return await ensureSimulatorOpenAsync({ udid: resolved.udid });
+    return await Simulator.ensureSimulatorOpenAsync({ udid: resolved.udid });
   }
 
   return resolved;
