@@ -1,5 +1,5 @@
 import * as osascript from '@expo/osascript';
-import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
+import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import chalk from 'chalk';
 import path from 'path';
 
@@ -8,7 +8,7 @@ import XDLError from './XDLError';
 
 type DeviceState = 'Shutdown' | 'Booted';
 
-export type Device = {
+export type SimulatorDevice = {
   availabilityError: 'runtime profile not found';
   /**
    * '/Users/name/Library/Developer/CoreSimulator/Devices/00E55DC0-0364-49DF-9EC6-77BE587137D4/data'
@@ -48,7 +48,24 @@ export type Device = {
   windowName: string;
 };
 
-type OSType = 'iOS' | 'tvOS' | 'watchOS';
+export type XCTraceDevice = {
+  /**
+   * '00E55DC0-0364-49DF-9EC6-77BE587137D4'
+   */
+  udid: string;
+  /**
+   * 'Apple TV'
+   */
+  name: string;
+
+  deviceType: 'device' | 'catalyst';
+  /**
+   * '13.4'
+   */
+  osVersion: string;
+};
+
+type OSType = 'iOS' | 'tvOS' | 'watchOS' | 'macOS';
 
 type PermissionName =
   | 'all'
@@ -67,7 +84,7 @@ type PermissionName =
 
 type SimulatorDeviceList = {
   devices: {
-    [runtime: string]: Device[];
+    [runtime: string]: SimulatorDevice[];
   };
 };
 
@@ -131,8 +148,15 @@ export async function openURLAsync(options: { udid?: string; url: string }) {
   return simctlAsync(['openurl', deviceUDIDOrBooted(options.udid), options.url]);
 }
 
+export async function openBundleIdAsync(options: {
+  udid?: string;
+  bundleIdentifier: string;
+}): Promise<SpawnResult> {
+  return simctlAsync(['launch', deviceUDIDOrBooted(options.udid), options.bundleIdentifier]);
+}
+
 // This will only boot in headless mode if the Simulator app is not running.
-export async function bootAsync({ udid }: { udid: string }): Promise<Device | null> {
+export async function bootAsync({ udid }: { udid: string }): Promise<SimulatorDevice | null> {
   try {
     // Skip logging since this is likely to fail.
     await xcrunAsync(['simctl', 'boot', udid]);
@@ -144,14 +168,18 @@ export async function bootAsync({ udid }: { udid: string }): Promise<Device | nu
   return await isSimulatorBootedAsync({ udid });
 }
 
-export async function getBootedSimulatorsAsync(): Promise<Device[]> {
+export async function getBootedSimulatorsAsync(): Promise<SimulatorDevice[]> {
   const simulatorDeviceInfo = await listAsync('devices');
   return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
     return prev.concat(runtime.filter(device => device.state === 'Booted'));
   }, []);
 }
 
-export async function isSimulatorBootedAsync({ udid }: { udid?: string }): Promise<Device | null> {
+export async function isSimulatorBootedAsync({
+  udid,
+}: {
+  udid?: string;
+}): Promise<SimulatorDevice | null> {
   // Simulators can be booted even if the app isn't running :(
   const devices = await getBootedSimulatorsAsync();
   if (udid) {
@@ -209,6 +237,40 @@ export async function listAsync(
     }
   }
   return info;
+}
+
+/**
+ * Get a list of all connected devices.
+ */
+export async function listDevicesAsync(): Promise<XCTraceDevice[]> {
+  const { output } = await xcrunAsync(['xctrace', 'list', 'devices']);
+
+  const text = output.join('');
+  const devices: XCTraceDevice[] = [];
+  if (!text.includes('== Simulators ==')) {
+    return [];
+  }
+
+  const lines = text.split('\n');
+  for (const line of lines) {
+    if (line === '== Simulators ==') {
+      break;
+    }
+    const device = line.match(/(.*?) (\(([0-9\.]+)\) )?\(([0-9A-F-]+)\)/i);
+    if (device) {
+      const [, name, , osVersion, udid] = device;
+      const metadata: XCTraceDevice = {
+        name,
+        udid,
+        osVersion: osVersion ?? '??',
+        deviceType: osVersion ? 'device' : 'catalyst',
+      };
+
+      devices.push(metadata);
+    }
+  }
+
+  return devices;
 }
 
 export async function shutdownAsync(udid?: string) {
@@ -271,7 +333,7 @@ export async function deleteUnavailableAsync() {
 export async function simctlAsync(
   [command, ...args]: (string | undefined)[],
   options?: SpawnOptions
-) {
+): Promise<SpawnResult> {
   return xcrunWithLogging(
     // @ts-ignore
     ['simctl', command, ...args.filter(Boolean)],
@@ -287,13 +349,20 @@ function deviceUDIDOrBooted(udid?: string): string {
  * I think the app can be open while no simulators are booted.
  */
 export async function isSimulatorAppRunningAsync(): Promise<boolean> {
-  const zeroMeansNo = (
-    await osascript.execAsync(
-      'tell app "System Events" to count processes whose name is "Simulator"'
-    )
-  ).trim();
-  if (zeroMeansNo === '0') {
-    return false;
+  try {
+    const zeroMeansNo = (
+      await osascript.execAsync(
+        'tell app "System Events" to count processes whose name is "Simulator"'
+      )
+    ).trim();
+    if (zeroMeansNo === '0') {
+      return false;
+    }
+  } catch (error) {
+    if (error.message.includes('Application isn’t running')) {
+      return false;
+    }
+    throw error;
   }
 
   return true;
@@ -350,7 +419,10 @@ export async function xcrunAsync(args: string[], options?: SpawnOptions) {
     throw e;
   }
 }
-export async function xcrunWithLogging(args: string[], options?: SpawnOptions) {
+export async function xcrunWithLogging(
+  args: string[],
+  options?: SpawnOptions
+): Promise<SpawnResult> {
   try {
     return await xcrunAsync(args, options);
   } catch (e) {
