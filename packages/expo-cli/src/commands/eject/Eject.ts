@@ -24,7 +24,7 @@ import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConf
 import maybeBailOnGitStatusAsync from '../utils/maybeBailOnGitStatusAsync';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
 
-type DependenciesMap = { [key: string]: string | number };
+export type DependenciesMap = { [key: string]: string | number };
 
 export type EjectAsyncOptions = {
   verbose?: boolean;
@@ -758,7 +758,7 @@ async function createNativeProjectsFromTemplateAsync({
  *
  * @param dependencies - ideally an object of type {[key]: string} - if not then this will error.
  */
-function createDependenciesMap(dependencies: any): DependenciesMap {
+export function createDependenciesMap(dependencies: any): DependenciesMap {
   if (typeof dependencies !== 'object') {
     throw new Error(`Dependency map is invalid, expected object but got ${typeof dependencies}`);
   } else if (!dependencies) {
