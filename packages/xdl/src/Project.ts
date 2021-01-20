@@ -17,6 +17,7 @@ import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import { bundleAsync, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
 import JsonFile from '@expo/json-file';
 import joi from '@hapi/joi';
+import assert from 'assert';
 import axios from 'axios';
 import chalk from 'chalk';
 import child_process from 'child_process';
@@ -28,7 +29,6 @@ import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import HashIds from 'hashids';
-import invariant from 'invariant';
 import escapeRegExp from 'lodash/escapeRegExp';
 import { AddressInfo } from 'net';
 import path from 'path';
@@ -121,16 +121,20 @@ type Release = {
 type ProjectStatus = 'running' | 'ill' | 'exited';
 
 type BundlePlatform = 'android' | 'ios';
-const bundlePlatforms: BundlePlatform[] = ['android', 'ios'];
+
 type PlatformMetadata = { bundle: string; assets: { path: string; ext: string }[] };
+
 type FileMetadata = {
   [key in BundlePlatform]: PlatformMetadata;
 };
+
 type Metadata = {
   version: 0;
   bundler: 'metro';
   fileMetadata: FileMetadata;
 };
+
+const bundlePlatforms: BundlePlatform[] = ['android', 'ios'];
 
 export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
   const { packagerPort, expoServerPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
@@ -377,7 +381,7 @@ export async function exportAppAsync(
     dumpSourcemap?: boolean;
     publishOptions?: PublishOptions;
   } = {},
-  eas: boolean
+  experimentalBundle: boolean
 ): Promise<void> {
   const absoluteOutputDir = path.resolve(process.cwd(), outputDir);
   const defaultTarget = getDefaultTarget(projectRoot);
@@ -420,19 +424,17 @@ export async function exportAppAsync(
 
   logger.global.info('Finished saving JS Bundles.');
 
-  const { assets } = await exportAssetsAsync(
-    {
-      projectRoot,
-      exp,
-      hostedUrl: publicUrl,
-      assetPath: 'assets',
-      outputDir: absoluteOutputDir,
-      bundles,
-    },
-    eas
-  );
+  const { assets } = await exportAssetsAsync({
+    projectRoot,
+    exp,
+    hostedUrl: publicUrl,
+    assetPath: 'assets',
+    outputDir: absoluteOutputDir,
+    bundles,
+    experimentalBundle,
+  });
 
-  if (eas) {
+  if (experimentalBundle) {
     // Build metadata.json
     const fileMetadata: {
       [key in BundlePlatform]: Partial<PlatformMetadata>;
@@ -516,7 +518,7 @@ export async function exportAppAsync(
   }
 
   // Skip the hooks and manifest creation if building for EAS.
-  if (!eas) {
+  if (!experimentalBundle) {
     const validPostExportHooks = prepareHooks(hooks, 'postExport', projectRoot, exp);
 
     // Add assetUrl to manifest
@@ -578,8 +580,8 @@ export async function exportAppAsync(
       JSON.stringify(iosManifest)
     );
 
-    invariant(androidManifest!, 'should have been assigned');
-    invariant(iosManifest!, 'should have been assigned');
+    assert(androidManifest!, 'should have been assigned');
+    assert(iosManifest!, 'should have been assigned');
     const hookOptions = {
       url: null,
       exp,

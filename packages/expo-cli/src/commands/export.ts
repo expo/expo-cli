@@ -26,7 +26,7 @@ type Options = {
   dumpSourcemap: boolean;
   maxWorkers?: number;
   force: boolean;
-  eas: boolean;
+  experimentalBundle: boolean;
 };
 
 export async function promptPublicUrlAsync(): Promise<string> {
@@ -76,7 +76,7 @@ async function exportFilesAsync(
     | 'outputDir'
     | 'publicUrl'
     | 'assetUrl'
-    | 'eas'
+    | 'experimentalBundle'
   >
 ) {
   // Make outputDir an absolute path if it isnt already
@@ -95,7 +95,7 @@ async function exportFilesAsync(
     options.assetUrl,
     options.outputDir,
     exportOptions,
-    options.eas
+    options.experimentalBundle
   );
 }
 
@@ -162,7 +162,7 @@ function collect<T>(val: T, memo: T[]): T[] {
 }
 
 export async function action(projectDir: string, options: Options) {
-  if (!options.eas) {
+  if (!options.experimentalBundle) {
     // Ensure URL
     options.publicUrl = await ensurePublicUrlAsync(options.publicUrl, options.dev);
   }
@@ -234,6 +234,6 @@ export default function (program: Command) {
       []
     )
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
-    .option('--eas', 'export bundles for use with EAS updates.')
+    .option('--experimental-bundle', 'export bundles for use with EAS updates.')
     .asyncActionProjectDir(action, { checkConfig: true });
 }
