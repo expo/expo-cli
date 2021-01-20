@@ -7,6 +7,8 @@ import { withExpoPlist } from '../plugins/ios-plugins';
 import { projectHasModule } from '../utils/modules';
 import { ExpoPlist } from './IosConfig.types';
 
+const CREATE_MANIFEST_IOS_PATH = 'expo-updates/scripts/create-manifest-ios.sh';
+
 type ExpoConfigUpdates = Pick<
   ExpoConfig,
   'sdkVersion' | 'owner' | 'runtimeVersion' | 'nodeModulesPath' | 'updates' | 'slug'
@@ -116,11 +118,7 @@ function formatConfigurationScriptPath(
   projectRoot: string,
   config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>
 ): string {
-  const buildScriptPath = projectHasModule(
-    'expo-updates/scripts/create-manifest-ios.sh',
-    projectRoot,
-    config
-  );
+  const buildScriptPath = projectHasModule(CREATE_MANIFEST_IOS_PATH, projectRoot, config);
 
   if (!buildScriptPath) {
     throw new Error(
@@ -138,7 +136,7 @@ interface ShellScriptBuildPhase {
   [key: string]: any;
 }
 
-function getBundleReactNativePhase(project: xcode.XcodeProject): ShellScriptBuildPhase {
+export function getBundleReactNativePhase(project: xcode.XcodeProject): ShellScriptBuildPhase {
   const shellScriptBuildPhase = project.hash.project.objects.PBXShellScriptBuildPhase as Record<
     string,
     ShellScriptBuildPhase
@@ -162,7 +160,15 @@ export function ensureBundleReactNativePhaseContainsConfigurationScript(
   const bundleReactNative = getBundleReactNativePhase(project);
   const buildPhaseShellScriptPath = formatConfigurationScriptPath(projectRoot, config);
 
-  if (!bundleReactNative.shellScript.includes(buildPhaseShellScriptPath)) {
+  if (!isShellScriptBuildPhaseConfigured(projectRoot, config, project)) {
+    // check if there's already another path to create-manifest-ios.sh
+    // this might be the case for monorepos
+    if (bundleReactNative.shellScript.includes(CREATE_MANIFEST_IOS_PATH)) {
+      bundleReactNative.shellScript = bundleReactNative.shellScript.replace(
+        new RegExp(`(\\\\n)(\\.\\.)+/node_modules/${CREATE_MANIFEST_IOS_PATH}`),
+        ''
+      );
+    }
     bundleReactNative.shellScript = `${bundleReactNative.shellScript.replace(
       /"$/,
       ''

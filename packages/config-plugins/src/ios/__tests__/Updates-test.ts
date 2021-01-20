@@ -1,4 +1,13 @@
+import fs from 'fs';
+import { vol } from 'memfs';
+import path from 'path';
+
 import * as Updates from '../Updates';
+import { getPbxproj } from '../utils/Xcodeproj';
+
+const fsReal = jest.requireActual('fs') as typeof fs;
+
+jest.mock('fs');
 
 describe('iOS Updates config', () => {
   it(`returns correct default values from all getters if no value provided`, () => {
@@ -47,6 +56,54 @@ describe('iOS Updates config', () => {
       EXUpdatesCheckOnLaunch: 'NEVER',
       EXUpdatesLaunchWaitMs: 2000,
       EXUpdatesSDKVersion: '37.0.0',
+    });
+  });
+
+  describe(Updates.ensureBundleReactNativePhaseContainsConfigurationScript, () => {
+    beforeEach(() => {
+      vol.reset();
+    });
+
+    it("adds create-manifest-ios.sh line to the 'Bundle React Native code and images' build phase ", () => {
+      vol.fromJSON(
+        {
+          'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
+            path.join(__dirname, 'fixtures/project-without-create-manifest-ios.pbxproj'),
+            'utf-8'
+          ),
+          'node_modules/expo-updates/scripts/create-manifest-ios.sh': 'whatever',
+        },
+        '/app'
+      );
+
+      const xcodeProject = getPbxproj('/app');
+      Updates.ensureBundleReactNativePhaseContainsConfigurationScript('/app', {}, xcodeProject);
+      const bundleReactNative = Updates.getBundleReactNativePhase(xcodeProject);
+      expect(bundleReactNative.shellScript).toMatchSnapshot();
+    });
+
+    it('fixes the path to create-manifest-ios.sh in case of a monorepo', () => {
+      vol.fromJSON(
+        {
+          'workspace/ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
+            path.join(
+              __dirname,
+              'fixtures/project-with-incorrect-create-manifest-ios-path.pbxproj'
+            ),
+            'utf-8'
+          ),
+          'node_modules/expo-updates/scripts/create-manifest-ios.sh': 'whatever',
+        },
+        '/app'
+      );
+      const xcodeProject = getPbxproj('/app/workspace');
+      Updates.ensureBundleReactNativePhaseContainsConfigurationScript(
+        '/app/workspace',
+        { nodeModulesPath: '/app' },
+        xcodeProject
+      );
+      const bundleReactNative = Updates.getBundleReactNativePhase(xcodeProject);
+      expect(bundleReactNative.shellScript).toMatchSnapshot();
     });
   });
 });
