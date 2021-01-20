@@ -9,7 +9,6 @@ import log from '../../log';
 import * as Eject from '../eject/Eject';
 import * as IOSDeploy from './IOSDeploy';
 import * as PlistBuddy from './PlistBuddy';
-import maybePromptToSyncPodsAsync from './Podfile';
 import * as XcodeBuild from './XcodeBuild';
 import { Options, resolveOptionsAsync } from './resolveOptionsAsync';
 
@@ -31,8 +30,7 @@ export async function action(projectRoot: string, options: Options) {
       platforms: ['ios'],
     } as Eject.EjectAsyncOptions);
   } else {
-    // Ensure the pods are in sync
-    await maybePromptToSyncPodsAsync(projectRoot);
+    // TODO: Ensure the pods are in sync
   }
 
   const props = await resolveOptionsAsync(projectRoot, options);
