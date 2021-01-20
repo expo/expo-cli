@@ -1,9 +1,7 @@
 import spawnAsync from '@expo/spawn-async';
-import { Simulator } from '@expo/xdl';
-import { installAsync, openBundleIdAsync, XCTraceDevice } from '@expo/xdl/build/SimControl';
+import { SimControl } from '@expo/xdl';
 import chalk from 'chalk';
-import { execFileSync, spawn, SpawnOptionsWithoutStdio, spawnSync } from 'child_process';
-import { sync as globSync } from 'glob';
+import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
 import ora from 'ora';
 import * as path from 'path';
 
@@ -11,6 +9,7 @@ import CommandError from '../../CommandError';
 import { assert } from '../../assert';
 import log from '../../log';
 import { forkXCPrettyAsync } from './XCPretty';
+import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
 
 function getTargetPaths(buildSettings: string) {
   const settings = JSON.parse(buildSettings);
@@ -27,31 +26,13 @@ function getTargetPaths(buildSettings: string) {
   return {};
 }
 
-const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
-
-export function findXcodeProjectPaths(
-  projectRoot: string,
-  extension: 'xcworkspace' | 'xcodeproj'
-): string[] {
-  return globSync(`ios/*.${extension}`, {
-    absolute: true,
-    cwd: projectRoot,
-    ignore: ignoredPaths,
-  });
-}
-
-export type ProjectInfo = {
-  isWorkspace: boolean;
-  name: string;
-};
-
-export function getBuildPath(
+export async function getAppBinaryPathAsync(
   xcodeProject: ProjectInfo,
   configuration: XcodeConfiguration,
   buildOutput: string,
   scheme: string
-): string {
-  const buildSettings = execFileSync(
+): Promise<string> {
+  const { output } = await spawnAsync(
     'xcodebuild',
     [
       xcodeProject.isWorkspace ? '-workspace' : '-project',
@@ -65,8 +46,9 @@ export function getBuildPath(
       '-showBuildSettings',
       '-json',
     ],
-    { encoding: 'utf8' }
+    { stdio: 'pipe' }
   );
+  const buildSettings = output.join('');
   const { targetBuildDir, executableFolderPath } = getTargetPaths(buildSettings);
 
   assert(executableFolderPath, 'Unable to find the app name');
@@ -78,10 +60,11 @@ export function getBuildPath(
 function getPlatformName(buildOutput: string) {
   // Xcode can sometimes escape `=` with a backslash or put the value in quotes
   const platformNameMatch = /export PLATFORM_NAME\\?="?(\w+)"?$/m.exec(buildOutput);
-  assert(
-    platformNameMatch,
-    'Couldn\'t find "PLATFORM_NAME" variable in xcodebuild output. Please report this issue and run your project with Xcode instead.'
-  );
+  if (!platformNameMatch || !platformNameMatch.length) {
+    throw new CommandError(
+      `Malformed xcodebuild results: "PLATFORM_NAME" variable was not generated in build output. Please report this issue and run your project with Xcode instead.`
+    );
+  }
   return platformNameMatch[1];
 }
 
@@ -113,22 +96,10 @@ function getProcessOptions({
   };
 }
 
-export function findProject(projectRoot: string): ProjectInfo {
-  let paths = findXcodeProjectPaths(projectRoot, 'xcworkspace');
-  if (paths.length) {
-    return { name: paths[0], isWorkspace: true };
-  }
-  paths = findXcodeProjectPaths(projectRoot, 'xcodeproj');
-  if (paths.length) {
-    return { name: paths[0], isWorkspace: false };
-  }
-  throw new CommandError(`Xcode project not found in project: ${projectRoot}`);
-}
-
 export type BuildProps = {
   isSimulator: boolean;
   xcodeProject: ProjectInfo;
-  device: Pick<XCTraceDevice, 'name' | 'udid'>;
+  device: Pick<SimControl.XCTraceDevice, 'name' | 'udid'>;
   configuration: XcodeConfiguration;
   verbose: boolean;
   shouldStartBundler: boolean;
@@ -137,7 +108,7 @@ export type BuildProps = {
   scheme: string;
 };
 
-export function buildProject({
+export function buildAsync({
   xcodeProject,
   device,
   configuration,
@@ -220,83 +191,4 @@ export function buildProject({
       resolve(buildOutput);
     });
   });
-}
-
-export type XcodeConfiguration = 'Debug' | 'Release';
-
-export async function runOnDeviceAsync(props: BuildProps) {
-  const isIOSDeployInstalled = spawnSync('ios-deploy', ['--version'], { encoding: 'utf8' });
-
-  if (isIOSDeployInstalled.error) {
-    throw new CommandError(
-      `Failed to install the app on the device because we couldn't execute the "ios-deploy" command. Please install it by running "${chalk.bold(
-        'brew install ios-deploy'
-      )}" and try again.`
-    );
-  }
-
-  const buildOutput = await buildProject(props);
-
-  const buildPath = getBuildPath(
-    props.xcodeProject,
-    props.configuration,
-    buildOutput,
-    props.scheme
-  );
-
-  const iosDeployInstallArgs = ['--bundle', buildPath, '--id', props.device.udid, '--justlaunch'];
-
-  log(`${chalk.cyan`▸`} ${chalk.bold`Installing`} on ${props.device.name}`);
-
-  const iosDeployOutput = spawnSync('ios-deploy', iosDeployInstallArgs, { encoding: 'utf8' });
-
-  if (iosDeployOutput.error) {
-    throw new CommandError(
-      `Failed to install the app on the device. We've encountered an error in "ios-deploy" command: ${iosDeployOutput.error.message}`
-    );
-  }
-
-  log(`${chalk.cyan`▸`} ${chalk.bold`Installed`} on ${props.device.name}`);
-}
-
-async function getPlistBundleIdentifierAsync(plistPath: string): Promise<string> {
-  const { output } = await spawnAsync(
-    '/usr/libexec/PlistBuddy',
-    ['-c', 'Print:CFBundleIdentifier', plistPath],
-    {
-      stdio: 'pipe',
-    }
-  );
-  return output.join('').trim();
-}
-
-export async function runOnSimulatorAsync(props: BuildProps) {
-  const buildOutput = await buildProject(props);
-
-  const appPath = getBuildPath(props.xcodeProject, props.configuration, buildOutput, props.scheme);
-
-  log.debug(`▸ ${chalk.bold`Installing`} ${appPath}`);
-
-  await installAsync({ udid: props.device.udid, dir: appPath });
-
-  const builtInfoPlistPath = path.join(appPath, 'Info.plist');
-
-  const bundleID = await getPlistBundleIdentifierAsync(builtInfoPlistPath);
-
-  log(
-    `${chalk.cyan`▸`} ${chalk.bold`Opening`} on ${props.device.name} ${chalk.dim(`(${bundleID})`)}`
-  );
-
-  const result = await openBundleIdAsync({ udid: props.device.udid, bundleIdentifier: bundleID });
-
-  if (result.status === 0) {
-    await Simulator.activateSimulatorWindowAsync();
-  } else {
-    log.error(
-      `▸ ${chalk.bold`Failed to launch the app on simulator`} ${props.device.name} (${
-        props.device.udid
-      })`,
-      result.stderr
-    );
-  }
 }

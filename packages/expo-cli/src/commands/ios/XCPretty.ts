@@ -1,4 +1,4 @@
-import { spawnAsync } from '@expo/xdl/build/detach/ExponentTools';
+import spawnAsync from '@expo/spawn-async';
 import { spawn } from 'child_process';
 
 export async function isXCPrettyInstalledAsync(): Promise<boolean> {
