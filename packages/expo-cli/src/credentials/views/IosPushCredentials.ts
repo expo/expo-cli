@@ -38,6 +38,11 @@ export class CreateIosPush implements IView {
     log('Successfully created Push Notification Key\n');
     displayIosUserCredentials(pushKey);
     log();
+
+    if (ctx.hasProjectContext) {
+      await this.assignToCurrentProject(ctx, pushKey);
+    }
+
     return null;
   }
 
@@ -71,6 +76,23 @@ export class CreateIosPush implements IView {
       }
     }
     return await generatePushKey(ctx, this.accountName);
+  }
+
+  async assignToCurrentProject(ctx: Context, pushKey: IosPushCredentials) {
+    const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
+    const bundleIdentifier = ctx.manifest?.ios?.bundleIdentifier;
+    if (!ctx.nonInteractive && bundleIdentifier) {
+      const confirm = await confirmAsync({
+        message: `Would you like to use this push key for the current project: ${experienceName} (${bundleIdentifier})?`,
+      });
+      if (!confirm) {
+        return;
+      }
+
+      const app = getAppLookupParams(experienceName, bundleIdentifier);
+      await ctx.ios.usePushKey(app, pushKey.id);
+      log(chalk.green(`Successfully assigned Push Key to ${experienceName} (${bundleIdentifier})`));
+    }
   }
 }
 
