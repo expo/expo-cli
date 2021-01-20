@@ -803,7 +803,6 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
     );
   const pkgsWithExtraSetup: Record<string, string> = {
     ...expoPackagesWithExtraSetup,
-    'lottie-react-native': 'https://github.com/react-native-community/lottie-react-native',
   };
 
   // Starting with SDK 40 the manifest is embedded in ejected apps automatically
