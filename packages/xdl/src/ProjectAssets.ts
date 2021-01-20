@@ -1,9 +1,11 @@
 import { ExpoAppManifest, ExpoConfig } from '@expo/config';
 import { BundleAssetWithFileHashes, BundleOutput } from '@expo/dev-server';
+import assert from 'assert';
 import fs from 'fs-extra';
 import chunk from 'lodash/chunk';
 import get from 'lodash/get';
 import set from 'lodash/set';
+import uniqBy from 'lodash/uniqBy';
 import md5hex from 'md5hex';
 import minimatch from 'minimatch';
 import path from 'path';
@@ -36,6 +38,7 @@ type ExportAssetsOptions = {
   assetPath: string;
   bundles: BundlesByPlatform;
   outputDir?: string;
+  experimentalBundle?: boolean;
 };
 
 export async function resolveGoogleServicesFile(projectRoot: string, manifest: ExpoConfig) {
@@ -197,11 +200,18 @@ export async function exportAssetsAsync({
   assetPath,
   outputDir,
   bundles,
+  experimentalBundle,
 }: ExportAssetsOptions) {
   logger.global.info('Analyzing assets');
 
-  const assetCdnPath = urljoin(hostedUrl, assetPath);
-  const assets = await collectAssets(projectRoot, exp, assetCdnPath, bundles);
+  let assets: Asset[];
+  if (experimentalBundle) {
+    assert(outputDir, 'outputDir must be specified when exporting to EAS');
+    assets = uniqBy([...bundles.android.assets, ...bundles.ios.assets], asset => asset.hash);
+  } else {
+    const assetCdnPath = urljoin(hostedUrl, assetPath);
+    assets = await collectAssets(projectRoot, exp, assetCdnPath, bundles);
+  }
 
   logger.global.info('Saving assets');
 

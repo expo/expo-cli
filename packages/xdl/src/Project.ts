@@ -17,6 +17,7 @@ import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import { bundleAsync, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
 import JsonFile from '@expo/json-file';
 import joi from '@hapi/joi';
+import assert from 'assert';
 import axios from 'axios';
 import chalk from 'chalk';
 import child_process from 'child_process';
@@ -118,6 +119,22 @@ type Release = {
 };
 
 type ProjectStatus = 'running' | 'ill' | 'exited';
+
+type BundlePlatform = 'android' | 'ios';
+
+type PlatformMetadata = { bundle: string; assets: { path: string; ext: string }[] };
+
+type FileMetadata = {
+  [key in BundlePlatform]: PlatformMetadata;
+};
+
+type Metadata = {
+  version: 0;
+  bundler: 'metro';
+  fileMetadata: FileMetadata;
+};
+
+const bundlePlatforms: BundlePlatform[] = ['android', 'ios'];
 
 export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
   const { packagerPort, expoServerPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
@@ -334,7 +351,16 @@ function shouldUseDevServer(exp: ExpoConfig) {
 }
 
 /**
- * Apps exporting for self hosting will have the files created in the project directory the following way:
+ * If the `eas` flag is true, the stucture of the outputDir will be:
+├── assets
+│   └── *
+├── bundles
+│   ├── android-01ee6e3ab3e8c16a4d926c91808d5320.js
+│   └── ios-ee8206cc754d3f7aa9123b7f909d94ea.js
+└── metadata.json
+
+ * If the `eas` flag is not true, then this function is for self hosting 
+ * and the outputDir will have the files created in the project directory the following way:
 .
 ├── android-index.json
 ├── ios-index.json
@@ -344,7 +370,7 @@ function shouldUseDevServer(exp: ExpoConfig) {
       ├── android-01ee6e3ab3e8c16a4d926c91808d5320.js
       └── ios-ee8206cc754d3f7aa9123b7f909d94ea.js
  */
-export async function exportForAppHosting(
+export async function exportAppAsync(
   projectRoot: string,
   publicUrl: string,
   assetUrl: string,
@@ -354,8 +380,10 @@ export async function exportForAppHosting(
     dumpAssetmap?: boolean;
     dumpSourcemap?: boolean;
     publishOptions?: PublishOptions;
-  } = {}
+  } = {},
+  experimentalBundle: boolean
 ): Promise<void> {
+  const absoluteOutputDir = path.resolve(process.cwd(), outputDir);
   const defaultTarget = getDefaultTarget(projectRoot);
   const target = options.publishOptions?.target ?? defaultTarget;
 
@@ -366,8 +394,10 @@ export async function exportForAppHosting(
   const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
   await fs.ensureDir(bundlesPathToWrite);
 
-  const publishOptions = options.publishOptions || {};
-  const { exp, pkg, hooks } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
+  const { exp, pkg, hooks } = await _getPublishExpConfigAsync(
+    projectRoot,
+    options.publishOptions || {}
+  );
 
   const bundles = await buildPublishBundlesAsync(projectRoot, options.publishOptions, {
     dev: options.isDev,
@@ -378,11 +408,16 @@ export async function exportForAppHosting(
 
   const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
-  const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
+  const iosJsPath = path.join(absoluteOutputDir, 'bundles', iosBundleUrl);
 
   const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
-  const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
+  const androidJsPath = path.join(absoluteOutputDir, 'bundles', androidBundleUrl);
+
+  const relativeBundlePaths = {
+    android: path.join('bundles', androidBundleUrl),
+    ios: path.join('bundles', iosBundleUrl),
+  };
 
   await writeArtifactSafelyAsync(projectRoot, null, iosJsPath, iosBundle);
   await writeArtifactSafelyAsync(projectRoot, null, androidJsPath, androidBundle);
@@ -394,9 +429,36 @@ export async function exportForAppHosting(
     exp,
     hostedUrl: publicUrl,
     assetPath: 'assets',
-    outputDir,
+    outputDir: absoluteOutputDir,
     bundles,
+    experimentalBundle,
   });
+
+  if (experimentalBundle) {
+    // Build metadata.json
+    const fileMetadata: {
+      [key in BundlePlatform]: Partial<PlatformMetadata>;
+    } = { android: {}, ios: {} };
+    bundlePlatforms.forEach(platform => {
+      fileMetadata[platform].assets = [];
+      bundles[platform].assets.forEach((asset: { type: string; fileHashes: string[] }) => {
+        fileMetadata[platform].assets = [
+          ...fileMetadata[platform].assets!,
+          ...asset.fileHashes.map(hash => {
+            return { path: path.join('assets', hash), ext: asset.type };
+          }),
+        ];
+      });
+      fileMetadata[platform].bundle = relativeBundlePaths[platform];
+    });
+    const metadata: Metadata = {
+      version: 0,
+      bundler: 'metro',
+      fileMetadata: fileMetadata as FileMetadata,
+    };
+
+    fs.writeFileSync(path.resolve(outputDir, 'metadata.json'), JSON.stringify(metadata));
+  }
 
   if (options.dumpAssetmap) {
     logger.global.info('Dumping asset map.');
@@ -410,71 +472,10 @@ export async function exportForAppHosting(
     await writeArtifactSafelyAsync(
       projectRoot,
       null,
-      path.join(outputDir, 'assetmap.json'),
+      path.join(absoluteOutputDir, 'assetmap.json'),
       JSON.stringify(assetmap)
     );
   }
-
-  const validPostExportHooks: LoadedHook[] = prepareHooks(hooks, 'postExport', projectRoot, exp);
-
-  // Add assetUrl to manifest
-  exp.assetUrlOverride = assetUrl;
-
-  exp.publishedTime = new Date().toISOString();
-  exp.commitTime = new Date().toISOString();
-  exp.releaseId = uuid.v4();
-
-  // generate revisionId and id the same way www does
-  const hashIds = new HashIds(uuid.v1(), 10);
-  exp.revisionId = hashIds.encode(Date.now());
-
-  if (options.isDev) {
-    exp.developer = {
-      tool: 'exp',
-    };
-  }
-
-  if (!exp.slug) {
-    throw new XDLError('INVALID_MANIFEST', 'Must provide a slug field in the app.json manifest.');
-  }
-
-  let username = await UserManager.getCurrentUsernameAsync();
-
-  if (!username) {
-    username = ANONYMOUS_USERNAME;
-  }
-
-  exp.id = `@${username}/${exp.slug}`;
-
-  // save the android manifest
-  const androidManifest = {
-    ...exp,
-    bundleUrl: urljoin(publicUrl, 'bundles', androidBundleUrl),
-    platform: 'android',
-    dependencies: Object.keys(pkg.dependencies),
-  };
-
-  await writeArtifactSafelyAsync(
-    projectRoot,
-    null,
-    path.join(outputDir, 'android-index.json'),
-    JSON.stringify(androidManifest)
-  );
-
-  // save the ios manifest
-  const iosManifest = {
-    ...exp,
-    bundleUrl: urljoin(publicUrl, 'bundles', iosBundleUrl),
-    platform: 'ios',
-    dependencies: Object.keys(pkg.dependencies),
-  };
-
-  await writeArtifactSafelyAsync(
-    projectRoot,
-    null,
-    path.join(outputDir, 'ios-index.json'),
-    JSON.stringify(iosManifest)
-  );
 
   const iosSourceMap = bundles.ios.map;
   const androidSourceMap = bundles.android.map;
@@ -483,11 +484,11 @@ export async function exportForAppHosting(
   if (options.dumpSourcemap) {
     // write the sourcemap files
     const iosMapName = `ios-${iosBundleHash}.map`;
-    const iosMapPath = path.join(outputDir, 'bundles', iosMapName);
+    const iosMapPath = path.join(absoluteOutputDir, 'bundles', iosMapName);
     await writeArtifactSafelyAsync(projectRoot, null, iosMapPath, iosSourceMap);
 
     const androidMapName = `android-${androidBundleHash}.map`;
-    const androidMapPath = path.join(outputDir, 'bundles', androidMapName);
+    const androidMapPath = path.join(absoluteOutputDir, 'bundles', androidMapName);
     await writeArtifactSafelyAsync(projectRoot, null, androidMapPath, androidSourceMap);
 
     // Remove original mapping to incorrect sourcemap paths
@@ -511,51 +512,117 @@ export async function exportForAppHosting(
     await writeArtifactSafelyAsync(
       projectRoot,
       null,
-      path.join(outputDir, 'debug.html'),
+      path.join(absoluteOutputDir, 'debug.html'),
       debugHtml
     );
   }
 
-  const hookOptions = {
-    url: null,
-    exp,
-    iosBundle,
-    iosSourceMap,
-    iosManifest,
-    androidBundle,
-    androidSourceMap,
-    androidManifest,
-    projectRoot,
-    log: (msg: any) => {
-      logger.global.info({ quiet: true }, msg);
-    },
-  };
+  // Skip the hooks and manifest creation if building for EAS.
+  if (!experimentalBundle) {
+    const validPostExportHooks = prepareHooks(hooks, 'postExport', projectRoot, exp);
 
-  for (const hook of validPostExportHooks) {
-    logger.global.info(`Running postExport hook: ${hook.file}`);
+    // Add assetUrl to manifest
+    exp.assetUrlOverride = assetUrl;
 
-    try {
-      runHook(hook, hookOptions);
-    } catch (e) {
-      logger.global.warn(`Warning: postExport hook '${hook.file}' failed: ${e.stack}`);
+    exp.publishedTime = new Date().toISOString();
+    exp.commitTime = new Date().toISOString();
+    exp.releaseId = uuid.v4();
+
+    // generate revisionId and id the same way www does
+    const hashIds = new HashIds(uuid.v1(), 10);
+    exp.revisionId = hashIds.encode(Date.now());
+
+    if (options.isDev) {
+      exp.developer = {
+        tool: 'exp',
+      };
     }
-  }
 
-  // configure embedded assets for expo-updates or ExpoKit
-  await EmbeddedAssets.configureAsync({
-    projectRoot,
-    pkg,
-    exp,
-    iosManifestUrl: urljoin(publicUrl, 'ios-index.json'),
-    iosManifest,
-    iosBundle,
-    iosSourceMap,
-    androidManifestUrl: urljoin(publicUrl, 'android-index.json'),
-    androidManifest,
-    androidBundle,
-    androidSourceMap,
-    target,
-  });
+    if (!exp.slug) {
+      throw new XDLError('INVALID_MANIFEST', 'Must provide a slug field in the app.json manifest.');
+    }
+
+    let username = await UserManager.getCurrentUsernameAsync();
+
+    if (!username) {
+      username = ANONYMOUS_USERNAME;
+    }
+
+    exp.id = `@${username}/${exp.slug}`;
+
+    // save the android manifest
+    const androidManifest = {
+      ...exp,
+      bundleUrl: urljoin(publicUrl, 'bundles', androidBundleUrl),
+      platform: 'android',
+      dependencies: Object.keys(pkg.dependencies),
+    };
+
+    await writeArtifactSafelyAsync(
+      projectRoot,
+      null,
+      path.join(absoluteOutputDir, 'android-index.json'),
+      JSON.stringify(androidManifest)
+    );
+
+    // save the ios manifest
+    const iosManifest = {
+      ...exp,
+      bundleUrl: urljoin(publicUrl, 'bundles', iosBundleUrl),
+      platform: 'ios',
+      dependencies: Object.keys(pkg.dependencies),
+    };
+
+    await writeArtifactSafelyAsync(
+      projectRoot,
+      null,
+      path.join(absoluteOutputDir, 'ios-index.json'),
+      JSON.stringify(iosManifest)
+    );
+
+    assert(androidManifest!, 'should have been assigned');
+    assert(iosManifest!, 'should have been assigned');
+    const hookOptions = {
+      url: null,
+      exp,
+      iosBundle,
+      iosSourceMap,
+      iosManifest,
+      androidBundle,
+      androidSourceMap,
+      androidManifest,
+      projectRoot,
+      log: (msg: any) => {
+        logger.global.info({ quiet: true }, msg);
+      },
+    };
+
+    for (const hook of validPostExportHooks) {
+      logger.global.info(`Running postExport hook: ${hook.file}`);
+
+      try {
+        runHook(hook, hookOptions);
+      } catch (e) {
+        logger.global.warn(`Warning: postExport hook '${hook.file}' failed: ${e.stack}`);
+      }
+    }
+
+    // configure embedded assets for expo-updates or ExpoKit
+    await EmbeddedAssets.configureAsync({
+      projectRoot,
+      pkg,
+      exp,
+      iosManifestUrl: urljoin(publicUrl, 'ios-index.json'),
+      iosManifest,
+      iosBundle,
+      iosSourceMap,
+      androidManifestUrl: urljoin(publicUrl, 'android-index.json'),
+      androidManifest,
+      androidBundle,
+      androidSourceMap,
+      target,
+    });
+  }
 }
 
 // truncate the last n lines in a file
@@ -1586,7 +1653,7 @@ export async function startReactNativeServerAsync({
       _logPackagerOutput(projectRoot, 'error', data);
     }
   });
-  const exitPromise = new Promise((resolve, reject) => {
+  const exitPromise = new Promise<void>((resolve, reject) => {
     packagerProcess.once('exit', async code => {
       ProjectUtils.logDebug(projectRoot, 'expo', `Metro Bundler process exited with code ${code}`);
       if (code) {
