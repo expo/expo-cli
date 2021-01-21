@@ -59,7 +59,7 @@ export function getHackyProjectName(projectRoot: string, config: ExpoConfig): st
 // TODO(brentvatne): I couldn't figure out how to do this with an existing
 // higher level function exposed by the xcode library, but we should find out how to do
 // that and replace this with it
-export function addFileToGroup(
+export function addResourceFileToGroup(
   filepath: string,
   groupName: string,
   project: XcodeProject
