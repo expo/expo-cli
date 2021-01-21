@@ -12,6 +12,8 @@ import {
   removeMetaDataItemFromMainApplication,
 } from './Manifest';
 
+const CREATE_MANIFEST_ANDROID_PATH = 'expo-updates/scripts/create-manifest-android.gradle';
+
 type ExpoConfigUpdates = Pick<
   ExpoConfig,
   'sdkVersion' | 'owner' | 'runtimeVersion' | 'nodeModulesPath' | 'updates' | 'slug'
@@ -130,13 +132,39 @@ export function setVersionsConfig(
 
   return androidManifest;
 }
+export function ensureBuildGradleContainsConfigurationScript(
+  projectRoot: string,
+  config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>,
+  buildGradleContents: string
+): string {
+  if (!isBuildGradleConfigured(projectRoot, config, buildGradleContents)) {
+    let cleanedUpBuildGradleContents;
+
+    const isBuildGradleMisconfigured = buildGradleContents
+      .split('\n')
+      .some(line => line.includes(CREATE_MANIFEST_ANDROID_PATH));
+    if (isBuildGradleMisconfigured) {
+      cleanedUpBuildGradleContents = buildGradleContents.replace(
+        new RegExp(`(\n// Integration with Expo updates)?\n.*${CREATE_MANIFEST_ANDROID_PATH}.*\n`),
+        ''
+      );
+    } else {
+      cleanedUpBuildGradleContents = buildGradleContents;
+    }
+
+    const gradleScriptApply = formatApplyLineForBuildGradle(projectRoot, config);
+    return `${cleanedUpBuildGradleContents}\n// Integration with Expo updates\n${gradleScriptApply}\n`;
+  } else {
+    return buildGradleContents;
+  }
+}
 
 export function formatApplyLineForBuildGradle(
   projectRoot: string,
   config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>
 ): string {
   const updatesGradleScriptPath = projectHasModule(
-    'expo-updates/scripts/create-manifest-android.gradle',
+    CREATE_MANIFEST_ANDROID_PATH,
     projectRoot,
     config
   );
@@ -153,14 +181,14 @@ export function formatApplyLineForBuildGradle(
 }
 
 export function isBuildGradleConfigured(
-  buildGradleContent: string,
   projectRoot: string,
-  config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>
+  config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>,
+  buildGradleContents: string
 ): boolean {
   const androidBuildScript = formatApplyLineForBuildGradle(projectRoot, config);
 
   return (
-    buildGradleContent
+    buildGradleContents
       .split('\n')
       // Check for both single and double quotes
       .some(line => line === androidBuildScript || line === androidBuildScript.replace(/"/g, "'"))
