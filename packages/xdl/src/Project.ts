@@ -490,11 +490,10 @@ export async function exportForAppHosting(
     const androidMapPath = path.join(outputDir, 'bundles', androidMapName);
     await writeArtifactSafelyAsync(projectRoot, null, androidMapPath, androidSourceMap);
 
-    if (!(target === 'bare' && semver.lte('40.0.0', exp.sdkVersion))) {
+    if (target === 'managed' && semver.lt(exp.sdkVersion, '40.0.0')) {
       // Remove original mapping to incorrect sourcemap paths
-      // In SDK 40+ bare projects, we no longer need to do this. It's also possible we should no
-      // longer do this in managed projects and/or older SDK versions, but this is safest for now
-      logger.global.info('Configuring sourcemaps');
+      // In SDK 40+ and bare projects, we no longer need to do this.
+      logger.global.info('Configuring source maps');
       await truncateLastNLines(iosJsPath, 1);
       await truncateLastNLines(androidJsPath, 1);
     }
