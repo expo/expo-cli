@@ -12,6 +12,7 @@ import xcode, {
 import pbxFile from 'xcode/lib/pbxFile';
 
 import { assert } from '../../utils/errors';
+import { addWarningIOS } from '../../utils/warnings';
 import * as Paths from '../Paths';
 
 export type ProjectSectionEntry = [string, PBXProject];
@@ -63,16 +64,28 @@ export function addFileToGroup(
   groupName: string,
   project: XcodeProject
 ): XcodeProject {
+  const group = pbxGroupByPath(project, groupName);
+  if (!group) {
+    throw Error(`Xcode PBXGroup with name "${groupName}" could not be found in the Xcode project.`);
+  }
   const file = new pbxFile(filepath);
+
+  const conflictingFile = group.children.find(child => child.comment === file.basename);
+  if (conflictingFile) {
+    // This can happen when a file like the GoogleService-Info.plist needs to be added and the eject command is run twice.
+    // Not much we can do here since it might be a conflicting file.
+    addWarningIOS(
+      'ios-xcode-project',
+      `Skipped adding duplicate file "${filepath}" to PBXGroup named "${groupName}"`
+    );
+    return project;
+  }
+
   file.uuid = project.generateUuid();
   file.fileRef = project.generateUuid();
   project.addToPbxFileReferenceSection(file);
   project.addToPbxBuildFileSection(file);
   project.addToPbxResourcesBuildPhase(file);
-  const group = pbxGroupByPath(project, groupName);
-  if (!group) {
-    throw Error(`Group by name ${groupName} not found!`);
-  }
 
   group.children.push({
     value: file.fileRef,
