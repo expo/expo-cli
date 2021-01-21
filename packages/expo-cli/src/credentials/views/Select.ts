@@ -90,7 +90,7 @@ export class SelectIosExperience implements IView {
   handleAction(ctx: Context, accountName: string, action: string): IView | null {
     switch (action) {
       case 'create-ios-push':
-        return new iosPushView.CreateIosPush(accountName);
+        return new iosPushView.CreateAndAssignIosPush(accountName);
       case 'update-ios-push':
         return new iosPushView.UpdateIosPush(accountName);
       case 'remove-ios-push':
