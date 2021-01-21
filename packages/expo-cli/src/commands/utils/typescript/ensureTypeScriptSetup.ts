@@ -1,6 +1,4 @@
 import * as PackageManager from '@expo/package-manager';
-import { isUsingYarn } from '@expo/package-manager/build';
-import { confirmAsync } from '@expo/xdl/build/Prompts';
 import chalk from 'chalk';
 import program from 'commander';
 import * as fs from 'fs-extra';
@@ -9,6 +7,7 @@ import wrapAnsi from 'wrap-ansi';
 
 import CommandError from '../../../CommandError';
 import log from '../../../log';
+import { confirmAsync } from '../../../prompts';
 import { logNewSection } from '../CreateApp';
 import { collectMissingPackages, hasTSConfig, queryProjectTypeScriptFiles } from './resolveModules';
 import { isTypeScriptSetupDisabled, updateTSConfigAsync } from './updateTSConfig';
@@ -74,7 +73,7 @@ async function ensureRequiredDependenciesAsync(
 
   const readableMissingPackages = missing.map(p => p.pkg).join(', ');
 
-  const isYarn = isUsingYarn(projectRoot);
+  const isYarn = PackageManager.isUsingYarn(projectRoot);
 
   let title = `It looks like you're trying to use TypeScript but don't have the required dependencies installed.`;
 
