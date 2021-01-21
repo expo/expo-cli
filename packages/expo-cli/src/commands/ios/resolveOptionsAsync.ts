@@ -64,15 +64,16 @@ function getDefaultUserTerminal(): string | undefined {
 }
 
 export async function resolveOptionsAsync(
-  projectDir: string,
+  projectRoot: string,
   options: Options
 ): Promise<XcodeBuild.BuildProps> {
-  const xcodeProject = resolveXcodeProject(projectDir);
+  const xcodeProject = resolveXcodeProject(projectRoot);
   const device = await resolveDeviceAsync(options.device);
 
   const isSimulator = !('deviceType' in device);
 
   return {
+    projectRoot,
     isSimulator,
     xcodeProject,
     device,

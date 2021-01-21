@@ -2,6 +2,7 @@ import spawnAsync from '@expo/spawn-async';
 import { SimControl } from '@expo/xdl';
 import chalk from 'chalk';
 import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
+import * as fs from 'fs-extra';
 import ora from 'ora';
 import * as path from 'path';
 
@@ -97,6 +98,7 @@ function getProcessOptions({
 }
 
 export type BuildProps = {
+  projectRoot: string;
   isSimulator: boolean;
   xcodeProject: ProjectInfo;
   device: Pick<SimControl.XCTraceDevice, 'name' | 'udid'>;
@@ -109,6 +111,7 @@ export type BuildProps = {
 };
 
 export function buildAsync({
+  projectRoot,
   xcodeProject,
   device,
   configuration,
@@ -167,16 +170,20 @@ export function buildAsync({
         loader.stop();
       }
       if (code !== 0) {
-        const output = buildOutput + '\n' + errorOutput;
+        const errorLogFilePath = writeErrorLog(projectRoot, buildOutput, errorOutput);
 
         reject(
           new CommandError(
             `
               Failed to build iOS project.
-              We ran "xcodebuild" command but it exited with error code ${code}. To debug build
+              "xcodebuild" exited with error code ${code}. To debug build
               logs further, consider building your app with Xcode.app, by opening
-              ${xcodeProject.name}.
-            ` + output
+              ${xcodeProject.name}.\n\n
+            ` +
+              buildOutput +
+              '\n\n' +
+              errorOutput +
+              `\n\nBuild logs written to ${chalk.underline(errorLogFilePath)}`
           )
         );
         return;
@@ -187,4 +194,24 @@ export function buildAsync({
       resolve(buildOutput);
     });
   });
+}
+
+function writeErrorLog(projectRoot: string, buildOutput: string, errorOutput: string) {
+  const output =
+    '# Build output\n\n```\n' +
+    buildOutput +
+    '\n```\n\n# Error output\n\n```\n' +
+    errorOutput +
+    '\n```\n';
+  const errorLogFilePath = getErrorLogFilePath(projectRoot);
+
+  fs.writeFileSync(errorLogFilePath, output);
+  return errorLogFilePath;
+}
+
+function getErrorLogFilePath(projectRoot: string): string {
+  const filename = 'xcodebuild-error.log';
+  const folder = path.join(projectRoot, '.expo');
+  fs.ensureDirSync(folder);
+  return path.join(folder, filename);
 }
