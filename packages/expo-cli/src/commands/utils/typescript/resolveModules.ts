@@ -25,7 +25,6 @@ export function resolveBaseTSConfig(projectRoot: string): string | null {
 }
 
 export async function hasTSConfig(projectRoot: string): Promise<string | null> {
-  // TODO: Does this work in a monorepo?
   const tsConfigPath = path.join(projectRoot, 'tsconfig.json');
   if (await fileExistsAsync(tsConfigPath)) {
     return tsConfigPath;
