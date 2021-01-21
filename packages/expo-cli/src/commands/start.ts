@@ -156,9 +156,10 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
 }
 
 async function startWebAction(projectDir: string, options: NormalizedOptions): Promise<void> {
-  await ensureTypeScriptSetupAsync(projectDir);
-
   const { exp, rootPath } = await configureProjectAsync(projectDir, options);
+  if (Versions.gteSdkVersion(exp, '34.0.0')) {
+    await ensureTypeScriptSetupAsync(projectDir);
+  }
   const startOpts = parseStartOptions(options);
   await Project.startAsync(rootPath, { ...startOpts, exp });
   await urlOpts.handleMobileOptsAsync(projectDir, options);
@@ -169,9 +170,11 @@ async function startWebAction(projectDir: string, options: NormalizedOptions): P
 }
 
 async function action(projectDir: string, options: NormalizedOptions): Promise<void> {
-  await ensureTypeScriptSetupAsync(projectDir);
-
   const { exp, pkg, rootPath } = await configureProjectAsync(projectDir, options);
+
+  if (Versions.gteSdkVersion(exp, '34.0.0')) {
+    await ensureTypeScriptSetupAsync(projectDir);
+  }
 
   // TODO: only validate dependencies if starting in managed workflow
   await validateDependenciesVersions(projectDir, exp, pkg);
