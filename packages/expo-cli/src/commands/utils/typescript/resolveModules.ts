@@ -1,5 +1,5 @@
 import { fileExistsAsync } from '@expo/config';
-import { sync as globSync } from 'glob';
+import { Glob } from 'glob';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
 
@@ -13,10 +13,27 @@ const requiredPackages = [
 
 export const baseTSConfigName = 'expo/tsconfig.base';
 
-export function queryProjectTypeScriptFiles(projectRoot: string): string[] {
-  return globSync('**/*.{ts,tsx}', {
-    cwd: projectRoot,
-    ignore: ['**/@(Carthage|Pods|node_modules)/**', '**/*.d.ts', '/{ios,android}/**'],
+export function queryFirstProjectTypeScriptFileAsync(projectRoot: string): Promise<null | string> {
+  // Bail out as soon as a single match is found.
+  return new Promise((resolve, reject) => {
+    const mg = new Glob(
+      '**/*.{ts,tsx}',
+      {
+        cwd: projectRoot,
+        ignore: ['**/@(Carthage|Pods|node_modules)/**', '**/*.d.ts', '/{ios,android}/**'],
+      },
+      (error, matches) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(matches[0] ?? null);
+        }
+      }
+    );
+    mg.once('match', matched => {
+      mg.abort();
+      resolve(matched);
+    });
   });
 }
 

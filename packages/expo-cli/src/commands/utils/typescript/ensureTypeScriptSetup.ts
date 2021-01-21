@@ -9,7 +9,11 @@ import CommandError from '../../../CommandError';
 import log from '../../../log';
 import { confirmAsync } from '../../../prompts';
 import { logNewSection } from '../CreateApp';
-import { collectMissingPackages, hasTSConfig, queryProjectTypeScriptFiles } from './resolveModules';
+import {
+  collectMissingPackages,
+  hasTSConfig,
+  queryFirstProjectTypeScriptFileAsync,
+} from './resolveModules';
 import { isTypeScriptSetupDisabled, updateTSConfigAsync } from './updateTSConfig';
 
 export async function ensureTypeScriptSetupAsync(projectRoot: string): Promise<void> {
@@ -53,8 +57,8 @@ export async function shouldSetupTypeScriptAsync(
   }
   // This is a somewhat heavy check in larger projects.
   // Test that this is reasonably paced by running expo start in `expo/apps/native-component-list`
-  const typescriptFiles = queryProjectTypeScriptFiles(projectRoot);
-  if (typescriptFiles.length) {
+  const typescriptFile = await queryFirstProjectTypeScriptFileAsync(projectRoot);
+  if (typescriptFile) {
     return { isBootstrapping: true };
   }
 
