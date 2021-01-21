@@ -40,6 +40,21 @@ export async function updateTSConfigAsync({
       projectTSConfig.extends = baseTSConfigName;
       modifications.push(['extends', baseTSConfigName]);
     }
+  } else if (isBootstrapping) {
+    // use an unversioned config when the versioned config cannot be resolved
+    projectTSConfig.compilerOptions = {
+      jsx: 'react-native',
+      target: 'esnext',
+      lib: ['esnext'],
+      allowJs: true,
+      skipLibCheck: true,
+      noEmit: true,
+      allowSyntheticDefaultImports: true,
+      resolveJsonModule: true,
+      esModuleInterop: true,
+      moduleResolution: 'node',
+    };
+    modifications.push(['compilerOptions', 'configured']);
   }
 
   // If no changes, then quietly bail out
