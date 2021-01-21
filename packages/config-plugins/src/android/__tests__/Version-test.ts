@@ -48,7 +48,7 @@ describe('versionName', () => {
   });
 
   it(`replaces provided version name in build.gradle if version name is given`, () => {
-    expect(setVersionName({ version: '1.2.3' }, EXAMPLE_BUILD_GRADLE_2, '2.0')).toMatch(
+    expect(setVersionName({ version: '1.2.3' }, EXAMPLE_BUILD_GRADLE_2)).toMatch(
       'versionName "1.2.3"'
     );
   });
