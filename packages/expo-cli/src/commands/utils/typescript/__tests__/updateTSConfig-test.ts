@@ -50,6 +50,34 @@ describe(updateTSConfigAsync, () => {
     });
   });
 
+  it(`uses an unversioned config when the versioned config isn't available`, async () => {
+    vol.fromJSON({
+      '/tsconfig.json': '{ "compilerOptions": {} }',
+    });
+    resolveBaseTSConfig.mockImplementationOnce(() => null);
+
+    await updateTSConfigAsync({
+      projectRoot: '/',
+      tsConfigPath: '/tsconfig.json',
+      isBootstrapping: true,
+    });
+
+    expect(JSON.parse(await fs.readFile('/tsconfig.json', 'utf8'))).toStrictEqual({
+      compilerOptions: {
+        allowJs: true,
+        allowSyntheticDefaultImports: true,
+        esModuleInterop: true,
+        jsx: 'react-native',
+        lib: ['esnext'],
+        moduleResolution: 'node',
+        noEmit: true,
+        resolveJsonModule: true,
+        skipLibCheck: true,
+        target: 'esnext',
+      },
+    });
+  });
+
   it(`forces the base config to be Expo`, async () => {
     vol.fromJSON({
       '/tsconfig.json': '{ "extends": "foobar", "compilerOptions": { "strict": true } }',
