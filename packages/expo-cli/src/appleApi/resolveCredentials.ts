@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import * as fs from 'fs-extra';
 import wrapAnsi from 'wrap-ansi';
 
+import CommandError from '../CommandError';
 import { learnMore } from '../commands/utils/TerminalLink';
 import log from '../log';
 import promptAsync from '../prompts';
@@ -41,8 +42,8 @@ function getAppleIdFromEnvironmentOrOptions({
   }
 
   // partial apple id params were set, assume user has intention of passing it in
-  if (!passedAppleIdPassword) {
-    throw new Error(
+  if (process.env.EXPO_APPLE_ID && !passedAppleIdPassword) {
+    throw new CommandError(
       'In order to provide your Apple ID credentials, you must set the --apple-id flag and set the EXPO_APPLE_PASSWORD environment variable.'
     );
   }

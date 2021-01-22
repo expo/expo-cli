@@ -7,6 +7,7 @@ import {
 } from '@expo/apple-utils';
 import chalk from 'chalk';
 
+import { AbortCommandError } from '../CommandError';
 import { assert } from '../assert';
 import log from '../log';
 import { toggleConfirmAsync } from '../prompts';
@@ -25,11 +26,6 @@ export type Options = {
    * Can be used to restore the Apple auth state via apple-utils.
    */
   cookies?: Session.AuthState['cookies'];
-};
-
-type AppleCredentials = {
-  appleIdPassword: string;
-  appleId: string;
 };
 
 export type Team = {
@@ -115,7 +111,7 @@ async function loginAsync(
           options
         );
       } else {
-        throw new Error('ABORTED');
+        throw new AbortCommandError();
       }
     }
     throw error;

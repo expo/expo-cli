@@ -2,7 +2,7 @@ import { ExpoConfig, getConfig } from '@expo/config';
 import { ApiV2, RobotUser, User, UserManager } from '@expo/xdl';
 import pick from 'lodash/pick';
 
-import { AppleCtx, authenticate } from '../appleApi';
+import { AppleCtx, authenticateAsync } from '../appleApi';
 import log from '../log';
 import { getProjectOwner } from '../projects';
 import AndroidApi from './api/AndroidApi';
@@ -82,7 +82,7 @@ export class Context {
 
   async ensureAppleCtx() {
     if (!this._appleCtx) {
-      this._appleCtx = await authenticate(this._appleCtxOptions);
+      this._appleCtx = await authenticateAsync(this._appleCtxOptions);
     }
   }
 

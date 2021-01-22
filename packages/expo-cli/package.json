@@ -111,6 +111,7 @@
     "slash": "1.0.0",
     "strip-ansi": "^6.0.0",
     "tar": "^6.0.5",
+    "turndown": "~7.0.0",
     "tempy": "^0.7.1",
     "terminal-link": "^2.1.1",
     "untildify": "3.0.3",
@@ -119,10 +120,6 @@
     "wordwrap": "1.0.0",
     "wrap-ansi": "^7.0.0",
     "xcode": "^3.0.1"
-  },
-  "optionalDependencies": {
-    "@expo/traveling-fastlane-darwin": "1.15.1",
-    "@expo/traveling-fastlane-linux": "1.15.1"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df"
 }
