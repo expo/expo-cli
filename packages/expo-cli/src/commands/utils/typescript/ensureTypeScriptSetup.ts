@@ -1,4 +1,6 @@
+import { getConfig } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
+import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program from 'commander';
 import * as fs from 'fs-extra';
@@ -65,6 +67,19 @@ export async function shouldSetupTypeScriptAsync(
   return null;
 }
 
+async function getSDKVersionsAsync(projectRoot: string): Promise<Versions.SDKVersion | null> {
+  try {
+    const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+    if (exp.sdkVersion) {
+      const sdkVersions = await Versions.releasedSdkVersionsAsync();
+      return sdkVersions[exp.sdkVersion] ?? null;
+    }
+  } catch {
+    // This is a convenience method and we should avoid making this halt the process.
+  }
+  return null;
+}
+
 async function ensureRequiredDependenciesAsync(
   projectRoot: string,
   skipPrompt: boolean = false
@@ -73,8 +88,18 @@ async function ensureRequiredDependenciesAsync(
   if (!missing.length) {
     return resolutions.typescript!;
   }
-  // Prompt to install or bail out...
 
+  // Ensure the versions are right for the SDK that the project is currently using.
+  const versions = await getSDKVersionsAsync(projectRoot);
+  if (versions?.relatedPackages) {
+    for (const pkg of missing) {
+      if (pkg.pkg in versions.relatedPackages) {
+        pkg.version = versions.relatedPackages[pkg.pkg];
+      }
+    }
+  }
+
+  // Prompt to install or bail out...
   const readableMissingPackages = missing.map(p => p.pkg).join(', ');
 
   const isYarn = PackageManager.isUsingYarn(projectRoot);
@@ -90,7 +115,12 @@ async function ensureRequiredDependenciesAsync(
     ) {
       await installPackagesAsync(projectRoot, {
         isYarn,
-        devPackages: missing.map(({ pkg }) => pkg),
+        devPackages: missing.map(({ pkg, version }) => {
+          if (version) {
+            return [pkg, version].join('@');
+          }
+          return pkg;
+        }),
       });
       // Try again but skip prompting twice.
       return await ensureRequiredDependenciesAsync(projectRoot, true);
@@ -107,7 +137,14 @@ async function ensureRequiredDependenciesAsync(
   const installCommand =
     (isYarn ? 'yarn add --dev' : 'npm install --save-dev') +
     ' ' +
-    missing.map(p => p.pkg).join(' ');
+    missing
+      .map(({ pkg, version }) => {
+        if (version) {
+          return [pkg, version].join('@');
+        }
+        return pkg;
+      })
+      .join(' ');
 
   let disableMessage =
     "If you're not using TypeScript, please remove the TypeScript files from your project";

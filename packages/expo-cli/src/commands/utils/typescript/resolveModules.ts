@@ -55,6 +55,7 @@ export function collectMissingPackages(
   missing: {
     file: string;
     pkg: string;
+    version?: string;
   }[];
   resolutions: Record<string, string>;
 } {
