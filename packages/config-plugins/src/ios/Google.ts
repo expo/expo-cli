@@ -8,7 +8,7 @@ import { createInfoPlistPlugin, withXcodeProject } from '../plugins/ios-plugins'
 import { InfoPlist } from './IosConfig.types';
 import { getSourceRoot } from './Paths';
 import { appendScheme } from './Scheme';
-import { addFileToGroup, getProjectName } from './utils/Xcodeproj';
+import { addResourceFileToGroup, getProjectName } from './utils/Xcodeproj';
 
 export const withGoogle = createInfoPlistPlugin(setGoogleConfig, 'withGoogle');
 
@@ -85,6 +85,6 @@ export function setGoogleServicesFile(
   );
 
   const projectName = getProjectName(projectRoot);
-  project = addFileToGroup(`${projectName}/GoogleService-Info.plist`, projectName, project);
+  project = addResourceFileToGroup(`${projectName}/GoogleService-Info.plist`, projectName, project);
   return project;
 }
