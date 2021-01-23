@@ -1,9 +1,11 @@
-import { ApiV2, RegistrationData, User, UserManager } from '@expo/xdl';
+import { ApiV2, User, UserManager } from '@expo/xdl';
 import { ApiV2Error } from '@expo/xdl/build/ApiV2';
 import chalk from 'chalk';
 import program from 'commander';
+import ora from 'ora';
+import openBrowser from 'react-dev-utils/openBrowser';
 
-import CommandError from './CommandError';
+import CommandError, { SilentError } from './CommandError';
 import { assert } from './assert';
 import log from './log';
 import promptNew, { confirmAsync, Question as NewQuestion, selectAsync } from './prompts';
@@ -65,7 +67,14 @@ export async function loginOrRegisterAsync(): Promise<User> {
   const { action } = await promptNew(question);
 
   if (action === 'register') {
-    return register();
+    openRegistrationInBrowser();
+    log.newLine();
+    log(
+      `Log in with ${chalk.bold(
+        'expo login'
+      )} after you have created your account through the website.`
+    );
+    throw new SilentError();
   } else if (action === 'existingUser') {
     return login({});
   } else {
@@ -324,83 +333,17 @@ async function _usernamePasswordAuth(
   }
 }
 
-export async function register(): Promise<User> {
-  const user = await UserManager.getCurrentUserAsync();
-  if (user?.accessToken) {
-    throw new CommandError(
-      'ACCESS_TOKEN_ERROR',
-      'Please remove the EXPO_TOKEN environment var to register as a new user.'
+export const REGISTRATION_URL = `https://expo.io/signup`;
+
+export function openRegistrationInBrowser() {
+  const spinner = ora(`Opening ${REGISTRATION_URL}...`).start();
+  const opened = openBrowser(REGISTRATION_URL);
+
+  if (opened) {
+    spinner.succeed(`Opened ${REGISTRATION_URL} in your web browser.`);
+  } else {
+    spinner.fail(
+      `Unable to open a web browser. Please open your browser and navigate to ${REGISTRATION_URL}.`
     );
   }
-
-  log(
-    `
-We need an email, username, and password to create an account for you.
-`
-  );
-
-  // Answers from previous questions aren't threaded through with `prompts`, so
-  // in order to confirm the password we need to save off the password value
-  // during the initial password validation callback and then validate against
-  // it in the confirmation step.
-  //
-  // https://github.com/expo/expo-cli/issues/2970
-  //
-  let passwordInput: string | undefined;
-
-  const questions: NewQuestion[] = [
-    {
-      type: 'text',
-      name: 'email',
-      message: 'Email:',
-      format: val => val.trim(),
-      validate: nonEmptyInput,
-    },
-    {
-      type: 'text',
-      name: 'username',
-      message: 'Username:',
-      format: val => val.trim(),
-      validate: nonEmptyInput,
-    },
-    {
-      type: 'password',
-      name: 'password',
-      message: 'Password:',
-      format: val => val.trim(),
-      validate(val) {
-        if (val.trim() === '') {
-          return 'Please create a password';
-        }
-
-        passwordInput = val;
-        return true;
-      },
-    },
-    {
-      type: 'password',
-      name: 'passwordRepeat',
-      message: 'Confirm Password:',
-      format: val => val.trim(),
-      validate(val) {
-        if (val.trim() === '') {
-          return false;
-        }
-        if (!passwordInput || val.trim() !== passwordInput.trim()) {
-          return `Passwords don't match!`;
-        }
-        return true;
-      },
-    },
-  ];
-  const answers = await promptNew(questions);
-  const registeredUser = await UserManager.registerAsync(answers as RegistrationData);
-  log(`\nAccount registered, you are now logged in as ${chalk.cyan(answers.username)}.`);
-  log(
-    `- You can log in to your account on ${chalk.bold(
-      'https://expo.io'
-    )} to manage and collaborate on your projects.`
-  );
-  log(`- You can log in on the Expo client app for quick access to your projects.\n`);
-  return registeredUser;
 }
