@@ -516,6 +516,9 @@ function updatePackageJSONDependencies({
   tempDir: string;
   pkg: PackageJSONConfig;
 }): DependenciesModificationResults {
+  if (!pkg.devDependencies) {
+    pkg.devDependencies = {};
+  }
   const { dependencies, devDependencies } = getPackageJson(tempDir);
   const defaultDependencies = createDependenciesMap(dependencies);
   const defaultDevDependencies = createDependenciesMap(devDependencies);
