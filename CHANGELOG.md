@@ -10,6 +10,51 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Mon, 25 Jan 2021 11:50:33 -0800](https://github.com/expo/expo-cli/commit/ded0c2af2180d76dd9f420f00b92b5167ab52312)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+- [cli] Check for optional `devDependencies` ([#3121](https://github.com/expo/expo-cli/issues/3121))
+- [cli] Validate project owner when publishing ([#3061](https://github.com/expo/expo-cli/issues/3061))
+- [cli] Copy over EAS Apple API methods  ([#3113](https://github.com/expo/expo-cli/issues/3113))
+- [cli] Open signup page in browser instead of CLI-based registration
+- [cli] Auto configure TypeScript ([#3096](https://github.com/expo/expo-cli/issues/3096))
+- [cli] Use the versions endpoint for TypeScript packages ([#3109](https://github.com/expo/expo-cli/issues/3109))
+- [cli] Remove EAS Build related code ([#3079](https://github.com/expo/expo-cli/issues/3079))
+- [cli] add option to assign created push key to current project ([#3098](https://github.com/expo/expo-cli/issues/3098))
+- [cli] add --experimental-bundle flag to 'export' command ([#3074](https://github.com/expo/expo-cli/issues/3074))
+- [cli] Only change react-native version when it's a fork ([#3097](https://github.com/expo/expo-cli/issues/3097))
+- [cli] remove lottie extra step warning ([#3099](https://github.com/expo/expo-cli/issues/3099))
+- [cli] improvement: Handle keychain save error ([#3067](https://github.com/expo/expo-cli/issues/3067))
+- [config] Only use wasm on web platforms ([#3100](https://github.com/expo/expo-cli/issues/3100))
+- [config-plugins] improve monorepo support - fix setting path to create-manifest-* script ([#3103](https://github.com/expo/expo-cli/issues/3103))
+- [config-plugins] Prevent adding duplicate Xcode references for files ([#3107](https://github.com/expo/expo-cli/issues/3107))
+- [config-plugins] Fix app gradle versionName replacement after ejecting twice ([#3082](https://github.com/expo/expo-cli/issues/3082))
+- [config-plugins] export more types from config-plugins ([#3083](https://github.com/expo/expo-cli/issues/3083))
+- [metro-config] Enable allowOptionalDependencies by default ([#3088](https://github.com/expo/expo-cli/issues/3088))
+- [xdl] fix expo export --dump-sourcemap for sdk 40+ and bare projects ([#3095](https://github.com/expo/expo-cli/issues/3095))
+- [xdl] improve simulator errors ([#3104](https://github.com/expo/expo-cli/issues/3104))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.15
+- @expo/config@3.3.24
+- @expo/dev-server@0.1.50
+- @expo/dev-tools@0.13.76
+- @expo/electron-adapter@0.0.41
+- expo-cli@4.1.0
+- expo-optimize@0.1.72
+- @expo/metro-config@0.1.50
+- @expo/next-adapter@2.1.55
+- expo-pwa@0.0.60
+- uri-scheme@1.0.61
+- @expo/webpack-config@0.12.54
+- @expo/xdl@59.0.16
+
 ## [Thu Jan 14 14:34:05 2021 +0100](https://github.com/expo/expo-cli/commit/e8dfcc425fa8128aeaf21fb8bbba6760dc196fcf)
 
 ### 🛠 Breaking changes
