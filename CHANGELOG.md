@@ -14,30 +14,32 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [cli] Open signup page in browser instead of CLI-based registration
+- [config] Only use wasm on web platforms ([#3100](https://github.com/expo/expo-cli/issues/3100))
+
 ### 🎉 New features
+
+- [cli] Auto configure TypeScript ([#3096](https://github.com/expo/expo-cli/issues/3096))
+- [cli] Use the versions endpoint for TypeScript packages ([#3109](https://github.com/expo/expo-cli/issues/3109))
+- [cli] Copy over EAS Apple API methods  ([#3113](https://github.com/expo/expo-cli/issues/3113))
+- [cli] add --experimental-bundle flag to 'export' command ([#3074](https://github.com/expo/expo-cli/issues/3074))
+- [config-plugins] improve monorepo support - fix setting path to create-manifest-* script ([#3103](https://github.com/expo/expo-cli/issues/3103))
+- [config-plugins] export more types from config-plugins ([#3083](https://github.com/expo/expo-cli/issues/3083))
+- [metro-config] Enable allowOptionalDependencies by default ([#3088](https://github.com/expo/expo-cli/issues/3088))
+- [xdl] improve simulator errors ([#3104](https://github.com/expo/expo-cli/issues/3104))
 
 ### 🐛 Bug fixes
 
 - [cli] Check for optional `devDependencies` ([#3121](https://github.com/expo/expo-cli/issues/3121))
 - [cli] Validate project owner when publishing ([#3061](https://github.com/expo/expo-cli/issues/3061))
-- [cli] Copy over EAS Apple API methods  ([#3113](https://github.com/expo/expo-cli/issues/3113))
-- [cli] Open signup page in browser instead of CLI-based registration
-- [cli] Auto configure TypeScript ([#3096](https://github.com/expo/expo-cli/issues/3096))
-- [cli] Use the versions endpoint for TypeScript packages ([#3109](https://github.com/expo/expo-cli/issues/3109))
 - [cli] Remove EAS Build related code ([#3079](https://github.com/expo/expo-cli/issues/3079))
 - [cli] add option to assign created push key to current project ([#3098](https://github.com/expo/expo-cli/issues/3098))
-- [cli] add --experimental-bundle flag to 'export' command ([#3074](https://github.com/expo/expo-cli/issues/3074))
 - [cli] Only change react-native version when it's a fork ([#3097](https://github.com/expo/expo-cli/issues/3097))
 - [cli] remove lottie extra step warning ([#3099](https://github.com/expo/expo-cli/issues/3099))
 - [cli] improvement: Handle keychain save error ([#3067](https://github.com/expo/expo-cli/issues/3067))
-- [config] Only use wasm on web platforms ([#3100](https://github.com/expo/expo-cli/issues/3100))
-- [config-plugins] improve monorepo support - fix setting path to create-manifest-* script ([#3103](https://github.com/expo/expo-cli/issues/3103))
 - [config-plugins] Prevent adding duplicate Xcode references for files ([#3107](https://github.com/expo/expo-cli/issues/3107))
 - [config-plugins] Fix app gradle versionName replacement after ejecting twice ([#3082](https://github.com/expo/expo-cli/issues/3082))
-- [config-plugins] export more types from config-plugins ([#3083](https://github.com/expo/expo-cli/issues/3083))
-- [metro-config] Enable allowOptionalDependencies by default ([#3088](https://github.com/expo/expo-cli/issues/3088))
 - [xdl] fix expo export --dump-sourcemap for sdk 40+ and bare projects ([#3095](https://github.com/expo/expo-cli/issues/3095))
-- [xdl] improve simulator errors ([#3104](https://github.com/expo/expo-cli/issues/3104))
 
 ### 📦 Packages updated
 
