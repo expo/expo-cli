@@ -516,6 +516,9 @@ function updatePackageJSONDependencies({
   tempDir: string;
   pkg: PackageJSONConfig;
 }): DependenciesModificationResults {
+  if(!pkg.devDependencies) {
+    pkg.devDependencies = {}
+  }
   const { dependencies, devDependencies } = getPackageJson(tempDir);
   const defaultDependencies = createDependenciesMap(dependencies);
   const defaultDevDependencies = createDependenciesMap(devDependencies);
@@ -539,7 +542,7 @@ function updatePackageJSONDependencies({
   }
   const combinedDevDependencies: DependenciesMap = createDependenciesMap({
     ...defaultDevDependencies,
-    ...pkg?.devDependencies,
+    ...pkg.devDependencies,
   });
 
   // Only change the dependencies if the normalized hash changes, this helps to reduce meaningless changes.
