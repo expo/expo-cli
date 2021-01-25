@@ -491,10 +491,13 @@ export async function exportAppAsync(
     const androidMapPath = path.join(absoluteOutputDir, 'bundles', androidMapName);
     await writeArtifactSafelyAsync(projectRoot, null, androidMapPath, androidSourceMap);
 
-    // Remove original mapping to incorrect sourcemap paths
-    logger.global.info('Configuring sourcemaps');
-    await truncateLastNLines(iosJsPath, 1);
-    await truncateLastNLines(androidJsPath, 1);
+    if (target === 'managed' && semver.lt(exp.sdkVersion, '40.0.0')) {
+      // Remove original mapping to incorrect sourcemap paths
+      // In SDK 40+ and bare projects, we no longer need to do this.
+      logger.global.info('Configuring source maps');
+      await truncateLastNLines(iosJsPath, 1);
+      await truncateLastNLines(androidJsPath, 1);
+    }
 
     // Add correct mapping to sourcemap paths
     await fs.appendFile(iosJsPath, `\n//# sourceMappingURL=${iosMapName}`);
