@@ -1,25 +1,31 @@
-import { UserSettings } from '@expo/xdl';
+import {
+  Auth,
+  InvalidUserCredentialsError,
+  RequestContext,
+  Session,
+  Teams,
+} from '@expo/apple-utils';
 import chalk from 'chalk';
-import wordwrap from 'wordwrap';
 
-import { learnMore } from '../commands/utils/TerminalLink';
+import { AbortCommandError } from '../CommandError';
+import { assert } from '../assert';
 import log from '../log';
-import prompt from '../prompts';
-import { nonEmptyInput } from '../validators';
-import { runAction, travelingFastlane } from './fastlane';
-import * as Keychain from './keychain';
+import { toggleConfirmAsync } from '../prompts';
+import {
+  deletePasswordAsync,
+  promptPasswordAsync,
+  resolveCredentialsAsync,
+} from './resolveCredentials';
 
 const APPLE_IN_HOUSE_TEAM_TYPE = 'in-house';
 
 export type Options = {
-  appleIdPassword?: string;
   appleId?: string;
   teamId?: string;
-};
-
-type AppleCredentials = {
-  appleIdPassword: string;
-  appleId: string;
+  /**
+   * Can be used to restore the Apple auth state via apple-utils.
+   */
+  cookies?: Session.AuthState['cookies'];
 };
 
 export type Team = {
@@ -28,274 +34,164 @@ export type Team = {
   inHouse?: boolean;
 };
 
-type FastlaneTeam = {
-  name: string;
-  teamId: string;
-  status: string;
-  type: string;
-};
-
 export type AppleCtx = {
   appleId: string;
-  appleIdPassword: string;
+  appleIdPassword?: string;
   team: Team;
-  fastlaneSession: string;
+  /**
+   * Defined when using Fastlane
+   */
+  fastlaneSession?: string;
+  /**
+   * Can be used to restore the Apple auth state via apple-utils.
+   */
+  authState?: Session.AuthState;
 };
 
-export async function authenticate(options: Options = {}): Promise<AppleCtx> {
-  const { appleId, appleIdPassword } = await requestAppleIdCreds(options);
-  log(`Authenticating to Apple Developer Portal...`); // use log instead of spinner in case we need to prompt user for 2fa
+export function getRequestContext(authCtx: AppleCtx): RequestContext {
+  assert(authCtx.authState?.context, 'Apple request context must be defined');
+  return authCtx.authState.context;
+}
+
+async function loginAsync(
+  userCredentials: Partial<Auth.UserCredentials> = {},
+  options: Auth.LoginOptions
+): Promise<Session.AuthState> {
+  // First try login with cookies JSON
+  if (userCredentials.cookies) {
+    const session = await Auth.loginWithCookiesAsync(userCredentials);
+    // If the session isn't valid, continue to the other authentication methods.
+    // Use `loginWithCookiesAsync` for a less resilient flow.
+    if (session) {
+      return session;
+    }
+  }
+
+  // Resolve the user credentials, optimizing for password-less login.
+  const { username, password } = await resolveCredentialsAsync(userCredentials);
+  assert(username);
+
+  // Clear data
+  Auth.resetInMemoryData();
+
   try {
-    const { teams, fastlaneSession } = await runAction(
-      travelingFastlane.authenticate,
-      [appleId, appleIdPassword],
+    // Attempt to rehydrate the session.
+    const restoredSession = await Auth.tryRestoringAuthStateFromUserCredentialsAsync(
       {
-        pipeStdout: true,
-      }
+        username,
+        providerId: userCredentials.providerId,
+        teamId: userCredentials.teamId,
+      },
+      options
     );
-    log(chalk.green('Authenticated with Apple Developer Portal successfully!'));
-    const team = await _chooseTeam(teams, options.teamId);
-    return { appleId, appleIdPassword, team, fastlaneSession };
-  } catch (err) {
-    if (err.rawDump?.match(/Invalid username and password combination/)) {
-      log(chalk.red('Invalid username and password combination, try again.'));
-      const anotherPromptResult = await _promptForAppleId({
-        firstAttempt: false,
-        previousAppleId: appleId,
-      });
-      return authenticate({ ...options, ...anotherPromptResult });
+    if (restoredSession) {
+      // Completed authentication!
+      return { password, ...restoredSession };
     }
-    log(chalk.red('Authentication with Apple Developer Portal failed!'));
-    throw err;
-  }
-}
 
-export async function requestAppleIdCreds(options: Options): Promise<AppleCredentials> {
-  return _getAppleIdFromParams(options) || (await _promptForAppleId());
-}
-
-function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCredentials | null {
-  const passedAppleId = appleId || process.env.EXPO_APPLE_ID;
-  const passedAppleIdPassword = passedAppleId
-    ? appleIdPassword || process.env.EXPO_APPLE_PASSWORD || process.env.EXPO_APPLE_ID_PASSWORD
-    : undefined;
-
-  if (process.env.EXPO_APPLE_ID_PASSWORD) {
-    log.error('EXPO_APPLE_ID_PASSWORD is deprecated, please use EXPO_APPLE_PASSWORD instead!');
-  }
-
-  // none of the apple id params were set, assume user has no intention of passing it in
-  if (!passedAppleId) {
-    return null;
-  }
-
-  // partial apple id params were set, assume user has intention of passing it in
-  if (!passedAppleIdPassword) {
-    throw new Error(
-      'In order to provide your Apple ID credentials, you must set the --apple-id flag and set the EXPO_APPLE_PASSWORD environment variable.'
-    );
-  }
-
-  return {
-    appleId: passedAppleId as string,
-    appleIdPassword: passedAppleIdPassword as string,
-  };
-}
-
-async function _promptForAppleId({
-  firstAttempt = true,
-  previousAppleId,
-}: { firstAttempt?: boolean; previousAppleId?: string } = {}): Promise<AppleCredentials> {
-  if (firstAttempt) {
-    const wrap = wordwrap(process.stdout.columns || 80);
-    log(
-      wrap(
-        'Please enter your Apple Developer Program account credentials. ' +
-          'These credentials are needed to manage certificates, keys and provisioning profiles ' +
-          `in your Apple Developer account.`
-      )
-    );
-
-    // https://docs.expo.io/distribution/security/#apple-developer-account-credentials
-    log(
-      wrap(
-        chalk.bold(
-          `The password is only used to authenticate with Apple and never stored on Expo servers`
-        )
-      )
-    );
-    log(wrap(chalk.dim(learnMore('https://bit.ly/2VtGWhU'))));
-  }
-
-  // Get the email address that was last used and set it as
-  // the default value for quicker authentication.
-  const lastAppleId = await getLastUsedAppleIdAsync();
-
-  const { appleId: promptAppleId } = await prompt(
-    {
-      type: 'text',
-      name: 'appleId',
-      message: `Apple ID:`,
-      validate: nonEmptyInput,
-      initial: lastAppleId ?? undefined,
-      ...(previousAppleId && { initial: previousAppleId }),
-    },
-    {
-      nonInteractiveHelp: 'Pass your Apple ID using the --apple-id flag.',
-    }
-  );
-
-  // If a new email was used then store it as a suggestion for next time.
-  // This functionality is disabled using the keychain mechanism.
-  if (!Keychain.EXPO_NO_KEYCHAIN && promptAppleId && lastAppleId !== promptAppleId) {
-    await UserSettings.setAsync('appleId', promptAppleId);
-  }
-
-  // Only check on the first attempt in case the user changed their password.
-  if (firstAttempt) {
-    const password = await getPasswordAsync({ appleId: promptAppleId });
-
-    if (password) {
-      log(
-        `Using password from your local Keychain. ${chalk.dim(
-          `Learn more ${chalk.underline('https://docs.expo.io/distribution/security#keychain')}`
-        )}`
-      );
-      return { appleId: promptAppleId, appleIdPassword: password };
-    }
-  }
-  const { appleIdPassword } = await prompt(
-    {
-      type: 'password',
-      name: 'appleIdPassword',
-      message: () => `Password (for ${promptAppleId}):`,
-      validate: nonEmptyInput,
-    },
-    {
-      nonInteractiveHelp:
-        'Pass your Apple ID password using the EXPO_APPLE_PASSWORD environment variable',
-    }
-  );
-
-  try {
-    await setPasswordAsync({ appleId: promptAppleId, appleIdPassword });
+    return await loginWithUserCredentialsAsync({
+      username,
+      password,
+      providerId: userCredentials.providerId,
+      teamId: userCredentials.teamId,
+    });
   } catch (error) {
-    log(chalk.yellow(`Unable to save Apple ID password to the local Keychain: ${error.message}`));
-  }
+    if (error instanceof InvalidUserCredentialsError) {
+      log.error(error.message);
+      // Remove the invalid password so it isn't automatically used...
+      await deletePasswordAsync({ username });
 
-  return { appleId: promptAppleId, appleIdPassword };
+      if (await toggleConfirmAsync({ message: 'Would you like to try again?' })) {
+        // Don't pass credentials back or the method will throw
+        return loginAsync(
+          {
+            teamId: userCredentials.teamId,
+            providerId: userCredentials.providerId,
+          },
+          options
+        );
+      } else {
+        throw new AbortCommandError();
+      }
+    }
+    throw error;
+  }
 }
 
-async function _chooseTeam(teams: FastlaneTeam[], userProvidedTeamId?: string): Promise<Team> {
-  if (teams.length === 0) {
-    throw new Error(`You have no team associated with your Apple account, cannot proceed.
-(Do you have a paid Apple Developer account?)`);
-  }
+async function loginWithUserCredentialsAsync({
+  username,
+  password,
+  teamId,
+  providerId,
+}: {
+  username: string;
+  password?: string;
+  teamId?: string;
+  providerId?: number;
+}) {
+  // Start a new login flow
+  const newSession = await Auth.loginWithUserCredentialsAsync({
+    username,
+    // If the session couldn't be restored, then prompt for the password (also check if it's stored in the keychain).
+    password: password || (await promptPasswordAsync({ username })),
+    providerId,
+    teamId,
+  });
+  // User cancelled or something.
+  assert(newSession, 'An unexpected error occurred while completing authentication');
 
-  if (userProvidedTeamId) {
-    const foundTeam = teams.find(({ teamId }) => teamId === userProvidedTeamId);
-    if (foundTeam) {
-      log(`Using Apple Team with ID: ${userProvidedTeamId}`);
-      return _formatTeam(foundTeam);
-    } else {
-      log.warn(`Your account is not associated with Apple Team with ID: ${userProvidedTeamId}`);
-    }
-  }
+  // Success!
+  return newSession;
+}
 
-  if (teams.length === 1) {
-    const [team] = teams;
-    log(`Only 1 team associated with your account, using Apple Team with ID: ${team.teamId}`);
-    return _formatTeam(team);
-  } else {
-    log(`You have ${teams.length} teams associated with your account`);
-    const choices = teams.map((team, i) => ({
-      title: `${i + 1}) ${team.teamId} "${team.name}" (${team.type})`,
-      value: team,
-    }));
-    const { team } = await prompt(
+export async function authenticateAsync(options: Options = {}): Promise<AppleCtx> {
+  // help keep apple login visually apart from the other operations.
+  log.addNewLineIfNone();
+
+  try {
+    const authState = await loginAsync(
       {
-        type: 'select',
-        name: 'team',
-        message: 'Which team would you like to use?',
-        choices,
+        cookies: options.cookies,
+        teamId: options.teamId,
       },
       {
-        nonInteractiveHelp: 'Pass in your Apple Team ID using the --team-id flag.',
+        // TODO: Provide a way to disable this for users who want to mix and match teams / providers.
+        autoResolveProvider: true,
       }
     );
-    return _formatTeam(team);
+
+    // Currently, this is resolved once, inside the apple-utils package.
+    const teamId = authState.context.teamId!;
+    // Get all of the teams to resolve the rest of the user data.
+    // TODO: optimize this step.
+    const teams = await Teams.getTeamsAsync();
+    const team = teams.find(team => team.teamId === teamId);
+    assert(team, `Your account is not associated with Apple Team with ID: ${teamId}`);
+
+    // Get the JSON cookies in the custom YAML format used by Fastlane
+    const fastlaneSession = Session.getSessionAsYAML();
+    return {
+      appleId: authState.username,
+      appleIdPassword: authState.password,
+      team: formatTeam(team),
+      // Can be used to restore the auth state using apple-utils.
+      authState,
+      // Defined for legacy usage in Turtle V1 or any other places where Fastlane is used in the servers.
+      fastlaneSession,
+    };
+  } catch (error) {
+    if (error.message === 'ABORTED') {
+      process.exit(1);
+    }
+    log(chalk.red('Authentication with Apple Developer Portal failed!'));
+    throw error;
   }
 }
 
-function _formatTeam({ teamId, name, type }: FastlaneTeam): Team {
+function formatTeam({ teamId, name, type }: Teams.AppStoreTeam): Team {
   return {
     id: teamId,
     name: `${name} (${type})`,
     inHouse: type.toLowerCase() === APPLE_IN_HOUSE_TEAM_TYPE,
   };
-}
-
-async function getLastUsedAppleIdAsync(): Promise<string | null> {
-  if (Keychain.EXPO_NO_KEYCHAIN) {
-    // Clear last used apple ID.
-    await UserSettings.deleteKeyAsync('appleId');
-    return null;
-  }
-  try {
-    // @ts-ignore: appleId syncing issue
-    const lastAppleId = (await UserSettings.getAsync('appleId')) ?? null;
-    if (typeof lastAppleId === 'string') {
-      return lastAppleId;
-    }
-  } catch {}
-  return null;
-}
-
-/**
- * Returns the same prefix used by Fastlane in order to potentially share access between services.
- * [Cite. Fastlane](https://github.com/fastlane/fastlane/blob/f831062fa6f4b216b8ee38949adfe28fc11a0a8e/credentials_manager/lib/credentials_manager/account_manager.rb#L8).
- *
- * @param appleId email address
- */
-function getKeychainServiceName(appleId: string): string {
-  return `deliver.${appleId}`;
-}
-
-async function deletePasswordAsync({
-  appleId,
-}: Pick<AppleCredentials, 'appleId'>): Promise<boolean> {
-  const serviceName = getKeychainServiceName(appleId);
-  const success = await Keychain.deletePasswordAsync({ username: appleId, serviceName });
-  if (success) {
-    log('Removed Apple ID password from the native Keychain.');
-  }
-  return success;
-}
-
-async function getPasswordAsync({
-  appleId,
-}: Pick<AppleCredentials, 'appleId'>): Promise<string | null> {
-  // If the user opts out, delete the password.
-  if (Keychain.EXPO_NO_KEYCHAIN) {
-    await deletePasswordAsync({ appleId });
-    return null;
-  }
-
-  const serviceName = getKeychainServiceName(appleId);
-  return Keychain.getPasswordAsync({ username: appleId, serviceName });
-}
-
-async function setPasswordAsync({ appleId, appleIdPassword }: AppleCredentials): Promise<boolean> {
-  if (Keychain.EXPO_NO_KEYCHAIN) {
-    log('Skip storing Apple ID password in the local Keychain.');
-    return false;
-  }
-
-  log(
-    `Saving Apple ID password to the local Keychain. ${chalk.dim(
-      `Learn more ${chalk.underline('https://docs.expo.io/distribution/security#keychain')}`
-    )}`
-  );
-  const serviceName = getKeychainServiceName(appleId);
-  return Keychain.setPasswordAsync({ username: appleId, password: appleIdPassword, serviceName });
 }
