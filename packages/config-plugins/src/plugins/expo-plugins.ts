@@ -36,6 +36,7 @@ export const withExpoIOSPlugins: ConfigPlugin<{
     IOSConfig.Version.withBuildNumber,
     IOSConfig.Version.withVersion,
     IOSConfig.Google.withGoogleServicesFile,
+    IOSConfig.StatusBar.withStatusBar,
     // Entitlements
     IOSConfig.Entitlements.withAppleSignInEntitlement,
     IOSConfig.Entitlements.withAccessesContactNotes,
