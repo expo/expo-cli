@@ -91,6 +91,11 @@ export class NpmPackageManager implements PackageManager {
     await this._runAsync(['install']);
   }
 
+  async addGlobalAsync(...names: string[]) {
+    if (!names.length) return this.installAsync();
+    await this._runAsync(['install', '--global', ...names]);
+  }
+
   async addAsync(...names: string[]) {
     if (!names.length) return this.installAsync();
 
@@ -230,6 +235,14 @@ export class YarnPackageManager implements PackageManager {
 
   async installAsync() {
     const args = await this.withOfflineSupportAsync('install');
+    await this._runAsync(args);
+  }
+
+  async addGlobalAsync(...names: string[]) {
+    if (!names.length) return this.installAsync();
+    const args = await this.withOfflineSupportAsync('global', 'add');
+    args.push(...names);
+
     await this._runAsync(args);
   }
 

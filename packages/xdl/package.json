@@ -34,7 +34,6 @@
     "@expo/config": "3.3.25",
     "@expo/dev-server": "0.1.51",
     "@expo/json-file": "8.2.26",
-    "@expo/ngrok": "2.4.3",
     "@expo/osascript": "2.0.24",
     "@expo/package-manager": "0.0.35",
     "@expo/plist": "0.0.11",
@@ -86,6 +85,7 @@
     "react-dev-utils": "~11.0.1",
     "read-last-lines": "1.6.0",
     "replace-string": "1.1.0",
+    "requireg": "^0.2.2",
     "semver": "7.3.2",
     "serialize-error": "^5.0.0",
     "slugid": "1.1.0",
@@ -108,6 +108,7 @@
   "devDependencies": {
     "@babel/core": "^7.4.5",
     "@expo/babel-preset-cli": "0.2.18",
+    "@expo/ngrok": "2.4.3",
     "@types/analytics-node": "^3.1.1",
     "@types/concat-stream": "^1.6.0",
     "@types/form-data": "2.2.0",
