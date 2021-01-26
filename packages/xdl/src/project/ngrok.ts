@@ -1,5 +1,4 @@
 import { readExpRcAsync } from '@expo/config';
-import ngrok from '@expo/ngrok';
 import delayAsync from 'delay-async';
 import * as path from 'path';
 import { promisify } from 'util';
@@ -14,10 +13,7 @@ import UserSettings from '../UserSettings';
 import XDLError from '../XDLError';
 import * as Logger from './ProjectUtils';
 import { assertValidProjectRoot } from './errors';
-
-const ngrokConnectAsync = promisify(ngrok.connect);
-
-const ngrokKillAsync = promisify(ngrok.kill);
+import { NgrokOptions, resolveNgrokAsync } from './resolveNgrok';
 
 function getNgrokConfigPath() {
   return path.join(UserSettings.dotExpoHomeDirectory(), 'ngrok.yml');
@@ -25,11 +21,15 @@ function getNgrokConfigPath() {
 
 async function connectToNgrokAsync(
   projectRoot: string,
-  args: ngrok.NgrokOptions,
+  args: NgrokOptions,
   hostnameAsync: () => Promise<string>,
   ngrokPid: number | null | undefined,
   attempts: number = 0
 ): Promise<string> {
+  const ngrok = await resolveNgrokAsync(projectRoot);
+  const ngrokConnectAsync = promisify(ngrok.connect);
+  const ngrokKillAsync = promisify(ngrok.kill);
+
   try {
     const configPath = getNgrokConfigPath();
     const hostname = await hostnameAsync();
@@ -76,6 +76,8 @@ async function connectToNgrokAsync(
 const TUNNEL_TIMEOUT = 10 * 1000;
 
 export async function startTunnelsAsync(projectRoot: string): Promise<void> {
+  const ngrok = await resolveNgrokAsync(projectRoot);
+
   const username = (await UserManager.getCurrentUsernameAsync()) || ANONYMOUS_USERNAME;
   assertValidProjectRoot(projectRoot);
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
@@ -191,6 +193,9 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
 
 export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
   assertValidProjectRoot(projectRoot);
+  const ngrok = await resolveNgrokAsync(projectRoot);
+  const ngrokKillAsync = promisify(ngrok.kill);
+
   // This will kill all ngrok tunnels in the process.
   // We'll need to change this if we ever support more than one project
   // open at a time in XDE.
