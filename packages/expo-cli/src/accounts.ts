@@ -37,6 +37,14 @@ export type SecondFactorDevice = {
 export async function loginOrRegisterAsync(): Promise<User> {
   log.warn('An Expo user account is required to proceed.');
 
+  // Always try to auto-login when these variables are set, even in non-interactive mode
+  if (process.env.EXPO_CLI_USERNAME && process.env.EXPO_CLI_PASSWORD) {
+    return login({
+      username: process.env.EXPO_CLI_USERNAME,
+      password: process.env.EXPO_CLI_PASSWORD,
+    });
+  }
+
   if (program.nonInteractive) {
     throw new CommandError(
       'NOT_LOGGED_IN',
