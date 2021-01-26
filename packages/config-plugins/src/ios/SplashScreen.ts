@@ -5,7 +5,7 @@ import * as path from 'path';
 import { XcodeProject } from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { createRunOncePlugin, withDangerousMod, withPlugins } from '../plugins/core-plugins';
+import { withDangerousMod, withPlugins } from '../plugins/core-plugins';
 import { withInfoPlist, withXcodeProject } from '../plugins/ios-plugins';
 import { addWarningIOS } from '../utils/warnings';
 import {
@@ -49,7 +49,7 @@ export interface IOSSplashConfig {
   darkBackgroundColor: string;
 }
 
-const withUnversionedSplashScreenIOS: ConfigPlugin<IOSSplashConfig | undefined | null | void> = (
+export const withSplashScreen: ConfigPlugin<IOSSplashConfig | undefined | null | void> = (
   config,
   splash
 ) => {
@@ -67,11 +67,6 @@ const withUnversionedSplashScreenIOS: ConfigPlugin<IOSSplashConfig | undefined |
     [withSplashXcodeProject, splash],
   ]);
 };
-
-export const withSplashScreen = createRunOncePlugin(
-  withUnversionedSplashScreenIOS,
-  'expo-splash-screen-ios'
-);
 
 const withSplashScreenInfoPlist: ConfigPlugin<IOSSplashConfig> = (config, splash) => {
   return withInfoPlist(config, async config => {
