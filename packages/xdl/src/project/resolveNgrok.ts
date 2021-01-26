@@ -1,9 +1,11 @@
 import * as PackageManager from '@expo/package-manager';
+import getenv from 'getenv';
 // @ts-ignore
 import requireg from 'requireg';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
+import Logger from '../Logger';
 import { confirmAsync } from '../Prompts';
 
 const NGROK_REQUIRED_VERSION = '^2.4.3';
@@ -70,6 +72,7 @@ export async function resolveNgrokAsync(
 
 let _ngrokInstance: any | null = null;
 
+const isDebug = getenv.boolish('EXPO_DEBUG', false);
 // Resolve a copy that's installed in the project.
 async function resolvePackageFromProjectAsync(projectRoot: string, version: string) {
   try {
@@ -77,6 +80,9 @@ async function resolvePackageFromProjectAsync(projectRoot: string, version: stri
     const ngrokCliPackage = require(ngrokCliPackagePath);
     if (ngrokCliPackage && semver.satisfies(ngrokCliPackage.version, version)) {
       const ngrokInstancePath = resolveFrom(projectRoot, '@expo/ngrok');
+      if (isDebug) {
+        Logger.global.info(`Resolving @expo/ngrok from project: "${ngrokInstancePath}"`);
+      }
       return require(ngrokInstancePath);
     }
   } catch {
@@ -91,6 +97,11 @@ async function resolveGlobalPackageAsync(version: string) {
     // use true to disable the use of local packages.
     const ngrokPkgJson = requireg('@expo/ngrok/package.json', true);
     if (semver.satisfies(ngrokPkgJson.version, version)) {
+      if (isDebug) {
+        Logger.global.info(
+          `Resolving global @expo/ngrok from: "${requireg.resolve('@expo/ngrok')}"`
+        );
+      }
       return requireg('@expo/ngrok', true);
     }
   } catch {}
