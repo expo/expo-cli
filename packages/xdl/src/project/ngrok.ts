@@ -198,7 +198,7 @@ export async function startTunnelsAsync(
 
 export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
   assertValidProjectRoot(projectRoot);
-  const ngrok = await resolveNgrokAsync(projectRoot, false).catch(() => null);
+  const ngrok = await resolveNgrokAsync(projectRoot, { shouldPrompt: false }).catch(() => null);
   if (!ngrok) {
     return;
   }
