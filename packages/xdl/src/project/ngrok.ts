@@ -21,12 +21,12 @@ function getNgrokConfigPath() {
 
 async function connectToNgrokAsync(
   projectRoot: string,
+  ngrok: any,
   args: NgrokOptions,
   hostnameAsync: () => Promise<string>,
   ngrokPid: number | null | undefined,
   attempts: number = 0
 ): Promise<string> {
-  const ngrok = await resolveNgrokAsync(projectRoot);
   const ngrokConnectAsync = promisify(ngrok.connect);
   const ngrokKillAsync = promisify(ngrok.kill);
 
@@ -69,14 +69,17 @@ async function connectToNgrokAsync(
       }
     } // Wait 100ms and then try again
     await delayAsync(100);
-    return connectToNgrokAsync(projectRoot, args, hostnameAsync, null, attempts + 1);
+    return connectToNgrokAsync(projectRoot, ngrok, args, hostnameAsync, null, attempts + 1);
   }
 }
 
 const TUNNEL_TIMEOUT = 10 * 1000;
 
-export async function startTunnelsAsync(projectRoot: string): Promise<void> {
-  const ngrok = await resolveNgrokAsync(projectRoot);
+export async function startTunnelsAsync(
+  projectRoot: string,
+  options: { autoInstall?: boolean } = {}
+): Promise<void> {
+  const ngrok = await resolveNgrokAsync(projectRoot, options);
 
   const username = (await UserManager.getCurrentUsernameAsync()) || ANONYMOUS_USERNAME;
   assertValidProjectRoot(projectRoot);
@@ -116,6 +119,7 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
     (async () => {
       const expoServerNgrokUrl = await connectToNgrokAsync(
         projectRoot,
+        ngrok,
         {
           authtoken: Config.ngrok.authToken,
           port: expoServerPort,
@@ -136,6 +140,7 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
       );
       const packagerNgrokUrl = await connectToNgrokAsync(
         projectRoot,
+        ngrok,
         {
           authtoken: Config.ngrok.authToken,
           port: packagerInfo.packagerPort,
@@ -193,7 +198,10 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
 
 export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
   assertValidProjectRoot(projectRoot);
-  const ngrok = await resolveNgrokAsync(projectRoot);
+  const ngrok = await resolveNgrokAsync(projectRoot, false).catch(() => null);
+  if (!ngrok) {
+    return;
+  }
   const ngrokKillAsync = promisify(ngrok.kill);
 
   // This will kill all ngrok tunnels in the process.

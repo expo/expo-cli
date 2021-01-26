@@ -36,7 +36,10 @@ export interface NgrokOptions {
 
 export async function resolveNgrokAsync(
   projectRoot: string,
-  shouldPrompt: boolean = true
+  {
+    shouldPrompt = true,
+    autoInstall = false,
+  }: { shouldPrompt?: boolean; autoInstall?: boolean } = {}
 ): Promise<any> {
   const ngrok = await findNgrokBinAsync(projectRoot);
 
@@ -45,16 +48,23 @@ export async function resolveNgrokAsync(
     if (shouldPrompt) {
       // Delay the prompt so it doesn't conflict with other dev tool logs
       await new Promise(r => setTimeout(r, 100));
-      const answer = await confirmAsync({
-        message: `The package ${packageName} is required to use tunnels, would you like to install it globally?`,
-        initial: true,
-      });
+      const answer =
+        autoInstall ||
+        (await confirmAsync({
+          message: `The package ${packageName} is required to use tunnels, would you like to install it globally?`,
+          initial: true,
+        }));
       if (answer) {
         const packageManager = PackageManager.createForProject(projectRoot, {
           silent: !EXPO_DEBUG,
         });
-        await packageManager.addGlobalAsync(packageName);
-        return await resolveNgrokAsync(projectRoot, false);
+        try {
+          await packageManager.addGlobalAsync(packageName);
+        } catch (e) {
+          e.message = `Failed to install ${packageName} globally: ${e.message}`;
+          throw e;
+        }
+        return await resolveNgrokAsync(projectRoot, { shouldPrompt: false });
       }
     }
     throw new Error(

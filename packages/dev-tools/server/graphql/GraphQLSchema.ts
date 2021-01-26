@@ -588,7 +588,7 @@ const resolvers = {
       // If 'tunnel' wasn't previously configured and it will be as a result of this request, start tunnels.
       if (previousSettings.hostType !== 'tunnel' && updatedSettings.hostType === 'tunnel') {
         try {
-          await Project.startTunnelsAsync(currentProject.projectDir);
+          await Project.startTunnelsAsync(currentProject.projectDir, { autoInstall: true });
         } catch (e) {
           ProjectUtils.logWarning(
             currentProject.projectDir,
