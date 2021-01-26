@@ -64,6 +64,7 @@
     "rimraf": "^3.0.2"
   },
   "dependencies": {
+    "@expo/xcpretty": "./expo-xcpretty-1.0.0.tgz",
     "@expo/bunyan": "4.0.0",
     "@expo/config": "3.3.23",
     "@expo/config-plugins": "1.0.14",

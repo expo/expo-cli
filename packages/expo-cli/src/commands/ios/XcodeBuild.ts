@@ -1,9 +1,11 @@
 import spawnAsync from '@expo/spawn-async';
+import { Formatter } from '@expo/xcpretty';
 import { SimControl } from '@expo/xdl';
 import chalk from 'chalk';
 import { spawn, SpawnOptionsWithoutStdio } from 'child_process';
 import * as fs from 'fs-extra';
 import ora from 'ora';
+import os from 'os';
 import * as path from 'path';
 
 import CommandError from '../../CommandError';
@@ -13,18 +15,28 @@ import { forkXCPrettyAsync } from './XCPretty';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
 
 function getTargetPaths(buildSettings: string) {
-  const settings = JSON.parse(buildSettings);
-  for (const setting of settings) {
-    const { WRAPPER_EXTENSION, TARGET_BUILD_DIR, EXECUTABLE_FOLDER_PATH } = setting.buildSettings;
-    if (WRAPPER_EXTENSION === 'app') {
-      return {
-        targetBuildDir: TARGET_BUILD_DIR,
-        executableFolderPath: EXECUTABLE_FOLDER_PATH,
-      };
+  try {
+    const settings = JSON.parse(buildSettings);
+    for (const setting of settings) {
+      const { WRAPPER_EXTENSION, TARGET_BUILD_DIR, EXECUTABLE_FOLDER_PATH } = setting.buildSettings;
+      if (WRAPPER_EXTENSION === 'app') {
+        return {
+          targetBuildDir: TARGET_BUILD_DIR,
+          executableFolderPath: EXECUTABLE_FOLDER_PATH,
+        };
+      }
     }
-  }
 
-  return {};
+    return {};
+  } catch (error) {
+    // This can fail if the xcodebuild command throws a simulator error:
+    // 2021-01-24 14:22:43.802 xcodebuild[73087:14664906]  DVTAssertions: Warning in /Library/Caches/com.apple.xbs/Sources/DVTiOSFrameworks/DVTiOSFrameworks-17705/DTDeviceKitBase/DTDKRemoteDeviceData.m:371
+    log.warn(error.message);
+    if (error.message.match(/in JSON at position/)) {
+      log(chalk.dim(buildSettings));
+    }
+    return {};
+  }
 }
 
 export async function getAppBinaryPathAsync(
@@ -134,7 +146,8 @@ export function buildAsync({
     ];
     const loader = ora();
     log(`▸ ${chalk.bold`Building`}\n  ${chalk.dim(`xcodebuild ${xcodebuildArgs.join(' ')}`)}`);
-    const xcpretty = verbose ? null : await forkXCPrettyAsync();
+    const xcpretty = new Formatter({ projectRoot });
+    // const xcpretty = verbose ? null : await forkXCPrettyAsync();
     const buildProcess = spawn(
       'xcodebuild',
       xcodebuildArgs,
@@ -146,10 +159,14 @@ export function buildAsync({
       const stringData = data.toString();
       buildOutput += stringData;
       if (xcpretty) {
+        const lines = xcpretty.pipe(stringData);
+        for (const line of lines) {
+          log(line);
+        }
         // TODO: Make the default mode skip warnings about React-Core and
         // other third-party packages that the user doesn't have control over.
         // TODO: Catch JS bundling errors and throw them clearly.
-        xcpretty.stdin.write(data);
+        // xcpretty.stdin.write(data);
       } else {
         if (log.isDebug) {
           log.debug(stringData);
@@ -165,7 +182,7 @@ export function buildAsync({
 
     buildProcess.on('close', (code: number) => {
       if (xcpretty) {
-        xcpretty.stdin.end();
+        // xcpretty.stdin.end();
       } else {
         loader.stop();
       }
@@ -214,4 +231,37 @@ function getErrorLogFilePath(projectRoot: string): string {
   const folder = path.join(projectRoot, '.expo');
   fs.ensureDirSync(folder);
   return path.join(folder, filename);
+}
+
+/**
+ * Optimally format milliseconds
+ *
+ * @example `1h 2m 3s`
+ * @example `5m 18s`
+ * @example `40s`
+ * @param duration
+ */
+export function formatMilliseconds(duration: number) {
+  const portions: string[] = [];
+
+  const msInHour = 1000 * 60 * 60;
+  const hours = Math.trunc(duration / msInHour);
+  if (hours > 0) {
+    portions.push(hours + 'h');
+    duration = duration - hours * msInHour;
+  }
+
+  const msInMinute = 1000 * 60;
+  const minutes = Math.trunc(duration / msInMinute);
+  if (minutes > 0) {
+    portions.push(minutes + 'm');
+    duration = duration - minutes * msInMinute;
+  }
+
+  const seconds = Math.trunc(duration / 1000);
+  if (seconds > 0) {
+    portions.push(seconds + 's');
+  }
+
+  return portions.join(' ');
 }
