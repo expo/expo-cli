@@ -1,4 +1,5 @@
 import * as PackageManager from '@expo/package-manager';
+import chalk from 'chalk';
 import getenv from 'getenv';
 // @ts-ignore
 import requireg from 'requireg';
@@ -57,11 +58,15 @@ export async function resolveNgrokAsync(
           initial: true,
         }));
       if (answer) {
+        Logger.global.info(`Installing ${packageName} for ${chalk.bold`tunnel`} support...`);
+
         const packageManager = PackageManager.createForProject(projectRoot, {
           silent: !EXPO_DEBUG,
         });
+
         try {
           await packageManager.addGlobalAsync(packageName);
+          Logger.global.info(`Successfully installed ${packageName}`);
         } catch (e) {
           e.message = `Failed to install ${packageName} globally: ${e.message}`;
           throw e;
