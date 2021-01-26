@@ -46,8 +46,10 @@ export async function resolveNgrokAsync(
   if (!ngrok) {
     const packageName = `@expo/ngrok@${NGROK_REQUIRED_VERSION}`;
     if (shouldPrompt) {
-      // Delay the prompt so it doesn't conflict with other dev tool logs
-      await new Promise(r => setTimeout(r, 100));
+      if (!autoInstall) {
+        // Delay the prompt so it doesn't conflict with other dev tool logs
+        await new Promise(r => setTimeout(r, 100));
+      }
       const answer =
         autoInstall ||
         (await confirmAsync({
