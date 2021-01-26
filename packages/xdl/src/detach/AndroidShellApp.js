@@ -774,8 +774,13 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
 
   // App name
   await regexFileAsync(
-    '"app_name">Expo',
-    `"app_name">${xmlWeirdAndroidEscape(name)}`,
+    '"app_name">Expo<',
+    `"app_name">${xmlWeirdAndroidEscape(name)}<`,
+    path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'strings.xml')
+  );
+  await regexFileAsync(
+    '"app_name">Expo Go<',
+    `"app_name">${xmlWeirdAndroidEscape(name)}<`,
     path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'strings.xml')
   );
 
