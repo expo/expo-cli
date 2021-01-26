@@ -1796,7 +1796,9 @@ async function stopExpoServerAsync(projectRoot: string): Promise<void> {
 async function startDevServerAsync(projectRoot: string, startOptions: StartOptions) {
   assertValidProjectRoot(projectRoot);
 
-  const port = await _getFreePortAsync(19000); // Create packager options
+  const port = startOptions.devClient
+    ? Number(process.env.RCT_METRO_PORT) || 8081
+    : await _getFreePortAsync(19000);
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort: port,
     packagerPort: port,
