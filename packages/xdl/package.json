@@ -65,7 +65,7 @@
     "is-reachable": "^4.0.0",
     "json-schema-deref-sync": "^0.13.0",
     "latest-version": "5.1.0",
-    "lodash": "4.17.15",
+    "lodash": "4.17.19",
     "md5hex": "1.0.0",
     "minimatch": "3.0.4",
     "minipass": "2.3.5",
