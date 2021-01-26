@@ -26,6 +26,7 @@ afterAll(() => {
 const projectRoot = '/app';
 const detachedProjectRoot = '/detached';
 const detachedWithSchemesProjectRoot = '/detached-with-schemes';
+const devClientWithSchemesProjectRoot = '/dev-client-with-schemes';
 beforeAll(async () => {
   vol.fromJSON(
     {
@@ -52,6 +53,20 @@ beforeAll(async () => {
     },
     detachedWithSchemesProjectRoot
   );
+  vol.fromJSON(
+    {
+      'package.json': JSON.stringify({ dependencies: { expo: '39.0.0' } }),
+      'app.json': JSON.stringify({
+        sdkVersion: '39.0.0',
+        scheme: 'custom-scheme',
+      }),
+      '.expo/settings.json': JSON.stringify({
+        scheme: 'custom-scheme',
+        devClient: true,
+      }),
+    },
+    devClientWithSchemesProjectRoot
+  );
 });
 
 afterAll(() => {
@@ -67,7 +82,11 @@ describe(UrlUtils.constructBundleQueryParamsWithConfig, () => {
   describe('SDK +33', () => {
     it(`creates a basic query string`, async () => {
       expect(
-        UrlUtils.constructBundleQueryParamsWithConfig(projectRoot, {}, { sdkVersion: '33.0.0' })
+        UrlUtils.constructBundleQueryParamsWithConfig(
+          projectRoot,
+          {},
+          { sdkVersion: '33.0.0', nodeModulesPath: './' }
+        )
       ).toBe('dev=false&hot=false');
     });
     it(`creates a full query string`, async () => {
@@ -75,7 +94,7 @@ describe(UrlUtils.constructBundleQueryParamsWithConfig, () => {
         UrlUtils.constructBundleQueryParamsWithConfig(
           projectRoot,
           { dev: true, strict: true, minify: true },
-          { sdkVersion: '33.0.0' }
+          { sdkVersion: '33.0.0', nodeModulesPath: './' }
         )
       ).toBe('dev=true&hot=false&strict=true&minify=true');
     });
@@ -170,6 +189,37 @@ describe(UrlUtils.constructUrlAsync, () => {
     process.env.EXPO_PACKAGER_PROXY_URL = 'http://localhost:9999';
     await expect(UrlUtils.constructUrlAsync(projectRoot, null, true)).resolves.toBe(
       'exp://localhost:9999'
+    );
+  });
+});
+
+describe(UrlUtils.constructDeepLinkAsync, () => {
+  it('delegates to constructDevClientUrlAsync if using devClient flag', async () => {
+    const result = await UrlUtils.constructDeepLinkAsync(devClientWithSchemesProjectRoot);
+    const expectedResult = await UrlUtils.constructDevClientUrlAsync(
+      devClientWithSchemesProjectRoot
+    );
+    expect(result).toEqual(expectedResult);
+  });
+
+  it('delegates to createManifestUrlAsync if not using devClient flag', async () => {
+    const result = await UrlUtils.constructDeepLinkAsync(projectRoot);
+    const expectedResult = await UrlUtils.constructManifestUrlAsync(projectRoot);
+    expect(result).toEqual(expectedResult);
+  });
+});
+
+describe(UrlUtils.constructDevClientUrlAsync, () => {
+  it(`throws an error if a scheme is not present in app.json`, async () => {
+    await expect(
+      UrlUtils.constructDevClientUrlAsync(projectRoot)
+    ).rejects.toThrowErrorMatchingInlineSnapshot(`"No scheme specified for development client"`);
+  });
+
+  it(`creates dev client url if a scheme is provided`, async () => {
+    const result = await UrlUtils.constructDevClientUrlAsync(devClientWithSchemesProjectRoot);
+    expect(result).toEqual(
+      'custom-scheme://expo-development-client/?url=http%3A%2F%2F100.100.1.100%3A80'
     );
   });
 });

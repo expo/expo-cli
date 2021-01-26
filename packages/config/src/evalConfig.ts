@@ -35,7 +35,25 @@ export function evalConfig(
     presets: [preset],
   });
 
-  let result = requireString(code, configFile);
+  const result = requireString(code, configFile);
+  return resolveConfigExport(result, configFile, request);
+}
+
+/**
+ * - Resolve the exported contents of an Expo config (be it default or module.exports)
+ * - Assert no promise exports
+ * - Return config type
+ * - Serialize config
+ *
+ * @param result
+ * @param configFile
+ * @param request
+ */
+export function resolveConfigExport(
+  result: any,
+  configFile: string,
+  request: ConfigContext | null
+) {
   if (result.default != null) {
     result = result.default;
   }

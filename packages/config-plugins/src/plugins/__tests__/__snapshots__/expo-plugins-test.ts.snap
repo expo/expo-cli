@@ -2,6 +2,35 @@
 
 exports[`built-in plugins compiles mods 1`] = `
 Object {
+  "_internal": Object {
+    "pluginHistory": Object {
+      "expo-ads-admob": Object {
+        "name": "expo-ads-admob",
+        "version": "UNVERSIONED",
+      },
+      "expo-branch": Object {
+        "name": "expo-branch",
+        "version": "UNVERSIONED",
+      },
+      "expo-facebook": Object {
+        "name": "expo-facebook",
+        "version": "UNVERSIONED",
+      },
+      "expo-notifications": Object {
+        "name": "expo-notifications",
+        "version": "UNVERSIONED",
+      },
+      "expo-splash-screen": Object {
+        "name": "expo-splash-screen",
+        "version": "UNVERSIONED",
+      },
+      "expo-updates": Object {
+        "name": "expo-updates",
+        "version": "UNVERSIONED",
+      },
+    },
+    "projectRoot": "/app",
+  },
   "android": Object {
     "adaptiveIcon": Object {
       "backgroundImage": "./icons/background.png",

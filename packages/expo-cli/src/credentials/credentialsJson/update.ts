@@ -19,7 +19,7 @@ export async function updateAndroidCredentialsAsync(ctx: Context) {
       throw error;
     }
   }
-  const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+  const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
   const keystore = await ctx.android.fetchKeystore(experienceName);
   if (!keystore) {
     log.error('There are no credentials configured for this project on Expo servers');
@@ -84,7 +84,7 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
   }
 
   const appLookupParams = {
-    accountName: ctx.manifest.owner ?? ctx.user.username,
+    accountName: ctx.projectOwner,
     projectName: ctx.manifest.slug,
     bundleIdentifier,
   };

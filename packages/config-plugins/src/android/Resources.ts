@@ -1,4 +1,4 @@
-import { readXMLAsync, XMLObject } from './XML';
+import { readXMLAsync, XMLObject } from '../utils/XML';
 
 export type ResourceGroupXML = {
   $: {
@@ -40,7 +40,7 @@ export async function readResourcesXMLAsync({
   fallback = fallbackResourceString,
 }: {
   path: string;
-  fallback?: string;
+  fallback?: string | null;
 }): Promise<ResourceXML> {
   const xml = await readXMLAsync({ path, fallback });
   // Ensure the type is expected.

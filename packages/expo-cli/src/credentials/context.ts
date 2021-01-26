@@ -1,9 +1,10 @@
 import { ExpoConfig, getConfig } from '@expo/config';
-import { ApiV2, User, UserManager } from '@expo/xdl';
+import { ApiV2, RobotUser, User, UserManager } from '@expo/xdl';
 import pick from 'lodash/pick';
 
-import { AppleCtx, authenticate } from '../appleApi';
+import { AppleCtx, authenticateAsync } from '../appleApi';
 import log from '../log';
+import { getProjectOwner } from '../projects';
 import AndroidApi from './api/AndroidApi';
 import IosApi from './api/IosApi';
 
@@ -25,7 +26,7 @@ interface CtxOptions extends AppleCtxOptions {
 export class Context {
   _hasProjectContext: boolean = false;
   _projectDir?: string;
-  _user?: User;
+  _user?: User | RobotUser;
   _manifest?: ExpoConfig;
   _apiClient?: ApiV2;
   _iosApiClient?: IosApi;
@@ -38,14 +39,17 @@ export class Context {
     return this._nonInteractive === true;
   }
 
-  get user(): User {
-    return this._user as User;
+  get user(): User | RobotUser {
+    return this._user as User | RobotUser;
   }
   get hasProjectContext(): boolean {
     return this._hasProjectContext;
   }
   get projectDir(): string {
     return this._projectDir as string;
+  }
+  get projectOwner(): string {
+    return getProjectOwner(this.user, this.manifest);
   }
   get manifest(): ExpoConfig {
     if (!this._manifest) {
@@ -78,7 +82,7 @@ export class Context {
 
   async ensureAppleCtx() {
     if (!this._appleCtx) {
-      this._appleCtx = await authenticate(this._appleCtxOptions);
+      this._appleCtx = await authenticateAsync(this._appleCtxOptions);
     }
   }
 
@@ -87,17 +91,19 @@ export class Context {
     const isProxyUser = this.manifest.owner && this.manifest.owner !== this.user.username;
     log(
       `Accessing credentials ${isProxyUser ? 'on behalf of' : 'for'} ${
-        this.manifest.owner ?? this.user.username
+        this.projectOwner
       } in project ${this.manifest.slug}`
     );
   }
 
   async init(projectDir: string, options: CtxOptions = {}) {
-    if (options.allowAnonymous) {
-      this._user = (await UserManager.getCurrentUserAsync()) || undefined;
-    } else {
-      this._user = await UserManager.ensureLoggedInAsync();
+    this._user = (await UserManager.getCurrentUserAsync()) || undefined;
+
+    // User isn't signed it, but needs to be signed in
+    if (!this._user && !options.allowAnonymous) {
+      this._user = (await UserManager.ensureLoggedInAsync()) as User;
     }
+
     this._projectDir = projectDir;
     this._apiClient = ApiV2.clientForUser(this.user);
     this._iosApiClient = new IosApi(this.api);

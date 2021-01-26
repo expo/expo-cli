@@ -1,6 +1,6 @@
 {
   "name": "@expo/config-types",
-  "version": "40.0.0-beta.1",
+  "version": "40.0.0-beta.2",
   "description": "Types for the Expo config object app.config.ts",
   "types": "build/ExpoConfig.d.ts",
   "main": "build/ExpoConfig.js",
@@ -35,7 +35,7 @@
     "build"
   ],
   "devDependencies": {
-    "json-schema-to-typescript": "^9.1.1"
+    "json-schema-to-typescript": "^10.0.0"
   },
   "publishConfig": {
     "access": "public"

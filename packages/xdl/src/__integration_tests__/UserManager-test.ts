@@ -125,7 +125,7 @@ describe.skip('UserManager', () => {
     expect(_getProfileSpy).toHaveBeenCalledTimes(1);
 
     // This shouldn't have changed, but just double check it
-    expect(first?.sessionSecret).toEqual(second?.sessionSecret);
+    expect(first).toEqual(second);
   });
 });
 

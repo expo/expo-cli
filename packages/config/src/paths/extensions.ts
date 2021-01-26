@@ -59,7 +59,7 @@ export function getManagedExtensions(
     'expo',
   ]);
   // Always add these last
-  _addMiscellaneousExtensions(fileExtensions);
+  _addMiscellaneousExtensions(platforms, fileExtensions);
   return fileExtensions;
 }
 
@@ -73,14 +73,17 @@ export function getBareExtensions(
     []
   );
   // Always add these last
-  _addMiscellaneousExtensions(fileExtensions);
+  _addMiscellaneousExtensions(platforms, fileExtensions);
   return fileExtensions;
 }
 
-function _addMiscellaneousExtensions(fileExtensions: string[]): string[] {
+function _addMiscellaneousExtensions(platforms: string[], fileExtensions: string[]): string[] {
   // Always add these with no platform extension
   // In the future we may want to add platform and workspace extensions to json.
   fileExtensions.push('json');
-  fileExtensions.push('wasm');
+  // Native doesn't currently support web assembly.
+  if (platforms.includes('web')) {
+    fileExtensions.push('wasm');
+  }
   return fileExtensions;
 }

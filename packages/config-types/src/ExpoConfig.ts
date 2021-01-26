@@ -17,7 +17,7 @@ export interface ExpoConfig {
    */
   slug: string;
   /**
-   * The Expo account name of the team owner, only applicable if you are enrolled in Expo Developer Services. If not provided, defaults to the username of the current user.
+   * The Expo account name of the team owner, only applicable if you are enrolled in the EAS Priority Plan. If not provided, defaults to the username of the current user.
    */
   owner?: string;
   /**
@@ -269,6 +269,10 @@ export interface ExpoConfig {
     };
     [k: string]: any;
   };
+  /**
+   * Plugins for adding extra functionality to your project
+   */
+  plugins?: (string | [] | [string] | [string, any])[];
 }
 /**
  * Configuration for loading and splash screen for standalone apps.

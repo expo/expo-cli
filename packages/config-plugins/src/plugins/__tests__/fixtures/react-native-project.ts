@@ -997,4 +997,152 @@ public class MainActivity extends ReactActivity {
   </style>
 </resources>
 `,
+  'android/settings.gradle': `rootProject.name = 'HelloWorld'
+
+apply from: '../node_modules/react-native-unimodules/gradle.groovy'
+includeUnimodulesProjects()
+
+apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle");
+applyNativeModulesSettingsGradle(settings)
+
+include ':app'
+`,
+  'android/build.gradle': `// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+  buildscript {
+      ext {
+          buildToolsVersion = "29.0.2"
+          minSdkVersion = 21
+          compileSdkVersion = 29
+          targetSdkVersion = 29
+      }
+      repositories {
+          google()
+          jcenter()
+      }
+      dependencies {
+          classpath("com.android.tools.build:gradle:3.5.3")
+  
+          // NOTE: Do not place your application dependencies here; they belong
+          // in the individual module build.gradle files
+      }
+  }
+  
+  allprojects {
+      repositories {
+          mavenLocal()
+          maven {
+              // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+              url("$rootDir/../node_modules/react-native/android")
+          }
+          maven {
+              // Android JSC is installed from npm
+              url("$rootDir/../node_modules/jsc-android/dist")
+          }
+  
+          google()
+          jcenter()
+          maven { url 'https://www.jitpack.io' }
+      }
+  }`,
+  'android/app/build.gradle': `apply plugin: "com.android.application"
+
+  import com.android.build.OutputFile
+  
+  project.ext.react = [
+      enableHermes: false
+  ]
+  
+  apply from: '../../node_modules/react-native-unimodules/gradle.groovy'
+  apply from: "../../node_modules/react-native/react.gradle"
+  apply from: "../../node_modules/expo-updates/scripts/create-manifest-android.gradle"
+  
+  def enableSeparateBuildPerCPUArchitecture = false
+  def enableProguardInReleaseBuilds = false
+  def jscFlavor = 'org.webkit:android-jsc:+'
+  def enableHermes = project.ext.react.get("enableHermes", false);
+  
+  android {
+      compileSdkVersion rootProject.ext.compileSdkVersion
+  
+      compileOptions {
+          sourceCompatibility JavaVersion.VERSION_1_8
+          targetCompatibility JavaVersion.VERSION_1_8
+      }
+  
+      defaultConfig {
+          applicationId 'com.bacon.mydevicefamilyproject'
+          minSdkVersion rootProject.ext.minSdkVersion
+          targetSdkVersion rootProject.ext.targetSdkVersion
+          versionCode 1
+          versionName "1.0.0"
+      }
+      splits {
+          abi {
+              reset()
+              enable enableSeparateBuildPerCPUArchitecture
+              universalApk false  // If true, also generate a universal APK
+              include "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
+          }
+      }
+      signingConfigs {
+          debug {
+              storeFile file('debug.keystore')
+              storePassword 'android'
+              keyAlias 'androiddebugkey'
+              keyPassword 'android'
+          }
+      }
+      buildTypes {
+          debug {
+              signingConfig signingConfigs.debug
+          }
+          release {
+              signingConfig signingConfigs.debug
+              minifyEnabled enableProguardInReleaseBuilds
+              proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+          }
+      }
+      applicationVariants.all { variant ->
+          variant.outputs.each { output ->
+              def versionCodes = ["armeabi-v7a": 1, "x86": 2, "arm64-v8a": 3, "x86_64": 4]
+              def abi = output.getFilter(OutputFile.ABI)
+              if (abi != null) {
+                  output.versionCodeOverride =
+                          versionCodes.get(abi) * 1048576 + defaultConfig.versionCode
+              }
+  
+          }
+      }
+  }
+  
+  dependencies {
+      implementation fileTree(dir: "libs", include: ["*.jar"])
+      implementation "com.facebook.react:react-native:+"  // From node_modules
+      implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
+      debugImplementation("com.facebook.flipper:flipper:\${FLIPPER_VERSION}") {
+        exclude group:'com.facebook.fbjni'
+      }
+      debugImplementation("com.facebook.flipper:flipper-network-plugin:\${FLIPPER_VERSION}") {
+          exclude group:'com.facebook.flipper'
+          exclude group:'com.squareup.okhttp3', module:'okhttp'
+      }
+      debugImplementation("com.facebook.flipper:flipper-fresco-plugin:\${FLIPPER_VERSION}") {
+          exclude group:'com.facebook.flipper'
+      }
+      addUnimodulesDependencies()
+  
+      if (enableHermes) {
+          def hermesPath = "../../node_modules/hermes-engine/android/";
+          debugImplementation files(hermesPath + "hermes-debug.aar")
+          releaseImplementation files(hermesPath + "hermes-release.aar")
+      } else {
+          implementation jscFlavor
+      }
+  }
+  task copyDownloadableDepsToLibs(type: Copy) {
+      from configurations.compile
+      into 'libs'
+  }
+  apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)`,
 };

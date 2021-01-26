@@ -45,18 +45,31 @@ describe('User', () => {
       const api = _newTestApiV2();
       const manager = _newTestUserManager();
 
-      // Mock login response and authenticate
-      api.postAsync.mockResolvedValue({ sessionSecret: 'session-secret' });
-      await manager.loginAsync('user-pass', { username: 'expouser', password: 'expopass' });
-      expect(await manager.getCurrentUserAsync()).toHaveProperty('sessionSecret', 'session-secret');
+      // Mock login and profile requests
+      api.postAsync.mockResolvedValue({ sessionSecret: 'session-secret-auth' });
+      api.getAsync.mockResolvedValue({ username: 'user-auth' });
+
+      // Login and get current user
+      await manager.loginAsync('user-pass', { username: 'user-auth', password: 'expopass' });
+      const user = await manager.getCurrentUserAsync();
+
+      // Check if the user has the auth method and expected username
+      expect(user).toMatchObject({
+        sessionSecret: 'session-secret-auth',
+        username: 'user-auth',
+      });
     });
 
     it('locks to prevent fetching user twice, simultaneously', async () => {
       const api = _newTestApiV2();
       const manager = _newTestUserManager();
 
-      // Mock login response and authenticate
+      // Mock login and profile requests
       api.postAsync.mockResolvedValue({ sessionSecret: 'session-secret' });
+      api.getAsync
+        .mockResolvedValueOnce({ username: 'should-not-be-requested' })
+        .mockResolvedValueOnce({ username: 'user-login-lock' });
+
       await manager.loginAsync('user-pass', { username: 'expouser', password: 'expopass' });
 
       // Empty in-memory cache, to force-fetch it
@@ -68,7 +81,9 @@ describe('User', () => {
         manager.getCurrentUserAsync(),
         manager.getCurrentUserAsync(),
       ]);
+
       expect(profileSpy).toBeCalledTimes(1);
+      expect(first).toHaveProperty('username', 'user-login-lock');
       expect(first).toBe(second);
 
       profileSpy.mockRestore();
@@ -78,8 +93,10 @@ describe('User', () => {
       const api = _newTestApiV2();
       const manager = _newTestUserManager();
 
-      // Mock login response and authenticate
-      api.postAsync.mockResolvedValue({ sessionSecret: 'session-secret' });
+      // Mock login and profile requests
+      api.postAsync.mockResolvedValue({ sessionSecret: 'session-secret-settings-persist' });
+      api.getAsync.mockResolvedValue({ username: 'user-settings-persist' });
+
       await manager.loginAsync('user-pass', { username: 'expouser', password: 'expopass' });
 
       // Check if the profile is loaded from cache instead of API
@@ -87,9 +104,11 @@ describe('User', () => {
       await manager.getCurrentUserAsync();
       expect(profileSpy).not.toBeCalled();
 
-      // Check if the settings-cache has the token
-      const auth = await UserSettings.getAsync('auth', null);
-      expect(auth?.sessionSecret).toBe('session-secret');
+      // Check if the settings-cache has the username and session secret
+      expect(await UserSettings.getAsync('auth', null)).toMatchObject({
+        username: 'user-settings-persist',
+        sessionSecret: 'session-secret-settings-persist',
+      });
 
       profileSpy.mockRestore();
     });
@@ -98,43 +117,21 @@ describe('User', () => {
       const api = _newTestApiV2();
       const manager = _newTestUserManager();
 
-      // Mock login response and authenticate
-      api.postAsync.mockResolvedValue({ sessionSecret: 'session-secret' });
+      // Mock login and profile requests
+      api.postAsync.mockResolvedValue({ sessionSecret: 'session-secret-settings-reset' });
+      api.getAsync.mockResolvedValue({ username: 'user-settings-reset' });
+
       await manager.loginAsync('user-pass', { username: 'expouser', password: 'expopass' });
 
       // Check if the settings-cache has the token
-      expect(await UserSettings.getAsync('auth', null)).toHaveProperty(
-        'sessionSecret',
-        'session-secret'
-      );
+      expect(await UserSettings.getAsync('auth', null)).toMatchObject({
+        username: 'user-settings-reset',
+        sessionSecret: 'session-secret-settings-reset',
+      });
 
       // Log user out and check if the cache is empty
       await manager.logoutAsync();
       expect(await UserSettings.getAsync('auth', null)).toBeNull();
-    });
-
-    it('returns session secret when logged in', async () => {
-      const api = _newTestApiV2();
-      const manager = _newTestUserManager();
-
-      // Mock login response and authenticate
-      api.postAsync.mockResolvedValue({ sessionSecret: 'session-secret' });
-      await manager.loginAsync('user-pass', { username: 'expouser', password: 'expopass' });
-
-      // Retrieve session and validate
-      const session = await manager.getSessionAsync();
-      expect(session).toHaveProperty('sessionSecret', 'session-secret');
-      expect(session).not.toHaveProperty('accessToken');
-    });
-
-    it('returns username from session', async () => {
-      const api = _newTestApiV2();
-      const manager = _newTestUserManager();
-
-      // Mock login response and authenticate
-      api.postAsync.mockResolvedValue({ sessionSecret: 'session-secret', username: 'expouser' });
-      await manager.loginAsync('user-pass', { username: 'expouser', password: 'expopass' });
-      expect(await manager.getCurrentUsernameAsync()).toBe('expouser');
     });
   });
 
@@ -149,11 +146,12 @@ describe('User', () => {
 
       // Mock authorization token response and fetch the user
       process.env.EXPO_TOKEN = 'auth-token';
-      api.postAsync.mockResolvedValue({ authorizationToken: 'auth-token' });
-      expect(await manager.getCurrentUserAsync()).toHaveProperty(
-        'authorizationToken',
-        'auth-token'
-      );
+      api.getAsync.mockResolvedValue({ username: 'user-auth-token', accessToken: 'auth-token' });
+
+      expect(await manager.getCurrentUserAsync()).toMatchObject({
+        username: 'user-auth-token',
+        accessToken: 'auth-token',
+      });
     });
 
     it(`doesn't cache user when authenticating with credentials`, async () => {
@@ -163,11 +161,9 @@ describe('User', () => {
 
       // Mock authorization token response and fetch the user
       process.env.EXPO_TOKEN = 'auth-token';
-      api.postAsync.mockResolvedValue({ authorizationToken: 'auth-token' });
-      expect(await manager.getCurrentUserAsync()).toHaveProperty(
-        'authorizationToken',
-        'auth-token'
-      );
+      api.getAsync.mockResolvedValue({ username: 'user-auth-token', accessToken: 'auth-token' });
+
+      expect(await manager.getCurrentUserAsync()).toBeDefined();
       // Note: unfortunately, there is no other way to see if the user data was cached
       expect(UserSettings.setAsync).not.toBeCalled();
 
@@ -179,19 +175,26 @@ describe('User', () => {
       const manager = _newTestUserManager();
 
       // Mock login response and authenticate
-      api.postAsync.mockResolvedValue({ sessionSecret: 'session-secret' });
-      await manager.loginAsync('user-pass', { username: 'expouser', password: 'expopass' });
-      expect(await manager.getCurrentUserAsync()).toHaveProperty('sessionSecret', 'session-secret');
+      api.postAsync.mockResolvedValue({ sessionSecret: 'session-secret-credentials' });
+      api.getAsync.mockResolvedValue({ username: 'user-credentials' });
+      await manager.loginAsync('user-pass', { username: 'user-credentials', password: 'expopass' });
+      expect(await manager.getCurrentUserAsync()).toMatchObject({
+        username: 'user-credentials',
+        sessionSecret: 'session-secret-credentials',
+      });
 
       // Empty in-memory cache, to force-fetch it
       manager._currentUser = null;
 
       // Mock token response and get user
       process.env.EXPO_TOKEN = 'auth-token';
-      api.postAsync.mockResolvedValue({ authorizationToken: 'auth-token' });
+      api.getAsync.mockResolvedValue({ username: 'user-token', accessToken: 'auth-token' });
       const user = await manager.getCurrentUserAsync();
-      expect(user).toHaveProperty('authorizationToken', 'auth-token');
       expect(user).not.toHaveProperty('sessionSecret', 'session-secret');
+      expect(user).toMatchObject({
+        username: 'user-token',
+        accessToken: 'auth-token',
+      });
     });
 
     it('returns access token with token', async () => {
@@ -204,16 +207,6 @@ describe('User', () => {
       const session = await manager.getSessionAsync();
       expect(session).toHaveProperty('accessToken', 'auth-token');
       expect(session).not.toHaveProperty('sessionSecret');
-    });
-
-    it('returns username from token account', async () => {
-      const api = _newTestApiV2();
-      const manager = _newTestUserManager();
-
-      // Mock authorization token response and fetch the username
-      process.env.EXPO_TOKEN = 'auth-token';
-      api.postAsync.mockResolvedValue({ authorizationToken: 'auth-token', username: 'expouser' });
-      expect(await manager.getCurrentUsernameAsync()).toBe('expouser');
     });
   });
 });

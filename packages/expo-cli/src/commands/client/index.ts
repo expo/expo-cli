@@ -1,5 +1,6 @@
+import { Device } from '@expo/apple-utils';
 import { getConfig, setCustomConfigPath } from '@expo/config';
-import { Android, Simulator, UserManager, Versions } from '@expo/xdl';
+import { Android, Simulator, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
 import { Command } from 'commander';
@@ -9,7 +10,7 @@ import path from 'path';
 
 import CommandError from '../../CommandError';
 import * as appleApi from '../../appleApi';
-import { runAction, travelingFastlane } from '../../appleApi/fastlane';
+import { getRequestContext } from '../../appleApi';
 import { getAppLookupParams } from '../../credentials/api/IosApi';
 import { Context } from '../../credentials/context';
 import { runCredentialsManager } from '../../credentials/route';
@@ -104,7 +105,7 @@ export default function (program: Command) {
         await context.ensureAppleCtx();
         const appleContext = context.appleCtx;
         if (user) {
-          await context.ios.getAllCredentials(user.username); // initialize credentials
+          await context.ios.getAllCredentials(context.projectOwner); // initialize credentials
         }
 
         // check if any builds are in flight
@@ -124,17 +125,13 @@ export default function (program: Command) {
         const experienceName = await getExperienceName({ user, appleTeamId: appleContext.team.id });
         const appLookupParams = getAppLookupParams(experienceName, bundleIdentifier);
 
-        await appleApi.ensureAppExists(appleContext, appLookupParams, {
+        await appleApi.ensureBundleIdExistsAsync(appleContext, appLookupParams, {
           enablePushNotifications: true,
         });
 
-        const { devices } = await runAction(travelingFastlane.listDevices, [
-          '--all-ios-profile-devices',
-          appleContext.appleId,
-          appleContext.appleIdPassword,
-          appleContext.team.id,
-        ]);
-        const udids = devices.map((device: { deviceNumber?: string }) => device.deviceNumber);
+        const requestContext = getRequestContext(appleContext);
+        const devices = await Device.getAllIOSProfileDevicesAsync(requestContext);
+        const udids = devices.map(device => device.attributes.udid);
 
         let distributionCert;
         if (user) {
@@ -206,12 +203,12 @@ export default function (program: Command) {
         }
 
         let email;
-        if (user) {
+        if (user && user.kind === 'user') {
           email = user.email;
         } else {
           email = await promptEmailAsync({
             message: 'Please enter an email address to notify, when the build is completed:',
-            initial: context?.user?.email,
+            initial: (context?.user as User)?.email,
           });
         }
         log.newLine();
@@ -228,12 +225,7 @@ export default function (program: Command) {
           );
           log('These devices are currently registered on your Apple Developer account:');
           const table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
-          table.push(
-            ...devices.map((device: { name: string; deviceNumber: string | number }) => [
-              device.name,
-              device.deviceNumber,
-            ])
-          );
+          table.push(...devices.map(device => [device.attributes.name, device.attributes.udid]));
           log(table.toString());
 
           const udidPrompt = await confirmAsync({

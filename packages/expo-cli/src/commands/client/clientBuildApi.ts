@@ -1,8 +1,8 @@
 import { ExpoConfig } from '@expo/config';
-import { ApiV2, User } from '@expo/xdl';
+import { ApiV2, RobotUser, User } from '@expo/xdl';
 
 export type ClientBuildRequestOptions = {
-  user: User | null;
+  user: User | RobotUser | null;
   appleTeamId?: string;
   appleContext: any;
   distributionCert: any;

@@ -19,7 +19,9 @@ export class SetupIosBuildCredentials implements IView {
     await this.bestEffortAppleCtx(ctx);
 
     if (ctx.hasAppleCtx()) {
-      await appleApi.ensureAppExists(ctx.appleCtx, this.app, { enablePushNotifications: true });
+      await appleApi.ensureBundleIdExistsAsync(ctx.appleCtx, this.app, {
+        enablePushNotifications: true,
+      });
     }
     try {
       await runCredentialsManager(ctx, new SetupIosDist(this.app));

@@ -5,10 +5,14 @@ import * as path from 'path';
 import xcode from 'xcode';
 
 import { ExportedConfig } from '../../Plugin.types';
-import { readXMLAsync } from '../../android/XML';
 import { withBranch } from '../../ios/Branch';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
-import { withExpoAndroidPlugins, withExpoIOSPlugins } from '../expo-plugins';
+import { readXMLAsync } from '../../utils/XML';
+import {
+  withExpoAndroidPlugins,
+  withExpoIOSPlugins,
+  withExpoVersionedSDKPlugins,
+} from '../expo-plugins';
 import { compileModsAsync, evalModsAsync } from '../mod-compiler';
 import rnFixture from './fixtures/react-native-project';
 
@@ -24,6 +28,8 @@ jest.mock('../../android/Icon', () => {
     setIconAsync() {},
   };
 });
+const NotificationsPlugin = require('../../android/Notifications');
+NotificationsPlugin.withNotificationIcons = jest.fn(config => config);
 
 describe(evalModsAsync, () => {
   it(`runs with no core mods`, async () => {
@@ -31,7 +37,7 @@ describe(evalModsAsync, () => {
       name: 'app',
       slug: '',
     };
-    config = await evalModsAsync(config, '/');
+    config = await evalModsAsync(config, { projectRoot: '/' });
     expect(config.ios).toBeUndefined();
   });
 });
@@ -72,15 +78,26 @@ describe('built-in plugins', () => {
       slug: '',
       ios: {},
     });
-    await expect(compileModsAsync(config, '/invalid')).rejects.toThrow(
+    await expect(compileModsAsync(config, { projectRoot: '/invalid' })).rejects.toThrow(
       'Failed to locate Info.plist files relative'
     );
+  });
+
+  it(`skips platforms`, async () => {
+    const config = withBranch({
+      name: 'app',
+      slug: '',
+      ios: {},
+    });
+    // should throw if the platform isn't skipped
+    await compileModsAsync(config, { projectRoot: '/invalid', platforms: ['android'] });
   });
 
   it('prefers named keys over info.plist overrides', async () => {
     let config: ExportedConfig = {
       name: 'app',
       slug: '',
+      _internal: { projectRoot: '.' },
       ios: {
         config: {
           usesNonExemptEncryption: false,
@@ -93,10 +110,9 @@ describe('built-in plugins', () => {
 
     config = withExpoIOSPlugins(config, {
       bundleIdentifier: 'com.bacon.todo',
-      expoUsername: 'bacon',
     });
     // Apply mod
-    config = await compileModsAsync(config, '/app');
+    config = await compileModsAsync(config, { projectRoot: '/app' });
     // This should be false because ios.config.usesNonExemptEncryption is used in favor of ios.infoPlist.ITSAppUsesNonExemptEncryption
     expect(config.ios?.infoPlist?.ITSAppUsesNonExemptEncryption).toBe(false);
   });
@@ -225,20 +241,21 @@ describe('built-in plugins', () => {
         allowBackup: true,
         softwareKeyboardLayoutMode: 'pan',
       },
+      _internal: { projectRoot: '/app' },
       mods: null,
     };
 
+    config = withExpoVersionedSDKPlugins(config, { expoUsername: 'bacon' });
+
     config = withExpoIOSPlugins(config, {
       bundleIdentifier: 'com.bacon.todo',
-      expoUsername: 'bacon',
     });
     config = withExpoAndroidPlugins(config, {
       package: 'com.bacon.todo',
-      expoUsername: 'bacon',
     });
 
     // Apply mod
-    config = await compileModsAsync(config, '/app');
+    config = await compileModsAsync(config, { projectRoot: '/app' });
 
     // App config should have been modified
     expect(config.name).toBe('my cool app');
@@ -282,7 +299,10 @@ describe('built-in plugins', () => {
       'android/app/src/main/res/values/styles.xml',
       'android/app/src/main/res/values/colors.xml',
       'android/app/src/main/res/values/strings.xml',
+      'android/app/build.gradle',
       'android/app/google-services.json',
+      'android/settings.gradle',
+      'android/build.gradle',
       'config/GoogleService-Info.plist',
       'config/google-services.json',
       'locales/en-US.json',

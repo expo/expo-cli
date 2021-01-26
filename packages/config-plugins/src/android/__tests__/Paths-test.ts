@@ -106,7 +106,7 @@ describe(getResourceXMLPathAsync, () => {
   });
 
   it(`throws when the android folder is missing`, async () => {
-    expect(getResourceXMLPathAsync('/managed', { name: 'somn' })).rejects.toThrow(
+    await expect(getResourceXMLPathAsync('/managed', { name: 'somn' })).rejects.toThrow(
       /Android project folder is missing in project/
     );
   });

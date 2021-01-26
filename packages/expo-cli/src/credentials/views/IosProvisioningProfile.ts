@@ -2,7 +2,6 @@ import plist, { PlistObject } from '@expo/plist';
 import { IosCodeSigning, PKCS12Utils } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import invariant from 'invariant';
 import ora from 'ora';
 
 import CommandError from '../../CommandError';
@@ -13,6 +12,7 @@ import {
   ProvisioningProfileInfo,
   ProvisioningProfileManager,
 } from '../../appleApi';
+import { assert } from '../../assert';
 import log from '../../log';
 import prompt, { confirmAsync, Question } from '../../prompts';
 import { displayIosAppCredentials } from '../actions/list';
@@ -96,7 +96,7 @@ export class CreateProvisioningProfile implements IView {
       }
     }
     const distCert = await ctx.ios.getDistCert(this.app);
-    invariant(distCert, 'missing distribution certificate');
+    assert(distCert, 'missing distribution certificate');
     return await generateProvisioningProfile(ctx, this.app.bundleIdentifier, distCert);
   }
 }
@@ -117,7 +117,7 @@ export class UseExistingProvisioningProfile implements IView {
     const selected = await selectProfileFromApple(ctx.appleCtx, this.app.bundleIdentifier);
     if (selected) {
       const distCert = await ctx.ios.getDistCert(this.app);
-      invariant(distCert, 'missing distribution certificate');
+      assert(distCert, 'missing distribution certificate');
 
       await configureAndUpdateProvisioningProfile(ctx, this.app, distCert, selected);
     }
@@ -158,7 +158,7 @@ export class CreateOrReuseProvisioningProfile implements IView {
     }
 
     const distCert = await ctx.ios.getDistCert(this.app);
-    invariant(distCert, 'missing distribution certificate');
+    assert(distCert, 'missing distribution certificate');
 
     const autoselectedProfile = this.choosePreferred(existingProfiles, distCert);
     // autoselect creds if we find valid certs
@@ -413,7 +413,7 @@ export async function useProvisioningProfileFromParams(
   provisioningProfile: ProvisioningProfile
 ): Promise<ProvisioningProfile> {
   const distCert = await ctx.ios.getDistCert(app);
-  invariant(distCert, 'missing distribution certificate');
+  assert(distCert, 'missing distribution certificate');
 
   const isValid = await validateProfileWithoutApple(
     provisioningProfile,

@@ -47,7 +47,7 @@ type Versions = {
   turtleSdkVersions: TurtleSDKVersionsOld;
 };
 
-export async function versionsAsync(): Promise<Versions> {
+export async function versionsAsync(options?: { skipCache?: boolean }): Promise<Versions> {
   const api = new ApiV2Client();
   const versionCache = new Cacher(
     () => api.getAsync('versions/latest'),
@@ -55,6 +55,12 @@ export async function versionsAsync(): Promise<Versions> {
     0,
     path.join(__dirname, '../caches/versions.json')
   );
+
+  // Clear cache when opting in to beta because things can change quickly in beta
+  if (getenv.boolish('EXPO_BETA', false) || options?.skipCache) {
+    versionCache.clearAsync();
+  }
+
   return await versionCache.getAsync();
 }
 
@@ -82,7 +88,11 @@ export async function setVersionsAsync(value: any) {
 // versions
 export async function releasedSdkVersionsAsync(): Promise<SDKVersions> {
   const sdkVersions = await sdkVersionsAsync();
-  return pickBy(sdkVersions, (data, _sdkVersionString) => !!data.releaseNoteUrl);
+  return pickBy(
+    sdkVersions,
+    (data, _sdkVersionString) =>
+      !!data.releaseNoteUrl || (getenv.boolish('EXPO_BETA', false) && data.beta)
+  );
 }
 
 export function gteSdkVersion(

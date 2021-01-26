@@ -44,6 +44,14 @@ export function learnMore(url: string): string {
   });
 }
 
+export function linkedText(text: string, url: string): string {
+  return terminalLink(text, url, {
+    fallback: (text, url) => {
+      return `${text} ${log.chalk.dim.underline(url)}`;
+    },
+  });
+}
+
 export function transporterAppLink() {
   return fallbackToTextAndUrl(
     'Transporter.app',

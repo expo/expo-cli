@@ -1,5 +1,4 @@
-import invariant from 'invariant';
-
+import { assert } from '../../assert';
 import prompts, { confirmAsync } from '../../prompts';
 import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
 import { AppLookupParams } from '../api/IosApi';
@@ -79,7 +78,7 @@ export class SelectIosExperience implements IView {
 
   getAppLookupParamsFromContext(ctx: Context): AppLookupParams {
     const projectName = ctx.manifest.slug;
-    const accountName = ctx.manifest.owner || ctx.user.username;
+    const accountName = ctx.projectOwner;
     const bundleIdentifier = ctx.manifest.ios?.bundleIdentifier;
     if (!bundleIdentifier) {
       throw new Error(`ios.bundleIdentifier need to be defined`);
@@ -91,7 +90,7 @@ export class SelectIosExperience implements IView {
   handleAction(ctx: Context, accountName: string, action: string): IView | null {
     switch (action) {
       case 'create-ios-push':
-        return new iosPushView.CreateIosPush(accountName);
+        return new iosPushView.CreateAndAssignIosPush(accountName);
       case 'update-ios-push':
         return new iosPushView.UpdateIosPush(accountName);
       case 'remove-ios-push':
@@ -123,14 +122,14 @@ export class SelectAndroidExperience implements IView {
 
   async open(ctx: Context): Promise<IView | null> {
     if (ctx.hasProjectContext && this.askAboutProjectMode) {
-      const experienceName = `@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`;
+      const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
       const runProjectContext = await confirmAsync({
         message: `You are currently in a directory with ${experienceName} experience. Do you want to select it?`,
       });
 
       if (runProjectContext) {
-        invariant(ctx.manifest.slug, 'app.json slug field must be set');
+        assert(ctx.manifest.slug, 'app.json slug field must be set');
         const view = new androidView.ExperienceView(experienceName);
         CredentialsManager.get().changeMainView(view);
         return view;

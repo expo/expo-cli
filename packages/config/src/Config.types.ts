@@ -1,9 +1,5 @@
+import { ModConfig } from '@expo/config-plugins';
 import { ExpoConfig } from '@expo/config-types';
-
-// import { ModConfig } from './Plugin.types';
-
-// TODO
-export type ModConfig = { ios?: any; android?: any };
 
 export { ExpoConfig };
 
@@ -112,6 +108,7 @@ export type ConfigErrorCode =
   | 'MODULE_NOT_FOUND'
   | 'INVALID_MODE'
   | 'INVALID_FORMAT'
+  | 'INVALID_PLUGIN'
   | 'INVALID_CONFIG';
 
 export type ConfigContext = {

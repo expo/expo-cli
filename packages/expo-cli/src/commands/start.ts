@@ -14,6 +14,7 @@ import log from '../log';
 import * as sendTo from '../sendTo';
 import urlOpts, { URLOptions } from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
+import { ensureTypeScriptSetupAsync } from './utils/typescript/ensureTypeScriptSetup';
 
 type NormalizedOptions = URLOptions & {
   webOnly?: boolean;
@@ -113,6 +114,8 @@ async function normalizeOptionsAsync(
 
 async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions): Promise<void> {
   await ProjectSettings.setAsync(projectDir, {
+    devClient: options.devClient,
+    scheme: options.scheme,
     dev: options.dev,
     minify: options.minify,
     https: options.https,
@@ -139,7 +142,14 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
   }
 
   if (options.devClient) {
+    startOpts.devClient = true;
+
+    // TODO: is this redundant?
     startOpts.target = 'bare';
+  } else {
+    // For `expo start`, the default target is 'managed', for both managed *and* bare apps.
+    // See: https://docs.expo.io/bare/using-expo-client
+    startOpts.target = 'managed';
   }
 
   return startOpts;
@@ -147,6 +157,9 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
 
 async function startWebAction(projectDir: string, options: NormalizedOptions): Promise<void> {
   const { exp, rootPath } = await configureProjectAsync(projectDir, options);
+  if (Versions.gteSdkVersion(exp, '34.0.0')) {
+    await ensureTypeScriptSetupAsync(projectDir);
+  }
   const startOpts = parseStartOptions(options);
   await Project.startAsync(rootPath, { ...startOpts, exp });
   await urlOpts.handleMobileOptsAsync(projectDir, options);
@@ -159,6 +172,10 @@ async function startWebAction(projectDir: string, options: NormalizedOptions): P
 async function action(projectDir: string, options: NormalizedOptions): Promise<void> {
   const { exp, pkg, rootPath } = await configureProjectAsync(projectDir, options);
 
+  if (Versions.gteSdkVersion(exp, '34.0.0')) {
+    await ensureTypeScriptSetupAsync(projectDir);
+  }
+
   // TODO: only validate dependencies if starting in managed workflow
   await validateDependenciesVersions(projectDir, exp, pkg);
 
@@ -166,7 +183,7 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
 
   await Project.startAsync(rootPath, { ...startOpts, exp });
 
-  const url = await UrlUtils.constructManifestUrlAsync(projectDir);
+  const url = await UrlUtils.constructDeepLinkAsync(projectDir);
 
   const recipient = await sendTo.getRecipient(options.sendTo);
   if (recipient) {

@@ -1,10 +1,12 @@
-import { ApiV2, RegistrationData, User, UserManager } from '@expo/xdl';
+import { ApiV2, User, UserManager } from '@expo/xdl';
 import { ApiV2Error } from '@expo/xdl/build/ApiV2';
 import chalk from 'chalk';
 import program from 'commander';
-import invariant from 'invariant';
+import ora from 'ora';
+import openBrowser from 'react-dev-utils/openBrowser';
 
-import CommandError from './CommandError';
+import CommandError, { SilentError } from './CommandError';
+import { assert } from './assert';
 import log from './log';
 import promptNew, { confirmAsync, Question as NewQuestion, selectAsync } from './prompts';
 import { nonEmptyInput } from './validators';
@@ -34,6 +36,14 @@ export type SecondFactorDevice = {
 
 export async function loginOrRegisterAsync(): Promise<User> {
   log.warn('An Expo user account is required to proceed.');
+
+  // Always try to auto-login when these variables are set, even in non-interactive mode
+  if (process.env.EXPO_CLI_USERNAME && process.env.EXPO_CLI_PASSWORD) {
+    return login({
+      username: process.env.EXPO_CLI_USERNAME,
+      password: process.env.EXPO_CLI_PASSWORD,
+    });
+  }
 
   if (program.nonInteractive) {
     throw new CommandError(
@@ -65,7 +75,14 @@ export async function loginOrRegisterAsync(): Promise<User> {
   const { action } = await promptNew(question);
 
   if (action === 'register') {
-    return register();
+    openRegistrationInBrowser();
+    log.newLine();
+    log(
+      `Log in with ${chalk.bold(
+        'expo login'
+      )} after you have created your account through the website.`
+    );
+    throw new SilentError();
   } else if (action === 'existingUser') {
     return login({});
   } else {
@@ -74,7 +91,7 @@ export async function loginOrRegisterAsync(): Promise<User> {
 }
 
 export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
-  const user = await UserManager.getCurrentUserAsync();
+  const user = await UserManager.getCurrentUserOnlyAsync();
   if (user) {
     return user;
   }
@@ -83,6 +100,13 @@ export async function loginOrRegisterIfLoggedOutAsync(): Promise<User> {
 
 export async function login(options: CommandOptions): Promise<User> {
   const user = await UserManager.getCurrentUserAsync();
+  if (user?.accessToken) {
+    throw new CommandError(
+      'ACCESS_TOKEN_ERROR',
+      'Please remove the EXPO_TOKEN environment var to login with a different user.'
+    );
+  }
+
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!nonInteractive) {
     if (user) {
@@ -91,7 +115,7 @@ export async function login(options: CommandOptions): Promise<User> {
       });
       if (!action) {
         // If user chooses to stay logged in, return
-        return user;
+        return user as User;
       }
     }
     return _usernamePasswordAuth(options.username, options.password, options.otp);
@@ -223,7 +247,7 @@ export async function _retryUsernamePasswordAuthWithOTPAsync(
   }
 ): Promise<User> {
   const { secondFactorDevices, smsAutomaticallySent } = metadata;
-  invariant(
+  assert(
     secondFactorDevices !== undefined && smsAutomaticallySent !== undefined,
     `Malformed OTP error metadata: ${metadata}`
   );
@@ -232,10 +256,7 @@ export async function _retryUsernamePasswordAuthWithOTPAsync(
   let otp: string | null = null;
 
   if (smsAutomaticallySent) {
-    invariant(
-      primaryDevice,
-      'OTP should only automatically be sent when there is a primary device'
-    );
+    assert(primaryDevice, 'OTP should only automatically be sent when there is a primary device');
     log.nested(
       `One-time password was sent to the phone number ending in ${primaryDevice.sms_phone_number}.`
     );
@@ -320,75 +341,17 @@ async function _usernamePasswordAuth(
   }
 }
 
-export async function register(): Promise<User> {
-  log(
-    `
-We need an email, username, and password to create an account for you.
-`
-  );
+export const REGISTRATION_URL = `https://expo.io/signup`;
 
-  // Answers from previous questions aren't threaded through with `prompts`, so
-  // in order to confirm the password we need to save off the password value
-  // during the initial password validation callback and then validate against
-  // it in the confirmation step.
-  //
-  // https://github.com/expo/expo-cli/issues/2970
-  //
-  let passwordInput: string | undefined;
+export function openRegistrationInBrowser() {
+  const spinner = ora(`Opening ${REGISTRATION_URL}...`).start();
+  const opened = openBrowser(REGISTRATION_URL);
 
-  const questions: NewQuestion[] = [
-    {
-      type: 'text',
-      name: 'email',
-      message: 'Email:',
-      format: val => val.trim(),
-      validate: nonEmptyInput,
-    },
-    {
-      type: 'text',
-      name: 'username',
-      message: 'Username:',
-      format: val => val.trim(),
-      validate: nonEmptyInput,
-    },
-    {
-      type: 'password',
-      name: 'password',
-      message: 'Password:',
-      format: val => val.trim(),
-      validate(val) {
-        if (val.trim() === '') {
-          return 'Please create a password';
-        }
-
-        passwordInput = val;
-        return true;
-      },
-    },
-    {
-      type: 'password',
-      name: 'passwordRepeat',
-      message: 'Confirm Password:',
-      format: val => val.trim(),
-      validate(val) {
-        if (val.trim() === '') {
-          return false;
-        }
-        if (!passwordInput || val.trim() !== passwordInput.trim()) {
-          return `Passwords don't match!`;
-        }
-        return true;
-      },
-    },
-  ];
-  const answers = await promptNew(questions);
-  const registeredUser = await UserManager.registerAsync(answers as RegistrationData);
-  log(`\nAccount registered, you are now logged in as ${chalk.cyan(answers.username)}.`);
-  log(
-    `- You can log in to your account on ${chalk.bold(
-      'https://expo.io'
-    )} to manage and collaborate on your projects.`
-  );
-  log(`- You can log in on the Expo client app for quick access to your projects.\n`);
-  return registeredUser;
+  if (opened) {
+    spinner.succeed(`Opened ${REGISTRATION_URL} in your web browser.`);
+  } else {
+    spinner.fail(
+      `Unable to open a web browser. Please open your browser and navigate to ${REGISTRATION_URL}.`
+    );
+  }
 }

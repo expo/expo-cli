@@ -346,10 +346,12 @@ async function getExpoVersionAsync(device: Device): Promise<string | null> {
   return regexMatch[1];
 }
 
-async function isClientOutdatedAsync(device: Device): Promise<boolean> {
+async function isClientOutdatedAsync(device: Device, sdkVersion?: string): Promise<boolean> {
   const versions = await Versions.versionsAsync();
+  const clientForSdk = await getClientForSDK(sdkVersion);
+  const latestVersionForSdk = clientForSdk?.version ?? versions.androidVersion;
   const installedVersion = await getExpoVersionAsync(device);
-  return !installedVersion || semver.lt(installedVersion, versions.androidVersion);
+  return !installedVersion || semver.lt(installedVersion, latestVersionForSdk);
 }
 
 function _apkCacheDirectory() {
@@ -558,10 +560,12 @@ async function openUrlAsync({
   url,
   device,
   isDetached = false,
+  sdkVersion,
 }: {
   url: string;
   isDetached?: boolean;
   device: Device;
+  sdkVersion?: string;
 }): Promise<void> {
   try {
     const bootedDevice = await attemptToStartEmulatorOrAssertAsync(device);
@@ -577,7 +581,7 @@ async function openUrlAsync({
       if (
         !shouldInstall &&
         !hasPromptedToUpgrade[promptKey] &&
-        (await isClientOutdatedAsync(device))
+        (await isClientOutdatedAsync(device, sdkVersion))
       ) {
         // Only prompt once per device, per run.
         hasPromptedToUpgrade[promptKey] = true;
@@ -592,7 +596,8 @@ async function openUrlAsync({
       }
 
       if (shouldInstall) {
-        await installExpoAsync({ device });
+        const androidClient = await getClientForSDK(sdkVersion);
+        await installExpoAsync({ device, ...androidClient });
         installedExpo = true;
       }
     }
@@ -631,6 +636,18 @@ async function openUrlAsync({
   }
 }
 
+async function getClientForSDK(sdkVersionString?: string) {
+  if (!sdkVersionString) {
+    return null;
+  }
+
+  const sdkVersion = (await Versions.sdkVersionsAsync())[sdkVersionString];
+  return {
+    url: sdkVersion.androidClientUrl,
+    version: sdkVersion.androidClientVersion,
+  };
+}
+
 export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
@@ -641,7 +658,7 @@ export async function openProjectAsync({
   try {
     await startAdbReverseAsync(projectRoot);
 
-    const projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
+    const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot);
     const { exp } = getConfig(projectRoot, {
       skipSDKVersionRequirement: true,
     });
@@ -655,7 +672,12 @@ export async function openProjectAsync({
       return { success: false, error: 'escaped' };
     }
 
-    await openUrlAsync({ url: projectUrl, device, isDetached: !!exp.isDetached });
+    await openUrlAsync({
+      url: projectUrl,
+      device,
+      isDetached: !!exp.isDetached,
+      sdkVersion: exp.sdkVersion,
+    });
     return { success: true, url: projectUrl };
   } catch (e) {
     Logger.global.error(`Couldn't start project on Android: ${e.message}`);

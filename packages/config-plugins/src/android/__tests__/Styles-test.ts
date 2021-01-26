@@ -1,8 +1,14 @@
 import { vol } from 'memfs';
 
+import { writeXMLAsync } from '../../utils/XML';
 import { buildResourceItem, readResourcesXMLAsync } from '../Resources';
-import { getProjectStylesXMLPathAsync, getStyleParent, setStylesItem } from '../Styles';
-import { writeXMLAsync } from '../XML';
+import {
+  getProjectStylesXMLPathAsync,
+  getStyleParent,
+  getStylesItem,
+  removeStylesItem,
+  setStylesItem,
+} from '../Styles';
 jest.mock('fs');
 
 const mockStyles = `
@@ -77,5 +83,24 @@ describe('Styles', () => {
         },
       ],
     });
+  });
+
+  it(`removes a value`, async () => {
+    const stylesPath = await getProjectStylesXMLPathAsync('/app')!;
+    const xml = await readResourcesXMLAsync({ path: stylesPath });
+    const parent = { name: 'Theme.App.SplashScreen', parent: 'Theme.AppCompat.Light.NoActionBar' };
+    expect(getStylesItem({ xml, parent, name: 'android:textColor' })).toStrictEqual({
+      $: {
+        name: 'android:textColor',
+      },
+      _: '#ffffff',
+    });
+
+    removeStylesItem({
+      xml,
+      parent,
+      name: 'android:textColor',
+    });
+    expect(getStylesItem({ xml, parent, name: 'android:textColor' })).toBe(null);
   });
 });

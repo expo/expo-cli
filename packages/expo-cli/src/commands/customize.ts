@@ -138,8 +138,8 @@ export async function action(projectDir: string = './', options: Options = { for
     instructions: '',
     choices: values,
   });
-  if (!answer) {
-    log('\n\u203A Exiting...\n');
+  if (!answer || answer.length === 0) {
+    log('\n\u203A Exiting with no change...\n');
     return;
   }
   await generateFilesAsync({ projectDir, staticPath, options, answer, templateFolder });

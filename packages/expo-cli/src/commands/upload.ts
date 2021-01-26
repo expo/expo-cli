@@ -1,15 +1,10 @@
 import chalk from 'chalk';
 import { Command } from 'commander';
-import pick from 'lodash/pick';
 
-import CommandError from '../CommandError';
 import log from '../log';
-import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
 import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
 import { AndroidSubmitCommandOptions } from './upload/submission-service/android/types';
 import * as TerminalLink from './utils/TerminalLink';
-
-const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
 
 export default function (program: Command) {
   program
@@ -59,7 +54,9 @@ export default function (program: Command) {
   program
     .command('upload:ios [path]')
     .alias('ui')
-    .description('macOS only: Upload an iOS binary to Apple. An alternative to Transporter.app')
+    .description(
+      `${chalk.yellow('Unsupported:')} Use ${chalk.bold('eas submit')} or Transporter app instead.`
+    )
     .longDescription(
       'Upload an iOS binary to Apple TestFlight (MacOS only). Uses the latest build by default'
     )
@@ -101,38 +98,22 @@ export default function (program: Command) {
       'English'
     )
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
-
-    .on('--help', function () {
-      log('Available languages:');
-      log(`  ${LANGUAGES.join(', ')}`);
-      log();
-    })
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
-    .asyncActionProjectDir(async (projectDir: string, options: IosPlatformOptions) => {
-      try {
-        // TODO: remove this once we remove fastlane
-        if (process.platform !== 'darwin') {
-          throw new CommandError('Currently, iOS uploads are only supported on macOS, sorry :(');
-        }
+    .asyncActionProjectDir(async (projectDir: string, options: any) => {
+      const logItem = (name: string, link: string) => {
+        log(`\u203A ${TerminalLink.linkedText(name, link)}`);
+      };
 
-        const args = pick(options, SOURCE_OPTIONS);
-        if (Object.keys(args).length > 1) {
-          throw new Error(`You have to choose only one of: --path, --id, --latest, --url`);
-        }
-        IOSUploader.validateOptions(options);
-        const uploader = new IOSUploader(projectDir, options);
-        await uploader.upload();
-      } catch (err) {
-        log.error('Failed to upload the standalone app to the App Store.');
-        log.warn(
-          `We recommend using ${chalk.bold(
-            TerminalLink.transporterAppLink()
-          )} instead of the ${chalk.bold(
-            'expo upload:ios'
-          )} command if you have any trouble with it.`
-        );
-
-        throw err;
-      }
+      log.newLine();
+      log(chalk.yellow('expo upload:ios is no longer supported'));
+      log('Please use one of the following');
+      log.newLine();
+      logItem(chalk.cyan.bold('eas submit'), 'https://docs.expo.io/submit/ios');
+      logItem('Transporter', 'https://apps.apple.com/us/app/transporter/id1450874784');
+      logItem(
+        'Fastlane deliver',
+        'https://docs.fastlane.tools/getting-started/ios/appstore-deployment'
+      );
+      log.newLine();
     });
 }
