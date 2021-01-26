@@ -32,35 +32,6 @@ export function getProjectName(projectRoot: string) {
   return path.basename(sourceRoot);
 }
 
-/**
- * @param filePath
- * @param param1.target PBXNativeTarget reference
- * @param param1.group PBXGroup reference
- */
-export function addStoryboardFileToProject(
-  pbxProject: XcodeProject,
-  filePath: string,
-  { target, group }: { target: UUID; group: UUID }
-) {
-  const file = pbxProject.addFile(filePath, undefined, {
-    lastKnownFileType: 'file.storyboard',
-    defaultEncoding: 4,
-    target,
-  });
-  if (!file) {
-    throw new Error('File already exists in the project');
-  }
-  delete pbxProject.pbxFileReferenceSection()[file.fileRef].explicitFileType;
-  delete pbxProject.pbxFileReferenceSection()[file.fileRef].includeInIndex;
-
-  file.uuid = pbxProject.generateUuid();
-  file.target = target;
-
-  pbxProject.addToPbxBuildFileSection(file);
-  pbxProject.addToPbxResourcesBuildPhase(file);
-  pbxProject.addToPbxGroup(file, group);
-}
-
 // TODO: come up with a better solution for using app.json expo.name in various places
 function sanitizedName(name: string) {
   return name
@@ -115,7 +86,7 @@ export function addResourceFileToGroup(
   project.addToPbxFileReferenceSection(file);
   project.addToPbxBuildFileSection(file);
   project.addToPbxResourcesBuildPhase(file);
-
+  // project.addToPbxGroup(file, group.);
   group.children.push({
     value: file.fileRef,
     comment: file.basename,

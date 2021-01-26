@@ -7,7 +7,6 @@ import { XcodeProject } from 'xcode';
 import { ConfigPlugin } from '../Plugin.types';
 import { createRunOncePlugin, withDangerousMod, withPlugins } from '../plugins/core-plugins';
 import { withInfoPlist, withXcodeProject } from '../plugins/ios-plugins';
-import { assert } from '../utils/errors';
 import { addWarningIOS } from '../utils/warnings';
 import {
   ContentsJsonImage,
@@ -25,7 +24,7 @@ import {
 import { InfoPlist } from './IosConfig.types';
 import * as Paths from './Paths';
 import { getUserInterfaceStyle } from './UserInterfaceStyle';
-import { addStoryboardFileToProject, getApplicationNativeTarget } from './utils/Xcodeproj';
+import { addResourceFileToGroup } from './utils/Xcodeproj';
 
 const STORYBOARD_FILE_PATH = './SplashScreen.storyboard';
 const IMAGESET_PATH = 'Images.xcassets/SplashScreen.imageset';
@@ -411,17 +410,11 @@ function updatePbxProject({
   projectName: string;
   project: XcodeProject;
 }): void {
-  const applicationNativeTarget = getApplicationNativeTarget({ project, projectName });
   // Check if `${projectName}/SplashScreen.storyboard` already exists
   // Path relative to `ios` directory
   const storyboardFilePath = path.join(projectName, STORYBOARD_FILE_PATH);
   if (!project.hasFile(storyboardFilePath)) {
-    const group = project.findPBXGroupKey({ name: projectName });
-    assert(group, `Couldn't locate proper PBXGroup (${projectName}) '.xcodeproj' file.`);
-    addStoryboardFileToProject(project, storyboardFilePath, {
-      target: applicationNativeTarget.uuid,
-      group,
-    });
+    addResourceFileToGroup(storyboardFilePath, projectName, project);
   }
 }
 
