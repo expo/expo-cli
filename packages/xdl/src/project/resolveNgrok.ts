@@ -50,7 +50,9 @@ export async function resolveNgrokAsync(
         initial: true,
       });
       if (answer) {
-        const packageManager = PackageManager.createForProject(projectRoot);
+        const packageManager = PackageManager.createForProject(projectRoot, {
+          silent: !EXPO_DEBUG,
+        });
         await packageManager.addGlobalAsync(packageName);
         return await resolveNgrokAsync(projectRoot, false);
       }
