@@ -9,6 +9,8 @@ import Logger from '../Logger';
 import { confirmAsync } from '../Prompts';
 
 const NGROK_REQUIRED_VERSION = '^2.4.3';
+const EXPO_DEBUG = getenv.boolish('EXPO_DEBUG', false);
+let _ngrokInstance: any | null = null;
 
 export interface NgrokOptions {
   authtoken?: string;
@@ -32,72 +34,57 @@ export interface NgrokOptions {
   remote_addr?: string;
 }
 
-/**
- * Returns `true` if a global ngrok instance can be found.
- */
-export async function isAvailableAsync(projectRoot: string): Promise<boolean> {
-  try {
-    return !!(await findNgrokBinAsync(projectRoot));
-  } catch {
-    return false;
-  }
-}
 export async function resolveNgrokAsync(
   projectRoot: string,
   shouldPrompt: boolean = true
 ): Promise<any> {
-  const inst = await findNgrokBinAsync(projectRoot);
+  const ngrok = await findNgrokBinAsync(projectRoot);
 
-  if (!inst) {
-    const pkg = `@expo/ngrok@${NGROK_REQUIRED_VERSION}`;
+  if (!ngrok) {
+    const packageName = `@expo/ngrok@${NGROK_REQUIRED_VERSION}`;
     if (shouldPrompt) {
       // Delay the prompt so it doesn't conflict with other dev tool logs
       await new Promise(r => setTimeout(r, 100));
       const answer = await confirmAsync({
-        message: `The package ${pkg} is required to use tunnels, would you like to install it globally?`,
+        message: `The package ${packageName} is required to use tunnels, would you like to install it globally?`,
         initial: true,
       });
       if (answer) {
         const packageManager = PackageManager.createForProject(projectRoot);
-        await packageManager.addGlobalAsync(pkg);
+        await packageManager.addGlobalAsync(packageName);
         return await resolveNgrokAsync(projectRoot, false);
       }
     }
     throw new Error(
-      `Please install ${pkg} and try again, or try using another hosting method like lan or localhost`
+      `Please install ${packageName} and try again, or try using another hosting method like lan or localhost`
     );
   }
-  return inst;
+  return ngrok;
 }
 
-let _ngrokInstance: any | null = null;
-
-const isDebug = getenv.boolish('EXPO_DEBUG', false);
 // Resolve a copy that's installed in the project.
-async function resolvePackageFromProjectAsync(projectRoot: string, version: string) {
+async function resolvePackageFromProjectAsync(projectRoot: string) {
   try {
-    const ngrokCliPackagePath = resolveFrom(projectRoot, '@expo/ngrok/package.json');
-    const ngrokCliPackage = require(ngrokCliPackagePath);
-    if (ngrokCliPackage && semver.satisfies(ngrokCliPackage.version, version)) {
-      const ngrokInstancePath = resolveFrom(projectRoot, '@expo/ngrok');
-      if (isDebug) {
-        Logger.global.info(`Resolving @expo/ngrok from project: "${ngrokInstancePath}"`);
+    const ngrokPackagePath = resolveFrom(projectRoot, '@expo/ngrok/package.json');
+    const pkg = require(ngrokPackagePath);
+    if (pkg && semver.satisfies(pkg.version, NGROK_REQUIRED_VERSION)) {
+      const ngrokPath = resolveFrom(projectRoot, '@expo/ngrok');
+      if (EXPO_DEBUG) {
+        Logger.global.info(`Resolving @expo/ngrok from project: "${ngrokPath}"`);
       }
-      return require(ngrokInstancePath);
+      return require(ngrokPath);
     }
-  } catch {
-    //   fall back to global ngrok-cli
-  }
+  } catch {}
   return null;
 }
 
 // Resolve a copy that's installed globally.
-async function resolveGlobalPackageAsync(version: string) {
+async function resolveGlobalPackageAsync() {
   try {
     // use true to disable the use of local packages.
-    const ngrokPkgJson = requireg('@expo/ngrok/package.json', true);
-    if (semver.satisfies(ngrokPkgJson.version, version)) {
-      if (isDebug) {
+    const pkg = requireg('@expo/ngrok/package.json', true);
+    if (semver.satisfies(pkg.version, NGROK_REQUIRED_VERSION)) {
+      if (EXPO_DEBUG) {
         Logger.global.info(
           `Resolving global @expo/ngrok from: "${requireg.resolve('@expo/ngrok')}"`
         );
@@ -114,15 +101,15 @@ async function findNgrokBinAsync(projectRoot: string): Promise<any> {
     return _ngrokInstance;
   }
 
-  const globalInstance = await resolveGlobalPackageAsync(NGROK_REQUIRED_VERSION);
-  if (globalInstance) {
-    _ngrokInstance = globalInstance;
+  const localInstance = await resolvePackageFromProjectAsync(projectRoot);
+  if (localInstance) {
+    _ngrokInstance = localInstance;
     return _ngrokInstance;
   }
 
-  const localInstance = await resolvePackageFromProjectAsync(projectRoot, NGROK_REQUIRED_VERSION);
-  if (localInstance) {
-    _ngrokInstance = localInstance;
+  const globalInstance = await resolveGlobalPackageAsync();
+  if (globalInstance) {
+    _ngrokInstance = globalInstance;
     return _ngrokInstance;
   }
 
