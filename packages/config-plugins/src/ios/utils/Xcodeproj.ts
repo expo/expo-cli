@@ -86,7 +86,7 @@ export function addResourceFileToGroup(
   project.addToPbxFileReferenceSection(file);
   project.addToPbxBuildFileSection(file);
   project.addToPbxResourcesBuildPhase(file);
-  // project.addToPbxGroup(file, group.);
+
   group.children.push({
     value: file.fileRef,
     comment: file.basename,
