@@ -30,7 +30,7 @@
   "dependencies": {
     "ajv": "^5.2.2",
     "json-schema-traverse": "0.3.1",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "probe-image-size": "^3.1.0",
     "read-chunk": "^3.2.0"
   },
