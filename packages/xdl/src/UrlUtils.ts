@@ -238,7 +238,7 @@ function assertValidOptions(opts: Partial<URLOptions>): URLOptions {
     devClient: joi.boolean().optional(),
     scheme: joi.string().optional().allow(null),
     // Replaced by `scheme`
-    urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol'),
+    urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol').allow(null),
     lanType: joi.any().valid('ip', 'hostname'),
     hostType: joi.any().valid('localhost', 'lan', 'tunnel'),
     dev: joi.boolean(),
@@ -252,6 +252,7 @@ function assertValidOptions(opts: Partial<URLOptions>): URLOptions {
   if (error) {
     throw new XDLError('INVALID_OPTIONS', error.toString());
   }
+
   return opts as URLOptions;
 }
 
