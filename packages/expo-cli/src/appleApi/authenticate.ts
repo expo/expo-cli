@@ -151,6 +151,7 @@ export async function authenticateAsync(options: Options = {}): Promise<AppleCtx
   try {
     const authState = await loginAsync(
       {
+        username: options.appleId,
         cookies: options.cookies,
         teamId: options.teamId,
       },
