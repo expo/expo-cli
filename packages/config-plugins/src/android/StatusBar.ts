@@ -4,9 +4,9 @@ import { ConfigPlugin } from '../Plugin.types';
 import { withDangerousMod } from '../plugins/core-plugins';
 import { writeXMLAsync } from '../utils/XML';
 import * as WarningAggregator from '../utils/warnings';
-import { getProjectColorsXMLPathAsync, setColorItem } from './Colors';
-import { buildResourceItem, readResourcesXMLAsync, ResourceItemXML } from './Resources';
-import { getProjectStylesXMLPathAsync, setStylesItem } from './Styles';
+import { getProjectColorsXMLPathAsync, removeColorItem, setColorItem } from './Colors';
+import { buildResourceItem, readResourcesXMLAsync, ResourceKind, ResourceXML } from './Resources';
+import { getProjectStylesXMLPathAsync, removeStylesItem, setStylesItem } from './Styles';
 
 const COLOR_PRIMARY_DARK_KEY = 'colorPrimaryDark';
 const WINDOW_TRANSLUCENT_STATUS = 'android:windowTranslucentStatus';
@@ -38,62 +38,170 @@ export function getStatusBarStyle(config: Pick<ExpoConfig, 'androidStatusBar'>) 
   return config.androidStatusBar?.barStyle || 'light-content';
 }
 
+export function getStatusBarHidden(config: Pick<ExpoConfig, 'androidStatusBar'>): boolean | null {
+  return config.androidStatusBar?.hidden ?? null;
+}
+
+export function getStatusBarTranslucent(
+  config: Pick<ExpoConfig, 'androidStatusBar'>
+): boolean | null {
+  return config.androidStatusBar?.translucent ?? null;
+}
+
+const styleResourceGroup = {
+  // Must use splash screen theme instead of AppTheme
+  name: 'Theme.App.SplashScreen',
+  parent: 'Theme.AppCompat.Light.NoActionBar',
+};
+
 export async function setStatusBarConfig(
   config: Pick<ExpoConfig, 'androidStatusBarColor' | 'androidStatusBar'>,
   projectRoot: string
 ) {
+  // TODO: dark theme -- need to add it to the config first.
   const hexString = getStatusBarColor(config);
   const statusBarStyle = getStatusBarStyle(config);
-
-  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
-  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);
-
-  let stylesJSON = await readResourcesXMLAsync({ path: stylesPath });
-  let colorsJSON = await readResourcesXMLAsync({ path: colorsPath });
-
-  let styleItemToAdd: ResourceItemXML;
-  if (hexString === 'translucent') {
-    // translucent status bar set in theme
-    styleItemToAdd = buildResourceItem({ name: WINDOW_TRANSLUCENT_STATUS, value: 'true' });
-  } else {
-    // Need to add a color key to colors.xml to use in styles.xml
-    const colorItemToAdd = buildResourceItem({ name: COLOR_PRIMARY_DARK_KEY, value: hexString });
-    colorsJSON = setColorItem(colorItemToAdd, colorsJSON);
-
-    styleItemToAdd = buildResourceItem({
-      name: COLOR_PRIMARY_DARK_KEY,
-      value: `@color/${COLOR_PRIMARY_DARK_KEY}`,
-    });
-  }
-
-  // Default is light-content, don't need to do anything to set it
-  if (statusBarStyle === 'dark-content') {
-    const statusBarStyleItem: ResourceItemXML = buildResourceItem({
-      name: WINDOW_LIGHT_STATUS_BAR,
-      value: `true`,
-    });
-    stylesJSON = setStylesItem({
-      item: statusBarStyleItem,
-      xml: stylesJSON,
-      parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
-    });
-  }
-
-  stylesJSON = setStylesItem({
-    item: styleItemToAdd,
-    xml: stylesJSON,
-    parent: { name: 'AppTheme', parent: 'Theme.AppCompat.Light.NoActionBar' },
-  });
+  const statusBarHidden = getStatusBarHidden(config);
+  const statusBarTranslucent = getStatusBarTranslucent(config);
 
   try {
+    // TODO: use kind: values-night, values-night-v23, and values-v23
     await Promise.all([
-      writeXMLAsync({ path: colorsPath, xml: colorsJSON }),
-      writeXMLAsync({ path: stylesPath, xml: stylesJSON }),
+      setStatusBarStylesForThemeAsync({
+        projectRoot,
+        kind: 'values',
+        hidden: statusBarHidden,
+        barStyle: statusBarStyle,
+        translucent: statusBarTranslucent,
+        // TODO: Make this not default to translucent
+        addStatusBarBackgroundColor: !!hexString && hexString !== 'translucent',
+      }),
+      setStatusBarColorsForThemeAsync({
+        projectRoot,
+        kind: 'values',
+        statusBarBackgroundColor: hexString === 'translucent' ? null : hexString,
+      }),
     ]);
   } catch (e) {
-    throw new Error(
-      `Error setting Android status bar config. Cannot write colors.xml to ${colorsPath}, or styles.xml to ${stylesPath}.`
-    );
+    throw new Error(`Error setting Android status bar config: ${e.message}`);
   }
   return true;
+}
+
+async function setStatusBarStylesForThemeAsync({
+  projectRoot,
+  kind,
+  hidden,
+  barStyle,
+  translucent,
+  // backgroundColor,
+  addStatusBarBackgroundColor,
+}: {
+  projectRoot: string;
+  kind?: ResourceKind;
+  statusBarBackgroundColor?: string | null;
+  hidden?: boolean | null;
+  translucent?: boolean | null;
+  barStyle?: 'light-content' | 'dark-content' | null;
+  addStatusBarBackgroundColor?: boolean | null;
+}): Promise<ResourceXML> {
+  const stylesPath = await getProjectStylesXMLPathAsync(projectRoot, { kind });
+
+  let xml = await readResourcesXMLAsync({ path: stylesPath });
+
+  const parent = styleResourceGroup;
+
+  // setStylesItem({
+  //   xml,
+  //   item: buildResourceItem({ name: 'android:windowBackground', value: '@drawable/splashscreen' }),
+  //   parent,
+  // });
+
+  // TODO: Just guessing...
+  if (translucent == null) {
+    xml = removeStylesItem({ xml, name: WINDOW_TRANSLUCENT_STATUS, parent });
+  } else {
+    xml = setStylesItem({
+      xml,
+      item: buildResourceItem({ name: WINDOW_TRANSLUCENT_STATUS, value: String(translucent) }),
+      parent,
+    });
+  }
+
+  if (hidden == null) {
+    xml = removeStylesItem({
+      xml,
+      name: 'android:windowFullscreen',
+      parent: styleResourceGroup,
+    });
+  } else {
+    const hiddenItem = buildResourceItem({
+      name: 'android:windowFullscreen',
+      value: String(hidden),
+    });
+    xml = setStylesItem({
+      xml,
+      item: hiddenItem,
+      parent: styleResourceGroup,
+    });
+  }
+
+  if (barStyle === undefined) {
+    xml = removeStylesItem({ xml, name: WINDOW_LIGHT_STATUS_BAR, parent });
+  } else {
+    const windowLightStatusBarValue =
+      barStyle === 'light-content' ? 'false' : barStyle === 'dark-content' ? 'true' : '';
+    xml = setStylesItem({
+      xml,
+      item: buildResourceItem({
+        name: WINDOW_LIGHT_STATUS_BAR,
+        value: windowLightStatusBarValue,
+      }),
+      parent,
+    });
+  }
+
+  if (!addStatusBarBackgroundColor) {
+    xml = removeStylesItem({ xml, name: 'android:statusBarColor', parent });
+  } else {
+    xml = setStylesItem({
+      xml,
+      item: buildResourceItem({
+        name: 'android:statusBarColor',
+        value: `@color/${COLOR_PRIMARY_DARK_KEY}`,
+      }),
+      parent,
+    });
+  }
+
+  await writeXMLAsync({ path: stylesPath, xml });
+
+  return xml;
+}
+
+async function setStatusBarColorsForThemeAsync({
+  projectRoot,
+  kind,
+  statusBarBackgroundColor,
+}: {
+  projectRoot: string;
+  kind?: ResourceKind;
+  statusBarBackgroundColor?: string | null;
+}): Promise<ResourceXML> {
+  const colorsPath = await getProjectColorsXMLPathAsync(projectRoot, { kind });
+
+  let colors = await readResourcesXMLAsync({ path: colorsPath });
+
+  if (statusBarBackgroundColor == null) {
+    colors = removeColorItem(COLOR_PRIMARY_DARK_KEY, colors);
+  } else {
+    colors = setColorItem(
+      buildResourceItem({ name: COLOR_PRIMARY_DARK_KEY, value: statusBarBackgroundColor }),
+      colors
+    );
+  }
+
+  await writeXMLAsync({ path: colorsPath, xml: colors });
+
+  return colors;
 }
