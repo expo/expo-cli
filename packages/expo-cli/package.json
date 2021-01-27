@@ -116,7 +116,6 @@
     "turndown": "~7.0.0",
     "untildify": "3.0.3",
     "uuid": "^8.0.0",
-    "validator": "10.5.0",
     "wordwrap": "1.0.0",
     "wrap-ansi": "^7.0.0",
     "xcode": "^3.0.1"

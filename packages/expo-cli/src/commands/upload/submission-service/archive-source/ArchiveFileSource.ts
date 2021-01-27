@@ -1,10 +1,10 @@
 import { Platform } from '@expo/config';
-import { StandaloneBuild } from '@expo/xdl';
-import validator from 'validator';
+import { StandaloneBuild, UrlUtils } from '@expo/xdl';
 
 import log from '../../../../log';
 import prompt from '../../../../prompts';
 import { existingFile } from '../../../../validators';
+import { isUUID } from '../../../utils/isUUID';
 import { getAppConfig } from '../utils/config';
 import {
   downloadAppArchiveAsync,
@@ -275,7 +275,7 @@ async function askForBuildIdAsync(): Promise<string> {
     message: 'Build ID:',
     type: 'text',
     validate: (val: string): string | boolean => {
-      if (!validator.isUUID(val)) {
+      if (!isUUID(val)) {
         return `${val} is not a valid id`;
       } else {
         return true;
@@ -286,7 +286,7 @@ async function askForBuildIdAsync(): Promise<string> {
 }
 
 function validateUrl(url: string): boolean {
-  return validator.isURL(url, {
+  return UrlUtils.isURL(url, {
     protocols: ['http', 'https'],
   });
 }

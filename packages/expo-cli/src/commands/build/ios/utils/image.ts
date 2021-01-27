@@ -1,15 +1,13 @@
-import { XDLError } from '@expo/xdl';
+import { UrlUtils, XDLError } from '@expo/xdl';
 import axios from 'axios';
 import fs from 'fs-extra';
 import pick from 'lodash/pick';
 import { PNG } from 'pngjs';
 import { Readable } from 'stream';
-import validator from 'validator';
 
 async function getImageStreamAsync(imagePathOrURL: string) {
-  const isUrl = validator.isURL(imagePathOrURL, {
+  const isUrl = UrlUtils.isURL(imagePathOrURL, {
     protocols: ['http', 'https'],
-    require_protocol: true,
   });
 
   if (isUrl) {
