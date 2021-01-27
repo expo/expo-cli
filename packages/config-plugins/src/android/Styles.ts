@@ -117,3 +117,27 @@ export function removeStylesItem({
   }
   return xml;
 }
+
+export function removeStyleGroup({
+  xml,
+  parent,
+}: {
+  xml: ResourceXML;
+  parent: { name: string; parent?: string };
+}): ResourceXML {
+  xml = ensureDefaultStyleResourceXML(xml);
+
+  const index =
+    xml.resources.style?.findIndex?.((e: any) => {
+      let matches = e['$']['name'] === parent.name;
+      if (parent.parent != null && matches) {
+        matches = e['$']['parent'] === parent.parent;
+      }
+      return matches;
+    }) ?? -1;
+  const shouldRemove = index > -1;
+  if (xml.resources.style && shouldRemove) {
+    xml.resources.style.splice(index, 1);
+  }
+  return xml;
+}

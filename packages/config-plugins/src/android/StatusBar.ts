@@ -38,12 +38,24 @@ export function getStatusBarStyle(config: Pick<ExpoConfig, 'androidStatusBar'>) 
   return config.androidStatusBar?.barStyle || 'light-content';
 }
 
+export function getStatusBarHidden(config: Pick<ExpoConfig, 'androidStatusBar'>): boolean | null {
+  return config.androidStatusBar?.hidden ?? null;
+}
+
+export function getStatusBarTranslucent(
+  config: Pick<ExpoConfig, 'androidStatusBar'>
+): boolean | null {
+  return config.androidStatusBar?.translucent ?? null;
+}
+
 export async function setStatusBarConfig(
   config: Pick<ExpoConfig, 'androidStatusBarColor' | 'androidStatusBar'>,
   projectRoot: string
 ) {
   const hexString = getStatusBarColor(config);
   const statusBarStyle = getStatusBarStyle(config);
+  const statusBarHidden = getStatusBarHidden(config);
+  const statusBarTranslucent = getStatusBarTranslucent(config);
 
   const stylesPath = await getProjectStylesXMLPathAsync(projectRoot);
   const colorsPath = await getProjectColorsXMLPathAsync(projectRoot);

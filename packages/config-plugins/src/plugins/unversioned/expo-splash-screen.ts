@@ -1,5 +1,5 @@
 import { ConfigPlugin } from '../../Plugin.types';
-import { withSplashScreen as withSplashScreenAndroid } from '../../android/SplashScreen';
+import { withSplashScreen as withSplashScreenAndroid } from '../../android/SplashScreen/SplashScreen';
 import { withSplashScreen as withSplashScreenIOS } from '../../ios/SplashScreen';
 import { createRunOncePlugin } from '../core-plugins';
 import { withStaticPlugin } from '../static-plugins';

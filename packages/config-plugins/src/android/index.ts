@@ -19,7 +19,7 @@ import * as Permissions from './Permissions';
 import * as PrimaryColor from './PrimaryColor';
 import * as RootViewBackgroundColor from './RootViewBackgroundColor';
 import * as Scheme from './Scheme';
-import * as SplashScreen from './SplashScreen';
+import * as SplashScreen from './SplashScreen/SplashScreen';
 import * as StatusBar from './StatusBar';
 import * as Styles from './Styles';
 import * as Updates from './Updates';
