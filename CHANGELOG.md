@@ -71,9 +71,9 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - [cli] Auto configure TypeScript ([#3096](https://github.com/expo/expo-cli/issues/3096))
 - [cli] Use the versions endpoint for TypeScript packages ([#3109](https://github.com/expo/expo-cli/issues/3109))
-- [cli] Copy over EAS Apple API methods  ([#3113](https://github.com/expo/expo-cli/issues/3113))
+- [cli] Copy over EAS Apple API methods ([#3113](https://github.com/expo/expo-cli/issues/3113))
 - [cli] add --experimental-bundle flag to 'export' command ([#3074](https://github.com/expo/expo-cli/issues/3074))
-- [config-plugins] improve monorepo support - fix setting path to create-manifest-* script ([#3103](https://github.com/expo/expo-cli/issues/3103))
+- [config-plugins] improve monorepo support - fix setting path to create-manifest-\* script ([#3103](https://github.com/expo/expo-cli/issues/3103))
 - [config-plugins] export more types from config-plugins ([#3083](https://github.com/expo/expo-cli/issues/3083))
 - [metro-config] Enable allowOptionalDependencies by default ([#3088](https://github.com/expo/expo-cli/issues/3088))
 - [xdl] improve simulator errors ([#3104](https://github.com/expo/expo-cli/issues/3104))
