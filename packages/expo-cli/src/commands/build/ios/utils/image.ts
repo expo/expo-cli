@@ -8,6 +8,7 @@ import { Readable } from 'stream';
 async function getImageStreamAsync(imagePathOrURL: string) {
   const isUrl = UrlUtils.isURL(imagePathOrURL, {
     protocols: ['http', 'https'],
+    requireProtocol: true,
   });
 
   if (isUrl) {
