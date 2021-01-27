@@ -439,7 +439,7 @@ export async function installExpoOnSimulatorAsync({
   version?: string;
 }) {
   const bar = new ProgressBar(
-    `Installing the Expo client app on ${simulator.name} [:bar] :percent :etas`,
+    `Installing the Expo Go app on ${simulator.name} [:bar] :percent :etas`,
     {
       total: 100,
       width: 64,
