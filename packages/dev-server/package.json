@@ -36,7 +36,7 @@
   ],
   "dependencies": {
     "@expo/bunyan": "4.0.0",
-    "@expo/config": "3.3.26",
+    "resolve-from": "^5.0.0",
     "@expo/metro-config": "0.1.52",
     "@react-native-community/cli-server-api": "4.9.0",
     "body-parser": "1.19.0",

@@ -99,7 +99,6 @@ describe('iOS Updates config', () => {
       const xcodeProject = getPbxproj('/app/workspace');
       Updates.ensureBundleReactNativePhaseContainsConfigurationScript(
         '/app/workspace',
-        { nodeModulesPath: '/app' },
         xcodeProject
       );
       const bundleReactNative = Updates.getBundleReactNativePhase(xcodeProject);

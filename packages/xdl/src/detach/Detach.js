@@ -225,9 +225,7 @@ async function _detachAsync(projectRoot, options) {
   await fs.writeFile(configPath, JSON.stringify(config, null, 2));
 
   const packagesToInstall = [];
-  const nodeModulesPath = exp.nodeModulesPath
-    ? path.resolve(projectRoot, exp.nodeModulesPath)
-    : projectRoot;
+  const nodeModulesPath = projectRoot;
 
   if (sdkVersionConfig && sdkVersionConfig.expoReactNativeTag) {
     packagesToInstall.push(

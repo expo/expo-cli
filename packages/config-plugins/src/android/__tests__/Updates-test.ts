@@ -135,7 +135,6 @@ describe('Android Updates config', () => {
       const contents = await fsExtra.readFile('/app/workspace/android/app/build.gradle', 'utf-8');
       const newContents = Updates.ensureBuildGradleContainsConfigurationScript(
         '/app/workspace',
-        { nodeModulesPath: '/app' },
         contents
       );
       expect(newContents).toMatchSnapshot();

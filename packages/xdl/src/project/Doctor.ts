@@ -4,7 +4,6 @@ import {
   getConfig,
   getPackageJson,
   PackageJSONConfig,
-  resolveModule,
 } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
@@ -12,6 +11,7 @@ import fs from 'fs-extra';
 import getenv from 'getenv';
 import isReachable from 'is-reachable';
 import path from 'path';
+import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
 import Config from '../Config';
@@ -365,53 +365,18 @@ async function _validateReactNativeVersionAsync(
 }
 
 async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
-  // Just need `nodeModulesPath` so it doesn't matter if expo is installed or the sdkVersion is defined.
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  let nodeModulesPath = projectRoot;
-  if (exp.nodeModulesPath) {
-    nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
-  }
+  // Check to make sure react-native is installed
 
-  // Check to make sure node_modules exists at all
-  try {
-    const result = fs.statSync(path.join(nodeModulesPath, 'node_modules'));
-    if (!result.isDirectory()) {
-      ProjectUtils.logError(
-        projectRoot,
-        'expo',
-        `Error: node_modules directory is missing. Please run \`npm install\` in your project directory.`,
-        'doctor-node-modules-missing'
-      );
-      return FATAL;
-    }
-
-    ProjectUtils.clearNotification(projectRoot, 'doctor-node-modules-missing');
-  } catch (e) {
+  if (resolveFrom.silent(projectRoot, 'react-native/local-cli/cli.js')) {
+    ProjectUtils.clearNotification(projectRoot, 'doctor-react-native-not-installed');
+  } else {
     ProjectUtils.logError(
       projectRoot,
       'expo',
-      `Error: node_modules directory is missing. Please run \`npm install\` in your project directory.`,
-      'doctor-node-modules-missing'
+      `Error: react-native is not installed. Please run \`npm install\` or \`yarn\` in your project directory.`,
+      'doctor-react-native-not-installed'
     );
     return FATAL;
-  }
-
-  // Check to make sure react-native is installed
-  try {
-    resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
-    ProjectUtils.clearNotification(projectRoot, 'doctor-react-native-not-installed');
-  } catch (e) {
-    if (e.code === 'MODULE_NOT_FOUND') {
-      ProjectUtils.logError(
-        projectRoot,
-        'expo',
-        `Error: react-native is not installed. Please run \`npm install\` or \`yarn\` in your project directory.`,
-        'doctor-react-native-not-installed'
-      );
-      return FATAL;
-    } else {
-      throw e;
-    }
   }
   return NO_ISSUES;
 }
@@ -464,11 +429,9 @@ async function validateAsync(
 
   status = Math.max(status, expStatus);
 
-  if (exp && !exp.ignoreNodeModulesValidation) {
-    const nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
-    if (nodeModulesStatus > status) {
-      return nodeModulesStatus;
-    }
+  const nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
+  if (nodeModulesStatus > status) {
+    return nodeModulesStatus;
   }
 
   return status;

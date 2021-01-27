@@ -1,4 +1,4 @@
-import { findConfigFile, getConfig, readConfigJsonAsync, resolveModule } from '@expo/config';
+import { findConfigFile, getConfig, readConfigJsonAsync } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Detach, Exp, IosWorkspace, Versions } from '@expo/xdl';
@@ -7,6 +7,7 @@ import fse from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
 import path from 'path';
+import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import temporary from 'tempy';
 
@@ -30,13 +31,13 @@ export type EjectAsyncOptions = {
 const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string): Promise<void> {
-  // We just need the custom `nodeModulesPath` from the config.
-  const { exp, pkg } = await getConfig(projectRoot, {
+  // TODO: Read the package.json cheaper
+  const { pkg } = await getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
   const pkgsWithExtraSetup = await JsonFile.readAsync(
-    resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
+    resolveFrom(projectRoot, 'expo/requiresExtraSetup.json')
   );
   const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(pkgName =>
     pkgsWithExtraSetup.hasOwnProperty(pkgName)

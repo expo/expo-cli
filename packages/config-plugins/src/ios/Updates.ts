@@ -1,17 +1,17 @@
 import { ExpoConfig } from '@expo/config-types';
 import * as path from 'path';
+import resolveFrom from 'resolve-from';
 import xcode from 'xcode';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withExpoPlist } from '../plugins/ios-plugins';
-import { projectHasModule } from '../utils/modules';
 import { ExpoPlist } from './IosConfig.types';
 
 const CREATE_MANIFEST_IOS_PATH = 'expo-updates/scripts/create-manifest-ios.sh';
 
 type ExpoConfigUpdates = Pick<
   ExpoConfig,
-  'sdkVersion' | 'owner' | 'runtimeVersion' | 'nodeModulesPath' | 'updates' | 'slug'
+  'sdkVersion' | 'owner' | 'runtimeVersion' | 'updates' | 'slug'
 >;
 
 export enum Config {
@@ -114,11 +114,8 @@ export function setVersionsConfig(config: ExpoConfigUpdates, expoPlist: ExpoPlis
   return newExpoPlist;
 }
 
-function formatConfigurationScriptPath(
-  projectRoot: string,
-  config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>
-): string {
-  const buildScriptPath = projectHasModule(CREATE_MANIFEST_IOS_PATH, projectRoot, config);
+function formatConfigurationScriptPath(projectRoot: string): string {
+  const buildScriptPath = resolveFrom.silent(projectRoot, CREATE_MANIFEST_IOS_PATH);
 
   if (!buildScriptPath) {
     throw new Error(
@@ -154,13 +151,12 @@ export function getBundleReactNativePhase(project: xcode.XcodeProject): ShellScr
 
 export function ensureBundleReactNativePhaseContainsConfigurationScript(
   projectRoot: string,
-  config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>,
   project: xcode.XcodeProject
 ): xcode.XcodeProject {
   const bundleReactNative = getBundleReactNativePhase(project);
-  const buildPhaseShellScriptPath = formatConfigurationScriptPath(projectRoot, config);
+  const buildPhaseShellScriptPath = formatConfigurationScriptPath(projectRoot);
 
-  if (!isShellScriptBuildPhaseConfigured(projectRoot, config, project)) {
+  if (!isShellScriptBuildPhaseConfigured(projectRoot, project)) {
     // check if there's already another path to create-manifest-ios.sh
     // this might be the case for monorepos
     if (bundleReactNative.shellScript.includes(CREATE_MANIFEST_IOS_PATH)) {
@@ -179,11 +175,10 @@ export function ensureBundleReactNativePhaseContainsConfigurationScript(
 
 export function isShellScriptBuildPhaseConfigured(
   projectRoot: string,
-  config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>,
   project: xcode.XcodeProject
 ): boolean {
   const bundleReactNative = getBundleReactNativePhase(project);
-  const buildPhaseShellScriptPath = formatConfigurationScriptPath(projectRoot, config);
+  const buildPhaseShellScriptPath = formatConfigurationScriptPath(projectRoot);
   return bundleReactNative.shellScript.includes(buildPhaseShellScriptPath);
 }
 

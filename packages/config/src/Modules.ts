@@ -1,27 +1,7 @@
 import { stat, Stats, statSync } from 'fs-extra';
-import { join, resolve } from 'path';
-import resolveFrom from 'resolve-from';
+import { join } from 'path';
 
-import { ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
-
-export function resolveModule(
-  request: string,
-  projectRoot: string,
-  exp: Pick<ExpoConfig, 'nodeModulesPath'>
-): string {
-  const fromDir = exp.nodeModulesPath ? exp.nodeModulesPath : projectRoot;
-  return resolveFrom(fromDir, request);
-}
-
-export function projectHasModule(
-  modulePath: string,
-  projectRoot: string,
-  exp: Pick<ExpoConfig, 'nodeModulesPath'>
-): string | undefined {
-  const fromDir = exp.nodeModulesPath ? exp.nodeModulesPath : projectRoot;
-  return resolveFrom.silent(fromDir, modulePath);
-}
 
 export function moduleNameFromPath(modulePath: string): string {
   if (modulePath.startsWith('@')) {
@@ -64,14 +44,8 @@ export function fileExists(file: string): boolean {
   }
 }
 
-export function getRootPackageJsonPath(
-  projectRoot: string,
-  exp: Partial<Pick<ExpoConfig, 'nodeModulesPath'>>
-): string {
-  const packageJsonPath =
-    'nodeModulesPath' in exp && typeof exp.nodeModulesPath === 'string'
-      ? join(resolve(projectRoot, exp.nodeModulesPath), 'package.json')
-      : join(projectRoot, 'package.json');
+export function getRootPackageJsonPath(projectRoot: string): string {
+  const packageJsonPath = join(projectRoot, 'package.json');
   if (!fileExists(packageJsonPath)) {
     throw new ConfigError(
       `The expected package.json path: ${packageJsonPath} does not exist`,
