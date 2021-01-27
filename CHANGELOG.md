@@ -10,6 +10,40 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 26 Jan 2021 17:34:40 -0800](https://github.com/expo/expo-cli/commit/c9a57c31bc2309de5c8ddfa13986209c5dffcecf)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [xdl] Use global ngrok for xdl ([#3123](https://github.com/expo/expo-cli/issues/3123))
+- [configure-splash-screen] publish @expo/configure-splash-screen
+
+### 🐛 Bug fixes
+
+- [cli] prevent throwing duplicate warning ([#3130](https://github.com/expo/expo-cli/issues/3130))
+- [cli] Auto-login when envvars are defined ([#3127](https://github.com/expo/expo-cli/issues/3127))
+- [cli] Improve handling of no answer for customize:web ([#3128](https://github.com/expo/expo-cli/issues/3128))
+- [xdl] Support Expo Go name in shellapp template ([#3125](https://github.com/expo/expo-cli/issues/3125))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.17
+- @expo/config@3.3.26
+- @expo/dev-server@0.1.52
+- @expo/dev-tools@0.13.78
+- @expo/electron-adapter@0.0.43
+- expo-cli@4.1.2
+- expo-optimize@0.1.74
+- @expo/metro-config@0.1.52
+- @expo/next-adapter@2.1.57
+- @expo/package-manager@0.0.36
+- pod-install@0.1.16
+- expo-pwa@0.0.62
+- uri-scheme@1.0.63
+- @expo/webpack-config@0.12.56
+- @expo/xdl@59.0.18
+
 ## [Mon, 25 Jan 2021 11:50:33 -0800](https://github.com/expo/expo-cli/commit/ded0c2af2180d76dd9f420f00b92b5167ab52312)
 
 ### 🛠 Breaking changes
