@@ -1,10 +1,10 @@
 import Log from '@expo/bunyan';
-import { getConfig, Platform, projectHasModule } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
 import bodyParser from 'body-parser';
 import http from 'http';
 import type Metro from 'metro';
+import resolveFrom from 'resolve-from';
 
 import LogReporter from './LogReporter';
 import clientLogsMiddleware from './middleware/clientLogsMiddleware';
@@ -15,7 +15,7 @@ export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
 };
 export type BundleOptions = {
   entryPoint: string;
-  platform: Platform;
+  platform: 'android' | 'ios' | 'web';
   dev?: boolean;
   minify?: boolean;
   sourceMapUrl?: string;
@@ -136,9 +136,7 @@ export async function bundleAsync(
 }
 
 function importMetroFromProject(projectRoot: string): typeof Metro {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-
-  const resolvedPath = projectHasModule('metro', projectRoot, exp);
+  const resolvedPath = resolveFrom.silent(projectRoot, 'metro');
   if (!resolvedPath) {
     throw new Error(
       'Missing package "metro" in the project at ' +
@@ -153,9 +151,7 @@ function importMetroFromProject(projectRoot: string): typeof Metro {
 }
 
 function importMetroServerFromProject(projectRoot: string): typeof Metro.Server {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-
-  const resolvedPath = projectHasModule('metro/src/Server', projectRoot, exp);
+  const resolvedPath = resolveFrom.silent(projectRoot, 'metro/src/Server');
   if (!resolvedPath) {
     throw new Error(
       'Missing module "metro/src/Server" in the project. ' +
