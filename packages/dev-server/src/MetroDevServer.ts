@@ -1,5 +1,4 @@
 import Log from '@expo/bunyan';
-import { Platform } from '@expo/config';
 import * as ExpoMetroConfig from '@expo/metro-config';
 import { createDevServerMiddleware } from '@react-native-community/cli-server-api';
 import bodyParser from 'body-parser';
@@ -16,7 +15,7 @@ export type MetroDevServerOptions = ExpoMetroConfig.LoadOptions & {
 };
 export type BundleOptions = {
   entryPoint: string;
-  platform: Platform;
+  platform: 'android' | 'ios' | 'web';
   dev?: boolean;
   minify?: boolean;
   sourceMapUrl?: string;

@@ -1,6 +1,7 @@
 import { vol } from 'memfs';
 
 import {
+  ensureValidPlatforms,
   hashForDependencyMap,
   isPkgMainExpoAppEntry,
   resolveBareEntryFile,
@@ -26,6 +27,28 @@ describe('hashForDependencyMap', () => {
     expect(hashForDependencyMap({ a: '1.0.0', b: 2, c: '~3.0' })).toBe(
       hashForDependencyMap({ c: '~3.0', b: 2, a: '1.0.0' })
     );
+  });
+});
+
+describe(ensureValidPlatforms, () => {
+  const platform = process.platform;
+
+  afterEach(() => {
+    Object.defineProperty(process, 'platform', {
+      value: platform,
+    });
+  });
+  it(`bails on windows if only ios is passed`, async () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'win32',
+    });
+    expect(ensureValidPlatforms(['ios', 'android'])).toStrictEqual(['android']);
+  });
+  it(`allows ios on all platforms except windows`, async () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'other',
+    });
+    expect(ensureValidPlatforms(['ios', 'android'])).toStrictEqual(['ios', 'android']);
   });
 });
 
