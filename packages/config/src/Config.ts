@@ -554,11 +554,11 @@ export function getDefaultTarget(projectRoot: string): ProjectTarget {
   if (exp.sdkVersion && exp.sdkVersion !== 'UNVERSIONED' && semver.lt(exp.sdkVersion, '37.0.0')) {
     return 'managed';
   }
-  return isBareWorkflowProject(projectRoot, exp) ? 'bare' : 'managed';
+  return isBareWorkflowProject(projectRoot) ? 'bare' : 'managed';
 }
 
-function isBareWorkflowProject(projectRoot: string, exp: ExpoConfig): boolean {
-  const [pkg] = getPackageJsonAndPath(projectRoot, exp);
+function isBareWorkflowProject(projectRoot: string): boolean {
+  const [pkg] = getPackageJsonAndPath(projectRoot);
 
   if (pkg.dependencies && pkg.dependencies.expokit) {
     return false;
