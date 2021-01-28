@@ -1,5 +1,4 @@
-import * as path from 'path';
-import { URL } from 'url';
+import { joinUrlPath } from 'expo-pwa';
 import { compilation as compilationNS, Compiler, Plugin } from 'webpack';
 
 import JsonWebpackPlugin from './JsonWebpackPlugin';
@@ -22,18 +21,6 @@ export type PwaManifestOptions = {
   inject?: boolean | Function;
   publicPath: string;
 };
-
-// Can be simplified if no need to mimic path.join API.
-export function joinPublicPath(publicPath: string, ...toJoin: string[]): string {
-  const segments = path.join(...toJoin);
-  try {
-    // Handle publicPath with full host.
-    return new URL(segments, publicPath).href;
-  } catch (e) {
-    // Fallback to handling just path.
-    return path.join(publicPath, ...toJoin);
-  }
-}
 
 export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
   rel: string = 'manifest';
@@ -85,7 +72,7 @@ export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
                 voidTag: true,
                 attributes: {
                   rel: this.rel,
-                  href: joinPublicPath(this.pwaOptions.publicPath, this.pwaOptions.path),
+                  href: joinUrlPath(this.pwaOptions.publicPath, this.pwaOptions.path),
                 },
               });
 
