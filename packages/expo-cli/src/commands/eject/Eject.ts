@@ -79,7 +79,7 @@ export async function ejectAsync(
   logNextSteps(results);
 }
 
-function ensureValidPlatforms(platforms: ModPlatform[]): ModPlatform[] {
+export function ensureValidPlatforms(platforms: ModPlatform[]): ModPlatform[] {
   const isWindows = process.platform === 'win32';
   // Skip ejecting for iOS on Windows
   if (isWindows && platforms.includes('ios')) {
