@@ -225,7 +225,6 @@ async function _detachAsync(projectRoot, options) {
   await fs.writeFile(configPath, JSON.stringify(config, null, 2));
 
   const packagesToInstall = [];
-  const nodeModulesPath = projectRoot;
 
   if (sdkVersionConfig && sdkVersionConfig.expoReactNativeTag) {
     packagesToInstall.push(
@@ -244,7 +243,7 @@ async function _detachAsync(projectRoot, options) {
       cwd: path.join(process.env.EXPO_VIEW_DIR, 'expokit-npm-package'),
     });
     await spawnAsync('yarn', ['link', 'expokit'], {
-      cwd: nodeModulesPath,
+      cwd: projectRoot,
     });
   } else if (sdkVersionConfig.expokitNpmPackage) {
     packagesToInstall.push(sdkVersionConfig.expokitNpmPackage);
