@@ -2,15 +2,14 @@ import path from 'path';
 
 import { joinUrlPath } from '../index';
 
-const publicPath = 'https://test.draftbit.app';
-const filePath = 'index.html';
-
 describe('joinUrlPath', () => {
+  const publicPath = 'https://test.draftbit.app';
+  const filePath = 'index.html';
+
   describe(`joins urls with URL`, () => {
     it(`simple`, () => {
       const got = joinUrlPath(publicPath, filePath);
       expect(got).toBe('https://test.draftbit.app/index.html');
-      expect(got).not.toBe('https:/test.draftbit.app/index.html');
     });
 
     it(`empty segment`, () => {
@@ -37,34 +36,37 @@ describe('joinUrlPath', () => {
   describe(`joins non-urls with path.join`, () => {
     const spy = jest.spyOn(path, 'join');
 
+    beforeEach(spy.mockClear);
+    afterAll(spy.mockRestore);
+
     it(`simple`, () => {
       const got = joinUrlPath('/pwa', filePath);
       expect(got).toBe('/pwa/index.html');
-      expect(spy).toHaveBeenCalled();
+      expect(spy).toHaveBeenCalledTimes(2);
     });
 
     it(`empty segment`, () => {
       const got = joinUrlPath('', filePath);
       expect(got).toBe('index.html');
-      expect(spy).toHaveBeenCalled();
+      expect(spy).toHaveBeenCalledTimes(2);
     });
 
     it(`raw segment`, () => {
       const got = joinUrlPath('pwa', filePath);
       expect(got).toBe('pwa/index.html');
-      expect(spy).toHaveBeenCalled();
+      expect(spy).toHaveBeenCalledTimes(2);
     });
 
     it(`separator`, () => {
       const got = joinUrlPath('/', filePath);
       expect(got).toBe('/index.html');
-      expect(spy).toHaveBeenCalled();
+      expect(spy).toHaveBeenCalledTimes(2);
     });
 
     it(`many segments`, () => {
       const got = joinUrlPath('/', '', 'one', '/two', 'three/', filePath);
       expect(got).toBe('/one/two/three/index.html');
-      expect(spy).toHaveBeenCalled();
+      expect(spy).toHaveBeenCalledTimes(2);
     });
   });
 });
