@@ -1,5 +1,6 @@
 import { ExpoAppManifest, ExpoConfig, getConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
+import chalk from 'chalk';
 import express from 'express';
 import http from 'http';
 import os from 'os';
@@ -15,6 +16,7 @@ import * as UrlUtils from '../UrlUtils';
 import UserManager, { ANONYMOUS_USERNAME } from '../User';
 import UserSettings from '../UserSettings';
 import * as Versions from '../Versions';
+import { learnMore } from '../logs/TerminalLink';
 import * as Doctor from './Doctor';
 import * as ProjectUtils from './ProjectUtils';
 
@@ -231,7 +233,31 @@ export async function getManifestResponseAsync({
   await resolveGoogleServicesFile(projectRoot, manifest);
 
   // Create the final string
-  const manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
+  let manifestString;
+  try {
+    manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
+  } catch (error) {
+    if (error.code === 'UNAUTHORIZED_ERROR' && manifest.owner) {
+      // Don't have permissions for siging, warn and enable offline mode.
+      addSigningDisabledWarning(
+        projectRoot,
+        `This project belongs to ${chalk.bold(
+          `@${manifest.owner}`
+        )} and you have not been granted the appropriate permissions.\n` +
+          `Please request access from an admin of @${manifest.owner} or change the \"owner\" field to an account you belong to.\n` +
+          learnMore('https://docs.expo.io/versions/latest/config/app/#owner')
+      );
+      Config.offline = true;
+      manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
+    } else if (error.code === 'ENOTFOUND') {
+      // Got a DNS error, i.e. can't access exp.host, warn and enable offline mode.
+      addSigningDisabledWarning(projectRoot, 'Not connected to internet.');
+      Config.offline = true;
+      manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
+    } else {
+      throw error;
+    }
+  }
 
   return {
     manifestString,
@@ -239,6 +265,21 @@ export async function getManifestResponseAsync({
     hostInfo,
   };
 }
+
+const addSigningDisabledWarning = (() => {
+  let seen = false;
+  return (projectRoot: string, reason: string) => {
+    if (!seen) {
+      seen = true;
+      ProjectUtils.logWarning(
+        projectRoot,
+        'expo',
+        reason + '\n' + `Falling back to offline mode.`,
+        'signing-disabled'
+      );
+    }
+  };
+})();
 
 function getManifestEnvironment(): Record<string, any> {
   return Object.keys(process.env).reduce<Record<string, any>>((prev, key) => {
@@ -258,12 +299,12 @@ async function getManifestStringAsync(
   if (!currentSession || Config.offline) {
     manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
   }
-  if (acceptSignature) {
-    return !currentSession || Config.offline
-      ? getUnsignedManifestString(manifest)
-      : await getSignedManifestStringAsync(manifest, currentSession);
-  } else {
+  if (!acceptSignature) {
     return JSON.stringify(manifest);
+  } else if (!currentSession || Config.offline) {
+    return getUnsignedManifestString(manifest);
+  } else {
+    return await getSignedManifestStringAsync(manifest, currentSession);
   }
 }
 
