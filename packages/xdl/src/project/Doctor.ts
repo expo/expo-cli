@@ -367,34 +367,6 @@ async function _validateReactNativeVersionAsync(
 async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
   // Just need `nodeModulesPath` so it doesn't matter if expo is installed or the sdkVersion is defined.
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  let nodeModulesPath = projectRoot;
-  if (exp.nodeModulesPath) {
-    nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
-  }
-
-  // Check to make sure node_modules exists at all
-  try {
-    const result = fs.statSync(path.join(nodeModulesPath, 'node_modules'));
-    if (!result.isDirectory()) {
-      ProjectUtils.logError(
-        projectRoot,
-        'expo',
-        `Error: node_modules directory is missing. Please run \`npm install\` in your project directory.`,
-        'doctor-node-modules-missing'
-      );
-      return FATAL;
-    }
-
-    ProjectUtils.clearNotification(projectRoot, 'doctor-node-modules-missing');
-  } catch (e) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      `Error: node_modules directory is missing. Please run \`npm install\` in your project directory.`,
-      'doctor-node-modules-missing'
-    );
-    return FATAL;
-  }
 
   // Check to make sure react-native is installed
   try {
@@ -464,11 +436,9 @@ async function validateAsync(
 
   status = Math.max(status, expStatus);
 
-  if (exp && !exp.ignoreNodeModulesValidation) {
-    const nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
-    if (nodeModulesStatus > status) {
-      return nodeModulesStatus;
-    }
+  const nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
+  if (nodeModulesStatus > status) {
+    return nodeModulesStatus;
   }
 
   return status;

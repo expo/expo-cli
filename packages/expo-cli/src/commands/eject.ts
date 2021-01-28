@@ -23,7 +23,7 @@ export async function actionAsync(
   {
     platform,
     ...options
-  }: Eject.EjectAsyncOptions & {
+  }: Omit<Eject.EjectAsyncOptions, 'platforms'> & {
     npm?: boolean;
     platform?: string;
   }
