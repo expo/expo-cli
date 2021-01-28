@@ -1,10 +1,10 @@
+import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
-import { FileSystem } from '@expo/xdl';
 import editors from 'env-editor';
 
 import log from '../../log';
 
-export function guessEditor() {
+function guessEditor() {
   if (process.env.EXPO_EDITOR) {
     return editors.getEditor(process.env.EXPO_EDITOR);
   }
@@ -16,12 +16,15 @@ export function guessEditor() {
   }
 }
 
+// TODO: wut 0.o
 export async function startProjectInEditorAsync(path: string, options: { editor?: string } = {}) {
-  try {
-    return await FileSystem.openProjectInEditorAsync(path);
-  } catch {}
-
   const editor = options.editor ? editors.getEditor(options.editor) : guessEditor();
+
+  if (process.platform === 'darwin') {
+    // This will use the ENV var $EXPO_EDITOR if set, or else will try various
+    // popular editors, looking for one that is open, or if none are, one that is installed
+    return await osascript.openInEditorAsync(path, editor.name);
+  }
 
   if (!editor) {
     log.error(

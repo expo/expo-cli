@@ -44,6 +44,7 @@
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
     "@expo/babel-preset-cli": "0.2.18",
+    "@expo/osascript": "2.0.24",
     "@types/command-exists": "^1.2.0",
     "@types/dateformat": "^3.0.0",
     "@types/fs-extra": "^9.0.1",
