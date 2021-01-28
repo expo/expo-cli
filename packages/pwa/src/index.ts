@@ -16,7 +16,7 @@ export function joinUrlPath(publicPath: string, ...toJoin: string[]): string {
   try {
     // Throws if publicPath is not a valid protocol+host
     return new URL(segments, publicPath).href;
-  } catch (_) {
+  } catch {
     return path.join(publicPath, segments);
   }
 }
