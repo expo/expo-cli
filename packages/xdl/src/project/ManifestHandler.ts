@@ -8,13 +8,13 @@ import { URL } from 'url';
 import Analytics from '../Analytics';
 import ApiV2 from '../ApiV2';
 import Config from '../Config';
-import * as Exp from '../Exp';
 import { resolveGoogleServicesFile, resolveManifestAssets } from '../ProjectAssets';
 import * as ProjectSettings from '../ProjectSettings';
 import * as UrlUtils from '../UrlUtils';
 import UserManager, { ANONYMOUS_USERNAME } from '../User';
 import UserSettings from '../UserSettings';
 import * as Versions from '../Versions';
+import { resolveEntryPoint } from '../tools/resolveEntryPoint';
 import * as Doctor from './Doctor';
 import * as ProjectUtils from './ProjectUtils';
 
@@ -189,7 +189,7 @@ export async function getManifestResponseAsync({
   const hostname = stripPort(host);
 
   // Get project entry point and initial module
-  const entryPoint = Exp.determineEntryPoint(projectRoot, platform, projectConfig);
+  const entryPoint = resolveEntryPoint(projectRoot, platform, projectConfig);
   const mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
   // Gather packager and host info
   const hostInfo = await createHostInfoAsync();

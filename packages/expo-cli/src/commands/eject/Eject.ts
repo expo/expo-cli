@@ -2,7 +2,6 @@ import { ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
 import { ModPlatform, WarningAggregator } from '@expo/config-plugins';
 import { getBareExtensions, getFileWithExtensions } from '@expo/config/paths';
 import JsonFile, { JSONObject } from '@expo/json-file';
-import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
 import crypto from 'crypto';
 import fs from 'fs-extra';
@@ -15,6 +14,7 @@ import terminalLink from 'terminal-link';
 
 import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
+import { extractTemplateAppAsync } from '../../utils/extractTemplateAppAsync';
 import configureProjectAsync, { expoManagedPlugins } from '../apply/configureProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
@@ -687,7 +687,7 @@ async function cloneNativeDirectoriesAsync({
   let copiedPaths: string[] = [];
   let skippedPaths: string[] = [];
   try {
-    await Exp.extractTemplateAppAsync(templateSpec, tempDir, exp);
+    await extractTemplateAppAsync(templateSpec, tempDir, exp);
     [copiedPaths, skippedPaths] = copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
     const results = GitIgnore.mergeGitIgnorePaths(
       path.join(projectRoot, '.gitignore'),
