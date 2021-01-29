@@ -30,10 +30,10 @@ export default function (program: Command) {
     .command('client:ios [path]')
     .helpGroup('experimental')
     .description(
-      'Experimental: build a custom version of the Expo client for iOS using your own Apple credentials'
+      'Experimental: build a custom version of Expo Go for iOS using your own Apple credentials'
     )
     .longDescription(
-      'Build a custom version of the Expo client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
+      'Build a custom version of Expo Go for iOS using your own Apple credentials and install it on your mobile device using Safari.'
     )
     .option(
       '--apple-id <login>',
@@ -59,8 +59,8 @@ export default function (program: Command) {
         };
 
         // get custom project manifest if it exists
-        // Note: this is the current developer's project, NOT the Expo client's manifest
-        const spinner = ora(`Finding custom configuration for the Expo client...`).start();
+        // Note: this is the current developer's project, NOT Expo Go's manifest
+        const spinner = ora(`Finding custom configuration for Expo Go...`).start();
         if (options.config) {
           setCustomConfigPath(projectDir, options.config);
         }
@@ -69,9 +69,9 @@ export default function (program: Command) {
         });
 
         if (exp) {
-          spinner.succeed(`Found custom configuration for the Expo client`);
+          spinner.succeed(`Found custom configuration for Expo Go`);
         } else {
-          spinner.warn(`Unable to find custom configuration for the Expo client`);
+          spinner.warn(`Unable to find custom configuration for Expo Go`);
         }
         if (!exp.ios) exp.ios = {};
 
@@ -221,7 +221,7 @@ export default function (program: Command) {
           addUdid = true;
         } else {
           log(
-            'Custom builds of the Expo client can only be installed on devices which have been registered with Apple at build-time.'
+            'Custom builds of Expo Go can only be installed on devices which have been registered with Apple at build-time.'
           );
           log('These devices are currently registered on your Apple Developer account:');
           const table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
@@ -229,7 +229,7 @@ export default function (program: Command) {
           log(table.toString());
 
           const udidPrompt = await confirmAsync({
-            message: 'Would you like to register a new device to use the Expo client with?',
+            message: 'Would you like to register a new device to use Expo Go with?',
           });
           addUdid = udidPrompt;
         }
@@ -275,7 +275,7 @@ export default function (program: Command) {
 
   program
     .command('client:install:ios')
-    .description('Install the Expo client for iOS on the simulator')
+    .description('Install Expo Go for iOS on the simulator')
     .option(
       '--latest',
       `Install the latest version of Expo client, ignoring the current project version.`
@@ -389,7 +389,7 @@ export default function (program: Command) {
 
   program
     .command('client:install:android')
-    .description('Install the Expo client for Android on a connected device or emulator')
+    .description('Install Expo Go for Android on a connected device or emulator')
     .option(
       '--latest',
       `Install the latest version of Expo client, ignore the current project version.`

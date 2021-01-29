@@ -68,7 +68,7 @@ export async function updateTSConfigAsync({
   log.addNewLineIfNone();
 
   if (isBootstrapping) {
-    log(`${chalk.bold`TypeScript`}: A ${chalk.cyan('tsconfig.json')} has been auto generated`);
+    log(`${chalk.bold`TypeScript`}: A ${chalk.cyan('tsconfig.json')} has been auto-generated`);
   } else {
     log(
       `${chalk.bold`TypeScript`}: The ${chalk.cyan(

@@ -1,4 +1,4 @@
-import * as path from 'path';
+import { joinUrlPath } from 'expo-pwa';
 import { compilation as compilationNS, Compiler, Plugin } from 'webpack';
 
 import JsonWebpackPlugin from './JsonWebpackPlugin';
@@ -72,7 +72,7 @@ export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
                 voidTag: true,
                 attributes: {
                   rel: this.rel,
-                  href: path.join(this.pwaOptions.publicPath, this.pwaOptions.path),
+                  href: joinUrlPath(this.pwaOptions.publicPath, this.pwaOptions.path),
                 },
               });
 

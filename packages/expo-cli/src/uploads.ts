@@ -1,4 +1,5 @@
-import { ApiV2, FormData, UserManager } from '@expo/xdl';
+import { ApiV2, UserManager } from '@expo/xdl';
+import FormData from 'form-data';
 import fs from 'fs';
 import got, { Progress } from 'got';
 import md5File from 'md5-file';

@@ -6,9 +6,7 @@
   "packages": ["packages/*"],
   "commands": {
     "publish": {
-      "ignoreChanges": [
-        "packages/config-types/**/*"
-      ]
+      "ignoreChanges": ["packages/config-types/**/*"]
     }
   }
 }

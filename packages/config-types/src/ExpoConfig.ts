@@ -5,7 +5,7 @@
 
 export interface ExpoConfig {
   /**
-   * The name of your app as it appears both within Expo client and on your home screen as a standalone app.
+   * The name of your app as it appears both within Expo Go and on your home screen as a standalone app.
    */
   name: string;
   /**
@@ -166,7 +166,6 @@ export interface ExpoConfig {
   extra?: {
     [k: string]: any;
   };
-  rnCliPath?: string;
   packagerOpts?: {
     [k: string]: any;
   };
@@ -220,7 +219,7 @@ export interface ExpoConfig {
    */
   facebookDisplayName?: string;
   /**
-   * Used for Facebook native login. Starts with 'fb' and followed by a string of digits, like 'fb1234567890'. You can find your scheme [here](https://developers.facebook.com/docs/facebook-login/ios)in the 'Configuring Your info.plist' section (only applicable to standalone apps and custom Expo clients).
+   * Used for Facebook native login. Starts with 'fb' and followed by a string of digits, like 'fb1234567890'. You can find your scheme [here](https://developers.facebook.com/docs/facebook-login/ios)in the 'Configuring Your info.plist' section (only applicable to standalone apps and custom Expo Go apps).
    */
   facebookScheme?: string;
   /**
@@ -430,7 +429,7 @@ export interface IOS {
    */
   splash?: {
     /**
-     * Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo client.
+     * Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in Expo Go.
      */
     xib?: string;
     /**

@@ -10,6 +10,22 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 26 Jan 2021 18:21:34 -0800](https://github.com/expo/expo-cli/commit/ee77eaa57684c3ac496eae24b5e10b8acb6b6e32)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+- [xdl] Fix flicker when switching to tunnel connection due to null urlType
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.79
+- expo-cli@4.1.3
+- @expo/xdl@59.0.19
+
 ## [Tue, 26 Jan 2021 17:34:40 -0800](https://github.com/expo/expo-cli/commit/c9a57c31bc2309de5c8ddfa13986209c5dffcecf)
 
 ### 🛠 Breaking changes
@@ -55,9 +71,9 @@ This is the log of notable changes to Expo CLI and related packages.
 
 - [cli] Auto configure TypeScript ([#3096](https://github.com/expo/expo-cli/issues/3096))
 - [cli] Use the versions endpoint for TypeScript packages ([#3109](https://github.com/expo/expo-cli/issues/3109))
-- [cli] Copy over EAS Apple API methods  ([#3113](https://github.com/expo/expo-cli/issues/3113))
+- [cli] Copy over EAS Apple API methods ([#3113](https://github.com/expo/expo-cli/issues/3113))
 - [cli] add --experimental-bundle flag to 'export' command ([#3074](https://github.com/expo/expo-cli/issues/3074))
-- [config-plugins] improve monorepo support - fix setting path to create-manifest-* script ([#3103](https://github.com/expo/expo-cli/issues/3103))
+- [config-plugins] improve monorepo support - fix setting path to create-manifest-\* script ([#3103](https://github.com/expo/expo-cli/issues/3103))
 - [config-plugins] export more types from config-plugins ([#3083](https://github.com/expo/expo-cli/issues/3083))
 - [metro-config] Enable allowOptionalDependencies by default ([#3088](https://github.com/expo/expo-cli/issues/3088))
 - [xdl] improve simulator errors ([#3104](https://github.com/expo/expo-cli/issues/3104))
