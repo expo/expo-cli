@@ -190,7 +190,7 @@ export async function getManifestResponseAsync({
 
   // Get project entry point and initial module
   const entryPoint = Exp.determineEntryPoint(projectRoot, platform, projectConfig);
-  const mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
+  const mainModuleName = UrlUtils.stripJSExtension(entryPoint);
   // Gather packager and host info
   const hostInfo = await createHostInfoAsync();
   const [packagerOpts, bundleUrlPackagerOpts] = await getPackagerOptionsAsync(projectRoot);
