@@ -166,7 +166,6 @@ export interface ExpoConfig {
   extra?: {
     [k: string]: any;
   };
-  rnCliPath?: string;
   packagerOpts?: {
     [k: string]: any;
   };

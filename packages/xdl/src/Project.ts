@@ -1602,24 +1602,13 @@ export async function startReactNativeServerAsync({
     cliOpts.push('--reset-cache');
   }
 
-  // Get custom CLI path from project package.json, but fall back to node_module path
-  const defaultCliPath = resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
-  const cliPath = exp.rnCliPath || defaultCliPath;
-
-  let nodePath;
-  // When using a custom path for the RN CLI, we want it to use the project
-  // root to look up config files and Node modules
-  if (exp.rnCliPath) {
-    nodePath = _nodePathForProjectRoot(projectRoot);
-  } else {
-    nodePath = null;
-  }
+  // Get the CLI path
+  const cliPath = resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
 
   // Run the copy of Node that's embedded in Electron by setting the
   // ELECTRON_RUN_AS_NODE environment variable
   // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the
   // child process
-  const nodePathEnv = nodePath ? { NODE_PATH: nodePath } : {};
   const packagerProcess = child_process.fork(cliPath, cliOpts, {
     cwd: projectRoot,
     env: {
@@ -1627,7 +1616,6 @@ export async function startReactNativeServerAsync({
       NODE_OPTIONS: process.env.METRO_NODE_OPTIONS,
       REACT_NATIVE_APP_ROOT: projectRoot,
       ELECTRON_RUN_AS_NODE: '1',
-      ...nodePathEnv,
     },
     silent: true,
   });
