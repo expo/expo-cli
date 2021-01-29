@@ -251,7 +251,12 @@ export async function getManifestResponseAsync({
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
     } else if (error.code === 'ENOTFOUND') {
       // Got a DNS error, i.e. can't access exp.host, warn and enable offline mode.
-      addSigningDisabledWarning(projectRoot, 'Not connected to internet.');
+      addSigningDisabledWarning(
+        projectRoot,
+        `Could not reach Expo servers, please check if you can access ${
+          error.hostname || 'exp.host'
+        }.`
+      );
       Config.offline = true;
       manifestString = await getManifestStringAsync(manifest, hostInfo.host, acceptSignature);
     } else {
