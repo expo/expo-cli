@@ -5,7 +5,6 @@ import { promisify } from 'util';
 
 import * as Android from '../Android';
 import Config from '../Config';
-import * as Exp from '../Exp';
 import * as ProjectSettings from '../ProjectSettings';
 import * as UrlUtils from '../UrlUtils';
 import UserManager, { ANONYMOUS_USERNAME } from '../User';
@@ -17,6 +16,22 @@ import { NgrokOptions, resolveNgrokAsync } from './resolveNgrok';
 
 function getNgrokConfigPath() {
   return path.join(UserSettings.dotExpoHomeDirectory(), 'ngrok.yml');
+}
+
+async function getProjectRandomnessAsync(projectRoot: string) {
+  const ps = await ProjectSettings.readAsync(projectRoot);
+  const randomness = ps.urlRandomness;
+  if (randomness) {
+    return randomness;
+  } else {
+    return resetProjectRandomnessAsync(projectRoot);
+  }
+}
+
+async function resetProjectRandomnessAsync(projectRoot: string) {
+  const randomness = UrlUtils.someRandomness();
+  ProjectSettings.setAsync(projectRoot, { urlRandomness: randomness });
+  return randomness;
 }
 
 async function connectToNgrokAsync(
@@ -65,7 +80,7 @@ async function connectToNgrokAsync(
         }
       } else {
         // Change randomness to avoid conflict if killing ngrok didn't help
-        await Exp.resetProjectRandomnessAsync(projectRoot);
+        await resetProjectRandomnessAsync(projectRoot);
       }
     } // Wait 100ms and then try again
     await delayAsync(100);
@@ -128,7 +143,7 @@ export async function startTunnelsAsync(
         async () => {
           const randomness = expRc.manifestTunnelRandomness
             ? expRc.manifestTunnelRandomness
-            : await Exp.getProjectRandomnessAsync(projectRoot);
+            : await getProjectRandomnessAsync(projectRoot);
           return [
             randomness,
             UrlUtils.domainify(username),
@@ -149,7 +164,7 @@ export async function startTunnelsAsync(
         async () => {
           const randomness = expRc.manifestTunnelRandomness
             ? expRc.manifestTunnelRandomness
-            : await Exp.getProjectRandomnessAsync(projectRoot);
+            : await getProjectRandomnessAsync(projectRoot);
           return [
             'packager',
             randomness,

@@ -2,7 +2,7 @@ import { BareAppConfig, getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
-import { Exp, UserManager, Versions } from '@expo/xdl';
+import { UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import fs from 'fs-extra';
@@ -17,6 +17,7 @@ import wrapAnsi from 'wrap-ansi';
 import CommandError, { SilentError } from '../CommandError';
 import log from '../log';
 import prompts, { selectAsync } from '../prompts';
+import { extractAndPrepareTemplateAppAsync } from '../utils/extractTemplateAppAsync';
 import * as CreateApp from './utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 
@@ -267,11 +268,7 @@ async function action(projectDir: string, command: Command) {
   const extractTemplateStep = CreateApp.logNewSection('Downloading and extracting project files.');
   let projectPath;
   try {
-    projectPath = await Exp.extractAndPrepareTemplateAppAsync(
-      templateSpec,
-      projectRoot,
-      initialConfig
-    );
+    projectPath = await extractAndPrepareTemplateAppAsync(templateSpec, projectRoot, initialConfig);
     extractTemplateStep.succeed('Downloaded and extracted project files.');
   } catch (e) {
     extractTemplateStep.fail(
