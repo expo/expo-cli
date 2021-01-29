@@ -16119,7 +16119,7 @@ package-json@^6.3.0:
     registry-url "^5.0.0"
     semver "^6.2.0"
 
-pacote@11.1.0, pacote@^11.1.0:
+pacote@^11.1.0:
   version "11.1.0"
   resolved "https://registry.yarnpkg.com/pacote/-/pacote-11.1.0.tgz#2285e37594c42588436549148a941ca6e282d425"
   integrity sha512-JcMmHiK6h6rcncj2HLayiyJZg28iJXJafXcmEGw2NjKH3WE8ZgSwyMZs7+f+aliPD57PDhB31IEgUtLXp0YZxA==
