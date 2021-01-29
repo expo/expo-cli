@@ -85,6 +85,9 @@ export function getDefaultConfig(
       ],
       getPolyfills: () => require(path.join(reactNativePath, 'rn-get-polyfills'))(),
     },
+    server: {
+      port: Number(process.env.RCT_METRO_PORT) || 8081,
+    },
     symbolicator: {
       customizeFrame: (frame: { file: string | null }) => {
         const collapse = Boolean(frame.file && INTERNAL_CALLSITES_REGEX.test(frame.file));
