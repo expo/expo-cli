@@ -1602,24 +1602,13 @@ export async function startReactNativeServerAsync({
     cliOpts.push('--reset-cache');
   }
 
-  // Get custom CLI path from project package.json, but fall back to node_module path
-  const defaultCliPath = resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
-  const cliPath = exp.rnCliPath || defaultCliPath;
-
-  let nodePath;
-  // When using a custom path for the RN CLI, we want it to use the project
-  // root to look up config files and Node modules
-  if (exp.rnCliPath) {
-    nodePath = _nodePathForProjectRoot(projectRoot);
-  } else {
-    nodePath = null;
-  }
+  // Get the CLI path
+  const cliPath = resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
 
   // Run the copy of Node that's embedded in Electron by setting the
   // ELECTRON_RUN_AS_NODE environment variable
   // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the
   // child process
-  const nodePathEnv = nodePath ? { NODE_PATH: nodePath } : {};
   const packagerProcess = child_process.fork(cliPath, cliOpts, {
     cwd: projectRoot,
     env: {
@@ -1627,7 +1616,6 @@ export async function startReactNativeServerAsync({
       NODE_OPTIONS: process.env.METRO_NODE_OPTIONS,
       REACT_NATIVE_APP_ROOT: projectRoot,
       ELECTRON_RUN_AS_NODE: '1',
-      ...nodePathEnv,
     },
     silent: true,
   });
@@ -1679,22 +1667,6 @@ export async function startReactNativeServerAsync({
   await Promise.race([_waitForRunningAsync(projectRoot, `${packagerUrl}/status`), exitPromise]);
 }
 
-// Simulate the node_modules resolution
-// If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns
-// "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
-function _nodePathForProjectRoot(projectRoot: string): string {
-  const paths = [];
-  let directory = path.resolve(projectRoot);
-  while (true) {
-    paths.push(path.join(directory, 'node_modules'));
-    const parentDirectory = path.dirname(directory);
-    if (directory === parentDirectory) {
-      break;
-    }
-    directory = parentDirectory;
-  }
-  return paths.join(path.delimiter);
-}
 export async function stopReactNativeServerAsync(projectRoot: string): Promise<void> {
   assertValidProjectRoot(projectRoot);
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
