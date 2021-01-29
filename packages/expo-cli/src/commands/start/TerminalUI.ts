@@ -18,7 +18,7 @@ import wordwrap from 'wordwrap';
 import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import log from '../../log';
 import urlOpts from '../../urlOpts';
-import { startProjectInEditorAsync } from '../utils/EditorUtils';
+import { openInEditorAsync } from '../utils/openInEditorAsync';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
@@ -367,7 +367,7 @@ Please reload the project in the Expo app for the change to take effect.`
       }
       case 'o':
         log('Trying to open the project in your editor...');
-        await startProjectInEditorAsync(projectRoot);
+        await openInEditorAsync(projectRoot);
     }
   }
 };

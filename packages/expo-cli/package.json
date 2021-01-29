@@ -65,6 +65,7 @@
   },
   "dependencies": {
     "@expo/apple-utils": "0.0.0-alpha.17",
+    "@expo/osascript": "2.0.24",
     "@expo/bunyan": "4.0.0",
     "@expo/config": "3.3.26",
     "@expo/config-plugins": "1.0.17",
