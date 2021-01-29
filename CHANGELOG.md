@@ -8,6 +8,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🎉 New features
 
+- [xdl] Automatically fall back to offline mode when manifest can't be signed. ([#3148](https://github.com/expo/expo-cli/pull/3148))
+
 ### 🐛 Bug fixes
 
 ## [Tue, 26 Jan 2021 18:21:34 -0800](https://github.com/expo/expo-cli/commit/ee77eaa57684c3ac496eae24b5e10b8acb6b6e32)

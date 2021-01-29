@@ -59,7 +59,6 @@
     "@types/prompts": "^2.0.6",
     "@types/slash": "^2.0.0",
     "@types/untildify": "^3.0.0",
-    "@types/wordwrap": "^1.0.0",
     "@types/wrap-ansi": "^3.0.0",
     "klaw-sync": "6.0.0",
     "pretty-bytes": "^5.3.0",
@@ -67,6 +66,7 @@
   },
   "dependencies": {
     "@expo/apple-utils": "0.0.0-alpha.17",
+    "@expo/osascript": "2.0.24",
     "@expo/bunyan": "4.0.0",
     "@expo/config": "3.3.26",
     "@expo/config-plugins": "1.0.17",
@@ -121,7 +121,6 @@
     "untildify": "3.0.3",
     "uuid": "^8.0.0",
     "validator": "10.5.0",
-    "wordwrap": "1.0.0",
     "wrap-ansi": "^7.0.0",
     "xcode": "^3.0.1"
   },

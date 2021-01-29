@@ -12,7 +12,7 @@ import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
 import path from 'path';
 import terminalLink from 'terminal-link';
-import wordwrap from 'wordwrap';
+import wrapAnsi from 'wrap-ansi';
 
 import CommandError, { SilentError } from '../CommandError';
 import log from '../log';
@@ -233,10 +233,10 @@ async function action(projectDir: string, command: Command) {
               title:
                 chalk.bold(padEnd(template.shortName, descriptionColumn)) +
                 trimStart(
-                  wordwrap(
-                    descriptionColumn + 2,
-                    process.stdout.columns || 80
-                  )(template.description)
+                  wrapAnsi(
+                    template.description,
+                    Math.min(descriptionColumn + 2, process.stdout.columns || 80)
+                  )
                 ),
               short: template.name,
             };
