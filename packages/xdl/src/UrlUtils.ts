@@ -114,7 +114,7 @@ export async function constructUrlWithExtensionAsync(
     requestHostname
   );
 
-  const mainModulePath = guessMainModulePath(entryPoint);
+  const mainModulePath = stripJSExtension(entryPoint);
   bundleUrl += `/${mainModulePath}.${ext}`;
 
   const queryParams = constructBundleQueryParams(projectRoot, metroQueryOptions);
@@ -414,7 +414,7 @@ function joinURLComponents({
   return `${validProtocol}${hostname}:${validPort}`;
 }
 
-export function guessMainModulePath(entryPoint: string): string {
+export function stripJSExtension(entryPoint: string): string {
   return entryPoint.replace(/\.js$/, '');
 }
 
