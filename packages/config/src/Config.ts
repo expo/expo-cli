@@ -20,11 +20,11 @@ import {
   WriteConfigOptions,
 } from './Config.types';
 import { ConfigError } from './Errors';
-import { getRootPackageJsonPath } from './Modules';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 import { withConfigPlugins } from './plugins/withConfigPlugins';
 import { withInternal } from './plugins/withInternal';
+import { getRootPackageJsonPath } from './resolvePackageJson';
 
 type SplitConfigs = { expo: ExpoConfig; mods: ModConfig };
 

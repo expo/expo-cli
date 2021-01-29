@@ -1,4 +1,4 @@
-import { fileExists, getConfig, getWebOutputPath } from '@expo/config';
+import { getConfig, getWebOutputPath } from '@expo/config';
 import { isAvailableAsync, sharpAsync } from '@expo/image-utils';
 import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
@@ -16,6 +16,14 @@ import { sync as globSync } from 'glob';
 import { basename, join, parse, relative } from 'path';
 import prettyBytes from 'pretty-bytes';
 import temporary from 'tempy';
+
+function fileExists(file: string): boolean {
+  try {
+    return statSync(file).isFile();
+  } catch (e) {
+    return false;
+  }
+}
 
 export type AssetOptimizationState = { [hash: string]: boolean };
 
