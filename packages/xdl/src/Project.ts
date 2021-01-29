@@ -25,6 +25,7 @@ import crypto from 'crypto';
 import decache from 'decache';
 import delayAsync from 'delay-async';
 import express from 'express';
+import FormData from 'form-data';
 import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
 import getenv from 'getenv';
@@ -71,7 +72,7 @@ import * as ProjectUtils from './project/ProjectUtils';
 import { assertValidProjectRoot } from './project/errors';
 import { startTunnelsAsync, stopTunnelsAsync } from './project/ngrok';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
-import FormData from './tools/FormData';
+
 const MINIMUM_BUNDLE_SIZE = 500;
 
 const treekillAsync = promisify<number, string>(treekill);

@@ -1,4 +1,3 @@
-import { IosCodeSigning } from '@expo/xdl';
 import chalk from 'chalk';
 import dateformat from 'dateformat';
 import fs from 'fs-extra';
@@ -9,6 +8,7 @@ import CommandError from '../../CommandError';
 import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';
 import log from '../../log';
 import prompt, { confirmAsync, Question } from '../../prompts';
+import { findP12CertSerialNumber } from '../../utils/p12Certificate';
 import { displayIosUserCredentials } from '../actions/list';
 import { askForUserProvided, CredentialSchema } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
@@ -399,10 +399,7 @@ function formatDistCert(
   let serialNumber = distCert.distCertSerialNumber;
   try {
     if (!serialNumber) {
-      serialNumber = IosCodeSigning.findP12CertSerialNumber(
-        distCert.certP12,
-        distCert.certPassword
-      );
+      serialNumber = findP12CertSerialNumber(distCert.certP12, distCert.certPassword);
     }
   } catch (error) {
     serialNumber = chalk.red('invalid serial number');
@@ -516,7 +513,7 @@ async function promptForDistCert(ctx: Context): Promise<DistCert | null> {
 
 async function _getDistCertWithSerial(distCert: DistCert): Promise<DistCert> {
   try {
-    distCert.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
+    distCert.distCertSerialNumber = findP12CertSerialNumber(
       distCert.certP12,
       distCert.certPassword
     );

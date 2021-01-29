@@ -1,5 +1,5 @@
 import plist, { PlistObject } from '@expo/plist';
-import { IosCodeSigning, PKCS12Utils } from '@expo/xdl';
+import { IosCodeSigning } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import ora from 'ora';
@@ -15,6 +15,7 @@ import {
 import { assert } from '../../assert';
 import log from '../../log';
 import prompt, { confirmAsync, Question } from '../../prompts';
+import { getP12CertFingerprint } from '../../utils/p12Certificate';
 import { displayIosAppCredentials } from '../actions/list';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
@@ -295,7 +296,7 @@ export async function validateProfileWithoutApple(
   const profilePlist = plist.parse(profile) as PlistObject;
 
   try {
-    const distCertFingerprint = await PKCS12Utils.getP12CertFingerprint(
+    const distCertFingerprint = await getP12CertFingerprint(
       distCert.certP12,
       distCert.certPassword
     );
