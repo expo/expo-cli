@@ -70,17 +70,21 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
     throw new SilentError(message);
   }
 
+  // This shouldn't be invoked because `findProjectRootAsync` will throw if node_modules are missing.
+  // Every React project should have react installed...
+  if (!resolveFrom.silent(projectRoot, 'react')) {
+    log.addNewLineIfNone();
+    log(log.chalk.cyan(`node_modules not found, running ${packageManager.name} install command.`));
+    log.newLine();
+    await packageManager.installAsync();
+  }
+
   const bundledNativeModulesPath = resolveFrom.silent(
     projectRoot,
     'expo/bundledNativeModules.json'
   );
 
   if (!bundledNativeModulesPath) {
-    // TODO: Prompt to install and try again
-    //     log(log.chalk.cyan(`node_modules not found, running ${packageManager.name} install command.`));
-
-    //     await packageManager.installAsync();
-
     log.addNewLineIfNone();
     throw new CommandError(
       `The dependency map ${log.chalk.bold(
