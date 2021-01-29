@@ -244,7 +244,7 @@ export async function getManifestResponseAsync({
         `This project belongs to ${chalk.bold(
           `@${manifest.owner}`
         )} and you have not been granted the appropriate permissions.\n` +
-          `Please request access from an admin of @${manifest.owner} or change the \"owner\" field to an account you belong to.\n` +
+          `Please request access from an admin of @${manifest.owner} or change the "owner" field to an account you belong to.\n` +
           learnMore('https://docs.expo.io/versions/latest/config/app/#owner')
       );
       Config.offline = true;
@@ -274,7 +274,7 @@ const addSigningDisabledWarning = (() => {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
-        reason + '\n' + `Falling back to offline mode.`,
+        `${reason}\nFalling back to offline mode.`,
         'signing-disabled'
       );
     }
