@@ -1667,22 +1667,6 @@ export async function startReactNativeServerAsync({
   await Promise.race([_waitForRunningAsync(projectRoot, `${packagerUrl}/status`), exitPromise]);
 }
 
-// Simulate the node_modules resolution
-// If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns
-// "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
-function _nodePathForProjectRoot(projectRoot: string): string {
-  const paths = [];
-  let directory = path.resolve(projectRoot);
-  while (true) {
-    paths.push(path.join(directory, 'node_modules'));
-    const parentDirectory = path.dirname(directory);
-    if (directory === parentDirectory) {
-      break;
-    }
-    directory = parentDirectory;
-  }
-  return paths.join(path.delimiter);
-}
 export async function stopReactNativeServerAsync(projectRoot: string): Promise<void> {
   assertValidProjectRoot(projectRoot);
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
