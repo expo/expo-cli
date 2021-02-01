@@ -6,6 +6,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [config-plugins] Rename `IOSConfig.BundleIdenitifer` to `IOSConfig.BundleIdentifier`.
+
 ### 🎉 New features
 
 - [xdl] Automatically fall back to offline mode when manifest can't be signed. ([#3148](https://github.com/expo/expo-cli/pull/3148))
