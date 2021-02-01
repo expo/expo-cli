@@ -11,7 +11,6 @@ import {
   Platform,
   ProjectTarget,
   readExpRcAsync,
-  resolveModule,
 } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import { bundleAsync, MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
@@ -34,6 +33,7 @@ import escapeRegExp from 'lodash/escapeRegExp';
 import { AddressInfo } from 'net';
 import path from 'path';
 import readLastLines from 'read-last-lines';
+import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import slug from 'slugify';
 import split from 'split';
@@ -156,9 +156,9 @@ async function _getFreePortAsync(rangeStart: number) {
   return port;
 }
 
-function _requireFromProject(modulePath: string, projectRoot: string, exp: ExpoConfig) {
+function _requireFromProject(modulePath: string, projectRoot: string) {
   try {
-    const fullPath = resolveModule(modulePath, projectRoot, exp);
+    const fullPath = resolveFrom(projectRoot, modulePath);
     // Clear the require cache for this module so get a fresh version of it
     // without requiring the user to restart Expo CLI
     decache(fullPath);
@@ -290,19 +290,14 @@ export async function mergeAppDistributions(
   );
 }
 
-function prepareHooks(
-  hooks: ExpoConfig['hooks'],
-  hookType: HookType,
-  projectRoot: string,
-  exp: ExpoConfig
-) {
+function prepareHooks(hooks: ExpoConfig['hooks'], hookType: HookType, projectRoot: string) {
   const validHooks: LoadedHook[] = [];
 
   if (hooks) {
     if (hooks[hookType]) {
       hooks[hookType]!.forEach((hook: any) => {
         const { file } = hook;
-        const fn = _requireFromProject(file, projectRoot, exp);
+        const fn = _requireFromProject(file, projectRoot);
         if (typeof fn !== 'function') {
           logger.global.error(
             `Unable to load ${hookType} hook: '${file}'. The module does not export a function.`
@@ -522,7 +517,7 @@ export async function exportAppAsync(
 
   // Skip the hooks and manifest creation if building for EAS.
   if (!experimentalBundle) {
-    const validPostExportHooks = prepareHooks(hooks, 'postExport', projectRoot, exp);
+    const validPostExportHooks = prepareHooks(hooks, 'postExport', projectRoot);
 
     // Add assetUrl to manifest
     exp.assetUrlOverride = assetUrl;
@@ -701,7 +696,7 @@ export async function publishAsync(
   }
 
   // TODO: refactor this out to a function, throw error if length doesn't match
-  const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
+  const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot);
   const bundles = await buildPublishBundlesAsync(projectRoot, options, {
     useDevServer: shouldUseDevServer(exp),
   });
@@ -1534,16 +1529,11 @@ export async function startReactNativeServerAsync({
   if (Versions.gteSdkVersion(exp, '33.0.0')) {
     // starting with SDK 37, we bundle this plugin with the expo-asset package instead of expo,
     // so check there first and fall back to expo if we can't find it in expo-asset
-    try {
-      packagerOpts.assetPlugins = resolveModule(
-        'expo-asset/tools/hashAssetFiles',
-        projectRoot,
-        exp
-      );
-    } catch (e) {
-      try {
-        packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
-      } catch (e) {
+
+    packagerOpts.assetPlugins = resolveFrom.silent(projectRoot, 'expo-asset/tools/hashAssetFiles');
+    if (!packagerOpts.assetPlugins) {
+      packagerOpts.assetPlugins = resolveFrom.silent(projectRoot, 'expo/tools/hashAssetFiles');
+      if (!packagerOpts.assetPlugins) {
         throw new Error(
           'Unable to find the expo-asset package in the current project. Install it and try again.'
         );
@@ -1603,7 +1593,7 @@ export async function startReactNativeServerAsync({
   }
 
   // Get the CLI path
-  const cliPath = resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
+  const cliPath = resolveFrom(projectRoot, 'react-native/local-cli/cli.js');
 
   // Run the copy of Node that's embedded in Electron by setting the
   // ELECTRON_RUN_AS_NODE environment variable
