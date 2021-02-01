@@ -1,11 +1,10 @@
-import chalk from 'chalk';
 import path from 'path';
 
-import * as Analytics from '../Analytics';
+import Analytics from '../Analytics';
 import Logger, { Log, LogStream } from '../Logger';
 
 const MAX_MESSAGE_LENGTH = 200;
-let _projectRootToLogger: { [projectRoot: string]: Log } = {};
+const _projectRootToLogger: { [projectRoot: string]: Log } = {};
 
 function _getLogger(projectRoot: string): Log {
   let logger = _projectRootToLogger[projectRoot];
@@ -48,7 +47,7 @@ export function logWithLevel(
     fields.issueId = id;
   }
 
-  let logger = _getLogger(projectRoot);
+  const logger = _getLogger(projectRoot);
   switch (level) {
     case 'debug':
       logger.debug(fields, msg);
@@ -70,22 +69,6 @@ export function logWithLevel(
 
 export function logDebug(projectRoot: string, tag: LogTag, message: string, id?: string) {
   _getLogger(projectRoot).debug({ tag }, message.toString());
-}
-
-export function getPlatformTag(platform: string): string {
-  const input = platform.toLowerCase().trim();
-  switch (input) {
-    case 'ios':
-      return chalk.bgWhite.black(' iOS ');
-    case 'android':
-      return chalk.bgGreen.black(' Android ');
-    case 'node':
-      return chalk.bgCyan.black(' Node ');
-    case 'web':
-      return chalk.bgMagenta.black(' web ');
-    default:
-      return chalk.bgWhite.black(` ${platform} `);
-  }
 }
 
 export function logInfo(projectRoot: string, tag: LogTag, message: string, id?: string) {

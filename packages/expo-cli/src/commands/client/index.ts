@@ -1,40 +1,55 @@
-import { Android, Simulator, UserManager, Versions } from '@expo/xdl';
+import { Device } from '@expo/apple-utils';
+import { getConfig, setCustomConfigPath } from '@expo/config';
+import { Android, Simulator, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import CliTable from 'cli-table3';
+import { Command } from 'commander';
 import fs from 'fs-extra';
 import ora from 'ora';
 import path from 'path';
-import { Command } from 'commander';
 
-import { getConfig, setCustomConfigPath } from '@expo/config';
 import CommandError from '../../CommandError';
-import log from '../../log';
-import prompt from '../../prompt';
-import urlOpts from '../../urlOpts';
 import * as appleApi from '../../appleApi';
-import { runAction, travelingFastlane } from '../../appleApi/fastlane';
+import { getRequestContext } from '../../appleApi';
+import { getAppLookupParams } from '../../credentials/api/IosApi';
+import { Context } from '../../credentials/context';
+import { runCredentialsManager } from '../../credentials/route';
+import { CreateIosDist } from '../../credentials/views/IosDistCert';
+import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/IosProvisioningProfileAdhoc';
+import { SetupIosDist } from '../../credentials/views/SetupIosDist';
+import { SetupIosPush } from '../../credentials/views/SetupIosPush';
+import log from '../../log';
+import { confirmAsync, promptEmailAsync } from '../../prompts';
+import urlOpts from '../../urlOpts';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
-import { SetupIosDist } from '../../credentials/views/SetupIosDist';
-import { SetupIosPush } from '../../credentials/views/SetupIosPush';
-import { Context } from '../../credentials/context';
-import { CreateIosDist } from '../../credentials/views/IosDistCert';
-import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/IosProvisioningProfileAdhoc';
-import { runCredentialsManager } from '../../credentials/route';
 
 export default function (program: Command) {
   program
-    .command('client:ios [project-dir]')
+    .command('client:ios [path]')
+    .helpGroup('experimental')
+    .description(
+      'Experimental: build a custom version of Expo Go for iOS using your own Apple credentials'
+    )
+    .longDescription(
+      'Build a custom version of Expo Go for iOS using your own Apple credentials and install it on your mobile device using Safari.'
+    )
     .option(
       '--apple-id <login>',
       'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
     )
-    .description(
-      'Build a custom version of the Expo client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
-    )
     .asyncActionProjectDir(
-      async (projectDir: string, options: { appleId?: string; config?: string }) => {
+      async (
+        projectDir: string,
+        options: {
+          appleId?: string;
+          config?: string;
+          parent?: {
+            nonInteractive: boolean;
+          };
+        }
+      ) => {
         const disabledServices: { [key: string]: { name: string; reason: string } } = {
           pushNotifications: {
             name: 'Push Notifications',
@@ -44,8 +59,8 @@ export default function (program: Command) {
         };
 
         // get custom project manifest if it exists
-        // Note: this is the current developer's project, NOT the Expo client's manifest
-        const spinner = ora(`Finding custom configuration for the Expo client...`).start();
+        // Note: this is the current developer's project, NOT Expo Go's manifest
+        const spinner = ora(`Finding custom configuration for Expo Go...`).start();
         if (options.config) {
           setCustomConfigPath(projectDir, options.config);
         }
@@ -54,9 +69,9 @@ export default function (program: Command) {
         });
 
         if (exp) {
-          spinner.succeed(`Found custom configuration for the Expo client`);
+          spinner.succeed(`Found custom configuration for Expo Go`);
         } else {
-          spinner.warn(`Unable to find custom configuration for the Expo client`);
+          spinner.warn(`Unable to find custom configuration for Expo Go`);
         }
         if (!exp.ios) exp.ios = {};
 
@@ -82,11 +97,15 @@ export default function (program: Command) {
 
         const user = await UserManager.getCurrentUserAsync();
         const context = new Context();
-        await context.init(projectDir, { allowAnonymous: true });
-        await context.ensureAppleCtx(options);
+        await context.init(projectDir, {
+          ...options,
+          allowAnonymous: true,
+          nonInteractive: options.parent?.nonInteractive,
+        });
+        await context.ensureAppleCtx();
         const appleContext = context.appleCtx;
         if (user) {
-          await context.ios.getAllCredentials(); // initialize credentials
+          await context.ios.getAllCredentials(context.projectOwner); // initialize credentials
         }
 
         // check if any builds are in flight
@@ -104,30 +123,24 @@ export default function (program: Command) {
 
         const bundleIdentifier = generateBundleIdentifier(appleContext.team.id);
         const experienceName = await getExperienceName({ user, appleTeamId: appleContext.team.id });
+        const appLookupParams = getAppLookupParams(experienceName, bundleIdentifier);
 
-        await appleApi.ensureAppExists(
-          appleContext,
-          { bundleIdentifier, experienceName },
-          { enablePushNotifications: true }
-        );
+        await appleApi.ensureBundleIdExistsAsync(appleContext, appLookupParams, {
+          enablePushNotifications: true,
+        });
 
-        const { devices } = await runAction(travelingFastlane.listDevices, [
-          '--all-ios-profile-devices',
-          appleContext.appleId,
-          appleContext.appleIdPassword,
-          appleContext.team.id,
-        ]);
-        const udids = devices.map((device: { deviceNumber?: string }) => device.deviceNumber);
+        const requestContext = getRequestContext(appleContext);
+        const devices = await Device.getAllIOSProfileDevicesAsync(requestContext);
+        const udids = devices.map(device => device.attributes.udid);
 
         let distributionCert;
         if (user) {
-          await runCredentialsManager(
-            context,
-            new SetupIosDist({ experienceName, bundleIdentifier })
-          );
-          distributionCert = await context.ios.getDistCert(experienceName, bundleIdentifier);
+          await runCredentialsManager(context, new SetupIosDist(appLookupParams));
+          distributionCert = await context.ios.getDistCert(appLookupParams);
         } else {
-          distributionCert = await new CreateIosDist().provideOrGenerate(context);
+          distributionCert = await new CreateIosDist(appLookupParams.accountName).provideOrGenerate(
+            context
+          );
         }
         if (!distributionCert) {
           throw new CommandError(
@@ -138,26 +151,18 @@ export default function (program: Command) {
 
         let pushKey;
         if (user) {
-          await runCredentialsManager(
-            context,
-            new SetupIosPush({ experienceName, bundleIdentifier })
-          );
-          pushKey = await context.ios.getPushKey(experienceName, bundleIdentifier);
+          await runCredentialsManager(context, new SetupIosPush(appLookupParams));
+          pushKey = await context.ios.getPushKey(appLookupParams);
         }
 
         let provisioningProfile;
-        const createOrReuseProfile = new CreateOrReuseProvisioningProfileAdhoc({
-          experienceName,
-          bundleIdentifier,
+        const createOrReuseProfile = new CreateOrReuseProvisioningProfileAdhoc(appLookupParams, {
           distCertSerialNumber: distributionCert.distCertSerialNumber!,
           udids,
         });
         if (user) {
           await runCredentialsManager(context, createOrReuseProfile);
-          provisioningProfile = await context.ios.getProvisioningProfile(
-            experienceName,
-            bundleIdentifier
-          );
+          provisioningProfile = await context.ios.getProvisioningProfile(appLookupParams);
         } else {
           provisioningProfile = await createOrReuseProfile.createOrReuse(context);
         }
@@ -198,17 +203,13 @@ export default function (program: Command) {
         }
 
         let email;
-        if (user) {
+        if (user && user.kind === 'user') {
           email = user.email;
         } else {
-          ({ email } = await prompt({
-            name: 'email',
+          email = await promptEmailAsync({
             message: 'Please enter an email address to notify, when the build is completed:',
-            default: context.user.email,
-            filter: value => value.trim(),
-            validate: (value: string) =>
-              /.+@.+/.test(value) ? true : "That doesn't look like a valid email.",
-          }));
+            initial: (context?.user as User)?.email,
+          });
         }
         log.newLine();
 
@@ -220,25 +221,17 @@ export default function (program: Command) {
           addUdid = true;
         } else {
           log(
-            'Custom builds of the Expo client can only be installed on devices which have been registered with Apple at build-time.'
+            'Custom builds of Expo Go can only be installed on devices which have been registered with Apple at build-time.'
           );
           log('These devices are currently registered on your Apple Developer account:');
           const table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
-          table.push(
-            ...devices.map((device: { name: string; deviceNumber: string | number }) => [
-              device.name,
-              device.deviceNumber,
-            ])
-          );
+          table.push(...devices.map(device => [device.attributes.name, device.attributes.udid]));
           log(table.toString());
 
-          const udidPrompt = await prompt({
-            name: 'addUdid',
-            message: 'Would you like to register a new device to use the Expo client with?',
-            type: 'confirm',
-            default: true,
+          const udidPrompt = await confirmAsync({
+            message: 'Would you like to register a new device to use Expo Go with?',
           });
-          addUdid = udidPrompt.addUdid;
+          addUdid = udidPrompt;
         }
 
         const result = await createClientBuildRequest({
@@ -282,23 +275,47 @@ export default function (program: Command) {
 
   program
     .command('client:install:ios')
-    .description('Install the Expo client for iOS on the simulator')
-    .asyncAction(async () => {
+    .description('Install Expo Go for iOS on the simulator')
+    .option(
+      '--latest',
+      `Install the latest version of Expo client, ignoring the current project version.`
+    )
+    .helpGroup('client')
+    .asyncAction(async (command: Command) => {
+      const forceLatest = !!command.latest;
       const currentSdkConfig = await ClientUpgradeUtils.getExpoSdkConfig(process.cwd());
       const currentSdkVersion = currentSdkConfig ? currentSdkConfig.sdkVersion : undefined;
+      const sdkVersions = await Versions.sdkVersionsAsync();
+      const latestSdk = await Versions.newestReleasedSdkVersionAsync();
+      const currentSdk = sdkVersions[currentSdkVersion!];
+      const recommendedClient = ClientUpgradeUtils.getClient('ios', currentSdk);
+      const latestClient = ClientUpgradeUtils.getClient('ios', latestSdk.data);
+
+      if (forceLatest) {
+        if (!latestClient?.url) {
+          log.error(
+            `Unable to find latest client version. Check your internet connection or run this command again without the ${chalk.bold(
+              '--latest'
+            )} flag.`
+          );
+          return;
+        }
+
+        if (
+          await Simulator.upgradeExpoAsync({ url: latestClient.url, version: latestClient.version })
+        ) {
+          log('Done!');
+        } else {
+          log.error(`Unable to install Expo client ${latestClient.version} for iOS.`);
+        }
+        return;
+      }
 
       if (!currentSdkVersion) {
         log(
           'Could not find your Expo project. If you run this from a project, we can help pick the right Expo client version!'
         );
       }
-
-      const sdkVersions = await Versions.sdkVersionsAsync();
-      const latestSdk = await Versions.newestSdkVersionAsync();
-      const currentSdk = sdkVersions[currentSdkVersion!];
-      const recommendedClient = currentSdk
-        ? ClientUpgradeUtils.getClient(currentSdk, 'ios')
-        : undefined;
 
       if (currentSdk && !recommendedClient) {
         log(
@@ -308,24 +325,28 @@ export default function (program: Command) {
 
       if (currentSdk && recommendedClient) {
         const recommendedClientVersion = recommendedClient.version || 'version unknown';
-        const answer = await prompt({
-          type: 'confirm',
-          name: 'upgradeToRecommended',
+        const answer = await confirmAsync({
           message: `You are currently using SDK ${currentSdkVersion}. Would you like to install client ${recommendedClientVersion} released for this SDK?`,
         });
-        if (answer.upgradeToRecommended) {
-          await Simulator.upgradeExpoAsync(recommendedClient.url);
+        if (answer) {
+          await Simulator.upgradeExpoAsync({
+            url: recommendedClient.url,
+            version: recommendedClient.version,
+          });
           log('Done!');
           return;
         }
       } else {
-        const answer = await prompt({
-          type: 'confirm',
-          name: 'upgradeToLatest',
-          message: 'Do you want to install the latest client?',
+        const answer = await confirmAsync({
+          message: latestClient?.version
+            ? chalk`Do you want to install the latest client? {dim (${latestClient.version})}`
+            : 'Do you want to install the latest client?',
         });
-        if (answer.upgradeToLatest) {
-          await Simulator.upgradeExpoAsync();
+        if (answer) {
+          await Simulator.upgradeExpoAsync({
+            url: latestClient?.url,
+            version: latestClient?.version,
+          });
           log('Done!');
           return;
         }
@@ -338,15 +359,16 @@ export default function (program: Command) {
       });
 
       if (availableClients.length === 0) {
-        const answer = await prompt({
-          type: 'confirm',
-          name: 'updateToAClient',
+        const answer = await confirmAsync({
           message: currentSdk
             ? `We don't have a compatible client for SDK ${currentSdkVersion}. Do you want to try the latest client?`
             : "It looks like we don't have a compatible client. Do you want to try the latest client?",
         });
-        if (answer.updateToAClient) {
-          await Simulator.upgradeExpoAsync();
+        if (answer) {
+          await Simulator.upgradeExpoAsync({
+            url: latestClient?.url,
+            version: latestClient?.version,
+          });
           log('Done!');
         } else {
           log('No client to install');
@@ -360,30 +382,55 @@ export default function (program: Command) {
         clients: availableClients,
       });
 
-      if (await Simulator.upgradeExpoAsync(targetClient.clientUrl)) {
+      if (await Simulator.upgradeExpoAsync({ url: targetClient.clientUrl })) {
         log('Done!');
       }
     });
 
   program
     .command('client:install:android')
-    .description('Install the Expo client for Android on a connected device or emulator')
-    .asyncAction(async () => {
+    .description('Install Expo Go for Android on a connected device or emulator')
+    .option(
+      '--latest',
+      `Install the latest version of Expo client, ignore the current project version.`
+    )
+    .helpGroup('client')
+    .asyncAction(async (command: Command) => {
+      const forceLatest = !!command.latest;
       const currentSdkConfig = await ClientUpgradeUtils.getExpoSdkConfig(process.cwd());
       const currentSdkVersion = currentSdkConfig ? currentSdkConfig.sdkVersion : undefined;
+      const sdkVersions = await Versions.sdkVersionsAsync();
+      const latestSdk = await Versions.newestReleasedSdkVersionAsync();
+      const currentSdk = sdkVersions[currentSdkVersion!];
+      const recommendedClient = ClientUpgradeUtils.getClient('android', currentSdk);
+      const latestClient = ClientUpgradeUtils.getClient('android', latestSdk.data);
+
+      if (forceLatest) {
+        if (!latestClient?.url) {
+          log.error(
+            `Unable to find latest client version. Check your internet connection or run this command again without the ${chalk.bold(
+              '--latest'
+            )} flag.`
+          );
+          return;
+        }
+
+        if (
+          await Android.upgradeExpoAsync({ url: latestClient.url, version: latestClient.version })
+        ) {
+          log('Done!');
+        } else {
+          log.error(`Unable to install Expo client ${latestClient.version} for Android.`);
+        }
+
+        return;
+      }
 
       if (!currentSdkVersion) {
         log(
           'Could not find your Expo project. If you run this from a project, we can help pick the right Expo client version!'
         );
       }
-
-      const sdkVersions = await Versions.sdkVersionsAsync();
-      const latestSdk = await Versions.newestSdkVersionAsync();
-      const currentSdk = sdkVersions[currentSdkVersion!];
-      const recommendedClient = currentSdk
-        ? ClientUpgradeUtils.getClient(currentSdk, 'android')
-        : undefined;
 
       if (currentSdk && !recommendedClient) {
         log(
@@ -393,24 +440,28 @@ export default function (program: Command) {
 
       if (currentSdk && recommendedClient) {
         const recommendedClientVersion = recommendedClient.version || 'version unknown';
-        const answer = await prompt({
-          type: 'confirm',
-          name: 'upgradeToRecommended',
+        const answer = await confirmAsync({
           message: `You are currently using SDK ${currentSdkVersion}. Would you like to install client ${recommendedClientVersion} released for this SDK?`,
         });
-        if (answer.upgradeToRecommended) {
-          await Android.upgradeExpoAsync(recommendedClient.url);
+        if (answer) {
+          await Android.upgradeExpoAsync({
+            url: recommendedClient.url,
+            version: recommendedClient.version,
+          });
           log('Done!');
           return;
         }
       } else {
-        const answer = await prompt({
-          type: 'confirm',
-          name: 'upgradeToLatest',
-          message: 'Do you want to install the latest client?',
+        const answer = await confirmAsync({
+          message: latestClient?.version
+            ? chalk`Do you want to install the latest client? {dim (${latestClient.version})}`
+            : 'Do you want to install the latest client?',
         });
-        if (answer.upgradeToLatest) {
-          await Android.upgradeExpoAsync();
+        if (answer) {
+          await Android.upgradeExpoAsync({
+            url: latestClient?.url,
+            version: latestClient?.version,
+          });
           log('Done!');
           return;
         }
@@ -423,15 +474,16 @@ export default function (program: Command) {
       });
 
       if (availableClients.length === 0) {
-        const answer = await prompt({
-          type: 'confirm',
-          name: 'updateToAClient',
+        const answer = await confirmAsync({
           message: currentSdk
             ? `We don't have a compatible client for SDK ${currentSdkVersion}. Do you want to try the latest client?`
             : "It looks like we don't have a compatible client. Do you want to try the latest client?",
         });
-        if (answer.updateToAClient) {
-          await Android.upgradeExpoAsync();
+        if (answer) {
+          await Android.upgradeExpoAsync({
+            url: latestClient?.url,
+            version: latestClient?.version,
+          });
           log('Done!');
         } else {
           log('No client to install');
@@ -445,7 +497,7 @@ export default function (program: Command) {
         clients: availableClients,
       });
 
-      if (await Android.upgradeExpoAsync(targetClient.clientUrl)) {
+      if (await Android.upgradeExpoAsync({ url: targetClient.clientUrl })) {
         log('Done!');
       }
     });

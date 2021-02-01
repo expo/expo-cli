@@ -1,32 +1,30 @@
 import dateFormat from 'dateformat';
 
-import * as table from './utils/cli-table';
+import log from '../log';
 import {
   DetailOptions,
-  HistoryOptions,
-  Publication,
   getPublicationDetailAsync,
   getPublishHistoryAsync,
+  HistoryOptions,
   printPublicationDetailAsync,
+  Publication,
 } from './utils/PublishUtils';
+import * as table from './utils/cli-table';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;
 const HORIZ_CELL_WIDTH_BIG = 40;
 
 export default (program: any) => {
   program
-    .command('publish:history [project-dir]')
+    .command('publish:history [path]')
     .alias('ph')
-    .description('View a log of your published releases.')
+    .description("Log the project's releases")
+    .helpGroup('publish')
     .option(
       '-c, --release-channel <channel-name>',
       'Filter by release channel. If this flag is not included, the most recent publications will be shown.'
     )
-    .option(
-      '-count, --count <number-of-logs>',
-      'Number of logs to view, maximum 100, default 5.',
-      parseInt
-    )
+    .option('--count <number-of-logs>', 'Number of logs to view, maximum 100, default 5.', parseInt)
     .option(
       '-p, --platform <ios|android>',
       'Filter by platform, android or ios. Defaults to both platforms.'
@@ -38,23 +36,23 @@ export default (program: any) => {
         const result = await getPublishHistoryAsync(projectDir, options);
 
         if (options.raw) {
-          console.log(JSON.stringify(result));
+          log(JSON.stringify(result));
           return;
         }
 
         if (result.queryResult && result.queryResult.length > 0) {
           // Print general publication info
-          let sampleItem = result.queryResult[0]; // get a sample item
-          let generalTableString = table.printTableJson(
+          const sampleItem = result.queryResult[0]; // get a sample item
+          const generalTableString = table.printTableJson(
             {
               fullName: sampleItem.fullName,
             },
             'General Info'
           );
-          console.log(generalTableString);
+          log(generalTableString);
 
           // Print info specific to each publication
-          let headers = [
+          const headers = [
             'publishedTime',
             'appVersion',
             'sdkVersion',
@@ -64,8 +62,8 @@ export default (program: any) => {
           ];
 
           // colWidths contains the cell size of each header
-          let colWidths: number[] = [];
-          let bigCells = new Set(['publicationId', 'publishedTime']);
+          const colWidths: number[] = [];
+          const bigCells = new Set(['publicationId', 'publishedTime', 'channel']);
           headers.forEach(header => {
             if (bigCells.has(header)) {
               colWidths.push(HORIZ_CELL_WIDTH_BIG);
@@ -77,8 +75,8 @@ export default (program: any) => {
             ...publication,
             publishedTime: dateFormat(publication.publishedTime, 'ddd mmm dd yyyy HH:MM:ss Z'),
           }));
-          let tableString = table.printTableJsonArray(headers, resultRows, colWidths);
-          console.log(tableString);
+          const tableString = table.printTableJsonArray(headers, resultRows, colWidths);
+          log(tableString);
         } else {
           throw new Error('No records found matching your query.');
         }
@@ -86,9 +84,10 @@ export default (program: any) => {
       { checkConfig: true }
     );
   program
-    .command('publish:details [project-dir]')
+    .command('publish:details [path]')
     .alias('pd')
-    .description('View the details of a published release.')
+    .description('Log details of a published release')
+    .helpGroup('publish')
     .option('--publish-id <publish-id>', 'Publication id. (Required)')
     .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(

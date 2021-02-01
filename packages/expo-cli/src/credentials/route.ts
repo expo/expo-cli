@@ -1,5 +1,4 @@
 import log from '../log';
-
 import { Context, IView } from './context';
 import { AskQuit, DoQuit, IQuit, QuitError } from './views/Select';
 

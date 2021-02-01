@@ -1,8 +1,6 @@
-import React from 'react';
-
-import { css } from 'react-emotion';
-
 import * as Constants from 'app/common/constants';
+import React from 'react';
+import { css } from 'react-emotion';
 
 const STYLES_ERROR_CONTAINER = css`
   background: ${Constants.colors.foreground};

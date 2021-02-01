@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
+import pascalCase from 'pascal-case';
 import path from 'path';
 import rimraf from 'rimraf';
-import pascalCase from 'pascal-case';
 
 import {
   getManifestAsync,
@@ -11,9 +11,9 @@ import {
 } from './ExponentTools';
 import * as IosNSBundle from './IosNSBundle';
 import * as IosWorkspace from './IosWorkspace';
+import logger from './Logger';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
-import logger from './Logger';
 
 export const EXPOKIT_APP = 'ExpoKitApp';
 export const EXPONENT_APP = 'Exponent';
@@ -102,7 +102,7 @@ async function _buildAsync(
   let buildCmd = `set -o pipefail && xcodebuild -workspace ${projectName}.xcworkspace -scheme ${projectName} -configuration ${configuration} -derivedDataPath ${buildDest} ${modernBuildSystemFragment}`,
     pathToArtifact;
   if (type === 'simulator') {
-    buildCmd += ` -sdk iphonesimulator CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ARCHS="i386 x86_64" ONLY_ACTIVE_ARCH=NO | xcpretty`;
+    buildCmd += ` -sdk iphonesimulator CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ARCHS="x86_64" ONLY_ACTIVE_ARCH=NO | xcpretty`;
     pathToArtifact = path.join(
       buildDest,
       'Build',
@@ -147,7 +147,7 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
   process.env.COCOAPODS_DISABLE_STATS = true;
 
   // install
-  let cocoapodsArgs = ['install'];
+  const cocoapodsArgs = ['install'];
   if (isRepoUpdateEnabled) {
     cocoapodsArgs.push('--repo-update');
   }
@@ -179,13 +179,13 @@ async function _createStandaloneContextAsync(args) {
   } else {
     workspaceSourcePath = path.join(expoSourcePath, '..', 'shellAppWorkspaces', 'default', 'ios');
   }
-  let { privateConfigFile, privateConfigData } = args;
+  const { privateConfigFile, privateConfigData } = args;
 
   let privateConfig;
   if (privateConfigData) {
     privateConfig = privateConfigData;
   } else if (privateConfigFile) {
-    let privateConfigContents = await fs.readFile(privateConfigFile, 'utf8');
+    const privateConfigContents = await fs.readFile(privateConfigFile, 'utf8');
     privateConfig = JSON.parse(privateConfigContents);
   }
 
@@ -206,9 +206,9 @@ async function _createStandaloneContextAsync(args) {
   }
 
   let bundleExecutable = args.type === 'client' ? EXPONENT_APP : EXPOKIT_APP;
-  if (manifest.ios && manifest.ios.infoPlist && manifest.ios.infoPlist.CFBundleExecutable) {
+  if (manifest?.ios?.infoPlist?.CFBundleExecutable) {
     bundleExecutable = manifest.ios.infoPlist.CFBundleExecutable;
-  } else if (privateConfig && privateConfig.bundleIdentifier) {
+  } else if (privateConfig?.bundleIdentifier) {
     bundleExecutable = pascalCase(privateConfig.bundleIdentifier);
   }
 
@@ -353,11 +353,11 @@ async function buildAndCopyArtifactAsync(args) {
     context.build.ios.workspaceSourcePath,
     context.build.configuration,
     type,
-    path.relative(context.build.ios.workspaceSourcePath, '../shellAppBase'),
+    path.relative(context.build.ios.workspaceSourcePath, './shellAppBase'),
     verbose,
     parseSdkMajorVersion(args.shellAppSdkVersion) > 33
   );
-  const artifactDestPath = path.join('../shellAppBase-builds', type, context.build.configuration);
+  const artifactDestPath = path.join('./shellAppBase-builds', type, context.build.configuration);
   logger.info(`\nFinished building, copying artifact to ${path.resolve(artifactDestPath)}...`);
   if (fs.existsSync(artifactDestPath)) {
     await spawnAsyncThrowError('/bin/rm', ['-rf', artifactDestPath]);

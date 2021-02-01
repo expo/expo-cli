@@ -1,6 +1,8 @@
-import semver from 'semver';
 import spawnAsync from '@expo/spawn-async';
+import { boolish } from 'getenv';
 import resolveFrom from 'resolve-from';
+import semver from 'semver';
+
 import { Options, SharpCommandOptions, SharpGlobalOptions } from './sharp.types';
 
 const SHARP_HELP_PATTERN = /\n\nSpecify --help for available options/g;
@@ -25,7 +27,16 @@ export async function resizeBufferAsync(buffer: Buffer, sizes: number[]): Promis
   return resizedBuffers;
 }
 
+const isSharpDisabled = boolish('EXPO_IMAGE_UTILS_NO_SHARP', false);
+
+/**
+ * Returns `true` if a global sharp instance can be found.
+ * This functionality can be overridden with `process.env.EXPO_IMAGE_UTILS_NO_SHARP=1`.
+ */
 export async function isAvailableAsync(): Promise<boolean> {
+  if (isSharpDisabled) {
+    return false;
+  }
   try {
     return !!(await findSharpBinAsync());
   } catch (_) {
@@ -127,7 +138,16 @@ async function findSharpBinAsync(): Promise<string> {
   return _sharpBin;
 }
 
+/**
+ * Returns the instance of `sharp` installed by the global `sharp-cli` package.
+ * This method will throw errors if the `sharp` instance cannot be found, these errors can be circumvented by ensuring `isAvailableAsync()` resolves to `true`.
+ */
 export async function findSharpInstanceAsync(): Promise<any | null> {
+  if (isSharpDisabled) {
+    throw new Error(
+      'Global instance of sharp-cli cannot be retrieved because sharp-cli has been disabled with the environment variable `EXPO_IMAGE_UTILS_NO_SHARP`'
+    );
+  }
   if (_sharpInstance) {
     return _sharpInstance;
   }

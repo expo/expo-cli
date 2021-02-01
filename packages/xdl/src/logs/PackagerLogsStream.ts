@@ -36,7 +36,7 @@ type DeviceLogRecord = {
 };
 export type LogRecord = (MetroLogRecord | ExpoLogRecord | DeviceLogRecord) & ProjectUtils.LogFields;
 
-export type LogUpdater = (logState: Array<LogRecord>) => Array<LogRecord>;
+export type LogUpdater = (logState: LogRecord[]) => LogRecord[];
 
 type ErrorObject = {
   name?: string;
@@ -49,7 +49,7 @@ type MetroError =
   | ({
       originModulePath: string;
       message: string;
-      errors: Array<Object>;
+      errors: object[];
     } & ErrorObject)
   | ({
       type: 'TransformError';
@@ -57,7 +57,7 @@ type MetroError =
       lineNumber: number;
       column: number;
       filename: string;
-      errors: Array<Object>;
+      errors: object[];
     } & ErrorObject)
   | ErrorObject;
 
@@ -74,11 +74,15 @@ type BundleDetails = {
 type ReportableEvent =
   | {
       port: number | undefined;
-      projectRoots: ReadonlyArray<string>;
+      projectRoots: readonly string[];
       type: 'initialize_started';
     }
   | {
       type: 'initialize_done';
+    }
+  | {
+      type: 'client_log';
+      data: any;
     }
   | {
       type: 'initialize_failed';
@@ -151,7 +155,7 @@ export default class PackagerLogsStream {
   _projectRoot: string;
   _getCurrentOpenProjectId: () => any;
   _updateLogs: (updater: LogUpdater) => void;
-  _logsToAdd: Array<LogRecord> = [];
+  _logsToAdd: LogRecord[] = [];
   _bundleBuildChunkID: string | null = null;
   _onStartBuildBundle?: StartBuildBundleCallback;
   _onProgressBuildBundle?: ProgressBuildBundleCallback;
@@ -194,7 +198,7 @@ export default class PackagerLogsStream {
   }
 
   _attachLoggerStream() {
-    let projectId = this._getCurrentOpenProjectId();
+    const projectId = this._getCurrentOpenProjectId();
 
     ProjectUtils.attachLoggerStream(this._projectRoot, {
       stream: {
@@ -226,7 +230,7 @@ export default class PackagerLogsStream {
 
   _handleMetroEvent(originalChunk: MetroLogRecord) {
     const chunk = { ...originalChunk };
-    let { msg } = chunk;
+    const { msg } = chunk;
 
     if (typeof msg === 'string') {
       if ((msg as string).includes('HTTP/1.1') && !getenv.boolish('EXPO_DEBUG', false)) {
@@ -237,6 +241,7 @@ export default class PackagerLogsStream {
       }
       return;
     }
+
     switch (msg.type) {
       // Bundle transform events
       case 'bundle_build_started':
@@ -248,16 +253,14 @@ export default class PackagerLogsStream {
 
       case 'initialize_started':
         chunk._metroEventType = 'METRO_INITIALIZE_STARTED';
-        chunk.msg = msg.port
-          ? `Starting Metro Bundler on port ${msg.port}.`
-          : 'Starting Metro Bundler.';
+        chunk.msg = 'Starting Metro Bundler';
         break;
       case 'initialize_done':
-        chunk.msg = `Metro Bundler ready.`;
+        chunk.msg = `Started Metro Bundler`;
         break;
       case 'initialize_failed': {
         // SDK <=22
-        let code = msg.error.code;
+        const code = msg.error.code;
         chunk.msg =
           code === 'EADDRINUSE'
             ? `Metro Bundler can't listen on port ${msg.port}. The port is in use.`
@@ -295,6 +298,7 @@ export default class PackagerLogsStream {
         chunk.msg = this._formatWorkerChunk('stderr', msg.chunk);
         break;
       // Ignored events.
+      case 'client_log':
       case 'dep_graph_loading':
       case 'dep_graph_loaded':
       case 'global_cache_error':
@@ -416,10 +420,8 @@ export default class PackagerLogsStream {
     const moduleName = match[1];
     const relativePath = path.relative(this._projectRoot, originModulePath);
 
-    // todo: check if we need to re-add this header
-    // https://github.com/expo/expo/commit/f1624cace73fc569402e4304b4b494afa053e046#diff-3bc168b28fe19df4560d1324b96cfa84L103
     const DOCS_PAGE_URL =
-      'https://docs.expo.io/introduction/faq/#can-i-use-nodejs-packages-with-expo';
+      'https://docs.expo.io/workflow/using-libraries/#using-third-party-libraries';
 
     if (NODE_STDLIB_MODULES.includes(moduleName)) {
       if (originModulePath.includes('node_modules')) {
@@ -442,7 +444,7 @@ export default class PackagerLogsStream {
 
     message = chalk.red(message);
 
-    let snippet = (this._getSnippetForError && this._getSnippetForError(error)) || error.snippet;
+    const snippet = (this._getSnippetForError && this._getSnippetForError(error)) || error.snippet;
     if (snippet) {
       message += `\n${snippet}`;
     }
@@ -470,7 +472,7 @@ export default class PackagerLogsStream {
         return logs;
       }
 
-      let nextLogs = logs.concat(this._logsToAdd);
+      const nextLogs = logs.concat(this._logsToAdd);
       this._logsToAdd = [];
       return nextLogs;
     });
@@ -478,7 +480,7 @@ export default class PackagerLogsStream {
 
   _maybeParseMsgJSON(chunk: LogRecord) {
     try {
-      let parsedMsg = JSON.parse(chunk.msg);
+      const parsedMsg = JSON.parse(chunk.msg);
       chunk.msg = parsedMsg;
     } catch (e) {
       // non-JSON message

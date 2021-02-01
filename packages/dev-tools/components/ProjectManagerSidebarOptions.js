@@ -1,15 +1,13 @@
-import { css } from 'react-emotion';
-import copyToClipboard from 'copy-to-clipboard';
-
-import * as React from 'react';
-import * as SVG from 'app/common/svg';
 import * as Constants from 'app/common/constants';
-
+import * as SVG from 'app/common/svg';
 import ContentGroup from 'app/components/ContentGroup';
-import NetworkGroupButton from 'app/components/NetworkGroupButton';
 import InputWithButton from 'app/components/InputWithButton';
-import SettingsControl from 'app/components/SettingsControl';
+import NetworkGroupButton from 'app/components/NetworkGroupButton';
 import QRCode from 'app/components/QRCode';
+import SettingsControl from 'app/components/SettingsControl';
+import copyToClipboard from 'copy-to-clipboard';
+import * as React from 'react';
+import { css } from 'react-emotion';
 
 const STYLES_CONNECTION_SECTION = css`
   display: flex;

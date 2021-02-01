@@ -1,0 +1,73 @@
+{
+  "name": "@expo/configure-splash-screen",
+  "version": "0.3.3",
+  "description": "Supplementary module for 'expo-splash-screen' providing cli configuration command",
+  "bin": {
+    "configure-splash-screen": "./build/index-cli.js",
+    "expo-splash-screen": "./build/index-cli.js"
+  },
+  "main": "./build/index.js",
+  "scripts": {
+    "start": "yarn run prepare",
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "prepare": "yarn run clean && yarn run build",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx,.d.ts src",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "keywords": [
+    "react-native",
+    "expo",
+    "expo-splash-screen",
+    "configure-splash-screen"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "unlinked-packages/configure-splash-screen"
+  },
+  "bugs": {
+    "url": "https://github.com/expo/expo-cli/issues"
+  },
+  "author": "650 Industries, Inc.",
+  "license": "MIT",
+  "homepage": "https://github.com/expo/expo-cli/tree/master/unlinked-packages/configure-splash-screen",
+  "engines": {
+    "node": ">=10"
+  },
+  "dependencies": {
+    "@react-native-community/cli-platform-ios": "^4.10.0",
+    "color-string": "^1.5.3",
+    "commander": "^5.1.0",
+    "core-js": "^3.6.5",
+    "deep-equal": "^2.0.3",
+    "fs-extra": "^9.0.0",
+    "lodash": "^4.17.15",
+    "pngjs": "^5.0.0",
+    "xcode": "^3.0.0",
+    "xml-js": "^1.6.11"
+  },
+  "devDependencies": {
+    "@expo/babel-preset-cli": "0.2.18",
+    "@react-native-community/cli-types": "^4.10.0",
+    "@types/color-string": "^1.5.0",
+    "@types/deep-equal": "^1.0.1",
+    "@types/fs-extra": "^9.0.1",
+    "@types/jest": "^25.2.2",
+    "@types/lodash": "^4.14.155",
+    "babel-jest": "^26.2.2",
+    "conditional-type-checks": "^1.0.5",
+    "eslint": "^6.8.0",
+    "jest": "^26.2.2",
+    "memfs": "^3.1.2",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^26.1.4",
+    "typescript": "^4.0.3"
+  },
+  "files": [
+    "build"
+  ],
+  "gitHead": "58cc7088dae609832c85dba393372ed1a06b00db"
+}

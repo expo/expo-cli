@@ -3,9 +3,9 @@
  */
 'use strict';
 
+import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import execAsync, { ExecAsyncOptions } from 'exec-async';
 import path from 'path';
-import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import util from 'util';
 
 function osascriptArgs(script: string | string[]): string[] {
@@ -13,8 +13,8 @@ function osascriptArgs(script: string | string[]): string[] {
     script = [script];
   }
 
-  let args = [];
-  for (let line of script) {
+  const args = [];
+  for (const line of script) {
     args.push('-e');
     args.push(line);
   }
@@ -41,7 +41,7 @@ async function osascriptSpawnAsync(
 }
 
 async function isAppRunningAsync(appName: string): Promise<boolean> {
-  let zeroMeansNo = (
+  const zeroMeansNo = (
     await osascriptExecAsync(
       'tell app "System Events" to count processes whose name is ' + JSON.stringify(appName)
     )
@@ -67,20 +67,21 @@ async function openFinderToFolderAsync(dir: string, activate = true): Promise<vo
 }
 
 async function openInAppAsync(appName: string, pth: string): Promise<SpawnResult> {
-  let cmd = 'tell app ' + JSON.stringify(appName) + ' to open ' + JSON.stringify(path.resolve(pth));
+  const cmd =
+    'tell app ' + JSON.stringify(appName) + ' to open ' + JSON.stringify(path.resolve(pth));
   // console.log("cmd=", cmd);
   return await osascriptSpawnAsync(cmd);
 }
 
 async function chooseAppAsync(listOfAppNames: string[]): Promise<string | null> {
-  let runningAwaitables = [];
-  let appIdAwaitables = [];
-  for (let appName of listOfAppNames) {
+  const runningAwaitables = [];
+  const appIdAwaitables = [];
+  for (const appName of listOfAppNames) {
     runningAwaitables.push(isAppRunningAsync(appName));
     appIdAwaitables.push(safeIdOfAppAsync(appName));
   }
-  let running = await Promise.all(runningAwaitables);
-  let appIds = await Promise.all(appIdAwaitables);
+  const running = await Promise.all(runningAwaitables);
+  const appIds = await Promise.all(appIdAwaitables);
 
   let i;
   for (i = 0; i < listOfAppNames.length; i++) {
@@ -101,7 +102,7 @@ async function chooseAppAsync(listOfAppNames: string[]): Promise<string | null> 
 async function chooseEditorAppAsync(preferredEditor?: string): Promise<string | null> {
   if (preferredEditor) {
     // Make sure this editor exists
-    let appId = await safeIdOfAppAsync(preferredEditor);
+    const appId = await safeIdOfAppAsync(preferredEditor);
     if (appId) {
       return preferredEditor;
     } else {
@@ -109,7 +110,7 @@ async function chooseEditorAppAsync(preferredEditor?: string): Promise<string | 
     }
   }
 
-  let editorsToTry = [
+  const editorsToTry = [
     'Visual Studio Code',
     'Atom',
     'Sublime Text',
@@ -144,7 +145,7 @@ async function chooseTerminalAppAsync(): Promise<string | null> {
 }
 
 async function openInEditorAsync(pth: string, preferredEditor?: string): Promise<SpawnResult> {
-  let appName = await chooseEditorAppAsync(preferredEditor);
+  const appName = await chooseEditorAppAsync(preferredEditor);
   if (!appName) {
     throw new Error('No editor found.');
   }
@@ -190,7 +191,7 @@ async function openTerminalToSpecificFolderAsync(dir: string, inTab = false): Pr
 }
 
 async function openFolderInTerminalAppAsync(dir: string, inTab = false): Promise<SpawnResult> {
-  let program = await chooseTerminalAppAsync();
+  const program = await chooseTerminalAppAsync();
 
   switch (program) {
     case 'iTerm':

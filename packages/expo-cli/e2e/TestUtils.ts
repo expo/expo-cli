@@ -1,10 +1,11 @@
-import path from 'path';
-
+import { ExpoConfig } from '@expo/config';
 import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
+import fs from 'fs';
+import path from 'path';
 
 export const EXPO_CLI = path.join(__dirname, '../bin/expo.js');
 
-function isSpawnResult(errorOrResult: any): errorOrResult is SpawnResult {
+function isSpawnResult(errorOrResult: Error): errorOrResult is Error & SpawnResult {
   return 'pid' in errorOrResult && 'stdout' in errorOrResult && 'stderr' in errorOrResult;
 }
 
@@ -12,7 +13,15 @@ export async function runAsync(args: string[], options?: SpawnOptions): Promise<
   const promise = spawnAsync(EXPO_CLI, args, options);
   promise.child.stdout.pipe(process.stdout);
   promise.child.stderr.pipe(process.stderr);
-  return await promise;
+  try {
+    return await promise;
+  } catch (error) {
+    if (isSpawnResult(error)) {
+      if (error.stdout) error.message += `\n------\nSTDOUT:\n${error.stdout}`;
+      if (error.stderr) error.message += `\n------\nSTDERR:\n${error.stderr}`;
+    }
+    throw error;
+  }
 }
 
 export async function tryRunAsync(args: string[], options?: SpawnOptions): Promise<SpawnResult> {
@@ -24,4 +33,76 @@ export async function tryRunAsync(args: string[], options?: SpawnOptions): Promi
     }
     throw error;
   }
+}
+
+// TODO(Bacon): This is too much stuff
+export const minimumNativePkgJson = {
+  main: 'node_modules/expo/AppEntry.js',
+  dependencies: {
+    expo: '37.0.11',
+    react: '16.9.0',
+    // speed up test by using the unstable branch
+    'react-native': 'https://github.com/expo/react-native/archive/unstable/sdk-37.tar.gz',
+  },
+  devDependencies: {
+    '@babel/core': '7.9.0',
+  },
+  scripts: {
+    start: 'expo start',
+    android: 'expo start --android',
+    ios: 'expo start --ios',
+    web: 'expo web',
+    eject: 'expo eject',
+  },
+  private: true,
+};
+
+export const minimumAppJson = {
+  expo: {
+    sdkVersion: '37.0.0',
+    android: { package: 'com.example.minimal' },
+    ios: { bundleIdentifier: 'com.example.minimal' },
+  },
+};
+
+export const appJs = `
+import React from 'react';
+import { View } from 'react-native';
+export default () => <View />;
+`;
+
+export async function createMinimalProjectAsync(
+  parentDir: string,
+  projectName: string,
+  config?: Partial<ExpoConfig>
+) {
+  // Create a minimal project
+  const projectRoot = path.join(parentDir, projectName);
+
+  // Create the project root
+  fs.mkdirSync(projectRoot, { recursive: true });
+
+  // Create a package.json
+  fs.writeFileSync(path.join(projectRoot, 'package.json'), JSON.stringify(minimumNativePkgJson));
+
+  // TODO(Bacon): We shouldn't need this
+  fs.writeFileSync(
+    path.join(projectRoot, 'app.json'),
+    JSON.stringify({
+      ...minimumAppJson,
+      ...config,
+      expo: {
+        ...minimumAppJson.expo,
+        ...config?.expo,
+      },
+    })
+  );
+
+  fs.writeFileSync(path.join(projectRoot, 'App.js'), appJs);
+
+  // TODO(Bacon): We shouldn't need this
+  // Install the packages so eject can infer the versions
+  await spawnAsync('yarn', [], { cwd: projectRoot, stdio: ['ignore', 'inherit', 'inherit'] });
+
+  return projectRoot;
 }

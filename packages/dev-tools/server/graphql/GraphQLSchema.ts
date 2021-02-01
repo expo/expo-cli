@@ -432,7 +432,7 @@ const resolvers = {
     },
     async manifestUrl(project) {
       if ((await Project.currentStatus(project.projectDir)) === 'running') {
-        return UrlUtils.constructManifestUrlAsync(project.projectDir);
+        return UrlUtils.constructDeepLinkAsync(project.projectDir);
       } else {
         return null;
       }
@@ -551,9 +551,15 @@ const resolvers = {
       const currentProject = context.getCurrentProject();
       let result;
       if (platform === 'ANDROID') {
-        result = await Android.openProjectAsync(currentProject.projectDir);
+        result = await Android.openProjectAsync({
+          projectRoot: currentProject.projectDir,
+          shouldPrompt: false,
+        });
       } else {
-        result = await Simulator.openProjectAsync(currentProject.projectDir);
+        result = await Simulator.openProjectAsync({
+          projectRoot: currentProject.projectDir,
+          shouldPrompt: false,
+        });
       }
       if (result.success) {
         return result;
@@ -576,13 +582,13 @@ const resolvers = {
     },
     async setProjectSettings(parent, { settings }, context) {
       const currentProject = context.getCurrentProject();
-      let previousSettings = await ProjectSettings.readAsync(currentProject.projectDir);
-      let updatedSettings = await ProjectSettings.setAsync(currentProject.projectDir, settings);
+      const previousSettings = await ProjectSettings.readAsync(currentProject.projectDir);
+      const updatedSettings = await ProjectSettings.setAsync(currentProject.projectDir, settings);
 
       // If 'tunnel' wasn't previously configured and it will be as a result of this request, start tunnels.
       if (previousSettings.hostType !== 'tunnel' && updatedSettings.hostType === 'tunnel') {
         try {
-          await Project.startTunnelsAsync(currentProject.projectDir);
+          await Project.startTunnelsAsync(currentProject.projectDir, { autoInstall: true });
         } catch (e) {
           ProjectUtils.logWarning(
             currentProject.projectDir,
@@ -621,8 +627,8 @@ const resolvers = {
     },
     async sendProjectUrl(parent, { recipient }, context) {
       const currentProject = context.getCurrentProject();
-      let url = await UrlUtils.constructManifestUrlAsync(currentProject.projectDir);
-      let result = await Exp.sendAsync(recipient, url);
+      const url = await UrlUtils.constructManifestUrlAsync(currentProject.projectDir);
+      const result = await Exp.sendAsync(recipient, url);
       await UserSettings.setAsync('sendTo', recipient);
       return { medium: result.medium, url }; // medium can be a phone number or email
     },

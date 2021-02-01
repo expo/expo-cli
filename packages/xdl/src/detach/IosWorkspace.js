@@ -1,9 +1,12 @@
+import assert from 'assert';
 import fs from 'fs-extra';
-import invariant from 'invariant';
 import path from 'path';
 import rimraf from 'rimraf';
 
 import Api from '../Api';
+import * as Utils from '../Utils';
+import * as Versions from '../Versions';
+import * as Modules from '../modules/Modules';
 import {
   isDirectory,
   parseSdkMajorVersion,
@@ -11,12 +14,9 @@ import {
   spawnAsyncThrowError,
   transformFileContentsAsync,
 } from './ExponentTools';
-import { renderPodfileAsync } from './IosPodsTools.js';
 import * as IosPlist from './IosPlist';
+import { renderPodfileAsync } from './IosPodsTools.js';
 import logger from './Logger';
-import * as Utils from '../Utils';
-import * as Versions from '../Versions';
-import * as Modules from '../modules/Modules';
 import installPackagesAsync from './installPackagesAsync';
 
 export { setBundleIdentifier } from './IosSetBundleIdentifier';
@@ -54,7 +54,7 @@ async function _getOrCreateTemplateDirectoryAsync(context, iosExpoViewUrl) {
       if (!isDirectory(expoRootTemplateDirectory)) {
         fs.mkdirpSync(expoRootTemplateDirectory);
         logger.info('Downloading iOS code...');
-        invariant(iosExpoViewUrl, `The URL for ExpoKit iOS must be set`);
+        assert(iosExpoViewUrl, `The URL for ExpoKit iOS must be set`);
         await Api.downloadAsync(iosExpoViewUrl, expoRootTemplateDirectory, {
           extract: true,
         });
@@ -119,7 +119,10 @@ async function _renameAndMoveProjectFilesAsync(context, projectDirectory, projec
   ];
 
   filesToMove.forEach(async fileName => {
-    let destFileName = path.join(path.dirname(fileName), `${projectName}${path.extname(fileName)}`);
+    const destFileName = path.join(
+      path.dirname(fileName),
+      `${projectName}${path.extname(fileName)}`
+    );
     await spawnAsyncThrowError('/bin/mv', [
       path.join(projectDirectory, fileName),
       path.join(projectDirectory, destFileName),
@@ -153,7 +156,7 @@ async function _renderPodfileFromTemplateAsync(
 ) {
   const { iosProjectDirectory, projectName } = getPaths(context);
   let podfileTemplateFilename;
-  let podfileSubstitutions = {
+  const podfileSubstitutions = {
     TARGET_NAME: projectName,
   };
   let reactNativeDependencyPath;
@@ -164,7 +167,7 @@ async function _renderPodfileFromTemplateAsync(
     context.data.shellAppSdkVersion || sdkVersion
   );
   if (context.type === 'user') {
-    invariant(iosClientVersion, `The iOS client version must be specified`);
+    assert(iosClientVersion, `The iOS client version must be specified`);
     reactNativeDependencyPath = path.join(context.data.projectPath, 'node_modules', 'react-native');
     modulesPath = path.join(context.data.projectPath, 'node_modules');
 
@@ -244,7 +247,6 @@ async function createDetachedAsync(context) {
   );
   logger.info(`Creating ExpoKit workspace at ${iosProjectDirectory}...`);
 
-  const isServiceContext = context.type === 'service';
   const standaloneSdkVersion = await getNewestSdkVersionSupportedAsync(context);
 
   let iosClientVersion;
@@ -361,7 +363,6 @@ function getPaths(context) {
   let iosProjectDirectory;
   let projectName;
   let supportingDirectory;
-  let intermediatesDirectory;
   let projectRootDirectory;
 
   if (context.build.isExpoClientBuild()) {
@@ -369,7 +370,7 @@ function getPaths(context) {
   } else if (context.isAnonymous()) {
     projectName = 'ExpoKitApp';
   } else if (context.config && context.config.name) {
-    let projectNameLabel = context.config.name;
+    const projectNameLabel = context.config.name;
     projectName = projectNameLabel.replace(/[^a-z0-9_-]/gi, '-').toLowerCase();
   } else {
     throw new Error('Cannot configure an Expo project with no name.');
@@ -392,7 +393,7 @@ function getPaths(context) {
   }
   // sandbox intermediates directory by workspace so that concurrently operating
   // contexts do not interfere with one another.
-  intermediatesDirectory = path.join(
+  const intermediatesDirectory = path.join(
     iosProjectDirectory,
     context.build.isExpoClientBuild() ? 'ExponentIntermediates' : 'ExpoKitIntermediates'
   );
@@ -435,7 +436,7 @@ async function getNewestSdkVersionSupportedAsync(context) {
     });
     let highestMajorComponent = 0;
     allVersions.forEach(version => {
-      let majorComponent = parseSdkMajorVersion(version);
+      const majorComponent = parseSdkMajorVersion(version);
       if (majorComponent > highestMajorComponent) {
         highestMajorComponent = majorComponent;
         newestVersion = version;

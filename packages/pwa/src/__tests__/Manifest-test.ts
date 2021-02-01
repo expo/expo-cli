@@ -64,6 +64,14 @@ describe('getFaviconIconConfig', () => {
     const icon = Manifest.getFaviconIconConfig(config);
     expect(icon.src).toBe(config.icon);
   });
+  it(`allow empty favicon with empty string in web.favicon`, () => {
+    const config = {
+      web: { favicon: '' },
+      icon: 'icon',
+    };
+    const icon = Manifest.getFaviconIconConfig(config);
+    expect(icon).toBe(null);
+  });
 });
 describe('getSafariIconConfig', () => {
   it(`defaults to ios.icon`, () => {

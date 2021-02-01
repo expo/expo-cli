@@ -1,28 +1,23 @@
-import invariant from 'invariant';
-import prompt, { ChoiceType, Question } from '../../prompt';
-import log from '../../log';
-
+import { assert } from '../../assert';
+import prompts, { confirmAsync } from '../../prompts';
+import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
+import { AppLookupParams } from '../api/IosApi';
+import { Context, IView } from '../context';
+import { CredentialsManager } from '../route';
 import * as androidView from './AndroidCredentials';
-import * as iosPushView from './IosPushCredentials';
 import * as iosDistView from './IosDistCert';
 import * as iosProvisionigProfileView from './IosProvisioningProfile';
-
-import { Context, IView } from '../context';
-import { AndroidCredentials } from '../credentials';
-import { CredentialsManager } from '../route';
-import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
+import * as iosPushView from './IosPushCredentials';
 
 export class SelectPlatform implements IView {
   async open(ctx: Context): Promise<IView | null> {
-    const { platform } = await prompt([
-      {
-        type: 'list',
-        name: 'platform',
-        message: 'Select platform',
-        pageSize: Infinity,
-        choices: ['ios', 'android'],
-      },
-    ]);
+    const { platform } = await prompts({
+      type: 'select',
+      name: 'platform',
+      message: 'Select platform',
+      choices: ['ios', 'android'].map(value => ({ value, title: value })),
+      optionsPerPage: 20,
+    });
     const view = platform === 'ios' ? new SelectIosExperience() : new SelectAndroidExperience();
     CredentialsManager.get().changeMainView(view);
     return view;
@@ -31,20 +26,21 @@ export class SelectPlatform implements IView {
 
 export class SelectIosExperience implements IView {
   async open(ctx: Context): Promise<IView | null> {
-    const iosCredentials = await ctx.ios.getAllCredentials();
+    const accountName =
+      (ctx.hasProjectContext ? ctx.manifest.owner : undefined) ?? ctx.user.username;
+    const iosCredentials = await ctx.ios.getAllCredentials(accountName);
 
     await displayIosCredentials(iosCredentials);
 
-    const projectSpecificActions: ChoiceType<string>[] = ctx.hasProjectContext
+    const projectSpecificActions: { value: string; title: string }[] = ctx.hasProjectContext
       ? [
-          prompt.separator('---- Current project actions ----'),
           {
             value: 'use-existing-push-ios',
-            name: 'Use existing Push Notifications Key in current project',
+            title: 'Use existing Push Notifications Key in current project',
           },
           {
             value: 'use-existing-dist-ios',
-            name: 'Use existing Distribution Certificate in current project',
+            title: 'Use existing Distribution Certificate in current project',
           },
           // {
           //   value: 'current-remove-push-ios',
@@ -58,51 +54,63 @@ export class SelectIosExperience implements IView {
           //   value: 'current-remove-app-ios',
           //   name: 'Remove all credentials for current project',
           // },
-          prompt.separator('---- Account level actions ----'),
         ]
       : [];
 
-    const question: Question = {
-      type: 'list',
+    const { action } = await prompts({
+      type: 'select',
       name: 'action',
       message: 'What do you want to do?',
       choices: [
         ...projectSpecificActions,
-        { value: 'remove-provisioning-profile', name: 'Remove Provisioning Profile' },
-        { value: 'create-ios-push', name: 'Add new Push Notifications Key' },
-        { value: 'remove-ios-push', name: 'Remove Push Notification credentials' },
-        { value: 'update-ios-push', name: 'Update Push Notifications Key' },
-        { value: 'create-ios-dist', name: 'Add new Distribution Certificate' },
-        { value: 'remove-ios-dist', name: 'Remove Distribution Certificate' },
-        { value: 'update-ios-dist', name: 'Update Distribution Certificate' },
+        { value: 'remove-provisioning-profile', title: 'Remove Provisioning Profile' },
+        { value: 'create-ios-push', title: 'Add new Push Notifications Key' },
+        { value: 'remove-ios-push', title: 'Remove Push Notification credentials' },
+        { value: 'update-ios-push', title: 'Update Push Notifications Key' },
+        { value: 'create-ios-dist', title: 'Add new Distribution Certificate' },
+        { value: 'remove-ios-dist', title: 'Remove Distribution Certificate' },
+        { value: 'update-ios-dist', title: 'Update Distribution Certificate' },
       ],
-      pageSize: Infinity,
-    };
-
-    const { action } = await prompt(question);
-    return this.handleAction(ctx, action);
+      optionsPerPage: 20,
+    });
+    return this.handleAction(ctx, accountName, action);
   }
 
-  handleAction(ctx: Context, action: string): IView | null {
+  getAppLookupParamsFromContext(ctx: Context): AppLookupParams {
+    const projectName = ctx.manifest.slug;
+    const accountName = ctx.projectOwner;
+    const bundleIdentifier = ctx.manifest.ios?.bundleIdentifier;
+    if (!bundleIdentifier) {
+      throw new Error(`ios.bundleIdentifier need to be defined`);
+    }
+
+    return { accountName, projectName, bundleIdentifier };
+  }
+
+  handleAction(ctx: Context, accountName: string, action: string): IView | null {
     switch (action) {
       case 'create-ios-push':
-        return new iosPushView.CreateIosPush();
+        return new iosPushView.CreateAndAssignIosPush(accountName);
       case 'update-ios-push':
-        return new iosPushView.UpdateIosPush();
+        return new iosPushView.UpdateIosPush(accountName);
       case 'remove-ios-push':
-        return new iosPushView.RemoveIosPush();
+        return new iosPushView.RemoveIosPush(accountName);
       case 'create-ios-dist':
-        return new iosDistView.CreateIosDist();
+        return new iosDistView.CreateIosDist(accountName);
       case 'update-ios-dist':
-        return new iosDistView.UpdateIosDist();
+        return new iosDistView.UpdateIosDist(accountName);
       case 'remove-ios-dist':
-        return new iosDistView.RemoveIosDist();
-      case 'use-existing-push-ios':
-        return iosPushView.UseExistingPushNotification.withProjectContext(ctx);
-      case 'use-existing-dist-ios':
-        return iosDistView.UseExistingDistributionCert.withProjectContext(ctx);
+        return new iosDistView.RemoveIosDist(accountName);
+      case 'use-existing-push-ios': {
+        const app = this.getAppLookupParamsFromContext(ctx);
+        return new iosPushView.UseExistingPushNotification(app);
+      }
+      case 'use-existing-dist-ios': {
+        const app = this.getAppLookupParamsFromContext(ctx);
+        return new iosDistView.UseExistingDistributionCert(app);
+      }
       case 'remove-provisioning-profile':
-        return new iosProvisionigProfileView.RemoveProvisioningProfile();
+        return new iosProvisionigProfileView.RemoveProvisioningProfile(accountName);
       default:
         throw new Error('Unknown action selected');
     }
@@ -110,53 +118,40 @@ export class SelectIosExperience implements IView {
 }
 
 export class SelectAndroidExperience implements IView {
-  androidCredentials: AndroidCredentials[] = [];
-  askAboutProjectMode = true;
+  private askAboutProjectMode = true;
 
   async open(ctx: Context): Promise<IView | null> {
     if (ctx.hasProjectContext && this.askAboutProjectMode) {
-      const experienceName = `@${ctx.user.username}/${ctx.manifest.slug}`;
-      const { runProjectContext } = await prompt([
-        {
-          type: 'confirm',
-          name: 'runProjectContext',
-          message: `You are currently in a directory with ${experienceName} experience. Do you want to select it?`,
-        },
-      ]);
+      const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
+
+      const runProjectContext = await confirmAsync({
+        message: `You are currently in a directory with ${experienceName} experience. Do you want to select it?`,
+      });
+
       if (runProjectContext) {
-        invariant(ctx.manifest.slug, 'app.json slug field must be set');
-        const view = new androidView.ExperienceView(ctx.manifest.slug as string, null);
+        assert(ctx.manifest.slug, 'app.json slug field must be set');
+        const view = new androidView.ExperienceView(experienceName);
         CredentialsManager.get().changeMainView(view);
         return view;
       }
     }
     this.askAboutProjectMode = false;
 
-    if (this.androidCredentials.length === 0) {
-      this.androidCredentials = (await ctx.api.getAsync('credentials/android'))?.credentials;
-    }
-    await displayAndroidCredentials(this.androidCredentials);
+    const credentials = await ctx.android.fetchAll();
+    await displayAndroidCredentials(Object.values(credentials));
 
-    const question: Question = {
-      type: 'list',
-      name: 'appIndex',
+    const { experienceName } = await prompts({
+      type: 'select',
+      name: 'experienceName',
       message: 'Select application',
-      choices: this.androidCredentials.map((cred, index) => ({
-        name: cred.experienceName,
-        value: index,
+      choices: Object.values(credentials).map(cred => ({
+        title: cred.experienceName,
+        value: cred.experienceName,
       })),
-      pageSize: Infinity,
-    };
+      optionsPerPage: 20,
+    });
 
-    const { appIndex } = await prompt(question);
-
-    const matchName = this.androidCredentials[appIndex].experienceName.match(/@[\w.-]+\/([\w.-]+)/);
-    if (matchName && matchName[1]) {
-      return new androidView.ExperienceView(matchName[1], this.androidCredentials[appIndex]);
-    } else {
-      log.error('Invalid experience name');
-    }
-    return null;
+    return new androidView.ExperienceView(experienceName);
   }
 }
 
@@ -182,17 +177,15 @@ export class DoQuit implements IQuit {
 
 export class AskQuit implements IQuit {
   async runAsync(mainpage: IView): Promise<IView> {
-    const { selected } = await prompt([
-      {
-        type: 'list',
-        name: 'selected',
-        message: 'Do you want to quit Credential Manager',
-        choices: [
-          { value: 'exit', name: 'Quit Credential Manager' },
-          { value: 'mainpage', name: 'Go back to experience overview.' },
-        ],
-      },
-    ]);
+    const { selected } = await prompts({
+      type: 'select',
+      name: 'selected',
+      message: 'Do you want to quit Credential Manager',
+      choices: [
+        { value: 'exit', title: 'Quit Credential Manager' },
+        { value: 'mainpage', title: 'Go back to experience overview.' },
+      ],
+    });
     if (selected === 'exit') {
       process.exit(0);
     }

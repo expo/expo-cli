@@ -1,6 +1,10 @@
 import chalk from 'chalk';
-import terminalLink from 'terminal-link';
 import program from 'commander';
+import { boolish } from 'getenv';
+import { Ora } from 'ora';
+import terminalLink from 'terminal-link';
+
+const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 type Color = (...text: string[]) => string;
 
@@ -13,7 +17,7 @@ function _updateIsLastLineNewLine(args: any[]) {
   if (args.length === 0) {
     _isLastLineNewLine = true;
   } else {
-    let lastArg = args[args.length - 1];
+    const lastArg = args[args.length - 1];
     if (typeof lastArg === 'string' && (lastArg === '' || lastArg.match(/[\r\n]$/))) {
       _isLastLineNewLine = true;
     } else {
@@ -25,29 +29,43 @@ function _updateIsLastLineNewLine(args: any[]) {
 function _maybePrintNewLine() {
   if (_printNewLineBeforeNextLog) {
     _printNewLineBeforeNextLog = false;
-    console.log();
+    console.log(); // eslint-disable-line no-console
   }
+}
+
+function consoleDebug(...args: any[]) {
+  _maybePrintNewLine();
+  _updateIsLastLineNewLine(args);
+
+  console.debug(...args); // eslint-disable-line no-console
+}
+
+function consoleInfo(...args: any[]) {
+  _maybePrintNewLine();
+  _updateIsLastLineNewLine(args);
+
+  console.info(...args); // eslint-disable-line no-console
 }
 
 function consoleLog(...args: any[]) {
   _maybePrintNewLine();
   _updateIsLastLineNewLine(args);
 
-  console.log(...args);
+  console.log(...args); // eslint-disable-line no-console
 }
 
 function consoleWarn(...args: any[]) {
   _maybePrintNewLine();
   _updateIsLastLineNewLine(args);
 
-  console.warn(...args);
+  console.warn(...args); // eslint-disable-line no-console
 }
 
 function consoleError(...args: any[]) {
   _maybePrintNewLine();
   _updateIsLastLineNewLine(args);
 
-  console.error(...args);
+  console.error(...args); // eslint-disable-line no-console
 }
 
 function respectProgressBars(commitLogs: () => void) {
@@ -120,8 +138,23 @@ log.setBundleProgressBar = function setBundleProgressBar(bar: any) {
   _bundleProgressBar = bar;
 };
 
-log.setSpinner = function setSpinner(oraSpinner: any) {
+log.setSpinner = function setSpinner(oraSpinner: Ora | null) {
   _oraSpinner = oraSpinner;
+  if (_oraSpinner) {
+    const originalStart = _oraSpinner.start.bind(_oraSpinner);
+    _oraSpinner.start = (text: any) => {
+      // Reset the new line tracker
+      _isLastLineNewLine = false;
+      return originalStart(text);
+    };
+    // All other methods of stopping will invoke the stop method.
+    const originalStop = _oraSpinner.stop.bind(_oraSpinner);
+    _oraSpinner.stop = () => {
+      // Reset the target spinner
+      log.setSpinner(null);
+      return originalStop();
+    };
+  }
 };
 
 log.error = function error(...args: any[]) {
@@ -142,6 +175,27 @@ log.warn = function warn(...args: any[]) {
   });
 };
 
+log.isDebug = EXPO_DEBUG;
+
+// Only show these logs when EXPO_DEBUG is active
+log.debug = function debug(...args: any[]) {
+  if (!EXPO_DEBUG) {
+    return;
+  }
+  respectProgressBars(() => {
+    consoleDebug(...withPrefixAndTextColor(args));
+  });
+};
+
+log.info = function info(...args: any[]) {
+  if (!EXPO_DEBUG) {
+    return;
+  }
+  respectProgressBars(() => {
+    consoleInfo(...args);
+  });
+};
+
 log.nestedWarn = function (message: string) {
   respectProgressBars(() => {
     consoleWarn(chalk.yellow(message));
@@ -152,6 +206,10 @@ log.gray = function (...args: any[]) {
   respectProgressBars(() => {
     consoleLog(...withPrefixAndTextColor(args));
   });
+};
+
+log.clear = function () {
+  process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
 };
 
 log.chalk = chalk;

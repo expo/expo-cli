@@ -1,5 +1,5 @@
-import { graphiqlExpress } from 'apollo-server-express';
 import { Project } from '@expo/xdl';
+import { graphiqlExpress } from 'apollo-server-express';
 import express from 'express';
 import http from 'http';
 import next from 'next';
@@ -11,9 +11,9 @@ const PORT = 3333;
 
 async function run(): Promise<void> {
   try {
-    const projectDir = process.argv[2];
-    if (!projectDir) {
-      throw new Error('No project dir specified.\nUsage: yarn dev <project-dir>');
+    const projectRoot = process.argv[2];
+    if (!projectRoot) {
+      throw new Error('No project dir specified.\nUsage: yarn dev [path]');
     }
 
     const app: any = next({ dev: true });
@@ -39,10 +39,10 @@ async function run(): Promise<void> {
       httpServer.once('listening', resolve);
       httpServer.listen(PORT, 'localhost');
     });
-    startGraphQLServer(projectDir, httpServer, authenticationContext);
+    startGraphQLServer(projectRoot, httpServer, authenticationContext);
     console.log('Starting project...');
-    await Project.startAsync(projectDir);
-    let url = `http://localhost:${PORT}`;
+    await Project.startAsync(projectRoot);
+    const url = `http://localhost:${PORT}`;
     console.log(`Development server running at ${url}`);
     openBrowser(url);
   } catch (error) {

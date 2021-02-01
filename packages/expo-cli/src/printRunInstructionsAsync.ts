@@ -1,9 +1,10 @@
 import { UserManager } from '@expo/xdl';
 import chalk from 'chalk';
+
 import log from './log';
 
 export default async function printRunInstructionsAsync(): Promise<void> {
-  let user = await UserManager.getCurrentUserAsync();
+  const user = await UserManager.getCurrentUserAsync();
 
   // If no user, we are offline and can't connect
   if (user) {
@@ -20,7 +21,7 @@ export default async function printRunInstructionsAsync(): Promise<void> {
     // log(
     //   `Alternatively, sign in to your account (${chalk.bold(
     //     user.username
-    //   )}) in the latest version of the Expo client on your iOS or Android device. Your projects will automatically appear in the "Projects" tab.`
+    //   )}) in the latest version of Expo Go on your iOS or Android device. Your projects will automatically appear in the "Projects" tab.`
     // );
   }
 

@@ -1,8 +1,8 @@
 import program from 'commander';
 
-import { validateGitStatusAsync } from './ProjectUtils';
 import log from '../../log';
-import prompt from '../../prompt';
+import { confirmAsync } from '../../prompts';
+import { validateGitStatusAsync } from './ProjectUtils';
 
 export default async function maybeBailOnGitStatusAsync(): Promise<boolean> {
   const isGitStatusClean = await validateGitStatusAsync();
@@ -17,13 +17,11 @@ export default async function maybeBailOnGitStatusAsync(): Promise<boolean> {
       return false;
     }
 
-    const answer = await prompt({
-      type: 'confirm',
-      name: 'ignoreDirtyGit',
+    const answer = await confirmAsync({
       message: `Would you like to proceed?`,
     });
 
-    if (!answer.ignoreDirtyGit) {
+    if (!answer) {
       return true;
     }
 

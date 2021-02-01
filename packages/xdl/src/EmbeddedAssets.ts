@@ -1,20 +1,20 @@
-import { ExpoConfig, PackageJSONConfig, ProjectTarget, getConfig } from '@expo/config';
+import { ExpoAppManifest, getConfig, PackageJSONConfig, ProjectTarget } from '@expo/config';
 import fs from 'fs-extra';
 import path from 'path';
 import semver from 'semver';
 
+import logger from './Logger';
 import * as ExponentTools from './detach/ExponentTools';
 import * as IosPlist from './detach/IosPlist';
 // @ts-ignore IosWorkspace not yet converted to TypeScript
 import * as IosWorkspace from './detach/IosWorkspace';
 import StandaloneContext from './detach/StandaloneContext';
-import logger from './Logger';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 
 export type EmbeddedAssetsConfiguration = {
   projectRoot: string;
   pkg: PackageJSONConfig;
-  exp: PublicConfig;
+  exp: ExpoAppManifest;
   releaseChannel?: string;
   iosManifestUrl: string;
   iosManifest: any;
@@ -27,10 +27,6 @@ export type EmbeddedAssetsConfiguration = {
   target: ProjectTarget;
 };
 
-type PublicConfig = ExpoConfig & {
-  sdkVersion: string;
-};
-
 export async function configureAsync(config: EmbeddedAssetsConfiguration) {
   await _maybeWriteArtifactsToDiskAsync(config);
   await _maybeConfigureExpoKitEmbeddedAssetsAsync(config);
@@ -40,7 +36,7 @@ export async function configureAsync(config: EmbeddedAssetsConfiguration) {
 export function getEmbeddedManifestPath(
   platform: 'ios' | 'android',
   projectRoot: string,
-  exp: PublicConfig
+  exp: ExpoAppManifest
 ): string {
   if (platform === 'ios') {
     return exp.ios && exp.ios.publishManifestPath
@@ -57,7 +53,7 @@ export function getEmbeddedManifestPath(
 function _getDefaultEmbeddedManifestPath(
   platform: 'ios' | 'android',
   projectRoot: string,
-  exp: PublicConfig
+  exp: ExpoAppManifest
 ): string {
   return path.join(_getDefaultEmbeddedAssetDir(platform, projectRoot, exp), 'app.manifest');
 }
@@ -65,7 +61,7 @@ function _getDefaultEmbeddedManifestPath(
 function _getDefaultEmbeddedBundlePath(
   platform: 'ios' | 'android',
   projectRoot: string,
-  exp: PublicConfig
+  exp: ExpoAppManifest
 ): string {
   return path.join(_getDefaultEmbeddedAssetDir(platform, projectRoot, exp), 'app.bundle');
 }
@@ -73,7 +69,7 @@ function _getDefaultEmbeddedBundlePath(
 function _getDefaultEmbeddedAssetDir(
   platform: 'ios' | 'android',
   projectRoot: string,
-  exp: PublicConfig
+  exp: ExpoAppManifest
 ): string {
   if (platform === 'ios') {
     const { iosSupportingDirectory } = getIOSPaths(projectRoot);
@@ -87,11 +83,11 @@ function _getDefaultEmbeddedAssetDir(
 
 export function shouldEmbedAssetsForExpoUpdates(
   projectRoot: string,
-  exp: PublicConfig,
+  exp: ExpoAppManifest,
   pkg: PackageJSONConfig,
   target: ProjectTarget
 ): boolean {
-  if (!pkg.dependencies['expo-updates'] || target !== 'bare') {
+  if (!pkg.dependencies?.['expo-updates'] || target !== 'bare') {
     return false;
   }
 
@@ -158,22 +154,22 @@ async function _maybeWriteArtifactsToDiskAsync(config: EmbeddedAssetsConfigurati
   }
 
   // allow custom overrides
-  if (exp.android && exp.android.publishBundlePath) {
+  if (exp.android?.publishBundlePath) {
     androidBundlePath = exp.android.publishBundlePath;
   }
-  if (exp.android && exp.android.publishManifestPath) {
+  if (exp.android?.publishManifestPath) {
     androidManifestPath = exp.android.publishManifestPath;
   }
-  if (exp.android && exp.android.publishSourceMapPath) {
+  if (exp.android?.publishSourceMapPath) {
     androidSourceMapPath = exp.android.publishSourceMapPath;
   }
-  if (exp.ios && exp.ios.publishBundlePath) {
+  if (exp.ios?.publishBundlePath) {
     iosBundlePath = exp.ios.publishBundlePath;
   }
-  if (exp.ios && exp.ios.publishManifestPath) {
+  if (exp.ios?.publishManifestPath) {
     iosManifestPath = exp.ios.publishManifestPath;
   }
-  if (exp.ios && exp.ios.publishSourceMapPath) {
+  if (exp.ios?.publishSourceMapPath) {
     iosSourceMapPath = exp.ios.publishSourceMapPath;
   }
 
@@ -243,7 +239,7 @@ async function _maybeConfigureExpoKitEmbeddedAssetsAsync(config: EmbeddedAssetsC
   }
 
   // Android ExpoKit
-  let constantsPath = path.join(
+  const constantsPath = path.join(
     projectRoot,
     'android',
     'app',
@@ -286,7 +282,7 @@ async function _maybeConfigureExpoKitEmbeddedAssetsAsync(config: EmbeddedAssetsC
 }
 
 async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAssetsConfiguration) {
-  if (!config.pkg.dependencies['expo-updates'] || config.target === 'managed') {
+  if (!config.pkg.dependencies?.['expo-updates'] || config.target === 'managed') {
     return;
   }
 
@@ -314,7 +310,7 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
   }
 
   // Android expo-updates
-  let androidManifestXmlPath = path.join(
+  const androidManifestXmlPath = path.join(
     projectRoot,
     'android',
     'app',
@@ -322,16 +318,16 @@ async function _maybeConfigureExpoUpdatesEmbeddedAssetsAsync(config: EmbeddedAss
     'main',
     'AndroidManifest.xml'
   );
-  let androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
-  let expoUpdateUrlRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_UPDATE_URL"[^>]+\/>/;
-  let expoSdkVersionRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_SDK_VERSION"[^>]+\/>/;
-  let expoReleaseChannelRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_RELEASE_CHANNEL"[^>]+\/>/;
+  const androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
+  const expoUpdateUrlRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_UPDATE_URL"[^>]+\/>/;
+  const expoSdkVersionRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_SDK_VERSION"[^>]+\/>/;
+  const expoReleaseChannelRegex = /<meta-data[^>]+"expo.modules.updates.EXPO_RELEASE_CHANNEL"[^>]+\/>/;
 
-  let expoUpdateUrlTag = `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${androidManifestUrl}" />`;
-  let expoSdkVersionTag = `<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="${exp.sdkVersion}" />`;
-  let expoReleaseChannelTag = `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${releaseChannel}" />`;
+  const expoUpdateUrlTag = `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${androidManifestUrl}" />`;
+  const expoSdkVersionTag = `<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="${exp.sdkVersion}" />`;
+  const expoReleaseChannelTag = `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${releaseChannel}" />`;
 
-  let tagsToInsert = [];
+  const tagsToInsert = [];
   if (androidManifestXmlFile.search(expoUpdateUrlRegex) < 0) {
     tagsToInsert.push(expoUpdateUrlTag);
   }
@@ -393,7 +389,7 @@ function sanitizedName(name: string) {
 export function getIOSPaths(projectRoot: string) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
-  let projectName = exp.name;
+  const projectName = exp.name;
   if (!projectName) {
     throw new Error('Your project needs a name in app.json/app.config.js.');
   }

@@ -1,65 +1,69 @@
+import { getConfig } from '@expo/config';
+import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { Versions } from '@expo/xdl';
-import { ExpoConfig, getConfig } from '@expo/config';
+
+import CommandError from '../CommandError';
+import log from '../log';
+import { confirmAsync } from '../prompts';
 import * as Eject from './eject/Eject';
-import * as LegacyEject from './eject/LegacyEject';
-import prompt from '../prompt';
+import { platformsFromPlatform } from './eject/platformOptions';
+import { learnMore } from './utils/TerminalLink';
 
 async function userWantsToEjectWithoutUpgradingAsync() {
-  const answer = await prompt({
-    type: 'confirm',
-    name: 'ejectWithoutUpgrading',
+  const answer = await confirmAsync({
     message: `We recommend upgrading to the latest SDK version before ejecting. SDK 37 introduces support for OTA updates and notifications in ejected projects, and includes many features that make ejecting your project easier. Would you like to continue ejecting anyways?`,
   });
 
-  return answer.ejectWithoutUpgrading;
+  return answer;
 }
 
-async function action(
+export async function actionAsync(
   projectDir: string,
-  options: LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions
+  {
+    platform,
+    ...options
+  }: Omit<Eject.EjectAsyncOptions, 'platforms'> & {
+    npm?: boolean;
+    platform?: string;
+  }
 ) {
-  let exp: ExpoConfig;
-  try {
-    exp = getConfig(projectDir).exp;
-  } catch (error) {
-    console.log();
-    console.log(chalk.red(error.message));
-    console.log();
-    process.exit(1);
+  const { exp } = getConfig(projectDir);
+
+  if (options.npm) {
+    options.packageManager = 'npm';
   }
 
   // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3 for ExpoKit
   if (Versions.lteSdkVersion(exp, '36.0.0')) {
-    // Don't show a warning if we haven't released SDK 37 yet
-    let latestReleasedVersion = await Versions.newestReleasedSdkVersionAsync();
-    if (Versions.lteSdkVersion({ sdkVersion: latestReleasedVersion.version }, '36.0.0')) {
-      await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
-    } else {
-      if (options.force || (await userWantsToEjectWithoutUpgradingAsync())) {
-        await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
-      }
+    if (options.force || (await userWantsToEjectWithoutUpgradingAsync())) {
+      throw new CommandError(
+        `Ejecting to ExpoKit is now deprecated. Upgrade to Expo SDK +37 or downgrade to expo-cli@4.1.3`
+      );
     }
   } else {
-    await Eject.ejectAsync(projectDir, options as Eject.EjectAsyncOptions);
+    log.debug('Eject Mode: Latest');
+    await Eject.ejectAsync(projectDir, {
+      ...options,
+      platforms: platformsFromPlatform(platform),
+    } as Eject.EjectAsyncOptions);
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
-    .command('eject [project-dir]')
+    .command('eject [path]')
     .description(
-      'Creates Xcode and Android Studio projects for your app. Use this if you need to add custom native functionality.'
+      `Create native iOS and Android project files. ${chalk.dim(
+        learnMore('https://docs.expo.io/bare/customizing/')
+      )}`
     )
-    .option(
-      '--eject-method [type]',
-      `Eject method to use. [Depreacted]: Ejecting to ExpoKit is not available on SDK >= 37 and not recommended for older SDK versions. We recommend updating to SDK >= 37 and ejecting to bare.`,
-      value => value.toLowerCase()
+    .longDescription(
+      'Create Xcode and Android Studio projects for your app. Use this if you need to add custom native functionality.'
     )
-    .option(
-      '-f --force',
-      'Will attempt to generate an iOS project even when the system is not running macOS. Unsafe and may fail.'
-    )
-    .asyncActionProjectDir(action);
+    .helpGroup('eject')
+    .option('--no-install', 'Skip installing npm packages and CocoaPods.')
+    .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
+    .option('-p, --platform [platform]', 'Platforms to sync: ios, android, all. Default: all')
+    .asyncActionProjectDir(actionAsync);
 }

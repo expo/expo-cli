@@ -31,18 +31,19 @@ self.addEventListener('push', event => {
   }
 
   const title = payload.title;
-  let options = {
+  const data = payload.data || payload.custom || {};
+  const options = {
     body: payload.body,
-    data: payload.data || {},
+    data,
   };
-  options.icon = options.data._icon || self.notificationIcon || null;
-  if (options.data._tag) {
-    options.tag = options.data._tag;
-    options.renotify = options.data._renotify;
+  options.icon = data._icon || payload.icon || self.notificationIcon || null;
+  options.image =
+    data._richContent && data._richContent.image ? options.data._richContent.image : payload.image;
+  options.tag = data._tag || payload.collapseKey;
+  if (options.tag) {
+    options.renotify = data._renotify;
   }
-  if (options.data._richContent && options.data._richContent.image) {
-    options.image = options.data._richContent.image;
-  }
+
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
@@ -58,7 +59,7 @@ self.addEventListener('notificationclick', event => {
 
       let appClient;
 
-      let path = event.notification.data._webPath || '/';
+      const path = event.notification.data._webPath || '/';
 
       // If we already have a window open, use it.
       for (const client of allClients) {

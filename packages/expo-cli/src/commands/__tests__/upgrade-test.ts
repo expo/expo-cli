@@ -1,14 +1,16 @@
 import { vol } from 'memfs';
 
+import { mockExpoXDL } from '../../__tests__/mock-utils';
+import log from '../../log';
 import {
   getDependenciesFromBundledNativeModules,
   maybeFormatSdkVersion,
   upgradeAsync,
 } from '../upgrade';
-import { mockExpoXDL } from '../../__tests__/mock-utils';
 
 jest.mock('fs');
 jest.mock('resolve-from');
+jest.mock('../../log');
 
 describe('maybeFormatSdkVersion', () => {
   it(`returns null`, () => {
@@ -25,16 +27,7 @@ describe('maybeFormatSdkVersion', () => {
 });
 
 describe('getDependenciesFromBundledNativeModules', () => {
-  const originalWarn = console.warn;
-  beforeEach(() => {
-    console.warn = jest.fn();
-  });
-  afterAll(() => {
-    console.warn = originalWarn;
-  });
-
   it(`warns when the target SDK versions aren't provided`, () => {
-    console.warn = jest.fn();
     getDependenciesFromBundledNativeModules({
       projectDependencies: {},
       bundledNativeModules: {},
@@ -43,7 +36,7 @@ describe('getDependenciesFromBundledNativeModules', () => {
       targetSdkVersion: null,
     });
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(log.warn).toHaveBeenCalledTimes(1);
   });
 
   describe('priority', () => {
@@ -89,6 +82,21 @@ describe('getDependenciesFromBundledNativeModules', () => {
         targetSdkVersion,
       });
       expect(deps['jest-expo']).toBe('4.0.0');
+    });
+
+    it('upgrades jest-expo to ^${sdkVersion}-beta when targetSdkVersion is beta and not included in relatedPackages', () => {
+      const deps = getDependenciesFromBundledNativeModules({
+        projectDependencies,
+        bundledNativeModules,
+        sdkVersion,
+        workflow: 'bare',
+        targetSdkVersion: {
+          ...targetSdkVersion,
+          relatedPackages: {},
+          beta: true,
+        },
+      });
+      expect(deps['jest-expo']).toBe('^3.0.0-beta');
     });
   });
 
@@ -151,17 +159,6 @@ describe('getDependenciesFromBundledNativeModules', () => {
 });
 
 xdescribe('upgradeAsync', () => {
-  const originalWarn = console.warn;
-  const originalLog = console.log;
-  beforeEach(() => {
-    console.warn = jest.fn();
-    console.log = jest.fn();
-  });
-  afterAll(() => {
-    console.warn = originalWarn;
-    console.log = originalLog;
-  });
-
   beforeEach(() => {
     jest.mock('commander', () => {
       return {

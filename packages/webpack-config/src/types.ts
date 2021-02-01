@@ -1,3 +1,4 @@
+import { PWAConfig } from 'expo-pwa';
 import { Configuration as WebpackConfiguration } from 'webpack';
 import {
   ProxyConfigArray,
@@ -11,7 +12,7 @@ export interface DevConfiguration extends WebpackConfiguration {
 
 export type AnyConfiguration = DevConfiguration | WebpackConfiguration;
 
-type AnyObject = { [key: string]: any };
+type AnyObject = Record<string, any>;
 
 export type InputEnvironment = {
   projectRoot?: string;
@@ -22,7 +23,6 @@ export type InputEnvironment = {
   development?: boolean;
   config?: AnyObject;
   locations?: FilePaths;
-  polyfill?: boolean;
   mode?: Mode;
   removeUnusedImportExports?: boolean;
   pwa?: boolean;
@@ -44,7 +44,7 @@ export type Environment = {
    *
    * @default undefined
    */
-  config: { [key: string]: any };
+  config: PWAConfig;
   /**
    * Paths used to locate where things are.
    */
@@ -54,9 +54,9 @@ export type Environment = {
    */
   projectRoot: string;
   /**
-   * Passing `true` will disable offline support and skip adding a service worker.
+   * Passing `true` will enable offline support and add a service worker.
    *
-   * @default true
+   * @default false
    */
   offline?: boolean;
   /**
@@ -83,12 +83,6 @@ export type Environment = {
    * Control how the default Babel loader is configured.
    */
   babel?: ExpoBabelOptions;
-  /**
-   * Includes all Babel polyfills.
-   *
-   * @deprecated
-   */
-  polyfill?: boolean;
 };
 
 /**

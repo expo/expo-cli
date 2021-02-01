@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
-import Jimp from 'jimp';
+import Jimp from 'jimp/es';
 import * as path from 'path';
+
 import {
   FlattenOptions,
   Position,
@@ -15,9 +16,16 @@ type JimpGlobalOptions = Omit<SharpGlobalOptions, 'input'> & {
 };
 
 export async function resizeBufferAsync(buffer: Buffer, sizes: number[]): Promise<Buffer[]> {
-  const jimpImage = await Jimp.read(buffer);
-  const mime = jimpImage.getMIME();
-  return Promise.all(sizes.map(size => jimpImage.resize(size, size).getBufferAsync(mime)));
+  return Promise.all(
+    sizes.map(async size => {
+      // Parse the buffer each time to prevent mutable copies.
+      // Parse the buffer each time to prevent mutable copies.
+      const jimpImage = await Jimp.read(buffer);
+      const mime = jimpImage.getMIME();
+
+      return jimpImage.resize(size, size).getBufferAsync(mime);
+    })
+  );
 }
 
 export function convertFormat(format?: string): string | undefined {
@@ -80,9 +88,31 @@ export async function isFolderAsync(path: string): Promise<boolean> {
   }
 }
 
-async function getJimpImageAsync(input: string | Buffer | Jimp): Promise<Jimp> {
+export function circleAsync(jimp: Jimp): Promise<Jimp> {
+  const radius = Math.min(jimp.bitmap.width, jimp.bitmap.height) / 2;
+
+  const center = {
+    x: jimp.bitmap.width / 2,
+    y: jimp.bitmap.height / 2,
+  };
+
+  return new Promise(resolve => {
+    jimp.scanQuiet(0, 0, jimp.bitmap.width, jimp.bitmap.height, (x, y, idx) => {
+      const curR = Math.sqrt(Math.pow(x - center.x, 2) + Math.pow(y - center.y, 2));
+
+      if (radius - curR <= 0.0) {
+        jimp.bitmap.data[idx + 3] = 0;
+      } else if (radius - curR < 1.0) {
+        jimp.bitmap.data[idx + 3] = 255 * (radius - curR);
+      }
+      resolve(jimp);
+    });
+  });
+}
+
+export async function getJimpImageAsync(input: string | Buffer | Jimp): Promise<Jimp> {
   // @ts-ignore: Jimp types are broken
-  if (typeof input === 'string' || input instanceof Buffer) return Jimp.read(input);
+  if (typeof input === 'string' || input instanceof Buffer) return await Jimp.read(input);
 
   return input;
 }
@@ -104,7 +134,11 @@ export async function resize(
     );
   }
   if (background) {
-    initialImage = initialImage.background(Jimp.cssColorToHex(background));
+    initialImage = initialImage.composite(new Jimp(width, height, background), 0, 0, {
+      mode: Jimp.BLEND_DESTINATION_OVER,
+      opacitySource: 1,
+      opacityDest: 1,
+    });
   }
 
   return await initialImage.quality(jimpQuality);

@@ -1,3 +1,4 @@
+/* eslint-disable */
 /* (The MIT License)
 
 Copyright (c) 2010-2017 Nathan Rajlich <nathan@tootallnate.net>
@@ -23,7 +24,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE. */
 
-import invariant from 'invariant';
+import assert from 'assert';
 import { DOMParser } from 'xmldom';
 
 const TEXT_NODE = 3;
@@ -70,7 +71,7 @@ function isEmptyNode(node: { [key: string]: any }): boolean {
 export function parse(xml: string): any {
   // prevent the parser from logging non-fatel errors
   const doc = new DOMParser({ errorHandler() {} }).parseFromString(xml);
-  invariant(
+  assert(
     doc.documentElement.nodeName === 'plist',
     'malformed document. First element should be <plist>'
   );
@@ -117,10 +118,10 @@ function parsePlistXML(node: { [key: string]: any }): any {
     for (i = 0; i < node.childNodes.length; i++) {
       if (shouldIgnoreNode(node.childNodes[i])) continue;
       if (counter % 2 === 0) {
-        invariant(node.childNodes[i].nodeName === 'key', 'Missing key while parsing <dict/>.');
+        assert(node.childNodes[i].nodeName === 'key', 'Missing key while parsing <dict/>.');
         key = parsePlistXML(node.childNodes[i]);
       } else {
-        invariant(
+        assert(
           node.childNodes[i].nodeName !== 'key',
           'Unexpected key "' + parsePlistXML(node.childNodes[i]) + '" while parsing <dict/>.'
         );
@@ -164,10 +165,10 @@ function parsePlistXML(node: { [key: string]: any }): any {
     }
     return res;
   } else if (node.nodeName === 'integer') {
-    invariant(!isEmptyNode(node), 'Cannot parse "" as integer.');
+    assert(!isEmptyNode(node), 'Cannot parse "" as integer.');
     return parseInt(node.childNodes[0].nodeValue, 10);
   } else if (node.nodeName === 'real') {
-    invariant(!isEmptyNode(node), 'Cannot parse "" as real.');
+    assert(!isEmptyNode(node), 'Cannot parse "" as real.');
     res = '';
     for (i = 0; i < node.childNodes.length; i++) {
       if (node.childNodes[i].nodeType === TEXT_NODE) {
@@ -187,7 +188,7 @@ function parsePlistXML(node: { [key: string]: any }): any {
     }
     return Buffer.from(res, 'base64');
   } else if (node.nodeName === 'date') {
-    invariant(!isEmptyNode(node), 'Cannot parse "" as Date.');
+    assert(!isEmptyNode(node), 'Cannot parse "" as Date.');
     return new Date(node.childNodes[0].nodeValue);
   } else if (node.nodeName === 'true') {
     return true;

@@ -1,19 +1,10 @@
+import plist, { PlistObject } from '@expo/plist';
+import { IosCodeSigning, PKCS12Utils } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import ora from 'ora';
-import plist, { PlistObject } from '@expo/plist';
-import { IosCodeSigning, PKCS12Utils } from '@expo/xdl';
-import prompt, { Question } from '../../prompt';
-import log from '../../log';
-import { Context, IView } from '../context';
-import {
-  IosAppCredentials,
-  IosCredentials,
-  appleTeamSchema,
-  provisioningProfileSchema,
-} from '../credentials';
-import { askForUserProvided, getCredentialsFromUser } from '../actions/promptForCredentials';
-import { displayIosAppCredentials } from '../actions/list';
+
+import CommandError from '../../CommandError';
 import {
   AppleCtx,
   DistCert,
@@ -21,30 +12,30 @@ import {
   ProvisioningProfileInfo,
   ProvisioningProfileManager,
 } from '../../appleApi';
-
-type CliOptions = {
-  nonInteractive?: boolean;
-};
-
-export type ProvisioningProfileOptions = {
-  experienceName: string;
-  bundleIdentifier: string;
-  distCert: DistCert;
-} & CliOptions;
+import { assert } from '../../assert';
+import log from '../../log';
+import prompt, { confirmAsync, Question } from '../../prompts';
+import { displayIosAppCredentials } from '../actions/list';
+import { askForUserProvided } from '../actions/promptForCredentials';
+import { AppLookupParams, getAppLookupParams } from '../api/IosApi';
+import { Context, IView } from '../context';
+import {
+  IosAppCredentials,
+  IosCredentials,
+  IosDistCredentials,
+  provisioningProfileSchema,
+} from '../credentials';
+import * as provisioningProfileUtils from '../utils/provisioningProfile';
 
 export class RemoveProvisioningProfile implements IView {
-  shouldRevoke: boolean;
-  nonInteractive: boolean;
-
-  constructor(shouldRevoke: boolean = false, nonInteractive: boolean = false) {
-    this.shouldRevoke = shouldRevoke;
-    this.nonInteractive = nonInteractive;
-  }
+  constructor(private accountName: string, private shouldRevoke: boolean = false) {}
 
   async open(ctx: Context): Promise<IView | null> {
-    const selected = await selectProfileFromExpo(ctx.ios.credentials);
+    const credentials = await ctx.ios.getAllCredentials(this.accountName);
+    const selected = await selectProfileFromExpo(credentials);
     if (selected) {
-      await this.removeSpecific(ctx, selected);
+      const app = getAppLookupParams(selected.experienceName, selected.bundleIdentifier);
+      await this.removeSpecific(ctx, app);
       log(
         chalk.green(
           `Successfully removed Provisioning Profile for ${selected.experienceName} (${selected.bundleIdentifier})`
@@ -54,133 +45,96 @@ export class RemoveProvisioningProfile implements IView {
     return null;
   }
 
-  async removeSpecific(ctx: Context, selected: IosAppCredentials) {
+  async removeSpecific(ctx: Context, app: AppLookupParams) {
     log('Removing Provisioning Profile...\n');
-    await ctx.ios.deleteProvisioningProfile(selected.experienceName, selected.bundleIdentifier);
+    await ctx.ios.deleteProvisioningProfile(app);
 
     let shouldRevoke = this.shouldRevoke;
-    if (!shouldRevoke && !this.nonInteractive) {
-      const { revoke } = await prompt([
-        {
-          type: 'confirm',
-          name: 'revoke',
-          message: 'Do you also want to revoke it on Apple Developer Portal?',
-        },
-      ]);
+    if (!shouldRevoke && !ctx.nonInteractive) {
+      const revoke = await confirmAsync({
+        message: 'Do you also want to revoke this Provisioning Profile on Apple Developer Portal?',
+      });
       shouldRevoke = revoke;
     }
 
     if (shouldRevoke) {
       await ctx.ensureAppleCtx();
       const ppManager = new ProvisioningProfileManager(ctx.appleCtx);
-      await ppManager.revoke(selected.bundleIdentifier);
+      await ppManager.revoke(app.bundleIdentifier);
     }
   }
 }
 
 export class CreateProvisioningProfile implements IView {
-  _experienceName: string;
-  _bundleIdentifier: string;
-  _distCert: DistCert;
-  _nonInteractive: boolean;
-
-  constructor(options: ProvisioningProfileOptions) {
-    const { experienceName, bundleIdentifier, distCert } = options;
-    this._experienceName = experienceName;
-    this._bundleIdentifier = bundleIdentifier;
-    this._distCert = distCert;
-    this._nonInteractive = options.nonInteractive ?? false;
-  }
+  constructor(private app: AppLookupParams) {}
 
   async create(ctx: Context): Promise<ProvisioningProfile> {
     const provisioningProfile = await this.provideOrGenerate(ctx);
-    const appleTeam = ctx.hasAppleCtx()
-      ? ctx.appleCtx.team
-      : await getCredentialsFromUser(appleTeamSchema);
-    if (!appleTeam) {
-      throw new Error('Must provide a valid Apple Team Id');
-    }
-    return await ctx.ios.updateProvisioningProfile(
-      this._experienceName,
-      this._bundleIdentifier,
-      provisioningProfile,
-      appleTeam
-    );
+    return await ctx.ios.updateProvisioningProfile(this.app, provisioningProfile);
   }
 
   async open(ctx: Context): Promise<IView | null> {
     await this.create(ctx);
 
     log(chalk.green('Successfully created Provisioning Profile\n'));
-    const appCredentials = ctx.ios.credentials.appCredentials.find(
-      app =>
-        app.experienceName === this._experienceName &&
-        app.bundleIdentifier === this._bundleIdentifier
-    )!;
+    const appCredentials = await ctx.ios.getAppCredentials(this.app);
     displayIosAppCredentials(appCredentials);
     log();
     return null;
   }
 
   async provideOrGenerate(ctx: Context): Promise<ProvisioningProfile> {
-    if (!this._nonInteractive) {
+    if (!ctx.nonInteractive) {
       const userProvided = await askForUserProvided(provisioningProfileSchema);
       if (userProvided) {
         // userProvided profiles don't come with ProvisioningProfileId's (only accessible from Apple Portal API)
-        log(chalk.yellow('Provisioning profile: Unable to validate uploaded profile.'));
-        return userProvided;
+        log(chalk.yellow('Provisioning profile: Unable to validate specified profile.'));
+        return {
+          ...userProvided,
+          ...provisioningProfileUtils.readAppleTeam(userProvided.provisioningProfile),
+        };
       }
     }
-    return await generateProvisioningProfile(ctx, this._bundleIdentifier, this._distCert);
+    const distCert = await ctx.ios.getDistCert(this.app);
+    assert(distCert, 'missing distribution certificate');
+    return await generateProvisioningProfile(ctx, this.app.bundleIdentifier, distCert);
   }
 }
 
 export class UseExistingProvisioningProfile implements IView {
-  _experienceName: string;
-  _bundleIdentifier: string;
-  _distCert: DistCert;
-
-  constructor(options: ProvisioningProfileOptions) {
-    const { experienceName, bundleIdentifier, distCert } = options;
-    this._experienceName = experienceName;
-    this._bundleIdentifier = bundleIdentifier;
-    this._distCert = distCert;
-  }
+  constructor(private app: AppLookupParams) {}
 
   async open(ctx: Context): Promise<IView | null> {
     await ctx.ensureAppleCtx();
-    const selected = await selectProfileFromApple(ctx.appleCtx, this._bundleIdentifier);
-    if (selected) {
-      await configureAndUpdateProvisioningProfile(
-        ctx,
-        this._experienceName,
-        this._bundleIdentifier,
-        this._distCert,
-        selected
+
+    if (ctx.nonInteractive) {
+      throw new CommandError(
+        'NON_INTERACTIVE',
+        "Start the CLI without the '--non-interactive' flag to select a distribution certificate."
       );
+    }
+
+    const selected = await selectProfileFromApple(ctx.appleCtx, this.app.bundleIdentifier);
+    if (selected) {
+      const distCert = await ctx.ios.getDistCert(this.app);
+      assert(distCert, 'missing distribution certificate');
+
+      await configureAndUpdateProvisioningProfile(ctx, this.app, distCert, selected);
     }
     return null;
   }
 }
 
 export class CreateOrReuseProvisioningProfile implements IView {
-  _experienceName: string;
-  _bundleIdentifier: string;
-  _distCert: DistCert;
-  _nonInteractive: boolean;
+  constructor(private app: AppLookupParams) {}
 
-  constructor(options: ProvisioningProfileOptions) {
-    const { experienceName, bundleIdentifier, distCert } = options;
-    this._experienceName = experienceName;
-    this._bundleIdentifier = bundleIdentifier;
-    this._distCert = distCert;
-    this._nonInteractive = options.nonInteractive ?? false;
-  }
-
-  choosePreferred(profiles: ProvisioningProfileInfo[]): ProvisioningProfileInfo {
+  choosePreferred(
+    profiles: ProvisioningProfileInfo[],
+    distCert: IosDistCredentials
+  ): ProvisioningProfileInfo {
     // prefer the profile that already has the same dist cert associated with it
     const profileWithSameCert = profiles.find(profile =>
-      profile.certificates.some(cert => cert.id === this._distCert.certId)
+      profile.certificates.some(cert => cert.id === distCert.certId)
     );
 
     // if not, just get an arbitrary profile
@@ -193,87 +147,62 @@ export class CreateOrReuseProvisioningProfile implements IView {
     }
 
     if (!ctx.hasAppleCtx()) {
-      return new CreateProvisioningProfile({
-        experienceName: this._experienceName,
-        bundleIdentifier: this._bundleIdentifier,
-        distCert: this._distCert,
-        nonInteractive: this._nonInteractive,
-      });
+      return new CreateProvisioningProfile(this.app);
     }
 
     const ppManager = new ProvisioningProfileManager(ctx.appleCtx);
-    const existingProfiles = await ppManager.list(this._bundleIdentifier);
+    const existingProfiles = await ppManager.list(this.app.bundleIdentifier);
 
     if (existingProfiles.length === 0) {
-      return new CreateProvisioningProfile({
-        experienceName: this._experienceName,
-        bundleIdentifier: this._bundleIdentifier,
-        distCert: this._distCert,
-        nonInteractive: this._nonInteractive,
-      });
+      return new CreateProvisioningProfile(this.app);
     }
 
-    const autoselectedProfile = this.choosePreferred(existingProfiles);
-    // autoselect creds if we find valid certs
-    const confirmQuestion: Question = {
-      type: 'confirm',
-      name: 'confirm',
-      message: `${formatProvisioningProfileFromApple(
-        autoselectedProfile
-      )} \n Would you like to use this profile?`,
-      pageSize: Infinity,
-    };
+    const distCert = await ctx.ios.getDistCert(this.app);
+    assert(distCert, 'missing distribution certificate');
 
-    if (!this._nonInteractive) {
-      const { confirm } = await prompt(confirmQuestion);
+    const autoselectedProfile = this.choosePreferred(existingProfiles, distCert);
+    // autoselect creds if we find valid certs
+
+    if (!ctx.nonInteractive) {
+      const confirm = await confirmAsync({
+        message: `${formatProvisioningProfileFromApple(
+          autoselectedProfile
+        )} \n Would you like to use this profile?`,
+        limit: Infinity,
+      });
       if (!confirm) {
         return await this._createOrReuse(ctx);
       }
     }
 
     log(`Using Provisioning Profile: ${autoselectedProfile.provisioningProfileId}`);
-    await configureAndUpdateProvisioningProfile(
-      ctx,
-      this._experienceName,
-      this._bundleIdentifier,
-      this._distCert,
-      autoselectedProfile
-    );
+    await configureAndUpdateProvisioningProfile(ctx, this.app, distCert, autoselectedProfile);
     return null;
   }
 
   async _createOrReuse(ctx: Context): Promise<IView | null> {
     const choices = [
       {
-        name: '[Choose existing provisioning profile] (Recommended)',
+        title: '[Choose existing provisioning profile] (Recommended)',
         value: 'CHOOSE_EXISTING',
       },
-      { name: '[Add a new provisioning profile]', value: 'GENERATE' },
+      { title: '[Add a new provisioning profile]', value: 'GENERATE' },
     ];
 
     const question: Question = {
-      type: 'list',
+      type: 'select',
       name: 'action',
       message: 'Select a Provisioning Profile:',
       choices,
-      pageSize: Infinity,
+      optionsPerPage: 20,
     };
 
     const { action } = await prompt(question);
 
     if (action === 'GENERATE') {
-      return new CreateProvisioningProfile({
-        experienceName: this._experienceName,
-        bundleIdentifier: this._bundleIdentifier,
-        distCert: this._distCert,
-        nonInteractive: this._nonInteractive,
-      });
+      return new CreateProvisioningProfile(this.app);
     } else if (action === 'CHOOSE_EXISTING') {
-      return new UseExistingProvisioningProfile({
-        experienceName: this._experienceName,
-        bundleIdentifier: this._bundleIdentifier,
-        distCert: this._distCert,
-      });
+      return new UseExistingProvisioningProfile(this.app);
     }
 
     throw new Error('unsupported action');
@@ -294,11 +223,11 @@ async function selectProfileFromApple(
   }
 
   const question: Question = {
-    type: 'list',
+    type: 'select',
     name: 'credentialsIndex',
     message: 'Select Provisioning Profile from the list.',
     choices: profiles.map((entry, index) => ({
-      name: formatProvisioningProfileFromApple(entry),
+      title: formatProvisioningProfileFromApple(entry),
       value: index,
     })),
   };
@@ -324,11 +253,11 @@ async function selectProfileFromExpo(
   };
 
   const question: Question = {
-    type: 'list',
+    type: 'select',
     name: 'credentialsIndex',
     message: 'Select Provisioning Profile from the list.',
     choices: profiles.map((entry, index) => ({
-      name: getName(entry),
+      title: getName(entry),
       value: index,
     })),
   };
@@ -425,14 +354,17 @@ export async function getAppleInfo(
 
 export async function configureAndUpdateProvisioningProfile(
   ctx: Context,
-  experienceName: string,
-  bundleIdentifier: string,
+  app: AppLookupParams,
   distCert: DistCert,
   profileFromApple: ProvisioningProfileInfo
 ) {
   // configure profile on Apple's Server to use our distCert
   const ppManager = new ProvisioningProfileManager(ctx.appleCtx);
-  const updatedProfile = await ppManager.useExisting(bundleIdentifier, profileFromApple, distCert);
+  const updatedProfile = await ppManager.useExisting(
+    app.bundleIdentifier,
+    profileFromApple,
+    distCert
+  );
   log(
     chalk.green(
       `Successfully configured Provisioning Profile ${
@@ -442,15 +374,10 @@ export async function configureAndUpdateProvisioningProfile(
   );
 
   // Update profile on expo servers
-  await ctx.ios.updateProvisioningProfile(
-    experienceName,
-    bundleIdentifier,
-    updatedProfile,
-    ctx.appleCtx.team
-  );
+  await ctx.ios.updateProvisioningProfile(app, updatedProfile);
   log(
     chalk.green(
-      `Successfully assigned Provisioning Profile to ${experienceName} (${bundleIdentifier})`
+      `Successfully assigned Provisioning Profile to @${app.accountName}/${app.projectName} (${app.bundleIdentifier})`
     )
   );
 }
@@ -464,50 +391,38 @@ function formatProvisioningProfileFromApple(appleInfo: ProvisioningProfileInfo) 
   return `Provisioning Profile - ID: ${id}${details}`;
 }
 
-export async function getProvisioningProfileFromParams(builderOptions: {
-  provisioningProfilePath?: string;
-  teamId?: string;
-}): Promise<ProvisioningProfile | null> {
-  const { provisioningProfilePath, teamId } = builderOptions;
-
-  // none of the provisioningProfile params were set, assume user has no intention of passing it in
-  if (!provisioningProfilePath && !teamId) {
+export async function getProvisioningProfileFromParams(
+  provisioningProfilePath?: string
+): Promise<ProvisioningProfile | null> {
+  if (!provisioningProfilePath) {
     return null;
   }
 
-  // partial provisioningProfile params were set, assume user has intention of passing it in
-  if (!(provisioningProfilePath && teamId)) {
-    throw new Error(
-      'In order to provide a Provisioning Profile through the CLI parameters, you have to pass --provisioning-profile-path and --team-id parameters.'
-    );
-  }
+  const provisioningProfile = await fs.readFile(provisioningProfilePath as string, 'base64');
+  const team = provisioningProfileUtils.readAppleTeam(provisioningProfile);
 
   return {
-    provisioningProfile: await fs.readFile(provisioningProfilePath as string, 'base64'),
+    provisioningProfile,
+    ...team,
   };
 }
 
 export async function useProvisioningProfileFromParams(
   ctx: Context,
-  appCredentials: IosAppCredentials,
-  teamId: string,
-  provisioningProfile: ProvisioningProfile,
-  distCert: DistCert
+  app: AppLookupParams,
+  provisioningProfile: ProvisioningProfile
 ): Promise<ProvisioningProfile> {
-  const { experienceName, bundleIdentifier } = appCredentials;
+  const distCert = await ctx.ios.getDistCert(app);
+  assert(distCert, 'missing distribution certificate');
+
   const isValid = await validateProfileWithoutApple(
     provisioningProfile,
     distCert,
-    appCredentials.bundleIdentifier
+    app.bundleIdentifier
   );
   if (!isValid) {
-    throw new Error('Uploaded invalid Provisioning Profile');
+    throw new Error('Specified invalid Provisioning Profile');
   }
 
-  return await ctx.ios.updateProvisioningProfile(
-    experienceName,
-    bundleIdentifier,
-    provisioningProfile,
-    { id: teamId }
-  );
+  return await ctx.ios.updateProvisioningProfile(app, provisioningProfile);
 }

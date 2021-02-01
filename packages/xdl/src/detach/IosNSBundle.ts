@@ -1,17 +1,18 @@
+import { ExpoConfig } from '@expo/config';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { ExpoConfig } from '@expo/config';
 import * as AssetBundle from './AssetBundle';
 import {
+  getBundleFileNameForSdkVersion,
   getManifestAsync,
+  getManifestFileNameForSdkVersion,
   manifestUsesSplashApi,
   parseSdkMajorVersion,
   saveUrlToPathAsync,
 } from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
 import * as IosIcons from './IosIcons';
-
 // @ts-ignore: No TS support
 import * as IosLaunchScreen from './IosLaunchScreen';
 // @ts-ignore: No TS support
@@ -22,9 +23,9 @@ import * as IosWorkspace from './IosWorkspace';
 import logger from './Logger';
 import {
   AnyStandaloneContext,
+  isStandaloneContextDataService,
   StandaloneContextService,
   StandaloneContextUser,
-  isStandaloneContextDataService,
 } from './StandaloneContext';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
@@ -57,8 +58,8 @@ function _configureInfoPlistForLocalDevelopment(config: any, exp: ExpoConfig): E
  */
 function _logDeveloperInfoForLocalDevelopment(infoPlist: any[]): void {
   // warn about *UsageDescription changes
-  let usageKeysConfigured = [];
-  for (let key in infoPlist) {
+  const usageKeysConfigured = [];
+  for (const key in infoPlist) {
     if (key in infoPlist && key.includes('UsageDescription')) {
       usageKeysConfigured.push(key);
     }
@@ -115,7 +116,7 @@ async function _maybeLegacyPreloadKernelManifestAndBundleAsync(
   bundleFilename: string
 ): Promise<void> {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
-  let sdkVersionSupported = await IosWorkspace.getNewestSdkVersionSupportedAsync(context);
+  const sdkVersionSupported = await IosWorkspace.getNewestSdkVersionSupportedAsync(context);
 
   if (parseSdkMajorVersion(sdkVersionSupported) < 26) {
     logger.info('Preloading Expo kernel JS...');
@@ -143,11 +144,11 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
     logger.info(
       'Your iOS ExpoKit project will not contain an .entitlements file by default. If you need specific Apple entitlements, enable them manually via Xcode or the Apple Developer website.'
     );
-    let keysToFlag = [];
-    if (exp.ios && exp.ios.usesIcloudStorage) {
+    const keysToFlag = [];
+    if (exp.ios?.usesIcloudStorage) {
       keysToFlag.push('ios.usesIcloudStorage');
     }
-    if (exp.ios && exp.ios.associatedDomains) {
+    if (exp.ios?.associatedDomains) {
       keysToFlag.push('ios.associatedDomains');
     }
     if (keysToFlag.length) {
@@ -167,12 +168,20 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
       await IosPlist.createBlankAsync(supportingDirectory, entitlementsFilename);
     }
     const result = IosPlist.modifyAsync(supportingDirectory, entitlementsFilename, entitlements => {
+      if (manifest.ios?.entitlements) {
+        for (const key in manifest.ios.entitlements) {
+          if (manifest.ios.entitlements.hasOwnProperty(key)) {
+            entitlements[key] = manifest.ios.entitlements[key];
+          }
+        }
+      }
+
       // push notif entitlement changes based on build configuration
       entitlements['aps-environment'] =
         context.build.configuration === 'Release' ? 'production' : 'development';
 
       // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
-      if (manifest.ios && manifest.ios.usesIcloudStorage && appleTeamId) {
+      if (manifest.ios?.usesIcloudStorage && appleTeamId) {
         entitlements['com.apple.developer.icloud-container-identifiers'] = [
           'iCloud.' + manifest.ios.bundleIdentifier,
         ];
@@ -195,20 +204,20 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
         });
       }
 
-      if (manifest.ios && manifest.ios.usesAppleSignIn) {
+      if (manifest.ios?.usesAppleSignIn) {
         entitlements['com.apple.developer.applesignin'] = ['Default'];
       } else if (entitlements.hasOwnProperty('com.apple.developer.applesignin')) {
         delete entitlements['com.apple.developer.applesignin'];
       }
 
-      if (manifest.ios && manifest.ios.accessesContactNotes) {
+      if (manifest.ios?.accessesContactNotes) {
         entitlements['com.apple.developer.contacts.notes'] = manifest.ios.accessesContactNotes;
       } else if (entitlements.hasOwnProperty('com.apple.developer.contacts.notes')) {
         delete entitlements['com.apple.developer.contacts.notes'];
       }
 
       // Add app associated domains remove exp-specific ones.
-      if (manifest.ios && manifest.ios.associatedDomains) {
+      if (manifest.ios?.associatedDomains) {
         entitlements['com.apple.developer.associated-domains'] = manifest.ios.associatedDomains;
       } else if (entitlements.hasOwnProperty('com.apple.developer.associated-domains')) {
         delete entitlements['com.apple.developer.associated-domains'];
@@ -246,6 +255,14 @@ function _isAppleUsageDescriptionKey(key: string): boolean {
   return key.includes('UsageDescription');
 }
 
+function ensureStringArray(input: any): string[] {
+  // Normalize schemes and filter invalid schemes.
+  const stringArray = (Array.isArray(input) ? input : [input]).filter(
+    scheme => typeof scheme === 'string' && !!scheme
+  );
+  return stringArray;
+}
+
 /**
  * Configure an iOS Info.plist for a standalone app.
  */
@@ -254,14 +271,14 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
   const config = context.config;
   const privateConfig = _getPrivateConfig(context);
 
-  let result = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
+  const result = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
     // make sure this happens first:
     // apply any custom information from ios.infoPlist prior to all other exponent config
-    let usageDescriptionKeysConfigured: { [key: string]: any } = {};
+    const usageDescriptionKeysConfigured: { [key: string]: any } = {};
     let extraConfig;
     if (config.ios && config.ios.infoPlist) {
       extraConfig = config.ios.infoPlist;
-      for (let key in extraConfig) {
+      for (const key in extraConfig) {
         if (extraConfig.hasOwnProperty(key)) {
           infoPlist[key] = extraConfig[key];
 
@@ -281,8 +298,7 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     }
 
     // bundle id
-    infoPlist.CFBundleIdentifier =
-      config.ios && config.ios.bundleIdentifier ? config.ios.bundleIdentifier : null;
+    infoPlist.CFBundleIdentifier = config?.ios?.bundleIdentifier ?? null;
     if (!infoPlist.CFBundleIdentifier) {
       throw new Error(`Cannot configure an iOS app with no bundle identifier.`);
     }
@@ -294,7 +310,9 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       : config.name;
 
     // determine app linking schemes
-    let linkingSchemes = config.scheme ? [config.scheme] : [];
+    const multiPlatformSchemes = ensureStringArray(config.scheme);
+    const iosSchemes = ensureStringArray(config.ios?.scheme);
+    const linkingSchemes = [...multiPlatformSchemes, ...iosSchemes];
     if (config.facebookScheme && config.facebookScheme.startsWith('fb')) {
       linkingSchemes.push(config.facebookScheme);
     }
@@ -375,8 +393,8 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     );
 
     // use version from manifest
-    let version = config.version ? config.version : '0.0.0';
-    let buildNumber = config.ios && config.ios.buildNumber ? config.ios.buildNumber : '1';
+    const version = config.version ? config.version : '0.0.0';
+    const buildNumber = config.ios && config.ios.buildNumber ? config.ios.buildNumber : '1';
     infoPlist.CFBundleShortVersionString = version;
     infoPlist.CFBundleVersion = buildNumber;
 
@@ -398,8 +416,8 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       };
     }
 
-    let permissionsAppName = config.name ? config.name : 'this app';
-    for (let key in infoPlist) {
+    const permissionsAppName = config.name ? config.name : 'this app';
+    for (const key in infoPlist) {
       if (
         infoPlist.hasOwnProperty(key) &&
         _isAppleUsageDescriptionKey(key) &&
@@ -482,6 +500,13 @@ async function _configureShellPlistAsync(context: AnyStandaloneContext): Promise
       // enable/disable code push if the developer provided specific behavior
       shellPlist.areRemoteUpdatesEnabled = config.updates.enabled;
     }
+    if (config.updates?.hasOwnProperty('checkAutomatically')) {
+      shellPlist.updatesCheckAutomatically =
+        config.updates.checkAutomatically !== 'ON_ERROR_RECOVERY';
+    }
+    if (config.updates?.hasOwnProperty('fallbackToCacheTimeout')) {
+      shellPlist.updatesFallbackToCacheTimeout = config.updates.fallbackToCacheTimeout;
+    }
     if (!manifestUsesSplashApi(config, 'ios') && parseSdkMajorVersion(config.sdkVersion) < 28) {
       // for people still using the old loading api, hide the native splash screen.
       // we can remove this code eventually.
@@ -525,9 +550,10 @@ async function _configureGoogleServicesPlistAsync(context: AnyStandaloneContext)
 export async function configureAsync(context: AnyStandaloneContext): Promise<void> {
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
 
-  let {
+  const {
     intermediatesDirectory,
     iosProjectDirectory,
+    projectRootDirectory,
     projectName,
     supportingDirectory,
   } = IosWorkspace.getPaths(context);
@@ -555,6 +581,7 @@ export async function configureAsync(context: AnyStandaloneContext): Promise<voi
     if (!isExpoClientBuild) {
       await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
       await IosLocalization.writeLocalizationResourcesAsync({
+        projectRoot: projectRootDirectory,
         supportingDirectory,
         context,
       });
@@ -592,8 +619,8 @@ export async function configureAsync(context: AnyStandaloneContext): Promise<voi
       await _preloadManifestAndBundleAsync(
         context.data.manifest,
         supportingDirectory,
-        'shell-app-manifest.json',
-        'shell-app.bundle'
+        getManifestFileNameForSdkVersion(context.data.manifest.sdkVersion),
+        getBundleFileNameForSdkVersion(context.data.manifest.sdkVersion)
       );
     }
 

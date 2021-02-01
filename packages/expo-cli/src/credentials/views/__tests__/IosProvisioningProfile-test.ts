@@ -1,13 +1,13 @@
+import { testAppLookupParams } from '../../test-fixtures/mocks-constants';
+import { getCtxMock } from '../../test-fixtures/mocks-context';
+import {
+  testProvisioningProfiles,
+  testProvisioningProfilesFromApple,
+} from '../../test-fixtures/mocks-ios';
 import {
   CreateOrReuseProvisioningProfile,
   CreateProvisioningProfile,
 } from '../IosProvisioningProfile';
-import {
-  getCtxMock,
-  testIosDistCredential,
-  testProvisioningProfiles,
-  testProvisioningProfilesFromApple,
-} from '../../test-fixtures/mocks';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope
 const mockProvProfManagerCreate = jest.fn(() => testProvisioningProfiles);
@@ -25,16 +25,6 @@ jest.mock('../../../appleApi', () => {
 
 jest.mock('../../actions/list');
 
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
 beforeEach(() => {
   mockProvProfManagerCreate.mockClear();
   mockProvProfManagerUseExisting.mockClear();
@@ -44,14 +34,8 @@ beforeEach(() => {
 describe('IosProvisioningProfile', () => {
   describe('CreateProvisioningProfile', () => {
     it('Basic Case - Create a Provisioning Profile and save it to Expo Servers', async () => {
-      const ctx = getCtxMock();
-      const provProfOptions = {
-        experienceName: 'testApp',
-        bundleIdentifier: 'test.com.app',
-        distCert: testIosDistCredential,
-        nonInteractive: true,
-      };
-      const createProvisioningProfile = new CreateProvisioningProfile(provProfOptions);
+      const ctx = getCtxMock({ nonInteractive: true });
+      const createProvisioningProfile = new CreateProvisioningProfile(testAppLookupParams);
       await createProvisioningProfile.open(ctx as any);
 
       // expect provisioning profile is created
@@ -63,15 +47,9 @@ describe('IosProvisioningProfile', () => {
   });
   describe('CreateOrReuseProvisioningProfile', () => {
     it('Use Autosuggested Provisioning Profile ', async () => {
-      const ctx = getCtxMock();
-      const provProfOptions = {
-        experienceName: 'testApp',
-        bundleIdentifier: 'test.com.app',
-        distCert: testIosDistCredential,
-        nonInteractive: true,
-      };
+      const ctx = getCtxMock({ nonInteractive: true });
       const createOrReuseProvisioningProfile = new CreateOrReuseProvisioningProfile(
-        provProfOptions
+        testAppLookupParams
       );
       await createOrReuseProvisioningProfile.open(ctx as any);
 
@@ -88,15 +66,9 @@ describe('IosProvisioningProfile', () => {
       // no available certs on apple dev portal
       mockProvProfManagerList.mockImplementation(() => [] as any);
 
-      const ctx = getCtxMock();
-      const provProfOptions = {
-        experienceName: 'testApp',
-        bundleIdentifier: 'test.com.app',
-        distCert: testIosDistCredential,
-        nonInteractive: true,
-      };
+      const ctx = getCtxMock({ nonInteractive: true });
       const createOrReuseProvisioningProfile = new CreateOrReuseProvisioningProfile(
-        provProfOptions
+        testAppLookupParams
       );
       const createProvisioningProfile = await createOrReuseProvisioningProfile.open(ctx as any);
       await createProvisioningProfile.open(ctx as any);

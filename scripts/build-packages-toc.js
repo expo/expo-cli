@@ -1,10 +1,6 @@
 #!/usr/bin/env node
-const path = require('path');
 const fs = require('fs-extra');
-
-function toCamel(s) {
-  return s.replace(/(-\w)/g, m => m[1].toUpperCase());
-}
+const path = require('path');
 
 /**
  * @param {string} cell
@@ -51,7 +47,7 @@ async function run() {
 
   const lines = [`\n<!-- Begin auto-generation -->\n`];
   const entries = [
-    ['Package', 'Coverage'],
+    ['Package', 'Version'],
     ['---', '---'],
   ];
   for (const pkg of contents) {
@@ -60,13 +56,13 @@ async function run() {
 
       const repoLink = `./packages/${pkg}`;
 
-      const codecovLink = `https://codecov.io/gh/expo/expo-cli/tree/master/packages/${pkg}/src`;
-      const codecovIcon = `https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=${toCamel(
-        pkg
-      )}`;
+      // const codecovLink = `https://codecov.io/gh/expo/expo-cli/tree/master/packages/${pkg}/src`;
+      // const codecovIcon = `https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=${toCamel(
+      //   pkg
+      // )}`;
 
-      // const npmLink = `https://www.npmjs.com/package/${pkgJson.name}`;
-      // const npmIcon = `https://img.shields.io/npm/v/${pkgJson.name}.svg?style=flat-square&label=&labelColor=CB3837&color=000&logo=npm?cacheSeconds=3600`;
+      const npmLink = `https://www.npmjs.com/package/${pkgJson.name}`;
+      const npmIcon = `https://img.shields.io/npm/v/${pkgJson.name}?color=32cd32&style=flat-square`;
       // const npmItem = `[\`v${pkgJson.version}\`](${npmLink})`;
       /// With Icon, this seems to time out
       // const npmItem = `[![badges](${npmIcon})](${npmLink})`;
@@ -75,7 +71,7 @@ async function run() {
       // Currently doesn't work with xdl or expo-cli
       entries.push([
         `[**\`${pkgJson.name}\`**](${repoLink})`,
-        `[![badges](${codecovIcon})](${codecovLink})`,
+        `[![badges](${npmIcon})](${npmLink})`,
       ]);
     } catch (e) {
       console.log(`Skipping ${pkg}`);

@@ -1,9 +1,7 @@
+import { testAppLookupParams } from '../../test-fixtures/mocks-constants';
+import { getCtxMock } from '../../test-fixtures/mocks-context';
+import { testDistCertsFromApple, testIosDistCredential } from '../../test-fixtures/mocks-ios';
 import { SetupIosDist } from '../SetupIosDist';
-import {
-  getCtxMock,
-  testDistCertsFromApple,
-  testIosDistCredential,
-} from '../../test-fixtures/mocks';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope
 const mockDistCertManagerCreate = jest.fn(() => testIosDistCredential);
@@ -19,16 +17,6 @@ jest.mock('../../../appleApi', () => {
 
 jest.mock('../../actions/list');
 
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
 beforeEach(() => {
   mockDistCertManagerCreate.mockClear();
   mockDistCertManagerList.mockClear();
@@ -36,13 +24,13 @@ beforeEach(() => {
 
 describe('SetupIosDist', () => {
   it('Basic Case - Create or Reuse', async () => {
-    const ctx = getCtxMock();
-    const distCertOptions = {
-      experienceName: 'testApp',
-      bundleIdentifier: 'test.com.app',
+    const ctx = getCtxMock({
+      ios: {
+        getDistCert: jest.fn(),
+      },
       nonInteractive: true,
-    };
-    const setupIosDist = new SetupIosDist(distCertOptions);
+    });
+    const setupIosDist = new SetupIosDist(testAppLookupParams);
     const createOrReuse = await setupIosDist.open(ctx as any);
     await createOrReuse.open(ctx as any);
 

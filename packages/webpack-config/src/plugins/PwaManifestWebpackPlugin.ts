@@ -1,5 +1,6 @@
-import { Compiler, Plugin, compilation } from 'webpack';
-import * as path from 'path';
+import { joinUrlPath } from 'expo-pwa';
+import { compilation as compilationNS, Compiler, Plugin } from 'webpack';
+
 import JsonWebpackPlugin from './JsonWebpackPlugin';
 import { HTMLPluginData } from './ModifyHtmlWebpackPlugin';
 
@@ -36,7 +37,7 @@ export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
     super.apply(compiler);
     compiler.hooks.make.tapPromise(
       this.constructor.name,
-      async (compilation: compilation.Compilation) => {
+      async (compilation: compilationNS.Compilation) => {
         // Hook into the html-webpack-plugin processing and add the html
         const HtmlWebpackPlugin = maybeFetchPlugin(compiler, 'HtmlWebpackPlugin') as any;
         if (HtmlWebpackPlugin) {
@@ -71,7 +72,7 @@ export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
                 voidTag: true,
                 attributes: {
                   rel: this.rel,
-                  href: path.join(this.pwaOptions.publicPath, this.pwaOptions.path),
+                  href: joinUrlPath(this.pwaOptions.publicPath, this.pwaOptions.path),
                 },
               });
 

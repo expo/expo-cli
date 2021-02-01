@@ -7,6 +7,7 @@ import * as Env from './Env';
 import { ConnectionType } from './User';
 
 export type UserSettingsData = {
+  appleId?: string;
   accessToken?: string;
   auth?: UserData | null;
   ignoreBundledBinaries?: string[];
@@ -17,6 +18,7 @@ export type UserSettingsData = {
 };
 
 export type UserData = {
+  appleId?: string;
   userId?: string;
   username?: string;
   currentConnection?: ConnectionType;
@@ -26,11 +28,11 @@ export type UserData = {
 const SETTINGS_FILE_NAME = 'state.json';
 
 function userSettingsFile(): string {
-  let dir = dotExpoHomeDirectory();
-  let file = path.join(dir, SETTINGS_FILE_NAME);
+  const dir = dotExpoHomeDirectory();
+  const file = path.join(dir, SETTINGS_FILE_NAME);
   try {
     // move exponent.json to state.json
-    let oldFile = path.join(dir, 'exponent.json');
+    const oldFile = path.join(dir, 'exponent.json');
     if (fs.statSync(oldFile).isFile()) {
       fs.renameSync(oldFile, file);
     }
@@ -44,15 +46,6 @@ function userSettingsJsonFile(): JsonFile<UserSettingsData> {
   return new JsonFile<UserSettingsData>(userSettingsFile(), {
     jsonParseErrorDefault: {},
     cantReadFileDefault: {},
-  });
-}
-
-function recentExpsJsonFile() {
-  // TODO(ville): Add array support to JsonFile.
-  // @ts-ignore JsonFile doesn't officially support arrays, only objects
-  return new JsonFile<string[]>(path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json'), {
-    jsonParseErrorDefault: [],
-    cantReadFileDefault: [],
   });
 }
 
@@ -79,7 +72,7 @@ function dotExpoHomeDirectory() {
 
     try {
       // move .exponent to .expo
-      let oldDirPath = path.join(home, '.exponent');
+      const oldDirPath = path.join(home, '.exponent');
       if (fs.statSync(oldDirPath).isDirectory()) {
         fs.renameSync(oldDirPath, dirPath);
       }
@@ -107,11 +100,15 @@ async function anonymousIdentifier(): Promise<string> {
   return id;
 }
 
+function accessToken(): string | null {
+  return process.env.EXPO_TOKEN || null;
+}
+
 const UserSettings = Object.assign(userSettingsJsonFile(), {
   dotExpoHomeDirectory,
-  recentExpsJsonFile,
   userSettingsFile,
   userSettingsJsonFile,
+  accessToken,
   anonymousIdentifier,
   SETTINGS_FILE_NAME,
 });

@@ -1,4 +1,4 @@
-import * as ConfigUtils from '@expo/config';
+import { getConfig, getNameFromConfig } from '@expo/config';
 import { isUsingYarn } from '@expo/package-manager';
 import chalk from 'chalk';
 import * as devcert from 'devcert';
@@ -6,20 +6,22 @@ import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';
 import * as path from 'path';
+import { choosePort, prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import openBrowser from 'react-dev-utils/openBrowser';
-import { Urls, choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
-import ip from './ip';
 import Logger from './Logger';
-import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as UrlUtils from './UrlUtils';
-import createWebpackCompiler, { printInstructions } from './webpack-utils/createWebpackCompiler';
-import { DEFAULT_PORT, HOST, isDebugModeEnabled } from './webpack-utils/WebpackEnvironment';
+import * as Versions from './Versions';
 import XDLError from './XDLError';
+import ip from './ip';
+import { learnMore } from './logs/TerminalLink';
+import * as ProjectUtils from './project/ProjectUtils';
+import { DEFAULT_PORT, HOST, isDebugModeEnabled } from './webpack-utils/WebpackEnvironment';
+import createWebpackCompiler, { printInstructions } from './webpack-utils/createWebpackCompiler';
 
 const WEBPACK_LOG_TAG = 'expo';
 
@@ -51,7 +53,7 @@ type BundlingOptions = {
   clear?: boolean;
   pwa?: boolean;
   isImageEditingEnabled?: boolean;
-  webpackEnv?: Object;
+  webpackEnv?: object;
   mode?: 'development' | 'production' | 'test' | 'none';
   https?: boolean;
   nonInteractive?: boolean;
@@ -68,6 +70,7 @@ export type WebEnvironment = {
   pwa: boolean;
   mode: 'development' | 'production' | 'test' | 'none';
   https: boolean;
+  offline?: boolean;
 };
 
 export async function restartAsync(
@@ -77,9 +80,6 @@ export async function restartAsync(
   await stopAsync(projectRoot);
   return await startAsync(projectRoot, options);
 }
-
-const PLATFORM_TAG = ProjectUtils.getPlatformTag('web');
-const withTag = (...messages: any[]) => [PLATFORM_TAG + ' ', ...messages].join('');
 
 let devServerInfo: {
   urls: Urls;
@@ -96,17 +96,20 @@ export function printConnectionInstructions(projectRoot: string, options = {}) {
     appName: devServerInfo.appName,
     urls: devServerInfo.urls,
     showInDevtools: false,
-    showHelp: false,
     ...options,
   });
 }
 
 async function clearWebCacheAsync(projectRoot: string, mode: string): Promise<void> {
   const cacheFolder = path.join(projectRoot, '.expo', 'web', 'cache', mode);
+  ProjectUtils.logInfo(
+    projectRoot,
+    WEBPACK_LOG_TAG,
+    chalk.dim(`Clearing ${mode} cache directory...`)
+  );
   try {
-    withTag(chalk.dim(`Clearing ${mode} cache directory...`));
     await fs.remove(cacheFolder);
-  } catch (_) {}
+  } catch {}
 }
 
 export async function startAsync(
@@ -121,13 +124,13 @@ export async function startAsync(
     );
   }
 
-  let serverName = 'Webpack';
+  const serverName = 'Webpack';
 
   if (webpackDevServerInstance) {
     ProjectUtils.logError(
       projectRoot,
       WEBPACK_LOG_TAG,
-      withTag(chalk.red(`${serverName} is already running.`))
+      chalk.red(`${serverName} is already running.`)
     );
     return null;
   }
@@ -163,9 +166,7 @@ export async function startAsync(
   ProjectUtils.logInfo(
     projectRoot,
     WEBPACK_LOG_TAG,
-    withTag(
-      `Starting ${serverName} on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`
-    )
+    `Starting ${serverName} on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`
   );
 
   const protocol = env.https ? 'https' : 'http';
@@ -178,8 +179,6 @@ export async function startAsync(
     !process.stdout.isTTY
   );
 
-  let server: DevServer;
-
   devServerInfo = {
     urls,
     protocol,
@@ -189,7 +188,7 @@ export async function startAsync(
     port: webpackServerPort!,
   };
 
-  server = await new Promise(resolve => {
+  const server: DevServer = await new Promise(resolve => {
     // Create a webpack compiler that is configured with custom messages.
     const compiler = createWebpackCompiler({
       projectRoot,
@@ -288,11 +287,9 @@ export async function compileWebAppAsync(
         ProjectUtils.logWarning(
           projectRoot,
           WEBPACK_LOG_TAG,
-          withTag(
-            chalk.yellow(
-              '\nTreating warnings as errors because `process.env.CI = true` and `process.env.EXPO_WEB_BUILD_STRICT = true`. \n' +
-                'Most CI servers set it automatically.\n'
-            )
+          chalk.yellow(
+            '\nTreating warnings as errors because `process.env.CI = true` and `process.env.EXPO_WEB_BUILD_STRICT = true`. \n' +
+              'Most CI servers set it automatically.\n'
           )
         );
         return reject(new Error(messages.warnings.join('\n\n')));
@@ -314,18 +311,14 @@ export async function bundleWebAppAsync(projectRoot: string, config: WebpackConf
       ProjectUtils.logWarning(
         projectRoot,
         WEBPACK_LOG_TAG,
-        withTag(chalk.yellow('Compiled with warnings.\n'))
+        chalk.yellow('Compiled with warnings.\n')
       );
       ProjectUtils.logWarning(projectRoot, WEBPACK_LOG_TAG, warnings.join('\n\n'));
     } else {
-      ProjectUtils.logInfo(
-        projectRoot,
-        WEBPACK_LOG_TAG,
-        withTag(chalk.green('Compiled successfully.\n'))
-      );
+      ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, chalk.green('Compiled successfully.\n'));
     }
   } catch (error) {
-    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, withTag(chalk.red('Failed to compile.\n')));
+    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, chalk.red('Failed to compile.\n'));
     throw error;
   }
 }
@@ -341,6 +334,19 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
     mode: 'production',
   });
 
+  if (typeof env.offline === 'undefined') {
+    try {
+      const expoConfig = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+      // If offline isn't defined, check the version and keep offline enabled for SDK 38 and prior
+      if (expoConfig.exp.sdkVersion)
+        if (Versions.lteSdkVersion(expoConfig.exp, '38.0.0')) {
+          env.offline = true;
+        }
+    } catch {
+      // Ignore the error thrown by projects without an Expo config.
+    }
+  }
+
   if (fullOptions.clear) {
     await clearWebCacheAsync(projectRoot, env.mode);
   }
@@ -348,13 +354,28 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
   const config = await createWebpackConfigAsync(env, fullOptions);
 
   await bundleWebAppAsync(projectRoot, config);
+
+  const hasSWPlugin = config.plugins?.find(item => {
+    return item?.constructor?.name === 'GenerateSW';
+  });
+  if (!hasSWPlugin) {
+    ProjectUtils.logInfo(
+      projectRoot,
+      WEBPACK_LOG_TAG,
+      chalk.green(
+        `Offline (PWA) support is not enabled in this build. ${chalk.dim(
+          learnMore('https://expo.fyi/enabling-web-service-workers')
+        )}\n`
+      )
+    );
+  }
 }
 
 export async function getProjectNameAsync(projectRoot: string): Promise<string> {
-  const { exp } = ConfigUtils.getConfig(projectRoot, {
+  const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
-  const { webName } = ConfigUtils.getNameFromConfig(exp);
+  const webName = getNameFromConfig(exp).webName ?? exp.name;
   return webName;
 }
 
@@ -364,7 +385,7 @@ export function isRunning(): boolean {
 
 export function getServer(projectRoot: string): DevServer | null {
   if (webpackDevServerInstance == null) {
-    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, withTag('Webpack is not running.'));
+    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is not running.');
   }
   return webpackDevServerInstance;
 }
@@ -457,7 +478,7 @@ async function applyOptionsToProjectSettingsAsync(
   projectRoot: string,
   options: BundlingOptions
 ): Promise<ProjectSettings.Settings> {
-  let newSettings: Partial<ProjectSettings.Settings> = {};
+  const newSettings: Partial<ProjectSettings.Settings> = {};
   // Change settings before reading them
   if (typeof options.https === 'boolean') {
     newSettings.https = options.https;
@@ -474,7 +495,7 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   projectRoot: string,
   options: BundlingOptions
 ): Promise<WebEnvironment> {
-  let { dev, https } = await applyOptionsToProjectSettingsAsync(projectRoot, options);
+  const { dev, https } = await applyOptionsToProjectSettingsAsync(projectRoot, options);
 
   const mode = typeof options.mode === 'string' ? options.mode : dev ? 'development' : 'production';
 
@@ -597,7 +618,7 @@ export async function openProjectAsync(
   projectRoot: string
 ): Promise<{ success: true; url: string } | { success: false; error: Error }> {
   try {
-    let url = await UrlUtils.constructWebAppUrlAsync(projectRoot, { hostType: 'localhost' });
+    const url = await UrlUtils.constructWebAppUrlAsync(projectRoot, { hostType: 'localhost' });
     if (!url) {
       throw new Error('Webpack Dev Server is not running');
     }

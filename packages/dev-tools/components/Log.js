@@ -1,10 +1,10 @@
-import React from 'react';
-import { css, cx } from 'react-emotion';
-import hasAnsi from 'has-ansi';
 import { ansiToJson } from 'anser';
-
 import * as Constants from 'app/common/constants';
 import * as Strings from 'app/common/strings';
+import hasAnsi from 'has-ansi';
+import React from 'react';
+import { css, cx } from 'react-emotion';
+
 import StackTrace from './StackTrace';
 
 const STYLES_LOG = css`

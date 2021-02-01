@@ -1,9 +1,9 @@
+import { ApiV2, UserManager } from '@expo/xdl';
+import FormData from 'form-data';
 import fs from 'fs';
-import { Readable } from 'stream';
-
-import { ApiV2, FormData, UserManager } from '@expo/xdl';
 import got, { Progress } from 'got';
-import md5File from 'md5-file/promise';
+import md5File from 'md5-file';
+import { Readable } from 'stream';
 
 enum UploadType {
   TURTLE_PROJECT_SOURCES = 'turtle-project-sources',

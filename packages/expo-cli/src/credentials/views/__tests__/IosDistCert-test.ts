@@ -1,9 +1,7 @@
+import { jester, testAppLookupParams } from '../../test-fixtures/mocks-constants';
+import { getCtxMock } from '../../test-fixtures/mocks-context';
+import { testDistCertsFromApple, testIosDistCredential } from '../../test-fixtures/mocks-ios';
 import { CreateIosDist, CreateOrReuseDistributionCert } from '../IosDistCert';
-import {
-  getCtxMock,
-  testDistCertsFromApple,
-  testIosDistCredential,
-} from '../../test-fixtures/mocks';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope
 const mockDistCertManagerCreate = jest.fn(() => testIosDistCredential);
@@ -19,16 +17,6 @@ jest.mock('../../../appleApi', () => {
 
 jest.mock('../../actions/list');
 
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
 beforeEach(() => {
   mockDistCertManagerCreate.mockClear();
   mockDistCertManagerList.mockClear();
@@ -37,11 +25,8 @@ beforeEach(() => {
 describe('IosDistCert', () => {
   describe('CreateIosDist', () => {
     it('Basic Case - Create a Dist Cert and save it to Expo Servers', async () => {
-      const ctx = getCtxMock();
-      const cliOptions = {
-        nonInteractive: true,
-      };
-      const createIosDist = new CreateIosDist(cliOptions);
+      const ctx = getCtxMock({ nonInteractive: true });
+      const createIosDist = new CreateIosDist(jester.username);
       await createIosDist.open(ctx as any);
 
       // expect dist cert is created
@@ -53,13 +38,8 @@ describe('IosDistCert', () => {
   });
   describe('CreateOrReuseDistributionCert', () => {
     it('Reuse Autosuggested Dist Cert ', async () => {
-      const ctx = getCtxMock();
-      const distCertOptions = {
-        experienceName: 'testApp',
-        bundleIdentifier: 'test.com.app',
-        nonInteractive: true,
-      };
-      const createOrReuseIosDist = new CreateOrReuseDistributionCert(distCertOptions);
+      const ctx = getCtxMock({ nonInteractive: true });
+      const createOrReuseIosDist = new CreateOrReuseDistributionCert(testAppLookupParams);
       await createOrReuseIosDist.open(ctx as any);
 
       // expect suggested dist cert is used
@@ -75,14 +55,9 @@ describe('IosDistCert', () => {
       // no available certs on apple dev portal
       mockDistCertManagerList.mockImplementation(() => [] as any);
 
-      const ctx = getCtxMock();
+      const ctx = getCtxMock({ nonInteractive: true });
 
-      const distCertOptions = {
-        experienceName: 'testApp',
-        bundleIdentifier: 'test.com.app',
-        nonInteractive: true,
-      };
-      const createOrReuseIosDist = new CreateOrReuseDistributionCert(distCertOptions);
+      const createOrReuseIosDist = new CreateOrReuseDistributionCert(testAppLookupParams);
       await createOrReuseIosDist.open(ctx as any);
 
       // expect dist cert is used

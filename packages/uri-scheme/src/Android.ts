@@ -1,14 +1,14 @@
 import {
-  format,
-  getPackageAsync,
+  AndroidManifest,
   readAndroidManifestAsync,
   writeAndroidManifestAsync,
-} from '@expo/config/build/android/Manifest';
-import * as Scheme from '@expo/config/build/android/Scheme';
+} from '@expo/config-plugins/build/android/Manifest';
+import * as Scheme from '@expo/config-plugins/build/android/Scheme';
+import { format } from '@expo/config-plugins/build/utils/XML';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
-import { sync } from 'glob';
-import { join } from 'path';
+import { existsSync } from 'fs';
+import path from 'path';
 
 import { CommandError, Options } from './Options';
 
@@ -16,9 +16,10 @@ const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Inten
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 
 export function isAvailable(projectRoot: string): boolean {
-  const reactNativeAndroid = sync(join(projectRoot, 'android/app/src/main/AndroidManifest.xml'));
-  const currentAndroid = sync(join(projectRoot, 'app/src/main/AndroidManifest.xml'));
-  return !!currentAndroid.length || !!reactNativeAndroid.length;
+  return (
+    existsSync(path.join(projectRoot, 'android/app/src/main/AndroidManifest.xml')) ||
+    existsSync(path.join(projectRoot, 'app/src/main/AndroidManifest.xml'))
+  );
 }
 
 export async function addAsync({
@@ -103,7 +104,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
   const adb = whichADB();
 
   try {
-    let result = await spawnAsync(adb, args);
+    const result = await spawnAsync(adb, args);
     return result.stdout;
   } catch (e) {
     const err: string = e.stderr || e.stdout || '';
@@ -147,13 +148,17 @@ export async function getAsync({
   return await Scheme.getSchemesFromManifest(manifest);
 }
 
+function getPackage(androidManifest: AndroidManifest): string | null {
+  return androidManifest.manifest?.$?.package ?? null;
+}
+
 export async function getProjectIdAsync({
   projectRoot,
   manifestPath,
 }: Pick<Options, 'projectRoot' | 'manifestPath'>): Promise<string> {
   const resolvedManifestPath = manifestPath ?? getConfigPath(projectRoot);
   const manifest = await readConfigAsync(resolvedManifestPath);
-  const androidPackage = await getPackageAsync(manifest);
+  const androidPackage = getPackage(manifest);
   if (!androidPackage)
     throw new CommandError(
       `Android: Failed to resolve android package for Manifest at path: ${resolvedManifestPath}`
@@ -162,12 +167,16 @@ export async function getProjectIdAsync({
 }
 
 export function getConfigPath(projectRoot: string): string {
-  const rnManifestPaths = sync(join(projectRoot, 'android/app/src/main/AndroidManifest.xml'));
-  if (rnManifestPaths.length) {
-    return rnManifestPaths[0];
+  const paths = [
+    'android/app/src/main/AndroidManifest.xml',
+    'app/src/main/AndroidManifest.xml',
+  ].map(relative => path.join(projectRoot, relative));
+  for (const manifestPath of paths) {
+    if (existsSync(manifestPath)) {
+      return manifestPath;
+    }
   }
-  const manifestPaths = sync(join(projectRoot, 'app/src/main/AndroidManifest.xml'));
-  return manifestPaths[0];
+  throw new Error(`Could not find AndroidManifest.xml, looked in: ${paths.join(', ')}`);
 }
 
 async function readConfigAsync(path: string): Promise<any> {

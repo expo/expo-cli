@@ -3,8 +3,16 @@ import { isAvailableAsync, sharpAsync } from '@expo/image-utils';
 import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
 import crypto from 'crypto';
-import { ensureDirSync, move, readFileSync, statSync, unlinkSync } from 'fs-extra';
-import glob from 'glob';
+import {
+  ensureDirSync,
+  existsSync,
+  move,
+  readFileSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from 'fs-extra';
+import { sync as globSync } from 'glob';
 import { basename, join, parse, relative } from 'path';
 import prettyBytes from 'pretty-bytes';
 import temporary from 'tempy';
@@ -18,6 +26,25 @@ async function readAssetJsonAsync(
   const dirPath = join(projectDir, '.expo-shared');
 
   ensureDirSync(dirPath);
+
+  const readmeFilePath = join(dirPath, 'README.md');
+  if (!existsSync(readmeFilePath)) {
+    writeFileSync(
+      readmeFilePath,
+      `> Why do I have a folder named ".expo-shared" in my project?
+
+The ".expo-shared" folder is created when running commands that produce state that is intended to be shared with all developers on the project. For example, "npx expo-optimize".
+
+> What does the "assets.json" file contain?
+
+The "assets.json" file describes the assets that have been optimized through "expo-optimize" and do not need to be processed again.
+
+> Should I commit the ".expo-shared" folder?
+
+Yes, you should share the ".expo-shared" folder with your collaborators.
+`
+    );
+  }
 
   const assetJson = new JsonFile<AssetOptimizationState>(join(dirPath, 'assets.json'));
   if (!fileExists(assetJson.file)) {
@@ -86,14 +113,14 @@ async function getAssetFilesAsync(
   const allFiles: string[] = [];
   const patterns = assetBundlePatterns || ['**/*'];
   patterns.forEach((pattern: string) => {
-    allFiles.push(...glob.sync(pattern, globOptions));
+    allFiles.push(...globSync(pattern, globOptions));
   });
   // If --include is passed in, only return files matching that pattern
   const included =
-    options && options.include ? [...glob.sync(options.include, globOptions)] : allFiles;
+    options && options.include ? [...globSync(options.include, globOptions)] : allFiles;
   const toExclude = new Set();
   if (options && options.exclude) {
-    glob.sync(options.exclude, globOptions).forEach(file => toExclude.add(file));
+    globSync(options.exclude, globOptions).forEach(file => toExclude.add(file));
   }
   // If --exclude is passed in, filter out files matching that pattern
   const excluded = included.filter(file => !toExclude.has(file));

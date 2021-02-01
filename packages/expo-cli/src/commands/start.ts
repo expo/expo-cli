@@ -1,4 +1,4 @@
-import { ExpoConfig, PackageJSONConfig, getConfig, projectHasModule } from '@expo/config';
+import { ExpoConfig, getConfig, PackageJSONConfig, projectHasModule } from '@expo/config';
 // @ts-ignore: not typed
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
@@ -11,9 +11,10 @@ import semver from 'semver';
 
 import { installExitHooks } from '../exit';
 import log from '../log';
-import sendTo from '../sendTo';
+import * as sendTo from '../sendTo';
 import urlOpts, { URLOptions } from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
+import { ensureTypeScriptSetupAsync } from './utils/typescript/ensureTypeScriptSetup';
 
 type NormalizedOptions = URLOptions & {
   webOnly?: boolean;
@@ -52,25 +53,6 @@ function getBooleanArg(rawArgs: string[], argName: string): boolean {
   }
 }
 
-/**
- * If the project config `platforms` only contains the "web" field.
- * If no `platforms` array is defined this could still resolve true because platforms
- * will be inferred from the existence of `react-native-web` and `react-native`.
- *
- * @param projectRoot
- */
-function isWebOnly(projectRoot: string): boolean {
-  // TODO(Bacon): Limit the amount of times that the config is evaluated
-  // currently we read it the first time without the SDK version then later read it with the SDK version if react-native is installed.
-  const { exp } = getConfig(projectRoot, {
-    skipSDKVersionRequirement: true,
-  });
-  if (Array.isArray(exp.platforms) && exp.platforms.length === 1) {
-    return exp.platforms[0] === 'web';
-  }
-  return false;
-}
-
 // The main purpose of this function is to take existing options object and
 // support boolean args with as defined in the hasBooleanArg and getBooleanArg
 // functions.
@@ -80,7 +62,7 @@ async function normalizeOptionsAsync(
 ): Promise<NormalizedOptions> {
   const opts: NormalizedOptions = {
     ...options, // This is necessary to ensure we don't drop any options
-    webOnly: options.webOnly ?? isWebOnly(projectDir),
+    webOnly: !!options.webOnly, // This is only ever true in the start:web command
     nonInteractive: options.parent?.nonInteractive,
   };
 
@@ -132,6 +114,8 @@ async function normalizeOptionsAsync(
 
 async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions): Promise<void> {
   await ProjectSettings.setAsync(projectDir, {
+    devClient: options.devClient,
+    scheme: options.scheme,
     dev: options.dev,
     minify: options.minify,
     https: options.https,
@@ -157,13 +141,27 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
     startOpts.maxWorkers = options.maxWorkers;
   }
 
+  if (options.devClient) {
+    startOpts.devClient = true;
+
+    // TODO: is this redundant?
+    startOpts.target = 'bare';
+  } else {
+    // For `expo start`, the default target is 'managed', for both managed *and* bare apps.
+    // See: https://docs.expo.io/bare/using-expo-client
+    startOpts.target = 'managed';
+  }
+
   return startOpts;
 }
 
 async function startWebAction(projectDir: string, options: NormalizedOptions): Promise<void> {
   const { exp, rootPath } = await configureProjectAsync(projectDir, options);
+  if (Versions.gteSdkVersion(exp, '34.0.0')) {
+    await ensureTypeScriptSetupAsync(projectDir);
+  }
   const startOpts = parseStartOptions(options);
-  await Project.startAsync(rootPath, startOpts);
+  await Project.startAsync(rootPath, { ...startOpts, exp });
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
   if (!options.nonInteractive && !exp.isDetached) {
@@ -174,13 +172,18 @@ async function startWebAction(projectDir: string, options: NormalizedOptions): P
 async function action(projectDir: string, options: NormalizedOptions): Promise<void> {
   const { exp, pkg, rootPath } = await configureProjectAsync(projectDir, options);
 
+  if (Versions.gteSdkVersion(exp, '34.0.0')) {
+    await ensureTypeScriptSetupAsync(projectDir);
+  }
+
+  // TODO: only validate dependencies if starting in managed workflow
   await validateDependenciesVersions(projectDir, exp, pkg);
 
   const startOpts = parseStartOptions(options);
 
-  await Project.startAsync(rootPath, startOpts);
+  await Project.startAsync(rootPath, { ...startOpts, exp });
 
-  const url = await UrlUtils.constructManifestUrlAsync(projectDir);
+  const url = await UrlUtils.constructDeepLinkAsync(projectDir);
 
   const recipient = await sendTo.getRecipient(options.sendTo);
   if (recipient) {
@@ -226,7 +229,7 @@ async function validateDependenciesVersions(
 
   const bundledNativeModules = await JsonFile.readAsync(bundleNativeModulesPath);
   const bundledNativeModulesNames = Object.keys(bundledNativeModules);
-  const projectDependencies = Object.keys(pkg.dependencies);
+  const projectDependencies = Object.keys(pkg.dependencies || []);
 
   const modulesToCheck = intersection(bundledNativeModulesNames, projectDependencies);
   const incorrectDeps = [];
@@ -326,15 +329,12 @@ async function configureProjectAsync(
 
 export default (program: any) => {
   program
-    .command('start [project-dir]')
+    .command('start [path]')
     .alias('r')
-    .description('Starts or restarts a local server for your app and gives you a URL to it')
+    .description('Start a local dev server for the app')
+    .helpGroup('core')
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .option('-c, --clear', 'Clear the Metro bundler cache')
-    .option(
-      '--web-only',
-      'Only start the Webpack dev server for web. [Deprecated]: use `expo start:web`'
-    )
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .option('--dev', 'Turn development mode on')
@@ -348,17 +348,15 @@ export default (program: any) => {
     .asyncActionProjectDir(
       async (projectDir: string, options: Options): Promise<void> => {
         const normalizedOptions = await normalizeOptionsAsync(projectDir, options);
-        if (normalizedOptions.webOnly) {
-          return await startWebAction(projectDir, normalizedOptions);
-        }
         return await action(projectDir, normalizedOptions);
       }
     );
 
   program
-    .command('start:web [project-dir]')
+    .command('start:web [path]')
     .alias('web')
-    .description('Starts the Webpack dev server for web projects')
+    .description('Start a Webpack dev server for the web app')
+    .helpGroup('core')
     .option('--dev', 'Turn development mode on')
     .option('--no-dev', 'Turn development mode off')
     .option('--minify', 'Minify code')

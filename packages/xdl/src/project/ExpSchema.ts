@@ -1,18 +1,22 @@
-import path from 'path';
-import { JSONObject } from '@expo/json-file';
-
 import { getConfig } from '@expo/config';
+import { JSONObject } from '@expo/json-file';
 import Schemer from '@expo/schemer';
 import fs from 'fs';
+import { boolish } from 'getenv';
+import schemaDerefSync from 'json-schema-deref-sync';
+import path from 'path';
 
 import ApiV2 from '../ApiV2';
 import { Cacher } from '../tools/FsCache';
 
 export type Schema = any;
-export type AssetSchema = { schema: Schema; fieldPath: string };
+export type AssetSchema = {
+  // schema: Schema;
+  fieldPath: string;
+};
 
-let _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
-let _schemaCaches: { [version: string]: Cacher<JSONObject> } = {};
+const _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
+const _schemaCaches: { [version: string]: Cacher<JSONObject> } = {};
 
 export async function validatorFromProjectRoot(projectRoot: string): Promise<Schemer> {
   const { exp } = getConfig(projectRoot);
@@ -22,19 +26,32 @@ export async function validatorFromProjectRoot(projectRoot: string): Promise<Sch
   return validator;
 }
 
-export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
-  let json = await _getSchemaJSONAsync(sdkVersion);
-  return json.schema;
+export async function validateAsync(projectRoot: string) {
+  const { exp } = getConfig(projectRoot);
+  if (!exp.sdkVersion) throw new Error(`Couldn't read local manifest`);
+  const schema = await getSchemaAsync(exp.sdkVersion);
+  const validator = new Schemer(schema);
+  await validator.validateAll(exp);
 }
 
-// Array of schema nodes that refer to assets along with their field
-// path (eg. 'notification.icon')
-export async function getAssetSchemasAsync(sdkVersion: string): Promise<AssetSchema[]> {
-  const schema = await getSchemaAsync(sdkVersion);
-  const assetSchemas: AssetSchema[] = [];
+export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
+  const json = await _getSchemaJSONAsync(sdkVersion);
+  const schema = schemaDerefSync(json.schema);
+  return schema;
+}
+
+/**
+ * Array of schema nodes that refer to assets along with their field path (eg. 'notification.icon')
+ *
+ * @param sdkVersion
+ */
+export async function getAssetSchemasAsync(sdkVersion: string): Promise<string[]> {
+  // If no SDK version is available then fall back to unversioned
+  const schema = await getSchemaAsync(sdkVersion ?? 'UNVERSIONED');
+  const assetSchemas: string[] = [];
   const visit = (node: Schema, fieldPath: string) => {
     if (node.meta && node.meta.asset) {
-      assetSchemas.push({ schema: node, fieldPath });
+      assetSchemas.push(fieldPath);
     }
     const properties = node.properties;
     if (properties) {
@@ -44,11 +61,12 @@ export async function getAssetSchemasAsync(sdkVersion: string): Promise<AssetSch
     }
   };
   visit(schema, '');
+
   return assetSchemas;
 }
 
 async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema }> {
-  if (process.env.LOCAL_XDL_SCHEMA) {
+  if (boolish('LOCAL_XDL_SCHEMA', false)) {
     if (process.env.EXPONENT_UNIVERSE_DIR) {
       return JSON.parse(
         fs

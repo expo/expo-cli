@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import terminalLink from 'terminal-link';
 
+import { SilentError } from '../CommandError';
 import log from '../log';
 
 type Options = {
@@ -23,17 +24,18 @@ async function action(projectDir: string, options: Options) {
         'https://expo.fyi/release-builds-with-expo-updates'
       )}`
     );
-    process.exit(1);
+    throw new SilentError(e);
   }
 }
 
 export default function (program: Command) {
   program
-    .command('bundle-assets [project-dir]')
+    .command('bundle-assets [path]')
+    .description(
+      'Bundle assets for a detached app. This command should be executed from xcode or gradle'
+    )
+    .helpGroup('internal')
     .option('--dest [dest]', 'Destination directory for assets')
     .option('--platform [platform]', 'detached project platform')
-    .description(
-      'Bundles assets for a detached app. This command should be executed from xcode or gradle.'
-    )
     .asyncActionProjectDir(action);
 }

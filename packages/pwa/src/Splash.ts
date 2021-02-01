@@ -1,4 +1,4 @@
-import { Orientation, isLandscape, isPortrait, isValid } from './Orientation';
+import { isLandscape, isPortrait, isValid, Orientation } from './Orientation';
 
 interface Device {
   names: string[];
@@ -64,7 +64,7 @@ export function getDevices({
     throw new Error(`${orientation} is not a valid orientation`);
   }
 
-  let orientations: Orientation[] = [];
+  const orientations: Orientation[] = [];
   if (isLandscape(orientation)) {
     orientations.push('landscape');
   }

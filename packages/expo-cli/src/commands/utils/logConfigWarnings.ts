@@ -1,13 +1,14 @@
-import terminalLink from 'terminal-link';
-import { WarningAggregator } from '@expo/config';
+import { WarningAggregator } from '@expo/config-plugins';
 import chalk from 'chalk';
+
 import log from '../../log';
+import * as TerminalLink from './TerminalLink';
 
 export function logConfigWarningsIOS() {
-  let warningsIOS = WarningAggregator.flushWarningsIOS();
+  const warningsIOS = WarningAggregator.flushWarningsIOS();
   if (warningsIOS.length) {
     warningsIOS.forEach(([property, warning, link]) => {
-      log.nested(formatOutput(property, warning, link));
+      log.nested(formatNamedWarning(property, warning, link));
     });
   }
 
@@ -15,19 +16,19 @@ export function logConfigWarningsIOS() {
 }
 
 export function logConfigWarningsAndroid() {
-  let warningsAndroid = WarningAggregator.flushWarningsAndroid();
+  const warningsAndroid = WarningAggregator.flushWarningsAndroid();
   if (warningsAndroid.length) {
     warningsAndroid.forEach(([property, warning, link]) => {
-      log.nested(formatOutput(property, warning, link));
+      log.nested(formatNamedWarning(property, warning, link));
     });
   }
 
   return !!warningsAndroid;
 }
 
-function formatOutput(property: string, warning: string, link: string | undefined) {
+export function formatNamedWarning(property: string, warning: string, link?: string) {
   return `- ${chalk.bold(property)}: ${warning}${
-    link ? getSpacer(warning) + terminalLink('Details.', link) : ''
+    link ? getSpacer(warning) + log.chalk.dim(TerminalLink.learnMore(link)) : ''
   }`;
 }
 

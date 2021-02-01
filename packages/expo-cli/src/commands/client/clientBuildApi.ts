@@ -1,8 +1,8 @@
-import { ApiV2, User } from '@expo/xdl';
 import { ExpoConfig } from '@expo/config';
+import { ApiV2, RobotUser, User } from '@expo/xdl';
 
 export type ClientBuildRequestOptions = {
-  user: User | null;
+  user: User | RobotUser | null;
   appleTeamId?: string;
   appleContext: any;
   distributionCert: any;
@@ -12,7 +12,7 @@ export type ClientBuildRequestOptions = {
   addUdid: any;
   email: any;
   bundleIdentifier: string;
-  customAppConfig: ExpoConfig;
+  customAppConfig: Partial<ExpoConfig>;
 };
 
 export async function createClientBuildRequest({
@@ -33,7 +33,7 @@ export async function createClientBuildRequest({
     addUdid,
     bundleIdentifier,
     email,
-    customAppConfig,
+    customAppConfig: customAppConfig as any,
     credentials: {
       ...(pushKey && pushKey.apnsKeyP8 ? { apnsKeyP8: pushKey.apnsKeyP8 } : null),
       ...(pushKey && pushKey.apnsKeyId ? { apnsKeyId: pushKey.apnsKeyId } : null),

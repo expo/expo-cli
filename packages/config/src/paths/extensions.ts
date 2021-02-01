@@ -1,4 +1,4 @@
-import invariant from 'invariant';
+import { assert } from '../Errors';
 
 export type LanguageOptions = {
   isTS: boolean;
@@ -12,9 +12,9 @@ export function getExtensions(
   workflows: string[]
 ): string[] {
   // In the past we used spread operators to collect the values so now we enforce type safety on them.
-  invariant(Array.isArray(platforms), 'Expected: `platforms: string[]`');
-  invariant(Array.isArray(extensions), 'Expected: `extensions: string[]`');
-  invariant(Array.isArray(workflows), 'Expected: `workflows: string[]`');
+  assert(Array.isArray(platforms), 'Expected: `platforms: string[]`');
+  assert(Array.isArray(extensions), 'Expected: `extensions: string[]`');
+  assert(Array.isArray(workflows), 'Expected: `workflows: string[]`');
 
   const fileExtensions = [];
   // support .expo files
@@ -59,7 +59,7 @@ export function getManagedExtensions(
     'expo',
   ]);
   // Always add these last
-  _addMiscellaneousExtensions(fileExtensions);
+  _addMiscellaneousExtensions(platforms, fileExtensions);
   return fileExtensions;
 }
 
@@ -73,14 +73,17 @@ export function getBareExtensions(
     []
   );
   // Always add these last
-  _addMiscellaneousExtensions(fileExtensions);
+  _addMiscellaneousExtensions(platforms, fileExtensions);
   return fileExtensions;
 }
 
-function _addMiscellaneousExtensions(fileExtensions: string[]): string[] {
+function _addMiscellaneousExtensions(platforms: string[], fileExtensions: string[]): string[] {
   // Always add these with no platform extension
   // In the future we may want to add platform and workspace extensions to json.
   fileExtensions.push('json');
-  fileExtensions.push('wasm');
+  // Native doesn't currently support web assembly.
+  if (platforms.includes('web')) {
+    fileExtensions.push('wasm');
+  }
   return fileExtensions;
 }

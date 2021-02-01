@@ -1,17 +1,15 @@
-import axios from 'axios';
+import { getDefaultTarget, ProjectTarget } from '@expo/config';
+import { Project, UrlUtils } from '@expo/xdl';
+import program, { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
-import validator from 'validator';
 import path from 'path';
-import targz from 'targz';
-import { Project, ProjectSettings, UrlUtils } from '@expo/xdl';
-import { ProjectTarget, getDefaultTarget } from '@expo/config';
-import { Command } from 'commander';
 
-import prompt, { Question } from '../prompt';
+import CommandError, { SilentError } from '../CommandError';
 import log from '../log';
-import { installExitHooks } from '../exit';
-import CommandError from '../CommandError';
+import prompt from '../prompts';
+import * as CreateApp from './utils/CreateApp';
+import { downloadAndDecompressAsync } from './utils/Tar';
 
 type Options = {
   outputDir: string;
@@ -27,139 +25,126 @@ type Options = {
   dumpSourcemap: boolean;
   maxWorkers?: number;
   force: boolean;
+  experimentalBundle: boolean;
 };
 
-export async function action(projectDir: string, options: Options) {
-  const outputPath = path.resolve(projectDir, options.outputDir);
-  let overwrite = options.force;
-  if (fs.existsSync(outputPath)) {
-    if (!overwrite) {
-      const question: Question = {
-        type: 'confirm',
-        name: 'action',
-        message: `Output directory ${outputPath} already exists.\nThe following files and directories will be overwritten if they exist:\n- ${options.outputDir}/bundles\n- ${options.outputDir}/assets\n- ${options.outputDir}/ios-index.json\n- ${options.outputDir}/android-index.json\nWould you like to continue?`,
-      };
-
-      const { action } = await prompt(question);
-      if (action) {
-        overwrite = true;
-      } else {
-        throw new CommandError(
-          'OUTPUT_DIR_EXISTS',
-          `Output directory ${outputPath} already exists. Aborting export.`
-        );
-      }
-    }
-    if (overwrite) {
-      log(`Removing old files from ${outputPath}`);
-      const outputBundlesDir = path.resolve(outputPath, 'bundles');
-      const outputAssetsDir = path.resolve(outputPath, 'assets');
-      const outputAndroidJson = path.resolve(outputPath, 'android-index.json');
-      const outputiOSJson = path.resolve(outputPath, 'ios-index.json');
-      if (fs.existsSync(outputBundlesDir)) {
-        fs.removeSync(outputBundlesDir);
-      }
-      if (fs.existsSync(outputAssetsDir)) {
-        fs.removeSync(outputAssetsDir);
-      }
-      if (fs.existsSync(outputAndroidJson)) {
-        fs.removeSync(outputAndroidJson);
-      }
-      if (fs.existsSync(outputiOSJson)) {
-        fs.removeSync(outputiOSJson);
-      }
-    }
-  }
-  if (!options.publicUrl) {
+export async function promptPublicUrlAsync(): Promise<string> {
+  try {
+    const { value } = await prompt({
+      type: 'text',
+      name: 'value',
+      validate: UrlUtils.isHttps,
+      message: `What is the public url that will host the static files?`,
+    });
+    return value;
+  } catch {
     throw new CommandError('MISSING_PUBLIC_URL', 'Missing required option: --public-url');
   }
+}
+
+export async function ensurePublicUrlAsync(url: any, isDev?: boolean): Promise<string> {
+  if (!url) {
+    if (program.nonInteractive) {
+      throw new CommandError('MISSING_PUBLIC_URL', 'Missing required option: --public-url');
+    }
+    url = await promptPublicUrlAsync();
+  }
+
   // If we are not in dev mode, ensure that url is https
-  if (!options.dev && !UrlUtils.isHttps(options.publicUrl)) {
+  if (!isDev && !UrlUtils.isHttps(url)) {
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-  } else if (!validator.isURL(options.publicUrl, { protocols: ['http', 'https'] })) {
-    console.warn(`Dev Mode: publicUrl ${options.publicUrl} does not conform to HTTP format.`);
+  } else if (!UrlUtils.isURL(url, { protocols: ['http', 'https'] })) {
+    log.nestedWarn(
+      `Dev Mode: --public-url ${url} does not conform to the required HTTP(S) protocol.`
+    );
   }
 
-  const target = options.target ?? getDefaultTarget(projectDir);
+  return url;
+}
 
-  const status = await Project.currentStatus(projectDir);
-  let shouldStartOurOwn = false;
-
-  if (status === 'running') {
-    const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectDir);
-    const runningPackagerTarget = packagerInfo.target ?? 'managed';
-    if (target !== runningPackagerTarget) {
-      log(
-        'Found an existing Expo CLI instance running for this project but the target did not match.'
-      );
-      await Project.stopAsync(projectDir);
-      log('Starting a new Expo CLI instance...');
-      shouldStartOurOwn = true;
-    }
-  } else {
-    log('Unable to find an existing Expo CLI instance for this directory; starting a new one...');
-    shouldStartOurOwn = true;
-  }
-
-  let startedOurOwn = false;
-  if (shouldStartOurOwn) {
-    installExitHooks(projectDir);
-
-    const startOpts: Project.StartOptions = {
-      reset: !!options.clear,
-      nonPersistent: true,
-      target,
-    };
-    if (options.maxWorkers) {
-      startOpts.maxWorkers = options.maxWorkers;
-    }
-    log('Exporting your app...');
-    await Project.startAsync(projectDir, startOpts, !options.quiet);
-    startedOurOwn = true;
-  }
-
+// TODO: We shouldn't need to wrap a method that is only used for one purpose.
+async function exportFilesAsync(
+  projectRoot: string,
+  options: Pick<
+    Options,
+    | 'dumpAssetmap'
+    | 'dumpSourcemap'
+    | 'dev'
+    | 'clear'
+    | 'target'
+    | 'outputDir'
+    | 'publicUrl'
+    | 'assetUrl'
+    | 'experimentalBundle'
+  >
+) {
   // Make outputDir an absolute path if it isnt already
   const exportOptions = {
     dumpAssetmap: options.dumpAssetmap,
     dumpSourcemap: options.dumpSourcemap,
     isDev: options.dev,
+    publishOptions: {
+      resetCache: !!options.clear,
+      target: options.target ?? getDefaultTarget(projectRoot),
+    },
   };
-  const absoluteOutputDir = path.resolve(process.cwd(), options.outputDir);
-  await Project.exportForAppHosting(
-    projectDir,
-    options.publicUrl,
+  return await Project.exportAppAsync(
+    projectRoot,
+    options.publicUrl!,
     options.assetUrl,
-    absoluteOutputDir,
-    exportOptions
+    options.outputDir,
+    exportOptions,
+    options.experimentalBundle
   );
+}
 
-  if (startedOurOwn) {
-    log('Terminating server processes.');
-    await Project.stopAsync(projectDir);
+async function mergeSourceDirectoriresAsync(
+  projectDir: string,
+  mergeSrcDirs: string[],
+  options: Pick<Options, 'mergeSrcUrl' | 'mergeSrcDir' | 'outputDir'>
+): Promise<void> {
+  if (!mergeSrcDirs.length) {
+    return;
   }
+  const srcDirs = options.mergeSrcDir.concat(options.mergeSrcUrl).join(' ');
+  log.nested(`Starting project merge of ${srcDirs} into ${options.outputDir}`);
 
+  // Merge app distributions
+  await Project.mergeAppDistributions(
+    projectDir,
+    [...mergeSrcDirs, options.outputDir], // merge stuff in srcDirs and outputDir together
+    options.outputDir
+  );
+  log.nested(
+    `Project merge was successful. Your merged files can be found in ${options.outputDir}`
+  );
+}
+
+export async function collectMergeSourceUrlsAsync(
+  projectDir: string,
+  mergeSrcUrl: string[]
+): Promise<string[]> {
   // Merge src dirs/urls into a multimanifest if specified
-  const mergeSrcDirs = [];
+  const mergeSrcDirs: string[] = [];
 
   // src urls were specified to merge in, so download and decompress them
-  if (options.mergeSrcUrl.length > 0) {
+  if (mergeSrcUrl.length > 0) {
     // delete .tmp if it exists and recreate it anew
-    const tmpFolder = path.resolve(projectDir, path.join('.tmp'));
+    const tmpFolder = path.resolve(projectDir, '.tmp');
     await fs.remove(tmpFolder);
     await fs.ensureDir(tmpFolder);
 
     // Download the urls into a tmp dir
-    const downloadDecompressPromises = options.mergeSrcUrl.map(
+    const downloadDecompressPromises = mergeSrcUrl.map(
       async (url: string): Promise<void> => {
         // Add the absolute paths to srcDir
         const uniqFilename = `${path.basename(url, '.tar.gz')}_${crypto
           .randomBytes(16)
           .toString('hex')}`;
-        const tmpFileCompressed = path.resolve(tmpFolder, uniqFilename + '_compressed');
-        const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
-        await download(url, tmpFileCompressed);
-        await decompress(tmpFileCompressed, tmpFolderUncompressed);
 
+        const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
+        await fs.ensureDir(tmpFolderUncompressed);
+        await downloadAndDecompressAsync(url, tmpFolderUncompressed);
         // add the decompressed folder to be merged
         mergeSrcDirs.push(tmpFolderUncompressed);
       }
@@ -167,69 +152,59 @@ export async function action(projectDir: string, options: Options) {
 
     await Promise.all(downloadDecompressPromises);
   }
-
-  // add any local src dirs to be merged
-  mergeSrcDirs.push(...options.mergeSrcDir);
-
-  if (mergeSrcDirs.length > 0) {
-    const srcDirs = options.mergeSrcDir.concat(options.mergeSrcUrl).join(' ');
-    log(`Starting project merge of ${srcDirs} into ${options.outputDir}`);
-
-    // Merge app distributions
-    await Project.mergeAppDistributions(
-      projectDir,
-      [...mergeSrcDirs, options.outputDir], // merge stuff in srcDirs and outputDir together
-      options.outputDir
-    );
-    log(`Project merge was successful. Your merged files can be found in ${options.outputDir}`);
-  }
-  log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
+  return mergeSrcDirs;
 }
 
-const download = async (uri: string, filename: string): Promise<null> => {
-  const response = await axios({
-    method: 'get',
-    url: uri,
-    responseType: 'stream',
-  });
-
-  response.data.pipe(fs.createWriteStream(filename));
-
-  return new Promise((resolve, reject) => {
-    response.data.on('close', () => resolve(null));
-    response.data.on('error', (err?: Error) => {
-      reject(err);
-    });
-  });
-};
-
-const decompress = async (src: string, dest: string): Promise<null> => {
-  return new Promise((resolve, reject) => {
-    targz.decompress(
-      {
-        src,
-        dest,
-      },
-      (error: string | Error | null) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(null);
-        }
-      }
-    );
-  });
-};
-
-function collect<T>(val: T, memo: Array<T>): Array<T> {
+function collect<T>(val: T, memo: T[]): T[] {
   memo.push(val);
   return memo;
 }
 
+export async function action(projectDir: string, options: Options) {
+  if (!options.experimentalBundle) {
+    // Ensure URL
+    options.publicUrl = await ensurePublicUrlAsync(options.publicUrl, options.dev);
+  }
+
+  // Ensure the output directory is created
+  const outputPath = path.resolve(projectDir, options.outputDir);
+  await fs.ensureDir(outputPath);
+
+  // Assert if the folder has contents
+  if (
+    !(await CreateApp.assertFolderEmptyAsync({
+      projectRoot: outputPath,
+      folderName: options.outputDir,
+      overwrite: options.force,
+    }))
+  ) {
+    const message = `Try using a new directory name with ${log.chalk.bold(
+      '--output-dir'
+    )}, moving these files, or using ${log.chalk.bold('--force')} to overwrite them.`;
+    log.newLine();
+    log.nested(message);
+    log.newLine();
+    throw new SilentError(message);
+  }
+
+  // Wrap the XDL method for exporting assets
+  await exportFilesAsync(projectDir, options);
+
+  // Merge src dirs/urls into a multimanifest if specified
+  const mergeSrcDirs: string[] = await collectMergeSourceUrlsAsync(projectDir, options.mergeSrcUrl);
+  // add any local src dirs to be merged
+  mergeSrcDirs.push(...options.mergeSrcDir);
+
+  await mergeSourceDirectoriresAsync(projectDir, mergeSrcDirs, options);
+
+  log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
+}
+
 export default function (program: Command) {
   program
-    .command('export [project-dir]')
-    .description('Exports the static files of the app for hosting it on a web server.')
+    .command('export [path]')
+    .description('Export the static files of the app for hosting it on a web server')
+    .helpGroup('core')
     .option('-p, --public-url <url>', 'The public url that will host the static files. (Required)')
     .option(
       '--output-dir <dir>',
@@ -242,10 +217,10 @@ export default function (program: Command) {
       './assets'
     )
     .option('-d, --dump-assetmap', 'Dump the asset map for further processing.')
-    .option('--dev', 'Configures static files for developing locally using a non-https server')
+    .option('--dev', 'Configure static files for developing locally using a non-https server')
     .option('-f, --force', 'Overwrite files in output directory without prompting for confirmation')
     .option('-s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
-    .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
+    .option('-q, --quiet', 'Suppress verbose output.')
     .option(
       '-t, --target [env]',
       'Target environment for which this export is intended. Options are `managed` or `bare`.'
@@ -258,5 +233,6 @@ export default function (program: Command) {
       []
     )
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
+    .option('--experimental-bundle', 'export bundles for use with EAS updates.')
     .asyncActionProjectDir(action, { checkConfig: true });
 }

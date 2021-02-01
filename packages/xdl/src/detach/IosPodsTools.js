@@ -1,7 +1,7 @@
-import fs from 'fs-extra';
-import glob from 'glob-promise';
-import indentString from 'indent-string';
 import JsonFile from '@expo/json-file';
+import fs from 'fs-extra';
+import { sync as globSync } from 'glob';
+import indentString from 'indent-string';
 import path from 'path';
 
 import { parseSdkMajorVersion } from './ExponentTools';
@@ -63,7 +63,7 @@ function _renderExpoKitDependency(options, sdkVersion) {
   let attributes;
   if (options.expoKitPath) {
     attributes = {
-      path: options.expoKitPath,
+      path: path.join(options.expoKitPath, 'ios'),
     };
   } else if (options.expoKitTag) {
     attributes = {
@@ -88,7 +88,7 @@ function _renderExpoKitDependency(options, sdkVersion) {
   }
   attributes.inhibit_warnings = true;
 
-  let dependency = `pod 'ExpoKit',
+  const dependency = `pod 'ExpoKit',
 ${indentString(_renderDependencyAttributes(attributes), 2)}`;
 
   return indentString(dependency, 2);
@@ -100,7 +100,14 @@ ${indentString(_renderDependencyAttributes(attributes), 2)}`;
  *  an unversioned dependency pointing at RN#sdk-15.
  */
 function _renderUnversionedReactNativeDependency(options, sdkVersion) {
-  let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
+  const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
+
+  if (sdkMajorVersion >= 39) {
+    return indentString(`
+# Install React Native and its dependencies
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+use_react_native!(production: true)`);
+  }
 
   if (sdkMajorVersion >= 36) {
     return indentString(
@@ -140,7 +147,7 @@ function _renderUnversionedReactDependency(options, sdkVersion) {
   if (!options.reactNativePath) {
     throw new Error(`Unsupported options for RN dependency: ${options}`);
   }
-  let attributes = {
+  const attributes = {
     path: options.reactNativePath,
     inhibit_warnings: true,
     subspecs: [
@@ -192,9 +199,9 @@ ${indentString(_renderDependencyAttributes(attributes), 2)}`;
 }
 
 function _renderDependencyAttributes(attributes) {
-  let attributesStrings = [];
-  for (let key of Object.keys(attributes)) {
-    let value = JSON.stringify(attributes[key], null, 2);
+  const attributesStrings = [];
+  for (const key of Object.keys(attributes)) {
+    const value = JSON.stringify(attributes[key], null, 2);
     attributesStrings.push(`:${key} => ${value}`);
   }
   return attributesStrings.join(',\n');
@@ -240,13 +247,15 @@ async function _renderVersionedReactNativePostinstallsAsync(
 }
 
 async function _concatTemplateFilesInDirectoryAsync(directory, filterFn) {
-  let templateFilenames = (await glob(path.join(directory, '*.rb'))).sort();
-  let filteredTemplateFilenames = filterFn ? templateFilenames.filter(filterFn) : templateFilenames;
-  let templateStrings = [];
+  const templateFilenames = globSync('*.rb', { absolute: true, cwd: directory }).sort();
+  const filteredTemplateFilenames = filterFn
+    ? templateFilenames.filter(filterFn)
+    : templateFilenames;
+  const templateStrings = [];
   // perform this in series in order to get deterministic output
   for (let fileIdx = 0, nFiles = filteredTemplateFilenames.length; fileIdx < nFiles; fileIdx++) {
     const filename = filteredTemplateFilenames[fileIdx];
-    let templateString = await fs.readFile(filename, 'utf8');
+    const templateString = await fs.readFile(filename, 'utf8');
     if (templateString) {
       templateStrings.push(templateString);
     }
@@ -259,7 +268,7 @@ function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
   const podNameExpression = sdkMajorVersion < 33 ? 'target.pod_name' : 'pod_name';
   const targetExpression = sdkMajorVersion < 33 ? 'target' : 'target_installation_result';
 
-  let podsRootSub = '${PODS_ROOT}';
+  const podsRootSub = '${PODS_ROOT}';
   const maybeDetachedServiceDef = isServiceContext
     ? `config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED_SERVICE=1'`
     : '';
@@ -271,6 +280,20 @@ function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
           config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= []
           config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Base/Frameworks'
           config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Maps/Frameworks'`
+      : '';
+  // In SDK39, in preparation for iOS 14 we've decided to remove IDFA code.
+  // By adding this macro to shell apps we'll remove this code from Branch
+  // on compilation level, see:
+  // https://github.com/BranchMetrics/ios-branch-deep-linking-attribution/blob/ac991f9d0bc9bad640b25a0f1192679a8cfa083a/Branch-SDK/BNCSystemObserver.m#L49-L75
+  const excludeIdfaCodeFromBranchSinceSDK39 =
+    sdkMajorVersion >= 39
+      ? `
+      if ${podNameExpression} == 'Branch'
+        ${targetExpression}.native_target.build_configurations.each do |config|
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'BRANCH_EXCLUDE_IDFA_CODE=1'
+        end
+      end`
       : '';
   return `
       if ${podNameExpression} == 'ExpoKit'
@@ -284,6 +307,8 @@ function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
           ${maybeFrameworkSearchPathDef}
         end
       end
+
+      ${excludeIdfaCodeFromBranchSinceSDK39}
 `;
 }
 
@@ -305,8 +330,8 @@ function _renderUnversionedPostinstall(sdkVersion) {
   const podNameExpression = sdkMajorVersion < 33 ? 'target.pod_name' : 'pod_name';
   const targetExpression = sdkMajorVersion < 33 ? 'target' : 'target_installation_result';
 
-  // SDK31 drops support for iOS 9.0
-  const deploymentTarget = sdkMajorVersion > 30 ? '10.0' : '9.0';
+  // SDK41 drops support for iOS 10.0
+  const deploymentTarget = sdkMajorVersion > 40 ? '11.0' : '10.0';
 
   const podsToChangeDeployTargetIfStart =
     sdkMajorVersion <= 33 ? `      if ${podsToChangeRB}.include? ${podNameExpression}` : '';
@@ -357,10 +382,10 @@ function _renderTestTarget(reactNativePath) {
 }
 
 async function _renderPodDependenciesAsync(dependenciesConfigPath, options) {
-  let dependencies = await new JsonFile(dependenciesConfigPath).readAsync();
+  const dependencies = await new JsonFile(dependenciesConfigPath).readAsync();
   const type = options.isPodfile ? 'pod' : 'ss.dependency';
   const noWarningsFlag = options.isPodfile ? `, :inhibit_warnings => true` : '';
-  let depsStrings = dependencies.map(dependency => {
+  const depsStrings = dependencies.map(dependency => {
     let builder = '';
     if (dependency.comments) {
       builder += dependency.comments.map(commentLine => `  # ${commentLine}`).join('\n');
@@ -376,9 +401,9 @@ async function _renderPodDependenciesAsync(dependenciesConfigPath, options) {
 }
 
 async function renderExpoKitPodspecAsync(pathToTemplate, pathToOutput, moreSubstitutions) {
-  let templatesDirectory = path.dirname(pathToTemplate);
-  let templateString = await fs.readFile(pathToTemplate, 'utf8');
-  let dependencies = await _renderPodDependenciesAsync(
+  const templatesDirectory = path.dirname(pathToTemplate);
+  const templateString = await fs.readFile(pathToTemplate, 'utf8');
+  const dependencies = await _renderPodDependenciesAsync(
     path.join(templatesDirectory, 'dependencies.json'),
     { isPodfile: false }
   );
@@ -401,6 +426,25 @@ function _renderUnversionedUniversalModulesDependencies(
   const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
 
   if (sdkMajorVersion >= 33) {
+    const excludedUnimodules = [
+      'expo-bluetooth',
+      'expo-in-app-purchases',
+      'expo-payments-stripe',
+      'expo-module-template',
+      'expo-image',
+    ];
+
+    if (sdkMajorVersion < 39) {
+      excludedUnimodules.push('expo-splash-screen', 'expo-updates');
+    }
+
+    const expoModulesThatAreNotUnimodules = [];
+    if (sdkMajorVersion >= 39) {
+      expoModulesThatAreNotUnimodules.push(
+        `pod 'EXRandom', path: '${universalModulesPath}/expo-random/ios'`
+      );
+    }
+
     return indentString(
       `
 # Install unimodules
@@ -408,14 +452,13 @@ require_relative '../node_modules/react-native-unimodules/cocoapods.rb'
 use_unimodules!(
   modules_paths: ['${universalModulesPath}'],
   exclude: [
-    'expo-bluetooth',
-    'expo-in-app-purchases',
-    'expo-payments-stripe',
-    'expo-splash-screen',
-    'expo-image',
-    'expo-updates',
+    ${excludedUnimodules.map(module => `'${module}'`).join(',\n    ')}
   ],
-)`,
+)
+
+# Expo modules that are not unimodules
+${expoModulesThatAreNotUnimodules.join('\n')}
+`,
       2
     );
   } else {
@@ -458,10 +501,10 @@ async function renderPodfileAsync(
   if (!moreSubstitutions) {
     moreSubstitutions = {};
   }
-  let templatesDirectory = path.dirname(pathToTemplate);
-  let templateString = await fs.readFile(pathToTemplate, 'utf8');
+  const templatesDirectory = path.dirname(pathToTemplate);
+  const templateString = await fs.readFile(pathToTemplate, 'utf8');
 
-  let reactNativePath = moreSubstitutions.REACT_NATIVE_PATH;
+  const reactNativePath = moreSubstitutions.REACT_NATIVE_PATH;
   let rnDependencyOptions;
   if (reactNativePath) {
     rnDependencyOptions = { reactNativePath };
@@ -487,17 +530,17 @@ async function renderPodfileAsync(
     rnExpoSubspecs = ['Expo'];
   }
 
-  let versionedDependencies = await _renderVersionedReactNativeDependenciesAsync(
+  const versionedDependencies = await _renderVersionedReactNativeDependenciesAsync(
     templatesDirectory,
     versionedRnPath,
     rnExpoSubspecs,
     shellAppSdkVersion
   );
-  let versionedPostinstalls = await _renderVersionedReactNativePostinstallsAsync(
+  const versionedPostinstalls = await _renderVersionedReactNativePostinstallsAsync(
     templatesDirectory,
     shellAppSdkVersion
   );
-  let podDependencies = await _renderPodDependenciesAsync(
+  const podDependencies = await _renderPodDependenciesAsync(
     path.join(templatesDirectory, 'dependencies.json'),
     { isPodfile: true }
   );
@@ -507,7 +550,7 @@ async function renderPodfileAsync(
     universalModules = [];
   }
 
-  let substitutions = {
+  const substitutions = {
     EXPONENT_CLIENT_DEPS: podDependencies,
     EXPOKIT_DEPENDENCY: _renderExpoKitDependency(expoKitDependencyOptions, sdkVersion),
     PODFILE_UNVERSIONED_EXPO_MODULES_DEPENDENCIES: _renderUnversionedUniversalModulesDependencies(
@@ -530,9 +573,9 @@ async function renderPodfileAsync(
   _validatePodfileSubstitutions(substitutions);
 
   let result = templateString;
-  for (let key in substitutions) {
+  for (const key in substitutions) {
     if (substitutions.hasOwnProperty(key)) {
-      let replacement = substitutions[key];
+      const replacement = substitutions[key];
       result = result.replace(new RegExp(`\\$\\{${key}\\}`, 'g'), replacement);
     }
   }

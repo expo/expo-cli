@@ -1,7 +1,6 @@
 import { JSONObject, JSONValue } from '@expo/json-file';
 import axios, { AxiosRequestConfig } from 'axios';
 import concat from 'concat-stream';
-import ExtendableError from 'es6-error';
 import FormData from 'form-data';
 import idx from 'idx';
 import merge from 'lodash/merge';
@@ -11,6 +10,7 @@ import Config from './Config';
 import * as ConnectionStatus from './ConnectionStatus';
 
 export const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
+export const MAX_BODY_LENGTH = 100 /* MB */ * 1024 * 1024;
 
 // These aren't constants because some commands switch between staging and prod
 function _rootBaseUrl() {
@@ -31,10 +31,12 @@ async function _convertFormDataToBuffer(formData: FormData): Promise<{ data: Buf
   });
 }
 
-export class ApiV2Error extends ExtendableError {
+export class ApiV2Error extends Error {
+  readonly name = 'ApiV2Error';
   code: string;
   details?: JSONValue;
   serverStack?: string;
+  metadata?: object;
   readonly _isApiError = true;
 
   constructor(message: string, code: string = 'UNKNOWN') {
@@ -44,10 +46,10 @@ export class ApiV2Error extends ExtendableError {
 }
 
 type RequestOptions = {
-  httpMethod: 'get' | 'post' | 'put' | 'delete';
+  httpMethod: 'get' | 'post' | 'put' | 'patch' | 'delete';
   queryParameters?: QueryParameters;
   body?: JSONObject;
-  timeout?: Number;
+  timeout?: number;
 };
 
 type UploadOptions = {
@@ -59,15 +61,17 @@ type QueryParameters = { [key: string]: string | number | boolean | null | undef
 
 type APIV2ClientOptions = {
   sessionSecret?: string;
+  accessToken?: string;
 };
 
 export default class ApiV2Client {
   static exponentClient: string = 'xdl';
   sessionSecret: string | null = null;
+  accessToken: string | null = null;
 
   static clientForUser(user?: APIV2ClientOptions | null): ApiV2Client {
-    if (user && user.sessionSecret) {
-      return new ApiV2Client({ sessionSecret: user.sessionSecret });
+    if (user) {
+      return new ApiV2Client(user);
     }
 
     return new ApiV2Client();
@@ -78,6 +82,9 @@ export default class ApiV2Client {
   }
 
   constructor(options: APIV2ClientOptions = {}) {
+    if (options.accessToken) {
+      this.accessToken = options.accessToken;
+    }
     if (options.sessionSecret) {
       this.sessionSecret = options.sessionSecret;
     }
@@ -134,6 +141,23 @@ export default class ApiV2Client {
     );
   }
 
+  async patchAsync(
+    methodName: string,
+    data: JSONObject,
+    extraOptions?: Partial<RequestOptions>,
+    returnEntireResponse: boolean = false
+  ) {
+    return this._requestAsync(
+      methodName,
+      {
+        httpMethod: 'patch',
+        body: data,
+      },
+      extraOptions,
+      returnEntireResponse
+    );
+  }
+
   async deleteAsync(
     methodName: string,
     args: QueryParameters = {},
@@ -177,7 +201,10 @@ export default class ApiV2Client {
       },
     };
 
-    if (this.sessionSecret) {
+    // Handle auth method, prioritizing authorization tokens before session secrets
+    if (this.accessToken) {
+      reqOptions.headers['Authorization'] = `Bearer ${this.accessToken}`;
+    } else if (this.sessionSecret) {
       reqOptions.headers['Expo-Session'] = this.sessionSecret;
     }
 
@@ -198,6 +225,7 @@ export default class ApiV2Client {
 
     reqOptions = merge({}, reqOptions, extraRequestOptions, uploadOptions, {
       maxContentLength: MAX_CONTENT_LENGTH,
+      maxBodyLength: MAX_BODY_LENGTH,
     });
 
     let response;
@@ -215,10 +243,11 @@ export default class ApiV2Client {
     }
 
     if (result.errors && result.errors.length) {
-      let responseError = result.errors[0];
-      let error = new ApiV2Error(responseError.message, responseError.code);
+      const responseError = result.errors[0];
+      const error = new ApiV2Error(responseError.message, responseError.code);
       error.serverStack = responseError.stack;
       error.details = responseError.details;
+      error.metadata = responseError.metadata;
       throw error;
     }
 

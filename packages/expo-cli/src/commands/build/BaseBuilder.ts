@@ -1,25 +1,38 @@
-import { ExpoConfig, getConfig } from '@expo/config';
-import { Project, User, UserManager, Versions } from '@expo/xdl';
+import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
+import { Project, RobotUser, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import ora from 'ora';
 import semver from 'semver';
 
-import * as UrlUtils from '../utils/url';
 import log from '../../log';
+import { getProjectOwner } from '../../projects';
 import { action as publishAction } from '../publish';
-import BuildError from './BuildError';
-import { PLATFORMS, Platform } from './constants';
-
+import * as UrlUtils from '../utils/url';
 import { BuilderOptions } from './BaseBuilder.types';
+import BuildError from './BuildError';
+import { Platform, PLATFORMS } from './constants';
 
 const secondsToMilliseconds = (seconds: number): number => seconds * 1000;
 
 export default class BaseBuilder {
-  manifest: ExpoConfig = {};
-  user?: User;
+  protected projectConfig: ProjectConfig;
+  manifest: ExpoConfig;
 
-  constructor(public projectDir: string, public options: BuilderOptions = {}) {}
+  async getUserAsync(): Promise<User | RobotUser> {
+    return await UserManager.ensureLoggedInAsync();
+  }
+
+  constructor(public projectDir: string, public options: BuilderOptions = {}) {
+    this.projectConfig = getConfig(this.projectDir);
+    this.manifest = this.projectConfig.exp;
+  }
+
+  protected updateProjectConfig() {
+    // Update the project config
+    this.projectConfig = getConfig(this.projectDir);
+    this.manifest = this.projectConfig.exp;
+  }
 
   async command() {
     try {
@@ -54,12 +67,14 @@ export default class BaseBuilder {
   }
 
   async prepareProjectInfo(): Promise<void> {
-    // always use local json to unify behavior between regular apps and self hosted ones
-    const { exp } = getConfig(this.projectDir);
-    this.manifest = exp;
-    this.user = await UserManager.ensureLoggedInAsync();
-
     await this.checkProjectConfig();
+    // note: this validates if a robot user is used without "owner" in the manifest
+    // without this check, build/status returns "robots not allowed".
+    getProjectOwner(
+      // TODO: Move this since it can add delay
+      await this.getUserAsync(),
+      this.projectConfig.exp
+    );
   }
 
   async checkProjectConfig(): Promise<void> {
@@ -69,41 +84,30 @@ export default class BaseBuilder {
     }
 
     // Warn user if building a project using the next deprecated SDK version
-    let oldestSupportedMajorVersion = await Versions.oldestSupportedMajorVersionAsync();
+    const oldestSupportedMajorVersion = await Versions.oldestSupportedMajorVersionAsync();
     if (semver.major(this.manifest.sdkVersion!) === oldestSupportedMajorVersion) {
-      let { version } = await Versions.newestSdkVersionAsync();
+      const { version } = await Versions.newestReleasedSdkVersionAsync();
       log.warn(
         `\nSDK${oldestSupportedMajorVersion} will be ${chalk.bold(
           'deprecated'
         )} next! We recommend upgrading versions, ideally to the latest (SDK${semver.major(
           version
-        )}), so you can continue to build new binaries of your app and develop in the Expo client.\n`
+        )}), so you can continue to build new binaries of your app and develop in Expo Go.\n`
       );
     }
   }
 
   async checkForBuildInProgress() {
     log('Checking if there is a build in progress...\n');
-    let buildStatus;
-    if (process.env.EXPO_LEGACY_API === 'true') {
-      buildStatus = await Project.buildAsync(this.projectDir, {
-        mode: 'status',
-        platform: this.platform(),
-        current: true,
-        releaseChannel: this.options.releaseChannel,
-        publicUrl: this.options.publicUrl,
-        sdkVersion: this.manifest.sdkVersion,
-      } as any);
-    } else {
-      buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
-        platform: this.platform(),
-        current: true,
-        releaseChannel: this.options.releaseChannel,
-        publicUrl: this.options.publicUrl,
-        sdkVersion: this.manifest.sdkVersion,
-      } as any);
-    }
-    if ('jobs' in buildStatus && buildStatus.jobs?.length > 0) {
+    const buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
+      platform: this.platform(),
+      current: true,
+      releaseChannel: this.options.releaseChannel,
+      publicUrl: this.options.publicUrl,
+      sdkVersion: this.manifest.sdkVersion,
+    } as any);
+
+    if (buildStatus.jobs && buildStatus.jobs.length > 0) {
       throw new BuildError('Cannot start a new build, as there is already an in-progress build.');
     }
   }
@@ -111,33 +115,22 @@ export default class BaseBuilder {
   async checkStatus(platform: 'all' | 'ios' | 'android' = 'all'): Promise<void> {
     log('Fetching build history...\n');
 
-    let buildStatus: Project.BuildStatusResult | Project.BuildCreatedResult;
-    if (process.env.EXPO_LEGACY_API === 'true') {
-      buildStatus = await Project.buildAsync(this.projectDir, {
-        mode: 'status',
-        platform,
-        current: false,
-        releaseChannel: this.options.releaseChannel,
-      });
-    } else {
-      buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
-        platform,
-        current: false,
-        releaseChannel: this.options.releaseChannel,
-      });
-    }
+    const buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
+      platform,
+      current: false,
+      releaseChannel: this.options.releaseChannel,
+    });
+
     if ('err' in buildStatus && buildStatus.err) {
       throw new Error('Error getting current build status for this project.');
     }
 
-    // @ts-ignore: Property 'jobs' does not exist on type 'BuildCreatedResult'.
     if (!(buildStatus.jobs && buildStatus.jobs.length)) {
       log('No currently active or previous builds for this project.');
       return;
     }
 
     await this.logBuildStatuses({
-      // @ts-ignore: Property 'jobs' does not exist on type 'BuildCreatedResult'.
       jobs: buildStatus.jobs,
       canPurchasePriorityBuilds: buildStatus.canPurchasePriorityBuilds,
       numberOfRemainingPriorityBuilds: buildStatus.numberOfRemainingPriorityBuilds,
@@ -152,7 +145,8 @@ export default class BaseBuilder {
       this.options.releaseChannel!,
       this.platform(),
       this.manifest.sdkVersion!,
-      this.manifest.slug!
+      this.manifest.slug!,
+      this.manifest.owner
     );
     if (reuseStatus.canReuse) {
       log.warn(`Did you know that Expo provides over-the-air updates?
@@ -165,13 +159,14 @@ Please see the docs (${chalk.underline(
           reuseStatus.downloadUrl!
         )}`
       );
+      log.newLine();
     }
   }
 
   async logBuildStatuses(buildStatus: {
-    jobs: Array<Record<string, any>>;
-    canPurchasePriorityBuilds: boolean;
-    numberOfRemainingPriorityBuilds: number;
+    jobs: Project.BuildJobFields[];
+    canPurchasePriorityBuilds?: boolean;
+    numberOfRemainingPriorityBuilds?: number;
     hasUnlimitedPriorityBuilds?: boolean;
   }) {
     log('=================');
@@ -192,10 +187,16 @@ Please see the docs (${chalk.underline(
         packageExtension = 'APK';
       }
 
-      log(`### ${i} | ${platform} | ${UrlUtils.constructBuildLogsUrl(job.id, username!)} ###`);
+      log(
+        `### ${i} | ${platform} | ${UrlUtils.constructBuildLogsUrl({
+          buildId: job.id,
+          username: username ?? undefined,
+        })} ###`
+      );
 
       const hasPriorityBuilds =
-        buildStatus.numberOfRemainingPriorityBuilds > 0 || buildStatus.hasUnlimitedPriorityBuilds;
+        (buildStatus.numberOfRemainingPriorityBuilds ?? 0) > 0 ||
+        buildStatus.hasUnlimitedPriorityBuilds;
       const shouldShowUpgradeInfo =
         !hasPriorityBuilds &&
         i === 0 &&
@@ -298,100 +299,73 @@ ${job.id}
     log(
       `Waiting for build to complete.\nYou can press Ctrl+C to exit. It won't cancel the build, you'll be able to monitor it at the printed URL.`
     );
-    let spinner = ora().start();
+    const spinner = ora().start();
+    let i = 0;
     while (true) {
-      let res;
-      if (process.env.EXPO_LEGACY_API === 'true') {
-        res = (await Project.buildAsync(this.projectDir, {
-          current: false,
-          mode: 'status',
-          ...(publicUrl ? { publicUrl } : {}),
-        })) as Project.BuildStatusResult;
-      } else {
-        res = await Project.getBuildStatusAsync(this.projectDir, {
-          current: false,
-          ...(publicUrl ? { publicUrl } : {}),
-        });
-      }
-      const job = res.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId)[0];
+      i++;
+      const result = await Project.getBuildStatusAsync(this.projectDir, {
+        current: false,
+        ...(publicUrl ? { publicUrl } : {}),
+      });
 
-      switch (job.status) {
-        case 'finished':
-          spinner.succeed('Build finished.');
-          return job;
-        case 'pending':
-        case 'sent-to-queue':
-          spinner.text = 'Build queued...';
-          break;
-        case 'started':
-        case 'in-progress':
-          spinner.text = 'Build in progress...';
-          break;
-        case 'errored':
-          spinner.fail('Build failed.');
-          throw new BuildError(`Standalone build failed!`);
-        default:
-          spinner.warn('Unknown status.');
-          throw new BuildError(`Unknown status: ${job.status} - aborting!`);
+      const jobs = result.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId);
+      const job = jobs ? jobs[0] : null;
+      if (job) {
+        switch (job.status) {
+          case 'finished':
+            spinner.succeed('Build finished.');
+            return job;
+          case 'pending':
+          case 'sent-to-queue':
+            spinner.text = 'Build queued...';
+            break;
+          case 'started':
+          case 'in-progress':
+            spinner.text = 'Build in progress...';
+            break;
+          case 'errored':
+            spinner.fail('Build failed.');
+            throw new BuildError(`Standalone build failed!`);
+          default:
+            spinner.warn('Unknown status.');
+            throw new BuildError(`Unknown status: ${job.status} - aborting!`);
+        }
+      } else if (i > 5) {
+        spinner.warn('Unknown status.');
+        throw new BuildError(`Failed to locate build job for id "${buildId}"`);
       }
       await delayAsync(secondsToMilliseconds(interval));
     }
   }
 
-  async build(expIds?: Array<string>) {
+  async build(expIds?: string[]) {
     const { publicUrl } = this.options;
     const platform = this.platform();
     const bundleIdentifier = this.manifest.ios?.bundleIdentifier;
 
-    let result: any;
-    if (process.env.EXPO_LEGACY_API === 'true') {
-      let opts: Record<string, any> = {
-        mode: 'create',
-        expIds,
-        platform,
-        releaseChannel: this.options.releaseChannel,
-        ...(publicUrl ? { publicUrl } : {}),
+    let opts: Record<string, any> = {
+      expIds,
+      platform,
+      releaseChannel: this.options.releaseChannel,
+      ...(publicUrl ? { publicUrl } : {}),
+    };
+
+    if (platform === PLATFORMS.IOS) {
+      opts = {
+        ...opts,
+        type: this.options.type,
+        bundleIdentifier,
       };
-
-      if (platform === PLATFORMS.IOS) {
-        opts = {
-          ...opts,
-          type: this.options.type,
-          bundleIdentifier,
-        };
-      } else if (platform === PLATFORMS.ANDROID) {
-        opts = {
-          ...opts,
-          type: this.options.type,
-        };
-      }
-
-      // call out to build api here with url
-      result = await Project.buildAsync(this.projectDir, opts);
-    } else {
-      let opts: Record<string, any> = {
-        expIds,
-        platform,
-        releaseChannel: this.options.releaseChannel,
-        ...(publicUrl ? { publicUrl } : {}),
+    } else if (platform === PLATFORMS.ANDROID) {
+      opts = {
+        ...opts,
+        type: this.options.type,
       };
-
-      if (platform === PLATFORMS.IOS) {
-        opts = {
-          ...opts,
-          type: this.options.type,
-          bundleIdentifier,
-        };
-      } else if (platform === PLATFORMS.ANDROID) {
-        opts = {
-          ...opts,
-          type: this.options.type,
-        };
-      }
-
-      // call out to build api here with url
-      result = await Project.startBuildAsync(this.projectDir, opts);
     }
+
+    // call out to build api here with url
+    const result = await Project.startBuildAsync(this.projectDir, opts);
+
     const { id: buildId, priority, canPurchasePriorityBuilds } = result;
 
     log('Build started, it may take a few minutes to complete.');
@@ -404,16 +378,15 @@ ${job.id}
       );
     }
 
-    const username = this.manifest.owner
-      ? this.manifest.owner
-      : await UserManager.getCurrentUsernameAsync();
+    const user = await UserManager.getCurrentUserAsync();
 
     if (buildId) {
-      log(
-        `You can monitor the build at\n\n ${chalk.underline(
-          UrlUtils.constructBuildLogsUrl(buildId, username ?? undefined)
-        )}\n`
-      );
+      const url = UrlUtils.constructBuildLogsUrl({
+        buildId,
+        username: this.manifest.owner || (user?.kind === 'user' ? user.username : undefined),
+      });
+
+      log(`You can monitor the build at\n\n ${chalk.underline(url)}\n`);
     }
 
     if (this.options.wait) {
@@ -422,6 +395,7 @@ ${job.id}
       const artifactUrl = completedJob.artifactId
         ? UrlUtils.constructArtifactUrl(completedJob.artifactId)
         : completedJob.artifacts.url;
+      log.addNewLineIfNone();
       log(`${chalk.green('Successfully built standalone app:')} ${chalk.underline(artifactUrl)}`);
     } else {
       log('Alternatively, run `expo build:status` to monitor it from the command line.');

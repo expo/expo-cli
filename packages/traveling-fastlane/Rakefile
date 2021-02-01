@@ -2,7 +2,7 @@
 require 'bundler/setup'
 
 PACKAGE_NAME = "traveling-fastlane"
-VERSION = "1.14.0"
+VERSION = "1.15.3"
 TRAVELING_RUBY_VERSION = "20150715-2.2.2"
 JSON_VERSION = '1.8.2'
 UNF_VERSION = '0.0.6'
@@ -19,6 +19,7 @@ SCRIPTS = [
   'manage_dist_certs',
   'manage_provisioning_profiles',
   'manage_push_keys',
+  'new_manage_provisioning_profiles',
   'pilot_upload',
   'preload',
   'resolve_itc_team_id',
@@ -151,12 +152,12 @@ def create_package target
   if target == "osx"
     sh "mv #{PACKAGE_NAME}-#{VERSION}-osx publishing/darwin/dist"
     if !ENV['NO_PUBLISH']
-      sh "cd publishing/darwin; npm publish --access=public"
+      sh "cd publishing/darwin; npm publish --access=public -timeout=9999999"
     end
   else
     sh "mv #{PACKAGE_NAME}-#{VERSION}-linux-x86_64 publishing/linux/dist"
     if !ENV['NO_PUBLISH']
-      sh "cd publishing/linux; npm publish --access=public"
+      sh "cd publishing/linux; npm publish --access=public -timeout=9999999"
     end
   end
 end

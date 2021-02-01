@@ -91,6 +91,11 @@ export class NpmPackageManager implements PackageManager {
     await this._runAsync(['install']);
   }
 
+  async addGlobalAsync(...names: string[]) {
+    if (!names.length) return this.installAsync();
+    await this._runAsync(['install', '--global', ...names]);
+  }
+
   async addAsync(...names: string[]) {
     if (!names.length) return this.installAsync();
 
@@ -131,7 +136,7 @@ export class NpmPackageManager implements PackageManager {
     if (!this.options.cwd) {
       throw new Error('cwd required for NpmPackageManager.removeLockfileAsync');
     }
-    let lockfilePath = path.join(this.options.cwd, 'package-lock.json');
+    const lockfilePath = path.join(this.options.cwd, 'package-lock.json');
     if (existsSync(lockfilePath)) {
       rimraf.sync(lockfilePath);
     }
@@ -141,7 +146,7 @@ export class NpmPackageManager implements PackageManager {
     if (!this.options.cwd) {
       throw new Error('cwd required for NpmPackageManager.cleanAsync');
     }
-    let nodeModulesPath = path.join(this.options.cwd, 'node_modules');
+    const nodeModulesPath = path.join(this.options.cwd, 'node_modules');
     if (existsSync(nodeModulesPath)) {
       rimraf.sync(nodeModulesPath);
     }
@@ -233,6 +238,14 @@ export class YarnPackageManager implements PackageManager {
     await this._runAsync(args);
   }
 
+  async addGlobalAsync(...names: string[]) {
+    if (!names.length) return this.installAsync();
+    const args = await this.withOfflineSupportAsync('global', 'add');
+    args.push(...names);
+
+    await this._runAsync(args);
+  }
+
   async addAsync(...names: string[]) {
     if (!names.length) return this.installAsync();
     const args = await this.withOfflineSupportAsync('add');
@@ -262,7 +275,7 @@ export class YarnPackageManager implements PackageManager {
     if (!this.options.cwd) {
       throw new Error('cwd required for YarnPackageManager.removeLockfileAsync');
     }
-    let lockfilePath = path.join(this.options.cwd, 'yarn-lock.json');
+    const lockfilePath = path.join(this.options.cwd, 'yarn-lock.json');
     if (existsSync(lockfilePath)) {
       rimraf.sync(lockfilePath);
     }
@@ -272,7 +285,7 @@ export class YarnPackageManager implements PackageManager {
     if (!this.options.cwd) {
       throw new Error('cwd required for YarnPackageManager.cleanAsync');
     }
-    let nodeModulesPath = path.join(this.options.cwd, 'node_modules');
+    const nodeModulesPath = path.join(this.options.cwd, 'node_modules');
     if (existsSync(nodeModulesPath)) {
       rimraf.sync(nodeModulesPath);
     }

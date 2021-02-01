@@ -5,6 +5,17 @@ import path from 'path';
 
 import { Logger, PackageManager, spawnSudoAsync } from './PackageManager';
 
+export type CocoaPodsErrorCode = 'NON_INTERACTIVE' | 'NO_CLI' | 'COMMAND_FAILED';
+
+export class CocoaPodsError extends Error {
+  readonly name = 'CocoaPodsError';
+  readonly isPackageManagerError = true;
+
+  constructor(message: string, public code: CocoaPodsErrorCode, public cause?: Error) {
+    super(cause ? `${message}\n└─ Cause: ${cause.name}: ${cause.message}` : message);
+  }
+}
+
 export class CocoaPodsPackageManager implements PackageManager {
   options: SpawnOptions;
   private log: Logger;
@@ -14,6 +25,8 @@ export class CocoaPodsPackageManager implements PackageManager {
     if (CocoaPodsPackageManager.isUsingPods(projectRoot)) return projectRoot;
     const iosProject = path.join(projectRoot, 'ios');
     if (CocoaPodsPackageManager.isUsingPods(iosProject)) return iosProject;
+    const macOsProject = path.join(projectRoot, 'macos');
+    if (CocoaPodsPackageManager.isUsingPods(macOsProject)) return macOsProject;
     return null;
   }
 
@@ -28,14 +41,18 @@ export class CocoaPodsPackageManager implements PackageManager {
     const options = ['install', 'cocoapods', '--no-document'];
 
     try {
-      // Try the recommended way to install cocoapods first.
+      // In case the user has run sudo before running the command we can properly install CocoaPods without prompting for an interaction.
       await spawnAsync('gem', options, spawnOptions);
     } catch (error) {
       if (nonInteractive) {
-        throw error;
+        throw new CocoaPodsError(
+          'Failed to install CocoaPods CLI with gem (recommended)',
+          'COMMAND_FAILED',
+          error
+        );
       }
-      // If the default fails, it might be because sudo is required.
-      await spawnSudoAsync(`gem ${options.join(' ')}`);
+      // If the user doesn't have permission then we can prompt them to use sudo.
+      await spawnSudoAsync(['gem', ...options], spawnOptions);
     }
   }
 
@@ -59,45 +76,55 @@ export class CocoaPodsPackageManager implements PackageManager {
     if (!spawnOptions) {
       spawnOptions = { stdio: 'inherit' };
     }
-    let silent = !!spawnOptions.ignoreStdio;
+    const silent = !!spawnOptions.ignoreStdio;
 
     try {
-      !silent && console.log(chalk.magenta(`\u203A Attempting to install CocoaPods with Gem`));
+      !silent && console.log(`\u203A Attempting to install CocoaPods CLI with Gem`);
       await CocoaPodsPackageManager.gemInstallCLIAsync(nonInteractive, spawnOptions);
-      !silent && console.log(chalk.magenta(`\u203A Successfully installed CocoaPods with Gem`));
+      !silent && console.log(`\u203A Successfully installed CocoaPods CLI with Gem`);
       return true;
     } catch (error) {
-      !silent && console.log(chalk.yellow(`\u203A Failed to install CocoaPods with Gem`));
-      !silent && console.log(chalk.black.bgRed(error.stderr));
+      if (!silent) {
+        console.log(chalk.yellow(`\u203A Failed to install CocoaPods CLI with Gem`));
+        console.log(chalk.red(error.stderr ?? error.message));
+        console.log(`\u203A Attempting to install CocoaPods CLI with Homebrew`);
+      }
       try {
-        !silent &&
-          console.log(chalk.magenta(`\u203A Attempting to install CocoaPods with Homebrew`));
         await CocoaPodsPackageManager.brewInstallCLIAsync(spawnOptions);
         if (!(await CocoaPodsPackageManager.isCLIInstalledAsync(spawnOptions))) {
           try {
             await CocoaPodsPackageManager.brewLinkCLIAsync(spawnOptions);
             // Still not available after linking? Bail out
             if (!(await CocoaPodsPackageManager.isCLIInstalledAsync(spawnOptions))) {
-              throw new Error();
+              throw new CocoaPodsError(
+                'CLI could not be installed automatically with gem or Homebrew, please install CocoaPods manually and try again',
+                'NO_CLI',
+                error
+              );
             }
-          } catch (e) {
-            throw Error(
-              'Homebrew installation appeared to succeed but CocoaPods not found in PATH and unable to link.'
+          } catch (error) {
+            throw new CocoaPodsError(
+              'Homebrew installation appeared to succeed but CocoaPods CLI not found in PATH and unable to link.',
+              'NO_CLI',
+              error
             );
           }
         }
 
-        !silent &&
-          console.log(chalk.magenta(`\u203A Successfully installed CocoaPods with Homebrew`));
+        !silent && console.log(`\u203A Successfully installed CocoaPods CLI with Homebrew`);
         return true;
       } catch (error) {
         !silent &&
           console.log(
             chalk.yellow(
-              `\u203A Failed to install CocoaPods with Homebrew. Please install CocoaPods manually and try again.`
+              `\u203A Failed to install CocoaPods with Homebrew. Please install CocoaPods CLI manually and try again.`
             )
           );
-        throw new Error(error.stderr);
+        throw new CocoaPodsError(
+          `Failed to install CocoaPods with Homebrew. Please install CocoaPods CLI manually and try again.`,
+          'NO_CLI',
+          error
+        );
       }
     }
   }
@@ -157,9 +184,9 @@ export class CocoaPodsPackageManager implements PackageManager {
     });
   }
 
-  private async _installAsync(shouldUpdate: boolean = true): Promise<void> {
+  private async _installAsync(shouldUpdate: boolean = true): Promise<SpawnResult> {
     try {
-      await this._runAsync(['install']);
+      return await this._runAsync(['install']);
     } catch (error) {
       const stderr = error.stderr ?? error.stdout;
 
@@ -174,9 +201,10 @@ export class CocoaPodsPackageManager implements PackageManager {
           );
         await this.podRepoUpdateAsync();
         // Include a boolean to ensure pod repo update isn't invoked in the unlikely case where the pods fail to update.
-        await this._installAsync(false);
+        return await this._installAsync(false);
       } else {
-        throw new Error(stderr);
+        error.message = error.message || stderr;
+        throw new CocoaPodsError('The command `pod install` failed', 'COMMAND_FAILED', error);
       }
     }
   }
@@ -211,7 +239,9 @@ export class CocoaPodsPackageManager implements PackageManager {
     try {
       await this._runAsync(['repo', 'update']);
     } catch (error) {
-      throw new Error(error.stderr ?? error.stdout);
+      error.message = error.message || (error.stderr ?? error.stdout);
+
+      throw new CocoaPodsError('The command `pod repo update` failed', 'COMMAND_FAILED', error);
     }
   }
 

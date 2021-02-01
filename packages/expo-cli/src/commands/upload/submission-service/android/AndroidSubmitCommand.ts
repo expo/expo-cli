@@ -1,13 +1,8 @@
 import { Result, result } from '@expo/results';
 import { UserManager } from '@expo/xdl';
-import validator from 'validator';
 
-import AndroidSubmitter, { AndroidSubmissionOptions } from './AndroidSubmitter';
-import { ArchiveType, ReleaseStatus, ReleaseTrack } from './AndroidSubmissionConfig';
-import { ServiceAccountSource, ServiceAccountSourceType } from './ServiceAccountSource';
-import { AndroidPackageSource, AndroidPackageSourceType } from './AndroidPackageSource';
-import { AndroidSubmissionContext, AndroidSubmitCommandOptions } from './types';
-
+import log from '../../../../log';
+import { isUUID } from '../../../utils/isUUID';
 import {
   ArchiveFileSource,
   ArchiveFileSourceType,
@@ -15,18 +10,19 @@ import {
   ArchiveTypeSource,
   ArchiveTypeSourceType,
 } from '../archive-source';
-import { SubmissionMode } from '../types';
 import { getExpoConfig } from '../utils/config';
-import log from '../../../../log';
+import { AndroidPackageSource, AndroidPackageSourceType } from './AndroidPackageSource';
+import { ArchiveType, ReleaseStatus, ReleaseTrack } from './AndroidSubmissionConfig';
+import AndroidSubmitter, { AndroidSubmissionOptions } from './AndroidSubmitter';
+import { ServiceAccountSource, ServiceAccountSourceType } from './ServiceAccountSource';
+import { AndroidSubmissionContext, AndroidSubmitCommandOptions } from './types';
 
 class AndroidSubmitCommand {
   static createContext(
-    mode: SubmissionMode,
     projectDir: string,
     commandOptions: AndroidSubmitCommandOptions
   ): AndroidSubmissionContext {
     return {
-      mode,
       projectDir,
       commandOptions,
     };
@@ -35,7 +31,7 @@ class AndroidSubmitCommand {
   constructor(private ctx: AndroidSubmissionContext) {}
 
   async runAsync(): Promise<void> {
-    if (this.ctx.mode === SubmissionMode.online && !(await UserManager.getCurrentUserAsync())) {
+    if (!(await UserManager.getCurrentUserAsync())) {
       await UserManager.ensureLoggedInAsync();
       log.addNewLineIfNone();
     }
@@ -158,7 +154,7 @@ class AndroidSubmitCommand {
         projectDir: this.ctx.projectDir,
       };
     } else if (id) {
-      if (!validator.isUUID(id)) {
+      if (!isUUID(id)) {
         throw new Error(`${id} is not a id`);
       }
       return {
@@ -183,7 +179,7 @@ class AndroidSubmitCommand {
   }
 
   private resolveArchiveTypeSource(): ArchiveTypeSource {
-    const { archiveType: rawArchiveType } = this.ctx.commandOptions;
+    const { type: rawArchiveType } = this.ctx.commandOptions;
     if (rawArchiveType) {
       if (!(rawArchiveType in ArchiveType)) {
         throw new Error(

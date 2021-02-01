@@ -1,18 +1,28 @@
 import { ExpoConfig, Platform } from '@expo/config';
 import spawnAsyncQuiet, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
+import axios from 'axios';
 import fs from 'fs-extra';
 import isObject from 'lodash/isObject';
 import path from 'path';
-import axios from 'axios';
 import { Readable } from 'stream';
 
 import XDLError from '../XDLError';
 import LoggerDetach, { Logger, pipeOutputToLogger } from './Logger';
 
-function _getFilesizeInBytes(path: string) {
-  let stats = fs.statSync(path);
-  let fileSizeInBytes = stats['size'];
-  return fileSizeInBytes;
+function getManifestFileNameForSdkVersion(sdkVersion: string) {
+  if (parseSdkMajorVersion(sdkVersion) < 39) {
+    return 'shell-app-manifest.json';
+  } else {
+    return 'app.manifest';
+  }
+}
+
+function getBundleFileNameForSdkVersion(sdkVersion: string) {
+  if (parseSdkMajorVersion(sdkVersion) < 39) {
+    return 'shell-app.bundle';
+  } else {
+    return 'app.bundle';
+  }
 }
 
 function parseSdkMajorVersion(expSdkVersion: string) {
@@ -23,7 +33,7 @@ function parseSdkMajorVersion(expSdkVersion: string) {
 
   let sdkMajorVersion = 0;
   try {
-    let versionComponents = expSdkVersion.split('.').map(number => parseInt(number, 10));
+    const versionComponents = expSdkVersion.split('.').map(number => parseInt(number, 10));
     sdkMajorVersion = versionComponents[0];
   } catch (_) {}
   return sdkMajorVersion;
@@ -33,7 +43,7 @@ async function saveUrlToPathAsync(url: string, path: string, timeout = 20000) {
   const response = await axios.get(url, { responseType: 'stream', timeout });
 
   return new Promise(function (resolve, reject) {
-    let stream = fs.createWriteStream(path);
+    const stream = fs.createWriteStream(path);
     stream.on('close', resolve);
     stream.on('error', reject);
     response.data.on('error', reject).pipe(stream);
@@ -82,6 +92,7 @@ export type AsyncSpawnOptions = SpawnOptions & {
   loggerFields?: any;
   pipeToLogger?: boolean | { stdout?: boolean; stderr?: boolean };
   stdoutOnly?: boolean;
+  loggerLineTransformer?: (line: any) => any;
 };
 
 async function spawnAsyncThrowError(
@@ -99,7 +110,7 @@ async function spawnAsyncThrowError(
   }
   const promise = spawnAsyncQuiet(command, args, options);
   if (pipeToLogger && promise.child) {
-    let streams: { stdout?: Readable | null; stderr?: Readable | null } = {};
+    const streams: { stdout?: Readable | null; stderr?: Readable | null } = {};
     if (pipeToLogger === true || pipeToLogger.stdout) {
       streams.stdout = promise.child.stdout;
     }
@@ -145,8 +156,8 @@ async function transformFileContentsAsync(
   filename: string,
   transform: (input: string) => string | null
 ) {
-  let fileString = await fs.readFile(filename, 'utf8');
-  let newFileString = transform(fileString);
+  const fileString = await fs.readFile(filename, 'utf8');
+  const newFileString = transform(fileString);
   if (newFileString !== null) {
     await fs.writeFile(filename, newFileString);
   }
@@ -184,11 +195,11 @@ function isDirectory(dir: string) {
 
 type LocaleMap = { [lang: string]: any };
 
-async function getResolvedLocalesAsync(exp: ExpoConfig): Promise<LocaleMap> {
+async function getResolvedLocalesAsync(projectRoot: string, exp: ExpoConfig): Promise<LocaleMap> {
   const locales: LocaleMap = {};
   if (exp.locales !== undefined) {
-    for (const [lang, path] of Object.entries(exp.locales)) {
-      const s = await fs.readFile(path as string, 'utf8');
+    for (const [lang, localePath] of Object.entries(exp.locales)) {
+      const s = await fs.readFile(path.resolve(projectRoot, localePath as string), 'utf8');
       try {
         locales[lang] = JSON.parse(s);
       } catch (e) {
@@ -204,8 +215,8 @@ async function regexFileAsync(
   replace: string,
   filename: string
 ): Promise<void> {
-  let file = await fs.readFile(filename);
-  let fileString = file.toString();
+  const file = await fs.readFile(filename);
+  const fileString = file.toString();
   await fs.writeFile(filename, fileString.replace(regex, replace));
 }
 
@@ -215,10 +226,10 @@ async function deleteLinesInFileAsync(
   endRegex: RegExp | string,
   filename: string
 ): Promise<void> {
-  let file = await fs.readFile(filename);
-  let fileString = file.toString();
-  let lines = fileString.split(/\r?\n/);
-  let filteredLines = [];
+  const file = await fs.readFile(filename);
+  const fileString = file.toString();
+  const lines = fileString.split(/\r?\n/);
+  const filteredLines = [];
   let inDeleteRange = false;
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].match(startRegex)) {
@@ -252,4 +263,6 @@ export {
   regexFileAsync,
   deleteLinesInFileAsync,
   createSpawner,
+  getManifestFileNameForSdkVersion,
+  getBundleFileNameForSdkVersion,
 };

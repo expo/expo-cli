@@ -1,5 +1,5 @@
-import styled, { css } from 'react-emotion';
 import * as Constants from 'app/common/constants';
+import styled, { css } from 'react-emotion';
 
 const OptionsButton = styled.span`
   font-family: ${Constants.fontFamilies.demi};

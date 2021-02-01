@@ -1,15 +1,16 @@
+import { ModConfig } from '@expo/config-plugins';
 import JsonFile, { JSONObject } from '@expo/json-file';
 import fs from 'fs-extra';
-import globby from 'globby';
+import { sync as globSync } from 'glob';
 import path from 'path';
 import semver from 'semver';
-import slug from 'slugify';
+import slugify from 'slugify';
 
 import {
   AppJSONConfig,
   ConfigFilePaths,
-  ExpRc,
   ExpoConfig,
+  ExpRc,
   GetConfigOptions,
   PackageJSONConfig,
   Platform,
@@ -18,9 +19,13 @@ import {
   WriteConfigOptions,
 } from './Config.types';
 import { ConfigError } from './Errors';
-import { getDynamicConfig, getStaticConfig } from './getConfig';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
 import { getExpoSDKVersion } from './Project';
+import { getDynamicConfig, getStaticConfig } from './getConfig';
+import { withConfigPlugins } from './plugins/withConfigPlugins';
+import { withInternal } from './plugins/withInternal';
+
+type SplitConfigs = { expo: ExpoConfig; mods: ModConfig };
 
 /**
  * If a config has an `expo` object then that will be used as the config.
@@ -28,14 +33,15 @@ import { getExpoSDKVersion } from './Project';
  *
  * @param config Input config object to reduce
  */
-function reduceExpoObject(config?: any): ExpoConfig | null {
+function reduceExpoObject(config?: any): SplitConfigs {
   if (!config) return config === undefined ? null : config;
 
-  if (typeof config.expo === 'object') {
-    // TODO: We should warn users in the future that if there are more values than "expo", those values outside of "expo" will be omitted in favor of the "expo" object.
-    return config.expo as ExpoConfig;
-  }
-  return config;
+  const { mods, ...expo } = config.expo ?? config;
+
+  return {
+    expo,
+    mods,
+  };
 }
 
 /**
@@ -63,13 +69,15 @@ function getSupportedPlatforms(
  * If a function is exported from the `app.config.js` then a partial config will be passed as an argument.
  * The partial config is composed from any existing app.json, and certain fields from the `package.json` like name and description.
  *
+ * If options.isPublicConfig is true, the Expo config will include only public-facing options (omitting private keys).
+ * The resulting config should be suitable for hosting or embedding in a publicly readable location.
  *
  * **Example**
  * ```js
  * module.exports = function({ config }) {
  *   // mutate the config before returning it.
  *   config.slug = 'new slug'
- *   return config;
+ *   return { expo: config };
  * }
  *
  * **Supports**
@@ -89,31 +97,71 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
   const rootConfig = (rawStaticConfig || {}) as AppJSONConfig;
   const staticConfig = reduceExpoObject(rawStaticConfig) || {};
 
-  const jsonFileWithNodeModulesPath = reduceExpoObject(rootConfig) as ExpoConfig;
+  const jsonFileWithNodeModulesPath = reduceExpoObject(rootConfig);
   // Can only change the package.json location if an app.json or app.config.json exists with nodeModulesPath
   const [packageJson, packageJsonPath] = getPackageJsonAndPath(
     projectRoot,
-    jsonFileWithNodeModulesPath
+    jsonFileWithNodeModulesPath.expo
   );
 
-  function fillAndReturnConfig(config: any, dynamicConfigObjectType: string | null) {
-    return {
-      ...ensureConfigHasDefaultValues(
+  function fillAndReturnConfig(config: SplitConfigs, dynamicConfigObjectType: string | null) {
+    const configWithDefaultValues = {
+      ...ensureConfigHasDefaultValues({
         projectRoot,
-        config,
-        packageJson,
-        options.skipSDKVersionRequirement
-      ),
+        exp: config.expo,
+        pkg: packageJson,
+        skipSDKVersionRequirement: options.skipSDKVersionRequirement,
+        paths,
+        packageJsonPath,
+      }),
+      mods: config.mods,
       dynamicConfigObjectType,
       rootConfig,
       dynamicConfigPath: paths.dynamicConfigPath,
       staticConfigPath: paths.staticConfigPath,
     };
+
+    if (options.isModdedConfig) {
+      // @ts-ignore: Add the mods back to the object.
+      configWithDefaultValues.exp.mods = config.mods ?? null;
+    }
+
+    // Apply static json plugins, should be done after _internal
+    configWithDefaultValues.exp = withConfigPlugins(configWithDefaultValues.exp);
+
+    if (!options.isModdedConfig) {
+      // @ts-ignore: Delete mods added by static plugins when they won't have a chance to be evaluated
+      delete configWithDefaultValues.exp.mods;
+    }
+
+    if (options.isPublicConfig) {
+      // Remove internal values with references to user's file paths from the public config.
+      delete configWithDefaultValues.exp._internal;
+
+      if (configWithDefaultValues.exp.hooks) {
+        delete configWithDefaultValues.exp.hooks;
+      }
+      if (configWithDefaultValues.exp.ios?.config) {
+        delete configWithDefaultValues.exp.ios.config;
+      }
+      if (configWithDefaultValues.exp.android?.config) {
+        delete configWithDefaultValues.exp.android.config;
+      }
+    }
+
+    return configWithDefaultValues;
   }
 
   // Fill in the static config
-  function getContextConfig(config: any = {}) {
-    return ensureConfigHasDefaultValues(projectRoot, config, packageJson, true).exp;
+  function getContextConfig(config: SplitConfigs) {
+    return ensureConfigHasDefaultValues({
+      projectRoot,
+      exp: config.expo,
+      pkg: packageJson,
+      skipSDKVersionRequirement: true,
+      paths,
+      packageJsonPath,
+    }).exp;
   }
 
   if (paths.dynamicConfigPath) {
@@ -139,7 +187,7 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
 
 export function getPackageJson(
   projectRoot: string,
-  config: Pick<ExpoConfig, 'nodeModulesPath'> = {}
+  config: Partial<Pick<ExpoConfig, 'nodeModulesPath'>> = {}
 ): PackageJSONConfig {
   const [pkg] = getPackageJsonAndPath(projectRoot, config);
   return pkg;
@@ -147,8 +195,11 @@ export function getPackageJson(
 
 function getPackageJsonAndPath(
   projectRoot: string,
-  config: Pick<ExpoConfig, 'nodeModulesPath'> = {}
+  config: Partial<Pick<ExpoConfig, 'nodeModulesPath'>> | null = {}
 ): [PackageJSONConfig, string] {
+  if (!config) {
+    config = {};
+  }
   const packageJsonPath = getRootPackageJsonPath(projectRoot, config);
   return [JsonFile.read(packageJsonPath), packageJsonPath];
 }
@@ -163,11 +214,11 @@ export function readConfigJson(
   const rawStaticConfig = paths.staticConfigPath ? getStaticConfig(paths.staticConfigPath) : null;
 
   const getConfigName = (): string => {
-    if (paths.staticConfigPath) ` \`${path.basename(paths.staticConfigPath)}\``;
+    if (paths.staticConfigPath) return ` \`${path.basename(paths.staticConfigPath)}\``;
     return '';
   };
 
-  let outputRootConfig: JSONObject | null = rawStaticConfig;
+  let outputRootConfig = rawStaticConfig as JSONObject | null;
   if (outputRootConfig === null || typeof outputRootConfig !== 'object') {
     if (skipValidation) {
       outputRootConfig = { expo: {} };
@@ -180,7 +231,7 @@ export function readConfigJson(
       );
     }
   }
-  let exp = outputRootConfig.expo as ExpoConfig;
+  let exp = outputRootConfig.expo as Partial<ExpoConfig>;
   if (exp === null || typeof exp !== 'object') {
     throw new ConfigError(
       `Property 'expo' in${getConfigName()} for project at path ${path.resolve(
@@ -192,10 +243,18 @@ export function readConfigJson(
 
   exp = { ...exp };
 
-  const [pkg] = getPackageJsonAndPath(projectRoot, exp);
+  const [pkg, packageJsonPath] = getPackageJsonAndPath(projectRoot, exp);
 
   return {
-    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
+    ...ensureConfigHasDefaultValues({
+      projectRoot,
+      exp,
+      pkg,
+      skipSDKVersionRequirement: skipNativeValidation,
+      paths,
+      packageJsonPath,
+    }),
+    mods: null,
     dynamicConfigPath: null,
     dynamicConfigObjectType: null,
     rootConfig: { ...outputRootConfig } as AppJSONConfig,
@@ -305,6 +364,12 @@ export async function readExpRcAsync(projectRoot: string): Promise<ExpRc> {
 
 const customConfigPaths: { [projectRoot: string]: string } = {};
 
+export function resetCustomConfigPaths(): void {
+  for (const key of Object.keys(customConfigPaths)) {
+    delete customConfigPaths[key];
+  }
+}
+
 export function setCustomConfigPath(projectRoot: string, configPath: string): void {
   customConfigPaths[projectRoot] = configPath;
 }
@@ -325,7 +390,11 @@ export async function modifyConfigAsync(
   modifications: Partial<ExpoConfig>,
   readOptions: GetConfigOptions = {},
   writeOptions: WriteConfigOptions = {}
-): Promise<{ type: 'success' | 'warn' | 'fail'; message?: string; config: ExpoConfig | null }> {
+): Promise<{
+  type: 'success' | 'warn' | 'fail';
+  message?: string;
+  config: ExpoConfig | AppJSONConfig | null;
+}> {
   const config = getConfig(projectRoot, readOptions);
   if (config.dynamicConfigPath) {
     // We cannot automatically write to a dynamic config.
@@ -351,7 +420,7 @@ export async function modifyConfigAsync(
     };
   } else if (config.staticConfigPath) {
     // Static with no dynamic config, this means we can append to the config automatically.
-    let outputConfig: AppJSONConfig;
+    let outputConfig: ExpoConfig | AppJSONConfig;
     // If the config has an expo object (app.json) then append the options to that object.
     if (config.rootConfig.expo) {
       outputConfig = {
@@ -379,58 +448,70 @@ const APP_JSON_EXAMPLE = JSON.stringify({
   },
 });
 
-function ensureConfigHasDefaultValues(
-  projectRoot: string,
-  exp: ExpoConfig,
-  pkg: JSONObject,
-  skipSDKVersionRequirement: boolean = false
-): { exp: ExpoConfig; pkg: PackageJSONConfig } {
-  if (!exp) exp = {};
+function ensureConfigHasDefaultValues({
+  projectRoot,
+  exp,
+  pkg,
+  paths,
+  packageJsonPath,
+  skipSDKVersionRequirement = false,
+}: {
+  projectRoot: string;
+  exp: Partial<ExpoConfig> | null;
+  pkg: JSONObject;
+  skipSDKVersionRequirement?: boolean;
+  paths?: ConfigFilePaths;
+  packageJsonPath?: string;
+}): { exp: ExpoConfig; pkg: PackageJSONConfig } {
+  if (!exp) {
+    exp = {};
+  }
+  exp = withInternal(exp as any, {
+    projectRoot,
+    ...(paths ?? {}),
+    packageJsonPath,
+  });
+  // Defaults for package.json fields
+  const pkgName = typeof pkg.name === 'string' ? pkg.name : path.basename(projectRoot);
+  const pkgVersion = typeof pkg.version === 'string' ? pkg.version : '1.0.0';
 
-  if (!exp.name) {
-    if (typeof pkg.name !== 'string') {
-      pkg.name = path.basename(projectRoot);
-    }
-    exp.name = pkg.name;
+  const pkgWithDefaults = { ...pkg, name: pkgName, version: pkgVersion };
+
+  // Defaults for app.json/app.config.js fields
+  const name = exp.name ?? pkgName;
+  const slug = exp.slug ?? slugify(name.toLowerCase());
+  const version = exp.version ?? pkgVersion;
+  const nodeModulesPath = exp.nodeModulesPath
+    ? path.resolve(projectRoot, exp.nodeModulesPath)
+    : undefined;
+  let description = exp.description;
+  if (!description && typeof pkg.description === 'string') {
+    description = pkg.description;
   }
 
-  if (!exp.description && typeof pkg.description === 'string') {
-    exp.description = pkg.description;
-  }
+  const expWithDefaults = { ...exp, name, slug, version, nodeModulesPath, description };
 
-  if (!exp.slug && typeof exp.name === 'string') {
-    exp.slug = slug(exp.name.toLowerCase());
-  }
-
-  if (!exp.version) {
-    if (typeof pkg.version === 'string') {
-      exp.version = pkg.version;
-    } else {
-      pkg.version = '1.0.0';
-    }
-    exp.version = pkg.version;
-  }
-
-  if (exp.nodeModulesPath) {
-    exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
-  }
-
+  let sdkVersion;
   try {
-    exp.sdkVersion = getExpoSDKVersion(projectRoot, exp);
+    sdkVersion = getExpoSDKVersion(projectRoot, expWithDefaults);
   } catch (error) {
     if (!skipSDKVersionRequirement) throw error;
   }
 
-  if (!exp.platforms) {
-    exp.platforms = getSupportedPlatforms(projectRoot, exp);
+  let platforms = exp.platforms;
+  if (!platforms) {
+    platforms = getSupportedPlatforms(projectRoot, expWithDefaults);
   }
 
-  return { exp, pkg };
+  return {
+    exp: { ...expWithDefaults, sdkVersion, platforms },
+    pkg: pkgWithDefaults,
+  };
 }
 
 export async function writeConfigJsonAsync(
   projectRoot: string,
-  options: Object
+  options: object
 ): Promise<ProjectConfig> {
   const paths = getConfigFilePaths(projectRoot);
   let {
@@ -468,7 +549,9 @@ export function getWebOutputPath(config: { [key: string]: any } = {}): string {
   return expo?.web?.build?.output || DEFAULT_BUILD_PATH;
 }
 
-export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webName: string } {
+export function getNameFromConfig(
+  exp: Record<string, any> = {}
+): { appName?: string; webName?: string } {
   // For RN CLI support
   const appManifest = exp.expo || exp;
   const { web = {} } = appManifest;
@@ -489,28 +572,29 @@ export function getDefaultTarget(projectRoot: string): ProjectTarget {
   if (exp.sdkVersion && exp.sdkVersion !== 'UNVERSIONED' && semver.lt(exp.sdkVersion, '37.0.0')) {
     return 'managed';
   }
-  return isBareWorkflowProject(projectRoot) ? 'bare' : 'managed';
+  return isBareWorkflowProject(projectRoot, exp) ? 'bare' : 'managed';
 }
 
-function isBareWorkflowProject(projectRoot: string): boolean {
-  const { pkg } = getConfig(projectRoot, {
-    skipSDKVersionRequirement: true,
-  });
+function isBareWorkflowProject(projectRoot: string, exp: ExpoConfig): boolean {
+  const [pkg] = getPackageJsonAndPath(projectRoot, exp);
+
   if (pkg.dependencies && pkg.dependencies.expokit) {
     return false;
   }
 
-  if (fs.existsSync(path.resolve(projectRoot, 'ios'))) {
-    const xcodeprojFiles = globby.sync([path.join(projectRoot, 'ios', '/**/*.xcodeproj')]);
-    if (xcodeprojFiles.length) {
-      return true;
-    }
+  const xcodeprojFiles = globSync('ios/**/*.xcodeproj', {
+    absolute: true,
+    cwd: projectRoot,
+  });
+  if (xcodeprojFiles.length) {
+    return true;
   }
-  if (fs.existsSync(path.resolve(projectRoot, 'android'))) {
-    const gradleFiles = globby.sync([path.join(projectRoot, 'android', '/**/*.gradle')]);
-    if (gradleFiles.length) {
-      return true;
-    }
+  const gradleFiles = globSync('android/**/*.gradle', {
+    absolute: true,
+    cwd: projectRoot,
+  });
+  if (gradleFiles.length) {
+    return true;
   }
 
   return false;
@@ -534,7 +618,7 @@ function isDynamicFilePath(filePath: string): boolean {
  */
 export function getProjectConfigDescription(
   projectRoot: string,
-  projectConfig: ProjectConfig
+  projectConfig: Partial<ProjectConfig>
 ): string | null {
   if (projectConfig.dynamicConfigPath) {
     const relativeDynamicConfigPath = path.relative(projectRoot, projectConfig.dynamicConfigPath);

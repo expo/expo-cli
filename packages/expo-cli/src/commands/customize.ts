@@ -1,4 +1,5 @@
-import * as ConfigUtils from '@expo/config';
+import { getConfig } from '@expo/config';
+import * as PackageManager from '@expo/package-manager';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { Command } from 'commander';
@@ -6,7 +7,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import prompts from 'prompts';
 
-import * as PackageManager from '@expo/package-manager';
 import log from '../log';
 
 type Options = { force: boolean };
@@ -48,7 +48,7 @@ async function generateFilesAsync({
   answer: string[];
   templateFolder: string;
 }) {
-  let promises = [];
+  const promises = [];
 
   for (const file of answer) {
     if (Object.keys(dependencyMap).includes(file)) {
@@ -85,7 +85,7 @@ async function generateFilesAsync({
 export async function action(projectDir: string = './', options: Options = { force: false }) {
   // Get the static path (defaults to 'web/')
   // Doesn't matter if expo is installed or which mode is used.
-  const { exp } = ConfigUtils.getConfig(projectDir, {
+  const { exp } = getConfig(projectDir, {
     skipSDKVersionRequirement: true,
   });
 
@@ -100,7 +100,7 @@ export async function action(projectDir: string = './', options: Options = { for
     ...Object.keys(dependencyMap),
     ...files.map(file => path.join(staticPath, file)),
   ];
-  let values = [];
+  const values = [];
 
   for (const file of allFiles) {
     const localProjectFile = path.resolve(projectDir, file);
@@ -138,8 +138,8 @@ export async function action(projectDir: string = './', options: Options = { for
     instructions: '',
     choices: values,
   });
-  if (!answer) {
-    console.log('\n\u203A Exiting...\n');
+  if (!answer || answer.length === 0) {
+    log('\n\u203A Exiting with no change...\n');
     return;
   }
   await generateFilesAsync({ projectDir, staticPath, options, answer, templateFolder });
@@ -147,8 +147,9 @@ export async function action(projectDir: string = './', options: Options = { for
 
 export default function (program: Command) {
   program
-    .command('customize:web [project-dir]')
-    .description('Generate static web files into your project.')
+    .command('customize:web [path]')
+    .description('Eject the default web files for customization')
+    .helpGroup('eject')
     .option('-f, --force', 'Allows replacing existing files')
     .allowOffline()
     .asyncAction(action);

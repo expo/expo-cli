@@ -18,7 +18,7 @@ const config = {
     url: 'https://localhost:5000',
     launch,
     server: {
-      command: `../expo-cli/bin/expo.js start e2e/basic/ --web-only --non-interactive --https`,
+      command: `../expo-cli/bin/expo.js start:web e2e/basic/ --non-interactive --https`,
       port: 5000,
       launchTimeout: 60000,
       debug: true,

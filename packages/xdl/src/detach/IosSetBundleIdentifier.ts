@@ -1,14 +1,12 @@
-import fs from 'fs-extra';
-import { sync } from 'glob';
-import { join } from 'path';
-// @ts-ignore
-import { project as Project } from 'xcode';
 import plist, { PlistObject } from '@expo/plist';
+import fs from 'fs';
+import { sync as globSync } from 'glob';
+import xcode from 'xcode';
 
 const defaultBundleId = '$(PRODUCT_BUNDLE_IDENTIFIER)';
 
 export function resetAllPlistBundleIdentifiers(projectRoot: string) {
-  const infoPlistPaths = sync(join(projectRoot, 'ios', '*', 'Info.plist'));
+  const infoPlistPaths = globSync('ios/*/Info.plist', { absolute: true, cwd: projectRoot });
 
   for (const plistPath of infoPlistPaths) {
     resetPlistBundleIdentifier(plistPath);
@@ -59,7 +57,7 @@ function filterHosts(input: any[]): boolean {
 }
 
 export function updateBundleIdentifierForPbxproj(pbxprojPath: string, bundleIdentifier: string) {
-  const project = Project(pbxprojPath);
+  const project = xcode.project(pbxprojPath);
   project.parseSync();
 
   Object.entries(project.pbxXCBuildConfigurationSection())
@@ -83,7 +81,7 @@ export function updateBundleIdentifierForPbxproj(pbxprojPath: string, bundleIden
 
 export function setBundleIdentifier(projectRoot: string, bundleIdentifier: string) {
   // Get all pbx projects
-  const pbxprojPaths = sync(join(projectRoot, 'ios', '*', 'project.pbxproj'));
+  const pbxprojPaths = globSync('ios/*/project.pbxproj', { absolute: true, cwd: projectRoot });
 
   for (const pbxprojPath of pbxprojPaths) {
     updateBundleIdentifierForPbxproj(pbxprojPath, bundleIdentifier);

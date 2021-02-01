@@ -17,8 +17,8 @@ captured_stderr = with_captured_stderr{
       language: $language,
     }
     Produce.config = FastlaneCore::Configuration.create(Produce::Options.available_options, config)
-    Produce::Manager.start_producing
-    $result = JSON.generate({ result: 'success' })
+    apple_id = Produce::Manager.start_producing.to_s
+    $result = JSON.generate({ result: 'success', appleId: apple_id })
   rescue Spaceship::Client::InvalidUserCredentialsError => invalid_cred
     $result = JSON.generate({
       result: 'failure',

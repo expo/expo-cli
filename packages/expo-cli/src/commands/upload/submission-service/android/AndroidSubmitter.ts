@@ -1,30 +1,28 @@
-import os from 'os';
-
+import { UserManager } from '@expo/xdl';
 import Table from 'cli-table3';
 import fs from 'fs-extra';
-import ora from 'ora';
 import chunk from 'lodash/chunk';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
+import ora from 'ora';
 
+import log from '../../../../log';
+import { ensureProjectExistsAsync, getProjectOwner } from '../../../../projects';
+import { sleep } from '../../../utils/promise';
+import SubmissionService, { DEFAULT_CHECK_INTERVAL_MS } from '../SubmissionService';
+import { Platform, Submission, SubmissionStatus } from '../SubmissionService.types';
+import { Archive, ArchiveSource, getArchiveAsync } from '../archive-source';
+import { getExpoConfig } from '../utils/config';
+import { displayLogs } from '../utils/logs';
+import { AndroidPackageSource, getAndroidPackageAsync } from './AndroidPackageSource';
 import {
   AndroidSubmissionConfig,
   ArchiveType,
   ReleaseStatus,
   ReleaseTrack,
 } from './AndroidSubmissionConfig';
-import { ServiceAccountSource, getServiceAccountAsync } from './ServiceAccountSource';
-import { AndroidPackageSource, getAndroidPackageAsync } from './AndroidPackageSource';
+import { getServiceAccountAsync, ServiceAccountSource } from './ServiceAccountSource';
 import { AndroidSubmissionContext } from './types';
-
-import SubmissionService, { DEFAULT_CHECK_INTERVAL_MS } from '../SubmissionService';
-import { Platform, Submission, SubmissionStatus } from '../SubmissionService.types';
-import { Archive, ArchiveSource, getArchiveAsync } from '../archive-source';
-import { displayLogs } from '../utils/logs';
-import { runTravelingFastlaneAsync } from '../utils/travelingFastlane';
-import { SubmissionMode } from '../types';
-import { sleep } from '../../../utils/promise';
-import log from '../../../../log';
 
 export interface AndroidSubmissionOptions
   extends Pick<AndroidSubmissionConfig, 'track' | 'releaseStatus'> {
@@ -44,29 +42,26 @@ class AndroidSubmitter {
 
   async submitAsync(): Promise<void> {
     const resolvedSourceOptions = await this.resolveSourceOptions();
-    if (this.ctx.mode === SubmissionMode.online) {
-      const submissionConfig = await AndroidOnlineSubmitter.formatSubmissionConfigAndPrintSummary(
-        this.options,
-        resolvedSourceOptions
-      );
-      const onlineSubmitter = new AndroidOnlineSubmitter(
-        submissionConfig,
-        this.ctx.commandOptions.verbose ?? false
-      );
-      await onlineSubmitter.submitAsync();
-    } else {
-      const submissionConfig = await AndroidOfflineSubmitter.formatSubmissionConfigAndPrintSummary(
-        this.options,
-        resolvedSourceOptions
-      );
-      const offlineSubmitter = new AndroidOfflineSubmitter(submissionConfig);
-      await offlineSubmitter.submitAsync();
-    }
+    const user = await UserManager.ensureLoggedInAsync();
+    const exp = getExpoConfig(this.ctx.projectDir);
+    const projectId = await ensureProjectExistsAsync(user, {
+      accountName: getProjectOwner(user, exp),
+      projectName: exp.slug,
+    });
+    const submissionConfig = await AndroidOnlineSubmitter.formatSubmissionConfigAndPrintSummary(
+      { ...this.options, projectId },
+      resolvedSourceOptions
+    );
+    const onlineSubmitter = new AndroidOnlineSubmitter(
+      submissionConfig,
+      this.ctx.commandOptions.verbose ?? false
+    );
+    await onlineSubmitter.submitAsync();
   }
 
   private async resolveSourceOptions(): Promise<ResolvedSourceOptions> {
     const androidPackage = await getAndroidPackageAsync(this.options.androidPackageSource);
-    const archive = await getArchiveAsync(this.ctx.mode, this.options.archiveSource);
+    const archive = await getArchiveAsync(this.options.archiveSource);
     const serviceAccountPath = await getServiceAccountAsync(this.options.serviceAccountSource);
     return {
       androidPackage,
@@ -76,76 +71,14 @@ class AndroidSubmitter {
   }
 }
 
-interface AndroidOfflineSubmissionConfig
-  extends Pick<
-    AndroidSubmissionConfig,
-    'archiveType' | 'track' | 'releaseStatus' | 'androidPackage'
-  > {
-  archivePath: string;
-  serviceAccountPath: string;
+export type AndroidOnlineSubmissionConfig = AndroidSubmissionConfig & { projectId: string };
+interface AndroidOnlineSubmissionOptions extends AndroidSubmissionOptions {
+  projectId: string;
 }
-
-class AndroidOfflineSubmitter {
-  static async formatSubmissionConfigAndPrintSummary(
-    options: AndroidSubmissionOptions,
-    { archive, androidPackage, serviceAccountPath }: ResolvedSourceOptions
-  ): Promise<AndroidOfflineSubmissionConfig> {
-    const submissionConfig = {
-      androidPackage,
-      archivePath: archive.location,
-      archiveType: archive.type,
-      serviceAccountPath,
-      ...pick(options, 'track', 'releaseStatus'),
-    };
-    printSummary({
-      ...omit(submissionConfig, 'serviceAccount'),
-      mode: SubmissionMode.offline,
-    });
-    return submissionConfig;
-  }
-
-  constructor(private submissionConfig: AndroidOfflineSubmissionConfig) {}
-
-  async submitAsync(): Promise<void> {
-    const {
-      archivePath,
-      archiveType,
-      androidPackage,
-      serviceAccountPath,
-      track,
-      releaseStatus,
-    } = this.submissionConfig;
-
-    const travelingFastlanePkgName = this.resolveTravelingFastlanePkgName();
-    const travelingFastlane = require(travelingFastlanePkgName)();
-    const args = [archivePath, androidPackage, serviceAccountPath, track, archiveType];
-    if (releaseStatus) {
-      args.push(releaseStatus);
-    }
-    try {
-      await runTravelingFastlaneAsync(travelingFastlane.supplyAndroid, args);
-    } finally {
-      if (archivePath.startsWith(os.tmpdir())) {
-        await fs.remove(archivePath);
-      }
-    }
-  }
-
-  private resolveTravelingFastlanePkgName(): string {
-    const osPlatform = os.platform();
-    if (osPlatform === 'darwin') {
-      return '@expo/traveling-fastlane-darwin';
-    } else {
-      return '@expo/traveling-fastlane-linux';
-    }
-  }
-}
-
-type AndroidOnlineSubmissionConfig = AndroidSubmissionConfig;
 
 class AndroidOnlineSubmitter {
   static async formatSubmissionConfigAndPrintSummary(
-    options: AndroidSubmissionOptions,
+    options: AndroidOnlineSubmissionOptions,
     { archive, androidPackage, serviceAccountPath }: ResolvedSourceOptions
   ): Promise<AndroidOnlineSubmissionConfig> {
     const serviceAccount = await fs.readFile(serviceAccountPath, 'utf-8');
@@ -154,12 +87,11 @@ class AndroidOnlineSubmitter {
       archiveUrl: archive.location,
       archiveType: archive.type,
       serviceAccount,
-      ...pick(options, 'track', 'releaseStatus'),
+      ...pick(options, 'track', 'releaseStatus', 'projectId'),
     };
     printSummary({
       ...omit(submissionConfig, 'serviceAccount'),
       serviceAccountPath,
-      mode: SubmissionMode.online,
     });
     return submissionConfig;
   }
@@ -175,6 +107,7 @@ class AndroidOnlineSubmitter {
     try {
       submissionId = await SubmissionService.startSubmissionAsync(
         Platform.ANDROID,
+        this.submissionConfig.projectId,
         this.submissionConfig
       );
       scheduleSpinner.succeed();
@@ -190,11 +123,15 @@ class AndroidOnlineSubmitter {
     try {
       while (!submissionCompleted) {
         await sleep(DEFAULT_CHECK_INTERVAL_MS);
-        submission = await SubmissionService.getSubmissionAsync(submissionId);
+        submission = await SubmissionService.getSubmissionAsync(
+          this.submissionConfig.projectId,
+          submissionId
+        );
         submissionSpinner.text = AndroidOnlineSubmitter.getStatusText(submission.status);
         submissionStatus = submission.status;
         if (submissionStatus === SubmissionStatus.ERRORED) {
           submissionCompleted = true;
+          process.exitCode = 1;
           submissionSpinner.fail();
         } else if (submissionStatus === SubmissionStatus.FINISHED) {
           submissionCompleted = true;
@@ -232,7 +169,7 @@ interface Summary {
   serviceAccountPath: string;
   track: ReleaseTrack;
   releaseStatus?: ReleaseStatus;
-  mode: SubmissionMode;
+  projectId?: string;
 }
 
 const SummaryHumanReadableKeys: Record<keyof Summary, string> = {
@@ -243,17 +180,10 @@ const SummaryHumanReadableKeys: Record<keyof Summary, string> = {
   serviceAccountPath: 'Google Service Account',
   track: 'Release track',
   releaseStatus: 'Release status',
-  mode: 'Submission mode',
+  projectId: 'Project ID',
 };
 
 const SummaryHumanReadableValues: Partial<Record<keyof Summary, Function>> = {
-  mode: (mode: SubmissionMode): string => {
-    if (mode === SubmissionMode.online) {
-      return 'Using Expo Submission Service';
-    } else {
-      return 'Submitting the app from this computer';
-    }
-  },
   archivePath: (path: string) => breakWord(path, 50),
   archiveUrl: (url: string) => breakWord(url, 50),
 };
@@ -281,7 +211,7 @@ function printSummary(summary: Summary): void {
     const displayValue = SummaryHumanReadableValues[key as keyof Summary]?.(value) ?? value;
     table.push([displayKey, displayValue]);
   }
-  console.info(table.toString());
+  log(table.toString());
 }
 
 export default AndroidSubmitter;

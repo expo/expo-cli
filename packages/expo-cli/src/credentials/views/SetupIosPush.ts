@@ -1,21 +1,12 @@
-import { prompt } from 'inquirer';
+import CommandError from '../../CommandError';
+import log from '../../log';
+import { confirmAsync } from '../../prompts';
+import { AppLookupParams } from '../api/IosApi';
+import { Context, IView } from '../context';
 import * as iosPushView from './IosPushCredentials';
 
-import { Context, IView } from '../context';
-import { Question } from '../../prompt';
-import log from '../../log';
-
 export class SetupIosPush implements IView {
-  _experienceName: string;
-  _bundleIdentifier: string;
-  _nonInteractive: boolean;
-
-  constructor(options: iosPushView.PushKeyOptions) {
-    const { experienceName, bundleIdentifier } = options;
-    this._experienceName = experienceName;
-    this._bundleIdentifier = bundleIdentifier;
-    this._nonInteractive = options.nonInteractive ?? false;
-  }
+  constructor(private app: AppLookupParams) {}
 
   async open(ctx: Context): Promise<IView | null> {
     if (!ctx.user) {
@@ -23,32 +14,28 @@ export class SetupIosPush implements IView {
     }
 
     // TODO: Remove this on Nov 2020 when Apple no longer accepts deprecated push certs
-    const appCredentials = await ctx.ios.getAppCredentials(
-      this._experienceName,
-      this._bundleIdentifier
-    );
+    const appCredentials = await ctx.ios.getAppCredentials(this.app);
     const deprecatedPushId = appCredentials?.credentials?.pushId;
     const deprecatedPushP12 = appCredentials?.credentials?.pushP12;
     const deprecatedPushPassword = appCredentials?.credentials?.pushPassword;
     if (deprecatedPushId && deprecatedPushP12 && deprecatedPushPassword) {
-      const confirmQuestion: Question = {
-        type: 'confirm',
-        name: 'confirm',
-        message: `We've detected legacy Push Certificates on file. Would you like to upgrade to the newer standard?`,
-        pageSize: Infinity,
-      };
+      if (ctx.nonInteractive) {
+        throw new CommandError(
+          'NON_INTERACTIVE',
+          "We've detected legacy Push Certificates on file. Start the CLI without the '--non-interactive' flag to upgrade to the newer standard."
+        );
+      }
 
-      const { confirm } = await prompt(confirmQuestion);
+      const confirm = await confirmAsync({
+        message: `We've detected legacy Push Certificates on file. Would you like to upgrade to the newer standard?`,
+      });
       if (!confirm) {
         log(`Using Deprecated Push Cert: ${deprecatedPushId} on file`);
         return null;
       }
     }
 
-    const configuredPushKey = await ctx.ios.getPushKey(
-      this._experienceName,
-      this._bundleIdentifier
-    );
+    const configuredPushKey = await ctx.ios.getPushKey(this.app);
 
     if (configuredPushKey) {
       // we dont need to setup if we have a valid push key on file
@@ -58,10 +45,6 @@ export class SetupIosPush implements IView {
       }
     }
 
-    return new iosPushView.CreateOrReusePushKey({
-      experienceName: this._experienceName,
-      bundleIdentifier: this._bundleIdentifier,
-      nonInteractive: this._nonInteractive,
-    });
+    return new iosPushView.CreateOrReusePushKey(this.app);
   }
 }

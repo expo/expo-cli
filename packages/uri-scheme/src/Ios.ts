@@ -1,17 +1,27 @@
 #!/usr/bin/env node
-import * as Scheme from '@expo/config/build/ios/Scheme';
+import * as Scheme from '@expo/config-plugins/build/ios/Scheme';
 import plist, { PlistObject } from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import fs from 'fs';
-import { sync } from 'glob';
-import { join } from 'path';
+import { sync as globSync } from 'glob';
+import * as path from 'path';
 
 import { Options } from './Options';
 
+const ignoredPaths = ['**/@(Carthage|Pods|node_modules)/**'];
+
 export function isAvailable(projectRoot: string): boolean {
-  const reactNativeIos = sync(join(projectRoot, 'ios', '*.xcodeproj'));
-  const currentIos = sync(join(projectRoot, '*.xcodeproj'));
+  const reactNativeIos = globSync('ios/*.xcodeproj', {
+    ignore: ignoredPaths,
+    absolute: true,
+    cwd: projectRoot,
+  });
+  const currentIos = globSync('*.xcodeproj', {
+    ignore: ignoredPaths,
+    absolute: true,
+    cwd: projectRoot,
+  });
   return !!currentIos.length || !!reactNativeIos.length;
 }
 
@@ -92,14 +102,20 @@ export async function getAsync({
   return schemes;
 }
 
+function getInfoPlistsInDirectory(projectRoot: string): string[] {
+  // longer name means more suffixes, we want the shortest possible one to be first.
+  return globSync('*/Info.plist', { ignore: ignoredPaths, absolute: true, cwd: projectRoot }).sort(
+    (a, b) => a.length - b.length
+  );
+}
+
 export function getConfigPath(projectRoot: string): string {
   // TODO: Figure out how to avoid using the Tests info.plist
-
-  const rnInfoPlistPaths = sync(join(projectRoot, 'ios', '*', 'Info.plist'));
+  const rnInfoPlistPaths = getInfoPlistsInDirectory(path.join(projectRoot, 'ios'));
   if (rnInfoPlistPaths.length) {
     return rnInfoPlistPaths[0];
   }
-  const infoPlistPaths = sync(join(projectRoot, '*', 'Info.plist'));
+  const infoPlistPaths = getInfoPlistsInDirectory(projectRoot);
   return infoPlistPaths[0];
 }
 

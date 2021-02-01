@@ -60,30 +60,32 @@ Expo CLI
 
 <!-- Begin auto-generation -->
 
-| Package                                                                   | Coverage                                                                                                                                                                                        |
-| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**`@expo/babel-preset-cli`**](./packages/babel-preset-cli)               | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=babelPresetCli)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/babel-preset-cli/src)               |
-| [**`@expo/config`**](./packages/config)                                   | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=config)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/config/src)                                 |
-| [**`@expo/configure-splash-screen`**](./packages/configure-splash-screen) | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=configureSplashScreen)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/configure-splash-screen/src) |
-| [**`@expo/dev-server`**](./packages/dev-server)                           | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=devServer)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/dev-server/src)                          |
-| [**`@expo/dev-tools`**](./packages/dev-tools)                             | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=devTools)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/dev-tools/src)                            |
-| [**`@expo/electron-adapter`**](./packages/electron-adapter)               | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=electronAdapter)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/electron-adapter/src)              |
-| [**`expo-cli`**](./packages/expo-cli)                                     | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=expoCli)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/expo-cli/src)                              |
-| [**`expo-codemod`**](./packages/expo-codemod)                             | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=expoCodemod)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/expo-codemod/src)                      |
-| [**`expo-optimize`**](./packages/expo-optimize)                           | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=expoOptimize)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/expo-optimize/src)                    |
-| [**`@expo/image-utils`**](./packages/image-utils)                         | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=imageUtils)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/image-utils/src)                        |
-| [**`@expo/json-file`**](./packages/json-file)                             | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=jsonFile)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/json-file/src)                            |
-| [**`@expo/metro-config`**](./packages/metro-config)                       | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=metroConfig)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/metro-config/src)                      |
-| [**`@expo/next-adapter`**](./packages/next-adapter)                       | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=nextAdapter)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/next-adapter/src)                      |
-| [**`@expo/osascript`**](./packages/osascript)                             | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=osascript)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/osascript/src)                           |
-| [**`@expo/package-manager`**](./packages/package-manager)                 | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=packageManager)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/package-manager/src)                |
-| [**`@expo/plist`**](./packages/plist)                                     | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=plist)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/plist/src)                                   |
-| [**`pod-install`**](./packages/pod-install)                               | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=podInstall)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/pod-install/src)                        |
-| [**`expo-pwa`**](./packages/pwa)                                          | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=pwa)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/pwa/src)                                       |
-| [**`@expo/schemer`**](./packages/schemer)                                 | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=schemer)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/schemer/src)                               |
-| [**`uri-scheme`**](./packages/uri-scheme)                                 | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=uriScheme)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/uri-scheme/src)                          |
-| [**`@expo/webpack-config`**](./packages/webpack-config)                   | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=webpackConfig)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/webpack-config/src)                  |
-| [**`@expo/xdl`**](./packages/xdl)                                         | [![badges](https://codecov.io/gh/expo/expo-cli/branch/master/graph/badge.svg?flag=xdl)](https://codecov.io/gh/expo/expo-cli/tree/master/packages/xdl/src)                                       |
+| Package                                                                            | Version                                                                                                                                                             |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [**`@expo/babel-preset-cli`**](./packages/babel-preset-cli)                        | [![badges](https://img.shields.io/npm/v/@expo/babel-preset-cli?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/babel-preset-cli)               |
+| [**`@expo/config`**](./packages/config)                                            | [![badges](https://img.shields.io/npm/v/@expo/config?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/config)                                   |
+| [**`@expo/config-types`**](./packages/config-types)                                | [![badges](https://img.shields.io/npm/v/@expo/config-types?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/config-types)                       |
+| [**`@expo/configure-splash-screen`**](./unlinked-packages/configure-splash-screen) | [![badges](https://img.shields.io/npm/v/@expo/configure-splash-screen?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/configure-splash-screen) |
+| [**`@expo/dev-server`**](./packages/dev-server)                                    | [![badges](https://img.shields.io/npm/v/@expo/dev-server?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/dev-server)                           |
+| [**`@expo/dev-tools`**](./packages/dev-tools)                                      | [![badges](https://img.shields.io/npm/v/@expo/dev-tools?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/dev-tools)                             |
+| [**`@expo/electron-adapter`**](./packages/electron-adapter)                        | [![badges](https://img.shields.io/npm/v/@expo/electron-adapter?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/electron-adapter)               |
+| [**`expo-cli`**](./packages/expo-cli)                                              | [![badges](https://img.shields.io/npm/v/expo-cli?color=32cd32&style=flat-square)](https://www.npmjs.com/package/expo-cli)                                           |
+| [**`expo-codemod`**](./packages/expo-codemod)                                      | [![badges](https://img.shields.io/npm/v/expo-codemod?color=32cd32&style=flat-square)](https://www.npmjs.com/package/expo-codemod)                                   |
+| [**`expo-optimize`**](./packages/expo-optimize)                                    | [![badges](https://img.shields.io/npm/v/expo-optimize?color=32cd32&style=flat-square)](https://www.npmjs.com/package/expo-optimize)                                 |
+| [**`@expo/image-utils`**](./packages/image-utils)                                  | [![badges](https://img.shields.io/npm/v/@expo/image-utils?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/image-utils)                         |
+| [**`@expo/json-file`**](./packages/json-file)                                      | [![badges](https://img.shields.io/npm/v/@expo/json-file?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/json-file)                             |
+| [**`@expo/metro-config`**](./packages/metro-config)                                | [![badges](https://img.shields.io/npm/v/@expo/metro-config?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/metro-config)                       |
+| [**`@expo/next-adapter`**](./packages/next-adapter)                                | [![badges](https://img.shields.io/npm/v/@expo/next-adapter?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/next-adapter)                       |
+| [**`@expo/osascript`**](./packages/osascript)                                      | [![badges](https://img.shields.io/npm/v/@expo/osascript?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/osascript)                             |
+| [**`@expo/package-manager`**](./packages/package-manager)                          | [![badges](https://img.shields.io/npm/v/@expo/package-manager?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/package-manager)                 |
+| [**`@expo/pkcs12`**](./packages/pkcs12)                                            | [![badges](https://img.shields.io/npm/v/@expo/pkcs12?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/pkcs12)                                   |
+| [**`@expo/plist`**](./packages/plist)                                              | [![badges](https://img.shields.io/npm/v/@expo/plist?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/plist)                                     |
+| [**`pod-install`**](./packages/pod-install)                                        | [![badges](https://img.shields.io/npm/v/pod-install?color=32cd32&style=flat-square)](https://www.npmjs.com/package/pod-install)                                     |
+| [**`expo-pwa`**](./packages/pwa)                                                   | [![badges](https://img.shields.io/npm/v/expo-pwa?color=32cd32&style=flat-square)](https://www.npmjs.com/package/expo-pwa)                                           |
+| [**`@expo/schemer`**](./packages/schemer)                                          | [![badges](https://img.shields.io/npm/v/@expo/schemer?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/schemer)                                 |
+| [**`uri-scheme`**](./packages/uri-scheme)                                          | [![badges](https://img.shields.io/npm/v/uri-scheme?color=32cd32&style=flat-square)](https://www.npmjs.com/package/uri-scheme)                                       |
+| [**`@expo/webpack-config`**](./packages/webpack-config)                            | [![badges](https://img.shields.io/npm/v/@expo/webpack-config?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/webpack-config)                   |
+| [**`@expo/xdl`**](./packages/xdl)                                                  | [![badges](https://img.shields.io/npm/v/@expo/xdl?color=32cd32&style=flat-square)](https://www.npmjs.com/package/@expo/xdl)                                         |
 
 <!-- Generated with $ node scripts/build-packages-toc.js -->
 
@@ -119,16 +121,3 @@ Curious about who makes Expo? Here are our [team members](https://expo.io/about)
 ## License
 
 The Expo source code is made available under the [MIT license](LICENSE). Some of the dependencies are licensed differently, with the BSD license, for example.
-
-<!-- Footer -->
-
----
-
-<p>
-    <a aria-label="sponsored by expo" href="http://expo.io">
-        <img src="https://img.shields.io/badge/Sponsored_by-Expo-4630EB.svg?style=for-the-badge&logo=EXPO&labelColor=000&logoColor=fff" target="_blank" />
-    </a>
-    <a aria-label="expo next-adapter is free to use" href="/packages/expo-cli/LICENSE" target="_blank">
-        <img align="right" alt="License: MIT" src="https://img.shields.io/badge/License-MIT-success.svg?style=for-the-badge&color=33CC12" target="_blank" />
-    </a>
-</p>

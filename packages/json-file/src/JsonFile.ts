@@ -1,15 +1,14 @@
-import { readFile, readFileSync } from 'fs';
-import { promisify } from 'util';
-
+import { codeFrameColumns } from '@babel/code-frame';
+import { mkdirp, readFile, readFileSync } from 'fs-extra';
+import JSON5 from 'json5';
 import get from 'lodash/get';
 import set from 'lodash/set';
-import JSON5 from 'json5';
+import path from 'path';
+import { promisify } from 'util';
 import writeFileAtomic from 'write-file-atomic';
-import { codeFrameColumns } from '@babel/code-frame';
 
-import JsonFileError from './JsonFileError';
+import JsonFileError, { EmptyJsonFileError } from './JsonFileError';
 
-const readFileAsync = promisify(readFile);
 const writeFileAtomicAsync: (
   filename: string,
   data: string | Buffer,
@@ -28,6 +27,7 @@ type Options<TJSONObject extends JSONObject> = {
   badJsonDefault?: TJSONObject;
   jsonParseErrorDefault?: TJSONObject;
   cantReadFileDefault?: TJSONObject;
+  ensureDir?: boolean;
   default?: TJSONObject;
   json5?: boolean;
   space?: number;
@@ -38,6 +38,7 @@ const DEFAULT_OPTIONS = {
   badJsonDefault: undefined,
   jsonParseErrorDefault: undefined,
   cantReadFileDefault: undefined,
+  ensureDir: false,
   default: undefined,
   json5: false,
   space: 2,
@@ -100,7 +101,7 @@ export default class JsonFile<TJSONObject extends JSONObject> {
   }
 
   async mergeAsync(
-    sources: Partial<TJSONObject> | Array<Partial<TJSONObject>>,
+    sources: Partial<TJSONObject> | Partial<TJSONObject>[],
     options?: Options<TJSONObject>
   ): Promise<TJSONObject> {
     return mergeAsync<TJSONObject>(this.file, sources, this._getOptions(options));
@@ -110,7 +111,7 @@ export default class JsonFile<TJSONObject extends JSONObject> {
     return deleteKeyAsync(this.file, key, this._getOptions(options));
   }
 
-  async deleteKeysAsync(keys: Array<string>, options?: Options<TJSONObject>) {
+  async deleteKeysAsync(keys: string[], options?: Options<TJSONObject>) {
     return deleteKeysAsync(this.file, keys, this._getOptions(options));
   }
 
@@ -134,14 +135,15 @@ function read<TJSONObject extends JSONObject>(
   try {
     json = readFileSync(file, 'utf8');
   } catch (error) {
-    let defaultValue = cantReadFileDefault(options);
+    assertEmptyJsonString(json, file);
+    const defaultValue = cantReadFileDefault(options);
     if (defaultValue === undefined) {
-      throw new JsonFileError(`Can't read JSON file: ${file}`, error, error.code);
+      throw new JsonFileError(`Can't read JSON file: ${file}`, error, error.code, file);
     } else {
       return defaultValue;
     }
   }
-  return parseJsonString(json, options);
+  return parseJsonString(json, options, file);
 }
 
 async function readAsync<TJSONObject extends JSONObject>(
@@ -150,9 +152,10 @@ async function readAsync<TJSONObject extends JSONObject>(
 ): Promise<TJSONObject> {
   let json;
   try {
-    json = await readFileAsync(file, 'utf8');
+    json = await readFile(file, 'utf8');
   } catch (error) {
-    let defaultValue = cantReadFileDefault(options);
+    assertEmptyJsonString(json, file);
+    const defaultValue = cantReadFileDefault(options);
     if (defaultValue === undefined) {
       throw new JsonFileError(`Can't read JSON file: ${file}`, error, error.code);
     } else {
@@ -164,8 +167,10 @@ async function readAsync<TJSONObject extends JSONObject>(
 
 function parseJsonString<TJSONObject extends JSONObject>(
   json: string,
-  options?: Options<TJSONObject>
+  options?: Options<TJSONObject>,
+  fileName?: string
 ): TJSONObject {
+  assertEmptyJsonString(json, fileName);
   try {
     if (_getOption(options, 'json5')) {
       return JSON5.parse(json);
@@ -173,15 +178,15 @@ function parseJsonString<TJSONObject extends JSONObject>(
       return JSON.parse(json);
     }
   } catch (e) {
-    let defaultValue = jsonParseErrorDefault(options);
+    const defaultValue = jsonParseErrorDefault(options);
     if (defaultValue === undefined) {
-      let location = locationFromSyntaxError(e, json);
+      const location = locationFromSyntaxError(e, json);
       if (location) {
-        let codeFrame = codeFrameColumns(json, { start: location });
+        const codeFrame = codeFrameColumns(json, { start: location });
         e.codeFrame = codeFrame;
         e.message += `\n${codeFrame}`;
       }
-      throw new JsonFileError(`Error parsing JSON: ${json}`, e, 'EJSONPARSE');
+      throw new JsonFileError(`Error parsing JSON: ${json}`, e, 'EJSONPARSE', fileName);
     } else {
       return defaultValue;
     }
@@ -206,6 +211,9 @@ async function writeAsync<TJSONObject extends JSONObject>(
   object: TJSONObject,
   options?: Options<TJSONObject>
 ): Promise<TJSONObject> {
+  if (options?.ensureDir) {
+    await mkdirp(path.dirname(file));
+  }
   const space = _getOption(options, 'space');
   const json5 = _getOption(options, 'json5');
   const addNewLineAtEOF = _getOption(options, 'addNewLineAtEOF');
@@ -239,7 +247,7 @@ async function setAsync<TJSONObject extends JSONObject>(
 
 async function mergeAsync<TJSONObject extends JSONObject>(
   file: string,
-  sources: Partial<TJSONObject> | Array<Partial<TJSONObject>>,
+  sources: Partial<TJSONObject> | Partial<TJSONObject>[],
   options?: Options<TJSONObject>
 ): Promise<TJSONObject> {
   const object = await readAsync(file, options);
@@ -261,14 +269,14 @@ async function deleteKeyAsync<TJSONObject extends JSONObject>(
 
 async function deleteKeysAsync<TJSONObject extends JSONObject>(
   file: string,
-  keys: Array<string>,
+  keys: string[],
   options?: Options<TJSONObject>
 ): Promise<TJSONObject> {
   const object = await readAsync(file, options);
   let didDelete = false;
 
   for (let i = 0; i < keys.length; i++) {
-    let key = keys[i];
+    const key = keys[i];
     if (object.hasOwnProperty(key)) {
       delete object[key];
       didDelete = true;
@@ -327,12 +335,18 @@ function locationFromSyntaxError(error: any, sourceString: string) {
     return { line: error.lineNumber, column: error.columnNumber };
   }
   // JSON SyntaxError only includes the index in the message.
-  let match = /at position (\d+)/.exec(error.message);
+  const match = /at position (\d+)/.exec(error.message);
   if (match) {
-    let index = parseInt(match[1], 10);
-    let lines = sourceString.slice(0, index + 1).split('\n');
+    const index = parseInt(match[1], 10);
+    const lines = sourceString.slice(0, index + 1).split('\n');
     return { line: lines.length, column: lines[lines.length - 1].length };
   }
 
   return null;
+}
+
+function assertEmptyJsonString(json?: string, file?: string) {
+  if (json?.trim() === '') {
+    throw new EmptyJsonFileError(file);
+  }
 }

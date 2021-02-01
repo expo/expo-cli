@@ -1,27 +1,28 @@
 /** @internal */ /** */
 /* eslint-env node */
-import PnpWebpackPlugin from 'pnp-webpack-plugin';
-import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
-import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
-import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
-import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
-import ManifestPlugin from 'webpack-manifest-plugin';
 import { projectHasModule } from '@expo/config';
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import {
-  IconOptions,
   getChromeIconConfig,
   getFaviconIconConfig,
   getSafariIconConfig,
   getSafariStartupImageConfig,
+  IconOptions,
 } from 'expo-pwa';
 import { readFileSync } from 'fs-extra';
 import { boolish } from 'getenv';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { parse } from 'node-html-parser';
 import path from 'path';
+import PnpWebpackPlugin from 'pnp-webpack-plugin';
+import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
+import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
+import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
+import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
+import ManifestPlugin from 'webpack-manifest-plugin';
 
 import {
   withAlias,
@@ -50,14 +51,15 @@ import {
   ExpoPwaManifestWebpackPlugin,
   FaviconWebpackPlugin,
 } from './plugins';
+import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 import { HTMLLinkNode } from './plugins/ModifyHtmlWebpackPlugin';
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 import { overrideWithPropertyOrConfig } from './utils';
-import ExpoAppManifestWebpackPlugin from './plugins/ExpoAppManifestWebpackPlugin';
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = boolish('GENERATE_SOURCEMAP', true);
 const shouldUseNativeCodeLoading = boolish('EXPO_WEBPACK_USE_NATIVE_CODE_LOADING', true);
+const shouldUseReactRefresh = boolish('EXPO_WEBPACK_FAST_REFRESH', false);
 
 const isCI = boolish('CI', false);
 
@@ -139,7 +141,7 @@ function getPlatformsExtensions(platform: string): string[] {
   return getModuleFileExtensions(platform);
 }
 
-export default async function(
+export default async function (
   env: Environment,
   argv: Arguments = {}
 ): Promise<Configuration | DevConfiguration> {
@@ -181,12 +183,13 @@ export default async function(
     }
   );
 
-  let appEntry: string[] = [];
+  const appEntry: string[] = [];
 
   // In solutions like Gatsby the main entry point doesn't need to be known.
   if (locations.appMain) {
     appEntry.push(locations.appMain);
   }
+  const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
 
   if (isNative) {
     const reactNativeModulePath = projectHasModule(
@@ -233,7 +236,7 @@ export default async function(
       // the line below with these two lines if you prefer the stock client:
       // require.resolve('webpack-dev-server/client') + '?/',
       // require.resolve('webpack/hot/dev-server'),
-      appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
+      appEntry.unshift(webpackDevClientEntry);
     }
   }
 
@@ -242,19 +245,24 @@ export default async function(
     generatePWAImageAssets = env.pwa;
   }
 
-  const filesToCopy = [
+  const filesToCopy: any[] = [
     {
       from: locations.template.folder,
       to: locations.production.folder,
-      // We generate new versions of these based on the templates
-      ignore: [
-        'expo-service-worker.js',
-        'serve.json',
-        'index.html',
-        'icon.png',
-        // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
-        'register-service-worker.js',
-      ],
+      toType: 'dir',
+      noErrorOnMissing: true,
+      globOptions: {
+        dot: true,
+        // We generate new versions of these based on the templates
+        ignore: [
+          '**/expo-service-worker.*',
+          // '**/serve.json',
+          // '**/index.html',
+          '**/icon.png',
+          // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
+          '**/register-service-worker.js',
+        ],
+      },
     },
     {
       from: locations.template.serveJson,
@@ -262,7 +270,7 @@ export default async function(
     },
   ];
 
-  if (env.offline !== false) {
+  if (env.offline === true) {
     filesToCopy.push({
       from: locations.template.serviceWorker,
       to: locations.production.serviceWorker,
@@ -305,7 +313,7 @@ export default async function(
   };
 
   // TODO(Bacon): Move to expo/config - manifest code from XDL Project
-  let publicConfig = {
+  const publicConfig = {
     ...config,
     xde: true,
     developer: {
@@ -341,7 +349,7 @@ export default async function(
           verbose: false,
         }),
       // Copy the template files over
-      isProd && new CopyWebpackPlugin(filesToCopy),
+      isProd && new CopyWebpackPlugin({ patterns: filesToCopy }),
 
       // Generate the `index.html`
       new ExpoHtmlWebpackPlugin(env, templateIndex),
@@ -386,9 +394,9 @@ export default async function(
           },
           {
             name: env.config.web?.shortName,
-            isFullScreen: env.config.web?.meta.apple.touchFullscreen,
-            isWebAppCapable: env.config.web?.meta.apple.mobileWebAppCapable,
-            barStyle: env.config.web?.meta.apple.barStyle,
+            isFullScreen: env.config.web?.meta?.apple?.touchFullscreen,
+            isWebAppCapable: !!env.config.web?.meta?.apple?.mobileWebAppCapable,
+            barStyle: env.config.web?.meta?.apple?.barStyle,
           },
           ensureSourceAbsolute(getSafariIconConfig(env.config)),
           ensureSourceAbsolute(getSafariStartupImageConfig(env.config))
@@ -421,6 +429,16 @@ export default async function(
 
       // This is necessary to emit hot updates (currently CSS only):
       !isNative && isDev && new HotModuleReplacementPlugin(),
+
+      // Experimental hot reloading for React .
+      // https://github.com/facebook/react/tree/master/packages/react-refresh
+      isDev &&
+        shouldUseReactRefresh &&
+        new ReactRefreshWebpackPlugin({
+          overlay: {
+            entry: webpackDevClientEntry,
+          },
+        }),
 
       // If you require a missing module and then `npm install` it, you still have
       // to restart the development server for Webpack to discover it. This plugin

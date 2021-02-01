@@ -1,7 +1,8 @@
-let { bold } = require('chalk');
-let boxen = require('boxen');
-let inquirer = require('inquirer');
+const boxen = require('boxen');
+const { bold } = require('chalk');
+const prompts = require('prompts');
 
+// eslint-disable-next-line no-console
 console.log(
   boxen(bold("Please complete these checks before publishing the 'expo-cli' package:"), {
     padding: 1,
@@ -17,31 +18,25 @@ ${bold('3) Eject')}: Create an app and eject it immediately. Check that it build
 
     <repo-dir>/packages/expo-cli/bin/expo.js init testapp --template blank
     cd testapp
-    <repo-dir>/packages/expo-cli/bin/expo.js eject --eject-method expoKit
-    <repo-dir>/packages/expo-cli/bin/expo.js start
+    <repo-dir>/packages/expo-cli/bin/expo.js eject
 
     # In another terminal:
     # Test that it builds for iOS
-    cd ios
-    pod install
-    open testapp.xcworkspace
-    # then press "Run" in Xcode
+    yarn ios
 
     # Test that it builds for Android
-    cd ../android
-    ./gradlew installDevKernelDebug`
+    yarn android`
 );
 
-inquirer
-  .prompt({
-    type: 'confirm',
-    name: 'completed',
-    message: 'Have you completed all the checks?',
-    default: false,
-  })
-  .then(answer => {
-    if (!answer.completed) {
-      console.error('Please complete all the checks before continuing.');
-      process.exit(1);
-    }
-  });
+prompts({
+  type: 'confirm',
+  name: 'completed',
+  message: 'Have you completed all the checks?',
+  initial: false,
+}).then(answer => {
+  if (!answer.completed) {
+    // eslint-disable-next-line no-console
+    console.error('Please complete all the checks before continuing.');
+    process.exit(1);
+  }
+});

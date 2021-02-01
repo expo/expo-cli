@@ -1,13 +1,22 @@
 #!/usr/bin/env node
-let path = require('path');
-let spawnAsync = require('@expo/spawn-async');
+const spawnAsync = require('@expo/spawn-async');
+const path = require('path');
 
-let lerna = path.join(__dirname, '../node_modules/.bin/lerna');
+const lerna = path.join(__dirname, '../node_modules/.bin/lerna');
+const shouldPrerelease = isPrerelease();
+
+function isPrerelease() {
+  const bumpFlagIndex = process.argv.findIndex(arg => arg === '--bump');
+  const prereleaseArgIndex = process.argv.findIndex(arg => arg === 'prerelease');
+  return (
+    bumpFlagIndex !== -1 && prereleaseArgIndex !== -1 && bumpFlagIndex + 1 === prereleaseArgIndex
+  );
+}
 
 async function run() {
   await spawnAsync(lerna, ['version', '--exact', ...process.argv.slice(2)], { stdio: 'inherit' });
 
-  let packages = JSON.parse(
+  const packages = JSON.parse(
     (
       await spawnAsync(lerna, ['ls', '--toposort', '--json'], {
         stdio: ['inherit', 'pipe', 'inherit'],
@@ -16,7 +25,7 @@ async function run() {
   );
 
   console.log('🔎 Looking for packages to publish');
-  let toPublish = [];
+  const toPublish = [];
   for (const { name, version, location } of packages) {
     let packageViewStdout;
     try {
@@ -52,6 +61,9 @@ async function run() {
     console.log();
     console.log('🚢 Publishing', name);
     const args = ['publish', '--access', 'public'];
+    if (shouldPrerelease) {
+      args.push('--tag', 'alpha');
+    }
     if (name === 'expo-cli') {
       args.push('--tag', 'next');
       console.log(`  using dist-tag 'next', run 'npm dist-tag add ${name}@${version} latest'`);
@@ -63,6 +75,7 @@ async function run() {
     });
     console.log('✅ Published', name);
   }
+  console.log('❗❗❗ Make sure CHANGELOG.md is up to date ❗❗❗');
 }
 
 run().catch(error => {

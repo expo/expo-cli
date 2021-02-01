@@ -1,21 +1,20 @@
 import chalk from 'chalk';
-import pick from 'lodash/pick';
 import { Command } from 'commander';
 
-import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
-import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
 import log from '../log';
-import { SubmissionMode } from './upload/submission-service/types';
-
-const SOURCE_OPTIONS = ['id', 'latest', 'path', 'url'];
+import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
+import { AndroidSubmitCommandOptions } from './upload/submission-service/android/types';
+import * as TerminalLink from './utils/TerminalLink';
 
 export default function (program: Command) {
   program
-    .command('upload:android [projectDir]')
+    .command('upload:android [path]')
     .alias('ua')
-    .option('--latest', 'uploads the latest build (default)')
+    .description('Upload an Android binary to the Google Play Store')
+    .helpGroup('upload')
+    .option('--latest', 'upload the latest build')
     .option('--id <id>', 'id of the build to upload')
-    .option('--path <path>', 'path to the .apk/.aab file')
+    .option('--path [path]', 'path to the .apk/.aab file')
     .option('--url <url>', 'app archive url')
     .option('--key <key>', 'path to the JSON key used to authenticate with Google Play')
     .option(
@@ -40,28 +39,31 @@ export default function (program: Command) {
       'Experimental: Use Submission Service for uploading your app. The upload process will happen on Expo servers.'
     )
     .option('--verbose', 'Always print logs from Submission Service')
-    .description('Uploads an Android standalone app to Google Play Store.')
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
-    .asyncActionProjectDir(async (projectDir: string, options: any) => {
-      // TODO: remove this once we verify `fastlane supply` works on linux / windows
-      if (!options.useSubmissionService) {
-        checkRuntimePlatform('android');
+    .asyncActionProjectDir(async (projectDir: string, options: AndroidSubmitCommandOptions) => {
+      if (options.useSubmissionService) {
+        log.warn(
+          '\n`--use-submission-service is now the default and the flag will be deprecated in the future.`'
+        );
       }
-
-      const submissionMode = options.useSubmissionService
-        ? SubmissionMode.online
-        : SubmissionMode.offline;
-      const ctx = AndroidSubmitCommand.createContext(submissionMode, projectDir, options);
+      const ctx = AndroidSubmitCommand.createContext(projectDir, options);
       const command = new AndroidSubmitCommand(ctx);
       await command.runAsync();
     });
 
   program
-    .command('upload:ios [projectDir]')
+    .command('upload:ios [path]')
     .alias('ui')
-    .option('--latest', 'uploads the latest build (default)')
+    .description(
+      `${chalk.yellow('Unsupported:')} Use ${chalk.bold('eas submit')} or Transporter app instead.`
+    )
+    .longDescription(
+      'Upload an iOS binary to Apple TestFlight (MacOS only). Uses the latest build by default'
+    )
+    .helpGroup('upload')
+    .option('--latest', 'upload the latest build (default)')
     .option('--id <id>', 'id of the build to upload')
-    .option('--path <path>', 'path to the .ipa file')
+    .option('--path [path]', 'path to the .ipa file')
     .option('--url <url>', 'app archive url')
     .option(
       '--apple-id <apple-id>',
@@ -76,7 +78,7 @@ export default function (program: Command) {
     )
     .option(
       '--apple-id-password <apple-id-password>',
-      'your Apple ID password (you can also set EXPO_APPLE_ID_PASSWORD env variable)'
+      'your Apple ID password (you can also set EXPO_APPLE_PASSWORD env variable)'
     )
     .option(
       '--app-name <app-name>',
@@ -96,46 +98,22 @@ export default function (program: Command) {
       'English'
     )
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
-    .description(
-      'Uploads a standalone app to Apple TestFlight (works on macOS only). Uploads the latest build by default.'
-    )
-    .on('--help', function () {
-      console.log('Available languages:');
-      console.log(`  ${LANGUAGES.join(', ')}`);
-      console.log();
-    })
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
-    .asyncActionProjectDir(async (projectDir: string, options: IosPlatformOptions) => {
-      try {
-        // TODO: remove this once we verify `fastlane supply` works on linux / windows
-        checkRuntimePlatform('ios');
+    .asyncActionProjectDir(async (projectDir: string, options: any) => {
+      const logItem = (name: string, link: string) => {
+        log(`\u203A ${TerminalLink.linkedText(name, link)}`);
+      };
 
-        const args = pick(options, SOURCE_OPTIONS);
-        if (Object.keys(args).length > 1) {
-          throw new Error(`You have to choose only one of: --path, --id, --latest, --url`);
-        }
-        IOSUploader.validateOptions(options);
-        const uploader = new IOSUploader(projectDir, options);
-        await uploader.upload();
-      } catch (err) {
-        log.error('Failed to upload the standalone app to the app store.');
-        throw err;
-      }
-    });
-}
-
-function checkRuntimePlatform(targetPlatform: 'android' | 'ios'): void {
-  if (process.platform !== 'darwin') {
-    if (targetPlatform === 'android') {
-      log.error('Local Android uploads are only supported on macOS.');
-      log(
-        chalk.bold(
-          'Try the --use-submission-service flag to upload your app from Expo servers. This feature is behind a flag because it is experimental.'
-        )
+      log.newLine();
+      log(chalk.yellow('expo upload:ios is no longer supported'));
+      log('Please use one of the following');
+      log.newLine();
+      logItem(chalk.cyan.bold('eas submit'), 'https://docs.expo.io/submit/ios');
+      logItem('Transporter', 'https://apps.apple.com/us/app/transporter/id1450874784');
+      logItem(
+        'Fastlane deliver',
+        'https://docs.fastlane.tools/getting-started/ios/appstore-deployment'
       );
-    } else {
-      log.error('Currently, iOS uploads are only supported on macOS, sorry :(');
-    }
-    process.exit(1);
-  }
+      log.newLine();
+    });
 }

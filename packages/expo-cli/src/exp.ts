@@ -1,16 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import url from 'url';
-
-import ProgressBar from 'progress';
-import leven from 'leven';
-import findLastIndex from 'lodash/findLastIndex';
-import boxen from 'boxen';
 import bunyan from '@expo/bunyan';
-import chalk from 'chalk';
-import ora from 'ora';
+import { setCustomConfigPath } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
-import program, { Command, Option } from 'commander';
 import {
   Analytics,
   Api,
@@ -18,22 +8,35 @@ import {
   Binaries,
   Config,
   Doctor,
+  Logger,
   LogRecord,
   LogUpdater,
-  Logger,
   NotificationCode,
   PackagerLogsStream,
   Project,
   ProjectUtils,
   UserManager,
 } from '@expo/xdl';
-import * as ConfigUtils from '@expo/config';
+import boxen from 'boxen';
+import chalk from 'chalk';
+import program, { Command } from 'commander';
+import fs from 'fs';
+import getenv from 'getenv';
+import leven from 'leven';
+import findLastIndex from 'lodash/findLastIndex';
+import ora from 'ora';
+import path from 'path';
+import ProgressBar from 'progress';
+import stripAnsi from 'strip-ansi';
+import url from 'url';
+import wrapAnsi from 'wrap-ansi';
 
+import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
+import { registerCommands } from './commands';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
-import { registerCommands } from './commands';
 
 // We use require() to exclude package.json from TypeScript's analysis since it lives outside the
 // src directory and would change the directory structure of the emitted files under the build
@@ -55,8 +58,271 @@ Command.prototype.allowOffline = function () {
   return this;
 };
 
+// Add support for logical command groupings
+Command.prototype.helpGroup = function (name: string) {
+  if (this.commands[this.commands.length - 1]) {
+    this.commands[this.commands.length - 1].__helpGroup = name;
+  } else {
+    this.parent.helpGroup(name);
+  }
+  return this;
+};
+
+// A longer description that will be displayed then the command is used with --help
+Command.prototype.longDescription = function (name: string) {
+  if (this.commands[this.commands.length - 1]) {
+    this.commands[this.commands.length - 1].__longDescription = name;
+  } else {
+    this.parent.longDescription(name);
+  }
+  return this;
+};
+
+function pad(str: string, width: number): string {
+  // Pulled from commander for overriding
+  const len = Math.max(0, width - stripAnsi(str).length);
+  return str + Array(len + 1).join(' ');
+}
+
+function humanReadableArgName(arg: any): string {
+  // Pulled from commander for overriding
+  const nameOutput = arg.name + (arg.variadic === true ? '...' : '');
+  return arg.required ? `<${nameOutput}>` : `[${nameOutput}]`;
+}
+
+function breakSentence(input: string): string {
+  // Break a sentence by the word after a max character count, adjusting for ansi characters
+  return wrapAnsi(input, 72);
+}
+
+Command.prototype.prepareCommands = function () {
+  return this.commands
+    .filter(function (cmd: Command) {
+      // Display all commands with EXPO_DEBUG, otherwise use the noHelp option.
+      if (getenv.boolish('EXPO_DEBUG', false)) {
+        return true;
+      }
+      return !['internal', 'eas'].includes(cmd.__helpGroup);
+    })
+    .map(function (cmd: Command, i: number) {
+      const args = cmd._args.map(humanReadableArgName).join(' ');
+
+      const description = cmd._description;
+      // Remove alias. We still show this with --help on the command.
+      // const alias = cmd._alias;
+      // const nameWithAlias = cmd._name + (alias ? '|' + alias : '');
+      const nameWithAlias = cmd._name;
+      return [
+        nameWithAlias +
+          // Remove the redundant [options] string that's shown after every command.
+          // (cmd.options.length ? ' [options]' : '') +
+          (args ? ' ' + args : ''),
+        breakSentence(description),
+        cmd.__helpGroup ?? 'misc',
+      ];
+    });
+};
+
+/**
+ * Set / get the command usage `str`.
+ *
+ * @param {String} str
+ * @return {String|Command}
+ * @api public
+ */
+
+// @ts-ignore
+Command.prototype.usage = function (str: string) {
+  var args = this._args.map(function (arg: any[]) {
+    return humanReadableArgName(arg);
+  });
+
+  const commandsStr = this.commands.length ? '[command]' : '';
+  const argsStr = this._args.length ? args.join(' ') : '';
+
+  let usage = commandsStr + argsStr;
+  if (usage.length) usage += ' ';
+  usage += '[options]';
+
+  if (arguments.length === 0) {
+    return this._usage || usage;
+  }
+  this._usage = str;
+
+  return this;
+};
+
+Command.prototype.helpInformation = function () {
+  let desc: string[] = [];
+  // Use the long description if available, otherwise use the regular description.
+  const description = this.__longDescription ?? this._description;
+  if (description) {
+    desc = [replaceAll(breakSentence(description), '\n', pad('\n', 3)), ''];
+
+    const argsDescription = this._argsDescription;
+    if (argsDescription && this._args.length) {
+      const width = this.padWidth();
+      desc.push('Arguments:');
+      desc.push('');
+      this._args.forEach(({ name }: { name: string }) => {
+        desc.push('  ' + pad(name, width) + '  ' + argsDescription[name]);
+      });
+      desc.push('');
+    }
+  }
+
+  let cmdName = this._name;
+  if (this._alias) {
+    // Here is the only place we show the command alias
+    cmdName = `${cmdName}|${this._alias}`;
+  }
+
+  // Dim the options to keep things consistent.
+  const usage = `${chalk.bold`Usage:`} ${cmdName} ${chalk.dim(this.usage())}\n`;
+
+  const commandHelp = '' + this.commandHelp();
+
+  const options = [chalk.bold`Options:`, '\n' + this.optionHelp().replace(/^/gm, '    '), ''];
+
+  // return ['', usage, ...desc, ...options, commandHelp].join('\n') + '\n';
+  return ['', usage, ...desc, ...options, commandHelp].join(pad('\n', 3)) + '\n';
+};
+
+function replaceAll(string: string, search: string, replace: string): string {
+  return string.split(search).join(replace);
+}
+
+export const helpGroupOrder = [
+  'auth',
+  'core',
+  'client',
+  'info',
+  'publish',
+  'build',
+  'credentials',
+  'eas',
+  'notifications',
+  'url',
+  'webhooks',
+  'upload',
+  'eject',
+  'experimental',
+  'internal',
+];
+
+function sortHelpGroups(helpGroups: Record<string, string[][]>): Record<string, string[][]> {
+  const groupOrder = [
+    ...new Set([
+      ...helpGroupOrder,
+      // add any others and remove duplicates
+      ...Object.keys(helpGroups),
+    ]),
+  ];
+
+  const subGroupOrder: Record<string, string[]> = {
+    core: ['init', 'start', 'start:web', 'publish', 'export'],
+    eas: ['eas:credentials'],
+  };
+
+  const sortSubGroupWithOrder = (groupName: string, group: string[][]): string[][] => {
+    const order: string[] = subGroupOrder[groupName];
+    if (!order?.length) {
+      return group;
+    }
+
+    const sortedCommands: string[][] = [];
+
+    while (order.length) {
+      const key = order.shift()!;
+      const index = group.findIndex(item => item[0].startsWith(key));
+      if (index >= 0) {
+        const [item] = group.splice(index, 1);
+        sortedCommands.push(item);
+      }
+    }
+
+    return sortedCommands.concat(group);
+  };
+
+  // Reverse the groups
+  const sortedGroups: Record<string, string[][]> = {};
+  while (groupOrder.length) {
+    const group = groupOrder.shift()!;
+    if (group in helpGroups) {
+      sortedGroups[group] = helpGroups[group];
+    }
+  }
+
+  return Object.keys(sortedGroups).reduce(
+    (prev, curr) => ({
+      ...prev,
+      // Sort subgroups that have a defined order
+      [curr]: sortSubGroupWithOrder(curr, helpGroups[curr]),
+    }),
+    {}
+  );
+}
+
+// Extended the help renderer to add a custom format and groupings.
+Command.prototype.commandHelp = function () {
+  if (!this.commands.length) {
+    return '';
+  }
+  const width: number = this.padWidth();
+  const commands: string[][] = this.prepareCommands();
+
+  const helpGroups: Record<string, string[][]> = {};
+
+  // Sort commands into helpGroups
+  for (const command of commands) {
+    const groupName = command[2];
+    if (!helpGroups[groupName]) {
+      helpGroups[groupName] = [];
+    }
+    helpGroups[groupName].push(command);
+  }
+
+  const sorted = sortHelpGroups(helpGroups);
+
+  // Render everything.
+  return [
+    '' + chalk.bold('Commands:'),
+    '',
+    // Render all of the groups.
+    Object.values(sorted)
+      .map(group =>
+        group
+          // Render the command and description
+          .map(([cmd, description]: string[]) => {
+            // Dim the arguments that come after the command, this makes scanning a bit easier.
+            let [noArgsCmd, ...noArgsCmdArgs] = cmd.split(' ');
+            if (noArgsCmdArgs.length) {
+              noArgsCmd += ` ${chalk.dim(noArgsCmdArgs.join(' '))}`;
+            }
+
+            // Word wrap the description.
+            let wrappedDescription = description;
+            if (description) {
+              // Ensure the wrapped description appears on the same padded line.
+              wrappedDescription = '  ' + replaceAll(description, '\n', pad('\n', width + 3));
+            }
+
+            const paddedName = wrappedDescription ? pad(noArgsCmd, width) : noArgsCmd;
+            return paddedName + wrappedDescription;
+          })
+          .join('\n')
+          .replace(/^/gm, '    ')
+      )
+      // Double new line to add spacing between groups
+      .join('\n\n'),
+    '',
+  ].join('\n');
+};
+
 program.on('--help', () => {
-  log(`To learn more about a specific command and its options use 'expo [command] --help'\n`);
+  log(`  Run a command with --help for more info 💡`);
+  log(`    $ expo start --help`);
+  log();
 });
 
 export type Action = (...args: any[]) => void;
@@ -72,7 +338,7 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
     }
 
     try {
-      let options = args[args.length - 1];
+      const options = args[args.length - 1];
       if (options.offline) {
         Config.offline = true;
       }
@@ -83,12 +349,24 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
       Analytics.flush();
     } catch (err) {
       // TODO: Find better ways to consolidate error messages
-      if (err.isCommandError) {
+      if (err instanceof AbortCommandError || err instanceof SilentError) {
+        // Do nothing when a prompt is cancelled or the error is logged in a pretty way.
+      } else if (err.isCommandError) {
         log.error(err.message);
       } else if (err._isApiError) {
         log.error(chalk.red(err.message));
       } else if (err.isXDLError) {
         log.error(err.message);
+      } else if (err.isJsonFileError || err.isConfigError || err.isPackageManagerError) {
+        if (err.code === 'EJSONEMPTY') {
+          // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
+          log.error(err.message);
+        } else {
+          log.addNewLineIfNone();
+          log.error(err.message);
+          const stacktrace = formatStackTrace(err.stack, this.name());
+          log.error(chalk.gray(stacktrace));
+        }
       } else {
         log.error(err.message);
         log.error(chalk.gray(err.stack));
@@ -98,6 +376,63 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
     }
   });
 };
+
+function getStringBetweenParens(value: string): string {
+  const regExp = /\(([^)]+)\)/;
+  const matches = regExp.exec(value);
+  if (matches && matches?.length > 1) {
+    return matches[1];
+  }
+  return value;
+}
+
+function focusLastPathComponent(value: string): string {
+  const parts = value.split('/');
+  if (parts.length > 1) {
+    const last = parts.pop();
+    const current = chalk.dim(parts.join('/') + '/');
+    return `${current}${last}`;
+  }
+  return chalk.dim(value);
+}
+
+function formatStackTrace(stacktrace: string, command: string): string {
+  const treeStackLines: string[][] = [];
+  for (const line of stacktrace.split('\n')) {
+    const [first, ...parts] = line.trim().split(' ');
+    // Remove at -- we'll use a branch instead.
+    if (first === 'at') {
+      treeStackLines.push(parts);
+    }
+  }
+
+  return treeStackLines
+    .map((parts, index) => {
+      let first = parts.shift();
+      let last = parts.pop();
+
+      // Replace anonymous with command name
+      if (first === 'Command.<anonymous>') {
+        first = chalk.bold(`expo ${command}`);
+      } else if (first?.startsWith('Object.')) {
+        // Remove extra JS types from function names
+        first = first.split('Object.').pop()!;
+      } else if (first?.startsWith('Function.')) {
+        // Remove extra JS types from function names
+        first = first.split('Function.').pop()!;
+      } else if (first?.startsWith('/')) {
+        // If the first element is a path
+        first = focusLastPathComponent(getStringBetweenParens(first));
+      }
+
+      if (last) {
+        last = focusLastPathComponent(getStringBetweenParens(last));
+      }
+      const branch = (index === treeStackLines.length - 1 ? '└' : '├') + '─';
+      return ['   ', branch, first, ...parts, last].filter(Boolean).join(' ');
+    })
+    .join('\n');
+}
 
 // asyncActionProjectDir captures the projectDirectory from the command line,
 // setting it to cwd if it is not provided.
@@ -111,7 +446,7 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
 // - Runs AsyncAction with the projectDir as an argument
 Command.prototype.asyncActionProjectDir = function (
   asyncFn: Action,
-  options: { checkConfig?: boolean } = {}
+  options: { checkConfig?: boolean; skipSDKVersionRequirement?: boolean } = {}
 ) {
   this.option('--config [file]', 'Specify a path to app.json or app.config.js');
   return this.asyncAction(async (projectDir: string, ...args: any[]) => {
@@ -124,16 +459,37 @@ Command.prototype.asyncActionProjectDir = function (
     }
 
     if (opts.config) {
-      const pathToConfig = path.resolve(process.cwd(), opts.config);
-      if (!fs.existsSync(pathToConfig)) {
-        throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
+      // @ts-ignore: This guards against someone passing --config without a path.
+      if (opts.config === true) {
+        log.addNewLineIfNone();
+        log('Please specify your custom config path:');
+        log(log.chalk.green(`  expo ${this.name()} --config ${log.chalk.cyan(`<app-config>`)}`));
+        log.newLine();
+        process.exit(1);
       }
-      ConfigUtils.setCustomConfigPath(projectDir, pathToConfig);
+
+      const pathToConfig = path.resolve(process.cwd(), opts.config);
+      // Warn the user when the custom config path they provided does not exist.
+      if (!fs.existsSync(pathToConfig)) {
+        const relativeInput = path.relative(process.cwd(), opts.config);
+        const formattedPath = log.chalk
+          .reset(pathToConfig)
+          .replace(relativeInput, log.chalk.bold(relativeInput));
+        log.addNewLineIfNone();
+        log.nestedWarn(`Custom config file does not exist:\n${formattedPath}`);
+        log.newLine();
+        const helpCommand = log.chalk.green(`expo ${this.name()} --help`);
+        log(`Run ${helpCommand} for more info`);
+        log.newLine();
+        process.exit(1);
+        // throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
+      }
+      setCustomConfigPath(projectDir, pathToConfig);
     }
 
     const logLines = (msg: any, logFn: (...args: any[]) => void) => {
       if (typeof msg === 'string') {
-        for (let line of msg.split('\n')) {
+        for (const line of msg.split('\n')) {
           logFn(line);
         }
       } else {
@@ -153,7 +509,7 @@ Command.prototype.asyncActionProjectDir = function (
         return logFn(chunk.msg);
       }
 
-      let { message, stack } = traceInfo;
+      const { message, stack } = traceInfo;
       log.addNewLineIfNone();
       logFn(chalk.bold(message));
 
@@ -162,7 +518,7 @@ Command.prototype.asyncActionProjectDir = function (
       };
 
       const stackFrames: string[] = stack.split('\n').filter((line: string) => line);
-      let lastAppCodeFrameIndex = findLastIndex(stackFrames, (line: string) => {
+      const lastAppCodeFrameIndex = findLastIndex(stackFrames, (line: string) => {
         return !isLibraryFrame(line);
       });
       let lastFrameIndexToLog = Math.min(
@@ -178,7 +534,7 @@ Command.prototype.asyncActionProjectDir = function (
       }
 
       for (let i = 0; i <= lastFrameIndexToLog; i++) {
-        let line = stackFrames[i];
+        const line = stackFrames[i];
         if (!line) {
           continue;
         } else if (line.match(/react-native\/.*YellowBox.js/)) {
@@ -230,6 +586,7 @@ Command.prototype.asyncActionProjectDir = function (
       projectRoot: projectDir,
       onStartBuildBundle: () => {
         bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
+          width: 64,
           total: 100,
           clear: true,
           complete: '=',
@@ -240,7 +597,7 @@ Command.prototype.asyncActionProjectDir = function (
       },
       onProgressBuildBundle: (percent: number) => {
         if (!bar || bar.complete) return;
-        let ticks = percent - bar.curr;
+        const ticks = percent - bar.curr;
         ticks > 0 && bar.tick(ticks);
       },
       onFinishBuildBundle: (err, startTime, endTime) => {
@@ -267,7 +624,7 @@ Command.prototype.asyncActionProjectDir = function (
         }
       },
       updateLogs: (updater: LogUpdater) => {
-        let newLogChunks = updater([]);
+        const newLogChunks = updater([]);
         newLogChunks.forEach((newLogChunk: LogRecord) => {
           if (newLogChunk.issueId && newLogChunk.issueCleared) {
             return;
@@ -297,11 +654,13 @@ Command.prototype.asyncActionProjectDir = function (
     // to rerun Doctor because the directory was already checked previously
     // This is relevant for command such as `send`
     if (options.checkConfig && (await Project.currentStatus(projectDir)) !== 'running') {
-      let spinner = ora('Making sure project is set up correctly...').start();
+      const spinner = ora('Making sure project is set up correctly...').start();
       log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
 
-      let status = await Doctor.validateWithoutNetworkAsync(projectDir);
+      const status = await Doctor.validateWithoutNetworkAsync(projectDir, {
+        skipSDKVersionRequirement: options.skipSDKVersionRequirement,
+      });
       if (status === Doctor.FATAL) {
         throw new Error(`There is an error with your project. See above logs for information.`);
       }
@@ -330,7 +689,7 @@ function runAsync(programName: string) {
       if (!serverUrl.startsWith('http')) {
         serverUrl = `http://${serverUrl}`;
       }
-      let parsedUrl = url.parse(serverUrl);
+      const parsedUrl = url.parse(serverUrl);
       const port = parseInt(parsedUrl.port || '', 10);
       if (parsedUrl.hostname && port) {
         Config.api.host = parsedUrl.hostname;
@@ -346,10 +705,7 @@ function runAsync(programName: string) {
     program.name(programName);
     program
       .version(packageJSON.version)
-      .option(
-        '--non-interactive',
-        'Fail, if an interactive prompt would be required to continue. Enabled by default if stdin is not a TTY.'
-      );
+      .option('--non-interactive', 'Fail, if an interactive prompt would be required to continue.');
 
     // Load each module found in ./commands by 'registering' it with our commander instance
     registerCommands(program);
@@ -384,13 +740,13 @@ function runAsync(programName: string) {
       program.help();
     }
   } catch (e) {
-    console.error(e);
+    log.error(e);
     throw e;
   }
 }
 
 async function checkCliVersionAsync() {
-  let { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
+  const { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
   if (updateIsAvailable) {
     log.nestedWarn(
       boxen(
@@ -420,7 +776,7 @@ any interaction with Expo servers may result in unexpected behaviour.`
 }
 
 function _registerLogs() {
-  let stream = {
+  const stream = {
     stream: {
       write: (chunk: any) => {
         if (chunk.code) {
@@ -453,7 +809,7 @@ function _registerLogs() {
 }
 
 async function writePathAsync() {
-  let subCommand = process.argv[2];
+  const subCommand = process.argv[2];
   if (subCommand === 'prepare-detached-build') {
     // This is being run from Android Studio or Xcode. Don't want to write PATH in this case.
     return;
@@ -462,103 +818,12 @@ async function writePathAsync() {
   await Binaries.writePathToUserSettingsAsync();
 }
 
-type OptionData = {
-  flags: string;
-  required: boolean;
-  description: string;
-  default: any;
-};
-
-type CommandData = {
-  name: string;
-  description: string;
-  alias?: string;
-  options: OptionData[];
-};
-
-// Sets up commander with a minimal setup for inspecting commands and extracting
-// data from them.
-function generateCommandJSON() {
-  program.name('expo');
-  registerCommands(program);
-  return program.commands.map(commandAsJSON);
-}
-
-// The type definition for Option seems to be wrong - doesn't include defaultValue
-function optionAsJSON(option: Option & { defaultValue: any }): OptionData {
-  return {
-    flags: option.flags,
-    required: option.required,
-    description: option.description,
-    default: option.defaultValue,
-  };
-}
-
-function commandAsJSON(command: Command): CommandData {
-  return {
-    name: command.name(),
-    description: command.description(),
-    alias: command.alias(),
-    options: command.options.map(optionAsJSON),
-  };
-}
-
-function sanitizeFlags(flags: string) {
-  return flags.replace('<', '[').replace('>', ']');
-}
-
-function formatOptionAsMarkdown(option: OptionData) {
-  return `| \`${sanitizeFlags(option.flags)}\` | ${option.description} |`;
-}
-
-function formatOptionsAsMarkdown(options: OptionData[]) {
-  if (!options || !options.length) {
-    return 'This command does not take any options.';
-  }
-
-  return `| Option         | Description             |
-| ------------ | ----------------------- |
-${options.map(formatOptionAsMarkdown).join('\n')}
-`;
-}
-
-function formatCommandAsMarkdown(command: CommandData) {
-  return `
-<details><summary><h3>expo ${command.name}</h3><p>${command.description}</p></summary>
-<p>${
-    command.alias
-      ? `
-
-Alias: \`expo ${command.alias}\``
-      : ''
-  }
-
-${formatOptionsAsMarkdown(command.options)}
-
-</p>
-</details>
-  `;
-}
-
-function formatCommandsAsMarkdown(commands: CommandData[]) {
-  return commands.map(formatCommandAsMarkdown).join('\n');
-}
-
 // This is the entry point of the CLI
 export function run(programName: string) {
   (async function () {
-    if (process.argv[2] === 'introspect') {
-      let commands = generateCommandJSON();
-      if (process.argv[3] && process.argv[3].includes('markdown')) {
-        log(formatCommandsAsMarkdown(commands));
-      } else {
-        log(JSON.stringify(commands));
-      }
-    } else {
-      await Promise.all([writePathAsync(), runAsync(programName)]);
-    }
+    await Promise.all([writePathAsync(), runAsync(programName)]);
   })().catch(e => {
-    console.error('Uncaught Error', e);
+    log.error('Uncaught Error', e);
     process.exit(1);
   });
 }

@@ -1,14 +1,12 @@
-import { css } from 'react-emotion';
-
-import * as React from 'react';
 import * as Constants from 'app/common/constants';
 import * as Strings from 'app/common/strings';
 import * as SVG from 'app/common/svg';
-
 import InputWithLabel from 'app/components/InputWithLabel';
+import PrimaryButtonWithStates from 'app/components/PrimaryButtonWithStates';
 import SettingsControl from 'app/components/SettingsControl';
 import TextareaWithLabel from 'app/components/TextareaWithLabel';
-import PrimaryButtonWithStates from 'app/components/PrimaryButtonWithStates';
+import * as React from 'react';
+import { css } from 'react-emotion';
 
 const STYLES_HEADING_WITH_DISMISS = css`
   display: flex;
@@ -126,7 +124,7 @@ export default class ProjectManagerPublishingSection extends React.Component {
   _handleChangeSlug = e => {
     const value = e.target.value;
     this.setState(state => {
-      let slug = Strings.slugify(value);
+      const slug = Strings.slugify(value);
       return {
         config: {
           ...state.config,
@@ -285,7 +283,7 @@ export default class ProjectManagerPublishingSection extends React.Component {
         <p className={STYLES_PARAGRAPH}>
           Once you publish your project, you will be able to view it at&nbsp;
           <span className={STYLES_EMPHASIS}>
-            https://expo.io/@{this.props.user.username}/{this.state.config.slug}
+            https://expo.io/@{this.props.user.username}/projects/{this.state.config.slug}
           </span>
           .
         </p>

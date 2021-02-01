@@ -1,54 +1,43 @@
+import { UrlUtils, UserSettings } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { UrlUtils, UserSettings } from '@expo/xdl';
 
-import askUser from '../askUser';
+import { askForSendToAsync } from '../askUser';
 import log from '../log';
-import sendTo from '../sendTo';
+import * as sendTo from '../sendTo';
 import urlOpts, { URLOptions } from '../urlOpts';
 
-async function action(projectDir: string, options: { sendTo?: string } & URLOptions) {
-  await urlOpts.optsAsync(projectDir, options);
+type Options = URLOptions & { sendTo?: string };
 
-  let url = await UrlUtils.constructManifestUrlAsync(projectDir);
+async function action(projectRoot: string, options: Options) {
+  await urlOpts.optsAsync(projectRoot, options);
 
-  log('Your project manifest URL is\n\n' + chalk.underline(url) + '\n');
+  const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
 
-  let shouldQuit = false;
-  if (await urlOpts.handleMobileOptsAsync(projectDir, options)) {
-    shouldQuit = true;
-  }
+  log.nested('Project manifest URL\n\n' + chalk.underline(url) + '\n');
 
-  if (shouldQuit) {
+  if (await urlOpts.handleMobileOptsAsync(projectRoot, options)) {
     return;
   }
 
-  var recipient;
-  if (typeof options.sendTo !== 'boolean') {
-    recipient = options.sendTo;
-  } else {
-    recipient = await UserSettings.getAsync('sendTo', null);
-  }
+  let recipient =
+    typeof options.sendTo !== 'boolean'
+      ? options.sendTo
+      : await UserSettings.getAsync('sendTo', null);
 
   if (!recipient) {
-    recipient = await askUser.askForSendToAsync();
+    recipient = await askForSendToAsync();
   }
 
-  if (recipient) {
-    await sendTo.sendUrlAsync(url, recipient);
-  } else {
-    log.gray("(Not sending anything because you didn't specify a recipient.)");
-  }
-
-  process.exit();
+  await sendTo.sendUrlAsync(url, recipient);
 }
 
 export default function (program: Command) {
   program
-    .command('send [project-dir]')
-    .description('Sends a link to your project to an email address')
-    //.help('You must have the server running for this command to work')
-    .option('-s, --send-to  [dest]', 'Specifies the email address to send this URL to')
+    .command('send [path]')
+    .description(`Share the project's URL to an email address`)
+    .helpGroup('core')
+    .option('-s, --send-to [dest]', 'Email address to send the URL to')
     .urlOpts()
     .asyncActionProjectDir(action);
 }

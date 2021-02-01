@@ -1,107 +1,139 @@
-import path from 'path';
-import fs from 'fs-extra';
-
 import { AndroidCredentials } from '@expo/xdl';
-import invariant from 'invariant';
-import { DownloadKeystore } from '../../credentials/views/AndroidCredentials';
-import { Context } from '../../credentials';
+import assert from 'assert';
+import chalk from 'chalk';
+import * as fs from 'fs-extra';
+import * as path from 'path';
 
+import { Context } from '../../credentials';
+import { runCredentialsManager } from '../../credentials/route';
+import { DownloadKeystore } from '../../credentials/views/AndroidKeystore';
 import log from '../../log';
 
-async function maybeRenameExistingFile(projectDir: string, filename: string) {
-  let desiredFilePath = path.resolve(projectDir, filename);
+type Options = {
+  parent?: {
+    nonInteractive: boolean;
+  };
+};
+
+function assertSlug(slug: any): asserts slug {
+  assert(slug, `${chalk.bold(slug)} field must be set in your app.json or app.config.js`);
+}
+
+async function maybeRenameExistingFileAsync(projectRoot: string, filename: string) {
+  const desiredFilePath = path.resolve(projectRoot, filename);
 
   if (await fs.pathExists(desiredFilePath)) {
     let num = 1;
-    while (await fs.pathExists(path.resolve(projectDir, `OLD_${num}_${filename}`))) {
+    while (await fs.pathExists(path.resolve(projectRoot, `OLD_${num}_${filename}`))) {
       num++;
     }
     log(
       `\nA file already exists at "${desiredFilePath}"\n  Renaming the existing file to OLD_${num}_${filename}\n`
     );
-    await fs.rename(desiredFilePath, path.resolve(projectDir, `OLD_${num}_${filename}`));
+    await fs.rename(desiredFilePath, path.resolve(projectRoot, `OLD_${num}_${filename}`));
   }
 }
 
-export async function fetchAndroidKeystoreAsync(projectDir: string): Promise<void> {
+export async function fetchAndroidKeystoreAsync(
+  projectRoot: string,
+  options: Options
+): Promise<void> {
   const ctx = new Context();
-  await ctx.init(projectDir);
+  await ctx.init(projectRoot, {
+    nonInteractive: options.parent?.nonInteractive,
+  });
 
   const keystoreFilename = `${ctx.manifest.slug}.jks`;
-  await maybeRenameExistingFile(projectDir, keystoreFilename);
-  const backupKeystoreOutputPath = path.resolve(projectDir, keystoreFilename);
+  await maybeRenameExistingFileAsync(projectRoot, keystoreFilename);
+  const backupKeystoreOutputPath = path.resolve(projectRoot, keystoreFilename);
+  const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
-  invariant(ctx.manifest.slug, 'app.json slug field must be set');
-  const view = new DownloadKeystore(ctx.manifest.slug as string);
-  await view.fetch(ctx);
-  await view.save(ctx, backupKeystoreOutputPath, true);
+  assertSlug(ctx.manifest.slug);
+  await runCredentialsManager(
+    ctx,
+    new DownloadKeystore(experienceName, {
+      outputPath: backupKeystoreOutputPath,
+      displayCredentials: true,
+    })
+  );
 }
 
-export async function fetchAndroidHashesAsync(projectDir: string): Promise<void> {
+export async function fetchAndroidHashesAsync(
+  projectRoot: string,
+  options: Options
+): Promise<void> {
   const ctx = new Context();
-  await ctx.init(projectDir);
-  const outputPath = path.resolve(projectDir, `${ctx.manifest.slug}.tmp.jks`);
+  await ctx.init(projectRoot, {
+    nonInteractive: options.parent?.nonInteractive,
+  });
+  const outputPath = path.resolve(projectRoot, `${ctx.manifest.slug}.tmp.jks`);
   try {
-    invariant(ctx.manifest.slug, 'app.json slug field must be set');
-    const view = new DownloadKeystore(ctx.manifest.slug as string);
-    await view.fetch(ctx);
-    await view.save(ctx, outputPath);
-
-    await AndroidCredentials.logKeystoreHashes({
-      keystorePath: outputPath,
-      // @ts-ignore keystorePassword can not be undefined
-      keystorePassword: view.credentials?.keystorePassword,
-      // @ts-ignore keyAlias can not be undefined
-      keyAlias: view.credentials?.keyAlias,
+    assertSlug(ctx.manifest.slug);
+    const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
+    const view = new DownloadKeystore(experienceName, {
+      outputPath,
+      quiet: true,
     });
-    log(
-      `\nNote: if you are using Google Play signing, this app will be signed with a different key after publishing to the store, and you'll need to use the hashes displayed in the Google Play console.`
-    );
-  } finally {
-    try {
-      fs.unlink(outputPath);
-    } catch (err) {
-      if (err.code !== 'ENOENT') {
-        log.error(err);
-      }
+    await runCredentialsManager(ctx, view);
+    const keystore = await ctx.android.fetchKeystore(experienceName);
+
+    if (keystore) {
+      await AndroidCredentials.logKeystoreHashes({
+        keystorePath: outputPath,
+        keystorePassword: keystore.keystorePassword,
+        keyAlias: keystore.keyAlias,
+        keyPassword: keystore.keyPassword,
+      });
+      log(
+        `\nNote: if you are using Google Play signing, this app will be signed with a different key after publishing to the store, and you'll need to use the hashes displayed in the Google Play console.`
+      );
+    } else {
+      log.warn('There is no valid Keystore defined for this app');
     }
+  } finally {
+    await fs.remove(outputPath);
   }
 }
 
-export async function fetchAndroidUploadCertAsync(projectDir: string): Promise<void> {
+export async function fetchAndroidUploadCertAsync(
+  projectRoot: string,
+  options: Options
+): Promise<void> {
   const ctx = new Context();
-  await ctx.init(projectDir);
+  await ctx.init(projectRoot, {
+    nonInteractive: options.parent?.nonInteractive,
+  });
 
-  const keystorePath = path.resolve(projectDir, `${ctx.manifest.slug}.tmp.jks`);
+  const keystorePath = path.resolve(projectRoot, `${ctx.manifest.slug}.tmp.jks`);
 
   const uploadKeyFilename = `${ctx.manifest.slug}_upload_cert.pem`;
-  await maybeRenameExistingFile(projectDir, uploadKeyFilename);
-  const uploadKeyPath = path.resolve(projectDir, uploadKeyFilename);
+  await maybeRenameExistingFileAsync(projectRoot, uploadKeyFilename);
+  const uploadKeyPath = path.resolve(projectRoot, uploadKeyFilename);
 
   try {
-    invariant(ctx.manifest.slug, 'app.json slug field must be set');
-    const view = new DownloadKeystore(ctx.manifest.slug as string);
-    await view.fetch(ctx);
-    await view.save(ctx, keystorePath);
+    assertSlug(ctx.manifest.slug);
+    const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
+    const view = new DownloadKeystore(experienceName, {
+      outputPath: keystorePath,
+      quiet: true,
+    });
+    await runCredentialsManager(ctx, view);
+    const keystore = await ctx.android.fetchKeystore(experienceName);
 
-    log(`Writing upload key to ${uploadKeyPath}`);
-    await AndroidCredentials.exportCertBase64(
-      {
-        keystorePath,
-        // @ts-ignore keystorePassword can not be undefined
-        keystorePassword: view.credentials?.keystorePassword,
-        // @ts-ignore keyAlias can not be undefined
-        keyAlias: view.credentials?.keyAlias,
-      },
-      uploadKeyPath
-    );
-  } finally {
-    try {
-      await fs.unlink(keystorePath);
-    } catch (err) {
-      if (err.code !== 'ENOENT') {
-        log.error(err);
-      }
+    if (keystore) {
+      log(`Writing upload key to ${uploadKeyPath}`);
+      await AndroidCredentials.exportCertBase64(
+        {
+          keystorePath,
+          keystorePassword: keystore.keystorePassword,
+          keyAlias: keystore.keyAlias,
+        },
+        uploadKeyPath
+      );
+    } else {
+      log.warn('There is no valid Keystore defined for this app');
     }
+  } finally {
+    await fs.remove(keystorePath);
   }
 }

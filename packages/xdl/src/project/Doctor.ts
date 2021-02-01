@@ -1,15 +1,16 @@
 import {
-  ExpoConfig,
-  PackageJSONConfig,
   configFilename,
+  ExpoConfig,
   getConfig,
   getPackageJson,
+  PackageJSONConfig,
   resolveModule,
 } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import getenv from 'getenv';
+import isReachable from 'is-reachable';
 import path from 'path';
 import semver from 'semver';
 
@@ -37,14 +38,14 @@ function _isNpmVersionWithinRanges(npmVersion: string, ranges: string[]) {
 async function _checkNpmVersionAsync(projectRoot: string) {
   try {
     try {
-      let yarnVersionResponse = await spawnAsync('yarnpkg', ['--version']);
+      const yarnVersionResponse = await spawnAsync('yarnpkg', ['--version']);
       if (yarnVersionResponse.status === 0) {
         return NO_ISSUES;
       }
     } catch (e) {}
 
-    let npmVersionResponse = await spawnAsync('npm', ['--version']);
-    let npmVersion = npmVersionResponse.stdout.trim();
+    const npmVersionResponse = await spawnAsync('npm', ['--version']);
+    const npmVersion = npmVersionResponse.stdout.trim();
 
     if (
       semver.lt(npmVersion, MIN_NPM_VERSION) ||
@@ -87,7 +88,7 @@ async function _checkWatchmanVersionAsync(projectRoot: string) {
     return;
   }
 
-  let watchmanVersion = await Watchman.unblockAndGetVersionAsync(projectRoot);
+  const watchmanVersion = await Watchman.unblockAndGetVersionAsync(projectRoot);
 
   // If we can't get the watchman version, `getVersionAsync` will return `null`
   if (!watchmanVersion) {
@@ -111,14 +112,18 @@ async function _checkWatchmanVersionAsync(projectRoot: string) {
 
 export async function validateWithSchema(
   projectRoot: string,
-  exp: any,
+  {
+    // Extract internal from the config object.
+    _internal,
+    ...exp
+  }: ExpoConfig,
   schema: any,
   configName: string,
   validateAssets: boolean
 ): Promise<{ schemaErrorMessage: string | undefined; assetsErrorMessage: string | undefined }> {
   let schemaErrorMessage;
   let assetsErrorMessage;
-  let validator = new Schemer(schema, { rootDir: projectRoot });
+  const validator = new Schemer(schema, { rootDir: projectRoot });
 
   // Validate the schema itself
   try {
@@ -157,7 +162,8 @@ async function _validateExpJsonAsync(
   exp: ExpoConfig,
   pkg: PackageJSONConfig,
   projectRoot: string,
-  allowNetwork: boolean
+  allowNetwork: boolean,
+  skipSDKVersionRequirement: boolean | undefined
 ): Promise<number> {
   if (!exp || !pkg) {
     // getConfig already logged an error
@@ -176,7 +182,7 @@ async function _validateExpJsonAsync(
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-problem-checking-watchman-version');
 
-  let sdkVersion = exp.sdkVersion;
+  const sdkVersion = exp.sdkVersion;
   const configName = configFilename(projectRoot);
 
   // Warn if sdkVersion is UNVERSIONED
@@ -190,7 +196,7 @@ async function _validateExpJsonAsync(
     return ERROR;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
-  let sdkVersions = await Versions.sdkVersionsAsync();
+  const sdkVersions = await Versions.sdkVersionsAsync();
   if (!sdkVersions) {
     ProjectUtils.logError(
       projectRoot,
@@ -202,7 +208,7 @@ async function _validateExpJsonAsync(
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-versions-endpoint-failed');
 
-  if (!sdkVersion || !sdkVersions[sdkVersion]) {
+  if (!skipSDKVersionRequirement && (!sdkVersion || !sdkVersions[sdkVersion])) {
     ProjectUtils.logError(
       projectRoot,
       'expo',
@@ -214,10 +220,10 @@ async function _validateExpJsonAsync(
   ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-sdk-version');
 
   // Skip validation if the correct token is set in env
-  if (sdkVersion !== 'UNVERSIONED') {
+  if (sdkVersion && sdkVersion !== 'UNVERSIONED') {
     try {
-      let schema = await ExpSchema.getSchemaAsync(sdkVersion);
-      let { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
+      const schema = await ExpSchema.getSchemaAsync(sdkVersion);
+      const { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
         projectRoot,
         exp,
         schema,
@@ -252,16 +258,18 @@ async function _validateExpJsonAsync(
     }
   }
 
-  const reactNativeIssue = await _validateReactNativeVersionAsync(
-    exp,
-    pkg,
-    projectRoot,
-    sdkVersions,
-    sdkVersion
-  );
+  if (sdkVersion) {
+    const reactNativeIssue = await _validateReactNativeVersionAsync(
+      exp,
+      pkg,
+      projectRoot,
+      sdkVersions,
+      sdkVersion
+    );
 
-  if (reactNativeIssue !== NO_ISSUES) {
-    return reactNativeIssue;
+    if (reactNativeIssue !== NO_ISSUES) {
+      return reactNativeIssue;
+    }
   }
 
   // TODO: Check any native module versions here
@@ -323,8 +331,8 @@ async function _validateReactNativeVersionAsync(
     ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
 
     try {
-      let reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
-      let sdkVersionObject = sdkVersions[sdkVersion];
+      const reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
+      const sdkVersionObject = sdkVersions[sdkVersion];
 
       // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
       if (
@@ -358,35 +366,7 @@ async function _validateReactNativeVersionAsync(
 
 async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
   // Just need `nodeModulesPath` so it doesn't matter if expo is installed or the sdkVersion is defined.
-  let { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  let nodeModulesPath = projectRoot;
-  if (exp.nodeModulesPath) {
-    nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
-  }
-
-  // Check to make sure node_modules exists at all
-  try {
-    let result = fs.statSync(path.join(nodeModulesPath, 'node_modules'));
-    if (!result.isDirectory()) {
-      ProjectUtils.logError(
-        projectRoot,
-        'expo',
-        `Error: node_modules directory is missing. Please run \`npm install\` in your project directory.`,
-        'doctor-node-modules-missing'
-      );
-      return FATAL;
-    }
-
-    ProjectUtils.clearNotification(projectRoot, 'doctor-node-modules-missing');
-  } catch (e) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      `Error: node_modules directory is missing. Please run \`npm install\` in your project directory.`,
-      'doctor-node-modules-missing'
-    );
-    return FATAL;
-  }
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
 
   // Check to make sure react-native is installed
   try {
@@ -408,54 +388,57 @@ async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
   return NO_ISSUES;
 }
 
-export async function validateWithoutNetworkAsync(projectRoot: string): Promise<number> {
-  return validateAsync(projectRoot, false);
+export async function validateWithoutNetworkAsync(
+  projectRoot: string,
+  options: { skipSDKVersionRequirement?: boolean } = {}
+): Promise<number> {
+  return validateAsync(projectRoot, false, options.skipSDKVersionRequirement);
 }
 
-export async function validateWithNetworkAsync(projectRoot: string): Promise<number> {
-  return validateAsync(projectRoot, true);
+export async function validateWithNetworkAsync(
+  projectRoot: string,
+  options: { skipSDKVersionRequirement?: boolean } = {}
+): Promise<number> {
+  return validateAsync(projectRoot, true, options.skipSDKVersionRequirement);
 }
 
-async function validateAsync(projectRoot: string, allowNetwork: boolean): Promise<number> {
+async function validateAsync(
+  projectRoot: string,
+  allowNetwork: boolean,
+  skipSDKVersionRequirement: boolean | undefined
+): Promise<number> {
   if (getenv.boolish('EXPO_NO_DOCTOR', false)) {
     return NO_ISSUES;
   }
 
-  let exp, pkg;
-  try {
-    const config = getConfig(projectRoot, {
-      strict: true,
-    });
-    exp = config.exp;
-    pkg = config.pkg;
-    ProjectUtils.clearNotification(projectRoot, 'doctor-config-json-not-read');
-  } catch (e) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      `Error: could not load config json at ${projectRoot}: ${e.toString()}`,
-      'doctor-config-json-not-read'
-    );
-    return ERROR;
-  }
+  const { exp, pkg } = getConfig(projectRoot, {
+    strict: true,
+    skipSDKVersionRequirement,
+  });
+
+  ProjectUtils.clearNotification(projectRoot, 'doctor-config-json-not-read');
 
   let status = await _checkNpmVersionAsync(projectRoot);
   if (status === FATAL) {
     return status;
   }
 
-  const expStatus = await _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork);
+  const expStatus = await _validateExpJsonAsync(
+    exp,
+    pkg,
+    projectRoot,
+    allowNetwork,
+    skipSDKVersionRequirement
+  );
   if (expStatus === FATAL) {
     return expStatus;
   }
 
   status = Math.max(status, expStatus);
 
-  if (exp && !exp.ignoreNodeModulesValidation) {
-    let nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
-    if (nodeModulesStatus > status) {
-      return nodeModulesStatus;
-    }
+  const nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
+  if (nodeModulesStatus > status) {
+    return nodeModulesStatus;
   }
 
   return status;
@@ -481,8 +464,8 @@ export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStat
       return EXPO_SDK_NOT_INSTALLED;
     }
 
-    let mainFilePath = path.join(projectRoot, pkg.main);
-    let mainFile = await fs.readFile(mainFilePath, 'utf8');
+    const mainFilePath = path.join(projectRoot, pkg.main);
+    const mainFile = await fs.readFile(mainFilePath, 'utf8');
 
     // TODO: support separate .ios.js and .android.js files
     if (mainFile.includes(`from 'expo'`) || mainFile.includes(`require('expo')`)) {
@@ -493,4 +476,42 @@ export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStat
   } catch (e) {
     return EXPO_SDK_NOT_IMPORTED;
   }
+}
+
+export async function validateExpoServersAsync(projectRoot: string): Promise<number> {
+  const domains = [
+    'expo.io',
+    'expo.fyi',
+    'expo.dev',
+    'static.expo.dev',
+    // 'exp.host', - This is causing some intermittent false errors
+  ];
+  const attempts = await Promise.all(
+    domains.map(async domain => ({
+      domain,
+      reachable: await isReachable(domain),
+    }))
+  );
+  const failures = attempts.filter(attempt => !attempt.reachable);
+
+  if (failures.length) {
+    failures.forEach(failure => {
+      ProjectUtils.logWarning(
+        projectRoot,
+        'expo',
+        `Warning: could not reach \`${failure.domain}\`.`,
+        `doctor-server-dashboard-not-reachable-${failure.domain}`
+      );
+    });
+    console.log();
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expo',
+      `We couldn't reach some of our domains, this might cause issues on our website or services.\nPlease check your network configuration and try to access these domains in your browser.`,
+      'doctor-server-dashboard-not-reachable'
+    );
+    console.log();
+    return WARNING;
+  }
+  return NO_ISSUES;
 }

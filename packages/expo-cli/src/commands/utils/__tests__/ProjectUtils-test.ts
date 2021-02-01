@@ -1,15 +1,24 @@
-import { vol } from 'memfs';
 import { setCustomConfigPath } from '@expo/config';
+import { vol } from 'memfs';
+
 import { findProjectRootAsync } from '../ProjectUtils';
 
 jest.mock('fs');
+jest.mock('@expo/image-utils', () => ({
+  generateImageAsync(input, { src }) {
+    const fs = require('fs');
+    return { source: fs.readFileSync(src) };
+  },
+}));
 
 const basicPackageJson = {
   name: 'testing123',
   version: '0.1.0',
   description: 'fake description',
   main: 'index.js',
-  dependencies: {},
+  dependencies: {
+    expo: '0.0.0',
+  },
 };
 
 const basicAppJson = {};
@@ -59,10 +68,14 @@ describe('findProjectRootAsync', () => {
     });
   });
 
-  describe('no app.json, no react-native-unimodules', () => {
+  describe('no app.json, no expo, no react-native-unimodules', () => {
     beforeAll(() => {
+      const vanillaPackageJson = {
+        ...basicPackageJson,
+        dependencies: {},
+      };
       vol.fromJSON({
-        [`${exampleProjectPath}/package.json`]: JSON.stringify(basicPackageJson),
+        [`${exampleProjectPath}/package.json`]: JSON.stringify(vanillaPackageJson),
       });
     });
 
@@ -99,9 +112,15 @@ describe('findProjectRootAsync', () => {
 
   describe('no valid project', () => {
     it('throws an error if no package.json in directory or its parents', async () => {
-      expect(findProjectRootAsync(exampleProjectPath)).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"No managed or bare projects found. Please make sure you are inside a project folder."`
-      );
+      expect.assertions(1);
+
+      try {
+        await findProjectRootAsync(exampleProjectPath);
+      } catch (e) {
+        expect(e).toMatchInlineSnapshot(
+          `[CommandError: No managed or bare projects found. Please make sure you are inside a project folder.]`
+        );
+      }
     });
   });
 });

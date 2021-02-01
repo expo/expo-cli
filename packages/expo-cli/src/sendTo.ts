@@ -1,11 +1,10 @@
-import simpleSpinner from '@expo/simple-spinner';
-
 import { Exp, UserSettings } from '@expo/xdl';
+import ora from 'ora';
 
-import askUser from './askUser';
+import { askForSendToAsync } from './askUser';
 import log from './log';
 
-async function getRecipient(sendTo?: string | boolean): Promise<string> {
+export async function getRecipient(sendTo?: string | boolean): Promise<string> {
   let recipient: string | null = '';
   if (sendTo) {
     if (typeof sendTo !== 'boolean') {
@@ -15,26 +14,20 @@ async function getRecipient(sendTo?: string | boolean): Promise<string> {
     }
 
     if (!recipient) {
-      return await askUser.askForSendToAsync();
+      return await askForSendToAsync();
     }
   }
 
   return recipient;
 }
-
-async function sendUrlAsync(url: string, recipient: string) {
-  log('Sending URL to', recipient);
-  simpleSpinner.start();
+export async function sendUrlAsync(url: string, recipient: string) {
+  const email = log.chalk.bold(recipient);
+  const spinner = ora(`Sending URL to ${email}`).start();
   try {
     var result = await Exp.sendAsync(recipient, url);
-  } finally {
-    simpleSpinner.stop();
+    spinner.succeed(`Sent URL to ${email}`);
+  } catch (e) {
+    spinner.fail(`Failed to email ${email}: ${e.message}`);
   }
-  log('Sent.');
   return result;
 }
-
-export default {
-  getRecipient,
-  sendUrlAsync,
-};

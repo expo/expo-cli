@@ -19,6 +19,7 @@ const submissionStore: Record<string, Submission> = {};
 
 async function startSubmissionAsync(
   platform: Platform,
+  _projectId: string,
   _config: SubmissionConfig
 ): Promise<StartSubmissionResult> {
   const id = uuid();
@@ -35,7 +36,7 @@ async function startSubmissionAsync(
   return Promise.resolve(id);
 }
 
-async function getSubmissionAsync(submissionId: string): Promise<Submission> {
+async function getSubmissionAsync(_projectId: string, submissionId: string): Promise<Submission> {
   return submissionStore[submissionId];
 }
 

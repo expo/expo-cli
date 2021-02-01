@@ -1,36 +1,55 @@
 import { ExpoConfig, getConfig } from '@expo/config';
-import { ApiV2, Doctor, User, UserManager } from '@expo/xdl';
+import { ApiV2, RobotUser, User, UserManager } from '@expo/xdl';
+import pick from 'lodash/pick';
 
-import { AppleCtx, authenticate } from '../appleApi';
-import { IosApi } from './api';
+import { AppleCtx, authenticateAsync } from '../appleApi';
 import log from '../log';
+import { getProjectOwner } from '../projects';
+import AndroidApi from './api/AndroidApi';
+import IosApi from './api/IosApi';
 
 export interface IView {
   open(ctx: Context): Promise<IView | null>;
 }
 
-type AppleCtxOptions = {
+interface AppleCtxOptions {
   appleId?: string;
   appleIdPassword?: string;
-};
+  teamId?: string;
+}
 
-type CtxOptions = {
+interface CtxOptions extends AppleCtxOptions {
   allowAnonymous?: boolean;
-};
+  nonInteractive?: boolean;
+}
 
 export class Context {
   _hasProjectContext: boolean = false;
-  _user?: User;
+  _projectDir?: string;
+  _user?: User | RobotUser;
   _manifest?: ExpoConfig;
   _apiClient?: ApiV2;
   _iosApiClient?: IosApi;
+  _androidApiClient?: AndroidApi;
+  _appleCtxOptions?: AppleCtxOptions;
   _appleCtx?: AppleCtx;
+  _nonInteractive?: boolean;
 
-  get user(): User {
-    return this._user as User;
+  get nonInteractive(): boolean {
+    return this._nonInteractive === true;
+  }
+
+  get user(): User | RobotUser {
+    return this._user as User | RobotUser;
   }
   get hasProjectContext(): boolean {
     return this._hasProjectContext;
+  }
+  get projectDir(): string {
+    return this._projectDir as string;
+  }
+  get projectOwner(): string {
+    return getProjectOwner(this.user, this.manifest);
   }
   get manifest(): ExpoConfig {
     if (!this._manifest) {
@@ -40,6 +59,9 @@ export class Context {
   }
   get api(): ApiV2 {
     return this._apiClient as ApiV2;
+  }
+  get android(): AndroidApi {
+    return this._androidApiClient as AndroidApi;
   }
   get ios(): IosApi {
     return this._iosApiClient as IosApi;
@@ -58,9 +80,9 @@ export class Context {
     return !!this._appleCtx;
   }
 
-  async ensureAppleCtx(options: AppleCtxOptions = {}) {
+  async ensureAppleCtx() {
     if (!this._appleCtx) {
-      this._appleCtx = await authenticate(options);
+      this._appleCtx = await authenticateAsync(this._appleCtxOptions);
     }
   }
 
@@ -68,32 +90,36 @@ export class Context {
     // Figure out if User A is configuring credentials as admin for User B's project
     const isProxyUser = this.manifest.owner && this.manifest.owner !== this.user.username;
     log(
-      `Configuring credentials ${isProxyUser ? 'on behalf of' : 'for'} ${
-        this.manifest.owner ?? this.user.username
+      `Accessing credentials ${isProxyUser ? 'on behalf of' : 'for'} ${
+        this.projectOwner
       } in project ${this.manifest.slug}`
     );
   }
 
   async init(projectDir: string, options: CtxOptions = {}) {
-    if (options.allowAnonymous) {
-      this._user = (await UserManager.getCurrentUserAsync()) || undefined;
-    } else {
-      this._user = await UserManager.ensureLoggedInAsync();
+    this._user = (await UserManager.getCurrentUserAsync()) || undefined;
+
+    // User isn't signed it, but needs to be signed in
+    if (!this._user && !options.allowAnonymous) {
+      this._user = (await UserManager.ensureLoggedInAsync()) as User;
     }
 
-    // Check if we are in project context by looking for a manifest
-    const status = await Doctor.validateWithoutNetworkAsync(projectDir);
-    if (status !== Doctor.FATAL) {
-      const { exp } = getConfig(projectDir);
+    this._projectDir = projectDir;
+    this._apiClient = ApiV2.clientForUser(this.user);
+    this._iosApiClient = new IosApi(this.api);
+    this._androidApiClient = new AndroidApi(this.api);
+    this._appleCtxOptions = pick(options, ['appleId', 'appleIdPassword', 'teamId']);
+    this._nonInteractive = options.nonInteractive;
+
+    // try to acccess project context
+    try {
+      const { exp } = getConfig(projectDir, { skipSDKVersionRequirement: true });
       this._manifest = exp;
       this._hasProjectContext = true;
-      this._iosApiClient = new IosApi(this.user).withProjectContext(this);
       this.logOwnerAndProject();
-    } else {
-      /* This manager does not need to work in project context */
-      this._iosApiClient = new IosApi(this.user);
+    } catch (error) {
+      // ignore error
+      // startcredentials manager without project context
     }
-
-    this._apiClient = ApiV2.clientForUser(this.user);
   }
 }

@@ -1,16 +1,22 @@
-import { vol } from 'memfs';
 import { ApiV2 } from '@expo/xdl';
+import { vol } from 'memfs';
 
+import { mockExpoXDL } from '../../__tests__/mock-utils';
+import { createTestProject } from '../../__tests__/project-utils';
+import { jester } from '../../credentials/test-fixtures/mocks-constants';
 import {
   rollbackPublicationFromChannelAsync,
   setPublishToChannelAsync,
 } from '../utils/PublishUtils';
-import { jester } from '../../credentials/test-fixtures/mocks';
-import { mockExpoXDL } from '../../__tests__/mock-utils';
-import { createTestProject } from '../../__tests__/project-utils';
 
 jest.mock('fs');
 jest.mock('resolve-from');
+jest.mock('@expo/image-utils', () => ({
+  generateImageAsync(input, { src }) {
+    const fs = require('fs');
+    return { source: fs.readFileSync(src) };
+  },
+}));
 
 mockExpoXDL({
   UserManager: {
@@ -31,17 +37,6 @@ describe('publish details', () => {
 
   afterAll(() => {
     vol.reset();
-  });
-
-  const originalWarn = console.warn;
-  const originalLog = console.log;
-  beforeAll(() => {
-    console.warn = jest.fn();
-    console.log = jest.fn();
-  });
-  afterAll(() => {
-    console.warn = originalWarn;
-    console.log = originalLog;
   });
 
   it('Set publication to channel', async () => {

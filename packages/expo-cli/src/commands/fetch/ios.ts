@@ -1,72 +1,68 @@
-import path from 'path';
-
-import fs from 'fs-extra';
 import chalk from 'chalk';
-import { Credentials, Exp } from '@expo/xdl';
+import * as fs from 'fs-extra';
+import * as path from 'path';
 
+import CommandError from '../../CommandError';
+import { Context } from '../../credentials/context';
 import log from '../../log';
+import { getOrPromptForBundleIdentifier } from '../eject/ConfigValidation';
 
-async function fetchIosCerts(projectDir: string): Promise<void> {
-  const {
-    args: { remotePackageName },
-  } = await Exp.getPublishInfoAsync(projectDir);
+async function fetchIosCertsAsync(projectRoot: string): Promise<void> {
+  const inProjectDir = (filename: string): string => path.resolve(projectRoot, filename);
 
-  const inProjectDir = (filename: string): string => path.resolve(projectDir, filename);
-  const credentialMetadata = await Credentials.getCredentialMetadataAsync(projectDir, 'ios');
-
-  log(`Retrieving iOS credentials for ${credentialMetadata.experienceName}`);
+  const bundleIdentifier = await getOrPromptForBundleIdentifier(projectRoot);
 
   try {
-    const creds = await Credentials.getCredentialsForPlatform(credentialMetadata);
-    if (!creds) throw new Error('Error fetching credentials.');
+    const ctx = new Context();
+    await ctx.init(projectRoot);
 
-    const {
-      certP12,
-      certPassword,
-      certPrivateSigningKey,
-      apnsKeyId,
-      apnsKeyP8,
-      pushP12,
-      pushPassword,
-      pushPrivateSigningKey,
-      provisioningProfile,
-      teamId,
-    } = creds;
+    const app = {
+      accountName: ctx.projectOwner,
+      projectName: ctx.manifest.slug,
+      bundleIdentifier,
+    };
+    log(
+      `Retrieving iOS credentials for @${app.accountName}/${app.projectName} (${bundleIdentifier})`
+    );
+    const appCredentials = await ctx.ios.getAppCredentials(app);
+    const pushCredentials = await ctx.ios.getPushKey(app);
+    const distCredentials = await ctx.ios.getDistCert(app);
+
+    const { certP12, certPassword, certPrivateSigningKey } = distCredentials ?? {};
+    const { apnsKeyId, apnsKeyP8 } = pushCredentials ?? {};
+    const { pushP12, pushPassword, provisioningProfile, teamId } =
+      appCredentials?.credentials ?? {};
 
     if (teamId !== undefined) {
       log(`These credentials are associated with Apple Team ID: ${teamId}`);
     }
     if (certP12) {
-      const distPath = inProjectDir(`${remotePackageName}_dist.p12`);
+      const distPath = inProjectDir(`${app.projectName}_dist.p12`);
       await fs.writeFile(distPath, Buffer.from(certP12, 'base64'));
     }
     if (certPrivateSigningKey) {
-      const distPrivateKeyPath = inProjectDir(`${remotePackageName}_dist_cert_private.key`);
+      const distPrivateKeyPath = inProjectDir(`${app.projectName}_dist_cert_private.key`);
       await fs.writeFile(distPrivateKeyPath, certPrivateSigningKey);
     }
     if (certP12 || certPrivateSigningKey) {
       log('Wrote distribution cert credentials to disk.');
     }
     if (apnsKeyP8) {
-      const apnsKeyP8Path = inProjectDir(`${remotePackageName}_apns_key.p8`);
+      const apnsKeyP8Path = inProjectDir(`${app.projectName}_apns_key.p8`);
       await fs.writeFile(apnsKeyP8Path, apnsKeyP8);
       log('Wrote push key credentials to disk.');
     }
     if (pushP12) {
-      const pushPath = inProjectDir(`${remotePackageName}_push.p12`);
+      const pushPath = inProjectDir(`${app.projectName}_push.p12`);
       await fs.writeFile(pushPath, Buffer.from(pushP12, 'base64'));
     }
-    if (pushPrivateSigningKey) {
-      const pushPrivateKeyPath = inProjectDir(`${remotePackageName}_push_cert_private.key`);
-      await fs.writeFile(pushPrivateKeyPath, pushPrivateSigningKey);
-    }
-    if (pushP12 || pushPrivateSigningKey) {
+    if (pushP12) {
       log('Wrote push cert credentials to disk.');
     }
     if (provisioningProfile) {
       const provisioningProfilePath = path.resolve(
-        projectDir,
-        `${remotePackageName}.mobileprovision`
+        projectRoot,
+        `${app.projectName}.mobileprovision`
       );
       await fs.writeFile(provisioningProfilePath, Buffer.from(provisioningProfile, 'base64'));
       log('Wrote provisioning profile to disk');
@@ -82,10 +78,12 @@ Push P12 password:         ${
     }
 `);
   } catch (e) {
-    throw new Error('Unable to fetch credentials for this project. Are you sure they exist?');
+    throw new CommandError(
+      'Unable to fetch credentials for this project. Are you sure they exist?'
+    );
   }
 
   log('All done!');
 }
 
-export default fetchIosCerts;
+export default fetchIosCertsAsync;

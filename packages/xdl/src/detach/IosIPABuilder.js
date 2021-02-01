@@ -1,11 +1,11 @@
+import plist from '@expo/plist';
+import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
-import fs from 'fs-extra';
-import plist from '@expo/plist';
 
-import _logger from './Logger';
 import { spawnAsyncThrowError } from './ExponentTools';
 import * as IosCodeSigning from './IosCodeSigning';
+import _logger from './Logger';
 
 const logger = _logger.withFields({ buildPhase: 'building and signing IPA' });
 

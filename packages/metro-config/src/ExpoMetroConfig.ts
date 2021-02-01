@@ -1,16 +1,15 @@
-import path from 'path';
-
 import {
-  ProjectTarget,
   getConfig,
   getDefaultTarget,
   projectHasModule,
+  ProjectTarget,
   resolveModule,
 } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import { Reporter } from 'metro';
 // Import only the types here, the values will be imported from the project, at runtime.
 import type MetroConfig from 'metro-config';
+import path from 'path';
 
 const INTERNAL_CALLSITES_REGEX = new RegExp(
   [
@@ -39,6 +38,16 @@ export function getDefaultConfig(
   const reactNativePath = path.dirname(
     resolveModule('react-native/package.json', projectRoot, exp)
   );
+
+  let hashAssetFilesPath;
+  try {
+    hashAssetFilesPath = resolveModule('expo-asset/tools/hashAssetFiles', projectRoot, exp);
+  } catch {
+    // TODO: we should warn/throw an error if the user has expo-updates installed but does not
+    // have hashAssetFiles available, or if the user is in managed workflow and does not have
+    // hashAssetFiles available. but in a bare app w/o expo-updates, just using dev-client,
+    // it is not needed
+  }
 
   const target = options.target ?? process.env.EXPO_TARGET ?? getDefaultTarget(projectRoot);
   if (!(target === 'managed' || target === 'bare')) {
@@ -76,6 +85,9 @@ export function getDefaultConfig(
       ],
       getPolyfills: () => require(path.join(reactNativePath, 'rn-get-polyfills'))(),
     },
+    server: {
+      port: Number(process.env.RCT_METRO_PORT) || 8081,
+    },
     symbolicator: {
       customizeFrame: (frame: { file: string | null }) => {
         const collapse = Boolean(frame.file && INTERNAL_CALLSITES_REGEX.test(frame.file));
@@ -83,10 +95,11 @@ export function getDefaultConfig(
       },
     },
     transformer: {
+      allowOptionalDependencies: true,
       babelTransformerPath: require.resolve('metro-react-native-babel-transformer'),
       // TODO: Bacon: Add path for web platform
       assetRegistryPath: path.join(reactNativePath, 'Libraries/Image/AssetRegistry'),
-      assetPlugins: [resolveModule('expo/tools/hashAssetFiles', projectRoot, exp)],
+      assetPlugins: hashAssetFilesPath ? [hashAssetFilesPath] : undefined,
     },
   });
 }

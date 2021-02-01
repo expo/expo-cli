@@ -1,11 +1,10 @@
+import { testAppLookupParams } from '../../test-fixtures/mocks-constants';
+import { getCtxMock } from '../../test-fixtures/mocks-context';
 import {
-  getCtxMock,
-  testIosDistCredential,
   testProvisioningProfiles,
   testProvisioningProfilesFromApple,
-} from '../../test-fixtures/mocks';
+} from '../../test-fixtures/mocks-ios';
 import { SetupIosProvisioningProfile } from '../SetupIosProvisioningProfile';
-import { IosDistCredentials } from '../../credentials';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope
 const mockProvProfManagerCreate = jest.fn(() => testProvisioningProfiles);
@@ -23,16 +22,6 @@ jest.mock('../../../appleApi', () => {
 
 jest.mock('../../actions/list');
 
-const originalWarn = console.warn;
-const originalLog = console.log;
-beforeAll(() => {
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.warn = originalWarn;
-  console.log = originalLog;
-});
 beforeEach(() => {
   mockProvProfManagerCreate.mockClear();
   mockProvProfManagerUseExisting.mockClear();
@@ -41,14 +30,13 @@ beforeEach(() => {
 
 describe('SetupProvisioningProfile', () => {
   it('Basic Case - Create or Reuse', async () => {
-    const ctx = getCtxMock();
-    const provProfOptions = {
-      experienceName: 'testApp',
-      bundleIdentifier: 'test.com.app',
-      distCert: testIosDistCredential as IosDistCredentials,
+    const ctx = getCtxMock({
+      ios: {
+        getProvisioningProfile: jest.fn(),
+      },
       nonInteractive: true,
-    };
-    const setupProvisioningProfile = new SetupIosProvisioningProfile(provProfOptions);
+    });
+    const setupProvisioningProfile = new SetupIosProvisioningProfile(testAppLookupParams);
     const createOrReuse = await setupProvisioningProfile.open(ctx as any);
     await createOrReuse.open(ctx as any);
 

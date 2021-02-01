@@ -1,17 +1,15 @@
-import { css } from 'react-emotion';
-import { DragDropContext } from 'react-dnd';
-import HTML5Backend from 'react-dnd-html5-backend';
-
-import * as React from 'react';
 import * as Constants from 'app/common/constants';
 import * as Validations from 'app/common/validations';
-
-import ProjectManagerLayout from 'app/components/ProjectManagerLayout';
 import ProjectManagerDeviceTab from 'app/components/ProjectManagerDeviceTab';
+import ProjectManagerLayout from 'app/components/ProjectManagerLayout';
+import ProjectManagerPublishingSection from 'app/components/ProjectManagerPublishingSection';
 import ProjectManagerSidebarOptions from 'app/components/ProjectManagerSidebarOptions';
 import ProjectManagerToolbar from 'app/components/ProjectManagerToolbar';
-import ProjectManagerPublishingSection from 'app/components/ProjectManagerPublishingSection';
 import UserIndicator from 'app/components/UserIndicator';
+import * as React from 'react';
+import { DragDropContext } from 'react-dnd';
+import HTML5Backend from 'react-dnd-html5-backend';
+import { css } from 'react-emotion';
 
 const wait = delay =>
   new Promise(resolve => {

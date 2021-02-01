@@ -1,15 +1,16 @@
-import ExtendableError from 'es6-error';
+export class SchemerError extends Error {
+  readonly name = 'SchemerError';
+  errors: ValidationError[];
 
-export class SchemerError extends ExtendableError {
-  errors: Array<ValidationError>;
-  constructor(errors: Array<ValidationError>) {
-    const message = errors.map(e => e.message).join('\n');
-    super(message);
+  constructor(errors: ValidationError[]) {
+    super('');
+    this.message = errors.map(e => e.message).join('\n');
     this.errors = errors;
   }
 }
 
-export class ValidationError extends ExtendableError {
+export class ValidationError extends Error {
+  readonly name = 'ValidationError';
   errorCode: string;
   fieldPath: string;
   message: string;

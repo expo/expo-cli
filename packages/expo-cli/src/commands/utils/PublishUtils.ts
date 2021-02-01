@@ -1,9 +1,11 @@
 import { getConfig } from '@expo/config';
-import { Api, ApiV2, FormData, Project, UserManager } from '@expo/xdl';
+import { ApiV2, UserManager } from '@expo/xdl';
 import ora from 'ora';
-import * as table from './cli-table';
+
 import log from '../../log';
-import prompt from '../../prompt';
+import { getProjectOwner } from '../../projects';
+import { confirmAsync } from '../../prompts';
+import * as table from './cli-table';
 
 export type HistoryOptions = {
   releaseChannel?: string;
@@ -63,7 +65,7 @@ export type PublicationDetail = {
 const VERSION = 2;
 
 export async function getPublishHistoryAsync(
-  projectDir: string,
+  projectRoot: string,
   options: HistoryOptions
 ): Promise<any> {
   if (options.count && (isNaN(options.count) || options.count < 1 || options.count > 100)) {
@@ -72,61 +74,33 @@ export async function getPublishHistoryAsync(
 
   // TODO(ville): handle the API result for not authenticated user instead of checking upfront
   const user = await UserManager.ensureLoggedInAsync();
-  const { exp } = getConfig(projectDir, {
+  const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
-  let result: any;
-  if (process.env.EXPO_LEGACY_API === 'true') {
-    // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
-    let formData = new FormData();
-    formData.append('queryType', 'history');
-    if (exp.owner) {
-      formData.append('owner', exp.owner);
-    }
-    formData.append('slug', await Project.getSlugAsync(projectDir));
-    formData.append('version', VERSION);
-    if (options.releaseChannel) {
-      formData.append('releaseChannel', options.releaseChannel);
-    }
-    if (options.count) {
-      formData.append('count', options.count);
-    }
-    if (options.platform) {
-      formData.append('platform', options.platform);
-    }
-    if (options.sdkVersion) {
-      formData.append('sdkVersion', options.sdkVersion);
-    }
-
-    result = await Api.callMethodAsync('publishInfo', [], 'post', null, {
-      formData,
-    });
-  } else {
-    const api = ApiV2.clientForUser(user);
-    result = await api.postAsync('publish/history', {
-      owner: exp.owner,
-      slug: await Project.getSlugAsync(projectDir),
-      version: VERSION,
-      releaseChannel: options.releaseChannel,
-      count: options.count,
-      platform: options.platform,
-      sdkVersion: options.sdkVersion,
-    });
-  }
-  return result;
+  const api = ApiV2.clientForUser(user);
+  return await api.postAsync('publish/history', {
+    owner: getProjectOwner(user, exp),
+    slug: exp.slug,
+    version: VERSION,
+    releaseChannel: options.releaseChannel,
+    count: options.count,
+    platform: options.platform,
+    sdkVersion: options.sdkVersion,
+  });
 }
 
 export async function setPublishToChannelAsync(
-  projectDir: string,
+  projectRoot: string,
   options: SetOptions
 ): Promise<any> {
   const user = await UserManager.ensureLoggedInAsync();
   const api = ApiV2.clientForUser(user);
+  const exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp;
   return await api.postAsync('publish/set', {
     releaseChannel: options.releaseChannel,
     publishId: options.publishId,
-    slug: await Project.getSlugAsync(projectDir),
+    slug: exp.slug,
   });
 }
 
@@ -230,13 +204,9 @@ async function _printAndConfirm(
   if (partialOptions.parent && partialOptions.parent.nonInteractive) {
     return;
   }
-  const { confirm } = await prompt([
-    {
-      type: 'confirm',
-      name: 'confirm',
-      message: `${platform}: Users on the '${channel}' channel will receive the above publication as a result of the rollback.`,
-    },
-  ]);
+  const confirm = await confirmAsync({
+    message: `${platform}: Users on the '${channel}' channel will receive the above publication as a result of the rollback.`,
+  });
 
   if (!confirm) {
     throw new Error(`You can run 'publish:set' to send the desired publication to users`);
@@ -244,37 +214,21 @@ async function _printAndConfirm(
 }
 
 export async function getPublicationDetailAsync(
-  projectDir: string,
+  projectRoot: string,
   options: DetailOptions
 ): Promise<PublicationDetail> {
   // TODO(ville): handle the API result for not authenticated user instead of checking upfront
   const user = await UserManager.ensureLoggedInAsync();
-  const { exp } = getConfig(projectDir, {
+  const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
-  const slug = await Project.getSlugAsync(projectDir);
-  let result: any;
-  if (process.env.EXPO_LEGACY_API === 'true') {
-    let formData = new FormData();
-    formData.append('queryType', 'details');
 
-    if (exp.owner) {
-      formData.append('owner', exp.owner);
-    }
-    formData.append('publishId', options.publishId);
-    formData.append('slug', slug);
-
-    result = await Api.callMethodAsync('publishInfo', null, 'post', null, {
-      formData,
-    });
-  } else {
-    const api = ApiV2.clientForUser(user);
-    result = await api.postAsync('publish/details', {
-      owner: exp.owner,
-      publishId: options.publishId,
-      slug,
-    });
-  }
+  const api = ApiV2.clientForUser(user);
+  const result = await api.postAsync('publish/details', {
+    owner: getProjectOwner(user, exp),
+    publishId: options.publishId,
+    slug: exp.slug,
+  });
 
   if (!result.queryResult) {
     throw new Error('No records found matching your query.');
@@ -288,18 +242,18 @@ export async function printPublicationDetailAsync(
   options: DetailOptions
 ) {
   if (options.raw) {
-    console.log(JSON.stringify(detail));
+    log(JSON.stringify(detail));
     return;
   }
 
-  let manifest = detail.manifest;
+  const manifest = detail.manifest;
   delete detail.manifest;
 
   // Print general release info
-  let generalTableString = table.printTableJson(detail, 'Release Description');
-  console.log(generalTableString);
+  const generalTableString = table.printTableJson(detail, 'Release Description');
+  log(generalTableString);
 
   // Print manifest info
-  let manifestTableString = table.printTableJson(manifest, 'Manifest Details');
-  console.log(manifestTableString);
+  const manifestTableString = table.printTableJson(manifest, 'Manifest Details');
+  log(manifestTableString);
 }

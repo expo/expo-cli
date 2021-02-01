@@ -34,21 +34,21 @@ export default async function createWebpackConfigAsync(
     console.warn('environment.info is deprecated');
   }
 
-  if (environment.offline === false) {
-    return config;
-  }
-  const { workbox = {} } = argv;
-  const publicUrl = workbox.publicUrl || getPublicPaths(environment).publicUrl;
+  if (environment.offline === true) {
+    const { workbox = {} } = argv;
+    const publicUrl = workbox.publicUrl || getPublicPaths(environment).publicUrl;
 
-  // No SW for native
-  if (['ios', 'android'].includes(env.platform || '')) {
-    return config;
-  }
+    // No SW for native
+    if (['ios', 'android'].includes(env.platform || '')) {
+      return config;
+    }
 
-  return withWorkbox(config, {
-    projectRoot: environment.projectRoot,
-    ...workbox,
-    publicUrl,
-    platform: env.platform,
-  });
+    return withWorkbox(config, {
+      projectRoot: environment.projectRoot,
+      ...workbox,
+      publicUrl,
+      platform: env.platform,
+    });
+  }
+  return config;
 }

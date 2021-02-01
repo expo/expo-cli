@@ -1,3 +1,5 @@
+import dns from 'dns';
+
 export function getExpoDomainUrl(): string {
   if (process.env.EXPO_STAGING) {
     return `https://staging.expo.io`;
@@ -8,11 +10,20 @@ export function getExpoDomainUrl(): string {
   }
 }
 
-export function constructBuildLogsUrl(buildId: string, username?: string): string {
+export function constructBuildLogsUrl({
+  buildId,
+  username,
+  v2 = false,
+}: {
+  buildId: string;
+  username?: string;
+  v2?: boolean;
+}): string {
   if (username) {
-    return `${getExpoDomainUrl()}/dashboard/${username}/builds/${buildId}`;
+    return `${getExpoDomainUrl()}/accounts/${username}/builds/${buildId}`;
+  } else {
+    return `${getExpoDomainUrl()}/builds/${buildId}`;
   }
-  return `${getExpoDomainUrl()}/builds/${buildId}`;
 }
 
 export function constructTurtleStatusUrl(): string {
@@ -21,4 +32,12 @@ export function constructTurtleStatusUrl(): string {
 
 export function constructArtifactUrl(artifactId: string): string {
   return `${getExpoDomainUrl()}/artifacts/${artifactId}`;
+}
+
+export function isUrlAvailableAsync(url: string): Promise<boolean> {
+  return new Promise<boolean>(resolve => {
+    dns.lookup(url, err => {
+      resolve(!err);
+    });
+  });
 }
