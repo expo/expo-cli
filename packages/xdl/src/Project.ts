@@ -51,7 +51,6 @@ import * as DevSession from './DevSession';
 import * as EmbeddedAssets from './EmbeddedAssets';
 import { maySkipManifestValidation } from './Env';
 import { ErrorCode } from './ErrorCode';
-import * as Exp from './Exp';
 import logger from './Logger';
 import { Asset, exportAssetsAsync, publishAssetsAsync } from './ProjectAssets';
 import * as ProjectSettings from './ProjectSettings';
@@ -72,7 +71,7 @@ import * as ProjectUtils from './project/ProjectUtils';
 import { assertValidProjectRoot } from './project/errors';
 import { startTunnelsAsync, stopTunnelsAsync } from './project/ngrok';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
-
+import { resolveEntryPoint } from './tools/resolveEntryPoint';
 const MINIMUM_BUNDLE_SIZE = 500;
 
 const treekillAsync = promisify<number, string>(treekill);
@@ -938,7 +937,7 @@ async function buildPublishBundlesAsync(
     },
     platforms.map((platform: Platform) => ({
       platform,
-      entryPoint: Exp.determineEntryPoint(projectRoot, platform),
+      entryPoint: resolveEntryPoint(projectRoot, platform),
       dev: bundleOptions.dev,
     }))
   );
@@ -951,7 +950,7 @@ async function buildPublishBundlesAsync(
 
 // Fetch iOS and Android bundles for publishing
 async function fetchPublishBundlesAsync(projectRoot: string, opts?: PackagerOptions) {
-  const entryPoint = Exp.determineEntryPoint(projectRoot);
+  const entryPoint = resolveEntryPoint(projectRoot);
   const publishUrl = await UrlUtils.constructPublishUrlAsync(
     projectRoot,
     entryPoint,

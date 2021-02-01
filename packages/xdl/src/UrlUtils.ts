@@ -5,7 +5,6 @@ import os from 'os';
 import QueryString from 'querystring';
 import resolveFrom from 'resolve-from';
 import url from 'url';
-import validator from 'validator';
 
 import Config from './Config';
 import * as ProjectSettings from './ProjectSettings';
@@ -449,6 +448,27 @@ export function domainify(s: string): string {
     .replace(/-+$/, '');
 }
 
-export function isHttps(url: string): boolean {
-  return validator.isURL(url, { protocols: ['https'] });
+export function isHttps(urlString: string): boolean {
+  return isURL(urlString, { protocols: ['https'] });
+}
+
+export function isURL(
+  urlString: string,
+  { protocols, requireProtocol }: { protocols?: string[]; requireProtocol?: boolean }
+) {
+  try {
+    // eslint-disable-next-line
+    new url.URL(urlString);
+    const parsed = url.parse(urlString);
+    if (!parsed.protocol && !requireProtocol) {
+      return true;
+    }
+    return protocols
+      ? parsed.protocol
+        ? protocols.map(x => `${x.toLowerCase()}:`).includes(parsed.protocol)
+        : false
+      : true;
+  } catch (err) {
+    return false;
+  }
 }

@@ -1,10 +1,10 @@
 import { vol } from 'memfs';
 
-import * as Exp from '../Exp';
+import { resolveEntryPoint } from '../resolveEntryPoint';
 
 jest.mock('fs');
 
-describe('determineEntryPoint', () => {
+describe(resolveEntryPoint, () => {
   beforeEach(() => {
     const packageJson = JSON.stringify(
       {
@@ -91,34 +91,34 @@ describe('determineEntryPoint', () => {
   afterEach(() => vol.reset());
 
   it('exists-no-platform', () => {
-    const entryPoint = Exp.determineEntryPoint('/exists-no-platform');
+    const entryPoint = resolveEntryPoint('/exists-no-platform');
     expect(entryPoint).toBe('index.js');
   });
 
   // Can't test resolving modules yet
   xit('exists-no-platform-no-main', () => {
-    const entryPoint = Exp.determineEntryPoint('/exists-no-platform-no-main');
+    const entryPoint = resolveEntryPoint('/exists-no-platform-no-main');
     expect(entryPoint).toBe('index.js');
   });
 
   it('exists-android', () => {
-    const entryPoint = Exp.determineEntryPoint('/exists-android');
+    const entryPoint = resolveEntryPoint('/exists-android');
     expect(entryPoint).toBe('index.android.js');
   });
 
   it('exists-ios', () => {
-    const entryPoint = Exp.determineEntryPoint('/exists-ios');
+    const entryPoint = resolveEntryPoint('/exists-ios');
     expect(entryPoint).toBe('index.ios.js');
   });
 
   it('exists-expjson', () => {
-    const entryPoint = Exp.determineEntryPoint('/exists-expjson');
+    const entryPoint = resolveEntryPoint('/exists-expjson');
     expect(entryPoint).toBe('main.js');
   });
 
   // Can't test resolving modules yet
   xit('uses node_modules/expo/AppEntry as a last resort', () => {
-    const entryPoint = Exp.determineEntryPoint('/expo-app-entry');
+    const entryPoint = resolveEntryPoint('/expo-app-entry');
     expect(entryPoint).toBe('node_modules/expo/AppEntry.js');
   });
 });

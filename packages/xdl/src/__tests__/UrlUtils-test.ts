@@ -233,3 +233,18 @@ describe(UrlUtils.constructSourceMapUrlAsync, () => {
     ).resolves.toBe('http://127.0.0.1:80/./App.tsx.map?dev=false&hot=false&minify=true');
   });
 });
+
+describe(UrlUtils.isURL, () => {
+  it(`guards against protocols`, () => {
+    expect(UrlUtils.isURL('http://127.0.0.1:80', { protocols: ['http'] })).toBe(true);
+    expect(UrlUtils.isURL('127.0.0.1:80', { requireProtocol: true })).toBe(false);
+    expect(UrlUtils.isURL('http://127.0.0.1:80', { protocols: ['https'] })).toBe(false);
+    expect(UrlUtils.isURL('http://127.0.0.1:80', {})).toBe(true);
+    expect(
+      UrlUtils.isURL('127.0.0.1:80', { protocols: ['https', 'http'], requireProtocol: true })
+    ).toBe(false);
+    expect(UrlUtils.isURL('https://expo.io/', { protocols: ['https'] })).toBe(true);
+    expect(UrlUtils.isURL('', { protocols: ['https'] })).toBe(false);
+    expect(UrlUtils.isURL('hello', { protocols: ['https'] })).toBe(false);
+  });
+});
