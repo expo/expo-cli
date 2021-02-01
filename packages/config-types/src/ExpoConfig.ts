@@ -169,8 +169,6 @@ export interface ExpoConfig {
   packagerOpts?: {
     [k: string]: any;
   };
-  ignoreNodeModulesValidation?: boolean;
-  nodeModulesPath?: string;
   /**
    * Configuration for how and when the app should request OTA JavaScript updates
    */
@@ -355,7 +353,7 @@ export interface IOS {
      */
     googleMobileAdsAppId?: string;
     /**
-     * A boolean indicating whether to initialize Google App Measurement and begin sending user-level event data to Google immediately when the app starts. The default in Expo (Client and in standalone apps) is `false`. [Sets the opposite of the given value to the following key in `Info.plist`.](https://developers.google.com/admob/ios/eu-consent#delay_app_measurement_optional)
+     * A boolean indicating whether to initialize Google App Measurement and begin sending user-level event data to Google immediately when the app starts. The default in Expo (Go and in standalone apps) is `false`. [Sets the opposite of the given value to the following key in `Info.plist`.](https://developers.google.com/admob/ios/eu-consent#delay_app_measurement_optional)
      */
     googleMobileAdsAutoInit?: boolean;
     /**
@@ -409,7 +407,7 @@ export interface IOS {
     [k: string]: any;
   };
   /**
-   * An array that contains Associated Domains for the standalone app. See [Apple's docs for config](https://developer.apple.com/documentation/uikit/core_app/allowing_apps_and_websites_to_link_to_your_content/enabling_universal_links).
+   * An array that contains Associated Domains for the standalone app. See [Apple's docs for config](https://developer.apple.com/documentation/safariservices/supporting_associated_domains).
    */
   associatedDomains?: string[];
   /**
@@ -429,7 +427,7 @@ export interface IOS {
    */
   splash?: {
     /**
-     * Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in Expo Go.
+     * Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo Go.
      */
     xib?: string;
     /**

@@ -1,8 +1,9 @@
-import { ExpoConfig, getConfig, resolveModule } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import joi from '@hapi/joi';
 import assert from 'assert';
 import os from 'os';
 import QueryString from 'querystring';
+import resolveFrom from 'resolve-from';
 import url from 'url';
 
 import Config from './Config';
@@ -172,7 +173,7 @@ export function constructBundleQueryParams(projectRoot: string, opts: MetroQuery
 export function constructBundleQueryParamsWithConfig(
   projectRoot: string,
   opts: MetroQueryOptions,
-  exp: Pick<ExpoConfig, 'sdkVersion' | 'nodeModulesPath'>
+  exp: Pick<ExpoConfig, 'sdkVersion'>
 ): string {
   const queryParams: Record<string, boolean | string> = {
     dev: !!opts.dev,
@@ -201,7 +202,7 @@ export function constructBundleQueryParamsWithConfig(
   const usesAssetPluginsQueryParam = supportsAssetPlugins && Versions.lteSdkVersion(exp, '32.0.0');
   if (usesAssetPluginsQueryParam) {
     // Use an absolute path here so that we can not worry about symlinks/relative requires
-    const pluginModule = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+    const pluginModule = resolveFrom(projectRoot, 'expo/tools/hashAssetFiles');
     queryParams.assetPlugin = encodeURIComponent(pluginModule);
   } else if (!supportsAssetPlugins) {
     // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the

@@ -82,11 +82,7 @@ describe(UrlUtils.constructBundleQueryParamsWithConfig, () => {
   describe('SDK +33', () => {
     it(`creates a basic query string`, async () => {
       expect(
-        UrlUtils.constructBundleQueryParamsWithConfig(
-          projectRoot,
-          {},
-          { sdkVersion: '33.0.0', nodeModulesPath: './' }
-        )
+        UrlUtils.constructBundleQueryParamsWithConfig(projectRoot, {}, { sdkVersion: '33.0.0' })
       ).toBe('dev=false&hot=false');
     });
     it(`creates a full query string`, async () => {
@@ -94,7 +90,7 @@ describe(UrlUtils.constructBundleQueryParamsWithConfig, () => {
         UrlUtils.constructBundleQueryParamsWithConfig(
           projectRoot,
           { dev: true, strict: true, minify: true },
-          { sdkVersion: '33.0.0', nodeModulesPath: './' }
+          { sdkVersion: '33.0.0' }
         )
       ).toBe('dev=true&hot=false&strict=true&minify=true');
     });

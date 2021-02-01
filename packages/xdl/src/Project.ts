@@ -10,7 +10,6 @@ import {
   PackageJSONConfig,
   Platform,
   ProjectTarget,
-  resolveModule,
 } from '@expo/config';
 import { bundleAsync } from '@expo/dev-server';
 import JsonFile from '@expo/json-file';
@@ -26,6 +25,7 @@ import getenv from 'getenv';
 import HashIds from 'hashids';
 import path from 'path';
 import readLastLines from 'read-last-lines';
+import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import slug from 'slugify';
 import urljoin from 'url-join';
@@ -128,9 +128,9 @@ export async function currentStatus(projectDir: string): Promise<ProjectStatus> 
   }
 }
 
-function _requireFromProject(modulePath: string, projectRoot: string, exp: ExpoConfig) {
+function _requireFromProject(modulePath: string, projectRoot: string) {
   try {
-    const fullPath = resolveModule(modulePath, projectRoot, exp);
+    const fullPath = resolveFrom(projectRoot, modulePath);
     // Clear the require cache for this module so get a fresh version of it
     // without requiring the user to restart Expo CLI
     decache(fullPath);
@@ -262,19 +262,14 @@ export async function mergeAppDistributions(
   );
 }
 
-function prepareHooks(
-  hooks: ExpoConfig['hooks'],
-  hookType: HookType,
-  projectRoot: string,
-  exp: ExpoConfig
-) {
+function prepareHooks(hooks: ExpoConfig['hooks'], hookType: HookType, projectRoot: string) {
   const validHooks: LoadedHook[] = [];
 
   if (hooks) {
     if (hooks[hookType]) {
       hooks[hookType]!.forEach((hook: any) => {
         const { file } = hook;
-        const fn = _requireFromProject(file, projectRoot, exp);
+        const fn = _requireFromProject(file, projectRoot);
         if (typeof fn !== 'function') {
           logger.global.error(
             `Unable to load ${hookType} hook: '${file}'. The module does not export a function.`
@@ -494,7 +489,7 @@ export async function exportAppAsync(
 
   // Skip the hooks and manifest creation if building for EAS.
   if (!experimentalBundle) {
-    const validPostExportHooks = prepareHooks(hooks, 'postExport', projectRoot, exp);
+    const validPostExportHooks = prepareHooks(hooks, 'postExport', projectRoot);
 
     // Add assetUrl to manifest
     exp.assetUrlOverride = assetUrl;
@@ -673,7 +668,7 @@ export async function publishAsync(
   }
 
   // TODO: refactor this out to a function, throw error if length doesn't match
-  const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot, exp);
+  const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot);
   const bundles = await buildPublishBundlesAsync(projectRoot, options, {
     useDevServer: shouldUseDevServer(exp),
   });
