@@ -1,10 +1,11 @@
-import { ExpoConfig, getConfig, resolveModule } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import axios from 'axios';
 import child_process from 'child_process';
 import delayAsync from 'delay-async';
 import escapeRegExp from 'lodash/escapeRegExp';
 import path from 'path';
+import resolveFrom from 'resolve-from';
 import split from 'split';
 import treekill from 'tree-kill';
 import { promisify } from 'util';
@@ -155,16 +156,10 @@ export async function startReactNativeServerAsync({
   if (Versions.gteSdkVersion(exp, '33.0.0')) {
     // starting with SDK 37, we bundle this plugin with the expo-asset package instead of expo,
     // so check there first and fall back to expo if we can't find it in expo-asset
-    try {
-      packagerOpts.assetPlugins = resolveModule(
-        'expo-asset/tools/hashAssetFiles',
-        projectRoot,
-        exp
-      );
-    } catch (e) {
-      try {
-        packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
-      } catch (e) {
+    packagerOpts.assetPlugins = resolveFrom.silent(projectRoot, 'expo-asset/tools/hashAssetFiles');
+    if (!packagerOpts.assetPlugins) {
+      packagerOpts.assetPlugins = resolveFrom.silent(projectRoot, 'expo/tools/hashAssetFiles');
+      if (!packagerOpts.assetPlugins) {
         throw new Error(
           'Unable to find the expo-asset package in the current project. Install it and try again.'
         );
@@ -224,7 +219,7 @@ export async function startReactNativeServerAsync({
   }
 
   // Get the CLI path
-  const cliPath = resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
+  const cliPath = resolveFrom(projectRoot, 'react-native/local-cli/cli.js');
 
   // Run the copy of Node that's embedded in Electron by setting the
   // ELECTRON_RUN_AS_NODE environment variable
