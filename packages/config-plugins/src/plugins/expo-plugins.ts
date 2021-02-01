@@ -24,7 +24,7 @@ export const withExpoIOSPlugins: ConfigPlugin<{
   config.ios.bundleIdentifier = bundleIdentifier;
 
   return withPlugins(config, [
-    [IOSConfig.BundleIdenitifer.withBundleIdentifier, { bundleIdentifier }],
+    [IOSConfig.BundleIdentifier.withBundleIdentifier, { bundleIdentifier }],
     IOSConfig.Google.withGoogle,
     IOSConfig.Name.withDisplayName,
     // IOSConfig.Name.withName,
