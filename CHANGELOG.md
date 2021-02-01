@@ -12,6 +12,22 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🐛 Bug fixes
 
+## [Tue, 01 Feb 2021 08:55:22 -0800](https://github.com/expo/expo-cli/commit/51c6adb941b74df413834ab3ae3f2578e336d60d)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+- [xdl] Define max content and body lengths in Axios 0.21 ([#3162](https://github.com/expo/expo-cli/pull/3162))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.81
+- expo-cli@4.1.5
+- @expo/xdl@59.0.21
+
 ## [Tue, 26 Jan 2021 18:21:34 -0800](https://github.com/expo/expo-cli/commit/ee77eaa57684c3ac496eae24b5e10b8acb6b6e32)
 
 ### 🛠 Breaking changes
