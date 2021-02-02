@@ -2,10 +2,10 @@ import commandExists from 'command-exists';
 import fs from 'fs-extra';
 import { vol } from 'memfs';
 
-import { testKeystore } from '../../test-fixtures/mocks-android';
-import { testAppLookupParams } from '../../test-fixtures/mocks-constants';
-import { getCtxMock } from '../../test-fixtures/mocks-context';
-import { testAllCredentialsForApp } from '../../test-fixtures/mocks-ios';
+import { testKeystore } from '../../__tests__/fixtures/mocks-android';
+import { testAppLookupParams } from '../../__tests__/fixtures/mocks-constants';
+import { getCtxMock } from '../../__tests__/fixtures/mocks-context';
+import { testAllCredentialsForApp } from '../../__tests__/fixtures/mocks-ios';
 import { SetupIosBuildCredentialsFromLocal } from '../SetupIosBuildCredentials';
 
 jest.mock('../../actions/list');
