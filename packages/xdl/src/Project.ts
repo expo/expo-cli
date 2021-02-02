@@ -149,7 +149,7 @@ export {
   startReactNativeServerAsync,
   stopReactNativeServerAsync,
 };
-export { publishAsync } from './project/publishAsync';
+export { PublishedProjectResult, publishAsync } from './project/publishAsync';
 export { BuildCreatedResult, startBuildAsync } from './project/startBuildAsync';
 export { exportAppAsync } from './project/exportAppAsync';
 
