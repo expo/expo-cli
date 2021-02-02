@@ -1,13 +1,13 @@
 import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
 import { Project, RobotUser, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
-import delayAsync from 'delay-async';
 import ora from 'ora';
 import semver from 'semver';
 
 import log from '../../log';
 import { getProjectOwner } from '../../projects';
 import { action as publishAction } from '../publish';
+import { sleep } from '../utils/promise';
 import * as UrlUtils from '../utils/url';
 import { BuilderOptions } from './BaseBuilder.types';
 import BuildError from './BuildError';
@@ -334,7 +334,7 @@ ${job.id}
         spinner.warn('Unknown status.');
         throw new BuildError(`Failed to locate build job for id "${buildId}"`);
       }
-      await delayAsync(secondsToMilliseconds(interval));
+      await sleep(secondsToMilliseconds(interval));
     }
   }
 

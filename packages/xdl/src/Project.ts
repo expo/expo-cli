@@ -22,7 +22,6 @@ import chalk from 'chalk';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import decache from 'decache';
-import delayAsync from 'delay-async';
 import express from 'express';
 import FormData from 'form-data';
 import freeportAsync from 'freeport-async';
@@ -72,6 +71,8 @@ import { assertValidProjectRoot } from './project/errors';
 import { startTunnelsAsync, stopTunnelsAsync } from './project/ngrok';
 import { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
 import { resolveEntryPoint } from './tools/resolveEntryPoint';
+import { delayAsync } from './utils/delayAsync';
+
 const MINIMUM_BUNDLE_SIZE = 500;
 
 const treekillAsync = promisify<number, string>(treekill);
