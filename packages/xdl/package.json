@@ -58,7 +58,6 @@
     "glob": "7.1.6",
     "hasbin": "1.2.3",
     "hashids": "1.1.4",
-    "idx": "2.4.0",
     "indent-string": "3.2.0",
     "internal-ip": "4.3.0",
     "is-reachable": "^4.0.0",
