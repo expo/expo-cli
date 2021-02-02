@@ -7,6 +7,7 @@ This is the log of notable changes to Expo CLI and related packages.
 ### 🛠 Breaking changes
 
 - [config-plugins] Rename `IOSConfig.BundleIdenitifer` to `IOSConfig.BundleIdentifier`.
+- [json-file] Remove undocumented support for multi-part keys in `getAsync` and `setAsync` ([#3019](https://github.com/expo/expo-cli/pulls/3019))
 
 ### 🎉 New features
 
