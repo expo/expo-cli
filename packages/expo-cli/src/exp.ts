@@ -13,7 +13,6 @@ import {
   LogUpdater,
   NotificationCode,
   PackagerLogsStream,
-  Project,
   ProjectSettings,
   ProjectUtils,
   UserManager,
