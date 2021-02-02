@@ -32,18 +32,14 @@
     "clean": "rimraf build ./tsconfig.tsbuildinfo"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.18",
-    "@types/fs-extra": "^9.0.1",
     "@types/node": "^12",
     "rimraf": "^3.0.2"
   },
   "dependencies": {
     "@expo/config": "3.3.28",
     "@expo/image-utils": "0.3.10",
-    "@expo/json-file": "8.2.27",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
-    "fs-extra": "9.0.0",
     "update-check": "1.5.3"
   }
 }
