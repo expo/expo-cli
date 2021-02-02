@@ -9,9 +9,7 @@ import * as Webpack from './Webpack';
 import XDLError from './XDLError';
 import * as ProjectUtils from './project/ProjectUtils';
 import { assertValidProjectRoot } from './project/errors';
-import { exportAppAsync } from './project/exportAppAsync';
 import { startTunnelsAsync, stopTunnelsAsync } from './project/ngrok';
-import { publishAsync } from './project/publishAsync';
 import {
   shouldUseDevServer,
   startDevServerAsync,
@@ -150,10 +148,10 @@ export {
   StartOptions,
   startReactNativeServerAsync,
   stopReactNativeServerAsync,
-  publishAsync,
-  exportAppAsync,
 };
+export { publishAsync } from './project/publishAsync';
 export { BuildCreatedResult, startBuildAsync } from './project/startBuildAsync';
+export { exportAppAsync } from './project/exportAppAsync';
 
 export {
   TurtleMode,
