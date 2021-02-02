@@ -1,7 +1,7 @@
 import { ApiV2 } from '@expo/xdl';
 
 import { _retryUsernamePasswordAuthWithOTPAsync, UserSecondFactorDeviceMethod } from '../accounts';
-import { jester } from '../credentials/test-fixtures/mocks-constants';
+import { jester } from '../credentials/__tests__/fixtures/mocks-constants';
 import log from '../log';
 import prompt, { selectAsync } from '../prompts';
 import { mockExpoXDL } from './mock-utils';

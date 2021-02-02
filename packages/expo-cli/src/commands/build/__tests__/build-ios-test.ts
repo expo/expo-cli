@@ -6,11 +6,11 @@ import {
   testAppJson,
   testBundleIdentifier,
   testExperienceName,
-} from '../../../credentials/test-fixtures/mocks-constants';
+} from '../../../credentials/__tests__/fixtures/mocks-constants';
 import {
   getApiV2WrapperMock,
   testAllCredentialsForApp,
-} from '../../../credentials/test-fixtures/mocks-ios';
+} from '../../../credentials/__tests__/fixtures/mocks-ios';
 import { BuilderOptions } from '../BaseBuilder.types';
 import IOSBuilder from '../ios/IOSBuilder';
 
