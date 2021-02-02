@@ -36,6 +36,12 @@ xdl.UserSettings = {
   },
 };
 
+xdl.ProjectSettings = {
+  getCurrentStatusAsync() {
+    return Promise.resolve('running');
+  },
+};
+
 xdl.Project = {
   currentStatus() {
     return Promise.resolve('running');
