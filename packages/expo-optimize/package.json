@@ -33,7 +33,6 @@
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.18",
     "@expo/config": "3.3.27",
     "@expo/image-utils": "0.3.10",
     "@expo/json-file": "8.2.26",
@@ -43,7 +42,6 @@
     "cross-spawn": "6.0.5",
     "glob": "7.1.6",
     "pretty-bytes": "5.2.0",
-    "rimraf": "2.6.3",
     "tempy": "0.3.0",
     "update-check": "1.5.3"
   }

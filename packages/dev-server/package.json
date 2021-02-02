@@ -43,11 +43,9 @@
     "serialize-error": "6.0.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.18",
     "@types/connect": "^3.4.33",
     "connect": "^3.7.0",
-    "node-fetch": "^2.6.0",
-    "rimraf": "^3.0.2"
+    "node-fetch": "^2.6.0"
   },
   "publishConfig": {
     "access": "public"

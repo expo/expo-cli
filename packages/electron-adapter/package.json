@@ -43,9 +43,7 @@
     "template"
   ],
   "devDependencies": {
-    "@expo/babel-preset-cli": "0.2.18",
-    "@expo/webpack-config": "0.12.57",
-    "rimraf": "^3.0.2"
+    "@expo/webpack-config": "0.12.57"
   },
   "publishConfig": {
     "access": "public"

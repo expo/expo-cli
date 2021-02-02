@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@expo/spawn-async": "^1.5.0",
+    "@types/fs-extra": "^9.0.1",
     "@types/jest": "^26.0.8",
     "@vercel/ncc": "^0.27.0",
     "codecov": "^3.6.5",
@@ -39,7 +40,9 @@
     "lerna": "3.4.1",
     "lint-staged": "^8.0.4",
     "prettier": "^2.0.5",
-    "typescript": "^3.8.3"
+    "typescript": "^3.8.3",
+    "memfs": "^2.15.5",
+    "rimraf": "^3.0.2"
   },
   "resolutions": {
     "@types/webpack": "4.41.18",
