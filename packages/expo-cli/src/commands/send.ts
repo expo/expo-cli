@@ -12,7 +12,7 @@ type Options = URLOptions & { sendTo?: string };
 async function action(projectRoot: string, options: Options) {
   await urlOpts.optsAsync(projectRoot, options);
 
-  const url = await UrlUtils.constructManifestUrlAsync(projectRoot);
+  const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
 
   log.nested('Project manifest URL\n\n' + chalk.underline(url) + '\n');
 

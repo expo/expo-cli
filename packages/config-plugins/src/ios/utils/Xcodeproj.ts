@@ -12,6 +12,7 @@ import xcode, {
 import pbxFile from 'xcode/lib/pbxFile';
 
 import { assert } from '../../utils/errors';
+import { addWarningIOS } from '../../utils/warnings';
 import * as Paths from '../Paths';
 
 export type ProjectSectionEntry = [string, PBXProject];
@@ -58,21 +59,33 @@ export function getHackyProjectName(projectRoot: string, config: ExpoConfig): st
 // TODO(brentvatne): I couldn't figure out how to do this with an existing
 // higher level function exposed by the xcode library, but we should find out how to do
 // that and replace this with it
-export function addFileToGroup(
+export function addResourceFileToGroup(
   filepath: string,
   groupName: string,
   project: XcodeProject
 ): XcodeProject {
+  const group = pbxGroupByPath(project, groupName);
+  if (!group) {
+    throw Error(`Xcode PBXGroup with name "${groupName}" could not be found in the Xcode project.`);
+  }
   const file = new pbxFile(filepath);
+
+  const conflictingFile = group.children.find(child => child.comment === file.basename);
+  if (conflictingFile) {
+    // This can happen when a file like the GoogleService-Info.plist needs to be added and the eject command is run twice.
+    // Not much we can do here since it might be a conflicting file.
+    addWarningIOS(
+      'ios-xcode-project',
+      `Skipped adding duplicate file "${filepath}" to PBXGroup named "${groupName}"`
+    );
+    return project;
+  }
+
   file.uuid = project.generateUuid();
   file.fileRef = project.generateUuid();
   project.addToPbxFileReferenceSection(file);
   project.addToPbxBuildFileSection(file);
   project.addToPbxResourcesBuildPhase(file);
-  const group = pbxGroupByPath(project, groupName);
-  if (!group) {
-    throw Error(`Group by name ${groupName} not found!`);
-  }
 
   group.children.push({
     value: file.fileRef,
@@ -225,15 +238,19 @@ export function getNativeTargets(project: XcodeProject): NativeTargetSectionEntr
   return Object.entries(section).filter(isNotComment);
 }
 
-export function findFirstNativeTarget(project: XcodeProject): PBXNativeTarget {
+export function findFirstNativeTarget(project: XcodeProject): NativeTargetSectionEntry {
   const { targets } = Object.values(getProjectSection(project))[0];
   const target = targets[0].value;
-
   const nativeTargets = getNativeTargets(project);
-  const nativeTarget = (nativeTargets.find(
-    ([key]) => key === target
-  ) as NativeTargetSectionEntry)[1];
-  return nativeTarget;
+  return nativeTargets.find(([key]) => key === target) as NativeTargetSectionEntry;
+}
+
+export function findNativeTargetByName(
+  project: XcodeProject,
+  targetName: string
+): NativeTargetSectionEntry {
+  const nativeTargets = getNativeTargets(project);
+  return nativeTargets.find(([, i]) => i.name === targetName) as NativeTargetSectionEntry;
 }
 
 export function getXCConfigurationListEntries(project: XcodeProject): ConfigurationListEntry[] {

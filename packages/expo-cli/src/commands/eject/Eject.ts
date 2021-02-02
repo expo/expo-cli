@@ -2,7 +2,6 @@ import { ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
 import { ModPlatform, WarningAggregator } from '@expo/config-plugins';
 import { getBareExtensions, getFileWithExtensions } from '@expo/config/paths';
 import JsonFile, { JSONObject } from '@expo/json-file';
-import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
 import crypto from 'crypto';
 import fs from 'fs-extra';
@@ -15,8 +14,8 @@ import terminalLink from 'terminal-link';
 
 import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
-import configureAndroidProjectAsync from '../apply/configureAndroidProjectAsync';
-import configureIOSProjectAsync from '../apply/configureIOSProjectAsync';
+import { extractTemplateAppAsync } from '../../utils/extractTemplateAppAsync';
+import configureProjectAsync, { expoManagedPlugins } from '../apply/configureProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
@@ -35,50 +34,95 @@ export type EjectAsyncOptions = {
   platforms: ModPlatform[];
 };
 
+type PrebuildResults = {
+  hasAssetBundlePatterns: boolean;
+  legacyUpdates: boolean;
+  hasNewProjectFiles: boolean;
+  platforms: ModPlatform[];
+  podInstall: boolean;
+  nodeInstall: boolean;
+  packageManager: string;
+};
+
+export async function clearNativeFolder(projectRoot: string, folders: string[]) {
+  const step = CreateApp.logNewSection(`Clearing ${folders.join(', ')}`);
+  try {
+    await Promise.all(folders.map(folderName => fs.remove(path.join(projectRoot, folderName))));
+    step.succeed(`Cleared ${folders.join(', ')} code`);
+  } catch (error) {
+    step.fail(`Failed to delete ${folders.join(', ')} code: ${error.message}`);
+    throw error;
+  }
+}
+
+function assertPlatforms(platforms: EjectAsyncOptions['platforms']) {
+  if (!platforms?.length) {
+    throw new CommandError('At least one platform must be enabled when syncing');
+  }
+}
+
 /**
  * Entry point into the eject process, delegates to other helpers to perform various steps.
  *
  * 1. Verify git is clean
- * 2. Create native projects (ios, android)
- * 3. Install node modules
- * 4. Apply config to native projects
- * 5. Install CocoaPods
- * 6. Log project info
+ * 2. Prebuild the project
+ * 3. Log project info
  */
 export async function ejectAsync(
   projectRoot: string,
   { platforms, ...options }: EjectAsyncOptions
 ): Promise<void> {
-  if (!platforms?.length) {
-    throw new CommandError('At least one platform must be enabled when syncing');
-  }
+  assertPlatforms(platforms);
+  if (await maybeBailOnGitStatusAsync()) return;
 
+  const results = await prebuildAsync(projectRoot, { platforms, ...options });
+  logNextSteps(results);
+}
+
+export function ensureValidPlatforms(platforms: ModPlatform[]): ModPlatform[] {
   const isWindows = process.platform === 'win32';
   // Skip ejecting for iOS on Windows
-  if (isWindows && !platforms.includes('ios')) {
+  if (isWindows && platforms.includes('ios')) {
     log.warn(
       `⚠️  Skipping generating the iOS native project files. Run ${chalk.bold(
         'expo eject'
       )} again from macOS or Linux to generate the iOS project.`
     );
     log.newLine();
+    return platforms.filter(platform => platform !== 'ios');
   }
+  return platforms;
+}
 
-  if (await maybeBailOnGitStatusAsync()) return;
+/**
+ * Entry point into the prebuild process, delegates to other helpers to perform various steps.
+ *
+ * 1. Create native projects (ios, android)
+ * 2. Install node modules
+ * 3. Apply config to native projects
+ * 4. Install CocoaPods
+ */
+export async function prebuildAsync(
+  projectRoot: string,
+  { platforms, ...options }: EjectAsyncOptions
+): Promise<PrebuildResults> {
+  platforms = ensureValidPlatforms(platforms);
+  assertPlatforms(platforms);
 
   const { exp, pkg } = await ensureConfigAsync({ projectRoot, platforms });
   const tempDir = temporary.directory();
 
-  const { hasNewProjectFiles, needsPodInstall } = await createNativeProjectsFromTemplateAsync({
+  const {
+    hasNewProjectFiles,
+    needsPodInstall,
+    hasNewDependencies,
+  } = await createNativeProjectsFromTemplateAsync({
     projectRoot,
     exp,
     pkg,
     tempDir,
     platforms,
   });
-  // Set this to true when we can detect that the user is running eject to sync new changes rather than ejecting to bare.
-  // This will be used to prevent the node modules from being nuked every time.
-  const isSyncing = !hasNewProjectFiles;
 
   // Install node modules
   const shouldInstall = options?.install !== false;
@@ -90,16 +134,28 @@ export async function ejectAsync(
   });
 
   if (shouldInstall) {
-    await installNodeDependenciesAsync(projectRoot, packageManager, { clean: !isSyncing });
+    await installNodeDependenciesAsync(projectRoot, packageManager, {
+      // We delete the dependencies when new ones are added because native packages are more fragile.
+      // npm doesn't work well so we always run the cleaning step when npm is used in favor of yarn.
+      clean: hasNewDependencies || packageManager === 'npm',
+    });
   }
 
   // Apply Expo config to native projects
-  if (platforms.includes('ios')) {
-    await configureIOSStepAsync({ projectRoot, platforms });
-  }
-
-  if (platforms.includes('android')) {
-    await configureAndroidStepAsync({ projectRoot, platforms });
+  const applyingAndroidConfigStep = CreateApp.logNewSection('Config syncing');
+  const managedConfig = await configureProjectAsync({
+    projectRoot,
+    platforms,
+  });
+  if (WarningAggregator.hasWarningsAndroid() || WarningAggregator.hasWarningsIOS()) {
+    applyingAndroidConfigStep.stopAndPersist({
+      symbol: '⚠️ ',
+      text: chalk.red('Config synced with warnings that should be fixed:'),
+    });
+    logConfigWarningsAndroid();
+    logConfigWarningsIOS();
+  } else {
+    applyingAndroidConfigStep.succeed('Config synced');
   }
 
   // Install CocoaPods
@@ -111,53 +167,77 @@ export async function ejectAsync(
     log.debug('Skipped pod install');
   }
 
-  await warnIfDependenciesRequireAdditionalSetupAsync(pkg, exp.sdkVersion);
+  await warnIfDependenciesRequireAdditionalSetupAsync(
+    pkg,
+    exp.sdkVersion,
+    Object.keys(managedConfig._internal?.pluginHistory ?? {})
+  );
 
+  return {
+    packageManager,
+    nodeInstall: options.install === false,
+    podInstall: !podsInstalled,
+    legacyUpdates: await usesOldExpoUpdatesAsync(projectRoot),
+    platforms,
+    hasNewProjectFiles,
+    hasAssetBundlePatterns: exp.hasOwnProperty('assetBundlePatterns'),
+  };
+}
+
+export function logNextSteps({
+  hasAssetBundlePatterns,
+  hasNewProjectFiles,
+  legacyUpdates,
+  platforms,
+  podInstall,
+  nodeInstall,
+  packageManager,
+}: PrebuildResults) {
   log.newLine();
   log.nested(`➡️  ${chalk.bold('Next steps')}`);
 
   if (WarningAggregator.hasWarningsIOS() || WarningAggregator.hasWarningsAndroid()) {
     log.nested(
-      `- 👆 Review the logs above and look for any warnings (⚠️ ) that might need follow-up.`
+      `\u203A 👆 Review the logs above and look for any warnings (⚠️ ) that might need follow-up.`
     );
   }
 
   // Log a warning about needing to install node modules
-  if (options?.install === false) {
+  if (nodeInstall) {
     const installCmd = packageManager === 'npm' ? 'npm install' : 'yarn';
-    log.nested(`- ⚠️  Install node modules: ${log.chalk.bold(installCmd)}`);
+    log.nested(`\u203A ⚠️  Install node modules: ${log.chalk.bold(installCmd)}`);
   }
-  if (!podsInstalled) {
+  if (podInstall) {
     log.nested(
-      `- 🍫 When CocoaPods is installed, initialize the project workspace: ${chalk.bold(
+      `\u203A 🍫 When CocoaPods is installed, initialize the project workspace: ${chalk.bold(
         'npx pod-install'
       )}`
     );
   }
   log.nested(
-    `- 💡 You may want to run ${chalk.bold(
+    `\u203A 💡 You may want to run ${chalk.bold(
       'npx @react-native-community/cli doctor'
     )} to help install any tools that your app may need to run your native projects.`
   );
   log.nested(
-    `- 🔑 Download your Android keystore (if you're not sure if you need to, just run the command and see): ${chalk.bold(
+    `\u203A 🔑 Download your Android keystore (if you're not sure if you need to, just run the command and see): ${chalk.bold(
       'expo fetch:android:keystore'
     )}`
   );
 
-  if (exp.hasOwnProperty('assetBundlePatterns')) {
+  if (hasAssetBundlePatterns) {
     log.nested(
-      `- 📁 The property ${chalk.bold(
+      `\u203A 📁 The property ${chalk.bold(
         `assetBundlePatterns`
-      )} does not have the same effect in the bare workflow. ${log.chalk.dim(
+      )} does not have the same effect in the bare workflow.\n  ${log.chalk.dim(
         learnMore('https://docs.expo.io/bare/updating-your-app/#embedding-assets')
       )}`
     );
   }
 
-  if (await usesOldExpoUpdatesAsync(projectRoot)) {
+  if (legacyUpdates) {
     log.nested(
-      `- 🚀 ${
+      `\u203A 🚀 ${
         (terminalLink(
           'expo-updates',
           'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
@@ -179,28 +259,16 @@ export async function ejectAsync(
     );
 
     if (platforms.includes('ios')) {
-      log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
+      log.nested(`\u203A ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
     }
 
     if (platforms.includes('android')) {
-      log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
+      log.nested(
+        `\u203A ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`
+      );
     }
 
-    log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
-  }
-}
-
-async function configureIOSStepAsync(props: { projectRoot: string; platforms: ModPlatform[] }) {
-  const applyingIOSConfigStep = CreateApp.logNewSection('iOS config syncing');
-  await configureIOSProjectAsync(props);
-  if (WarningAggregator.hasWarningsIOS()) {
-    applyingIOSConfigStep.stopAndPersist({
-      symbol: '⚠️ ',
-      text: chalk.red('iOS config synced with warnings that should be fixed:'),
-    });
-    logConfigWarningsIOS();
-  } else {
-    applyingIOSConfigStep.succeed('iOS config synced');
+    log.nested(`\u203A ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
   }
 }
 
@@ -236,20 +304,6 @@ async function installNodeDependenciesAsync(
     installJsDepsStep.fail(chalk.red(message));
     // TODO: actually show the error message from the package manager! :O
     throw new SilentError(message);
-  }
-}
-
-async function configureAndroidStepAsync(props: { projectRoot: string; platforms: ModPlatform[] }) {
-  const applyingAndroidConfigStep = CreateApp.logNewSection('Android config syncing');
-  await configureAndroidProjectAsync(props);
-  if (WarningAggregator.hasWarningsAndroid()) {
-    applyingAndroidConfigStep.stopAndPersist({
-      symbol: '⚠️ ',
-      text: chalk.red('Android config synced with warnings that should be fixed:'),
-    });
-    logConfigWarningsAndroid();
-  } else {
-    applyingAndroidConfigStep.succeed('Android config synced');
   }
 }
 
@@ -317,7 +371,7 @@ async function ensureConfigAsync({
 
   if (exp.entryPoint) {
     delete exp.entryPoint;
-    log(`- expo.entryPoint is not needed and has been removed.`);
+    log(`\u203A expo.entryPoint is not needed and has been removed.`);
   }
 
   // Read config again because prompting for bundle id or package name may have mutated the results.
@@ -374,13 +428,13 @@ function writeMetroConfig({
   } catch (e) {
     updatingMetroConfigStep.stopAndPersist({
       symbol: '⚠️ ',
-      text: chalk.red('Metro bundler configuration not applied:'),
+      text: chalk.yellow('Metro bundler configuration not applied:'),
     });
-    log.nested(`- ${e.message}`);
+    log.nested(`\u203A ${e.message}`);
     log.nested(
-      `- You will need to add the ${chalk.bold(
+      `\u203A You will need to add the ${chalk.bold(
         'hashAssetFiles'
-      )} plugin to your Metro configuration. ${log.chalk.dim(
+      )} plugin to your Metro configuration.\n  ${log.chalk.dim(
         learnMore('https://docs.expo.io/bare/installing-updates/')
       )}`
     );
@@ -412,47 +466,67 @@ type DependenciesModificationResults = {
   hasNewDevDependencies: boolean;
 };
 
-async function updatePackageJSONAsync({
-  projectRoot,
-  tempDir,
-  pkg,
-}: {
-  projectRoot: string;
-  tempDir: string;
-  pkg: PackageJSONConfig;
-}): Promise<DependenciesModificationResults> {
-  let defaultDependencies: any = {};
-  let defaultDevDependencies: any = {};
-  const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
-  defaultDependencies = createDependenciesMap(dependencies);
-  defaultDevDependencies = createDependenciesMap(devDependencies);
-  /**
-   * Update package.json scripts - `npm start` should default to `react-native
-   * start` rather than `expo start` after ejecting, for example.
-   */
-  // NOTE(brentvatne): Removing spaces between steps for now, add back when
-  // there is some additional context for steps
-  const updatingPackageJsonStep = CreateApp.logNewSection(
-    'Updating your package.json scripts, dependencies, and main file'
-  );
+function getPackageJson(projectRoot: string): JSONObject {
+  return JsonFile.read(path.join(projectRoot, 'package.json'));
+}
+
+/**
+ * Update package.json scripts - `npm start` should default to `react-native
+ * start` rather than `expo start` after ejecting, for example.
+ */
+function updatePackageJSONScripts({ pkg }: { pkg: PackageJSONConfig }) {
   if (!pkg.scripts) {
     pkg.scripts = {};
   }
   pkg.scripts.start = 'react-native start';
   pkg.scripts.ios = 'react-native run-ios';
   pkg.scripts.android = 'react-native run-android';
+}
 
-  /**
-   * Update package.json dependencies by combining the dependencies in the project we are ejecting
-   * with the dependencies in the template project. Does the same for devDependencies.
-   *
-   * - The template may have some dependencies beyond react/react-native/react-native-unimodules,
-   *   for example RNGH and Reanimated. We should prefer the version that is already being used
-   *   in the project for those, but swap the react/react-native/react-native-unimodules versions
-   *   with the ones in the template.
-   * - The same applies to expo-updates -- since some native project configuration may depend on the
-   *   version, we should always use the version of expo-updates in the template.
-   */
+/**
+ * Add new app entry points
+ */
+function updatePackageJSONEntryPoint({ pkg }: { pkg: PackageJSONConfig }): boolean {
+  let removedPkgMain = false;
+  // Check that the pkg.main doesn't match:
+  // - ./node_modules/expo/AppEntry
+  // - ./node_modules/expo/AppEntry.js
+  // - node_modules/expo/AppEntry.js
+  // - expo/AppEntry.js
+  // - expo/AppEntry
+  if (shouldDeleteMainField(pkg.main)) {
+    // Save the custom
+    removedPkgMain = pkg.main;
+    delete pkg.main;
+  }
+
+  return removedPkgMain;
+}
+
+/**
+ * Update package.json dependencies by combining the dependencies in the project we are ejecting
+ * with the dependencies in the template project. Does the same for devDependencies.
+ *
+ * - The template may have some dependencies beyond react/react-native/react-native-unimodules,
+ *   for example RNGH and Reanimated. We should prefer the version that is already being used
+ *   in the project for those, but swap the react/react-native/react-native-unimodules versions
+ *   with the ones in the template.
+ * - The same applies to expo-updates -- since some native project configuration may depend on the
+ *   version, we should always use the version of expo-updates in the template.
+ */
+function updatePackageJSONDependencies({
+  tempDir,
+  pkg,
+}: {
+  tempDir: string;
+  pkg: PackageJSONConfig;
+}): DependenciesModificationResults {
+  if (!pkg.devDependencies) {
+    pkg.devDependencies = {};
+  }
+  const { dependencies, devDependencies } = getPackageJson(tempDir);
+  const defaultDependencies = createDependenciesMap(dependencies);
+  const defaultDevDependencies = createDependenciesMap(devDependencies);
 
   const combinedDependencies: DependenciesMap = createDependenciesMap({
     ...defaultDependencies,
@@ -462,6 +536,13 @@ async function updatePackageJSONAsync({
   const requiredDependencies = ['react', 'react-native-unimodules', 'react-native', 'expo-updates'];
 
   for (const dependenciesKey of requiredDependencies) {
+    // Only overwrite the react-native version if it's an Expo fork.
+    if (dependenciesKey === 'react-native' && pkg.dependencies?.[dependenciesKey]) {
+      const dependencyVersion = pkg.dependencies[dependenciesKey];
+      if (!dependencyVersion.includes('github.com/expo/react-native')) {
+        continue;
+      }
+    }
     combinedDependencies[dependenciesKey] = defaultDependencies[dependenciesKey];
   }
   const combinedDevDependencies: DependenciesMap = createDependenciesMap({
@@ -476,27 +557,40 @@ async function updatePackageJSONAsync({
     hashForDependencyMap(pkg.devDependencies) !== hashForDependencyMap(combinedDevDependencies);
   // Save the dependencies
   if (hasNewDependencies) {
-    pkg.dependencies = combinedDependencies;
+    // Use Object.assign to preserve the original order of dependencies, this makes it easier to see what changed in the git diff.
+    pkg.dependencies = Object.assign(pkg.dependencies, combinedDependencies);
   }
   if (hasNewDevDependencies) {
-    pkg.devDependencies = combinedDevDependencies;
+    // Same as with dependencies
+    pkg.devDependencies = Object.assign(pkg.devDependencies, combinedDevDependencies);
   }
 
-  /**
-   * Add new app entry points
-   */
-  let removedPkgMain;
-  // Check that the pkg.main doesn't match:
-  // - ./node_modules/expo/AppEntry
-  // - ./node_modules/expo/AppEntry.js
-  // - node_modules/expo/AppEntry.js
-  // - expo/AppEntry.js
-  // - expo/AppEntry
-  if (shouldDeleteMainField(pkg.main)) {
-    // Save the custom
-    removedPkgMain = pkg.main;
-    delete pkg.main;
-  }
+  return {
+    hasNewDependencies,
+    hasNewDevDependencies,
+  };
+}
+
+async function updatePackageJSONAsync({
+  projectRoot,
+  tempDir,
+  pkg,
+}: {
+  projectRoot: string;
+  tempDir: string;
+  pkg: PackageJSONConfig;
+}): Promise<DependenciesModificationResults> {
+  // NOTE(brentvatne): Removing spaces between steps for now, add back when
+  // there is some additional context for steps
+  const updatingPackageJsonStep = CreateApp.logNewSection(
+    'Updating your package.json scripts, dependencies, and main file'
+  );
+
+  updatePackageJSONScripts({ pkg });
+
+  const results = updatePackageJSONDependencies({ pkg, tempDir });
+
+  const removedPkgMain = updatePackageJSONEntryPoint({ pkg });
   await fs.writeFile(path.resolve(projectRoot, 'package.json'), JSON.stringify(pkg, null, 2));
 
   updatingPackageJsonStep.succeed(
@@ -504,17 +598,14 @@ async function updatePackageJSONAsync({
   );
   if (removedPkgMain) {
     log(
-      `- Removed ${chalk.bold(
+      `\u203A Removed ${chalk.bold(
         `"main": "${removedPkgMain}"`
       )} from package.json because we recommend using index.js as main instead.`
     );
     log.newLine();
   }
 
-  return {
-    hasNewDependencies,
-    hasNewDevDependencies,
-  };
+  return results;
 }
 
 export function resolveBareEntryFile(projectRoot: string, main: any) {
@@ -596,7 +687,7 @@ async function cloneNativeDirectoriesAsync({
   let copiedPaths: string[] = [];
   let skippedPaths: string[] = [];
   try {
-    await Exp.extractTemplateAppAsync(templateSpec, tempDir, exp);
+    await extractTemplateAppAsync(templateSpec, tempDir, exp);
     [copiedPaths, skippedPaths] = copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
     const results = GitIgnore.mergeGitIgnorePaths(
       path.join(projectRoot, '.gitignore'),
@@ -685,10 +776,11 @@ async function createNativeProjectsFromTemplateAsync({
 function createDependenciesMap(dependencies: any): DependenciesMap {
   if (typeof dependencies !== 'object') {
     throw new Error(`Dependency map is invalid, expected object but got ${typeof dependencies}`);
+  } else if (!dependencies) {
+    return {};
   }
 
   const outputMap: DependenciesMap = {};
-  if (!dependencies) return outputMap;
 
   for (const key of Object.keys(dependencies)) {
     const value = dependencies[key];
@@ -711,34 +803,21 @@ function createDependenciesMap(dependencies: any): DependenciesMap {
  */
 async function warnIfDependenciesRequireAdditionalSetupAsync(
   pkg: PackageJSONConfig,
-  sdkVersion?: string
+  sdkVersion?: string,
+  appliedPlugins?: string[]
 ): Promise<void> {
-  const expoPackagesWithExtraSetup = [
-    'expo-camera',
-    'expo-image-picker',
-    'expo-av',
-    'expo-background-fetch',
-    'expo-barcode-scanner',
-    'expo-brightness',
-    'expo-calendar',
-    'expo-contacts',
-    'expo-file-system',
-    'expo-location',
-    'expo-media-library',
-    'expo-notifications',
-    'expo-screen-orientation',
-    'expo-sensors',
-    'expo-task-manager',
-  ].reduce(
-    (prev, curr) => ({
-      ...prev,
-      [curr]: `https://github.com/expo/expo/tree/master/packages/${curr}`,
-    }),
-    {}
-  );
+  // TODO: Remove based on plugin history
+  const expoPackagesWithExtraSetup = expoManagedPlugins
+    .filter(plugin => !appliedPlugins?.includes(plugin))
+    .reduce(
+      (prev, curr) => ({
+        ...prev,
+        [curr]: `https://github.com/expo/expo/tree/master/packages/${curr}`,
+      }),
+      {}
+    );
   const pkgsWithExtraSetup: Record<string, string> = {
     ...expoPackagesWithExtraSetup,
-    'lottie-react-native': 'https://github.com/react-native-community/lottie-react-native',
   };
 
   // Starting with SDK 40 the manifest is embedded in ejected apps automatically
@@ -769,15 +848,15 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
 
   warnAdditionalSetupStep.stopAndPersist({
     symbol: '⚠️ ',
-    text: chalk.red(
-      `Your app includes ${chalk.bold(`${packagesToWarn.length}`)} package${
-        plural ? 's' : ''
-      } that require${plural ? '' : 's'} additional setup in order to run:`
+    text: chalk.yellow.bold(
+      `The app has ${packagesToWarn.length} package${plural ? 's' : ''} that require${
+        plural ? '' : 's'
+      } extra setup before building:`
     ),
   });
 
   packagesToWarn.forEach(pkgName => {
-    log.nested(`- ${chalk.bold(pkgName)}: ${pkgsWithExtraSetup[pkgName]}`);
+    log.nested(`\u203A ${chalk.bold(pkgName)}: ${pkgsWithExtraSetup[pkgName]}`);
   });
 }
 

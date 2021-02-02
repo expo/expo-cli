@@ -1,7 +1,7 @@
 import { AndroidCredentials } from '@expo/xdl';
+import assert from 'assert';
 import chalk from 'chalk';
 import * as fs from 'fs-extra';
-import invariant from 'invariant';
 import * as path from 'path';
 
 import { Context } from '../../credentials';
@@ -16,7 +16,7 @@ type Options = {
 };
 
 function assertSlug(slug: any): asserts slug {
-  invariant(slug, `${chalk.bold(slug)} field must be set in your app.json or app.config.js`);
+  assert(slug, `${chalk.bold(slug)} field must be set in your app.json or app.config.js`);
 }
 
 async function maybeRenameExistingFileAsync(projectRoot: string, filename: string) {

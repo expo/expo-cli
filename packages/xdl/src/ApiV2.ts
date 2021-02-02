@@ -10,6 +10,7 @@ import Config from './Config';
 import * as ConnectionStatus from './ConnectionStatus';
 
 export const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
+export const MAX_BODY_LENGTH = 100 /* MB */ * 1024 * 1024;
 
 // These aren't constants because some commands switch between staging and prod
 function _rootBaseUrl() {
@@ -224,6 +225,7 @@ export default class ApiV2Client {
 
     reqOptions = merge({}, reqOptions, extraRequestOptions, uploadOptions, {
       maxContentLength: MAX_CONTENT_LENGTH,
+      maxBodyLength: MAX_BODY_LENGTH,
     });
 
     let response;

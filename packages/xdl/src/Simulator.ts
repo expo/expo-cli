@@ -175,7 +175,7 @@ export async function isSimulatorInstalledAsync() {
 export async function ensureSimulatorOpenAsync(
   { udid }: { udid?: string } = {},
   tryAgain: boolean = true
-): Promise<SimControl.Device> {
+): Promise<SimControl.SimulatorDevice> {
   // Yes, simulators can be booted even if the app isn't running, obviously we'd never want this.
   if (!(await SimControl.isSimulatorAppRunningAsync())) {
     Logger.global.info(`Opening the iOS simulator, this might take a moment.`);
@@ -222,19 +222,19 @@ export async function ensureSimulatorOpenAsync(
 /**
  * Get all simulators supported by Expo (iOS only).
  */
-async function getSelectableSimulatorsAsync(): Promise<SimControl.Device[]> {
+async function getSelectableSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
   const simulators = await getSimulatorsAsync();
   return simulators.filter(device => device.isAvailable && device.osType === 'iOS');
 }
 
-async function getSimulatorsAsync(): Promise<SimControl.Device[]> {
+async function getSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
   const simulatorDeviceInfo = await SimControl.listAsync('devices');
   return Object.values(simulatorDeviceInfo.devices).reduce((prev, runtime) => {
     return prev.concat(runtime);
   }, []);
 }
 
-async function getBootedSimulatorsAsync(): Promise<SimControl.Device[]> {
+async function getBootedSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
   const simulators = await getSimulatorsAsync();
   return simulators.filter(device => device.state === 'Booted');
 }
@@ -243,7 +243,7 @@ export async function isSimulatorBootedAsync({
   udid,
 }: {
   udid?: string;
-} = {}): Promise<SimControl.Device | null> {
+} = {}): Promise<SimControl.SimulatorDevice | null> {
   // Simulators can be booted even if the app isn't running :(
   const devices = await getBootedSimulatorsAsync();
   if (udid) {
@@ -304,8 +304,8 @@ async function waitForSimulatorAppToStart(): Promise<boolean> {
 
 async function waitForDeviceToBootAsync({
   udid,
-}: Pick<SimControl.Device, 'udid'>): Promise<SimControl.Device | null> {
-  return waitForActionAsync<SimControl.Device | null>({
+}: Pick<SimControl.SimulatorDevice, 'udid'>): Promise<SimControl.SimulatorDevice | null> {
+  return waitForActionAsync<SimControl.SimulatorDevice | null>({
     action: () => {
       return SimControl.bootAsync({ udid });
     },
@@ -379,7 +379,7 @@ export async function expoVersionOnSimulatorAsync({
 }
 
 export async function doesExpoClientNeedUpdatedAsync(
-  simulator: Pick<SimControl.Device, 'udid'>,
+  simulator: Pick<SimControl.SimulatorDevice, 'udid'>,
   sdkVersion?: string
 ): Promise<boolean> {
   // Test that upgrading works by returning true
@@ -434,12 +434,12 @@ export async function installExpoOnSimulatorAsync({
   simulator,
   version,
 }: {
-  simulator: Pick<SimControl.Device, 'name' | 'udid'>;
+  simulator: Pick<SimControl.SimulatorDevice, 'name' | 'udid'>;
   url?: string;
   version?: string;
 }) {
   const bar = new ProgressBar(
-    `Installing the Expo client app on ${simulator.name} [:bar] :percent :etas`,
+    `Installing the Expo Go app on ${simulator.name} [:bar] :percent :etas`,
     {
       total: 100,
       width: 64,
@@ -551,7 +551,7 @@ export async function openUrlInSimulatorSafeAsync({
     };
   }
 
-  let simulator: SimControl.Device | null = null;
+  let simulator: SimControl.SimulatorDevice | null = null;
   try {
     simulator = await ensureSimulatorOpenAsync({ udid });
   } catch (error) {
@@ -608,7 +608,7 @@ export async function openUrlInSimulatorSafeAsync({
 const hasPromptedToUpgrade: Record<string, boolean> = {};
 
 async function ensureExpoClientInstalledAsync(
-  simulator: Pick<SimControl.Device, 'udid' | 'name'>,
+  simulator: Pick<SimControl.SimulatorDevice, 'udid' | 'name'>,
   sdkVersion?: string
 ) {
   let isInstalled = await isExpoClientInstalledOnSimulatorAsync(simulator);
@@ -659,14 +659,14 @@ export async function openProjectAsync({
   projectRoot: string;
   shouldPrompt?: boolean;
 }): Promise<{ success: true; url: string } | { success: false; error: string }> {
-  const projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
+  const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, {
     hostType: 'localhost',
   });
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
-  let device: SimControl.Device | null = null;
+  let device: SimControl.SimulatorDevice | null = null;
   if (shouldPrompt) {
     const devices = await getSelectableSimulatorsAsync();
     device = await promptForSimulatorAsync(devices);
@@ -707,7 +707,7 @@ export async function openWebProjectAsync({
     };
   }
 
-  let device: SimControl.Device | null = null;
+  let device: SimControl.SimulatorDevice | null = null;
   if (shouldPrompt) {
     const devices = await getSelectableSimulatorsAsync();
     device = await promptForSimulatorAsync(devices);
@@ -736,9 +736,9 @@ export async function openWebProjectAsync({
  *
  * @param devices
  */
-async function sortDefaultDeviceToBeginningAsync(
-  devices: SimControl.Device[]
-): Promise<SimControl.Device[]> {
+export async function sortDefaultDeviceToBeginningAsync(
+  devices: SimControl.SimulatorDevice[]
+): Promise<SimControl.SimulatorDevice[]> {
   const defaultUdid =
     (await _getDefaultSimulatorDeviceUDIDAsync()) ?? (await getFirstAvailableDeviceAsync()).udid;
   if (defaultUdid) {
@@ -751,9 +751,9 @@ async function sortDefaultDeviceToBeginningAsync(
   return devices;
 }
 
-async function promptForSimulatorAsync(
-  devices: SimControl.Device[]
-): Promise<SimControl.Device | null> {
+export async function promptForSimulatorAsync(
+  devices: SimControl.SimulatorDevice[]
+): Promise<SimControl.SimulatorDevice | null> {
   devices = await sortDefaultDeviceToBeginningAsync(devices);
   // TODO: Bail on non-interactive
   const results = await promptForDeviceAsync(devices);
@@ -761,7 +761,9 @@ async function promptForSimulatorAsync(
   return results ? devices.find(({ udid }) => results === udid)! : null;
 }
 
-async function promptForDeviceAsync(devices: SimControl.Device[]): Promise<string | undefined> {
+async function promptForDeviceAsync(
+  devices: SimControl.SimulatorDevice[]
+): Promise<string | undefined> {
   // TODO: provide an option to add or download more simulators
   // TODO: Add support for physical devices too.
 

@@ -21,7 +21,7 @@ export default async function printRunInstructionsAsync(): Promise<void> {
     // log(
     //   `Alternatively, sign in to your account (${chalk.bold(
     //     user.username
-    //   )}) in the latest version of the Expo client on your iOS or Android device. Your projects will automatically appear in the "Projects" tab.`
+    //   )}) in the latest version of Expo Go on your iOS or Android device. Your projects will automatically appear in the "Projects" tab.`
     // );
   }
 

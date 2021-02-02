@@ -4,7 +4,6 @@ import program, { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
-import validator from 'validator';
 
 import CommandError, { SilentError } from '../CommandError';
 import log from '../log';
@@ -26,6 +25,7 @@ type Options = {
   dumpSourcemap: boolean;
   maxWorkers?: number;
   force: boolean;
+  experimentalBundle: boolean;
 };
 
 export async function promptPublicUrlAsync(): Promise<string> {
@@ -53,7 +53,7 @@ export async function ensurePublicUrlAsync(url: any, isDev?: boolean): Promise<s
   // If we are not in dev mode, ensure that url is https
   if (!isDev && !UrlUtils.isHttps(url)) {
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-  } else if (!validator.isURL(url, { protocols: ['http', 'https'] })) {
+  } else if (!UrlUtils.isURL(url, { protocols: ['http', 'https'] })) {
     log.nestedWarn(
       `Dev Mode: --public-url ${url} does not conform to the required HTTP(S) protocol.`
     );
@@ -75,6 +75,7 @@ async function exportFilesAsync(
     | 'outputDir'
     | 'publicUrl'
     | 'assetUrl'
+    | 'experimentalBundle'
   >
 ) {
   // Make outputDir an absolute path if it isnt already
@@ -87,13 +88,13 @@ async function exportFilesAsync(
       target: options.target ?? getDefaultTarget(projectRoot),
     },
   };
-  const absoluteOutputDir = path.resolve(process.cwd(), options.outputDir);
-  return await Project.exportForAppHosting(
+  return await Project.exportAppAsync(
     projectRoot,
     options.publicUrl!,
     options.assetUrl,
-    absoluteOutputDir,
-    exportOptions
+    options.outputDir,
+    exportOptions,
+    options.experimentalBundle
   );
 }
 
@@ -160,8 +161,10 @@ function collect<T>(val: T, memo: T[]): T[] {
 }
 
 export async function action(projectDir: string, options: Options) {
-  // Ensure URL
-  options.publicUrl = await ensurePublicUrlAsync(options.publicUrl, options.dev);
+  if (!options.experimentalBundle) {
+    // Ensure URL
+    options.publicUrl = await ensurePublicUrlAsync(options.publicUrl, options.dev);
+  }
 
   // Ensure the output directory is created
   const outputPath = path.resolve(projectDir, options.outputDir);
@@ -230,5 +233,6 @@ export default function (program: Command) {
       []
     )
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
+    .option('--experimental-bundle', 'export bundles for use with EAS updates.')
     .asyncActionProjectDir(action, { checkConfig: true });
 }

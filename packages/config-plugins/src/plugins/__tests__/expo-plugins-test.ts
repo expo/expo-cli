@@ -5,10 +5,14 @@ import * as path from 'path';
 import xcode from 'xcode';
 
 import { ExportedConfig } from '../../Plugin.types';
-import { readXMLAsync } from '../../android/XML';
 import { withBranch } from '../../ios/Branch';
 import { getDirFromFS } from '../../ios/__tests__/utils/getDirFromFS';
-import { withExpoAndroidPlugins, withExpoIOSPlugins } from '../expo-plugins';
+import { readXMLAsync } from '../../utils/XML';
+import {
+  withExpoAndroidPlugins,
+  withExpoIOSPlugins,
+  withExpoVersionedSDKPlugins,
+} from '../expo-plugins';
 import { compileModsAsync, evalModsAsync } from '../mod-compiler';
 import rnFixture from './fixtures/react-native-project';
 
@@ -24,6 +28,8 @@ jest.mock('../../android/Icon', () => {
     setIconAsync() {},
   };
 });
+const NotificationsPlugin = require('../../android/Notifications');
+NotificationsPlugin.withNotificationIcons = jest.fn(config => config);
 
 describe(evalModsAsync, () => {
   it(`runs with no core mods`, async () => {
@@ -91,6 +97,7 @@ describe('built-in plugins', () => {
     let config: ExportedConfig = {
       name: 'app',
       slug: '',
+      _internal: { projectRoot: '.' },
       ios: {
         config: {
           usesNonExemptEncryption: false,
@@ -103,7 +110,6 @@ describe('built-in plugins', () => {
 
     config = withExpoIOSPlugins(config, {
       bundleIdentifier: 'com.bacon.todo',
-      expoUsername: 'bacon',
     });
     // Apply mod
     config = await compileModsAsync(config, { projectRoot: '/app' });
@@ -235,16 +241,17 @@ describe('built-in plugins', () => {
         allowBackup: true,
         softwareKeyboardLayoutMode: 'pan',
       },
+      _internal: { projectRoot: '/app' },
       mods: null,
     };
 
+    config = withExpoVersionedSDKPlugins(config, { expoUsername: 'bacon' });
+
     config = withExpoIOSPlugins(config, {
       bundleIdentifier: 'com.bacon.todo',
-      expoUsername: 'bacon',
     });
     config = withExpoAndroidPlugins(config, {
       package: 'com.bacon.todo',
-      expoUsername: 'bacon',
     });
 
     // Apply mod
@@ -292,7 +299,10 @@ describe('built-in plugins', () => {
       'android/app/src/main/res/values/styles.xml',
       'android/app/src/main/res/values/colors.xml',
       'android/app/src/main/res/values/strings.xml',
+      'android/app/build.gradle',
       'android/app/google-services.json',
+      'android/settings.gradle',
+      'android/build.gradle',
       'config/GoogleService-Info.plist',
       'config/google-services.json',
       'locales/en-US.json',

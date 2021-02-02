@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.13.71",
+  "version": "0.13.81",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development ts-node ./server/dev-server",
@@ -17,14 +17,14 @@
     "build"
   ],
   "dependencies": {
-    "@expo/config": "3.3.21",
+    "@expo/config": "3.3.27",
     "base64url": "3.0.1",
     "express": "4.16.4",
     "freeport-async": "2.0.0",
     "graphql": "0.13.2",
     "graphql-tools": "3.0.0",
     "iterall": "1.2.2",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "subscriptions-transport-ws": "0.9.8"
   },
   "peerDependencies": {
@@ -33,7 +33,7 @@
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.8.3",
     "@expo/babel-preset-cli": "0.2.18",
-    "@expo/xdl": "59.0.11",
+    "@expo/xdl": "59.0.21",
     "anser": "^1.4.7",
     "apollo-cache-inmemory": "^1.1.12",
     "apollo-client": "^2.2.8",

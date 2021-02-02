@@ -2,11 +2,11 @@ import { ExpoConfig } from '@expo/config-types';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { createStringsXmlPlugin, withSettingsGradle } from '../plugins/android-plugins';
+import { writeXMLAsync } from '../utils/XML';
 import { assert } from '../utils/errors';
 import { addWarningAndroid } from '../utils/warnings';
 import { buildResourceItem, readResourcesXMLAsync, ResourceXML } from './Resources';
 import { getProjectStringsXMLPathAsync, removeStringItem, setStringItem } from './Strings';
-import { writeXMLAsync } from './XML';
 
 /**
  * Sanitize a name, this should be used for files and gradle names.

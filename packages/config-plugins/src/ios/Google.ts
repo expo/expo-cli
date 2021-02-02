@@ -8,7 +8,7 @@ import { createInfoPlistPlugin, withXcodeProject } from '../plugins/ios-plugins'
 import { InfoPlist } from './IosConfig.types';
 import { getSourceRoot } from './Paths';
 import { appendScheme } from './Scheme';
-import { addFileToGroup, getProjectName } from './utils/Xcodeproj';
+import { addResourceFileToGroup, getProjectName } from './utils/Xcodeproj';
 
 export const withGoogle = createInfoPlistPlugin(setGoogleConfig, 'withGoogle');
 
@@ -24,17 +24,6 @@ export const withGoogleServicesFile: ConfigPlugin = config => {
 
 export function getGoogleMapsApiKey(config: Pick<ExpoConfig, 'ios'>) {
   return config.ios?.config?.googleMapsApiKey ?? null;
-}
-
-// NOTE(brentvatne): if the developer has installed the google ads sdk and does
-// not provide an app id their app will crash. Standalone apps get around this by
-// providing some default value, we will instead here assume that the user can
-// do the right thing if they have installed the package. This is a slight discrepancy
-// that arises in ejecting because it's possible for the package to be installed and
-// not crashing in the managed workflow, then you eject and the app crashes because
-// you don't have an id to fall back to.
-export function getGoogleMobileAdsAppId(config: Pick<ExpoConfig, 'ios'>) {
-  return config.ios?.config?.googleMobileAdsAppId ?? null;
 }
 
 export function getGoogleSignInReservedClientId(config: Pick<ExpoConfig, 'ios'>) {
@@ -61,22 +50,6 @@ export function setGoogleMapsApiKey(
   };
 }
 
-export function setGoogleMobileAdsAppId(
-  config: Pick<ExpoConfig, 'ios'>,
-  { GADApplicationIdentifier, ...infoPlist }: InfoPlist
-): InfoPlist {
-  const appId = getGoogleMobileAdsAppId(config);
-
-  if (appId === null) {
-    return infoPlist;
-  }
-
-  return {
-    ...infoPlist,
-    GADApplicationIdentifier: appId,
-  };
-}
-
 export function setGoogleSignInReservedClientId(
   config: Pick<ExpoConfig, 'ios'>,
   infoPlist: InfoPlist
@@ -92,7 +65,6 @@ export function setGoogleSignInReservedClientId(
 
 export function setGoogleConfig(config: Pick<ExpoConfig, 'ios'>, infoPlist: InfoPlist): InfoPlist {
   infoPlist = setGoogleMapsApiKey(config, infoPlist);
-  infoPlist = setGoogleMobileAdsAppId(config, infoPlist);
   infoPlist = setGoogleSignInReservedClientId(config, infoPlist);
   return infoPlist;
 }
@@ -113,6 +85,9 @@ export function setGoogleServicesFile(
   );
 
   const projectName = getProjectName(projectRoot);
-  project = addFileToGroup(`${projectName}/GoogleService-Info.plist`, projectName, project);
+  const plistFilePath = `${projectName}/GoogleService-Info.plist`;
+  if (!project.hasFile(plistFilePath)) {
+    project = addResourceFileToGroup(plistFilePath, projectName, project);
+  }
   return project;
 }

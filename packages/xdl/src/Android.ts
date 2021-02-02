@@ -390,7 +390,7 @@ export async function installExpoAsync({
   url?: string;
   version?: string;
 }) {
-  const bar = new ProgressBar('Downloading the Expo client app [:bar] :percent :etas', {
+  const bar = new ProgressBar('Downloading the Expo Go app [:bar] :percent :etas', {
     total: 100,
     width: 64,
   });
@@ -658,7 +658,7 @@ export async function openProjectAsync({
   try {
     await startAdbReverseAsync(projectRoot);
 
-    const projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
+    const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot);
     const { exp } = getConfig(projectRoot, {
       skipSDKVersionRequirement: true,
     });

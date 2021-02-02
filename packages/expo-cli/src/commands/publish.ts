@@ -1,6 +1,6 @@
 import { getConfig, getDefaultTarget, PackageJSONConfig, ProjectTarget } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
-import { Project } from '@expo/xdl';
+import { Project, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';
@@ -8,6 +8,7 @@ import path from 'path';
 
 import CommandError from '../CommandError';
 import log from '../log';
+import { getProjectOwner } from '../projects';
 import * as sendTo from '../sendTo';
 import * as TerminalLink from './utils/TerminalLink';
 import { formatNamedWarning } from './utils/logConfigWarnings';
@@ -36,6 +37,10 @@ export async function action(
 
   const target = options.target ?? getDefaultTarget(projectDir);
 
+  // note: this validates the exp.owner when the user is a robot
+  const user = await UserManager.ensureLoggedInAsync();
+  const owner = getProjectOwner(user, exp);
+
   log.addNewLineIfNone();
 
   // Log building info before building.
@@ -46,6 +51,9 @@ export async function action(
   }
   log(`- Release channel: ${log.chalk.bold(options.releaseChannel)}`);
   log(`- Workflow: ${log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
+  if (user.kind === 'robot') {
+    log(`- Owner: ${log.chalk.bold(owner)}`);
+  }
 
   log.newLine();
 
@@ -275,7 +283,7 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
  * it will run in Expo client in development even. We should revisit this with
  * dev client, and possibly also by excluding SDK version for bare
  * expo-updates usage in the future (and then surfacing this as an error in
- * the Expo client app instead)
+ * the Expo Go app instead)
  *
  * Related: https://github.com/expo/expo/issues/9517
  *

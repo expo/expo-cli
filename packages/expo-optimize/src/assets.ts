@@ -1,4 +1,4 @@
-import { fileExists, getConfig, getWebOutputPath } from '@expo/config';
+import { getConfig, getWebOutputPath } from '@expo/config';
 import { isAvailableAsync, sharpAsync } from '@expo/image-utils';
 import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
@@ -17,13 +17,13 @@ import { basename, join, parse, relative } from 'path';
 import prettyBytes from 'pretty-bytes';
 import temporary from 'tempy';
 
-export type AssetOptimizationState = { [hash: string]: boolean };
+export type AssetOptimizationState = Record<string, boolean>;
 
 // Read the contents of assets.json under .expo-shared folder. Create the file/directory if they don't exist.
 async function readAssetJsonAsync(
-  projectDir: string
+  projectRoot: string
 ): Promise<{ assetJson: JsonFile<AssetOptimizationState>; assetInfo: AssetOptimizationState }> {
-  const dirPath = join(projectDir, '.expo-shared');
+  const dirPath = join(projectRoot, '.expo-shared');
 
   ensureDirSync(dirPath);
 
@@ -47,7 +47,7 @@ Yes, you should share the ".expo-shared" folder with your collaborators.
   }
 
   const assetJson = new JsonFile<AssetOptimizationState>(join(dirPath, 'assets.json'));
-  if (!fileExists(assetJson.file)) {
+  if (!existsSync(assetJson.file)) {
     console.log();
     console.log(
       chalk.magenta(
@@ -96,16 +96,16 @@ function createNewFilename(imagePath: string): string {
 // Find all project assets under assetBundlePatterns in app.json excluding node_modules.
 // If --include of --exclude flags were passed in those results are filtered out.
 async function getAssetFilesAsync(
-  projectDir: string,
+  projectRoot: string,
   options: OptimizationOptions
 ): Promise<{ allFiles: string[]; selectedFiles: string[] }> {
-  const { exp } = getConfig(projectDir, {
+  const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
   const webOutputPath = await getWebOutputPath(exp);
   const { assetBundlePatterns } = exp;
   const globOptions = {
-    cwd: projectDir,
+    cwd: projectRoot,
     ignore: ['**/node_modules/**', '**/ios/**', '**/android/**', `**/${webOutputPath}/**`],
   };
 
@@ -126,15 +126,15 @@ async function getAssetFilesAsync(
   const excluded = included.filter(file => !toExclude.has(file));
   const filtered = options && options.exclude ? excluded : included;
   return {
-    allFiles: filterImages(allFiles, projectDir),
-    selectedFiles: filterImages(filtered, projectDir),
+    allFiles: filterImages(allFiles, projectRoot),
+    selectedFiles: filterImages(filtered, projectRoot),
   };
 }
 
 // Formats an array of files to include the project directory and filters out PNGs and JPGs.
-function filterImages(files: string[], projectDir: string) {
+function filterImages(files: string[], projectRoot: string) {
   const regex = /\.(png|jpg|jpeg)$/;
-  const withDirectory = files.map(file => `${projectDir}/${file}`.replace('//', '/'));
+  const withDirectory = files.map(file => `${projectRoot}/${file}`.replace('//', '/'));
   const allImages = withDirectory.filter(file => regex.test(file.toLowerCase()));
   return allImages;
 }
@@ -154,14 +154,14 @@ export type OptimizationOptions = {
 
 // Returns a boolean indicating whether or not there are assets to optimize
 export async function isProjectOptimized(
-  projectDir: string,
+  projectRoot: string,
   options: OptimizationOptions
 ): Promise<boolean> {
-  if (!fileExists(join(projectDir, '.expo-shared/assets.json'))) {
+  if (!existsSync(join(projectRoot, '.expo-shared/assets.json'))) {
     return false;
   }
-  const { selectedFiles } = await getAssetFilesAsync(projectDir, options);
-  const { assetInfo } = await readAssetJsonAsync(projectDir);
+  const { selectedFiles } = await getAssetFilesAsync(projectRoot, options);
+  const { assetInfo } = await readAssetJsonAsync(projectRoot);
 
   for (const file of selectedFiles) {
     const hash = calculateHash(file);

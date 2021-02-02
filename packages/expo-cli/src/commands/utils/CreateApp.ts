@@ -1,5 +1,5 @@
 import * as PackageManager from '@expo/package-manager';
-import program from 'commander';
+import chalk from 'chalk';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import yaml from 'js-yaml';
@@ -93,13 +93,11 @@ export function resolvePackageManager(options: {
     packageManager = 'npm';
   }
   if (options.install) {
-    log.addNewLineIfNone();
     log(
       packageManager === 'yarn'
-        ? '🧶 Using Yarn to install packages. You can pass --npm to use npm instead.'
+        ? `🧶 Using Yarn to install packages. ${chalk.dim('Pass --npm to use npm instead.')}`
         : '📦 Using npm to install packages.'
     );
-    log.newLine();
   }
 
   return packageManager;
@@ -163,11 +161,12 @@ export function getChangeDirectoryPath(projectRoot: string): string {
 
 export async function installCocoaPodsAsync(projectRoot: string) {
   log.addNewLineIfNone();
-  let step = logNewSection('Installing CocoaPods.');
+  let step = logNewSection('Installing CocoaPods...');
   if (process.platform !== 'darwin') {
     step.succeed('Skipped installing CocoaPods because operating system is not on macOS.');
     return false;
   }
+
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
     log,
@@ -180,20 +179,22 @@ export async function installCocoaPodsAsync(projectRoot: string) {
       step.text = 'CocoaPods CLI not found in your PATH, installing it now.';
       step.render();
       await PackageManager.CocoaPodsPackageManager.installCLIAsync({
-        nonInteractive: program.nonInteractive,
+        nonInteractive: true,
         spawnOptions: packageManager.options,
       });
-      step.succeed('Installed CocoaPods CLI');
+      step.succeed('Installed CocoaPods CLI.');
       step = logNewSection('Running `pod install` in the `ios` directory.');
     } catch (e) {
       step.stopAndPersist({
         symbol: '⚠️ ',
         text: log.chalk.red(
-          'Unable to install the CocoaPods CLI. Continuing with project sync, you can install CocoaPods afterwards.'
+          'Unable to install the CocoaPods CLI. Continuing with project sync, you can install CocoaPods CLI afterwards.'
         ),
       });
-      if (e.message) {
-        log(`- ${e.message}`);
+      if (e instanceof PackageManager.CocoaPodsError) {
+        log(e.message);
+      } else {
+        log(`Unknown error: ${e.message}`);
       }
       return false;
     }
@@ -210,8 +211,10 @@ export async function installCocoaPodsAsync(projectRoot: string) {
         'Something went wrong running `pod install` in the `ios` directory. Continuing with project sync, you can debug this afterwards.'
       ),
     });
-    if (e.message) {
-      log(`- ${e.message}`);
+    if (e instanceof PackageManager.CocoaPodsError) {
+      log(e.message);
+    } else {
+      log(`Unknown error: ${e.message}`);
     }
     return false;
   }

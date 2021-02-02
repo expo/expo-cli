@@ -5,14 +5,14 @@ import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withDangerousMod } from '../plugins/core-plugins';
+import { writeXMLAsync } from '../utils/XML';
 import * as Colors from './Colors';
 import { buildResourceItem, readResourcesXMLAsync } from './Resources';
-import { writeXMLAsync } from './XML';
 
 type DPIString = 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
 type dpiMap = Record<DPIString, { folderName: string; scale: number }>;
 
-const dpiValues: dpiMap = {
+export const dpiValues: dpiMap = {
   mdpi: { folderName: 'mipmap-mdpi', scale: 1 },
   hdpi: { folderName: 'mipmap-hdpi', scale: 1.5 },
   xhdpi: { folderName: 'mipmap-xhdpi', scale: 2 },
@@ -20,7 +20,7 @@ const dpiValues: dpiMap = {
   xxxhdpi: { folderName: 'mipmap-xxxhdpi', scale: 4 },
 };
 const BASELINE_PIXEL_SIZE = 48;
-const ANDROID_RES_PATH = 'android/app/src/main/res/';
+export const ANDROID_RES_PATH = 'android/app/src/main/res/';
 const MIPMAP_ANYDPI_V26 = 'mipmap-anydpi-v26';
 const ICON_BACKGROUND = 'iconBackground';
 const IC_LAUNCHER_PNG = 'ic_launcher.png';

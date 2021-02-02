@@ -26,6 +26,7 @@ afterAll(() => {
 const projectRoot = '/app';
 const detachedProjectRoot = '/detached';
 const detachedWithSchemesProjectRoot = '/detached-with-schemes';
+const devClientWithSchemesProjectRoot = '/dev-client-with-schemes';
 beforeAll(async () => {
   vol.fromJSON(
     {
@@ -51,6 +52,20 @@ beforeAll(async () => {
       }),
     },
     detachedWithSchemesProjectRoot
+  );
+  vol.fromJSON(
+    {
+      'package.json': JSON.stringify({ dependencies: { expo: '39.0.0' } }),
+      'app.json': JSON.stringify({
+        sdkVersion: '39.0.0',
+        scheme: 'custom-scheme',
+      }),
+      '.expo/settings.json': JSON.stringify({
+        scheme: 'custom-scheme',
+        devClient: true,
+      }),
+    },
+    devClientWithSchemesProjectRoot
   );
 });
 
@@ -174,6 +189,37 @@ describe(UrlUtils.constructUrlAsync, () => {
   });
 });
 
+describe(UrlUtils.constructDeepLinkAsync, () => {
+  it('delegates to constructDevClientUrlAsync if using devClient flag', async () => {
+    const result = await UrlUtils.constructDeepLinkAsync(devClientWithSchemesProjectRoot);
+    const expectedResult = await UrlUtils.constructDevClientUrlAsync(
+      devClientWithSchemesProjectRoot
+    );
+    expect(result).toEqual(expectedResult);
+  });
+
+  it('delegates to createManifestUrlAsync if not using devClient flag', async () => {
+    const result = await UrlUtils.constructDeepLinkAsync(projectRoot);
+    const expectedResult = await UrlUtils.constructManifestUrlAsync(projectRoot);
+    expect(result).toEqual(expectedResult);
+  });
+});
+
+describe(UrlUtils.constructDevClientUrlAsync, () => {
+  it(`throws an error if a scheme is not present in app.json`, async () => {
+    await expect(
+      UrlUtils.constructDevClientUrlAsync(projectRoot)
+    ).rejects.toThrowErrorMatchingInlineSnapshot(`"No scheme specified for development client"`);
+  });
+
+  it(`creates dev client url if a scheme is provided`, async () => {
+    const result = await UrlUtils.constructDevClientUrlAsync(devClientWithSchemesProjectRoot);
+    expect(result).toEqual(
+      'custom-scheme://expo-development-client/?url=http%3A%2F%2F100.100.1.100%3A80'
+    );
+  });
+});
+
 describe(UrlUtils.constructSourceMapUrlAsync, () => {
   it(`creates a source map url`, async () => {
     await expect(UrlUtils.constructSourceMapUrlAsync(projectRoot, './App.tsx')).resolves.toBe(
@@ -185,5 +231,20 @@ describe(UrlUtils.constructSourceMapUrlAsync, () => {
     await expect(
       UrlUtils.constructSourceMapUrlAsync(projectRoot, './App.tsx', 'localhost')
     ).resolves.toBe('http://127.0.0.1:80/./App.tsx.map?dev=false&hot=false&minify=true');
+  });
+});
+
+describe(UrlUtils.isURL, () => {
+  it(`guards against protocols`, () => {
+    expect(UrlUtils.isURL('http://127.0.0.1:80', { protocols: ['http'] })).toBe(true);
+    expect(UrlUtils.isURL('127.0.0.1:80', { requireProtocol: true })).toBe(false);
+    expect(UrlUtils.isURL('http://127.0.0.1:80', { protocols: ['https'] })).toBe(false);
+    expect(UrlUtils.isURL('http://127.0.0.1:80', {})).toBe(true);
+    expect(
+      UrlUtils.isURL('127.0.0.1:80', { protocols: ['https', 'http'], requireProtocol: true })
+    ).toBe(false);
+    expect(UrlUtils.isURL('https://expo.io/', { protocols: ['https'] })).toBe(true);
+    expect(UrlUtils.isURL('', { protocols: ['https'] })).toBe(false);
+    expect(UrlUtils.isURL('hello', { protocols: ['https'] })).toBe(false);
   });
 });

@@ -1,9 +1,9 @@
 import { ExpoConfig } from '@expo/config-types';
 import path from 'path';
+import resolveFrom from 'resolve-from';
 
 import { ConfigPlugin } from '../Plugin.types';
 import { withAndroidManifest } from '../plugins/android-plugins';
-import { projectHasModule } from '../utils/modules';
 import {
   addMetaDataItemToMainApplication,
   AndroidManifest,
@@ -12,9 +12,11 @@ import {
   removeMetaDataItemFromMainApplication,
 } from './Manifest';
 
+const CREATE_MANIFEST_ANDROID_PATH = 'expo-updates/scripts/create-manifest-android.gradle';
+
 type ExpoConfigUpdates = Pick<
   ExpoConfig,
-  'sdkVersion' | 'owner' | 'runtimeVersion' | 'nodeModulesPath' | 'updates' | 'slug'
+  'sdkVersion' | 'owner' | 'runtimeVersion' | 'updates' | 'slug'
 >;
 
 export enum Config {
@@ -130,16 +132,34 @@ export function setVersionsConfig(
 
   return androidManifest;
 }
-
-export function formatApplyLineForBuildGradle(
+export function ensureBuildGradleContainsConfigurationScript(
   projectRoot: string,
-  config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>
+  buildGradleContents: string
 ): string {
-  const updatesGradleScriptPath = projectHasModule(
-    'expo-updates/scripts/create-manifest-android.gradle',
-    projectRoot,
-    config
-  );
+  if (!isBuildGradleConfigured(projectRoot, buildGradleContents)) {
+    let cleanedUpBuildGradleContents;
+
+    const isBuildGradleMisconfigured = buildGradleContents
+      .split('\n')
+      .some(line => line.includes(CREATE_MANIFEST_ANDROID_PATH));
+    if (isBuildGradleMisconfigured) {
+      cleanedUpBuildGradleContents = buildGradleContents.replace(
+        new RegExp(`(\n// Integration with Expo updates)?\n.*${CREATE_MANIFEST_ANDROID_PATH}.*\n`),
+        ''
+      );
+    } else {
+      cleanedUpBuildGradleContents = buildGradleContents;
+    }
+
+    const gradleScriptApply = formatApplyLineForBuildGradle(projectRoot);
+    return `${cleanedUpBuildGradleContents}\n// Integration with Expo updates\n${gradleScriptApply}\n`;
+  } else {
+    return buildGradleContents;
+  }
+}
+
+export function formatApplyLineForBuildGradle(projectRoot: string): string {
+  const updatesGradleScriptPath = resolveFrom.silent(projectRoot, CREATE_MANIFEST_ANDROID_PATH);
 
   if (!updatesGradleScriptPath) {
     throw new Error(
@@ -152,15 +172,11 @@ export function formatApplyLineForBuildGradle(
   )}`;
 }
 
-export function isBuildGradleConfigured(
-  buildGradleContent: string,
-  projectRoot: string,
-  config: Pick<ExpoConfigUpdates, 'nodeModulesPath'>
-): boolean {
-  const androidBuildScript = formatApplyLineForBuildGradle(projectRoot, config);
+export function isBuildGradleConfigured(projectRoot: string, buildGradleContents: string): boolean {
+  const androidBuildScript = formatApplyLineForBuildGradle(projectRoot);
 
   return (
-    buildGradleContent
+    buildGradleContents
       .split('\n')
       // Check for both single and double quotes
       .some(line => line === androidBuildScript || line === androidBuildScript.replace(/"/g, "'"))

@@ -7,34 +7,30 @@ import {
   ExportedConfigWithProps,
   Mod,
   ModPlatform,
+  StaticPlugin,
 } from '../Plugin.types';
+import { assert } from '../utils/errors';
 import { addHistoryItem, getHistoryItem, PluginHistoryItem } from '../utils/history';
+import { withStaticPlugin } from './static-plugins';
 
 const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
-function ensureArray<T>(input: T | T[]): T[] {
-  if (Array.isArray(input)) {
-    return input;
-  }
-  return [input];
-}
-
 /**
- * Plugin to chain a list of plugins together.
+ * Resolves a list of plugins.
  *
  * @param config exported config
  * @param plugins list of config config plugins to apply to the exported config
  */
-export const withPlugins: ConfigPlugin<
-  (
-    | ConfigPlugin
-    // TODO: Type this somehow if possible.
-    | [ConfigPlugin<any>, any]
-  )[]
-> = (config, plugins): ExportedConfig => {
-  return plugins.reduce((prev, curr) => {
-    const [plugins, args] = ensureArray(curr);
-    return plugins(prev, args);
+export const withPlugins: ConfigPlugin<(StaticPlugin | ConfigPlugin | string)[]> = (
+  config,
+  plugins
+) => {
+  assert(
+    Array.isArray(plugins),
+    'withPlugins expected a valid array of plugins or plugin module paths'
+  );
+  return plugins.reduce((prev, plugin) => {
+    return withStaticPlugin(prev, { plugin });
   }, config);
 };
 
@@ -72,7 +68,7 @@ export function createRunOncePlugin<T>(
   version?: string
 ): ConfigPlugin<T> {
   return (config, props) => {
-    return withRunOnce(config, { plugin: c => plugin(c, props), name, version });
+    return withRunOnce(config, { plugin: config => plugin(config, props), name, version });
   };
 }
 
@@ -181,13 +177,15 @@ export function withInterceptedMod<T>(
     const stack = new Error().stack;
     // Format the stack trace to create the debug log
     debugTrace = getDebugPluginStackFromStackTrace(stack);
+    const modStack = chalk.bold(`${platform}.${mod}`);
+
+    debugTrace = `${modStack}: ${debugTrace}`;
   }
 
   async function interceptingMod({ modRequest, ...config }: ExportedConfigWithProps<T>) {
     if (isDebug) {
       // In debug mod, log the plugin stack in the order which they were invoked
-      const modStack = chalk.bold(`${platform}.${mod}`);
-      console.log(`${modStack}: ${debugTrace}`);
+      console.log(debugTrace);
     }
     return action({ ...config, modRequest: { ...modRequest, nextMod: interceptedMod } });
   }

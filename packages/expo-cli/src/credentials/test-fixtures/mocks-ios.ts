@@ -55,7 +55,6 @@ export const testDistCertFromApple: DistCertInfo = {
   status: 'Active',
   created: today.getTime(),
   expires: tomorrow.getTime(),
-  ownerType: 'test-owner-type',
   ownerName: 'test-owner',
   ownerId: 'test-id',
   serialNumber: testIosDistCredential.distCertSerialNumber as string,

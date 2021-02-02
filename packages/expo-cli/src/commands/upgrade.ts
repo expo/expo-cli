@@ -1,4 +1,4 @@
-import { getConfig, readConfigJsonAsync, resolveModule, writeConfigJsonAsync } from '@expo/config';
+import { getConfig, readConfigJsonAsync, writeConfigJsonAsync } from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
@@ -10,6 +10,7 @@ import difference from 'lodash/difference';
 import omit from 'lodash/omit';
 import pickBy from 'lodash/pickBy';
 import ora from 'ora';
+import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import terminalLink from 'terminal-link';
 
@@ -61,17 +62,9 @@ export function maybeFormatSdkVersion(sdkVersionString: string | null): string |
  * This is preferable to reading it from the project package.json because we get
  * the exact installed version and not a range.
  */
-async function getExactInstalledModuleVersionAsync(
-  moduleName: string,
-  projectRoot: string,
-  options?: { nodeModulesPath?: string }
-) {
+async function getExactInstalledModuleVersionAsync(moduleName: string, projectRoot: string) {
   try {
-    const pkg = await JsonFile.readAsync(
-      resolveModule(`${moduleName}/package.json`, projectRoot, {
-        nodeModulesPath: options?.nodeModulesPath,
-      })
-    );
+    const pkg = await JsonFile.readAsync(resolveFrom(projectRoot, `${moduleName}/package.json`));
     return pkg.version as string;
   } catch (e) {
     return null;
@@ -90,7 +83,7 @@ export async function getUpdatedDependenciesAsync(
   // Get the updated version for any bundled modules
   const { exp, pkg } = getConfig(projectRoot);
   const bundledNativeModules = (await JsonFile.readAsync(
-    resolveModule('expo/bundledNativeModules.json', projectRoot, exp)
+    resolveFrom(projectRoot, 'expo/bundledNativeModules.json')
   )) as DependencyList;
 
   // Smoosh regular and dev dependencies together for now
@@ -464,8 +457,7 @@ export async function upgradeAsync(
 
   const previousReactNativeVersion = await getExactInstalledModuleVersionAsync(
     'react-native',
-    projectRoot,
-    exp
+    projectRoot
   );
 
   // Maybe bail out early if people are trying to update to the current version
@@ -711,8 +703,7 @@ export async function upgradeAsync(
     // versions data let's read the version from the source of truth - package.json in node_modules.
     const newReactNativeVersion = await getExactInstalledModuleVersionAsync(
       'react-native',
-      projectRoot,
-      exp
+      projectRoot
     );
 
     // It's possible that the developer has upgraded react-native already because it's bare workflow.

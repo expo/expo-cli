@@ -1,6 +1,7 @@
 import { JSONObject, JSONValue } from '@expo/json-file';
 import axios, { AxiosRequestConfig } from 'axios';
 import concat from 'concat-stream';
+import FormData from 'form-data';
 import fs from 'fs-extra';
 import idx from 'idx';
 import merge from 'lodash/merge';
@@ -8,7 +9,6 @@ import QueryString from 'querystring';
 import { URL } from 'url';
 
 import Config from './Config';
-import FormData from './tools/FormData';
 
 const apiBaseUrl = `${Config.turtleApi.scheme}://${Config.turtleApi.host}:${Config.turtleApi.port}`;
 

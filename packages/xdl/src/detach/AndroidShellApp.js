@@ -774,8 +774,13 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
 
   // App name
   await regexFileAsync(
-    '"app_name">Expo',
-    `"app_name">${xmlWeirdAndroidEscape(name)}`,
+    '"app_name">Expo<',
+    `"app_name">${xmlWeirdAndroidEscape(name)}<`,
+    path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'strings.xml')
+  );
+  await regexFileAsync(
+    '"app_name">Expo Go<',
+    `"app_name">${xmlWeirdAndroidEscape(name)}<`,
     path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'strings.xml')
   );
 
@@ -1057,7 +1062,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   );
 
   // Set the tint color for icons in the notification tray
-  // This is set to "#005eff" in the Expo client app, but
+  // This is set to "#005eff" in the Expo Go app, but
   // just to be safe we'll match any value with a regex
   await regexFileAsync(
     /"notification_icon_color">.*?</,

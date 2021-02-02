@@ -1,5 +1,4 @@
-import invariant from 'invariant';
-
+import { assert } from '../../assert';
 import prompts, { confirmAsync } from '../../prompts';
 import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
 import { AppLookupParams } from '../api/IosApi';
@@ -91,7 +90,7 @@ export class SelectIosExperience implements IView {
   handleAction(ctx: Context, accountName: string, action: string): IView | null {
     switch (action) {
       case 'create-ios-push':
-        return new iosPushView.CreateIosPush(accountName);
+        return new iosPushView.CreateAndAssignIosPush(accountName);
       case 'update-ios-push':
         return new iosPushView.UpdateIosPush(accountName);
       case 'remove-ios-push':
@@ -130,7 +129,7 @@ export class SelectAndroidExperience implements IView {
       });
 
       if (runProjectContext) {
-        invariant(ctx.manifest.slug, 'app.json slug field must be set');
+        assert(ctx.manifest.slug, 'app.json slug field must be set');
         const view = new androidView.ExperienceView(experienceName);
         CredentialsManager.get().changeMainView(view);
         return view;

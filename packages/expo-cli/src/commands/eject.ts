@@ -1,5 +1,4 @@
 import { getConfig } from '@expo/config';
-import { ModPlatform } from '@expo/config-plugins';
 import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
@@ -8,7 +7,7 @@ import CommandError from '../CommandError';
 import log from '../log';
 import { confirmAsync } from '../prompts';
 import * as Eject from './eject/Eject';
-import * as LegacyEject from './eject/LegacyEject';
+import { platformsFromPlatform } from './eject/platformOptions';
 import { learnMore } from './utils/TerminalLink';
 
 async function userWantsToEjectWithoutUpgradingAsync() {
@@ -19,40 +18,12 @@ async function userWantsToEjectWithoutUpgradingAsync() {
   return answer;
 }
 
-function getDefaultPlatforms(): ModPlatform[] {
-  const platforms: ModPlatform[] = ['android'];
-  if (process.platform !== 'win32') {
-    platforms.push('ios');
-  }
-  return platforms;
-}
-
-function platformsFromPlatform(platform?: string): ModPlatform[] {
-  if (!platform) {
-    return getDefaultPlatforms();
-  }
-  switch (platform) {
-    case 'ios':
-      if (process.platform === 'win32') {
-        log.warn('Ejecting on windows is unsupported');
-        // continue anyways :shrug:
-      }
-      return ['ios'];
-    case 'android':
-      return ['android'];
-    case 'all':
-      return getDefaultPlatforms();
-    default:
-      throw new CommandError(`Unsupported platform "${platform}". Options are: ios, android, all`);
-  }
-}
-
 export async function actionAsync(
   projectDir: string,
   {
     platform,
     ...options
-  }: (LegacyEject.EjectAsyncOptions | Eject.EjectAsyncOptions) & {
+  }: Omit<Eject.EjectAsyncOptions, 'platforms'> & {
     npm?: boolean;
     platform?: string;
   }
@@ -64,11 +35,11 @@ export async function actionAsync(
   }
 
   // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3 for ExpoKit
-  // TODO: remove LegacyEject when SDK 36 is no longer supported: after SDK 40 is released.
   if (Versions.lteSdkVersion(exp, '36.0.0')) {
     if (options.force || (await userWantsToEjectWithoutUpgradingAsync())) {
-      log.debug('Eject Mode: Legacy');
-      await LegacyEject.ejectAsync(projectDir, options as LegacyEject.EjectAsyncOptions);
+      throw new CommandError(
+        `Ejecting to ExpoKit is now deprecated. Upgrade to Expo SDK +37 or downgrade to expo-cli@4.1.3`
+      );
     }
   } else {
     log.debug('Eject Mode: Latest');
@@ -91,7 +62,6 @@ export default function (program: Command) {
       'Create Xcode and Android Studio projects for your app. Use this if you need to add custom native functionality.'
     )
     .helpGroup('eject')
-    .option('--force', 'Skip legacy eject warnings.') // TODO: remove the force flag when SDK 36 is no longer supported: after SDK 40 is released.
     .option('--no-install', 'Skip installing npm packages and CocoaPods.')
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('-p, --platform [platform]', 'Platforms to sync: ios, android, all. Default: all')

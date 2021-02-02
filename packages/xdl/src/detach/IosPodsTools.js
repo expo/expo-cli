@@ -330,8 +330,8 @@ function _renderUnversionedPostinstall(sdkVersion) {
   const podNameExpression = sdkMajorVersion < 33 ? 'target.pod_name' : 'pod_name';
   const targetExpression = sdkMajorVersion < 33 ? 'target' : 'target_installation_result';
 
-  // SDK31 drops support for iOS 9.0
-  const deploymentTarget = sdkMajorVersion > 30 ? '10.0' : '9.0';
+  // SDK41 drops support for iOS 10.0
+  const deploymentTarget = sdkMajorVersion > 40 ? '11.0' : '10.0';
 
   const podsToChangeDeployTargetIfStart =
     sdkMajorVersion <= 33 ? `      if ${podsToChangeRB}.include? ${podNameExpression}` : '';

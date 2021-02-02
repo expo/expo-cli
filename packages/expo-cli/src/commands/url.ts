@@ -61,7 +61,7 @@ async function action(projectDir: string, options: ProjectUrlOptions & URLOption
   }
   const url = options.web
     ? await getWebAppUrlAsync(projectDir)
-    : await UrlUtils.constructManifestUrlAsync(projectDir);
+    : await UrlUtils.constructDeepLinkAsync(projectDir);
 
   log.newLine();
   urlOpts.printQRCode(url);
@@ -81,7 +81,7 @@ export default function (program: Command) {
     .helpGroup('url')
 
     .option('-w, --web', 'Return the URL of the web app')
-    .description('Log a URL for opening the project in the Expo client')
+    .description('Log a URL for opening the project in Expo Go')
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(action);

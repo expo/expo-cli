@@ -1,10 +1,10 @@
-import { ExpoConfig, getConfig, resolveModule } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import joi from '@hapi/joi';
 import assert from 'assert';
 import os from 'os';
 import QueryString from 'querystring';
+import resolveFrom from 'resolve-from';
 import url from 'url';
-import validator from 'validator';
 
 import Config from './Config';
 import * as ProjectSettings from './ProjectSettings';
@@ -14,7 +14,7 @@ import ip from './ip';
 import * as ProjectUtils from './project/ProjectUtils';
 
 interface URLOptions extends Omit<ProjectSettings.ProjectSettings, 'urlRandomness'> {
-  urlType: null | 'exp' | 'http' | 'no-protocol' | 'redirect';
+  urlType: null | 'exp' | 'http' | 'no-protocol' | 'redirect' | 'custom';
 }
 
 interface MetroQueryOptions {
@@ -31,12 +31,44 @@ export async function constructBundleUrlAsync(
   return await constructUrlAsync(projectRoot, opts, true, requestHostname);
 }
 
+export async function constructDeepLinkAsync(
+  projectRoot: string,
+  opts?: Partial<URLOptions>,
+  requestHostname?: string
+) {
+  const { devClient } = await ProjectSettings.getPackagerOptsAsync(projectRoot);
+
+  if (devClient) {
+    return constructDevClientUrlAsync(projectRoot, opts, requestHostname);
+  } else {
+    return constructManifestUrlAsync(projectRoot, opts, requestHostname);
+  }
+}
+
 export async function constructManifestUrlAsync(
   projectRoot: string,
   opts?: Partial<URLOptions>,
   requestHostname?: string
 ) {
   return await constructUrlAsync(projectRoot, opts ?? null, false, requestHostname);
+}
+
+export async function constructDevClientUrlAsync(
+  projectRoot: string,
+  opts?: Partial<URLOptions>,
+  requestHostname?: string
+) {
+  const { scheme } = await ProjectSettings.getPackagerOptsAsync(projectRoot);
+  if (!scheme || typeof scheme !== 'string') {
+    throw new XDLError('NO_DEV_CLIENT_SCHEME', 'No scheme specified for development client');
+  }
+  const protocol = resolveProtocol(projectRoot, { scheme, urlType: 'custom' });
+  const manifestUrl = await constructManifestUrlAsync(
+    projectRoot,
+    { ...opts, urlType: 'http' },
+    requestHostname
+  );
+  return `${protocol}://expo-development-client/?url=${encodeURIComponent(manifestUrl)}`;
 }
 
 // gets the base manifest URL and removes the scheme
@@ -81,7 +113,7 @@ export async function constructUrlWithExtensionAsync(
     requestHostname
   );
 
-  const mainModulePath = guessMainModulePath(entryPoint);
+  const mainModulePath = stripJSExtension(entryPoint);
   bundleUrl += `/${mainModulePath}.${ext}`;
 
   const queryParams = constructBundleQueryParams(projectRoot, metroQueryOptions);
@@ -141,7 +173,7 @@ export function constructBundleQueryParams(projectRoot: string, opts: MetroQuery
 export function constructBundleQueryParamsWithConfig(
   projectRoot: string,
   opts: MetroQueryOptions,
-  exp: Pick<ExpoConfig, 'sdkVersion' | 'nodeModulesPath'>
+  exp: Pick<ExpoConfig, 'sdkVersion'>
 ): string {
   const queryParams: Record<string, boolean | string> = {
     dev: !!opts.dev,
@@ -170,7 +202,7 @@ export function constructBundleQueryParamsWithConfig(
   const usesAssetPluginsQueryParam = supportsAssetPlugins && Versions.lteSdkVersion(exp, '32.0.0');
   if (usesAssetPluginsQueryParam) {
     // Use an absolute path here so that we can not worry about symlinks/relative requires
-    const pluginModule = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+    const pluginModule = resolveFrom(projectRoot, 'expo/tools/hashAssetFiles');
     queryParams.assetPlugin = encodeURIComponent(pluginModule);
   } else if (!supportsAssetPlugins) {
     // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
@@ -203,9 +235,10 @@ export async function constructWebAppUrlAsync(
 
 function assertValidOptions(opts: Partial<URLOptions>): URLOptions {
   const schema = joi.object().keys({
+    devClient: joi.boolean().optional(),
     scheme: joi.string().optional().allow(null),
     // Replaced by `scheme`
-    urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol'),
+    urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol').allow(null),
     lanType: joi.any().valid('ip', 'hostname'),
     hostType: joi.any().valid('localhost', 'lan', 'tunnel'),
     dev: joi.boolean(),
@@ -219,6 +252,7 @@ function assertValidOptions(opts: Partial<URLOptions>): URLOptions {
   if (error) {
     throw new XDLError('INVALID_OPTIONS', error.toString());
   }
+
   return opts as URLOptions;
 }
 
@@ -242,13 +276,12 @@ function resolveProtocol(
   projectRoot: string,
   { urlType, ...options }: Pick<URLOptions, 'urlType' | 'scheme'>
 ): string | null {
-  if (options.scheme) {
-    return options.scheme;
-  }
   if (urlType === 'http') {
     return 'http';
   } else if (urlType === 'no-protocol') {
     return null;
+  } else if (urlType === 'custom') {
+    return options.scheme;
   }
   let protocol = 'exp';
 
@@ -380,7 +413,7 @@ function joinURLComponents({
   return `${validProtocol}${hostname}:${validPort}`;
 }
 
-export function guessMainModulePath(entryPoint: string): string {
+export function stripJSExtension(entryPoint: string): string {
   return entryPoint.replace(/\.js$/, '');
 }
 
@@ -415,6 +448,27 @@ export function domainify(s: string): string {
     .replace(/-+$/, '');
 }
 
-export function isHttps(url: string): boolean {
-  return validator.isURL(url, { protocols: ['https'] });
+export function isHttps(urlString: string): boolean {
+  return isURL(urlString, { protocols: ['https'] });
+}
+
+export function isURL(
+  urlString: string,
+  { protocols, requireProtocol }: { protocols?: string[]; requireProtocol?: boolean }
+) {
+  try {
+    // eslint-disable-next-line
+    new url.URL(urlString);
+    const parsed = url.parse(urlString);
+    if (!parsed.protocol && !requireProtocol) {
+      return true;
+    }
+    return protocols
+      ? parsed.protocol
+        ? protocols.map(x => `${x.toLowerCase()}:`).includes(parsed.protocol)
+        : false
+      : true;
+  } catch (err) {
+    return false;
+  }
 }

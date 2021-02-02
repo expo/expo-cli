@@ -5,7 +5,7 @@ import { XcodeProject } from 'xcode';
 import { AndroidManifest } from './android/Manifest';
 import * as AndroidPaths from './android/Paths';
 import { ResourceXML } from './android/Resources';
-import { InfoPlist } from './ios/IosConfig.types';
+import { ExpoPlist, InfoPlist } from './ios/IosConfig.types';
 
 type OptionalPromise<T> = Promise<T> | T;
 
@@ -57,6 +57,8 @@ export interface ExportedConfigWithProps<Data = any> extends ExpoConfig {
 
 export type ConfigPlugin<Props = void> = (config: ExpoConfig, props: Props) => ExpoConfig;
 
+export type StaticPlugin<T = any> = [string | ConfigPlugin<T>, T];
+
 export type Mod<Props = any> = (
   config: ExportedConfigWithProps<Props>
 ) => OptionalPromise<ExportedConfigWithProps<Props>>;
@@ -105,7 +107,13 @@ export interface ModConfig {
      * Modify the `ios/<name>.xcodeproj` as an `XcodeProject` (parsed with [`xcode`](https://www.npmjs.com/package/xcode))
      */
     xcodeproj?: Mod<XcodeProject>;
+    /**
+     * Modify the `ios/<name>/AppDelegate.m` as a string (dangerous)
+     */
+    appDelegate?: Mod<XcodeProject>;
   };
 }
 
 export type ModPlatform = keyof ModConfig;
+
+export { XcodeProject, InfoPlist, ExpoPlist, AndroidManifest };

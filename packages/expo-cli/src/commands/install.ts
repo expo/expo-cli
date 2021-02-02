@@ -1,11 +1,10 @@
-import { getConfig, projectHasModule } from '@expo/config';
+import { getConfig } from '@expo/config';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
 import { Versions } from '@expo/xdl';
 import { Command } from 'commander';
-import fs from 'fs';
 import npmPackageArg from 'npm-package-arg';
-import path from 'path';
+import resolveFrom from 'resolve-from';
 
 import CommandError, { SilentError } from '../CommandError';
 import log from '../log';
@@ -72,17 +71,17 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   }
 
   // This shouldn't be invoked because `findProjectRootAsync` will throw if node_modules are missing.
-  if (!fs.existsSync(path.join(exp.nodeModulesPath || projectRoot, 'node_modules'))) {
+  // Every React project should have react installed...
+  if (!resolveFrom.silent(projectRoot, 'react')) {
     log.addNewLineIfNone();
     log(log.chalk.cyan(`node_modules not found, running ${packageManager.name} install command.`));
     log.newLine();
     await packageManager.installAsync();
   }
 
-  const bundledNativeModulesPath = projectHasModule(
-    'expo/bundledNativeModules.json',
+  const bundledNativeModulesPath = resolveFrom.silent(
     projectRoot,
-    exp
+    'expo/bundledNativeModules.json'
   );
 
   if (!bundledNativeModulesPath) {

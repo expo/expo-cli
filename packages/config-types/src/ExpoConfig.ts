@@ -5,7 +5,7 @@
 
 export interface ExpoConfig {
   /**
-   * The name of your app as it appears both within Expo client and on your home screen as a standalone app.
+   * The name of your app as it appears both within Expo Go and on your home screen as a standalone app.
    */
   name: string;
   /**
@@ -17,7 +17,7 @@ export interface ExpoConfig {
    */
   slug: string;
   /**
-   * The Expo account name of the team owner, only applicable if you are enrolled in Expo Developer Services. If not provided, defaults to the username of the current user.
+   * The Expo account name of the team owner, only applicable if you are enrolled in the EAS Priority Plan. If not provided, defaults to the username of the current user.
    */
   owner?: string;
   /**
@@ -166,12 +166,9 @@ export interface ExpoConfig {
   extra?: {
     [k: string]: any;
   };
-  rnCliPath?: string;
   packagerOpts?: {
     [k: string]: any;
   };
-  ignoreNodeModulesValidation?: boolean;
-  nodeModulesPath?: string;
   /**
    * Configuration for how and when the app should request OTA JavaScript updates
    */
@@ -220,7 +217,7 @@ export interface ExpoConfig {
    */
   facebookDisplayName?: string;
   /**
-   * Used for Facebook native login. Starts with 'fb' and followed by a string of digits, like 'fb1234567890'. You can find your scheme [here](https://developers.facebook.com/docs/facebook-login/ios)in the 'Configuring Your info.plist' section (only applicable to standalone apps and custom Expo clients).
+   * Used for Facebook native login. Starts with 'fb' and followed by a string of digits, like 'fb1234567890'. You can find your scheme [here](https://developers.facebook.com/docs/facebook-login/ios)in the 'Configuring Your info.plist' section (only applicable to standalone apps and custom Expo Go apps).
    */
   facebookScheme?: string;
   /**
@@ -269,6 +266,10 @@ export interface ExpoConfig {
     };
     [k: string]: any;
   };
+  /**
+   * Plugins for adding extra functionality to your project
+   */
+  plugins?: (string | [] | [string] | [string, any])[];
 }
 /**
  * Configuration for loading and splash screen for standalone apps.
@@ -352,7 +353,7 @@ export interface IOS {
      */
     googleMobileAdsAppId?: string;
     /**
-     * A boolean indicating whether to initialize Google App Measurement and begin sending user-level event data to Google immediately when the app starts. The default in Expo (Client and in standalone apps) is `false`. [Sets the opposite of the given value to the following key in `Info.plist`.](https://developers.google.com/admob/ios/eu-consent#delay_app_measurement_optional)
+     * A boolean indicating whether to initialize Google App Measurement and begin sending user-level event data to Google immediately when the app starts. The default in Expo (Go and in standalone apps) is `false`. [Sets the opposite of the given value to the following key in `Info.plist`.](https://developers.google.com/admob/ios/eu-consent#delay_app_measurement_optional)
      */
     googleMobileAdsAutoInit?: boolean;
     /**
@@ -406,7 +407,7 @@ export interface IOS {
     [k: string]: any;
   };
   /**
-   * An array that contains Associated Domains for the standalone app. See [Apple's docs for config](https://developer.apple.com/documentation/uikit/core_app/allowing_apps_and_websites_to_link_to_your_content/enabling_universal_links).
+   * An array that contains Associated Domains for the standalone app. See [Apple's docs for config](https://developer.apple.com/documentation/safariservices/supporting_associated_domains).
    */
   associatedDomains?: string[];
   /**
@@ -426,7 +427,7 @@ export interface IOS {
    */
   splash?: {
     /**
-     * Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo client.
+     * Local path to a XIB file as the loading screen. It overrides other loading screen options. Note: This will only be used in the standalone app (i.e., after you build the app). It will not be used in the Expo Go.
      */
     xib?: string;
     /**

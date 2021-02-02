@@ -237,7 +237,9 @@ class IOSBuilder extends BaseBuilder {
 
   async produceCredentials(ctx: Context, appLookupParams: AppLookupParams) {
     if (ctx.hasAppleCtx()) {
-      await apple.ensureAppExists(ctx.appleCtx, appLookupParams, { enablePushNotifications: true });
+      await apple.ensureBundleIdExistsAsync(ctx.appleCtx, appLookupParams, {
+        enablePushNotifications: true,
+      });
     }
     await this._setupDistCert(ctx, appLookupParams);
     await this._setupPushCert(ctx, appLookupParams);

@@ -1,5 +1,3 @@
-import { projectHasModule } from '@expo/config';
-// @ts-ignore: ???
 import { createForProject } from '@expo/package-manager';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -154,10 +152,10 @@ function getDependencies(
   projectRoot: string
 ): { dependencies: string[]; devDependencies: string[] } {
   const dependencies = ['react-native-web', 'electron@^6.0.12'].filter(
-    dependency => !projectHasModule(dependency.split('@^').shift()!, projectRoot, {})
+    dependency => !resolveFrom.silent(projectRoot, dependency.split('@^').shift()!)
   );
   const devDependencies = ['@expo/electron-adapter', '@expo/webpack-config'].filter(
-    dependency => !projectHasModule(dependency, projectRoot, {})
+    dependency => !resolveFrom.silent(projectRoot, dependency)
   );
 
   return { dependencies, devDependencies };

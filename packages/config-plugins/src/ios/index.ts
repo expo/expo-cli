@@ -1,5 +1,6 @@
+import * as AdMob from './AdMob';
 import * as Branch from './Branch';
-import * as BundleIdenitifer from './BundleIdentifier';
+import * as BundleIdentifier from './BundleIdentifier';
 import * as CustomInfoPlistEntries from './CustomInfoPlistEntries';
 import * as DeviceFamily from './DeviceFamily';
 import * as Entitlements from './Entitlements';
@@ -16,6 +17,7 @@ import * as ProvisioningProfile from './ProvisioningProfile';
 import * as RequiresFullScreen from './RequiresFullScreen';
 import * as Scheme from './Scheme';
 import * as SplashScreen from './SplashScreen';
+import * as Target from './Target';
 import * as Updates from './Updates';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
@@ -26,8 +28,9 @@ import * as XcodeUtils from './utils/Xcodeproj';
 // https://devblogs.microsoft.com/typescript/announcing-typescript-3-8-beta/#export-star-as-namespace-syntax
 // .. but we should wait for this to be the default VSCode version.
 export {
+  AdMob,
   Branch,
-  BundleIdenitifer,
+  BundleIdentifier,
   CustomInfoPlistEntries,
   DeviceFamily,
   Entitlements,
@@ -45,6 +48,7 @@ export {
   Permissions,
   RequiresFullScreen,
   Scheme,
+  Target,
   Updates,
   UserInterfaceStyle,
   UsesNonExemptEncryption,

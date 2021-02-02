@@ -1,4 +1,15 @@
+import fs from 'fs';
+import { vol } from 'memfs';
+import path from 'path';
+
 import * as Updates from '../Updates';
+import { getPbxproj } from '../utils/Xcodeproj';
+
+const fsReal = jest.requireActual('fs') as typeof fs;
+jest.mock('fs');
+jest.mock('resolve-from');
+
+const { silent } = require('resolve-from');
 
 describe('iOS Updates config', () => {
   it(`returns correct default values from all getters if no value provided`, () => {
@@ -47,6 +58,62 @@ describe('iOS Updates config', () => {
       EXUpdatesCheckOnLaunch: 'NEVER',
       EXUpdatesLaunchWaitMs: 2000,
       EXUpdatesSDKVersion: '37.0.0',
+    });
+  });
+
+  describe(Updates.ensureBundleReactNativePhaseContainsConfigurationScript, () => {
+    beforeEach(() => {
+      vol.reset();
+      const resolveFrom = require('resolve-from');
+      resolveFrom.silent = silent;
+    });
+
+    it("adds create-manifest-ios.sh line to the 'Bundle React Native code and images' build phase ", () => {
+      vol.fromJSON(
+        {
+          'ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
+            path.join(__dirname, 'fixtures/project-without-create-manifest-ios.pbxproj'),
+            'utf-8'
+          ),
+          'node_modules/expo-updates/scripts/create-manifest-ios.sh': 'whatever',
+        },
+        '/app'
+      );
+
+      const xcodeProject = getPbxproj('/app');
+      Updates.ensureBundleReactNativePhaseContainsConfigurationScript('/app', xcodeProject);
+      const bundleReactNative = Updates.getBundleReactNativePhase(xcodeProject);
+      expect(bundleReactNative.shellScript).toMatchSnapshot();
+    });
+
+    it('fixes the path to create-manifest-ios.sh in case of a monorepo', () => {
+      // Pseudo node module resolution since actually mocking it could prove challenging.
+      // In a yarn workspace, resolve-from would be able to locate a module in any node_module folder if properly linked.
+      const resolveFrom = require('resolve-from');
+      resolveFrom.silent = (p, a) => {
+        return silent(path.join(p, '..'), a);
+      };
+
+      vol.fromJSON(
+        {
+          'workspace/ios/testproject.xcodeproj/project.pbxproj': fsReal.readFileSync(
+            path.join(
+              __dirname,
+              'fixtures/project-with-incorrect-create-manifest-ios-path.pbxproj'
+            ),
+            'utf-8'
+          ),
+          'node_modules/expo-updates/scripts/create-manifest-ios.sh': 'whatever',
+        },
+        '/app'
+      );
+      const xcodeProject = getPbxproj('/app/workspace');
+      Updates.ensureBundleReactNativePhaseContainsConfigurationScript(
+        '/app/workspace',
+        xcodeProject
+      );
+      const bundleReactNative = Updates.getBundleReactNativePhase(xcodeProject);
+      expect(bundleReactNative.shellScript).toMatchSnapshot();
     });
   });
 });

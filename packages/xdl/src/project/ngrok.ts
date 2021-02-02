@@ -1,12 +1,10 @@
 import { readExpRcAsync } from '@expo/config';
-import ngrok from '@expo/ngrok';
 import delayAsync from 'delay-async';
 import * as path from 'path';
 import { promisify } from 'util';
 
 import * as Android from '../Android';
 import Config from '../Config';
-import * as Exp from '../Exp';
 import * as ProjectSettings from '../ProjectSettings';
 import * as UrlUtils from '../UrlUtils';
 import UserManager, { ANONYMOUS_USERNAME } from '../User';
@@ -14,22 +12,39 @@ import UserSettings from '../UserSettings';
 import XDLError from '../XDLError';
 import * as Logger from './ProjectUtils';
 import { assertValidProjectRoot } from './errors';
-
-const ngrokConnectAsync = promisify(ngrok.connect);
-
-const ngrokKillAsync = promisify(ngrok.kill);
+import { NgrokOptions, resolveNgrokAsync } from './resolveNgrok';
 
 function getNgrokConfigPath() {
   return path.join(UserSettings.dotExpoHomeDirectory(), 'ngrok.yml');
 }
 
+async function getProjectRandomnessAsync(projectRoot: string) {
+  const ps = await ProjectSettings.readAsync(projectRoot);
+  const randomness = ps.urlRandomness;
+  if (randomness) {
+    return randomness;
+  } else {
+    return resetProjectRandomnessAsync(projectRoot);
+  }
+}
+
+async function resetProjectRandomnessAsync(projectRoot: string) {
+  const randomness = UrlUtils.someRandomness();
+  ProjectSettings.setAsync(projectRoot, { urlRandomness: randomness });
+  return randomness;
+}
+
 async function connectToNgrokAsync(
   projectRoot: string,
-  args: ngrok.NgrokOptions,
+  ngrok: any,
+  args: NgrokOptions,
   hostnameAsync: () => Promise<string>,
   ngrokPid: number | null | undefined,
   attempts: number = 0
 ): Promise<string> {
+  const ngrokConnectAsync = promisify(ngrok.connect);
+  const ngrokKillAsync = promisify(ngrok.kill);
+
   try {
     const configPath = getNgrokConfigPath();
     const hostname = await hostnameAsync();
@@ -65,17 +80,22 @@ async function connectToNgrokAsync(
         }
       } else {
         // Change randomness to avoid conflict if killing ngrok didn't help
-        await Exp.resetProjectRandomnessAsync(projectRoot);
+        await resetProjectRandomnessAsync(projectRoot);
       }
     } // Wait 100ms and then try again
     await delayAsync(100);
-    return connectToNgrokAsync(projectRoot, args, hostnameAsync, null, attempts + 1);
+    return connectToNgrokAsync(projectRoot, ngrok, args, hostnameAsync, null, attempts + 1);
   }
 }
 
 const TUNNEL_TIMEOUT = 10 * 1000;
 
-export async function startTunnelsAsync(projectRoot: string): Promise<void> {
+export async function startTunnelsAsync(
+  projectRoot: string,
+  options: { autoInstall?: boolean } = {}
+): Promise<void> {
+  const ngrok = await resolveNgrokAsync(projectRoot, options);
+
   const username = (await UserManager.getCurrentUsernameAsync()) || ANONYMOUS_USERNAME;
   assertValidProjectRoot(projectRoot);
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
@@ -114,6 +134,7 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
     (async () => {
       const expoServerNgrokUrl = await connectToNgrokAsync(
         projectRoot,
+        ngrok,
         {
           authtoken: Config.ngrok.authToken,
           port: expoServerPort,
@@ -122,7 +143,7 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
         async () => {
           const randomness = expRc.manifestTunnelRandomness
             ? expRc.manifestTunnelRandomness
-            : await Exp.getProjectRandomnessAsync(projectRoot);
+            : await getProjectRandomnessAsync(projectRoot);
           return [
             randomness,
             UrlUtils.domainify(username),
@@ -134,6 +155,7 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
       );
       const packagerNgrokUrl = await connectToNgrokAsync(
         projectRoot,
+        ngrok,
         {
           authtoken: Config.ngrok.authToken,
           port: packagerInfo.packagerPort,
@@ -142,7 +164,7 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
         async () => {
           const randomness = expRc.manifestTunnelRandomness
             ? expRc.manifestTunnelRandomness
-            : await Exp.getProjectRandomnessAsync(projectRoot);
+            : await getProjectRandomnessAsync(projectRoot);
           return [
             'packager',
             randomness,
@@ -191,6 +213,12 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
 
 export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
   assertValidProjectRoot(projectRoot);
+  const ngrok = await resolveNgrokAsync(projectRoot, { shouldPrompt: false }).catch(() => null);
+  if (!ngrok) {
+    return;
+  }
+  const ngrokKillAsync = promisify(ngrok.kill);
+
   // This will kill all ngrok tunnels in the process.
   // We'll need to change this if we ever support more than one project
   // open at a time in XDE.
