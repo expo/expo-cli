@@ -2,7 +2,6 @@ import { getConfig } from '@expo/config';
 import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
-import delayAsync from 'delay-async';
 import fs from 'fs-extra';
 import path from 'path';
 import ProgressBar from 'progress';
@@ -20,6 +19,7 @@ import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
 import * as Xcode from './Xcode';
+import { delayAsync } from './utils/delayAsync';
 
 let _lastUrl: string | null = null;
 let _lastUdid: string | null = null;
