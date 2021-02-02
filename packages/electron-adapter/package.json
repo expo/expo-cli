@@ -42,9 +42,6 @@
     "bin",
     "template"
   ],
-  "devDependencies": {
-    "@expo/webpack-config": "0.12.57"
-  },
   "publishConfig": {
     "access": "public"
   },
