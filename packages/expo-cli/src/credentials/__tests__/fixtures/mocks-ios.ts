@@ -8,8 +8,8 @@ import {
   PushKey,
   PushKeyInfo,
   Team,
-} from '../../appleApi';
-import { IosDistCredentials, IosPushCredentials } from '../credentials';
+} from '../../../appleApi';
+import { IosDistCredentials, IosPushCredentials } from '../../credentials';
 import { testProvisioningProfileBase64 } from './mock-base64-data';
 import { testBundleIdentifier, testExperienceName } from './mocks-constants';
 

@@ -1,5 +1,5 @@
 import IosApi from '../api/IosApi';
-import { jester, jester2, testAppLookupParams } from '../test-fixtures/mocks-constants';
+import { jester, jester2, testAppLookupParams } from './fixtures/mocks-constants';
 import {
   getApiV2WrapperMock,
   testAllCredentials,
@@ -11,7 +11,7 @@ import {
   testLegacyPushCert,
   testProvisioningProfile,
   testPushKey,
-} from '../test-fixtures/mocks-ios';
+} from './fixtures/mocks-ios';
 
 describe('IosApi - Basic Tests', () => {
   let iosApi;
