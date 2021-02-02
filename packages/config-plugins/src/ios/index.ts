@@ -1,57 +1,25 @@
-import * as AdMob from './AdMob';
-import * as Branch from './Branch';
-import * as BundleIdentifier from './BundleIdentifier';
-import * as CustomInfoPlistEntries from './CustomInfoPlistEntries';
-import * as DeviceFamily from './DeviceFamily';
-import * as Entitlements from './Entitlements';
-import * as Facebook from './Facebook';
-import * as Google from './Google';
-import * as Icons from './Icons';
-import { ExpoPlist, InfoPlist } from './IosConfig.types';
-import * as Locales from './Locales';
-import * as Name from './Name';
-import * as Orientation from './Orientation';
-import * as Paths from './Paths';
-import * as Permissions from './Permissions';
-import * as ProvisioningProfile from './ProvisioningProfile';
-import * as RequiresFullScreen from './RequiresFullScreen';
-import * as Scheme from './Scheme';
-import * as SplashScreen from './SplashScreen';
-import * as Target from './Target';
-import * as Updates from './Updates';
-import * as UserInterfaceStyle from './UserInterfaceStyle';
-import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
-import * as Version from './Version';
-import * as XcodeUtils from './utils/Xcodeproj';
-
-// We can change this to export * as X with TypeScript 3.8+
-// https://devblogs.microsoft.com/typescript/announcing-typescript-3-8-beta/#export-star-as-namespace-syntax
-// .. but we should wait for this to be the default VSCode version.
-export {
-  AdMob,
-  Branch,
-  BundleIdentifier,
-  CustomInfoPlistEntries,
-  DeviceFamily,
-  Entitlements,
-  Facebook,
-  Google,
-  Icons,
-  Locales,
-  SplashScreen,
-  InfoPlist,
-  ExpoPlist,
-  Name,
-  Orientation,
-  Paths,
-  ProvisioningProfile,
-  Permissions,
-  RequiresFullScreen,
-  Scheme,
-  Target,
-  Updates,
-  UserInterfaceStyle,
-  UsesNonExemptEncryption,
-  Version,
-  XcodeUtils,
-};
+export * as AdMob from './AdMob';
+export * as Branch from './Branch';
+export * as BundleIdentifier from './BundleIdentifier';
+export * as CustomInfoPlistEntries from './CustomInfoPlistEntries';
+export * as DeviceFamily from './DeviceFamily';
+export * as Entitlements from './Entitlements';
+export * as Facebook from './Facebook';
+export * as Google from './Google';
+export * as Icons from './Icons';
+export { ExpoPlist, InfoPlist } from './IosConfig.types';
+export * as Locales from './Locales';
+export * as Name from './Name';
+export * as Orientation from './Orientation';
+export * as Paths from './Paths';
+export * as Permissions from './Permissions';
+export * as ProvisioningProfile from './ProvisioningProfile';
+export * as RequiresFullScreen from './RequiresFullScreen';
+export * as Scheme from './Scheme';
+export * as SplashScreen from './SplashScreen';
+export * as Target from './Target';
+export * as Updates from './Updates';
+export * as UserInterfaceStyle from './UserInterfaceStyle';
+export * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
+export * as Version from './Version';
+export * as XcodeUtils from './utils/Xcodeproj';
