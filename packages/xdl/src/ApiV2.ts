@@ -2,7 +2,6 @@ import { JSONObject, JSONValue } from '@expo/json-file';
 import axios, { AxiosRequestConfig } from 'axios';
 import concat from 'concat-stream';
 import FormData from 'form-data';
-import idx from 'idx';
 import merge from 'lodash/merge';
 import QueryString from 'querystring';
 
@@ -234,8 +233,7 @@ export default class ApiV2Client {
       response = await axios.request(reqOptions);
       result = response.data;
     } catch (e) {
-      const maybeErrorData = idx(e, _ => _.response.data.errors.length);
-      if (maybeErrorData) {
+      if (e?.response?.data?.errors?.length) {
         result = e.response.data;
       } else {
         throw e;

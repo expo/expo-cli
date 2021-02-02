@@ -6,13 +6,46 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
-- [config-plugins] Rename `IOSConfig.BundleIdenitifer` to `IOSConfig.BundleIdentifier`.
+- [json-file] Remove undocumented support for multi-part keys in `getAsync` and `setAsync` ([#3019](https://github.com/expo/expo-cli/pulls/3019))
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+## [Mon, 1 Feb 2021 21:22:35 -0800](https://github.com/expo/expo-cli/commit/d7b35c0c8bca99d3a5ea6ea1599d1a3c254f3d40)
+
+### 🛠 Breaking changes
+
+- [cli] Drop `nodeModulesPath` support (only known use was in former Expo monorepo) ([#3141](https://github.com/expo/expo-cli/issues/3141))
 
 ### 🎉 New features
 
 - [xdl] Automatically fall back to offline mode when manifest can't be signed. ([#3148](https://github.com/expo/expo-cli/pull/3148))
 
 ### 🐛 Bug fixes
+
+- [cli] fix init visual regresion ([#3173](https://github.com/expo/expo-cli/issues/3173))
+- [config-plugins] Rename `IOSConfig.BundleIdenitifer` to `IOSConfig.BundleIdentifier` ([#3161](https://github.com/expo/expo-cli/issues/3161))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.18
+- @expo/config@3.3.28
+- @expo/dev-server@0.1.54
+- @expo/dev-tools@0.13.82
+- @expo/electron-adapter@0.0.45
+- expo-cli@4.1.6
+- expo-optimize@0.1.76
+- @expo/json-file@8.2.27
+- @expo/metro-config@0.1.54
+- @expo/next-adapter@2.1.59
+- @expo/package-manager@0.0.38
+- pod-install@0.1.18
+- expo-pwa@0.0.64
+- @expo/schemer@1.3.26
+- uri-scheme@1.0.65
+- @expo/webpack-config@0.12.58
+- @expo/xdl@59.0.22
 
 ## [Tue, 01 Feb 2021 08:55:22 -0800](https://github.com/expo/expo-cli/commit/51c6adb941b74df413834ab3ae3f2578e336d60d)
 
