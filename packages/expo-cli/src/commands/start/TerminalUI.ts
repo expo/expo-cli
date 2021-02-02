@@ -122,7 +122,9 @@ export const printServerInfo = async (
 export const startAsync = async (projectRoot: string, options: StartOptions) => {
   const { stdin } = process;
   const startWaitingForCommand = () => {
-    stdin.setRawMode(true);
+    if (stdin.setRawMode) {
+      stdin.setRawMode(true);
+    }
     stdin.resume();
     stdin.setEncoding('utf8');
     stdin.on('data', handleKeypress);
@@ -130,7 +132,9 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
 
   const stopWaitingForCommand = () => {
     stdin.removeListener('data', handleKeypress);
-    stdin.setRawMode(false);
+    if (stdin.setRawMode) {
+      stdin.setRawMode(false);
+    }
     stdin.resume();
   };
 
