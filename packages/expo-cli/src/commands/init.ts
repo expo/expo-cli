@@ -6,13 +6,11 @@ import { UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import fs from 'fs-extra';
-import padEnd from 'lodash/padEnd';
-import trimStart from 'lodash/trimStart';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
 import path from 'path';
+import stripAnsi from 'strip-ansi';
 import terminalLink from 'terminal-link';
-import wrapAnsi from 'wrap-ansi';
 
 import CommandError, { SilentError } from '../CommandError';
 import log from '../log';
@@ -155,6 +153,12 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
   return projectRoot;
 }
 
+function padEnd(str: string, width: number): string {
+  // Pulled from commander for overriding
+  const len = Math.max(0, width - stripAnsi(str).length);
+  return str + Array(len + 1).join(' ');
+}
+
 async function action(projectDir: string, command: Command) {
   const options = parseOptions(command);
 
@@ -232,12 +236,7 @@ async function action(projectDir: string, command: Command) {
               value: template.name,
               title:
                 chalk.bold(padEnd(template.shortName, descriptionColumn)) +
-                trimStart(
-                  wrapAnsi(
-                    template.description,
-                    Math.min(descriptionColumn + 2, process.stdout.columns || 80)
-                  )
-                ),
+                template.description.trim(),
               short: template.name,
             };
           }
