@@ -33,6 +33,7 @@
   "dependencies": {
     "@expo/bunyan": "4.0.0",
     "@expo/config": "3.3.28",
+    "@expo/devcert": "^1.0.0",
     "@expo/dev-server": "0.1.54",
     "@expo/json-file": "8.2.27",
     "@expo/osascript": "2.0.24",
@@ -49,7 +50,6 @@
     "chalk": "^4.0.0",
     "concat-stream": "1.6.2",
     "decache": "4.4.0",
-    "devcert": "^1.1.0",
     "express": "4.16.4",
     "form-data": "^2.3.2",
     "freeport-async": "2.0.0",
@@ -58,7 +58,6 @@
     "glob": "7.1.6",
     "hasbin": "1.2.3",
     "hashids": "1.1.4",
-    "idx": "2.4.0",
     "indent-string": "3.2.0",
     "internal-ip": "4.3.0",
     "is-reachable": "^4.0.0",

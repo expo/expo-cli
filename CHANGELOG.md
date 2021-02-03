@@ -6,6 +6,8 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [json-file] Remove undocumented support for multi-part keys in `getAsync` and `setAsync` ([#3019](https://github.com/expo/expo-cli/pulls/3019))
+
 ### 🎉 New features
 
 - [configure-splash-screen] Drop `@react-native-community/cli-tools` in favor of iOS file resolution from `config-plugins` ([#3178](https://github.com/expo/expo-cli/issues/3178))

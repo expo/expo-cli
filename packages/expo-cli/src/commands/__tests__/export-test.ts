@@ -2,7 +2,7 @@ import program from 'commander';
 import { vol } from 'memfs';
 
 import { mockExpoXDL } from '../../__tests__/mock-utils';
-import { jester } from '../../credentials/test-fixtures/mocks-constants';
+import { jester } from '../../credentials/__tests__/fixtures/mocks-constants';
 import log from '../../log';
 import { collectMergeSourceUrlsAsync, ensurePublicUrlAsync, promptPublicUrlAsync } from '../export';
 

@@ -1,6 +1,6 @@
-import { jester, testAppLookupParams } from '../../test-fixtures/mocks-constants';
-import { getCtxMock } from '../../test-fixtures/mocks-context';
-import { testIosPushCredential, testPushKeysFromApple } from '../../test-fixtures/mocks-ios';
+import { jester, testAppLookupParams } from '../../__tests__/fixtures/mocks-constants';
+import { getCtxMock } from '../../__tests__/fixtures/mocks-context';
+import { testIosPushCredential, testPushKeysFromApple } from '../../__tests__/fixtures/mocks-ios';
 import { CreateIosPush, CreateOrReusePushKey } from '../IosPushCredentials';
 
 // these variables need to be prefixed with 'mock' if declared outside of the mock scope

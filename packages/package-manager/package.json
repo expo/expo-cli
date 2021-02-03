@@ -46,6 +46,7 @@
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.18",
     "@types/npm-package-arg": "^6.1.0",
+    "@types/rimraf": "^3.0.0",
     "@types/split": "^1.0.0"
   },
   "publishConfig": {
