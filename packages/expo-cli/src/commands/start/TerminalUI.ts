@@ -28,6 +28,7 @@ const BLT = `\u203A`;
 const { bold: b, italic: i, underline: u } = chalk;
 
 type StartOptions = {
+  devClient?: boolean;
   reset?: boolean;
   nonInteractive?: boolean;
   nonPersistent?: boolean;
@@ -208,6 +209,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           await Simulator.openProjectAsync({
             projectRoot,
             shouldPrompt: true,
+            devClient: options.devClient ?? false,
           });
           printHelp();
           break;
@@ -227,6 +229,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           await Simulator.openProjectAsync({
             projectRoot,
             shouldPrompt: false,
+            devClient: options.devClient ?? false,
           });
           printHelp();
           break;

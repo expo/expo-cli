@@ -592,29 +592,24 @@ function isDynamicFilePath(filePath: string): boolean {
 }
 
 /**
- * Returns a string describing the configurations used for the given project root.
- * Will return null if no config is found.
- *
- * @param projectRoot
- * @param projectConfig
+ * Return a useful name describing the project config.
+ * - dynamic: app.config.js
+ * - static: app.json
+ * - custom path app config relative to root folder
+ * - both: app.config.js or app.json
  */
-export function getProjectConfigDescription(
-  projectRoot: string,
-  projectConfig: Partial<ProjectConfig>
-): string | null {
-  if (projectConfig.dynamicConfigPath) {
-    const relativeDynamicConfigPath = path.relative(projectRoot, projectConfig.dynamicConfigPath);
-    if (projectConfig.staticConfigPath) {
-      return `Using dynamic config \`${relativeDynamicConfigPath}\` and static config \`${path.relative(
-        projectRoot,
-        projectConfig.staticConfigPath
-      )}\``;
+export function getProjectConfigDescription(projectDir: string): string {
+  const paths = getConfigFilePaths(projectDir);
+  if (paths.dynamicConfigPath) {
+    const relativeDynamicConfigPath = path.relative(projectDir, paths.dynamicConfigPath);
+    if (paths.staticConfigPath) {
+      return `${relativeDynamicConfigPath} or ${path.relative(projectDir, paths.staticConfigPath)}`;
     }
-    return `Using dynamic config \`${relativeDynamicConfigPath}\``;
-  } else if (projectConfig.staticConfigPath) {
-    return `Using static config \`${path.relative(projectRoot, projectConfig.staticConfigPath)}\``;
+    return relativeDynamicConfigPath;
+  } else if (paths.staticConfigPath) {
+    return path.relative(projectDir, paths.staticConfigPath);
   }
-  return null;
+  return 'app.config.js/app.json';
 }
 
 export * from './Config.types';
