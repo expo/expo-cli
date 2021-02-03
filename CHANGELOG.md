@@ -6,8 +6,9 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
-
 ### 🎉 New features
+
+- [configure-splash-screen] Drop `@react-native-community/cli-tools` in favor of iOS file resolution from `config-plugins` ([#3178](https://github.com/expo/expo-cli/issues/3178))
 
 ### 🐛 Bug fixes
 
