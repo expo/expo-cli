@@ -43,7 +43,6 @@
     "serialize-error": "6.0.0"
   },
   "devDependencies": {
-    "@expo/xdl": "59.0.22",
     "@types/connect": "^3.4.33",
     "connect": "^3.7.0",
     "node-fetch": "^2.6.0"
