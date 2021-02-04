@@ -187,6 +187,7 @@ Object {
         "armv7",
       ],
       "UIRequiresFullScreen": true,
+      "UIStatusBarStyle": "UIStatusBarStyleAuto",
       "UISupportedInterfaceOrientations": Array [
         "UIInterfaceOrientationPortrait",
         "UIInterfaceOrientationPortraitUpsideDown",
