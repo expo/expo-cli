@@ -563,9 +563,9 @@ Command.prototype.asyncActionProjectDir = function (
       }
       if (chunk.level <= bunyan.INFO) {
         if (chunk.includesStack) {
-          logStackTrace(chunk, Log, Log.nested);
+          logStackTrace(chunk, Log.log, Log.nested);
         } else {
-          logLines(chunk.msg, Log);
+          logLines(chunk.msg, Log.log);
         }
       } else if (chunk.level === bunyan.WARN) {
         if (chunk.includesStack) {

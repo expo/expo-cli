@@ -35,7 +35,7 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   const packageManager = PackageManager.createForProject(projectRoot, {
     npm: options.npm,
     yarn: options.yarn,
-    log: Log,
+    log: Log.log,
   });
 
   const { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true });

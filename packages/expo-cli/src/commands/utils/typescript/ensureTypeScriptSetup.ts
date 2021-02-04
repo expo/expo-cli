@@ -169,7 +169,7 @@ async function installPackagesAsync(
 ) {
   const packageManager = PackageManager.createForProject(projectRoot, {
     yarn: isYarn,
-    log: Log,
+    log: Log.log,
     silent: !Log.isDebug,
   });
 

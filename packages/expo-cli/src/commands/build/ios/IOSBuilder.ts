@@ -94,7 +94,7 @@ class IOSBuilder extends BaseBuilder {
     if (confirm) {
       return await ctx.ensureAppleCtx();
     } else {
-      Log(
+      Log.log(
         chalk.green(
           'No problem! 👌 \nWe can’t auto-generate credentials if you don’t have access to the main Apple account. \nBut we can still set it up if you upload your credentials.'
         )
@@ -145,7 +145,7 @@ class IOSBuilder extends BaseBuilder {
     });
 
     if (this.options.skipCredentialsCheck) {
-      Log('Skipping credentials check...');
+      Log.log('Skipping credentials check...');
       return;
     }
     await this.bestEffortAppleCtx(context);
@@ -160,12 +160,12 @@ class IOSBuilder extends BaseBuilder {
           'expo.fyi/credentials-non-interactive',
           'https://expo.fyi/credentials-non-interactive'
         );
-        Log(
+        Log.log(
           chalk.bold.red(
             `Additional information needed to setup credentials in non-interactive mode.`
           )
         );
-        Log(chalk.bold.red(`Learn more about how to resolve this: ${link}.`));
+        Log.log(chalk.bold.red(`Learn more about how to resolve this: ${link}.`));
         Log.newLine();
 
         // We don't want to display project credentials when we bail out due to
@@ -177,7 +177,7 @@ class IOSBuilder extends BaseBuilder {
         );
       }
 
-      Log(
+      Log.log(
         chalk.bold.red(
           'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
         )
@@ -355,7 +355,7 @@ class IOSBuilder extends BaseBuilder {
     }
 
     Log.newLine();
-    Log(
+    Log.log(
       `You can now publish to the App Store with ${TerminalLink.transporterAppLink()} or ${chalk.bold(
         'expo upload:ios'
       )}. ${TerminalLink.learnMore('https://docs.expo.io/distribution/uploading-apps/')}`
@@ -371,14 +371,14 @@ class IOSBuilder extends BaseBuilder {
 
     if (isMacOsCatalinaOrLater && this.options.type === 'simulator') {
       Log.newLine();
-      Log(
+      Log.log(
         chalk.bold(
           `🚨 If the build is not installable on your simulator because of "${chalk.underline(
             `... is damaged and can't be opened.`
           )}", please run:`
         )
       );
-      Log(chalk.grey.bold('xattr -rd com.apple.quarantine /path/to/your.app'));
+      Log.log(chalk.grey.bold('xattr -rd com.apple.quarantine /path/to/your.app'));
     }
   }
 }

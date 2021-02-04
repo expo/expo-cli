@@ -169,7 +169,7 @@ export async function installCocoaPodsAsync(projectRoot: string) {
 
   const packageManager = new PackageManager.CocoaPodsPackageManager({
     cwd: path.join(projectRoot, 'ios'),
-    log: Log,
+    log: Log.log,
     silent: !EXPO_DEBUG,
   });
 

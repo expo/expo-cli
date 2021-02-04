@@ -63,7 +63,7 @@ async function generateFilesAsync({
       );
 
       if (file in dependencyMap) {
-        const packageManager = PackageManager.createForProject(projectDir, { log: Log });
+        const packageManager = PackageManager.createForProject(projectDir, { log: Log.log });
         for (const dependency of dependencyMap[file]) {
           promises.push(packageManager.addDevAsync(dependency));
         }

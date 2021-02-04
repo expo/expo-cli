@@ -525,7 +525,7 @@ export async function upgradeAsync(
   const packageManager = PackageManager.createForProject(projectRoot, {
     npm: options.npm,
     yarn: options.yarn,
-    log: Log,
+    log: Log.log,
     silent: !getenv.boolish('EXPO_DEBUG', false),
   });
 
