@@ -340,13 +340,11 @@ async function shouldUpgradeSimulatorAsync(): Promise<boolean> {
     return false;
   }
 
-  let answer = false;
-  try {
-    answer = await confirmAsync({
-      message: 'Would you like to upgrade the Expo app in the iOS simulator?',
-      initial: false,
-    });
-  } catch {}
+  const answer = await confirmAsync({
+    message: 'Would you like to upgrade the Expo app in the iOS simulator?',
+    initial: false,
+  });
+
   log.newLine();
   return answer;
 }
@@ -378,13 +376,10 @@ async function shouldUpgradeEmulatorAsync(): Promise<boolean> {
     return false;
   }
 
-  let answer = false;
-  try {
-    answer = await confirmAsync({
-      message: 'Would you like to upgrade the Expo app in the Android emulator?',
-      initial: false,
-    });
-  } catch {}
+  const answer = await confirmAsync({
+    message: 'Would you like to upgrade the Expo app in the Android emulator?',
+    initial: false,
+  });
 
   log.newLine();
   return answer;
