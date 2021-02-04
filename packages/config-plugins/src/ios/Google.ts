@@ -85,6 +85,9 @@ export function setGoogleServicesFile(
   );
 
   const projectName = getProjectName(projectRoot);
-  project = addResourceFileToGroup(`${projectName}/GoogleService-Info.plist`, projectName, project);
+  const plistFilePath = `${projectName}/GoogleService-Info.plist`;
+  if (!project.hasFile(plistFilePath)) {
+    project = addResourceFileToGroup(plistFilePath, projectName, project);
+  }
   return project;
 }

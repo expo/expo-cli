@@ -8,6 +8,7 @@ import semver from 'semver';
 
 import Logger from '../Logger';
 import { confirmAsync } from '../Prompts';
+import { delayAsync } from '../utils/delayAsync';
 
 const NGROK_REQUIRED_VERSION = '^2.4.3';
 const EXPO_DEBUG = getenv.boolish('EXPO_DEBUG', false);
@@ -49,7 +50,7 @@ export async function resolveNgrokAsync(
     if (shouldPrompt) {
       if (!autoInstall) {
         // Delay the prompt so it doesn't conflict with other dev tool logs
-        await new Promise(r => setTimeout(r, 100));
+        await delayAsync(100);
       }
       const answer =
         autoInstall ||

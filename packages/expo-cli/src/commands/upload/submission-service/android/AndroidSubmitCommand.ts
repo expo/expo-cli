@@ -1,8 +1,8 @@
 import { Result, result } from '@expo/results';
 import { UserManager } from '@expo/xdl';
-import validator from 'validator';
 
 import log from '../../../../log';
+import { isUUID } from '../../../utils/isUUID';
 import {
   ArchiveFileSource,
   ArchiveFileSourceType,
@@ -154,7 +154,7 @@ class AndroidSubmitCommand {
         projectDir: this.ctx.projectDir,
       };
     } else if (id) {
-      if (!validator.isUUID(id)) {
+      if (!isUUID(id)) {
         throw new Error(`${id} is not a id`);
       }
       return {

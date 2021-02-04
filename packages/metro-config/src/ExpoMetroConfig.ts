@@ -1,16 +1,11 @@
-import {
-  getConfig,
-  getDefaultTarget,
-  projectHasModule,
-  ProjectTarget,
-  resolveModule,
-} from '@expo/config';
+import { getDefaultTarget, ProjectTarget } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import { Reporter } from 'metro';
-// Import only the types here, the values will be imported from the project, at runtime.
 import type MetroConfig from 'metro-config';
 import path from 'path';
+import resolveFrom from 'resolve-from';
 
+// Import only the types here, the values will be imported from the project, at runtime.
 const INTERNAL_CALLSITES_REGEX = new RegExp(
   [
     '/Libraries/Renderer/implementations/.+\\.js$',
@@ -32,16 +27,13 @@ export function getDefaultConfig(
   projectRoot: string,
   options: DefaultConfigOptions = {}
 ): MetroConfig.InputConfigT {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   const MetroConfig = importMetroConfigFromProject(projectRoot);
 
-  const reactNativePath = path.dirname(
-    resolveModule('react-native/package.json', projectRoot, exp)
-  );
+  const reactNativePath = path.dirname(resolveFrom(projectRoot, 'react-native/package.json'));
 
   let hashAssetFilesPath;
   try {
-    hashAssetFilesPath = resolveModule('expo-asset/tools/hashAssetFiles', projectRoot, exp);
+    hashAssetFilesPath = resolveFrom(projectRoot, 'expo-asset/tools/hashAssetFiles');
   } catch {
     // TODO: we should warn/throw an error if the user has expo-updates installed but does not
     // have hashAssetFiles available, or if the user is in managed workflow and does not have
@@ -85,6 +77,9 @@ export function getDefaultConfig(
       ],
       getPolyfills: () => require(path.join(reactNativePath, 'rn-get-polyfills'))(),
     },
+    server: {
+      port: Number(process.env.RCT_METRO_PORT) || 8081,
+    },
     symbolicator: {
       customizeFrame: (frame: { file: string | null }) => {
         const collapse = Boolean(frame.file && INTERNAL_CALLSITES_REGEX.test(frame.file));
@@ -126,9 +121,7 @@ export async function loadAsync(
 }
 
 function importMetroConfigFromProject(projectRoot: string): typeof MetroConfig {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-
-  const resolvedPath = projectHasModule('metro-config', projectRoot, exp);
+  const resolvedPath = resolveFrom.silent(projectRoot, 'metro-config');
   if (!resolvedPath) {
     throw new Error(
       'Missing package "metro-config" in the project. ' +

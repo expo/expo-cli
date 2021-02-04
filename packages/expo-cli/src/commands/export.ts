@@ -4,7 +4,6 @@ import program, { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
-import validator from 'validator';
 
 import CommandError, { SilentError } from '../CommandError';
 import log from '../log';
@@ -54,7 +53,7 @@ export async function ensurePublicUrlAsync(url: any, isDev?: boolean): Promise<s
   // If we are not in dev mode, ensure that url is https
   if (!isDev && !UrlUtils.isHttps(url)) {
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-  } else if (!validator.isURL(url, { protocols: ['http', 'https'] })) {
+  } else if (!UrlUtils.isURL(url, { protocols: ['http', 'https'] })) {
     log.nestedWarn(
       `Dev Mode: --public-url ${url} does not conform to the required HTTP(S) protocol.`
     );

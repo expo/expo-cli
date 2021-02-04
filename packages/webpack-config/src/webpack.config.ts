@@ -1,6 +1,5 @@
 /** @internal */ /** */
 /* eslint-env node */
-import { projectHasModule } from '@expo/config';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import chalk from 'chalk';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
@@ -20,6 +19,7 @@ import path from 'path';
 import PnpWebpackPlugin from 'pnp-webpack-plugin';
 import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
+import resolveFrom from 'resolve-from';
 import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 import ManifestPlugin from 'webpack-manifest-plugin';
@@ -192,11 +192,7 @@ export default async function (
   const webpackDevClientEntry = require.resolve('react-dev-utils/webpackHotDevClient');
 
   if (isNative) {
-    const reactNativeModulePath = projectHasModule(
-      'react-native',
-      env.projectRoot,
-      env.config ?? {}
-    );
+    const reactNativeModulePath = resolveFrom.silent(env.projectRoot, 'react-native');
     if (reactNativeModulePath) {
       for (const polyfill of [
         'Core/InitializeCore.js',
@@ -204,10 +200,9 @@ export default async function (
         'polyfills/error-guard.js',
         'polyfills/console.js',
       ]) {
-        const resolvedPolyfill = projectHasModule(
-          `react-native/Libraries/${polyfill}`,
+        const resolvedPolyfill = resolveFrom.silent(
           env.projectRoot,
-          env.config ?? {}
+          `react-native/Libraries/${polyfill}`
         );
         if (resolvedPolyfill) appEntry.unshift(resolvedPolyfill);
       }
@@ -215,10 +210,9 @@ export default async function (
   } else {
     // Add a loose requirement on the ResizeObserver polyfill if it's installed...
     // Avoid `withEntry` as we don't need so much complexity with this config.
-    const resizeObserverPolyfill = projectHasModule(
-      'resize-observer-polyfill/dist/ResizeObserver.global',
+    const resizeObserverPolyfill = resolveFrom.silent(
       env.projectRoot,
-      config
+      'resize-observer-polyfill/dist/ResizeObserver.global'
     );
     if (resizeObserverPolyfill) {
       appEntry.unshift(resizeObserverPolyfill);

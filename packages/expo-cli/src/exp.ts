@@ -13,7 +13,7 @@ import {
   LogUpdater,
   NotificationCode,
   PackagerLogsStream,
-  Project,
+  ProjectSettings,
   ProjectUtils,
   UserManager,
 } from '@expo/xdl';
@@ -357,7 +357,7 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
         log.error(chalk.red(err.message));
       } else if (err.isXDLError) {
         log.error(err.message);
-      } else if (err.isJsonFileError || err.isConfigError) {
+      } else if (err.isJsonFileError || err.isConfigError || err.isPackageManagerError) {
         if (err.code === 'EJSONEMPTY') {
           // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
           log.error(err.message);
@@ -653,7 +653,10 @@ Command.prototype.asyncActionProjectDir = function (
     // If the packager/manifest server is running and healthy, there is no need
     // to rerun Doctor because the directory was already checked previously
     // This is relevant for command such as `send`
-    if (options.checkConfig && (await Project.currentStatus(projectDir)) !== 'running') {
+    if (
+      options.checkConfig &&
+      (await ProjectSettings.getCurrentStatusAsync(projectDir)) !== 'running'
+    ) {
       const spinner = ora('Making sure project is set up correctly...').start();
       log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else

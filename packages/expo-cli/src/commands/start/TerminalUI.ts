@@ -13,12 +13,12 @@ import {
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import readline from 'readline';
-import wordwrap from 'wordwrap';
+import wrapAnsi from 'wrap-ansi';
 
 import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import log from '../../log';
 import urlOpts from '../../urlOpts';
-import { startProjectInEditorAsync } from '../utils/EditorUtils';
+import { openInEditorAsync } from '../utils/openInEditorAsync';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
@@ -102,12 +102,11 @@ export const printServerInfo = async (
   log.nested(` ${u(url)}`);
   log.newLine();
   urlOpts.printQRCode(url);
-  const wrap = wordwrap(1, process.stdout.columns || 80);
-  const wrapItem = wordwrap(4, process.stdout.columns || 80);
-  const item = (text: string): string => ` ${BLT} ` + wrapItem(text).trimStart();
+  const wrapLength = process.stdout.columns || 80;
+  const item = (text: string): string => ` ${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
   const iosInfo = process.platform === 'darwin' ? `, or ${b('i')} for iOS simulator` : '';
   const webInfo = `${b`w`} to run on ${u`w`}eb`;
-  log.nested(wrap(u('To run the app, choose one of:')));
+  log.nested(wrapAnsi(u('To run the app, choose one of:'), wrapLength));
 
   // TODO: if dev client, chanege this message!
   log.nested(item(`Scan the QR code above with the Expo app (Android) or the Camera app (iOS).`));
@@ -367,7 +366,7 @@ Please reload the project in the Expo app for the change to take effect.`
       }
       case 'o':
         log('Trying to open the project in your editor...');
-        await startProjectInEditorAsync(projectRoot);
+        await openInEditorAsync(projectRoot);
     }
   }
 };

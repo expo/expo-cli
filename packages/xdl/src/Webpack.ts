@@ -1,7 +1,7 @@
 import { getConfig, getNameFromConfig } from '@expo/config';
+import * as devcert from '@expo/devcert';
 import { isUsingYarn } from '@expo/package-manager';
 import chalk from 'chalk';
-import * as devcert from 'devcert';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';

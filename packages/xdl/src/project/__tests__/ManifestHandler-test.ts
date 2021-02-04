@@ -86,6 +86,7 @@ describe('getSignedManifestStringAsync', () => {
           "Expo-Session": "SECRET",
           "Exponent-Client": "xdl",
         },
+        "maxBodyLength": 104857600,
         "maxContentLength": 104857600,
         "method": "post",
         "url": "https://exp.host/--/api/v2/manifest/sign",

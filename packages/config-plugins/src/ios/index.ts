@@ -1,6 +1,6 @@
 import * as AdMob from './AdMob';
 import * as Branch from './Branch';
-import * as BundleIdenitifer from './BundleIdentifier';
+import * as BundleIdentifier from './BundleIdentifier';
 import * as CustomInfoPlistEntries from './CustomInfoPlistEntries';
 import * as DeviceFamily from './DeviceFamily';
 import * as Entitlements from './Entitlements';
@@ -31,7 +31,7 @@ import * as XcodeUtils from './utils/Xcodeproj';
 export {
   AdMob,
   Branch,
-  BundleIdenitifer,
+  BundleIdentifier,
   CustomInfoPlistEntries,
   DeviceFamily,
   Entitlements,

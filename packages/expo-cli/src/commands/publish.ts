@@ -283,7 +283,7 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
  * it will run in Expo client in development even. We should revisit this with
  * dev client, and possibly also by excluding SDK version for bare
  * expo-updates usage in the future (and then surfacing this as an error in
- * the Expo client app instead)
+ * the Expo Go app instead)
  *
  * Related: https://github.com/expo/expo/issues/9517
  *

@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Note that instances of this class do NOT pass `instanceof JsonFileError`.
  */

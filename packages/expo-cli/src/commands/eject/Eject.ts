@@ -2,7 +2,6 @@ import { ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
 import { ModPlatform, WarningAggregator } from '@expo/config-plugins';
 import { getBareExtensions, getFileWithExtensions } from '@expo/config/paths';
 import JsonFile, { JSONObject } from '@expo/json-file';
-import { Exp } from '@expo/xdl';
 import chalk from 'chalk';
 import crypto from 'crypto';
 import fs from 'fs-extra';
@@ -15,6 +14,7 @@ import terminalLink from 'terminal-link';
 
 import CommandError, { SilentError } from '../../CommandError';
 import log from '../../log';
+import { extractTemplateAppAsync } from '../../utils/extractTemplateAppAsync';
 import configureProjectAsync, { expoManagedPlugins } from '../apply/configureProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
 import * as GitIgnore from '../utils/GitIgnore';
@@ -75,19 +75,23 @@ export async function ejectAsync(
   assertPlatforms(platforms);
   if (await maybeBailOnGitStatusAsync()) return;
 
+  const results = await prebuildAsync(projectRoot, { platforms, ...options });
+  logNextSteps(results);
+}
+
+export function ensureValidPlatforms(platforms: ModPlatform[]): ModPlatform[] {
   const isWindows = process.platform === 'win32';
   // Skip ejecting for iOS on Windows
-  if (isWindows && !platforms.includes('ios')) {
+  if (isWindows && platforms.includes('ios')) {
     log.warn(
       `⚠️  Skipping generating the iOS native project files. Run ${chalk.bold(
         'expo eject'
       )} again from macOS or Linux to generate the iOS project.`
     );
     log.newLine();
+    return platforms.filter(platform => platform !== 'ios');
   }
-
-  const results = await prebuildAsync(projectRoot, { platforms, ...options });
-  logNextSteps(results);
+  return platforms;
 }
 
 /**
@@ -102,6 +106,7 @@ export async function prebuildAsync(
   projectRoot: string,
   { platforms, ...options }: EjectAsyncOptions
 ): Promise<PrebuildResults> {
+  platforms = ensureValidPlatforms(platforms);
   assertPlatforms(platforms);
 
   const { exp, pkg } = await ensureConfigAsync({ projectRoot, platforms });
@@ -224,7 +229,7 @@ export function logNextSteps({
     log.nested(
       `\u203A 📁 The property ${chalk.bold(
         `assetBundlePatterns`
-      )} does not have the same effect in the bare workflow. ${log.chalk.dim(
+      )} does not have the same effect in the bare workflow.\n  ${log.chalk.dim(
         learnMore('https://docs.expo.io/bare/updating-your-app/#embedding-assets')
       )}`
     );
@@ -682,7 +687,7 @@ async function cloneNativeDirectoriesAsync({
   let copiedPaths: string[] = [];
   let skippedPaths: string[] = [];
   try {
-    await Exp.extractTemplateAppAsync(templateSpec, tempDir, exp);
+    await extractTemplateAppAsync(templateSpec, tempDir, exp);
     [copiedPaths, skippedPaths] = copyPathsFromTemplate(projectRoot, tempDir, targetPaths);
     const results = GitIgnore.mergeGitIgnorePaths(
       path.join(projectRoot, '.gitignore'),

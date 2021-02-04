@@ -4,7 +4,7 @@ import FormData from 'form-data';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { MAX_CONTENT_LENGTH } from './ApiV2';
+import { MAX_BODY_LENGTH, MAX_CONTENT_LENGTH } from './ApiV2';
 import Config from './Config';
 import * as ConnectionStatus from './ConnectionStatus';
 import * as Extract from './Extract';
@@ -78,6 +78,7 @@ async function _callMethodAsync(
     method,
     headers,
     maxContentLength: MAX_CONTENT_LENGTH,
+    maxBodyLength: MAX_BODY_LENGTH,
   };
 
   if (requestBody) {

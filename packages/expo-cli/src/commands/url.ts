@@ -1,4 +1,4 @@
-import { Project, UrlUtils } from '@expo/xdl';
+import { Project, ProjectSettings, UrlUtils } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
@@ -53,7 +53,7 @@ async function getWebAppUrlAsync(projectDir: string): Promise<string> {
 async function action(projectDir: string, options: ProjectUrlOptions & URLOptions) {
   await urlOpts.optsAsync(projectDir, options);
 
-  if ((await Project.currentStatus(projectDir)) !== 'running') {
+  if ((await ProjectSettings.getCurrentStatusAsync(projectDir)) !== 'running') {
     throw new CommandError(
       'NOT_RUNNING',
       `Project is not running. Please start it with \`expo start\`.`
@@ -81,7 +81,7 @@ export default function (program: Command) {
     .helpGroup('url')
 
     .option('-w, --web', 'Return the URL of the web app')
-    .description('Log a URL for opening the project in the Expo client')
+    .description('Log a URL for opening the project in Expo Go')
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(action);

@@ -2,21 +2,20 @@ import { BareAppConfig, getConfig } from '@expo/config';
 import { AndroidConfig, IOSConfig } from '@expo/config-plugins';
 import plist from '@expo/plist';
 import spawnAsync from '@expo/spawn-async';
-import { Exp, UserManager, Versions } from '@expo/xdl';
+import { UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import fs from 'fs-extra';
-import padEnd from 'lodash/padEnd';
-import trimStart from 'lodash/trimStart';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
 import path from 'path';
+import stripAnsi from 'strip-ansi';
 import terminalLink from 'terminal-link';
-import wordwrap from 'wordwrap';
 
 import CommandError, { SilentError } from '../CommandError';
 import log from '../log';
 import prompts, { selectAsync } from '../prompts';
+import { extractAndPrepareTemplateAppAsync } from '../utils/extractTemplateAppAsync';
 import * as CreateApp from './utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from './utils/ProjectUtils';
 
@@ -154,6 +153,12 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
   return projectRoot;
 }
 
+function padEnd(str: string, width: number): string {
+  // Pulled from commander for overriding
+  const len = Math.max(0, width - stripAnsi(str).length);
+  return str + Array(len + 1).join(' ');
+}
+
 async function action(projectDir: string, command: Command) {
   const options = parseOptions(command);
 
@@ -231,12 +236,7 @@ async function action(projectDir: string, command: Command) {
               value: template.name,
               title:
                 chalk.bold(padEnd(template.shortName, descriptionColumn)) +
-                trimStart(
-                  wordwrap(
-                    descriptionColumn + 2,
-                    process.stdout.columns || 80
-                  )(template.description)
-                ),
+                template.description.trim(),
               short: template.name,
             };
           }
@@ -267,11 +267,7 @@ async function action(projectDir: string, command: Command) {
   const extractTemplateStep = CreateApp.logNewSection('Downloading and extracting project files.');
   let projectPath;
   try {
-    projectPath = await Exp.extractAndPrepareTemplateAppAsync(
-      templateSpec,
-      projectRoot,
-      initialConfig
-    );
+    projectPath = await extractAndPrepareTemplateAppAsync(templateSpec, projectRoot, initialConfig);
     extractTemplateStep.succeed('Downloaded and extracted project files.');
   } catch (e) {
     extractTemplateStep.fail(

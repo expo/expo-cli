@@ -1,7 +1,11 @@
-import { fileExistsAsync } from '@expo/config';
+import { stat } from 'fs-extra';
 import { Glob } from 'glob';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
+
+async function fileExistsAsync(file: string): Promise<boolean> {
+  return (await stat(file).catch(() => null))?.isFile() ?? false;
+}
 
 const requiredPackages = [
   // use typescript/package.json to skip node module cache issues when the user installs

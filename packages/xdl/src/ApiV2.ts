@@ -2,7 +2,6 @@ import { JSONObject, JSONValue } from '@expo/json-file';
 import axios, { AxiosRequestConfig } from 'axios';
 import concat from 'concat-stream';
 import FormData from 'form-data';
-import idx from 'idx';
 import merge from 'lodash/merge';
 import QueryString from 'querystring';
 
@@ -10,6 +9,7 @@ import Config from './Config';
 import * as ConnectionStatus from './ConnectionStatus';
 
 export const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
+export const MAX_BODY_LENGTH = 100 /* MB */ * 1024 * 1024;
 
 // These aren't constants because some commands switch between staging and prod
 function _rootBaseUrl() {
@@ -224,6 +224,7 @@ export default class ApiV2Client {
 
     reqOptions = merge({}, reqOptions, extraRequestOptions, uploadOptions, {
       maxContentLength: MAX_CONTENT_LENGTH,
+      maxBodyLength: MAX_BODY_LENGTH,
     });
 
     let response;
@@ -232,8 +233,7 @@ export default class ApiV2Client {
       response = await axios.request(reqOptions);
       result = response.data;
     } catch (e) {
-      const maybeErrorData = idx(e, _ => _.response.data.errors.length);
-      if (maybeErrorData) {
+      if (e?.response?.data?.errors?.length) {
         result = e.response.data;
       } else {
         throw e;
