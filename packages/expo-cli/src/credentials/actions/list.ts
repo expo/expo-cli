@@ -24,7 +24,7 @@ export function displayProjectCredentials(
   const experienceName = `@${appLookupParams.accountName}/${appLookupParams.projectName}`;
   const bundleIdentifier = appLookupParams.bundleIdentifier;
   if (!appCredentials) {
-    log(
+    log.log(
       chalk.bold(
         `No credentials configured for app ${experienceName} with bundle identifier ${bundleIdentifier}\n`
       )
@@ -32,10 +32,10 @@ export function displayProjectCredentials(
     return;
   }
 
-  log();
-  log(chalk.bold('Project Credential Configuration:'));
+  log.log();
+  log.log(chalk.bold('Project Credential Configuration:'));
   displayIosAppCredentials(appCredentials);
-  log();
+  log.log();
 
   if (distCert) {
     displayIosUserCredentials(distCert);
@@ -47,48 +47,48 @@ export function displayProjectCredentials(
 }
 
 export async function displayIosCredentials(credentials: IosCredentials) {
-  log(chalk.bold('Available credentials for iOS apps\n'));
+  log.log(chalk.bold('Available credentials for iOS apps\n'));
 
-  log(chalk.bold('Application credentials\n'));
+  log.log(chalk.bold('Application credentials\n'));
   for (const cred of credentials.appCredentials) {
     displayIosAppCredentials(cred);
-    log();
+    log.log();
   }
 
-  log();
-  log(chalk.bold('User credentials\n'));
+  log.log();
+  log.log(chalk.bold('User credentials\n'));
   for (const cred of credentials.userCredentials) {
     displayIosUserCredentials(cred, credentials);
-    log();
+    log.log();
   }
-  log();
-  log();
+  log.log();
+  log.log();
 }
 
 export function displayIosAppCredentials(appCredentials: IosAppCredentials) {
-  log(
+  log.log(
     `  Experience: ${chalk.bold(appCredentials.experienceName)}, bundle identifier: ${
       appCredentials.bundleIdentifier
     }`
   );
   if (appCredentials.credentials.provisioningProfile) {
-    log(
+    log.log(
       `    Provisioning profile (ID: ${chalk.green(
         appCredentials.credentials.provisioningProfileId || '---------'
       )})`
     );
   } else {
-    log('    Provisioning profile is missing. It will be generated during the next build');
+    log.log('    Provisioning profile is missing. It will be generated during the next build');
   }
   if (appCredentials.credentials.teamId || appCredentials.credentials.teamName) {
-    log(
+    log.log(
       `    Apple Team ID: ${chalk.green(
         appCredentials.credentials.teamId || '---------'
       )},  Apple Team Name: ${chalk.green(appCredentials.credentials.teamName || '---------')}`
     );
   }
   if (appCredentials.credentials.pushP12 && appCredentials.credentials.pushPassword) {
-    log(
+    log.log(
       `    (deprecated) Push Certificate (Push ID: ${chalk.green(
         appCredentials.credentials.pushId || '-----'
       )})`
@@ -101,9 +101,9 @@ export function displayIosUserCredentials(
   credentials?: IosCredentials
 ) {
   if (userCredentials.type === 'push-key') {
-    log(`  Push Notifications Key - Key ID: ${chalk.green(userCredentials.apnsKeyId)}`);
+    log.log(`  Push Notifications Key - Key ID: ${chalk.green(userCredentials.apnsKeyId)}`);
   } else if (userCredentials.type === 'dist-cert') {
-    log(
+    log.log(
       `  Distribution Certificate - Certificate ID: ${chalk.green(
         userCredentials.certId || '-----'
       )}`
@@ -111,7 +111,7 @@ export function displayIosUserCredentials(
   } else {
     log.warn(`  Unknown key type ${(userCredentials as any).type}`);
   }
-  log(
+  log.log(
     `    Apple Team ID: ${chalk.green(
       userCredentials.teamId || '---------'
     )},  Apple Team Name: ${chalk.green(userCredentials.teamName || '---------')}`
@@ -127,13 +127,13 @@ export function displayIosUserCredentials(
       ),
     ].join(',\n      ');
     const usedByAppsText = usedByApps ? `used by\n      ${usedByApps}` : 'not used by any apps';
-    log(`    ${chalk.gray(usedByAppsText)}`);
+    log.log(`    ${chalk.gray(usedByAppsText)}`);
   }
 }
 
 export async function displayAndroidCredentials(credentialsList: AndroidCredentials[]) {
-  log(chalk.bold('Available Android credentials'));
-  log();
+  log.log(chalk.bold('Available Android credentials'));
+  log.log();
   for (const credentials of credentialsList) {
     await displayAndroidAppCredentials(credentials);
   }
@@ -142,8 +142,8 @@ export async function displayAndroidCredentials(credentialsList: AndroidCredenti
 export async function displayAndroidAppCredentials(credentials: AndroidCredentials) {
   const tmpFilename = path.join(os.tmpdir(), `expo_tmp_keystore_${uuid()}file.jks`);
   try {
-    log(chalk.green(credentials.experienceName));
-    log(chalk.bold('  Upload Keystore hashes'));
+    log.log(chalk.green(credentials.experienceName));
+    log.log(chalk.bold('  Upload Keystore hashes'));
     if (credentials.keystore?.keystore) {
       const storeBuf = Buffer.from(credentials.keystore.keystore, 'base64');
       await fs.writeFile(tmpFilename, storeBuf);
@@ -155,14 +155,14 @@ export async function displayAndroidAppCredentials(credentials: AndroidCredentia
         '    '
       );
     } else {
-      log('    -----------------------');
+      log.log('    -----------------------');
     }
-    log(chalk.bold('  Push Notifications credentials'));
-    log('    FCM Api Key: ', credentials.pushCredentials?.fcmApiKey ?? '---------------------');
-    log('\n');
+    log.log(chalk.bold('  Push Notifications credentials'));
+    log.log('    FCM Api Key: ', credentials.pushCredentials?.fcmApiKey ?? '---------------------');
+    log.log('\n');
   } catch (error) {
     log.error('  Failed to parse the Keystore', error);
-    log('\n');
+    log.log('\n');
   } finally {
     await fs.remove(tmpFilename);
   }

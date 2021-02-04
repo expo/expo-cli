@@ -33,7 +33,7 @@ async function downloadAndPrintSubmissionLogs(submission: Submission): Promise<v
     } else if (level === 'warn') {
       log.warn(msgWithPrefix);
     } else {
-      log(msgWithPrefix);
+      log.log(msgWithPrefix);
     }
   }
 }

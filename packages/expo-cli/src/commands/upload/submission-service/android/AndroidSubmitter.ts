@@ -211,7 +211,7 @@ function printSummary(summary: Summary): void {
     const displayValue = SummaryHumanReadableValues[key as keyof Summary]?.(value) ?? value;
     table.push([displayKey, displayValue]);
   }
-  log(table.toString());
+  log.log(table.toString());
 }
 
 export default AndroidSubmitter;

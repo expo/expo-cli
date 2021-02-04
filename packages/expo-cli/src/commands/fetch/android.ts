@@ -27,7 +27,7 @@ async function maybeRenameExistingFileAsync(projectRoot: string, filename: strin
     while (await fs.pathExists(path.resolve(projectRoot, `OLD_${num}_${filename}`))) {
       num++;
     }
-    log(
+    log.log(
       `\nA file already exists at "${desiredFilePath}"\n  Renaming the existing file to OLD_${num}_${filename}\n`
     );
     await fs.rename(desiredFilePath, path.resolve(projectRoot, `OLD_${num}_${filename}`));
@@ -84,7 +84,7 @@ export async function fetchAndroidHashesAsync(
         keyAlias: keystore.keyAlias,
         keyPassword: keystore.keyPassword,
       });
-      log(
+      log.log(
         `\nNote: if you are using Google Play signing, this app will be signed with a different key after publishing to the store, and you'll need to use the hashes displayed in the Google Play console.`
       );
     } else {
@@ -121,7 +121,7 @@ export async function fetchAndroidUploadCertAsync(
     const keystore = await ctx.android.fetchKeystore(experienceName);
 
     if (keystore) {
-      log(`Writing upload key to ${uploadKeyPath}`);
+      log.log(`Writing upload key to ${uploadKeyPath}`);
       await AndroidCredentials.exportCertBase64(
         {
           keystorePath,

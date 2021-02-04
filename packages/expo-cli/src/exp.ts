@@ -320,9 +320,9 @@ Command.prototype.commandHelp = function () {
 };
 
 program.on('--help', () => {
-  log(`  Run a command with --help for more info 💡`);
-  log(`    $ expo start --help`);
-  log();
+  log.log(`  Run a command with --help for more info 💡`);
+  log.log(`    $ expo start --help`);
+  log.log();
 });
 
 export type Action = (...args: any[]) => void;
@@ -462,8 +462,10 @@ Command.prototype.asyncActionProjectDir = function (
       // @ts-ignore: This guards against someone passing --config without a path.
       if (opts.config === true) {
         log.addNewLineIfNone();
-        log('Please specify your custom config path:');
-        log(log.chalk.green(`  expo ${this.name()} --config ${log.chalk.cyan(`<app-config>`)}`));
+        log.log('Please specify your custom config path:');
+        log.log(
+          log.chalk.green(`  expo ${this.name()} --config ${log.chalk.cyan(`<app-config>`)}`)
+        );
         log.newLine();
         process.exit(1);
       }
@@ -479,7 +481,7 @@ Command.prototype.asyncActionProjectDir = function (
         log.nestedWarn(`Custom config file does not exist:\n${formattedPath}`);
         log.newLine();
         const helpCommand = log.chalk.green(`expo ${this.name()} --help`);
-        log(`Run ${helpCommand} for more info`);
+        log.log(`Run ${helpCommand} for more info`);
         log.newLine();
         process.exit(1);
         // throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
@@ -611,9 +613,9 @@ Command.prototype.asyncActionProjectDir = function (
           bar = null;
 
           if (err) {
-            log(chalk.red('Failed building JavaScript bundle.'));
+            log.log(chalk.red('Failed building JavaScript bundle.'));
           } else {
-            log(
+            log.log(
               chalk.green(
                 `Finished building JavaScript bundle in ${
                   endTime.getTime() - startTime.getTime()
@@ -796,7 +798,7 @@ function _registerLogs() {
         }
 
         if (chunk.level === bunyan.INFO) {
-          log(chunk.msg);
+          log.log(chunk.msg);
         } else if (chunk.level === bunyan.WARN) {
           log.warn(chunk.msg);
         } else if (chunk.level >= bunyan.ERROR) {

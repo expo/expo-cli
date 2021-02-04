@@ -14,7 +14,7 @@ class ExperienceView implements IView {
     const credentials = await ctx.android.fetchCredentials(this.experienceName);
 
     if (isEmpty(credentials.keystore) && isEmpty(credentials.pushCredentials)) {
-      log(`No credentials available for ${this.experienceName} experience.\n`);
+      log.log(`No credentials available for ${this.experienceName} experience.\n`);
     } else if (this.experienceName) {
       log.newLine();
       await displayAndroidAppCredentials(credentials);

@@ -38,7 +38,7 @@ function printSubmissionError(error: SubmissionError): boolean {
     log.error(SubmissionErrorMessages[errorCode]);
     return errorCode === SubmissionErrorCode.ANDROID_UNKNOWN_ERROR;
   } else {
-    log(error.message);
+    log.log(error.message);
     return true;
   }
 }

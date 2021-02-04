@@ -197,7 +197,7 @@ export async function action(projectDir: string, options: Options) {
 
   await mergeSourceDirectoriresAsync(projectDir, mergeSrcDirs, options);
 
-  log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
+  log.log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }
 
 export default function (program: Command) {

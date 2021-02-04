@@ -52,7 +52,7 @@ export class SetupIosProvisioningProfile implements IView {
 
     // User uploaded profiles dont have ids - do best effort validation here
     if (!configuredProfile.provisioningProfileId) {
-      log(
+      log.log(
         chalk.yellow(
           "The provisioning profile we have on file cannot be validated on Apple's servers."
         )

@@ -68,9 +68,9 @@ export async function updateTSConfigAsync({
   log.addNewLineIfNone();
 
   if (isBootstrapping) {
-    log(`${chalk.bold`TypeScript`}: A ${chalk.cyan('tsconfig.json')} has been auto-generated`);
+    log.log(`${chalk.bold`TypeScript`}: A ${chalk.cyan('tsconfig.json')} has been auto-generated`);
   } else {
-    log(
+    log.log(
       `${chalk.bold`TypeScript`}: The ${chalk.cyan(
         'tsconfig.json'
       )} has been updated ${chalk.dim`(Use ${TS_FEATURE_FLAG} to skip)`}`
@@ -83,7 +83,9 @@ export async function updateTSConfigAsync({
 function logModifications(modifications: string[][]) {
   log.newLine();
 
-  log(`\u203A ${chalk.bold('Required')} modifications made to the ${chalk.cyan('tsconfig.json')}:`);
+  log.log(
+    `\u203A ${chalk.bold('Required')} modifications made to the ${chalk.cyan('tsconfig.json')}:`
+  );
 
   log.newLine();
 
@@ -97,6 +99,6 @@ function printTable(items: string[][]) {
   const tableFormat = (name: string, msg: string) =>
     `  ${chalk.bold`${name}`} is now ${chalk.cyan(msg)}`;
   for (const [key, value] of items) {
-    log(tableFormat(key, value));
+    log.log(tableFormat(key, value));
   }
 }

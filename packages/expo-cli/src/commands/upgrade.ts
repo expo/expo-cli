@@ -292,7 +292,7 @@ async function stopExpoServerAsync(projectRoot: string): Promise<void> {
   const status = await ProjectSettings.getCurrentStatusAsync(projectRoot);
   if (status === 'running') {
     await Project.stopAsync(projectRoot);
-    log(
+    log.log(
       chalk.bold.underline(
         'We found an existing expo-cli instance running for this project and closed it to continue.'
       )
@@ -319,7 +319,7 @@ async function shouldBailWhenUsingLatest(
     });
 
     if (!answer) {
-      log('Follow the Expo blog at https://blog.expo.io for new release information!');
+      log.log('Follow the Expo blog at https://blog.expo.io for new release information!');
       log.newLine();
       return true;
     }
@@ -662,13 +662,13 @@ export async function upgradeAsync(
   }
 
   log.newLine();
-  log(chalk.bold.green(`👏 Automated upgrade steps complete.`));
-  log(chalk.bold.grey(`...but this doesn't mean everything is done yet!`));
+  log.log(chalk.bold.green(`👏 Automated upgrade steps complete.`));
+  log.log(chalk.bold.grey(`...but this doesn't mean everything is done yet!`));
   log.newLine();
 
   // List packages that were updated
-  log(chalk.bold(`✅ The following packages were updated:`));
-  log(chalk.grey.bold([...Object.keys(updates), ...['expo']].join(', ')));
+  log.log(chalk.bold(`✅ The following packages were updated:`));
+  log.log(chalk.grey.bold([...Object.keys(updates), ...['expo']].join(', ')));
   log.addNewLineIfNone();
 
   // List packages that were not updated
@@ -679,14 +679,14 @@ export async function upgradeAsync(
   ]);
   if (untouchedDependencies.length) {
     log.addNewLineIfNone();
-    log(
+    log.log(
       chalk.bold(
         `🚨 The following packages were ${chalk.underline(
           'not'
         )} updated. You should check the READMEs for those repositories to determine what version is compatible with your new set of packages:`
       )
     );
-    log(chalk.grey.bold(untouchedDependencies.join(', ')));
+    log.log(chalk.grey.bold(untouchedDependencies.join(', ')));
     log.addNewLineIfNone();
   }
 
@@ -712,19 +712,19 @@ export async function upgradeAsync(
       const upgradeHelperUrl = `https://react-native-community.github.io/upgrade-helper/`;
 
       if (semver.lt(previousReactNativeVersion, newReactNativeVersion)) {
-        log(
+        log.log(
           chalk.bold(
             `⬆️  To finish your react-native upgrade, update your native projects as outlined here:
 ${chalk.gray(`${upgradeHelperUrl}?from=${previousReactNativeVersion}&to=${newReactNativeVersion}`)}`
           )
         );
       } else {
-        log(
+        log.log(
           chalk.bold(
             `👉 react-native has been changed from ${previousReactNativeVersion} to ${newReactNativeVersion} because this is the version used in SDK ${targetSdkVersionString}.`
           )
         );
-        log(
+        log.log(
           chalk.bold(
             chalk.grey(
               `Bare workflow apps are free to adjust their react-native version at the developer's discretion. You may want to re-install react-native@${previousReactNativeVersion} before proceeding.`
@@ -736,7 +736,7 @@ ${chalk.gray(`${upgradeHelperUrl}?from=${previousReactNativeVersion}&to=${newRea
       log.newLine();
     }
 
-    log(
+    log.log(
       chalk.bold(
         `🏗  Run ${chalk.grey(
           'pod install'
@@ -747,10 +747,10 @@ ${chalk.gray(`${upgradeHelperUrl}?from=${previousReactNativeVersion}&to=${newRea
   }
 
   if (targetSdkVersion && targetSdkVersion.releaseNoteUrl) {
-    log(
+    log.log(
       `Please refer to the release notes for information on any further required steps to update and information about breaking changes:`
     );
-    log(chalk.bold(targetSdkVersion.releaseNoteUrl));
+    log.log(chalk.bold(targetSdkVersion.releaseNoteUrl));
   } else {
     if (getenv.boolish('EXPO_BETA', false)) {
       log.gray(
@@ -779,14 +779,14 @@ ${chalk.gray(`${upgradeHelperUrl}?from=${previousReactNativeVersion}&to=${newRea
       .filter(releaseNoteUrl => releaseNoteUrl)
       .reverse();
     if (releaseNotesUrls.length === 1) {
-      log(`You should also look at the breaking changes from a release that you skipped:`);
-      log(chalk.bold(`- ${releaseNotesUrls[0]}`));
+      log.log(`You should also look at the breaking changes from a release that you skipped:`);
+      log.log(chalk.bold(`- ${releaseNotesUrls[0]}`));
     } else {
-      log(
+      log.log(
         `In addition to the most recent release notes, you should go over the breaking changes from skipped releases:`
       );
       releaseNotesUrls.forEach(url => {
-        log(chalk.bold(`- ${url}`));
+        log.log(chalk.bold(`- ${url}`));
       });
     }
   }

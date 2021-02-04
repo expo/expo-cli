@@ -371,7 +371,7 @@ async function ensureConfigAsync({
 
   if (exp.entryPoint) {
     delete exp.entryPoint;
-    log(`\u203A expo.entryPoint is not needed and has been removed.`);
+    log.log(`\u203A expo.entryPoint is not needed and has been removed.`);
   }
 
   // Read config again because prompting for bundle id or package name may have mutated the results.
@@ -597,7 +597,7 @@ async function updatePackageJSONAsync({
     'Updated package.json and added index.js entry point for iOS and Android.'
   );
   if (removedPkgMain) {
-    log(
+    log.log(
       `\u203A Removed ${chalk.bold(
         `"main": "${removedPkgMain}"`
       )} from package.json because we recommend using index.js as main instead.`
@@ -712,7 +712,7 @@ async function cloneNativeDirectoriesAsync({
     creatingNativeProjectStep.fail(
       'Failed to create the native project - see the output above for more information.'
     );
-    log(
+    log.log(
       chalk.yellow(
         'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
       )

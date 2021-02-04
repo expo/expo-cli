@@ -101,12 +101,12 @@ export default function (program: Command) {
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: any) => {
       const logItem = (name: string, link: string) => {
-        log(`\u203A ${TerminalLink.linkedText(name, link)}`);
+        log.log(`\u203A ${TerminalLink.linkedText(name, link)}`);
       };
 
       log.newLine();
-      log(chalk.yellow('expo upload:ios is no longer supported'));
-      log('Please use one of the following');
+      log.log(chalk.yellow('expo upload:ios is no longer supported'));
+      log.log('Please use one of the following');
       log.newLine();
       logItem(chalk.cyan.bold('eas submit'), 'https://docs.expo.io/submit/ios');
       logItem('Transporter', 'https://apps.apple.com/us/app/transporter/id1450874784');

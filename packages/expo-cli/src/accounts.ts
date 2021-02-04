@@ -77,7 +77,7 @@ export async function loginOrRegisterAsync(): Promise<User> {
   if (action === 'register') {
     openRegistrationInBrowser();
     log.newLine();
-    log(
+    log.log(
       `Log in with ${chalk.bold(
         'expo login'
       )} after you have created your account through the website.`
@@ -334,7 +334,7 @@ async function _usernamePasswordAuth(
   }
 
   if (user) {
-    log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
+    log.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
     return user;
   } else {
     throw new Error('Unexpected Error: No user returned from the API');

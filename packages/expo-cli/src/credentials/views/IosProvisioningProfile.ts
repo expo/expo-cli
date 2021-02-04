@@ -36,7 +36,7 @@ export class RemoveProvisioningProfile implements IView {
     if (selected) {
       const app = getAppLookupParams(selected.experienceName, selected.bundleIdentifier);
       await this.removeSpecific(ctx, app);
-      log(
+      log.log(
         chalk.green(
           `Successfully removed Provisioning Profile for ${selected.experienceName} (${selected.bundleIdentifier})`
         )
@@ -46,7 +46,7 @@ export class RemoveProvisioningProfile implements IView {
   }
 
   async removeSpecific(ctx: Context, app: AppLookupParams) {
-    log('Removing Provisioning Profile...\n');
+    log.log('Removing Provisioning Profile...\n');
     await ctx.ios.deleteProvisioningProfile(app);
 
     let shouldRevoke = this.shouldRevoke;
@@ -76,10 +76,10 @@ export class CreateProvisioningProfile implements IView {
   async open(ctx: Context): Promise<IView | null> {
     await this.create(ctx);
 
-    log(chalk.green('Successfully created Provisioning Profile\n'));
+    log.log(chalk.green('Successfully created Provisioning Profile\n'));
     const appCredentials = await ctx.ios.getAppCredentials(this.app);
     displayIosAppCredentials(appCredentials);
-    log();
+    log.log();
     return null;
   }
 
@@ -88,7 +88,7 @@ export class CreateProvisioningProfile implements IView {
       const userProvided = await askForUserProvided(provisioningProfileSchema);
       if (userProvided) {
         // userProvided profiles don't come with ProvisioningProfileId's (only accessible from Apple Portal API)
-        log(chalk.yellow('Provisioning profile: Unable to validate specified profile.'));
+        log.log(chalk.yellow('Provisioning profile: Unable to validate specified profile.'));
         return {
           ...userProvided,
           ...provisioningProfileUtils.readAppleTeam(userProvided.provisioningProfile),
@@ -175,7 +175,7 @@ export class CreateOrReuseProvisioningProfile implements IView {
       }
     }
 
-    log(`Using Provisioning Profile: ${autoselectedProfile.provisioningProfileId}`);
+    log.log(`Using Provisioning Profile: ${autoselectedProfile.provisioningProfileId}`);
     await configureAndUpdateProvisioningProfile(ctx, this.app, distCert, autoselectedProfile);
     return null;
   }
@@ -325,7 +325,7 @@ export async function getAppleInfo(
   profile: ProvisioningProfile
 ): Promise<ProvisioningProfileInfo | null> {
   if (!profile.provisioningProfileId) {
-    log(
+    log.log(
       chalk.yellow('Provisioning Profile: cannot look up profile on Apple Servers - there is no id')
     );
     return null;
@@ -365,7 +365,7 @@ export async function configureAndUpdateProvisioningProfile(
     profileFromApple,
     distCert
   );
-  log(
+  log.log(
     chalk.green(
       `Successfully configured Provisioning Profile ${
         profileFromApple.provisioningProfileId
@@ -375,7 +375,7 @@ export async function configureAndUpdateProvisioningProfile(
 
   // Update profile on expo servers
   await ctx.ios.updateProvisioningProfile(app, updatedProfile);
-  log(
+  log.log(
     chalk.green(
       `Successfully assigned Provisioning Profile to @${app.accountName}/${app.projectName} (${app.bundleIdentifier})`
     )

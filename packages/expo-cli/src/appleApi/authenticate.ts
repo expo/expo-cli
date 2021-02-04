@@ -184,7 +184,7 @@ export async function authenticateAsync(options: Options = {}): Promise<AppleCtx
     if (error.message === 'ABORTED') {
       process.exit(1);
     }
-    log(chalk.red('Authentication with Apple Developer Portal failed!'));
+    log.log(chalk.red('Authentication with Apple Developer Portal failed!'));
     throw error;
   }
 }

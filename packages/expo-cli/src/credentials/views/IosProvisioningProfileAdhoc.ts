@@ -23,7 +23,7 @@ export class CreateOrReuseProvisioningProfileAdhoc implements IView {
 
   async assignProvisioningProfile(ctx: Context, provisioningProfile: ProvisioningProfile) {
     await ctx.ios.updateProvisioningProfile(this.app, provisioningProfile);
-    log(
+    log.log(
       chalk.green(
         `Successfully assigned Provisioning Profile id: ${provisioningProfile.provisioningProfileId} to @${this.app.accountName}/${this.app.projectName} (${this.app.bundleIdentifier})`
       )

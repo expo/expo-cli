@@ -12,7 +12,7 @@ const existingFile = async (filePath: string, verbose = true) => {
     return stats.isFile();
   } catch (e) {
     if (verbose) {
-      log('\nFile does not exist.');
+      log.log('\nFile does not exist.');
     }
     return false;
   }

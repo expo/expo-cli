@@ -161,7 +161,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         case 'A':
         case 'a':
           log.clear();
-          log('Opening the web project in Chrome on Android...');
+          log.log('Opening the web project in Chrome on Android...');
           await Android.openWebProjectAsync({
             projectRoot,
             shouldPrompt: !options.nonInteractive && key === 'A',
@@ -171,7 +171,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         case 'i':
         case 'I':
           log.clear();
-          log('Opening the web project in Safari on iOS...');
+          log.log('Opening the web project in Safari on iOS...');
           await Simulator.openWebProjectAsync({
             projectRoot,
             shouldPrompt: !options.nonInteractive && key === 'I',
@@ -186,7 +186,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           printHelp();
           break;
         case 'e':
-          log(chalk.red` ${BLT} Sending a URL is not supported in web-only mode`);
+          log.log(chalk.red` ${BLT} Sending a URL is not supported in web-only mode`);
           break;
       }
     } else {
@@ -198,7 +198,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           break;
         case 'a': {
           log.clear();
-          log('Opening on Android...');
+          log.log('Opening on Android...');
           await Android.openProjectAsync({ projectRoot });
           printHelp();
           break;
@@ -223,7 +223,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           // const shouldPrompt =
           //   !options.nonInteractive && (key === 'I' || !(await Simulator.isSimulatorBootedAsync()));
 
-          log('Opening on iOS...');
+          log.log('Opening on iOS...');
           await Simulator.openProjectAsync({
             projectRoot,
             shouldPrompt: false,
@@ -258,7 +258,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           };
           log.clear();
           process.stdin.addListener('keypress', handleKeypress);
-          log('Please enter your email address (press ESC to cancel) ');
+          log.log('Please enter your email address (press ESC to cancel) ');
           rl.question(
             defaultRecipient ? `[default: ${defaultRecipient}]> ` : '> ',
             async sendTo => {
@@ -271,15 +271,15 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
                 cancel();
                 return;
               }
-              log(`Sending ${lanAddress} to ${sendTo}...`);
+              log.log(`Sending ${lanAddress} to ${sendTo}...`);
 
               let sent = false;
               try {
                 await Exp.sendAsync(sendTo, lanAddress);
                 sent = true;
-                log(`Sent link successfully.`);
+                log.log(`Sent link successfully.`);
               } catch (err) {
-                log(`Could not send link. ${err}`);
+                log.log(`Could not send link. ${err}`);
               }
               printHelp();
               if (sent) {
@@ -309,7 +309,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
       }
       case 'w': {
         log.clear();
-        log('Attempting to open the project in a web browser...');
+        log.log('Attempting to open the project in a web browser...');
         await Webpack.openAsync(projectRoot);
         await printServerInfo(projectRoot, options);
         break;
@@ -321,7 +321,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
       }
       case 'd': {
         const { devToolsPort } = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-        log('Opening DevTools in the browser...');
+        log.log('Opening DevTools in the browser...');
         openBrowser(`http://localhost:${devToolsPort}`);
         printHelp();
         break;
@@ -330,7 +330,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         log.clear();
         const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', true));
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
-        log(
+        log.log(
           `Automatically opening DevTools ${b(
             enabled ? 'enabled' : 'disabled'
           )}.\nPress ${b`d`} to open DevTools now.`
@@ -343,7 +343,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         const projectSettings = await ProjectSettings.readAsync(projectRoot);
         const dev = !projectSettings.dev;
         await ProjectSettings.setAsync(projectRoot, { dev, minify: !dev });
-        log(
+        log.log(
           `Metro bundler is now running in ${chalk.bold(
             dev ? 'development' : 'production'
           )}${chalk.reset(` mode.`)}
@@ -357,15 +357,15 @@ Please reload the project in the Expo app for the change to take effect.`
         log.clear();
         const reset = key === 'R';
         if (reset) {
-          log('Restarting Metro bundler and clearing cache...');
+          log.log('Restarting Metro bundler and clearing cache...');
         } else {
-          log('Restarting Metro bundler...');
+          log.log('Restarting Metro bundler...');
         }
         Project.startAsync(projectRoot, { ...options, reset });
         break;
       }
       case 'o':
-        log('Trying to open the project in your editor...');
+        log.log('Trying to open the project in your editor...');
         await openInEditorAsync(projectRoot);
     }
   }

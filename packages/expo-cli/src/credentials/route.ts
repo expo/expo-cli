@@ -52,7 +52,7 @@ export class CredentialsManager {
           throw error;
         } else {
           // fallback to interactive Quit View
-          log(error);
+          log.log(error);
           await sleep(1000);
           this._currentView = await this._quit.runAsync(this._mainView);
         }

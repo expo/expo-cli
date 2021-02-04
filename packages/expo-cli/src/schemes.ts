@@ -44,12 +44,12 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
     log.warn(
       '\nDev Client: No common URI schemes could be found for the native ios and android projects, this is required for opening the project\n'
     );
-    log(
+    log.log(
       `Add a common scheme with ${log.chalk.cyan(
         'npx uri-scheme add my-scheme'
       )} or provide a scheme with the ${log.chalk.cyan('--scheme')} flag\n`
     );
-    log(
+    log.log(
       log.chalk.dim(
         `You can see all of the existing schemes for your native projects by running ${log.chalk.cyan(
           'npx uri-scheme list'

@@ -38,7 +38,7 @@ async function actionAsync(projectRoot: string): Promise<void> {
   const lines = info.split('\n');
   lines.pop();
   lines.push(`    Expo Workflow: ${workflow}`);
-  log(lines.join('\n') + '\n');
+  log.log(lines.join('\n') + '\n');
 }
 
 export default function (program: Command) {

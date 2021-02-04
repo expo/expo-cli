@@ -10,10 +10,10 @@ async function action(command: Command) {
     if (command.parent?.nonInteractive) {
       log.nested(user.username);
     } else {
-      log(`Logged in as ${chalk.cyan(user.username)}`);
+      log.log(`Logged in as ${chalk.cyan(user.username)}`);
     }
   } else {
-    log(`\u203A Not logged in, run ${chalk.cyan`expo login`} to authenticate`);
+    log.log(`\u203A Not logged in, run ${chalk.cyan`expo login`} to authenticate`);
     process.exit(1);
   }
 }

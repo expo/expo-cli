@@ -117,7 +117,7 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
   }
 
   log.addNewLineIfNone();
-  log(
+  log.log(
     `${log.chalk.bold(`📝  iOS Bundle Identifier`)} ${log.chalk.dim(
       learnMore('https://expo.fyi/bundle-identifier')
     )}`
@@ -198,7 +198,7 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
   }
 
   log.addNewLineIfNone();
-  log(
+  log.log(
     `${log.chalk.bold(`📝  Android package`)} ${log.chalk.dim(
       learnMore('https://expo.fyi/android-package')
     )}`
@@ -269,7 +269,7 @@ async function attemptModification(
 }
 
 function logNoConfig() {
-  log(
+  log.log(
     log.chalk.yellow(
       'No Expo config was found. Please create an Expo config (`app.config.js` or `app.json`) in your project root.'
     )
@@ -280,7 +280,7 @@ function warnAboutConfigAndThrow(type: string, message: string, edits: Partial<E
   log.addNewLineIfNone();
   if (type === 'warn') {
     // The project is using a dynamic config, give the user a helpful log and bail out.
-    log(log.chalk.yellow(message));
+    log.log(log.chalk.yellow(message));
   } else {
     logNoConfig();
   }
@@ -290,8 +290,8 @@ function warnAboutConfigAndThrow(type: string, message: string, edits: Partial<E
 }
 
 function notifyAboutManualConfigEdits(edits: Partial<ExpoConfig>) {
-  log(log.chalk.cyan(`Please add the following to your Expo config, and try again... `));
+  log.log(log.chalk.cyan(`Please add the following to your Expo config, and try again... `));
   log.newLine();
-  log(JSON.stringify(edits, null, 2));
+  log.log(JSON.stringify(edits, null, 2));
   log.newLine();
 }

@@ -35,9 +35,9 @@ export class CreateIosDist implements IView {
   async open(ctx: Context): Promise<IView | null> {
     const distCert = await this.create(ctx);
 
-    log(chalk.green('Successfully created Distribution Certificate\n'));
+    log.log(chalk.green('Successfully created Distribution Certificate\n'));
     displayIosUserCredentials(distCert);
-    log();
+    log.log();
     return null;
   }
 
@@ -60,7 +60,7 @@ export class RemoveIosDist implements IView {
     const selected = await selectDistCertFromList(ctx, this.accountName);
     if (selected) {
       await this.removeSpecific(ctx, selected);
-      log(chalk.green('Successfully removed Distribution Certificate\n'));
+      log.log(chalk.green('Successfully removed Distribution Certificate\n'));
     }
     return null;
   }
@@ -71,17 +71,17 @@ export class RemoveIosDist implements IView {
     const appsList = apps.map(appCred => chalk.green(appCred.experienceName)).join(', ');
 
     if (appsList && !ctx.nonInteractive) {
-      log('Removing Distribution Certificate');
+      log.log('Removing Distribution Certificate');
       const confirm = await confirmAsync({
         message: `You are removing certificate used by ${appsList}. Do you want to continue?`,
       });
       if (!confirm) {
-        log('Aborting');
+        log.log('Aborting');
         return;
       }
     }
 
-    log('Removing Distribution Certificate...\n');
+    log.log('Removing Distribution Certificate...\n');
     await ctx.ios.deleteDistCert(selected.id, this.accountName);
 
     let shouldRevoke = this.shouldRevoke;
@@ -107,7 +107,7 @@ export class RemoveIosDist implements IView {
       if (!(await ctx.ios.getProvisioningProfile(appLookupParams))) {
         continue;
       }
-      log(
+      log.log(
         `Removing Provisioning Profile for ${appCredentials.experienceName} (${appCredentials.bundleIdentifier})`
       );
       const view = new RemoveProvisioningProfile(this.accountName, shouldRevoke);
@@ -124,13 +124,13 @@ export class UpdateIosDist implements IView {
     if (selected) {
       await this.updateSpecific(ctx, selected);
 
-      log(chalk.green('Successfully updated Distribution Certificate\n'));
+      log.log(chalk.green('Successfully updated Distribution Certificate\n'));
       const credentials = await ctx.ios.getAllCredentials(this.accountName);
       const updated = credentials.userCredentials.find(i => i.id === selected.id);
       if (updated) {
         displayIosUserCredentials(updated);
       }
-      log();
+      log.log();
     }
     return null;
   }
@@ -152,7 +152,7 @@ export class UpdateIosDist implements IView {
         message: `You are updating certificate used by ${appsList}. Do you want to continue?`,
       });
       if (!confirm) {
-        log('Aborting update process');
+        log.log('Aborting update process');
         return;
       }
     }
@@ -161,7 +161,7 @@ export class UpdateIosDist implements IView {
     await ctx.ios.updateDistCert(selected.id, this.accountName, newDistCert);
 
     for (const appCredentials of apps) {
-      log(
+      log.log(
         `Removing Provisioning Profile for ${appCredentials.experienceName} (${appCredentials.bundleIdentifier})`
       );
       const appLookupParams = getAppLookupParams(
@@ -194,7 +194,7 @@ export class UseExistingDistributionCert implements IView {
     });
     if (selected) {
       await ctx.ios.useDistCert(this.app, selected.id);
-      log(
+      log.log(
         chalk.green(
           `Successfully assigned Distribution Certificate to @${this.app.accountName}/${this.app.projectName} (${this.app.bundleIdentifier})`
         )
@@ -209,7 +209,7 @@ export class CreateOrReuseDistributionCert implements IView {
 
   async assignDistCert(ctx: Context, userCredentialsId: number) {
     await ctx.ios.useDistCert(this.app, userCredentialsId);
-    log(
+    log.log(
       chalk.green(
         `Successfully assigned Distribution Certificate to @${this.app.accountName}/${this.app.projectName} (${this.app.bundleIdentifier})`
       )
@@ -250,7 +250,7 @@ export class CreateOrReuseDistributionCert implements IView {
     }
 
     // Use autosuggested push key
-    log(`Using Distribution Certificate: ${autoselectedCertificate.certId || '-----'}`);
+    log.log(`Using Distribution Certificate: ${autoselectedCertificate.certId || '-----'}`);
     await this.assignDistCert(ctx, autoselectedCertificate.id);
     return null;
   }
@@ -291,7 +291,7 @@ async function getValidDistCerts(iosCredentials: IosCredentials, ctx: Context) {
     (cred): cred is IosDistCredentials => cred.type === 'dist-cert'
   );
   if (!ctx.hasAppleCtx()) {
-    log(chalk.yellow(`Unable to determine validity of Distribution Certificates.`));
+    log.log(chalk.yellow(`Unable to determine validity of Distribution Certificates.`));
     return distCerts;
   }
   const distCertManager = new DistCertManager(ctx.appleCtx);
@@ -451,11 +451,11 @@ async function generateDistCert(ctx: Context, accountName: string): Promise<Dist
 
       // https://docs.expo.io/distribution/app-signing/#summary
       const here = terminalLink('here', 'https://bit.ly/3cfJJkQ');
-      log(
+      log.log(
         chalk.grey(`✅  Distribution Certificates can be revoked with no production side effects`)
       );
-      log(chalk.grey(`ℹ️  Learn more ${here}`));
-      log();
+      log.log(chalk.grey(`ℹ️  Learn more ${here}`));
+      log.log();
 
       const { revoke } = await prompt([
         {
@@ -630,7 +630,7 @@ export async function useDistCertFromParams(
   const iosDistCredentials = await ctx.ios.createDistCert(app.accountName, distCert);
 
   await ctx.ios.useDistCert(app, iosDistCredentials.id);
-  log(
+  log.log(
     chalk.green(
       `Successfully assigned Distribution Certificate to @${app.accountName}/${app.projectName} (${app.bundleIdentifier})`
     )

@@ -20,7 +20,7 @@ import { isTypeScriptSetupDisabled, updateTSConfigAsync } from './updateTSConfig
 
 export async function ensureTypeScriptSetupAsync(projectRoot: string): Promise<void> {
   if (isTypeScriptSetupDisabled) {
-    log(chalk.dim('\u203A Skipping TypeScript verification'));
+    log.log(chalk.dim('\u203A Skipping TypeScript verification'));
     return;
   }
 

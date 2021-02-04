@@ -24,7 +24,7 @@ export class UpdateFcmKey implements IView {
     });
 
     await ctx.android.updateFcmKey(this.experienceName, fcmApiKey);
-    log(chalk.green('Updated successfully'));
+    log.log(chalk.green('Updated successfully'));
     return null;
   }
 }

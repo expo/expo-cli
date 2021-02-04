@@ -42,7 +42,7 @@ export async function updateAndroidCredentialsAsync(ctx: Context) {
 
   const keystorePath =
     rawCredentialsJsonObject?.android?.keystore?.keystorePath ?? 'android/keystores/keystore.jks';
-  log(`Writing Keystore to ${keystorePath}`);
+  log.log(`Writing Keystore to ${keystorePath}`);
   await updateFileAsync(ctx.projectDir, keystorePath, keystore.keystore);
   const shouldWarnKeystore = await isFileUntrackedAsync(keystorePath);
 
@@ -115,7 +115,7 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
     }
   }
 
-  log(`Writing Provisioning Profile to ${pprofilePath}`);
+  log.log(`Writing Provisioning Profile to ${pprofilePath}`);
   await updateFileAsync(
     ctx.projectDir,
     pprofilePath,
@@ -123,7 +123,7 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
   );
   const shouldWarnPProfile = await isFileUntrackedAsync(pprofilePath);
 
-  log(`Writing Distribution Certificate to ${distCertPath}`);
+  log.log(`Writing Distribution Certificate to ${distCertPath}`);
   await updateFileAsync(ctx.projectDir, distCertPath, distCredentials?.certP12);
   const shouldWarnDistCert = await isFileUntrackedAsync(distCertPath);
 

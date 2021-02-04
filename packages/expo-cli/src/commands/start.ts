@@ -200,7 +200,7 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
       log.newLine();
       urlOpts.printQRCode(url);
     }
-    log(`Your native app is running at ${chalk.underline(url)}`);
+    log.log(`Your native app is running at ${chalk.underline(url)}`);
   }
   log.nested(chalk.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
 }
@@ -271,14 +271,14 @@ async function tryOpeningDevToolsAsync({
   options,
 }: OpenDevToolsOptions): Promise<void> {
   const devToolsUrl = await DevToolsServer.startAsync(rootPath);
-  log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
+  log.log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
 
   if (!options.nonInteractive && !exp.isDetached) {
     if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
-      log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
+      log.log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
       openBrowser(devToolsUrl);
     } else {
-      log(
+      log.log(
         `Press ${chalk.bold`d`} to open DevTools now, or ${chalk.bold`shift-d`} to always open it automatically.`
       );
     }
@@ -296,7 +296,7 @@ async function configureProjectAsync(
   }
   await urlOpts.optsAsync(projectDir, options);
 
-  log(chalk.gray(`Starting project at ${projectDir}`));
+  log.log(chalk.gray(`Starting project at ${projectDir}`));
 
   const projectConfig = getConfig(projectDir, {
     skipSDKVersionRequirement: options.webOnly,
@@ -306,7 +306,7 @@ async function configureProjectAsync(
   // TODO: move this function over to CLI
   // const message = getProjectConfigDescription(projectDir, projectConfig);
   // if (message) {
-  //   log(chalk.magenta(`\u203A ${message}`));
+  //   log.log(chalk.magenta(`\u203A ${message}`));
   // }
 
   const rootPath = path.resolve(projectDir);

@@ -35,9 +35,9 @@ export class CreateIosPush implements IView {
   async open(ctx: Context): Promise<IView | null> {
     const pushKey = await this.create(ctx);
 
-    log('Successfully created Push Notification Key\n');
+    log.log('Successfully created Push Notification Key\n');
     displayIosUserCredentials(pushKey);
-    log();
+    log.log();
 
     return null;
   }
@@ -79,13 +79,13 @@ export class CreateAndAssignIosPush extends CreateIosPush {
   async open(ctx: Context): Promise<IView | null> {
     const pushKey = await super.create(ctx);
 
-    log('Successfully created Push Notification Key\n');
+    log.log('Successfully created Push Notification Key\n');
     displayIosUserCredentials(pushKey);
-    log();
+    log.log();
 
     if (ctx.hasProjectContext && pushKey) {
       await this.assignToCurrentProject(ctx, pushKey.id);
-      log();
+      log.log();
     }
 
     return null;
@@ -104,7 +104,9 @@ export class CreateAndAssignIosPush extends CreateIosPush {
 
       const app = getAppLookupParams(experienceName, bundleIdentifier);
       await ctx.ios.usePushKey(app, pushKeyId);
-      log(chalk.green(`Successfully assigned Push Key to ${experienceName} (${bundleIdentifier})`));
+      log.log(
+        chalk.green(`Successfully assigned Push Key to ${experienceName} (${bundleIdentifier})`)
+      );
     }
   }
 }
@@ -125,17 +127,17 @@ export class RemoveIosPush implements IView {
       if (!('type' in selected)) {
         const app = getAppLookupParams(selected.experienceName, selected.bundleIdentifier);
         await this.removePushCert(ctx, app);
-        log(chalk.green('Successfully removed Push Certificate'));
+        log.log(chalk.green('Successfully removed Push Certificate'));
       } else {
         await this.removeSpecific(ctx, selected as IosPushCredentials);
-        log(chalk.green('Successfully removed Push Notification Key'));
+        log.log(chalk.green('Successfully removed Push Notification Key'));
       }
     }
     return null;
   }
 
   async removePushCert(ctx: Context, app: AppLookupParams): Promise<void> {
-    log('Removing Push Certificate');
+    log.log('Removing Push Certificate');
     await ctx.ios.deletePushCert(app);
   }
 
@@ -145,17 +147,17 @@ export class RemoveIosPush implements IView {
     const appsList = apps.map(appCred => appCred.experienceName).join(', ');
 
     if (appsList && !ctx.nonInteractive) {
-      log('Removing Push Key');
+      log.log('Removing Push Key');
       const confirm = await confirmAsync({
         message: `Removing this key/cert will disable notifications in ${appsList}. Do you want to continue?`,
       });
       if (!confirm) {
-        log('Aborting');
+        log.log('Aborting');
         return;
       }
     }
 
-    log('Removing Push Key...\n');
+    log.log('Removing Push Key...\n');
     await ctx.ios.deletePushKey(selected.id, this.accountName);
 
     let shouldRevoke = this.shouldRevoke;
@@ -190,13 +192,13 @@ export class UpdateIosPush implements IView {
     if (selected) {
       await this.updateSpecific(ctx, selected);
 
-      log(chalk.green('Successfully updated Push Notification Key.\n'));
+      log.log(chalk.green('Successfully updated Push Notification Key.\n'));
       const credentials = await ctx.ios.getAllCredentials(this.accountName);
       const updated = credentials.userCredentials.find(i => i.id === selected.id);
       if (updated) {
         displayIosUserCredentials(updated);
       }
-      log();
+      log.log();
     }
     return null;
   }
@@ -253,7 +255,7 @@ export class UseExistingPushNotification implements IView {
     })) as IosPushCredentials;
     if (selected) {
       await ctx.ios.usePushKey(this.app, selected.id);
-      log(
+      log.log(
         chalk.green(
           `Successfully assigned Push Notifactions Key to ${this.app.accountName}/${this.app.projectName} (${this.app.bundleIdentifier})`
         )
@@ -268,7 +270,7 @@ export class CreateOrReusePushKey implements IView {
 
   async assignPushKey(ctx: Context, userCredentialsId: number) {
     await ctx.ios.usePushKey(this.app, userCredentialsId);
-    log(
+    log.log(
       chalk.green(
         `Successfully assigned Push Key to ${this.app.accountName}/${this.app.projectName} (${this.app.bundleIdentifier})`
       )
@@ -309,7 +311,7 @@ export class CreateOrReusePushKey implements IView {
     }
 
     // Use autosuggested push key
-    log(`Using Push Key: ${autoselectedPushKey.apnsKeyId}`);
+    log.log(`Using Push Key: ${autoselectedPushKey.apnsKeyId}`);
     await this.assignPushKey(ctx, autoselectedPushKey.id);
     return null;
   }
@@ -349,7 +351,7 @@ async function getValidPushKeys(iosCredentials: IosCredentials, ctx: Context) {
     (cred): cred is IosPushCredentials => cred.type === 'push-key'
   );
   if (!ctx.hasAppleCtx()) {
-    log(
+    log.log(
       chalk.yellow(
         `Unable to determine validity of Push Keys due to insufficient Apple Credentials`
       )
@@ -530,9 +532,9 @@ async function generatePushKey(ctx: Context, accountName: string): Promise<PushK
 
       // https://docs.expo.io/distribution/app-signing/#summary
       const here = terminalLink('here', 'https://bit.ly/3cfJJkQ');
-      log(chalk.grey(`⚠️  Revoking a Push Key will affect other apps that rely on it`));
-      log(chalk.grey(`ℹ️  Learn more ${here}`));
-      log();
+      log.log(chalk.grey(`⚠️  Revoking a Push Key will affect other apps that rely on it`));
+      log.log(chalk.grey(`ℹ️  Learn more ${here}`));
+      log.log();
 
       const { revoke } = await prompt([
         {
@@ -634,7 +636,7 @@ export async function usePushKeyFromParams(
   const iosPushCredentials = await ctx.ios.createPushKey(app.accountName, pushKey);
 
   await ctx.ios.usePushKey(app, iosPushCredentials.id);
-  log(
+  log.log(
     chalk.green(
       `Successfully assigned Push Key to ${app.accountName}/${app.projectName} (${app.bundleIdentifier})`
     )

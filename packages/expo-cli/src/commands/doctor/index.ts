@@ -11,7 +11,7 @@ async function action(projectDir: string) {
   await Doctor.validateExpoServersAsync(projectDir);
 
   if ((await Doctor.validateWithNetworkAsync(projectDir)) === Doctor.NO_ISSUES) {
-    log(`Didn't find any issues with the project!`);
+    log.log(`Didn't find any issues with the project!`);
   }
 }
 

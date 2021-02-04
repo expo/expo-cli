@@ -67,7 +67,7 @@ async function action(projectDir: string, options: ProjectUrlOptions & URLOption
   log.newLine();
   urlOpts.printQRCode(url);
 
-  log('Your URL is\n\n' + chalk.underline(url) + '\n');
+  log.log('Your URL is\n\n' + chalk.underline(url) + '\n');
 
   if (!options.web) {
     await printRunInstructionsAsync();

@@ -44,7 +44,7 @@ class UpdateKeystore implements IView {
       await validateKeystoreAsync(keystore);
     }
     await ctx.android.updateKeystore(this.experienceName, keystore);
-    log(chalk.green('Keystore updated successfully'));
+    log.log(chalk.green('Keystore updated successfully'));
     return null;
   }
 
@@ -123,14 +123,14 @@ class RemoveKeystore implements IView {
       initial: false,
     });
     if (answers) {
-      log('Backing up your Android Keystore now...');
+      log.log('Backing up your Android Keystore now...');
       await new DownloadKeystore(this.experienceName, {
         displayCredentials: true,
         outputPath: `${this.experienceName}.bak.jks`.replace('/', '__'),
       }).open(ctx);
 
       await ctx.android.removeKeystore(this.experienceName);
-      log(chalk.green('Keystore removed successfully'));
+      log.log(chalk.green('Keystore removed successfully'));
     }
     return null;
   }
@@ -199,13 +199,13 @@ class DownloadKeystore implements IView {
 
     await maybeRenameExistingFile(ctx.projectDir, keystorePath);
     if (!this.options?.quiet) {
-      log(chalk.green(`Saving Keystore to ${keystorePath}`));
+      log.log(chalk.green(`Saving Keystore to ${keystorePath}`));
     }
     const storeBuf = Buffer.from(keystore, 'base64');
     await fs.writeFile(keystorePath, storeBuf);
 
     if (this.options?.displayCredentials ?? displayCredentials) {
-      log(`Keystore credentials
+      log.log(`Keystore credentials
   Keystore password: ${chalk.bold(keystorePassword)}
   Key alias:         ${chalk.bold(keyAlias)}
   Key password:      ${chalk.bold(keyPassword)}
@@ -230,7 +230,7 @@ async function getKeystoreFromParams(options: {
   }
 
   if (!keystorePath || !keyAlias || !keystorePassword || !keyPassword) {
-    log(keystorePath, keyAlias, keystorePassword, keyPassword);
+    log.log(keystorePath, keyAlias, keystorePassword, keyPassword);
     throw new Error(
       'In order to provide a Keystore through the CLI parameters, you have to pass --keystore-alias, --keystore-path parameters and set EXPO_ANDROID_KEY_PASSWORD and EXPO_ANDROID_KEYSTORE_PASSWORD environment variables.'
     );
@@ -271,7 +271,7 @@ async function maybeRenameExistingFile(projectDir: string, filename: string) {
     while (await fs.pathExists(path.resolve(projectDir, `OLD_${num}_${filename}`))) {
       num++;
     }
-    log(
+    log.log(
       `\nA file already exists at "${desiredFilePath}"\n  Renaming the existing file to OLD_${num}_${filename}\n`
     );
     await fs.rename(desiredFilePath, path.resolve(projectDir, `OLD_${num}_${filename}`));

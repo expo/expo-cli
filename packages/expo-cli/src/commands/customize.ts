@@ -22,7 +22,7 @@ async function maybeWarnToCommitAsync(projectRoot: string) {
   }
 
   if (workingTreeStatus === 'dirty') {
-    log(
+    log.log(
       chalk.yellow(
         'You should commit your changes before generating code into the root of your project.'
       )
@@ -117,7 +117,7 @@ export async function action(projectDir: string = './', options: Options = { for
   }
 
   if (!values.filter(({ disabled }) => !disabled).length) {
-    log(
+    log.log(
       chalk.yellow('\nAll of the custom web files already exist.') +
         '\nTo regenerate the files run:' +
         chalk.bold(' expo customize:web --force\n')
@@ -139,7 +139,7 @@ export async function action(projectDir: string = './', options: Options = { for
     choices: values,
   });
   if (!answer || answer.length === 0) {
-    log('\n\u203A Exiting with no change...\n');
+    log.log('\n\u203A Exiting with no change...\n');
     return;
   }
   await generateFilesAsync({ projectDir, staticPath, options, answer, templateFolder });

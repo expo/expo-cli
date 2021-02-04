@@ -242,7 +242,7 @@ export async function printPublicationDetailAsync(
   options: DetailOptions
 ) {
   if (options.raw) {
-    log(JSON.stringify(detail));
+    log.log(JSON.stringify(detail));
     return;
   }
 
@@ -251,9 +251,9 @@ export async function printPublicationDetailAsync(
 
   // Print general release info
   const generalTableString = table.printTableJson(detail, 'Release Description');
-  log(generalTableString);
+  log.log(generalTableString);
 
   // Print manifest info
   const manifestTableString = table.printTableJson(manifest, 'Manifest Details');
-  log(manifestTableString);
+  log.log(manifestTableString);
 }

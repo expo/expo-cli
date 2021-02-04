@@ -89,7 +89,7 @@ export class Context {
   logOwnerAndProject() {
     // Figure out if User A is configuring credentials as admin for User B's project
     const isProxyUser = this.manifest.owner && this.manifest.owner !== this.user.username;
-    log(
+    log.log(
       `Accessing credentials ${isProxyUser ? 'on behalf of' : 'for'} ${
         this.projectOwner
       } in project ${this.manifest.slug}`

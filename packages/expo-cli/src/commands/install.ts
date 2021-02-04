@@ -23,7 +23,7 @@ async function resolveExpoProjectRootAsync() {
     log.addNewLineIfNone();
     log.error(error.message);
     log.newLine();
-    log(log.chalk.cyan(`You can create a new project with ${log.chalk.bold(`expo init`)}`));
+    log.log(log.chalk.cyan(`You can create a new project with ${log.chalk.bold(`expo init`)}`));
     log.newLine();
     throw new SilentError(error);
   }
@@ -65,7 +65,7 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
     log.addNewLineIfNone();
     log.error(message);
     log.newLine();
-    log(log.chalk.cyan(`Current version: ${log.chalk.bold(exp.sdkVersion)}`));
+    log.log(log.chalk.cyan(`Current version: ${log.chalk.bold(exp.sdkVersion)}`));
     log.newLine();
     throw new SilentError(message);
   }
@@ -74,7 +74,9 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   // Every React project should have react installed...
   if (!resolveFrom.silent(projectRoot, 'react')) {
     log.addNewLineIfNone();
-    log(log.chalk.cyan(`node_modules not found, running ${packageManager.name} install command.`));
+    log.log(
+      log.chalk.cyan(`node_modules not found, running ${packageManager.name} install command.`)
+    );
     log.newLine();
     await packageManager.installAsync();
   }
@@ -124,7 +126,7 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   if (others.length > 0) {
     messages.push(`${others.length} other ${others.length === 1 ? 'package' : 'packages'}`);
   }
-  log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
+  log.log(`Installing ${messages.join(' and ')} using ${packageManager.name}.`);
   await packageManager.addAsync(...versionedPackages);
 }
 

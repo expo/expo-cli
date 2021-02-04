@@ -65,10 +65,10 @@ async function listAsync(projectRoot: string) {
   if (webhooks.length) {
     const table = new CliTable({ head: ['Webhook ID', 'URL', 'Event'] });
     table.push(...webhooks.map((hook: Webhook) => [hook.id, hook.url, hook.event]));
-    log(table.toString());
+    log.log(table.toString());
   } else {
-    log(`${chalk.bold(experienceName)} has no webhooks.`);
-    log('Use `expo webhooks:add` to add one.');
+    log.log(`${chalk.bold(experienceName)} has no webhooks.`);
+    log.log('Use `expo webhooks:add` to add one.');
   }
 }
 
@@ -132,8 +132,8 @@ function validateSecret({ secret }: { secret?: string }): string | null {
 function generateSecret() {
   // Create a 60 characters long secret from 30 random bytes.
   const randomSecret = crypto.randomBytes(30).toString('hex');
-  log(chalk.underline('Webhook signing secret:'));
-  log(randomSecret);
+  log.log(chalk.underline('Webhook signing secret:'));
+  log.log(randomSecret);
   return randomSecret;
 }
 

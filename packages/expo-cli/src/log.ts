@@ -106,11 +106,13 @@ function withPrefix(args: any[], chalkColor = chalk.gray) {
   }
 }
 
-function log(...args: any[]) {
+const log = {} as any;
+
+log.log = function (...args: any[]) {
   respectProgressBars(() => {
     consoleLog(...withPrefix(args));
   });
-}
+};
 
 log.nested = function (message: any) {
   respectProgressBars(() => {

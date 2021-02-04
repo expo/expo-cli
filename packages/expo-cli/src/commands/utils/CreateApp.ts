@@ -93,7 +93,7 @@ export function resolvePackageManager(options: {
     packageManager = 'npm';
   }
   if (options.install) {
-    log(
+    log.log(
       packageManager === 'yarn'
         ? `🧶 Using Yarn to install packages. ${chalk.dim('Pass --npm to use npm instead.')}`
         : '📦 Using npm to install packages.'
@@ -134,7 +134,7 @@ export async function installNodeDependenciesAsync(
         log.warn(
           `Yarn v${version} detected, enabling experimental Yarn v2 support using the node-modules plugin.`
         );
-      !flags.silent && log(`Writing ${yarnRc}...`);
+      !flags.silent && log.log(`Writing ${yarnRc}...`);
       fs.writeFileSync(yarnRc, yaml.safeDump(config));
     }
     await yarn.installAsync();
@@ -192,9 +192,9 @@ export async function installCocoaPodsAsync(projectRoot: string) {
         ),
       });
       if (e instanceof PackageManager.CocoaPodsError) {
-        log(e.message);
+        log.log(e.message);
       } else {
-        log(`Unknown error: ${e.message}`);
+        log.log(`Unknown error: ${e.message}`);
       }
       return false;
     }
@@ -212,9 +212,9 @@ export async function installCocoaPodsAsync(projectRoot: string) {
       ),
     });
     if (e instanceof PackageManager.CocoaPodsError) {
-      log(e.message);
+      log.log(e.message);
     } else {
-      log(`Unknown error: ${e.message}`);
+      log.log(`Unknown error: ${e.message}`);
     }
     return false;
   }

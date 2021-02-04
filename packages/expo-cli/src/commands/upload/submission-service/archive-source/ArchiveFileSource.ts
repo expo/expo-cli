@@ -87,7 +87,7 @@ async function getArchiveLocationForUrlAsync(url: string): Promise<string> {
   if (!pathIsTar(url)) {
     return url;
   } else {
-    log('Downloading your app archive');
+    log.log('Downloading your app archive');
     return downloadAppArchiveAsync(url);
   }
 }
@@ -95,7 +95,7 @@ async function getArchiveLocationForUrlAsync(url: string): Promise<string> {
 async function getArchiveLocationForPathAsync(path: string): Promise<string> {
   const resolvedPath = await extractLocalArchiveAsync(path);
 
-  log('Uploading your app archive to the Expo Submission Service');
+  log.log('Uploading your app archive to the Expo Submission Service');
   return await uploadAppArchiveAsync(resolvedPath);
 }
 

@@ -51,7 +51,7 @@ async function handlePromptSourceAsync(_source: ServiceAccountPromptSource): Pro
 }
 
 async function askForServiceAccountPathAsync(): Promise<string> {
-  log(
+  log.log(
     `${log.chalk.bold(
       'A Google Service Account JSON key is required to upload your app to Google Play Store'
     )}.\n` +

@@ -66,7 +66,7 @@ export class SetupIosBuildCredentials implements IView {
     if (confirm) {
       return await ctx.ensureAppleCtx();
     } else {
-      log(
+      log.log(
         chalk.green(
           'No problem! 👌 \nWe can’t auto-generate credentials if you don’t have access to the main Apple account. \nBut we can still set it up if you upload your credentials.'
         )

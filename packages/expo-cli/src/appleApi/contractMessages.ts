@@ -84,15 +84,15 @@ export async function assertContractMessagesAsync(context: RequestContext, spinn
       spinner.stop();
     }
     log.newLine();
-    log(chalk.yellow.bold('Messages from App Store Connect:'));
+    log.log(chalk.yellow.bold('Messages from App Store Connect:'));
     log.newLine();
     for (const message of messages) {
       if (log.isDebug) {
-        log(JSON.stringify(message, null, 2));
+        log.log(JSON.stringify(message, null, 2));
         log.newLine();
       }
       log.addNewLineIfNone();
-      log(formatContractMessage(message));
+      log.log(formatContractMessage(message));
     }
     log.addNewLineIfNone();
     // Only throw an error if we know that the status is fatal, otherwise attempt to finish the process.
