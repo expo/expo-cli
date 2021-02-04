@@ -12,9 +12,9 @@ import * as UrlUtils from '../utils/url';
 import { BuilderOptions } from './BaseBuilder.types';
 import BuildError from './BuildError';
 import { Platform, PLATFORMS } from './constants';
+import { findReusableBuildAsync } from './findReusableBuildAsync';
 
 const secondsToMilliseconds = (seconds: number): number => seconds * 1000;
-
 export default class BaseBuilder {
   protected projectConfig: ProjectConfig;
   manifest: ExpoConfig;
@@ -141,7 +141,7 @@ export default class BaseBuilder {
   async checkStatusBeforeBuild(): Promise<void> {
     log('Checking if this build already exists...\n');
 
-    const reuseStatus = await Project.findReusableBuildAsync(
+    const reuseStatus = await findReusableBuildAsync(
       this.options.releaseChannel!,
       this.platform(),
       this.manifest.sdkVersion!,

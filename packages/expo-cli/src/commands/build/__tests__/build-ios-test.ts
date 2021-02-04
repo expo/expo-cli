@@ -44,6 +44,11 @@ jest.mock('commander', () => {
 jest.mock('../../../credentials/api/IosApiV2Wrapper', () => {
   return jest.fn(() => mockIosCredentialsApi);
 });
+jest.mock('../findReusableBuildAsync', () => {
+  return {
+    findReusableBuildAsync: jest.fn(() => ({})),
+  };
+});
 jest.mock('@expo/image-utils', () => ({
   generateImageAsync(input, { src }) {
     const fs = require('fs');
@@ -63,7 +68,6 @@ const mockedXDLModules = {
   Project: {
     getBuildStatusAsync: jest.fn(() => ({ jobs: [] })),
     getLatestReleaseAsync: jest.fn(() => ({ publicationId: 'test-publication-id' })),
-    findReusableBuildAsync: jest.fn(() => ({})),
     startBuildAsync: jest.fn(() => ({})),
   },
   IosCodeSigning: {
