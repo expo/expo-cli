@@ -1,6 +1,6 @@
-import ApiV2 from '../ApiV2';
-import UserManager from '../User';
-import { assertValidProjectRoot } from './errors';
+import { ApiV2, UserManager } from '@expo/xdl';
+
+// import { assertValidProjectRoot } from './errors';
 import { getExpAsync, GetExpConfigOptions, validateOptions } from './startBuildAsync';
 
 type JobState = 'pending' | 'started' | 'in-progress' | 'finished' | 'errored' | 'sent-to-queue';
@@ -57,7 +57,7 @@ export async function getBuildStatusAsync(
 ): Promise<BuildStatusResult> {
   const user = await UserManager.ensureLoggedInAsync();
 
-  assertValidProjectRoot(projectRoot);
+  // assertValidProjectRoot(projectRoot);
   validateOptions(options);
   const { exp } = await getExpAsync(projectRoot, options);
 

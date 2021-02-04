@@ -12,8 +12,10 @@ import {
   testAllCredentialsForApp,
 } from '../../../credentials/__tests__/fixtures/mocks-ios';
 import { BuilderOptions } from '../BaseBuilder.types';
+import { getBuildStatusAsync } from '../getBuildStatusAsync';
 import { getLatestReleaseAsync } from '../getLatestReleaseAsync';
 import IOSBuilder from '../ios/IOSBuilder';
+import { startBuildAsync } from '../startBuildAsync';
 
 jest.setTimeout(30e3); // 30s
 
@@ -55,6 +57,16 @@ jest.mock('../getLatestReleaseAsync', () => {
     getLatestReleaseAsync: jest.fn(() => ({ publicationId: 'test-publication-id' })),
   };
 });
+jest.mock('../getBuildStatusAsync', () => {
+  return {
+    getBuildStatusAsync: jest.fn(() => ({ jobs: [] })),
+  };
+});
+jest.mock('../startBuildAsync', () => {
+  return {
+    startBuildAsync: jest.fn(() => ({})),
+  };
+});
 jest.mock('@expo/image-utils', () => ({
   generateImageAsync(input, { src }) {
     const fs = require('fs');
@@ -62,11 +74,15 @@ jest.mock('@expo/image-utils', () => ({
   },
 }));
 
-function mockGetLatestReleaseAsync() {
+function mockBuildApis() {
   // @ts-ignore
   getLatestReleaseAsync.mockImplementation(() => ({
     publicationId: 'test-publication-id',
   }));
+  // @ts-ignore
+  getBuildStatusAsync.mockImplementation(() => ({ jobs: [] }));
+  // @ts-ignore
+  startBuildAsync.mockImplementation(() => ({}));
 }
 
 const mockedXDLModules = {
@@ -77,10 +93,6 @@ const mockedXDLModules = {
   },
   ApiV2: {
     clientForUser: jest.fn(),
-  },
-  Project: {
-    getBuildStatusAsync: jest.fn(() => ({ jobs: [] })),
-    startBuildAsync: jest.fn(() => ({})),
   },
   IosCodeSigning: {
     validateProvisioningProfile: jest.fn(),
@@ -132,6 +144,10 @@ describe('build ios', () => {
     }
     // @ts-ignore
     getLatestReleaseAsync.mockClear();
+    // @ts-ignore
+    getBuildStatusAsync.mockClear();
+    // @ts-ignore
+    startBuildAsync.mockClear();
   });
 
   it('fails if no bundle-id is used in non-interactive mode', async () => {
@@ -152,7 +168,7 @@ describe('build ios', () => {
     // expect(mockedXDLModules.Project.startBuildAsync.mock.calls.length).toBe(1);
   });
   it('archive build: basic case', async () => {
-    mockGetLatestReleaseAsync();
+    mockBuildApis();
     const projectRoot = '/test-project';
     (mockIosCredentialsApi as any).getAllCredentialsForAppApi.mockImplementation(
       () => testAllCredentialsForApp
@@ -168,12 +184,12 @@ describe('build ios', () => {
 
     // expect that we get the latest release and started build
     expect(getLatestReleaseAsync).toHaveBeenCalledTimes(1);
-    expect(mockedXDLModules.Project.startBuildAsync).toHaveBeenCalledTimes(1);
+    expect(startBuildAsync).toHaveBeenCalledTimes(1);
   });
   it('archive build: fails if user passes in incomplete credential flags', async () => {
     const projectRoot = '/test-project';
     setupMockForNonInteractiveCliOptions();
-    mockGetLatestReleaseAsync();
+    mockBuildApis();
     (mockIosCredentialsApi as any).getAllCredentialsApi.mockImplementation(() => ({
       appCredentials: [],
       userCredentials: [],
@@ -192,10 +208,10 @@ describe('build ios', () => {
     );
     // fail if we proceed to get the latest release and started build
     expect(getLatestReleaseAsync).toHaveBeenCalledTimes(0);
-    expect(mockedXDLModules.Project.startBuildAsync).toHaveBeenCalledTimes(0);
+    expect(startBuildAsync).toHaveBeenCalledTimes(0);
   });
   it('archive build: fails if user has no credentials', async () => {
-    mockGetLatestReleaseAsync();
+    mockBuildApis();
     const projectRoot = '/test-project';
     (mockIosCredentialsApi as any).getAllCredentialsForAppApi.mockImplementation(() => null);
     (mockIosCredentialsApi as any).getAllCredentialsApi.mockImplementation(() => ({
@@ -215,12 +231,12 @@ describe('build ios', () => {
 
     // fail if we proceed to get the latest release and started build
     expect(getLatestReleaseAsync).toHaveBeenCalledTimes(0);
-    expect(mockedXDLModules.Project.startBuildAsync).toHaveBeenCalledTimes(0);
+    expect(startBuildAsync).toHaveBeenCalledTimes(0);
   });
   it('archive build: pass in all credentials from cli', async () => {
     const OLD_ENV = process.env;
     setupMockForNonInteractiveCliOptions();
-    mockGetLatestReleaseAsync();
+    mockBuildApis();
     try {
       process.env = { ...OLD_ENV, EXPO_IOS_DIST_P12_PASSWORD: 'sdf' };
 
@@ -241,7 +257,7 @@ describe('build ios', () => {
 
       // expect that we get the latest release and started build
       expect(getLatestReleaseAsync).toHaveBeenCalledTimes(1);
-      expect(mockedXDLModules.Project.startBuildAsync).toHaveBeenCalledTimes(1);
+      expect(startBuildAsync).toHaveBeenCalledTimes(1);
     } finally {
       process.env = { ...OLD_ENV };
     }

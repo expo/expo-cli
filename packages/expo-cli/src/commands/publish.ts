@@ -10,6 +10,7 @@ import CommandError from '../CommandError';
 import log from '../log';
 import { getProjectOwner } from '../projects';
 import * as sendTo from '../sendTo';
+import { getBuildStatusAsync } from './build/getBuildStatusAsync';
 import * as TerminalLink from './utils/TerminalLink';
 import { formatNamedWarning } from './utils/logConfigWarnings';
 
@@ -216,7 +217,7 @@ async function logSDKMismatchWarningsAsync({
     return;
   }
 
-  const buildStatus = await Project.getBuildStatusAsync(projectRoot, {
+  const buildStatus = await getBuildStatusAsync(projectRoot, {
     platform: 'all',
     current: true,
     releaseChannel,

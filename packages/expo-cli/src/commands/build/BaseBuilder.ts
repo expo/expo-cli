@@ -13,7 +13,9 @@ import { BuilderOptions } from './BaseBuilder.types';
 import BuildError from './BuildError';
 import { Platform, PLATFORMS } from './constants';
 import { findReusableBuildAsync } from './findReusableBuildAsync';
+import { BuildJobFields, getBuildStatusAsync } from './getBuildStatusAsync';
 import { getLatestReleaseAsync } from './getLatestReleaseAsync';
+import { startBuildAsync } from './startBuildAsync';
 
 const secondsToMilliseconds = (seconds: number): number => seconds * 1000;
 export default class BaseBuilder {
@@ -100,7 +102,7 @@ export default class BaseBuilder {
 
   async checkForBuildInProgress() {
     log('Checking if there is a build in progress...\n');
-    const buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
+    const buildStatus = await getBuildStatusAsync(this.projectDir, {
       platform: this.platform(),
       current: true,
       releaseChannel: this.options.releaseChannel,
@@ -116,7 +118,7 @@ export default class BaseBuilder {
   async checkStatus(platform: 'all' | 'ios' | 'android' = 'all'): Promise<void> {
     log('Fetching build history...\n');
 
-    const buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
+    const buildStatus = await getBuildStatusAsync(this.projectDir, {
       platform,
       current: false,
       releaseChannel: this.options.releaseChannel,
@@ -165,7 +167,7 @@ Please see the docs (${chalk.underline(
   }
 
   async logBuildStatuses(buildStatus: {
-    jobs: Project.BuildJobFields[];
+    jobs: BuildJobFields[];
     canPurchasePriorityBuilds?: boolean;
     numberOfRemainingPriorityBuilds?: number;
     hasUnlimitedPriorityBuilds?: boolean;
@@ -304,12 +306,12 @@ ${job.id}
     let i = 0;
     while (true) {
       i++;
-      const result = await Project.getBuildStatusAsync(this.projectDir, {
+      const result = await getBuildStatusAsync(this.projectDir, {
         current: false,
         ...(publicUrl ? { publicUrl } : {}),
       });
 
-      const jobs = result.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId);
+      const jobs = result.jobs?.filter((job: BuildJobFields) => job.id === buildId);
       const job = jobs ? jobs[0] : null;
       if (job) {
         switch (job.status) {
@@ -365,7 +367,7 @@ ${job.id}
     }
 
     // call out to build api here with url
-    const result = await Project.startBuildAsync(this.projectDir, opts);
+    const result = await startBuildAsync(this.projectDir, opts);
 
     const { id: buildId, priority, canPurchasePriorityBuilds } = result;
 
