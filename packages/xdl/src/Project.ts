@@ -116,7 +116,7 @@ export async function stopAsync(projectRoot: string): Promise<void> {
 }
 
 /**
- * @deprecated
+ * @deprecated Use `ProjectSettings.setPackagerInfoAsync`
  * @param projectRoot
  * @param options
  */
