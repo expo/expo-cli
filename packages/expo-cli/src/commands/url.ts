@@ -1,4 +1,4 @@
-import { Project, ProjectSettings, UrlUtils } from '@expo/xdl';
+import { ProjectSettings, UrlUtils } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
