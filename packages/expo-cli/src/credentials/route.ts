@@ -1,5 +1,5 @@
 import { sleep } from '../commands/utils/promise';
-import log from '../log';
+import Log from '../log';
 import { Context, IView } from './context';
 import { AskQuit, DoQuit, IQuit, QuitError } from './views/Select';
 
@@ -52,7 +52,7 @@ export class CredentialsManager {
           throw error;
         } else {
           // fallback to interactive Quit View
-          log.log(error);
+          Log.log(error);
           await sleep(1000);
           this._currentView = await this._quit.runAsync(this._mainView);
         }

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-import log from '../../log';
+import Log from '../../log';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
 import { IosDistCredentials } from '../credentials';
@@ -52,7 +52,7 @@ export class SetupIosProvisioningProfile implements IView {
 
     // User uploaded profiles dont have ids - do best effort validation here
     if (!configuredProfile.provisioningProfileId) {
-      log.log(
+      Log.log(
         chalk.yellow(
           "The provisioning profile we have on file cannot be validated on Apple's servers."
         )

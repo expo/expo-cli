@@ -2,7 +2,7 @@ import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
 import { boolish } from 'getenv';
 
-import log from '../../../log';
+import Log from '../../../log';
 import { baseTSConfigName, resolveBaseTSConfig } from './resolveModules';
 
 const TS_FEATURE_FLAG = 'EXPO_NO_TYPESCRIPT_SETUP';
@@ -65,40 +65,40 @@ export async function updateTSConfigAsync({
   // Write changes and log out a summary of what changed
   await JsonFile.writeAsync(tsConfigPath, projectTSConfig);
 
-  log.addNewLineIfNone();
+  Log.addNewLineIfNone();
 
   if (isBootstrapping) {
-    log.log(`${chalk.bold`TypeScript`}: A ${chalk.cyan('tsconfig.json')} has been auto-generated`);
+    Log.log(`${chalk.bold`TypeScript`}: A ${chalk.cyan('tsconfig.json')} has been auto-generated`);
   } else {
-    log.log(
+    Log.log(
       `${chalk.bold`TypeScript`}: The ${chalk.cyan(
         'tsconfig.json'
       )} has been updated ${chalk.dim`(Use ${TS_FEATURE_FLAG} to skip)`}`
     );
     logModifications(modifications);
   }
-  log.newLine();
+  Log.newLine();
 }
 
 function logModifications(modifications: string[][]) {
-  log.newLine();
+  Log.newLine();
 
-  log.log(
+  Log.log(
     `\u203A ${chalk.bold('Required')} modifications made to the ${chalk.cyan('tsconfig.json')}:`
   );
 
-  log.newLine();
+  Log.newLine();
 
   // Sort the items based on key name length
   printTable(modifications.sort((a, b) => a[0].length - b[0].length));
 
-  log.newLine();
+  Log.newLine();
 }
 
 function printTable(items: string[][]) {
   const tableFormat = (name: string, msg: string) =>
     `  ${chalk.bold`${name}`} is now ${chalk.cyan(msg)}`;
   for (const [key, value] of items) {
-    log.log(tableFormat(key, value));
+    Log.log(tableFormat(key, value));
   }
 }

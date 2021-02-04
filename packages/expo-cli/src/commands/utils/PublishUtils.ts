@@ -2,7 +2,7 @@ import { getConfig } from '@expo/config';
 import { ApiV2, UserManager } from '@expo/xdl';
 import ora from 'ora';
 
-import log from '../../log';
+import Log from '../../log';
 import { getProjectOwner } from '../../projects';
 import { confirmAsync } from '../../prompts';
 import * as table from './cli-table';
@@ -178,7 +178,7 @@ export async function rollbackPublicationFromChannelAsync(
     }
   } catch (e) {
     if (completedPlatforms.length > 0) {
-      log.error(
+      Log.error(
         `The platforms ${platforms.filter(
           platform => !completedPlatforms.includes(platform)
         )} have not been rolled back. You can complete the missing platforms by running \`expo publish:rollback\` with the --platform flag`
@@ -242,7 +242,7 @@ export async function printPublicationDetailAsync(
   options: DetailOptions
 ) {
   if (options.raw) {
-    log.log(JSON.stringify(detail));
+    Log.log(JSON.stringify(detail));
     return;
   }
 
@@ -251,9 +251,9 @@ export async function printPublicationDetailAsync(
 
   // Print general release info
   const generalTableString = table.printTableJson(detail, 'Release Description');
-  log.log(generalTableString);
+  Log.log(generalTableString);
 
   // Print manifest info
   const manifestTableString = table.printTableJson(manifest, 'Manifest Details');
-  log.log(manifestTableString);
+  Log.log(manifestTableString);
 }

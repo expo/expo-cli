@@ -13,7 +13,7 @@ import stripAnsi from 'strip-ansi';
 import terminalLink from 'terminal-link';
 
 import CommandError, { SilentError } from '../CommandError';
-import log from '../log';
+import Log from '../log';
 import prompts, { selectAsync } from '../prompts';
 import { extractAndPrepareTemplateAppAsync } from '../utils/extractTemplateAppAsync';
 import * as CreateApp from './utils/CreateApp';
@@ -86,9 +86,9 @@ function parseOptions(command: Command): Options {
 async function assertFolderEmptyAsync(projectRoot: string, folderName?: string) {
   if (!(await CreateApp.assertFolderEmptyAsync({ projectRoot, folderName, overwrite: false }))) {
     const message = 'Try using a new directory name, or moving these files.';
-    log.newLine();
-    log.nested(message);
-    log.newLine();
+    Log.newLine();
+    Log.nested(message);
+    Log.newLine();
     throw new SilentError(message);
   }
 }
@@ -132,12 +132,12 @@ async function resolveProjectRootAsync(input?: string): Promise<string> {
     const message = [
       '',
       'Please choose your app name:',
-      `  ${log.chalk.green(`${program.name()} init`)} ${log.chalk.cyan('<app-name>')}`,
+      `  ${Log.chalk.green(`${program.name()} init`)} ${Log.chalk.cyan('<app-name>')}`,
       '',
-      `Run ${log.chalk.green(`${program.name()} init --help`)} for more info`,
+      `Run ${Log.chalk.green(`${program.name()} init --help`)} for more info`,
       '',
     ].join('\n');
-    log.nested(message);
+    Log.nested(message);
     throw new SilentError(message);
   }
 
@@ -313,7 +313,7 @@ async function action(projectDir: string, command: Command) {
 
   // Log info
 
-  log.addNewLineIfNone();
+  Log.addNewLineIfNone();
   await logProjectReadyAsync({
     cdPath,
     packageManager,
@@ -366,10 +366,10 @@ export async function initGitRepoAsync(
     await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
       cwd: root,
     });
-    !flags.silent && log.log('New project is already inside of a git repo, skipping git init.');
+    !flags.silent && Log.log('New project is already inside of a git repo, skipping git init.');
   } catch (e) {
     if (e.errno === 'ENOENT') {
-      !flags.silent && log.warn('Unable to initialize git repo. `git` not in PATH.');
+      !flags.silent && Log.warn('Unable to initialize git repo. `git` not in PATH.');
       return false;
     }
   }
@@ -377,7 +377,7 @@ export async function initGitRepoAsync(
   // not in git tree, so let's init
   try {
     await spawnAsync('git', ['init'], { cwd: root });
-    !flags.silent && log.log('Initialized a git repository.');
+    !flags.silent && Log.log('Initialized a git repository.');
 
     if (flags.commit) {
       await spawnAsync('git', ['add', '--all'], { cwd: root, stdio: 'ignore' });
@@ -395,15 +395,15 @@ export async function initGitRepoAsync(
 
 // TODO: Use in eject
 function logNodeInstallWarning(cdPath: string, packageManager: 'yarn' | 'npm'): void {
-  log.newLine();
-  log.nested(`⚠️  Before running your app, make sure you have node modules installed:`);
-  log.nested('');
+  Log.newLine();
+  Log.nested(`⚠️  Before running your app, make sure you have node modules installed:`);
+  Log.nested('');
   if (cdPath) {
     // In the case of --yes the project can be created in place so there would be no need to change directories.
-    log.nested(`  cd ${cdPath}/`);
+    Log.nested(`  cd ${cdPath}/`);
   }
-  log.nested(`  ${packageManager === 'npm' ? 'npm install' : 'yarn'}`);
-  log.nested('');
+  Log.nested(`  ${packageManager === 'npm' ? 'npm install' : 'yarn'}`);
+  Log.nested('');
 }
 
 // TODO: Use in eject
@@ -411,17 +411,17 @@ function logCocoaPodsWarning(cdPath: string): void {
   if (process.platform !== 'darwin') {
     return;
   }
-  log.newLine();
-  log.nested(
+  Log.newLine();
+  Log.nested(
     `⚠️  Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
   );
-  log.nested('');
+  Log.nested('');
   if (cdPath) {
     // In the case of --yes the project can be created in place so there would be no need to change directories.
-    log.nested(`  cd ${cdPath}/`);
+    Log.nested(`  cd ${cdPath}/`);
   }
-  log.nested(`  npx pod-install`);
-  log.nested('');
+  Log.nested(`  npx pod-install`);
+  Log.nested('');
 }
 
 // TODO: Use in eject
@@ -440,29 +440,29 @@ function logProjectReadyAsync({
   didConfigureUpdatesProjectFiles?: boolean;
   username?: string | null;
 }) {
-  log.nested(chalk.bold(`✅ Your project is ready!`));
-  log.newLine();
+  Log.nested(chalk.bold(`✅ Your project is ready!`));
+  Log.newLine();
 
   // empty string if project was created in current directory
   if (cdPath) {
-    log.nested(
+    Log.nested(
       `To run your project, navigate to the directory and run one of the following ${packageManager} commands.`
     );
-    log.newLine();
-    log.nested(`- ${chalk.bold('cd ' + cdPath)}`);
+    Log.newLine();
+    Log.nested(`- ${chalk.bold('cd ' + cdPath)}`);
   } else {
-    log.nested(`To run your project, run one of the following ${packageManager} commands.`);
-    log.newLine();
+    Log.nested(`To run your project, run one of the following ${packageManager} commands.`);
+    Log.newLine();
   }
 
   if (workflow === 'managed') {
-    log.nested(
+    Log.nested(
       `- ${chalk.bold(`${packageManager} start`)} ${chalk.dim(
         `# you can open iOS, Android, or web from here, or run them directly with the commands below.`
       )}`
     );
   }
-  log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
+  Log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`);
 
   let macOSComment = '';
   if (!isMacOS && workflow === 'bare') {
@@ -471,22 +471,22 @@ function logProjectReadyAsync({
   } else if (!isMacOS && workflow === 'managed') {
     macOSComment = ' # requires an iOS device or macOS for access to an iOS simulator';
   }
-  log.nested(
+  Log.nested(
     `- ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}${macOSComment}`
   );
 
-  log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
+  Log.nested(`- ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
 
   if (workflow === 'bare') {
-    log.newLine();
-    log.nested(
+    Log.newLine();
+    Log.nested(
       `💡 You can also open up the projects in the ${chalk.bold('ios')} and ${chalk.bold(
         'android'
       )} directories with their respective IDEs.`
     );
 
     if (showPublishBeforeBuildWarning) {
-      log.nested(
+      Log.nested(
         `🚀 ${terminalLink(
           'expo-updates',
           'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
@@ -495,7 +495,7 @@ function logProjectReadyAsync({
         )}. ${terminalLink('Learn more.', 'https://expo.fyi/release-builds-with-expo-updates')}`
       );
     } else if (didConfigureUpdatesProjectFiles) {
-      log.nested(
+      Log.nested(
         `🚀 ${terminalLink(
           'expo-updates',
           'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'
@@ -504,7 +504,7 @@ function logProjectReadyAsync({
         )}, you'll need to update the configuration in Expo.plist and AndroidManifest.xml before making a release build.`
       );
     } else {
-      log.nested(
+      Log.nested(
         `🚀 ${terminalLink(
           'expo-updates',
           'https://github.com/expo/expo/blob/master/packages/expo-updates/README.md'

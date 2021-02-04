@@ -11,7 +11,7 @@ import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
 import { installExitHooks } from '../exit';
-import log from '../log';
+import Log from '../log';
 import * as sendTo from '../sendTo';
 import urlOpts, { URLOptions } from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
@@ -197,12 +197,12 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
     await TerminalUI.startAsync(projectDir, startOpts);
   } else {
     if (!exp.isDetached) {
-      log.newLine();
+      Log.newLine();
       urlOpts.printQRCode(url);
     }
-    log.log(`Your native app is running at ${chalk.underline(url)}`);
+    Log.log(`Your native app is running at ${chalk.underline(url)}`);
   }
-  log.nested(chalk.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
+  Log.nested(chalk.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
 }
 
 async function validateDependenciesVersions(
@@ -216,7 +216,7 @@ async function validateDependenciesVersions(
 
   const bundleNativeModulesPath = resolveFrom.silent(projectDir, 'expo/bundledNativeModules.json');
   if (!bundleNativeModulesPath) {
-    log.warn(
+    Log.warn(
       `Your project is in SDK version >= 33.0.0, but the ${chalk.underline(
         'expo'
       )} package version seems to be older.`
@@ -246,17 +246,17 @@ async function validateDependenciesVersions(
     }
   }
   if (incorrectDeps.length > 0) {
-    log.warn(
+    Log.warn(
       "Some of your project's dependencies are not compatible with currently installed expo package version:"
     );
     incorrectDeps.forEach(({ moduleName, expectedRange, actualRange }) => {
-      log.warn(
+      Log.warn(
         ` - ${chalk.underline(moduleName)} - expected version range: ${chalk.underline(
           expectedRange
         )} - actual version installed: ${chalk.underline(actualRange)}`
       );
     });
-    log.warn(
+    Log.warn(
       'Your project may not work correctly until you install the correct versions of the packages.\n' +
         `To install the correct versions of these packages, please run: ${chalk.inverse(
           'expo install [package-name ...]'
@@ -271,14 +271,14 @@ async function tryOpeningDevToolsAsync({
   options,
 }: OpenDevToolsOptions): Promise<void> {
   const devToolsUrl = await DevToolsServer.startAsync(rootPath);
-  log.log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
+  Log.log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
 
   if (!options.nonInteractive && !exp.isDetached) {
     if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
-      log.log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
+      Log.log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
       openBrowser(devToolsUrl);
     } else {
-      log.log(
+      Log.log(
         `Press ${chalk.bold`d`} to open DevTools now, or ${chalk.bold`shift-d`} to always open it automatically.`
       );
     }
@@ -296,7 +296,7 @@ async function configureProjectAsync(
   }
   await urlOpts.optsAsync(projectDir, options);
 
-  log.log(chalk.gray(`Starting project at ${projectDir}`));
+  Log.log(chalk.gray(`Starting project at ${projectDir}`));
 
   const projectConfig = getConfig(projectDir, {
     skipSDKVersionRequirement: options.webOnly,

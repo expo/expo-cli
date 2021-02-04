@@ -2,7 +2,7 @@ import { Command } from 'commander';
 
 import CommandError from '../CommandError';
 import { Context } from '../credentials/context';
-import log from '../log';
+import Log from '../log';
 
 export default function (program: Command) {
   program
@@ -20,7 +20,7 @@ export default function (program: Command) {
       const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
       await ctx.android.updateFcmKey(experienceName, options.apiKey);
-      log.log('All done!');
+      Log.log('All done!');
     });
 
   program
@@ -34,7 +34,7 @@ export default function (program: Command) {
 
       const fcmCredentials = await ctx.android.fetchFcmKey(experienceName);
       if (fcmCredentials?.fcmApiKey) {
-        log.log(`FCM API key: ${fcmCredentials?.fcmApiKey}`);
+        Log.log(`FCM API key: ${fcmCredentials?.fcmApiKey}`);
       } else {
         throw new CommandError(`There is no FCM API key configured for this project`);
       }
@@ -50,6 +50,6 @@ export default function (program: Command) {
       const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
 
       await ctx.android.removeFcmKey(experienceName);
-      log.log('All done!');
+      Log.log('All done!');
     });
 }

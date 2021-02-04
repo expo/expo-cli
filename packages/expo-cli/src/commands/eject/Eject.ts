@@ -13,7 +13,7 @@ import temporary from 'tempy';
 import terminalLink from 'terminal-link';
 
 import CommandError, { SilentError } from '../../CommandError';
-import log from '../../log';
+import Log from '../../log';
 import { extractTemplateAppAsync } from '../../utils/extractTemplateAppAsync';
 import configureProjectAsync, { expoManagedPlugins } from '../apply/configureProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
@@ -83,12 +83,12 @@ export function ensureValidPlatforms(platforms: ModPlatform[]): ModPlatform[] {
   const isWindows = process.platform === 'win32';
   // Skip ejecting for iOS on Windows
   if (isWindows && platforms.includes('ios')) {
-    log.warn(
+    Log.warn(
       `⚠️  Skipping generating the iOS native project files. Run ${chalk.bold(
         'expo eject'
       )} again from macOS or Linux to generate the iOS project.`
     );
-    log.newLine();
+    Log.newLine();
     return platforms.filter(platform => platform !== 'ios');
   }
   return platforms;
@@ -164,7 +164,7 @@ export async function prebuildAsync(
   if (platforms.includes('ios') && shouldInstall && needsPodInstall) {
     podsInstalled = await CreateApp.installCocoaPodsAsync(projectRoot);
   } else {
-    log.debug('Skipped pod install');
+    Log.debug('Skipped pod install');
   }
 
   await warnIfDependenciesRequireAdditionalSetupAsync(
@@ -193,11 +193,11 @@ export function logNextSteps({
   nodeInstall,
   packageManager,
 }: PrebuildResults) {
-  log.newLine();
-  log.nested(`➡️  ${chalk.bold('Next steps')}`);
+  Log.newLine();
+  Log.nested(`➡️  ${chalk.bold('Next steps')}`);
 
   if (WarningAggregator.hasWarningsIOS() || WarningAggregator.hasWarningsAndroid()) {
-    log.nested(
+    Log.nested(
       `\u203A 👆 Review the logs above and look for any warnings (⚠️ ) that might need follow-up.`
     );
   }
@@ -205,38 +205,38 @@ export function logNextSteps({
   // Log a warning about needing to install node modules
   if (nodeInstall) {
     const installCmd = packageManager === 'npm' ? 'npm install' : 'yarn';
-    log.nested(`\u203A ⚠️  Install node modules: ${log.chalk.bold(installCmd)}`);
+    Log.nested(`\u203A ⚠️  Install node modules: ${Log.chalk.bold(installCmd)}`);
   }
   if (podInstall) {
-    log.nested(
+    Log.nested(
       `\u203A 🍫 When CocoaPods is installed, initialize the project workspace: ${chalk.bold(
         'npx pod-install'
       )}`
     );
   }
-  log.nested(
+  Log.nested(
     `\u203A 💡 You may want to run ${chalk.bold(
       'npx @react-native-community/cli doctor'
     )} to help install any tools that your app may need to run your native projects.`
   );
-  log.nested(
+  Log.nested(
     `\u203A 🔑 Download your Android keystore (if you're not sure if you need to, just run the command and see): ${chalk.bold(
       'expo fetch:android:keystore'
     )}`
   );
 
   if (hasAssetBundlePatterns) {
-    log.nested(
+    Log.nested(
       `\u203A 📁 The property ${chalk.bold(
         `assetBundlePatterns`
-      )} does not have the same effect in the bare workflow.\n  ${log.chalk.dim(
+      )} does not have the same effect in the bare workflow.\n  ${Log.chalk.dim(
         learnMore('https://docs.expo.io/bare/updating-your-app/#embedding-assets')
       )}`
     );
   }
 
   if (legacyUpdates) {
-    log.nested(
+    Log.nested(
       `\u203A 🚀 ${
         (terminalLink(
           'expo-updates',
@@ -247,28 +247,28 @@ export function logNextSteps({
         })
       } has been configured in your project. Before you do a release build, make sure you run ${chalk.bold(
         'expo publish'
-      )}. ${log.chalk.dim(learnMore('https://expo.fyi/release-builds-with-expo-updates'))}`
+      )}. ${Log.chalk.dim(learnMore('https://expo.fyi/release-builds-with-expo-updates'))}`
     );
   }
 
   if (hasNewProjectFiles) {
-    log.newLine();
-    log.nested(`☑️  ${chalk.bold('When you are ready to run your project')}`);
-    log.nested(
+    Log.newLine();
+    Log.nested(`☑️  ${chalk.bold('When you are ready to run your project')}`);
+    Log.nested(
       'To compile and run your project in development, execute one of the following commands:'
     );
 
     if (platforms.includes('ios')) {
-      log.nested(`\u203A ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
+      Log.nested(`\u203A ${chalk.bold(packageManager === 'npm' ? 'npm run ios' : 'yarn ios')}`);
     }
 
     if (platforms.includes('android')) {
-      log.nested(
+      Log.nested(
         `\u203A ${chalk.bold(packageManager === 'npm' ? 'npm run android' : 'yarn android')}`
       );
     }
 
-    log.nested(`\u203A ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
+    Log.nested(`\u203A ${chalk.bold(packageManager === 'npm' ? 'npm run web' : 'yarn web')}`);
   }
 }
 
@@ -356,7 +356,7 @@ async function ensureConfigAsync({
     }
   } catch (error) {
     // TODO(Bacon): Currently this is already handled in the command
-    log.addNewLineIfNone();
+    Log.addNewLineIfNone();
     throw new CommandError(`${error.message}\n`);
   }
 
@@ -371,7 +371,7 @@ async function ensureConfigAsync({
 
   if (exp.entryPoint) {
     delete exp.entryPoint;
-    log.log(`\u203A expo.entryPoint is not needed and has been removed.`);
+    Log.log(`\u203A expo.entryPoint is not needed and has been removed.`);
   }
 
   // Read config again because prompting for bundle id or package name may have mutated the results.
@@ -430,15 +430,15 @@ function writeMetroConfig({
       symbol: '⚠️ ',
       text: chalk.yellow('Metro bundler configuration not applied:'),
     });
-    log.nested(`\u203A ${e.message}`);
-    log.nested(
+    Log.nested(`\u203A ${e.message}`);
+    Log.nested(
       `\u203A You will need to add the ${chalk.bold(
         'hashAssetFiles'
-      )} plugin to your Metro configuration.\n  ${log.chalk.dim(
+      )} plugin to your Metro configuration.\n  ${Log.chalk.dim(
         learnMore('https://docs.expo.io/bare/installing-updates/')
       )}`
     );
-    log.newLine();
+    Log.newLine();
   }
 }
 
@@ -597,12 +597,12 @@ async function updatePackageJSONAsync({
     'Updated package.json and added index.js entry point for iOS and Android.'
   );
   if (removedPkgMain) {
-    log.log(
+    Log.log(
       `\u203A Removed ${chalk.bold(
         `"main": "${removedPkgMain}"`
       )} from package.json because we recommend using index.js as main instead.`
     );
-    log.newLine();
+    Log.newLine();
   }
 
   return results;
@@ -697,22 +697,22 @@ async function cloneNativeDirectoriesAsync({
     let message = `Created native project${platforms.length > 1 ? 's' : ''}`;
 
     if (skippedPaths.length) {
-      message += log.chalk.dim(
-        ` | ${skippedPaths.map(path => log.chalk.bold(`/${path}`)).join(', ')} already created`
+      message += Log.chalk.dim(
+        ` | ${skippedPaths.map(path => Log.chalk.bold(`/${path}`)).join(', ')} already created`
       );
     }
     if (!results?.didMerge) {
-      message += log.chalk.dim(` | gitignore already synced`);
+      message += Log.chalk.dim(` | gitignore already synced`);
     } else if (results.didMerge && results.didClear) {
-      message += log.chalk.dim(` | synced gitignore`);
+      message += Log.chalk.dim(` | synced gitignore`);
     }
     creatingNativeProjectStep.succeed(message);
   } catch (e) {
-    log.error(e.message);
+    Log.error(e.message);
     creatingNativeProjectStep.fail(
       'Failed to create the native project - see the output above for more information.'
     );
-    log.log(
+    Log.log(
       chalk.yellow(
         'You may want to delete the `./ios` and/or `./android` directories before running eject again.'
       )
@@ -826,7 +826,7 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
       'Constants.manifest'
     )} is not available in the bare workflow. You should replace it with ${chalk.bold(
       'Updates.manifest'
-    )}. ${log.chalk.dim(
+    )}. ${Log.chalk.dim(
       learnMore('https://docs.expo.io/versions/latest/sdk/updates/#updatesmanifest')
     )}`;
   }
@@ -839,7 +839,7 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
     return;
   }
 
-  log.newLine();
+  Log.newLine();
   const warnAdditionalSetupStep = CreateApp.logNewSection(
     'Checking if any additional setup steps are required for installed SDK packages.'
   );
@@ -856,7 +856,7 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(
   });
 
   packagesToWarn.forEach(pkgName => {
-    log.nested(`\u203A ${chalk.bold(pkgName)}: ${pkgsWithExtraSetup[pkgName]}`);
+    Log.nested(`\u203A ${chalk.bold(pkgName)}: ${pkgsWithExtraSetup[pkgName]}`);
   });
 }
 

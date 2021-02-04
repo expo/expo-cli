@@ -3,7 +3,7 @@ import plist from '@expo/plist';
 import * as fs from 'fs-extra';
 
 import { AbortCommandError } from './CommandError';
-import log from './log';
+import Log from './log';
 
 async function getSchemesForIosAsync(projectRoot: string) {
   try {
@@ -41,17 +41,17 @@ export async function getDevClientSchemeAsync(projectRoot: string): Promise<stri
 
   const [matching] = intersecting(ios, android);
   if (!matching) {
-    log.warn(
+    Log.warn(
       '\nDev Client: No common URI schemes could be found for the native ios and android projects, this is required for opening the project\n'
     );
-    log.log(
-      `Add a common scheme with ${log.chalk.cyan(
+    Log.log(
+      `Add a common scheme with ${Log.chalk.cyan(
         'npx uri-scheme add my-scheme'
-      )} or provide a scheme with the ${log.chalk.cyan('--scheme')} flag\n`
+      )} or provide a scheme with the ${Log.chalk.cyan('--scheme')} flag\n`
     );
-    log.log(
-      log.chalk.dim(
-        `You can see all of the existing schemes for your native projects by running ${log.chalk.cyan(
+    Log.log(
+      Log.chalk.dim(
+        `You can see all of the existing schemes for your native projects by running ${Log.chalk.cyan(
           'npx uri-scheme list'
         )}\n`
       )

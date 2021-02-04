@@ -1,17 +1,17 @@
 import { UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 
-import log from './log';
+import Log from './log';
 
 export default async function printRunInstructionsAsync(): Promise<void> {
   const user = await UserManager.getCurrentUserAsync();
 
   // If no user, we are offline and can't connect
   if (user) {
-    log.newLine();
-    log.log(chalk.bold('Instructions to open this project on a physical device'));
-    log.log(`${chalk.underline('Android devices')}: scan the above QR code.`);
-    log.log(
+    Log.newLine();
+    Log.log(chalk.bold('Instructions to open this project on a physical device'));
+    Log.log(`${chalk.underline('Android devices')}: scan the above QR code.`);
+    Log.log(
       `${chalk.underline('iOS devices')}: run ${chalk.bold(
         'expo send -s <your-email-address>'
       )} in this project directory in another terminal window to send the URL to your device.`
@@ -25,12 +25,12 @@ export default async function printRunInstructionsAsync(): Promise<void> {
     // );
   }
 
-  log.newLine();
-  log.log(chalk.bold('Instructions to open this project on a simulator'));
-  log.log(
+  Log.newLine();
+  Log.log(chalk.bold('Instructions to open this project on a simulator'));
+  Log.log(
     `If you already have the simulator installed, run ${chalk.bold('expo ios')} or ${chalk.bold(
       'expo android'
     )} in this project directory in another terminal window.`
   );
-  log.newLine();
+  Log.newLine();
 }

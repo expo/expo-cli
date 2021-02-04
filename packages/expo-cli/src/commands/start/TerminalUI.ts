@@ -16,7 +16,7 @@ import readline from 'readline';
 import wrapAnsi from 'wrap-ansi';
 
 import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
-import log from '../../log';
+import Log from '../../log';
 import urlOpts from '../../urlOpts';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
 
@@ -36,8 +36,8 @@ type StartOptions = {
 };
 
 const printHelp = (): void => {
-  log.newLine();
-  log.nested(`Press ${b('?')} to show a list of all available commands.`);
+  Log.newLine();
+  Log.nested(`Press ${b('?')} to show a list of all available commands.`);
 };
 
 const div = chalk.dim(`│`);
@@ -69,7 +69,7 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
     !options.webOnly && ['e', `share the app link by email`],
   ];
 
-  log.nested(
+  Log.nested(
     ui
       .filter(Boolean)
       // @ts-ignore: filter doesn't work
@@ -98,22 +98,22 @@ export const printServerInfo = async (
     return;
   }
   const url = await UrlUtils.constructDeepLinkAsync(projectDir);
-  log.newLine();
-  log.nested(` ${u(url)}`);
-  log.newLine();
+  Log.newLine();
+  Log.nested(` ${u(url)}`);
+  Log.newLine();
   urlOpts.printQRCode(url);
   const wrapLength = process.stdout.columns || 80;
   const item = (text: string): string => ` ${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
   const iosInfo = process.platform === 'darwin' ? `, or ${b('i')} for iOS simulator` : '';
   const webInfo = `${b`w`} to run on ${u`w`}eb`;
-  log.nested(wrapAnsi(u('To run the app, choose one of:'), wrapLength));
+  Log.nested(wrapAnsi(u('To run the app, choose one of:'), wrapLength));
 
   // TODO: if dev client, chanege this message!
-  log.nested(item(`Scan the QR code above with the Expo app (Android) or the Camera app (iOS).`));
+  Log.nested(item(`Scan the QR code above with the Expo app (Android) or the Camera app (iOS).`));
 
   // TODO: if no react-native-web in package.json then don't show web info
-  log.nested(item(`Press ${b`a`} for Android emulator${iosInfo}, or ${webInfo}.`));
-  log.nested(item(`Press ${b`e`} to send a link to your phone with email.`));
+  Log.nested(item(`Press ${b`a`} for Android emulator${iosInfo}, or ${webInfo}.`));
+  Log.nested(item(`Press ${b`e`} to send a link to your phone with email.`));
 
   Webpack.printConnectionInstructions(projectDir);
   printHelp();
@@ -160,8 +160,8 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
       switch (key) {
         case 'A':
         case 'a':
-          log.clear();
-          log.log('Opening the web project in Chrome on Android...');
+          Log.clear();
+          Log.log('Opening the web project in Chrome on Android...');
           await Android.openWebProjectAsync({
             projectRoot,
             shouldPrompt: !options.nonInteractive && key === 'A',
@@ -170,8 +170,8 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           break;
         case 'i':
         case 'I':
-          log.clear();
-          log.log('Opening the web project in Safari on iOS...');
+          Log.clear();
+          Log.log('Opening the web project in Safari on iOS...');
           await Simulator.openWebProjectAsync({
             projectRoot,
             shouldPrompt: !options.nonInteractive && key === 'I',
@@ -186,25 +186,25 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           printHelp();
           break;
         case 'e':
-          log.log(chalk.red` ${BLT} Sending a URL is not supported in web-only mode`);
+          Log.log(chalk.red` ${BLT} Sending a URL is not supported in web-only mode`);
           break;
       }
     } else {
       switch (key) {
         case 'A':
-          log.clear();
+          Log.clear();
           await Android.openProjectAsync({ projectRoot, shouldPrompt: true });
           printHelp();
           break;
         case 'a': {
-          log.clear();
-          log.log('Opening on Android...');
+          Log.clear();
+          Log.log('Opening on Android...');
           await Android.openProjectAsync({ projectRoot });
           printHelp();
           break;
         }
         case 'I':
-          log.clear();
+          Log.clear();
           await Simulator.openProjectAsync({
             projectRoot,
             shouldPrompt: true,
@@ -212,7 +212,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           printHelp();
           break;
         case 'i': {
-          log.clear();
+          Log.clear();
 
           // note(brentvatne): temporarily remove logic for picking the
           // simulator until we have parity for Android. this also ensures that we
@@ -223,7 +223,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           // const shouldPrompt =
           //   !options.nonInteractive && (key === 'I' || !(await Simulator.isSimulatorBootedAsync()));
 
-          log.log('Opening on iOS...');
+          Log.log('Opening on iOS...');
           await Simulator.openProjectAsync({
             projectRoot,
             shouldPrompt: false,
@@ -253,12 +253,12 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
             startWaitingForCommand();
           };
           const cancel = async () => {
-            log.clear();
+            Log.clear();
             printHelp();
           };
-          log.clear();
+          Log.clear();
           process.stdin.addListener('keypress', handleKeypress);
-          log.log('Please enter your email address (press ESC to cancel) ');
+          Log.log('Please enter your email address (press ESC to cancel) ');
           rl.question(
             defaultRecipient ? `[default: ${defaultRecipient}]> ` : '> ',
             async sendTo => {
@@ -271,15 +271,15 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
                 cancel();
                 return;
               }
-              log.log(`Sending ${lanAddress} to ${sendTo}...`);
+              Log.log(`Sending ${lanAddress} to ${sendTo}...`);
 
               let sent = false;
               try {
                 await Exp.sendAsync(sendTo, lanAddress);
                 sent = true;
-                log.log(`Sent link successfully.`);
+                Log.log(`Sent link successfully.`);
               } catch (err) {
-                log.log(`Could not send link. ${err}`);
+                Log.log(`Could not send link. ${err}`);
               }
               printHelp();
               if (sent) {
@@ -300,7 +300,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         break;
       }
       case CTRL_L: {
-        log.clear();
+        Log.clear();
         break;
       }
       case '?': {
@@ -308,29 +308,29 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         break;
       }
       case 'w': {
-        log.clear();
-        log.log('Attempting to open the project in a web browser...');
+        Log.clear();
+        Log.log('Attempting to open the project in a web browser...');
         await Webpack.openAsync(projectRoot);
         await printServerInfo(projectRoot, options);
         break;
       }
       case 'c': {
-        log.clear();
+        Log.clear();
         await printServerInfo(projectRoot, options);
         break;
       }
       case 'd': {
         const { devToolsPort } = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-        log.log('Opening DevTools in the browser...');
+        Log.log('Opening DevTools in the browser...');
         openBrowser(`http://localhost:${devToolsPort}`);
         printHelp();
         break;
       }
       case 'D': {
-        log.clear();
+        Log.clear();
         const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', true));
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
-        log.log(
+        Log.log(
           `Automatically opening DevTools ${b(
             enabled ? 'enabled' : 'disabled'
           )}.\nPress ${b`d`} to open DevTools now.`
@@ -339,11 +339,11 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         break;
       }
       case 'p': {
-        log.clear();
+        Log.clear();
         const projectSettings = await ProjectSettings.readAsync(projectRoot);
         const dev = !projectSettings.dev;
         await ProjectSettings.setAsync(projectRoot, { dev, minify: !dev });
-        log.log(
+        Log.log(
           `Metro bundler is now running in ${chalk.bold(
             dev ? 'development' : 'production'
           )}${chalk.reset(` mode.`)}
@@ -354,18 +354,18 @@ Please reload the project in the Expo app for the change to take effect.`
       }
       case 'r':
       case 'R': {
-        log.clear();
+        Log.clear();
         const reset = key === 'R';
         if (reset) {
-          log.log('Restarting Metro bundler and clearing cache...');
+          Log.log('Restarting Metro bundler and clearing cache...');
         } else {
-          log.log('Restarting Metro bundler...');
+          Log.log('Restarting Metro bundler...');
         }
         Project.startAsync(projectRoot, { ...options, reset });
         break;
       }
       case 'o':
-        log.log('Trying to open the project in your editor...');
+        Log.log('Trying to open the project in your editor...');
         await openInEditorAsync(projectRoot);
     }
   }

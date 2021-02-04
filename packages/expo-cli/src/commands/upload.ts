@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Command } from 'commander';
 
-import log from '../log';
+import Log from '../log';
 import AndroidSubmitCommand from './upload/submission-service/android/AndroidSubmitCommand';
 import { AndroidSubmitCommandOptions } from './upload/submission-service/android/types';
 import * as TerminalLink from './utils/TerminalLink';
@@ -42,7 +42,7 @@ export default function (program: Command) {
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: AndroidSubmitCommandOptions) => {
       if (options.useSubmissionService) {
-        log.warn(
+        Log.warn(
           '\n`--use-submission-service is now the default and the flag will be deprecated in the future.`'
         );
       }
@@ -101,19 +101,19 @@ export default function (program: Command) {
     // TODO: make this work outside the project directory (if someone passes all necessary options for upload)
     .asyncActionProjectDir(async (projectDir: string, options: any) => {
       const logItem = (name: string, link: string) => {
-        log.log(`\u203A ${TerminalLink.linkedText(name, link)}`);
+        Log.log(`\u203A ${TerminalLink.linkedText(name, link)}`);
       };
 
-      log.newLine();
-      log.log(chalk.yellow('expo upload:ios is no longer supported'));
-      log.log('Please use one of the following');
-      log.newLine();
+      Log.newLine();
+      Log.log(chalk.yellow('expo upload:ios is no longer supported'));
+      Log.log('Please use one of the following');
+      Log.newLine();
       logItem(chalk.cyan.bold('eas submit'), 'https://docs.expo.io/submit/ios');
       logItem('Transporter', 'https://apps.apple.com/us/app/transporter/id1450874784');
       logItem(
         'Fastlane deliver',
         'https://docs.fastlane.tools/getting-started/ios/appstore-deployment'
       );
-      log.newLine();
+      Log.newLine();
     });
 }

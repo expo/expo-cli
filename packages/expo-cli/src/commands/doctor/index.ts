@@ -1,7 +1,7 @@
 import { Doctor } from '@expo/xdl';
 import { Command } from 'commander';
 
-import log from '../../log';
+import Log from '../../log';
 import { warnUponCmdExe } from './windows';
 
 async function action(projectDir: string) {
@@ -11,7 +11,7 @@ async function action(projectDir: string) {
   await Doctor.validateExpoServersAsync(projectDir);
 
   if ((await Doctor.validateWithNetworkAsync(projectDir)) === Doctor.NO_ISSUES) {
-    log.log(`Didn't find any issues with the project!`);
+    Log.log(`Didn't find any issues with the project!`);
   }
 }
 

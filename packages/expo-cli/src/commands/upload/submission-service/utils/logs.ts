@@ -1,6 +1,6 @@
 import got from 'got';
 
-import log from '../../../../log';
+import Log from '../../../../log';
 import { Submission, SubmissionStatus } from '../SubmissionService.types';
 import { printSubmissionError } from './errors';
 
@@ -24,16 +24,16 @@ async function downloadAndPrintSubmissionLogs(submission: Submission): Promise<v
   }
   const { body: data } = await got.get(submission.submissionInfo.logsUrl);
   const logs = parseLogs(data);
-  log.addNewLineIfNone();
-  const prefix = log.chalk.blueBright('[logs] ');
+  Log.addNewLineIfNone();
+  const prefix = Log.chalk.blueBright('[logs] ');
   for (const { level, msg } of logs) {
     const msgWithPrefix = `${prefix}${msg}`;
     if (level === 'error') {
-      log.error(msgWithPrefix);
+      Log.error(msgWithPrefix);
     } else if (level === 'warn') {
-      log.warn(msgWithPrefix);
+      Log.warn(msgWithPrefix);
     } else {
-      log.log(msgWithPrefix);
+      Log.log(msgWithPrefix);
     }
   }
 }

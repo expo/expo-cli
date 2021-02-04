@@ -7,7 +7,7 @@ import fs from 'fs';
 import path from 'path';
 
 import CommandError from '../CommandError';
-import log from '../log';
+import Log from '../log';
 import { getProjectOwner } from '../projects';
 import * as sendTo from '../sendTo';
 import { getBuildStatusAsync } from './build/getBuildStatusAsync';
@@ -42,21 +42,21 @@ export async function action(
   const user = await UserManager.ensureLoggedInAsync();
   const owner = getProjectOwner(user, exp);
 
-  log.addNewLineIfNone();
+  Log.addNewLineIfNone();
 
   // Log building info before building.
   // This gives the user sometime to bail out if the info is unexpected.
 
   if (sdkVersion && target === 'managed') {
-    log.log(`- Expo SDK: ${log.chalk.bold(exp.sdkVersion)}`);
+    Log.log(`- Expo SDK: ${Log.chalk.bold(exp.sdkVersion)}`);
   }
-  log.log(`- Release channel: ${log.chalk.bold(options.releaseChannel)}`);
-  log.log(`- Workflow: ${log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
+  Log.log(`- Release channel: ${Log.chalk.bold(options.releaseChannel)}`);
+  Log.log(`- Workflow: ${Log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
   if (user.kind === 'robot') {
-    log.log(`- Owner: ${log.chalk.bold(owner)}`);
+    Log.log(`- Owner: ${Log.chalk.bold(owner)}`);
   }
 
-  log.newLine();
+  Log.newLine();
 
   // Log warnings.
 
@@ -77,11 +77,11 @@ export async function action(
     logBareWorkflowWarnings(pkg);
   }
 
-  log.addNewLineIfNone();
+  Log.addNewLineIfNone();
 
   // Build and publish the project.
 
-  log.log(`Building optimized bundles and generating sourcemaps...`);
+  Log.log(`Building optimized bundles and generating sourcemaps...`);
 
   if (options.quiet) {
     simpleSpinner.start();
@@ -100,8 +100,8 @@ export async function action(
     simpleSpinner.stop();
   }
 
-  log.log('Publish complete');
-  log.newLine();
+  Log.log('Publish complete');
+  Log.newLine();
 
   logManifestUrl({ url, sdkVersion: exp.sdkVersion });
 
@@ -124,7 +124,7 @@ export async function action(
     }
   }
 
-  log.newLine();
+  Log.newLine();
 
   return result;
 }
@@ -149,8 +149,8 @@ function assertValidReleaseChannel(releaseChannel?: string): void {
  */
 function logManifestUrl({ url, sdkVersion }: { url: string; sdkVersion?: string }) {
   const manifestUrl = getExampleManifestUrl(url, sdkVersion) ?? url;
-  log.log(
-    `📝  Manifest: ${log.chalk.bold(TerminalLink.fallbackToUrl(url, manifestUrl))} ${log.chalk.dim(
+  Log.log(
+    `📝  Manifest: ${Log.chalk.bold(TerminalLink.fallbackToUrl(url, manifestUrl))} ${Log.chalk.dim(
       TerminalLink.learnMore('https://expo.fyi/manifest-url')
     )}`
   );
@@ -168,16 +168,16 @@ function logProjectPageUrl({
   url: string;
   copiedToClipboard: boolean;
 }) {
-  let productionMessage = `⚙️   Project page: ${log.chalk.bold(
+  let productionMessage = `⚙️   Project page: ${Log.chalk.bold(
     TerminalLink.fallbackToUrl(url, url)
   )}`;
 
   if (copiedToClipboard) {
-    productionMessage += ` ${log.chalk.gray(`[copied to clipboard]`)}`;
+    productionMessage += ` ${Log.chalk.gray(`[copied to clipboard]`)}`;
   }
-  productionMessage += ` ${log.chalk.dim(TerminalLink.learnMore('https://expo.fyi/project-page'))}`;
+  productionMessage += ` ${Log.chalk.dim(TerminalLink.learnMore('https://expo.fyi/project-page'))}`;
 
-  log.log(productionMessage);
+  Log.log(productionMessage);
 }
 
 function getExampleManifestUrl(url: string, sdkVersion: string | undefined): string | null {
@@ -230,7 +230,7 @@ async function logSDKMismatchWarningsAsync({
   }
 
   // A convenient warning reminding people that they're publishing with an SDK that their published app does not support.
-  log.nestedWarn(
+  Log.nestedWarn(
     formatNamedWarning(
       'URL mismatch',
       `No standalone app has been built with SDK ${sdkVersion} and release channel "${releaseChannel}" for this project before.\n  OTA updates only work for native projects that have the same SDK version and release channel.`,
@@ -247,7 +247,7 @@ export function logExpoUpdatesWarnings(pkg: PackageJSONConfig): void {
     return;
   }
 
-  log.nestedWarn(
+  Log.nestedWarn(
     formatNamedWarning(
       'Conflicting Updates',
       `You have both the ${chalk.bold('expokit')} and ${chalk.bold(
@@ -266,7 +266,7 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
   if (hasOptimized) {
     return;
   }
-  log.nestedWarn(
+  Log.nestedWarn(
     formatNamedWarning(
       'Optimization',
       `Project may contain uncompressed images. Optimizing image assets can improve app size and performance.\n  To fix this, run ${chalk.bold(
@@ -296,7 +296,7 @@ export function logBareWorkflowWarnings(pkg: PackageJSONConfig) {
     return;
   }
 
-  log.nestedWarn(
+  Log.nestedWarn(
     formatNamedWarning(
       'Workflow target',
       `This is a ${chalk.bold(

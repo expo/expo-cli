@@ -8,7 +8,7 @@ import * as path from 'path';
 import wrapAnsi from 'wrap-ansi';
 
 import CommandError from '../../../CommandError';
-import log from '../../../log';
+import Log from '../../../log';
 import { confirmAsync } from '../../../prompts';
 import { logNewSection } from '../CreateApp';
 import {
@@ -20,7 +20,7 @@ import { isTypeScriptSetupDisabled, updateTSConfigAsync } from './updateTSConfig
 
 export async function ensureTypeScriptSetupAsync(projectRoot: string): Promise<void> {
   if (isTypeScriptSetupDisabled) {
-    log.log(chalk.dim('\u203A Skipping TypeScript verification'));
+    Log.log(chalk.dim('\u203A Skipping TypeScript verification'));
     return;
   }
 
@@ -169,12 +169,12 @@ async function installPackagesAsync(
 ) {
   const packageManager = PackageManager.createForProject(projectRoot, {
     yarn: isYarn,
-    log,
-    silent: !log.isDebug,
+    log: Log,
+    silent: !Log.isDebug,
   });
 
   const packagesStr = chalk.bold(devPackages.join(', '));
-  log.newLine();
+  Log.newLine();
   const installingPackageStep = logNewSection(`Installing ${packagesStr}`);
   try {
     await packageManager.addDevAsync(...devPackages);

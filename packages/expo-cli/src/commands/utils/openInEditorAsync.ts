@@ -2,7 +2,7 @@ import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
 import editors from 'env-editor';
 
-import log from '../../log';
+import Log from '../../log';
 
 function guessEditor() {
   if (process.env.EXPO_EDITOR) {
@@ -26,7 +26,7 @@ export async function openInEditorAsync(path: string, options: { editor?: string
   }
 
   if (!editor) {
-    log.error(
+    Log.error(
       'Could not find your editor, you can set it by defining $EXPO_EDITOR environment variable (e.g. "code" or "atom")'
     );
     return;

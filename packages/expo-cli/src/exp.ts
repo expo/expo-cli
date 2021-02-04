@@ -34,7 +34,7 @@ import wrapAnsi from 'wrap-ansi';
 import { AbortCommandError, SilentError } from './CommandError';
 import { loginOrRegisterAsync } from './accounts';
 import { registerCommands } from './commands';
-import log from './log';
+import Log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
 
@@ -320,9 +320,9 @@ Command.prototype.commandHelp = function () {
 };
 
 program.on('--help', () => {
-  log.log(`  Run a command with --help for more info 💡`);
-  log.log(`    $ expo start --help`);
-  log.log();
+  Log.log(`  Run a command with --help for more info 💡`);
+  Log.log(`    $ expo start --help`);
+  Log.log();
 });
 
 export type Action = (...args: any[]) => void;
@@ -352,24 +352,24 @@ Command.prototype.asyncAction = function (asyncFn: Action, skipUpdateCheck: bool
       if (err instanceof AbortCommandError || err instanceof SilentError) {
         // Do nothing when a prompt is cancelled or the error is logged in a pretty way.
       } else if (err.isCommandError) {
-        log.error(err.message);
+        Log.error(err.message);
       } else if (err._isApiError) {
-        log.error(chalk.red(err.message));
+        Log.error(chalk.red(err.message));
       } else if (err.isXDLError) {
-        log.error(err.message);
+        Log.error(err.message);
       } else if (err.isJsonFileError || err.isConfigError || err.isPackageManagerError) {
         if (err.code === 'EJSONEMPTY') {
           // Empty JSON is an easy bug to debug. Often this is thrown for package.json or app.json being empty.
-          log.error(err.message);
+          Log.error(err.message);
         } else {
-          log.addNewLineIfNone();
-          log.error(err.message);
+          Log.addNewLineIfNone();
+          Log.error(err.message);
           const stacktrace = formatStackTrace(err.stack, this.name());
-          log.error(chalk.gray(stacktrace));
+          Log.error(chalk.gray(stacktrace));
         }
       } else {
-        log.error(err.message);
-        log.error(chalk.gray(err.stack));
+        Log.error(err.message);
+        Log.error(chalk.gray(err.stack));
       }
 
       process.exit(1);
@@ -461,12 +461,12 @@ Command.prototype.asyncActionProjectDir = function (
     if (opts.config) {
       // @ts-ignore: This guards against someone passing --config without a path.
       if (opts.config === true) {
-        log.addNewLineIfNone();
-        log.log('Please specify your custom config path:');
-        log.log(
-          log.chalk.green(`  expo ${this.name()} --config ${log.chalk.cyan(`<app-config>`)}`)
+        Log.addNewLineIfNone();
+        Log.log('Please specify your custom config path:');
+        Log.log(
+          Log.chalk.green(`  expo ${this.name()} --config ${Log.chalk.cyan(`<app-config>`)}`)
         );
-        log.newLine();
+        Log.newLine();
         process.exit(1);
       }
 
@@ -474,15 +474,15 @@ Command.prototype.asyncActionProjectDir = function (
       // Warn the user when the custom config path they provided does not exist.
       if (!fs.existsSync(pathToConfig)) {
         const relativeInput = path.relative(process.cwd(), opts.config);
-        const formattedPath = log.chalk
+        const formattedPath = Log.chalk
           .reset(pathToConfig)
-          .replace(relativeInput, log.chalk.bold(relativeInput));
-        log.addNewLineIfNone();
-        log.nestedWarn(`Custom config file does not exist:\n${formattedPath}`);
-        log.newLine();
-        const helpCommand = log.chalk.green(`expo ${this.name()} --help`);
-        log.log(`Run ${helpCommand} for more info`);
-        log.newLine();
+          .replace(relativeInput, Log.chalk.bold(relativeInput));
+        Log.addNewLineIfNone();
+        Log.nestedWarn(`Custom config file does not exist:\n${formattedPath}`);
+        Log.newLine();
+        const helpCommand = Log.chalk.green(`expo ${this.name()} --help`);
+        Log.log(`Run ${helpCommand} for more info`);
+        Log.newLine();
         process.exit(1);
         // throw new Error(`File at provided config path does not exist: ${pathToConfig}`);
       }
@@ -512,7 +512,7 @@ Command.prototype.asyncActionProjectDir = function (
       }
 
       const { message, stack } = traceInfo;
-      log.addNewLineIfNone();
+      Log.addNewLineIfNone();
       logFn(chalk.bold(message));
 
       const isLibraryFrame = (line: string) => {
@@ -554,7 +554,7 @@ Command.prototype.asyncActionProjectDir = function (
         nestedLogFn(`- ... ${unloggedFrames} more stack frames from framework internals`);
       }
 
-      log.printNewLineBeforeNextLog();
+      Log.printNewLineBeforeNextLog();
     };
 
     const logWithLevel = (chunk: LogRecord) => {
@@ -563,21 +563,21 @@ Command.prototype.asyncActionProjectDir = function (
       }
       if (chunk.level <= bunyan.INFO) {
         if (chunk.includesStack) {
-          logStackTrace(chunk, log, log.nested);
+          logStackTrace(chunk, Log, Log.nested);
         } else {
-          logLines(chunk.msg, log);
+          logLines(chunk.msg, Log);
         }
       } else if (chunk.level === bunyan.WARN) {
         if (chunk.includesStack) {
-          logStackTrace(chunk, log.warn, log.nestedWarn);
+          logStackTrace(chunk, Log.warn, Log.nestedWarn);
         } else {
-          logLines(chunk.msg, log.warn);
+          logLines(chunk.msg, Log.warn);
         }
       } else {
         if (chunk.includesStack) {
-          logStackTrace(chunk, log.error, log.nestedError);
+          logStackTrace(chunk, Log.error, Log.nestedError);
         } else {
-          logLines(chunk.msg, log.error);
+          logLines(chunk.msg, Log.error);
         }
       }
     };
@@ -595,7 +595,7 @@ Command.prototype.asyncActionProjectDir = function (
           incomplete: ' ',
         });
 
-        log.setBundleProgressBar(bar);
+        Log.setBundleProgressBar(bar);
       },
       onProgressBuildBundle: (percent: number) => {
         if (!bar || bar.complete) return;
@@ -608,14 +608,14 @@ Command.prototype.asyncActionProjectDir = function (
         }
 
         if (bar) {
-          log.setBundleProgressBar(null);
+          Log.setBundleProgressBar(null);
           bar.terminate();
           bar = null;
 
           if (err) {
-            log.log(chalk.red('Failed building JavaScript bundle.'));
+            Log.log(chalk.red('Failed building JavaScript bundle.'));
           } else {
-            log.log(
+            Log.log(
               chalk.green(
                 `Finished building JavaScript bundle in ${
                   endTime.getTime() - startTime.getTime()
@@ -660,7 +660,7 @@ Command.prototype.asyncActionProjectDir = function (
       (await ProjectSettings.getCurrentStatusAsync(projectDir)) !== 'running'
     ) {
       const spinner = ora('Making sure project is set up correctly...').start();
-      log.setSpinner(spinner);
+      Log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
 
       const status = await Doctor.validateWithoutNetworkAsync(projectDir, {
@@ -670,7 +670,7 @@ Command.prototype.asyncActionProjectDir = function (
         throw new Error(`There is an error with your project. See above logs for information.`);
       }
       spinner.stop();
-      log.setSpinner(null);
+      Log.setSpinner(null);
     }
 
     // the existing CLI modules only pass one argument to this function, so skipProjectValidation
@@ -716,7 +716,7 @@ function runAsync(programName: string) {
     registerCommands(program);
 
     program.on('command:detach', () => {
-      log.warn('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');
+      Log.warn('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');
       process.exit(0);
     });
 
@@ -730,7 +730,7 @@ function runAsync(programName: string) {
       if (suggestion) {
         msg = `"${subCommand}" is not an expo command -- did you mean ${suggestion}?\n See "expo --help" for the full list of commands.`;
       }
-      log.warn(msg);
+      Log.warn(msg);
     });
 
     if (typeof program.nonInteractive === 'undefined') {
@@ -745,7 +745,7 @@ function runAsync(programName: string) {
       program.help();
     }
   } catch (e) {
-    log.error(e);
+    Log.error(e);
     throw e;
   }
 }
@@ -753,7 +753,7 @@ function runAsync(programName: string) {
 async function checkCliVersionAsync() {
   const { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
   if (updateIsAvailable) {
-    log.nestedWarn(
+    Log.nestedWarn(
       boxen(
         chalk.green(`There is a new version of ${packageJSON.name} available (${latest}).
 You are currently using ${packageJSON.name} ${current}
@@ -765,7 +765,7 @@ for example: \`npm install -g ${packageJSON.name}\` to get the latest version`),
   }
 
   if (deprecated) {
-    log.nestedWarn(
+    Log.nestedWarn(
       boxen(
         chalk.red(
           `This version of expo-cli is not supported anymore.
@@ -798,11 +798,11 @@ function _registerLogs() {
         }
 
         if (chunk.level === bunyan.INFO) {
-          log.log(chunk.msg);
+          Log.log(chunk.msg);
         } else if (chunk.level === bunyan.WARN) {
-          log.warn(chunk.msg);
+          Log.warn(chunk.msg);
         } else if (chunk.level >= bunyan.ERROR) {
-          log.error(chunk.msg);
+          Log.error(chunk.msg);
         }
       },
     },
@@ -828,7 +828,7 @@ export function run(programName: string) {
   (async function () {
     await Promise.all([writePathAsync(), runAsync(programName)]);
   })().catch(e => {
-    log.error('Uncaught Error', e);
+    Log.error('Uncaught Error', e);
     process.exit(1);
   });
 }

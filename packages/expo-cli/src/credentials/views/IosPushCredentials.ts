@@ -5,7 +5,7 @@ import terminalLink from 'terminal-link';
 
 import CommandError from '../../CommandError';
 import { isPushKey, PushKey, PushKeyInfo, PushKeyManager } from '../../appleApi';
-import log from '../../log';
+import Log from '../../log';
 import prompt, { confirmAsync, Question } from '../../prompts';
 import { displayIosUserCredentials } from '../actions/list';
 import { askForUserProvided, CredentialSchema } from '../actions/promptForCredentials';
@@ -35,9 +35,9 @@ export class CreateIosPush implements IView {
   async open(ctx: Context): Promise<IView | null> {
     const pushKey = await this.create(ctx);
 
-    log.log('Successfully created Push Notification Key\n');
+    Log.log('Successfully created Push Notification Key\n');
     displayIosUserCredentials(pushKey);
-    log.log();
+    Log.log();
 
     return null;
   }
@@ -79,13 +79,13 @@ export class CreateAndAssignIosPush extends CreateIosPush {
   async open(ctx: Context): Promise<IView | null> {
     const pushKey = await super.create(ctx);
 
-    log.log('Successfully created Push Notification Key\n');
+    Log.log('Successfully created Push Notification Key\n');
     displayIosUserCredentials(pushKey);
-    log.log();
+    Log.log();
 
     if (ctx.hasProjectContext && pushKey) {
       await this.assignToCurrentProject(ctx, pushKey.id);
-      log.log();
+      Log.log();
     }
 
     return null;
@@ -104,7 +104,7 @@ export class CreateAndAssignIosPush extends CreateIosPush {
 
       const app = getAppLookupParams(experienceName, bundleIdentifier);
       await ctx.ios.usePushKey(app, pushKeyId);
-      log.log(
+      Log.log(
         chalk.green(`Successfully assigned Push Key to ${experienceName} (${bundleIdentifier})`)
       );
     }
@@ -127,17 +127,17 @@ export class RemoveIosPush implements IView {
       if (!('type' in selected)) {
         const app = getAppLookupParams(selected.experienceName, selected.bundleIdentifier);
         await this.removePushCert(ctx, app);
-        log.log(chalk.green('Successfully removed Push Certificate'));
+        Log.log(chalk.green('Successfully removed Push Certificate'));
       } else {
         await this.removeSpecific(ctx, selected as IosPushCredentials);
-        log.log(chalk.green('Successfully removed Push Notification Key'));
+        Log.log(chalk.green('Successfully removed Push Notification Key'));
       }
     }
     return null;
   }
 
   async removePushCert(ctx: Context, app: AppLookupParams): Promise<void> {
-    log.log('Removing Push Certificate');
+    Log.log('Removing Push Certificate');
     await ctx.ios.deletePushCert(app);
   }
 
@@ -147,17 +147,17 @@ export class RemoveIosPush implements IView {
     const appsList = apps.map(appCred => appCred.experienceName).join(', ');
 
     if (appsList && !ctx.nonInteractive) {
-      log.log('Removing Push Key');
+      Log.log('Removing Push Key');
       const confirm = await confirmAsync({
         message: `Removing this key/cert will disable notifications in ${appsList}. Do you want to continue?`,
       });
       if (!confirm) {
-        log.log('Aborting');
+        Log.log('Aborting');
         return;
       }
     }
 
-    log.log('Removing Push Key...\n');
+    Log.log('Removing Push Key...\n');
     await ctx.ios.deletePushKey(selected.id, this.accountName);
 
     let shouldRevoke = this.shouldRevoke;
@@ -192,13 +192,13 @@ export class UpdateIosPush implements IView {
     if (selected) {
       await this.updateSpecific(ctx, selected);
 
-      log.log(chalk.green('Successfully updated Push Notification Key.\n'));
+      Log.log(chalk.green('Successfully updated Push Notification Key.\n'));
       const credentials = await ctx.ios.getAllCredentials(this.accountName);
       const updated = credentials.userCredentials.find(i => i.id === selected.id);
       if (updated) {
         displayIosUserCredentials(updated);
       }
-      log.log();
+      Log.log();
     }
     return null;
   }
@@ -220,7 +220,7 @@ export class UpdateIosPush implements IView {
         message: `Update will affect all applications that are using this key (${appsList}). Do you want to continue?`,
       });
       if (!confirm) {
-        log.warn('Aborting update process');
+        Log.warn('Aborting update process');
         return;
       }
     }
@@ -255,7 +255,7 @@ export class UseExistingPushNotification implements IView {
     })) as IosPushCredentials;
     if (selected) {
       await ctx.ios.usePushKey(this.app, selected.id);
-      log.log(
+      Log.log(
         chalk.green(
           `Successfully assigned Push Notifactions Key to ${this.app.accountName}/${this.app.projectName} (${this.app.bundleIdentifier})`
         )
@@ -270,7 +270,7 @@ export class CreateOrReusePushKey implements IView {
 
   async assignPushKey(ctx: Context, userCredentialsId: number) {
     await ctx.ios.usePushKey(this.app, userCredentialsId);
-    log.log(
+    Log.log(
       chalk.green(
         `Successfully assigned Push Key to ${this.app.accountName}/${this.app.projectName} (${this.app.bundleIdentifier})`
       )
@@ -311,7 +311,7 @@ export class CreateOrReusePushKey implements IView {
     }
 
     // Use autosuggested push key
-    log.log(`Using Push Key: ${autoselectedPushKey.apnsKeyId}`);
+    Log.log(`Using Push Key: ${autoselectedPushKey.apnsKeyId}`);
     await this.assignPushKey(ctx, autoselectedPushKey.id);
     return null;
   }
@@ -351,7 +351,7 @@ async function getValidPushKeys(iosCredentials: IosCredentials, ctx: Context) {
     (cred): cred is IosPushCredentials => cred.type === 'push-key'
   );
   if (!ctx.hasAppleCtx()) {
-    log.log(
+    Log.log(
       chalk.yellow(
         `Unable to determine validity of Push Keys due to insufficient Apple Credentials`
       )
@@ -403,7 +403,7 @@ async function selectPushCredFromList(
     : [];
   const pushCredentials = [...pushCerts, ...pushKeys];
   if (pushCredentials.length === 0) {
-    log.warn('There are no push credentials available in your account');
+    Log.warn('There are no push credentials available in your account');
     return null;
   }
 
@@ -512,8 +512,8 @@ async function generatePushKey(ctx: Context, accountName: string): Promise<PushK
   } catch (e) {
     if (e.code === 'APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR') {
       const keys = await manager.list();
-      log.warn('Maximum number of Push Notifications Keys generated on Apple Developer Portal.');
-      log.warn(APPLE_KEYS_TOO_MANY_GENERATED_ERROR);
+      Log.warn('Maximum number of Push Notifications Keys generated on Apple Developer Portal.');
+      Log.warn(APPLE_KEYS_TOO_MANY_GENERATED_ERROR);
 
       if (ctx.nonInteractive) {
         throw new CommandError(
@@ -532,9 +532,9 @@ async function generatePushKey(ctx: Context, accountName: string): Promise<PushK
 
       // https://docs.expo.io/distribution/app-signing/#summary
       const here = terminalLink('here', 'https://bit.ly/3cfJJkQ');
-      log.log(chalk.grey(`⚠️  Revoking a Push Key will affect other apps that rely on it`));
-      log.log(chalk.grey(`ℹ️  Learn more ${here}`));
-      log.log();
+      Log.log(chalk.grey(`⚠️  Revoking a Push Key will affect other apps that rely on it`));
+      Log.log(chalk.grey(`ℹ️  Learn more ${here}`));
+      Log.log();
 
       const { revoke } = await prompt([
         {
@@ -566,7 +566,7 @@ async function generatePushKey(ctx: Context, accountName: string): Promise<PushK
 
 export async function validatePushKey(ctx: Context, pushKey: PushKey) {
   if (!ctx.hasAppleCtx()) {
-    log.warn('Unable to validate Push Keys due to insufficient Apple Credentials');
+    Log.warn('Unable to validate Push Keys due to insufficient Apple Credentials');
     return true;
   }
   const spinner = ora(`Checking validity of push key on Apple Developer Portal...`).start();
@@ -636,7 +636,7 @@ export async function usePushKeyFromParams(
   const iosPushCredentials = await ctx.ios.createPushKey(app.accountName, pushKey);
 
   await ctx.ios.usePushKey(app, iosPushCredentials.id);
-  log.log(
+  Log.log(
     chalk.green(
       `Successfully assigned Push Key to ${app.accountName}/${app.projectName} (${app.bundleIdentifier})`
     )

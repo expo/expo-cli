@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 
 import CommandError from '../CommandError';
-import log from '../log';
+import Log from '../log';
 import printRunInstructionsAsync from '../printRunInstructionsAsync';
 import urlOpts, { URLOptions } from '../urlOpts';
 import { BuildJobFields, getBuildStatusAsync } from './build/getBuildStatusAsync';
@@ -32,7 +32,7 @@ const logArtifactUrl = (platform: 'ios' | 'android') => async (
   const url = result.jobs?.filter((job: BuildJobFields) => job.platform === platform)[0]?.artifacts
     ?.url;
   if (url) {
-    log.nested(url);
+    Log.nested(url);
   } else {
     throw new Error(
       `No ${platform} binary file found. Use "expo build:${platform}" to create one.`
@@ -64,10 +64,10 @@ async function action(projectDir: string, options: ProjectUrlOptions & URLOption
     ? await getWebAppUrlAsync(projectDir)
     : await UrlUtils.constructDeepLinkAsync(projectDir);
 
-  log.newLine();
+  Log.newLine();
   urlOpts.printQRCode(url);
 
-  log.log('Your URL is\n\n' + chalk.underline(url) + '\n');
+  Log.log('Your URL is\n\n' + chalk.underline(url) + '\n');
 
   if (!options.web) {
     await printRunInstructionsAsync();

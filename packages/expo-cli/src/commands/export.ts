@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import CommandError, { SilentError } from '../CommandError';
-import log from '../log';
+import Log from '../log';
 import prompt from '../prompts';
 import * as CreateApp from './utils/CreateApp';
 import { downloadAndDecompressAsync } from './utils/Tar';
@@ -54,7 +54,7 @@ export async function ensurePublicUrlAsync(url: any, isDev?: boolean): Promise<s
   if (!isDev && !UrlUtils.isHttps(url)) {
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
   } else if (!UrlUtils.isURL(url, { protocols: ['http', 'https'] })) {
-    log.nestedWarn(
+    Log.nestedWarn(
       `Dev Mode: --public-url ${url} does not conform to the required HTTP(S) protocol.`
     );
   }
@@ -107,7 +107,7 @@ async function mergeSourceDirectoriresAsync(
     return;
   }
   const srcDirs = options.mergeSrcDir.concat(options.mergeSrcUrl).join(' ');
-  log.nested(`Starting project merge of ${srcDirs} into ${options.outputDir}`);
+  Log.nested(`Starting project merge of ${srcDirs} into ${options.outputDir}`);
 
   // Merge app distributions
   await Project.mergeAppDistributions(
@@ -115,7 +115,7 @@ async function mergeSourceDirectoriresAsync(
     [...mergeSrcDirs, options.outputDir], // merge stuff in srcDirs and outputDir together
     options.outputDir
   );
-  log.nested(
+  Log.nested(
     `Project merge was successful. Your merged files can be found in ${options.outputDir}`
   );
 }
@@ -178,12 +178,12 @@ export async function action(projectDir: string, options: Options) {
       overwrite: options.force,
     }))
   ) {
-    const message = `Try using a new directory name with ${log.chalk.bold(
+    const message = `Try using a new directory name with ${Log.chalk.bold(
       '--output-dir'
-    )}, moving these files, or using ${log.chalk.bold('--force')} to overwrite them.`;
-    log.newLine();
-    log.nested(message);
-    log.newLine();
+    )}, moving these files, or using ${Log.chalk.bold('--force')} to overwrite them.`;
+    Log.newLine();
+    Log.nested(message);
+    Log.newLine();
     throw new SilentError(message);
   }
 
@@ -197,7 +197,7 @@ export async function action(projectDir: string, options: Options) {
 
   await mergeSourceDirectoriresAsync(projectDir, mergeSrcDirs, options);
 
-  log.log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
+  Log.log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }
 
 export default function (program: Command) {

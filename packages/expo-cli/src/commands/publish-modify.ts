@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import uniqBy from 'lodash/uniqBy';
 
 import * as table from '../commands/utils/cli-table';
-import log from '../log';
+import Log from '../log';
 import {
   getPublicationDetailAsync,
   getPublishHistoryAsync,
@@ -47,9 +47,9 @@ export default function (program: Command) {
             'Channel Set Status ',
             'SUCCESS'
           );
-          log.log(tableString);
+          Log.log(tableString);
         } catch (e) {
-          log.error(e);
+          Log.error(e);
         }
       },
       { checkConfig: true }
@@ -98,7 +98,7 @@ async function getUsageAsync(projectDir: string): Promise<string> {
   try {
     return await _getUsageAsync(projectDir);
   } catch (e) {
-    log.warn(e);
+    Log.warn(e);
     // couldn't print out warning for some reason
     return _getGenericUsage();
   }

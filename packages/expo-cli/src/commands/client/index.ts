@@ -18,7 +18,7 @@ import { CreateIosDist } from '../../credentials/views/IosDistCert';
 import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/IosProvisioningProfileAdhoc';
 import { SetupIosDist } from '../../credentials/views/SetupIosDist';
 import { SetupIosPush } from '../../credentials/views/SetupIosPush';
-import log from '../../log';
+import Log from '../../log';
 import { confirmAsync, promptEmailAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
@@ -187,8 +187,8 @@ export default function (program: Command) {
         }
 
         if (Object.keys(disabledServices).length > 0) {
-          log.newLine();
-          log.warn('These services will be disabled in your custom Expo client:');
+          Log.newLine();
+          Log.warn('These services will be disabled in your custom Expo client:');
           const table = new CliTable({ head: ['Service', 'Reason'], style: { head: ['cyan'] } });
           table.push(
             ...Object.keys(disabledServices).map(serviceKey => {
@@ -196,8 +196,8 @@ export default function (program: Command) {
               return [service.name, service.reason];
             })
           );
-          log.log(table.toString());
-          log.log(
+          Log.log(table.toString());
+          Log.log(
             'See https://docs.expo.io/guides/adhoc-builds/#optional-additional-configuration-steps for more details.'
           );
         }
@@ -211,22 +211,22 @@ export default function (program: Command) {
             initial: (context?.user as User)?.email,
           });
         }
-        log.newLine();
+        Log.newLine();
 
         let addUdid;
         if (udids.length === 0) {
-          log.log(
+          Log.log(
             'There are no devices registered to your Apple Developer account. Please follow the instructions below to register an iOS device.'
           );
           addUdid = true;
         } else {
-          log.log(
+          Log.log(
             'Custom builds of Expo Go can only be installed on devices which have been registered with Apple at build-time.'
           );
-          log.log('These devices are currently registered on your Apple Developer account:');
+          Log.log('These devices are currently registered on your Apple Developer account:');
           const table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
           table.push(...devices.map(device => [device.attributes.name, device.attributes.udid]));
-          log.log(table.toString());
+          Log.log(table.toString());
 
           const udidPrompt = await confirmAsync({
             message: 'Would you like to register a new device to use Expo Go with?',
@@ -247,29 +247,29 @@ export default function (program: Command) {
           customAppConfig: exp,
         });
 
-        log.newLine();
+        Log.newLine();
         if (addUdid) {
           urlOpts.printQRCode(result.registrationUrl);
-          log.log(
+          Log.log(
             'Open the following link on your iOS device (or scan the QR code) and follow the instructions to install the development profile:'
           );
-          log.newLine();
-          log.log(chalk.green(`${result.registrationUrl}`));
-          log.newLine();
-          log.log('Please note that you can only register one iOS device per request.');
-          log.log(
+          Log.newLine();
+          Log.log(chalk.green(`${result.registrationUrl}`));
+          Log.newLine();
+          Log.log('Please note that you can only register one iOS device per request.');
+          Log.log(
             "After you register your device, we'll start building your client, and you'll receive an email when it's ready to install."
           );
         } else {
           urlOpts.printQRCode(result.statusUrl);
-          log.log('Your custom Expo client is being built! 🛠');
-          log.log(
+          Log.log('Your custom Expo client is being built! 🛠');
+          Log.log(
             'Open this link on your iOS device (or scan the QR code) to view build logs and install the client:'
           );
-          log.newLine();
-          log.log(chalk.green(`${result.statusUrl}`));
+          Log.newLine();
+          Log.log(chalk.green(`${result.statusUrl}`));
         }
-        log.newLine();
+        Log.newLine();
       }
     );
 
@@ -293,7 +293,7 @@ export default function (program: Command) {
 
       if (forceLatest) {
         if (!latestClient?.url) {
-          log.error(
+          Log.error(
             `Unable to find latest client version. Check your internet connection or run this command again without the ${chalk.bold(
               '--latest'
             )} flag.`
@@ -304,21 +304,21 @@ export default function (program: Command) {
         if (
           await Simulator.upgradeExpoAsync({ url: latestClient.url, version: latestClient.version })
         ) {
-          log.log('Done!');
+          Log.log('Done!');
         } else {
-          log.error(`Unable to install Expo client ${latestClient.version} for iOS.`);
+          Log.error(`Unable to install Expo client ${latestClient.version} for iOS.`);
         }
         return;
       }
 
       if (!currentSdkVersion) {
-        log.log(
+        Log.log(
           'Could not find your Expo project. If you run this from a project, we can help pick the right Expo client version!'
         );
       }
 
       if (currentSdk && !recommendedClient) {
-        log.log(
+        Log.log(
           `You are currently using SDK ${currentSdkVersion}. Unfortunately, we couldn't detect the proper client version for this SDK.`
         );
       }
@@ -333,7 +333,7 @@ export default function (program: Command) {
             url: recommendedClient.url,
             version: recommendedClient.version,
           });
-          log.log('Done!');
+          Log.log('Done!');
           return;
         }
       } else {
@@ -347,7 +347,7 @@ export default function (program: Command) {
             url: latestClient?.url,
             version: latestClient?.version,
           });
-          log.log('Done!');
+          Log.log('Done!');
           return;
         }
       }
@@ -369,9 +369,9 @@ export default function (program: Command) {
             url: latestClient?.url,
             version: latestClient?.version,
           });
-          log.log('Done!');
+          Log.log('Done!');
         } else {
-          log.log('No client to install');
+          Log.log('No client to install');
         }
         return;
       }
@@ -383,7 +383,7 @@ export default function (program: Command) {
       });
 
       if (await Simulator.upgradeExpoAsync({ url: targetClient.clientUrl })) {
-        log.log('Done!');
+        Log.log('Done!');
       }
     });
 
@@ -407,7 +407,7 @@ export default function (program: Command) {
 
       if (forceLatest) {
         if (!latestClient?.url) {
-          log.error(
+          Log.error(
             `Unable to find latest client version. Check your internet connection or run this command again without the ${chalk.bold(
               '--latest'
             )} flag.`
@@ -418,22 +418,22 @@ export default function (program: Command) {
         if (
           await Android.upgradeExpoAsync({ url: latestClient.url, version: latestClient.version })
         ) {
-          log.log('Done!');
+          Log.log('Done!');
         } else {
-          log.error(`Unable to install Expo client ${latestClient.version} for Android.`);
+          Log.error(`Unable to install Expo client ${latestClient.version} for Android.`);
         }
 
         return;
       }
 
       if (!currentSdkVersion) {
-        log.log(
+        Log.log(
           'Could not find your Expo project. If you run this from a project, we can help pick the right Expo client version!'
         );
       }
 
       if (currentSdk && !recommendedClient) {
-        log.log(
+        Log.log(
           `You are currently using SDK ${currentSdkVersion}. Unfortunately, we couldn't detect the proper client version for this SDK.`
         );
       }
@@ -448,7 +448,7 @@ export default function (program: Command) {
             url: recommendedClient.url,
             version: recommendedClient.version,
           });
-          log.log('Done!');
+          Log.log('Done!');
           return;
         }
       } else {
@@ -462,7 +462,7 @@ export default function (program: Command) {
             url: latestClient?.url,
             version: latestClient?.version,
           });
-          log.log('Done!');
+          Log.log('Done!');
           return;
         }
       }
@@ -484,9 +484,9 @@ export default function (program: Command) {
             url: latestClient?.url,
             version: latestClient?.version,
           });
-          log.log('Done!');
+          Log.log('Done!');
         } else {
-          log.log('No client to install');
+          Log.log('No client to install');
         }
         return;
       }
@@ -498,7 +498,7 @@ export default function (program: Command) {
       });
 
       if (await Android.upgradeExpoAsync({ url: targetClient.clientUrl })) {
-        log.log('Done!');
+        Log.log('Done!');
       }
     });
 }

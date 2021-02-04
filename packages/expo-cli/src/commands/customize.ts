@@ -7,7 +7,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import prompts from 'prompts';
 
-import log from '../log';
+import Log from '../log';
 
 type Options = { force: boolean };
 
@@ -22,7 +22,7 @@ async function maybeWarnToCommitAsync(projectRoot: string) {
   }
 
   if (workingTreeStatus === 'dirty') {
-    log.log(
+    Log.log(
       chalk.yellow(
         'You should commit your changes before generating code into the root of your project.'
       )
@@ -63,7 +63,7 @@ async function generateFilesAsync({
       );
 
       if (file in dependencyMap) {
-        const packageManager = PackageManager.createForProject(projectDir, { log });
+        const packageManager = PackageManager.createForProject(projectDir, { log: Log });
         for (const dependency of dependencyMap[file]) {
           promises.push(packageManager.addDevAsync(dependency));
         }
@@ -117,7 +117,7 @@ export async function action(projectDir: string = './', options: Options = { for
   }
 
   if (!values.filter(({ disabled }) => !disabled).length) {
-    log.log(
+    Log.log(
       chalk.yellow('\nAll of the custom web files already exist.') +
         '\nTo regenerate the files run:' +
         chalk.bold(' expo customize:web --force\n')
@@ -139,7 +139,7 @@ export async function action(projectDir: string = './', options: Options = { for
     choices: values,
   });
   if (!answer || answer.length === 0) {
-    log.log('\n\u203A Exiting with no change...\n');
+    Log.log('\n\u203A Exiting with no change...\n');
     return;
   }
   await generateFilesAsync({ projectDir, staticPath, options, answer, templateFolder });

@@ -27,7 +27,7 @@ import {
 import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
 import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
 import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
-import log from '../../../log';
+import Log from '../../../log';
 import { confirmAsync } from '../../../prompts';
 import { getOrPromptForBundleIdentifier } from '../../eject/ConfigValidation';
 import * as TerminalLink from '../../utils/TerminalLink';
@@ -56,7 +56,7 @@ class IOSBuilder extends BaseBuilder {
       simulator: 'Run the build on a simulator',
     });
     this.maybeWarnDamagedSimulator();
-    log.addNewLineIfNone();
+    Log.addNewLineIfNone();
     await this.checkForBuildInProgress();
     if (this.options.type === 'archive') {
       await this.prepareCredentials();
@@ -94,7 +94,7 @@ class IOSBuilder extends BaseBuilder {
     if (confirm) {
       return await ctx.ensureAppleCtx();
     } else {
-      log(
+      Log(
         chalk.green(
           'No problem! 👌 \nWe can’t auto-generate credentials if you don’t have access to the main Apple account. \nBut we can still set it up if you upload your credentials.'
         )
@@ -145,7 +145,7 @@ class IOSBuilder extends BaseBuilder {
     });
 
     if (this.options.skipCredentialsCheck) {
-      log('Skipping credentials check...');
+      Log('Skipping credentials check...');
       return;
     }
     await this.bestEffortAppleCtx(context);
@@ -155,18 +155,18 @@ class IOSBuilder extends BaseBuilder {
       await this.produceCredentials(context, appLookupParams);
     } catch (e) {
       if (e.code === ErrorCodes.NON_INTERACTIVE) {
-        log.newLine();
+        Log.newLine();
         const link = TerminalLink.fallbackToTextAndUrl(
           'expo.fyi/credentials-non-interactive',
           'https://expo.fyi/credentials-non-interactive'
         );
-        log(
+        Log(
           chalk.bold.red(
             `Additional information needed to setup credentials in non-interactive mode.`
           )
         );
-        log(chalk.bold.red(`Learn more about how to resolve this: ${link}.`));
-        log.newLine();
+        Log(chalk.bold.red(`Learn more about how to resolve this: ${link}.`));
+        Log.newLine();
 
         // We don't want to display project credentials when we bail out due to
         // non-interactive mode error, because we are unable to recover without
@@ -177,7 +177,7 @@ class IOSBuilder extends BaseBuilder {
         );
       }
 
-      log(
+      Log(
         chalk.bold.red(
           'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
         )
@@ -200,7 +200,7 @@ class IOSBuilder extends BaseBuilder {
         await runCredentialsManager(ctx, new SetupIosDist(appLookupParams));
       }
     } catch (e) {
-      log.error('Failed to set up Distribution Certificate');
+      Log.error('Failed to set up Distribution Certificate');
       throw e;
     }
   }
@@ -214,7 +214,7 @@ class IOSBuilder extends BaseBuilder {
         await runCredentialsManager(ctx, new SetupIosPush(appLookupParams));
       }
     } catch (e) {
-      log.error('Failed to set up Push Key');
+      Log.error('Failed to set up Push Key');
       throw e;
     }
   }
@@ -230,7 +230,7 @@ class IOSBuilder extends BaseBuilder {
         await runCredentialsManager(ctx, new SetupIosProvisioningProfile(appLookupParams));
       }
     } catch (e) {
-      log.error('Failed to set up Provisioning Profile');
+      Log.error('Failed to set up Provisioning Profile');
       throw e;
     }
   }
@@ -354,8 +354,8 @@ class IOSBuilder extends BaseBuilder {
       return;
     }
 
-    log.newLine();
-    log(
+    Log.newLine();
+    Log(
       `You can now publish to the App Store with ${TerminalLink.transporterAppLink()} or ${chalk.bold(
         'expo upload:ios'
       )}. ${TerminalLink.learnMore('https://docs.expo.io/distribution/uploading-apps/')}`
@@ -370,15 +370,15 @@ class IOSBuilder extends BaseBuilder {
       os.platform() === 'darwin' && semver.satisfies(os.release(), '>=19.0.0');
 
     if (isMacOsCatalinaOrLater && this.options.type === 'simulator') {
-      log.newLine();
-      log(
+      Log.newLine();
+      Log(
         chalk.bold(
           `🚨 If the build is not installable on your simulator because of "${chalk.underline(
             `... is damaged and can't be opened.`
           )}", please run:`
         )
       );
-      log(chalk.grey.bold('xattr -rd com.apple.quarantine /path/to/your.app'));
+      Log(chalk.grey.bold('xattr -rd com.apple.quarantine /path/to/your.app'));
     }
   }
 }

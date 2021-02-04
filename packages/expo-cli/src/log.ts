@@ -106,41 +106,41 @@ function withPrefix(args: any[], chalkColor = chalk.gray) {
   }
 }
 
-const log = {} as any;
+const Log = {} as any;
 
-log.log = function (...args: any[]) {
+Log.log = function (...args: any[]) {
   respectProgressBars(() => {
     consoleLog(...withPrefix(args));
   });
 };
 
-log.nested = function (message: any) {
+Log.nested = function (message: any) {
   respectProgressBars(() => {
     consoleLog(message);
   });
 };
 
-log.newLine = function newLine() {
+Log.newLine = function newLine() {
   respectProgressBars(() => {
     consoleLog();
   });
 };
 
-log.addNewLineIfNone = function addNewLineIfNone() {
+Log.addNewLineIfNone = function addNewLineIfNone() {
   if (!_isLastLineNewLine && !_printNewLineBeforeNextLog) {
-    log.newLine();
+    Log.newLine();
   }
 };
 
-log.printNewLineBeforeNextLog = function printNewLineBeforeNextLog() {
+Log.printNewLineBeforeNextLog = function printNewLineBeforeNextLog() {
   _printNewLineBeforeNextLog = true;
 };
 
-log.setBundleProgressBar = function setBundleProgressBar(bar: any) {
+Log.setBundleProgressBar = function setBundleProgressBar(bar: any) {
   _bundleProgressBar = bar;
 };
 
-log.setSpinner = function setSpinner(oraSpinner: Ora | null) {
+Log.setSpinner = function setSpinner(oraSpinner: Ora | null) {
   _oraSpinner = oraSpinner;
   if (_oraSpinner) {
     const originalStart = _oraSpinner.start.bind(_oraSpinner);
@@ -153,34 +153,34 @@ log.setSpinner = function setSpinner(oraSpinner: Ora | null) {
     const originalStop = _oraSpinner.stop.bind(_oraSpinner);
     _oraSpinner.stop = () => {
       // Reset the target spinner
-      log.setSpinner(null);
+      Log.setSpinner(null);
       return originalStop();
     };
   }
 };
 
-log.error = function error(...args: any[]) {
+Log.error = function error(...args: any[]) {
   respectProgressBars(() => {
     consoleError(...withPrefixAndTextColor(args, chalk.red));
   });
 };
 
-log.nestedError = function (message: string) {
+Log.nestedError = function (message: string) {
   respectProgressBars(() => {
     consoleError(chalk.red(message));
   });
 };
 
-log.warn = function warn(...args: any[]) {
+Log.warn = function warn(...args: any[]) {
   respectProgressBars(() => {
     consoleWarn(...withPrefixAndTextColor(args, chalk.yellow));
   });
 };
 
-log.isDebug = EXPO_DEBUG;
+Log.isDebug = EXPO_DEBUG;
 
 // Only show these logs when EXPO_DEBUG is active
-log.debug = function debug(...args: any[]) {
+Log.debug = function debug(...args: any[]) {
   if (!EXPO_DEBUG) {
     return;
   }
@@ -189,7 +189,7 @@ log.debug = function debug(...args: any[]) {
   });
 };
 
-log.info = function info(...args: any[]) {
+Log.info = function info(...args: any[]) {
   if (!EXPO_DEBUG) {
     return;
   }
@@ -198,23 +198,23 @@ log.info = function info(...args: any[]) {
   });
 };
 
-log.nestedWarn = function (message: string) {
+Log.nestedWarn = function (message: string) {
   respectProgressBars(() => {
     consoleWarn(chalk.yellow(message));
   });
 };
 
-log.gray = function (...args: any[]) {
+Log.gray = function (...args: any[]) {
   respectProgressBars(() => {
     consoleLog(...withPrefixAndTextColor(args));
   });
 };
 
-log.clear = function () {
+Log.clear = function () {
   process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
 };
 
-log.chalk = chalk;
-log.terminalLink = terminalLink;
+Log.chalk = chalk;
+Log.terminalLink = terminalLink;
 
-export default log;
+export default Log;

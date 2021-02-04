@@ -8,7 +8,7 @@ import ora from 'ora';
 
 import CommandError, { ErrorCodes } from '../CommandError';
 import { assert } from '../assert';
-import log from '../log';
+import Log from '../log';
 
 const SECRET_MIN_LENGTH = 16;
 const SECRET_MAX_LENGTH = 1000;
@@ -65,10 +65,10 @@ async function listAsync(projectRoot: string) {
   if (webhooks.length) {
     const table = new CliTable({ head: ['Webhook ID', 'URL', 'Event'] });
     table.push(...webhooks.map((hook: Webhook) => [hook.id, hook.url, hook.event]));
-    log.log(table.toString());
+    Log.log(table.toString());
   } else {
-    log.log(`${chalk.bold(experienceName)} has no webhooks.`);
-    log.log('Use `expo webhooks:add` to add one.');
+    Log.log(`${chalk.bold(experienceName)} has no webhooks.`);
+    Log.log('Use `expo webhooks:add` to add one.');
   }
 }
 
@@ -132,8 +132,8 @@ function validateSecret({ secret }: { secret?: string }): string | null {
 function generateSecret() {
   // Create a 60 characters long secret from 30 random bytes.
   const randomSecret = crypto.randomBytes(30).toString('hex');
-  log.log(chalk.underline('Webhook signing secret:'));
-  log.log(randomSecret);
+  Log.log(chalk.underline('Webhook signing secret:'));
+  Log.log(randomSecret);
   return randomSecret;
 }
 

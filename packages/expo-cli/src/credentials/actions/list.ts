@@ -5,7 +5,7 @@ import os from 'os';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
 
-import log from '../../log';
+import Log from '../../log';
 import { AppLookupParams } from '../api/IosApi';
 import {
   AndroidCredentials,
@@ -24,7 +24,7 @@ export function displayProjectCredentials(
   const experienceName = `@${appLookupParams.accountName}/${appLookupParams.projectName}`;
   const bundleIdentifier = appLookupParams.bundleIdentifier;
   if (!appCredentials) {
-    log.log(
+    Log.log(
       chalk.bold(
         `No credentials configured for app ${experienceName} with bundle identifier ${bundleIdentifier}\n`
       )
@@ -32,10 +32,10 @@ export function displayProjectCredentials(
     return;
   }
 
-  log.log();
-  log.log(chalk.bold('Project Credential Configuration:'));
+  Log.log();
+  Log.log(chalk.bold('Project Credential Configuration:'));
   displayIosAppCredentials(appCredentials);
-  log.log();
+  Log.log();
 
   if (distCert) {
     displayIosUserCredentials(distCert);
@@ -47,48 +47,48 @@ export function displayProjectCredentials(
 }
 
 export async function displayIosCredentials(credentials: IosCredentials) {
-  log.log(chalk.bold('Available credentials for iOS apps\n'));
+  Log.log(chalk.bold('Available credentials for iOS apps\n'));
 
-  log.log(chalk.bold('Application credentials\n'));
+  Log.log(chalk.bold('Application credentials\n'));
   for (const cred of credentials.appCredentials) {
     displayIosAppCredentials(cred);
-    log.log();
+    Log.log();
   }
 
-  log.log();
-  log.log(chalk.bold('User credentials\n'));
+  Log.log();
+  Log.log(chalk.bold('User credentials\n'));
   for (const cred of credentials.userCredentials) {
     displayIosUserCredentials(cred, credentials);
-    log.log();
+    Log.log();
   }
-  log.log();
-  log.log();
+  Log.log();
+  Log.log();
 }
 
 export function displayIosAppCredentials(appCredentials: IosAppCredentials) {
-  log.log(
+  Log.log(
     `  Experience: ${chalk.bold(appCredentials.experienceName)}, bundle identifier: ${
       appCredentials.bundleIdentifier
     }`
   );
   if (appCredentials.credentials.provisioningProfile) {
-    log.log(
+    Log.log(
       `    Provisioning profile (ID: ${chalk.green(
         appCredentials.credentials.provisioningProfileId || '---------'
       )})`
     );
   } else {
-    log.log('    Provisioning profile is missing. It will be generated during the next build');
+    Log.log('    Provisioning profile is missing. It will be generated during the next build');
   }
   if (appCredentials.credentials.teamId || appCredentials.credentials.teamName) {
-    log.log(
+    Log.log(
       `    Apple Team ID: ${chalk.green(
         appCredentials.credentials.teamId || '---------'
       )},  Apple Team Name: ${chalk.green(appCredentials.credentials.teamName || '---------')}`
     );
   }
   if (appCredentials.credentials.pushP12 && appCredentials.credentials.pushPassword) {
-    log.log(
+    Log.log(
       `    (deprecated) Push Certificate (Push ID: ${chalk.green(
         appCredentials.credentials.pushId || '-----'
       )})`
@@ -101,17 +101,17 @@ export function displayIosUserCredentials(
   credentials?: IosCredentials
 ) {
   if (userCredentials.type === 'push-key') {
-    log.log(`  Push Notifications Key - Key ID: ${chalk.green(userCredentials.apnsKeyId)}`);
+    Log.log(`  Push Notifications Key - Key ID: ${chalk.green(userCredentials.apnsKeyId)}`);
   } else if (userCredentials.type === 'dist-cert') {
-    log.log(
+    Log.log(
       `  Distribution Certificate - Certificate ID: ${chalk.green(
         userCredentials.certId || '-----'
       )}`
     );
   } else {
-    log.warn(`  Unknown key type ${(userCredentials as any).type}`);
+    Log.warn(`  Unknown key type ${(userCredentials as any).type}`);
   }
-  log.log(
+  Log.log(
     `    Apple Team ID: ${chalk.green(
       userCredentials.teamId || '---------'
     )},  Apple Team Name: ${chalk.green(userCredentials.teamName || '---------')}`
@@ -127,13 +127,13 @@ export function displayIosUserCredentials(
       ),
     ].join(',\n      ');
     const usedByAppsText = usedByApps ? `used by\n      ${usedByApps}` : 'not used by any apps';
-    log.log(`    ${chalk.gray(usedByAppsText)}`);
+    Log.log(`    ${chalk.gray(usedByAppsText)}`);
   }
 }
 
 export async function displayAndroidCredentials(credentialsList: AndroidCredentials[]) {
-  log.log(chalk.bold('Available Android credentials'));
-  log.log();
+  Log.log(chalk.bold('Available Android credentials'));
+  Log.log();
   for (const credentials of credentialsList) {
     await displayAndroidAppCredentials(credentials);
   }
@@ -142,8 +142,8 @@ export async function displayAndroidCredentials(credentialsList: AndroidCredenti
 export async function displayAndroidAppCredentials(credentials: AndroidCredentials) {
   const tmpFilename = path.join(os.tmpdir(), `expo_tmp_keystore_${uuid()}file.jks`);
   try {
-    log.log(chalk.green(credentials.experienceName));
-    log.log(chalk.bold('  Upload Keystore hashes'));
+    Log.log(chalk.green(credentials.experienceName));
+    Log.log(chalk.bold('  Upload Keystore hashes'));
     if (credentials.keystore?.keystore) {
       const storeBuf = Buffer.from(credentials.keystore.keystore, 'base64');
       await fs.writeFile(tmpFilename, storeBuf);
@@ -155,14 +155,14 @@ export async function displayAndroidAppCredentials(credentials: AndroidCredentia
         '    '
       );
     } else {
-      log.log('    -----------------------');
+      Log.log('    -----------------------');
     }
-    log.log(chalk.bold('  Push Notifications credentials'));
-    log.log('    FCM Api Key: ', credentials.pushCredentials?.fcmApiKey ?? '---------------------');
-    log.log('\n');
+    Log.log(chalk.bold('  Push Notifications credentials'));
+    Log.log('    FCM Api Key: ', credentials.pushCredentials?.fcmApiKey ?? '---------------------');
+    Log.log('\n');
   } catch (error) {
-    log.error('  Failed to parse the Keystore', error);
-    log.log('\n');
+    Log.error('  Failed to parse the Keystore', error);
+    Log.log('\n');
   } finally {
     await fs.remove(tmpFilename);
   }

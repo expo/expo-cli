@@ -3,7 +3,7 @@ import { UserManager } from '@expo/xdl';
 import got from 'got';
 
 import CommandError, { SilentError } from '../../CommandError';
-import log from '../../log';
+import Log from '../../log';
 import prompt, { confirmAsync } from '../../prompts';
 import { learnMore } from '../utils/TerminalLink';
 import { isUrlAvailableAsync } from '../utils/url';
@@ -72,9 +72,9 @@ async function getPackageNameWarningAsync(packageName: string): Promise<string |
     if (response.statusCode === 200) {
       // There is no JSON API for the Play Store so we can't concisely
       // locate the app name and developer to match the iOS warning.
-      const message = `⚠️  The package ${log.chalk.bold(
+      const message = `⚠️  The package ${Log.chalk.bold(
         packageName
-      )} is already in use. ${log.chalk.dim(learnMore(url))}`;
+      )} is already in use. ${Log.chalk.dim(learnMore(url))}`;
       cachedPackageNameResults[packageName] = message;
       return message;
     }
@@ -85,9 +85,9 @@ async function getPackageNameWarningAsync(packageName: string): Promise<string |
 }
 
 function formatInUseWarning(appName: string, author: string, id: string): string {
-  return `⚠️  The app ${log.chalk.bold(appName)} by ${log.chalk.italic(
+  return `⚠️  The app ${Log.chalk.bold(appName)} by ${Log.chalk.italic(
     author
-  )} is already using ${log.chalk.bold(id)}`;
+  )} is already using ${Log.chalk.bold(id)}`;
 }
 
 export async function getOrPromptForBundleIdentifier(projectRoot: string): Promise<string> {
@@ -116,13 +116,13 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
     }
   }
 
-  log.addNewLineIfNone();
-  log.log(
-    `${log.chalk.bold(`📝  iOS Bundle Identifier`)} ${log.chalk.dim(
+  Log.addNewLineIfNone();
+  Log.log(
+    `${Log.chalk.bold(`📝  iOS Bundle Identifier`)} ${Log.chalk.dim(
       learnMore('https://expo.fyi/bundle-identifier')
     )}`
   );
-  log.newLine();
+  Log.newLine();
   // Prompt the user for the bundle ID.
   // Even if the project is using a dynamic config we can still
   // prompt a better error message, recommend a default value, and help the user
@@ -144,16 +144,16 @@ export async function getOrPromptForBundleIdentifier(projectRoot: string): Promi
   // Warn the user if the bundle ID is already in use.
   const warning = await getBundleIdWarningAsync(bundleIdentifier);
   if (warning) {
-    log.newLine();
-    log.nestedWarn(warning);
-    log.newLine();
+    Log.newLine();
+    Log.nestedWarn(warning);
+    Log.newLine();
     if (
       !(await confirmAsync({
         message: `Continue?`,
         initial: true,
       }))
     ) {
-      log.newLine();
+      Log.newLine();
       return getOrPromptForBundleIdentifier(projectRoot);
     }
   }
@@ -197,13 +197,13 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
     }
   }
 
-  log.addNewLineIfNone();
-  log.log(
-    `${log.chalk.bold(`📝  Android package`)} ${log.chalk.dim(
+  Log.addNewLineIfNone();
+  Log.log(
+    `${Log.chalk.bold(`📝  Android package`)} ${Log.chalk.dim(
       learnMore('https://expo.fyi/android-package')
     )}`
   );
-  log.newLine();
+  Log.newLine();
 
   // Prompt the user for the android package.
   // Even if the project is using a dynamic config we can still
@@ -225,16 +225,16 @@ export async function getOrPromptForPackage(projectRoot: string): Promise<string
   // Warn the user if the package name is already in use.
   const warning = await getPackageNameWarningAsync(packageName);
   if (warning) {
-    log.newLine();
-    log.nestedWarn(warning);
-    log.newLine();
+    Log.newLine();
+    Log.nestedWarn(warning);
+    Log.newLine();
     if (
       !(await confirmAsync({
         message: `Continue?`,
         initial: true,
       }))
     ) {
-      log.newLine();
+      Log.newLine();
       return getOrPromptForPackage(projectRoot);
     }
   }
@@ -262,25 +262,25 @@ async function attemptModification(
     skipSDKVersionRequirement: true,
   });
   if (modification.type === 'success') {
-    log.newLine();
+    Log.newLine();
   } else {
     warnAboutConfigAndThrow(modification.type, modification.message!, exactEdits);
   }
 }
 
 function logNoConfig() {
-  log.log(
-    log.chalk.yellow(
+  Log.log(
+    Log.chalk.yellow(
       'No Expo config was found. Please create an Expo config (`app.config.js` or `app.json`) in your project root.'
     )
   );
 }
 
 function warnAboutConfigAndThrow(type: string, message: string, edits: Partial<ExpoConfig>) {
-  log.addNewLineIfNone();
+  Log.addNewLineIfNone();
   if (type === 'warn') {
     // The project is using a dynamic config, give the user a helpful log and bail out.
-    log.log(log.chalk.yellow(message));
+    Log.log(Log.chalk.yellow(message));
   } else {
     logNoConfig();
   }
@@ -290,8 +290,8 @@ function warnAboutConfigAndThrow(type: string, message: string, edits: Partial<E
 }
 
 function notifyAboutManualConfigEdits(edits: Partial<ExpoConfig>) {
-  log.log(log.chalk.cyan(`Please add the following to your Expo config, and try again... `));
-  log.newLine();
-  log.log(JSON.stringify(edits, null, 2));
-  log.newLine();
+  Log.log(Log.chalk.cyan(`Please add the following to your Expo config, and try again... `));
+  Log.newLine();
+  Log.log(JSON.stringify(edits, null, 2));
+  Log.newLine();
 }

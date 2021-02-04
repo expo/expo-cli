@@ -2,18 +2,18 @@ import { UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
-import log from '../log';
+import Log from '../log';
 
 async function action(command: Command) {
   const user = await UserManager.getCurrentUserAsync({ silent: true });
   if (user) {
     if (command.parent?.nonInteractive) {
-      log.nested(user.username);
+      Log.nested(user.username);
     } else {
-      log.log(`Logged in as ${chalk.cyan(user.username)}`);
+      Log.log(`Logged in as ${chalk.cyan(user.username)}`);
     }
   } else {
-    log.log(`\u203A Not logged in, run ${chalk.cyan`expo login`} to authenticate`);
+    Log.log(`\u203A Not logged in, run ${chalk.cyan`expo login`} to authenticate`);
     process.exit(1);
   }
 }
