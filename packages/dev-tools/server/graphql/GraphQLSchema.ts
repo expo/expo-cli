@@ -431,7 +431,7 @@ const resolvers = {
       return Buffer.from(project.projectDir).toString('base64');
     },
     async manifestUrl(project) {
-      if ((await Project.currentStatus(project.projectDir)) === 'running') {
+      if ((await ProjectSettings.getCurrentStatusAsync(project.projectDir)) === 'running') {
         return UrlUtils.constructDeepLinkAsync(project.projectDir);
       } else {
         return null;

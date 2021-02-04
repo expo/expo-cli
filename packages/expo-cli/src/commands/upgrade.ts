@@ -2,7 +2,7 @@ import { getConfig, readConfigJsonAsync, writeConfigJsonAsync } from '@expo/conf
 import { ExpoConfig } from '@expo/config-types';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
-import { Android, Project, Simulator, Versions } from '@expo/xdl';
+import { Android, Project, ProjectSettings, Simulator, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import program, { Command } from 'commander';
 import getenv from 'getenv';
@@ -289,7 +289,7 @@ async function maybeBailOnUnsafeFunctionalityAsync(
 
 async function stopExpoServerAsync(projectRoot: string): Promise<void> {
   // Can't upgrade if Expo is running
-  const status = await Project.currentStatus(projectRoot);
+  const status = await ProjectSettings.getCurrentStatusAsync(projectRoot);
   if (status === 'running') {
     await Project.stopAsync(projectRoot);
     log(
