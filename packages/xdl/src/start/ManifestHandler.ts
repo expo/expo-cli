@@ -16,9 +16,9 @@ import UserManager, { ANONYMOUS_USERNAME } from '../User';
 import UserSettings from '../UserSettings';
 import * as Versions from '../Versions';
 import { learnMore } from '../logs/TerminalLink';
+import * as Doctor from '../project/Doctor';
+import * as ProjectUtils from '../project/ProjectUtils';
 import { resolveEntryPoint } from '../tools/resolveEntryPoint';
-import * as Doctor from './Doctor';
-import * as ProjectUtils from './ProjectUtils';
 
 interface HostInfo {
   host: string;

@@ -5,10 +5,10 @@ import { AddressInfo } from 'net';
 
 import * as ConnectionStatus from '../ConnectionStatus';
 import * as ProjectSettings from '../ProjectSettings';
-import * as Doctor from './Doctor';
+import * as Doctor from '../project/Doctor';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { assertValidProjectRoot } from '../project/errors';
 import { getManifestHandler } from './ManifestHandler';
-import * as ProjectUtils from './ProjectUtils';
-import { assertValidProjectRoot } from './errors';
 import { getFreePortAsync } from './getFreePortAsync';
 
 type ConsoleLogLevel = 'info' | 'warn' | 'error' | 'debug';

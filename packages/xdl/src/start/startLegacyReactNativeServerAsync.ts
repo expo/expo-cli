@@ -13,9 +13,9 @@ import * as ProjectSettings from '../ProjectSettings';
 import * as UrlUtils from '../UrlUtils';
 import * as Versions from '../Versions';
 import * as Watchman from '../Watchman';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { assertValidProjectRoot } from '../project/errors';
 import { delayAsync } from '../utils/delayAsync';
-import * as ProjectUtils from './ProjectUtils';
-import { assertValidProjectRoot } from './errors';
 import { getFreePortAsync } from './getFreePortAsync';
 import { StartOptions } from './startDevServerAsync';
 
