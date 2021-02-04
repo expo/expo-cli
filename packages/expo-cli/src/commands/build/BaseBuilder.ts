@@ -13,6 +13,7 @@ import { BuilderOptions } from './BaseBuilder.types';
 import BuildError from './BuildError';
 import { Platform, PLATFORMS } from './constants';
 import { findReusableBuildAsync } from './findReusableBuildAsync';
+import { getLatestReleaseAsync } from './getLatestReleaseAsync';
 
 const secondsToMilliseconds = (seconds: number): number => seconds * 1000;
 export default class BaseBuilder {
@@ -276,7 +277,7 @@ ${job.id}
       return ids;
     } else {
       log('Looking for releases...');
-      const release = await Project.getLatestReleaseAsync(this.projectDir, {
+      const release = await getLatestReleaseAsync(this.projectDir, {
         releaseChannel: this.options.releaseChannel!,
         platform: this.platform(),
         owner: this.manifest.owner,

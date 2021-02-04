@@ -161,5 +161,4 @@ export {
 } from './project/getBuildStatusAsync';
 
 export { runHook } from './project/runHook';
-export { getLatestReleaseAsync } from './project/getLatestReleaseAsync';
 export { mergeAppDistributions } from './project/mergeAppDistributions';
