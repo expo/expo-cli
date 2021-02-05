@@ -16,6 +16,7 @@ import Analytics from '../Analytics';
 import ApiV2 from '../ApiV2';
 import Config from '../Config';
 import * as EmbeddedAssets from '../EmbeddedAssets';
+import { shouldUseDevServer } from '../Env';
 import { ErrorCode } from '../ErrorCode';
 import logger from '../Logger';
 import { publishAssetsAsync } from '../ProjectAssets';
@@ -26,16 +27,15 @@ import XDLError from '../XDLError';
 import * as ExponentTools from '../detach/ExponentTools';
 import * as TableText from '../logs/TableText';
 import { learnMore } from '../logs/TerminalLink';
+import {
+  startReactNativeServerAsync,
+  stopReactNativeServerAsync,
+} from '../start/startLegacyReactNativeServerAsync';
 import { resolveEntryPoint } from '../tools/resolveEntryPoint';
 import * as Doctor from './Doctor';
 import * as ProjectUtils from './ProjectUtils';
 import { getPublishExpConfigAsync, PublishOptions } from './getPublishExpConfigAsync';
 import { LoadedHook, prepareHooks, runHook } from './runHook';
-import { shouldUseDevServer } from './startDevServerAsync';
-import {
-  startReactNativeServerAsync,
-  stopReactNativeServerAsync,
-} from './startLegacyReactNativeServerAsync';
 
 const MINIMUM_BUNDLE_SIZE = 500;
 

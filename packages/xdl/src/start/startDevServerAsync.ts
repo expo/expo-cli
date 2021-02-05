@@ -1,12 +1,10 @@
-import { ExpoConfig, ProjectTarget } from '@expo/config';
+import { ProjectTarget } from '@expo/config';
 import { MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
-import { boolish } from 'getenv';
 
 import * as ProjectSettings from '../ProjectSettings';
-import * as Versions from '../Versions';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { assertValidProjectRoot } from '../project/errors';
 import { getManifestHandler } from './ManifestHandler';
-import * as ProjectUtils from './ProjectUtils';
-import { assertValidProjectRoot } from './errors';
 import { getFreePortAsync } from './getFreePortAsync';
 
 export type StartOptions = {
@@ -18,15 +16,6 @@ export type StartOptions = {
   webOnly?: boolean;
   target?: ProjectTarget;
 };
-
-/**
- * Returns true if we should use Metro using its JS APIs via @expo/dev-server (the modern and fast
- * way), false if we should fall back to spawning it as a subprocess (supported for backwards
- * compatibility with SDK39 and older).
- */
-export function shouldUseDevServer(exp: ExpoConfig) {
-  return Versions.gteSdkVersion(exp, '40.0.0') || boolish('EXPO_USE_DEV_SERVER', false);
-}
 
 export async function startDevServerAsync(projectRoot: string, startOptions: StartOptions) {
   assertValidProjectRoot(projectRoot);

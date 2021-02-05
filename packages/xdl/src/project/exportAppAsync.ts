@@ -10,6 +10,7 @@ import urljoin from 'url-join';
 import uuid from 'uuid';
 
 import * as EmbeddedAssets from '../EmbeddedAssets';
+import { shouldUseDevServer } from '../Env';
 import logger from '../Logger';
 import { Asset, exportAssetsAsync } from '../ProjectAssets';
 import UserManager, { ANONYMOUS_USERNAME } from '../User';
@@ -18,7 +19,6 @@ import { writeArtifactSafelyAsync } from '../tools/ArtifactUtils';
 import { getPublishExpConfigAsync, PublishOptions } from './getPublishExpConfigAsync';
 import { buildPublishBundlesAsync } from './publishAsync';
 import { prepareHooks, runHook } from './runHook';
-import { shouldUseDevServer } from './startDevServerAsync';
 
 const bundlePlatforms: BundlePlatform[] = ['android', 'ios'];
 
