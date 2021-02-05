@@ -1,4 +1,4 @@
-import { getConfig, readExpRcAsync } from '@expo/config';
+import { ExpoConfig, getConfig, readExpRcAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import child_process from 'child_process';
@@ -311,25 +311,38 @@ async function _isDeviceAuthorizedAsync(device: Device): Promise<boolean> {
   return device.isAuthorized;
 }
 
-// Expo installed
-async function _isExpoInstalledAsync(device: Device) {
+async function isInstalledAsync(device: Device, androidPackage: string): Promise<boolean> {
   const packages = await getAdbOutputAsync(
-    adbPidArgs(device.pid, 'shell', 'pm', 'list', 'packages', '-f')
+    adbPidArgs(device.pid, 'shell', 'pm', 'list', 'packages', androidPackage)
   );
 
   const lines = packages.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.includes('host.exp.exponent.test')) {
-      continue;
-    }
-
-    if (line.includes('host.exp.exponent')) {
+    const line = lines[i].trim();
+    if (line === `package:${androidPackage}`) {
       return true;
     }
   }
-
   return false;
+}
+
+// Expo installed
+async function _isExpoInstalledAsync(device: Device) {
+  return await isInstalledAsync(device, 'host.exp.exponent');
+}
+
+async function ensureDevClientInstalledAsync(
+  device: Device,
+  androidPackage: string
+): Promise<void> {
+  if (!(await isInstalledAsync(device, androidPackage))) {
+    throw new Error(
+      `The development client (${androidPackage}) for this project is not installed. ` +
+        `Please build and install the client on the simulator first.\n${learnMore(
+          'https://docs.expo.io/clients/distribution-for-android/'
+        )}`
+    );
+  }
 }
 
 async function getExpoVersionAsync(device: Device): Promise<string | null> {
@@ -561,11 +574,15 @@ async function openUrlAsync({
   device,
   isDetached = false,
   sdkVersion,
+  devClient = false,
+  exp,
 }: {
   url: string;
   isDetached?: boolean;
   device: Device;
   sdkVersion?: string;
+  devClient?: boolean;
+  exp?: ExpoConfig;
 }): Promise<void> {
   try {
     const bootedDevice = await attemptToStartEmulatorOrAssertAsync(device);
@@ -575,7 +592,16 @@ async function openUrlAsync({
     device = bootedDevice;
 
     let installedExpo = false;
-    if (!isDetached) {
+    if (devClient) {
+      const androidPackage = exp?.android?.package;
+      if (!androidPackage) {
+        // TODO(ville): need to compare Gradle project with app.json/config.ts
+        // similar to https://github.com/expo/eas-cli/blob/6a0a9bbaaad03b053b5930f7d14bde35b4d0a9f0/packages/eas-cli/src/project/projectUtils.ts#L57
+        // and need to show a helpful error message.
+        throw new Error(`Missing configuration: android.package`);
+      }
+      await ensureDevClientInstalledAsync(device, androidPackage);
+    } else if (!isDetached) {
       let shouldInstall = !(await _isExpoInstalledAsync(device));
       const promptKey = device.pid ?? 'unknown';
       if (
@@ -600,10 +626,7 @@ async function openUrlAsync({
         await installExpoAsync({ device, ...androidClient });
         installedExpo = true;
       }
-    }
-    // process.exit(0);
 
-    if (!isDetached) {
       _lastUrl = url;
       // _checkExpoUpToDateAsync(); // let this run in background
     }
@@ -651,9 +674,11 @@ async function getClientForSDK(sdkVersionString?: string) {
 export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
+  devClient = false,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
+  devClient?: boolean;
 }): Promise<{ success: true; url: string } | { success: false; error: string }> {
   try {
     await startAdbReverseAsync(projectRoot);
@@ -677,6 +702,8 @@ export async function openProjectAsync({
       device,
       isDetached: !!exp.isDetached,
       sdkVersion: exp.sdkVersion,
+      devClient,
+      exp,
     });
     return { success: true, url: projectUrl };
   } catch (e) {
