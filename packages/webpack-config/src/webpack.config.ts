@@ -294,7 +294,19 @@ export default async function (
     link => typeof link.rel === 'string' && link.rel.split(' ').includes('manifest')
   );
   let templateManifest = locations.template.manifest;
-  if (manifestLink && manifestLink.href) {
+  // Only inject a manifest tag if the template is missing one.
+  // This enables users to disable tag injection.
+  const shouldInjectManifestTag = !manifestLink;
+  if (manifestLink?.href) {
+    // Often the manifest will be referenced as `/manifest.json` (to support public paths).
+    // We've detected that the user has manually added a manifest tag to their template index.html which according
+    // to our docs means they want to use a custom manifest.json instead of having a new one generated.
+    //
+    // Normalize the link (removing the beginning slash) so it can be resolved relative to the user's static folder.
+    // Ref: https://docs.expo.io/guides/progressive-web-apps/#manual-setup
+    if (manifestLink.href.startsWith('/')) {
+      manifestLink.href = manifestLink.href.substring(1);
+    }
     templateManifest = locations.template.get(manifestLink.href);
   }
 
@@ -366,6 +378,7 @@ export default async function (
             template: templateManifest,
             path: 'manifest.json',
             publicPath,
+            inject: shouldInjectManifestTag,
           },
           config
         ),
