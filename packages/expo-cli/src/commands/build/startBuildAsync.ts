@@ -1,14 +1,7 @@
 import { configFilename, getConfig } from '@expo/config';
+import { Analytics, ApiV2, Config, ThirdParty, UserManager, XDLError } from '@expo/xdl';
 import joi from '@hapi/joi';
 import slug from 'slugify';
-
-import Analytics from '../Analytics';
-import ApiV2 from '../ApiV2';
-import Config from '../Config';
-import * as ThirdParty from '../ThirdParty';
-import UserManager from '../User';
-import XDLError from '../XDLError';
-import { assertValidProjectRoot } from './errors';
 
 export type BuildCreatedResult = {
   id: string;
@@ -108,7 +101,6 @@ export async function startBuildAsync(
 ): Promise<BuildCreatedResult> {
   const user = await UserManager.ensureLoggedInAsync();
 
-  assertValidProjectRoot(projectRoot);
   validateOptions(options);
   const { exp, configName, configPrefix } = await getExpAsync(projectRoot, options);
   validateManifest(options, exp, configName, configPrefix);

@@ -1,5 +1,4 @@
-import ApiV2 from '../ApiV2';
-import UserManager from '../User';
+import { ApiV2, UserManager } from '@expo/xdl';
 
 export async function findReusableBuildAsync(
   releaseChannel: string,

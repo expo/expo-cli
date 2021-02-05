@@ -150,17 +150,6 @@ export {
   stopReactNativeServerAsync,
 };
 export { PublishedProjectResult, publishAsync } from './project/publishAsync';
-export { BuildCreatedResult, startBuildAsync } from './project/startBuildAsync';
 export { exportAppAsync } from './project/exportAppAsync';
-
-export {
-  TurtleMode,
-  BuildJobFields,
-  BuildStatusResult,
-  getBuildStatusAsync,
-} from './project/getBuildStatusAsync';
-
 export { runHook } from './project/runHook';
-export { findReusableBuildAsync } from './project/findReusableBuildAsync';
-export { getLatestReleaseAsync } from './project/getLatestReleaseAsync';
 export { mergeAppDistributions } from './project/mergeAppDistributions';

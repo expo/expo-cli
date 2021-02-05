@@ -1,5 +1,5 @@
 import { ExpoConfig, getConfig, ProjectConfig } from '@expo/config';
-import { Project, RobotUser, User, UserManager, Versions } from '@expo/xdl';
+import { RobotUser, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import ora from 'ora';
 import semver from 'semver';
@@ -12,9 +12,12 @@ import * as UrlUtils from '../utils/url';
 import { BuilderOptions } from './BaseBuilder.types';
 import BuildError from './BuildError';
 import { Platform, PLATFORMS } from './constants';
+import { findReusableBuildAsync } from './findReusableBuildAsync';
+import { BuildJobFields, getBuildStatusAsync } from './getBuildStatusAsync';
+import { getLatestReleaseAsync } from './getLatestReleaseAsync';
+import { startBuildAsync } from './startBuildAsync';
 
 const secondsToMilliseconds = (seconds: number): number => seconds * 1000;
-
 export default class BaseBuilder {
   protected projectConfig: ProjectConfig;
   manifest: ExpoConfig;
@@ -99,7 +102,7 @@ export default class BaseBuilder {
 
   async checkForBuildInProgress() {
     log('Checking if there is a build in progress...\n');
-    const buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
+    const buildStatus = await getBuildStatusAsync(this.projectDir, {
       platform: this.platform(),
       current: true,
       releaseChannel: this.options.releaseChannel,
@@ -115,7 +118,7 @@ export default class BaseBuilder {
   async checkStatus(platform: 'all' | 'ios' | 'android' = 'all'): Promise<void> {
     log('Fetching build history...\n');
 
-    const buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
+    const buildStatus = await getBuildStatusAsync(this.projectDir, {
       platform,
       current: false,
       releaseChannel: this.options.releaseChannel,
@@ -141,7 +144,7 @@ export default class BaseBuilder {
   async checkStatusBeforeBuild(): Promise<void> {
     log('Checking if this build already exists...\n');
 
-    const reuseStatus = await Project.findReusableBuildAsync(
+    const reuseStatus = await findReusableBuildAsync(
       this.options.releaseChannel!,
       this.platform(),
       this.manifest.sdkVersion!,
@@ -164,7 +167,7 @@ Please see the docs (${chalk.underline(
   }
 
   async logBuildStatuses(buildStatus: {
-    jobs: Project.BuildJobFields[];
+    jobs: BuildJobFields[];
     canPurchasePriorityBuilds?: boolean;
     numberOfRemainingPriorityBuilds?: number;
     hasUnlimitedPriorityBuilds?: boolean;
@@ -276,7 +279,7 @@ ${job.id}
       return ids;
     } else {
       log('Looking for releases...');
-      const release = await Project.getLatestReleaseAsync(this.projectDir, {
+      const release = await getLatestReleaseAsync(this.projectDir, {
         releaseChannel: this.options.releaseChannel!,
         platform: this.platform(),
         owner: this.manifest.owner,
@@ -303,12 +306,12 @@ ${job.id}
     let i = 0;
     while (true) {
       i++;
-      const result = await Project.getBuildStatusAsync(this.projectDir, {
+      const result = await getBuildStatusAsync(this.projectDir, {
         current: false,
         ...(publicUrl ? { publicUrl } : {}),
       });
 
-      const jobs = result.jobs?.filter((job: Project.BuildJobFields) => job.id === buildId);
+      const jobs = result.jobs?.filter((job: BuildJobFields) => job.id === buildId);
       const job = jobs ? jobs[0] : null;
       if (job) {
         switch (job.status) {
@@ -364,7 +367,7 @@ ${job.id}
     }
 
     // call out to build api here with url
-    const result = await Project.startBuildAsync(this.projectDir, opts);
+    const result = await startBuildAsync(this.projectDir, opts);
 
     const { id: buildId, priority, canPurchasePriorityBuilds } = result;
 

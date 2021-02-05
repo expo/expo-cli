@@ -1,4 +1,4 @@
-import { Project, ProjectSettings, UrlUtils } from '@expo/xdl';
+import { ProjectSettings, UrlUtils } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
@@ -6,6 +6,7 @@ import CommandError from '../CommandError';
 import log from '../log';
 import printRunInstructionsAsync from '../printRunInstructionsAsync';
 import urlOpts, { URLOptions } from '../urlOpts';
+import { BuildJobFields, getBuildStatusAsync } from './build/getBuildStatusAsync';
 
 type ProjectUrlOptions = Command & {
   web?: boolean;
@@ -23,13 +24,13 @@ const logArtifactUrl = (platform: 'ios' | 'android') => async (
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
   }
 
-  const result = await Project.getBuildStatusAsync(projectDir, {
+  const result = await getBuildStatusAsync(projectDir, {
     current: false,
     ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
   });
 
-  const url = result.jobs?.filter((job: Project.BuildJobFields) => job.platform === platform)[0]
-    ?.artifacts?.url;
+  const url = result.jobs?.filter((job: BuildJobFields) => job.platform === platform)[0]?.artifacts
+    ?.url;
   if (url) {
     log.nested(url);
   } else {
