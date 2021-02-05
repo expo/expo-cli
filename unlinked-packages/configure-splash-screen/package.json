@@ -1,6 +1,6 @@
 {
   "name": "@expo/configure-splash-screen",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Supplementary module for 'expo-splash-screen' providing cli configuration command",
   "bin": {
     "configure-splash-screen": "./build/index-cli.js",
@@ -38,12 +38,12 @@
     "node": ">=10"
   },
   "dependencies": {
-    "@react-native-community/cli-platform-ios": "^4.10.0",
     "color-string": "^1.5.3",
     "commander": "^5.1.0",
     "core-js": "^3.6.5",
     "deep-equal": "^2.0.3",
     "fs-extra": "^9.0.0",
+    "glob": "^7.1.6",
     "lodash": "^4.17.15",
     "pngjs": "^5.0.0",
     "xcode": "^3.0.0",
@@ -51,7 +51,6 @@
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.18",
-    "@react-native-community/cli-types": "^4.10.0",
     "@types/color-string": "^1.5.0",
     "@types/deep-equal": "^1.0.1",
     "@types/fs-extra": "^9.0.1",

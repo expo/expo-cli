@@ -13,7 +13,7 @@ import {
   LogUpdater,
   NotificationCode,
   PackagerLogsStream,
-  Project,
+  ProjectSettings,
   ProjectUtils,
   UserManager,
 } from '@expo/xdl';
@@ -653,7 +653,10 @@ Command.prototype.asyncActionProjectDir = function (
     // If the packager/manifest server is running and healthy, there is no need
     // to rerun Doctor because the directory was already checked previously
     // This is relevant for command such as `send`
-    if (options.checkConfig && (await Project.currentStatus(projectDir)) !== 'running') {
+    if (
+      options.checkConfig &&
+      (await ProjectSettings.getCurrentStatusAsync(projectDir)) !== 'running'
+    ) {
       const spinner = ora('Making sure project is set up correctly...').start();
       log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else

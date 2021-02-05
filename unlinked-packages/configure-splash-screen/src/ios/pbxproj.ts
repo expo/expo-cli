@@ -1,6 +1,11 @@
-import { projectConfig } from '@react-native-community/cli-platform-ios';
-import path from 'path';
-import xcode, { XcodeProject, UUID, PBXNativeTarget } from 'xcode';
+import * as path from 'path';
+import xcode, { PBXNativeTarget, UUID, XcodeProject } from 'xcode';
+
+import {
+  getAllPBXProjectPaths,
+  getAllXcodeProjectPaths,
+  getApplicationNativeTarget,
+} from './Paths';
 
 export interface IosProject {
   projectName: string;
@@ -18,28 +23,27 @@ export interface IosProject {
   applicationNativeTarget: { uuid: UUID; target: PBXNativeTarget };
 }
 
+function getProjectConfig(projectRoot: string): { projectPath: string; pbxprojPath: string } {
+  return {
+    projectPath: getAllXcodeProjectPaths(projectRoot)[0]!,
+    pbxprojPath: getAllPBXProjectPaths(projectRoot)[0]!,
+  };
+}
+
 /**
  * Reads iOS project and locates `.pbxproj` file for further parsing and modifications.
  */
 export default async function readPbxProject(projectRootPath: string): Promise<IosProject> {
-  const config = projectConfig(projectRootPath, { plist: [] });
-
-  if (!config) {
-    throw new Error(`Couldn't find iOS project. Cannot configure iOS.`);
-  }
+  const config = getProjectConfig(projectRootPath);
 
   const { projectPath: xcodeProjPath, pbxprojPath } = config;
 
-  // xcodeProjPath contains path to .xcodeproj directory
-  if (!xcodeProjPath.endsWith('.xcodeproj')) {
-    throw new Error(`Couldn't find .xcodeproj directory.`);
-  }
   const projectPath = xcodeProjPath.substring(0, xcodeProjPath.length - '.xcodeproj'.length);
   const projectName = path.basename(projectPath);
 
   const pbxProject = xcode.project(pbxprojPath);
 
-  await new Promise(resolve =>
+  await new Promise<void>(resolve =>
     pbxProject.parse(err => {
       if (err) {
         throw new Error(`.pbxproj file parsing issue: ${err.message}.`);
@@ -48,16 +52,7 @@ export default async function readPbxProject(projectRootPath: string): Promise<I
     })
   );
 
-  const applicationNativeTarget = pbxProject.getTarget('com.apple.product-type.application');
-  if (!applicationNativeTarget) {
-    throw new Error(`Couldn't locate application PBXNativeTarget in '.xcodeproj' file.`);
-  }
-
-  if (String(applicationNativeTarget.target.name) !== projectName) {
-    throw new Error(
-      `Application native target name mismatch. Expected ${projectName}, but found ${applicationNativeTarget.target.name}.`
-    );
-  }
+  const applicationNativeTarget = getApplicationNativeTarget({ project: pbxProject, projectName });
 
   return {
     projectName,
