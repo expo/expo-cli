@@ -38,7 +38,7 @@ describe(ensureConfigExistsAsync, () => {
     vol.reset();
   });
 
-  it(`resolves null when the app entry is managed`, async () => {
+  it(`automatically writes an Expo config when one is missing`, async () => {
     await ensureConfigExistsAsync(projectRoot);
     const config = getConfig(projectRoot);
 
@@ -49,6 +49,6 @@ describe(ensureConfigExistsAsync, () => {
     expect(config.exp.sdkVersion).toBe('40.0.0');
     expect(config.exp.name).toBe('my-app');
     // Ensure the internal object isn't written
-    expect(config.exp._internal).not.toBeDefined();
+    expect(config.rootConfig._internal).not.toBeDefined();
   });
 });
