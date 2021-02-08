@@ -32,7 +32,6 @@
     "clean": "rimraf build ./tsconfig.tsbuildinfo"
   },
   "devDependencies": {
-    "@types/node": "^12",
     "rimraf": "^3.0.2"
   },
   "dependencies": {

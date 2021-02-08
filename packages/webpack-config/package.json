@@ -79,7 +79,6 @@
     "@expo/babel-preset-cli": "0.2.18",
     "@types/copy-webpack-plugin": "~6.0.0",
     "@types/html-webpack-plugin": "~3.2.3",
-    "@types/node": "^12",
     "@types/optimize-css-assets-webpack-plugin": "^5.0.0",
     "@types/react-dev-utils": "~9.0.4",
     "@types/terser-webpack-plugin": "~3.0.0",

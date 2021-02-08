@@ -122,6 +122,12 @@ export const printServerInfo = async (
 export const startAsync = async (projectRoot: string, options: StartOptions) => {
   const { stdin } = process;
   const startWaitingForCommand = () => {
+    if (!stdin.setRawMode) {
+      log.warn(
+        'Non-interactive terminal, keyboard commands are disabled. Please upgrade to Node 12+'
+      );
+      return;
+    }
     stdin.setRawMode(true);
     stdin.resume();
     stdin.setEncoding('utf8');
@@ -130,6 +136,12 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
 
   const stopWaitingForCommand = () => {
     stdin.removeListener('data', handleKeypress);
+    if (!stdin.setRawMode) {
+      log.warn(
+        'Non-interactive terminal, keyboard commands are disabled. Please upgrade to Node 12+'
+      );
+      return;
+    }
     stdin.setRawMode(false);
     stdin.resume();
   };

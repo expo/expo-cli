@@ -34,7 +34,6 @@
   "devDependencies": {
     "@expo/babel-preset-cli": "0.2.18",
     "@expo/package-manager": "0.0.38",
-    "@types/node": "^12",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "rimraf": "^3.0.2",

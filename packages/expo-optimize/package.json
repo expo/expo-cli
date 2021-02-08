@@ -37,7 +37,6 @@
     "@expo/config": "3.3.28",
     "@expo/image-utils": "0.3.10",
     "@expo/json-file": "8.2.27",
-    "@types/node": "^12",
     "chalk": "^4.0.0",
     "commander": "2.20.0",
     "cross-spawn": "6.0.5",
