@@ -56,15 +56,11 @@ export const withStaticPlugin: ConfigPlugin<{
         if (isModuleMissingError(pluginResolve, error)) {
           // Prevent causing log spew for basic resolution errors.
           console.log(`Could not find plugin "${pluginResolve}"`);
-        } else if (error instanceof SyntaxError) {
-          console.log(`Error resolving plugin "${pluginResolve}"`);
+        } else {
           // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
+          console.log(`Error resolving plugin "${pluginResolve}"`);
           console.log(error);
           console.log();
-        } else {
-          console.log(`Error resolving plugin "${pluginResolve}"`);
-          // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
-          console.log(error);
         }
       }
       // TODO: Maybe allow for `PluginError`s to be thrown so external plugins can assert invalid options.
