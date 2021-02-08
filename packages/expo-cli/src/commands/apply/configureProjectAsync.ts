@@ -11,7 +11,7 @@ import {
 } from '@expo/config-plugins';
 import { UserManager } from '@expo/xdl';
 
-import log from '../../log';
+import Log from '../../log';
 import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from '../eject/ConfigValidation';
 
 // Expo managed packages that require extra update.
@@ -114,14 +114,14 @@ export default async function configureManagedProjectAsync({
   // compile all plugins and mods
   config = await compileModsAsync(config, { projectRoot, platforms });
 
-  if (log.isDebug) {
-    log.debug();
-    log.debug('Evaluated config:');
+  if (Log.isDebug) {
+    Log.debug();
+    Log.debug('Evaluated config:');
     // @ts-ignore: mods not on config type
     const { mods, ...rest } = config;
-    log.info(JSON.stringify(rest, null, 2));
-    log.info(mods);
-    log.debug();
+    Log.info(JSON.stringify(rest, null, 2));
+    Log.info(mods);
+    Log.debug();
   }
 
   return config;

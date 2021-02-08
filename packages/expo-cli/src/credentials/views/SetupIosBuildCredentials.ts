@@ -2,7 +2,7 @@ import chalk from 'chalk';
 
 import CommandError from '../../CommandError';
 import * as appleApi from '../../appleApi';
-import log from '../../log';
+import Log from '../../log';
 import prompts, { confirmAsync } from '../../prompts';
 import { AppLookupParams } from '../api/IosApi';
 import { Context, IView } from '../context';
@@ -26,7 +26,7 @@ export class SetupIosBuildCredentials implements IView {
     try {
       await runCredentialsManager(ctx, new SetupIosDist(this.app));
     } catch (error) {
-      log.error('Failed to set up Distribution Certificate');
+      Log.error('Failed to set up Distribution Certificate');
       throw error;
     }
 
@@ -41,7 +41,7 @@ export class SetupIosBuildCredentials implements IView {
     try {
       await runCredentialsManager(ctx, new SetupIosProvisioningProfile(this.app));
     } catch (error) {
-      log.error('Failed to set up Provisioning Profile');
+      Log.error('Failed to set up Provisioning Profile');
       throw error;
     }
 
@@ -66,7 +66,7 @@ export class SetupIosBuildCredentials implements IView {
     if (confirm) {
       return await ctx.ensureAppleCtx();
     } else {
-      log(
+      Log.log(
         chalk.green(
           'No problem! 👌 \nWe can’t auto-generate credentials if you don’t have access to the main Apple account. \nBut we can still set it up if you upload your credentials.'
         )
@@ -83,7 +83,7 @@ export class SetupIosBuildCredentialsFromLocal implements IView {
     try {
       localCredentials = await credentialsJsonReader.readIosCredentialsAsync(ctx.projectDir);
     } catch (error) {
-      log.error(
+      Log.error(
         'Reading credentials from credentials.json failed. Make sure this file is correct and all credentials are present there.'
       );
       throw error;

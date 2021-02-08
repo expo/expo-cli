@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import semver from 'semver';
 
-import log from '../../log';
+import Log from '../../log';
 import { getProjectOwner } from '../../projects';
 import { action as publishAction } from '../publish';
 import { sleep } from '../utils/promise';
@@ -45,7 +45,7 @@ export default class BaseBuilder {
       if (!(e instanceof BuildError)) {
         throw e;
       } else {
-        log.error(e.message);
+        Log.error(e.message);
         process.exit(1);
       }
     }
@@ -63,7 +63,7 @@ export default class BaseBuilder {
       if (!(e instanceof BuildError)) {
         throw e;
       } else {
-        log.error(e.message);
+        Log.error(e.message);
         process.exit(1);
       }
     }
@@ -82,7 +82,7 @@ export default class BaseBuilder {
 
   async checkProjectConfig(): Promise<void> {
     if (this.manifest.isDetached) {
-      log.error(`'expo build:${this.platform()}' is not supported for detached projects.`);
+      Log.error(`'expo build:${this.platform()}' is not supported for detached projects.`);
       process.exit(1);
     }
 
@@ -90,7 +90,7 @@ export default class BaseBuilder {
     const oldestSupportedMajorVersion = await Versions.oldestSupportedMajorVersionAsync();
     if (semver.major(this.manifest.sdkVersion!) === oldestSupportedMajorVersion) {
       const { version } = await Versions.newestReleasedSdkVersionAsync();
-      log.warn(
+      Log.warn(
         `\nSDK${oldestSupportedMajorVersion} will be ${chalk.bold(
           'deprecated'
         )} next! We recommend upgrading versions, ideally to the latest (SDK${semver.major(
@@ -101,7 +101,7 @@ export default class BaseBuilder {
   }
 
   async checkForBuildInProgress() {
-    log('Checking if there is a build in progress...\n');
+    Log.log('Checking if there is a build in progress...\n');
     const buildStatus = await getBuildStatusAsync(this.projectDir, {
       platform: this.platform(),
       current: true,
@@ -116,7 +116,7 @@ export default class BaseBuilder {
   }
 
   async checkStatus(platform: 'all' | 'ios' | 'android' = 'all'): Promise<void> {
-    log('Fetching build history...\n');
+    Log.log('Fetching build history...\n');
 
     const buildStatus = await getBuildStatusAsync(this.projectDir, {
       platform,
@@ -129,7 +129,7 @@ export default class BaseBuilder {
     }
 
     if (!(buildStatus.jobs && buildStatus.jobs.length)) {
-      log('No currently active or previous builds for this project.');
+      Log.log('No currently active or previous builds for this project.');
       return;
     }
 
@@ -142,7 +142,7 @@ export default class BaseBuilder {
   }
 
   async checkStatusBeforeBuild(): Promise<void> {
-    log('Checking if this build already exists...\n');
+    Log.log('Checking if this build already exists...\n');
 
     const reuseStatus = await findReusableBuildAsync(
       this.options.releaseChannel!,
@@ -152,17 +152,17 @@ export default class BaseBuilder {
       this.manifest.owner
     );
     if (reuseStatus.canReuse) {
-      log.warn(`Did you know that Expo provides over-the-air updates?
+      Log.warn(`Did you know that Expo provides over-the-air updates?
 Please see the docs (${chalk.underline(
         'https://docs.expo.io/guides/configuring-ota-updates/'
       )}) and check if you can use them instead of building your app binaries again.`);
 
-      log.warn(
+      Log.warn(
         `There were no new changes from the last build, you can download that build from here: ${chalk.underline(
           reuseStatus.downloadUrl!
         )}`
       );
-      log.newLine();
+      Log.newLine();
     }
   }
 
@@ -172,9 +172,9 @@ Please see the docs (${chalk.underline(
     numberOfRemainingPriorityBuilds?: number;
     hasUnlimitedPriorityBuilds?: boolean;
   }) {
-    log('=================');
-    log(' Builds Statuses ');
-    log('=================\n');
+    Log.log('=================');
+    Log.log(' Builds Statuses ');
+    Log.log('=================\n');
 
     const username = this.manifest.owner
       ? this.manifest.owner
@@ -190,7 +190,7 @@ Please see the docs (${chalk.underline(
         packageExtension = 'APK';
       }
 
-      log(
+      Log.log(
         `### ${i} | ${platform} | ${UrlUtils.constructBuildLogsUrl({
           buildId: job.id,
           username: username ?? undefined,
@@ -253,15 +253,15 @@ ${job.id}
           break;
       }
 
-      log(status);
+      Log.log(status);
       if (job.status === 'finished') {
         if (job.artifacts) {
-          log(`${packageExtension}: ${job.artifacts.url}`);
+          Log.log(`${packageExtension}: ${job.artifacts.url}`);
         } else {
-          log(`Problem getting ${packageExtension} URL. Please try to build again.`);
+          Log.log(`Problem getting ${packageExtension} URL. Please try to build again.`);
         }
       }
-      log();
+      Log.log();
     });
   }
 
@@ -278,7 +278,7 @@ ${job.id}
       }
       return ids;
     } else {
-      log('Looking for releases...');
+      Log.log('Looking for releases...');
       const release = await getLatestReleaseAsync(this.projectDir, {
         releaseChannel: this.options.releaseChannel!,
         platform: this.platform(),
@@ -287,7 +287,7 @@ ${job.id}
       if (!release) {
         throw new BuildError('No releases found. Please create one using `expo publish` first.');
       }
-      log(
+      Log.log(
         `Using existing release on channel "${release.channel}":\n` +
           `publicationId: ${release.publicationId}\n  publishedTime: ${release.publishedTime}`
       );
@@ -299,7 +299,7 @@ ${job.id}
     buildId: string,
     { interval = 30, publicUrl }: { interval?: number; publicUrl?: string } = {}
   ): Promise<any> {
-    log(
+    Log.log(
       `Waiting for build to complete.\nYou can press Ctrl+C to exit. It won't cancel the build, you'll be able to monitor it at the printed URL.`
     );
     const spinner = ora().start();
@@ -371,12 +371,12 @@ ${job.id}
 
     const { id: buildId, priority, canPurchasePriorityBuilds } = result;
 
-    log('Build started, it may take a few minutes to complete.');
-    log(
+    Log.log('Build started, it may take a few minutes to complete.');
+    Log.log(
       `You can check the queue length at ${chalk.underline(UrlUtils.constructTurtleStatusUrl())}\n`
     );
     if (priority === 'normal' && canPurchasePriorityBuilds) {
-      log(
+      Log.log(
         'You can make this faster. 🐢\nGet priority builds at: https://expo.io/settings/billing\n'
       );
     }
@@ -389,7 +389,7 @@ ${job.id}
         username: this.manifest.owner || (user?.kind === 'user' ? user.username : undefined),
       });
 
-      log(`You can monitor the build at\n\n ${chalk.underline(url)}\n`);
+      Log.log(`You can monitor the build at\n\n ${chalk.underline(url)}\n`);
     }
 
     if (this.options.wait) {
@@ -398,10 +398,12 @@ ${job.id}
       const artifactUrl = completedJob.artifactId
         ? UrlUtils.constructArtifactUrl(completedJob.artifactId)
         : completedJob.artifacts.url;
-      log.addNewLineIfNone();
-      log(`${chalk.green('Successfully built standalone app:')} ${chalk.underline(artifactUrl)}`);
+      Log.addNewLineIfNone();
+      Log.log(
+        `${chalk.green('Successfully built standalone app:')} ${chalk.underline(artifactUrl)}`
+      );
     } else {
-      log('Alternatively, run `expo build:status` to monitor it from the command line.');
+      Log.log('Alternatively, run `expo build:status` to monitor it from the command line.');
     }
   }
 
