@@ -11,7 +11,7 @@ import { createNativeProjectsFromTemplateAsync } from './createNativeProjectsFro
 import { ensureConfigAsync } from './ensureConfigAsync';
 import { installNodeDependenciesAsync } from './installNodeDependenciesAsync';
 import { assertPlatforms, ensureValidPlatforms } from './platformOptions';
-import { warnIfDependenciesRequireAdditionalSetupAsync } from './warnIfDependenciesRequireAdditionalSetupAsync';
+import { warnIfDependenciesRequireAdditionalSetup } from './setupWarnings';
 
 export type EjectAsyncOptions = {
   verbose?: boolean;
@@ -104,7 +104,7 @@ export async function prebuildAsync(
     Log.debug('Skipped pod install');
   }
 
-  await warnIfDependenciesRequireAdditionalSetupAsync(
+  warnIfDependenciesRequireAdditionalSetup(
     pkg,
     exp.sdkVersion,
     Object.keys(managedConfig._internal?.pluginHistory ?? {})

@@ -11,23 +11,44 @@ import { learnMore } from '../utils/TerminalLink';
  * Some packages are not configured automatically on eject and may require
  * users to add some code, eg: to their AppDelegate.
  */
-export async function warnIfDependenciesRequireAdditionalSetupAsync(
+export function warnIfDependenciesRequireAdditionalSetup(
   pkg: PackageJSONConfig,
   sdkVersion?: string,
   appliedPlugins?: string[]
-): Promise<void> {
-  const expoPackagesWithExtraSetup = expoManagedPlugins
+): Record<string, string> {
+  const warnings = getSetupWarnings({
+    pkg,
+    sdkVersion,
+    appliedPlugins: appliedPlugins ?? [],
+    autoPlugins: expoManagedPlugins,
+  });
+
+  logSetupWarnings(warnings);
+
+  return warnings;
+}
+
+// Exposed for testing
+export function getSetupWarnings({
+  pkg,
+  sdkVersion,
+  appliedPlugins,
+  autoPlugins,
+}: {
+  pkg: PackageJSONConfig;
+  sdkVersion?: string;
+  appliedPlugins: string[];
+  autoPlugins: string[];
+}): Record<string, string> {
+  const pkgsWithExtraSetup = autoPlugins
     .filter(plugin => !appliedPlugins?.includes(plugin))
-    .reduce(
+    .reduce<Record<string, string>>(
       (prev, curr) => ({
         ...prev,
         [curr]: `https://github.com/expo/expo/tree/master/packages/${curr}`,
       }),
       {}
     );
-  const pkgsWithExtraSetup: Record<string, string> = {
-    ...expoPackagesWithExtraSetup,
-  };
 
   // Starting with SDK 40 the manifest is embedded in ejected apps automatically
   if (sdkVersion && semver.lte(sdkVersion, '39.0.0')) {
@@ -40,11 +61,22 @@ export async function warnIfDependenciesRequireAdditionalSetupAsync(
     )}`;
   }
 
-  const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(
-    pkgName => pkgName in pkgsWithExtraSetup
-  );
+  const warnings = Object.keys(pkg.dependencies).reduce<Record<string, string>>((prev, key) => {
+    if (!(key in pkgsWithExtraSetup)) {
+      return prev;
+    }
+    return {
+      ...prev,
+      [key]: pkgsWithExtraSetup[key],
+    };
+  }, {});
 
-  if (packagesToWarn.length === 0) {
+  return warnings;
+}
+
+function logSetupWarnings(warnings: Record<string, string>) {
+  const warningLength = Object.keys(warnings).length;
+  if (!warningLength) {
     return;
   }
 
@@ -53,18 +85,18 @@ export async function warnIfDependenciesRequireAdditionalSetupAsync(
     'Checking if any additional setup steps are required for installed SDK packages.'
   );
 
-  const plural = packagesToWarn.length > 1;
+  const plural = warningLength > 1;
 
   warnAdditionalSetupStep.stopAndPersist({
     symbol: '⚠️ ',
     text: chalk.yellow.bold(
-      `The app has ${packagesToWarn.length} package${plural ? 's' : ''} that require${
+      `The app has ${warningLength} package${plural ? 's' : ''} that require${
         plural ? '' : 's'
       } extra setup before building:`
     ),
   });
 
-  packagesToWarn.forEach(pkgName => {
-    Log.nested(`\u203A ${chalk.bold(pkgName)}: ${pkgsWithExtraSetup[pkgName]}`);
-  });
+  for (const [pkgName, message] of Object.entries(warnings)) {
+    Log.nested(`\u203A ${chalk.bold(pkgName)}: ${message}`);
+  }
 }
