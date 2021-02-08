@@ -48,5 +48,7 @@ describe(ensureConfigExistsAsync, () => {
 
     expect(config.exp.sdkVersion).toBe('40.0.0');
     expect(config.exp.name).toBe('my-app');
+    // Ensure the internal object isn't written
+    expect(config.exp._internal).not.toBeDefined();
   });
 });

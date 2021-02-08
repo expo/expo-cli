@@ -17,6 +17,9 @@ export async function ensureConfigExistsAsync(projectRoot: string) {
     const config = getConfig(projectRoot, { skipSDKVersionRequirement: false });
     // If no config exists in the file system then we should generate one so the process doesn't fail.
     if (!config.dynamicConfigPath && !config.staticConfigPath) {
+      // Remove the internal object before writing.
+      delete config.exp._internal;
+
       // Don't check for a custom config path because the process should fail if a custom file doesn't exist.
       // Write the generated config.
       // writeConfigJsonAsync(projectRoot, config.exp);
