@@ -623,7 +623,7 @@ export async function useDistCertFromParams(
   app: AppLookupParams,
   distCert: DistCert
 ): Promise<IosDistCredentials> {
-  if (ctx.skipCredentialsValidation) {
+  if (!ctx.skipCredentialsValidation) {
     const isValid = await validateDistributionCertificate(ctx, distCert);
     if (!isValid) {
       throw new Error('Cannot validate uploaded Distribution Certificate');
