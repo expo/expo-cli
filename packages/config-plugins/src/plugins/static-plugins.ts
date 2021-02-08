@@ -10,6 +10,14 @@ import {
 
 const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
+function isModuleMissingError(name: string, error: Error): boolean {
+  // @ts-ignore
+  if (error.code === 'MODULE_NOT_FOUND') {
+    return true;
+  }
+  return error.message.includes(`Cannot find module '${name}'`);
+}
+
 /**
  * Resolves static module plugin and potentially falls back on a provided plugin if the module cannot be resolved
  *
@@ -45,8 +53,15 @@ export const withStaticPlugin: ConfigPlugin<{
       withPlugin = resolveConfigPluginFunction(projectRoot, pluginResolve);
     } catch (error) {
       if (EXPO_DEBUG) {
-        // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
-        console.log(`Error resolving plugin "${pluginResolve}"`, error);
+        if (isModuleMissingError(pluginResolve, error)) {
+          // Prevent causing log spew for basic resolution errors.
+          console.log(`Could not find plugin "${pluginResolve}"`);
+        } else {
+          // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
+          console.log(`Error resolving plugin "${pluginResolve}"`);
+          console.log(error);
+          console.log();
+        }
       }
       // TODO: Maybe allow for `PluginError`s to be thrown so external plugins can assert invalid options.
 
