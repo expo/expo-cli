@@ -1,4 +1,5 @@
 import { ExpoConfig, getConfig, readExpRcAsync } from '@expo/config';
+import { AndroidConfig } from '@expo/config-plugins';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import child_process from 'child_process';
@@ -9,6 +10,7 @@ import path from 'path';
 import ProgressBar from 'progress';
 import prompts from 'prompts';
 import semver from 'semver';
+import { project } from 'xcode';
 
 import Analytics from './Analytics';
 import Api from './Api';
@@ -331,13 +333,10 @@ async function _isExpoInstalledAsync(device: Device) {
   return await isInstalledAsync(device, 'host.exp.exponent');
 }
 
-async function ensureDevClientInstalledAsync(
-  device: Device,
-  androidPackage: string
-): Promise<void> {
-  if (!(await isInstalledAsync(device, androidPackage))) {
+async function ensureDevClientInstalledAsync(device: Device, applicationId: string): Promise<void> {
+  if (!(await isInstalledAsync(device, applicationId))) {
     throw new Error(
-      `The development client (${androidPackage}) for this project is not installed. ` +
+      `The development client (${applicationId}) for this project is not installed. ` +
         `Please build and install the client on the simulator first.\n${learnMore(
           'https://docs.expo.io/clients/distribution-for-android/'
         )}`
@@ -511,7 +510,15 @@ export async function upgradeExpoAsync(options?: {
   }
 }
 
-async function _openUrlAsync({ pid, url }: { pid: string; url: string }) {
+async function _openUrlAsync({
+  pid,
+  url,
+  applicationId,
+}: {
+  pid: string;
+  url: string;
+  applicationId: string;
+}) {
   // NOTE(brentvatne): temporary workaround! launch expo client first, then
   // launch the project!
   // https://github.com/expo/expo/issues/7772
@@ -522,7 +529,7 @@ async function _openUrlAsync({ pid, url }: { pid: string; url: string }) {
       'shell',
       'monkey',
       '-p',
-      'host.exp.exponent',
+      applicationId,
       '-c',
       'android.intent.category.LAUNCHER',
       '1'
@@ -576,6 +583,7 @@ async function openUrlAsync({
   sdkVersion,
   devClient = false,
   exp,
+  projectRoot,
 }: {
   url: string;
   isDetached?: boolean;
@@ -583,6 +591,7 @@ async function openUrlAsync({
   sdkVersion?: string;
   devClient?: boolean;
   exp?: ExpoConfig;
+  projectRoot: string;
 }): Promise<void> {
   try {
     const bootedDevice = await attemptToStartEmulatorOrAssertAsync(device);
@@ -592,15 +601,19 @@ async function openUrlAsync({
     device = bootedDevice;
 
     let installedExpo = false;
+    let clientApplicationId = 'host.exp.exponent';
     if (devClient) {
-      const androidPackage = exp?.android?.package;
-      if (!androidPackage) {
-        // TODO(ville): need to compare Gradle project with app.json/config.ts
-        // similar to https://github.com/expo/eas-cli/blob/6a0a9bbaaad03b053b5930f7d14bde35b4d0a9f0/packages/eas-cli/src/project/projectUtils.ts#L57
-        // and need to show a helpful error message.
-        throw new Error(`Missing configuration: android.package`);
+      const applicationId = await AndroidConfig.Package.getApplicationIdAsync(projectRoot);
+      if (!applicationId) {
+        // TODO(ville): possibly need to compare Gradle project with app.json/config.ts
+        // and show a helpful error message, if there's a mismatch.
+        throw new Error(
+          `Could not find applicationId in ${AndroidConfig.Paths.getAppBuildGradle(projectRoot)}`
+        );
+      } else {
+        clientApplicationId = applicationId;
       }
-      await ensureDevClientInstalledAsync(device, androidPackage);
+      await ensureDevClientInstalledAsync(device, clientApplicationId);
     } else if (!isDetached) {
       let shouldInstall = !(await _isExpoInstalledAsync(device));
       const promptKey = device.pid ?? 'unknown';
@@ -634,7 +647,7 @@ async function openUrlAsync({
     Logger.global.info(`Opening ${chalk.underline(url)} on ${chalk.bold(device.name)}`);
 
     try {
-      await _openUrlAsync({ pid: device.pid!, url });
+      await _openUrlAsync({ pid: device.pid!, url, applicationId: clientApplicationId });
     } catch (e) {
       if (isDetached) {
         e.message = `Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${e.message}`;
@@ -704,6 +717,7 @@ export async function openProjectAsync({
       sdkVersion: exp.sdkVersion,
       devClient,
       exp,
+      projectRoot,
     });
     return { success: true, url: projectUrl };
   } catch (e) {
@@ -738,7 +752,7 @@ export async function openWebProjectAsync({
       return { success: false, error: 'escaped' };
     }
 
-    await openUrlAsync({ url: projectUrl, device, isDetached: true });
+    await openUrlAsync({ url: projectUrl, device, isDetached: true, projectRoot });
     return { success: true, url: projectUrl };
   } catch (e) {
     Logger.global.error(`Couldn't open the web project on Android: ${e.message}`);
