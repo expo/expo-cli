@@ -24,6 +24,7 @@ export type IosOptions = CommonOptions & {
   pushP8Path?: string;
   provisioningProfilePath?: string;
   skipCredentialsCheck?: boolean;
+  skipCredentialsValidation?: boolean;
 };
 
 export type AndroidOptions = CommonOptions & {

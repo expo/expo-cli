@@ -16,6 +16,7 @@ interface AppleCtxOptions {
   appleId?: string;
   appleIdPassword?: string;
   teamId?: string;
+  skipCredentialsValidation?: boolean;
 }
 
 interface CtxOptions extends AppleCtxOptions {
@@ -72,6 +73,9 @@ export class Context {
     }
     return this._appleCtx;
   }
+  get skipCredentialsValidation(): boolean {
+    return !!this._appleCtxOptions?.skipCredentialsValidation;
+  }
   set manifest(value: ExpoConfig) {
     this._manifest = value;
   }
@@ -108,7 +112,12 @@ export class Context {
     this._apiClient = ApiV2.clientForUser(this.user);
     this._iosApiClient = new IosApi(this.api);
     this._androidApiClient = new AndroidApi(this.api);
-    this._appleCtxOptions = pick(options, ['appleId', 'appleIdPassword', 'teamId']);
+    this._appleCtxOptions = pick(options, [
+      'appleId',
+      'appleIdPassword',
+      'teamId',
+      'skipCredentialsValidation',
+    ]);
     this._nonInteractive = options.nonInteractive;
 
     // try to acccess project context

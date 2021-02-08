@@ -102,6 +102,10 @@ export default function (program: Command) {
     )
     .option('--skip-credentials-check', 'Skip checking credentials.')
     .option('--skip-workflow-check', 'Skip warning about build service bare workflow limitations.')
+    .option(
+      '--skip-credentials-validation',
+      'Skip validation of credentials. Use this flag to upsert a Distribution Certificate P12, a Provisioning Profile and a Push Key .p8 without having them validated before starting the build.'
+    )
     .description('Build and sign a standalone IPA for the Apple App Store')
     .asyncActionProjectDir(
       async (projectRoot: string, options: IosOptions) => {

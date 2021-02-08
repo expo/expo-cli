@@ -415,13 +415,15 @@ export async function useProvisioningProfileFromParams(
   const distCert = await ctx.ios.getDistCert(app);
   assert(distCert, 'missing distribution certificate');
 
-  const isValid = await validateProfileWithoutApple(
-    provisioningProfile,
-    distCert,
-    app.bundleIdentifier
-  );
-  if (!isValid) {
-    throw new Error('Specified invalid Provisioning Profile');
+  if (ctx.skipCredentialsValidation) {
+    const isValid = await validateProfileWithoutApple(
+      provisioningProfile,
+      distCert,
+      app.bundleIdentifier
+    );
+    if (!isValid) {
+      throw new Error('Specified invalid Provisioning Profile');
+    }
   }
 
   return await ctx.ios.updateProvisioningProfile(app, provisioningProfile);

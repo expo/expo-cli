@@ -623,9 +623,11 @@ export async function useDistCertFromParams(
   app: AppLookupParams,
   distCert: DistCert
 ): Promise<IosDistCredentials> {
-  const isValid = await validateDistributionCertificate(ctx, distCert);
-  if (!isValid) {
-    throw new Error('Cannot validate uploaded Distribution Certificate');
+  if (ctx.skipCredentialsValidation) {
+    const isValid = await validateDistributionCertificate(ctx, distCert);
+    if (!isValid) {
+      throw new Error('Cannot validate uploaded Distribution Certificate');
+    }
   }
   const iosDistCredentials = await ctx.ios.createDistCert(app.accountName, distCert);
 

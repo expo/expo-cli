@@ -626,9 +626,11 @@ export async function usePushKeyFromParams(
   app: AppLookupParams,
   pushKey: PushKey
 ): Promise<IosPushCredentials> {
-  const isValid = await validatePushKey(ctx, pushKey);
-  if (!isValid) {
-    throw new Error('Cannot validate uploaded Push Key');
+  if (ctx.skipCredentialsValidation) {
+    const isValid = await validatePushKey(ctx, pushKey);
+    if (!isValid) {
+      throw new Error('Cannot validate uploaded Push Key');
+    }
   }
 
   const iosPushCredentials = await ctx.ios.createPushKey(app.accountName, pushKey);
