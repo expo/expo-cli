@@ -77,6 +77,7 @@ export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
                 attributes: {
                   rel: this.rel,
                   href: joinUrlPath(this.pwaOptions.publicPath, this.pwaOptions.path),
+                  crossorigin: 'use-credentials',
                 },
               });
 
