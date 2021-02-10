@@ -13,12 +13,12 @@ enum BundleIdentiferSource {
 }
 
 export async function configureBundleIdentifierAsync(
-  projectDir: string,
+  projectRoot: string,
   exp: ExpoConfig
 ): Promise<string> {
-  const configDescription = getProjectConfigDescription(projectDir);
+  const configDescription = getProjectConfigDescription(projectRoot);
   const bundleIdentifierFromPbxproj = IOSConfig.BundleIdentifier.getBundleIdentifierFromPbxproj(
-    projectDir
+    projectRoot
   );
   const bundleIdentifierFromConfig = IOSConfig.BundleIdentifier.getBundleIdentifier(exp);
   if (bundleIdentifierFromPbxproj && bundleIdentifierFromConfig) {
@@ -26,17 +26,17 @@ export async function configureBundleIdentifierAsync(
       return bundleIdentifierFromConfig;
     } else {
       logWarning(
-        projectDir,
+        projectRoot,
         'expo',
         `We detected that your Xcode project is configured with a different bundle identifier than the one defined in ${configDescription}.`
       );
       const hasBundleIdentifierInStaticConfig = await hasBundleIdentifierInStaticConfigAsync(
-        projectDir,
+        projectRoot,
         exp
       );
       if (!hasBundleIdentifierInStaticConfig) {
         logInfo(
-          projectDir,
+          projectRoot,
           'expo',
           `If you choose the one defined in ${configDescription} we'll automatically configure your Xcode project with it.
 However, if you choose the one defined in the Xcode project you'll have to update ${configDescription} on your own.`
@@ -59,13 +59,13 @@ However, if you choose the one defined in the Xcode project you'll have to updat
       });
       if (bundleIdentifierSource === BundleIdentiferSource.XcodeProject) {
         IOSConfig.BundleIdentifier.setBundleIdentifierForPbxproj(
-          projectDir,
+          projectRoot,
           bundleIdentifierFromConfig
         );
         return bundleIdentifierFromConfig;
       } else {
         if (hasBundleIdentifierInStaticConfig) {
-          await updateAppJsonConfigAsync(projectDir, exp, bundleIdentifierFromPbxproj);
+          await updateAppJsonConfigAsync(projectRoot, exp, bundleIdentifierFromPbxproj);
         } else {
           throw new Error(missingBundleIdentifierMessage(configDescription));
         }
@@ -73,15 +73,15 @@ However, if you choose the one defined in the Xcode project you'll have to updat
       }
     }
   } else if (bundleIdentifierFromPbxproj && !bundleIdentifierFromConfig) {
-    if (getConfigFilePaths(projectDir).staticConfigPath) {
-      await updateAppJsonConfigAsync(projectDir, exp, bundleIdentifierFromPbxproj);
+    if (getConfigFilePaths(projectRoot).staticConfigPath) {
+      await updateAppJsonConfigAsync(projectRoot, exp, bundleIdentifierFromPbxproj);
       return bundleIdentifierFromPbxproj;
     } else {
       throw new Error(missingBundleIdentifierMessage(configDescription));
     }
   } else if (!bundleIdentifierFromPbxproj && bundleIdentifierFromConfig) {
     IOSConfig.BundleIdentifier.setBundleIdentifierForPbxproj(
-      projectDir,
+      projectRoot,
       bundleIdentifierFromConfig
     );
     return bundleIdentifierFromConfig;
