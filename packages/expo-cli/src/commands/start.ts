@@ -271,12 +271,19 @@ async function tryOpeningDevToolsAsync({
   options,
 }: OpenDevToolsOptions): Promise<void> {
   const devToolsUrl = await DevToolsServer.startAsync(rootPath);
-  Log.log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
+  Log.log(`Developer tools running on ${chalk.underline(devToolsUrl)}`);
 
   if (!options.nonInteractive && !exp.isDetached) {
     if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
-      Log.log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
-      openBrowser(devToolsUrl);
+      if (openBrowser(devToolsUrl)) {
+        Log.log(
+          `Opening developer tools in the browser... ${chalk.dim(
+            `(press ${chalk.bold`shift-d`} to disable)`
+          )}`
+        );
+      } else {
+        Log.warn(`Unable to open developer tools in the browser`);
+      }
     } else {
       Log.log(
         `Press ${chalk.bold`d`} to open DevTools now, or ${chalk.bold`shift-d`} to always open it automatically.`
@@ -311,7 +318,7 @@ async function configureProjectAsync(
 
   const rootPath = path.resolve(projectDir);
 
-  await tryOpeningDevToolsAsync({
+  tryOpeningDevToolsAsync({
     rootPath,
     exp,
     options,
