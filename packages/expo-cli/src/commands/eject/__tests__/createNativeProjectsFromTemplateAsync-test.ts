@@ -1,56 +1,9 @@
 import { vol } from 'memfs';
 
-import {
-  ensureValidPlatforms,
-  hashForDependencyMap,
-  isPkgMainExpoAppEntry,
-  resolveBareEntryFile,
-  shouldDeleteMainField,
-  stripDashes,
-} from '../Eject';
+import { resolveBareEntryFile } from '../createNativeProjectsFromTemplateAsync';
 
 jest.mock('fs');
 jest.mock('resolve-from');
-
-describe('stripDashes', () => {
-  it(`removes spaces and dashes from a string`, () => {
-    expect(stripDashes(' My cool-app ')).toBe('Mycoolapp');
-    expect(stripDashes(' --- - ----- ')).toBe('');
-    expect(stripDashes('-----')).toBe('');
-    expect(stripDashes(' ')).toBe('');
-    expect(stripDashes(' \n-\n-')).toBe('');
-  });
-});
-
-describe('hashForDependencyMap', () => {
-  it(`dependencies in any order hash to the same value`, () => {
-    expect(hashForDependencyMap({ a: '1.0.0', b: 2, c: '~3.0' })).toBe(
-      hashForDependencyMap({ c: '~3.0', b: 2, a: '1.0.0' })
-    );
-  });
-});
-
-describe(ensureValidPlatforms, () => {
-  const platform = process.platform;
-
-  afterEach(() => {
-    Object.defineProperty(process, 'platform', {
-      value: platform,
-    });
-  });
-  it(`bails on windows if only ios is passed`, async () => {
-    Object.defineProperty(process, 'platform', {
-      value: 'win32',
-    });
-    expect(ensureValidPlatforms(['ios', 'android'])).toStrictEqual(['android']);
-  });
-  it(`allows ios on all platforms except windows`, async () => {
-    Object.defineProperty(process, 'platform', {
-      value: 'other',
-    });
-    expect(ensureValidPlatforms(['ios', 'android'])).toStrictEqual(['ios', 'android']);
-  });
-});
 
 describe(resolveBareEntryFile, () => {
   const projectRoot = '/alpha';
@@ -137,34 +90,5 @@ describe(resolveBareEntryFile, () => {
   });
   it(`resolves to null when the default file doesn't exist`, () => {
     expect(resolveBareEntryFile(projectRootBeta, null)).toEqual(null);
-  });
-});
-
-describe('shouldDeleteMainField', () => {
-  it(`should delete non index field`, () => {
-    expect(shouldDeleteMainField(null)).toBe(false);
-    expect(shouldDeleteMainField()).toBe(false);
-    expect(shouldDeleteMainField('expo/AppEntry')).toBe(true);
-    // non-expo fields
-    expect(shouldDeleteMainField('.src/other.js')).toBe(false);
-    expect(shouldDeleteMainField('index.js')).toBe(false);
-    expect(shouldDeleteMainField('index.ios.js')).toBe(false);
-    expect(shouldDeleteMainField('index.ts')).toBe(false);
-    expect(shouldDeleteMainField('./index')).toBe(false);
-  });
-});
-
-describe('isPkgMainExpoAppEntry', () => {
-  it(`matches expo app entry`, () => {
-    expect(isPkgMainExpoAppEntry('./node_modules/expo/AppEntry.js')).toBe(true);
-    expect(isPkgMainExpoAppEntry('./node_modules/expo/AppEntry')).toBe(true);
-    expect(isPkgMainExpoAppEntry('expo/AppEntry.js')).toBe(true);
-    expect(isPkgMainExpoAppEntry('expo/AppEntry')).toBe(true);
-  });
-  it(`doesn't match expo app entry`, () => {
-    expect(isPkgMainExpoAppEntry()).toBe(false);
-    expect(isPkgMainExpoAppEntry(null)).toBe(false);
-    expect(isPkgMainExpoAppEntry('./expo/AppEntry')).toBe(false);
-    expect(isPkgMainExpoAppEntry('./expo/AppEntry.js')).toBe(false);
   });
 });
