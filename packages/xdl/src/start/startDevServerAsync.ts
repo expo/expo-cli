@@ -44,6 +44,7 @@ export async function startDevServerAsync(projectRoot: string, startOptions: Sta
     process.env.EXPO_TARGET = startOptions.target;
   }
 
-  const { middleware } = await runMetroDevServerAsync(projectRoot, options);
+  const { server, middleware } = await runMetroDevServerAsync(projectRoot, options);
   middleware.use(getManifestHandler(projectRoot));
+  return server;
 }
