@@ -274,10 +274,12 @@ async function tryOpeningDevToolsAsync({
   Log.log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
 
   if (!options.nonInteractive && !exp.isDetached) {
-    if (await UserSettings.getAsync('openDevToolsAtStartup', false)) {
+    if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
+      UserSettings.setAsync('openDevToolsAtStartup', true);
       Log.log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
       openBrowser(devToolsUrl);
     } else {
+      UserSettings.setAsync('openDevToolsAtStartup', false);
       Log.log(
         `Press ${chalk.bold`d`} to open DevTools now, or ${chalk.bold`shift-d`} to always open it automatically.`
       );
