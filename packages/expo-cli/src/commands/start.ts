@@ -6,7 +6,6 @@ import { Project, ProjectSettings, UrlUtils, UserSettings, Versions } from '@exp
 import chalk from 'chalk';
 import intersection from 'lodash/intersection';
 import path from 'path';
-import openBrowser from 'react-dev-utils/openBrowser';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
