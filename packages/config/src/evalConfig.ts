@@ -4,6 +4,7 @@ import requireString from 'require-from-string';
 import { AppJSONConfig, ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
 import { serializeSkippingMods } from './Serialize';
+import { getBabelPreset } from './getBabelPreset';
 // import babel from '@babel/core';
 
 type RawDynamicConfig = AppJSONConfig | Partial<ExpoConfig> | null;
@@ -22,7 +23,6 @@ export function evalConfig(
   request: ConfigContext | null
 ): DynamicConfigResults {
   const babel = require('@babel/core');
-  const preset = require('@expo/babel-preset-cli');
 
   const { code } = babel.transformFileSync(configFile, {
     // only: [configFile],
@@ -32,7 +32,7 @@ export function evalConfig(
     comments: false,
     ignore: [/node_modules/],
     filename: 'unknown',
-    presets: [preset],
+    presets: [getBabelPreset()],
   });
 
   const result = requireString(code, configFile);
