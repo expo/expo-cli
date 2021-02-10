@@ -126,7 +126,7 @@ const printServerInfo = async (
   Log.nested(item(`Waiting on ${u(url)}`));
   // Log.newLine();
   // TODO: if dev client, change this message!
-  Log.nested(item(`Scan the QR code above with the Expo app (Android) or the Camera app (iOS)`));
+  Log.nested(item(`Scan the QR code above with Expo Go (Android) or the Camera app (iOS)`));
 
   await printBasicUsageAsync(options);
   Webpack.printConnectionInstructions(projectRoot);
@@ -362,17 +362,8 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', true));
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
         const currentToggle = enabled ? 'enabled' : 'disabled';
-
-        logCommandsTable([
-          ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
-          ['d', `open developer tools now`],
-        ]);
-        // Log.log(
-        //   `Automatically opening DevTools ${b(
-        //     enabled ? 'enabled' : 'disabled'
-        //   )}.\nPress ${b`d`} to open DevTools now.`
-        // );
-        // printHelp();
+        Log.log(`Auto opening developer tools on startup: ${chalk.bold(currentToggle)}`);
+        logCommandsTable([['d', `open developer tools now`]]);
         break;
       }
       case 'p': {
@@ -384,7 +375,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           `Metro bundler is now running in ${chalk.bold(
             dev ? 'development' : 'production'
           )}${chalk.reset(` mode.`)}
-Please reload the project in the Expo app for the change to take effect.`
+Please reload the project in Expo Go for the change to take effect.`
         );
         printHelp();
         break;
