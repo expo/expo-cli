@@ -22,7 +22,7 @@ export async function openInEditorAsync(path: string, options: { editor?: string
   if (process.platform === 'darwin') {
     // This will use the ENV var $EXPO_EDITOR if set, or else will try various
     // popular editors, looking for one that is open, or if none are, one that is installed
-    return await osascript.openInEditorAsync(path, editor.name);
+    await osascript.openInEditorAsync(path, editor.name);
   }
 
   if (!editor) {
