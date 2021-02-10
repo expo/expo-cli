@@ -12,11 +12,11 @@ import {
 } from '@expo/xdl';
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
-import readline from 'readline';
 import wrapAnsi from 'wrap-ansi';
 
 import { loginOrRegisterIfLoggedOutAsync } from '../../accounts';
 import Log from '../../log';
+import { promptEmailAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import { openInEditorAsync } from '../utils/openInEditorAsync';
 
@@ -243,64 +243,9 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
           printHelp();
           break;
         }
-        case 'e': {
-          stopWaitingForCommand();
-          const lanAddress = await UrlUtils.constructDeepLinkAsync(projectRoot, {
-            hostType: 'lan',
-          });
-          const defaultRecipient = await UserSettings.getAsync('sendTo', null);
-          const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-          });
-          const handleKeypress = (chr: string, key: { name: string }) => {
-            if (key && key.name === 'escape') {
-              cleanup();
-              cancel();
-            }
-          };
-          const cleanup = () => {
-            rl.close();
-            process.stdin.removeListener('keypress', handleKeypress);
-            startWaitingForCommand();
-          };
-          const cancel = async () => {
-            Log.clear();
-            printHelp();
-          };
-          Log.clear();
-          process.stdin.addListener('keypress', handleKeypress);
-          Log.log('Please enter your email address (press ESC to cancel) ');
-          rl.question(
-            defaultRecipient ? `[default: ${defaultRecipient}]> ` : '> ',
-            async sendTo => {
-              cleanup();
-              if (!sendTo && defaultRecipient) {
-                sendTo = defaultRecipient;
-              }
-              sendTo = sendTo && sendTo.trim();
-              if (!sendTo) {
-                cancel();
-                return;
-              }
-              Log.log(`Sending ${lanAddress} to ${sendTo}...`);
-
-              let sent = false;
-              try {
-                await Exp.sendAsync(sendTo, lanAddress);
-                sent = true;
-                Log.log(`Sent link successfully.`);
-              } catch (err) {
-                Log.log(`Could not send link. ${err}`);
-              }
-              printHelp();
-              if (sent) {
-                await UserSettings.setAsync('sendTo', sendTo);
-              }
-            }
-          );
+        case 'e':
+          await sendEmailAsync(projectRoot);
           break;
-        }
       }
     }
 
@@ -382,3 +327,43 @@ Please reload the project in the Expo app for the change to take effect.`
     }
   }
 };
+
+async function sendEmailAsync(projectRoot: string): Promise<void> {
+  const lanAddress = await UrlUtils.constructDeepLinkAsync(projectRoot, {
+    hostType: 'lan',
+  });
+  const defaultRecipient = await UserSettings.getAsync('sendTo', null);
+
+  Log.addNewLineIfNone();
+
+  Prompts.pauseInteractions();
+
+  let recipient: string;
+  try {
+    recipient = await promptEmailAsync({
+      message: `Email address ${chalk.dim(`(ESC to cancel)`)}`,
+      initial: defaultRecipient ?? undefined,
+    });
+  } catch {
+    Prompts.resumeInteractions();
+    printHelp();
+    return;
+  }
+
+  Prompts.resumeInteractions();
+
+  Log.log(`Sending ${lanAddress} to ${recipient}...`);
+
+  let sent = false;
+  try {
+    await Exp.sendAsync(recipient, lanAddress);
+    sent = true;
+    Log.log(`Sent link successfully.`);
+  } catch (err) {
+    Log.log(`Could not send link. ${err}`);
+  }
+  printHelp();
+  if (sent) {
+    await UserSettings.setAsync('sendTo', recipient);
+  }
+}
