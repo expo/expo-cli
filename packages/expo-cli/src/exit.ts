@@ -10,11 +10,11 @@ export function installExitHooks(
   const killSignals: ['SIGINT', 'SIGTERM'] = ['SIGINT', 'SIGTERM'];
   for (const signal of killSignals) {
     process.on(signal, () => {
-      const spinner = ora('Stopping server').start();
+      const spinner = ora({ text: 'Stopping server', color: 'white' }).start();
       Log.setSpinner(spinner);
       onStop(projectRoot)
         .then(() => {
-          spinner.succeed('Stopped server');
+          spinner.stopAndPersist({ text: 'Stopped server', symbol: `\u203A` });
           process.exit();
         })
         .catch(error => {
