@@ -3,10 +3,10 @@ import chalk from 'chalk';
 import temporary from 'tempy';
 
 import Log from '../../log';
-import configureProjectAsync from '../apply/configureProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
 import { usesOldExpoUpdatesAsync } from '../utils/ProjectUtils';
 import { logConfigWarningsAndroid, logConfigWarningsIOS } from '../utils/logConfigWarnings';
+import configureProjectAsync from './configureProjectAsync';
 import { createNativeProjectsFromTemplateAsync } from './createNativeProjectsFromTemplateAsync';
 import { ensureConfigAsync } from './ensureConfigAsync';
 import { installNodeDependenciesAsync } from './installNodeDependenciesAsync';

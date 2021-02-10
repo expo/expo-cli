@@ -3,9 +3,9 @@ import chalk from 'chalk';
 import semver from 'semver';
 
 import Log from '../../log';
-import { expoManagedPlugins } from '../apply/configureProjectAsync';
 import * as CreateApp from '../utils/CreateApp';
 import { learnMore } from '../utils/TerminalLink';
+import { expoManagedPlugins } from './configureProjectAsync';
 
 /**
  * Some packages are not configured automatically on eject and may require

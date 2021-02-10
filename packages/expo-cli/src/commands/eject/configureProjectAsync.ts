@@ -12,7 +12,7 @@ import {
 import { UserManager } from '@expo/xdl';
 
 import Log from '../../log';
-import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from '../eject/ConfigValidation';
+import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
 
 // Expo managed packages that require extra update.
 // These get applied automatically to create parity with expo build in eas build.
