@@ -1,20 +1,26 @@
 import { Project } from '@expo/xdl';
-import chalk from 'chalk';
+import ora from 'ora';
 
 import Log from './log';
 
 export function installExitHooks(
-  projectDir: string,
-  onStop: (projectDir: string) => Promise<void> = Project.stopAsync
+  projectRoot: string,
+  onStop: (projectRoot: string) => Promise<void> = Project.stopAsync
 ): void {
   const killSignals: ['SIGINT', 'SIGTERM'] = ['SIGINT', 'SIGTERM'];
   for (const signal of killSignals) {
     process.on(signal, () => {
-      Log.nested(chalk.blue('\nStopping packager...'));
-      onStop(projectDir).then(() => {
-        Log.nested(chalk.green('Packager stopped.'));
-        process.exit();
-      });
+      const spinner = ora('Stopping server').start();
+      Log.setSpinner(spinner);
+      onStop(projectRoot)
+        .then(() => {
+          spinner.succeed('Stopped server');
+          process.exit();
+        })
+        .catch(error => {
+          spinner.fail('Failed to stop server');
+          Log.error(error);
+        });
     });
   }
 }

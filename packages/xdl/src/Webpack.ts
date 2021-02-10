@@ -229,8 +229,12 @@ export async function startAsync(
 
 export async function stopAsync(projectRoot: string): Promise<void> {
   if (webpackDevServerInstance) {
-    ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, '\u203A Closing Webpack server');
-    webpackDevServerInstance.close();
+    await new Promise(res => {
+      if (webpackDevServerInstance) {
+        ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, '\u203A Stopping Webpack server');
+        webpackDevServerInstance.close(res);
+      }
+    });
     webpackDevServerInstance = null;
     devServerInfo = null;
     webpackServerPort = null;
