@@ -572,7 +572,7 @@ async function openUrlInSimulatorSafeAsync({
   try {
     if (devClient) {
       const bundleIdentifier = await configureBundleIdentifierAsync(projectRoot, exp);
-      await ensureDevClientInstalledAsync(simulator, bundleIdentifier);
+      await assertDevClientInstalledAsync(simulator, bundleIdentifier);
     } else if (!isDetached) {
       await ensureExpoClientInstalledAsync(simulator, sdkVersion);
       _lastUrl = url;
@@ -614,7 +614,7 @@ async function openUrlInSimulatorSafeAsync({
   };
 }
 
-async function ensureDevClientInstalledAsync(
+async function assertDevClientInstalledAsync(
   simulator: Pick<SimControl.SimulatorDevice, 'udid' | 'name'>,
   bundleIdentifier: string
 ): Promise<void> {
