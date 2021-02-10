@@ -44,7 +44,7 @@ const div = chalk.dim(`│`);
 
 const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOnly'> = {}) => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
-  const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
+  const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', false);
   const devMode = dev ? 'development' : 'production';
   const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
 
@@ -340,7 +340,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
       }
       case 'D': {
         Log.clear();
-        const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', true));
+        const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', false));
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
         Log.log(
           `Automatically opening DevTools ${b(
