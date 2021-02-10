@@ -202,7 +202,7 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
     }
     Log.log(`Your native app is running at ${chalk.underline(url)}`);
   }
-  Log.nested(chalk.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
+  Log.nested(`Logs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
 }
 
 async function validateDependenciesVersions(
@@ -275,19 +275,7 @@ async function tryOpeningDevToolsAsync({
 
   if (!options.nonInteractive && !exp.isDetached) {
     if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
-      if (openBrowser(devToolsUrl)) {
-        Log.log(
-          `Opening developer tools in the browser... ${chalk.dim(
-            `(press ${chalk.bold`shift-d`} to disable)`
-          )}`
-        );
-      } else {
-        Log.warn(`Unable to open developer tools in the browser`);
-      }
-    } else {
-      Log.log(
-        `Press ${chalk.bold`d`} to open DevTools now, or ${chalk.bold`shift-d`} to always open it automatically.`
-      );
+      TerminalUI.openDeveloperTools(devToolsUrl);
     }
   }
 }

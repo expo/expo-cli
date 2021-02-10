@@ -36,21 +36,23 @@ type StartOptions = {
 };
 
 const printHelp = (): void => {
-  Log.newLine();
-  Log.nested(`Press ${b('?')} to show a list of all available commands.`);
+  logCommandsTable([[], ['?', 'show all commands']]);
 };
 
 const div = chalk.dim(`│`);
 
-const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOnly'> = {}) => {
-  const { dev } = await ProjectSettings.readAsync(projectDir);
+const printUsageAsync = async (
+  projectRoot: string,
+  options: Pick<StartOptions, 'webOnly'> = {}
+) => {
+  const { dev } = await ProjectSettings.readAsync(projectRoot);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
   const devMode = dev ? 'development' : 'production';
   const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
 
   const isMac = process.platform === 'darwin';
 
-  const ui = [
+  logCommandsTable([
     [],
     ['a', `open Android`],
     ['shift+a', `select a device or emulator`],
@@ -64,11 +66,30 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
     ['r', `restart bundler`],
     ['shift+r', `restart and clear cache`],
     [],
-    ['d', `open Expo DevTools`],
-    ['shift+d', `toggle auto opening DevTools on startup`, currentToggle],
+    ['d', `open developer tools`],
+    ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
     !options.webOnly && ['e', `share the app link by email`],
-  ];
+  ]);
+};
 
+const printBasicUsageAsync = async (options: Pick<StartOptions, 'webOnly'> = {}) => {
+  const isMac = process.platform === 'darwin';
+  const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
+  const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
+
+  logCommandsTable([
+    [],
+    ['a', `open Android`],
+    isMac && ['i', `open iOS simulator`],
+    ['w', `open web`],
+    [],
+    ['d', `open developer tools`],
+    ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
+    !options.webOnly && ['e', `share the app link by email`],
+  ]);
+};
+
+function logCommandsTable(ui: (false | string[])[]) {
   Log.nested(
     ui
       .filter(Boolean)
@@ -87,37 +108,38 @@ const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOn
       })
       .join('\n')
   );
-};
+}
 
-export const printServerInfo = async (
-  projectDir: string,
+const printServerInfo = async (
+  projectRoot: string,
   options: Pick<StartOptions, 'webOnly'> = {}
 ) => {
   if (options.webOnly) {
-    Webpack.printConnectionInstructions(projectDir);
+    Webpack.printConnectionInstructions(projectRoot);
     return;
   }
-  const url = await UrlUtils.constructDeepLinkAsync(projectDir);
   Log.newLine();
-  Log.nested(` ${u(url)}`);
-  Log.newLine();
+  const url = await UrlUtils.constructDeepLinkAsync(projectRoot);
   urlOpts.printQRCode(url);
   const wrapLength = process.stdout.columns || 80;
   const item = (text: string): string => ` ${BLT} ` + wrapAnsi(text, wrapLength).trimStart();
-  const iosInfo = process.platform === 'darwin' ? `, or ${b('i')} for iOS simulator` : '';
-  const webInfo = `${b`w`} to run on ${u`w`}eb`;
-  Log.nested(wrapAnsi(u('To run the app, choose one of:'), wrapLength));
+  Log.nested(item(`Waiting on ${u(url)}`));
+  // Log.newLine();
+  // TODO: if dev client, change this message!
+  Log.nested(item(`Scan the QR code above with the Expo app (Android) or the Camera app (iOS)`));
 
-  // TODO: if dev client, chanege this message!
-  Log.nested(item(`Scan the QR code above with the Expo app (Android) or the Camera app (iOS).`));
-
-  // TODO: if no react-native-web in package.json then don't show web info
-  Log.nested(item(`Press ${b`a`} for Android emulator${iosInfo}, or ${webInfo}.`));
-  Log.nested(item(`Press ${b`e`} to send a link to your phone with email.`));
-
-  Webpack.printConnectionInstructions(projectDir);
+  await printBasicUsageAsync(options);
+  Webpack.printConnectionInstructions(projectRoot);
   printHelp();
+  Log.newLine();
 };
+
+export function openDeveloperTools(url: string) {
+  Log.log(`Opening developer tools in the browser...`);
+  if (!openBrowser(url)) {
+    Log.warn(`Unable to open developer tools in the browser`);
+  }
+}
 
 export const startAsync = async (projectRoot: string, options: StartOptions) => {
   const { stdin } = process;
@@ -316,11 +338,10 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         break;
       }
       case '?': {
-        await printUsage(projectRoot, options);
+        await printUsageAsync(projectRoot, options);
         break;
       }
       case 'w': {
-        Log.clear();
         Log.log('Attempting to open the project in a web browser...');
         await Webpack.openAsync(projectRoot);
         await printServerInfo(projectRoot, options);
@@ -333,21 +354,25 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
       }
       case 'd': {
         const { devToolsPort } = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-        Log.log('Opening DevTools in the browser...');
-        openBrowser(`http://localhost:${devToolsPort}`);
+        openDeveloperTools(`http://localhost:${devToolsPort}`);
         printHelp();
         break;
       }
       case 'D': {
-        Log.clear();
         const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', true));
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
-        Log.log(
-          `Automatically opening DevTools ${b(
-            enabled ? 'enabled' : 'disabled'
-          )}.\nPress ${b`d`} to open DevTools now.`
-        );
-        printHelp();
+        const currentToggle = enabled ? 'enabled' : 'disabled';
+
+        logCommandsTable([
+          ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
+          ['d', `open developer tools now`],
+        ]);
+        // Log.log(
+        //   `Automatically opening DevTools ${b(
+        //     enabled ? 'enabled' : 'disabled'
+        //   )}.\nPress ${b`d`} to open DevTools now.`
+        // );
+        // printHelp();
         break;
       }
       case 'p': {
