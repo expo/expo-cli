@@ -146,14 +146,9 @@ function parseStartOptions(options: NormalizedOptions, exp: ExpoConfig): Project
   }
 
   if (isLegacyImportsEnabled(exp)) {
-    if (options.devClient) {
-      // TODO: is this redundant?
-      startOpts.target = 'bare';
-    } else {
-      // For `expo start`, the default target is 'managed', for both managed *and* bare apps.
-      // See: https://docs.expo.io/bare/using-expo-client
-      startOpts.target = 'managed';
-    }
+    // For `expo start`, the default target is 'managed', for both managed *and* bare apps.
+    // See: https://docs.expo.io/bare/using-expo-client
+    startOpts.target = options.devClient ? 'bare' : 'managed';
     Log.debug('Using target: ', startOpts.target);
   }
 
