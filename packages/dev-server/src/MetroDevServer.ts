@@ -68,6 +68,7 @@ export async function runMetroDevServerAsync(
 
 let nextBuildID = 0;
 
+// TODO: deprecate options.target
 export async function bundleAsync(
   projectRoot: string,
   options: MetroDevServerOptions,

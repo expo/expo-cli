@@ -1,4 +1,4 @@
-import { ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
+import { ExpoConfig, getConfig, isLegacyImportsEnabled, PackageJSONConfig } from '@expo/config';
 // @ts-ignore: not typed
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
@@ -122,7 +122,7 @@ async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions)
   });
 }
 
-function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
+function parseStartOptions(options: NormalizedOptions, exp: ExpoConfig): Project.StartOptions {
   const startOpts: Project.StartOptions = {};
 
   if (options.clear) {
@@ -143,13 +143,18 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
 
   if (options.devClient) {
     startOpts.devClient = true;
+  }
 
-    // TODO: is this redundant?
-    startOpts.target = 'bare';
-  } else {
-    // For `expo start`, the default target is 'managed', for both managed *and* bare apps.
-    // See: https://docs.expo.io/bare/using-expo-client
-    startOpts.target = 'managed';
+  if (isLegacyImportsEnabled(exp)) {
+    if (options.devClient) {
+      // TODO: is this redundant?
+      startOpts.target = 'bare';
+    } else {
+      // For `expo start`, the default target is 'managed', for both managed *and* bare apps.
+      // See: https://docs.expo.io/bare/using-expo-client
+      startOpts.target = 'managed';
+    }
+    Log.debug('Using target: ', startOpts.target);
   }
 
   return startOpts;
@@ -160,7 +165,8 @@ async function startWebAction(projectDir: string, options: NormalizedOptions): P
   if (Versions.gteSdkVersion(exp, '34.0.0')) {
     await ensureTypeScriptSetupAsync(projectDir);
   }
-  const startOpts = parseStartOptions(options);
+  const startOpts = parseStartOptions(options, exp);
+
   await Project.startAsync(rootPath, { ...startOpts, exp });
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
@@ -179,7 +185,7 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
   // TODO: only validate dependencies if starting in managed workflow
   await validateDependenciesVersions(projectDir, exp, pkg);
 
-  const startOpts = parseStartOptions(options);
+  const startOpts = parseStartOptions(options, exp);
 
   await Project.startAsync(rootPath, { ...startOpts, exp });
 

@@ -1,4 +1,4 @@
-import { getDefaultTarget, ProjectTarget } from '@expo/config';
+import { getConfig, getDefaultTarget, isLegacyImportsEnabled, ProjectTarget } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import { Reporter } from 'metro';
 import type MetroConfig from 'metro-config';
@@ -23,6 +23,11 @@ export interface DefaultConfigOptions {
   target?: ProjectTarget;
 }
 
+function readIsLegacyImportsEnabled(projectRoot: string): boolean {
+  const config = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  return isLegacyImportsEnabled(config.exp);
+}
+
 export function getDefaultConfig(
   projectRoot: string,
   options: DefaultConfigOptions = {}
@@ -41,13 +46,42 @@ export function getDefaultConfig(
     // it is not needed
   }
 
-  const target = options.target ?? process.env.EXPO_TARGET ?? getDefaultTarget(projectRoot);
+  const isLegacy = readIsLegacyImportsEnabled(projectRoot);
+  // Deprecated -- SDK 41 --
+  if (options.target) {
+    if (!isLegacy) {
+      console.warn(
+        `The target option is deprecated. Learn More: http://expo.fyi/expo-extension-migration`
+      );
+      delete options.target;
+    }
+  } else if (process.env.EXPO_TARGET) {
+    console.error(
+      'EXPO_TARGET is deprecated. Learn More: http://expo.fyi/expo-extension-migration'
+    );
+    if (isLegacy) {
+      // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
+      // called from metro.config.js.
+      // @ts-ignore
+      options.target = process.env.EXPO_TARGET;
+    }
+  } else if (isLegacy) {
+    // Fall back to guessing based on the project structure in legacy mode.
+    options.target = getDefaultTarget(projectRoot);
+  }
+
+  if (!options.target) {
+    // Default to bare -- no .expo extension.
+    options.target = 'bare';
+  }
+  // End deprecated -- SDK 41 --
+
+  const { target } = options;
   if (!(target === 'managed' || target === 'bare')) {
     throw new Error(
       `Invalid target: '${target}'. Debug info: \n${JSON.stringify(
         {
           'options.target': options.target,
-          EXPO_TARGET: process.env.EXPO_TARGET,
           default: getDefaultTarget(projectRoot),
         },
         null,
