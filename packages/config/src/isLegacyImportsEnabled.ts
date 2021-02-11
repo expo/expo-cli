@@ -11,7 +11,7 @@ import { ExpoConfig } from './Config.types';
 export function isLegacyImportsEnabled(exp: Pick<ExpoConfig, 'sdkVersion'>) {
   if (boolish('EXPO_LEGACY_IMPORTS', false)) {
     console.warn(
-      'Dangerously enabled deprecated `.expo` extensions, this functionality may be removed between SDK cycles.'
+      'Dangerously enabled the deprecated `.expo` extensions feature, this functionality may be removed between SDK cycles.'
     );
     return true;
   }
