@@ -245,9 +245,7 @@ async function validateDependenciesVersions(
     }
   }
   if (incorrectDeps.length > 0) {
-    Log.warn(
-      "Some of your project's dependencies are not compatible with currently installed expo package version:"
-    );
+    Log.warn('Some dependencies are incompatible with the installed expo package version:');
     incorrectDeps.forEach(({ moduleName, expectedRange, actualRange }) => {
       Log.warn(
         ` - ${chalk.underline(moduleName)} - expected version range: ${chalk.underline(
