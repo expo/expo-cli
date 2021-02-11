@@ -309,7 +309,7 @@ async function configureProjectAsync(
 
   const rootPath = path.resolve(projectDir);
 
-  tryOpeningDevToolsAsync({
+  await tryOpeningDevToolsAsync({
     rootPath,
     exp,
     options,
