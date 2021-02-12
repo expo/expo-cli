@@ -21,10 +21,14 @@ export function queryFirstProjectTypeScriptFileAsync(projectRoot: string): Promi
   // Bail out as soon as a single match is found.
   return new Promise((resolve, reject) => {
     const mg = new Glob(
-      '**/*.{ts,tsx}',
+      '**/*.@(ts|tsx)',
       {
         cwd: projectRoot,
-        ignore: ['**/@(Carthage|Pods|node_modules)/**', '**/*.d.ts', '/{ios,android}/**'],
+        ignore: [
+          '**/@(Carthage|Pods|node_modules)/**',
+          '**/*.d.ts',
+          '@(ios|android|web|web-build|dist)/**',
+        ],
       },
       (error, matches) => {
         if (error) {
