@@ -3,6 +3,8 @@ import { Glob } from 'glob';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
 
+import Log from '../../../log';
+
 async function fileExistsAsync(file: string): Promise<boolean> {
   return (await stat(file).catch(() => null))?.isFile() ?? false;
 }
@@ -17,14 +19,20 @@ const requiredPackages = [
 
 export const baseTSConfigName = 'expo/tsconfig.base';
 
-export function queryFirstProjectTypeScriptFileAsync(projectRoot: string): Promise<null | string> {
-  // Bail out as soon as a single match is found.
-  return new Promise((resolve, reject) => {
+export async function queryFirstProjectTypeScriptFileAsync(
+  projectRoot: string
+): Promise<null | string> {
+  Log.time('queryFirstProjectTypeScriptFileAsync');
+  const results = await new Promise<null | string>((resolve, reject) => {
     const mg = new Glob(
-      '**/*.{ts,tsx}',
+      '**/*.@(ts|tsx)',
       {
         cwd: projectRoot,
-        ignore: ['**/@(Carthage|Pods|node_modules)/**', '**/*.d.ts', '/{ios,android}/**'],
+        ignore: [
+          '**/@(Carthage|Pods|node_modules)/**',
+          '**/*.d.ts',
+          '@(ios|android|web|web-build|dist)/**',
+        ],
       },
       (error, matches) => {
         if (error) {
@@ -39,6 +47,9 @@ export function queryFirstProjectTypeScriptFileAsync(projectRoot: string): Promi
       resolve(matched);
     });
   });
+  Log.timeEnd('queryFirstProjectTypeScriptFileAsync');
+  // Bail out as soon as a single match is found.
+  return results;
 }
 
 export function resolveBaseTSConfig(projectRoot: string): string | null {
