@@ -16,7 +16,7 @@ interface ProjectFile<L extends string = string> {
 export type AppDelegateProjectFile = ProjectFile<'objc' | 'swift'>;
 
 export function getAppDelegate(projectRoot: string): AppDelegateProjectFile {
-  const [using, ...extra] = globSync('ios/*/AppDelegate.{m,swift}', {
+  const [using, ...extra] = globSync('ios/*/AppDelegate.@(m|swift)', {
     absolute: true,
     cwd: projectRoot,
     ignore: ignoredPaths,
