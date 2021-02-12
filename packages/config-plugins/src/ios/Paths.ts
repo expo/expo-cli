@@ -62,6 +62,16 @@ export function findSchemeNames(projectRoot: string): string[] {
   return schemePaths.map(schemePath => path.basename(schemePath).split('.')[0]);
 }
 
+export function findSchemePath(projectRoot: string, scheme: string): string {
+  const allSchemePaths = findSchemePaths(projectRoot);
+  const re = new RegExp(`/${scheme}.xcscheme`);
+  const schemePath = allSchemePaths.find(i => re.exec(i));
+  if (!schemePath) {
+    throw new Error(`scheme '${scheme}' does not exist`);
+  }
+  return schemePath;
+}
+
 export function getAllXcodeProjectPaths(projectRoot: string): string[] {
   const iosFolder = 'ios';
   const pbxprojPaths = globSync('**/*.xcodeproj', { cwd: projectRoot, ignore: ignoredPaths })

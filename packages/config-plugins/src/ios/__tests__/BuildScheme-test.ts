@@ -2,7 +2,11 @@ import fs from 'fs';
 import { vol } from 'memfs';
 import path from 'path';
 
-import { getApplicationTargetForSchemeAsync } from '../Target';
+import {
+  BuildConfiguration,
+  getApplicationTargetForSchemeAsync,
+  getBuildConfigurationForSchemeAsync,
+} from '../BuildScheme';
 
 const fsReal = jest.requireActual('fs') as typeof fs;
 
@@ -63,6 +67,54 @@ describe(getApplicationTargetForSchemeAsync, () => {
       await expect(() =>
         getApplicationTargetForSchemeAsync('/app', 'nonexistentscheme')
       ).rejects.toThrow(/does not exist/);
+    });
+  });
+});
+
+describe(getBuildConfigurationForSchemeAsync, () => {
+  describe('release build', () => {
+    beforeAll(async () => {
+      vol.fromJSON(
+        {
+          'ios/testproject.xcodeproj/xcshareddata/xcschemes/testproject.xcscheme': fsReal.readFileSync(
+            path.join(__dirname, 'fixtures/testproject.xcscheme'),
+            'utf-8'
+          ),
+        },
+        '/app'
+      );
+    });
+
+    afterAll(() => {
+      vol.reset();
+    });
+
+    it('reads the build configuration properly', async () => {
+      const buildConfiguration = await getBuildConfigurationForSchemeAsync('/app', 'testproject');
+      expect(buildConfiguration).toBe(BuildConfiguration.RELEASE);
+    });
+  });
+
+  describe('debug build', () => {
+    beforeAll(async () => {
+      vol.fromJSON(
+        {
+          'ios/testproject.xcodeproj/xcshareddata/xcschemes/testproject.xcscheme': fsReal.readFileSync(
+            path.join(__dirname, 'fixtures/testproject-3.xcscheme'),
+            'utf-8'
+          ),
+        },
+        '/app'
+      );
+    });
+
+    afterAll(() => {
+      vol.reset();
+    });
+
+    it('reads the build configuration properly', async () => {
+      const buildConfiguration = await getBuildConfigurationForSchemeAsync('/app', 'testproject');
+      expect(buildConfiguration).toBe(BuildConfiguration.DEBUG);
     });
   });
 });

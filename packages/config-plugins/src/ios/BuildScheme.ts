@@ -1,7 +1,12 @@
 import path from 'path';
 
 import { readXMLAsync } from '../utils/XML';
-import { findSchemePaths } from './Paths';
+import { findSchemeNames, findSchemePath } from './Paths';
+
+export enum BuildConfiguration {
+  RELEASE = 'Release',
+  DEBUG = 'Debug',
+}
 
 interface SchemeXML {
   Scheme?: {
@@ -9,6 +14,11 @@ interface SchemeXML {
       BuildActionEntries?: {
         BuildActionEntry?: BuildActionEntryType[];
       }[];
+    }[];
+    ArchiveAction?: {
+      $?: {
+        buildConfiguration: BuildConfiguration;
+      };
     }[];
   };
 }
@@ -22,17 +32,24 @@ interface BuildActionEntryType {
   }[];
 }
 
+export function getBuildSchemesFromXcodeproj(projectRoot: string): string[] {
+  return findSchemeNames(projectRoot);
+}
+
+export async function getBuildConfigurationForSchemeAsync(
+  projectRoot: string,
+  scheme: string
+): Promise<BuildConfiguration> {
+  const schemePath = findSchemePath(projectRoot, scheme);
+  const schemeXML = ((await readXMLAsync({ path: schemePath })) as unknown) as SchemeXML;
+  return schemeXML.Scheme?.ArchiveAction?.[0].$?.buildConfiguration ?? BuildConfiguration.RELEASE;
+}
+
 export async function getApplicationTargetForSchemeAsync(
   projectRoot: string,
   scheme: string
 ): Promise<string> {
-  const allSchemePaths = findSchemePaths(projectRoot);
-  const re = new RegExp(`/${scheme}.xcscheme`);
-  const schemePath = allSchemePaths.find(i => re.exec(i));
-  if (!schemePath) {
-    throw new Error(`scheme '${scheme}' does not exist`);
-  }
-
+  const schemePath = findSchemePath(projectRoot, scheme);
   const schemeXML = ((await readXMLAsync({ path: schemePath })) as unknown) as SchemeXML;
   const buildActionEntry =
     schemeXML.Scheme?.BuildAction?.[0]?.BuildActionEntries?.[0]?.BuildActionEntry;
