@@ -14,6 +14,7 @@ import Log from '../log';
 import * as sendTo from '../sendTo';
 import urlOpts, { URLOptions } from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
+import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
 import { ensureTypeScriptSetupAsync } from './utils/typescript/ensureTypeScriptSetup';
 
 type NormalizedOptions = URLOptions & {
@@ -162,6 +163,8 @@ async function startWebAction(projectDir: string, options: NormalizedOptions): P
   }
   const startOpts = parseStartOptions(options, exp);
 
+  // No need to warn about extensions for web.
+
   await Project.startAsync(rootPath, { ...startOpts, exp });
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
@@ -181,6 +184,13 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
   await validateDependenciesVersions(projectDir, exp, pkg);
 
   const startOpts = parseStartOptions(options, exp);
+
+  // Warn about expo extensions.
+  if (!isLegacyImportsEnabled(exp)) {
+    // Adds a few seconds in basic projects so we should
+    // drop this in favor of the upgrade version as soon as possible.
+    await assertProjectHasExpoExtensionFilesAsync(projectDir);
+  }
 
   await Project.startAsync(rootPath, { ...startOpts, exp });
 

@@ -134,7 +134,9 @@ export async function startReactNativeServerAsync({
 
   let packagerPort = await getFreePortAsync(19001); // Create packager options
 
-  const customLogReporterPath: string = require.resolve(path.join(__dirname, '../build/reporter'));
+  const customLogReporterPath: string = require.resolve(
+    path.join(__dirname, '../../build/reporter')
+  );
 
   // TODO: Bacon: Support .mjs (short-lived JS modules extension that some packages use)
   const sourceExtsConfig = { isTS: true, isReact: true, isModern: false };
