@@ -7,16 +7,19 @@ interface SchemeXML {
   Scheme?: {
     BuildAction?: {
       BuildActionEntries?: {
-        BuildActionEntry?: {
-          BuildableReference?: {
-            $?: {
-              BlueprintName?: string;
-            };
-          }[];
-        }[];
+        BuildActionEntry?: BuildActionEntryType[];
       }[];
     }[];
   };
+}
+
+interface BuildActionEntryType {
+  BuildableReference?: {
+    $?: {
+      BlueprintName?: string;
+      BuildableName?: string;
+    };
+  }[];
 }
 
 export async function getApplicationTargetForSchemeAsync(
@@ -31,12 +34,23 @@ export async function getApplicationTargetForSchemeAsync(
   }
 
   const schemeXML = ((await readXMLAsync({ path: schemePath })) as unknown) as SchemeXML;
+  const buildActionEntry =
+    schemeXML.Scheme?.BuildAction?.[0]?.BuildActionEntries?.[0]?.BuildActionEntry;
   const targetName =
-    schemeXML.Scheme?.BuildAction?.[0]?.BuildActionEntries?.[0]?.BuildActionEntry?.[0]
-      ?.BuildableReference?.[0]?.['$']?.BlueprintName;
+    buildActionEntry?.length === 1
+      ? getBlueprintName(buildActionEntry[0])
+      : getBlueprintName(
+          buildActionEntry?.find(entry => {
+            return entry.BuildableReference?.[0]?.['$']?.BuildableName?.endsWith('.app');
+          })
+        );
   if (!targetName) {
     const schemeRelativePath = path.relative(projectRoot, schemePath);
     throw new Error(`${schemeRelativePath} seems to be corrupted`);
   }
   return targetName;
+}
+
+function getBlueprintName(entry?: BuildActionEntryType): string | undefined {
+  return entry?.BuildableReference?.[0]?.['$']?.BlueprintName;
 }
