@@ -38,6 +38,10 @@ export async function assertProjectHasExpoExtensionFilesAsync(
     '/{ios,android}/**',
   ]).catch(() => [] as string[]);
 
+  if (!matches.length) {
+    return;
+  }
+
   await promptMatchesAsync(matches);
 }
 
