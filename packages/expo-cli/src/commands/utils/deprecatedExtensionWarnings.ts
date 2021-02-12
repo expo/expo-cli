@@ -11,7 +11,7 @@ import { confirmAsync } from '../../prompts';
 function queryExpoExtensionFilesAsync(projectRoot: string, ignore: string[]): Promise<string[]> {
   return new Promise((resolve, reject) => {
     glob(
-      '**/*.expo.{js,jsx,ts,tsx}',
+      '**/*.expo.@(js|jsx|ts|tsx)',
       {
         absolute: true,
         ignore,
@@ -33,11 +33,12 @@ export async function assertProjectHasExpoExtensionFilesAsync(
     return await assertModulesHasExpoExtensionFilesAsync(projectRoot);
   }
 
+  //   console.time('count');
   const matches = await queryExpoExtensionFilesAsync(projectRoot, [
-    `**/@(Carthage|Pods|node_modules)/**`,
-    '/{ios,android}/**',
+    `**/@(Carthage|Pods|node_modules|ts-declarations|.expo)/**`,
+    '@(ios|android|web)/**',
   ]).catch(() => [] as string[]);
-
+  //   console.timeEnd('count');
   if (!matches.length) {
     return;
   }
@@ -49,11 +50,12 @@ async function assertModulesHasExpoExtensionFilesAsync(projectRoot: string) {
   const spinner = ora('Checking project for deprecated features, this may take a moment.').start();
   const root = findWorkspaceRoot(projectRoot) || projectRoot;
 
+  //   console.time('count');
   let matches = await queryExpoExtensionFilesAsync(root, [
-    `**/@(Carthage|Pods)/**`,
-    '/{ios,android}/**',
+    `**/@(Carthage|Pods|ts-declarations|.expo)/**`,
+    '@(ios|android|web)/**',
   ]).catch(() => [] as string[]);
-
+  //   console.timeEnd('count');
   matches = matches.filter(value => {
     if (value.includes('node_modules')) {
       // Remove duplicate files from packages compiled with bob
