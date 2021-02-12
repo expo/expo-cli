@@ -29,24 +29,36 @@ export async function assertProjectHasExpoExtensionFilesAsync(
   projectRoot: string,
   checkNodeModules: boolean = false
 ) {
-  const spinner = ora('Checking project for deprecated features, this may take a moment.').start();
-  const root = checkNodeModules ? findWorkspaceRoot(projectRoot) || projectRoot : projectRoot;
+  if (checkNodeModules) {
+    return await assertModulesHasExpoExtensionFilesAsync(projectRoot);
+  }
 
-  let matches = await queryExpoExtensionFilesAsync(root, [
-    `**/@(Carthage|Pods${checkNodeModules ? `` : `|node_modules`})/**`,
+  const matches = await queryExpoExtensionFilesAsync(projectRoot, [
+    `**/@(Carthage|Pods|node_modules)/**`,
     '/{ios,android}/**',
   ]).catch(() => [] as string[]);
 
-  if (checkNodeModules) {
-    matches = matches.filter(value => {
-      if (value.includes('node_modules')) {
-        // Remove duplicate files from packages compiled with bob
-        return !value.match(/node_modules\/.*\/lib\/commonjs/g);
-      }
-      return true;
-    });
-  }
-  if (!matches) {
+  await promptMatchesAsync(matches);
+}
+
+async function assertModulesHasExpoExtensionFilesAsync(projectRoot: string) {
+  const spinner = ora('Checking project for deprecated features, this may take a moment.').start();
+  const root = findWorkspaceRoot(projectRoot) || projectRoot;
+
+  let matches = await queryExpoExtensionFilesAsync(root, [
+    `**/@(Carthage|Pods)/**`,
+    '/{ios,android}/**',
+  ]).catch(() => [] as string[]);
+
+  matches = matches.filter(value => {
+    if (value.includes('node_modules')) {
+      // Remove duplicate files from packages compiled with bob
+      return !value.match(/node_modules\/.*\/lib\/commonjs/g);
+    }
+    return true;
+  });
+
+  if (!matches.length) {
     spinner.succeed('Validated project');
     return;
   } else {
@@ -73,7 +85,7 @@ async function promptMatchesAsync(matches: string[]) {
   // Skip in nonInteractive to give users a bypass
   if (
     program.nonInteractive ||
-    (await confirmAsync({ message: 'Would you like to continue anyways?', initial: false }))
+    (await confirmAsync({ message: 'Would you like to continue anyways?', initial: true }))
   ) {
     return;
   }
