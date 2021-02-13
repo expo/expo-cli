@@ -39,7 +39,10 @@ Keeping the `master` releasable means that changes merged to it need to be:
 1. Clone the repository.
 2. Run `yarn`. (Installs dependencies and links packages in the workspace.)
 3. Run `git config commit.template .github/.COMMIT_TEMPLATE` (Sets you up with our commit message template)
-4. Run `yarn start` in the root folder. (Start watching and automatically re-building packages when there are new changes.)
+4. Run `yarn build` to build all packages before start watching.
+5. Run `yarn start` in the root folder. (Start watching and automatically re-building packages when there are new changes.)
+6. Open another terminal to test the `expo-cli`, then run `node expo-cli/packages/expo-cli/bin/expo.js init` outside the `expo-cli` repository to create an test repository, if everything is correct, it should create the repository `my-app`.
+7. Finally, run `node expo-cli/packages/expo-cli/bin/expo.js start my-app` outside the `expo-cli` to start the test repository, if it starts, the repository is correctly configured and you can start developing.
 
 ## Submitting a pull request
 
