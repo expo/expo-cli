@@ -56,14 +56,14 @@ export function getDefaultConfig(
     if (!isLegacy) {
       console.warn(
         chalk.yellow(
-          `The target option is deprecated. Learn More: http://expo.fyi/expo-extension-migration`
+          `The target option is deprecated. Learn more: http://expo.fyi/expo-extension-migration`
         )
       );
       delete options.target;
     }
   } else if (process.env.EXPO_TARGET) {
     console.error(
-      'EXPO_TARGET is deprecated. Learn More: http://expo.fyi/expo-extension-migration'
+      'EXPO_TARGET is deprecated. Learn more: http://expo.fyi/expo-extension-migration'
     );
     if (isLegacy) {
       // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
