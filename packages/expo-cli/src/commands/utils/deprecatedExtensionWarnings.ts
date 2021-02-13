@@ -30,32 +30,30 @@ export async function assertProjectHasExpoExtensionFilesAsync(
   checkNodeModules: boolean = false
 ) {
   if (checkNodeModules) {
-    return await assertModulesHasExpoExtensionFilesAsync(projectRoot);
+    await assertModulesHasExpoExtensionFilesAsync(projectRoot);
+  } else {
+    Log.time('assertProjectHasExpoExtensionFilesAsync');
+    const matches = await queryExpoExtensionFilesAsync(projectRoot, [
+      `**/@(Carthage|Pods|node_modules|ts-declarations|.expo)/**`,
+      '@(ios|android|web)/**',
+    ]).catch(() => [] as string[]);
+    Log.timeEnd('assertProjectHasExpoExtensionFilesAsync');
+    if (matches.length) {
+      await promptMatchesAsync(matches);
+    }
   }
-
-  //   console.time('count');
-  const matches = await queryExpoExtensionFilesAsync(projectRoot, [
-    `**/@(Carthage|Pods|node_modules|ts-declarations|.expo)/**`,
-    '@(ios|android|web)/**',
-  ]).catch(() => [] as string[]);
-  //   console.timeEnd('count');
-  if (!matches.length) {
-    return;
-  }
-
-  await promptMatchesAsync(matches);
 }
 
 async function assertModulesHasExpoExtensionFilesAsync(projectRoot: string) {
   const spinner = ora('Checking project for deprecated features, this may take a moment.').start();
   const root = findWorkspaceRoot(projectRoot) || projectRoot;
 
-  //   console.time('count');
+  Log.time('assertModulesHasExpoExtensionFilesAsync');
   let matches = await queryExpoExtensionFilesAsync(root, [
     `**/@(Carthage|Pods|ts-declarations|.expo)/**`,
     '@(ios|android|web)/**',
   ]).catch(() => [] as string[]);
-  //   console.timeEnd('count');
+  Log.timeEnd('assertModulesHasExpoExtensionFilesAsync');
   matches = matches.filter(value => {
     if (value.includes('node_modules')) {
       // Remove duplicate files from packages compiled with bob
