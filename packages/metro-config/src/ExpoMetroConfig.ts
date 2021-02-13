@@ -1,9 +1,13 @@
 import { getConfig, getDefaultTarget, isLegacyImportsEnabled, ProjectTarget } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
+import chalk from 'chalk';
+import { boolish } from 'getenv';
 import { Reporter } from 'metro';
 import type MetroConfig from 'metro-config';
 import path from 'path';
 import resolveFrom from 'resolve-from';
+
+export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 // Import only the types here, the values will be imported from the project, at runtime.
 const INTERNAL_CALLSITES_REGEX = new RegExp(
@@ -51,7 +55,9 @@ export function getDefaultConfig(
   if (options.target) {
     if (!isLegacy) {
       console.warn(
-        `The target option is deprecated. Learn More: http://expo.fyi/expo-extension-migration`
+        chalk.yellow(
+          `The target option is deprecated. Learn More: http://expo.fyi/expo-extension-migration`
+        )
       );
       delete options.target;
     }
@@ -95,6 +101,15 @@ export function getDefaultConfig(
       ? getBareExtensions([], sourceExtsConfig)
       : getManagedExtensions([], sourceExtsConfig);
 
+  if (EXPO_DEBUG) {
+    console.log();
+    console.log(`Expo Metro config:`);
+    console.log(`- Bundler target: ${target}`);
+    console.log(`- Legacy: ${isLegacy}`);
+    console.log(`- Extensions: ${sourceExts.join(', ')}`);
+    console.log(`- React Native: ${reactNativePath}`);
+    console.log();
+  }
   const metroDefaultValues = MetroConfig.getDefaultConfig.getDefaultValues(projectRoot);
   // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
   // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
