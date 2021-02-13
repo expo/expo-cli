@@ -21,7 +21,7 @@ async function getProjectFileAsync(
   name: string
 ): Promise<ApplicationProjectFile> {
   const mainActivityJavaPath = globSync(
-    path.join(projectRoot, `android/app/src/main/java/**/${name}.{java,kt}`)
+    path.join(projectRoot, `android/app/src/main/java/**/${name}.@(java|kt)`)
   )[0];
   assert(
     mainActivityJavaPath,
