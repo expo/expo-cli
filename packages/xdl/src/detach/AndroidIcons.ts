@@ -176,6 +176,34 @@ async function createAndWriteIconsToPathAsync(
         iconForegroundUrl,
         isDetached
       );
+
+      // Adaptive icon background image or color
+      if (iconBackgroundUrl) {
+        await _resizeIconsAsync(
+          context,
+          resPath,
+          'mipmap-',
+          108,
+          'ic_background.png',
+          iconBackgroundUrl,
+          isDetached
+        );
+
+        await _regexFileInResSubfoldersAsync(
+          '@color/iconBackground',
+          '@mipmap/ic_background',
+          resPath,
+          'mipmap-',
+          '-v26',
+          'ic_launcher.xml'
+        );
+      } else if (iconBackgroundColor) {
+        await regexFileAsync(
+          '"iconBackground">#FFFFFF',
+          `"iconBackground">${iconBackgroundColor}`,
+          path.join(resPath, 'values', 'colors.xml')
+        );
+      }
     } else {
       // the OS's default method of coercing normal app icons to adaptive
       // makes them look quite different from using an actual adaptive icon (with xml)
@@ -202,34 +230,6 @@ async function createAndWriteIconsToPathAsync(
         // so just fail silently here
       }
     }
-  }
-
-  // Adaptive icon background image or color
-  if (iconBackgroundUrl) {
-    await _resizeIconsAsync(
-      context,
-      resPath,
-      'mipmap-',
-      108,
-      'ic_background.png',
-      iconBackgroundUrl,
-      isDetached
-    );
-
-    await _regexFileInResSubfoldersAsync(
-      '@color/iconBackground',
-      '@mipmap/ic_background',
-      resPath,
-      'mipmap-',
-      '-v26',
-      'ic_launcher.xml'
-    );
-  } else if (iconBackgroundColor) {
-    await regexFileAsync(
-      '"iconBackground">#FFFFFF',
-      `"iconBackground">${iconBackgroundColor}`,
-      path.join(resPath, 'values', 'colors.xml')
-    );
   }
 
   // Remove Expo client notification icon resources
