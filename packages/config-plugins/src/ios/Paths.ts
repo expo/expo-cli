@@ -1,7 +1,6 @@
 import { pathExistsSync, readFileSync } from 'fs-extra';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
-import { project } from 'xcode';
 
 import { UnexpectedError } from '../utils/errors';
 import * as WarningAggregator from '../utils/warnings';
