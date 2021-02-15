@@ -1,10 +1,8 @@
-import boxen from 'boxen';
+import { resolveEntryPoint } from '@expo/xdl/build/tools/resolveEntryPoint';
 import chalk from 'chalk';
 import { Command } from 'commander';
-
-import { Exp } from '@expo/xdl';
-import { readFile } from 'fs-extra';
 import path from 'path';
+
 import { buildAsync } from './esbuild/service';
 
 export default function (program: Command) {
@@ -17,7 +15,7 @@ export default function (program: Command) {
     .asyncActionProjectDir(async (projectRoot: string) => {
       const platform = process.env.EXPO_PLATFORM ?? 'ios';
 
-      const filename = Exp.determineEntryPoint(projectRoot, platform);
+      const filename = resolveEntryPoint(projectRoot, platform);
       // const contents = await readFile(filename, 'utf8');
       // console.log(filename, contents);
       await buildAsync(

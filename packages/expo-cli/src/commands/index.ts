@@ -2,6 +2,7 @@ import { Command } from 'commander';
 
 const COMMANDS = [
   require('./build'),
+  require('./ios'),
   require('./bundle-assets'),
   require('./client'),
   require('./credentials'),
