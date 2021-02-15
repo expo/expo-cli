@@ -4,9 +4,8 @@ import { sync as globSync } from 'glob';
 import path from 'path';
 
 import { ConfigPlugin } from '../Plugin.types';
-import { createAndroidManifestPlugin, withAppBuildGradle } from '../plugins/android-plugins';
+import { createAndroidManifestPlugin } from '../plugins/android-plugins';
 import { withDangerousMod } from '../plugins/core-plugins';
-import * as WarningAggregator from '../utils/warnings';
 import { AndroidManifest } from './Manifest';
 import { getMainApplicationAsync } from './Paths';
 
@@ -14,20 +13,6 @@ export const withPackageManifest = createAndroidManifestPlugin(
   setPackageInAndroidManifest,
   'withPackageManifest'
 );
-
-export const withPackageGradle: ConfigPlugin = config => {
-  return withAppBuildGradle(config, config => {
-    if (config.modResults.language === 'groovy') {
-      config.modResults.contents = setPackageInBuildGradle(config, config.modResults.contents);
-    } else {
-      WarningAggregator.addWarningAndroid(
-        'android-package',
-        `Cannot automatically configure app build.gradle if it's not groovy`
-      );
-    }
-    return config;
-  });
-};
 
 export const withPackageRefactor: ConfigPlugin = config => {
   return withDangerousMod(config, [
@@ -120,16 +105,6 @@ export async function renamePackageOnDisk(
       }
     } catch {}
   });
-}
-
-export function setPackageInBuildGradle(config: Pick<ExpoConfig, 'android'>, buildGradle: string) {
-  const packageName = getPackage(config);
-  if (packageName === null) {
-    return buildGradle;
-  }
-
-  const pattern = new RegExp(`applicationId ['"].*['"]`);
-  return buildGradle.replace(pattern, `applicationId '${packageName}'`);
 }
 
 export function setPackageInAndroidManifest(

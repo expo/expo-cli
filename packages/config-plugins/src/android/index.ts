@@ -1,5 +1,6 @@
 import * as AdMob from './AdMob';
 import * as AllowBackup from './AllowBackup';
+import * as ApplicationId from './ApplicationId';
 import * as Branch from './Branch';
 import * as Colors from './Colors';
 import * as EasBuild from './EasBuild';
@@ -27,6 +28,7 @@ import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as Version from './Version';
 export {
   AllowBackup,
+  ApplicationId,
   EasBuild,
   Manifest,
   Branch,
