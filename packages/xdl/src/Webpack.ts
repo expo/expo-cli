@@ -1,7 +1,7 @@
 import { getConfig, getNameFromConfig } from '@expo/config';
+import * as devcert from '@expo/devcert';
 import { isUsingYarn } from '@expo/package-manager';
 import chalk from 'chalk';
-import * as devcert from 'devcert';
 import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';
@@ -229,8 +229,12 @@ export async function startAsync(
 
 export async function stopAsync(projectRoot: string): Promise<void> {
   if (webpackDevServerInstance) {
-    ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, '\u203A Closing Webpack server');
-    webpackDevServerInstance.close();
+    await new Promise(res => {
+      if (webpackDevServerInstance) {
+        ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, '\u203A Stopping Webpack server');
+        webpackDevServerInstance.close(res);
+      }
+    });
     webpackDevServerInstance = null;
     devServerInfo = null;
     webpackServerPort = null;

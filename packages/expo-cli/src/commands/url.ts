@@ -1,11 +1,12 @@
-import { Project, UrlUtils } from '@expo/xdl';
+import { ProjectSettings, UrlUtils } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 
 import CommandError from '../CommandError';
-import log from '../log';
+import Log from '../log';
 import printRunInstructionsAsync from '../printRunInstructionsAsync';
 import urlOpts, { URLOptions } from '../urlOpts';
+import { BuildJobFields, getBuildStatusAsync } from './build/getBuildStatusAsync';
 
 type ProjectUrlOptions = Command & {
   web?: boolean;
@@ -23,15 +24,15 @@ const logArtifactUrl = (platform: 'ios' | 'android') => async (
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
   }
 
-  const result = await Project.getBuildStatusAsync(projectDir, {
+  const result = await getBuildStatusAsync(projectDir, {
     current: false,
     ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
   });
 
-  const url = result.jobs?.filter((job: Project.BuildJobFields) => job.platform === platform)[0]
-    ?.artifacts?.url;
+  const url = result.jobs?.filter((job: BuildJobFields) => job.platform === platform)[0]?.artifacts
+    ?.url;
   if (url) {
-    log.nested(url);
+    Log.nested(url);
   } else {
     throw new Error(
       `No ${platform} binary file found. Use "expo build:${platform}" to create one.`
@@ -53,7 +54,7 @@ async function getWebAppUrlAsync(projectDir: string): Promise<string> {
 async function action(projectDir: string, options: ProjectUrlOptions & URLOptions) {
   await urlOpts.optsAsync(projectDir, options);
 
-  if ((await Project.currentStatus(projectDir)) !== 'running') {
+  if ((await ProjectSettings.getCurrentStatusAsync(projectDir)) !== 'running') {
     throw new CommandError(
       'NOT_RUNNING',
       `Project is not running. Please start it with \`expo start\`.`
@@ -63,10 +64,10 @@ async function action(projectDir: string, options: ProjectUrlOptions & URLOption
     ? await getWebAppUrlAsync(projectDir)
     : await UrlUtils.constructDeepLinkAsync(projectDir);
 
-  log.newLine();
+  Log.newLine();
   urlOpts.printQRCode(url);
 
-  log('Your URL is\n\n' + chalk.underline(url) + '\n');
+  Log.log('Your URL is\n\n' + chalk.underline(url) + '\n');
 
   if (!options.web) {
     await printRunInstructionsAsync();

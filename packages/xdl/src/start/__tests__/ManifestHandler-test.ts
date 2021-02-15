@@ -29,7 +29,7 @@ jest.mock('../../User', () => {
     }),
   };
 });
-jest.mock('../ExpSchema', () => {
+jest.mock('../../project/ExpSchema', () => {
   // const user = jest.requireActual('../../User');
   return {
     getAssetSchemasAsync() {

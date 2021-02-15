@@ -51,6 +51,12 @@ export async function exportCertBinary(
       log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
       log.info('Also make sure that keytool is in your PATH after installation.');
     }
+    if (err.stdout) {
+      log.info(err.stdout);
+    }
+    if (err.stderr) {
+      log.error(err.stderr);
+    }
     throw err;
   }
 }
@@ -84,6 +90,12 @@ export async function exportCertBase64(
       log.warn('Are you sure you have keytool installed?');
       log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
       log.info('Also make sure that keytool is in your PATH after installation.');
+    }
+    if (err.stdout) {
+      log.info(err.stdout);
+    }
+    if (err.stderr) {
+      log.error(err.stderr);
     }
     throw err;
   }
@@ -174,13 +186,19 @@ export async function createKeystore(
       '-dname',
       `CN=${androidPackage},OU=,O=,L=,S=,C=US`,
     ]);
-  } catch (error) {
-    if (error.code === 'ENOENT') {
+  } catch (err) {
+    if (err.code === 'ENOENT') {
       log.warn('Are you sure you have keytool installed?');
       log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
       log.info('Also make sure that keytool is in your PATH after installation.');
     }
-    throw error;
+    if (err.stdout) {
+      log.info(err.stdout);
+    }
+    if (err.stderr) {
+      log.error(err.stderr);
+    }
+    throw err;
   }
 }
 

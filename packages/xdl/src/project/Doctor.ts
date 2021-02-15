@@ -1,17 +1,9 @@
-import {
-  configFilename,
-  ExpoConfig,
-  getConfig,
-  getPackageJson,
-  PackageJSONConfig,
-  resolveModule,
-} from '@expo/config';
+import { configFilename, ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
-import fs from 'fs-extra';
 import getenv from 'getenv';
 import isReachable from 'is-reachable';
-import path from 'path';
+import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
 import Config from '../Config';
@@ -30,6 +22,8 @@ const MIN_NPM_VERSION = '3.0.0';
 const CORRECT_NPM_VERSION = 'latest';
 const WARN_NPM_VERSION_RANGES = ['>= 5.0.0 < 5.7.0'];
 const BAD_NPM_VERSION_RANGES = ['>= 5.0.0 <= 5.0.3'];
+
+const EXPO_NO_DOCTOR = getenv.boolish('EXPO_NO_DOCTOR', false);
 
 function _isNpmVersionWithinRanges(npmVersion: string, ranges: string[]) {
   return ranges.some(range => semver.satisfies(npmVersion, range));
@@ -110,7 +104,7 @@ async function _checkWatchmanVersionAsync(projectRoot: string) {
   }
 }
 
-export async function validateWithSchema(
+async function validateWithSchema(
   projectRoot: string,
   {
     // Extract internal from the config object.
@@ -365,25 +359,18 @@ async function _validateReactNativeVersionAsync(
 }
 
 async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
-  // Just need `nodeModulesPath` so it doesn't matter if expo is installed or the sdkVersion is defined.
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-
   // Check to make sure react-native is installed
-  try {
-    resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
+
+  if (resolveFrom.silent(projectRoot, 'react-native/local-cli/cli.js')) {
     ProjectUtils.clearNotification(projectRoot, 'doctor-react-native-not-installed');
-  } catch (e) {
-    if (e.code === 'MODULE_NOT_FOUND') {
-      ProjectUtils.logError(
-        projectRoot,
-        'expo',
-        `Error: react-native is not installed. Please run \`npm install\` or \`yarn\` in your project directory.`,
-        'doctor-react-native-not-installed'
-      );
-      return FATAL;
-    } else {
-      throw e;
-    }
+  } else {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      `Error: react-native is not installed. Please run \`npm install\` or \`yarn\` in your project directory.`,
+      'doctor-react-native-not-installed'
+    );
+    return FATAL;
   }
   return NO_ISSUES;
 }
@@ -407,7 +394,7 @@ async function validateAsync(
   allowNetwork: boolean,
   skipSDKVersionRequirement: boolean | undefined
 ): Promise<number> {
-  if (getenv.boolish('EXPO_NO_DOCTOR', false)) {
+  if (EXPO_NO_DOCTOR) {
     return NO_ISSUES;
   }
 
@@ -442,40 +429,6 @@ async function validateAsync(
   }
 
   return status;
-}
-
-type ExpoSdkStatus = 0 | 1 | 2;
-
-export const EXPO_SDK_INSTALLED_AND_IMPORTED = 0;
-export const EXPO_SDK_NOT_INSTALLED = 1;
-export const EXPO_SDK_NOT_IMPORTED = 2;
-
-export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStatus> {
-  const { pkg } = getPackageJson(projectRoot);
-
-  try {
-    if (
-      !(
-        pkg.dependencies?.['expo'] ||
-        pkg.devDependencies?.['expo'] ||
-        pkg.peerDependencies?.['expo']
-      )
-    ) {
-      return EXPO_SDK_NOT_INSTALLED;
-    }
-
-    const mainFilePath = path.join(projectRoot, pkg.main);
-    const mainFile = await fs.readFile(mainFilePath, 'utf8');
-
-    // TODO: support separate .ios.js and .android.js files
-    if (mainFile.includes(`from 'expo'`) || mainFile.includes(`require('expo')`)) {
-      return EXPO_SDK_INSTALLED_AND_IMPORTED;
-    } else {
-      return EXPO_SDK_NOT_IMPORTED;
-    }
-  } catch (e) {
-    return EXPO_SDK_NOT_IMPORTED;
-  }
 }
 
 export async function validateExpoServersAsync(projectRoot: string): Promise<number> {

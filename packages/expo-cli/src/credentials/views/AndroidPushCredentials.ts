@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 
 import CommandError from '../../CommandError';
-import log from '../../log';
+import Log from '../../log';
 import prompt from '../../prompts';
 import { Context, IView } from '../context';
 
@@ -24,7 +24,7 @@ export class UpdateFcmKey implements IView {
     });
 
     await ctx.android.updateFcmKey(this.experienceName, fcmApiKey);
-    log(chalk.green('Updated successfully'));
+    Log.log(chalk.green('Updated successfully'));
     return null;
   }
 }

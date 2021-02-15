@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import { gitStatusAsync } from '../../git';
-import log from '../../log';
+import Log from '../../log';
 import { confirmAsync } from '../../prompts';
 import { Context } from '../context';
 
@@ -14,15 +14,15 @@ export async function updateAndroidCredentialsAsync(ctx: Context) {
       const rawFile = await fs.readFile(credentialsJsonFilePath, 'utf-8');
       rawCredentialsJsonObject = JSON.parse(rawFile);
     } catch (error) {
-      log.error(`There was an error while reading credentials.json [${error}]`);
-      log.error('Make sure that file is correct (or remove it) and rerun this command.');
+      Log.error(`There was an error while reading credentials.json [${error}]`);
+      Log.error('Make sure that file is correct (or remove it) and rerun this command.');
       throw error;
     }
   }
   const experienceName = `@${ctx.projectOwner}/${ctx.manifest.slug}`;
   const keystore = await ctx.android.fetchKeystore(experienceName);
   if (!keystore) {
-    log.error('There are no credentials configured for this project on Expo servers');
+    Log.error('There are no credentials configured for this project on Expo servers');
     return;
   }
 
@@ -35,14 +35,14 @@ export async function updateAndroidCredentialsAsync(ctx: Context) {
         'Credentials on Expo servers might be invalid or incomplete. Are you sure you want to continue?',
     });
     if (!confirm) {
-      log.warn('Aborting...');
+      Log.warn('Aborting...');
       return;
     }
   }
 
   const keystorePath =
     rawCredentialsJsonObject?.android?.keystore?.keystorePath ?? 'android/keystores/keystore.jks';
-  log(`Writing Keystore to ${keystorePath}`);
+  Log.log(`Writing Keystore to ${keystorePath}`);
   await updateFileAsync(ctx.projectDir, keystorePath, keystore.keystore);
   const shouldWarnKeystore = await isFileUntrackedAsync(keystorePath);
 
@@ -77,8 +77,8 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
       const rawFile = await fs.readFile(credentialsJsonFilePath, 'utf-8');
       rawCredentialsJsonObject = JSON.parse(rawFile);
     } catch (error) {
-      log.error(`There was an error while reading credentials.json [${error}]`);
-      log.error('Make sure that file is correct (or remove it) and rerun this command.');
+      Log.error(`There was an error while reading credentials.json [${error}]`);
+      Log.error('Make sure that file is correct (or remove it) and rerun this command.');
       throw error;
     }
   }
@@ -95,7 +95,7 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
   const appCredentials = await ctx.ios.getAppCredentials(appLookupParams);
   const distCredentials = await ctx.ios.getDistCert(appLookupParams);
   if (!appCredentials?.credentials?.provisioningProfile && !distCredentials) {
-    log.error('There are no credentials configured for this project on Expo servers');
+    Log.error('There are no credentials configured for this project on Expo servers');
     return;
   }
 
@@ -110,12 +110,12 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
         'Credentials on Expo servers might be invalid or incomplete. Are you sure you want to continue?',
     });
     if (!confirm) {
-      log.warn('Aborting...');
+      Log.warn('Aborting...');
       return;
     }
   }
 
-  log(`Writing Provisioning Profile to ${pprofilePath}`);
+  Log.log(`Writing Provisioning Profile to ${pprofilePath}`);
   await updateFileAsync(
     ctx.projectDir,
     pprofilePath,
@@ -123,7 +123,7 @@ export async function updateIosCredentialsAsync(ctx: Context, bundleIdentifier: 
   );
   const shouldWarnPProfile = await isFileUntrackedAsync(pprofilePath);
 
-  log(`Writing Distribution Certificate to ${distCertPath}`);
+  Log.log(`Writing Distribution Certificate to ${distCertPath}`);
   await updateFileAsync(ctx.projectDir, distCertPath, distCredentials?.certP12);
   const shouldWarnDistCert = await isFileUntrackedAsync(distCertPath);
 
@@ -181,11 +181,11 @@ async function isFileUntrackedAsync(path: string): Promise<boolean> {
 
 function displayUntrackedFilesWarning(newFilePaths: string[]) {
   if (newFilePaths.length === 1) {
-    log.warn(
+    Log.warn(
       `File ${newFilePaths[0]} is currently untracked, remember to add it to .gitignore or to encrypt it. (e.g. with git-crypt)`
     );
   } else if (newFilePaths.length > 1) {
-    log.warn(
+    Log.warn(
       `Files ${newFilePaths.join(
         ', '
       )} are currently untracked, remember to add them to .gitignore or to encrypt them. (e.g. with git-crypt)`

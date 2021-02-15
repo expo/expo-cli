@@ -200,12 +200,6 @@
         "properties": {},
         "additionalProperties": true
       },
-      "ignoreNodeModulesValidation": {
-        "type": "boolean"
-      },
-      "nodeModulesPath": {
-        "type": "string"
-      },
       "ios": {
         "description": "iOS standalone app specific configuration",
         "type": "object",

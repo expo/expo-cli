@@ -1,17 +1,17 @@
 import JsonFile from '@expo/json-file';
+import resolveFrom from 'resolve-from';
 
 import { ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
-import { projectHasModule } from './Modules';
 
 export function getExpoSDKVersion(
   projectRoot: string,
-  exp: Pick<ExpoConfig, 'sdkVersion' | 'nodeModulesPath'>
+  exp: Pick<ExpoConfig, 'sdkVersion'>
 ): string {
-  if (exp && exp.sdkVersion) {
+  if (exp?.sdkVersion) {
     return exp.sdkVersion;
   }
-  const packageJsonPath = projectHasModule('expo/package.json', projectRoot, exp);
+  const packageJsonPath = resolveFrom.silent(projectRoot, 'expo/package.json');
   if (packageJsonPath) {
     const expoPackageJson = JsonFile.read(packageJsonPath, { json5: true });
     const { version: packageVersion } = expoPackageJson;

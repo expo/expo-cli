@@ -1,7 +1,7 @@
 import { vol } from 'memfs';
 
 import { mockExpoXDL } from '../../__tests__/mock-utils';
-import log from '../../log';
+import Log from '../../log';
 import {
   getDependenciesFromBundledNativeModules,
   maybeFormatSdkVersion,
@@ -36,7 +36,7 @@ describe('getDependenciesFromBundledNativeModules', () => {
       targetSdkVersion: null,
     });
 
-    expect(log.warn).toHaveBeenCalledTimes(1);
+    expect(Log.warn).toHaveBeenCalledTimes(1);
   });
 
   describe('priority', () => {

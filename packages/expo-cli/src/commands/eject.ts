@@ -4,10 +4,11 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 
 import CommandError from '../CommandError';
-import log from '../log';
+import Log from '../log';
 import { confirmAsync } from '../prompts';
-import * as Eject from './eject/Eject';
+import { ejectAsync } from './eject/ejectAsync';
 import { platformsFromPlatform } from './eject/platformOptions';
+import { EjectAsyncOptions } from './eject/prebuildAsync';
 import { learnMore } from './utils/TerminalLink';
 
 async function userWantsToEjectWithoutUpgradingAsync() {
@@ -23,7 +24,7 @@ export async function actionAsync(
   {
     platform,
     ...options
-  }: Omit<Eject.EjectAsyncOptions, 'platforms'> & {
+  }: Omit<EjectAsyncOptions, 'platforms'> & {
     npm?: boolean;
     platform?: string;
   }
@@ -42,11 +43,11 @@ export async function actionAsync(
       );
     }
   } else {
-    log.debug('Eject Mode: Latest');
-    await Eject.ejectAsync(projectDir, {
+    Log.debug('Eject Mode: Latest');
+    await ejectAsync(projectDir, {
       ...options,
       platforms: platformsFromPlatform(platform),
-    } as Eject.EjectAsyncOptions);
+    } as EjectAsyncOptions);
   }
 }
 
