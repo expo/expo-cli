@@ -1,6 +1,7 @@
 import { pathExistsSync, readFileSync } from 'fs-extra';
 import { sync as globSync } from 'glob';
 import * as path from 'path';
+import { project } from 'xcode';
 
 import { UnexpectedError } from '../utils/errors';
 import * as WarningAggregator from '../utils/warnings';
@@ -95,6 +96,30 @@ export function getXcodeProjectPath(projectRoot: string): string {
   }
 
   return using;
+}
+
+export function getXcodeWorkspacePath(projectRoot: string): string {
+  const workspacePaths = globSync('ios/*.xcworkspace', {
+    absolute: true,
+    cwd: projectRoot,
+    ignore: ignoredPaths,
+  });
+
+  if (workspacePaths.length === 0) {
+    throw new UnexpectedError(
+      `Failed to locate the ios/*.xcworkspace file relative to path "${projectRoot}".`
+    );
+  }
+  if (workspacePaths.length >= 1) {
+    warnMultipleFiles({
+      tag: 'project-pbxproj',
+      fileName: 'project.pbxproj',
+      projectRoot,
+      using: workspacePaths[0],
+      extra: workspacePaths.slice(1),
+    });
+  }
+  return workspacePaths[0];
 }
 
 export function getAllPBXProjectPaths(projectRoot: string): string[] {

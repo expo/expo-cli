@@ -224,7 +224,7 @@ export async function ensureSimulatorOpenAsync(
 /**
  * Get all simulators supported by Expo (iOS only).
  */
-async function getSelectableSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
+export async function getSelectableSimulatorsAsync(): Promise<SimControl.SimulatorDevice[]> {
   const simulators = await getSimulatorsAsync();
   return simulators.filter(device => device.isAvailable && device.osType === 'iOS');
 }
