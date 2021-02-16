@@ -8,10 +8,8 @@ import semver from 'semver';
 
 import Log from '../../log';
 
-// @ts-ignore: not typed
-
 export async function validateDependenciesVersionsAsync(
-  projectDir: string,
+  projectRoot: string,
   exp: ExpoConfig,
   pkg: PackageJSONConfig
 ): Promise<void> {
@@ -19,7 +17,7 @@ export async function validateDependenciesVersionsAsync(
     return;
   }
 
-  const bundleNativeModulesPath = resolveFrom.silent(projectDir, 'expo/bundledNativeModules.json');
+  const bundleNativeModulesPath = resolveFrom.silent(projectRoot, 'expo/bundledNativeModules.json');
   if (!bundleNativeModulesPath) {
     Log.warn(
       `Your project is in SDK version >= 33.0.0, but the ${chalk.underline(
