@@ -59,7 +59,7 @@ async function getWebAppUrlAsync(projectRoot: string): Promise<string> {
   if (!url) {
     throw new CommandError(
       'NOT_RUNNING',
-      `Expo web server is not running. Please start it with \`expo start:web\`.`
+      `Webpack dev server is not running. Please start it with \`expo start:web\`.`
     );
   }
   return url;
