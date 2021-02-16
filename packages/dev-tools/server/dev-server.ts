@@ -41,7 +41,17 @@ async function run(): Promise<void> {
     });
     startGraphQLServer(projectRoot, httpServer, authenticationContext);
     console.log('Starting project...');
-    await Project.startAsync(projectRoot);
+    await Project.startAsync(projectRoot, {
+      reset: false,
+      webOnly: false,
+      nonInteractive: false,
+      // TODO: deprecate
+      devClient: false,
+      // TODO: deprecate
+      target: 'managed',
+      // TODO: deprecate
+      nonPersistent: false,
+    });
     const url = `http://localhost:${PORT}`;
     console.log(`Development server running at ${url}`);
     openBrowser(url);
