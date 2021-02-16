@@ -131,10 +131,8 @@ export default (program: any) => {
     .allowOffline()
     .asyncActionProjectDir(
       async (projectRoot: string, options: RawStartOptions): Promise<void> => {
-        const normalizedOptions = await normalizeOptionsAsync(projectRoot, {
-          ...options,
-          webOnly: true,
-        });
+        const normalizedOptions = await normalizeOptionsAsync(projectRoot, options);
+        normalizedOptions.webOnly = true;
         return await action(projectRoot, normalizedOptions);
       }
     );

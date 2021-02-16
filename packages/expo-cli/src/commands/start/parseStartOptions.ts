@@ -37,31 +37,23 @@ export async function normalizeOptionsAsync(
   projectRoot: string,
   options: RawStartOptions
 ): Promise<NormalizedOptions> {
-  const opts: NormalizedOptions = {
-    ...options, // This is necessary to ensure we don't drop any options
-    webOnly: !!options.webOnly, // This is only ever true in the start:web command
-    nonInteractive: !!options.parent?.nonInteractive,
-  };
-
   const rawArgs = options.parent?.rawArgs || [];
 
-  // dev server
-  opts.dev = setBooleanArg(rawArgs, 'dev', true);
-  opts.minify = setBooleanArg(rawArgs, 'minify', false);
-  opts.https = setBooleanArg(rawArgs, 'https', false);
+  const opts: NormalizedOptions = {
+    // ios, android, web, localhost, lan, tunnel added automatically
+    // This is necessary to ensure we don't drop any options
+    ...options,
+    nonInteractive: !!options.parent?.nonInteractive,
+    // setBooleanArg is used to flip the default commander logic which automatically sets a value to `true` if the inverse option isn't provided.
+    // ex: `dev == true` if `--no-dev` is a possible flag, but `--no-dev` was not provided in the command.
+    dev: setBooleanArg(rawArgs, 'dev', true),
+    minify: setBooleanArg(rawArgs, 'minify', false),
+    https: setBooleanArg(rawArgs, 'https', false),
+  };
 
-  // platforms
-  opts.android = setBooleanArg(rawArgs, 'android');
-  opts.ios = setBooleanArg(rawArgs, 'ios');
-  opts.web = setBooleanArg(rawArgs, 'web');
-
-  // url
-  // TODO: auto convert to `host`
-  opts.localhost = setBooleanArg(rawArgs, 'localhost');
-  opts.lan = setBooleanArg(rawArgs, 'lan');
-  opts.tunnel = setBooleanArg(rawArgs, 'tunnel');
-
+  // Side-effect
   await cacheOptionsAsync(projectRoot, opts);
+
   return opts;
 }
 
