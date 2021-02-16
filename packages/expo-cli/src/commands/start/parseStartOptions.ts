@@ -16,26 +16,14 @@ export type RawStartOptions = NormalizedOptions & {
   parent?: { nonInteractive: boolean; rawArgs: string[] };
 };
 
-function hasBooleanArg(rawArgs: string[], argName: string): boolean {
-  return rawArgs.includes('--' + argName) || rawArgs.includes('--no-' + argName);
-}
-
-function getBooleanArg(rawArgs: string[], argName: string): boolean {
-  if (rawArgs.includes('--' + argName)) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 function setBooleanArg(
   rawArgs: string[],
   argName: string,
   fallback?: boolean
 ): boolean | undefined {
-  if (rawArgs.includes('--' + argName)) {
+  if (rawArgs.includes(`--${argName}`)) {
     return true;
-  } else if (rawArgs.includes('--no-' + argName)) {
+  } else if (rawArgs.includes(`--no-${argName}`)) {
     return false;
   } else {
     return fallback;
@@ -57,40 +45,31 @@ export async function normalizeOptionsAsync(
 
   const rawArgs = options.parent?.rawArgs || [];
 
+  // dev server
   opts.dev = setBooleanArg(rawArgs, 'dev', true);
   opts.minify = setBooleanArg(rawArgs, 'minify', false);
   opts.https = setBooleanArg(rawArgs, 'https', false);
 
-  if (hasBooleanArg(rawArgs, 'android')) {
-    opts.android = getBooleanArg(rawArgs, 'android');
-  }
+  // platforms
+  opts.android = setBooleanArg(rawArgs, 'android');
+  opts.ios = setBooleanArg(rawArgs, 'ios');
+  opts.web = setBooleanArg(rawArgs, 'web');
 
-  if (hasBooleanArg(rawArgs, 'ios')) {
-    opts.ios = getBooleanArg(rawArgs, 'ios');
-  }
-
-  if (hasBooleanArg(rawArgs, 'web')) {
-    opts.web = getBooleanArg(rawArgs, 'web');
-  }
-
-  if (hasBooleanArg(rawArgs, 'localhost')) {
-    opts.localhost = getBooleanArg(rawArgs, 'localhost');
-  }
-
-  if (hasBooleanArg(rawArgs, 'lan')) {
-    opts.lan = getBooleanArg(rawArgs, 'lan');
-  }
-
-  if (hasBooleanArg(rawArgs, 'tunnel')) {
-    opts.tunnel = getBooleanArg(rawArgs, 'tunnel');
-  }
+  // url
+  // TODO: auto convert to `host`
+  opts.localhost = setBooleanArg(rawArgs, 'localhost');
+  opts.lan = setBooleanArg(rawArgs, 'lan');
+  opts.tunnel = setBooleanArg(rawArgs, 'tunnel');
 
   await cacheOptionsAsync(projectRoot, opts);
   return opts;
 }
 
-async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions): Promise<void> {
-  await ProjectSettings.setAsync(projectDir, {
+async function cacheOptionsAsync(
+  projectRoot: string,
+  options: Pick<NormalizedOptions, 'devClient' | 'scheme' | 'dev' | 'minify' | 'https'>
+): Promise<void> {
+  await ProjectSettings.setAsync(projectRoot, {
     devClient: options.devClient,
     scheme: options.scheme,
     dev: options.dev,
