@@ -16,39 +16,10 @@ type ArtifactUrlOptions = {
   publicUrl?: string;
 };
 
-const logArtifactUrl = (platform: 'ios' | 'android') => async (
-  projectDir: string,
-  options: ArtifactUrlOptions
-) => {
-  if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
+function assertHTTPS(url?: string) {
+  if (url && !UrlUtils.isHttps(url)) {
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
   }
-
-  const result = await getBuildStatusAsync(projectDir, {
-    current: false,
-    ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
-  });
-
-  const url = result.jobs?.filter((job: BuildJobFields) => job.platform === platform)[0]?.artifacts
-    ?.url;
-  if (url) {
-    Log.nested(url);
-  } else {
-    throw new Error(
-      `No ${platform} binary file found. Use "expo build:${platform}" to create one.`
-    );
-  }
-};
-
-async function getWebAppUrlAsync(projectDir: string): Promise<string> {
-  const webAppUrl = await UrlUtils.constructWebAppUrlAsync(projectDir);
-  if (!webAppUrl) {
-    throw new CommandError(
-      'NOT_RUNNING',
-      `Expo web server is not running. Please start it with \`expo start:web\`.`
-    );
-  }
-  return webAppUrl;
 }
 
 async function assertProjectRunningAsync(projectRoot: string) {
@@ -58,6 +29,40 @@ async function assertProjectRunningAsync(projectRoot: string) {
       `Project is not running. Please start it with \`expo start\`.`
     );
   }
+}
+
+const logArtifactUrl = (platform: 'ios' | 'android') => async (
+  projectRoot: string,
+  options: ArtifactUrlOptions
+) => {
+  assertHTTPS(options.publicUrl);
+
+  const result = await getBuildStatusAsync(projectRoot, {
+    current: false,
+    ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
+  });
+
+  const url = result.jobs?.filter((job: BuildJobFields) => job.platform === platform)[0]?.artifacts
+    ?.url;
+
+  if (!url) {
+    throw new CommandError(
+      `No ${platform} binary file found. Use "expo build:${platform}" to create one.`
+    );
+  }
+
+  Log.nested(url);
+};
+
+async function getWebAppUrlAsync(projectRoot: string): Promise<string> {
+  const url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
+  if (!url) {
+    throw new CommandError(
+      'NOT_RUNNING',
+      `Expo web server is not running. Please start it with \`expo start:web\`.`
+    );
+  }
+  return url;
 }
 
 function logUrl(url: string) {
