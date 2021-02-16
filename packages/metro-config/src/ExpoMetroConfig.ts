@@ -110,7 +110,13 @@ export function getDefaultConfig(
     console.log(`- React Native: ${reactNativePath}`);
     console.log();
   }
-  const metroDefaultValues = MetroConfig.getDefaultConfig.getDefaultValues(projectRoot);
+  const {
+    // Remove the default reporter which metro always resolves to be the react-native-community/cli reporter.
+    // This prints a giant React logo which is less accessible to users on smaller terminals.
+    reporter,
+    ...metroDefaultValues
+  } = MetroConfig.getDefaultConfig.getDefaultValues(projectRoot);
+
   // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
   // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
   return MetroConfig.mergeConfig(metroDefaultValues, {

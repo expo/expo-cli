@@ -7,7 +7,7 @@ function _newIdentifier(type = 'c') {
 }
 
 export async function clientIdAsync(): Promise<string> {
-  var clientId = await UserSettings.getAsync('accessToken', null);
+  let clientId = await UserSettings.getAsync('accessToken', null);
   if (clientId === null) {
     clientId = _newIdentifier();
     await setClientIdAsync(clientId);
