@@ -51,27 +51,37 @@ async function getWebAppUrlAsync(projectDir: string): Promise<string> {
   return webAppUrl;
 }
 
-async function action(projectDir: string, options: ProjectUrlOptions & URLOptions) {
-  await urlOpts.optsAsync(projectDir, options);
-
-  if ((await ProjectSettings.getCurrentStatusAsync(projectDir)) !== 'running') {
+async function assertProjectRunningAsync(projectRoot: string) {
+  if ((await ProjectSettings.getCurrentStatusAsync(projectRoot)) !== 'running') {
     throw new CommandError(
       'NOT_RUNNING',
       `Project is not running. Please start it with \`expo start\`.`
     );
   }
-  const url = options.web
-    ? await getWebAppUrlAsync(projectDir)
-    : await UrlUtils.constructDeepLinkAsync(projectDir);
+}
 
+function logUrl(url: string) {
   Log.newLine();
+
   urlOpts.printQRCode(url);
 
   Log.log('Your URL is\n\n' + chalk.underline(url) + '\n');
+}
+
+async function action(projectRoot: string, options: ProjectUrlOptions & URLOptions) {
+  await urlOpts.optsAsync(projectRoot, options);
+
+  await assertProjectRunningAsync(projectRoot);
+
+  const url = options.web
+    ? await getWebAppUrlAsync(projectRoot)
+    : await UrlUtils.constructDeepLinkAsync(projectRoot);
+
+  logUrl(url);
 
   if (!options.web) {
     await printRunInstructionsAsync();
-    await urlOpts.handleMobileOptsAsync(projectDir, options);
+    await urlOpts.handleMobileOptsAsync(projectRoot, options);
   }
 }
 
