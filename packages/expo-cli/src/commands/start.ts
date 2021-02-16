@@ -3,11 +3,11 @@ import { Project, UrlUtils, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import path from 'path';
 
-import { installExitHooks } from '../exit';
 import Log from '../log';
 import * as sendTo from '../sendTo';
 import urlOpts from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
+import { installExitHooks } from './start/installExitHooks';
 import { tryOpeningDevToolsAsync } from './start/openDevTools';
 import {
   NormalizedOptions,
@@ -35,6 +35,7 @@ async function action(projectRoot: string, options: NormalizedOptions): Promise<
   // TODO: This is useless on mac, check if useless on win32
   const rootPath = path.resolve(projectRoot);
 
+  // Optionally open the developer tools UI.
   await tryOpeningDevToolsAsync(rootPath, {
     exp,
     options,

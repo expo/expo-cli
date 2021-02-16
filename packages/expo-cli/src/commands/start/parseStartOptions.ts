@@ -12,7 +12,7 @@ export type NormalizedOptions = URLOptions &
     host?: string;
   };
 
-export type RawStartOptions = NormalizedOptions & {
+export type RawStartOptions = Record<string, any> & {
   parent?: { nonInteractive: boolean; rawArgs: string[] };
 };
 
@@ -40,9 +40,17 @@ export async function normalizeOptionsAsync(
   const rawArgs = options.parent?.rawArgs || [];
 
   const opts: NormalizedOptions = {
-    // ios, android, web, localhost, lan, tunnel added automatically
     // This is necessary to ensure we don't drop any options
     ...options,
+    webOnly: false,
+    // explicit since any is used
+    ios: options.ios,
+    android: options.android,
+    web: options.web,
+    localhost: options.localhost,
+    lan: options.lan,
+    tunnel: options.tunnel,
+    // helper
     nonInteractive: !!options.parent?.nonInteractive,
     // setBooleanArg is used to flip the default commander logic which automatically sets a value to `true` if the inverse option isn't provided.
     // ex: `dev == true` if `--no-dev` is a possible flag, but `--no-dev` was not provided in the command.
@@ -70,8 +78,14 @@ async function cacheOptionsAsync(
   });
 }
 
-export function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
-  const startOpts: Project.StartOptions = {
+export function parseStartOptions(
+  options: Pick<
+    NormalizedOptions,
+    'clear' | 'devClient' | 'nonInteractive' | 'webOnly' | 'maxWorkers'
+  >
+): Project.StartOptions {
+  return {
+    // TODO: Deprecate nonPersistent
     nonPersistent: false,
     reset: !!options.clear,
     devClient: !!options.devClient,
@@ -81,10 +95,6 @@ export function parseStartOptions(options: NormalizedOptions): Project.StartOpti
     // For `expo start`, the default target is 'managed', for both managed *and* bare apps.
     // See: https://docs.expo.io/bare/using-expo-client
     target: options.devClient ? 'bare' : 'managed',
+    maxWorkers: options.maxWorkers,
   };
-  if (options.maxWorkers) {
-    startOpts.maxWorkers = options.maxWorkers;
-  }
-
-  return startOpts;
 }
