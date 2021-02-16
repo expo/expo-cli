@@ -82,7 +82,11 @@ async function promptMatchesAsync(matches: string[]) {
     ) +
       chalk.reset(
         matches.map(match => `- ${match}`).join('\n') +
-          `\n\nLearn more: http://expo.fyi/expo-extension-migration\n`
+          chalk.dim(
+            `\n\nDangerously disable this check with ${chalk.bold(
+              `EXPO_LEGACY_IMPORTS=1`
+            )}\nLearn more: http://expo.fyi/expo-extension-migration\n`
+          )
       )
   );
 
