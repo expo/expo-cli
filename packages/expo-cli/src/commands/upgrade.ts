@@ -646,7 +646,10 @@ export async function upgradeAsync(
   try {
     await Project.startReactNativeServerAsync({
       projectRoot,
-      options: { reset: true, nonPersistent: true },
+      options: {
+        reset: true,
+        nonPersistent: true,
+      },
     });
   } catch (e) {
     clearingCacheStep.fail(`Failed to clear packager cache with error: ${e.message}`);

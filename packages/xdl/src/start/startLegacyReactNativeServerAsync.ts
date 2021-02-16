@@ -123,7 +123,7 @@ export async function startReactNativeServerAsync({
   verbose = true,
 }: {
   projectRoot: string;
-  options: StartOptions;
+  options: Partial<Pick<StartOptions, 'target' | 'nonPersistent' | 'maxWorkers' | 'reset'>>;
   exp?: ExpoConfig;
   verbose?: boolean;
 }): Promise<void> {

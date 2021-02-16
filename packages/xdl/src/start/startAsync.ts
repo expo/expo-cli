@@ -22,7 +22,7 @@ let serverInstance: Server | null = null;
 
 export async function startAsync(
   projectRoot: string,
-  { exp = getConfig(projectRoot).exp, ...options }: StartOptions & { exp?: ExpoConfig } = {},
+  { exp = getConfig(projectRoot).exp, ...options }: StartOptions & { exp?: ExpoConfig },
   verbose: boolean = true
 ): Promise<ExpoConfig> {
   assertValidProjectRoot(projectRoot);
@@ -55,11 +55,6 @@ export async function startAsync(
     }
   }
   return exp;
-}
-
-export async function stopWebOnlyAsync(projectRoot: string): Promise<void> {
-  DevSession.stopSession();
-  await Webpack.stopAsync(projectRoot);
 }
 
 async function stopInternalAsync(projectRoot: string): Promise<void> {

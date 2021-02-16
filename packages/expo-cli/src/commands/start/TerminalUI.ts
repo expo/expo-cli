@@ -27,25 +27,17 @@ const CTRL_L = '\u000C';
 const BLT = `\u203A`;
 const { bold: b, italic: i, underline: u } = chalk;
 
-type StartOptions = {
-  devClient?: boolean;
-  reset?: boolean;
-  nonInteractive?: boolean;
-  nonPersistent?: boolean;
-  maxWorkers?: number;
-  webOnly?: boolean;
-};
-
 const printHelp = (): void => {
   logCommandsTable([[], ['?', 'show all commands']]);
 };
 
 const div = chalk.dim(`│`);
 
-const printUsageAsync = async (
-  projectRoot: string,
-  options: Pick<StartOptions, 'webOnly'> = {}
-) => {
+type UsageOptions = {
+  webOnly?: boolean;
+};
+
+const printUsageAsync = async (projectRoot: string, options: UsageOptions = {}) => {
   const { dev } = await ProjectSettings.readAsync(projectRoot);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
   const devMode = dev ? 'development' : 'production';
@@ -73,7 +65,7 @@ const printUsageAsync = async (
   ]);
 };
 
-const printBasicUsageAsync = async (options: Pick<StartOptions, 'webOnly'> = {}) => {
+const printBasicUsageAsync = async (options: UsageOptions = {}) => {
   const isMac = process.platform === 'darwin';
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
   const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
@@ -111,10 +103,7 @@ function logCommandsTable(ui: (false | string[])[]) {
   );
 }
 
-const printServerInfo = async (
-  projectRoot: string,
-  options: Pick<StartOptions, 'webOnly'> = {}
-) => {
+const printServerInfo = async (projectRoot: string, options: UsageOptions = {}) => {
   if (options.webOnly) {
     Webpack.printConnectionInstructions(projectRoot);
     return;
@@ -142,7 +131,7 @@ export function openDeveloperTools(url: string) {
   }
 }
 
-export const startAsync = async (projectRoot: string, options: StartOptions) => {
+export const startAsync = async (projectRoot: string, options: Project.StartOptions) => {
   const { stdin } = process;
   const startWaitingForCommand = () => {
     if (!stdin.setRawMode) {

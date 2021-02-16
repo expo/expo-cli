@@ -8,19 +8,22 @@ import { getManifestHandler } from './ManifestHandler';
 import { getFreePortAsync } from './getFreePortAsync';
 
 export type StartOptions = {
+  nonInteractive: boolean;
+  nonPersistent: boolean;
+  webOnly: boolean;
   devClient?: boolean;
   reset?: boolean;
-  nonInteractive?: boolean;
-  nonPersistent?: boolean;
   maxWorkers?: number;
-  webOnly?: boolean;
   target?: ProjectTarget;
 };
 
-export async function startDevServerAsync(projectRoot: string, startOptions: StartOptions) {
+export async function startDevServerAsync(
+  projectRoot: string,
+  options: Pick<StartOptions, 'devClient' | 'reset' | 'maxWorkers' | 'target'>
+) {
   assertValidProjectRoot(projectRoot);
 
-  const port = startOptions.devClient
+  const port = options.devClient
     ? Number(process.env.RCT_METRO_PORT) || 8081
     : await getFreePortAsync(19000);
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -28,23 +31,23 @@ export async function startDevServerAsync(projectRoot: string, startOptions: Sta
     packagerPort: port,
   });
 
-  const options: MetroDevServerOptions = {
+  const metroOptions: MetroDevServerOptions = {
     port,
     logger: ProjectUtils.getLogger(projectRoot),
   };
-  if (startOptions.reset) {
-    options.resetCache = true;
+  if (options.reset) {
+    metroOptions.resetCache = true;
   }
-  if (startOptions.maxWorkers != null) {
-    options.maxWorkers = startOptions.maxWorkers;
+  if (options.maxWorkers != null) {
+    metroOptions.maxWorkers = options.maxWorkers;
   }
-  if (startOptions.target) {
+  if (options.target) {
     // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
     // called from metro.config.js.
-    process.env.EXPO_TARGET = startOptions.target;
+    process.env.EXPO_TARGET = options.target;
   }
 
-  const { server, middleware } = await runMetroDevServerAsync(projectRoot, options);
+  const { server, middleware } = await runMetroDevServerAsync(projectRoot, metroOptions);
   middleware.use(getManifestHandler(projectRoot));
   return server;
 }

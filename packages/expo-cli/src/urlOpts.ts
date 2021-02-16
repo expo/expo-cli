@@ -8,6 +8,8 @@ import CommandError, { AbortCommandError } from './CommandError';
 import Log from './log';
 import { getDevClientSchemeAsync } from './schemes';
 
+export type URLHostType = 'lan' | 'tunnel' | 'localhost';
+
 // NOTE: if you update this, you should also update assertValidOptions in UrlUtils.ts
 export type URLOptions = {
   devClient?: boolean;
@@ -15,7 +17,7 @@ export type URLOptions = {
   ios?: boolean;
   web?: boolean;
   scheme?: string;
-  host?: 'lan' | 'tunnel' | 'localhost';
+  host?: URLHostType;
   tunnel?: boolean;
   lan?: boolean;
   localhost?: boolean;
@@ -43,37 +45,62 @@ function addOptions(program: Command) {
     .option('--localhost', 'Same as --host localhost');
 }
 
-async function optsAsync(projectDir: string, options: any) {
-  var opts = await ProjectSettings.readAsync(projectDir);
-
-  if ([options.host, options.lan, options.localhost, options.tunnel].filter(i => i).length > 1) {
+function assertServingType(options: any) {
+  if ([options.host, options.lan, options.localhost, options.tunnel].filter(Boolean).length > 1) {
     throw new CommandError(
       'BAD_ARGS',
       'Specify at most one of --host, --tunnel, --lan, and --localhost'
     );
   }
+}
 
-  opts.hostType = 'lan';
+function getHostType(options: any) {
+  let hostType = 'lan';
+
+  if (options.offline) {
+    hostType = 'localhost';
+  }
+
+  if (options.host) {
+    return options.host;
+  } else if (options.tunnel) {
+    return 'tunnel';
+  } else if (options.lan) {
+    return 'lan';
+  } else if (options.localhost) {
+    return 'localhost';
+  }
+  return hostType;
+}
+
+async function optsAsync(projectRoot: string, options: any) {
+  // Prevent using too many different boolean options together.
+  assertServingType(options);
+  // Prevent using --dev-client in a managed app.
+  assertDevClientOption(projectRoot, options.devClient);
 
   if (options.offline) {
     // TODO: maybe let people know that we will force localhost with offline?
     ConnectionStatus.setIsOffline(true);
-    opts.hostType = 'localhost';
   }
 
-  if (options.host) {
-    opts.hostType = options.host;
-  } else if (options.tunnel) {
-    opts.hostType = 'tunnel';
-  } else if (options.lan) {
-    opts.hostType = 'lan';
-  } else if (options.localhost) {
-    opts.hostType = 'localhost';
-  }
+  // Read cached options.
+  const opts = await ProjectSettings.readAsync(projectRoot);
 
+  opts.hostType = getHostType(options);
+
+  opts.scheme = await resolveSchemeAsync(projectRoot, options);
+
+  // Cache options.
+  await ProjectSettings.setAsync(projectRoot, opts);
+
+  return opts;
+}
+
+function assertDevClientOption(projectRoot: string, isDevClient: boolean) {
   // Prevent using --dev-client in a managed app.
-  if (options.devClient) {
-    const defaultTarget = getDefaultTarget(projectDir);
+  if (isDevClient) {
+    const defaultTarget = getDefaultTarget(projectRoot);
     if (defaultTarget !== 'bare') {
       Log.warn(
         `\nOption ${Log.chalk.cyan(
@@ -85,21 +112,21 @@ async function optsAsync(projectDir: string, options: any) {
       throw new AbortCommandError();
     }
   }
+}
 
+async function resolveSchemeAsync(
+  projectRoot: string,
+  options: { scheme: any; devClient?: boolean }
+): Promise<string | null> {
   if (typeof options.scheme === 'string') {
     // Use the custom scheme
-    opts.scheme = options.scheme ?? null;
+    return options.scheme ?? null;
   } else if (options.devClient) {
     // Attempt to find the scheme or warn the user how to setup a custom scheme
-    opts.scheme = await getDevClientSchemeAsync(projectDir);
-  } else {
-    // Ensure this is reset when users don't use `--scheme` or `--dev-client`
-    opts.scheme = null;
+    return await getDevClientSchemeAsync(projectRoot);
   }
-
-  await ProjectSettings.setAsync(projectDir, opts);
-
-  return opts;
+  // Ensure this is reset when users don't use `--scheme` or `--dev-client`
+  return null;
 }
 
 function printQRCode(url: string) {
