@@ -8,7 +8,7 @@ import path from 'path';
 import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import urljoin from 'url-join';
-import uuid from 'uuid';
+import { v1 as uuidv1, v4 as uuidv4 } from 'uuid';
 
 import Log from '../../log';
 
@@ -209,10 +209,10 @@ export async function exportAppAsync(
 
     exp.publishedTime = new Date().toISOString();
     exp.commitTime = new Date().toISOString();
-    exp.releaseId = uuid.v4();
+    exp.releaseId = uuidv4();
 
     // generate revisionId and id the same way www does
-    const hashIds = new HashIds(uuid.v1(), 10);
+    const hashIds = new HashIds(uuidv1(), 10);
     exp.revisionId = hashIds.encode(Date.now());
 
     if (options.isDev) {
