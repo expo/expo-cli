@@ -271,8 +271,12 @@ async function tryOpeningDevToolsAsync({
   Log.log(`Developer tools running on ${chalk.underline(devToolsUrl)}`);
 
   if (!options.nonInteractive && !exp.isDetached) {
-    if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
+    if (await TerminalUI.shouldOpenDevToolsOnStartupAsync()) {
+      // Ensure the preference is written to disk.
+      UserSettings.setAsync('openDevToolsAtStartup', true);
       TerminalUI.openDeveloperTools(devToolsUrl);
+    } else {
+      UserSettings.setAsync('openDevToolsAtStartup', false);
     }
   }
 }

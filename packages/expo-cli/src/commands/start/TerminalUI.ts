@@ -42,12 +42,21 @@ const printHelp = (): void => {
 
 const div = chalk.dim(`│`);
 
+export async function shouldOpenDevToolsOnStartupAsync() {
+  return UserSettings.getAsync(
+    'openDevToolsAtStartup',
+    // Defaults to true for new users.
+    // TODO: switch this to false.
+    true
+  );
+}
+
 const printUsageAsync = async (
   projectRoot: string,
   options: Pick<StartOptions, 'webOnly'> = {}
 ) => {
   const { dev } = await ProjectSettings.readAsync(projectRoot);
-  const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
+  const openDevToolsAtStartup = await shouldOpenDevToolsOnStartupAsync();
   const devMode = dev ? 'development' : 'production';
   const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
 
@@ -75,7 +84,7 @@ const printUsageAsync = async (
 
 const printBasicUsageAsync = async (options: Pick<StartOptions, 'webOnly'> = {}) => {
   const isMac = process.platform === 'darwin';
-  const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
+  const openDevToolsAtStartup = await shouldOpenDevToolsOnStartupAsync();
   const currentToggle = openDevToolsAtStartup ? 'enabled' : 'disabled';
 
   logCommandsTable([
@@ -307,7 +316,7 @@ export const startAsync = async (projectRoot: string, options: StartOptions) => 
         break;
       }
       case 'D': {
-        const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', true));
+        const enabled = !(await shouldOpenDevToolsOnStartupAsync());
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
         const currentToggle = enabled ? 'enabled' : 'disabled';
         Log.log(`Auto opening developer tools on startup: ${chalk.bold(currentToggle)}`);
