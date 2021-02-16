@@ -49,7 +49,8 @@ function userSettingsJsonFile(): JsonFile<UserSettingsData> {
   });
 }
 
-var mkdirped = false;
+let mkdirped = false;
+
 function dotExpoHomeDirectory() {
   let dirPath;
   if (process.env.__UNSAFE_EXPO_HOME_DIRECTORY) {
