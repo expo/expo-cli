@@ -1,5 +1,5 @@
 import { getDefaultTarget, ProjectTarget } from '@expo/config';
-import { Project, UrlUtils } from '@expo/xdl';
+import { UrlUtils } from '@expo/xdl';
 import program, { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
@@ -8,6 +8,8 @@ import path from 'path';
 import CommandError, { SilentError } from '../CommandError';
 import Log from '../log';
 import prompt from '../prompts';
+import { exportAppAsync } from './export/exportAppAsync';
+import { mergeAppDistributions } from './export/mergeAppDistributions';
 import * as CreateApp from './utils/CreateApp';
 import { downloadAndDecompressAsync } from './utils/Tar';
 
@@ -88,7 +90,7 @@ async function exportFilesAsync(
       target: options.target ?? getDefaultTarget(projectRoot),
     },
   };
-  return await Project.exportAppAsync(
+  return await exportAppAsync(
     projectRoot,
     options.publicUrl!,
     options.assetUrl,
@@ -99,7 +101,7 @@ async function exportFilesAsync(
 }
 
 async function mergeSourceDirectoriresAsync(
-  projectDir: string,
+  projectRoot: string,
   mergeSrcDirs: string[],
   options: Pick<Options, 'mergeSrcUrl' | 'mergeSrcDir' | 'outputDir'>
 ): Promise<void> {
@@ -110,8 +112,8 @@ async function mergeSourceDirectoriresAsync(
   Log.nested(`Starting project merge of ${srcDirs} into ${options.outputDir}`);
 
   // Merge app distributions
-  await Project.mergeAppDistributions(
-    projectDir,
+  await mergeAppDistributions(
+    projectRoot,
     [...mergeSrcDirs, options.outputDir], // merge stuff in srcDirs and outputDir together
     options.outputDir
   );
@@ -121,7 +123,7 @@ async function mergeSourceDirectoriresAsync(
 }
 
 export async function collectMergeSourceUrlsAsync(
-  projectDir: string,
+  projectRoot: string,
   mergeSrcUrl: string[]
 ): Promise<string[]> {
   // Merge src dirs/urls into a multimanifest if specified
@@ -130,7 +132,7 @@ export async function collectMergeSourceUrlsAsync(
   // src urls were specified to merge in, so download and decompress them
   if (mergeSrcUrl.length > 0) {
     // delete .tmp if it exists and recreate it anew
-    const tmpFolder = path.resolve(projectDir, '.tmp');
+    const tmpFolder = path.resolve(projectRoot, '.tmp');
     await fs.remove(tmpFolder);
     await fs.ensureDir(tmpFolder);
 
@@ -160,14 +162,14 @@ function collect<T>(val: T, memo: T[]): T[] {
   return memo;
 }
 
-export async function action(projectDir: string, options: Options) {
+export async function action(projectRoot: string, options: Options) {
   if (!options.experimentalBundle) {
     // Ensure URL
     options.publicUrl = await ensurePublicUrlAsync(options.publicUrl, options.dev);
   }
 
   // Ensure the output directory is created
-  const outputPath = path.resolve(projectDir, options.outputDir);
+  const outputPath = path.resolve(projectRoot, options.outputDir);
   await fs.ensureDir(outputPath);
 
   // Assert if the folder has contents
@@ -188,14 +190,17 @@ export async function action(projectDir: string, options: Options) {
   }
 
   // Wrap the XDL method for exporting assets
-  await exportFilesAsync(projectDir, options);
+  await exportFilesAsync(projectRoot, options);
 
   // Merge src dirs/urls into a multimanifest if specified
-  const mergeSrcDirs: string[] = await collectMergeSourceUrlsAsync(projectDir, options.mergeSrcUrl);
+  const mergeSrcDirs: string[] = await collectMergeSourceUrlsAsync(
+    projectRoot,
+    options.mergeSrcUrl
+  );
   // add any local src dirs to be merged
   mergeSrcDirs.push(...options.mergeSrcDir);
 
-  await mergeSourceDirectoriresAsync(projectDir, mergeSrcDirs, options);
+  await mergeSourceDirectoriresAsync(projectRoot, mergeSrcDirs, options);
 
   Log.log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }
