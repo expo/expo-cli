@@ -16,9 +16,9 @@ export type RawStartOptions = Record<string, any> & {
   parent?: { nonInteractive: boolean; rawArgs: string[] };
 };
 
-function setBooleanArg(
-  rawArgs: string[],
+export function setBooleanArg(
   argName: string,
+  rawArgs: string[],
   fallback?: boolean
 ): boolean | undefined {
   if (rawArgs.includes(`--${argName}`)) {
@@ -39,7 +39,19 @@ export async function normalizeOptionsAsync(
 ): Promise<NormalizedOptions> {
   const rawArgs = options.parent?.rawArgs || [];
 
-  const opts: NormalizedOptions = {
+  const opts = parseRawArguments(options, rawArgs);
+
+  // Side-effect
+  await cacheOptionsAsync(projectRoot, opts);
+
+  return opts;
+}
+
+// The main purpose of this function is to take existing options object and
+// support boolean args with as defined in the hasBooleanArg and getBooleanArg
+// functions.
+export function parseRawArguments(options: RawStartOptions, rawArgs: string[]): NormalizedOptions {
+  return {
     // This is necessary to ensure we don't drop any options
     ...options,
     webOnly: false,
@@ -54,15 +66,10 @@ export async function normalizeOptionsAsync(
     nonInteractive: !!options.parent?.nonInteractive,
     // setBooleanArg is used to flip the default commander logic which automatically sets a value to `true` if the inverse option isn't provided.
     // ex: `dev == true` if `--no-dev` is a possible flag, but `--no-dev` was not provided in the command.
-    dev: setBooleanArg(rawArgs, 'dev', true),
-    minify: setBooleanArg(rawArgs, 'minify', false),
-    https: setBooleanArg(rawArgs, 'https', false),
+    dev: setBooleanArg('dev', rawArgs, true),
+    minify: setBooleanArg('minify', rawArgs, false),
+    https: setBooleanArg('https', rawArgs, false),
   };
-
-  // Side-effect
-  await cacheOptionsAsync(projectRoot, opts);
-
-  return opts;
 }
 
 async function cacheOptionsAsync(
