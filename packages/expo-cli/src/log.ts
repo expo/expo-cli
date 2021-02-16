@@ -6,10 +6,18 @@ import terminalLink from 'terminal-link';
 
 type Color = (...text: string[]) => string;
 
+const isProfiling = boolish('EXPO_PROFILE', false);
+
+// eslint-disable-next-line no-console
+const consoleTime: (label?: string) => void = isProfiling ? console.time : () => {};
+// eslint-disable-next-line no-console
+const consoleTimeEnd: (label?: string) => void = isProfiling ? console.timeEnd : () => {};
+
 export default class Log {
   public static readonly chalk = chalk;
   public static readonly terminalLink = terminalLink;
   public static readonly isDebug = boolish('EXPO_DEBUG', false);
+  public static readonly isProfiling = isProfiling;
 
   public static log(...args: any[]) {
     Log.respectProgressBars(() => {
@@ -22,6 +30,10 @@ export default class Log {
       Log.consoleLog(message);
     });
   }
+
+  public static time = consoleTime;
+
+  public static timeEnd = consoleTimeEnd;
 
   public static newLine() {
     Log.respectProgressBars(() => {

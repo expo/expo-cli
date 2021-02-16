@@ -1,4 +1,5 @@
 import { ExpoConfig, getConfig } from '@expo/config';
+import { Server } from 'http';
 
 import Analytics from '../Analytics';
 import * as Android from '../Android';
@@ -17,6 +18,8 @@ import {
   stopReactNativeServerAsync,
 } from './startLegacyReactNativeServerAsync';
 
+let serverInstance: Server | null = null;
+
 export async function startAsync(
   projectRoot: string,
   { exp = getConfig(projectRoot).exp, ...options }: StartOptions & { exp?: ExpoConfig } = {},
@@ -34,7 +37,7 @@ export async function startAsync(
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
   } else if (shouldUseDevServer(exp) || options.devClient) {
-    await startDevServerAsync(projectRoot, options);
+    serverInstance = await startDevServerAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'native');
   } else {
     await startExpoServerAsync(projectRoot);
@@ -61,20 +64,33 @@ export async function stopWebOnlyAsync(projectRoot: string): Promise<void> {
 
 async function stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
-  await Webpack.stopAsync(projectRoot);
-  ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Closing Expo server');
-  await stopExpoServerAsync(projectRoot);
-  ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Stopping Metro bundler');
-  await stopReactNativeServerAsync(projectRoot);
-  if (!Config.offline) {
-    try {
-      await stopTunnelsAsync(projectRoot);
-    } catch (e) {
-      ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping ngrok ${e.message}`);
-    }
-  }
 
-  await Android.maybeStopAdbDaemonAsync();
+  await Promise.all([
+    Webpack.stopAsync(projectRoot),
+    new Promise<void>((resolve, reject) => {
+      if (serverInstance) {
+        serverInstance.close(error => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
+        });
+      }
+    }),
+    stopExpoServerAsync(projectRoot),
+    stopReactNativeServerAsync(projectRoot),
+    async () => {
+      if (!Config.offline) {
+        try {
+          await stopTunnelsAsync(projectRoot);
+        } catch (e) {
+          ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping ngrok ${e.message}`);
+        }
+      }
+    },
+    await Android.maybeStopAdbDaemonAsync(),
+  ]);
 }
 
 async function forceQuitAsync(projectRoot: string) {
@@ -102,11 +118,16 @@ async function forceQuitAsync(projectRoot: string) {
 }
 
 export async function stopAsync(projectRoot: string): Promise<void> {
-  const result = await Promise.race([
-    stopInternalAsync(projectRoot),
-    new Promise(resolve => setTimeout(resolve, 2000, 'stopFailed')),
-  ]);
-  if (result === 'stopFailed') {
+  try {
+    const result = await Promise.race([
+      stopInternalAsync(projectRoot),
+      new Promise(resolve => setTimeout(resolve, 2000, 'stopFailed')),
+    ]);
+    if (result === 'stopFailed') {
+      await forceQuitAsync(projectRoot);
+    }
+  } catch (error) {
     await forceQuitAsync(projectRoot);
+    throw error;
   }
 }

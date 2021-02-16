@@ -206,6 +206,7 @@ export default function (program: Command) {
     .description('Export the static files of the app for hosting it on a web server')
     .helpGroup('core')
     .option('-p, --public-url <url>', 'The public url that will host the static files. (Required)')
+    .option('-c, --clear', 'Clear the Metro bundler cache')
     .option(
       '--output-dir <dir>',
       'The directory to export the static files to. Default directory is `dist`',

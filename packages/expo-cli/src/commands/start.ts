@@ -6,7 +6,6 @@ import { Project, ProjectSettings, UrlUtils, UserSettings, Versions } from '@exp
 import chalk from 'chalk';
 import intersection from 'lodash/intersection';
 import path from 'path';
-import openBrowser from 'react-dev-utils/openBrowser';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
@@ -202,7 +201,7 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
     }
     Log.log(`Your native app is running at ${chalk.underline(url)}`);
   }
-  Log.nested(chalk.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
+  Log.nested(`Logs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
 }
 
 async function validateDependenciesVersions(
@@ -246,9 +245,7 @@ async function validateDependenciesVersions(
     }
   }
   if (incorrectDeps.length > 0) {
-    Log.warn(
-      "Some of your project's dependencies are not compatible with currently installed expo package version:"
-    );
+    Log.warn('Some dependencies are incompatible with the installed expo package version:');
     incorrectDeps.forEach(({ moduleName, expectedRange, actualRange }) => {
       Log.warn(
         ` - ${chalk.underline(moduleName)} - expected version range: ${chalk.underline(
@@ -271,18 +268,15 @@ async function tryOpeningDevToolsAsync({
   options,
 }: OpenDevToolsOptions): Promise<void> {
   const devToolsUrl = await DevToolsServer.startAsync(rootPath);
-  Log.log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
+  Log.log(`Developer tools running on ${chalk.underline(devToolsUrl)}`);
 
   if (!options.nonInteractive && !exp.isDetached) {
-    if (await UserSettings.getAsync('openDevToolsAtStartup', false)) {
+    if (await TerminalUI.shouldOpenDevToolsOnStartupAsync()) {
+      // Ensure the preference is written to disk.
       UserSettings.setAsync('openDevToolsAtStartup', true);
-      Log.log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
-      openBrowser(devToolsUrl);
+      TerminalUI.openDeveloperTools(devToolsUrl);
     } else {
       UserSettings.setAsync('openDevToolsAtStartup', false);
-      Log.log(
-        `Press ${chalk.bold`d`} to open DevTools now, or ${chalk.bold`shift-d`} to always open it automatically.`
-      );
     }
   }
 }

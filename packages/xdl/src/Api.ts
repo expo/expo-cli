@@ -110,7 +110,7 @@ async function _callMethodAsync(
     throw new Error('Unexpected error: Request failed.');
   }
   const responseBody = response.data;
-  var responseObj;
+  let responseObj;
   if (typeof responseBody === 'string') {
     try {
       responseObj = JSON.parse(responseBody);
@@ -169,7 +169,7 @@ async function _downloadAsync(
     cancelToken: token,
   };
   const response = await axios(url, config);
-  await new Promise(resolve => {
+  await new Promise<void>(resolve => {
     const totalDownloadSize = response.data.headers['content-length'];
     let downloadProgress = 0;
     response.data
