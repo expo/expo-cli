@@ -24,10 +24,10 @@ export async function sendUrlAsync(url: string, recipient: string) {
   const email = Log.chalk.bold(recipient);
   const spinner = ora(`Sending URL to ${email}`).start();
   try {
-    var result = await Exp.sendAsync(recipient, url);
+    const result = await Exp.sendAsync(recipient, url);
     spinner.succeed(`Sent URL to ${email}`);
+    return result;
   } catch (e) {
     spinner.fail(`Failed to email ${email}: ${e.message}`);
   }
-  return result;
 }
