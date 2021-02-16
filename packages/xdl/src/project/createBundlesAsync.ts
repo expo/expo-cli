@@ -48,7 +48,7 @@ export function printBundleSizes(bundles: { android: BundleOutput; ios: BundleOu
   logger.global.info('');
 }
 
-export async function buildPublishBundlesAsync(
+export async function createBundlesAsync(
   projectRoot: string,
   publishOptions: PublishOptions = {},
   bundleOptions: { dev?: boolean; useDevServer: boolean }

@@ -79,7 +79,7 @@ export async function exportAppAsync(
     options.publishOptions || {}
   );
 
-  const bundles = await Project.buildPublishBundlesAsync(projectRoot, options.publishOptions, {
+  const bundles = await Project.createBundlesAsync(projectRoot, options.publishOptions, {
     dev: options.isDev,
     useDevServer: Env.shouldUseDevServer(exp),
   });

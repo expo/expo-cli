@@ -21,7 +21,7 @@ import UserManager, { User } from '../User';
 import XDLError from '../XDLError';
 import * as ExponentTools from '../detach/ExponentTools';
 import * as Doctor from './Doctor';
-import { buildPublishBundlesAsync, printBundleSizes } from './buildPublishBundlesAsync';
+import { createBundlesAsync, printBundleSizes } from './createBundlesAsync';
 import { getPublishExpConfigAsync, PublishOptions } from './getPublishExpConfigAsync';
 import { LoadedHook, prepareHooks, runHook } from './runHook';
 
@@ -71,7 +71,7 @@ export async function publishAsync(
 
   // TODO: refactor this out to a function, throw error if length doesn't match
   const validPostPublishHooks: LoadedHook[] = prepareHooks(hooks, 'postPublish', projectRoot);
-  const bundles = await buildPublishBundlesAsync(projectRoot, options, {
+  const bundles = await createBundlesAsync(projectRoot, options, {
     useDevServer: shouldUseDevServer(exp),
   });
 
