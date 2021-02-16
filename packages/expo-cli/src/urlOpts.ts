@@ -44,7 +44,7 @@ function addOptions(program: Command) {
 }
 
 async function optsAsync(projectDir: string, options: any) {
-  var opts = await ProjectSettings.readAsync(projectDir);
+  const opts = await ProjectSettings.readAsync(projectDir);
 
   if ([options.host, options.lan, options.localhost, options.tunnel].filter(i => i).length > 1) {
     throw new CommandError(

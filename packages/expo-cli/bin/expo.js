@@ -7,11 +7,11 @@ function yellow(text) {
   return '\u001b[33m' + text + '\u001b[39m';
 }
 
-var match = /v(\d+)\.(\d+)/.exec(process.version);
-var major = parseInt(match[1], 10);
-var minor = parseInt(match[2], 10);
+const match = /v(\d+)\.(\d+)/.exec(process.version);
+const major = parseInt(match[1], 10);
+const minor = parseInt(match[2], 10);
 
-var supportedVersions =
+const supportedVersions =
   'expo-cli supports following Node.js versions:\n' +
   '* >=10.13.0 <11.0.0 (Maintenance LTS)\n' +
   '* >=12.13.0 <13.0.0 (Maintenance LTS)\n' +

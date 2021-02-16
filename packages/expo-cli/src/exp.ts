@@ -133,7 +133,7 @@ Command.prototype.prepareCommands = function () {
 
 // @ts-ignore
 Command.prototype.usage = function (str: string) {
-  var args = this._args.map(function (arg: any[]) {
+  const args = this._args.map(function (arg: any[]) {
     return humanReadableArgName(arg);
   });
 
