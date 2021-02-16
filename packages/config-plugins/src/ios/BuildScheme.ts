@@ -1,7 +1,7 @@
 import path from 'path';
 
 import { readXMLAsync } from '../utils/XML';
-import { findSchemePaths } from './Paths';
+import { findSchemeNames, findSchemePaths } from './Paths';
 
 interface SchemeXML {
   Scheme?: {
@@ -20,6 +20,10 @@ interface BuildActionEntryType {
       BuildableName?: string;
     };
   }[];
+}
+
+export function getSchemesFromXcodeproj(projectRoot: string): string[] {
+  return findSchemeNames(projectRoot);
 }
 
 export async function getApplicationTargetForSchemeAsync(
