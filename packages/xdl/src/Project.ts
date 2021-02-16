@@ -45,11 +45,8 @@ export {
   startReactNativeServerAsync,
   stopReactNativeServerAsync,
 };
-export {
-  PublishedProjectResult,
-  buildPublishBundlesAsync,
-  publishAsync,
-} from './project/publishAsync';
+export { PublishedProjectResult, publishAsync } from './project/publishAsync';
+export { buildPublishBundlesAsync } from './project/buildPublishBundlesAsync';
 export { runHook, prepareHooks } from './project/runHook';
 export { getPublishExpConfigAsync, PublishOptions } from './project/getPublishExpConfigAsync';
 export { writeArtifactSafelyAsync } from './tools/ArtifactUtils';
