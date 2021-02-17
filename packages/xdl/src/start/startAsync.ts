@@ -57,11 +57,6 @@ export async function startAsync(
   return exp;
 }
 
-export async function stopWebOnlyAsync(projectRoot: string): Promise<void> {
-  DevSession.stopSession();
-  await Webpack.stopAsync(projectRoot);
-}
-
 async function stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
 

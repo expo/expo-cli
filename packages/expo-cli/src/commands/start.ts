@@ -9,11 +9,11 @@ import path from 'path';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
-import { installExitHooks } from '../exit';
 import Log from '../log';
 import * as sendTo from '../sendTo';
 import urlOpts, { URLOptions } from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
+import { installExitHooks } from './start/installExitHooks';
 import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
 import { ensureTypeScriptSetupAsync } from './utils/typescript/ensureTypeScriptSetup';
 
@@ -282,8 +282,12 @@ async function tryOpeningDevToolsAsync({
   Log.log(`Developer tools running on ${chalk.underline(devToolsUrl)}`);
 
   if (!options.nonInteractive && !exp.isDetached) {
-    if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
+    if (await TerminalUI.shouldOpenDevToolsOnStartupAsync()) {
+      // Ensure the preference is written to disk.
+      UserSettings.setAsync('openDevToolsAtStartup', true);
       TerminalUI.openDeveloperTools(devToolsUrl);
+    } else {
+      UserSettings.setAsync('openDevToolsAtStartup', false);
     }
   }
 }
@@ -292,11 +296,8 @@ async function configureProjectAsync(
   projectDir: string,
   options: NormalizedOptions
 ): Promise<{ rootPath: string; exp: ExpoConfig; pkg: PackageJSONConfig }> {
-  if (options.webOnly) {
-    installExitHooks(projectDir, Project.stopWebOnlyAsync);
-  } else {
-    installExitHooks(projectDir);
-  }
+  installExitHooks(projectDir);
+
   await urlOpts.optsAsync(projectDir, options);
 
   Log.log(chalk.gray(`Starting project at ${projectDir}`));
