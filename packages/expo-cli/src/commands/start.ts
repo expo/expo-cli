@@ -9,11 +9,11 @@ import path from 'path';
 import resolveFrom from 'resolve-from';
 import semver from 'semver';
 
-import { installExitHooks } from '../exit';
 import Log from '../log';
 import * as sendTo from '../sendTo';
 import urlOpts, { URLOptions } from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
+import { installExitHooks } from './start/installExitHooks';
 import { ensureTypeScriptSetupAsync } from './utils/typescript/ensureTypeScriptSetup';
 
 type NormalizedOptions = URLOptions & {
@@ -285,11 +285,8 @@ async function configureProjectAsync(
   projectDir: string,
   options: NormalizedOptions
 ): Promise<{ rootPath: string; exp: ExpoConfig; pkg: PackageJSONConfig }> {
-  if (options.webOnly) {
-    installExitHooks(projectDir, Project.stopWebOnlyAsync);
-  } else {
-    installExitHooks(projectDir);
-  }
+  installExitHooks(projectDir);
+
   await urlOpts.optsAsync(projectDir, options);
 
   Log.log(chalk.gray(`Starting project at ${projectDir}`));
