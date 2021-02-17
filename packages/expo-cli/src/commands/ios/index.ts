@@ -5,8 +5,8 @@ import fs from 'fs-extra';
 import * as path from 'path';
 
 import CommandError from '../../CommandError';
-import log from '../../log';
-import * as Eject from '../eject/Eject';
+import Log from '../../log';
+import { EjectAsyncOptions, prebuildAsync } from '../eject/prebuildAsync';
 import * as IOSDeploy from './IOSDeploy';
 import * as PlistBuddy from './PlistBuddy';
 import * as XcodeBuild from './XcodeBuild';
@@ -17,7 +17,8 @@ const isMac = process.platform === 'darwin';
 export async function action(projectRoot: string, options: Options) {
   if (!isMac) {
     // TODO: Prompt to use EAS?
-    log.warn(
+
+    Log.warn(
       `iOS apps can only be built on macOS devices. Use ${chalk.cyan`eas build -p ios`} to build in the cloud.`
     );
     return;
@@ -25,10 +26,10 @@ export async function action(projectRoot: string, options: Options) {
 
   // If the project doesn't have native code, prebuild it...
   if (!fs.existsSync(path.join(projectRoot, 'ios'))) {
-    await Eject.prebuildAsync(projectRoot, {
+    await prebuildAsync(projectRoot, {
       install: true,
       platforms: ['ios'],
-    } as Eject.EjectAsyncOptions);
+    } as EjectAsyncOptions);
   } else {
     // TODO: Ensure the pods are in sync
   }
@@ -88,7 +89,7 @@ async function openInSimulatorAsync({
 
 // Matches the current XCPretty formatter
 function logPrettyItem(message: string) {
-  log(`${chalk.cyan`▸`} ${message}`);
+  Log.log(`${chalk.cyan`▸`} ${message}`);
 }
 
 export default function (program: Command) {

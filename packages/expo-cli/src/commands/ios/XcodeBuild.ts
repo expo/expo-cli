@@ -10,7 +10,7 @@ import * as path from 'path';
 
 import CommandError from '../../CommandError';
 import { assert } from '../../assert';
-import log from '../../log';
+import Log from '../../log';
 import { forkXCPrettyAsync } from './XCPretty';
 import { ProjectInfo, XcodeConfiguration } from './resolveOptionsAsync';
 
@@ -31,9 +31,9 @@ function getTargetPaths(buildSettings: string) {
   } catch (error) {
     // This can fail if the xcodebuild command throws a simulator error:
     // 2021-01-24 14:22:43.802 xcodebuild[73087:14664906]  DVTAssertions: Warning in /Library/Caches/com.apple.xbs/Sources/DVTiOSFrameworks/DVTiOSFrameworks-17705/DTDeviceKitBase/DTDKRemoteDeviceData.m:371
-    log.warn(error.message);
+    Log.warn(error.message);
     if (error.message.match(/in JSON at position/)) {
-      log(chalk.dim(buildSettings));
+      Log.log(chalk.dim(buildSettings));
     }
     return {};
   }
@@ -122,6 +122,13 @@ export type BuildProps = {
   scheme: string;
 };
 
+class ExpoFormatter extends Formatter {
+  shouldShowCompileWarning(filePath: string, lineNumber?: string, columnNumber?: string): boolean {
+    if (Log.isDebug) return true;
+    return !filePath.match(/node_modules/) && !filePath.match(/\/ios\/Pods\//);
+  }
+}
+
 export function buildAsync({
   projectRoot,
   xcodeProject,
@@ -145,8 +152,8 @@ export function buildAsync({
       `id=${device.udid}`,
     ];
     const loader = ora();
-    log(`▸ ${chalk.bold`Building`}\n  ${chalk.dim(`xcodebuild ${xcodebuildArgs.join(' ')}`)}`);
-    const xcpretty = new Formatter({ projectRoot });
+    Log.log(`▸ ${chalk.bold`Building`}\n  ${chalk.dim(`xcodebuild ${xcodebuildArgs.join(' ')}`)}`);
+    const xcpretty = new ExpoFormatter({ projectRoot });
     // const xcpretty = verbose ? null : await forkXCPrettyAsync();
     const buildProcess = spawn(
       'xcodebuild',
@@ -161,15 +168,15 @@ export function buildAsync({
       if (xcpretty) {
         const lines = xcpretty.pipe(stringData);
         for (const line of lines) {
-          log(line);
+          Log.log(line);
         }
         // TODO: Make the default mode skip warnings about React-Core and
         // other third-party packages that the user doesn't have control over.
         // TODO: Catch JS bundling errors and throw them clearly.
         // xcpretty.stdin.write(data);
       } else {
-        if (log.isDebug) {
-          log.debug(stringData);
+        if (Log.isDebug) {
+          Log.debug(stringData);
         } else {
           loader.start(`Building the app${'.'.repeat(buildOutput.length % 10)}`);
         }
@@ -206,7 +213,7 @@ export function buildAsync({
         return;
       }
       if (!xcpretty) {
-        log(`▸ ${chalk.bold`Build`} Succeeded`);
+        Log.log(`▸ ${chalk.bold`Build`} Succeeded`);
       }
       resolve(buildOutput);
     });

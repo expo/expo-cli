@@ -64,7 +64,7 @@
     "rimraf": "^3.0.2"
   },
   "dependencies": {
-    "@expo/xcpretty": "./expo-xcpretty-1.0.0.tgz",
+    "@expo/xcpretty": "./expo-xcpretty-1.0.0-alpha.0.tgz",
     "@expo/apple-utils": "0.0.0-alpha.17",
     "@expo/bunyan": "4.0.0",
     "@expo/config": "3.3.28",
