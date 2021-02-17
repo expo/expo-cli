@@ -4,7 +4,7 @@ import FormData from 'form-data';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { MAX_CONTENT_LENGTH } from './ApiV2';
+import { MAX_BODY_LENGTH, MAX_CONTENT_LENGTH } from './ApiV2';
 import Config from './Config';
 import * as ConnectionStatus from './ConnectionStatus';
 import * as Extract from './Extract';
@@ -78,6 +78,7 @@ async function _callMethodAsync(
     method,
     headers,
     maxContentLength: MAX_CONTENT_LENGTH,
+    maxBodyLength: MAX_BODY_LENGTH,
   };
 
   if (requestBody) {
@@ -109,7 +110,7 @@ async function _callMethodAsync(
     throw new Error('Unexpected error: Request failed.');
   }
   const responseBody = response.data;
-  var responseObj;
+  let responseObj;
   if (typeof responseBody === 'string') {
     try {
       responseObj = JSON.parse(responseBody);
@@ -168,7 +169,7 @@ async function _downloadAsync(
     cancelToken: token,
   };
   const response = await axios(url, config);
-  await new Promise(resolve => {
+  await new Promise<void>(resolve => {
     const totalDownloadSize = response.data.headers['content-length'];
     let downloadProgress = 0;
     response.data

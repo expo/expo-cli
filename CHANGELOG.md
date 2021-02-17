@@ -6,9 +6,163 @@ This is the log of notable changes to Expo CLI and related packages.
 
 ### 🛠 Breaking changes
 
+- [json-file] Remove undocumented support for multi-part keys in `getAsync` and `setAsync` ([#3019](https://github.com/expo/expo-cli/pulls/3019))
+- [xdl] Remove Project methods `getLatestReleaseAsync`, `findReusableBuildAsync`, `getBuildStatusAsync`, `startBuildAsync` ([#3187](https://github.com/expo/expo-cli/pulls/3187))
+- [xdl] Remove Project types `BuildCreatedResult`, `TurtleMode`, `BuildJobFields`, `BuildStatusResult` ([#3187](https://github.com/expo/expo-cli/pulls/3187))
+
+### 🎉 New features
+
+- [configure-splash-screen] Drop `@react-native-community/cli-tools` in favor of iOS file resolution from `config-plugins` ([#3178](https://github.com/expo/expo-cli/issues/3178))
+
+### 🐛 Bug fixes
+
+## [Mon, 1 Feb 2021 21:22:35 -0800](https://github.com/expo/expo-cli/commit/d7b35c0c8bca99d3a5ea6ea1599d1a3c254f3d40)
+
+### 🛠 Breaking changes
+
+- [cli] Drop `nodeModulesPath` support (only known use was in former Expo monorepo) ([#3141](https://github.com/expo/expo-cli/issues/3141))
+
+### 🎉 New features
+
+- [xdl] Automatically fall back to offline mode when manifest can't be signed. ([#3148](https://github.com/expo/expo-cli/pull/3148))
+
+### 🐛 Bug fixes
+
+- [cli] fix init visual regresion ([#3173](https://github.com/expo/expo-cli/issues/3173))
+- [config-plugins] Rename `IOSConfig.BundleIdenitifer` to `IOSConfig.BundleIdentifier` ([#3161](https://github.com/expo/expo-cli/issues/3161))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.18
+- @expo/config@3.3.28
+- @expo/dev-server@0.1.54
+- @expo/dev-tools@0.13.82
+- @expo/electron-adapter@0.0.45
+- expo-cli@4.1.6
+- expo-optimize@0.1.76
+- @expo/json-file@8.2.27
+- @expo/metro-config@0.1.54
+- @expo/next-adapter@2.1.59
+- @expo/package-manager@0.0.38
+- pod-install@0.1.18
+- expo-pwa@0.0.64
+- @expo/schemer@1.3.26
+- uri-scheme@1.0.65
+- @expo/webpack-config@0.12.58
+- @expo/xdl@59.0.22
+
+## [Tue, 01 Feb 2021 08:55:22 -0800](https://github.com/expo/expo-cli/commit/51c6adb941b74df413834ab3ae3f2578e336d60d)
+
+### 🛠 Breaking changes
+
 ### 🎉 New features
 
 ### 🐛 Bug fixes
+
+- [xdl] Define max content and body lengths in Axios 0.21 ([#3162](https://github.com/expo/expo-cli/pull/3162))
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.81
+- expo-cli@4.1.5
+- @expo/xdl@59.0.21
+
+## [Tue, 26 Jan 2021 18:21:34 -0800](https://github.com/expo/expo-cli/commit/ee77eaa57684c3ac496eae24b5e10b8acb6b6e32)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+- [xdl] Fix flicker when switching to tunnel connection due to null urlType
+
+### 📦 Packages updated
+
+- @expo/dev-tools@0.13.79
+- expo-cli@4.1.3
+- @expo/xdl@59.0.19
+
+## [Tue, 26 Jan 2021 17:34:40 -0800](https://github.com/expo/expo-cli/commit/c9a57c31bc2309de5c8ddfa13986209c5dffcecf)
+
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+- [xdl] Use global ngrok for xdl ([#3123](https://github.com/expo/expo-cli/issues/3123))
+- [configure-splash-screen] publish @expo/configure-splash-screen
+
+### 🐛 Bug fixes
+
+- [cli] prevent throwing duplicate warning ([#3130](https://github.com/expo/expo-cli/issues/3130))
+- [cli] Auto-login when envvars are defined ([#3127](https://github.com/expo/expo-cli/issues/3127))
+- [cli] Improve handling of no answer for customize:web ([#3128](https://github.com/expo/expo-cli/issues/3128))
+- [xdl] Support Expo Go name in shellapp template ([#3125](https://github.com/expo/expo-cli/issues/3125))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.17
+- @expo/config@3.3.26
+- @expo/dev-server@0.1.52
+- @expo/dev-tools@0.13.78
+- @expo/electron-adapter@0.0.43
+- expo-cli@4.1.2
+- expo-optimize@0.1.74
+- @expo/metro-config@0.1.52
+- @expo/next-adapter@2.1.57
+- @expo/package-manager@0.0.36
+- pod-install@0.1.16
+- expo-pwa@0.0.62
+- uri-scheme@1.0.63
+- @expo/webpack-config@0.12.56
+- @expo/xdl@59.0.18
+
+## [Mon, 25 Jan 2021 11:50:33 -0800](https://github.com/expo/expo-cli/commit/ded0c2af2180d76dd9f420f00b92b5167ab52312)
+
+### 🛠 Breaking changes
+
+- [cli] Open signup page in browser instead of CLI-based registration
+- [config] Only use wasm on web platforms ([#3100](https://github.com/expo/expo-cli/issues/3100))
+
+### 🎉 New features
+
+- [cli] Auto configure TypeScript ([#3096](https://github.com/expo/expo-cli/issues/3096))
+- [cli] Use the versions endpoint for TypeScript packages ([#3109](https://github.com/expo/expo-cli/issues/3109))
+- [cli] Copy over EAS Apple API methods ([#3113](https://github.com/expo/expo-cli/issues/3113))
+- [cli] add --experimental-bundle flag to 'export' command ([#3074](https://github.com/expo/expo-cli/issues/3074))
+- [config-plugins] improve monorepo support - fix setting path to create-manifest-\* script ([#3103](https://github.com/expo/expo-cli/issues/3103))
+- [config-plugins] export more types from config-plugins ([#3083](https://github.com/expo/expo-cli/issues/3083))
+- [metro-config] Enable allowOptionalDependencies by default ([#3088](https://github.com/expo/expo-cli/issues/3088))
+- [xdl] improve simulator errors ([#3104](https://github.com/expo/expo-cli/issues/3104))
+
+### 🐛 Bug fixes
+
+- [cli] Check for optional `devDependencies` ([#3121](https://github.com/expo/expo-cli/issues/3121))
+- [cli] Validate project owner when publishing ([#3061](https://github.com/expo/expo-cli/issues/3061))
+- [cli] Remove EAS Build related code ([#3079](https://github.com/expo/expo-cli/issues/3079))
+- [cli] add option to assign created push key to current project ([#3098](https://github.com/expo/expo-cli/issues/3098))
+- [cli] Only change react-native version when it's a fork ([#3097](https://github.com/expo/expo-cli/issues/3097))
+- [cli] remove lottie extra step warning ([#3099](https://github.com/expo/expo-cli/issues/3099))
+- [cli] improvement: Handle keychain save error ([#3067](https://github.com/expo/expo-cli/issues/3067))
+- [config-plugins] Prevent adding duplicate Xcode references for files ([#3107](https://github.com/expo/expo-cli/issues/3107))
+- [config-plugins] Fix app gradle versionName replacement after ejecting twice ([#3082](https://github.com/expo/expo-cli/issues/3082))
+- [xdl] fix expo export --dump-sourcemap for sdk 40+ and bare projects ([#3095](https://github.com/expo/expo-cli/issues/3095))
+
+### 📦 Packages updated
+
+- @expo/config-plugins@1.0.15
+- @expo/config@3.3.24
+- @expo/dev-server@0.1.50
+- @expo/dev-tools@0.13.76
+- @expo/electron-adapter@0.0.41
+- expo-cli@4.1.0
+- expo-optimize@0.1.72
+- @expo/metro-config@0.1.50
+- @expo/next-adapter@2.1.55
+- expo-pwa@0.0.60
+- uri-scheme@1.0.61
+- @expo/webpack-config@0.12.54
+- @expo/xdl@59.0.16
 
 ## [Thu Jan 14 14:34:05 2021 +0100](https://github.com/expo/expo-cli/commit/e8dfcc425fa8128aeaf21fb8bbba6760dc196fcf)
 

@@ -1,3 +1,4 @@
+import { Device } from '@expo/apple-utils';
 import { getConfig, setCustomConfigPath } from '@expo/config';
 import { Android, Simulator, User, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
@@ -9,7 +10,7 @@ import path from 'path';
 
 import CommandError from '../../CommandError';
 import * as appleApi from '../../appleApi';
-import { runAction, travelingFastlane } from '../../appleApi/fastlane';
+import { getRequestContext } from '../../appleApi';
 import { getAppLookupParams } from '../../credentials/api/IosApi';
 import { Context } from '../../credentials/context';
 import { runCredentialsManager } from '../../credentials/route';
@@ -17,7 +18,7 @@ import { CreateIosDist } from '../../credentials/views/IosDistCert';
 import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/IosProvisioningProfileAdhoc';
 import { SetupIosDist } from '../../credentials/views/SetupIosDist';
 import { SetupIosPush } from '../../credentials/views/SetupIosPush';
-import log from '../../log';
+import Log from '../../log';
 import { confirmAsync, promptEmailAsync } from '../../prompts';
 import urlOpts from '../../urlOpts';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
@@ -29,10 +30,10 @@ export default function (program: Command) {
     .command('client:ios [path]')
     .helpGroup('experimental')
     .description(
-      'Experimental: build a custom version of the Expo client for iOS using your own Apple credentials'
+      'Experimental: build a custom version of Expo Go for iOS using your own Apple credentials'
     )
     .longDescription(
-      'Build a custom version of the Expo client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
+      'Build a custom version of Expo Go for iOS using your own Apple credentials and install it on your mobile device using Safari.'
     )
     .option(
       '--apple-id <login>',
@@ -58,8 +59,8 @@ export default function (program: Command) {
         };
 
         // get custom project manifest if it exists
-        // Note: this is the current developer's project, NOT the Expo client's manifest
-        const spinner = ora(`Finding custom configuration for the Expo client...`).start();
+        // Note: this is the current developer's project, NOT Expo Go's manifest
+        const spinner = ora(`Finding custom configuration for Expo Go...`).start();
         if (options.config) {
           setCustomConfigPath(projectDir, options.config);
         }
@@ -68,9 +69,9 @@ export default function (program: Command) {
         });
 
         if (exp) {
-          spinner.succeed(`Found custom configuration for the Expo client`);
+          spinner.succeed(`Found custom configuration for Expo Go`);
         } else {
-          spinner.warn(`Unable to find custom configuration for the Expo client`);
+          spinner.warn(`Unable to find custom configuration for Expo Go`);
         }
         if (!exp.ios) exp.ios = {};
 
@@ -124,17 +125,13 @@ export default function (program: Command) {
         const experienceName = await getExperienceName({ user, appleTeamId: appleContext.team.id });
         const appLookupParams = getAppLookupParams(experienceName, bundleIdentifier);
 
-        await appleApi.ensureAppExists(appleContext, appLookupParams, {
+        await appleApi.ensureBundleIdExistsAsync(appleContext, appLookupParams, {
           enablePushNotifications: true,
         });
 
-        const { devices } = await runAction(travelingFastlane.listDevices, [
-          '--all-ios-profile-devices',
-          appleContext.appleId,
-          appleContext.appleIdPassword,
-          appleContext.team.id,
-        ]);
-        const udids = devices.map((device: { deviceNumber?: string }) => device.deviceNumber);
+        const requestContext = getRequestContext(appleContext);
+        const devices = await Device.getAllIOSProfileDevicesAsync(requestContext);
+        const udids = devices.map(device => device.attributes.udid);
 
         let distributionCert;
         if (user) {
@@ -190,8 +187,8 @@ export default function (program: Command) {
         }
 
         if (Object.keys(disabledServices).length > 0) {
-          log.newLine();
-          log.warn('These services will be disabled in your custom Expo client:');
+          Log.newLine();
+          Log.warn('These services will be disabled in your custom Expo client:');
           const table = new CliTable({ head: ['Service', 'Reason'], style: { head: ['cyan'] } });
           table.push(
             ...Object.keys(disabledServices).map(serviceKey => {
@@ -199,8 +196,8 @@ export default function (program: Command) {
               return [service.name, service.reason];
             })
           );
-          log(table.toString());
-          log(
+          Log.log(table.toString());
+          Log.log(
             'See https://docs.expo.io/guides/adhoc-builds/#optional-additional-configuration-steps for more details.'
           );
         }
@@ -214,30 +211,25 @@ export default function (program: Command) {
             initial: (context?.user as User)?.email,
           });
         }
-        log.newLine();
+        Log.newLine();
 
         let addUdid;
         if (udids.length === 0) {
-          log(
+          Log.log(
             'There are no devices registered to your Apple Developer account. Please follow the instructions below to register an iOS device.'
           );
           addUdid = true;
         } else {
-          log(
-            'Custom builds of the Expo client can only be installed on devices which have been registered with Apple at build-time.'
+          Log.log(
+            'Custom builds of Expo Go can only be installed on devices which have been registered with Apple at build-time.'
           );
-          log('These devices are currently registered on your Apple Developer account:');
+          Log.log('These devices are currently registered on your Apple Developer account:');
           const table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
-          table.push(
-            ...devices.map((device: { name: string; deviceNumber: string | number }) => [
-              device.name,
-              device.deviceNumber,
-            ])
-          );
-          log(table.toString());
+          table.push(...devices.map(device => [device.attributes.name, device.attributes.udid]));
+          Log.log(table.toString());
 
           const udidPrompt = await confirmAsync({
-            message: 'Would you like to register a new device to use the Expo client with?',
+            message: 'Would you like to register a new device to use Expo Go with?',
           });
           addUdid = udidPrompt;
         }
@@ -255,35 +247,35 @@ export default function (program: Command) {
           customAppConfig: exp,
         });
 
-        log.newLine();
+        Log.newLine();
         if (addUdid) {
           urlOpts.printQRCode(result.registrationUrl);
-          log(
+          Log.log(
             'Open the following link on your iOS device (or scan the QR code) and follow the instructions to install the development profile:'
           );
-          log.newLine();
-          log(chalk.green(`${result.registrationUrl}`));
-          log.newLine();
-          log('Please note that you can only register one iOS device per request.');
-          log(
+          Log.newLine();
+          Log.log(chalk.green(`${result.registrationUrl}`));
+          Log.newLine();
+          Log.log('Please note that you can only register one iOS device per request.');
+          Log.log(
             "After you register your device, we'll start building your client, and you'll receive an email when it's ready to install."
           );
         } else {
           urlOpts.printQRCode(result.statusUrl);
-          log('Your custom Expo client is being built! 🛠');
-          log(
+          Log.log('Your custom Expo client is being built! 🛠');
+          Log.log(
             'Open this link on your iOS device (or scan the QR code) to view build logs and install the client:'
           );
-          log.newLine();
-          log(chalk.green(`${result.statusUrl}`));
+          Log.newLine();
+          Log.log(chalk.green(`${result.statusUrl}`));
         }
-        log.newLine();
+        Log.newLine();
       }
     );
 
   program
     .command('client:install:ios')
-    .description('Install the Expo client for iOS on the simulator')
+    .description('Install Expo Go for iOS on the simulator')
     .option(
       '--latest',
       `Install the latest version of Expo client, ignoring the current project version.`
@@ -301,7 +293,7 @@ export default function (program: Command) {
 
       if (forceLatest) {
         if (!latestClient?.url) {
-          log.error(
+          Log.error(
             `Unable to find latest client version. Check your internet connection or run this command again without the ${chalk.bold(
               '--latest'
             )} flag.`
@@ -312,21 +304,21 @@ export default function (program: Command) {
         if (
           await Simulator.upgradeExpoAsync({ url: latestClient.url, version: latestClient.version })
         ) {
-          log('Done!');
+          Log.log('Done!');
         } else {
-          log.error(`Unable to install Expo client ${latestClient.version} for iOS.`);
+          Log.error(`Unable to install Expo client ${latestClient.version} for iOS.`);
         }
         return;
       }
 
       if (!currentSdkVersion) {
-        log(
+        Log.log(
           'Could not find your Expo project. If you run this from a project, we can help pick the right Expo client version!'
         );
       }
 
       if (currentSdk && !recommendedClient) {
-        log(
+        Log.log(
           `You are currently using SDK ${currentSdkVersion}. Unfortunately, we couldn't detect the proper client version for this SDK.`
         );
       }
@@ -341,7 +333,7 @@ export default function (program: Command) {
             url: recommendedClient.url,
             version: recommendedClient.version,
           });
-          log('Done!');
+          Log.log('Done!');
           return;
         }
       } else {
@@ -355,7 +347,7 @@ export default function (program: Command) {
             url: latestClient?.url,
             version: latestClient?.version,
           });
-          log('Done!');
+          Log.log('Done!');
           return;
         }
       }
@@ -377,9 +369,9 @@ export default function (program: Command) {
             url: latestClient?.url,
             version: latestClient?.version,
           });
-          log('Done!');
+          Log.log('Done!');
         } else {
-          log('No client to install');
+          Log.log('No client to install');
         }
         return;
       }
@@ -391,13 +383,13 @@ export default function (program: Command) {
       });
 
       if (await Simulator.upgradeExpoAsync({ url: targetClient.clientUrl })) {
-        log('Done!');
+        Log.log('Done!');
       }
     });
 
   program
     .command('client:install:android')
-    .description('Install the Expo client for Android on a connected device or emulator')
+    .description('Install Expo Go for Android on a connected device or emulator')
     .option(
       '--latest',
       `Install the latest version of Expo client, ignore the current project version.`
@@ -415,7 +407,7 @@ export default function (program: Command) {
 
       if (forceLatest) {
         if (!latestClient?.url) {
-          log.error(
+          Log.error(
             `Unable to find latest client version. Check your internet connection or run this command again without the ${chalk.bold(
               '--latest'
             )} flag.`
@@ -426,22 +418,22 @@ export default function (program: Command) {
         if (
           await Android.upgradeExpoAsync({ url: latestClient.url, version: latestClient.version })
         ) {
-          log('Done!');
+          Log.log('Done!');
         } else {
-          log.error(`Unable to install Expo client ${latestClient.version} for Android.`);
+          Log.error(`Unable to install Expo client ${latestClient.version} for Android.`);
         }
 
         return;
       }
 
       if (!currentSdkVersion) {
-        log(
+        Log.log(
           'Could not find your Expo project. If you run this from a project, we can help pick the right Expo client version!'
         );
       }
 
       if (currentSdk && !recommendedClient) {
-        log(
+        Log.log(
           `You are currently using SDK ${currentSdkVersion}. Unfortunately, we couldn't detect the proper client version for this SDK.`
         );
       }
@@ -456,7 +448,7 @@ export default function (program: Command) {
             url: recommendedClient.url,
             version: recommendedClient.version,
           });
-          log('Done!');
+          Log.log('Done!');
           return;
         }
       } else {
@@ -470,7 +462,7 @@ export default function (program: Command) {
             url: latestClient?.url,
             version: latestClient?.version,
           });
-          log('Done!');
+          Log.log('Done!');
           return;
         }
       }
@@ -492,9 +484,9 @@ export default function (program: Command) {
             url: latestClient?.url,
             version: latestClient?.version,
           });
-          log('Done!');
+          Log.log('Done!');
         } else {
-          log('No client to install');
+          Log.log('No client to install');
         }
         return;
       }
@@ -506,7 +498,7 @@ export default function (program: Command) {
       });
 
       if (await Android.upgradeExpoAsync({ url: targetClient.clientUrl })) {
-        log('Done!');
+        Log.log('Done!');
       }
     });
 }

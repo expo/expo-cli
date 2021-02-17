@@ -1,11 +1,11 @@
+import { Keys } from '@expo/apple-utils';
 import chalk from 'chalk';
 import dateformat from 'dateformat';
 import ora from 'ora';
 
-import CommandError, { ErrorCodes } from '../CommandError';
-import log from '../log';
-import { AppleCtx } from './authenticate';
-import { runAction, travelingFastlane } from './fastlane';
+import CommandError from '../CommandError';
+import Log from '../log';
+import { AppleCtx, getRequestContext } from './authenticate';
 
 export type PushKeyInfo = {
   id: string;
@@ -30,11 +30,71 @@ export function isPushKey(obj: { [key: string]: any }): obj is PushKey {
   );
 }
 
+const { MaxKeysCreatedError } = Keys;
+
 const APPLE_KEYS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline('two')} Apple Keys generated on your Apple Developer account.
 Please revoke the old ones or reuse existing from your other apps.
 Please remember that Apple Keys are not application specific!
 `;
+
+async function listPushKeysAsync(authCtx: AppleCtx): Promise<PushKeyInfo[]> {
+  const spinner = ora(`Fetching Apple push keys`).start();
+  try {
+    const context = getRequestContext(authCtx);
+    const keys = await Keys.getKeysAsync(context);
+    spinner.succeed(`Fetched Apple push keys`);
+    return keys;
+  } catch (error) {
+    spinner.fail(`Failed to fetch Apple push keys`);
+    throw error;
+  }
+}
+
+async function createPushKeyAsync(
+  authCtx: AppleCtx,
+  name: string = `Expo Push Notifications Key ${dateformat('yyyymmddHHMMss')}`
+): Promise<PushKey> {
+  const spinner = ora(`Creating Apple push key`).start();
+  try {
+    const context = getRequestContext(authCtx);
+    const key = await Keys.createKeyAsync(context, { name, isApns: true });
+    const apnsKeyP8 = await Keys.downloadKeyAsync(context, { id: key.id });
+    spinner.succeed(`Created Apple push key`);
+    return {
+      apnsKeyId: key.id,
+      apnsKeyP8,
+      teamId: authCtx.team.id,
+      teamName: authCtx.team.name,
+    };
+  } catch (err) {
+    spinner.fail('Failed to create Apple push key');
+    const resultString = err.rawDump?.resultString;
+    if (
+      err instanceof MaxKeysCreatedError ||
+      (resultString && resultString.match(/maximum allowed number of Keys/))
+    ) {
+      throw new CommandError(APPLE_KEYS_TOO_MANY_GENERATED_ERROR);
+    }
+    throw err;
+  }
+}
+
+async function revokePushKeyAsync(authCtx: AppleCtx, ids: string[]): Promise<void> {
+  const name = `Apple push key${ids?.length === 1 ? '' : 's'}`;
+
+  const spinner = ora(`Revoking ${name}`).start();
+  try {
+    const context = getRequestContext(authCtx);
+    await Promise.all(ids.map(id => Keys.revokeKeyAsync(context, { id })));
+
+    spinner.succeed(`Revoked ${name}`);
+  } catch (error) {
+    Log.error(error);
+    spinner.fail(`Failed to revoke ${name}`);
+    throw error;
+  }
+}
 
 export class PushKeyManager {
   ctx: AppleCtx;
@@ -43,57 +103,15 @@ export class PushKeyManager {
   }
 
   async list(): Promise<PushKeyInfo[]> {
-    const spinner = ora(`Getting Push Keys from Apple...`).start();
-    const args = ['list', this.ctx.appleId, this.ctx.appleIdPassword, this.ctx.team.id];
-    const { keys } = await runAction(travelingFastlane.managePushKeys, args);
-    spinner.succeed();
-    return keys;
+    return listPushKeysAsync(this.ctx);
   }
 
-  async create(
-    name = `Expo Push Notifications Key ${dateformat('yyyymmddHHMMss')}`
-  ): Promise<PushKey> {
-    const spinner = ora(`Creating Push Key on Apple Servers...`).start();
-    try {
-      const args = ['create', this.ctx.appleId, this.ctx.appleIdPassword, this.ctx.team.id, name];
-      const { apnsKeyId, apnsKeyP8 } = await runAction(travelingFastlane.managePushKeys, args);
-      spinner.succeed();
-      return {
-        apnsKeyId,
-        apnsKeyP8,
-        teamId: this.ctx.team.id,
-        teamName: this.ctx.team.name,
-      };
-    } catch (err) {
-      spinner.stop();
-      const resultString = err.rawDump?.resultString;
-      if (resultString && resultString.match(/maximum allowed number of Keys/)) {
-        throw new CommandError(
-          ErrorCodes.APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR,
-          APPLE_KEYS_TOO_MANY_GENERATED_ERROR
-        );
-      }
-      throw err;
-    }
+  async create(name?: string): Promise<PushKey> {
+    return createPushKeyAsync(this.ctx, name);
   }
 
   async revoke(ids: string[]) {
-    const spinner = ora(`Revoking Push Key on Apple Servers...`).start();
-    try {
-      const args = [
-        'revoke',
-        this.ctx.appleId,
-        this.ctx.appleIdPassword,
-        this.ctx.team.id,
-        ids.join(','),
-      ];
-      await runAction(travelingFastlane.managePushKeys, args);
-      spinner.succeed();
-    } catch (error) {
-      log.error(error);
-      spinner.fail('Failed to revoke Push Key on Apple Servers');
-      throw error;
-    }
+    return revokePushKeyAsync(this.ctx, ids);
   }
 
   format({ id, name }: PushKeyInfo): string {

@@ -431,7 +431,7 @@ const resolvers = {
       return Buffer.from(project.projectDir).toString('base64');
     },
     async manifestUrl(project) {
-      if ((await Project.currentStatus(project.projectDir)) === 'running') {
+      if ((await ProjectSettings.getCurrentStatusAsync(project.projectDir)) === 'running') {
         return UrlUtils.constructDeepLinkAsync(project.projectDir);
       } else {
         return null;
@@ -588,7 +588,7 @@ const resolvers = {
       // If 'tunnel' wasn't previously configured and it will be as a result of this request, start tunnels.
       if (previousSettings.hostType !== 'tunnel' && updatedSettings.hostType === 'tunnel') {
         try {
-          await Project.startTunnelsAsync(currentProject.projectDir);
+          await Project.startTunnelsAsync(currentProject.projectDir, { autoInstall: true });
         } catch (e) {
           ProjectUtils.logWarning(
             currentProject.projectDir,

@@ -1,8 +1,7 @@
-import { getConfig } from '@expo/config';
+import { ExpoConfig, getConfig } from '@expo/config';
 import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
-import delayAsync from 'delay-async';
 import fs from 'fs-extra';
 import path from 'path';
 import ProgressBar from 'progress';
@@ -11,6 +10,7 @@ import semver from 'semver';
 
 import Analytics from './Analytics';
 import Api from './Api';
+import { configureBundleIdentifierAsync } from './BundleIdentifier';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import * as Prompts from './Prompts';
@@ -20,6 +20,8 @@ import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
 import * as Xcode from './Xcode';
+import { learnMore } from './logs/TerminalLink';
+import { delayAsync } from './utils/delayAsync';
 
 let _lastUrl: string | null = null;
 let _lastUdid: string | null = null;
@@ -439,7 +441,7 @@ export async function installExpoOnSimulatorAsync({
   version?: string;
 }) {
   const bar = new ProgressBar(
-    `Installing the Expo client app on ${simulator.name} [:bar] :percent :etas`,
+    `Installing the Expo Go app on ${simulator.name} [:bar] :percent :etas`,
     {
       total: 100,
       width: 64,
@@ -533,16 +535,22 @@ export async function upgradeExpoAsync(
   return true;
 }
 
-export async function openUrlInSimulatorSafeAsync({
+async function openUrlInSimulatorSafeAsync({
   url,
   udid,
   isDetached = false,
   sdkVersion,
+  devClient = false,
+  projectRoot,
+  exp = getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp,
 }: {
   url: string;
   udid?: string;
   sdkVersion?: string;
   isDetached: boolean;
+  devClient?: boolean;
+  exp?: ExpoConfig;
+  projectRoot: string;
 }): Promise<{ success: true } | { success: false; msg: string }> {
   if (!(await isSimulatorInstalledAsync())) {
     return {
@@ -562,7 +570,10 @@ export async function openUrlInSimulatorSafeAsync({
   }
 
   try {
-    if (!isDetached) {
+    if (devClient) {
+      const bundleIdentifier = await configureBundleIdentifierAsync(projectRoot, exp);
+      await assertDevClientInstalledAsync(simulator, bundleIdentifier);
+    } else if (!isDetached) {
       await ensureExpoClientInstalledAsync(simulator, sdkVersion);
       _lastUrl = url;
     }
@@ -585,7 +596,7 @@ export async function openUrlInSimulatorSafeAsync({
         `Error running app. Have you installed the app already using Xcode? Since you are detached you must build manually. ${e.toString()}`
       );
     } else {
-      Logger.global.error(`Error installing or running app. ${e.toString()}`);
+      Logger.global.error(e.message);
     }
 
     return {
@@ -601,6 +612,20 @@ export async function openUrlInSimulatorSafeAsync({
   return {
     success: true,
   };
+}
+
+async function assertDevClientInstalledAsync(
+  simulator: Pick<SimControl.SimulatorDevice, 'udid' | 'name'>,
+  bundleIdentifier: string
+): Promise<void> {
+  if (!(await SimControl.getContainerPathAsync(simulator.udid, bundleIdentifier))) {
+    throw new Error(
+      `The development client (${bundleIdentifier}) for this project is not installed. ` +
+        `Please build and install the client on the simulator first.\n${learnMore(
+          'https://docs.expo.io/clients/distribution-for-ios/#building-for-ios'
+        )}`
+    );
+  }
 }
 
 // Keep a list of simulator UDIDs so we can prevent asking multiple times if a user wants to upgrade.
@@ -655,9 +680,11 @@ async function getClientForSDK(sdkVersionString?: string) {
 export async function openProjectAsync({
   projectRoot,
   shouldPrompt,
+  devClient,
 }: {
   projectRoot: string;
   shouldPrompt?: boolean;
+  devClient?: boolean;
 }): Promise<{ success: true; url: string } | { success: false; error: string }> {
   const projectUrl = await UrlUtils.constructDeepLinkAsync(projectRoot, {
     hostType: 'localhost',
@@ -683,6 +710,9 @@ export async function openProjectAsync({
     url: projectUrl,
     sdkVersion: exp.sdkVersion,
     isDetached: !!exp.isDetached,
+    devClient,
+    exp,
+    projectRoot,
   });
 
   if (result.success) {
@@ -723,6 +753,7 @@ export async function openWebProjectAsync({
     url: projectUrl,
     udid: device.udid,
     isDetached: true,
+    projectRoot,
   });
   if (result.success) {
     await activateSimulatorWindowAsync();

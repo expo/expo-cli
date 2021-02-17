@@ -3,6 +3,7 @@ import JsonFile, { JSONObject } from '@expo/json-file';
 import fs from 'fs-extra';
 import { sync as globSync } from 'glob';
 import path from 'path';
+import resolveFrom from 'resolve-from';
 import semver from 'semver';
 import slugify from 'slugify';
 
@@ -19,11 +20,11 @@ import {
   WriteConfigOptions,
 } from './Config.types';
 import { ConfigError } from './Errors';
-import { getRootPackageJsonPath, projectHasModule } from './Modules';
 import { getExpoSDKVersion } from './Project';
 import { getDynamicConfig, getStaticConfig } from './getConfig';
 import { withConfigPlugins } from './plugins/withConfigPlugins';
 import { withInternal } from './plugins/withInternal';
+import { getRootPackageJsonPath } from './resolvePackageJson';
 
 type SplitConfigs = { expo: ExpoConfig; mods: ModConfig };
 
@@ -50,15 +51,12 @@ function reduceExpoObject(config?: any): SplitConfigs {
  * @param projectRoot
  * @param exp
  */
-function getSupportedPlatforms(
-  projectRoot: string,
-  exp: Pick<ExpoConfig, 'nodeModulesPath'>
-): Platform[] {
+function getSupportedPlatforms(projectRoot: string): Platform[] {
   const platforms: Platform[] = [];
-  if (projectHasModule('react-native', projectRoot, exp)) {
+  if (resolveFrom.silent(projectRoot, 'react-native')) {
     platforms.push('ios', 'android');
   }
-  if (projectHasModule('react-native-web', projectRoot, exp)) {
+  if (resolveFrom.silent(projectRoot, 'react-native-web')) {
     platforms.push('web');
   }
   return platforms;
@@ -97,12 +95,8 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
   const rootConfig = (rawStaticConfig || {}) as AppJSONConfig;
   const staticConfig = reduceExpoObject(rawStaticConfig) || {};
 
-  const jsonFileWithNodeModulesPath = reduceExpoObject(rootConfig);
-  // Can only change the package.json location if an app.json or app.config.json exists with nodeModulesPath
-  const [packageJson, packageJsonPath] = getPackageJsonAndPath(
-    projectRoot,
-    jsonFileWithNodeModulesPath.expo
-  );
+  // Can only change the package.json location if an app.json or app.config.json exists
+  const [packageJson, packageJsonPath] = getPackageJsonAndPath(projectRoot);
 
   function fillAndReturnConfig(config: SplitConfigs, dynamicConfigObjectType: string | null) {
     const configWithDefaultValues = {
@@ -185,22 +179,13 @@ export function getConfig(projectRoot: string, options: GetConfigOptions = {}): 
   return fillAndReturnConfig(staticConfig || {}, null);
 }
 
-export function getPackageJson(
-  projectRoot: string,
-  config: Partial<Pick<ExpoConfig, 'nodeModulesPath'>> = {}
-): PackageJSONConfig {
-  const [pkg] = getPackageJsonAndPath(projectRoot, config);
+export function getPackageJson(projectRoot: string): PackageJSONConfig {
+  const [pkg] = getPackageJsonAndPath(projectRoot);
   return pkg;
 }
 
-function getPackageJsonAndPath(
-  projectRoot: string,
-  config: Partial<Pick<ExpoConfig, 'nodeModulesPath'>> | null = {}
-): [PackageJSONConfig, string] {
-  if (!config) {
-    config = {};
-  }
-  const packageJsonPath = getRootPackageJsonPath(projectRoot, config);
+function getPackageJsonAndPath(projectRoot: string): [PackageJSONConfig, string] {
+  const packageJsonPath = getRootPackageJsonPath(projectRoot);
   return [JsonFile.read(packageJsonPath), packageJsonPath];
 }
 
@@ -243,7 +228,7 @@ export function readConfigJson(
 
   exp = { ...exp };
 
-  const [pkg, packageJsonPath] = getPackageJsonAndPath(projectRoot, exp);
+  const [pkg, packageJsonPath] = getPackageJsonAndPath(projectRoot);
 
   return {
     ...ensureConfigHasDefaultValues({
@@ -481,15 +466,12 @@ function ensureConfigHasDefaultValues({
   const name = exp.name ?? pkgName;
   const slug = exp.slug ?? slugify(name.toLowerCase());
   const version = exp.version ?? pkgVersion;
-  const nodeModulesPath = exp.nodeModulesPath
-    ? path.resolve(projectRoot, exp.nodeModulesPath)
-    : undefined;
   let description = exp.description;
   if (!description && typeof pkg.description === 'string') {
     description = pkg.description;
   }
 
-  const expWithDefaults = { ...exp, name, slug, version, nodeModulesPath, description };
+  const expWithDefaults = { ...exp, name, slug, version, description };
 
   let sdkVersion;
   try {
@@ -500,7 +482,7 @@ function ensureConfigHasDefaultValues({
 
   let platforms = exp.platforms;
   if (!platforms) {
-    platforms = getSupportedPlatforms(projectRoot, expWithDefaults);
+    platforms = getSupportedPlatforms(projectRoot);
   }
 
   return {
@@ -576,9 +558,8 @@ export function getDefaultTarget(projectRoot: string): ProjectTarget {
 }
 
 function isBareWorkflowProject(projectRoot: string): boolean {
-  const { pkg } = getConfig(projectRoot, {
-    skipSDKVersionRequirement: true,
-  });
+  const [pkg] = getPackageJsonAndPath(projectRoot);
+
   if (pkg.dependencies && pkg.dependencies.expokit) {
     return false;
   }
@@ -611,29 +592,42 @@ function isDynamicFilePath(filePath: string): boolean {
 }
 
 /**
+ * Return a useful name describing the project config.
+ * - dynamic: app.config.js
+ * - static: app.json
+ * - custom path app config relative to root folder
+ * - both: app.config.js or app.json
+ */
+export function getProjectConfigDescription(projectRoot: string): string {
+  const paths = getConfigFilePaths(projectRoot);
+  return getProjectConfigDescriptionWithPaths(projectRoot, paths);
+}
+
+/**
  * Returns a string describing the configurations used for the given project root.
  * Will return null if no config is found.
  *
  * @param projectRoot
  * @param projectConfig
  */
-export function getProjectConfigDescription(
+export function getProjectConfigDescriptionWithPaths(
   projectRoot: string,
-  projectConfig: Partial<ProjectConfig>
-): string | null {
+  projectConfig: ConfigFilePaths
+): string {
   if (projectConfig.dynamicConfigPath) {
     const relativeDynamicConfigPath = path.relative(projectRoot, projectConfig.dynamicConfigPath);
     if (projectConfig.staticConfigPath) {
-      return `Using dynamic config \`${relativeDynamicConfigPath}\` and static config \`${path.relative(
+      return `${relativeDynamicConfigPath} or ${path.relative(
         projectRoot,
         projectConfig.staticConfigPath
-      )}\``;
+      )}`;
     }
-    return `Using dynamic config \`${relativeDynamicConfigPath}\``;
+    return relativeDynamicConfigPath;
   } else if (projectConfig.staticConfigPath) {
-    return `Using static config \`${path.relative(projectRoot, projectConfig.staticConfigPath)}\``;
+    return path.relative(projectRoot, projectConfig.staticConfigPath);
   }
-  return null;
+  // If a config doesn't exist, our tooling will generate a static app.json
+  return 'app.json';
 }
 
 export * from './Config.types';

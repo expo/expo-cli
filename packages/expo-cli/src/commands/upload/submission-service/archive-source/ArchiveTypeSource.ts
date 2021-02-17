@@ -1,4 +1,4 @@
-import log from '../../../../log';
+import Log from '../../../../log';
 import prompt from '../../../../prompts';
 import { ArchiveType } from '../android/AndroidSubmissionConfig';
 
@@ -52,7 +52,7 @@ async function handleInferSourceAsync(
   if (inferredArchiveType) {
     return inferredArchiveType;
   } else {
-    log.warn("We couldn't autodetect the archive type");
+    Log.warn("We couldn't autodetect the archive type");
     return getArchiveTypeAsync({ sourceType: ArchiveTypeSourceType.prompt }, location);
   }
 }
@@ -66,7 +66,7 @@ async function handleParameterSourceAsync(
     if (source.archiveType === inferredArchiveType) {
       return source.archiveType;
     } else {
-      log.warn(
+      Log.warn(
         `The archive seems to be .${inferredArchiveType} and you passed: --type ${source.archiveType}`
       );
       return getArchiveTypeAsync({ sourceType: ArchiveTypeSourceType.prompt }, location);

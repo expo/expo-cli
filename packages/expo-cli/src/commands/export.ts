@@ -4,10 +4,9 @@ import program, { Command } from 'commander';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
-import validator from 'validator';
 
 import CommandError, { SilentError } from '../CommandError';
-import log from '../log';
+import Log from '../log';
 import prompt from '../prompts';
 import * as CreateApp from './utils/CreateApp';
 import { downloadAndDecompressAsync } from './utils/Tar';
@@ -26,6 +25,7 @@ type Options = {
   dumpSourcemap: boolean;
   maxWorkers?: number;
   force: boolean;
+  experimentalBundle: boolean;
 };
 
 export async function promptPublicUrlAsync(): Promise<string> {
@@ -53,8 +53,8 @@ export async function ensurePublicUrlAsync(url: any, isDev?: boolean): Promise<s
   // If we are not in dev mode, ensure that url is https
   if (!isDev && !UrlUtils.isHttps(url)) {
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
-  } else if (!validator.isURL(url, { protocols: ['http', 'https'] })) {
-    log.nestedWarn(
+  } else if (!UrlUtils.isURL(url, { protocols: ['http', 'https'] })) {
+    Log.nestedWarn(
       `Dev Mode: --public-url ${url} does not conform to the required HTTP(S) protocol.`
     );
   }
@@ -75,6 +75,7 @@ async function exportFilesAsync(
     | 'outputDir'
     | 'publicUrl'
     | 'assetUrl'
+    | 'experimentalBundle'
   >
 ) {
   // Make outputDir an absolute path if it isnt already
@@ -87,13 +88,13 @@ async function exportFilesAsync(
       target: options.target ?? getDefaultTarget(projectRoot),
     },
   };
-  const absoluteOutputDir = path.resolve(process.cwd(), options.outputDir);
-  return await Project.exportForAppHosting(
+  return await Project.exportAppAsync(
     projectRoot,
     options.publicUrl!,
     options.assetUrl,
-    absoluteOutputDir,
-    exportOptions
+    options.outputDir,
+    exportOptions,
+    options.experimentalBundle
   );
 }
 
@@ -106,7 +107,7 @@ async function mergeSourceDirectoriresAsync(
     return;
   }
   const srcDirs = options.mergeSrcDir.concat(options.mergeSrcUrl).join(' ');
-  log.nested(`Starting project merge of ${srcDirs} into ${options.outputDir}`);
+  Log.nested(`Starting project merge of ${srcDirs} into ${options.outputDir}`);
 
   // Merge app distributions
   await Project.mergeAppDistributions(
@@ -114,7 +115,7 @@ async function mergeSourceDirectoriresAsync(
     [...mergeSrcDirs, options.outputDir], // merge stuff in srcDirs and outputDir together
     options.outputDir
   );
-  log.nested(
+  Log.nested(
     `Project merge was successful. Your merged files can be found in ${options.outputDir}`
   );
 }
@@ -160,8 +161,10 @@ function collect<T>(val: T, memo: T[]): T[] {
 }
 
 export async function action(projectDir: string, options: Options) {
-  // Ensure URL
-  options.publicUrl = await ensurePublicUrlAsync(options.publicUrl, options.dev);
+  if (!options.experimentalBundle) {
+    // Ensure URL
+    options.publicUrl = await ensurePublicUrlAsync(options.publicUrl, options.dev);
+  }
 
   // Ensure the output directory is created
   const outputPath = path.resolve(projectDir, options.outputDir);
@@ -175,12 +178,12 @@ export async function action(projectDir: string, options: Options) {
       overwrite: options.force,
     }))
   ) {
-    const message = `Try using a new directory name with ${log.chalk.bold(
+    const message = `Try using a new directory name with ${Log.chalk.bold(
       '--output-dir'
-    )}, moving these files, or using ${log.chalk.bold('--force')} to overwrite them.`;
-    log.newLine();
-    log.nested(message);
-    log.newLine();
+    )}, moving these files, or using ${Log.chalk.bold('--force')} to overwrite them.`;
+    Log.newLine();
+    Log.nested(message);
+    Log.newLine();
     throw new SilentError(message);
   }
 
@@ -194,7 +197,7 @@ export async function action(projectDir: string, options: Options) {
 
   await mergeSourceDirectoriresAsync(projectDir, mergeSrcDirs, options);
 
-  log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
+  Log.log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }
 
 export default function (program: Command) {
@@ -203,6 +206,7 @@ export default function (program: Command) {
     .description('Export the static files of the app for hosting it on a web server')
     .helpGroup('core')
     .option('-p, --public-url <url>', 'The public url that will host the static files. (Required)')
+    .option('-c, --clear', 'Clear the Metro bundler cache')
     .option(
       '--output-dir <dir>',
       'The directory to export the static files to. Default directory is `dist`',
@@ -230,5 +234,6 @@ export default function (program: Command) {
       []
     )
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
+    .option('--experimental-bundle', 'export bundles for use with EAS updates.')
     .asyncActionProjectDir(action, { checkConfig: true });
 }

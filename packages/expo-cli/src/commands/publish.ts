@@ -1,14 +1,16 @@
 import { getConfig, getDefaultTarget, PackageJSONConfig, ProjectTarget } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
-import { Project } from '@expo/xdl';
+import { Project, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
 
 import CommandError from '../CommandError';
-import log from '../log';
+import Log from '../log';
+import { getProjectOwner } from '../projects';
 import * as sendTo from '../sendTo';
+import { getBuildStatusAsync } from './build/getBuildStatusAsync';
 import * as TerminalLink from './utils/TerminalLink';
 import { formatNamedWarning } from './utils/logConfigWarnings';
 
@@ -36,18 +38,25 @@ export async function action(
 
   const target = options.target ?? getDefaultTarget(projectDir);
 
-  log.addNewLineIfNone();
+  // note: this validates the exp.owner when the user is a robot
+  const user = await UserManager.ensureLoggedInAsync();
+  const owner = getProjectOwner(user, exp);
+
+  Log.addNewLineIfNone();
 
   // Log building info before building.
   // This gives the user sometime to bail out if the info is unexpected.
 
   if (sdkVersion && target === 'managed') {
-    log(`- Expo SDK: ${log.chalk.bold(exp.sdkVersion)}`);
+    Log.log(`- Expo SDK: ${Log.chalk.bold(exp.sdkVersion)}`);
   }
-  log(`- Release channel: ${log.chalk.bold(options.releaseChannel)}`);
-  log(`- Workflow: ${log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
+  Log.log(`- Release channel: ${Log.chalk.bold(options.releaseChannel)}`);
+  Log.log(`- Workflow: ${Log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
+  if (user.kind === 'robot') {
+    Log.log(`- Owner: ${Log.chalk.bold(owner)}`);
+  }
 
-  log.newLine();
+  Log.newLine();
 
   // Log warnings.
 
@@ -68,11 +77,11 @@ export async function action(
     logBareWorkflowWarnings(pkg);
   }
 
-  log.addNewLineIfNone();
+  Log.addNewLineIfNone();
 
   // Build and publish the project.
 
-  log(`Building optimized bundles and generating sourcemaps...`);
+  Log.log(`Building optimized bundles and generating sourcemaps...`);
 
   if (options.quiet) {
     simpleSpinner.start();
@@ -91,8 +100,8 @@ export async function action(
     simpleSpinner.stop();
   }
 
-  log('Publish complete');
-  log.newLine();
+  Log.log('Publish complete');
+  Log.newLine();
 
   logManifestUrl({ url, sdkVersion: exp.sdkVersion });
 
@@ -115,7 +124,7 @@ export async function action(
     }
   }
 
-  log.newLine();
+  Log.newLine();
 
   return result;
 }
@@ -140,8 +149,8 @@ function assertValidReleaseChannel(releaseChannel?: string): void {
  */
 function logManifestUrl({ url, sdkVersion }: { url: string; sdkVersion?: string }) {
   const manifestUrl = getExampleManifestUrl(url, sdkVersion) ?? url;
-  log(
-    `📝  Manifest: ${log.chalk.bold(TerminalLink.fallbackToUrl(url, manifestUrl))} ${log.chalk.dim(
+  Log.log(
+    `📝  Manifest: ${Log.chalk.bold(TerminalLink.fallbackToUrl(url, manifestUrl))} ${Log.chalk.dim(
       TerminalLink.learnMore('https://expo.fyi/manifest-url')
     )}`
   );
@@ -159,16 +168,16 @@ function logProjectPageUrl({
   url: string;
   copiedToClipboard: boolean;
 }) {
-  let productionMessage = `⚙️   Project page: ${log.chalk.bold(
+  let productionMessage = `⚙️   Project page: ${Log.chalk.bold(
     TerminalLink.fallbackToUrl(url, url)
   )}`;
 
   if (copiedToClipboard) {
-    productionMessage += ` ${log.chalk.gray(`[copied to clipboard]`)}`;
+    productionMessage += ` ${Log.chalk.gray(`[copied to clipboard]`)}`;
   }
-  productionMessage += ` ${log.chalk.dim(TerminalLink.learnMore('https://expo.fyi/project-page'))}`;
+  productionMessage += ` ${Log.chalk.dim(TerminalLink.learnMore('https://expo.fyi/project-page'))}`;
 
-  log(productionMessage);
+  Log.log(productionMessage);
 }
 
 function getExampleManifestUrl(url: string, sdkVersion: string | undefined): string | null {
@@ -208,7 +217,7 @@ async function logSDKMismatchWarningsAsync({
     return;
   }
 
-  const buildStatus = await Project.getBuildStatusAsync(projectRoot, {
+  const buildStatus = await getBuildStatusAsync(projectRoot, {
     platform: 'all',
     current: true,
     releaseChannel,
@@ -221,7 +230,7 @@ async function logSDKMismatchWarningsAsync({
   }
 
   // A convenient warning reminding people that they're publishing with an SDK that their published app does not support.
-  log.nestedWarn(
+  Log.nestedWarn(
     formatNamedWarning(
       'URL mismatch',
       `No standalone app has been built with SDK ${sdkVersion} and release channel "${releaseChannel}" for this project before.\n  OTA updates only work for native projects that have the same SDK version and release channel.`,
@@ -238,7 +247,7 @@ export function logExpoUpdatesWarnings(pkg: PackageJSONConfig): void {
     return;
   }
 
-  log.nestedWarn(
+  Log.nestedWarn(
     formatNamedWarning(
       'Conflicting Updates',
       `You have both the ${chalk.bold('expokit')} and ${chalk.bold(
@@ -257,7 +266,7 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
   if (hasOptimized) {
     return;
   }
-  log.nestedWarn(
+  Log.nestedWarn(
     formatNamedWarning(
       'Optimization',
       `Project may contain uncompressed images. Optimizing image assets can improve app size and performance.\n  To fix this, run ${chalk.bold(
@@ -275,7 +284,7 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
  * it will run in Expo client in development even. We should revisit this with
  * dev client, and possibly also by excluding SDK version for bare
  * expo-updates usage in the future (and then surfacing this as an error in
- * the Expo client app instead)
+ * the Expo Go app instead)
  *
  * Related: https://github.com/expo/expo/issues/9517
  *
@@ -287,7 +296,7 @@ export function logBareWorkflowWarnings(pkg: PackageJSONConfig) {
     return;
   }
 
-  log.nestedWarn(
+  Log.nestedWarn(
     formatNamedWarning(
       'Workflow target',
       `This is a ${chalk.bold(

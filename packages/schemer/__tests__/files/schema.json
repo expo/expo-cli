@@ -195,19 +195,10 @@
         "properties": {},
         "additionalProperties": true
       },
-      "rnCliPath": {
-        "type": "string"
-      },
       "packagerOpts": {
         "type": "object",
         "properties": {},
         "additionalProperties": true
-      },
-      "ignoreNodeModulesValidation": {
-        "type": "boolean"
-      },
-      "nodeModulesPath": {
-        "type": "string"
       },
       "ios": {
         "description": "iOS standalone app specific configuration",

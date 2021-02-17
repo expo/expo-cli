@@ -256,7 +256,7 @@ export async function listDevicesAsync(): Promise<XCTraceDevice[]> {
     if (line === '== Simulators ==') {
       break;
     }
-    const device = line.match(/(.*?) (\(([0-9\.]+)\) )?\(([0-9A-F-]+)\)/i);
+    const device = line.match(/(.*?) (\(([0-9.]+)\) )?\(([0-9A-F-]+)\)/i);
     if (device) {
       const [, name, , osVersion, udid] = device;
       const metadata: XCTraceDevice = {
@@ -281,6 +281,7 @@ export async function shutdownAsync(udid?: string) {
       throw e;
     }
   }
+  return null;
 }
 
 // Some permission changes will terminate the application if running

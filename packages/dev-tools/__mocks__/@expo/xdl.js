@@ -15,6 +15,9 @@ xdl.ProjectSettings = {
       hostType: 'lan',
     });
   },
+  getCurrentStatusAsync() {
+    return Promise.resolve('running');
+  },
 };
 
 xdl.ProjectUtils = {
@@ -33,12 +36,6 @@ xdl.UserSettings = {
     return Promise.resolve({
       sendTo: 'fake-send-to',
     });
-  },
-};
-
-xdl.Project = {
-  currentStatus() {
-    return Promise.resolve('running');
   },
 };
 

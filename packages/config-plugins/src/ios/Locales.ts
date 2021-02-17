@@ -7,7 +7,7 @@ import { XcodeProject } from 'xcode';
 import { ConfigPlugin } from '../Plugin.types';
 import { withXcodeProject } from '../plugins/ios-plugins';
 import * as WarningAggregator from '../utils/warnings';
-import { addFileToGroup, ensureGroupRecursively, getProjectName } from './utils/Xcodeproj';
+import { addResourceFileToGroup, ensureGroupRecursively, getProjectName } from './utils/Xcodeproj';
 
 type LocaleJson = Record<string, string>;
 type ResolvedLocalesJson = Record<string, LocaleJson>;
@@ -63,7 +63,7 @@ export async function setLocalesAsync(
     // Ensure the file doesn't already exist
     if (!group?.children.some(({ comment }) => comment === stringName)) {
       // Only write the file if it doesn't already exist.
-      project = addFileToGroup(strings, `${projectName}/Supporting/${lang}.lproj`, project);
+      project = addResourceFileToGroup(strings, `${projectName}/Supporting/${lang}.lproj`, project);
     }
   }
 

@@ -1,4 +1,4 @@
-import * as path from 'path';
+import { joinUrlPath } from 'expo-pwa';
 import { compilation as compilationNS, Compiler, Plugin } from 'webpack';
 
 import JsonWebpackPlugin from './JsonWebpackPlugin';
@@ -58,10 +58,14 @@ export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
             ) => {
               // Skip if a custom injectFunction returns false or if
               // the htmlWebpackPlugin optuons includes a `favicons: false` flag
-              const isInjectionAllowed =
-                typeof this.pwaOptions.inject === 'function'
-                  ? this.pwaOptions.inject(data.plugin)
-                  : data.plugin.options.pwaManifest !== false;
+              let isInjectionAllowed: boolean;
+              if (typeof this.pwaOptions.inject === 'boolean') {
+                isInjectionAllowed = this.pwaOptions.inject;
+              } else if (typeof this.pwaOptions.inject === 'function') {
+                isInjectionAllowed = this.pwaOptions.inject(data.plugin);
+              } else {
+                isInjectionAllowed = data.plugin.options.pwaManifest !== false;
+              }
 
               if (isInjectionAllowed === false) {
                 return htmlCallback(null, data);
@@ -72,7 +76,7 @@ export default class PwaManifestWebpackPlugin extends JsonWebpackPlugin {
                 voidTag: true,
                 attributes: {
                   rel: this.rel,
-                  href: path.join(this.pwaOptions.publicPath, this.pwaOptions.path),
+                  href: joinUrlPath(this.pwaOptions.publicPath, this.pwaOptions.path),
                 },
               });
 
