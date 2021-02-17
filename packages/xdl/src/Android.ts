@@ -10,7 +10,6 @@ import path from 'path';
 import ProgressBar from 'progress';
 import prompts from 'prompts';
 import semver from 'semver';
-import { project } from 'xcode';
 
 import Analytics from './Analytics';
 import Api from './Api';
