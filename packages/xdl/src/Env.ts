@@ -8,6 +8,10 @@ export function home(): string {
   return os.homedir();
 }
 
+export function isDebug(): boolean {
+  return getenv.boolish('EXPO_DEBUG', false);
+}
+
 export function isStaging(): boolean {
   return getenv.boolish('EXPO_STAGING', false);
 }

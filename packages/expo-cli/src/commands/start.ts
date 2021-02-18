@@ -1,4 +1,4 @@
-import { ExpoConfig, getConfig, PackageJSONConfig } from '@expo/config';
+import { ExpoConfig, getConfig, isLegacyImportsEnabled, PackageJSONConfig } from '@expo/config';
 // @ts-ignore: not typed
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
@@ -14,6 +14,7 @@ import * as sendTo from '../sendTo';
 import urlOpts, { URLOptions } from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
 import { installExitHooks } from './start/installExitHooks';
+import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
 import { ensureTypeScriptSetupAsync } from './utils/typescript/ensureTypeScriptSetup';
 
 type NormalizedOptions = URLOptions & {
@@ -122,7 +123,7 @@ async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions)
   });
 }
 
-function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
+function parseStartOptions(options: NormalizedOptions, exp: ExpoConfig): Project.StartOptions {
   const startOpts: Project.StartOptions = {};
 
   if (options.clear) {
@@ -143,13 +144,13 @@ function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
 
   if (options.devClient) {
     startOpts.devClient = true;
+  }
 
-    // TODO: is this redundant?
-    startOpts.target = 'bare';
-  } else {
+  if (isLegacyImportsEnabled(exp)) {
     // For `expo start`, the default target is 'managed', for both managed *and* bare apps.
     // See: https://docs.expo.io/bare/using-expo-client
-    startOpts.target = 'managed';
+    startOpts.target = options.devClient ? 'bare' : 'managed';
+    Log.debug('Using target: ', startOpts.target);
   }
 
   return startOpts;
@@ -160,7 +161,10 @@ async function startWebAction(projectDir: string, options: NormalizedOptions): P
   if (Versions.gteSdkVersion(exp, '34.0.0')) {
     await ensureTypeScriptSetupAsync(projectDir);
   }
-  const startOpts = parseStartOptions(options);
+  const startOpts = parseStartOptions(options, exp);
+
+  // No need to warn about extensions for web.
+
   await Project.startAsync(rootPath, { ...startOpts, exp });
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
@@ -179,7 +183,14 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
   // TODO: only validate dependencies if starting in managed workflow
   await validateDependenciesVersions(projectDir, exp, pkg);
 
-  const startOpts = parseStartOptions(options);
+  const startOpts = parseStartOptions(options, exp);
+
+  // Warn about expo extensions.
+  if (!isLegacyImportsEnabled(exp)) {
+    // Adds a few seconds in basic projects so we should
+    // drop this in favor of the upgrade version as soon as possible.
+    await assertProjectHasExpoExtensionFilesAsync(projectDir);
+  }
 
   await Project.startAsync(rootPath, { ...startOpts, exp });
 

@@ -631,3 +631,5 @@ export function getProjectConfigDescriptionWithPaths(
 }
 
 export * from './Config.types';
+
+export { isLegacyImportsEnabled } from './isLegacyImportsEnabled';

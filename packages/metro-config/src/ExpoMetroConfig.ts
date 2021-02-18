@@ -1,9 +1,13 @@
-import { getDefaultTarget, ProjectTarget } from '@expo/config';
+import { getConfig, getDefaultTarget, isLegacyImportsEnabled, ProjectTarget } from '@expo/config';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
+import chalk from 'chalk';
+import { boolish } from 'getenv';
 import { Reporter } from 'metro';
 import type MetroConfig from 'metro-config';
 import path from 'path';
 import resolveFrom from 'resolve-from';
+
+export const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
 
 // Import only the types here, the values will be imported from the project, at runtime.
 const INTERNAL_CALLSITES_REGEX = new RegExp(
@@ -21,6 +25,11 @@ const INTERNAL_CALLSITES_REGEX = new RegExp(
 
 export interface DefaultConfigOptions {
   target?: ProjectTarget;
+}
+
+function readIsLegacyImportsEnabled(projectRoot: string): boolean {
+  const config = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+  return isLegacyImportsEnabled(config.exp);
 }
 
 export function getDefaultConfig(
@@ -41,13 +50,44 @@ export function getDefaultConfig(
     // it is not needed
   }
 
-  const target = options.target ?? process.env.EXPO_TARGET ?? getDefaultTarget(projectRoot);
+  const isLegacy = readIsLegacyImportsEnabled(projectRoot);
+  // Deprecated -- SDK 41 --
+  if (options.target) {
+    if (!isLegacy) {
+      console.warn(
+        chalk.yellow(
+          `The target option is deprecated. Learn more: http://expo.fyi/expo-extension-migration`
+        )
+      );
+      delete options.target;
+    }
+  } else if (process.env.EXPO_TARGET) {
+    console.error(
+      'EXPO_TARGET is deprecated. Learn more: http://expo.fyi/expo-extension-migration'
+    );
+    if (isLegacy) {
+      // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
+      // called from metro.config.js.
+      // @ts-ignore
+      options.target = process.env.EXPO_TARGET;
+    }
+  } else if (isLegacy) {
+    // Fall back to guessing based on the project structure in legacy mode.
+    options.target = getDefaultTarget(projectRoot);
+  }
+
+  if (!options.target) {
+    // Default to bare -- no .expo extension.
+    options.target = 'bare';
+  }
+  // End deprecated -- SDK 41 --
+
+  const { target } = options;
   if (!(target === 'managed' || target === 'bare')) {
     throw new Error(
       `Invalid target: '${target}'. Debug info: \n${JSON.stringify(
         {
           'options.target': options.target,
-          EXPO_TARGET: process.env.EXPO_TARGET,
           default: getDefaultTarget(projectRoot),
         },
         null,
@@ -61,12 +101,22 @@ export function getDefaultConfig(
       ? getBareExtensions([], sourceExtsConfig)
       : getManagedExtensions([], sourceExtsConfig);
 
+  if (EXPO_DEBUG) {
+    console.log();
+    console.log(`Expo Metro config:`);
+    console.log(`- Bundler target: ${target}`);
+    console.log(`- Legacy: ${isLegacy}`);
+    console.log(`- Extensions: ${sourceExts.join(', ')}`);
+    console.log(`- React Native: ${reactNativePath}`);
+    console.log();
+  }
   const {
     // Remove the default reporter which metro always resolves to be the react-native-community/cli reporter.
     // This prints a giant React logo which is less accessible to users on smaller terminals.
     reporter,
     ...metroDefaultValues
   } = MetroConfig.getDefaultConfig.getDefaultValues(projectRoot);
+
   // Merge in the default config from Metro here, even though loadConfig uses it as defaults.
   // This is a convenience for getDefaultConfig use in metro.config.js, e.g. to modify assetExts.
   return MetroConfig.mergeConfig(metroDefaultValues, {
