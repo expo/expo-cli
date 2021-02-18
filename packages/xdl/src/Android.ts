@@ -995,7 +995,7 @@ function nameStyleForDevice(device: Device) {
   return (text: string) => chalk.bold(chalk.gray(text));
 }
 
-async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
+export async function promptForDeviceAsync(devices: Device[]): Promise<Device | null> {
   // TODO: provide an option to add or download more simulators
 
   // Pause interactions on the TerminalUI
