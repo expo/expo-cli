@@ -19,7 +19,7 @@ export type NormalizedOptions = URLOptions & {
   tunnel?: boolean;
 };
 
-export type Options = NormalizedOptions & {
+export type RawStartOptions = NormalizedOptions & {
   parent?: { nonInteractive: boolean; rawArgs: string[] };
 };
 
@@ -35,36 +35,51 @@ function getBooleanArg(rawArgs: string[], argName: string): boolean {
   }
 }
 
+export function setBooleanArg(
+  argName: string,
+  rawArgs: string[],
+  fallback?: boolean
+): boolean | undefined {
+  if (rawArgs.includes(`--${argName}`)) {
+    return true;
+  } else if (rawArgs.includes(`--no-${argName}`)) {
+    return false;
+  } else {
+    return fallback;
+  }
+}
+
 // The main purpose of this function is to take existing options object and
 // support boolean args with as defined in the hasBooleanArg and getBooleanArg
 // functions.
 export async function normalizeOptionsAsync(
-  projectDir: string,
-  options: Options
+  projectRoot: string,
+  options: RawStartOptions
 ): Promise<NormalizedOptions> {
+  const rawArgs = options.parent?.rawArgs || [];
+
+  const opts = parseRawArguments(options, rawArgs);
+
+  // Side-effect
+  await cacheOptionsAsync(projectRoot, opts);
+
+  return opts;
+}
+
+// The main purpose of this function is to take existing options object and
+// support boolean args with as defined in the hasBooleanArg and getBooleanArg
+// functions.
+export function parseRawArguments(options: RawStartOptions, rawArgs: string[]): NormalizedOptions {
   const opts: NormalizedOptions = {
     ...options, // This is necessary to ensure we don't drop any options
     webOnly: !!options.webOnly, // This is only ever true in the start:web command
     nonInteractive: options.parent?.nonInteractive,
+    // setBooleanArg is used to flip the default commander logic which automatically sets a value to `true` if the inverse option isn't provided.
+    // ex: `dev == true` if `--no-dev` is a possible flag, but `--no-dev` was not provided in the command.
+    dev: setBooleanArg('dev', rawArgs, true),
+    minify: setBooleanArg('minify', rawArgs, false),
+    https: setBooleanArg('https', rawArgs, false),
   };
-
-  const rawArgs = options.parent?.rawArgs || [];
-
-  if (hasBooleanArg(rawArgs, 'dev')) {
-    opts.dev = getBooleanArg(rawArgs, 'dev');
-  } else {
-    opts.dev = true;
-  }
-  if (hasBooleanArg(rawArgs, 'minify')) {
-    opts.minify = getBooleanArg(rawArgs, 'minify');
-  } else {
-    opts.minify = false;
-  }
-  if (hasBooleanArg(rawArgs, 'https')) {
-    opts.https = getBooleanArg(rawArgs, 'https');
-  } else {
-    opts.https = false;
-  }
 
   if (hasBooleanArg(rawArgs, 'android')) {
     opts.android = getBooleanArg(rawArgs, 'android');
@@ -90,7 +105,6 @@ export async function normalizeOptionsAsync(
     opts.tunnel = getBooleanArg(rawArgs, 'tunnel');
   }
 
-  await cacheOptionsAsync(projectDir, opts);
   return opts;
 }
 

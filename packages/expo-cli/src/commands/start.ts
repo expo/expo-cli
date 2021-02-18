@@ -12,8 +12,8 @@ import { tryOpeningDevToolsAsync } from './start/openDevTools';
 import {
   NormalizedOptions,
   normalizeOptionsAsync,
-  Options,
   parseStartOptions,
+  RawStartOptions,
 } from './start/parseStartOptions';
 import { validateDependenciesVersionsAsync } from './start/validateDependenciesVersions';
 import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
@@ -115,7 +115,7 @@ export default (program: any) => {
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(
-      async (projectRoot: string, options: Options): Promise<void> => {
+      async (projectRoot: string, options: RawStartOptions): Promise<void> => {
         const normalizedOptions = await normalizeOptionsAsync(projectRoot, options);
         return await action(projectRoot, normalizedOptions);
       }
@@ -136,7 +136,7 @@ export default (program: any) => {
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(
-      async (projectRoot: string, options: Options): Promise<void> => {
+      async (projectRoot: string, options: RawStartOptions): Promise<void> => {
         const normalizedOptions = await normalizeOptionsAsync(projectRoot, {
           ...options,
           webOnly: true,
