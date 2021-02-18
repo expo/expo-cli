@@ -1,19 +1,15 @@
-import { ExpoConfig, getConfig, isLegacyImportsEnabled, PackageJSONConfig } from '@expo/config';
-// @ts-ignore: not typed
-import { DevToolsServer } from '@expo/dev-tools';
-import JsonFile from '@expo/json-file';
-import { Project, ProjectSettings, UrlUtils, UserSettings, Versions } from '@expo/xdl';
+import { ExpoConfig, getConfig, isLegacyImportsEnabled } from '@expo/config';
+import { Project, ProjectSettings, UrlUtils, Versions } from '@expo/xdl';
 import chalk from 'chalk';
-import intersection from 'lodash/intersection';
 import path from 'path';
-import resolveFrom from 'resolve-from';
-import semver from 'semver';
 
 import Log from '../log';
 import * as sendTo from '../sendTo';
 import urlOpts, { URLOptions } from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
 import { installExitHooks } from './start/installExitHooks';
+import { tryOpeningDevToolsAsync } from './start/openDevTools';
+import { validateDependenciesVersionsAsync } from './start/validateDependenciesVersions';
 import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
 import { ensureTypeScriptSetupAsync } from './utils/typescript/ensureTypeScriptSetup';
 
@@ -34,12 +30,6 @@ type NormalizedOptions = URLOptions & {
 
 type Options = NormalizedOptions & {
   parent?: { nonInteractive: boolean; rawArgs: string[] };
-};
-
-type OpenDevToolsOptions = {
-  rootPath: string;
-  exp: ExpoConfig;
-  options: NormalizedOptions;
 };
 
 function hasBooleanArg(rawArgs: string[], argName: string): boolean {
@@ -156,55 +146,63 @@ function parseStartOptions(options: NormalizedOptions, exp: ExpoConfig): Project
   return startOpts;
 }
 
-async function startWebAction(projectDir: string, options: NormalizedOptions): Promise<void> {
-  const { exp, rootPath } = await configureProjectAsync(projectDir, options);
-  if (Versions.gteSdkVersion(exp, '34.0.0')) {
-    await ensureTypeScriptSetupAsync(projectDir);
-  }
-  const startOpts = parseStartOptions(options, exp);
-
-  // No need to warn about extensions for web.
-
-  await Project.startAsync(rootPath, { ...startOpts, exp });
-  await urlOpts.handleMobileOptsAsync(projectDir, options);
-
-  if (!options.nonInteractive && !exp.isDetached) {
-    await TerminalUI.startAsync(projectDir, startOpts);
-  }
-}
-
 async function action(projectDir: string, options: NormalizedOptions): Promise<void> {
-  const { exp, pkg, rootPath } = await configureProjectAsync(projectDir, options);
+  Log.log(chalk.gray(`Starting project at ${projectDir}`));
+
+  // Add clean up hooks
+  installExitHooks(projectDir);
+
+  const { exp, pkg } = getConfig(projectDir, {
+    skipSDKVersionRequirement: options.webOnly,
+  });
+
+  // Assert various random things
+  // TODO: split up this method
+  await urlOpts.optsAsync(projectDir, options);
+
+  // TODO: This is useless on mac, check if useless on win32
+  const rootPath = path.resolve(projectDir);
+
+  // Optionally open the developer tools UI.
+  await tryOpeningDevToolsAsync(rootPath, {
+    exp,
+    options,
+  });
 
   if (Versions.gteSdkVersion(exp, '34.0.0')) {
     await ensureTypeScriptSetupAsync(projectDir);
   }
 
-  // TODO: only validate dependencies if starting in managed workflow
-  await validateDependenciesVersions(projectDir, exp, pkg);
-
-  const startOpts = parseStartOptions(options, exp);
-
-  // Warn about expo extensions.
-  if (!isLegacyImportsEnabled(exp)) {
-    // Adds a few seconds in basic projects so we should
-    // drop this in favor of the upgrade version as soon as possible.
-    await assertProjectHasExpoExtensionFilesAsync(projectDir);
+  if (!options.webOnly) {
+    // TODO: only validate dependencies if starting in managed workflow
+    await validateDependenciesVersionsAsync(projectDir, exp, pkg);
+    // Warn about expo extensions.
+    if (!isLegacyImportsEnabled(exp)) {
+      // Adds a few seconds in basic projects so we should
+      // drop this in favor of the upgrade version as soon as possible.
+      await assertProjectHasExpoExtensionFilesAsync(projectDir);
+    }
   }
 
-  await Project.startAsync(rootPath, { ...startOpts, exp });
+  const startOptions = parseStartOptions(options, exp);
 
+  await Project.startAsync(rootPath, { ...startOptions, exp });
+
+  // Send to option...
   const url = await UrlUtils.constructDeepLinkAsync(projectDir);
-
   const recipient = await sendTo.getRecipient(options.sendTo);
   if (recipient) {
     await sendTo.sendUrlAsync(url, recipient);
   }
 
+  // Open project on devices.
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
-  if (!startOpts.nonInteractive && !exp.isDetached) {
-    await TerminalUI.startAsync(projectDir, startOpts);
+  // Present the Terminal UI.
+  const isTerminalUIEnabled = !options.nonInteractive && !exp.isDetached;
+
+  if (isTerminalUIEnabled) {
+    await TerminalUI.startAsync(projectDir, startOptions);
   } else {
     if (!exp.isDetached) {
       Log.newLine();
@@ -212,120 +210,17 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
     }
     Log.log(`Your native app is running at ${chalk.underline(url)}`);
   }
-  Log.nested(`Logs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
-}
 
-async function validateDependenciesVersions(
-  projectDir: string,
-  exp: ExpoConfig,
-  pkg: PackageJSONConfig
-): Promise<void> {
-  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
-    return;
-  }
-
-  const bundleNativeModulesPath = resolveFrom.silent(projectDir, 'expo/bundledNativeModules.json');
-  if (!bundleNativeModulesPath) {
-    Log.warn(
-      `Your project is in SDK version >= 33.0.0, but the ${chalk.underline(
-        'expo'
-      )} package version seems to be older.`
-    );
-    return;
-  }
-
-  const bundledNativeModules = await JsonFile.readAsync(bundleNativeModulesPath);
-  const bundledNativeModulesNames = Object.keys(bundledNativeModules);
-  const projectDependencies = Object.keys(pkg.dependencies || []);
-
-  const modulesToCheck = intersection(bundledNativeModulesNames, projectDependencies);
-  const incorrectDeps = [];
-  for (const moduleName of modulesToCheck) {
-    const expectedRange = bundledNativeModules[moduleName];
-    const actualRange = pkg.dependencies[moduleName];
-    if (
-      (semver.valid(actualRange) || semver.validRange(actualRange)) &&
-      typeof expectedRange === 'string' &&
-      !semver.intersects(expectedRange, actualRange)
-    ) {
-      incorrectDeps.push({
-        moduleName,
-        expectedRange,
-        actualRange,
-      });
-    }
-  }
-  if (incorrectDeps.length > 0) {
-    Log.warn('Some dependencies are incompatible with the installed expo package version:');
-    incorrectDeps.forEach(({ moduleName, expectedRange, actualRange }) => {
-      Log.warn(
-        ` - ${chalk.underline(moduleName)} - expected version range: ${chalk.underline(
-          expectedRange
-        )} - actual version installed: ${chalk.underline(actualRange)}`
-      );
-    });
-    Log.warn(
-      'Your project may not work correctly until you install the correct versions of the packages.\n' +
-        `To install the correct versions of these packages, please run: ${chalk.inverse(
-          'expo install [package-name ...]'
-        )}`
+  // Final note about closing the server.
+  if (!options.webOnly) {
+    Log.nested(`Logs for your project will appear below. ${chalk.dim(`Press Ctrl+C to exit.`)}`);
+  } else {
+    Log.nested(
+      `\nLogs for your project will appear in the browser console. ${chalk.dim(
+        `Press Ctrl+C to exit.`
+      )}`
     );
   }
-}
-
-async function tryOpeningDevToolsAsync({
-  rootPath,
-  exp,
-  options,
-}: OpenDevToolsOptions): Promise<void> {
-  const devToolsUrl = await DevToolsServer.startAsync(rootPath);
-  Log.log(`Developer tools running on ${chalk.underline(devToolsUrl)}`);
-
-  if (!options.nonInteractive && !exp.isDetached) {
-    if (await TerminalUI.shouldOpenDevToolsOnStartupAsync()) {
-      // Ensure the preference is written to disk.
-      UserSettings.setAsync('openDevToolsAtStartup', true);
-      TerminalUI.openDeveloperTools(devToolsUrl);
-    } else {
-      UserSettings.setAsync('openDevToolsAtStartup', false);
-    }
-  }
-}
-
-async function configureProjectAsync(
-  projectDir: string,
-  options: NormalizedOptions
-): Promise<{ rootPath: string; exp: ExpoConfig; pkg: PackageJSONConfig }> {
-  installExitHooks(projectDir);
-
-  await urlOpts.optsAsync(projectDir, options);
-
-  Log.log(chalk.gray(`Starting project at ${projectDir}`));
-
-  const projectConfig = getConfig(projectDir, {
-    skipSDKVersionRequirement: options.webOnly,
-  });
-  const { exp, pkg } = projectConfig;
-
-  // TODO: move this function over to CLI
-  // const message = getProjectConfigDescription(projectDir, projectConfig);
-  // if (message) {
-  //   log.log(chalk.magenta(`\u203A ${message}`));
-  // }
-
-  const rootPath = path.resolve(projectDir);
-
-  await tryOpeningDevToolsAsync({
-    rootPath,
-    exp,
-    options,
-  });
-
-  return {
-    rootPath,
-    exp,
-    pkg,
-  };
 }
 
 export default (program: any) => {
@@ -347,9 +242,9 @@ export default (program: any) => {
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(
-      async (projectDir: string, options: Options): Promise<void> => {
-        const normalizedOptions = await normalizeOptionsAsync(projectDir, options);
-        return await action(projectDir, normalizedOptions);
+      async (projectRoot: string, options: Options): Promise<void> => {
+        const normalizedOptions = await normalizeOptionsAsync(projectRoot, options);
+        return await action(projectRoot, normalizedOptions);
       }
     );
 
@@ -364,14 +259,16 @@ export default (program: any) => {
     .option('--no-minify', 'Do not minify code')
     .option('--https', 'To start webpack with https protocol')
     .option('--no-https', 'To start webpack with http protocol')
+    .option('-s, --send-to [dest]', 'An email address to send a link to')
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(
-      async (projectDir: string, options: Options): Promise<void> => {
-        return startWebAction(
-          projectDir,
-          await normalizeOptionsAsync(projectDir, { ...options, webOnly: true })
-        );
+      async (projectRoot: string, options: Options): Promise<void> => {
+        const normalizedOptions = await normalizeOptionsAsync(projectRoot, {
+          ...options,
+          webOnly: true,
+        });
+        return await action(projectRoot, normalizedOptions);
       }
     );
 };
