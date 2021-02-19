@@ -1471,6 +1471,13 @@
     pouchdb-collections "^1.0.1"
     tiny-queue "^0.2.1"
 
+"@expo/xcpretty@./expo-xcpretty-1.0.0-alpha.0.tgz":
+  version "1.0.0-alpha.0"
+  resolved "./expo-xcpretty-1.0.0-alpha.0.tgz#e019e67ced50ef5640e5cd3bfb357cb6e5cd6a2a"
+  dependencies:
+    "@babel/code-frame" "7.10.4"
+    chalk "^4.1.0"
+
 "@gulp-sourcemaps/map-sources@1.X":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@gulp-sourcemaps/map-sources/-/map-sources-1.0.0.tgz#890ae7c5d8c877f6d384860215ace9d7ec945bda"
