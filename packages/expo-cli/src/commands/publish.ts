@@ -1,4 +1,10 @@
-import { getConfig, getDefaultTarget, PackageJSONConfig, ProjectTarget } from '@expo/config';
+import {
+  getConfig,
+  getDefaultTarget,
+  isLegacyImportsEnabled,
+  PackageJSONConfig,
+  ProjectTarget,
+} from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
 import { Project, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
@@ -73,7 +79,7 @@ export async function action(
 
   logOptimizeWarnings({ projectRoot: projectDir });
 
-  if (!options.target && target === 'bare') {
+  if (!options.target && target === 'bare' && isLegacyImportsEnabled(exp)) {
     logBareWorkflowWarnings(pkg);
   }
 
