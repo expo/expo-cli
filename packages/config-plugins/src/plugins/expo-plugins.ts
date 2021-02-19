@@ -6,6 +6,7 @@ import * as AndroidConfig from '../android';
 import * as IOSConfig from '../ios';
 import { withPlugins } from './core-plugins';
 import withAdMob from './unversioned/expo-ads-admob';
+import withAppleAuthentication from './unversioned/expo-apple-authentication';
 import withBranch from './unversioned/expo-branch';
 import withDocumentPicker from './unversioned/expo-document-picker';
 import withFacebook from './unversioned/expo-facebook';
@@ -38,7 +39,6 @@ export const withExpoIOSPlugins: ConfigPlugin<{
     IOSConfig.Version.withVersion,
     IOSConfig.Google.withGoogleServicesFile,
     // Entitlements
-    IOSConfig.Entitlements.withAppleSignInEntitlement,
     IOSConfig.Entitlements.withAccessesContactNotes,
     IOSConfig.Entitlements.withAssociatedDomains,
     // XcodeProject
@@ -110,6 +110,7 @@ export const withExpoVersionedSDKPlugins: ConfigPlugin<{ expoUsername: string | 
 ) => {
   return withPlugins(config, [
     withAdMob,
+    withAppleAuthentication,
     withNotifications,
     [withUpdates, { expoUsername }],
     withBranch,

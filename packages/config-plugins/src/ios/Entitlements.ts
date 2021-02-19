@@ -27,11 +27,6 @@ export const withAssociatedDomains = createEntitlementsPlugin(
   'withAssociatedDomains'
 );
 
-export const withAppleSignInEntitlement = createEntitlementsPlugin(
-  setAppleSignInEntitlement,
-  'withAppleSignInEntitlement'
-);
-
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
 
 export function getConfigEntitlements(config: ExpoConfig) {
@@ -45,20 +40,6 @@ export function setCustomEntitlementsEntries(config: ExpoConfig, entitlements: I
     ...entitlements,
     ...entries,
   };
-}
-
-export function setAppleSignInEntitlement(
-  config: ExpoConfig,
-  { 'com.apple.developer.applesignin': _, ...entitlementsPlist }: Plist
-): Plist {
-  if (config.ios?.usesAppleSignIn) {
-    return {
-      ...entitlementsPlist,
-      'com.apple.developer.applesignin': ['Default'],
-    };
-  }
-
-  return entitlementsPlist;
 }
 
 export function setAccessesContactNotes(
