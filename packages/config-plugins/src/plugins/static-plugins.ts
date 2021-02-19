@@ -9,6 +9,7 @@ import {
 } from '../utils/plugin-resolver';
 
 const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
+const EXPO_CONFIG_PLUGIN_VERBOSE = boolish('EXPO_CONFIG_PLUGIN_VERBOSE', false);
 
 function isModuleMissingError(name: string, error: Error): boolean {
   // @ts-ignore
@@ -66,18 +67,25 @@ export const withStaticPlugin: ConfigPlugin<{
       withPlugin = resolveConfigPluginFunction(projectRoot, pluginResolve);
     } catch (error) {
       if (EXPO_DEBUG) {
-        const shouldMuteWarning =
-          props._isLegacyPlugin &&
-          (isModuleMissingError(pluginResolve, error) || isUnexpectedTokenError(error));
-        if (!shouldMuteWarning) {
-          if (isModuleMissingError(pluginResolve, error)) {
-            // Prevent causing log spew for basic resolution errors.
-            console.log(`Could not find plugin "${pluginResolve}"`);
-          } else {
-            // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
-            console.log(`Error resolving plugin "${pluginResolve}"`);
-            console.log(error);
-            console.log();
+        if (EXPO_CONFIG_PLUGIN_VERBOSE) {
+          // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
+          console.log(`Error resolving plugin "${pluginResolve}"`);
+          console.log(error);
+          console.log();
+        } else {
+          const shouldMuteWarning =
+            props._isLegacyPlugin &&
+            (isModuleMissingError(pluginResolve, error) || isUnexpectedTokenError(error));
+          if (!shouldMuteWarning) {
+            if (isModuleMissingError(pluginResolve, error)) {
+              // Prevent causing log spew for basic resolution errors.
+              console.log(`Could not find plugin "${pluginResolve}"`);
+            } else {
+              // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
+              console.log(`Error resolving plugin "${pluginResolve}"`);
+              console.log(error);
+              console.log();
+            }
           }
         }
       }
