@@ -1,7 +1,11 @@
 <!-- Title -->
-<h1 align="center">
-Expo CLI
-</h1>
+
+<p align="center">
+  <a href="https://expo.io/">
+    <img alt="expo cli" height="128" src="./.gh-assets/banner.png">
+    <h1 align="center">Expo CLI</h1>
+  </a>
+</p>
 
 <p align="center">Tools for creating, running, and deploying Universal Expo and React Native apps</p>
 

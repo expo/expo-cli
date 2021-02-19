@@ -8,6 +8,7 @@ const packageName = 'expo-branch';
 
 export const withBranch: ConfigPlugin = config => {
   return withStaticPlugin(config, {
+    _isLegacyPlugin: true,
     plugin: packageName,
     // If the static plugin isn't found, use the unversioned one.
     fallback: withUnversionedBranch,
