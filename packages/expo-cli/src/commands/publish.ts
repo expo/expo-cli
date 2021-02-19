@@ -53,7 +53,7 @@ export async function action(
   // Log building info before building.
   // This gives the user sometime to bail out if the info is unexpected.
 
-  if (sdkVersion && target === 'managed') {
+  if (sdkVersion) {
     Log.log(`- Expo SDK: ${Log.chalk.bold(exp.sdkVersion)}`);
   }
   Log.log(`- Release channel: ${Log.chalk.bold(options.releaseChannel)}`);
