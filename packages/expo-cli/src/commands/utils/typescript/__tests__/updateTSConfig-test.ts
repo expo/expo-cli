@@ -78,7 +78,7 @@ describe(updateTSConfigAsync, () => {
     });
   });
 
-  it(`forces the base config to be Expo`, async () => {
+  it(`does not force the base config to be Expo`, async () => {
     vol.fromJSON({
       '/tsconfig.json': '{ "extends": "foobar", "compilerOptions": { "strict": true } }',
     });
@@ -91,7 +91,7 @@ describe(updateTSConfigAsync, () => {
     });
 
     expect(JSON.parse(await fs.readFile('/tsconfig.json', 'utf8'))).toStrictEqual({
-      extends: 'expo/tsconfig.base',
+      extends: 'foobar',
       compilerOptions: {
         strict: true,
       },
