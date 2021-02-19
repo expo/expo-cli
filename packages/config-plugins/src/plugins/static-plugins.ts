@@ -9,7 +9,7 @@ import {
 } from '../utils/plugin-resolver';
 
 const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
-const EXPO_CONFIG_PLUGIN_VERBOSE = boolish('EXPO_CONFIG_PLUGIN_VERBOSE', false);
+const EXPO_CONFIG_PLUGIN_VERBOSE_ERRORS = boolish('EXPO_CONFIG_PLUGIN_VERBOSE_ERRORS', false);
 
 function isModuleMissingError(name: string, error: Error): boolean {
   // @ts-ignore
@@ -67,7 +67,7 @@ export const withStaticPlugin: ConfigPlugin<{
       withPlugin = resolveConfigPluginFunction(projectRoot, pluginResolve);
     } catch (error) {
       if (EXPO_DEBUG) {
-        if (EXPO_CONFIG_PLUGIN_VERBOSE) {
+        if (EXPO_CONFIG_PLUGIN_VERBOSE_ERRORS) {
           // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
           console.log(`Error resolving plugin "${pluginResolve}"`);
           console.log(error);
