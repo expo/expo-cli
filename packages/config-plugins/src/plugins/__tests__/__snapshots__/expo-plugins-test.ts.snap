@@ -16,6 +16,10 @@ Object {
         "name": "expo-branch",
         "version": "UNVERSIONED",
       },
+      "expo-document-picker": Object {
+        "name": "expo-document-picker",
+        "version": "UNVERSIONED",
+      },
       "expo-facebook": Object {
         "name": "expo-facebook",
         "version": "UNVERSIONED",

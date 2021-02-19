@@ -3,9 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import slash from 'slash';
 
-import { ConfigPlugin } from '../Plugin.types';
-import { createEntitlementsPlugin, withEntitlementsPlist } from '../plugins/ios-plugins';
-import * as WarningAggregator from '../utils/warnings';
+import { createEntitlementsPlugin } from '../plugins/ios-plugins';
 import { InfoPlist } from './IosConfig.types';
 import * as Paths from './Paths';
 import {
@@ -29,16 +27,6 @@ export const withAssociatedDomains = createEntitlementsPlugin(
   'withAssociatedDomains'
 );
 
-export const withICloudEntitlement: ConfigPlugin<{ appleTeamId: string }> = (
-  config,
-  { appleTeamId }
-) => {
-  return withEntitlementsPlist(config, config => {
-    config.modResults = setICloudEntitlement(config, config.modResults, appleTeamId);
-    return config;
-  });
-};
-
 // TODO: should it be possible to turn off these entitlements by setting false in app.json and running apply
 
 export function getConfigEntitlements(config: ExpoConfig) {
@@ -52,23 +40,6 @@ export function setCustomEntitlementsEntries(config: ExpoConfig, entitlements: I
     ...entitlements,
     ...entries,
   };
-}
-
-export function setICloudEntitlement(
-  config: ExpoConfig,
-  entitlementsPlist: Plist,
-  appleTeamId: string
-): Plist {
-  if (config.ios?.usesIcloudStorage) {
-    // TODO: need access to the appleTeamId for this one!
-    WarningAggregator.addWarningIOS(
-      'ios.usesIcloudStorage',
-      'Enable the iCloud Storage Entitlement from the Capabilities tab in your Xcode project.'
-      // TODO: add a link to a docs page with more information on how to do this
-    );
-  }
-
-  return entitlementsPlist;
 }
 
 export function setAccessesContactNotes(

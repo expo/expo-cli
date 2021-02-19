@@ -8,6 +8,7 @@ import { withPlugins } from './core-plugins';
 import withAdMob from './unversioned/expo-ads-admob';
 import withAppleAuthentication from './unversioned/expo-apple-authentication';
 import withBranch from './unversioned/expo-branch';
+import withDocumentPicker from './unversioned/expo-document-picker';
 import withFacebook from './unversioned/expo-facebook';
 import withNotifications from './unversioned/expo-notifications';
 import withSplashScreen from './unversioned/expo-splash-screen';
@@ -39,8 +40,6 @@ export const withExpoIOSPlugins: ConfigPlugin<{
     IOSConfig.Google.withGoogleServicesFile,
     // Entitlements
     IOSConfig.Entitlements.withAccessesContactNotes,
-    // TODO: We don't have a mechanism for getting the apple team id here yet
-    [IOSConfig.Entitlements.withICloudEntitlement, { appleTeamId: 'TODO-GET-APPLE-TEAM-ID' }],
     IOSConfig.Entitlements.withAssociatedDomains,
     // XcodeProject
     IOSConfig.DeviceFamily.withDeviceFamily,
@@ -115,6 +114,7 @@ export const withExpoVersionedSDKPlugins: ConfigPlugin<{ expoUsername: string | 
     withNotifications,
     [withUpdates, { expoUsername }],
     withBranch,
+    withDocumentPicker,
     withFacebook,
     withSplashScreen,
   ]);
