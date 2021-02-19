@@ -54,12 +54,12 @@ export async function action(
   // This gives the user sometime to bail out if the info is unexpected.
 
   if (sdkVersion) {
-    Log.log(`- Expo SDK: ${Log.chalk.bold(exp.sdkVersion)}`);
+    Log.log(`\u203A Expo SDK: ${Log.chalk.bold(exp.sdkVersion)}`);
   }
-  Log.log(`- Release channel: ${Log.chalk.bold(options.releaseChannel)}`);
-  Log.log(`- Workflow: ${Log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
+  Log.log(`\u203A Release channel: ${Log.chalk.bold(options.releaseChannel)}`);
+  Log.log(`\u203A Workflow: ${Log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
   if (user.kind === 'robot') {
-    Log.log(`- Owner: ${Log.chalk.bold(owner)}`);
+    Log.log(`\u203A Owner: ${Log.chalk.bold(owner)}`);
   }
 
   Log.newLine();
