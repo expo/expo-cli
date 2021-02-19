@@ -69,10 +69,10 @@ async function assertModulesHasExpoExtensionFilesAsync(projectRoot: string) {
     spinner.fail('Found project files with deprecated features');
   }
 
-  await promptMatchesAsync(matches);
+  logMatchedFiles(matches);
 }
 
-async function promptMatchesAsync(matches: string[]) {
+function logMatchedFiles(matches: string[]) {
   const hasNodeModules = matches.find(match => match.includes('node_modules/'));
   Log.error(
     chalk.red(
@@ -89,6 +89,10 @@ async function promptMatchesAsync(matches: string[]) {
           )
       )
   );
+}
+
+async function promptMatchesAsync(matches: string[]) {
+  logMatchedFiles(matches);
 
   // Skip in nonInteractive to give users a bypass
   if (
