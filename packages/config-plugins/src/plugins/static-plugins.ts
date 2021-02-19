@@ -21,6 +21,7 @@ function isModuleMissingError(name: string, error: Error): boolean {
 function isUnexpectedTokenError(error: Error): boolean {
   if (error instanceof SyntaxError) {
     return (
+      // These are the most common errors that'll be thrown when a package isn't transpiled correctly.
       !!error.message.match(/Unexpected token/) ||
       !!error.message.match(/Cannot use import statement/)
     );
