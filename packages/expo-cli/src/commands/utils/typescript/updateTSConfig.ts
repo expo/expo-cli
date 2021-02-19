@@ -36,7 +36,9 @@ export async function updateTSConfigAsync({
   // If the default TSConfig template exists (SDK +41), then use it in the project
   const hasTemplateTsconfig = resolveBaseTSConfig(projectRoot);
   if (hasTemplateTsconfig) {
-    if (projectTSConfig.extends !== baseTSConfigName) {
+    // If the extends field isn't defined, set it to the expo default
+    if (!projectTSConfig.extends) {
+      // if (projectTSConfig.extends !== baseTSConfigName) {
       projectTSConfig.extends = baseTSConfigName;
       modifications.push(['extends', baseTSConfigName]);
     }

@@ -11,7 +11,8 @@ const packageName = 'expo-updates';
 export const withUpdates: ConfigPlugin<{ expoUsername: string }> = (config, props) => {
   return withStaticPlugin(config, {
     _isLegacyPlugin: true,
-    plugin: packageName,
+    // Pass props to the static plugin if it exists.
+    plugin: [packageName, props],
     // If the static plugin isn't found, use the unversioned one.
     fallback: config => withUnversionedUpdates(config, props),
   });
