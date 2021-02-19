@@ -20,7 +20,10 @@ function isModuleMissingError(name: string, error: Error): boolean {
 
 function isUnexpectedTokenError(error: Error): boolean {
   if (error instanceof SyntaxError) {
-    return !!error.message.match(/Unexpected token/);
+    return (
+      !!error.message.match(/Unexpected token/) ||
+      !!error.message.match(/Cannot use import statement/)
+    );
   }
   return false;
 }
