@@ -1,4 +1,4 @@
-import { getDefaultTarget, ProjectTarget } from '@expo/config';
+import { ProjectTarget } from '@expo/config';
 import { Project, UrlUtils } from '@expo/xdl';
 import program, { Command } from 'commander';
 import crypto from 'crypto';
@@ -85,9 +85,10 @@ async function exportFilesAsync(
     isDev: options.dev,
     publishOptions: {
       resetCache: !!options.clear,
-      target: options.target ?? getDefaultTarget(projectRoot),
+      target: options.target,
     },
   };
+
   return await Project.exportAppAsync(
     projectRoot,
     options.publicUrl!,
@@ -98,7 +99,7 @@ async function exportFilesAsync(
   );
 }
 
-async function mergeSourceDirectoriresAsync(
+async function mergeSourceDirectoriesAsync(
   projectDir: string,
   mergeSrcDirs: string[],
   options: Pick<Options, 'mergeSrcUrl' | 'mergeSrcDir' | 'outputDir'>
@@ -160,14 +161,14 @@ function collect<T>(val: T, memo: T[]): T[] {
   return memo;
 }
 
-export async function action(projectDir: string, options: Options) {
+export async function action(projectRoot: string, options: Options) {
   if (!options.experimentalBundle) {
     // Ensure URL
     options.publicUrl = await ensurePublicUrlAsync(options.publicUrl, options.dev);
   }
 
   // Ensure the output directory is created
-  const outputPath = path.resolve(projectDir, options.outputDir);
+  const outputPath = path.resolve(projectRoot, options.outputDir);
   await fs.ensureDir(outputPath);
 
   // Assert if the folder has contents
@@ -188,14 +189,17 @@ export async function action(projectDir: string, options: Options) {
   }
 
   // Wrap the XDL method for exporting assets
-  await exportFilesAsync(projectDir, options);
+  await exportFilesAsync(projectRoot, options);
 
   // Merge src dirs/urls into a multimanifest if specified
-  const mergeSrcDirs: string[] = await collectMergeSourceUrlsAsync(projectDir, options.mergeSrcUrl);
+  const mergeSrcDirs: string[] = await collectMergeSourceUrlsAsync(
+    projectRoot,
+    options.mergeSrcUrl
+  );
   // add any local src dirs to be merged
   mergeSrcDirs.push(...options.mergeSrcDir);
 
-  await mergeSourceDirectoriresAsync(projectDir, mergeSrcDirs, options);
+  await mergeSourceDirectoriesAsync(projectRoot, mergeSrcDirs, options);
 
   Log.log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }

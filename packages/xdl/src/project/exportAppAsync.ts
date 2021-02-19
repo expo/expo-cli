@@ -10,7 +10,7 @@ import urljoin from 'url-join';
 import uuid from 'uuid';
 
 import * as EmbeddedAssets from '../EmbeddedAssets';
-import { shouldUseDevServer } from '../Env';
+import { isDebug, shouldUseDevServer } from '../Env';
 import logger from '../Logger';
 import { Asset, exportAssetsAsync } from '../ProjectAssets';
 import UserManager, { ANONYMOUS_USERNAME } from '../User';
@@ -72,6 +72,13 @@ export async function exportAppAsync(
   const absoluteOutputDir = path.resolve(process.cwd(), outputDir);
   const defaultTarget = getDefaultTarget(projectRoot);
   const target = options.publishOptions?.target ?? defaultTarget;
+
+  if (isDebug()) {
+    console.log();
+    console.log('Export Assets:');
+    console.log(`- Asset target: ${target}`);
+    console.log();
+  }
 
   // build the bundles
   // make output dirs if not exists
