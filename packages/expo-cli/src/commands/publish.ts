@@ -32,17 +32,17 @@ type Options = {
 };
 
 export async function action(
-  projectDir: string,
+  projectRoot: string,
   options: Options = {}
 ): Promise<Project.PublishedProjectResult> {
   assertValidReleaseChannel(options.releaseChannel);
 
-  const { exp, pkg } = getConfig(projectDir, {
+  const { exp, pkg } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
   const { sdkVersion, isDetached } = exp;
 
-  const target = options.target ?? getDefaultTarget(projectDir);
+  const target = options.target ?? getDefaultTarget(projectRoot);
 
   // note: this validates the exp.owner when the user is a robot
   const user = await UserManager.ensureLoggedInAsync();
@@ -69,7 +69,7 @@ export async function action(
   if (!isDetached && !options.duringBuild) {
     // Check for SDK version and release channel mismatches only after displaying the values.
     await logSDKMismatchWarningsAsync({
-      projectRoot: projectDir,
+      projectRoot,
       releaseChannel: options.releaseChannel,
       sdkVersion,
     });
@@ -77,7 +77,7 @@ export async function action(
 
   logExpoUpdatesWarnings(pkg);
 
-  logOptimizeWarnings({ projectRoot: projectDir });
+  logOptimizeWarnings({ projectRoot });
 
   if (!options.target && target === 'bare' && isLegacyImportsEnabled(exp)) {
     logBareWorkflowWarnings(pkg);
@@ -93,7 +93,7 @@ export async function action(
     simpleSpinner.start();
   }
 
-  const result = await Project.publishAsync(projectDir, {
+  const result = await Project.publishAsync(projectRoot, {
     releaseChannel: options.releaseChannel,
     quiet: options.quiet,
     target,
