@@ -29,11 +29,6 @@ export const withAssociatedDomains = createEntitlementsPlugin(
   'withAssociatedDomains'
 );
 
-export const withAppleSignInEntitlement = createEntitlementsPlugin(
-  setAppleSignInEntitlement,
-  'withAppleSignInEntitlement'
-);
-
 export const withICloudEntitlement: ConfigPlugin<{ appleTeamId: string }> = (
   config,
   { appleTeamId }
@@ -71,20 +66,6 @@ export function setICloudEntitlement(
       'Enable the iCloud Storage Entitlement from the Capabilities tab in your Xcode project.'
       // TODO: add a link to a docs page with more information on how to do this
     );
-  }
-
-  return entitlementsPlist;
-}
-
-export function setAppleSignInEntitlement(
-  config: ExpoConfig,
-  { 'com.apple.developer.applesignin': _, ...entitlementsPlist }: Plist
-): Plist {
-  if (config.ios?.usesAppleSignIn) {
-    return {
-      ...entitlementsPlist,
-      'com.apple.developer.applesignin': ['Default'],
-    };
   }
 
   return entitlementsPlist;
