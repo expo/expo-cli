@@ -113,7 +113,7 @@
     "@types/hapi__joi": "^17.1.2",
     "@types/hashids": "^1.0.30",
     "@types/ncp": "^2.0.1",
-    "@types/node-forge": "^0.8.6",
+    "@types/node-forge": "^0.9.7",
     "@types/raven": "^2.5.3",
     "@types/react-dev-utils": "~9.0.4",
     "@types/semver": "^6.0.0",
