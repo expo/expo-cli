@@ -2,47 +2,52 @@ name: "\U0001F41B Bug Report in Expo CLI"
 about: 'You want to report a reproducible bug or regression in Expo CLI or related tooling.'
 labels: 'bug'
 issue_body: true
-inputs:
-  - type: description
+body:
+  - type: markdown
     attributes:
       value: "We're looking to keep questions on our forums and bug reports on the GitHub repo. For questions and help using Expo CLI, post in our [community forums](https://forums.expo.io/c/expo-cli) (log in with your Expo developer account)."
-  - type: description
+  - type: markdown
     attributes:
       value: Found a bug in the Expo SDK? Open a bug report [here](https://github.com/expo/expo/issues/new?assignees=&labels=needs+review&template=bug_report.yml) instead.
-  - type: description
+  - type: markdown
     attributes:
       value: Thanks for taking the time to file a bug report! Please fill out this form as completely as possible.
-  - type: description
+  - type: markdown
     attributes:
       value: If you leave out sections there is a high likelihood your issue will be closed. If you have a question, not a bug report, please post it on our [forums](https://forums.expo.io/) instead.
   - type: textarea
+    validations:
+      required: true
     attributes:
       label: Summary
-      required: true
       description: Describe the issue in 1 or 2 sentences
       placeholder: Clearly describe what the expected behavior is vs. what is actually happening. This should be as short as possible, while still communicating all the necessary information. If your summary is just 'X library/method isn't working', then you need to continue debugging yourself and provide more information.
   - type: textarea
+    validations:
+      required: true
     attributes:
       label: Environment
-      required: true
       placeholder: Run `expo diagnostics` and paste the output here
   - type: input
+    validations:
+      required: true
     attributes:
       label: 'Please specify your device/emulator/simulator platform, model and version'
-      required: true
   - type: textarea
+    validations:
+      required: false
     attributes:
       label: Error output
-      required: false
       placeholder: If you're running into an error message, please run the same command with `EXPO_DEBUG=true <your command here>` and paste output here.
   - type: textarea
+    validations:
+      required: true
     attributes:
       label: Reproducible demo or steps to reproduce from a blank project
-      required: true
       description: 'This should include as little code as possible, do not simply link your entire project. Sharing a link to a [Snack](https://snack.expo.io/) is a GREAT way to provide a reproducible demo :) If a reproducible demo, or a complete list of steps from blank project to bug, are not provided, it is very likely your issue will be closed. Read [here more guidance](https://stackoverflow.com/help/mcve).'
-  - type: description
+  - type: markdown
     attributes:
       value: Please make sure contributors can follow the steps your provided in order to reproduce the bug.
-  - type: description
+  - type: markdown
     attributes:
       value: "**Realize that it is up to you to debug your code and be as certain as possible that the bug is with Expo, not with your own app.** [Here's an excellent guide to debugging you can follow](https://github.com/expo/fyi/blob/master/manual-debugging.md#how-to-narrow-down-the-source-of-an-error-a-step-by-step-guide-to-good-old-fashioned-manual-debugging)."

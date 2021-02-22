@@ -1,4 +1,10 @@
-import { getConfig, getDefaultTarget, PackageJSONConfig, ProjectTarget } from '@expo/config';
+import {
+  getConfig,
+  getDefaultTarget,
+  isLegacyImportsEnabled,
+  PackageJSONConfig,
+  ProjectTarget,
+} from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
 import { Project, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
@@ -26,17 +32,17 @@ type Options = {
 };
 
 export async function action(
-  projectDir: string,
+  projectRoot: string,
   options: Options = {}
 ): Promise<Project.PublishedProjectResult> {
   assertValidReleaseChannel(options.releaseChannel);
 
-  const { exp, pkg } = getConfig(projectDir, {
+  const { exp, pkg } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
   const { sdkVersion, isDetached } = exp;
 
-  const target = options.target ?? getDefaultTarget(projectDir);
+  const target = options.target ?? getDefaultTarget(projectRoot);
 
   // note: this validates the exp.owner when the user is a robot
   const user = await UserManager.ensureLoggedInAsync();
@@ -47,13 +53,13 @@ export async function action(
   // Log building info before building.
   // This gives the user sometime to bail out if the info is unexpected.
 
-  if (sdkVersion && target === 'managed') {
-    Log.log(`- Expo SDK: ${Log.chalk.bold(exp.sdkVersion)}`);
+  if (sdkVersion) {
+    Log.log(`\u203A Expo SDK: ${Log.chalk.bold(exp.sdkVersion)}`);
   }
-  Log.log(`- Release channel: ${Log.chalk.bold(options.releaseChannel)}`);
-  Log.log(`- Workflow: ${Log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
+  Log.log(`\u203A Release channel: ${Log.chalk.bold(options.releaseChannel)}`);
+  Log.log(`\u203A Workflow: ${Log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
   if (user.kind === 'robot') {
-    Log.log(`- Owner: ${Log.chalk.bold(owner)}`);
+    Log.log(`\u203A Owner: ${Log.chalk.bold(owner)}`);
   }
 
   Log.newLine();
@@ -63,7 +69,7 @@ export async function action(
   if (!isDetached && !options.duringBuild) {
     // Check for SDK version and release channel mismatches only after displaying the values.
     await logSDKMismatchWarningsAsync({
-      projectRoot: projectDir,
+      projectRoot,
       releaseChannel: options.releaseChannel,
       sdkVersion,
     });
@@ -71,9 +77,9 @@ export async function action(
 
   logExpoUpdatesWarnings(pkg);
 
-  logOptimizeWarnings({ projectRoot: projectDir });
+  logOptimizeWarnings({ projectRoot });
 
-  if (!options.target && target === 'bare') {
+  if (!options.target && target === 'bare' && isLegacyImportsEnabled(exp)) {
     logBareWorkflowWarnings(pkg);
   }
 
@@ -87,7 +93,7 @@ export async function action(
     simpleSpinner.start();
   }
 
-  const result = await Project.publishAsync(projectDir, {
+  const result = await Project.publishAsync(projectRoot, {
     releaseChannel: options.releaseChannel,
     quiet: options.quiet,
     target,
