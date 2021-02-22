@@ -12,4 +12,4 @@ body:
     attributes:
       label: Do you understand that any feature requests opened in the core Expo repository will be closed?
       options:
-        - Yes
+        - 'Yes'
