@@ -9,9 +9,9 @@ import * as UrlUtils from '../UrlUtils';
 import UserManager, { ANONYMOUS_USERNAME } from '../User';
 import UserSettings from '../UserSettings';
 import XDLError from '../XDLError';
+import * as Logger from '../project/ProjectUtils';
+import { assertValidProjectRoot } from '../project/errors';
 import { delayAsync } from '../utils/delayAsync';
-import * as Logger from './ProjectUtils';
-import { assertValidProjectRoot } from './errors';
 import { NgrokOptions, resolveNgrokAsync } from './resolveNgrok';
 
 function getNgrokConfigPath() {

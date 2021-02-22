@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { Ora } from 'ora';
 
 import CommandError from '../CommandError';
-import log from '../log';
+import Log from '../log';
 import { convertHTMLToASCII } from '../utils/convertHTMLToASCII';
 
 async function getContractStatusAsync(
@@ -13,7 +13,7 @@ async function getContractStatusAsync(
     const capabilities = await ITCAgreements.getCapabilitiesAsync(context);
     return capabilities?.contractStatus ?? null;
   } catch (error) {
-    log.warn(`Failed to get iTunes contract status: ${error.message}`);
+    Log.warn(`Failed to get iTunes contract status: ${error.message}`);
     return null;
   }
 }
@@ -22,7 +22,7 @@ async function getContractMessagesAsync(context: RequestContext) {
   try {
     return await ITCAgreements.getContractMessagesAsync(context);
   } catch (error) {
-    log.warn(`Failed to get iTunes contract messages: ${error.message}`);
+    Log.warn(`Failed to get iTunes contract messages: ${error.message}`);
     return null;
   }
 }
@@ -56,10 +56,10 @@ async function getRequiredContractMessagesAsync(
   // There is a small chance that this could result in a false positive if the messages are extraneous, so we'll also
   // prompt the user to open an issue so we can address the new contract state if it ever appears.
   // TODO: Maybe a silent analytic would be better
-  log.error(
+  Log.error(
     `\nUnexpected Apple developer contract status "${status}". Please open an issue on https://github.com/expo/eas-cli`
   );
-  log.newLine();
+  Log.newLine();
   return { messages: (await getContractMessagesAsync(context)) ?? [], isFatal: false };
 }
 
@@ -83,18 +83,18 @@ export async function assertContractMessagesAsync(context: RequestContext, spinn
     if (spinner) {
       spinner.stop();
     }
-    log.newLine();
-    log(chalk.yellow.bold('Messages from App Store Connect:'));
-    log.newLine();
+    Log.newLine();
+    Log.log(chalk.yellow.bold('Messages from App Store Connect:'));
+    Log.newLine();
     for (const message of messages) {
-      if (log.isDebug) {
-        log(JSON.stringify(message, null, 2));
-        log.newLine();
+      if (Log.isDebug) {
+        Log.log(JSON.stringify(message, null, 2));
+        Log.newLine();
       }
-      log.addNewLineIfNone();
-      log(formatContractMessage(message));
+      Log.addNewLineIfNone();
+      Log.log(formatContractMessage(message));
     }
-    log.addNewLineIfNone();
+    Log.addNewLineIfNone();
     // Only throw an error if we know that the status is fatal, otherwise attempt to finish the process.
     if (isFatal) {
       throw new CommandError('App Store Connect has agreement updates that must be resolved');

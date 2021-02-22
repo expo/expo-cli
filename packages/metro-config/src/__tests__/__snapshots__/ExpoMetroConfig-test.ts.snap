@@ -4,7 +4,6 @@ exports[`getDefaultConfig complains about an invalid target setting 1`] = `
 "Invalid target: 'blooper'. Debug info: 
 {
   \\"options.target\\": \\"blooper\\",
-  \\"EXPO_TARGET\\": \\"bare\\",
   \\"default\\": \\"managed\\"
 }"
 `;

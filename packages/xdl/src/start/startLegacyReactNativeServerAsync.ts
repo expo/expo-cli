@@ -13,9 +13,9 @@ import * as ProjectSettings from '../ProjectSettings';
 import * as UrlUtils from '../UrlUtils';
 import * as Versions from '../Versions';
 import * as Watchman from '../Watchman';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { assertValidProjectRoot } from '../project/errors';
 import { delayAsync } from '../utils/delayAsync';
-import * as ProjectUtils from './ProjectUtils';
-import { assertValidProjectRoot } from './errors';
 import { getFreePortAsync } from './getFreePortAsync';
 import { StartOptions } from './startDevServerAsync';
 
@@ -134,7 +134,9 @@ export async function startReactNativeServerAsync({
 
   let packagerPort = await getFreePortAsync(19001); // Create packager options
 
-  const customLogReporterPath: string = require.resolve(path.join(__dirname, '../build/reporter'));
+  const customLogReporterPath: string = require.resolve(
+    path.join(__dirname, '../../build/reporter')
+  );
 
   // TODO: Bacon: Support .mjs (short-lived JS modules extension that some packages use)
   const sourceExtsConfig = { isTS: true, isReact: true, isModern: false };

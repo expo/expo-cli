@@ -8,8 +8,16 @@ Object {
         "name": "expo-ads-admob",
         "version": "UNVERSIONED",
       },
+      "expo-apple-authentication": Object {
+        "name": "expo-apple-authentication",
+        "version": "UNVERSIONED",
+      },
       "expo-branch": Object {
         "name": "expo-branch",
+        "version": "UNVERSIONED",
+      },
+      "expo-document-picker": Object {
+        "name": "expo-document-picker",
         "version": "UNVERSIONED",
       },
       "expo-facebook": Object {

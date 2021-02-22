@@ -4,7 +4,7 @@ import dateformat from 'dateformat';
 import ora from 'ora';
 
 import CommandError from '../CommandError';
-import log from '../log';
+import Log from '../log';
 import { AppleCtx, getRequestContext } from './authenticate';
 
 export type PushKeyInfo = {
@@ -90,7 +90,7 @@ async function revokePushKeyAsync(authCtx: AppleCtx, ids: string[]): Promise<voi
 
     spinner.succeed(`Revoked ${name}`);
   } catch (error) {
-    log.error(error);
+    Log.error(error);
     spinner.fail(`Failed to revoke ${name}`);
     throw error;
   }

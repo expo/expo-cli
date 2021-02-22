@@ -1,4 +1,10 @@
-import { getConfig, getDefaultTarget, PackageJSONConfig, ProjectTarget } from '@expo/config';
+import {
+  getConfig,
+  getDefaultTarget,
+  isLegacyImportsEnabled,
+  PackageJSONConfig,
+  ProjectTarget,
+} from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
 import { Project, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
@@ -7,9 +13,10 @@ import fs from 'fs';
 import path from 'path';
 
 import CommandError from '../CommandError';
-import log from '../log';
+import Log from '../log';
 import { getProjectOwner } from '../projects';
 import * as sendTo from '../sendTo';
+import { getBuildStatusAsync } from './build/getBuildStatusAsync';
 import * as TerminalLink from './utils/TerminalLink';
 import { formatNamedWarning } from './utils/logConfigWarnings';
 
@@ -25,44 +32,44 @@ type Options = {
 };
 
 export async function action(
-  projectDir: string,
+  projectRoot: string,
   options: Options = {}
 ): Promise<Project.PublishedProjectResult> {
   assertValidReleaseChannel(options.releaseChannel);
 
-  const { exp, pkg } = getConfig(projectDir, {
+  const { exp, pkg } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
   const { sdkVersion, isDetached } = exp;
 
-  const target = options.target ?? getDefaultTarget(projectDir);
+  const target = options.target ?? getDefaultTarget(projectRoot);
 
   // note: this validates the exp.owner when the user is a robot
   const user = await UserManager.ensureLoggedInAsync();
   const owner = getProjectOwner(user, exp);
 
-  log.addNewLineIfNone();
+  Log.addNewLineIfNone();
 
   // Log building info before building.
   // This gives the user sometime to bail out if the info is unexpected.
 
-  if (sdkVersion && target === 'managed') {
-    log(`- Expo SDK: ${log.chalk.bold(exp.sdkVersion)}`);
+  if (sdkVersion) {
+    Log.log(`\u203A Expo SDK: ${Log.chalk.bold(exp.sdkVersion)}`);
   }
-  log(`- Release channel: ${log.chalk.bold(options.releaseChannel)}`);
-  log(`- Workflow: ${log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
+  Log.log(`\u203A Release channel: ${Log.chalk.bold(options.releaseChannel)}`);
+  Log.log(`\u203A Workflow: ${Log.chalk.bold(target.replace(/\b\w/g, l => l.toUpperCase()))}`);
   if (user.kind === 'robot') {
-    log(`- Owner: ${log.chalk.bold(owner)}`);
+    Log.log(`\u203A Owner: ${Log.chalk.bold(owner)}`);
   }
 
-  log.newLine();
+  Log.newLine();
 
   // Log warnings.
 
   if (!isDetached && !options.duringBuild) {
     // Check for SDK version and release channel mismatches only after displaying the values.
     await logSDKMismatchWarningsAsync({
-      projectRoot: projectDir,
+      projectRoot,
       releaseChannel: options.releaseChannel,
       sdkVersion,
     });
@@ -70,23 +77,23 @@ export async function action(
 
   logExpoUpdatesWarnings(pkg);
 
-  logOptimizeWarnings({ projectRoot: projectDir });
+  logOptimizeWarnings({ projectRoot });
 
-  if (!options.target && target === 'bare') {
+  if (!options.target && target === 'bare' && isLegacyImportsEnabled(exp)) {
     logBareWorkflowWarnings(pkg);
   }
 
-  log.addNewLineIfNone();
+  Log.addNewLineIfNone();
 
   // Build and publish the project.
 
-  log(`Building optimized bundles and generating sourcemaps...`);
+  Log.log(`Building optimized bundles and generating sourcemaps...`);
 
   if (options.quiet) {
     simpleSpinner.start();
   }
 
-  const result = await Project.publishAsync(projectDir, {
+  const result = await Project.publishAsync(projectRoot, {
     releaseChannel: options.releaseChannel,
     quiet: options.quiet,
     target,
@@ -99,8 +106,8 @@ export async function action(
     simpleSpinner.stop();
   }
 
-  log('Publish complete');
-  log.newLine();
+  Log.log('Publish complete');
+  Log.newLine();
 
   logManifestUrl({ url, sdkVersion: exp.sdkVersion });
 
@@ -123,7 +130,7 @@ export async function action(
     }
   }
 
-  log.newLine();
+  Log.newLine();
 
   return result;
 }
@@ -148,8 +155,8 @@ function assertValidReleaseChannel(releaseChannel?: string): void {
  */
 function logManifestUrl({ url, sdkVersion }: { url: string; sdkVersion?: string }) {
   const manifestUrl = getExampleManifestUrl(url, sdkVersion) ?? url;
-  log(
-    `📝  Manifest: ${log.chalk.bold(TerminalLink.fallbackToUrl(url, manifestUrl))} ${log.chalk.dim(
+  Log.log(
+    `📝  Manifest: ${Log.chalk.bold(TerminalLink.fallbackToUrl(url, manifestUrl))} ${Log.chalk.dim(
       TerminalLink.learnMore('https://expo.fyi/manifest-url')
     )}`
   );
@@ -167,16 +174,16 @@ function logProjectPageUrl({
   url: string;
   copiedToClipboard: boolean;
 }) {
-  let productionMessage = `⚙️   Project page: ${log.chalk.bold(
+  let productionMessage = `⚙️   Project page: ${Log.chalk.bold(
     TerminalLink.fallbackToUrl(url, url)
   )}`;
 
   if (copiedToClipboard) {
-    productionMessage += ` ${log.chalk.gray(`[copied to clipboard]`)}`;
+    productionMessage += ` ${Log.chalk.gray(`[copied to clipboard]`)}`;
   }
-  productionMessage += ` ${log.chalk.dim(TerminalLink.learnMore('https://expo.fyi/project-page'))}`;
+  productionMessage += ` ${Log.chalk.dim(TerminalLink.learnMore('https://expo.fyi/project-page'))}`;
 
-  log(productionMessage);
+  Log.log(productionMessage);
 }
 
 function getExampleManifestUrl(url: string, sdkVersion: string | undefined): string | null {
@@ -216,7 +223,7 @@ async function logSDKMismatchWarningsAsync({
     return;
   }
 
-  const buildStatus = await Project.getBuildStatusAsync(projectRoot, {
+  const buildStatus = await getBuildStatusAsync(projectRoot, {
     platform: 'all',
     current: true,
     releaseChannel,
@@ -229,7 +236,7 @@ async function logSDKMismatchWarningsAsync({
   }
 
   // A convenient warning reminding people that they're publishing with an SDK that their published app does not support.
-  log.nestedWarn(
+  Log.nestedWarn(
     formatNamedWarning(
       'URL mismatch',
       `No standalone app has been built with SDK ${sdkVersion} and release channel "${releaseChannel}" for this project before.\n  OTA updates only work for native projects that have the same SDK version and release channel.`,
@@ -246,7 +253,7 @@ export function logExpoUpdatesWarnings(pkg: PackageJSONConfig): void {
     return;
   }
 
-  log.nestedWarn(
+  Log.nestedWarn(
     formatNamedWarning(
       'Conflicting Updates',
       `You have both the ${chalk.bold('expokit')} and ${chalk.bold(
@@ -265,7 +272,7 @@ export function logOptimizeWarnings({ projectRoot }: { projectRoot: string }): v
   if (hasOptimized) {
     return;
   }
-  log.nestedWarn(
+  Log.nestedWarn(
     formatNamedWarning(
       'Optimization',
       `Project may contain uncompressed images. Optimizing image assets can improve app size and performance.\n  To fix this, run ${chalk.bold(
@@ -295,7 +302,7 @@ export function logBareWorkflowWarnings(pkg: PackageJSONConfig) {
     return;
   }
 
-  log.nestedWarn(
+  Log.nestedWarn(
     formatNamedWarning(
       'Workflow target',
       `This is a ${chalk.bold(

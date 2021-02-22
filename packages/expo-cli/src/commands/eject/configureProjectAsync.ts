@@ -11,8 +11,8 @@ import {
 } from '@expo/config-plugins';
 import { UserManager } from '@expo/xdl';
 
-import log from '../../log';
-import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from '../eject/ConfigValidation';
+import Log from '../../log';
+import { getOrPromptForBundleIdentifier, getOrPromptForPackage } from './ConfigValidation';
 
 // Expo managed packages that require extra update.
 // These get applied automatically to create parity with expo build in eas build.
@@ -56,6 +56,8 @@ const expoManagedVersionedPlugins = [
 const withOptionalPlugins: ConfigPlugin<(StaticPlugin | string)[]> = (config, plugins) => {
   return plugins.reduce((prev, plugin) => {
     return withStaticPlugin(prev, {
+      // hide errors
+      _isLegacyPlugin: true,
       plugin,
       // If a plugin doesn't exist, do nothing.
       fallback: config => config,
@@ -114,14 +116,14 @@ export default async function configureManagedProjectAsync({
   // compile all plugins and mods
   config = await compileModsAsync(config, { projectRoot, platforms });
 
-  if (log.isDebug) {
-    log.debug();
-    log.debug('Evaluated config:');
+  if (Log.isDebug) {
+    Log.debug();
+    Log.debug('Evaluated config:');
     // @ts-ignore: mods not on config type
     const { mods, ...rest } = config;
-    log.info(JSON.stringify(rest, null, 2));
-    log.info(mods);
-    log.debug();
+    Log.info(JSON.stringify(rest, null, 2));
+    Log.info(mods);
+    Log.debug();
   }
 
   return config;

@@ -1,4 +1,4 @@
-import { getDefaultTarget, ProjectTarget } from '@expo/config';
+import { ProjectTarget } from '@expo/config';
 import { Project, UrlUtils } from '@expo/xdl';
 import program, { Command } from 'commander';
 import crypto from 'crypto';
@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import CommandError, { SilentError } from '../CommandError';
-import log from '../log';
+import Log from '../log';
 import prompt from '../prompts';
 import * as CreateApp from './utils/CreateApp';
 import { downloadAndDecompressAsync } from './utils/Tar';
@@ -54,7 +54,7 @@ export async function ensurePublicUrlAsync(url: any, isDev?: boolean): Promise<s
   if (!isDev && !UrlUtils.isHttps(url)) {
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
   } else if (!UrlUtils.isURL(url, { protocols: ['http', 'https'] })) {
-    log.nestedWarn(
+    Log.nestedWarn(
       `Dev Mode: --public-url ${url} does not conform to the required HTTP(S) protocol.`
     );
   }
@@ -85,9 +85,10 @@ async function exportFilesAsync(
     isDev: options.dev,
     publishOptions: {
       resetCache: !!options.clear,
-      target: options.target ?? getDefaultTarget(projectRoot),
+      target: options.target,
     },
   };
+
   return await Project.exportAppAsync(
     projectRoot,
     options.publicUrl!,
@@ -98,7 +99,7 @@ async function exportFilesAsync(
   );
 }
 
-async function mergeSourceDirectoriresAsync(
+async function mergeSourceDirectoriesAsync(
   projectDir: string,
   mergeSrcDirs: string[],
   options: Pick<Options, 'mergeSrcUrl' | 'mergeSrcDir' | 'outputDir'>
@@ -107,7 +108,7 @@ async function mergeSourceDirectoriresAsync(
     return;
   }
   const srcDirs = options.mergeSrcDir.concat(options.mergeSrcUrl).join(' ');
-  log.nested(`Starting project merge of ${srcDirs} into ${options.outputDir}`);
+  Log.nested(`Starting project merge of ${srcDirs} into ${options.outputDir}`);
 
   // Merge app distributions
   await Project.mergeAppDistributions(
@@ -115,7 +116,7 @@ async function mergeSourceDirectoriresAsync(
     [...mergeSrcDirs, options.outputDir], // merge stuff in srcDirs and outputDir together
     options.outputDir
   );
-  log.nested(
+  Log.nested(
     `Project merge was successful. Your merged files can be found in ${options.outputDir}`
   );
 }
@@ -160,14 +161,14 @@ function collect<T>(val: T, memo: T[]): T[] {
   return memo;
 }
 
-export async function action(projectDir: string, options: Options) {
+export async function action(projectRoot: string, options: Options) {
   if (!options.experimentalBundle) {
     // Ensure URL
     options.publicUrl = await ensurePublicUrlAsync(options.publicUrl, options.dev);
   }
 
   // Ensure the output directory is created
-  const outputPath = path.resolve(projectDir, options.outputDir);
+  const outputPath = path.resolve(projectRoot, options.outputDir);
   await fs.ensureDir(outputPath);
 
   // Assert if the folder has contents
@@ -178,26 +179,29 @@ export async function action(projectDir: string, options: Options) {
       overwrite: options.force,
     }))
   ) {
-    const message = `Try using a new directory name with ${log.chalk.bold(
+    const message = `Try using a new directory name with ${Log.chalk.bold(
       '--output-dir'
-    )}, moving these files, or using ${log.chalk.bold('--force')} to overwrite them.`;
-    log.newLine();
-    log.nested(message);
-    log.newLine();
+    )}, moving these files, or using ${Log.chalk.bold('--force')} to overwrite them.`;
+    Log.newLine();
+    Log.nested(message);
+    Log.newLine();
     throw new SilentError(message);
   }
 
   // Wrap the XDL method for exporting assets
-  await exportFilesAsync(projectDir, options);
+  await exportFilesAsync(projectRoot, options);
 
   // Merge src dirs/urls into a multimanifest if specified
-  const mergeSrcDirs: string[] = await collectMergeSourceUrlsAsync(projectDir, options.mergeSrcUrl);
+  const mergeSrcDirs: string[] = await collectMergeSourceUrlsAsync(
+    projectRoot,
+    options.mergeSrcUrl
+  );
   // add any local src dirs to be merged
   mergeSrcDirs.push(...options.mergeSrcDir);
 
-  await mergeSourceDirectoriresAsync(projectDir, mergeSrcDirs, options);
+  await mergeSourceDirectoriesAsync(projectRoot, mergeSrcDirs, options);
 
-  log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
+  Log.log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }
 
 export default function (program: Command) {
@@ -206,6 +210,7 @@ export default function (program: Command) {
     .description('Export the static files of the app for hosting it on a web server')
     .helpGroup('core')
     .option('-p, --public-url <url>', 'The public url that will host the static files. (Required)')
+    .option('-c, --clear', 'Clear the Metro bundler cache')
     .option(
       '--output-dir <dir>',
       'The directory to export the static files to. Default directory is `dist`',

@@ -3,7 +3,7 @@ import once from 'lodash/once';
 import path from 'path';
 import untildify from 'untildify';
 
-import log from '../../log';
+import Log from '../../log';
 import prompts, { Question as PromptQuestion } from '../../prompts';
 import * as validators from '../../validators';
 
@@ -36,7 +36,7 @@ export type CredentialSchema<T> = {
 };
 
 const EXPERT_PROMPT = once(() =>
-  log.warn(`
+  Log.warn(`
 WARNING! In this mode, we won't be able to make sure that your credentials are valid.
 Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!
 

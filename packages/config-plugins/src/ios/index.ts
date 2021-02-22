@@ -1,5 +1,6 @@
 import * as AdMob from './AdMob';
 import * as Branch from './Branch';
+import * as BuildScheme from './BuildScheme';
 import * as BundleIdentifier from './BundleIdentifier';
 import * as CustomInfoPlistEntries from './CustomInfoPlistEntries';
 import * as DeviceFamily from './DeviceFamily';
@@ -18,7 +19,6 @@ import * as RequiresFullScreen from './RequiresFullScreen';
 import * as Scheme from './Scheme';
 import * as SplashScreen from './SplashScreen';
 import * as StatusBar from './StatusBar';
-import * as Target from './Target';
 import * as Updates from './Updates';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
 import * as UsesNonExemptEncryption from './UsesNonExemptEncryption';
@@ -31,6 +31,7 @@ import * as XcodeUtils from './utils/Xcodeproj';
 export {
   AdMob,
   Branch,
+  BuildScheme,
   BundleIdentifier,
   CustomInfoPlistEntries,
   DeviceFamily,
@@ -50,7 +51,6 @@ export {
   Permissions,
   RequiresFullScreen,
   Scheme,
-  Target,
   Updates,
   UserInterfaceStyle,
   UsesNonExemptEncryption,

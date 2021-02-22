@@ -1,8 +1,9 @@
 import chalk from 'chalk';
 import { Command } from 'commander';
 
-import * as Eject from './eject/Eject';
+import { clearNativeFolder } from './eject/clearNativeFolder';
 import { platformsFromPlatform } from './eject/platformOptions';
+import { EjectAsyncOptions, prebuildAsync } from './eject/prebuildAsync';
 import { learnMore } from './utils/TerminalLink';
 
 export async function actionAsync(
@@ -10,7 +11,7 @@ export async function actionAsync(
   {
     platform,
     ...options
-  }: Eject.EjectAsyncOptions & {
+  }: EjectAsyncOptions & {
     npm?: boolean;
     platform?: string;
   }
@@ -22,12 +23,12 @@ export async function actionAsync(
   const platforms = platformsFromPlatform(platform);
 
   // Clear the native folders before syncing
-  await Eject.clearNativeFolder(projectDir, platforms);
+  await clearNativeFolder(projectDir, platforms);
 
-  await Eject.prebuildAsync(projectDir, {
+  await prebuildAsync(projectDir, {
     ...options,
     platforms,
-  } as Eject.EjectAsyncOptions);
+  } as EjectAsyncOptions);
 }
 
 export default function (program: Command) {

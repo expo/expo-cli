@@ -9,6 +9,26 @@ import {
 } from '../utils/plugin-resolver';
 
 const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
+const EXPO_CONFIG_PLUGIN_VERBOSE_ERRORS = boolish('EXPO_CONFIG_PLUGIN_VERBOSE_ERRORS', false);
+
+function isModuleMissingError(name: string, error: Error): boolean {
+  // @ts-ignore
+  if (error.code === 'MODULE_NOT_FOUND') {
+    return true;
+  }
+  return error.message.includes(`Cannot find module '${name}'`);
+}
+
+function isUnexpectedTokenError(error: Error): boolean {
+  if (error instanceof SyntaxError) {
+    return (
+      // These are the most common errors that'll be thrown when a package isn't transpiled correctly.
+      !!error.message.match(/Unexpected token/) ||
+      !!error.message.match(/Cannot use import statement/)
+    );
+  }
+  return false;
+}
 
 /**
  * Resolves static module plugin and potentially falls back on a provided plugin if the module cannot be resolved
@@ -16,11 +36,13 @@ const EXPO_DEBUG = boolish('EXPO_DEBUG', false);
  * @param config
  * @param fallback Plugin with `_resolverError` explaining why the module couldn't be used
  * @param projectRoot optional project root, fallback to _internal.projectRoot. Used for testing.
+ * @param _isLegacyPlugin Used to suppress errors thrown by plugins that are applied automatically
  */
 export const withStaticPlugin: ConfigPlugin<{
   plugin: StaticPlugin | ConfigPlugin | string;
   fallback?: ConfigPlugin<{ _resolverError: Error } & any>;
   projectRoot?: string;
+  _isLegacyPlugin?: boolean;
 }> = (config, props) => {
   let projectRoot = props.projectRoot;
   if (!projectRoot) {
@@ -45,8 +67,27 @@ export const withStaticPlugin: ConfigPlugin<{
       withPlugin = resolveConfigPluginFunction(projectRoot, pluginResolve);
     } catch (error) {
       if (EXPO_DEBUG) {
-        // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
-        console.log(`Error resolving plugin "${pluginResolve}"`, error);
+        if (EXPO_CONFIG_PLUGIN_VERBOSE_ERRORS) {
+          // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
+          console.log(`Error resolving plugin "${pluginResolve}"`);
+          console.log(error);
+          console.log();
+        } else {
+          const shouldMuteWarning =
+            props._isLegacyPlugin &&
+            (isModuleMissingError(pluginResolve, error) || isUnexpectedTokenError(error));
+          if (!shouldMuteWarning) {
+            if (isModuleMissingError(pluginResolve, error)) {
+              // Prevent causing log spew for basic resolution errors.
+              console.log(`Could not find plugin "${pluginResolve}"`);
+            } else {
+              // Log the error in debug mode for plugins with fallbacks (like the Expo managed plugins).
+              console.log(`Error resolving plugin "${pluginResolve}"`);
+              console.log(error);
+              console.log();
+            }
+          }
+        }
       }
       // TODO: Maybe allow for `PluginError`s to be thrown so external plugins can assert invalid options.
 

@@ -16,9 +16,9 @@ import UserManager, { ANONYMOUS_USERNAME } from '../User';
 import UserSettings from '../UserSettings';
 import * as Versions from '../Versions';
 import { learnMore } from '../logs/TerminalLink';
+import * as Doctor from '../project/Doctor';
+import * as ProjectUtils from '../project/ProjectUtils';
 import { resolveEntryPoint } from '../tools/resolveEntryPoint';
-import * as Doctor from './Doctor';
-import * as ProjectUtils from './ProjectUtils';
 
 interface HostInfo {
   host: string;
@@ -73,19 +73,19 @@ async function getPackagerOptionsAsync(
   projectRoot: string
 ): Promise<[PackagerOptions, PackagerOptions]> {
   // Get packager opts and then copy into bundleUrlPackagerOpts
-  const packagerOpts = await ProjectSettings.readAsync(projectRoot);
-  const bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
+  const projectSettings = await ProjectSettings.readAsync(projectRoot);
+  const bundleUrlPackagerOpts = JSON.parse(JSON.stringify(projectSettings));
   bundleUrlPackagerOpts.urlType = 'http';
   if (bundleUrlPackagerOpts.hostType === 'redirect') {
     bundleUrlPackagerOpts.hostType = 'tunnel';
   }
-  return [packagerOpts, bundleUrlPackagerOpts];
+  return [projectSettings, bundleUrlPackagerOpts];
 }
 
 async function getBundleUrlAsync({
   projectRoot,
   platform,
-  packagerOpts,
+  projectSettings,
   bundleUrlPackagerOpts,
   mainModuleName,
   hostname,
@@ -94,10 +94,10 @@ async function getBundleUrlAsync({
   hostname?: string;
   mainModuleName: string;
   projectRoot: string;
-  packagerOpts: PackagerOptions;
+  projectSettings: PackagerOptions;
   bundleUrlPackagerOpts: PackagerOptions;
 }): Promise<string> {
-  const queryParams = UrlUtils.constructBundleQueryParams(projectRoot, packagerOpts);
+  const queryParams = UrlUtils.constructBundleQueryParams(projectRoot, projectSettings);
 
   const path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(
     platform
@@ -195,14 +195,14 @@ export async function getManifestResponseAsync({
   const mainModuleName = UrlUtils.stripJSExtension(entryPoint);
   // Gather packager and host info
   const hostInfo = await createHostInfoAsync();
-  const [packagerOpts, bundleUrlPackagerOpts] = await getPackagerOptionsAsync(projectRoot);
+  const [projectSettings, bundleUrlPackagerOpts] = await getPackagerOptionsAsync(projectRoot);
   // Mutate the manifest
   manifest.xde = true; // deprecated
   manifest.developer = {
     tool: Config.developerTool,
     projectRoot,
   };
-  manifest.packagerOpts = packagerOpts;
+  manifest.packagerOpts = projectSettings;
   manifest.mainModuleName = mainModuleName;
   // Adding the env variables to the Expo manifest is unsafe.
   // This feature is deprecated in SDK 41 forward.
@@ -213,7 +213,7 @@ export async function getManifestResponseAsync({
   manifest.bundleUrl = await getBundleUrlAsync({
     projectRoot,
     platform,
-    packagerOpts,
+    projectSettings,
     bundleUrlPackagerOpts,
     mainModuleName,
     hostname,

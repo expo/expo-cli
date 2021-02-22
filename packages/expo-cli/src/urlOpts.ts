@@ -5,7 +5,7 @@ import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
 
 import CommandError, { AbortCommandError } from './CommandError';
-import log from './log';
+import Log from './log';
 import { getDevClientSchemeAsync } from './schemes';
 
 // NOTE: if you update this, you should also update assertValidOptions in UrlUtils.ts
@@ -44,7 +44,7 @@ function addOptions(program: Command) {
 }
 
 async function optsAsync(projectDir: string, options: any) {
-  var opts = await ProjectSettings.readAsync(projectDir);
+  const opts = await ProjectSettings.readAsync(projectDir);
 
   if ([options.host, options.lan, options.localhost, options.tunnel].filter(i => i).length > 1) {
     throw new CommandError(
@@ -75,12 +75,12 @@ async function optsAsync(projectDir: string, options: any) {
   if (options.devClient) {
     const defaultTarget = getDefaultTarget(projectDir);
     if (defaultTarget !== 'bare') {
-      log.warn(
-        `\nOption ${log.chalk.cyan(
+      Log.warn(
+        `\nOption ${Log.chalk.bold(
           '--dev-client'
-        )} can only be used in bare workflow apps. Run ${log.chalk.cyan(
+        )} can only be used in bare workflow apps. Run ${Log.chalk.bold(
           'expo eject'
-        )} and try again\n`
+        )} and try again.\n`
       );
       throw new AbortCommandError();
     }
@@ -103,7 +103,7 @@ async function optsAsync(projectDir: string, options: any) {
 }
 
 function printQRCode(url: string) {
-  qrcodeTerminal.generate(url, code => log(`${indentString(code, 1)}\n`));
+  qrcodeTerminal.generate(url, code => Log.log(`${indentString(code, 1)}\n`));
 }
 
 async function handleMobileOptsAsync(

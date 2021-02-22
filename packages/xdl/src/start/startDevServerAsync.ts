@@ -1,12 +1,10 @@
-import { ExpoConfig, ProjectTarget } from '@expo/config';
+import { ProjectTarget } from '@expo/config';
 import { MetroDevServerOptions, runMetroDevServerAsync } from '@expo/dev-server';
-import { boolish } from 'getenv';
 
 import * as ProjectSettings from '../ProjectSettings';
-import * as Versions from '../Versions';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { assertValidProjectRoot } from '../project/errors';
 import { getManifestHandler } from './ManifestHandler';
-import * as ProjectUtils from './ProjectUtils';
-import { assertValidProjectRoot } from './errors';
 import { getFreePortAsync } from './getFreePortAsync';
 
 export type StartOptions = {
@@ -18,15 +16,6 @@ export type StartOptions = {
   webOnly?: boolean;
   target?: ProjectTarget;
 };
-
-/**
- * Returns true if we should use Metro using its JS APIs via @expo/dev-server (the modern and fast
- * way), false if we should fall back to spawning it as a subprocess (supported for backwards
- * compatibility with SDK39 and older).
- */
-export function shouldUseDevServer(exp: ExpoConfig) {
-  return Versions.gteSdkVersion(exp, '40.0.0') || boolish('EXPO_USE_DEV_SERVER', false);
-}
 
 export async function startDevServerAsync(projectRoot: string, startOptions: StartOptions) {
   assertValidProjectRoot(projectRoot);
@@ -42,6 +31,8 @@ export async function startDevServerAsync(projectRoot: string, startOptions: Sta
   const options: MetroDevServerOptions = {
     port,
     logger: ProjectUtils.getLogger(projectRoot),
+    // @deprecated
+    target: startOptions.target,
   };
   if (startOptions.reset) {
     options.resetCache = true;
@@ -49,12 +40,8 @@ export async function startDevServerAsync(projectRoot: string, startOptions: Sta
   if (startOptions.maxWorkers != null) {
     options.maxWorkers = startOptions.maxWorkers;
   }
-  if (startOptions.target) {
-    // EXPO_TARGET is used by @expo/metro-config to determine the target when getDefaultConfig is
-    // called from metro.config.js.
-    process.env.EXPO_TARGET = startOptions.target;
-  }
 
-  const { middleware } = await runMetroDevServerAsync(projectRoot, options);
+  const { server, middleware } = await runMetroDevServerAsync(projectRoot, options);
   middleware.use(getManifestHandler(projectRoot));
+  return server;
 }

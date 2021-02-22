@@ -1,6 +1,6 @@
 import terminalLink from 'terminal-link';
 
-import log from '../../log';
+import Log from '../../log';
 
 /**
  * When linking isn't available, fallback to displaying the URL beside the
@@ -39,15 +39,15 @@ export function fallbackToUrl(text: string, url: string): string {
  * @param url
  */
 export function learnMore(url: string): string {
-  return terminalLink(log.chalk.underline('Learn more.'), url, {
-    fallback: (text, url) => `Learn more: ${log.chalk.underline(url)}`,
+  return terminalLink(Log.chalk.underline('Learn more.'), url, {
+    fallback: (text, url) => `Learn more: ${Log.chalk.underline(url)}`,
   });
 }
 
 export function linkedText(text: string, url: string): string {
   return terminalLink(text, url, {
     fallback: (text, url) => {
-      return `${text} ${log.chalk.dim.underline(url)}`;
+      return `${text} ${Log.chalk.dim.underline(url)}`;
     },
   });
 }
