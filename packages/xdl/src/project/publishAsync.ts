@@ -1,7 +1,9 @@
 import {
   ExpoAppManifest,
   ExpoConfig,
+  getConfig,
   getDefaultTarget,
+  isLegacyImportsEnabled,
   PackageJSONConfig,
   Platform,
 } from '@expo/config';
@@ -16,7 +18,7 @@ import Analytics from '../Analytics';
 import ApiV2 from '../ApiV2';
 import Config from '../Config';
 import * as EmbeddedAssets from '../EmbeddedAssets';
-import { shouldUseDevServer } from '../Env';
+import { isDebug, shouldUseDevServer } from '../Env';
 import { ErrorCode } from '../ErrorCode';
 import logger from '../Logger';
 import { publishAssetsAsync } from '../ProjectAssets';
@@ -67,6 +69,13 @@ export async function buildPublishBundlesAsync(
     }
   }
 
+  const isLegacy = isLegacyImportsEnabled(
+    getConfig(projectRoot, { skipSDKVersionRequirement: true }).exp
+  );
+  // If not legacy, delete the target option to prevent warnings from being thrown.
+  if (!isLegacy) {
+    delete publishOptions.target;
+  }
   const platforms: Platform[] = ['android', 'ios'];
   const [android, ios] = await bundleAsync(
     projectRoot,
@@ -218,6 +227,13 @@ export async function publishAsync(
   const target = options.target;
   const user = await UserManager.ensureLoggedInAsync();
 
+  if (isDebug()) {
+    console.log();
+    console.log('Publish Assets:');
+    console.log(`- Asset target: ${target}`);
+    console.log();
+  }
+
   Analytics.logEvent('Publish', {
     projectRoot,
     developerTool: Config.developerTool,
@@ -273,8 +289,8 @@ export async function publishAsync(
 
   const hasHooks = validPostPublishHooks.length > 0;
 
-  const shouldPublishAndroidMaps = !!exp.android && !!exp.android.publishSourceMapPath;
-  const shouldPublishIosMaps = !!exp.ios && !!exp.ios.publishSourceMapPath;
+  const shouldPublishAndroidMaps = !!exp.android?.publishSourceMapPath;
+  const shouldPublishIosMaps = !!exp.ios?.publishSourceMapPath;
   const androidSourceMap = hasHooks || shouldPublishAndroidMaps ? bundles.android.map : null;
   const iosSourceMap = hasHooks || shouldPublishIosMaps ? bundles.ios.map : null;
 
@@ -302,8 +318,8 @@ export async function publishAsync(
 
   if (
     validPostPublishHooks.length ||
-    (exp.ios && exp.ios.publishManifestPath) ||
-    (exp.android && exp.android.publishManifestPath) ||
+    exp.ios?.publishManifestPath ||
+    exp.android?.publishManifestPath ||
     EmbeddedAssets.shouldEmbedAssetsForExpoUpdates(projectRoot, exp, pkg, target)
   ) {
     [androidManifest, iosManifest] = await Promise.all([

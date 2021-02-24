@@ -2,7 +2,7 @@ import fs from 'fs';
 import { vol } from 'memfs';
 import path from 'path';
 
-import { getApplicationTargetForSchemeAsync } from '../Target';
+import { getApplicationTargetForSchemeAsync } from '../BuildScheme';
 
 const fsReal = jest.requireActual('fs') as typeof fs;
 

@@ -10,7 +10,7 @@ import urljoin from 'url-join';
 import uuid from 'uuid';
 
 import * as EmbeddedAssets from '../EmbeddedAssets';
-import { shouldUseDevServer } from '../Env';
+import { isDebug, shouldUseDevServer } from '../Env';
 import logger from '../Logger';
 import { Asset, exportAssetsAsync } from '../ProjectAssets';
 import UserManager, { ANONYMOUS_USERNAME } from '../User';
@@ -73,6 +73,13 @@ export async function exportAppAsync(
   const defaultTarget = getDefaultTarget(projectRoot);
   const target = options.publishOptions?.target ?? defaultTarget;
 
+  if (isDebug()) {
+    console.log();
+    console.log('Export Assets:');
+    console.log(`- Asset target: ${target}`);
+    console.log();
+  }
+
   // build the bundles
   // make output dirs if not exists
   const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
@@ -92,11 +99,17 @@ export async function exportAppAsync(
   const iosBundle = bundles.ios.code;
   const androidBundle = bundles.android.code;
 
-  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
+  const iosBundleHash = crypto
+    .createHash('md5')
+    .update(iosBundle)
+    .digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(absoluteOutputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
+  const androidBundleHash = crypto
+    .createHash('md5')
+    .update(androidBundle)
+    .digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(absoluteOutputDir, 'bundles', androidBundleUrl);
 

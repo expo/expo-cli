@@ -8,7 +8,7 @@ import { createAndroidManifestPlugin, withAppBuildGradle } from '../plugins/andr
 import { withDangerousMod } from '../plugins/core-plugins';
 import * as WarningAggregator from '../utils/warnings';
 import { AndroidManifest } from './Manifest';
-import { getMainApplicationAsync } from './Paths';
+import { getAppBuildGradle, getMainApplicationAsync } from './Paths';
 
 export const withPackageManifest = createAndroidManifestPlugin(
   setPackageInAndroidManifest,
@@ -51,7 +51,10 @@ async function getCurrentPackageName(projectRoot: string) {
   const packageRoot = getPackageRoot(projectRoot);
   const mainApplication = await getMainApplicationAsync(projectRoot);
   const packagePath = path.dirname(mainApplication.path);
-  const packagePathParts = path.relative(packageRoot, packagePath).split(path.sep).filter(Boolean);
+  const packagePathParts = path
+    .relative(packageRoot, packagePath)
+    .split(path.sep)
+    .filter(Boolean);
 
   return packagePathParts.join('.');
 }
@@ -145,4 +148,15 @@ export function setPackageInAndroidManifest(
   }
 
   return androidManifest;
+}
+
+export async function getApplicationIdAsync(projectDir: string): Promise<string | null> {
+  const buildGradlePath = getAppBuildGradle(projectDir);
+  if (!(await fs.pathExists(buildGradlePath))) {
+    return null;
+  }
+  const buildGradle = await fs.readFile(buildGradlePath, 'utf8');
+  const matchResult = buildGradle.match(/applicationId ['"](.*)['"]/);
+  // TODO add fallback for legacy cases to read from AndroidManifest.xml
+  return matchResult?.[1] ?? null;
 }

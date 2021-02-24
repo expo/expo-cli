@@ -44,7 +44,7 @@ function addOptions(program: Command) {
 }
 
 async function optsAsync(projectDir: string, options: any) {
-  var opts = await ProjectSettings.readAsync(projectDir);
+  const opts = await ProjectSettings.readAsync(projectDir);
 
   if ([options.host, options.lan, options.localhost, options.tunnel].filter(i => i).length > 1) {
     throw new CommandError(
@@ -76,11 +76,11 @@ async function optsAsync(projectDir: string, options: any) {
     const defaultTarget = getDefaultTarget(projectDir);
     if (defaultTarget !== 'bare') {
       Log.warn(
-        `\nOption ${Log.chalk.cyan(
+        `\nOption ${Log.chalk.bold(
           '--dev-client'
-        )} can only be used in bare workflow apps. Run ${Log.chalk.cyan(
+        )} can only be used in bare workflow apps. Run ${Log.chalk.bold(
           'expo eject'
-        )} and try again\n`
+        )} and try again.\n`
       );
       throw new AbortCommandError();
     }

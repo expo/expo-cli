@@ -1,4 +1,9 @@
-import { getConfig, readConfigJsonAsync, writeConfigJsonAsync } from '@expo/config';
+import {
+  getConfig,
+  isLegacyImportsEnabled,
+  readConfigJsonAsync,
+  writeConfigJsonAsync,
+} from '@expo/config';
 import { ExpoConfig } from '@expo/config-types';
 import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
@@ -18,6 +23,7 @@ import CommandError from '../CommandError';
 import Log from '../log';
 import { confirmAsync, selectAsync } from '../prompts';
 import { findProjectRootAsync } from './utils/ProjectUtils';
+import { assertProjectHasExpoExtensionFilesAsync } from './utils/deprecatedExtensionWarnings';
 import maybeBailOnGitStatusAsync from './utils/maybeBailOnGitStatusAsync';
 
 type DependencyList = Record<string, string>;
@@ -661,6 +667,11 @@ export async function upgradeAsync(
     clearingCacheStep.succeed('Cleared packager cache.');
   }
 
+  // Warn about extensions out of sync. Remove after dropping support for SDK 41
+  if (!isLegacyImportsEnabled(exp)) {
+    await assertProjectHasExpoExtensionFilesAsync(projectRoot, true);
+  }
+
   Log.newLine();
   Log.log(chalk.bold.green(`👏 Automated upgrade steps complete.`));
   Log.log(chalk.bold.grey(`...but this doesn't mean everything is done yet!`));
@@ -832,7 +843,7 @@ async function maybeCleanNpmStateAsync(packageManager: any) {
   }
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
     .command('upgrade [sdk-version]')
     .alias('update')

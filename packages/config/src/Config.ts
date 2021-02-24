@@ -598,18 +598,38 @@ function isDynamicFilePath(filePath: string): boolean {
  * - custom path app config relative to root folder
  * - both: app.config.js or app.json
  */
-export function getProjectConfigDescription(projectDir: string): string {
-  const paths = getConfigFilePaths(projectDir);
-  if (paths.dynamicConfigPath) {
-    const relativeDynamicConfigPath = path.relative(projectDir, paths.dynamicConfigPath);
-    if (paths.staticConfigPath) {
-      return `${relativeDynamicConfigPath} or ${path.relative(projectDir, paths.staticConfigPath)}`;
+export function getProjectConfigDescription(projectRoot: string): string {
+  const paths = getConfigFilePaths(projectRoot);
+  return getProjectConfigDescriptionWithPaths(projectRoot, paths);
+}
+
+/**
+ * Returns a string describing the configurations used for the given project root.
+ * Will return null if no config is found.
+ *
+ * @param projectRoot
+ * @param projectConfig
+ */
+export function getProjectConfigDescriptionWithPaths(
+  projectRoot: string,
+  projectConfig: ConfigFilePaths
+): string {
+  if (projectConfig.dynamicConfigPath) {
+    const relativeDynamicConfigPath = path.relative(projectRoot, projectConfig.dynamicConfigPath);
+    if (projectConfig.staticConfigPath) {
+      return `${relativeDynamicConfigPath} or ${path.relative(
+        projectRoot,
+        projectConfig.staticConfigPath
+      )}`;
     }
     return relativeDynamicConfigPath;
-  } else if (paths.staticConfigPath) {
-    return path.relative(projectDir, paths.staticConfigPath);
+  } else if (projectConfig.staticConfigPath) {
+    return path.relative(projectRoot, projectConfig.staticConfigPath);
   }
-  return 'app.config.js/app.json';
+  // If a config doesn't exist, our tooling will generate a static app.json
+  return 'app.json';
 }
 
 export * from './Config.types';
+
+export { isLegacyImportsEnabled } from './isLegacyImportsEnabled';
