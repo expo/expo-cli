@@ -126,6 +126,7 @@ const printServerInfo = async (
 ) => {
   if (options.webOnly) {
     Webpack.printConnectionInstructions(projectRoot);
+    printHelp();
     return;
   }
   Log.newLine();

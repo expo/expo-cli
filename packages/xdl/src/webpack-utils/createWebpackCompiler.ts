@@ -70,7 +70,6 @@ export function printInstructions(
   message += '\n';
 
   message += `\n \u203A Press ${chalk.bold(`w`)} ${divider} open in the browser`;
-  message += `\n \u203A Press ${chalk.bold(`?`)} ${divider} show all commands`;
 
   log(projectRoot, message, showInDevtools);
 }
