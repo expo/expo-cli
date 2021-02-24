@@ -87,7 +87,7 @@ export async function promptToClearMalformedNativeProjectsAsync(projectRoot: str
     program.nonInteractive ||
     // Prompt to clear the native folders.
     (await confirmAsync({
-      message: `${message}, would you like to clear before prebuilding?`,
+      message: `${message}, would you like to clear the project files and reinitialize them?`,
       initial: true,
     }))
   ) {
