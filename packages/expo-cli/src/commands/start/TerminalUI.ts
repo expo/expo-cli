@@ -142,7 +142,7 @@ export function openDeveloperTools(url: string) {
   }
 }
 
-export const startAsync = async (projectRoot: string, options: StartOptions) => {
+export async function startAsync(projectRoot: string, options: StartOptions) {
   const { stdin } = process;
   const startWaitingForCommand = () => {
     if (!stdin.setRawMode) {
@@ -345,7 +345,7 @@ Please reload the project in Expo Go for the change to take effect.`
         await openInEditorAsync(projectRoot);
     }
   }
-};
+}
 
 async function sendEmailAsync(projectRoot: string): Promise<void> {
   const lanAddress = await UrlUtils.constructDeepLinkAsync(projectRoot, {

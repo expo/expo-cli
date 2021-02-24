@@ -14,6 +14,7 @@ import Log from '../log';
 import * as sendTo from '../sendTo';
 import urlOpts, { URLOptions } from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
+import { profileMethod } from './utils/profileMethod';
 import { ensureTypeScriptSetupAsync } from './utils/typescript/ensureTypeScriptSetup';
 
 type NormalizedOptions = URLOptions & {
@@ -173,27 +174,30 @@ async function action(projectDir: string, options: NormalizedOptions): Promise<v
   const { exp, pkg, rootPath } = await configureProjectAsync(projectDir, options);
 
   if (Versions.gteSdkVersion(exp, '34.0.0')) {
-    await ensureTypeScriptSetupAsync(projectDir);
+    await profileMethod(ensureTypeScriptSetupAsync)(projectDir);
   }
 
   // TODO: only validate dependencies if starting in managed workflow
-  await validateDependenciesVersions(projectDir, exp, pkg);
+  await profileMethod(validateDependenciesVersions)(projectDir, exp, pkg);
 
-  const startOpts = parseStartOptions(options);
+  const startOpts = profileMethod(parseStartOptions)(options);
 
-  await Project.startAsync(rootPath, { ...startOpts, exp });
+  await profileMethod(Project.startAsync)(rootPath, { ...startOpts, exp });
 
-  const url = await UrlUtils.constructDeepLinkAsync(projectDir);
+  const url = await profileMethod(
+    UrlUtils.constructDeepLinkAsync,
+    'UrlUtils.constructDeepLinkAsync'
+  )(projectDir);
 
-  const recipient = await sendTo.getRecipient(options.sendTo);
+  const recipient = await profileMethod(sendTo.getRecipient)(options.sendTo);
   if (recipient) {
     await sendTo.sendUrlAsync(url, recipient);
   }
 
-  await urlOpts.handleMobileOptsAsync(projectDir, options);
+  await profileMethod(urlOpts.handleMobileOptsAsync)(projectDir, options);
 
   if (!startOpts.nonInteractive && !exp.isDetached) {
-    await TerminalUI.startAsync(projectDir, startOpts);
+    await profileMethod(TerminalUI.startAsync, 'TerminalUI.startAsync')(projectDir, startOpts);
   } else {
     if (!exp.isDetached) {
       Log.newLine();
