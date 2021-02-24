@@ -99,17 +99,11 @@ export async function exportAppAsync(
   const iosBundle = bundles.ios.code;
   const androidBundle = bundles.android.code;
 
-  const iosBundleHash = crypto
-    .createHash('md5')
-    .update(iosBundle)
-    .digest('hex');
+  const iosBundleHash = crypto.createHash('md5').update(iosBundle).digest('hex');
   const iosBundleUrl = `ios-${iosBundleHash}.js`;
   const iosJsPath = path.join(absoluteOutputDir, 'bundles', iosBundleUrl);
 
-  const androidBundleHash = crypto
-    .createHash('md5')
-    .update(androidBundle)
-    .digest('hex');
+  const androidBundleHash = crypto.createHash('md5').update(androidBundle).digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
   const androidJsPath = path.join(absoluteOutputDir, 'bundles', androidBundleUrl);
 

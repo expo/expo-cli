@@ -90,7 +90,7 @@ async function action(projectRoot: string, options: ProjectUrlOptions & URLOptio
   }
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('url [path]')
     .alias('u')

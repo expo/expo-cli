@@ -204,7 +204,7 @@ export async function action(projectRoot: string, options: Options) {
   Log.log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }
 
-export default function(program: Command) {
+export default function (program: Command) {
   program
     .command('export [path]')
     .description('Export the static files of the app for hosting it on a web server')
