@@ -37,7 +37,7 @@ type StartOptions = {
 };
 
 const printHelp = (): void => {
-  logCommandsTable([[], ['?', 'show all commands']]);
+  logCommandsTable([['?', 'show all commands']]);
 };
 
 const div = chalk.dim(`│`);
@@ -79,6 +79,7 @@ const printUsageAsync = async (
     ['d', `open developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
     !options.webOnly && ['e', `share the app link by email`],
+    [],
   ]);
 };
 
@@ -96,6 +97,7 @@ const printBasicUsageAsync = async (options: Pick<StartOptions, 'webOnly'> = {})
     ['d', `open developer tools`],
     ['shift+d', `toggle auto opening developer tools on startup`, currentToggle],
     !options.webOnly && ['e', `share the app link by email`],
+    [],
   ]);
 };
 
